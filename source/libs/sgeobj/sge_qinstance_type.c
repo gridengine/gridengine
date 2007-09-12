@@ -48,7 +48,7 @@
 const char *queue_types[] = {
    "BATCH",
    "INTERACTIVE",
-   ""
+   NULL
 };
 
 static bool
@@ -99,7 +99,7 @@ qtype_append_to_dstring(u_long32 qtype, dstring *string)
       u_long32 bitmask = 1;
       bool qtype_defined = false;
 
-      for (ptr = queue_types; **ptr != '\0'; ptr++) {
+      for (ptr = queue_types; *ptr != NULL; ptr++) {
          if (bitmask & qtype) {
             if (qtype_defined) {
                sge_dstring_sprintf_append(string, " ");
@@ -130,7 +130,7 @@ qinstance_print_qtype_to_dstring(const lListElem *this_elem,
       u_long32 bitmask = 1;
       bool qtype_defined = false;
 
-      for (ptr = queue_types; **ptr != '\0'; ptr++) {
+      for (ptr = queue_types; *ptr != NULL; ptr++) {
          if (bitmask & lGetUlong(this_elem, QU_qtype)) {
             qtype_defined = true;
             if (only_first_char) {

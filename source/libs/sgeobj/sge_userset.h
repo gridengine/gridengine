@@ -34,6 +34,8 @@
 
 #include "sge_usersetL.h"
 
+extern const char *userset_types[];
+
 extern lList *Master_Userset_List;
 
 lList **

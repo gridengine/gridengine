@@ -1,3 +1,8 @@
+RH-2007-09-19-1: Enhancem.: installation copies jmxremote.password file to
+                            $SGE_ROOT/$SGE_CELL/common and sets the correct
+                            permissions
+                 Review:    AA
+
 RH-2007-09-19-0: Enhancem.: - JGDI: Dynamic proxy for accessing JGDI over JMX
                             - qmaster: jvm thread is enabled if env variable SGE_LIBJVM_PATH
                               is set

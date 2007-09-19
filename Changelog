@@ -1,3 +1,8 @@
+RH-2007-09-19-0: Enhancem.: - JGDI: Dynamic proxy for accessing JGDI over JMX
+                            - qmaster: jvm thread is enabled if env variable SGE_LIBJVM_PATH
+                              is set
+                 Review:    AA
+
 RN-2007-09-12-0: Bugfix:    - Creating a userset with NONE as a type results
                               in a core dump
                             - Userset spooling in classic mode is broken

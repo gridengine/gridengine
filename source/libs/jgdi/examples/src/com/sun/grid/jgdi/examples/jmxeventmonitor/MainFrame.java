@@ -31,6 +31,8 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.examples.jmxeventmonitor;
 
+import com.sun.grid.jgdi.event.Event;
+import com.sun.grid.jgdi.event.EventListener;
 import com.sun.grid.jgdi.event.EventTypeEnum;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -94,11 +96,7 @@ public class MainFrame extends JFrame {
         JPanel panel = new JPanel(new BorderLayout());
         getContentPane().add(panel);
         
-        eventTableModel.setColumnIdentifiers(new Object[] { "time", "id", "type", "userdata" });
-        
-        eventTable.getColumnModel().getColumn(0).setMaxWidth(80);
-        eventTable.getColumnModel().getColumn(1).setMaxWidth(30);
-        eventTable.getColumnModel().getColumn(2).setMaxWidth(60);
+        eventTableModel.setColumnIdentifiers(new Object[] { "Event" });
         
         int SUB_COL_WIDTH = 40;
         int TYPE_WIDTH = 140;
@@ -149,7 +147,7 @@ public class MainFrame extends JFrame {
         disconnectAction.setEnabled(false);
         subscriptionTable.setEnabled(false);
         
-        controller.addNotificationListener(new MyNotificationListener(), null, null);
+        controller.addEventListener(new MyNotificationListener());
         controller.addListener(new ControllerListener());
     }
     
@@ -229,6 +227,8 @@ public class MainFrame extends JFrame {
     
     private class ConnectAction extends AbstractAction {
         
+        ConnectDialog dlg = new ConnectDialog(MainFrame.this);
+        
         public ConnectAction() {
             super("connect");
         }
@@ -237,34 +237,25 @@ public class MainFrame extends JFrame {
 
             statusLabel.setText("Connecting");
             
+            dlg.setLocationRelativeTo(MainFrame.this);
             while(true) {
-                String hostAndPort = JOptionPane.showInputDialog(MainFrame.this, "Enter <host>:<port>", "connection", JOptionPane.QUESTION_MESSAGE);
+                
+                dlg.setVisible(true);
 
-                if(hostAndPort == null) {
+                if(dlg.isCanceled()) {
+                    statusLabel.setText("Connecting canceled");
                     break;
                 }
-                String [] str = hostAndPort.split(":");
-                if(str.length == 2) {
-                    try {
-                        String host = str[0];
-                        int port = Integer.parseInt(str[1]);
 
-                        statusLabel.setText("Connecting to " + host + ":" + port);
-                        controller.connect(host, port);
-                        break;
-                    } catch(NumberFormatException nfe) {
-                        JOptionPane.showMessageDialog(MainFrame.this, "Invalid port '" + str[1] + "'");
-                        continue;
-                    } catch(Exception ex) {
-                        ErrorDialog.showErrorDialog(MainFrame.this, ex);
-                        break;
-                    }
-                } else {
-                    JOptionPane.showMessageDialog(MainFrame.this, "Please enter <host>:<port>");
-                    continue;
+                try {
+                    statusLabel.setText("Connecting to " + dlg.getHost() + ":" + dlg.getPort());
+                    controller.connect(dlg.getHost(), dlg.getPort(), new String []  { dlg.getUsername(), new String(dlg.getPassword()) });
+                    dlg.saveInPrefs();
+                    break;
+                } catch (Exception ex) {
+                    ErrorDialog.showErrorDialog(MainFrame.this, ex);
+                    break;
                 }
-                
-                
             }            
         }
     }
@@ -291,15 +282,13 @@ public class MainFrame extends JFrame {
         }
     }
     
-    public class MyNotificationListener implements NotificationListener {
+    public class MyNotificationListener implements EventListener {
         
-        private DateFormat df = DateFormat.getTimeInstance();
-        public void handleNotification(final Notification notification, final Object handback) {
-            
+
+        public void eventOccured(final Event evt) {
             if(SwingUtilities.isEventDispatchThread()) {
                 
-                eventTableModel.addRow(new Object[] { df.format(new Date(notification.getTimeStamp())), 
-                   notification.getSequenceNumber(), notification.getType(), notification.getUserData() } );
+                eventTableModel.addRow(new Object[] { evt } );
                 if(eventTableModel.getRowCount() >= 1000) {
                     eventTableModel.removeRow(0);
                 }
@@ -307,7 +296,7 @@ public class MainFrame extends JFrame {
             } else {
                 SwingUtilities.invokeLater(new Runnable() {
                     public void run() {
-                        handleNotification(notification, handback);
+                        eventOccured(evt);
                     }
                 });
             }

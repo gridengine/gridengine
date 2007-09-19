@@ -31,9 +31,13 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.examples.jmxeventmonitor;
 
+import com.sun.grid.jgdi.JGDIFactory;
+import com.sun.grid.jgdi.event.EventListener;
 import com.sun.grid.jgdi.event.EventTypeEnum;
+import com.sun.grid.jgdi.management.JGDIProxy;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -42,37 +46,29 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.management.ListenerNotFoundException;
-import javax.management.MBeanServerConnection;
-import javax.management.Notification;
 import javax.management.NotificationBroadcasterSupport;
-import javax.management.NotificationFilter;
-import javax.management.NotificationListener;
 import javax.management.ObjectName;
-import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
 /**
  *
  */
-public class ConnectionController implements NotificationListener {
+public class ConnectionController {
     
     private final static Logger log = Logger.getLogger(ConnectionController.class.getName());
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     
     private final List<Listener> listeners = new LinkedList<Listener>();
     
-    private ObjectName name;
-    private JMXConnector connector;
-    private MBeanServerConnection connection;
+    private JGDIProxy jgdiProxy;
     
     private Set<EventTypeEnum> subscription;
     
     private NotificationBroadcasterSupport broadcaster = new NotificationBroadcasterSupport();
     
-    public void connect(String host, int port) {
-        executor.submit(new ConnectAction(host, port));
+    public void connect(String host, int port, Object credentials) {
+        executor.submit(new ConnectAction(host, port, credentials));
     }
     
     public void disconnect() {
@@ -107,26 +103,14 @@ public class ConnectionController implements NotificationListener {
         }
     }
 
-    public void addNotificationListener(NotificationListener lis, NotificationFilter filter, Object handback) {
-        broadcaster.addNotificationListener(lis, filter, handback);
+    private final Set<EventListener> eventListeners = new HashSet<EventListener>();
+    
+    public void addEventListener(EventListener lis) {
+        eventListeners.add(lis);
     }
     
-    public void removeNotificationListener(NotificationListener lis) {
-        try {
-            broadcaster.removeNotificationListener(lis);
-        } catch (ListenerNotFoundException ex) {
-            for(Listener tmpLis: getListeners()) {
-                tmpLis.errorOccured(ex);
-            }
-        }
-    }
-    
-    public void handleNotification(Notification notification, Object handback) {
-        if(notification.getType().equals("jmx.remote.connection.closed")) {
-            disconnect();
-        } else {
-            broadcaster.sendNotification(notification);
-        }
+    public void removeEventListener(EventListener lis) {
+        eventListeners.remove(lis);
     }
     
     private class SubscribeAction implements Runnable {
@@ -142,15 +126,16 @@ public class ConnectionController implements NotificationListener {
         public void run() {
             
             try {
-                if(connection != null) {
+                if(jgdiProxy != null) {
 
+                    
                     if(subscribe) {
-                        connection.invoke(name, "subscribe", new Object [] { types }, new String [] { Set.class.getName() });
+                        jgdiProxy.getProxy().subscribe(types);
                         for(Listener lis: getListeners()) {
                             lis.subscribed(types);
                         }
                     } else {
-                        connection.invoke(name, "unsubscribe", new Object [] { types }, new String [] { Set.class.getName() });
+                        jgdiProxy.getProxy().unsubscribe(types);
                         for(Listener lis: getListeners()) {
                             lis.unsubscribed(types);
                         }
@@ -173,16 +158,13 @@ public class ConnectionController implements NotificationListener {
         public void run() {
             
             try {
-                if(connector != null) {
-                    connector.close();
+                if(jgdiProxy != null) {
+                    jgdiProxy.close();
                 }
-                
             } catch(Exception ex) {
                 log.log(Level.WARNING, "connector.close failed", ex);
             } finally {
-                connection = null;
-                connection = null;
-                subscription = null;
+                jgdiProxy = null;
                 for(Listener lis: getListeners()) {
                     lis.disconnected();
                 }
@@ -196,32 +178,21 @@ public class ConnectionController implements NotificationListener {
         
         private final String host;
         private final int port;
+        private final Object credentials;
         
-        public ConnectAction(String host, int port) {
+        public ConnectAction(String host, int port, Object credentials) {
             this.host = host;
             this.port = port;
+            this.credentials = credentials;
         }
         
         public void run() {
             try {
-                JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" + host + ":" + port + "/jmxrmi");
-
-                Map<String, Object> env = new HashMap<String, Object>();
-
-                String [] cred = { "controlRole", "R&D" };
-
-                env.put("jmx.remote.credentials", cred );
-
-                name = new ObjectName("gridengine:type=JGDI");
-                
-                connector = JMXConnectorFactory.connect(url, env);
-                connection = connector.getMBeanServerConnection();
-
-                connection.addNotificationListener(name,ConnectionController.this, null, null);
-                
-                connector.addConnectionNotificationListener(ConnectionController.this, null, null);
-                
-                subscription = (Set<EventTypeEnum>)connection.getAttribute(name, "Subscription");
+                jgdiProxy = JGDIFactory.newJMXInstance(host, port, credentials);
+                for(EventListener lis: eventListeners) {
+                    jgdiProxy.addEventListener(lis);
+                }
+                subscription = jgdiProxy.getProxy().getSubscription();
                 
                 for(Listener lis: getListeners()) {
                     lis.connected(host, port, subscription);
@@ -247,8 +218,4 @@ public class ConnectionController implements NotificationListener {
         
     }
 
-    public ObjectName getName() {
-        return name;
-    }
-            
 }

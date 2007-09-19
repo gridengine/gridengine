@@ -31,12 +31,17 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi;
 
-import java.lang.IllegalStateException;
-import java.lang.IllegalStateException;
+import com.sun.grid.jgdi.management.JGDIProxy;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.net.MalformedURLException;
+import java.util.HashMap;
+import java.util.Map;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import javax.management.remote.JMXServiceURL;
 
 /**
  * Factory class for {@link JGDI} objects.
@@ -139,4 +144,31 @@ public class JGDIFactory {
     
     private native static String setJGDIVersion();
     
+    /**
+     *   Create a proxy object to the JGDI MBean.
+     * 
+     *   @param  host  the qmaster host
+     *   @param  port  port where qmasters MBeanServer is listening
+     *   @param  credentials credentials for authentication
+     *   @return the JGDI Proxy object
+     */
+    public static JGDIProxy newJMXInstance(String host, int port, Object credentials) {
+        
+        JMXServiceURL url;
+        try {
+            url = new JMXServiceURL(String.format("service:jmx:rmi:///jndi/rmi://%s:%d/jmxrmi", host, port));
+        } catch (MalformedURLException ex) {
+            throw new IllegalStateException("Invalid JMX url", ex);
+        }
+        
+        ObjectName name;
+        try {
+            name = new ObjectName("gridengine:type=JGDI");
+        } catch (MalformedObjectNameException ex) {
+            throw new IllegalStateException("Invalid object name");
+        }
+        
+        return new JGDIProxy(url, name, credentials);
+        
+    }
 }

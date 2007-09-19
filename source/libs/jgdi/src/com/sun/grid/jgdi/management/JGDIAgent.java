@@ -99,6 +99,42 @@ public class JGDIAgent {
    
    // Singleton instance
    private static JGDIAgent singleton;
+   
+   private final static Logger logger = Logger.getLogger(JGDIAgent.class.getName());
+   
+   public static void main(String [] args) {
+       
+       try {
+           if(args.length != 1) {
+               System.err.println("JGDIAgent <jgdi connect url>");
+               System.exit(1);
+           }
+           String sge_url = args[0];
+
+           // start JGDIAgent
+           JGDIAgent agent = JGDIAgent.getDefault(sge_url);
+
+           ShutdownHook shutdownHook = new ShutdownHook();
+           Runtime.getRuntime().addShutdownHook(shutdownHook);
+           shutdownHook.waitForShutdown();
+       } catch(Exception ex) {
+           log.log(Level.SEVERE, "Unexpected error", ex);
+       }
+   }
+   
+   private static class ShutdownHook extends Thread {
+      
+      public void run() {
+        synchronized(this) {
+            notifyAll();
+        }
+      }
+      
+      public synchronized void waitForShutdown() throws InterruptedException {
+         wait();
+      }
+   }
+   
 }
 
 

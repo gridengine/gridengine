@@ -1435,9 +1435,9 @@ static void *sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *mo
 
    char **jvm_argv;
    int   jvm_argc = 0;
-   char *main_argv[4];
+   char *main_argv[1];
    int i;
-   char main_class_name[] = "com/sun/grid/jgdi/rmi/JGDIRmiProxy";
+   char main_class_name[] = "com/sun/grid/jgdi/management/JGDIAgent";
 	JNIEnv* env = NULL;
    jobject main_class = NULL;
    const char* additional_jvm_args = getenv("SGE_JVM_ARGS");
@@ -1446,7 +1446,8 @@ static void *sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *mo
    
    DENTER(TOP_LAYER, "sge_run_jvm");
 
-   libjvm_path = ctx->get_libjvm_path(ctx);
+/*    libjvm_path = ctx->get_libjvm_path(ctx); */
+   libjvm_path = getenv("SGE_LIBJVM_PATH");
 
    if (libjvm_path == NULL) {
       DRETURN(anArg);
@@ -1486,7 +1487,8 @@ static void *sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *mo
    jvm_argv[4] = strdup(sge_dstring_sprintf(&ds, "-Djava.library.path=%s/lib/%s", ctx->get_sge_root(ctx), sge_get_arch()));
    jvm_argv[5] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.config.file=%s/util/management.properties", ctx->get_sge_root(ctx)));
    jvm_argv[6] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.jmxremote.access.file=%s/util/jmxremote.access", ctx->get_sge_root(ctx)));
-   jvm_argv[7] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.jmxremote.password.file=%s/util/jmxremote.password", ctx->get_sge_root(ctx)));
+   jvm_argv[7] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.jmxremote.password.file=%s/common/jmxremote.password", 
+                                            ctx->get_cell_root(ctx)));
    jvm_argv[8] = strdup(sge_dstring_sprintf(&ds, "-Djava.security.auth.login.config=%s/util/jaas.config", ctx->get_sge_root(ctx)));
    jvm_argv[9] = strdup(sge_dstring_sprintf(&ds, "-Djava.util.logging.config.file=%s/util/logging.properties", ctx->get_sge_root(ctx)));
 
@@ -1495,10 +1497,7 @@ static void *sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *mo
    }
    FREE(additional_jvm_argv);
 
-   main_argv[0] = strdup("-reg");
-   main_argv[1] = strdup("local:54321");
-   main_argv[2] = strdup("jgdi");
-   main_argv[3] = strdup(sge_dstring_sprintf(&ds, "bootstrap://%s@%s:"sge_u32, ctx->get_sge_root(ctx), ctx->get_default_cell(ctx), ctx->get_sge_qmaster_port(ctx)));
+   main_argv[0] = strdup(sge_dstring_sprintf(&ds, "bootstrap://%s@%s:"sge_u32, ctx->get_sge_root(ctx), ctx->get_default_cell(ctx), ctx->get_sge_qmaster_port(ctx)));
 
    sge_dstring_free(&ds);
 

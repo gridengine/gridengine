@@ -1,3 +1,10 @@
+AH-2007-09-19-1: Bugfix:    Fix scheduling of PE range jobs when resource
+                            quotas are used. It was broken by OJ-2007-09-10-0
+                            which in turn was broken by AH-2007-06-15-0 when
+                            resource quota result caching was introduced for
+                            parallel jobs.
+                 Review:    RD
+
 RH-2007-09-19-1: Enhancem.: installation copies jmxremote.password file to
                             $SGE_ROOT/$SGE_CELL/common and sets the correct
                             permissions

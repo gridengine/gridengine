@@ -668,6 +668,7 @@ parallel_reservation_max_time_slots(sge_assignment_t *best)
       }
       
       result = parallel_assignment(&tmp_assignment, &use_category, &available_slots);
+      assignment_clear_cache(&tmp_assignment);
 
       if (result == DISPATCH_OK) {
          if (best->gdil) {
@@ -868,13 +869,13 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots)
          /* we try that slot amount */
          tmp.slots = use_category.posible_pe_slots[current];
          result = parallel_assignment(&tmp, &use_category, available_slots);         
+         assignment_clear_cache(&tmp);
         
          if (result == DISPATCH_OK) {
             assignment_copy(best, &tmp, true);
             match_current = current;
             min = current + 1;
-         }
-         else {
+         } else {
             max = current - 1;
          }
          
@@ -906,10 +907,11 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots)
             /* we try that slot amount */ 
             tmp.slots = use_category.posible_pe_slots[current];
             result = parallel_assignment(&tmp, &use_category, available_slots);
+            assignment_clear_cache(&tmp);
 
             if (result != DISPATCH_OK) { /* we have mismatch, stop */
                break;                    /* the other runs will not work */
-            }   
+            }
             
             match_current = current;
             assignment_copy(best, &tmp, true);
@@ -930,12 +932,13 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots)
             /* we try that slot amount */ 
             tmp.slots = use_category.posible_pe_slots[current];
             result = parallel_assignment(&tmp, &use_category, available_slots);
+            assignment_clear_cache(&tmp);
 
             if (result == DISPATCH_OK) {          /* we have a match, stop */
                assignment_copy(best, &tmp, true); /* all other runs will also match */
                match_current = current;
                break;
-            } /* end if*/
+            }
          } /* end for */
       }
       

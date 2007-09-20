@@ -1,6 +1,10 @@
+AH-2007-09-20-0: Bugfix:   Resource quota matching with sequential job scheduling
+                           was broken as it slipped through with the merge 
+                           OJ-2007-09-10-0 from maintrunk
+
 RN-2007-09-20-0: Bugfix:    - authuser binary returns unusable error message
                             - Several qconf options display only single message
-			    when a list of messages should be printed
+                              when a list of messages should be printed
                  Bugster:   6527836,6577034
                  Issue:     2194
                  Review:    JG
@@ -12,7 +16,7 @@ AH-2007-09-19-0: Bugfix:   Fix scheduling of PE range jobs when resource
                            parallel jobs.
                  Review:   RD
 
-OJ-2007-09-10-0: Bugfix:   Fixed broken check-in OJ-2007-09-10-0
+OJ-2007-09-11-0: Bugfix:   Fixed broken check-in OJ-2007-09-10-0
 
 RN-2007-09-11-0: Bugfix:    - Creating a userset with NONE as a type results
                               in a core dump

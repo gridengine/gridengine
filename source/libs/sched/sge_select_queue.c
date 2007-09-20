@@ -3043,6 +3043,7 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
       const char *eh_name;
       const char *qname, *cqname;
       u_long32 tt_rqs = 0;   
+      bool is_global;
 
       lListElem *hep;
 
@@ -3067,6 +3068,23 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
       if (skip_queue_list && lGetElemStr(skip_queue_list, CTI_name, qname)){
          DPRINTF(("job category skip queue %s\n", qname));
          continue;
+      }
+
+      /* resource quota matching */
+      if ((result = rqs_by_slots(a, cqname, eh_name, &tt_rqs, &is_global,
+               &rue_string, &limit_name, &rule_name, got_solution?tt_best:U_LONG32_MAX)) != DISPATCH_OK) {
+         best_queue_result = find_best_result(result, best_queue_result);
+         if (is_global == false) {
+            DPRINTF(("no match due to GLOBAL RQS\n", eh_name));
+            continue;
+         }
+         break; /* hit a global limit */
+      }
+      if (got_solution && is_not_better(a, violations_best, tt_best, 0, tt_rqs)) {
+         DPRINTF(("CUT TREE: Due to RQS for \"%s\"\n", qname));
+         if (is_global == false)
+            continue;
+         break;
       }
 
       /* static cqueue matching */

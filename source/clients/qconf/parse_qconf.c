@@ -1581,7 +1581,7 @@ char *argv[]
 
          lString2List(*spp, &lp, US_Type, US_name, ", ");
          alp = ctx->gdi(ctx, SGE_USERSET_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-         sge_parse_return |= show_answer(alp);
+         sge_parse_return |= show_answer_list(alp);
          lFreeList(&alp);
          lFreeList(&lp);
 
@@ -1598,7 +1598,7 @@ char *argv[]
 
          lString2List(*spp, &lp, UP_Type, UP_name, ", ");
          alp = ctx->gdi(ctx, SGE_USER_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-         sge_parse_return |= show_answer(alp);
+         sge_parse_return |= show_answer_list(alp);
          lFreeList(&alp);
          lFreeList(&lp);
 

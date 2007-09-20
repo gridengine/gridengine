@@ -224,5 +224,6 @@
 #define MSG_AUTHUSER_NO_PW_ENTRY_SS       _MESSAGE(213105, _("password: can not get password entry of user "SFN": "SFN))
 #define MSG_AUTHUSER_ERROR                _MESSAGE(213106, _("Error: "))
 #define MSG_AUTHUSER_WRONG_USER_OR_PASSWORD   _MESSAGE(213107, _("Wrong user or password"))
+#define MSG_AUTHUSER_ONLY_ROOT_S          _MESSAGE(213108, _(SFN": can only be run as root user"))
 
 #endif /* __MSG_UTILBIN_H */

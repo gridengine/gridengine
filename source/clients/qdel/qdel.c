@@ -298,7 +298,7 @@ lList **alpp
 ) {
    char **sp;
    char **rp;
-
+   
    DENTER(TOP_LAYER, "sge_parse_cmdline_qdel");
 
    rp = argv;
@@ -363,8 +363,24 @@ lList **alpp
       }
 
       /* job id's */
-      if ((rp = parse_param(sp, "jobs", ppcmdline, alpp)) != sp) {
-         continue;
+      if (*sp) {
+         lList *del_list = NULL;
+         lListElem *job;         
+         lListElem *ep = NULL;
+         str_list_parse_from_string(&del_list, *sp, ",");
+        
+         for_each(job, del_list) {
+            const char *job_name;
+            job_name = lGetString(job, ST_name);
+            if(ep == NULL) {
+               ep = sge_add_arg(ppcmdline, 0, lListT, "jobs", NULL);
+            }
+            lAddElemStr(lGetListRef(ep, SPA_argval_lListT), ST_name, job_name, ST_Type);
+         }  
+         sp ++;
+         rp = sp;
+         lFreeList(&del_list);
+         continue;        
       }
 
       /* oops */

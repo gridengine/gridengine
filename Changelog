@@ -1,3 +1,10 @@
+MP-2007-09-21-0: Bugfix:    qdel does not recognize wc_job_range_list
+                            as it is defined.
+                 Bugster:   6597547
+                 Issue:     2367
+                 Review:    JG
+
+
 AH-2007-09-20-0: Bugfix:   Resource quota matching with sequential job scheduling
                            was broken as it slipped through with the merge 
                            OJ-2007-09-10-0 from maintrunk

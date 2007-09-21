@@ -1003,6 +1003,15 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
       DRETURN(DISPATCH_NEVER_CAT);
    }
 
+   if (is_reserve) {
+      if (*queue_list == NULL) { 
+         *queue_list = lCreateList("temp queue", lGetListDescr(*dis_queue_list));
+         a.queue_list       = *queue_list;
+      }
+      is_computed_reservation = true;
+      lAppendList(*queue_list, *dis_queue_list);
+   }
+
    a.duration = duration_add_offset(a.duration, sconf_get_duration_offset());
    a.is_schedule_based = is_schedule_based;
 
@@ -1038,14 +1047,6 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
          
          a.start = DISPATCH_TIME_NOW;
          a.is_reservation = false;
-         if (is_reserve) {
-            if (*queue_list == NULL) { 
-               *queue_list = lCreateList("temp queue", lGetListDescr(*dis_queue_list));
-               a.queue_list       = *queue_list;
-            }
-            is_computed_reservation = true;
-            lAppendList(*queue_list, *dis_queue_list);
-         }
          
          result = sge_select_parallel_environment(&a, pe_list);
       }
@@ -1085,14 +1086,6 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
          
          a.start = DISPATCH_TIME_NOW;
          a.is_reservation = false;
-         if (is_reserve) {
-            is_computed_reservation = true;
-            if (*queue_list == NULL) { 
-               *queue_list  = lCreateList("temp queue", lGetListDescr(*dis_queue_list));
-               a.queue_list = *queue_list;
-            }
-            lAppendList(*queue_list, *dis_queue_list);
-         }
          result = sge_sequential_assignment(&a);
          
          DPRINTF(("sge_sequential_assignment(immediate) returned %d\n", result));

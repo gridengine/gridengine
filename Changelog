@@ -1,3 +1,9 @@
+AH-2007-09-21-0: Bugfix:    Resource reservation broken with sequences of
+                            identical jobs differing only in their -R y|n
+                 Bugster:   6590079
+                 Issue:     2344
+                 Review:    RD
+
 MP-2007-09-21-0: Bugfix:    qdel does not recognize wc_job_range_list
                             as it is defined.
                  Bugster:   6597547

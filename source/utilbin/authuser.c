@@ -192,6 +192,15 @@ int main(int argc, char** argv) {
    }
    auth_method = argv[1];
 
+#ifndef WINDOWS
+#define SGE_SUPERUSER_UID 0
+   /* only root can successfull execute this */
+   if(getuid() != SGE_SUPERUSER_UID) {
+      print_error(MSG_AUTHUSER_ONLY_ROOT_S, argv[0]);
+      return 1;
+   }
+#endif
+
    if(strcmp(auth_method, "pam") == 0 ) {
       for(i=2; i < argc; i++) {
          if( strcmp(argv[i], "-s") == 0 ) {

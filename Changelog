@@ -1,3 +1,10 @@
+RN-2007-09-21-0: Bugfix:    - authuser binary returns unusable error message
+                            - Several qconf options display only single message
+                              when a list of messages should be printed
+                 Bugster:   6527836,6577034
+                 Issue:     2194,2369
+                 Review:    JG
+
 RD-2007-09-21-0: Bugfix:    fixed broken build on hp11
                  Review:    JG
 

@@ -1,3 +1,9 @@
+RN-2007-09-21-0: Bugfix:    SGE does not work if primary group entry is too big
+                            in groups map
+                 Bugster:   6568575
+                 Issue:     2249
+                 Review:    AH
+
 MP-2007-09-21-0: Bugfix:    qdel does not recognize wc_job_range_list
                             as it is defined.
                  Bugster:   6597547

@@ -1,3 +1,9 @@
+RN-2007-09-21-0: Bugfix:    SGE does not work if primary group entry is too big
+                            in groups map
+                 Bugster:   6568575
+                 Issue:     2249
+                 Review:    AH
+
 RN-2007-09-12-0: Bugfix:    - Creating a userset with NONE as a type results
                               in a core dump
                             - Fixed userset spooling in classic mode

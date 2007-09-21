@@ -1007,7 +1007,17 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
    DENTER(TOP_LAYER, "select_assign_debit");
 
    assignment_init(&a, job, ja_task, true);
+
    a.queue_list       = *queue_list;
+   if (is_reserve) {
+      if (*queue_list == NULL) { 
+         *queue_list = lCreateList("temp queue", lGetListDescr(*dis_queue_list));
+         a.queue_list       = *queue_list;
+      }
+      is_computed_reservation = true;
+      lAppendList(*queue_list, *dis_queue_list);
+   }
+
    a.host_list        = host_list;
    a.centry_list      = centry_list;
    a.acl_list         = acl_list;
@@ -1055,15 +1065,6 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
          
          a.start = DISPATCH_TIME_NOW;
          a.is_reservation = false;
-         if (is_reserve) {
-            if (*queue_list == NULL) { 
-               *queue_list = lCreateList("temp queue", lGetListDescr(*dis_queue_list));
-               a.queue_list       = *queue_list;
-            }
-            is_computed_reservation = true;
-            lAppendList(*queue_list, *dis_queue_list);
-         }
-         
          result = sge_select_parallel_environment(&a, pe_list);
       }
 
@@ -1072,7 +1073,6 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
             DPRINTF(("### looking for parallel reservation for job "
                sge_U32CFormat"."sge_U32CFormat" requesting pe \"%s\" duration "sge_U32CFormat"\n", 
                   a.job_id, a.ja_task_id, pe_name, a.duration)); 
-            is_computed_reservation = true;
             a.start = DISPATCH_TIME_QUEUE_END;
             a.is_reservation = true;
             assignment_clear_cache(&a);
@@ -1104,14 +1104,6 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
          
          a.start = DISPATCH_TIME_NOW;
          a.is_reservation = false;
-         if (is_reserve) {
-            is_computed_reservation = true;
-            if (*queue_list == NULL) { 
-               *queue_list  = lCreateList("temp queue", lGetListDescr(*dis_queue_list));
-               a.queue_list = *queue_list;
-            }
-            lAppendList(*queue_list, *dis_queue_list);
-         }
          result = sge_sequential_assignment(&a);
          
          DPRINTF(("sge_sequential_assignment(immediate) returned %d\n", result));

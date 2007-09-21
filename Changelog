@@ -1,3 +1,9 @@
+AH-2007-09-21-1: Bugfix:   Resource reservation broken with sequences of
+                           identical jobs differing only in their -R y|n
+                 Bugster:  6590079
+                 Issue:    2344
+                 Review:   RD
+
 RN-2007-09-21-0: Bugfix:    SGE does not work if primary group entry is too big
                             in groups map
                  Bugster:   6568575
@@ -9,7 +15,6 @@ MP-2007-09-21-0: Bugfix:    qdel does not recognize wc_job_range_list
                  Bugster:   6597547
                  Issue:     2367
                  Review:    JG
-
 
 AH-2007-09-20-0: Bugfix:   Resource quota matching with sequential job scheduling
                            was broken as it slipped through with the merge 

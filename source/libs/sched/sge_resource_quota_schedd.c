@@ -1167,7 +1167,7 @@ parallel_rqs_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, con
                }
             }
 
-            if (result != DISPATCH_OK || *slots == 0) {
+            if (result != DISPATCH_OK || tslots == 0) {
                break;
             }
          }

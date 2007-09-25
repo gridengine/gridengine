@@ -1,5 +1,4 @@
-/*___INFO__MARK_BEGIN__*/
-/*************************************************************************
+/*___INFO__MARK_BEGIN__*//*************************************************************************
  *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
@@ -31,7 +30,7 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.cull;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -39,27 +38,27 @@ import java.util.Collections;
  *
  */
 public class CullNameSpace {
-   private String nameSpace;
-   private ArrayList nameList = new ArrayList();
-   
-   /** Creates a new instance of NameObject */
-   public CullNameSpace() {
-   }
 
-   public String getNameSpace() {
-      return nameSpace;
-   }
+    private String nameSpace;
+    private LinkedList<String> nameList = new LinkedList<String>();
 
-   public void setNameSpace(String nameSpace) {
-      this.nameSpace = nameSpace;
-   }
-   
-   public void addName(String name) {
-      nameList.add(name);
-   }
-   
-   public Collection getNames() {
-      return Collections.unmodifiableCollection(nameList);
-   }
-   
+    /** Creates a new instance of NameObject */
+    public CullNameSpace() {
+    }
+
+    public String getNameSpace() {
+        return nameSpace;
+    }
+
+    public void setNameSpace(String nameSpace) {
+        this.nameSpace = nameSpace;
+    }
+
+    public void addName(String name) {
+        nameList.add(name);
+    }
+
+    public Collection<String> getNames() {
+        return Collections.unmodifiableCollection(nameList);
+    }
 }

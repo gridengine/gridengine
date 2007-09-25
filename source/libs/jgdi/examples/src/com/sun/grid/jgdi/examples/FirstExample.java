@@ -35,7 +35,6 @@ import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.JGDIException;
 import com.sun.grid.jgdi.JGDIFactory;
 import com.sun.grid.jgdi.configuration.ClusterQueue;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -48,18 +47,12 @@ public class FirstExample {
    public static void main(String [] args)  {
       
       try {
-         
          String url = args[0];
-         
          JGDI jgdi = JGDIFactory.newInstance(url);
-         
          try {
             System.out.println("Successfully connected to " + url);         
-            
-            List cql = jgdi.getClusterQueueList();
-            Iterator iter = cql.iterator();
-            while(iter.hasNext()) {
-               ClusterQueue cq = (ClusterQueue)iter.next();
+            List<ClusterQueue> cql = jgdi.getClusterQueueList();
+            for (ClusterQueue cq : cql) {
                System.out.println("Found cluster queue " + cq.getName());
             }
          } finally {

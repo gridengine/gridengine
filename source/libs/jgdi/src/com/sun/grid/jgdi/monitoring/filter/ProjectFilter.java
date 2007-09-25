@@ -32,9 +32,8 @@
 package com.sun.grid.jgdi.monitoring.filter;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -43,48 +42,49 @@ import java.util.StringTokenizer;
  *
  */
 public class ProjectFilter implements Serializable {
-   
-   private List prjList = new ArrayList();
-   
-   /** 
-    * Creates a new instance of ProjectFilter 
-    */
-   public ProjectFilter() {
-   }
-
-   public static ProjectFilter parse(String projectList) {
-       ProjectFilter ret = new ProjectFilter();
-       StringTokenizer st = new StringTokenizer(projectList, ",");
-       while(st.hasMoreTokens()) {
-           ret.addProject(st.nextToken());
-       }
-       return ret;
-   }
-   
-   public void addProject(String prjName) {
-      prjList.add(prjName);
-   }
-   
-   public List getProjectList() {
-      return Collections.unmodifiableList(prjList);
-   }
-   
-   public int getProjectCount() {
-      return prjList.size();
-   }
-   
-   public String toString() {
-      StringBuilder ret = new StringBuilder();
-      
-      ret.append("ProjectFilter[");
-      Iterator iter = prjList.iterator();
-      if(iter.hasNext()) {
-         ret.append(iter.next());
-         while(iter.hasNext()) {
-            ret.append(",");
-            ret.append(iter.next());
-         }
-      }
-      return ret.toString();
-   }
+    
+    private List<String> prjList = new LinkedList<String>();
+    
+    /**
+     * Creates a new instance of ProjectFilter
+     */
+    public ProjectFilter() {
+    }
+    
+    public static ProjectFilter parse(String projectList) {
+        ProjectFilter ret = new ProjectFilter();
+        StringTokenizer st = new StringTokenizer(projectList, ",");
+        while (st.hasMoreTokens()) {
+            ret.addProject(st.nextToken());
+        }
+        return ret;
+    }
+    
+    public void addProject(String prjName) {
+        prjList.add(prjName);
+    }
+    
+    public List<String> getProjectList() {
+        return Collections.unmodifiableList(prjList);
+    }
+    
+    public int getProjectCount() {
+        return prjList.size();
+    }
+    
+    public String toString() {
+        StringBuilder ret = new StringBuilder();
+        boolean first = true;
+        ret.append("ProjectFilter[");
+        for (String prj : prjList) {
+            if (first) {
+                first = false;
+            } else {
+                ret.append(", ");
+            }
+            ret.append(prj);
+        }
+        ret.append("]");
+        return ret.toString();
+    }
 }

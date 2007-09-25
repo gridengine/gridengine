@@ -71,8 +71,8 @@ public class OptionInfo {
    /**
     * Invokes the method for current option in a loop until all argumetns 
     * are processed.
-    *  NOTE: Use getFirstArg() and optionDone() to avoid infinite loop.
-    * @see getFirstArg(), optionDone(), @link {OptionMethod}
+    * NOTE: Use getFirstArg() and optionDone() to avoid infinite loop.
+    * @see OptionInfo#getFirstArg() OptionInfo#optionDone() {@link OptionInfo}
     * @throws java.lang.Exception 
     */
    public void invokeOption(Command command) throws Exception {
@@ -139,7 +139,7 @@ public class OptionInfo {
    /**
     * Contract method.
     * Terminates option loop. Should be called at the at of every option.
-    * @see getFirstArg()
+    * @see #getFirstArg()
     */
    public void optionDone(){
        optionDone=true;

@@ -35,8 +35,6 @@ import java.lang.reflect.Method;
 import java.security.PrivilegedExceptionAction;
 import java.util.Enumeration;
 import java.util.logging.Logger;
-import javax.security.auth.Subject;
-import javax.security.auth.login.LoginContext;
 import junit.framework.TestCase;
 import junit.framework.TestFailure;
 import junit.framework.TestResult;
@@ -46,94 +44,87 @@ import junit.framework.TestSuite;
  *
  */
 public class TestRunner implements PrivilegedExceptionAction {
-    
+
     private static Logger logger = Logger.getLogger(TestRunner.class.getName());
-    
+
     private Class testClass;
-    
-    public TestRunner(Class testClass)  {
+
+    public TestRunner(Class testClass) {
         this.testClass = testClass;
     }
-    
-    
+
+
     private static void usage(String message, int exitCode) {
-        if(message != null) {
+        if (message != null) {
             logger.severe(message);
         }
         logger.info("TestRunner <test class>");
         System.exit(exitCode);
     }
-    
-    public static void loadLib() throws Exception {
-        System.loadLibrary("jgdi");
-    }
-    
+
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        
+
         try {
-            
-            if(args.length < 1) {
+
+            if (args.length < 1) {
                 usage("Invalid number of arguments", 1);
             }
-            
+
             String classname = args[0];
-            
+
             logger.info("Search for class " + classname);
             Class testClass = null;
-            
+
             try {
                 testClass = Class.forName(classname);
-            } catch( ClassNotFoundException cnfe) {
+            } catch (ClassNotFoundException cnfe) {
                 usage("Class " + classname + " not found", 1);
             }
-            
-            if(!TestCase.class.isAssignableFrom(testClass)) {
+
+            if (!TestCase.class.isAssignableFrom(testClass)) {
                 usage("class " + classname + " is not a TestCase", 1);
             }
-            
+
             TestRunner runner = new TestRunner(testClass);
-            
+
             runner.run();
-            
-        } catch( Throwable e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             System.exit(1);
         }
-        
     }
-    
+
     public Object run() throws Exception {
-        Method testSuiteMethod = testClass.getMethod("suite", (java.lang.Class[])null);
-        
-        TestSuite suite = (TestSuite)testSuiteMethod.invoke(testClass, (java.lang.Object[])null);
-        
+        Method testSuiteMethod = testClass.getMethod("suite", (java.lang.Class[]) null);
+
+        TestSuite suite = (TestSuite) testSuiteMethod.invoke(testClass, (java.lang.Object[])null);
+
         TestResult result = new TestResult();
-        
-        
+
+
         suite.run(result);
-        
-        if(result.wasSuccessful()) {
-            
+
+        if (result.wasSuccessful()) {
+
             logger.info("Success");
-            
         } else {
             logger.severe("Failed");
-            
+
             Enumeration errorEnum = result.errors();
             TestFailure failure = null;
-            while(errorEnum.hasMoreElements()) {
-                failure = (TestFailure)errorEnum.nextElement();
+            while (errorEnum.hasMoreElements()) {
+                failure = (TestFailure) errorEnum.nextElement();
                 logger.severe("Test " + failure.failedTest().toString() + " failed --------");
                 Throwable th = failure.thrownException();
                 th.printStackTrace(System.err);
             }
             errorEnum = result.failures();
             failure = null;
-            while(errorEnum.hasMoreElements()) {
-                failure = (TestFailure)errorEnum.nextElement();
+            while (errorEnum.hasMoreElements()) {
+                failure = (TestFailure) errorEnum.nextElement();
                 logger.severe("Test " + failure.failedTest().toString() + " failed --------");
                 Throwable th = failure.thrownException();
                 th.printStackTrace(System.err);
@@ -142,5 +133,4 @@ public class TestRunner implements PrivilegedExceptionAction {
         }
         return null;
     }
-    
 }

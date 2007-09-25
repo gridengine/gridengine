@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.event;
 
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.logging.Logger;
 
@@ -44,7 +43,7 @@ public class WaitForEventThread extends Thread implements EventListener {
    
    private Logger logger = Logger.getLogger("com.sun.grid.jgdi.event");
    private Object object;
-   private LinkedList events = new LinkedList();
+   private LinkedList<Event> events = new LinkedList<Event>();
    
    public WaitForEventThread(Object object) {
       this.object = object;
@@ -108,7 +107,7 @@ public class WaitForEventThread extends Thread implements EventListener {
                   while (events.isEmpty()) {
                      events.wait();
                   }
-                  evt = (Event)events.removeFirst();
+                  evt = events.removeFirst();
                }
             }
             

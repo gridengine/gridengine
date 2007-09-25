@@ -48,25 +48,23 @@ import java.util.HashMap;
  */
 public class CullTypeMapping {
    
-   private static Map typeMap;
+   private static Map<String, Class> typeMap;
    
    private static void reg(String cullType, Class clazz) {
       typeMap.put(cullType, clazz);
    }
    
    private static void init() {
-      if(typeMap == null ) {
+      if (typeMap == null) {
         synchronized(CullTypeMapping.class) {
            if (typeMap == null ) {
-               typeMap = new HashMap();
-<%  java.util.Iterator iter = cullDef.getObjectNames().iterator();
-
-    while( iter.hasNext() ) {
-      String name = (String)iter.next();
+               typeMap = new HashMap<String, Class>();
+<%  for (String name : cullDef.getObjectNames()) {
       com.sun.grid.cull.CullObject cullObj = cullDef.getCullObject(name);       
-
 %>              reg("<%=name%>", <%=jh.getFullClassName(cullObj)%>.class);   
-<% } // end of while %>
+<% 
+    } // end of for 
+%>
             }
          }
       }
@@ -80,7 +78,7 @@ public class CullTypeMapping {
     */
    public static Class getClassForCullType(String cullType) {
       init();
-      Class ret = (Class)typeMap.get(cullType);
+      Class ret = typeMap.get(cullType);
       if (ret == null) {
          throw new IllegalArgumentException("Unknown cull type '" + cullType + "'");
       }

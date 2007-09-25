@@ -35,7 +35,6 @@ import com.sun.grid.cull.AbstractCullConverter;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -50,112 +49,108 @@ import org.apache.tools.ant.types.Path;
  *
  */
 public class JavaConvAntTask extends Task {
-   
-   private File buildDir;
-   
-   private List converterList = new ArrayList();
-   
-   private Path classpath;
-   
-   private String classname;
-   
-   private ClassFilter classdef;
-   
-   private String source = "1.4";
-   private String target = "1.4";
-   
-   public ClassFilter createClassDef() {
-      if(classdef == null) {
-         classdef = new ClassFilter(this);
-      }
-      return classdef;
-   }
-   
-   String getClassPathAsString() {
-      return classdef.getClassPathAsString();
-   }
-   
-   public JavaTemplateConverterDefintion createTemplateconv() {
-      JavaTemplateConverterDefintion conv = new JavaTemplateConverterDefintion(this);
-      converterList.add(conv);
-      return conv;
-   }
-   
-   public TemplateConverterDefinition createSimpleTemplateConv() {
-      TemplateConverterDefinition conv = new TemplateConverterDefinition(this);
-      converterList.add(conv);
-      return conv;
-   }
-   
-   
-   public void execute() throws org.apache.tools.ant.BuildException {
-      
-      Logger logger = AbstractCullConverter.logger;
-      
-      Handler [] handler = logger.getHandlers();
-      for(int i = 0; i < handler.length; i++ ) {
-         logger.removeHandler(handler[i]);
-      }
-      
-      logger.setUseParentHandlers(false);
-      AntLoggingHandler myHandler = new AntLoggingHandler(getProject());
-      logger.addHandler(myHandler);
-      logger.setLevel(Level.ALL);
-      myHandler.setLevel(Level.ALL);
-      
-      
-      try {
-         Class classes [] = classdef.getClasses();
-         JavaToJavaConverter conv[] = new JavaToJavaConverter[converterList.size()];
-         Iterator iter = converterList.iterator();
-         int i = 0;
-         while(iter.hasNext()) {
-            AbstractConverterDefinition convDef = (AbstractConverterDefinition)iter.next();
-            conv[i++] = convDef.createConverter();
-         }
 
-         logger.fine("has " + conv.length + " converters and " + classes.length + " classes");
-         for(int convIndex = 0; convIndex < conv.length; convIndex++) {
-            for(int classIndex = 0; classIndex < classes.length; classIndex++) {
-               conv[convIndex].convert(classes[classIndex]);
+    private File buildDir;
+
+    private List<AbstractConverterDefinition> converterList = new ArrayList<AbstractConverterDefinition>();
+
+    private Path classpath;
+
+    private String classname;
+
+    private ClassFilter classdef;
+
+    private String source = " converters and ";
+    private String target = " classes";
+
+    public ClassFilter createClassDef() {
+        if (classdef == null) {
+            classdef = new ClassFilter(this);
+        }
+        return classdef;
+    }
+
+    String getClassPathAsString() {
+        return classdef.getClassPathAsString();
+    }
+
+    public JavaTemplateConverterDefintion createTemplateconv() {
+        JavaTemplateConverterDefintion conv = new JavaTemplateConverterDefintion(this);
+        converterList.add(conv);
+        return conv;
+    }
+
+    public TemplateConverterDefinition createSimpleTemplateConv() {
+        TemplateConverterDefinition conv = new TemplateConverterDefinition(this);
+        converterList.add(conv);
+        return conv;
+    }
+
+
+    public void execute() throws org.apache.tools.ant.BuildException {
+
+        Logger logger = AbstractCullConverter.logger;
+
+        Handler[] handler = logger.getHandlers();
+        for (int i = 0; i < handler.length; i++) {
+            logger.removeHandler(handler[i]);
+        }
+
+        logger.setUseParentHandlers(false);
+        AntLoggingHandler myHandler = new AntLoggingHandler(getProject());
+        logger.addHandler(myHandler);
+        logger.setLevel(Level.ALL);
+        myHandler.setLevel(Level.ALL);
+
+
+        try {
+            Class[] classes = classdef.getClasses();
+            JavaToJavaConverter[] conv = new JavaToJavaConverter[converterList.size()];
+            int i = 0;
+            for (AbstractConverterDefinition convDef : converterList) {
+                conv[i++] = convDef.createConverter();
             }
-            conv[convIndex].finish();
-         }
-      } catch( ClassNotFoundException cnfe ) {
-         throw new BuildException("a class was not found: " + cnfe.getMessage(), cnfe);
-      } catch(IOException ioe) {
-         throw new BuildException("IO/Error: " + ioe.getMessage(), ioe);
-      }
-   }
-   
-   
-   public File getBuildDir() {
-      return buildDir;
-   }
-   
-   public void setBuildDir(File buildDir) {
-      this.buildDir = buildDir;
-   }
-   
-   public String getClassname() {
-      return classname;
-   }
 
-   public String getSource() {
-      return source;
-   }
+            logger.fine("has " + conv.length + " converters and " + classes.length + " classes");
+            for (int convIndex = 0; convIndex < conv.length; convIndex++) {
+                for (int classIndex = 0; classIndex < classes.length; classIndex++) {
+                    conv[convIndex].convert(classes[classIndex]);
+                }
+                conv[convIndex].finish();
+            }
+        } catch (ClassNotFoundException cnfe) {
+            throw new BuildException("a class was not found: " + cnfe.getMessage(), cnfe);
+        } catch (IOException ioe) {
+            throw new BuildException("IO/Error: " + ioe.getMessage(), ioe);
+        }
+    }
 
-   public void setSource(String source) {
-      this.source = source;
-   }
 
-   public String getTarget() {
-      return target;
-   }
+    public File getBuildDir() {
+        return buildDir;
+    }
 
-   public void setTarget(String target) {
-      this.target = target;
-   }
-   
-   
+    public void setBuildDir(File buildDir) {
+        this.buildDir = buildDir;
+    }
+
+    public String getClassname() {
+        return classname;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public String getTarget() {
+        return target;
+    }
+
+    public void setTarget(String target) {
+        this.target = target;
+    }
 }

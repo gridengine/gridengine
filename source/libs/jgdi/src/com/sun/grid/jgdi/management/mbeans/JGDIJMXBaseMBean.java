@@ -57,30 +57,30 @@ public interface JGDIJMXBaseMBean {
    /**
     *   Subscribe a set of event types if they are not already subscribed.
     *
-    *   @param set of event types
+    *   @param eventTypeSet  set of event types
     */
-   public void subscribe(Set<EventTypeEnum> subscription) throws JGDIException;
+   public void subscribe(Set<EventTypeEnum> eventTypeSet) throws JGDIException;
    
    /**
     *   Unsubcribe a set of event types if the are not already unsubscribed.
     *
-    *   @param set of event type which should be unsubcribed
+    *   @param eventTypeSet  set of event type which should be unsubcribed
     */
-   public void unsubscribe(Set<EventTypeEnum> subscription) throws JGDIException;
+   public void unsubscribe(Set<EventTypeEnum> eventTypeSet) throws JGDIException;
    
    /**
     *  Get the current event subscription.
     *
-    *  @return set of event type which a currently subscribed
+    *  @return set of event types which are currently subscribed
     */
    public Set<EventTypeEnum> getSubscription();
    
    /**
     *   Set the current event subscription.
     *
-    *   @param subscription  the set of subscribed event types
+    *   @param eventTypeSet  the set of event types to subscribe
     */
-   public void setSubscription(Set<EventTypeEnum> subscription);
+   public void setSubscription(Set<EventTypeEnum> eventTypeSet);
 
    // ========= JGDIBase methods ================================
    public String getAdminUser() throws JGDIException;

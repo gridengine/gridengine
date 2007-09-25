@@ -40,18 +40,18 @@ import java.util.Collections;
  */
 public class QueueInstanceSummaryResultImpl implements QueueInstanceSummaryResult, Serializable {
 
-   private List queueInstanceSummaryList = new ArrayList();
-   private List unassignedJobSummaryList = new ArrayList();
-   private List pendingJobList = new ArrayList();
-   private List errorJobList = new ArrayList();
-   private List zombieJobList = new ArrayList();
-   private List finishedJobList = new ArrayList();
+   private List<QueueInstanceSummary> queueInstanceSummaryList = new ArrayList<QueueInstanceSummary>();
+   private List<JobSummary> unassignedJobSummaryList = new ArrayList<JobSummary>();
+   private List<JobSummary> pendingJobList = new ArrayList<JobSummary>();
+   private List<JobSummary> errorJobList = new ArrayList<JobSummary>();
+   private List<JobSummary> zombieJobList = new ArrayList<JobSummary>();
+   private List<JobSummary> finishedJobList = new ArrayList<JobSummary>();
    
    /** Creates a new instance of QueueInstanceSummaryResultImpl */
    public QueueInstanceSummaryResultImpl() {
    }
 
-   public List getQueueInstanceSummary() {
+   public List<QueueInstanceSummary> getQueueInstanceSummary() {
       return Collections.unmodifiableList(queueInstanceSummaryList);
    }
 
@@ -59,35 +59,35 @@ public class QueueInstanceSummaryResultImpl implements QueueInstanceSummaryResul
       queueInstanceSummaryList.add(qs);
    }
    
-   public List getPendingJobs() {
+   public List<JobSummary> getPendingJobs() {
       return Collections.unmodifiableList(pendingJobList);
    }
 
-   public void addPendingJobs(List jobs) {
+   public void addPendingJobs(List<JobSummary> jobs) {
       pendingJobList.addAll(jobs);
    }
    
-   public List getErrorJobs() {
+   public List<JobSummary> getErrorJobs() {
       return Collections.unmodifiableList(errorJobList);
    }
 
-   public void addErrorJobs(List jobs) {
+   public void addErrorJobs(List<JobSummary> jobs) {
       errorJobList.addAll(jobs);
    }
    
-   public List getFinishedJobs() {
+   public List<JobSummary> getFinishedJobs() {
       return Collections.unmodifiableList(finishedJobList);
    }
 
-   public void addFinishedJobs(List jobs) {
+   public void addFinishedJobs(List<JobSummary> jobs) {
       finishedJobList.addAll(jobs);
    }
    
-   public List getZombieJobs() {
+   public List<JobSummary> getZombieJobs() {
       return Collections.unmodifiableList(zombieJobList);
    }
    
-   public void addZombieJobs(List jobs) {
+   public void addZombieJobs(List<JobSummary> jobs) {
       zombieJobList.addAll(jobs);
    }
    

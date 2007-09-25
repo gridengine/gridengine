@@ -7,7 +7,6 @@ import java.beans.PropertyDescriptor;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.text.DecimalFormat;
@@ -15,7 +14,7 @@ import java.text.Format;
 
 public class OutputTable {
    
-   private List columns = new LinkedList();
+   private List<Column> columns = new LinkedList<Column>();
    private Class clazz;
    int rowWidth = -1;
    
@@ -73,9 +72,7 @@ public class OutputTable {
    }
    
    public void printHeader(PrintWriter pw) {
-      Iterator iter = columns.iterator();
-      while (iter.hasNext()) {
-         Column col = (Column)iter.next();
+      for (Column col : columns) {
          col.printStr(pw, col.getHeader());
          pw.print(' ');
       }
@@ -85,24 +82,19 @@ public class OutputTable {
    public int getRowWidth() {
       if (rowWidth < 0) {
          int ret = 0;
-         Iterator iter = columns.iterator();
-         while (iter.hasNext()) {
-            Column col = (Column)iter.next();
+         for (Column col : columns) {
             ret += col.getWidth();
-            if (iter.hasNext()) {
-               // +1 for every space, not for last column
-               ret++;
-            }
+            // +1 for every space, for last column we subtract it 
+            ret++;
          }
-         rowWidth = ret;
+         rowWidth = --ret;
       }
       return rowWidth;
    }
    
    public void printRow(PrintWriter pw, Object obj) {
-      Iterator iter = columns.iterator();
-      while (iter.hasNext()) {
-         ((Column) iter.next()).print(pw, obj);
+      for (Column col : columns) {
+         col.print(pw, obj);
          pw.print(' ');
       }
       pw.println();

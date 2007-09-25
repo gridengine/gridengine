@@ -44,14 +44,13 @@ public interface ClassDescriptor {
    public String getCullName();
 
    public String [] getPropertyNames();
-   public PropertyDescriptor getProperty( String name );
+   public PropertyDescriptor getProperty(String name);
    public PropertyDescriptor getPropertyByCullFieldName(int cullFieldName);
    
    
    public int getPropertyCount();
    public PropertyDescriptor getProperty(int index);
-   
-   public List getProperties();
+   public List<PropertyDescriptor> getProperties();
    
    public Object newInstance();
    

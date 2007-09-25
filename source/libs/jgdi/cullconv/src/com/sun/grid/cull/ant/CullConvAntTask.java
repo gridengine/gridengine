@@ -38,7 +38,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -54,36 +53,37 @@ import org.apache.tools.ant.types.Path;
  *
  */
 public class CullConvAntTask extends Task {
-   
-   private FileSet cullfiles = null;
 
-   private File buildDir;
-   
-   private List converterList = new ArrayList();
-   
-   private String packageName;
-   
-   private Path classpath;
-   
-   private String source = "1.4";
-   private String target = "1.4";
-   
-   /** Creates a new instance of CullConvAntTask */
-   public CullConvAntTask() {
-   }
-   
-   
-   public Path createClasspath() {
-      if(classpath == null) {
-         classpath = new Path(getProject());
-      }
-      return classpath;      
-   }
+    private FileSet cullfiles = null;
+
+    private File buildDir;
+
+    private List<ConverterDefinition> converterList = new ArrayList<ConverterDefinition>();
+
+    private String packageName;
+
+    private Path classpath;
+
+    private String source = "1.5";
+    private String target = "1.5";
+
+    /** Creates a new instance of CullConvAntTask */
+    public CullConvAntTask() {
+        super();
+    }
+
+
+    public Path createClasspath() {
+        if (classpath == null) {
+            classpath = new Path(getProject());
+        }
+        return classpath;
+    }
 
     String getClassPathAsString() {
-       return classpath.toString();
+        return classpath.toString();
     }
-   
+
     /**
      * Create the fileset fo the cull files
      * @param p the project to use to create the path in
@@ -95,133 +95,123 @@ public class CullConvAntTask extends Task {
         }
         return cullfiles;
     }
-    
+
     public JavaConverterDefinition createJavaconv() {
-       JavaConverterDefinition conv = new JavaConverterDefinition(getProject());
-       converterList.add(conv);
-       return conv;
+        JavaConverterDefinition conv = new JavaConverterDefinition(getProject());
+        converterList.add(conv);
+        return conv;
     }
 
     public JavaTemplateDefinition createJavatemplateconv() {
-       JavaTemplateDefinition conv = new JavaTemplateDefinition(this);
-       converterList.add(conv);
-       return conv;
+        JavaTemplateDefinition conv = new JavaTemplateDefinition(this);
+        converterList.add(conv);
+        return conv;
     }
-    
+
     public TemplateConverterDefinition createTemplateconv() {
-       TemplateConverterDefinition conv = new TemplateConverterDefinition(this);
-       converterList.add(conv);
-       return conv;
+        TemplateConverterDefinition conv = new TemplateConverterDefinition(this);
+        converterList.add(conv);
+        return conv;
     }
-   
-   
-   private CullDefinition parseFiles() throws BuildException {
-      
-      DirectoryScanner ds = cullfiles.getDirectoryScanner(getProject());
-       
-      File baseDir = ds.getBasedir();
-      
-      CullDefinition ret = new CullDefinition();
-      
-      String [] files = ds.getIncludedFiles();
-      
-      for(int i = 0; i < files.length; i++ ) {
-         File f = new File(baseDir,files[i]);
-         try {
-            log("parse file " + f , Project.MSG_VERBOSE );
-            ret.addFile(f);
-         } catch(IOException ioe) {
-            throw new BuildException("I/O Error while parsing file " + f , ioe );
-         } catch(com.sun.grid.cull.ParseException e ) {
-            throw new BuildException("Parse Error: " + f + ": " + e.getMessage(), e );
-         }
-      }
-      int errorCount = ret.verify();
-      if(errorCount > 0 ) {
-         throw new BuildException("cull defintion contains " + errorCount + " errors");
-      }
-      return ret;
-   }
-   
-   public void execute() throws org.apache.tools.ant.BuildException {
-      
-      Logger logger = AbstractCullConverter.logger;
-      
-      Handler [] handler = logger.getHandlers();
-      for(int i = 0; i < handler.length; i++ ) {
-         logger.removeHandler(handler[i]);
-      }
 
-      logger.setUseParentHandlers(false);
-      AntLoggingHandler myHandler = new AntLoggingHandler(getProject());
-      logger.addHandler(myHandler);
-      logger.setLevel(Level.ALL);
-      myHandler.setLevel(Level.ALL);
-      
 
-      CullDefinition def = parseFiles();
-      
-      def.setPackageName(packageName);
-      
-      
-      Iterator iter = converterList.iterator();
-      while(iter.hasNext()) {
-         ConverterDefinition conv = (ConverterDefinition)iter.next();         
-         try {
-            CullDefinition filteredDef = conv.createFilteredCullDefinition(def);
-            conv.createConverter().convert(filteredDef);
-         } catch( BuildException be) {
-            throw be;
-         } catch( IOException ioe) {
-            throw new BuildException("converter " + conv.getClassname() + " failed: " + ioe.getMessage(), ioe);
-         } catch( RuntimeException e ) {
-            
-            
-            StringWriter sw = new StringWriter();
-            
-            PrintWriter pw = new PrintWriter(sw);
-            
-            e.printStackTrace(pw);
-            pw.flush();
+    private CullDefinition parseFiles() throws BuildException {
 
-            logger.severe("Runtime error in converter " + conv.getClassname() );
-            logger.severe(sw.getBuffer().toString());
-            
-            throw new BuildException("converter " + conv.getClassname() + " failed: " + e.getMessage(), e);
-         }
-      }
-   }
+        DirectoryScanner ds = cullfiles.getDirectoryScanner(getProject());
 
-   public String getPackageName() {
-      return packageName;
-   }
+        File baseDir = ds.getBasedir();
 
-   public void setPackageName(String packageName) {
-      this.packageName = packageName;
-   }
+        CullDefinition ret = new CullDefinition();
 
-   public File getBuildDir() {
-      return buildDir;
-   }
+        String[] files = ds.getIncludedFiles();
 
-   public void setBuildDir(File buildDir) {
-      this.buildDir = buildDir;
-   }
+        for (int i = 0; i < files.length; i++) {
+            File f = new File(baseDir, files[i]);
+            try {
+                log("parse file " + f, Project.MSG_VERBOSE);
+                ret.addFile(f);
+            } catch (IOException ioe) {
+                throw new BuildException("I/O Error while parsing file " + f, ioe);
+            } catch (com.sun.grid.cull.ParseException e) {
+                throw new BuildException("Parse Error: " + f + ": " + e.getMessage(), e);
+            }
+        }
+        int errorCount = ret.verify();
+        if (errorCount > 0) {
+            throw new BuildException("cull defintion contains " + errorCount + " errors");
+        }
+        return ret;
+    }
 
-   public String getSource() {
-      return source;
-   }
+    public void execute() throws org.apache.tools.ant.BuildException {
 
-   public void setSource(String source) {
-      this.source = source;
-   }
+        Logger logger = AbstractCullConverter.logger;
 
-   public String getTarget() {
-      return target;
-   }
+        Handler[] handler = logger.getHandlers();
+        for (int i = 0; i < handler.length; i++) {
+            logger.removeHandler(handler[i]);
+        }
 
-   public void setTarget(String target) {
-      this.target = target;
-   }
-   
+        logger.setUseParentHandlers(false);
+        AntLoggingHandler myHandler = new AntLoggingHandler(getProject());
+        logger.addHandler(myHandler);
+        logger.setLevel(Level.ALL);
+        myHandler.setLevel(Level.ALL);
+
+
+        CullDefinition def = parseFiles();
+
+        def.setPackageName(packageName);
+
+        for (ConverterDefinition conv : converterList) {
+            try {
+                CullDefinition filteredDef = conv.createFilteredCullDefinition(def);
+                conv.createConverter().convert(filteredDef);
+            } catch (BuildException be) {
+                throw be;
+            } catch (IOException ioe) {
+                throw new BuildException("converter " + conv.getClassname() + " failed: " + ioe.getMessage(), ioe);
+            } catch (RuntimeException e) {
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                e.printStackTrace(pw);
+                pw.flush();
+                logger.severe("Runtime error in converter " + conv.getClassname());
+                logger.severe(sw.getBuffer().toString());
+                throw new BuildException("converter " + conv.getClassname() + " failed: " + e.getMessage(), e);
+            }
+        }
+    }
+
+    public String getPackageName() {
+        return packageName;
+    }
+
+    public void setPackageName(String packageName) {
+        this.packageName = packageName;
+    }
+
+    public File getBuildDir() {
+        return buildDir;
+    }
+
+    public void setBuildDir(File buildDir) {
+        this.buildDir = buildDir;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public String getTarget() {
+        return target;
+    }
+
+    public void setTarget(String target) {
+        this.target = target;
+    }
 }

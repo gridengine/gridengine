@@ -58,7 +58,6 @@ public abstract class AnnotatedCommand extends AbstractCommand {
     * Initialize the option map optionDescriptorMap if not yet created.
     * Map is created by scanning all OptionMethod annotated functions.
     * NOTE: Only options in the map will be recognized as implemented
-    * @return 
     */
    public static void initOptionDescriptorMap(Class<? extends Command> cls, PrintWriter pw) throws Exception {
       if (commandOptionMap == null) {
@@ -90,8 +89,8 @@ public abstract class AnnotatedCommand extends AbstractCommand {
    /**
     * Finds option info based on option name.
     * Use to do a lookahead if specific option was in the argument list.
-    * @params option String
-    * @returns OptionInfo associated with the option or null does not exist
+    * @param option String
+    * @return OptionInfo associated with the option or null does not exist
     */
    public OptionInfo getOptionInfo(String option) {
       if (optionInfoMap.containsKey(option)) {
@@ -102,7 +101,7 @@ public abstract class AnnotatedCommand extends AbstractCommand {
    
    /**
     * Getter method
-    * @returns Map<String, OptionDescriptor>
+    * @return Map<String, OptionDescriptor>
     */
    public Map<String, OptionDescriptor> getOptionDescriptorMap() {
       if (this.optionDescriptorMap == null) {
@@ -140,7 +139,6 @@ public abstract class AnnotatedCommand extends AbstractCommand {
    /**
     * Invoke appropriate methods
     * It calls annotated functions for every recognized option.
-    * @param args command line options
     * @throws java.lang.Exception an exception during the option call
     * or some runnable exception, when the options are wrong
     */

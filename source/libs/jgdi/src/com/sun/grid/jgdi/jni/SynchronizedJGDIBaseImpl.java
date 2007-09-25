@@ -53,11 +53,11 @@ import java.util.List;
  * @see com.sun.grid.jgdi.JGDI
  * @see com.sun.grid.jgdi.JGDIFactory#newSynchronizedInstance
  */
-public class SynchronizedJGDIBase implements com.sun.grid.jgdi.JGDIBase {
+public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
     
     protected JGDI jgdi;
     
-    protected SynchronizedJGDIBase(JGDI jgdi) throws JGDIException {
+    protected SynchronizedJGDIBaseImpl(JGDI jgdi) throws JGDIException {
         jgdi = jgdi;
     }
     

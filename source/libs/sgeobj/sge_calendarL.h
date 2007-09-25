@@ -131,7 +131,7 @@ NAMEEND
 /**
  *
  * this structure is needed to store the state changes of a queue based on its
- * calendar^
+ * calendar
  *
  */
 enum {
@@ -141,8 +141,8 @@ enum {
 
 LISTDEF(CQU_Type)
    JGDI_OBJ(CalendarQueueState)
-   SGE_ULONG(CQU_state, CULL_DEFAULT)        /* current state*/
-   SGE_ULONG(CQU_till, CULL_DEFAULT)          /* point in time for the next state change*/
+   SGE_ULONG(CQU_state, CULL_DEFAULT)        /* current state */
+   SGE_ULONG(CQU_till, CULL_DEFAULT)         /* point in time for the next state change */
 LISTEND 
 
 NAMEDEF(CQUN)

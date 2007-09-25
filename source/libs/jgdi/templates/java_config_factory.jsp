@@ -48,13 +48,10 @@ import java.util.*;
 public class ConfigurationFactory {
 
 <%
-    java.util.Iterator iter = cullDef.getObjectNames().iterator();
-    while( iter.hasNext() ) {
-      String name = (String)iter.next();
+    for (String name : cullDef.getObjectNames()) {
       com.sun.grid.cull.CullObject cullObj = cullDef.getCullObject(name); 
       String classname = jh.getClassName(cullObj);
 %>
-        
       public static <%=classname%> create<%=classname%>() {
          return new <%=classname%>Impl();
       }
@@ -62,9 +59,8 @@ public class ConfigurationFactory {
       public static <%=classname%> create<%=classname%>WithDefaults() {
          return new <%=classname%>Impl(true);
       }
-      
 <%
-    } // end of while
+    } // end of for
 %>  
 
 }

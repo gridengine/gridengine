@@ -32,7 +32,6 @@
 package com.sun.grid.jgdi.monitoring;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,10 +43,10 @@ import java.util.Set;
  */
 public class QHostResultImpl implements QHostResult, Serializable {
    
-   private Map hostInfoMap = new HashMap();
-   private List hostInfoList = new ArrayList();
+   private Map<String, HostInfo> hostInfoMap = new HashMap<String, HostInfo>();
+   private List<HostInfo> hostInfoList = new ArrayList<HostInfo>();
    
-   public Set getHostNames() {
+   public Set<String> getHostNames() {
       return hostInfoMap.keySet();
    }
    
@@ -62,10 +61,10 @@ public class QHostResultImpl implements QHostResult, Serializable {
    }
    
    public HostInfo getHostInfo(String hostname) {
-      return (HostInfo)hostInfoMap.get(hostname);
+      return hostInfoMap.get(hostname);
    }
    
-   public List getHostInfo() {
+   public List<HostInfo> getHostInfo() {
       return new ArrayList(hostInfoMap.values());
    }
    

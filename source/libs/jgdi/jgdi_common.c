@@ -84,8 +84,6 @@ static jgdi_result_t elem_to_calendar(object_mapping_t *thiz, JNIEnv *env, lList
 static object_mapping_t* get_object_mapping(const lDescr *descr);
 static jgdi_result_t set_object(JNIEnv *env, jclass bean_class, jobject bean, jobject property_descr, lObject cob, lList **alpp);
 static jgdi_result_t get_object(JNIEnv *env, jclass bean_class, jobject bean, jobject property_descr, lObject *cob, lList **alpp);
-static void jgdi_detached_settings(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jstring *jdetachedStrPtr);
-
 
 
 struct object_mapping_str {
@@ -106,13 +104,13 @@ static object_mapping_t OBJECT_MAPPINGS [] = {
 
 /*
  * Class:     com_sun_grid_jgdi_jni_JGDI
- * Method:    close
+ * Method:    nativeClose
  * Signature: (I)V
  */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_close(JNIEnv *env, jobject jgdi, jint ctx_index) {
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeClose(JNIEnv *env, jobject jgdi, jint ctx_index) {
    sge_gdi_ctx_class_t *ctx = NULL;
 
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_close");
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeClose");
 
    pthread_mutex_lock(&sge_gdi_ctx_mutex);
    ctx = sge_gdi_ctx_array[ctx_index];
@@ -128,11 +126,11 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_close(JNIEnv *env, jo
 }
 
 /*
- * Class:     com_sun_grid_jgdi_JGDIBase
- * Method:    initNative
+ * Class:     com_sun_grid_jgdi_JGDIBaseImpl
+ * Method:    nativeInit
  * Signature: ()V
  */
-JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_initNative(JNIEnv *env, jobject jgdi, jstring url_obj) {
+JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeInit(JNIEnv *env, jobject jgdi, jstring url_obj) {
    
    char* argv[] = { "jgdi" };
    int argc = 1;
@@ -150,7 +148,7 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_initNative(JNIEnv *en
    jgdi_result_t res = JGDI_SUCCESS;
    lList *alp = NULL;
    
-   DENTER_MAIN(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_initNative");
+   DENTER_MAIN(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeInit");
 
    if (url_obj == NULL) {
       THROW_ERROR((env, JGDI_NULL_POINTER, "url_obj is null"));
@@ -275,14 +273,14 @@ error:
 
 /*
  * Class:     com_sun_grid_jgdi_JGDI
- * Method:    getEnv
+ * Method:    nativeGetEnv
  * Signature: (Ljava/lang/String;)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDI_getEnv(JNIEnv *env, jobject jgdi, jstring name) {
+JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDI_nativeGetEnv(JNIEnv *env, jobject jgdi, jstring name) {
    const char * env_name = NULL;
    char* buf = NULL;
    
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDI_getEnv");
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDI_nativeGetEnv");
    
    if (name == NULL) {
       DRETURN(NULL);
@@ -331,11 +329,11 @@ jgdi_result_t getGDIContext(JNIEnv *env, jobject jgdi, sge_gdi_ctx_class_t **ctx
 
 
 /*
- * Class:    com_sun_grid_jgdi_jni_JGDIBase
- * Method:    getActQMaster
+ * Class:    com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeGetActQMaster
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getActQMaster(JNIEnv *env, jobject jgdi) {
+JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeGetActQMaster(JNIEnv *env, jobject jgdi) {
 
    lList *alp = NULL;
    sge_gdi_ctx_class_t *ctx = NULL;
@@ -343,7 +341,7 @@ JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getActQMaster(JNIE
    const char* master = NULL;
    jgdi_result_t ret = JGDI_SUCCESS;
    
-   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDI_getActQMaster");
+   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDI_nativeGetActQMaster");
    
    if ((ret = getGDIContext(env, jgdi, &ctx, &alp)) != JGDI_SUCCESS)  {
       throw_error_from_answer_list(env, ret, alp);
@@ -366,10 +364,10 @@ JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getActQMaster(JNIE
 
 /*
  * Class:     com_sun_grid_jgdi_JGDI
- * Method:    getAdminUser
+ * Method:    nativeGetAdminUser
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getAdminUser(JNIEnv *env, jobject jgdi) {
+JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeGetAdminUser(JNIEnv *env, jobject jgdi) {
    
    lList *alp = NULL;
    sge_gdi_ctx_class_t *ctx = NULL;
@@ -377,7 +375,7 @@ JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getAdminUser(JNIEn
    const char *admin_user = NULL;
    jgdi_result_t ret = JGDI_SUCCESS;
    
-   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDI_getAdminUser");
+   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDI_nativeGetAdminUser");
 
    if ((ret=getGDIContext(env, jgdi, &ctx, &alp)) != JGDI_SUCCESS) {
       throw_error_from_answer_list(env, ret, alp);
@@ -398,13 +396,13 @@ JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getAdminUser(JNIEn
 }
 
 
-JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getNativeSGERoot(JNIEnv *env, jobject jgdi) {
+JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeGetSGERoot(JNIEnv *env, jobject jgdi) {
    lList *alp = NULL;
    sge_gdi_ctx_class_t *ctx = NULL;
    const char *sge_root = NULL;
    jgdi_result_t ret = JGDI_SUCCESS;
    
-   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_getNativeSGERoot");
+   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeGetSGERoot");
 
    if ((ret=getGDIContext(env, jgdi, &ctx, &alp)) != JGDI_SUCCESS) {
       throw_error_from_answer_list(env, ret, alp);
@@ -418,13 +416,13 @@ JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getNativeSGERoot(J
    DRETURN(NULL);
 }
 
-JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getSGECell(JNIEnv *env, jobject jgdi) {
+JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeGetSGECell(JNIEnv *env, jobject jgdi) {
    lList *alp = NULL;
    sge_gdi_ctx_class_t *ctx = NULL;
    const char *sge_cell = NULL;
    jgdi_result_t ret = JGDI_SUCCESS;
    
-   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_getSGECell");
+   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeGetSGECell");
 
    if ((ret=getGDIContext(env, jgdi, &ctx, &alp)) != JGDI_SUCCESS) {
       throw_error_from_answer_list(env, ret, alp);
@@ -3699,7 +3697,9 @@ void jgdi_fill(JNIEnv *env, jobject jgdi, jobject list, jobject filter, const ch
    
    /* get list */
    alp = ctx->gdi(ctx, target_list, SGE_GDI_GET, &lp, where, what);
-   
+   if (target_list == SGE_SHARETREE_LIST) {
+      id_sharetree(&alp, lFirst(lp), 0, NULL);
+   }
    if (answers != NULL) {
       generic_fill_list(env, answers, "com/sun/grid/jgdi/configuration/JGDIAnswer", alp, NULL);
    }
@@ -3783,9 +3783,12 @@ void jgdi_add(JNIEnv *env, jobject jgdi, jobject jobj, const char *classname, in
          if (answer_list_has_error(&alp)) {
             ret = JGDI_ERROR;
             goto error;
-         } else {
+         }
+#if 0         
+         else {
             lFreeList(&alp);
          }   
+#endif
 
          if ((ep = lFirst(lp)) != NULL) {
             jclass elem_class = NULL;
@@ -4445,474 +4448,7 @@ error:
 }
 
 
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    killAllExecdsWithAnswer
- * Signature: (ZLjava/util/List;)V
- */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_killAllExecdsWithAnswer(JNIEnv *env, jobject jgdi, jboolean terminate_jobs, jobject answers)
-{
-   int kill_target = EXECD_KILL;
-   
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_killAllExecdsWithAnswer");
-  
-   if (terminate_jobs) {
-      kill_target |= JOB_KILL;
-   }
-   jgdi_kill(env, jgdi, NULL, kill_target, answers);
-
-   DRETURN_VOID;
-}
-
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    killExecdWithAnswer
- * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
- */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_killExecdWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean terminate_jobs, jobject answers)
-{
-   lList *lp = NULL;
-   int kill_target = EXECD_KILL;
-   
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_killExecdWithAnswer");
-  
-   if (obj_array != NULL) {
-      int i;
-      jsize asize = (*env)->GetArrayLength(env, obj_array);
-      for (i=0; i<asize; i++) {
-         jobject obj = (*env)->GetObjectArrayElement(env, obj_array, i);
-         if (obj) {
-            const char* hostname = (*env)->GetStringUTFChars(env, obj, 0);
-            if (hostname == NULL) {
-               return;  /*LP Out of memoery is already thrown in JVM, just return*/
-            }
-            DPRINTF(("hostname: %s\n", hostname));
-            lAddElemHost(&lp, EH_name, hostname, EH_Type);
-            (*env)->ReleaseStringUTFChars(env, obj, hostname);
-         }
-      }
-   
-      if (terminate_jobs) {
-         kill_target |= JOB_KILL;
-      }
-      jgdi_kill(env, jgdi, lp, kill_target, answers);
-      lFreeList(&lp);
-   }
-
-   DRETURN_VOID;
-}
-
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    killEventClientsWithAnswer
- * Signature: ([ILjava/util/List;)V
- */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_killEventClientsWithAnswer(JNIEnv *env, jobject jgdi, jintArray iarray, jobject answers)
-{
-   jsize length = 0;
-   jint *ibuf = NULL;
-   int i;
-   lList *lp = NULL;
-
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_killEventClientsWithAnswer");
-
-   if (iarray == NULL) {
-      DEXIT;
-      return;
-   }
-
-   length = (*env)->GetArrayLength(env, iarray);
-
-   if (length <= 0) {
-      DEXIT;
-      return;
-   }
-
-   ibuf = (jint *) malloc(sizeof(jint)*length);
-   
-   (*env)->GetIntArrayRegion(env, iarray, 0, length, ibuf);
-   for (i=0; i<length; i++) {
-      char buffer[BUFSIZ];
-      sprintf(buffer, "%d", (int) ibuf[i]);
-      DPRINTF(("ec: %s\n", buffer));
-      lAddElemStr(&lp, ID_str, buffer, ID_Type);
-   }
-   FREE(ibuf);
-   jgdi_kill(env, jgdi, lp, EVENTCLIENT_KILL, answers);
-   lFreeList(&lp);
-
-   DRETURN_VOID;
-}
-
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    triggerSchedulerMonitoringWithAnswer
- * Signature: (Ljava/util/List;)V
- */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_triggerSchedulerMonitoringWithAnswer(JNIEnv *env, jobject jgdi, jobject answers)
-{
-   lList *alp = NULL;
-   sge_gdi_ctx_class_t *ctx = NULL;
-   jgdi_result_t ret = JGDI_SUCCESS;
-   rmon_ctx_t rmon_ctx;
-   
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_triggerSchedulerMonitoringWithAnswer");
-  
-   jgdi_init_rmon_ctx(env, JGDI_LOGGER, &rmon_ctx);
-   rmon_set_thread_ctx(&rmon_ctx);
-   
-
-   /* get context */
-   if ((ret = getGDIContext(env, jgdi, &ctx, &alp)) == JGDI_SUCCESS) {
-      alp = ctx->tsm(ctx, NULL, NULL);
-      if (answer_list_has_error(&alp)) {
-         ret = JGDI_ERROR;
-      }
-
-      if (answers != NULL) {
-         generic_fill_list(env, answers, "com/sun/grid/jgdi/configuration/JGDIAnswer", alp, NULL);
-      }
-   }
-   
-   /* if error throw exception */
-   if (ret != JGDI_SUCCESS) {
-      throw_error_from_answer_list(env, ret, alp);
-   }
-
-   lFreeList(&alp);
-
-   rmon_set_thread_ctx(NULL);
-   jgdi_destroy_rmon_ctx(&rmon_ctx);
-
-   DRETURN_VOID;
-}
-
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    killAllEventClientsWithAnswer
- * Signature: (Ljava/util/List;)V
- */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_killAllEventClients(JNIEnv *env, jobject jgdi, jobject answers)
-{
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_killAllEventClientsWithAnswer");
-
-   jgdi_kill(env, jgdi, NULL, EVENTCLIENT_KILL, answers);
-
-   DRETURN_VOID;
-}
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    killMasterWithAnswer
- * Signature: (Ljava/util/List;)V
- */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_killMasterWithAnswer(JNIEnv *env, jobject jgdi, jobject answers)
-{
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_killMasterWithAnswer");
-   
-   jgdi_kill(env, jgdi, NULL, MASTER_KILL, answers);
-
-   DRETURN_VOID;
-}
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    killSchedulerWithAnswer
- * Signature: (Ljava/util/List;)V
- */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_killSchedulerWithAnswer(JNIEnv *env, jobject jgdi, jobject answers)
-{
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_killSchedulerWithAnswer");
-
-   jgdi_kill(env, jgdi, NULL, SCHEDD_KILL, answers);
-
-   DRETURN_VOID;
-}
-
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    cleanQueuesWithAnswer
- * Signature: ([Ljava/lang/String;Ljava/util/List;)V
- */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_cleanQueuesWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jobject answers)
-{
-   u_long32 transition = QI_DO_CLEAN;
-   u_long32 option = false;
-   jboolean force = false;
-
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_cleanQueuesWithAnswer");
-
-   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
-
-   DRETURN_VOID;
-}
-
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    unsuspendWithAnswer
- * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
- */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_unsuspendWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers) 
-{
-   u_long32 transition = QI_DO_UNSUSPEND;
-   u_long32 option = force;
-
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_unsuspendWithAnswer");
-
-   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
-
-   DRETURN_VOID;
-}
-
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    unsuspendQueuesWithAnswer
- * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
- */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_unsuspendQueuesWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers) 
-{
-   u_long32 transition = QI_DO_UNSUSPEND | QUEUE_DO_ACTION;
-   u_long32 option = force;
-
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_unsuspendQueuesWithAnswer");
-
-   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
-
-   DRETURN_VOID;
-}
-
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    unsuspendJobsWithAnswer
- * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
- */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_unsuspendJobsWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
-{
-   u_long32 transition = QI_DO_UNSUSPEND | JOB_DO_ACTION;
-   u_long32 option = force;
-
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_unsuspendJobs");
-
-   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
-
-   DRETURN_VOID;
-}
-
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    suspendWithAnswer
- * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
- */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_suspendWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
-{
-   u_long32 transition = QI_DO_SUSPEND;
-   u_long32 option = force;
-
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_suspendWithAnswer");
-
-   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
-
-   DRETURN_VOID;
-}
-
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    suspendQueuesWithAnswer
- * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
- */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_suspendQueuesWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
-{
-   u_long32 transition = QI_DO_SUSPEND | QUEUE_DO_ACTION;
-   u_long32 option = force;
-
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_suspendQueuesWithAnswer");
-
-   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
-
-   DRETURN_VOID;
-}
-
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    suspendJobsWithAnswer
- * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
- */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_suspendJobsWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
-{
-   u_long32 transition = QI_DO_SUSPEND | JOB_DO_ACTION;
-   u_long32 option = force;
-
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_suspendJobsWithAnswer");
-
-   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
-
-   DRETURN_VOID;
-}
-
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    rescheduleJobsWithAnswer
- * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
- */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_rescheduleJobsWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
-{
-   u_long32 transition = QI_DO_RESCHEDULE | JOB_DO_ACTION;
-   u_long32 option = force;
-
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_rescheduleJobsWithAnswer");
-
-   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
-
-   DRETURN_VOID;
-}
-
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    rescheduleWithAnswer
- * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
- */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_rescheduleWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
-{
-   u_long32 transition = QI_DO_RESCHEDULE;
-   u_long32 option = force;
-
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_rescheduleWithAnswer");
-
-   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
-
-   DRETURN_VOID;
-}
-
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    rescheduleQueuesWithAnswer
- * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
- */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_rescheduleQueuesWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
-{
-   u_long32 transition = QI_DO_RESCHEDULE | QUEUE_DO_ACTION;
-   u_long32 option = force;
-
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_rescheduleQueuesWithAnswer");
-
-   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
-
-   DRETURN_VOID;
-}
-
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    clearJobsWithAnswer
- * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
- */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_clearJobsWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
-{
-   u_long32 transition = QI_DO_CLEARERROR | JOB_DO_ACTION;
-   u_long32 option = force;
-
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_clearJobsWithAnswer");
-
-   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
-
-   DRETURN_VOID;
-}
-
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    clearQueuesWithAnswer
- * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
- */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_clearQueuesWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
-{
-   u_long32 transition = QI_DO_CLEARERROR | QUEUE_DO_ACTION;
-   u_long32 option = force;
-
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_clearQueuesWithAnswer");
-
-   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
-
-   DRETURN_VOID;
-}
-
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    disableQueuesWithAnswer
- * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
- */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_disableQueuesWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
-{
-   u_long32 transition = QI_DO_DISABLE | QUEUE_DO_ACTION;
-   u_long32 option = force;
-
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_disableQueuesWithAnswer");
-
-   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
-
-   DRETURN_VOID;
-}
-
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    enableQueuesWithAnswer
- * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
- */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_enableQueuesWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
-{
-   u_long32 transition = QI_DO_ENABLE | QUEUE_DO_ACTION;
-   u_long32 option = force;
-
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_enableQueuesWithAnswer");
-
-   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
-
-   DRETURN_VOID;
-}
-
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    clearShareTreeUsageWithAnswer
- * Signature: (Ljava/util/List;)V
- */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_clearShareTreeUsageWithAnswer(JNIEnv *env, jobject jgdi, jobject answers)
-{
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_clearShareTreeUsageWithAnswer");
-
-   jgdi_clearusage(env, jgdi, answers);
-   
-   DRETURN_VOID;
-}
-
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    showDetachedSettings
- * Signature: ([Ljava/lang/String;)Ljava/lang/String
- */
-JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_showDetachedSettingsAll(JNIEnv *env, jobject jgdi) {
-   
-   jstring jdetachedStr = NULL;
-   
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_showDetachedSettings");
-   
-   jgdi_detached_settings(env, jgdi, NULL, &jdetachedStr);
-   
-   DRETURN(jdetachedStr);
-}
-
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    showDetachedSettings
- * Signature: ([Ljava/lang/String;)Ljava/lang/String
- */
-JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_showDetachedSettings(JNIEnv *env, jobject jgdi, jobjectArray obj_array) {
-   
-   jstring jdetachedStr = NULL;
-   
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_showDetachedSettings");
-   
-   jgdi_detached_settings(env, jgdi, obj_array, &jdetachedStr);
-   
-   DRETURN(jdetachedStr);
-}
-
-static void jgdi_detached_settings(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jstring *jdetachedStrPtr) {
+static void jgdi_detached_settings(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jstring *jdetachedStrPtr, jobject answers) {
    jgdi_result_t ret = JGDI_SUCCESS;
    rmon_ctx_t rmon_ctx;
    lList *lp = NULL;
@@ -5008,6 +4544,9 @@ static void jgdi_detached_settings(JNIEnv *env, jobject jgdi, jobjectArray obj_a
    lFreeList(&local_answer_list);
    lFreeList(&multi_answer_list);
       
+   if (answers != NULL) {
+      generic_fill_list(env, answers, "com/sun/grid/jgdi/configuration/JGDIAnswer", alp, NULL);
+   }
    if (answer_list_has_error(&alp)) {
       ret = JGDI_ERROR;
    } else {
@@ -5029,7 +4568,7 @@ static void jgdi_detached_settings(JNIEnv *env, jobject jgdi, jobjectArray obj_a
    }
    *jdetachedStrPtr = jdetachedStr;
    
-   error:
+error:
    /* if error throw exception */
    if (ret != JGDI_SUCCESS) {
       throw_error_from_answer_list(env, ret, alp);
@@ -5043,12 +4582,480 @@ static void jgdi_detached_settings(JNIEnv *env, jobject jgdi, jobjectArray obj_a
    DRETURN_VOID;
 }
 
+
 /*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    getSchedulerHost
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeKillAllExecdsWithAnswer
+ * Signature: (ZLjava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeKillAllExecdsWithAnswer(JNIEnv *env, jobject jgdi, jboolean terminate_jobs, jobject answers)
+{
+   int kill_target = EXECD_KILL;
+   
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeKillAllExecdsWithAnswer");
+  
+   if (terminate_jobs) {
+      kill_target |= JOB_KILL;
+   }
+   jgdi_kill(env, jgdi, NULL, kill_target, answers);
+
+   DRETURN_VOID;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeKillExecdWithAnswer
+ * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeKillExecdWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean terminate_jobs, jobject answers)
+{
+   lList *lp = NULL;
+   int kill_target = EXECD_KILL;
+   
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeKillExecdWithAnswer");
+  
+   if (obj_array != NULL) {
+      int i;
+      jsize asize = (*env)->GetArrayLength(env, obj_array);
+      for (i=0; i<asize; i++) {
+         jobject obj = (*env)->GetObjectArrayElement(env, obj_array, i);
+         if (obj) {
+            const char* hostname = (*env)->GetStringUTFChars(env, obj, 0);
+            if (hostname == NULL) {
+               return;  /*LP Out of memoery is already thrown in JVM, just return*/
+            }
+            DPRINTF(("hostname: %s\n", hostname));
+            lAddElemHost(&lp, EH_name, hostname, EH_Type);
+            (*env)->ReleaseStringUTFChars(env, obj, hostname);
+         }
+      }
+   
+      if (terminate_jobs) {
+         kill_target |= JOB_KILL;
+      }
+      jgdi_kill(env, jgdi, lp, kill_target, answers);
+      lFreeList(&lp);
+   }
+
+   DRETURN_VOID;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeKillEventClientsWithAnswer
+ * Signature: ([ILjava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeKillEventClientsWithAnswer(JNIEnv *env, jobject jgdi, jintArray iarray, jobject answers)
+{
+   jsize length = 0;
+   jint *ibuf = NULL;
+   int i;
+   lList *lp = NULL;
+
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeKillEventClientsWithAnswer");
+
+   if (iarray == NULL) {
+      DEXIT;
+      return;
+   }
+
+   length = (*env)->GetArrayLength(env, iarray);
+
+   if (length <= 0) {
+      DEXIT;
+      return;
+   }
+
+   ibuf = (jint *) malloc(sizeof(jint)*length);
+   
+   (*env)->GetIntArrayRegion(env, iarray, 0, length, ibuf);
+   for (i=0; i<length; i++) {
+      char buffer[BUFSIZ];
+      sprintf(buffer, "%d", (int) ibuf[i]);
+      DPRINTF(("ec: %s\n", buffer));
+      lAddElemStr(&lp, ID_str, buffer, ID_Type);
+   }
+   FREE(ibuf);
+   jgdi_kill(env, jgdi, lp, EVENTCLIENT_KILL, answers);
+   lFreeList(&lp);
+
+   DRETURN_VOID;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeTriggerSchedulerMonitoringWithAnswer
+ * Signature: (Ljava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeTriggerSchedulerMonitoringWithAnswer(JNIEnv *env, jobject jgdi, jobject answers)
+{
+   lList *alp = NULL;
+   sge_gdi_ctx_class_t *ctx = NULL;
+   jgdi_result_t ret = JGDI_SUCCESS;
+   rmon_ctx_t rmon_ctx;
+   
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeTriggerSchedulerMonitoringWithAnswer");
+  
+   jgdi_init_rmon_ctx(env, JGDI_LOGGER, &rmon_ctx);
+   rmon_set_thread_ctx(&rmon_ctx);
+   
+
+   /* get context */
+   if ((ret = getGDIContext(env, jgdi, &ctx, &alp)) == JGDI_SUCCESS) {
+      alp = ctx->tsm(ctx, NULL, NULL);
+      if (answer_list_has_error(&alp)) {
+         ret = JGDI_ERROR;
+      }
+
+      if (answers != NULL) {
+         generic_fill_list(env, answers, "com/sun/grid/jgdi/configuration/JGDIAnswer", alp, NULL);
+      }
+   }
+   
+   /* if error throw exception */
+   if (ret != JGDI_SUCCESS) {
+      throw_error_from_answer_list(env, ret, alp);
+   }
+
+   lFreeList(&alp);
+
+   rmon_set_thread_ctx(NULL);
+   jgdi_destroy_rmon_ctx(&rmon_ctx);
+
+   DRETURN_VOID;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeKillAllEventClientsWithAnswer
+ * Signature: (Ljava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeKillAllEventClients(JNIEnv *env, jobject jgdi, jobject answers)
+{
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeKillAllEventClientsWithAnswer");
+
+   jgdi_kill(env, jgdi, NULL, EVENTCLIENT_KILL, answers);
+
+   DRETURN_VOID;
+}
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeKillMasterWithAnswer
+ * Signature: (Ljava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeKillMasterWithAnswer(JNIEnv *env, jobject jgdi, jobject answers)
+{
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeKillMasterWithAnswer");
+   
+   jgdi_kill(env, jgdi, NULL, MASTER_KILL, answers);
+
+   DRETURN_VOID;
+}
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeKillSchedulerWithAnswer
+ * Signature: (Ljava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeKillSchedulerWithAnswer(JNIEnv *env, jobject jgdi, jobject answers)
+{
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeKillSchedulerWithAnswer");
+
+   jgdi_kill(env, jgdi, NULL, SCHEDD_KILL, answers);
+
+   DRETURN_VOID;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeCleanQueuesWithAnswer
+ * Signature: ([Ljava/lang/String;Ljava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeCleanQueuesWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jobject answers)
+{
+   u_long32 transition = QI_DO_CLEAN;
+   u_long32 option = false;
+   jboolean force = false;
+
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeCleanQueuesWithAnswer");
+
+   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
+
+   DRETURN_VOID;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeUnsuspendWithAnswer
+ * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeUnsuspendWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers) 
+{
+   u_long32 transition = QI_DO_UNSUSPEND;
+   u_long32 option = force;
+
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeUnsuspendWithAnswer");
+
+   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
+
+   DRETURN_VOID;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeUnsuspendQueuesWithAnswer
+ * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeUnsuspendQueuesWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers) 
+{
+   u_long32 transition = QI_DO_UNSUSPEND | QUEUE_DO_ACTION;
+   u_long32 option = force;
+
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeUnsuspendQueuesWithAnswer");
+
+   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
+
+   DRETURN_VOID;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeUnsuspendJobsWithAnswer
+ * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeUnsuspendJobsWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
+{
+   u_long32 transition = QI_DO_UNSUSPEND | JOB_DO_ACTION;
+   u_long32 option = force;
+
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeUnsuspendJobs");
+
+   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
+
+   DRETURN_VOID;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeSuspendWithAnswer
+ * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeSuspendWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
+{
+   u_long32 transition = QI_DO_SUSPEND;
+   u_long32 option = force;
+
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeSuspendWithAnswer");
+
+   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
+
+   DRETURN_VOID;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeSuspendQueuesWithAnswer
+ * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeSuspendQueuesWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
+{
+   u_long32 transition = QI_DO_SUSPEND | QUEUE_DO_ACTION;
+   u_long32 option = force;
+
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeSuspendQueuesWithAnswer");
+
+   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
+
+   DRETURN_VOID;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeSuspendJobsWithAnswer
+ * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeSuspendJobsWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
+{
+   u_long32 transition = QI_DO_SUSPEND | JOB_DO_ACTION;
+   u_long32 option = force;
+
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeSuspendJobsWithAnswer");
+
+   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
+
+   DRETURN_VOID;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeRescheduleJobsWithAnswer
+ * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeRescheduleJobsWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
+{
+   u_long32 transition = QI_DO_RESCHEDULE | JOB_DO_ACTION;
+   u_long32 option = force;
+
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeRescheduleJobsWithAnswer");
+
+   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
+
+   DRETURN_VOID;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeRescheduleWithAnswer
+ * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeRescheduleWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
+{
+   u_long32 transition = QI_DO_RESCHEDULE;
+   u_long32 option = force;
+
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeRescheduleWithAnswer");
+
+   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
+
+   DRETURN_VOID;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeRescheduleQueuesWithAnswer
+ * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeRescheduleQueuesWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
+{
+   u_long32 transition = QI_DO_RESCHEDULE | QUEUE_DO_ACTION;
+   u_long32 option = force;
+
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeRescheduleQueuesWithAnswer");
+
+   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
+
+   DRETURN_VOID;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeClearJobsWithAnswer
+ * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeClearJobsWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
+{
+   u_long32 transition = QI_DO_CLEARERROR | JOB_DO_ACTION;
+   u_long32 option = force;
+
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeClearJobsWithAnswer");
+
+   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
+
+   DRETURN_VOID;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeClearQueuesWithAnswer
+ * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeClearQueuesWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
+{
+   u_long32 transition = QI_DO_CLEARERROR | QUEUE_DO_ACTION;
+   u_long32 option = force;
+
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeClearQueuesWithAnswer");
+
+   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
+
+   DRETURN_VOID;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeDisableQueuesWithAnswer
+ * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeDisableQueuesWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
+{
+   u_long32 transition = QI_DO_DISABLE | QUEUE_DO_ACTION;
+   u_long32 option = force;
+
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeDisableQueuesWithAnswer");
+
+   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
+
+   DRETURN_VOID;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeEnableQueuesWithAnswer
+ * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeEnableQueuesWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
+{
+   u_long32 transition = QI_DO_ENABLE | QUEUE_DO_ACTION;
+   u_long32 option = force;
+
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeEnableQueuesWithAnswer");
+
+   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
+
+   DRETURN_VOID;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeClearShareTreeUsageWithAnswer
+ * Signature: (Ljava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeClearShareTreeUsageWithAnswer(JNIEnv *env, jobject jgdi, jobject answers)
+{
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeClearShareTreeUsageWithAnswer");
+
+   jgdi_clearusage(env, jgdi, answers);
+   
+   DRETURN_VOID;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeShowDetachedSettingsAllWithAnswer
+ * Signature: (Ljava/util/List;)Ljava/lang/String
+ */
+JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeShowDetachedSettingsAllWithAnswer(JNIEnv *env, jobject jgdi, jobject answers) {
+   
+   jstring jdetachedStr = NULL;
+   
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeShowDetachedSettingsAllWithAnswer");
+   
+   jgdi_detached_settings(env, jgdi, NULL, &jdetachedStr, answers);
+   
+   DRETURN(jdetachedStr);
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeShowDetachedSettingsWithAnswer
+ * Signature: ([Ljava/lang/String;Ljava/util/List)Ljava/lang/String
+ */
+JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeShowDetachedSettingsWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jobject answers) {
+   
+   jstring jdetachedStr = NULL;
+   
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeShowDetachedSettingsWithAnswer");
+   
+   jgdi_detached_settings(env, jgdi, obj_array, &jdetachedStr, answers);
+   
+   DRETURN(jdetachedStr);
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeGetSchedulerHost
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getSchedulerHost(JNIEnv *env, jobject jgdi)
+JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeGetSchedulerHost(JNIEnv *env, jobject jgdi)
 {
    jstring jschedd_host = NULL;
    lList *lp = NULL;
@@ -5058,7 +5065,7 @@ JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getSchedulerHost(J
    jgdi_result_t ret = JGDI_SUCCESS;
    sge_gdi_ctx_class_t *ctx = NULL;
    
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_getSchedulerHost");
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeGetSchedulerHost");
 
    /* get context */
    if ((ret = getGDIContext(env, jgdi, &ctx, &alp)) != JGDI_SUCCESS) {
@@ -5102,14 +5109,14 @@ error:
 
 /*
  * Class:     com_sun_grid_jgdi_JGDIFactory
- * Method:    setJGDIVersion
+ * Method:    nativeSetJGDIVersion
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_JGDIFactory_setJGDIVersion(JNIEnv *env, jclass jgdi_factory)
+JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_JGDIFactory_nativeSetJGDIVersion(JNIEnv *env, jclass jgdi_factory)
 {
    char version_string[BUFSIZ];
 
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_JGDIFactory_setJGDIVersion");
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_JGDIFactory_nativeSetJGDIVersion");
    sprintf(version_string, "%s %s", GE_SHORTNAME, GDI_VERSION);
    DRETURN((*env)->NewStringUTF(env, version_string));
 }

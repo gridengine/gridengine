@@ -415,7 +415,7 @@
 #define MSG_SGETEXT_NOJOBSDELETED                     _MESSAGE(33328, _("No jobs deleted"))
 #define MSG_SGETEXT_NOJOBSMODIFIED                    _MESSAGE(33329, _("No jobs modified"))
 #define MSG_SGETEXT_THEREARENOJOBS                    _MESSAGE(33330, _("There are no jobs registered"))
-#define MSG_SGETEXT_THEREARENOXFORUSERS_SS            _MESSAGE(33331, _("There are no "SFN" registered for following users: "SFN))
+#define MSG_SGETEXT_THEREARENOXFORUSERS_SS            _MESSAGE(33331, _("There is no "SFN" registered for the following users: "SFN))
 #define MSG_SGETEXT_SPECIFYUSERORID_S                 _MESSAGE(33332, _("You have to specify a username or "SFN" ids"))
 #define MSG_SGETEXT_NO_ACCESS2PRJ4USER_SS             _MESSAGE(33334, _("job rejected: no access to project "SFQ" for user "SFQ) ) 
 #define MSG_SGETEXT_NOTALLOWEDTOSPECUSERANDJID        _MESSAGE(33335, _("it is not allowed to select users and job ids together"))

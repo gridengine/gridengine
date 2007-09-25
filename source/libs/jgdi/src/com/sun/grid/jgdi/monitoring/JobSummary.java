@@ -65,7 +65,7 @@ public interface JobSummary extends JobInfo {
     *   
     *   @return set of resources names
     */
-   public Set getRequestNames();
+   public Set<String> getRequestNames();
    
    /**
     *  Get value of a requested resource
@@ -79,7 +79,7 @@ public interface JobSummary extends JobInfo {
     *  Get a set of all hard requested resources.
     *  @return set of resource names
     */
-   public Set getHardRequestNames();
+   public Set<String> getHardRequestNames();
    
    /**
     *  Get a value of a hard requested resource
@@ -93,7 +93,7 @@ public interface JobSummary extends JobInfo {
     *  Get a set of all soft requested resources
     *  @return set of all soft requested resources
     */
-   public Set getSoftRequestNames();
+   public Set<String> getSoftRequestNames();
    
    /**
     *  Get the value of a soft requested resource

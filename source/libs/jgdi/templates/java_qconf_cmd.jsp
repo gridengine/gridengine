@@ -86,11 +86,15 @@
    @OptionAnnotation(value = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
    public void add<%=objectType%>(final OptionInfo oi) throws JGDIException {
       String arg = oi.getFirstArg();
-      if (arg == null) {
-         arg = "template";
+//      if (arg == null) {
+//         arg = "template";
+//      }
+      List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
+      // create an object with defaults set
+      <%=objectType%> obj = new <%=objectType%>Impl(true);
+      if (arg != null) {
+         obj.setName(arg);
       }
-      List<JGDIAnswer> answer = new ArrayList<JGDIAnswer>();
-      <%=objectType%> obj = new <%=objectType%>Impl(arg);
       String userTypedText = runEditor(GEObjectEditor.getConfigurablePropertiesAsText(obj));
 
       if (userTypedText != null) {
@@ -113,7 +117,7 @@
    @OptionAnnotation(value = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
    public void addFromFile<%=objectType%>(final OptionInfo oi) throws JGDIException {
       final String fileName = oi.getFirstArg();
-      List<JGDIAnswer> answer = new ArrayList<JGDIAnswer>();
+      List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
       <%=objectType%> obj = new <%=objectType%>Impl(true);
       String inputText = readFile(fileName);
       String setNameMethod = "setName";
@@ -144,7 +148,7 @@
    @OptionAnnotation(value = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
    public void modify<%=objectType%>(final OptionInfo oi) throws JGDIException {
       final String arg = oi.getFirstArg();
-      List<JGDIAnswer> answer = new ArrayList<JGDIAnswer>();
+      List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
       <% if ( mandatory == 0 && optional == 0 ) { %>
       <%=objectType%> obj = jgdi.get<%=objectType%>WithAnswer(answer);
       <% } else { %>
@@ -159,8 +163,14 @@
             GEObjectEditor.updateObjectWithText(jgdi, obj, userTypedText);
             jgdi.update<%=objectType%>WithAnswer(obj, answer);
          }
+         printAnswers(answer);
+      } else {
+         if (arg != null) {
+            throw new JGDIException("'" + arg + "' does not exist");
+         } else {
+            throw new JGDIException("<%=objectType%> does not exist");
+         }
       }
-      printAnswers(answer);
       oi.optionDone();
    }  
    <%
@@ -176,7 +186,7 @@
    @OptionAnnotation(value = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
    public void modifyFromFile<%=objectType%>(final OptionInfo oi) throws JGDIException {
       final String fileName = oi.getFirstArg();
-      List<JGDIAnswer> answer = new ArrayList<JGDIAnswer>();
+      List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
       String inputText = readFile(fileName);
       <%=objectType%> obj;
       <%if (objectType.equals("SchedConf")) {%>
@@ -227,7 +237,7 @@
    @OptionAnnotation(value = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
    public void showList<%=objectType%>(final OptionInfo oi) throws JGDIException {
       List< <%=objectType%> > list = (List< <%=objectType%> >)jgdi.get<%=objectType%>List();
-      List<String> values = new ArrayList<String>();
+      List<String> values = new LinkedList<String>();
       for (<%=objectType%> obj : list) {
          values.add(obj.getName());
       }
@@ -256,7 +266,7 @@
    @OptionAnnotation(value = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
    public void delete<%=objectType%>(final OptionInfo oi) throws JGDIException {
       final String arg = oi.getFirstArg();
-      List<JGDIAnswer> answer = new ArrayList<JGDIAnswer>();
+      List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
       jgdi.delete<%=objectType%>WithAnswer(arg, answer);
       printAnswers(answer);
    }
@@ -287,8 +297,7 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.PrintWriter;
 import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.Collections;
 import java.util.List;
 
@@ -296,7 +305,7 @@ import java.util.List;
  * Generated abstract class for handling generic JGDI objects.
  * Implements generic qconf command options.
  * NOTE: QConfCommand should extend this class.
- * @see @link {QConfCommand}
+ * @see com.sun.grid.jgdi.util.shell.QConfCommand
  */
 public abstract class QConfCommandGenerated extends AnnotatedCommand {
 

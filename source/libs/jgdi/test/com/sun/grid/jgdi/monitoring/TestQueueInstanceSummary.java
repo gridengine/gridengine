@@ -32,11 +32,11 @@
 package com.sun.grid.jgdi.monitoring;
 
 import com.sun.grid.jgdi.JGDI;
+import com.sun.grid.jgdi.configuration.QueueInstance;
 import com.sun.grid.jgdi.monitoring.filter.QueueFilter;
 import com.sun.grid.jgdi.monitoring.filter.QueueStateFilter;
 import com.sun.grid.jgdi.monitoring.filter.ResourceAttributeFilter;
 import java.io.PrintWriter;
-import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import junit.framework.Test;
@@ -45,32 +45,28 @@ import junit.framework.TestSuite;
 /**
  *
  */
-public class TestQueueInstanceSummary extends com.sun.grid.jgdi.BaseTestCase  {
-    
+public class TestQueueInstanceSummary extends com.sun.grid.jgdi.BaseTestCase {
+
     public TestQueueInstanceSummary(String testName) {
         super(testName);
     }
-    
+
     protected void setUp() throws Exception {
-        System.loadLibrary( "jgdi" );
         super.setUp();
     }
-    
+
     public static Test suite() {
-        TestSuite suite = new TestSuite( TestQueueInstanceSummary.class);
+        TestSuite suite = new TestSuite(TestQueueInstanceSummary.class);
         return suite;
     }
-    
+
     public void testFullOutput() throws Exception {
-        
         JGDI jgdi = createJGDI();
         try {
             QueueInstanceSummaryOptions options = new QueueInstanceSummaryOptions();
-            
             options.setShowFullOutput(true);
-            
             QueueInstanceSummaryResult result = jgdi.getQueueInstanceSummary(options);
-            if(logger.isLoggable(Level.FINE)) {
+            if (logger.isLoggable(Level.FINE)) {
                 PrintWriter pw = new PrintWriter(System.out);
                 QueueInstanceSummaryPrinter.print(pw, result, options);
                 pw.flush();
@@ -79,19 +75,16 @@ public class TestQueueInstanceSummary extends com.sun.grid.jgdi.BaseTestCase  {
             jgdi.close();
         }
     }
-    
-    
+
     public void testAllResourceAttributes() throws Exception {
-        
+
         JGDI jgdi = createJGDI();
         try {
             QueueInstanceSummaryOptions options = new QueueInstanceSummaryOptions();
-            
             ResourceAttributeFilter raf = new ResourceAttributeFilter();
             options.setResourceAttributeFilter(raf);
-            
             QueueInstanceSummaryResult result = jgdi.getQueueInstanceSummary(options);
-            if(logger.isLoggable(Level.FINE)) {
+            if (logger.isLoggable(Level.FINE)) {
                 PrintWriter pw = new PrintWriter(System.out);
                 QueueInstanceSummaryPrinter.print(pw, result, options);
                 pw.flush();
@@ -100,176 +93,115 @@ public class TestQueueInstanceSummary extends com.sun.grid.jgdi.BaseTestCase  {
             jgdi.close();
         }
     }
-    
-    
-    
+
     public void testQueueStateFilterSuspended() throws Exception {
-        
+
         QueueInstanceSummaryOptions options = new QueueInstanceSummaryOptions();
         options.setShowFullOutput(true);
-        
         JGDI jgdi = createJGDI();
         try {
-            
             QueueInstanceSummaryResult result = jgdi.getQueueInstanceSummary(options);
-            
-            List qiList = result.getQueueInstanceSummary();
-            
-            
+            List<QueueInstanceSummary> qiList = result.getQueueInstanceSummary();
             QueueStateFilter qsf = new QueueStateFilter();
             qsf.setSuspended(true);
             options.setQueueStateFilter(qsf);
-            
-            Iterator qiIter = qiList.iterator();
-            while(qiIter.hasNext()) {
-                
-                QueueInstanceSummary qis = (QueueInstanceSummary)qiIter.next();
-                
+            options.setShowFullOutput(true);
+            for (QueueInstanceSummary qis : qiList) {
                 logger.fine("Suspend queue " + qis.getName());
-                
-                jgdi.suspendQueues( new String[] { qis.getName() }, false );
-                
-                
+                jgdi.suspendQueues(new String[]{qis.getName()}, false);
                 result = jgdi.getQueueInstanceSummary(options);
-                
-                if(logger.isLoggable(Level.FINE)) {
+                // if (logger.isLoggable(Level.FINE)) {
                     PrintWriter pw = new PrintWriter(System.out);
                     QueueInstanceSummaryPrinter.print(pw, result, options);
                     pw.flush();
-                }
-                
-                Iterator iter = result.getQueueInstanceSummary().iterator();
-                
-                
+                // }
                 boolean found = false;
-                while(iter.hasNext()) {
-                    
-                    QueueInstanceSummary susQis = (QueueInstanceSummary)iter.next();
-                    assertTrue("exepect state 's' for queue instance " + susQis , susQis.getState().indexOf('s') >= 0);
-                    
-                    if(qis.getName().equals(susQis.getName())) {
+                for (QueueInstanceSummary susQis : result.getQueueInstanceSummary()) {
+                    pw.println("susQis.getName() = " + susQis.getName() + " state = " + susQis.getState());
+                    assertTrue("expect state 's' for queue instance " + susQis.getName(), (susQis.getState().indexOf('s') >= 0));
+                    if (qis.getName().equals(susQis.getName())) {
                         found = true;
                     }
                 }
                 assertTrue("suspended queue instance " + qis.getName() + " is not in result", found);
-                
                 logger.fine("Unsuspend queue " + qis.getName());
-                jgdi.unsuspendQueues( new String[] { qis.getName() }, false );
-                
+                jgdi.unsuspendQueues(new String[]{qis.getName()}, false);
             }
-            
-            
-            
         } finally {
             jgdi.close();
         }
     }
-    
+
     public void testQueueStateFilterDisabled() throws Exception {
-        
+
         QueueInstanceSummaryOptions options = new QueueInstanceSummaryOptions();
         options.setShowFullOutput(true);
         QueueStateFilter qsf = new QueueStateFilter();
         qsf.setDisabled(true);
         options.setQueueStateFilter(qsf);
-        
         JGDI jgdi = createJGDI();
         try {
-            
             QueueInstanceSummaryResult result = jgdi.getQueueInstanceSummary(options);
-            
-            List qiList = result.getQueueInstanceSummary();
-            
+            List<QueueInstanceSummary> qiList = result.getQueueInstanceSummary();
             // Disable all queues
-            jgdi.disableQueues( new String[] { "*" }, false);
-            
+            jgdi.disableQueues(new String[]{"*"}, false);
             result = jgdi.getQueueInstanceSummary(options);
-            
-            List newQiList = result.getQueueInstanceSummary();
-            
-            Iterator iter = qiList.iterator();
-            while(iter.hasNext()) {
-                QueueInstanceSummary qis = (QueueInstanceSummary)iter.next();
-                
+            List<QueueInstanceSummary> newQiList = result.getQueueInstanceSummary();
+            for (QueueInstanceSummary qis : qiList) {
                 boolean found = false;
-                Iterator newIter = newQiList.iterator();
-                while(newIter.hasNext()) {
-                    QueueInstanceSummary qis1 = (QueueInstanceSummary)newIter.next();
-                    
-                    if(qis.getName().equals(qis1.getName())) {
+                for (QueueInstanceSummary qis1 : newQiList) {
+                    if (qis.getName().equals(qis1.getName())) {
                         found = true;
                         break;
                     }
                 }
                 assertTrue("queue instance " + qis.getName() + " has not been found in disabled queue list", found);
             }
-            
-            jgdi.enableQueues( new String[] { "*" }, true);
-            
+            jgdi.enableQueues(new String[]{"*"}, true);
             result = jgdi.getQueueInstanceSummary(options);
-            
             newQiList = result.getQueueInstanceSummary();
-            
-            if(logger.isLoggable(Level.FINE)) {
+            if (logger.isLoggable(Level.FINE)) {
                 PrintWriter pw = new PrintWriter(System.out);
                 QueueInstanceSummaryPrinter.print(pw, result, options);
                 pw.flush();
             }
-            
             assertEquals("got queue instances, but all queues are disabled", 0, newQiList.size());
-            
-            
         } finally {
             jgdi.close();
         }
-        
     }
-    
+
     public void testQueueFilter() throws Exception {
-        
+
         QueueInstanceSummaryOptions options = new QueueInstanceSummaryOptions();
         options.setShowFullOutput(true);
-        
+
         JGDI jgdi = createJGDI();
-        
+
         try {
             QueueInstanceSummaryResult result = jgdi.getQueueInstanceSummary(options);
-            
-            List qiList = result.getQueueInstanceSummary();
-            
-            Iterator iter = qiList.iterator();
-            while(iter.hasNext()) {
-                QueueInstanceSummary qis = (QueueInstanceSummary)iter.next();
-                
+            List<QueueInstanceSummary> qiList = result.getQueueInstanceSummary();
+
+            for (QueueInstanceSummary qis : qiList) {
                 logger.fine("Filter for queue instance " + qis.getName());
                 QueueFilter qf = new QueueFilter();
                 qf.addQueue(qis.getName());
                 options.setQueueFilter(qf);
-                
                 result = jgdi.getQueueInstanceSummary(options);
-                
-                if(logger.isLoggable(Level.FINE)) {
+                if (logger.isLoggable(Level.FINE)) {
                     PrintWriter pw = new PrintWriter(System.out);
                     QueueInstanceSummaryPrinter.print(pw, result, options);
                     pw.flush();
                 }
-                
-                Iterator newIter = result.getQueueInstanceSummary().iterator();
-                assertTrue("Missing queue instance " + qis.getName(), newIter.hasNext());
-                
-                while(newIter.hasNext()) {
-                    QueueInstanceSummary newQis = (QueueInstanceSummary)newIter.next();
-                    assertEquals("Queue instance " + newQis.getName() + " is not in queue filter",
-                            qis.getName(), newQis.getName() );
+
+                List<QueueInstanceSummary> newQiList = result.getQueueInstanceSummary();
+                assertTrue("Missing queue instance " + qis.getName(), !newQiList.isEmpty());
+                for (QueueInstanceSummary newQis : newQiList) {
+                    assertEquals("Queue instance " + newQis.getName() + " is not in queue filter", qis.getName(), newQis.getName());
                 }
             }
-            
         } finally {
             jgdi.close();
         }
-        
-        
     }
-    
-    
 }

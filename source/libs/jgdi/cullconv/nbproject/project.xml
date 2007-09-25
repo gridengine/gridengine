@@ -6,8 +6,8 @@
             <!--Do not use Project Properties customizer when editing this file manually.-->
             <name>Cull2Java</name>
             <properties>
-                <property-file>build_private.properties</property-file>
-                <property-file>build.properties</property-file>
+                <property-file>../../../build_private.properties</property-file>
+                <property-file>../../../build.properties</property-file>
             </properties>
             <folders>
                 <source-folder>
@@ -82,11 +82,12 @@
             <compilation-unit>
                 <package-root>test</package-root>
                 <unit-tests/>
-                <source-level>1.4</source-level>
+                <source-level>1.5</source-level>
             </compilation-unit>
             <compilation-unit>
                 <package-root>build/gensrc</package-root>
-                <source-level>1.4</source-level>
+                <classpath mode="compile">src</classpath>
+                <source-level>1.5</source-level>
             </compilation-unit>
         </java-data>
     </configuration>

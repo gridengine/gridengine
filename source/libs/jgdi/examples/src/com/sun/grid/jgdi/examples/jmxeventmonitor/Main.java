@@ -31,37 +31,21 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.examples.jmxeventmonitor;
 
-import com.sun.grid.jgdi.event.Event;
-import com.sun.grid.jgdi.event.EventListener;
-import com.sun.grid.jgdi.event.EventTypeEnum;
-import com.sun.grid.jgdi.event.QmasterGoesDownEvent;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import javax.management.MBeanServerConnection;
-import javax.management.Notification;
-import javax.management.NotificationListener;
-import javax.management.ObjectName;
-import javax.management.remote.JMXConnector;
-import javax.management.remote.JMXConnectorFactory;
-import javax.management.remote.JMXServiceURL;
-
 /**
  *
  */
 public class Main {
-    
+
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        
+
         try {
             MainFrame frame = new MainFrame();
             frame.setSize(700, 600);
             frame.setVisible(true);
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
     }

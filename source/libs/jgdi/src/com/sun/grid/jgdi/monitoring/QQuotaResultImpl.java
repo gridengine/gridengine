@@ -30,7 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.monitoring;
-import com.sun.grid.jgdi.monitoring.ResourceQuotaRuleInfoImpl;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,10 +44,10 @@ import java.util.Set;
  */
 public class QQuotaResultImpl implements QQuotaResult, Serializable {
    
-   private Map resourceQuotaRuleInfoMap = new HashMap();
-   private List resourceQuotaRuleInfoList = new ArrayList();
+   private Map<String, ResourceQuotaRuleInfo> resourceQuotaRuleInfoMap = new HashMap<String, ResourceQuotaRuleInfo>();
+   private List<ResourceQuotaRuleInfo> resourceQuotaRuleInfoList = new ArrayList<ResourceQuotaRuleInfo>();
    
-   public Set getResourceQuotaRuleNames() {
+   public Set<String> getResourceQuotaRuleNames() {
       return resourceQuotaRuleInfoMap.keySet();
    }
    
@@ -62,10 +62,10 @@ public class QQuotaResultImpl implements QQuotaResult, Serializable {
    }
    
    public ResourceQuotaRuleInfo getResourceQuotaRuleInfo(String resourceQuotaRuleName) {
-      return (ResourceQuotaRuleInfo)resourceQuotaRuleInfoMap.get(resourceQuotaRuleName);
+      return resourceQuotaRuleInfoMap.get(resourceQuotaRuleName);
    }
    
-   public List getResourceQuotaRules() {
+   public List<ResourceQuotaRuleInfo> getResourceQuotaRules() {
       return new ArrayList(resourceQuotaRuleInfoMap.values());
    }
    

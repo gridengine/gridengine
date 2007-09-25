@@ -42,17 +42,17 @@ public interface ResourceQuotaRuleInfo {
    
    public String getResouceQuotaRuleName();
  
-   public List getUsers();
-   public List getProjects();
-   public List getPes();
-   public List getQueues();
-   public List getHosts();
+   public List<String> getUsers();
+   public List<String> getProjects();
+   public List<String> getPes();
+   public List<String> getQueues();
+   public List<String> getHosts();
    
-   public List getXUsers();
-   public List getXProjects();
-   public List getXPes();
-   public List getXQueues();
-   public List getXHosts();
+   public List<String> getXUsers();
+   public List<String> getXProjects();
+   public List<String> getXPes();
+   public List<String> getXQueues();
+   public List<String> getXHosts();
 
-   public List getLimits();
+   public List<ResourceQuota> getLimits();
 }

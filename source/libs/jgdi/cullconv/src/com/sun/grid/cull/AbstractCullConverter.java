@@ -40,40 +40,38 @@ import java.util.logging.Logger;
  *
  */
 public abstract class AbstractCullConverter implements CullConverter {
-   
-   
-   public final static Logger logger = Logger.getLogger("cullconv");
-   
-   private boolean iterateObjects;
-   
-   /** Creates a new instance of AbstractCullConverter */
-   protected AbstractCullConverter() {
-   }
-   
-   protected String[] readArgFile( String filename ) throws IOException {
-      
-      FileReader fr = new FileReader(filename);
-      BufferedReader br = new BufferedReader( fr );
-      
-      ArrayList list  = new ArrayList();
-      String line = null;
-      
-      while(  (line=br.readLine()) != null ) {
-         list.add( line );
-      }
-      
-      String [] ret = new String[list.size()];
-      
-      list.toArray( ret );
-      return ret;
-   }
 
-   public boolean iterateObjects() {
-      return iterateObjects;
-   }
+    public static final Logger logger = Logger.getLogger("cullconv");
 
-   public void setIterateObjects(boolean iterateObjects) {
-      this.iterateObjects = iterateObjects;
-   }
+    private boolean iterateObjects;
 
+    /** Creates a new instance of AbstractCullConverter */
+    protected AbstractCullConverter() {
+    }
+
+    protected String[] readArgFile(String filename) throws IOException {
+
+        FileReader fr = new FileReader(filename);
+        BufferedReader br = new BufferedReader(fr);
+
+        ArrayList list = new ArrayList();
+        String line = null;
+
+        while ((line = br.readLine()) != null) {
+            list.add(line);
+        }
+
+        String[] ret = new String[list.size()];
+
+        list.toArray(ret);
+        return ret;
+    }
+
+    public boolean iterateObjects() {
+        return iterateObjects;
+    }
+
+    public void setIterateObjects(boolean iterateObjects) {
+        this.iterateObjects = iterateObjects;
+    }
 }

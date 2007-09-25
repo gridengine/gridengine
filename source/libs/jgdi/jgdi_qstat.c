@@ -83,15 +83,6 @@ static jgdi_result_t jgdi_qstat_env_init(JNIEnv *env, sge_gdi_ctx_class_t *ctx, 
 int jgdi_qstat_cqueue_summary(cqueue_summary_handler_t *thiz, const char* cqname, 
                               cqueue_summary_t *summary, lList **alpp);
                               
-/*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    fillClusterQueueSummary
- * Signature: (Lcom/sun/grid/jgdi/monitoring/QueueFilter;Lcom/sun/grid/jgdi/monitoring/filter/ResourceFilter;Ljava/util/List;)V
- */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_fillClusterQueueSummary
-  (JNIEnv *, jobject, jobject, jobject);
-                              
-
 
 /*-------------------------------------------------------------------------*
  * NAME
@@ -247,7 +238,7 @@ static jgdi_result_t build_queue_state_filter(JNIEnv *env, jobject queue_state_f
       if ((ret = QueueStateFilter_getOptions(env, queue_state_filter, &options_obj, alpp)) != JGDI_SUCCESS) {
          DRETURN(ret);
       } else {
-         const char* options;
+         const char* options = NULL;
          u_long32 filter = 0xFFFFFFFF;
          if (options_obj == NULL) {     
             answer_list_add(alpp, "build_queue_state_filter: options_obj is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -1313,11 +1304,11 @@ static int jgdi_qstat_zombie_jobs_finished(qstat_handler_t *handler, lList **alp
 
 
 /*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    fillQueueInstanceSummary
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeFillQueueInstanceSummary
  * Signature: (Lcom/sun/grid/jgdi/monitoring/QueueInstanceSummaryOptions;Ljava/util/List;)V
  */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_fillQueueInstanceSummary
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeFillQueueInstanceSummary
 (JNIEnv *env, jobject jgdi, jobject options, jobject result) {
 
    jgdi_qstat_filter_t filter;
@@ -1329,7 +1320,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_fillQueueInstanceSumm
    jgdi_result_t ret = JGDI_SUCCESS;
    rmon_ctx_t rmon_ctx;
    
-   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_fillQueueInstanceSummary");
+   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeFillQueueInstanceSummary");
    
    memset(&filter, 0, sizeof(jgdi_qstat_filter_t));
    memset(&qstat_env, 0, sizeof(qstat_env));
@@ -1536,11 +1527,11 @@ error:
 
 
 /*
- * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    fillClusterQueueSummary
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeFillClusterQueueSummary
  * Signature: (Lcom/sun/grid/jgdi/monitoring/QueueFilter;Lcom/sun/grid/jgdi/monitoring/filter/ResourceFilter;Ljava/util/List;)V
  */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_fillClusterQueueSummary
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeFillClusterQueueSummary
      (JNIEnv *env, jobject jgdi, jobject options, jobject result) {
  
    jgdi_qstat_filter_t filter;
@@ -1553,7 +1544,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_fillClusterQueueSumma
    jgdi_result_t ret = JGDI_SUCCESS;
    rmon_ctx_t rmon_ctx;
    
-   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_fillClusterQueueSummary");
+   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeFillClusterQueueSummary");
 
    memset(&filter, 0, sizeof(jgdi_qstat_filter_t));
    memset(&qstat_env, 0, sizeof(qstat_env));

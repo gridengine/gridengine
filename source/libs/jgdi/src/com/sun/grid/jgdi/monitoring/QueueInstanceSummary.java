@@ -119,7 +119,7 @@ public interface QueueInstanceSummary {
     *  Get the list of jobs which are assigned to the queue instance
     *  @return list of jobs (instances of {@link JobSummary})
     */
-   public List getJobList();
+   public List<JobSummary> getJobList();
 
    /**
     *  Get the load alarm reason for the queue instance
@@ -137,19 +137,19 @@ public interface QueueInstanceSummary {
     *  Get the list of explain messages
     *  @return list of explain messages 
     */
-   public List getExplainMessageList();
+   public List<String> getExplainMessageList();
 
    /**
     *  Get avaialable dominances for the resource values
     *  @return set of avaialable dominances
     */
-   public Set getResourceDominanceSet();
+   public Set<String> getResourceDominanceSet();
    
    /**
     *  Get all resources names which have the dominane <code>dom</code>
     *  @return set of resource names
     */
-   public Set getResourceNames(String dom);
+   public Set<String> getResourceNames(String dom);
    
    /**
     *  Get a resource value

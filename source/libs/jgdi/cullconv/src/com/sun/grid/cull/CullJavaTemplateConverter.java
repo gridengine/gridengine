@@ -35,65 +35,50 @@ import com.sun.grid.cull.template.Template;
 import com.sun.grid.cull.template.TemplateFactory;
 import java.io.File;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
  *
  */
 public class CullJavaTemplateConverter extends AbstractCullToJavaConverter {
-   
-   private TemplateFactory fac;
-   private File templateFile;
-   
-   /** Creates a new instance of CullTemplateConverter */
-   public CullJavaTemplateConverter(File buildDir, String classpath, File outputDir, 
-                                    File template, String javaSourceVersion, String javaTargetVersion ) {      
-      fac = new TemplateFactory(buildDir, classpath, javaSourceVersion, javaTargetVersion );
-      
-      super.setOutputDir(outputDir);
-      this.templateFile = template;
-   }
-   
 
-   public void convert(CullDefinition cullDef) throws java.io.IOException {
-      
-      Template template = fac.createTemplate(templateFile);
-      
-      Iterator iter = cullDef.getObjectNames().iterator();
-      
-      JavaHelper javaHelper = new JavaHelper(cullDef );
-      
-      if( getPackagename() == null ) {
-         setPackagename(cullDef.getPackageName() );
-      }
-      
-      javaHelper.setPackageName(getPackagename());
-      Map params = new HashMap();
-      
-      params.put("javaHelper", javaHelper);
-      params.put("cullDef", cullDef);
-      
-      while( iter.hasNext() ) {
-         String name = (String)iter.next();
-         CullObject obj = cullDef.getCullObject(name);
-         
-         params.put("cullObj", obj);
-         
-         String javaClassName = javaHelper.getNonPrimitiveClassname(obj);
-         
-         File f = super.getFileForClass(javaClassName);
-         
-         if( !f.exists() || f.lastModified() < templateFile.lastModified() ) { 
-            
-            
-            Printer p  = new Printer(f);
+    private TemplateFactory fac;
+    private File templateFile;
 
-            template.print(p, params );
-            p.flush();
-            p.close();
-         }
-      }
-   }
+    /** Creates a new instance of CullTemplateConverter */
+    public CullJavaTemplateConverter(File buildDir, String classpath, File outputDir, File template, String javaSourceVersion, String javaTargetVersion) {
+        fac = new TemplateFactory(buildDir, classpath, javaSourceVersion, javaTargetVersion);
+        super.setOutputDir(outputDir);
+        this.templateFile = template;
+    }
 
+
+    public void convert(CullDefinition cullDef) throws java.io.IOException {
+
+        Template template = fac.createTemplate(templateFile);
+        JavaHelper javaHelper = new JavaHelper(cullDef);
+
+        if (getPackagename() == null) {
+            setPackagename(cullDef.getPackageName());
+        }
+
+        javaHelper.setPackageName(getPackagename());
+        Map params = new HashMap();
+
+        params.put("javaHelper", javaHelper);
+        params.put("cullDef", cullDef);
+
+        for (String name : cullDef.getObjectNames()) {
+            CullObject obj = cullDef.getCullObject(name);
+            params.put("cullObj", obj);
+            String javaClassName = javaHelper.getNonPrimitiveClassname(obj);
+            File f = super.getFileForClass(javaClassName);
+            if (!f.exists() || f.lastModified() < templateFile.lastModified()) {
+                Printer p = new Printer(f);
+                template.print(p, params);
+                p.flush();
+                p.close();
+            }
+        }
+    }
 }

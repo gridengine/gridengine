@@ -32,9 +32,8 @@
 package com.sun.grid.jgdi.monitoring.filter;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -43,53 +42,47 @@ import java.util.StringTokenizer;
  */
 public class ResourceAttributeFilter implements Serializable {
 
-  
-   private List<String> valueNames = new ArrayList<String>();
+    private List<String> valueNames = new LinkedList<String>();
 
-   public static ResourceAttributeFilter parse(String str) {
-      ResourceAttributeFilter ret = new ResourceAttributeFilter();
-      return ret.fill(str);
-   }
+    public static ResourceAttributeFilter parse(String str) {
+        ResourceAttributeFilter ret = new ResourceAttributeFilter();
+        return ret.fill(str);
+    }
 
-   public ResourceAttributeFilter fill(String str) {
-      StringTokenizer st = new StringTokenizer(str, ",");
-      while (st.hasMoreTokens()) {
-         addValueName(st.nextToken().trim());
-      }
-      return this;
-   }
-    
+    public ResourceAttributeFilter fill(String str) {
+        StringTokenizer st = new StringTokenizer(str, ",");
+        while (st.hasMoreTokens()) {
+            addValueName(st.nextToken().trim());
+        }
+        return this;
+    }
+
     public void addValueName(String valueName) {
         valueNames.add(valueName);
     }
-    
-    public List getValueNames() {
-        if(valueNames == null) {
+
+    public List<String> getValueNames() {
+        if (valueNames == null) {
             return Collections.EMPTY_LIST;
         } else {
             return Collections.unmodifiableList(valueNames);
         }
     }
-    
-   @Override
+
+    @Override
     public String toString() {
-        
-        StringBuilder buf = new StringBuilder();
-        Iterator iter = getValueNames().iterator();
+        StringBuilder ret = new StringBuilder();
         boolean first = true;
-        buf.append("[ResourceAttributeFilter: ");
-        while(iter.hasNext()) {
-            String name = (String)iter.next();
-            if(first) {
+        ret.append("ResourceAttributeFilter[");
+        for (String name: getValueNames()) {
+            if (first) {
                 first = false;
             } else {
-                buf.append(", ");
+                ret.append(", ");
             }
-            buf.append(name);
+            ret.append(name);
         }
-        buf.append("]");
-        return buf.toString();
+        ret.append("]");
+        return ret.toString();
     }
-    
-    
 }

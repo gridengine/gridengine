@@ -35,7 +35,6 @@ import com.sun.grid.jgdi.configuration.ClusterQueue;
 import com.sun.grid.jgdi.configuration.xml.XMLUtil;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.Iterator;
 import java.util.List;
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -45,75 +44,51 @@ import org.xml.sax.SAXParseException;
  *
  */
 public class MapAttributeTestCase extends BaseTestCase {
-   
-   /** Creates a new instance of MapAttributeTestCase */
-   public MapAttributeTestCase(String name) {
-      super(name);
-   }
-   
-   protected void setUp() throws Exception {
-      logger.fine("Loading jgdi");
-      System.loadLibrary( "jgdi" );
-      super.setUp();
-      logger.fine("SetUp done");
-   }
-   
-   
-   public static Test suite() {
-      TestSuite suite = new TestSuite( MapAttributeTestCase.class);
-      return suite;
-   }
-   
-   
-   public void testClusterQueueRerun() throws Exception {
-    
-      JGDI jgdi = createJGDI();
-      try {
-         List queueList = jgdi.getClusterQueueList();
 
-         Iterator iter = queueList.iterator();
-         while(iter.hasNext()) {         
-            ClusterQueue queue = (ClusterQueue)iter.next();
+    /** Creates a new instance of MapAttributeTestCase */
+    public MapAttributeTestCase(String name) {
+        super(name);
+    }
 
-            logger.info( queue.getName() + "------------" );
-            Iterator keyiter = queue.getRerunKeys().iterator();
-            while(keyiter.hasNext()) {
-               String key = (String)keyiter.next();
-               logger.info("rerun: " + key + "=" + queue.getRerun(key));
-               queue.putRerun(key, !queue.getRerun(key) );
-            }         
-            queue.setName("blubber_" + queue.getName() );
+    public static Test suite() {
+        TestSuite suite = new TestSuite(MapAttributeTestCase.class);
+        return suite;
+    }
 
-            queue.addPe("@/", "make");
+    public void testClusterQueueRerun() throws Exception {
 
-            StringWriter sw = new StringWriter();
-            XMLUtil.write(queue, sw);
+        JGDI jgdi = createJGDI();
+        try {
+            List<ClusterQueue> queueList = jgdi.getClusterQueueList();
+            for (ClusterQueue queue : queueList) {    
+                logger.info(queue.getName() + "------------");
+                for (String key : queue.getRerunKeys()) {
+                    logger.info("rerun: " + key + "=" + queue.getRerun(key));
+                    queue.putRerun(key, !queue.getRerun(key));
+                }
+                queue.setName("blubber_" + queue.getName());
+                queue.addPe("@/", "make");
+                StringWriter sw = new StringWriter();
+                XMLUtil.write(queue, sw);
+                sw.flush();
+                logger.fine(sw.getBuffer().toString());
 
-            sw.flush();
-            
-            logger.fine(sw.getBuffer().toString());
+                try {
+                    queue = (ClusterQueue) XMLUtil.read(new StringReader(sw.getBuffer().toString()));
+                    XMLUtil.write(queue, System.out);
+                } catch (SAXParseException spe) {
+                    logger.severe("Error in [" + spe.getLineNumber() + ":" + spe.getColumnNumber() + "]:" + spe.getMessage());
+                    throw spe;
+                }
 
-            try {
-               queue = (ClusterQueue)XMLUtil.read(new StringReader(sw.getBuffer().toString()));
-
-               XMLUtil.write(queue, System.out);
-            } catch( SAXParseException spe ) {
-
-               logger.severe("Error in [" + spe.getLineNumber() + ":" + spe.getColumnNumber() +"]:" + spe.getMessage() );
-               throw spe;
+                //         pe = new ST();
+                //         pe.setName("make");
+                //         queue.addPe("oin", pe);
+                //         jgdi.addClusterQueue(queue);
+                //jgdi.deleteClusterQueue(queue);
             }
-
-
-   //         pe = new ST();
-   //         pe.setName("make");
-   //         queue.addPe("oin", pe);
-   //         jgdi.addClusterQueue(queue);
-            //jgdi.deleteClusterQueue(queue);
-         }
-      
-      } finally {
-         jgdi.close();
-      }      
-   }
-   
+        } finally {
+            jgdi.close();
+        }
+    }
 }

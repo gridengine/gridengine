@@ -47,16 +47,11 @@ import com.sun.grid.jgdi.configuration.reflect.PlainListPropertyDescriptor;
 import com.sun.grid.jgdi.configuration.reflect.SimplePropertyDescriptor;
 
 <% // Import all cull object names;
-    java.util.Iterator iter = cullDef.getObjectNames().iterator();
     com.sun.grid.cull.CullObject cullObj = null;
-    String name = null;
     String classname = null;
     String idlname = null;
-
-    while( iter.hasNext() ) {
-      name = (String)iter.next();
+    for (String name : cullDef.getObjectNames()) {
       cullObj = cullDef.getCullObject(name); 
-      
       if(cullObj.getType() == cullObj.TYPE_PRIMITIVE) {
          continue;
       }
@@ -67,7 +62,7 @@ import com.sun.grid.jgdi.configuration.reflect.SimplePropertyDescriptor;
         continue;
       }
 %>import <%=jh.getFullClassName(cullObj)%>;
-<% } // end of while %>
+<% } // end of for %>
 /**
  *
  * 
@@ -80,30 +75,30 @@ public class JGDIRemoteDescriptor extends AbstractClassDescriptor {
        
        PlainListPropertyDescriptor lpd = null;
 
-<%  iter = cullDef.getObjectNames().iterator();
-     while( iter.hasNext() ) {
-      name = (String)iter.next();
+<%
+     for (String name : cullDef.getObjectNames()) {
       cullObj = cullDef.getCullObject(name); 
-      if(cullObj.getType() == cullObj.TYPE_PRIMITIVE) {
+      if (cullObj.getType() == cullObj.TYPE_PRIMITIVE) {
          continue;
       }
-      if(cullObj.getType() == cullObj.TYPE_MAPPED) {
+      if (cullObj.getType() == cullObj.TYPE_MAPPED) {
          continue;
       }
       classname = cullObj.getName();
       idlname = cullObj.getIdlName();
       
-  if ( !cullObj.hasGetListOperation()) {
+  if (!cullObj.hasGetListOperation()) {
 %>
       // add( new SimplePropertyDescriptor(JGDIRemote.class, "<%=idlname%>", <%=idlname%>.class,  "<%=name%>", -1, false, true, false));
 <% } else { %>
       add( new PlainListPropertyDescriptor(JGDIRemote.class, "<%=idlname%>", <%=idlname%>.class, "<%=name%>", -1, false, false, true));
 <% } %>      
-<% } // end of while %>
+<% 
+   } // end of for
+%>
    }
    
    public void validate(Object bean) throws com.sun.grid.jgdi.configuration.reflect.InvalidObjectException {
       // TODO
    }
-   
 }

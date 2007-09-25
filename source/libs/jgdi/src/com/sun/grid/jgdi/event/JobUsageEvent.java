@@ -40,41 +40,38 @@ import java.util.Set;
  * Java Wrapper class for the JOB_USAGE event.
  */
 public class JobUsageEvent extends JobEvent implements java.io.Serializable {
-    
-    private Map usage;
-    
+
+    private Map<String, Double> usage;
+
     /** Creates a new instance of JobFinishEvent */
     public JobUsageEvent(long timestamp, int evtId) {
         super(timestamp, evtId);
     }
 
     public void addUsage(String name, double value) {
-        if(usage == null) {
-            usage = new HashMap();
+        if (usage == null) {
+            usage = new HashMap<String, Double>();
         }
         usage.put(name, new Double(value));
     }
-    
-    
-    public Set getLoadValueNames() {
-        if(usage == null) {
+
+    public Set<String> getLoadValueNames() {
+        if (usage == null) {
             return Collections.EMPTY_SET;
         } else {
             return usage.keySet();
         }
     }
-    
+
     public Double getLoadValue(String name) {
-        if(usage == null) {
+        if (usage == null) {
             throw new IllegalStateException("Have no load values");
         }
-        return (Double)usage.get(name);
+        return usage.get(name);
     }
-    
-    
-    
-    public Map getUsage() {
-        if(usage == null) {
+
+    public Map<String, Double> getUsage() {
+        if (usage == null) {
             return Collections.EMPTY_MAP;
         }
         return Collections.unmodifiableMap(usage);

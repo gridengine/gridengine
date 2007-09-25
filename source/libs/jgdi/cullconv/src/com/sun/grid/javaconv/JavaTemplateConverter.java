@@ -1,5 +1,4 @@
-/*___INFO__MARK_BEGIN__*/
-/*************************************************************************
+/*___INFO__MARK_BEGIN__*//*************************************************************************
  *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
@@ -46,86 +45,70 @@ import java.util.logging.Logger;
  *
  */
 public class JavaTemplateConverter implements JavaToJavaConverter {
-   
-   private File outputFile;
-   
-   private TemplateFactory fac;
-   private File templateFile;
-   private String packageName;
-   private String classpath;
-   private Printer printer;
-   private File   prologFile;
-   private File   epilogFile;
-   private Logger logger = Logger.getLogger("cullconv");
-    
-   /** Creates a new instance of JavaTemplateConverter */
-   public JavaTemplateConverter(File buildDir, String classpath, File templateFile, File outputFile, File prologFile, File epilogFile,
-                                String javaSourceVersion, String javaTargetVersion) {
-      this.templateFile = templateFile;
-      this.outputFile = outputFile;
-      fac = new TemplateFactory(buildDir, classpath, javaSourceVersion, javaTargetVersion);
-      this.prologFile = prologFile;
-      this.epilogFile = epilogFile; 
-      this.printer = null;
-   }
-   
-   
 
-   public void convert(Class clazz) throws java.io.IOException {
-      Template template = fac.createTemplate(templateFile);
-      
-      
-      try {
-         
-         if(printer == null) {
-            if( !outputFile.exists() || 
-                outputFile.lastModified() < templateFile.lastModified() ||
-                (prologFile != null && outputFile.lastModified() < prologFile.lastModified()) ||
-                (epilogFile != null && outputFile.lastModified() < epilogFile.lastModified()) ) {
-               printer = new Printer(outputFile);
-               if(prologFile != null) {
-                  logger.fine("write prolog " + prologFile);
-                  printer.printFile(prologFile);
-               }
+    private File outputFile;
+    private TemplateFactory fac;
+    private File templateFile;
+    private String packageName;
+    private String classpath;
+    private Printer printer;
+    private File prologFile;
+    private File epilogFile;
+    private Logger logger = Logger.getLogger("class");
+
+    /** Creates a new instance of JavaTemplateConverter */
+    public JavaTemplateConverter(File buildDir, String classpath, File templateFile, File outputFile, File prologFile, File epilogFile, String javaSourceVersion, String javaTargetVersion) {
+        this.templateFile = templateFile;
+        this.outputFile = outputFile;
+        fac = new TemplateFactory(buildDir, classpath, javaSourceVersion, javaTargetVersion);
+        this.prologFile = prologFile;
+        this.epilogFile = epilogFile;
+        this.printer = null;
+    }
+
+    public void convert(Class clazz) throws java.io.IOException {
+        Template template = fac.createTemplate(templateFile);
+
+        try {
+            if (printer == null) {
+                if (!outputFile.exists() || outputFile.lastModified() < templateFile.lastModified() || (prologFile != null && outputFile.lastModified() < prologFile.lastModified()) || (epilogFile != null && outputFile.lastModified() < epilogFile.lastModified())) {
+                    printer = new Printer(outputFile);
+                    if (prologFile != null) {
+                        logger.fine("write prolog " + prologFile);
+                        printer.printFile(prologFile);
+                    }
+                }
             }
-         }
-         if(printer != null) {
-            Map params = new HashMap();
-
-            params.put("class", clazz);
-
-            String javaClassName = clazz.getName();
-
-            int index = javaClassName.lastIndexOf(".");
-            if(index >= 0 ) {
-               javaClassName = javaClassName.substring(index+1);
+            if (printer != null) {
+                Map<String, Object> params = new HashMap<String, Object>();
+                params.put("shortname", clazz);
+                String javaClassName = clazz.getName();
+                int index = javaClassName.lastIndexOf(".");
+                if (index >= 0) {
+                    javaClassName = javaClassName.substring(index + 1);
+                }
+                params.put("shortname", javaClassName);
+                BeanInfo beanInfo = java.beans.Introspector.getBeanInfo(clazz);
+                params.put("beanInfo", beanInfo);
+                logger.fine("writer class " + clazz.getName());
+                template.print(printer, params);
+                printer.flush();
             }
+        } catch (IntrospectionException itse) {
+            IOException e = new IOException("Introspection error: " + itse.getMessage());
+            e.initCause(itse);
+            throw e;
+        }
+    }
 
-            params.put("shortname", javaClassName);
-            
-            BeanInfo beanInfo = java.beans.Introspector.getBeanInfo(clazz);
-
-            params.put("beanInfo", beanInfo);
-            logger.fine("writer class " + clazz.getName());
-            template.print(printer, params );
-            printer.flush();
-         }
-      } catch(IntrospectionException itse) {
-         IOException e = new IOException("Introspection error: " + itse.getMessage());
-         e.initCause(itse);
-         throw e;
-      }
-   }
-   
-   public void finish() throws IOException {
-      if(printer != null) {
-         if(epilogFile != null) {
-            logger.fine("write epilog " + epilogFile);
-            printer.printFile(epilogFile);
-            printer.flush();
-         }
-         printer.close();
-      }
-   }
-
+    public void finish() throws IOException {
+        if (printer != null) {
+            if (epilogFile != null) {
+                logger.fine("write epilog " + epilogFile);
+                printer.printFile(epilogFile);
+                printer.flush();
+            }
+            printer.close();
+        }
+    }
 }

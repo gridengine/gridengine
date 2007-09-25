@@ -32,30 +32,11 @@
 
 package com.sun.grid.jgdi.util.shell.editor;
 
-import com.sun.grid.jgdi.BaseTestCase;
-import com.sun.grid.jgdi.JGDI;
-import com.sun.grid.jgdi.JGDIException;
-import com.sun.grid.jgdi.JGDIFactory;
-import com.sun.grid.jgdi.configuration.UserSet;
-import com.sun.grid.jgdi.configuration.UserSetImpl;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import junit.framework.*;
 import com.sun.grid.jgdi.configuration.*;
-import com.sun.grid.jgdi.configuration.reflect.ClassDescriptor;
-import com.sun.grid.jgdi.configuration.reflect.DefaultListPropertyDescriptor;
-import com.sun.grid.jgdi.configuration.reflect.DefaultMapListPropertyDescriptor;
-import com.sun.grid.jgdi.configuration.reflect.DefaultMapPropertyDescriptor;
-import com.sun.grid.jgdi.configuration.reflect.PropertyDescriptor;
-import com.sun.grid.jgdi.configuration.reflect.SimplePropertyDescriptor;
-import com.sun.grid.jgdi.configuration.xml.XMLUtil;
-import java.io.IOException;
-import java.io.LineNumberReader;
-import java.io.StreamTokenizer;
-import java.io.StringReader;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;

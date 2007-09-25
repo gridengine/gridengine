@@ -244,9 +244,7 @@ import java.util.Hashtable;
 import com.sun.grid.jgdi.EventClient;
 import com.sun.grid.jgdi.JGDIFactory;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.Map;
-import java.util.Iterator;
 import com.sun.grid.jgdi.TestValueFactory;
 
 public class <%=cullObj.getIdlName()%>EventTestCase extends BaseTestCase {

@@ -46,10 +46,10 @@ import java.util.Set;
 public class HostInfoImpl implements HostInfo, Serializable {
 
    private String hostname;
-   private Map   hostValueMap = new HashMap();
-   private Map   resourceMap = new HashMap();
-   private List  jobList = new ArrayList();
-   private List  queueList = new ArrayList();
+   private Map<String, Object> hostValueMap = new HashMap<String, Object>();
+   private Map<String, Map<String, Object>> resourceMap = new HashMap<String, Map<String, Object>>();
+   private List<JobInfo> jobList = new ArrayList<JobInfo>();
+   private List<QueueInfo>  queueList = new ArrayList<QueueInfo>();
    
    /** 
     * Create a new host info object 
@@ -153,7 +153,7 @@ public class HostInfoImpl implements HostInfo, Serializable {
     *
     *  @return set of host value names
     */
-   public Set getHostValueKeys() {
+   public Set<String> getHostValueKeys() {
       return hostValueMap.keySet();
    }
    
@@ -196,9 +196,9 @@ public class HostInfoImpl implements HostInfo, Serializable {
     * @param value  value
     */
    public void putResourceValue(String dominance, String name, Object value) {
-      Map dominanceMap = (Map)resourceMap.get(dominance);
+      Map<String, Object> dominanceMap = resourceMap.get(dominance);
       if(dominanceMap == null) {
-         dominanceMap = new HashMap();
+         dominanceMap = new HashMap<String, Object>();
          resourceMap.put(dominance, dominanceMap);
       }
       dominanceMap.put(name, value);
@@ -210,7 +210,7 @@ public class HostInfoImpl implements HostInfo, Serializable {
     * Get the set of available domincances
     * @return  the set of available domincances
     */
-   public Set getDominanceSet() {
+   public Set<String> getDominanceSet() {
       return resourceMap.keySet();
    }
    
@@ -219,9 +219,9 @@ public class HostInfoImpl implements HostInfo, Serializable {
     * @param dominance  the dominance
     * @return set of resource names
     */
-   public Set getResourceValueNames(String dominance) {
-      Map dominanceMap = (Map)resourceMap.get(dominance);
-      if(dominanceMap == null) {
+   public Set<String> getResourceValueNames(String dominance) {
+      Map<String, Object> dominanceMap = resourceMap.get(dominance);
+      if (dominanceMap == null) {
          return Collections.EMPTY_SET;
       } else {
          return dominanceMap.keySet();
@@ -254,7 +254,7 @@ public class HostInfoImpl implements HostInfo, Serializable {
     *  @return list of jobs (instances of {@link JobInfo})
     *  @see com.sun.grid.jgdi.JGDI#execQHost
     */
-   public List getJobList() {
+   public List<JobInfo> getJobList() {
       return Collections.unmodifiableList(jobList);
    }
 
@@ -285,7 +285,7 @@ public class HostInfoImpl implements HostInfo, Serializable {
     *  @return list of queues (instances of {@link QueueInfo})
     *  @see com.sun.grid.jgdi.JGDI#execQHost
     */
-   public List getQueueList() {
+   public List<QueueInfo> getQueueList() {
       return Collections.unmodifiableList(queueList);
    }
 

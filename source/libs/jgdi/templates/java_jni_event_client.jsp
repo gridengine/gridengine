@@ -67,20 +67,13 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
    }
 
 <%
-    java.util.Iterator iter = cullDef.getObjectNames().iterator();
     com.sun.grid.cull.CullObject cullObj = null;
-    String name = null;
-
-    while( iter.hasNext() ) {
-      name = (String)iter.next();
+    for (String name : cullDef.getObjectNames()) {
       cullObj = cullDef.getCullObject(name); 
-      
       name = cullObj.getIdlName();
-      
-      if(name == null) {
+      if (name == null) {
          throw new IllegalStateException("Have no idl name for " + cullObj.getName());
       }
-      
       if(cullObj.hasAddEvent()) {
 %>
      /**
@@ -265,7 +258,7 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
      
 <% 
       } // end of hasModifyOperation
-   } // end of while 
+   } // end of for
    String [] specialEvents = {
        "QmasterGoesDown",
        "SchedulerRun",

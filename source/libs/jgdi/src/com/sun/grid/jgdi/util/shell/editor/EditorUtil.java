@@ -56,7 +56,6 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -595,8 +594,7 @@ public class EditorUtil {
                 ",io="+df.format(pd.get(obj,"io"));
         }
         
-        for (Iterator iter = pd.getKeys(obj).iterator(); iter.hasNext(); ) {
-            String key = (String) iter.next();
+        for (String key : pd.getKeys(obj)) {
             val = EditorUtil.translateObjectToStringValue(pd.getPropertyName(), pd.get(obj, key));
             if (key.equals(EditorUtil.VALUE_DEFAULT)) {
                 sb.insert(0,"," + val);
@@ -614,10 +612,9 @@ public class EditorUtil {
     private static String convertMapList2String(GEObject obj, DefaultMapListPropertyDescriptor pd) {
         StringBuilder sb = new StringBuilder();
         Object val;
-        for (Iterator iter = pd.getKeys(obj).iterator(); iter.hasNext(); ) {
-            String key = (String) iter.next();
+        for (String key : pd.getKeys(obj)) {
             StringBuilder temp = new StringBuilder();
-            for (int i=0; i < pd.getCount(obj,key); i++) {
+            for (int i=0; i < pd.getCount(obj, key); i++) {
                 val = pd.get(obj, key, i);
                 //ClusterQueue - ComplexEntryImpl
                 if (val instanceof ComplexEntryImpl) {

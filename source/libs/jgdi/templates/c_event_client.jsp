@@ -189,21 +189,13 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_nativeGet<
 #include "jgdi_wrapper.h"
 
 <%
-    java.util.Iterator iter = cullDef.getObjectNames().iterator();
     com.sun.grid.cull.CullObject cullObj = null;
-    String name = null;
-    
     SubscribeMethodGenerator gen = new SubscribeMethodGenerator();
-
-    while( iter.hasNext() ) {
-      name = (String)iter.next();
+    for (String name : cullDef.getObjectNames()) {
       cullObj = cullDef.getCullObject(name); 
-      
       gen.setObj(cullObj);
-      
       gen.generate();
-      
-   } // end of while 
+    } // end of for 
     
    // special events
     
@@ -293,20 +285,15 @@ jgdi_result_t process_generic_event(JNIEnv *env,  jobject *event, lListElem *ev,
        } // end of generate
    } // end of class EvtInfo
        
-   java.util.List evtList = new java.util.LinkedList();
-   
-   iter = cullDef.getObjectNames().iterator();
-    while( iter.hasNext() ) {
-      name = (String)iter.next();
+   java.util.List<EvtInfo> evtList = new java.util.LinkedList<EvtInfo>();
+   for (String name : cullDef.getObjectNames()) {
       cullObj = cullDef.getCullObject(name); 
-      
       evtList.add(new EvtInfo(cullObj, gen));
-   } // end of while      
+   } // end of for     
    
    // generate the c code
-   iter = evtList.iterator();
-   while(iter.hasNext()) {
-       ((EvtInfo)iter.next()).generate();
+   for (EvtInfo info : evtList) {
+       info.generate();
    }
    
 %>  
@@ -317,4 +304,3 @@ jgdi_result_t process_generic_event(JNIEnv *env,  jobject *event, lListElem *ev,
    }
 
 }
-

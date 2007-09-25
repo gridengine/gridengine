@@ -36,17 +36,14 @@
   java.beans.BeanInfo beanInfo = (java.beans.BeanInfo)params.get("beanInfo");
   Class beanClass = beanInfo.getBeanDescriptor().getBeanClass();
   String classname = beanClass.getName();
-  
   String fullClassname = classname.replace('.','/');
   {
       int i = classname.lastIndexOf('.');
-      if(i>0) {
+      if (i>0) {
           classname = classname.substring(i+1);
       }
-  }  
-  
+  }
   classname = classname.replace('$', '_');
-  
   
   // skip the inner EventFactory classes
   if (classname.startsWith("EventFactory_")) {
@@ -54,117 +51,99 @@
      return;
   }
   
-  java.beans.PropertyDescriptor [] props = beanInfo.getPropertyDescriptors();
-  
+  java.beans.PropertyDescriptor[] props = beanInfo.getPropertyDescriptors();
   com.sun.grid.javaconv.CWrapperHelper ch = new com.sun.grid.javaconv.CWrapperHelper(beanInfo.getBeanDescriptor().getBeanClass());
-  
-  java.util.Iterator iter = null;
 %>
-
 /*==== BEGIN  <%=fullClassname%> */
 
 jclass <%=classname%>_find_class(JNIEnv *env, lList** alpp) {
    static jclass clazz = NULL;
+
    DENTER(BASIS_LAYER, "<%=classname%>_find_class");
    if (clazz == NULL) {
       clazz = find_class(env, "<%=fullClassname%>", alpp);
    }
-   DEXIT;
-   return clazz;
+   DRETURN(clazz);
 }
 
 <%
   // ---------------------------------------------------------------------------
   // ------------ CONSTRUCTORS -------------------------------------------------
   // ---------------------------------------------------------------------------
-   iter = ch.getConstructorNames().iterator();
-
-   while(iter.hasNext()) {
-      String constructorName = (String)iter.next();
+  for (String constructorName: ch.getConstructorNames()) { 
       java.lang.reflect.Constructor constructor = ch.getConstructor(constructorName);
-      Class [] parameters = constructor.getParameterTypes();
+      Class[] parameters = constructor.getParameterTypes();
 %>
 jgdi_result_t <%=classname%>_<%=constructorName%>(JNIEnv *env, jobject *obj <%
    
-      for(int i = 0; i < parameters.length; i++) {      
-         if( String.class.equals(parameters[i])) {
+      for (int i = 0; i < parameters.length; i++) {
+         if (String.class.equals(parameters[i])) {
             /* For strings we want a const char* not a jstring */
           %>, const char* p<%=i%> <%
          } else {
          %>, <%=ch.getCType(parameters[i])%> p<%=i%> <%
          }
-      } // end of fore
+      } // end of inner for
 %>, lList **alpp) {
    jgdi_result_t ret = JGDI_SUCCESS;
    static jmethodID mid = NULL;
    jclass clazz = NULL;<%
-   
-  // For string parameters we need a local variable
-  // which hold the jstring object
-  for(int i = 0; i < parameters.length; i++) {
-     if( String.class.equals(parameters[i])) {
-%>   jstring p<%=i%>_obj = NULL;<%
-     }
-  }
-   
-%>
+   // For string parameters we need a local variable
+   // which hold the jstring object
+   for (int i = 0; i < parameters.length; i++) {
+      if (String.class.equals(parameters[i])) {
+   %>     jstring p<%=i%>_obj = NULL;<%
+      }
+   } // end of inner for   
+   %>
    DENTER(BASIS_LAYER, "<%=classname%>_<%=constructorName%>");
       
    clazz = <%=classname%>_find_class(env, alpp);
    if (clazz == NULL) {
-      DEXIT;
-      return JGDI_ILLEGAL_STATE;
+      DRETURN(JGDI_ILLEGAL_STATE);
    }
    if (mid == NULL) {
       /* initialize the mid */
       mid = get_methodid(env, clazz, "<init>", "<%=ch.getSignature(constructor)%>", alpp);
       if (mid == NULL) {
-         DEXIT;
-         return JGDI_ILLEGAL_STATE;
+         DRETURN(JGDI_ILLEGAL_STATE);
       }
    } <%
-   
    // All string parameters comes a const char* 
    // we have to allocate the jstring object
-   for(int i = 0; i < parameters.length; i++) {
-      if( String.class.equals(parameters[i])) {
+   for (int i = 0; i < parameters.length; i++) {
+      if (String.class.equals(parameters[i])) {
 %>
    if ( p<%=i%> != NULL ) {
       p<%=i%>_obj = (*env)->NewStringUTF(env, p<%=i%> ); 
    }<%
       } // end of if
-  } // end of for
+  } // end of inner for
 %>   
    *obj = (*env)->NewObject(env, clazz, mid <%
-      for(int i = 0; i < parameters.length; i++) {      
-         if( String.class.equals(parameters[i])) {
+      for (int i = 0; i < parameters.length; i++) {
+         if (String.class.equals(parameters[i])) {
             // For all string parameter we pass the jstring object
             // to the method call
           %>, p<%=i%>_obj <%
          } else {
          %>, p<%=i%> <%
          }
-      } // end of for
+      } // end of inner for
   %>);
    if (test_jni_error(env, "call of constructor failed", alpp)) {
       ret = JGDI_ILLEGAL_STATE;
    } 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 <%   
-   } // end of while(iter.hasNext())
+   } // end of for
    
   // ---------------------------------------------------------------------------
   // ------------ Static Fields ------------------------------------------------
   // ---------------------------------------------------------------------------
-
- iter = ch.getStaticFieldNames().iterator();
- while(iter.hasNext()) {
-    String fieldName = (String)iter.next();
+  for (String fieldName: ch.getStaticFieldNames()) {
     java.lang.reflect.Field field = ch.getStaticField(fieldName);
-  
-    
 %>
 jgdi_result_t <%=classname%>_static_<%=fieldName%>(JNIEnv *env, <%=ch.getCType(field.getType())%> *res, lList **alpp) {
    jgdi_result_t ret = JGDI_SUCCESS;
@@ -176,55 +155,45 @@ jgdi_result_t <%=classname%>_static_<%=fieldName%>(JNIEnv *env, <%=ch.getCType(f
 
    if (env == NULL) {
       answer_list_add(alpp, "env is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return JGDI_ILLEGAL_STATE;
+      DRETURN(JGDI_ILLEGAL_STATE);
    }
    clazz = <%=classname%>_find_class(env, alpp);
    if (clazz == NULL) {
       answer_list_add(alpp, "class <%=fullClassname%> not found", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return JGDI_ILLEGAL_STATE;
+      DRETURN(JGDI_ILLEGAL_STATE);
    }
    if (mid == NULL) {
       mid = get_static_fieldid(env, clazz, "<%=field.getName()%>", "<%=ch.getSignature(field)%>", alpp);
       if (mid == NULL) {
-         DEXIT;
-         return JGDI_ILLEGAL_STATE;
+         DRETURN(JGDI_ILLEGAL_STATE);
       }
    }   
    *res = (*env)-><%=ch.getStaticGetFieldMethod(field)%>(env, clazz, mid);
    if (test_jni_error(env, "<%=classname%>_static_<%=fieldName%> failed", alpp)) {
       ret = JGDI_ILLEGAL_STATE;
    }      
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 <%    
- } // end of while
+ } // end of for
    
    
   // ---------------------------------------------------------------------------
   // ------------ Static METHODS -----------------------------------------------
   // ---------------------------------------------------------------------------
-
-   iter = ch.getStaticMethodNames().iterator();
-   while(iter.hasNext()) {
-      String methodName = (String)iter.next();
+  for (String methodName: ch.getStaticMethodNames()) {
       java.lang.reflect.Method method = ch.getStaticMethod(methodName);
-      Class [] parameters = method.getParameterTypes();
-      
+      Class[] parameters = method.getParameterTypes();
 %>
-jgdi_result_t <%=classname%>_static_<%=methodName%>(JNIEnv *env <%
-   
-      for(int i = 0; i < parameters.length; i++) {         
-         if( String.class.equals(parameters[i])) {
+jgdi_result_t <%=classname%>_static_<%=methodName%>(JNIEnv *env <%   
+      for (int i = 0; i < parameters.length; i++) {         
+         if (String.class.equals(parameters[i])) {
             /* For strings we want a const char* not a jstring */
           %>, const char* p<%=i%> <%
          } else {
          %>, <%=ch.getCType(parameters[i])%> p<%=i%> <%
          }
       }
-
       if (!Void.TYPE.equals(method.getReturnType())) {
          // Add a pointer to the result argument
          %>, <%=ch.getCType(method.getReturnType())%>* result<%
@@ -232,27 +201,26 @@ jgdi_result_t <%=classname%>_static_<%=methodName%>(JNIEnv *env <%
            %>, int* len<%  
          }
       }
-    // And finally we need the answer lsit
+    // And finally we need the answer list
 %>, lList **alpp) {
 
    jgdi_result_t ret = JGDI_SUCCESS;
    static jmethodID mid = NULL; 
    static jclass clazz = NULL;
-<%   
+<%
   // For string parameters we need a local variable
   // which hold the jstring object
   for(int i = 0; i < parameters.length; i++) {
      if( String.class.equals(parameters[i])) {
-%>
-   jstring p<%=i%>_obj = NULL;<%
+%>   jstring p<%=i%>_obj = NULL;<%
      }
   }
   // For non void methods we temporary store the result
   // of the java method in a local variable
   if (!Void.TYPE.equals(method.getReturnType())) {
-     if(method.getReturnType().isArray()) { %>
+     if (method.getReturnType().isArray()) { %>
    jobject temp = NULL;    
-<%   } else {
+<%} else {
 %>
    <%=ch.getCType(method.getReturnType())%> temp = <%=ch.getInitializer(method.getReturnType())%>;
 <%
@@ -265,8 +233,7 @@ jgdi_result_t <%=classname%>_static_<%=methodName%>(JNIEnv *env <%
 %>         
    if (result == NULL ) {
       answer_list_add(alpp, "result is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return JGDI_ILLEGAL_STATE;
+      DRETURN(JGDI_ILLEGAL_STATE);
    }
    /* We set the result always to the default value */
 <%   
@@ -277,17 +244,16 @@ jgdi_result_t <%=classname%>_static_<%=methodName%>(JNIEnv *env <%
   }  %>   
   if (mid == NULL) {
      if (JGDI_SUCCESS != get_static_method_id_for_fullClassname(env, &clazz, &mid, "<%=fullClassname%>", "<%=method.getName()%>", "<%=ch.getSignature(method)%>", alpp)) {
-        DEXIT;
-        return JGDI_ILLEGAL_STATE;
+        DRETURN(JGDI_ILLEGAL_STATE);
      }
    }<%
    
    // All string parameters comes a const char* 
    // we have to allocate the jstring object
-   for(int i = 0; i < parameters.length; i++) {
-      if( String.class.equals(parameters[i])) {
-%>   if ( p<%=i%> != NULL ) {
-      p<%=i%>_obj = (*env)->NewStringUTF(env, p<%=i%> ); 
+   for (int i = 0; i < parameters.length; i++) {
+      if (String.class.equals(parameters[i])) {
+%>   if (p<%=i%> != NULL) {
+      p<%=i%>_obj = (*env)->NewStringUTF(env, p<%=i%>); 
    }<%
       } // end of if
   } // end of for
@@ -300,8 +266,8 @@ jgdi_result_t <%=classname%>_static_<%=methodName%>(JNIEnv *env <%
 %> 
  (*env)-><%=ch.getStaticCallMethod(method.getReturnType())%>(env, clazz, mid <%
       /* Add all parameter to the method call */
-      for(int i = 0; i < parameters.length; i++) {  
-         if( String.class.equals(parameters[i])) {
+      for (int i = 0; i < parameters.length; i++) {  
+         if (String.class.equals(parameters[i])) {
             // For all string parameter we pass the jstring object
             // to the method call
           %>, p<%=i%>_obj <%
@@ -385,34 +351,28 @@ jgdi_result_t <%=classname%>_static_<%=methodName%>(JNIEnv *env <%
 <%   } %>      
    }
 <% } %>
-   DEXIT; 
-   return ret;
+   DRETURN(ret);
 }<%
-   } // end of while(iter.hasNext())
+   } // end of for
    
    
   // ---------------------------------------------------------------------------
   // ------------ METHODS ------------------------------------------------------
   // ---------------------------------------------------------------------------
-
-   iter = ch.getMethodNames().iterator();
-   while(iter.hasNext()) {
-      String methodName = (String)iter.next();
+  for (String methodName: ch.getMethodNames()) {
       java.lang.reflect.Method method = ch.getMethod(methodName);
-      Class [] parameters = method.getParameterTypes();
-      
+      Class[] parameters = method.getParameterTypes();
 %>
 jgdi_result_t <%=classname%>_<%=methodName%>(JNIEnv *env, <%=ch.getCType(beanClass)%> obj <%
    
-      for(int i = 0; i < parameters.length; i++) {         
-         if( String.class.equals(parameters[i])) {
+      for (int i = 0; i < parameters.length; i++) {         
+         if (String.class.equals(parameters[i])) {
             /* For strings we want a const char* not a jstring */
           %>, const char* p<%=i%> <%
          } else {
          %>, <%=ch.getCType(parameters[i])%> p<%=i%> <%
          }
       }
-
       if (!Void.TYPE.equals(method.getReturnType())) {
          // Add a pointer to the result argument
          %>, <%=ch.getCType(method.getReturnType())%>* result<%
@@ -427,8 +387,8 @@ jgdi_result_t <%=classname%>_<%=methodName%>(JNIEnv *env, <%=ch.getCType(beanCla
 <%   
   // For string parameters we need a local variable
   // which hold the jstring object
-  for(int i = 0; i < parameters.length; i++) {
-     if( String.class.equals(parameters[i])) {
+  for (int i = 0; i < parameters.length; i++) {
+     if (String.class.equals(parameters[i])) {
 %>
    jstring p<%=i%>_obj = NULL;<%
      }
@@ -436,7 +396,7 @@ jgdi_result_t <%=classname%>_<%=methodName%>(JNIEnv *env, <%=ch.getCType(beanCla
   // For non void methods we temporary store the result
   // of the java method in a local variable
   if (!Void.TYPE.equals(method.getReturnType())) {
-     if(method.getReturnType().isArray()) { %>
+     if (method.getReturnType().isArray()) { %>
    jobject temp = NULL;    
 <%   } else {
 %>
@@ -451,28 +411,26 @@ jgdi_result_t <%=classname%>_<%=methodName%>(JNIEnv *env, <%=ch.getCType(beanCla
 %>         
    if (result == NULL ) {
       answer_list_add(alpp, "result is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return JGDI_ILLEGAL_STATE;
+      DRETURN(JGDI_ILLEGAL_STATE);
    }
    /* We set the result always to the default value */
 <% 
-   if(method.getReturnType().isArray()) { %>   *result = NULL;    
+   if (method.getReturnType().isArray()) { %>   *result = NULL;    
 <%   } else { 
 %>   *result = <%=ch.getInitializer(method.getReturnType())%>;
 <%
     }
-  }  %>   
+  }%>   
   if (mid == NULL) {
      if (JGDI_SUCCESS != get_method_id_for_fullClassname(env, obj, &mid, "<%=fullClassname%>", "<%=method.getName()%>", "<%=ch.getSignature(method)%>", alpp)) {
-        DEXIT;
-        return JGDI_ILLEGAL_STATE;
+        DRETURN(JGDI_ILLEGAL_STATE);
      }
-   }<%
-   
+   }
+<%
    // All string parameters comes a const char* 
    // we have to allocate the jstring object
-   for(int i = 0; i < parameters.length; i++) {
-      if( String.class.equals(parameters[i])) {
+   for (int i = 0; i < parameters.length; i++) {
+      if (String.class.equals(parameters[i])) {
 %>
    if (p<%=i%> != NULL) {
       p<%=i%>_obj = (*env)->NewStringUTF(env, p<%=i%> ); 
@@ -488,8 +446,8 @@ jgdi_result_t <%=classname%>_<%=methodName%>(JNIEnv *env, <%=ch.getCType(beanCla
   }
 %> (*env)-><%=ch.getCallMethod(method.getReturnType())%>(env, obj, mid<%
       // Add all parameter to the method call 
-      for(int i = 0; i < parameters.length; i++) {  
-         if( String.class.equals(parameters[i])) {
+      for (int i = 0; i < parameters.length; i++) {  
+         if (String.class.equals(parameters[i])) {
             // For all string parameter we pass the jstring object
             // to the method call
           %>, p<%=i%>_obj<%
@@ -511,9 +469,7 @@ jgdi_result_t <%=classname%>_<%=methodName%>(JNIEnv *env, <%=ch.getCType(beanCla
   if (!Void.TYPE.equals(method.getReturnType())) {
      // for non void method store the temporary result
      // in the result pointer
- 
-     if(method.getReturnType().isArray()) {
-         
+     if (method.getReturnType().isArray()) {
        Class realType = method.getReturnType().getComponentType();
        String realCType = ch.getCType(realType);
   %>
@@ -570,10 +526,9 @@ jgdi_result_t <%=classname%>_<%=methodName%>(JNIEnv *env, <%=ch.getCType(beanCla
       *result = temp;
 <%     } %>      
 <% } // end of !Void.TYPE %>
-   DEXIT; 
-   return ret;
+   DRETURN(ret);
 }<%
-   } // end of while(iter.hasNext())
+   } // end of for
 %>
 
 /*==== END  <%=fullClassname%> */

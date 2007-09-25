@@ -49,13 +49,12 @@ import javax.management.remote.JMXServiceURL;
  * @see com.sun.grid.jgdi.JGDI
  */
 public class JGDIFactory {
-    
+
     private static String versionString;
-    
     private static boolean libNotLoaded = true;
-    
+
     private static synchronized void initLib() throws JGDIException {
-        if(libNotLoaded) {
+        if (libNotLoaded) {
             try {
                 System.loadLibrary("jgdi");
                 libNotLoaded = false;
@@ -66,6 +65,7 @@ public class JGDIFactory {
             }
         }
     }
+
     /**
      * Get a new instance of a <code>JGDI</code> object.
      *
@@ -78,10 +78,10 @@ public class JGDIFactory {
         initLib();
         com.sun.grid.jgdi.jni.JGDIImpl ret = new com.sun.grid.jgdi.jni.JGDIImpl();
         ret.init(url);
-        
+
         return ret;
     }
-    
+
     /**
      * Get a synchronized instance of a <code>JGDI</code> object.
      *
@@ -91,22 +91,22 @@ public class JGDIFactory {
      * @return the <code>JGDI<code> instance
      * @since  0.91
      */
-    public static JGDI newSynchronizedInstance(String url)  throws JGDIException {
-        return (JGDI)Proxy.newProxyInstance(JGDIFactory.class.getClassLoader(), new Class [] { JGDI.class },
+    public static JGDI newSynchronizedInstance(String url) throws JGDIException {
+        return (JGDI) Proxy.newProxyInstance(JGDIFactory.class.getClassLoader(), new Class [] { JGDI.class },
             new SynchronJGDIInvocationHandler(newInstance(url)));
     }
-    
+
     private static class SynchronJGDIInvocationHandler implements InvocationHandler {
-        
+
         private final JGDI jgdi;
-        
+
         public SynchronJGDIInvocationHandler(JGDI jgdi) {
             this.jgdi = jgdi;
         }
-        
+
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             try {
-                synchronized(jgdi) {
+                synchronized (jgdi) {
                     return method.invoke(jgdi, args);
                 }
             } catch (InvocationTargetException ex) {
@@ -114,8 +114,7 @@ public class JGDIFactory {
             }
         }
     }
-    
-    
+
     /**
      * Create a new event client which receives events from a jgdi
      * connection.
@@ -129,7 +128,12 @@ public class JGDIFactory {
     public static EventClient createEventClient(String url, int evcId) throws JGDIException {
         return new com.sun.grid.jgdi.jni.EventClientImpl(url, evcId);
     }
-    
+
+    /**
+     * return the jgdi shared library version string, e.g. 'GE maintrunk' or
+     * 'GE 6.1u1'
+     * @return the jgdi shared library version string
+     */
     public static String getJGDIVersion() {
         try {
             initLib();
@@ -137,38 +141,37 @@ public class JGDIFactory {
             throw new IllegalStateException(ex.getCause());
         }
         if (versionString == null) {
-            versionString = setJGDIVersion();
+            versionString = nativeSetJGDIVersion();
         }
         return versionString;
     }
-    
-    private native static String setJGDIVersion();
-    
+
+    private static native String nativeSetJGDIVersion();
+
     /**
      *   Create a proxy object to the JGDI MBean.
-     * 
+     *
      *   @param  host  the qmaster host
      *   @param  port  port where qmasters MBeanServer is listening
      *   @param  credentials credentials for authentication
      *   @return the JGDI Proxy object
      */
     public static JGDIProxy newJMXInstance(String host, int port, Object credentials) {
-        
+
         JMXServiceURL url;
         try {
             url = new JMXServiceURL(String.format("service:jmx:rmi:///jndi/rmi://%s:%d/jmxrmi", host, port));
         } catch (MalformedURLException ex) {
             throw new IllegalStateException("Invalid JMX url", ex);
         }
-        
+
         ObjectName name;
         try {
             name = new ObjectName("gridengine:type=JGDI");
         } catch (MalformedObjectNameException ex) {
             throw new IllegalStateException("Invalid object name");
         }
-        
+
         return new JGDIProxy(url, name, credentials);
-        
     }
 }

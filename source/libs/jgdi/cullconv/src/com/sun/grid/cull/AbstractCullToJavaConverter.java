@@ -32,66 +32,60 @@
 package com.sun.grid.cull;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 /**
  *
  */
 public abstract class AbstractCullToJavaConverter extends AbstractCullConverter {
 
-   private File   outputDir = new File(".");
-   private String packagename;
-   
-   private String classSuffix;
-   
-   
-   /** Creates a new instance of AbstractCallToJavaConverter */
-   public AbstractCullToJavaConverter() {
-   }
+    private File outputDir = new File(".");
+    private String packagename;
+    private String classSuffix;
 
-   public File getOutputDir() {
-      return outputDir;
-   }
+    /** Creates a new instance of AbstractCallToJavaConverter */
+    public AbstractCullToJavaConverter() {
+    }
 
-   public void setOutputDir(File outputDir) {
-      this.outputDir = outputDir;
-   }
-   
-   public File getFileForClass(String className) {  
+    public File getOutputDir() {
+        return outputDir;
+    }
 
-      String name = getPackagename();
+    public void setOutputDir(File outputDir) {
+        this.outputDir = outputDir;
+    }
 
-      if( name != null ) {
-        name = name + "." + className; 
-        name = name.replace('.', File.separatorChar );
-      } else {
-        name = className;
-      }
-      
-      if( classSuffix != null ) {
-         name += classSuffix;
-      }
-      name += ".java";
-      
-      return new File( getOutputDir(), name );
-   }
-   
-   public String getClassSuffix() {
-      return classSuffix;
-   }
+    public File getFileForClass(String className) {
 
-   public void setClassSuffix(String classSuffix) {
-      this.classSuffix = classSuffix;
-   }
+        String name = getPackagename();
 
-   public String getPackagename() {
-      return packagename;
-   }
+        if (name != null) {
+            name = name + "." + className;
+            name = name.replace('.', File.separatorChar);
+        } else {
+            name = className;
+        }
 
-   public void setPackagename(String packagename) {
-      this.packagename = packagename;
-   }
-   
+        if (classSuffix != null) {
+            name += classSuffix;
+        }
+        name += ".java";
+
+        return new File(getOutputDir(), name);
+    }
+
+    public String getClassSuffix() {
+        return classSuffix;
+    }
+
+    public void setClassSuffix(String classSuffix) {
+        this.classSuffix = classSuffix;
+    }
+
+    public String getPackagename() {
+        return packagename;
+    }
+
+    public void setPackagename(String packagename) {
+        this.packagename = packagename;
+    }
 }

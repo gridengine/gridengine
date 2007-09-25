@@ -37,87 +37,71 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import com.sun.grid.jgdi.JGDI;
 import java.io.PrintWriter;
-import java.util.Iterator;
 import java.util.List;
 
 /**
  *
  */
 public class TestRequestedResourcesForJobs extends com.sun.grid.jgdi.BaseTestCase {
-    
-    
+
     /** Creates a new instance of TestQHost */
     public TestRequestedResourcesForJobs(String testName) {
         super(testName);
     }
-    
+
     protected void setUp() throws Exception {
         super.setUp();
     }
-    
+
     public static Test suite() {
-        TestSuite suite = new TestSuite( TestRequestedResourcesForJobs.class);
+        TestSuite suite = new TestSuite(TestRequestedResourcesForJobs.class);
         return suite;
     }
-    
+
     public void testSimple() throws Exception {
-        
+
         JGDI jgdi = createJGDI();
-        
+
         try {
-            jgdi.disableQueues(new String [] { "*" }, false);
+            jgdi.disableQueues(new String[]{"*"}, false);
             try {
-                
-                String [] args = new String [] {
-                    "-e", "/dev/null",
-                    "-o", "/dev/null",
-                    "-l", "arch=*",
-                    "-soft",
-                    "-l", "arch=*",
-                    "$SGE_ROOT/examples/jobs/sleeper.sh"
-                };
-                
+
+                String[] args = new String[]{"-e", "/dev/null", "-o", "/dev/null", "-l", "arch=*", "-soft", "-l", "arch=*", "$SGE_ROOT/examples/jobs/sleeper.sh"};
+
                 int jobId = JobSubmitter.submitJob(getCurrentCluster(), args);
-                
+
                 QueueInstanceSummaryOptions options = new QueueInstanceSummaryOptions();
                 options.setShowRequestedResourcesForJobs(true);
                 options.setShowFullOutput(true);
                 options.setShowArrayJobs(true);
                 options.setShowExtendedSubTaskInfo(true);
-                
+
                 QueueInstanceSummaryResult result = jgdi.getQueueInstanceSummary(options);
-                
+
                 PrintWriter pw = new PrintWriter(System.out);
                 QueueInstanceSummaryPrinter.print(pw, result, options);
                 pw.flush();
-                
-                
-                List pendingJobs = result.getPendingJobs();
-                Iterator iter = pendingJobs.iterator();
-                
-                boolean foundJob = false;
-                JobSummary js = null;
-                while(iter.hasNext()) {
-                    js = (JobSummary)iter.next();
-                    if(js.getId() == jobId) {
+
+
+                List<JobSummary> pendingJobs = result.getPendingJobs();
+                JobSummary jobFound = null;
+                for (JobSummary js : pendingJobs) {
+                    if (js.getId() == jobId) {
+                        jobFound = js;
                         break;
                     }
-                    js = null;
                 }
-                
-                assertNotNull("job with id " + jobId + " not found in pending job list", js);
-                
-                Set hardRequestNames = js.getHardRequestNames();
+                assertNotNull("job with id " + jobId + " not found in pending job list", jobFound);
+
+                Set hardRequestNames = jobFound.getHardRequestNames();
                 assertFalse("Job has not hard requested value", hardRequestNames.isEmpty());
                 assertTrue(hardRequestNames.contains("arch"));
-                assertEquals(js.getHardRequestValue("arch").getValue(), "*");
-                
+                assertEquals(jobFound.getHardRequestValue("arch").getValue(), "*");
             } finally {
-                jgdi.enableQueues(new String [] { "*" }, false);
+                jgdi.enableQueues(new String[]{"*"}, false);
             }
         } finally {
             jgdi.close();
         }
     }
-    
 }

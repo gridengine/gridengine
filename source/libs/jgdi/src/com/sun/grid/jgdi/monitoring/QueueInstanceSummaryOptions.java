@@ -42,7 +42,7 @@ import java.io.Serializable;
  * @see com.sun.grid.jgdi.JGDI#getQueueInstanceSummary
  */
 public class QueueInstanceSummaryOptions extends BasicQueueOptions implements Serializable {
-   
+
    /* qstat -F */
    private ResourceAttributeFilter resourceAttributeFilter;
    
@@ -56,33 +56,33 @@ public class QueueInstanceSummaryOptions extends BasicQueueOptions implements Se
    private UserFilter jobUserFilter;
    
    /* qstat -f */
-   private boolean showFullOutput;
+   private boolean showFullOutput = false;
    
    /* qstat -ne */
-   private boolean showEmptyQueues;
+   private boolean showEmptyQueues = true;
    
    /* qstat -r */
-   private boolean showRequestedResourcesForJobs;
+   private boolean showRequestedResourcesForJobs = false;
    
    /* qstat -g d */
-   private boolean showArrayJobs;
+   private boolean showArrayJobs = false;
    
    /* qstat -g t */
-   private boolean showPEJobs;
+   private boolean showPEJobs = false;
    
    /* qstat -pri */
-   private boolean showJobPriorities;
+   private boolean showJobPriorities = false;
    
    /* qstat -urg */
-   private boolean showJobUrgency;
+   private boolean showJobUrgency = false;
    
    
    /* qstat -t */
-   private boolean showExtendedSubTaskInfo;
+   private boolean showExtendedSubTaskInfo = false;
    
    /* -explain a|A|c|E */
    private char explain;
-   private boolean isExplainSet;
+   private boolean isExplainSet = false;
    
    
    /** Creates a new instance of QueueInstanceSummaryOptions */

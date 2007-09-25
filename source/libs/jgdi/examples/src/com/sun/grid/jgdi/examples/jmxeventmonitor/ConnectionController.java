@@ -58,48 +58,49 @@ public class ConnectionController {
     
     private final static Logger log = Logger.getLogger(ConnectionController.class.getName());
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
-    
+
     private final List<Listener> listeners = new LinkedList<Listener>();
+
     
     private JGDIProxy jgdiProxy;
     
     private Set<EventTypeEnum> subscription;
-    
+
     private NotificationBroadcasterSupport broadcaster = new NotificationBroadcasterSupport();
     
     public void connect(String host, int port, Object credentials) {
         executor.submit(new ConnectAction(host, port, credentials));
     }
-    
+
     public void disconnect() {
         executor.submit(new DisconnectAction());
     }
-    
-    
+
+
     public void subscribe(Set<EventTypeEnum> types) {
         executor.submit(new SubscribeAction(types, true));
     }
-    
+
     public void unsubscribe(Set<EventTypeEnum> types) {
         executor.submit(new SubscribeAction(types, false));
     }
-    
-    
+
+
     public void addListener(Listener lis) {
-        synchronized(listeners) {
+        synchronized (listeners) {
             listeners.add(lis);
         }
     }
-    
+
     public void removeListener(Listener lis) {
-        synchronized(listeners) {
+        synchronized (listeners) {
             listeners.remove(lis);
         }
     }
-    
+
     private List<Listener> getListeners() {
-        synchronized(listeners) {
-            return new ArrayList(listeners);
+        synchronized (listeners) {
+            return new ArrayList<Listener>(listeners);
         }
     }
 
@@ -112,19 +113,19 @@ public class ConnectionController {
     public void removeEventListener(EventListener lis) {
         eventListeners.remove(lis);
     }
-    
+
     private class SubscribeAction implements Runnable {
-        
+
         private final Set<EventTypeEnum> types;
         private final boolean subscribe;
-        
+
         public SubscribeAction(Set<EventTypeEnum> types, boolean subscribe) {
             this.types = types;
             this.subscribe = subscribe;
         }
-        
+
         public void run() {
-            
+
             try {
                 if(jgdiProxy != null) {
 
@@ -140,23 +141,20 @@ public class ConnectionController {
                             lis.unsubscribed(types);
                         }
                     }
-
                 }
-            } catch(Exception ex) {
-                for(Listener lis: getListeners()) {
+            } catch (Exception ex) {
+                for (Listener lis : getListeners()) {
                     lis.errorOccured(ex);
                 }
             }
-            
         }
-        
     }
-            
-    
+
+
     private class DisconnectAction implements Runnable {
-        
+
         public void run() {
-            
+
             try {
                 if(jgdiProxy != null) {
                     jgdiProxy.close();
@@ -170,12 +168,10 @@ public class ConnectionController {
                 }
             }
         }
-                
-                
     }
-    
+
     private class ConnectAction implements Runnable {
-        
+
         private final String host;
         private final int port;
         private final Object credentials;
@@ -185,7 +181,7 @@ public class ConnectionController {
             this.port = port;
             this.credentials = credentials;
         }
-        
+
         public void run() {
             try {
                 jgdiProxy = JGDIFactory.newJMXInstance(host, port, credentials);
@@ -197,25 +193,25 @@ public class ConnectionController {
                 for(Listener lis: getListeners()) {
                     lis.connected(host, port, subscription);
                 }
-            } catch(Exception ex) {
-                for(Listener lis: getListeners()) {
+            } catch (Exception ex) {
+                for (Listener lis : getListeners()) {
                     lis.errorOccured(ex);
                 }
             }
-                    
         }
     }
-    
-    public interface Listener {
-        
+
+    public static interface Listener {
+
         public void connected(String host, int port, Set<EventTypeEnum> subscription);
+
         public void disconnected();
-        
+
         public void subscribed(Set<EventTypeEnum> types);
+
         public void unsubscribed(Set<EventTypeEnum> typea);
-        
+
         public void errorOccured(Throwable ex);
-        
     }
 
 }

@@ -60,32 +60,22 @@ public class QueueInstanceSummaryExample {
          
          try {
             System.out.println("Successfully connected to " + url);         
-            
             QueueInstanceSummaryOptions options = new QueueInstanceSummaryOptions();
-            
 //            ResourceAttributeFilter raf = new ResourceAttributeFilter();
 //            raf.addValueName("arch");
 //            options.setResourceAttributeFilter(raf);
-            
             QueueInstanceSummaryResult res = jgdi.getQueueInstanceSummary(options);
-            
-            Iterator iter = res.getQueueInstanceSummary().iterator();
-            while(iter.hasNext()) {
-               QueueInstanceSummary cis = (QueueInstanceSummary)iter.next();               
+            for (QueueInstanceSummary cis : res.getQueueInstanceSummary()) {
                cis.getJobList();
                System.out.println(cis.getName() + " " + cis.getLoadAvg());
             }
-            
-            iter = res.getPendingJobs().iterator();
-            while(iter.hasNext()) {
-               JobSummary js = (JobSummary)iter.next();
+
+            for (JobSummary js : res.getPendingJobs()) {
                System.out.println(js.getId() + " (" + js.getName() + ") is pending");
-               
             }
          } finally {
             jgdi.close();
          }
-         
       } catch (JGDIException e) {
          e.printStackTrace();
       }

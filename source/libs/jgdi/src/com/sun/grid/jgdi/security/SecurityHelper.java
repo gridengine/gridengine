@@ -46,80 +46,80 @@ import javax.security.auth.x500.X500PrivateCredential;
  *
  */
 public class SecurityHelper {
-    
+
     private static Logger logger = Logger.getLogger(SecurityHelper.class.getName());
-    
+
     private static X500PrivateCredential getPrivateCredentials() {
         AccessControlContext ctx = AccessController.getContext();
-        
-        if(ctx == null) {
+
+        if (ctx == null) {
             return null;
         }
         Subject subject = Subject.getSubject(ctx);
-        if(subject == null) {
+        if (subject == null) {
             return null;
         }
-        
+
         Set credSet = subject.getPrivateCredentials(X500PrivateCredential.class);
-        if(credSet == null || credSet.isEmpty()) {
+        if (credSet == null || credSet.isEmpty()) {
             return null;
         }
-        return (X500PrivateCredential)credSet.iterator().next();
+        return (X500PrivateCredential) credSet.iterator().next();
     }
-    
+
     public static String getUsername() {
-        
+
         X500PrivateCredential cred = getPrivateCredentials();
-        if(cred == null) {
+        if (cred == null) {
             logger.fine("user.name: " + System.getProperty("user.name"));
             return System.getProperty("user.name");
         }
         return cred.getAlias();
     }
-    
-    
+
+
     public static String getPrivateKey() {
         X500PrivateCredential cred = getPrivateCredentials();
-        if(cred == null) {
+        if (cred == null) {
             return null;
         }
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
-        
-        
+
+
         pw.println("-----BEGIN PRIVATE KEY-----");
         String str = Base64.encode(cred.getPrivateKey().getEncoded());
-        int lines = str.length()/64;
-        boolean lastline = ((str.length() % 64) != 0);
+        int lines = str.length() / 64;
+        boolean lastline = (str.length() % 64) != 0;
         int i;
-        for (i=0; i<lines; i++) {
-            pw.println(str.substring((i*64), ((i*64)+64)));
+        for (i = 0; i < lines; i++) {
+            pw.println(str.substring(i * 64, (i * 64) + 64));
         }
         if (lastline) {
-            pw.println(str.substring(i*64));
+            pw.println(str.substring(i * 64));
         }
         pw.println("-----END PRIVATE KEY-----");
         pw.close();
         return sw.getBuffer().toString();
     }
-    
+
     public static String getCertificate() throws CertificateEncodingException {
         X500PrivateCredential cred = getPrivateCredentials();
-        if(cred == null) {
+        if (cred == null) {
             return null;
         }
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         pw.println("-----BEGIN CERTIFICATE-----");
         String str = Base64.encode(cred.getCertificate().getEncoded());
-        int lines = str.length()/64;
-        boolean lastline = ((str.length() % 64) != 0);
+        int lines = str.length() / 64;
+        boolean lastline = (str.length() % 64) != 0;
         int i;
-        for (i=0; i<lines; i++) {
-            pw.println(str.substring((i*64), ((i*64)+64)));
+        for (i = 0; i < lines; i++) {
+            pw.println(str.substring(i * 64, (i * 64) + 64));
         }
         if (lastline) {
-            pw.println(str.substring(i*64));
+            pw.println(str.substring(i * 64));
         }
         pw.println("-----END CERTIFICATE-----");
         pw.close();

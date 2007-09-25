@@ -46,7 +46,6 @@
   classname = classname.replace('$', '_');
   java.beans.PropertyDescriptor [] props = beanInfo.getPropertyDescriptors();
   com.sun.grid.javaconv.CWrapperHelper ch = new com.sun.grid.javaconv.CWrapperHelper(beanInfo.getBeanDescriptor().getBeanClass());
-  java.util.Iterator iter = null;
 %>
 /* ==== <%=classname%> ====================== */
    jclass <%=classname%>_find_class(JNIEnv *env, lList** alpp);
@@ -54,9 +53,7 @@
   // ---------------------------------------------------------------------------
   // ------------ CONSTRUCTORS -------------------------------------------------
   // ---------------------------------------------------------------------------
-   iter = ch.getConstructorNames().iterator();
-   while(iter.hasNext()) {
-      String constructorName = (String)iter.next();
+  for (String constructorName : ch.getConstructorNames()) {
       java.lang.reflect.Constructor constructor = ch.getConstructor(constructorName);
 %>   jgdi_result_t <%=classname%>_<%=constructorName%>(JNIEnv *env, jobject*obj <%
       Class [] parameters = constructor.getParameterTypes();
@@ -69,25 +66,20 @@
          }
       }
 %>, lList **alpp);
-<%   } // end of while(iter.hasNext())
+<%   } // end of for
   // ---------------------------------------------------------------------------
   // ------------ Static Fields ------------------------------------------------
   // ---------------------------------------------------------------------------
- iter = ch.getStaticFieldNames().iterator();
- while(iter.hasNext()) {
-    String fieldName = (String)iter.next();
+  for (String fieldName : ch.getStaticFieldNames()) {
     java.lang.reflect.Field field = ch.getStaticField(fieldName);
 %>   jgdi_result_t <%=classname%>_static_<%=fieldName%>(JNIEnv *env, <%=ch.getCType(field.getType())%> *res, lList **alpp);
 <%    
- } // end of while
+ } // end of for
   // ---------------------------------------------------------------------------
   // ------------ Static METHODS -----------------------------------------------
   // ---------------------------------------------------------------------------
-   iter = ch.getStaticMethodNames().iterator();
-   while(iter.hasNext()) {
-      String methodName = (String)iter.next();
+  for (String methodName : ch.getStaticMethodNames()) { 
       java.lang.reflect.Method method = ch.getStaticMethod(methodName);
-      
 %>   jgdi_result_t <%=classname%>_static_<%=methodName%>(JNIEnv *env<%
       Class [] parameters = method.getParameterTypes();      
       for(int i = 0; i < parameters.length; i++) {
@@ -105,14 +97,12 @@
          }
       }
 %>, lList **alpp);
-<%   } // end of while(iter.hasNext())
+<%   } // end of for
   // ---------------------------------------------------------------------------
   // ------------ METHODS ------------------------------------------------------
   // ---------------------------------------------------------------------------
-   iter = ch.getMethodNames().iterator();
-   while(iter.hasNext()) {
-      String methodName = (String)iter.next();
-      java.lang.reflect.Method method = ch.getMethod(methodName);
+  for (String methodName : ch.getMethodNames()) {
+     java.lang.reflect.Method method = ch.getMethod(methodName);
 %>   jgdi_result_t <%=classname%>_<%=methodName%>(JNIEnv *env, <%=ch.getCType(beanClass)%> obj <%
       Class [] parameters = method.getParameterTypes();
       for(int i = 0; i < parameters.length; i++) {
@@ -130,5 +120,5 @@
          }
       }
 %>, lList **alpp);
-<%   } // end of while(iter.hasNext())
+<%   } // end of for
 %>

@@ -33,9 +33,7 @@ package com.sun.grid.jgdi.monitoring;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Objects of this class holds the monitoring information about
@@ -45,18 +43,18 @@ import java.util.Map;
 public class ResourceQuotaRuleInfoImpl implements ResourceQuotaRuleInfo, Serializable {
    
    private String resourceQuotaRuleName;
-   private List users = new ArrayList();
-   private List pes = new ArrayList();
-   private List hosts = new ArrayList();
-   private List queues = new ArrayList();
-   private List projects = new ArrayList();
-   private List xusers = new ArrayList();
-   private List xpes = new ArrayList();
-   private List xhosts = new ArrayList();
-   private List xqueues = new ArrayList();
-   private List xprojects = new ArrayList();
+   private List<String> users = new ArrayList<String>();
+   private List<String> pes = new ArrayList<String>();
+   private List<String> hosts = new ArrayList<String>();
+   private List<String> queues = new ArrayList<String>();
+   private List<String> projects = new ArrayList<String>();
+   private List<String> xusers = new ArrayList<String>();
+   private List<String> xpes = new ArrayList<String>();
+   private List<String> xhosts = new ArrayList<String>();
+   private List<String> xqueues = new ArrayList<String>();
+   private List<String> xprojects = new ArrayList<String>();
 
-   private List resourceLimits = new ArrayList();
+   private List<ResourceQuota> resourceLimits = new ArrayList<ResourceQuota>();
    
    /**
     * Create a new limit rule info object
@@ -96,7 +94,7 @@ public class ResourceQuotaRuleInfoImpl implements ResourceQuotaRuleInfo, Seriali
     *
     *  @return list of user names
     */
-   public List getUsers() {
+   public List<String> getUsers() {
       return Collections.unmodifiableList(users);
    }
    
@@ -114,7 +112,7 @@ public class ResourceQuotaRuleInfoImpl implements ResourceQuotaRuleInfo, Seriali
     *
     *  @return list of project names
     */
-   public List getProjects() {
+   public List<String> getProjects() {
       return Collections.unmodifiableList(projects);
    }
    
@@ -133,7 +131,7 @@ public class ResourceQuotaRuleInfoImpl implements ResourceQuotaRuleInfo, Seriali
     *
     *  @return list of PE names
     */
-   public List getPes() {
+   public List<String> getPes() {
       return Collections.unmodifiableList(pes);
    }
    
@@ -152,7 +150,7 @@ public class ResourceQuotaRuleInfoImpl implements ResourceQuotaRuleInfo, Seriali
     *
     *  @return list of queue names
     */
-   public List getQueues() {
+   public List<String> getQueues() {
       return Collections.unmodifiableList(queues);
    }
    
@@ -171,7 +169,7 @@ public class ResourceQuotaRuleInfoImpl implements ResourceQuotaRuleInfo, Seriali
     *
     *  @return list of host names
     */
-   public List getHosts() {
+   public List<String> getHosts() {
       return Collections.unmodifiableList(hosts);
    }
    
@@ -190,7 +188,7 @@ public class ResourceQuotaRuleInfoImpl implements ResourceQuotaRuleInfo, Seriali
     *  @return list of excluded user names
     */
  
-   public List getXUsers() {
+   public List<String> getXUsers() {
       return Collections.unmodifiableList(xusers);
    }
    
@@ -208,7 +206,7 @@ public class ResourceQuotaRuleInfoImpl implements ResourceQuotaRuleInfo, Seriali
     *
     *  @return list of excluded project names
     */
-   public List getXProjects() {
+   public List<String> getXProjects() {
       return Collections.unmodifiableList(xprojects);
    }
    
@@ -227,7 +225,7 @@ public class ResourceQuotaRuleInfoImpl implements ResourceQuotaRuleInfo, Seriali
     *
     *  @return list of excluded PE names
     */
-   public List getXPes() {
+   public List<String> getXPes() {
       return Collections.unmodifiableList(xpes);
    }
    
@@ -246,7 +244,7 @@ public class ResourceQuotaRuleInfoImpl implements ResourceQuotaRuleInfo, Seriali
     *
     *  @return list of excluded queue names
     */
-   public List getXQueues() {
+   public List<String> getXQueues() {
       return Collections.unmodifiableList(xqueues);
    }
    
@@ -265,7 +263,7 @@ public class ResourceQuotaRuleInfoImpl implements ResourceQuotaRuleInfo, Seriali
     *
     *  @return list of excluded host names
     */
-   public List getXHosts() {
+   public List<String> getXHosts() {
       return Collections.unmodifiableList(xhosts);
    }
    
@@ -284,7 +282,7 @@ public class ResourceQuotaRuleInfoImpl implements ResourceQuotaRuleInfo, Seriali
     * 
     * @return list of ResourceLimit objects
     */
-   public List getLimits() {
+   public List<ResourceQuota> getLimits() {
       return Collections.unmodifiableList(resourceLimits);
    }
    

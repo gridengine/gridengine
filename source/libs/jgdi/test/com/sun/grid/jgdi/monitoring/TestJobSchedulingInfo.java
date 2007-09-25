@@ -39,72 +39,65 @@ import com.sun.grid.jgdi.configuration.JobSchedulingInfo;
 import com.sun.grid.jgdi.configuration.JobSchedulingMessage;
 import com.sun.grid.jgdi.configuration.ULNG;
 import java.io.PrintWriter;
-import java.util.Iterator;
 
 /**
  *
  */
 public class TestJobSchedulingInfo extends com.sun.grid.jgdi.BaseTestCase {
-   
-   
-   /** Creates a new instance of TestQHost */
-   public TestJobSchedulingInfo(String testName) {
-      super(testName);
-   }
-   
-   protected void setUp() throws Exception {
-      super.setUp();
-   }
-   
-   public static Test suite() {
-      TestSuite suite = new TestSuite( TestJobSchedulingInfo.class);
-      return suite;
-   }
-   
-   public void testSimple() throws Exception {
-      
-      JGDI jgdi = createJGDI();
-      try {
-         JobSchedulingInfo schedInfo = jgdi.getJobSchedulingInfo();
-         Iterator iter = schedInfo.getGlobalMessageList().iterator();
-         PrintWriter pw = new PrintWriter(System.out);
-         pw.println("Global Message List");
-         while (iter.hasNext()) {
-            JobSchedulingMessage mes = (JobSchedulingMessage)iter.next();
-            pw.println(mes.getMessage() + " (" + mes.getMessageNumber() +")");
-            for (int i=0; i<mes.getJobNumberCount();i++) {
-               pw.println("Job " + mes.getJobNumberList().get(i).toString());
+
+    /** Creates a new instance of TestQHost */
+    public TestJobSchedulingInfo(String testName) {
+        super(testName);
+    }
+
+    protected void setUp() throws Exception {
+        super.setUp();
+    }
+
+    public static Test suite() {
+        TestSuite suite = new TestSuite(TestJobSchedulingInfo.class);
+        return suite;
+    }
+
+    public void testSimple() throws Exception {
+
+        JGDI jgdi = createJGDI();
+        try {
+            PrintWriter pw = new PrintWriter(System.out);
+            pw.println("Global Message List");
+            JobSchedulingInfo schedInfo = jgdi.getJobSchedulingInfo();
+            for (JobSchedulingMessage mes : schedInfo.getGlobalMessageList()) {
+                pw.println(mes.getMessage() + " (" + mes.getMessageNumber() + ")");
+                for (int i = 0; i < mes.getJobNumberCount(); i++) {
+                    pw.println("Job " + mes.getJobNumberList().get(i).toString());
+                }
             }
-         }
-         if (schedInfo.isSetMessage()) {
-            pw.println("Message List");
-            iter = schedInfo.getMessageList().iterator();
-            while (iter.hasNext()) {
-               JobSchedulingMessage mes = (JobSchedulingMessage)iter.next();
-               pw.println(mes.getMessage() + " (" + mes.getMessageNumber() +")");
-               for (int i=0; i<mes.getJobNumberCount();i++) {
-                  int jobId = ((ULNG)mes.getJobNumberList().get(i)).getULNG();
-                  pw.println("job_number: " + jobId);
-                  Job job = jgdi.getJob(jobId);
-                  pw.println("exec_file:  " + job.getExecFile());
-                  pw.println("submission_time: " + job.getSubmissionTime());
-                  pw.println("owner: " + job.getOwner());
-                  pw.println("uid: " + job.getUid());
-                  pw.println("group: " + job.getGroup());
-                  pw.println("gid: " + job.getGid());
+            if (schedInfo.isSetMessage()) {
+                pw.println("Message List");
+                for (JobSchedulingMessage mes : schedInfo.getMessageList()) {
+                    pw.println(mes.getMessage() + " (" + mes.getMessageNumber() + ")");
+                    for (int i = 0; i < mes.getJobNumberCount(); i++) {
+                        int jobId = ((ULNG) mes.getJobNumberList().get(i)).getULNG();
+                        pw.println("job_number: " + jobId);
+                        Job job = jgdi.getJob(jobId);
+                        pw.println("exec_file:  " + job.getExecFile());
+                        pw.println("submission_time: " + job.getSubmissionTime());
+                        pw.println("owner: " + job.getOwner());
+                        pw.println("uid: " + job.getUid());
+                        pw.println("group: " + job.getGroup());
+                        pw.println("gid: " + job.getGid());
 //                  pw.println("default env: " + job.getDefaultEnv());
 //                  pw.println("sge_o_home: " + job.getEnv("SGE_O_HOME"));
 //                  pw.println("sge_o_log_name: " + job.getEnv("SGE_O_LOG_NAME"));
 //                  pw.println("sge_o_path: " + job.getEnv("SGE_O_PATH"));
-               }
+                    }
+                }
             }
-         }
-         pw.flush();
-      } catch (Exception e) {
-         e.printStackTrace();
-      } finally {
-         jgdi.close();
-      }
-   }
-   
+            pw.flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            jgdi.close();
+        }
+    }
 }

@@ -33,7 +33,6 @@ package com.sun.grid.jgdi.monitoring;
 
 import com.sun.grid.jgdi.monitoring.filter.QueueStateFilter;
 import com.sun.grid.jgdi.monitoring.filter.ResourceFilter;
-import java.util.Iterator;
 import java.util.List;
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -48,132 +47,108 @@ import com.sun.grid.jgdi.configuration.UserSet;
  *
  */
 public class TestClusterQueueSummary extends com.sun.grid.jgdi.BaseTestCase {
-   
-   /** Creates a new instance of TestQHost */
-   public TestClusterQueueSummary(String testName) {
-      super(testName);
-   }
-   
-   protected void setUp() throws Exception {
-      System.loadLibrary( "jgdi" );
-      super.setUp();
-   }
-   
-   public static Test suite() {
-      TestSuite suite = new TestSuite( TestClusterQueueSummary.class);
-      return suite;
-   }
-   
-   private void printResult(List result) {
-      Iterator iter = result.iterator();
-      logger.fine("CLUSTER QUEUE CQLOAD   USED  AVAIL  TOTAL");
-      StringBuilder buf = new StringBuilder();
-      
-      while(iter.hasNext()) {
-         ClusterQueueSummary cqs = (ClusterQueueSummary)iter.next();
-         buf.setLength(0);
-         buf.append(cqs.getName());
-         buf.append(" ");
-         buf.append(cqs.isLoadSet()?Double.toString(cqs.getLoad()) : "-NA-");
-         buf.append(" ");
-         buf.append(cqs.getUsedSlots());
-         buf.append(" ");
-         buf.append(cqs.getAvailableSlots());
-         buf.append(" ");
-         buf.append(cqs.getTotalSlots());
-         logger.fine(buf.toString());
 
-      }
-   }
-   
-   public void testSimple() throws Exception {
-      
-      JGDI jgdi = createJGDI();
-      try {
-         ClusterQueueSummaryOptions options = new ClusterQueueSummaryOptions();
-         List result = jgdi.getClusterQueueSummary(options);
-         
-         printResult(result);
-      } finally {
-         jgdi.close();
-      }
-   }
-   
-   public void testResourceFilter() throws Exception {
+    /** Creates a new instance of TestQHost */
+    public TestClusterQueueSummary(String testName) {
+        super(testName);
+    }
 
-      JGDI jgdi = createJGDI();
-      try {
-         ClusterQueueSummaryOptions options = new ClusterQueueSummaryOptions();
+    public static Test suite() {
+        TestSuite suite = new TestSuite(TestClusterQueueSummary.class);
+        return suite;
+    }
 
-         ResourceFilter rsf = new ResourceFilter();
-         rsf.addResource("arch", "lx26-x86");
-         options.setResourceFilter(rsf);
+    private void printResult(List<ClusterQueueSummary> result) {
+        
+        logger.fine("CLUSTER QUEUE CQLOAD   USED  AVAIL  TOTAL");
+        StringBuilder buf = new StringBuilder();
+        for (ClusterQueueSummary cqs : result) {
+            buf.setLength(0);
+            buf.append(cqs.getName());
+            buf.append(" ");
+            buf.append(cqs.isLoadSet() ? Double.toString(cqs.getLoad()) : "-NA-");
+            buf.append(" ");
+            buf.append(cqs.getUsedSlots());
+            buf.append(" ");
+            buf.append(cqs.getAvailableSlots());
+            buf.append(" ");
+            buf.append(cqs.getTotalSlots());
+            logger.fine(buf.toString());
+        }
+    }
 
-         List result = jgdi.getClusterQueueSummary(options);
+    public void testSimple() throws Exception {
 
-         printResult(result);
-      } finally {
-         jgdi.close();
-      }
-   }
-   
-   public void testQueueStateFilter() throws Exception {
-      
-      JGDI jgdi = createJGDI();
-      try {
-         ClusterQueueSummaryOptions options = new ClusterQueueSummaryOptions();
+        JGDI jgdi = createJGDI();
+        try {
+            ClusterQueueSummaryOptions options = new ClusterQueueSummaryOptions();
+            List<ClusterQueueSummary> result = jgdi.getClusterQueueSummary(options);
+            printResult(result);
+        } finally {
+            jgdi.close();
+        }
+    }
 
-         QueueStateFilter qsf = new QueueStateFilter();
-         qsf.setAlarm(true);
-         options.setQueueStateFilter(qsf);
+    public void testResourceFilter() throws Exception {
 
-         logger.fine("queueStateFiter: " + qsf);
+        JGDI jgdi = createJGDI();
+        try {
+            ClusterQueueSummaryOptions options = new ClusterQueueSummaryOptions();
+            ResourceFilter rsf = new ResourceFilter();
+            rsf.addResource("NoAccessUsers", "lx26-x86");
+            options.setResourceFilter(rsf);
+            List<ClusterQueueSummary> result = jgdi.getClusterQueueSummary(options);
+            printResult(result);
+        } finally {
+            jgdi.close();
+        }
+    }
 
-         List result = jgdi.getClusterQueueSummary(options);
-         printResult(result);
-      } finally {
-         jgdi.close();
-      }
-   }
+    public void testQueueStateFilter() throws Exception {
 
-   public void testQueueUserFilter() throws Exception {
+        JGDI jgdi = createJGDI();
+        try {
+            ClusterQueueSummaryOptions options = new ClusterQueueSummaryOptions();
+            QueueStateFilter qsf = new QueueStateFilter();
+            qsf.setAlarm(true);
+            options.setQueueStateFilter(qsf);
+            logger.fine("queueStateFiter: " + qsf);
+            List<ClusterQueueSummary> result = jgdi.getClusterQueueSummary(options);
+            printResult(result);
+        } finally {
+            jgdi.close();
+        }
+    }
 
-      JGDI jgdi = createJGDI();
-      try {
-         ClusterQueueSummaryOptions options = new ClusterQueueSummaryOptions();
+    public void testQueueUserFilter() throws Exception {
 
-         UserSet userSet = ConfigurationFactory.createUserSet();
-         userSet.setName("NoAccessUsers");
-         userSet.addEntries("noaccess");
-
-         jgdi.addUserSet(userSet);
-
-         try {      
-            ClusterQueue cq = ConfigurationFactory.createClusterQueueWithDefaults();
-            cq.setName("testQueueUserFilter");
-
-            UserFilter uf = new UserFilter();
-            uf.addUser("noaccess");
-
-            jgdi.addClusterQueue(cq);
-
+        JGDI jgdi = createJGDI();
+        try {
+            ClusterQueueSummaryOptions options = new ClusterQueueSummaryOptions();
+            UserSet userSet = ConfigurationFactory.createUserSet();
+            userSet.setName("NoAccessUsers");
+            userSet.addEntries("noaccess");
+            jgdi.addUserSet(userSet);
             try {
+                ClusterQueue cq = ConfigurationFactory.createClusterQueueWithDefaults();
+                cq.setName("testQueueUserFilter");
+                UserFilter uf = new UserFilter();
+                uf.addUser("noaccess");
+                jgdi.addClusterQueue(cq);
 
-               options.setQueueUserFilter(uf);
-
-               logger.fine("testQueueUserFilter for queue " + cq.getName());
-               List result = jgdi.getClusterQueueSummary(options);
-               printResult(result);
-
+                try {
+                    options.setQueueUserFilter(uf);
+                    logger.fine("testQueueUserFilter for queue " + cq.getName());
+                    List<ClusterQueueSummary> result = jgdi.getClusterQueueSummary(options);
+                    printResult(result);
+                } finally {
+                    jgdi.deleteClusterQueue(cq);
+                }
             } finally {
-               jgdi.deleteClusterQueue(cq);
+                jgdi.deleteUserSet(userSet);
             }
-         } finally {
-            jgdi.deleteUserSet(userSet);
-         }
-      } finally {
-         jgdi.close();
-      }
-   }
-   
+        } finally {
+            jgdi.close();
+        }
+    }
 }

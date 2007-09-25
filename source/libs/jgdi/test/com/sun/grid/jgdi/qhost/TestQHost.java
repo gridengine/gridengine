@@ -41,7 +41,6 @@ import com.sun.grid.jgdi.configuration.ClusterQueue;
 import com.sun.grid.jgdi.configuration.QueueInstance;
 import com.sun.grid.jgdi.configuration.ExecHost;
 import com.sun.grid.jgdi.monitoring.QueueInfo;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import junit.framework.Test;
@@ -51,213 +50,146 @@ import junit.framework.TestSuite;
  *
  */
 public class TestQHost extends com.sun.grid.jgdi.BaseTestCase {
-   
-   /** Creates a new instance of TestQHost */
-   public TestQHost(String testName) {
-      super(testName);
-   }
-   
-   protected void setUp() throws Exception {
-      super.setUp();
-   }
-   
-   public static Test suite() {
-      TestSuite suite = new TestSuite(TestQHost.class);
-      return suite;
-   }
-   
-   private void printResult(QHostResult res) {
-      Iterator hostIter = res.getHostNames().iterator();
-      while(hostIter.hasNext()) {
-         String hostname = (String)hostIter.next();
-         
-         HostInfo hostInfo = res.getHostInfo(hostname);
-         
-         logger.fine("Host " + hostname + " ---------------------");
-         Iterator hostValueiter = hostInfo.getHostValueKeys().iterator();
-         while(hostValueiter.hasNext()) {
-            String hostValueNames = (String)hostValueiter.next();
-            logger.fine("HostValue: " + hostValueNames + " = " + hostInfo.getHostValue(hostValueNames));
-         }
-         
-         Iterator queueIter = hostInfo.getQueueList().iterator();
-         while(queueIter.hasNext()) {
-            QueueInfo qi = (QueueInfo)queueIter.next();
-            logger.fine("  Queue: " + qi.getQname());
-            logger.fine("  Qtype: " + qi.getQtype());
-            logger.fine("  State: " + qi.getState());
-            logger.fine("  total: " + qi.getTotalSlots());
-            logger.fine("  used:  " + qi.getUsedSlots());
-         }
-         
-         Iterator dominanceIter = hostInfo.getDominanceSet().iterator();
-         while(dominanceIter.hasNext()) {
-            String dom = (String)dominanceIter.next();
-            Iterator resourceValueIter = hostInfo.getResourceValueNames(dom).iterator();
-            while(resourceValueIter.hasNext()) {
-               String resourceValueName = (String)resourceValueIter.next();
-               logger.fine("Resource: " + dom + ": " + resourceValueName + " = " + hostInfo.getResourceValue(dom, resourceValueName));
+
+    /** Creates a new instance of TestQHost */
+    public TestQHost(String testName) {
+        super(testName);
+    }
+
+    protected void setUp() throws Exception {
+        super.setUp();
+    }
+
+    public static Test suite() {
+        TestSuite suite = new TestSuite(TestQHost.class);
+        return suite;
+    }
+
+    private void printResult(QHostResult res) {
+        for (String hostname : res.getHostNames()) {
+            HostInfo hostInfo = res.getHostInfo(hostname);
+            logger.fine("Host " + hostname + " ---------------------");
+            for (String hostValueNames : hostInfo.getHostValueKeys()) {
+                logger.fine("HostValue: " + hostValueNames + " = " + hostInfo.getHostValue(hostValueNames));
             }
-         }
-      }
-   }
-   
-   
-   public void testAllHostValues() throws Exception {
-      
-      JGDI jgdi = createJGDI();
-      try {
-         QHostOptions qhostOptions = new QHostOptions();
 
-         ResourceAttributeFilter resourceAttributeFilter = new ResourceAttributeFilter();
-
-         qhostOptions.setResourceAttributeFilter(resourceAttributeFilter);
-
-         QHostResult res = jgdi.execQHost(qhostOptions);
-
-         printResult(res);      
-      } finally {
-         jgdi.close();
-      }      
-   }
-   
-   public void testQueueFilter() throws Exception {
-      
-      JGDI jgdi = createJGDI();
-      try {
-         QHostOptions qhostOptions = new QHostOptions();
-
-         List ehList = jgdi.getExecHostList();
-
-         List cqList = jgdi.getClusterQueueList();
-
-         Iterator iter = ehList.iterator();
-
-         qhostOptions.setIncludeQueue(true);
-
-         while(iter.hasNext()) {
-            ExecHost eh = (ExecHost)iter.next();
-
-            if (eh.getName().equals("template") ||
-                eh.getName().equals("global")) {
-               continue;
+            for (QueueInfo qi : hostInfo.getQueueList()) {
+                logger.fine("  Queue: " + qi.getQname());
+                logger.fine("  Qtype: " + qi.getQtype());
+                logger.fine("  State: " + qi.getState());
+                logger.fine("  total: " + qi.getTotalSlots());
+                logger.fine("  used:  " + qi.getUsedSlots());
             }
-            HostFilter hf = new HostFilter();
-            hf.addHost(eh.getName());
-            qhostOptions.setHostFilter(hf);
+
+            for (String dom : hostInfo.getDominanceSet()) {
+                for (String resourceValueName : hostInfo.getResourceValueNames(dom)) {
+                    logger.fine("Resource: " + dom + ": " + resourceValueName + " = " + hostInfo.getResourceValue(dom, resourceValueName));
+                }
+            }
+        }
+    }
+
+    public void testAllHostValues() throws Exception {
+
+        JGDI jgdi = createJGDI();
+        try {
+            QHostOptions qhostOptions = new QHostOptions();
+
+            ResourceAttributeFilter resourceAttributeFilter = new ResourceAttributeFilter();
+
+            qhostOptions.setResourceAttributeFilter(resourceAttributeFilter);
 
             QHostResult res = jgdi.execQHost(qhostOptions);
+
             printResult(res);
+        } finally {
+            jgdi.close();
+        }
+    }
 
-            HostInfo hi = res.getHostInfo(eh.getName());
+    public void testQueueFilter() throws Exception {
 
-            assertNotNull(hi);            
-
-            Iterator cqIter = cqList.iterator();
-            while(cqIter.hasNext()) {
-               ClusterQueue cq = (ClusterQueue)cqIter.next();
-
-               Iterator cqiIter = cq.getQinstancesList().iterator();
-               while(cqiIter.hasNext()) {
-                  QueueInstance cqi = (QueueInstance)cqiIter.next();
-                  if (cqi.getQhostname().equals(eh.getName()) ) {
-                     boolean foundq = false;
-                     Iterator hiter = hi.getQueueList().iterator();
-                     while (hiter.hasNext()) {
-                        String hqname = ((QueueInfo)hiter.next()).getQname();
-                        // System.out.println("++ comparing cq.getName() " + cq.getName() +
-                        //                      " and hqname " + hqname);
-                        if (cq.getName().equals(hqname)) {
-                        //   System.out.println("-- matching cq.getName() " + cq.getName() +
-                        //                      " and hqname " + hqname);
-                           foundq = true;
-                           break;
+        JGDI jgdi = createJGDI();
+        try {
+            QHostOptions qhostOptions = new QHostOptions();
+            List<ExecHost> ehList = jgdi.getRealExecHostList();
+            List<ClusterQueue> cqList = jgdi.getClusterQueueList();
+            qhostOptions.setIncludeQueue(true);
+            for (ExecHost eh : ehList) {
+                HostFilter hf = new HostFilter();
+                hf.addHost(eh.getName());
+                qhostOptions.setHostFilter(hf);
+                QHostResult res = jgdi.execQHost(qhostOptions);
+                printResult(res);
+                HostInfo hi = res.getHostInfo(eh.getName());
+                assertNotNull(hi);
+                for (ClusterQueue cq : cqList) {
+                    for (QueueInstance cqi : cq.getQinstancesList()) {
+                        if (cqi.getQhostname().equals(eh.getName())) {
+                            boolean foundq = false;
+                            for (QueueInfo qi : hi.getQueueList()) {
+                                String hqname = qi.getQname();
+                                // System.out.println("++ comparing cq.getName() " + cq.getName() +
+                                //                      " and hqname " + hqname);
+                                if (cq.getName().equals(hqname)) {
+                                    //   System.out.println("-- matching cq.getName() " + cq.getName() +
+                                    //                      " and hqname " + hqname);
+                                    foundq = true;
+                                    break;
+                                }
+                            }
+                            assertTrue("queue " + cq.getName() + " not included for host " + eh.getName(), foundq);
                         }
-                     }
-                     assertTrue("queue " + cq.getName() + " not included for host " + eh.getName(), foundq);
-                  }
-               }
+                    }
+                }
             }
-         }      
-      } finally {
-         jgdi.close();
-      }
-   }
-   
-   public void testHostValueFilter() throws Exception {
-      
-      JGDI jgdi = createJGDI();
-      try {
-         QHostOptions qhostOptions = new QHostOptions();
+        } finally {
+            jgdi.close();
+        }
+    }
 
-         List ehList = jgdi.getExecHostList();
+    public void testHostValueFilter() throws Exception {
 
-
-         Iterator iter = ehList.iterator();
-         while(iter.hasNext()) {
-            ExecHost eh = (ExecHost)iter.next();
-
-            if(eh.getName().equals("template") ||
-               eh.getName().equals("global")) {
-               continue;
+        JGDI jgdi = createJGDI();
+        try {
+            QHostOptions qhostOptions = new QHostOptions();
+            List<ExecHost> ehList = jgdi.getRealExecHostList();
+            for (ExecHost eh : ehList) {
+                for (String loadValueName : eh.getLoadKeys()) {
+                    String loadValue = eh.getLoad(loadValueName);
+                    ResourceAttributeFilter resourceAttributeFilter = new ResourceAttributeFilter();
+                    resourceAttributeFilter.addValueName(loadValueName);
+                    qhostOptions.setResourceAttributeFilter(resourceAttributeFilter);
+                    QHostResult res = jgdi.execQHost(qhostOptions);
+                    printResult(res);
+                    HostInfo hi = res.getHostInfo(eh.getName());
+                    assertNotNull(hi);
+                    assertNotNull("Resource Value " + loadValueName + " not found", hi.getResourceValue("hl", loadValueName));
+                }
             }
+        } finally {
+            jgdi.close();
+        }
+    }
 
-            Iterator loadIter = eh.getLoadKeys().iterator();
-            while(loadIter.hasNext()) {
+    public void testHostFilter() throws Exception {
 
-               String loadValueName = (String)loadIter.next();
-               String loadValue = eh.getLoad(loadValueName);
-
-               ResourceAttributeFilter resourceAttributeFilter = new ResourceAttributeFilter();
-               resourceAttributeFilter.addValueName(loadValueName);
-
-               qhostOptions.setResourceAttributeFilter(resourceAttributeFilter);
-
-               QHostResult res = jgdi.execQHost(qhostOptions);
-               printResult(res);
-               HostInfo hi = res.getHostInfo(eh.getName());
-               assertNotNull(hi);            
-               assertNotNull("Resource Value " + loadValueName + " not found", hi.getResourceValue("hl", loadValueName));
+        JGDI jgdi = createJGDI();
+        try {
+            QHostOptions qhostOptions = new QHostOptions();
+            List<ExecHost> ehList = jgdi.getRealExecHostList();
+            for (ExecHost eh : ehList) {
+                HostFilter hostFilter = new HostFilter();
+                hostFilter.addHost(eh.getName());
+                qhostOptions.setHostFilter(hostFilter);
+                QHostResult res = jgdi.execQHost(qhostOptions);
+                printResult(res);
+                Set<String> hostNames = res.getHostNames();
+                assertTrue("host " + eh.getName() + " not found", hostNames.contains(eh.getName()));
+                assertTrue("host global not found", hostNames.contains("global"));
             }
-         }      
-      } finally {
-         jgdi.close();
-      }
-   }
-   
-   public void testHostFilter() throws Exception {
-      
-      JGDI jgdi = createJGDI();
-      try {
-         QHostOptions qhostOptions = new QHostOptions();
-
-         List ehList = jgdi.getExecHostList();
-
-
-         Iterator iter = ehList.iterator();
-         while(iter.hasNext()) {
-            ExecHost eh = (ExecHost)iter.next();
-
-            if(eh.getName().equals("template") ||
-               eh.getName().equals("global")) {
-               continue;
-            }
-
-            HostFilter hostFilter = new HostFilter();
-            hostFilter.addHost(eh.getName());
-            qhostOptions.setHostFilter(hostFilter);
-
-            QHostResult res = jgdi.execQHost(qhostOptions);
-            printResult(res);
-
-            Set hostNames = res.getHostNames();
-
-            assertTrue("host " + eh.getName() + " not found", hostNames.contains(eh.getName()));
-            assertTrue("host global not found", hostNames.contains("global"));
-         }
-      } finally {
-         jgdi.close();
-      }      
-   }
-   
+        } finally {
+            jgdi.close();
+        }
+    }
 }

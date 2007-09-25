@@ -128,22 +128,21 @@
    /**
     *   Delete a <code><%=name%></code> object by its primary key
     *
-<%   java.util.Iterator iter = primaryKeys.keySet().iterator();
+<%
    boolean first = true;
-   while(iter.hasNext()) {
-      String pkName = (String)iter.next();
+   for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+      String pkName = entry.getKey();
+      String pkType = entry.getValue();
 %>    *   @param <%=pkName%>  the <%=pkName%> of the <code><%=name%></code> object <%      
    }
 %>      
     *   @throws RemoteException on any error
     */
    public void delete<%=name%>(<%
-   
-   iter = primaryKeys.keySet().iterator();
    first = true;
-   while(iter.hasNext()) {
-      String pkName = (String)iter.next();
-      String pkType = (String)primaryKeys.get(pkName);
+   for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+      String pkName = entry.getKey();
+      String pkType = entry.getValue();
       if(first) {
          first = false;
       } else {
@@ -160,10 +159,10 @@
    /**
     *   Get a a <code><%=name%></code> object by its primary key
     *
-<%   java.util.Iterator iter = primaryKeys.keySet().iterator();
+<%
    boolean first = true;
-   while(iter.hasNext()) {
-      String pkName = (String)iter.next();
+   for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+      String pkName = entry.getKey();
 %>    *   @param <%=pkName%>  the <%=pkName%> of the <code><%=name%></code> object <%      
    }
 %>      
@@ -171,12 +170,10 @@
     *   @throws RemoteException on any error
     */
    public <%=classname%> get<%=name%>(<%
-   
-   iter = primaryKeys.keySet().iterator();
    first = true;
-   while(iter.hasNext()) {
-      String pkName = (String)iter.next();
-      String pkType = (String)primaryKeys.get(pkName);
+   for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+      String pkName = entry.getKey();
+      String pkType = entry.getValue();
       if(first) {
          first = false;
       } else {
@@ -192,12 +189,10 @@
   // ---------------------------------------------------------------------------
   // Build Generator instances
   // ---------------------------------------------------------------------------
-
-  java.util.Iterator iter = cullDef.getObjectNames().iterator();
-  java.util.List generators = new java.util.ArrayList();
-  while(iter.hasNext()) {
-    String name = (String)iter.next();
-    com.sun.grid.cull.CullObject cullObj = cullDef.getCullObject(name);
+  java.util.List<JGDIRMIGenerator> generators = new java.util.ArrayList<JGDIRMIGenerator>();
+  com.sun.grid.cull.CullObject cullObj = null;
+  for (String name : cullDef.getObjectNames()) {
+    cullObj = cullDef.getCullObject(name);
     generators.add(new JGDIRMIGenerator(cullObj));
   }
 %>
@@ -208,12 +203,10 @@ import java.rmi.RemoteException;
 import java.rmi.Remote;
 
 <% // Import all cull object names;
-    iter = generators.iterator();
-
-    while( iter.hasNext() ) {
-       JGDIRMIGenerator gen = (JGDIRMIGenerator)iter.next();
+    for (JGDIRMIGenerator gen : generators) {
        gen.genImport();
-    } // end of while %>
+    } // end of for
+%>
     
     
 /**
@@ -223,10 +216,9 @@ import java.rmi.Remote;
  *   {@link com.sun.grid.jgdi.JGDIException} as cause.
  */
 public interface JGDIRemote extends JGDIRemoteBase {
-<% iter = generators.iterator();
-   while( iter.hasNext() ) {
-       JGDIRMIGenerator gen = (JGDIRMIGenerator)iter.next();
+<%
+    for (JGDIRMIGenerator gen : generators) {
        gen.genMethods();
-   } // end of while 
+    } // end of for
 %>
 }

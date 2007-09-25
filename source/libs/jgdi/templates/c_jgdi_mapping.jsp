@@ -56,14 +56,12 @@
 
 lDescr* get_descr(const char* name) {
 <%
-   java.util.Iterator iter = cullDef.getObjectNames().iterator();
-   while( iter.hasNext() ) {
-     String name = (String)iter.next();
+   for (String name : cullDef.getObjectNames()) {
      com.sun.grid.cull.CullObject cullObj = cullDef.getCullObject(name);
 %>
    if( strcmp(name, "<%=name%>") == 0 ) return <%=name%>;
 <%   
-  } // end of while
+  } // end of for
 %>
    return NULL;
 }
@@ -71,75 +69,57 @@ lDescr* get_descr(const char* name) {
 lDescr* get_descr_for_classname(const char* classname ) {
 
 <%
-   iter = cullDef.getObjectNames().iterator();
-   while( iter.hasNext() ) {
-     String name = (String)iter.next();
+   for (String name : cullDef.getObjectNames()) {
      com.sun.grid.cull.CullObject cullObj = cullDef.getCullObject(name);
      String classname = jh.getFullClassName(cullObj);
-     
-     if(cullObj.getParentName() != null) {
-        
+     if (cullObj.getParentName() != null) {
         name = cullObj.getParentName();
      }
 %>
-   if( strcmp(classname, "<%=classname%>") == 0 ) return <%=name%>;
+   if (strcmp(classname, "<%=classname%>") == 0) return <%=name%>;
 <%   
-  } // end of while
+  } // end of for
 %>
    return NULL;
 }
 
 
 <%
-   iter = cullDef.getEnumNames().iterator();
-   while(iter.hasNext()) {
-      String name = (String)iter.next();
+   for (String name : cullDef.getEnumNames()) {
       com.sun.grid.cull.CullEnum aEnum = cullDef.getEnum(name);
 %>
-
 int get_<%=name%>(const char* a_<%=name%>_name) {
-
 <%
-     java.util.Iterator elemIter = aEnum.getElems().iterator();
-     while( elemIter.hasNext() ) {
-        String elemName = (String)elemIter.next();
+    for (String elemName : aEnum.getElems()) {
 %>
-    if( strcmp("<%=elemName%>", a_<%=name%>_name) == 0 ) return <%=elemName%>;
-<%     
-    }
-  }
+    if (strcmp("<%=elemName%>", a_<%=name%>_name) == 0) return <%=elemName%>;
+<%
+    } // end of inner for
+  } // end of for
 %>
 
 const char* get_classname_for_descr(const lDescr *descr) {
-
 <%
-   iter = cullDef.getObjectNames().iterator();
-   while( iter.hasNext() ) {
-     String name = (String)iter.next();
+   for (String name : cullDef.getObjectNames()) {
      com.sun.grid.cull.CullObject cullObj = cullDef.getCullObject(name);
      String classname = jh.getFullClassName(cullObj);
      classname = classname.replace('.', '/');
-     
      if(cullObj.getParentName() != null) {
-        
         name = cullObj.getParentName();
      }
-     
 %>
    if (descr == <%=name%>) {
       return "<%=classname%>";
    }
 <%   
-  } // end of while
+  } // end of for
 %>
    return NULL;
 }
 
 int get_master_list_for_classname(const char* classname) {
 <%
-   iter = cullDef.getObjectNames().iterator();
-   while( iter.hasNext() ) {
-     String name = (String)iter.next();
+   for (String name : cullDef.getObjectNames()) {  
      com.sun.grid.cull.CullObject cullObj = cullDef.getCullObject(name);
      String classname = jh.getFullClassName(cullObj);
 %>
@@ -153,7 +133,7 @@ int get_master_list_for_classname(const char* classname) {
 <%   } %>      
    }
 <%   
-  } // end of while
+  } // end of for
 %>
    return -1;
 }

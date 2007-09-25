@@ -43,146 +43,139 @@ import com.sun.grid.jgdi.monitoring.filter.QueueFilter;
 import com.sun.grid.jgdi.monitoring.filter.ResourceAttributeFilter;
 import com.sun.grid.jgdi.monitoring.filter.ResourceFilter;
 import com.sun.grid.jgdi.monitoring.filter.UserFilter;
-import java.util.Iterator;
 import java.util.LinkedList;
-
 import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
+
 /**
  *
  */
-@CommandAnnotation("qquota")
+@CommandAnnotation(value = "qquota")
 public class QQuotaCommand extends AbstractCommand {
-   
-   public String getUsage() {
-      return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qquota");
-   }
-   
-   
-   public void run(String[] args) throws Exception {
-      QQuotaOptions options = parse(args);
-      if (options == null) {
-         return; 
-      }
-      
-      QQuotaResult res = jgdi.getQQuota(options);
-      
-      if (res.getResourceQuotaRules().size() > 0) {
-         pw.println("resource quota rule    limit                filter");
-         pw.println("--------------------------------------------------------------------------------");
-         Iterator iter = res.getResourceQuotaRules().iterator();
-         while (iter.hasNext()) {
-            ResourceQuotaRuleInfo info = (ResourceQuotaRuleInfo)iter.next();
-            // need a Formatter here
-            pw.print(info.getResouceQuotaRuleName());
-            Iterator liter = info.getLimits().iterator();
-            while (liter.hasNext()) {
-               ResourceQuota relim = (ResourceQuota)liter.next();
-               pw.print(" " + relim.getName() + "=" + relim.getUsageValue() + "/" + relim.getLimitValue());
+
+    public String getUsage() {
+        return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qquota");
+    }
+
+    public void run(String[] args) throws Exception {
+        QQuotaOptions options = parse(args);
+        if (options == null) {
+            return;
+        }
+
+        QQuotaResult res = jgdi.getQQuota(options);
+
+        if (!res.getResourceQuotaRules().isEmpty()) {
+            pw.println("resource quota rule    limit                filter");
+            pw.println("--------------------------------------------------------------------------------");
+            for (ResourceQuotaRuleInfo info : res.getResourceQuotaRules()) {
+                // need a Formatter here
+                pw.print(info.getResouceQuotaRuleName());
+                for (ResourceQuota relim : info.getLimits()) {
+                    pw.print(" " + relim.getName() + "=" + relim.getUsageValue() + "/" + relim.getLimitValue());
+                }
+                if (!info.getUsers().isEmpty()) {
+                    pw.print(" users" + info.getUsers());
+                }
+                if (!info.getProjects().isEmpty()) {
+                    pw.print(" projects" + info.getProjects());
+                }
+                if (!info.getPes().isEmpty()) {
+                    pw.print(" pes" + info.getPes());
+                }
+                if (!info.getQueues().isEmpty()) {
+                    pw.print(" queues" + info.getQueues());
+                }
+                if (!info.getHosts().isEmpty()) {
+                    pw.print(" hosts" + info.getHosts());
+                }
+                pw.println();
             }
-            if (!info.getUsers().isEmpty()) {
-               pw.print(" users" + info.getUsers());
+        }
+    }
+
+    private QQuotaOptions parse(String[] args) throws Exception {
+        ResourceAttributeFilter resourceAttributeFilter = null;
+        ResourceFilter resourceFilter = null;
+        UserFilter userFilter = null;
+        HostFilter hostFilter = null;
+        ProjectFilter projectFilter = null;
+        ParallelEnvironmentFilter peFilter = null;
+        QueueFilter queueFilter = null;
+
+        LinkedList<String> argList = new LinkedList<String>();
+        for (int i = 0; i < args.length; i++) {
+            argList.add(args[i]);
+        }
+
+        while (!argList.isEmpty()) {
+            String arg = (String) argList.removeFirst();
+
+            if (arg.equals("-help")) {
+                pw.println(getUsage());
+                return null;
+            } else if (arg.equals("-h")) {
+                if (argList.isEmpty()) {
+                    throw new IllegalArgumentException("missing host_list");
+                }
+                arg = (String) argList.removeFirst();
+                hostFilter = HostFilter.parse(arg);
+            } else if (arg.equals("-l")) {
+                if (argList.isEmpty()) {
+                    throw new IllegalArgumentException("missing resource_list");
+                }
+                resourceFilter = new ResourceFilter();
+                arg = (String) argList.removeFirst();
+                resourceFilter = ResourceFilter.parse(arg);
+            } else if (arg.equals("-u")) {
+                if (argList.isEmpty()) {
+                    throw new IllegalArgumentException("missing user_list");
+                }
+                arg = (String) argList.removeFirst();
+                userFilter = UserFilter.parse(arg);
+            } else if (arg.equals("-pe")) {
+                if (argList.isEmpty()) {
+                    throw new IllegalArgumentException("missing pe_list");
+                }
+                arg = (String) argList.removeFirst();
+                peFilter = ParallelEnvironmentFilter.parse(arg);
+            } else if (arg.equals("-P")) {
+                if (argList.isEmpty()) {
+                    throw new IllegalArgumentException("missing project_list");
+                }
+                arg = (String) argList.removeFirst();
+                projectFilter = ProjectFilter.parse(arg);
+            } else if (arg.equals("-q")) {
+                if (argList.isEmpty()) {
+                    throw new IllegalArgumentException("missing wc_queue_list");
+                }
+                arg = (String) argList.removeFirst();
+                queueFilter = QueueFilter.parse(arg);
+            } else {
+                throw new IllegalStateException("Unknown argument: " + arg);
             }
-            if (!info.getProjects().isEmpty()) {
-               pw.print(" projects" + info.getProjects());
-            }
-            if (!info.getPes().isEmpty()) {
-               pw.print(" pes" + info.getPes());
-            }
-            if (!info.getQueues().isEmpty()) {
-               pw.print(" queues" + info.getQueues());
-            }
-            if (!info.getHosts().isEmpty()) {
-               pw.print(" hosts" + info.getHosts());
-            }            
-            pw.println();
-         }
-      }
-      
-   }
-   
-   private QQuotaOptions parse(String [] args) throws Exception {
-      ResourceAttributeFilter resourceAttributeFilter = null;
-      ResourceFilter resourceFilter = null;
-      UserFilter userFilter = null;
-      HostFilter hostFilter = null;
-      ProjectFilter projectFilter = null;
-      ParallelEnvironmentFilter peFilter = null;
-      QueueFilter queueFilter = null;
-      
-      LinkedList argList = new LinkedList();
-      for(int i = 0; i < args.length; i++) {
-         argList.add(args[i]);
-      }
-      
-      while(!argList.isEmpty()) {
-         String arg = (String)argList.removeFirst();
-         
-         if(arg.equals("-help")) {
-            pw.println(getUsage());
-            return null;
-         } else if (arg.equals("-h")) {
-            if(argList.isEmpty()) {
-               throw new IllegalArgumentException("missing host_list");
-            }
-            arg = (String)argList.removeFirst();
-            hostFilter = HostFilter.parse(arg);
-         } else if (arg.equals("-l")) {
-            if(argList.isEmpty()) {
-               throw new IllegalArgumentException("missing resource_list");
-            }
-            resourceFilter = new ResourceFilter();
-            arg = (String)argList.removeFirst();
-            resourceFilter = ResourceFilter.parse(arg);
-         } else if (arg.equals("-u")) {
-            if(argList.isEmpty()) {
-               throw new IllegalArgumentException("missing user_list");
-            }
-            arg = (String)argList.removeFirst();
-            userFilter = UserFilter.parse(arg);
-         } else if (arg.equals("-pe")) {
-            if(argList.isEmpty()) {
-               throw new IllegalArgumentException("missing pe_list");
-            }
-            arg = (String)argList.removeFirst();
-            peFilter = ParallelEnvironmentFilter.parse(arg);
-         } else if (arg.equals("-P")) {
-            if(argList.isEmpty()) {
-               throw new IllegalArgumentException("missing project_list");
-            }
-            arg = (String)argList.removeFirst();
-            projectFilter = ProjectFilter.parse(arg);
-         } else if (arg.equals("-q")) {
-            if(argList.isEmpty()) {
-               throw new IllegalArgumentException("missing wc_queue_list");
-            }
-            arg = (String)argList.removeFirst();
-            queueFilter = QueueFilter.parse(arg);
-         } else {
-            throw new IllegalStateException("Unknown argument: " + arg);
-         }
-      }
-      
-      QQuotaOptions options = new QQuotaOptions();
-      
-      if (hostFilter != null) {
-         options.setHostFilter(hostFilter);
-      }
-      if (resourceFilter != null) {
-         options.setResourceFilter(resourceFilter);
-      }
-      if (userFilter != null) {
-         options.setUserFilter(userFilter);
-      }
-      if (peFilter != null) {
-         options.setPeFilter(peFilter);
-      }
-      if (projectFilter != null) {
-         options.setProjectFilter(projectFilter);
-      }
-      if (queueFilter != null) {
-         options.setQueueFilter(queueFilter);
-      }
-      
-      return options;
-   }
+        }
+
+        QQuotaOptions options = new QQuotaOptions();
+
+        if (hostFilter != null) {
+            options.setHostFilter(hostFilter);
+        }
+        if (resourceFilter != null) {
+            options.setResourceFilter(resourceFilter);
+        }
+        if (userFilter != null) {
+            options.setUserFilter(userFilter);
+        }
+        if (peFilter != null) {
+            options.setPeFilter(peFilter);
+        }
+        if (projectFilter != null) {
+            options.setProjectFilter(projectFilter);
+        }
+        if (queueFilter != null) {
+            options.setQueueFilter(queueFilter);
+        }
+
+        return options;
+    }
 }

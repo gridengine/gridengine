@@ -47,10 +47,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.management.MBeanServerConnection;
 import javax.management.Notification;
 import javax.management.NotificationListener;
-import javax.management.remote.JMXConnector;
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
@@ -70,28 +68,27 @@ import javax.swing.table.DefaultTableModel;
  *
  */
 public class MainFrame extends JFrame {
-    
+
     //private final DefaultListModel subscriptionListModel = new DefaultListModel();
     //private final JList  subscriptionList = new JList(subscriptionListModel);
-    
     private final ConnectionController controller = new ConnectionController();
-    
+
     private final SubscriptionTableModel subscriptionTableModel = new SubscriptionTableModel(controller);
     private final JTable subscriptionTable = new JTable(subscriptionTableModel);
-    
+
     private final DefaultTableModel eventTableModel = new DefaultTableModel();
-    
+
     private final JTable eventTable = new JTable(eventTableModel);
     private final ConnectAction connectAction = new ConnectAction();
     private final DisConnectAction disconnectAction = new DisConnectAction();
-    
+
     private MyNotificationListener listener = new MyNotificationListener();
-    
+
     private JLabel statusLabel = new JLabel();
-    
+
     /** Creates a new instance of MainFrame */
     public MainFrame() {
-        
+
         setTitle("JGDI Event Monitor: Not connected");
         JPanel panel = new JPanel(new BorderLayout());
         getContentPane().add(panel);
@@ -101,68 +98,63 @@ public class MainFrame extends JFrame {
         int SUB_COL_WIDTH = 40;
         int TYPE_WIDTH = 140;
         subscriptionTable.getColumnModel().getColumn(0).setMaxWidth(SUB_COL_WIDTH);
-        
+
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        
+
         JScrollPane sp = new JScrollPane(subscriptionTable, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         sp.setMaximumSize(new Dimension(SUB_COL_WIDTH + TYPE_WIDTH + 20, Integer.MAX_VALUE));
         sp.setPreferredSize(new Dimension(SUB_COL_WIDTH + TYPE_WIDTH + 20, 300));
-        sp.setBorder(
-            BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder("Subscription:"),
-                BorderFactory.createLoweredBevelBorder()));
-            
+        sp.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Subscription:"), BorderFactory.createLoweredBevelBorder()));
+
         panel.add(sp, BorderLayout.EAST);
-        
+
         sp = new JScrollPane(eventTable);
-        sp.setBorder(
-            BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder("Events:"),
-                BorderFactory.createLoweredBevelBorder()));
+        sp.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Events:"), BorderFactory.createLoweredBevelBorder()));
         panel.add(sp, BorderLayout.CENTER);
-        
+
         JPanel statusLabelPanel = new JPanel(new BorderLayout());
-        
+
         statusLabel.setText("OK");
         statusLabelPanel.add(statusLabel, BorderLayout.CENTER);
         statusLabelPanel.setBorder(BorderFactory.createLoweredBevelBorder());
         panel.add(statusLabelPanel, BorderLayout.SOUTH);
-        
+
         JToolBar toolBar = new JToolBar();
         toolBar.add(connectAction);
         toolBar.add(disconnectAction);
         getContentPane().add(toolBar, BorderLayout.NORTH);
-        
+
         JMenuBar mb = new JMenuBar();
-        
+
         JMenu menu = new JMenu("File");
         mb.add(menu);
-        
+
         menu.add(connectAction);
         menu.add(disconnectAction);
         menu.addSeparator();
         menu.add(new ExitAction());
         setJMenuBar(mb);
-        
+
         disconnectAction.setEnabled(false);
         subscriptionTable.setEnabled(false);
         
         controller.addEventListener(new MyNotificationListener());
         controller.addListener(new ControllerListener());
     }
-    
-    
+
+
     private class ControllerListener implements ConnectionController.Listener {
-        
+
         public void connected(final String host, final int port, final Set<EventTypeEnum> subscription) {
-            if(SwingUtilities.isEventDispatchThread()) {
+            if (SwingUtilities.isEventDispatchThread()) {
                 setTitle("JGDI Event Monitor: " + host + ":" + port);
                 connectAction.setEnabled(false);
                 disconnectAction.setEnabled(true);
                 subscriptionTable.setEnabled(true);
                 statusLabel.setText("Connected to " + host + ":" + port);
-            } else { 
+            } else {
                 SwingUtilities.invokeLater(new Runnable() {
+
                     public void run() {
                         connected(host, port, subscription);
                     }
@@ -171,7 +163,7 @@ public class MainFrame extends JFrame {
         }
 
         public void disconnected() {
-            if(SwingUtilities.isEventDispatchThread()) {
+            if (SwingUtilities.isEventDispatchThread()) {
                 setTitle("JGDI Event Monitor: Not connected");
                 connectAction.setEnabled(true);
                 disconnectAction.setEnabled(false);
@@ -179,6 +171,7 @@ public class MainFrame extends JFrame {
                 statusLabel.setText("disconnected");
             } else {
                 SwingUtilities.invokeLater(new Runnable() {
+
                     public void run() {
                         disconnected();
                     }
@@ -187,10 +180,11 @@ public class MainFrame extends JFrame {
         }
 
         public void subscribed(final Set<EventTypeEnum> types) {
-            if(SwingUtilities.isEventDispatchThread()) {
+            if (SwingUtilities.isEventDispatchThread()) {
                 statusLabel.setText(types + " subscribed");
             } else {
                 SwingUtilities.invokeLater(new Runnable() {
+
                     public void run() {
                         subscribed(types);
                     }
@@ -199,10 +193,11 @@ public class MainFrame extends JFrame {
         }
 
         public void unsubscribed(final Set<EventTypeEnum> types) {
-            if(SwingUtilities.isEventDispatchThread()) {
+            if (SwingUtilities.isEventDispatchThread()) {
                 statusLabel.setText(types + " unsubscribed");
             } else {
                 SwingUtilities.invokeLater(new Runnable() {
+
                     public void run() {
                         unsubscribed(types);
                     }
@@ -211,20 +206,19 @@ public class MainFrame extends JFrame {
         }
 
         public void errorOccured(final Throwable ex) {
-            if(SwingUtilities.isEventDispatchThread()) {
+            if (SwingUtilities.isEventDispatchThread()) {
                 ErrorDialog.showErrorDialog(MainFrame.this, ex);
             } else {
                 SwingUtilities.invokeLater(new Runnable() {
+
                     public void run() {
                         errorOccured(ex);
                     }
                 });
             }
         }
-        
-        
     }
-    
+
     private class ConnectAction extends AbstractAction {
         
         ConnectDialog dlg = new ConnectDialog(MainFrame.this);
@@ -259,19 +253,20 @@ public class MainFrame extends JFrame {
             }            
         }
     }
-    
+
     private class ExitAction extends AbstractAction {
-        
+
         public ExitAction() {
             super("Exit");
         }
+
         public void actionPerformed(ActionEvent e) {
             System.exit(0);
         }
     }
-    
+
     private class DisConnectAction extends AbstractAction {
-        
+
         public DisConnectAction() {
             super("disconnect");
         }
@@ -292,9 +287,9 @@ public class MainFrame extends JFrame {
                 if(eventTableModel.getRowCount() >= 1000) {
                     eventTableModel.removeRow(0);
                 }
-                
             } else {
                 SwingUtilities.invokeLater(new Runnable() {
+
                     public void run() {
                         eventOccured(evt);
                     }
@@ -302,38 +297,37 @@ public class MainFrame extends JFrame {
             }
         }
     }
-    
-    private final static int TYPE_COL = 1;
-    private final static int SUB_COL = 0;
-    
+
+    private static final int TYPE_COL = 1;
+    private static final int SUB_COL = 0;
+
     private class SubscriptionTableModel extends AbstractTableModel implements ConnectionController.Listener {
-        
-        private final Map<EventTypeEnum,Boolean> subscription = new HashMap<EventTypeEnum,Boolean>();
+
+        private final Map<EventTypeEnum, Boolean> subscription = new HashMap<EventTypeEnum, Boolean>();
         private final List<EventTypeEnum> subscriptionList;
-        
-        
+
+
         private final ConnectionController controller;
-        
+
         public SubscriptionTableModel(ConnectionController controller) {
-            
+
             this.controller = controller;
             subscriptionList = new ArrayList(Arrays.asList(EventTypeEnum.values()));
-            
+
             Collections.sort(subscriptionList, new Comparator<EventTypeEnum>() {
-                
+
                 public int compare(EventTypeEnum o1, EventTypeEnum o2) {
                     return o1.toString().compareTo(o2.toString());
                 }
-                
             });
-            
-            for(EventTypeEnum type: subscriptionList) {
+
+            for (EventTypeEnum type : subscriptionList) {
                 subscription.put(type, false);
             }
-            
+
             controller.addListener(this);
         }
-        
+
         public int getRowCount() {
             return subscriptionList.size();
         }
@@ -343,7 +337,7 @@ public class MainFrame extends JFrame {
         }
 
         public Object getValueAt(int rowIndex, int columnIndex) {
-            switch(columnIndex) {
+            switch (columnIndex) {
                 case TYPE_COL:
                     return subscriptionList.get(rowIndex);
                 case SUB_COL:
@@ -358,11 +352,11 @@ public class MainFrame extends JFrame {
         }
 
         public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-            if(columnIndex == SUB_COL) {
+            if (columnIndex == SUB_COL) {
                 EventTypeEnum type = subscriptionList.get(rowIndex);
-                boolean subscribe = (Boolean)aValue;
-                
-                if(subscribe) {
+                boolean subscribe = (Boolean) aValue;
+
+                if (subscribe) {
                     statusLabel.setText("subscribing " + type);
                     controller.subscribe(Collections.singleton(type));
                 } else {
@@ -371,38 +365,45 @@ public class MainFrame extends JFrame {
                 }
             }
         }
-        
+
         public void clearSubscription() {
-            for(Map.Entry<EventTypeEnum,Boolean> entry: subscription.entrySet()) {
+            for (Map.Entry<EventTypeEnum, Boolean> entry : subscription.entrySet()) {
                 entry.setValue(false);
             }
         }
-        
+
         public EventTypeEnum getType(int row) {
             return subscriptionList.get(row);
         }
+
         public void setSubscription(EventTypeEnum type, boolean subscribed) {
             subscription.put(type, subscribed);
         }
-        
+
         public boolean isSubscribed(EventTypeEnum type) {
             return subscription.get(type);
         }
-        
+
 
         public String getColumnName(int column) {
-            switch(column) {
-                case TYPE_COL: return "Type";
-                case SUB_COL: return "";
-                default: return "Error";
+            switch (column) {
+                case TYPE_COL:
+                    return "Type";
+                case SUB_COL:
+                    return "";
+                default:
+                    return "Error";
             }
         }
 
         public Class<?> getColumnClass(int columnIndex) {
-            switch(columnIndex) {
-                case TYPE_COL: return EventTypeEnum.class;
-                case SUB_COL: return Boolean.class;
-                default: return null;
+            switch (columnIndex) {
+                case TYPE_COL:
+                    return EventTypeEnum.class;
+                case SUB_COL:
+                    return Boolean.class;
+                default:
+                    return null;
             }
         }
 
@@ -411,43 +412,46 @@ public class MainFrame extends JFrame {
         }
 
         public void disconnected() {
-            if(SwingUtilities.isEventDispatchThread()) {
+            if (SwingUtilities.isEventDispatchThread()) {
                 clearSubscription();
                 fireTableDataChanged();
             } else {
                 SwingUtilities.invokeLater(new Runnable() {
+
                     public void run() {
-                       disconnected(); 
+                        disconnected();
                     }
                 });
             }
         }
 
         public void subscribed(final Set<EventTypeEnum> types) {
-            if(SwingUtilities.isEventDispatchThread()) {
-                for(EventTypeEnum type: types) {
+            if (SwingUtilities.isEventDispatchThread()) {
+                for (EventTypeEnum type : types) {
                     setSubscription(type, true);
                 }
                 fireTableDataChanged();
             } else {
                 SwingUtilities.invokeLater(new Runnable() {
+
                     public void run() {
-                       subscribed(types); 
+                        subscribed(types);
                     }
                 });
             }
         }
 
         public void unsubscribed(final Set<EventTypeEnum> types) {
-            if(SwingUtilities.isEventDispatchThread()) {
-                for(EventTypeEnum type: types) {
+            if (SwingUtilities.isEventDispatchThread()) {
+                for (EventTypeEnum type : types) {
                     setSubscription(type, false);
                 }
                 fireTableDataChanged();
             } else {
                 SwingUtilities.invokeLater(new Runnable() {
+
                     public void run() {
-                       unsubscribed(types); 
+                        unsubscribed(types);
                     }
                 });
             }
@@ -455,7 +459,5 @@ public class MainFrame extends JFrame {
 
         public void errorOccured(Throwable ex) {
         }
-        
     }
-    
 }

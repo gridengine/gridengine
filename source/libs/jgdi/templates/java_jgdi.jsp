@@ -99,14 +99,14 @@ public void genUpdateMethod() { %>
     *   @return list of <code><%=name%></code> objects
     *   @throws JGDIException on any error on the GDI layer
     */
-   public List get<%=name%>List() throws JGDIException;
+   public List< <%=classname%> > get<%=name%>List() throws JGDIException;
    /**
     *   Get the list of all defined <code><%=name%></code> objects.
     *   @param answers  the <code>answer list</code> object    
     *   @return list of <code><%=name%></code> objects
     *   @throws JGDIException on any error on the GDI layer
     */
-   public List get<%=name%>ListWithAnswer(List<JGDIAnswer> answers) throws JGDIException;
+   public List< <%=classname%> > get<%=name%>ListWithAnswer(List<JGDIAnswer> answers) throws JGDIException;
 <%
     } // end of genGetListMethod
     
@@ -225,7 +225,7 @@ public void genUpdateMethod() { %>
     for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
        String pkName = entry.getKey();
        // String pkType = entry.getValue();
-%>    *  @param String[] <%=pkName%>s   array of <%=pkName%> of the <code><%=name%></code> objects
+%>    *  @param <%=pkName%>s   array of <%=pkName%> of the <code><%=name%></code> objects
 <%
     } // end of for
 %>    *  @param answers   the <code>answer list</code> object
@@ -317,21 +317,13 @@ public void genUpdateMethod() { %>
   // --------------------------------------------------------------------------
   // Build all generator instances
   // --------------------------------------------------------------------------
-  java.util.Iterator iter = cullDef.getObjectNames().iterator();
   com.sun.grid.cull.CullObject cullObj = null;
-  String name = null;
-  java.util.ArrayList generators = new java.util.ArrayList();
-  
-  while( iter.hasNext() ) {
-      name = (String)iter.next();
-      cullObj = cullDef.getCullObject(name); 
-      JGDIGenerator gen = null;
-
+  java.util.ArrayList<JGDIGenerator> generators = new java.util.ArrayList<JGDIGenerator>();
+  for (String name : cullDef.getObjectNames()) {
+      cullObj = cullDef.getCullObject(name);
       logger.fine("JGDIGenerator->handle " + cullObj.getName() + "(" + cullObj.getOperationString() +")");
       generators.add(new JGDIGenerator(cullObj));
-      
-  } // end of while iter.hasNext()
-  
+  } // end of for
 %>
 
 package com.sun.grid.jgdi;
@@ -342,11 +334,9 @@ import com.sun.grid.jgdi.configuration.JGDIAnswer;
 import com.sun.grid.jgdi.monitoring.filter.UserFilter;
 
 <% // Import all cull object names;
-  iter = generators.iterator();
-  while(iter.hasNext()) {
-     JGDIGenerator gen = (JGDIGenerator)iter.next();
+   for (JGDIGenerator gen : generators) {
      gen.genImport();
-  }  
+   }  
 %>    
 /**
  *  <p>The class <code>JGDI</code> is the central interface for communication with
@@ -376,9 +366,7 @@ import com.sun.grid.jgdi.monitoring.filter.UserFilter;
  */
 public interface JGDI extends JGDIBase {
 <%
-  iter = generators.iterator();
-  while(iter.hasNext()) {
-     JGDIGenerator gen = (JGDIGenerator)iter.next();
+  for (JGDIGenerator gen : generators) {
      gen.genMethods();
   }  
 %>

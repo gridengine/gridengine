@@ -103,8 +103,8 @@ public class DefaultMapListPropertyDescriptor extends MapListPropertyDescriptor 
    }
    
    
-   public Set getKeys(Object bean) {
-      return (Set)invoke(keysMethod, bean, null);
+   public Set<String> getKeys(Object bean) {
+      return (Set<String>)invoke(keysMethod, bean, null);
    }
    
 

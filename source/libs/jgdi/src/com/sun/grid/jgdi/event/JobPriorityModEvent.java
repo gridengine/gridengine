@@ -35,9 +35,8 @@ package com.sun.grid.jgdi.event;
  *
  */
 public class JobPriorityModEvent extends JobModEvent implements java.io.Serializable {
-    
-  public JobPriorityModEvent(long timestamp, int eventID) {
-     super(timestamp, eventID);
-  } // end of default constructor
-    
+
+    public JobPriorityModEvent(long timestamp, int eventID) {
+        super(timestamp, eventID);
+    } // end of default constructor
 }

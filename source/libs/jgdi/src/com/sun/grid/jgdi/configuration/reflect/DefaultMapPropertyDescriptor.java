@@ -75,8 +75,8 @@ public class DefaultMapPropertyDescriptor extends MapPropertyDescriptor {
       return ((Integer)invoke( countMethod, bean, null )).intValue();
    }
 
-   public java.util.Set getKeys(Object bean) {
-      return (java.util.Set)invoke(keysMethod, bean, null);
+   public java.util.Set<String> getKeys(Object bean) {
+      return (java.util.Set<String>)invoke(keysMethod, bean, null);
    }
 
    public boolean isBrowsable() {

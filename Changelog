@@ -1,3 +1,6 @@
+AA-2007-09-25-0: Cleanup:   - typed lists and other 1.5 cleanups
+                 Review:    LP
+
 AH-2007-09-24-1: Bugfix:    Fix schedd crash with test case 2300 due to 
                             AH-2007-06-15-0
 

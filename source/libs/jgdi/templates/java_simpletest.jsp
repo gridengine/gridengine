@@ -43,23 +43,16 @@ String classname = jh.getClassName(cullObj);
 %>
 package com.sun.grid.jgdi.configuration;
 
-import com.sun.grid.jgdi.configuration.reflect.ClassDescriptor;
 import junit.framework.*;
 import com.sun.grid.jgdi.configuration.*;
-import com.sun.grid.jgdi.configuration.reflect.PropertyDescriptor;
-import com.sun.grid.jgdi.configuration.reflect.SimplePropertyDescriptor;
 import java.io.File;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Iterator;
+import java.util.List;
+import java.util.LinkedList;
+import com.sun.grid.jgdi.configuration.Util;
 import com.sun.grid.jgdi.configuration.xml.XMLUtil;
 import com.sun.grid.jgdi.BaseTestCase;
 import com.sun.grid.jgdi.JGDI;
-import com.sun.grid.jgdi.JGDIException;
 import com.sun.grid.jgdi.TestValueFactory;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
@@ -87,25 +80,18 @@ public class <%=classname%>TestCase extends BaseTestCase {
    
    public void test<%=classname%>AddGetDelete() throws Exception {
    
-      Object [] testValues = TestValueFactory.getTestValues(<%=classname%>.class);
+      Object[] testValues = TestValueFactory.getTestValues(<%=classname%>.class);
+      assertTrue("We have no test values for <%=classname%>", (testValues.length > 0));
 
-      assertTrue("We have no test values for <%=classname%>", testValues.length > 0 );
-      
       JGDI jgdi = createJGDI();
       try {
-         List differences = new ArrayList();
-         
+         List<Util.Difference> differences = new LinkedList<Util.Difference>();
          for (int i = 0; i < testValues.length; i++) {
             <%=classname%> testObj = (<%=classname%>)testValues[i];
-
             logger.info("adding testObj " + testObj);
-            
             jgdi.add<%=classname%>(testObj);
-            
             try {
-
               logger.info("fetching and diffing testObj " + testObj);
-
               <%=classname%> retObj = jgdi.get<%=classname%>(<%
               for (int i = 0; i < cullObj.getPrimaryKeyCount(); i++) {
                  com.sun.grid.cull.CullAttr attr = cullObj.getPrimaryKeyAttr(i);          
@@ -117,22 +103,14 @@ public class <%=classname%>TestCase extends BaseTestCase {
                  }                                                           
                  %>testObj.get<%=gsname%>()<%                              
               }                                                                 
-                
               %>);
               
               Util.getDifferences(testObj, retObj, differences);
-              
               if (!differences.isEmpty()) {
-
                  logger.warning("org <%=classname%> is not equal to stored <%=classname%> ------------------------"); 
-                 Iterator iter = differences.iterator();
-                 while(iter.hasNext()) {
-                    
-                    Util.Difference diff = (Util.Difference)iter.next();
-                    
+                 for (Util.Difference diff: differences) {
                     logger.warning(diff.toString());
                  }
-                 
               }
               //assertTrue("retobj is not equals to the testobj", differences.isEmpty());
               differences.clear();
@@ -141,66 +119,52 @@ public class <%=classname%>TestCase extends BaseTestCase {
               jgdi.delete<%=classname%>(testObj);
               
               <%=classname%> retObj = jgdi.get<%=classname%>(<%
-                                                                                
               for (int i = 0; i < cullObj.getPrimaryKeyCount(); i++) {                 
                  com.sun.grid.cull.CullAttr attr = cullObj.getPrimaryKeyAttr(i);          
                  String attrName = jh.getAttrName(attr);                     
                  String gsname =  Character.toUpperCase( attrName.charAt(0) ) +
                                   attrName.substring(1);                     
-
                  if (i>0) {                                                   
                   %>,<%                                                      
                  }                                                           
                   %>testObj.get<%=gsname%>()<%                              
               }                                                                 
-                
               %>);
               
               logger.info("deleting testObj " + testObj);
-
               assertNull(testObj + " has not been deleted", retObj);
             }
-         
          }
       } finally {
         jgdi.close();
       }
    }
-   
 <%
    }
-
    // If the object has the get list operation we can test
    // the serialization of all objects into a xml object
    if (cullObj.hasGetListOperation()) {
 %>
    public void test<%=classname%>ListXML() throws Exception {
-   
       JGDI jgdi = createJGDI();
       try {
-         <%=classname%> obj = null;
-         Iterator iter = jgdi.get<%=classname%>List().iterator();
-         while (iter.hasNext()) {
-            obj = (<%=classname%>)iter.next();
-
+         for (<%=classname%> obj : jgdi.get<%=classname%>List()) {
             File file = File.createTempFile("<%=classname%>", ".xml");
             try {
                XMLUtil.write(obj, file);
                <%=classname%> obj1 = (<%=classname%>)XMLUtil.read(file);
                
-               // begin debug: check differences
-//               List differences = new ArrayList();
+// begin debug: check differences
+//               List<Util.Difference> differences = new LinkedList<Util.Difference>();
 //               Util.getDifferences(obj, obj1, differences);
 //               if (!differences.isEmpty()) {
 //                  logger.warning("org <%=classname%> is not equal to filed/reread obj1 <%=classname%> ------------------------"); 
-//                  Iterator it = differences.iterator();
-//                  while(it.hasNext()) {
-//                     Util.Difference diff = (Util.Difference)it.next();
+//                  for (Util.Difference diff : differences) {
 //                     logger.warning(diff.toString());
 //                  }
 //               }
 //               differences.clear();
-               // end debug: check differences
+// end debug: check differences
                
                assertTrue("serialized xml object of class <%=classname%> is invalid", 
                           obj.equalsCompletely(obj1) );
@@ -211,7 +175,6 @@ public class <%=classname%>TestCase extends BaseTestCase {
       } finally {
          jgdi.close();
       }
-   
    }
 <%
    }

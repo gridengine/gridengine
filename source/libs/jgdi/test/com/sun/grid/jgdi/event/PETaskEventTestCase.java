@@ -35,7 +35,6 @@ import com.sun.grid.jgdi.BaseTestCase;
 import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.EventClient;
 import com.sun.grid.jgdi.JGDIException;
-import com.sun.grid.jgdi.JGDIFactory;
 import com.sun.grid.jgdi.JobSubmitter;
 import com.sun.grid.jgdi.configuration.ClusterQueue;
 import com.sun.grid.jgdi.configuration.ParallelEnvironment;
@@ -49,26 +48,26 @@ import junit.framework.TestSuite;
  *
  */
 public class PETaskEventTestCase extends BaseTestCase {
-    
+
     private JGDI jgdi;
     private EventClient evc;
-    
+
     /** Creates a new instance of PETaskEventTestCase */
     public PETaskEventTestCase(String testName) {
         super(testName);
     }
-    
+
     private ParallelEnvironment pe;
     private ClusterQueue queue;
-    
+
     protected void setUp() throws Exception {
-        
+
         jgdi = createJGDI();
         evc = createEventClient(0);
         super.setUp();
 
         String peName = "pe" + System.currentTimeMillis();
-        
+
         pe = new ParallelEnvironmentImpl();
         pe.setName(peName);
         pe.setSlots(999);
@@ -78,33 +77,33 @@ public class PETaskEventTestCase extends BaseTestCase {
         pe.setControlSlaves(true);
         pe.setJobIsFirstTask(true);
         pe.setUrgencySlots("min");
-        
+
         jgdi.addParallelEnvironment(pe);
-        
+
         queue = jgdi.getClusterQueue("all.q");
-        
+
         String queueName = peName + ".q";
         queue.setName(queueName);
         queue.putJobSlots("@/", 2);
         queue.removeAllPe();
         queue.addDefaultPe(peName);
         jgdi.addClusterQueue(queue);
-        
+
         logger.fine("SetUp done");
     }
-    
+
     protected void tearDown() throws Exception {
         if (queue != null) {
             try {
                 jgdi.deleteClusterQueue(queue);
-            } catch(JGDIException ex) {
+            } catch (JGDIException ex) {
                 logger.log(Level.WARNING, ex.getLocalizedMessage(), ex);
             }
         }
         if (pe != null) {
             try {
                 jgdi.deleteParallelEnvironment(pe);
-            } catch(JGDIException ex) {
+            } catch (JGDIException ex) {
                 logger.log(Level.WARNING, ex.getLocalizedMessage(), ex);
             }
         }
@@ -114,97 +113,91 @@ public class PETaskEventTestCase extends BaseTestCase {
             jgdi.close();
         }
     }
-    
+
     public void testPETaskEvents() throws Exception {
-        
-        
-        jgdi.disableQueues(new String [] { queue.getName() }, false);
-        
+
+
+        jgdi.disableQueues(new String[]{queue.getName()}, false);
+
         int numberOfTasks = 2;
         int taskRuntime = 10;
-        
+
         File peJobFile = new File("util/scripts/pe_job.sh");
         File peTaskFile = new File("util/scripts/pe_task.sh");
-        
-        int jobid = JobSubmitter.submitJob(getCurrentCluster(),
-                new String [] {
-            "-pe", pe.getName(), Integer.toString(numberOfTasks) , 
-            peJobFile.getAbsolutePath(), peTaskFile.getAbsolutePath(),
-            Integer.toString(numberOfTasks), 
-            Integer.toString(taskRuntime)
-        });
-        
-        
+
+        int jobid = JobSubmitter.submitJob(getCurrentCluster(), new String[]{"-pe", pe.getName(), Integer.toString(numberOfTasks), peJobFile.getAbsolutePath(), peTaskFile.getAbsolutePath(), Integer.toString(numberOfTasks), Integer.toString(taskRuntime)});
+
+
         evc.subscribePETaskAdd(true);
         evc.setPETaskAddFlush(true, 1);
-        
+
         evc.subscribePETaskDel(true);
         evc.setPETaskDelFlush(true, 1);
-        
+
         evc.subscribeJobDel(true);
         evc.setJobDelFlush(true, 1);
-        
+
         PETaskEventListener lis = new PETaskEventListener(jobid);
         evc.addEventListener(lis);
-        
-        evc.start();
-        
-        Thread.currentThread().sleep(2);
-        
-        jgdi.enableQueues(new String [] { queue.getName() }, false);
 
-        
+        evc.start();
+
+        Thread.currentThread().sleep(2);
+
+        jgdi.enableQueues(new String[]{queue.getName()}, false);
+
+
         assertTrue("timeout while waiting for job finish event", lis.waitForJobFinish(taskRuntime * 10));
-        assertEquals("Too few pe task add events", numberOfTasks, lis.getAddEventCount() );
-        assertEquals("Too few pe task del events", numberOfTasks - 1 , lis.getDelEventCount());
-        
+        assertEquals("Too few pe task add events", numberOfTasks, lis.getAddEventCount());
+        assertEquals("Too few pe task del events", numberOfTasks - 1, lis.getDelEventCount());
     }
-    
-    
+
+
     class PETaskEventListener implements EventListener {
-        
+
         private final Object finishSync = new Object();
         private int addEventCount = 0;
         private int delEventCount = 0;
         private int jobid;
         private boolean finished = false;
+
         public PETaskEventListener(int jobid) {
             this.jobid = jobid;
         }
-        
+
         public void eventOccured(Event evt) {
-            
-            if(evt instanceof PETaskAddEvent) {
-                PETaskAddEvent jte = (PETaskAddEvent)evt;
-                if(jte.getJobId() == jobid) {
+
+            if (evt instanceof PETaskAddEvent) {
+                PETaskAddEvent jte = (PETaskAddEvent) evt;
+                if (jte.getJobId() == jobid) {
                     addEventCount++;
-                    logger.info("pe task " + jte.getJobId() + "." + jte.getTaskNumber() +  " started");
+                    logger.info("pe task " + jte.getJobId() + "." + jte.getTaskNumber() + " started");
                 }
             } else if (evt instanceof PETaskDelEvent) {
-                PETaskDelEvent tde = (PETaskDelEvent)evt;
-                if(tde.getJobId() == jobid) {
+                PETaskDelEvent tde = (PETaskDelEvent) evt;
+                if (tde.getJobId() == jobid) {
                     delEventCount++;
                     logger.info("pe task " + tde.getJobId() + "." + tde.getTaskNumber() + " deleted");
                 }
             } else if (evt instanceof JobDelEvent) {
-                JobDelEvent jde = (JobDelEvent)evt;
-                if(jde.getJobNumber() == jobid) {
+                JobDelEvent jde = (JobDelEvent) evt;
+                if (jde.getJobNumber() == jobid) {
                     logger.info("got job delete event: " + jde);
-                    synchronized(finishSync) {
+                    synchronized (finishSync) {
                         finished = true;
                         finishSync.notifyAll();
                     }
                 }
-            } 
+            }
         }
-        
+
         public boolean waitForJobFinish(int timeout) throws InterruptedException {
-            long end =  System.currentTimeMillis() + (timeout * 1000);
-            synchronized(finishSync) {
-                while(!finished) {
+            long end = System.currentTimeMillis() + (timeout * 1000);
+            synchronized (finishSync) {
+                while (!finished) {
                     long waittime = end - System.currentTimeMillis();
-                    if(waittime < 0) {
-                        logger.info("timeout while waiting for final usage event" );
+                    if (waittime < 0) {
+                        logger.info("timeout while waiting for final usage event");
                         return false;
                     }
                     finishSync.wait(waittime);
@@ -221,11 +214,9 @@ public class PETaskEventTestCase extends BaseTestCase {
             return delEventCount;
         }
     }
-    
+
     public static Test suite() {
         TestSuite suite = new TestSuite(PETaskEventTestCase.class);
         return suite;
     }
-    
-    
 }

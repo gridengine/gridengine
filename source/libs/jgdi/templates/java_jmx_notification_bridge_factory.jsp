@@ -54,24 +54,16 @@ public class NotificationBridgeFactory {
         NotificationBridge ret = new NotificationBridge(url);
     
 <%
-    
-    java.util.Iterator iter = cullDef.getObjectNames().iterator();
-    com.sun.grid.cull.CullObject cullObj = null;
-    String name = null;
-
-    while( iter.hasNext() ) {
-      name = (String)iter.next();
+    com.sun.grid.cull.CullObject cullObj = null;    
+    for (String name : cullDef.getObjectNames()) {
       cullObj = cullDef.getCullObject(name); 
-      
       name = cullObj.getIdlName();
-      
 //      System.out.println("name = " + name + ", cullname = " + cullObj.getName() + " " + 
 //                         (cullObj.hasAddEvent() ? "A" : "") + 
 //                         (cullObj.hasDeleteEvent() ? "D" : "") +
 //                         (cullObj.hasGetListEvent() ? "L" : "") +
 //                         (cullObj.hasGetEvent() ? "G" : "") +
 //                         (cullObj.hasModifyEvent() ? "M" : ""));
-      
       if(name == null) {
          throw new IllegalStateException("Have no idl name for " + cullObj.getName());
       }
@@ -97,7 +89,7 @@ public class NotificationBridgeFactory {
       ret.registerEvent("List<%=name%>", com.sun.grid.jgdi.event.<%=cullObj.getIdlName()%>ListEvent.class);
 <%
       }
-   } // end of while 
+   } // end of for
 
    String [] specialEvents = {
        "QmasterGoesDown",
@@ -111,7 +103,7 @@ public class NotificationBridgeFactory {
        "QueueInstanceUnsuspend"
    };
    
-   for(int i = 0; i < specialEvents.length; i++) {
+   for (int i = 0; i < specialEvents.length; i++) {
 
 %>
       ret.registerEvent("<%=specialEvents[i]%>", com.sun.grid.jgdi.event.<%=specialEvents[i]%>Event.class);

@@ -111,7 +111,7 @@ public interface HostInfo {
     *
     *  @return set of host value names
     */
-   public Set getHostValueKeys();
+   public Set<String> getHostValueKeys();
    
    /**
     * Get a resource value of the host
@@ -125,14 +125,14 @@ public interface HostInfo {
     * Get the set of available domincances
     * @return  the set of available domincances
     */
-   public Set getDominanceSet();
+   public Set<String> getDominanceSet();
    
    /**
     * Get the set of resource names for a dominance
     * @param dominance  the dominance
     * @return set of resource names
     */
-   public Set getResourceValueNames(String dominance);
+   public Set<String> getResourceValueNames(String dominance);
    
    
    /**
@@ -151,7 +151,7 @@ public interface HostInfo {
     *  @return list of jobs (instances of {@link JobInfo})
     *  @see com.sun.grid.jgdi.JGDI#execQHost
     */
-   public List getJobList();
+   public List<JobInfo> getJobList();
 
    /**
     *  Get the number of entries in the job list
@@ -169,7 +169,7 @@ public interface HostInfo {
     *  @return list of queues (instances of {@link QueueInfo})
     *  @see com.sun.grid.jgdi.JGDI#execQHost
     */
-   public List getQueueList();
+   public List<QueueInfo> getQueueList();
    
    /**
     *  Get the number of entries in the queue list

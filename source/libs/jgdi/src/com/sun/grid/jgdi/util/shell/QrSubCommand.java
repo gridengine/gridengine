@@ -1,4 +1,5 @@
-/*___INFO__MARK_BEGIN__*//*************************************************************************
+/*___INFO__MARK_BEGIN__*/
+/*************************************************************************
  *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
@@ -64,9 +65,7 @@ public class QrSubCommand extends AnnotatedCommand {
    }
   
    public void run(String[] args) throws Exception {
-      if (args.length == 0) {
-         throw new IllegalArgumentException("Invalid number of arguments");
-      }
+
       // new ar object
       ar = new AdvanceReservationImpl(false); 
       // parse arguments and fill the ar object

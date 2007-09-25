@@ -534,10 +534,10 @@ static int jgdi_report_job_finished(qhost_report_handler_t *report_handler, cons
 
 /*
  * Class:     com_sun_grid_jgdi_jni_JGDIImpl
- * Method:    execQHost
+ * Method:    nativeExecQHost
  * Signature: (Lcom/sun/grid/jgdi/monitoring/QHostOptions;Lcom/sun/grid/jgdi/monitoring/QHostResultImpl;)V
  */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeExecQHost
   (JNIEnv *env, jobject jgdi, jobject qhost_options, jobject qhost_result)
 {
    
@@ -568,7 +568,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost
    jgdi_result_t ret = JGDI_SUCCESS;
    rmon_ctx_t rmon_ctx;
    
-   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost");
+   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeExecQHost");
    
    jgdi_init_rmon_ctx(env, JGDI_QHOST_LOGGER, &rmon_ctx);
    rmon_set_thread_ctx(&rmon_ctx);
@@ -600,11 +600,11 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost
       }
     
       if (is_show_queue) {
-         DPRINTF(("execQHost: show queues\n"));
+         DPRINTF(("nativeExecQHost: show queues\n"));
          show |= QHOST_DISPLAY_QUEUES;
       }
       if (is_show_jobs) {
-         DPRINTF(("execQHost: show jobs\n"));
+         DPRINTF(("nativeExecQHost: show jobs\n"));
          show |= QHOST_DISPLAY_JOBS | QHOST_DISPLAY_QUEUES;
       }
    }
@@ -618,7 +618,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost
       }
       sub_object = (*env)->CallObjectMethod(env, qhost_options, mid);
       
-      if (test_jni_error(env, "Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost: Unexpected error while getting sub_object", &alp)) {
+      if (test_jni_error(env, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeExecQHost: Unexpected error while getting sub_object", &alp)) {
          ret = JGDI_ILLEGAL_STATE;
          break;
       }

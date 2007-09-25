@@ -43,7 +43,7 @@ public interface QHostResult {
     *  Get a set of all hostnames
     *  @return set of hostnames 
     */
-   public Set getHostNames();
+   public Set<String> getHostNames();
    
    /**
     *  Get the host info for a host
@@ -56,6 +56,6 @@ public interface QHostResult {
     *  Get a list of all available host info objects
     *  @return list of all available host info objects
     */
-   public List getHostInfo();
+   public List<HostInfo> getHostInfo();
    
 }

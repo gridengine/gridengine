@@ -61,17 +61,17 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
      private void genFillMethod() {
         if(!hasFillMethod) {
 %>        
-   private native void fill<%=name%>ListWithAnswer(List list, JGDIFilter filter, List<JGDIAnswer> answers) throws JGDIException;
+   private native void fill<%=name%>ListWithAnswer(List< <%=classname%> > list, JGDIFilter filter, List<JGDIAnswer> answers) throws JGDIException;
    
-   private void fill<%=name%>List(List list, JGDIFilter filter) throws JGDIException {
+   private void fill<%=name%>List(List< <%=classname%> > list, JGDIFilter filter) throws JGDIException {
       fill<%=name%>ListWithAnswer(list, filter, null);
    }
    
-   private void fill<%=name%>List(List list) throws JGDIException {
+   private void fill<%=name%>List(List< <%=classname%> > list) throws JGDIException {
       fill<%=name%>ListWithAnswer(list, null, null);
    }
    
-   private void fill<%=name%>ListWithAnswer(List list, List<JGDIAnswer> answers) throws JGDIException {
+   private void fill<%=name%>ListWithAnswer(List< <%=classname%> > list, List<JGDIAnswer> answers) throws JGDIException {
       fill<%=name%>ListWithAnswer(list, null, answers);
    }
 
@@ -90,7 +90,7 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
     *   @throws JGDIException on any error on the GDI layer
     */
    public <%=classname%> get<%=name%>() throws JGDIException {
-      ArrayList ret = new ArrayList(1);
+      List< <%=classname%> > ret = new LinkedList< <%=classname%> >();
       fill<%=name%>List(ret);
       switch(ret.size()) {
          case 0: throw new IllegalStateException("static  <%=name%> object not found");
@@ -107,7 +107,7 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
     *   @throws JGDIException on any error on the GDI layer
     */
    public <%=classname%> get<%=name%>WithAnswer(List<JGDIAnswer> answers) throws JGDIException {
-      ArrayList ret = new ArrayList(1);
+      List< <%=classname%> > ret = new LinkedList< <%=classname%> >();
       fill<%=name%>ListWithAnswer(ret, answers);
       switch(ret.size()) {
          case 0: throw new IllegalStateException("static  <%=name%> object not found");
@@ -129,7 +129,7 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
     *   @throws JGDIException on any error on the GDI layer
     */
    public List get<%=name%>List() throws JGDIException {
-      ArrayList ret = new ArrayList();
+      List< <%=classname%> > ret = new LinkedList< <%=classname%> >();
       fill<%=name%>List(ret);
       return ret;
    }
@@ -140,7 +140,7 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
     *   @throws JGDIException on any error on the GDI layer
     */
    public List get<%=name%>ListWithAnswer(List<JGDIAnswer> answers) throws JGDIException {
-      ArrayList ret = new ArrayList();
+      List< <%=classname%> > ret = new LinkedList< <%=classname%> >();
       fill<%=name%>ListWithAnswer(ret, answers);
       return ret;
    }
@@ -156,24 +156,20 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
     *
     *  @return the <%=name%>
 <%
-{
-    java.util.Iterator pkIter = primaryKeys.keySet().iterator();
-    while(pkIter.hasNext()) {
-       String pkName = (String)pkIter.next();
-       String pkType = (String)primaryKeys.get(pkName);
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
 %>    *  @param <%=pkName%>   the <%=pkName%> of the <code><%=name%></code> object
 <%
     }    
-}
 %>    *  @return the found <code><%=name%></code> object of <code>null</code>    
     *  @throws JGDIException on any error on the GDI layer
     */
    public <%=classname%> get<%=name%>(<%
     boolean first = true; 
-    java.util.Iterator iter = primaryKeys.keySet().iterator();
-    while(iter.hasNext()) {
-       String pkName = (String)iter.next();
-       String pkType = (String)primaryKeys.get(pkName);
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
        if (first) {
           first = false;
        } else {
@@ -183,15 +179,15 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
     }
        %>) throws JGDIException {
     
-        ArrayList ret = new ArrayList();
-        
-        PrimaryKeyFilter filter = new PrimaryKeyFilter("<%=cullname%>");<%
-
-    iter = primaryKeys.keySet().iterator();
-    while(iter.hasNext()) {
-       String pkName = (String)iter.next();
-        String pkType = (String)primaryKeys.get(pkName);%>
-        filter.include(CullConstants.<%=pkName%>, <%=pkName%> ); <% 
+        List< <%=classname%> > ret = new LinkedList< <%=classname%> >();
+        PrimaryKeyFilter filter = new PrimaryKeyFilter("<%=cullname%>");
+<%
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
+%>
+        filter.include(CullConstants.<%=pkName%>, <%=pkName%>);
+<% 
     }
 %>
         fill<%=name%>List(ret, filter);
@@ -209,25 +205,21 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
     *
     *  @return the <%=name%>
 <%
-{
-    java.util.Iterator pkIter = primaryKeys.keySet().iterator();
-    while(pkIter.hasNext()) {
-       String pkName = (String)pkIter.next();
-       String pkType = (String)primaryKeys.get(pkName);
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
 %>    *  @param <%=pkName%>   the <%=pkName%> of the <code><%=name%></code> object
 <%
     }    
-}
 %>   *   @param  answers the <code>answer list</code> object
     *  @return the found <code><%=name%></code> object of <code>null</code>    
     *  @throws JGDIException on any error on the GDI layer
     */
    public <%=classname%> get<%=name%>WithAnswer(<%
     first = true;
-    iter = primaryKeys.keySet().iterator();
-    while(iter.hasNext()) {
-       String pkName = (String)iter.next();
-       String pkType = (String)primaryKeys.get(pkName);
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
        if (first) {
           first = false;
        } else {
@@ -237,15 +229,13 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
     }
        %>, List<JGDIAnswer> answers) throws JGDIException {
     
-        ArrayList ret = new ArrayList();
+        List< <%=classname%> >  ret = new LinkedList< <%=classname%> >();
         
         PrimaryKeyFilter filter = new PrimaryKeyFilter("<%=cullname%>");<%
-
-    iter = primaryKeys.keySet().iterator();
-    while(iter.hasNext()) {
-       String pkName = (String)iter.next();
-        String pkType = (String)primaryKeys.get(pkName);%>
-        filter.include(CullConstants.<%=pkName%>, <%=pkName%> ); <% 
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();%>
+        filter.include(CullConstants.<%=pkName%>, <%=pkName%>); <% 
     }
 %>
         fill<%=name%>ListWithAnswer(ret, filter, answers);
@@ -342,24 +332,19 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
    /**
     *   Delete a <code><%=name%></code> object by its primary key
 <%
-{
-    java.util.Iterator pkIter = primaryKeys.keySet().iterator();
-    while(pkIter.hasNext()) {
-       String pkName = (String)pkIter.next();
-       String pkType = (String)primaryKeys.get(pkName);
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
 %>    *   @param <%=pkName%>   the <%=pkName%> of the <code><%=name%></code> object
 <%
     }    
-}
 %>    *   @throws JGDIException on any error on the GDI layer
     */
    public void delete<%=name%>(<%
     boolean first = true;  
-    java.util.Iterator pkIter = primaryKeys.keySet().iterator();
-    while(pkIter.hasNext()) {
-       String pkName = (String)pkIter.next();
-       String pkType = (String)primaryKeys.get(pkName);
-       
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
        if(first) {
          first = false;
        } else {
@@ -370,11 +355,9 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
     %>) throws JGDIException {
        <%=classname%> obj = new <%=classname%>Impl(<%
     first = true;  
-    pkIter = primaryKeys.keySet().iterator();
-    while(pkIter.hasNext()) {
-       String pkName = (String)pkIter.next();
-       String pkType = (String)primaryKeys.get(pkName);
-       
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
        if(first) {
          first = false;
        } else {
@@ -388,47 +371,41 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
    /**
     *   Delete a <code><%=name%></code> object by its primary key
 <%
-{
-    pkIter = primaryKeys.keySet().iterator();
-    while(pkIter.hasNext()) {
-       String pkName = (String)pkIter.next();
-       String pkType = (String)primaryKeys.get(pkName);
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
 %>    *   @param <%=pkName%>   the <%=pkName%> of the <code><%=name%></code> object
-    *   @param answers  <code>answer list</code> object
+
 <%
     }    
-}
-%>    *   @throws JGDIException on any error on the GDI layer
+%>       *   @param answers  <code>answer list</code> object
+    *   @throws JGDIException on any error on the GDI layer
     */
    public void delete<%=name%>WithAnswer(<%
     first = true;  
-    pkIter = primaryKeys.keySet().iterator();
-    while(pkIter.hasNext()) {
-       String pkName = (String)pkIter.next();
-       String pkType = (String)primaryKeys.get(pkName);
-       
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
        if(first) {
          first = false;
        } else {
             %> , <%           
        }
        %><%=pkType%> <%=pkName%><%
-    } // end of while  
+    } // end of for  
     %>, List<JGDIAnswer> answers) throws JGDIException {
        <%=classname%> obj = new <%=classname%>Impl(<%
     first = true;  
-    pkIter = primaryKeys.keySet().iterator();
-    while(pkIter.hasNext()) {
-       String pkName = (String)pkIter.next();
-       String pkType = (String)primaryKeys.get(pkName);
-       
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
        if(first) {
          first = false;
        } else {
             %> , <%           
        }
        %><%=pkName%><%
-    } // end of while  
+    } // end of for
     %>);
        delete<%=name%>WithAnswer(obj, answers);
     }
@@ -436,15 +413,12 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
    /**
     *   Delete several <code><%=name%></code> objects by its primary key
 <%
-{
-    pkIter = primaryKeys.keySet().iterator();
-    while(pkIter.hasNext()) {
-       String pkName = (String)pkIter.next();
-       String pkType = (String)primaryKeys.get(pkName);
-%>    *   @param <%=pkName%>   the <%=pkName%> of the <code><%=name%></code> object
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
+%>    *   @param <%=pkName%>s   the <%=pkName%> of the <code><%=name%></code> object
 <%
     }
-} 
 if (name.equals("Job") || name.equals("AdvanceReservation")) {%>    
     *   @param forced  <code>forced</code> delete flag
     *   @param userFilter  delete objects owned by users contained in userFilter 
@@ -453,29 +427,25 @@ if (name.equals("Job") || name.equals("AdvanceReservation")) {%>
     */
    public void delete<%=name%>sWithAnswer(<%
     first = true;  
-    pkIter = primaryKeys.keySet().iterator();
-    while(pkIter.hasNext()) {
-       String pkName = (String)pkIter.next();
-       // String pkType = (String)primaryKeys.get(pkName);
-       
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       // String pkType = entry.getValue();
        if(first) {
          first = false;
        } else {
             %> , <%           
        }
        %>String[] <%=pkName%>s<%
-    } // end of while  
+    } // end of for
     if (name.equals("Job") || name.equals("AdvanceReservation")) {%>, boolean forced, UserFilter userFilter
     <%}%>, List<JGDIAnswer> answers) throws JGDIException {
-       
-       
-       
-<%
+
+    <%
     if (name.equals("Job") || name.equals("AdvanceReservation")) {
-      first = true;  
-      pkIter = primaryKeys.keySet().iterator();
-      while(pkIter.hasNext()) {
-         String pkName = (String)pkIter.next();%>
+       first = true;
+       for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+          String pkName = entry.getKey();
+    %>
          delete<%=name%>sWithAnswer(  
          <% if (first) {
             first = false;%>
@@ -483,24 +453,23 @@ if (name.equals("Job") || name.equals("AdvanceReservation")) {%>
          <%} else {%>
             , (Object[])<%=pkName%>s
          <%}%>
-       <%} // end of while %>
-        , forced, userFilter, answers);
+       <%
+        } // end of for 
+       %>, forced, userFilter, answers);
 <%} else {
       first = true;  
-      pkIter = primaryKeys.keySet().iterator();
-      while(pkIter.hasNext()) {
-         String pkName = (String)pkIter.next();%>
-  
-      <% if (first) {%>
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       if (first) {%>
        // Other objects
-       List< <%=classname%> > list = new ArrayList< <%=classname%> >();
+       List< <%=classname%> > list = new LinkedList< <%=classname%> >();
 
        for (int i=0; <%=pkName%>s != null && i < <%=pkName%>s.length; i++) {
              <%=classname%> obj = new <%=classname%>Impl(
        <%} else {%> , <%}%>
        <%=pkName%>s[i]
-  <%} // end of while 
-         %> );
+  <%} // end of for 
+         %>);
          list.add(obj);
        }
        delete<%=name%>sWithAnswer(list.toArray(), false, null, answers);      
@@ -524,49 +493,38 @@ if (name.equals("Job") || name.equals("AdvanceReservation")) {%>
     *   @throws JGDIException on any error on the GDI layer
     */
    public native void update<%=name%>WithAnswer(<%=classname%> obj, List<JGDIAnswer> answers) throws JGDIException;
-
 <%   
      } // end of getUpdateMethod 
-     
   } // end of JGDIGenerator  
-  
   // ---------------------------------------------------------------------------
   // Build generators
   // ---------------------------------------------------------------------------
-  java.util.Iterator iter =  cullDef.getObjectNames().iterator();
-  java.util.List generators = new java.util.ArrayList();
-  
-  while (iter.hasNext()) {
-     
-      String name = (String)iter.next();
+  java.util.List<JGDIJniGenerator> generators = new java.util.LinkedList<JGDIJniGenerator>();
+  for (String name : cullDef.getObjectNames()) {
       com.sun.grid.cull.CullObject cullObj = cullDef.getCullObject(name);
-
       generators.add(new JGDIJniGenerator(cullObj));
-      
-  } // end of while
+  } // end of for
 %>
 package com.sun.grid.jgdi.jni;
-
 
 import com.sun.grid.jgdi.JGDIException;
 import com.sun.grid.jgdi.filter.*;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import com.sun.grid.jgdi.CullConstants;
 import com.sun.grid.jgdi.configuration.JGDIAnswer;
 import com.sun.grid.jgdi.monitoring.filter.UserFilter;
 
-<%  iter = generators.iterator();
-     while( iter.hasNext() ) {
-      JGDIJniGenerator gen = (JGDIJniGenerator)iter.next();
+<%  
+    for (JGDIJniGenerator gen : generators) {
       gen.genImport();
-     }
+    }
 %>
 /**
  *  JNI implementation of {@link com.sun.grid.jgdi.JGDI}
  * 
  */
-public class JGDIImpl extends JGDIBase implements com.sun.grid.jgdi.JGDI {
+public class JGDIImpl extends JGDIBaseImpl implements com.sun.grid.jgdi.JGDI {
 
 <%
     //  We can not move the getRealExecHostList into JGDIBase, because
@@ -579,8 +537,7 @@ public class JGDIImpl extends JGDIBase implements com.sun.grid.jgdi.JGDI {
      * @return the list of real exec hosts
      */
    public List getRealExecHostList() throws com.sun.grid.jgdi.JGDIException {
-        ArrayList ret = new ArrayList();
-        
+        List<ExecHost> ret = new LinkedList<ExecHost>();
         PrimaryKeyFilter filter = new PrimaryKeyFilter("EH_Type");
         filter.exclude(CullConstants.EH_name, "template" ); 
         filter.exclude(CullConstants.EH_name, "global" );
@@ -588,13 +545,10 @@ public class JGDIImpl extends JGDIBase implements com.sun.grid.jgdi.JGDI {
         return ret;
    }
 
-
-<%  iter = generators.iterator();
-    while( iter.hasNext() ) {
-      JGDIJniGenerator gen = (JGDIJniGenerator)iter.next();
-      
+<%  
+    for (JGDIJniGenerator gen : generators) {
       gen.genMethods();
-    }   
+    }
 %>
-   
+
 }

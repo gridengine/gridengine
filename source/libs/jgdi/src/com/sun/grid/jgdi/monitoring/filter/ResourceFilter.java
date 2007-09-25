@@ -31,9 +31,8 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.monitoring.filter;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,7 +42,6 @@ import java.util.StringTokenizer;
  *
  */
 public class ResourceFilter implements Serializable {
-
 
    private Map<String,String> resourceMap = new HashMap<String,String>();
 
@@ -60,7 +58,6 @@ public class ResourceFilter implements Serializable {
     * I need to join all the same option together
     */
    public ResourceFilter fill(String str) throws IllegalArgumentException {
-
       StringTokenizer st = new StringTokenizer(str, ",");
       while (st.hasMoreTokens()) {
          String resource = st.nextToken();
@@ -78,23 +75,20 @@ public class ResourceFilter implements Serializable {
         resourceMap.put(name, value);
     }
     
-    public Set getResourceNames() {
+    public Set<String> getResourceNames() {
         return resourceMap.keySet();
     }
     
     public List<String> getResources() {
-        ArrayList<String> ret = new ArrayList<String>(resourceMap.size());
-        Iterator iter = getResourceNames().iterator();
-        while(iter.hasNext()) {
-            String name = (String)iter.next();
-            ret.add("name=" + getResource(name));
+        List<String> ret = new LinkedList<String>();
+        for (Map.Entry<String, String> entry: resourceMap.entrySet()) {
+            ret.add(entry.getKey() + "=" + entry.getValue());
         }
         return ret;
     }
     
     public String getResource(String name) {
-        String ret = resourceMap.get(name);
-        return ret;
+        return resourceMap.get(name);
     }
 
 }

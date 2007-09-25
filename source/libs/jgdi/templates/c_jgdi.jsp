@@ -179,7 +179,7 @@ JNIEXPORT void JNICALL <%=methodName%>WithAnswer(JNIEnv *env, jobject jgdi, jobj
    // Build the generators 
    // -------------------------------------------------------------------------
 
-   java.util.List generators = new java.util.ArrayList();
+   java.util.List<CGDIGenerator> generators = new java.util.ArrayList<CGDIGenerator>();
    
    if (cullObj == null ) {
      throw new IllegalStateException("param cullObj not found");
@@ -213,11 +213,8 @@ JNIEXPORT void JNICALL <%=methodName%>WithAnswer(JNIEnv *env, jobject jgdi, jobj
    }
 %>
 <%
-   java.util.Iterator iter = generators.iterator();
    boolean first = true;
-   
-   while(iter.hasNext()) {
-      CGDIGenerator gen = (CGDIGenerator)iter.next();
+   for (CGDIGenerator gen : generators) {
       if (first) {
          first = false;
 %>

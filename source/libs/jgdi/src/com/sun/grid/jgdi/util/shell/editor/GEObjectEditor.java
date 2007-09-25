@@ -50,6 +50,7 @@ import com.sun.grid.jgdi.configuration.reflect.SimplePropertyDescriptor;
 import com.sun.grid.jgdi.configuration.xml.XMLUtil;
 import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.configuration.SchedConf;
+import com.sun.grid.jgdi.configuration.ShareTreeImpl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -124,7 +125,12 @@ public class GEObjectEditor {
          throw new UnsupportedOperationException("XML based editing not yet implemented!!!");
       } else {
          try {
-            Map propertyMap = EditorParser.parsePlainText(obj, text);
+            Map propertyMap = null; 
+            if (obj instanceof ShareTreeImpl) {
+                return EditorParser.parseShareTreeText(obj, text);
+            } else {
+                propertyMap = EditorParser.parsePlainText(obj, text, " ");
+            }
             for (Iterator iter=propertyMap.keySet().iterator(); iter.hasNext();) {
                key = iter.next();
                line = (String) propertyMap.get(key);
@@ -380,7 +386,7 @@ public class GEObjectEditor {
       return list;
    }
    
-   static List getAllProperties(GEObject obj) {
+   static List<PropertyDescriptor> getAllProperties(GEObject obj) {
       return getProperties(obj, EditorUtil.PROPERTIES_ALL);
    }  
    static List getConfigurableProperties(GEObject obj) {
@@ -391,12 +397,9 @@ public class GEObjectEditor {
    }
    
    static List getProperties(GEObject obj, int propScope) {
-      List propList = new ArrayList();
+      List<PropertyDescriptor> propList = new ArrayList<PropertyDescriptor>();
       ClassDescriptor cd = Util.getDescriptor(obj.getClass());
-      Iterator iter = cd.getProperties().iterator();
-      while (iter.hasNext()) {
-         
-         PropertyDescriptor pd = (PropertyDescriptor)iter.next();
+      for (PropertyDescriptor pd : cd.getProperties()) {
          if (EditorUtil.doNotDisplayAttr(obj, pd, propScope)) {
             continue;
          }

@@ -38,11 +38,10 @@ import java.util.List;
  */
 public interface QueueInstanceSummaryResult {
 
-   public List getQueueInstanceSummary();
-   
-   public List getPendingJobs();
-   public List getErrorJobs();
-   public List getFinishedJobs();
-   public List getZombieJobs();
+   public List<QueueInstanceSummary> getQueueInstanceSummary();
+   public List<JobSummary> getPendingJobs();
+   public List<JobSummary> getErrorJobs();
+   public List<JobSummary> getFinishedJobs();
+   public List<JobSummary> getZombieJobs();
 
 }

@@ -129,28 +129,25 @@
    /**
     *   Delete a <code><%=name%></code> object by its primary key
     *
-<%   java.util.Iterator iter = primaryKeys.keySet().iterator();
-   boolean first = true;
-   while(iter.hasNext()) {
-      String pkName = (String)iter.next();
+<%
+    boolean first = true;
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
 %>    *   @param <%=pkName%>  the <%=pkName%> of the <code><%=name%></code> object <%      
    }
 %>      
     *   @throws JGDIException on any error
     */
    public void delete<%=name%>(<%
-   
-   iter = primaryKeys.keySet().iterator();
-   first = true;
-   while(iter.hasNext()) {
-      String pkName = (String)iter.next();
-      String pkType = (String)primaryKeys.get(pkName);
-      if(first) {
-         first = false;
-      } else {
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
+       if (first) {
+          first = false;
+       } else {
          %>, <%
-      }
-      %> <%=pkType%> <%=pkName%><%
+       }
+       %> <%=pkType%> <%=pkName%><%
    }
    %>) throws JGDIException;
 <%        
@@ -160,10 +157,10 @@
    /**
     *   Get a a <code><%=name%></code> object by its primary key
     *
-<%   java.util.Iterator iter = primaryKeys.keySet().iterator();
+<%
    boolean first = true;
-   while(iter.hasNext()) {
-      String pkName = (String)iter.next();
+   for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+      String pkName = entry.getKey();
 %>    *   @param <%=pkName%>  the <%=pkName%> of the <code><%=name%></code> object <%      
    }
 %>      
@@ -171,12 +168,11 @@
     *   @throws JGDIException on any error
     */
    public <%=classname%> get<%=name%>(<%
-   
-   iter = primaryKeys.keySet().iterator();
+
    first = true;
-   while(iter.hasNext()) {
-      String pkName = (String)iter.next();
-      String pkType = (String)primaryKeys.get(pkName);
+   for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+      String pkName = entry.getKey();
+      String pkType = entry.getValue();
       if(first) {
          first = false;
       } else {
@@ -193,11 +189,8 @@
   // ---------------------------------------------------------------------------
   // Build Generator instances
   // ---------------------------------------------------------------------------
-
-  java.util.Iterator iter = cullDef.getObjectNames().iterator();
-  java.util.List generators = new java.util.ArrayList();
-  while(iter.hasNext()) {
-    String name = (String)iter.next();
+  java.util.List<JGDIJMXGenerator> generators = new java.util.ArrayList<JGDIJMXGenerator>();
+  for (String name : cullDef.getObjectNames()) {
     com.sun.grid.cull.CullObject cullObj = cullDef.getCullObject(name);
     generators.add(new JGDIJMXGenerator(cullObj));
   }
@@ -206,25 +199,21 @@ package com.sun.grid.jgdi.management.mbeans;
 
 
 import com.sun.grid.jgdi.JGDIException;
-<% // Import all cull object names;
-    iter = generators.iterator();
-
-    while( iter.hasNext() ) {
-       JGDIJMXGenerator gen = (JGDIJMXGenerator)iter.next();
+<%  // Import all cull object names;
+    for (JGDIJMXGenerator gen : generators) {
        gen.genImport();
-    } // end of while %>
-    
-    
+    } // end of for
+%>
+        
 /**
  *   JGDIMBean interface of {@link com.sun.grid.jgdi.JGDI} for a JMX service.
  *   Defines all methods as {@link com.sun.grid.jgdi.JGDI}, but throws a
  */
 public interface JGDIJMXMBean extends JGDIJMXBaseMBean {
-<% iter = generators.iterator();
-   while( iter.hasNext() ) {
-       JGDIJMXGenerator gen = (JGDIJMXGenerator)iter.next();
+<%
+    for (JGDIJMXGenerator gen : generators) {
        gen.genMethods();
-   } // end of while 
+    } // end of for
 %>
 }
 

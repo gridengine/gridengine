@@ -114,7 +114,6 @@ public abstract class AbstractCommand implements HistoryCommand {
     * <p>Prints the JGDI answer list to specified PrintWriter.</p>
     * <p>Helper method for JGDI methods *withAnswer</p>
     * @param answers a JGDI answer list
-    * @return an int exit code
     */
     public void printAnswers(java.util.List<JGDIAnswer> answers) {
        int exitCode = 0;

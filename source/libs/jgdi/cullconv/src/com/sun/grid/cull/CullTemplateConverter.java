@@ -35,58 +35,47 @@ import com.sun.grid.cull.template.Template;
 import com.sun.grid.cull.template.TemplateFactory;
 import java.io.File;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
  *
  */
 public class CullTemplateConverter extends AbstractCullConverter {
-   
 
-   private TemplateFactory fac;
-   private File templateFile;
-   private File outputFile;
-   
-   
-   /** Creates a new instance of CullTemplateConverter */
-   public CullTemplateConverter(File buildDir, String classpath, File outputFile, File template,
-           String javaSourceVersion, String javaTargetVersion) {      
-      fac = new TemplateFactory(buildDir, classpath, javaSourceVersion, javaTargetVersion);
-      this.outputFile = outputFile;
-      this.templateFile = template;
-   }
+    private TemplateFactory fac;
+    private File templateFile;
+    private File outputFile;
 
-   public void convert(CullDefinition cullDef) throws java.io.IOException {
-      
-      
-      
-      if( !outputFile.exists() || outputFile.lastModified() < templateFile.lastModified() ) {         
-      
-         Template template = fac.createTemplate(templateFile);
 
-         Printer p = new Printer(outputFile);
+    /** Creates a new instance of CullTemplateConverter */
+    public CullTemplateConverter(File buildDir, String classpath, File outputFile, File template, String javaSourceVersion, String javaTargetVersion) {
+        fac = new TemplateFactory(buildDir, classpath, javaSourceVersion, javaTargetVersion);
+        this.outputFile = outputFile;
+        this.templateFile = template;
+    }
 
-         JavaHelper jh = new JavaHelper(cullDef);
+    public void convert(CullDefinition cullDef) throws java.io.IOException {
 
-         Map params = new HashMap();
-         params.put("cullDef", cullDef);
-         params.put("javaHelper", jh );
+        if (!outputFile.exists() || outputFile.lastModified() < templateFile.lastModified()) {
+            Template template = fac.createTemplate(templateFile);
+            Printer p = new Printer(outputFile);
+            JavaHelper jh = new JavaHelper(cullDef);
+            Map params = new HashMap();
 
-         if(super.iterateObjects()) {
-            Iterator iter = cullDef.getObjectNames().iterator();
-            while( iter.hasNext() ) {
-               String name = (String)iter.next();
-               CullObject obj = cullDef.getCullObject(name);
-               params.put("cullObj", obj);
-               template.print(p, params);
+            params.put("cullDef", cullDef);
+            params.put("javaHelper", jh);
+
+            if (super.iterateObjects()) {
+                for (String name : cullDef.getObjectNames()) {
+                    CullObject obj = cullDef.getCullObject(name);
+                    params.put("cullObj", obj);
+                    template.print(p, params);
+                }
+            } else {
+                template.print(p, params);
             }
-         } else {
-            template.print(p,params);
-         }
-         p.flush();
-         p.close();
-      }
-   }
-
+            p.flush();
+            p.close();
+        }
+    }
 }

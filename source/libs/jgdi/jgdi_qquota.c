@@ -320,7 +320,7 @@ static int jgdi_report_limit_rule_finished(report_handler_t* handler, const char
  * Method:    getQQuota
  * Signature: (Lcom/sun/grid/jgdi/monitoring/QQuotaOptions;Lcom/sun/grid/jgdi/monitoring/QQuotaResultImpl;)V
  */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getQQuota
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_getQQuota
   (JNIEnv *env, jobject jgdi, jobject qquota_options, jobject qquota_result) {
    
    jclass    cls = NULL;
@@ -354,7 +354,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getQQuota
    jgdi_result_t ret = JGDI_SUCCESS;
    rmon_ctx_t rmon_ctx;
    
-   DENTER( JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_getQQuota" );
+   DENTER( JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_getQQuota" );
    
    jgdi_init_rmon_ctx(env, JGDI_QHOST_LOGGER, &rmon_ctx);
    rmon_set_thread_ctx(&rmon_ctx);
@@ -382,7 +382,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getQQuota
       }
       sub_object = (*env)->CallObjectMethod(env, qquota_options, mid);
       
-      if (test_jni_error( env, "Java_com_sun_grid_jgdi_jni_JGDIBase_getQQuota: Unexpected error while getting sub_object", &alp)) {
+      if (test_jni_error( env, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_getQQuota: Unexpected error while getting sub_object", &alp)) {
          ret = JGDI_ILLEGAL_STATE;
          break;
       }

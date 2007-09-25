@@ -46,100 +46,89 @@ import org.apache.tools.ant.Project;
  */
 public abstract class ConverterDefinition {
 
-   private String classname;
-   private Project project;
-   
-   /** Creates a new instance of Converter */
-   public ConverterDefinition(Project project) {
-      this.project = project;
-   }
-   
-   private boolean forEachObject;
-   
-   public static final String SCOPE_DEF = "definition";
-   public static final String SCOPE_OBJECTS = "objects";
-   
-   private String scope;
-   
-   public String getClassname() {
-      return classname;
-   }
+    private String classname;
+    private Project project;
 
-   public void setClassname(String classname) {
-      this.classname = classname;
-   }
-   
-   protected void setScopeInConverter(AbstractCullConverter converter) throws BuildException {
-      
-      if(scope == null) {
-         converter.setIterateObjects(true);         
-      } else if (SCOPE_OBJECTS.equals(scope)) {
-         converter.setIterateObjects(true);
-      } else if (SCOPE_DEF.equals(scope)) {
-         converter.setIterateObjects(false);
-      } else {
-         throw new BuildException("Invalid scope " + scope);
-      }
-      
-   }
-   
-   public CullConverter createConverter() throws BuildException {
-      
-      try {
-         
-         if( classname == null ) {
-            throw new BuildException("classname not set");            
-         }
-         
-         Class cls = Class.forName(classname);
-         
-         if( !AbstractCullConverter.class.isAssignableFrom(cls) ) {            
-            throw new BuildException("class must be an instanceof " + 
-                                     CullConverter.class.getName() );
-         }
-         
-         return (CullConverter)cls.newInstance();
-         
-      } catch( ClassNotFoundException cnfe ) {
-         throw new  BuildException("class " + classname + " not found", cnfe );
-      } catch( InstantiationException ise ) {
-         throw new  BuildException("can not instantiate class " + classname , ise);
-      } catch( IllegalAccessException iae ) {
-         throw new  BuildException("class " + classname + " is not accessible" , iae);
-      }
-      
-   }
+    /** Creates a new instance of Converter */
+    public ConverterDefinition(Project project) {
+        this.project = project;
+    }
+    private boolean forEachObject;
+    public static final String SCOPE_DEF = "definition";
+    public static final String SCOPE_OBJECTS = "objects";
+    private String scope;
 
-   private List patternList = new LinkedList();
-   
-   public CullObjectFilterDefinition createPattern() { 
-       
-      CullObjectFilterDefinition ret = new CullObjectFilterDefinition();
-      patternList.add(ret);
-      return ret;
-   }
-   
+    public String getClassname() {
+        return classname;
+    }
 
-   
-   public CullDefinition createFilteredCullDefinition(CullDefinition cullDef) {
+    public void setClassname(String classname) {
+        this.classname = classname;
+    }
 
-       if(patternList.isEmpty()) {
-           return cullDef;
-       } else {
-           CullDefinitionFilter [] filters = new CullDefinitionFilter[patternList.size()];
-           for(int i = 0; i < filters.length; i++) {
-               filters[i] = ((CullObjectFilterDefinition)patternList.get(i)).createFilter();
-           }
-           return new CullDefinitionFilterProxy(cullDef, filters);
-       }
-   }
+    protected void setScopeInConverter(AbstractCullConverter converter) throws BuildException {
 
-   public String getScope() {
-      return scope;
-   }
+        if (scope == null) {
+            converter.setIterateObjects(true);
+        } else if (SCOPE_OBJECTS.equals(scope)) {
+            converter.setIterateObjects(true);
+        } else if (SCOPE_DEF.equals(scope)) {
+            converter.setIterateObjects(false);
+        } else {
+            throw new BuildException("Invalid scope " + scope);
+        }
+    }
 
-   public void setScope(String scope) {
-      this.scope = scope;
-   }
+    public CullConverter createConverter() throws BuildException {
 
+        try {
+
+            if (classname == null) {
+                throw new BuildException("classname not set");
+            }
+
+            Class cls = Class.forName(classname);
+
+            if (!AbstractCullConverter.class.isAssignableFrom(cls)) {
+                throw new BuildException("class must be an instanceof " + CullConverter.class.getName());
+            }
+
+            return (CullConverter) cls.newInstance();
+        } catch (ClassNotFoundException cnfe) {
+            throw new BuildException("class " + classname + " not found", cnfe);
+        } catch (InstantiationException ise) {
+            throw new BuildException("can not instantiate class " + classname, ise);
+        } catch (IllegalAccessException iae) {
+            throw new BuildException("class " + classname + " is not accessible", iae);
+        }
+    }
+    private List<CullObjectFilterDefinition> patternList = new LinkedList<CullObjectFilterDefinition>();
+
+    public CullObjectFilterDefinition createPattern() {
+
+        CullObjectFilterDefinition ret = new CullObjectFilterDefinition();
+        patternList.add(ret);
+        return ret;
+    }
+
+    public CullDefinition createFilteredCullDefinition(CullDefinition cullDef) {
+
+        if (patternList.isEmpty()) {
+            return cullDef;
+        } else {
+            CullDefinitionFilter[] filters = new CullDefinitionFilter[patternList.size()];
+            for (int i = 0; i < filters.length; i++) {
+                filters[i] = ((CullObjectFilterDefinition) patternList.get(i)).createFilter();
+            }
+            return new CullDefinitionFilterProxy(cullDef, filters);
+        }
+    }
+
+    public String getScope() {
+        return scope;
+    }
+
+    public void setScope(String scope) {
+        this.scope = scope;
+    }
 }

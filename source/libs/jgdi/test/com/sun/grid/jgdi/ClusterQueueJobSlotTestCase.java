@@ -113,20 +113,14 @@ public class ClusterQueueJobSlotTestCase extends BaseTestCase {
 //      for (int i=0; i<clusterNames.length;i++) {
 //         JGDI gdi = createJGDI();
 //         try {
-//            
-//            Iterator iter = gdi.getClusterQueueList().iterator();
-//            
-//            while(iter.hasNext()) {
-//               ClusterQueue cq = (ClusterQueue)iter.next();
+//            for (ClusterQueue cq : gdi.getClusterQueueList()) {
 //               logger.fine("ClusterQueue " + cq.getName() + "----------");
 //               File file = File.createTempFile("cq_" + cq.getName(), ".xml" );
 //               XMLUtil.write(cq, file);      
 //               logger.fine("cq " + cq.getName() + " -> " + file.getAbsolutePath());
 //               ClusterQueue cq1 = (ClusterQueue)XMLUtil.read(file);
-//               
 //               assertTrue("cq1 is not equals to cq2", cq.equalsCompletely(cq1));
 //            }
-//            
 //         } finally {
 //            gdi.close();
 //         }

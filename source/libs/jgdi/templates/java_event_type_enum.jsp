@@ -46,23 +46,16 @@ package com.sun.grid.jgdi.event;
 public enum EventTypeEnum {
 
 <%
-    java.util.Iterator iter = cullDef.getObjectNames().iterator();
     com.sun.grid.cull.CullObject cullObj = null;
-    String name = null;
-
-    while( iter.hasNext() ) {
-      name = (String)iter.next();
+    for (String name : cullDef.getObjectNames()) {
       cullObj = cullDef.getCullObject(name); 
-      
       name = cullObj.getIdlName();
-      
 //      System.out.println("name = " + name + ", cullname = " + cullObj.getName() + " " + 
 //                         (cullObj.hasAddEvent() ? "A" : "") + 
 //                         (cullObj.hasDeleteEvent() ? "D" : "") +
 //                         (cullObj.hasGetListEvent() ? "L" : "") +
 //                         (cullObj.hasGetEvent() ? "G" : "") +
 //                         (cullObj.hasModifyEvent() ? "M" : ""));
-      
       if(name == null) {
          throw new IllegalStateException("Have no idl name for " + cullObj.getName());
       }
@@ -87,7 +80,7 @@ public enum EventTypeEnum {
       } // end of hasModifyOperation
 %>
 <%
-   } // end of while 
+   } // end of for
 %>
        /* Special Events */<%
    String [] specialEvents = {

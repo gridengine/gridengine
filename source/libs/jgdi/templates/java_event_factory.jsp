@@ -43,14 +43,8 @@ package com.sun.grid.jgdi.event;
 import java.util.*;
 
 <% // Import all cull object names;
-    java.util.Iterator iter = cullDef.getObjectNames().iterator();
     com.sun.grid.cull.CullObject cullObj = null;
-    String name = null;
-    
-    
-
-    while( iter.hasNext() ) {
-      name = (String)iter.next();
+    for (String name : cullDef.getObjectNames()) {
       cullObj = cullDef.getCullObject(name); 
 /*      if (cullObj.getType() == cullObj.TYPE_PRIMITIVE) {
          continue;
@@ -62,7 +56,9 @@ import java.util.*;
         continue;
       }*/
 %>import <%=jh.getFullClassName(cullObj)%>;
-<% } // end of while %>
+<% 
+   } // end of for
+%>
 
 /**
  *  Factory class for all List/Del/Add/Mod Events of cull objects
@@ -158,23 +154,19 @@ public class EventFactory extends EventFactoryBase {
         facMap = new HashMap();
         
 <%
-    iter = cullDef.getObjectNames().iterator();
-    while( iter.hasNext() ) {
-      name = (String)iter.next();
-      cullObj = cullDef.getCullObject(name); 
+    for (String name : cullDef.getObjectNames()) {
+       cullObj = cullDef.getCullObject(name); 
        String idlName = cullObj.getIdlName();
         // <%=cullObj.getName()%>
         facMap.put("<%=cullObj.getName()%>", new <%=idlName%>EventFactory()); 
 <%
-    } // end of while
+    } // end of for
 %>
     
     }
     // -------------------- Factory classes -----------------------------------
 <%
-    iter = cullDef.getObjectNames().iterator();
-    while( iter.hasNext() ) {
-      name = (String)iter.next();
+    for (String name : cullDef.getObjectNames()) {
       cullObj = cullDef.getCullObject(name); 
       String idlName = cullObj.getIdlName();
 %>
@@ -236,7 +228,7 @@ public class EventFactory extends EventFactoryBase {
     }
     
 <% 
-    } // end of while
+    } // end of for
 %>
 
 }

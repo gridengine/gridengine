@@ -1,5 +1,4 @@
-/*___INFO__MARK_BEGIN__*/
-/*************************************************************************
+/*___INFO__MARK_BEGIN__*//*************************************************************************
  *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
@@ -31,7 +30,7 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.cull;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Collections;
 import java.util.List;
 
@@ -39,26 +38,27 @@ import java.util.List;
  *
  */
 public class CullEnum {
-   private String name;
-   private List   elems = new ArrayList();
-   
-   /** Creates a new instance of CullEnum */
-   public CullEnum() {
-   }
 
-   public String getName() {
-      return name;
-   }
+    private String name;
+    private List<String> elems = new LinkedList<String>();
 
-   public void setName(String name) {
-      this.name = name;
-   }
-   
-   public void addElem(String elem) {
-      elems.add(elem);
-   }
-   
-   public List getElems() {
-      return Collections.unmodifiableList(elems);
-   }
+    /** Creates a new instance of CullEnum */
+    public CullEnum() {
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void addElem(String elem) {
+        elems.add(elem);
+    }
+
+    public List<String> getElems() {
+        return Collections.unmodifiableList(elems);
+    }
 }

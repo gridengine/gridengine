@@ -38,7 +38,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Handler;
 import java.util.logging.Logger;
@@ -50,149 +49,144 @@ import org.apache.tools.ant.types.Path;
  *
  */
 public class TemplateTask extends Task {
-   
-   private File buildDir;
-   private File template;
-   private String classname;
-   private File outputFile;
-   private Path classpath;
-   private String source = "1.4";
-   private String target = "1.4";
-   
-   /** Creates a new instance of TemplateTask */
-   public TemplateTask() {
-   }
 
-   public File getBuildDir() {
-      return buildDir;
-   }
+    private File buildDir;
+    private File template;
+    private String classname;
+    private File outputFile;
+    private Path classpath;
+    private String source = "1.4";
+    private String target = "1.4";
 
-   public void setBuildDir(File buildDir) {
-      this.buildDir = buildDir;
-   }
+    /** Creates a new instance of TemplateTask */
+    public TemplateTask() {
+        super();
+    }
 
-   public void execute() throws org.apache.tools.ant.BuildException {
+    public File getBuildDir() {
+        return buildDir;
+    }
 
-      Logger logger = Logger.getLogger("cullconv");
-      
-      Handler [] handler = logger.getHandlers();
-      for(int i = 0; i < handler.length; i++ ) {
-         logger.removeHandler(handler[i]);
-      }
-      
-      logger.setUseParentHandlers(false);
-      AntLoggingHandler myHandler = new AntLoggingHandler(getProject());
-      
-      logger.addHandler(myHandler);
-      
-      if( classpath == null ) {
-         throw new BuildException("classpath not set");
-      }
-      try {
-         TemplateFactory fac = new TemplateFactory(buildDir,classpath.toString(),source, target);
-         Template t = fac.createTemplate(template);
+    public void setBuildDir(File buildDir) {
+        this.buildDir = buildDir;
+    }
 
-         Printer p = null;
-         
-         if( getOutputFile() == null ) {
-            p = new Printer();
-         } else {
-            p = new Printer(getOutputFile());
-         }
+    public void execute() throws org.apache.tools.ant.BuildException {
 
-         
+        Logger logger = Logger.getLogger("cullconv");
 
-         
-         Map paramMap = new HashMap();
-         Iterator iter = params.iterator();
-         while(iter.hasNext()) {
-            Param param = (Param)iter.next();
-            paramMap.put(param.getName(), param.getValue());
-         }
-         t.print(p, paramMap);
-         p.flush();
+        Handler[] handler = logger.getHandlers();
+        for (int i = 0; i < handler.length; i++) {
+            logger.removeHandler(handler[i]);
+        }
 
-      } catch(IOException ioe) {
-         throw new BuildException( "I/O Error: " + ioe.getMessage() , ioe);
-      }
-   }
-   
-   private ArrayList params = new ArrayList();
-   
-   public Param createParam() {
-      Param ret = new Param();
-      params.add(ret);
-      return ret;
-   }
-   
-   static class Param {
-      private String name;
-      private String value;
+        logger.setUseParentHandlers(false);
+        AntLoggingHandler myHandler = new AntLoggingHandler(getProject());
 
-      public String getName() {
-         return name;
-      }
+        logger.addHandler(myHandler);
 
-      public void setName(String name) {
-         this.name = name;
-      }
+        if (classpath == null) {
+            throw new BuildException("classpath not set");
+        }
+        try {
+            TemplateFactory fac = new TemplateFactory(buildDir, classpath.toString(), source, target);
+            Template t = fac.createTemplate(template);
 
-      public String getValue() {
-         return value;
-      }
+            Printer p = null;
 
-      public void setValue(String value) {
-         this.value = value;
-      }
-      
-   }
+            if (getOutputFile() == null) {
+                p = new Printer();
+            } else {
+                p = new Printer(getOutputFile());
+            }
 
-   public File getOutputFile() {
-      return outputFile;
-   }
 
-   public void setOutputFile(File outputFile) {
-      this.outputFile = outputFile;
-   }
 
-   public File getTemplate() {
-      return template;
-   }
 
-   public void setTemplate(File template) {
-      this.template = template;
-   }
+            Map<String, String> paramMap = new HashMap<String, String>();
+            for (Param param : params) {
+                paramMap.put(param.getName(), param.getValue());
+            }
+            t.print(p, paramMap);
+            p.flush();
+        } catch (IOException ioe) {
+            throw new BuildException("I/O Error: " + ioe.getMessage(), ioe);
+        }
+    }
 
-   public String getClassname() {
-      return classname;
-   }
+    private ArrayList<Param> params = new ArrayList<Param>();
 
-   public void setClassname(String classname) {
-      this.classname = classname;
-   }
+    private Param createParam() {
+        Param ret = new Param();
+        params.add(ret);
+        return ret;
+    }
 
-   public Path createClasspath() {
-      if( classpath == null) {
-         classpath = new Path(getProject());
-      }
-      return classpath;
-   }
+    static class Param {
+        private String name;
+        private String value;
 
-   public String getSource() {
-      return source;
-   }
+        public String getName() {
+            return name;
+        }
 
-   public void setSource(String source) {
-      this.source = source;
-   }
+        public void setName(String name) {
+            this.name = name;
+        }
 
-   public String getTarget() {
-      return target;
-   }
+        public String getValue() {
+            return value;
+        }
 
-   public void setTarget(String target) {
-      this.target = target;
-   }
+        public void setValue(String value) {
+            this.value = value;
+        }
+    }
 
-   
+    public File getOutputFile() {
+        return outputFile;
+    }
+
+    public void setOutputFile(File outputFile) {
+        this.outputFile = outputFile;
+    }
+
+    public File getTemplate() {
+        return template;
+    }
+
+    public void setTemplate(File template) {
+        this.template = template;
+    }
+
+    public String getClassname() {
+        return classname;
+    }
+
+    public void setClassname(String classname) {
+        this.classname = classname;
+    }
+
+    public Path createClasspath() {
+        if (classpath == null) {
+            classpath = new Path(getProject());
+        }
+        return classpath;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public String getTarget() {
+        return target;
+    }
+
+    public void setTarget(String target) {
+        this.target = target;
+    }
 }

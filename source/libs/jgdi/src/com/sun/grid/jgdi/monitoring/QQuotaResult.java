@@ -43,7 +43,7 @@ public interface QQuotaResult {
     *  Get a set of all resource quota rule names
     *  @return set of resource quota
     */
-   public Set getResourceQuotaRuleNames();
+   public Set<String> getResourceQuotaRuleNames();
    
    /**
     *  Get a resource quotal
@@ -56,6 +56,6 @@ public interface QQuotaResult {
     *  Get a list of all available resource quota info objects
     *  @return list of all available resource quota info objects
     */
-   public List getResourceQuotaRules();
+   public List<ResourceQuotaRuleInfo> getResourceQuotaRules();
    
 }

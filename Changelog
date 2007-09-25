@@ -1,3 +1,7 @@
+RN-2007-09-25-0: Bugfix:    problem with floating point job resource limits
+                 Bugster:   4743006
+                 Review:    JG
+
 AH-2007-09-21-2: Bugfix:   Resource reservation broken with sequences of
                            identical jobs differing only in their -R y|n
                  Bugster:  6590079

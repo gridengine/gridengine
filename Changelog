@@ -1,3 +1,9 @@
+MP-2007-09-25-0: Bugfix:   qstat -j messages disagree between plain and
+                           XML output
+                 Bugster:  6440408,6440412
+                 Issue:    2076
+                 Review:   RD
+
 AH-2007-09-24-0: Bugfix:   Fix schedd crash with test case 2300 due to 
                            AH-2007-06-15-0
 

@@ -1,3 +1,7 @@
+OJ-2007-09-25-0: Bugfix:   Unset old_value out of scope
+                 Bugster:  6569862
+                 Review:   MD
+ 
 MP-2007-09-25-0: Bugfix:   qstat -j messages disagree between plain and
                            XML output
                  Bugster:  6440408,6440412
@@ -53,7 +57,11 @@ RN-2007-09-11-0: Bugfix:    - Creating a userset with NONE as a type results
                  Review:    RD
 
 OJ-2007-09-10-0: Bugfix:   Merged in SGE 6.1 resource quota enhancements
+<<<<<<< Changelog
+                 Bugster:  6551121, 6564461, 6569088, 6571749, 6579232, 6585721 
+=======
                  Bugster:  6551121, 6564461, 6569088, 66571749, 6579232, 6585721 
+>>>>>>> 1.3671.2.147
                  Issue:    2274, 2293, 2303, 2338 
                  Review:   AH
 

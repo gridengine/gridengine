@@ -1103,6 +1103,10 @@ void xml_qstat_show_job_info(lList **list, lList **answer_list) {
    lListElem *answer = NULL;
    lListElem *xml_elem = NULL;
    bool error = false;
+   lListElem* mes;
+   lListElem *sme;
+   lList *mlp = NULL;
+   lListElem *jid_ulng = NULL; 
    DENTER(TOP_LAYER, "xml_qstat_show_job");
 
    for_each(answer, *answer_list) {
@@ -1118,6 +1122,26 @@ void xml_qstat_show_job_info(lList **list, lList **answer_list) {
       lFreeElem(&xml_elem);
    }
    else {
+      /* need to modify list to display correct message */
+      
+      sme = lFirst(*list);
+      if (sme) {
+         mlp = lGetList(sme, SME_message_list);         
+      }      
+      for_each(mes, mlp) {
+         lPSortList (lGetList(mes, MES_job_number_list), "I+", ULNG);
+
+         for_each(jid_ulng, lGetList(mes, MES_job_number_list)) {
+            u_long32 mid;            
+
+            mid = lGetUlong(mes, MES_message_number);
+            lSetString(mes,MES_message,sge_schedd_text(mid+SCHEDD_INFO_OFFSET));
+         }
+            
+      }
+           
+      /* print out xml info from list */
+      
       xml_elem = xml_getHead("message", *list, NULL);
       lWriteElemXMLTo(xml_elem, stdout);
       lFreeElem(&xml_elem);

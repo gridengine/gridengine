@@ -1,3 +1,7 @@
+RN-2007-09-26-0: Bugfix:    problem with floating point job resource limits
+                 Bugster:   4743006
+                 Review:    JG
+
 MP-2007-09-25-0: Bugfix:   qstat -j messages disagree between plain and
                            XML output
                  Bugster:  6440408,6440412

@@ -111,9 +111,9 @@ echo "      setenv \$shlib_path_name \"\$SGE_ROOT/lib/\$ARCH\":\"\$old_value\"" 
 echo "   else"                                                      >> $SP_CSH
 echo "      setenv \$shlib_path_name \$SGE_ROOT/lib/\$ARCH"         >> $SP_CSH
 echo "   endif"                                                     >> $SP_CSH
-echo "   unset shlib_path_name"                                     >> $SP_CSH
+echo "   unset shlib_path_name  old_value"                          >> $SP_CSH
 echo "endsw"                                                        >> $SP_CSH
-echo "unset ARCH DEFAULTMANPATH MANTYPE old_value"                  >> $SP_CSH
+echo "unset ARCH DEFAULTMANPATH MANTYPE"                            >> $SP_CSH
 
 #
 # bourne shell settings file
@@ -126,7 +126,11 @@ echo "DEFAULTMANPATH=\`\$SGE_ROOT/util/arch -m\`"                >> $SP_SH
 echo "MANTYPE=\`\$SGE_ROOT/util/arch -mt\`"                      >> $SP_SH
 echo ""                                                          >> $SP_SH
 
-   echo "SGE_CELL=$SGE_CELL; export SGE_CELL"                          >> $SP_SH
+if [ "$SGE_CELL" != "" ]; then
+   echo "SGE_CELL=$SGE_CELL; export SGE_CELL"                    >> $SP_SH
+else
+   echo "unset SGE_CELL"                                         >> $SP_SH
+fi
 
 if [ "$SGE_QMASTER_PORT" != "" ]; then
    echo "SGE_QMASTER_PORT=$SGE_QMASTER_PORT; export SGE_QMASTER_PORT"  >> $SP_SH
@@ -136,7 +140,7 @@ fi
 if [ "$SGE_EXECD_PORT" != "" ]; then
    echo "SGE_EXECD_PORT=$SGE_EXECD_PORT; export SGE_EXECD_PORT"        >> $SP_SH
 else
-   echo "unset SGE_EXECD_PORT"                                       >> $SP_SH    
+   echo "unset SGE_EXECD_PORT"                                         >> $SP_SH    
 fi
 
 
@@ -161,8 +165,8 @@ echo "   else"                                                      >> $SP_SH
 echo "      eval \$shlib_path_name=\$SGE_ROOT/lib/\$ARCH:\$old_value" >> $SP_SH
 echo "   fi"                                                        >> $SP_SH
 echo "   export \$shlib_path_name"                                  >> $SP_SH
-echo '   unset shlib_path_name'                                     >> $SP_SH
+echo '   unset shlib_path_name old_value'                           >> $SP_SH
 echo '   ;;'                                                        >> $SP_SH
 echo 'esac'                                                         >> $SP_SH
-echo "unset ARCH DEFAULTMANPATH MANTYPE old_value"                  >> $SP_SH
+echo "unset ARCH DEFAULTMANPATH MANTYPE"                            >> $SP_SH
 

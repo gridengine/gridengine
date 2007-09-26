@@ -1,3 +1,7 @@
+OJ-2007-09-26-0: Bugfix:   Unset old_value out of scope
+                 Bugster:  6569862
+                 Review:   MD
+
 RN-2007-09-26-0: Bugfix:    problem with floating point job resource limits
                  Bugster:   4743006
                  Review:    JG
@@ -749,7 +753,7 @@ AH-2007-05-07-0: Bugfix:    Use of hostgroups in resource quotas is less
                             performant than the full list of hosts
                  Bugster:   6542137
                  Issue:     2239
-                 Review:    TBD
+                 Review:    OJ
 
 AH-2007-05-03-0: Bugfix:    - Need faster resource quota matchmaking and more 
                               concise job info messages

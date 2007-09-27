@@ -1,3 +1,7 @@
+AH-2007-09-27-0: Bugfix:   Fix broken dependencies of japi.1.0.o and japi.0.95.o 
+                           build targets 
+                 Review:   JG
+
 OJ-2007-09-26-0: Bugfix:   Unset old_value out of scope
                  Bugster:  6569862
                  Review:   MD

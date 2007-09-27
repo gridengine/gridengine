@@ -140,10 +140,10 @@ drmaa.1.0.o: $(JAPILIB_DIR)/drmaa.c
 drmaa.0.95.o: $(JAPILIB_DIR)/drmaa.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -DDRMAA_95 -c $(JAPILIB_DIR)/drmaa.c -o drmaa.0.95.o
 
-japi.1.0.o: $(JAPILIB_DIR)/japi.c
+japi.1.0.o: $(JAPILIB_DIR)/japi.c japi.o
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/japi.c -o japi.1.0.o
 
-japi.0.95.o: $(JAPILIB_DIR)/japi.c
+japi.0.95.o: $(JAPILIB_DIR)/japi.c japi.o
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -DDRMAA_95 -c $(JAPILIB_DIR)/japi.c -o japi.0.95.o
 
 com_sun_grid_drmaa_SessionImpl.1.0.o: $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c

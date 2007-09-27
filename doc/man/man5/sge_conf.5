@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/06/05 16:57:16 $     Revision: $Revision: 1.46.2.10 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/09/27 13:51:37 $     Revision: $Revision: 1.46.2.11 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/06/05 16:57:16 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/09/27 13:51:37 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -69,6 +69,10 @@ If a local configuration is available, its entries overwrite the
 corresponding entries of the global configuration. \fBNote:\fP The local
 configuration does not have to contain all valid configuration entries,
 but only those which need to be modified against the global entries.
+.PP
+Note: xxQS_NAMExx allows backslashes (\\) be used to escape newline
+(\\newline) characters. The backslash and the newline are replaced with a
+space (" ") character before any interpretation.
 .\"
 .\"
 .SH FORMAT
@@ -192,7 +196,7 @@ specific tasks like the preparation of temporary file systems with the
 need for the same context information as the job.
 Each
 .M xxqs_name_sxx_execd 8
-may use a private prologue script. 
+may use a private prolog script. 
 Correspondingly, the execution host local 
 configurations is can be overwritten by the queue configuration (see
 .M queue_conf 5
@@ -201,7 +205,7 @@ Changing \fBprolog\fP will take
 immediate effect.
 .PP
 The default for \fBprolog\fP is the special value NONE, which prevents
-from execution of a prologue script. 
+from execution of a prolog script. 
 .PP
 The following special
 variables being expanded at runtime can be used (besides any other
@@ -301,7 +305,7 @@ specific tasks like the cleaning up of temporary file systems with the
 need for the same context information as the job.
 Each
 .M xxqs_name_sxx_execd 8
-may use a private epilogue script. 
+may use a private epilog script. 
 Correspondingly, the execution host local 
 configurations is can be overwritten by the queue configuration (see
 .M queue_conf 5
@@ -310,7 +314,7 @@ Changing \fBepilog\fP will take
 immediate effect.
 .PP
 The default for \fBepilog\fP is the special value NONE, which prevents
-from execution of a epilogue script.
+from execution of a epilog script.
 The  same  special variables as for \fBprolog\fP can be
 used to constitute a command line.
 .PP
@@ -355,7 +359,7 @@ readable by any user who may execute jobs.
 If this violates your
 site's security policies you may want to set \fBshell_start_mode\fP
 to \fIscript_from_stdin\fP. This will force xxQS_NAMExx to open the
-job script as well as the epilogue and prologue scripts for reading into
+job script as well as the epilog and prolog scripts for reading into
 STDIN as root (if
 .M xxqs_name_sxx_execd 8
 was started as root) before changing to the job owner's user account.
@@ -642,7 +646,7 @@ overwritten by the execution host local configuration.
 .SS "\fBmax_aj_instances\fP"
 This parameter defines the maximum amount of array task to be scheduled to
 run simultaneously per array job.  An instance of an array task will be
-created within the master daemeon when it gets a start order from the
+created within the master daemon when it gets a start order from the
 scheduler. The instance will be destroyed when the array task finishes.
 Thus the parameter provides control mainly over the memory consumption of
 array jobs in the master and scheduler daemon. It is most useful for very
@@ -850,7 +854,7 @@ forge -u $1 -t $2 | SetToken
 .PP
 Since it is necessary for \fIforge\fP to read the secret AFS server
 key, a site might wish to replace the \fBset_token_cmd\fP script by a
-command, which connects to a self written daemon at the AFS server. The
+command, which connects to a custom daemon at the AFS server. The
 token must be forged at the AFS server and returned to the local
 machine, where \fISetToken\fP is executed.
 .PP
@@ -921,7 +925,7 @@ may be overwritten by the execution host local configuration.
 A list of additional parameters can be passed to the 
 xxQS_NAMExx qmaster. The following values are recognized:
 .IP "\fIENABLE_FORCED_QDEL\fP"
-If this parameter is set, non-administrative users can foce deletion of
+If this parameter is set, non-administrative users can force deletion of
 their own jobs via the \fI\-f\fP option of
 .M qdel 1 .
 Without this parameter, forced deletion of jobs is only allowed by the
@@ -986,7 +990,7 @@ the only source of monitoring data.
 .PP
 .IP "\fIPROF_SIGNAL\fP"
 Profiling provides the user with the possibility to get system measurements.
-This can be useful for debugging or optimisation of the system. The profiling 
+This can be useful for debugging or optimization of the system. The profiling 
 output will be done within the messages file.
 
 Enables the profiling for qmaster signal thread.
@@ -1015,6 +1019,13 @@ string or seconds. There is no setting to turn the sharetree spooling
 off. 
 (e.g. STREE_SPOOL_INTERVAL=00:02:00)
 .PP
+.IP "\fIMAX_JOB_DELETION_TIME\fp
+Sets the value of how long the qmaster will spend deleting jobs. After this time,
+the qmaster will continue with other tasks and schedule the deletion of remaining
+jobs at a later time. The default value is 3 seconds, and will be used if no value
+is entered. The range of valid values is > 0 and <= 5.
+(e.g. MAX_JOB_DELETION_TIME=1)
+.PP
 Changing \fBqmaster_params\fP will take immediate effect.
 The default for \fBqmaster_params\fP is none.
 .PP
@@ -1023,7 +1034,7 @@ overwritten by the execution host local configuration.
 .\"
 .\"
 .SS "\fBexecd_params\fP"
-This is foreseen for passing additional parameters 
+This is used for passing additional parameters 
 to the xxQS_NAMExx execution daemon. The following values are recognized:
 .\"
 .IP "\fIACCT_RESERVED_USAGE\fP"
@@ -1129,7 +1140,7 @@ inherited by the execution daemon from the shell that started it to be inherited
 by the job it's starting.  When true, any environment variable that is set in
 the shell which starts the execution daemon at the time the execution daemon is
 started will be set in the environment of any jobs run by that execution daemon,
-unless the environment variable is explictly overridden, such as PATH or
+unless the environment variable is explicitly overridden, such as PATH or
 LOGNAME.  If set to false, each job starts with only the environment variables
 that are explicitly passed on by the execution daemon, such as PATH and LOGNAME.
 The default value is true.
@@ -1148,8 +1159,15 @@ has set the library path, it may be further altered by the shell in which the
 job is executed, or by the job script itself.  The default value for
 SET_LIB_PATH is false.
 .PP
+.IP "\fIENABLE_ADDGRP_KILL\fP"
+If this parameter is set then xxQS_NAMExx uses the supplementary group ids
+(see \fIgid_range\fP) to identify all processes which are to be terminated
+when a job is deleted, or when
+.M xxqs_name_sxx_shepherd 8
+cleans up after job termination.
+.PP
 .SS "\fBreporting_params\fP"
-Used to define the behaviour of reporting modules in the xxQS_NAMExx 
+Used to define the behavior of reporting modules in the xxQS_NAMExx 
 qmaster. Changes to the \fBreporting_params\fP takes immediate effect.
 The following values are recognized:
 .\"

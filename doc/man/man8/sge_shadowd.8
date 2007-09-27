@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_shadowd.8,v $     Last Update: $Date: 2005/03/30 14:31:38 $     Revision: $Revision: 1.9 $
+.\" $RCSfile: sge_shadowd.8,v $     Last Update: $Date: 2007/09/27 13:51:37 $     Revision: $Revision: 1.9.4.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_SHADOWD 8 "$Date: 2005/03/30 14:31:38 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_SHADOWD 8 "$Date: 2007/09/27 13:51:37 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_shadowd \- xxQS_NAMExx shadow master daemon
 .\"
@@ -100,10 +100,22 @@ Most installations will use a services map entry for the
 service "sge_qmaster" instead to define that port.
 .\"
 .IP "\fBxxQS_NAME_Sxx_DELAY_TIME\fP" 1.5i
+This variable controls the interval in which
+.I xxqs_name_sxx_shadowd
 If set, overrides the 600 seconds default minimum delay before before a new
 .M xxqs_name_sxx_qmaster 8
 is started by 
 .I xxqs_name_sxx_shadowd .
+.\"
+.IP "\fBxxQS_NAME_Sxx_CHECK_INTERVAL\fP" 1.5i
+This variable controls the interval in which the
+.I xxqs_name_sxx_shadowd
+checks the heartbeat file (60 seconds by default).
+.\"
+.IP "\fBxxQS_NAME_Sxx_GET_ACTIVE_INTERVAL\fP" 1.5i
+This variable controls the interval when a
+.I xxqs_name_sxx_shadowd
+instance tries to take over when the heartbeat file has not changed.
 .\"
 .\"
 .SH "FILES"

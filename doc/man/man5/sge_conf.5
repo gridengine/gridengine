@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/07/19 08:17:18 $     Revision: $Revision: 1.55.2.6 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/09/27 13:25:18 $     Revision: $Revision: 1.55.2.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/07/19 08:17:18 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/09/27 13:25:18 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -1161,6 +1161,13 @@ also set to false, the library path will be empty.  After the execution daemon
 has set the library path, it may be further altered by the shell in which the
 job is executed, or by the job script itself.  The default value for
 SET_LIB_PATH is false.
+.PP
+.IP "\fIENABLE_ADDGRP_KILL\fP"
+If this parameter is set then xxQS_NAMExx uses the supplementary group ids
+(see \fIgid_range\fP) to identify all processes which are to be terminated
+when a job is deleted, or when
+.M xxqs_name_sxx_shepherd 8
+cleans up after job termination.
 .PP
 .SS "\fBreporting_params\fP"
 Used to define the behavior of reporting modules in the xxQS_NAMExx 

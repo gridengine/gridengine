@@ -1,3 +1,8 @@
+JG-2007-09-27-0: Bugfix:   Fixed man page issues.
+                 Bugster:  6575727, 6575720, 6589459
+                 Issue:    2272, 2270, 2374
+                 Review:   RD
+
 OJ-2007-09-25-0: Bugfix:   Unset old_value out of scope
                  Bugster:  6569862
                  Review:   MD
@@ -120,6 +125,7 @@ MD-2007-08-08-0: Enhancem.: added gelint script.
 
 JG-2007-08-07-0: Bugfix:    newline missing from "illegal debug level" message
                  Bugster:   6589807
+                 Issue:     2343
                  Review:    MD
 
 HP-2007-08-06-0: Bugfix:    Overflow of group members in getgrgid_r() call on
@@ -221,19 +227,19 @@ AA-2007-07-02-0: Bugfix:    - in qmon, under calendar configuration, it is
 RD-2007-06-29-0: Bugfix:    duration offset config was ignored
                  Review:    PJ 
 
-AA-2007-06-29-0: Bugfix:   incomplete fix of AA-2007-06-18-0
-                           /etc/services worked, set ports didn't
-                 Review:   MD
+AA-2007-06-29-0: Bugfix:    incomplete fix of AA-2007-06-18-0
+                            /etc/services worked, set ports didn't
+                 Review:    MD
 
-OJ-2007-06-28-0: Bugfix:   Merged in SGE 6.1 resource quota enhancements
-                 Bugster:  6542137 6551568, 6550718
-                 Issue:    2238, 2239
-                 Review:   AH
+OJ-2007-06-28-0: Bugfix:    Merged in SGE 6.1 resource quota enhancements
+                 Bugster:   6542137 6551568, 6550718
+                 Issue:     2238, 2239
+                 Review:    AH
 
-OJ-2007-06-26-0: Bugfix:   Spelling, usage errors in  man pages
-                 Bugster:  Not filed
-                 Issue:    Not filed
-                 Review:   DT
+OJ-2007-06-26-0: Bugfix:    Spelling, usage errors in  man pages
+                 Bugster:   Not filed
+                 Issue:     Not filed
+                 Review:    DT
 
 JG-2007-06-26-1: Bugfix:    qrsh with command reported an error when ssh was 
                             configured as transport, and CTRL-C was pressed.

@@ -117,7 +117,7 @@ test_performance.o: $(SPOOLLIB_DIR)/test_performance.c
 	$(CC) $(CFLAGS) -c $(SPOOLLIB_DIR)/test_performance.c
 
 test_sge_spooling: test_sge_spooling.o sig_handlers.o $(SPOOLING_DEPS) $(SGEOBJLIB) $(SGEOBJDLIB) $(MIRLIB) $(EVCLIB) $(GDILIB) $(SCHEDLIB) $(LCKLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(RMONLIB) $(WINGRIDLIB_DEP)
-	$(CC) -o test_sge_spooling $(LFLAGS) test_sge_spooling.o sig_handlers.o $(SPOOLING_LIBS) $(SCHEDLIB)  $(MIRLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB) $(RMONLIB) $(WINGRIDLIB) $(LCKLIB) $(SLIBS) $(LIBS) $(DLLIB) 
+	$(CC) -o test_sge_spooling $(LFLAGS) test_sge_spooling.o sig_handlers.o $(SPOOLING_LIBS) $(SCHEDLIB)  $(MIRLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB) $(RMONLIB) $(WINGRIDLIB) $(LCKLIB) $(SECLIB) $(SLIBS) $(LIBS) $(DLLIB) 
 
 test_sge_spooling.o: $(SPOOLLIB_DIR)/test_sge_spooling.c
 	$(CC) $(CFLAGS) -c $(SPOOLLIB_DIR)/test_sge_spooling.c

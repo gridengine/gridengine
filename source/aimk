@@ -51,6 +51,7 @@ set WINCC        = ""
 set WINCFLAGS    = ""
 set WINLIBS      = ""
 set AIMK_TARGETOPT   = 0
+set NO_XDEPEND   = ""
 
 if ( -f dist/util/arch ) then
    set buildarch = `dist/util/arch`
@@ -1616,6 +1617,7 @@ case SOLARISAMD64:
             set MEMFLAG = "-xarch=sse2 -m64"
             set LFLAGS = "-xarch=sse2 -m64 $LFLAGS"
             set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G -xarch=sse2 -m64"
+            set NO_XDEPEND = "-xdepend=no"
          endif
       else
          set CFLAGS = "-D_LARGEFILE64_SOURCE=1 $CFLAGS"
@@ -1974,7 +1976,7 @@ if ( "$SGE_DEPEND" == 1 ) then
    endif
 
    cd $COMPILE_ARCH
-   $MAKE $MAKEOPT -f ../Makefile "CC=$CC" "CFLAGS=$CFLAGS $XCFLAGS -U_GNU_SOURCE" "LFLAGS=$LFLAGS" "COMPILE_ARCH=$COMPILE_ARCH" $*
+   $MAKE $MAKEOPT -f ../Makefile "CC=$CC" "CFLAGS=$CFLAGS $XCFLAGS -U_GNU_SOURCE $NO_XDEPEND" "LFLAGS=$LFLAGS" "COMPILE_ARCH=$COMPILE_ARCH" $*
 
    if ( $status != 0 ) then
       echo not done

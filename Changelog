@@ -1,3 +1,7 @@
+RD-2007-09-27-0: Bugfix:   - fixed broken build on hp11
+                           - fixed broken sge_depend with SS12
+                 Review:   AA
+
 AH-2007-09-27-0: Bugfix:   Fix broken dependencies of japi.1.0.o and japi.0.95.o 
                            build targets 
                  Review:   JG

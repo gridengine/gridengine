@@ -1,24 +1,29 @@
-RD-2007-09-27-0: Bugfix:   - fixed broken build on hp11
-                           - fixed broken sge_depend with SS12
-                 Review:   AA
+JG-2007-09-27-0: Bugfix:    Fixed man page issues.
+                 Bugster:   6575727, 6575720, 6589459
+                 Issue:     2272, 2270, 2374
+                 Review:    RD
 
-AH-2007-09-27-0: Bugfix:   Fix broken dependencies of japi.1.0.o and japi.0.95.o 
-                           build targets 
-                 Review:   JG
+RD-2007-09-27-0: Bugfix:    - fixed broken build on hp11
+                            - fixed broken sge_depend with SS12
+                 Review:    AA
 
-OJ-2007-09-26-0: Bugfix:   Unset old_value out of scope
-                 Bugster:  6569862
-                 Review:   MD
+AH-2007-09-27-0: Bugfix:    Fix broken dependencies of japi.1.0.o and japi.0.95.o 
+                            build targets 
+                 Review:    JG
+
+OJ-2007-09-26-0: Bugfix:    Unset old_value out of scope
+                 Bugster:   6569862
+                 Review:    MD
 
 RN-2007-09-26-0: Bugfix:    problem with floating point job resource limits
                  Bugster:   4743006
                  Review:    JG
 
-MP-2007-09-25-0: Bugfix:   qstat -j messages disagree between plain and
-                           XML output
-                 Bugster:  6440408,6440412
-                 Issue:    2076
-                 Review:   RD
+MP-2007-09-25-0: Bugfix:    qstat -j messages disagree between plain and
+                            XML output
+                 Bugster:   6440408,6440412
+                 Issue:     2076
+                 Review:    RD
 
 AA-2007-09-25-0: Cleanup:   - typed lists and other 1.5 cleanups
                  Review:    LP

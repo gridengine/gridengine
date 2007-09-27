@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_shadowd.8,v $     Last Update: $Date: 2005/03/30 14:31:38 $     Revision: $Revision: 1.9 $
+.\" $RCSfile: sge_shadowd.8,v $     Last Update: $Date: 2007/09/27 14:02:27 $     Revision: $Revision: 1.10 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_SHADOWD 8 "$Date: 2005/03/30 14:31:38 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_SHADOWD 8 "$Date: 2007/09/27 14:02:27 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_shadowd \- xxQS_NAMExx shadow master daemon
 .\"
@@ -53,11 +53,11 @@ run a protocol which ensures that only one of them will start-up
 a new master daemon.
 .PP
 The  hosts suitable for being used as shadow master hosts must have
-shared root read/write access to the directory <xxqs_name_sxx_root>/<cell>/common
+shared root read/write access to the directory $xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common
 as well as to the master daemon spool directory
-(by default <xxqs_name_sxx_root>/<cell>/spool/qmaster).
+(by default $xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/spool/qmaster).
 The names of the shadow master hosts need to be contained in the file 
-<xxqs_name_sxx_root>/<cell>/common/shadow_masters.
+$xxQS_NAME_Sxx_ROOT/<$xQS_NAME_Sxx_CELL/common/shadow_masters.
 .\"
 .\"
 .SH RESTRICTIONS
@@ -100,10 +100,22 @@ Most installations will use a services map entry for the
 service "sge_qmaster" instead to define that port.
 .\"
 .IP "\fBxxQS_NAME_Sxx_DELAY_TIME\fP" 1.5i
-If set, overrides the 600 seconds default minimum delay before before a new
-.M xxqs_name_sxx_qmaster 8
-is started by 
-.I xxqs_name_sxx_shadowd .
+This variable controls the interval in which
+.I xxqs_name_sxx_shadowd
+pauses if a takeover bid fails. This value is used only when there are multiple
+.I xxqs_name_sxx_shadowd
+instances and they are contending to be the master.
+The default is 600 seconds.
+.\"
+.IP "\fBxxQS_NAME_Sxx_CHECK_INTERVAL\fP" 1.5i
+This variable controls the interval in which the
+.I xxqs_name_sxx_shadowd
+checks the heartbeat file (60 seconds by default).
+.\"
+.IP "\fBxxQS_NAME_Sxx_GET_ACTIVE_INTERVAL\fP" 1.5i
+This variable controls the interval when a
+.I xxqs_name_sxx_shadowd
+instance tries to take over when the heartbeat file has not changed.
 .\"
 .\"
 .SH "FILES"

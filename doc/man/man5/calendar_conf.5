@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: calendar_conf.5,v $     Last Update: $Date: 2007/02/14 12:58:39 $     Revision: $Revision: 1.9 $
+.\" $RCSfile: calendar_conf.5,v $     Last Update: $Date: 2007/09/27 14:02:27 $     Revision: $Revision: 1.10 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH CALENDAR_CONF 5 "$Date: 2007/02/14 12:58:39 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH CALENDAR_CONF 5 "$Date: 2007/09/27 14:02:27 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 calendar_conf \- xxQS_NAMExx calendar configuration file format
@@ -75,14 +75,17 @@ field is defined as follows:
 .nf
 .ta \w'xxxx'u
 \fByear\fP:=
-	{\fByear_day_range_list=\fP\fBdaytime_range_list\fP[\fB=state\fP]
-	|\fByear_day_range_list=\fP[\fBdaytime_range_list=\fP]\fBstate\fP
-   |state} ...
+	{ NONE
+    | \fByear_day_range_list=\fP\fBdaytime_range_list\fP[\fB=state\fP]
+    | \fByear_day_range_list=\fP[\fBdaytime_range_list=\fP]\fBstate\fP
+    | state}
 .fi
 .sp 1
 Where
 .IP "\(bu" 3n
-at least one of \fByear_day_range_list\fP, \fBdaytime_range_list\fP and
+NONE means, no definition is made on the year basis
+.IP "\(bu" 3n
+if a definition is made on the year basis, at least one of \fByear_day_range_list\fP, \fBdaytime_range_list\fP and
 \fBstate\fP 
 always have to be present,
 .IP "\(bu" 3n
@@ -121,14 +124,17 @@ field is defined as follows:
 .nf
 .ta \w'xxxx'u
 \fBweek\fP:=
-	{\fBweek_day_range_list\fP[\fB=daytime_range_list\fP][\fB=state\fP]
-	|[\fBweek_day_range_list=\fP]\fBdaytime_range_list\fP[\fB=state\fP]
-	|[\fBweek_day_range_list=\fP][\fBdaytime_range_list=\fP]\fBstate\fP} ...
+	{ NONE 
+    | \fBweek_day_range_list\fP[\fB=daytime_range_list\fP][\fB=state\fP]
+    | [\fBweek_day_range_list=\fP]\fBdaytime_range_list\fP[\fB=state\fP]
+    | [\fBweek_day_range_list=\fP][\fBdaytime_range_list=\fP]\fBstate\fP} ...
 .fi
 .sp 1
 Where
 .IP "\(bu" 3n
-at least one of \fBweek_day_range_list\fP, \fBdaytime_range_list\fP and
+NONE means, no definition is made on the week basis
+.IP "\(bu" 3n
+if a definition is made on the week basis, at least one of \fBweek_day_range_list\fP, \fBdaytime_range_list\fP and
 \fBstate\fP 
 always have to be present,
 .IP "\(bu" 3n
@@ -262,8 +268,20 @@ instead of switching them "off".
 	year 	1.1.1999,6.1.1999,28.3.1999,30.3.1999-
 	31.3.1999,18.5.1999-19.5.1999,3.10.1999,25.12.1999,26
 	.12.1999=suspended
-	week 	mon-fri=20-6=suspended sat-sun=suspend
-	ed
+	week 	mon-fri=20-6=suspended sat-sun=suspended
+.fi
+.sp 1
+.IP "\(bu" 3n
+Weekend calendar with suspension, ignoring public holidays:
+.sp 1
+Settings are only done on the week basis,
+no settings on the year basis (keyword "NONE").
+.sp 1
+.nf
+.ta \w'xx'u \w'calendar_name    'u
+	calendar_name 	weekend_s
+	year 	NONE
+	week 	sat-sun=suspended
 .fi
 .sp 1
 .\"

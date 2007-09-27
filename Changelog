@@ -1,26 +1,26 @@
-JG-2007-09-27-0: Bugfix:   Fixed man page issues.
-                 Bugster:  6575727, 6575720, 6589459
-                 Issue:    2272, 2270, 2374
-                 Review:   RD
+JG-2007-09-27-0: Bugfix:    Fixed man page issues.
+                 Bugster:   6575727, 6575720, 6589459
+                 Issue:     2272, 2270, 2374
+                 Review:    RD
 
-OJ-2007-09-25-0: Bugfix:   Unset old_value out of scope
-                 Bugster:  6569862
-                 Review:   MD
+OJ-2007-09-25-0: Bugfix:    Unset old_value out of scope
+                 Bugster:   6569862
+                 Review:    MD
  
-MP-2007-09-25-0: Bugfix:   qstat -j messages disagree between plain and
-                           XML output
-                 Bugster:  6440408,6440412
-                 Issue:    2076
-                 Review:   RD
+MP-2007-09-25-0: Bugfix:    qstat -j messages disagree between plain and
+                            XML output
+                 Bugster:   6440408,6440412
+                 Issue:     2076
+                 Review:    RD
 
-AH-2007-09-24-0: Bugfix:   Fix schedd crash with test case 2300 due to 
-                           AH-2007-06-15-0
+AH-2007-09-24-0: Bugfix:    Fix schedd crash with test case 2300 due to 
+                            AH-2007-06-15-0
 
-AH-2007-09-21-1: Bugfix:   Resource reservation broken with sequences of
-                           identical jobs differing only in their -R y|n
-                 Bugster:  6590079
-                 Issue:    2344
-                 Review:   RD
+AH-2007-09-21-1: Bugfix:    Resource reservation broken with sequences of
+                            identical jobs differing only in their -R y|n
+                 Bugster:   6590079
+                 Issue:     2344
+                 Review:    RD
 
 RN-2007-09-21-0: Bugfix:    SGE does not work if primary group entry is too big
                             in groups map
@@ -34,9 +34,9 @@ MP-2007-09-21-0: Bugfix:    qdel does not recognize wc_job_range_list
                  Issue:     2367
                  Review:    JG
 
-AH-2007-09-20-0: Bugfix:   Resource quota matching with sequential job scheduling
-                           was broken as it slipped through with the merge 
-                           OJ-2007-09-10-0 from maintrunk
+AH-2007-09-20-0: Bugfix:    Resource quota matching with sequential job scheduling
+                            was broken as it slipped through with the merge 
+                            OJ-2007-09-10-0 from maintrunk
 
 RN-2007-09-20-0: Bugfix:    - authuser binary returns unusable error message
                             - Several qconf options display only single message
@@ -45,14 +45,14 @@ RN-2007-09-20-0: Bugfix:    - authuser binary returns unusable error message
                  Issue:     2194
                  Review:    JG
 
-AH-2007-09-19-0: Bugfix:   Fix scheduling of PE range jobs when resource 
-                           quotas are used. It was broken by OJ-2007-09-10-0
-                           which in turn was broken by AH-2007-06-15-0 when
-                           resource quota result caching was introduced for
-                           parallel jobs.
-                 Review:   RD
+AH-2007-09-19-0: Bugfix:    Fix scheduling of PE range jobs when resource 
+                            quotas are used. It was broken by OJ-2007-09-10-0
+                            which in turn was broken by AH-2007-06-15-0 when
+                            resource quota result caching was introduced for
+                            parallel jobs.
+                 Review:    RD
 
-OJ-2007-09-11-0: Bugfix:   Fixed broken check-in OJ-2007-09-10-0
+OJ-2007-09-11-0: Bugfix:    Fixed broken check-in OJ-2007-09-10-0
 
 RN-2007-09-11-0: Bugfix:    - Creating a userset with NONE as a type results
                               in a core dump
@@ -61,14 +61,10 @@ RN-2007-09-11-0: Bugfix:    - Creating a userset with NONE as a type results
                  Issue:     2323,2356 
                  Review:    RD
 
-OJ-2007-09-10-0: Bugfix:   Merged in SGE 6.1 resource quota enhancements
-<<<<<<< Changelog
-                 Bugster:  6551121, 6564461, 6569088, 6571749, 6579232, 6585721 
-=======
-                 Bugster:  6551121, 6564461, 6569088, 66571749, 6579232, 6585721 
->>>>>>> 1.3671.2.147
-                 Issue:    2274, 2293, 2303, 2338 
-                 Review:   AH
+OJ-2007-09-10-0: Bugfix:    Merged in SGE 6.1 resource quota enhancements
+                 Bugster:   6551121, 6564461, 6569088, 6571749, 6579232, 6585721 
+                 Issue:     2274, 2293, 2303, 2338 
+                 Review:    AH
 
 CR-2007-08-31-0: Cleanup:   sge_ca script now does umask 077 also for no
                             root user installations (merged from maintrunk)

@@ -241,16 +241,14 @@ Linux)
          lxrelease="${lxrelease}-GLIBC"
       else
          libc_version=`echo $libc_string | tr ' ,' '\n' | grep "2\." | cut -f 2 -d "."`
-         case $libc_version in
-         2)
-            unsupported="u"
-            ;;
-         3|4|5)
-            ;;
-         *)
+         if [ $libc_version -lt 2 ]; then
             unsupported="UNSUPPORTED-"
             lxrelease=24-GLIBC-2.${libc_version}
-         esac
+         else
+            if [ $libc_version -eq 2 ]; then
+               unsupported="u"
+            fi
+         fi
       fi
       ;;
    *)

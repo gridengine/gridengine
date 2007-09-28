@@ -70,6 +70,7 @@ int main(int argc, char *argv[]);
 /************************************************************************/
 int main(int argc, char **argv) {
    /* lListElem *rep, *nxt_rep, *jep, *aep, *jrep, *idep; */
+   int ret = 0;
    lListElem *aep, *idep;
    lList *jlp = NULL, *alp = NULL, *pcmdline = NULL, *ref_list = NULL, *user_list=NULL;
    u_long32 force = 0;
@@ -241,6 +242,10 @@ int main(int argc, char **argv) {
             for_each(aep, alp) {
                status = lGetUlong(aep, AN_status);
 
+               if (lGetUlong(aep, AN_quality) == ANSWER_QUALITY_ERROR) {
+                  ret = 1;
+               }
+
                if (delete_mode != 5 && 
                    ((first_try  && status != STATUS_OK_DOAGAIN) ||
                     (!first_try && status == STATUS_OK))) {
@@ -289,8 +294,8 @@ int main(int argc, char **argv) {
    lFreeList(&ref_list);
    sge_gdi_shutdown();
    sge_prof_cleanup();
-   SGE_EXIT(0);
-   return 0;
+   SGE_EXIT(ret);
+   return ret;
 
 error_exit:
    lFreeList(&alp);

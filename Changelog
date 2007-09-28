@@ -1,3 +1,7 @@
+AH-2007-09-28-0: Bugfix:    Fix unneeded builds of JAPI targets due to 
+                            AH-2007-09-27-0 by using japi.o instead of 
+                            japi.1.0.o, drmaa.o instead of drmaa.1.0.o etc.
+
 RD-2007-09-28-0: Bugfix:    - fixed qrstat -ar for AR of different user
                             - enhanced job scheduling for AR jobs to allow the
                               request of non consumable resources

@@ -36,14 +36,14 @@
 JAPILIB_DIR   = $(SDIR)/libs/japi
 CLASSES_DIR   = $(SDIR)/classes/src
 
-JAPILIB_10    = japi.1.0.o
+JAPILIB_10    = japi.o
 JAPILIB_95    = japi.0.95.o
 JAPILIB_OBJS  = $(JAPILIB_10) $(JAPILIB_95)
 
 DRMAALIB         = libdrmaa$(SHAREDEXT)
 DRMAALIB_V       = libdrmaa$(SHAREDEXT).0.95 libdrmaa$(SHAREDEXT).1.0
-DRMAALIB_10_NJ  = drmaa.1.0.o
-DRMAALIB_10_ALL = $(DRMAALIB_10_NJ) com_sun_grid_drmaa_SessionImpl.1.0.o
+DRMAALIB_10_NJ  = drmaa.o
+DRMAALIB_10_ALL = $(DRMAALIB_10_NJ) com_sun_grid_drmaa_SessionImpl.o
 DRMAALIB_95_NJ  = drmaa.0.95.o
 DRMAALIB_95_ALL = $(DRMAALIB_95_NJ) com_sun_grid_drmaa_SessionImpl.0.95.o
 
@@ -76,7 +76,7 @@ drmaa_extras_clean: drmaa_howto_clean
          test_drmaa_sync.o test_drmaa_no_bin test_drmaa_no_bin.o \
          test_drmaa_issue1768 test_drmaa_issue1768.o test_drmaa_issue1892 \
          test_drmaa_issue1892.o \
-         test_drmaa.1.0 test_drmaa.1.0.o test_drmaa.0.95 test_drmaa.0.95.o \
+         test_drmaa.1.0 test_drmaa.o test_drmaa.0.95 test_drmaa.0.95.o \
          compile compile.o
 
 japilib: $(JAPILIB)
@@ -134,22 +134,24 @@ include $(JAPILIB_DIR)/howto/Makefile
 ###############################################################################
 # rules to build object codes
 ###############################################################################
-drmaa.1.0.o: $(JAPILIB_DIR)/drmaa.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/drmaa.c -o drmaa.1.0.o
+# dependencies: built -DDRMAA_95 library build targets each time when 1.0 are built
 
-drmaa.0.95.o: $(JAPILIB_DIR)/drmaa.c
+drmaa.o: $(JAPILIB_DIR)/drmaa.c
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/drmaa.c -o drmaa.o
+
+drmaa.0.95.o: $(JAPILIB_DIR)/drmaa.c drmaa.o
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -DDRMAA_95 -c $(JAPILIB_DIR)/drmaa.c -o drmaa.0.95.o
 
-japi.1.0.o: $(JAPILIB_DIR)/japi.c japi.o
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/japi.c -o japi.1.0.o
+japi.o: $(JAPILIB_DIR)/japi.c 
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/japi.c -o japi.o
 
 japi.0.95.o: $(JAPILIB_DIR)/japi.c japi.o
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -DDRMAA_95 -c $(JAPILIB_DIR)/japi.c -o japi.0.95.o
 
-com_sun_grid_drmaa_SessionImpl.1.0.o: $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c -o com_sun_grid_drmaa_SessionImpl.1.0.o
+com_sun_grid_drmaa_SessionImpl.o: $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c -o com_sun_grid_drmaa_SessionImpl.o
 
-com_sun_grid_drmaa_SessionImpl.0.95.o: $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c
+com_sun_grid_drmaa_SessionImpl.0.95.o: $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c com_sun_grid_drmaa_SessionImpl.o
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -DDRMAA_95 -c $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c -o com_sun_grid_drmaa_SessionImpl.0.95.o
 
 #---------------------------------------------------------------------
@@ -157,16 +159,16 @@ com_sun_grid_drmaa_SessionImpl.0.95.o: $(CLASSES_DIR)/com_sun_grid_drmaa_Session
 test_drmaa: test_drmaa.1.0 test_drmaa.0.95
 	rm -f test_drmaa ; ln -s test_drmaa.1.0 test_drmaa
 
-test_drmaa.1.0: test_drmaa.1.0.o $(DRMAALIB) $(WINGRIDLIB_DEP)
-	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.1.0.o $(LFLAGS) $(LIBS) libdrmaa$(SHAREDEXT).1.0 $(WINGRIDLIB)
+test_drmaa.1.0: test_drmaa.o $(DRMAALIB) $(WINGRIDLIB_DEP)
+	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.o $(LFLAGS) $(LIBS) libdrmaa$(SHAREDEXT).1.0 $(WINGRIDLIB)
 
 test_drmaa.0.95: test_drmaa.0.95.o $(DRMAALIB) $(WINGRIDLIB_DEP)
 	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.0.95.o -DDRMAA_95 $(LFLAGS) $(LIBS) -ldrmaa95 $(WINGRIDLIB)
 
-test_drmaa.1.0.o: $(JAPILIB_DIR)/test_drmaa.c
-	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa.c -o test_drmaa.1.0.o
+test_drmaa.o: $(JAPILIB_DIR)/test_drmaa.c
+	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa.c -o test_drmaa.o
 
-test_drmaa.0.95.o: $(JAPILIB_DIR)/test_drmaa.c
+test_drmaa.0.95.o: $(JAPILIB_DIR)/test_drmaa.c test_drmaa.o
 	$(CC) $(CFLAGS) -DDRMAA_95 -c $(JAPILIB_DIR)/test_drmaa.c -o test_drmaa.0.95.o
 
 test_drmaa_sync: test_drmaa_sync.o $(DRMAALIB)

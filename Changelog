@@ -1,3 +1,8 @@
+RD-2007-09-28-0: Bugfix:    fixed qdel exit code handling
+                 Bugster:   6610788
+                 Issue:     2375
+                 Review:    AA
+
 JG-2007-09-28-0: Bugfix:    Installation failed on Linux with glibc 2.6
                  Bugster:   6594665
                  Issue:     2352

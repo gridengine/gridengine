@@ -133,15 +133,8 @@ bool ar_validate(lListElem *ar, lList **alpp, bool in_master, bool is_spool)
 
    /*   AR_start_time, SGE_ULONG        */
    if ((start_time = lGetUlong(ar, AR_start_time)) == 0) {
-#if 1
       start_time = now;
       lSetUlong(ar, AR_start_time, start_time);
-#else
-      answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR ,
-                              MSG_AR_MISSING_VALUE_S, "start time");
-      goto ERROR;
-#endif
-
    }
 
    /*   AR_end_time, SGE_ULONG        */
@@ -185,10 +178,12 @@ bool ar_validate(lListElem *ar, lList **alpp, bool in_master, bool is_spool)
    
    if (in_master) {
       /*    AR_name, SGE_STRING */
+      NULL_OUT_NONE(ar, AR_name);
       if (object_verify_name(ar, alpp, AR_name, SGE_OBJ_AR)) {
          goto ERROR;
       }
       /*   AR_account, SGE_STRING */
+      NULL_OUT_NONE(ar, AR_account);
       if (!lGetString(ar, AR_account)) {
          lSetString(ar, AR_account, DEFAULT_ACCOUNT);
       } else {
@@ -200,6 +195,7 @@ bool ar_validate(lListElem *ar, lList **alpp, bool in_master, bool is_spool)
       /*   AR_verify, SGE_ULONG              just verify the reservation or final case */
       /*   AR_error_handling, SGE_ULONG      how to deal with soft and hard exceptions */
       /*   AR_checkpoint_name, SGE_STRING    Named checkpoint */
+      NULL_OUT_NONE(ar, AR_checkpoint_name);
       /*   AR_resource_list, SGE_LIST */
       {
          lList *master_centry_list = *object_base[SGE_TYPE_CENTRY].list;
@@ -231,6 +227,7 @@ bool ar_validate(lListElem *ar, lList **alpp, bool in_master, bool is_spool)
        
       
       /*   AR_pe, SGE_STRING,  AR_pe_range, SGE_LIST */
+      NULL_OUT_NONE(ar, AR_pe);
       {
          const char *pe_name = NULL;
          lList *pe_range = NULL;
@@ -250,15 +247,16 @@ bool ar_validate(lListElem *ar, lList **alpp, bool in_master, bool is_spool)
                goto ERROR;
             }
          }
-         /*   AR_acl_list, SGE_LIST */
-         if (userset_list_validate_access(lGetList(ar, AR_acl_list), ARA_name, alpp) != STATUS_OK) {
-            goto ERROR;
-         }
-         
-         /*   AR_xacl_list, SGE_LIST */
-         if (userset_list_validate_access(lGetList(ar, AR_xacl_list), ARA_name, alpp) != STATUS_OK) {
-            goto ERROR;
-         }
+      }
+
+      /*   AR_acl_list, SGE_LIST */
+      if (userset_list_validate_access(lGetList(ar, AR_acl_list), ARA_name, alpp) != STATUS_OK) {
+         goto ERROR;
+      }
+      
+      /*   AR_xacl_list, SGE_LIST */
+      if (userset_list_validate_access(lGetList(ar, AR_xacl_list), ARA_name, alpp) != STATUS_OK) {
+         goto ERROR;
       }
 
       if (is_spool) {

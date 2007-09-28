@@ -1,3 +1,14 @@
+RD-2007-09-28-0: Bugfix:    - fixed qrstat -ar for AR of different user
+                            - enhanced job scheduling for AR jobs to allow the
+                              request of non consumable resources
+                            - implemented qrstat default request file
+                 Bugfix:    - wc_ar_list is not explained in sge_types man page
+                            - fixed qrdel as admin for ARs of different user
+                            - fixed qdel exit code handling
+                 Bugster:   6597428, 6597549, 6610788
+                 Issue:     2376, 2377, 2375 
+                 Review:    AA
+
 JG-2007-09-28-0: Bugfix:    Installation failed on Linux with glibc 2.6
                  Bugster:   6594665
                  Issue:     2352

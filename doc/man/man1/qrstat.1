@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qrstat.1,v $     Last Update: $Date: 2007/06/20 07:28:53 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: qrstat.1,v $     Last Update: $Date: 2007/09/28 10:08:39 $     Revision: $Revision: 1.5 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,14 +30,14 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2007/06/20 07:28:53 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2007/09/28 10:08:39 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qrstat \- show the status of xxQS_NAMExx Advance Reservations (AR)
 .\"
 .\"
 .SH SYNTAX
 .B qrstat
-.B [\-ar ar_id]
+.B [\-ar ar_id,...]
 .B [\-help]
 .B [\-u user,...]
 .B [\-explain]
@@ -47,11 +47,21 @@ qrstat \- show the status of xxQS_NAMExx Advance Reservations (AR)
 .I qrstat
 shows the current status of the available xxQS_NAMExx ARs.
 The selection option \fB\-ar\fP allows you to get information about 
-specific AR. 
+specific AR.
+.PP
+The administrator and the user may define files
+which can contain any of the options described below. A cluster-wide sge_qrstat
+file may be placed under
+$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/sge_qrstat
+The user private  file is searched at the location
+$HOME/.sge_qrstat.
+The home directory request file has the highest precedence over
+the cluster global file.
+Command line can be used to override the flags contained in the files.
 .\"
 .SH OPTIONS
-.IP "\fB\-ar ar_id\fP"
-Prints various information about the AR identified by ar_id.
+.IP "\fB\-ar ar_id,...\fP"
+Prints various information about the ARs identified by given ar_id list.
 .\"
 .IP "\fB\-explain\fP"
 Displays the reason for the error state of an AR. Possible reasons 
@@ -151,6 +161,11 @@ service "sge_qmaster" instead to define that port.
 .ta \w'<xxqs_name_sxx_root>/     'u
 \fI<xxqs_name_sxx_root>/<cell>/common/act_qmaster\fP
 	xxQS_NAMExx master host file
+.ta \w'<xxqs_name_sxx_root>/     'u
+\fI<xxqs_name_sxx_root>/<cell>/common/xxqs_name_sxx_qrstat\fP
+	cluster qrstat default options
+\fI$HOME/.xxqs_name_sxx_qrstat\fP	
+	user qrstat default options
 .fi
 .\"
 .\"

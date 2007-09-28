@@ -68,6 +68,7 @@ int main(int argc, char *argv[]);
 /************************************************************************/
 int main(int argc, char **argv) {
    /* lListElem *rep, *nxt_rep, *jep, *aep, *jrep, *idep; */
+   int ret = 0;
    lListElem *aep, *idep;
    lList *jlp = NULL, *alp = NULL, *pcmdline = NULL, *ref_list = NULL, *user_list=NULL;
    u_long32 force = 0;
@@ -220,11 +221,15 @@ int main(int argc, char **argv) {
             for_each(aep, alp) {
                status = lGetUlong(aep, AN_status);
 
+               if (lGetUlong(aep, AN_quality) == ANSWER_QUALITY_ERROR) {
+                  ret = 1;
+               }
+
                if (delete_mode != 5 && 
                    ((first_try  && status != STATUS_OK_DOAGAIN) ||
                     (!first_try && status == STATUS_OK))) {
                   
-                  printf("%s\n", lGetString(aep, AN_text) );
+                  printf("%s\n", lGetString(aep, AN_text));
                   
                }
                /* but a job name might have extended to more than MAX_DELETE_JOBS */
@@ -268,8 +273,8 @@ int main(int argc, char **argv) {
    lFreeList(&ref_list);
    sge_prof_cleanup();
    sge_gdi2_shutdown((void**)&ctx);
-   SGE_EXIT((void**)&ctx, 0);
-   return 0;
+   SGE_EXIT((void**)&ctx, ret);
+   return ret;
 
 error_exit:
    lFreeList(&alp);

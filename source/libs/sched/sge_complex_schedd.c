@@ -169,7 +169,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
    if (config_attr) {
       lListElem *temp = lGetElemStr(config_attr, CE_name, attrname);
 
-      if(temp){ 
+      if (temp){ 
 
          cplx_el = lCopyElem(lGetElemStr(centry_list, CE_name, attrname));
          if(!cplx_el){

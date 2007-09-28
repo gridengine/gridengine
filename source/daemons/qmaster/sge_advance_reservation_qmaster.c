@@ -440,6 +440,8 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **master
       DRETURN(STATUS_EUNKNOWN);
    }
 
+   id_str = lGetString(ep, ID_str);
+   
    if ((user_list = lGetList(ep, ID_user_list)) != NULL) {
       lCondition *new_where = NULL;
       lListElem *user;
@@ -461,8 +463,8 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **master
             ar_where = lOrWhere(ar_where, new_where);
          }   
       }
-   } else {
-      /* if no userlist was requested only delete the own ars */
+   } else if (sge_is_pattern(id_str)) {
+      /* if no userlist and wildcard jobs was requested only delete the own ars */
       lCondition *new_where = NULL;
       new_where = lWhere("%T(%I p= %s)", AR_Type, AR_owner, ruser);
       if (ar_where == NULL) {
@@ -472,7 +474,7 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **master
       }   
    }
 
-   if (((id_str = lGetString(ep, ID_str)) != NULL) && (strcmp(id_str, "0") != 0)) {
+   if (id_str != NULL && (strcmp(id_str, "0") != 0)) {
       lCondition *new_where = NULL;
       if (isdigit(id_str[0])) {
          new_where = lWhere("%T(%I==%u)", AR_Type, AR_id, atol(id_str)); 
@@ -514,13 +516,12 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **master
 
       removed_one = true;
 
-      if (strcmp(ruser, lGetString(ar, AR_owner)) && !has_manager_privileges) {
-         WARNING((SGE_EVENT, MSG_DELETEPERMS_SSU,
+      if (!has_manager_privileges && strcmp(ruser, lGetString(ar, AR_owner))) {
+         ERROR((SGE_EVENT, MSG_DELETEPERMS_SSU,
                   ruser, SGE_OBJ_AR, sge_u32c(ar_id)));
-         answer_list_add(alpp, SGE_EVENT, STATUS_ENOTOWNER, ANSWER_QUALITY_WARNING);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ENOTOWNER, ANSWER_QUALITY_ERROR);
          continue;
       }
-
 
       sge_ar_state_set_deleted(ar);
 
@@ -1635,28 +1636,28 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
 
       lSetUlong(queue, QU_job_slots, slots);
 
-      if (slots > 1) {
+      {
          lListElem *cr;
          lListElem *new_cr;
          
          for_each(cr, lGetList(ar, AR_resource_list)) {
-            if (crl == NULL) {
-               crl = lCreateList("", CE_Type);
-            }
-            new_cr = lCopyElem(cr);
 
-            if (lGetBool(new_cr, CE_consumable) == true) {
+            if (lGetBool(cr, CE_consumable)) {
                double newval = lGetDouble(cr, CE_doubleval) * slots;
 
-               lSetDouble(new_cr, CE_doubleval, newval);
-               sge_dstring_sprintf(&buffer, "%f", lGetDouble(new_cr, CE_doubleval));
+               sge_dstring_sprintf(&buffer, "%f", newval);
+               new_cr = lCopyElem(cr);
                lSetString(new_cr, CE_stringval, sge_dstring_get_string(&buffer));
+               lSetDouble(new_cr, CE_doubleval, newval);
+
+               if (crl == NULL) {
+                  crl = lCreateList("", CE_Type);
+               }
+               lAppendElem(crl, new_cr);
             }
-            lAppendElem(crl, new_cr);
          }
-      } else {
-         crl = lCopyList("", lGetList(ar, AR_resource_list));
       }
+
       lSetList(queue, QU_consumable_config_list, crl);
       lAppendElem(queue_list, queue);
 

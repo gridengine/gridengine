@@ -40,6 +40,8 @@
 #define SGE_HOME_DEF_QQUOTA_FILE     ".sge_qquota"
 #define SGE_COMMON_DEF_AR_REQ_FILE   "common/sge_ar_request"
 #define SGE_HOME_DEF_AR_REQ_FILE     ".sge_ar_request"
+#define SGE_COMMON_DEF_QRSTAT_FILE   "common/sge_qrstat"
+#define SGE_HOME_DEF_QRSTAT_FILE     ".sge_qrstat"
 
 void opt_list_append_opts_from_default_files(u_long32 prog_number,
                                              const char* cell_root,

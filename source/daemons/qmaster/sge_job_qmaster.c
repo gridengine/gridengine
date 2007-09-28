@@ -191,7 +191,7 @@ static int deny_soft_consumables(lList **alpp, lList *srl, const lList *master_c
 
 static void job_list_filter(lList *user_list, const char* jobid, lCondition **job_filter);
 
-static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, const char *ruser, const char *rhost, lListElem *job, u_long32 *r_start, u_long32 *r_end, u_long32 *step, lList* ja_structure, int *alltasks, u_long32 *deleted_tasks, u_long32 start_time, monitoring_t *monitor, int forced);
+static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, const char *ruser, const char *rhost, lListElem *job, u_long32 *r_start, u_long32 *r_end, u_long32 *step, lList* ja_structure, int *alltasks, u_long32 *deleted_tasks, u_long32 start_time, monitoring_t *monitor, int forced, bool *deletion_time_reached);
 
 
 /* when this character is modified, it has also be modified
@@ -1022,6 +1022,7 @@ int sge_gdi_del_job(sge_gdi_ctx_class_t *ctx, lListElem *idep, lList **alpp, cha
    nxt = lFirst(master_job_list);
    while ((job=nxt)) {
       u_long32 job_number = 0;
+      bool deletion_time_reached = false;
 
       nxt = lNext(job);   
 
@@ -1041,7 +1042,11 @@ int sge_gdi_del_job(sge_gdi_ctx_class_t *ctx, lListElem *idep, lList **alpp, cha
       }
 
       njobs += sge_delete_all_tasks_of_job(ctx, alpp, ruser, rhost, job, &r_start, &r_end, &step, lGetList(idep, ID_ja_structure),
-               &alltasks, &deleted_tasks, start_time, monitor, lGetUlong(idep, ID_force));
+               &alltasks, &deleted_tasks, start_time, monitor, lGetUlong(idep, ID_force), &deletion_time_reached);
+
+      if (deletion_time_reached) {
+         DRETURN(STATUS_OK);
+      }
    }
 
    lFreeWhere(&job_where);
@@ -3808,7 +3813,7 @@ bool spool_delete_script(lList **answer_list, u_long32 jobid, lListElem *jep)
    DRETURN(ret);
 }
 
-static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, const char *ruser, const char *rhost, lListElem *job, u_long32 *r_start, u_long32 *r_end, u_long32 *step, lList* ja_structure, int *alltasks, u_long32 *deleted_tasks, u_long32 start_time, monitoring_t *monitor, int forced)
+static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, const char *ruser, const char *rhost, lListElem *job, u_long32 *r_start, u_long32 *r_end, u_long32 *step, lList* ja_structure, int *alltasks, u_long32 *deleted_tasks, u_long32 start_time, monitoring_t *monitor, int forced, bool *deletion_time_reached)
 {
    int njobs = 0;
    lListElem *rn;
@@ -4021,6 +4026,7 @@ static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, c
                   INFO((SGE_EVENT, MSG_JOB_DISCONTTASKTRANS_SUU, ruser,
                         sge_u32c(job_number), sge_u32c(task_number)));
                   answer_list_add(alpp, SGE_EVENT, STATUS_OK_DOAGAIN, ANSWER_QUALITY_INFO);
+                  *deletion_time_reached = true;
                   FREE(dupped_session);
                   lFreeList(&range_list);
                   DRETURN(njobs);
@@ -4077,6 +4083,7 @@ static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, c
          INFO((SGE_EVENT, MSG_JOB_DISCONTINUEDTRANS_SU, ruser, 
                sge_u32c(job_number)));
          answer_list_add(alpp, SGE_EVENT, STATUS_OK_DOAGAIN, ANSWER_QUALITY_INFO); 
+         *deletion_time_reached = true;
          FREE(dupped_session);
          lFreeList(&range_list);
          DRETURN(njobs);

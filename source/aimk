@@ -1077,7 +1077,7 @@ case FREEBSD_*:
    set LIBS     = "$LIBS -lkvm"
    set SHAREDLD = $CC
    set SHARED_CFLAGS = "-fPIC"
-   set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared -export-dynamic" 
+   set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared -export-dynamic"
    set AUTHLIBS = "-lcrypt -lpam"
    
    set XMTDEF   = ""

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2007/07/19 09:04:31 $     Revision: $Revision: 1.21 $
+.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2007/09/28 10:08:39 $     Revision: $Revision: 1.22 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2007/07/19 09:04:31 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2007/09/28 10:08:39 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .\"
 .SH NAME
 sge_types - xxQS_NAMExx type descriptions 
@@ -48,6 +48,8 @@ types is explained in this page.
 .\" qdomain           => wc_qdomain without expression
 .\" qinstance         => wc_qinstance without expression
 .\" range             := n[-m[:s]][,n[-m[:s]],...]
+.\" wc_ar             := ar_id|ar_name|pattern
+.\" wc_ar_list        := wc_ar[,wc_ar,...]
 .\" wc_host           := wildcard expression matching a host
 .\" wc_hostgroup      := wildcard expression matching a hostgroup
 .\" wc_job            := job-id|job-name|pattern
@@ -260,6 +262,19 @@ list of range specifiers n[-m[:s]]. The ranges are concatenated to the
 complete task id range. Each range may be a single number, a simple
 range of the form n-m or a range with a step size.
 .PP
+.SS "\fBwc_ar\fP"
+The wildcard advance reservation (AR) specification is a placeholder
+for AR ids, AR names including AR name patterns. An AR id always references one
+AR, while the name and pattern might reference multiple ARs.
+.sp 1
+wc_ar := ar_id | ar_name | pattern
+.PP
+.SS "\fBwc_ar_list\fP"
+The wildcard advance reservation (AR) list specification allows to reference
+multiple ARs with one command.
+.PP
+wc_ar_list := wc_ar [ , wc_ar , ...]
+.PP
 .SS "\fBwc_host\fP"
 A wildcard host specification (\fIwc_host\fP) is a 
 wildcard expression which might match one or more hosts used in the cluster.
@@ -295,8 +310,8 @@ e.g.
 .\"
 .SS "\fBwc_job\fP"
 The wildcard job specification is a placeholder for job ids, job names 
-include job name pattern. A job id always references one
-job, while the names and pattern might reference multiple jobs.
+including job name patterns. A job id always references one
+job, while the name and pattern might reference multiple jobs.
 .sp 1
 wc_job := job-id | job-name | pattern
 .PP

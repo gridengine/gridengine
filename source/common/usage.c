@@ -94,6 +94,10 @@ static char* get_argument_syntax(u_long32 prog_number, int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_AR_ID; 
      case OA_AR_ID_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_AR_ID_LIST; 
+     case OA_WC_AR:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_WC_AR; 
+     case OA_WC_AR_LIST:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_WC_AR_LIST; 
      case OA_JOB_IDENTIFIER_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_JOB_IDENTIFIER_LIST; 
      case OA_JOB_QUEUE_DEST:
@@ -204,10 +208,7 @@ FILE *fp
 
 
 
-void sge_usage(
-u_long32 prog_number,
-FILE *fp 
-) {
+void sge_usage(u_long32 prog_number, FILE *fp) {
 
   char namebuf[128];
   dstring ds;
@@ -312,17 +313,6 @@ FILE *fp
 
    if (VALID_OPT(Ahgrp_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_Ahgrp_OPT, MSG_GDI_UTEXT_Ahgrp_OPT);
-   }
-
-   if (VALID_OPT(ar_OPT, prog_number)) {
-      if (prog_number == QRSTAT) {
-         PRINTITD(MSG_GDI_USAGE_ar_list_OPT, MSG_GDI_UTEXT_ar_QRSTAT_OPT);
-         MARK(OA_AR_ID_LIST);
-         MARK(OA_AR_ID);
-      } else {
-         PRINTITD(MSG_GDI_USAGE_ar_OPT, MSG_GDI_UTEXT_ar_OPT);
-         MARK(OA_AR_ID);
-      }
    }
 
    if (VALID_OPT(arqs_OPT, prog_number)) {
@@ -1292,6 +1282,22 @@ FILE *fp
    if (VALID_OPT(verbose_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_verbose_OPT, MSG_GDI_UTEXT_verbose_OPT );
    }
+
+   if (VALID_OPT(ar_OPT, prog_number)) {
+      if (prog_number == QRSTAT) {
+         PRINTITD(MSG_GDI_USAGE_ar_list_OPT, MSG_GDI_UTEXT_ar_QRSTAT_OPT);
+         MARK(OA_AR_ID_LIST);
+         MARK(OA_AR_ID);
+      } else if (prog_number == QRDEL) {
+         PRINTITD(MSG_GDI_USAGE_wc_ar_list_OPT, MSG_GDI_UTEXT_wc_ar_list_OPT);
+         MARK(OA_WC_AR_LIST);
+         MARK(OA_WC_AR);
+      } else {
+         PRINTITD(MSG_GDI_USAGE_ar_OPT, MSG_GDI_UTEXT_ar_OPT);
+         MARK(OA_AR_ID);
+      }
+   }
+
 
    fprintf(fp, "\n");
    print_marked(prog_number, fp);

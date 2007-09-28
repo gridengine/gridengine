@@ -66,10 +66,15 @@
 #include "sgeobj/sge_str.h"
 
 #include "uti/sge_uidgid.h"
+#include "uti/sge_io.h"
+#include "uti/sge_string.h"
 
 #include "msg_common.h"
 
 extern char **environ;
+
+static bool
+sge_parse_from_file_qrstat(const char *file, lList **ppcmdline, lList **alpp);
 
 static bool 
 sge_parse_qrstat(lList **answer_list, qrstat_env_t *qrstat_env, lList **cmdline)
@@ -128,7 +133,7 @@ sge_parse_qrstat(lList **answer_list, qrstat_env_t *qrstat_env, lList **cmdline)
       }
    } 
 
-   {
+   if (qrstat_env->is_summary) {
       char  user[128] = "";
       if (sge_uid2user(geteuid(), user, sizeof(user), MAX_NIS_RETRIES)) {
          answer_list_add_sprintf(answer_list, STATUS_ESEMANTIC, ANSWER_QUALITY_CRITICAL, MSG_SYSTEM_RESOLVEUSER);
@@ -171,6 +176,29 @@ int main(int argc, char **argv) {
    /*
     * stage 1: commandline parsing
     */
+   {
+      dstring file = DSTRING_INIT;
+      const char *user = ctx->get_username(ctx);
+      const char *cell_root = ctx->get_cell_root(ctx);
+
+      /* arguments from SGE_ROOT/common/sge_qrstat file */
+      get_root_file_path(&file, cell_root, SGE_COMMON_DEF_QRSTAT_FILE);
+      if (sge_parse_from_file_qrstat(sge_dstring_get_string(&file), &pcmdline, &answer_list) == true) {
+         /* arguments from $HOME/.sge_qrstat file */
+         if (get_user_home_file_path(&file, SGE_HOME_DEF_QRSTAT_FILE, user, &answer_list)) {
+            sge_parse_from_file_qrstat(sge_dstring_get_string(&file), &pcmdline, &answer_list);
+         }
+      }
+      sge_dstring_free(&file); 
+
+      if (answer_list) {
+         answer_list_output(&answer_list);
+         lFreeList(&pcmdline);
+         sge_prof_cleanup();
+         SGE_EXIT((void**)&ctx, 1);
+      }
+   }
+
    answer_list = cull_parse_cmdline(QRSTAT, argv+1, environ, &pcmdline, FLG_USE_PSEUDOS);
    if (answer_list != NULL) {
       answer_list_output(&answer_list);
@@ -232,3 +260,38 @@ error_exit:
    DRETURN(1);
 }
 
+static bool
+sge_parse_from_file_qrstat(const char *file, lList **ppcmdline, lList **alpp)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "sge_parse_from_file_qrstat");
+
+   if (ppcmdline == NULL) {
+      ret = false;
+   } else {
+      if (!sge_is_file(file)) {
+         /*
+          * This is no error
+          */
+         DPRINTF(("file "SFQ" does not exist\n", file));
+      } else {
+         char *file_as_string = NULL;
+         int file_as_string_length;
+
+         file_as_string = sge_file2string(file, &file_as_string_length);
+         if (file_as_string == NULL) {
+            answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR,
+                                    MSG_ANSWER_ERRORREADINGFROMFILEX_S, file);
+            ret = false;
+         } else {
+            char **token = NULL;
+
+            token = stra_from_str(file_as_string, " \n\t");
+            *alpp = cull_parse_cmdline(QRSTAT, token, environ, ppcmdline, FLG_USE_PSEUDOS);
+         }
+      }
+   }  
+   DRETURN(ret); 
+}

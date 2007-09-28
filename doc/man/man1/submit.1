@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2007/06/18 10:40:22 $     Revision: $Revision: 1.69 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2007/09/28 10:08:39 $     Revision: $Revision: 1.70 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2007/06/18 10:40:22 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2007/09/28 10:08:39 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -372,7 +372,10 @@ The AR_id \fBAR_is\fP is required.
 Assigns the submitted job to be a part of an existing Advance Reservation. 
 The complete list of existing Advance Reservations can be obtained using the
 .M qrstat 1
-command. 
+command.
+.PP \fINote\fP, that the
+.I -ar
+option adds implicitly the \fB\-w e\fP option if not otherwise requested.
 .sp 1
 .I Qalter
 allows the AR_id of a pending job to be changed. 

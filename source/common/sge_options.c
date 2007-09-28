@@ -475,7 +475,7 @@ unsigned short sge_options[][ALL_OPT + 1] =
 /* drqs_OPT - delete resource quota set */
  {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 /* ar_OPT - advance reservation option */
- {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1},
+ {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1},
 /* he_OPT - ard error handling for qrsub */
  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1},
 /* explain_OPT - explain error in qrstat */ 

@@ -3238,18 +3238,55 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
       /* ar matching */
       if (ar_ep != NULL) {
          lListElem *ar_queue;
+         lListElem *rep;
+         dstring reason = DSTRING_INIT;
+
          ar_queue = lGetSubStr(ar_ep, QU_full_name, qname, AR_reserved_queues);
 
-         result = sequential_queue_time(&tt_queue, a, &queue_violations, ar_queue);
-         if (result != DISPATCH_OK) {
-            DPRINTF(("ar queue %s returned %d\n", qname, result));         
-            if (skip_queue_list) {
-               lAddElemStr(&skip_queue_list, CTI_name, lGetString(ar_queue, QU_full_name), CTI_Type);
+         /* we are only interested in the static complexes on queue/host level. These are tagged
+            in this function. The result doesn't matter */
+         for_each(rep, lGetList(a->job, JB_hard_resource_list)) {
+            const char *attrname = lGetString(rep, CE_name);
+            lListElem *cplx_el = lGetElemStr(a->centry_list, CE_name, attrname);
+
+            if (lGetBool(cplx_el, CE_consumable)) {
+               continue;
             }
-            best_queue_result = find_best_result(result, best_queue_result); 
-            continue;
+            sge_dstring_clear(&reason);
+            cplx_el = get_attribute_by_name(a->gep, hep, qep, attrname, a->centry_list, a->start, a->duration);
+            if (cplx_el == NULL) { 
+               result = DISPATCH_MISSING_ATTR;
+               sge_dstring_sprintf(&reason, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S, attrname);
+               break;
+            }
+
+            result = match_static_resource(1, rep, cplx_el, &reason, false, false, false);
+            lFreeElem(&cplx_el);
+            if (result != DISPATCH_OK) {
+               break;
+            }
+            lSetUlong(rep, CE_tagged, HOST_TAG); 
          }
-         tt_global = tt_host = tt_queue;
+         if (result != DISPATCH_OK) {
+            char buff[1024 + 1];
+            centry_list_append_to_string(lGetList(a->job, JB_hard_resource_list), buff, sizeof(buff) - 1);
+            if (*buff && (buff[strlen(buff) - 1] == '\n')) {
+               buff[strlen(buff) - 1] = 0;
+            }
+            schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNATHOST_SSS, buff,
+                  lGetHost(hep, EH_name), sge_dstring_get_string(&reason));
+         } else {
+            result = sequential_queue_time(&tt_queue, a, &queue_violations, ar_queue);
+            if (result != DISPATCH_OK) {
+               DPRINTF(("ar queue %s returned %d\n", qname, result));         
+               if (skip_queue_list) {
+                  lAddElemStr(&skip_queue_list, CTI_name, lGetString(ar_queue, QU_full_name), CTI_Type);
+               }
+               best_queue_result = find_best_result(result, best_queue_result); 
+               continue;
+            }
+            tt_global = tt_host = tt_queue;
+         }
       } else {
          queue_violations = global_violations;
 
@@ -3772,12 +3809,12 @@ parallel_tag_hosts_queues(sge_assignment_t *a, lListElem *hep, int *slots, int *
    int max_host_slots = a->slots;
    int accu_queue_slots, accu_queue_slots_qend;
    int qslots, qslots_qend;
-   int hslots = INT_MAX;
-   int hslots_qend = INT_MAX;
+   int hslots = 0;
+   int hslots_qend = 0;
    int host_soft_violations, queue_soft_violations;
    const char *cqname, *qname, *eh_name = lGetHost(hep, EH_name);
    lListElem *qep, *next_queue; 
-   dispatch_t result;
+   dispatch_t result = DISPATCH_OK;
    const void *queue_iterator = NULL;
    int allocation_rule; 
    
@@ -3793,6 +3830,45 @@ parallel_tag_hosts_queues(sge_assignment_t *a, lListElem *hep, int *slots, int *
 
    if (lGetUlong(a->job, JB_ar) == 0) {
       parallel_host_slots(a, &hslots, &hslots_qend, &host_soft_violations, hep, false);
+   } else {
+      lList *config_attr = lGetList(hep, EH_consumable_config_list);
+      lList *actual_attr = lGetList(hep, EH_resource_utilization);
+      lList *load_attr = lGetList(hep, EH_load_list);
+      lListElem *rep;
+      dstring reason = DSTRING_INIT;
+
+      for_each(rep, lGetList(a->job, JB_hard_resource_list)) {
+         const char *attrname = lGetString(rep, CE_name);
+         lListElem *cplx_el = lGetElemStr(a->centry_list, CE_name, attrname);
+
+         if (lGetBool(cplx_el, CE_consumable)) {
+            continue;
+         }
+         sge_dstring_clear(&reason);
+         cplx_el = get_attribute(attrname, config_attr, actual_attr, load_attr, a->centry_list, NULL,
+                  DOMINANT_LAYER_HOST, 0, &reason, false, DISPATCH_TIME_NOW, 0);
+         if (cplx_el != NULL) {
+            if (match_static_resource(1, rep, cplx_el, &reason, false, false, false) == DISPATCH_OK) {
+               lSetUlong(rep, CE_tagged, HOST_TAG); 
+            }
+            lFreeElem(&cplx_el);
+         }
+      }
+      sge_dstring_free(&reason);
+
+      {
+         lListElem *gdil_ep;
+         const void *iterator = NULL;
+         lListElem *ar = ar_list_locate(a->ar_list, lGetUlong(a->job, JB_ar));
+         lList *granted_list = lGetList(ar, AR_granted_slots);
+
+         for (gdil_ep = lGetElemHostFirst(granted_list, JG_qhostname, eh_name, &iterator); 
+              gdil_ep != NULL;
+              gdil_ep = lGetElemHostNext(granted_list, JG_qhostname, eh_name, &iterator)) {
+              hslots += lGetUlong(gdil_ep, JG_slots);
+         }
+         hslots_qend = hslots;
+      }
    }
 
    DPRINTF(("HOST %s itself (and queue threshold) will get us %d slots (%d later) ... "
@@ -4734,9 +4810,33 @@ parallel_queue_slots(sge_assignment_t *a, lListElem *qep, int *slots, int *slots
 
       if (ar_id != 0) {
          lListElem *ar_queue;
+         lListElem *rep;
          lList *ar_queue_config_attr;
          lList *ar_queue_actual_attr;
          lListElem *ar_ep = lGetElemUlong(a->ar_list, AR_id, ar_id);
+         dstring reason = DSTRING_INIT;
+
+         ar_queue_config_attr = lGetList(qep, QU_consumable_config_list);
+         ar_queue_actual_attr = lGetList(qep, QU_resource_utilization);
+
+         for_each(rep, lGetList(a->job, JB_hard_resource_list)) {
+            const char *attrname = lGetString(rep, CE_name);
+            lListElem *cplx_el = lGetElemStr(a->centry_list, CE_name, attrname);
+
+            if (lGetBool(cplx_el, CE_consumable)) {
+               continue;
+            }
+            sge_dstring_clear(&reason);
+            cplx_el = get_attribute(attrname, ar_queue_config_attr, ar_queue_actual_attr, NULL, a->centry_list, NULL,
+                     DOMINANT_LAYER_QUEUE, 0, &reason, false, DISPATCH_TIME_NOW, 0);
+            if (cplx_el != NULL) {
+               if (match_static_resource(1, rep, cplx_el, &reason, false, false, false) == DISPATCH_OK) {
+                  lSetUlong(rep, CE_tagged, PE_TAG); 
+               }
+               lFreeElem(&cplx_el);
+            }
+         }
+         sge_dstring_free(&reason);
 
          ar_queue = lGetSubStr(ar_ep, QU_full_name, qname, AR_reserved_queues);
          ar_queue_config_attr = lGetList(ar_queue, QU_consumable_config_list);

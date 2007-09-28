@@ -98,6 +98,8 @@ enum {
    OA_TIME,
    OA_AR_ID,
    OA_AR_ID_LIST,
+   OA_WC_AR_LIST,
+   OA_WC_AR,
 
    OA__END
 };

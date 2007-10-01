@@ -1,3 +1,7 @@
+HP-2007-10-01-0: Bugfix:    Fixed broken build after checkin AH-2007-09-28-0:
+                            Removed dependency to japi.1.0.o from qsub Makefile
+                 Changed:   clients/qsub/Makefile
+
 AH-2007-09-28-0: Bugfix:    Fix unneeded builds of JAPI targets due to 
                             AH-2007-09-27-0 by using japi.o instead of 
                             japi.1.0.o, drmaa.o instead of drmaa.1.0.o etc.

@@ -45,7 +45,7 @@ QSUB_ADD_SRC = parse_job_cull.c parse_qsub.c \
 
 QSUB_OBJS = $(QSUB_SRC:.c=.o)
 
-QSUB_ADD_OBJS = $(QSUB_ADD_SRC:.c=.o) japi.1.0.o
+QSUB_ADD_OBJS = $(QSUB_ADD_SRC:.c=.o) japi.o
 
 QSUB_ADD_LIBS = -levc -lgdi -lsgeobj -lsgeobjd  \
                 -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon \

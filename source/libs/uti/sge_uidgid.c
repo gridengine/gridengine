@@ -849,6 +849,8 @@ int get_pw_buffer_size(void)
 #ifdef _SC_GETPW_R_SIZE_MAX
    if ((sz = (int)sysconf(_SC_GETPW_R_SIZE_MAX)) == -1) {
       sz = buf_size;
+   } else {
+      sz = MAX(sz, buf_size);
    }
 #endif
 
@@ -885,6 +887,8 @@ int get_group_buffer_size(void)
 #ifdef _SC_GETGR_R_SIZE_MAX
    if ((sz = (int)sysconf(_SC_GETGR_R_SIZE_MAX)) == -1) {
       sz = buf_size;
+   } else {
+      sz = MAX(sz, buf_size);
    }
 #endif
 

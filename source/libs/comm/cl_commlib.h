@@ -48,6 +48,11 @@
 cl_raw_list_t* cl_com_get_host_list(void);
 cl_raw_list_t* cl_com_get_log_list(void);
 cl_raw_list_t* cl_com_get_endpoint_list(void);
+int cl_com_set_parameter_list_value(char* parameter, char* value);
+int cl_com_get_parameter_list_value(char* parameter, char** value);
+int cl_com_get_parameter_list_string(char** param_string);
+int cl_com_remove_parameter_list_value(char* parameter);
+int cl_com_update_parameter_list(char* parameter);
 
 /* application log functions */
 int cl_commlib_push_application_error(cl_log_t cl_err_type, int cl_error, const char* cl_info);

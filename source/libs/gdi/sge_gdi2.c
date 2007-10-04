@@ -530,20 +530,81 @@ static int sge_send_receive_gdi2_request(sge_gdi_ctx_class_t *ctx,
 
    strcpy(rcv_rhost, rhost);
    strcpy(rcv_commproc, rcommproc);
-   while (!(ret = sge_get_gdi2_request(ctx, commlib_error, rcv_rhost, rcv_commproc, 
-                                      &id, in, gdi_request_mid))) {
 
-      DPRINTF(("in: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
-            (*in)->request_id, (*in)->sequence_id, (*in)->target, (*in)->op));
-      DPRINTF(("out: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
-               out->request_id, out->sequence_id, out->target, out->op));
 
-      if (*in && ((*in)->request_id == out->request_id)) {
-         break;
-      } else {
-         *in = free_gdi_request(*in);
-         DPRINTF(("<<<<<<<<<<<<<<< GDI MISMATCH >>>>>>>>>>>>>>>>>>>\n"));
+   {
+      char* cl_ping = NULL;
+      char* gdi_retries = NULL;
+      int retries = 0;
+      int doit = 0;
+
+      cl_com_get_parameter_list_value("cl_ping", &cl_ping);
+      cl_com_get_parameter_list_value("gdi_retries", &gdi_retries);
+      if (gdi_retries != NULL) {
+         retries = atoi(gdi_retries);
+         retries++;
       }
+
+      if (retries <= 0) {
+         doit = retries - 2; 
+      } 
+
+      while (doit <= retries - 1) {
+
+         DPRINTF(("calling the sge_get_gdi2_request: %d times\n",retries));
+         DPRINTF(("retry: %d\n",doit));
+         ret = sge_get_gdi2_request(ctx, commlib_error, rcv_rhost, rcv_commproc, &id, in, gdi_request_mid);
+         if (ret == 0) {
+
+            DPRINTF(("in: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
+                  (*in)->request_id, (*in)->sequence_id, (*in)->target, (*in)->op));
+            DPRINTF(("out: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
+                     out->request_id, out->sequence_id, out->target, out->op));
+
+            if (*in && ((*in)->request_id == out->request_id)) {
+               break;
+            } else {
+               *in = free_gdi_request(*in);
+               DPRINTF(("<<<<<<<<<<<<<<< GDI MISMATCH >>>>>>>>>>>>>>>>>>>\n"));
+            }
+         } else {
+            if (*commlib_error == CL_RETVAL_SYNC_RECEIVE_TIMEOUT) {
+               cl_com_SIRM_t* cl_endpoint_status = NULL;
+               cl_com_handle_t* handle = NULL;
+
+               DPRINTF(("failed receiving gdi response. Commlib returned: "SFQ"\n", cl_get_error_text(*commlib_error)));
+               handle = ctx->get_com_handle(ctx);
+
+               DPRINTF(("gdi timeout is set to: %d\n", handle->synchron_receive_timeout));
+               DPRINTF(("cl_ping: %s\n", cl_ping));
+              
+               if (strncasecmp(cl_ping, "true", sizeof("true")-1) == 0 && strlen(cl_ping) == sizeof("true")-1) {
+                  DPRINTF(("sending qping to commlib!\n"));
+                  cl_commlib_get_endpoint_status(handle, rcv_rhost, rcv_commproc, id, &cl_endpoint_status);
+
+                  if (cl_endpoint_status->application_status != 0) {
+                     DPRINTF(("qmaster status is not ok!\n"));
+                     DPRINTF(("some qmaster threads may have crashed or overloaded\n"));
+                  } else {
+                     DPRINTF(("qmaster application status is ok. qmaster is working.\n"));
+                     DPRINTF(("commlib seems to be ok, but commlib returned: "SFQ"\n", cl_get_error_text(*commlib_error)));
+                  }
+                  DPRINTF(("Message Number: %d\n", cl_endpoint_status->application_messages_brm));
+                  DPRINTF(("Application Status: %d\n", cl_endpoint_status->application_status));
+                  DPRINTF(("The qmaster seems to be overloaded!!!!!\n"));
+                  DPRINTF(("Setting a higher timeout or raise the number of retires may solve this problem\n"));
+                  cl_com_free_sirm_message(&cl_endpoint_status);
+               }
+            } else {
+               break;
+            }
+         }
+         if (retries > 0) {
+            doit++;
+         } 
+      }
+      free(cl_ping);
+      free(gdi_retries);
    }
 
    if (ret) {
@@ -708,7 +769,11 @@ static int sge_get_gdi2_request_async(sge_gdi_ctx_class_t *ctx,
 
    DENTER(GDI_LAYER, "sge_get_gdi2_request_async");
    
+   DPRINTF(("sge_gdi2_get_any_request starting ...\n"));
    if ((*commlib_error = sge_gdi2_get_any_request(ctx, rhost, rcommproc, id, &pb, &tag, is_sync, request_mid,0)) != CL_RETVAL_OK) {
+      DPRINTF(("sge_gdi2_get_any_request returned: "SFQ"\n", cl_get_error_text(*commlib_error)));
+      DPRINTF(("sge_gdi2_get_any_request returning with error -1\n"));
+
       DRETURN(-1);
    }
 
@@ -1028,19 +1093,78 @@ gdi2_receive_multi_async(sge_gdi_ctx_class_t* ctx, sge_gdi_request **answer, lLi
       /* nothing todo... */
       DRETURN(true);
    }
-   
-   /* receive answer */
-   while (!(ret = sge_get_gdi2_request_async(ctx, &commlib_error, rcv_rhost, rcv_commproc, &id ,answer, gdi_request_mid, is_sync))) {
-      DPRINTF(("in: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
-            (*answer)->request_id, (*answer)->sequence_id, (*answer)->target, (*answer)->op));
-      DPRINTF(("out: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
-               state->first->request_id, state->first->sequence_id, state->first->target, state->first->op));
+  
+   {
+      char* cl_ping = NULL;
+      char* gdi_retries = NULL;
+      int retries = 0;
+      int doit = 0; 
 
-      if (*answer && ((*answer)->request_id == state->first->request_id)) {
-         break;
-      } else {
-         *answer = free_gdi_request(*answer);
-         DPRINTF(("<<<<<<<<<<<<<<< GDI MISMATCH >>>>>>>>>>>>>>>>>>>\n"));
+      cl_com_get_parameter_list_value("cl_ping", &cl_ping);
+      cl_com_get_parameter_list_value("gdi_retries", &gdi_retries);
+      retries = atoi(gdi_retries);
+      retries++;
+
+      if (retries <= 0) {
+         doit = retries - 2;
+      }
+
+      /* receive answer */
+      while (doit <= retries - 1) {
+
+         DPRINTF(("calling the sge_get_gdi2_request_async: %d times\n",retries));
+         DPRINTF(("retry: %d\n",doit));
+         ret = sge_get_gdi2_request_async(ctx, &commlib_error, rcv_rhost, rcv_commproc, &id ,answer, gdi_request_mid, is_sync);
+         if (ret == 0) {
+
+            DPRINTF(("in: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
+                  (*answer)->request_id, (*answer)->sequence_id, (*answer)->target, (*answer)->op));
+            DPRINTF(("out: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
+                     state->first->request_id, state->first->sequence_id, state->first->target, state->first->op));
+            if (*answer && ((*answer)->request_id == state->first->request_id)) {
+               break;
+            } else {
+               *answer = free_gdi_request(*answer);
+               DPRINTF(("<<<<<<<<<<<<<<< GDI MISMATCH >>>>>>>>>>>>>>>>>>>\n"));
+            }
+         } else {
+            if (commlib_error == CL_RETVAL_SYNC_RECEIVE_TIMEOUT) {
+               cl_com_SIRM_t* cl_endpoint_status = NULL;
+               cl_com_handle_t* handle = NULL;
+
+               DPRINTF(("failed receiving gdi response. Commlib returned: "SFQ"\n", cl_get_error_text(commlib_error)));
+               handle = ctx->get_com_handle(ctx);
+
+               DPRINTF(("gdi timeout is set to: %d\n", handle->synchron_receive_timeout));
+               DPRINTF(("cl_ping: %s\n", cl_ping));
+
+               if (strncasecmp(cl_ping, "true", sizeof("true")-1) == 0 && strlen(cl_ping) == sizeof("true")-1) {
+                  DPRINTF(("sending qping to commlib!\n"));
+                  cl_commlib_get_endpoint_status(handle, rcv_rhost, rcv_commproc, id, &cl_endpoint_status);
+
+                  if (cl_endpoint_status->application_status != 0) {
+                     DPRINTF(("qmaster status is not ok!\n"));
+                     DPRINTF(("some qmaster threads may have crashed or overloaded\n"));
+                  } else {
+                     DPRINTF(("qmaster application status is ok. qmaster is working.\n"));
+                     DPRINTF(("commlib seems to be ok, but commlib returned: "SFQ"\n", cl_get_error_text(commlib_error)));
+                     DPRINTF(("Qmaster status not ok\n"));
+                  }
+                  DPRINTF(("Message Number: %d\n", cl_endpoint_status->application_messages_brm));
+                  DPRINTF(("Application Status: %d\n", cl_endpoint_status->application_status));
+                  DPRINTF(("The qmaster seems to be overloaded!!!!!\n"));
+                  DPRINTF(("Setting a higher timeout or raise the number of retires may solve this problem\n"));
+                  cl_com_free_sirm_message(&cl_endpoint_status);
+               }
+            } else {
+               break;
+            }
+         }
+         if (retries > 0) {
+            doit++;
+         }
+         free(cl_ping);
+         free(gdi_retries);
       }
    }
   
@@ -1066,6 +1190,7 @@ gdi2_receive_multi_async(sge_gdi_ctx_class_t* ctx, sge_gdi_request **answer, lLi
                                       cl_get_error_text(commlib_error)));
             }
          } else {
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, "sge_get_gdi2_request_async: error returned\n"));
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_RECEIVEGDIREQUESTFAILED));
          }
 #ifdef NEW_GDI_STATE

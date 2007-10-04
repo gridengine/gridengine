@@ -38,6 +38,7 @@
 #include <sys/resource.h>
 #include <errno.h>
 #include "sge_arch.h"
+#include "sge_string.h"
 
 
 #include "cl_commlib.h"
@@ -49,6 +50,7 @@
 #include "cl_endpoint_list.h"
 #include "cl_application_error_list.h"
 #include "cl_host_alias_list.h"
+#include "cl_parameter_list.h"
 #include "cl_communication.h"
 #include "cl_tcp_framework.h"
 #include "cl_ssl_framework.h"
@@ -161,6 +163,13 @@ static cl_raw_list_t*  cl_com_thread_list = NULL;
 static pthread_mutex_t cl_com_application_error_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 static cl_raw_list_t*  cl_com_application_error_list = NULL;
 
+/* cl_com_parameter_list
+ * =========================
+ *
+ * Each entry in this list is a parameter out 
+   the qmaster params */
+static pthread_mutex_t cl_com_parameter_list_mutex = PTHREAD_MUTEX_INITIALIZER;
+static cl_raw_list_t* cl_com_parameter_list = NULL;
 
 
 /* global flags/variables */
@@ -275,6 +284,166 @@ int cl_com_set_status_func(cl_app_status_func_t status_func) {
    return CL_RETVAL_OK;
 }
 
+
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_get_parameter_list_value()"
+int cl_com_get_parameter_list_value(char* parameter, char** value) 
+{
+   cl_parameter_list_elem_t* elem = NULL;
+   int retval = CL_RETVAL_UNKNOWN_PARAMETER;
+
+   if (parameter == NULL || value == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   if (*value != NULL) {
+      return CL_RETVAL_PARAMS; 
+   }
+
+   pthread_mutex_lock(&cl_com_parameter_list_mutex);
+   cl_raw_list_lock(cl_com_parameter_list);
+   elem = cl_parameter_list_get_first_elem(cl_com_parameter_list);
+   while (elem != NULL) { 
+      if (strcmp(elem->parameter,parameter) == 0) {
+         /* found matching element */
+         *value = strdup(elem->value);
+         if (*value == NULL) {
+            retval = CL_RETVAL_MALLOC;
+         } else {
+            retval = CL_RETVAL_OK;
+         }
+         break;
+      }
+      elem = cl_parameter_list_get_next_elem(elem);
+   }
+   cl_raw_list_unlock(cl_com_parameter_list);
+   pthread_mutex_unlock(&cl_com_parameter_list_mutex);
+   return retval;
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_get_parameter_list_string()"
+int cl_com_get_parameter_list_string(char** param_string) {
+   int retval = CL_RETVAL_UNKNOWN_PARAMETER;
+
+   if (*param_string != NULL) {
+      return CL_RETVAL_PARAMS; 
+   }
+
+   pthread_mutex_lock(&cl_com_parameter_list_mutex);
+   cl_raw_list_lock(cl_com_parameter_list);
+   retval = cl_parameter_list_get_param_string(cl_com_parameter_list, param_string, 0);
+   cl_raw_list_unlock(cl_com_parameter_list);
+   pthread_mutex_unlock(&cl_com_parameter_list_mutex);
+   return retval;
+}
+
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_set_parameter_list_value()"
+int cl_com_set_parameter_list_value(char* parameter, char* value) {
+   cl_parameter_list_elem_t* elem = NULL;
+   int retval = CL_RETVAL_UNKNOWN_PARAMETER;
+
+   if (parameter == NULL || value == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+
+   pthread_mutex_lock(&cl_com_parameter_list_mutex);
+
+   cl_raw_list_lock(cl_com_parameter_list);
+   elem = cl_parameter_list_get_first_elem(cl_com_parameter_list);
+   while (elem != NULL) { 
+      if (strcmp(elem->parameter,parameter) == 0 ) {
+         /* found matching element */
+         free(elem->value);
+         elem->value = strdup(value);
+         if (elem->value == NULL) {
+            retval = CL_RETVAL_MALLOC;
+         } else {
+            retval = CL_RETVAL_OK;
+         }
+      }
+      elem = cl_parameter_list_get_next_elem(elem);
+   }
+   if (retval == CL_RETVAL_UNKNOWN_PARAMETER) {
+     retval = cl_parameter_list_append_parameter(cl_com_parameter_list, parameter, value, 0); 
+   }
+   cl_raw_list_unlock(cl_com_parameter_list);
+   pthread_mutex_unlock(&cl_com_parameter_list_mutex);
+   return retval;
+}
+
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_remove_parameter_list_value()"
+int cl_com_remove_parameter_list_value(char* parameter) {
+   int retval = CL_RETVAL_OK;
+   pthread_mutex_lock(&cl_com_parameter_list_mutex);
+   retval = cl_parameter_list_remove_parameter(cl_com_parameter_list, parameter,1);
+   pthread_mutex_unlock(&cl_com_parameter_list_mutex);
+   return retval;
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_update_parameter_list()"
+int cl_com_update_parameter_list(char* parameter) {
+   int retval = CL_RETVAL_OK;
+   const char* param_token = NULL;
+   struct saved_vars_s* context = NULL;
+
+   cl_com_set_parameter_list_value("gdi_timeout", "60");
+   cl_com_set_parameter_list_value("gdi_retries", "0");
+   cl_com_set_parameter_list_value("cl_ping", "false");
+
+   /*begin to parse*/
+
+   param_token = sge_strtok_r(parameter, ",; ", &context);
+
+   /*overriding the default values with values found in qmaster_params*/
+   while (param_token != NULL) {
+      if (strstr(param_token, "gdi_timeout") || strstr(param_token, "gdi_retries") || strstr(param_token, "cl_ping")) {
+         char* sub_token1 = NULL;
+         char* sub_token2 = NULL;
+         struct saved_vars_s* context2 = NULL;
+         sub_token1 = sge_strtok_r(param_token, "=", &context2);
+         sub_token2 = sge_strtok_r(NULL, "=", &context2);
+
+         if (sub_token2 != NULL) {    
+            if (strstr(sub_token1, "gdi_timeout") || strstr(sub_token1, "gdi_retries")) {
+               if (sge_str_is_number(sub_token2)) {
+                  cl_com_set_parameter_list_value(sub_token1, sub_token2);
+               }
+            } else {
+               if (strstr(sub_token1, "cl_ping")) {
+                  if ((strncasecmp(sub_token2, "true", sizeof("true")-1) == 0 && 
+                       strlen(sub_token2) == sizeof("true")-1) || 
+                      ((strncasecmp(sub_token2, "false", sizeof("false")-1) == 0) && 
+                       strlen(sub_token2) == sizeof("false")-1)){
+                     cl_com_set_parameter_list_value(sub_token1, sub_token2);
+                  }
+               }
+            }
+         }
+         sge_free_saved_vars(context2);
+      }
+     param_token = sge_strtok_r(NULL, ",; ", &context); 
+   }
+   sge_free_saved_vars(context);
+   return retval;
+}
 
 
 /* The only errors supported by error func calls are:
@@ -584,6 +753,18 @@ int cl_com_setup_commlib( cl_thread_mode_t t_mode, cl_log_t debug_level , cl_log
    }
    pthread_mutex_unlock(&cl_com_endpoint_list_mutex);
 
+   /* setup global parameter list */
+   pthread_mutex_lock(&cl_com_parameter_list_mutex);
+   if (cl_com_parameter_list == NULL) {
+      ret_val = cl_parameter_list_setup(&cl_com_parameter_list, "global_parameter_list");
+      if (cl_com_parameter_list == NULL) {
+         pthread_mutex_unlock(&cl_com_parameter_list_mutex);
+         cl_com_cleanup_commlib();
+         return ret_val;
+      }
+   }
+   pthread_mutex_unlock(&cl_com_parameter_list_mutex);
+
    /* setup global thread list */
    pthread_mutex_lock(&cl_com_thread_list_mutex);
    switch(cl_com_create_threads) {
@@ -703,6 +884,11 @@ int cl_com_cleanup_commlib(void) {
    pthread_mutex_lock(&cl_com_host_list_mutex);
    cl_host_list_cleanup(&cl_com_host_list);
    pthread_mutex_unlock(&cl_com_host_list_mutex);
+
+   CL_LOG(CL_LOG_INFO,"cleanup parameter list ...");
+   pthread_mutex_lock(&cl_com_parameter_list_mutex);
+   cl_parameter_list_cleanup(&cl_com_parameter_list);
+   pthread_mutex_unlock(&cl_com_parameter_list_mutex);
 
    CL_LOG(CL_LOG_INFO,"cleanup ssl framework configuration object ...");
    cl_com_ssl_framework_cleanup(); 
@@ -6559,6 +6745,20 @@ cl_commlib_send_message(cl_com_handle_t* handle, char *un_resolved_hostname,
       CL_LOG_INT(CL_LOG_INFO,"message acknowledge expected, waiting for ack", (int)my_mid);
       return_value = cl_commlib_check_for_ack(handle, receiver.comp_host, component_name, component_id, my_mid, CL_TRUE);
       free(unique_hostname);
+
+      {
+         char* gdi_timeout = NULL;
+         int timeout = 0;
+         int retval = 0;
+         retval = cl_com_get_parameter_list_value("gdi_timeout", &gdi_timeout);
+         if (retval != CL_RETVAL_OK || gdi_timeout == NULL) {
+            cl_com_set_synchron_receive_timeout(handle, 60);
+         } else {
+            timeout = atoi(gdi_timeout);
+            cl_com_set_synchron_receive_timeout(handle, timeout);
+            free(gdi_timeout);
+         }
+      }
    }
    return return_value;
 }

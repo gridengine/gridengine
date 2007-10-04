@@ -258,6 +258,12 @@ extern int main(int argc, char** argv)
   }
   cl_com_setup_commlib(CL_RW_THREAD, log_level, NULL );
 
+
+  cl_com_set_parameter_list_value("parameter1","value1");
+  cl_com_set_parameter_list_value("parameter2","value2");
+  cl_com_set_parameter_list_value("parameter3","value3");
+  cl_com_set_parameter_list_value("parameter4","value4");
+
   cl_com_set_alias_file("./alias_file");
 
   cl_com_set_status_func(my_application_status); 

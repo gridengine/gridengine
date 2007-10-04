@@ -1,3 +1,10 @@
+MD-2007-10-04-0: Bugfix:    clients should issue a more explicit error 
+                            message when qmaster is busy
+                 Bugster:   6469494
+                 Issue:     2372
+                 Changed:   commlib, gdi, spooling 
+                 Review:    JG
+
 RD-2007-09-28-0: Bugfix:    fixed qdel exit code handling
                  Bugster:   6610788
                  Issue:     2375

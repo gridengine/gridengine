@@ -225,6 +225,15 @@ sge_event_spool(sge_gdi_ctx_class_t *ctx,
    dstring buffer = DSTRING_INIT;
    bool job_spooling = ctx->get_job_spooling(ctx);
 
+   if (getenv("SGE_TEST_SPOOLING_WAIT_TIME_US") != NULL) {
+      static unsigned long sleep_time = 0;
+      if (sleep_time == 0) {
+         sleep_time = atoi(getenv("SGE_TEST_SPOOLING_WAIT_TIME_US"));
+      }
+      usleep(sleep_time);
+      sleep_time = sleep_time + 100000;
+   }
+
    switch (event) {
       case sgeE_ADMINHOST_LIST:
       case sgeE_ADMINHOST_ADD:

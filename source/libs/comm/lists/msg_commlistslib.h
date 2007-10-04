@@ -160,5 +160,6 @@
 #define MSG_CL_RETVAL_SSL_CANT_SET_CERT_PEM_BYTE       _MESSAGE(80122, _("can't set certificate bytes"))
 #define MSG_CL_RETVAL_SSL_SET_CERT_PEM_BYTE_IS_NULL    _MESSAGE(80123, _("certificate bytes are NULL"))
 #define MSG_CL_RETVAL_SSL_CANT_SET_KEY_PEM_BYTE        _MESSAGE(80124, _("can't set key bytes"))
+#define MSG_CL_RETVAL_UNKNOWN_PARAMETER                _MESSAGE(80125, _("parameter not found"))
 
 #endif /* __MSG_COMMLISTSLIB_H */

@@ -245,7 +245,7 @@ spool_startup_context(lList **answer_list, lListElem *context, bool check)
       lListElem *rule, *type;
 
       /* each type needs at least one rule and exactly one default rule */
-      for_each (type, lGetList(context, SPC_types)) {
+      for_each(type, lGetList(context, SPC_types)) {
          lListElem *type_rule;
          int default_rules = 0;
          
@@ -1221,15 +1221,15 @@ spool_write_object(lList **answer_list, const lListElem *context,
                                           lGetString(rule, SPR_name), 
                                           lGetString(context, SPC_name),
                                           SGE_FUNC);
-                         ret = false;
+                   ret = false;
                } else {
-                  if(!func(answer_list, type, rule, object, key, object_type)) {
+                  if (!func(answer_list, type, rule, object, key, object_type)) {
                      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                              ANSWER_QUALITY_WARNING, 
                                              MSG_SPOOL_RULEINCONTEXTFAILEDWRITING_SS,
                                              lGetString(rule, SPR_name), 
                                              lGetString(context, SPC_name));
-                     ret = false;
+                      ret = false;
                   }
                }
             }
@@ -1410,4 +1410,3 @@ spool_compare_objects(lList **answer_list, const lListElem *context,
 
    DRETURN(ret);
 }
-

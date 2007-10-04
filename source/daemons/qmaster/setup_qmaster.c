@@ -107,6 +107,7 @@
 #include "spool/sge_spooling.h"
 #include "sgeobj/sge_resource_quota.h"
 #include "sge_resource_quota_qmaster.h"
+#include "uti/sge_string.h"
 
 static void   process_cmdline(char**);
 static lList* parse_cmdline_qmaster(char**, lList**);
@@ -594,6 +595,7 @@ static void qmaster_init(sge_gdi_ctx_class_t *ctx, char **anArgv)
 static void communication_setup(sge_gdi_ctx_class_t *ctx)
 {
    cl_com_handle_t* com_handle = NULL;
+   char* qmaster_params = NULL;
 #if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
    struct rlimit64 qmaster_rlimits;
 #else
@@ -667,6 +669,14 @@ static void communication_setup(sge_gdi_ctx_class_t *ctx)
 
    cl_commlib_set_connection_param(cl_com_get_handle(prognames[QMASTER], 1), HEARD_FROM_TIMEOUT, mconf_get_max_unheard());
 
+   /*fetching qmaster_params and begin to parse*/
+   qmaster_params = mconf_get_qmaster_params();
+
+   /*updateing the commlib paramterlist with new or changed parameters*/
+   cl_com_update_parameter_list(qmaster_params);
+
+   DPRINTF(("received qmaster_params are: %s\n", qmaster_params));
+   
    DEXIT;
    return;
 } /* communication_setup() */

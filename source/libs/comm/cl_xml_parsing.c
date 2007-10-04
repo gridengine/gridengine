@@ -162,7 +162,7 @@ int cl_com_transformXML2String(const char* input, char** output) {
                   (*output)[pos++] = cl_com_sequence_array[s].character;
                   i += cl_com_sequence_array[s].sequence_length - 1;
                   matched = 1;
-                  break;;
+                  break;
                }
             }
             if (matched == 1) {
@@ -455,12 +455,13 @@ int cl_com_free_crm_message(cl_com_CRM_t** message) {   /* CR check */
    if (*message == NULL) {
       return CL_RETVAL_PARAMS;
    }
-   free( (*message)->version );
-   free( (*message)->cs_text );
-   free( (*message)->formats );
-   cl_com_free_endpoint( &( (*message)->src )  );
-   cl_com_free_endpoint( &( (*message)->dst )  );
-   cl_com_free_endpoint( &( (*message)->rdata )  );
+   free((*message)->version);
+   free((*message)->cs_text);
+   free((*message)->formats);
+   cl_com_free_endpoint(&((*message)->src));
+   cl_com_free_endpoint(&((*message)->dst));
+   cl_com_free_endpoint(&((*message)->rdata));
+   free((*message)->params);
    free(*message);
    *message = NULL;
    return CL_RETVAL_OK;
@@ -1019,6 +1020,8 @@ int cl_xml_parse_CRM(unsigned char* buffer, unsigned long buffer_length, cl_com_
    unsigned long dst_end = 0;
    unsigned long rdata_begin = 0;
    unsigned long rdata_end = 0;
+   unsigned long params_begin = 0;
+   unsigned long params_end = 0;
 
 
    if (message == NULL || buffer == NULL ) {
@@ -1088,6 +1091,11 @@ int cl_xml_parse_CRM(unsigned char* buffer, unsigned long buffer_length, cl_com_
                   buf_pointer++;
                   continue;
                }
+               if (strcmp(help_buf,"/params") == 0) {
+                  params_end = buf_pointer - 9;
+                  buf_pointer++;
+                  continue;
+               }
 
                if (strncmp(help_buf,"cs", 2) == 0 && cs_begin == 0) {
                   cs_begin = tag_begin;
@@ -1107,6 +1115,12 @@ int cl_xml_parse_CRM(unsigned char* buffer, unsigned long buffer_length, cl_com_
                }
                if (strncmp(help_buf,"rdata", 5) == 0 && rdata_begin == 0) {
                   rdata_begin = tag_begin;
+                  buf_pointer++;
+                  continue;
+               }
+               if (strncmp(help_buf,"params", 6) == 0 && params_begin == 0) {
+                  params_begin = tag_begin;
+                  params_begin = params_begin + 7;
                   buf_pointer++;
                   continue;
                }
@@ -1388,6 +1402,18 @@ int cl_xml_parse_CRM(unsigned char* buffer, unsigned long buffer_length, cl_com_
       (*message)->rdata->comp_id = cl_util_get_ulong_value(help_buf);
    }
 
+   /* get env params */
+   if (params_begin > 0 && params_end > 0 && params_end >= params_begin) {
+      i = params_begin;
+      help_buf_pointer = 0;
+      while(i<=params_end && help_buf_pointer < 254) {
+         help_buf[help_buf_pointer++] = buffer[i];
+         i++;
+      }
+      help_buf[help_buf_pointer] = 0;
+      (*message)->params = strdup(help_buf);
+   }
+
    (*message)->formats = strdup("not supported");
 #if CL_DO_XML_DEBUG
    CL_LOG_STR(CL_LOG_DEBUG,"version:     ", (*message)->version);
@@ -1403,6 +1429,7 @@ int cl_xml_parse_CRM(unsigned char* buffer, unsigned long buffer_length, cl_com_
    CL_LOG_STR(CL_LOG_DEBUG,"rdata->host: ", (*message)->rdata->comp_host);
    CL_LOG_STR(CL_LOG_DEBUG,"rdata->comp: ", (*message)->rdata->comp_name);
    CL_LOG_INT(CL_LOG_DEBUG,"rdata->id:   ", (int)(*message)->rdata->comp_id);
+   CL_LOG_STR(CL_LOG_DEBUG,"params:      ", (*message)->params);
 #endif
 
    return CL_RETVAL_OK;
@@ -1635,8 +1662,9 @@ int cl_xml_parse_MIH(unsigned char* buffer, unsigned long buffer_length, cl_com_
          help_buf[help_buf_pointer++] = buffer[i];
       }
       help_buf[help_buf_pointer] = 0;
-      
-      while(while_helper) {
+
+      /*MD: ToDO: This is not a "while case". Compiler will print a warning message*/
+      while (while_helper) {
          if (strcmp(CL_MIH_MESSAGE_DATA_FORMAT_BIN,help_buf) == 0) {
             (*message)->df = CL_MIH_DF_BIN;
             break;
@@ -1665,8 +1693,6 @@ int cl_xml_parse_MIH(unsigned char* buffer, unsigned long buffer_length, cl_com_
             (*message)->df = CL_MIH_DF_SIRM;
             break;
          }
-
-
          break;
       }
    }
@@ -1678,7 +1704,8 @@ int cl_xml_parse_MIH(unsigned char* buffer, unsigned long buffer_length, cl_com_
       }
       help_buf[help_buf_pointer] = 0;
 
-      while(while_helper) {
+      /*MD: ToDO: This is not a "while case". Compiler will print a warning message*/
+      while (while_helper) {
          if (strcmp(CL_MIH_MESSAGE_ACK_TYPE_NAK,help_buf) == 0) {
             (*message)->mat = CL_MIH_MAT_NAK;
             break;
@@ -1705,7 +1732,7 @@ int cl_xml_parse_MIH(unsigned char* buffer, unsigned long buffer_length, cl_com_
    CL_LOG_INT(CL_LOG_DEBUG,"rid:     ", (int)(*message)->rid);
 #endif
 
-   if ( (*message)->dl > CL_DEFINE_MAX_MESSAGE_LENGTH ) {
+   if ((*message)->dl > CL_DEFINE_MAX_MESSAGE_LENGTH) {
       return CL_RETVAL_MAX_MESSAGE_LENGTH_ERROR; 
    }
 

@@ -321,6 +321,7 @@ int sge_mod_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aConf, lList **an
       lListElem *local = NULL;
       lListElem *global = NULL;
       lList *answer_list = NULL;
+      char* qmaster_params = NULL;
       int accounting_flush_time = mconf_get_accounting_flush_time();
 
       if ((local = sge_get_configuration_for_host(qualified_hostname)) == NULL) {
@@ -351,6 +352,12 @@ int sge_mod_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aConf, lList **an
 
       /* 'max_unheard' may have changed */
       cl_commlib_set_connection_param(cl_com_get_handle("qmaster", 1), HEARD_FROM_TIMEOUT, mconf_get_max_unheard());
+
+      /*fetching qmaster_params and begin to parse*/
+      qmaster_params = mconf_get_qmaster_params();
+
+      /*updateing the commlib paramterlist and gdi_timeout with new or changed parameters*/
+      cl_com_update_parameter_list(qmaster_params);
    }
     
    /* invalidate configuration cache */
@@ -359,10 +366,8 @@ int sge_mod_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aConf, lList **an
    DRETURN(STATUS_OK);
 }
    
-static int check_config(
-lList **alpp,
-lListElem *conf 
-) {
+static int check_config(lList **alpp, lListElem *conf)
+{
    lListElem *ep;
    const char *name, *value;
    const char *conf_name;

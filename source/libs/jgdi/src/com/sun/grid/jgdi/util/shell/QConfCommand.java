@@ -49,6 +49,8 @@ import com.sun.grid.jgdi.util.shell.editor.EditorParser;
 import com.sun.grid.jgdi.util.shell.editor.GEObjectEditor;
 import java.beans.IntrospectionException;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -113,9 +115,11 @@ public class QConfCommand extends QConfCommandGenerated {
 
     @OptionAnnotation(value = "-ds", extra = MAX_ARG_VALUE)
     public void deleteSubmitHost(final OptionInfo oi) throws JGDIException {
-        final String hostName = oi.getFirstArg();
         List<JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
-        jgdi.deleteSubmitHostWithAnswer(hostName, answers);
+        int size = oi.getArgs().size();
+        final String[] hosts = oi.getArgs().toArray(new String[size]);
+        oi.optionDone();
+        jgdi.deleteSubmitHostsWithAnswer(hosts, answers);
         printAnswers(answers);
     }
 
@@ -130,9 +134,11 @@ public class QConfCommand extends QConfCommandGenerated {
 
     @OptionAnnotation(value = "-dh", extra = MAX_ARG_VALUE)
     public void deleteAdminHost(final OptionInfo oi) throws JGDIException {
-        final String hostName = oi.getFirstArg();
         List<JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
-        jgdi.deleteAdminHostWithAnswer(hostName, answers);
+        int size = oi.getArgs().size();
+        final String[] hosts = oi.getArgs().toArray(new String[size]);
+        oi.optionDone();
+        jgdi.deleteAdminHostsWithAnswer(hosts, answers);
         printAnswers(answers);
     }
 
@@ -344,7 +350,7 @@ public class QConfCommand extends QConfCommandGenerated {
                 table.printRow(pw, (Object) evc);
             }
         } else {
-            pw.println("no event clients registered");
+            pw.println(getErrorMessage("NoObjectFound", oi.getOd().getOption(), "no event clients registered"));
         }
     }
 
@@ -713,10 +719,13 @@ public class QConfCommand extends QConfCommandGenerated {
 
     @OptionAnnotation(value = "-dm", extra = MAX_ARG_VALUE)
     public void deleteManager(final OptionInfo oi) throws JGDIException {
-        final String name = oi.getFirstArg();
-        List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
-        jgdi.deleteManagerWithAnswer(name, answer);
-        printAnswers(answer);
+        List<JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
+        String a[] = new String[0];
+        int size = oi.getArgs().size();
+        final String[] names = oi.getArgs().toArray(new String[size]);
+        oi.optionDone();
+        jgdi.deleteManagersWithAnswer(names, answers);
+        printAnswers(answers);
     }
 
     //OPERATOR
@@ -730,10 +739,13 @@ public class QConfCommand extends QConfCommandGenerated {
 
     @OptionAnnotation(value = "-do", extra = MAX_ARG_VALUE)
     public void deleteOperator(final OptionInfo oi) throws JGDIException {
-        final String name = oi.getFirstArg();
-        List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
-        jgdi.deleteOperatorWithAnswer(name, answer);
-        printAnswers(answer);
+        List<JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
+        String a[] = new String[0];
+        int size = oi.getArgs().size();
+        final String[] names = oi.getArgs().toArray(new String[size]);
+        oi.optionDone();
+        jgdi.deleteOperatorsWithAnswer(names, answers);
+        printAnswers(answers);
     }
     
     //RESOURCE QUOTA SET
@@ -835,6 +847,11 @@ public class QConfCommand extends QConfCommandGenerated {
         final String userName = oi.getFirstArg();
         String setName = oi.showLastArg();
         UserSet obj = jgdi.getUserSet(setName);
+        if (obj == null) {
+            String msg = getErrorMessage("InvalidObjectArgument", oi.getOd().getOption(), setName, null);
+            pw.println(msg);
+            return;
+        }
         obj.removeEntries(userName);
         jgdi.updateUserSetWithAnswer(obj, answer);
         printAnswers(answer);
@@ -846,6 +863,11 @@ public class QConfCommand extends QConfCommandGenerated {
         List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
         final String setName = oi.getFirstArg();
         UserSet obj = jgdi.getUserSet(setName);
+        if (obj == null) {
+            String msg = getErrorMessage("InvalidObjectArgument", oi.getOd().getOption(), setName, null);
+            pw.println(msg);
+            return;
+        }
         obj.removeAllEntries();
         jgdi.updateUserSetWithAnswer(obj, answer);
         printAnswers(answer);
@@ -934,5 +956,27 @@ public class QConfCommand extends QConfCommandGenerated {
             }
         }
         return true;
+    }
+    
+    /**
+     * Helper method. Checks if option's next argument is a reachable host
+     * return isHostReachable
+     */
+    private boolean isHostReachable(OptionInfo oi) {
+	List<String> args = oi.getArgs();
+	OptionDescriptor od = oi.getOd();
+	if (args != null && args.size() > 0) {
+	    String host = args.get(0);
+	    try {
+		if (InetAddress.getByName(host) != null) {
+		    return true;
+		}
+	    } catch (UnknownHostException ex) {
+		String msg = getErrorMessage("UnreachableHost", od.getOption(), host, "Host \""+host+"\" is not reachable");
+		od.getPw().println(msg);
+		return false;
+	    }
+	}
+	return true;
     }
 }

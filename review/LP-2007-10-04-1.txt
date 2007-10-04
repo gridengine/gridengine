@@ -6,9 +6,8 @@ Date: 2007-10-04
 
 1 Identification
 LP-2007-10-04-1: Following refferes to JGDI and JGDShell only
-                 Enhancem.: qstat -g c [ext] recognized
-                 Enhancem.: Added resource file with error messages
-                 Bugfix.:   Fixed many error messages for qconf and qstat
+                 Enhancem.: Added new error messages to resource file
+                 Bugfix.:   Fixed some error messages for qconf
                  Review:    AA
 
 2 Conforms to specification

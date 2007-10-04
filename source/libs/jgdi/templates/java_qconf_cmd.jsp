@@ -274,10 +274,12 @@
     */
    @OptionAnnotation(value = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
    public void delete<%=objectType%>(final OptionInfo oi) throws JGDIException {
-      final String arg = oi.getFirstArg();
-      List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
-      jgdi.delete<%=objectType%>WithAnswer(arg, answer);
-      printAnswers(answer);
+      List<JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
+      int size = oi.getArgs().size();
+      final String[] vals = oi.getArgs().toArray(new String[size]);
+      oi.optionDone();
+      jgdi.delete<%=objectType%>sWithAnswer(vals, answers);
+      printAnswers(answers);
    }
    <%
        } //end genDeleteMethod  

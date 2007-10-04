@@ -1,4 +1,9 @@
-LP-2007-10-04-1: Following changes reffer only to JGDI and JGDShell
+LP-2007-10-04-1: Following reffer to JGDI and JGDShell only
+                 Enhancem.: Added new error messages to resource file
+                 Bugfix.:   Fixed some error messages for qconf
+                 Review:    AA
+
+LP-2007-10-04-0: Following changes reffer only to JGDI and JGDShell
                  Enhancem.: qstat -g c [ext] recognized
                  Enhancem.: Added resource file with error messages
                  Bugfix.:   Fixed many error messages for qconf and qstat

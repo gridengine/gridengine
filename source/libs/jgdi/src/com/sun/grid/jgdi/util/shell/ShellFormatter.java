@@ -41,39 +41,39 @@ import java.util.logging.LogRecord;
  *
  */
 public class ShellFormatter extends Formatter {
-   
-   private StringWriter sw = new StringWriter();
-   private boolean printStacktrace = true;
-
-   public String format(LogRecord record) {
-
-
-      sw.getBuffer().setLength(0);
-      PrintWriter pw = new PrintWriter(sw);
-
-      if(record.getLevel().equals(Level.INFO)) {
-         pw.println(record.getMessage());
-      } else {
-         pw.print(record.getLevel());
-         pw.print(": ");
-         
-         String message = record.getMessage();
-         if ("ENTRY".equals(message)) {
-            pw.print("Entering ");
-            pw.print(record.getSourceClassName());
-            pw.print(".");
-            pw.println(record.getSourceMethodName());
+    
+    private StringWriter sw = new StringWriter();
+    private boolean printStacktrace = true;
+    
+    public String format(LogRecord record) {
+        
+        
+        sw.getBuffer().setLength(0);
+        PrintWriter pw = new PrintWriter(sw);
+        
+        if(record.getLevel().equals(Level.INFO)) {
+            pw.println(record.getMessage());
+        } else {
+            pw.print(record.getLevel());
+            pw.print(": ");
             
-         } else {
-            pw.println(message);
-         }
-      }
-
-      if(record.getThrown() != null && printStacktrace) {            
-         record.getThrown().printStackTrace(pw);           
-      }
-      pw.flush();
-      return sw.getBuffer().toString();
-   }
-      
+            String message = record.getMessage();
+            if ("ENTRY".equals(message)) {
+                pw.print("Entering ");
+                pw.print(record.getSourceClassName());
+                pw.print(".");
+                pw.println(record.getSourceMethodName());
+                
+            } else {
+                pw.println(message);
+            }
+        }
+        
+        if(record.getThrown() != null && printStacktrace) {
+            record.getThrown().printStackTrace(pw);
+        }
+        pw.flush();
+        return sw.getBuffer().toString();
+    }
+    
 }

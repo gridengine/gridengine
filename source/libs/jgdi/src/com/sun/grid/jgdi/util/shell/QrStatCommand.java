@@ -45,94 +45,94 @@ import static com.sun.grid.jgdi.util.shell.Util.*;
 public class QrStatCommand extends AnnotatedCommand {
     List<String> userList = null;
     List<Integer> arList = null;
-
+    
     boolean xml=false;
     boolean explain=false;
-
-   public String getUsage() {
-      return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qrstat");
-   }
-
-   public void run(String[] args) throws Exception {
-      clear();
-
-      //parse the option
-      parseAndInvokeOptions(args);
-      
-      boolean arlist = !arList.isEmpty();
-      //Let's take ar_list and look for candidates to delete
-      @SuppressWarnings(value = "unchecked")
-      List<AdvanceReservation> ars = (List<AdvanceReservation>) jgdi.getAdvanceReservationList();
-      //Filter out just the ars in the arList
-      if (ars.size() > 0) {
-         if (arList.isEmpty()) {
-            pw.println("ar-id   name       owner        state start at             end at               duration");
-            pw.println("----------------------------------------------------------------------------------------");
-         }
-         for (AdvanceReservation ar : ars) {
-            if (!arlist) {
-               if (userList.isEmpty() || userList.contains(ar.getOwner())) {
-                  if (xml) {
-                     XMLUtil.write(ar, pw); 
-                  } else {
-                     pw.printf("%1$7d %2$-10.10s %3$-12.12s %4$-5.5s %5$-20.20s %6$-20.20s %7$s\n", ar.getId(), ar.getName() == null ? "" : ar.getName(), ar.getOwner(), ar.getStateAsString(), getDateAndTimeAsString(ar.getStartTime()), getDateAndTimeAsString(ar.getEndTime()), getTimeAsString(ar.getDuration()));
-                  }
-               }
-            } else {
-               if (arList.remove((Object) ar.getId()) && (userList.isEmpty() || userList.contains(ar.getOwner()))) {
-                  AdvanceReservationImpl ari = (AdvanceReservationImpl) ar;
-                  if (xml) {
-                     XMLUtil.write(ari, pw);
-                  } else {
-                     pw.println(ari.dump());
-                  }
-               }
+    
+    public String getUsage() {
+        return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qrstat");
+    }
+    
+    public void run(String[] args) throws Exception {
+        clear();
+        
+        //parse the option
+        parseAndInvokeOptions(args);
+        
+        boolean arlist = !arList.isEmpty();
+        //Let's take ar_list and look for candidates to delete
+        @SuppressWarnings(value = "unchecked")
+        List<AdvanceReservation> ars = (List<AdvanceReservation>) jgdi.getAdvanceReservationList();
+        //Filter out just the ars in the arList
+        if (ars.size() > 0) {
+            if (arList.isEmpty()) {
+                pw.println("ar-id   name       owner        state start at             end at               duration");
+                pw.println("----------------------------------------------------------------------------------------");
             }
-         }
-      }
-
-      if (!arList.isEmpty()) {
-         pw.println("Following advance reservations do not exist:");
-         pw.println(arList);
-      }
-   }
-   
-   //[-ar ar_id_list]                         show advance reservation information
-   @OptionAnnotation(value="-ar",extra=OptionAnnotation.MAX_ARG_VALUE)
-   public void setAdvanceReservationList(final OptionInfo oi) throws JGDIException {
-      try { 
-        arList.add(Integer.parseInt(oi.getFirstArg()));
-      } catch (NumberFormatException ex) {
-          throw new IllegalArgumentException("error: ERROR! invalid id, must be an unsigned integer");
-      }
-   }   
-   //[-help]                                  print this help
-   @OptionAnnotation(value="-help",min=0)
-   public void printUsage(final OptionInfo oi) throws JGDIException {
-      pw.println(getUsage());
-      // To avoid the continue of the command
-      throw new AbortException();
-   }   
-   //[-u user_list]                           all advance reservations of users specified in list
-   @OptionAnnotation(value="-u",extra=OptionAnnotation.MAX_ARG_VALUE)
-   public void setUserList(final OptionInfo oi) throws JGDIException {
-      userList.add(oi.getFirstArg());
-   }   
-   
-   //[-xml]                                   display the information in XML-Format
-   @OptionAnnotation(value="-xml",min=0)
-   public void setXml(final OptionInfo oi) throws JGDIException {
-      xml=true;
-   }   
-   //[-explain]                               show reason for error state
-   @OptionAnnotation(value="-explain",min=0)
-   public void setExplain(final OptionInfo oi) throws JGDIException {
-       explain=true;
-      throw new UnsupportedOperationException("Option -explain is not implemented");
-   }
-
-   private void clear() {
-      userList = new ArrayList<String>();
-      arList = new ArrayList<Integer>();
-   }
+            for (AdvanceReservation ar : ars) {
+                if (!arlist) {
+                    if (userList.isEmpty() || userList.contains(ar.getOwner())) {
+                        if (xml) {
+                            XMLUtil.write(ar, pw);
+                        } else {
+                            pw.printf("%1$7d %2$-10.10s %3$-12.12s %4$-5.5s %5$-20.20s %6$-20.20s %7$s\n", ar.getId(), ar.getName() == null ? "" : ar.getName(), ar.getOwner(), ar.getStateAsString(), getDateAndTimeAsString(ar.getStartTime()), getDateAndTimeAsString(ar.getEndTime()), getTimeAsString(ar.getDuration()));
+                        }
+                    }
+                } else {
+                    if (arList.remove((Object) ar.getId()) && (userList.isEmpty() || userList.contains(ar.getOwner()))) {
+                        AdvanceReservationImpl ari = (AdvanceReservationImpl) ar;
+                        if (xml) {
+                            XMLUtil.write(ari, pw);
+                        } else {
+                            pw.println(ari.dump());
+                        }
+                    }
+                }
+            }
+        }
+        
+        if (!arList.isEmpty()) {
+            pw.println("Following advance reservations do not exist:");
+            pw.println(arList);
+        }
+    }
+    
+    //[-ar ar_id_list]                         show advance reservation information
+    @OptionAnnotation(value="-ar",extra=OptionAnnotation.MAX_ARG_VALUE)
+    public void setAdvanceReservationList(final OptionInfo oi) throws JGDIException {
+        try {
+            arList.add(Integer.parseInt(oi.getFirstArg()));
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException("error: ERROR! invalid id, must be an unsigned integer");
+        }
+    }
+    //[-help]                                  print this help
+    @OptionAnnotation(value="-help",min=0)
+    public void printUsage(final OptionInfo oi) throws JGDIException {
+        pw.println(getUsage());
+        // To avoid the continue of the command
+        throw new AbortException();
+    }
+    //[-u user_list]                           all advance reservations of users specified in list
+    @OptionAnnotation(value="-u",extra=OptionAnnotation.MAX_ARG_VALUE)
+    public void setUserList(final OptionInfo oi) throws JGDIException {
+        userList.add(oi.getFirstArg());
+    }
+    
+    //[-xml]                                   display the information in XML-Format
+    @OptionAnnotation(value="-xml",min=0)
+    public void setXml(final OptionInfo oi) throws JGDIException {
+        xml=true;
+    }
+    //[-explain]                               show reason for error state
+    @OptionAnnotation(value="-explain",min=0)
+    public void setExplain(final OptionInfo oi) throws JGDIException {
+        explain=true;
+        throw new UnsupportedOperationException("Option -explain is not implemented");
+    }
+    
+    private void clear() {
+        userList = new ArrayList<String>();
+        arList = new ArrayList<Integer>();
+    }
 }

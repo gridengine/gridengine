@@ -45,9 +45,9 @@ import java.util.logging.Logger;
  *
  */
 public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializable {
-
+    
     private static Logger logger = Logger.getLogger(QueueInstanceSummaryImpl.class.getName());
-
+    
     private String name;
     private String queueType;
     private int reservedSlots;
@@ -64,11 +64,11 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
     private String suspendAlarmReason;
     private List<String> explainMessageList;
     private Map<String, Map<String, String>> resourceMap;
-
+    
     /** Creates a new instance of QueueInstanceSummary */
     public QueueInstanceSummaryImpl() {
     }
-
+    
     /**
      *  Get the name of the queue instance
      *  @return name of the queue instance
@@ -76,7 +76,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
     public String getName() {
         return name;
     }
-
+    
     /**
      * Set the name of the queue instance
      * @param name name of the queue instance
@@ -84,7 +84,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
     public void setName(String name) {
         this.name = name;
     }
-
+    
     /**
      *  Get the type of the queue
      *  @return type of the queue
@@ -92,7 +92,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
     public String getQueueType() {
         return queueType;
     }
-
+    
     /**
      *  Set the type of the queue
      *  @param queueType type of the queue
@@ -100,7 +100,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
     public void setQueueType(String queueType) {
         this.queueType = queueType;
     }
-
+    
     /**
      *  Get the number of reserved slots.
      *  @return number of reserved slots
@@ -108,7 +108,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
     public int getReservedSlots() {
         return reservedSlots;
     }
-
+    
     /**
      *  Set the number of reserved slots
      *  @param reservedSlots number of reserved slots
@@ -119,8 +119,8 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
         }
         this.reservedSlots = reservedSlots;
     }
-
-
+    
+    
     /**
      *  Get the number of used slots.
      *  @return number of used slots
@@ -128,7 +128,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
     public int getUsedSlots() {
         return usedSlots;
     }
-
+    
     /**
      *  Set the number of used slots
      *  @param usedSlots number of used slots
@@ -139,7 +139,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
         }
         this.usedSlots = usedSlots;
     }
-
+    
     /**
      *  Get the number of free slots
      *  @return number of free slots
@@ -147,7 +147,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
     public int getFreeSlots() {
         return freeSlots;
     }
-
+    
     /**
      *  Set the number of free slots
      *  @param freeSlots  number of free slots
@@ -155,7 +155,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
     public void setFreeSlots(int freeSlots) {
         this.freeSlots = freeSlots;
     }
-
+    
     /**
      *  Get the architecture of the queue instance
      *  @return architecture of the queue instance
@@ -163,7 +163,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
     public String getArch() {
         return arch;
     }
-
+    
     /**
      *  Set the architecture of the queue instance
      *  @param arch architecture of the queue instance
@@ -171,7 +171,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
     public void setArch(String arch) {
         this.arch = arch;
     }
-
+    
     /**
      *  Get the state of the queue instance
      *  @return state of the queue instance
@@ -179,7 +179,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
     public String getState() {
         return state;
     }
-
+    
     /**
      *  Set the state of a queue instance
      *  @param state state of a queue instance
@@ -190,7 +190,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
         }
         this.state = state;
     }
-
+    
     /**
      * Get the string representation of the load average
      *
@@ -199,7 +199,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
     public String getLoadAvgStr() {
         return loadAvgStr;
     }
-
+    
     /**
      * Set the string representation of the load average
      * @param loadAvgStr the string representation of the load average
@@ -207,7 +207,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
     public void setLoadAvgStr(String loadAvgStr) {
         this.loadAvgStr = loadAvgStr;
     }
-
+    
     /**
      * Determine if the queue instance has a load value
      * @return <code>true</code> if the queue instance has a load value
@@ -215,7 +215,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
     public boolean hasLoadValue() {
         return hasLoadValue;
     }
-
+    
     /**
      *  Set the has load value flag
      *
@@ -224,7 +224,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
     public void setHasLoadValue(boolean hasLoadValue) {
         this.hasLoadValue = hasLoadValue;
     }
-
+    
     /**
      *  Determine if the load value is derived from an object
      *  @return <code>true</code> if the load value is derived from an object
@@ -232,7 +232,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
     public boolean isHasLoadValueFromObject() {
         return hasLoadValueFromObject;
     }
-
+    
     /**
      *  Set the has load value from object flag
      *  @param hasLoadValueFromObject the load value from object flag
@@ -240,7 +240,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
     public void setHasLoadValueFromObject(boolean hasLoadValueFromObject) {
         this.hasLoadValueFromObject = hasLoadValueFromObject;
     }
-
+    
     /**
      *  Get the load average of the queue instance. Return only a meanful
      *  value if <code>hasLoadValue</code> returns <code>true</code>.
@@ -251,7 +251,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
     public double getLoadAvg() {
         return loadAvg;
     }
-
+    
     /**
      *  Set the load average of the queue instance
      *  @param loadAvg the load average
@@ -259,7 +259,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
     public void setLoadAvg(double loadAvg) {
         this.loadAvg = loadAvg;
     }
-
+    
     /**
      *  Add all jobs from a list
      *  @param jobList  list of {@link JobSummary} instances
@@ -277,7 +277,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
             }
         }
     }
-
+    
     /**
      *  Add a job.
      *  @param jobSummary the job
@@ -291,7 +291,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
             logger.finer("job " + jobSummary + " added");
         }
     }
-
+    
     /**
      *  Get the list of jobs which are assigned to the queue instance
      *  @return list of jobs (instances of {@link JobSummary})
@@ -303,7 +303,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
             return Collections.EMPTY_LIST;
         }
     }
-
+    
     /**
      *  Get the load alarm reason for the queue instance
      *  @return the load alarm reason
@@ -311,7 +311,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
     public String getLoadAlarmReason() {
         return loadAlarmReason;
     }
-
+    
     /**
      *  Set the load alarm reason for the queue instance
      *  @param loadAlarmReason the load alarm reason
@@ -319,7 +319,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
     public void setLoadAlarmReason(String loadAlarmReason) {
         this.loadAlarmReason = loadAlarmReason;
     }
-
+    
     /**
      *  Get the suspend alarm reason for the queue instance
      *  @return the suspend alarm reason
@@ -327,14 +327,14 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
     public String getSuspendAlarmReason() {
         return suspendAlarmReason;
     }
-
+    
     /**
      *  Set the suspend alarm reason for the queue instance
      */
     public void setSuspendAlarmReason(String suspendAlarmReason) {
         this.suspendAlarmReason = suspendAlarmReason;
     }
-
+    
     /**
      *  Add an explain message
      *  @param message the explain message
@@ -345,7 +345,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
         }
         explainMessageList.add(message);
     }
-
+    
     /**
      *  Get the list of explain messages
      *  @return list of explain messages
@@ -353,7 +353,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
     public List getExplainMessageList() {
         return Collections.unmodifiableList(explainMessageList);
     }
-
+    
     /**
      *  Add a resource value to the queue instance
      *  @param dom  dominance of the resource value
@@ -361,11 +361,11 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
      *  @param value value of the resource
      */
     public void addResource(String dom, String name, String value) {
-
+        
         if (resourceMap == null) {
             resourceMap = new HashMap<String, Map<String, String>>();
         }
-
+        
         Map<String, String> map = resourceMap.get(dom);
         if (map == null) {
             map = new HashMap<String, String>();
@@ -373,7 +373,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
         }
         map.put(name, value);
     }
-
+    
     /**
      *  Get avaialable dominances for the resource values
      *  @return set of avaialable dominances
@@ -385,7 +385,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
             return resourceMap.keySet();
         }
     }
-
+    
     /**
      *  Get all resources names which have the dominane <code>dom</code>
      *  @return set of resource names
@@ -402,7 +402,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
             }
         }
     }
-
+    
     /**
      *  Get a resource value
      *  @param  dom   dominance of the resource value

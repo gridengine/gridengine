@@ -39,8 +39,8 @@ import java.util.logging.Logger;
  *
  */
 public interface Shell {
-
-   public Logger getLogger();
-   public JGDI getConnection();
-   public PrintWriter getPrintWriter();
+    
+    public Logger getLogger();
+    public JGDI getConnection();
+    public PrintWriter getPrintWriter();
 }

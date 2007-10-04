@@ -40,20 +40,20 @@ import java.util.List;
  *
  */
 public class UserFilter implements Serializable {
-
+    
     private List<String> userList = new LinkedList<String>();
-
+    
     /**
      * Creates a new instance of UserFilter
      */
     public UserFilter() {
     }
-
+    
     public static UserFilter parse(String userList) {
         UserFilter ret = new UserFilter();
         return ret.fill(userList);
     }
-
+    
     public UserFilter fill(String list) {
         String[] elems = list.split(",");
         for (String elem : elems) {
@@ -61,16 +61,16 @@ public class UserFilter implements Serializable {
         }
         return this;
     }
-
-
+    
+    
     public void addUser(String username) {
         userList.add(username);
     }
-
+    
     public List getUsers() {
         return Collections.unmodifiableList(userList);
     }
-
+    
     @Override
     public String toString() {
         StringBuilder ret = new StringBuilder();

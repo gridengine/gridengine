@@ -47,14 +47,14 @@ import java.util.logging.Logger;
  *
  */
 public abstract class AbstractEventClient implements Runnable {
-
+    
     private static final Logger logger = Logger.getLogger("com.sun.grid.jgdi.event");
     private int evc_index = -1;
     private int id;
     private JGDI jgdi;
     private Thread thread;
     protected final Object syncObject = new Object();
-
+    
     /**
      * Creates a new instance of EventClient
      * @param url  JGDI connection url in the form
@@ -72,7 +72,7 @@ public abstract class AbstractEventClient implements Runnable {
             throw new IllegalArgumentException("JGDI must be instanceof " + JGDIImpl.class.getName());
         }
     }
-
+    
     /**
      * Get the id of this event client
      * @return the event client id
@@ -80,7 +80,7 @@ public abstract class AbstractEventClient implements Runnable {
     public int getId() {
         return id;
     }
-
+    
     /**
      * Set the event client id of this event client
      * <p><strong>This method is not intended to be call by the
@@ -94,7 +94,7 @@ public abstract class AbstractEventClient implements Runnable {
     public void setId(int id) {
         this.id = id;
     }
-
+    
     /**
      *  Get the index of this event client in the native event client
      *  list.
@@ -105,12 +105,12 @@ public abstract class AbstractEventClient implements Runnable {
             return evc_index;
         }
     }
-
+    
     /**
      *  Close this event client
      */
     public void close() throws JGDIException, InterruptedException {
-
+        
         logger.log(Level.FINE, "close event client");
         Thread aThread = null;
         int index = 0;
@@ -146,7 +146,7 @@ public abstract class AbstractEventClient implements Runnable {
             }
         }
     }
-
+    
     /**
      *  Start the event client
      */
@@ -162,14 +162,14 @@ public abstract class AbstractEventClient implements Runnable {
             }
         }
     }
-
+    
     /**
      *  Run method of the event client thread
      */
     public void run() {
-
+        
         try {
-
+            
             synchronized (syncObject) {
                 try {
                     this.register();
@@ -177,10 +177,10 @@ public abstract class AbstractEventClient implements Runnable {
                     syncObject.notify();
                 }
             }
-
+            
             List<Event> eventList = new ArrayList<Event>();
             logger.fine("event client registered at qmaster (id = " + getId() + ")");
-
+            
             while (!Thread.currentThread().isInterrupted()) {
                 boolean gotShutdownEvent = false;
                 try {
@@ -229,7 +229,7 @@ public abstract class AbstractEventClient implements Runnable {
             this.thread = null;
         }
     }
-
+    
     /**
      *  Determine if the event client is running
      *  @return <code>true</code> if the event client is running
@@ -239,13 +239,13 @@ public abstract class AbstractEventClient implements Runnable {
             return thread != null && thread.isAlive();
         }
     }
-
+    
     protected void testConnected() throws JGDIException {
         if (jgdi == null) {
             throw new JGDIException("Not connected");
         }
     }
-
+    
     /**
      *  Subscribe all events for this event client
      *  @throws JGDIException if the subscribtion is failed
@@ -255,8 +255,8 @@ public abstract class AbstractEventClient implements Runnable {
             subscribeAllNative();
         }
     }
-
-
+    
+    
     /**
      *  Unsubscribe all events for this event client
      *  @throws JGDIException if the unsubscribtion is failed
@@ -271,24 +271,24 @@ public abstract class AbstractEventClient implements Runnable {
             }
         }
     }
-
-
+    
+    
     protected void fireEventOccured(Event evt) {
-
+        
         logger.fine("fire event " + evt);
         EventListener[] lis = null;
         synchronized (eventListeners) {
             lis = new EventListener[eventListeners.size()];
             eventListeners.toArray(lis);
         }
-
+        
         for (int i = 0; i < lis.length; i++) {
             lis[i].eventOccured(evt);
         }
     }
-
+    
     private List<EventListener> eventListeners = new ArrayList<EventListener>();
-
+    
     /**
      * Add an event listener to this event client
      * @param lis the event listener
@@ -298,7 +298,7 @@ public abstract class AbstractEventClient implements Runnable {
             eventListeners.add(lis);
         }
     }
-
+    
     /**
      * Remove an event listener from this event client
      * @param lis the event listener
@@ -308,7 +308,7 @@ public abstract class AbstractEventClient implements Runnable {
             eventListeners.remove(lis);
         }
     }
-
+    
     public void commit() throws JGDIException {
         synchronized (syncObject) {
             logger.log(Level.FINE, "commit");
@@ -316,7 +316,7 @@ public abstract class AbstractEventClient implements Runnable {
             nativeCommit();
         }
     }
-
+    
     private void register() throws JGDIException {
         synchronized (syncObject) {
             logger.log(Level.FINE, "register");
@@ -324,7 +324,7 @@ public abstract class AbstractEventClient implements Runnable {
             registerNative();
         }
     }
-
+    
     private void deregister() throws JGDIException {
         synchronized (syncObject) {
             if (evc_index >= 0) {
@@ -335,7 +335,7 @@ public abstract class AbstractEventClient implements Runnable {
             }
         }
     }
-
+    
     private native void nativeCommit() throws JGDIException;
     private native void subscribeNative(int type) throws JGDIException;
     private native void unsubscribeNative(int type) throws JGDIException;

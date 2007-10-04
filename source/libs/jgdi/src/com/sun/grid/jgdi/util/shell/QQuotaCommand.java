@@ -51,19 +51,19 @@ import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
  */
 @CommandAnnotation(value = "qquota")
 public class QQuotaCommand extends AbstractCommand {
-
+    
     public String getUsage() {
         return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qquota");
     }
-
+    
     public void run(String[] args) throws Exception {
         QQuotaOptions options = parse(args);
         if (options == null) {
             return;
         }
-
+        
         QQuotaResult res = jgdi.getQQuota(options);
-
+        
         if (!res.getResourceQuotaRules().isEmpty()) {
             pw.println("resource quota rule    limit                filter");
             pw.println("--------------------------------------------------------------------------------");
@@ -92,7 +92,7 @@ public class QQuotaCommand extends AbstractCommand {
             }
         }
     }
-
+    
     private QQuotaOptions parse(String[] args) throws Exception {
         ResourceAttributeFilter resourceAttributeFilter = null;
         ResourceFilter resourceFilter = null;
@@ -101,15 +101,15 @@ public class QQuotaCommand extends AbstractCommand {
         ProjectFilter projectFilter = null;
         ParallelEnvironmentFilter peFilter = null;
         QueueFilter queueFilter = null;
-
+        
         LinkedList<String> argList = new LinkedList<String>();
         for (int i = 0; i < args.length; i++) {
             argList.add(args[i]);
         }
-
+        
         while (!argList.isEmpty()) {
             String arg = (String) argList.removeFirst();
-
+            
             if (arg.equals("-help")) {
                 pw.println(getUsage());
                 return null;
@@ -154,9 +154,9 @@ public class QQuotaCommand extends AbstractCommand {
                 throw new IllegalStateException("Unknown argument: " + arg);
             }
         }
-
+        
         QQuotaOptions options = new QQuotaOptions();
-
+        
         if (hostFilter != null) {
             options.setHostFilter(hostFilter);
         }
@@ -175,7 +175,7 @@ public class QQuotaCommand extends AbstractCommand {
         if (queueFilter != null) {
             options.setQueueFilter(queueFilter);
         }
-
+        
         return options;
     }
 }

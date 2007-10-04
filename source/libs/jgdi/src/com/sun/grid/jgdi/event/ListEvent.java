@@ -39,18 +39,18 @@ import java.util.List;
  * Abstract base class for list events
  */
 public abstract class ListEvent extends Event implements java.io.Serializable {
-
+    
     /** the list of object */
     private List objects;
     /** Type of the changed objects */
     private Class objectType;
-
+    
     /** Creates a new instance of AbstractListEvent */
     public ListEvent(long timestamp, int eventId, Class objectType) {
         super(EventType.SGE_EMA_LIST, timestamp, eventId);
         this.objectType = objectType;
     }
-
+    
     /**
      *  Add a object
      *
@@ -68,7 +68,7 @@ public abstract class ListEvent extends Event implements java.io.Serializable {
         }
         objects.add(obj);
     }
-
+    
     /**
      * Get the objects we belongs to this list event
      * @return list of objects

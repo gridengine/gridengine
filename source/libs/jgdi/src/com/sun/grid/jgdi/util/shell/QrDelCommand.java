@@ -39,56 +39,56 @@ import java.util.LinkedList;
 
 @CommandAnnotation("qrdel")
 public class QrDelCommand extends AbstractCommand {
-
-   public String getUsage() {
-      return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qrdel");
-   }
-
-   public void run(String[] args) throws Exception {
-      String[] ars = null;
-      boolean force = false;
-      UserFilter users = new UserFilter();
-      List<JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
-      
-      if (jgdi == null) {
-         throw new IllegalStateException("Not connected");
-      }
-      if (args.length == 0) {
-         pw.println(getUsage());
-         pw.flush();
-         return;
-      }
-      
-      for (int i = 0; i < args.length; i++) {
-         if (args[i].equals("-help")) {
-            i++;
+    
+    public String getUsage() {
+        return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qrdel");
+    }
+    
+    public void run(String[] args) throws Exception {
+        String[] ars = null;
+        boolean force = false;
+        UserFilter users = new UserFilter();
+        List<JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
+        
+        if (jgdi == null) {
+            throw new IllegalStateException("Not connected");
+        }
+        if (args.length == 0) {
             pw.println(getUsage());
             pw.flush();
-            break;
-         } else if (args[i].equals("-u")) {
-            i++;
-            if (i >= args.length) {
-               throw new IllegalArgumentException("user_list is missing");
+            return;
+        }
+        
+        for (int i = 0; i < args.length; i++) {
+            if (args[i].equals("-help")) {
+                i++;
+                pw.println(getUsage());
+                pw.flush();
+                break;
+            } else if (args[i].equals("-u")) {
+                i++;
+                if (i >= args.length) {
+                    throw new IllegalArgumentException("user_list is missing");
+                }
+                users.fill(args[i]);
+            } else if (args[i].equals("-f")) {
+                force = true;
+            } else if (args[i].charAt(0) == '-') {
+                pw.println(getUsage());
+                pw.flush();
+                throw new IllegalArgumentException("error: ERROR! invalid option argument \"" + args[i] + "\"");
+            } else {
+                ars = parseDestinIdList(args[i]);
             }
-            users.fill(args[i]);
-         } else if (args[i].equals("-f")) {
-            force = true;
-         } else if (args[i].charAt(0) == '-') {
-            pw.println(getUsage());
-            pw.flush();
-            throw new IllegalArgumentException("error: ERROR! invalid option argument \"" + args[i] + "\"");
-         } else {
-            ars = parseDestinIdList(args[i]);
-         }
-      }
-      
-      jgdi.deleteAdvanceReservationsWithAnswer(ars, force, users.getUsers().size() == 0 ? null : users, answers);
-      printAnswers(answers);
-   }
-
-   private String[] parseDestinIdList(String arg) {
-      String[] ret = arg.split(",");
-      return ret;
-   }
-
+        }
+        
+        jgdi.deleteAdvanceReservationsWithAnswer(ars, force, users.getUsers().size() == 0 ? null : users, answers);
+        printAnswers(answers);
+    }
+    
+    private String[] parseDestinIdList(String arg) {
+        String[] ret = arg.split(",");
+        return ret;
+    }
+    
 }

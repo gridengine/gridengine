@@ -43,30 +43,30 @@ import java.util.Set;
  *
  */
 public class QQuotaResultImpl implements QQuotaResult, Serializable {
-   
-   private Map<String, ResourceQuotaRuleInfo> resourceQuotaRuleInfoMap = new HashMap<String, ResourceQuotaRuleInfo>();
-   private List<ResourceQuotaRuleInfo> resourceQuotaRuleInfoList = new ArrayList<ResourceQuotaRuleInfo>();
-   
-   public Set<String> getResourceQuotaRuleNames() {
-      return resourceQuotaRuleInfoMap.keySet();
-   }
-   
-   public ResourceQuotaRuleInfo createResourceQuotaRuleInfo(String resouceQuotaRuleName) {
-      ResourceQuotaRuleInfoImpl ret = new ResourceQuotaRuleInfoImpl(resouceQuotaRuleName);
-      resourceQuotaRuleInfoMap.put(ret.getResouceQuotaRuleName(), ret);
-      return ret;
-   }
-   
-   public void addResourceQuotaRuleInfo(ResourceQuotaRuleInfo resouceQuotaRuleInfo) {
-      resourceQuotaRuleInfoMap.put(resouceQuotaRuleInfo.getResouceQuotaRuleName(), resouceQuotaRuleInfo);
-   }
-   
-   public ResourceQuotaRuleInfo getResourceQuotaRuleInfo(String resourceQuotaRuleName) {
-      return resourceQuotaRuleInfoMap.get(resourceQuotaRuleName);
-   }
-   
-   public List<ResourceQuotaRuleInfo> getResourceQuotaRules() {
-      return new ArrayList(resourceQuotaRuleInfoMap.values());
-   }
-   
+    
+    private Map<String, ResourceQuotaRuleInfo> resourceQuotaRuleInfoMap = new HashMap<String, ResourceQuotaRuleInfo>();
+    private List<ResourceQuotaRuleInfo> resourceQuotaRuleInfoList = new ArrayList<ResourceQuotaRuleInfo>();
+    
+    public Set<String> getResourceQuotaRuleNames() {
+        return resourceQuotaRuleInfoMap.keySet();
+    }
+    
+    public ResourceQuotaRuleInfo createResourceQuotaRuleInfo(String resouceQuotaRuleName) {
+        ResourceQuotaRuleInfoImpl ret = new ResourceQuotaRuleInfoImpl(resouceQuotaRuleName);
+        resourceQuotaRuleInfoMap.put(ret.getResouceQuotaRuleName(), ret);
+        return ret;
+    }
+    
+    public void addResourceQuotaRuleInfo(ResourceQuotaRuleInfo resouceQuotaRuleInfo) {
+        resourceQuotaRuleInfoMap.put(resouceQuotaRuleInfo.getResouceQuotaRuleName(), resouceQuotaRuleInfo);
+    }
+    
+    public ResourceQuotaRuleInfo getResourceQuotaRuleInfo(String resourceQuotaRuleName) {
+        return resourceQuotaRuleInfoMap.get(resourceQuotaRuleName);
+    }
+    
+    public List<ResourceQuotaRuleInfo> getResourceQuotaRules() {
+        return new ArrayList(resourceQuotaRuleInfoMap.values());
+    }
+    
 }

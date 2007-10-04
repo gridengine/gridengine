@@ -40,59 +40,59 @@ import java.awt.Font;
  *
  */
 public class TextEditor extends javax.swing.JFrame {
-   private boolean isDone=false;
-   private String text;
-   /** Creates new form TextEditor */
-   public TextEditor() {
-      initComponents();
-   }
-   
-   public TextEditor(String str) {
-      initComponents();
-      textArea.setText(str);
-      this.setVisible(true);
-   }
-   
-   private void initComponents() {
-      jScrollPane1 = new javax.swing.JScrollPane();
-      textArea = new javax.swing.JTextArea();
-      
-      setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-      addWindowListener(new java.awt.event.WindowAdapter() {
-         public void windowClosed(java.awt.event.WindowEvent evt) {
-            formWindowClosed(evt);
-         }
-      });
-      
-      textArea.setFont(new Font("Courier",Font.PLAIN,14));
-      //textArea.putClientProperty(com.sun.java.swing.SwingUtilities2.AA_TEXT_PROPERTY_KEY, Boolean.TRUE);
-      jScrollPane1.setViewportView(textArea);
-      
-      getContentPane().setLayout(new BorderLayout());
-      getContentPane().add(jScrollPane1);
-      
-      pack();
-      this.setSize(500,600);
-   }
-   
-    private void formWindowClosed(java.awt.event.WindowEvent evt) {                                  
-       text = textArea.getText();
-       isDone=true;
+    private boolean isDone=false;
+    private String text;
+    /** Creates new form TextEditor */
+    public TextEditor() {
+        initComponents();
+    }
+    
+    public TextEditor(String str) {
+        initComponents();
+        textArea.setText(str);
+        this.setVisible(true);
+    }
+    
+    private void initComponents() {
+        jScrollPane1 = new javax.swing.JScrollPane();
+        textArea = new javax.swing.JTextArea();
+        
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosed(java.awt.event.WindowEvent evt) {
+                formWindowClosed(evt);
+            }
+        });
+        
+        textArea.setFont(new Font("Courier",Font.PLAIN,14));
+        //textArea.putClientProperty(com.sun.java.swing.SwingUtilities2.AA_TEXT_PROPERTY_KEY, Boolean.TRUE);
+        jScrollPane1.setViewportView(textArea);
+        
+        getContentPane().setLayout(new BorderLayout());
+        getContentPane().add(jScrollPane1);
+        
+        pack();
+        this.setSize(500,600);
+    }
+    
+    private void formWindowClosed(java.awt.event.WindowEvent evt) {
+        text = textArea.getText();
+        isDone=true;
     }
     
     public String getText() {
-       return text;
+        return text;
     }
     
     /** Provides an easy way of knowing if the editing was completed
-    */
+     */
     public boolean isDone() {
-       return isDone;
+        return isDone;
     }
     
-    // Variables declaration - do not modify                     
+    // Variables declaration - do not modify
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextArea textArea;
-    // End of variables declaration                   
+    // End of variables declaration
     
 }

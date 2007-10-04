@@ -44,16 +44,16 @@ import junit.framework.TestSuite;
  *
  */
 public class TestRunner implements PrivilegedExceptionAction {
-
+    
     private static Logger logger = Logger.getLogger(TestRunner.class.getName());
-
+    
     private Class testClass;
-
+    
     public TestRunner(Class testClass) {
         this.testClass = testClass;
     }
-
-
+    
+    
     private static void usage(String message, int exitCode) {
         if (message != null) {
             logger.severe(message);
@@ -61,58 +61,58 @@ public class TestRunner implements PrivilegedExceptionAction {
         logger.info("TestRunner <test class>");
         System.exit(exitCode);
     }
-
+    
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-
+        
         try {
-
+            
             if (args.length < 1) {
                 usage("Invalid number of arguments", 1);
             }
-
+            
             String classname = args[0];
-
+            
             logger.info("Search for class " + classname);
             Class testClass = null;
-
+            
             try {
                 testClass = Class.forName(classname);
             } catch (ClassNotFoundException cnfe) {
                 usage("Class " + classname + " not found", 1);
             }
-
+            
             if (!TestCase.class.isAssignableFrom(testClass)) {
                 usage("class " + classname + " is not a TestCase", 1);
             }
-
+            
             TestRunner runner = new TestRunner(testClass);
-
+            
             runner.run();
         } catch (Throwable e) {
             e.printStackTrace();
             System.exit(1);
         }
     }
-
+    
     public Object run() throws Exception {
         Method testSuiteMethod = testClass.getMethod("suite", (java.lang.Class[]) null);
-
+        
         TestSuite suite = (TestSuite) testSuiteMethod.invoke(testClass, (java.lang.Object[])null);
-
+        
         TestResult result = new TestResult();
-
-
+        
+        
         suite.run(result);
-
+        
         if (result.wasSuccessful()) {
-
+            
             logger.info("Success");
         } else {
             logger.severe("Failed");
-
+            
             Enumeration errorEnum = result.errors();
             TestFailure failure = null;
             while (errorEnum.hasMoreElements()) {

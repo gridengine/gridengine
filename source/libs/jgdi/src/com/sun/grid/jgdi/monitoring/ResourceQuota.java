@@ -37,9 +37,9 @@ package com.sun.grid.jgdi.monitoring;
  *         add javadoc comments
  */
 public interface ResourceQuota {
-   
-   public String getName();
-   public String getLimitValue();
-   public String getUsageValue();
-   
+    
+    public String getName();
+    public String getLimitValue();
+    public String getUsageValue();
+    
 }

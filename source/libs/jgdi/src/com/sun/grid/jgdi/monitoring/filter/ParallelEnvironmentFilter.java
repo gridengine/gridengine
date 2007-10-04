@@ -40,18 +40,18 @@ import java.util.List;
  *
  */
 public class ParallelEnvironmentFilter implements Serializable {
-
+    
     private List<String> peList = new LinkedList<String>();
-
+    
     /** Creates a new instance of ParallelEnvironmentFilter */
     public ParallelEnvironmentFilter() {
     }
-
+    
     public static ParallelEnvironmentFilter parse(String str) {
         ParallelEnvironmentFilter ret = new ParallelEnvironmentFilter();
         return ret.fill(str);
     }
-
+    
     public ParallelEnvironmentFilter fill(String list) {
         String[] elems = list.split(",");
         for (String elem : elems) {
@@ -59,19 +59,19 @@ public class ParallelEnvironmentFilter implements Serializable {
         }
         return this;
     }
-
+    
     public void addPE(String peName) {
         peList.add(peName);
     }
-
+    
     public List getPEList() {
         return Collections.unmodifiableList(peList);
     }
-
+    
     public int getPECount() {
         return peList.size();
     }
-
+    
     @Override
     public String toString() {
         StringBuilder ret = new StringBuilder();

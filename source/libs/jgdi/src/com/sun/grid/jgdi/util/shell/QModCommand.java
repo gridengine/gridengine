@@ -43,165 +43,165 @@ import java.util.List;
  */
 @CommandAnnotation("qmod")
 public class QModCommand extends AbstractCommand {
-   
-   public String getUsage() {
-      return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qmod");
-   }
-   
-   public void run(String[] args) throws Exception {
-      JGDI jgdi = getShell().getConnection();
-      
-      if (args.length == 0) {
-         pw.println(getUsage());
-      }
-      
-      if (jgdi == null) {
-         throw new IllegalStateException("Not connected");
-      }
-      
-      boolean force = false;
-      
-      for (int i = 0; i < args.length; i++) {
-         if (args[i].equals("-help")) {
+    
+    public String getUsage() {
+        return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qmod");
+    }
+    
+    public void run(String[] args) throws Exception {
+        JGDI jgdi = getShell().getConnection();
+        
+        if (args.length == 0) {
             pw.println(getUsage());
-            return;
-         } else if (args[i].equals("-cj")) {
-            i++;
-            if (i>=args.length) {
-               throw new IllegalArgumentException("job_wc_queue_list is missing");
+        }
+        
+        if (jgdi == null) {
+            throw new IllegalStateException("Not connected");
+        }
+        
+        boolean force = false;
+        
+        for (int i = 0; i < args.length; i++) {
+            if (args[i].equals("-help")) {
+                pw.println(getUsage());
+                return;
+            } else if (args[i].equals("-cj")) {
+                i++;
+                if (i>=args.length) {
+                    throw new IllegalArgumentException("job_wc_queue_list is missing");
+                }
+                String jobs [] = parseJobWCQueueList(args[i]);
+                List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
+                jgdi.clearJobsWithAnswer(jobs, force, answers);
+                printAnswers(answers);
+                break;
+            } else if (args[i].equals("-c")) {
+                i++;
+                if (i>=args.length) {
+                    throw new IllegalArgumentException("job_wc_queue_list is missing");
+                }
+                String queues [] = parseJobWCQueueList(args[i]);
+                List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
+                jgdi.clearQueuesWithAnswer(queues, force, answers);
+                printAnswers(answers);
+            } else if (args[i].equals("-s")) {
+                i++;
+                if (i>=args.length) {
+                    throw new IllegalArgumentException("job_wc_queue_list is missing");
+                }
+                String queues [] = parseJobWCQueueList(args[i]);
+                List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
+                jgdi.suspendWithAnswer(queues, force, answers);
+                printAnswers(answers);
+            } else if (args[i].equals("-us")) {
+                i++;
+                if (i>=args.length) {
+                    throw new IllegalArgumentException("job_wc_queue_list is missing");
+                }
+                String queues [] = parseJobWCQueueList(args[i]);
+                List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
+                jgdi.unsuspendWithAnswer(queues, force, answers);
+                printAnswers(answers);
+            } else if (args[i].equals("-sj")) {
+                i++;
+                if (i>=args.length) {
+                    throw new IllegalArgumentException("job_list is missing");
+                }
+                String jobs [] = parseJobList(args[i]);
+                List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
+                jgdi.suspendJobsWithAnswer(jobs, force, answers);
+                printAnswers(answers);
+            } else if (args[i].equals("-usj")) {
+                i++;
+                if (i>=args.length) {
+                    throw new IllegalArgumentException("job_list is missing");
+                }
+                String jobs [] = parseJobList(args[i]);
+                List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
+                jgdi.unsuspendJobsWithAnswer(jobs, force, answers);
+                printAnswers(answers);
+            } else if (args[i].equals("-sq")) {
+                i++;
+                if (i>=args.length) {
+                    throw new IllegalArgumentException("job_wc_queue_list is missing");
+                }
+                String queues [] = parseWCQueueList(args[i]);
+                List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
+                jgdi.suspendQueuesWithAnswer(queues, force, answers);
+                printAnswers(answers);
+            } else if (args[i].equals("-uq")) {
+                i++;
+                if (i>=args.length) {
+                    throw new IllegalArgumentException("job_wc_queue_list is missing");
+                }
+                String queues [] = parseWCQueueList(args[i]);
+                List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
+                jgdi.unsuspendQueuesWithAnswer(queues, force, answers);
+                printAnswers(answers);
+            } else if (args[i].equals("-r")) {
+                i++;
+                if (i>=args.length) {
+                    throw new IllegalArgumentException("job_wc_queue_list is missing");
+                }
+                String jobs[] = parseJobWCQueueList(args[i]);
+                List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
+                jgdi.rescheduleWithAnswer(jobs, force, answers);
+                printAnswers(answers);
+            } else if (args[i].equals("-rj")) {
+                i++;
+                if (i>=args.length) {
+                    throw new IllegalArgumentException("job_wc_queue_list is missing");
+                }
+                String jobs [] = parseJobList(args[i]);
+                List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
+                jgdi.rescheduleJobsWithAnswer(jobs, force, answers);
+                printAnswers(answers);
+            } else if (args[i].equals("-cq")) {
+                i++;
+                if (i>=args.length) {
+                    throw new IllegalArgumentException("wc_queue_list is missing");
+                }
+                String queues [] = parseWCQueueList(args[i]);
+                List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
+                jgdi.clearQueuesWithAnswer(queues, force, answers);
+                printAnswers(answers);
+                break;
+            } else if (args[i].equals("-rq")) {
+                i++;
+                if (i>=args.length) {
+                    throw new IllegalArgumentException("wc_queue_list is missing");
+                }
+                String queues [] = parseWCQueueList(args[i]);
+                List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
+                jgdi.rescheduleQueuesWithAnswer(queues, force, answers);
+                printAnswers(answers);
+                break;
+            } else if (args[i].equals("-d")) {
+                i++;
+                if (i>=args.length) {
+                    throw new IllegalArgumentException("wc_queue_list is missing");
+                }
+                String queues [] = parseWCQueueList(args[i]);
+                List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
+                jgdi.disableQueuesWithAnswer(queues, force, answers);
+                printAnswers(answers);
+                break;
+            } else if (args[i].equals("-e")) {
+                i++;
+                if (i>=args.length) {
+                    throw new IllegalArgumentException("wc_queue_list is missing");
+                }
+                String queues [] = parseWCQueueList(args[i]);
+                List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
+                jgdi.enableQueuesWithAnswer(queues, force, answers);
+                printAnswers(answers);
+                break;
+            } else if (args[i].equals("-f")) {
+                force = true;
+            } else {
+                throw new IllegalArgumentException("Unknown or not implemented option " + args[i]);
             }
-            String jobs [] = parseJobWCQueueList(args[i]);
-            List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
-            jgdi.clearJobsWithAnswer(jobs, force, answers);
-            printAnswers(answers);
-            break;
-         } else if (args[i].equals("-c")) {
-            i++;
-            if (i>=args.length) {
-               throw new IllegalArgumentException("job_wc_queue_list is missing");
-            }
-            String queues [] = parseJobWCQueueList(args[i]);
-            List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
-            jgdi.clearQueuesWithAnswer(queues, force, answers);
-            printAnswers(answers);
-         } else if (args[i].equals("-s")) {
-            i++;
-            if (i>=args.length) {
-               throw new IllegalArgumentException("job_wc_queue_list is missing");
-            }
-            String queues [] = parseJobWCQueueList(args[i]);
-            List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
-            jgdi.suspendWithAnswer(queues, force, answers);
-            printAnswers(answers);
-         } else if (args[i].equals("-us")) {
-            i++;
-            if (i>=args.length) {
-               throw new IllegalArgumentException("job_wc_queue_list is missing");
-            }
-            String queues [] = parseJobWCQueueList(args[i]);
-            List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
-            jgdi.unsuspendWithAnswer(queues, force, answers);
-            printAnswers(answers);
-         } else if (args[i].equals("-sj")) {
-            i++;
-            if (i>=args.length) {
-               throw new IllegalArgumentException("job_list is missing");
-            }
-            String jobs [] = parseJobList(args[i]);
-            List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
-            jgdi.suspendJobsWithAnswer(jobs, force, answers);
-            printAnswers(answers);
-         } else if (args[i].equals("-usj")) {
-            i++;
-            if (i>=args.length) {
-               throw new IllegalArgumentException("job_list is missing");
-            }
-            String jobs [] = parseJobList(args[i]);
-            List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
-            jgdi.unsuspendJobsWithAnswer(jobs, force, answers);
-            printAnswers(answers);
-         } else if (args[i].equals("-sq")) {
-            i++;
-            if (i>=args.length) {
-               throw new IllegalArgumentException("job_wc_queue_list is missing");
-            }
-            String queues [] = parseWCQueueList(args[i]);
-            List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
-            jgdi.suspendQueuesWithAnswer(queues, force, answers);
-            printAnswers(answers);
-         } else if (args[i].equals("-uq")) {
-            i++;
-            if (i>=args.length) {
-               throw new IllegalArgumentException("job_wc_queue_list is missing");
-            }
-            String queues [] = parseWCQueueList(args[i]);
-            List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
-            jgdi.unsuspendQueuesWithAnswer(queues, force, answers);
-            printAnswers(answers);
-         } else if (args[i].equals("-r")) {
-            i++;
-            if (i>=args.length) {
-               throw new IllegalArgumentException("job_wc_queue_list is missing");
-            }
-            String jobs[] = parseJobWCQueueList(args[i]);
-            List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
-            jgdi.rescheduleWithAnswer(jobs, force, answers);
-            printAnswers(answers);
-         } else if (args[i].equals("-rj")) {
-            i++;
-            if (i>=args.length) {
-               throw new IllegalArgumentException("job_wc_queue_list is missing");
-            }
-            String jobs [] = parseJobList(args[i]);
-            List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
-            jgdi.rescheduleJobsWithAnswer(jobs, force, answers);
-            printAnswers(answers);
-         } else if (args[i].equals("-cq")) {
-            i++;
-            if (i>=args.length) {
-               throw new IllegalArgumentException("wc_queue_list is missing");
-            }
-            String queues [] = parseWCQueueList(args[i]);
-            List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
-            jgdi.clearQueuesWithAnswer(queues, force, answers);
-            printAnswers(answers);
-            break;
-         } else if (args[i].equals("-rq")) {
-            i++;
-            if (i>=args.length) {
-               throw new IllegalArgumentException("wc_queue_list is missing");
-            }
-            String queues [] = parseWCQueueList(args[i]);
-            List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
-            jgdi.rescheduleQueuesWithAnswer(queues, force, answers);
-            printAnswers(answers);
-            break;
-         } else if (args[i].equals("-d")) {
-            i++;
-            if (i>=args.length) {
-               throw new IllegalArgumentException("wc_queue_list is missing");
-            }
-            String queues [] = parseWCQueueList(args[i]);
-            List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
-            jgdi.disableQueuesWithAnswer(queues, force, answers);
-            printAnswers(answers);
-            break;
-         } else if (args[i].equals("-e")) {
-            i++;
-            if (i>=args.length) {
-               throw new IllegalArgumentException("wc_queue_list is missing");
-            }
-            String queues [] = parseWCQueueList(args[i]);
-            List <JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
-            jgdi.enableQueuesWithAnswer(queues, force, answers);
-            printAnswers(answers);
-            break;
-         } else if (args[i].equals("-f")) {
-            force = true;
-         } else {
-            throw new IllegalArgumentException("Unknown or not implemented option " + args[i]);
-         }
-      }
-   }
-   
+        }
+    }
+    
 }

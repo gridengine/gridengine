@@ -44,34 +44,34 @@ import junit.framework.TestSuite;
  *
  */
 public class SpecialEventTestCase extends BaseTestCase {
-   
-   private JGDI jgdi;
-   private EventClient evc;
-   
-   /** Creates a new instance of SpecialEventTestCase */
-   public SpecialEventTestCase(String testName) {
-      super(testName);
-   }
-   
-   protected void setUp() throws Exception {
-      
-      jgdi = createJGDI();
-      evc = createEventClient(0);
-      super.setUp();
-      logger.fine("SetUp done");
-   }
-   
-   protected void tearDown() throws Exception {
-      try {
-        evc.close();
-      } finally {
-         jgdi.close();
-      }
-   }
-   
-   
-   public static Test suite() {
-      TestSuite suite = new TestSuite( SpecialEventTestCase.class);
-      return suite;
-   }
+    
+    private JGDI jgdi;
+    private EventClient evc;
+    
+    /** Creates a new instance of SpecialEventTestCase */
+    public SpecialEventTestCase(String testName) {
+        super(testName);
+    }
+    
+    protected void setUp() throws Exception {
+        
+        jgdi = createJGDI();
+        evc = createEventClient(0);
+        super.setUp();
+        logger.fine("SetUp done");
+    }
+    
+    protected void tearDown() throws Exception {
+        try {
+            evc.close();
+        } finally {
+            jgdi.close();
+        }
+    }
+    
+    
+    public static Test suite() {
+        TestSuite suite = new TestSuite( SpecialEventTestCase.class);
+        return suite;
+    }
 }

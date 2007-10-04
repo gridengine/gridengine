@@ -37,7 +37,7 @@ package com.sun.grid.jgdi.configuration;
 public abstract class GEObjectImpl implements java.io.Serializable, GEObject, Cloneable {
 
     /* parent object. */
-    private GEObjectImpl parent;
+private GEObjectImpl parent;
     /* name of the object. */
     private String name;
 

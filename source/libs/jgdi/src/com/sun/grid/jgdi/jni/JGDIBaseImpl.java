@@ -41,80 +41,80 @@ import java.util.List;
  *
  */
 public abstract class JGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
-
+    
     private int ctxIndex = -1;
     private File sgeRoot;
-
+    
     public void init(String url) throws JGDIException {
         ctxIndex = nativeInit(url);
     }
-
+    
     int getCtxIndex() {
         return ctxIndex;
     }
-
+    
     public synchronized void close() throws com.sun.grid.jgdi.JGDIException {
         if (ctxIndex >= 0) {
             nativeClose(ctxIndex);
             ctxIndex = -1;
         }
     }
-
+    
     public File getSGERoot() throws JGDIException {
         if (sgeRoot == null) {
             sgeRoot = new File(nativeGetSGERoot());
         }
         return sgeRoot;
     }
-
+    
     public String getSGECell() throws JGDIException {
         return nativeGetSGECell();
     }
-
+    
     public String getAdminUser() throws JGDIException {
         return nativeGetAdminUser();
     }
-
+    
     public String getActQMaster() throws JGDIException {
         return nativeGetActQMaster();
     }
-
+    
     public String getSchedulerHost() throws JGDIException {
         return nativeGetSchedulerHost();
     }
-
+    
     public QHostResult execQHost(QHostOptions options) throws JGDIException {
         QHostResultImpl ret = new QHostResultImpl();
         nativeExecQHost(options, ret);
         return ret;
     }
-
+    
     public List<ClusterQueueSummary> getClusterQueueSummary(ClusterQueueSummaryOptions options) throws JGDIException {
         List<ClusterQueueSummary> ret = new LinkedList<ClusterQueueSummary>();
         nativeFillClusterQueueSummary(options, ret);
         return ret;
     }
-
+    
     public QueueInstanceSummaryResult getQueueInstanceSummary(QueueInstanceSummaryOptions options) throws JGDIException {
         QueueInstanceSummaryResultImpl ret = new QueueInstanceSummaryResultImpl();
         nativeFillQueueInstanceSummary(options, ret);
         return ret;
     }
-
+    
     public QQuotaResult getQQuota(QQuotaOptions options) throws JGDIException {
         QQuotaResultImpl ret = new QQuotaResultImpl();
         nativeGetQQuota(options, ret);
         return ret;
     }
-
+    
     public void cleanQueuesWithAnswer(String[] queues, List<JGDIAnswer> answers) throws JGDIException {
         nativeCleanQueuesWithAnswer(queues, answers);
     }
-
+    
     public void cleanQueues(String[] queues) throws JGDIException {
         cleanQueuesWithAnswer(queues, null);
     }
-
+    
     public void unsuspendWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         nativeUnsuspendWithAnswer(queues, force, answers);
     }
@@ -122,23 +122,23 @@ public abstract class JGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
     public void unsuspend(String[] queues, boolean force) throws JGDIException {
         unsuspendWithAnswer(queues, force, null);
     }
-
+    
     public void unsuspendQueuesWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         nativeUnsuspendQueuesWithAnswer(queues, force, answers);
     }
-
+    
     public void unsuspendQueues(String[] queues, boolean force) throws JGDIException {
         unsuspendQueuesWithAnswer(queues, force, null);
     }
-
+    
     public void unsuspendJobsWithAnswer(String[] jobs, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         nativeUnsuspendJobsWithAnswer(jobs, force, answers);
     }
-
+    
     public void unsuspendJobs(String[] jobs, boolean force) throws JGDIException {
         unsuspendJobsWithAnswer(jobs, force, null);
     }
-
+    
     public void suspendWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         nativeSuspendWithAnswer(queues, force, answers);
     }
@@ -146,71 +146,71 @@ public abstract class JGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
     public void suspend(String[] queues, boolean force) throws JGDIException {
         suspendWithAnswer(queues, force, null);
     }
-
+    
     public void suspendQueuesWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         nativeSuspendQueuesWithAnswer(queues, force, answers);
     }
-
+    
     public void suspendQueues(String[] queues, boolean force) throws JGDIException {
         suspendQueuesWithAnswer(queues, force, null);
     }
-
+    
     public void suspendJobsWithAnswer(String[] jobs, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         nativeSuspendJobsWithAnswer(jobs, force, answers);
     }
-
+    
     public void suspendJobs(String[] jobs, boolean force) throws JGDIException {
         suspendJobsWithAnswer(jobs, force, null);
     }
-
+    
     public void rescheduleJobsWithAnswer(String[] jobs, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         nativeRescheduleJobsWithAnswer(jobs, force, answers);
     }
-
+    
     public void rescheduleJobs(String[] jobs, boolean force) throws JGDIException {
         rescheduleJobsWithAnswer(jobs, force, null);
     }
-
+    
     public void rescheduleQueuesWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         nativeRescheduleQueuesWithAnswer(queues, force, answers);
     }
-
+    
     public void rescheduleQueues(String[] queues, boolean force) throws JGDIException {
         rescheduleQueuesWithAnswer(queues, force, null);
     }
-
+    
     public void rescheduleWithAnswer(String[] queue_or_job, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         nativeRescheduleWithAnswer(queue_or_job, force, answers);
     }
-
+    
     public void reschedule(String[] queue_or_job, boolean force) throws JGDIException {
         rescheduleWithAnswer(queue_or_job, force, null);
     }
-
+    
     public void clearJobsWithAnswer(String[] jobs, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         nativeClearJobsWithAnswer(jobs, force, answers);
     }
-
+    
     public void clearJobs(String[] jobs, boolean force) throws JGDIException {
         clearJobsWithAnswer(jobs, force, null);
     }
-
+    
     public void clearQueuesWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         nativeClearQueuesWithAnswer(queues, force, answers);
     }
-
+    
     public void clearQueues(String[] queues, boolean force) throws JGDIException {
         clearQueuesWithAnswer(queues, force, null);
     }
-
+    
     public void disableQueuesWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         nativeDisableQueuesWithAnswer(queues, force, answers);
     }
-
+    
     public void disableQueues(String[] queues, boolean force) throws JGDIException {
         disableQueuesWithAnswer(queues, force, null);
     }
-
+    
     public void enableQueuesWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         nativeEnableQueuesWithAnswer(queues, force, answers);
     }
@@ -218,7 +218,7 @@ public abstract class JGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
     public void enableQueues(String[] queues, boolean force) throws JGDIException {
         enableQueuesWithAnswer(queues, force, null);
     }
-
+    
     public void killAllExecdsWithAnswer(boolean terminateJobs, List<JGDIAnswer> answers) throws JGDIException {
         nativeKillAllExecdsWithAnswer(terminateJobs, answers);
     }
@@ -226,7 +226,7 @@ public abstract class JGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
     public void killAllExecds(boolean terminateJobs) throws JGDIException {
         killAllExecdsWithAnswer(terminateJobs, null);
     }
-
+    
     public void killExecdWithAnswer(String[] hosts, boolean terminateJobs, List<JGDIAnswer> answers) throws JGDIException {
         nativeKillExecdWithAnswer(hosts, terminateJobs, answers);
     }
@@ -234,73 +234,73 @@ public abstract class JGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
     public void killExecd(String[] hosts, boolean terminateJobs) throws JGDIException {
         killExecdWithAnswer(hosts, terminateJobs, null);
     }
-
+    
     public void killEventClientsWithAnswer(int[] ids, List<JGDIAnswer> answers) throws JGDIException {
         nativeKillEventClientsWithAnswer(ids, answers);
     }
-
+    
     public void killEventClients(int[] ids) throws JGDIException {
         killEventClientsWithAnswer(ids, null);
     }
-
+    
     public void triggerSchedulerMonitoringWithAnswer(List<JGDIAnswer> answers) throws JGDIException {
         nativeTriggerSchedulerMonitoringWithAnswer(answers);
     }
-
+    
     public void triggerSchedulerMonitoring() throws JGDIException {
         triggerSchedulerMonitoringWithAnswer(null);
     }
-
+    
     public void clearShareTreeUsageWithAnswer(List<JGDIAnswer> answers) throws JGDIException {
         nativeClearShareTreeUsageWithAnswer(answers);
     }
-
+    
     public void clearShareTreeUsage() throws JGDIException {
         clearShareTreeUsageWithAnswer(null);
     }
-
+    
     public void killAllEventClientsWithAnswer(List<JGDIAnswer> answers) throws JGDIException {
         nativeKillAllEventClientsWithAnswer(answers);
     }
-
+    
     public void killAllEventClients() throws JGDIException {
         killAllEventClientsWithAnswer(null);
     }
-
+    
     public void killMasterWithAnswer(List<JGDIAnswer> answers) throws JGDIException {
         nativeKillMasterWithAnswer(answers);
     }
-
+    
     public void killMaster() throws JGDIException {
         killMasterWithAnswer(null);
     }
-
+    
     public void killSchedulerWithAnswer(List<JGDIAnswer> answers) throws JGDIException {
         nativeKillSchedulerWithAnswer(answers);
     }
-
+    
     public void killScheduler() throws JGDIException {
         killSchedulerWithAnswer(null);
     }
-
+    
     public String showDetachedSettingsWithAnswer(String[] queues, List<JGDIAnswer> answers) throws JGDIException {
         return nativeShowDetachedSettingsWithAnswer(queues, answers);
     }
-
+    
     public String showDetachedSettings(String[] queues) throws JGDIException {
         return showDetachedSettingsWithAnswer(queues, null);
     }
-
+    
     public String showDetachedSettingsAllWithAnswer(List<JGDIAnswer> answers) throws JGDIException {
         return nativeShowDetachedSettingsAllWithAnswer(answers);
     }
-
+    
     public String showDetachedSettingsAll() throws JGDIException {
         return showDetachedSettingsAllWithAnswer(null);
     }
     
-
-
+    
+    
     private native int nativeInit(String url) throws JGDIException;
     private native void nativeClose(int ctxIndex) throws JGDIException;
     private native String nativeGetSGERoot() throws JGDIException;

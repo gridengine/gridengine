@@ -45,76 +45,76 @@ import java.io.Serializable;
  *          <p>Add javadoc comments</p>
  */
 public class QQuotaOptions implements Serializable {
-   
-   
-   /* -q option */
-   private QueueFilter queueFilter;
-   
-   /* -h option */
-   private HostFilter hostFilter;
-   
-   /* -P option */
-   private ProjectFilter projectFilter;
-   
-   /* -pe option */
-   private ParallelEnvironmentFilter peFilter;
-   
-   /* -l option */
-   private ResourceFilter resourceFilter;
-   
-   /* -u option */
-   private UserFilter userFilter;
-   
-   /** Creates a new instance of QQuotaOptions */
-   public QQuotaOptions() {
-   }
-
-   public QueueFilter getQueueFilter() {
-      return queueFilter;
-   }
-
-   public void setQueueFilter(QueueFilter queueFilter) {
-      this.queueFilter = queueFilter;
-   }
-
-   public HostFilter getHostFilter() {
-      return hostFilter;
-   }
-
-   public void setHostFilter(HostFilter hostFilter) {
-      this.hostFilter = hostFilter;
-   }
-
-   public ProjectFilter getProjectFilter() {
-      return projectFilter;
-   }
-
-   public void setProjectFilter(ProjectFilter projectFilter) {
-      this.projectFilter = projectFilter;
-   }
-
-   public ParallelEnvironmentFilter getPeFilter() {
-      return peFilter;
-   }
-
-   public void setPeFilter(ParallelEnvironmentFilter peFilter) {
-      this.peFilter = peFilter;
-   }
-
-   public ResourceFilter getResourceFilter() {
-      return resourceFilter;
-   }
-
-   public void setResourceFilter(ResourceFilter resourceFilter) {
-      this.resourceFilter = resourceFilter;
-   }
-
-   public UserFilter getUserFilter() {
-      return userFilter;
-   }
-
-   public void setUserFilter(UserFilter userFilter) {
-      this.userFilter = userFilter;
-   }
-   
+    
+    
+    /* -q option */
+    private QueueFilter queueFilter;
+    
+    /* -h option */
+    private HostFilter hostFilter;
+    
+    /* -P option */
+    private ProjectFilter projectFilter;
+    
+    /* -pe option */
+    private ParallelEnvironmentFilter peFilter;
+    
+    /* -l option */
+    private ResourceFilter resourceFilter;
+    
+    /* -u option */
+    private UserFilter userFilter;
+    
+    /** Creates a new instance of QQuotaOptions */
+    public QQuotaOptions() {
+    }
+    
+    public QueueFilter getQueueFilter() {
+        return queueFilter;
+    }
+    
+    public void setQueueFilter(QueueFilter queueFilter) {
+        this.queueFilter = queueFilter;
+    }
+    
+    public HostFilter getHostFilter() {
+        return hostFilter;
+    }
+    
+    public void setHostFilter(HostFilter hostFilter) {
+        this.hostFilter = hostFilter;
+    }
+    
+    public ProjectFilter getProjectFilter() {
+        return projectFilter;
+    }
+    
+    public void setProjectFilter(ProjectFilter projectFilter) {
+        this.projectFilter = projectFilter;
+    }
+    
+    public ParallelEnvironmentFilter getPeFilter() {
+        return peFilter;
+    }
+    
+    public void setPeFilter(ParallelEnvironmentFilter peFilter) {
+        this.peFilter = peFilter;
+    }
+    
+    public ResourceFilter getResourceFilter() {
+        return resourceFilter;
+    }
+    
+    public void setResourceFilter(ResourceFilter resourceFilter) {
+        this.resourceFilter = resourceFilter;
+    }
+    
+    public UserFilter getUserFilter() {
+        return userFilter;
+    }
+    
+    public void setUserFilter(UserFilter userFilter) {
+        this.userFilter = userFilter;
+    }
+    
 }

@@ -42,9 +42,9 @@ import java.util.*;
  *
  */
 public class Util {
-
+    
     private static Map<Class, ClassDescriptor> classDescriptorMap = Collections.synchronizedMap(new HashMap<Class, ClassDescriptor>());
-
+    
     /**
      *  Get a descriptor of a cull type
      *  @param  cullType name of the cull type
@@ -55,7 +55,7 @@ public class Util {
         Class clazz = CullTypeMapping.getClassForCullType(cullType);
         return getDescriptor(clazz);
     }
-
+    
     /**
      * Register a new class descriptor.
      * @param aClass   the described class
@@ -64,7 +64,7 @@ public class Util {
     public static void addDescriptor(Class aClass, ClassDescriptor cd) {
         classDescriptorMap.put(aClass, cd);
     }
-
+    
     public static ClassDescriptor getDescriptor(Class aClass) {
         ClassDescriptor ret = null;
         ret = classDescriptorMap.get(aClass);
@@ -74,12 +74,12 @@ public class Util {
         }
         return ret;
     }
-
+    
     public static Object clone(Object obj) {
         ClassDescriptor cd = getDescriptor(obj.getClass());
         return cd.clone(obj);
     }
-
+    
     public static int nextObjectId() {
         synchronized (Util.class) {
             int ret = objectId;
@@ -89,14 +89,14 @@ public class Util {
     }
     // private ------------------------------------------------------------------
     private static int objectId;
-
+    
     private static ClassDescriptor createDescriptor(Class aClass) {
         ClassDescriptor ret = null;
         StringBuilder name = new StringBuilder();
         String packagename = aClass.getPackage().getName();
         name.append(packagename);
         name.append(".reflect.");
-
+        
         String simpleName = aClass.getSimpleName();
         if (simpleName.endsWith("Impl")) {
             name.append(simpleName.substring(0, simpleName.length() - 4));
@@ -104,7 +104,7 @@ public class Util {
             name.append(aClass.getSimpleName());
         }
         name.append("Descriptor");
-
+        
         try {
             Class descr = Class.forName(name.toString());
             return (ClassDescriptor) descr.newInstance();
@@ -124,31 +124,31 @@ public class Util {
             throw ilse;
         }
     }
-
+    
     public static GEObject findObject(String path, GEObject root) {
         int dotIndex = path.indexOf('.');
-
+        
         String name = path;
         String rest = null;
-
+        
         if (dotIndex > 0) {
             name = path.substring(0, dotIndex);
             rest = path.substring(dotIndex + 1);
         }
-
+        
         int bracketIndex = name.indexOf('[');
         String propertyName = null;
-
+        
         if (bracketIndex > 0) {
             int bracketCloseIndex = name.indexOf(']', bracketIndex);
-
+            
             if (bracketCloseIndex < 0) {
                 throw new IllegalArgumentException("Unkonwn property descriptor " + path);
             }
             propertyName = name.substring(0, bracketIndex);
             name = name.substring(bracketIndex + 1, bracketCloseIndex);
         }
-
+        
         if (propertyName != null) {
             ClassDescriptor descr = getDescriptor(root.getClass());
             PropertyDescriptor propDescr = descr.getProperty(propertyName);
@@ -195,29 +195,29 @@ public class Util {
             }
         }
     }
-
+    
     public static void getDifferences(GEObject obj1, GEObject obj2, List<Difference> differences) {
         getDifferences(obj1, obj2, ".", differences);
     }
-
+    
     public static void getDifferences(GEObject obj1, GEObject obj2, String path, List<Difference> differences) {
-
+        
         if (!obj1.getClass().equals(obj2.getClass())) {
             differences.add(new Difference(path, "obj1 and obj2 have not the same class"));
         } else {
             ClassDescriptor cd = getDescriptor(obj1.getClass());
-
+            
             for (int i = 0; i < cd.getPropertyCount(); i++) {
                 PropertyDescriptor pd = cd.getProperty(i);
                 String propPath = path + pd.getPropertyName();
-
+                
                 if (pd instanceof SimplePropertyDescriptor) {
-
+                    
                     SimplePropertyDescriptor spd = (SimplePropertyDescriptor) pd;
-
+                    
                     Object v1 = spd.getValue(obj1);
                     Object v2 = spd.getValue(obj2);
-
+                    
                     if (v1 == null && v2 == null) {
                         // no difference
                     } else if (v1 == null && v2 != null) {
@@ -235,7 +235,7 @@ public class Util {
                     }
                 } else if (pd instanceof ListPropertyDescriptor) {
                     ListPropertyDescriptor lpd = (ListPropertyDescriptor) pd;
-
+                    
                     int count1 = lpd.getCount(obj1);
                     int count2 = lpd.getCount(obj2);
                     if (count1 != count2) {
@@ -244,7 +244,7 @@ public class Util {
                         for (int valueIndex = 0; valueIndex < count1; valueIndex++) {
                             Object v1 = lpd.get(obj1, valueIndex);
                             Object v2 = lpd.get(obj2, valueIndex);
-
+                            
                             String myPath = propPath + "[" + valueIndex + "]";
                             if (v1 == null && v2 == null) {
                                 // do nothing
@@ -264,9 +264,9 @@ public class Util {
                         }
                     }
                 } else if (pd instanceof MapListPropertyDescriptor) {
-
+                    
                     MapListPropertyDescriptor lpd = (MapListPropertyDescriptor) pd;
-
+                    
                     Set keys1 = lpd.getKeys(obj1);
                     Set keys2 = lpd.getKeys(obj2);
                     if (keys1.size() != keys2.size()) {
@@ -278,14 +278,14 @@ public class Util {
                             String keyPath = propPath + "[" + key + "]";
                             int count1 = lpd.getCount(obj1, key);
                             int count2 = lpd.getCount(obj2, key);
-
+                            
                             if (count1 != count2) {
                                 differences.add(new Difference(keyPath, "MLPD: different length (" + count1 + " != " + count2 + ")"));
                             } else {
                                 for (int valueIndex = 0; valueIndex < count1; valueIndex++) {
                                     Object v1 = lpd.get(obj1, key, valueIndex);
                                     Object v2 = lpd.get(obj2, key, valueIndex);
-
+                                    
                                     String myPath = keyPath + "[" + valueIndex + "]";
                                     if (v1 == null && v2 == null) {
                                         // do nothing
@@ -307,23 +307,23 @@ public class Util {
                         }
                     }
                 } else if (pd instanceof MapPropertyDescriptor) {
-
+                    
                     MapPropertyDescriptor lpd = (MapPropertyDescriptor) pd;
-
+                    
                     Set keys1 = lpd.getKeys(obj1);
                     Set keys2 = lpd.getKeys(obj2);
-
+                    
                     if (keys1.size() != keys2.size()) {
                         differences.add(new Difference(propPath, "MPD: different key count (" + keys1.size() + " != " + keys2.size() + ")"));
                     } else {
                         Iterator iter = keys1.iterator();
                         while (iter.hasNext()) {
                             Object key = iter.next();
-
+                            
                             String keyPath = propPath + "[" + key + "]";
                             Object v1 = lpd.get(obj1, key);
                             Object v2 = lpd.get(obj2, key);
-
+                            
                             if (v1 == null && v2 == null) {
                                 // do nothing
                             } else if (v1 == null && v2 != null) {
@@ -345,17 +345,17 @@ public class Util {
             }
         }
     }
-
+    
     static class Difference {
-
+        
         private String text;
         private String path;
-
+        
         public Difference(String path, String text) {
             this.path = path;
             this.text = text;
         }
-
+        
         public String toString() {
             return path + ": " + text;
         }

@@ -60,11 +60,11 @@ import javax.management.remote.JMXServiceURL;
 
 /**
  *  <p>
- *  This class can be used to communicate with qmaster over JMX. 
+ *  This class can be used to communicate with qmaster over JMX.
  *  </p>
  */
 public class JGDIProxy implements InvocationHandler, NotificationListener {
-
+    
     private static final Map<Method, MethodInvocationHandler> handlerMap = new HashMap<Method, MethodInvocationHandler>();
     
     private final ObjectName name;
@@ -76,17 +76,17 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
     private Set<EventListener> listeners = Collections.<EventListener>emptySet();
     
     
-
+    
     /**
      *  Create a new proxy the the jgdi MBean
-     * 
+     *
      *  @param url  jmx connection url to qmaster
      *  @param name name of the MBean in qmasters MBean server
      *  @param credentials credentials for authenticating user. If the MBeanServer
-     *         allows username/password authentication this parameter must be a 
+     *         allows username/password authentication this parameter must be a
      *         string array. The for element is the username, the second elements
      *         is the password.
-     * 
+     *
      */
     public JGDIProxy(JMXServiceURL url, ObjectName name, Object credentials) {
         this.name = name;
@@ -95,19 +95,19 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
         Class<?>[] types = new Class<?>[]{JGDIJMXMBean.class};
         proxy = (JGDIJMXMBean) Proxy.newProxyInstance(JGDIJMXMBean.class.getClassLoader(), types , this);
     }
-
+    
     /**
      *   Get the dynamic proxy object
-     * 
+     *
      *   @return the dynamic proxy object
      */
     public JGDIJMXMBean getProxy() {
         return proxy;
     }
-
+    
     /**
      *   Register an jgdi event listener.
-     * 
+     *
      *   @param lis the jgdi event listener
      */
     public synchronized void addEventListener(EventListener lis) {
@@ -116,10 +116,10 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
         newListeners.add(lis);
         listeners = newListeners;
     }
-
+    
     /**
      *   Remove a jgdi event listener.
-     * 
+     *
      *   @param lis the jgdi event listener
      */
     public synchronized void removeEventListener(EventListener lis) {
@@ -127,18 +127,18 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
         newListeners.remove(lis);
         listeners = newListeners;
     }
-
+    
     /**
      *  JMX will call this method of a notification for the proxy is available.
-     * 
+     *
      *  If the notification contains a JGDI event it will be propagated to all
      *  registered JGDI event listeners.
-     * 
+     *
      *  @param notification  the notification
      *  @param handback      the handback object
      */
     public void handleNotification(Notification notification, Object handback) {
-
+        
         if (notification.getUserData() instanceof Event) {
             Set<EventListener> tmpLis = null;
             synchronized (this) {
@@ -149,22 +149,22 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
             }
         }
     }
-
+    
     /**
      *   Determine of the connection to the JMX MBean servers is established
-     * 
+     *
      *   @return <code>true</code> if the connection is established otherwise
      *           <code>false</code>
      */
     public synchronized boolean isConnected() {
         return connection != null;
     }
-
+    
     /**
      *   Close the connection to the MBean server
      */
     public synchronized void close() {
-
+        
         if (connection != null) {
             try {
                 connector.close();
@@ -176,7 +176,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
             }
         }
     }
-
+    
     private void connect() throws JGDIException {
         if (connection == null) {
             Map<String, Object> env = new HashMap<String, Object>();
@@ -186,7 +186,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
             try {
                 connector = JMXConnectorFactory.connect(url, env);
                 connection = connector.getMBeanServerConnection();
-
+                
                 connection.addNotificationListener(name, this, null, null);
                 connector.addConnectionNotificationListener(this, null, null);
             } catch (InstanceNotFoundException ex) {
@@ -196,10 +196,10 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
             }
         }
     }
-
+    
     /**
      *   Invoke a method on the remote MBean.
-     * 
+     *
      *   @param proxy the JGDIProxy object
      *   @param method the method which should be invoked
      *   @param args   arguments for the method
@@ -209,7 +209,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
         return getHandler(method).invoke(connection, name, args);
     }
     
-
+    
     private static MethodInvocationHandler getHandler(Method m) {
         MethodInvocationHandler ret = null;
         synchronized (handlerMap) {
@@ -221,64 +221,64 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
         }
         return ret;
     }
-
+    
     private static MethodInvocationHandler createHandler(Method method) {
-
+        
         // Is the method an attribute getter?
         String attrname = isAttributeGetter(method);
         if (attrname != null) {
             return new AttributeGetter(attrname);
         }
-
+        
         // Is the method an attribute setter
         attrname = isAttributeSetter(method);
         if (attrname != null) {
             return new AttributeSetter(attrname);
         }
-
+        
         if (method.getName().equals("toString")) {
             return new ToStringMethodInvocationHandler();
         }
-
+        
         return new MethodInvoker(method);
     }
-
+    
     private static interface MethodInvocationHandler {
         public Object invoke(MBeanServerConnection connection, ObjectName name, Object[] args) throws Throwable;
     }
-
+    
     private static class AttributeGetter implements MethodInvocationHandler {
-
+        
         private String attribute;
-
+        
         public AttributeGetter(String attribute) {
             this.attribute = attribute;
         }
-
+        
         public Object invoke(MBeanServerConnection connection, ObjectName name, Object[] args) throws Throwable {
             return connection.getAttribute(name, attribute);
         }
     }
-
+    
     private static class AttributeSetter implements MethodInvocationHandler {
-
+        
         private String attribute;
-
+        
         public AttributeSetter(String attribute) {
             this.attribute = attribute;
         }
-
+        
         public Object invoke(MBeanServerConnection connection, ObjectName name, Object[] args) throws Throwable {
             connection.setAttribute(name, new Attribute(attribute, args[0]));
             return null;
         }
     }
-
+    
     private static class MethodInvoker implements MethodInvocationHandler {
-
+        
         private final String[] signature;
         private final String methodName;
-
+        
         public MethodInvoker(Method method) {
             this.methodName = method.getName();
             Class<?>[] paramTypes = method.getParameterTypes();
@@ -287,7 +287,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
                 this.signature[i] = paramTypes[i].getName();
             }
         }
-
+        
         public Object invoke(MBeanServerConnection connection, ObjectName name, Object[] args) throws Throwable {
             try {
                 return connection.invoke(name, methodName, args, signature);
@@ -301,20 +301,20 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
             }
         }
     }
-
+    
     private static class ToStringMethodInvocationHandler implements MethodInvocationHandler {
-
+        
         public Object invoke(MBeanServerConnection connection, ObjectName name, Object[] args) throws Throwable {
             return String.format("[JGDIClientProxy to %s]", name.toString());
         }
     }
     
     private static String isAttributeGetter(Method method) {
-
+        
         Class returnType = method.getReturnType();
-
+        
         String attrName = null;
-
+        
         if (!returnType.equals(Void.TYPE)) {
             Class[] paramTypes = method.getParameterTypes();
             if (paramTypes.length == 0) {
@@ -326,7 +326,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
                 }
             }
         }
-
+        
         return attrName;
     }
     
@@ -342,10 +342,10 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
         
         Class[] paramTypes = method.getParameterTypes();
         Class returnType = method.getReturnType();
-
-        if (returnType.equals(Void.TYPE) && paramTypes.length == 1 
-            && method.getName().length() > 3 
-            && method.getName().startsWith("set")) {
+        
+        if (returnType.equals(Void.TYPE) && paramTypes.length == 1
+                && method.getName().length() > 3
+                && method.getName().startsWith("set")) {
             String attrName = method.getName();
             return attrName.substring(3);
         } else {

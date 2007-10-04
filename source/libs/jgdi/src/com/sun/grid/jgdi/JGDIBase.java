@@ -48,42 +48,42 @@ import java.util.List;
  * Base class for the <code>JGDI</code> object.
  */
 public interface JGDIBase {
-
+    
     /**
      *  Get the admin user
      *  @return the admin user
      *  @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
      */
     public String getAdminUser() throws JGDIException;
-
+    
     /**
      * Get the root directory of the grid engine installation
      * @throws com.sun.grid.jgdi.JGDIException
      * @return root directory of the gridengine installation
      */
     public File getSGERoot() throws JGDIException;
-
+    
     /**
      * Get the cell of the grid engine
      * @return the cell of the grid engine
      * @throws com.sun.grid.jgdi.JGDIException
      */
     public String getSGECell() throws JGDIException;
-
+    
     /**
      *  Get the hostname of the current qmaster
      *  @return the hostname of the current qmaster
      *  @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
      */
     public String getActQMaster() throws JGDIException;
-
+    
     /**
      *   Close the <code>JGDI</code> object. After calling this method
      *   the <code>JGDI</code> is not longer useable.
      *   @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
      */
     public void close() throws com.sun.grid.jgdi.JGDIException;
-
+    
     /**
      * Get the list of real exec hosts (excludes "template" and "global").
      *
@@ -91,7 +91,7 @@ public interface JGDIBase {
      * @return the list of real exec hosts
      */
     public List<ExecHost> getRealExecHostList() throws com.sun.grid.jgdi.JGDIException;
-
+    
     // -------- Monitoring interface --------------------------------------------
     /**
      *  Get summary information about cluster hosts.
@@ -103,7 +103,7 @@ public interface JGDIBase {
      *  @throws com.sun.grid.jgdi.JGDIException on any error in the GDI layer
      */
     public QHostResult execQHost(QHostOptions options) throws JGDIException;
-
+    
     /**
      *  Get summary information about cluster queues.
      *
@@ -113,7 +113,7 @@ public interface JGDIBase {
      *  @throws com.sun.grid.jgdi.JGDIException on any error in the GDI layer
      */
     public List<ClusterQueueSummary> getClusterQueueSummary(ClusterQueueSummaryOptions options) throws JGDIException;
-
+    
     /**
      *  Get summary information abouter queue instances.
      *
@@ -123,7 +123,7 @@ public interface JGDIBase {
      *  @throws com.sun.grid.jgdi.JGDIException on any error in the GDI layer
      */
     public QueueInstanceSummaryResult getQueueInstanceSummary(QueueInstanceSummaryOptions options) throws JGDIException;
-
+    
     /**
      *  Get the limit information.
      *
@@ -134,7 +134,7 @@ public interface JGDIBase {
      *  @throws com.sun.grid.jgdi.JGDIException on any error in the GDI layer
      */
     public QQuotaResult getQQuota(QQuotaOptions options) throws JGDIException;
-
+    
     // -------- Managing interface methods --------------------------------------
     /**
      * <p>Clears all user and project usage from  the  sharetree.
@@ -145,7 +145,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException
      */
     public void clearShareTreeUsage() throws JGDIException;
-
+    
     /**
      * <p>Clears all user and project usage from  the  sharetree.
      * All usage will be initialized back to zero.</p>
@@ -156,7 +156,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException
      */
     public void clearShareTreeUsageWithAnswer(List<JGDIAnswer> answers) throws JGDIException;
-
+    
     /**
      * <p>Cleans queue from jobs which haven't been reaped. Primarily for
      *    development purpose. Requires root/manager/operator privileges.</p>
@@ -167,7 +167,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
      */
     public void cleanQueues(String[] queues) throws JGDIException;
-
+    
     /**
      * <p>Cleans queue from jobs which haven't been reaped. Primarily for
      *    development purpose. Requires root/manager/operator privileges.</p>
@@ -179,7 +179,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
      */
     public void cleanQueuesWithAnswer(String[] queues, List<JGDIAnswer> answers) throws JGDIException;
-
+    
     /**
      * Send the qmaster a kill signal.
      *
@@ -188,7 +188,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
      */
     public void killMaster() throws JGDIException;
-
+    
     /**
      * Send the qmaster a kill signal.
      *
@@ -198,7 +198,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
      */
     public void killMasterWithAnswer(List<JGDIAnswer> answers) throws JGDIException;
-
+    
     /**
      * Send the schedduler a kill signal.
      *
@@ -207,7 +207,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
      */
     public void killScheduler() throws JGDIException;
-
+    
     /**
      * Send the schedduler a kill signal.
      *
@@ -217,7 +217,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
      */
     public void killSchedulerWithAnswer(List<JGDIAnswer> answers) throws JGDIException;
-
+    
     /**
      * Send some execution hosts a kill signal.
      *
@@ -230,7 +230,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
      */
     public void killExecd(String[] hosts, boolean terminateJobs) throws JGDIException;
-
+    
     /**
      * Send some execution hosts a kill signal.
      *
@@ -244,7 +244,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
      */
     public void killExecdWithAnswer(String[] hosts, boolean terminateJobs, List<JGDIAnswer> answers) throws JGDIException;
-
+    
     /**
      * Send all execution hosts a kill signal.
      *
@@ -256,7 +256,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
      */
     public void killAllExecds(boolean terminateJobs) throws JGDIException;
-
+    
     /**
      * Send all execution hosts a kill signal.
      *
@@ -269,7 +269,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
      */
     public void killAllExecdsWithAnswer(boolean terminateJobs, List<JGDIAnswer> answers) throws JGDIException;
-
+    
     /**
      * <p>Used to shutdown event clients registered at qmaster(8), except
      *    special clients like the sge_schedd(8)</p>
@@ -280,7 +280,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void killEventClients(int[] ids) throws JGDIException;
-
+    
     /**
      * <p>Used to shutdown event clients registered at qmaster(8), except
      *    special clients like the sge_schedd(8)</p>
@@ -292,20 +292,20 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void killEventClientsWithAnswer(int[] ids, List<JGDIAnswer> answers) throws JGDIException;
-
+    
     /**
      * <p>Used to shutdown event clients all registered at qmaster(8).</p>
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void killAllEventClients() throws JGDIException;
-
+    
     /**
      * <p>Used to shutdown event clients all registered at qmaster(8).</p>
      * @param answers   the <code>answer list</code> object
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void killAllEventClientsWithAnswer(List<JGDIAnswer> answers) throws JGDIException;
-
+    
     /**
      * <p>The SGE scheduler sge_schedd(8) is forced to print
      *   trace messages of its  next scheduling run to the file
@@ -317,7 +317,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void triggerSchedulerMonitoring() throws JGDIException;
-
+    
     /**
      * <p>The N1 Grid Engine scheduler sge_schedd(8) is forced to print
      *   trace messages of its  next scheduling run to the file
@@ -330,7 +330,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void triggerSchedulerMonitoringWithAnswer(List<JGDIAnswer> answers) throws JGDIException;
-
+    
     /**
      * <p>Return the host where the SGE scheduler sge_schedd(8) is
      *   active or null otherwise</p>
@@ -338,7 +338,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public String getSchedulerHost() throws JGDIException;
-
+    
     /**
      * <p>Enable queue(s).</p>
      * <p>The CLI equivialent for this method is <code>qmod -e<code> (see man qmod(1)).</p>
@@ -347,7 +347,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void enableQueues(String[] queues, boolean force) throws JGDIException;
-
+    
     /**
      * <p>Enable queue(s).</p>
      * <p>The CLI equivialent for this method is <code>qmod -e<code> (see man qmod(1)).</p>
@@ -357,7 +357,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void enableQueuesWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException;
-
+    
     /**
      * <p>Disable queue(s),  i.e. no further jobs are dispatched to disabled
      *  queues while jobs already executing in these queues are allowed to finish.</p>
@@ -367,7 +367,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void disableQueues(String[] queues, boolean force) throws JGDIException;
-
+    
     /**
      * <p>Disable queue(s),  i.e. no further jobs are dispatched to disabled
      *  queues while jobs already executing in these queues are allowed to finish.</p>
@@ -378,7 +378,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void disableQueuesWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException;
-
+    
     /**
      * <p>Suspend the  queues  and  any jobs which might be active.</p>
      *
@@ -389,7 +389,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void suspend(String[] queues, boolean force) throws JGDIException;
-
+    
     /**
      * <p>Suspend the  queues  and  any jobs which might be active.</p>
      *
@@ -401,7 +401,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void suspendWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException;
-
+    
     /**
      * <p>Suspend the  queues  and  any jobs which might be active.</p>
      *
@@ -412,7 +412,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void suspendQueues(String[] queues, boolean force) throws JGDIException;
-
+    
     /**
      * <p>Suspend the  queues  and  any jobs which might be active.</p>
      *
@@ -424,7 +424,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void suspendQueuesWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException;
-
+    
     /**
      * <p>Suspends job(s). If a job is  both suspended explicitly and via
      * suspension of its queue, a following unsuspend  of  the  queue  will  not
@@ -437,7 +437,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void suspendJobs(String[] jobs, boolean force) throws JGDIException;
-
+    
     /**
      * <p>Suspends job(s). If a job is  both suspended explicitly and via
      * suspension of its queue, a following unsuspend  of  the  queue  will  not
@@ -451,7 +451,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void suspendJobsWithAnswer(String[] jobs, boolean force, List<JGDIAnswer> answers) throws JGDIException;
-
+    
     /**
      * <p>Unsuspends the queues and any jobs which might be active.</p>
      *
@@ -463,7 +463,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void unsuspend(String[] queues, boolean force) throws JGDIException;
-
+    
     /**
      * <p>Unsuspends the queues and any jobs which might be active.</p>
      *
@@ -476,7 +476,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void unsuspendWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException;
-
+    
     /**
      * <p>Unsuspends the queues and any jobs which might be active.</p>
      *
@@ -488,7 +488,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void unsuspendQueues(String[] queues, boolean force) throws JGDIException;
-
+    
     /**
      * <p>Unsuspends the queues and any jobs which might be active.</p>
      *
@@ -501,7 +501,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void unsuspendQueuesWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException;
-
+    
     /**
      * <p>Unsuspends the job(s). If a job is both  suspended  explicitly
      * and via suspension of its queue, a following unsuspend of the
@@ -515,7 +515,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void unsuspendJobs(String[] jobs, boolean force) throws JGDIException;
-
+    
     /**
      * <p>Unsuspends the job(s). If a job is both  suspended  explicitly
      * and via suspension of its queue, a following unsuspend of the
@@ -530,7 +530,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void unsuspendJobsWithAnswer(String[] jobs, boolean force, List<JGDIAnswer> answers) throws JGDIException;
-
+    
     /**
      * <p>Clears the error state of the specified queues(s).</p>
      *
@@ -543,7 +543,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void clearQueues(String[] queues, boolean force) throws JGDIException;
-
+    
     /**
      * <p>Clears the error state of the specified queues(s).</p>
      *
@@ -557,7 +557,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void clearQueuesWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException;
-
+    
     /**
      * <p>Clears the error state of the specified jobs(s).</p>
      *
@@ -568,7 +568,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void clearJobs(String[] jobs, boolean force) throws JGDIException;
-
+    
     /**
      * <p>Clears the error state of the specified jobs(s).</p>
      *
@@ -580,7 +580,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void clearJobsWithAnswer(String[] jobs, boolean force, List<JGDIAnswer> answers) throws JGDIException;
-
+    
     /**
      *  <p>Reschedules  all  jobs  currently running  in  the  queue(s). Requires
      *  root  or  manager privileges.</p>
@@ -592,7 +592,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void reschedule(String[] queue_or_job, boolean force) throws JGDIException;
-
+    
     /**
      *  <p>Reschedules  all  jobs  currently running  in  the  queue(s). Requires
      *  root  or  manager privileges.</p>
@@ -605,7 +605,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void rescheduleWithAnswer(String[] queue_or_job, boolean force, List<JGDIAnswer> answers) throws JGDIException;
-
+    
     /**
      *  <p>Reschedules  all  jobs  currently running  in  the  queue(s). Requires
      *  root  or  manager privileges.</p>
@@ -617,7 +617,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void rescheduleQueues(String[] queues, boolean force) throws JGDIException;
-
+    
     /**
      *  <p>Reschedules  all  jobs  currently running  in  the  queue(s). Requires
      *  root  or  manager privileges.</p>
@@ -630,7 +630,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void rescheduleQueuesWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException;
-
+    
     /**
      * <p>If applied  to  running  jobs,  reschedules  the  jobs.
      * Requires root or manager privileges.</p>
@@ -642,7 +642,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void rescheduleJobs(String[] jobs, boolean force) throws JGDIException;
-
+    
     /**
      * <p>If applied  to  running  jobs,  reschedules  the  jobs.
      * Requires root or manager privileges.</p>
@@ -655,7 +655,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void rescheduleJobsWithAnswer(String[] jobs, boolean force, List<JGDIAnswer> answers) throws JGDIException;
-
+    
     /**
      * <p>Show the detached settings of a cluster queue
      * Requires root or manager privileges.</p>
@@ -667,7 +667,7 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public String showDetachedSettings(String[] queues) throws JGDIException;
-
+    
     /**
      * <p>Show the detached settings of all cluster queues
      * Requires root or manager privileges.</p>

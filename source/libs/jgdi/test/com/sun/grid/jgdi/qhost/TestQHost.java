@@ -50,21 +50,21 @@ import junit.framework.TestSuite;
  *
  */
 public class TestQHost extends com.sun.grid.jgdi.BaseTestCase {
-
+    
     /** Creates a new instance of TestQHost */
     public TestQHost(String testName) {
         super(testName);
     }
-
+    
     protected void setUp() throws Exception {
         super.setUp();
     }
-
+    
     public static Test suite() {
         TestSuite suite = new TestSuite(TestQHost.class);
         return suite;
     }
-
+    
     private void printResult(QHostResult res) {
         for (String hostname : res.getHostNames()) {
             HostInfo hostInfo = res.getHostInfo(hostname);
@@ -72,7 +72,7 @@ public class TestQHost extends com.sun.grid.jgdi.BaseTestCase {
             for (String hostValueNames : hostInfo.getHostValueKeys()) {
                 logger.fine("HostValue: " + hostValueNames + " = " + hostInfo.getHostValue(hostValueNames));
             }
-
+            
             for (QueueInfo qi : hostInfo.getQueueList()) {
                 logger.fine("  Queue: " + qi.getQname());
                 logger.fine("  Qtype: " + qi.getQtype());
@@ -80,7 +80,7 @@ public class TestQHost extends com.sun.grid.jgdi.BaseTestCase {
                 logger.fine("  total: " + qi.getTotalSlots());
                 logger.fine("  used:  " + qi.getUsedSlots());
             }
-
+            
             for (String dom : hostInfo.getDominanceSet()) {
                 for (String resourceValueName : hostInfo.getResourceValueNames(dom)) {
                     logger.fine("Resource: " + dom + ": " + resourceValueName + " = " + hostInfo.getResourceValue(dom, resourceValueName));
@@ -88,27 +88,27 @@ public class TestQHost extends com.sun.grid.jgdi.BaseTestCase {
             }
         }
     }
-
+    
     public void testAllHostValues() throws Exception {
-
+        
         JGDI jgdi = createJGDI();
         try {
             QHostOptions qhostOptions = new QHostOptions();
-
+            
             ResourceAttributeFilter resourceAttributeFilter = new ResourceAttributeFilter();
-
+            
             qhostOptions.setResourceAttributeFilter(resourceAttributeFilter);
-
+            
             QHostResult res = jgdi.execQHost(qhostOptions);
-
+            
             printResult(res);
         } finally {
             jgdi.close();
         }
     }
-
+    
     public void testQueueFilter() throws Exception {
-
+        
         JGDI jgdi = createJGDI();
         try {
             QHostOptions qhostOptions = new QHostOptions();
@@ -147,9 +147,9 @@ public class TestQHost extends com.sun.grid.jgdi.BaseTestCase {
             jgdi.close();
         }
     }
-
+    
     public void testHostValueFilter() throws Exception {
-
+        
         JGDI jgdi = createJGDI();
         try {
             QHostOptions qhostOptions = new QHostOptions();
@@ -171,9 +171,9 @@ public class TestQHost extends com.sun.grid.jgdi.BaseTestCase {
             jgdi.close();
         }
     }
-
+    
     public void testHostFilter() throws Exception {
-
+        
         JGDI jgdi = createJGDI();
         try {
             QHostOptions qhostOptions = new QHostOptions();

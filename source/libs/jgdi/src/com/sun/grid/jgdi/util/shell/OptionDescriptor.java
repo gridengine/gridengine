@@ -38,90 +38,90 @@ import java.lang.reflect.Method;
  * Describes command option parameters as cache entry
  */
 public class OptionDescriptor {
-   private String option;
-   private int mandatoryArgCount;
-   private int optionalArgCount;
-   private Method method;
-   private PrintWriter pw;
-   
-   /**
-    * Constructor
-    * @param option - option string
-    * @param mandatory - number of mandatory arguments
-    * @param optional - number of optional arguments
-    * @param method - command method to execute
-    * @throws java.lang.InstantiationException 
-    * @throws java.lang.IllegalAccessException 
-    */
-   public OptionDescriptor(String option, int mandatory, int optional, Method method, PrintWriter pw) throws InstantiationException,IllegalAccessException  {
-      this.option = option;
-      this.mandatoryArgCount = mandatory;
-      this.optionalArgCount = optional;
-      this.method = method;
-      this.pw = pw;
-   }
-   
-   /**
-    * Getter method
-    * @return value
-    */
-   public int getMandatoryArgCount() {
-      return mandatoryArgCount;
-   }
-   
-   /**
-    * Getter method
-    * @return value
-    */
-   public int getOptionalArgCount() {
-      return optionalArgCount;
-   }
-   
-   /**
-    * Gets sum of mandatory and optional arguments
-    * @return int sum of mandatory and optional arguments
-    */
-   public int getMaxArgCount() {
-      return mandatoryArgCount + optionalArgCount;
-   }
-   
-   /**
-    * Getter method
-    * @return value
-    */
-   public boolean isWithoutArgs() {
-      return (mandatoryArgCount == 0 && optionalArgCount == 0) ? true : false;
-   }
-   
-   /**
-    * Getter method
-    * @return value
-    */
-   public boolean isMultiple() {
-       return (getMaxArgCount() > 1) ? true : false;
-   }
-
-   /**
-    * Getter method
-    * @return value
-    */
-   public Method getMethod() {
-      return method;
-   }
-
-   /**
-    * Getter method
-    * @return value
-    */
-   public String getOption() {
-      return option;
-   }
-   
-   /**
-    * Getter method
-    * @return value
-    */
-   public PrintWriter getPw() {
-      return pw;
-   }
+    private String option;
+    private int mandatoryArgCount;
+    private int optionalArgCount;
+    private Method method;
+    private PrintWriter pw;
+    
+    /**
+     * Constructor
+     * @param option - option string
+     * @param mandatory - number of mandatory arguments
+     * @param optional - number of optional arguments
+     * @param method - command method to execute
+     * @throws java.lang.InstantiationException
+     * @throws java.lang.IllegalAccessException
+     */
+    public OptionDescriptor(String option, int mandatory, int optional, Method method, PrintWriter pw) throws InstantiationException,IllegalAccessException  {
+        this.option = option;
+        this.mandatoryArgCount = mandatory;
+        this.optionalArgCount = optional;
+        this.method = method;
+        this.pw = pw;
+    }
+    
+    /**
+     * Getter method
+     * @return value
+     */
+    public int getMandatoryArgCount() {
+        return mandatoryArgCount;
+    }
+    
+    /**
+     * Getter method
+     * @return value
+     */
+    public int getOptionalArgCount() {
+        return optionalArgCount;
+    }
+    
+    /**
+     * Gets sum of mandatory and optional arguments
+     * @return int sum of mandatory and optional arguments
+     */
+    public int getMaxArgCount() {
+        return mandatoryArgCount + optionalArgCount;
+    }
+    
+    /**
+     * Getter method
+     * @return value
+     */
+    public boolean isWithoutArgs() {
+        return (mandatoryArgCount == 0 && optionalArgCount == 0) ? true : false;
+    }
+    
+    /**
+     * Getter method
+     * @return value
+     */
+    public boolean isMultiple() {
+        return (getMaxArgCount() > 1) ? true : false;
+    }
+    
+    /**
+     * Getter method
+     * @return value
+     */
+    public Method getMethod() {
+        return method;
+    }
+    
+    /**
+     * Getter method
+     * @return value
+     */
+    public String getOption() {
+        return option;
+    }
+    
+    /**
+     * Getter method
+     * @return value
+     */
+    public PrintWriter getPw() {
+        return pw;
+    }
 }

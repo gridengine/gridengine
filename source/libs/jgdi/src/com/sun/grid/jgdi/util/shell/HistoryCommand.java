@@ -35,5 +35,5 @@ package com.sun.grid.jgdi.util.shell;
  *
  */
 public interface HistoryCommand extends Command {
-   
+    
 }

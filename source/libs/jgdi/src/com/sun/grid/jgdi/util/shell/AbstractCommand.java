@@ -41,106 +41,106 @@ import java.util.logging.Logger;
  *
  */
 public abstract class AbstractCommand implements HistoryCommand {
-   Shell shell=null;
-   JGDI jgdi = null;
-   PrintWriter pw=null;
-   
-   public Logger getLogger() {
-      return shell.getLogger();
-   }
-   
-   public Shell getShell() {
-      return shell;
-   }
-   
-   public void init(Shell shell) throws Exception {
-      this.shell=shell;  
-      this.jgdi = shell.getConnection();
-      this.pw = shell.getPrintWriter();
-   }
-
-   public String[] parseWCQueueList(String arg) {
-      String [] ret = arg.split(",");
-      if(getLogger().isLoggable(Level.FINE)) {
-         StringBuilder buf = new StringBuilder();
-         buf.append("wc_queue_list [");
-         for(int i = 0; i < ret.length; i++) {
-            if(i>0) {
-               buf.append(", ");
+    Shell shell=null;
+    JGDI jgdi = null;
+    PrintWriter pw=null;
+    
+    public Logger getLogger() {
+        return shell.getLogger();
+    }
+    
+    public Shell getShell() {
+        return shell;
+    }
+    
+    public void init(Shell shell) throws Exception {
+        this.shell=shell;
+        this.jgdi = shell.getConnection();
+        this.pw = shell.getPrintWriter();
+    }
+    
+    public String[] parseWCQueueList(String arg) {
+        String [] ret = arg.split(",");
+        if(getLogger().isLoggable(Level.FINE)) {
+            StringBuilder buf = new StringBuilder();
+            buf.append("wc_queue_list [");
+            for(int i = 0; i < ret.length; i++) {
+                if(i>0) {
+                    buf.append(", ");
+                }
+                buf.append(ret[i]);
             }
-            buf.append(ret[i]);
-         }
-         buf.append("]");
-         getLogger().fine(buf.toString());
-      }
-      return ret;
-   }
-
-   public String[] parseJobWCQueueList(String arg) {
-      String [] ret = arg.split(",");
-      if (getLogger().isLoggable(Level.FINE)) {
-         StringBuilder buf = new StringBuilder();
-         buf.append("job_wc_queue_list [");
-         for (int i = 0; i < ret.length; i++) {
-            if (i > 0) {
-               buf.append(", ");
+            buf.append("]");
+            getLogger().fine(buf.toString());
+        }
+        return ret;
+    }
+    
+    public String[] parseJobWCQueueList(String arg) {
+        String [] ret = arg.split(",");
+        if (getLogger().isLoggable(Level.FINE)) {
+            StringBuilder buf = new StringBuilder();
+            buf.append("job_wc_queue_list [");
+            for (int i = 0; i < ret.length; i++) {
+                if (i > 0) {
+                    buf.append(", ");
+                }
+                buf.append(ret[i]);
             }
-            buf.append(ret[i]);
-         }
-         buf.append("]");
-         getLogger().fine(buf.toString());
-      }
-      return ret;
-   }
-
-   public String[] parseJobList(String arg) {
-      String[] ret = arg.split(",");
-      if (getLogger().isLoggable(Level.FINE)) {
-         StringBuilder buf = new StringBuilder();
-         buf.append("job_list [");
-         for (int i = 0; i < ret.length; i++) {
-            if (i > 0) {
-               buf.append(", ");
+            buf.append("]");
+            getLogger().fine(buf.toString());
+        }
+        return ret;
+    }
+    
+    public String[] parseJobList(String arg) {
+        String[] ret = arg.split(",");
+        if (getLogger().isLoggable(Level.FINE)) {
+            StringBuilder buf = new StringBuilder();
+            buf.append("job_list [");
+            for (int i = 0; i < ret.length; i++) {
+                if (i > 0) {
+                    buf.append(", ");
+                }
+                buf.append(ret[i]);
             }
-            buf.append(ret[i]);
-         }
-         buf.append("]");
-         getLogger().fine(buf.toString());
-      }
-      return ret;
-   }
-
-   /**
-    * <p>Prints the JGDI answer list to specified PrintWriter.</p>
-    * <p>Helper method for JGDI methods *withAnswer</p>
-    * @param answers a JGDI answer list
-    */
+            buf.append("]");
+            getLogger().fine(buf.toString());
+        }
+        return ret;
+    }
+    
+    /**
+     * <p>Prints the JGDI answer list to specified PrintWriter.</p>
+     * <p>Helper method for JGDI methods *withAnswer</p>
+     * @param answers a JGDI answer list
+     */
     public void printAnswers(java.util.List<JGDIAnswer> answers) {
-       int exitCode = 0;
-       int status;
-       int i=0;
-       if (answers.size() == 0) {
-          return;
-       }
-       JGDIAnswer answer;
-       String text;
-       for (i=0; i<answers.size()-1; i++) {
-          answer = answers.get(i);
-          status = answer.getQuality();
-          if (status == 0 || status == 1) {  //If critical or error
-             exitCode = status;
-          }
-          text = answer.getText().trim();
-          if (text.length()>0 && !text.equals("ok")) pw.println(answer.getText());
-       }
-       //Get the last
-       answer = answers.get(i);
-       status = answer.getQuality();
-       text = answer.getText();
-       
-       if (status == 0 || status == 1 || exitCode != 0) {
-          throw new IllegalArgumentException(text);
-       }
-       if (text.length()>0 && !text.equals("ok")) pw.println(text);
+        int exitCode = 0;
+        int status;
+        int i=0;
+        if (answers.size() == 0) {
+            return;
+        }
+        JGDIAnswer answer;
+        String text;
+        for (i=0; i<answers.size()-1; i++) {
+            answer = answers.get(i);
+            status = answer.getQuality();
+            if (status == 0 || status == 1) {  //If critical or error
+                exitCode = status;
+            }
+            text = answer.getText().trim();
+            if (text.length()>0 && !text.equals("ok")) pw.println(answer.getText());
+        }
+        //Get the last
+        answer = answers.get(i);
+        status = answer.getQuality();
+        text = answer.getText();
+        
+        if (status == 0 || status == 1 || exitCode != 0) {
+            throw new IllegalArgumentException(text);
+        }
+        if (text.length()>0 && !text.equals("ok")) pw.println(text);
     }
 }

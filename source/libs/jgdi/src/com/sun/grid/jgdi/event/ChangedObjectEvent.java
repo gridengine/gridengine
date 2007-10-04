@@ -37,11 +37,11 @@ package com.sun.grid.jgdi.event;
  *
  */
 public abstract class ChangedObjectEvent extends Event implements java.io.Serializable {
-
+    
     /** the new version of the changed objects */
     private Object changedObject;
     private Class objectType;
-
+    
     /**
      * Creates a new instance of ChangedObjectEvent
      * @param eventType   type of event
@@ -53,7 +53,7 @@ public abstract class ChangedObjectEvent extends Event implements java.io.Serial
         super(eventType, timestamp, eventId);
         this.objectType = objectType;
     }
-
+    
     /**
      *  Get the type of the changed objects
      *  @return type of the changed objects
@@ -61,7 +61,7 @@ public abstract class ChangedObjectEvent extends Event implements java.io.Serial
     public Class getObjectType() {
         return objectType;
     }
-
+    
     /**
      *  Set the new version of the changed object
      *  @param changedObj  the changed object
@@ -79,7 +79,7 @@ public abstract class ChangedObjectEvent extends Event implements java.io.Serial
         }
         this.changedObject = changedObj;
     }
-
+    
     /**
      *  Get the new version of the changed object which has been changed by this event
      *  @return list of changed objects
@@ -87,7 +87,7 @@ public abstract class ChangedObjectEvent extends Event implements java.io.Serial
     public Object getChangedObject() {
         return changedObject;
     }
-
+    
     public String toString() {
         StringBuilder ret = new StringBuilder();
         ret.append("[");
@@ -97,7 +97,7 @@ public abstract class ChangedObjectEvent extends Event implements java.io.Serial
         ret.append("]");
         return ret.toString();
     }
-
+    
     /**
      *  Set the primary key information of the changed object into the event.
      *

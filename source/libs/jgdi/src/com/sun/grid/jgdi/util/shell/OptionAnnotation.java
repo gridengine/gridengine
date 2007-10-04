@@ -45,16 +45,16 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface OptionAnnotation {
     public static final int MAX_ARG_VALUE = Integer.MAX_VALUE / 8;
-   /** option string 
-    * @return String
-    */
+    /** option string
+     * @return String
+     */
     String value();
-   /** number of required args 
-    * @return int
-    */
-    int min()      default 1; 
-   /** number of optional args 
-    * @return int
-    */
+    /** number of required args
+     * @return int
+     */
+    int min()      default 1;
+    /** number of optional args
+     * @return int
+     */
     int extra()    default 0;
 }

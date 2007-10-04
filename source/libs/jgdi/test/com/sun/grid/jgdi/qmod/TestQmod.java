@@ -44,22 +44,22 @@ import java.util.List;
  *
  */
 public class TestQmod extends com.sun.grid.jgdi.BaseTestCase {
-
+    
     /** Creates a new instance of TestQmod */
     public TestQmod(String testName) {
         super(testName);
     }
-
+    
     protected void setUp() throws Exception {
         logger.fine("Version: " + JGDIFactory.getJGDIVersion());
         super.setUp();
     }
-
+    
     public static Test suite() {
         TestSuite suite = new TestSuite(TestQmod.class);
         return suite;
     }
-
+    
     public void testCleanQueues() throws Exception {
         JGDI jgdi = createJGDI();
         try {
@@ -68,7 +68,7 @@ public class TestQmod extends com.sun.grid.jgdi.BaseTestCase {
             jgdi.close();
         }
     }
-
+    
     public void testUnsuspendQueues() throws Exception {
         JGDI jgdi = createJGDI();
         try {
@@ -85,7 +85,7 @@ public class TestQmod extends com.sun.grid.jgdi.BaseTestCase {
 //         jgdi.close();
 //      }
 //   }
-
+    
 //   public void testKillScheduler() throws Exception {
 //      JGDI jgdi = createJGDI();
 //      try {
@@ -134,7 +134,7 @@ public class TestQmod extends com.sun.grid.jgdi.BaseTestCase {
 //         jgdi.close();
 //      }
 //   }
-
+    
     public void testClearShareTreeUsage() throws Exception {
         JGDI jgdi = createJGDI();
         try {
@@ -143,7 +143,7 @@ public class TestQmod extends com.sun.grid.jgdi.BaseTestCase {
             jgdi.close();
         }
     }
-
+    
     public void testGetSchedulerHost() throws Exception {
         JGDI jgdi = createJGDI();
         try {
@@ -152,7 +152,7 @@ public class TestQmod extends com.sun.grid.jgdi.BaseTestCase {
             jgdi.close();
         }
     }
-
+    
     public void testDisableQueues() throws Exception {
         JGDI jgdi = createJGDI();
         try {
@@ -185,7 +185,7 @@ public class TestQmod extends com.sun.grid.jgdi.BaseTestCase {
             jgdi.close();
         }
     }
-
+    
     public void testEnableQueues() throws Exception {
         JGDI jgdi = createJGDI();
         try {

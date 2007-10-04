@@ -154,14 +154,14 @@ public class BaseTestCase extends TestCase {
         }
         
         public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
-        
+            
             for(int i = 0; i < callbacks.length; i++) {
                 
                 if(callbacks[i] instanceof TextOutputCallback) {
                     logger.fine("skip text output callback " + callbacks[i]);
                     continue;
                 } else if(callbacks[i] instanceof NameCallback) {
-                  
+                    
                     NameCallback cb = (NameCallback)callbacks[i];
                     
                     if(cb.getPrompt().indexOf("alias") >= 0) {
@@ -172,25 +172,25 @@ public class BaseTestCase extends TestCase {
                     }
                     
                 } else if (callbacks[i] instanceof PasswordCallback) {
-                  
-                  PasswordCallback cb = (PasswordCallback)callbacks[i];
-                  
-                  String prompt = cb.getPrompt().toLowerCase();
-                  logger.fine("handle password callback " + prompt);
-                  if(prompt.indexOf("keystore password") >= 0) {
-                      logger.fine("found keystore password callback");
-                      cb.setPassword(cluster.getKeystorePassword());
-                      
-                  } else if(prompt.indexOf("key password") >= 0) {
-                      logger.fine("found key password callback");                      
-                      cb.setPassword(cluster.getPrivateKeyPassword());
-                      
-                  } else {
-                      throw new UnsupportedCallbackException(callbacks[i]);
-                  }
+                    
+                    PasswordCallback cb = (PasswordCallback)callbacks[i];
+                    
+                    String prompt = cb.getPrompt().toLowerCase();
+                    logger.fine("handle password callback " + prompt);
+                    if(prompt.indexOf("keystore password") >= 0) {
+                        logger.fine("found keystore password callback");
+                        cb.setPassword(cluster.getKeystorePassword());
+                        
+                    } else if(prompt.indexOf("key password") >= 0) {
+                        logger.fine("found key password callback");
+                        cb.setPassword(cluster.getPrivateKeyPassword());
+                        
+                    } else {
+                        throw new UnsupportedCallbackException(callbacks[i]);
+                    }
                     
                 } else if (callbacks[i] instanceof ConfirmationCallback) {
-                      logger.fine("handle confirm callback");                      
+                    logger.fine("handle confirm callback");
                     ConfirmationCallback cb = (ConfirmationCallback)callbacks[i];
                     cb.setSelectedIndex(cb.getDefaultOption());
                 } else {

@@ -42,51 +42,51 @@ import java.util.List;
  *
  */
 public class XMLDump {
-   
-   private static void usage(String message, int exitCode) {
-      if(message != null) {
-         System.err.println(message);
-      }
-      System.err.println("XMLDump <url> <object> [all|<name>]");
-      System.exit(exitCode);
-   }
-   
-   public static void main(String [] args) {
-      
-      try {
-         if(args.length != 3) {
-            usage("Invalid number of arguments",1);
-         }
-         String url = args[0];
-         String objectName = args[1];
-         String name = args[2];
-         
-         JGDI jgdi = JGDIFactory.newInstance(url);
-         
-         if(name.equals("all")) {
-            
-            Method method = JGDI.class.getMethod("get" + objectName + "List", (java.lang.Class[])null);
-            
-            List list = (List)method.invoke(jgdi, (java.lang.Object[])null);
-            
-            Iterator iter = list.iterator();
-            while(iter.hasNext()) {
-               GEObject obj = (GEObject)iter.next();
-               XMLUtil.write(obj, System.out);
-               System.out.flush();
+    
+    private static void usage(String message, int exitCode) {
+        if(message != null) {
+            System.err.println(message);
+        }
+        System.err.println("XMLDump <url> <object> [all|<name>]");
+        System.exit(exitCode);
+    }
+    
+    public static void main(String [] args) {
+        
+        try {
+            if(args.length != 3) {
+                usage("Invalid number of arguments",1);
             }
-         } else {
+            String url = args[0];
+            String objectName = args[1];
+            String name = args[2];
             
-            Method method = JGDI.class.getMethod("get" + objectName , new Class[] { String.class } );
+            JGDI jgdi = JGDIFactory.newInstance(url);
             
-            Object obj = method.invoke(jgdi, new Object[] { name } );
-            XMLUtil.write((GEObject)obj,System.out);
-            System.out.flush();
-         }
-         
-      } catch (Exception e) {
-         e.printStackTrace();
-      }
-      
-   }
+            if(name.equals("all")) {
+                
+                Method method = JGDI.class.getMethod("get" + objectName + "List", (java.lang.Class[])null);
+                
+                List list = (List)method.invoke(jgdi, (java.lang.Object[])null);
+                
+                Iterator iter = list.iterator();
+                while(iter.hasNext()) {
+                    GEObject obj = (GEObject)iter.next();
+                    XMLUtil.write(obj, System.out);
+                    System.out.flush();
+                }
+            } else {
+                
+                Method method = JGDI.class.getMethod("get" + objectName , new Class[] { String.class } );
+                
+                Object obj = method.invoke(jgdi, new Object[] { name } );
+                XMLUtil.write((GEObject)obj,System.out);
+                System.out.flush();
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+    }
 }

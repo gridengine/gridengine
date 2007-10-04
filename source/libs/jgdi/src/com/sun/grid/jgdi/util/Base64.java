@@ -46,7 +46,7 @@ public class Base64 {
         int resultLen = 4*((aLen + 2)/3);
         StringBuilder result = new StringBuilder(resultLen);
         char[] intToAlpha = intToBase64;
-
+        
         // Translate all full groups from byte array elements to Base64
         int inCursor = 0;
         for (int i=0; i<numFullGroups; i++) {
@@ -58,7 +58,7 @@ public class Base64 {
             result.append(intToAlpha[(byte1 << 2)&0x3f | (byte2 >> 6)]);
             result.append(intToAlpha[byte2 & 0x3f]);
         }
-
+        
         // Translate partial group if present
         if (numBytesInPartialGroup != 0) {
             int byte0 = a[inCursor++] & 0xff;
@@ -78,10 +78,10 @@ public class Base64 {
         // assert result.length() == resultLen;
         return result.toString();
     }
-
+    
     /**
      * This array is a lookup table that translates 6-bit positive integer
-     * index values into their "Base64 Alphabet" equivalents as specified 
+     * index values into their "Base64 Alphabet" equivalents as specified
      * in Table 1 of RFC 2045.
      */
     private static final char intToBase64[] = {
@@ -91,11 +91,11 @@ public class Base64 {
         'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'
     };
-
+    
     /**
      * Translates the specified Base64 string (as per Preferences.get(byte[]))
      * into a byte array.
-     * 
+     *
      * @throws IllegalArgumentException if <tt>s</tt> is not a valid Base64
      *        string.
      */
@@ -105,7 +105,7 @@ public class Base64 {
         int numGroups = sLen/4;
         if (4*numGroups != sLen)
             throw new IllegalArgumentException(
-                "String length must be a multiple of four.");
+                    "String length must be a multiple of four.");
         int missingBytesInLastGroup = 0;
         int numFullGroups = numGroups;
         if (sLen != 0) {
@@ -117,7 +117,7 @@ public class Base64 {
                 missingBytesInLastGroup++;
         }
         byte[] result = new byte[3*numGroups - missingBytesInLastGroup];
-
+        
         // Translate all full groups from base64 to byte array elements
         int inCursor = 0, outCursor = 0;
         for (int i=0; i<numFullGroups; i++) {
@@ -129,13 +129,13 @@ public class Base64 {
             result[outCursor++] = (byte) ((ch1 << 4) | (ch2 >> 2));
             result[outCursor++] = (byte) ((ch2 << 6) | ch3);
         }
-
+        
         // Translate partial group, if present
         if (missingBytesInLastGroup != 0) {
             int ch0 = base64toInt(s.charAt(inCursor++), alphaToInt);
             int ch1 = base64toInt(s.charAt(inCursor++), alphaToInt);
             result[outCursor++] = (byte) ((ch0 << 2) | (ch1 >> 4));
-
+            
             if (missingBytesInLastGroup == 1) {
                 int ch2 = base64toInt(s.charAt(inCursor++), alphaToInt);
                 result[outCursor++] = (byte) ((ch1 << 4) | (ch2 >> 2));
@@ -145,7 +145,7 @@ public class Base64 {
         // assert outCursor == result.length;
         return result;
     }
-
+    
     /**
      * Translates the specified character, which is assumed to be in the
      * "Base 64 Alphabet" into its equivalent 6-bit positive integer.
@@ -159,7 +159,7 @@ public class Base64 {
             throw new IllegalArgumentException("Illegal character " + c);
         return result;
     }
-
+    
     /**
      * This array is a lookup table that translates unicode characters
      * drawn from the "Base64 Alphabet" (as specified in Table 1 of RFC 2045)
@@ -176,5 +176,5 @@ public class Base64 {
         24, 25, -1, -1, -1, -1, -1, -1, 26, 27, 28, 29, 30, 31, 32, 33, 34,
         35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51
     };
-
+    
 }

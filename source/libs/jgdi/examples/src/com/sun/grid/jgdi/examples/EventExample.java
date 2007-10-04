@@ -46,63 +46,63 @@ import com.sun.grid.jgdi.event.EventListener;
  *
  */
 public class EventExample {
-
+    
     public static void main(String[] args) {
-
+        
         try {
-
+            
             String url = "bootstrap:///opt/sge@default:1026";
-
+            
             if (args.length == 1) {
                 url = args[0];
             }
-
+            
             JGDI jgdi = JGDIFactory.newInstance(url);
-
+            
             try {
-            System.out.println("Successfully connected to " + url);         
-
+                System.out.println("Successfully connected to " + url);
+                
                 EventClient evc = JGDIFactory.createEventClient(url, 0);
-
+                
                 evc.start();
-
+                
                 evc.subscribeCheckpointAdd(true);
                 evc.subscribeCheckpointMod(true);
                 evc.subscribeCheckpointDel(true);
-
+                
                 evc.commit();
-
+                
                 evc.addEventListener(new EventListener() {
-
+                    
                     public void eventOccured(Event evt) {
                         System.out.println("got event " + evt);
                     }
                 });
-
-
+                
+                
                 try {
-
+                    
                     // Create a new checkpoint object which intialized with default values
                     Checkpoint ckpt = ConfigurationFactory.createCheckpointWithDefaults();
                     ckpt.setName("sample");
                     ckpt.setCkptCommand("/usr/bin/ckpt");
                     ckpt.setCkptDir("/tmp");
-
+                    
                     jgdi.addCheckpoint(ckpt);
                     try {
                         System.out.println("Checkpoint " + ckpt.getName() + " successfully added");
-
+                        
                         ckpt = jgdi.getCheckpoint("ckpt");
-
+                        
                         ckpt.setRestCommand("/tmp/blubber");
-
+                        
                         jgdi.updateCheckpoint(ckpt);
                         System.out.println("Checkpoint " + ckpt.getName() + " successfully modified");
                     } finally {
                         jgdi.deleteCheckpoint(ckpt);
                         System.out.println("Checkpoint " + ckpt.getName() + " successfully deleted");
                     }
-
+                    
                     Thread.sleep(60000);
                 } finally {
                     evc.close();

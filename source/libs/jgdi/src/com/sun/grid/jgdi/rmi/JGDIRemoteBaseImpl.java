@@ -113,27 +113,27 @@ public class JGDIRemoteBaseImpl extends UnicastRemoteObject implements JGDIRemot
             }
         }
     }
-
+    
     public File getSGERoot() throws RemoteException {
         return null;
     }
-
+    
     public String getSGECell() throws RemoteException {
         return null;
     }
-
+    
     public List getRealExecHostList() throws RemoteException {
         return null;
     }
-
+    
     public List getClusterQueueSummary(ClusterQueueSummaryOptions options) throws RemoteException {
         return null;
     }
-
+    
     public QueueInstanceSummaryResult getQueueInstanceSummary(QueueInstanceSummaryOptions options) throws RemoteException {
         return null;
     }
-
+    
     public QQuotaResult getQQuota(QQuotaOptions options) throws RemoteException {
         if( jgdi == null ) {
             return null;
@@ -146,7 +146,7 @@ public class JGDIRemoteBaseImpl extends UnicastRemoteObject implements JGDIRemot
             }
         }
     }
-
+    
     public void clearShareTreeUsage() throws RemoteException {
         if(jgdi != null) {
             try {
@@ -157,7 +157,7 @@ public class JGDIRemoteBaseImpl extends UnicastRemoteObject implements JGDIRemot
             }
         }
     }
-
+    
     public void cleanQueues(String[] queues) throws RemoteException {
         if(jgdi != null) {
             try {
@@ -168,7 +168,7 @@ public class JGDIRemoteBaseImpl extends UnicastRemoteObject implements JGDIRemot
             }
         }
     }
-
+    
     public void killMaster() throws RemoteException {
         if(jgdi != null) {
             try {
@@ -179,7 +179,7 @@ public class JGDIRemoteBaseImpl extends UnicastRemoteObject implements JGDIRemot
             }
         }
     }
-
+    
     public void killScheduler() throws RemoteException {
         if(jgdi != null) {
             try {
@@ -190,7 +190,7 @@ public class JGDIRemoteBaseImpl extends UnicastRemoteObject implements JGDIRemot
             }
         }
     }
-
+    
     public void killExecd(String[] hosts, boolean terminateJobs) throws RemoteException {
         if(jgdi != null) {
             try {
@@ -201,7 +201,7 @@ public class JGDIRemoteBaseImpl extends UnicastRemoteObject implements JGDIRemot
             }
         }
     }
-
+    
     public void killAllExecds(boolean terminateJobs) throws RemoteException {
         if(jgdi != null) {
             try {
@@ -212,7 +212,7 @@ public class JGDIRemoteBaseImpl extends UnicastRemoteObject implements JGDIRemot
             }
         }
     }
-
+    
     public void killEventClients(int[] ids) throws RemoteException {
         if(jgdi != null) {
             try {
@@ -223,7 +223,7 @@ public class JGDIRemoteBaseImpl extends UnicastRemoteObject implements JGDIRemot
             }
         }
     }
-
+    
     public void killAllEventClients() throws RemoteException {
         if(jgdi != null) {
             try {
@@ -234,7 +234,7 @@ public class JGDIRemoteBaseImpl extends UnicastRemoteObject implements JGDIRemot
             }
         }
     }
-
+    
     public void triggerSchedulerMonitoring() throws RemoteException {
         if(jgdi != null) {
             try {
@@ -245,7 +245,7 @@ public class JGDIRemoteBaseImpl extends UnicastRemoteObject implements JGDIRemot
             }
         }
     }
-
+    
     public String getSchedulerHost() throws RemoteException {
         if(jgdi != null) {
             try {
@@ -257,7 +257,7 @@ public class JGDIRemoteBaseImpl extends UnicastRemoteObject implements JGDIRemot
         }
         return null;
     }
-
+    
     public void enableQueues(String[] queues, boolean force) throws RemoteException {
         if(jgdi != null) {
             try {
@@ -268,7 +268,7 @@ public class JGDIRemoteBaseImpl extends UnicastRemoteObject implements JGDIRemot
             }
         }
     }
-
+    
     public void disableQueues(String[] queues, boolean force) throws RemoteException {
         if(jgdi != null) {
             try {
@@ -279,7 +279,7 @@ public class JGDIRemoteBaseImpl extends UnicastRemoteObject implements JGDIRemot
             }
         }
     }
-
+    
     public void suspendQueues(String[] queues, boolean force) throws RemoteException {
         if(jgdi != null) {
             try {
@@ -312,7 +312,7 @@ public class JGDIRemoteBaseImpl extends UnicastRemoteObject implements JGDIRemot
             }
         }
     }
-
+    
     public void rescheduleQueues(String[] queues, boolean force) throws RemoteException {
         if(jgdi != null) {
             try {
@@ -334,8 +334,8 @@ public class JGDIRemoteBaseImpl extends UnicastRemoteObject implements JGDIRemot
             }
         }
     }
-
-
+    
+    
     public void unsuspendJobs(String[] jobs, boolean force) throws RemoteException {
         if(jgdi != null) {
             try {
@@ -346,8 +346,8 @@ public class JGDIRemoteBaseImpl extends UnicastRemoteObject implements JGDIRemot
             }
         }
     }
-
-
+    
+    
     public void clearJobs(String[] jobs, boolean force) throws RemoteException {
         if(jgdi != null) {
             try {
@@ -358,8 +358,8 @@ public class JGDIRemoteBaseImpl extends UnicastRemoteObject implements JGDIRemot
             }
         }
     }
-
-
+    
+    
     public void rescheduleJobs(String[] jobs, boolean force) throws RemoteException {
         if(jgdi != null) {
             try {

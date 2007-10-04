@@ -35,20 +35,20 @@ package com.sun.grid.jgdi.util.shell;
  * Command interface
  */
 public interface Command {
-   
-   public String getUsage();
-   /**
-    * Init command, set all needed arrtibutes from shell
-    * @param shell 
-    * @throws java.lang.Exception 
-    */
-   public void init(Shell shell) throws Exception;
-
-   /**
-    * Run the command
-    * @param args 
-    * @throws java.lang.Exception 
-    */
-   public void run(String [] args) throws Exception;
-   
+    
+    public String getUsage();
+    /**
+     * Init command, set all needed arrtibutes from shell
+     * @param shell
+     * @throws java.lang.Exception
+     */
+    public void init(Shell shell) throws Exception;
+    
+    /**
+     * Run the command
+     * @param args
+     * @throws java.lang.Exception
+     */
+    public void run(String [] args) throws Exception;
+    
 }

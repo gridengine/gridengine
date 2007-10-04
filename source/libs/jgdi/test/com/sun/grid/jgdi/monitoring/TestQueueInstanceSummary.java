@@ -46,20 +46,20 @@ import junit.framework.TestSuite;
  *
  */
 public class TestQueueInstanceSummary extends com.sun.grid.jgdi.BaseTestCase {
-
+    
     public TestQueueInstanceSummary(String testName) {
         super(testName);
     }
-
+    
     protected void setUp() throws Exception {
         super.setUp();
     }
-
+    
     public static Test suite() {
         TestSuite suite = new TestSuite(TestQueueInstanceSummary.class);
         return suite;
     }
-
+    
     public void testFullOutput() throws Exception {
         JGDI jgdi = createJGDI();
         try {
@@ -75,9 +75,9 @@ public class TestQueueInstanceSummary extends com.sun.grid.jgdi.BaseTestCase {
             jgdi.close();
         }
     }
-
+    
     public void testAllResourceAttributes() throws Exception {
-
+        
         JGDI jgdi = createJGDI();
         try {
             QueueInstanceSummaryOptions options = new QueueInstanceSummaryOptions();
@@ -93,9 +93,9 @@ public class TestQueueInstanceSummary extends com.sun.grid.jgdi.BaseTestCase {
             jgdi.close();
         }
     }
-
+    
     public void testQueueStateFilterSuspended() throws Exception {
-
+        
         QueueInstanceSummaryOptions options = new QueueInstanceSummaryOptions();
         options.setShowFullOutput(true);
         JGDI jgdi = createJGDI();
@@ -111,9 +111,9 @@ public class TestQueueInstanceSummary extends com.sun.grid.jgdi.BaseTestCase {
                 jgdi.suspendQueues(new String[]{qis.getName()}, false);
                 result = jgdi.getQueueInstanceSummary(options);
                 // if (logger.isLoggable(Level.FINE)) {
-                    PrintWriter pw = new PrintWriter(System.out);
-                    QueueInstanceSummaryPrinter.print(pw, result, options);
-                    pw.flush();
+                PrintWriter pw = new PrintWriter(System.out);
+                QueueInstanceSummaryPrinter.print(pw, result, options);
+                pw.flush();
                 // }
                 boolean found = false;
                 for (QueueInstanceSummary susQis : result.getQueueInstanceSummary()) {
@@ -131,9 +131,9 @@ public class TestQueueInstanceSummary extends com.sun.grid.jgdi.BaseTestCase {
             jgdi.close();
         }
     }
-
+    
     public void testQueueStateFilterDisabled() throws Exception {
-
+        
         QueueInstanceSummaryOptions options = new QueueInstanceSummaryOptions();
         options.setShowFullOutput(true);
         QueueStateFilter qsf = new QueueStateFilter();
@@ -170,18 +170,18 @@ public class TestQueueInstanceSummary extends com.sun.grid.jgdi.BaseTestCase {
             jgdi.close();
         }
     }
-
+    
     public void testQueueFilter() throws Exception {
-
+        
         QueueInstanceSummaryOptions options = new QueueInstanceSummaryOptions();
         options.setShowFullOutput(true);
-
+        
         JGDI jgdi = createJGDI();
-
+        
         try {
             QueueInstanceSummaryResult result = jgdi.getQueueInstanceSummary(options);
             List<QueueInstanceSummary> qiList = result.getQueueInstanceSummary();
-
+            
             for (QueueInstanceSummary qis : qiList) {
                 logger.fine("Filter for queue instance " + qis.getName());
                 QueueFilter qf = new QueueFilter();
@@ -193,7 +193,7 @@ public class TestQueueInstanceSummary extends com.sun.grid.jgdi.BaseTestCase {
                     QueueInstanceSummaryPrinter.print(pw, result, options);
                     pw.flush();
                 }
-
+                
                 List<QueueInstanceSummary> newQiList = result.getQueueInstanceSummary();
                 assertTrue("Missing queue instance " + qis.getName(), !newQiList.isEmpty());
                 for (QueueInstanceSummary newQis : newQiList) {

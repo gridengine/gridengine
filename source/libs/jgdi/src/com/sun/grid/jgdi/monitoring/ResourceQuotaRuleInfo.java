@@ -39,20 +39,20 @@ import java.util.List;
  *         add javadoc comments
  */
 public interface ResourceQuotaRuleInfo {
-   
-   public String getResouceQuotaRuleName();
- 
-   public List<String> getUsers();
-   public List<String> getProjects();
-   public List<String> getPes();
-   public List<String> getQueues();
-   public List<String> getHosts();
-   
-   public List<String> getXUsers();
-   public List<String> getXProjects();
-   public List<String> getXPes();
-   public List<String> getXQueues();
-   public List<String> getXHosts();
-
-   public List<ResourceQuota> getLimits();
+    
+    public String getResouceQuotaRuleName();
+    
+    public List<String> getUsers();
+    public List<String> getProjects();
+    public List<String> getPes();
+    public List<String> getQueues();
+    public List<String> getHosts();
+    
+    public List<String> getXUsers();
+    public List<String> getXProjects();
+    public List<String> getXPes();
+    public List<String> getXQueues();
+    public List<String> getXHosts();
+    
+    public List<ResourceQuota> getLimits();
 }

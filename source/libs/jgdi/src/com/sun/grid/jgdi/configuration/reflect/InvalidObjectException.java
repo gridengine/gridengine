@@ -40,17 +40,17 @@ import java.util.Set;
  *
  */
 public class InvalidObjectException extends java.lang.Exception {
-
+    
     private Object obj;
     private Map<String, String> propertyErrorMap;
-
+    
     /**
      * Creates a new instance of <code>InvalidObjectException</code> without detail message.
      */
     public InvalidObjectException(Object obj) {
         this.obj = obj;
     }
-
+    
     /**
      * Constructs an instance of <code>InvalidObjectException</code> with the specified detail message.
      * @param msg the detail message.
@@ -58,15 +58,15 @@ public class InvalidObjectException extends java.lang.Exception {
     public InvalidObjectException(Object obj, String msg) {
         super(msg);
     }
-
-
+    
+    
     public void addPropertyError(String propertyName, String error) {
         if (propertyErrorMap == null) {
             propertyErrorMap = new HashMap<String, String>();
         }
         propertyErrorMap.put(propertyName, error);
     }
-
+    
     public Set getInvalidProperties() {
         if (propertyErrorMap == null) {
             return Collections.EMPTY_SET;
@@ -74,11 +74,11 @@ public class InvalidObjectException extends java.lang.Exception {
             return Collections.unmodifiableSet(propertyErrorMap.keySet());
         }
     }
-
+    
     public String getPropertyError(String propertyName) {
         return propertyErrorMap.get(propertyName);
     }
-
+    
     public String toString() {
         StringBuilder ret = new StringBuilder();
         ret.append(getMessage());
@@ -91,7 +91,7 @@ public class InvalidObjectException extends java.lang.Exception {
                 ret.append(entry.getValue());
                 if (first) {
                     first = false;
-                } else {    
+                } else {
                     ret.append(", ");
                 }
             }

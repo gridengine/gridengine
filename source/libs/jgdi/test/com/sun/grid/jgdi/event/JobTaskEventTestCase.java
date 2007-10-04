@@ -42,23 +42,23 @@ import junit.framework.TestSuite;
  *
  */
 public class JobTaskEventTestCase extends BaseTestCase {
-
+    
     private JGDI jgdi;
     private EventClient evc;
-
+    
     /** Creates a new instance of SpecialEventTestCase */
     public JobTaskEventTestCase(String testName) {
         super(testName);
     }
-
+    
     protected void setUp() throws Exception {
-
+        
         jgdi = createJGDI();
         evc = createEventClient(0);
         super.setUp();
         logger.fine("SetUp done");
     }
-
+    
     protected void tearDown() throws Exception {
         try {
             evc.close();
@@ -67,57 +67,57 @@ public class JobTaskEventTestCase extends BaseTestCase {
             evc.close();
         }
     }
-
+    
     public void testJobTaskEvents() throws Exception {
-
-
+        
+        
         jgdi.disableQueues(new String[]{"*"}, false);
-
+        
         int numberOfTasks = 10;
-
+        
         int jobid = JobSubmitter.submitJob(getCurrentCluster(), new String[]{"-t", "1-" + numberOfTasks, "$SGE_ROOT/examples/jobs/sleeper.sh", "1"});
-
-
+        
+        
         evc.subscribeJobTaskAdd(true);
         evc.setJobTaskAddFlush(true, 1);
-
+        
         evc.subscribeJobTaskDel(true);
         evc.setJobTaskDelFlush(true, 1);
-
+        
         evc.subscribeJobDel(true);
         evc.setJobDelFlush(true, 1);
-
-
+        
+        
         JobTaskEventListener lis = new JobTaskEventListener(jobid);
         evc.addEventListener(lis);
-
+        
         evc.start();
-
+        
         Thread.currentThread().sleep(2);
-
+        
         jgdi.enableQueues(new String[]{"*"}, false);
-
+        
         int timeout = 300;
         assertTrue("timeout while waiting for job finish event", lis.waitForJobFinish(timeout));
         assertEquals("too few job task add events", numberOfTasks, lis.getAddEventCount());
         assertEquals("too few job task del events", numberOfTasks - 1, lis.getDelEventCount());
     }
-
-
+    
+    
     class JobTaskEventListener implements EventListener {
-
+        
         private final Object syncObj = new Object();
         private int addEventCount = 0;
         private int delEventCount = 0;
         private boolean finished = false;
         private int jobid;
-
+        
         public JobTaskEventListener(int jobid) {
             this.jobid = jobid;
         }
-
+        
         public void eventOccured(Event evt) {
-
+            
             if (evt instanceof JobTaskAddEvent) {
                 JobTaskAddEvent jte = (JobTaskAddEvent) evt;
                 if (jte.getJobId() == jobid) {
@@ -141,7 +141,7 @@ public class JobTaskEventTestCase extends BaseTestCase {
                 }
             }
         }
-
+        
         public boolean waitForJobFinish(int timeout) throws InterruptedException {
             long end = System.currentTimeMillis() + (timeout * 1000);
             synchronized (syncObj) {
@@ -156,16 +156,16 @@ public class JobTaskEventTestCase extends BaseTestCase {
             }
             return true;
         }
-
+        
         public int getAddEventCount() {
             return addEventCount;
         }
-
+        
         public int getDelEventCount() {
             return delEventCount;
         }
     }
-
+    
     public static Test suite() {
         TestSuite suite = new TestSuite(JobTaskEventTestCase.class);
         return suite;

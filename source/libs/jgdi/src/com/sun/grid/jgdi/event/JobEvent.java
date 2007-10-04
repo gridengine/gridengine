@@ -45,31 +45,31 @@ public abstract class JobEvent extends Event implements java.io.Serializable {
     public JobEvent(long timestamp, int evtId) {
         super(EventType.SGE_EMA_TRIGGER, timestamp, evtId);
     }
-
+    
     public int getJobId() {
         return jobId;
     }
-
+    
     public void setJobId(int jobId) {
         this.jobId = jobId;
     }
-
+    
     public int getTaskId() {
         return taskId;
     }
-
+    
     public void setTaskId(int taskId) {
         this.taskId = taskId;
     }
-
+    
     public String getPeTaskId() {
         return peTaskId;
     }
-
+    
     public void setPeTaskId(String peTaskId) {
         this.peTaskId = peTaskId;
     }
-
+    
     public String toString() {
         return super.toString() + ", jobId=" + jobId + ", taskId=" + taskId + ", pePeTaskId=" + peTaskId;
     }

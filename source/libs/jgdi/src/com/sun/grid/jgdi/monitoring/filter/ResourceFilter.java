@@ -42,34 +42,34 @@ import java.util.StringTokenizer;
  *
  */
 public class ResourceFilter implements Serializable {
-
-   private Map<String,String> resourceMap = new HashMap<String,String>();
-
-   /** Creates a new instance of ResourceFilter */
-   public ResourceFilter() {
-   }
-
-   public static ResourceFilter parse(String str) {
-      ResourceFilter ret = new ResourceFilter();
-      return ret.fill(str);
-   }
-
-   /**
-    * I need to join all the same option together
-    */
-   public ResourceFilter fill(String str) throws IllegalArgumentException {
-      StringTokenizer st = new StringTokenizer(str, ",");
-      while (st.hasMoreTokens()) {
-         String resource = st.nextToken();
-         int index = resource.indexOf('=');
-         if (index <= 0) {
-            throw new IllegalArgumentException("invalid resource list:  " + resource);
-         }
-         this.addResource(resource.substring(0, index), resource.substring(index + 1));
-      }
-      return this;
-   }
-
+    
+    private Map<String,String> resourceMap = new HashMap<String,String>();
+    
+    /** Creates a new instance of ResourceFilter */
+    public ResourceFilter() {
+    }
+    
+    public static ResourceFilter parse(String str) {
+        ResourceFilter ret = new ResourceFilter();
+        return ret.fill(str);
+    }
+    
+    /**
+     * I need to join all the same option together
+     */
+    public ResourceFilter fill(String str) throws IllegalArgumentException {
+        StringTokenizer st = new StringTokenizer(str, ",");
+        while (st.hasMoreTokens()) {
+            String resource = st.nextToken();
+            int index = resource.indexOf('=');
+            if (index <= 0) {
+                throw new IllegalArgumentException("invalid resource list:  " + resource);
+            }
+            this.addResource(resource.substring(0, index), resource.substring(index + 1));
+        }
+        return this;
+    }
+    
     
     public void addResource(String name, String value) {
         resourceMap.put(name, value);
@@ -90,5 +90,5 @@ public class ResourceFilter implements Serializable {
     public String getResource(String name) {
         return resourceMap.get(name);
     }
-
+    
 }

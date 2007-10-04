@@ -41,69 +41,69 @@ import com.sun.grid.jgdi.configuration.Util;
  *
  */
 public abstract class AbstractClassDescriptor implements ClassDescriptor {
-
+    
     private ArrayList<PropertyDescriptor> propertyList = new ArrayList<PropertyDescriptor>();
     private Map<String, PropertyDescriptor> propertyMap = new HashMap<String, PropertyDescriptor>();
     private Class beanClass;
     private Class implClass;
     private String cullName;
-
+    
     protected AbstractClassDescriptor(Class beanClass, String cullName) {
         this.beanClass = beanClass;
         this.cullName = cullName;
     }
-
+    
     public List getProperties() {
         return Collections.unmodifiableList(propertyList);
     }
-
+    
     protected void add(PropertyDescriptor property) {
         propertyList.add(property);
         propertyMap.put(property.getPropertyName(), property);
     }
-
+    
     protected SimplePropertyDescriptor addSimple(String name, Class type, String cullType, int cullFieldName, boolean required, boolean readOnly, boolean configurable) {
         SimplePropertyDescriptor prop = new SimplePropertyDescriptor(beanClass, name, type, cullType, cullFieldName, required, readOnly, configurable);
         add(prop);
         return prop;
     }
-
+    
     protected ListPropertyDescriptor addList(String name, Class type, String cullType, int cullFieldName, boolean browsable, boolean readOnly, boolean configurable) {
         ListPropertyDescriptor prop = new DefaultListPropertyDescriptor(beanClass, name, type, cullType, cullFieldName, browsable, readOnly, configurable);
         add(prop);
         return prop;
     }
-
+    
     protected MapPropertyDescriptor addMap(String name, Class type, String cullType, Class keyType, int cullFieldName, int keyCullFieldName, int valueCullFieldName, Object defaultKey, boolean readOnly, boolean configurable) {
         MapPropertyDescriptor prop = new DefaultMapPropertyDescriptor(beanClass, name, type, cullType, keyType, cullFieldName, keyCullFieldName, valueCullFieldName, defaultKey, readOnly, configurable);
         add(prop);
         return prop;
     }
-
+    
     protected MapListPropertyDescriptor addMapList(String name, Class type, String cullType, Class keyType, String cullListType, int cullFieldName, int keyCullFieldName, int valueCullFieldName, Object defaultKey, boolean readOnly, boolean configurable) {
         MapListPropertyDescriptor prop = new DefaultMapListPropertyDescriptor(beanClass, name, type, cullType, keyType, cullListType, cullFieldName, keyCullFieldName, valueCullFieldName, defaultKey, readOnly, configurable);
         add(prop);
         return prop;
     }
-
+    
     public PropertyDescriptor getProperty(String name) {
         return propertyMap.get(name);
     }
-
+    
     public String[] getPropertyNames() {
         String[] ret = new String[propertyMap.size()];
         propertyMap.keySet().toArray(ret);
         return ret;
     }
-
+    
     public int getPropertyCount() {
         return propertyList.size();
     }
-
+    
     public PropertyDescriptor getProperty(int index) {
         return propertyList.get(index);
     }
-
+    
     public PropertyDescriptor getPropertyByCullFieldName(int cullFieldName) {
         for(PropertyDescriptor pd: propertyList) {
             if (pd.getCullFieldName() == cullFieldName) {
@@ -112,11 +112,11 @@ public abstract class AbstractClassDescriptor implements ClassDescriptor {
         }
         return null;
     }
-
+    
     public Class getBeanClass() {
         return beanClass;
     }
-
+    
     public Object newInstance() {
         try {
             if (implClass != null) {
@@ -134,13 +134,13 @@ public abstract class AbstractClassDescriptor implements ClassDescriptor {
             throw ilse;
         }
     }
-
+    
     public Object clone(Object bean) {
-
+        
         ClassDescriptor classDescr = Util.getDescriptor(bean.getClass());
         Object ret = classDescr.newInstance();
         PropertyDescriptor propDescr = null;
-
+        
         for (int i = 0; i < classDescr.getPropertyCount(); i++) {
             propDescr = classDescr.getProperty(i);
             if (propDescr.getPropertyName().equals("parent")) {
@@ -150,16 +150,16 @@ public abstract class AbstractClassDescriptor implements ClassDescriptor {
                 propDescr.clone(bean, ret);
             }
         }
-
+        
         return ret;
     }
-
+    
     public void registryObjects(Object root) {
-
+        
         ClassDescriptor cd = Util.getDescriptor(root.getClass());
         int count = cd.getPropertyCount();
         PropertyDescriptor pd = null;
-
+        
         for (int i = 0; i < count; i++) {
             pd = cd.getProperty(i);
             if (!pd.getPropertyName().equals("parent") && GEObject.class.isAssignableFrom(pd.getPropertyType())) {
@@ -176,19 +176,19 @@ public abstract class AbstractClassDescriptor implements ClassDescriptor {
             }
         }
     }
-
+    
     public String getCullName() {
         return cullName;
     }
-
+    
     public String toString(Object bean) {
         return bean.toString();
     }
-
+    
     public Class getImplClass() {
         return implClass;
     }
-
+    
     public void setImplClass(Class implClass) {
         this.implClass = implClass;
     }

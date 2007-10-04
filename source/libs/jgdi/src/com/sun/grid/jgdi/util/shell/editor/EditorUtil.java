@@ -590,8 +590,8 @@ public class EditorUtil {
             }
             DecimalFormat df = new DecimalFormat("#0.000000", new DecimalFormatSymbols(Locale.US));
             return "cpu="+df.format(pd.get(obj,"cpu")) +
-                ",mem="+df.format(pd.get(obj,"mem")) +
-                ",io="+df.format(pd.get(obj,"io"));
+                    ",mem="+df.format(pd.get(obj,"mem")) +
+                    ",io="+df.format(pd.get(obj,"io"));
         }
         
         for (String key : pd.getKeys(obj)) {

@@ -43,58 +43,58 @@ import java.text.DateFormat;
  *  Prints all events from qmaster to <code>System.out</code>
  */
 public class QEvent implements EventListener {
-   
-   private EventClient evc;
-   
-   public QEvent(String url) throws JGDIException {
-      evc = JGDIFactory.createEventClient(url, 0);
-      evc.addEventListener(this);
-      evc.subscribeAll();
-   }
-   
-   public void start() throws InterruptedException {
-      evc.start();
-   }
-   
-   public static void main(String[] args) {
-      
-      if (args.length != 1) {
-         usage();
-      }
-
-      try {
-         QEvent qevt = new QEvent(args[0]);
-         qevt.start();
-         Runtime.getRuntime().addShutdownHook(qevt.new ShutdownHandler());
-         Thread.currentThread().sleep(Integer.MAX_VALUE);
-      } catch (Exception e) {
-         e.printStackTrace();
-      }
-   }
-   
-   
-   class ShutdownHandler extends Thread {
-      
-      public void run() {
-         try {
-            System.out.println("close event client");
-            evc.close();
-         } catch (Exception e) {
+    
+    private EventClient evc;
+    
+    public QEvent(String url) throws JGDIException {
+        evc = JGDIFactory.createEventClient(url, 0);
+        evc.addEventListener(this);
+        evc.subscribeAll();
+    }
+    
+    public void start() throws InterruptedException {
+        evc.start();
+    }
+    
+    public static void main(String[] args) {
+        
+        if (args.length != 1) {
+            usage();
+        }
+        
+        try {
+            QEvent qevt = new QEvent(args[0]);
+            qevt.start();
+            Runtime.getRuntime().addShutdownHook(qevt.new ShutdownHandler());
+            Thread.currentThread().sleep(Integer.MAX_VALUE);
+        } catch (Exception e) {
             e.printStackTrace();
-         }
-      }
-   }
-   
-   private static void usage() {
-      System.out.println("QEvent <connect url>");
-      System.exit(1);
-   }
-   
-   private static DateFormat df = DateFormat.getTimeInstance(DateFormat.SHORT);
-   
-   public void eventOccured(Event evt) {
-      System.out.println(evt);
-      System.out.flush();
-   }
-   
+        }
+    }
+    
+    
+    class ShutdownHandler extends Thread {
+        
+        public void run() {
+            try {
+                System.out.println("close event client");
+                evc.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    private static void usage() {
+        System.out.println("QEvent <connect url>");
+        System.exit(1);
+    }
+    
+    private static DateFormat df = DateFormat.getTimeInstance(DateFormat.SHORT);
+    
+    public void eventOccured(Event evt) {
+        System.out.println(evt);
+        System.out.flush();
+    }
+    
 }

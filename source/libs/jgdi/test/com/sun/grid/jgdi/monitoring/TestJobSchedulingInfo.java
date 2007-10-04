@@ -44,23 +44,23 @@ import java.io.PrintWriter;
  *
  */
 public class TestJobSchedulingInfo extends com.sun.grid.jgdi.BaseTestCase {
-
+    
     /** Creates a new instance of TestQHost */
     public TestJobSchedulingInfo(String testName) {
         super(testName);
     }
-
+    
     protected void setUp() throws Exception {
         super.setUp();
     }
-
+    
     public static Test suite() {
         TestSuite suite = new TestSuite(TestJobSchedulingInfo.class);
         return suite;
     }
-
+    
     public void testSimple() throws Exception {
-
+        
         JGDI jgdi = createJGDI();
         try {
             PrintWriter pw = new PrintWriter(System.out);

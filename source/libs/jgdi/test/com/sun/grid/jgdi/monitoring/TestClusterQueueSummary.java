@@ -47,17 +47,17 @@ import com.sun.grid.jgdi.configuration.UserSet;
  *
  */
 public class TestClusterQueueSummary extends com.sun.grid.jgdi.BaseTestCase {
-
+    
     /** Creates a new instance of TestQHost */
     public TestClusterQueueSummary(String testName) {
         super(testName);
     }
-
+    
     public static Test suite() {
         TestSuite suite = new TestSuite(TestClusterQueueSummary.class);
         return suite;
     }
-
+    
     private void printResult(List<ClusterQueueSummary> result) {
         
         logger.fine("CLUSTER QUEUE CQLOAD   USED  AVAIL  TOTAL");
@@ -76,9 +76,9 @@ public class TestClusterQueueSummary extends com.sun.grid.jgdi.BaseTestCase {
             logger.fine(buf.toString());
         }
     }
-
+    
     public void testSimple() throws Exception {
-
+        
         JGDI jgdi = createJGDI();
         try {
             ClusterQueueSummaryOptions options = new ClusterQueueSummaryOptions();
@@ -88,9 +88,9 @@ public class TestClusterQueueSummary extends com.sun.grid.jgdi.BaseTestCase {
             jgdi.close();
         }
     }
-
+    
     public void testResourceFilter() throws Exception {
-
+        
         JGDI jgdi = createJGDI();
         try {
             ClusterQueueSummaryOptions options = new ClusterQueueSummaryOptions();
@@ -103,9 +103,9 @@ public class TestClusterQueueSummary extends com.sun.grid.jgdi.BaseTestCase {
             jgdi.close();
         }
     }
-
+    
     public void testQueueStateFilter() throws Exception {
-
+        
         JGDI jgdi = createJGDI();
         try {
             ClusterQueueSummaryOptions options = new ClusterQueueSummaryOptions();
@@ -119,9 +119,9 @@ public class TestClusterQueueSummary extends com.sun.grid.jgdi.BaseTestCase {
             jgdi.close();
         }
     }
-
+    
     public void testQueueUserFilter() throws Exception {
-
+        
         JGDI jgdi = createJGDI();
         try {
             ClusterQueueSummaryOptions options = new ClusterQueueSummaryOptions();
@@ -135,7 +135,7 @@ public class TestClusterQueueSummary extends com.sun.grid.jgdi.BaseTestCase {
                 UserFilter uf = new UserFilter();
                 uf.addUser("noaccess");
                 jgdi.addClusterQueue(cq);
-
+                
                 try {
                     options.setQueueUserFilter(uf);
                     logger.fine("testQueueUserFilter for queue " + cq.getName());

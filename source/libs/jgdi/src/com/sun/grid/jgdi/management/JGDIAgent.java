@@ -45,96 +45,96 @@ import java.util.logging.Logger;
  */
 public class JGDIAgent {
     
-   private final static Logger log = Logger.getLogger(JGDIAgent.class.getName());
-   private JGDIJMX mbean;
+    private final static Logger log = Logger.getLogger(JGDIAgent.class.getName());
+    private JGDIJMX mbean;
 //   private CalendarBean cal;
-   
-   public JGDIJMX getJGDIMBean() {
-      return mbean;
-   }
-   
-   /**
-    * Instantiate and register your MBeans.
-    */
-   public void init(String url) throws Exception {
-      
-      //TODO Add your MBean registration code here
-      
-      log.log(Level.INFO,"init: " + url + "-----------------------");
-      
-      // Instantiate JGDIJMX MBean
-      mbean = new JGDIJMX(url);
-      ObjectName mbeanName = new ObjectName("gridengine:type=JGDI");
-      //Register the JGDI MBean
-      getMBeanServer().registerMBean(mbean, mbeanName);
-      
-      log.log(Level.INFO,"mbean " + mbeanName + " registered");
-      
-      
+    
+    public JGDIJMX getJGDIMBean() {
+        return mbean;
+    }
+    
+    /**
+     * Instantiate and register your MBeans.
+     */
+    public void init(String url) throws Exception {
+        
+        //TODO Add your MBean registration code here
+        
+        log.log(Level.INFO,"init: " + url + "-----------------------");
+        
+        // Instantiate JGDIJMX MBean
+        mbean = new JGDIJMX(url);
+        ObjectName mbeanName = new ObjectName("gridengine:type=JGDI");
+        //Register the JGDI MBean
+        getMBeanServer().registerMBean(mbean, mbeanName);
+        
+        log.log(Level.INFO,"mbean " + mbeanName + " registered");
+        
+        
 //      cal = new CalendarBean();
 //      mbeanName = new ObjectName("jgdi.grid.sun.com:type=configuration.CalendarBean");
 //      //Register the JGDI MBean
 //      getMBeanServer().registerMBean(cal, mbeanName);
-      
-      
-   }
-   
-   /**
-    * Returns an agent singleton.
-    */
-   public synchronized static JGDIAgent getDefault(String url) throws Exception {
-      if(singleton == null) {
-         singleton = new JGDIAgent();
-         singleton.init(url);
-      }
-      return singleton;
-   }
-   
-   public MBeanServer getMBeanServer() {
-      return mbs;
-   }
-   
-   // Platform MBeanServer used to register your MBeans
-   private final MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-   
-   // Singleton instance
-   private static JGDIAgent singleton;
-   
-   private final static Logger logger = Logger.getLogger(JGDIAgent.class.getName());
-   
-   public static void main(String [] args) {
-       
-       try {
-           if(args.length != 1) {
-               System.err.println("JGDIAgent <jgdi connect url>");
-               System.exit(1);
-           }
-           String sge_url = args[0];
-
-           // start JGDIAgent
-           JGDIAgent agent = JGDIAgent.getDefault(sge_url);
-
-           ShutdownHook shutdownHook = new ShutdownHook();
-           Runtime.getRuntime().addShutdownHook(shutdownHook);
-           shutdownHook.waitForShutdown();
-       } catch(Exception ex) {
-           log.log(Level.SEVERE, "Unexpected error", ex);
-       }
-   }
-   
-   private static class ShutdownHook extends Thread {
-      
-      public void run() {
-        synchronized(this) {
-            notifyAll();
+        
+        
+    }
+    
+    /**
+     * Returns an agent singleton.
+     */
+    public synchronized static JGDIAgent getDefault(String url) throws Exception {
+        if(singleton == null) {
+            singleton = new JGDIAgent();
+            singleton.init(url);
         }
-      }
-      
-      public synchronized void waitForShutdown() throws InterruptedException {
-         wait();
-      }
-   }
-   
+        return singleton;
+    }
+    
+    public MBeanServer getMBeanServer() {
+        return mbs;
+    }
+    
+    // Platform MBeanServer used to register your MBeans
+    private final MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+    
+    // Singleton instance
+    private static JGDIAgent singleton;
+    
+    private final static Logger logger = Logger.getLogger(JGDIAgent.class.getName());
+    
+    public static void main(String [] args) {
+        
+        try {
+            if(args.length != 1) {
+                System.err.println("JGDIAgent <jgdi connect url>");
+                System.exit(1);
+            }
+            String sge_url = args[0];
+            
+            // start JGDIAgent
+            JGDIAgent agent = JGDIAgent.getDefault(sge_url);
+            
+            ShutdownHook shutdownHook = new ShutdownHook();
+            Runtime.getRuntime().addShutdownHook(shutdownHook);
+            shutdownHook.waitForShutdown();
+        } catch(Exception ex) {
+            log.log(Level.SEVERE, "Unexpected error", ex);
+        }
+    }
+    
+    private static class ShutdownHook extends Thread {
+        
+        public void run() {
+            synchronized(this) {
+                notifyAll();
+            }
+        }
+        
+        public synchronized void waitForShutdown() throws InterruptedException {
+            wait();
+        }
+    }
+    
 }
 
 

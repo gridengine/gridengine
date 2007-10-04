@@ -44,23 +44,23 @@ import org.xml.sax.SAXParseException;
  *
  */
 public class MapAttributeTestCase extends BaseTestCase {
-
+    
     /** Creates a new instance of MapAttributeTestCase */
     public MapAttributeTestCase(String name) {
         super(name);
     }
-
+    
     public static Test suite() {
         TestSuite suite = new TestSuite(MapAttributeTestCase.class);
         return suite;
     }
-
+    
     public void testClusterQueueRerun() throws Exception {
-
+        
         JGDI jgdi = createJGDI();
         try {
             List<ClusterQueue> queueList = jgdi.getClusterQueueList();
-            for (ClusterQueue queue : queueList) {    
+            for (ClusterQueue queue : queueList) {
                 logger.info(queue.getName() + "------------");
                 for (String key : queue.getRerunKeys()) {
                     logger.info("rerun: " + key + "=" + queue.getRerun(key));
@@ -72,7 +72,7 @@ public class MapAttributeTestCase extends BaseTestCase {
                 XMLUtil.write(queue, sw);
                 sw.flush();
                 logger.fine(sw.getBuffer().toString());
-
+                
                 try {
                     queue = (ClusterQueue) XMLUtil.read(new StringReader(sw.getBuffer().toString()));
                     XMLUtil.write(queue, System.out);
@@ -80,7 +80,7 @@ public class MapAttributeTestCase extends BaseTestCase {
                     logger.severe("Error in [" + spe.getLineNumber() + ":" + spe.getColumnNumber() + "]:" + spe.getMessage());
                     throw spe;
                 }
-
+                
                 //         pe = new ST();
                 //         pe.setName("make");
                 //         queue.addPe("oin", pe);

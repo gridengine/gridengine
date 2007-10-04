@@ -41,41 +41,41 @@ import com.sun.grid.jgdi.configuration.reflect.PropertyDescriptor;
 import com.sun.grid.jgdi.util.shell.editor.TestGEObject;
 
 public class TestGEObjectDescriptor extends GEObjectDescriptor {
-
-
-   public TestGEObjectDescriptor() {
-      this(TestGEObject.class, "CQ_Type" );
-      setImplClass(TestGEObject.class);
-   }
-      
-   protected TestGEObjectDescriptor(Class type, String name) {
-      super(type, name);
-      
-     
-      PropertyDescriptor propDescr = null;
-      
-      propDescr = addSimple("name", String.class, "SGE_STRING", CullConstants.CQ_name, true, false, true);
-      propDescr = addSimple("long", Long.TYPE, "AULNG_Type", CullConstants.CQ_seq_no, true, false, true);
-      propDescr = addSimple("double", Double.TYPE, "SGE_DOUBLE", CullConstants.JAT_oticket, false, false, true);      
-      //LIST
-      propDescr = addList("stringList", String.class, "HR_Type", CullConstants.CQ_hostlist, true, false, true );
-      ///MAP
-      propDescr = addMap("stringMap", String.class, "ATIME_Type", String.class,
-             CullConstants.CQ_s_cpu, CullConstants.ATIME_href, CullConstants.ATIME_value,
-             "0", false, true );
-      //MAPLIST
-      propDescr = addMapList("stringMapList", String.class, "ASTRLIST_Type", String.class, "ST_Type",
-             CullConstants.CQ_pe_list, CullConstants.ASTRLIST_href, CullConstants.ASTRLIST_value,
-             "NONE",false, true ); 
+    
+    
+    public TestGEObjectDescriptor() {
+        this(TestGEObject.class, "CQ_Type" );
+        setImplClass(TestGEObject.class);
+    }
+    
+    protected TestGEObjectDescriptor(Class type, String name) {
+        super(type, name);
+        
+        
+        PropertyDescriptor propDescr = null;
+        
+        propDescr = addSimple("name", String.class, "SGE_STRING", CullConstants.CQ_name, true, false, true);
+        propDescr = addSimple("long", Long.TYPE, "AULNG_Type", CullConstants.CQ_seq_no, true, false, true);
+        propDescr = addSimple("double", Double.TYPE, "SGE_DOUBLE", CullConstants.JAT_oticket, false, false, true);
+        //LIST
+        propDescr = addList("stringList", String.class, "HR_Type", CullConstants.CQ_hostlist, true, false, true );
+        ///MAP
+        propDescr = addMap("stringMap", String.class, "ATIME_Type", String.class,
+                CullConstants.CQ_s_cpu, CullConstants.ATIME_href, CullConstants.ATIME_value,
+                "0", false, true );
+        //MAPLIST
+        propDescr = addMapList("stringMapList", String.class, "ASTRLIST_Type", String.class, "ST_Type",
+                CullConstants.CQ_pe_list, CullConstants.ASTRLIST_href, CullConstants.ASTRLIST_value,
+                "NONE",false, true );
       /*propDescr = addMapList("loadThresholds", ComplexEntry.class, "ACELIST_Type", String.class, "CE_Type",
              CullConstants.CQ_load_thresholds, CullConstants.ACELIST_href, CullConstants.ACELIST_value,
              "NONE",false, true );*/
-   }
-   
-   public void validate(Object obj) throws InvalidObjectException {
-      if( !(obj instanceof ClusterQueue) ) {
-         throw new InvalidObjectException(obj, "obj is not an instanceof ClusterQueue");
-      }
-   }
+    }
+    
+    public void validate(Object obj) throws InvalidObjectException {
+        if( !(obj instanceof ClusterQueue) ) {
+            throw new InvalidObjectException(obj, "obj is not an instanceof ClusterQueue");
+        }
+    }
 }
 

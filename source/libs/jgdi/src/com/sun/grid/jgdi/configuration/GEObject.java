@@ -35,18 +35,18 @@ package com.sun.grid.jgdi.configuration;
  *
  */
 public interface GEObject {
-
+    
     /**
      * Getter for property name.
      * @return Value of property name.
      */
     public String getName();
-
+    
     /**
      * Getter for property parent.
      * @return Value of property parent.
      */
     public GEObject getParent();
-
+    
     public boolean equalsCompletely(Object obj);
 }

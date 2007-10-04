@@ -46,12 +46,12 @@ import javax.security.auth.x500.X500PrivateCredential;
  *
  */
 public class SecurityHelper {
-
+    
     private static Logger logger = Logger.getLogger(SecurityHelper.class.getName());
-
+    
     private static X500PrivateCredential getPrivateCredentials() {
         AccessControlContext ctx = AccessController.getContext();
-
+        
         if (ctx == null) {
             return null;
         }
@@ -59,16 +59,16 @@ public class SecurityHelper {
         if (subject == null) {
             return null;
         }
-
+        
         Set credSet = subject.getPrivateCredentials(X500PrivateCredential.class);
         if (credSet == null || credSet.isEmpty()) {
             return null;
         }
         return (X500PrivateCredential) credSet.iterator().next();
     }
-
+    
     public static String getUsername() {
-
+        
         X500PrivateCredential cred = getPrivateCredentials();
         if (cred == null) {
             logger.fine("user.name: " + System.getProperty("user.name"));
@@ -76,8 +76,8 @@ public class SecurityHelper {
         }
         return cred.getAlias();
     }
-
-
+    
+    
     public static String getPrivateKey() {
         X500PrivateCredential cred = getPrivateCredentials();
         if (cred == null) {
@@ -85,8 +85,8 @@ public class SecurityHelper {
         }
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
-
-
+        
+        
         pw.println("-----BEGIN PRIVATE KEY-----");
         String str = Base64.encode(cred.getPrivateKey().getEncoded());
         int lines = str.length() / 64;
@@ -102,7 +102,7 @@ public class SecurityHelper {
         pw.close();
         return sw.getBuffer().toString();
     }
-
+    
     public static String getCertificate() throws CertificateEncodingException {
         X500PrivateCredential cred = getPrivateCredentials();
         if (cred == null) {

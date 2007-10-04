@@ -38,31 +38,31 @@ import java.util.ResourceBundle;
  * Base exception class for all errors on the GDI layer.
  */
 public class JGDIException extends java.rmi.RemoteException {
-
+    
     private Object[] params;
     //private static ResourceBundle RB = ResourceBundle.getBundle("com.sun.grid.jgdi.Resources");
-
+    
     /** Creates a new instance of JGDIException */
     public JGDIException() {
     }
-
+    
     public JGDIException(String msg) {
         super(msg);
     }
-
+    
     public JGDIException(String msg, Object[] params) {
         super(msg);
         this.params = params;
     }
-
+    
     public JGDIException(String msg, Object param) {
         this(msg, new Object[]{param});
     }
-
+    
     public JGDIException(String msg, Object param1, Object param2) {
         this(msg, new Object[]{param1, param2});
     }
-
+    
     public JGDIException(String msg, Object param1, Object param2, Object param3) {
         this(msg, new Object[]{param1, param2, param3});
     }

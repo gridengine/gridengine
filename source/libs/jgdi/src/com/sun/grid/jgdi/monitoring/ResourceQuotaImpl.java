@@ -54,7 +54,7 @@ public class ResourceQuotaImpl implements ResourceQuota, Serializable {
     public ResourceQuotaImpl(String name) {
         setName(name);
     }
-
+    
     /**
      * Create a new resource quota
      * @param name  name of the resource quota
@@ -66,7 +66,7 @@ public class ResourceQuotaImpl implements ResourceQuota, Serializable {
         setLimitValue(limitValue);
         setLimitValue(usageValue);
     }
-        
+    
     /**
      *  Get the resource name
      *  @return the resource name

@@ -35,12 +35,12 @@ package com.sun.grid.jgdi.examples.jmxeventmonitor;
  *
  */
 public class Main {
-
+    
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-
+        
         try {
             MainFrame frame = new MainFrame();
             frame.setSize(700, 600);

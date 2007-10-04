@@ -37,46 +37,46 @@ import java.io.Serializable;
  *
  */
 public class HardRequestValue implements Serializable {
-   
-   private String resource;
-   private String value;
-   private double uc;
-   
-   /**
-    *  Create an new instanceof a HardRequestValue
-    *  @param resource the name of the resource
-    *  @param value  requested value of the resource
-    *  @param uc     urgency contribution of the resource
-    */
-   public HardRequestValue(String resource, String value, double uc) {
-      this.resource = resource;
-      this.value = value;
-      this.uc = uc;
-   }
-   
-   /**
-    *  Get the resource
-    *  @return the resource
-    */
-   public String getResource() {
-      return resource;
-   }
-   
-   /**
-    *  Get the requested value of the resource
-    *  @return the requested value
-    */
-   public String getValue() {
-      return value;
-   }
-   
-   /**
-    *  Get the urgency contribution  of the resource
-    *  @return the urgency contribution
-    */
-   public double getContribution() {
-      return uc;
-   }
-   
-   
+    
+    private String resource;
+    private String value;
+    private double uc;
+    
+    /**
+     *  Create an new instanceof a HardRequestValue
+     *  @param resource the name of the resource
+     *  @param value  requested value of the resource
+     *  @param uc     urgency contribution of the resource
+     */
+    public HardRequestValue(String resource, String value, double uc) {
+        this.resource = resource;
+        this.value = value;
+        this.uc = uc;
+    }
+    
+    /**
+     *  Get the resource
+     *  @return the resource
+     */
+    public String getResource() {
+        return resource;
+    }
+    
+    /**
+     *  Get the requested value of the resource
+     *  @return the requested value
+     */
+    public String getValue() {
+        return value;
+    }
+    
+    /**
+     *  Get the urgency contribution  of the resource
+     *  @return the urgency contribution
+     */
+    public double getContribution() {
+        return uc;
+    }
+    
+    
 }

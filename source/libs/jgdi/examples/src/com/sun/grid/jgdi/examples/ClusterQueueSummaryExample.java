@@ -45,21 +45,21 @@ import java.util.List;
  *
  */
 public class ClusterQueueSummaryExample {
-
+    
     /**
      *  @param args   args[0] can contain the jgdi connection url
      */
     public static void main(String[] args) {
-
+        
         try {
             String url = "bootstrap:///opt/sge@default:1026";
-
+            
             if (args.length == 1) {
                 url = args[0];
             }
-
+            
             JGDI jgdi = JGDIFactory.newInstance(url);
-
+            
             try {
                 ClusterQueueSummaryOptions options = new ClusterQueueSummaryOptions();
                 QueueStateFilter queueStateFilter = new QueueStateFilter();

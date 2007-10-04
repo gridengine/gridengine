@@ -164,7 +164,7 @@ public class JGDIRemoteCacheBase implements JGDIRemoteBase {
         }
         return qhostResult;
     }
-
+    
     private boolean SGERootNotSet = true;
     private File SGERoot;
     
@@ -200,7 +200,7 @@ public class JGDIRemoteCacheBase implements JGDIRemoteBase {
         }
         return SGECell;
     }
-
+    
     private boolean RealExecHostListNotSet = true;
     private List RealExecHostList;
     

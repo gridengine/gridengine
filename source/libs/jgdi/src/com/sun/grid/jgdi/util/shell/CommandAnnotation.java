@@ -44,8 +44,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface CommandAnnotation {
-   /** command string 
-    * @return a command value 
-    */
+    /** command string
+     * @return a command value
+     */
     String value();
 }

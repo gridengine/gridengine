@@ -36,8 +36,8 @@ package com.sun.grid.jgdi.event;
  */
 public class QueueInstanceSuspendEvent extends QueueInstanceModEvent implements java.io.Serializable {
     
-  public QueueInstanceSuspendEvent(long timestamp, int eventID) {
-     super(timestamp, eventID );
-  } // end of default constructor
+    public QueueInstanceSuspendEvent(long timestamp, int eventID) {
+        super(timestamp, eventID );
+    } // end of default constructor
     
 }

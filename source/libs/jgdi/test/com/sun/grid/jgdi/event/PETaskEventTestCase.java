@@ -48,26 +48,26 @@ import junit.framework.TestSuite;
  *
  */
 public class PETaskEventTestCase extends BaseTestCase {
-
+    
     private JGDI jgdi;
     private EventClient evc;
-
+    
     /** Creates a new instance of PETaskEventTestCase */
     public PETaskEventTestCase(String testName) {
         super(testName);
     }
-
+    
     private ParallelEnvironment pe;
     private ClusterQueue queue;
-
+    
     protected void setUp() throws Exception {
-
+        
         jgdi = createJGDI();
         evc = createEventClient(0);
         super.setUp();
-
+        
         String peName = "pe" + System.currentTimeMillis();
-
+        
         pe = new ParallelEnvironmentImpl();
         pe.setName(peName);
         pe.setSlots(999);
@@ -77,21 +77,21 @@ public class PETaskEventTestCase extends BaseTestCase {
         pe.setControlSlaves(true);
         pe.setJobIsFirstTask(true);
         pe.setUrgencySlots("min");
-
+        
         jgdi.addParallelEnvironment(pe);
-
+        
         queue = jgdi.getClusterQueue("all.q");
-
+        
         String queueName = peName + ".q";
         queue.setName(queueName);
         queue.putJobSlots("@/", 2);
         queue.removeAllPe();
         queue.addDefaultPe(peName);
         jgdi.addClusterQueue(queue);
-
+        
         logger.fine("SetUp done");
     }
-
+    
     protected void tearDown() throws Exception {
         if (queue != null) {
             try {
@@ -113,60 +113,60 @@ public class PETaskEventTestCase extends BaseTestCase {
             jgdi.close();
         }
     }
-
+    
     public void testPETaskEvents() throws Exception {
-
-
+        
+        
         jgdi.disableQueues(new String[]{queue.getName()}, false);
-
+        
         int numberOfTasks = 2;
         int taskRuntime = 10;
-
+        
         File peJobFile = new File("util/scripts/pe_job.sh");
         File peTaskFile = new File("util/scripts/pe_task.sh");
-
+        
         int jobid = JobSubmitter.submitJob(getCurrentCluster(), new String[]{"-pe", pe.getName(), Integer.toString(numberOfTasks), peJobFile.getAbsolutePath(), peTaskFile.getAbsolutePath(), Integer.toString(numberOfTasks), Integer.toString(taskRuntime)});
-
-
+        
+        
         evc.subscribePETaskAdd(true);
         evc.setPETaskAddFlush(true, 1);
-
+        
         evc.subscribePETaskDel(true);
         evc.setPETaskDelFlush(true, 1);
-
+        
         evc.subscribeJobDel(true);
         evc.setJobDelFlush(true, 1);
-
+        
         PETaskEventListener lis = new PETaskEventListener(jobid);
         evc.addEventListener(lis);
-
+        
         evc.start();
-
+        
         Thread.currentThread().sleep(2);
-
+        
         jgdi.enableQueues(new String[]{queue.getName()}, false);
-
-
+        
+        
         assertTrue("timeout while waiting for job finish event", lis.waitForJobFinish(taskRuntime * 10));
         assertEquals("Too few pe task add events", numberOfTasks, lis.getAddEventCount());
         assertEquals("Too few pe task del events", numberOfTasks - 1, lis.getDelEventCount());
     }
-
-
+    
+    
     class PETaskEventListener implements EventListener {
-
+        
         private final Object finishSync = new Object();
         private int addEventCount = 0;
         private int delEventCount = 0;
         private int jobid;
         private boolean finished = false;
-
+        
         public PETaskEventListener(int jobid) {
             this.jobid = jobid;
         }
-
+        
         public void eventOccured(Event evt) {
-
+            
             if (evt instanceof PETaskAddEvent) {
                 PETaskAddEvent jte = (PETaskAddEvent) evt;
                 if (jte.getJobId() == jobid) {
@@ -190,7 +190,7 @@ public class PETaskEventTestCase extends BaseTestCase {
                 }
             }
         }
-
+        
         public boolean waitForJobFinish(int timeout) throws InterruptedException {
             long end = System.currentTimeMillis() + (timeout * 1000);
             synchronized (finishSync) {
@@ -205,16 +205,16 @@ public class PETaskEventTestCase extends BaseTestCase {
             }
             return true;
         }
-
+        
         public int getAddEventCount() {
             return addEventCount;
         }
-
+        
         public int getDelEventCount() {
             return delEventCount;
         }
     }
-
+    
     public static Test suite() {
         TestSuite suite = new TestSuite(PETaskEventTestCase.class);
         return suite;

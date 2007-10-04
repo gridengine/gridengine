@@ -41,38 +41,38 @@ import junit.framework.TestSuite;
  *
  */
 public class ClusterQueueTestCase extends BaseTestCase {
-
+    
     private ClusterQueue testClusterQueue;
-
+    
     /** Creates a new instance of ClusterQueueTestCase */
     public ClusterQueueTestCase(String name) {
         super(name);
     }
-
+    
     protected void setUp() throws Exception {
         logger.fine("Setup");
-
+        
         // load the cluster queue definition from a XML file
         File file = new File("test/ClusterQueueTestCase_private.xml");
-
+        
         if (!file.exists()) {
             file = new File("test/ClusterQueueTestCase.xml");
         }
-
+        
 //      testClusterQueue = (ClusterQueue)XMLUtil.read(file);
         super.setUp();
         logger.fine("SetUp done");
     }
-
-
+    
+    
     public static Test suite() {
         TestSuite suite = new TestSuite(ClusterQueueTestCase.class);
         return suite;
     }
-
+    
     public void testWriteXML() throws Exception {
         String[] clusterNames = getClusterNames();
-
+        
         for (int i = 0; i < clusterNames.length; i++) {
             JGDI gdi = createJGDI();
             try {

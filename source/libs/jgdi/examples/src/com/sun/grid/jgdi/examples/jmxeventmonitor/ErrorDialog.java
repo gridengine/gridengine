@@ -94,7 +94,7 @@ public class ErrorDialog extends JDialog {
         
         textArea.setBorder(BorderFactory.createEmptyBorder(10,20,10,20));
         
-
+        
         if(icon != null) {
             JPanel textPanel = new JPanel(new BorderLayout());
             textPanel.add(textArea, BorderLayout.CENTER);
@@ -117,9 +117,9 @@ public class ErrorDialog extends JDialog {
         
         
         btc.addActionListener( new ActionListener() {
-           public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(ActionEvent e) {
                 setVisible(false);
-            } 
+            }
         });
         
         
@@ -149,7 +149,7 @@ public class ErrorDialog extends JDialog {
         }
         dlg.setVisible(true);
     }
-
+    
     public static void showErrorDialog(JFrame frame, String msg, Throwable ex) {
         ErrorDialog dlg = new ErrorDialog(frame, msg, ex);
         dlg.pack();
@@ -176,7 +176,7 @@ public class ErrorDialog extends JDialog {
         }
         dlg.setVisible(true);
     }
-            
+    
     public static void showWarnDialog(JFrame frame, String msg) {
         ErrorDialog dlg = new ErrorDialog(frame, msg, JOptionPane.WARNING_MESSAGE, true);
         dlg.pack();
@@ -185,7 +185,7 @@ public class ErrorDialog extends JDialog {
         }
         dlg.setVisible(true);
     }
-
+    
     public static void showWarnDialog(JFrame frame, String msg, Throwable ex) {
         ErrorDialog dlg = new ErrorDialog(frame, msg, JOptionPane.WARNING_MESSAGE, true);
         dlg.pack();
@@ -196,13 +196,13 @@ public class ErrorDialog extends JDialog {
     }
     
     private class ShowDetailsAction extends AbstractAction {
-
+        
         boolean visible = false;
         
         public ShowDetailsAction() {
             super("Details");
         }
-
+        
         public void actionPerformed(ActionEvent e) {
             
             if(visible) {

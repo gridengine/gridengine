@@ -68,7 +68,7 @@ public class ClusterConfig {
             ret.user = props.getProperty(prefix + ".user");
             ret.csp = Boolean.valueOf(props.getProperty(prefix + ".csp")).booleanValue();
             ret.jaasLoginContext = props.getProperty(prefix + ".jass_login_context");
-
+            
             str = props.getProperty(prefix + ".keystore_password");
             if(str != null) {
                 ret.keystorePassword = str.toCharArray();
@@ -90,21 +90,21 @@ public class ClusterConfig {
         String file = System.getProperty("cluster.config.file.location");
         InputStream in = null;
         if (file != null && !file.equals("${cluster.config.file.location}")) {
-           in = new FileInputStream(file);
+            in = new FileInputStream(file);
         } else {
-           in = cl.getResourceAsStream("ClusterConfig_private.properties");
+            in = cl.getResourceAsStream("ClusterConfig_private.properties");
         }
         if (in == null) {
-           in = cl.getResourceAsStream("ClusterConfig.properties");
+            in = cl.getResourceAsStream("ClusterConfig.properties");
         }
         if (in == null) {
-           throw new IOException("Could not find ClusterConfig.properties file.");
+            throw new IOException("Could not find ClusterConfig.properties file.");
         }
         props.load(in);
         
         int i = 0;
         ArrayList list = new ArrayList();
-      
+        
         while(true) {
             
             ClusterConfig conf = newInstance(props, "cluster[" + list.size() + "]");
@@ -118,39 +118,39 @@ public class ClusterConfig {
         list.toArray(ret);
         return ret;
     }
-
+    
     public String getSgeRoot() {
         return sgeRoot;
     }
-
+    
     public String getSgeCell() {
         return sgeCell;
     }
-
+    
     public int getQmasterPort() {
         return qmasterPort;
     }
-
+    
     public int getExecdPort() {
         return execdPort;
     }
-
+    
     public String getUser() {
         return user;
     }
-
+    
     public char[] getKeystorePassword() {
         return keystorePassword;
     }
-
+    
     public char[] getPrivateKeyPassword() {
         return privateKeyPassword;
     }
-
+    
     public boolean isCsp() {
         return csp;
     }
-
+    
     public String getJaasLoginContext() {
         return jaasLoginContext;
     }

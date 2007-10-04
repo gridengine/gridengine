@@ -79,7 +79,7 @@ public class JobStateFilter implements Serializable {
      *  Jobs in the state hold operator (<code>qstat -s ho</code>)
      */
     public static final State HOLD_OPERATOR = new State(0x0002, "ho");
-
+    
     /**
      *  Jobs in the state hold system (<code>qstat -s hs</code>)
      */
@@ -107,7 +107,7 @@ public class JobStateFilter implements Serializable {
     public static final State ZOMBIE        = new State(0x0040, "z");
     
     /**
-     * This state includes <code>HOLD_USER</code>, <code>HOLD_OPERATOR</code> and 
+     * This state includes <code>HOLD_USER</code>, <code>HOLD_OPERATOR</code> and
      * <code>HOLD_SYSTEM</code>.
      */
     public static final State HOLD          = new State(HOLD_USER.getMask() | HOLD_OPERATOR.getMask() | HOLD_SYSTEM.getMask(),
@@ -159,34 +159,34 @@ public class JobStateFilter implements Serializable {
         JobStateFilter ret = new JobStateFilter();
         String str = null;
         outer:
-        for(int index = 0; index < stateString.length(); index++) {
-            
-            for(int i = 0; i < ALL_SIMPLE_STATES.length; i++) {
-                str = ALL_SIMPLE_STATES[i].getValue();
+            for(int index = 0; index < stateString.length(); index++) {
+                
+                for(int i = 0; i < ALL_SIMPLE_STATES.length; i++) {
+                    str = ALL_SIMPLE_STATES[i].getValue();
+                    if(stateString.indexOf(str, index) == 0) {
+                        ret.include(ALL_SIMPLE_STATES[i]);
+                        index += str.length();
+                        continue outer;
+                    }
+                }
+                
+                str = HOLD.getValue();
                 if(stateString.indexOf(str, index) == 0) {
-                    ret.include(ALL_SIMPLE_STATES[i]);
+                    ret.include(HOLD);
                     index += str.length();
-                    continue outer;
-                }  
+                    continue;
+                }
+                
+                str = ALL.getValue();
+                if(stateString.indexOf(str, index) == 0) {
+                    ret.include(ALL);
+                    index += str.length();
+                    continue;
+                }
+                
+                throw new IllegalStateException("Unknown jobs state "+ stateString );
             }
-            
-            str = HOLD.getValue();
-            if(stateString.indexOf(str, index) == 0) {
-                ret.include(HOLD);
-                index += str.length();
-                continue;
-            }  
-            
-            str = ALL.getValue();
-            if(stateString.indexOf(str, index) == 0) {
-                ret.include(ALL);
-                index += str.length();
-                continue;
-            }  
-
-            throw new IllegalStateException("Unknown jobs state "+ stateString );
-        }
-        return ret;
+            return ret;
     }
     
     
@@ -207,7 +207,7 @@ public class JobStateFilter implements Serializable {
     
     public void exclude(State state) {
         setStates(mask & (~state.getMask()));
-    } 
+    }
     
     /**
      *  Include/Exclude jobs in specific state
@@ -251,10 +251,10 @@ public class JobStateFilter implements Serializable {
         }
         return stateStr;
     }
-
+    
     /**
      * Determine of this is equal to <code>obj</code>.
-     * Two <code>JobStateFilter</code> objects are equals if they 
+     * Two <code>JobStateFilter</code> objects are equals if they
      * include exactly the same jobs states
      *
      * @param obj the obj
@@ -262,9 +262,9 @@ public class JobStateFilter implements Serializable {
      */
     public boolean equals(Object obj) {
         return obj instanceof JobStateFilter &&
-               mask == ((JobStateFilter)obj).mask;
+                mask == ((JobStateFilter)obj).mask;
     }
-
+    
     /**
      * Get the hashcode of this object
      * @return the hashcode
@@ -272,7 +272,7 @@ public class JobStateFilter implements Serializable {
     public int hashCode() {
         return mask;
     }
-
+    
     /**
      * Get a string representation of this object
      * @return the string representation

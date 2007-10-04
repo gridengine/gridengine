@@ -46,7 +46,7 @@ import java.util.List;
 /**
  * Base class for synchronized version of a <code>JGDI</code> connection.
  *
- * The end user should not use this class directory. Instead the factory 
+ * The end user should not use this class directory. Instead the factory
  * method @link{JGDIFactory#newSynchronizedInstance} should be used.
  *
  * @since  0.91
@@ -85,224 +85,224 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
             return jgdi.execQHost(options);
         }
     }
-
+    
     public File getSGERoot() throws JGDIException {
         synchronized(jgdi) {
             return jgdi.getSGERoot();
         }
     }
-
+    
     public String getSGECell() throws JGDIException {
         synchronized(jgdi) {
             return jgdi.getSGECell();
         }
     }
-
+    
     public List getRealExecHostList() throws JGDIException {
         synchronized(jgdi) {
             return jgdi.getRealExecHostList();
         }
     }
-
+    
     public List getClusterQueueSummary(ClusterQueueSummaryOptions options) throws JGDIException {
         synchronized(jgdi) {
             return jgdi.getClusterQueueSummary(options);
         }
     }
-
+    
     public QueueInstanceSummaryResult getQueueInstanceSummary(QueueInstanceSummaryOptions options) throws JGDIException {
         synchronized(jgdi) {
             return jgdi.getQueueInstanceSummary(options);
         }
     }
-
+    
     public QQuotaResult getQQuota(QQuotaOptions options) throws JGDIException {
         synchronized(jgdi) {
             return jgdi.getQQuota(options);
         }
     }
-
+    
     public void clearShareTreeUsage() throws JGDIException {
         synchronized(jgdi) {
             jgdi.clearShareTreeUsage();
         }
     }
-
+    
     public void clearShareTreeUsageWithAnswer(List answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.clearShareTreeUsageWithAnswer(answers);
         }
     }
-
+    
     public void cleanQueues(String[] queues) throws JGDIException {
         synchronized(jgdi) {
             jgdi.cleanQueues(queues);
         }
     }
-
+    
     public void cleanQueuesWithAnswer(String[] queues, List answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.cleanQueuesWithAnswer(queues, answers);
         }
     }
-
+    
     public void killMaster() throws JGDIException {
         synchronized(jgdi) {
             jgdi.killMaster();
         }
     }
-
+    
     public void killMasterWithAnswer(List answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.killMasterWithAnswer(answers);
         }
     }
-
-
+    
+    
     public void killScheduler() throws JGDIException {
         synchronized(jgdi) {
             jgdi.killScheduler();
         }
     }
-
+    
     public void killSchedulerWithAnswer(List answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.killSchedulerWithAnswer(answers);
         }
     }
-
+    
     public void killExecd(String[] hosts, boolean terminateJobs) throws JGDIException {
         synchronized(jgdi) {
             jgdi.killExecd(hosts, terminateJobs);
         }
     }
-
+    
     public void killExecdWithAnswer(String[] hosts, boolean terminateJobs, List answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.killExecdWithAnswer(hosts, terminateJobs, answers);
         }
     }
-
+    
     public void killAllExecds(boolean terminateJobs) throws JGDIException {
         synchronized(jgdi) {
             jgdi.killAllExecds(terminateJobs);
         }
     }
-
+    
     public void killAllExecdsWithAnswer(boolean terminateJobs, List answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.killAllExecdsWithAnswer(terminateJobs, answers);
         }
     }
-
+    
     public void killEventClients(int[] ids) throws JGDIException {
         synchronized(jgdi) {
             jgdi.killEventClients(ids);
         }
     }
-
+    
     public void killEventClientsWithAnswer(int[] ids, List answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.killEventClientsWithAnswer(ids, answers);
         }
     }
-
+    
     public void killAllEventClients() throws JGDIException {
         synchronized(jgdi) {
             jgdi.killAllEventClients();
         }
     }
-
+    
     public void killAllEventClientsWithAnswer(List answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.killAllEventClientsWithAnswer(answers);
         }
     }
-
+    
     public void triggerSchedulerMonitoring() throws JGDIException {
         synchronized(jgdi) {
             jgdi.triggerSchedulerMonitoring();
         }
     }
-
+    
     public void triggerSchedulerMonitoringWithAnswer(List answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.triggerSchedulerMonitoringWithAnswer(answers);
         }
     }
-
+    
     public String getSchedulerHost() throws JGDIException {
         synchronized(jgdi) {
             return jgdi.getSchedulerHost();
         }
     }
-
+    
     public void enableQueues(String[] queues, boolean force) throws JGDIException {
         synchronized(jgdi) {
             jgdi.enableQueues(queues, force);
         }
     }
-
+    
     public void enableQueuesWithAnswer(String[] queues, boolean force, List answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.enableQueuesWithAnswer(queues, force, answers);
         }
     }
-
+    
     public void disableQueues(String[] queues, boolean force) throws JGDIException {
         synchronized(jgdi) {
             jgdi.disableQueues(queues, force);
         }
     }
-
+    
     public void disableQueuesWithAnswer(String[] queues, boolean force, List answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.disableQueuesWithAnswer(queues, force, answers);
         }
     }
-
+    
     public void suspend(String[] queues, boolean force) throws JGDIException {
         synchronized(jgdi) {
             jgdi.suspend(queues, force);
         }
     }
-
+    
     public void suspendWithAnswer(String[] queues, boolean force, List answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.suspendWithAnswer(queues, force, answers);
         }
     }
-
+    
     public void suspendQueues(String[] queues, boolean force) throws JGDIException {
         synchronized(jgdi) {
             jgdi.suspendQueues(queues, force);
         }
     }
-
+    
     public void suspendQueuesWithAnswer(String[] queues, boolean force, List answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.suspendQueuesWithAnswer(queues, force, answers);
         }
     }
-
+    
     public void suspendJobs(String[] jobs, boolean force) throws JGDIException {
         synchronized(jgdi) {
             jgdi.suspendJobs(jobs, force);
         }
     }
-
+    
     public void suspendJobsWithAnswer(String[] jobs, boolean force, List answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.suspendJobsWithAnswer(jobs, force, answers);
         }
     }
-
+    
     public void unsuspend(String[] queues, boolean force) throws JGDIException {
         synchronized(jgdi) {
             jgdi.unsuspend(queues, force);
         }
     }
-
+    
     public void unsuspendWithAnswer(String[] queues, boolean force, List answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.unsuspendWithAnswer(queues, force, answers);
@@ -314,7 +314,7 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
             jgdi.unsuspendQueues(queues, force);
         }
     }
-
+    
     public void unsuspendQueuesWithAnswer(String[] queues, boolean force, List answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.unsuspendQueuesWithAnswer(queues, force, answers);
@@ -326,81 +326,81 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
             jgdi.unsuspendJobs(jobs, force);
         }
     }
-
+    
     public void unsuspendJobsWithAnswer(String[] jobs, boolean force, List answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.unsuspendJobsWithAnswer(jobs, force, answers);
         }
     }
-
+    
     public void clearQueues(String[] queues, boolean force) throws JGDIException {
         synchronized(jgdi) {
             jgdi.clearQueues(queues, force);
         }
     }
-
+    
     public void clearQueuesWithAnswer(String[] queues, boolean force, List answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.clearQueuesWithAnswer(queues, force, answers);
         }
     }
-
-
+    
+    
     public void clearJobs(String[] jobs, boolean force) throws JGDIException {
         synchronized(jgdi) {
             jgdi.clearJobs(jobs, force);
         }
     }
-
+    
     public void clearJobsWithAnswer(String[] jobs, boolean force, List answer) throws JGDIException {
         synchronized(jgdi) {
             jgdi.clearJobsWithAnswer(jobs, force, answer);
         }
     }
-
+    
     public void reschedule(String[] queue_or_job, boolean force) throws JGDIException {
         synchronized(jgdi) {
             jgdi.reschedule(queue_or_job, force);
         }
     }
-
+    
     public void rescheduleWithAnswer(String[] queue_or_job, boolean force, List answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.rescheduleWithAnswer(queue_or_job, force, answers);
         }
     }
-
+    
     public void rescheduleQueues(String[] queues, boolean force) throws JGDIException {
         synchronized(jgdi) {
             jgdi.rescheduleQueues(queues, force);
         }
     }
-
+    
     public void rescheduleQueuesWithAnswer(String[] queues, boolean force, List answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.rescheduleQueuesWithAnswer(queues, force, answers);
         }
     }
-
+    
     public void rescheduleJobs(String[] jobs, boolean force) throws JGDIException {
         synchronized(jgdi) {
             jgdi.rescheduleJobs(jobs, force);
         }
     }
-
+    
     public void rescheduleJobsWithAnswer(String[] jobs, boolean force, List answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.rescheduleJobsWithAnswer(jobs, force, answers);
         }
     }
-
-
+    
+    
     public String showDetachedSettings(String[] queues) throws JGDIException {
         synchronized(jgdi) {
             return jgdi.showDetachedSettings(queues);
         }
     }
-
+    
     public String showDetachedSettingsAll() throws JGDIException {
         synchronized(jgdi) {
             return jgdi.showDetachedSettingsAll();

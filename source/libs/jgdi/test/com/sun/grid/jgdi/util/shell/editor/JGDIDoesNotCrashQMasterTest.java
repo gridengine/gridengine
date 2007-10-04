@@ -44,18 +44,18 @@ import java.util.List;
  *
  */
 public class JGDIDoesNotCrashQMasterTest extends BaseTestCase {
-
+    
     private JGDI jgdi;
     private ClusterQueue cq;
-
+    
     public JGDIDoesNotCrashQMasterTest(String testName) {
         super(testName);
     }
-
+    
     protected synchronized void setUp() throws Exception {
         super.setUp();
         jgdi = createJGDI();
-
+        
         cq = new ClusterQueueImpl(true);
         cq.setName("crashQueue");
         cq.addHostlist("@allhosts");
@@ -64,7 +64,7 @@ public class JGDIDoesNotCrashQMasterTest extends BaseTestCase {
             jgdi.deleteClusterQueue(oldQueue);
         }
         jgdi.addClusterQueue(cq);
-
+        
         ParallelEnvironment pe1 = new ParallelEnvironmentImpl(true);
         pe1.setName("one");
         ParallelEnvironment pe2 = new ParallelEnvironmentImpl(true);
@@ -86,11 +86,11 @@ public class JGDIDoesNotCrashQMasterTest extends BaseTestCase {
         jgdi.addParallelEnvironment(pe3);
         List pes = jgdi.getParallelEnvironmentList();
     }
-
+    
     protected void tearDown() throws Exception {
         jgdi.close();
     }
-
+    
     public void testCrashQmaster() throws Exception {
         System.out.print("testCrashQmaster - ");
         cq.removeAllPe();
@@ -110,7 +110,7 @@ public class JGDIDoesNotCrashQMasterTest extends BaseTestCase {
             fail("Qmaster might have crashed. Message was: " + ex.getMessage());
         }
     }
-
+    
     public void testCrashQmaster2() throws Exception {
         System.out.print("testCrashQmaster2 - ");
         cq.removeAllPe();

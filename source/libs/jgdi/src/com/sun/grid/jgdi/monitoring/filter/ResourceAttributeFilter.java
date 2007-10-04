@@ -41,14 +41,14 @@ import java.util.StringTokenizer;
  *
  */
 public class ResourceAttributeFilter implements Serializable {
-
+    
     private List<String> valueNames = new LinkedList<String>();
-
+    
     public static ResourceAttributeFilter parse(String str) {
         ResourceAttributeFilter ret = new ResourceAttributeFilter();
         return ret.fill(str);
     }
-
+    
     public ResourceAttributeFilter fill(String str) {
         StringTokenizer st = new StringTokenizer(str, ",");
         while (st.hasMoreTokens()) {
@@ -56,11 +56,11 @@ public class ResourceAttributeFilter implements Serializable {
         }
         return this;
     }
-
+    
     public void addValueName(String valueName) {
         valueNames.add(valueName);
     }
-
+    
     public List<String> getValueNames() {
         if (valueNames == null) {
             return Collections.EMPTY_LIST;
@@ -68,7 +68,7 @@ public class ResourceAttributeFilter implements Serializable {
             return Collections.unmodifiableList(valueNames);
         }
     }
-
+    
     @Override
     public String toString() {
         StringBuilder ret = new StringBuilder();

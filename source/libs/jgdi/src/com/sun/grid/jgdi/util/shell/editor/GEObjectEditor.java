@@ -346,10 +346,6 @@ public class GEObjectEditor {
             sb.append(spaces+value+"\n");
          }
       }
-      //SCHEDCONF special formatting case
-      if (obj instanceof SchedConf) {
-         sb.deleteCharAt(sb.length()-1);
-      }
       return sb.toString();
    }
    

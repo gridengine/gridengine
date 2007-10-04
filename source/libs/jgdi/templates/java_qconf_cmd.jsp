@@ -54,7 +54,7 @@
          nameToOpt.put("Hostgroup","hgrp");
          nameToOpt.put("ParallelEnvironment","p");
          nameToOpt.put("Project","prj");
-         nameToOpt.put("ResourceQuotaSet","rqs");
+         //nameToOpt.put("ResourceQuotaSet","rqs");
          nameToOpt.put("User","user");
       }
       
@@ -86,9 +86,6 @@
    @OptionAnnotation(value = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
    public void add<%=objectType%>(final OptionInfo oi) throws JGDIException {
       String arg = oi.getFirstArg();
-//      if (arg == null) {
-//         arg = "template";
-//      }
       List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
       // create an object with defaults set
       <%=objectType%> obj = new <%=objectType%>Impl(true);
@@ -154,9 +151,8 @@
       <% } else { %>
       <%=objectType%> obj = jgdi.get<%=objectType%>WithAnswer(arg, answer);
       <% }%>
-
       if (obj != null) {
-         // clear the ok answer from the get request
+         //clear the answers from the get request
          answer.clear();
          String userTypedText = runEditor(GEObjectEditor.getConfigurablePropertiesAsText(obj));
          if (userTypedText != null) {
@@ -165,11 +161,8 @@
          }
          printAnswers(answer);
       } else {
-         if (arg != null) {
-            throw new JGDIException("'" + arg + "' does not exist");
-         } else {
-            throw new JGDIException("<%=objectType%> does not exist");
-         }
+         String msg = getErrorMessage("InvalidObjectArgument", oi.getOd().getOption(), arg, null);
+         pw.println(msg);
       }
       oi.optionDone();
    }  
@@ -216,11 +209,19 @@
    @OptionAnnotation(value = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
    public void show<%=objectType%>(final OptionInfo oi) throws JGDIException {
       final String arg = oi.getFirstArg();
+      List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
       <% if ( mandatory == 0 && optional == 0 ) { %>
-      <%=objectType%> obj = jgdi.get<%=objectType%>();
+      <%=objectType%> obj = jgdi.get<%=objectType%>WithAnswer(answer);
       <% } else { %>
-      <%=objectType%> obj = jgdi.get<%=objectType%>(arg);
+      <%=objectType%> obj = jgdi.get<%=objectType%>WithAnswer(arg, answer);
       <% }%>
+      printAnswers(answer);
+      //Display error message in no such object exists
+      if (obj == null) {
+          pw.println(getErrorMessage("InvalidObjectArgument", oi.getOd().getOption(), arg, "Object \""+arg+"\" does not exist"));
+          return;
+      }
+      //Show the object
       String text = GEObjectEditor.getAllPropertiesAsText(obj);
       pw.print(text);
    } 
@@ -236,7 +237,9 @@
     */
    @OptionAnnotation(value = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
    public void showList<%=objectType%>(final OptionInfo oi) throws JGDIException {
-      List< <%=objectType%> > list = (List< <%=objectType%> >)jgdi.get<%=objectType%>List();
+      List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
+      List< <%=objectType%> > list = (List< <%=objectType%> >)jgdi.get<%=objectType%>ListWithAnswer(answer);
+      printAnswers(answer);
       List<String> values = new LinkedList<String>();
       for (<%=objectType%> obj : list) {
          values.add(obj.getName());
@@ -246,7 +249,13 @@
       <%} else if (objectType.equals("ExecHost")) { %>
       values.remove("global");
       values.remove("template");
-      <% } %>      
+      <% } %>
+      //Show correct error message if list is empty
+      if (values.size() == 0) {
+          pw.println(getErrorMessage("NoObjectFound", oi.getOd().getOption(), "", "No object found"));
+          return;
+      }
+      //Otherwise print sorted list
       Collections.sort(values);
       for (String val : values) {
         pw.println(val);
@@ -331,6 +340,12 @@ public abstract class QConfCommandGenerated extends AnnotatedCommand {
   init.genShowListMethod("SubmitHost", "-ss", 0, 0);
   //AdminHost
   init.genShowListMethod("AdminHost", "-sh", 0, 0);
+  //ResourceQuotaSet
+  init.genAddMethod("ResourceQuotaSet", "-arqs", 0, init.MAX_ARG_VALUE);
+  init.genAddFromFileMethod("ResourceQuotaSet", "-Arqs", 1, 0);
+  init.genModifyFromFileMethod("ResourceQuotaSet", "-Mrqs", 1, 0);
+  init.genShowListMethod("ResourceQuotaSet", "-srqsl", 0, 0);
+  init.genDeleteMethod("ResourceQuotaSet", "-drqs", 1, init.MAX_ARG_VALUE);
 %>
   <%@include file="java_qconf_cmd.static"%>
 }

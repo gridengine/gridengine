@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.util.shell;
 
+import com.sun.grid.jgdi.JGDIException;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -84,15 +85,28 @@ public class OptionInfo {
             objList.add(this);
             method.invoke(command, objList.toArray());
          } catch (Exception ex) {
-            optionDone();
             Throwable cause = ex.getCause();
-            // Rethrow the generated Exception
-            if (cause != null && cause instanceof Exception) {
-               throw (Exception) cause;
-            } else {
-               throw ex;
+            if (cause != null && cause instanceof JGDIException) {
+                PrintWriter pw = od.getPw();
+                String[] elems = ((JGDIException)cause).getMessage().split("\n");
+                String msg = "";
+                for (String elem : elems) {
+                    if (elem.trim().length() > 0) {
+                        msg += elem + "\n";
+                    }
+                }
+                pw.print(msg);
+                pw.flush();
+                continue;
             }
-         } 
+            // Rethrow the generated Exception, end the option execution if not JGDIException
+            optionDone();
+            if (cause != null && cause instanceof Exception) {
+                throw (Exception) cause;
+             } else {    
+                throw ex;
+             }
+         }
       } while (!isOptionDone() && getOd().isMultiple());
    }
    
@@ -111,6 +125,9 @@ public class OptionInfo {
     * @return {@link List} of option arguments
     */
    public String getArgsAsString() {
+      if (args.size() == 0) {
+         return "";
+      }
       StringBuilder sb = new StringBuilder();
       for(String arg: args){
           sb.append(arg);
@@ -148,7 +165,7 @@ public class OptionInfo {
    /**
     * Contract method. 
     * Developer should use it to retreave option arguments one-by-one. So the 
-    * option loop is terminited.
+    * option loop is terminated.
     * @return String - first argument of the option or null if no arg
     */
    public String getFirstArg() {
@@ -157,6 +174,23 @@ public class OptionInfo {
       }
       final String ret = args.remove(0);
       if(args.isEmpty()) {
+          optionDone();
+      }
+      return ret;
+   }
+   
+   /**
+    * Contract method. 
+    * Developer should use it to retreave look at the last argument. So the 
+    * option loop is terminated.
+    * @return String - last argument of the option or null if no arg
+    */
+   public String showLastArg() {
+      if (args == null || args.size() == 0) { 
+         return null;
+      }
+      final String ret = args.get(args.size()-1);
+      if (args.size() ==1) {
           optionDone();
       }
       return ret;

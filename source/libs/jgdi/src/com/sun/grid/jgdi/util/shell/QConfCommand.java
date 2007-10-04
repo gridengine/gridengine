@@ -40,6 +40,7 @@ import com.sun.grid.jgdi.configuration.ExecHost;
 import com.sun.grid.jgdi.configuration.GEObject;
 import com.sun.grid.jgdi.configuration.Hostgroup;
 import com.sun.grid.jgdi.configuration.JGDIAnswer;
+import com.sun.grid.jgdi.configuration.ResourceQuotaSet;
 import com.sun.grid.jgdi.configuration.ShareTree;
 import com.sun.grid.jgdi.configuration.ShareTreeImpl;
 import com.sun.grid.jgdi.configuration.UserSet;
@@ -416,7 +417,7 @@ public class QConfCommand extends QConfCommandGenerated {
     @OptionAnnotation(value = "-shgrp_tree")
     public void showHostgroupTree(final OptionInfo oi) throws JGDIException {
         final List<String> args = oi.getArgs();
-
+        List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
         int i = 0;
         while (i < args.size()) {
             //Prepare the hgroup
@@ -424,15 +425,16 @@ public class QConfCommand extends QConfCommandGenerated {
             int level = 0;
             Hostgroup obj = null;
             try {
-                obj = jgdi.getHostgroup(hgroup);
+                obj = jgdi.getHostgroupWithAnswer(hgroup, answer);
+                printAnswers(answer);
             } catch (JGDIException ex) {
-                //pw.println("Host group \"" + hgroup + "\" does not exist");
                 pw.println(ex.getMessage()); //TODO LP: Check if the message is a correct one
-                continue;
             }
             //Print the tree
             if (obj != null) {
                 showHostgroupTree(obj, "", "   ");
+            } else {
+                pw.println(getErrorMessage("InvalidObjectArgument", oi.getOd().getOption(), "", "No such object found"));
             }
         }
     }
@@ -442,6 +444,7 @@ public class QConfCommand extends QConfCommandGenerated {
     @SuppressWarnings(value = "unchecked")
     public void showHostgroupResolved(final OptionInfo oi) throws JGDIException {
         final List<String> args = oi.getArgs();
+        List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
         int i = 0;
         while (i < args.size()) {
             //Prepare the hgroup
@@ -449,9 +452,9 @@ public class QConfCommand extends QConfCommandGenerated {
             int level = 0;
             Hostgroup obj = null;
             try {
-                obj = jgdi.getHostgroup(hgroup);
+                obj = jgdi.getHostgroupWithAnswer(hgroup, answer);
+                printAnswers(answer);
             } catch (JGDIException ex) {
-                //pw.println("Host group \"" + hgroup + "\" does not exist");
                 pw.println(ex.getMessage()); //TODO LP: Check if the message is a correct one
             }
             //Print the tree
@@ -463,6 +466,8 @@ public class QConfCommand extends QConfCommandGenerated {
                     out += hname + " ";
                 }
                 pw.println(out.substring(0, out.length() - 1));
+            } else {
+                pw.println(getErrorMessage("InvalidObjectArgument", oi.getOd().getOption(), "", "No object found"));
             }
         }
     }
@@ -679,9 +684,9 @@ public class QConfCommand extends QConfCommandGenerated {
 
     @SuppressWarnings(value = "unchecked")
     private static List sortListByName(final List list) {
-        Collections.sort(list, new Comparator() {
+        Collections.sort(list, new Comparator<GEObject>() {
 
-            public int compare(Object o1, Object o2) {
+            public int compare(GEObject o1, GEObject o2) {
                 if (o1 == null && o2 == null) {
                     return 0;
                 }
@@ -691,7 +696,7 @@ public class QConfCommand extends QConfCommandGenerated {
                 if (o2 == null) {
                     return 1;
                 }
-                return ((GEObject) o1).getName().compareTo(((GEObject) o2).getName());
+                return (o1.getName().compareTo(o2.getName()));
             }
         });
         return list;
@@ -730,14 +735,93 @@ public class QConfCommand extends QConfCommandGenerated {
         jgdi.deleteOperatorWithAnswer(name, answer);
         printAnswers(answer);
     }
+    
+    //RESOURCE QUOTA SET
+    /**
+     *   Implements qconf -mrqs option
+     *   @param  oi <b>OptionInfo</b> option enviroment object
+     *   @throws JGDIException on any error on the GDI layer
+     */
+    @OptionAnnotation(value = "-mrqs", min = 0, extra = MAX_ARG_VALUE)
+    public void modifyResourceQuotaSet(final OptionInfo oi) throws JGDIException {
+        //TODO LP: Needs spceial editor handling, displays more objects at once
+        ResourceQuotaSet obj;
+        List<ResourceQuotaSet> rqsList = new LinkedList<ResourceQuotaSet>();
+        List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
+        String textToEdit = "";
+        
+       
+        if (oi.getArgs().size() == 0) {
+            rqsList = jgdi.getResourceQuotaSetListWithAnswer(answer);
+            printAnswers(answer);
+        } else {
+            for (String arg : oi.getArgs()) {
+                obj = jgdi.getResourceQuotaSetWithAnswer(arg, answer);
+                rqsList.add(obj);
+                printAnswers(answer);
+                answer.clear();
+            }
+        }
+        //Create text to be displayed in the editor
+        for (ResourceQuotaSet rqs : rqsList) {
+            textToEdit += GEObjectEditor.getConfigurablePropertiesAsText(rqs);
+        }
+
+        String userTypedText = runEditor(textToEdit);
+        if (userTypedText != null) {
+            //TODO LP: Handle the multiple objects. Need special parser for the userTypedText
+            //GEObjectEditor.updateObjectWithText(jgdi, obj, userTypedText);
+            //jgdi.updateResourceQuotaSetWithAnswer(obj, answer);
+            //printAnswers(answer);
+            throw new IllegalStateException("NOT IMPLEMENTED");
+        }
+        oi.optionDone();
+    }
+    
+    /**
+    *   Implements qconf -srqs option
+    *   @param  oi <b>OptionInfo</b> option enviroment object
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   @OptionAnnotation(value = "-srqs", min = 0, extra = MAX_ARG_VALUE)
+   public void showResourceQuotaSet(final OptionInfo oi) throws JGDIException {
+       ResourceQuotaSet obj;
+       List<ResourceQuotaSet> rqsList = new LinkedList<ResourceQuotaSet>();
+       List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
+       String text = "";
+
+
+       if (oi.getArgs().size() == 0) {
+           rqsList = jgdi.getResourceQuotaSetListWithAnswer(answer);
+           oi.optionDone();
+           printAnswers(answer);
+       } else {
+           for (String arg : oi.getArgs()) {
+               obj = jgdi.getResourceQuotaSetWithAnswer(arg, answer);
+               rqsList.add(obj);
+               printAnswers(answer);
+               answer.clear();
+           }
+       }
+       //Show correct error message if list is empty
+       if (rqsList.size() == 0) {
+           pw.println(getErrorMessage("NoObjectFound", oi.getOd().getOption(), "", "No object found"));
+           return;
+       }
+       //Create text to be displayed in the editor
+       for (ResourceQuotaSet rqs : rqsList) {
+           text += GEObjectEditor.getConfigurablePropertiesAsText(rqs);
+       }
+       pw.print(text);
+   }
 
     //USERSET
     //-au
-    @OptionAnnotation(value = "-au", min = 2)
+    @OptionAnnotation(value = "-au", min = 2, extra = MAX_ARG_VALUE)
     public void addUserSet(final OptionInfo oi) throws JGDIException {
         List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
         final String userName = oi.getFirstArg();
-        String setName = oi.getFirstArg();
+        String setName = oi.showLastArg();
         UserSet obj = jgdi.getUserSet(setName);
         obj.addEntries(userName);
         jgdi.updateUserSetWithAnswer(obj, answer);
@@ -745,11 +829,11 @@ public class QConfCommand extends QConfCommandGenerated {
     }
 
     //-du
-    @OptionAnnotation(value = "-du", min = 2)
+    @OptionAnnotation(value = "-du", min = 2, extra = MAX_ARG_VALUE)
     public void deleteUserSet(final OptionInfo oi) throws JGDIException {
         List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
         final String userName = oi.getFirstArg();
-        String setName = oi.getFirstArg();
+        String setName = oi.showLastArg();
         UserSet obj = jgdi.getUserSet(setName);
         obj.removeEntries(userName);
         jgdi.updateUserSetWithAnswer(obj, answer);
@@ -757,7 +841,7 @@ public class QConfCommand extends QConfCommandGenerated {
     }
 
     //-dul
-    @OptionAnnotation(value = "-dul", min = 1)
+    @OptionAnnotation(value = "-dul", min = 1, extra = MAX_ARG_VALUE)
     public void deleteUserSetList(final OptionInfo oi) throws JGDIException {
         List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
         final String setName = oi.getFirstArg();
@@ -765,5 +849,90 @@ public class QConfCommand extends QConfCommandGenerated {
         obj.removeAllEntries();
         jgdi.updateUserSetWithAnswer(obj, answer);
         printAnswers(answer);
+    }
+    
+    
+    
+    //OVERRIDES - special handling to have same behaviour as in clients
+    //TODO: Fix the clients remove this special handling
+
+    //CALENDAR
+    @OptionAnnotation(value = "-acal", min = 0, extra = 1)
+    @Override
+    public void addCalendar(final OptionInfo oi) throws JGDIException {
+        //Handling client inconsistancy. Does not open editor when no arg given
+        if (hasNoArgument(oi)) {
+            return;
+        }
+        //otherwise handle adding object
+        super.addCalendar(oi);
+    }
+
+    //CHECKPOINT
+    @OptionAnnotation(value = "-ackpt", min = 0, extra = 1)
+    @Override
+    public void addCheckpoint(final OptionInfo oi) throws JGDIException {
+        //Handling client inconsistancy. Does not open editor when no arg given
+        if (hasNoArgument(oi)) {
+            return;
+        }
+        //otherwise handle adding of the object
+        super.addCheckpoint(oi);
+    }
+    
+    //PARALLEL ENVIRONMENT
+    @OptionAnnotation(value = "-sp", min = 1, extra = 0)
+    @Override //TODO LP: -sp has exactly 1 arg in client, could work also with extra>0 (default)
+    public void showParallelEnvironment(final OptionInfo oi) throws JGDIException {
+        super.showParallelEnvironment(oi);
+    }
+    
+    //PROJECT
+    @OptionAnnotation(value = "-sprj", min = 1, extra = 0)
+    @Override //TODO LP: -sprj has exactly 1 arg in client, could work also with extra>0 (default)
+    public void showProject(final OptionInfo oi) throws JGDIException {
+        super.showProject(oi);
+    }
+    
+    //HOSTGROUP -  additional check if the argument starts with @ character
+    @OptionAnnotation(value = "-ahgrp", min = 0, extra = 1)
+    @Override //TODO LP: -sprj has exactly 1 arg in client, could work also with extra>0 (default)
+    public void addHostgroup(final OptionInfo oi) throws JGDIException {
+        if (!hasValidHostgroupName(oi)) {
+           return;
+        }
+        super.addHostgroup(oi);
+    }
+    
+    
+    /**
+     * Helper method. Checks if option has an argument(s)
+     * return hasNoArgument
+     */
+    private boolean hasNoArgument(OptionInfo oi) {
+        String option = oi.getOd().getOption();
+        if (oi.getArgs().size() == 0) {
+            pw.println(getErrorMessage("NoArgument", option, "No argument provided to option "+ option));
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Helper method. Checks if option's next argument is a valid hostgroup name (starting with @).
+     * return hasNoArgument
+     */
+    private boolean hasValidHostgroupName(OptionInfo oi) {
+        List<String> args = oi.getArgs();
+        OptionDescriptor od = oi.getOd();
+        if (args != null && args.size() > 0) {
+            String hgrp = args.get(0);
+            if (!hgrp.startsWith("@")) {
+                String msg = getErrorMessage("InvalidObjectArgument", od.getOption(), hgrp, "Hostgroup name \""+hgrp+"\" is not valid");
+                od.getPw().println(msg);
+                return false;
+            }
+        }
+        return true;
     }
 }

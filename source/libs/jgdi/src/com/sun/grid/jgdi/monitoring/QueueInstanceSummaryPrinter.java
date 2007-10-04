@@ -267,77 +267,77 @@ public class QueueInstanceSummaryPrinter {
             }
         }
     }
+   
+   private static class MemUsageCalc extends UsageCalc {
 
-    private static class MemUsageCalc extends UsageCalc {
+      protected boolean hasValue(JobSummary js) {
+         return js.hasMemUsage();
+      }
+      
+      protected double getValue(JobSummary js) {
+         return js.getMemUsage();
+      }
+   }
+   
+   private static class IOUsageCalc extends UsageCalc {
 
-        protected boolean hasValue(JobSummary js) {
-            return js.hasMemUsage();
-        }
-
-        protected double getValue(JobSummary js) {
-            return js.getMemUsage();
-        }
-    }
-
-    private static class IOUsageCalc extends UsageCalc {
-
-        protected boolean hasValue(JobSummary js) {
-            return js.hasIoUsage();
-        }
-
-        protected double getValue(JobSummary js) {
-            return js.getIoUsage();
-        }
-    }
-
-    private static abstract class TicketCalc implements Calc {
-
-        private DecimalFormat format = new DecimalFormat("###00");
-
-        private boolean sge_ext;
-
-        public TicketCalc(boolean sge_ext) {
-            this.sge_ext = sge_ext;
-        }
-
-        protected abstract long getValue(JobSummary js);
-
-        public Object getValue(Object obj) {
-            JobSummary js = (JobSummary) obj;
-            if (js.isZombie()) {
-                return "NA ";
+      protected boolean hasValue(JobSummary js) {
+         return js.hasIoUsage();
+      }
+      
+      protected double getValue(JobSummary js) {
+         return js.getIoUsage();
+      }
+   }
+   
+   private static abstract class TicketCalc implements Calc {
+      
+      private DecimalFormat format = new DecimalFormat("####0");
+      
+      private boolean sge_ext;
+      
+      public TicketCalc(boolean sge_ext) {
+         this.sge_ext = sge_ext;
+      }
+      
+      protected abstract long getValue(JobSummary js);
+      
+      public Object getValue(Object obj) {
+         JobSummary js = (JobSummary)obj;
+         if (js.isZombie()) {
+            return "NA ";
+         } else {
+            if (sge_ext || js.isQueueAssigned()) {
+               return format.format(getValue(js));
             } else {
-                if (sge_ext || js.isQueueAssigned()) {
-                    return format.format(getValue(js));
-                } else {
                     return "";
-                }
             }
-        }
-    }
-
-    private static class ShareCalc implements Calc {
-
-        private DecimalFormat format = new DecimalFormat("###.00");
-
-        private boolean sge_ext;
-
-        public ShareCalc(boolean sge_ext) {
-            this.sge_ext = sge_ext;
-        }
-
-        public Object getValue(Object obj) {
+         }
+      }
+   }
+   
+   private static class ShareCalc implements Calc {
+      
+      private DecimalFormat format = new DecimalFormat("##0.00");
+      
+      private boolean sge_ext;
+      
+      public ShareCalc(boolean sge_ext) {
+         this.sge_ext = sge_ext;
+      }
+      
+      public Object getValue(Object obj) {
             JobSummary js = (JobSummary) obj;
-            if (js.isZombie()) {
-                return "NA ";
+         if (js.isZombie()) {
+            return "NA ";
+         } else {
+            if (sge_ext || js.isQueueAssigned()) {
+               return format.format(js.getShare());
             } else {
-                if (sge_ext || js.isQueueAssigned()) {
-                    return format.format(js.getShare());
-                } else {
                     return "";
-                }
             }
-        }
+         }
+      }
     }
 
     private static class JaTaskIdCalc implements Calc {

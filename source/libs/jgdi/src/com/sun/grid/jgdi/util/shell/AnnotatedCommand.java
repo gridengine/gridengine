@@ -1,4 +1,5 @@
-/*___INFO__MARK_BEGIN__*/ /*************************************************************************
+/*___INFO__MARK_BEGIN__*/ 
+/*************************************************************************
  *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
@@ -35,11 +36,14 @@ import com.sun.grid.jgdi.JGDIException;
 import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 import java.util.Set;
 
 
@@ -48,11 +52,17 @@ import java.util.Set;
  */
 public abstract class AnnotatedCommand extends AbstractCommand {
 
-   /* Map holding all qconf options and method that should be invoked for it */
+   /* Map holding all commands and their respective optionDesriptorMap */
    private static Map<Class<? extends Command>, Map<String, OptionDescriptor>> commandOptionMap = null;
+   /* Map holding all options of selected command and methods that should be invoked for it */
    private Map<String, OptionDescriptor> optionDescriptorMap = null;
+   /* List of all command options */
    private List<OptionInfo> optionList = null;
+   /* Map holding OptionInfo (after paring the args) to the option string */
    private Map<String, OptionInfo> optionInfoMap = null;
+   
+   /* ResourceBundle containging all error messags */
+   private static final ResourceBundle errorMessages = ResourceBundle.getBundle("com.sun.grid.jgdi.util.shell.ErrorMessagesResources");
    
    /**
     * Initialize the option map optionDescriptorMap if not yet created.
@@ -77,7 +87,7 @@ public abstract class AnnotatedCommand extends AbstractCommand {
                      }
                   }
                   //Add method to the optionDescriptorMap
-                  optionDescriptorMap.put(o.value(), new OptionDescriptor(o.value(), o.min(), o.extra(), m));
+                  optionDescriptorMap.put(o.value(), new OptionDescriptor(o.value(), o.min(), o.extra(), m, pw));
                }
             }
          }
@@ -88,9 +98,9 @@ public abstract class AnnotatedCommand extends AbstractCommand {
    
    /**
     * Finds option info based on option name.
-    * Use to do a lookahead if specific option was in the argument list.
-    * @param option String
-    * @return OptionInfo associated with the option or null does not exist
+    * Use to do a lookahead to see if specific option was in the argument list.
+    * @params option String
+    * @returns OptionInfo associated with the option or null does not exist
     */
    public OptionInfo getOptionInfo(String option) {
       if (optionInfoMap.containsKey(option)) {
@@ -195,10 +205,10 @@ public abstract class AnnotatedCommand extends AbstractCommand {
     * @return return the option info structure
     */
    //TODO LP: Discuss this enhancement. We now accept "arg1,arg2 arg3,arg4" as 4 valid args
-   static OptionInfo getOptionInfo(final Map<String, OptionDescriptor> optMap, List<String> args) {
+   private OptionInfo getOptionInfo(final Map<String, OptionDescriptor> optMap, List<String> args) {
       //Check we have a map set
       if (optMap.isEmpty()) {
-         throw new UnsupportedOperationException("Cannot get OptionInfo from the abstract class CommandOption directly!");
+         throw new UnsupportedOperationException("Cannot get OptionInfo. Option map is empty!");
       }
 
       String option = args.get(0);
@@ -206,11 +216,12 @@ public abstract class AnnotatedCommand extends AbstractCommand {
 
       if (!optMap.containsKey(option)) {
          if (option.startsWith("-")) {
-            msg = "error: unknown option \"" + option + "\"\nUsage: qconf -help";
+            msg = getErrorMessage("InvalidArgument", option, "Unknown option \""+option+"\"");
             throw new IllegalArgumentException(msg);
          } else {
-            msg = "error: invalid option argument \"" + option + "\"\nUsage: qconf -help";
-            // return this option to list and repotr this
+            msg = getErrorMessage("InvalidArgument", option, "Unexpected extra argument \""+option+"\"");
+            //TODO LP: Remove the extra argument exception and handle extra args by default. Needed for qalter.
+            //return this option to list and report this
             throw new ExtraArgumentException(msg,args);
          }
       } else {
@@ -234,7 +245,10 @@ public abstract class AnnotatedCommand extends AbstractCommand {
 
          //Check we have all mandatory args
          if (i != od.getMandatoryArgCount()) {
-            throw new IllegalArgumentException("Expected " + od.getMandatoryArgCount() + " arguments for " + option + " option. Got only " + argList.size() + ".");
+            msg = getErrorMessage((i == 0) ? "NoArgument" : "LessArguments", option, argList, 
+                  "Expected " + od.getMandatoryArgCount() + " arguments for " + option + 
+                  " option. Got only " + argList.size() + ".");
+            throw new IllegalArgumentException(msg);
          }
 
          //Try to get as many optional args as possible
@@ -254,8 +268,9 @@ public abstract class AnnotatedCommand extends AbstractCommand {
          }
       }
 
+      //TODO LP: This should probably never happen - remove?
       //Check if we have more args than expected
-      if (argList.size() > od.getMaxArgCount()) {
+      if (argList.size() > od.getMaxArgCount()) { 
          msg = "Expected only " + od.getMaxArgCount() + " arguments for " + option + " option. Got " + argList.size() + ".";
          throw new IllegalArgumentException(msg);
       }
@@ -268,5 +283,42 @@ public abstract class AnnotatedCommand extends AbstractCommand {
 
       //TODO: Check we have correct args
       return new OptionInfo(od, argList, optMap);
+   }
+      
+   /** Hepler method to get the right error message */
+   String getErrorMessage(String msgType, String optionString, String generalMessage) {
+       return getErrorMessage(msgType, optionString, new ArrayList<String>(), generalMessage);
+   }
+   
+   /** Hepler method to get the right error message */
+   String getErrorMessage(String msgType, String optionString, String arg, String generalMessage) {
+       List<String> argList = new ArrayList<String>();
+       argList.add(arg);
+       return getErrorMessage(msgType, optionString, argList, generalMessage);
+   }
+   
+   /** Hepler method to get the right error message */
+   String getErrorMessage(String msgType, String optionString, List<String> args, String generalMessage) {
+       String[] tmp = this.getClass().getName().split("[.]");
+       String cmdName = tmp[tmp.length-1];
+       String cmdString = cmdName.split("Command")[0].toLowerCase();
+       String prefix = msgType+"."+cmdName+".";
+       String argString = "";
+       if (args != null && args.size() > 0) {
+           for (String arg : args) {
+              argString += arg + " ";
+           }
+           argString = argString.substring(0, argString.length()-1);
+       }
+       //TODO LP: Remove the New generic message string
+       String msg = "New generic message: "+generalMessage; //If not known, we print this general message
+       try { //Try to get option specific message
+          msg = errorMessages.getString(prefix+optionString);
+       } catch (MissingResourceException ex) {
+          try { //Try to get command default message
+              msg = errorMessages.getString(prefix+"default");
+          } catch (MissingResourceException dex) {}
+      }
+      return MessageFormat.format(msg, optionString, argString, "Usage: "+cmdString+" -help", getUsage());
    }
 }

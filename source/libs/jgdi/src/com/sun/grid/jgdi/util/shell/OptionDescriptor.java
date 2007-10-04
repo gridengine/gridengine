@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.util.shell;
 
+import java.io.PrintWriter;
 import java.lang.reflect.Method;
 
 /**
@@ -41,6 +42,7 @@ public class OptionDescriptor {
    private int mandatoryArgCount;
    private int optionalArgCount;
    private Method method;
+   private PrintWriter pw;
    
    /**
     * Constructor
@@ -51,11 +53,12 @@ public class OptionDescriptor {
     * @throws java.lang.InstantiationException 
     * @throws java.lang.IllegalAccessException 
     */
-   public OptionDescriptor(String option, int mandatory, int optional, Method method) throws InstantiationException,IllegalAccessException  {
+   public OptionDescriptor(String option, int mandatory, int optional, Method method, PrintWriter pw) throws InstantiationException,IllegalAccessException  {
       this.option = option;
       this.mandatoryArgCount = mandatory;
       this.optionalArgCount = optional;
       this.method = method;
+      this.pw = pw;
    }
    
    /**
@@ -106,7 +109,19 @@ public class OptionDescriptor {
       return method;
    }
 
+   /**
+    * Getter method
+    * @return value
+    */
    public String getOption() {
       return option;
+   }
+   
+   /**
+    * Getter method
+    * @return value
+    */
+   public PrintWriter getPw() {
+      return pw;
    }
 }

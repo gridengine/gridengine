@@ -120,23 +120,27 @@ public abstract class AbstractCommand implements HistoryCommand {
        int status;
        int i=0;
        if (answers.size() == 0) {
-          return; 
+          return;
        }
        JGDIAnswer answer;
+       String text;
        for (i=0; i<answers.size()-1; i++) {
           answer = answers.get(i);
-          status = answer.getStatus(); 
-          if ( status != 0) {
+          status = answer.getQuality();
+          if (status == 0 || status == 1) {  //If critical or error
              exitCode = status;
           }
-          pw.println(answer.getText());
+          text = answer.getText().trim();
+          if (text.length()>0 && !text.equals("ok")) pw.println(answer.getText());
        }
        //Get the last
        answer = answers.get(i);
-       status = answer.getStatus();
-       if (status != 0 || exitCode != 0) {
-          throw new IllegalArgumentException(answer.getText());
+       status = answer.getQuality();
+       text = answer.getText();
+       
+       if (status == 0 || status == 1 || exitCode != 0) {
+          throw new IllegalArgumentException(text);
        }
-       pw.println(answer.getText());
+       if (text.length()>0 && !text.equals("ok")) pw.println(text);
     }
 }

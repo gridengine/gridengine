@@ -251,10 +251,6 @@ public class JGDIShell implements Runnable, Shell {
             pw.println(ex.getMessage());
             logger.info("Command failed: " + ex.getMessage());
             exitCode = 1; //There was an error during the execution
-        } catch (JGDIException ex) {
-            pw.println(ex.getMessage());
-            logger.info("Command failed: " + ex.getMessage());
-            exitCode = 1; //There was an error during the execution
         } catch (Exception ex) {
             ex.printStackTrace(pw);
             logger.log(Level.SEVERE, "Command failed: " + ex.getMessage(), ex);

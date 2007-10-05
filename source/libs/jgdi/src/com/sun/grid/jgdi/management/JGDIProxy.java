@@ -278,7 +278,8 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
         
         private final String[] signature;
         private final String methodName;
-        
+        private final Class  returnType;
+
         public MethodInvoker(Method method) {
             this.methodName = method.getName();
             Class<?>[] paramTypes = method.getParameterTypes();
@@ -286,11 +287,23 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
             for (int i = 0; i < paramTypes.length; i++) {
                 this.signature[i] = paramTypes[i].getName();
             }
+            returnType = method.getReturnType();
         }
         
         public Object invoke(MBeanServerConnection connection, ObjectName name, Object[] args) throws Throwable {
             try {
-                return connection.invoke(name, methodName, args, signature);
+                Object ret = connection.invoke(name, methodName, args, signature);
+
+                if(ret != null) {
+                    try {
+                        return returnType.cast(ret);
+                    } catch(Exception ex) {
+                        throw new IllegalStateException("return type does not match (" +
+                                typeToString(returnType) + " <-> " + typeToString(ret.getClass()));
+                    }
+                } else {
+                    return ret;
+                }
             } catch (MBeanException ex) {
                 // Is it a real exception (thrown be the component implementation?
                 if (ex.getTargetException() instanceof InvocationTargetException) {
@@ -300,8 +313,17 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
                 }
             }
         }
+        
+        private static String typeToString(Class<?> clazz) {
+            if(clazz != null) {
+                return String.format("%s@%s(%s)", clazz.getName(), clazz.getProtectionDomain().getCodeSource(),
+                                     clazz.getClassLoader().getClass().getName());
+            } else {
+                return "null";
+            }
+        }
     }
-    
+
     private static class ToStringMethodInvocationHandler implements MethodInvocationHandler {
         
         public Object invoke(MBeanServerConnection connection, ObjectName name, Object[] args) throws Throwable {

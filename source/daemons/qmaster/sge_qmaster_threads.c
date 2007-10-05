@@ -100,7 +100,7 @@ typedef struct {
    pthread_mutex_t mutex;      /* used for thread exclusion  */
    pthread_cond_t  cond_var;   /* used for thread waiting    */
    pthread_t       sig_thrd;   /* signal thread              */
-#ifdef JVM_THREAD   
+#if defined(JVM_THREAD) && !defined(NO_JNI)   
    pthread_t       jvm_thrd;   /* jvm thread                 */
 #endif   
    bool            shutdown;   /* true -> shutdown qmaster   */
@@ -108,7 +108,7 @@ typedef struct {
 } qmaster_control_t;
 
 
-#ifdef JVM_THREAD   
+#if defined(JVM_THREAD) && !defined(NO_JNI)   
 
 #include <jni.h>
 
@@ -130,7 +130,7 @@ static void      set_signal_thread(pthread_t);
 static pthread_t get_signal_thread(void);
 static void*     signal_thread(void*);
 
-#ifdef JVM_THREAD
+#if defined(JVM_THREAD) && !defined(NO_JNI)   
 static void      set_jvm_thread(pthread_t);
 static pthread_t get_jvm_thread(void);
 static void*     jvm_thread(void*);
@@ -422,7 +422,7 @@ void sge_start_heartbeat(void)
 *******************************************************************************/
 void sge_create_and_join_threads(sge_gdi_ctx_class_t *ctx)
 {
-#ifdef JVM_THREAD
+#if defined(JVM_THREAD) && !defined(NO_JNI)   
    enum { NUM_THRDS = 6 };
    const char *thread_names[NUM_THRDS] = {"SIGT", "JVM", "MT(1)","MT(2)","MT(3)","MT(4)"}; 
    pthread_t tids[NUM_THRDS];
@@ -447,7 +447,7 @@ void sge_create_and_join_threads(sge_gdi_ctx_class_t *ctx)
    
    set_signal_thread(tids[0]);
 
-#ifdef JVM_THREAD
+#if defined(JVM_THREAD) && !defined(NO_JNI)
    pthread_create(&(tids[1]), NULL, jvm_thread, (void*)thread_names[1]);
    inc_thread_count();
 
@@ -917,7 +917,7 @@ static void* signal_thread(void* anArg)
       switch (sig_num) {
          case SIGINT:
          case SIGTERM:
-#ifdef JVM_THREAD
+#if defined(JVM_THREAD) && !defined(NO_JNI)
             if (pthread_kill(get_jvm_thread(), SIGINT) != 0) {
                /* error occurred */
             }
@@ -1108,7 +1108,7 @@ static int sge_shutdown_qmaster_via_signal_thread(int i)
 {
    int return_value = 0;
    DENTER(TOP_LAYER, "sge_shutdown_qmaster_via_signal_thread");
-#ifdef JVM_THREAD
+#if defined(JVM_THREAD) && !defined(NO_JNI)
    if (pthread_kill(get_jvm_thread(), SIGINT) != 0) {
       return_value = -1;         
    }
@@ -1126,7 +1126,7 @@ int sge_get_qmaster_exit_state(void) {
 }
 
 
-#ifdef JVM_THREAD
+#if defined(JVM_THREAD) && !defined(NO_JNI)
 
 #ifdef LINUX
 #ifndef __USE_GNU
@@ -1585,6 +1585,9 @@ static void* jvm_thread(void* anArg)
          sge_run_jvm(ctx, anArg, &monitor);
          jvm_started = true;
       }
+      /* to prevent high cpu load if jvm is not started
+         loop we simply sleep here */
+      sleep(60*60*60);
 
       thread_output_profiling("message thread profiling summary:\n", 
                               &next_prof_output);

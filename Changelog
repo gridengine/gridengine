@@ -1,3 +1,7 @@
+RH-2007-10-05-0: Bugfix:    - high cpu utilization in jvm thread fixed
+                            - missing functions in JMX JGDI added
+                 Review:    AA
+
 LP-2007-10-04-1: Following reffer to JGDI and JGDShell only
                  Enhancem.: Added new error messages to resource file
                  Bugfix.:   Fixed some error messages for qconf

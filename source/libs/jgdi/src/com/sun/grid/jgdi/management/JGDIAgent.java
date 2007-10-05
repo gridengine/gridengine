@@ -32,6 +32,9 @@
 
 package com.sun.grid.jgdi.management;
 
+import com.sun.grid.jgdi.JGDI;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
 import java.util.logging.Level;
 import javax.management.ObjectName;
 import javax.management.MBeanServer;
@@ -46,12 +49,7 @@ import java.util.logging.Logger;
 public class JGDIAgent {
     
     private final static Logger log = Logger.getLogger(JGDIAgent.class.getName());
-    private JGDIJMX mbean;
-//   private CalendarBean cal;
     
-    public JGDIJMX getJGDIMBean() {
-        return mbean;
-    }
     
     /**
      * Instantiate and register your MBeans.
@@ -63,20 +61,12 @@ public class JGDIAgent {
         log.log(Level.INFO,"init: " + url + "-----------------------");
         
         // Instantiate JGDIJMX MBean
-        mbean = new JGDIJMX(url);
+        JGDIJMX mbean = new JGDIJMX(url);
         ObjectName mbeanName = new ObjectName("gridengine:type=JGDI");
         //Register the JGDI MBean
         getMBeanServer().registerMBean(mbean, mbeanName);
         
         log.log(Level.INFO,"mbean " + mbeanName + " registered");
-        
-        
-//      cal = new CalendarBean();
-//      mbeanName = new ObjectName("jgdi.grid.sun.com:type=configuration.CalendarBean");
-//      //Register the JGDI MBean
-//      getMBeanServer().registerMBean(cal, mbeanName);
-        
-        
     }
     
     /**
@@ -103,7 +93,6 @@ public class JGDIAgent {
     private final static Logger logger = Logger.getLogger(JGDIAgent.class.getName());
     
     public static void main(String [] args) {
-        
         try {
             if(args.length != 1) {
                 System.err.println("JGDIAgent <jgdi connect url>");
@@ -123,18 +112,17 @@ public class JGDIAgent {
     }
     
     private static class ShutdownHook extends Thread {
-        
+        public void waitForShutdown() throws InterruptedException {
+            synchronized(this) {
+                wait();
+            }
+        }
         public void run() {
             synchronized(this) {
                 notifyAll();
             }
         }
-        
-        public synchronized void waitForShutdown() throws InterruptedException {
-            wait();
-        }
     }
-    
 }
 
 

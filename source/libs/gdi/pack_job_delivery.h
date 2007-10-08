@@ -36,7 +36,7 @@
 extern "C" {
 #endif
 
-int pack_job_delivery(sge_pack_buffer *pb, lListElem *jep, lList *qlp, lListElem *pep);
+int pack_job_delivery(sge_pack_buffer *pb, lListElem *jep);
 
 #ifdef  __cplusplus
 }

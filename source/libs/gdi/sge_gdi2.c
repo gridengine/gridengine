@@ -88,6 +88,7 @@
 #include "sge_conf.h"
 #include "sge_gdi2.h"
 #include "sge_security.h"
+#include "sgeobj/sge_ack.h"
 
 
 static void dump_send_info(const char* comp_host, const char* comp_name, int comp_id, cl_xml_ack_type_t ack_type, unsigned long tag, unsigned long* mid);
@@ -596,8 +597,7 @@ static int sge_send_gdi2_request(int sync, sge_gdi_ctx_class_t *ctx,
 {
    int ret = 0;
    sge_pack_buffer pb;
-   int size;
-   bool local_ret;
+   bool local_ret = false;
    lList *answer_list = NULL;
 
    /* TODO: to master only !!!!! */
@@ -610,21 +610,8 @@ static int sge_send_gdi2_request(int sync, sge_gdi_ctx_class_t *ctx,
 
    PROF_START_MEASUREMENT(SGE_PROF_GDI_REQUEST);
 
-   /* 
-   ** retrieve packbuffer size to avoid large realloc's while packing 
-   */
-   init_packbuffer(&pb, 0, 1);
-   local_ret = request_list_pack_results(ar, &answer_list, &pb);
-   size = pb_used(&pb);
-   clear_packbuffer(&pb);
-
-   if (local_ret) {
-      /*
-      ** now we do the real packing
-      */
-      if(init_packbuffer(&pb, size, 0) == PACK_SUCCESS) {
-         local_ret = request_list_pack_results(ar, &answer_list, &pb);
-      }
+   if (init_packbuffer(&pb, 8192, 0) == PACK_SUCCESS) {
+      local_ret = request_list_pack_results(ar, &answer_list, &pb);
    }
    if (!local_ret) {
       lListElem *answer = lFirst(answer_list);
@@ -758,7 +745,7 @@ int sge_gdi2_send_any_request(sge_gdi_ctx_class_t *ctx, int synchron, u_long32 *
                          int tag, u_long32  response_id, lList **alpp)
 {
    int i;
-   cl_xml_ack_type_t ack_type;
+   cl_xml_ack_type_t ack_type = CL_MIH_MAT_NAK;
    cl_com_handle_t* handle = ctx->get_com_handle(ctx);
    unsigned long dummy_mid = 0;
    unsigned long* mid_pointer = NULL;
@@ -767,7 +754,6 @@ int sge_gdi2_send_any_request(sge_gdi_ctx_class_t *ctx, int synchron, u_long32 *
    
    DENTER(GDI_LAYER, "sge_gdi2_send_any_request");
 
-   ack_type = CL_MIH_MAT_NAK;
 
    if (rhost == NULL) {
       answer_list_add(alpp, MSG_GDI_RHOSTISNULLFORSENDREQUEST, STATUS_ESYNTAX,
@@ -847,7 +833,6 @@ sge_gdi2_get_any_request(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, 
 {
    int i;
    ushort usid=0;
-   char host[CL_MAXHOSTLEN+1];
    cl_com_message_t* message = NULL;
    cl_com_endpoint_t* sender = NULL;
    cl_com_handle_t* handle = NULL;
@@ -867,14 +852,12 @@ sge_gdi2_get_any_request(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, 
       DRETURN(-1);
    }
    
-   strcpy(host, rhost);
-
    handle = ctx->get_com_handle(ctx);
 
    /* trigger communication or wait for a new message (select timeout) */
-   cl_commlib_trigger(handle, synchron);
+   cl_commlib_trigger(handle, synchron); /* RD: is this trigger really necessary? */
 
-   i = cl_commlib_receive_message(handle, rhost, commproc, usid, (cl_bool_t) synchron, for_request_mid, &message, &sender);
+   i = cl_commlib_receive_message(handle, rhost, commproc, usid, (cl_bool_t)synchron, for_request_mid, &message, &sender);
 
    if ( i == CL_RETVAL_CONNECTION_NOT_FOUND ) {
       if ( commproc[0] != '\0' && rhost[0] != '\0' ) {
@@ -1251,58 +1234,6 @@ static void dump_send_info(const char* comp_host, const char* comp_name, int com
    DEXIT;
 }
 
-
-/****** sge_ack/sge_send_ack_to_qmaster() **************************************
-*  NAME
-*     sge_send_ack_to_qmaster() -- ??? 
-*
-*  SYNOPSIS
-*     int sge_send_ack_to_qmaster(int sync, u_long32 type, u_long32 ulong_val, 
-*     u_long32 ulong_val_2) 
-*
-*  FUNCTION
-*     Sends an acknowledge to qmaster.
-*
-*  INPUTS
-*     int sync             - ??? 
-*     u_long32 type        - ??? 
-*     u_long32 ulong_val   - ??? 
-*     u_long32 ulong_val_2 - ??? 
-*
-*  RESULT
-*     int - CL_OK on success
-*
-*  NOTES
-*     MT-NOTE: sge_send_ack_to_qmaster() is MT safe (assumptions)
-*******************************************************************************/
-int sge_gdi2_send_ack_to_qmaster(sge_gdi_ctx_class_t *ctx, int sync, u_long32 type, u_long32 ulong_val, 
-                            u_long32 ulong_val_2, lList **alpp) 
-{
-   int ret;
-   sge_pack_buffer pb;
-   /* TODO: to master only !!!!! */
-   const char* commproc = prognames[QMASTER];
-   const char* rhost = ctx->get_master(ctx, false);
-   int         id   = 1;
-   
-   DENTER(GDI_LAYER, "sge_gdi2_send_ack_to_qmaster");
-
-   /* send an ack to the qmaster for the events */
-   if(init_packbuffer(&pb, 3*sizeof(u_long32), 0) != PACK_SUCCESS) {
-      DRETURN(CL_RETVAL_MALLOC);
-   }
-
-   packint(&pb, type);
-   packint(&pb, ulong_val);
-   packint(&pb, ulong_val_2);
-   ret = sge_gdi2_send_any_request(ctx, sync, NULL, rhost, commproc, id, &pb, TAG_ACK_REQUEST, 0, alpp);
-   clear_packbuffer(&pb);
-   answer_list_output (alpp);
-
-   DRETURN(ret);
-}
-
-
 /*
 ** NAME
 **   gdi_tsm   - trigger scheduler monitoring 
@@ -1609,7 +1540,7 @@ int gdi2_send_message_pb(sge_gdi_ctx_class_t *ctx,
 
    DENTER(GDI_LAYER, "gdi2_send_message_pb");
 
-   if ( !pb ) {
+   if (!pb) {
        DPRINTF(("no pointer for sge_pack_buffer\n"));
        ret = gdi2_send_message(ctx, synchron, tocomproc, toid, tohost, tag, NULL, 0, mid);
        DRETURN(ret);
@@ -1759,7 +1690,7 @@ gdi2_receive_message(sge_gdi_ctx_class_t *sge_ctx, char *fromcommproc, u_short *
     */
 
 
-   if ( fromcommproc[0] == '\0') {
+   if (fromcommproc[0] == '\0') {
       DEBUG((SGE_EVENT,"fromcommproc is empty string\n"));
    }
    switch (progid) {
@@ -1807,8 +1738,8 @@ gdi2_receive_message(sge_gdi_ctx_class_t *sge_ctx, char *fromcommproc, u_short *
 
    ret = cl_commlib_receive_message(handle, fromhost, fromcommproc, *fromid, (cl_bool_t)synchron, 0, &message, &sender);
 
-   if (ret == CL_RETVAL_CONNECTION_NOT_FOUND ) {
-      if ( fromcommproc[0] != '\0' && fromhost[0] != '\0' ) {
+   if (ret == CL_RETVAL_CONNECTION_NOT_FOUND) {
+      if (fromcommproc[0] != '\0' && fromhost[0] != '\0') {
           /* The connection was closed, reopen it */
           ret = cl_commlib_open_connection(handle,fromhost,fromcommproc, *fromid);
           INFO((SGE_EVENT,"reopen connection to %s,%s,"sge_U32CFormat" (1)\n", fromhost , fromcommproc , sge_u32c(*fromid)));
@@ -2218,19 +2149,13 @@ int report_list_send(sge_gdi_ctx_class_t *ctx,
                      int synchron, u_long32 *mid)
 {
    sge_pack_buffer pb;
-   int ret, size;
+   int ret; 
    lList *alp = NULL;
 
    DENTER(TOP_LAYER, "report_list_send");
 
-   /* retrieve packbuffer size to avoid large realloc's while packing */
-   init_packbuffer(&pb, 0, 1);
-   ret = cull_pack_list(&pb, rlp);
-   size = pb_used(&pb);
-   clear_packbuffer(&pb);
-
    /* prepare packing buffer */
-   if((ret = init_packbuffer(&pb, size, 0)) == PACK_SUCCESS) {
+   if((ret = init_packbuffer(&pb, 1024, 0)) == PACK_SUCCESS) {
       ret = cull_pack_list(&pb, rlp);
    }
 
@@ -2239,7 +2164,7 @@ int report_list_send(sge_gdi_ctx_class_t *ctx,
       break;
 
    case PACK_ENOMEM:
-      ERROR((SGE_EVENT, MSG_GDI_REPORTNOMEMORY_I , size));
+      ERROR((SGE_EVENT, MSG_GDI_REPORTNOMEMORY_I , 1024));
       clear_packbuffer(&pb);
       DEXIT;
       return -2;
@@ -2262,8 +2187,7 @@ int report_list_send(sge_gdi_ctx_class_t *ctx,
    clear_packbuffer(&pb);
    answer_list_output (&alp);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 /************* COMMLIB HANDLERS from sge_any_request ************************/
 

@@ -46,6 +46,5 @@ int sge_mod_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aConf, lList **an
 int sge_compare_configuration(lListElem *aHost, lList *aConf);
 
 void sge_set_conf_reprioritize(lListElem *aConf, bool aFlag);
-bool sge_conf_is_reprioritize(void);
 
 #endif /* __CONFIGURATION_QMASTER_H */

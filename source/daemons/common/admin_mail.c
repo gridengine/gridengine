@@ -98,11 +98,8 @@ u_long32 admail_times[MAX_SSTATE + 1];
 ** it might not be apt to report on errors that
 ** have nothing to do with a particular job
 */
-void job_related_adminmail(
-u_long32 progid,
-lListElem *jr,
-int is_array 
-) {
+void job_related_adminmail(u_long32 progid, lListElem *jr, int is_array, const char *job_owner)
+{
    static int first = 1;
    char sge_mail_subj[1024];
    char sge_mail_body[2048];
@@ -110,7 +107,7 @@ int is_array
    char sge_mail_end[128];
    char str_general[512] = "";
    u_long32 jobid, jataskid, failed, general;
-   const char *q, *h;
+   const char *q;
    lListElem *ep;
    lList *lp_mail = NULL;
    u_long32 now;
@@ -127,7 +124,6 @@ int is_array
    int sge_mail_body_total_size = 0;
    FILE *fp;
    int start = 0;
-   const char *job_owner;   
    dstring ds;
    char buffer[128];
    char* administrator_mail = NULL;
@@ -157,8 +153,6 @@ int is_array
 
    if (!(q=lGetString(jr, JR_queue_name)))
       q = MSG_MAIL_UNKNOWN_NAME;
-   if (!(h=lGetHost(jr, JR_host_name)))
-      h = MSG_MAIL_UNKNOWN_NAME;
    if ((ep=lGetSubStr(jr, UA_name, "start_time", JR_usage)))
       strcpy(sge_mail_start, sge_ctime((time_t)lGetDouble(ep, UA_value), &ds));
    else   
@@ -170,8 +164,6 @@ int is_array
 
    jobid = lGetUlong(jr, JR_job_number);
    jataskid = lGetUlong(jr, JR_ja_task_number);
-   if (!( job_owner = lGetString(jr, JR_owner)))
-      job_owner = "MSG_MAIL_UNKNOWN_NAME";
 
    failed = lGetUlong(jr, JR_failed);
    general = lGetUlong(jr, JR_general_failure);
@@ -236,7 +228,13 @@ int is_array
              sprintf(str_general, MSG_GFSTATE_QUEUE_S, q);
           }
           else if (general == GFSTATE_HOST) {
-             sprintf(str_general, MSG_GFSTATE_HOST_S, h);
+             const char *s = strchr(q, '@');
+             if (s != NULL) {
+               s++;
+               sprintf(str_general, MSG_GFSTATE_HOST_S, s);
+             } else {
+               sprintf(str_general, MSG_GFSTATE_HOST_S, MSG_MAIL_UNKNOWN_NAME);
+             }
           }
           else if (general == GFSTATE_JOB) {
              if (is_array)
@@ -259,10 +257,10 @@ int is_array
          sprintf(sge_mail_subj, MSG_MAIL_SUBJECT_SU, 
                  feature_get_product_name(FS_SHORT_VERSION, &ds), sge_u32c(jobid));
       sprintf(sge_mail_body,
-              MSG_MAIL_BODY_USSSSSSSS,
+              MSG_MAIL_BODY_USSSSSSS,
               sge_u32c(jobid),
               str_general,
-              job_owner, q, h, sge_mail_start, sge_mail_end,
+              job_owner, q, sge_mail_start, sge_mail_end,
               get_sstate_description(failed),
               err_str);
       /*

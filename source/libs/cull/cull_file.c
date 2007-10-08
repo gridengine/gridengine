@@ -84,7 +84,7 @@ int lWriteElemToDisk(const lListElem *ep, const char *prefix, const char *name,
 {
    stringT filename;
    sge_pack_buffer pb;
-   int ret, size, fd;
+   int ret, fd;
 
    DENTER(TOP_LAYER, "lWriteElemToDisk");
 
@@ -95,12 +95,7 @@ int lWriteElemToDisk(const lListElem *ep, const char *prefix, const char *name,
    }
 
    /* init packing buffer */
-   init_packbuffer(&pb, 0, 1);
-   cull_pack_elem(&pb, ep);
-   size = pb_used(&pb);
-   clear_packbuffer(&pb);
-
-   ret = init_packbuffer(&pb, size, 0);
+   ret = init_packbuffer(&pb, 8192, 0);
 
    /* pack ListElement */
    if (ret == PACK_SUCCESS) {

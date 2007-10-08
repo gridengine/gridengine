@@ -1,3 +1,11 @@
+RD-2007-10-08-0: Enhancem:  improved qmaster-execd-protocoll
+                            - enabled threaded commlib for execd
+                            - rewrite of execd dispatcher
+                            - only changed load reports are now send to qmaster
+                 Cleanup:   - cleanup qdel and the job del code in qmaster
+                 Issue:     664
+                 Review:    AA
+
 RH-2007-10-05-0: Bugfix:    - high cpu utilization in jvm thread fixed
                             - missing functions in JMX JGDI added
                  Review:    AA

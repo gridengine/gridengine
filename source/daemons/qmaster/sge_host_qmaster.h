@@ -74,7 +74,6 @@ int sge_execd_startedup(sge_gdi_ctx_class_t *context,
                         u_long32 target, monitoring_t *monitor, bool is_restart);
 
 u_long32 load_report_interval(lListElem *hep); 
-u_long32 sge_get_max_unheard_value(void); 
 
 bool host_list_add_missing_href(sge_gdi_ctx_class_t *context,
                                 lList *this_list, 

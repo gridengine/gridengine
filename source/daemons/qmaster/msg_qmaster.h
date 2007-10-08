@@ -741,7 +741,6 @@
 
 #define MSG_QMASTER_MAX_FILE_DESCRIPTORS_LIMIT_U _MESSAGE(33903, _("qmaster will use max. "sge_U32CFormat" file descriptors for communication"))
 
-#define MSG_OBJ_MAXUNHEARDVALUE_SS    _MESSAGE(33904, _("host "SFQ": "SFQ" is not a valid time value for \"max_unheard\" - assuming 120 seconds") )  
 #define MSG_QMASTER_MAX_EVC_LIMIT_U              _MESSAGE(33905, _("qmaster will accept max. "sge_U32CFormat" dynamic event clients"))
 #define MSG_QMASTER_COMMUNICATION_ERRORS  _MESSAGE(33906, _("abort qmaster startup due to communication errors"))
 

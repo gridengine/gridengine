@@ -1680,7 +1680,7 @@ static void init_thread_info(void) {
 
    if (thrdInfo == NULL) {
       thrdInfo = (sge_thread_info_t*)sge_malloc(MAX_THREAD_NUM * sizeof(sge_thread_info_t));
-      memset (thrdInfo, 0, MAX_THREAD_NUM * sizeof(sge_thread_info_t));
+      memset(thrdInfo, 0, MAX_THREAD_NUM * sizeof(sge_thread_info_t));
    }
 
    pthread_mutex_unlock(&thrdInfo_mutex);

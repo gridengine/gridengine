@@ -1053,6 +1053,7 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
          case DRMAA:
          case JGDI:
          case SCHEDD:
+         case EXECD:
             INFO((SGE_EVENT,MSG_GDI_MULTI_THREADED_STARTUP));
             cl_ret = cl_com_setup_commlib(CL_RW_THREAD, CL_LOG_OFF, sge_gdi_ctx_log_flush_func);
             break;

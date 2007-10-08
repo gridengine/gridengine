@@ -34,21 +34,8 @@
 
 #include "gdi/sge_gdi_ctx.h"
 
-int execd_job_exec(sge_gdi_ctx_class_t *ctx, 
-                   struct dispatch_entry *de, 
-                   sge_pack_buffer *pb, 
-                   sge_pack_buffer *apb, 
-                   u_long *rcvtimeout, 
-                   int *synchron, 
-                   char *err_str, 
-                   int answer_error);
-int execd_job_slave(sge_gdi_ctx_class_t *ctx, 
-                    struct dispatch_entry *de, 
-                    sge_pack_buffer *pb, 
-                    sge_pack_buffer *apb, 
-                    u_long *rcvtimeout, 
-                    int *synchron, 
-                    char *err_str, 
-                    int answer_error);
+int do_job_exec(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, sge_pack_buffer *apb);
+
+int do_job_slave(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg);
 
 #endif /* __EXECD_JOB_EXEC_H */

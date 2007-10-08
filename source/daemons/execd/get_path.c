@@ -320,24 +320,23 @@ const char *sge_get_active_job_file_path(dstring *buffer, u_long32 job_id, u_lon
 {
    DENTER(TOP_LAYER, "sge_get_active_job_file_path");
 
-   if(buffer == NULL) {
-      return NULL;
+   if (buffer == NULL) {
+      DRETURN(NULL);
    }
 
    sge_dstring_sprintf(buffer, "%s/"sge_u32"."sge_u32, ACTIVE_DIR, job_id, ja_task_id);
 
-   if(pe_task_id != NULL) {
-      sge_dstring_append(buffer, "/");
+   if (pe_task_id != NULL) {
+      sge_dstring_append_char(buffer, '/');
       sge_dstring_append(buffer, pe_task_id);
    }
 
-   if(filename != NULL) {
-      sge_dstring_append(buffer, "/");
+   if (filename != NULL) {
+      sge_dstring_append_char(buffer, '/');
       sge_dstring_append(buffer, filename);
    }
 
-   DEXIT;
-   return sge_dstring_get_string(buffer);
+   DRETURN(sge_dstring_get_string(buffer));
 }
 
 
@@ -381,11 +380,11 @@ const char *sge_make_ja_task_active_dir(const lListElem *job, const lListElem *j
 
    DENTER(TOP_LAYER, "sge_make_ja_task_active_dir");
    
-   if(err_str != NULL) {
+   if (err_str != NULL) {
       sge_dstring_clear(err_str);
    }
    
-   if(job == NULL || ja_task == NULL) {
+   if (job == NULL || ja_task == NULL) {
       DEXIT;
       return NULL;
    }
@@ -398,26 +397,22 @@ const char *sge_make_ja_task_active_dir(const lListElem *job, const lListElem *j
 
    /* try to create it */
    result = mkdir(path, 0755);
-   if(result == -1) {
+   if (result == -1) {
       /* if it already exists and keep_active: try to rename it */
-      if(errno == EEXIST && mconf_get_keep_active() && lGetUlong(ja_task, JAT_job_restarted) > 0) {
+      if (errno == EEXIST && mconf_get_keep_active() && lGetUlong(ja_task, JAT_job_restarted) > 0) {
          dstring new_path = DSTRING_INIT;
          int i, success = 0;
 
-         for(i = 0; i < 10; i++) {
+         for (i = 0; i < 10; i++) {
             sge_dstring_sprintf(&new_path, "%s.%d", path, i);
-            if(rename(path, sge_dstring_get_string(&new_path)) == 0) {
+            if (rename(path, sge_dstring_get_string(&new_path)) == 0) {
                success = 1;
                break;
-            } else {
-               if(errno == EEXIST) {
-                  continue;
-               }
-            }
+            } 
          }
          
          /* if it couldn't be renamed: try to remove it */
-         if(success == 0) {
+         if (success == 0) {
             dstring error_string;
             char error_string_buffer[MAX_STRING_SIZE];
 
@@ -425,8 +420,8 @@ const char *sge_make_ja_task_active_dir(const lListElem *job, const lListElem *j
 
             DPRINTF(("could not rename old active job dir "SFN" - removing it\n", path));
 
-            if(sge_rmdir(path, &error_string)) {
-               if(err_str != NULL) {
+            if (sge_rmdir(path, &error_string)) {
+               if (err_str != NULL) {
                   SGE_ADD_MSG_ID(sge_dstring_sprintf(err_str, MSG_FILE_RMDIR_SS, path, 
                         sge_dstring_get_string(&error_string)));
                } else {
@@ -443,9 +438,9 @@ const char *sge_make_ja_task_active_dir(const lListElem *job, const lListElem *j
       }
    }   
 
-   if(result == -1) {
+   if (result == -1) {
       /* error creating directory */
-      if(err_str != NULL) {
+      if (err_str != NULL) {
          sge_dstring_sprintf(err_str, MSG_FILE_CREATEDIR_SS, path, strerror(errno));
       } else {
          ERROR((SGE_EVENT, MSG_FILE_CREATEDIR_SS, path, strerror(errno)));

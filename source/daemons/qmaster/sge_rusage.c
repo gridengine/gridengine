@@ -113,6 +113,7 @@ sge_write_rusage(dstring *buffer,
 #endif
    const char *ret = NULL;
    char *qname = NULL;
+   char *hostname = NULL;
    lListElem *pe_task = NULL;
    u_long32 submission_time = 0;
    u_long32 start_time      = 0;
@@ -190,25 +191,8 @@ sge_write_rusage(dstring *buffer,
    }
 #endif
 
-   SET_STR_DEFAULT(jr, JR_queue_name, "UNKNOWN");
-   SET_HOST_DEFAULT(jr, JR_host_name,  "UNKNOWN");
+   SET_STR_DEFAULT(jr, JR_queue_name, "UNKNOWN@UNKNOWN");
 
-   if (lGetString(jr, JR_owner) == NULL) {
-      if (lGetString(job, JB_owner) == NULL) {
-         lSetString(jr, JR_owner, "UNKNOWN");
-      } else {
-         lSetString(jr, JR_owner, lGetString(job, JB_owner));
-      }
-   }
-   
-   if (lGetString(jr, JR_group) == NULL) {
-      if (lGetString(job, JB_group) == NULL) {
-         lSetString(jr, JR_group, "UNKNOWN");
-      } else {
-         lSetString(jr, JR_group, lGetString(job, JB_group));
-      }
-   }
-   
    /* job name and account get taken 
       from local job structure */
    if (lGetString(job, JB_job_name) == NULL) {
@@ -263,9 +247,17 @@ sge_write_rusage(dstring *buffer,
    }
 #endif 
    {
-      const char *qi_name = NULL;
-      qi_name = lGetString(jr, JR_queue_name);
-      qname = cqueue_get_name_from_qinstance(qi_name);
+      dstring cqueue = DSTRING_INIT;
+      dstring hname = DSTRING_INIT;
+      bool has_host, has_domain;
+
+      cqueue_name_split(lGetString(jr, JR_queue_name), &cqueue, &hname, &has_host, &has_domain);
+
+      qname = strdup(sge_dstring_get_string(&cqueue));
+      hostname = strdup(sge_dstring_get_string(&hname));
+
+      sge_dstring_free(&cqueue);
+      sge_dstring_free(&hname);
    }
 
    if (intermediate) {
@@ -283,10 +275,10 @@ sge_write_rusage(dstring *buffer,
    }
    
    ret = sge_dstring_sprintf(buffer, ACTFILE_FPRINTF_FORMAT, 
-         qname, delimiter,
-          lGetHost(jr, JR_host_name), delimiter,
-          lGetString(jr, JR_group), delimiter,
-          lGetString(jr, JR_owner), delimiter,
+          qname, delimiter,
+          hostname, delimiter,
+          lGetString(job, JB_group), delimiter,
+          lGetString(job, JB_owner), delimiter,
           lGetString(job, JB_job_name), delimiter,
           lGetUlong(jr, JR_job_number), delimiter,
           lGetString(job, JB_account), delimiter,
@@ -342,6 +334,7 @@ sge_write_rusage(dstring *buffer,
              );
      
    FREE(qname);
+   FREE(hostname);
    DRETURN(ret);
 }
 

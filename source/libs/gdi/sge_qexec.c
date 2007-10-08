@@ -170,34 +170,33 @@ sge_tid_t sge_qexecve(sge_gdi_ctx_class_t *ctx,
    lSetUlong(petrep, PETR_jataskid, jataskid);
    lSetString(petrep, PETR_owner, myname);
 
-   if(cwd != NULL) {
+   if (cwd != NULL) {
       lSetString(petrep, PETR_cwd, cwd);
    }
 
-   if(environment != NULL) {
+   if (environment != NULL) {
       lSetList(petrep, PETR_environment, lCopyList("environment", environment));
    }
 
-   if(path_aliases != NULL) {
+   if (path_aliases != NULL) {
       lSetList(petrep, PETR_path_aliases, lCopyList("path_aliases", path_aliases));
    }
 
 
-   if(queuename != NULL) {
+   if (queuename != NULL) {
       lSetString(petrep, PETR_queuename, queuename);
    }
 
-   if(init_packbuffer(&pb, 0, 0) != PACK_SUCCESS) {
+   if (init_packbuffer(&pb, 1024, 0) != PACK_SUCCESS) {
       lFreeElem(&petrep);
       sprintf(lasterror, MSG_GDI_OUTOFMEMORY);
       DEXIT;
       return NULL;
    }
 
-   pack_job_delivery(&pb, petrep, NULL, NULL);
+   pack_job_delivery(&pb, petrep);
 
-   ret = gdi2_send_message_pb(ctx, 
-                              1, prognames[EXECD], 1, hostname,
+   ret = gdi2_send_message_pb(ctx, 1, prognames[EXECD], 1, hostname,
                               TAG_JOB_EXECUTION, &pb, &dummymid);
 
    clear_packbuffer(&pb);
@@ -219,7 +218,7 @@ sge_tid_t sge_qexecve(sge_gdi_ctx_class_t *ctx,
 
    tid = (sge_tid_t) lGetString(rt, RT_tid);
 
-   if(strcmp(tid, "none") == 0) {
+   if (strcmp(tid, "none") == 0) {
       tid = NULL;
    }
 

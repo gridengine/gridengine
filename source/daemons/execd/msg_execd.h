@@ -205,11 +205,9 @@
 #define MSG_FILE_CHDIR_SS             _MESSAGE(29118, _("can't change dir to "SFN": "SFN))
 #define MSG_EXECD_NOFORK_S            _MESSAGE(29119, _("fork failed: "SFN))
 #define MSG_EXECD_NOSTARTSHEPHERD     _MESSAGE(29120, _("unable to start shepherd process"))
-#define MSG_EXECD_NOWHERE4GDIL_S        _MESSAGE(29121, _("cannot build where for "SFN))
 #define MSG_SYSTEM_CANTMAKETMPDIR     _MESSAGE(29122, _("can't make tmpdir"))
 #define MSG_SYSTEM_CANTGETTMPDIR      _MESSAGE(29123, _("can't get tmpdir"))
 #define MSG_EXECD_UNABLETOFINDSCRIPTFILE_SS  _MESSAGE(29124, _("unable to find script file "SFN": "SFN))
-#define MSG_EXECD_NEEDATTRXINUSERDEFCOMPLOFYQUEUES_SS _MESSAGE(29125, _("need attribute "SFQ" in userdefined complex of "SFQ"-queues"))
 
 /*
 ** execd_ck_to_do.c
@@ -227,7 +225,6 @@
 */
 #define MSG_COM_UNPACKFEATURESET      _MESSAGE(29134, _("unpacking featureset from job execution message"))
 #define MSG_COM_UNPACKJOB             _MESSAGE(29135, _("unpacking job from job execution message"))
-#define MSG_COM_UNPACKINGQ            _MESSAGE(29137, _("unpacking queue list from job execution message"))
 #define MSG_JOB_MISSINGQINGDIL_SU     _MESSAGE(29138, _("missing queue "SFQ" found in gdil of job "sge_U32CFormat))
 #define MSG_EXECD_NOWRITESCRIPT_SIUS  _MESSAGE(29139, _("can't write script file "SFQ" wrote only %d of "sge_U32CFormat" bytes: "SFN))
 #define MSG_JOB_TASKWITHOUTJOB_U      _MESSAGE(29140, _("received task belongs to job "sge_U32CFormat" but this job is not here"))
@@ -254,15 +251,6 @@
 #define MSG_JOB_DELIVERSIGNAL_ISSIS   _MESSAGE(29154, _("failed to deliver signal %d to job "SFN" for "SFN" (shepherd with pid %d): "SFN))
 #define MSG_JOB_INITMIGRSUSPJ_UU      _MESSAGE(29155, _("initiate migration at job suspend for job "sge_U32CFormat" task "sge_U32CFormat""))
 
-
-
-/*
-** dispatcher.c
-*/
-#define MSG_COM_NOACK_S               _MESSAGE(29159, _("error sending acknowledge: "SFN))
-#define MSG_COM_INTERNALDISPATCHCALLWITHOUTDISPATCH _MESSAGE(29160, _("internal dispatcher called without s.th. to dispatch"))
-
-
 /*
 ** sge_load_sensor.c
 */
@@ -287,7 +275,6 @@
 #define MSG_PARSE_INVALIDARG_S        _MESSAGE(29178, _("invalid command line argument "SFQ))
 #define MSG_PARSE_TOOMANYARGS         _MESSAGE(29179, _("too many command line options"))
 
-#define MSG_EXECD_INITPACKBUFFERFAILED_S _MESSAGE(29181, _("init_packbuffer failed: "SFN))
 
 #define MSG_EXECD_CANT_GET_CONFIGURATION_EXIT  _MESSAGE(29186, _("can't get configuration qmaster - terminating"))
 #define MSG_EXECD_REGISTERED_AT_QMASTER_S      _MESSAGE(29187, _("registered at qmaster host "SFQ))

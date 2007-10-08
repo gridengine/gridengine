@@ -2539,7 +2539,7 @@ int lSetList(lListElem *ep, int name, lList *value)
       return -1;
    }
 
-   if(value != ep->cont[pos].glp) {
+   if (value != ep->cont[pos].glp) {
       /* free old list */
       lFreeList(&(ep->cont[pos].glp));
 

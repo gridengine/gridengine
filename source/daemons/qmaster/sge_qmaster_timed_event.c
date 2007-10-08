@@ -462,8 +462,7 @@ int te_delete_one_time_event(te_type_t aType, u_long32 aKey1, u_long32 aKey2, co
    if (strKey != NULL) {
       cond = lWhere("%T(%I != %u || %I != %u || %I != %u || %I != %u || %I != %s)", TE_Type,
          TE_type, aType, TE_mode, ONE_TIME_EVENT, TE_uval0, aKey1, TE_uval1, aKey2, TE_sval, strKey);
-   }
-   else {
+   } else {
       cond = lWhere("%T(%I != %u || %I != %u || %I != %u || %I != %u)", TE_Type,
          TE_type, aType, TE_mode, ONE_TIME_EVENT, TE_uval0, aKey1, TE_uval1, aKey2);
    

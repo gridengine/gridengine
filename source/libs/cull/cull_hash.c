@@ -778,7 +778,7 @@ int cull_hash_new(lList *lp, int nm, bool unique)
 
    descr[pos].ht = cull_hash_create(&descr[pos], size);
 
-   if(descr[pos].ht == NULL) {
+   if (descr[pos].ht == NULL) {
       DEXIT;
       return 0;
    }

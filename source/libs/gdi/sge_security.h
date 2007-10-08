@@ -66,7 +66,7 @@ int store_sec_cred2(const char* sge_root,
                     lListElem *jelem, 
                     int do_authentication, 
                     int *general, 
-                    char *err_str);
+                    dstring *err_str);
 
 int sge_set_auth_info(sge_gdi_request *request, 
                       uid_t uid, const char *user, 

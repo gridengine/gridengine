@@ -984,7 +984,7 @@ int store_sec_cred(const char* sge_root, sge_gdi_request *request, lListElem *je
  *  NOTES
  *     MT-NOTE: store_sec_cred2() is MT safe (assumptions)
  */
-int store_sec_cred2(const char* sge_root, const char* unqualified_hostname, lListElem *jelem, int do_authentication, int *general, char* err_str)
+int store_sec_cred2(const char* sge_root, const char* unqualified_hostname, lListElem *jelem, int do_authentication, int *general, dstring *err_str)
 {
    int ret = 0;
    const char *cred;
@@ -1048,13 +1048,12 @@ int store_sec_cred2(const char* sge_root, const char* unqualified_hostname, lLis
          if (do_authentication && (ret != 0)) {               
             ERROR((SGE_EVENT, MSG_SEC_KRBAUTHFAILURE,
                    sge_u32c(lGetUlong(jelem, JB_job_number))));         
-            sprintf(err_str, MSG_SEC_KRBAUTHFAILUREONHOST,
+            sge_dstring_sprintf(err_str, MSG_SEC_KRBAUTHFAILUREONHOST,
                     sge_u32c(lGetUlong(jelem, JB_job_number)),
                     unqualified_hostname);                 
             *general = GFSTATE_JOB;                            
          }                                                    
-      } 
-      else {
+      } else {
          ERROR((SGE_EVENT, MSG_SEC_NOSTORECREDNOBIN_US, sge_u32c(lGetUlong(jelem, JB_job_number)), binary));
       }
    }

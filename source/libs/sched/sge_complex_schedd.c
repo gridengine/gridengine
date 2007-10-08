@@ -223,16 +223,16 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
 
    /** check for a load value */
    if (load_attr && 
-        (sconf_get_qs_state()==QS_STATE_FULL || sge_is_static_load_value(attrname)) &&
-        (load_el = lGetElemStr(load_attr, HL_name, attrname)) &&
-        (!is_attr_prior(cplx_el, cplx_el))) /* ???? */
+       (load_el = lGetElemStr(load_attr, HL_name, attrname)) &&
+       (sconf_get_qs_state()==QS_STATE_FULL || lGetBool(load_el, HL_static)) &&
+        (!is_attr_prior(cplx_el, cplx_el)))
    {
          lListElem *ep_nproc=NULL;
          int nproc=1;
 
          if (!cplx_el){
             cplx_el = lCopyElem(lGetElemStr(centry_list, CE_name, attrname));
-               if(!cplx_el){
+               if (!cplx_el){
                   /* error */
                   DRETURN(NULL);
                }         

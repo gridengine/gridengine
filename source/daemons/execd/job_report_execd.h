@@ -47,14 +47,7 @@ int add_usage(lListElem *jr, char *name, const char *uval_as_str, double val);
 
 #include "dispatcher.h"
 
-int execd_c_ack(sge_gdi_ctx_class_t *ctx, 
-                struct dispatch_entry *de, 
-                sge_pack_buffer *pb, 
-                sge_pack_buffer *apb, 
-                u_long *rcvtimeout, 
-                int *synchron, 
-                char *err_str, 
-                int answer_error);
+int do_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg);
 
 int
 execd_get_acct_multiplication_factor(const lListElem *pe, 

@@ -1008,10 +1008,8 @@ lListElem *job_create_task(lListElem *job, lList **answer_list, u_long32 ja_task
 
    DENTER(TOP_LAYER, "job_create_task");
 
-   if(job != NULL) {
-      if(job_is_ja_task_defined(job, ja_task_id)) {
-         ja_task = job_enroll(job, answer_list, ja_task_id);
-      }
+   if (job != NULL && job_is_ja_task_defined(job, ja_task_id)) {
+      ja_task = job_enroll(job, answer_list, ja_task_id);
    }
 
    DRETURN(ja_task);
@@ -1598,9 +1596,8 @@ int job_initialize_id_lists(lListElem *job, lList **answer_list)
    DENTER(TOP_LAYER, "job_initialize_id_lists");
    n_h_list = lCopyList("task_id_range", lGetList(job, JB_ja_structure));
    if (n_h_list == NULL) {
-      sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
-      answer_list_add(answer_list, SGE_EVENT, 
-                      STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+      answer_list_add_sprintf(answer_list, STATUS_EMALLOC, ANSWER_QUALITY_ERROR,
+                              MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
       DRETURN(-1);
    } else {
       lSetList(job, JB_ja_n_h_ids, n_h_list);
@@ -2624,9 +2621,8 @@ job_get_contribution(const lListElem *this_elem, lList **answer_list,
    }
    if (!(parse_ulong_val(value, NULL, TYPE_INT, value_string, 
                          error_str, sizeof(error_str)-1))) {
-      sprintf(SGE_EVENT, MSG_ATTRIB_PARSATTRFAILED_SS, name, error_str);
-      answer_list_add(answer_list, SGE_EVENT, 
-                      STATUS_EEXIST, ANSWER_QUALITY_ERROR); 
+      answer_list_add_sprintf(answer_list, STATUS_EEXIST, ANSWER_QUALITY_ERROR,
+                              MSG_ATTRIB_PARSATTRFAILED_SS, name, error_str); 
       ret = false; 
    }
    
@@ -2635,7 +2631,7 @@ job_get_contribution(const lListElem *this_elem, lList **answer_list,
 
 /****** sge_job/sge_unparse_acl_dstring() **************************************
 *  NAME
-*     sge_unparse_acl_dstring() -- creates a string from teh access lists and user
+*     sge_unparse_acl_dstring() -- creates a string from the access lists and user
 *
 *  SYNOPSIS
 *     bool sge_unparse_acl_dstring(dstring *category_str, const char *owner, 
@@ -2997,7 +2993,7 @@ job_verify(const lListElem *job, lList **answer_list)
 
    if (job == NULL) {
       answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, "NULL pointer argument");
-      ret = false;
+      DRETURN(false);
    }
 
    if (ret) {

@@ -147,8 +147,7 @@ void sge_setup_sge_execd(sge_gdi_ctx_class_t *ctx, const char* tmp_err_file_name
    sge_mkdir(ACTIVE_DIR,  0775, 1, 0);
 
    FREE(spool_dir);
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /*-------------------------------------------------------------------------*/
@@ -178,10 +177,9 @@ int daemonize_execd(void *context)
 
    cl_com_set_handle_fds(cl_com_get_handle(progname,0), &keep_open);
 
-   ret = sge_daemonize(&keep_open, ctx);   
+   ret = sge_daemonize_finalize(ctx);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 int job_initialize_job(lListElem *job)

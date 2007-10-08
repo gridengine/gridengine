@@ -2272,8 +2272,7 @@ sge_load_alarm(char *reason, lListElem *qep, lList *threshold,
          if (hlep != NULL) {
             load_value = lGetString(hlep, HL_value);
             load_is_value = 0;
-         }
-         else if ((global_hep != NULL) &&
+         } else if ((global_hep != NULL) &&
                   ((glep = lGetSubStr(global_hep, HL_name, name, EH_load_list)) != NULL)) {
                load_value = lGetString(glep, HL_value);
                load_is_value = 0;

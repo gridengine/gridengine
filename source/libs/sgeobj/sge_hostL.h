@@ -60,7 +60,6 @@ enum {
                               * reported for exechost spooled (not
                               * everytime load comes in) */
    EH_lt_heard_from,
-   EH_startup,
    EH_processors,            /* for license purposes exec host only
                               * spooled */
    EH_acl,                   /* US_Type - userset access list */
@@ -135,8 +134,7 @@ LISTDEF(EH_Type)
    SGE_LIST(EH_consumable_config_list, CE_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)
    SGE_MAP(EH_usage_scaling_list, HS_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)
    SGE_MAP(EH_load_list, HL_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
-   SGE_ULONG(EH_lt_heard_from, CULL_DEFAULT | CULL_JGDI_HIDDEN)
-   SGE_ULONG(EH_startup, CULL_DEFAULT | CULL_JGDI_HIDDEN)
+   SGE_ULONG(EH_lt_heard_from, CULL_DEFAULT | CULL_JGDI_RO)
    SGE_ULONG(EH_processors, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
    SGE_LIST(EH_acl, US_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)
    SGE_LIST(EH_xacl, US_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)
@@ -181,7 +179,6 @@ NAMEDEF(EHN)
    NAME("EH_usage_scaling_list")
    NAME("EH_load_list")
    NAME("EH_lt_heard_from")
-   NAME("EH_startup")
    NAME("EH_processors")
    NAME("EH_acl")
    NAME("EH_xacl")
@@ -321,7 +318,8 @@ NAMEEND
 enum {
    HL_name = HL_LOWERBOUND,
    HL_value,
-   HL_last_update
+   HL_last_update,
+   HL_static
 };
 
 LISTDEF(HL_Type)
@@ -329,12 +327,14 @@ LISTDEF(HL_Type)
    SGE_STRING(HL_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SUBLIST)
    SGE_STRING(HL_value, CULL_DEFAULT | CULL_SUBLIST)
    SGE_ULONG(HL_last_update, CULL_DEFAULT)
+   SGE_BOOL(HL_static, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(HLN)
    NAME("HL_name")
    NAME("HL_value")
    NAME("HL_last_update")
+   NAME("HL_static")
 NAMEEND
 
 #define HLS sizeof(HLN)/sizeof(char*)

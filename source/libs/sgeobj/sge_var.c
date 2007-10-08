@@ -403,13 +403,12 @@ void var_list_copy_prefix_vars(lList **varl,
    DENTER(TOP_LAYER, "var_list_copy_prefix_vars");
    for_each(var_elem, src_varl) {
       const char *prefix_name = lGetString(var_elem, VA_variable);
-      const char *value = lGetString(var_elem, VA_value);
-      char *name_without_prefix = (char*)(prefix_name + prefix_len);
 
       if (!strncmp(prefix_name, prefix, prefix_len)) {
          char name[MAX_STRING_SIZE];
+         const char *name_without_prefix = &prefix_name[prefix_len];
+         const char *value = lGetString(var_elem, VA_value);
 
-         prefix_name += prefix_len;
          sprintf(name, "%s%s", new_prefix, name_without_prefix);
          var_list_set_string(&var_list2, name, value);
       }
@@ -461,14 +460,13 @@ void var_list_copy_prefix_vars_undef(lList **varl,
    DENTER(TOP_LAYER, "var_list_copy_prefix_vars");
    for_each(var_elem, src_varl) {
       const char *prefix_name = lGetString(var_elem, VA_variable);
-      const char *value = lGetString(var_elem, VA_value);
-      char *name_without_prefix = (char*)(prefix_name + prefix_len);
 
       if (!strncmp(prefix_name, prefix, prefix_len)) {
          char name[MAX_STRING_SIZE];
+         const char *value = lGetString(var_elem, VA_value);
+         const char *name_without_prefix = &prefix_name[prefix_len];
          lListElem *existing_variable;
 
-         prefix_name += prefix_len;
          sprintf(name, "%s%s", new_prefix, name_without_prefix);
          existing_variable = lGetElemStr(*varl, VA_variable, name);
          if (existing_variable == NULL) {
@@ -480,60 +478,6 @@ void var_list_copy_prefix_vars_undef(lList **varl,
       *varl = lCreateList("", VA_Type);
    }
    lAddList(*varl, &var_list2);
-   DEXIT;
-}
-
-/****** sgeobj/var/var_list_copy_complex_vars_and_value() *********************
-*  NAME
-*     var_list_copy_complex_vars_and_value() -- copy certain vars 
-*
-*  SYNOPSIS
-*     void 
-*     var_list_copy_complex_vars_and_value(lList **varl, 
-*                                          const lList *src_varl, 
-*                                          const lList *centry_list) 
-*
-*  FUNCTION
-*     Copy all variables from "src_varl" into
-*     "varl" whose names begin with the define VAR_COMPLEX_PREFIX
-*     If the tail of the name of a variable is equivalent
-*     with a complex entry name then replace the value of the
-*     corresponding variable with the complex value. 
-*
-*     SGE_COMPLEX_hostname="" ==> SGE_COMPLEX_hostname="fangorn.sun.com" 
-*
-*  INPUTS
-*     lList **varl             - VA_Type list 
-*     const lList *src_varl    - source VA_Type list 
-*     const lList *centry_list - complex entry list 
-******************************************************************************/
-void var_list_copy_complex_vars_and_value(lList **varl,
-                                          const lList* src_varl,
-                                          const lList* centry_list)
-{
-   lListElem *var = NULL;
-   int n = strlen(VAR_COMPLEX_PREFIX);
-   DENTER(TOP_LAYER, "var_list_copy_complex_vars_and_value");
-
-   for_each(var, src_varl) {
-      const char *name = lGetString(var, VA_variable);
-
-      if (!strncmp(name, VAR_COMPLEX_PREFIX, n)) {
-         const lListElem* attr = lGetElemStr(centry_list, CE_name, &name[n]);
-
-         if (attr != NULL) {
-            const char *value = lGetString(attr, CE_stringval);
-   
-            if (value != NULL) {
-               var_list_set_string(varl, name, value);
-            } else {
-               var_list_set_string(varl, name, "");
-            }
-         } else {
-            var_list_set_string(varl, name, "");
-         }
-      }
-   }
    DEXIT;
 }
 
@@ -560,24 +504,14 @@ void var_list_copy_complex_vars_and_value(lList **varl,
 *     void - none
 ******************************************************************************/
 void var_list_copy_env_vars_and_value(lList **varl,
-                                      const lList* src_varl,
-                                      const char *ignore_prefix) 
+                                      const lList* src_varl)
 {
    lListElem *env;
-   int n = strlen(ignore_prefix);
 
    for_each(env, src_varl) {
       const char *s, *name;
 
-      /*
-       * var_list_copy_complex_vars_and_value() might be used to handle 
-       * variables which will skip now 
-       */
       name = lGetString(env, VA_variable);
-      if (n > 0 && !strncmp(name, ignore_prefix, n)) {
-         continue; 
-      }
-
       s = lGetString(env, VA_value);
       var_list_set_string(varl, name, s ? s : "");
    }

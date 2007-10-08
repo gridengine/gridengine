@@ -119,7 +119,7 @@ int sge_get_pids(pid_t *pids, int max_pids, const char *name,
       DRETURN(-1);
    }
 
-   while (!feof(fp_out) && num_of_pids<max_pids) {
+   while (!feof(fp_out) && num_of_pids < max_pids) {
       if ((fgets(buf, sizeof(buf), fp_out))) {
          if ((len = strlen(buf))) {
 
@@ -320,7 +320,7 @@ int sge_checkprog(pid_t pid, const char *name, const char *pscommand)
 *  SEE ALSO
 *     sge_os/sge_daemonize_finalize()
 *******************************************************************************/
-int sge_daemonize_prepare(sge_gdi_ctx_class_t *ctx) {
+bool sge_daemonize_prepare(sge_gdi_ctx_class_t *ctx) {
    pid_t pid;
    fd_set keep_open;
 #if !(defined(__hpux) || defined(CRAY) || defined(WIN32) || defined(SINIX) || defined(INTERIX))
@@ -376,7 +376,7 @@ int sge_daemonize_prepare(sge_gdi_ctx_class_t *ctx) {
       exit(1);
    }
 
-   if ( pid > 0) {
+   if (pid > 0) {
       char line[256];
       int line_p = 0;
       int retries = 60;
@@ -500,8 +500,9 @@ int sge_daemonize_prepare(sge_gdi_ctx_class_t *ctx) {
 *  SEE ALSO
 *     sge_os/sge_daemonize_prepare()
 *******************************************************************************/
-int sge_daemonize_finalize(sge_gdi_ctx_class_t *ctx) 
+bool sge_daemonize_finalize(sge_gdi_ctx_class_t *ctx) 
 {
+   int failed_fd;
    char tmp_buffer[4];
    int is_daemonized = ctx->is_daemonized(ctx);
 
@@ -528,13 +529,9 @@ int sge_daemonize_finalize(sge_gdi_ctx_class_t *ctx)
    close(2);
    
    /* new descriptors acquired for stdin, stdout, stderr should be 0,1,2 */
-   if (open("/dev/null",O_RDONLY,0)!=0) {
-      SGE_EXIT(NULL, 0);
-   }
-   if (open("/dev/null",O_WRONLY,0)!=1) {
-      SGE_EXIT(NULL, 0);
-   }
-   if (open("/dev/null",O_WRONLY,0)!=2) {
+   failed_fd = sge_occupy_first_three();
+   if (failed_fd  != -1) {
+      CRITICAL((SGE_EVENT, MSG_CANNOT_REDIRECT_STDINOUTERR_I, failed_fd));
       SGE_EXIT(NULL, 0);
    }
 #endif

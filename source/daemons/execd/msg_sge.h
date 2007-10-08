@@ -33,34 +33,7 @@
 /*___INFO__MARK_END__*/
 
 #include "basis_types.h"
-/* 
-** sge/pdc.c
-*/ 
-#define MSG_SGE_TABINFOXFAILEDY_SS  _MESSAGE(31000, _("tabinfo("SFQ", ...) failed, "SFN))
-#define MSG_MEMORY_MALLOCXFAILED_D  _MESSAGE(31001, _("malloc("sge_U32CFormat") failed"))
-#define MSG_SGE_SKIPPINGREADOFCORRUPTEDPACCTFILE   _MESSAGE(31002, _("skipping read of corrupted pacct file"))
-#define MSG_SGE_FREADOFHEADERFAILEDPACCTFILECORRUPTED _MESSAGE(31003, _("fread of header failed, pacct file corrupted"))
-#define MSG_SGE_FREADOFFLAGFAILEDPACCTFILECORRUPTED   _MESSAGE(31004, _("fread of flag failed, pacct file corrupted"))
-#define MSG_SGE_BADACCOUNTINGRECORDPACCTFILECORRUPTED _MESSAGE(31005, _("bad accounting record, pacct file corrupted"))
-#define MSG_SGE_FREADOFACCTRECORDFAILEDPACCTFILECORRUPTED _MESSAGE(31006, _("fread of acct record failed, pacct file corrupted"))
-#define MSG_SGE_UNABLETOOPENNEWPACCTFILE              _MESSAGE(31007, _("unable to open new pacct file"))
-#define MSG_SGE_READPACCTRECORDSFORXPROCESSESANDYJOBS_II _MESSAGE(31008, _("read pacct records for %d processes, %d jobs"))
-#define MSG_SGE_SYSMP_MP_SAGETXFAILEDY_SS             _MESSAGE(31009, _("sysmp(MP_SAGET, "SFN", ...) failed, "SFN))
-#define MSG_SGE_SWAPCTL_XFAILEDY_SS                   _MESSAGE(31010, _("swapctl("SFN", ...) failed, "SFN))
-#define MSG_SGE_PSRETRIEVESYSTEMDATASUCCESSFULLYCOMPLETED   _MESSAGE(31011, _("psRetrieveSystemData() successfully completed"))
-#define MSG_MEMORY_MALLOCFAILURE                      _MESSAGE(31012, _("malloc failure"))
-#define MSG_SGE_PSRETRIEVEOSJOBDATASUCCESSFULLYCOMPLETED _MESSAGE(31013, _("psRetrieveOSJobData() successfully completed"))
-#define MSG_SGE_GETSYSINFO_GSI_PHYSMEM_FAILEDX_S         _MESSAGE(31014, _("getsysinfo(GSI_PHYSMEM) failed, "SFN))
-#define MSG_SGE_NLISTFAILEDX_S         _MESSAGE(31015, _("nlist failed: "SFN))
-#define MSG_SGE_VM_PERFSUM_NOTFOUND     _MESSAGE(31016, _("vm_perfsum not found"  ))
-#define MSG_SGE_PSSTARTCOLLECTORSUCCESSFULLYCOMPLETED _MESSAGE(31017, _("psStartCollector() successfully completed"))
-#define MSG_SGE_PSSTOPCOLLECTORSUCCESSFULLYCOMPLETED  _MESSAGE(31018, _("psStopCollector() successfully completed"))
-#define MSG_SGE_PSWATCHJOBSUCCESSFULLYCOMPLETED       _MESSAGE(31019, _("psWatchJob() successfully completed"))
-#define MSG_SGE_PSIGNOREJOBSUCCESSFULLYCOMPLETED      _MESSAGE(31020, _("psIgnoreJob() successfully completed"))
-#define MSG_SGE_PSTATUSSUCCESSFULLYCOMPLETED          _MESSAGE(31021, _("psStatus() successfully completed"))
-#define MSG_SGE_PSGETONEJOBSUCCESSFULLYCOMPLETED      _MESSAGE(31022, _("psGetOneJob() successfully completed"))
-#define MSG_SGE_PSGETALLJOBSSUCCESSFULLYCOMPLETED     _MESSAGE(31023, _("psGetAllJobs() successfully completed"))
-#define MSG_SGE_PSGETSYSDATASUCCESSFULLYCOMPLETED     _MESSAGE(31024, _("psGetSysdata() successfully completed"))
+
 #define MSG_SGE_USAGE         _MESSAGE(31025, _("usage: pdc [-snpgj] [-kK signo] [-iJPS secs] job_id [ ... ]"))
 #define MSG_SGE_s_OPT_USAGE   _MESSAGE(31026, _("show system data"  ))
 #define MSG_SGE_n_OPT_USAGE   _MESSAGE(31027, _("no output"  ))

@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 /* do not compile in monitoring code */
 #ifndef NO_SGE_COMPILE_DEBUG
@@ -215,86 +216,6 @@ cull_pack_switch(sge_pack_buffer *pb, const lMultiType *src, lEnumeration *what,
       break;
    }
 
-   DEXIT;
-   return ret;
-}
-
-/****** cull/pack/cull_get_list_packsize() ************************************
-*  NAME
-*     cull_get_list_packsize() -- Get size of a CULL list
-*
-*  SYNOPSIS
-*     size_t cull_get_list_packsize(const lList *list) 
-*
-*  FUNCTION
-*     Return the number of bytes which "list" would consume in a
-*     pack buffer.
-*
-*  INPUTS
-*     const lList *list - Any CULL list 
-*
-*  RESULT
-*     size_t - Size in bytes
-*
-*  SEE ALSO
-*     cull/pack/cull_get_elem_packsize() 
-******************************************************************************/
-size_t cull_get_list_packsize(const lList *list)
-{
-   size_t ret = 0;
-   DENTER(CULL_LAYER, "cull_get_list_packsize");
-
-   PROF_START_MEASUREMENT(SGE_PROF_PACKING);
-   if (list != NULL) {
-      sge_pack_buffer pb;
-
-      init_packbuffer(&pb, 0, 1);
-      if (!cull_pack_list(&pb, list)) {
-         ret = pb_used(&pb);
-      }
-      clear_packbuffer(&pb);
-   }
-   PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
-   DEXIT;
-   return ret;
-}
-
-/****** cull/pack/cull_get_elem_packsize() ************************************
-*  NAME
-*     cull_get_elem_packsize() -- Get size of a CULL element 
-*
-*  SYNOPSIS
-*     size_t cull_get_elem_packsize(const lListElem *elem) 
-*
-*  FUNCTION
-*     Return the number of bytes which "elem" would consume in a
-*     pack buffer. 
-*
-*  INPUTS
-*     const lListElem *elem - Any CULL element
-*
-*  RESULT
-*     size_t - Size in bytes
-*
-*  SEE ALSO
-*     cull/pack/cull_get_list_packsize()
-*******************************************************************************/
-size_t cull_get_elem_packsize(const lListElem *elem)
-{
-   size_t ret = 0;
-   DENTER(CULL_LAYER, "cull_get_elem_packsize");
-
-   PROF_START_MEASUREMENT(SGE_PROF_PACKING);
-   if (elem != NULL) {
-      sge_pack_buffer pb;
-
-      init_packbuffer(&pb, 0, 1);
-      if (!cull_pack_elem(&pb, elem)) {
-         ret = pb_used(&pb);
-      }
-      clear_packbuffer(&pb);
-   }
-   PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
    DEXIT;
    return ret;
 }
@@ -1723,3 +1644,21 @@ int getByteArray(char **byte, const lListElem *elem, int name){
    return size;
 }
 
+void cull_dump_pack_buffer(sge_pack_buffer *pb, FILE *fp)
+{ 
+   int i;
+   int j = 0;
+   char hex[2048], tex[2048];
+
+   for (i=0; i<pb->bytes_used; i++) {
+      sprintf(&hex[j*3], "%2x ", pb->head_ptr[i]);
+      sprintf(&tex[j], "%c", isalnum(pb->head_ptr[i])?pb->head_ptr[i]:'.');
+
+      if ((i % 16) == 0) {
+         fprintf(fp, "%s  %s\n", hex, tex);
+         j=0;
+      } else {
+         j++;
+      }
+   }
+}

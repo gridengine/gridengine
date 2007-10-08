@@ -870,7 +870,6 @@ enum {
    JG_slots,
    JG_queue,
    JG_tag_slave_job,
-   JG_complex,
    JG_task_id_range,
    JG_ticket,
    JG_oticket,
@@ -889,8 +888,6 @@ LISTDEF(JG_Type)
    SGE_OBJECT(JG_queue, QU_Type, CULL_DEFAULT | CULL_JGDI_HIDDEN | CULL_JGDI_RO) /* QU_Type - complete queue only in execd */
    SGE_ULONG(JG_tag_slave_job, CULL_DEFAULT | CULL_JGDI_HIDDEN) /* whether slave execds job has arrived in 
                                  * case of pe's with sge controlled slaves */
-   SGE_LIST(JG_complex, CE_Type, CULL_DEFAULT | CULL_JGDI_HIDDEN)         /* CE_Type - complex list for this queue 
-                                 * used to transfer these values to execd */
    SGE_ULONG(JG_task_id_range, CULL_DEFAULT | CULL_JGDI_HIDDEN) /* unused - please recycle */
    SGE_DOUBLE(JG_ticket, CULL_DEFAULT | CULL_JGDI_HIDDEN)    /* SGEEE tickets assigned to slots              */
    SGE_DOUBLE(JG_oticket, CULL_DEFAULT | CULL_JGDI_HIDDEN)   /* SGEEE override tickets assigned to slots     */
@@ -908,7 +905,6 @@ NAMEDEF( JGN )
    NAME( "JG_slots" )
    NAME( "JG_queue" )
    NAME( "JG_tag_slave_job" )
-   NAME( "JG_complex" )
    NAME( "JG_task_id_range" )
    NAME( "JG_ticket" )
    NAME( "JG_oticket" )

@@ -95,8 +95,51 @@ report_source execd_report_sources[] = {
 };
 
 lUlong sge_execd_report_seqno = 0;
+static lListElem *last_lr = NULL;
+static lList *lr_list = NULL;
 
 extern lList *jr_list;
+
+void execd_merge_load_report(u_long32 seqno)
+{
+   if (last_lr == NULL || seqno != lGetUlong(last_lr, REP_seqno)) {
+      return;
+   } else {
+      lListElem *old_lr;
+
+      for_each(old_lr, lGetList(last_lr, REP_list)) {
+         const void *iterator = NULL;
+         const char *hostname = lGetHost(old_lr, LR_host);
+         const char *name = lGetString(old_lr, LR_name);
+         const char *value = lGetString(old_lr, LR_value);
+         lListElem *lr, *lr_next;
+         bool found = false;
+
+         lr_next = lGetElemStrFirst(lr_list, LR_name, name, &iterator);
+         while ((lr = lr_next)) {
+            lr_next = lGetElemStrNext(lr_list, LR_name, name, &iterator);
+
+            if (sge_hostcmp(lGetHost(lr, LR_host), hostname) == 0) {
+               found = true;
+               if (lGetUlong(old_lr, LR_static) == 2) {
+                  lRemoveElem(lr_list, &lr); 
+               } else {
+                  lSetString(lr, LR_value, value);
+               }
+            }
+         }
+         if (!found) {
+            lAppendElem(lr_list, lCopyElem(old_lr));
+         }
+      }
+   }
+   lFreeElem(&last_lr);
+}
+
+void execd_trash_load_report(void) {
+   lFreeList(&lr_list);
+   lFreeElem(&last_lr);
+}
 
 static int 
 execd_add_load_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now, u_long32 *next_send) 
@@ -104,8 +147,11 @@ execd_add_load_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now
    const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
    const char* binary_path = ctx->get_binary_path(ctx);
 
+   DENTER(TOP_LAYER, "execd_add_load_report");
+
    if (*next_send <= now) {
       lListElem *report;
+      lList *tmp_lr_list;
 
       *next_send = now + mconf_get_load_report_time();
 
@@ -120,11 +166,57 @@ execd_add_load_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now
       lSetUlong(report, REP_version, GRM_GDI_VERSION);
       lSetUlong(report, REP_seqno, sge_execd_report_seqno);
       lSetHost(report, REP_host, qualified_hostname);
-      lSetList(report, REP_list, sge_build_load_report(qualified_hostname, binary_path));
+
+      tmp_lr_list = sge_build_load_report(qualified_hostname, binary_path);
+
+      if (lr_list == NULL) {
+         lr_list = lCopyList("", tmp_lr_list);
+         lFreeElem(&last_lr);
+         lSetList(report, REP_list, tmp_lr_list);
+      } else {
+         lListElem *lr;
+
+         for_each(lr, lr_list) {
+            const void *iterator = NULL;
+            const char *hostname = lGetHost(lr, LR_host);
+            const char *name = lGetString(lr, LR_name);
+            const char *value = lGetString(lr, LR_value);
+            lListElem *ep, *next_ep;
+            bool found = false;
+         
+            next_ep = lGetElemStrFirst(tmp_lr_list, LR_name, name, &iterator);
+            while ((ep = next_ep)) {
+               next_ep = lGetElemStrNext(tmp_lr_list, LR_name, name, &iterator);
+
+               if (sge_hostcmp(lGetHost(ep, LR_host), hostname) == 0) {
+                  /* we found the same load value in the temp list */
+                  found = true;
+
+                  if (sge_strnullcmp(lGetString(ep, LR_value), value) == 0) {
+                     /* value hasn't changed, removed it from list */ 
+                     lRemoveElem(tmp_lr_list, &ep);
+                  }
+                  break;
+               }
+            }
+
+            if (found == false) {
+               /* the load value is no longer reported, tag is as deleted and
+                  add it to the report list */
+               lListElem *del_report = lCopyElem(lr);     
+               lSetUlong(del_report, LR_static, 2); 
+               lAppendElem(tmp_lr_list, del_report);
+            }
+         }
+         lSetList(report, REP_list, tmp_lr_list);
+         lFreeElem(&last_lr);
+         last_lr = lCopyElem(report);
+      }
+
       lAppendElem(report_list, report);
    }
 
-   return 0;
+   DRETURN(0);
 }
 
 
@@ -161,7 +253,7 @@ execd_add_license_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 
 {
    const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
 
-   if (*next_send <= now) {
+   if (*next_send == 0) {
       lListElem *report;
 
       *next_send = now + mconf_get_load_report_time();
@@ -202,16 +294,19 @@ execd_add_job_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now,
    static u_long32 last_send = 0;
    const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
 
+   /* return if no job reports are in the list */
+   if (lGetNumberOfElem(jr_list) == 0) {
+      return 0;
+   }
+
    /* if report interval expired: send all reports */
    if (*next_send <= now) {
       *next_send = now + mconf_get_load_report_time();
       do_send = true;
-   } else {
+   } else if (sge_get_flush_jr_flag()) {
       /* if we shall flush reports: send only reports marked to flush */
-      if (sge_get_flush_jr_flag() == true) {
-         do_send = true;
-         only_flush = true;
-      }
+      do_send = true;
+      only_flush = true;
    }
 
    /* 
@@ -262,7 +357,6 @@ lList *sge_build_load_report(const char* qualified_hostname, const char* binary_
    lListElem *ep;
    int nprocs = 1;
    double load;
-   const char *s;
    const void *iterator = NULL;
 
 #if defined(NECSX4) || defined(NECSX5)
@@ -270,7 +364,6 @@ lList *sge_build_load_report(const char* qualified_hostname, const char* binary_
    int rsg_id;
 #endif
  
-
    DENTER(TOP_LAYER, "sge_build_load_report");
 
    /* 
@@ -294,9 +387,13 @@ lList *sge_build_load_report(const char* qualified_hostname, const char* binary_
    /* make derived load values */
    /* retrieve num procs first - we need it for all other derived load values */
    ep = lGetElemStrFirst(lp, LR_name, LOAD_ATTR_NUM_PROC, &iterator);
-   while(ep != NULL) {
-      if ((sge_hostcmp(lGetHost(ep, LR_host), qualified_hostname) == 0) && (s = lGetString(ep, LR_value))) {
-         nprocs = MAX(1, atoi(s));
+   while (ep != NULL) {
+      const char *value = lGetString(ep, LR_value);
+
+      if (sge_hostcmp(lGetHost(ep, LR_host), qualified_hostname) == 0) {
+         if (value) {
+            nprocs = MAX(1, atoi(value));
+         }
          break;
       }   
       ep = lGetElemStrNext(lp, LR_name, LOAD_ATTR_NUM_PROC, &iterator);
@@ -304,26 +401,33 @@ lList *sge_build_load_report(const char* qualified_hostname, const char* binary_
 
    /* now make the derived load values */
    ep = lGetElemHostFirst(lp, LR_host, qualified_hostname, &iterator);
-   while(ep != NULL) {
-      if ((strcmp(lGetString(ep, LR_name), LOAD_ATTR_LOAD_AVG) == 0) && (s = lGetString(ep, LR_value))) {
-         load = strtod(s, NULL);
-         sge_add_double2load_report(&lp, LOAD_ATTR_NP_LOAD_AVG, (load/nprocs), qualified_hostname, NULL);
-      }
+   while (ep != NULL) {
+      const char *name = lGetString(ep, LR_name);
+      const char *value = lGetString(ep, LR_value);
 
-      if ((strcmp(lGetString(ep, LR_name), LOAD_ATTR_LOAD_SHORT) == 0) && (s = lGetString(ep, LR_value))) {
-         load = strtod(s, NULL);
-         sge_add_double2load_report(&lp, LOAD_ATTR_NP_LOAD_SHORT, (load/nprocs), 
-                                       qualified_hostname, NULL);
-      }
-      if ((strcmp(lGetString(ep, LR_name), LOAD_ATTR_LOAD_MEDIUM) == 0) && (s = lGetString(ep, LR_value))) {
-         load = strtod(s, NULL);
-         sge_add_double2load_report(&lp, LOAD_ATTR_NP_LOAD_MEDIUM, (load/nprocs), 
-                                       qualified_hostname, NULL);
-      }
-      if ((strcmp(lGetString(ep, LR_name), LOAD_ATTR_LOAD_LONG) == 0) && (s = lGetString(ep, LR_value))) {
-         load = strtod(s, NULL);
-         sge_add_double2load_report(&lp, LOAD_ATTR_NP_LOAD_LONG, (load/nprocs), 
-                                       qualified_hostname, NULL);
+      if (strcmp(name, LOAD_ATTR_LOAD_AVG) == 0) {
+         if (value != NULL) {
+            load = strtod(value, NULL);
+            sge_add_double2load_report(&lp, LOAD_ATTR_NP_LOAD_AVG, (load/nprocs), qualified_hostname, NULL);
+         }
+      } else if (strcmp(name, LOAD_ATTR_LOAD_SHORT) == 0) {
+         if (value != NULL) {
+            load = strtod(value, NULL);
+            sge_add_double2load_report(&lp, LOAD_ATTR_NP_LOAD_SHORT, (load/nprocs), 
+                                          qualified_hostname, NULL);
+         }
+      } else if (strcmp(name, LOAD_ATTR_LOAD_MEDIUM) == 0) {
+         if (value != NULL) {
+            load = strtod(value, NULL);
+            sge_add_double2load_report(&lp, LOAD_ATTR_NP_LOAD_MEDIUM, (load/nprocs), 
+                                          qualified_hostname, NULL);
+         }
+      } else if (strcmp(name, LOAD_ATTR_LOAD_LONG) == 0) {
+         if (value != NULL) {
+            load = strtod(value, NULL);
+            sge_add_double2load_report(&lp, LOAD_ATTR_NP_LOAD_LONG, (load/nprocs), 
+                                          qualified_hostname, NULL);
+         }
       }
 
    #if defined(NECSX4) || defined(NECSX5)
@@ -331,33 +435,33 @@ lList *sge_build_load_report(const char* qualified_hostname, const char* binary_
 
       for (rsg_id = 0; rsg_id < 32; rsg_id++) {
          sprintf(lv_name, "rsg%d_%s", rsg_id, LOAD_ATTR_NUM_PROC);
-         if ((strcmp(lGetString(ep, LR_name), lv_name) == 0) && (s = lGetString(ep, LR_value)))
-            nprocs = MAX(1, atoi(s));
+         if ((strcmp(name, lv_name) == 0) && value)
+            nprocs = MAX(1, atoi(value));
 
          sprintf(lv_name, "rsg%d_%s", rsg_id, LOAD_ATTR_LOAD_AVG);
-         if ((strcmp(lGetString(ep, LR_name), lv_name) == 0) && (s = lGetString(ep, LR_value))) {
+         if ((strcmp(name, lv_name) == 0) && value) {
             load = strtod(s, NULL);
             sprintf(lv_name, "rsg%d_%s", rsg_id, LOAD_ATTR_NP_LOAD_AVG);
             sge_add_double2load_report(&lp, lv_name, (load/nprocs), qualified_hostname, NULL);
          }
 
          sprintf(lv_name, "rsg%d_%s", rsg_id, LOAD_ATTR_LOAD_SHORT);
-         if ((strcmp(lGetString(ep, LR_name), lv_name) == 0) && (s = lGetString(ep, LR_value))) {
-            load = strtod(s, NULL);
+         if ((strcmp(name, lv_name) == 0) && value) {
+            load = strtod(value, NULL);
             sprintf(lv_name, "rsg%d_%s", rsg_id, LOAD_ATTR_NP_LOAD_SHORT);
             sge_add_double2load_report(&lp, lv_name, (load/nprocs), qualified_hostname, NULL);
          }
 
          sprintf(lv_name, "rsg%d_%s", rsg_id, LOAD_ATTR_LOAD_MEDIUM);
-         if ((strcmp(lGetString(ep, LR_name), lv_name) == 0) && (s = lGetString(ep, LR_value))) {
-            load = strtod(s, NULL);
+         if ((strcmp(name, lv_name) == 0) && value) {
+            load = strtod(value, NULL);
             sprintf(lv_name, "rsg%d_%s", rsg_id, LOAD_ATTR_NP_LOAD_MEDIUM);
             sge_add_double2load_report(&lp, lv_name, (load/nprocs), qualified_hostname, NULL);
          }
 
          sprintf(lv_name, "rsg%d_%s", rsg_id, LOAD_ATTR_LOAD_LONG);
-         if ((strcmp(lGetString(ep, LR_name), lv_name) == 0) && (s = lGetString(ep, LR_value))) {
-            load = strtod(s, NULL);
+         if ((strcmp(name, lv_name) == 0) && value) {
+            load = strtod(value, NULL);
             sprintf(lv_name, "rsg%d_%s", rsg_id, LOAD_ATTR_NP_LOAD_LONG);
             sge_add_double2load_report(&lp, lv_name, (load/nprocs), qualified_hostname, NULL);
          }
@@ -369,8 +473,7 @@ lList *sge_build_load_report(const char* qualified_hostname, const char* binary_
    /* qmaster expects a list sorted by host */
    lPSortList(lp, "%I+", LR_host);
 
-   DEXIT;
-   return lp;
+   DRETURN(lp);
 }
 
 static int sge_get_loadavg(const char* qualified_hostname, lList **lpp) 
@@ -455,8 +558,7 @@ static int sge_get_loadavg(const char* qualified_hostname, lList **lpp)
          ERROR((SGE_EVENT, MSG_LOAD_NOMEMINDICES));
          mem_fail =1;
       }
-      DEXIT;
-      return 1;
+      DRETURN(1);
    }
 
    sge_add_double2load_report(lpp, LOAD_ATTR_MEM_FREE,        mem_info.mem_free, qualified_hostname, "M");
@@ -587,8 +689,9 @@ static int sge_get_loadavg(const char* qualified_hostname, lList **lpp)
 
       if (sge_getcpuload(&cpu_percentage) != -1) {
          sge_add_double2load_report(lpp, "cpu", cpu_percentage, qualified_hostname, NULL);
-      } else {
+      }
 #ifndef INTERIX
+      else {
          static u_long32 next_log2 = 0;
 
          u_long32 now = sge_get_gmt();
@@ -596,8 +699,8 @@ static int sge_get_loadavg(const char* qualified_hostname, lList **lpp)
             WARNING((SGE_EVENT, MSG_SGETEXT_NO_LOAD));
             next_log2 = now + 7200;
          }
-#endif
       }
+#endif
          
    }
 #endif /* SGE_LOADCPU */
@@ -609,7 +712,7 @@ static int sge_get_loadavg(const char* qualified_hostname, lList **lpp)
 
       /* look if SGE_Helper_Service.exe is running */
       svc_running = sge_get_pids(pids, 1, "SGE_Helper_Service.exe", PSCMD);
-      if(svc_running <= 0) {
+      if (svc_running <= 0) {
          svc_running = 0;
       }
 
@@ -619,8 +722,7 @@ static int sge_get_loadavg(const char* qualified_hostname, lList **lpp)
    }
 #endif
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 void update_job_usage(const char* qualified_hostname)
@@ -665,7 +767,9 @@ void update_job_usage(const char* qualified_hostname)
    }
 
 #ifdef COMPILE_DC
+#ifdef DEBUG
    ptf_show_registered_jobs();
+#endif
 #endif
 
    /* replace existing usage in the job report with the new one */
@@ -735,7 +839,9 @@ void update_job_usage(const char* qualified_hostname)
                ERROR((SGE_EVENT, "could not find job report for job "sge_u32"."sge_u32" "
                   "task %s contained in job usage from ptf", job_id, ja_task_id, pe_task_id));
 #ifdef COMPILE_DC
+#ifdef DEBUG
                ptf_show_registered_jobs();
+#endif
 #endif
                continue;
             }

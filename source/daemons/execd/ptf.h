@@ -261,9 +261,8 @@ void ptf_show_registered_jobs(void);
 /* #define PTF_Exxxx 1 */
 
 #define PTF_ERROR_NONE                  0
-#define PTF_ERROR_DC_FAILURE            1
-#define PTF_ERROR_JOB_NOT_FOUND         2
-#define PTF_ERROR_INVALID_ARGUMENT      3
+#define PTF_ERROR_JOB_NOT_FOUND         1
+#define PTF_ERROR_INVALID_ARGUMENT      2
 
 #endif /* __PTF_H */
 

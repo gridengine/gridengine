@@ -163,6 +163,14 @@ typedef struct {
 /* the key for the thread local memeory */
 static pthread_key_t   obj_state_key;
 
+static bool 
+object_parse_raw_field_from_string(lListElem *object, lList **answer_list, 
+                                   const int nm, const char *value);
+
+static const char *
+object_append_raw_field_to_dstring(const lListElem *object, lList **answer_list,
+                                   dstring *buffer, const int nm,
+                                   char string_quotes);
 
 /****** sge_object/obj_state_init() ********************************************
 *  NAME
@@ -720,7 +728,7 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
 *     sgeobj/object/--GDI-object-Handling
 *     sgeobj/object/object_parse_field_from_string()
 *******************************************************************************/
-const char *
+static const char *
 object_append_raw_field_to_dstring(const lListElem *object, lList **answer_list,
                                    dstring *buffer, const int nm,
                                    char string_quotes)
@@ -1001,7 +1009,7 @@ object_parse_field_from_string(lListElem *object, lList **answer_list,
 *     sgeobj/object/--GDI-object-Handling
 *     sgeobj/object/object_append_field_to_dstring()
 ******************************************************************************/
-bool 
+static bool 
 object_parse_raw_field_from_string(lListElem *object, lList **answer_list, 
                                    const int nm, const char *value)
 {

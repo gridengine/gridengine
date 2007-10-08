@@ -96,7 +96,8 @@ SGEOBJLIB_SRC = \
          str2nm_converter.c \
          sge_var.c \
          sge_eval_expression.c \
-         sge_advance_reservation.c
+         sge_advance_reservation.c \
+         sge_ack.c
 
 SGEOBJDLIB_OBJS = $(SGEOBJDLIB_SRC:.c=.o)
 
@@ -318,6 +319,9 @@ sge_eval_expression.o: $(SGEOBJLIB_DIR)/sge_eval_expression.c
 
 sge_advance_reservation.o: $(SGEOBJLIB_DIR)/sge_advance_reservation.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_advance_reservation.c
+
+sge_ack.o: $(SGEOBJLIB_DIR)/sge_ack.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_ack.c
 
 ###############################################################################
 # rules to build object codes for CULL data types

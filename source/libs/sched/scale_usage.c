@@ -57,12 +57,11 @@ lList *scaled_usage /* UA_Type */
 
 #ifndef TRACE_INCOMING_USAGE 
    if (!scaling) {
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 #endif
 
-   if(scaled_usage == NULL) {
+   if (scaled_usage == NULL) {
       scaled_usage = lCreateList("usage", UA_Type);
    }
 
@@ -72,27 +71,53 @@ lList *scaled_usage /* UA_Type */
          lGetString(ep, UA_name), 
          lGetDouble(ep, UA_value))); 
 #endif
-      if ((sep=lGetElemStr(scaling, HS_name, lGetString(ep, UA_name)))) 
-         lSetDouble(ep, UA_value, 
-            lGetDouble(ep, UA_value) * lGetDouble(sep, HS_value));
-   }
-
-   /* summarize sge usage */
-   for_each (prev, prev_usage) {
-      if (!strcmp(lGetString(prev, UA_name), USAGE_ATTR_CPU) ||
-          !strcmp(lGetString(prev, UA_name), USAGE_ATTR_IO)  ||
-          !strcmp(lGetString(prev, UA_name), USAGE_ATTR_IOW) ||
-          !strcmp(lGetString(prev, UA_name), USAGE_ATTR_VMEM) ||
-          !strcmp(lGetString(prev, UA_name), USAGE_ATTR_MAXVMEM) ||
-          !strcmp(lGetString(prev, UA_name), USAGE_ATTR_MEM)) {
-         if ((ep=lGetElemStr(scaled_usage, UA_name, lGetString(prev, UA_name)))) {
-            lSetDouble(ep, UA_value, lGetDouble(ep, UA_value) + lGetDouble(prev, UA_value));
-         } else {
-            lAppendElem(scaled_usage, lCopyElem(prev));
-         }
+      if ((sep=lGetElemStr(scaling, HS_name, lGetString(ep, UA_name)))) {
+         lSetDouble(ep, UA_value, lGetDouble(ep, UA_value) * lGetDouble(sep, HS_value));
       }
    }
 
-   DEXIT;
-   return scaled_usage;
+   if ((prev = lGetElemStr(prev_usage, UA_name, USAGE_ATTR_CPU)) != NULL) {
+      if ((ep=lGetElemStr(scaled_usage, UA_name, USAGE_ATTR_CPU))) {
+         lAddDouble(ep, UA_value, lGetDouble(prev, UA_value));
+      } else {
+         lAppendElem(scaled_usage, lCopyElem(prev));
+      }
+   }
+   if ((prev = lGetElemStr(prev_usage, UA_name, USAGE_ATTR_IO)) != NULL) {
+      if ((ep=lGetElemStr(scaled_usage, UA_name, USAGE_ATTR_IO))) {
+         lAddDouble(ep, UA_value, lGetDouble(prev, UA_value));
+      } else {
+         lAppendElem(scaled_usage, lCopyElem(prev));
+      }
+   }
+   if ((prev = lGetElemStr(prev_usage, UA_name, USAGE_ATTR_IOW)) != NULL) {
+      if ((ep=lGetElemStr(scaled_usage, UA_name, USAGE_ATTR_IOW))) {
+         lAddDouble(ep, UA_value, lGetDouble(prev, UA_value));
+      } else {
+         lAppendElem(scaled_usage, lCopyElem(prev));
+      }
+   }
+   if ((prev = lGetElemStr(prev_usage, UA_name, USAGE_ATTR_VMEM)) != NULL) {
+      if ((ep=lGetElemStr(scaled_usage, UA_name, USAGE_ATTR_VMEM))) {
+         lAddDouble(ep, UA_value, lGetDouble(prev, UA_value));
+      } else {
+         lAppendElem(scaled_usage, lCopyElem(prev));
+      }
+   }
+   if ((prev = lGetElemStr(prev_usage, UA_name, USAGE_ATTR_MAXVMEM)) != NULL) {
+      if ((ep=lGetElemStr(scaled_usage, UA_name, USAGE_ATTR_MAXVMEM))) {
+         lAddDouble(ep, UA_value, lGetDouble(prev, UA_value));
+      } else {
+         lAppendElem(scaled_usage, lCopyElem(prev));
+      }
+   }
+   if ((prev = lGetElemStr(prev_usage, UA_name, USAGE_ATTR_MEM)) != NULL) {
+      if ((ep=lGetElemStr(scaled_usage, UA_name, USAGE_ATTR_MEM))) {
+         lAddDouble(ep, UA_value, lGetDouble(prev, UA_value));
+      } else {
+         lAppendElem(scaled_usage, lCopyElem(prev));
+      }
+   }
+
+   DRETURN(scaled_usage);
 }

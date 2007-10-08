@@ -128,9 +128,6 @@ enum {
    JR_job_number = JR_LOWERBOUND,
    JR_ja_task_number,
    JR_queue_name,
-   JR_host_name,
-   JR_owner,
-   JR_group,
    JR_state,
    JR_failed,
    JR_general_failure,
@@ -145,12 +142,9 @@ enum {
 };
 
 LISTDEF(JR_Type)
-   SGE_ULONG(JR_job_number, CULL_DEFAULT)   /* Job to report */
+   SGE_ULONG(JR_job_number, CULL_HASH)   /* Job to report */
    SGE_ULONG(JR_ja_task_number, CULL_DEFAULT)       /* JobArray task to report */
    SGE_STRING(JR_queue_name, CULL_DEFAULT)  /* Queue this job (tried to) run in */
-   SGE_HOST(JR_host_name, CULL_DEFAULT)   /* Host this job (tried to) run on */ /* CR - hostname change */
-   SGE_STRING(JR_owner, CULL_DEFAULT)       /* Owner (User) of this job */
-   SGE_STRING(JR_group, CULL_DEFAULT)       /* Owner (User) of this job */
    SGE_ULONG(JR_state, CULL_DEFAULT)        /* either JRUNNING or JEXITING, JRUNNING sent 
                                * * as ack for jobdelivery and cyclic */
    SGE_ULONG(JR_failed, CULL_DEFAULT)       /* FAILED_... */
@@ -171,9 +165,6 @@ NAMEDEF(JRN)
    NAME("JR_job_number")
    NAME("JR_ja_task_number")
    NAME("JR_queue_name")
-   NAME("JR_host_name")
-   NAME("JR_owner")
-   NAME("JR_group")
    NAME("JR_state")
    NAME("JR_failed")
    NAME("JR_general_failure")

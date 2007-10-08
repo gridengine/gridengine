@@ -103,7 +103,6 @@
 
 static int ck_login_sh(char *shell);
 static int get_nhosts(lList *gdil_list);
-static int arch_dep_config(FILE *fp, lList *cplx, char *err_str);
 
 /* from execd.c import the working dir of the execd */
 extern char execd_spool_dir[SGE_PATH_MAX];
@@ -121,11 +120,8 @@ static long get_next_addgrpid(lList *, long);
    in case of tasks the queue is the appropriate entry in the gdil list of the slave job
 */
 
-lListElem* responsible_queue(
-lListElem *jep,
-lListElem *jatep,
-lListElem *petep
-) {
+lListElem* responsible_queue(lListElem *jep, lListElem *jatep, lListElem *petep)
+{
    lListElem *master_q = NULL;
 
    DENTER(TOP_LAYER, "responsible_queue");
@@ -135,22 +131,17 @@ lListElem *petep
    } else {
       lListElem *pe_queue = lFirst(lGetList(petep, PET_granted_destin_identifier_list));
       master_q = lGetObject(lGetElemStr(lGetList(jatep, JAT_granted_destin_identifier_list),
-                                        JG_qname,
-                                        lGetString(pe_queue, JG_qname)),
-                            JG_queue);
+                            JG_qname, lGetString(pe_queue, JG_qname)), JG_queue);
       
    }
 
-   DEXIT;
-   return master_q;
+   DRETURN(master_q);
 }
 
 #if COMPILE_DC
 #if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) || defined(FREEBSD) || defined(DARWIN)
-static long get_next_addgrpid(
-lList *rlp,
-long last_addgrpid 
-) {
+static long get_next_addgrpid(lList *rlp, long last_addgrpid)
+{
    lListElem *rep;
    int take_next = 0;
    
@@ -221,13 +212,9 @@ static int addgrpid_already_in_use(long add_grp_id)
         err_str set to error string
         err_length size of err_str
  ************************************************************************/
-int sge_exec_job(
-sge_gdi_ctx_class_t *ctx,
-lListElem *jep,
-lListElem *jatep,
-lListElem *petep,
-char *err_str,
-int err_length) {
+int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
+                 lListElem *petep, char *err_str, int err_length)
+{
    int i;
    char ps_name[128];
    FILE *fp;
@@ -243,7 +230,6 @@ int err_length) {
    dstring cwd_out;
      
    const lList *path_aliases = NULL;
-   lList *cplx;
    char dce_wrapper_cmd[128];
 
 #if COMPILE_DC
@@ -275,6 +261,7 @@ int err_length) {
         fs_stderr_path[SGE_PATH_MAX] ="";
 
    char mail_str[1024], *shepherd_name;
+   lList *gdil;
    lListElem *gdil_ep, *master_q;
    lListElem *ep;
    lListElem *env;
@@ -318,7 +305,9 @@ int err_length) {
 
       job_id = lGetUlong(jep, JB_job_number);
       ja_task_id = lGetUlong(jatep, JAT_task_number);
-      if(petep != NULL) {
+      gdil = lGetList(jatep, JAT_granted_destin_identifier_list);
+
+      if (petep != NULL) {
          pe_task_id = lGetString(petep, PET_id);
       }
 
@@ -328,14 +317,6 @@ int err_length) {
 
       master_q = responsible_queue(jep, jatep, petep);
       SGE_ASSERT((master_q));
-
-      /* prepare complex of master_q */
-      if (!(cplx = lGetList( lGetElemStr( lGetList(jatep, JAT_granted_destin_identifier_list), 
-            JG_qname, lGetString(master_q, QU_full_name)), JG_complex))) {
-         DEXIT;
-         return -2;
-      } 
-
       pw = sge_getpwnam_r(lGetString(jep, JB_owner), &pw_struct, buffer, sizeof(buffer));
       if (!pw) {
          snprintf(err_str, err_length, MSG_SYSTEM_GETPWNAMFAILED_S, lGetString(jep, JB_owner));
@@ -378,9 +359,9 @@ int err_length) {
             used_slots, used_slots+1));
       qinstance_set_slots_used(master_q, used_slots+1);
 
-      nhosts = get_nhosts(lGetList(jatep, JAT_granted_destin_identifier_list));
+      nhosts = get_nhosts(gdil);
       pe_slots = 0;
-      for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
+      for_each (gdil_ep, gdil) {
          pe_slots += (int)lGetUlong(gdil_ep, JG_slots);
       }
       
@@ -410,7 +391,7 @@ int err_length) {
             They need to get passed to shepherd
          */
          host_slots = 0;
-         for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
+         for_each (gdil_ep, gdil) {
             int slots;
             lList *alp = NULL;
             const char *q_set;
@@ -449,14 +430,12 @@ int err_length) {
 
       /* write environment of job */
       var_list_copy_env_vars_and_value(&environmentList, 
-                                       lGetList(jep, JB_env_list),
-                                       VAR_COMPLEX_PREFIX);
+                                       lGetList(jep, JB_env_list));
 
       /* write environment of petask */
       if (petep != NULL) {
          var_list_copy_env_vars_and_value(&environmentList,
-                                          lGetList(petep, PET_environment),
-                                          VAR_COMPLEX_PREFIX);
+                                          lGetList(petep, PET_environment));
       }
      
       {
@@ -675,7 +654,7 @@ int err_length) {
       var_list_set_string(&environmentList, VAR_PREFIX "ROOT", sge_root);
 
       var_list_set_int(&environmentList, "NQUEUES", 
-         lGetNumberOfElem(lGetList(jatep, JAT_granted_destin_identifier_list)));
+         lGetNumberOfElem(gdil));
       var_list_set_int(&environmentList, "NSLOTS", pe_slots);
       var_list_set_int(&environmentList, "NHOSTS", nhosts);
 
@@ -720,10 +699,6 @@ int err_length) {
          sprintf(buffer, "%s/%s", execd_spool_dir, active_dir_buffer);  
          var_list_set_string(&environmentList, VAR_PREFIX "JOB_SPOOL_DIR", buffer);
       }
-
-      var_list_copy_complex_vars_and_value(&environmentList, 
-                                           lGetList(jep, JB_env_list),
-                                           cplx);
 
       /* Bugfix: Issuezilla 1300
        * Because this change could break pre-existing installations, it's been
@@ -1249,14 +1224,6 @@ int err_length) {
       }
    }
 
-   
-   if (arch_dep_config(fp, cplx, err_str)) {
-      lFreeList(&environmentList);
-      FCLOSE(fp);
-      DEXIT;
-      return -2;
-   } 
-
    /* if "pag_cmd" is not set, do not use AFS setup for this host */
    pag_cmd = mconf_get_pag_cmd();
    if (feature_is_enabled(FEATURE_AFS_SECURITY) && pag_cmd &&
@@ -1769,100 +1736,18 @@ lList *gdil_orig  /* JG_Type */
 ) {
    int nhosts = 0;
    lListElem *ep;
-   lCondition *where;
-   lList *gdil_copy;
+   lList *cache = lCreateList("", STU_Type);
+   const char *hostname;
 
    DENTER(TOP_LAYER, "get_nhosts");
-
-   gdil_copy = lCopyList("", gdil_orig);   
-   while ((ep=lFirst(gdil_copy))) {
-      /* remove all gdil_copy-elements with the same JG_qhostname */
-      where = lWhere("%T(!(%I h= %s))", JG_Type, JG_qhostname, 
-              lGetHost(ep, JG_qhostname));
-      if (!where) {
-         lFreeList(&gdil_copy);
-         CRITICAL((SGE_EVENT, MSG_EXECD_NOWHERE4GDIL_S,"JG_qhostname"));
-         DEXIT;
-         return -1;
+   for_each(ep, gdil_orig) {
+      hostname = lGetHost(ep, JG_qhostname);
+      if (lGetElemStr(cache, STU_name, hostname) == NULL) {
+         nhosts++;
+         lAddElemStr(&cache, STU_name, hostname, STU_Type);
       }
-      gdil_copy = lSelectDestroy(gdil_copy, where);   
-      lFreeWhere(&where);
-
-      nhosts++;
    }
+   lFreeList(&cache);
 
-   DEXIT;
-   return nhosts;
+   DRETURN(nhosts);
 } 
-
-static int arch_dep_config(
-FILE *fp,
-lList *cplx,
-char *err_str 
-) {
-   static char *cplx2config[] = {
-#if defined(NECSX4) || defined(NECSX5)
-      /* Scheduling parameter */
-      "nec_basepriority",     /* Base priorityi (>-20) */
-      "nec_modcpu",           /* Modification factor cpu (0-39) */
-      "nec_tickcnt",          /* Tick count (pos. int) */
-      "nec_dcyfctr",          /* Decay factor (0-7) */
-      "nec_dcyintvl",         /* Decay interval (pos. int) */
-      "nec_timeslice",        /* Time slice (pos. int) */
-      "nec_memorypriority",   /* Memory priority (0-39) */
-      "nec_mrt_size_effct",   /* MRT size effect (0-1000) */
-      "nec_mrt_pri_effct",    /* MRT priority effect (20-1000) */
-      "nec_mrt_minimum",      /* MRT minimum (pos. int) */
-      "nec_aging_range",      /* Aging range (pos. int) */
-      "nec_slavepriority",    /* Slave priority () */
-      "nec_cpu_count",        /* Cpu count (pos. int) */
-      /* NEC specific limits */
-      "s_tmpf",               /* Temporary file capacity limit */
-      "h_tmpf",
-      "s_mtdev",              /* tape drives limit */
-      "h_mtdev",              
-      "s_nofile",             /* open file limit */
-      "h_nofile",
-      "s_proc",               /* process number limit */
-      "h_proc",
-      "s_rlg0",               /* FSG Limits */
-      "h_rlg0",
-      "s_rlg1",
-      "h_rlg1",
-      "s_rlg2",
-      "h_rlg2",
-      "s_rlg3",
-      "h_rlg3",
-      "s_cpurestm",           /* CPU resident time */
-      "h_cpurestm",
-#endif
-      NULL
-   };
-
-   int i, failed = 0;
-   const char *s;
-   lListElem *attr;
-
-   DENTER(TOP_LAYER, "arch_dep_config");
-
-   for (i=0; cplx2config[i]; i++) {
-      if ( (attr=lGetElemStr(cplx, CE_name, cplx2config[i]))
-            && (s=lGetString(attr, CE_stringval))) {
-         DPRINTF(("\"%s\" = \"%s\"\n", cplx2config[i], s));
-         fprintf(fp, "%s=%s\n", cplx2config[i], s);
-      } else {
-         sprintf(err_str, MSG_EXECD_NEEDATTRXINUSERDEFCOMPLOFYQUEUES_SS,
-               cplx2config[i], sge_get_arch());
-         ERROR((SGE_EVENT, err_str));
-         failed = 1;
-      }
-   }
-
-   if (failed) {
-      DEXIT;
-      return -1;
-   }
-
-   DEXIT;
-   return 0;
-}

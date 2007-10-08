@@ -40,6 +40,10 @@ lList *sge_build_load_report(const char* qualified_hostname, const char* binary_
 
 void update_job_usage(const char *qualified_hostname);
 
+void execd_merge_load_report(u_long32 seqno);
+
+void execd_trash_load_report(void);
+
 
 #endif /* __LOAD_AVG_H */
 

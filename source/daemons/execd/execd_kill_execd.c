@@ -47,24 +47,17 @@
 
 extern int shut_me_down;
 
-int execd_kill_execd(sge_gdi_ctx_class_t *ctx,
-                     struct dispatch_entry *de,
-                     sge_pack_buffer *pb, 
-                     sge_pack_buffer *apb, 
-                     u_long *rcvtimeout, 
-                     int *synchron, 
-                     char *err_str, 
-                     int answer_error)
+int do_kill_execd(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
 {
    lListElem *jep, *jatep;
    u_long32 kill_jobs;
    u_long32 sge_signal;
    
-   DENTER(TOP_LAYER, "execd_kill_execd");
+   DENTER(TOP_LAYER, "do_kill_execd");
 
    /* real shut down is done in the execd_ck_to_do function */
 
-   unpackint(pb, &kill_jobs);
+   unpackint(&(aMsg->buf), &kill_jobs);
 
    DPRINTF(("===>KILL EXECD%s\n", kill_jobs?" and jobs":""));
    if (kill_jobs) {
@@ -73,8 +66,7 @@ int execd_kill_execd(sge_gdi_ctx_class_t *ctx,
             if (lGetUlong(jep, JB_checkpoint_attr) & CHECKPOINT_AT_SHUTDOWN) {
                WARNING((SGE_EVENT, MSG_JOB_INITCKPTSHUTDOWN_U, sge_u32c(lGetUlong(jep, JB_job_number))));
                sge_signal = SGE_MIGRATE;
-            }
-            else {
+            } else {
                WARNING((SGE_EVENT, MSG_JOB_KILLSHUTDOWN_U, sge_u32c(lGetUlong(jep, JB_job_number))));
                sge_signal = SGE_SIGKILL;
             }
@@ -85,7 +77,6 @@ int execd_kill_execd(sge_gdi_ctx_class_t *ctx,
 
    shut_me_down = 1;
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 

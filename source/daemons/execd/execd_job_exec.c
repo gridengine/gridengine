@@ -78,71 +78,39 @@
 
 extern volatile int jobs_to_start;
 
-static int handle_job(sge_gdi_ctx_class_t *ctx,
-                      lListElem *jelem, 
-                      lListElem *jatep, 
-                      struct dispatch_entry *de, 
-                      sge_pack_buffer *pb, 
+static int handle_job(sge_gdi_ctx_class_t *ctx, lListElem *jelem, lListElem *jatep,
                       int slave);
-static int handle_task(sge_gdi_ctx_class_t *ctx,
-                       lListElem *petrep, 
-                       struct dispatch_entry *de, 
-                       sge_pack_buffer *pb, 
-                       sge_pack_buffer *apb, 
-                       int *synchron);
+static int handle_task(sge_gdi_ctx_class_t *ctx, lListElem *petrep, char *commproc,
+                       char *host, u_short id, sge_pack_buffer *apb);
 
-/*************************************************************************
-EXECD function called by dispatcher
-
-get job from qmaster and store it in execd local structures and files
-real execution is done by the cyclic execd_ck_to_do()
-
- jobs_to_start will be incremented
-
- qmaster counterpart is sge_give_jobs()
-
-
- Files generated here:
-   job_scripts/<jid>   for the script 
-   jobs/<jid>          for the job structure
-
- *************************************************************************/
-int execd_job_exec(sge_gdi_ctx_class_t *ctx, 
-                   struct dispatch_entry *de,
-                   sge_pack_buffer *pb, 
-                   sge_pack_buffer *apb,
-                   u_long *rcvtimeout,
-                   int *synchron,
-                   char *err_str,
-                   int answer_error)
+int do_job_exec(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, sge_pack_buffer *apb)
 {
    int ret = 1;
    u_long32 feature_set;
    const char *admin_user = ctx->get_admin_user(ctx);
    const char *progname = ctx->get_progname(ctx);
 
-   DENTER(TOP_LAYER, "execd_job_exec");
+   DENTER(TOP_LAYER, "do_job_exec");
 
    /* ------- featureset */
-   if (unpackint(pb, &feature_set)) {
+   if (unpackint(&(aMsg->buf), &feature_set)) {
       ERROR((SGE_EVENT, MSG_COM_UNPACKFEATURESET));
       DRETURN(0);
    }
 
-
    /* if request comes from qmaster: start a job
     * else it is a request to start a pe task
     */
-   if(strcmp(de->commproc, prognames[QMASTER]) == 0) {
+   if (strcmp(aMsg->snd_name, prognames[QMASTER]) == 0) {
       lListElem *job, *ja_task;
       lList *answer_list = NULL;
 
-      if (false == sge_security_verify_unique_identifier(true, admin_user, progname, 0,
-                                            de->host, de->commproc, de->id)) {
+      if (!sge_security_verify_unique_identifier(true, admin_user, progname, 0,
+                                            aMsg->snd_host, aMsg->snd_name, aMsg->snd_id)) {
          DRETURN(0);
       }
        
-      if (cull_unpack_elem(pb, &job, NULL)) {
+      if (cull_unpack_elem(&(aMsg->buf), &job, NULL)) {
          ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
          DRETURN(0);
       }
@@ -150,7 +118,7 @@ int execd_job_exec(sge_gdi_ctx_class_t *ctx,
       if (!job_verify_execd_job(job, &answer_list)) {
          lFreeElem(&job);
          answer_list_output(&answer_list);
-         ERROR((SGE_EVENT, MSG_EXECD_INVALIDJOBREQUEST_SS, de->commproc, de->host));
+         ERROR((SGE_EVENT, MSG_EXECD_INVALIDJOBREQUEST_SS, aMsg->snd_name, aMsg->snd_host));
          DRETURN(0);
       }
       
@@ -164,12 +132,12 @@ int execd_job_exec(sge_gdi_ctx_class_t *ctx,
       
       /* we expect one jatask to start per request */
       ja_task = lFirst(lGetList(job, JB_ja_tasks));
-      if(ja_task != NULL) {
+      if (ja_task != NULL) {
          DPRINTF(("new job %ld.%ld\n", 
             (long) lGetUlong(job, JB_job_number),
             (long) lGetUlong(ja_task, JAT_task_number)));
-         ret = handle_job(ctx, job, ja_task, de, pb, 0);
-         if(ret != 0) {
+         ret = handle_job(ctx, job, ja_task, 0);
+         if (ret != 0) {
             lFreeElem(&job);
          }
       }
@@ -177,14 +145,14 @@ int execd_job_exec(sge_gdi_ctx_class_t *ctx,
       lListElem *petrep;
       lList *answer_list = NULL;
 
-      if (cull_unpack_elem(pb, &petrep, NULL)) {
+      if (cull_unpack_elem(&(aMsg->buf), &petrep, NULL)) {
          ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
          DRETURN(0);
       }
 
       if (!pe_task_verify_request(petrep, &answer_list)) {
          answer_list_output(&answer_list);
-         ERROR((SGE_EVENT, MSG_EXECD_INVALIDTASKREQUEST_SS, de->commproc, de->host));
+         ERROR((SGE_EVENT, MSG_EXECD_INVALIDTASKREQUEST_SS, aMsg->snd_name, aMsg->snd_host));
          DRETURN(0);
       }
 
@@ -192,35 +160,29 @@ int execd_job_exec(sge_gdi_ctx_class_t *ctx,
             (long) lGetUlong(petrep, PETR_jobid), 
             (long) lGetUlong(petrep, PETR_jataskid)));
 
-      ret = handle_task(ctx, petrep, de, pb, apb, synchron);
+      ret = handle_task(ctx, petrep, aMsg->snd_name, aMsg->snd_host,
+                          aMsg->snd_id, apb);
 
       lFreeElem(&petrep);
    }
    
-   if(ret == 0) {
+   if (ret == 0) {
       jobs_to_start = 1;
    }
 
    DRETURN(0);
 }
 
-int execd_job_slave(sge_gdi_ctx_class_t *ctx,
-                    struct dispatch_entry *de,
-                    sge_pack_buffer *pb, 
-                    sge_pack_buffer *apb,
-                    u_long *rcvtimeouts,
-                    int *synchron,
-                    char *err_str,
-                    int answer_error)
+int do_job_slave(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
 {
    int ret = 1;
    lListElem *jelem, *ja_task;
    u_long32 feature_set;
 
-   DENTER(TOP_LAYER, "execd_job_slave");
+   DENTER(TOP_LAYER, "do_job_slave");
 
    /* ------- featureset */
-   if (unpackint(pb, &feature_set)) {
+   if (unpackint(&(aMsg->buf), &feature_set)) {
       ERROR((SGE_EVENT, MSG_COM_UNPACKFEATURESET));
       DRETURN(0);
    }
@@ -232,7 +194,7 @@ int execd_job_slave(sge_gdi_ctx_class_t *ctx,
    */
 
    /* ------- job */
-   if (cull_unpack_elem(pb, &jelem, NULL)) {
+   if (cull_unpack_elem(&(aMsg->buf), &jelem, NULL)) {
       ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
       DRETURN(0);
    }
@@ -240,7 +202,7 @@ int execd_job_slave(sge_gdi_ctx_class_t *ctx,
    for_each(ja_task, lGetList(jelem, JB_ja_tasks)) {
       DPRINTF(("Job: %ld Task: %ld\n", (long) lGetUlong(jelem, JB_job_number),
          (long) lGetUlong(ja_task, JAT_task_number)));
-      ret = handle_job(ctx, jelem, ja_task, de, pb, 1);
+      ret = handle_job(ctx, jelem, ja_task, 1);
    }
 
    if (ret)  {
@@ -250,33 +212,22 @@ int execd_job_slave(sge_gdi_ctx_class_t *ctx,
    DRETURN(0);
 }
 
-static int handle_job(
-sge_gdi_ctx_class_t *ctx,
-lListElem *jelem,
-lListElem *jatep,
-struct dispatch_entry *de,
-sge_pack_buffer *pb, 
-int slave 
-) {
-   lListElem *jep, *pelem = NULL, *jep_jatep = NULL;
+static int handle_job(sge_gdi_ctx_class_t *ctx, lListElem *jelem, lListElem *jatep,
+                      int slave)
+{
+   lListElem *jep; 
    dstring err_str = DSTRING_INIT;
    u_long32 jobid, jataskid;
-   int mail_on_error = 0, general = GFSTATE_QUEUE;
+   int general = GFSTATE_QUEUE;
    lListElem *qep, *gdil_ep;
-   lList *qlp = NULL;
    const char *qnm;
-   int slots;
-   int fd;
    const void *iterator = NULL;
    bool report_job_error = true;   /* send job report on error? */
-   const char *sge_root = ctx->get_sge_root(ctx);
-   const char *unqualified_hostname = ctx->get_unqualified_hostname(ctx);
 
    DENTER(TOP_LAYER, "handle_job");
 
-   DPRINTF(("got %s job "sge_u32" from (%s/%s/%d)\n",
-           slave ?"slave ":"", lGetUlong(jelem, JB_job_number),
-           de->commproc, de->host, de->id));
+   DPRINTF(("got %s job "sge_u32"\n",
+           slave ?"slave ":"", lGetUlong(jelem, JB_job_number)));
 
    jobid = lGetUlong(jelem, JB_job_number);
    jataskid = lGetUlong(jatep, JAT_task_number);
@@ -289,9 +240,8 @@ int slave
     * We can ignore this job because job is resend by qmaster.
     */
    jep = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, jobid, &iterator);
-   while(jep != NULL) {
-      jep_jatep = job_search_task(jep, NULL, jataskid);
-      if(jep_jatep != NULL) {
+   while (jep != NULL) {
+      if (job_search_task(jep, NULL, jataskid) != NULL) {
          DPRINTF(("Job "sge_u32"."sge_u32" is already running - skip the new one\n", 
                   jobid, jataskid));
          goto Ignore;   /* don't set queue in error state */
@@ -307,47 +257,31 @@ int slave
    DPRINTF(("===>JOB_EXECUTION: >"sge_u32"."sge_u32"< with "sge_u32" tickets\n", jobid, jataskid,
                (u_long32)lGetDouble(jatep, JAT_tix)));
 
-   if (cull_unpack_list(pb, &qlp)) {
-      sge_dstring_sprintf(&err_str, MSG_COM_UNPACKINGQ);
-      goto Error;
-   }
-
-   /* 
-    * Verify the queue list sent with the job start order.
-    * If it is incorrect, we reject the job start.
-    * We do not send a job report for this job - this would trigger
-    * rescheduling in qmaster ...
-    *
-    * TODO: A better solution to stepwise unpacking and verification of the job order
-    * in this function would be to do all unpacking and verification in the
-    * calling function (execd_job_exec)!
-    *
-    * TODO: Why do we send the queue list (and also the pe) as a separate list, and then
-    * move it into the granted destination identifier list here in execd?
-    * Couldn't qmaster just put the queues in to the JG_queue field instead?
-    */
-   {
-      lList *answer_list = NULL;
-      if (!qinstance_list_verify_execd_job(qlp, &answer_list)) {
-         sge_dstring_sprintf(&err_str, MSG_EXECD_INVALIDJOBREQUEST_SS, de->commproc, de->host);
-         answer_list_output(&answer_list);
-         report_job_error = false;
-         goto Error;
-      }
-      lFreeList(&answer_list);
-   }
-
    /* initialize job */
-   /* store queues as sub elems of gdil */
    for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
-      qnm=lGetString(gdil_ep, JG_qname);
-      if (!(qep=qinstance_list_locate2(qlp, qnm))) {
+      lList *answer_list = NULL;
+      int slots;
+
+      if (!(qep=lGetObject(gdil_ep, JG_queue))) {
+         qnm = lGetString(gdil_ep, JG_qname);
          sge_dstring_sprintf(&err_str, MSG_JOB_MISSINGQINGDIL_SU, qnm, 
                              sge_u32c(lGetUlong(jelem, JB_job_number)));
          goto Error;
       }
 
-      qep = lDechainElem(qlp, qep);
+      /* 
+       * Verify the queue list sent with the job start order.
+       * If it is incorrect, we reject the job start.
+       * We do not send a job report for this job - this would trigger
+       * rescheduling in qmaster ...
+       */
+      if (!qinstance_verify(qep, &answer_list)) {
+         answer_list_output(&answer_list);
+         report_job_error = false;
+         goto Error;
+      }
+      lFreeList(&answer_list);
+
       /* clear any queue state that might be set from qmaster */
       lSetUlong(qep, QU_state, 0);
 
@@ -355,29 +289,21 @@ int slave
       slots = lGetUlong(gdil_ep, JG_slots);
       lSetUlong(qep, QU_job_slots, slots);
       qinstance_set_slots_used(qep, 0);
-      lSetObject(gdil_ep, JG_queue, qep);
-      DPRINTF(("Q: %s %d\n", qnm, slots));
    }
-   /* trash envelope */
-   lFreeList(&qlp);
 
    /* ------- optionally pe */
    if (lGetString(jatep, JAT_granted_pe)) {
-      cull_unpack_elem(pb, &pelem, NULL); /* pelem will be freed with jelem */
-      lSetObject(jatep, JAT_pe_object, pelem);
+      lListElem *pelem = lGetObject(jatep, JAT_pe_object);
 
-      if (lGetBool(pelem, PE_control_slaves)) {
-         if (!lGetBool(pelem, PE_job_is_first_task)) {
-            int slots;
-            lListElem *mq = lGetObject(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), 
-                                       JG_queue);
-            slots = lGetUlong(mq, QU_job_slots) + 1;
-            DPRINTF(("Increasing job slots in master queue \"%s\" "
-               "to %d because job is not first task\n",
-                  lGetString(mq, QU_qname), slots));
-            lSetUlong(mq, QU_job_slots, slots);
-
-         }
+      if (pelem != NULL && lGetBool(pelem, PE_control_slaves) && !lGetBool(pelem, PE_job_is_first_task)) {
+         int slots;
+         lListElem *mq = lGetObject(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), 
+                                    JG_queue);
+         slots = lGetUlong(mq, QU_job_slots) + 1;
+         DPRINTF(("Increasing job slots in master queue \"%s\" "
+            "to %d because job is not first task\n",
+               lGetString(mq, QU_qname), slots));
+         lSetUlong(mq, QU_job_slots, slots);
       }
    }
 
@@ -412,7 +338,7 @@ int slave
           */
          next_tmp_job = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)),
                                            JB_job_number, job_id, &iterator);
-         while((tmp_job = next_tmp_job) != NULL) {
+         while ((tmp_job = next_tmp_job) != NULL) {
             next_tmp_job = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)),
                                            JB_job_number, job_id, &iterator);
            
@@ -427,6 +353,8 @@ int slave
          }
 
          if (!found_script) {
+            int fd;
+
             /* We are root. Make the scriptfile readable for the jobs submitter,
                so shepherd can open (execute) it after changing to the user. */
             fd = SGE_OPEN3(lGetString(jelem, JB_exec_file), O_CREAT | O_WRONLY, 0755);
@@ -461,8 +389,10 @@ int slave
    ** This also creates a forwardable credential for the user.
    */
    if (mconf_get_do_credentials()) {
-      if (store_sec_cred2(sge_root, unqualified_hostname, jelem, mconf_get_do_authentication(), &general, SGE_EVENT) != 0) {
-         sge_dstring_copy_string(&err_str, SGE_EVENT);
+      const char *sge_root = ctx->get_sge_root(ctx);
+      const char *unqualified_hostname = ctx->get_unqualified_hostname(ctx);
+
+      if (store_sec_cred2(sge_root, unqualified_hostname, jelem, mconf_get_do_authentication(), &general, &err_str) != 0) {
          goto Error;
       }   
    }
@@ -471,13 +401,13 @@ int slave
    kerb_job(jelem, de);
 #endif
 
-
-
-   lSetUlong(jelem, JB_script_size, 0);
-   if (job_write_spool_file(jelem, jataskid, NULL, SPOOL_WITHIN_EXECD)) {
-      /* SGE_EVENT is written by job_write_spool_file() */
-      sge_dstring_copy_string(&err_str, SGE_EVENT);
-      goto Error;
+   if (!mconf_get_simulate_jobs()) {
+      lSetUlong(jelem, JB_script_size, 0);
+      if (job_write_spool_file(jelem, jataskid, NULL, SPOOL_WITHIN_EXECD)) {
+         /* SGE_EVENT is written by job_write_spool_file() */
+         sge_dstring_copy_string(&err_str, SGE_EVENT);
+         goto Error;
+      }
    }
 
    { 
@@ -486,27 +416,19 @@ int slave
       flush_job_report(report);
    }   
 
-   if (!jep_jatep) {
-      /* put into job list */
-      lAppendElem(*(object_type_get_master_list(SGE_TYPE_JOB)), jelem);
-   }
+   /* put into job list */
+   lAppendElem(*(object_type_get_master_list(SGE_TYPE_JOB)), jelem);
 
    DRETURN(0);
 
 Error:
    if (report_job_error) {
-      lListElem *jr;
-      jr = execd_job_start_failure(jelem, jatep, NULL, sge_dstring_get_string(&err_str), general);
-      
-      if (mail_on_error) {
-         reaper_sendmail(ctx, jelem, jr);
-      }
+      execd_job_start_failure(jelem, jatep, NULL, sge_dstring_get_string(&err_str), general);
    }
 
    sge_dstring_free(&err_str);
 
 Ignore:   
-   lFreeList(&qlp);
    DRETURN(-1);  
 }
 
@@ -592,9 +514,9 @@ static lList *job_get_queue_with_task_about_to_exit(lListElem *jep,
    
    for_each(petask, lGetList(jatep, JAT_task_list)) {
       lListElem *pe_task_queue = lFirst(lGetList(petask, PET_granted_destin_identifier_list));
-      if(pe_task_queue != NULL) {
+      if (pe_task_queue != NULL) {
          /* if a certain queue is requested, skip non matching tasks */
-         if(queuename != NULL && strcmp(queuename, lGetString(pe_task_queue, JG_qname)) != 0) {
+         if (queuename != NULL && strcmp(queuename, lGetString(pe_task_queue, JG_qname)) != 0) {
             continue;
          } else {
             dstring shepherd_about_to_exit = DSTRING_INIT;
@@ -612,7 +534,7 @@ static lList *job_get_queue_with_task_about_to_exit(lListElem *jep,
                                          "shepherd_about_to_exit");
             DPRINTF(("checking for file %s\n", sge_dstring_get_string(&shepherd_about_to_exit)));
 
-            if(SGE_STAT(sge_dstring_get_string(&shepherd_about_to_exit), &stat_buffer) == 0) {
+            if (SGE_STAT(sge_dstring_get_string(&shepherd_about_to_exit), &stat_buffer) == 0) {
                lList *jat_gdil = job_set_queue_info_in_task(qualified_hostname, 
                                        lGetString(pe_task_queue, JG_qname), petep);
                DPRINTF(("task %s of job %d.%d already exited, using its slot for new task\n", 
@@ -685,7 +607,7 @@ job_get_queue_for_task(lListElem *jatep, lListElem *petep,
          DTRACE;
 
          /* Queue must have free slots */
-         if(qinstance_slots_used(this_q) < lGetUlong(this_q, QU_job_slots)) {
+         if (qinstance_slots_used(this_q) < lGetUlong(this_q, QU_job_slots)) {
             lList *jat_gdil = job_set_queue_info_in_task(qualified_hostname, lGetString(gdil_ep, JG_qname),
                                                           petep);
             DRETURN(jat_gdil); 
@@ -695,25 +617,20 @@ job_get_queue_for_task(lListElem *jatep, lListElem *petep,
    DRETURN(NULL);
 }
 
-static int handle_task(
-sge_gdi_ctx_class_t *ctx,
-lListElem *petrep,
-struct dispatch_entry *de,
-sge_pack_buffer *pb, 
-sge_pack_buffer *apb, 
-int *synchron
-) {
+
+static int handle_task(sge_gdi_ctx_class_t *ctx, lListElem *petrep, char *commproc,
+                       char *host, u_short id, sge_pack_buffer *apb)
+{
    u_long32 jobid, jataskid;
    lListElem *jep   = NULL;
    lListElem *pe    = NULL;
    lListElem *jatep = NULL;
    lListElem *petep = NULL;
    const char *requested_queue;
-   char source[1024], new_task_id[1024];
+   char new_task_id[1024];
    lList *gdil = NULL;
    int tid = 0;
    const void *iterator;
-   dstring err_str = DSTRING_INIT;
    const char *progname = ctx->get_progname(ctx);
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
    const char *unqualified_hostname = ctx->get_unqualified_hostname(ctx);
@@ -722,18 +639,12 @@ int *synchron
 
    petep = lCreateElem(PET_Type);
 
-   /* may be we have to send a task exit message to this guy */
-   sprintf(source, "%s:%s:%d", de->host, de->commproc, de->id);
-   lSetString(petep, PET_source, source);
-
 #ifdef KERBEROS
-
    if (krb_verify_user(de->host, de->commproc, de->id,
                        lGetString(petrep, PETR_owner)) < 0) {
       ERROR((SGE_EVENT, MSG_SEC_KRB_CRED_SSSI, lGetString(petrep, PETR_owner), de->host, de->commproc, de->id));
       goto Error;
    }
-
 #endif /* KERBEROS */
 
    jobid    = lGetUlong(petrep, PETR_jobid);
@@ -742,7 +653,7 @@ int *synchron
    jep=lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, jobid, &iterator);
    while(jep != NULL) {
       jatep = job_search_task(jep, NULL, jataskid);
-      if(jatep != NULL) {
+      if (jatep != NULL) {
          break;
       }
 
@@ -759,9 +670,9 @@ int *synchron
       goto Error;
    }
 
-   if (false == sge_security_verify_unique_identifier(false, 
+   if (!sge_security_verify_unique_identifier(false, 
                                          lGetString(jep, JB_owner), progname, 0,
-                                         de->host, de->commproc, de->id)) {
+                                         host, commproc, id)) {
       goto Error;
    }
 
@@ -798,23 +709,23 @@ int *synchron
 
    DPRINTF(("got task ("sge_u32"/%s) from (%s/%s/%d) %s queue selection\n", 
             lGetUlong(jep, JB_job_number), new_task_id,
-            de->commproc, de->host, de->id, 
+            commproc, host,id, 
             requested_queue != NULL ? "with" : "without"));
 
    gdil = job_get_queue_for_task(jatep, petep, qualified_hostname, requested_queue);
          
    if (!gdil) { /* ran through list without finding matching queue */ 
       gdil = job_get_queue_with_task_about_to_exit(jep, jatep, petep, qualified_hostname, requested_queue);
+
+      if (!gdil) {  /* also no already exited task found -> no way to start new task */
+         ERROR((SGE_EVENT, MSG_JOB_NOFREEQ_USSS, sge_u32c(jobid), 
+                lGetString(petrep, PETR_owner), host, qualified_hostname));
+         goto Error;
+      }
    }
          
-   if(!gdil) {  /* also no already exited task found -> no way to start new task */
-      ERROR((SGE_EVENT, MSG_JOB_NOFREEQ_USSS, sge_u32c(jobid), 
-             lGetString(petrep, PETR_owner), de->host, qualified_hostname));
-      goto Error;
-   }
-
    /* put task into task_list of slave/master job */ 
-   if(!lGetList(jatep, JAT_task_list)) {
+   if (!lGetList(jatep, JAT_task_list)) {
 DTRACE;
    /* put task into task_list of slave/master job */ 
       lSetList(jatep, JAT_task_list, lCreateList("task_list", PET_Type));
@@ -825,10 +736,14 @@ DTRACE;
 
 DTRACE;
 
-   if (job_write_spool_file(jep, jataskid, NULL, SPOOL_WITHIN_EXECD)) { 
-      sge_dstring_copy_string(&err_str, SGE_EVENT);
-      execd_job_start_failure(jep, jatep, petep, sge_dstring_get_string(&err_str), 1);
-      goto Error;
+   if (!mconf_get_simulate_jobs()) {
+      if (job_write_spool_file(jep, jataskid, NULL, SPOOL_WITHIN_EXECD)) { 
+         dstring err_str = DSTRING_INIT;
+         sge_dstring_copy_string(&err_str, SGE_EVENT);
+         execd_job_start_failure(jep, jatep, petep, sge_dstring_get_string(&err_str), 1);
+         sge_dstring_free(&err_str);
+         goto Error;
+      }
    }
    
 DTRACE;   
@@ -847,7 +762,7 @@ DTRACE;
       execd_job_start_failure(jep, jatep, petep, "FAILURE_BEFORE_START", 0);
    }   
 
-   if(sge_make_pe_task_active_dir(jep, jatep, petep, NULL) == NULL) {
+   if (sge_make_pe_task_active_dir(jep, jatep, petep, NULL) == NULL) {
      goto Error;
    }
 
@@ -857,7 +772,6 @@ DTRACE;
    if (tid) {
       DPRINTF(("sending tid %s\n", new_task_id)); 
       packstr(apb, new_task_id);
-      *synchron = 0;
    }
 
    DRETURN(0);
@@ -866,8 +780,6 @@ Error:
    /* send nack to sender of task */
    DPRINTF(("sending nack\n")); 
    packstr(apb, "none");    
-   *synchron = 0;
 
-   sge_dstring_free(&err_str);
    DRETURN(-1);
 }

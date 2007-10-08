@@ -292,8 +292,7 @@ int main(int argc, char* argv[])
 
    /* qmaster doesn't support any commandline anymore,
       but we should show version string and -help option */
-   if (argc != 1)
-   {
+   if (argc != 1) {
       sigset_t sig_set;
       sge_mt_init();
       sigfillset(&sig_set);

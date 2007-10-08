@@ -52,6 +52,7 @@
 #include "sge_gdi2.h"
 #include "sge_error_class.h"
 #include "evc/sge_event_client.h"
+#include "sgeobj/sge_ack.h"
 
 #include "msg_evclib.h"
 #include "msg_common.h"
@@ -2608,11 +2609,10 @@ static bool ec2_get(sge_evc_class_t *thiz, lList **event_list, bool exit_on_qmas
          last_fetch_ok_time = (time_t)sge_get_gmt();
 
          /* send an ack to the qmaster for all received events */
-         /* TODO: replace this func with sge_gdi_ctx */
-         if (sge_gdi2_send_ack_to_qmaster(sge_gdi_ctx, 0, ACK_EVENT_DELIVERY, sge_evc->next_event - 1,
-                                     lGetUlong(sge_evc->ec, EV_id), &alp)
+         if (sge_send_ack_to_qmaster(sge_gdi_ctx, ACK_EVENT_DELIVERY, sge_evc->next_event - 1,
+                                     lGetUlong(sge_evc->ec, EV_id), NULL, &alp)
                                     != CL_RETVAL_OK) {
-            answer_list_output (&alp);
+            answer_list_output(&alp);
             WARNING((SGE_EVENT, MSG_COMMD_FAILEDTOSENDACKEVENTDELIVERY ));
          } else {
             DPRINTF(("Sent ack for all events lower or equal %d\n", 

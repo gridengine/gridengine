@@ -218,17 +218,11 @@ void sge_clean_lists(void)
 /*
  * MT-NOTE: verify_request_version() is MT safe
  */
-int verify_request_version(
-lList **alpp,
-u_long32 version,
-char *host,
-char *commproc,
-int id 
-) {
+int verify_request_version(lList **alpp, u_long32 version, char *host, char *commproc, int id)
+{
    char *client_version = NULL;
    dstring ds;
    char buffer[256];
-
    const vdict_t *vp, *vdict = GRM_GDI_VERSION_ARRAY;
 
    DENTER(TOP_LAYER, "verify_request_version");
@@ -236,28 +230,26 @@ int id
    sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    if (version == GRM_GDI_VERSION) {
-      DEXIT;
-      return 0;
+      DRETURN(0);
    }
 
    for (vp = &vdict[0]; vp->version; vp++) {
       if (version == vp->version) {
          client_version = vp->release;
+         break;
       }
    }
 
    if (client_version) {
       WARNING((SGE_EVENT, MSG_GDI_WRONG_GDI_SSISS,
          host, commproc, id, client_version, feature_get_product_name(FS_VERSION, &ds)));
-   }
-   else {
+   } else {
       WARNING((SGE_EVENT, MSG_GDI_WRONG_GDI_SSIUS,
          host, commproc, id, sge_u32c(version), feature_get_product_name(FS_VERSION, &ds)));
    }
    answer_list_add(alpp, SGE_EVENT, STATUS_EVERSION, ANSWER_QUALITY_ERROR);
 
-   DEXIT;
-   return 1;
+   DRETURN(1);
 }
 
 /* ------------------------------------------------------------ */
@@ -491,13 +483,9 @@ sge_c_gdi_get(gdi_object_t *ao, char *host, sge_gdi_request *request,
    bool local_ret = true;
 #endif
    lList *lp = NULL;
-   dstring ds;
-   char buffer[256];
    object_description *object_base = object_type_get_object_description();
 
    DENTER(TOP_LAYER, "sge_c_gdi_get");
-
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    if (sge_chck_get_perm_host(&(answer->alp), request, monitor, object_base)) {
       gdi_request_pack_result(answer, &local_answer_list, pb);
@@ -612,7 +600,7 @@ fprintf(stderr, "\n");
                sge_pack_buffer pb2;
                lList *lpr = NULL;
 
-               init_packbuffer(&pb2, 0, 0);
+               init_packbuffer(&pb2, 1024, 0);
                lpr = lSelectHashPack("qmaster_response", lp, request->cp,
                                request->enp, false, NULL);
                cull_pack_list(&pb2, lpr);
@@ -763,14 +751,9 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_re
 {
    lListElem *ep;
    lList *ticket_orders = NULL;
-   dstring ds;
-   char buffer[256];
    object_description *object_base = object_type_get_object_description();
-   bool is_restart;
 
    DENTER(TOP_LAYER, "sge_c_gdi_add");
-
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    if (!request->host || !user || !request->commproc) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
@@ -898,16 +881,17 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_re
                   } 
                   
                   if (request->target==SGE_EXECHOST_LIST && !strcmp(prognames[EXECD], request->commproc)) {
-		     /*
-		      * Evaluate subcommand.
-		      */
+                     bool is_restart;
+                     /*
+                      * Evaluate subcommand.
+                      */
                      if (sub_command == SGE_GDI_EXECD_RESTART) {
-		        is_restart = true;
+                        is_restart = true;
                      } else {
-		        is_restart = false;
-		     }
+                        is_restart = false;
+                     }
                      sge_execd_startedup(ctx, ep, &(answer->alp), user, host, request->target,
-				         monitor, is_restart);
+				                             monitor, is_restart);
                   } else {
                      sge_gdi_add_mod_generic(ctx, &(answer->alp), ep, 1, ao, user, host, sub_command, &ppList, monitor);
                   }
@@ -943,14 +927,13 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_re
    }
    
    if (ticket_orders != NULL) {
-      if (sge_conf_is_reprioritize()) {
+      if (mconf_get_reprioritize() == 1) {
 
          MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
          distribute_ticket_orders(ctx, ticket_orders, monitor, object_base);
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
-      }
-      else {
+      } else {
          /* tickets not needed at execd's if no repriorization is done */
          DPRINTF(("NO TICKET DELIVERY\n"));
       } 
@@ -971,13 +954,9 @@ sge_c_gdi_del(sge_gdi_ctx_class_t *ctx,
               monitoring_t *monitor)
 {
    lListElem *ep;
-   dstring ds;
-   char buffer[256];
    object_description *object_base = object_type_get_object_description();
 
    DENTER(GDI_LAYER, "sge_c_gdi_del");
-
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    if (!request->lp) /* delete whole list */
    { 
@@ -1599,15 +1578,11 @@ static void sge_c_gdi_mod(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host
                           monitoring_t *monitor)
 {
    lListElem *ep;
-   dstring ds;
-   char buffer[256];
    lList *ppList = NULL; /* for postprocessing, after the lists of requests has been processed */
    bool is_locked = false;
    object_description *object_base = object_type_get_object_description();
       
    DENTER(TOP_LAYER, "sge_c_gdi_mod");
-
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    if (sge_chck_mod_perm_user(&(answer->alp), request->target, user, monitor)) {
       DEXIT;
@@ -2063,9 +2038,12 @@ monitoring_t *monitor
              *old_obj;
 
    lListElem *tmp_ep = NULL;
-   dstring buffer = DSTRING_INIT;
+   dstring buffer;
+   char ds_buffer[256];
 
    DENTER(TOP_LAYER, "sge_gdi_add_mod_generic");
+
+   sge_dstring_init(&buffer, ds_buffer, sizeof(ds_buffer));
 
    /* DO COMMON CHECKS AND SEARCH OLD OBJECT */
    if (!instructions || !object) {
@@ -2118,7 +2096,6 @@ monitoring_t *monitor
    if (name == NULL) {
       answer_list_add(alpp, MSG_OBJ_NAME_MISSING,
                       STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-      sge_dstring_free(&buffer);
       DRETURN(STATUS_EEXIST);
    }
 
@@ -2129,7 +2106,6 @@ monitoring_t *monitor
             MSG_SGETEXT_ALREADYEXISTS_SS:MSG_SGETEXT_DOESNOTEXIST_SS, 
             object->object_name, name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-      sge_dstring_free(&buffer);
       DRETURN(STATUS_EEXIST);
    }
 
@@ -2139,7 +2115,6 @@ monitoring_t *monitor
          : lCopyElem(old_obj)))) {
       ERROR((SGE_EVENT, MSG_MEM_MALLOC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-      sge_dstring_free(&buffer);
       DRETURN(STATUS_EEXIST);
    }
 
@@ -2169,7 +2144,6 @@ monitoring_t *monitor
          }
       }
       lFreeElem(&new_obj);
-      sge_dstring_free(&buffer);
       DRETURN(STATUS_EUNKNOWN);
    }  
 
@@ -2178,7 +2152,6 @@ monitoring_t *monitor
    if (object->writer(ctx, alpp, new_obj, object)) {
       lFreeElem(&new_obj);
       lFreeList(&tmp_alp);
-      sge_dstring_free(&buffer);
       DRETURN(STATUS_EUNKNOWN);
    }
 
@@ -2232,7 +2205,6 @@ monitoring_t *monitor
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    }
     
-   sge_dstring_free(&buffer);
    DRETURN(STATUS_OK);
 }
 
@@ -2254,17 +2226,10 @@ gdi_object_t *get_gdi_object(u_long32 target)
    DRETURN(NULL);
 }
 
-static int schedd_mod(
-sge_gdi_ctx_class_t *ctx,
-lList **alpp,
-lListElem *modp,
-lListElem *ep,
-int add,
-const char *ruser,
-const char *rhost,
-gdi_object_t *object,
-int sub_command, monitoring_t *monitor
-) {
+static int schedd_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *modp,
+                      lListElem *ep, int add, const char *ruser,
+                      const char *rhost, gdi_object_t *object, int sub_command,
+                      monitoring_t *monitor) {
    int ret;
    DENTER(TOP_LAYER, "schedd_mod");
 

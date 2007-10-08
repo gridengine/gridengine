@@ -2135,13 +2135,13 @@ cl_com_append_known_endpoint_from_name(char* unresolved_comp_host,
       return retval;
    }
 
-   endpoint = cl_com_create_endpoint(resolved_hostname,comp_name , comp_id );
+   endpoint = cl_com_create_endpoint(resolved_hostname, comp_name, comp_id);
    if (endpoint == NULL) {
       free(resolved_hostname); 
       return CL_RETVAL_MALLOC;
    }
 
-   function_return = cl_com_append_known_endpoint(endpoint, comp_port, autoclose , is_static );
+   function_return = cl_com_append_known_endpoint(endpoint, comp_port, autoclose, is_static );
 
    free(resolved_hostname); 
    cl_com_free_endpoint(&endpoint);

@@ -60,11 +60,9 @@ static void sge_ls_set_pid(lListElem *this_ls, pid_t pid);
 static int sge_ls_status(lListElem *this_ls);
 static void sge_set_ls_fds(lListElem *this_ls, fd_set *fds);
 static lListElem *sge_ls_create_ls(const char* qualified_hostname, char *name, const char *scriptfile);
-static void sge_ls_destroy_ls(lListElem *this_ls, int send_no_quit_command);
 static void sge_ls_start_ls(const char *qualified_hostname, lListElem *this_ls);
 static void sge_ls_stop_ls(lListElem *this_ls, int send_no_quit_command);
 static int read_ls(void);
-static void sge_ls_initialize(void);
 
 /* 
  * time load sensors get to quit cleanly before they get a SIGKILL 
@@ -311,31 +309,29 @@ static lListElem *sge_ls_create_ls(const char *qualified_hostname, char *name, c
             WARNING((SGE_EVENT, MSG_LS_NOMODTIME_SS, scriptfile,
                    strerror(errno)));
          }
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
+      }
+
+      new_ls = lCreateElem(LS_Type);
+      if (new_ls) {
+         /* initialize all attributes */
+         lSetString(new_ls, LS_name, name);
+         lSetString(new_ls, LS_command, scriptfile);
+         sge_ls_set_pid(new_ls, -1);
+         lSetRef(new_ls, LS_in, NULL);
+         lSetRef(new_ls, LS_out, NULL);
+         lSetRef(new_ls, LS_err, NULL);
+         lSetBool(new_ls, LS_has_to_restart, false);
+         lSetUlong(new_ls, LS_tag, 0);
+         lSetList(new_ls, LS_incomplete, lCreateList("", LR_Type));
+         lSetList(new_ls, LS_complete, lCreateList("", LR_Type));
+         lSetUlong(new_ls, LS_last_mod, st.st_mtime);
+
+         sge_ls_start_ls(qualified_hostname, new_ls);
       }
    }
 
-   new_ls = lCreateElem(LS_Type);
-   if (new_ls) {
-      /* initialize all attributes */
-      lSetString(new_ls, LS_name, name);
-      lSetString(new_ls, LS_command, (char *) scriptfile);
-      sge_ls_set_pid(new_ls, -1);
-      lSetRef(new_ls, LS_in, NULL);
-      lSetRef(new_ls, LS_out, NULL);
-      lSetRef(new_ls, LS_err, NULL);
-      lSetBool(new_ls, LS_has_to_restart, false);
-      lSetUlong(new_ls, LS_tag, 0);
-      lSetList(new_ls, LS_incomplete, lCreateList("", LR_Type));
-      lSetList(new_ls, LS_complete, lCreateList("", LR_Type));
-      lSetUlong(new_ls, LS_last_mod, st.st_mtime);
-
-      lAppendElem(ls_list, new_ls);
-      sge_ls_start_ls(qualified_hostname, new_ls);
-   }
-   DEXIT;
-   return new_ls;
+   DRETURN(new_ls);
 }
 
 /****** execd/loadsensor/sge_ls_stop_ls() *************************************
@@ -396,44 +392,6 @@ static void sge_ls_stop_ls(lListElem *this_ls, int send_no_quit_command)
    }
 
    sge_ls_set_pid(this_ls, -1);
-   DEXIT;
-   return;
-}
-
-/****** execd/loadsensor/sge_ls_destroy_ls() **********************************
-*  NAME
-*     sge_ls_destroy_ls -- stop a loadsensor an destroy the 
-*        CULL element 
-*
-*  SYNOPSIS
-*     static void sge_ls_destroy_ls(lListElem *this_ls, 
-*                                   int send_no_quit_command)
-*
-*  FUNCTION
-*     The "quit" command will be send to the loadsensor process.
-*     So the loadsensor process can stop itself. After that the
-*     CULL element will be destroied
-*
-*  INPUTS
-*     this_ls - pointer to a CULL element of type LS_Type
-*     send_no_quit_command -
-*        0 - send quit command
-*        1 - no quit command will be send (kill without notification)
-*
-*  RESULT
-*     the loadsensor process will be terminated
-*     [this_ls] the pointer will be invalid 
-******************************************************************************/
-static void sge_ls_destroy_ls(lListElem *this_ls, int send_no_quit_command)
-{
-   DENTER(TOP_LAYER, "sge_ls_destroy_ls");
-
-   sge_ls_stop_ls(this_ls, send_no_quit_command);
-   lDechainElem(ls_list, this_ls);
-   lFreeElem(&this_ls);
-   if (lGetNumberOfElem(ls_list) == 0) {
-      lFreeList(&ls_list);
-   }
    DEXIT;
    return;
 }
@@ -502,23 +460,22 @@ static int read_ls(void)
    char name[1000];
    char value[1000];
    lListElem *ls_elem;
+   bool flag = true;
 
    DENTER(TOP_LAYER, "read_ls");
 
    for_each(ls_elem, ls_list) {
-      bool done;
       
       if (sge_ls_get_pid(ls_elem) == -1) {
          continue;
       }
       DPRINTF(("receiving from %s\n", lGetString(ls_elem, LS_command)));
-      done = false;
-      while (!done) {
+
+      while (flag) {
          FILE *file = lGetRef(ls_elem, LS_out);
          lList *tmp_list;
 
          if (fscanf(file, "%[^\n]\n", input) != 1) {
-            done = true;
             break;
          }
 #ifdef INTERIX
@@ -542,7 +499,6 @@ static int read_ls(void)
 
             /* request next load report from ls */
             ls_send_command(ls_elem, "\n");
-            done = true;
             break;
          }
 
@@ -571,8 +527,7 @@ static int read_ls(void)
       }
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /****** execd/loadsensor/ls_send_command() ************************************
@@ -652,26 +607,6 @@ static int ls_send_command(lListElem *this_ls, const char *command)
    return 0;
 }
 
-/****** execd/loadsensor/sge_ls_initialize() **********************************
-*  NAME
-*     sge_ls_initialize -- initialize the module which containes this
-*                          function
-*
-*  SYNOPSIS
-*     static void sge_ls_initialize(void)
-*
-*  FUNCTION
-*     Initialize the module which containes this function
-******************************************************************************/
-static void sge_ls_initialize()
-{
-   DENTER(TOP_LAYER, "sge_ls_initialize");
-   if (!ls_list) {
-      ls_list = lCreateList("load sensor list", LS_Type);
-   }
-   DEXIT;
-}
-
 /****** execd/loadsensor/sge_ls_qidle() ***************************************
 *  NAME
 *     sge_ls_qidle -- enable/diable qidle loadsensor 
@@ -748,8 +683,6 @@ int sge_ls_start(const char *qualified_hostname, const char *binary_path, char *
 
    DENTER(TOP_LAYER, "sge_ls_start");
 
-   sge_ls_initialize();
-
    /* tag all elements */
    for_each(ls_elem, ls_list) {
       lSetUlong(ls_elem, LS_tag, 1);
@@ -759,8 +692,8 @@ int sge_ls_start(const char *qualified_hostname, const char *binary_path, char *
    if ((scriptfiles != NULL) && (strcasecmp(scriptfiles, "NONE") != 0)) {
       char *scriptfile = NULL;
 
-       if (strlen (scriptfiles) > MAX_STRING_SIZE - 1) {
-          return LS_NOT_STARTED;
+       if (strlen(scriptfiles) > MAX_STRING_SIZE - 1) {
+          DRETURN(LS_NOT_STARTED);
        }
    
       strcpy(scriptfiles_buffer, scriptfiles);
@@ -774,6 +707,11 @@ int sge_ls_start(const char *qualified_hostname, const char *binary_path, char *
          if (ls_elem == NULL) {
             INFO((SGE_EVENT, MSG_LS_STARTLS_S, scriptfile));
             ls_elem = sge_ls_create_ls(qualified_hostname, "extern", scriptfile);
+
+            if (ls_list == NULL) {
+               ls_list = lCreateList("", LS_Type);
+            }
+            lAppendElem(ls_list, ls_elem);
          }
          if (ls_elem != NULL) {
             lSetUlong(ls_elem, LS_tag, 0);
@@ -781,6 +719,7 @@ int sge_ls_start(const char *qualified_hostname, const char *binary_path, char *
          scriptfile = strtok(NULL, ",\n");
       }
    }
+
    /* QIDLE loadsensor */
    if (has_to_use_qidle) {
       snprintf(scriptfiles_buffer, MAX_STRING_SIZE, "%s/%s/%s",
@@ -800,6 +739,7 @@ int sge_ls_start(const char *qualified_hostname, const char *binary_path, char *
          lSetUlong(ls_elem, LS_tag, 0);
       }
    }
+
    /* GNU loadsensor */
    if (has_to_use_gnu_load_sensor) {
       snprintf(scriptfiles_buffer, MAX_STRING_SIZE, "%s/%s/%s",
@@ -827,12 +767,12 @@ int sge_ls_start(const char *qualified_hostname, const char *binary_path, char *
       nxt_ls_elem = lNext(ls_elem);
       if (lGetUlong(ls_elem, LS_tag) == 1) {
          INFO((SGE_EVENT, MSG_LS_STOPLS_S, lGetString(ls_elem, LS_command)));
-         sge_ls_destroy_ls(ls_elem, 0);
+         sge_ls_stop_ls(ls_elem, 0);
+         lRemoveElem(ls_list, &ls_elem);
       }
    }
 
-   DEXIT;
-   return LS_OK;
+   DRETURN(LS_OK);
 }
 
 /****** execd/loadsensor/trigger_ls_restart() *********************************
@@ -851,13 +791,11 @@ void trigger_ls_restart(void)
 
    DENTER(TOP_LAYER, "sge_ls_trigger_restart");
 
-   sge_ls_initialize();
-
    for_each(ls, ls_list) {
       lSetBool(ls, LS_has_to_restart, true);
    }
-   DEXIT;
-   return;
+
+   DRETURN_VOID;
 }
 
 /****** execd/loadsensor/sge_ls_stop_if_pid() *********************************
@@ -887,17 +825,14 @@ int sge_ls_stop_if_pid(pid_t pid, int send_no_quit_command)
 
    DENTER(TOP_LAYER, "sge_ls_stop_if_pid");
 
-   sge_ls_initialize();
-
    for_each(ls, ls_list) {
       if (pid == sge_ls_get_pid(ls)) {
          trigger_ls_restart();
-         return 1;
+         DRETURN(1);
       }
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /****** execd/loadsensor/sge_ls_get() *****************************************
@@ -934,12 +869,11 @@ int sge_ls_get(const char *qualified_hostname, const char *binary_path, lList **
 
    DENTER(TOP_LAYER, "sge_ls_get");
 
-   sge_ls_initialize();
    load_sensor = mconf_get_load_sensor();
    sge_ls_start(qualified_hostname, binary_path, load_sensor);
 
    for_each(ls_elem, ls_list) {
-      int restart = 0;
+      bool restart = false;
       SGE_STRUCT_STAT st;
       const char *ls_command;
       const char *ls_name;
@@ -949,7 +883,7 @@ int sge_ls_get(const char *qualified_hostname, const char *binary_path, lList **
 
       /* someone triggered the restart */
       if (lGetBool(ls_elem, LS_has_to_restart)) {
-         restart = 1;
+         restart = true;
       }
 
       /* the modification time of the ls script changed */
@@ -963,10 +897,11 @@ int sge_ls_get(const char *qualified_hostname, const char *binary_path, lList **
             continue;
          }
          if (lGetUlong(ls_elem, LS_last_mod) != st.st_mtime) {
-            restart = 1;
+            restart = true;
             lSetUlong(ls_elem, LS_last_mod, st.st_mtime);
          }
       }
+
       if (restart) {
          INFO((SGE_EVENT, MSG_LS_RESTARTLS_S, ls_command ? ls_command : ""));
          sge_ls_stop_ls(ls_elem, 0);
@@ -987,8 +922,7 @@ int sge_ls_get(const char *qualified_hostname, const char *binary_path, lList **
    }
    FREE(load_sensor);
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /****** execd/loadsensor/sge_ls_stop() ****************************************
@@ -1009,21 +943,16 @@ int sge_ls_get(const char *qualified_hostname, const char *binary_path, lList **
 ******************************************************************************/
 void sge_ls_stop(int exited)
 {
-   lListElem *ls_elem, *nxt;
+   lListElem *ls_elem;
 
    DENTER(TOP_LAYER, "sge_ls_stop");
 
-   sge_ls_initialize();
-
-   nxt = lFirst(ls_list);
-   while ((ls_elem = nxt)) {
-      nxt = lNext(ls_elem);
-      sge_ls_destroy_ls(ls_elem, exited);
+   for_each(ls_elem, ls_list) {
+      sge_ls_stop_ls(ls_elem, exited);
    }
    lFreeList(&ls_list);
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /****** execd/loadsensor/set_ls_fds() *****************************************
@@ -1045,11 +974,9 @@ void set_ls_fds(fd_set *fds)
 
    DENTER(TOP_LAYER, "set_ls_fds");
 
-   sge_ls_initialize();
-
    for_each(ls_elem, ls_list) {
       sge_set_ls_fds(ls_elem, fds);
    }
-   DEXIT;
-   return;
+
+   DRETURN_VOID;
 }

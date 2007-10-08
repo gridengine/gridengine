@@ -171,17 +171,16 @@ void (*config_errfunc)(const char *) = NULL;
 
  MT-NOTE: read_config() is not MT safe
  *****************************************************/
-int read_config(
-const char *fname 
-) {
+int read_config(const char *fname) {
    FILE *fp;
    char buf[100000], *name, *value;
 
    delete_config();
 
    fp = fopen(fname, "r");
-   if (!fp)
+   if (!fp) {
       return 1;
+   }
 
    while (fgets(buf, sizeof(buf), fp)) {
       struct saved_vars_s *context;
@@ -207,8 +206,7 @@ FCLOSE_ERROR:
 }
 
 /******************************************************/
-int add_config_entry(name, value)
-const char *name, *value;
+int add_config_entry(const char *name, const char *value)
 {
    config_entry *new;
 
@@ -216,13 +214,13 @@ const char *name, *value;
       return 1;
    }
    
-   if((new->name = strdup(name)) == NULL) {
+   if ((new->name = strdup(name)) == NULL) {
       free(new);
       return 1;
    }
   
-   if(value != NULL) {
-      if((new->value = strdup(value)) == NULL) {
+   if (value != NULL) {
+      if ((new->value = strdup(value)) == NULL) {
          free(new->name);
          free(new);
          return 1;
@@ -251,9 +249,8 @@ static config_entry *find_conf_entry(const char *name, config_entry *ptr)
 }
 
 /***************************************************/
-char *get_conf_val(
-char *name 
-) {
+char *get_conf_val(const char *name)
+{
    config_entry *ptr = config_list;
    char err_str[10000];
    
@@ -282,29 +279,27 @@ char *name
  *   - NULL if a new config value was created or an error occured.
  *   - The old value of the config entry if it already existed.
  *****************************************************************************/
-char* set_conf_val( const char* name, const char* value )
+char* set_conf_val(const char* name, const char* value)
 {
    config_entry* pConfigEntry;
    char* szOldValue=NULL;
 
-   if( !name || !value ) {
+   if (!name || !value) {
       return NULL;
    }
    
-   pConfigEntry = find_conf_entry( name, config_list );
-   if( pConfigEntry ) {
+   pConfigEntry = find_conf_entry(name, config_list);
+   if (pConfigEntry) {
       szOldValue = pConfigEntry->value;
       pConfigEntry->value = strdup( value );
    } else {
-      add_config_entry( name, value );
+      add_config_entry(name, value);
    }
    return szOldValue;
 }
 
 /***************************************************/
-char *search_conf_val(
-const char *name 
-) {
+char *search_conf_val(const char *name) {
    config_entry *ptr = config_list;
    
    ptr = find_conf_entry(name, config_list);

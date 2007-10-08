@@ -159,7 +159,6 @@ init_packbuffer(sge_pack_buffer *pb, int initial_size, int just_count)
       return PACK_FORMAT;
    }   
 
-
    if (!just_count) {
       if (initial_size == 0) {
          initial_size = CHUNK;
@@ -193,8 +192,7 @@ init_packbuffer(sge_pack_buffer *pb, int initial_size, int just_count)
       pb->just_count = 1;
    }
 
-   DEXIT;
-   return PACK_SUCCESS;
+   DRETURN(PACK_SUCCESS);
 }
 
 /**************************************************************
@@ -210,8 +208,7 @@ init_packbuffer_from_buffer(sge_pack_buffer *pb, char *buf, u_long32 buflen)
    DENTER(PACK_LAYER, "init_packbuffer_from_buffer");
 
    if (!pb && !buf) {
-      DEXIT;
-      return PACK_FORMAT;
+      DRETURN(PACK_FORMAT);
    }   
 
    memset(pb, 0, sizeof(sge_pack_buffer));
@@ -222,7 +219,7 @@ init_packbuffer_from_buffer(sge_pack_buffer *pb, char *buf, u_long32 buflen)
    pb->bytes_used = 0;
 
    /* check cull version (only if buffer contains any data) */
-   if(buflen > 0) {
+   if (buflen > 0) {
       int ret;
       u_long32 pad, version;
 
@@ -318,13 +315,13 @@ int packint(sge_pack_buffer *pb, u_long32 i)
             DEXIT;
             return PACK_ENOMEM;
          }
-         pb->cur_ptr = pb->head_ptr + pb->bytes_used;
+         pb->cur_ptr = &(pb->head_ptr[pb->bytes_used]);
       }
 
       /* copy in packing buffer */
       J = htonl(i);
       memcpy(pb->cur_ptr, (((char *) &J) + INTOFF), INTSIZE);
-      pb->cur_ptr += INTSIZE;
+      pb->cur_ptr = &(pb->cur_ptr[INTSIZE]);
    }
    pb->bytes_used += INTSIZE;
 
@@ -336,14 +333,12 @@ int repackint(sge_pack_buffer *pb, u_long32 i)
 {
    u_long32 J=0;
 
-   DENTER(PACK_LAYER, "packint");
+   DENTER(PACK_LAYER, "repackint");
 
    if (!pb->just_count) {
-      {
-         J = htonl(i);
-         memcpy(pb->cur_ptr, (((char *) &J) + INTOFF), INTSIZE);
-         pb->cur_ptr += INTSIZE;
-      }
+      J = htonl(i);
+      memcpy(pb->cur_ptr, (((char *) &J) + INTOFF), INTSIZE);
+      pb->cur_ptr = &(pb->cur_ptr[INTSIZE]);
    }
 
    DEXIT;
@@ -376,7 +371,7 @@ int packdouble(sge_pack_buffer *pb, double d) {
             DEXIT;
             return PACK_ENOMEM;
          }
-         pb->cur_ptr = pb->head_ptr + pb->bytes_used;
+         pb->cur_ptr = &(pb->head_ptr[pb->bytes_used]);
       }
 
       /* copy in packing buffer */
@@ -417,7 +412,7 @@ int packdouble(sge_pack_buffer *pb, double d) {
 
       memcpy(pb->cur_ptr, buf, DOUBLESIZE);
       /* we have to increment the buffer even through WIN32 will not use it */
-      pb->cur_ptr += DOUBLESIZE;
+      pb->cur_ptr = &(pb->cur_ptr[DOUBLESIZE]);
 
 #if !(defined(WIN32) || defined(INTERIX)) /* XDR not called */
       xdr_destroy(&xdrs);
@@ -460,11 +455,11 @@ int packstr(sge_pack_buffer *pb, const char *str)
             }
 
             /* update cur_ptr */
-            pb->cur_ptr = pb->head_ptr + pb->bytes_used;
+            pb->cur_ptr = &(pb->head_ptr[pb->bytes_used]);
          }
          pb->cur_ptr[0] = '\0';
          /* update cur_ptr & bytes_packed */
-         pb->cur_ptr++;
+         pb->cur_ptr = &(pb->cur_ptr[1]);
       }
       pb->bytes_used++;
    } else {
@@ -484,11 +479,11 @@ int packstr(sge_pack_buffer *pb, const char *str)
             }
 
             /* update cur_ptr */
-            pb->cur_ptr = pb->head_ptr + pb->bytes_used;
+            pb->cur_ptr = &(pb->head_ptr[pb->bytes_used]);
          }
          memcpy(pb->cur_ptr, str, n);
          /* update cur_ptr & bytes_packed */
-         pb->cur_ptr += n;
+         pb->cur_ptr = &(pb->cur_ptr[n]);
       }
       pb->bytes_used += n;
    }
@@ -583,13 +578,13 @@ u_long32 buf_size
          }
 
          /* update cur_ptr */
-         pb->cur_ptr = pb->head_ptr + pb->bytes_used;
+         pb->cur_ptr = &(pb->head_ptr[pb->bytes_used]);
       }
 
       /* copy in packing buffer */
       memcpy(pb->cur_ptr, buf_ptr, buf_size);
       /* update cur_ptr & bytes_packed */
-      pb->cur_ptr += buf_size;
+      pb->cur_ptr = &(pb->cur_ptr[buf_size]);
    }
    pb->bytes_used += buf_size;
 
@@ -629,7 +624,7 @@ int unpackint(sge_pack_buffer *pb, u_long32 *ip)
    *ip = ntohl(*ip);
 
    /* update cur_ptr & bytes_unpacked */
-   pb->cur_ptr += INTSIZE;
+   pb->cur_ptr = &(pb->cur_ptr[INTSIZE]);
    pb->bytes_used += INTSIZE;
 
    DEXIT;
@@ -688,7 +683,7 @@ int unpackdouble(sge_pack_buffer *pb, double *dp)
 #endif
 
    /* update cur_ptr & bytes_unpacked */
-   pb->cur_ptr += DOUBLESIZE;
+   pb->cur_ptr = &(pb->cur_ptr[DOUBLESIZE]);
    pb->bytes_used += DOUBLESIZE;
 
 #if !(defined(WIN32) || defined(INTERIX))                   /* XDR not called */
@@ -721,7 +716,7 @@ int unpackstr(sge_pack_buffer *pb, char **str)
       *str = NULL;
 
       /* update cur_ptr & bytes_unpacked */
-      pb->cur_ptr++;
+      pb->cur_ptr = &(pb->cur_ptr[1]);
       pb->bytes_used++;
 
       /* are there enough bytes ? */
@@ -747,7 +742,7 @@ int unpackstr(sge_pack_buffer *pb, char **str)
       }
       /* update cur_ptr & bytes_unpacked */
       pb->bytes_used += n;
-      pb->cur_ptr += n;
+      pb->cur_ptr = &(pb->cur_ptr[n]);
    }
 
    DEXIT;
@@ -785,7 +780,7 @@ int unpackbuf(sge_pack_buffer *pb, char **buf_ptr, int buf_size)
    }
    memcpy(*buf_ptr, pb->cur_ptr, buf_size);
    /* update cur_ptr & bytes_unpacked */
-   pb->cur_ptr += buf_size;
+   pb->cur_ptr = &(pb->cur_ptr[buf_size]);
    pb->bytes_used += buf_size;
 
    DEXIT;

@@ -149,8 +149,6 @@
 #define MSG_SPOOLDEFAULTS_SHARETREE             _MESSAGE(57120,         _("sharetree <template>          create sharetree"))
 #define MSG_SPOOLDEFAULTS_CANTREADGLOBALCONF_S  _MESSAGE(57125,         _("couldn't read global config file "SFN))
 #define MSG_SPOOLDEFAULTS_CANTREADLOCALCONF_S   _MESSAGE(57126,         _("couldn't read local config file "SFN))
-#define MSG_SPOOLDEFAULTS_CANTREADSHARETREE_SS  _MESSAGE(57127,         _("couldn't read sharetree from file "SFN": "SFN))
-#define MSG_SPOOLDEFAULTS_CANTREADKEYOFOBJ      _MESSAGE(57128,         _("can't read key of object - unknown type"))
 #define MSG_SPOOLDEFAULTS_CANTHANDLECLASSICSPOOLING    _MESSAGE(57129,         _("can't handle classic spooling"))
 
 /*

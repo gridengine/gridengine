@@ -203,8 +203,6 @@ long pagesize;           /* size of a page of memory (probably 8k) */
 int physical_memory;     /* size of real mem in KB                 */
 char unixname[128];      /* the name of the booted kernel          */
 
-static char ps_errstr[1024];
-
 #if defined(LINUX)
 int sup_grp_in_proc;
 #endif
@@ -506,9 +504,6 @@ read_kernel_table(char *name, void **table, long *size, int *entries)
    long tsize;
 
    if (tabinfo(name, &tinfo) < 0) {
-      sprintf(ps_errstr, MSG_SGE_TABINFOXFAILEDY_SS ,
-              name, strerror(errno));
-      sprintf(ps_errstr, "\n");
       return -1;
    }
 
@@ -517,7 +512,6 @@ read_kernel_table(char *name, void **table, long *size, int *entries)
       if (*table) free(*table);
       *table = malloc(tsize);
       if (*table == NULL) {
-         sprintf(ps_errstr, MSG_MEMORY_MALLOCXFAILED_D , sge_u32c(tsize));
          return -1;
       }
       memset(*table, 0, tsize);
@@ -525,9 +519,6 @@ read_kernel_table(char *name, void **table, long *size, int *entries)
    }
 
    if (tabread(name, (char *)*table, tsize, 0) == -1) {
-      sprintf(ps_errstr, MSG_SGE_TABINFOXFAILEDY_SS ,
-              name, strerror(errno));
-      sprintf(ps_errstr, "\n");
       return -1;
    }
 
@@ -629,7 +620,6 @@ read_pacct(lnk_link_t *job_list, time_t time_stamp)
    /* don't read corrupted pacct file */
 
    if (corrupted && !newfile) {
-      sprintf(ps_errstr, MSG_SGE_SKIPPINGREADOFCORRUPTEDPACCTFILE );
       return 0;
    }
 
@@ -644,19 +634,16 @@ read_pacct(lnk_link_t *job_list, time_t time_stamp)
          if (fread(&hdr, sizeof(hdr), 1, fp) != 1) {
             if (feof(fp))
                break;
-            sprintf(ps_errstr, MSG_SGE_FREADOFHEADERFAILEDPACCTFILECORRUPTED );
             corrupted = 1;
             return -1;
          }
 
          if (fread(&flag, 1, 1, fp) != 1) {
-            sprintf(ps_errstr, MSG_SGE_FREADOFFLAGFAILEDPACCTFILECORRUPTED);
             corrupted = 1;
             return -1;
          }
 
          if (hdr.ah_size > sizeof(acct)) {
-            sprintf(ps_errstr, MSG_SGE_BADACCOUNTINGRECORDPACCTFILECORRUPTED );
             corrupted = 1;
             return -1;
          }
@@ -664,7 +651,6 @@ read_pacct(lnk_link_t *job_list, time_t time_stamp)
          bytes = hdr.ah_size - hdrsize;
 
          if (fread((char *)&acct + hdrsize, bytes, 1, fp) != 1) {
-            sprintf(ps_errstr, MSG_SGE_FREADOFACCTRECORDFAILEDPACCTFILECORRUPTED );
             corrupted = 1;
             return -1;
          }
@@ -823,7 +809,6 @@ read_pacct(lnk_link_t *job_list, time_t time_stamp)
             corrupted = 0;
 	         fgetpos(fp, &offset);
          } else {
-            sprintf(ps_errstr, MSG_SGE_UNABLETOOPENNEWPACCTFILE );
             return -1;
          }
 
@@ -832,12 +817,8 @@ read_pacct(lnk_link_t *job_list, time_t time_stamp)
       more_records = fp && !feof(fp) && in_window;
    }
 
-   sprintf(ps_errstr, MSG_SGE_READPACCTRECORDSFORXPROCESSESANDYJOBS_II ,
-           count, jobcount);
-
    return 0;
 FCLOSE_ERROR:
-   sprintf(ps_errstr, MSG_FILE_ERRORCLOSEINGXY_SS, PACCT, strerror(errno));
    return -1;
 }
 
@@ -873,14 +854,6 @@ static struct {
 } base;
 #endif
 #endif
-
-
-char *
-psErrstr(void)
-{
-    return ps_errstr;
-}
-
 
 void
 psSetCollectionIntervals(int jobi, int prci, int sysi)
@@ -946,83 +919,50 @@ int psRetrieveSystemData(void)
 
 
    if (sysmp(MP_SAGET, MPSA_SINFO, &si, sizeof(si))<0) {
-      sprintf(ps_errstr, MSG_SGE_SYSMP_MP_SAGETXFAILEDY_SS,"MPSA_SINFO",
-              strerror(errno));
-      sprintf(ps_errstr, "\n");
       return -1;
    }
 
    if (sysmp(MP_SAGET, MPSA_RMINFO, &rmi, sizeof(rmi))<0) {
-      sprintf(ps_errstr, MSG_SGE_SYSMP_MP_SAGETXFAILEDY_SS,"MPSA_RMINFO",
-              strerror(errno));
-      sprintf(ps_errstr, "\n");
       return -1;
    }
 
    if (sysmp(MP_SAGET, MPSA_MINFO, &mi, sizeof(mi))<0) {
-      sprintf(ps_errstr, MSG_SGE_SYSMP_MP_SAGETXFAILEDY_SS,"MPSA_MINFO",
-              strerror(errno));
-      sprintf(ps_errstr, "\n");
       return -1;
    }
 
 #ifdef ever_needed
 
    if (sysmp(MP_SAGET, MPSA_SERR, &se, sizeof(se))<0) {
-      sprintf(ps_errstr, MSG_SGE_SYSMP_MP_SAGETXFAILEDY_SS,"MPSA_SERR",
-              strerror(errno));
-      sprintf(ps_errstr, "\n");
       return -1;
    }
 
    if (sysmp(MP_SAGET, MPSA_DINFO, &di, sizeof(di))<0) {
-      sprintf(ps_errstr, MSG_SGE_SYSMP_MP_SAGETXFAILEDY_SS,"MPSA_DINFO",
-              strerror(errno));
-      sprintf(ps_errstr, "\n");
       return -1;
    }
 
    if (sysmp(MP_SAGET, MPSA_TCPIPSTATS, &k, sizeof(k))<0) {
-      sprintf(ps_errstr, MSG_SGE_SYSMP_MP_SAGETXFAILEDY_SS,"MPSA_TCPIPSTATS",
-              strerror(errno));
-      sprintf(ps_errstr, "\n");
       return -1;
    }
 
 #endif
 
    if (swapctl(SC_GETFREESWAP, &swapfree)<0) {
-      sprintf(ps_errstr, MSG_SGE_SWAPCTL_XFAILEDY_SS,"SC_GETFREESWAP",
-              strerror(errno));
-      sprintf(ps_errstr, "\n");
       return -1;
    }
    
    if (swapctl(SC_GETSWAPMAX, &swapmax)<0) {
-      sprintf(ps_errstr, MSG_SGE_SWAPCTL_XFAILEDY_SS,"SC_GETSWAPMAX",
-              strerror(errno));
-      sprintf(ps_errstr, "\n");
       return -1;
    }
    
    if (swapctl(SC_GETSWAPVIRT, &swapvirt)<0) {
-      sprintf(ps_errstr, MSG_SGE_SWAPCTL_XFAILEDY_SS,"SC_GETSWAPVIRT",
-              strerror(errno));
-      sprintf(ps_errstr, "\n");
       return -1;
    }
    
    if (swapctl(SC_GETRESVSWAP, &swaprsrv)<0) {
-      sprintf(ps_errstr, MSG_SGE_SWAPCTL_XFAILEDY_SS,"SC_GETRESVSWAP",
-              strerror(errno));
-      sprintf(ps_errstr, "\n");
       return -1;
    }
    
    if (swapctl(SC_GETSWAPTOT, &swaptot)<0) {
-      sprintf(ps_errstr, MSG_SGE_SWAPCTL_XFAILEDY_SS,"SC_GETSWAPTOT",
-              strerror(errno));
-      sprintf(ps_errstr, "\n");
       return -1;
    }
 
@@ -1330,8 +1270,6 @@ int psRetrieveSystemData(void)
    sysdata.sys_writech = si->writech;
 
 #endif
-
-   sprintf(ps_errstr, MSG_SGE_PSRETRIEVESYSTEMDATASUCCESSFULLYCOMPLETED );
    return 0;
 }
 
@@ -2016,7 +1954,6 @@ static int psRetrieveOSJobData(void) {
       if (currp == &job_elem->procs) {
          proc_elem = (proc_elem_t *)malloc(sizeof(proc_elem_t));
          if (!proc_elem) {
-            sprintf(ps_errstr, MSG_MEMORY_MALLOCFAILURE );
             DRETURN(-1);
          }
          memset(proc_elem, 0, sizeof(proc_elem_t));
@@ -2537,7 +2474,6 @@ static int psRetrieveOSJobData(void) {
    if (time_stamp > pnext_time)
       pnext_time = time_stamp + ps_config.prc_collection_interval;
 
-   sprintf(ps_errstr, MSG_SGE_PSRETRIEVEOSJOBDATASUCCESSFULLYCOMPLETED );
    DRETURN(0);
 }
 
@@ -2589,9 +2525,6 @@ int psStartCollector(void)
       /* Number of CPUs */
       ncpus = sge_nprocs();
       if (getsysinfo(GSI_PHYSMEM, (caddr_t)&physical_memory,sizeof(int),0,NULL)==-1) {
-         sprintf(ps_errstr, MSG_SGE_GETSYSINFO_GSI_PHYSMEM_FAILEDX_S ,
-                 strerror(errno));
-         sprintf(ps_errstr, "\n");
          return -1;
       }
 
@@ -2602,20 +2535,13 @@ int psStartCollector(void)
       }
 
       if (nlist(unixname, mem_nl) == -1) {
-         sprintf(ps_errstr, MSG_SGE_NLISTFAILEDX_S ,
-                 strerror(errno));
-         sprintf(ps_errstr, "\n");
          return -1;
       }
       if (mem_nl[PERFSUM].n_value == 0) {
-         sprintf(ps_errstr, MSG_SGE_VM_PERFSUM_NOTFOUND );
-         sprintf(ps_errstr, "\n");
          return -1;
       }
 
       if ((kmem_fd = open(_PATH_KMEM,O_RDONLY,0)) == -1) {
-         sprintf(ps_errstr, MSG_SGE_OPENXFAILEDY_SS , 
-                  _PATH_KMEM, strerror(errno));
          return -1;
       }
 
@@ -2631,7 +2557,6 @@ int psStartCollector(void)
 #ifdef PDC_STANDALONE
    sysdata.sys_ncpus = ncpus;
 #endif   
-   sprintf(ps_errstr, MSG_SGE_PSSTARTCOLLECTORSUCCESSFULLYCOMPLETED );
    return 0;
 }
 
@@ -2642,7 +2567,6 @@ int psStopCollector(void)
    close(kmem_fd);
 #endif
 
-   sprintf(ps_errstr, MSG_SGE_PSSTOPCOLLECTORSUCCESSFULLYCOMPLETED );
    return 0;
 }
 
@@ -2676,7 +2600,6 @@ int psWatchJob(JobID_t JobID)
       LNK_ADD(job_list.prev, &job_elem->link);
    }
 
-   sprintf(ps_errstr, MSG_SGE_PSWATCHJOBSUCCESSFULLYCOMPLETED );
    return 0;
 }
 
@@ -2691,7 +2614,6 @@ int psIgnoreJob(JobID_t JobID) {
       free_job(LNK_DATA(curr, job_elem_t, link));
    }
 
-   sprintf(ps_errstr, MSG_SGE_PSIGNOREJOBSUCCESSFULLYCOMPLETED );
    return 0;
 }
 
@@ -2703,7 +2625,6 @@ struct psStat_s *psStatus(void)
    time_t time_stamp = get_gmt();
 
    if ((pstat = (psStat_t *)malloc(sizeof(psStat_t)))==NULL) {
-      sprintf(ps_errstr, MSG_MEMORY_MALLOCFAILURE);
       return NULL;
    }
 
@@ -2742,7 +2663,6 @@ struct psStat_s *psStatus(void)
 
    last_time_stamp = time_stamp;
 
-   sprintf(ps_errstr, MSG_SGE_PSTATUSSUCCESSFULLYCOMPLETED);
    return pstat;
 }
 
@@ -2767,8 +2687,8 @@ struct psJob_s *psGetOneJob(JobID_t JobID)
       job_elem = LNK_DATA(curr, job_elem_t, link);
       if (job_elem->precreated) continue; /* skip precreated jobs */
       if (job_elem->job.jd_jid == JobID) {
-	 found = 1;
-	 break;
+         found = 1;
+         break;
       }
    }
 
@@ -2788,13 +2708,10 @@ struct psJob_s *psGetOneJob(JobID_t JobID)
                psProc_t *proc = &(LNK_DATA(currp, proc_elem_t, link)->proc);
                memcpy(&rjob->proc[nprocs++], proc, sizeof(psProc_t));
             }
-
          }
       }
-
    }
 
-   sprintf(ps_errstr, MSG_SGE_PSGETONEJOBSUCCESSFULLYCOMPLETED );
    return (struct psJob_s *)rjob;
 }
 
@@ -2863,7 +2780,6 @@ struct psJob_s *psGetAllJobs(void)
 
    }
 
-   sprintf(ps_errstr, MSG_SGE_PSGETALLJOBSSUCCESSFULLYCOMPLETED);
    return rjob;
 }
 
@@ -2877,11 +2793,9 @@ struct psSys_s *psGetSysdata(void)
    psRetrieveSystemData();
 
    if ((sd = (psSys_t *)malloc(sizeof(psSys_t))) == NULL) {
-      sprintf(ps_errstr, MSG_MEMORY_MALLOCFAILURE );
       return NULL;
    }
    memcpy(sd, &sysdata, sizeof(psSys_t));
-   sprintf(ps_errstr, MSG_SGE_PSGETSYSDATASUCCESSFULLYCOMPLETED );
    return sd;
 }
 #endif
@@ -3244,8 +3158,7 @@ main(int argc, char **argv)
                      INCPROCPTR(pp, pp->pd_length);
                   }
                   free(ojp);
-               } else
-                  puts(psErrstr());
+               } 
 
             } else if (verbose && !killjob)
                print_job_data(jobs);

@@ -32,13 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int execd_ticket(sge_gdi_ctx_class_t *ctx, 
-                 struct dispatch_entry *de, 
-                 sge_pack_buffer *pb, 
-                 sge_pack_buffer *apb, 
-                 u_long *rcvtimeout, 
-                 int *synchron, 
-                 char *err_str, 
-                 int answer_error);
+int do_ticket(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg);
 
 #endif /* _EXECD_TICKET_H */

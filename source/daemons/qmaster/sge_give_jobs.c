@@ -125,7 +125,7 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx,
 static int 
 send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, 
                    const char *target, lListElem *tmpjep, lListElem *jatep, 
-                   lListElem *pe, lList *qlp, monitoring_t *monitor);
+                   monitoring_t *monitor);
 
 static int 
 send_job(sge_gdi_ctx_class_t *ctx, const char *rhost, const char *target, lListElem *jep, lListElem *jatep, 
@@ -161,49 +161,14 @@ int sge_give_job(sge_gdi_ctx_class_t *ctx,
 {
    const char *target;   /* prognames[EXECD|QSTD] */
    const char *rhost;   /* prognames[EXECD|QSTD] */
-   lListElem *gdil_ep, *q;
    int ret = 0; 
    int sent_slaves = 0;
-   object_description *object_base = object_type_get_object_description();
-   lList *master_cqueue_list = *object_base[SGE_TYPE_CQUEUE].list;
-   lList *master_exechost_list = *object_base[SGE_TYPE_EXECHOST].list;
-   lList *master_centry_list = *object_base[SGE_TYPE_CENTRY].list;
    
    DENTER(TOP_LAYER, "sge_give_job");
    
    target = prognames[EXECD];
    rhost = lGetHost(master_qep, QU_qhostname);
    DPRINTF(("execd host: %s\n", rhost));
-
-   /* build complex list for all queues in the gdil list */
-   for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) { 
-      lList *resources;
-      lList *gdil_ep_JG_complex;
-      lListElem *ep1, *cep;
-
-      if ((q = cqueue_list_locate_qinstance(master_cqueue_list, lGetString(gdil_ep, JG_qname)))) {
-         resources = NULL;
-         queue_complexes2scheduler(&resources, q, master_exechost_list, master_centry_list);
-         lSetList(gdil_ep, JG_complex, resources);
-      } else {
-         DTRACE;
-         /* SG: should this not be an error case? */
-      }
-
-
-      /* job requests overrides complex list */
-      gdil_ep_JG_complex = lGetList(gdil_ep, JG_complex); 
-      for_each (ep1, lGetList(jep, JB_hard_resource_list)) {
-         if ((cep=lGetElemStr(gdil_ep_JG_complex, CE_name, lGetString(ep1, CE_name))))  {  
-            lSetString(cep, CE_stringval, lGetString(ep1, CE_stringval));
-            DPRINTF(("complex: %s = %s\n", lGetString(ep1, CE_name), lGetString(ep1, CE_stringval)));
-         }
-         if (!cep) {
-            DPRINTF(("complex %s not found\n", lGetString(ep1, CE_name)));
-            /* SG: should this not be an error? */
-         }
-      }
-   }
 
    switch (send_slave_jobs(ctx, target, jep, jatep, pe, monitor)) {
       case -1 : ret = -1;
@@ -223,13 +188,7 @@ int sge_give_job(sge_gdi_ctx_class_t *ctx,
       MONITOR_MESSAGES_OUT(monitor);
    }
 
-   /* free complex list in gdil list */
-   for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
-      lSetList(gdil_ep, JG_complex, NULL);
-   }   
-
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 
@@ -266,18 +225,15 @@ static int
 send_slave_jobs(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *jep, lListElem *jatep, lListElem *pe, monitoring_t *monitor)
 {
    lListElem *tmpjep, *qep, *tmpjatep;
-   lList *qlp;
    lListElem *gdil_ep;
    int ret=0;
    bool is_pe_jobs = false;
    lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
-   lList *master_pe_list = *object_type_get_master_list(SGE_TYPE_PE);
 
    DENTER(TOP_LAYER, "send_slave_jobs");
 
-
    /* do we have pe slave tasks* */
-   for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) { 
+   for_each(gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) { 
       if (lGetUlong(gdil_ep, JG_tag_slave_job)) {
          lSetUlong(jatep, JAT_next_pe_task_id, 1);   
          is_pe_jobs = true;
@@ -293,8 +249,7 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *jep, lL
    /* create a copy of the job */
    if ((tmpjep = copyJob(jep, jatep)) == NULL) {
       DRETURN(-1);
-   }
-   else {
+   } else {
       tmpjatep = lFirst(lGetList(tmpjep, JB_ja_tasks));
    }
 
@@ -306,8 +261,6 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *jep, lL
       lFreeElem(&tmpjep);
       DRETURN(-1);
    }
-
-   qlp = lCreateList("qlist", QU_Type);
 
    /* add all queues referenced in gdil to qlp 
     * (necessary for availability of ALL resource limits and tempdir in queue) 
@@ -346,24 +299,18 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *jep, lL
       reduce_queue_limit(master_centry_list, qep, tmpjep, QU_s_rt,    "s_rt");
       reduce_queue_limit(master_centry_list, qep, tmpjep, QU_h_rt,    "h_rt");
 
-      lAppendElem(qlp, qep);
+      lSetObject(gdil_ep, JG_queue, qep);
    }
 
-   if (pe) { /* we dechain the element to get a temporary free element  */
-      pe = lDechainElem(master_pe_list, pe);
+   if (pe) {
+      lSetObject(tmpjatep, JAT_pe_object, lCopyElem(pe));
    }
 
-   ret = send_slave_jobs_wc(ctx, target, tmpjep, jatep, pe, qlp, monitor);
+   ret = send_slave_jobs_wc(ctx, target, tmpjep, jatep, monitor);
 
    lFreeElem(&tmpjep);
-   lFreeList(&qlp);
 
-   if (pe) { 
-      lAppendElem(master_pe_list, pe);
-   }   
-
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sge_give_jobs/send_slave_jobs_wc() *************************************
@@ -394,11 +341,10 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *jep, lL
 *******************************************************************************/
 static int 
 send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpjep, lListElem *jatep, 
-                   lListElem *pe, lList *qlp, monitoring_t *monitor)
+                   monitoring_t *monitor)
 {
    lListElem *gdil_ep = NULL;
    int ret = 0;
-   cl_com_handle_t* handle = NULL;
    int failed = CL_RETVAL_OK;
 #ifndef __SGE_NO_USERMAPPING__    
    const char *old_mapped_user = NULL;
@@ -412,14 +358,11 @@ send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpj
 
    DENTER(TOP_LAYER, "send_slave_jobs_wc");
 
-   handle = cl_com_get_handle(prognames[QMASTER], 0);
 
    for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) { 
       lListElem *hep;
       const char* hostname = NULL;
-      u_long32 dummymid = 0;
       unsigned long last_heard_from;
-      u_long32 now;
 
       if (!lGetUlong(gdil_ep, JG_tag_slave_job)) {
          continue;
@@ -432,22 +375,21 @@ send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpj
       hostname = lGetHost(gdil_ep, JG_qhostname);
 
       /* map hostname if we are simulating hosts */
-      if(mconf_get_simulate_hosts()) {
+      if (mconf_get_simulate_hosts()) {
          const lListElem *simhost = lGetSubStr(hep, CE_name, "simhost", EH_consumable_config_list);
-         if(simhost != NULL) {
+         if (simhost != NULL) {
             const char *real_host = lGetString(simhost, CE_stringval);
-            if(real_host != NULL && sge_hostcmp(real_host, hostname) != 0) {
+            if (real_host != NULL && sge_hostcmp(real_host, hostname) != 0) {
                DPRINTF(("deliver job for simulated host %s to host %s\n", hostname, real_host));
                hostname = real_host;
             }   
          }
       }
 
-      if(!simulate_execd) {
+      if (!simulate_execd) {
          /* do ask_commproc() only if we are missing load reports */
-         cl_commlib_get_last_message_time(handle, (char*)hostname, (char*)target, 1, &last_heard_from);
-         now = sge_get_gmt();
-         if (last_heard_from + sge_get_max_unheard_value() <= now) {
+         cl_commlib_get_last_message_time(cl_com_get_handle(prognames[QMASTER], 0), (char*)hostname, (char*)target, 1, &last_heard_from);
+         if (last_heard_from + mconf_get_max_unheard() <= sge_get_gmt()) {
 
             ERROR((SGE_EVENT, MSG_COM_CANT_DELIVER_UNHEARD_SSU, target, hostname, sge_u32c(lGetUlong(tmpjep, JB_job_number))));
             sge_mark_unheard(hep, target);
@@ -491,11 +433,11 @@ send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpj
          if (is_clean_pb) {
             clear_packbuffer(&pb); 
          }
-         if(init_packbuffer(&pb, 0, 0) != PACK_SUCCESS) {
+         if (init_packbuffer(&pb, 0, 0) != PACK_SUCCESS) {
             ret = -1;
             break;
          }
-         pack_job_delivery(&pb, tmpjep, qlp, pe);
+         pack_job_delivery(&pb, tmpjep);
          is_clean_pb = true;
          is_init_pb = false;
       }
@@ -504,10 +446,12 @@ send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpj
       ** security hook
       */
       tgt2cc(tmpjep, hostname, target);
-      if (simulate_execd)
+      if (simulate_execd) {
          failed = CL_RETVAL_OK;
-      else
+      } else {
+         u_long32 dummymid = 0;
          failed = gdi2_send_message_pb(ctx, 0, target, 1, hostname, TAG_SLAVE_ALLOW, &pb, &dummymid);
+      }
       MONITOR_MESSAGES_OUT(monitor);
       /*
       ** security hook
@@ -543,14 +487,10 @@ send_job(sge_gdi_ctx_class_t *ctx,
    int failed;
    u_long32 now;
    sge_pack_buffer pb;
-   u_long32 dummymid = 0;
    lListElem *tmpjep, *qep, *tmpjatep, *tmpgdil_ep=NULL;
-   lList *qlp;
    lListElem *gdil_ep;
    unsigned long last_heard_from;
-   cl_com_handle_t* handle = NULL;
    lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
-   lList *master_pe_list = *object_type_get_master_list(SGE_TYPE_PE);
    const char* sge_root = ctx->get_sge_root(ctx);
    const char* myprogname = ctx->get_progname(ctx);
    bool job_spooling = ctx->get_job_spooling(ctx);
@@ -559,9 +499,9 @@ send_job(sge_gdi_ctx_class_t *ctx,
    DENTER(TOP_LAYER, "send_job");
 
    /* map hostname if we are simulating hosts */
-   if(mconf_get_simulate_hosts()) {
+   if (mconf_get_simulate_hosts()) {
       const lListElem *simhost = lGetSubStr(hep, CE_name, "simhost", EH_consumable_config_list);
-      if(simhost != NULL) {
+      if (simhost != NULL) {
          const char *real_host = lGetString(simhost, CE_stringval);
          if(real_host != NULL && sge_hostcmp(real_host, rhost) != 0) {
             DPRINTF(("deliver job for simulated host %s to host %s\n", rhost, real_host));
@@ -570,12 +510,10 @@ send_job(sge_gdi_ctx_class_t *ctx,
       }
    }
 
-   /* do ask_commproc() only if we are missing load reports */
-   handle = cl_com_get_handle(myprogname, 0);
-   if(!simulate_execd) {
-      cl_commlib_get_last_message_time(handle, (char*)rhost, (char*)target, 1, &last_heard_from);
+   if (!simulate_execd) {
+      cl_commlib_get_last_message_time(cl_com_get_handle(myprogname, 0), (char*)rhost, (char*)target, 1, &last_heard_from);
       now = sge_get_gmt();
-      if (last_heard_from + sge_get_max_unheard_value() <= now) {
+      if (last_heard_from + mconf_get_max_unheard() <= now) {
 
          ERROR((SGE_EVENT, MSG_COM_CANT_DELIVER_UNHEARD_SSU, target, rhost, sge_u32c(lGetUlong(jep, JB_job_number))));
          sge_mark_unheard(hep, target);
@@ -583,13 +521,10 @@ send_job(sge_gdi_ctx_class_t *ctx,
          return -1;
       }
    }
-
    
    if ((tmpjep = copyJob(jep, jatep)) == NULL) {
-      DEXIT;
-      return -1;
-   }
-   else {
+      DRETURN(-1);
+   } else {
       tmpjatep = lFirst(lGetList(tmpjep, JB_ja_tasks));
    }
 
@@ -615,15 +550,13 @@ send_job(sge_gdi_ctx_class_t *ctx,
       return -1;
    }
    
-   qlp = lCreateList("qlist", QU_Type);
-
    /* add all queues referenced in gdil to qlp 
     * (necessary for availability of ALL resource limits and tempdir in queue) 
     * AND
     * copy all JG_processors from all queues to the JG_processors in tmpgdil
     * (so the execd can decide on which processors (-sets) the job will be run).
     */
-   for_each (gdil_ep, lGetList(tmpjatep, JAT_granted_destin_identifier_list)) {
+   for_each(gdil_ep, lGetList(tmpjatep, JAT_granted_destin_identifier_list)) {
       const char *src_qname = lGetString(gdil_ep, JG_qname);
       lListElem *src_qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), src_qname);
 
@@ -652,11 +585,11 @@ send_job(sge_gdi_ctx_class_t *ctx,
       reduce_queue_limit(master_centry_list, qep, tmpjep, QU_s_rt,    "s_rt");
       reduce_queue_limit(master_centry_list, qep, tmpjep, QU_h_rt,    "h_rt");
 
-      lAppendElem(qlp, qep);
+      lSetObject(gdil_ep, JG_queue, qep);
    }
 
-   if (pe) { /* we dechain the element to get a temporary free element  */
-      pe = lDechainElem(master_pe_list, pe);
+   if (pe) {
+      lSetObject(tmpjatep, JAT_pe_object, lCopyElem(pe));
    }
 
    /*
@@ -684,33 +617,31 @@ send_job(sge_gdi_ctx_class_t *ctx,
       }
    }
 #endif
-   
-   if(init_packbuffer(&pb, 0, 0) != PACK_SUCCESS) {
+
+   /*
+   ** remove some data not used at execd side
+   */
+   lSetList(tmpjep, JB_ja_template, NULL);
+ 
+   if (init_packbuffer(&pb, 0, 0) != PACK_SUCCESS) {
       lFreeElem(&tmpjep);
-      lFreeList(&qlp);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
-   pack_job_delivery(&pb, tmpjep, qlp, pe);
-   
+   pack_job_delivery(&pb, tmpjep);
    lFreeElem(&tmpjep);
-   lFreeList(&qlp);
-
-   if (pe != NULL) {
-      lAppendElem(master_pe_list, pe);
-   }   
-
 
    /*
    ** security hook
    */
    tgt2cc(jep, rhost, target);
 
-   if(simulate_execd)
+   if (simulate_execd) { 
       failed = CL_RETVAL_OK;
-   else
+   } else {
+      u_long32 dummymid = 0;
       failed = gdi2_send_message_pb(ctx, 0, target, 1, rhost, master?TAG_JOB_EXECUTION:TAG_SLAVE_ALLOW, &pb, &dummymid);
+   }
 
    /*
    ** security hook
@@ -737,8 +668,7 @@ send_job(sge_gdi_ctx_class_t *ctx,
                rhost));
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 void sge_job_resend_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor)
@@ -779,9 +709,6 @@ void sge_job_resend_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, 
          lSetUlong(jr, JR_ja_task_number, jataskid);
          ep = lFirst(lGetList(jatep, JAT_granted_destin_identifier_list));
          lSetString(jr, JR_queue_name, lGetString(ep, JG_qname));
-         lSetHost(jr, JR_host_name, lGetHost(ep, JG_qhostname));
-         lSetString(jr, JR_owner, lGetString(jep, JB_owner));
-         lSetString(jr, JR_group, lGetString(jep, JB_group));
          lSetUlong(jr, JR_wait_status, SGE_SET_WEXITSTATUS(SGE_WEXITED_BIT, 0)); /* returned with exit(0) */
 
          ue = lAddSubStr(jr, UA_name, "submission_time", JR_usage, UA_Type);
@@ -893,8 +820,7 @@ void cancel_job_resend(u_long32 jid, u_long32 ja_task_id)
    DPRINTF(("CANCEL JOB RESEND "sge_u32"/"sge_u32"\n", jid, ja_task_id)); 
    te_delete_one_time_event(TYPE_JOB_RESEND_EVENT, jid, ja_task_id, "job-resend_event");
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /* 
@@ -1143,14 +1069,10 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
        */
       lSetUlong(jatep, JAT_start_time, now);
       job_enroll(jep, NULL, jataskid);
-      {
-         const char *session = lGetString (jep, JB_session);
-
-         sge_event_spool(ctx, &answer_list, now, sgeE_JATASK_MOD,
-                         jobid, jataskid, NULL, NULL, session,
-                         jep, jatep, NULL, true, true);
-         answer_list_output(&answer_list);
-      }
+      sge_event_spool(ctx, &answer_list, now, sgeE_JATASK_MOD,
+                      jobid, jataskid, NULL, NULL, lGetString (jep, JB_session),
+                      jep, jatep, NULL, true, true);
+      answer_list_output(&answer_list);
       break;
    }
    case COMMIT_ST_ARRIVED:
@@ -1198,7 +1120,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
 
                   if (!master_host) {
                      master_host = granted_queue_JG_qhostname;
-                  } 
+                  }
                   if (sge_hostcmp(master_host, granted_queue_JG_qhostname )) {
                      host = host_list_locate(master_exechost_list, granted_queue_JG_qhostname ); 
                      
@@ -1236,17 +1158,6 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       lSetList(jatep, JAT_previous_usage_list, lCopyList("name", lGetList(jatep, JAT_scaled_usage_list)));
       lSetList(jatep, JAT_scaled_usage_list, NULL);
       lSetList(jatep, JAT_reported_usage_list, NULL);
-      {
-         lListElem *ep;
-         const char *s;
-
-         DPRINTF(("osjobid = %s\n", (s=lGetString(jatep, JAT_osjobid))?s:"(null)"));
-         for_each(ep, lGetList(jatep, JAT_previous_usage_list)) {
-            DPRINTF(("previous usage: \"%s\" = %f\n",
-                        lGetString(ep, UA_name),
-                                    lGetDouble(ep, UA_value)));
-         }
-      }
 
       /* sum up the usage of all pe tasks not yet deleted (e.g. tasks from 
        * exec host in unknown state). Then remove all pe tasks except the 
@@ -1255,7 +1166,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       { 
          lList *pe_task_list = lGetList(jatep, JAT_task_list);
 
-         if(pe_task_list != NULL) {
+         if (pe_task_list != NULL) {
             lListElem *pe_task = NULL;
             lListElem *container = NULL;
             lListElem *existing_container = NULL;
@@ -1263,7 +1174,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
 
             existing_container = lGetElemStr(pe_task_list, PET_id, PE_TASK_PAST_USAGE_CONTAINER); 
             container = pe_task_sum_past_usage_all(pe_task_list);
-            if(existing_container == NULL) {
+            if (existing_container == NULL) {
                /* the usage container is not spooled */
                sge_add_event( now, sgeE_PETASK_ADD, jobid, jataskid, 
                              PE_TASK_PAST_USAGE_CONTAINER, NULL,
@@ -1345,33 +1256,23 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
                             usage_list);
       }
 
-      {
-         /* IZ 664
-          * Workaround to fix qdel -f.
-          * It copies SGE_EVENT set in sge_commit_job or in a sub function
-          * call to an answer list.
-          * As other functions, like the following sge_event_spool may also
-          * use ERROR/WARNING/INFO or even DEBUG, the message qdel relies apon
-          * may be overwritten.
-          */
-         char *save = strdup(SGE_EVENT); 
-         
-         sge_event_spool(ctx, &answer_list, 0, sgeE_JATASK_MOD, 
-                         jobid, jataskid, NULL, NULL, session,
-                         jep, jatep, NULL, false, true);
-         strcpy(SGE_EVENT, save);
-         FREE(save);
-      }
+      sge_event_spool(ctx, &answer_list, 0, sgeE_JATASK_MOD, 
+                      jobid, jataskid, NULL, NULL, session,
+                      jep, jatep, NULL, false, true);
 
-      /* finished all ja-tasks => remove job script */
-      for_each(tmp_ja_task, lGetList(jep, JB_ja_tasks)) {
-         if (lGetUlong(tmp_ja_task, JAT_status) != JFINISHED)
-            no_unlink = 1;
-      }
+
       if (job_get_not_enrolled_ja_tasks(jep)) {
          no_unlink = 1;
+      } else {
+         /* finished all ja-tasks => remove job script */
+         for_each(tmp_ja_task, lGetList(jep, JB_ja_tasks)) {
+            if (lGetUlong(tmp_ja_task, JAT_status) != JFINISHED) {
+               no_unlink = 1;
+               break;
+            }
+         }
       }
-      
+
       if (!no_unlink) {
          release_successor_jobs(jep);
          if ((lGetString(jep, JB_exec_file) != NULL) && job_spooling && !JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type))) {
@@ -1416,8 +1317,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       break;
    }
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
    /* 
@@ -1475,7 +1375,7 @@ static void sge_job_finish_event(lListElem *jep, lListElem *jatep, lListElem *jr
       }   
    }
 
-   sge_add_event( 0, sgeE_JOB_FINISH, lGetUlong(jep, JB_job_number), 
+   sge_add_event(0, sgeE_JOB_FINISH, lGetUlong(jep, JB_job_number), 
                  lGetUlong(jatep, JAT_task_number), NULL, NULL,
                  lGetString(jep, JB_session), jr);
 
@@ -1490,9 +1390,8 @@ static void sge_job_finish_event(lListElem *jep, lListElem *jatep, lListElem *jr
    return;
 }
 
-static void release_successor_jobs(
-lListElem *jep 
-) {
+static void release_successor_jobs(lListElem *jep)
+{
    lListElem *jid, *suc_jep;
    u_long32 job_ident;
 
@@ -1902,7 +1801,7 @@ copyJob(lListElem *job, lListElem *ja_task)
    lListElem *ja_task_copy = NULL;
    lList * tmp_ja_task_list = NULL;
    
-   DENTER(TOP_LAYER, "setCheckpointObj");
+   DENTER(TOP_LAYER, "copyJob");
 
    /* create a copy of the job */
    lXchgList(job, JB_ja_tasks, &tmp_ja_task_list);
@@ -1910,18 +1809,12 @@ copyJob(lListElem *job, lListElem *ja_task)
    lXchgList(job, JB_ja_tasks, &tmp_ja_task_list);
 
    if (job_copy != NULL) { /* not enough memory */
-   
-      ja_task_copy = lLast(lGetList(job, JB_ja_tasks));
-
-      while (ja_task_copy != NULL) {
-         if (lGetUlong(ja_task_copy, JAT_task_number) == lGetUlong(ja_task, JAT_task_number)) {
-            break;
-         }
-         ja_task_copy = lPrev(ja_task_copy);
-      }
+  
+      ja_task_copy = lGetElemUlong(lGetList(job, JB_ja_tasks), JAT_task_number,
+                                   lGetUlong(ja_task, JAT_task_number));
 
       tmp_ja_task_list = lCreateList("cp_ja_task_list", lGetElemDescr(ja_task_copy));
-      lAppendElem(tmp_ja_task_list, (ja_task_copy = lCopyElem(ja_task_copy)));
+      lAppendElem(tmp_ja_task_list, lCopyElem(ja_task_copy));
       lSetList(job_copy, JB_ja_tasks, tmp_ja_task_list);
 
       if (lGetNumberOfElem(tmp_ja_task_list) == 0) { /* not enough memory */
@@ -1929,8 +1822,7 @@ copyJob(lListElem *job, lListElem *ja_task)
       }
    }
 
-   DEXIT;
-   return job_copy;
+   DRETURN(job_copy);
 }
 
 

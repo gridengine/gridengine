@@ -62,6 +62,5 @@ sge_is_static_load_value(const char *name)
       }
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }

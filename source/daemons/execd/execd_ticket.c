@@ -53,37 +53,29 @@ extern volatile int jobs_to_start;
  get a list of jobid/tickets tuples and pass them to the PTF
  *************************************************************************/
 
-int 
-execd_ticket(sge_gdi_ctx_class_t *ctx, 
-             struct dispatch_entry *de, 
-             sge_pack_buffer *pb, 
-             sge_pack_buffer *apb, 
-             u_long *rcvtimeout, 
-             int *synchron, 
-             char *err_str, 
-             int answer_error)
+int do_ticket(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
 {
    u_long32 jobid, jataskid;
    double ticket;
    lListElem *job_ticket, *task_ticket;
    lList *ticket_modifier = NULL;
 
-   DENTER(TOP_LAYER, "execd_ticket");
+   DENTER(TOP_LAYER, "do_ticket");
 
-   while (pb_unused(pb)>0) {
+   while (pb_unused(&(aMsg->buf))>0) {
       lList *jatasks = NULL;
 
-      if (unpackint(pb, &jobid) || unpackint(pb, &jataskid) || unpackdouble(pb, &ticket)) {
+      if (unpackint(&(aMsg->buf), &jobid) || unpackint(&(aMsg->buf), &jataskid) || unpackdouble(&(aMsg->buf), &ticket)) {
          ERROR((SGE_EVENT, MSG_JOB_TICKETFORMAT));
-         DEXIT;
-         return 0;
+         DRETURN(0);
       }
       DPRINTF(("got %lf new tickets for job "sge_u32"."sge_u32"\n", ticket, jobid, jataskid));
       job_ticket = lAddElemUlong(&ticket_modifier, JB_job_number, jobid, JB_Type);   
       if (job_ticket) {
          task_ticket = lAddElemUlong(&jatasks, JAT_task_number, jataskid, JAT_Type);
-         if (task_ticket)
+         if (task_ticket) {
             lSetDouble(task_ticket, JAT_tix, ticket);
+         }
          lSetList(job_ticket, JB_ja_tasks, jatasks);
       }
    }
@@ -103,8 +95,7 @@ execd_ticket(sge_gdi_ctx_class_t *ctx,
 
    lFreeList(&ticket_modifier);
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 

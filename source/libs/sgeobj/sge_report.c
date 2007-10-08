@@ -41,8 +41,7 @@
 #include "msg_sgeobjlib.h"
 
 
-#define REPORT_LAYER TOP_LAYER
-
+#if 0
 /****** sgeobj/report/job_report_print_usage() *******************************
 *  NAME
 *     job_report_print_usage() -- Print usage contained in job report 
@@ -63,7 +62,7 @@ void job_report_print_usage(const lListElem *job_report, FILE *fp)
 {
    lListElem *uep;
 
-   DENTER(CULL_LAYER, "job_report_print_usage");
+   DENTER(TOP_LAYER, "job_report_print_usage");
 
    if (!job_report) {
       DEXIT;
@@ -83,6 +82,7 @@ void job_report_print_usage(const lListElem *job_report, FILE *fp)
    DEXIT;
    return;
 }
+#endif
 
 /****** sgeobj/report/job_report_init_from_job() *****************************
 *  NAME
@@ -118,14 +118,15 @@ void job_report_init_from_job(lListElem *job_report,
    lSetUlong(job_report, JR_job_number, job_id);
    lSetUlong(job_report, JR_ja_task_number, ja_task_id);
 
-   if(pe_task != NULL) {
+   if (pe_task != NULL) {
       lSetString(job_report, JR_pe_task_id_str, lGetString(pe_task, PET_id));
+      queue = lFirst(lGetList(pe_task, PET_granted_destin_identifier_list));
+   } else {
+      queue = lFirst(lGetList(ja_task, JAT_granted_destin_identifier_list));
    }
 
-   lSetString(job_report, JR_owner, lGetString(job, JB_owner));
-
    if (lGetUlong(ja_task, JAT_status) == JSLAVE){
-      if(pe_task == NULL) {
+      if (pe_task == NULL) {
          lSetUlong(job_report, JR_state, JSLAVE);
       } else {
          lSetUlong(job_report, JR_state, JWRITTEN);
@@ -134,15 +135,8 @@ void job_report_init_from_job(lListElem *job_report,
       lSetUlong(job_report, JR_state, JWRITTEN);
    }
 
-   if(pe_task != NULL) {
-      queue = lFirst(lGetList(pe_task, PET_granted_destin_identifier_list));
-   } else {
-      queue = lFirst(lGetList(ja_task, JAT_granted_destin_identifier_list));
-   }
-
    if (queue != NULL) {
       lSetString(job_report, JR_queue_name, lGetString(queue, JG_qname));
-      lSetHost(job_report, JR_host_name,  lGetHost(queue, JG_qhostname));
    }
 
    DEXIT;

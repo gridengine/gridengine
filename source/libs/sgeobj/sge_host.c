@@ -56,30 +56,27 @@ lListElem *
 host_list_locate(const lList *host_list, const char *hostname) 
 {
    lListElem *ret = NULL;
+   
    DENTER(TOP_LAYER, "host_list_locate");
 
-   if (hostname != NULL) {
-      if (host_list != NULL) {
-         const lListElem *element = lFirst(host_list);
-         int nm = NoName;
+   if (hostname != NULL && host_list != NULL) {
+      int nm = NoName;
+      const lListElem *element = lFirst(host_list);
 
-         if (element != NULL) {
-            if (object_has_type(element, EH_Type)) {
-               nm = object_get_primary_key(EH_Type);
-            } else if (object_has_type(element, AH_Type)) {
-               nm = object_get_primary_key(AH_Type);
-            } else if (object_has_type(element, SH_Type)) {
-               nm = object_get_primary_key(SH_Type);
-            }
-
-            ret = lGetElemHost(host_list, nm, hostname);
-         }
+      if (object_has_type(element, EH_Type)) {
+         nm = object_get_primary_key(EH_Type);
+      } else if (object_has_type(element, AH_Type)) {
+         nm = object_get_primary_key(AH_Type);
+      } else if (object_has_type(element, SH_Type)) {
+         nm = object_get_primary_key(SH_Type);
       }
+
+      ret = lGetElemHost(host_list, nm, hostname);
    } else {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
    }
-   DEXIT;
-   return ret;
+   
+   DRETURN(ret);
 }
 
 /****** sgeobj/host/host_is_referenced() **************************************
@@ -363,43 +360,6 @@ host_is_centry_a_complex_value(const lListElem *this_elem,
    return ret;
 }
 
-bool
-host_trash_load_values(lListElem *host)
-{
-   bool ret = true;
-
-   DENTER(TOP_LAYER, "host_trash_load_values");
-
-   if (host != NULL) {
-      lListElem *ep, *next;
-      lList *load_list = lGetList(host, EH_load_list);
-      const char *host_name = lGetHost(host, EH_name);
-
-      /* loop over load list */
-      ep = lFirst(load_list);
-      while (ep != NULL) {
-         const char *load_name;
-
-         next = lNext(ep);
-         load_name = lGetString(ep, HL_name);
-
-         /* we don't trash static load values like "arch" etc. */
-         if (!sge_is_static_load_value(load_name)) {
-            DPRINTF(("host "SFN": trashing load value "SFQ"\n",
-                     host_name,
-                     load_name));
-            lRemoveElem(load_list, &ep);
-         }
-
-         /* assign next element */
-         ep = next;
-      }
-   }   
-
-   DEXIT;
-   return ret;
-}
-
 /****** sgeobj/host/host_list_merge() ******************************************
 *  NAME
 *     host_list_merge() -- merge global host settings into exec hosts
@@ -451,8 +411,7 @@ host_list_merge(lList *this_list)
       }
    }
    
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/host/host_merge() **********************************************

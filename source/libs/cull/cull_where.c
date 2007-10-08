@@ -414,29 +414,17 @@ static void lWriteWhereTo_(const lCondition *cp, int depth, FILE *fp)
 lListElem *lWhereToElem(const lCondition *where){
    lListElem *whereElem = NULL;
    sge_pack_buffer pb;
-   int size;
    DENTER(CULL_LAYER, "lWhereToElem");
    
-   /* 
-    * retrieve packbuffer size to avoid large realloc's while packing 
-    */
-   init_packbuffer(&pb, 0, 1);
-   if (cull_pack_cond(&pb, where) == PACK_SUCCESS) {
-      size = pb_used(&pb);
-      clear_packbuffer(&pb);
-
-      /*
-       * now we do the real packing
-       */
-      if (init_packbuffer(&pb, size, 0) == PACK_SUCCESS) {
-         if (cull_pack_cond(&pb, where) == PACK_SUCCESS) {
-            whereElem = lCreateElem(PACK_Type);
-            lSetUlong(whereElem, PACK_id, SGE_WHERE);
-            setByteArray( (char*)pb.head_ptr, pb.bytes_used, whereElem, PACK_string);
-         }
+   if (init_packbuffer(&pb, 1024, 0) == PACK_SUCCESS) {
+      if (cull_pack_cond(&pb, where) == PACK_SUCCESS) {
+         whereElem = lCreateElem(PACK_Type);
+         lSetUlong(whereElem, PACK_id, SGE_WHERE);
+         setByteArray( (char*)pb.head_ptr, pb.bytes_used, whereElem, PACK_string);
       }
-      clear_packbuffer(&pb); 
    }
+   clear_packbuffer(&pb); 
+
    DRETURN(whereElem);
 }
 

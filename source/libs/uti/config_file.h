@@ -39,7 +39,7 @@ void set_error(const char *err_str);
 
 int read_config(const char *fname);
 
-char *get_conf_val(char *name);
+char *get_conf_val(const char *name);
 char *search_conf_val(const char *name);
 char *search_nonone_conf_val(const char *name);
 

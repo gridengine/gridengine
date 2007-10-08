@@ -84,32 +84,26 @@ static int get_load_value(double *dvalp, lListElem *global, lListElem *host, con
       0 on success; -1 otherwise
 
    input parameters:
-      hl             :  the host list to be sorted
-      centry_list    :  the complex entry list
+      hl             :  the host list to be sorted (EH_Type)
+      centry_list    :  the complex entry list (CE_Type)
       formula        :  the load evaluation formula (containing no blanks)
 
    output parameters:
       hl             :  the sorted host list
 
 *************************************************************************/
-int sort_host_list(
-lList *hl,           /* EH_Type */ 
-lList *centry_list   /* CE_Type */
-) {
+int sort_host_list(lList *hl, lList *centry_list)
+{
    lListElem *hlp = NULL;
-   lListElem *global = NULL;
-   const char *host = NULL;
-   const char *load_formula = NULL;
+   lListElem *global = host_list_locate(hl, SGE_GLOBAL_NAME);
+   lListElem *template = host_list_locate(hl, SGE_TEMPLATE_NAME);
+   const char *load_formula = sconf_get_load_formula();
    double load;
    
    DENTER(TOP_LAYER, "sort_host_list");
 
-   global = host_list_locate(hl, SGE_GLOBAL_NAME);
-
-   load_formula = sconf_get_load_formula();
    for_each (hlp, hl) {
-      host = lGetHost(hlp,EH_name);
-      if (strcmp(host, SGE_GLOBAL_NAME) && strcmp(host, SGE_TEMPLATE_NAME)) { /* don't treat global */
+      if (hlp != global && hlp != template) { /* don't treat global or template */
          /* build complexes for that host */
          lSetDouble(hlp, EH_sort_value, load = scaled_mixed_load(load_formula, global, hlp, centry_list));
          DPRINTF(("%s: %f\n", lGetHost(hlp, EH_name), load));
@@ -117,7 +111,7 @@ lList *centry_list   /* CE_Type */
    }
    FREE(load_formula);
 
-   if (lPSortList(hl,"%I+",EH_sort_value)) {
+   if (lPSortList(hl,"%I+", EH_sort_value)) {
       DRETURN(-1);
    } else {
       DRETURN(0);
@@ -148,7 +142,8 @@ lList *centry_list   /* CE_Type */
                        0 means no load correction, 
                        n load correction for n new jobs
 *************************************************************************/
-double scaled_mixed_load(const char* load_formula, lListElem *global, lListElem *host, const lList *centry_list)
+double scaled_mixed_load(const char* load_formula, lListElem *global,
+                         lListElem *host, const lList *centry_list)
 {
    char *cp = NULL;
    char *tf = NULL; 

@@ -55,6 +55,7 @@
 #include "sge_security.h"
 #include "sge_all_listsL.h"
 #include "gdi/sge_gdi_ctx.h"
+#include "sgeobj/sge_ack.h"
 
 #define ARGUMENT_COUNT 15
 static char*  cl_values[ARGUMENT_COUNT+2];
@@ -585,7 +586,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
                }
    
             }
-            if ( strstr( cl_values[6] , "TAG_REPORT_REQUEST") != NULL ) {
+            if (strstr(cl_values[6], "TAG_REPORT_REQUEST") != NULL) {
                unsigned long buffer_length = 0;
                if (  cl_util_get_binary_buffer(message_debug_data, &binary_buffer , &buffer_length) == CL_RETVAL_OK) {
                   sge_pack_buffer buf;
@@ -624,127 +625,36 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
                }
             }
    
-            if ( strstr( cl_values[6] , "TAG_ACK_REQUEST") != NULL ) {
+            if (strstr( cl_values[6] , "TAG_ACK_REQUEST") != NULL ) {
                unsigned long buffer_length = 0;
-               if (  cl_util_get_binary_buffer(message_debug_data, &binary_buffer , &buffer_length) == CL_RETVAL_OK) {
+               if (cl_util_get_binary_buffer(message_debug_data, &binary_buffer , &buffer_length) == CL_RETVAL_OK) {
                   sge_pack_buffer buf;
    
                   if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
-                     u_long32 ack_tag, ack_ulong, ack_ulong2;
-   
-                     while(unpackint(&buf,  &ack_tag ) == PACK_SUCCESS) {
-                        printf("      unpacked tag ack request (binary buffer length %lu):\n", buffer_length );
-                        printf("ack_tag : "sge_U32CFormat" => ", sge_u32c(ack_tag));
-   
-                        switch (ack_tag) {
-                           case TAG_SIGQUEUE:
-                              printf("   TAG_SIGQUEUE\n");
-                              break;
-                           case TAG_SIGJOB:
-                              printf("   TAG_SIGJOB\n");
-                              break;
-                           case TAG_GDI_REQUEST:
-                              printf("   TAG_GDI_REQUEST or ACK_JOB_EXIT (sent back by qmaster, when execd sends a job_exit)\n");
-                              break;
-   #if 0
-                           case ACK_EVENT_DELIVERY:
-                              printf("   ACK_EVENT_DELIVERY\n");
-                              break;
-                           case ACK_SIGNAL_JOB:
-                              printf("   ACK_SIGNAL_JOB\n");
-                              break;
-   #endif
-   #if 0
-                           case ACK_JOB_EXIT:
-                              printf("   ACK_JOB_EXIT\n");
-                              break;
-   #endif
-                           case ACK_SIGNAL_DELIVERY:
-                              printf("   ACK_SIGNAL_DELIVERY (sent back by execd, when master sends a queue) or TAG_OLD_REQUEST\n");
-                              break;
-                           case ACK_JOB_DELIVERY:
-                              printf("   ACK_JOB_DELIVERY (sent back by execd, when master gave him a job) or TAG_NONE\n");
-                              break;
-   #if 0
-                           case TAG_NONE:
-                              printf("   TAG_NONE\n");
-                              break;
-                           case TAG_OLD_REQUEST:
-                              printf("   TAG_OLD_REQUEST\n");
-                              break;
-   #endif
-                           case TAG_ACK_REQUEST:
-                              printf("   TAG_ACK_REQUEST or ACK_SIGNAL_JOB (sent back by qmaster, when execd reports a job as running - that was not supposed to be there\n");
-                              break;
-                           case TAG_REPORT_REQUEST:
-                              printf("   TAG_REPORT_REQUEST or ACK_EVENT_DELIVERY (sent back by schedd, when master sends events)\n");
-                              break;
-                           case TAG_FINISH_REQUEST:
-                              printf("   TAG_FINISH_REQUEST\n");
-                              break;
-                           case TAG_JOB_EXECUTION:
-                              printf("   TAG_JOB_EXECUTION\n");
-                              break;
-                           case TAG_SLAVE_ALLOW:
-                              printf("   TAG_SLAVE_ALLOW\n");
-                              break;
-                           case TAG_CHANGE_TICKET:
-                              printf("   TAG_CHANGE_TICKET\n");
-                              break;
-                           case TAG_KILL_EXECD:
-                              printf("   TAG_KILL_EXECD\n");
-                              break;
-                           case TAG_NEW_FEATURES:
-                              printf("   TAG_NEW_FEATURES\n");
-                              break;
-                           case TAG_GET_NEW_CONF:
-                              printf("   TAG_GET_NEW_CONF\n");
-                              break;
-                           case TAG_JOB_REPORT:
-                              printf("   TAG_JOB_REPORT\n");
-                              break;
-                           case TAG_QSTD_QSTAT:
-                              printf("   TAG_QSTD_QSTAT\n");
-                              break;
-                           case TAG_TASK_EXIT:
-                              printf("   TAG_TASK_EXIT\n");
-                              break;
-                           case TAG_TASK_TID:
-                              printf("   TAG_TASK_TID\n");
-                              break;
-                           case TAG_EVENT_CLIENT_EXIT:
-                              printf("   TAG_EVENT_CLIENT_EXIT\n");
-                              break;
-   
-                           default:
-                              printf("   Unexpected tag\n");
-                              break;
-                        }
-                        if (unpackint(&buf, &ack_ulong) == PACK_SUCCESS) {
-                           printf("ack_ulong : "sge_U32CFormat"\n", sge_u32c(ack_ulong));
+                     lListElem *ack;
+
+                     while (pb_unused(&buf) > 0) {
+                        if (cull_unpack_elem(&buf, &ack, NULL)) {
+                           printf("TAG_ACK_REQUEST: unpack error\n");
                         } else {
-                           printf("ack_ulong : unpack error\n");
-                        }
-                        if (unpackint(&buf, &ack_ulong2) == PACK_SUCCESS) {
-                           printf("ack_ulong2 : "sge_U32CFormat"\n", sge_u32c(ack_ulong2));
-                        } else {
-                           printf("ack_ulong2 : unpack error\n");
+                           lWriteElemTo(ack ,stdout); /* ack */
                         }
                      }
+
                      clear_packbuffer(&buf);
                   }
                }
             }
    
-            if ( strstr( cl_values[6] , "TAG_JOB_EXECUTION") != NULL ) {
+            if (strstr(cl_values[6] , "TAG_JOB_EXECUTION") != NULL ||
+                strstr(cl_values[6] , "TAG_SLAVE_ALLOW") != NULL) {
                unsigned long buffer_length = 0;
-               if (  cl_util_get_binary_buffer(message_debug_data, &binary_buffer , &buffer_length) == CL_RETVAL_OK) {
+               if (cl_util_get_binary_buffer(message_debug_data, &binary_buffer , &buffer_length) == CL_RETVAL_OK) {
                   sge_pack_buffer buf;
    
                   if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
                      u_long32 feature_set;
-                     lListElem *job = NULL, *pe = NULL;
-                     lList *qlist = NULL;
+                     lListElem *job = NULL;
                      if (unpackint(&buf, &feature_set) == PACK_SUCCESS) {
                         printf("      unpacked tag job execution (binary buffer length %lu):\n", buffer_length );
                         printf("feature_set: "sge_U32CFormat"\n", sge_u32c(feature_set));
@@ -754,47 +664,22 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
                      } else {
                         printf("could not unpack job\n");
                      }
-                     if (cull_unpack_list(&buf, &qlist) == PACK_SUCCESS) {
-                        lWriteListTo(qlist,stdout); /* jobs master queue */
-                     } else {
-                        printf("could not unpack queue list\n");
-                     }
-                     if (job && lGetString(lFirst(lGetList(job, JB_ja_tasks)), JAT_granted_pe)) {
-                        if (cull_unpack_elem(&buf, &pe, NULL) == PACK_SUCCESS) {
-                           lWriteElemTo(pe,stdout); /* pe elem */
-                        } else {
-                           printf("could not unpack PE elem\n");
-                        }
-                     }
-                     lFreeList(&qlist);
                      lFreeElem(&job);
-                     lFreeElem(&pe);
                      clear_packbuffer(&buf);
                   }
                }
             }
    
-            if ( strstr( cl_values[6] , "TAG_SIGJOB") != NULL ) {
+            if (strstr(cl_values[6] , "TAG_SIGJOB") != NULL) {
                unsigned long buffer_length = 0;
-               if (  cl_util_get_binary_buffer(message_debug_data, &binary_buffer , &buffer_length) == CL_RETVAL_OK) {
+               if (cl_util_get_binary_buffer(message_debug_data, &binary_buffer , &buffer_length) == CL_RETVAL_OK) {
                   sge_pack_buffer buf;
    
                   if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
-                     u_long32 jobid_pre = 0;
-                     u_long32 jataskid_pre = 0;
                      u_long32 jobid    = 0;
                      u_long32 job_signal   = 0;
                      u_long32 jataskid = 0;
                      char *qname       = NULL;
-   
-                     if (unpackint(&buf, &jobid_pre) == PACK_SUCCESS) {
-                        printf("      unpacked tag signal job (binary buffer length %lu):\n", buffer_length );
-                        printf("jobid_pre (JB_job_number):    "sge_U32CFormat"\n", sge_u32c(jobid_pre));
-                     }
-   
-                     if (unpackint(&buf, &jataskid_pre) == PACK_SUCCESS) {
-                        printf("jataskid_pre (JAT_task_number):    "sge_U32CFormat"\n", sge_u32c(jataskid_pre));
-                     }
    
                      if (unpackint(&buf, &jobid) == PACK_SUCCESS) {
                         printf("jobid (JB_job_number):    "sge_U32CFormat"\n", sge_u32c(jobid));
@@ -823,7 +708,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
             }
             
    
-            if ( strstr( cl_values[6] , "TAG_SIGQUEUE") != NULL ) {
+            if (strstr(cl_values[6], "TAG_SIGQUEUE") != NULL) {
                unsigned long buffer_length = 0;
                if (  cl_util_get_binary_buffer(message_debug_data, &binary_buffer , &buffer_length) == CL_RETVAL_OK) {
                   sge_pack_buffer buf;
@@ -831,21 +716,10 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
                   printf("binary buffer length is %lu\n",buffer_length);  
    
                   if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
-                     u_long32 jobid_pre = 0;
-                     u_long32 jataskid_pre = 0;
                      u_long32 jobid    = 0;
                      u_long32 queue_signal   = 0;
                      u_long32 jataskid = 0;
                      char *qname       = NULL;
-   
-                     if (unpackint(&buf, &jobid_pre) == PACK_SUCCESS) {
-                        printf("      unpacked tag signal queue (binary buffer length %lu):\n", buffer_length );
-                        printf("jobid_pre (QU_queue_number):    "sge_U32CFormat"\n", sge_u32c(jobid_pre));
-                     }
-   
-                     if (unpackint(&buf, &jataskid_pre) == PACK_SUCCESS) {
-                        printf("jataskid_pre (0 - unused):    "sge_U32CFormat"\n", sge_u32c(jataskid_pre));
-                     }
    
                      if (unpackint(&buf, &jobid) == PACK_SUCCESS) {
                         printf("jobid (0 - unused):    "sge_U32CFormat"\n", sge_u32c(jobid));

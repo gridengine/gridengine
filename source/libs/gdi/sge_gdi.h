@@ -183,17 +183,6 @@ enum {
 #define JOB_KILL          (1<<3)
 #define EVENTCLIENT_KILL  (1<<4)
 
-/* from sge_ack.h */
-enum {
-   ACK_JOB_DELIVERY,     /* sent back by execd, when master gave him a job    */
-   ACK_SIGNAL_DELIVERY,  /* sent back by execd, when master sends a queue     */
-   ACK_JOB_EXIT,         /* sent back by qmaster, when execd sends a job_exit */
-   ACK_SIGNAL_JOB,       /* sent back by qmaster, when execd reports a job as */
-                         /* running - that was not supposed to be there       */
-   ACK_EVENT_DELIVERY    /* sent back by schedd, when master sends events     */
-};
-
-
 #ifdef  __cplusplus
 }
 #endif

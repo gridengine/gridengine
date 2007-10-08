@@ -164,6 +164,9 @@ static bool simulate_hosts = false;
 /* generally simulate all execd's */
 static bool simulate_execds = false;
 
+/* allow the simulation of jobs (job spooling on execd side is disabled) */
+static bool simulate_jobs = false;
+
 /*
  * This value overrides the default scheduler timeout (10 minutes)
  * to allow graceful degradation on extremely busy systems with
@@ -608,6 +611,7 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       disable_reschedule = false;   
       simulate_hosts = false;
       simulate_execds = false;
+      simulate_jobs = false;
       prof_message_thrd = false;
       prof_signal_thrd = false;
       prof_deliver_thrd = false;
@@ -740,6 +744,9 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
             }
          }   
          if (parse_bool_param(s, "KEEP_ACTIVE", &keep_active)) {
+            continue;
+         }
+         if (parse_bool_param(s, "SIMULATE_JOBS", &simulate_jobs)) {
             continue;
          }
          if (parse_bool_param(s, "ENABLE_WINDOMACC", &enable_windomacc)) {
@@ -1823,6 +1830,18 @@ bool mconf_get_simulate_execds(void) {
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = simulate_execds;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+bool mconf_get_simulate_jobs(void) {
+   bool ret;
+
+   DENTER(BASIS_LAYER, "mconf_get_simulate_jobs");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = simulate_jobs;
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(ret);

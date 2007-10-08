@@ -66,6 +66,14 @@ enum {
 
 };
 
+typedef struct {
+   char snd_host[CL_MAXHOSTLEN]; /* sender hostname; NULL -> all              */
+   char snd_name[CL_MAXHOSTLEN]; /* sender name (aka 'commproc'); NULL -> all */
+   u_short snd_id;            /* sender identifier; 0 -> all               */
+   int tag;                   /* message tag; TAG_NONE -> all              */
+   u_long32 request_mid;      /* message id of request                     */
+   sge_pack_buffer buf;       /* message buffer                            */
+} struct_msg_t;
 
 lList
 *sge_gdi2(sge_gdi_ctx_class_t *ctx, u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp, lEnumeration *enp);
@@ -87,10 +95,6 @@ int sge_gdi2_send_any_request(sge_gdi_ctx_class_t *ctx, int synchron, u_long32 *
                               const char *rhost, const char *commproc, int id,
                               sge_pack_buffer *pb, 
                               int tag, u_long32  response_id, lList **alpp);
-
-
-int sge_gdi2_send_ack_to_qmaster(sge_gdi_ctx_class_t *ctx, int sync, u_long32 type, u_long32 ulong_val, 
-                            u_long32 ulong_val_2, lList **alpp);
 
 lList *gdi2_kill(sge_gdi_ctx_class_t *thiz, lList *id_list, const char *cell, u_long32 option_flags, u_long32 action_flag);
 lList *gdi2_tsm( sge_gdi_ctx_class_t *thiz, const char *schedd_name, const char *cell);

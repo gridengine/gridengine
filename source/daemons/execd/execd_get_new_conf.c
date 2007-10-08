@@ -40,6 +40,7 @@
 #include "admin_mail.h"
 #include "sge_string.h"
 #include "sge_log.h"
+#include "load_avg.h"
 
 #include "msg_common.h"
 
@@ -50,14 +51,7 @@
 **   executed on startup. This function is triggered by the execd
 **   dispatcher table when the tag TAG_GET_NEW_CONF is received.
 */
-int execd_get_new_conf(sge_gdi_ctx_class_t *ctx, 
-                       dispatch_entry *de, 
-                       sge_pack_buffer *pb, 
-                       sge_pack_buffer *apb, 
-                       u_long *rcvtimeout, 
-                       int *synchron, 
-                       char *err_str, 
-                       int answer_error)
+int do_get_new_conf(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
 {
    int ret;
    bool use_qidle = mconf_get_use_qidle();
@@ -65,9 +59,9 @@ int execd_get_new_conf(sge_gdi_ctx_class_t *ctx,
    char* old_spool = NULL;
    char* spool_dir = NULL;
 
-   DENTER(TOP_LAYER, "execd_get_new_conf");
+   DENTER(TOP_LAYER, "do_get_new_conf");
 
-   unpackint(pb, &dummy);
+   unpackint(&(aMsg->buf), &dummy);
 
    old_spool = mconf_get_execd_spool_dir();  
 
@@ -85,11 +79,13 @@ int execd_get_new_conf(sge_gdi_ctx_class_t *ctx,
 
    sge_ls_qidle(use_qidle);
    DPRINTF(("use_qidle: %d\n", use_qidle));
+   
+   execd_trash_load_report();
+
    FREE(old_spool);
    FREE(spool_dir);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 

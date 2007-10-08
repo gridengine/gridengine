@@ -906,6 +906,7 @@ spool_berkeleydb_write_object(lList **answer_list, bdb_info info,
    {
       sge_pack_buffer pb;
       int cull_ret;
+
       cull_ret = init_packbuffer(&pb, 8192, 0);
       if (cull_ret != PACK_SUCCESS) {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 

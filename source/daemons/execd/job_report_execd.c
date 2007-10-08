@@ -47,6 +47,8 @@
 #include "sge_ja_task.h"
 #include "sge_pe.h"
 #include "sge_report.h"
+#include "sgeobj/sge_ack.h"
+#include "load_avg.h"
 
 lList *jr_list = NULL;
 static bool flush_jr = false;
@@ -88,12 +90,8 @@ void trace_jr()
    DEXIT;
 }
 
-lListElem *add_job_report(
-u_long32 jobid,
-u_long32 jataskid,
-const char *petaskid,
-lListElem *jep 
-) {  
+lListElem *add_job_report(u_long32 jobid, u_long32 jataskid, const char *petaskid, lListElem *jep)
+{  
    lListElem *jr, *jatep = NULL;
  
    DENTER(TOP_LAYER, "add_job_report");
@@ -103,31 +101,29 @@ lListElem *jep
   
    if (!jr_list || !(jr=lCreateElem(JR_Type))) {
       ERROR((SGE_EVENT, MSG_JOB_TYPEMALLOC));  
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    lSetUlong(jr, JR_job_number, jobid);
    lSetUlong(jr, JR_ja_task_number, jataskid);
-   if(petaskid != NULL) {
+   if (petaskid != NULL) {
       lSetString(jr, JR_pe_task_id_str, petaskid);
    }
 
    lAppendElem(jr_list, jr);
 
-   if(jep != NULL) {
+   if (jep != NULL) {
       jatep = job_search_task(jep, NULL, jataskid);
       if (jatep != NULL) { 
          lListElem *petep = NULL;
-         if(petaskid != NULL) {
+         if (petaskid != NULL) {
             petep = ja_task_search_pe_task(jatep, petaskid);
          }   
          job_report_init_from_job(jr, jep, jatep, petep);
       }
    }
  
-   DEXIT;
-   return jr;
+   DRETURN(jr);
 }
 
 lListElem *
@@ -153,40 +149,35 @@ get_job_report(u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id)
       jr = lGetElemUlongNext(jr_list, JR_job_number, job_id, &iterator);
    }
 
-   DEXIT;
-   return jr;
+   DRETURN(jr);
 }
 
-void del_job_report(
-lListElem *jr 
-) {
+void del_job_report(lListElem *jr)
+{
    lRemoveElem(jr_list, &jr);
 }
 
-void cleanup_job_report(
-u_long32 jobid,
-u_long32 jataskid 
-) {
-   lListElem *nxt, *jr;
+void cleanup_job_report(u_long32 jobid, u_long32 jataskid)
+{
+   lListElem *jr;
+   const void *iterator = NULL;
 
    DENTER(TOP_LAYER, "cleanup_job_report");
 
    /* get rid of job reports for all slave tasks */
-   nxt = lFirst(jr_list);
-   while ((jr=nxt)) {
-      nxt = lNext(jr);
-      if (lGetUlong(jr, JR_job_number) == jobid &&
-          lGetUlong(jr, JR_ja_task_number) == jataskid) {
+   jr = lGetElemUlongFirst(jr_list, JR_job_number, jobid, &iterator);
+   while (jr != NULL) {
+      if (lGetUlong(jr, JR_ja_task_number) == jataskid) {
          const char *s = lGetString(jr, JR_pe_task_id_str);
 
          DPRINTF(("!!!! removing jobreport for "sge_u32"."sge_u32" task %s !!!!\n",
             jobid, jataskid, s?s:"master"));
          lRemoveElem(jr_list, &jr);
       }
+      jr = lGetElemUlongNext(jr_list, JR_job_number, jobid, &iterator);
    }
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /* ------------------------------------------------------------
@@ -268,30 +259,26 @@ RETURN
    Typical dispatcher service function return values
 
    ------------------------------------------------------------ */
-int 
-execd_c_ack(sge_gdi_ctx_class_t *ctx, 
-            struct dispatch_entry *de, 
-            sge_pack_buffer *pb, 
-            sge_pack_buffer *apb,
-            u_long *rcvtimeout, 
-            int *synchron, 
-            char *err_str, 
-            int answer_error) 
+int do_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
 {
-   u_long32 ack_type;
    u_long32 jobid, jataskid;
    lListElem *jr;
-   char *pe_task_id_str;
+   lListElem *ack;
+   const char *pe_task_id_str;
 
-   DENTER(TOP_LAYER, "execd_c_ack");
+   DENTER(TOP_LAYER, "do_ack");
  
    DPRINTF(("------- GOT ACK'S ---------\n"));
  
    /* we get a bunch of ack's */
-   while (pb_unused(pb)>0) {
- 
-      unpackint(pb, &ack_type);
-      switch (ack_type) {
+   while (pb_unused(&(aMsg->buf)) > 0) {
+
+      if (cull_unpack_elem(&(aMsg->buf), &ack, NULL)) {
+         ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
+         DRETURN(0);
+      }
+
+      switch (lGetUlong(ack, ACK_type)) {
  
          case ACK_JOB_EXIT:
 /*
@@ -301,22 +288,19 @@ execd_c_ack(sge_gdi_ctx_class_t *ctx,
 **          - retry is triggered by next job report sent to qmaster 
 **            containing this job as "exiting"                  
 */
-            unpackint(pb, &jobid);
-            unpackint(pb, &jataskid);
-            unpackstr(pb, &pe_task_id_str);
+            jobid = lGetUlong(ack, ACK_id);
+            jataskid = lGetUlong(ack, ACK_id2);
+            pe_task_id_str = lGetString(ack, ACK_str);
 
             DPRINTF(("remove exiting job "sge_u32"/"sge_u32"/%s\n", 
                     jobid, jataskid, pe_task_id_str?pe_task_id_str:""));
 
             if ((jr = get_job_report(jobid, jataskid, pe_task_id_str))) {
                remove_acked_job_exit(ctx, jobid, jataskid, pe_task_id_str, jr);
-            } 
-            else {
+            } else {
                DPRINTF(("acknowledged job "sge_u32"."sge_u32" not found\n", jobid, jataskid));
             }
 
-            if (pe_task_id_str)
-               free(pe_task_id_str);
             break;
  
          case ACK_SIGNAL_JOB:
@@ -333,12 +317,11 @@ execd_c_ack(sge_gdi_ctx_class_t *ctx,
 **            "running"                  
 */
             {
-               u_long32 signo;
- 
-               unpackint(pb, &jobid);
-               unpackint(pb, &jataskid);
-               unpackint(pb, &signo);
- 
+               u_long32 signo  = SGE_SIGKILL;
+
+               jobid = lGetUlong(ack, ACK_id);
+               jataskid = lGetUlong(ack, ACK_id2);
+
                if (signal_job(jobid, jataskid, signo)) {
                   lListElem *jr;
                   jr = get_job_report(jobid, jataskid, NULL);
@@ -347,11 +330,16 @@ execd_c_ack(sge_gdi_ctx_class_t *ctx,
                }
             }
             break;
+         case ACK_LOAD_REPORT:
+            execd_merge_load_report(lGetUlong(ack, ACK_id));
+            break;
  
          default:
             ERROR((SGE_EVENT, MSG_COM_ACK_UNKNOWN));
             break;
       }
+
+      lFreeElem(&ack);
       /* 
        * delete job's spooling directory may take some time
        * (NFS directory case). We have to trigger communication
@@ -362,8 +350,8 @@ execd_c_ack(sge_gdi_ctx_class_t *ctx,
        */
       cl_commlib_trigger(cl_com_get_handle("execd",1) ,0);
    }
-   DEXIT;
-   return 0;
+
+   DRETURN(0);
 }
 
 int
@@ -375,23 +363,18 @@ execd_get_acct_multiplication_factor(const lListElem *pe,
    DENTER(TOP_LAYER, "execd_get_acct_multiplication_factor");
 
    /* task of tightly integrated job: default factor 1 is OK - skip it */
-   if (!task) {
-      /* only parallel jobs need factors != 0 */
-      if (pe != NULL) {
-         /* only loosely integrated job will get factor != 0 */
-         if (!lGetBool(pe, PE_control_slaves)) {
-            /* if job is first task: factor = n, else n + 1 */
-            if (lGetBool(pe, PE_job_is_first_task)) {
-               factor = slots;
-            } else {
-               factor = slots + 1;
-            }
-         }
+   /* only parallel jobs need factors != 0 */
+   /* only loosely integrated job will get factor != 0 */
+   if (!task && pe != NULL && !lGetBool(pe, PE_control_slaves)) {
+      /* if job is first task: factor = n, else n + 1 */
+      if (lGetBool(pe, PE_job_is_first_task)) {
+         factor = slots;
+      } else {
+         factor = slots + 1;
       }
    }
 
    DPRINTF(("reserved usage will be multiplied by %d\n", factor));
 
-   DEXIT;
-   return factor;
+   DRETURN(factor);
 }

@@ -386,18 +386,18 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
 
       /* check max_jobs */
       if (job_list_register_new_job(*object_base[SGE_TYPE_JOB].list, mconf_get_max_jobs(), 0)) {/*read*/
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          INFO((SGE_EVENT, MSG_JOB_ALLOWEDJOBSPERCLUSTER, sge_u32c(mconf_get_max_jobs())));
          answer_list_add(alpp, SGE_EVENT, STATUS_NOTOK_DOAGAIN, ANSWER_QUALITY_ERROR);
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          DRETURN(STATUS_NOTOK_DOAGAIN);
       }
 
       if ((lGetUlong(jep, JB_verify_suitable_queues) != JUST_VERIFY)) {
          if (suser_check_new_job(jep, mconf_get_max_u_jobs()) != 0) { /*mod*/
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             INFO((SGE_EVENT, MSG_JOB_ALLOWEDJOBSPERUSER_UU, sge_u32c(mconf_get_max_u_jobs()), 
                                                             sge_u32c(suser_job_count(jep))));
             answer_list_add(alpp, SGE_EVENT, STATUS_NOTOK_DOAGAIN, ANSWER_QUALITY_ERROR);
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             DRETURN(STATUS_NOTOK_DOAGAIN);
          }
       }
@@ -406,9 +406,9 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       xuser_lists = mconf_get_xuser_lists();
       if (!sge_has_access_(ruser, lGetString(jep, JB_group), /* read */
             user_lists, xuser_lists, *object_base[SGE_TYPE_USERSET].list)) {
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          ERROR((SGE_EVENT, MSG_JOB_NOPERMS_SS, ruser, rhost));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          lFreeList(&user_lists);
          lFreeList(&xuser_lists);
          DRETURN(STATUS_EUNKNOWN);
@@ -482,9 +482,9 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
          const lListElem *pep;
          pep = pe_list_find_matching(*object_base[SGE_TYPE_PE].list, pe_name);
          if (!pep) {
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             ERROR((SGE_EVENT, MSG_JOB_PEUNKNOWN_S, pe_name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             DRETURN(STATUS_EUNKNOWN);
          }
          /* check pe_range */
@@ -561,9 +561,9 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
             break;
          }                 
          
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          ERROR((SGE_EVENT, "%s", str));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          DRETURN(STATUS_ESEMANTIC);
       }
       
@@ -612,9 +612,9 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
          /* ensure user exists if enforce_user flag is set */
          if (enforce_user && !strcasecmp(enforce_user, "true") && 
                   !user_list_locate(*object_base[SGE_TYPE_USER].list, ruser)) {
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             ERROR((SGE_EVENT, MSG_JOB_USRUNKNOWN_S, ruser));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             FREE(enforce_user);
             DRETURN(STATUS_EUNKNOWN);
          } 
@@ -635,9 +635,9 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
             lList* xprojects;
             lListElem *pep;
             if (!(pep = prj_list_locate(*object_base[SGE_TYPE_PROJECT].list , project))) {
+               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
                ERROR((SGE_EVENT, MSG_JOB_PRJUNKNOWN_S, project));
                answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
                lFreeList(&projects);
                DRETURN(STATUS_EUNKNOWN);
             }
@@ -647,10 +647,10 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
                                  lGetList(pep, PR_acl), 
                                  lGetList(pep, PR_xacl), 
                                  *object_base[SGE_TYPE_USERSET].list)) {
+               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
                ERROR((SGE_EVENT, MSG_SGETEXT_NO_ACCESS2PRJ4USER_SS,
                         project, ruser));
                answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
                lFreeList(&projects);
                DRETURN(STATUS_EUNKNOWN);
             }
@@ -659,9 +659,9 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
             xprojects = mconf_get_xprojects();
             if ((xprojects && prj_list_locate(xprojects, project)) ||
                 (projects && !prj_list_locate(projects, project))) {
+               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
                ERROR((SGE_EVENT, MSG_JOB_PRJNOSUBMITPERMS_S, project));
                answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
                lFreeList(&xprojects);
                lFreeList(&projects);
                DRETURN(STATUS_EUNKNOWN);
@@ -671,18 +671,18 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
          } else {
             char* enforce_project = mconf_get_enforce_project();
             if (lGetNumberOfElem(projects)>0) {
+               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
                ERROR((SGE_EVENT, MSG_JOB_PRJREQUIRED)); 
                answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
                lFreeList(&projects);
                FREE(enforce_project);
                DRETURN(STATUS_EUNKNOWN);
             }
 
             if (enforce_project && !strcasecmp(enforce_project, "true")) {
+               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
                ERROR((SGE_EVENT, MSG_SGETEXT_NO_PROJECT));
                answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
                lFreeList(&projects);
                FREE(enforce_project);
                DRETURN(STATUS_EUNKNOWN);
@@ -693,7 +693,7 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       }
 
       /* try to dispatch a department to the job */
-      if (set_department(alpp, jep, *object_base[SGE_TYPE_USERSET].list)!=1) {
+      if (set_department(alpp, jep, *object_base[SGE_TYPE_USERSET].list) != 1) {
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          /* alpp gets filled by set_department */
          DRETURN(STATUS_EUNKNOWN);
@@ -704,9 +704,9 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       */
       if (lGetUlong(jep, JB_deadline)) {
          if (!userset_is_deadline_user(*object_base[SGE_TYPE_USERSET].list, ruser)) {
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             ERROR((SGE_EVENT, MSG_JOB_NODEADLINEUSER_S, ruser));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             DRETURN(STATUS_EUNKNOWN);
          }
       }
@@ -720,15 +720,15 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
 
          ar=ar_list_locate(*object_base[SGE_TYPE_AR].list, ar_id);
          if (ar == NULL) {
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             ERROR((SGE_EVENT, MSG_JOB_NOAREXISTS_U, sge_u32c(ar_id)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             DRETURN(STATUS_EEXIST);
          } else if ((lGetUlong(ar, AR_state) == AR_DELETED) ||
                     (lGetUlong(ar, AR_state) == AR_EXITED)) {
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             ERROR((SGE_EVENT, MSG_JOB_ARNOLONGERAVAILABE_U, sge_u32c(ar_id)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             DRETURN(STATUS_EEXIST);
          }
          /* fill the job and ar values */         
@@ -756,15 +756,15 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
 
             /* fit the timeframe */
             if (job_duration > (ar_end_time - ar_start_time)) {
+               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
                ERROR((SGE_EVENT, MSG_JOB_HRTLIMITTOOLONG_U, sge_u32c(ar_id)));
                answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
                DRETURN(STATUS_DENIED);
             }
             if ((job_execution_time + job_duration) > ar_end_time) {
+               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
                ERROR((SGE_EVENT, MSG_JOB_HRTLIMITOVEREND_U, sge_u32c(ar_id)));
                answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
                DRETURN(STATUS_DENIED);
             }
          }
@@ -785,9 +785,9 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
        * jobs with higher priority than 0 (=BASE_PRIORITY)
        */
       if (lGetUlong(jep, JB_priority) > BASE_PRIORITY && !manop_is_operator(ruser)) {
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          ERROR((SGE_EVENT, MSG_JOB_NONADMINPRIO));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          DRETURN(STATUS_EUNKNOWN);
       }
 
@@ -802,9 +802,9 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
          if (lGetString(jep, JB_script_file) && 
              !JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type))) {
             if (spool_write_script(alpp, job_number, jep)==false) {
+               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
                ERROR((SGE_EVENT, MSG_JOB_NOWRITE_US, sge_u32c(job_number), strerror(errno)));
                answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
                DRETURN(STATUS_EDISK);
             }
          }
@@ -831,9 +831,9 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       if (!sge_event_spool(ctx, alpp, 0, sgeE_JOB_ADD, 
                            job_number, 0, NULL, NULL, NULL,
                            jep, NULL, NULL, true, true)) {
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          ERROR((SGE_EVENT, MSG_JOB_NOWRITE_U, sge_u32c(job_number)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          if ((lGetString(jep, JB_exec_file) != NULL) && job_spooling) {
             unlink(lGetString(jep, JB_exec_file));
             lSetString(jep, JB_exec_file, NULL);
@@ -851,8 +851,8 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       
       /* add into job list */
       if (job_list_add_job(object_base[SGE_TYPE_JOB].list, "Master_Job_List", lCopyElem(jep), 0)) {
-         answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
          DRETURN(STATUS_EUNKNOWN);
       }
 
@@ -1440,6 +1440,11 @@ void get_rid_of_job_due_to_qdel(sge_gdi_ctx_class_t *ctx,
    }
    if (sge_signal_queue(ctx, SGE_SIGKILL, qep, j, t, monitor)) {
       if (force) {
+         /* 3: JOB_FINISH reports aborted */
+         sge_commit_job(ctx, j, t, NULL, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
+         cancel_job_resend(job_number, task_number);
+         j = NULL;
+
          if (job_is_array(j)) {
             ERROR((SGE_EVENT, MSG_JOB_FORCEDDELTASK_SUU,
                    ruser, sge_u32c(job_number), sge_u32c(task_number)));
@@ -1447,14 +1452,6 @@ void get_rid_of_job_due_to_qdel(sge_gdi_ctx_class_t *ctx,
             ERROR((SGE_EVENT, MSG_JOB_FORCEDDELJOB_SU,
                    ruser, sge_u32c(job_number)));
          }
-         /* 3: JOB_FINISH reports aborted */
-         sge_commit_job(ctx, j, t, NULL, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
-         cancel_job_resend(job_number, task_number);
-         j = NULL;
-         /* IZ 664: Where is SGE_EVENT initialized??? 
-          * generate the ERROR/INFO message here or pass answer_list to 
-          * sge_commit_job!!!
-          */
          answer_list_add(answer_list, SGE_EVENT, STATUS_OK, 
                          ANSWER_QUALITY_INFO);
       } else {
@@ -1640,8 +1637,7 @@ int sub_command
 
          if (strlen(del_pos)>0) {
             lSetPosString(jep, job_name_pos, del_pos);
-         }   
-         else {
+         } else {
             lSetPosString(jep, job_name_pos, NULL);
          }   
       }

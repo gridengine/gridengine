@@ -134,22 +134,6 @@ lList *cull_parse_job_parameter(u_long32 uid, const char *username, const char *
       }
    }
 
-   if (!lGetList(*pjob, JB_ja_tasks)) {
-      lList *tmpl_task_list = NULL; /* JAT_Type */
-      lListElem *tmpl_task = NULL;  /* JAT_Type */
-
-      tmpl_task_list = lCreateList("template task list", JAT_Type);
-      tmpl_task = lCreateElem(JAT_Type);
-      if (!tmpl_task_list || !tmpl_task) {
-         sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
-         answer_list_add(&answer, SGE_EVENT, 
-                         STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-         DRETURN(answer);
-      }
-      lAppendElem(tmpl_task_list, tmpl_task);
-      lSetList(*pjob, JB_ja_tasks, tmpl_task_list); 
-   }
-
    /*
    ** path aliasing
    */

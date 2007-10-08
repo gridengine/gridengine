@@ -159,10 +159,12 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
             lSetUlong(ep, EH_tagged, 1);
          }
       } else {
+         lListElem* template = host_list_locate(ehl, SGE_TEMPLATE_NAME);
          for_each(ep, ehl) {
             /* prepare complex attributes */
-            if (!strcmp(lGetHost(ep, EH_name), SGE_TEMPLATE_NAME))
+            if (ep == template) {
                continue;
+            }
 
             DPRINTF(("matching host %s with qhost -l\n", lGetHost(ep, EH_name)));
 

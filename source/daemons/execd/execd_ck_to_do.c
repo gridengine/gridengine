@@ -101,7 +101,6 @@ static int sge_start_jobs(sge_gdi_ctx_class_t *ctx);
 static int exec_job_or_task(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, lListElem *petep);
 
 #ifdef COMPILE_DC
-static bool should_reprioritize(void);
 static void force_job_rlimit(const char* qualified_hostname);
 #endif
 
@@ -118,7 +117,9 @@ static void notify_ptf()
 
    DENTER(TOP_LAYER, "notify_ptf");
 
+#ifdef DEBUG
    ptf_show_registered_jobs();
+#endif
 
    /* ck joblist if there are still jobs waiting for osjobid */
    if (waiting4osjid) {
@@ -151,7 +152,7 @@ static void notify_ptf()
 
             for_each(tep, lGetList(jatep, JAT_task_list)) {
                if (lGetUlong(tep, PET_status) == JWAITING4OSJID) {
-                  switch ( register_at_ptf(jep, jatep, tep)) {
+                  switch (register_at_ptf(jep, jatep, tep)) {
                      case 0:   
                         /* succeeded */
                         lSetUlong(tep, PET_status, JRUNNING);
@@ -171,7 +172,7 @@ static void notify_ptf()
                    }
                }
             }
-            if (write_job)
+            if (write_job && !mconf_get_simulate_jobs())
                job_write_spool_file(jep, lGetUlong(jatep, JAT_task_number), 
                                     NULL, SPOOL_WITHIN_EXECD);
          }
@@ -290,9 +291,7 @@ static void force_job_rlimit(const char* qualified_hostname)
             continue;
          }
 
-         if (usage_list)
-            lFreeList(&usage_list);
-
+         lFreeList(&usage_list);
       }
    }
 
@@ -355,15 +354,7 @@ execd_get_wallclock_limit(const char *qualified_hostname, lList *gdil_list, int 
 #define SIGNAL_RESEND_INTERVAL 1
 #define OLD_JOB_INTERVAL 60
 
-int 
-execd_ck_to_do(sge_gdi_ctx_class_t *ctx,
-               struct dispatch_entry *de, 
-               sge_pack_buffer *pb, 
-               sge_pack_buffer *apb,
-               u_long *rcvtimeout, 
-               int *synchron, 
-               char *err_str, 
-               int answer_error) 
+int do_ck_to_do(sge_gdi_ctx_class_t *ctx)
 {
    u_long32 now;
    static u_long next_usage = 0;
@@ -372,7 +363,6 @@ execd_ck_to_do(sge_gdi_ctx_class_t *ctx,
    static u_long next_report = 0;
    static u_long last_report_send = 0;
    lListElem *jep, *jatep;
-   int was_communication_error = CL_RETVAL_OK;
    int return_value = 0;
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
 
@@ -412,7 +402,7 @@ execd_ck_to_do(sge_gdi_ctx_class_t *ctx,
       ptf_update_job_usage();
       sge_switch2admin_user();
 
-      if (should_reprioritize()) {
+      if (mconf_get_reprioritize()) {
          sge_switch2start_user();
          DPRINTF(("ADJUST PRIORITIES\n"));
          ptf_adjust_job_priorities();
@@ -432,36 +422,32 @@ execd_ck_to_do(sge_gdi_ctx_class_t *ctx,
 
                for_each (jatask, lGetList(job, JB_ja_tasks)) {
                   int priority;
-                  master_queue = 
-                           responsible_queue(job, jatask, NULL);
+
+                  master_queue = responsible_queue(job, jatask, NULL);
                   priority = atoi(lGetString(master_queue, QU_priority));
 
                   DPRINTF(("Set priority of job "sge_u32"."sge_u32" running in"
                      " queue  %s to %d\n", 
-                     lGetUlong(job, JB_job_number), 
-                     lGetUlong(jatask, JAT_task_number),
-                     lGetString(master_queue, QU_full_name), priority));
-                  ptf_reinit_queue_priority(
-                     lGetUlong(job, JB_job_number),
-                     lGetUlong(jatask, JAT_task_number),
-                     NULL,
-                     priority);
+                  lGetUlong(job, JB_job_number), 
+                  lGetUlong(jatask, JAT_task_number),
+                  lGetString(master_queue, QU_full_name), priority));
+                  ptf_reinit_queue_priority(lGetUlong(job, JB_job_number),
+                                            lGetUlong(jatask, JAT_task_number),
+                                            NULL, priority);
 
                   for_each(petask, lGetList(jatask, JAT_task_list)) {
-                     master_queue = 
-                           responsible_queue(job, jatask, petask);
+                     master_queue = responsible_queue(job, jatask, petask);
                      priority = atoi(lGetString(master_queue, QU_priority));
-                     DPRINTF(("EB Set priority of task "sge_u32"."sge_u32"-%s running "
-                        "in queue %s to %d\n", 
-                        lGetUlong(job, JB_job_number), 
-                        lGetUlong(jatask, JAT_task_number),
-                        lGetString(petask, PET_id),
-                        lGetString(master_queue, QU_full_name), priority));
-                     ptf_reinit_queue_priority(
-                        lGetUlong(job, JB_job_number),
-                        lGetUlong(jatask, JAT_task_number),
-                        lGetString(petask, PET_id),
-                        priority);
+                     DPRINTF(("Set priority of task "sge_u32"."sge_u32"-%s running "
+                              "in queue %s to %d\n", 
+                     lGetUlong(job, JB_job_number), 
+                     lGetUlong(jatask, JAT_task_number),
+                     lGetString(petask, PET_id),
+                     lGetString(master_queue, QU_full_name), priority));
+                     ptf_reinit_queue_priority(lGetUlong(job, JB_job_number),
+                                               lGetUlong(jatask, JAT_task_number),
+                                                lGetString(petask, PET_id),
+                                                priority);
                   }
                }
             }
@@ -491,7 +477,6 @@ execd_ck_to_do(sge_gdi_ctx_class_t *ctx,
 
       sge_sig_handler_dead_children = sge_reap_children_execd(10);
    }
-
 
    if (next_signal <= now) {
       next_signal = now + SIGNAL_RESEND_INTERVAL;
@@ -567,7 +552,7 @@ execd_ck_to_do(sge_gdi_ctx_class_t *ctx,
    }
 
    /* check for end of simulated jobs */
-   if(mconf_get_simulate_hosts()) {
+   if (mconf_get_simulate_hosts()) {
       for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
             if((lGetUlong(jatep, JAT_status) & JSIMULATED) && lGetUlong(jatep, JAT_end_time) <= now) {
@@ -606,13 +591,13 @@ execd_ck_to_do(sge_gdi_ctx_class_t *ctx,
    }
 
    /* do timeout calculation */
-
-   if ( sge_get_flush_jr_flag() == true || next_report <= now) {
+   if (sge_get_flush_jr_flag() || next_report <= now) {
       if (next_report <= now) {
          next_report = now + mconf_get_load_report_time();
       }
 
       if (last_report_send < now) {
+         int was_communication_error = CL_RETVAL_OK;
          last_report_send = now;
          /* send all reports */
          was_communication_error = sge_send_all_reports(ctx, now, 0, execd_report_sources);
@@ -645,11 +630,6 @@ execd_ck_to_do(sge_gdi_ctx_class_t *ctx,
          }
    }
 
-   if ( return_value == 0 && was_communication_error != CL_RETVAL_OK ) {
-      DPRINTF(("was_communication_error is %s\n", cl_get_error_text(was_communication_error)));
-      return_value = -1;  /* leave dispatcher */
-   }
-
    DEXIT;
    return return_value;
 }
@@ -679,13 +659,9 @@ sge_execd_ja_task_is_tightly_integrated(const lListElem *ja_task)
    bool ret = false;
 
    if (ja_task != NULL) {
-      const lListElem *pe;
-
-      pe = lGetObject(ja_task, JAT_pe_object);
-      if (pe != NULL) {
-         if (lGetBool(pe, PE_control_slaves)) {
-            ret = true;
-         }
+      const lListElem *pe = lGetObject(ja_task, JAT_pe_object);
+      if (pe != NULL && lGetBool(pe, PE_control_slaves)) {
+         ret = true;
       }
    }
 
@@ -745,39 +721,36 @@ static int sge_start_jobs(sge_gdi_ctx_class_t *ctx)
 
    if (lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_JOB))) == 0) {
       DPRINTF(("No jobs to start\n"));
-      DEXIT;
-      return 0;
+      DRETURN(0);
    }
 
    for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
-      for_each (jatep, lGetList(jep, JB_ja_tasks)) {
+      for_each(jatep, lGetList(jep, JB_ja_tasks)) {
          state_changed = exec_job_or_task(ctx, jep, jatep, NULL);
 
          /* visit all tasks */
-         for_each(petep, lGetList(jatep, JAT_task_list))
+         for_each(petep, lGetList(jatep, JAT_task_list)) {
             state_changed |= exec_job_or_task(ctx, jep, jatep, petep);
+         }
 
          /* now save this job so we are up to date on restart */
          if (state_changed) {
-            job_write_spool_file(jep, lGetUlong(jatep, JAT_task_number), 
-                                 NULL, SPOOL_WITHIN_EXECD);
+            if (!mconf_get_simulate_jobs()) {
+               job_write_spool_file(jep, lGetUlong(jatep, JAT_task_number), 
+                                    NULL, SPOOL_WITHIN_EXECD);
+            }
             jobs_started++;
          }
       }
    }
    DPRINTF(("execd_ck_to_do: started "sge_U32CFormat" jobs\n", sge_u32c(jobs_started)));
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 
-static int exec_job_or_task(
-sge_gdi_ctx_class_t *ctx,
-lListElem *jep,
-lListElem *jatep,
-lListElem *petep
-) {
+static int exec_job_or_task(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, lListElem *petep)
+{
    char err_str[256];
    int pid;
    u_long32 now;
@@ -799,15 +772,14 @@ lListElem *petep
    {
       u_long32 status;
 
-      if(petep != NULL) {
+      if (petep != NULL) {
          status = lGetUlong(petep, PET_status);
       } else {
          status = lGetUlong(jatep, JAT_status);
       }
 
       if (status != JIDLE) {
-         DEXIT;
-         return 0;
+         DRETURN(0);
       }
    }   
 
@@ -815,9 +787,9 @@ lListElem *petep
 
    /* we might simulate another host */
    /* JG: TODO: make a function simulate_start_job_or_task() */
-   if(mconf_get_simulate_hosts()) {
+   if (mconf_get_simulate_hosts()) {
       const char *host = lGetHost(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_qhostname);
-      if(sge_hostcmp(host, qualified_hostname) != 0) {
+      if (sge_hostcmp(host, qualified_hostname) != 0) {
          lList *job_args;
          u_long32 duration = 60;
 
@@ -828,17 +800,17 @@ lListElem *petep
 
          /* set time when job shall be reported as finished */
          job_args = lGetList(jep, JB_job_args);
-         if(lGetNumberOfElem(job_args) == 1) {
+         if (lGetNumberOfElem(job_args) == 1) {
             const char *arg = NULL;
             char *endptr = NULL;
             u_long32 duration_in;
   
             arg = lGetString(lFirst(job_args), ST_name);
-            if(arg != NULL) {
+            if (arg != NULL) {
                DPRINTF(("Trying to use first argument ("SFQ") as duration for simulated job\n", arg));
                
                duration_in = strtol(arg, &endptr, 0);
-               if(arg != endptr) {
+               if (arg != endptr) {
                   duration = duration_in;
                }
             }   
@@ -849,7 +821,7 @@ lListElem *petep
       }
    }
 
-   if(petep != NULL) {
+   if (petep != NULL) {
       lSetUlong(petep, PET_start_time, now);
 #ifdef COMPILE_DC
       lSetUlong(petep, PET_status, JWAITING4OSJID);
@@ -889,13 +861,12 @@ lListElem *petep
             execd_job_start_failure(jep, jatep, petep, err_str, GFSTATE_HOST);
             break;
       }
-      DEXIT;
-      return 0;
+      DRETURN(0);
    }
    DTIMEPRINTF(("TIME IN EXECD FOR STARTING THE JOB: " sge_u32 "\n",
                 sge_get_gmt()-now));
    
-   if(petep != NULL) {
+   if (petep != NULL) {
       lSetUlong(petep, PET_pid, pid);
    } else {
       lSetUlong(jatep, JAT_pid, pid);
@@ -914,8 +885,7 @@ lListElem *petep
       }
    }
 
-   DEXIT;
-   return 1;
+   DRETURN(1);
 }
 
 #ifdef COMPILE_DC
@@ -1083,43 +1053,4 @@ FCLOSE_ERROR:
    DEXIT;
    return 1;
 }
-
-static bool should_reprioritize(void)
-{
-   lListElem *confl = NULL; 
-   lList *ep_list = NULL;
-   lListElem *ep = NULL; 
-   bool ret = true;
-
-   DENTER(TOP_LAYER, "should_reprioritize");
-
-   confl = lCopyElem(lGetElemHost(Execd_Config_List, CONF_name, "global"));
-
-   if (confl) {
-      ep_list = lGetList(confl, CONF_entries);
-   }
-    
-   if (ep_list) {
-      ep = lGetElemStr(ep_list, CF_name, REPRIORITIZE);
-   }
-
-   if (ep)
-   {
-      const char* value;
-      value = lGetString(ep, CF_value);
-      ret = (strncasecmp(value, "0", sizeof("0")) == 0) ? false : true;
-   }
-   else
-   {
-      ret = mconf_get_reprioritize()? true : false;
-   }
-
-   if (NULL != confl) {
-      lFreeElem(&confl);
-   }
-
-   DEXIT;
-   return ret;
-} /* should_reprioritize */
-
 #endif

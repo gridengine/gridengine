@@ -603,6 +603,7 @@ cqueue_mod_qinstances(sge_gdi_ctx_class_t *ctx,
                      answer_list_add(answer_list, SGE_EVENT, 
                                      STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                      ret = false;
+                     break;
                   }
                }
             }
@@ -633,14 +634,14 @@ cqueue_handle_qinstances(sge_gdi_ctx_class_t *ctx,
    DENTER(TOP_LAYER, "cqueue_handle_qinstances");
 
    if (ret) { 
-      ret &= cqueue_mark_qinstances(cqueue, answer_list, rem_hosts);
+      ret = cqueue_mark_qinstances(cqueue, answer_list, rem_hosts);
    }
    if (ret) {
-      ret &= cqueue_mod_qinstances(ctx, cqueue, answer_list, reduced_elem, 
+      ret = cqueue_mod_qinstances(ctx, cqueue, answer_list, reduced_elem, 
                                    refresh_all_values, monitor);
    }
    if (ret) {
-      ret &= cqueue_add_qinstances(ctx, cqueue, answer_list, add_hosts, monitor);
+      ret = cqueue_add_qinstances(ctx, cqueue, answer_list, add_hosts, monitor);
    }
    DRETURN(ret);
 }
@@ -1368,9 +1369,7 @@ qinstance_check_unknown_state(lListElem *this_elem, lList *master_exechost_list)
       load_list = lGetList(host, EH_load_list);
 
       for_each(load, load_list) {
-         const char *load_name = lGetString(load, HL_name);
-
-         if (!sge_is_static_load_value(load_name)) {
+         if (!lGetBool(load, HL_static)) {
             sge_qmaster_qinstance_state_set_unknown(this_elem, false);
             DTRACE;
             break;

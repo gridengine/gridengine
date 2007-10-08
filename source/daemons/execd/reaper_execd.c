@@ -93,7 +93,7 @@
 static void unregister_from_ptf(u_long32 jobid, u_long32 jataskid, const char *pe_task_id, lListElem *jr);
 #endif
 
-static int clean_up_job(lListElem *jr, int failed, int signal, int is_array, const lListElem *pe);
+static int clean_up_job(lListElem *jr, int failed, int signal, int is_array, const lListElem *pe, const char *job_owner);
 static void convert_attribute(lList **cflpp, lListElem *jr, char *name, u_long32 udefau);
 static int extract_ulong_attribute(lList **cflpp, char *name, u_long32 *valuep); 
 
@@ -269,7 +269,7 @@ int sge_reap_children_execd(int max_count)
          }
 
          clean_up_job(jr, failed, exit_status, job_is_array(jep),
-                      lGetObject(jatep, JAT_pe_object));
+                      lGetObject(jatep, JAT_pe_object), lGetString(jep, JB_owner));
 
          flush_job_report(jr);
 
@@ -350,7 +350,7 @@ lListElem *jr
    failed = indicates a failure of job execution, see shepherd_states.h
  ************************************************************************/
 static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status, 
-                        int is_array, const lListElem *pe) 
+                        int is_array, const lListElem *pe, const char* job_owner) 
 {
    dstring jobdir = DSTRING_INIT;
    dstring fname  = DSTRING_INIT;
@@ -641,15 +641,14 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
                    job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring)));
          }
       }
-   }
-   else
+   } else {
       job_pid = 0;
+   }
 
    lSetUlong(jr, JR_job_pid, job_pid);
    
    /* Only used for ckpt jobs: 1 checkpointed, 2 checkpoint in the arena */
    lSetUlong(jr, JR_ckpt_arena, ckpt_arena);
-   
 
    /* Currently the shepherd doesn't create this file */
    sge_get_active_job_file_path(&fname, job_id, ja_task_id, pe_task_id, 
@@ -681,7 +680,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    */
       general_failure = GFSTATE_HOST;
       lSetUlong(jr, JR_general_failure, general_failure);
-      job_related_adminmail(EXECD, jr, is_array);
+      job_related_adminmail(EXECD, jr, is_array, job_owner);
       break;
    case SSTATE_PROCSET_NOTSET:
    case SSTATE_READ_CONFIG:
@@ -690,7 +689,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    case SSTATE_PESTART_FAILED:
       general_failure = GFSTATE_QUEUE;
       lSetUlong(jr, JR_general_failure, general_failure);
-      job_related_adminmail(EXECD, jr, is_array);
+      job_related_adminmail(EXECD, jr, is_array, job_owner);
       break;
    case SSTATE_BEFORE_JOB:
    case SSTATE_NO_SHELL:
@@ -744,7 +743,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
 
          general_failure = job_caused_failure ? GFSTATE_JOB : GFSTATE_QUEUE;
          lSetUlong(jr, JR_general_failure, general_failure);
-         job_related_adminmail(EXECD, jr, is_array);
+         job_related_adminmail(EXECD, jr, is_array, job_owner);
       }
       break;
    /*
@@ -760,7 +759,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    case SSTATE_HELPER_SERVICE_BEFORE_JOB:
       general_failure = GFSTATE_JOB;
       lSetUlong(jr, JR_general_failure, general_failure);
-      job_related_adminmail(EXECD, jr, is_array);
+      job_related_adminmail(EXECD, jr, is_array, job_owner);
       break;
    /*
    ** if an error occurred after the job has been run
@@ -773,7 +772,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    case SSTATE_PROCSET_NOTFREED:
       general_failure = GFSTATE_NO_HALT;
       lSetUlong(jr, JR_general_failure, general_failure);
-      job_related_adminmail(EXECD, jr, is_array);
+      job_related_adminmail(EXECD, jr, is_array, job_owner);
       break;
    /*
    ** these are shepherd error conditions met by the execd
@@ -790,7 +789,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
       */
       general_failure = GFSTATE_NO_HALT;
       lSetUlong(jr, JR_general_failure, general_failure);
-      job_related_adminmail(EXECD, jr, is_array);
+      job_related_adminmail(EXECD, jr, is_array, job_owner);
       break;
    default: 
       general_failure = GFSTATE_NO_HALT;
@@ -849,7 +848,7 @@ lListElem *jr
    jep = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
    while(jep != NULL) {
       jatep = job_search_task(jep, NULL, ja_task_id);
-      if(jatep != NULL) {
+      if (jatep != NULL) {
          break;
       }
       jep = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
@@ -860,11 +859,7 @@ lListElem *jr
    
       DPRINTF(("REMOVING WITH jep && jatep\n"));
       if (pe_task_id_str) {
-         for_each(petep, lGetList(jatep, JAT_task_list)) {
-            if (!strcmp(pe_task_id_str, lGetString(petep, PET_id))) {
-               break;  
-            }
-         }   
+         petep = lGetElemStr(lGetList(jatep, JAT_task_list), PET_id, pe_task_id_str);
 
          if (!petep) {
             ERROR((SGE_EVENT, MSG_JOB_XYHASNOTASKZ_UUS, 
@@ -874,7 +869,7 @@ lListElem *jr
             return;
          }
 
-         if (lGetUlong(jr, JR_state)!=JEXITING) {
+         if (lGetUlong(jr, JR_state) != JEXITING) {
             WARNING((SGE_EVENT, MSG_EXECD_GOTACKFORPETASKBUTISNOTINSTATEEXITING_S, pe_task_id_str));
             DEXIT;
             return;
@@ -886,8 +881,9 @@ lListElem *jr
       }   
      
       /* use mail list of job instead of tasks one */
-      if (jr && lGetUlong(jr, JR_state)!=JSLAVE)
+      if (jr && lGetUlong(jr, JR_state) != JSLAVE) {
          reaper_sendmail(ctx, jep, jr); 
+      }
 
 
       /*
@@ -927,7 +923,9 @@ lListElem *jr
       }
 
       if (!pe_task_id_str) {
-         job_remove_spool_file(job_id, ja_task_id, NULL, SPOOL_WITHIN_EXECD);
+         if (!mconf_get_simulate_jobs()) {
+            job_remove_spool_file(job_id, ja_task_id, NULL, SPOOL_WITHIN_EXECD);
+         }
 
          if (!JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type)) &&
              lGetString(jep, JB_exec_file)) {
@@ -937,7 +935,7 @@ lListElem *jr
             /* it is possible to remove the exec_file if
                less than one task of a job is running */
             tmp_job = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
-            while(tmp_job != NULL) {
+            while (tmp_job != NULL && task_number <= 2) {
                task_number++;
                tmp_job = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
             }
@@ -1022,7 +1020,9 @@ lListElem *jr
          }
 
          /* job */
-         job_remove_spool_file(job_id, ja_task_id, NULL, SPOOL_WITHIN_EXECD); 
+         if (!mconf_get_simulate_jobs()) {
+            job_remove_spool_file(job_id, ja_task_id, NULL, SPOOL_WITHIN_EXECD);
+         }
 
          /* active dir */
          if (!mconf_get_keep_active() && !getenv("SGE_KEEP_ACTIVE")) {
@@ -1104,7 +1104,7 @@ int failed
       jr = add_job_report(jobid, jataskid, petaskid, jep);
    }
    
-   if(petep != NULL) {
+   if (petep != NULL) {
       ep = lFirst(lGetList(petep, PET_granted_destin_identifier_list));
    } else {
       ep = lFirst(lGetList(jatep, JAT_granted_destin_identifier_list));
@@ -1112,7 +1112,6 @@ int failed
 
    if (ep != NULL) {
       lSetString(jr, JR_queue_name, lGetString(ep, JG_qname));
-      lSetHost(jr, JR_host_name,  lGetHost(ep, JG_qhostname));
    }
       
    lSetUlong(jr, JR_failed, failed);
@@ -1121,7 +1120,7 @@ int failed
   
    lSetUlong(jr, JR_state, JEXITING);
 
-   job_related_adminmail(EXECD, jr, job_is_array(jep));
+   job_related_adminmail(EXECD, jr, job_is_array(jep), lGetString(jep, JB_owner));
 
    DEXIT;
    return jr;
@@ -1167,11 +1166,10 @@ char *qname
  If startup is true this is the first call of the execd. We produce more
  output for the administrator the first time.
  ************************************************************************/
-int clean_up_old_jobs(
-int startup 
-) {
-   SGE_STRUCT_DIRENT *dent;
-   DIR *cwd;
+int clean_up_old_jobs(int startup)
+{
+   SGE_STRUCT_DIRENT *dent = NULL;
+   DIR *cwd = NULL;
    char dir[SGE_PATH_MAX];
    pid_t pids[10000];   /* a bunch of processes */
    int npids;           /* number of running processes */
@@ -1179,7 +1177,6 @@ int startup
    u_long32 jobid, jataskid;
    static int lost_children = 1;
    lListElem *jep, *petep, *jatep = NULL;
-   char *cp;
 
    DENTER(TOP_LAYER, "clean_up_old_jobs");
 
@@ -1214,8 +1211,7 @@ int startup
    }
 
    /* Get pids of running jobs. So we can look for running shepherds. */
-   cp = SGE_SHEPHERD;
-   npids = sge_get_pids(pids, 10000, cp, PSCMD);
+   npids = sge_get_pids(pids, 10000, SGE_SHEPHERD, PSCMD);
    if (npids == -1) {
       ERROR((SGE_EVENT, MSG_SHEPHERD_CANTGETPROCESSESFROMPSCOMMAND));
       DEXIT;
@@ -1376,7 +1372,7 @@ examine_job_task_from_file(int startup, char *dir, lListElem *jep,
          }
          lSetUlong(jr, JR_state, JEXITING);
          clean_up_job(jr, ESSTATE_NO_PID, 0, job_is_array(jep),
-                      lGetObject(jatep, JAT_pe_object));  /* failed before execution */
+                      lGetObject(jatep, JAT_pe_object), lGetString(jep, JB_owner));  /* failed before execution */
       }
       DEXIT;
       return;
@@ -1448,7 +1444,7 @@ examine_job_task_from_file(int startup, char *dir, lListElem *jep,
       return;
    }
 
-   clean_up_job(jr, 0, 0, job_is_array(jep), lGetObject(jatep, JAT_pe_object));
+   clean_up_job(jr, 0, 0, job_is_array(jep), lGetObject(jatep, JAT_pe_object), lGetString(jep, JB_owner));
    lSetUlong(jr, JR_state, JEXITING);
    
    flush_job_report(jr);
@@ -1491,7 +1487,6 @@ read_dusage(lListElem *jr, const char *jobdir, u_long32 jobid,
    if (failed != ESSTATE_NO_CONFIG) {
       dstring buffer = DSTRING_INIT;
       const char *qinstance_name = NULL;
-      char *owner;
    
       qinstance_name = sge_dstring_sprintf(&buffer, SFN"@"SFN,
                                            get_conf_val("queue"),
@@ -1499,38 +1494,6 @@ read_dusage(lListElem *jr, const char *jobdir, u_long32 jobid,
       lSetString(jr, JR_queue_name, qinstance_name);
       qinstance_name = NULL;
       sge_dstring_free(&buffer);
-
-      lSetHost(jr, JR_host_name, get_conf_val("host"));
-      lSetString(jr, JR_owner, owner = get_conf_val("job_owner"));
-      if (owner) {
-         struct passwd *pw;
-         struct passwd pw_struct;
-         char *buffer_pw;
-         int size_pw;
-
-         size_pw = get_pw_buffer_size();
-         buffer_pw = sge_malloc(size_pw);
-         pw = sge_getpwnam_r(owner, &pw_struct, buffer_pw, size_pw);
-         if (pw) {
-            char *buffer_pg;
-            int size_pg;
-
-            if (mconf_get_use_qsub_gid()) {
-               char *tmp_qsub_gid = search_conf_val("qsub_gid");
-               pw->pw_gid = atol(tmp_qsub_gid);
-            }
-
-            size_pg = get_group_buffer_size();
-            buffer_pg = sge_malloc(size_pg);
-            if(sge_gid2group(pw->pw_gid, buffer_pg, 
-                             size_pg, MAX_NIS_RETRIES) != 0) {
-               lSetString(jr, JR_group, buffer_pg);
-            }
-            FREE(buffer_pg);
-         }
-
-         FREE(buffer_pw);
-      }
 
       add_usage(jr, "submission_time", get_conf_val("submission_time"), (double)0);
       add_usage(jr, "priority",        get_conf_val("priority"),        (double)0);
@@ -1815,9 +1778,7 @@ lListElem *jr
    if (!(q=lGetString(jr, JR_queue_name)))
       q = MSG_MAIL_UNKNOWN_NAME;
 
-   if (!(h=lGetHost(jr, JR_host_name))) {
-      h = qualified_hostname;
-   }
+   h = qualified_hostname;
 
    if (!(u=lGetString(jep, JB_owner)))
       u = MSG_MAIL_UNKNOWN_NAME;

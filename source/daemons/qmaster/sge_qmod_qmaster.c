@@ -1089,7 +1089,6 @@ monitoring_t *monitor
    int i;
    u_long32 next_delivery_time = 60;
    u_long32 now;
-   u_long32 dummy = 0;
    sge_pack_buffer pb;
    int sent = 0;
 
@@ -1111,7 +1110,7 @@ monitoring_t *monitor
       hnm = lGetHost(qep, QU_qhostname);
 
       /* map hostname if we are simulating hosts */
-      if(mconf_get_simulate_hosts()) {
+      if (mconf_get_simulate_hosts()) {
          lListElem *hep = NULL;
          const lListElem *simhost = NULL;
 
@@ -1128,7 +1127,7 @@ monitoring_t *monitor
          }
       }
 
-      if((i = init_packbuffer(&pb, 256, 0)) == PACK_SUCCESS) {
+      if ((i = init_packbuffer(&pb, 256, 0)) == PACK_SUCCESS) {
          /* identifier for acknowledgement */
          if (jep) {
             /*
@@ -1139,26 +1138,24 @@ monitoring_t *monitor
             if (!lGetString(jatep, JAT_master_queue) ||
                 is_pe_master_task_send(jatep)) {
                /* TAG_SIGJOB */
-               /* one for acknowledgement */
-               packint(&pb, lGetUlong(jep, JB_job_number));    
-               packint(&pb, lGetUlong(jatep, JAT_task_number)); 
-               /* and one for processing */
                packint(&pb, lGetUlong(jep, JB_job_number));   
                packint(&pb, lGetUlong(jatep, JAT_task_number));
-            }
-         }
-         else {
+               packstr(&pb, NULL);
+               packint(&pb, how); 
+            } 
+         } else {
             /* TAG_SIGQUEUE */
             packint(&pb, lGetUlong(qep, QU_queue_number));
             packint(&pb, 0); 
-            packint(&pb, 0); 
-            packint(&pb, 0);
+            packstr(&pb, lGetString(qep, QU_full_name));
+            packint(&pb, how); 
          }
-         packstr(&pb, lGetString(qep, QU_full_name));
-         packint(&pb, how); 
 
-         i = gdi2_send_message_pb(ctx, 0, pnm, 1, hnm, jep ? TAG_SIGJOB: TAG_SIGQUEUE, 
+         if (pb_filled(&pb)) {
+            u_long32 dummy = 0;
+            i = gdi2_send_message_pb(ctx, 0, pnm, 1, hnm, jep ? TAG_SIGJOB: TAG_SIGQUEUE, 
                           &pb, &dummy);
+         }
          MONITOR_MESSAGES_OUT(monitor);                          
          clear_packbuffer(&pb);
       } else {
@@ -1167,8 +1164,7 @@ monitoring_t *monitor
 
       if (i != CL_RETVAL_OK) {
          ERROR((SGE_EVENT, MSG_COM_NOUPDATEQSTATE_IS, how, lGetString(qep, QU_full_name)));
-         DEXIT;
-         return i;
+         DRETURN(i);
       }
       sent = 1;
    }
@@ -1178,8 +1174,7 @@ monitoring_t *monitor
    /* If this is a operation on one job we enter the signal request in the
       job structure. If the operation is not acknowledged in time we can do
       further steps */
-   if (jep)
-   {
+   if (jep) {
       te_event_t ev = NULL;
 
       DPRINTF(("JOB "sge_u32": %s signal %s (retry after "sge_u32" seconds) host: %s\n", 
@@ -1193,9 +1188,7 @@ monitoring_t *monitor
       te_add_event(ev);
       te_free_event(&ev);
       lSetUlong(jatep, JAT_pending_signal_delivery_time, next_delivery_time); 
-   }
-   else
-   {
+   } else {
       te_event_t ev = NULL;
 
       DPRINTF(("QUEUE %s: %s signal %s (retry after "sge_u32" seconds) host %s\n", 

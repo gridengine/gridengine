@@ -1323,9 +1323,9 @@ struct group *sge_getgrgid_r(gid_t gid, struct group *pg,
 
    while(retries-- && !res) {
 #if defined(INTERIX)
-      if(getgrgid_nomembers_r(gid, pg, buffer, bufsize, &res) != 0) 
+      if (getgrgid_nomembers_r(gid, pg, buffer, bufsize, &res) != 0) 
 #else
-      if(getgrgid_r(gid, pg, buffer, bufsize, &res) != 0) 
+      if (getgrgid_r(gid, pg, buffer, bufsize, &res) != 0) 
 #endif
       {
          res = NULL;
@@ -1333,7 +1333,7 @@ struct group *sge_getgrgid_r(gid_t gid, struct group *pg,
    }
 
    /* could be that struct is not NULL but group nam is empty */
-   if(res && !res->gr_name) {
+   if (res && !res->gr_name) {
       res = NULL;
    }
 

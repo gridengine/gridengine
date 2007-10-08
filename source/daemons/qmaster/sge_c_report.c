@@ -33,6 +33,8 @@
 #include "sge_c_report.h"
 
 #include <string.h>
+
+#include "uti/sge_time.h"
 #include "sgermon.h"
 #include "sge_prog.h"
 #include "sge_log.h"
@@ -49,6 +51,8 @@
 #include "sge_answer.h"
 #include "sge_lock.h"
 #include "sge_event_master.h"
+#include "sgeobj/sge_ack.h"
+#include "reschedule.h"
 
 static int update_license_data(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList *lp_lic); 
 
@@ -88,29 +92,26 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
 
    DENTER(TOP_LAYER, "sge_c_report");
 
-   if (!lGetNumberOfElem(report_list)) {
+   if (lGetNumberOfElem(report_list) == 0) {
       DPRINTF(("received empty report\n"));
       if (rhost != NULL) {
          WARNING((SGE_EVENT, MSG_QMASTER_RECEIVED_EMPTY_LOAD_REPORT_S, rhost));
       } else {
          WARNING((SGE_EVENT, MSG_QMASTER_RECEIVED_EMPTY_LOAD_REPORT_S, "unknown"));
       }
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
 
    /* accept reports only from execd's */
    if (strcmp(prognames[EXECD], commproc)) {
       ERROR((SGE_EVENT, MSG_GOTSTATUSREPORTOFUNKNOWNCOMMPROC_S, commproc));
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
 
    /* do not process load reports from old execution daemons */
    rversion = lGetUlong(lFirst(report_list), REP_version);
    if (verify_request_version(NULL, rversion, rhost, commproc, id)) {
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
    
    this_seqno = lGetUlong(lFirst(report_list), REP_seqno);
@@ -118,10 +119,9 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
    MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor); 
    /* need exec host for all types of reports */
    if (!(hep = host_list_locate(*object_type_get_master_list(SGE_TYPE_EXECHOST), rhost))) {
-      ERROR((SGE_EVENT, MSG_GOTSTATUSREPORTOFUNKNOWNEXECHOST_S, rhost));
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-      DEXIT;
-      return;
+      ERROR((SGE_EVENT, MSG_GOTSTATUSREPORTOFUNKNOWNEXECHOST_S, rhost));
+      DRETURN_VOID;
    }
 
    /* prevent old reports being proceeded 
@@ -135,11 +135,15 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       INFO((SGE_EVENT, MSG_QMASTER_RECEIVED_OLD_LOAD_REPORT_UUS, 
                sge_u32c(this_seqno), sge_u32c(last_seqno), rhost));
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
    
    lSetUlong(hep, EH_report_seqno, this_seqno);
+
+   /* RU: */
+   /* tag all reschedule_unknown list entries we hope to 
+      hear about in that job report */
+   update_reschedule_unknown_list(ctx, hep);
 
    /*
    ** process the reports one after the other
@@ -154,10 +158,15 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
       case NUM_REP_REPORT_LOAD:
          MONITOR_ELOAD(monitor); 
          /* Now handle execds load reports */
+         if (!is_pb_used) {
+            is_pb_used = true;
+            init_packbuffer(&pb, 1024, 0);
+         }
          sge_update_load_values(ctx, rhost, lGetList(report, REP_list));
+         pack_ack(&pb, ACK_LOAD_REPORT, this_seqno, 0, NULL);
 
          break;
-      case NUM_REP_REPORT_CONF: /* this is thread safe, no need for the global lock */
+      case NUM_REP_REPORT_CONF: 
          MONITOR_ECONF(monitor); 
          if (hep && (sge_compare_configuration(hep, lGetList(report, REP_list)) != 0)) {
             DPRINTF(("%s: configuration on host %s is not up to date\n", SGE_FUNC, rhost));
@@ -172,7 +181,7 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
          ** save number of processors
          */
          MONITOR_EPROC(monitor);
-         ret = update_license_data(ctx, hep, lGetList(report, REP_list)); /* is not thread safe, needs global lock */
+         ret = update_license_data(ctx, hep, lGetList(report, REP_list)); 
          if (ret) {
             ERROR((SGE_EVENT, MSG_LICENCE_ERRORXUPDATINGLICENSEDATA_I, ret));
          }
@@ -180,19 +189,22 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
          break;
 
       case NUM_REP_REPORT_JOB:
-         {
-            MONITOR_EJOB(monitor);
+         MONITOR_EJOB(monitor);
+         if (!is_pb_used) {
             is_pb_used = true;
-            if(init_packbuffer(&pb, 1024, 0) == PACK_SUCCESS) {
-               process_job_report(ctx, report, hep, rhost, commproc, &pb, monitor); /* is not thread safe, needs global lock */
-            }
+            init_packbuffer(&pb, 1024, 0);
          }
+         process_job_report(ctx, report, hep, rhost, commproc, &pb, monitor);
          break;
 
       default:   
          DPRINTF(("received invalid report type %ld\n", rep_type));
       }
    } /* end for_each */
+
+   /* RU: */
+   /* delete reschedule unknown list entries we heard about */
+   delete_from_reschedule_unknown_list(ctx, hep);
    
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
   
@@ -207,8 +219,7 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
       clear_packbuffer(&pb);
    }
    
-   DEXIT;
-   return;
+   DRETURN_VOID;
 } /* sge_c_report */
 
 /*
@@ -230,21 +241,19 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
 */
 static int update_license_data(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList *lp_lic)
 {
-   u_long32 processors, old_processors;
+   u_long32 processors;
 
    DENTER(TOP_LAYER, "update_license_data");
 
    if (!hep) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    /*
    ** if it was clear what to do in this case we could return 0
    */
    if (!lp_lic) {
-      DEXIT;
-      return -2;
+      DRETURN(-2);
    }
 
    /*
@@ -252,11 +261,10 @@ static int update_license_data(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList *
    */
    processors = lGetUlong(lFirst(lp_lic), LIC_processors);
 
-   old_processors = lGetUlong(hep, EH_processors);
    /*
    ** we spool, cf. cod_update_load_values()
    */
-   if (processors != old_processors) {
+   if (processors != lGetUlong(hep, EH_processors)) {
       lList *answer_list = NULL;
 
       lSetUlong(hep, EH_processors, processors);
@@ -270,7 +278,6 @@ static int update_license_data(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList *
       answer_list_output(&answer_list);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 

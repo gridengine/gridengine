@@ -94,10 +94,6 @@ extern "C" {
 *        Environment variables exported to the pe task.
 *        They will overwrite inherited variables from the ja task.
 *
-*     Communication information
-*     =========================
-*     SGE_STRING(PET_source)
-*
 *  FUNCTION
 *     PET_Type objects are used to store information about tasks of
 *     tightly integrated parallel jobs (started with qrsh -inherit).
@@ -134,9 +130,7 @@ enum {
 
    PET_cwd,
    PET_path_aliases,
-   PET_environment,
-
-   PET_source
+   PET_environment
 };
 
 LISTDEF(PET_Type)
@@ -163,8 +157,6 @@ LISTDEF(PET_Type)
    SGE_STRING(PET_cwd, CULL_DEFAULT | CULL_SUBLIST)
    SGE_LIST(PET_path_aliases, PA_Type, CULL_DEFAULT)
    SGE_MAP(PET_environment, VA_Type, CULL_DEFAULT)
-
-   SGE_STRING(PET_source, CULL_DEFAULT)
 LISTEND
 
 NAMEDEF(PETN)
@@ -189,8 +181,6 @@ NAMEDEF(PETN)
    NAME("PET_cwd")
    NAME("PET_path_aliases")
    NAME("PET_environment")
-
-   NAME("PET_source")
 NAMEEND
 
 

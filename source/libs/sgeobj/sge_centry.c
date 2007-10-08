@@ -1259,8 +1259,7 @@ centry_list_is_correct(lList *this_list, lList **answer_list)
    DRETURN(ret);
 }
 
-int 
-ensure_attrib_available(lList **alpp, lListElem *ep, int nm) 
+int ensure_attrib_available(lList **alpp, lListElem *ep, int nm) 
 {
    int ret = 0;
    lListElem *attr = NULL;
@@ -1277,6 +1276,7 @@ ensure_attrib_available(lList **alpp, lListElem *ep, int nm)
             answer_list_add(alpp, SGE_EVENT, 
                             STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             ret = STATUS_EUNKNOWN;
+            break;
          } else {
             const char *fullname = lGetString(centry, CE_name);
 

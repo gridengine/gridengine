@@ -39,23 +39,11 @@
 #include "sge_gdi.h"
 
 #include "sge_all_listsL.h"
-#include "sge_host.h"
 #include "sge_load_sensor.h"
 #include "sge_log.h"
-#include "sge_prog.h"
 #include "sge_time.h"
 #include "sgermon.h"
-#include "commlib.h"
-#include "sge_conf.h"
 #include "dispatcher.h"
-#include "execd_ck_to_do.h"
-#include "execd_get_new_conf.h"
-#include "execd_job_exec.h"
-#include "execd_kill_execd.h"
-#include "execd_signal_queue.h"
-#include "execd_ticket.h"
-#include "job_report_execd.h"
-#include "sge_report_execd.h"
 #include "load_avg.h"
 #include "parse.h"
 #include "sge_feature.h"
@@ -68,25 +56,13 @@
 #include "spool/classic/read_write_job.h"
 #include "sge_os.h"
 #include "sge_stdlib.h"
-#include "sge_spool.h"
 #include "sge_answer.h"
-#include "basis_types.h"
-#include "sge_language.h"
-#include "sge_job.h"
-#include "sge_mt_init.h"
-#include "sge_uidgid.h"
-#include "sge_profiling.h"
 #include "execd.h"
-#include "qm_name.h"
 #include "sgeobj/sge_object.h"
-#include "uti/sge_bootstrap.h"
-
 
 #include "msg_common.h"
 #include "msg_execd.h"
 #include "msg_gdilib.h"
-
-#include "uti/sge_monitor.h"
 
 #ifdef COMPILE_DC
 #   include "ptf.h"
@@ -113,24 +89,6 @@ static void dispatcher_errfunc(const char *err_str);
 static void parse_cmdline_execd(char **argv);
 static lList *sge_parse_cmdline_execd(char **argv, lList **ppcmdline);
 static lList *sge_parse_execd(lList **ppcmdline, lList **ppreflist, u_long32 *help);
-
-/* DISPATCHER TABLE FOR EXECD */
-dispatch_entry execd_dispatcher_table[] = {
-   { TAG_JOB_EXECUTION, NULL, NULL, 0, execd_job_exec },
-   { TAG_SLAVE_ALLOW,   NULL, NULL, 0, execd_job_slave },
-   { TAG_CHANGE_TICKET, NULL, NULL, 0, execd_ticket },
-   { TAG_ACK_REQUEST,   NULL, NULL, 0, execd_c_ack }, 
-   { TAG_SIGJOB,        NULL, NULL, 0, execd_signal_queue },
-   { TAG_SIGQUEUE,      NULL, NULL, 0, execd_signal_queue },
-   { TAG_KILL_EXECD,    NULL, NULL, 0, execd_kill_execd  },
-/*    { TAG_NEW_FEATURES,  NULL, NULL, 0, execd_new_features }, */
-   { TAG_GET_NEW_CONF,  NULL, NULL, 0, execd_get_new_conf },
-   { -1,                NULL, NULL, 0, execd_ck_to_do}
-};
-
-
-/* time execd maximal waits in the dispatch routine */
-#define DISPATCH_TIMEOUT_SGE     2
 
 int main(int argc, char *argv[]);
 
@@ -175,12 +133,9 @@ unsigned long sge_execd_application_status(char** info_message)
 }
 
 /*-------------------------------------------------------------------------*/
-int main(
-int argc,
-char **argv 
-) {
-   int i, dispatch_timeout;
-   char err_str[1024];
+int main(int argc, char **argv)
+{
+   int ret;
    int my_pid;
    int ret_val;
    int printed_points = 0;
@@ -197,6 +152,9 @@ char **argv
    sge_prof_setup();
    set_thread_name(pthread_self(),"Execd Thread");
 
+   prof_set_level_name(SGE_PROF_CUSTOM1, "Execd Thread", NULL); 
+   prof_set_level_name(SGE_PROF_CUSTOM2, "Execd Dispatch", NULL); 
+
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
    /* init language output for gettext() , it will use the right language */
    sge_init_language_func((gettext_func_type)        gettext,
@@ -211,7 +169,7 @@ char **argv
       
    /* Initialize path for temporary logging until we chdir to spool */
    my_pid = getpid();
-   sprintf(tmp_err_file_name,"%s."sge_U32CFormat"",TMP_ERR_FILE_EXECD,sge_u32c(my_pid));
+   sprintf(tmp_err_file_name,"%s."sge_U32CFormat"", TMP_ERR_FILE_EXECD, sge_u32c(my_pid));
    log_state_set_log_file(tmp_err_file_name);
 
    /* exit func for SGE_EXIT() */
@@ -224,10 +182,16 @@ char **argv
    }
    ctx->set_exit_func(ctx, execd_exit_func);
 
-   if ((i=sge_occupy_first_three())>=0) {
-      CRITICAL((SGE_EVENT, MSG_FILE_REDIRECTFD_I, i));
+   /* prepare daemonize */
+   if (!getenv("SGE_ND")) {
+      sge_daemonize_prepare(ctx);
+   }
+
+   if ((ret=sge_occupy_first_three())>=0) {
+      CRITICAL((SGE_EVENT, MSG_FILE_REDIRECTFD_I, ret));
       SGE_EXIT((void**)&ctx, 1);
-   }     
+   }
+
    lInit(nmv);
 
    /* unset XAUTHORITY if set */
@@ -242,7 +206,8 @@ char **argv
    while (cl_com_get_handle(prognames[EXECD],1) == NULL) {
       ctx->prepare_enroll(ctx);
       max_enroll_tries--;
-      if ( max_enroll_tries <= 0 || shut_me_down ) {
+
+      if (max_enroll_tries <= 0 || shut_me_down) {
          /* exit after 30 seconds */
          if (printed_points != 0) {
             printf("\n");
@@ -278,10 +243,14 @@ char **argv
    /* daemonizes if qmaster is unreachable */   
    sge_setup_sge_execd(ctx, tmp_err_file_name);
 
+   /* finalize daeamonize */
    if (!getenv("SGE_ND")) {
+#if 1
       daemonize_execd(ctx);
+#else
+      sge_daemonize_finalize(ctx);
+#endif
    }
-
 
    /* are we using qidle or not */
    sge_ls_qidle(mconf_get_use_qidle());
@@ -301,9 +270,8 @@ char **argv
 
    /* at this point we are sure we are the only sge_execd */
    /* first we have to report any reaped children that might exist */
-
    starting_up();
-   
+
    /*
    ** log a warning message if execd hasn't been started by a superuser
    */
@@ -329,30 +297,25 @@ char **argv
    clean_up_old_jobs(1);
    sge_send_all_reports(ctx, 0, NUM_REP_REPORT_JOB, execd_report_sources);
 
-   dispatch_timeout = DISPATCH_TIMEOUT_SGE;
-      
    sge_sig_handler_in_main_loop = 1;
 
    /***** MAIN LOOP *****/
    while (shut_me_down != 1) {
+      char err_str[1024];
 
      if (thread_prof_active_by_id(pthread_self())) {
          prof_start(SGE_PROF_CUSTOM1, NULL);
-         prof_set_level_name(SGE_PROF_CUSTOM1, "Execd Thread", NULL); 
          prof_start(SGE_PROF_CUSTOM2, NULL);
-         prof_set_level_name(SGE_PROF_CUSTOM2, "Execd Dispatch", NULL); 
          prof_start(SGE_PROF_GDI_REQUEST, NULL);
       } else {
            prof_stop(SGE_PROF_CUSTOM1, NULL);
            prof_stop(SGE_PROF_CUSTOM2, NULL);
            prof_stop(SGE_PROF_GDI_REQUEST, NULL);
-        }
+      }
 
       PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
 
-      i = dispatch(ctx, execd_dispatcher_table, 
-                   sizeof(execd_dispatcher_table)/sizeof(dispatch_entry),
-                   dispatch_timeout, err_str, dispatcher_errfunc);
+      ret = sge_execd_process_messages(ctx, err_str, dispatcher_errfunc);
 
       if (sge_sig_handler_sigpipe_received) {
           sge_sig_handler_sigpipe_received = 0;
@@ -369,13 +332,13 @@ char **argv
          break; /* shut down, leave while */
       }
 
-      if (i) {
-         if (cl_is_commlib_error(i)) {
-            if (i != CL_RETVAL_OK) {
+      if (ret) {
+         if (cl_is_commlib_error(ret)) {
+            if (ret != CL_RETVAL_OK) {
                execd_register(ctx); /* reregister at qmaster */
             }
          } else {
-            WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, err_str ));
+            WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, err_str));
          }
       }
    }
@@ -396,8 +359,7 @@ char **argv
 
    sge_prof_cleanup();
    sge_shutdown((void**)&ctx, execd_exit_state);
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 
@@ -405,10 +367,8 @@ char **argv
  * Function installed to be called just before exit() is called.
  * clean up
  *-------------------------------------------------------------*/
-static void execd_exit_func(
-void **ctx_ref,
-int i 
-) {
+static void execd_exit_func(void **ctx_ref, int i)
+{
    DENTER(TOP_LAYER, "execd_exit_func");
 
    sge_gdi2_shutdown(ctx_ref);
@@ -428,9 +388,8 @@ int i
  *
  * function called by dispatcher on non terminal errors 
  *-------------------------------------------------------------*/
-static void dispatcher_errfunc(
-const char *err_str 
-) {
+static void dispatcher_errfunc(const char *err_str)
+{
    DENTER(TOP_LAYER, "dispatcher_errfunc");
    ERROR((SGE_EVENT, "%s", err_str));
    DEXIT;
@@ -500,17 +459,12 @@ int sge_execd_register_at_qmaster(sge_gdi_ctx_class_t *ctx, bool is_restart) {
       sge_last_register_error_flag = 0;
       INFO((SGE_EVENT, MSG_EXECD_REGISTERED_AT_QMASTER_S, master_host));
    }
+
    lFreeList(&alp);
    lFreeList(&hlp);
-   DEXIT;
-   return return_value;
+   DRETURN(return_value);
 }
 
-/*-------------------------------------------------------------
- * execd_register
- *
- * Function for registering the execd at qmaster
- *-------------------------------------------------------------*/
 /****** execd/execd_register() *************************************************
 *  NAME
 *     execd_register() -- register at qmaster on startup
@@ -541,7 +495,7 @@ static void execd_register(sge_gdi_ctx_class_t *ctx)
          cl_com_handle_t* handle = NULL;
          
          handle = cl_com_get_handle(prognames[EXECD],1);
-         if ( handle == NULL) {
+         if (handle == NULL) {
             DPRINTF(("preparing reenroll"));
             ctx->prepare_enroll(ctx);
             handle = cl_com_get_handle(prognames[EXECD],1);
@@ -573,17 +527,15 @@ static void execd_register(sge_gdi_ctx_class_t *ctx)
       break;
    }
    
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 
 /*---------------------------------------------------------------------
  * parse_cmdline_execd
  *---------------------------------------------------------------------*/
-static void parse_cmdline_execd(
-char **argv
-) {
+static void parse_cmdline_execd(char **argv)
+{
    lList *ref_list = NULL, *alp = NULL, *pcmdline = NULL;
    lListElem *aep;
    u_long32 help = 0;
@@ -636,10 +588,8 @@ char **argv
  * sge_parse_cmdline_execd
  *
  *-------------------------------------------------------------*/ 
-static lList *sge_parse_cmdline_execd(
-char **argv,
-lList **ppcmdline 
-) {
+static lList *sge_parse_cmdline_execd(char **argv, lList **ppcmdline)
+{
 char **sp;
 char **rp;
 stringT str;

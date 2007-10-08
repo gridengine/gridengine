@@ -97,6 +97,7 @@
 #include "sched/sge_select_queueL.h"
 #include "sgeobj/sge_resource_quotaL.h"
 #include "sgeobj/sge_advance_reservationL.h"
+#include "sgeobj/sge_ackL.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -276,6 +277,8 @@ extern "C" {
       {AR_LOWERBOUND, ARS, ARN},                /* advance reservation */ 
       {ARA_LOWERBOUND, ARAS, ARAN},             /* advance reservation acl*/ 
       
+      {ACK_LOWERBOUND, ACKS, ACKN},             /* acknowledge */ 
+
       {0, 0, NULL}
    };
 

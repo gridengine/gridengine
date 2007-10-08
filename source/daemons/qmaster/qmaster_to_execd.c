@@ -97,13 +97,13 @@ static int host_notify_about_X(sge_gdi_ctx_class_t *ctx,
 {
    const char *hostname = NULL;
    sge_pack_buffer pb;
-   int ret = 0;
-   unsigned long last_heard_from;
+   int ret = -1;
 
    DENTER(TOP_LAYER, "host_notify_about_X");
 
    hostname = lGetHost(host, EH_name);
    if (progname_id == EXECD) {
+      unsigned long last_heard_from;
       u_short id = 1;
       const char *commproc = prognames[progname_id];
       cl_commlib_get_last_message_time(cl_com_get_handle(prognames[QMASTER], 0),
@@ -112,28 +112,22 @@ static int host_notify_about_X(sge_gdi_ctx_class_t *ctx,
       if (!last_heard_from) {
          ERROR((SGE_EVENT, MSG_NOXKNOWNONHOSTYTOSENDCONFNOTIFICATION_SS,
                 commproc, hostname));
-         ret = -2;
-         goto error;
+         DRETURN(-2);
       }
    }
 
-   if(init_packbuffer(&pb, 256, 0) == PACK_SUCCESS) {
+   if (init_packbuffer(&pb, 256, 0) == PACK_SUCCESS) {
       u_long32 dummy = 0;
 
       packint(&pb, x);
-      if (gdi2_send_message_pb(ctx, 0, prognames[progname_id], 1, hostname, tag, &pb, &dummy) != CL_RETVAL_OK) {
-         ret = -1;
-      } else {
+      if (gdi2_send_message_pb(ctx, 0, prognames[progname_id], 1, hostname,
+                               tag, &pb, &dummy) == CL_RETVAL_OK) {
          ret = 0;
       }
       clear_packbuffer(&pb);
-   } else {
-      ret = -1;
    }
 
-error:
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** qmaster/host/host_notify_about_new_conf() *****************************

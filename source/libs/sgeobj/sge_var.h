@@ -36,17 +36,11 @@
 
 #define VAR_PREFIX "__SGE_PREFIX__"
 #define VAR_PREFIX_NR "__SGE_PREFIX2__"
-#define VAR_COMPLEX_PREFIX "SGE_COMPLEX_"
 
 void var_list_dump_to_file(const lList *varl, FILE *file);
 
-void var_list_copy_complex_vars_and_value(lList **varl,
-                                          const lList* src_varl,
-                                          const lList* cplx_list);
-
 void var_list_copy_env_vars_and_value(lList **varl,
-                                      const lList* src_varl,
-                                      const char *ignore_prefix);
+                                      const lList* src_varl);
 
 void var_list_copy_prefix_vars(lList **varl, 
                                const lList *src_varl,

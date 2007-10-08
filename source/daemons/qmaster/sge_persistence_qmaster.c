@@ -43,6 +43,7 @@
 #include "spool/sge_spooling.h"
 #include "spool/loader/sge_spooling_loader.h"
 #include "sge_persistence_qmaster.h"
+#include "sgeobj/sge_host.h"
 
 #include "msg_qmaster.h"
 
@@ -224,6 +225,9 @@ sge_event_spool(sge_gdi_ctx_class_t *ctx,
    bool delete = false;
    dstring buffer = DSTRING_INIT;
    bool job_spooling = ctx->get_job_spooling(ctx);
+   lList *tmp_list = NULL;
+
+   DENTER(TOP_LAYER, "sge_event_spool");
 
    switch (event) {
       case sgeE_ADMINHOST_LIST:
@@ -273,6 +277,22 @@ sge_event_spool(sge_gdi_ctx_class_t *ctx,
          key = strkey;
          element = object;
          object_type = SGE_TYPE_EXECHOST;
+         if (event != sgeE_EXECHOST_DEL) {
+            lListElem *load_value;
+
+            /* 
+             *  Only static load values should be spooled, therefore we modify
+             *  the host elem to spool
+             */
+            tmp_list = lCreateList("", HL_Type);
+            for_each(load_value, lGetList(object, EH_load_list)) {
+               if (lGetBool(load_value, HL_static)) {
+                  lAppendElem(tmp_list, lCopyElem(load_value));
+               }
+            }
+
+            lXchgList(object, EH_load_list, &tmp_list);
+         }
          break;
       case sgeE_GLOBAL_CONFIG:
          key = strkey;
@@ -527,6 +547,17 @@ sge_event_spool(sge_gdi_ctx_class_t *ctx,
       }
    }
 
+   switch (event) {
+      case sgeE_EXECHOST_LIST:
+      case sgeE_EXECHOST_ADD:
+      case sgeE_EXECHOST_MOD:
+         lXchgList(object, EH_load_list, &tmp_list);
+         lFreeList(&tmp_list);
+         break;
+      default:
+         break;
+   }
+
    /* send event only, if spooling succeeded */
    if (ret) {
       if (send_event) {
@@ -541,6 +572,6 @@ sge_event_spool(sge_gdi_ctx_class_t *ctx,
 
    sge_dstring_free(&buffer);
 
-   return ret;
+   DRETURN(ret);
 }
 

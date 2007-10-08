@@ -49,8 +49,6 @@
 *  INPUTS
 *     sge_pack_buffer *pb - packing buffer
 *     lListElem *jep      - JB_Type
-*     lList *qlp          - QU_Type
-*     lListElem *pep      - PE_Type
 *
 *  RESULT
 *     int - PACK_SUCCESS on success
@@ -58,27 +56,15 @@
 *  NOTES
 *     MT-NOTE: pack_job_delivery() is MT safe
 *******************************************************************************/
-int pack_job_delivery(
-sge_pack_buffer *pb,
-lListElem *jep, /* JB_Type */ 
-lList *qlp,     /* QU_Type */
-lListElem *pep  /* PE_Type */
-) {
+int pack_job_delivery(sge_pack_buffer *pb, lListElem *jep)
+{
    int ret;
 
    if ((ret=packint(pb, feature_get_active_featureset_id()))) {
       return ret;  
    }
-   if ((ret=cull_pack_elem(pb, jep))!=PACK_SUCCESS) {
+   if ((ret=cull_pack_elem(pb, jep)) != PACK_SUCCESS) {
       return ret;
-   }
-   if ((ret=cull_pack_list(pb, qlp))!=PACK_SUCCESS) {
-      return ret;
-   }
-   if (pep) {
-      if ((ret=cull_pack_elem(pb, pep))!=PACK_SUCCESS) {
-         return ret;
-      }
    }
    return PACK_SUCCESS;
 }

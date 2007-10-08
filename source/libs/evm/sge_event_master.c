@@ -955,7 +955,7 @@ process_mod_event_client(monitoring_t *monitor)
    lList *temp_evc_list = NULL;
    lListElem *clio = NULL;
 
-   DENTER(TOP_LAYER,"mod_event_client");
+   DENTER(TOP_LAYER,"process_mod_event_client");
 
    MONITOR_WAIT_TIME(sge_mutex_lock("event_master_change_evc_mutex", SGE_FUNC, __LINE__, 
                      &Master_Control.change_evc_mutex), monitor);

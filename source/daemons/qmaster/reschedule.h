@@ -53,8 +53,6 @@ int reschedule_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, l
  
 lListElem* add_to_reschedule_unknown_list(sge_gdi_ctx_class_t *ctx, lListElem *hostr, u_long32 job_number, u_long32 task_number, u_long32 state);
  
-lListElem* get_from_reschedule_unknown_list(lListElem *host, u_long32 job_number, u_long32 task_number);
- 
 void delete_from_reschedule_unknown_list(sge_gdi_ctx_class_t *ctx, lListElem *host);
  
 void update_reschedule_unknown_list(sge_gdi_ctx_class_t *ctx, lListElem *host);
@@ -63,10 +61,6 @@ void update_reschedule_unknown_list_for_job(lListElem *host, u_long32 job_number
 
 void update_reschedule_unknown_timout_values(const char *config_name);
 
-void update_reschedule_unknown_timeout(lListElem *host);
-
-u_long32 reschedule_unknown_timeout(lListElem *hep);
- 
 void reschedule_unknown_trigger(lListElem *hep); 
 
 void reschedule_add_additional_time(u_long32 time); 

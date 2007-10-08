@@ -387,7 +387,5 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
       answer_list_output(&answer_list);
    }
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
-

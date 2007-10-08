@@ -93,7 +93,6 @@ static int do_add_config(sge_gdi_ctx_class_t *ctx, char *aConfName, lListElem *a
 static int remove_conf_by_name(char *aConfName);
 static lListElem *get_entry_from_conf(lListElem *aConf, const char *anEntryName);
 static u_long32 sge_get_config_version_for_host(const char* aName);
-static bool sge_get_conf_reprioritize(const lListElem *aConf);
 
 /* 
  * Read the cluster configuration from secondary storage using 'aSpoolContext'.
@@ -714,55 +713,6 @@ void sge_set_conf_reprioritize(lListElem *aConf, bool aFlag)
    DRETURN_VOID;
 } /* sge_set_conf_reprioritize */
 
-
-static bool sge_get_conf_reprioritize(const lListElem *aConf)
-{
-   lList *entries = NULL;
-   lListElem *ep = NULL;
-   bool res = false;
-
-   DENTER(TOP_LAYER, "sge_get_conf_reprioritize");
-
-   SGE_ASSERT((NULL != aConf));
-
-   entries = lGetList(aConf, CONF_entries);
-
-   ep = lGetElemStr(entries, CF_name, REPRIORITIZE);
-
-   if (NULL == ep) {
-      res = false; /* no conf value */
-   } else {
-      const char *val;
-
-      val = lGetString(ep, CF_value);
-      if (val == NULL || *val == '0' || strcasecmp(val, "false") == 0) {
-         res = false;
-      } else {
-         res = true;
-      }
-   }
-
-   DRETURN(res);
-} /* sge_get_conf_reprioritize */
-
-
-bool sge_conf_is_reprioritize(void)
-{
-   bool res = false;
-   lListElem *conf = NULL;
-
-   DENTER(TOP_LAYER, "sge_conf_is_reprioritize");
-
-   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
-   
-   conf = lGetElemHost(Cluster_Config.list, CONF_name, SGE_GLOBAL_NAME);
-   res = sge_get_conf_reprioritize(conf);
-
-   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
-
-   DRETURN(res);
-}
- 
 /* 
  * Modify configuration with name 'aConfName'. 'anOldConf' is a *COPY* of this
  * configuration. 'aNewConf' is the new configuration.

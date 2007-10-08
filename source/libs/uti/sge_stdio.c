@@ -382,7 +382,7 @@ int sge_peclose(pid_t pid, FILE *fp_in, FILE *fp_out, FILE *fp_err,
             timeout->tv_sec -= 1;
          }
       }
-   } while (i!=pid);
+   } while (i != pid);
  
    if (status & 0xff) {    /* terminated by signal */
       DEXIT;

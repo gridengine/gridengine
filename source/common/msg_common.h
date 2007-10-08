@@ -995,7 +995,6 @@
 
 /* file io */
 #define MSG_INVALIDFILENAMENULLOREMPTY    _MESSAGE(60200, _("invalid file name: NULL pointer or empty string"))
-#define MSG_STDFILEHANDLECLOSEDORCORRUPTED_S _MESSAGE(60201, _("standard file handle "SFN" has been closed or corrupted"))
 #define MSG_ERRORGETTINGTMPNAM_S          _MESSAGE(60202, _("error getting temporary file name: "SFN))
 #define MSG_ERROROPENINGFILEFORREADING_SS _MESSAGE(60203, _("error opening file "SFQ" for reading: "SFN)) 
 #define MSG_ERROROPENINGFILEFORWRITING_SS _MESSAGE(60204, _("error opening file "SFQ" for writing: "SFN))

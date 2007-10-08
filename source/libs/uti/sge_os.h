@@ -88,8 +88,8 @@ int sge_daemonize(fd_set *keep_open, sge_gdi_ctx_class_t *context);
  
 int sge_occupy_first_three(void);
 
-int sge_daemonize_prepare(sge_gdi_ctx_class_t *context);
-int sge_daemonize_finalize(sge_gdi_ctx_class_t *context);
+bool sge_daemonize_prepare(sge_gdi_ctx_class_t *context);
+bool sge_daemonize_finalize(sge_gdi_ctx_class_t *context);
 
 
  

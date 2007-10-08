@@ -383,11 +383,8 @@ static lList* do_depts_conflict(lListElem *new, lListElem *old)
       0   no matching department found
       1   set department
 */
-int set_department(
-lList **alpp,
-lListElem *job,
-lList *userset_list 
-) {
+int set_department(lList **alpp, lListElem *job, lList *userset_list)
+{
    lListElem *dep;
    const char *owner, *group; 
 
@@ -426,12 +423,11 @@ lList *userset_list
       }
    }   
    
-
    /*
    ** attach default department if present
    ** if job has no department we reach this
    */
-   if(lGetElemStr(userset_list, US_name, DEFAULT_DEPARTMENT)) {
+   if (lGetElemStr(userset_list, US_name, DEFAULT_DEPARTMENT)) {
       lSetString(job, JB_department, DEFAULT_DEPARTMENT);
       DPRINTF(("user %s got department "SFQ"\n", owner, DEFAULT_DEPARTMENT));
       DRETURN(1);

@@ -1,5 +1,5 @@
-#ifndef __SGE_HOST_H
-#define __SGE_HOST_H
+#ifndef __SGE_ACKL_H
+#define __SGE_ACKL_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,32 +32,37 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_hostL.h"
+#include "sge_boundaries.h"
+#include "cull.h"
 
-bool host_is_referenced(const lListElem *host, lList **answer_list,
-                        const lList *queue_list, const lList *hgrp_list);
+#ifdef  __cplusplus
+extern "C" {
+#endif
 
-const char *host_get_load_value(lListElem *host, const char *name);
+enum {
+   ACK_type = ACK_LOWERBOUND,
+   ACK_id,
+   ACK_id2,
+   ACK_str
+};
 
-int sge_resolve_host(lListElem *ep, int nm);
+LISTDEF(ACK_Type)
+   SGE_ULONG(ACK_type, CULL_DEFAULT | CULL_JGDI_HIDDEN)
+   SGE_ULONG(ACK_id, CULL_DEFAULT | CULL_JGDI_HIDDEN)
+   SGE_ULONG(ACK_id2, CULL_DEFAULT | CULL_JGDI_HIDDEN)
+   SGE_STRING(ACK_str, CULL_DEFAULT | CULL_JGDI_HIDDEN)
+LISTEND
 
-int sge_resolve_hostname(const char *hostname, char *unique, int nm);
+NAMEDEF(ACKN)
+   NAME("ACK_type")
+   NAME("ACK_id")
+   NAME("ACK_id2")
+   NAME("ACK_str")
+NAMEEND
 
-bool
-host_is_centry_referenced(const lListElem *this_elem, const lListElem *centry);
+#define ACKS sizeof(ACKN)/sizeof(char*)
 
-bool
-host_is_centry_a_complex_value(const lListElem *this_elem, 
-                               const lListElem *centry);
-
-lListElem *
-host_list_locate(const lList *this_list, const char *hostname);
-
-bool
-host_list_merge(lList *this_list);
-
-bool 
-host_merge(lListElem *host, const lListElem *global_host);
-
-#endif /* __SGE_HOST_H */
-
+#ifdef  __cplusplus
+}
+#endif
+#endif                          /* __SGE_ACKL_H */

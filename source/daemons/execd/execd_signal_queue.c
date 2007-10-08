@@ -70,6 +70,7 @@
 #include "msg_execd.h"
 #include "msg_daemons_common.h"
 #include "sgeobj/sge_object.h"
+#include "sgeobj/sge_ack.h"
 
 #if defined(CRAY) && !defined(SIGXCPU)
 #   define SIGXCPU SIGCPULIM
@@ -82,40 +83,33 @@ extern volatile int shut_me_down;
 
  counterpart in qmaster: c_qmod.c
  **************************************************************************/
-int 
-execd_signal_queue(sge_gdi_ctx_class_t *ctx, 
-                   struct dispatch_entry *de, 
-                   sge_pack_buffer *pb, 
-                   sge_pack_buffer *apb, 
-                   u_long *rcvtimeout, 
-                   int *synchron, 
-                   char *err_str, 
-                   int answer_error)
+int do_signal_queue(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, sge_pack_buffer *apb)
 {
    lListElem *jep;
    int found = 0;
    u_long32 jobid, signal, jataskid;
-   char *qname;
+   char *qname = NULL;
 
-   DENTER(TOP_LAYER, "execd_signal_queue");
+   DENTER(TOP_LAYER, "do_signal_queue");
 
-   unpackint(pb, &jobid);
-   unpackint(pb, &jataskid);
-   unpackstr(pb, &qname);       /* mallocs qname !! */
-   unpackint(pb, &signal);
+   if (unpackint(&(aMsg->buf), &jobid) != 0 ||
+       unpackint(&(aMsg->buf), &jataskid) != 0 ||
+       unpackstr(&(aMsg->buf), &qname) != 0 || /* mallocs qname !! */
+       unpackint(&(aMsg->buf), &signal)) {     /* signal don't need to be packed Ü*/
+      FREE(qname); 
+      DRETURN(1);    
+   }
 
    DPRINTF(("===>DELIVER_SIGNAL: %s >%s< Job(s) "sge_u32"."sge_u32" \n",
-            sge_sig2str(signal), qname, jobid, jataskid));
+            sge_sig2str(signal), qname? qname: "<NULL>", jobid, jataskid));
 
-   /* In real this is both a signal queue and a signal job request.
-      If jobid is set this is a job signal.
-         qname is set this is a queue signal.
-      Acknowledges are sent already by the dispatcher. */
+   if (aMsg->tag == TAG_SIGJOB) { /* signal a job / task */
+      pack_ack(apb, ACK_SIGJOB, jobid, jataskid, NULL);
 
-   if (jobid) {     /* signal a job / task */
       found = (signal_job(jobid, jataskid, signal)==0);
-   } 
-   else {            /* signal a queue */
+   } else {            /* signal a queue */
+      pack_ack(apb, ACK_SIGQUEUE, jobid, jataskid, qname);
+
       for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
          lListElem *gdil_ep, *master_q, *jatep;
          const char *qnm;
@@ -151,8 +145,7 @@ execd_signal_queue(sge_gdi_ctx_class_t *ctx,
                               sge_send_suspend_mail(signal,master_q ,jep, jatep); 
                            }
                         }   
-                     } 
-                     else {
+                     } else {
                         /* if the signal is a unsuspend and the job is suspended
                            we do not deliver a signal */
                         if (signal == SGE_SIGCONT) {
@@ -162,16 +155,17 @@ execd_signal_queue(sge_gdi_ctx_class_t *ctx,
                                  sge_send_suspend_mail(signal,master_q ,jep, jatep); 
                               }
                            }
-                        }
-                        else {
+                        } else {
                            sge_execd_deliver_signal(signal, jep, jatep);
                         }   
                      }
                      found = lGetUlong(jep, JB_job_number);
 
-                     job_write_spool_file(jep, 
-                        lGetUlong(lFirst(lGetList(jep, JB_ja_tasks)), 
-                        JAT_task_number), NULL, SPOOL_WITHIN_EXECD);
+                     if (!mconf_get_simulate_jobs()) {
+                        job_write_spool_file(jep, 
+                           lGetUlong(lFirst(lGetList(jep, JB_ja_tasks)), 
+                           JAT_task_number), NULL, SPOOL_WITHIN_EXECD);
+                     }
 
                   }
                }
@@ -186,22 +180,17 @@ execd_signal_queue(sge_gdi_ctx_class_t *ctx,
    }
 
    /* If this is a queue signal 'found' now holds the number of a job
-      running in this queue. We use this job_number for acking to the
-      qmaster. */
-
-   if (!found && jobid) {
+      running in this queue. */
+   if (!found && aMsg->tag == TAG_SIGJOB) {
       lListElem *jr;
       jr = get_job_report(jobid, jataskid, NULL);
       remove_acked_job_exit(ctx, jobid, jataskid, NULL, jr);
       job_unknown(jobid, jataskid, qname);
    }
 
-   if (qname) {
-      free(qname);
-   }
+   FREE(qname);
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /*************************************************************************
@@ -231,11 +220,7 @@ execd_signal_queue(sge_gdi_ctx_class_t *ctx,
    1 if job is supposed to be not in a healthy state and thus
      should be removed by the calling context
  *************************************************************************/
-int sge_execd_deliver_signal(
-u_long32 sig,
-lListElem *jep,
-lListElem *jatep 
-) {
+int sge_execd_deliver_signal(u_long32 sig, lListElem *jep, lListElem *jatep) {
    int queue_already_suspended;
    int getridofjob = 0;
 
@@ -466,13 +451,8 @@ void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, lListElem *jep,
        -1 in case of other problems
 */
 
-int sge_kill(
-int pid,
-u_long32 sge_signal,
-u_long32 job_id,
-u_long32 ja_task_id,
-const char *pe_task_id 
-) {
+int sge_kill(int pid, u_long32 sge_signal, u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id)
+{
    int sig;
    int direct_signal;   /* deliver per signal or per file */
    char id_buffer[MAX_STRING_SIZE];
@@ -612,11 +592,7 @@ RETURN
    1 job was not found you better get rid of it to prevent 
      infinite pingpong effects
    ------------------------------------------------------------ */
-int signal_job(
-u_long32 jobid,
-u_long32 jataskid,
-u_long32 signal 
-) {
+int signal_job(u_long32 jobid, u_long32 jataskid, u_long32 signal) {
    lListElem *jep;
    u_long32 state;
    lListElem *master_q;
@@ -722,7 +698,9 @@ u_long32 signal
 
    /* now save this job/queue so we are up to date on restart */
    if (!getridofjob) {
-      job_write_spool_file(jep, jataskid, NULL, SPOOL_WITHIN_EXECD);
+      if (!mconf_get_simulate_jobs()) {
+         job_write_spool_file(jep, jataskid, NULL, SPOOL_WITHIN_EXECD);
+      }
       /* write mail */
       if (send_mail == 1) {
          sge_send_suspend_mail(SGE_SIGCONT,master_q ,jep, jatep); 

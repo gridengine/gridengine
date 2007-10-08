@@ -264,7 +264,7 @@ bool sge_daemonize_qmaster()
 
    DENTER(TOP_LAYER, "sge_daemonize_qmaster");
 
-   if(getenv("SGE_ND") != NULL) {
+   if (getenv("SGE_ND") != NULL) {
       DPRINTF(("sge_qmaster is not daemonized\n"));
       DEXIT;
       return false;

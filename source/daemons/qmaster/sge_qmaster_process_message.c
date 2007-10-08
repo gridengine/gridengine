@@ -58,18 +58,10 @@
 #include "sge_cqueue.h"
 #include "sge_lock.h"
 #include "spool/sge_spooling.h"
+#include "sgeobj/sge_ack.h"
 
 #include "msg_qmaster.h"
 #include "msg_common.h"
-
-typedef struct {
-   char snd_host[CL_MAXHOSTLEN]; /* sender hostname; NULL -> all              */
-   char snd_name[CL_MAXHOSTLEN]; /* sender name (aka 'commproc'); NULL -> all */
-   u_short snd_id;            /* sender identifier; 0 -> all               */
-   int tag;                   /* message tag; TAG_NONE -> all              */
-   u_long32 request_mid;      /* message id of request                     */
-   sge_pack_buffer buf;       /* message buffer                            */
-} struct_msg_t;
 
 /***************************************************
  *
@@ -154,11 +146,12 @@ static void do_c_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t 
 static request_handling_t do_report_request(sge_gdi_ctx_class_t *ctx, struct_msg_t*, monitoring_t *monitor);
 static void do_event_client_exit(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t *monitor);
 static void sge_c_job_ack(sge_gdi_ctx_class_t *ctx,
-                          char *host,
-                          char *commproc,
+                          const char *host,
+                          const char *commproc,
                           u_long32 ack_tag, 
                           u_long32 ack_ulong,
                           u_long32 ack_ulong2, 
+                          const char *ack_str,
                           monitoring_t *monitor);
 
 
@@ -200,8 +193,7 @@ eval_message_and_block(struct_msg_t msg)
   
    if (msg.tag == TAG_REPORT_REQUEST) {
       type = ATOMIC_SINGLE;
-   }
-   else {
+   } else {
       type = ATOMIC_NONE;   
    }
   
@@ -242,11 +234,9 @@ eval_gdi_and_block(sge_gdi_request *req_head)
   
    if (req_head->next == NULL) {
       type = ATOMIC_SINGLE;     
-   }
-   else if (req_head->op == SGE_GDI_GET) {
+   } else if (req_head->op == SGE_GDI_GET) {
       type = ATOMIC_MULTIPLE_READ; 
-   }
-   else {
+   } else {
       type = ATOMIC_MULTIPLE_WRITE;
    }
   
@@ -450,8 +440,7 @@ void *sge_qmaster_process_message(sge_gdi_ctx_class_t *ctx, void *anArg, monitor
 
    clear_packbuffer(&(msg.buf));
   
-   DEXIT;
-   return anArg; 
+   DRETURN(anArg); 
 } /* sge_qmaster_process_message */
 
 /****** sge_qmaster_process_message/do_gdi_request() ***************************
@@ -502,7 +491,7 @@ do_gdi_request(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t *monit
       sge_gdi_request *resp = NULL;
 
       resp_head = new_gdi_request();
-      init_packbuffer(&pb, 0, 0);
+      init_packbuffer(&pb, 1024, 0);
 
       MONITOR_WAIT_TIME((type = eval_gdi_and_block(req_head)), monitor);
 
@@ -573,15 +562,14 @@ static request_handling_t do_report_request(sge_gdi_ctx_class_t *ctx, struct_msg
    DENTER(TOP_LAYER, "do_report_request");
 
    /* Load reports are only accepted from admin/root user */
-   if (false == sge_security_verify_unique_identifier(true, admin_user, myprogname, 0,
+   if (!sge_security_verify_unique_identifier(true, admin_user, myprogname, 0,
                                             aMsg->snd_host, aMsg->snd_name, aMsg->snd_id)) {
-      DEXIT;
-      return type;
+      DRETURN(type);
     }
 
    if (cull_unpack_list(&(aMsg->buf), &rep)) {
       ERROR((SGE_EVENT,MSG_CULL_FAILEDINCULLUNPACKLISTREPORT));
-      return type;
+      DRETURN(type);
    }
 
    MONITOR_WAIT_TIME((type = eval_message_and_block(*aMsg)), monitor); 
@@ -589,8 +577,7 @@ static request_handling_t do_report_request(sge_gdi_ctx_class_t *ctx, struct_msg
    sge_c_report(ctx, aMsg->snd_host, aMsg->snd_name, aMsg->snd_id, rep, monitor);
    lFreeList(&rep);
 
-   DEXIT;
-   return type;
+   DRETURN(type);
 } /* do_report_request */
 
 /****** qmaster/sge_qmaster_process_message/do_event_client_exit() *************
@@ -673,38 +660,34 @@ static void do_c_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t 
    u_long32 ack_tag, ack_ulong, ack_ulong2;
    const char *admin_user = ctx->get_admin_user(ctx);
    const char *myprogname = ctx->get_progname(ctx);
+   lListElem *ack = NULL;
 
    DENTER(TOP_LAYER, "do_c_ack");
 
-   
    /* Do some validity tests */
-   while (!unpackint(&(aMsg->buf), &ack_tag)) {
-      if (unpackint(&(aMsg->buf), &ack_ulong)) {
-         ERROR((SGE_EVENT, MSG_COM_UNPACKINT_I, 1));
-         DEXIT;
-         return;
+   while (pb_unused(&(aMsg->buf)) > 0) {
+      if (cull_unpack_elem(&(aMsg->buf), &ack, NULL)) {
+         ERROR((SGE_EVENT, "failed unpacking ACK"));
+         DRETURN_VOID;
       }
-      if (unpackint(&(aMsg->buf), &ack_ulong2)) {
-         ERROR((SGE_EVENT, MSG_COM_UNPACKINT_I, 2));
-         DEXIT;
-         return;
-      }
+      ack_tag = lGetUlong(ack, ACK_type);
+      ack_ulong = lGetUlong(ack, ACK_id);
+      ack_ulong2 = lGetUlong(ack, ACK_id2);
 
       DPRINTF(("ack_ulong = %ld, ack_ulong2 = %ld\n", ack_ulong, ack_ulong2));
-      switch (ack_tag) {
-      case TAG_SIGJOB:
-      case TAG_SIGQUEUE:
+      switch (ack_tag) { /* send by dispatcher */
+      case ACK_SIGJOB:
+      case ACK_SIGQUEUE:
          MONITOR_EACK(monitor);
          /* 
          ** accept only ack requests from admin or root
          */
          if (false == sge_security_verify_unique_identifier(true, admin_user, myprogname, 0,
                                                   aMsg->snd_host, aMsg->snd_name, aMsg->snd_id)) {
-            DEXIT;
-            return;
+            DRETURN_VOID;
          }
          /* an execd sends a job specific acknowledge ack_ulong == jobid of received job */
-         sge_c_job_ack(ctx, aMsg->snd_host, aMsg->snd_name, ack_tag, ack_ulong, ack_ulong2, monitor);
+         sge_c_job_ack(ctx, aMsg->snd_host, aMsg->snd_name, ack_tag, ack_ulong, ack_ulong2, lGetString(ack, ACK_str), monitor);
          break;
 
       case ACK_EVENT_DELIVERY:
@@ -720,96 +703,104 @@ static void do_c_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t 
          WARNING((SGE_EVENT, MSG_COM_UNKNOWN_TAG, sge_u32c(ack_tag)));
          break;
       }
+      lFreeElem(&ack);
    }
   
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /***************************************************************/
-static void sge_c_job_ack(sge_gdi_ctx_class_t *ctx, char *host, char *commproc, u_long32 ack_tag, 
-                          u_long32 ack_ulong, u_long32 ack_ulong2, 
+static void sge_c_job_ack(sge_gdi_ctx_class_t *ctx, const char *host, const char *commproc, u_long32 ack_tag, 
+                          u_long32 ack_ulong, u_long32 ack_ulong2, const char *ack_str,
                           monitoring_t *monitor) 
 {
-   lListElem *qinstance = NULL;
-   lListElem *jep = NULL;
-   lListElem *jatep = NULL;
    lList *answer_list = NULL;
    bool job_spooling = ctx->get_job_spooling(ctx);
 
    DENTER(TOP_LAYER, "sge_c_job_ack");
 
-   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor); 
-
    if (strcmp(prognames[EXECD], commproc)) {
       ERROR((SGE_EVENT, MSG_COM_ACK_S, commproc));
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
 
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor); 
+
    switch (ack_tag) {
-   case TAG_SIGJOB:
-      DPRINTF(("TAG_SIGJOB\n"));
-      /* ack_ulong is the jobid */
-      if (!(jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), ack_ulong))) {
-         ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKOWNJOB_U, sge_u32c(ack_ulong) ));
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-         DEXIT;
-         return;
-      }
-      jatep = job_search_task(jep, NULL, ack_ulong2);
-      if (jatep == NULL) {
-         ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKNOWNTASKOFJOB_UU, sge_u32c(ack_ulong2), sge_u32c(ack_ulong)));
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-         DEXIT;
-         return;
+   case ACK_SIGJOB:
+      {
+         lListElem *jep = NULL;
+         lListElem *jatep = NULL;
+
+         DPRINTF(("TAG_SIGJOB\n"));
+         /* ack_ulong is the jobid */
+         if (!(jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), ack_ulong))) {
+            ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKOWNJOB_U, sge_u32c(ack_ulong) ));
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+            DRETURN_VOID;
+         }
+         jatep = job_search_task(jep, NULL, ack_ulong2);
+         if (jatep == NULL) {
+            ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKNOWNTASKOFJOB_UU, sge_u32c(ack_ulong2), sge_u32c(ack_ulong)));
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+            DRETURN_VOID;
+         }
+
+         DPRINTF(("JOB "sge_u32": SIGNAL ACK\n", lGetUlong(jep, JB_job_number)));
+         lSetUlong(jatep, JAT_pending_signal, 0);
+         te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, ack_ulong, ack_ulong2, NULL);
+         {
+            dstring buffer = DSTRING_INIT;
+            spool_write_object(&answer_list, spool_get_default_context(), jep, 
+                               job_get_key(lGetUlong(jep, JB_job_number), 
+                                           ack_ulong2, NULL, &buffer), 
+                               SGE_TYPE_JOB, job_spooling);
+            sge_dstring_free(&buffer);
+         }
+         answer_list_output(&answer_list);
+         
+         break;
       }
 
-      DPRINTF(("JOB "sge_u32": SIGNAL ACK\n", lGetUlong(jep, JB_job_number)));
-      lSetUlong(jatep, JAT_pending_signal, 0);
-      te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, ack_ulong, ack_ulong2, NULL);
+   case ACK_SIGQUEUE:
       {
-         dstring buffer = DSTRING_INIT;
-         spool_write_object(&answer_list, spool_get_default_context(), jep, 
-                            job_get_key(lGetUlong(jep, JB_job_number), 
-                                        ack_ulong2, NULL, &buffer), 
-                            SGE_TYPE_JOB, job_spooling);
-         sge_dstring_free(&buffer);
-      }
-      answer_list_output(&answer_list);
-      
-      break;
-
-   case TAG_SIGQUEUE:
-      {
+         lListElem *qinstance = NULL;
          lListElem *cqueue = NULL;
+         dstring cqueue_name = DSTRING_INIT;
+         dstring host_domain = DSTRING_INIT;
+         bool has_hostname, has_domain;
 
-         for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+         cqueue_name_split(ack_str, &cqueue_name, &host_domain, 
+                           &has_hostname, &has_domain);
+
+         cqueue = lGetElemStr(*(object_type_get_master_list(SGE_TYPE_CQUEUE)),
+                              CQ_name, sge_dstring_get_string(&cqueue_name));
+
+         sge_dstring_free(&cqueue_name);
+         sge_dstring_free(&host_domain);
+
+         if (cqueue != NULL) {
             lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
 
             qinstance = lGetElemUlong(qinstance_list, 
                                       QU_queue_number, ack_ulong);
-            if (qinstance != NULL) {
-               break;
-            }
          }
+
          if (qinstance == NULL) {
             ERROR((SGE_EVENT, MSG_COM_ACK_QUEUE_U, sge_u32c(ack_ulong)));
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-            DEXIT;
-            return;
+            DRETURN_VOID;
          }
-      }
       
-      DPRINTF(("QUEUE %s: SIGNAL ACK\n", lGetString(qinstance, QU_full_name)));
+         DPRINTF(("QUEUE %s: SIGNAL ACK\n", lGetString(qinstance, QU_full_name)));
 
-      lSetUlong(qinstance, QU_pending_signal, 0);
-      te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, 0, 0, lGetString(qinstance, QU_full_name));
-      spool_write_object(&answer_list, spool_get_default_context(), qinstance, 
-                         lGetString(qinstance, QU_full_name), SGE_TYPE_QINSTANCE, job_spooling);
-      answer_list_output(&answer_list);
-      break;
+         lSetUlong(qinstance, QU_pending_signal, 0);
+         te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, 0, 0, lGetString(qinstance, QU_full_name));
+         spool_write_object(&answer_list, spool_get_default_context(), qinstance, 
+                            lGetString(qinstance, QU_full_name), SGE_TYPE_QINSTANCE, job_spooling);
+         answer_list_output(&answer_list);
+         break;
+      }
 
    default:
       ERROR((SGE_EVENT, MSG_COM_ACK_UNKNOWN));
@@ -817,6 +808,5 @@ static void sge_c_job_ack(sge_gdi_ctx_class_t *ctx, char *host, char *commproc, 
 
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
    
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }

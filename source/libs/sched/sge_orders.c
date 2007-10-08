@@ -531,11 +531,9 @@ int sge_send_job_start_orders(sge_evc_class_t *evc, order_t *orders) {
 
    DENTER(TOP_LAYER, "sge_send_job_start_orders");
 
-   if(!ctx->gdi_receive_multi_async(ctx, &answer, &malp, false)) {
-      DEXIT;
-      return false;
-   }
-   else {
+   if (!ctx->gdi_receive_multi_async(ctx, &answer, &malp, false)) {
+      DRETURN(false);
+   } else {
       /* check for a sucessful send */
       lFreeList(&malp); 
    }
@@ -544,8 +542,7 @@ int sge_send_job_start_orders(sge_evc_class_t *evc, order_t *orders) {
    if (lGetNumberOfElem(orders->pendingOrderList) == 0 ) {
       if (lGetNumberOfElem(orders->jobStartOrderList) == 0) {
          config_mode = SGE_GDI_SEND;
-      }
-      else {
+      } else {
          start_mode = SGE_GDI_SEND;   
       }
    }
@@ -579,7 +576,6 @@ int sge_send_job_start_orders(sge_evc_class_t *evc, order_t *orders) {
    lFreeList(&malp);
    lFreeList(&alp);
 
-   DEXIT;
-   return true;
+   DRETURN(true);
 }
 

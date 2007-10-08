@@ -89,8 +89,6 @@ spool_sql_create_insert_statement(lList **answer_list,
             continue;
          } else {
             sge_dstring_append(field_dstring, fields[i].name);
-            object_append_raw_field_to_dstring(object, answer_list, value_dstring, 
-                                               fields[i].nm, '\'');
          }
          *data_written = true;
          first_field = false;
@@ -138,9 +136,6 @@ spool_sql_create_update_statement(lList **answer_list,
                sge_dstring_append(update_dstring, ", ");
             }
             sge_dstring_sprintf_append(update_dstring, "%s = ", fields[i].name);
-            object_append_raw_field_to_dstring(object, answer_list, 
-                                               update_dstring, fields[i].nm, 
-                                               '\'');
             *data_written = true;
             first_field = false;
          }

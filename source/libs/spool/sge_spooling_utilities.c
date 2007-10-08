@@ -421,26 +421,24 @@ bool spool_default_validate_func(lList **answer_list,
 
             free(old_name);
 
-            if (object_type == SGE_TYPE_EXECHOST) {
-               /* trash load values - they are not valid after unspooling
-                * a host object.
-                */
-               if (ret) {
-                  ret = host_trash_load_values(object);
+            if (object_type == SGE_TYPE_EXECHOST && ret) {
+               lListElem *load_value;
+               lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
+
+               /* all spooled load values are static, therefore we tag them here */
+               for_each(load_value, lGetList(object, EH_load_list)) {
+                  lSetBool(load_value, HL_static, true);
                }
 
-               if (ret) {
-                  lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
-                  /* necessary to setup actual list of exechost */
-                  debit_host_consumable(NULL, object, master_centry_list, 0);
-                  /* necessary to init double values of consumable configuration */
-                  centry_list_fill_request(lGetList(object, EH_consumable_config_list), 
-                        NULL, master_centry_list, true, false, true);
+               /* necessary to setup actual list of exechost */
+               debit_host_consumable(NULL, object, master_centry_list, 0);
+               /* necessary to init double values of consumable configuration */
+               centry_list_fill_request(lGetList(object, EH_consumable_config_list), 
+                     NULL, master_centry_list, true, false, true);
 
-                  if (ensure_attrib_available(NULL, object, 
-                                              EH_consumable_config_list)) {
-                     ret = false;
-                  }
+               if (ensure_attrib_available(NULL, object, 
+                                           EH_consumable_config_list)) {
+                  ret = false;
                }
             }
          }

@@ -220,7 +220,9 @@ lList *joblist
 
 		  }
 
-                  job_write_spool_file(job, 0, NULL, SPOOL_DEFAULT);;
+      if (!mconf_get_simulate_jobs()) {
+         job_write_spool_file(job, 0, NULL, SPOOL_DEFAULT);;
+      }
 
 		  if (new_creds[0])
 		     krb5_free_creds(context, new_creds[0]);

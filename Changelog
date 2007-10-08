@@ -1,3 +1,10 @@
+AH-2007-10-08-0: Bugfix     Multiple occurrence of a name in RQS limit 
+                            definition break classic spooling
+                 Bugster:   6614041
+                 Issue:     2387
+                 Changed:   libspoolc.so
+                 Review:    JG
+
 MD-2007-10-04-0: Bugfix:    clients should issue a more explicit error 
                             message when qmaster is busy
                  Bugster:   6469494

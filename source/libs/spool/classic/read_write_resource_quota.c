@@ -211,52 +211,49 @@ lList *cull_read_in_rqs_list(const char *fname, lList **alpp)
       }
       /* RQS_limit */
       else if (strcmp(name, "limit") == 0) {
-         lList *tmp_list = NULL;
-         lListElem *tmp_ep = NULL;
          lListElem *rule = lCreateElem(RQR_Type);
+         struct saved_vars_s *context = NULL;
+         const char dlmt[] = "\t \v\r";
+         char *field;
 
-         lString2List(value, &tmp_list, ST_Type, ST_name, "\t \v\r");
-         for_each(tmp_ep, tmp_list) {
-            const char *field = lGetString(tmp_ep, ST_name);
-
+         for (field = sge_strtok_r(value, dlmt, &context); field; field = sge_strtok_r(NULL, dlmt, &context)) {
             /* RQR_name */
             if (strcmp(field, "name") == 0) {
-               tmp_ep = lNext(tmp_ep);
-               lSetString(rule, RQR_name, lGetString(tmp_ep, ST_name));
+               field = sge_strtok_r(NULL, dlmt, &context);
+               lSetString(rule, RQR_name, field);
             }
             /* RQR_filter_users */
             else if (strcmp(field, "users") == 0) {
-               tmp_ep = lNext(tmp_ep);
-               sge_read_RQRF_obj(rule, RQR_filter_users, lGetString(tmp_ep, ST_name), alpp); 
+               field = sge_strtok_r(NULL, dlmt, &context);
+               sge_read_RQRF_obj(rule, RQR_filter_users, field, alpp); 
             } 
             /* RQR_filter_projects */
             else if (strcmp(field, "projects") == 0) {
-               tmp_ep = lNext(tmp_ep);
-               sge_read_RQRF_obj(rule, RQR_filter_projects, lGetString(tmp_ep, ST_name), alpp); 
+               field = sge_strtok_r(NULL, dlmt, &context);
+               sge_read_RQRF_obj(rule, RQR_filter_projects, field, alpp); 
             }
             /* RQR_filter_pes */
             else if (strcmp(field, "pes") == 0) {
-               tmp_ep = lNext(tmp_ep);
-               sge_read_RQRF_obj(rule, RQR_filter_pes, lGetString(tmp_ep, ST_name), alpp); 
+               field = sge_strtok_r(NULL, dlmt, &context);
+               sge_read_RQRF_obj(rule, RQR_filter_pes, field, alpp); 
             }
             /* RQR_filter_queues */
             else if (strcmp(field, "queues") == 0) {
-               tmp_ep = lNext(tmp_ep);
-               sge_read_RQRF_obj(rule, RQR_filter_queues, lGetString(tmp_ep, ST_name), alpp); 
+               field = sge_strtok_r(NULL, dlmt, &context);
+               sge_read_RQRF_obj(rule, RQR_filter_queues, field, alpp); 
             }
             /* RQR_filter_hosts */
             else if (strcmp(field, "hosts") == 0) {
-               tmp_ep = lNext(tmp_ep);
-               sge_read_RQRF_obj(rule, RQR_filter_hosts, lGetString(tmp_ep, ST_name), alpp); 
+               field = sge_strtok_r(NULL, dlmt, &context);
+               sge_read_RQRF_obj(rule, RQR_filter_hosts, field, alpp); 
             }
             /* RQR_limit */
             else if (strcmp(field, "to") == 0) {
                static int object_rule[] = { RQRL_name, RQRL_value, 0 };
                lList* limit_list = NULL;  
                
-               tmp_ep = lNext(tmp_ep);
-               if (!cull_parse_definition_list( (char*)lGetString(tmp_ep, ST_name), 
-                    &limit_list, "", RQRL_Type, object_rule)) {
+               field = sge_strtok_r(NULL, dlmt, &context);
+               if (!cull_parse_definition_list(field, &limit_list, "", RQRL_Type, object_rule)) {
                   lSetList(rule, RQR_limit, limit_list);
                } else {
                   ERROR((SGE_EVENT, MSG_RESOURCE_QUOTA_ERRORPARSINGRULELIMIT));
@@ -269,8 +266,9 @@ lList *cull_read_in_rqs_list(const char *fname, lList **alpp)
             }
          }
 
+         if (context)   
+            sge_free_saved_vars(context);
          lAppendElem(lp_rules, rule);
-         lFreeList(&tmp_list);
       }
    }
    sge_free_saved_vars(last);

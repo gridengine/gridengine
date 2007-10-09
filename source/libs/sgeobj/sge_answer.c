@@ -68,7 +68,7 @@ static bool answer_log(lListElem *answer);
 *           callee(&answer_list);
 *           if (answer_list_has_error(&answer_list)) {
 *              try_to_handle_error();
-*              answer_list = lFreeList(answer_list);
+*              lFreeList(&answer_list);
 *           }
 *        } 
 *

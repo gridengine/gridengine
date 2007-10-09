@@ -284,14 +284,14 @@ int main(int argc, char *argv[])
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
    copy = copy_jobs();
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
-   copy = lFreeList(copy);
+   lFreeList(&copy);
    prof_output_info(SGE_PROF_CUSTOM1, true, "copy jobs:\n");
    prof_reset(NULL);
 
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
    copy = select_jobs(what_job);
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
-   copy = lFreeList(copy);
+   lFreeList(&copy);
    prof_output_info(SGE_PROF_CUSTOM1, true, "select jobs:\n");
    prof_reset(NULL);
 */
@@ -302,7 +302,6 @@ int main(int argc, char *argv[])
    prof_reset(NULL);
 
    lFreeList(&Master_Job_List);
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
 
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
    read_spooled_data();
@@ -313,7 +312,7 @@ int main(int argc, char *argv[])
    spool_shutdown_context(&answer_list, spooling_context);
    spool_startup_context(&answer_list, spooling_context, true);
   
-   Master_Job_List = lFreeList(Master_Job_List);
+   lFreeList(&Master_Job_List);
 #else
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
    read_spooled_data();
@@ -321,7 +320,7 @@ int main(int argc, char *argv[])
    prof_output_info(SGE_PROF_CUSTOM1, true, "\nread jobs (uncached):\n");
    prof_reset(NULL);
 
-   Master_Job_List = lFreeList(Master_Job_List);
+   lFreeList(&Master_Job_List);
 #endif
 
    spool_shutdown_context(&answer_list, spooling_context);

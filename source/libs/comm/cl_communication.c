@@ -4815,7 +4815,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
    
          /* here we are fetching the parameter from crm_message, parse it into tokens an
             set the parameter list values */
-         if (crm_message->params != "" && crm_message->params != NULL) {
+         if (crm_message->params != NULL && *crm_message->params != '\0') {
             char* token = NULL;
             char* sub_token1 = NULL;
             char* sub_token2 = NULL;

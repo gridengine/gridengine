@@ -368,7 +368,7 @@ size_t sge_strlcpy(char *dst, const char *src, size_t dstsize) {
 *  INPUTS
 *     const char *str                - str which should be tokenized 
 *     const char *delimitor          - delimitor string 
-*     struct saved_vars_s **constext - context
+*     struct saved_vars_s **context  - context
 *
 *  RESULT
 *     char* - first/next token

@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
          answer_list_print_err_warn(&answer_list, NULL, NULL);
       } else {
          lWriteListTo(reread_list, stdout);
-         reread_list = lFreeList(reread_list);
+         lFreeList(&reread_list);
       }
 /*       sge_unlink(NULL, filepath); */
       FREE(filepath);
@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
    answer_list_print_err_warn(&answer_list, NULL, NULL);
 
    /* cleanup */
-   queue_list = lFreeList(queue_list);
+   lFreeList(&queue_list);
 
    sge_dstring_free(&queue_str);
    sge_dstring_free(&copy_str);

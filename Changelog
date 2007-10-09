@@ -1,11 +1,14 @@
-AH-2007-10-08-1: Bugfix     Specifying more than one drmaa_v_env 
+JG-2007-10-09-0: Bugfix:    Fixed gcc-4.2 warnings, minor bugs, cleanup.
+                 Review:    MD
+
+AH-2007-10-08-1: Bugfix:    Specifying more than one drmaa_v_env 
                             attribute causes spurious error msg
                  Bugster:   6614108
                  Issue:     2392
                  Changed:   libdrmaa.so
                  Review:    JG
 
-AH-2007-10-08-0: Bugfix     Multiple occurrence of a name in RQS limit 
+AH-2007-10-08-0: Bugfix:    Multiple occurrence of a name in RQS limit 
                             definition break classic spooling
                  Bugster:   6614041
                  Issue:     2387

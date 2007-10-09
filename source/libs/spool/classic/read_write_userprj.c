@@ -532,7 +532,7 @@ int main(int argc, char *argv[])
    else
       lWriteElemTo(ep, stdout);
 
-   alp = lFreeList(alp);
+   lFreeList(&alp);
 
    DCLOSE;
    DRETURN(0);

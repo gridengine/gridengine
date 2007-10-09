@@ -1413,7 +1413,7 @@ int sge_shutdown_dynamic_event_clients(const char *anUser, lList **alpp, monitor
 
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_COM_SHUTDOWNNOTIFICATION_SUS,
                      lGetString(client, EV_name),
-                     (unsigned long)id, lGetHost(client, EV_host)));
+                     sge_u32c(id), lGetHost(client, EV_host)));
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
       
    }

@@ -958,13 +958,11 @@ sge_mirror_error sge_mirror_process_events(void)
 
    if (prof_is_active(SGE_PROF_MIRROR)) {
       prof_stop_measurement(SGE_PROF_MIRROR, NULL);
-      
-      PROFILING((SGE_EVENT, "PROF: sge_mirror processed %d events in %.3f s\n", 
+      PROFILING((SGE_EVENT, "PROF: sge_mirror processed %d events in %.3f s",
                  num_events, prof_get_measurement_wallclock(SGE_PROF_MIRROR, 
                  false, NULL)));
    }
 
-   
    DEXIT;
    return ret;
 }

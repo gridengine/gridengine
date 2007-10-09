@@ -1,3 +1,10 @@
+JG-2007-10-09-1: Bugfix:    o sharetree.5 didn't explain type field.
+                 Bugster:   6575731
+                 Issue:     2276
+                            o scheduler printed empty lines in messages file
+                 Bugster:   6608259
+                 Issue:     2394
+
 JG-2007-10-09-0: Bugfix:    Fixed gcc-4.2 warnings, minor bugs, cleanup.
                  Review:    MD
 

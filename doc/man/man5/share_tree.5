@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: share_tree.5,v $     Last Update: $Date: 2007/06/26 22:21:10 $     Revision: $Revision: 1.5.32.2 $
+.\" $RCSfile: share_tree.5,v $     Last Update: $Date: 2007/10/09 15:21:20 $     Revision: $Revision: 1.5.32.3 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SHARE_TREE 5 "$Date: 2007/06/26 22:21:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SHARE_TREE 5 "$Date: 2007/10/09 15:21:20 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 share_tree \- xxQS_NAMExx share tree file format
@@ -64,6 +64,9 @@ A new node starts with the attribute \fBid\fP, and equal sign and the
 numeric identification number of the node. Further attributes of that
 node follow until another \fBid\fP-keyword is encountered.
 .IP "\(bu" 3n
+The attribute \fBtype\fP defines, if a sharetree node references
+a user (type=0), or a project (type=1)
+.IP "\(bu" 3n
 The attribute \fBchildnodes\fP contains a comma separated list of child
 nodes to this node.
 .IP "\(bu" 3n
@@ -97,6 +100,31 @@ object defined in order to get shares. Do not configure a
 object named 'default'. 
 
 .\"
+.SH "EXAMPLES"
+Jobs of projects P1 and P2 get 50 shares, all other jobs get 10 shares.
+.sp
+.nf
+id=0
+name=Root
+type=0
+shares=1
+childnodes=1,2,3
+id=1
+name=P1
+type=1
+shares=50
+childnodes=NONE
+id=2
+name=P2
+type=1
+shares=50
+childnodes=NONE
+id=3
+name=default
+type=0
+shares=10
+childnodes=NONE
+.fi
 .\"
 .SH "SEE ALSO"
 .M xxqs_name_sxx_intro 1 ,

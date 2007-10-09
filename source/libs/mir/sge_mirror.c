@@ -1155,7 +1155,7 @@ sge_mirror_error sge_mirror_process_events(sge_evc_class_t *evc)
 
    if (prof_is_active(SGE_PROF_MIRROR)) {
       prof_stop_measurement(SGE_PROF_MIRROR, NULL);
-      PROFILING((SGE_EVENT, "PROF: sge_mirror processed %d events in %.3f s\n", 
+      PROFILING((SGE_EVENT, "PROF: sge_mirror processed %d events in %.3f s",
                  mir_get_num_events(), prof_get_measurement_wallclock(SGE_PROF_MIRROR, 
                  false, NULL)));
    }

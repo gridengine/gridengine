@@ -301,7 +301,7 @@ int scheduler(sge_evc_class_t *evc, sge_Sdescr_t *lists, lList **order) {
    if(prof_is_active(SGE_PROF_CUSTOM0)) {
       prof_stop_measurement(SGE_PROF_CUSTOM0, NULL); 
 
-      PROFILING((SGE_EVENT, "PROF: scheduled in %.3f (u %.3f + s %.3f = %.3f): %d sequential, %d parallel, %d orders, %d H, %d Q, %d QA, %d J(qw), %d J(r), %d J(s), %d J(h), %d J(e), %d J(x), %d J(all), %d C, %d ACL, %d PE, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU, %d gMes, %d jMes, %d/%d pre-send, %d/%d/%d pe-alg\n",
+      PROFILING((SGE_EVENT, "PROF: scheduled in %.3f (u %.3f + s %.3f = %.3f): %d sequential, %d parallel, %d orders, %d H, %d Q, %d QA, %d J(qw), %d J(r), %d J(s), %d J(h), %d J(e), %d J(x), %d J(all), %d C, %d ACL, %d PE, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU, %d gMes, %d jMes, %d/%d pre-send, %d/%d/%d pe-alg",
          prof_get_measurement_wallclock(SGE_PROF_CUSTOM0, true, NULL),
          prof_get_measurement_utime(SGE_PROF_CUSTOM0, true, NULL),
          prof_get_measurement_stime(SGE_PROF_CUSTOM0, true, NULL),

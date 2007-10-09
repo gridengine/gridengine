@@ -224,7 +224,7 @@ lList *project_list,
 lListElem *project,
 lList **found  /* tmp list that contains one entry for each found u/p */
 ) {
-   lList *childs;
+   lList *children;
    lListElem *child, *remaining;
    lList *save_found = NULL;
    const char *name = lGetString(node, STN_name);
@@ -241,7 +241,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
       return -1;
    }
    
-   if ((childs=lGetList(node, STN_children))) {
+   if ((children=lGetList(node, STN_children))) {
 
       /* not a leaf node */
 
@@ -280,15 +280,25 @@ lList **found  /* tmp list that contains one entry for each found u/p */
             return -1;
       }
 
-      for_each (child, childs) {
-      
+      for_each(child, children) {
          /* ensure pathes are identically inside share tree */ 
-         for (remaining=lNext(child); remaining; 
-            remaining=lNext(remaining)) {
-            if (!strcmp( lGetString(child, STN_name),   
-               lGetString(remaining, STN_name))) {
+         for (remaining=lNext(child); remaining; remaining=lNext(remaining)) {
+            const char *cn = lGetString(child, STN_name);
+            const char *rn = lGetString(remaining, STN_name);
+            if (cn == NULL || rn == NULL) {
+               ERROR((SGE_EVENT, MSG_GDI_KEYSTR_NULL_S, "STN_name"));
+               answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+               /* restore old found list */
+               if (save_found) {
+                  lFreeList(found);
+                  *found = save_found;
+               }
+               DEXIT;
+               return -1;
+            }
+            if (!strcmp(cn, rn)) {
                ERROR((SGE_EVENT, MSG_SGETEXT_FOUND_UP_TWICE_SS, 
-                  lGetString(child, STN_name), lGetString(node, STN_name)));
+                  cn, lGetString(node, STN_name)));
                answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                /* restore old found list */
                if (save_found) {

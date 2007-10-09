@@ -470,4 +470,11 @@ public interface <%=classname%> extends <%
     }
 %>
 
+    /*
+     * Dump the object
+     * @return <code>String</code> the dump string
+     */
+     public String dump();
+     
+
 }

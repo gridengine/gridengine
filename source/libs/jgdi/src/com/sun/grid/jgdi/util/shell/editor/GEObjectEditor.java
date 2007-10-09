@@ -49,7 +49,6 @@ import com.sun.grid.jgdi.configuration.reflect.PropertyDescriptor;
 import com.sun.grid.jgdi.configuration.reflect.SimplePropertyDescriptor;
 import com.sun.grid.jgdi.configuration.xml.XMLUtil;
 import com.sun.grid.jgdi.JGDI;
-import com.sun.grid.jgdi.configuration.SchedConf;
 import com.sun.grid.jgdi.configuration.ShareTreeImpl;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -127,15 +126,15 @@ public class GEObjectEditor {
             try {
                 Map propertyMap = null;
                 if (obj instanceof ShareTreeImpl) {
-                    return EditorParser.parseShareTreeText(obj, text);
+                    obj = EditorParser.parseShareTreeText(text);
                 } else {
                     propertyMap = EditorParser.parsePlainText(obj, text, " ");
-                }
-                for (Iterator iter=propertyMap.keySet().iterator(); iter.hasNext();) {
-                    key = iter.next();
-                    line = (String) propertyMap.get(key);
-                    updatePropertyValue(jgdi, obj, key, line);
-                }
+                    for (Iterator iter=propertyMap.keySet().iterator(); iter.hasNext();) {
+                        key = iter.next();
+                        line = (String) propertyMap.get(key);
+                        updatePropertyValue(jgdi, obj, key, line);
+                    }
+                }                    
             } catch (IOException ex) {
                 ex.printStackTrace();
             }

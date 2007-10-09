@@ -679,4 +679,26 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public String showDetachedSettingsAll() throws JGDIException;
+
+    /**
+     * <p>Delete the sharetree
+     * Requires root or manager privileges.</p>
+     *
+     * <p>The CLI equivialent for this method is <code>qconf -dstree</code> (see man qconf(1)).</p>
+     *
+     * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
+     */
+    public void deleteShareTree() throws JGDIException;
+    
+    /**
+     * <p>Delete the sharetree
+     * Requires root or manager privileges.</p>
+     *
+     * <p>The CLI equivialent for this method is <code>qconf -dstree</code> (see man qconf(1)).</p>
+     *
+     * @param  answers   the <code>answer list</code> object
+     * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
+     */
+    public void deleteShareTreeWithAnswer(List<JGDIAnswer> answers) throws JGDIException;
+            
 }

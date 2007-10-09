@@ -1176,17 +1176,23 @@ public class <%=classname%> extends <%
             }
             String gsname = Character.toUpperCase(attrName.charAt(0)) + attrName.substring(1);
 %>        
-        {
-            Iterator iter = get<%=gsname%>Keys().iterator();
-            while (iter.hasNext()) {
-                <%=jh.getFullClassNameOrWrapper(keyAttr.getType())%> key = (<%=jh.getFullClassNameOrWrapper(keyAttr.getType())%>)iter.next();
+            for (<%=jh.getFullClassNameOrWrapper(keyAttr.getType())%> key : get<%=gsname%>Keys()) {
                 int count = get<%=gsname%>Count(key);
                 for (int i = 0; i < count; i++) {
                     <%=jh.getFullClassName(valueAttr.getType())%> value = get<%=gsname%>(key, i);
-                    sb.append("<%=gsname%>[" + key + "," + i + "] = " + value +"\n");
+                    <%
+                    if (jh.isPrimitiv(valueAttr) || jh.isString(valueAttr)) {
+                    %>
+                    sb.append("<%=gsname%>[" + key + "," + i + "] = " + value + "\n");
+                    <%
+                    } else {
+                    %>
+                    sb.append("<%=gsname%>[" + key + "," + i + "] = " + value.dump() + "\n");
+                    <%
+                    }
+                    %>
                 }
             }
-        }
 <%
         } // end of dumpMapListAttr
         public void dumpMapAttr(com.sun.grid.cull.CullMapAttr mapAttr) {
@@ -1198,13 +1204,19 @@ public class <%=classname%> extends <%
             }
             String gsname =  Character.toUpperCase(attrName.charAt(0)) + attrName.substring(1);
 %>
-            {
-                Iterator iter = get<%=gsname%>Keys().iterator();
-                while (iter.hasNext()) {
-                    <%=jh.getFullClassNameOrWrapper(keyAttr.getType())%> key = (<%=jh.getFullClassNameOrWrapper(keyAttr.getType())%>)iter.next();
-                    <%=jh.getFullClassName(valueAttr.getType())%> value = get<%=gsname%>(key);
-                    sb.append("<%=gsname%>[" + key + "] = " + value + "\n");
+            for (<%=jh.getFullClassNameOrWrapper(keyAttr.getType())%> key : get<%=gsname%>Keys()) {
+                <%=jh.getFullClassName(valueAttr.getType())%> value = get<%=gsname%>(key);
+                <%
+                if (jh.isPrimitiv(valueAttr) || jh.isString(valueAttr)) {
+                %>
+                sb.append("<%=gsname%>[" + key + "] = " + value + "\n");
+                <%
+                } else {
+                %>
+                sb.append("<%=gsname%>[" + key + "] = " + value.dump() + "\n");
+                <%
                 }
+                %>
             }
 <%
         } // end of dumpMapAttr
@@ -1215,13 +1227,21 @@ public class <%=classname%> extends <%
             }
             String gsname = Character.toUpperCase(attrName.charAt(0)) + attrName.substring(1);
 %>
-            {
-                int <%=attrName%>Count = get<%=gsname%>Count();
-                for (int i = 0; i < <%=attrName%>Count; i++) {
-                    <%=jh.getFullClassName(attr.getType())%> value = get<%=gsname%>(i);
-                    sb.append("<%=gsname%>[" + i + "] = " + value + "\n");
-                } // end of for
-            }
+            int <%=attrName%>Count = get<%=gsname%>Count();
+            for (int i = 0; i < <%=attrName%>Count; i++) {
+                <%=jh.getFullClassName(attr.getType())%> value = get<%=gsname%>(i);
+                <%
+                if (jh.isPrimitiv(attr) || jh.isString(attr)) {
+                %>
+                sb.append("<%=gsname%>[" + i + "] = " + value + "\n");
+                <%
+                } else {
+                %>
+                sb.append("<%=gsname%>[" + i + "] = " + value.dump() + "\n");
+                <%
+                }
+                %>
+            } // end of for
 <%
         } // end of dumpListAttr
         public void dumpSimpleAttr(com.sun.grid.cull.CullAttr attr) {

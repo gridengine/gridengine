@@ -37,6 +37,7 @@ import com.sun.grid.jgdi.configuration.Configuration;
 import com.sun.grid.jgdi.configuration.GEObject;
 import com.sun.grid.jgdi.configuration.SchedConf;
 import com.sun.grid.jgdi.configuration.ShareTree;
+import com.sun.grid.jgdi.configuration.ShareTreeImpl;
 import com.sun.grid.jgdi.configuration.UserSet;
 import com.sun.grid.jgdi.configuration.reflect.DefaultListPropertyDescriptor;
 import com.sun.grid.jgdi.configuration.reflect.DefaultMapListPropertyDescriptor;
@@ -51,6 +52,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
 
 /**
  *
@@ -61,9 +64,119 @@ public class EditorParser {
      * Converts text to map of PropertyDescriptors ... line, based on obj type
      * Each line is also converted to the intermediate format.
      */
-    static ShareTree parseShareTreeText(GEObject obj, String text) throws IOException {
-        ShareTree stree = null;
-        return stree;
+    static ShareTree parseShareTreeText(String text) throws IOException {
+        ShareTreeImpl node = null;
+        ShareTreeImpl rootNode = null;
+        text = trimText(text);
+        Map<Integer, ShareTreeImpl> map = new HashMap<Integer, ShareTreeImpl>();
+        StringTokenizer st = new StringTokenizer(text);
+        while (st.hasMoreTokens()) {
+            // id
+            try {
+                String line = st.nextToken("\n");
+                String attr = line.split("=")[0].trim();
+                line = (line.length() == attr.length()) ? "" : line.substring(attr.length() + 1);
+                if (line.length() == 0) {
+                    throw new IllegalArgumentException("Expected at least 2 tokens name and value got: \"" + attr + "\"");
+                }
+                if (attr.equals("id")) {
+                    Integer id = Integer.parseInt(line);
+                    node = map.get(id);
+                    if (node == null) {
+                        node = new ShareTreeImpl();
+                        node.setId(id);
+                        map.put(id, node);
+                    }
+                }
+            } catch (NoSuchElementException nse) {
+                throw new IllegalArgumentException("Expected id entry");
+            }
+            // name
+            try {
+                String line = st.nextToken("\n");
+                String attr = line.split("=")[0].trim();
+                line = (line.length() == attr.length()) ? "" : line.substring(attr.length() + 1);
+                if (line.length() == 0) {
+                    throw new IllegalArgumentException("Expected at least 2 tokens name and value got: \"" + attr + "\"");
+                }
+                if (attr.equals("name")) {
+                    node.setName(line);
+                }
+            } catch (NoSuchElementException nse) {
+                throw new IllegalArgumentException("Expected name entry");
+            }
+
+            // type
+            try {
+                String line = st.nextToken("\n");
+                String attr = line.split("=")[0].trim();
+                line = (line.length() == attr.length()) ? "" : line.substring(attr.length() + 1);
+                if (line.length() == 0) {
+                    throw new IllegalArgumentException("Expected at least 2 tokens name and value got: \"" + attr + "\"");
+                }
+                if (attr.equals("type")) {
+                    int type = Integer.parseInt(line);
+                    node.setType(type);
+                }
+            } catch (NoSuchElementException nse) {
+                throw new IllegalArgumentException("Expected type entry");
+            }
+
+            // shares
+            try {
+                String line = st.nextToken("\n");
+                String attr = line.split("=")[0].trim();
+                line = (line.length() == attr.length()) ? "" : line.substring(attr.length() + 1);
+                if (line.length() == 0) {
+                    throw new IllegalArgumentException("Expected at least 2 tokens name and value got: \"" + attr + "\"");
+                }
+                if (attr.equals("shares")) {
+                    int shares = Integer.parseInt(line);
+                    node.setShares(shares);
+                }
+            } catch (NoSuchElementException nse) {
+                throw new IllegalArgumentException("Expected shares entry");
+            }
+
+            // children
+            try {
+                String line = st.nextToken("\n");
+                String attr = line.split("=")[0].trim();
+                line = (line.length() == attr.length()) ? "" : line.substring(attr.length() + 1);
+                if (line.length() == 0) {
+                    throw new IllegalArgumentException("Expected at least 2 tokens name and value got: \"" + attr + "\"");
+                }
+                if (attr.equals("childnodes")) {
+                    if (!line.equalsIgnoreCase("none")) {
+                        ShareTreeImpl subnode;
+                        StringTokenizer ct = new StringTokenizer(line, ",");
+                        while (ct.hasMoreTokens()) {
+                            Integer id = Integer.parseInt(ct.nextToken());
+                            if (id == node.getId()) {
+                                throw new IllegalArgumentException("self referencing nodes are not allowed");
+                            }
+                            subnode = map.get(id);
+                            if (subnode == null) {
+                                subnode = new ShareTreeImpl();
+                                subnode.setId(id);
+                                map.put(id, subnode);
+                            }
+                            node.addChildren(subnode);
+                        }
+                    }
+                }
+            } catch (NoSuchElementException nse) {
+                throw new IllegalArgumentException("Expected childnodes entry");
+            }
+        }
+        // check all nodes for valid name
+        for (Map.Entry<Integer, ShareTreeImpl> entry: map.entrySet()) {
+            if (entry.getValue().getName() == null) {
+                throw new IllegalArgumentException("Invalid node " + entry.getKey() + " or wrong childnodes reference");
+            }
+        }
+        rootNode = map.get(0);
+        return rootNode;
     }
     
     /**

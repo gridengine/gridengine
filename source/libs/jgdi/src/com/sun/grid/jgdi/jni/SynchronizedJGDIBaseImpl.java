@@ -33,6 +33,9 @@ package com.sun.grid.jgdi.jni;
 
 import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.JGDIException;
+import com.sun.grid.jgdi.configuration.ExecHost;
+import com.sun.grid.jgdi.configuration.JGDIAnswer;
+import com.sun.grid.jgdi.monitoring.ClusterQueueSummary;
 import com.sun.grid.jgdi.monitoring.ClusterQueueSummaryOptions;
 import com.sun.grid.jgdi.monitoring.QHostOptions;
 import com.sun.grid.jgdi.monitoring.QHostResult;
@@ -58,7 +61,7 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
     protected JGDI jgdi;
     
     protected SynchronizedJGDIBaseImpl(JGDI jgdi) throws JGDIException {
-        jgdi = jgdi;
+        this.jgdi = jgdi;
     }
     
     public void close() throws JGDIException {
@@ -98,13 +101,13 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         }
     }
     
-    public List getRealExecHostList() throws JGDIException {
+    public List<ExecHost> getRealExecHostList() throws JGDIException {
         synchronized(jgdi) {
             return jgdi.getRealExecHostList();
         }
     }
     
-    public List getClusterQueueSummary(ClusterQueueSummaryOptions options) throws JGDIException {
+    public List<ClusterQueueSummary> getClusterQueueSummary(ClusterQueueSummaryOptions options) throws JGDIException {
         synchronized(jgdi) {
             return jgdi.getClusterQueueSummary(options);
         }
@@ -128,7 +131,7 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         }
     }
     
-    public void clearShareTreeUsageWithAnswer(List answers) throws JGDIException {
+    public void clearShareTreeUsageWithAnswer(List<JGDIAnswer> answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.clearShareTreeUsageWithAnswer(answers);
         }
@@ -140,7 +143,7 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         }
     }
     
-    public void cleanQueuesWithAnswer(String[] queues, List answers) throws JGDIException {
+    public void cleanQueuesWithAnswer(String[] queues, List<JGDIAnswer> answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.cleanQueuesWithAnswer(queues, answers);
         }
@@ -152,7 +155,7 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         }
     }
     
-    public void killMasterWithAnswer(List answers) throws JGDIException {
+    public void killMasterWithAnswer(List<JGDIAnswer> answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.killMasterWithAnswer(answers);
         }
@@ -165,7 +168,7 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         }
     }
     
-    public void killSchedulerWithAnswer(List answers) throws JGDIException {
+    public void killSchedulerWithAnswer(List<JGDIAnswer> answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.killSchedulerWithAnswer(answers);
         }
@@ -177,7 +180,7 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         }
     }
     
-    public void killExecdWithAnswer(String[] hosts, boolean terminateJobs, List answers) throws JGDIException {
+    public void killExecdWithAnswer(String[] hosts, boolean terminateJobs, List<JGDIAnswer> answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.killExecdWithAnswer(hosts, terminateJobs, answers);
         }
@@ -189,7 +192,7 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         }
     }
     
-    public void killAllExecdsWithAnswer(boolean terminateJobs, List answers) throws JGDIException {
+    public void killAllExecdsWithAnswer(boolean terminateJobs, List<JGDIAnswer> answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.killAllExecdsWithAnswer(terminateJobs, answers);
         }
@@ -201,7 +204,7 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         }
     }
     
-    public void killEventClientsWithAnswer(int[] ids, List answers) throws JGDIException {
+    public void killEventClientsWithAnswer(int[] ids, List<JGDIAnswer> answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.killEventClientsWithAnswer(ids, answers);
         }
@@ -213,7 +216,7 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         }
     }
     
-    public void killAllEventClientsWithAnswer(List answers) throws JGDIException {
+    public void killAllEventClientsWithAnswer(List<JGDIAnswer> answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.killAllEventClientsWithAnswer(answers);
         }
@@ -225,7 +228,7 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         }
     }
     
-    public void triggerSchedulerMonitoringWithAnswer(List answers) throws JGDIException {
+    public void triggerSchedulerMonitoringWithAnswer(List<JGDIAnswer> answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.triggerSchedulerMonitoringWithAnswer(answers);
         }
@@ -243,7 +246,7 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         }
     }
     
-    public void enableQueuesWithAnswer(String[] queues, boolean force, List answers) throws JGDIException {
+    public void enableQueuesWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.enableQueuesWithAnswer(queues, force, answers);
         }
@@ -255,7 +258,7 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         }
     }
     
-    public void disableQueuesWithAnswer(String[] queues, boolean force, List answers) throws JGDIException {
+    public void disableQueuesWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.disableQueuesWithAnswer(queues, force, answers);
         }
@@ -267,7 +270,7 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         }
     }
     
-    public void suspendWithAnswer(String[] queues, boolean force, List answers) throws JGDIException {
+    public void suspendWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.suspendWithAnswer(queues, force, answers);
         }
@@ -279,7 +282,7 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         }
     }
     
-    public void suspendQueuesWithAnswer(String[] queues, boolean force, List answers) throws JGDIException {
+    public void suspendQueuesWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.suspendQueuesWithAnswer(queues, force, answers);
         }
@@ -291,7 +294,7 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         }
     }
     
-    public void suspendJobsWithAnswer(String[] jobs, boolean force, List answers) throws JGDIException {
+    public void suspendJobsWithAnswer(String[] jobs, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.suspendJobsWithAnswer(jobs, force, answers);
         }
@@ -303,7 +306,7 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         }
     }
     
-    public void unsuspendWithAnswer(String[] queues, boolean force, List answers) throws JGDIException {
+    public void unsuspendWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.unsuspendWithAnswer(queues, force, answers);
         }
@@ -315,7 +318,7 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         }
     }
     
-    public void unsuspendQueuesWithAnswer(String[] queues, boolean force, List answers) throws JGDIException {
+    public void unsuspendQueuesWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.unsuspendQueuesWithAnswer(queues, force, answers);
         }
@@ -327,7 +330,7 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         }
     }
     
-    public void unsuspendJobsWithAnswer(String[] jobs, boolean force, List answers) throws JGDIException {
+    public void unsuspendJobsWithAnswer(String[] jobs, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.unsuspendJobsWithAnswer(jobs, force, answers);
         }
@@ -339,7 +342,7 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         }
     }
     
-    public void clearQueuesWithAnswer(String[] queues, boolean force, List answers) throws JGDIException {
+    public void clearQueuesWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.clearQueuesWithAnswer(queues, force, answers);
         }
@@ -352,7 +355,7 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         }
     }
     
-    public void clearJobsWithAnswer(String[] jobs, boolean force, List answer) throws JGDIException {
+    public void clearJobsWithAnswer(String[] jobs, boolean force, List<JGDIAnswer> answer) throws JGDIException {
         synchronized(jgdi) {
             jgdi.clearJobsWithAnswer(jobs, force, answer);
         }
@@ -364,7 +367,7 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         }
     }
     
-    public void rescheduleWithAnswer(String[] queue_or_job, boolean force, List answers) throws JGDIException {
+    public void rescheduleWithAnswer(String[] queue_or_job, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.rescheduleWithAnswer(queue_or_job, force, answers);
         }
@@ -376,7 +379,7 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         }
     }
     
-    public void rescheduleQueuesWithAnswer(String[] queues, boolean force, List answers) throws JGDIException {
+    public void rescheduleQueuesWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.rescheduleQueuesWithAnswer(queues, force, answers);
         }
@@ -388,7 +391,7 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         }
     }
     
-    public void rescheduleJobsWithAnswer(String[] jobs, boolean force, List answers) throws JGDIException {
+    public void rescheduleJobsWithAnswer(String[] jobs, boolean force, List<JGDIAnswer> answers) throws JGDIException {
         synchronized(jgdi) {
             jgdi.rescheduleJobsWithAnswer(jobs, force, answers);
         }
@@ -406,4 +409,17 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
             return jgdi.showDetachedSettingsAll();
         }
     }
+    
+    public void deleteShareTree() throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.deleteShareTree();
+        }
+    }
+    
+    public void deleteShareTreeWithAnswer(List<JGDIAnswer> answers) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.deleteShareTreeWithAnswer(answers);
+        }
+    }
+    
 }

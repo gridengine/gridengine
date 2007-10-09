@@ -66,7 +66,7 @@ int *ret_id
 
    /* handle the children */
    for_each(cep, lGetList(ep, STN_children)) {     
-      if (false == id_sharetree(alpp, cep, my_id, &my_id)) {
+      if (false == id_sharetree(NULL, cep, my_id, &my_id)) {
          DRETURN(false);
       }
    }

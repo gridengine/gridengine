@@ -453,8 +453,8 @@ char *what
       /* display full usage */
       fprintf(fp,"%s qmod [options]\n", MSG_SRC_USAGE); 
       fprintf(fp, "   [-c job_wc_queue_list]  %s\n", MSG_QMOD_c_OPT_USAGE);
-      fprintf(fp, "   [-cj wc_queue_list]     %s\n", MSG_QMOD_c_OPT_USAGE_J);
-      fprintf(fp, "   [-cq job_list]          %s\n", MSG_QMOD_c_OPT_USAGE_Q);
+      fprintf(fp, "   [-cj job_list]          %s\n", MSG_QMOD_c_OPT_USAGE_J);
+      fprintf(fp, "   [-cq wc_queue_list]     %s\n", MSG_QMOD_c_OPT_USAGE_Q);
 
       fprintf(fp, "   [-d wc_queue_list]      %s\n", MSG_QMOD_d_OPT_USAGE);
       fprintf(fp, "   [-e wc_queue_list]      %s\n", MSG_QMOD_e_OPT_USAGE);

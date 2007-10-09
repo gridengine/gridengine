@@ -42,35 +42,31 @@ import java.util.List;
 /**
  *
  */
-@CommandAnnotation("qdel")
+@CommandAnnotation(value = "qdel")
 public class QDelCommand extends AbstractCommand {
-    
+
     public String getUsage() {
         return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qdel");
     }
-    
+
     public void run(String[] args) throws Exception {
-        
+
+        boolean jobargs = false;
         boolean force = false;
         UserFilter users = null;
         List<JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
         String[] jobs = null;
-        
+
         if (jgdi == null) {
             throw new IllegalStateException("Not connected");
         }
-        if (args.length == 0) {
-            pw.println(getUsage());
-            pw.flush();
-            return;
-        }
-        
+
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("-help")) {
                 i++;
                 pw.println(getUsage());
                 pw.flush();
-                break;
+                return;
             } else if (args[i].equals("-u")) {
                 i++;
                 if (i >= args.length) {
@@ -85,7 +81,15 @@ public class QDelCommand extends AbstractCommand {
                 throw new IllegalArgumentException("error: ERROR! invalid option argument \"" + args[i] + "\"");
             } else {
                 jobs = parseDestinIdList(args[i]);
+                if (jobs != null) {
+                    jobargs = true;
+                }
             }
+        }
+        if (!jobargs) {
+            pw.println(getUsage());
+            pw.flush();
+            throw new IllegalArgumentException("ERROR! no option argument");
         }
 //      try {
         jgdi.deleteJobsWithAnswer(jobs, force, users, answers);
@@ -94,7 +98,7 @@ public class QDelCommand extends AbstractCommand {
 //      }
         printAnswers(answers);
     }
-    
+
     private String[] parseDestinIdList(String arg) {
         String[] ret = arg.split(",");
         return ret;

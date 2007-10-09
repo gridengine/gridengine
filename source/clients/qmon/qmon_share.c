@@ -627,9 +627,10 @@ static void qmonShareTreeAddNode(Widget w, XtPointer cld, XtPointer cad)
    ListTreeItem *item = NULL;
    ListTreeItem *new = NULL;
    ListTreeMultiReturnStruct ret;
-   char name[256];
+   char name[256] = "";
    Cardinal share = 0;
    Boolean status;
+   Boolean isDefault;
 
    DENTER(GUI_LAYER, "qmonShareTreeAddNode");
 
@@ -663,16 +664,15 @@ static void qmonShareTreeAddNode(Widget w, XtPointer cld, XtPointer cad)
       item = item->parent;
    new = add_node(tree, item, "", ItemBranchType, ADD_MODE);
 
-   strcpy(name, "");
    status = AskForNode(w, name, 256, &share);
 
-   if (!status || (name && !strcmp(name, "default"))) {
-      if (name && !strcmp(name, "default")) {
+   isDefault =  (strcmp(name, "default") == 0);
+   if (!status || isDefault) {
+      if (isDefault) {
          qmonMessageShow(w, True, "@{Nodes named 'default' are not allowed !}");
       }   
       ListTreeDelete(tree, new);
-   }
-   else {
+   } else {
       node_data(new, share, NULL);
       ListTreeRenameItem(tree, new, name);
       item = new;

@@ -611,6 +611,10 @@ public class JavaHelper {
       
       return getPrimitivIndex(attr) >= 0;
    }
+   
+   public boolean isString(CullAttr attr) {
+       return getFullClassName(attr.getType()).equals("java.lang.String");
+   }
 
    private int getPrimitivIndex(CullAttr attr) {
       

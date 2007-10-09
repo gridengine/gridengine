@@ -57,7 +57,9 @@
 #include "jgdi_logging.h"
 #include "sge_ja_task.h"
 #include "msg_sgeobjlib.h"
+#include "msg_common.h"
 #include "sge_edit.h"
+#include "sge_sharetree.h"
 
 #define MAX_GDI_CTX_ARRAY_SIZE 1024
 
@@ -3677,7 +3679,7 @@ void jgdi_fill(JNIEnv *env, jobject jgdi, jobject list, jobject filter, const ch
    jgdi_init_rmon_ctx(env, JGDI_LOGGER, &rmon_ctx);
    rmon_set_thread_ctx(&rmon_ctx);
    
-   if (filter != NULL) { 
+   if (filter != NULL && target_list != SGE_SHARETREE_LIST) { 
      ret=build_filter(env, filter, &where, &alp);
      if (ret != JGDI_SUCCESS) {
         goto error;
@@ -3697,9 +3699,6 @@ void jgdi_fill(JNIEnv *env, jobject jgdi, jobject list, jobject filter, const ch
    
    /* get list */
    alp = ctx->gdi(ctx, target_list, SGE_GDI_GET, &lp, where, what);
-   if (target_list == SGE_SHARETREE_LIST) {
-      id_sharetree(&alp, lFirst(lp), 0, NULL);
-   }
    if (answers != NULL) {
       generic_fill_list(env, answers, "com/sun/grid/jgdi/configuration/JGDIAnswer", alp, NULL);
    }
@@ -3710,6 +3709,18 @@ void jgdi_fill(JNIEnv *env, jobject jgdi, jobject list, jobject filter, const ch
       lFreeList(&alp);
    }   
 
+   if (target_list == SGE_SHARETREE_LIST) {
+      id_sharetree(&alp, lFirst(lp), 0, NULL);
+      if (answers != NULL) {
+         generic_fill_list(env, answers, "com/sun/grid/jgdi/configuration/JGDIAnswer", alp, NULL);
+      }
+      if (answer_list_has_error(&alp)) {
+         ret = JGDI_ERROR;
+         goto error;
+      } else {
+         lFreeList(&alp);
+      }   
+   }
    ret = generic_fill_list(env, list, classname, lp, &alp);
    
 
@@ -3999,8 +4010,11 @@ void jgdi_delete(JNIEnv *env, jobject jgdi, jobject jobj, const char* classname,
    
    sge_gdi_set_thread_local_ctx(ctx);
    
-   if ((ret = obj_to_listelem(env, jobj, &ep, descr, &alp)) != JGDI_SUCCESS) {
-      goto error;
+   /* we don't have an element for SGE_SHARETREE_LIST */
+   if (target_list != SGE_SHARETREE_LIST) {
+      if ((ret = obj_to_listelem(env, jobj, &ep, descr, &alp)) != JGDI_SUCCESS) {
+         goto error;
+      }
    }
  
    /*
@@ -4022,6 +4036,8 @@ void jgdi_delete(JNIEnv *env, jobject jgdi, jobject jobj, const char* classname,
       iep = lAddElemStr(&lp, ID_str, id_buf, ID_Type);
       lSetUlong(iep, ID_force, force);
       what = lWhat("%T(ALL)", ID_Type);
+   } else if (target_list == SGE_SHARETREE_LIST) {
+      // special handling: lp remains NULL
    } else {
       lp = lCreateList("", descr);
       lAppendElem(lp, ep);
@@ -5144,6 +5160,20 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_util_shell_editor_EditorUtil_nativ
    DRETURN(ret);
 }
 
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeDeleteShareTreeWithAnswer
+ * Signature: (Ljava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeDeleteShareTreeWithAnswer(JNIEnv *env, jobject jgdi, jobject answers)
+{
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeDeleteShareTreeWithAnswer");
+   
+   jgdi_delete(env, jgdi, NULL, "com/sun/grid/jgdi/configuration/ShareTree", SGE_SHARETREE_LIST, STN_Type, false, answers);
+
+   DRETURN_VOID;
+}
 
 /*-------------------------------------------------------------------------*
  * NAME

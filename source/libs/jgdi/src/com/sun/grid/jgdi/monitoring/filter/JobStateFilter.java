@@ -38,107 +38,89 @@ import java.io.Serializable;
  *
  */
 public class JobStateFilter implements Serializable {
-    
+
     public static class State {
+
         private int mask;
         private String value;
-        
+
         public State(int mask, String value) {
             this.mask = mask;
             this.value = value;
         }
-        
+
         public int getMask() {
             return mask;
         }
-        
+
         public String getValue() {
             return value;
         }
-        
+
         public boolean isSet(int state) {
             return (mask & state) == mask;
         }
     }
-    
-    
 /*
-   [-s {p|r|s|z|hu|ho|hs|hj|ha|h|a}] show pending, running, suspended, zombie jobs,
-                                          jobs with a user/operator/system hold,
-                                          jobs with a start time in future or any combination only.
-                                          h is an abbreviation for huhohshjha
-                                          a is an abbreviation for prsh
- */
-    
+    [-s {p|r|s|z|hu|ho|hs|hj|ha|h|a}] show pending, running, suspended, zombie jobs,
+    jobs with a user/operator/system hold,
+    jobs with a start time in future or any combination only.
+    h is an abbreviation for huhohshjha
+    a is an abbreviation for prsh
+     */
     /**
      *  Jobs in the state hold user (<code>qstat -s hu</code>)
      */
-    public static final State HOLD_USER     = new State(0x0001, "hu");
-    
+    public static final State HOLD_USER = new State(0x0001, "hu");
     /**
      *  Jobs in the state hold operator (<code>qstat -s ho</code>)
      */
     public static final State HOLD_OPERATOR = new State(0x0002, "ho");
-    
     /**
      *  Jobs in the state hold system (<code>qstat -s hs</code>)
      */
-    public static final State HOLD_SYSTEM   = new State(0x0004, "hs");
-    
+    public static final State HOLD_SYSTEM = new State(0x0004, "hs");
     /**
      *  Pending jobs (<code>qstat -s p</code>)
      */
-    public static final State PENDING       = new State(0x0008, "p");
-    
+    public static final State PENDING = new State(0x0008, "p");
     /**
      *  Running jobs (<code>qstat -s r</code>)
      */
-    public static final State RUNNING       = new State(0x0010, "r");
-    
-    
+    public static final State RUNNING = new State(0x0010, "r");
     /**
      *  Suspended jobs (<code>qstat -s r</code>)
      */
-    public static final State SUSPENDED     = new State(0x0020, "s");
-    
+    public static final State SUSPENDED = new State(0x0020, "s");
     /**
      *  Zombie jobs. (<code>qstat -s z</code>)
      */
-    public static final State ZOMBIE        = new State(0x0040, "z");
-    
+    public static final State ZOMBIE = new State(0x0040, "z");
     /**
      * This state includes <code>HOLD_USER</code>, <code>HOLD_OPERATOR</code> and
      * <code>HOLD_SYSTEM</code>.
      */
-    public static final State HOLD          = new State(HOLD_USER.getMask() | HOLD_OPERATOR.getMask() | HOLD_SYSTEM.getMask(),
-            "h");
-    
+    public static final State HOLD = new State(HOLD_USER.getMask() | HOLD_OPERATOR.getMask() | HOLD_SYSTEM.getMask(), "h");
     /**
      *  This state includes a other states besides <code>ZOMBIE</code>.
      *
      *  Same as <code>qstat -s a</code> or <code>qstat -s prsh</code>
      */
-    public static final State ALL  = new State(PENDING.getMask() | RUNNING.getMask() | SUSPENDED.getMask() | HOLD.getMask(),
-            "a");
-    
-    private static final State [] ALL_SIMPLE_STATES = new State [] {
-        HOLD_USER, HOLD_OPERATOR, HOLD_SYSTEM, PENDING, RUNNING, SUSPENDED, ZOMBIE
-    };
-    
+    public static final State ALL = new State(PENDING.getMask() | RUNNING.getMask() | SUSPENDED.getMask() | HOLD.getMask(), "a");
+    private static final State[] ALL_SIMPLE_STATES = new State[]{HOLD_USER, HOLD_OPERATOR, HOLD_SYSTEM, PENDING, RUNNING, SUSPENDED, ZOMBIE};
     private int mask;
     private String stateStr;
-    
-    public JobStateFilter(State [] states) {
-        for(int i = 0; i < states.length; i++) {
+
+    public JobStateFilter(State[] states) {
+        for (int i = 0; i < states.length; i++) {
             include(states[i]);
         }
     }
-    
-    
+
     public JobStateFilter() {
         setStates(0);
     }
-    
+
     /**
      * Parse a job state string.
      * @param stateString  the job state string
@@ -148,67 +130,63 @@ public class JobStateFilter implements Serializable {
         JobStateFilter ret = new JobStateFilter();
         return ret.fill(stateString);
     }
-    
+
     /**
      * Parse a job state string.
      * @param stateString  the job state string
      * @return the job state
      */
     public static JobStateFilter fill(String stateString) {
-        
+
         JobStateFilter ret = new JobStateFilter();
         String str = null;
         outer:
-            for(int index = 0; index < stateString.length(); index++) {
-                
-                for(int i = 0; i < ALL_SIMPLE_STATES.length; i++) {
-                    str = ALL_SIMPLE_STATES[i].getValue();
-                    if(stateString.indexOf(str, index) == 0) {
-                        ret.include(ALL_SIMPLE_STATES[i]);
-                        index += str.length();
-                        continue outer;
-                    }
-                }
-                
-                str = HOLD.getValue();
-                if(stateString.indexOf(str, index) == 0) {
-                    ret.include(HOLD);
+        for (int index = 0; index < stateString.length(); index++) {
+            for (int i = 0; i < ALL_SIMPLE_STATES.length; i++) {
+                str = ALL_SIMPLE_STATES[i].getValue();
+                if (stateString.indexOf(str, index) == 0) {
+                    ret.include(ALL_SIMPLE_STATES[i]);
                     index += str.length();
-                    continue;
+                    continue outer;
                 }
-                
-                str = ALL.getValue();
-                if(stateString.indexOf(str, index) == 0) {
-                    ret.include(ALL);
-                    index += str.length();
-                    continue;
-                }
-                
-                throw new IllegalStateException("Unknown jobs state "+ stateString );
             }
-            return ret;
+            str = HOLD.getValue();
+            if (stateString.indexOf(str, index) == 0) {
+                ret.include(HOLD);
+                index += str.length();
+                continue;
+            }
+            str = ALL.getValue();
+            if (stateString.indexOf(str, index) == 0) {
+                ret.include(ALL);
+                index += str.length();
+                continue;
+            }
+
+            throw new IllegalStateException("Unknown jobs state " + stateString);
+        }
+        return ret;
     }
-    
-    
+
     public void setStates(int mask) {
-        if(this.mask != mask) {
+        if (this.mask != mask) {
             this.mask = mask;
             stateStr = null;
         }
     }
-    
+
     public int getStates() {
         return this.mask;
     }
-    
+
     private void include(State state) {
         setStates(mask | state.getMask());
     }
-    
+
     public void exclude(State state) {
         setStates(mask & (~state.getMask()));
     }
-    
+
     /**
      *  Include/Exclude jobs in specific state
      *
@@ -217,13 +195,13 @@ public class JobStateFilter implements Serializable {
      *                else they are excluded
      */
     public void set(State state, boolean flag) {
-        if(flag) {
+        if (flag) {
             include(state);
         } else {
             exclude(state);
         }
     }
-    
+
     /**
      * Determine if jobs in a specific state are included.
      *
@@ -232,18 +210,18 @@ public class JobStateFilter implements Serializable {
     public boolean isSet(State state) {
         return state.isSet(mask);
     }
-    
+
     /**
      * Get the state string as it can be used for qstat
      *
      * @return the state string
      */
     public String getStateString() {
-        if(stateStr == null) {
+        if (stateStr == null) {
             StringBuilder buf = new StringBuilder();
-            
-            for(int i = 0; i < ALL_SIMPLE_STATES.length; i++ ) {
-                if(ALL_SIMPLE_STATES[i].isSet(mask)) {
+
+            for (int i = 0; i < ALL_SIMPLE_STATES.length; i++) {
+                if (ALL_SIMPLE_STATES[i].isSet(mask)) {
                     buf.append(ALL_SIMPLE_STATES[i].getValue());
                 }
             }
@@ -251,7 +229,7 @@ public class JobStateFilter implements Serializable {
         }
         return stateStr;
     }
-    
+
     /**
      * Determine of this is equal to <code>obj</code>.
      * Two <code>JobStateFilter</code> objects are equals if they
@@ -260,27 +238,26 @@ public class JobStateFilter implements Serializable {
      * @param obj the obj
      * @return <code>true</code> if </code>obj</code> is equal to this
      */
+    @Override
     public boolean equals(Object obj) {
-        return obj instanceof JobStateFilter &&
-                mask == ((JobStateFilter)obj).mask;
+        return obj instanceof JobStateFilter && mask == ((JobStateFilter) obj).mask;
     }
-    
+
     /**
      * Get the hashcode of this object
      * @return the hashcode
      */
+    @Override
     public int hashCode() {
         return mask;
     }
-    
+
     /**
      * Get a string representation of this object
      * @return the string representation
      */
+    @Override
     public String toString() {
         return "JobStateFilter: " + getStateString();
     }
-    
-    
-    
 }

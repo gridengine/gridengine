@@ -626,6 +626,10 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeExecQHost
       if (sub_object != NULL) {
          if (strcmp(filters[i].getter, "getResourceAttributeFilter") == 0) {
             show |= QHOST_DISPLAY_RESOURCES;
+            ret=get_string_list(env, sub_object, filters[i].getListFunc, &(filters[i].list), ST_Type, ST_name, &alp);
+            if (ret != JGDI_SUCCESS) {
+               break;
+            }   
          } else if (strcmp(filters[i].getter, "getResourceFilter") == 0) {
             ret = build_resource_filter(env, sub_object, &(filters[i].list), &alp);
             if (ret != JGDI_SUCCESS) {
@@ -644,6 +648,10 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeExecQHost
                   break;
                }
             }
+            ret=get_string_list(env, sub_object, filters[i].getListFunc, &(filters[i].list), ST_Type, ST_name, &alp);
+            if (ret != JGDI_SUCCESS) {
+               break;
+            }   
          } else {
             ret=get_string_list(env, sub_object, filters[i].getListFunc, &(filters[i].list), ST_Type, ST_name, &alp);
             if (ret != JGDI_SUCCESS) {

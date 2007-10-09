@@ -35,7 +35,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,19 +42,19 @@ import java.util.logging.Logger;
  *
  */
 public class QueueFilter implements Serializable {
-    
+
     private static Logger logger = Logger.getLogger(QueueFilter.class.getName());
-    
     private List<String> queues = new ArrayList<String>();
+
     /** Creates a new instance of QueueFilter */
     public QueueFilter() {
     }
-    
+
     public static QueueFilter parse(String str) {
         QueueFilter ret = new QueueFilter();
         return ret.fill(str);
     }
-    
+
     public QueueFilter fill(String list) {
         String[] elems = list.split(",");
         for (String elem : elems) {
@@ -63,17 +62,33 @@ public class QueueFilter implements Serializable {
         }
         return this;
     }
-    
+
     public void addQueue(String queue) {
-        if(logger.isLoggable(Level.FINE)) {
+        if (logger.isLoggable(Level.FINE)) {
             logger.fine("add queue " + queue + " to filter");
         }
         queues.add(queue);
     }
-    
+
     public List getQueues() {
-        logger.fine("get queues" );
+        logger.fine("get queues");
         return Collections.unmodifiableList(queues);
     }
-    
+
+    @Override
+    public String toString() {
+        StringBuilder ret = new StringBuilder();
+        boolean first = true;
+        ret.append("Queues[");
+        for (String queue : queues) {
+            if (first) {
+                first = false;
+            } else {
+                ret.append(", ");
+            }
+            ret.append(queue);
+        }
+        ret.append("]");
+        return ret.toString();
+    }
 }

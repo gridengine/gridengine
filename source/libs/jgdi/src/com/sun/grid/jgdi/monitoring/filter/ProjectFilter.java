@@ -42,15 +42,15 @@ import java.util.StringTokenizer;
  *
  */
 public class ProjectFilter implements Serializable {
-    
+
     private List<String> prjList = new LinkedList<String>();
-    
+
     /**
      * Creates a new instance of ProjectFilter
      */
     public ProjectFilter() {
     }
-    
+
     public static ProjectFilter parse(String projectList) {
         ProjectFilter ret = new ProjectFilter();
         StringTokenizer st = new StringTokenizer(projectList, ",");
@@ -59,19 +59,20 @@ public class ProjectFilter implements Serializable {
         }
         return ret;
     }
-    
+
     public void addProject(String prjName) {
         prjList.add(prjName);
     }
-    
+
     public List<String> getProjectList() {
         return Collections.unmodifiableList(prjList);
     }
-    
+
     public int getProjectCount() {
         return prjList.size();
     }
-    
+
+    @Override
     public String toString() {
         StringBuilder ret = new StringBuilder();
         boolean first = true;

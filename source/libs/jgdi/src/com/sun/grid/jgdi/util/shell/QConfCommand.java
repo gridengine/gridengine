@@ -65,24 +65,24 @@ import static com.sun.grid.jgdi.util.shell.OptionAnnotation.MAX_ARG_VALUE;
  */
 @CommandAnnotation(value = "qconf")
 public class QConfCommand extends QConfCommandGenerated {
-    
+
     public String getUsage() {
         return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qconf");
     }
-    
+
     public void run(String[] args) throws Exception {
         if (args.length == 0) {
             throw new IllegalArgumentException("Invalid number of arguments");
         }
         parseAndInvokeOptions(args);
     }
-    
+
     //-help
     @OptionAnnotation(value = "-help", min = 0)
     public void printUsage(final OptionInfo oi) throws JGDIException {
         pw.println(getUsage());
     }
-    
+
     String getTextFromFile(final List<String> args) {
         if (args.size() <= 0) {
             pw.println("no file argument given");
@@ -103,7 +103,7 @@ public class QConfCommand extends QConfCommandGenerated {
         }
         return inputText;
     }
-    
+
     //SUBMITHOST
     @OptionAnnotation(value = "-as", extra = MAX_ARG_VALUE)
     public void addSubmitHost(final OptionInfo oi) throws JGDIException {
@@ -112,7 +112,7 @@ public class QConfCommand extends QConfCommandGenerated {
         jgdi.addSubmitHostWithAnswer(hostName, answers);
         printAnswers(answers);
     }
-    
+
     @OptionAnnotation(value = "-ds", extra = MAX_ARG_VALUE)
     public void deleteSubmitHost(final OptionInfo oi) throws JGDIException {
         List<JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
@@ -122,7 +122,7 @@ public class QConfCommand extends QConfCommandGenerated {
         jgdi.deleteSubmitHostsWithAnswer(hosts, answers);
         printAnswers(answers);
     }
-    
+
     //ADMINHOST
     @OptionAnnotation(value = "-ah", extra = MAX_ARG_VALUE)
     public void addAdminHost(final OptionInfo oi) throws JGDIException {
@@ -131,7 +131,7 @@ public class QConfCommand extends QConfCommandGenerated {
         jgdi.addAdminHostWithAnswer(hostName, answers);
         printAnswers(answers);
     }
-    
+
     @OptionAnnotation(value = "-dh", extra = MAX_ARG_VALUE)
     public void deleteAdminHost(final OptionInfo oi) throws JGDIException {
         List<JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
@@ -141,22 +141,32 @@ public class QConfCommand extends QConfCommandGenerated {
         jgdi.deleteAdminHostsWithAnswer(hosts, answers);
         printAnswers(answers);
     }
-    
+
     //SHARETREE
     @OptionAnnotation(value = "-astree", min = 0)
     public void addShareTree(final OptionInfo oi) throws JGDIException {
-        String userTypedText = runEditor(showShareTreeNode("Root", true));
+        ShareTree stree = null;
+        try {
+            stree = jgdi.getShareTree("Root");
+        } catch (JGDIException je) {
+            // ignore no sharetree defined and fill in a template element instead
+        }
+        if (stree == null) {
+            stree = new ShareTreeImpl("template");
+        }
+        String treeAsText = showShareTree(stree, "Root", true);
+        String userTypedText = runEditor(treeAsText);
         if (userTypedText != null) {
             List<JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
-            ShareTreeImpl stree = new ShareTreeImpl();
-            GEObjectEditor.updateObjectWithText(jgdi, stree, userTypedText);
-            // jgdi.updateShareTreeWithAnswer(stree, answers);
-            pw.println("NOT IMPLEMENTED");
+            ShareTreeImpl node = new ShareTreeImpl();
+            node = (ShareTreeImpl) GEObjectEditor.updateObjectWithText(jgdi, node, userTypedText);
+            // pw.println(node.dump());
+            jgdi.updateShareTreeWithAnswer(node, answers);
             printAnswers(answers);
         }
         oi.optionDone();
     }
-    
+
     @OptionAnnotation(value = "-Astree")
     public void addShareTreeFromFile(final OptionInfo oi) throws JGDIException {
         String inputText = getTextFromFile(oi.getArgs());
@@ -165,32 +175,33 @@ public class QConfCommand extends QConfCommandGenerated {
         }
         pw.println("NOT IMPLEMENTED"); //TODO LP: Implement
     }
-    
+
+    // -mstree same as -astree
     @OptionAnnotation(value = "-mstree", min = 0)
     public void modifyShareTree(final OptionInfo oi) throws JGDIException {
-        String text = runEditor(showShareTreeNode("Root", true));
-        pw.println("NOT IMPLEMENTED"); //TODO LP: Implement
+        addShareTree(oi);
     }
-    
+
+    // -Mstree same as -Astree
     @OptionAnnotation(value = "-Mstree")
     public void modifyShareTreeFromFile(final OptionInfo oi) throws JGDIException {
-        String inputText = getTextFromFile(oi.getArgs());
-        pw.println("NOT IMPLEMENTED"); //TODO LP: Implement
+        addShareTreeFromFile(oi);
     }
-    
+
     @OptionAnnotation(value = "-sstree", min = 0)
     public void showShareTree(final OptionInfo oi) throws JGDIException {
-        pw.println(showShareTreeNode("Root", true));
+        ShareTree stree = jgdi.getShareTree("Root");
+        pw.println(showShareTree(stree, "Root", true));
     }
-    
+
     @OptionAnnotation(value = "-dstree", min = 0)
     public void deleteShareTree(final OptionInfo oi) throws JGDIException {
         ShareTree empty = new ShareTreeImpl(true);
         List<JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
-        jgdi.updateShareTreeWithAnswer(empty, answers);
+        jgdi.deleteShareTreeWithAnswer(answers);
         printAnswers(answers);
     }
-    
+
     /**
      * Show sharetree node
      * @param oi
@@ -199,30 +210,29 @@ public class QConfCommand extends QConfCommandGenerated {
      */
     String showShareTreeNode(final OptionInfo oi) throws JGDIException {
         final String name = oi.getFirstArg();
-        return showShareTreeNode(name, false);
+        ShareTree stree = jgdi.getShareTree(name);
+        return showShareTree(stree, name, false);
     }
-    
+
     /*
      * Show sharetree node
      */
-    @SuppressWarnings(value = "unchecked")
-    private String showShareTreeNode(final String name, final boolean showTree) throws JGDIException {
+    private static String showShareTree(ShareTree node, final String name, final boolean showTree) throws JGDIException {
         StringBuilder sb = new StringBuilder();
         List<ShareTree> sharetree = new LinkedList<ShareTree>();
         List<ShareTree> childList;
         String childStr;
         String stName;
-        ShareTree shareTree = jgdi.getShareTree(name);
         ShareTree tempTree;
-        sharetree.add(shareTree);
+        sharetree.add(node);
         while (!sharetree.isEmpty()) {
-            shareTree = sharetree.remove(0);
+            node = sharetree.remove(0);
             //Add children to queue
             childList = new LinkedList<ShareTree>();
-            childList.addAll(shareTree.getChildrenList());
+            childList.addAll(node.getChildrenList());
             //Sort the list by ID
             Collections.sort(childList, new Comparator<ShareTree>() {
-                
+
                 public int compare(ShareTree a, ShareTree b) {
                     int na = a.getId();
                     int nb = b.getId();
@@ -236,22 +246,22 @@ public class QConfCommand extends QConfCommandGenerated {
             }
             //For show node
             if (!showTree) {
-                stName = shareTree.getName();
+                stName = node.getName();
                 stName = stName.equals("Root") ? "" : stName;
-                sb.append("/" + stName + "=" + shareTree.getShares() + "\n");
+                sb.append("/" + stName + "=" + node.getShares() + "\n");
                 //For show tree
             } else {
-                sb.append("id=" + shareTree.getId() + "\n");
-                sb.append("name=" + shareTree.getName() + "\n");
-                sb.append("type=" + shareTree.getType() + "\n");
-                sb.append("shares=" + shareTree.getShares() + "\n");
+                sb.append("id=" + node.getId() + "\n");
+                sb.append("name=" + node.getName() + "\n");
+                sb.append("type=" + node.getType() + "\n");
+                sb.append("shares=" + node.getShares() + "\n");
                 childStr = (childStr.length() > 0) ? childStr.substring(0, childStr.length() - 1) : "NONE";
                 sb.append("childnodes=" + childStr + "\n");
             }
         }
         return sb.toString();
     }
-    
+
     //-tsm
     @OptionAnnotation(value = "-tsm", min = 0)
     public void triggerSchedulerMonitoring(OptionInfo oi) throws JGDIException {
@@ -259,7 +269,7 @@ public class QConfCommand extends QConfCommandGenerated {
         jgdi.triggerSchedulerMonitoringWithAnswer(answers);
         printAnswers(answers);
     }
-    
+
     //-clearusage
     @OptionAnnotation(value = "-clearusage", min = 0)
     public void clearUsage(final OptionInfo oi) throws JGDIException {
@@ -268,7 +278,7 @@ public class QConfCommand extends QConfCommandGenerated {
         //TODO LP: Bug - got no answers
         printAnswers(answers);
     }
-    
+
     //-cq
     @OptionAnnotation(value = "-cq", extra = MAX_ARG_VALUE)
     public void cleanQueue(final OptionInfo oi) throws JGDIException {
@@ -279,7 +289,7 @@ public class QConfCommand extends QConfCommandGenerated {
         printAnswers(answers);
         oi.optionDone();
     }
-    
+
     //-kec
     @OptionAnnotation(value = "-kec", extra = MAX_ARG_VALUE)
     public void killEventClient(final OptionInfo oi) throws JGDIException {
@@ -305,7 +315,7 @@ public class QConfCommand extends QConfCommandGenerated {
         printAnswers(answers);
         oi.optionDone();
     }
-    
+
     //-km
     @OptionAnnotation(value = "-km", min = 0)
     public void killMaster(final OptionInfo oi) throws JGDIException {
@@ -313,7 +323,7 @@ public class QConfCommand extends QConfCommandGenerated {
         jgdi.killMasterWithAnswer(answers);
         printAnswers(answers);
     }
-    
+
     //-ks
     @OptionAnnotation(value = "-ks", min = 0)
     public void killScheduler(final OptionInfo oi) throws JGDIException {
@@ -321,7 +331,7 @@ public class QConfCommand extends QConfCommandGenerated {
         jgdi.killSchedulerWithAnswer(answers);
         printAnswers(answers);
     }
-    
+
     //-sds
     @OptionAnnotation(value = "-sds", min = 0)
     public void showDetachedSettings(final OptionInfo oi) throws JGDIException {
@@ -330,7 +340,7 @@ public class QConfCommand extends QConfCommandGenerated {
         pw.println(sds);
         oi.optionDone();
     }
-    
+
     //-secl
     @OptionAnnotation(value = "-secl", min = 0)
     public void showEventClientList(final OptionInfo oi) throws JGDIException {
@@ -353,7 +363,7 @@ public class QConfCommand extends QConfCommandGenerated {
             pw.println(getErrorMessage("NoObjectFound", oi.getOd().getOption(), "no event clients registered"));
         }
     }
-    
+
     //-sep
     @OptionAnnotation(value = "-sep", min = 0)
     @SuppressWarnings(value = "unchecked")
@@ -384,27 +394,27 @@ public class QConfCommand extends QConfCommandGenerated {
         pw.println("===============================================");
         pw.printf("%-25.25s %9d%n", "SUM", totalCpu);
     }
-    
+
     //-sss
     @OptionAnnotation(value = "-sss", min = 0)
     public void showSchedulerState(final OptionInfo oi) throws JGDIException {
         pw.println(jgdi.getSchedulerHost());
     }
-    
+
     //-ke
     @OptionAnnotation(value = "-ke", extra = MAX_ARG_VALUE)
     public void killExecd(final OptionInfo oi) throws JGDIException {
         final List<String> args = oi.getArgs();
         killExecd(false, args);
     }
-    
+
     //-kej
     @OptionAnnotation(value = "-kej", extra = MAX_ARG_VALUE)
     public void killExecdWithJobs(final OptionInfo oi) throws JGDIException {
         final List<String> args = oi.getArgs();
         killExecd(true, args);
     }
-    
+
     private void killExecd(final boolean terminateJobs, final List<String> args) throws JGDIException {
         List<JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
         for (String host : args) {
@@ -417,7 +427,7 @@ public class QConfCommand extends QConfCommandGenerated {
         jgdi.killExecdWithAnswer(args.toArray(new String[args.size()]), terminateJobs, answers);
         printAnswers(answers);
     }
-    
+
     //HOSTGROUP
     //-shgrp_tree
     @OptionAnnotation(value = "-shgrp_tree")
@@ -444,7 +454,7 @@ public class QConfCommand extends QConfCommandGenerated {
             }
         }
     }
-    
+
     //-shgrp_resolved
     @OptionAnnotation(value = "-shgrp_resolved")
     @SuppressWarnings(value = "unchecked")
@@ -477,12 +487,12 @@ public class QConfCommand extends QConfCommandGenerated {
             }
         }
     }
-    
+
     //TODO LP: Remove recursion in shgrp_tree
     private void showHostgroupTree(Hostgroup obj, String prefix, final String tab) {
         pw.println(prefix + obj.getName());
         prefix += tab;
-        
+
         for (String hgroup : (List<String>) obj.getHostList()) {
             //Another hroup
             if (hgroup.startsWith("@")) {
@@ -497,7 +507,7 @@ public class QConfCommand extends QConfCommandGenerated {
             }
         }
     }
-    
+
     //TODO: Clients use postorder, better to use sort?
     private void printHostgroupResolved(List<String> result, Hostgroup obj) {
         LinkedList<Hostgroup> queue = new LinkedList<Hostgroup>();
@@ -522,7 +532,7 @@ public class QConfCommand extends QConfCommandGenerated {
         }
         //Collections.sort(result);
     }
-    
+
     //COMPLEXENTRY
     //-mc
     @OptionAnnotation(value = "-mc", min = 0)
@@ -530,7 +540,7 @@ public class QConfCommand extends QConfCommandGenerated {
         String text = runEditor(showComplexes());
         modifyComplexes(text);
     }
-    
+
     //-Mc
     @OptionAnnotation(value = "-Mc")
     public void modifyComplexEntryFromFile(final OptionInfo oi) throws JGDIException {
@@ -541,13 +551,13 @@ public class QConfCommand extends QConfCommandGenerated {
         }
         modifyComplexes(inputText);
     }
-    
+
     //-sc
     @OptionAnnotation(value = "-sc", min = 0)
     public void showComplexEntry(final OptionInfo oi) throws JGDIException {
         pw.print(showComplexes());
     }
-    
+
     /**
      * Updates the complex entry list based on the text
      * @param text
@@ -561,7 +571,7 @@ public class QConfCommand extends QConfCommandGenerated {
         int val;
         for (List<String> singleLine : lineList) {
             elem = singleLine.get(0);
-            
+
             //We check if the line starts with # and skip it
             if (elem.startsWith("#")) {
                 continue;
@@ -572,33 +582,33 @@ public class QConfCommand extends QConfCommandGenerated {
             ComplexEntry ce = new ComplexEntryImpl(true);
             ce.setName(elem);
             ce.setShortcut(singleLine.get(1));
-            
+
             val = ce.typeToInt(singleLine.get(2));
             //TODO LP: deny invalid
             ce.setValtype(val);
-            
+
             val = ce.opToInt(singleLine.get(3));
             //TODO LP: deny invalid
             ce.setRelop(val);
-            
+
             val = ce.reqToInt(singleLine.get(4));
             //TODO LP: deny invalid
             ce.setRequestable(val);
-            
+
             ce.setConsumable(Util.isYes(singleLine.get(5)));
-            
+
             ce.setDefault(singleLine.get(6));
-            
+
             //val = Integer.parseInt((String) singleLine.get(7));
             ce.setUrgencyWeight(singleLine.get(7));
-            
+
             newCEMap.put(elem, ce);
         }
         //TODO LP: Better to have jgdi.replaceCEList(List newList) and make the checks on qmaster side
         List<ComplexEntry> toModify = new LinkedList<ComplexEntry>();
         List<ComplexEntry> toDelete = new LinkedList<ComplexEntry>();
         List<ComplexEntry> origList = jgdi.getComplexEntryList();
-        
+
         String name;
         String shortCut;
         for (ComplexEntry ce : origList) {
@@ -639,7 +649,7 @@ public class QConfCommand extends QConfCommandGenerated {
             }
         }
     }
-    
+
     private String showComplexes() {
         StringBuilder sb = new StringBuilder();
         List<ComplexEntry> cList = null;
@@ -687,11 +697,11 @@ public class QConfCommand extends QConfCommandGenerated {
         sb.append("# >#< starts a comment but comments are not saved across edits --------\n");
         return sb.toString();
     }
-    
+
     @SuppressWarnings(value = "unchecked")
     private static List sortListByName(final List list) {
         Collections.sort(list, new Comparator<GEObject>() {
-            
+
             public int compare(GEObject o1, GEObject o2) {
                 if (o1 == null && o2 == null) {
                     return 0;
@@ -702,12 +712,12 @@ public class QConfCommand extends QConfCommandGenerated {
                 if (o2 == null) {
                     return 1;
                 }
-                return (o1.getName().compareTo(o2.getName()));
+                return o1.getName().compareTo(o2.getName());
             }
         });
         return list;
     }
-    
+
     //MANAGER
     @OptionAnnotation(value = "-am", extra = MAX_ARG_VALUE)
     public void addManager(final OptionInfo oi) throws JGDIException {
@@ -716,18 +726,18 @@ public class QConfCommand extends QConfCommandGenerated {
         jgdi.addManagerWithAnswer(name, answer);
         printAnswers(answer);
     }
-    
+
     @OptionAnnotation(value = "-dm", extra = MAX_ARG_VALUE)
     public void deleteManager(final OptionInfo oi) throws JGDIException {
         List<JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
-        String a[] = new String[0];
+        String[] a = new String[0];
         int size = oi.getArgs().size();
         final String[] names = oi.getArgs().toArray(new String[size]);
         oi.optionDone();
         jgdi.deleteManagersWithAnswer(names, answers);
         printAnswers(answers);
     }
-    
+
     //OPERATOR
     @OptionAnnotation(value = "-ao", extra = MAX_ARG_VALUE)
     public void addOperator(final OptionInfo oi) throws JGDIException {
@@ -736,18 +746,18 @@ public class QConfCommand extends QConfCommandGenerated {
         jgdi.addOperatorWithAnswer(name, answer);
         printAnswers(answer);
     }
-    
+
     @OptionAnnotation(value = "-do", extra = MAX_ARG_VALUE)
     public void deleteOperator(final OptionInfo oi) throws JGDIException {
         List<JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
-        String a[] = new String[0];
+        String[] a = new String[0];
         int size = oi.getArgs().size();
         final String[] names = oi.getArgs().toArray(new String[size]);
         oi.optionDone();
         jgdi.deleteOperatorsWithAnswer(names, answers);
         printAnswers(answers);
     }
-    
+
     //RESOURCE QUOTA SET
     /**
      *   Implements qconf -mrqs option
@@ -761,8 +771,8 @@ public class QConfCommand extends QConfCommandGenerated {
         List<ResourceQuotaSet> rqsList = new LinkedList<ResourceQuotaSet>();
         List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
         String textToEdit = "";
-        
-        
+
+
         if (oi.getArgs().size() == 0) {
             rqsList = jgdi.getResourceQuotaSetListWithAnswer(answer);
             printAnswers(answer);
@@ -778,7 +788,7 @@ public class QConfCommand extends QConfCommandGenerated {
         for (ResourceQuotaSet rqs : rqsList) {
             textToEdit += GEObjectEditor.getConfigurablePropertiesAsText(rqs);
         }
-        
+
         String userTypedText = runEditor(textToEdit);
         if (userTypedText != null) {
             //TODO LP: Handle the multiple objects. Need special parser for the userTypedText
@@ -789,7 +799,7 @@ public class QConfCommand extends QConfCommandGenerated {
         }
         oi.optionDone();
     }
-    
+
     /**
      *   Implements qconf -srqs option
      *   @param  oi <b>OptionInfo</b> option enviroment object
@@ -801,8 +811,8 @@ public class QConfCommand extends QConfCommandGenerated {
         List<ResourceQuotaSet> rqsList = new LinkedList<ResourceQuotaSet>();
         List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
         String text = "";
-        
-        
+
+
         if (oi.getArgs().size() == 0) {
             rqsList = jgdi.getResourceQuotaSetListWithAnswer(answer);
             oi.optionDone();
@@ -826,7 +836,7 @@ public class QConfCommand extends QConfCommandGenerated {
         }
         pw.print(text);
     }
-    
+
     //USERSET
     //-au
     @OptionAnnotation(value = "-au", min = 2, extra = MAX_ARG_VALUE)
@@ -839,7 +849,7 @@ public class QConfCommand extends QConfCommandGenerated {
         jgdi.updateUserSetWithAnswer(obj, answer);
         printAnswers(answer);
     }
-    
+
     //-du
     @OptionAnnotation(value = "-du", min = 2, extra = MAX_ARG_VALUE)
     public void deleteUserSet(final OptionInfo oi) throws JGDIException {
@@ -856,7 +866,7 @@ public class QConfCommand extends QConfCommandGenerated {
         jgdi.updateUserSetWithAnswer(obj, answer);
         printAnswers(answer);
     }
-    
+
     //-dul
     @OptionAnnotation(value = "-dul", min = 1, extra = MAX_ARG_VALUE)
     public void deleteUserSetList(final OptionInfo oi) throws JGDIException {
@@ -872,12 +882,9 @@ public class QConfCommand extends QConfCommandGenerated {
         jgdi.updateUserSetWithAnswer(obj, answer);
         printAnswers(answer);
     }
-    
-    
-    
     //OVERRIDES - special handling to have same behaviour as in clients
     //TODO: Fix the clients remove this special handling
-    
+
     //CALENDAR
     @OptionAnnotation(value = "-acal", min = 0, extra = 1)
     @Override
@@ -889,7 +896,7 @@ public class QConfCommand extends QConfCommandGenerated {
         //otherwise handle adding object
         super.addCalendar(oi);
     }
-    
+
     //CHECKPOINT
     @OptionAnnotation(value = "-ackpt", min = 0, extra = 1)
     @Override
@@ -901,32 +908,31 @@ public class QConfCommand extends QConfCommandGenerated {
         //otherwise handle adding of the object
         super.addCheckpoint(oi);
     }
-    
+
     //PARALLEL ENVIRONMENT
     @OptionAnnotation(value = "-sp", min = 1, extra = 0)
-    @Override //TODO LP: -sp has exactly 1 arg in client, could work also with extra>0 (default)
+    @Override
     public void showParallelEnvironment(final OptionInfo oi) throws JGDIException {
         super.showParallelEnvironment(oi);
     }
-    
+
     //PROJECT
     @OptionAnnotation(value = "-sprj", min = 1, extra = 0)
-    @Override //TODO LP: -sprj has exactly 1 arg in client, could work also with extra>0 (default)
+    @Override
     public void showProject(final OptionInfo oi) throws JGDIException {
         super.showProject(oi);
     }
-    
+
     //HOSTGROUP -  additional check if the argument starts with @ character
     @OptionAnnotation(value = "-ahgrp", min = 0, extra = 1)
-    @Override //TODO LP: -sprj has exactly 1 arg in client, could work also with extra>0 (default)
+    @Override
     public void addHostgroup(final OptionInfo oi) throws JGDIException {
         if (!hasValidHostgroupName(oi)) {
             return;
         }
         super.addHostgroup(oi);
     }
-    
-    
+
     /**
      * Helper method. Checks if option has an argument(s)
      * return hasNoArgument
@@ -934,12 +940,12 @@ public class QConfCommand extends QConfCommandGenerated {
     private boolean hasNoArgument(OptionInfo oi) {
         String option = oi.getOd().getOption();
         if (oi.getArgs().size() == 0) {
-            pw.println(getErrorMessage("NoArgument", option, "No argument provided to option "+ option));
+            pw.println(getErrorMessage("NoArgument", option, "No argument provided to option " + option));
             return true;
         }
         return false;
     }
-    
+
     /**
      * Helper method. Checks if option's next argument is a valid hostgroup name (starting with @).
      * return hasNoArgument
@@ -950,14 +956,14 @@ public class QConfCommand extends QConfCommandGenerated {
         if (args != null && args.size() > 0) {
             String hgrp = args.get(0);
             if (!hgrp.startsWith("@")) {
-                String msg = getErrorMessage("InvalidObjectArgument", od.getOption(), hgrp, "Hostgroup name \""+hgrp+"\" is not valid");
+                String msg = getErrorMessage("InvalidObjectArgument", od.getOption(), hgrp, "Hostgroup name \"" + hgrp + "\" is not valid");
                 od.getPw().println(msg);
                 return false;
             }
         }
         return true;
     }
-    
+
     /**
      * Helper method. Checks if option's next argument is a reachable host
      * return isHostReachable
@@ -972,7 +978,7 @@ public class QConfCommand extends QConfCommandGenerated {
                     return true;
                 }
             } catch (UnknownHostException ex) {
-                String msg = getErrorMessage("UnreachableHost", od.getOption(), host, "Host \""+host+"\" is not reachable");
+                String msg = getErrorMessage("UnreachableHost", od.getOption(), host, "Host \"" + host + "\" is not reachable");
                 od.getPw().println(msg);
                 return false;
             }

@@ -1,4 +1,5 @@
-/*___INFO__MARK_BEGIN__*/ /*************************************************************************
+/*___INFO__MARK_BEGIN__*/
+/*************************************************************************
  *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
@@ -37,34 +38,30 @@ import java.util.List;
 import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
 import java.util.LinkedList;
 
-@CommandAnnotation("qrdel")
+@CommandAnnotation(value = "qrdel")
 public class QrDelCommand extends AbstractCommand {
-    
+
     public String getUsage() {
         return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qrdel");
     }
-    
+
     public void run(String[] args) throws Exception {
         String[] ars = null;
+        boolean arargs = false;
         boolean force = false;
         UserFilter users = new UserFilter();
         List<JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
-        
+
         if (jgdi == null) {
             throw new IllegalStateException("Not connected");
         }
-        if (args.length == 0) {
-            pw.println(getUsage());
-            pw.flush();
-            return;
-        }
-        
+
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("-help")) {
                 i++;
                 pw.println(getUsage());
                 pw.flush();
-                break;
+                return;
             } else if (args[i].equals("-u")) {
                 i++;
                 if (i >= args.length) {
@@ -79,16 +76,24 @@ public class QrDelCommand extends AbstractCommand {
                 throw new IllegalArgumentException("error: ERROR! invalid option argument \"" + args[i] + "\"");
             } else {
                 ars = parseDestinIdList(args[i]);
+                if (ars != null) {
+                    arargs = true;
+                }
             }
         }
-        
+
+        if (!arargs) {
+            pw.println(getUsage());
+            pw.flush();
+            throw new IllegalArgumentException("ERROR! no option argument");
+        }
+
         jgdi.deleteAdvanceReservationsWithAnswer(ars, force, users.getUsers().size() == 0 ? null : users, answers);
         printAnswers(answers);
     }
-    
+
     private String[] parseDestinIdList(String arg) {
         String[] ret = arg.split(",");
         return ret;
     }
-    
 }

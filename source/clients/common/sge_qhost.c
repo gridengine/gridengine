@@ -253,7 +253,7 @@ qhost_report_handler_t *report_handler,
 lList **alpp
 ) {
    lListElem *lep;
-   char *s, host_print[CL_MAXHOSTLEN+1];
+   char *s, host_print[CL_MAXHOSTLEN+1] = "";
    const char *host;
    char load_avg[20], mem_total[20], mem_used[20], swap_total[20], 
         swap_used[20], num_proc[20], arch_string[80];
@@ -272,8 +272,9 @@ lList **alpp
 
    /* cut away domain in case of ignore_fqdn */
    sge_strlcpy(host_print, host, CL_MAXHOSTLEN);
-   if (ignore_fqdn && (s = strchr(host_print, '.')))
+   if (ignore_fqdn && (s = strchr(host_print, '.'))) {
       *s = '\0';
+   }   
 
    /*
    ** arch
@@ -392,7 +393,7 @@ lList **alpp
          DRETURN(ret);
       }
    } else {
-      printf(HEAD_FORMAT, *host_print == '\0' ? "-" : host_print, arch_string, num_proc, load_avg, 
+      printf(HEAD_FORMAT, host ? host_print: "-", arch_string, num_proc, load_avg, 
                      mem_total, mem_used, swap_total, swap_used);
    }
    

@@ -299,7 +299,13 @@ public abstract class JGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         return showDetachedSettingsAllWithAnswer(null);
     }
     
+    public void deleteShareTree() throws JGDIException {
+        deleteShareTreeWithAnswer(null);
+    }
     
+    public void deleteShareTreeWithAnswer(List<JGDIAnswer> answers) throws JGDIException {
+        nativeDeleteShareTreeWithAnswer(answers);
+    }
     
     private native int nativeInit(String url) throws JGDIException;
     private native void nativeClose(int ctxIndex) throws JGDIException;
@@ -337,4 +343,6 @@ public abstract class JGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
     private native void nativeKillMasterWithAnswer(List<JGDIAnswer> answers) throws JGDIException;
     private native String nativeShowDetachedSettingsWithAnswer(String[] queues, List<JGDIAnswer> answers) throws JGDIException;
     private native String nativeShowDetachedSettingsAllWithAnswer(List<JGDIAnswer> answers) throws JGDIException;
+    private native void nativeDeleteShareTreeWithAnswer(List<JGDIAnswer> answers) throws JGDIException;
+    
 }

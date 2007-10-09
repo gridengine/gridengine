@@ -31,7 +31,7 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.filter;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Collections;
 import java.util.List;
 
@@ -40,16 +40,20 @@ import java.util.List;
  */
 public class PrimaryKeyFilter implements JGDIFilter {
     
-    private List fields = new ArrayList();
+    private List<WhereClause> fields = new LinkedList<WhereClause>();
     private String  type;
+    private String equalRelop = "==";
     
     /** Creates a new instance of PrimaryKeyFilter */
     public PrimaryKeyFilter(String type) {
         this.type = type;
+        if (type.equals("CONF_Type") || type.equals("EH_Type")) {
+            equalRelop = "h=";
+        }
     }
     
     public void include(int field, String value) {
-        fields.add(new StringWhereClause(type, field, "==", value));
+        fields.add(new StringWhereClause(type, field, equalRelop, value));
     }
     
     public void include(int field, int value) {

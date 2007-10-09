@@ -32,8 +32,8 @@
 package com.sun.grid.jgdi.monitoring.filter;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
@@ -43,34 +43,49 @@ import java.util.logging.Logger;
  *
  */
 public class HostFilter implements Serializable {
-    
+
     private static Logger logger = Logger.getLogger(HostFilter.class.getName());
-    
-    private List hostList = new ArrayList();
-    
+    private List<String> hostList = new LinkedList<String>();
+
     /** Creates a new instance of HostFilter */
     public HostFilter() {
     }
-    
+
     public static HostFilter parse(String hosts) {
         HostFilter ret = new HostFilter();
         StringTokenizer st = new StringTokenizer(hosts, ",");
-        while(st.hasMoreTokens()) {
+        while (st.hasMoreTokens()) {
             ret.addHost(st.nextToken());
         }
         return ret;
     }
-    
+
     public void addHost(String hostname) {
-        if(logger.isLoggable(Level.FINE)) {
+        if (logger.isLoggable(Level.FINE)) {
             logger.fine("add host " + hostname + " to filter");
         }
         hostList.add(hostname);
     }
-    
+
     public List getHosts() {
-        logger.fine("get hosts" );
+        logger.fine("get hosts");
         return Collections.unmodifiableList(hostList);
     }
-    
+
+    @Override
+    public String toString() {
+        StringBuilder ret = new StringBuilder();
+        boolean first = true;
+        ret.append("Hosts[");
+        for (String host : hostList) {
+            if (first) {
+                first = false;
+            } else {
+                ret.append(", ");
+            }
+            ret.append(host);
+        }
+        ret.append("]");
+        return ret.toString();
+    }
 }

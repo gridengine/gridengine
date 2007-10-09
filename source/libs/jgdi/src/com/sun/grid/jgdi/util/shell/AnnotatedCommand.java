@@ -99,8 +99,8 @@ public abstract class AnnotatedCommand extends AbstractCommand {
     /**
      * Finds option info based on option name.
      * Use to do a lookahead to see if specific option was in the argument list.
-     * @params option String
-     * @returns OptionInfo associated with the option or null does not exist
+     * @param option String
+     * @return OptionInfo associated with the option or null does not exist
      */
     public OptionInfo getOptionInfo(String option) {
         if (optionInfoMap.containsKey(option)) {

@@ -149,7 +149,7 @@ void qmonQueuePopup(Widget w, XtPointer cld, XtPointer cad)
    qmonMirrorMultiAnswer(CQUEUE_T | EXECHOST_T | CENTRY_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
       /* set busy cursor */
       XmtDisplayDefaultCursor(w);
       DEXIT;
@@ -283,7 +283,7 @@ void updateQueueListCB(Widget w, XtPointer cld, XtPointer cad)
       qmonMirrorMultiAnswer(CQUEUE_T | EXECHOST_T | CENTRY_T, &alp);
       if (alp) {
          qmonMessageBox(w, alp, 0);
-         alp = lFreeList(alp);
+         lFreeList(&alp);
          return;
       }
       updateQueueList();
@@ -1436,9 +1436,9 @@ static void qmonQueueDeleteQuick(Widget w, XtPointer cld, XtPointer cad)
 
          qmonMessageBox(w, alp, 0);
 
-         alp = lFreeList(alp);
+         lFreeList(&alp);
       }
-      lp = lFreeList(lp);
+      lFreeList(&lp);
 
       updateQueueList();
 /*       updateQCQ(); */
@@ -1491,7 +1491,7 @@ static void qmonQueueChangeState(Widget w, XtPointer cld, XtPointer cad)
       updateQueueList();
 
       lFreeList(&ql);
-      alp = lFreeList(alp);
+      lFreeList(&alp);
    }
    
       

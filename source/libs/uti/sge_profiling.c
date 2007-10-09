@@ -44,6 +44,7 @@
 #include "sge_dstring.h"
 #include "sge_log.h"
 #include "uti/sge_time.h"
+#include "uti/sge_string.h"
 
 #include "sgermon.h"
 
@@ -1384,31 +1385,30 @@ static const char *prof_add_error_sprintf(dstring *buffer, const char *fmt, ...)
 bool prof_output_info(prof_level level, bool with_sub, const char *info)
 {
    bool ret = false;
-   int thread_num;
-   char* message = NULL;
-   char* pos = NULL;
-   pthread_t thread_id;
 
    DENTER(TOP_LAYER, "prof_output_info");
    
    if (profiling_enabled && (level <= SGE_PROF_ALL)) {
+      int thread_num;
+      pthread_t thread_id;
+
       thread_id = pthread_self();
-
       init_array(thread_id); 
-
       thread_num = get_prof_info_thread_id(thread_id);
 
-      if ((thread_num >= 0) && (thread_num < MAX_THREAD_NUM) &&
-          prof_is_active(level)) {
+      if ((thread_num >= 0) && (thread_num < MAX_THREAD_NUM) && prof_is_active(level)) {
          const char *info_message = NULL;
+         const char *message = NULL;
+         struct saved_vars_s *context = NULL;
 
          info_message = prof_get_info_string(level, with_sub, NULL);
          PROFILING((SGE_EVENT, "PROF(%d): %s%s", (int)thread_id, info, ""));
-         for (message = strtok_r((char*)info_message, "\n", &pos); message; 
-              message = strtok_r(NULL, "\n", &pos)) {
+         for (message = sge_strtok_r(info_message, "\n", &context); message != NULL; 
+              message = sge_strtok_r(NULL, "\n", &context)) {
             PROFILING((SGE_EVENT, "PROF(%d): %s", (int)thread_id, message));
          }
 
+         sge_free_saved_vars(context);
          ret = true;
       }
    }

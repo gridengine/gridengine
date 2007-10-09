@@ -159,10 +159,9 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
             lSetUlong(ep, EH_tagged, 1);
          }
       } else {
-         lListElem* template = host_list_locate(ehl, SGE_TEMPLATE_NAME);
          for_each(ep, ehl) {
             /* prepare complex attributes */
-            if (ep == template) {
+            if (strcmp(lGetHost(ep, EH_name), SGE_TEMPLATE_NAME) == 0) {
                continue;
             }
 
@@ -254,7 +253,7 @@ qhost_report_handler_t *report_handler,
 lList **alpp
 ) {
    lListElem *lep;
-   char *s,host_print[CL_MAXHOSTLEN+1];
+   char *s, host_print[CL_MAXHOSTLEN+1];
    const char *host;
    char load_avg[20], mem_total[20], mem_used[20], swap_total[20], 
         swap_used[20], num_proc[20], arch_string[80];
@@ -393,7 +392,7 @@ lList **alpp
          DRETURN(ret);
       }
    } else {
-      printf(HEAD_FORMAT, host_print ? host_print: "-", arch_string, num_proc, load_avg, 
+      printf(HEAD_FORMAT, *host_print == '\0' ? "-" : host_print, arch_string, num_proc, load_avg, 
                      mem_total, mem_used, swap_total, swap_used);
    }
    

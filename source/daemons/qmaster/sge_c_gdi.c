@@ -670,7 +670,7 @@ static int do_gdi_get_config_list(sge_gdi_request *aReq, sge_gdi_request *aRes, 
    aRes->lp = lSelectHashPack("qmaster_response", conf, aReq->cp, 
                               aReq->enp, false, NULL);
 
-   conf = lFreeList(conf);
+   lFreeList(&conf);
 
    *anAfterCnt = lGetNumberOfElem(aRes->lp);
 

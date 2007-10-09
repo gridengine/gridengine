@@ -2026,6 +2026,8 @@ int save
 
          JOB_TYPE_SET_BINARY(type);
          lSetUlong(jep, JB_type, type); 
+         lSetString(jep, JB_script_ptr, NULL);
+         lSetUlong(jep, JB_script_size, 0);
       }
       if (ISSET(submit_mode_data.sub_mode, SUBMIT_QSH)) {
          u_long32 type = lGetUlong(jep, JB_type);

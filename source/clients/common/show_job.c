@@ -336,8 +336,6 @@ void cull_show_job(lListElem *job, int flags)
          printf("verify:                     %s\n", "-verify");
 
    if (lGetPosViaElem(job, JB_env_list, SGE_NO_ABORT)>=0) {
-      int print_new_line = 1;
-
       if (lGetList(job, JB_env_list)) {
          lList *print = NULL;
          lList *do_not_print = NULL;
@@ -350,13 +348,10 @@ void cull_show_job(lListElem *job, int flags)
          var_list_split_prefix_vars(&print, &do_not_print, VAR_PREFIX);
          uni_print_list(stdout, NULL, 0, print, 
             fields, delis, FLG_NO_DELIS_STRINGS);
-         if (lGetNumberOfElem(print) > 0) {
-            print_new_line = 0;
+         if (lGetNumberOfElem(print) == 0) {
+            printf("\n");
          }
          lAddList(print, &do_not_print);
-      }
-      if (print_new_line) {
-         printf("\n");
       }
    } 
    

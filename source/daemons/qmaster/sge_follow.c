@@ -172,7 +172,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
    u_long32 pe_slots = 0, q_slots = 0, q_version;
    lListElem *pe = NULL;
 
-   DENTER(TOP_LAYER, "sge_follow_order");
+   DENTER(BASIS_LAYER, "sge_follow_order");
 
    or_type=lGetUlong(ep, OR_type);
    or_pe=lGetString(ep, OR_pe);
@@ -501,7 +501,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
       sge_commit_job(ctx, jep, jatp, NULL, COMMIT_ST_SENT, COMMIT_DEFAULT, monitor);   /* mode==0 -> really accept when execd acks */
 
       /* set timeout for job resend */
-      trigger_job_resend(sge_get_gmt(), master_host, job_number, task_number);
+      trigger_job_resend(sge_get_gmt(), master_host, job_number, task_number, 5);
 
       if (pe) {
          pe_debit_slots(pe, pe_slots, job_number);

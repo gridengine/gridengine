@@ -77,12 +77,6 @@ rqs_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
                         int slots, const char *obj_name, u_long32 start_time,
                         u_long32 end_time);
 
-static int 
-add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list, 
-                         lList *host_list, lList *queue_list, lList *rqs_list,
-                         lList *centry_list, lList *acl_list, lList *hgroup_list,
-                         lList *ar_list, bool for_job_scheduling);
-
 static void add_calendar_to_schedule(lList *queue_list);
 
 static void set_utilization(lList *uti_list, u_long32 from, u_long32 till, double uti);
@@ -202,9 +196,6 @@ void utilization_print(const lListElem *cr, const char *object_name)
             lGetDouble(cr, RUE_utilized_now)));
    for_each (rde, lGetList(cr, RUE_utilized)) {
       DPRINTF(("\t"sge_U32CFormat"  %f\n", lGetUlong(rde, RDE_time), lGetDouble(rde, RDE_amount))); 
-#if 0
-      printf("\t"sge_U32CFormat"  %f\n", lGetUlong(rde, RDE_time), lGetDouble(rde, RDE_amount)); 
-#endif
    }
 
    DRETURN_VOID;
@@ -214,13 +205,15 @@ static u_long32 utilization_endtime(u_long32 start, u_long32 duration)
 {
    u_long32 end_time;
 
+   DENTER(BASIS_LAYER, "utilization_endtime");
+
    if (((double)start + (double)duration) < ((double)U_LONG32_MAX)) {
       end_time = start + duration;
    } else {
       end_time = U_LONG32_MAX;
    }
 
-   return end_time;
+   DRETURN(end_time);
 }
 
 /****** sge_resource_utilization/utilization_add() *****************************
@@ -438,9 +431,12 @@ double utilization_queue_end(const lListElem *cr)
 {
    const lListElem *ep = lLast(lGetList(cr, RUE_utilized));
 
-   if (ep)
-      return lGetDouble(ep, RDE_amount);
-   else
+   if (ep) {
+      if (lGetUlong(ep, RDE_time) != U_LONG32_MAX)
+         return lGetDouble(ep, RDE_amount);
+      else 
+         return lGetDouble(lPrev(ep), RDE_amount);
+   } else
       return 0.0;
 }
 
@@ -479,6 +475,11 @@ double utilization_max(const lListElem *cr, u_long32 start_time, u_long32 durati
    /* someone is asking for the current utilization */
    if (start_time == DISPATCH_TIME_NOW) {
       DRETURN(lGetDouble(cr, RUE_utilized_now));
+   }
+
+   /* someone is asking for queue end utilization */
+   if (start_time == -1) {
+      DRETURN(utilization_queue_end(cr));
    }
    
 #if 0
@@ -611,10 +612,9 @@ int add_job_utilization(const sge_assignment_t *a, const char *type, bool for_jo
       }
 
       /* global */
-      hep = host_list_locate(a->host_list, SGE_GLOBAL_NAME);
-      rc_add_job_utilization(a->job, a->ja_task_id, type, hep, a->centry_list, a->slots, 
-            EH_consumable_config_list, EH_resource_utilization, 
-            lGetHost(hep, EH_name), a->start, a->duration, GLOBAL_TAG, for_job_scheduling);  
+      rc_add_job_utilization(a->job, a->ja_task_id, type, a->gep, a->centry_list, a->slots, 
+            EH_consumable_config_list, EH_resource_utilization, SGE_GLOBAL_NAME, 
+              a->start, a->duration, GLOBAL_TAG, for_job_scheduling);  
 
       /* hosts */
       for_each(hep, a->host_list) {
@@ -722,7 +722,7 @@ int add_job_utilization(const sge_assignment_t *a, const char *type, bool for_jo
 
 int rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type, 
    lListElem *ep, lList *centry_list, int slots, int config_nm, int actual_nm, 
-   const char *obj_name, u_long32 start_time, u_long32 end_time, u_long32 tag,
+   const char *obj_name, u_long32 start_time, u_long32 duration, u_long32 tag,
    bool for_job_scheduling) 
 {
    lListElem *cr, *cr_config, *dcep;
@@ -772,7 +772,7 @@ int rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
 
          if (tmp_ret && dval != 0.0) {
             /* update RUE_utilized resource diagram to reflect jobs utilization */
-            utilization_add(cr, start_time, end_time, slots * dval,
+            utilization_add(cr, start_time, duration, slots * dval,
                lGetUlong(jep, JB_job_number), task_id, tag, obj_name, type, for_job_scheduling);
             mods++;
          }  
@@ -868,58 +868,6 @@ rqs_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
    DRETURN(mods);
 }
 
-/****** sge_resource_utilization/prepare_resource_schedules() *********************************
-*  NAME
-*     prepare_resource_schedules() -- Debit non-pending jobs in resource schedule
-*
-*  SYNOPSIS
-*     static void prepare_resource_schedules(const lList *running_jobs, const 
-*     lList *suspended_jobs, lList *pe_list, lList *host_list, lList 
-*     *queue_list, lList *centry_list, lList *rqs_list) 
-*
-*  FUNCTION
-*     In order to reflect current and future resource utilization of running 
-*     and suspended jobs in the schedule we iterate through all jobs and debit
-*     resources requested by those jobs.
-*
-*  INPUTS
-*     const lList *running_jobs   - The running ones (JB_Type)
-*     const lList *suspended_jobs - The susepnded ones (JB_Type)
-*     lList *pe_list              - ??? 
-*     lList *host_list            - ??? 
-*     lList *queue_list           - ??? 
-*     lList *rqs_list             - configured resource quota sets
-*     lList *centry_list          - ??? 
-*     lList *acl_list             - ??? 
-*     lList *hgroup_list          - ??? 
-*     lList *prepare_resource_schedules - create schedule for job or advance reservation
-*                                         scheduling
-*     bool for_job_scheduling     - prepare for job or for advance reservation
-*
-*  NOTES
-*     MT-NOTE: prepare_resource_schedules() is not MT safe 
-*******************************************************************************/
-void prepare_resource_schedules(const lList *running_jobs, const lList *suspended_jobs, 
-   lList *pe_list, lList *host_list, lList *queue_list, lList *rqs_list, lList *centry_list,
-   lList *acl_list, lList *hgroup_list, lList *ar_list, bool for_job_scheduling)
-{
-   DENTER(TOP_LAYER, "prepare_resource_schedules");
-
-   add_job_list_to_schedule(running_jobs, false, pe_list, host_list, queue_list,
-                            rqs_list, centry_list, acl_list, hgroup_list,
-                            ar_list, for_job_scheduling);
-   add_job_list_to_schedule(suspended_jobs, true, pe_list, host_list, queue_list,
-                            rqs_list, centry_list, acl_list, hgroup_list,
-                            ar_list, for_job_scheduling);
-   add_calendar_to_schedule(queue_list); 
-
-#ifdef SGE_LOCK_DEBUG /* just for information purposes... */
-   utilization_print_all(pe_list, host_list, queue_list, ar_list); 
-#endif   
-
-   DRETURN_VOID;
-}
-
 static int 
 add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list, 
                          lList *host_list, lList *queue_list, lList *rqs_list,
@@ -927,6 +875,7 @@ add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list,
                          lList *ar_list, bool for_job_scheduling)
 {
    lListElem *jep, *ja_task;
+   lListElem *gep = host_list_locate(host_list, SGE_GLOBAL_NAME);
    const char *pe_name;
    const char *type;
    u_long32 now = sconf_get_now();
@@ -989,6 +938,7 @@ add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list,
          a.acl_list = acl_list;
          a.hgrp_list = hgroup_list;
          a.ar_list = ar_list;
+         a.gep     = gep;
 
          DPRINTF(("Adding job "sge_U32CFormat"."sge_U32CFormat" into schedule " "start "
                   sge_U32CFormat" duration "sge_U32CFormat"\n", lGetUlong(jep, JB_job_number), 
@@ -1001,6 +951,58 @@ add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list,
    }
 
    DRETURN(0);
+}
+
+/****** sge_resource_utilization/prepare_resource_schedules() *********************************
+*  NAME
+*     prepare_resource_schedules() -- Debit non-pending jobs in resource schedule
+*
+*  SYNOPSIS
+*     static void prepare_resource_schedules(const lList *running_jobs, const 
+*     lList *suspended_jobs, lList *pe_list, lList *host_list, lList 
+*     *queue_list, lList *centry_list, lList *rqs_list) 
+*
+*  FUNCTION
+*     In order to reflect current and future resource utilization of running 
+*     and suspended jobs in the schedule we iterate through all jobs and debit
+*     resources requested by those jobs.
+*
+*  INPUTS
+*     const lList *running_jobs   - The running ones (JB_Type)
+*     const lList *suspended_jobs - The susepnded ones (JB_Type)
+*     lList *pe_list              - ??? 
+*     lList *host_list            - ??? 
+*     lList *queue_list           - ??? 
+*     lList *rqs_list             - configured resource quota sets
+*     lList *centry_list          - ??? 
+*     lList *acl_list             - ??? 
+*     lList *hgroup_list          - ??? 
+*     lList *prepare_resource_schedules - create schedule for job or advance reservation
+*                                         scheduling
+*     bool for_job_scheduling     - prepare for job or for advance reservation
+*
+*  NOTES
+*     MT-NOTE: prepare_resource_schedules() is not MT safe 
+*******************************************************************************/
+void prepare_resource_schedules(const lList *running_jobs, const lList *suspended_jobs, 
+   lList *pe_list, lList *host_list, lList *queue_list, lList *rqs_list, lList *centry_list,
+   lList *acl_list, lList *hgroup_list, lList *ar_list, bool for_job_scheduling)
+{
+   DENTER(TOP_LAYER, "prepare_resource_schedules");
+
+   add_job_list_to_schedule(running_jobs, false, pe_list, host_list, queue_list,
+                            rqs_list, centry_list, acl_list, hgroup_list,
+                            ar_list, for_job_scheduling);
+   add_job_list_to_schedule(suspended_jobs, true, pe_list, host_list, queue_list,
+                            rqs_list, centry_list, acl_list, hgroup_list,
+                            ar_list, for_job_scheduling);
+   add_calendar_to_schedule(queue_list); 
+
+#if 0 /* just for information purposes... */
+   utilization_print_all(pe_list, host_list, queue_list, ar_list); 
+#endif   
+
+   DRETURN_VOID;
 }
 
 /****** sge_resource_utilization/add_calendar_to_schedule() ***********************************

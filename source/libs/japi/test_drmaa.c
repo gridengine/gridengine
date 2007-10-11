@@ -4304,11 +4304,11 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
          if (parse_args) {
             sleeper_job            = NEXT_ARGV(argc, argv);
             job_spec[0].native     = NEXT_ARGV(argc, argv);
-            job_spec[0].time       = 20;
+            job_spec[0].time       = 10;
             job_spec[1].native     = NEXT_ARGV(argc, argv);
-            job_spec[1].time       = 20;
+            job_spec[1].time       = 10;
             job_spec[2].native     = NEXT_ARGV(argc, argv);
-            job_spec[2].time       = 20;
+            job_spec[2].time       = 10;
          }
 
          if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {

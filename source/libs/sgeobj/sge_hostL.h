@@ -70,8 +70,7 @@ enum {
    /* scheduling stuff */
    EH_sort_value,            /* combined load value for sorting only
                               * scheduler local not spooled */
-   EH_job_slots_free,        /* used for parallel scheduling only
-                              * scheduler local not spooled */
+   EH_reuse_me,              /* can be rused */
    EH_tagged,                /* used for parallel scheduling only
                               * scheduler local not spooled */
    EH_load_correction_factor,        /* a value of 100 (stands for 1)
@@ -143,7 +142,7 @@ LISTDEF(EH_Type)
 
    /* scheduling stuff */
    SGE_DOUBLE(EH_sort_value, CULL_DEFAULT | CULL_JGDI_HIDDEN)
-   SGE_ULONG(EH_job_slots_free, CULL_DEFAULT | CULL_JGDI_HIDDEN)
+   SGE_ULONG(EH_reuse_me, CULL_DEFAULT | CULL_JGDI_HIDDEN)
    SGE_ULONG(EH_tagged, CULL_DEFAULT | CULL_JGDI_HIDDEN)
    SGE_ULONG(EH_load_correction_factor, CULL_DEFAULT | CULL_JGDI_HIDDEN)
    SGE_ULONG(EH_seq_no, CULL_DEFAULT | CULL_JGDI_HIDDEN)
@@ -187,7 +186,7 @@ NAMEDEF(EHN)
 
    /* scheduling stuff */
    NAME("EH_sort_value")
-   NAME("EH_job_slots_free")
+   NAME("EH_reuse_me")
    NAME("EH_tagged")
    NAME("EH_load_correction_factor")
    NAME("EH_seq_no")

@@ -257,11 +257,11 @@ sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt,
       int is_relevant;
       const void *queue_iterator = NULL;
 
-      if (sge_host_match_static(job, NULL, hep, centry_list, acl_list) == DISPATCH_NEVER_CAT) {
+      if (!strcmp((eh_name=lGetHost(hep, EH_name)), SGE_GLOBAL_NAME)) {
          continue;
       }   
 
-      if (!strcmp((eh_name=lGetHost(hep, EH_name)), SGE_GLOBAL_NAME)) {
+      if (sge_host_match_static(job, NULL, hep, centry_list, acl_list) == DISPATCH_NEVER_CAT) {
          continue;
       }   
 

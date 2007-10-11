@@ -105,6 +105,7 @@ typedef struct {
    lList      *rqs_list;          /* the resource quota set list (RQS_Type)         */ 
    lList      *ar_list;           /* the advance reservation list (AR_Type)         */ 
    bool       is_reservation;     /* true, if a reservation for this job should be done */
+   bool       care_reservation;   /* false, if reservation is not of interes        */
    bool       is_advance_reservation; /* true for advance reservation scheduling    */
    bool       is_job_verify;      /* true, if job verification (-w ev) (in qmaster) */
    bool       is_schedule_based;  /* true, if resource reservation is enabled       */
@@ -123,7 +124,7 @@ typedef struct {
 } sge_assignment_t;
 
 #define SGE_ASSIGNMENT_INIT {0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, \
-   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, false, false, false, false, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0}
+   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, false, false, false, false, false, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0}
 
 void assignment_init(sge_assignment_t *a, lListElem *job, lListElem *ja_task, bool is_load_adj);
 void assignment_copy(sge_assignment_t *dst, sge_assignment_t *src, bool move_gdil);

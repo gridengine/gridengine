@@ -54,6 +54,9 @@ enum {
 
 /* *INDENT-OFF* */
 
+/* sequential scheduling uses: QU_available_at 
+   parallel scheduling uses: QU_tag_qend */
+#define QU_tag_qend QU_available_at
 enum {
    QU_qhostname = QU_LOWERBOUND,
    QU_qname,
@@ -141,6 +144,7 @@ enum {
 /* new state variables, these are needed for the scheduler, to dispach jobs into suitable queues */
    QU_state_changes
 };
+
 
 LISTDEF(QU_Type)
    JGDI_OBJ(QueueInstance)

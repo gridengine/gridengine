@@ -46,6 +46,8 @@ bool sge_user_is_referenced_in_rqs(const lList *rqs, const char *user, const cha
 dispatch_t parallel_rqs_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, const char *host, const char *queue);
 void parallel_check_and_debit_rqs_slots(sge_assignment_t *a, const char *host, const char *queue, 
       int *slots, int *slots_qend, dstring *rule_name, dstring *rue_name, dstring *limit_name);
+void parallel_revert_rqs_slot_debitation(sge_assignment_t *a, const char *host, const char *queue, 
+      int slots, int slots_qend, dstring *rule_name, dstring *rue_name, dstring *limit_name);
 
 dispatch_t rqs_by_slots(sge_assignment_t *a, const char *queue, const char *host, 
   u_long32 *tt_rqs_all, bool *is_global, dstring *rue_string, dstring *limit_name, dstring *rule_name, u_long32 tt_best);

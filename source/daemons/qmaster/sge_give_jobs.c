@@ -39,6 +39,7 @@
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
 #include "sge_usageL.h"
+#include "sge_strL.h"
 #include "sge_job_refL.h"
 #include "sge_report.h"
 #include "sge_time_eventL.h"
@@ -699,33 +700,41 @@ void sge_job_resend_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, 
    jatasks = lGetList(jep, JB_ja_tasks);
 
    if (mconf_get_simulate_execds()) {
+      const lListElem *argv1;
+      int runtime = 3;
+
+      if ((argv1 = lFirst(lGetList(jep, JB_job_args))))
+         runtime = atoi(lGetString(argv1, ST_name));
+
       if (lGetUlong(jatep, JAT_status) == JTRANSFERING) {
          sge_commit_job(ctx, jep, jatep, NULL, COMMIT_ST_ARRIVED, COMMIT_DEFAULT, monitor);
-         /* initialize resending of job if not acknowledged by execd */
-         trigger_job_resend(now, hep, jobid, jataskid);
+         trigger_job_resend(now, hep, jobid, jataskid, runtime);
+
       } else { /* must be JRUNNING */
          lListElem *ue, *jr = lCreateElem(JR_Type);
          lSetUlong(jr, JR_job_number, jobid);
          lSetUlong(jr, JR_ja_task_number, jataskid);
-         ep = lFirst(lGetList(jatep, JAT_granted_destin_identifier_list));
-         lSetString(jr, JR_queue_name, lGetString(ep, JG_qname));
-         lSetUlong(jr, JR_wait_status, SGE_SET_WEXITSTATUS(SGE_WEXITED_BIT, 0)); /* returned with exit(0) */
 
-         ue = lAddSubStr(jr, UA_name, "submission_time", JR_usage, UA_Type);
-         lSetDouble(ue, UA_value, lGetUlong(jep, JB_submission_time)); 
+         if ((ep = lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)))) {
+            lSetString(jr, JR_queue_name, lGetString(ep, JG_qname));
+            lSetUlong(jr, JR_wait_status, SGE_SET_WEXITSTATUS(SGE_WEXITED_BIT, 0)); /* returned with exit(0) */
 
-         ue = lAddSubStr(jr, UA_name, "start_time", JR_usage, UA_Type);
-         lSetDouble(ue, UA_value, lGetUlong(jatep, JAT_start_time)); 
+            ue = lAddSubStr(jr, UA_name, "submission_time", JR_usage, UA_Type);
+            lSetDouble(ue, UA_value, lGetUlong(jep, JB_submission_time)); 
 
-         ue = lAddSubStr(jr, UA_name, "end_time", JR_usage, UA_Type);
-         lSetDouble(ue, UA_value, now); 
+            ue = lAddSubStr(jr, UA_name, "start_time", JR_usage, UA_Type);
+            lSetDouble(ue, UA_value, lGetUlong(jatep, JAT_start_time)); 
 
-         ue = lAddSubStr(jr, UA_name, "ru_wallclock", JR_usage, UA_Type);
-         lSetDouble(ue, UA_value, 3);
+            ue = lAddSubStr(jr, UA_name, "end_time", JR_usage, UA_Type);
+            lSetDouble(ue, UA_value, now); 
 
-         lXchgList(jr, JR_usage, lGetListRef(jatep, JAT_usage_list));
-         reporting_create_acct_record(ctx, NULL, jr, jep, jatep, false);
-         sge_commit_job(ctx, jep, jatep, jr, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT, monitor);
+            ue = lAddSubStr(jr, UA_name, "ru_wallclock", JR_usage, UA_Type);
+            lSetDouble(ue, UA_value, runtime);
+
+            lXchgList(jr, JR_usage, lGetListRef(jatep, JAT_usage_list));
+            reporting_create_acct_record(ctx, NULL, jr, jep, jatep, false);
+            sge_commit_job(ctx, jep, jatep, jr, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT, monitor);
+         }
          lFreeElem(&jr); 
       }
 
@@ -734,7 +743,6 @@ void sge_job_resend_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, 
       DEXIT;
       return;
    }
-   
 
    /* check whether a slave execd allowance has to be retransmitted */
    if (lGetUlong(jatep, JAT_status) == JTRANSFERING) {
@@ -772,7 +780,7 @@ void sge_job_resend_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, 
       
       if (qinstance_state_is_unknown(mqep))
       {
-         trigger_job_resend(now, hep, jobid, jataskid);
+         trigger_job_resend(now, hep, jobid, jataskid, 0);
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          DEXIT;
          return; /* try later again */
@@ -803,7 +811,7 @@ void sge_job_resend_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, 
 
       /* initialize resending of job if not acknowledged by execd */
       trigger_job_resend(now, hep, lGetUlong(jep, JB_job_number), 
-                         lGetUlong(jatep, JAT_task_number));
+                         lGetUlong(jatep, JAT_task_number), 0);
    }
 
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
@@ -826,7 +834,7 @@ void cancel_job_resend(u_long32 jid, u_long32 ja_task_id)
 /* 
  * if hep equals to NULL resend is triggered immediatelly 
  */ 
-void trigger_job_resend(u_long32 now, lListElem *hep, u_long32 jid, u_long32 ja_task_id)
+void trigger_job_resend(u_long32 now, lListElem *hep, u_long32 jid, u_long32 ja_task_id, int delta)
 {
    u_long32 seconds;
    time_t when = 0;
@@ -835,7 +843,7 @@ void trigger_job_resend(u_long32 now, lListElem *hep, u_long32 jid, u_long32 ja_
    DENTER(TOP_LAYER, "trigger_job_resend");
 
    if (mconf_get_simulate_execds())
-      seconds = 3;
+      seconds = delta;
    else
       seconds = hep ? MAX(load_report_interval(hep), MAX_JOB_DELIVER_TIME) : 0;
    DPRINTF(("TRIGGER JOB RESEND "sge_u32"/"sge_u32" in %d seconds\n", jid, ja_task_id, seconds)); 

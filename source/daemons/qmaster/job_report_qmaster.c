@@ -462,7 +462,7 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
                      DPRINTF(("trigger retry of job delivery to master execd\n"));
                      lSetUlong(jatep, JAT_start_time, 0);
                      cancel_job_resend(jobid, jataskid);
-                     trigger_job_resend(sge_get_gmt(), NULL, jobid, jataskid);
+                     trigger_job_resend(sge_get_gmt(), NULL, jobid, jataskid, 0);
                   }
                }
             } else {

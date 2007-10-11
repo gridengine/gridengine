@@ -504,7 +504,7 @@ static void rqs_expand_cqueues(const lListElem *rule, sge_assignment_t *a)
 
 /****** sge_resource_quota_schedd/rqs_expand_hosts() ***************************
 *  NAME
-*     rqs_expand_hosts() -- Add all matching cqueues to the list
+*     rqs_expand_hosts() -- Add all matching hosts to the list
 *
 *  SYNOPSIS
 *     void rqs_expand_hosts(const lListElem *rule, lList **skip_host_list,
@@ -807,7 +807,7 @@ void rqs_exceeded_sort_out_par(sge_assignment_t *a, const lListElem *rule, const
    const char* queue_name, const char* host_name)
 {
    if (rqs_exceeded_sort_out(a, rule, rule_name, queue_name, host_name)) {
-      rqs_expand_cqueues(rule, a);
+      rqs_expand_hosts(rule, a);
    }
 }
 
@@ -898,7 +898,7 @@ void parallel_check_and_debit_rqs_slots(sge_assignment_t *a, const char *host, c
    const char* project = a->project;
    const char* pe = a->pe_name;
 
-   DENTER(TOP_LAYER, "check_and_debit_rqs_slots");
+   DENTER(TOP_LAYER, "parallel_check_and_debit_rqs_slots");
 
    /* first step - see how many slots are left */
    for_each(rqs, a->rqs_list) {
@@ -945,6 +945,40 @@ void parallel_check_and_debit_rqs_slots(sge_assignment_t *a, const char *host, c
    }
 
    DPRINTF(("check_and_debit_rqs_slots(%s@%s) slots: %d slots_qend: %d\n", queue, host, *slots, *slots_qend));
+
+   DRETURN_VOID;
+}
+
+void parallel_revert_rqs_slot_debitation(sge_assignment_t *a, const char *host, const char *queue, 
+      int slots, int slots_qend, dstring *rule_name, dstring *rue_name, dstring *limit_name)
+{
+   lListElem *rqs, *rule;
+   const char* user = a->user;
+   const char* group = a->group;
+   const char* project = a->project;
+   const char* pe = a->pe_name;
+
+   DENTER(TOP_LAYER, "parallel_check_and_debit_rqs_slots");
+
+   for_each(rqs, a->rqs_list) {
+
+      /* ignore disabled rule sets */
+      if (!lGetBool(rqs, RQS_enabled)) {
+         continue;
+      }
+      sge_dstring_clear(rule_name);
+      rule = rqs_get_matching_rule(rqs, user, group, project, pe, host, queue, a->acl_list, a->hgrp_list, rule_name);
+      if (rule != NULL) {
+         lListElem *rql;
+         rqs_get_rue_string(rue_name, rule, user, project, host, queue, pe);
+         sge_dstring_sprintf(limit_name, "%s=%s", sge_dstring_get_string(rule_name), sge_dstring_get_string(rue_name));
+         rql = lGetElemStr(a->limit_list, RQL_name, sge_dstring_get_string(limit_name));
+         DPRINTF(("limit: %s %d <--- %d\n", sge_dstring_get_string(limit_name), 
+               lGetInt(rql, RQL_slots), lGetInt(rql, RQL_slots)+slots));
+         lSetInt(rql, RQL_slots,      lGetInt(rql, RQL_slots) + slots);
+         lSetInt(rql, RQL_slots_qend, lGetInt(rql, RQL_slots_qend) + slots_qend);
+      }
+   }
 
    DRETURN_VOID;
 }
@@ -1095,7 +1129,6 @@ parallel_rqs_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, con
 
                DPRINTF(("parallel_rqs_slots_by_time(%s@%s) result %d slots %d slots_qend %d for "SFQ" (cache)\n",
                      queue, host, result, tslots, tslots_qend, limit_s));
-
             } else {
                int ttslots = INT_MAX;
                int ttslots_qend = INT_MAX;
@@ -1154,12 +1187,13 @@ parallel_rqs_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, con
                tslots = MIN(tslots, ttslots);
                tslots_qend = MIN(tslots_qend, ttslots_qend);
 
-               if (result != DISPATCH_OK || (slots == 0 && (!a->is_reservation || slots_qend == 0))) {
-                  DPRINTF(("RQS PARALLEL SORT OUT\n"));
-                  schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNRQSGLOBAL_SS,
-                        sge_dstring_get_string(&rue_string), sge_dstring_get_string(&rule_name));
-                  rqs_exceeded_sort_out_par(a, rule, &rule_name, queue, host);
-               }
+            }
+
+            if (result != DISPATCH_OK || (tslots == 0 && ( a->is_reservation || !a->care_reservation || tslots_qend == 0))) {
+               DPRINTF(("RQS PARALLEL SORT OUT\n"));
+               schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNRQSGLOBAL_SS,
+                     sge_dstring_get_string(&rue_string), sge_dstring_get_string(&rule_name));
+               rqs_exceeded_sort_out_par(a, rule, &rule_name, queue, host);
             }
 
             if (result != DISPATCH_OK || tslots == 0) {
@@ -1175,7 +1209,7 @@ parallel_rqs_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, con
    *slots = tslots;
    *slots_qend = tslots_qend;
 
-   DPRINTF(("parallel_rqs_slots_by_time(%s@%s) finalresult %d slots %d slots_qend %d\n",
+   DPRINTF(("parallel_rqs_slots_by_time(%s@%s) finalresult %d slots %d slots_qend %d\n", 
          queue, host, result, *slots, *slots_qend));
 
    DRETURN(result);

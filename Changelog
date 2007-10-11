@@ -1,3 +1,16 @@
+AH-2007-10-10-0: Cleanup:   - integrated parallel two-stage slot selection into
+                              a single stage as to reduce dispatch time
+                 Bugfix:    - -masterq may not break slave task preference due to 
+                              soft/queue sort method
+                            - resource quota can break allocation_rule
+                            - fixed issue reservation until infinity in parallel 
+                              scheduling
+                 Enhancem.: - need means to simulate large numbers of execution 
+                              nodes
+                 Bugster:   6610855,6586817,6615165
+                 Issue:     2378,2339,2364
+                 Review:    RD
+
 JG-2007-10-09-1: Bugfix:    o sharetree.5 didn't explain type field.
                  Bugster:   6575731
                  Issue:     2276

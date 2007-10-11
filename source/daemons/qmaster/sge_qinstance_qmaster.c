@@ -1033,8 +1033,8 @@ sge_qmaster_qinstance_state_set_unknown(lListElem *this_elem, bool set_state)
       sge_ar_list_set_error_state(*object_type_get_master_list(SGE_TYPE_AR),
                                      lGetString(this_elem, QU_full_name), 
                                      QI_UNKNOWN,
-                                     false,
-                                     set_state);
+                                     true,
+                                     false);
    } else {
       sge_ar_list_set_error_state(*object_type_get_master_list(SGE_TYPE_AR),
                                      lGetString(this_elem, QU_full_name), 

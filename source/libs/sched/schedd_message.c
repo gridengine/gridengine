@@ -689,7 +689,7 @@ lList *schedd_mes_get_tmp_list(){
 *     schedd_mes_set_tmp_list() -- sets the messages for a current job 
 *
 *  SYNOPSIS
-*     void schedd_mes_set_tmp_list(lListElem *category, int name) 
+*     void schedd_mes_set_tmp_list(lListElem *category, int name, int name, u_long32 job_number) 
 *
 *  FUNCTION
 *     Takes a mesage list, changes the job number to the current job and stores

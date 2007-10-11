@@ -1151,11 +1151,17 @@ monitoring_t *monitor
             packint(&pb, how); 
          }
 
-         if (pb_filled(&pb)) {
-            u_long32 dummy = 0;
-            i = gdi2_send_message_pb(ctx, 0, pnm, 1, hnm, jep ? TAG_SIGJOB: TAG_SIGQUEUE, 
-                          &pb, &dummy);
+         if (mconf_get_simulate_execds() && jep) {
+            i = CL_RETVAL_OK;
+            trigger_job_resend(sge_get_gmt(), NULL, lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number), 1);
+         } else {
+            if (pb_filled(&pb)) {
+               u_long32 dummy = 0;
+               i = gdi2_send_message_pb(ctx, 0, pnm, 1, hnm, jep ? TAG_SIGJOB: TAG_SIGQUEUE, 
+                             &pb, &dummy);
+            }
          }
+
          MONITOR_MESSAGES_OUT(monitor);                          
          clear_packbuffer(&pb);
       } else {

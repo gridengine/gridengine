@@ -70,7 +70,7 @@ void sge_zombie_job_cleanup_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent
 
 void sge_job_resend_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor);
 
-void trigger_job_resend(u_long32 now, lListElem *hep, u_long32 jid, u_long32 tid);
+void trigger_job_resend(u_long32 now, lListElem *hep, u_long32 jid, u_long32 tid, int delta);
 
 void cancel_job_resend(u_long32 jid, u_long32 tid);
 

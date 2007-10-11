@@ -558,11 +558,14 @@ bool
 qinstance_state_set_unknown(lListElem *this_elem, bool set_state)
 {
    bool changed;
-
    DENTER(QINSTANCE_STATE_LAYER, "qinstance_state_set_unknown");
-   changed = qinstance_set_state(this_elem, set_state, QI_UNKNOWN);
+   if (mconf_get_simulate_execds())
+      changed = qinstance_set_state(this_elem, false, QI_UNKNOWN);
+   else
+      changed = qinstance_set_state(this_elem, set_state, QI_UNKNOWN);
    DRETURN(changed);
 }
+
 
 bool 
 qinstance_state_is_unknown(const lListElem *this_elem)

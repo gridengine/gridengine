@@ -302,10 +302,11 @@ int sge_resolve_hostname(const char *hostname, char *unique, int nm)
          ret = getuniquehostname(hostname, unique, 0);
          break;
       }
+   } else {
+      strcpy(unique, hostname);
    }
 
    if (ret != CL_RETVAL_OK) {
-      /* Optimized algorithm for resolving the names (to possitive logic) */
       strcpy(unique, hostname);
    }
 

@@ -63,6 +63,18 @@
 #if 1
 #define CL_DO_SEND_ACK_AT_COMMLIB_LAYER /* send ack when message arives */ 
 #endif
+static void dummy_start(void);
+static void dummy_end(void);
+#ifdef SOLARIS
+#pragma no_inline(dummy_start, dummy_end)
+#endif
+
+static void dummy_start(void) {
+   return;
+}
+static void dummy_end(void) {
+   return;
+}
 
 static void cl_com_default_application_debug_client_callback(int dc_connected, int debug_level);
 
@@ -4536,6 +4548,7 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
 }
 
 
+
 /* receive message from host, component, component id from handle */
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
@@ -6608,7 +6621,7 @@ int cl_commlib_get_last_message_time(cl_com_handle_t* handle,
    receiver.comp_id   = component_id;
 
 
-   return_value = cl_endpoint_list_get_last_touch_time(cl_com_get_endpoint_list(),&receiver,message_time);
+   return_value = cl_endpoint_list_get_last_touch_time(cl_com_get_endpoint_list(), &receiver, message_time);
    if (message_time) {
       CL_LOG_STR(CL_LOG_DEBUG,"host              :", receiver.comp_host);
       CL_LOG_STR(CL_LOG_DEBUG,"component         :", receiver.comp_name);
@@ -6685,6 +6698,7 @@ static void *cl_com_trigger_thread(void *t_conf) {
 
    /* ok, thread main */
    while (do_exit == 0) {
+      dummy_start();
       cl_thread_func_testcancel(thread_config);
 
       CL_LOG(CL_LOG_INFO,"trigger host list refresh ...");
@@ -6702,6 +6716,7 @@ static void *cl_com_trigger_thread(void *t_conf) {
                do_exit = 1;
          }
       }
+      dummy_end();
    }
 
    CL_LOG(CL_LOG_INFO, "exiting ...");
@@ -6749,6 +6764,8 @@ static void *cl_com_handle_service_thread(void *t_conf) {
          struct timeval now;
          cl_thread_list_elem_t* elem = NULL;
 
+         dummy_start();
+
          gettimeofday(&now,NULL);
    
          cl_raw_list_lock(cl_com_thread_list);
@@ -6792,6 +6809,8 @@ static void *cl_com_handle_service_thread(void *t_conf) {
          }
       }
       cl_thread_clear_events(thread_config);
+
+      dummy_end();
    }
 
    CL_LOG(CL_LOG_INFO, "exiting ...");
@@ -6852,6 +6871,7 @@ static void *cl_com_handle_read_thread(void *t_conf) {
       trigger_write_thread = 0;
       message_received = 0;
 
+      dummy_start();
 
       cl_thread_func_testcancel(thread_config);
  
@@ -7186,6 +7206,8 @@ static void *cl_com_handle_read_thread(void *t_conf) {
          /* cleanup all trigger events */
          cl_thread_clear_events(thread_config);
       }
+
+      dummy_end();
    }
 
    CL_LOG(CL_LOG_INFO, "exiting ...");
@@ -7239,6 +7261,8 @@ static void *cl_com_handle_write_thread(void *t_conf) {
 
    /* ok, thread main */
    while (do_exit == 0) {
+
+      dummy_start();
       trigger_read_thread = 0;
       cl_thread_func_testcancel(thread_config);
  
@@ -7527,6 +7551,7 @@ static void *cl_com_handle_write_thread(void *t_conf) {
             not wait when something is to do */
          cl_thread_clear_events(thread_config);
       }
+      dummy_end();
    }
    CL_LOG(CL_LOG_INFO, "exiting ...");
 

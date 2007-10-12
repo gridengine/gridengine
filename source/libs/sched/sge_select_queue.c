@@ -3743,7 +3743,7 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                   for_each (qep, a->queue_list) {
                      const char *qname = lGetString(qep, QU_full_name);
 
-                     if (strcmp(eh_name, lGetHost(qep, QU_qhostname)))
+                     if (sge_hostcmp(eh_name, lGetHost(qep, QU_qhostname)))
                         continue;
 
                      DPRINTF(("tagged: %d maxslots: %d rqs_hslots: %d\n", (int)lGetUlong(qep, QU_tag), maxslots, rqs_hslots));
@@ -3756,7 +3756,7 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                            slots--;
                      }
                      slots_qend = 0;
-                     if (lGetUlong(a->job, JB_ar)==0) {
+                     if (lGetUlong(a->job, JB_ar)==0 && !a->is_advance_reservation) {
                         DPRINTF(("trying to debit %d slots in queue "SFQ"\n", slots, qname));
                         parallel_check_and_debit_rqs_slots(a, eh_name, lGetString(qep, QU_qname), 
                               &slots, &slots_qend, &rule_name, &rue_name, &limit_name);
@@ -3794,7 +3794,7 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
 
                   if (rqs_hslots < minslots) {
                      const void *iter = NULL;
-                     DPRINTF(("reverting RQS debitation since "SFQ" gets us only %d slots while min. %d are needed\n",
+                     DPRINTF(("reverting debitation since "SFQ" gets us only %d slots while min. %d are needed\n",
                            eh_name, rqs_hslots, minslots));
                         
                      /* must revert all RQS debitations */
@@ -3802,7 +3802,7 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                           qep = lGetElemHostNext(a->queue_list, QU_qhostname, eh_name, &iter)) {
                         slots = lGetUlong(qep, QU_tag);
                         if (slots != 0) {
-                           if (lGetUlong(a->job, JB_ar)==0) {
+                           if (lGetUlong(a->job, JB_ar)==0 && !a->is_advance_reservation) {
                               parallel_revert_rqs_slot_debitation(a, eh_name, lGetString(qep, QU_qname), 
                                     slots, 0, &rule_name, &rue_name, &limit_name);
                            }
@@ -3840,7 +3840,7 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                   
                   /* debit on RQS limits */
                   for_each (qep, a->queue_list) {
-                     if (strcmp(eh_name, lGetHost(qep, QU_qhostname)))
+                     if (sge_hostcmp(eh_name, lGetHost(qep, QU_qhostname)))
                         continue;
 
                      slots = 0;
@@ -3850,7 +3850,7 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                            slots_qend--;
                      }
 
-                     if (lGetUlong(a->job, JB_ar)==0) {
+                     if (lGetUlong(a->job, JB_ar)==0 && !a->is_advance_reservation) {
                         DPRINTF(("trying to debit %d slots_qend in queue "SFQ"\n", slots_qend, lGetString(qep, QU_full_name)));
                         parallel_check_and_debit_rqs_slots(a, eh_name, lGetString(qep, QU_qname), 
                               &slots, &slots_qend, &rule_name, &rue_name, &limit_name);
@@ -3864,7 +3864,7 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                   }
                   if (rqs_hslots < minslots) {
                      const void *iter = NULL;
-                     DPRINTF(("reverting RQS debitation since "SFQ" gets us only %d slots while min. %d are needed\n",
+                     DPRINTF(("reverting debitation since "SFQ" gets us only %d slots while min. %d are needed\n",
                            eh_name, rqs_hslots, minslots));
                         
                      /* must revert all RQS debitations */
@@ -3872,7 +3872,7 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                           qep = lGetElemHostNext(a->queue_list, QU_qhostname, eh_name, &iter)) {
                         slots_qend = lGetUlong(qep, QU_tag_qend); 
                         if (slots_qend != 0) {
-                           if (lGetUlong(a->job, JB_ar)==0)
+                           if (lGetUlong(a->job, JB_ar)==0 && !a->is_advance_reservation)
                               parallel_revert_rqs_slot_debitation(a, eh_name, lGetString(qep, QU_qname), 
                                     0, slots_qend, &rule_name, &rue_name, &limit_name);
                            lSetUlong(qep, QU_tag_qend, 0);
@@ -4770,9 +4770,9 @@ parallel_queue_slots(sge_assignment_t *a, lListElem *qep, int *slots, int *slots
                ar_queue_config_attr, ar_queue_actual_attr, NULL, true, ar_queue, 
                DOMINANT_LAYER_QUEUE, 0, QUEUE_TAG, false, lGetString(ar_queue, QU_full_name));
       } else {
-         result = parallel_rqs_slots_by_time(a, &lslots, &lslots_qend, lGetHost(qep, QU_qhostname), lGetString(qep, QU_qname));
-         if (result == DISPATCH_OK) {
-
+         if (a->is_advance_reservation 
+            || (result = parallel_rqs_slots_by_time(a, &lslots, &lslots_qend, 
+                 lGetHost(qep, QU_qhostname), lGetString(qep, QU_qname))) == DISPATCH_OK) {
             DPRINTF(("verifing normal queue\n"));
             result = parallel_rc_slots_by_time(a, hard_requests, &qslots, &qslots_qend, 
                   config_attr, actual_attr, NULL, true, qep, 

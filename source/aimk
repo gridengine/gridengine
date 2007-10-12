@@ -42,7 +42,7 @@
 #
 set noglob
 unsetenv buildarch BUILDARCH COMPILE_ARCH COMPILE_DIR LD_LIBRARY_PATH RMONLIB
-unsetenv AIMK_INSURE AIMK_TARGET_BITS aimk_buildarch
+unsetenv AIMK_TARGET_BITS aimk_buildarch
 
 set COMPILE_ARCH = ""
 set COMPILE_DIR  = ""
@@ -239,7 +239,7 @@ set MAKEWINGRIDAPP   = 0
 set WITH_USERMAPPING = 0 # Compile without usermapping feature
 set SGESSH           = 0
 
-# Default Flags and Libraries
+# Default Flags and Libraries 
 set OPTIMIZATION     = 1
 set GPROFFED         = 0
 set COVED            = 0
@@ -247,7 +247,7 @@ set DEBUGGED         = 0
 set COMPILE_DC       = 0
 set CC               = cc
 set CXX              = CC
-set CFLAGS           = "-DSGE_ARCH_STRING=$buildarch -D$TARGET_BITS $INP_CFLAGS"
+set CFLAGS           = "-D$TARGET_BITS $INP_CFLAGS"
 set CORE_INCLUDE     = "-I../common -I../libs -I../libs/uti -I../libs/juti -I../libs/gdi -I../libs/japi -I../libs/sgeobj -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/comm/lists -I../libs/sched -I../libs/evc -I../libs/evm -I../libs/mir -I../libs/lck -I../daemons/common -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
 set DEBUG_FLAG       = ""
 set INSURE_FLAG      = ""
@@ -1317,7 +1317,7 @@ case LINUXSPARC64:
       endif
    endif
 
-   if ($buildarch == "lx24-x86" || $buildarch == "lx26-amd64" || $buildarch == "lx26-x86" || $buildarch == "lx26-sparc") then
+   if ($buildarch == "lx24-x86" || $buildarch == "lx26-x86" || $buildarch == "lx26-sparc") then
       set CFLAGS = "$CFLAGS -Wno-strict-aliasing"
    endif
 
@@ -1714,24 +1714,19 @@ if ( $JNI == 1 ) then
       set CORE_INCLUDE = "$CORE_INCLUDE -I${JAVA_HOME}/${JAVA_INCL}/${JAVA_ARCH}"
       switch ($buildarch)
          case lx24-x86:
-         case ulx24-x86:
          case lx26-x86:
          case nbsd-i386:
          case sol-x86:
-         case usol-x86:
              set JAVA_LIB_ARCH = i386
              breaksw
          case sol-sparc64:
-         case usol-sparc64:
              set JAVA_LIB_ARCH = sparcv9
              breaksw
          case lx26-sparc:
          case sol-sparc:
-         case usol-sparc:
              set JAVA_LIB_ARCH = sparc
              breaksw
          case lx24-amd64:
-         case ulx24-amd64:
          case lx26-amd64:
          case sol-amd64:
              set JAVA_LIB_ARCH = amd64
@@ -2269,16 +2264,6 @@ if ( "$JAVA" > 0 ) then
       setenv AIMK_TARGET_BITS $TARGET_BITS
       setenv aimk_buildarch $buildarch
    endif
-   if ( "$INSURE_FLAG" != "" ) then
-      setenv AIMK_INSURE -insure
-   else
-      setenv AIMK_INSURE ""
-   endif
-   if ( $DEBUGGED == 1 ) then
-      setenv AIMK_DEBUG true
-   else
-      setenv AIMK_DEBUG ""
-   endif  
    ant -f build.xml $argv
    # how to propagate ant opts to first and then second build.xml
    # ant -Dsge.ant.args='-DA="a" -DB="b" -DC="c"' -f build.xml $argv
@@ -2439,7 +2424,7 @@ if ( "$SGESSH" == 1) then
       env REMOTE=sge SGE_ARCH=$buildarch LD_LIBRARY_PATH=${OPENSSL_HOME}/lib\
       MAKE="${MAKE}" CFLAGS="${CFLAGS} ${NOERR_CFLAG}" CC="${CC}" AR="${AR}" \
       ../configure --with-grd=${COMPILE_ARCH} --srcdir=.. \
-         --with-cflags="${MEMCFLAG} ${NOERR_SSH} ${NOERR_PROTO} -DSGESSH_INTEGRATION" \
+         --with-cflags="${MEMCFLAG} ${NOERR_SSH} ${NOERR_PROTO}" \
          --with-ldflags="${LFLAGS}" \
          --with-libs="-L../../../${COMPILE_ARCH} -L../../../3rdparty/remote/${COMPILE_ARCH}/ -lsgeremote -luti -llck -lrmon ${LIBS} ${SLIBS}" \
          --with-ssl-dir=${OPENSSL_HOME}
@@ -2580,14 +2565,10 @@ echo done.
 # On SOLARIS64, if there was no special target (i.e. $argv = "") 
 # and no "-only-*" parameter specified, the shared libraries for
 # SOLARIS are also built.
-if ( $BUILDARCH == SOLARIS64 && "$argv" == "" && $ONLY_PARAM_SPEC == 0 && "${SOLARIS_ONLY_64}" != 1 ) then
+if ( $BUILDARCH == SOLARIS64 && "$argv" == "" && $ONLY_PARAM_SPEC == 0 ) then
       echo ""
       echo "Executing aimk again to build 32 bit shared libraries."
-      if ( "$JAVA" > 0 ) then
-         ./aimk -32 -only-core libdrmaa.so libjgdi.so libjuti.so
-      else 
-         ./aimk -32 -only-core libdrmaa.so libjuti.so
-      endif
+      ./aimk -32 -only-core libdrmaa.so libjgdi.so libjuti.so
       exit $status
    endif
 endif

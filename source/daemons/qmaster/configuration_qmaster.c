@@ -623,23 +623,26 @@ static u_long32 sge_get_config_version_for_host(const char* aName)
 
    DENTER(TOP_LAYER, "sge_get_configuration_for_host");
 
-   /*
-    * Due to CR 6319231 IZ 1760:
-    *    Try to resolve the hostname
-    *    if it is not resolveable then
-    *       ignore this and use the given hostname
-    */
-   ret = sge_resolve_hostname(aName, unique_name, EH_name);
-   if (CL_RETVAL_OK != ret) {
-      DPRINTF(("%s: error %s resolving host %s\n", SGE_FUNC,
-              cl_get_error_text(ret), aName));
-      strcpy(unique_name, aName);
-   }
 
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
-   
-   conf = lGetElemHost(Cluster_Config.list, CONF_name, unique_name);
-   if (NULL == conf) {
+  
+   conf = lGetElemHost(Cluster_Config.list, CONF_name, aName);
+   if (conf == NULL) {
+      /*
+       * Due to CR 6319231 IZ 1760:
+       *    Try to resolve the hostname
+       *    if it is not resolveable then
+       *       ignore this and use the given hostname
+       */
+      ret = sge_resolve_hostname(aName, unique_name, EH_name);
+      if (CL_RETVAL_OK != ret) {
+         DPRINTF(("%s: error %s resolving host %s\n", SGE_FUNC,
+                 cl_get_error_text(ret), aName));
+      }
+      conf = lGetElemHost(Cluster_Config.list, CONF_name, unique_name);
+   } 
+
+   if (conf == NULL) {
       DPRINTF(("%s: no master configuration for %s found\n", SGE_FUNC, aName));
    } else {
       version = lGetUlong(conf, CONF_version);

@@ -225,7 +225,6 @@ sge_event_spool(sge_gdi_ctx_class_t *ctx,
    bool delete = false;
    dstring buffer = DSTRING_INIT;
    bool job_spooling = ctx->get_job_spooling(ctx);
-   lList *tmp_list = NULL;
 
    DENTER(TOP_LAYER, "sge_event_spool");
 
@@ -277,22 +276,6 @@ sge_event_spool(sge_gdi_ctx_class_t *ctx,
          key = strkey;
          element = object;
          object_type = SGE_TYPE_EXECHOST;
-         if (event != sgeE_EXECHOST_DEL) {
-            lListElem *load_value;
-
-            /* 
-             *  Only static load values should be spooled, therefore we modify
-             *  the host elem to spool
-             */
-            tmp_list = lCreateList("", HL_Type);
-            for_each(load_value, lGetList(object, EH_load_list)) {
-               if (lGetBool(load_value, HL_static)) {
-                  lAppendElem(tmp_list, lCopyElem(load_value));
-               }
-            }
-
-            lXchgList(object, EH_load_list, &tmp_list);
-         }
          break;
       case sgeE_GLOBAL_CONFIG:
          key = strkey;
@@ -528,8 +511,42 @@ sge_event_spool(sge_gdi_ctx_class_t *ctx,
             ret = spool_delete_object(&spool_answer_list, spool_get_default_context(), 
                                       object_type, key, job_spooling);
          } else {
+            lList *tmp_list = NULL;
+            lListElem *load_value;
+
+            /* 
+             *  Only static load values should be spooled, therefore we modify
+             *  the host elem to spool
+             */
+            switch (event) {
+               case sgeE_EXECHOST_LIST:
+               case sgeE_EXECHOST_ADD:
+               case sgeE_EXECHOST_MOD:
+                  tmp_list = lCreateList("", HL_Type);
+                  for_each(load_value, lGetList(object, EH_load_list)) {
+                     if (lGetBool(load_value, HL_static)) {
+                        lAppendElem(tmp_list, lCopyElem(load_value));
+                     }
+                  }
+                  lXchgList(object, EH_load_list, &tmp_list);
+                  break;
+               default:
+                  break;
+            }
+
             ret = spool_write_object(&spool_answer_list, spool_get_default_context(), 
                                      element, key, object_type, job_spooling);
+
+            switch (event) {
+               case sgeE_EXECHOST_LIST:
+               case sgeE_EXECHOST_ADD:
+               case sgeE_EXECHOST_MOD:
+                  lXchgList(object, EH_load_list, &tmp_list);
+                  lFreeList(&tmp_list);
+                  break;
+               default:
+                  break;
+            }
          }
          /* output low level error messages */
          answer_list_output(&spool_answer_list);
@@ -544,18 +561,8 @@ sge_event_spool(sge_gdi_ctx_class_t *ctx,
                                     key);
             
          }
-      }
-   }
 
-   switch (event) {
-      case sgeE_EXECHOST_LIST:
-      case sgeE_EXECHOST_ADD:
-      case sgeE_EXECHOST_MOD:
-         lXchgList(object, EH_load_list, &tmp_list);
-         lFreeList(&tmp_list);
-         break;
-      default:
-         break;
+      }
    }
 
    /* send event only, if spooling succeeded */

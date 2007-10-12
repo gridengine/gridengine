@@ -273,8 +273,6 @@ int sge_resolve_hostname(const char *hostname, char *unique, int nm)
       DEXIT;
       return CL_RETVAL_PARAMS;
    }
-   /* Optimized algorithm for resolving the names (to possitive logic) */
-   strcpy(unique, hostname);
 
    /* Check to find hostname only if it was not contained in expression */
    if (!sge_is_expression(hostname)) {
@@ -286,20 +284,30 @@ int sge_resolve_hostname(const char *hostname, char *unique, int nm)
       case CE_stringval:
          if (strcmp(hostname, SGE_UNKNOWN_NAME)!=0) {
             ret = getuniquehostname(hostname, unique, 0);
+         } else {
+            strcpy(unique, hostname);
          }
+
          break;
       case EH_name:
       case CONF_name:
          if ((strcmp(hostname, SGE_GLOBAL_NAME)!=0) && 
              (strcmp(hostname, SGE_TEMPLATE_NAME)!=0)) {
             ret = getuniquehostname(hostname, unique, 0);
+         } else {
+            strcpy(unique, hostname);
          }
          break;
       default:
          ret = getuniquehostname(hostname, unique, 0);
          break;
       }
-   } 
+   }
+
+   if (ret != CL_RETVAL_OK) {
+      /* Optimized algorithm for resolving the names (to possitive logic) */
+      strcpy(unique, hostname);
+   }
 
    DRETURN(ret);
 }

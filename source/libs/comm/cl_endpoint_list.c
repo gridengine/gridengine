@@ -382,11 +382,11 @@ int cl_endpoint_list_get_last_touch_time(cl_raw_list_t* list_p, cl_com_endpoint_
    }
 
    elem = cl_endpoint_list_get_first_elem(list_p);
-   while ( elem != NULL) { 
+   while (elem != NULL) { 
       if (cl_com_compare_endpoints(endpoint, elem->endpoint )) {
          /* found matching endpoint */
          back = CL_RETVAL_OK;
-         CL_LOG_STR(CL_LOG_INFO,"found endpoint comp_host:",elem->endpoint->comp_host);
+         CL_LOG_STR(CL_LOG_INFO,"found endpoint comp_host:", elem->endpoint->comp_host);
          if (touch_time) {
             *touch_time = elem->last_used;
          }

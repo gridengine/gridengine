@@ -1633,12 +1633,10 @@ bool sge_add_event(u_long32 timestamp, ev_event type, u_long32 intkey,
       if (type == sgeE_JOB_MOD) {
          sub_list_elem = JB_ja_tasks;
          lXchgList(element, sub_list_elem, &temp_sub_lp);
-      }
-      else if (type == sgeE_CQUEUE_MOD) {
+      } else if (type == sgeE_CQUEUE_MOD) {
          sub_list_elem = CQ_qinstances;
          lXchgList(element, sub_list_elem, &temp_sub_lp);
-      }
-      else if (type == sgeE_JATASK_MOD) {
+      } else if (type == sgeE_JATASK_MOD) {
          sub_list_elem = JAT_task_list;
          lXchgList(element, sub_list_elem, &temp_sub_lp);
       }
@@ -2805,8 +2803,6 @@ static void send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, lList *repo
    DENTER(TOP_LAYER, "send_events");
 
    while (Master_Control.clients_indices[count] != 0) {
-      char *host = NULL;
-      char *commproc = NULL;
       ec_id = (u_long32)Master_Control.clients_indices[count++];
 
       if (!lock_client(ec_id, false)) {
@@ -2838,10 +2834,6 @@ static void send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, lList *repo
       /*Important:                            */
       /*   host and commproc have to be freed */
       update_func = (event_client_update_func_t) lGetRef(event_client, EV_update_function);
-      if (update_func == NULL) {  
-         host = strdup(lGetHost(event_client, EV_host));
-         commproc = strdup(lGetString(event_client, EV_commproc));
-      }
       
       id = lGetUlong(event_client, EV_commid);
 
@@ -2852,23 +2844,20 @@ static void send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, lList *repo
       if (lGetUlong(event_client, EV_last_heard_from) > now) {
          lSetUlong(event_client, EV_last_heard_from, now);
          lSetUlong(event_client, EV_next_send_time, now + deliver_interval);
-      }
-      else if (lGetUlong(event_client, EV_last_send_time)  > now) {
+      } else if (lGetUlong(event_client, EV_last_send_time)  > now) {
          lSetUlong(event_client, EV_last_send_time, now);
       }
   
       /* if set, use qmaster_params SCHEDULER_TIMEOUT */
       if (scheduler_timeout > 0) {
           timeout = scheduler_timeout;
-      }
-      else {
+      } else {
          /* is the ack timeout expired ? */
          timeout = 10*deliver_interval;
          
          if (timeout < EVENT_ACK_MIN_TIMEOUT) {
             timeout = EVENT_ACK_MIN_TIMEOUT;
-         }
-         else if (timeout > EVENT_ACK_MAX_TIMEOUT) {
+         } else if (timeout > EVENT_ACK_MAX_TIMEOUT) {
             timeout = EVENT_ACK_MAX_TIMEOUT;
          }
       }
@@ -2879,10 +2868,8 @@ static void send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, lList *repo
                  (int) id, "qmaster_host"));
          }
          else {
-            ERROR((SGE_EVENT, MSG_COM_ACKTIMEOUT4EV_ISIS, (int) timeout, commproc, 
-                  (int) id, host));
-            FREE(commproc);
-            FREE(host);
+            ERROR((SGE_EVENT, MSG_COM_ACKTIMEOUT4EV_ISIS, (int) timeout, lGetString(event_client, EV_commproc), 
+                  (int) id, lGetHost(event_client, EV_host)));
          }
          remove_event_client(event_client, ec_id, true);      
          unlock_client(ec_id);
@@ -2894,6 +2881,8 @@ static void send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, lList *repo
          if ((busy_handling == EV_THROTTLE_FLUSH) 
             || !lGetUlong(event_client, EV_busy)) {
             lList *lp = NULL;
+            char *host = NULL;
+            char *commproc = NULL;
 
             /* put only pointer in report - dont copy */
             lXchgList(event_client, EV_events, &lp);
@@ -2913,15 +2902,23 @@ static void send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, lList *repo
              *
              *  I take the second approach.
              */
+            if (update_func == NULL) {  
+               host = strdup(lGetHost(event_client, EV_host));
+               commproc = strdup(lGetString(event_client, EV_commproc));
+            }
             unlock_client(ec_id);
 
             if (update_func != NULL) {
                update_func(NULL, report_list);
                ret = CL_RETVAL_OK;
-            }
-            else {
+            } else {
                ret = report_list_send(ctx, report_list, host, commproc, id, 0, NULL);
                MONITOR_MESSAGES_OUT(monitor);
+            }
+
+            if (update_func == NULL) {
+               FREE(commproc);
+               FREE(host);
             }
 
             lock_client(ec_id, true); 
@@ -2982,8 +2979,6 @@ static void send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, lList *repo
          }
       } /*if */
    
-      FREE(host);
-      FREE(commproc);
       unlock_client(ec_id);      
    } /* while */
    

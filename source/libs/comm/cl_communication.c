@@ -58,7 +58,6 @@
 #include "cl_communication.h"
 #include "msg_commlib.h"
 
-
 #define CL_DO_COMMUNICATION_DEBUG 0
 
 static int cl_com_gethostbyname(char *hostname, cl_com_hostent_t **hostent, int* system_error );
@@ -109,11 +108,11 @@ static cl_bool_t cl_com_default_ssl_verify_func(cl_ssl_verify_mode_t mode, cl_bo
 #define __CL_FUNCTION__ "cl_com_compare_endpoints()"
 int cl_com_compare_endpoints(cl_com_endpoint_t* endpoint1, cl_com_endpoint_t* endpoint2) {  /* CR check */
    if (endpoint1 != NULL && endpoint2 != NULL) {
-       if (endpoint1->comp_id == endpoint2->comp_id ) {
+       if (endpoint1->comp_id == endpoint2->comp_id) {
           if (endpoint1->comp_host && endpoint1->comp_name && 
               endpoint2->comp_host && endpoint2->comp_name) {
-             if (cl_com_compare_hosts(endpoint1->comp_host,endpoint2->comp_host) == CL_RETVAL_OK) {
-                if (strcmp(endpoint1->comp_name,endpoint2->comp_name ) == 0) {
+             if (strcmp(endpoint1->comp_name,endpoint2->comp_name) == 0) {
+               if (cl_com_compare_hosts(endpoint1->comp_host, endpoint2->comp_host) == CL_RETVAL_OK) {
                    return 1;
                 }
              }
@@ -2140,7 +2139,7 @@ static int cl_com_dup_host(char** host_dest, char* source, cl_host_resolve_metho
                    return CL_RETVAL_MALLOC;
                 }
              }
-             for (counter = 0; counter < hostlen  ; counter++) {
+             for (counter = 0; counter < hostlen; counter++) {
                 (*host_dest)[counter] = toupper(source[counter]);
              }  
              (*host_dest)[hostlen]=0;

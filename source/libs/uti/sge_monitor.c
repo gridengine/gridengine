@@ -490,8 +490,8 @@ void sge_monitor_output(monitoring_t *monitor)
       
       sge_dstring_sprintf_append(monitor->work_line, MSG_UTI_MONITOR_DEFLINE_FFFFF,  
                                  monitor->message_out_count/time,
-                                 (time - monitor->idle)/monitor->message_in_count,
-                                 monitor->idle/time*100, monitor->wait/time*100,time);           
+                                 monitor->message_in_count ? (time - monitor->idle)/monitor->message_in_count: 0,
+                                 monitor->idle/time*100, monitor->wait/time*100, time);           
     
       /* only log into the message file, if the user wants it */
       if (monitor->log_monitor_mes) {
@@ -513,7 +513,7 @@ void sge_monitor_output(monitoring_t *monitor)
       sge_monitor_reset(monitor);
    }
    
-   DEXIT;
+   DRETURN_VOID;
 }
 
 

@@ -1346,7 +1346,7 @@ rc_time_by_slots(const sge_assignment_t *a, lList *requested, lList *load_attr, 
                            MAX(latest_time, tmp_start)));
                   latest_time = MAX(latest_time, tmp_start);
                }
-               if (lGetUlong(attr, CE_tagged) < tag) {
+               if (lGetUlong(attr, CE_tagged) < tag && tag != RQS_TAG) {
                   lSetUlong(attr, CE_tagged, tag);
                }   
             break;
@@ -1434,7 +1434,7 @@ static void clear_resource_tags( lList *resources, u_long32 max_tag) {
    lListElem *attr=NULL;
 
    for_each(attr, resources){
-      if(lGetUlong(attr, CE_tagged) <= max_tag)
+      if (lGetUlong(attr, CE_tagged) <= max_tag)
          lSetUlong(attr, CE_tagged, NO_TAG);
    }
 }
@@ -1584,7 +1584,7 @@ dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListE
 
    if (ckpt) { /* ckpt job */
       /* is it a ckpt queue ? */
-      if (!qinstance_is_checkointing_queue(queue)) {
+      if (!qinstance_is_checkpointing_queue(queue)) {
          DPRINTF(("Queue \"%s\" is not a checkpointing queue as requested by "
                   "job %d\n", qinstance_name, (int)job_id));
          schedd_mes_add(job_id, SCHEDD_INFO_NOTACKPTQUEUE_SS, qinstance_name);
@@ -3746,8 +3746,7 @@ parallel_tag_hosts_queues(sge_assignment_t *a, lListElem *hep, int *slots, int *
             accu_queue_slots      += qslots;
             accu_queue_slots_qend += qslots_qend;
             lSetUlong(qep, QU_tag, qslots);
-         }
-         else {
+         } else {
             if (skip_queue_list) {
                lAddElemStr(&skip_queue_list, CTI_name, qname, CTI_Type);
             }         
@@ -3832,13 +3831,11 @@ parallel_max_host_slots(sge_assignment_t *a, lListElem *host) {
             is_np_adjustment = true;
             adj_value = lGetString(lc, CE_stringval);
 
-         }
-         else { /* work on a consumable */
+         } else { /* work on a consumable */
             
             if ((lc = lGetElemStr(requests, CE_name, name)) != NULL) {
                adj_value = lGetString(lc, CE_stringval);
-            }
-            else { /* is default value */
+            } else { /* is default value */
                adj_value = lGetString(cep, CE_default);
             }
 
@@ -4598,7 +4595,7 @@ static int parallel_sort_suitable_queues(lList *queue_list)
 ******************************************************************************/
 static dispatch_t
 parallel_queue_slots(sge_assignment_t *a, lListElem *qep, int *slots, int *slots_qend, 
-                    int *violations, bool allow_non_requestable) 
+                     int *violations, bool allow_non_requestable) 
 {
    lList *hard_requests = lGetList(a->job, JB_hard_resource_list);
    lList *config_attr = lGetList(qep, QU_consumable_config_list);
@@ -4612,12 +4609,11 @@ parallel_queue_slots(sge_assignment_t *a, lListElem *qep, int *slots, int *slots
                              in one run. If the calendar returns later, we have to
                              compute the slots, and reset the current slots to 0, even
                              so the resurces are available, when the queue would not 
-                             have been cal disabled*/
+                             have been cal disabled */
 
    DENTER(TOP_LAYER, "parallel_queue_slots");
 
    if (sge_queue_match_static(qep, a->job, a->pe, a->ckpt, a->centry_list, a->acl_list, a->hgrp_list) == DISPATCH_OK) {
-
       result = parallel_rqs_slots_by_time(a, &lslots, &lslots_qend, lGetHost(qep, QU_qhostname), lGetString(qep, QU_qname));
 
       if (result == DISPATCH_OK) {
@@ -4641,8 +4637,7 @@ parallel_queue_slots(sge_assignment_t *a, lListElem *qep, int *slots, int *slots
 
    if (result == DISPATCH_OK) {
       DPRINTF(("\tparallel_queue_slots(%s) returns %d/%d\n", qname, qslots, qslots_qend));
-   } 
-   else {
+   } else {
       DPRINTF(("\tparallel_queue_slots(%s) returns <error>\n", qname));
    }
 
@@ -5682,7 +5677,7 @@ parallel_rc_slots_by_time(const sge_assignment_t *a, lList *requests,  int *slot
 
             DPRINTF(("%s: explicit request for %s gets us %d slots (%d later)\n", 
                   object_name, name, avail, avail_qend));
-            if (lGetUlong(req, CE_tagged) < tag)
+            if (lGetUlong(req, CE_tagged) < tag && tag != RQS_TAG)
                lSetUlong(req, CE_tagged, tag);
 
             max_slots      = MIN(max_slots,      avail);
@@ -5710,7 +5705,7 @@ parallel_rc_slots_by_time(const sge_assignment_t *a, lList *requests,  int *slot
                *slots = *slots_qend = 0;
                DRETURN(DISPATCH_NEVER_CAT);
             }
-            DPRINTF(("%s: parallel_rc_slots_by_time(%s) no such resource, but already satisified\n", 
+            DPRINTF(("%s: parallel_rc_slots_by_time(%s) no such resource, but already satisfied\n",
                      object_name, name));
             break;
          case DISPATCH_NEVER:

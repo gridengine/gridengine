@@ -48,7 +48,7 @@ bool
 qinstance_is_interactive_queue(const lListElem *this_elem);
 
 bool 
-qinstance_is_checkointing_queue(const lListElem *this_elem);
+qinstance_is_checkpointing_queue(const lListElem *this_elem);
 
 bool 
 qinstance_is_parallel_queue(const lListElem *this_elem);

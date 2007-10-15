@@ -150,7 +150,7 @@ int my_scheduler(sge_Sdescr_t *lists, lList **order)
 int scheduler(sge_evc_class_t *evc, sge_Sdescr_t *lists, lList **order) {
    order_t orders = ORDER_INIT;
    lList **splitted_job_lists[SPLIT_LAST];         /* JB_Type */
-   lList *waiting_due_to_pedecessor_list = NULL;   /* JB_Type */
+   lList *waiting_due_to_predecessor_list = NULL;  /* JB_Type */
    lList *waiting_due_to_time_list = NULL;         /* JB_Type */
    lList *pending_excluded_list = NULL;            /* JB_Type */
    lList *suspended_list = NULL;                   /* JB_Type */
@@ -182,8 +182,7 @@ int scheduler(sge_evc_class_t *evc, sge_Sdescr_t *lists, lList **order) {
    for (i = SPLIT_FIRST; i < SPLIT_LAST; i++) {
       splitted_job_lists[i] = NULL;
    }
-   splitted_job_lists[SPLIT_WAITING_DUE_TO_PREDECESSOR] = 
-                                               &waiting_due_to_pedecessor_list;
+   splitted_job_lists[SPLIT_WAITING_DUE_TO_PREDECESSOR] = &waiting_due_to_predecessor_list;
    splitted_job_lists[SPLIT_WAITING_DUE_TO_TIME] = &waiting_due_to_time_list;
    splitted_job_lists[SPLIT_PENDING_EXCLUDED] = &pending_excluded_list;
    splitted_job_lists[SPLIT_SUSPENDED] = &suspended_list;
@@ -610,7 +609,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, sge_Sdescr_t *lists, order_t *ord
                prof_get_measurement_wallclock(SGE_PROF_CUSTOM1, true, NULL)));
       }
 
-      if( ret != 0){
+      if (ret != 0) {
          lFreeList(&user_list);
          lFreeList(&group_list);
          lFreeList(&job_load_adjustments);
@@ -681,11 +680,8 @@ static int dispatch_jobs(sge_evc_class_t *evc, sge_Sdescr_t *lists, order_t *ord
    case QSM_LOAD:
    case QSM_SEQNUM:   
    default:
-
       DPRINTF(("sorting hosts by load\n"));
       sort_host_list(lists->host_list, lists->centry_list);
-
-
       break;
    }
 
@@ -731,8 +727,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, sge_Sdescr_t *lists, order_t *ord
              lGetBool(orig_job, JB_reserve) &&
              !JOB_TYPE_IS_IMMEDIATE(lGetUlong(orig_job, JB_type))) {
             is_reserve = true;
-         }   
-         else {
+         } else {
             is_reserve = false; 
          }   
 
@@ -745,14 +740,12 @@ static int dispatch_jobs(sge_evc_class_t *evc, sge_Sdescr_t *lists, order_t *ord
             u_long32 ja_task_id; 
             lListElem *ja_task;
 
-
             /* sort the hostlist */
-            if(sort_hostlist) {
+            if (sort_hostlist) {
                lPSortList(lists->host_list, "%I+", EH_sort_value);
-               sort_hostlist      = 0;
+               sort_hostlist = 0;
                sconf_set_host_order_changed(true);
-            } 
-            else {
+            } else {
                sconf_set_host_order_changed(false);
             }  
 
@@ -767,8 +760,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, sge_Sdescr_t *lists, order_t *ord
 
             if (job_get_next_task(job, &ja_task, &ja_task_id) != 0) {
                DPRINTF(("Found job "sge_u32" with no job array tasks\n", job_id));
-            } 
-            else { 
+            } else { 
                DPRINTF(("Found pending job "sge_u32"."sge_u32". Try %sto start and %sto reserve\n", 
                      job_id, ja_task_id, is_start?"":"not ", is_reserve?"":"not "));
                DPRINTF(("-----------------------------------------\n"));
@@ -1058,7 +1050,6 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
     *------------------------------------------------------------------*/
 
       if (is_start) {
-
          DPRINTF(("### looking for immediate parallel assignment for job "
                   sge_U32CFormat"."sge_U32CFormat" requesting pe \"%s\" duration "sge_U32CFormat"\n", 
                   a.job_id, a.ja_task_id, pe_name, a.duration)); 
@@ -1082,14 +1073,12 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
             if (result == DISPATCH_OK) {
                result = DISPATCH_NOT_AT_TIME; /* this job got a reservation */
             }   
-         } 
-         else {
+         } else {
             result = DISPATCH_NEVER_CAT;
          }   
       }
 
-   } 
-   else {
+   } else {
       /*------------------------------------------------------------------
        * SELECT POSSIBLE QUEUE(S) FOR THIS SEQUENTIAL JOB
        *------------------------------------------------------------------*/
@@ -1097,7 +1086,6 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
       a.slots = 1;
 
       if (is_start) {
-
          DPRINTF(("### looking for immediate sequential assignment for job "
                   sge_U32CFormat"."sge_U32CFormat" duration "sge_U32CFormat"\n", a.job_id, 
                   a.ja_task_id, a.duration)); 

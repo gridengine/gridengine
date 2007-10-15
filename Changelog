@@ -1,3 +1,10 @@
+JG-2007-10-15-0: Bugfix:    Scheduling of parallel jobs did not respect 
+                            consumables, if the consumables were referenced in 
+                            a resource quota
+                 Bugster:   6608236
+                 Issue:     2396
+                 Review:    RD
+
 AA-2007-10-09-0: Bugfix:    Fixed qmon binary job submit is broken
                  Bugster:   6604155
                  Issue:     2346 

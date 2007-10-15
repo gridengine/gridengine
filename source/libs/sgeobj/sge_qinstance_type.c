@@ -146,7 +146,7 @@ qinstance_print_qtype_to_dstring(const lListElem *this_elem,
             sge_dstring_sprintf_append(string, "%c", 'P');
             qtype_defined = true;
          }
-         if (qinstance_is_checkointing_queue(this_elem)) {
+         if (qinstance_is_checkpointing_queue(this_elem)) {
             sge_dstring_sprintf_append(string, "%c", 'C');
             qtype_defined = true;
          }
@@ -194,7 +194,7 @@ bool qinstance_is_interactive_queue(const lListElem *this_elem)
    return qinstance_has_type(this_elem, IQ);
 }
 
-bool qinstance_is_checkointing_queue(const lListElem *this_elem)
+bool qinstance_is_checkpointing_queue(const lListElem *this_elem)
 {
    return qinstance_is_a_ckpt_referenced(this_elem);
 }

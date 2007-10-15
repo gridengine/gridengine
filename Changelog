@@ -1,3 +1,9 @@
+MP-2007-10-15-0: Bugfix:   sge_shepherd should exit if it cannot
+                           write to any of its essential files
+                 Bugster:  6564543
+                 Issue:    2400
+                 Review:   JG
+
 JG-2007-10-15-0: Bugfix:    Scheduling of parallel jobs did not respect 
                             consumables, if the consumables were referenced in 
                             a resource quota

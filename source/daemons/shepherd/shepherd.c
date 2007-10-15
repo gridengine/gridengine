@@ -542,7 +542,7 @@ int main(int argc, char **argv)
    int run_epilog, run_pe_stop;
    dstring ds;
    char buffer[256];
-
+   
    if (argc >= 2) {
       if ( strcmp(argv[1],"-help") == 0) {
          show_shepherd_version();
@@ -642,8 +642,10 @@ int main(int argc, char **argv)
    /* write our pid to file */
    pid = getpid();
 
-   shepherd_write_pid_file(pid);
-
+   if(!shepherd_write_pid_file(pid, &ds)) {
+      shepherd_error(sge_dstring_get_string(&ds));
+   }
+   
    uid = getuid();
 
    if (!sge_is_start_user_superuser()) {

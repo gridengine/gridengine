@@ -66,7 +66,8 @@
 #define MSG_CONFIG_CONF_ERRORCLOSEINGSPOOLFILE_SS              _MESSAGE(23028, _("error closing the configuration spool file "SFN": "SFN))
 
 #define MSG_CANNOT_REDIRECT_STDINOUTERR_I     _MESSAGE(23029, _("cannot redirect stdin/stdout/stderr (%d) to /dev/null"))
-
+#define MSG_FILE_CANNOT_WRITE_SS                                     _MESSAGE(23030, _("unable to write to file "SFN": "SFN))
+#define MSG_FILE_CANNOT_FLUSH_SS                                     _MESSAGE(23031, _("unable to flush file "SFN": "SFN))
 /*
 ** parse_job_cull.c
 */

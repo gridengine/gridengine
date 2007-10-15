@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 bool 
-shepherd_write_pid_file(pid_t pid);
+shepherd_write_pid_file(pid_t pid, dstring *errmsg);
 
 bool
 shepherd_read_qrsh_pid_file(const char *filename, pid_t *qrsh_pid,

@@ -1,3 +1,10 @@
+JG-2007-10-15-0: Bugfix:    Scheduling of parallel jobs did not respect 
+                            consumables, if the consumables were referenced in 
+                            a resource quota
+                 Bugster:   6608236
+                 Issue:     2396
+                 Review:    RD
+
 RD-2007-10-12-2: CVS        Created V61ARsnapshot3_TAG
 ------------------------------------------------------
 

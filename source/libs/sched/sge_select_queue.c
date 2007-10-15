@@ -1380,7 +1380,7 @@ rc_time_by_slots(const sge_assignment_t *a, lList *requested, lList *load_attr, 
                            MAX(latest_time, tmp_start)));
                   latest_time = MAX(latest_time, tmp_start);
                }
-               if (lGetUlong(attr, CE_tagged) < tag) {
+               if (lGetUlong(attr, CE_tagged) < tag && tag != RQS_TAG) {
                   lSetUlong(attr, CE_tagged, tag);
                }   
             break;
@@ -1640,7 +1640,7 @@ dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListE
 
    if (ckpt) { /* ckpt job */
       /* is it a ckpt queue ? */
-      if (!qinstance_is_checkointing_queue(queue)) {
+      if (!qinstance_is_checkpointing_queue(queue)) {
          DPRINTF(("Queue \"%s\" is not a checkpointing queue as requested by "
                   "job %d\n", qinstance_name, (int)job_id));
          schedd_mes_add(job_id, SCHEDD_INFO_NOTACKPTQUEUE_SS, qinstance_name);
@@ -5834,7 +5834,7 @@ parallel_rc_slots_by_time(const sge_assignment_t *a, lList *requests,  int *slot
 
             DPRINTF(("%s: explicit request for %s gets us %d slots (%d later)\n", 
                   object_name, name, avail, avail_qend));
-            if (lGetUlong(req, CE_tagged) < tag)
+            if (lGetUlong(req, CE_tagged) < tag && tag != RQS_TAG)
                lSetUlong(req, CE_tagged, tag);
 
             max_slots      = MIN(max_slots,      avail);
@@ -5862,7 +5862,7 @@ parallel_rc_slots_by_time(const sge_assignment_t *a, lList *requests,  int *slot
                *slots = *slots_qend = 0;
                DRETURN(DISPATCH_NEVER_CAT);
             }
-            DPRINTF(("%s: parallel_rc_slots_by_time(%s) no such resource, but already satisified\n", 
+            DPRINTF(("%s: parallel_rc_slots_by_time(%s) no such resource, but already satisfied\n", 
                      object_name, name));
             break;
          case DISPATCH_NEVER:

@@ -134,7 +134,7 @@ int my_scheduler(sge_Sdescr_t *lists, lList **order)
 int scheduler(sge_evc_class_t *evc, sge_Sdescr_t *lists, lList **order) {
    order_t orders = ORDER_INIT;
    lList **splitted_job_lists[SPLIT_LAST];         /* JB_Type */
-   lList *waiting_due_to_pedecessor_list = NULL;   /* JB_Type */
+   lList *waiting_due_to_predecessor_list = NULL;  /* JB_Type */
    lList *waiting_due_to_time_list = NULL;         /* JB_Type */
    lList *pending_excluded_list = NULL;            /* JB_Type */
    lList *suspended_list = NULL;                   /* JB_Type */
@@ -167,7 +167,7 @@ int scheduler(sge_evc_class_t *evc, sge_Sdescr_t *lists, lList **order) {
       splitted_job_lists[i] = NULL;
    }
    splitted_job_lists[SPLIT_WAITING_DUE_TO_PREDECESSOR] = 
-                                               &waiting_due_to_pedecessor_list;
+                                               &waiting_due_to_predecessor_list;
    splitted_job_lists[SPLIT_WAITING_DUE_TO_TIME] = &waiting_due_to_time_list;
    splitted_job_lists[SPLIT_PENDING_EXCLUDED] = &pending_excluded_list;
    splitted_job_lists[SPLIT_SUSPENDED] = &suspended_list;

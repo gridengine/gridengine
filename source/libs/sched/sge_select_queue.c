@@ -153,9 +153,6 @@ parallel_tag_hosts_queues(sge_assignment_t *a, lListElem *hep, int *slots,
 static int 
 parallel_max_host_slots(sge_assignment_t *a, lListElem *host);
 
-static dispatch_t
-parallel_host_slots(sge_assignment_t *a, int *slots, int *slots_qend, int *host_soft_violations,
-                   lListElem *hep, bool allow_non_requestable);
 
 static dispatch_t
 parallel_queue_slots(sge_assignment_t *a,lListElem *qep, int *slots, int *slots_qend, 
@@ -3986,6 +3983,91 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
 }
 
 
+/****** sge_select_queue/parallel_host_slots() ******************************
+*  NAME
+*     parallel_host_slots() -- Return host slots available at time period
+*
+*  SYNOPSIS
+*  FUNCTION
+*     The maximum amount available at the host for the specified time period
+*     is determined. 
+*
+*
+*  INPUTS
+*
+*  RESULT
+*******************************************************************************/
+static dispatch_t 
+parallel_host_slots(sge_assignment_t *a, int *slots, int *slots_qend, int *host_soft_violations,
+                   lListElem *hep, bool allow_non_requestable) {
+
+   int hslots = 0, hslots_qend = 0;
+   const char *eh_name;
+   dispatch_t result = DISPATCH_NEVER_CAT;
+   lList *hard_requests = lGetList(a->job, JB_hard_resource_list);
+   lList *load_list = lGetList(hep, EH_load_list); 
+   lList *config_attr = lGetList(hep, EH_consumable_config_list);
+   lList *actual_attr = lGetList(hep, EH_resource_utilization);
+   double lc_factor = 0;
+
+   DENTER(TOP_LAYER, "parallel_host_slots");
+
+   eh_name = lGetHost(hep, EH_name);
+
+   clear_resource_tags(hard_requests, HOST_TAG);
+
+   if (!qref_list_eh_rejected(lGetList(a->job, JB_hard_queue_list), eh_name, a->hgrp_list) &&
+      sge_host_match_static(a->job, a->ja_task, hep, a->centry_list, a->acl_list) == DISPATCH_OK) {
+
+      /* cause load be raised artificially to reflect load correction when
+         checking job requests */
+      if (lGetPosViaElem(hep, EH_load_correction_factor, SGE_NO_ABORT) >= 0) {
+         u_long32 ulc_factor;
+         if ((ulc_factor=lGetUlong(hep, EH_load_correction_factor))) {
+            lc_factor = ((double)ulc_factor)/100;
+         }      
+      }
+
+      result = parallel_rc_slots_by_time(a, hard_requests, &hslots, &hslots_qend, 
+            config_attr, actual_attr, load_list, false, NULL, 
+               DOMINANT_LAYER_HOST, lc_factor, HOST_TAG, false, eh_name);
+
+      if (hslots > 0) {
+         const void *iterator = NULL;
+         lListElem *gdil;
+         int t_max = parallel_max_host_slots(a, hep);
+         if (t_max<hslots) {
+            DPRINTF(("\tparallel_host_slots(%s) threshold load adjustment reduces slots"
+                  " from %d to %d\n", eh_name, hslots, t_max));
+            hslots = t_max;
+         }
+
+         for (gdil = lGetElemHostFirst(a->gdil, JG_qhostname, eh_name, &iterator); 
+              gdil != NULL;
+              gdil = lGetElemHostNext(a->gdil, JG_qhostname, eh_name, &iterator)) {
+            hslots -= lGetUlong(gdil, JG_slots);
+         }
+      }
+   }
+
+   *slots = hslots;
+   *slots_qend = hslots_qend;
+
+   if (host_soft_violations != NULL) {
+      *host_soft_violations= compute_soft_violations(a, NULL,*host_soft_violations, load_list, config_attr, 
+                                                 actual_attr, DOMINANT_LAYER_HOST, 0, HOST_TAG);
+   }      
+
+   if (result == DISPATCH_OK) {
+      DPRINTF(("\tparallel_host_slots(%s) returns %d/%d\n", eh_name, hslots, hslots_qend));
+   } 
+   else {
+      DPRINTF(("\tparallel_host_slots(%s) returns <error>\n", eh_name));
+   }
+
+   DRETURN(result); 
+}
+
 /****** sge_select_queue/parallel_tag_hosts_queues() **********************************
 *  NAME
 *     parallel_tag_hosts_queues() -- Determine host slots and tag queue(s) accordingly
@@ -4866,83 +4948,6 @@ sequential_queue_time(u_long32 *start, const sge_assignment_t *a,
    DRETURN(result); 
 }
 
-
-/****** sge_select_queue/parallel_host_slots() ******************************
-*  NAME
-*     parallel_host_slots() -- Return host slots available at time period
-*
-*  SYNOPSIS
-*  FUNCTION
-*     The maximum amount available at the host for the specified time period
-*     is determined. 
-*
-*
-*  INPUTS
-*
-*  RESULT
-*******************************************************************************/
-static dispatch_t 
-parallel_host_slots(sge_assignment_t *a, int *slots, int *slots_qend, int *host_soft_violations,
-                   lListElem *hep, bool allow_non_requestable) {
-
-   int hslots = 0, hslots_qend = 0;
-   const char *eh_name;
-   dispatch_t result = DISPATCH_NEVER_CAT;
-   lList *hard_requests = lGetList(a->job, JB_hard_resource_list);
-   lList *load_list = lGetList(hep, EH_load_list); 
-   lList *config_attr = lGetList(hep, EH_consumable_config_list);
-   lList *actual_attr = lGetList(hep, EH_resource_utilization);
-   double lc_factor = 0;
-
-   DENTER(TOP_LAYER, "parallel_host_slots");
-
-   eh_name = lGetHost(hep, EH_name);
-
-   clear_resource_tags(hard_requests, HOST_TAG);
-
-   if (!qref_list_eh_rejected(lGetList(a->job, JB_hard_queue_list), eh_name, a->hgrp_list) &&
-      sge_host_match_static(a->job, a->ja_task, hep, a->centry_list, a->acl_list) == DISPATCH_OK) {
-
-      /* cause load be raised artificially to reflect load correction when
-         checking job requests */
-      if (lGetPosViaElem(hep, EH_load_correction_factor, SGE_NO_ABORT) >= 0) {
-         u_long32 ulc_factor;
-         if ((ulc_factor=lGetUlong(hep, EH_load_correction_factor))) {
-            lc_factor = ((double)ulc_factor)/100;
-         }      
-      }
-
-      result = parallel_rc_slots_by_time(a, hard_requests, &hslots, &hslots_qend, 
-            config_attr, actual_attr, load_list, false, NULL, 
-               DOMINANT_LAYER_HOST, lc_factor, HOST_TAG, false, lGetHost(hep, EH_name));
-
-      if (hslots > 0) {
-         int t_max = parallel_max_host_slots(a, hep);
-         if (t_max<hslots) {
-            DPRINTF(("\tparallel_host_slots(%s) threshold load adjustment reduces slots"
-                  " from %d to %d\n", eh_name, hslots, t_max));
-            hslots = t_max;
-         }
-      }
-   }
-
-   *slots = hslots;
-   *slots_qend = hslots_qend;
-
-   if (host_soft_violations != NULL) {
-      *host_soft_violations= compute_soft_violations(a, NULL,*host_soft_violations, load_list, config_attr, 
-                                                 actual_attr, DOMINANT_LAYER_HOST, 0, HOST_TAG);
-   }      
-
-   if (result == DISPATCH_OK) {
-      DPRINTF(("\tparallel_host_slots(%s) returns %d/%d\n", eh_name, hslots, hslots_qend));
-   } 
-   else {
-      DPRINTF(("\tparallel_host_slots(%s) returns <error>\n", eh_name));
-   }
-
-   DRETURN(result); 
-}
 
 
 

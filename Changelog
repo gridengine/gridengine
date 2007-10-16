@@ -1,3 +1,7 @@
+RD-2007-10-16-0: Bugfix:    - fixed bugs of new parallel reservation code
+                            - reverted part of qmaster performance improvements
+                              from RD-2007-10-12-0
+
 JG-2007-10-15-0: Bugfix:    Scheduling of parallel jobs did not respect 
                             consumables, if the consumables were referenced in 
                             a resource quota

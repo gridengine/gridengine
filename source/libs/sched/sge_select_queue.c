@@ -4079,10 +4079,13 @@ parallel_tag_hosts_queues(sge_assignment_t *a, lListElem *hep, int *slots, int *
       lList *config_attr = lGetList(hep, EH_consumable_config_list);
       lList *actual_attr = lGetList(hep, EH_resource_utilization);
       lList *load_attr = lGetList(hep, EH_load_list);
+      lList *hard_resource_list = lGetList(a->job, JB_hard_resource_list);
       lListElem *rep;
       dstring reason = DSTRING_INIT;
 
-      for_each(rep, lGetList(a->job, JB_hard_resource_list)) {
+      clear_resource_tags(hard_resource_list, HOST_TAG);
+
+      for_each(rep, hard_resource_list) {
          const char *attrname = lGetString(rep, CE_name);
          lListElem *cplx_el = lGetElemStr(a->centry_list, CE_name, attrname);
 
@@ -4737,12 +4740,15 @@ parallel_queue_slots(sge_assignment_t *a, lListElem *qep, int *slots, int *slots
          lList *ar_queue_config_attr;
          lList *ar_queue_actual_attr;
          lListElem *ar_ep = lGetElemUlong(a->ar_list, AR_id, ar_id);
+         lList *hard_resource_list = lGetList(a->job, JB_hard_resource_list);
          dstring reason = DSTRING_INIT;
+
+         clear_resource_tags(hard_resource_list, QUEUE_TAG); 
 
          ar_queue_config_attr = lGetList(qep, QU_consumable_config_list);
          ar_queue_actual_attr = lGetList(qep, QU_resource_utilization);
 
-         for_each(rep, lGetList(a->job, JB_hard_resource_list)) {
+         for_each(rep, hard_resource_list) {
             const char *attrname = lGetString(rep, CE_name);
             lListElem *cplx_el = lGetElemStr(a->centry_list, CE_name, attrname);
 

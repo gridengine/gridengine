@@ -787,14 +787,13 @@ int sge_gdi2_send_any_request(sge_gdi_ctx_class_t *ctx, int synchron, u_long32 *
 
    i = cl_commlib_send_message(handle, (char*) rhost, (char*) commproc, id,
                                   ack_type, (cl_byte_t*)pb->head_ptr, (unsigned long) pb->bytes_used,
-                                  mid_pointer,  response_id,  tag , (cl_bool_t)0, (cl_bool_t)synchron);
+                                  mid_pointer,  response_id,  tag , (cl_bool_t)1, (cl_bool_t)synchron);
    if (i != CL_RETVAL_OK) {
       /* try again ( if connection timed out ) */
       i = cl_commlib_send_message(handle, (char*) rhost, (char*) commproc, id,
                                   ack_type, (cl_byte_t*)pb->head_ptr, (unsigned long) pb->bytes_used,
-                                  mid_pointer,  response_id,  tag , (cl_bool_t)0, (cl_bool_t)synchron);
+                                  mid_pointer,  response_id,  tag , (cl_bool_t)1, (cl_bool_t)synchron);
    }
-   pb->head_ptr = NULL;
 
    dump_send_info(rhost, commproc, id, ack_type, tag, mid_pointer);
    

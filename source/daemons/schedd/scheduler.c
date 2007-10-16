@@ -1047,6 +1047,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
          
          a.start = DISPATCH_TIME_NOW;
          a.is_reservation = false;
+         a.care_reservation = is_reserve;
          
          result = sge_select_parallel_environment(&a, pe_list);
       }
@@ -1086,6 +1087,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
          
          a.start = DISPATCH_TIME_NOW;
          a.is_reservation = false;
+         a.care_reservation = is_reserve;
          result = sge_sequential_assignment(&a);
          
          DPRINTF(("sge_sequential_assignment(immediate) returned %d\n", result));

@@ -30,8 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/                                   
 
-#ifndef NO_JNI
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -41,6 +39,8 @@
 #include "sge_string.h"
 #include "sge_all_listsL.h"
 #include "str2nm_converter.h"
+
+#ifndef NO_JNI
 
 static int _lStr2Nm(const lNameSpace *nsp, const char *str) 
 {

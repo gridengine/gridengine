@@ -142,6 +142,7 @@ int do_job_exec(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, sge_pack_buffer *a
          }
       }
    } else {
+      /* start a pe task */ 
       lListElem *petrep;
       lList *answer_list = NULL;
 

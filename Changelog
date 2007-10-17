@@ -1,3 +1,10 @@
+HP-2007-10-17-0: Bugfix:    Fixed minor bugs, compiler warnings and comments
+                 Changed.   cl_commlib.c, sge_prog.h, cl_log_list.c,
+                            str2nm_converter.c, execd_tickets.c,
+                            execd_job_exec.c, msg_gdilib.h, sge_qexec.c
+                 Review:    MD
+
+
 RD-2007-10-17-1: CVS        Created V61ARsnapshot3_TAG
 ------------------------------------------------------
 

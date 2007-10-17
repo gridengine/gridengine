@@ -75,15 +75,14 @@
 #define MSG_GDI_MESSAGERECEIVEFAILED_SI                  _MESSAGE(43076, _("failed receiving message from execd: "SFN" %d"))
 #define MSG_GDI_TASKNOTFOUND_S                           _MESSAGE(43077, _("cannot find task with taskid "SFQ))
 #define MSG_GDI_TASKNOTFOUNDNOIDGIVEN_S                  _MESSAGE(43078, _("cannot find task without taskid - should become task "SFQ))
-
-
+#define MSG_GDI_EXECDONHOSTDIDNTACCEPTTASK_S             _MESSAGE(43079, _("execution daemon on host "SFQ" didn't accept task"))
 
 /* 
 ** gdilib/sge_report.c
 */
-#define MSG_GDI_REPORTNOMEMORY_I                         _MESSAGE(43079, _("not enough memory for packing report: %d bytes"))
-#define MSG_GDI_REPORTFORMATERROR                        _MESSAGE(43080, _("format error while packing report"))
-#define MSG_GDI_REPORTUNKNOWERROR                        _MESSAGE(43081, _("unexpected error while packing report"))
+#define MSG_GDI_REPORTNOMEMORY_I                         _MESSAGE(43080, _("not enough memory for packing report: %d bytes"))
+#define MSG_GDI_REPORTFORMATERROR                        _MESSAGE(43081, _("format error while packing report"))
+#define MSG_GDI_REPORTUNKNOWERROR                        _MESSAGE(43082, _("unexpected error while packing report"))
 
 /* 
 ** gdilib/qm_name.c

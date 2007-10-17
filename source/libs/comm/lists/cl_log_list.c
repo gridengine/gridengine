@@ -774,6 +774,7 @@ int cl_log_list_flush_list(cl_raw_list_t* list_p) {        /* CR check */
          elem->log_parameter);
       }
       cl_log_list_del_log(list_p);
+      fflush(stdout);
    }
    
    if (  ( ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {

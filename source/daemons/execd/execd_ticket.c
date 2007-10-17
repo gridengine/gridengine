@@ -45,8 +45,6 @@
 #include "sge_feature.h"
 #include "sge_job.h"
 
-extern volatile int jobs_to_start;
-
 /*************************************************************************
  EXECD function called by dispatcher
 

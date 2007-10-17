@@ -892,8 +892,8 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    /* setup SSL configuration */
    new_handle->ssl_setup = NULL;
    switch(framework) {
-      case CL_CT_UNDEFINED: {
-      case CL_CT_TCP:
+      case CL_CT_UNDEFINED:
+      case CL_CT_TCP: {
          break;
       }
       case CL_CT_SSL: {
@@ -6396,7 +6396,7 @@ cl_commlib_send_message(cl_com_handle_t* handle, char *un_resolved_hostname,
 
    } else {
 
-      CL_LOG_STR_STR_INT(CL_LOG_INFO, "new message for:      ", un_resolved_hostname, component_name, (int)component_id);
+      CL_LOG_STR_STR_INT(CL_LOG_INFO, "add new message for:      ", un_resolved_hostname, component_name, (int)component_id);
    
       /* resolve hostname */
       return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname,NULL, NULL, NULL);

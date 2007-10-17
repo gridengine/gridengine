@@ -204,7 +204,7 @@ sge_tid_t sge_qexecve(sge_gdi_ctx_class_t *ctx,
    lFreeElem(&petrep);
 
    if (ret != CL_RETVAL_OK) {
-      sprintf(lasterror, MSG_GDI_SENDTASKTOEXECDFAILED_SS , hostname, cl_get_error_text(ret));
+      sprintf(lasterror, MSG_GDI_SENDTASKTOEXECDFAILED_SS, hostname, cl_get_error_text(ret));
       DEXIT;
       return NULL;
    }
@@ -220,6 +220,7 @@ sge_tid_t sge_qexecve(sge_gdi_ctx_class_t *ctx,
 
    if (strcmp(tid, "none") == 0) {
       tid = NULL;
+      sprintf(lasterror, MSG_GDI_EXECDONHOSTDIDNTACCEPTTASK_S, hostname);
    }
 
    /* now close message to execd */

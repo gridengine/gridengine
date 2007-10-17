@@ -44,7 +44,7 @@
 #define SGE_SHADOWD     "sge_shadowd"
 #define PE_HOSTFILE     "pe_hostfile"
 
-/* who - must match prognames[] in prognames.c */
+/* who - must match prognames[] in libs/uti/sge_prog.c */
 
 enum {
  QALTER =  1 , 

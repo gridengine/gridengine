@@ -142,7 +142,7 @@ public class GEObjectEditor {
         return obj;
     }
     
-    private static void updatePropertyValue(JGDI jgdi, GEObject obj, Object key, String values) {
+    private static void updatePropertyValue(JGDI jgdi, GEObject obj, Object key, String values) throws JGDIException {
         if (key instanceof SimplePropertyDescriptor) {
             updateSimpleProperty(jgdi, obj, (SimplePropertyDescriptor)key, values);
         } else if (key instanceof DefaultListPropertyDescriptor) {
@@ -159,11 +159,9 @@ public class GEObjectEditor {
             //TODO LP: Find out expected behaviour! Can values contain list of ConfigElems?
             ce.setValue(values.trim());
             c.addEntries(ce);
-            try {
-                jgdi.updateConfiguration(c);
-            } catch (JGDIException ex) {
-                ex.printStackTrace();
-            }
+            //TODO LP: Need to exit if we get can't resolve hostname. Otherwise we get stacktrace for each element.
+            //Also if should be reworked to return correct error code (1).
+            jgdi.updateConfiguration(c);
         } else {
             new IllegalArgumentException("Unknown descriptor type=\""+key.getClass().getName()+
                     "\" for object type "+obj.getClass().getName());

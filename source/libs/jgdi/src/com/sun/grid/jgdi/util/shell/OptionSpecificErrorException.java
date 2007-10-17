@@ -29,29 +29,22 @@
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/
-
 package com.sun.grid.jgdi.util.shell;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
 /**
- * Option Function Annotation
- * Is intended to be used for automatic option info discovery
+ * To differentiate between IllegalArgumetnException (that end always with exitCode =1).
+ * JGDIShell retrieves command exitCode (that had to be set after calling getErrorMessage method) 
+ * when this exception occurs.
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface CommandAnnotation {
-    /** Command string
-     *  @return a command value
-     */ 
-    String value();
-
-    /** Specifies if command can have extra arguments. Default is false.
-     *  E.g.: qsub can
-     *  @return boolean
-     */
-    boolean hasExtraArgs() default false;
+public class OptionSpecificErrorException extends IllegalArgumentException {
+    private int exitCode = 0;
+    
+    public OptionSpecificErrorException(String msg, int exitCode) {
+        super(msg);
+        this.exitCode = exitCode;
+    }
+    
+    public int getExitCode() {
+        return exitCode;
+    }
 }

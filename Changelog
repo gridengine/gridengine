@@ -1,3 +1,6 @@
+LP-2007-10-17-1: Enhancem.: JGDIShell returns correct exitCodes in most cases
+                 Review:    AA
+
 HP-2007-10-17-0: Bugfix:    Fixed minor bugs, compiler warnings and comments
                  Changed.   cl_commlib.c, sge_prog.h, cl_log_list.c,
                             str2nm_converter.c, execd_tickets.c,
@@ -64,7 +67,7 @@ AA-2007-10-09-0: Bugfix:    Fixed qmon binary job submit is broken
                  Bugster:   6604155
                  Issue:     2346
                  Review:    RD
-                 
+
 JG-2007-10-09-0: Bugfix:    Fixed gcc-4.2 warnings, minor bugs, cleanup.
                  Review:    MD
 
@@ -79,6 +82,9 @@ RD-2007-10-08-0: Enhancem:  improved qmaster-execd-protocoll
 RH-2007-10-05-0: Bugfix:    - high cpu utilization in jvm thread fixed
                             - missing functions in JMX JGDI added
                  Review:    AA
+
+LP-2007-10-04-2: Cleanup:   Reformatted JGDI java files to 4 spaces
+                 Review:    LP
 
 LP-2007-10-04-1: Following reffer to JGDI and JGDShell only
                  Enhancem.: Added new error messages to resource file

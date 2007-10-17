@@ -76,7 +76,7 @@ public class OptionInfo {
      * @see OptionInfo#getFirstArg() OptionInfo#optionDone() {@link OptionInfo}
      * @throws java.lang.Exception
      */
-    public void invokeOption(Command command) throws Exception {
+    public void invokeOption(AnnotatedCommand command) throws Exception {
         //Invoke it
         do {
             try {
@@ -97,6 +97,9 @@ public class OptionInfo {
                     }
                     pw.print(msg);
                     pw.flush();
+                    //TODO LP: Decide/Check what should be set as exitCode here? Clearly this is an error.
+                    //Note LP: 'qconf -de unresolvable_host' should return here 1. Extend the JGDIException to also include desired exitCode?
+                    command.setExitCode(100);
                     continue;
                 }
                 // Rethrow the generated Exception, end the option execution if not JGDIException

@@ -44,6 +44,7 @@ public abstract class AbstractCommand implements HistoryCommand {
     Shell shell=null;
     JGDI jgdi = null;
     PrintWriter pw=null;
+    private int exitCode = 0;
     
     public Logger getLogger() {
         return shell.getLogger();
@@ -142,5 +143,21 @@ public abstract class AbstractCommand implements HistoryCommand {
             throw new IllegalArgumentException(text);
         }
         if (text.length()>0 && !text.equals("ok")) pw.println(text);
+    }
+    
+    /**
+     * <p>Gets the commands exit code</p>
+     * @return int exitCode
+     */
+    public int getExitCode() {
+        return exitCode;
+    }
+    
+    /**
+     * <p>Sets the commands exit code to newCode</p>
+     * @param int newCode new exitCode of this command
+     */
+    protected void setExitCode(int newCode) {
+        exitCode = newCode;
     }
 }

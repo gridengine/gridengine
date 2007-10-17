@@ -55,7 +55,7 @@ import static com.sun.grid.jgdi.util.shell.Util.*;
 /**
  *
  */
-@CommandAnnotation(value = "qsub")
+@CommandAnnotation(value = "qsub", hasExtraArgs=true)
 public class QSubCommand extends AnnotatedCommand {
     
     JobImpl job = null;
@@ -73,10 +73,9 @@ public class QSubCommand extends AnnotatedCommand {
         clear();
         
         // parse arguments and fill the ar object
-        try {
-            parseAndInvokeOptions(args);
-        } catch (ExtraArgumentException ea) {
-            for (String arg : ea.getArgs()) {
+        parseAndInvokeOptions(args);
+        if (hasExtraArguments()) {
+            for (String arg : this.getExtraArguments()) {
                 job.addJobArgs(arg);
             }
         }
@@ -88,7 +87,7 @@ public class QSubCommand extends AnnotatedCommand {
             sb.append(str);
             sb.append(" ");
         }
-        // TODO PJ This is temporary solution, should be replacec by JDGI
+        // TODO PJ This is temporary solution, should be replaced by JDGI
         // This will not work, if the qsub command is not on the path or
         // the current host is not submit host
         JGDIShell jsh = (JGDIShell) shell;

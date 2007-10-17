@@ -117,7 +117,6 @@
       List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
       <%=objectType%> obj = new <%=objectType%>Impl(true);
       String inputText = readFile(fileName);
-      String setNameMethod = "setName";
       <%if (objectType.equals("Configuration")) {%>
       final String keyAttrValue = new File(fileName).getName();
       <%} else {%>
@@ -163,6 +162,7 @@
       } else {
          String msg = getErrorMessage("InvalidObjectArgument", oi.getOd().getOption(), arg, null);
          pw.println(msg);
+         setExitCode(getCustomExitCode("InvalidObjectArgument", oi.getOd().getOption()));
       }
       oi.optionDone();
    }  
@@ -219,6 +219,7 @@
       //Display error message in no such object exists
       if (obj == null) {
           pw.println(getErrorMessage("InvalidObjectArgument", oi.getOd().getOption(), arg, "Object \""+arg+"\" does not exist"));
+          setExitCode(getCustomExitCode("InvalidObjectArgument", oi.getOd().getOption()));
           return;
       }
       //Show the object
@@ -253,6 +254,7 @@
       //Show correct error message if list is empty
       if (values.size() == 0) {
           pw.println(getErrorMessage("NoObjectFound", oi.getOd().getOption(), "", "No object found"));
+          setExitCode(getCustomExitCode("NoObjectFound", oi.getOd().getOption()));
           return;
       }
       //Otherwise print sorted list

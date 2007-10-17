@@ -42,7 +42,7 @@ import com.sun.grid.jgdi.util.shell.AnnotatedCommand;
 import com.sun.grid.jgdi.util.shell.Command;
 import com.sun.grid.jgdi.util.shell.CommandAnnotation;
 import com.sun.grid.jgdi.util.shell.HistoryCommand;
-import com.sun.grid.jgdi.util.shell.QSubCommand;
+import com.sun.grid.jgdi.util.shell.OptionSpecificErrorException;
 import com.sun.grid.jgdi.util.shell.Shell;
 import java.io.BufferedReader;
 import java.io.EOFException;
@@ -100,6 +100,8 @@ public class JGDIShell implements Runnable, Shell {
     private ReadlineHandler readlineHandler;
     private static final ResourceBundle usageResources = ResourceBundle.getBundle("com.sun.grid.jgdi.util.shell.UsageResources");
     private final PrintWriter pw;
+
+    private int lastExitCode = 0;
     
     //TODO LP: We should consider having single PrintWriter for all commands
     public JGDIShell() {
@@ -110,6 +112,7 @@ public class JGDIShell implements Runnable, Shell {
         cmdMap.put("debug", new DebugCommand());
         cmdMap.put("history", new PrintHistoryCommand());
         cmdMap.put("xmldump", new XMLDumpCommand());
+        cmdMap.put("$?", new GetExitCodeCommand());
         // Register all command classes
         try {
             List<Class> classes = getAllAnnotatedClasses(this.getClass().getPackage(), CommandAnnotation.class);
@@ -193,7 +196,7 @@ public class JGDIShell implements Runnable, Shell {
                 if (line == null) {
                     continue;
                 }
-                runCommand(line);
+                lastExitCode = runCommand(line);
             }
         } catch (EOFException eofe) {
             // Ignore
@@ -246,7 +249,15 @@ public class JGDIShell implements Runnable, Shell {
             
             cmd.init(this);
             cmd.run(parsedLine.args);
+            if (cmd instanceof AbstractCommand) {
+                return ((AbstractCommand) cmd).getExitCode();
+            }
         } catch (AbortException expected) {
+            exitCode = 0;
+        } catch (OptionSpecificErrorException ex) {
+            pw.println(ex.getMessage());
+            logger.info("Command failed: " + ex.getMessage());
+            exitCode = ex.getExitCode();
         } catch (IllegalArgumentException ex) {
             pw.println(ex.getMessage());
             logger.info("Command failed: " + ex.getMessage());
@@ -254,7 +265,7 @@ public class JGDIShell implements Runnable, Shell {
         } catch (Exception ex) {
             ex.printStackTrace(pw);
             logger.log(Level.SEVERE, "Command failed: " + ex.getMessage(), ex);
-            exitCode = 1; //There was an error during the execution
+            exitCode = 1000; //There was an error during the execution
         } finally {
             pw.flush();
         }
@@ -605,6 +616,20 @@ public class JGDIShell implements Runnable, Shell {
                 XMLUtil.write((GEObject) obj, System.out);
                 System.out.flush();
             }
+        }
+        
+        public void init(Shell shell) throws Exception {
+        }
+    }
+
+    class GetExitCodeCommand implements HistoryCommand {
+        
+        public String getUsage() {
+            return "$?";
+        }
+        
+        public void run(String[] args) throws Exception {
+            pw.println(lastExitCode);
         }
         
         public void init(Shell shell) throws Exception {

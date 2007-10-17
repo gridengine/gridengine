@@ -63,6 +63,9 @@ public abstract class AnnotatedCommand extends AbstractCommand {
     
     /* ResourceBundle containging all error messags */
     private static final ResourceBundle errorMessages = ResourceBundle.getBundle("com.sun.grid.jgdi.util.shell.ErrorMessagesResources");
+
+    /* Extra argument list for extending commands that support it. Other have to explicitly check and throw error if not-null */
+    private List<String> extraArgs = null;
     
     /**
      * Initialize the option map optionDescriptorMap if not yet created.
@@ -119,6 +122,23 @@ public abstract class AnnotatedCommand extends AbstractCommand {
         }
         return optionDescriptorMap;
     }
+
+    /**
+     * Gets the extra arguments for the command. Only certail commands actually need it: qrsub, qsub, qalter
+     * @return List<String>
+    */
+    protected List<String> getExtraArguments() {
+        return extraArgs;
+    }
+
+    /**
+     * Check if there are extra arguments. If command should not support it (not a qrsub, qsub, qalter)
+     * @return boolean
+    */
+    protected boolean hasExtraArguments() {
+        return extraArgs == null || extraArgs.size()==0;
+    }
+    
     
     protected void parseOptions(String[] args) throws Exception {
         optionList = new ArrayList<OptionInfo>();
@@ -127,10 +147,13 @@ public abstract class AnnotatedCommand extends AbstractCommand {
         while (!argList.isEmpty()) {
             //Get option info, token are divided by known option
             //to option and reladet arguments
-            // The arguments are tested for declared multiplicity
+            //The arguments are tested for declared multiplicity
             OptionInfo info = getOptionInfo(getOptionDescriptorMap(), argList);
-            optionList.add(info);
-            optionInfoMap.put(info.getOd().getOption(), info);
+            //If we got extra argument list, we skip it (info is null)
+            if (info != null) {
+                optionList.add(info);
+                optionInfoMap.put(info.getOd().getOption(), info);
+            }
         }
     }
     
@@ -210,23 +233,31 @@ public abstract class AnnotatedCommand extends AbstractCommand {
         if (optMap.isEmpty()) {
             throw new UnsupportedOperationException("Cannot get OptionInfo. Option map is empty!");
         }
-        
+
+        List<String> extraArgs = null;
         String option = args.get(0);
         String msg;
-        
-        if (!optMap.containsKey(option)) {
-            if (option.startsWith("-")) {
-                msg = getErrorMessage("InvalidArgument", option, "Unknown option \""+option+"\"");
-                throw new IllegalArgumentException(msg);
-            } else {
-                msg = getErrorMessage("InvalidArgument", option, "Unexpected extra argument \""+option+"\"");
-                //TODO LP: Remove the extra argument exception and handle extra args by default. Needed for qalter.
-                //return this option to list and report this
-                throw new ExtraArgumentException(msg,args);
-            }
-        } else {
-            // for known option remove it from the list
+
+        if (optMap.containsKey(option)) {
+            //We remove single known option from the list
             args.remove(0);
+        //We have unknown option (qconf -ddd, qalter 45). It's either extra arguments or really an error
+        } else {
+            extraArgs = new ArrayList<String>();
+            //Read all extra argument to the end of the of all args.
+            while (!args.isEmpty()) {
+                extraArgs.add(args.remove(0));
+                //If some is recognized as valid option. First extra arg is InvalidArgument
+                if (optMap.containsKey(option)) {
+                    extraArgs = null;
+                    msg = getErrorMessage("InvalidArgument", extraArgs.get(0), "Unknown option \"" + extraArgs.get(0) + "\"");
+                    int exitCode = getCustomExitCode("InvalidArgument", extraArgs.get(0));
+                    throw new OptionSpecificErrorException(msg, exitCode);
+                }
+            }
+            //We now store the extraArgs to this command.
+            this.extraArgs = extraArgs;
+            return null;    //null says now you have the extra args so save them
         }
         
         OptionDescriptor od = optMap.get(option);
@@ -245,10 +276,10 @@ public abstract class AnnotatedCommand extends AbstractCommand {
             
             //Check we have all mandatory args
             if (i != od.getMandatoryArgCount()) {
-                msg = getErrorMessage((i == 0) ? "NoArgument" : "LessArguments", option, argList,
-                        "Expected " + od.getMandatoryArgCount() + " arguments for " + option +
-                        " option. Got only " + argList.size() + ".");
-                throw new IllegalArgumentException(msg);
+                final String msgType = (i == 0) ? "NoArgument" : "LessArguments";
+                msg = getErrorMessage(msgType, option, argList, "Expected " + od.getMandatoryArgCount() + " arguments for " + option + " option. Got only " + argList.size() + ".");
+                int exitCode = getCustomExitCode(msgType, option);
+                throw new OptionSpecificErrorException(msg, exitCode);
             }
             
             //Try to get as many optional args as possible
@@ -320,5 +351,23 @@ public abstract class AnnotatedCommand extends AbstractCommand {
             } catch (MissingResourceException dex) {}
         }
         return MessageFormat.format(msg, optionString, argString, "Usage: "+cmdString+" -help", getUsage());
+    }
+    
+    /** Hepler method to get the right exit code for specified error (msgType) */
+    int getCustomExitCode(String msgType, String optionString) {
+        String[] tmp = this.getClass().getName().split("[.]");
+        String cmdName = tmp[tmp.length-1];
+        String cmdString = cmdName.split("Command")[0].toLowerCase();
+        String prefix = msgType+"."+cmdName+".";
+        String argString = "";
+        int exitCode = 0;
+        try { //Try to get option specific exitCode for this message type
+            exitCode = Integer.valueOf(errorMessages.getString(prefix+optionString+".exitCode"));
+        } catch (MissingResourceException ex) {
+            try { //Try to get command default message specific exitCode
+            exitCode = Integer.valueOf(errorMessages.getString(prefix+"default.exitCode"));
+            } catch (MissingResourceException dex) {}
+        }
+        return exitCode;
     }
 }

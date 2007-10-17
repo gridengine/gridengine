@@ -204,7 +204,9 @@ enum {
    LR_name = LR_LOWERBOUND,
    LR_value,
    LR_global,
-   LR_static,
+   LR_static, /* 0 - non static load_value */
+              /* 1 - static load_value */
+              /* 2 - remove load_value */
    LR_host
 };
 

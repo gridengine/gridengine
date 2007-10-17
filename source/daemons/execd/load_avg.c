@@ -95,6 +95,7 @@ report_source execd_report_sources[] = {
 };
 
 lUlong sge_execd_report_seqno = 0;
+static bool send_all = false;
 static lListElem *last_lr = NULL;
 static lList *lr_list = NULL;
 
@@ -137,8 +138,7 @@ void execd_merge_load_report(u_long32 seqno)
 }
 
 void execd_trash_load_report(void) {
-   lFreeList(&lr_list);
-   lFreeElem(&last_lr);
+   send_all = true;
 }
 
 static int 
@@ -192,7 +192,7 @@ execd_add_load_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now
                   /* we found the same load value in the temp list */
                   found = true;
 
-                  if (sge_strnullcmp(lGetString(ep, LR_value), value) == 0) {
+                  if (!send_all && sge_strnullcmp(lGetString(ep, LR_value), value) == 0) {
                      /* value hasn't changed, removed it from list */ 
                      lRemoveElem(tmp_lr_list, &ep);
                   }
@@ -214,6 +214,7 @@ execd_add_load_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now
       }
 
       lAppendElem(report_list, report);
+      send_all = false;
    }
 
    DRETURN(0);

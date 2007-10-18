@@ -849,7 +849,7 @@ void sge_load_value_cleanup_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent
       
 
       timeout = MAX(load_report_interval(hep)*3, max_unheard); 
-      if ((last_heard == 0) || (now <= last_heard + timeout)) {
+      if (now <= last_heard + timeout) {
          continue;
          /* host is known, nothing to trash */
       }

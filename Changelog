@@ -1,3 +1,8 @@
+AA-2007-10-18-0: Bugfix:    qmon displays wrong string for queue filtering
+                 Bugster:   6618328
+                 Issue:     2404
+                 Review:    RD
+
 MP-2007-10-15-0: Bugfix:   sge_shepherd should exit if it cannot
                            write to any of its essential files
                  Bugster:  6564543

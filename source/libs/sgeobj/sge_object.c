@@ -607,7 +607,7 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_append_field_to_dstring");
 
-   SGE_CHECK_POINTER_NULL(object);
+   SGE_CHECK_POINTER_NULL(object, answer_list);
 
    /* handle special cases 
     * these special cases are for instance bitfields that shall be 
@@ -853,7 +853,7 @@ object_parse_field_from_string(lListElem *object, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_parse_field_from_string");
 
-   SGE_CHECK_POINTER_FALSE(object);
+   SGE_CHECK_POINTER_FALSE(object, answer_list);
 
    /* handle special cases */
    switch (nm) {

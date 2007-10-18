@@ -41,7 +41,7 @@ Qmon*fticket_layout.dialogTitle:   @{QMON +++ Functional Policy}
 Qmon*fticket_layout.xmtChildren: \
       XmPushButton   fticket_main_link; \
       XmtMsgLine     fticket_message; \
-		UP_TypeMatrix  fticket_matrix;\
+		UU_TypeMatrix  fticket_matrix;\
       XmtChooser     fticket_type; \
       XmPushButton   fticket_ok, fticket_cancel, fticket_help, \
                      fticket_update, fticket_new, \
@@ -258,7 +258,7 @@ Qmon*oticket_layout.fontList:      $dialog_font
 Qmon*oticket_layout.xmtChildren: \
       XmPushButton   oticket_main_link; \
       XmtMsgLine     oticket_message; \
-		UP_TypeMatrix  oticket_matrix;\
+		UU_TypeMatrix  oticket_matrix;\
       XmtChooser     oticket_type; \
       XmPushButton   oticket_ok, oticket_cancel, oticket_help, \
                      oticket_update, oticket_new;

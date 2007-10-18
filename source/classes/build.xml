@@ -46,7 +46,7 @@ ___INFO__MARK_END__-->
          </not>
       </condition>
       <condition property="isJavaBuildHost" >
-         <equals arg1="${java.buildhost}" arg2="${hostname}" trim="true"/>
+         <contains string="${java.buildhost}" substring="${hostname}" casesensitive="false"/>
       </condition>
 
       <property location="../CLASSES" name="classes.dir"/>

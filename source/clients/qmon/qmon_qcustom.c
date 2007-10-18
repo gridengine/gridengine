@@ -603,7 +603,7 @@ static void qmonQFilterSet(Widget w, XtPointer cld, XtPointer cad)
    DENTER(GUI_LAYER, "qmonQFilterSet");
 
    UpdateXmListFromCull(misc_filter_q_sp, XmFONTLIST_DEFAULT_TAG, 
-                           queue_filter_q, ST_name);
+                           queue_filter_q, QR_name);
 
    DEXIT;
 }

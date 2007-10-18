@@ -322,8 +322,8 @@ userset_get_type_string(const lListElem *userset, lList **answer_list,
    DENTER(TOP_LAYER, "userset_get_type_string");
 
    
-   SGE_CHECK_POINTER_NULL(userset);
-   SGE_CHECK_POINTER_NULL(buffer);
+   SGE_CHECK_POINTER_NULL(userset, answer_list);
+   SGE_CHECK_POINTER_NULL(buffer, answer_list);
 
    type = lGetUlong(userset, US_type);
    sge_dstring_clear(buffer);
@@ -375,7 +375,7 @@ userset_set_type_string(lListElem *userset, lList **answer_list,
  
    DENTER(TOP_LAYER, "userset_set_type_string");
 
-   SGE_CHECK_POINTER_FALSE(userset);
+   SGE_CHECK_POINTER_FALSE(userset, answer_list);
 
    if (value != NULL && *value != 0) {
       if (!sge_parse_bitfield_str(value, userset_types, &type, 

@@ -1,3 +1,10 @@
+AA-2007-10-18-0: Bugfix:  qmon segfault functional/override policy
+                          qmon queue customize corrupted list string
+                          jgdi shutdown global variable link dependency
+                          long/short hostnames in build.xml
+                 Bugtraq: 6618315, 6618323, 6618328
+                 Review:  RD
+                          
 LP-2007-10-17-1: Enhancem.: JGDIShell returns correct exitCodes in most cases
                  Review:    AA
 

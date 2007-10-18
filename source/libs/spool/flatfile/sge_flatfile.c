@@ -571,7 +571,7 @@ spool_flatfile_align_object(lList **answer_list, spooling_field *fields)
 
    DENTER(FLATFILE_LAYER, "spool_flatfile_align_object");
 
-   SGE_CHECK_POINTER_FALSE(fields);
+   SGE_CHECK_POINTER_FALSE(fields, answer_list);
 
    for (i = 0; fields[i].nm != NoName; i++) {
       width = MAX(width, sge_strlen(fields[i].name));
@@ -624,8 +624,8 @@ spool_flatfile_align_list(lList **answer_list, const lList *list,
 
    DENTER(FLATFILE_LAYER, "spool_flatfile_align_list");
 
-   SGE_CHECK_POINTER_FALSE(list);
-   SGE_CHECK_POINTER_FALSE(fields);
+   SGE_CHECK_POINTER_FALSE(list, answer_list);
+   SGE_CHECK_POINTER_FALSE(fields, answer_list);
 
    for (i = 0; fields[i].nm != NoName; i++) {
       fields[i].width = sge_strlen(fields[i].name);
@@ -712,8 +712,8 @@ spool_flatfile_write_list(lList **answer_list,
 
    DENTER(FLATFILE_LAYER, "spool_flatfile_write_list");
 
-   SGE_CHECK_POINTER_NULL(list);
-   SGE_CHECK_POINTER_NULL(instr);
+   SGE_CHECK_POINTER_NULL(list, answer_list);
+   SGE_CHECK_POINTER_NULL(instr, answer_list);
 
    /* if fields are passed, use them, else retrieve them from instructions */
    if (fields_in != NULL) {
@@ -887,8 +887,8 @@ spool_flatfile_write_object(lList **answer_list, const lListElem *object,
 
    DENTER(FLATFILE_LAYER, "spool_flatfile_write_object");
 
-   SGE_CHECK_POINTER_NULL(object);
-   SGE_CHECK_POINTER_NULL(instr);
+   SGE_CHECK_POINTER_NULL(object, answer_list);
+   SGE_CHECK_POINTER_NULL(instr, answer_list);
 
    /* if no fields are passed, retrieve them from instructions */
    if (fields_in == NULL) {
@@ -1202,7 +1202,7 @@ spool_flatfile_write_data(lList **answer_list, const void *data, int data_len,
 
    DENTER(FLATFILE_LAYER, "spool_flatfile_write_data");
 
-   SGE_CHECK_POINTER_NULL(data);
+   SGE_CHECK_POINTER_NULL(data, answer_list);
 
    /* open/get filehandle */
    fd = spool_flatfile_open_file(answer_list, destination, filepath, &result);
@@ -1265,10 +1265,10 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
 
    DENTER(FLATFILE_LAYER, "spool_flatfile_write_object_fields");
 
-   SGE_CHECK_POINTER_FALSE(object);
-   SGE_CHECK_POINTER_FALSE(buffer);
-   SGE_CHECK_POINTER_FALSE(instr);
-   SGE_CHECK_POINTER_FALSE(fields);
+   SGE_CHECK_POINTER_FALSE(object, answer_list);
+   SGE_CHECK_POINTER_FALSE(buffer, answer_list);
+   SGE_CHECK_POINTER_FALSE(instr, answer_list);
+   SGE_CHECK_POINTER_FALSE(fields, answer_list);
 
    supress_field = instr->recursion_info.supress_field;
    field_delimiter = instr->field_delimiter;
@@ -1447,9 +1447,9 @@ spool_flatfile_write_list_fields(lList **answer_list, const lList *list,
 
    DENTER(FLATFILE_LAYER, "spool_flatfile_write_list_fields");
 
-   SGE_CHECK_POINTER_FALSE(list);
-   SGE_CHECK_POINTER_FALSE(buffer);
-   SGE_CHECK_POINTER_FALSE(instr);
+   SGE_CHECK_POINTER_FALSE(list, answer_list);
+   SGE_CHECK_POINTER_FALSE(buffer, answer_list);
+   SGE_CHECK_POINTER_FALSE(instr, answer_list);
 
    field_delimiter = (instr->field_delimiter == '\0')? false: true;
    record_delimiter = (instr->record_delimiter == '\0')? false: true;
@@ -1582,12 +1582,12 @@ spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
 
    DENTER(FLATFILE_LAYER, "spool_flatfile_read_object");
 
-   SGE_CHECK_POINTER_NULL(descr);
-   SGE_CHECK_POINTER_NULL(instr);
+   SGE_CHECK_POINTER_NULL(descr, answer_list);
+   SGE_CHECK_POINTER_NULL(instr, answer_list);
 
    /* if no file handle is passed, try to open file for reading */
    if (file == NULL) {
-      SGE_CHECK_POINTER_NULL(filepath);
+      SGE_CHECK_POINTER_NULL(filepath, answer_list);
 
       if (sge_is_file(filepath) == 0) {
          DRETURN(NULL);
@@ -2182,14 +2182,18 @@ spool_flatfile_read_list(lList **answer_list, const lDescr *descr,
 
    DENTER(FLATFILE_LAYER, "spool_flatfile_read_list");
 
-   SGE_CHECK_POINTER_NULL(descr);
-   SGE_CHECK_POINTER_NULL(instr);
+   SGE_CHECK_POINTER_NULL(descr, answer_list);
+   SGE_CHECK_POINTER_NULL(instr, answer_list);
 
    /* if no file handle is passed, try to open file for reading */
    if (file == NULL) {
-      SGE_CHECK_POINTER_NULL(filepath);
+      SGE_CHECK_POINTER_NULL(filepath, answer_list);
 
       if (sge_is_file(filepath) == 0) {
+         answer_list_add_sprintf(answer_list, STATUS_EDISK,
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_ERROROPENINGFILEFORREADING_SS,
+                                 filepath, strerror(errno));
          DRETURN(NULL);
       }
 
@@ -2220,7 +2224,6 @@ spool_flatfile_read_list(lList **answer_list, const lDescr *descr,
       if (file_opened) {
          FCLOSE(file);
       }
-      DEXIT;
       DRETURN(NULL);
    }
 

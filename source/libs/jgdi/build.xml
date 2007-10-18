@@ -86,7 +86,7 @@
         </condition>
         
         <condition property="isJavaBuildHost" >
-            <equals arg1="${java.buildhost}" arg2="${hostname}" trim="true"/>
+            <contains string="${java.buildhost}" substring="${hostname}" casesensitive="false"/>
         </condition>
         
         <echo>isJavaBuildHost=${isJavaBuildHost}</echo>
@@ -113,6 +113,7 @@
         
         <path id="compile.classpath">
             <pathelement path="${libs.junit.classpath}"/>
+            <!-- <pathelement location="${drmaa.jar}"/> -->
             <!-- <pathelement location="${comm.lib}"/> -->
             <!-- <pathelement location="${cull.jar}"/> -->
         </path>

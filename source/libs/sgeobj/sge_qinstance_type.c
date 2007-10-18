@@ -170,7 +170,7 @@ qinstance_parse_qtype_from_string(lListElem *this_elem, lList **answer_list,
    u_long32 type = 0;
 
    DENTER(QINSTANCE_TYPE_LAYER, "qinstance_parse_qtype_from_string");
-   SGE_CHECK_POINTER_FALSE(this_elem);
+   SGE_CHECK_POINTER_FALSE(this_elem, answer_list);
    if (value != NULL && *value != 0) {
       if (!sge_parse_bitfield_str(value, queue_types, &type,
                                   "queue type", NULL, true)) {

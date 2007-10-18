@@ -55,9 +55,6 @@
 #include "jgdi_wrapper.h"
 #include "jgdi_logging.h"
 
-/* DICKER TODO: Aendere das aber flott */ 
-/* int shut_me_down = 0; */
-
 
 typedef struct jgdi_report_handler_str jgdi_report_handler_t;
 

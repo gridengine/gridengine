@@ -237,8 +237,7 @@ lList **alpp
          }
             
          for_each (gdilep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
-
-            if(!strcmp(lGetString(gdilep, JG_qname), qnm)) {
+            if (!strcmp(lGetString(gdilep, JG_qname), qnm)) {
                int slot_adjust = 0;
                int lines_to_print;
                int slots_per_line, slots_in_queue = lGetUlong(gdilep, JG_slots); 

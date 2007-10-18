@@ -1004,7 +1004,7 @@ AddCommonFiles()
    # copy jmxremote.password
    f=jmxremote.password
    if [ -f util/$f ]; then
-      $INFOTEXT "Adding >%s< default submit options file" $f
+      $INFOTEXT "Adding >%s< default jmx password file" $f
       ExecuteAsAdmin cp util/$f $COMMONDIR
       ExecuteAsAdmin chmod 600 $COMMONDIR/$f
    fi

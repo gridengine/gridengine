@@ -168,7 +168,7 @@ spool_get_fields_to_spool(lList **answer_list, const lDescr *descr,
 
    DENTER(TOP_LAYER, "spool_get_fields_to_spool");
 
-   SGE_CHECK_POINTER_NULL(descr);
+   SGE_CHECK_POINTER_NULL(descr, answer_list);
 
    fields = _spool_get_fields_to_spool(answer_list, descr, instr);
 

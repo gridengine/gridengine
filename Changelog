@@ -1,3 +1,8 @@
+AA-2007-10-18-0: Bugfix:    qmon displays wrong string for queue filtering
+                 Bugster:   6618328
+                 Issue:     2404
+                 Review:    RD
+
 JG-2007-10-09-0: Bugfix:    o sharetree.5 didn't explain type field.
                  Bugster:   6575731
                  Issue:     2276

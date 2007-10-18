@@ -1,3 +1,6 @@
+RD-2007-10-17-1: CVS        Created V61ARsnapshot3_TAG
+------------------------------------------------------
+
 AH-2007-10-18-0: Bugfix:    Queue creation time grows more than linear with 
                             large clusters
                             Prevent "missing slots attribute" logging upon
@@ -5,7 +8,6 @@ AH-2007-10-18-0: Bugfix:    Queue creation time grows more than linear with
                  Bugster:   6618565
                  Issue:     2405
                  Review:    RD
-                  
 
 AA-2007-10-18-0: Bugfix:    qmon segfault functional/override policy
                             qmon queue customize corrupted list string
@@ -26,10 +28,6 @@ HP-2007-10-17-0: Bugfix:    Fixed minor bugs, compiler warnings and comments
                             str2nm_converter.c, execd_tickets.c,
                             execd_job_exec.c, msg_gdilib.h, sge_qexec.c
                  Review:    MD
-
-
-RD-2007-10-17-1: CVS        Created V61ARsnapshot3_TAG
-------------------------------------------------------
 
 RD-2007-10-17-0: Bugfix:    load sensor complex did not disappeared
                             introduced by RD-2007-10-08-0

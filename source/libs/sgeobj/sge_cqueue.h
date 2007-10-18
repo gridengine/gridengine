@@ -145,12 +145,6 @@ cqueue_trash_used_href_setting(lListElem *this_elem, lList **answer_list,
 bool
 cqueue_purge_host(lListElem *this_elem, lList **answer_list, lList *attr_list, const char *hgroup_or_hostname);
 
-u_long32
-cqueue_list_get_max_qinstance_number(lList *this_list);
-
-bool
-cqueue_list_qinstance_number_is_used(lList *this_list, u_long32 number);
-
 bool
 cqueue_sick(lListElem *cqueue, lList **answer_list, lList *hgroup_list, dstring *ds);
 

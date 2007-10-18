@@ -112,12 +112,6 @@ qinstance_message_add(lListElem *this_elem, u_long32 type, const char *message);
 bool
 qinstance_message_trash_all_of_type_X(lListElem *this_elem, u_long32 type);
 
-u_long32
-qinstance_list_get_max_qinstance_number(lList *this_list);
-
-bool
-qinstance_list_number_is_used(lList *this_list, u_long32 number);
-
 /* EB: TODO: queue -> qinstance */
 
 int queue_reference_list_validate(lList **alpp, lList *qr_list,

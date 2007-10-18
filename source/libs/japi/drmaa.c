@@ -564,6 +564,11 @@ static drmaa_attr_names_t *drmaa_fill_string_vector(const char *name[])
 
    for (i=0; name[i]; i++) {
       DPRINTF(("adding \"%s\"\n", name[i]));
+#if 0
+      DPRINTF(("adding \"%s\" %d %s\n", name[i], ST_name, lNm2Str(ST_name)));
+      lWriteDescrTo(ST_Type, stdout);
+#endif
+
       if (!lAddElemStr(&(vector->it.si.strings), ST_name, name[i], ST_Type)) {
          japi_delete_string_vector((drmaa_attr_values_t *)vector);
          DRETURN(NULL);

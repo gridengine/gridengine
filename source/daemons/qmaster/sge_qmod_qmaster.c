@@ -1145,15 +1145,16 @@ monitoring_t *monitor
             } 
          } else {
             /* TAG_SIGQUEUE */
-            packint(&pb, lGetUlong(qep, QU_queue_number));
+            packint(&pb, 0);
             packint(&pb, 0); 
             packstr(&pb, lGetString(qep, QU_full_name));
             packint(&pb, how); 
          }
 
-         if (mconf_get_simulate_execds() && jep) {
+         if (mconf_get_simulate_execds()) {
             i = CL_RETVAL_OK;
-            trigger_job_resend(sge_get_gmt(), NULL, lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number), 1);
+            if (jep)
+               trigger_job_resend(sge_get_gmt(), NULL, lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number), 1);
          } else {
             if (pb_filled(&pb)) {
                u_long32 dummy = 0;

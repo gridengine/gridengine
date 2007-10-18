@@ -215,7 +215,7 @@ LISTDEF(QU_Type)
 
 /* EB:*/
 
-   SGE_ULONG(QU_queue_number, CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_JGDI_RO)
+   SGE_ULONG(QU_queue_number, CULL_SPOOL | CULL_JGDI_RO) /* unused: please reuse me! */
    SGE_ULONG(QU_state, CULL_SPOOL | CULL_JGDI_HIDDEN)
    SGE_ULONG(QU_tagged4schedule, CULL_DEFAULT | CULL_JGDI_RO)
    SGE_ULONG(QU_cache_version, CULL_DEFAULT | CULL_JGDI_RO)

@@ -1042,31 +1042,6 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
       cqueue_mod_qinstances(ctx, tmpqep, NULL, tmpqep, true, &monitor);
    }
 
-   /* 
-    * initialize QU_queue_number if the value is 0 
-    *
-    * Normally this attribute gets a value > 0 during instance creation
-    * but due to CR 6286510 (IZ 1665) there might be instances which have
-    * the value 0. We correct this here.
-    */
-   {
-      lListElem *cqueue = NULL;
-
-      for_each(cqueue, *object_base[SGE_TYPE_CQUEUE].list) {
-         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-         lListElem *qinstance;
-   
-         for_each(qinstance, qinstance_list) {
-            u_long32 qinstance_number = lGetUlong(qinstance, QU_queue_number);
-
-            if (qinstance_number == 0) {
-               qinstance_number = sge_get_qinstance_number();
-               lSetUlong(qinstance, QU_queue_number, qinstance_number);
-            }
-         }
-      }
-   }
-
    /* Initialize
     *    - setup timers
     */

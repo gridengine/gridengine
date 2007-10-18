@@ -777,17 +777,17 @@ static void sge_c_job_ack(sge_gdi_ctx_class_t *ctx, const char *host, const char
                               CQ_name, sge_dstring_get_string(&cqueue_name));
 
          sge_dstring_free(&cqueue_name);
-         sge_dstring_free(&host_domain);
 
          if (cqueue != NULL) {
             lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
 
-            qinstance = lGetElemUlong(qinstance_list, 
-                                      QU_queue_number, ack_ulong);
+            qinstance = lGetElemHost(qinstance_list, QU_qhostname, 
+               sge_dstring_get_string(&host_domain));
          }
+         sge_dstring_free(&host_domain);
 
          if (qinstance == NULL) {
-            ERROR((SGE_EVENT, MSG_COM_ACK_QUEUE_U, sge_u32c(ack_ulong)));
+            ERROR((SGE_EVENT, MSG_COM_ACK_QUEUE_S, ack_str));
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             DRETURN_VOID;
          }

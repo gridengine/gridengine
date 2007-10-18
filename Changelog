@@ -1,6 +1,11 @@
-RD-2007-10-18-0: Bugfix:    timed event thread didn't set unknown host into
-                            unknown state
-                 Review:    JG
+AH-2007-10-18-0: Bugfix:    Queue creation time grows more than linear with 
+                            large clusters
+                            Prevent "missing slots attribute" logging upon
+                            queue instance creation
+                 Bugster:   6618565
+                 Issue:     2405
+                 Review:    RD
+                  
 
 AA-2007-10-18-0: Bugfix:    qmon segfault functional/override policy
                             qmon queue customize corrupted list string
@@ -8,7 +13,11 @@ AA-2007-10-18-0: Bugfix:    qmon segfault functional/override policy
                             long/short hostnames in build.xml
                  Bugtraq:   6618315, 6618323, 6618328
                  Review:    RD
-                          
+
+RD-2007-10-18-0: Bugfix:    timed event thread didn't set unknown host into
+                            unknown state
+                 Review:    JG
+
 LP-2007-10-17-1: Enhancem.: JGDIShell returns correct exitCodes in most cases
                  Review:    AA
 

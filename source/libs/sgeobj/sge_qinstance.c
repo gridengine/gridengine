@@ -247,11 +247,8 @@ qinstance_list_set_tag(lList *this_list, u_long32 tag_value)
 void
 qinstance_increase_qversion(lListElem *this_elem)
 {
-   u_long32 current_version;
-
    DENTER(TOP_LAYER, "qinstance_increase_qversion");
-   current_version = lGetUlong(this_elem, QU_version);
-   lSetUlong(this_elem, QU_version, current_version + 1);
+   lAddUlong(this_elem, QU_version, 1);
    DRETURN_VOID;
 }
 
@@ -699,10 +696,6 @@ int qinstance_slots_reserved(const lListElem *this_elem)
       for_each(utilized, lGetList(slots, RUE_utilized)) {
          ret = MAX(ret, lGetDouble(utilized, RDE_amount));
       }
-   } else {
-      /* may never happen */
-      CRITICAL((SGE_EVENT, MSG_QINSTANCE_MISSLOTS_S, 
-                lGetString(this_elem, QU_full_name)));
    }
 
    DRETURN(ret);
@@ -1019,79 +1012,6 @@ qinstance_list_validate(lList *this_list, lList **answer_list, lList *master_exe
    DRETURN(ret);
 }
 
-/****** sgeobj/qinstance/qinstance_list_get_max_qinstance_number() ************
-*  NAME
-*     qinstance_list_get_max_qinstance_number() -- find the maximum id 
-*
-*  SYNOPSIS
-*     u_long32
-*     qinstance_list_get_max_qinstance_number(lList *this_list)
-*
-*  FUNCTION
-*     Finds the maximum qinstance number used in the list of qinstances. 
-*
-*  INPUTS
-*     lList *this_list - QU_Type list
-*     lList **answer_list - AN_Type
-*
-*  RESULT
-*     void - maximum number or 0 if ther is no maxiumum
-*
-*  NOTES
-*     MT-NOTE: qinstance_list_get_max_qinstance_number() is MT safe 
-*******************************************************************************/
-u_long32
-qinstance_list_get_max_qinstance_number(lList *this_list)
-{
-   u_long32 ret = 0;
-   lListElem *qinstance;
-
-   DENTER(TOP_LAYER, "qinstance_list_get_max_qinstance_number");
-   for_each(qinstance, this_list) {
-      ret = MAX(ret, lGetUlong(qinstance, QU_queue_number));
-   }
-   DRETURN(ret);
-}
-
-/****** sgeobj/qinstance/qinstance_list_number_is_used() **********************
-*  NAME
-*     qinstance_list_number_is_used() -- checks if a number is already used 
-*
-*  SYNOPSIS
-*     bool
-*     qinstance_list_number_is_used(lList *this_list, u_long32 number)
-*
-*  FUNCTION
-*     Checks if "number" is already used as qinstance number for
-*     one of the give qinstances.
-*
-*  INPUTS
-*     lList *this_list - QU_Type list
-*     u_long32 number - qinstance number 
-*
-*  RESULT
-*     bool - result
-*        true  - number is used
-*        false - number is not used
-*
-*  NOTES
-*     MT-NOTE: qinstance_list_number_is_used() is MT safe 
-*******************************************************************************/
-bool
-qinstance_list_number_is_used(lList *this_list, u_long32 number)
-{
-   bool ret = false;
-   lListElem *qinstance;
-
-   DENTER(TOP_LAYER, "qinstance_list_number_is_used");
-   for_each(qinstance, this_list) {
-      if (lGetUlong(qinstance, QU_queue_number) == number) {
-         ret = true;
-         break;
-      }
-   } 
-   DRETURN(ret);
-}
 
 /****** lib/sgeobj/debit_consumable() ****************************************
 *  NAME

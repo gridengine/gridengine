@@ -88,17 +88,6 @@
 #include "msg_sgeobjlib.h"
 
 
-/* EB: ADOC: add commets */
-
-typedef struct {
-   u_long32 qinstance_number;
-   bool initialized;
-   pthread_mutex_t  qinstance_number_mutex;
-} qinstance_number_t;
-
-qinstance_number_t qinstance_number_control =
-                                       {0, false, PTHREAD_MUTEX_INITIALIZER};
-
 static bool
 cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
                     lListElem *reduced_elem, int sub_command, 
@@ -126,44 +115,6 @@ cqueue_update_categories(const lListElem *new_cq, const lListElem *old_cq);
 static void
 qinstance_check_unknown_state(lListElem *this_elem, lList *master_exechost_list);
 
-u_long32
-sge_get_qinstance_number(void)
-{
-   lList *master_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
-   u_long32 ret;
-
-   DENTER(TOP_LAYER, "sge_get_qinstance_number");
-   sge_mutex_lock("qinstance_number_mutex", "sge_get_qinstance_number",
-                  __LINE__, &qinstance_number_control.qinstance_number_mutex);
-
-   /*
-    * Initialize qinstance_number according to existing numbers
-    */
-   if (qinstance_number_control.initialized == false) {
-      qinstance_number_control.qinstance_number = 
-                             cqueue_list_get_max_qinstance_number(master_list);
-      qinstance_number_control.initialized = true;
-   }
-  
-   /*
-    * get next unused number
-    */ 
-   do {
-      qinstance_number_control.qinstance_number++;
-      if (qinstance_number_control.qinstance_number > MAX_SEQNUM) {
-         qinstance_number_control.qinstance_number = 1;
-      }
-   } while(cqueue_list_qinstance_number_is_used(
-                     master_list, qinstance_number_control.qinstance_number));
-
-   ret = qinstance_number_control.qinstance_number;
-   sge_mutex_unlock("qinstance_number_mutex", "sge_get_qinstance_number",
-                    __LINE__, &qinstance_number_control.qinstance_number_mutex);
-   
-   DEXIT;
-   return ret;
-}  
-
 static lListElem * 
 qinstance_create(sge_gdi_ctx_class_t *ctx,
                  const lListElem *cqueue, lList **answer_list,
@@ -186,8 +137,6 @@ qinstance_create(sge_gdi_ctx_class_t *ctx,
    sge_dstring_sprintf(&buffer, "%s@%s", cqueue_name, hostname);
    lSetString(ret, QU_full_name, sge_dstring_get_string(&buffer));
    sge_dstring_free(&buffer);
-   /* each qinstance has a uniq numer */
-   lSetUlong(ret, QU_queue_number, sge_get_qinstance_number());
 
    /*
     * Initialize configuration attributes from CQ

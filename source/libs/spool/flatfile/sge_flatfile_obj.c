@@ -1112,7 +1112,7 @@ spooling_field *sge_build_QU_field_list(bool to_stdout, bool to_file)
       create_spooling_field (&fields[count++], QU_version, 21, "version", NULL,
                              NULL, NULL, NULL);
       create_spooling_field (&fields[count++], QU_queue_number, 21,
-                             "queue_number", NULL, NULL, NULL, NULL);
+                             "queue_number", NULL, NULL, NULL, NULL); /* unused */
       /* SG: not supported */
 #if 0      
       create_spooling_field (&fields[count++], QU_error_messages, 21,

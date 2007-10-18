@@ -437,10 +437,6 @@ void schedd_mes_add(u_long32 job_number, u_long32 message_number, ...)
    vsprintf(msg, fmt, args);
 #endif
 
-#if 1
-   DPRINTF(("schedd_job_info: %d %s\n", schedd_job_info, msg));
-#endif
-
    if (job_number && (schedd_job_info != SCHEDD_JOB_INFO_FALSE)) {
       if (mes_schedd_info == true) {
          if (schedd_job_info == SCHEDD_JOB_INFO_JOB_LIST) {

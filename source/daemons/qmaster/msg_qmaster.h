@@ -171,7 +171,7 @@
 
 #define MSG_COM_ACK_U                _MESSAGE(33109, _("signalling acknowledged for unknown job " sge_U32CFormat))
 /* #define MSG_COM_ACK_UU               _message(33110, _("signalling acknowledged for unknown task " sge_U32CFormat  " of job " sge_U32CFormat)) __TS Removed automatically from testsuite!! TS__*/
-#define MSG_COM_ACK_QUEUE_U          _MESSAGE(33112, _("ack event for unknown queue " sge_U32CFormat))
+#define MSG_COM_ACK_QUEUE_S          _MESSAGE(33112, _("ack event for unknown queue "SFQ))
 #define MSG_COM_ACK_UNKNOWN          _MESSAGE(33113, _("unknown ack event"))
 
 /*

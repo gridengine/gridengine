@@ -161,7 +161,7 @@ int parsing_type
       }
    #endif   
 
-      /* --------- QU_queue_number */
+      /* --------- QU_queue_number - unused */
       if (!set_conf_ulong(alpp, clpp, fields, "queue_number", ep, QU_queue_number)) {
          DEXIT;
          return -1;
@@ -431,7 +431,7 @@ write_qinstance(int spool, int how, const lListElem *ep)
       FPRINTF((fp, "version            %d\n",
                (int)lGetUlong(ep, QU_version)));
       FPRINTF((fp, "queue_number       %d\n",
-               (int)lGetUlong(ep, QU_queue_number)));
+               (int)lGetUlong(ep, QU_queue_number))); /* unused */
       /* SG: not supported */
 #if 0      
       {

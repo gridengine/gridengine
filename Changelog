@@ -1,3 +1,7 @@
+AH-2007-10-19-0: Bugfix:    Bypass expensive but unneeded orphan queue checking
+                            in qmaster upon qmod -d|-e|-s|-us
+                 Review:    RD
+
 LP-2007-10-19-1: Enhancem.: JGDIShell now uses stderr to display errors
                  Enhancem.: JGDIException now has exitCode
                  Bugfix.:   JGDI qconf -ae now has the same behaviour as client

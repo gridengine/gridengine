@@ -1,3 +1,8 @@
+LP-2007-10-19-1: Enhancem.: JGDIShell now uses stderr to display errors
+                 Enhancem.: JGDIException now has exitCode
+                 Bugfix.:   JGDI qconf -ae now has the same behaviour as client
+                 Review:    AA
+
 RD-2007-10-17-1: CVS        Created V61ARsnapshot3_TAG
 ------------------------------------------------------
 

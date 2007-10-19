@@ -67,16 +67,18 @@ public class QHostCommand extends AbstractCommand {
                 if (options.showAsXML()) {
                     /*TODO LP: -xml is not implemented for object other that GEObjects
                     we could use a JAXB and some generator to get the schema for other objects*/
-                    pw.println("XML OUTPUT NOT IMPLEMENTED");
+                    out.println("XML OUTPUT NOT IMPLEMENTED");
                 } else {
-                    QueueInstanceSummaryPrinter.print(pw, res, options);
+                    QueueInstanceSummaryPrinter.print(out, res, options);
                 }
             }
         } catch (JGDIException ex) {
-            pw.println(ex.getMessage());
+            err.println(ex.getMessage());
+            setExitCode(ex.getExitCode());
         }
     }
 
+    //TODO LP: Add correct exitCodes
     private QHostOptions parse(List<String> argList) throws Exception {
         ResourceAttributeFilter resourceAttributeFilter = null;
         ResourceFilter resourceFilter = null;
@@ -90,11 +92,11 @@ public class QHostCommand extends AbstractCommand {
             String arg = argList.remove(0);
 
             if (arg.equals("-help")) {
-                pw.println(getUsage());
+                out.println(getUsage());
                 return null;
             } else if (arg.equals("-h")) {
                 if (argList.isEmpty()) {
-                    pw.println("error: ERROR! -h option must have argument");
+                    err.println("error: ERROR! -h option must have argument");
                     return null;
                 }
                 arg = argList.remove(0);
@@ -119,7 +121,7 @@ public class QHostCommand extends AbstractCommand {
                 showJobs = true;
             } else if (arg.equals("-l")) {
                 if (argList.isEmpty()) {
-                    pw.println("error: ERROR! -l option must have argument");
+                    err.println("error: ERROR! -l option must have argument");
                     return null;
                 }
                 resourceFilter = new ResourceFilter();
@@ -130,14 +132,14 @@ public class QHostCommand extends AbstractCommand {
                     //E.g.: qhost -l swap_total -> qmaster - no value to swap_total
                     resourceFilter = ResourceFilter.parse(arg);
                 } catch (IllegalArgumentException ex) {
-                    pw.println("error: " + ex.getMessage());
+                    err.println("error: " + ex.getMessage());
                     return null;
                 }
             } else if (arg.equals("-q")) {
                 showQueues = true;
             } else if (arg.equals("-u")) {
                 if (argList.isEmpty()) {
-                    pw.println("error: ERROR! -u option must have argument");
+                    err.println("error: ERROR! -u option must have argument");
                     return null;
                 }
                 arg = argList.remove(0);
@@ -146,8 +148,8 @@ public class QHostCommand extends AbstractCommand {
             } else if (arg.equals("-xml")) {
                 showAsXML = true;
             } else {
-                pw.print(getUsage());
-                pw.println("error: ERROR! invalid option argument \"" + arg + "\"");
+                err.print(getUsage());
+                err.println("error: ERROR! invalid option argument \"" + arg + "\"");
                 return null;
             }
         }

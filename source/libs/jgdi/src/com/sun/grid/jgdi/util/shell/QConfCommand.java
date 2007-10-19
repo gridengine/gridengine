@@ -48,7 +48,6 @@ import com.sun.grid.jgdi.util.OutputTable;
 import com.sun.grid.jgdi.util.shell.editor.EditorParser;
 import com.sun.grid.jgdi.util.shell.editor.GEObjectEditor;
 import java.beans.IntrospectionException;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.LinkedList;
@@ -80,28 +79,7 @@ public class QConfCommand extends QConfCommandGenerated {
     //-help
     @OptionAnnotation(value = "-help", min = 0)
     public void printUsage(final OptionInfo oi) throws JGDIException {
-        pw.println(getUsage());
-    }
-
-    String getTextFromFile(final List<String> args) {
-        if (args.size() <= 0) {
-            pw.println("no file argument given");
-            return null;
-        }
-        if (args.size() != 1) {
-            pw.println("error: invalid option argument \"" + args.get(1) + "\"");
-            pw.println("Usage: qconf -help");
-            return null;
-        }
-        String fileName = args.get(0);
-        String inputText = null;
-        try {
-            inputText = readFile(fileName);
-        } catch (IOException ex) {
-            pw.println("error: error opening file \"" + fileName + "\" for reading: " + ex.getMessage());
-            pw.println("error reading in file");
-        }
-        return inputText;
+        out.println(getUsage());
     }
 
     //SUBMITHOST
@@ -181,11 +159,8 @@ public class QConfCommand extends QConfCommandGenerated {
 
     @OptionAnnotation(value = "-Astree")
     public void addShareTreeFromFile(final OptionInfo oi) throws JGDIException {
-        String inputText = getTextFromFile(oi.getArgs());
-        if (inputText == null) {
-            return;
-        }
-        pw.println("NOT IMPLEMENTED"); //TODO LP: Implement
+        String inputText = readFile(oi);
+        out.println("NOT IMPLEMENTED"); //TODO LP: Implement
     }
 
     // -mstree same as -astree
@@ -203,7 +178,7 @@ public class QConfCommand extends QConfCommandGenerated {
     @OptionAnnotation(value = "-sstree", min = 0)
     public void showShareTree(final OptionInfo oi) throws JGDIException {
         ShareTree stree = jgdi.getShareTree("Root");
-        pw.println(showShareTree(stree, "Root", true));
+        out.println(showShareTree(stree, "Root", true));
     }
 
     @OptionAnnotation(value = "-dstree", min = 0)
@@ -349,7 +324,7 @@ public class QConfCommand extends QConfCommandGenerated {
     public void showDetachedSettings(final OptionInfo oi) throws JGDIException {
         String sds;
         sds = jgdi.showDetachedSettingsAll();
-        pw.println(sds);
+        out.println(sds);
         oi.optionDone();
     }
 
@@ -366,13 +341,13 @@ public class QConfCommand extends QConfCommandGenerated {
             } catch (IntrospectionException ex) {
                 ex.printStackTrace();
             }
-            table.printHeader(pw);
-            pw.write("--------------------------------------------------\n");
+            table.printHeader(out);
+            out.write("--------------------------------------------------\n");
             for (EventClient evc : evcl) {
-                table.printRow(pw, (Object) evc);
+                table.printRow(out, (Object) evc);
             }
         } else {
-            pw.println(getErrorMessage("NoObjectFound", oi.getOd().getOption(), "no event clients registered"));
+            err.println(getErrorMessage("NoObjectFound", oi.getOd().getOption()));
             setExitCode(getCustomExitCode("NoObjectFound", oi.getOd().getOption()));
         }
     }
@@ -387,8 +362,8 @@ public class QConfCommand extends QConfCommandGenerated {
         String arch;
         int cpu;
         int totalCpu = 0;
-        pw.println("HOST                      PROCESSOR        ARCH");
-        pw.println("===============================================");
+        out.println("HOST                      PROCESSOR        ARCH");
+        out.println("===============================================");
         //TODO LP: How about we sort the hosts by name first?
         for (ExecHost host : hosts) {
             name = host.getName();
@@ -402,16 +377,16 @@ public class QConfCommand extends QConfCommandGenerated {
             } else {
                 arch = "";
             }
-            pw.printf("%-25.25s %9d %11s%n", name, cpu, arch);
+            out.printf("%-25.25s %9d %11s%n", name, cpu, arch);
         }
-        pw.println("===============================================");
-        pw.printf("%-25.25s %9d%n", "SUM", totalCpu);
+        out.println("===============================================");
+        out.printf("%-25.25s %9d%n", "SUM", totalCpu);
     }
 
     //-sss
     @OptionAnnotation(value = "-sss", min = 0)
     public void showSchedulerState(final OptionInfo oi) throws JGDIException {
-        pw.println(jgdi.getSchedulerHost());
+        out.println(jgdi.getSchedulerHost());
     }
 
     //-ke
@@ -457,13 +432,14 @@ public class QConfCommand extends QConfCommandGenerated {
                 obj = jgdi.getHostgroupWithAnswer(hgroup, answer);
                 printAnswers(answer);
             } catch (JGDIException ex) {
-                pw.println(ex.getMessage()); //TODO LP: Check if the message is a correct one, what about exitCode?
+                err.println(ex.getMessage()); //TODO LP: Check if the message is a correct one, what about exitCode?
+                setExitCode(ex.getExitCode());
             }
             //Print the tree
             if (obj != null) {
                 showHostgroupTree(obj, "", "   ");
             } else {
-                pw.println(getErrorMessage("InvalidObjectArgument", oi.getOd().getOption(), "", "No such object found"));
+                err.println(getErrorMessage("InvalidObjectArgument", oi.getOd().getOption()));
                 setExitCode(getCustomExitCode("InvalidObjectArgument", oi.getOd().getOption()));
             }
         }
@@ -485,19 +461,19 @@ public class QConfCommand extends QConfCommandGenerated {
                 obj = jgdi.getHostgroupWithAnswer(hgroup, answer);
                 printAnswers(answer);
             } catch (JGDIException ex) {
-                pw.println(ex.getMessage()); //TODO LP: Check if the message is a correct one
+                err.println(ex.getMessage()); //TODO LP: Check if the message is a correct one
             }
             //Print the tree
             if (obj != null) {
                 List<String> hnames = new LinkedList<String>();
                 printHostgroupResolved(hnames, obj);
-                String out = "";
+                String res = "";
                 for (String hname : hnames) {
-                    out += hname + " ";
+                    res += hname + " ";
                 }
-                pw.println(out.substring(0, out.length() - 1));
+                out.println(res.substring(0, res.length() - 1));
             } else {
-                pw.println(getErrorMessage("InvalidObjectArgument", oi.getOd().getOption(), "", "No object found"));
+                err.println(getErrorMessage("InvalidObjectArgument", oi.getOd().getOption()));
                 setExitCode(getCustomExitCode("InvalidObjectArgument", oi.getOd().getOption()));
             }
         }
@@ -505,7 +481,7 @@ public class QConfCommand extends QConfCommandGenerated {
 
     //TODO LP: Remove recursion in shgrp_tree
     private void showHostgroupTree(Hostgroup obj, String prefix, final String tab) {
-        pw.println(prefix + obj.getName());
+        out.println(prefix + obj.getName());
         prefix += tab;
 
         for (String hgroup : (List<String>) obj.getHostList()) {
@@ -514,11 +490,12 @@ public class QConfCommand extends QConfCommandGenerated {
                 try {
                     obj = jgdi.getHostgroup(hgroup);
                 } catch (JGDIException ex) {
-                    pw.println(ex.getMessage());
+                    err.println(ex.getMessage());
+                    setExitCode(ex.getExitCode());
                 }
                 showHostgroupTree(obj, prefix, tab);
             } else {
-                pw.println(prefix + hgroup);
+                out.println(prefix + hgroup);
             }
         }
     }
@@ -536,7 +513,8 @@ public class QConfCommand extends QConfCommandGenerated {
                         obj = jgdi.getHostgroup(hgroup);
                         queue.add(obj);
                     } catch (JGDIException ex) {
-                        pw.println(ex.getMessage());
+                        err.println(ex.getMessage());
+                        setExitCode(ex.getExitCode());
                     }
                 } else {
                     if (!result.contains(hgroup)) {
@@ -559,18 +537,14 @@ public class QConfCommand extends QConfCommandGenerated {
     //-Mc
     @OptionAnnotation(value = "-Mc")
     public void modifyComplexEntryFromFile(final OptionInfo oi) throws JGDIException {
-        final List<String> args = oi.getArgs();
-        String inputText = getTextFromFile(args);
-        if (inputText == null) {
-            return;
-        }
+        String inputText = readFile(oi);
         modifyComplexes(inputText);
     }
 
     //-sc
     @OptionAnnotation(value = "-sc", min = 0)
     public void showComplexEntry(final OptionInfo oi) throws JGDIException {
-        pw.print(showComplexes());
+        out.print(showComplexes());
     }
 
     /**
@@ -644,7 +618,8 @@ public class QConfCommand extends QConfCommandGenerated {
             try {
                 jgdi.addComplexEntry(ce);
             } catch (JGDIException ex) {
-                pw.println(ex.getMessage());
+                err.println(ex.getMessage());
+                setExitCode(ex.getExitCode());
             }
         }
         //Modify existing
@@ -652,7 +627,8 @@ public class QConfCommand extends QConfCommandGenerated {
             try {
                 jgdi.updateComplexEntry(ce);
             } catch (JGDIException ex) {
-                pw.println(ex.getMessage());
+                err.println(ex.getMessage());
+                setExitCode(ex.getExitCode());
             }
         }
         //Remove not defined anymore
@@ -660,7 +636,8 @@ public class QConfCommand extends QConfCommandGenerated {
             try {
                 jgdi.deleteComplexEntry(ce);
             } catch (JGDIException ex) {
-                pw.println(ex.getMessage());
+                err.println(ex.getMessage());
+                setExitCode(ex.getExitCode());
             }
         }
     }
@@ -841,7 +818,7 @@ public class QConfCommand extends QConfCommandGenerated {
         }
         //Show correct error message if list is empty
         if (rqsList.size() == 0) {
-            pw.println(getErrorMessage("NoObjectFound", oi.getOd().getOption(), "", "No object found"));
+            err.println(getErrorMessage("NoObjectFound", oi.getOd().getOption()));
             setExitCode(getCustomExitCode("NoObjectFound", oi.getOd().getOption()));
             return;
         }
@@ -849,7 +826,7 @@ public class QConfCommand extends QConfCommandGenerated {
         for (ResourceQuotaSet rqs : rqsList) {
             text += GEObjectEditor.getConfigurablePropertiesAsText(rqs);
         }
-        pw.print(text);
+        out.print(text);
     }
 
     //USERSET
@@ -873,8 +850,7 @@ public class QConfCommand extends QConfCommandGenerated {
         String setName = oi.showLastArg();
         UserSet obj = jgdi.getUserSet(setName);
         if (obj == null) {
-            String msg = getErrorMessage("InvalidObjectArgument", oi.getOd().getOption(), setName, null);
-            pw.println(msg);
+            err.println(getErrorMessage("InvalidObjectArgument", oi.getOd().getOption(), setName));
             setExitCode(getCustomExitCode("InvalidObjectArgument", oi.getOd().getOption()));
             return;
         }
@@ -890,8 +866,7 @@ public class QConfCommand extends QConfCommandGenerated {
         final String setName = oi.getFirstArg();
         UserSet obj = jgdi.getUserSet(setName);
         if (obj == null) {
-            String msg = getErrorMessage("InvalidObjectArgument", oi.getOd().getOption(), setName, null);
-            pw.println(msg);
+            err.println(getErrorMessage("InvalidObjectArgument", oi.getOd().getOption(), setName));
             setExitCode(getCustomExitCode("InvalidObjectArgument", oi.getOd().getOption()));
             return;
         }
@@ -899,6 +874,35 @@ public class QConfCommand extends QConfCommandGenerated {
         jgdi.updateUserSetWithAnswer(obj, answer);
         printAnswers(answer);
     }
+    
+    //EXECHOST
+    @OptionAnnotation(value = "-ae", min = 0, extra = 1)
+    public void addExecHost(final OptionInfo oi) throws JGDIException {
+        if (isHostReachable(oi)) {
+            return;
+        }
+        String arg = oi.getFirstArg();
+        List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
+        //TODO LP: Remove this ugly(inconsistent) behaviour in client and JGDI (then can be generated as well)
+        ExecHost obj = jgdi.getExecHostWithAnswer(arg, answer);
+        //TODO LP: Qmaster check candidate
+        printAnswers(answer);
+        answer.clear();
+        if (obj == null) {
+            err.println(getErrorMessage("InvalidObjectArgument", oi.getOd().getOption() , arg));
+            setExitCode(getCustomExitCode("InvalidObjectArgument", oi.getOd().getOption()));
+            return;
+        }
+        String userTypedText = runEditor(GEObjectEditor.getConfigurablePropertiesAsText(obj));
+        if (userTypedText != null) {
+            GEObjectEditor.updateObjectWithText(jgdi, obj, userTypedText);
+            jgdi.addExecHostWithAnswer(obj, answer);
+            printAnswers(answer);
+        }
+        //oi.optionDone();
+    }
+    
+    
     //OVERRIDES - special handling to have same behaviour as in clients
     //TODO: Fix the clients remove this special handling
 
@@ -925,6 +929,17 @@ public class QConfCommand extends QConfCommandGenerated {
         //otherwise handle adding of the object
         super.addCheckpoint(oi);
     }
+    
+    //Configuration
+    @OptionAnnotation(value = "-aconf", min = 0, extra = 1)
+    @Override
+    public void addConfiguration(final OptionInfo oi) throws JGDIException {
+        if (isHostReachable(oi)) {
+            return;
+        }
+        //otherwise handle adding of the object
+        super.addConfiguration(oi);
+    }
 
     //PARALLEL ENVIRONMENT
     @OptionAnnotation(value = "-sp", min = 1, extra = 0)
@@ -950,16 +965,7 @@ public class QConfCommand extends QConfCommandGenerated {
         super.addHostgroup(oi);
     }
     
-    //EXECHOST 
-    @OptionAnnotation(value = "-ae", min = 0, extra = 1)
-    @Override
-    public void addExecHost(final OptionInfo oi) throws JGDIException {
-        if (!isHostReachable(oi)) {
-            return;
-        }
-        super.addExecHost(oi);
-    }
-    
+    //EXECHOST     
     @OptionAnnotation(value = "-me", min = 1, extra = 0)
     @Override
     public void modifyExecHost(final OptionInfo oi) throws JGDIException {
@@ -978,7 +984,7 @@ public class QConfCommand extends QConfCommandGenerated {
     private boolean hasNoArgument(OptionInfo oi) {
         String option = oi.getOd().getOption();
         if (oi.getArgs().size() == 0) {
-            pw.println(getErrorMessage("NoArgument", option, "No argument provided to option " + option));
+            err.println(getErrorMessage("NoArgument", option));
             setExitCode(getCustomExitCode("NoArgument", option));
             return true;
         }
@@ -995,8 +1001,8 @@ public class QConfCommand extends QConfCommandGenerated {
         if (args != null && args.size() > 0) {
             String hgrp = args.get(0);
             if (!hgrp.startsWith("@")) {
-                String msg = getErrorMessage("InvalidObjectArgument", od.getOption(), hgrp, "Hostgroup name \"" + hgrp + "\" is not valid");
-                od.getPw().println(msg);
+                String msg = getErrorMessage("InvalidObjectArgument", od.getOption(), hgrp);
+                err.println(msg);
                 setExitCode(getCustomExitCode("InvalidObjectArgument", od.getOption()));
                 return false;
             }
@@ -1018,8 +1024,8 @@ public class QConfCommand extends QConfCommandGenerated {
                     return true;
                 }
             } catch (UnknownHostException ex) {
-                String msg = getErrorMessage("UnreachableHost", od.getOption(), host, "Host \"" + host + "\" is not reachable");
-                od.getPw().println(msg);
+                String msg = getErrorMessage("UnreachableHost", od.getOption(), host);
+                err.println(msg);
                 setExitCode(getCustomExitCode("UnreachableHost", od.getOption()));
                 return false;
             }

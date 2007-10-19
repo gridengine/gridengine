@@ -87,7 +87,7 @@ public class OptionInfo {
             } catch (Exception ex) {
                 Throwable cause = ex.getCause();
                 if (cause != null && cause instanceof JGDIException) {
-                    PrintWriter pw = od.getPw();
+                    PrintWriter pw = od.getErr();
                     String[] elems = ((JGDIException)cause).getMessage().split("\n");
                     String msg = "";
                     for (String elem : elems) {
@@ -97,9 +97,7 @@ public class OptionInfo {
                     }
                     pw.print(msg);
                     pw.flush();
-                    //TODO LP: Decide/Check what should be set as exitCode here? Clearly this is an error.
-                    //Note LP: 'qconf -de unresolvable_host' should return here 1. Extend the JGDIException to also include desired exitCode?
-                    command.setExitCode(100);
+                    command.setExitCode(((JGDIException) cause).getExitCode());
                     continue;
                 }
                 // Rethrow the generated Exception, end the option execution if not JGDIException

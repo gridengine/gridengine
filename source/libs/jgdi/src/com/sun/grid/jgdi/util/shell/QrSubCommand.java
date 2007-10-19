@@ -113,7 +113,7 @@ public class QrSubCommand extends AnnotatedCommand {
     //[-help]                                  print this help
     @OptionAnnotation(value = "-help", min = 0)
     public void printUsage(final OptionInfo oi) throws JGDIException {
-        pw.println(getUsage());
+        out.println(getUsage());
         // To avoid the continue of the command
         throw new AbortException();
     }

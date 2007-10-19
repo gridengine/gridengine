@@ -43,7 +43,8 @@ import java.util.logging.Logger;
 public abstract class AbstractCommand implements HistoryCommand {
     Shell shell=null;
     JGDI jgdi = null;
-    PrintWriter pw=null;
+    PrintWriter out=null;
+    PrintWriter err=null;
     private int exitCode = 0;
     
     public Logger getLogger() {
@@ -57,7 +58,8 @@ public abstract class AbstractCommand implements HistoryCommand {
     public void init(Shell shell) throws Exception {
         this.shell=shell;
         this.jgdi = shell.getConnection();
-        this.pw = shell.getPrintWriter();
+        this.out = shell.getOut();
+        this.err = shell.getErr();
     }
     
     public String[] parseWCQueueList(String arg) {
@@ -132,7 +134,7 @@ public abstract class AbstractCommand implements HistoryCommand {
                 exitCode = status;
             }
             text = answer.getText().trim();
-            if (text.length()>0 && !text.equals("ok")) pw.println(answer.getText());
+            if (text.length()>0 && !text.equals("ok")) out.println(answer.getText());
         }
         //Get the last
         answer = answers.get(i);
@@ -142,7 +144,7 @@ public abstract class AbstractCommand implements HistoryCommand {
         if (status == 0 || status == 1 || exitCode != 0) {
             throw new IllegalArgumentException(text);
         }
-        if (text.length()>0 && !text.equals("ok")) pw.println(text);
+        if (text.length()>0 && !text.equals("ok")) out.println(text);
     }
     
     /**

@@ -31,9 +31,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 %>
-   String getKeyAttributeValueFromString(final PrintWriter pw, final String type, final String fileName, final String inputText) {
+   String getKeyAttributeValueFromString(final PrintWriter err, final String type, final String fileName, final String inputText) {
       String keyAttrValue = null;
-      //Get the key attribute value form the file
+      //Get the key attribute value from the file
       String keyAttr = EditorUtil.unifyAttrWithClientNames(type, "name");
       StringReader sr = new StringReader(inputText);
       LineNumberReader lnr = new LineNumberReader(sr);
@@ -48,41 +48,53 @@
          }
          //Exit if the key attribute is missing
          if (keyAttrValue == null) {
-            pw.println("error: required attribute \"" + keyAttr + "\" is missing");
-            pw.println(type + " file \"" + fileName + "\" is not correct");
-            pw.flush();
+            err.println("error: required attribute \"" + keyAttr + "\" is missing");
+            err.println(type + " file \"" + fileName + "\" is not correct");
+            err.flush();
+            //TODO LP: Set correct exit code
          }
       } catch (IOException ex) {
-         pw.println(ex.getMessage());
-         pw.flush();
+         err.println(ex.getMessage());
+         err.flush();
+         setExitCode(1);
       }
       return keyAttrValue;
    }
 
-   String readFile(final String fileName) throws JGDIException {
-      File f = new File(fileName);
-      long fileSize = f.length();
-      FileReader fr;
-      StringBuilder sb = new StringBuilder();
-      try {
-         fr = new FileReader(f);
-         char[] buff = new char[2048];
-         int r;
-         while (fr.ready()) {
-            r = fr.read(buff);
-            if (r > 0) {
-               sb.append(buff, 0, r);
+    String readFile(final OptionInfo oi) throws JGDIException {
+        String msg = "Error messages file not found!";
+        int exitCode = 0;
+        String option = oi.getOd().getOption();
+        if (oi.getArgs().size() == 0) {
+            err.println(getErrorMessage("NoArgument", option));
+            setExitCode(getCustomExitCode("NoArgument", option));
+            throw new JGDIException(msg, exitCode);
+        }
+        File f = new File(oi.getFirstArg());
+        long fileSize = f.length();
+        FileReader fr;
+        StringBuilder sb = new StringBuilder();
+        try {
+            fr = new FileReader(f);
+            char[] buff = new char[2048];
+            int r;
+            while (fr.ready()) {
+                r = fr.read(buff);
+                if (r > 0) {
+                    sb.append(buff, 0, r);
+                }
             }
-         }
-      } catch (IOException ex) {
-         throw new JGDIException(ex.getMessage());
-      }
-      //Check we have whole content
-      if (sb.length() != fileSize) {
-         throw new JGDIException("Unable to read whole file content. Filesize is " + fileSize + " got only " + sb.length());
-      }
-      return sb.toString();
-   }
+        } catch (IOException ex) {
+            msg = getErrorMessage("InvalidFile", option);
+            exitCode = getCustomExitCode("InvalidFile", option);
+            throw new JGDIException(msg, exitCode);
+        }
+        //Check we have whole content
+        if (sb.length() != fileSize) {
+            throw new JGDIException("Unable to read whole file content. Filesize is " + fileSize + " got only " + sb.length());
+        }
+        return sb.toString();
+    }
 
    private String runJavaEditor(final String text) {
       TextEditor ted = new TextEditor(text);
@@ -105,7 +117,6 @@
       } else {
          editor = System.getenv("EDITOR");
       }
-      //System.out.println("Version = "+version+" prop=\""+System.getProperty("EDITOR")+"\" editor=\""+editor+"\"");
       if (editor == null) {
          return runJavaEditor(text);
       }
@@ -116,18 +127,7 @@
          fw.write(text);
          fw.flush();
          fw.close();
-/*
-         String[] cmds;
-         //TODO LP Think about this. Vi has to be execed in tty. Graphic editors not.
-         if (editor.equalsIgnoreCase("vi") || editor.equalsIgnoreCase("vim")) {
-            cmds = new String[]{"xterm", "-e", editor, f.getAbsolutePath()};
-         } else {
-            cmds = new String[]{editor, f.getAbsolutePath()};
-         }
 
-         Process p = Runtime.getRuntime().exec(cmds);
-         int exitCode = p.waitFor();
-*/
          int exitCode = EditorUtil.sgeEdit(f);
          if (exitCode != 0) {
             return null;

@@ -42,7 +42,6 @@ import com.sun.grid.jgdi.util.shell.AnnotatedCommand;
 import com.sun.grid.jgdi.util.shell.Command;
 import com.sun.grid.jgdi.util.shell.CommandAnnotation;
 import com.sun.grid.jgdi.util.shell.HistoryCommand;
-import com.sun.grid.jgdi.util.shell.OptionSpecificErrorException;
 import com.sun.grid.jgdi.util.shell.Shell;
 import java.io.BufferedReader;
 import java.io.EOFException;
@@ -99,13 +98,15 @@ public class JGDIShell implements Runnable, Shell {
     private TreeSet<String> cmdSet = null;
     private ReadlineHandler readlineHandler;
     private static final ResourceBundle usageResources = ResourceBundle.getBundle("com.sun.grid.jgdi.util.shell.UsageResources");
-    private final PrintWriter pw;
+    private final PrintWriter out;
+    private final PrintWriter err;
 
     private int lastExitCode = 0;
     
     //TODO LP: We should consider having single PrintWriter for all commands
     public JGDIShell() {
-        pw = new PrintWriter(System.out);
+        out = new PrintWriter(System.out);
+        err = new PrintWriter(System.err);
         cmdMap.put("connect", new ConnectCommand());
         cmdMap.put("exit", new ExitCommand());
         cmdMap.put("help", new HelpCommand());
@@ -120,8 +121,7 @@ public class JGDIShell implements Runnable, Shell {
                 addAnnotatedCommand(cls);
             }
         } catch (Exception ex) {
-            // pw.println(ex.getMessage());
-            pw.println("Not connected" + ex.getMessage());
+            err.println("Not connected" + ex.getMessage());
         }
         
         cmdSet = new TreeSet<String>(cmdMap.keySet());
@@ -141,7 +141,7 @@ public class JGDIShell implements Runnable, Shell {
         if (Command.class.isAssignableFrom(cls)) {
             cmdMap.put(ca.value(), (Command) cls.newInstance());
             if (AnnotatedCommand.class.isAssignableFrom(cls)) {
-                AnnotatedCommand.initOptionDescriptorMap(cls, pw);
+                AnnotatedCommand.initOptionDescriptorMap(cls, out, err);
             }
         } else {
             throw new IllegalStateException("Can not assign " + cls.getName() + " from Command.class");
@@ -179,13 +179,24 @@ public class JGDIShell implements Runnable, Shell {
     
     /**
      * Getter method
-     * @return a writer
+     * @return a standard output print writer
      */
-    public PrintWriter getPrintWriter() {
-        if (pw == null) {
-            throw new IllegalStateException("pw is not initialized");
+    public PrintWriter getOut() {
+        if (out == null) {
+            throw new IllegalStateException("out pw is not initialized");
         }
-        return pw;
+        return out;
+    }
+    
+    /**
+     * Getter method
+     * @return a standard error print writer
+     */
+    public PrintWriter getErr() {
+        if (err == null) {
+            throw new IllegalStateException("err pw is not initialized");
+        }
+        return err;
     }
     
     public void run() {
@@ -254,31 +265,32 @@ public class JGDIShell implements Runnable, Shell {
             }
         } catch (AbortException expected) {
             exitCode = 0;
-        } catch (OptionSpecificErrorException ex) {
-            pw.println(ex.getMessage());
+        } catch (JGDIException ex) {
+            err.println(ex.getMessage());
             logger.info("Command failed: " + ex.getMessage());
             exitCode = ex.getExitCode();
         } catch (IllegalArgumentException ex) {
-            pw.println(ex.getMessage());
+            err.println(ex.getMessage());
             logger.info("Command failed: " + ex.getMessage());
             exitCode = 1; //There was an error during the execution
         } catch (Exception ex) {
-            ex.printStackTrace(pw);
+            ex.printStackTrace(err);
             logger.log(Level.SEVERE, "Command failed: " + ex.getMessage(), ex);
             exitCode = 1000; //There was an error during the execution
         } finally {
-            pw.flush();
+            out.flush();
+            err.flush();
         }
         return exitCode;
     }
     
     public int runShellCommand(String line) throws InterruptedException, IOException, InterruptedException {
-        pw.println("Executing /bin/sh -c " + line);
-        pw.flush();
+        out.println("Executing /bin/sh -c " + line);
+        out.flush();
         String[] cmds = {"/bin/sh", "-c", line};
         Process p = Runtime.getRuntime().exec(cmds);
-        GetResponse to = new GetResponse(p.getInputStream());
-        GetResponse te = new GetResponse(p.getErrorStream());
+        GetResponse to = new GetResponse(p.getInputStream(), out);
+        GetResponse te = new GetResponse(p.getErrorStream(), err);
         to.start();
         te.start();
         p.waitFor();
@@ -450,7 +462,7 @@ public class JGDIShell implements Runnable, Shell {
                     jgdi.close();
                 } catch (JGDIException ex1) {
                     final String msg = "close failed: " + ex1.getMessage();
-                    pw.println(msg);
+                    out.println(msg);
                     logger.warning(msg);
                 }
             }
@@ -471,17 +483,17 @@ public class JGDIShell implements Runnable, Shell {
         public void run(String[] args) throws Exception {
             switch (args.length) {
                 case 1:
-                    pw.println("Available commands: ");
+                    out.println("Available commands: ");
                     for (String cmd : cmdMap.keySet()) {
-                        pw.println(cmd);
+                        out.println(cmd);
                     }
                     break;
                 case 2:
                     Command cmd = getCommand(args[0]);
                     if (cmd == null) {
-                        pw.println("command " + args[0] + " not found");
+                        out.println("command " + args[0] + " not found");
                     }
-                    pw.println(cmd.getUsage());
+                    out.println(cmd.getUsage());
                     break;
                 default:
                     throw new IllegalArgumentException(" not found");
@@ -509,7 +521,7 @@ public class JGDIShell implements Runnable, Shell {
                     jgdi.close();
                 } catch(JGDIException ex1) {
                     final String msg = "close failed: " + ex1.getMessage();
-                    pw.println(msg);
+                    err.println(msg);
                     logger.warning(msg);
                 }
             }
@@ -579,7 +591,7 @@ public class JGDIShell implements Runnable, Shell {
         
         public void run(String[] args) throws Exception {
             for (HistoryElement elem : historyList) {
-                pw.printf("%5d %s%n", elem.getId(), elem.getLine());
+                out.printf("%5d %s%n", elem.getId(), elem.getLine());
             }
         }
         
@@ -629,7 +641,7 @@ public class JGDIShell implements Runnable, Shell {
         }
         
         public void run(String[] args) throws Exception {
-            pw.println(lastExitCode);
+            out.println(lastExitCode);
         }
         
         public void init(Shell shell) throws Exception {
@@ -889,9 +901,11 @@ public class JGDIShell implements Runnable, Shell {
     class GetResponse extends Thread {
         
         private InputStream stream;
+        private PrintWriter pw;
         
-        public GetResponse(InputStream is) {
+        public GetResponse(InputStream is, PrintWriter pw) {
             stream = is;
+            this.pw = pw;
         }
         
         @Override

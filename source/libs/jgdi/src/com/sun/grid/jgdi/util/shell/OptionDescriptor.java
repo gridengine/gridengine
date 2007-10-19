@@ -42,7 +42,8 @@ public class OptionDescriptor {
     private int mandatoryArgCount;
     private int optionalArgCount;
     private Method method;
-    private PrintWriter pw;
+    private PrintWriter out;
+    private PrintWriter err;
     
     /**
      * Constructor
@@ -53,12 +54,13 @@ public class OptionDescriptor {
      * @throws java.lang.InstantiationException
      * @throws java.lang.IllegalAccessException
      */
-    public OptionDescriptor(String option, int mandatory, int optional, Method method, PrintWriter pw) throws InstantiationException,IllegalAccessException  {
+    public OptionDescriptor(String option, int mandatory, int optional, Method method, PrintWriter out, PrintWriter err) throws InstantiationException,IllegalAccessException  {
         this.option = option;
         this.mandatoryArgCount = mandatory;
         this.optionalArgCount = optional;
         this.method = method;
-        this.pw = pw;
+        this.out = out;
+        this.err = err;
     }
     
     /**
@@ -121,7 +123,15 @@ public class OptionDescriptor {
      * Getter method
      * @return value
      */
-    public PrintWriter getPw() {
-        return pw;
+    public PrintWriter getOut() {
+        return out;
+    }
+    
+    /**
+     * Getter method
+     * @return value
+     */
+    public PrintWriter getErr() {
+        return err;
     }
 }

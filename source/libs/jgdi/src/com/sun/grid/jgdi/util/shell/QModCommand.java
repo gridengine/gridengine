@@ -52,7 +52,7 @@ public class QModCommand extends AbstractCommand {
         JGDI jgdi = getShell().getConnection();
 
         if (args.length == 0) {
-            pw.println(getUsage());
+            out.println(getUsage());
         }
 
         if (jgdi == null) {
@@ -63,7 +63,7 @@ public class QModCommand extends AbstractCommand {
 
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("-help")) {
-                pw.println(getUsage());
+                out.println(getUsage());
                 return;
             } else if (args[i].equals("-cj")) {
                 i++;
@@ -199,7 +199,7 @@ public class QModCommand extends AbstractCommand {
             } else if (args[i].equals("-f")) {
                 force = true;
             } else {
-                pw.println(getUsage());
+                out.println(getUsage());
                 throw new IllegalArgumentException("ERROR! invalid option argument \"" + args[i] + "\"");
             }
         }

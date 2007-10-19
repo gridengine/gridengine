@@ -59,8 +59,8 @@ public class QrDelCommand extends AbstractCommand {
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("-help")) {
                 i++;
-                pw.println(getUsage());
-                pw.flush();
+                out.println(getUsage());
+                out.flush();
                 return;
             } else if (args[i].equals("-u")) {
                 i++;
@@ -71,8 +71,8 @@ public class QrDelCommand extends AbstractCommand {
             } else if (args[i].equals("-f")) {
                 force = true;
             } else if (args[i].charAt(0) == '-') {
-                pw.println(getUsage());
-                pw.flush();
+                out.println(getUsage());
+                out.flush();
                 throw new IllegalArgumentException("error: ERROR! invalid option argument \"" + args[i] + "\"");
             } else {
                 ars = parseDestinIdList(args[i]);
@@ -83,8 +83,8 @@ public class QrDelCommand extends AbstractCommand {
         }
 
         if (!arargs) {
-            pw.println(getUsage());
-            pw.flush();
+            out.println(getUsage());
+            out.flush();
             throw new IllegalArgumentException("ERROR! no option argument");
         }
 

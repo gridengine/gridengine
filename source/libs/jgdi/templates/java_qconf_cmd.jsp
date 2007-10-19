@@ -50,7 +50,7 @@
          nameToOpt.put("Checkpoint","ckpt");
          nameToOpt.put("Configuration","conf");
          nameToOpt.put("ClusterQueue","q");
-         nameToOpt.put("ExecHost","e");
+         //nameToOpt.put("ExecHost","e");
          nameToOpt.put("Hostgroup","hgrp");
          nameToOpt.put("ParallelEnvironment","p");
          nameToOpt.put("Project","prj");
@@ -116,11 +116,11 @@
       final String fileName = oi.getFirstArg();
       List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
       <%=objectType%> obj = new <%=objectType%>Impl(true);
-      String inputText = readFile(fileName);
+      String inputText = readFile(oi);
       <%if (objectType.equals("Configuration")) {%>
       final String keyAttrValue = new File(fileName).getName();
       <%} else {%>
-      final String keyAttrValue = getKeyAttributeValueFromString(pw, "<%=objectType%>", fileName, inputText);
+      final String keyAttrValue = getKeyAttributeValueFromString(err, "<%=objectType%>", fileName, inputText);
       <% } %>
       if (keyAttrValue == null) {
          return;
@@ -160,8 +160,7 @@
          }
          printAnswers(answer);
       } else {
-         String msg = getErrorMessage("InvalidObjectArgument", oi.getOd().getOption(), arg, null);
-         pw.println(msg);
+         err.println(getErrorMessage("InvalidObjectArgument", oi.getOd().getOption(), arg));
          setExitCode(getCustomExitCode("InvalidObjectArgument", oi.getOd().getOption()));
       }
       oi.optionDone();
@@ -180,12 +179,12 @@
    public void modifyFromFile<%=objectType%>(final OptionInfo oi) throws JGDIException {
       final String fileName = oi.getFirstArg();
       List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
-      String inputText = readFile(fileName);
+      String inputText = readFile(oi);
       <%=objectType%> obj;
       <%if (objectType.equals("SchedConf")) {%>
       obj = jgdi.getSchedConf();
       <%} else {%>
-      final String keyAttrValue = getKeyAttributeValueFromString(pw, "<%=objectType%>", fileName, inputText);
+      final String keyAttrValue = getKeyAttributeValueFromString(err, "<%=objectType%>", fileName, inputText);
       if (keyAttrValue == null) {
          return;
       }
@@ -218,13 +217,13 @@
       printAnswers(answer);
       //Display error message in no such object exists
       if (obj == null) {
-          pw.println(getErrorMessage("InvalidObjectArgument", oi.getOd().getOption(), arg, "Object \""+arg+"\" does not exist"));
+          err.println(getErrorMessage("InvalidObjectArgument", oi.getOd().getOption(), arg));
           setExitCode(getCustomExitCode("InvalidObjectArgument", oi.getOd().getOption()));
           return;
       }
       //Show the object
       String text = GEObjectEditor.getAllPropertiesAsText(obj);
-      pw.print(text);
+      out.print(text);
    } 
    <%
        } //end genShowMethod  
@@ -253,14 +252,14 @@
       <% } %>
       //Show correct error message if list is empty
       if (values.size() == 0) {
-          pw.println(getErrorMessage("NoObjectFound", oi.getOd().getOption(), "", "No object found"));
+          err.println(getErrorMessage("NoObjectFound", oi.getOd().getOption()));
           setExitCode(getCustomExitCode("NoObjectFound", oi.getOd().getOption()));
           return;
       }
       //Otherwise print sorted list
       Collections.sort(values);
       for (String val : values) {
-        pw.println(val);
+        out.println(val);
       }
       oi.optionDone();
    }   
@@ -326,6 +325,13 @@ public abstract class QConfCommandGenerated extends AnnotatedCommand {
 <% for (String objType : init.getMap().keySet()) {
      init.genDefaultMethodsForType(objType);
   }
+  //ExecHost
+  init.genAddFromFileMethod("ExecHost", "-Ae", 1, 0);
+  init.genModifyMethod("ExecHost", "-me", 1, 0);
+  init.genModifyFromFileMethod("ExecHost", "-Me", 1, 0);
+  init.genShowMethod("ExecHost", "-se", 1, init.MAX_ARG_VALUE);
+  init.genShowListMethod("ExecHost", "-sel", 0, 0);
+  init.genDeleteMethod("ExecHost", "-de", 1, init.MAX_ARG_VALUE);
   //SchedConf
   init.genModifyMethod("SchedConf","-msconf", 0, 0);
   init.genModifyFromFileMethod("SchedConf", "-Msconf", 1, 0);

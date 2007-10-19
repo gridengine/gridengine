@@ -76,22 +76,22 @@ public class QStatCommand extends AnnotatedCommand {
             if (res.size() == 0) {
                 return;
             }
-            pw.printf("%s%s%n","CLUSTER QUEUE                   CQLOAD   USED    RES  AVAIL  TOTAL aoACDS  cdsuE",cqOptions.showAdditionalAttributes() ? "     s     A     S     C     u     a     d     D     c     o     E" : "");
-            pw.printf("%s%s%n","--------------------------------------------------------------------------------",cqOptions.showAdditionalAttributes() ? "------------------------------------------------------------------" : "");
+            out.printf("%s%s%n","CLUSTER QUEUE                   CQLOAD   USED    RES  AVAIL  TOTAL aoACDS  cdsuE",cqOptions.showAdditionalAttributes() ? "     s     A     S     C     u     a     d     D     c     o     E" : "");
+            out.printf("%s%s%n","--------------------------------------------------------------------------------",cqOptions.showAdditionalAttributes() ? "------------------------------------------------------------------" : "");
             for (ClusterQueueSummary elem : res) {
-                pw.printf("%-30.30s ",elem.getName());
+                out.printf("%-30.30s ",elem.getName());
                 if (elem.isLoadSet()) {
-                    pw.printf("%7.2f ", elem.getLoad());
+                    out.printf("%7.2f ", elem.getLoad());
                 } else {
-                    pw.printf("%7s ", "-NA-");
+                    out.printf("%7s ", "-NA-");
                 }
-                pw.printf("%6d %6d %6d %6d %6d %6d ", elem.getUsedSlots(), elem.getReservedSlots(), elem.getAvailableSlots(), elem.getTotalSlots(), elem.getTempDisabled(), elem.getManualIntervention());
+                out.printf("%6d %6d %6d %6d %6d %6d ", elem.getUsedSlots(), elem.getReservedSlots(), elem.getAvailableSlots(), elem.getTotalSlots(), elem.getTempDisabled(), elem.getManualIntervention());
                 if (cqOptions.showAdditionalAttributes()) {
-                    pw.printf("%5d %5d %5d %5d %5d %5d %5d %5d %5d %5d %5d ", elem.getSuspendManual(), elem.getSuspendThreshold(),
+                    out.printf("%5d %5d %5d %5d %5d %5d %5d %5d %5d %5d %5d ", elem.getSuspendManual(), elem.getSuspendThreshold(),
                             elem.getSuspendOnSubordinate(), elem.getSuspendByCalendar(), elem.getUnknown(), elem.getLoadAlarm(), elem.getDisabledManual(),
                             elem.getDisabledByCalendar(), elem.getAmbiguous(), elem.getOrphaned(), elem.getError());
                 }
-                pw.printf("%n");
+                out.printf("%n");
             }
             //No, we just print normal queue instances
         } else {
@@ -101,7 +101,7 @@ public class QStatCommand extends AnnotatedCommand {
                 return;
             }
             QueueInstanceSummaryResult res = jgdi.getQueueInstanceSummary(qiOptions);
-            QueueInstanceSummaryPrinter.print(pw, res, qiOptions);
+            QueueInstanceSummaryPrinter.print(out, res, qiOptions);
         }
     }
     
@@ -161,7 +161,7 @@ public class QStatCommand extends AnnotatedCommand {
     //[-help]                                  print this help
     @OptionAnnotation(value = "-help", min = 0)
     public void printUsage(final OptionInfo oi) throws JGDIException {
-        pw.println(getUsage());
+        out.println(getUsage());
         // To avoid the continue of the command
         throw new AbortException();
     }
@@ -174,7 +174,7 @@ public class QStatCommand extends AnnotatedCommand {
         Job jb = jgdi.getJob(Integer.parseInt(job));
       /*pw.printf("%29.29s %-s%n", "job_number:", jb.getJobNumber());
       pw.printf("%29.29s %-s%n", "exec_file:", jb.getExecFile());*/
-        pw.print(((JobImpl)jb).dump());
+        out.print(((JobImpl)jb).dump());
         throw new AbortException();
     }
     

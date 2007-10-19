@@ -66,25 +66,25 @@ public class QrStatCommand extends AnnotatedCommand {
         //Filter out just the ars in the arList
         if (ars.size() > 0) {
             if (arList.isEmpty()) {
-                pw.println("ar-id   name       owner        state start at             end at               duration");
-                pw.println("----------------------------------------------------------------------------------------");
+                out.println("ar-id   name       owner        state start at             end at               duration");
+                out.println("----------------------------------------------------------------------------------------");
             }
             for (AdvanceReservation ar : ars) {
                 if (!arlist) {
                     if (userList.isEmpty() || userList.contains(ar.getOwner())) {
                         if (xml) {
-                            XMLUtil.write(ar, pw);
+                            XMLUtil.write(ar, out);
                         } else {
-                            pw.printf("%1$7d %2$-10.10s %3$-12.12s %4$-5.5s %5$-20.20s %6$-20.20s %7$s\n", ar.getId(), ar.getName() == null ? "" : ar.getName(), ar.getOwner(), ar.getStateAsString(), getDateAndTimeAsString(ar.getStartTime()), getDateAndTimeAsString(ar.getEndTime()), getTimeAsString(ar.getDuration()));
+                            out.printf("%1$7d %2$-10.10s %3$-12.12s %4$-5.5s %5$-20.20s %6$-20.20s %7$s\n", ar.getId(), ar.getName() == null ? "" : ar.getName(), ar.getOwner(), ar.getStateAsString(), getDateAndTimeAsString(ar.getStartTime()), getDateAndTimeAsString(ar.getEndTime()), getTimeAsString(ar.getDuration()));
                         }
                     }
                 } else {
                     if (arList.remove((Object) ar.getId()) && (userList.isEmpty() || userList.contains(ar.getOwner()))) {
                         AdvanceReservationImpl ari = (AdvanceReservationImpl) ar;
                         if (xml) {
-                            XMLUtil.write(ari, pw);
+                            XMLUtil.write(ari, out);
                         } else {
-                            pw.println(ari.dump());
+                            out.println(ari.dump());
                         }
                     }
                 }
@@ -92,8 +92,8 @@ public class QrStatCommand extends AnnotatedCommand {
         }
         
         if (!arList.isEmpty()) {
-            pw.println("Following advance reservations do not exist:");
-            pw.println(arList);
+            out.println("Following advance reservations do not exist:");
+            out.println(arList);
         }
     }
     
@@ -109,7 +109,7 @@ public class QrStatCommand extends AnnotatedCommand {
     //[-help]                                  print this help
     @OptionAnnotation(value="-help",min=0)
     public void printUsage(final OptionInfo oi) throws JGDIException {
-        pw.println(getUsage());
+        out.println(getUsage());
         // To avoid the continue of the command
         throw new AbortException();
     }

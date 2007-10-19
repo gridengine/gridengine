@@ -65,30 +65,30 @@ public class QQuotaCommand extends AbstractCommand {
         QQuotaResult res = jgdi.getQQuota(options);
         
         if (!res.getResourceQuotaRules().isEmpty()) {
-            pw.println("resource quota rule    limit                filter");
-            pw.println("--------------------------------------------------------------------------------");
+            out.println("resource quota rule    limit                filter");
+            out.println("--------------------------------------------------------------------------------");
             for (ResourceQuotaRuleInfo info : res.getResourceQuotaRules()) {
                 // need a Formatter here
-                pw.print(info.getResouceQuotaRuleName());
+                out.print(info.getResouceQuotaRuleName());
                 for (ResourceQuota relim : info.getLimits()) {
-                    pw.print(" " + relim.getName() + "=" + relim.getUsageValue() + "/" + relim.getLimitValue());
+                    out.print(" " + relim.getName() + "=" + relim.getUsageValue() + "/" + relim.getLimitValue());
                 }
                 if (!info.getUsers().isEmpty()) {
-                    pw.print(" users" + info.getUsers());
+                    out.print(" users" + info.getUsers());
                 }
                 if (!info.getProjects().isEmpty()) {
-                    pw.print(" projects" + info.getProjects());
+                    out.print(" projects" + info.getProjects());
                 }
                 if (!info.getPes().isEmpty()) {
-                    pw.print(" pes" + info.getPes());
+                    out.print(" pes" + info.getPes());
                 }
                 if (!info.getQueues().isEmpty()) {
-                    pw.print(" queues" + info.getQueues());
+                    out.print(" queues" + info.getQueues());
                 }
                 if (!info.getHosts().isEmpty()) {
-                    pw.print(" hosts" + info.getHosts());
+                    out.print(" hosts" + info.getHosts());
                 }
-                pw.println();
+                out.println();
             }
         }
     }
@@ -111,7 +111,7 @@ public class QQuotaCommand extends AbstractCommand {
             String arg = (String) argList.removeFirst();
             
             if (arg.equals("-help")) {
-                pw.println(getUsage());
+                out.println(getUsage());
                 return null;
             } else if (arg.equals("-h")) {
                 if (argList.isEmpty()) {

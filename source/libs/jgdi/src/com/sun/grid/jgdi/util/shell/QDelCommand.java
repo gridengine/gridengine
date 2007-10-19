@@ -64,8 +64,8 @@ public class QDelCommand extends AbstractCommand {
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("-help")) {
                 i++;
-                pw.println(getUsage());
-                pw.flush();
+                out.println(getUsage());
+                out.flush();
                 return;
             } else if (args[i].equals("-u")) {
                 i++;
@@ -76,8 +76,8 @@ public class QDelCommand extends AbstractCommand {
             } else if (args[i].equals("-f")) {
                 force = true;
             } else if (args[i].charAt(0) == '-') {
-                pw.println(getUsage());
-                pw.flush();
+                out.println(getUsage());
+                out.flush();
                 throw new IllegalArgumentException("error: ERROR! invalid option argument \"" + args[i] + "\"");
             } else {
                 jobs = parseDestinIdList(args[i]);
@@ -87,15 +87,11 @@ public class QDelCommand extends AbstractCommand {
             }
         }
         if (!jobargs) {
-            pw.println(getUsage());
-            pw.flush();
+            out.println(getUsage());
+            out.flush();
             throw new IllegalArgumentException("ERROR! no option argument");
         }
-//      try {
         jgdi.deleteJobsWithAnswer(jobs, force, users, answers);
-//      } catch (JGDIException je) {
-//         // ignore
-//      }
         printAnswers(answers);
     }
 

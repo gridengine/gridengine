@@ -42,5 +42,6 @@ public interface Shell {
     
     public Logger getLogger();
     public JGDI getConnection();
-    public PrintWriter getPrintWriter();
+    public PrintWriter getOut();
+    public PrintWriter getErr();
 }

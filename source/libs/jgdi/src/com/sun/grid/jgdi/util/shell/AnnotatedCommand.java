@@ -72,7 +72,7 @@ public abstract class AnnotatedCommand extends AbstractCommand {
      * Map is created by scanning all OptionMethod annotated functions.
      * NOTE: Only options in the map will be recognized as implemented
      */
-    public static void initOptionDescriptorMap(Class<? extends Command> cls, PrintWriter pw) throws Exception {
+    public static void initOptionDescriptorMap(Class<? extends Command> cls, PrintWriter out, PrintWriter err) throws Exception {
         if (commandOptionMap == null) {
             commandOptionMap = new HashMap<Class<? extends Command>, Map<String, OptionDescriptor>>(30);
         }
@@ -86,11 +86,11 @@ public abstract class AnnotatedCommand extends AbstractCommand {
                         if (optionDescriptorMap.containsKey(o.value())) {
                             OptionDescriptor od = optionDescriptorMap.get(o.value());
                             if (!od.getMethod().getName().equals(m.getName())) {
-                                pw.println("WARNING: Attempt to override " +od.getMethod().getDeclaringClass().getName()+"."+od.getMethod().getName() + " by " + cls.getName() + "." + m.getName() + "() for option \""+o.value()+"\"\n");
+                                err.println("WARNING: Attempt to override " +od.getMethod().getDeclaringClass().getName()+"."+od.getMethod().getName() + " by " + cls.getName() + "." + m.getName() + "() for option \""+o.value()+"\"\n");
                             }
                         }
                         //Add method to the optionDescriptorMap
-                        optionDescriptorMap.put(o.value(), new OptionDescriptor(o.value(), o.min(), o.extra(), m, pw));
+                        optionDescriptorMap.put(o.value(), new OptionDescriptor(o.value(), o.min(), o.extra(), m, out, err));
                     }
                 }
             }
@@ -212,7 +212,7 @@ public abstract class AnnotatedCommand extends AbstractCommand {
         String[] options = oi.getMap().keySet().toArray(new String[set.size()]);
         Arrays.sort(options);
         for (String option : options) {
-            pw.println(option);
+            out.println(option);
         }
         // To avoid the continue of the command
         throw new AbortException();
@@ -228,7 +228,7 @@ public abstract class AnnotatedCommand extends AbstractCommand {
      * @return return the option info structure
      */
     //TODO LP: Discuss this enhancement. We now accept "arg1,arg2 arg3,arg4" as 4 valid args
-    private OptionInfo getOptionInfo(final Map<String, OptionDescriptor> optMap, List<String> args) {
+    private OptionInfo getOptionInfo(final Map<String, OptionDescriptor> optMap, List<String> args) throws JGDIException {
         //Check we have a map set
         if (optMap.isEmpty()) {
             throw new UnsupportedOperationException("Cannot get OptionInfo. Option map is empty!");
@@ -250,9 +250,9 @@ public abstract class AnnotatedCommand extends AbstractCommand {
                 //If some is recognized as valid option. First extra arg is InvalidArgument
                 if (optMap.containsKey(option)) {
                     extraArgs = null;
-                    msg = getErrorMessage("InvalidArgument", extraArgs.get(0), "Unknown option \"" + extraArgs.get(0) + "\"");
+                    msg = getErrorMessage("InvalidArgument", extraArgs.get(0));
                     int exitCode = getCustomExitCode("InvalidArgument", extraArgs.get(0));
-                    throw new OptionSpecificErrorException(msg, exitCode);
+                    throw new JGDIException(msg, exitCode);
                 }
             }
             //We now store the extraArgs to this command.
@@ -277,9 +277,9 @@ public abstract class AnnotatedCommand extends AbstractCommand {
             //Check we have all mandatory args
             if (i != od.getMandatoryArgCount()) {
                 final String msgType = (i == 0) ? "NoArgument" : "LessArguments";
-                msg = getErrorMessage(msgType, option, argList, "Expected " + od.getMandatoryArgCount() + " arguments for " + option + " option. Got only " + argList.size() + ".");
+                msg = getErrorMessage(msgType, option, argList);
                 int exitCode = getCustomExitCode(msgType, option);
-                throw new OptionSpecificErrorException(msg, exitCode);
+                throw new JGDIException(msg, exitCode);
             }
             
             //Try to get as many optional args as possible
@@ -317,19 +317,19 @@ public abstract class AnnotatedCommand extends AbstractCommand {
     }
     
     /** Hepler method to get the right error message */
-    String getErrorMessage(String msgType, String optionString, String generalMessage) {
-        return getErrorMessage(msgType, optionString, new ArrayList<String>(), generalMessage);
+    String getErrorMessage(String msgType, String optionString) {
+        return getErrorMessage(msgType, optionString, new ArrayList<String>());
     }
     
     /** Hepler method to get the right error message */
-    String getErrorMessage(String msgType, String optionString, String arg, String generalMessage) {
+    String getErrorMessage(String msgType, String optionString, String arg) {
         List<String> argList = new ArrayList<String>();
         argList.add(arg);
-        return getErrorMessage(msgType, optionString, argList, generalMessage);
+        return getErrorMessage(msgType, optionString, argList);
     }
     
     /** Hepler method to get the right error message */
-    String getErrorMessage(String msgType, String optionString, List<String> args, String generalMessage) {
+    String getErrorMessage(String msgType, String optionString, List<String> args) {
         String[] tmp = this.getClass().getName().split("[.]");
         String cmdName = tmp[tmp.length-1];
         String cmdString = cmdName.split("Command")[0].toLowerCase();
@@ -342,13 +342,15 @@ public abstract class AnnotatedCommand extends AbstractCommand {
             argString = argString.substring(0, argString.length()-1);
         }
         //TODO LP: Remove the New generic message string
-        String msg = "New generic message: "+generalMessage; //If not known, we print this general message
+        String msg = "Missing error messages file!";
         try { //Try to get option specific message
             msg = errorMessages.getString(prefix+optionString);
         } catch (MissingResourceException ex) {
             try { //Try to get command default message
                 msg = errorMessages.getString(prefix+"default");
-            } catch (MissingResourceException dex) {}
+            } catch (MissingResourceException dex) {
+                msg = errorMessages.getString(prefix+"general");
+            }
         }
         return MessageFormat.format(msg, optionString, argString, "Usage: "+cmdString+" -help", getUsage());
     }

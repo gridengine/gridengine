@@ -424,6 +424,11 @@ lList **alpp
 
    DENTER(TOP_LAYER, "sge_print_queues");
 
+   if (!(show & QHOST_DISPLAY_QUEUES) &&
+       !(show & QHOST_DISPLAY_JOBS)) {
+      DRETURN(ret);
+   }
+
    for_each(cqueue, qlp) {
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
 

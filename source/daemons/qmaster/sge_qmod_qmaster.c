@@ -423,6 +423,7 @@ sge_change_queue_state(sge_gdi_ctx_class_t *ctx,
    bool isoperator;
    bool isowner;
    int result = 0;
+   const char *ehname = lGetHost(qep, QU_qhostname);
    
    DENTER(TOP_LAYER, "sge_change_queue_state");
 
@@ -469,16 +470,17 @@ sge_change_queue_state(sge_gdi_ctx_class_t *ctx,
    sge_event_spool(ctx,
                    answer, 0, sgeE_QINSTANCE_MOD,
                    0, 0, lGetString(qep, QU_qname),
-                   lGetHost(qep, QU_qhostname), NULL,
+                   ehname, NULL,
                    qep, NULL, NULL, true, true);
 
    switch (action) {
-   case QI_DO_CLEAN:
-   case QI_DO_RESCHEDULE:
-      cqueue_list_del_all_orphaned(ctx, *(object_type_get_master_list(SGE_TYPE_CQUEUE)), answer);
-      break;
-   default:
-      break;
+      case QI_DO_CLEAN:
+      case QI_DO_RESCHEDULE:
+         cqueue_list_del_all_orphaned(ctx, *(object_type_get_master_list(SGE_TYPE_CQUEUE)), answer, 
+               lGetString(qep, QU_qname), ehname);
+         break;
+      default:
+         break;
    }
 
    DEXIT;

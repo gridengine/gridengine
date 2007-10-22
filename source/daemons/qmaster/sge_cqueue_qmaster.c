@@ -607,6 +607,7 @@ int cqueue_mod(sge_gdi_ctx_class_t *ctx,
 
    DENTER(TOP_LAYER, "cqueue_mod");
 
+
    if (ret) {
       int pos = lGetPosViaElem(reduced_elem, CQ_name, SGE_NO_ABORT);
 
@@ -1018,7 +1019,7 @@ int cqueue_del(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, lList **answer_li
 }
 
 bool
-cqueue_del_all_orphaned(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, lList **answer_list)
+cqueue_del_all_orphaned(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, lList **answer_list, const char *ehname)
 {
    bool ret = true;
 
@@ -1029,14 +1030,12 @@ cqueue_del_all_orphaned(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, lList **
       const char* cq_name = lGetString(this_elem, CQ_name);
       lList *qinstance_list = lGetList(this_elem, CQ_qinstances);
       lListElem *qinstance = NULL;
-      lListElem *next_qinstance = NULL;
 
-      next_qinstance = lFirst(qinstance_list);
-      while ((qinstance = next_qinstance) != NULL) {
-         next_qinstance = lNext(qinstance);
-         
-         if (qinstance_state_is_orphaned(qinstance) &&
-             qinstance_slots_used(qinstance) == 0 && qinstance_slots_reserved(qinstance) == 0) {
+      if (ehname) {
+         if ((qinstance = lGetElemHost(qinstance_list, QU_qhostname, ehname)) &&
+             qinstance_state_is_orphaned(qinstance) &&
+             qinstance_slots_used(qinstance) == 0 && 
+             qinstance_slots_reserved(qinstance) == 0) {
             const char *qi_name = lGetHost(qinstance, QU_qhostname);
       
             /*
@@ -1052,26 +1051,60 @@ cqueue_del_all_orphaned(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, lList **
                }
             }
          }
+      } else {
+         lListElem *next_qinstance = NULL;
+
+         next_qinstance = lFirst(qinstance_list);
+         while ((qinstance = next_qinstance) != NULL) {
+            next_qinstance = lNext(qinstance);
+
+            if (qinstance_state_is_orphaned(qinstance) &&
+                qinstance_slots_used(qinstance) == 0 && 
+                qinstance_slots_reserved(qinstance) == 0) {
+               const char *qi_name = lGetHost(qinstance, QU_qhostname);
+         
+               /*
+                * This qinstance should be deleted. There are not jobs anymore.
+                */
+               sge_dstring_sprintf(&dir, "%s/%s", QINSTANCES_DIR, cq_name);
+               if (sge_event_spool(ctx, answer_list, 0, sgeE_QINSTANCE_DEL,
+                                   0, 0, cq_name, qi_name,
+                                   NULL, NULL, NULL, NULL, true, true)) {
+                  lRemoveElem(qinstance_list, &qinstance);
+                  if (lGetNumberOfElem(qinstance_list) == 0) {
+                     sge_rmdir(sge_dstring_get_string(&dir), NULL);
+                  }
+               }
+            }
+         }
+         sge_dstring_free(&dir);
       }
-      sge_dstring_free(&dir);
    }
+
    DEXIT;
    return ret;
 }
 
 bool
-cqueue_list_del_all_orphaned(sge_gdi_ctx_class_t *ctx, lList *this_list, lList **answer_list)
+cqueue_list_del_all_orphaned(sge_gdi_ctx_class_t *ctx, lList *this_list, lList **answer_list, const char *cqname, const char *ehname)
 {
    bool ret = true;
    lListElem *cqueue;
 
    DENTER(TOP_LAYER, "cqueue_list_del_all_orphaned");
-   for_each(cqueue, this_list) {
-      ret &= cqueue_del_all_orphaned(ctx, cqueue, answer_list);
-      if (!ret) {
-         break;
+
+   if (cqname) {
+      cqueue = lGetElemStr(this_list, CQ_name, cqname);
+      ret &= cqueue_del_all_orphaned(ctx, cqueue, answer_list, ehname);
+   } else {
+      for_each(cqueue, this_list) {
+         ret &= cqueue_del_all_orphaned(ctx, cqueue, answer_list, ehname);
+         if (!ret) {
+            break;
+         }
       }
    }
+
    DEXIT;
    return ret;
 }

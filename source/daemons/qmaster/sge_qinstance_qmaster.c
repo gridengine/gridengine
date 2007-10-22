@@ -119,6 +119,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
    DENTER(BASIS_LAYER, "qinstance_modify_attribute");
 #endif
 
+
    if (this_elem != NULL && cqueue != NULL && 
       attribute_name != NoName && cqueue_attibute_name != NoName) {
       const char *hostname = lGetHost(this_elem, QU_qhostname);
@@ -379,10 +380,11 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                                          matching_host_or_group,
                                          matching_group, is_ambiguous);
                if (old_value != new_value) {
-                  DPRINTF(("reserved slots %d\n", qinstance_slots_reserved(this_elem)));
-                  if (new_value < qinstance_slots_reserved(this_elem)) {
+                  int slots_reserved = qinstance_slots_reserved(this_elem);
+                  DPRINTF(("reserved slots %d\n", slots_reserved));
+                  if (new_value < slots_reserved) {
                      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                                             MSG_QINSTANCE_SLOTSRESERVED_USS, qinstance_slots_reserved(this_elem),
+                                             MSG_QINSTANCE_SLOTSRESERVED_USS, slots_reserved,
                                              lGetString(this_elem, QU_qname), hostname);
                      ret &= false;
                   } else {

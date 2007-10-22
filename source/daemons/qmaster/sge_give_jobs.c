@@ -1887,3 +1887,22 @@ setCheckpointObj(lListElem *job)
    return ret;
 }
 
+bool gdil_del_all_orphaned(sge_gdi_ctx_class_t *ctx, const lList *gdil_list, lList **alpp)
+{
+   bool ret = true;
+   lListElem *gdil_ep;
+   
+   dstring cqueue_name = DSTRING_INIT;
+   dstring host_name = DSTRING_INIT;
+   bool has_hostname, has_domain;
+   for_each (gdil_ep, gdil_list) {
+      cqueue_name_split(lGetString(gdil_ep, JG_qname), &cqueue_name, &host_name, &has_hostname, &has_domain);
+      ret &= cqueue_list_del_all_orphaned(ctx, *(object_type_get_master_list(SGE_TYPE_CQUEUE)), alpp, 
+         sge_dstring_get_string(&cqueue_name), sge_dstring_get_string(&host_name));
+   }
+   sge_dstring_free(&cqueue_name);
+   sge_dstring_free(&host_name);
+
+   return ret;
+}
+

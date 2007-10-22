@@ -543,6 +543,7 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **master
                                         now);  
          reporting_create_ar_acct_records(NULL, ar, now); 
 
+         gdil_del_all_orphaned(ctx, lGetList(ar, AR_granted_slots), alpp);
 
          lRemoveElem(*master_ar_list, &ar);
 
@@ -595,9 +596,6 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **master
       lFreeWhere(&ar_where);
       DRETURN(STATUS_EEXIST);
    }
-
-   /* remove all orphaned queue intances, which are empty. */
-   cqueue_list_del_all_orphaned(ctx, *(object_type_get_master_list(SGE_TYPE_CQUEUE)), alpp);
 
    sge_dstring_free(&buffer);
    lFreeWhere(&ar_where);
@@ -868,6 +866,9 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
 
       sge_ar_send_mail(ar, MAIL_AT_EXIT);
 
+      /* remove all orphaned queue intances, which are empty. */
+      gdil_del_all_orphaned(ctx, lGetList(ar, AR_granted_slots), NULL);
+
       /* remove the AR itself */
       DPRINTF(("AR: exited, removing AR %s\n", sge_dstring_get_string(&buffer)));
       lRemoveElem(*(object_type_get_master_list(SGE_TYPE_AR)), &ar);
@@ -875,8 +876,6 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
                       ar_id, 0, sge_dstring_get_string(&buffer), NULL, NULL,
                       NULL, NULL, NULL, true, true);
 
-      /* remove all orphaned queue intances, which are empty. */
-      cqueue_list_del_all_orphaned(ctx, *(object_type_get_master_list(SGE_TYPE_CQUEUE)), NULL);
 
 
    } else {

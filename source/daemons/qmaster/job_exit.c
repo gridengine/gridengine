@@ -106,6 +106,7 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
    object_description *object_base = object_type_get_object_description();
 
    u_long32 failed, general_failure;
+   lList *saved_gdil;
 
    DENTER(TOP_LAYER, "sge_job_exit");
    
@@ -165,6 +166,8 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
       ERROR((SGE_EVENT, MSG_JOB_JEXITNOTRUN_UU, sge_u32c(lGetUlong(jep, JB_job_number)), sge_u32c(jataskid)));
       return;
    }
+
+   saved_gdil = lCopyList("cpy", lGetList(jatep, JAT_granted_destin_identifier_list));
 
    /*
     * case 1: job being trashed because 
@@ -382,10 +385,10 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
                       lGetHost(queueep, QU_qhostname), NULL,
                       queueep, NULL, NULL, true, spool_queueep);
 
-      cqueue_list_del_all_orphaned(ctx, *object_base[SGE_TYPE_CQUEUE].list, &answer_list);
-
+      gdil_del_all_orphaned(ctx, saved_gdil, &answer_list);
       answer_list_output(&answer_list);
    }
 
+   lFreeList(&saved_gdil);
    DRETURN_VOID;
 }

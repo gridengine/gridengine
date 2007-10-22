@@ -381,7 +381,7 @@ int sge_del_centry(sge_gdi_ctx_class_t *ctx, lListElem *centry, lList **answer_l
                }
             }
 
-            for ( i=0; i< max_host_resources; i++){
+            for (i = 0; i < max_host_resources; i++) {
                if (strcmp(host_resource[i].name, name) == 0 ){
                   answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
                                           MSG_INVALID_CENTRY_DEL_S, name);
@@ -579,13 +579,15 @@ void centry_redebit_consumables(sge_gdi_ctx_class_t *ctx, const lList *centries)
          lListElem *qinstance = NULL;
 
          for_each(qinstance, qinstance_list) {
-            reporting_create_queue_consumable_record(&answer_list, qinstance, now);
+            const char *hostname = lGetHost(qinstance, QU_qhostname);
+            const lListElem *host = lGetElemHost(*object_base[SGE_TYPE_EXECHOST].list, EH_name, hostname);
+            reporting_create_queue_consumable_record(&answer_list, host, qinstance, NULL, now);
          }
       }
       answer_list_output(&answer_list);
       /* dump all host consumables */
       for_each (hep, *object_base[SGE_TYPE_EXECHOST].list) {
-         reporting_create_host_consumable_record(&answer_list, hep, now);
+         reporting_create_host_consumable_record(&answer_list, hep, NULL, now);
       }
       answer_list_output(&answer_list);
    }

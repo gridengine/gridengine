@@ -1,3 +1,13 @@
+JG-2007-10-19-0: Bugfix:    add a parameter to reporting_params to switch off 
+                            writing of all consumables
+                 Bugster:   6617450
+                 Issue:     2401
+                            removing parameters from the reporting_params will 
+                            not fallback to default values
+                 Bugster:   6619016
+                 Issue:     2409
+                 Review:    EB
+
 AA-2007-10-18-0: Bugfix:    qmon displays wrong string for queue filtering
                  Bugster:   6618328
                  Issue:     2404

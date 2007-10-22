@@ -499,7 +499,7 @@ send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpj
          if (is_clean_pb) {
             clear_packbuffer(&pb); 
          }
-         if(init_packbuffer(&pb, 0, 0) != PACK_SUCCESS) {
+         if (init_packbuffer(&pb, 0, 0) != PACK_SUCCESS) {
             ret = -1;
             break;
          }
@@ -1005,23 +1005,23 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
             /* debit consumable resources */ 
             if (debit_host_consumable(jep, global_host_ep, master_centry_list, tmp_slot) > 0) {
                /* this info is not spooled */
-               sge_add_event( 0, sgeE_EXECHOST_MOD, 0, 0, 
+               sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, 
                              "global", NULL, NULL, global_host_ep);
-               reporting_create_host_consumable_record(&answer_list, global_host_ep, now);
+               reporting_create_host_consumable_record(&answer_list, global_host_ep, jep, now);
                answer_list_output(&answer_list);
                lListElem_clear_changed_info(global_host_ep);
             }
             host = host_list_locate(master_exechost_list, queue_hostname);
             if (debit_host_consumable(jep, host, master_centry_list, tmp_slot) > 0) {
                /* this info is not spooled */
-               sge_add_event( 0, sgeE_EXECHOST_MOD, 0, 0, 
+               sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, 
                              queue_hostname, NULL, NULL, host);
-               reporting_create_host_consumable_record(&answer_list, host, now);
+               reporting_create_host_consumable_record(&answer_list, host, jep, now);
                answer_list_output(&answer_list);
                lListElem_clear_changed_info(host);
             }
             qinstance_debit_consumable(queue, jep, master_centry_list, tmp_slot);
-            reporting_create_queue_consumable_record(&answer_list, queue, now);
+            reporting_create_queue_consumable_record(&answer_list, host, queue, jep, now);
             /* this info is not spooled */
             qinstance_add_event(queue, sgeE_QINSTANCE_MOD);
             lListElem_clear_changed_info(queue);
@@ -1492,18 +1492,18 @@ static void sge_clear_granted_resources(sge_gdi_ctx_class_t *ctx,
             /* undebit consumable resources */ 
             if (debit_host_consumable(job, global_host_ep, master_centry_list, -tmp_slot) > 0) {
                /* this info is not spooled */
-               sge_add_event( 0, sgeE_EXECHOST_MOD, 0, 0, 
+               sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, 
                              "global", NULL, NULL, global_host_ep);
-               reporting_create_host_consumable_record(&answer_list, global_host_ep, now);
+               reporting_create_host_consumable_record(&answer_list, global_host_ep, job, now);
                answer_list_output(&answer_list);
                lListElem_clear_changed_info(global_host_ep);
             }
             host = host_list_locate(master_exechost_list, queue_hostname);
             if (debit_host_consumable(job, host, master_centry_list, -tmp_slot) > 0) {
                /* this info is not spooled */
-               sge_add_event( 0, sgeE_EXECHOST_MOD, 0, 0, 
+               sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, 
                              queue_hostname, NULL, NULL, host);
-               reporting_create_host_consumable_record(&answer_list, host, now);
+               reporting_create_host_consumable_record(&answer_list, host, job, now);
                answer_list_output(&answer_list);
                lListElem_clear_changed_info(host);
             }
@@ -1522,7 +1522,7 @@ static void sge_clear_granted_resources(sge_gdi_ctx_class_t *ctx,
                }
             }
 
-            reporting_create_queue_consumable_record(&answer_list, queue, now);
+            reporting_create_queue_consumable_record(&answer_list, host, queue, job, now);
          }
 
          /* this info is not spooled */

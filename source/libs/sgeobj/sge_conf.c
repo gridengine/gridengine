@@ -149,13 +149,18 @@ static bool keep_active = false;
 static bool enable_windomacc = false;
 static bool enable_addgrp_kill = false;
 
-/* reporting params */
+/* 
+ * reporting params 
+ * when you add new params, make sure to set them to default values in 
+ * parsing code (merge_configuration)
+ */
 static bool do_accounting         = true;
 static bool do_reporting          = false;
 static bool do_joblog             = false;
 static int reporting_flush_time   = 15;
-static int accounting_flush_time   = -1;
+static int accounting_flush_time  = -1;
 static int sharelog_time          = 0;
+static bool log_consumables       = true;
 
 /* allow the simulation of (non existent) hosts */
 static bool simulate_hosts = false;
@@ -231,7 +236,7 @@ static void clean_conf(void);
 
 /*
  * This value is used to override the default value for time
- * in which the qmaster tries deleting jobs, after which it 
+ * in which the qmaster tries deleting jobs, after which it
  * stops deleting and deletes remaining jobs at a later time.
  */
 
@@ -702,11 +707,18 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       ptf_min_priority = -999;
       keep_active = false;
       enable_windomacc = false;
+      enable_addgrp_kill = false;
       use_qsub_gid = false;
       prof_execd_thrd = false;
       inherit_env = true;
       set_lib_path = false;
+      do_accounting = true;
+      do_reporting = false;
+      do_joblog = false;
+      reporting_flush_time = 15;
       accounting_flush_time = -1;
+      sharelog_time = 0;
+      log_consumables = true;
       enable_addgrp_kill = false;
 
       for (s=sge_strtok_r(execd_params, ",; ", &conf_context); s; s=sge_strtok_r(NULL, ",; ", &conf_context)) {
@@ -833,6 +845,9 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
             continue;
          }
          if (parse_int_param(s, "sharelog", &sharelog_time, TYPE_TIM)) {
+            continue;
+         }
+         if (parse_bool_param(s, "log_consumables", &log_consumables)) {
             continue;
          }
       }
@@ -1776,6 +1791,7 @@ bool mconf_get_enable_addgrp_kill(void) {
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = enable_addgrp_kill;
+
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(ret);
 }
@@ -2059,7 +2075,18 @@ int mconf_get_sharelog_time(void) {
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(ret);
+}
 
+int mconf_get_log_consumables(void) {
+   int ret;
+
+   DENTER(TOP_LAYER, "mconf_get_log_consumables");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = log_consumables;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
 }
 
 bool mconf_get_enable_forced_qdel(void) {
@@ -2077,7 +2104,7 @@ bool mconf_get_enable_forced_qdel(void) {
 
 int mconf_get_max_job_deletion_time(void) {
    int deletion_time;
-   
+
    DENTER(TOP_LAYER, "mconf_get_max_job_deletion_time");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 

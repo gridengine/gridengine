@@ -472,7 +472,15 @@ sge_change_queue_state(sge_gdi_ctx_class_t *ctx,
                    lGetHost(qep, QU_qhostname), NULL,
                    qep, NULL, NULL, true, true);
 
-   cqueue_list_del_all_orphaned(ctx, *(object_type_get_master_list(SGE_TYPE_CQUEUE)), answer);
+   switch (action) {
+   case QI_DO_CLEAN:
+   case QI_DO_RESCHEDULE:
+      cqueue_list_del_all_orphaned(ctx, *(object_type_get_master_list(SGE_TYPE_CQUEUE)), answer);
+      break;
+   default:
+      break;
+   }
+
    DEXIT;
    return result;
 }

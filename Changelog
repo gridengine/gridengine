@@ -1,3 +1,11 @@
+AH-2007-10-22-0: Bugfix:    - bypass expensive but unneeded orphan queue checking
+                              in qmaster upon qmod -d|-e|-s|-us
+                            - bypass expensive sge_print_queues() if not needed
+                              in qhost
+                 Bugster:   6619657,6619662
+                 Issue:     2410,2411
+                 Review:    JG
+
 JG-2007-10-19-0: Bugfix:    add a parameter to reporting_params to switch off 
                             writing of all consumables
                  Bugster:   6617450

@@ -423,6 +423,11 @@ lList **alpp
 
    DENTER(TOP_LAYER, "sge_print_queues");
 
+   if (!(show & QHOST_DISPLAY_QUEUES) &&
+       !(show & QHOST_DISPLAY_JOBS)) {
+      DRETURN(ret);
+   }
+
    for_each(cqueue, qlp) {
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
 
@@ -809,7 +814,6 @@ u_long32 show
       DRETURN(false);
    }
       
-
    q_all = lWhat("%T(ALL)", QU_Type);
    
    q_id = ctx->gdi_multi(ctx, 
@@ -947,6 +951,8 @@ u_long32 show
    }
 
    /* --- queue */
+
+
    sge_gdi_extract_answer(answer_list, SGE_GDI_GET, SGE_CQUEUE_LIST, q_id, 
                                  mal, queue_l);
    if (answer_list_has_error(answer_list)) {

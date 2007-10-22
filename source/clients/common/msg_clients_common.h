@@ -82,7 +82,6 @@
 #define MSG_RQSNOTFOUNDINFILE_SS    _MESSAGE(1043, _("resource quota set "SFQ" not found in file "SFQ))
 #define MSG_NORQSFOUND              _MESSAGE(1044, _("No resource quota set found"))
 
-
 #define MSG_HEADER_HOSTNAME              "HOSTNAME"
 #define MSG_HEADER_ARCH                  "ARCH"
 #define MSG_HEADER_NPROC                 "NCPU"
@@ -98,6 +97,9 @@
 #define MSG_OPTIONS_WRONGARGUMENTTOSOPT                      _MESSAGE(1052, _("ERROR! wrong argument to -s option"))
 
 #define MSG_PARSE_NOOPTIONARGUMENT                           _MESSAGE(1053, _("ERROR! no option argument"))
+
+#define MSG_CENTRY_NULL_URGENCY          _MESSAGE(1054, _("Complex urgency definition is missing"))
+
 
 #define MSG_HEADER_RULE "resource quota rule"
 #define MSG_HEADER_LIMIT "limit"

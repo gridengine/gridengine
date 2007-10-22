@@ -62,6 +62,7 @@
 
 #include "uti/sge_string.h"
 #include "sgeobj/sge_str.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
 #include "spool/sge_spooling.h"
 #include "sge_persistence_qmaster.h"
@@ -86,8 +87,15 @@ centry_mod(sge_gdi_ctx_class_t *ctx,
    bool ret = true;
    bool is_slots_attr = false;
    int pos;
+   double dval;
+   char error_msg[200];
+   const char *attrname;
+   const char *temp;
 
    DENTER(TOP_LAYER, "centry_mod");
+
+   error_msg[0] = '\0';
+
 
    /*
     * At least the centry name has to be available (CE_name)
@@ -214,7 +222,23 @@ centry_mod(sge_gdi_ctx_class_t *ctx,
       if (pos >= 0) {
          const char *urgency_weight = lGetPosString(reduced_elem, pos);
          DPRINTF(("Got CE_default: "SFQ"\n", urgency_weight ? urgency_weight : "-NA-"));
-         lSetString(centry, CE_urgency_weight, urgency_weight);
+         /* Check first that the entry is not NULL */
+         if (!pos)  {
+            ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
+                  lNm2Str(CE_urgency_weight), "urgency_weight"));
+            answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return STATUS_EEXIST;
+         }
+         /* Check then that the entry is valid   */
+
+         attrname = lGetString(centry, CE_name);
+         temp = lGetString(centry, CE_urgency_weight);
+         if(!parse_ulong_val(&dval, NULL, TYPE_DOUBLE, temp, error_msg, 199)){
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, MSG_INVALID_CENTRY_PARSE_URGENCY_SS, attrname, error_msg);
+               ret = false;
+         }
+
       }
    }
 

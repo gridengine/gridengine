@@ -772,7 +772,7 @@ u_long32 show
    lListElem *jatep = NULL;
    lList *mal = NULL;
    lList *conf_l = NULL;
-   int q_id, j_id = 0, ce_id, eh_id, pe_id, gc_id;
+   int q_id = 0, j_id = 0, ce_id, eh_id, pe_id, gc_id;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
    const char *cell_root = ctx->get_cell_root(ctx);
    u_long32 progid = ctx->get_who(ctx);

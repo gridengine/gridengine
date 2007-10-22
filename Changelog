@@ -1,3 +1,6 @@
+HP-2007-10-22-0: Bugfix:    Fixed broken build after checkin AH-2007-10-22-1
+                 Changed:   clients/common/sge_qhost.c
+
 AH-2007-10-22-1: Bugfix:    Further reduction with orphan queue checking overhead
                             and qhost optimization.
                  Bugster:   6619657,6619662

@@ -1,7 +1,9 @@
+RD-2007-10-17-1: CVS        Created V61ARsnapshot3_TAG
+------------------------------------------------------
+
 AH-2007-10-19-1: Bugfix:    Bypass expensive sge_print_queues() if not needed
                             in qhost
-                 Review:    TBD
-
+                 Review:    RD
 
 AH-2007-10-19-0: Bugfix:    Bypass expensive but unneeded orphan queue checking
                             in qmaster upon qmod -d|-e|-s|-us
@@ -11,9 +13,6 @@ LP-2007-10-19-1: Enhancem.: JGDIShell now uses stderr to display errors
                  Enhancem.: JGDIException now has exitCode
                  Bugfix.:   JGDI qconf -ae now has the same behaviour as client
                  Review:    AA
-
-RD-2007-10-17-1: CVS        Created V61ARsnapshot3_TAG
-------------------------------------------------------
 
 AH-2007-10-18-0: Bugfix:    Queue creation time grows more than linear with 
                             large clusters

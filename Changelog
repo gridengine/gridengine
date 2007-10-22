@@ -1,3 +1,8 @@
+OJ-2007-10-22-1: Bugfix:   See entry for OJ-2007-10-22-0. Took out one line
+                           by mistake form source/daemons/qmaster/sge_centry_qmaster.c
+                 Bugster:  6553062
+                 Issue:    2383
+
 OJ-2007-10-22-0: Bugfix:   Fix qconf -mc accepts erroneous resource entries
                            without an urgency; qmon gives (poor) error message
                 Bugster:   6553062

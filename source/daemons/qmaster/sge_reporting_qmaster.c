@@ -664,17 +664,22 @@ reporting_create_acct_record(lList **answer_list,
 *     reporting_write_consumables() -- dump consumables to a buffer
 *
 *  SYNOPSIS
-*     bool reporting_write_consumables(lList **answer_list, dstring *buffer, 
-*                                      const lList *actual, const lList *total) 
+*     static bool 
+*     reporting_write_consumables(lList **answer_list, dstring *buffer, 
+*                                 const lList *actual, const lList *total
+*                                 const lListElem *host, 
+*                                 const lListElem *job) 
 *
 *  FUNCTION
 *     ??? 
 *
 *  INPUTS
-*     lList **answer_list - used to return error messages
-*     dstring *buffer     - target buffer
-*     const lList *actual - actual consumable values
-*     const lList *total  - configured consumable values
+*     lList **answer_list   - used to return error messages
+*     dstring *buffer       - target buffer
+*     const lList *actual   - actual consumable values
+*     const lList *total    - configured consumable values
+*     const lListElem *host - host for which to output data
+*     const lListElem *job  - optional: job which changes consumables
 *
 *  RESULT
 *     bool - true on success, false on error
@@ -682,18 +687,44 @@ reporting_create_acct_record(lList **answer_list,
 *  NOTES
 *     MT-NOTE: reporting_write_consumables() is MT safe
 *******************************************************************************/
-bool
+static bool
 reporting_write_consumables(lList **answer_list, dstring *buffer,
-                            const lList *actual, const lList *total)
+                            const lList *actual, const lList *total,
+                            const lListElem *host, const lListElem *job)
 {
    bool ret = true;
    lListElem *cep; 
    
    DENTER(TOP_LAYER, "reporting_write_consumables");
 
-   if (mconf_get_do_reporting()) {
-      for_each (cep, actual) {
-         const char *name = lGetString(cep, RUE_name);
+   for_each (cep, actual) {
+      const char *name = lGetString(cep, RUE_name);
+      bool log_variable = true;
+
+      /* 
+       * if log_consumables == false, lookup if the consumable shall be logged
+       * due to reporting_variables in global/local host
+       */
+      if (mconf_get_log_consumables() == false) {
+         const lList *report_variables = lGetList(host, EH_merged_report_variables);
+         if (lGetElemStr(report_variables, STU_name, name) == NULL) {
+            log_variable = false;
+         } else {
+            /*
+             * if we log consumables for a specific job, make sure to log only
+             * consumables, which are requested by the job
+             * slots is an implicit request - always log it if requested
+             */
+            if (strcmp(name, "slots") != 0 && job != NULL) {
+               if (job_get_request(job, name) == NULL) {
+                  log_variable = false;
+               }
+            }
+         }
+      }
+
+      /* now do the logging, if requested */
+      if (log_variable == true) {
          lListElem *tep = lGetElemStr(total, CE_name, name);
          if (tep != NULL) {
             sge_dstring_append(buffer, name);
@@ -777,16 +808,20 @@ reporting_create_queue_record(lList **answer_list,
 *  SYNOPSIS
 *     bool 
 *     reporting_create_queue_consumable_record(lList **answer_list, 
-*                                             const lListElem *queue, 
-*                                             u_long32 report_time) 
+*                                              const lListElem *host, 
+*                                              const lListElem *queue, 
+*                                              const lListElem *job, 
+*                                              u_long32 report_time) 
 *
 *  FUNCTION
 *     ??? 
 *
 *  INPUTS
-*     lList **answer_list   - used to return error messages
-*     const lListElem *queue - queue to output
-*     u_long32 report_time  - time when consumables changed
+*     lList **answer_list    - used to return error messages
+*     const lListElem *host  - host on which the qinstance is located
+*     const lListElem *queue - queue instance to output
+*     const lListElem *job   - optional: job which changes consumables
+*     u_long32 report_time   - time when consumables changed
 *
 *  RESULT
 *     bool - true on success, false on error
@@ -796,20 +831,23 @@ reporting_create_queue_record(lList **answer_list,
 *******************************************************************************/
 bool
 reporting_create_queue_consumable_record(lList **answer_list,
-                                        const lListElem *queue,
-                                        u_long32 report_time)
+                                         const lListElem *host,
+                                         const lListElem *queue,
+                                         const lListElem *job,
+                                         u_long32 report_time)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "reporting_create_queue_consumable_record");
 
-   if (mconf_get_do_reporting() && queue != NULL) {
+   if (mconf_get_do_reporting() && host != NULL && queue != NULL) {
       dstring consumable_dstring = DSTRING_INIT;
 
       /* dump consumables */
       reporting_write_consumables(answer_list, &consumable_dstring, 
                                   lGetList(queue, QU_resource_utilization), 
-                                  lGetList(queue, QU_consumable_config_list));
+                                  lGetList(queue, QU_consumable_config_list),
+                                  host, job);
 
       if (sge_dstring_strlen(&consumable_dstring) > 0) {
          dstring queue_dstring = DSTRING_INIT;
@@ -914,6 +952,7 @@ reporting_create_host_record(lList **answer_list,
 *     bool 
 *     reporting_create_host_consumable_record(lList **answer_list, 
 *                                             const lListElem *host, 
+*                                             const lListElem *job, 
 *                                             u_long32 report_time) 
 *
 *  FUNCTION
@@ -922,6 +961,7 @@ reporting_create_host_record(lList **answer_list,
 *  INPUTS
 *     lList **answer_list   - used to return error messages
 *     const lListElem *host - host to output
+*     const lListElem *job  - optional: job which changes consumables
 *     u_long32 report_time  - time when consumables changed
 *
 *  RESULT
@@ -933,6 +973,7 @@ reporting_create_host_record(lList **answer_list,
 bool
 reporting_create_host_consumable_record(lList **answer_list,
                                         const lListElem *host,
+                                        const lListElem *job,
                                         u_long32 report_time)
 {
    bool ret = true;
@@ -945,7 +986,8 @@ reporting_create_host_consumable_record(lList **answer_list,
       /* dump consumables */
       reporting_write_consumables(answer_list, &consumable_dstring, 
                                   lGetList(host, EH_resource_utilization), 
-                                  lGetList(host, EH_consumable_config_list));
+                                  lGetList(host, EH_consumable_config_list),
+                                  host, job);
 
       if (sge_dstring_strlen(&consumable_dstring) > 0) {
          dstring host_dstring = DSTRING_INIT;

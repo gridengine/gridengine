@@ -976,7 +976,7 @@ void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr,
                   /* this info is not spooled */
                   sge_add_event(now, sgeE_EXECHOST_MOD, 0, 0, 
                                 "global", NULL, NULL, global_host_ep );
-                  reporting_create_host_consumable_record(&answer_list, global_host_ep, now);
+                  reporting_create_host_consumable_record(&answer_list, global_host_ep, jep, now);
                   answer_list_output(&answer_list);
                   lListElem_clear_changed_info(global_host_ep);
                }
@@ -986,12 +986,12 @@ void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr,
                   /* this info is not spooled */
                   sge_add_event( now, sgeE_EXECHOST_MOD, 0, 0, 
                                 qep_QU_qhostname, NULL, NULL, hep);
-                  reporting_create_host_consumable_record(&answer_list, hep, now);
+                  reporting_create_host_consumable_record(&answer_list, hep, jep, now);
                   answer_list_output(&answer_list);
                   lListElem_clear_changed_info(hep);
                }
                qinstance_debit_consumable(qinstance, jep, Master_CEntry_List, slots);
-               reporting_create_queue_consumable_record(&answer_list, qinstance, now);
+               reporting_create_queue_consumable_record(&answer_list, hep, qinstance, jep, now);
                /* this info is not spooled */
                qinstance_add_event(qinstance, sgeE_QINSTANCE_MOD); 
                lListElem_clear_changed_info(qinstance);
@@ -1444,7 +1444,7 @@ static void sge_clear_granted_resources(lListElem *job, lListElem *ja_task,
                /* this info is not spooled */
                sge_add_event( 0, sgeE_EXECHOST_MOD, 0, 0, 
                              "global", NULL, NULL, host);
-               reporting_create_host_consumable_record(&answer_list, host, now);
+               reporting_create_host_consumable_record(&answer_list, host, job, now);
                answer_list_output(&answer_list);
                lListElem_clear_changed_info(host);
             }
@@ -1453,12 +1453,12 @@ static void sge_clear_granted_resources(lListElem *job, lListElem *ja_task,
                /* this info is not spooled */
                sge_add_event( 0, sgeE_EXECHOST_MOD, 0, 0, 
                              queue_hostname, NULL, NULL, host);
-               reporting_create_host_consumable_record(&answer_list, host, now);
+               reporting_create_host_consumable_record(&answer_list, host, job, now);
                answer_list_output(&answer_list);
                lListElem_clear_changed_info(host);
             }
             qinstance_debit_consumable(queue, job, Master_CEntry_List, -tmp_slot);
-            reporting_create_queue_consumable_record(&answer_list, queue, now);
+            reporting_create_queue_consumable_record(&answer_list, host, queue, job, now);
          }
 
          /* this info is not spooled */

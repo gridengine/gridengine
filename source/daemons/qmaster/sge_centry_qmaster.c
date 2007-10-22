@@ -568,13 +568,15 @@ void centry_redebit_consumables(const lList *centries)
          lListElem *qinstance = NULL;
 
          for_each(qinstance, qinstance_list) {
-            reporting_create_queue_consumable_record(&answer_list, qinstance, now);
+            const char *hostname = lGetHost(qinstance, QU_qhostname);
+            const lListElem *host = lGetElemHost(Master_Exechost_List, EH_name, hostname);
+            reporting_create_queue_consumable_record(&answer_list, host, qinstance, NULL, now);
          }
       }
       answer_list_output(&answer_list);
       /* dump all host consumables */
       for_each (hep, Master_Exechost_List) {
-         reporting_create_host_consumable_record(&answer_list, hep, now);
+         reporting_create_host_consumable_record(&answer_list, hep, NULL, now);
       }
       answer_list_output(&answer_list);
    }

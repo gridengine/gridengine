@@ -1,3 +1,9 @@
+JG-2007-10-24-1: Bugfix:    Long running jobs caused incorrect usage 
+                            information from ARCo database.
+                 Bugster:   6618599
+                 Issue:     2414
+                 Review:    RD
+
 MP-2007-10-24-0: Bugfix:    qstat -j -xml shows more detailed information than 
                             qstat -j
                  Bugster:   6353628
@@ -7,16 +13,16 @@ MP-2007-10-24-0: Bugfix:    qstat -j -xml shows more detailed information than
 JG-2007-10-24-0: Bugfix:    Fixed memory leaks / memory access errors.
                  Review:    RD
 
-OJ-2007-10-22-1: Bugfix:   See entry for OJ-2007-10-22-0. Took out one line
-                           by mistake form source/daemons/qmaster/sge_centry_qmaster.c
-                 Bugster:  6553062
-                 Issue:    2383
+OJ-2007-10-22-1: Bugfix:    See entry for OJ-2007-10-22-0. Took out one line
+                            by mistake form source/daemons/qmaster/sge_centry_qmaster.c
+                 Bugster:   6553062
+                 Issue:     2383
 
-OJ-2007-10-22-0: Bugfix:   Fix qconf -mc accepts erroneous resource entries
-                           without an urgency; qmon gives (poor) error message
-                Bugster:   6553062
-                Issue:     2383
-                Review:    AH
+OJ-2007-10-22-0: Bugfix:    Fix qconf -mc accepts erroneous resource entries
+                            without an urgency; qmon gives (poor) error message
+                Bugster:    6553062
+                Issue:      2383
+                Review:     AH
 
 AH-2007-10-22-0: Bugfix:    - bypass expensive but unneeded orphan queue checking
                               in qmaster upon qmod -d|-e|-s|-us
@@ -41,11 +47,11 @@ AA-2007-10-18-0: Bugfix:    qmon displays wrong string for queue filtering
                  Issue:     2404
                  Review:    RD
 
-MP-2007-10-15-0: Bugfix:   sge_shepherd should exit if it cannot
-                           write to any of its essential files
-                 Bugster:  6564543
-                 Issue:    2400
-                 Review:   JG
+MP-2007-10-15-0: Bugfix:    sge_shepherd should exit if it cannot
+                            write to any of its essential files
+                 Bugster:   6564543
+                 Issue:     2400
+                 Review:    JG
 
 JG-2007-10-15-0: Bugfix:    Scheduling of parallel jobs did not respect 
                             consumables, if the consumables were referenced in 

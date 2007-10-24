@@ -1,3 +1,6 @@
+JG-2007-10-24-0: Bugfix:    Fixed memory leaks / memory access errors.
+                 Review:    RD
+
 OJ-2007-10-22-1: Bugfix:   See entry for OJ-2007-10-22-0. Took out one line
                            by mistake form source/daemons/qmaster/sge_centry_qmaster.c
                  Bugster:  6553062
@@ -17,7 +20,7 @@ AH-2007-10-22-0: Bugfix:    - bypass expensive but unneeded orphan queue checkin
                  Issue:     2410,2411
                  Review:    JG
 
-JG-2007-10-19-0: Bugfix:    add a parameter to reporting_params to switch off 
+JG-2007-10-22-0: Bugfix:    add a parameter to reporting_params to switch off 
                             writing of all consumables
                  Bugster:   6617450
                  Issue:     2401

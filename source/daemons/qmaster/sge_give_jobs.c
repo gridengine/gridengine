@@ -1022,6 +1022,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
             }
             qinstance_debit_consumable(queue, jep, master_centry_list, tmp_slot);
             reporting_create_queue_consumable_record(&answer_list, host, queue, jep, now);
+            answer_list_output(&answer_list);
             /* this info is not spooled */
             qinstance_add_event(queue, sgeE_QINSTANCE_MOD);
             lListElem_clear_changed_info(queue);
@@ -1065,7 +1066,6 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       {
          dstring buffer = DSTRING_INIT;
          /* JG: TODO: why don't we generate an event? */
-         lList *answer_list = NULL;
          spool_write_object(&answer_list, spool_get_default_context(), jatep, 
                             job_get_key(jobid, jataskid, NULL, &buffer), 
                             SGE_TYPE_JATASK, job_spooling);
@@ -1103,7 +1103,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
 
                   if (!master_host) {
                      master_host = granted_queue_JG_qhostname;
-                  } 
+                  }
                   if (sge_hostcmp(master_host, granted_queue_JG_qhostname )) {
                      host = host_list_locate(master_exechost_list, granted_queue_JG_qhostname ); 
                      
@@ -1160,7 +1160,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       { 
          lList *pe_task_list = lGetList(jatep, JAT_task_list);
 
-         if(pe_task_list != NULL) {
+         if (pe_task_list != NULL) {
             lListElem *pe_task = NULL;
             lListElem *container = NULL;
             lListElem *existing_container = NULL;
@@ -1168,7 +1168,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
 
             existing_container = lGetElemStr(pe_task_list, PET_id, PE_TASK_PAST_USAGE_CONTAINER); 
             container = pe_task_sum_past_usage_all(pe_task_list);
-            if(existing_container == NULL) {
+            if (existing_container == NULL) {
                /* the usage container is not spooled */
                sge_add_event( now, sgeE_PETASK_ADD, jobid, jataskid, 
                              PE_TASK_PAST_USAGE_CONTAINER, NULL,
@@ -1197,7 +1197,6 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       ja_task_clear_finished_pe_tasks(jatep);
       job_enroll(jep, NULL, jataskid);
       {
-         lList *answer_list = NULL;
          const char *session = lGetString (jep, JB_session);
          sge_event_spool(ctx, &answer_list, now, sgeE_JATASK_MOD, 
                          jobid, jataskid, NULL, NULL, session,
@@ -1276,7 +1275,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       if (job_get_not_enrolled_ja_tasks(jep)) {
          no_unlink = 1;
       }
-      
+
       if (!no_unlink) {
          release_successor_jobs(jep);
          if ((lGetString(jep, JB_exec_file) != NULL) && job_spooling && !JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type))) {
@@ -1311,7 +1310,6 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       sge_clear_granted_resources(ctx, jep, jatep, 0, monitor);
       job_enroll(jep, NULL, jataskid);
       {
-         lList *answer_list = NULL;
          const char *session = lGetString (jep, JB_session);
          sge_event_spool(ctx, &answer_list, now, sgeE_JATASK_MOD, 
                          jobid, jataskid, NULL, NULL, session,
@@ -1380,7 +1378,7 @@ static void sge_job_finish_event(lListElem *jep, lListElem *jatep, lListElem *jr
       }   
    }
 
-   sge_add_event( 0, sgeE_JOB_FINISH, lGetUlong(jep, JB_job_number), 
+   sge_add_event(0, sgeE_JOB_FINISH, lGetUlong(jep, JB_job_number), 
                  lGetUlong(jatep, JAT_task_number), NULL, NULL,
                  lGetString(jep, JB_session), jr);
 
@@ -1585,8 +1583,7 @@ static void reduce_queue_limit(const lList* master_centry_list, lListElem *qep,
    if ((res != NULL) && (s = lGetString(res, CE_stringval))) {
       DPRINTF(("job reduces queue limit: %s = %s (was %s)\n", rlimit_name, s, lGetString(qep, nm)));
       lSetString(qep, nm, s);
-   }     
-   else {              /* enforce default request if set, but only if the consumable is */
+   } else { /* enforce default request if set, but only if the consumable is */
       lListElem *dcep; /*really used to manage resources of this queue, host or globally */
       if ((dcep=centry_list_locate(master_centry_list, rlimit_name))
                && lGetBool(dcep, CE_consumable))
@@ -1668,7 +1665,7 @@ static int sge_bury_job(bool job_spooling, const char *sge_root, lListElem *job,
       int is_enrolled = job_is_enrolled(job, ja_task_id);
 
       if (!no_events) {
-         sge_add_event( 0, sgeE_JATASK_DEL, job_id, ja_task_id, 
+         sge_add_event(0, sgeE_JATASK_DEL, job_id, ja_task_id, 
                        NULL, NULL, lGetString(job, JB_session), NULL);
       }
 
@@ -1794,7 +1791,7 @@ copyJob(lListElem *job, lListElem *ja_task)
    lListElem *ja_task_copy = NULL;
    lList * tmp_ja_task_list = NULL;
    
-   DENTER(TOP_LAYER, "setCheckpointObj");
+   DENTER(TOP_LAYER, "copyJob");
 
    /* create a copy of the job */
    lXchgList(job, JB_ja_tasks, &tmp_ja_task_list);

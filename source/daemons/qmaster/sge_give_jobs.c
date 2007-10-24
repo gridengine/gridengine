@@ -407,7 +407,7 @@ send_slave_jobs_wc(const char *target, lListElem *tmpjep, lListElem *jatep,
       u_long32 dummymid = 0;
       unsigned long last_heard_from;
       u_long32 now;
-     
+
       if (!lGetUlong(gdil_ep, JG_tag_slave_job)) {
          continue;
       }
@@ -489,7 +489,6 @@ send_slave_jobs_wc(const char *target, lListElem *tmpjep, lListElem *jatep,
       ** security hook
       */
       tgt2cc(tmpjep, hostname, target);
-
       failed = gdi_send_message_pb(0, target, 1, hostname, TAG_SLAVE_ALLOW, &pb, &dummymid);
       MONITOR_MESSAGES_OUT(monitor);
       /*
@@ -992,6 +991,7 @@ void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr,
                }
                qinstance_debit_consumable(qinstance, jep, Master_CEntry_List, slots);
                reporting_create_queue_consumable_record(&answer_list, hep, qinstance, jep, now);
+               answer_list_output(&answer_list);
                /* this info is not spooled */
                qinstance_add_event(qinstance, sgeE_QINSTANCE_MOD); 
                lListElem_clear_changed_info(qinstance);
@@ -1023,7 +1023,6 @@ void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr,
       {
          dstring buffer = DSTRING_INIT;
          /* JG: TODO: why don't we generate an event? */
-         lList *answer_list = NULL;
          spool_write_object(&answer_list, spool_get_default_context(), jatep, 
                             job_get_key(jobid, jataskid, NULL, &buffer), 
                             SGE_TYPE_JATASK);
@@ -1061,7 +1060,7 @@ void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr,
 
                   if (!master_host) {
                      master_host = granted_queue_JG_qhostname;
-                  } 
+                  }
                   if (sge_hostcmp(master_host, granted_queue_JG_qhostname )) {
                      host = host_list_locate(Master_Exechost_List, granted_queue_JG_qhostname ); 
                      
@@ -1116,7 +1115,7 @@ void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr,
       { 
          lList *pe_task_list = lGetList(jatep, JAT_task_list);
 
-         if(pe_task_list != NULL) {
+         if (pe_task_list != NULL) {
             lListElem *pe_task = NULL;
             lListElem *container = NULL;
             lListElem *existing_container = NULL;
@@ -1124,7 +1123,7 @@ void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr,
 
             existing_container = lGetElemStr(pe_task_list, PET_id, PE_TASK_PAST_USAGE_CONTAINER); 
             container = pe_task_sum_past_usage_all(pe_task_list);
-            if(existing_container == NULL) {
+            if (existing_container == NULL) {
                /* the usage container is not spooled */
                sge_add_event( now, sgeE_PETASK_ADD, jobid, jataskid, 
                              PE_TASK_PAST_USAGE_CONTAINER, NULL,
@@ -1153,7 +1152,6 @@ void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr,
       ja_task_clear_finished_pe_tasks(jatep);
       job_enroll(jep, NULL, jataskid);
       {
-         lList *answer_list = NULL;
          const char *session = lGetString (jep, JB_session);
          sge_event_spool(&answer_list, now, sgeE_JATASK_MOD, 
                          jobid, jataskid, NULL, NULL, session,
@@ -1232,7 +1230,7 @@ void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr,
       if (job_get_not_enrolled_ja_tasks(jep)) {
          no_unlink = 1;
       }
-      
+
       if (!no_unlink) {
          release_successor_jobs(jep);
          if (lGetString(jep, JB_exec_file) != NULL) {
@@ -1270,7 +1268,6 @@ void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr,
       sge_clear_granted_resources(jep, jatep, 0, monitor);
       job_enroll(jep, NULL, jataskid);
       {
-         lList *answer_list = NULL;
          const char *session = lGetString (jep, JB_session);
          sge_event_spool(&answer_list, now, sgeE_JATASK_MOD, 
                          jobid, jataskid, NULL, NULL, session,
@@ -1339,7 +1336,7 @@ static void sge_job_finish_event(lListElem *jep, lListElem *jatep, lListElem *jr
       }   
    }
 
-   sge_add_event( 0, sgeE_JOB_FINISH, lGetUlong(jep, JB_job_number), 
+   sge_add_event(0, sgeE_JOB_FINISH, lGetUlong(jep, JB_job_number), 
                  lGetUlong(jatep, JAT_task_number), NULL, NULL,
                  lGetString(jep, JB_session), jr);
 

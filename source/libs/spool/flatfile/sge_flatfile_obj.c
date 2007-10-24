@@ -325,7 +325,8 @@ static spooling_field HS_sub_fields[] = {
 static spooling_field RU_sub_fields[] = {
    {  RU_job_number,         0, NULL, NULL, NULL, NULL, NULL},
    {  RU_task_number,        0, NULL, NULL, NULL, NULL, NULL},
-   {  RU_state,              0, NULL, NULL, NULL, NULL, NULL}
+   {  RU_state,              0, NULL, NULL, NULL, NULL, NULL},
+   {  NoName,                0, NULL, NULL, NULL, NULL, NULL}
 };
 
 static spooling_field HL_sub_fields[] = {

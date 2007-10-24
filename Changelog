@@ -8,9 +8,6 @@ JG-2007-10-22-0: Bugfix:    add a parameter to reporting_params to switch off
                  Issue:     2409
                  Review:    EB
 
-RD-2007-10-22-0: CVS        Created V61ARsnapshot3_TAG
-------------------------------------------------------
-
 HP-2007-10-22-0: Bugfix:    Fixed broken build after checkin AH-2007-10-22-1
                  Changed:   clients/common/sge_qhost.c
 
@@ -20,6 +17,11 @@ AH-2007-10-22-1: Bugfix:    Further reduction with orphan queue checking overhea
                  Issue:     2410,2411
                  Review:    EB
 
+RD-2007-10-21-0: CVS        Created V61ARsnapshot3_BRANCH
+---------------------------------------------------------
+
+RD-2007-10-21-0: CVS        Created V61ARsnapshot3_TAG
+------------------------------------------------------
 
 AH-2007-10-19-1: Bugfix:    Bypass expensive sge_print_queues() if not needed
                             in qhost

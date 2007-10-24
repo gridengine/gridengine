@@ -1037,6 +1037,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
             }
             qinstance_debit_consumable(queue, jep, master_centry_list, tmp_slot);
             reporting_create_queue_consumable_record(&answer_list, queue, now);
+            answer_list_output(&answer_list);
             /* this info is not spooled */
             qinstance_add_event(queue, sgeE_QINSTANCE_MOD);
             lListElem_clear_changed_info(queue);
@@ -1090,7 +1091,6 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       {
          dstring buffer = DSTRING_INIT;
          /* JG: TODO: why don't we generate an event? */
-         lList *answer_list = NULL;
          spool_write_object(&answer_list, spool_get_default_context(), jatep, 
                             job_get_key(jobid, jataskid, NULL, &buffer), 
                             SGE_TYPE_JATASK, job_spooling);
@@ -1211,7 +1211,6 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       ja_task_clear_finished_pe_tasks(jatep);
       job_enroll(jep, NULL, jataskid);
       {
-         lList *answer_list = NULL;
          const char *session = lGetString (jep, JB_session);
          sge_event_spool(ctx, &answer_list, now, sgeE_JATASK_MOD, 
                          jobid, jataskid, NULL, NULL, session,
@@ -1267,7 +1266,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       sge_event_spool(ctx, &answer_list, 0, sgeE_JATASK_MOD, 
                       jobid, jataskid, NULL, NULL, session,
                       jep, jatep, NULL, false, true);
-
+      answer_list_output(&answer_list);
 
       if (job_get_not_enrolled_ja_tasks(jep)) {
          no_unlink = 1;
@@ -1285,6 +1284,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
          release_successor_jobs(jep);
          if ((lGetString(jep, JB_exec_file) != NULL) && job_spooling && !JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type))) {
             spool_delete_script(&answer_list, lGetUlong(jep, JB_job_number), jep);
+            answer_list_output(&answer_list);
          }
       }
       break;
@@ -1315,7 +1315,6 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       sge_clear_granted_resources(ctx, jep, jatep, 0, monitor);
       job_enroll(jep, NULL, jataskid);
       {
-         lList *answer_list = NULL;
          const char *session = lGetString (jep, JB_session);
          sge_event_spool(ctx, &answer_list, now, sgeE_JATASK_MOD, 
                          jobid, jataskid, NULL, NULL, session,

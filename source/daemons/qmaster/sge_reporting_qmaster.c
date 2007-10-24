@@ -650,12 +650,14 @@ reporting_create_acct_record(sge_gdi_ctx_class_t *ctx,
           * Otherwise (final accounting record, no intermediate acct done before),
           * we can reuse the accounting record.
           */
-         if (job_string == NULL ||
-            intermediate_usage_written(job_report, ja_task) || intermediate) {
+         bool intermediate_written = intermediate_usage_written(job_report, ja_task);
+         bool do_intermediate = (intermediate_written || intermediate) ? true : false;
+
+         if (job_string == NULL || do_intermediate) {
             sge_dstring_clear(&job_dstring);
             job_string = sge_write_rusage(&job_dstring, job_report, job, ja_task, 
                                           category_string, REPORTING_DELIMITER,
-                                          intermediate);
+                                          do_intermediate);
          }
          if (job_string == NULL) {
             ret = false;

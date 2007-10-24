@@ -1838,7 +1838,7 @@ static int EH_test(void)
    ep = spool_flatfile_read_object(&alp, EH_Type, NULL,
                                    fields, NULL, true, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, file1);
-      
+
    /* Write a EH file using flatfile spooling */
    file2 = spool_flatfile_write_object(&alp, ep, false,
                                        fields,

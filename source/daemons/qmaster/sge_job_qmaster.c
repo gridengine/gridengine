@@ -1045,6 +1045,7 @@ int sge_gdi_del_job(sge_gdi_ctx_class_t *ctx, lListElem *idep, lList **alpp, cha
                &alltasks, &deleted_tasks, start_time, monitor, forced, &deletion_time_reached);
 
       if (deletion_time_reached) {
+         lFreeWhere(&job_where);
          DRETURN(STATUS_OK);
       }
    }

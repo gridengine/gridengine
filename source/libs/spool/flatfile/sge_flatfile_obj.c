@@ -282,7 +282,8 @@ static spooling_field HS_sub_fields[] = {
 static spooling_field RU_sub_fields[] = {
    {  RU_job_number,         0, NULL, NULL, NULL, NULL, NULL},
    {  RU_task_number,        0, NULL, NULL, NULL, NULL, NULL},
-   {  RU_state,              0, NULL, NULL, NULL, NULL, NULL}
+   {  RU_state,              0, NULL, NULL, NULL, NULL, NULL},
+   {  NoName,                0, NULL, NULL, NULL, NULL, NULL}
 };
 
 static spooling_field HL_sub_fields[] = {
@@ -761,7 +762,7 @@ static int write_PE_free_slots(const lListElem *ep, int nm, dstring *buffer, lLi
  * classic spooling uses two different field delimiters to represent the
  * field values. */
 spooling_field *sge_build_EH_field_list(bool spool, bool to_stdout,
-                                         bool history)
+                                        bool history)
 {
    /* There are 14 possible EH_Type fields. */
    spooling_field *fields = (spooling_field *)malloc(sizeof(spooling_field)*14);

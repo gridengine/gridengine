@@ -1077,8 +1077,8 @@ cqueue_del_all_orphaned(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, lList **
                }
             }
          }
-         sge_dstring_free(&dir);
       }
+      sge_dstring_free(&dir);
    }
 
    DEXIT;

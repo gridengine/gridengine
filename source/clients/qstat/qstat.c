@@ -1813,6 +1813,7 @@ u_long32 isXML
    bool schedd_info = true;
    bool jobs_exist = true;
    lListElem* mes;
+   lListElem *tmpElem;
 
    DENTER(TOP_LAYER, "qstat_show_job");
 
@@ -1850,13 +1851,53 @@ u_long32 isXML
             where = lOrWhere(where, newcp);
       }   
    }
-   what = lWhat("%T(ALL)", JB_Type);
+   what = lWhat("%T(%I%I%I%I%I%I%I%I%I%I%I%I%I->%T(%I)%I%I%I%I%I%I->%T(%I)%I%I%I%I->%T(%I%I%I%I%I))",
+            JB_Type, JB_job_number, JB_exec_file, JB_submission_time, JB_owner,
+            JB_uid, JB_group, JB_gid, JB_account, JB_merge_stderr, JB_mail_list,
+            JB_notify, JB_job_name, JB_stdout_path_list, PN_Type, PN_path,
+            JB_jobshare, JB_hard_resource_list, JB_soft_resource_list,
+            JB_hard_queue_list, JB_soft_queue_list, JB_shell_list, PN_Type,
+            PN_path, JB_env_list, JB_job_args, JB_script_file, JB_ja_tasks,
+            JAT_Type, JAT_status, JAT_task_number, JAT_scaled_usage_list,
+            JAT_task_list, JAT_message_list); 
    /* get job list */
    alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_GET, &jlp, where, what);
    lFreeWhere(&where);
    lFreeWhat(&what);
-
+  
    if (isXML) {
+      /* filter the message list to contain only jobs that have been requested.
+         First remove all enteries in the job_number_list that are not in the 
+         jbList. Then remove all entries (job_number_list, message_number and 
+         message) from the message_list that have no jobs in them. 
+      */
+      for_each (tmpElem, ilp) {
+         lList *msgList = NULL;
+         lListElem *msgElem = NULL;
+         lListElem *tmp_msgElem = NULL;
+         msgList = lGetList(tmpElem, SME_message_list);
+         msgElem = lFirst(msgList);
+         while (msgElem) {
+            tmp_msgElem = lNext(msgElem);
+            lList *jbList = NULL;
+            lListElem *jbElem = NULL;
+            lListElem *tmp_jbElem = NULL;
+            jbList = lGetList(msgElem, MES_job_number_list);
+            jbElem = lFirst(jbList);
+            while (jbElem) {
+               tmp_jbElem = lNext(jbElem);
+               if (lGetElemUlong(jlp, JB_job_number, lGetUlong(jbElem, ULNG)) == NULL) {
+                  lRemoveElem(jbList, &jbElem);
+               }
+               jbElem = tmp_jbElem;
+            }
+            if (lGetNumberOfElem(lGetList(msgElem, MES_job_number_list)) == 0) {
+               lRemoveElem(msgList, &msgElem);
+            }
+            msgElem = tmp_msgElem;
+         }         
+      }
+
       xml_qstat_show_job(&jlp, &ilp,  &alp, &jid_list);
    
       lFreeList(&jlp);

@@ -1,3 +1,9 @@
+MP-2007-10-24-0: Bugfix:    qstat -j -xml shows more detailed information than 
+                            qstat -j
+                 Bugster:   6353628
+                 Issue:     1909
+                 Review:    JG
+
 JG-2007-10-24-0: Bugfix:    Fixed memory leaks / memory access errors.
                  Review:    RD
 

@@ -1,3 +1,9 @@
+JG-2007-10-24-1: Bugfix:    Long running jobs caused incorrect usage 
+                            information from ARCo database.
+                 Bugster:   6618599
+                 Issue:     2414
+                 Review:    RD
+
 JG-2007-10-24-0: Bugfix:    Fixed memory leaks / memory access errors.
                  Review:    RD
 

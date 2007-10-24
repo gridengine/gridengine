@@ -639,12 +639,14 @@ reporting_create_acct_record(lList **answer_list,
           * Otherwise (final accounting record, no intermediate acct done before),
           * we can reuse the accounting record.
           */
-         if (job_string == NULL ||
-            intermediate_usage_written(job_report, ja_task) || intermediate) {
+         bool intermediate_written = intermediate_usage_written(job_report, ja_task);
+         bool do_intermediate = (intermediate_written || intermediate) ? true : false;
+
+         if (job_string == NULL || do_intermediate) {
             sge_dstring_clear(&job_dstring);
             job_string = sge_write_rusage(&job_dstring, job_report, job, ja_task, 
                                           category_string, REPORTING_DELIMITER,
-                                          intermediate);
+                                          do_intermediate);
          }
          if (job_string == NULL) {
             ret = false;
@@ -733,7 +735,7 @@ reporting_write_consumables(lList **answer_list, dstring *buffer,
             sge_dstring_append_char(buffer, '=');
             centry_print_resource_to_dstring(tep, buffer);
 
-            if (lNext(cep)) {
+            if (lNext(cep) != NULL) {
                sge_dstring_append_char(buffer, ','); 
             }
          }

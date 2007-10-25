@@ -1878,10 +1878,11 @@ u_long32 isXML
          msgList = lGetList(tmpElem, SME_message_list);
          msgElem = lFirst(msgList);
          while (msgElem) {
-            tmp_msgElem = lNext(msgElem);
             lList *jbList = NULL;
             lListElem *jbElem = NULL;
             lListElem *tmp_jbElem = NULL;
+
+            tmp_msgElem = lNext(msgElem);
             jbList = lGetList(msgElem, MES_job_number_list);
             jbElem = lFirst(jbList);
             while (jbElem) {

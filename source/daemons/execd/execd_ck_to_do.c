@@ -362,6 +362,7 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx)
    static u_long next_old_job = 0;
    static u_long next_report = 0;
    static u_long last_report_send = 0;
+   int was_communication_error = CL_RETVAL_OK;
    lListElem *jep, *jatep;
    int return_value = 0;
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
@@ -597,13 +598,9 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx)
       }
 
       if (last_report_send < now) {
-         int was_communication_error = CL_RETVAL_OK;
          last_report_send = now;
          /* send all reports */
          was_communication_error = sge_send_all_reports(ctx, now, 0, execd_report_sources);
-         DPRINTF(("----> was_communication_error: "SFQ" ("sge_U32CFormat")\n", 
-                  cl_get_error_text(was_communication_error), 
-                  sge_u32c(was_communication_error)));
       }
    }
 
@@ -630,8 +627,12 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx)
          }
    }
 
-   DEXIT;
-   return return_value;
+   if (return_value == 0 && was_communication_error != CL_RETVAL_OK ) {
+      DPRINTF(("was_communication_error is %s\n", cl_get_error_text(was_communication_error)));
+      return_value = 1;  /* leave dispatcher */
+   }
+
+   DRETURN(return_value);
 }
 
 /****** execd_ck_to_do/sge_execd_ja_task_is_tightly_integrated() ***************

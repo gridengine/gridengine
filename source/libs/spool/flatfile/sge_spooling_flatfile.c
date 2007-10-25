@@ -1287,7 +1287,7 @@ spool_classic_default_delete_func(lList **answer_list,
             const char *exec_file;  
             char *dup = strdup(key);
             jobscript_parse_key(dup, &exec_file);
-            ret = unlink(exec_file) ? true : false;
+            ret = (unlink(exec_file) != 0) ? false: true;
             FREE(dup);
          }
          break;

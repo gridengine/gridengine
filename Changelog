@@ -1,4 +1,4 @@
-RD-2007-10-15-0: Bugfix:    - fixed execd reconnect on qmaster migration
+RD-2007-10-25-0: Bugfix:    - fixed execd reconnect on qmaster migration
                             - fixed incorrect error reporting for job script
                               spooling
                  Review:    JG

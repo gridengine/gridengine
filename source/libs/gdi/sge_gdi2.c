@@ -1535,7 +1535,7 @@ int gdi2_send_message_pb(sge_gdi_ctx_class_t *ctx,
                          const char *tohost, int tag, sge_pack_buffer *pb, 
                          u_long32 *mid) 
 {
-   long ret = 0;
+   int ret = 0;
 
    DENTER(GDI_LAYER, "gdi2_send_message_pb");
 
@@ -1568,7 +1568,7 @@ gdi2_send_message(sge_gdi_ctx_class_t *sge_ctx, int synchron, const char *tocomp
 {
    int ret;
    cl_com_handle_t* handle = NULL;
-   cl_xml_ack_type_t ack_type;
+   cl_xml_ack_type_t ack_type = CL_MIH_MAT_NAK;
    unsigned long dummy_mid;
    unsigned long* mid_pointer = NULL;
    int use_execd_handle = 0;
@@ -1630,7 +1630,6 @@ gdi2_send_message(sge_gdi_ctx_class_t *sge_ctx, int synchron, const char *tocomp
       }
    }
 
-   ack_type = CL_MIH_MAT_NAK;
    if (synchron) {
       ack_type = CL_MIH_MAT_ACK;
    }

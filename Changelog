@@ -1,3 +1,8 @@
+RD-2007-10-15-0: Bugfix:    - fixed execd reconnect on qmaster migration
+                            - fixed incorrect error reporting for job script
+                              spooling
+                 Review:    JG
+
 JG-2007-10-24-1: Bugfix:    Long running jobs caused incorrect usage 
                             information from ARCo database.
                  Bugster:   6618599

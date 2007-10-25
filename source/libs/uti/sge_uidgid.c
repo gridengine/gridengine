@@ -972,6 +972,7 @@ static int _sge_set_uid_gid_addgrp(const char *user, const char *intermediate_us
 #endif
    struct passwd *pw;
    struct passwd pw_struct;
+   gid_t old_gid;
  
    sge_switch2start_user();
  
@@ -989,6 +990,12 @@ static int _sge_set_uid_gid_addgrp(const char *user, const char *intermediate_us
       return 1;
    }
  
+   /*
+    * preserve the old primary gid for initgroups()
+    * see cr 6590010
+    */ 
+   old_gid = pw->pw_gid;
+
    /*
     *  Should we use the primary group of qsub host? (qsub_gid)
     */
@@ -1021,7 +1028,7 @@ static int _sge_set_uid_gid_addgrp(const char *user, const char *intermediate_us
 #endif
 
 #if !(defined(WIN32) || defined(INTERIX)) /* initgroups not called */
-   status = initgroups(pw->pw_name, pw->pw_gid);
+   status = initgroups(pw->pw_name, old_gid);
  
    /* Why am I doing it this way?  Good question,
       an even better question would be why vendors

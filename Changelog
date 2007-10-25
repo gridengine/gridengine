@@ -1,3 +1,9 @@
+RN-2007-10-25-0: Bugfix:    Original primary group vanishes after newgrp command
+                            (USE_QSUB_GID=true)
+                 Bugster:   6590010
+                 Issue:     2342
+                 Review:    JG
+
 JG-2007-10-25-0: Bugfix:    Fixed broken build on irix65.
                  Review:    RD
 

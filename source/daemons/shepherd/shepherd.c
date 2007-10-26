@@ -642,7 +642,9 @@ int main(int argc, char **argv)
    /* write our pid to file */
    pid = getpid();
 
-   shepherd_write_pid_file(pid);
+   if(!shepherd_write_pid_file(pid, &ds)) {
+      shepherd_error(sge_dstring_get_string(&ds));
+   }
 
    uid = getuid();
 

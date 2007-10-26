@@ -47,23 +47,30 @@
 #include "uti/sge_uidgid.h"
 #include "msg_common.h"
 
-bool shepherd_write_pid_file(pid_t pid)
+bool shepherd_write_pid_file(pid_t pid, dstring *errmsg)
 {
    bool ret = true;
    FILE *fp = NULL;
 
    fp = fopen("pid", "w");
    if (fp != NULL) {
-      fprintf(fp, pid_t_fmt"\n", pid);
-      fflush(fp);
+      if (fprintf(fp, pid_t_fmt"\n", pid) < 0) {
+         sge_dstring_sprintf(errmsg, MSG_FILE_CANNOT_WRITE_SS, "pid", strerror(errno));
+         ret = false;
+      } else {
+         if (fflush(fp) < 0) {
+            sge_dstring_sprintf(errmsg, MSG_FILE_CANNOT_FLUSH_SS, "pid", strerror(errno));
+            ret = false;
+         }
+      }
       FCLOSE(fp);
    } else {
-      shepherd_error_sprintf(MSG_FILE_NOOPEN_SS, "pid", strerror(errno));
+      sge_dstring_sprintf(errmsg, MSG_FILE_NOOPEN_SS, "pid", strerror(errno));
       ret = false;
    }
    return ret;
 FCLOSE_ERROR:
-   shepherd_error_sprintf(MSG_FILE_NOCLOSE_SS, "pid", strerror(errno));
+   sge_dstring_sprintf(errmsg, MSG_FILE_NOCLOSE_SS, "pid", strerror(errno));
    return false;
 }
 

@@ -1451,7 +1451,7 @@ static void *sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *mo
 
    if (libjvm_path == NULL) {
       DRETURN(anArg);
-   }   
+   }
 
    if (additional_jvm_args != NULL) {
         char * args = strdup(additional_jvm_args);
@@ -1485,12 +1485,11 @@ static void *sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *mo
    jvm_argv[2] = strdup(sge_dstring_sprintf(&ds, "-Djava.security.policy=%s/util/rmiproxy.policy", ctx->get_sge_root(ctx)));
    jvm_argv[3] = strdup(sge_dstring_sprintf(&ds, "-Djava.rmi.server.codebase=file://%s/lib/jgdi.jar", ctx->get_sge_root(ctx)));
    jvm_argv[4] = strdup(sge_dstring_sprintf(&ds, "-Djava.library.path=%s/lib/%s", ctx->get_sge_root(ctx), sge_get_arch()));
-   jvm_argv[5] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.config.file=%s/util/management.properties", ctx->get_sge_root(ctx)));
-   jvm_argv[6] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.jmxremote.access.file=%s/util/jmxremote.access", ctx->get_sge_root(ctx)));
-   jvm_argv[7] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.jmxremote.password.file=%s/common/jmxremote.password", 
-                                            ctx->get_cell_root(ctx)));
-   jvm_argv[8] = strdup(sge_dstring_sprintf(&ds, "-Djava.security.auth.login.config=%s/util/jaas.config", ctx->get_sge_root(ctx)));
-   jvm_argv[9] = strdup(sge_dstring_sprintf(&ds, "-Djava.util.logging.config.file=%s/util/logging.properties", ctx->get_sge_root(ctx)));
+   jvm_argv[5] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.config.file=%s/common/jmx/management.properties", ctx->get_cell_root(ctx)));
+   jvm_argv[6] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.jmxremote.access.file=%s/common/jmx/jmxremote.access", ctx->get_cell_root(ctx)));
+   jvm_argv[7] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.jmxremote.password.file=%s/common/jmx/jmxremote.password", ctx->get_cell_root(ctx)));
+   jvm_argv[8] = strdup(sge_dstring_sprintf(&ds, "-Djava.security.auth.login.config=%s/common/jmx/jaas.config", ctx->get_cell_root(ctx)));
+   jvm_argv[9] = strdup(sge_dstring_sprintf(&ds, "-Djava.util.logging.config.file=%s/common/jmx/logging.properties", ctx->get_cell_root(ctx)));
 
    for(i=0; i < additional_jvm_argc; i++) {
       jvm_argv[10+i] = additional_jvm_argv[i];
@@ -1587,7 +1586,7 @@ static void* jvm_thread(void* anArg)
       }
       /* to prevent high cpu load if jvm is not started
          loop we simply sleep here */
-      sleep(60*60*60);
+      sleep(5);
 
       thread_output_profiling("message thread profiling summary:\n", 
                               &next_prof_output);

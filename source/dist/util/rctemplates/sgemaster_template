@@ -154,6 +154,119 @@ QmasterSpoolDir()
 }
 
 #---------------------------------------------------------------------------
+#  SetLibJvmPath
+#
+#     sets the env variable SGE_LIBJVM_PATH
+SetLibJvmPath() {
+   
+   if [ ! -f $SGE_ROOT/$SGE_CELL/common/jmx/management.properties ]; then
+      # jmx server configuration is not installed, do not start jvm thread
+      return 1
+   fi
+   
+   MIN_JAVA_VERSION=1.5.0
+   NUM_MIN_JAVA_VERSION=`JavaVersionString2Num $MIN_JAVA_VERSION`
+   
+   if [ "$JAVA_HOME" != "" ]; then
+      java_home=$JAVA_HOME
+   else
+     java_home=/usr/java
+   fi
+   
+   if [ -d $java_home/jre ]; then
+      java_home=$java_home/jre
+   fi
+   
+   if [ ! -x $java_home/bin/java ]; then
+      echo "Warning: Cannot start jvm thread: $java_home/bin/java is not executable"
+      return 1
+   fi
+   
+   JAVA_VERSION=`$java_home/bin/java -version 2>&1 | head -1`
+   JAVA_VERSION=`echo $JAVA_VERSION | awk '{print $3}' | sed -e "s/\"//g"`
+   NUM_JAVA_VERSION=`JavaVersionString2Num $JAVA_VERSION`
+   
+   if [ $NUM_JAVA_VERSION -lt $NUM_MIN_JAVA_VERSION ]; then
+      echo "Warning: Cannot start jvm thread: Invalid java version ($JAVA_VERSION), we need $MIN_JAVA_VERSION or higher"
+      return 1
+   fi
+   
+   case $ARCH in
+      sol-sparc64) jvm_lib_path=$java_home/lib/sparcv9/server/libjvm.so;;
+      sol-amd64)   jvm_lib_path=$java_home/lib/amd64/server/libjvm.so;;
+      sol-x86)     jvm_lib_path=$java_home/lib/x86/server/libjvm.so;;
+      lx*-amd64)   jvm_lib_path=$java_home/lib/amd64/server/libjvm.so;;
+      lx*-x86)     jvm_lib_path=$java_home/lib/x86/server/libjvm.so;;
+      *)
+      echo "Warning: Cannot start jvm thread: Have no java support for $ARCH"
+      return 1;;
+   esac
+   
+   if [ ! -f $jvm_lib_path ]; then
+      echo "Warning: Cannot start jvm thread: jvm library $jvm_lib_path not found"
+      return 1
+   fi
+   SGE_JVM_LIB_PATH=$jvm_lib_path
+   export SGE_JVM_LIB_PATH
+   return 0
+}
+
+########################################################
+#
+# Version to convert a version string in X.Y.Z-* or
+# X.Y.X_NN format to XYZNN format so can be treated as a
+# number.
+#
+# $1 = version string
+# Returns numerical version
+#
+########################################################
+JavaVersionString2Num () {
+
+   # Minor and micro default to 0 if not specified.
+   major=`echo $1 | awk -F. '{print $1}'`
+   minor=`echo $1 | awk -F. '{print $2}'`
+   if [ ! -n "$minor" ]; then
+      minor="0"
+   fi
+   micro=`echo $1 | awk -F. '{print $3}'`
+   if [ ! -n "$micro" ]; then
+      micro="0"
+   fi
+
+   # The micro version may further be extended to include a patch number.
+   # This is typically of the form <micro>_NN, where NN is the 2-digit
+   # patch number.  However it can also be of the form <micro>-XX, where
+   # XX is some arbitrary non-digit sequence (eg., "rc").  This latter
+   # form is typically used for internal-only release candidates or
+   # development builds.
+   #
+   # For these internal builds, we drop the -XX and assume a patch number 
+   # of "00".  Otherwise, we extract that patch number.
+   #
+   patch="00"
+   dash=`echo $micro | grep "-"`
+   if [ $? -eq 0 ]; then
+      # Must be internal build, so drop the trailing variant.
+      micro=`echo $micro | awk -F- '{print $1}'`
+   fi
+
+   underscore=`echo $micro | grep "_"`
+   if [ $? -eq 0 ]; then
+      # Extract the seperate micro and patch numbers, ignoring anything
+      # after the 2-digit patch.
+      patch=`echo $micro | awk -F_ '{print substr($2, 1, 2)}'`
+      micro=`echo $micro | awk -F_ '{print $1}'`
+   fi
+
+   echo "${major}${minor}${micro}${patch}"
+
+} # versionString2Num
+
+
+
+
+#---------------------------------------------------------------------------
 # CheckIfQmasterHost
 #    If our hostname given in $1 is the same as in the "act_qmaster" file
 #    echo "true" else echo "false"
@@ -468,6 +581,7 @@ if [ "$startup" = true ]; then
 
    if [ $qmaster = true -a $qmaster_host = true ]; then
       echo "   starting sge_qmaster"
+      SetLibJvmPath
       $bin_dir/sge_qmaster
       [ $? -eq 0 -a -d /var/lock/subsys ] && touch /var/lock/subsys/sgemaster >/dev/null 2>&1
       CheckRunningQmaster

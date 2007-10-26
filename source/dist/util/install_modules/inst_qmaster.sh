@@ -585,7 +585,7 @@ SetSpoolingOptions()
 #
 SelectHostNameResolving()
 {
-   if [ $AUTO = true ]; then
+   if [ $AUTO = "true" ]; then
      IGNORE_FQDN_DEFAULT=$HOSTNAME_RESOLVING
      $INFOTEXT -log "Using >%s< as IGNORE_FQDN_DEFAULT." "$IGNORE_FQDN_DEFAULT"
      $INFOTEXT -log "If it's >true<, the domainname will be ignored."
@@ -612,7 +612,7 @@ SelectHostNameResolving()
      $CLEAR
    fi
 
-   if [ "$IGNORE_FQDN_DEFAULT" = false ]; then
+   if [ "$IGNORE_FQDN_DEFAULT" = "false" ]; then
       GetDefaultDomain
    else
       CFG_DEFAULT_DOMAIN=none
@@ -1001,14 +1001,36 @@ AddCommonFiles()
       ExecuteAsAdmin chmod $FILEPERM $COMMONDIR/$f
    done
 
-   # copy jmxremote.password
-   f=jmxremote.password
-   if [ -f util/$f ]; then
-      $INFOTEXT "Adding >%s< default jmx password file" $f
-      ExecuteAsAdmin cp util/$f $COMMONDIR
-      ExecuteAsAdmin chmod 600 $COMMONDIR/$f
+}
+
+AddJMXFiles() {
+   if [ "$SGE_JMX_PORT" != "" ]; then
+      jmx_dir=$COMMONDIR/jmx
+      ExecuteAsAdmin mkdir $jmx_dir
+      
+      $INFOTEXT "Adding >jmx/%s< jmx remote access file" jmxremote.access
+      ExecuteAsAdmin cp util/jmxremote.access $jmx_dir/jmxremote.access
+      ExecuteAsAdmin chmod $FILEPERM $jmx_dir/jmxremote.access
+      
+      $INFOTEXT "Adding >jmx/%s< jmx remote password file" jmxremote.password
+      ExecuteAsAdmin cp util/jmxremote.password $jmx_dir/jmxremote.password
+      ExecuteAsAdmin chmod 600 $jmx_dir/jmxremote.password
+     
+      ExecuteAsAdmin touch /tmp/management.properties.$$
+      Execute sed -e "s#@@SGE_JMX_PORT@@#$SGE_JMX_PORT#g" \
+                  -e "s#@@SGE_ROOT@@#$SGE_ROOT#g" \
+                  -e "s#@@SGE_CELL@@#$SGE_CELL#g" \
+                  util/management.properties.template > /tmp/management.properties.$$
+      ExecuteAsAdmin mv /tmp/management.properties.$$ $jmx_dir/management.properties
+      ExecuteAsAdmin chmod $FILEPERM $jmx_dir/management.properties
+      $INFOTEXT "Adding >jmx/%s< jmx configuration" management.properties
+      
+      ExecuteAsAdmin touch /tmp/logging.properties.$$
+      Execute sed "s#@@MASTER_SPOOL_DIR@@#$QMDIR#g" util/logging.properties.template > /tmp/logging.properties.$$
+      ExecuteAsAdmin mv /tmp/logging.properties.$$ $jmx_dir/logging.properties
+      ExecuteAsAdmin chmod $FILEPERM $jmx_dir/logging.properties
+      $INFOTEXT "Adding >jmx/%s< jmx logging configuration" logging.properties
    fi
-   unset f
 }
 
 #-------------------------------------------------------------------------
@@ -1545,6 +1567,83 @@ GetQmasterPort()
       $CLEAR
    fi
 
+}
+
+GetJMXPort() {
+   $INFOTEXT -u "\nGrid Engine JMX MBean server"
+   if [ $AUTO != "true" ]; then
+      $INFOTEXT -ask "y" "n" -def "n" -n \
+           "Enable the JMX MBean server in qmaster (y/n) [n] >> "
+      ret=$?
+      if [ $ret -eq 1 ]; then
+         SGE_JMX_PORT=""
+         $INFOTEXT "\nJMX MBean server in qmaster disabled"
+         $INFOTEXT -wait -n "Hit <RETURN> to continue >> "
+         $CLEAR
+         return
+      fi
+   fi
+   
+   jmx_port_min=1
+   jmx_port_max=65500
+   
+   if [ "$SGE_JMX_PORT" != "" ]; then
+      if [ $SGE_JMX_PORT -ge $jmx_port_min -a $SGE_JMX_PORT -le $jmx_port_max ]; then
+         $INFOTEXT "\nUsing the environment variable\n\n" \
+                   "   \$SGE_JMX_PORT=%s\n\n" \
+                   "as port for JMX MBean server\n\n" $SGE_JMX_PORT
+         $INFOTEXT -log "Using SGE_JMX_PORT >%s<." $SGE_JMX_PORT
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+         $CLEAR
+         export SGE_JMX_PORT
+         return
+      else
+         $INFOTEXT "\nThe environment variable\n\n" \
+                   "   \$SGE_JMX_PORT=%s\n\n" \
+                   "has an invalid value (it must be in range %s..%s).\n\n" \
+                   "Please set the environment variable \$SGE_JMX_PORT and restart\n" \
+                   "the installation or configure the service >sge_qmaster<." $SGE_JMX_PORT $jmx_port_min $jmx_port_max
+         $INFOTEXT -log "Your \$SGE_JMX_PORT=%s\n\n" \
+                   "has an invalid value (it must be in range %s..%s).\n\n" \
+                   "Please check your configuration file and restart\n" \
+                   "the installation or configure the service >sge_qmaster<." $SGE_JMX_PORT $jmx_port_min $jmx_port_max
+         if [ $AUTO = "true" ]; then
+            MoveLog
+            exit 1
+         fi
+      fi
+   fi
+   if [ $AUTO = "true" ]; then
+      $CLEAR
+      return
+   fi
+   done=false
+   while [ $done != true ]; do
+      $INFOTEXT -n "Please enter an unused port number for the JMX MBean server >> "
+      INP=`Enter $SGE_JMX_PORT`
+      if [ "$INP" = "" ]; then
+         $INFOTEXT "\nInvalid input. Must be a number."
+         continue
+      fi
+      chars=`echo $INP | wc -c`
+      chars=`expr $chars - 1`
+      digits=`expr $INP : "[0-9][0-9]*"`
+      if [ "$chars" != "$digits" ]; then
+         $INFOTEXT "\nInvalid input. Must be a number."
+      elif [ $INP -lt $jmx_port_min -o $INP -gt $jmx_port_max ]; then
+         $INFOTEXT "\nInvalid port number. Must be in range [%s..%s]." $jmx_port_min $jmx_port_max
+      elif [ $INP -le 1024 -a $euid != 0 ]; then
+         $INFOTEXT "\nYou are not user >root<. You need to use a port above 1024."
+      else
+         done=true
+      fi
+   done
+   SGE_JMX_PORT=$INP
+   export SGE_JMX_PORT
+   $INFOTEXT "\nUsing port >%s< for Grid Engine JMX MBean server.\n" $SGE_JMX_PORT
+   $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+   $CLEAR
+   
 }
 
 #-------------------------------------------------------------------------

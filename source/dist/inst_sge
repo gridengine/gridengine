@@ -441,6 +441,7 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  SetPermissions
  SelectHostNameResolving
  SetProductMode
+ GetJMXPort
  MakeDirsMaster
  SetSpoolingOptions
  AddBootstrap
@@ -452,6 +453,7 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  AddPEFiles
  AddDefaultUsersets
  AddCommonFiles
+ AddJMXFiles
  CreateSGEStartUpScripts $euid true master
  CreateSGEStartUpScripts $euid true execd 
  CreateSettingsFile

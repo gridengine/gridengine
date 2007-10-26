@@ -1,3 +1,6 @@
+RH-2007-10-26-0: Enhancem:  Installer enhancement for JMX MBean Server added
+                 Review:    MD
+
 RD-2007-10-25-0: Bugfix:    - fixed execd reconnect on qmaster migration
                             - fixed incorrect error reporting for job script
                               spooling

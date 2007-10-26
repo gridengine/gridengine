@@ -1,3 +1,12 @@
+MD-2007-10-26-0: Bugfix:    o Incorrect messages in qconf command,
+                            o rctemplates lack of requirement,
+                            o the restore feature does not delete old configuration 
+                            before restoring 
+                 Bugster:   6596931, 6287501, 6618619
+                 Issue:     2406, 2336, 2407
+                 Changed:   clients, install, backup_restore 
+                 Review:    HP
+
 RN-2007-10-26-0: Bugfix:    forbid deletion of global config values
                  Bugster:   6506667
                  Issue:     2138
@@ -14,7 +23,7 @@ JG-2007-10-25-0: Bugfix:    Fixed broken build on irix65.
 
 JG-2007-10-24-1: Bugfix:    Long running jobs caused incorrect usage 
                             information from ARCo database.
-                 Bugster:   6618599
+                 
                  Issue:     2414
                  Review:    RD
 

@@ -1795,18 +1795,30 @@ RestoreConfig()
 
          for f in $BUP_CLASSIC_SPOOL_FILE_LIST; do
             if [ -f /tmp/bup_tmp_$DATE/$f -o -d /tmp/bup_tmp_$DATE/$f ]; then
+               if [ -f $master_spool_tmp/$f -o -d $master_spool_tmp/$f ]; then
+                  #move the old configuration to keep backup
+                  ExecuteAsAdmin mv -f $master_spool_tmp/$f $master_spool_tmp/$f.bak
+               fi
                ExecuteAsAdmin $CPR /tmp/bup_tmp_$DATE/$f $master_spool_tmp
             fi
          done
 
          for f in $BUP_CLASSIC_DIR_LIST; do
             if [ -d /tmp/bup_tmp_$DATE/$f ]; then
+               if [ -d $SGE_ROOT/$SGE_CELL/common/$f ]; then
+                  #move the old configuration to keep backup
+                  ExecuteAsAdmin mv -f $SGE_ROOT/$SGE_CELL/common/$f $SGE_ROOT/$SGE_CELL/common/$f.bak
+               fi
                ExecuteAsAdmin $CPR /tmp/bup_tmp_$DATE/$f $SGE_ROOT/$SGE_CELL/common
             fi
          done
 
          for f in $BUP_CLASSIC_COMMON_FILE_LIST; do
             if [ -d /tmp/bup_tmp_$DATE/$f ]; then
+               if [ -f $SGE_ROOT/$SGE_CELL/common/$f ]; then
+                  #move the old configuration to keep backup
+                  ExecuteAsAdmin m -f $SGE_ROOT/$SGE_CELL/common/$f $SGE_ROOT/$SGE_CELL/common/$f.bak
+               fi
                ExecuteAsAdmin $CP /tmp/bup_tmp_$DATE/$f $SGE_ROOT/$SGE_CELL/common
             fi
          done
@@ -1917,18 +1929,30 @@ RestoreConfig()
 
          for f in $BUP_CLASSIC_SPOOL_FILE_LIST; do
             if [ -f $bup_file/$f -o -d $bup_file/$f ]; then
+               if [ -f $master_spool_tmp/$f -o -d $master_spool_tmp/$f ]; then
+                  #move the old configuration to keep backup
+                  ExecuteAsAdmin mv -f $master_spool_tmp/$f $master_spool_tmp/$f.bak
+               fi
                ExecuteAsAdmin $CPR $bup_file/$f $master_spool_tmp
             fi
          done
 
          for f in $BUP_CLASSIC_DIR_LIST; do
             if [ -d $bup_file/$f ]; then
+               if [ -d $SGE_ROOT/$SGE_CELL/common/$f ]; then
+                  #move the old configuration to keep backup
+                  ExecuteAsAdmin mv -f $SGE_ROOT/$SGE_CELL/common/$f $SGE_ROOT/$SGE_CELL/common/$f.bak
+               fi
                ExecuteAsAdmin $CPR $bup_file/$f $SGE_ROOT/$SGE_CELL/common
             fi
          done
 
          for f in $BUP_CLASSIC_COMMON_FILE_LIST; do
             if [ -f $bup_file/$f ]; then
+               if [ -f $SGE_ROOT/$SGE_CELL/common/$f ]; then
+                  #move the old configuration to keep backup
+                  ExecuteAsAdmin mv -f $SGE_ROOT/$SGE_CELL/common/$f $SGE_ROOT/$SGE_CELL/common/$f.bak
+               fi
                ExecuteAsAdmin $CP $bup_file/$f $SGE_ROOT/$SGE_CELL/common
             fi
          done

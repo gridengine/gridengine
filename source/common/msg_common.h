@@ -303,6 +303,7 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_HOLD_LIST            "hold_list               `n' `u' `s' `o' `U' `S' `O'"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_HOLD_LIST_QHOLD      "hold_list               `u' `s' `o'" 
 #define MSG_GDI_ARGUMENTSYNTAX_OA_HOST_ID_LIST         "host_id_list            host[ host ...]"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_HOSTNAME_LIST        "hostname_list           hostname[,hostname,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_ID               "job_id_list"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_ID_LIST          "job_id_list             job_id[,job_id,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_IDENTIFIER_LIST  "job_identifier_list     {job_id|job_name|reg_exp}[,{job_id|job_name|reg_exp},...]"
@@ -337,7 +338,7 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME2         "obj_nm2                 \"queue\"|\"queue_domain\"|\"queue_instance\"|\"exechost\""
 #define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME3         "obj_nm3                 \"queue\""
 #define MSG_GDI_ARGUMENTSYNTAX_OA_ATTRIBUTE_NAME       "attr_nm                 (see man pages)"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_ID_LIST       "obj_id_lst              objectname [ objectname ...]" 
+#define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_ID_LIST       "obj_id_list             objectname [ objectname ...]" 
 #define MSG_GDI_ARGUMENTSYNTAX_OA_EVENTCLIENT_LIST     "evid_list               all | evid[,evid,...]" 
 #define MSG_GDI_ARGUMENTSYNTAX_OA_HOST_LIST            "host_list               all | hostname[,hostname,...]" 
 #define MSG_GDI_ARGUMENTSYNTAX_OA_WC_CQUEUE            "wc_cqueue               wildcard expression matching a cluster queue"
@@ -380,7 +381,7 @@
 #define MSG_GDI_USAGE_Ae_OPT_FNAME                       "[-Ae fname]"
 #define MSG_GDI_UTEXT_Ae_OPT_FNAME                       _MESSAGE(23301, _("add an exec host from file"))
 
-#define MSG_GDI_USAGE_ah_OPT_HOSTNAME                    "[-ah hostname]"
+#define MSG_GDI_USAGE_ah_OPT_HOSTNAME                    "[-ah hostname_list]"
 #define MSG_GDI_UTEXT_ah_OPT_HOSTNAME                    _MESSAGE(23302, _("add an administrative host"))
 
 #define MSG_GDI_USAGE_am_OPT_USER_LIST                   "[-am user_list]"
@@ -398,7 +399,7 @@
 #define MSG_GDI_USAGE_aq_OPT_Q_TEMPLATE                  "[-aq [queue_name]]"
 #define MSG_GDI_UTEXT_aq_OPT_Q_TEMPLATE                  _MESSAGE(23307, _("add a new cluster queue"))
 
-#define MSG_GDI_USAGE_as_OPT_HOSTNAME                    "[-as hostname]"
+#define MSG_GDI_USAGE_as_OPT_HOSTNAME                    "[-as hostname_list]"
 #define MSG_GDI_UTEXT_as_OPT_HOSTNAME                    _MESSAGE(23308, _("add a submit host"))
 
 #define MSG_GDI_USAGE_ASTNODE_NODE_SHARES_LIST           "[-astnode node_shares_list]"

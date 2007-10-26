@@ -40,6 +40,8 @@
 
 typedef int (*tDaemonizeFunc)(void *ctx);
 
+/* validate the global configuration */
+int validate_config( lList **alpp, lListElem *gconf );
 /* This list is *ONLY* used by the execd and should be moved eventually */
 extern lList *Execd_Config_List;
 

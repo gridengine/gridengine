@@ -1,3 +1,8 @@
+RN-2007-10-26-0: Bugfix:    forbid deletion of global config values
+                 Bugster:   6506667
+                 Issue:     2138
+                 Review:    JG
+
 RN-2007-10-25-0: Bugfix:    Original primary group vanishes after newgrp command
                             (USE_QSUB_GID=true)
                  Bugster:   6590010

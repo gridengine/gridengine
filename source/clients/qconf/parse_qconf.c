@@ -6609,12 +6609,7 @@ u_long32 flags
    lFreeList(&lp);
             
    /* report results */
-   ep = lFirst(alp);                   
-        
-   answer_exit_if_not_recoverable(ep); 
-   failed = !(answer_get_status(ep) == STATUS_OK);
-         
-   fprintf(stderr, "%s\n", lGetString(ep, AN_text));
+   failed = show_answer_list(alp);
      
    lFreeList(&alp);
    

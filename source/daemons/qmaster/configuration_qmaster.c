@@ -515,6 +515,11 @@ static int check_config(lList **alpp, lListElem *conf)
       }
    }
  
+   /* now check if all the required entries are present in the global conf.... */
+   if (validate_config(alpp, conf) != 0){
+      DRETURN(STATUS_EEXIST);
+   }
+
    DRETURN(0);
 }
   

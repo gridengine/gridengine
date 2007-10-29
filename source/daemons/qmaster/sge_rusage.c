@@ -163,31 +163,18 @@ sge_write_rusage(dstring *buffer,
          }
       }
 
+      /* 
+       * The LAST_INTERMEDIATE timestamp of the previous intermediate
+       * record is the start_time of the current interval.
+       */
+      start_time = usage_list_get_ulong_usage(reported_list, LAST_INTERMEDIATE, 0),
+
       /* now set actual time as time of last intermediate usage report */
       usage_list_set_ulong_usage(reported_list, LAST_INTERMEDIATE, 
                                  now);
    } else {
       reported_list = NULL;
    }
-
-
-#if 0
-   {
-      lListElem *ep;
-
-      if (usage_list) {
-         DPRINTF(("received usage attributes:\n"));
-      } else {
-         DPRINTF(("empty usage list\n"));
-      }   
-
-      for_each (ep, usage_list) {
-         DPRINTF(("    \"%s\" = %f\n",
-            lGetString(ep, UA_name),
-            lGetDouble(ep, UA_value)));
-      }
-   }
-#endif
 
    SET_STR_DEFAULT(jr, JR_queue_name, "UNKNOWN");
    SET_HOST_DEFAULT(jr, JR_host_name,  "UNKNOWN");
@@ -272,11 +259,17 @@ sge_write_rusage(dstring *buffer,
       }
    }
 
+   /* get submission_time, start_time, end_time */
    if (intermediate) {
       if (job != NULL && pe_task == NULL) {
          submission_time = lGetUlong(job, JB_submission_time);
       }
-      if (ja_task != NULL) {
+      /* 
+       * For the first intermediate record, the start_time is the ja_task start time.
+       * For consequent intermediate records, we already set the start_time to the
+       * previous intermediate record's end time.
+       */
+      if (start_time == 0 && ja_task != NULL) {
          start_time = lGetUlong(ja_task, JAT_start_time);
       }
       end_time = now;

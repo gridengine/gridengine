@@ -1,3 +1,9 @@
+OJ-2007-10-29-0: Bugfix:    See entry for OJ-2007-10-22-0. Fixed minor error in 
+                            source/daemons/qmaster/sge_centry_qmaster.c
+                 Bugster:   6553062
+                 Issue:     2383
+                 Review:    AH
+
 JG-2007-10-29-0: Bugfix:    The start_time field was incorrect in intermediate 
                             accounting records.
                  Bugster:   6622842

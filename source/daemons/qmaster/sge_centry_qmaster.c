@@ -87,6 +87,7 @@ centry_mod(sge_gdi_ctx_class_t *ctx,
    bool ret = true;
    bool is_slots_attr = false;
    int pos;
+
    double dval;
    char error_msg[200];
    const char *attrname;
@@ -95,7 +96,6 @@ centry_mod(sge_gdi_ctx_class_t *ctx,
    DENTER(TOP_LAYER, "centry_mod");
 
    error_msg[0] = '\0';
-
 
    /*
     * At least the centry name has to be available (CE_name)
@@ -232,13 +232,14 @@ centry_mod(sge_gdi_ctx_class_t *ctx,
          }
          /* Check then that the entry is valid   */
 
-         attrname = lGetString(centry, CE_name);
-         temp = lGetString(centry, CE_urgency_weight);
+         attrname = lGetString(reduced_elem, CE_name);
+         temp = lGetString(reduced_elem, CE_urgency_weight);
          if(!parse_ulong_val(&dval, NULL, TYPE_DOUBLE, temp, error_msg, 199)){
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, MSG_INVALID_CENTRY_PARSE_URGENCY_SS, attrname, error_msg);
                ret = false;
          }
-         lSetString(centry, CE_urgency_weight, urgency_weight);
+
+       lSetString(centry, CE_urgency_weight, urgency_weight);
       }
    }
 

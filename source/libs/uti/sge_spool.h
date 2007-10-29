@@ -243,4 +243,8 @@ void sge_silent_set(int i);
 
 int sge_silent_get(void); 
 
+void sge_qmaster_pid_set(pid_t pid);
+
+pid_t sge_qmaster_pid_get(void); 
+
 #endif /* _SGE_FILE_PATH_H_ */

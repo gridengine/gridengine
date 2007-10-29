@@ -72,7 +72,7 @@ public class QStatCommand extends AnnotatedCommand {
                 return;
             }
             @SuppressWarnings("unchecked")
-            List<ClusterQueueSummary> res = (List<ClusterQueueSummary>) jgdi.getClusterQueueSummary(cqOptions);
+            List<ClusterQueueSummary> res = jgdi.getClusterQueueSummary(cqOptions);
             if (res.size() == 0) {
                 return;
             }

@@ -1313,7 +1313,7 @@ static JNIEnv* create_vm(const char *libjvm_path, int argc, char** argv)
 #endif
 
    if (libjvm_handle == NULL) {
-      CRITICAL((SGE_EVENT, "could not load libjvmi %s", dlerror()));
+      CRITICAL((SGE_EVENT, "could not load libjvm %s", dlerror()));
       ok = false;
    }
 
@@ -1334,6 +1334,7 @@ static JNIEnv* create_vm(const char *libjvm_path, int argc, char** argv)
       }
    }
 
+/* printf("------> Running22 as uid/euid: %d/%d\n", getuid(), geteuid()); */
 	if ((i = sge_JNI_CreateJavaVM(&jvm, (void **)&env, &args)) < 0) {
       CRITICAL((SGE_EVENT, "can not create JVM (error code %d)\n", i));
       env = NULL;
@@ -1446,29 +1447,29 @@ static void *sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *mo
    
    DENTER(TOP_LAYER, "sge_run_jvm");
 
-/*    libjvm_path = ctx->get_libjvm_path(ctx); */
    libjvm_path = getenv("SGE_LIBJVM_PATH");
+   if (libjvm_path == NULL) {
+      libjvm_path = ctx->get_libjvm_path(ctx);
+   }   
 
    if (libjvm_path == NULL) {
-      DRETURN(anArg);
-   }
+      DRETURN(NULL);
+   }   
 
    if (additional_jvm_args != NULL) {
-        char * args = strdup(additional_jvm_args);
+        char* args = strdup(additional_jvm_args);
         char** tmp_argv = string_list(args," ", NULL);
         
-        for(i=0; tmp_argv[i] != NULL; i++) {
+        for (i=0; tmp_argv[i] != NULL; i++) {
            DPRINTF(("additional jvm arg[%d]: %s\n", i, tmp_argv[i]));
            additional_jvm_argc++;
         }
         
         additional_jvm_argv = (char**)sge_malloc(additional_jvm_argc*sizeof(char*));
         for(i=0; i < additional_jvm_argc; i++) {
-           additional_jvm_argv[i] = strdup(tmp_argv[i]);
-           FREE(tmp_argv[i]);
+           additional_jvm_argv[i] = tmp_argv[i];
         }
         FREE(tmp_argv);
-        FREE(args);
         jvm_argc = 10 + additional_jvm_argc;
    } else {
       additional_jvm_argv = NULL;
@@ -1480,7 +1481,7 @@ static void *sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *mo
    DPRINTF(("additional_jvm_argc = %d\n", additional_jvm_argc));
    
    jvm_argv = (char**)sge_malloc(jvm_argc * sizeof(char*));
-   jvm_argv[0] = strdup(sge_dstring_sprintf(&ds, "-Djava.class.path=%s/lib/jgdi.jar", ctx->get_sge_root(ctx)));
+   jvm_argv[0] = strdup(sge_dstring_sprintf(&ds, "-Djava.class.path=%s/lib/jgdi.jar:%s/lib/drmaa.jar", ctx->get_sge_root(ctx), ctx->get_sge_root(ctx)));
    jvm_argv[1] = strdup("-Djava.security.manager=java.rmi.RMISecurityManager");
    jvm_argv[2] = strdup(sge_dstring_sprintf(&ds, "-Djava.security.policy=%s/util/rmiproxy.policy", ctx->get_sge_root(ctx)));
    jvm_argv[3] = strdup(sge_dstring_sprintf(&ds, "-Djava.rmi.server.codebase=file://%s/lib/jgdi.jar", ctx->get_sge_root(ctx)));
@@ -1568,18 +1569,19 @@ static void* jvm_thread(void* anArg)
 
    DENTER(TOP_LAYER, "jvm_thread");
 
+/* printf("------> Running as uid/euid: %d/%d\n", getuid(), geteuid()); */
+
    sge_monitor_init(&monitor, (char *) anArg, GDI_EXT, MT_WARNING, MT_ERROR);
    
    sge_qmaster_thread_init(&ctx, true);
 
    /* register at profiling module */
-   set_thread_name(pthread_self(),"JVM Thread");
+   set_thread_name(pthread_self(), "JVM Thread");
    conf_update_thread_profiling("JVM Thread");
 
-   while (should_terminate() == false) {
+  while (should_terminate() == false) {
       
       thread_start_stop_profiling();
-
       if (jvm_started == false) {
          sge_run_jvm(ctx, anArg, &monitor);
          jvm_started = true;
@@ -1590,12 +1592,10 @@ static void* jvm_thread(void* anArg)
 
       thread_output_profiling("message thread profiling summary:\n", 
                               &next_prof_output);
-
       sge_monitor_output(&monitor);
    }
-
    sge_monitor_free(&monitor);
-   
+
    DEXIT;
    return NULL;
 } /* jvm_thread() */

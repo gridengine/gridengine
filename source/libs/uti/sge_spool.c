@@ -53,6 +53,7 @@
 static int silent_flag = 0;
 
 static washing_machine_t wtype;
+static pid_t qmaster_pid = 0;
 
 static const char *spoolmsg_message[] = {
    "",
@@ -863,4 +864,53 @@ void sge_silent_set(int i)
 int sge_silent_get()
 {
    return silent_flag;
+} 
+
+/****** uti/spool/sge_qmaster_pid_set() ********************************************
+*  NAME
+*     sge_qmaster_pid_set() -- set the qmaster pid during startup 
+*
+*  SYNOPSIS
+*     void sge_qmaster_pid_set(pid_t pid) 
+*
+*  FUNCTION
+*     Enable/disable silence during spool operations. Silence means
+*     that no messages are printed to stdout. 
+*
+*  INPUTS
+*     pid_t pid  the master pid 
+*
+*  SEE ALSO
+*     uti/spool/sge_qmaster_pid_get() 
+*
+*  NOTES
+*     MT-NOTE: sge_qmaster_pid_set() is not MT safe
+******************************************************************************/
+void sge_qmaster_pid_set(pid_t pid) 
+{
+   qmaster_pid = pid;
+}
+ 
+/****** uti/spool/sge_qmaster_pid_get() ********************************************
+*  NAME
+*     sge_qmaster_pid_get() -- return the saved qmaster pid
+*
+*  SYNOPSIS
+*     pid_t sge_qmaster_pid_get() 
+*
+*  FUNCTION
+*     return the stored qmaster pid
+*
+*  RESULT
+*     pid_t pid the stored qmaster pid
+*
+*  SEE ALSO
+*     uti/spool/sge_qmaster_pid_set() 
+*
+*  NOTES
+*     MT-NOTE: sge_qmaster_pid_get() is not MT safe
+******************************************************************************/
+pid_t sge_qmaster_pid_get()
+{
+   return qmaster_pid;
 } 

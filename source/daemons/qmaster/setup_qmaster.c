@@ -187,6 +187,12 @@ int sge_setup_qmaster(sge_gdi_ctx_class_t *ctx, char* anArgv[])
 
    sge_write_pid(QMASTER_PID_FILE);
 
+   /*
+   ** save the qmaster pid to have a possibility to check
+   ** if JGDIAgent has been started via jvm_thread
+   */
+   sge_qmaster_pid_set(getpid());
+
    reporting_initialize(NULL);
 
    DEXIT;

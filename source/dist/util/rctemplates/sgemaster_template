@@ -194,9 +194,9 @@ SetLibJvmPath() {
    case $ARCH in
       sol-sparc64) jvm_lib_path=$java_home/lib/sparcv9/server/libjvm.so;;
       sol-amd64)   jvm_lib_path=$java_home/lib/amd64/server/libjvm.so;;
-      sol-x86)     jvm_lib_path=$java_home/lib/x86/server/libjvm.so;;
+      sol-x86)     jvm_lib_path=$java_home/lib/i386/server/libjvm.so;;
       lx*-amd64)   jvm_lib_path=$java_home/lib/amd64/server/libjvm.so;;
-      lx*-x86)     jvm_lib_path=$java_home/lib/x86/server/libjvm.so;;
+      lx*-x86)     jvm_lib_path=$java_home/lib/i386/server/libjvm.so;;
       *)
       echo "Warning: Cannot start jvm thread: Have no java support for $ARCH"
       return 1;;

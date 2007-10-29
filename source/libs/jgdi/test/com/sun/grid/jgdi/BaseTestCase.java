@@ -51,78 +51,75 @@ import junit.framework.TestResult;
  *
  */
 public class BaseTestCase extends TestCase {
-    
+
     protected Logger logger = Logger.getLogger(getClass().getName());
     private ClusterConfig currentCluster;
     private ClusterConfig[] cluster;
-    
+
     /** Creates a new instance of BaseTestCase */
     public BaseTestCase(String testName) {
         super(testName);
     }
-    
+
     private void initConfig() {
         try {
             cluster = ClusterConfig.getClusters();
-        } catch(IOException ioe) {
+        } catch (IOException ioe) {
             IllegalStateException ilse = new IllegalStateException("can not read cluster config");
             ilse.initCause(ioe);
         }
     }
-    
+
     protected ClusterConfig getCurrentCluster() {
         return currentCluster;
     }
-    
+
     protected JGDI createJGDI() throws Exception {
         return createJGDI(currentCluster);
     }
-    
+
     private String getConnectURL(ClusterConfig cluster) {
         initConfig();
-        String url = "bootstrap://" + cluster.getSgeRoot()
-        + "@" + cluster.getSgeCell()
-        + ":" + cluster.getQmasterPort();
+        String url = "bootstrap://" + cluster.getSgeRoot() + "@" + cluster.getSgeCell() + ":" + cluster.getQmasterPort();
         return url;
     }
-    
+
     private JGDI createJGDI(ClusterConfig cluster) throws Exception {
         String url = getConnectURL(cluster);
-        if(logger.isLoggable(Level.FINE)) {
-            logger.fine("create jgdi ctx for cluster " + url );
+        if (logger.isLoggable(Level.FINE)) {
+            logger.fine("create jgdi ctx for cluster " + url);
         }
         return JGDIFactory.newInstance(url);
     }
-    
+
     protected EventClient createEventClient(int evcId) throws Exception {
         return createEventClient(currentCluster, evcId);
     }
-    
+
     private EventClient createEventClient(ClusterConfig cluster, int evcId) throws Exception {
         String url = getConnectURL(cluster);
-        if(logger.isLoggable(Level.FINE)) {
-            logger.fine("create event client ctx for cluster " + url );
+        if (logger.isLoggable(Level.FINE)) {
+            logger.fine("create event client ctx for cluster " + url);
         }
         return JGDIFactory.createEventClient(url, evcId);
     }
-    
+
     protected String[] getClusterNames() throws Exception {
         return null;
     }
-    
+
     public void run(TestResult result) {
         initConfig();
         try {
-            for(int i = 0; i < cluster.length; i++) {
+            for (int i = 0; i < cluster.length; i++) {
                 currentCluster = cluster[i];
-                if(logger.isLoggable(Level.CONFIG)) {
+                if (logger.isLoggable(Level.CONFIG)) {
                     logger.config("===================================================================");
                     logger.config("start test  on cluster " + i);
                 }
-                if(currentCluster.isCsp()) {
-                    
+                if (currentCluster.isCsp()) {
                     LoginContext lc = null;
-                    logger.config("setup jaas login context for "  + currentCluster.getJaasLoginContext() );
+                    logger.config("setup jaas login context for " + currentCluster.getJaasLoginContext());
                     lc = new LoginContext(currentCluster.getJaasLoginContext(), new ClusterConfigCallbackHandler(currentCluster));
                     lc.login();
                     try {
@@ -136,86 +133,82 @@ public class BaseTestCase extends TestCase {
                     super.run(result);
                 }
             }
-        } catch(Exception e) {
-            result.addError(this,e);
+        } catch (Exception e) {
+            result.addError(this, e);
         }
     }
-    
-    /**
+
+/**
      *  CallbackHandler which sets callback information from a cluster configuration
      *  object
      *
      */
     class ClusterConfigCallbackHandler implements CallbackHandler {
+
         private ClusterConfig cluster;
-        
+
         public ClusterConfigCallbackHandler(ClusterConfig cluster) {
             this.cluster = cluster;
         }
-        
+
         public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
-            
-            for(int i = 0; i < callbacks.length; i++) {
-                
-                if(callbacks[i] instanceof TextOutputCallback) {
+
+            for (int i = 0; i < callbacks.length; i++) {
+
+                if (callbacks[i] instanceof TextOutputCallback) {
                     logger.fine("skip text output callback " + callbacks[i]);
                     continue;
-                } else if(callbacks[i] instanceof NameCallback) {
-                    
-                    NameCallback cb = (NameCallback)callbacks[i];
-                    
-                    if(cb.getPrompt().indexOf("alias") >= 0) {
+                } else if (callbacks[i] instanceof NameCallback) {
+
+                    NameCallback cb = (NameCallback) callbacks[i];
+
+                    if (cb.getPrompt().indexOf("alias") >= 0) {
                         logger.fine("handle alias callback: " + cluster.getUser());
                         cb.setName(cluster.getUser());
                     } else {
                         throw new UnsupportedCallbackException(callbacks[i]);
                     }
-                    
                 } else if (callbacks[i] instanceof PasswordCallback) {
-                    
-                    PasswordCallback cb = (PasswordCallback)callbacks[i];
-                    
+
+                    PasswordCallback cb = (PasswordCallback) callbacks[i];
+
                     String prompt = cb.getPrompt().toLowerCase();
                     logger.fine("handle password callback " + prompt);
-                    if(prompt.indexOf("keystore password") >= 0) {
+                    if (prompt.indexOf("keystore password") >= 0) {
                         logger.fine("found keystore password callback");
                         cb.setPassword(cluster.getKeystorePassword());
-                        
-                    } else if(prompt.indexOf("key password") >= 0) {
+                    } else if (prompt.indexOf("key password") >= 0) {
                         logger.fine("found key password callback");
                         cb.setPassword(cluster.getPrivateKeyPassword());
-                        
                     } else {
                         throw new UnsupportedCallbackException(callbacks[i]);
                     }
-                    
                 } else if (callbacks[i] instanceof ConfirmationCallback) {
                     logger.fine("handle confirm callback");
-                    ConfirmationCallback cb = (ConfirmationCallback)callbacks[i];
+                    ConfirmationCallback cb = (ConfirmationCallback) callbacks[i];
                     cb.setSelectedIndex(cb.getDefaultOption());
                 } else {
                     throw new UnsupportedCallbackException(callbacks[i]);
                 }
-                
             }
         }
     }
-    
+
     class RunAction implements PrivilegedAction {
-        
+
         private TestResult result;
+
         public RunAction(TestResult result) {
             this.result = result;
         }
-        
+
         public Object run() {
             try {
                 BaseTestCase.super.run(result);
-            } catch(Exception e) {
+            } catch (Exception e) {
                 result.addError(BaseTestCase.this, e);
             }
             return null;
         }
-        
     }
 }

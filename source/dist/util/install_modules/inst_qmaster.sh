@@ -1006,7 +1006,7 @@ AddCommonFiles()
 AddJMXFiles() {
    if [ "$SGE_JMX_PORT" != "" ]; then
       jmx_dir=$COMMONDIR/jmx
-      ExecuteAsAdmin mkdir $jmx_dir
+      ExecuteAsAdmin mkdir -p $jmx_dir
       
       $INFOTEXT "Adding >jmx/%s< jmx remote access file" jmxremote.access
       ExecuteAsAdmin cp util/jmxremote.access $jmx_dir/jmxremote.access

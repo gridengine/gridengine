@@ -32,9 +32,6 @@
 
 package com.sun.grid.jgdi.management;
 
-import com.sun.grid.jgdi.JGDI;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
 import java.util.logging.Level;
 import javax.management.ObjectName;
 import javax.management.MBeanServer;
@@ -48,36 +45,36 @@ import java.util.logging.Logger;
  */
 public class JGDIAgent {
     
-    private final static Logger log = Logger.getLogger(JGDIAgent.class.getName());
-    
-    
     /**
      * Instantiate and register your MBeans.
      */
     public void init(String url) throws Exception {
         
         //TODO Add your MBean registration code here
+        this.url = url;
+        logger.log(Level.INFO,"init: " + JGDIAgent.getUrl() + "-----------------------");
         
-        log.log(Level.INFO,"init: " + url + "-----------------------");
-        
-        // Instantiate JGDIJMX MBean
-        JGDIJMX mbean = new JGDIJMX(url);
+        // Instantiate and register JGDIJMX MBean
+        JGDIJMX mbean = new JGDIJMX();
         ObjectName mbeanName = new ObjectName("gridengine:type=JGDI");
-        //Register the JGDI MBean
         getMBeanServer().registerMBean(mbean, mbeanName);
-        
-        log.log(Level.INFO,"mbean " + mbeanName + " registered");
+        logger.log(Level.INFO,"mbean " + mbeanName + " registered");
+
     }
     
     /**
      * Returns an agent singleton.
      */
     public synchronized static JGDIAgent getDefault(String url) throws Exception {
-        if(singleton == null) {
+        if (singleton == null) {
             singleton = new JGDIAgent();
             singleton.init(url);
         }
         return singleton;
+    }
+    
+    public static String getUrl() {
+        return url;
     }
     
     public MBeanServer getMBeanServer() {
@@ -90,6 +87,9 @@ public class JGDIAgent {
     // Singleton instance
     private static JGDIAgent singleton;
     
+    // JGDI url string
+    private static String url;
+
     private final static Logger logger = Logger.getLogger(JGDIAgent.class.getName());
     
     public static void main(String [] args) {
@@ -107,7 +107,7 @@ public class JGDIAgent {
             Runtime.getRuntime().addShutdownHook(shutdownHook);
             shutdownHook.waitForShutdown();
         } catch(Exception ex) {
-            log.log(Level.SEVERE, "Unexpected error", ex);
+            logger.log(Level.SEVERE, "Unexpected error", ex);
         }
     }
     
@@ -117,6 +117,8 @@ public class JGDIAgent {
                 wait();
             }
         }
+
+        @Override
         public void run() {
             synchronized(this) {
                 notifyAll();

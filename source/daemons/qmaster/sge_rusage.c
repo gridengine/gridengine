@@ -73,7 +73,7 @@ sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","
                                       lSetHost(jr, nm, s);
 
 static double 
-reporting_get_double_usage (lList *usage_list, lList *reported_list, 
+reporting_get_double_usage(lList *usage_list, lList *reported_list, 
                             const char *name, const char *rname, double def);
 /* ------------------------------------------------------------
 
@@ -152,16 +152,22 @@ sge_write_rusage(dstring *buffer,
       if (pe_task != NULL) {
          reported_list = lGetList(pe_task, PET_reported_usage);
          if (reported_list == NULL) {
-            reported_list = lCreateList("reported usage", UA_Type);
+            reported_list = lCreateList("reported_usage", UA_Type);
             lSetList(pe_task, PET_reported_usage, reported_list);
          }
       } else {
          reported_list = lGetList(ja_task, JAT_reported_usage_list);
          if (reported_list == NULL) {
-            reported_list = lCreateList("reported usage", UA_Type);
+            reported_list = lCreateList("reported_usage", UA_Type);
             lSetList(ja_task, JAT_reported_usage_list, reported_list);
          }
       }
+
+      /* 
+       * The LAST_INTERMEDIATE timestamp of the previous intermediate
+       * record is the start_time of the current interval.
+       */
+      start_time = usage_list_get_ulong_usage(reported_list, LAST_INTERMEDIATE, 0),
 
       /* now set actual time as time of last intermediate usage report */
       usage_list_set_ulong_usage(reported_list, LAST_INTERMEDIATE, 
@@ -169,25 +175,6 @@ sge_write_rusage(dstring *buffer,
    } else {
       reported_list = NULL;
    }
-
-
-#if 0
-   {
-      lListElem *ep;
-
-      if (usage_list) {
-         DPRINTF(("received usage attributes:\n"));
-      } else {
-         DPRINTF(("empty usage list\n"));
-      }   
-
-      for_each (ep, usage_list) {
-         DPRINTF(("    \"%s\" = %f\n",
-            lGetString(ep, UA_name),
-            lGetDouble(ep, UA_value)));
-      }
-   }
-#endif
 
    SET_STR_DEFAULT(jr, JR_queue_name, "UNKNOWN");
    SET_HOST_DEFAULT(jr, JR_host_name,  "UNKNOWN");
@@ -272,11 +259,17 @@ sge_write_rusage(dstring *buffer,
       }
    }
 
+   /* get submission_time, start_time, end_time */
    if (intermediate) {
       if (job != NULL && pe_task == NULL) {
          submission_time = lGetUlong(job, JB_submission_time);
       }
-      if (ja_task != NULL) {
+      /* 
+       * For the first intermediate record, the start_time is the ja_task start time.
+       * For consequent intermediate records, we already set the start_time to the
+       * previous intermediate record's end time.
+       */
+      if (start_time == 0 && ja_task != NULL) {
          start_time = lGetUlong(ja_task, JAT_start_time);
       }
       end_time = now;
@@ -354,8 +347,8 @@ sge_write_rusage(dstring *buffer,
 *     MT-NOTE: reporting_get_double_usage() is MT-safe
 */
 static double 
-reporting_get_double_usage (lList *usage_list, lList *reported_list, 
-                            const char *name, const char *rname, double def) 
+reporting_get_double_usage(lList *usage_list, lList *reported_list, 
+                           const char *name, const char *rname, double def) 
 {
    double usage;
 

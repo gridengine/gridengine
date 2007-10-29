@@ -1,7 +1,13 @@
+JG-2007-10-29-0: Bugfix:    The start_time field was incorrect in intermediate 
+                            accounting records.
+                 Bugster:   6622842
+                 Issue:     2417
+                 Review:    RD
+
 MD-2007-10-26-0: Bugfix:    o Incorrect messages in qconf command,
                             o rctemplates lack of requirement,
-                            o the restore feature does not delete old configuration 
-                            before restoring 
+                            o the restore feature does not delete old 
+                              configuration before restoring 
                  Bugster:   6596931, 6287501, 6618619
                  Issue:     2406, 2336, 2407
                  Changed:   clients, install, backup_restore 

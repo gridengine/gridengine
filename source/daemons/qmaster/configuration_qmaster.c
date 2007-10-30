@@ -515,8 +515,10 @@ static int check_config(lList **alpp, lListElem *conf)
       }
    }
  
-   /* now check if all the required entries are present in the global conf.... */
-   if (validate_config(alpp, conf) != 0){
+   /* validate only `global' config to check if all the required entries are 
+    * present
+    */
+   if (strcasecmp(SGE_GLOBAL_NAME, conf_name) == 0  && validate_config(alpp, conf) != 0){
       DRETURN(STATUS_EEXIST);
    }
 

@@ -2009,11 +2009,16 @@ static int sge_handle_job(lListElem *job, lListElem *jatep, lListElem *qep,
       lListElem *up, *pe, *task;
       lList *job_usage_list;
       const char *pe_name;
+      bool sum_pe_tasks = false;
       
-      if (!master || !strcmp(master, "MASTER"))
+      if (master == NULL || strcmp(master, "MASTER") == 0) {
+         if (!(qstat_env->group_opt & GROUP_NO_PETASK_GROUPS)) {
+            sum_pe_tasks = true;
+         }
          job_usage_list = lCopyList(NULL, lGetList(jatep, JAT_scaled_usage_list));
-      else
+      } else {
          job_usage_list = lCreateList("", UA_Type);
+      }
 
       /* sum pe-task usage based on queue slots */
       if (job_usage_list) {
@@ -2022,7 +2027,7 @@ static int sge_handle_job(lListElem *job, lListElem *jatep, lListElem *qep,
             lListElem *dst, *src, *ep;
             const char *qname;
 
-            if (!slots ||
+            if (sum_pe_tasks ||
                 (summary.queue && 
                  ((ep=lFirst(lGetList(task, PET_granted_destin_identifier_list)))) &&
                  ((qname=lGetString(ep, JG_qname))) &&

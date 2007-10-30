@@ -1,3 +1,9 @@
+JG-2007-10-30-0: Bugfix:    qstat -ext didn't show the usage of parallel tasks
+                            in the summary view (without -g t)
+                 Bugster:   6391244
+                 Issue:     2419
+                 Review:    RD
+
 JG-2007-10-30-0: Bugfix:    qrsh -no now set all queues in error state when the
                             qrsh was unavailable when the job was scheduled.
                  Bugster:   6588743

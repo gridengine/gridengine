@@ -1,3 +1,6 @@
+PJ-2007-10-30-0: Enhancem.: The GE Service Tags support
+                 Review:    RD
+
 JG-2007-10-30-0: Bugfix:    qrsh -no now set all queues in error state when the
                             qrsh was unavailable when the job was scheduled.
                  Bugster:   6588743

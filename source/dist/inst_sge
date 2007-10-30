@@ -118,6 +118,7 @@ CSP_ORGA="undef"
 CSP_ORGA_UNIT="undef"
 CSP_MAIL_ADDRESS="undef"
 CERT_COPY_HOST_LIST="undef"
+SERVICE_TAGS="undef"
 
 BasicSettings
 SetUpInfoText
@@ -149,10 +150,12 @@ while [ $ARGC != 0 ]; do
      QMASTER="install"
      . ./util/install_modules/inst_qmaster.sh
      . ./util/install_modules/inst_berkeley.sh
+     . ./util/install_modules/inst_st.sh
      ;;
    -um)
      QMASTER="uninstall"
      . ./util/install_modules/inst_qmaster_uninst.sh
+     . ./util/install_modules/inst_st.sh
      ;; 
    -x)
      EXECD="install"
@@ -446,6 +449,7 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  SetSpoolingOptions
  AddBootstrap
  InitSpoolingDatabase
+ ServiceTagsSupport
  AddConfiguration
  AddLocalConfiguration
  AddActQmaster
@@ -799,6 +803,7 @@ if [ $QMASTER = "uninstall" ]; then
 
    . $SGE_ROOT/$SGE_CELL/common/settings.sh
    RemoveQmaster
+   ServiceTagsSupport
    MoveLog
 fi
 

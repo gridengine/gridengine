@@ -730,6 +730,40 @@ static bool is_qmaster_already_running(const char *qmaster_spool_dir)
    return res;
 } /* is_qmaster_already_running() */
 
+
+static void sge_propagate_queue_suspension(object_description *object_base, lListElem *jep, dstring *cqueue_name, dstring *host_domain)
+{
+   const lListElem *gdil_ep, *cq, *qi;
+   lListElem *jatep;
+
+   for_each (jatep, lGetList(jep, JB_ja_tasks)) {
+      u_long32 jstate = lGetUlong(jatep, JAT_state); 
+      bool is_suspended = false;
+
+      for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
+
+         cqueue_name_split(lGetString(gdil_ep, JG_qname), cqueue_name, host_domain, NULL, NULL);
+
+         if (!(cq = lGetElemStr(*object_base[SGE_TYPE_CQUEUE].list, CQ_name, sge_dstring_get_string(cqueue_name))) ||
+             !(qi = lGetElemHost(lGetList(cq, CQ_qinstances), QU_qhostname, sge_dstring_get_string(host_domain)))) 
+            continue;
+
+         if (qinstance_state_is_manual_suspended(qi) ||
+             qinstance_state_is_susp_on_sub(qi) ||
+             qinstance_state_is_cal_suspended(qi)) {
+             is_suspended = true;
+             break;
+         }
+      }
+
+      if (is_suspended)
+         jstate |= JSUSPENDED_ON_SUBORDINATE;
+      else
+         jstate &= ~JSUSPENDED_ON_SUBORDINATE;
+      lSetUlong(jatep, JAT_state, jstate);
+   }
+}
+
 /****** qmaster/setup_qmaster/qmaster_lock_and_shutdown() ***************************
 *  NAME
 *     qmaster_lock_and_shutdown() -- Acquire qmaster lock file and shutdown 
@@ -975,15 +1009,27 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
       log_state_set_log_level(saved_logginglevel);
    }
 
-   for_each(jep, *(object_base[SGE_TYPE_JOB].list)) {
-      DPRINTF(("JOB "sge_u32" PRIORITY %d\n", lGetUlong(jep, JB_job_number), 
-            (int)lGetUlong(jep, JB_priority) - BASE_PRIORITY));
+   {
+      dstring cqueue_name = DSTRING_INIT;
+      dstring host_domain = DSTRING_INIT;
 
-      /* doing this operation we need the complete job list read in */
-      job_suc_pre(jep);
+      for_each(jep, *(object_base[SGE_TYPE_JOB].list)) {
 
-      centry_list_fill_request(lGetList(jep, JB_hard_resource_list), 
-                  NULL, *object_base[SGE_TYPE_CENTRY].list, false, true, false);
+         DPRINTF(("JOB "sge_u32" PRIORITY %d\n", lGetUlong(jep, JB_job_number), 
+               (int)lGetUlong(jep, JB_priority) - BASE_PRIORITY));
+
+         /* doing this operation we need the complete job list read in */
+         job_suc_pre(jep);
+
+         centry_list_fill_request(lGetList(jep, JB_hard_resource_list), 
+                     NULL, *object_base[SGE_TYPE_CENTRY].list, false, true, false);
+
+         /* need to update JSUSPENDED_ON_SUBORDINATE since task spooling is not 
+            triggered upon queue un/-suspension */
+         sge_propagate_queue_suspension(object_base, jep, &cqueue_name, &host_domain);
+      }
+      sge_dstring_free(&cqueue_name);
+      sge_dstring_free(&host_domain);
    }
 
    if (!ctx->get_job_spooling(ctx)) {

@@ -133,7 +133,7 @@ static int handle_queue(lListElem *q, qstat_env_t *qstat_env, qstat_handler_t *h
 static int handle_jobs_queue(lListElem *qep, qstat_env_t* qstat_env, int print_jobs_of_queue, 
                              qstat_handler_t *handler, lList **alpp);
 
-static int sge_handle_job(lListElem *job, lListElem *jatep, lListElem *qep, bool print_jobid,
+static int sge_handle_job(lListElem *job, lListElem *jatep, lListElem *qep, lListElem *gdil_ep, bool print_jobid,
                           char *master, dstring *dyn_task_str,
                           int slots, int slot, int slots_per_line,
                           qstat_env_t *qstat_env, job_handler_t *handler, lList **alpp );
@@ -147,7 +147,7 @@ static int handle_error_jobs(qstat_env_t *qstat_env, qstat_handler_t* handler, l
 
 static int handle_zombie_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, lList **alpp);
 
-static int handle_jobs_not_enrolled(lListElem *job, lListElem *qep, bool print_jobid, char *master,
+static int handle_jobs_not_enrolled(lListElem *job, bool print_jobid, char *master,
                                     int slots, int slot, int *count,
                                     qstat_env_t *qstat_env, qstat_handler_t *handler, lList **alpp);
                        
@@ -483,12 +483,20 @@ static void remove_tagged_jobs(lList *job_list) {
    
 }
 
-static int qstat_handle_running_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, lList **alpp) {
-   
+static int qstat_handle_running_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, lList **alpp) 
+{
    lListElem *qep = NULL;
    int ret = 0;
    
    DENTER(TOP_LAYER,"qstat_handle_running_jobs");
+
+   /* no need to iterate through queues if queues are not printed */
+   if (!qstat_env->need_queues) {
+      if ((ret = handle_jobs_queue(NULL, qstat_env, 1, handler, alpp))) {
+         DPRINTF(("handle_jobs_queue failed\n"));
+      }
+      DRETURN(ret);
+   }
    
    /* handle running jobs of a queue */ 
    for_each(qep, qstat_env->queue_list) {
@@ -531,6 +539,7 @@ static int qstat_handle_running_jobs(qstat_env_t *qstat_env, qstat_handler_t *ha
          
       }
    }
+
    DRETURN(ret);
 }
 
@@ -538,17 +547,15 @@ static int handle_jobs_queue(lListElem *qep, qstat_env_t* qstat_env, int print_j
                              qstat_handler_t *handler, lList **alpp) {
    lListElem *jlep;
    lListElem *jatep;
-   lListElem *gdilep;
+   lListElem *gdilep, *old_gdilep = NULL;
    u_long32 job_tag;
    u_long32 jid = 0, old_jid;
    u_long32 jataskid = 0, old_jataskid;
-   const char *qnm;
+   const char *qnm = qep?lGetString(qep, QU_full_name):NULL;
    int ret = 0;
    dstring dyn_task_str = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "handle_jobs_queue");
-
-   qnm = lGetString(qep, QU_full_name);
 
    if (handler->report_queue_jobs_started && (ret=handler->report_queue_jobs_started(handler, qnm, alpp)) ) {
       DPRINTF(("report_queue_jobs_started failed\n"));
@@ -559,30 +566,28 @@ static int handle_jobs_queue(lListElem *qep, qstat_env_t* qstat_env, int print_j
       int master, i;
 
       for_each(jatep, lGetList(jlep, JB_ja_tasks)) {
+         u_long32 jstate = lGetUlong(jatep, JAT_state);
+
          if (qstat_env->shut_me_down && qstat_env->shut_me_down()) {
             DPRINTF(("shut_me_down\n"));
             ret = 1;
             goto error;
          }
+
+         if ((jstate & JSUSPENDED_ON_SUBORDINATE))
+            lSetUlong(jatep, JAT_state, jstate & ~JRUNNING);
             
          for_each (gdilep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
 
-            if(!strcmp(lGetString(gdilep, JG_qname), qnm)) {
+            if(!qep || !strcmp(lGetString(gdilep, JG_qname), qnm)) {
                int slot_adjust = 0;
                int lines_to_print;
                int slots_per_line = 0;
                int slots_in_queue = lGetUlong(gdilep, JG_slots); 
 
-               if (qinstance_state_is_manual_suspended(qep) ||
-                   qinstance_state_is_susp_on_sub(qep) ||
-                   qinstance_state_is_cal_suspended(qep)) {
-                  u_long32 jstate;
+               if (!qep)
+                  qnm = lGetString(gdilep, JG_qname);
 
-                  jstate = lGetUlong(jatep, JAT_state);
-                  jstate &= ~JRUNNING;                 /* unset bit JRUNNING */
-                  jstate |= JSUSPENDED_ON_SUBORDINATE; /* set bit JSUSPENDED_ON_SUBORDINATE */
-                  lSetUlong(jatep, JAT_state, jstate);
-               }
                job_tag = lGetUlong(jatep, JAT_suitable);
                job_tag |= TAG_FOUND_IT;
                lSetUlong(jatep, JAT_suitable, job_tag);
@@ -634,9 +639,10 @@ static int handle_jobs_queue(lListElem *qep, qstat_env_t* qstat_env, int print_j
                   old_jataskid = jataskid;
                   jataskid = lGetUlong(jatep, JAT_task_number);
 
-                  different = (jid != old_jid) || (jataskid != old_jataskid);
+                  different = (jid != old_jid) || (jataskid != old_jataskid) || (gdilep != old_gdilep);
+                  old_gdilep = gdilep;
                   
-                  if (different) { 
+                  if (different) {
                      print_jobid = true;
                   } else {
                      if (!(qstat_env->full_listing & QSTAT_DISPLAY_RUNNING)) {
@@ -671,7 +677,7 @@ static int handle_jobs_queue(lListElem *qep, qstat_env_t* qstat_env, int print_j
                         }       
                         if (print_it) {
                            sge_dstring_sprintf(&dyn_task_str, sge_u32, jataskid);
-                           ret = sge_handle_job(jlep, jatep, qep, print_jobid,
+                           ret = sge_handle_job(jlep, jatep, qep, gdilep, print_jobid,
                                                 (master && different && (i==0))?"MASTER":"SLAVE",
                                                 &dyn_task_str,
                                                 slots_in_queue+slot_adjust, i, slots_per_line,
@@ -977,9 +983,9 @@ int filter_queues(lList **filtered_queue_list,
    DRETURN(1);
 }
 
-static int qstat_env_get_all_lists(qstat_env_t* qstat_env, bool need_job_list, lList** alpp) {
-   
-   lList **queue_l = &(qstat_env->queue_list);
+static int qstat_env_get_all_lists(qstat_env_t* qstat_env, bool need_job_list, lList** alpp) 
+{
+   lList **queue_l = qstat_env->need_queues ? &(qstat_env->queue_list) : NULL;
    lList **job_l = need_job_list ? &(qstat_env->job_list) : NULL;
    lList **centry_l = &(qstat_env->centry_list);
    lList **exechost_l = &(qstat_env->exechost_list);
@@ -1002,7 +1008,7 @@ static int qstat_env_get_all_lists(qstat_env_t* qstat_env, bool need_job_list, l
    lListElem *ep = NULL;
    lList *conf_l = NULL;
    lList *mal = NULL;
-   int q_id, j_id = 0, pe_id = 0, ckpt_id = 0, acl_id = 0, z_id = 0, up_id = 0;
+   int q_id = 0, j_id = 0, pe_id = 0, ckpt_id = 0, acl_id = 0, z_id = 0, up_id = 0;
    int ce_id, eh_id, sc_id, gc_id, hgrp_id = 0;
    int show_zombies = (show & QSTAT_DISPLAY_ZOMBIES) ? 1 : 0;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
@@ -1011,15 +1017,20 @@ static int qstat_env_get_all_lists(qstat_env_t* qstat_env, bool need_job_list, l
 
    DENTER(TOP_LAYER, "qstat_env_get_all_lists");
 
-   q_all = lWhat("%T(ALL)", CQ_Type);
-   
-   q_id = qstat_env->ctx->gdi_multi(qstat_env->ctx, alpp, SGE_GDI_RECORD, SGE_CQUEUE_LIST, SGE_GDI_GET,
-                                    NULL, NULL, q_all, NULL, &state, true);
-   lFreeWhat(&q_all);
-   lFreeWhere(&qw);
- 
-   if (answer_list_has_error(alpp)) {
-      DRETURN(1);
+   if (queue_l) {
+      DPRINTF(("need queues\n"));
+      q_all = lWhat("%T(ALL)", CQ_Type);
+      
+      q_id = qstat_env->ctx->gdi_multi(qstat_env->ctx, alpp, SGE_GDI_RECORD, SGE_CQUEUE_LIST, SGE_GDI_GET,
+                                       NULL, NULL, q_all, NULL, &state, true);
+      lFreeWhat(&q_all);
+      lFreeWhere(&qw);
+    
+      if (answer_list_has_error(alpp)) {
+         DRETURN(1);
+      }
+   } else {
+      DPRINTF(("queues not needed\n"));
    }
 
    /* 
@@ -1188,13 +1199,15 @@ static int qstat_env_get_all_lists(qstat_env_t* qstat_env, bool need_job_list, l
    /*
    ** handle results
    */
-   /* --- queue */
-   sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_CQUEUE_LIST, q_id, 
-                                 mal, queue_l);
+   if (queue_l) {
+      /* --- queue */
+      sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_CQUEUE_LIST, q_id, 
+                                    mal, queue_l);
 
-   if (answer_list_has_error(alpp)) {
-      lFreeList(&mal);
-      DRETURN(1);
+      if (answer_list_has_error(alpp)) {
+         lFreeList(&mal);
+         DRETURN(1);
+      }
    }
 
    /* --- job */
@@ -1589,7 +1602,7 @@ static int handle_pending_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler,
                      DPRINTF(("report_pending_jobs_started failed\n"));
                      goto error;
                   }
-                  ret = sge_handle_job(jep, jatep, NULL, true, NULL, &dyn_task_str,
+                  ret = sge_handle_job(jep, jatep, NULL, NULL, true, NULL, &dyn_task_str,
                                        0, 0, 0,
                                        qstat_env, &(handler->job_handler), alpp);
 
@@ -1622,7 +1635,7 @@ static int handle_pending_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler,
                DPRINTF(("report_pending_jobs_started failed\n"));
                goto error;
             }
-            ret = sge_handle_job(jep, lFirst(task_group), NULL, true, NULL, &dyn_task_str,
+            ret = sge_handle_job(jep, lFirst(task_group), NULL, NULL, true, NULL, &dyn_task_str,
                                  0, 0, 0,
                                  qstat_env, &(handler->job_handler), alpp);
             
@@ -1636,7 +1649,7 @@ static int handle_pending_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler,
          }
       }
       if (jep != nxt && (qstat_env->full_listing & QSTAT_DISPLAY_PENDING)) {
-         ret = handle_jobs_not_enrolled(jep, NULL, true, NULL,
+         ret = handle_jobs_not_enrolled(jep, true, NULL,
                                         0, 0, &count, qstat_env, handler, alpp);
       }
    }
@@ -1687,7 +1700,7 @@ static int handle_finished_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler
                sge_dstring_sprintf(&dyn_task_str, sge_u32, 
                                  lGetUlong(jatep, JAT_task_number));
                                  
-               ret = sge_handle_job(jep, jatep, NULL, true, NULL, &dyn_task_str, 
+               ret = sge_handle_job(jep, jatep, NULL, NULL, true, NULL, &dyn_task_str, 
                                     0, 0, 0,
                                     qstat_env, &(handler->job_handler), alpp);
 
@@ -1735,7 +1748,7 @@ static int handle_error_jobs(qstat_env_t *qstat_env, qstat_handler_t* handler, l
                       goto error;
                    }
                }
-               ret = sge_handle_job(jep, jatep, NULL, true, NULL, &dyn_task_str,
+               ret = sge_handle_job(jep, jatep, NULL, NULL, true, NULL, &dyn_task_str,
                                     0, 0, 0,
                                     qstat_env, &(handler->job_handler), alpp);
 
@@ -1788,7 +1801,7 @@ static int handle_zombie_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, 
             DPRINTF(("report_zombie_jobs_started failed\n"));
             break;
          }
-         ret = sge_handle_job(jep, ja_task, NULL, true, NULL, &dyn_task_str,
+         ret = sge_handle_job(jep, ja_task, NULL, NULL, true, NULL, &dyn_task_str,
                               0,0, 0,
                               qstat_env, &(handler->job_handler), alpp);
          if(ret) {
@@ -1807,7 +1820,7 @@ static int handle_zombie_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, 
 }
 
 
-static int handle_jobs_not_enrolled(lListElem *job, lListElem *qep, bool print_jobid, char *master,
+static int handle_jobs_not_enrolled(lListElem *job, bool print_jobid, char *master,
                                     int slots, int slot, int *count,
                                     qstat_env_t *qstat_env, qstat_handler_t *handler, lList **alpp)
 {
@@ -1857,7 +1870,7 @@ static int handle_jobs_not_enrolled(lListElem *job, lListElem *qep, bool print_j
                   ret = 1;
                   break;
                }
-               ret = sge_handle_job(job, ja_task, qep, print_jobid, master, &ja_task_id_string,
+               ret = sge_handle_job(job, ja_task, NULL, NULL, print_jobid, master, &ja_task_id_string,
                                     slots, slot, 0,
                                     qstat_env, &(handler->job_handler), alpp);
                if (ret) {
@@ -1886,7 +1899,7 @@ static int handle_jobs_not_enrolled(lListElem *job, lListElem *qep, bool print_j
                      ret = 1;
                      break;
                   }
-                  ret = sge_handle_job(job, ja_task, NULL, print_jobid, NULL, &ja_task_id_string,
+                  ret = sge_handle_job(job, ja_task, NULL, NULL, print_jobid, NULL, &ja_task_id_string,
                                        slots, slot, 0,
                                        qstat_env, &(handler->job_handler), alpp);
                   if (ret) {
@@ -1906,16 +1919,15 @@ static int handle_jobs_not_enrolled(lListElem *job, lListElem *qep, bool print_j
 }                 
 
 
-static int sge_handle_job(lListElem *job, lListElem *jatep, lListElem *qep,
+static int sge_handle_job(lListElem *job, lListElem *jatep, lListElem *qep, lListElem *gdil_ep, 
                           bool print_jobid, char *master, dstring *dyn_task_str,
                           int slots, int slot, int slots_per_line,
-                          qstat_env_t *qstat_env, job_handler_t *handler, lList **alpp ) {
-
+                          qstat_env_t *qstat_env, job_handler_t *handler, lList **alpp ) 
+{
    u_long32 jstate;
    int sge_ext, tsk_ext, sge_urg, sge_pri, sge_time;
    lList *ql = NULL;
-   lListElem *qrep, *gdil_ep=NULL;
-   
+   lListElem *qrep;
    
    job_summary_t summary;
    u_long32 ret = 0;
@@ -1927,11 +1939,8 @@ static int sge_handle_job(lListElem *job, lListElem *jatep, lListElem *qep,
    summary.print_jobid = print_jobid;
    summary.is_zombie = job_is_zombie_job(job);
 
-   if (qep != NULL) {
-      summary.queue = lGetString(qep, QU_full_name);
-   } else {
-      summary.queue = NULL;
-   }
+   if (gdil_ep)
+      summary.queue = lGetString(gdil_ep, JG_qname);
 
    sge_ext = ((qstat_env->full_listing & QSTAT_DISPLAY_EXTENDED) == QSTAT_DISPLAY_EXTENDED);
    tsk_ext = (qstat_env->full_listing & QSTAT_DISPLAY_TASKS);
@@ -2076,9 +2085,7 @@ static int sge_handle_job(lListElem *job, lListElem *jatep, lListElem *qep,
       /* braces needed to suppress compiler warnings */
       if ((pe_name=lGetString(jatep, JAT_granted_pe)) &&
            (pe=pe_list_locate(qstat_env->pe_list, pe_name)) &&
-           lGetBool(pe, PE_control_slaves)
-         && slots && (gdil_ep=lGetSubStr(jatep, JG_qname, summary.queue,
-               JAT_granted_destin_identifier_list))) {
+           lGetBool(pe, PE_control_slaves) && slots) {
          if (slot == 0) {
             summary.tickets = (u_long)lGetDouble(gdil_ep, JG_ticket);
             summary.otickets = (u_long)lGetDouble(gdil_ep, JG_oticket);

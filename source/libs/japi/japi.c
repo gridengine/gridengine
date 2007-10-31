@@ -87,7 +87,6 @@
 #include "sge_cqueue.h"
 #include "sge_event.h"
 #include "sge_feature.h"
-#include "sge_gqueue.h"
 #include "sge_id.h"
 #include "sge_job.h"
 #include "sge_object.h"
@@ -2975,7 +2974,7 @@ enum {
 *     japi_sge_state_to_drmaa_state() -- Map Grid Engine state into DRMAA state
 *
 *  SYNOPSIS
-*     static int japi_sge_state_to_drmaa_state(lListElem *job, lList *queue_list, 
+*     static int japi_sge_state_to_drmaa_state(lListElem *job, 
 *     bool is_array_task, u_long32 jobid, u_long32 taskid, int *remote_ps, 
 *     dstring *diag) 
 *
@@ -2985,7 +2984,6 @@ enum {
 *
 *  INPUTS
 *     lListElem *job     - the job (JB_Type)
-*     lList *queue_list  - the queue list
 *     bool is_array_task - if false jobid is considered the job id of a
 *                          seq. job, if true jobid and taskid must fit
 *                          to an existing array task.
@@ -3001,8 +2999,7 @@ enum {
 *     MT-NOTE: japi_sge_state_to_drmaa_state() is MT safe
 *******************************************************************************/
 static int 
-japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list, 
-                              bool is_array_task, u_long32 jobid, 
+japi_sge_state_to_drmaa_state(lListElem *job, bool is_array_task, u_long32 jobid, 
                               u_long32 taskid, int *remote_ps, dstring *diag)
 {
    bool task_finished = false;
@@ -3028,8 +3025,6 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
          }
       }
    }
-
-   DPRINTF(("japi_sge_state_to_drmaa_state(1)\n"));
 
    /*
     * The reason for this job no longer being available at qmaster might 
@@ -3100,8 +3095,6 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
       DRETURN(DRMAA_ERRNO_SUCCESS);
    }
 
-   DPRINTF(("japi_sge_state_to_drmaa_state(2)\n"));
-
    if (!is_array_task) {
       /* reject "jobid" without taskid for array jobs */
       if (JOB_TYPE_IS_ARRAY(lGetUlong(job, JB_type))) {
@@ -3115,8 +3108,6 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
          DRETURN(DRMAA_ERRNO_INVALID_JOB);
       }
    }
-
-   DPRINTF(("japi_sge_state_to_drmaa_state(3)\n"));
 
    if (ja_task != NULL) {
       /* the state of enrolled tasks can directly be determined */
@@ -3177,27 +3168,13 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
        *   - suspended because queue is suspended on subordinate 
        *   - suspended because queue is suspended by calendar 
        */
-      if (ja_task_state & JSUSPENDED_ON_THRESHOLD) {
+      if ((ja_task_state & JSUSPENDED_ON_THRESHOLD) || 
+          (ja_task_state & JSUSPENDED_ON_SUBORDINATE))
          *remote_ps |= DRMAA_PS_SUBSTATE_SYSTEM_SUSP;
-      } else {
-         lListElem *cqueue = NULL;
-
-         for_each(cqueue, cqueue_list) {
-            lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-            lList *qdil_list = lGetList(ja_task, JAT_granted_destin_identifier_list);
-
-            if (gqueue_is_suspended(qdil_list, qinstance_list)) {
-               *remote_ps |= DRMAA_PS_SUBSTATE_SYSTEM_SUSP;
-               break;
-            }
-         }
-      }
 
       DRETURN(DRMAA_ERRNO_SUCCESS);
    }
   
-   DPRINTF(("japi_sge_state_to_drmaa_state(4)\n"));
-
    /* not yet enrolled tasks are always PENDING */
    *remote_ps = DRMAA_PS_SUBSTATE_PENDING;
 
@@ -3210,21 +3187,19 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
        )
       *remote_ps |= DRMAA_PS_SUBSTATE_SYSTEM_SUSP;
  
-   DPRINTF(("japi_sge_state_to_drmaa_state(5)\n"));
-
    DRETURN(DRMAA_ERRNO_SUCCESS);
 }
 
 
 
 
-/****** JAPI/japi_get_job_and_queues() *****************************************
+/****** JAPI/japi_get_job() *****************************************
 *  NAME
-*     japi_get_job_and_queues() -- get job and the queue via GDI for job status
+*     japi_get_job() -- get job and the queue via GDI for job status
 *
 *  SYNOPSIS
-*     static int japi_get_job_and_queues(u_long32 jobid, lList 
-*     **retrieved_cqueue_list, lList **retrieved_job_list, dstring *diag) 
+*     static int japi_get_job(u_long32 jobid, 
+*           lList **retrieved_job_list, dstring *diag) 
 *
 *  FUNCTION
 *     We use GDI GET to get jobs status. Additionally also the queue list 
@@ -3233,7 +3208,6 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
 *
 *  INPUTS
 *     u_long32 jobid               - the jobs id
-*     lList **retrieved_cqueue_list - resulting queue list
 *     lList **retrieved_job_list   - resulting job list
 *     dstring *diag                - diagnosis info
 *
@@ -3241,36 +3215,20 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
 *     static int - DRMAA error codes
 *
 *  NOTES
-*     MT-NOTES: japi_get_job_and_queues() is MT safe
+*     MT-NOTES: japi_get_job() is MT safe
 *******************************************************************************/
-static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list, 
-      lList **retrieved_job_list, dstring *diag)
+static int japi_get_job(u_long32 jobid, lList **retrieved_job_list, dstring *diag)
 {
    lList *mal = NULL;
    lList *alp = NULL;
    lListElem *aep = NULL;
-   int qu_id, jb_id = 0;
+   int jb_id = 0;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
-   lCondition *cqueue_selection = NULL;
-   lEnumeration *cqueue_fields = NULL;
    lCondition *job_selection = NULL;
    lEnumeration *job_fields = NULL;
    u_long32 quality = 0;
 
-   DENTER(TOP_LAYER, "japi_get_job_and_queues");
-
-   /* we need all queues */
-   cqueue_selection = lWhere("%T(%I != %s)", CQ_Type, CQ_name, SGE_TEMPLATE_NAME);
-   cqueue_fields = lWhat("%T(%I%I)", CQ_Type, CQ_name, CQ_qinstances);
-   if (!cqueue_selection || !cqueue_fields) {
-      japi_standard_error(DRMAA_ERRNO_NO_MEMORY, diag);
-      DRETURN(DRMAA_ERRNO_NO_MEMORY);
-   }
-   qu_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_CQUEUE_LIST, 
-                         SGE_GDI_GET, NULL, cqueue_selection, cqueue_fields, 
-                         NULL, &state, true);
-   lFreeWhere(&cqueue_selection);
-   lFreeWhat(&cqueue_fields);
+   DENTER(TOP_LAYER, "japi_get_job");
 
    /* prepare GDI GET JOB selection */
    job_selection = lWhere("%T(%I==%u)", JB_Type, JB_job_number, jobid);
@@ -3295,25 +3253,6 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list
          job_selection, job_fields, &mal, &state, true);
    lFreeWhere(&job_selection);
    lFreeWhat(&job_fields);
-
-   sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_CQUEUE_LIST, qu_id, mal, 
-                                retrieved_cqueue_list);
-   aep = lFirst(alp);
-   
-   if (aep == NULL) {
-      sge_dstring_copy_string(diag, MSG_JAPI_BAD_GDI_ANSWER_LIST);
-      DRETURN(DRMAA_ERRNO_INTERNAL_ERROR);
-   }
-
-   quality = lGetUlong(aep, AN_quality);
-      
-   if (quality == ANSWER_QUALITY_ERROR) {
-      answer_to_dstring(aep, diag);
-      lFreeList(&alp);
-      DRETURN(DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE);
-   } 
-
-    lFreeList(&alp);
 
    sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_JOB_LIST, jb_id, mal, retrieved_job_list);
    aep = lFirst(alp);
@@ -3499,17 +3438,16 @@ int japi_job_ps(const char *job_id_str, int *remote_ps, dstring *diag)
 
    DPRINTF(("japi_job_ps2("SFQ")\n", job_id_str)); 
 
-   drmaa_errno = japi_get_job_and_queues(jobid, &retrieved_cqueue_list, &retrieved_job_list, diag);
+   drmaa_errno = japi_get_job(jobid, &retrieved_job_list, diag);
    if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
       japi_dec_threads(SGE_FUNC);
-      /* diag written by japi_get_job_and_queues() */
+      /* diag written by japi_get_job() */
       DRETURN(drmaa_errno);
    }
 
    DPRINTF(("japi_job_ps3("SFQ")\n", job_id_str)); 
 
    drmaa_errno = japi_sge_state_to_drmaa_state(lFirst(retrieved_job_list), 
-                                               retrieved_cqueue_list, 
                                                is_array_task, jobid, taskid, 
                                                remote_ps, diag);
 

@@ -1083,6 +1083,31 @@ void resend_signal_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitorin
    return;
 }
 
+static void sge_propagate_queue_suspension(const char *qnm, int how)
+{
+   lListElem *jep, *jatep;
+
+   DENTER(TOP_LAYER, "sge_propagate_queue_suspension");
+
+   DPRINTF(("searching for all jobs in queue %s due to %s\n", qnm, sge_sig2str(how)));
+   for_each (jep, *object_type_get_master_list(SGE_TYPE_JOB)) {
+      for_each (jatep, lGetList(jep, JB_ja_tasks)) {
+         if (lGetElemStr(lGetList(jatep, JAT_granted_destin_identifier_list), JG_qname, qnm)) {
+            u_long32 jstate;
+            DPRINTF(("found "sge_u32"."sge_u32"\n", lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number)));
+            jstate = lGetUlong(jatep, JAT_state);
+            if (how == SGE_SIGSTOP)
+               jstate |= JSUSPENDED_ON_SUBORDINATE;
+            else
+               jstate &= ~JSUSPENDED_ON_SUBORDINATE;
+            lSetUlong(jatep, JAT_state, jstate);
+         }
+      }
+   }
+
+   DRETURN_VOID;
+}
+
 /************************************************************************
  This is called by the qmaster to:
  - send a signal to all jobs in a queue (job_number == 0);
@@ -1111,7 +1136,10 @@ monitoring_t *monitor
             (int)(jep?lGetUlong(jep,JB_job_number):-1),
             (int)(jatep?lGetUlong(jatep,JAT_task_number):-1)
         ));
-   
+ 
+   if (!jep && (how == SGE_SIGSTOP || how == SGE_SIGCONT))
+      sge_propagate_queue_suspension(lGetString(qep, QU_full_name), how);
+
    /* don't try to signal unheard queues */
    if (!qinstance_state_is_unknown(qep)) {
       const char *hnm, *pnm;
@@ -1163,7 +1191,7 @@ monitoring_t *monitor
 
          if (mconf_get_simulate_execds()) {
             i = CL_RETVAL_OK;
-            if (jep)
+            if (jep && how == SGE_SIGKILL)
                trigger_job_resend(sge_get_gmt(), NULL, lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number), 1);
          } else {
             if (pb_filled(&pb)) {
@@ -1199,12 +1227,15 @@ monitoring_t *monitor
             lGetHost(qep, QU_qhostname)));
       te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, lGetUlong(jep, JB_job_number),
          lGetUlong(jatep, JAT_task_number), NULL);
-      lSetUlong(jatep, JAT_pending_signal, how);
-      ev = te_new_event((time_t)next_delivery_time, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT,
-         lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number), NULL);
-      te_add_event(ev);
-      te_free_event(&ev);
-      lSetUlong(jatep, JAT_pending_signal_delivery_time, next_delivery_time); 
+
+      if (!mconf_get_simulate_execds()) {
+         lSetUlong(jatep, JAT_pending_signal, how);
+         ev = te_new_event((time_t)next_delivery_time, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT,
+            lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number), NULL);
+         te_add_event(ev);
+         te_free_event(&ev);
+         lSetUlong(jatep, JAT_pending_signal_delivery_time, next_delivery_time); 
+      }
    } else {
       te_event_t ev = NULL;
 
@@ -1212,12 +1243,15 @@ monitoring_t *monitor
             lGetString(qep, QU_full_name), sent?"sent":"queued", sge_sig2str(how), next_delivery_time - now,
             lGetHost(qep, QU_qhostname)));
       te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, 0, 0, lGetString(qep, QU_full_name));
-      lSetUlong(qep, QU_pending_signal, how);
-      ev = te_new_event((time_t)next_delivery_time, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT, 0, 0,
-         lGetString(qep, QU_full_name));
-      te_add_event(ev);
-      te_free_event(&ev);
-      lSetUlong(qep, QU_pending_signal_delivery_time, next_delivery_time);
+
+      if (!mconf_get_simulate_execds()) {
+         lSetUlong(qep, QU_pending_signal, how);
+         ev = te_new_event((time_t)next_delivery_time, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT, 0, 0,
+            lGetString(qep, QU_full_name));
+         te_add_event(ev);
+         te_free_event(&ev);
+         lSetUlong(qep, QU_pending_signal_delivery_time, next_delivery_time);
+      }
    }
 
    if (!jep) {/* signalling a queue ? - handle slave jobs in this queue */

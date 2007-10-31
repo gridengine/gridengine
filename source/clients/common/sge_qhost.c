@@ -213,6 +213,11 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
       }
    }
    for_each(ep, ehl) {
+
+      if (shut_me_down) {
+         SGE_EXIT(NULL, 1);
+      }
+
       if(report_handler == NULL ) {
          if (print_header) {
             print_header = 0;

@@ -1,3 +1,14 @@
+AH-2007-10-31-0: Bugfix:    - reduce amount of queue list copying in scheduler
+                            - care for propagation of queue suspension state to
+                              jobs in qmaster as to minimize data amount to be 
+                              fetched by clients
+                            - add support for queue suspension to SIMULATE_EXECD 
+                              mode
+                 Bugster:   6595856
+                 Issue:     2350
+                 Review:    MD
+                  
+
 JG-2007-10-31-0: Bugfix:    Merge from V61_BRANCH of JG-2007-10-30-1:
                             qstat -ext didn't show the usage of parallel tasks
                             in the summary view (without -g t)
@@ -59,6 +70,7 @@ MP-2007-10-26-0: Bugfix:    qstat -j -xml shows more detailed information than
 RH-2007-10-26-0: Enhancem:  Installer enhancement for JMX MBean Server added
                  Review:    MD
 
+>>>>>>> 1.3969
 RD-2007-10-25-0: Bugfix:    - fixed execd reconnect on qmaster migration
                             - fixed incorrect error reporting for job script
                               spooling

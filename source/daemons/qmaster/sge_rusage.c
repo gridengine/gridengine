@@ -117,6 +117,7 @@ sge_write_rusage(dstring *buffer,
    u_long32 start_time      = 0;
    u_long32 end_time        = 0;
    u_long32 now             = sge_get_gmt();
+   u_long32 exit_status     = 0;
 
    DENTER(TOP_LAYER, "sge_write_rusage");
 
@@ -260,6 +261,8 @@ sge_write_rusage(dstring *buffer,
    }
 
    /* get submission_time, start_time, end_time */
+   end_time = usage_list_get_ulong_usage(usage_list, "end_time", 0);
+
    if (intermediate) {
       if (job != NULL && pe_task == NULL) {
          submission_time = lGetUlong(job, JB_submission_time);
@@ -272,11 +275,27 @@ sge_write_rusage(dstring *buffer,
       if (start_time == 0 && ja_task != NULL) {
          start_time = lGetUlong(ja_task, JAT_start_time);
       }
-      end_time = now;
+
+      /*
+       * For still running jobs, the job report from execd does not yet contain
+       * the end_time.
+       * So this is *not* the final usage record, and we use now as end_time.
+       */
+      if (end_time == 0) {
+         end_time = now;
+      }
+
+      /*
+       * While the job is still running, we don't get an exit_status reported
+       * by sge_execd.
+       * In this case set exit_status to -1, meaning in ARCo: Job still running.
+       * See CR 6621482.
+       */
+      exit_status = usage_list_get_ulong_usage(usage_list, "exit_status", -1);
    } else {
       submission_time = usage_list_get_ulong_usage(usage_list, "submission_time", 0);
       start_time = usage_list_get_ulong_usage(usage_list, "start_time", 0);
-      end_time = usage_list_get_ulong_usage(usage_list, "end_time", 0);
+      exit_status = usage_list_get_ulong_usage(usage_list, "exit_status", 0);
    }
    
    ret = sge_dstring_sprintf(buffer, ACTFILE_FPRINTF_FORMAT, 
@@ -292,7 +311,7 @@ sge_write_rusage(dstring *buffer,
           start_time, delimiter,
           end_time, delimiter,
           lGetUlong(jr, JR_failed), delimiter,
-          usage_list_get_ulong_usage(usage_list, "exit_status", 0), delimiter,
+          exit_status, delimiter,
           usage_list_get_ulong_usage(usage_list, "ru_wallclock", 0), delimiter,
           usage_list_get_ulong_usage(usage_list, "ru_utime", 0), delimiter,
           usage_list_get_ulong_usage(usage_list, "ru_stime", 0), delimiter,

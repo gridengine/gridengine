@@ -70,7 +70,6 @@ MP-2007-10-26-0: Bugfix:    qstat -j -xml shows more detailed information than
 RH-2007-10-26-0: Enhancem:  Installer enhancement for JMX MBean Server added
                  Review:    MD
 
->>>>>>> 1.3969
 RD-2007-10-25-0: Bugfix:    - fixed execd reconnect on qmaster migration
                             - fixed incorrect error reporting for job script
                               spooling

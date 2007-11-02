@@ -1029,7 +1029,6 @@ lListElem *jat,
 lList *eleml,
 int nm 
 ) {
-   lListElem *qep;
    lList *ql = NULL;
    int n;
    char buf[128] = "";
@@ -1079,15 +1078,8 @@ int nm
 
       /* check suspension of queue */
       if (n>0) {
-         /* EB: TODO: */
-         qep = cqueue_list_locate_qinstance(qmonMirrorList(SGE_CQUEUE_LIST), 
-                                 lGetString(lFirst(ql), JG_qname));
-         if (qep && 
-             (qinstance_state_is_manual_suspended(qep) ||
-              qinstance_state_is_susp_on_sub(qep) ||
-              qinstance_state_is_cal_suspended(qep))) {
-            tstate &= ~JRUNNING;                   /* unset bit JRUNNING */
-            tstate |= JSUSPENDED_ON_SUBORDINATE;   /* set bit JSUSPENDED_ON_SUBORDINATE */
+         if ((tstate & JSUSPENDED_ON_SUBORDINATE)) {
+            tstate &= ~JRUNNING;
             lSetUlong(jat, JAT_state, tstate);
          }
       }

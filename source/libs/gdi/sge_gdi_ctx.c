@@ -64,6 +64,7 @@
 #include "sge_conf.h"
 #include "sge_object.h"
 #include "lck/sge_lock.h"
+#include "uti/sge_spool.h"
 
 /*
 ** need this for lInit(nmv)
@@ -794,7 +795,7 @@ static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const 
       DRETURN(false);
    }   
    
-   if(component_name == NULL) {
+   if (component_name == NULL) {
       es->component_name = strdup(prognames[prog_number]);
    } else {
       es->component_name = strdup(component_name);
@@ -969,6 +970,17 @@ sge_gdi_ctx_class_t *sge_gdi_ctx_class_create_from_bootstrap(int prog_number,
    ret = sge_gdi_ctx_class_create(prog_number, component_name, username, NULL,
                                   sge_root, sge_cell, sge_qmaster_p, sge_execd_p, false, alpp);
    
+#if 1
+   /*
+   ** TODO:
+   ** jmx agent is marked as daemonized, this is checked in sge_csp_path_class_create
+   ** check via pid comparison that JGDIAgent is started as master thread 
+   */
+   if (getpid() == sge_qmaster_pid_get()) {
+      ret->set_daemonized(ret, true);
+   }
+#endif
+
    DRETURN(ret); 
 }
 

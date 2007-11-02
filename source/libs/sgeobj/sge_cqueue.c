@@ -221,11 +221,12 @@ cqueue_name_split(const char *name,
 
    DENTER(CQUEUE_LAYER, "cqueue_name_split");
 
-   *has_hostname = false;
-   *has_domain = false;
+   if (has_hostname)
+      *has_hostname = false;
+   if (has_domain)
+      *has_domain = false;
 
-   if (name != NULL && cqueue_name != NULL && 
-       host_domain != NULL && has_hostname != NULL && has_domain != NULL) {
+   if (name != NULL && cqueue_name != NULL && host_domain != NULL ) {
       bool at_skiped = false;
 
       sge_dstring_clear(cqueue_name);
@@ -236,11 +237,15 @@ cqueue_name_split(const char *name,
             at_skiped = true;
             name++;
             if (*name == '@') {
-               *has_domain = true;
-               *has_hostname = false;
+               if (has_domain)
+                  *has_domain = true;
+               if (has_hostname)
+                  *has_hostname = false;
             } else {
-               *has_domain = false;
-               *has_hostname = true;
+               if (has_domain)
+                  *has_domain = false;
+               if (has_hostname)
+                  *has_hostname = true;
             }
             continue; 
          }

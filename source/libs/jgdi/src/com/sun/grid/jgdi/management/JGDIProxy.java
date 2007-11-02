@@ -1,4 +1,5 @@
-/*___INFO__MARK_BEGIN__*//*************************************************************************
+/*___INFO__MARK_BEGIN__*/
+/*************************************************************************
  *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
@@ -30,7 +31,6 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.management;
 
-import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.JGDIException;
 import com.sun.grid.jgdi.event.Event;
 import com.sun.grid.jgdi.event.EventListener;
@@ -46,17 +46,23 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import javax.management.Attribute;
+import javax.management.InstanceAlreadyExistsException;
 import javax.management.InstanceNotFoundException;
-import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanException;
-import javax.management.MBeanOperationInfo;
+import javax.management.MBeanRegistrationException;
 import javax.management.MBeanServerConnection;
+import javax.management.MalformedObjectNameException;
+import javax.management.NotCompliantMBeanException;
 import javax.management.Notification;
 import javax.management.NotificationListener;
+import javax.management.ObjectInstance;
 import javax.management.ObjectName;
+import javax.management.ReflectionException;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
+import javax.management.remote.JMXPrincipal;
 import javax.management.remote.JMXServiceURL;
+import javax.security.auth.Subject;
 
 /**
  *  <p>
@@ -67,9 +73,9 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
     
     private static final Map<Method, MethodInvocationHandler> handlerMap = new HashMap<Method, MethodInvocationHandler>();
     
-    private final ObjectName name;
+    private ObjectName name;
     private final JMXServiceURL url;
-    private final JGDIJMXMBean proxy;
+    private JGDIJMXMBean proxy;
     private final Object credentials;
     private JMXConnector connector;
     private MBeanServerConnection connection;
@@ -88,8 +94,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
      *         is the password.
      *
      */
-    public JGDIProxy(JMXServiceURL url, ObjectName name, Object credentials) {
-        this.name = name;
+    public JGDIProxy(JMXServiceURL url, Object credentials) {
         this.url = url;
         this.credentials = credentials;
         Class<?>[] types = new Class<?>[]{JGDIJMXMBean.class};
@@ -167,7 +172,12 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
         
         if (connection != null) {
             try {
+                connection.unregisterMBean(name);
                 connector.close();
+            } catch (MBeanRegistrationException ex) {
+                // ignore: ex.printStackTrace();
+            } catch (InstanceNotFoundException ex) {
+                // ignore: ex.printStackTrace();
             } catch (IOException ex) {
                 // Ignore it
             } finally {
@@ -177,18 +187,40 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
         }
     }
     
-    private void connect() throws JGDIException {
+    private void connect() throws JGDIException, InstanceAlreadyExistsException {
         if (connection == null) {
             Map<String, Object> env = new HashMap<String, Object>();
-            if(credentials != null) {
+            if (credentials != null) {
                 env.put("jmx.remote.credentials", credentials);
             }
             try {
                 connector = JMXConnectorFactory.connect(url, env);
-                connection = connector.getMBeanServerConnection();
-                
+//                connection = connector.getMBeanServerConnection();
+                Subject delegationSubject = new Subject(true,
+                    Collections.singleton(new JMXPrincipal("delegate")),
+                    Collections.EMPTY_SET,
+                    Collections.EMPTY_SET);
+                connection = connector.getMBeanServerConnection(delegationSubject);
+                // we need a random number and just take the current
+                // mbean count + 1
+                int randomId = connection.getMBeanCount() + 1;
+//                System.out.println("connection.getMBeanCount() = " + connection.getMBeanCount());
+                name = new ObjectName("gridengine:type=JGDI,id=" + randomId);
+                ObjectInstance jgdiMBean = connection.createMBean("com.sun.grid.jgdi.management.mbeans.JGDIJMX", name);
                 connection.addNotificationListener(name, this, null, null);
                 connector.addConnectionNotificationListener(this, null, null);
+            } catch (MalformedObjectNameException ex) {
+                throw new JGDIException("jgdi mbean malformed object name", ex);
+            } catch (MBeanRegistrationException ex) {
+                throw new JGDIException("jgdi mbean registration failed", ex);
+            } catch (MBeanException ex) {
+                throw new JGDIException("jgdi mbean failed", ex);
+            } catch (NotCompliantMBeanException ex) {
+                throw new JGDIException("jgdi mbean not compliant", ex);
+            } catch (ReflectionException ex) {
+                throw new JGDIException("jgdi mbean not active in qmaster", ex);
+            } catch (NullPointerException ex) {
+                throw new JGDIException("jgdi mbean null", ex);
             } catch (InstanceNotFoundException ex) {
                 throw new JGDIException("jgdi mbean not active in qmaster", ex);
             } catch (IOException ex) {
@@ -279,7 +311,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
         private final String[] signature;
         private final String methodName;
         private final Class  returnType;
-
+        
         public MethodInvoker(Method method) {
             this.methodName = method.getName();
             Class<?>[] paramTypes = method.getParameterTypes();
@@ -293,13 +325,13 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
         public Object invoke(MBeanServerConnection connection, ObjectName name, Object[] args) throws Throwable {
             try {
                 Object ret = connection.invoke(name, methodName, args, signature);
-
+                
                 if(ret != null) {
                     try {
                         return returnType.cast(ret);
                     } catch(Exception ex) {
                         throw new IllegalStateException("return type does not match (" +
-                                typeToString(returnType) + " <-> " + typeToString(ret.getClass()));
+                            typeToString(returnType) + " <-> " + typeToString(ret.getClass()));
                     }
                 } else {
                     return ret;
@@ -317,13 +349,13 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
         private static String typeToString(Class<?> clazz) {
             if(clazz != null) {
                 return String.format("%s@%s(%s)", clazz.getName(), clazz.getProtectionDomain().getCodeSource(),
-                                     clazz.getClassLoader().getClass().getName());
+                    clazz.getClassLoader().getClass().getName());
             } else {
                 return "null";
             }
         }
     }
-
+    
     private static class ToStringMethodInvocationHandler implements MethodInvocationHandler {
         
         public Object invoke(MBeanServerConnection connection, ObjectName name, Object[] args) throws Throwable {
@@ -366,8 +398,8 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
         Class returnType = method.getReturnType();
         
         if (returnType.equals(Void.TYPE) && paramTypes.length == 1
-                && method.getName().length() > 3
-                && method.getName().startsWith("set")) {
+            && method.getName().length() > 3
+            && method.getName().startsWith("set")) {
             String attrName = method.getName();
             return attrName.substring(3);
         } else {

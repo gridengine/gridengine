@@ -112,13 +112,21 @@ static cl_bool_t ssl_cert_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t servi
 
 
 /* TODO: move to sge_prog.c */
-static bool is_daemon(const char* progname);
+static bool is_daemon(sge_prog_state_class_t *sge_prog);
 /* static bool is_master(const char* progname); */
 
-static bool is_daemon(const char* progname) {
+static bool is_daemon(sge_prog_state_class_t *sge_prog) {
+   const char *progname = sge_prog->get_sge_formal_prog_name(sge_prog);
    if (progname != NULL) {
       if ( !strcmp(prognames[QMASTER], progname) ||
            !strcmp(prognames[EXECD]  , progname) ||
+#if 1   
+           /*
+           ** TODO: AA problem CSP mode and jvm thread
+           */
+           sge_prog->get_daemonized(sge_prog) ||
+#endif   
+
            !strcmp(prognames[SCHEDD] , progname)) {
          return true;
       }
@@ -295,7 +303,6 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
    const char* user_dir = NULL;
    const char* user_local_dir = NULL;
    const char* username = NULL;
-   const char* progname = NULL;
    const char* sge_cakeyfile = NULL;
    const char* sge_certfile = NULL;
    const char* sge_keyfile = NULL;
@@ -317,8 +324,6 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
    sge_cell = sge_env->get_sge_cell(sge_env);
    sge_qmaster_port = sge_env->get_sge_qmaster_port(sge_env);
    is_from_services = sge_env->is_from_services(sge_env);
-   
-   progname = sge_prog->get_sge_formal_prog_name(sge_prog);
    username = sge_prog->get_user_name(sge_prog);
    
    DTRACE;
@@ -354,7 +359,7 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
    **   and as fallback
    **   /var/sgeCA/{port$COMMD_PORT|SGE_COMMD_SERVICE}/$SGE_CELL/userkeys/$USER/{cert.pem,key.pem}
    */
-   if (is_daemon(progname)) {
+   if (is_daemon(sge_prog)) {
       user_dir = strdup(ca_root);
       user_local_dir = strdup(ca_local_root);
    } else {
@@ -395,7 +400,7 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
    if ((sge_certfile = getenv("SGE_CERTFILE"))) {
       thiz->set_cert_file(thiz, sge_certfile);
    } else {   
-      if (is_daemon(progname)) {
+      if (is_daemon(sge_prog)) {
          sge_dstring_sprintf(&bw, "%s/certs/%s", user_dir, UserCert);
       } else {
          sge_dstring_sprintf(&bw, "%s/userkeys/%s/%s", ca_local_root, username, UserCert);
@@ -406,7 +411,7 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
    if ((sge_keyfile = getenv("SGE_KEYFILE"))) {
       thiz->set_key_file(thiz, sge_keyfile); 
    } else {   
-      if (is_daemon(progname)) {
+      if (is_daemon(sge_prog)) {
          sge_dstring_sprintf(&bw, "%s/private/%s", user_local_dir, UserKey);   
       } else {
          sge_dstring_sprintf(&bw, "%s/userkeys/%s/%s", ca_local_root, username, UserKey);
@@ -417,7 +422,7 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
    sge_dstring_sprintf(&bw, "%s/%s", user_dir, RandFile);
    thiz->set_rand_file(thiz, sge_dstring_get_string(&bw));
    if (SGE_STAT(thiz->get_rand_file(thiz), &sbuf)) { 
-      if (is_daemon(progname)) {
+      if (is_daemon(sge_prog)) {
          sge_dstring_sprintf(&bw, "%s/private/%s", user_local_dir, RandFile);   
       } else {
          sge_dstring_sprintf(&bw, "%s/userkeys/%s/%s", ca_local_root, username, RandFile);

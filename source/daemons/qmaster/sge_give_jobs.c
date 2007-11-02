@@ -1022,7 +1022,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
                /* this info is not spooled */
                sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, 
                              "global", NULL, NULL, global_host_ep);
-               reporting_create_host_consumable_record(&answer_list, global_host_ep, now);
+               reporting_create_host_consumable_record(&answer_list, global_host_ep, jep, now);
                answer_list_output(&answer_list);
                lListElem_clear_changed_info(global_host_ep);
             }
@@ -1031,12 +1031,13 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
                /* this info is not spooled */
                sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, 
                              queue_hostname, NULL, NULL, host);
-               reporting_create_host_consumable_record(&answer_list, host, now);
+               reporting_create_host_consumable_record(&answer_list, host, jep, now);
                answer_list_output(&answer_list);
                lListElem_clear_changed_info(host);
             }
             qinstance_debit_consumable(queue, jep, master_centry_list, tmp_slot);
-            reporting_create_queue_consumable_record(&answer_list, queue, now);
+            reporting_create_queue_consumable_record(&answer_list, host, queue, jep, now);
+            answer_list_output(&answer_list);
             /* this info is not spooled */
             qinstance_add_event(queue, sgeE_QINSTANCE_MOD);
             lListElem_clear_changed_info(queue);
@@ -1090,7 +1091,6 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       {
          dstring buffer = DSTRING_INIT;
          /* JG: TODO: why don't we generate an event? */
-         lList *answer_list = NULL;
          spool_write_object(&answer_list, spool_get_default_context(), jatep, 
                             job_get_key(jobid, jataskid, NULL, &buffer), 
                             SGE_TYPE_JATASK, job_spooling);
@@ -1211,7 +1211,6 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       ja_task_clear_finished_pe_tasks(jatep);
       job_enroll(jep, NULL, jataskid);
       {
-         lList *answer_list = NULL;
          const char *session = lGetString (jep, JB_session);
          sge_event_spool(ctx, &answer_list, now, sgeE_JATASK_MOD, 
                          jobid, jataskid, NULL, NULL, session,
@@ -1267,7 +1266,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       sge_event_spool(ctx, &answer_list, 0, sgeE_JATASK_MOD, 
                       jobid, jataskid, NULL, NULL, session,
                       jep, jatep, NULL, false, true);
-
+      answer_list_output(&answer_list);
 
       if (job_get_not_enrolled_ja_tasks(jep)) {
          no_unlink = 1;
@@ -1285,6 +1284,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
          release_successor_jobs(jep);
          if ((lGetString(jep, JB_exec_file) != NULL) && job_spooling && !JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type))) {
             spool_delete_script(&answer_list, lGetUlong(jep, JB_job_number), jep);
+            answer_list_output(&answer_list);
          }
       }
       break;
@@ -1315,7 +1315,6 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       sge_clear_granted_resources(ctx, jep, jatep, 0, monitor);
       job_enroll(jep, NULL, jataskid);
       {
-         lList *answer_list = NULL;
          const char *session = lGetString (jep, JB_session);
          sge_event_spool(ctx, &answer_list, now, sgeE_JATASK_MOD, 
                          jobid, jataskid, NULL, NULL, session,
@@ -1502,8 +1501,8 @@ static void sge_clear_granted_resources(sge_gdi_ctx_class_t *ctx,
             if (debit_host_consumable(job, global_host_ep, master_centry_list, -tmp_slot) > 0) {
                /* this info is not spooled */
                sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, 
-                             SGE_GLOBAL_NAME, NULL, NULL, global_host_ep);
-               reporting_create_host_consumable_record(&answer_list, global_host_ep, now);
+                             "global", NULL, NULL, global_host_ep);
+               reporting_create_host_consumable_record(&answer_list, global_host_ep, job, now);
                answer_list_output(&answer_list);
                lListElem_clear_changed_info(global_host_ep);
             }
@@ -1512,12 +1511,12 @@ static void sge_clear_granted_resources(sge_gdi_ctx_class_t *ctx,
                /* this info is not spooled */
                sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, 
                              queue_hostname, NULL, NULL, host);
-               reporting_create_host_consumable_record(&answer_list, host, now);
+               reporting_create_host_consumable_record(&answer_list, host, job, now);
                answer_list_output(&answer_list);
                lListElem_clear_changed_info(host);
             }
             qinstance_debit_consumable(queue, job, master_centry_list, -tmp_slot);
-            reporting_create_queue_consumable_record(&answer_list, queue, now);
+            reporting_create_queue_consumable_record(&answer_list, host, queue, job, now);
             /* this info is not spooled */
             qinstance_add_event(queue, sgeE_QINSTANCE_MOD);
             lListElem_clear_changed_info(queue);
@@ -1884,6 +1883,25 @@ setCheckpointObj(lListElem *job)
       }
    }
    DEXIT;
+   return ret;
+}
+
+bool gdil_del_all_orphaned(sge_gdi_ctx_class_t *ctx, const lList *gdil_list, lList **alpp)
+{
+   bool ret = true;
+   lListElem *gdil_ep;
+   
+   dstring cqueue_name = DSTRING_INIT;
+   dstring host_name = DSTRING_INIT;
+   bool has_hostname, has_domain;
+   for_each (gdil_ep, gdil_list) {
+      cqueue_name_split(lGetString(gdil_ep, JG_qname), &cqueue_name, &host_name, &has_hostname, &has_domain);
+      ret &= cqueue_list_del_all_orphaned(ctx, *(object_type_get_master_list(SGE_TYPE_CQUEUE)), alpp, 
+         sge_dstring_get_string(&cqueue_name), sge_dstring_get_string(&host_name));
+   }
+   sge_dstring_free(&cqueue_name);
+   sge_dstring_free(&host_name);
+
    return ret;
 }
 

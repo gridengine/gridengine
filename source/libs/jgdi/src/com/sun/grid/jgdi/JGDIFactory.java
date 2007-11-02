@@ -37,10 +37,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.MalformedURLException;
-import java.util.HashMap;
-import java.util.Map;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
 import javax.management.remote.JMXServiceURL;
 
 /**
@@ -164,14 +160,7 @@ public class JGDIFactory {
         } catch (MalformedURLException ex) {
             throw new IllegalStateException("Invalid JMX url", ex);
         }
-        
-        ObjectName name;
-        try {
-            name = new ObjectName("gridengine:type=JGDI");
-        } catch (MalformedObjectNameException ex) {
-            throw new IllegalStateException("Invalid object name");
-        }
-        
-        return new JGDIProxy(url, name, credentials);
+                
+        return new JGDIProxy(url, credentials);
     }
 }

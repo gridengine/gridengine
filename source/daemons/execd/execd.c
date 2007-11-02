@@ -327,6 +327,7 @@ int main(int argc, char **argv)
          break; /* shut down, leave while */
       }
 
+      /* TODO: for execd this function always returns false */
       if (sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE) == true) {
          execd_exit_state = SGE_COM_ENDPOINT_NOT_UNIQUE;
          break; /* shut down, leave while */
@@ -424,7 +425,7 @@ int sge_execd_register_at_qmaster(sge_gdi_ctx_class_t *ctx, bool is_restart) {
    lList *hlp = NULL, *alp = NULL;
    lListElem *aep = NULL;
    lListElem *hep = NULL;
-   const char *master_host = ctx->get_master(ctx, false);
+   const char *master_host = ctx->get_master(ctx, is_restart);
    
    DENTER(TOP_LAYER, "sge_execd_register_at_qmaster");
 
@@ -504,6 +505,7 @@ static void execd_register(sge_gdi_ctx_class_t *ctx)
          ret_val = cl_commlib_trigger(handle, 1); /* this will block on errors for 1 second */
          switch(ret_val) {
             case CL_RETVAL_SELECT_TIMEOUT:
+            case CL_RETVAL_CONDITION_WAIT_TIMEOUT:
             case CL_RETVAL_OK:
                break;
             default:
@@ -519,7 +521,7 @@ static void execd_register(sge_gdi_ctx_class_t *ctx)
       }
 
       if (sge_execd_register_at_qmaster(ctx, false) != 0) {
-         if ( had_problems == 0) {
+         if (had_problems == 0) {
             had_problems = 1;
          }
          continue;

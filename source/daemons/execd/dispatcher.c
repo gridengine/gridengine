@@ -66,12 +66,12 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx, char* err_str, void (*e
 {
    monitoring_t monitor;
    bool terminate = false;
-   bool do_re_register = false;
+   bool do_reconnect = false;
    int ret = CL_RETVAL_OK;
 
    DENTER(TOP_LAYER, "sge_execd_process_messages");
 
-   sge_monitor_init(&monitor, "dispatcher", NONE_EXT, EXECD_WARNING, EXECD_ERROR);
+   sge_monitor_init(&monitor, "sge_execd_process_messages", NONE_EXT, EXECD_WARNING, EXECD_ERROR);
 
    while (!terminate) {
       struct_msg_t msg;
@@ -81,8 +81,6 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx, char* err_str, void (*e
 
       memset((void*)&msg, 0, sizeof(struct_msg_t));
 
-
-      cl_commlib_trigger(ctx->get_com_handle(ctx), 1);
       ret = gdi2_receive_message(ctx, msg.snd_name, &msg.snd_id, msg.snd_host, 
                               &msg.tag, &buffer, &buflen, 0);
       init_packbuffer_from_buffer(&msg.buf, buffer, buflen);
@@ -138,55 +136,57 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx, char* err_str, void (*e
             }
             clear_packbuffer(&apb);
          }
-      } else if ((ret != CL_RETVAL_NO_MESSAGE) && (ret != CL_RETVAL_SYNC_RECEIVE_TIMEOUT)) {
-         switch (ret) {
-            case CL_RETVAL_CONNECTION_NOT_FOUND:  /* we lost connection to qmaster */
-            case CL_RETVAL_CONNECT_ERROR:         /* or we can't connect */
-              do_re_register = true;
-              break;
-            default:
-               do_re_register = true; /* unexpected error, do reregister */
-               if (cl_com_get_handle("execd", 1) == NULL) {
-                  terminate = true; /* if we don't have a handle, we must leave
-                                     * because execd_register will create a new one.
-                                     * This error would be realy strange, because
-                                     * if this happens the local socket was destroyed.
-                                     */
-               }
-         }
-         if (sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED) ||
-             sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE)) {
-            terminate = true; /* leave dispatcher */
-         } else if (sge_get_com_error_flag(EXECD, SGE_COM_WAS_COMMUNICATION_ERROR) == true) {
-            do_re_register = true;
+      } else {
+         cl_commlib_trigger(ctx->get_com_handle(ctx), 1);
+      }
+
+      if (do_reconnect || sge_get_com_error_flag(EXECD, SGE_COM_WAS_COMMUNICATION_ERROR)) {
+
+         do_reconnect = true;
+         if (cl_com_get_handle("execd", 1) == NULL) {
+            terminate = true; /* if we don't have a handle, we must leave
+                               * because execd_register will create a new one.
+                               * This error would be realy strange, because
+                               * if this happens the local socket was destroyed.
+                               */
+            ret = CL_RETVAL_HANDLE_NOT_FOUND;
          }
 
          /* 
-          * trigger re-read of act_qmaster_file in case of
-          * do_re_register == true
+          * trigger re-read of act_qmaster_file 
           */
-         if (!terminate && do_re_register) {
+         if (!terminate) {
             u_long32 now = sge_get_gmt();
             static u_long32 last_qmaster_file_read = 0;
             
             if (now - last_qmaster_file_read >= 30) {
                /* re-read act qmaster file (max. every 30 seconds) */
                DPRINTF(("re-read actual qmaster file\n"));
-               ctx->get_master(ctx, true);
                last_qmaster_file_read = now;
 
                /* re-register at qmaster when connection is up again */
                if (sge_execd_register_at_qmaster(ctx, true) == 0) {
-                  do_re_register = false;
-               }
+                     do_reconnect = false;
+               } 
             }
          }
       }
+      if (sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED) ||
+          sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE)){
+         terminate = true; /* leave sge_execd_process_messages */
+         ret = CL_RETVAL_UNKNOWN;
+      }
 
       /* do cyclic stuff */
-      if (do_ck_to_do(ctx) == 1) {
-         terminate = true;
-         ret = CL_RETVAL_OK;
+      if (!terminate) {
+         int check_to_do_ret = do_ck_to_do(ctx);
+
+         if (check_to_do_ret == 1) {
+            terminate = true;
+            ret = CL_RETVAL_OK;
+         } else if (check_to_do_ret == -1) {
+            do_reconnect = true;
+         }
       }
    }
    sge_monitor_free(&monitor);

@@ -88,6 +88,8 @@ static char* get_argument_syntax(u_long32 prog_number, int nr)
          }
      case OA_HOST_ID_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_HOST_ID_LIST;
+     case OA_HOSTNAME_LIST:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_HOSTNAME_LIST;
      case OA_JOB_ID_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_JOB_ID_LIST; 
      case OA_AR_ID:
@@ -305,6 +307,7 @@ void sge_usage(u_long32 prog_number, FILE *fp) {
 
    if (VALID_OPT(ah_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_ah_OPT_HOSTNAME, MSG_GDI_UTEXT_ah_OPT_HOSTNAME );
+      MARK(OA_HOSTNAME_LIST);
    }
 
    if (VALID_OPT(ahgrp_OPT, prog_number)) {
@@ -362,6 +365,7 @@ void sge_usage(u_long32 prog_number, FILE *fp) {
 
    if (VALID_OPT(as_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_as_OPT_HOSTNAME , MSG_GDI_UTEXT_as_OPT_HOSTNAME);
+      MARK(OA_HOSTNAME_LIST);
    }
 
    if (VALID_OPT(astnode_OPT, prog_number)) {

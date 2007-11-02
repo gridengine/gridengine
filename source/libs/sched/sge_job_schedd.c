@@ -57,7 +57,6 @@
 #include "sge_centry.h"
 #include "sge_schedd_conf.h"
 #include "sge_qinstance.h"
-#include "sge_gqueue.h"
 #include "sge_answer.h"
 #include "sge_orders.h"
 
@@ -681,20 +680,14 @@ void split_jobs(lList **job_list, lList **answer_list,
 #endif
                target = &(target_tasks[SPLIT_SUSPENDED]);
             } else {
-               /*
-                * Jobs in suspended queues are not in suspend state.
-                * Therefore we have to take this info from the queue state.
-                */
-               if (gqueue_is_suspended( 
-                        lGetList(ja_task, JAT_granted_destin_identifier_list),
-                        queue_list)) {
+               if ((lGetUlong(ja_task, JAT_state) & JSUSPENDED_ON_SUBORDINATE)) {
 #ifdef JOB_SPLIT_DEBUG
                   DPRINTF(("Task "sge_u32" is in suspended state\n",ja_task_id));
 #endif
                   target = &(target_tasks[SPLIT_SUSPENDED]);
                }
             }
-         } 
+         }
          if (target == NULL && result_list[SPLIT_RUNNING] && 
              ja_task_status != JIDLE) {
 #ifdef JOB_SPLIT_DEBUG

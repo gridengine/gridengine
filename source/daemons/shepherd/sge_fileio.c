@@ -47,23 +47,30 @@
 #include "uti/sge_uidgid.h"
 #include "msg_common.h"
 
-bool shepherd_write_pid_file(pid_t pid)
+bool shepherd_write_pid_file(pid_t pid, dstring *errmsg)
 {
    bool ret = true;
    FILE *fp = NULL;
 
    fp = fopen("pid", "w");
    if (fp != NULL) {
-      fprintf(fp, pid_t_fmt"\n", pid);
-      fflush(fp);
+      if (fprintf(fp, pid_t_fmt"\n", pid) < 0) {
+         sge_dstring_sprintf(errmsg, MSG_FILE_CANNOT_WRITE_SS, "pid", strerror(errno));
+         ret = false;
+      } else {
+         if (fflush(fp) < 0) {
+            sge_dstring_sprintf(errmsg, MSG_FILE_CANNOT_FLUSH_SS, "pid", strerror(errno));
+            ret = false;
+         }
+      }
       FCLOSE(fp);
    } else {
-      shepherd_error_sprintf(MSG_FILE_NOOPEN_SS, "pid", strerror(errno));
+      sge_dstring_sprintf(errmsg, MSG_FILE_NOOPEN_SS, "pid", strerror(errno));
       ret = false;
    }
    return ret;
 FCLOSE_ERROR:
-   shepherd_error_sprintf(MSG_FILE_NOCLOSE_SS, "pid", strerror(errno));
+   sge_dstring_sprintf(errmsg, MSG_FILE_NOCLOSE_SS, "pid", strerror(errno));
    return false;
 }
 
@@ -92,12 +99,20 @@ shepherd_read_qrsh_pid_file(const char *filename, pid_t *qrsh_pid,
       }
       FCLOSE(fp);
    } else {
-      shepherd_error_sprintf(MSG_FILE_NOOPEN_SS, filename, strerror(errno));
+      /*
+       * CR 6588743 - raising a shepherd_error here would set the queue in
+       *              error state and rerun the job
+       */
+      shepherd_trace_sprintf(MSG_FILE_NOOPEN_SS, filename, strerror(errno));
       ret = false;
    }
    return ret;
 FCLOSE_ERROR:
-   shepherd_error_sprintf(MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
+   /*
+    * CR 6588743 - raising a shepherd_error here would set the queue in
+    *              error state and rerun the job
+    */
+   shepherd_trace_sprintf(MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
    return false;
 }
 
@@ -349,13 +364,21 @@ shepherd_read_qrsh_file(const char* pid_file_name, pid_t *qrsh_pid)
          ret = false;
       } 
    } else {
-      shepherd_error_sprintf(MSG_FILE_NOOPEN_SS, pid_file_name, strerror(errno));
+      /*
+       * CR 6588743 - raising a shepherd_error here would set the queue in
+       *              error state and rerun the job
+       */
+      shepherd_trace_sprintf(MSG_FILE_NOOPEN_SS, pid_file_name, strerror(errno));
       ret = false;
    }
    FCLOSE(fp);
    return ret;
 FCLOSE_ERROR:
-   shepherd_error_sprintf(MSG_FILE_NOCLOSE_SS, pid_file_name, strerror(errno));
+   /*
+    * CR 6588743 - raising a shepherd_error here would set the queue in
+    *              error state and rerun the job
+    */
+   shepherd_trace_sprintf(MSG_FILE_NOCLOSE_SS, pid_file_name, strerror(errno));
    return false;
 }
 

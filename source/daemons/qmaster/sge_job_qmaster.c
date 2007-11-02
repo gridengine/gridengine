@@ -930,6 +930,7 @@ int sge_gdi_del_job(sge_gdi_ctx_class_t *ctx, lListElem *idep, lList **alpp, cha
    int alltasks = 1;
    lListElem *nxt, *job = NULL;
    u_long32 start_time;
+   bool forced = false;
 
    DENTER(TOP_LAYER, "sge_gdi_del_job");
 
@@ -941,7 +942,6 @@ int sge_gdi_del_job(sge_gdi_ctx_class_t *ctx, lListElem *idep, lList **alpp, cha
 
    /* first lets make sure they have permission if a force is involved */
    if (!mconf_get_enable_forced_qdel()) {/* Flag ENABLE_FORCED_QDEL in qmaster_params */
-      bool forced = false;
 
       if (lGetPosViaElem(idep, ID_force, SGE_NO_ABORT) >= 0) {
          if (lGetUlong(idep, ID_force) == 1) {
@@ -1042,9 +1042,10 @@ int sge_gdi_del_job(sge_gdi_ctx_class_t *ctx, lListElem *idep, lList **alpp, cha
       }
 
       njobs += sge_delete_all_tasks_of_job(ctx, alpp, ruser, rhost, job, &r_start, &r_end, &step, lGetList(idep, ID_ja_structure),
-               &alltasks, &deleted_tasks, start_time, monitor, lGetUlong(idep, ID_force), &deletion_time_reached);
+               &alltasks, &deleted_tasks, start_time, monitor, forced, &deletion_time_reached);
 
       if (deletion_time_reached) {
+         lFreeWhere(&job_where);
          DRETURN(STATUS_OK);
       }
    }
@@ -1060,8 +1061,10 @@ int sge_gdi_del_job(sge_gdi_ctx_class_t *ctx, lListElem *idep, lList **alpp, cha
       DRETURN(STATUS_EEXIST);
    }    
 
-   /* remove all orphaned queue intances, which are empty. */
-   cqueue_list_del_all_orphaned(ctx, *(object_type_get_master_list(SGE_TYPE_CQUEUE)), alpp);
+   if (forced) {
+      /* remove all orphaned queue intances, which are empty. */
+      cqueue_list_del_all_orphaned(ctx, *(object_type_get_master_list(SGE_TYPE_CQUEUE)), alpp, NULL, NULL);
+   }
 
    DRETURN(STATUS_OK);
 }

@@ -399,6 +399,13 @@ import java.util.logging.*;
  * 
  */
 public class JGDIJMX extends JGDIJMXBase implements JGDIJMXMBean, JGDIJMXBaseMBean {
+
+   /**
+    *   Create a new instance of <code>JGDIJMXImpl</code>.
+    */
+   public JGDIJMX() throws JGDIException {
+      super();
+   }
    
    /**
     *   Create a new instance of <code>JGDIJMXImpl</code>.

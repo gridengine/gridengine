@@ -2127,13 +2127,13 @@ monitoring_t *monitor
          /* failure: just append last elem in tmp_alp
             elements before may contain invalid success messages */
          if (tmp_alp) {
-
             if (!*alpp) {
                *alpp = lCreateList("answer", AN_Type);
             }
 
             if (object->type == AR_Type) {
                lAppendList(*alpp, tmp_alp);
+               lFreeList(&tmp_alp);
             } else {
                lListElem *failure = lLast(tmp_alp);
 

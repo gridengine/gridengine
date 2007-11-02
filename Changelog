@@ -1,12 +1,129 @@
-RD-2007-10-17-1: CVS        Created V61ARsnapshot3_TAG
+EB-2007-11-02-0: CVS        Created EB_PRE_SAAT_TAG
+---------------------------------------------------
+
+AH-2007-10-31-0: Bugfix:    - reduce amount of queue list copying in scheduler
+                            - care for propagation of queue suspension state to
+                              jobs in qmaster as to minimize data amount to be 
+                              fetched by clients
+                            - add support for queue suspension to SIMULATE_EXECD 
+                              mode
+                 Bugster:   6595856
+                 Issue:     2350
+                 Review:    MD
+                  
+
+JG-2007-10-31-0: Bugfix:    Merge from V61_BRANCH of JG-2007-10-30-1:
+                            qstat -ext didn't show the usage of parallel tasks
+                            in the summary view (without -g t)
+                 Bugster:   6391244
+                 Issue:     2419
+                 Review:    RD
+                            Merge from V61_BRANCH of JG-2007-10-31-0:
+                 Bugfix:    ARCo ju_exit_status should provide means to 
+                            recognize the intermediate record.
+                 Bugster:   6621482
+                 Issue:     2416
+                 Review:    RD
+
+PJ-2007-10-31-0: BugFix.  : Needs to be executable file
+
+PJ-2007-10-30-0: Enhancem.: The GE Service Tags support
+                 Review:    RD
+
+JG-2007-10-30-0: Bugfix:    qrsh -no now set all queues in error state when the
+                            qrsh was unavailable when the job was scheduled.
+                 Bugster:   6588743
+                 Issue:     2418
+                 Review:    HP, EB
+
+AA-2007-10-29-0: Enhancem:  o jvm_thread fix for using certs for JGDIAgent
+                            o multiple mbean instances
+                            o JGDIShell problem for macos
+                            o tpyo fix jass -> jaas, update your 
+                              ClusterConfig*.properties *jass*->*jaas* 
+                 Review:    RH
+
+JG-2007-10-29-0: Bugfix:    The start_time field was incorrect in intermediate 
+                            accounting records.
+                 Bugster:   6622842
+                 Issue:     2417
+                 Review:    RD
+
+MD-2007-10-26-0: Bugfix:    o Incorrect messages in qconf command,
+                            o rctemplates lack of requirement,
+                            o the restore feature does not delete old 
+                              configuration before restoring 
+                 Bugster:   6596931, 6287501, 6618619
+                 Issue:     2406, 2336, 2407
+                 Changed:   clients, install, backup_restore 
+                 Review:    HP
+
+MP-2007-10-26-1: Bugfix:    sge_shepherd should exit if it cannot
+                            write to any of its essential files
+                 Bugster:   6564543
+                 Issue:     2400
+                 Review:    JG
+
+MP-2007-10-26-0: Bugfix:    qstat -j -xml shows more detailed information than
+                            qstat -j
+                 Bugster:   6353628
+                 Issue:     1909
+                 Review:    JG
+
+RH-2007-10-26-0: Enhancem:  Installer enhancement for JMX MBean Server added
+                 Review:    MD
+
+RD-2007-10-25-0: Bugfix:    - fixed execd reconnect on qmaster migration
+                            - fixed incorrect error reporting for job script
+                              spooling
+                 Review:    JG
+
+JG-2007-10-24-1: Bugfix:    Long running jobs caused incorrect usage 
+                            information from ARCo database.
+                 Bugster:   6618599
+                 Issue:     2414
+                 Review:    RD
+
+JG-2007-10-24-0: Bugfix:    Fixed memory leaks / memory access errors.
+                 Review:    RD
+
+RD-2007-10-24-0: Bugfix:    raised GDI version
+
+JG-2007-10-22-0: Bugfix:    add a parameter to reporting_params to switch off 
+                            writing of all consumables
+                 Bugster:   6617450
+                 Issue:     2401
+                            removing parameters from the reporting_params will 
+                            not fallback to default values
+                 Bugster:   6619016
+                 Issue:     2409
+                 Review:    EB
+
+HP-2007-10-22-0: Bugfix:    Fixed broken build after checkin AH-2007-10-22-1
+                 Changed:   clients/common/sge_qhost.c
+
+AH-2007-10-22-1: Bugfix:    Further reduction with orphan queue checking overhead
+                            and qhost optimization.
+                 Bugster:   6619657,6619662
+                 Issue:     2410,2411
+                 Review:    EB
+
+RD-2007-10-21-0: CVS        Created V61ARsnapshot3_BRANCH
+---------------------------------------------------------
+
+RD-2007-10-21-0: CVS        Created V61ARsnapshot3_TAG
 ------------------------------------------------------
 
 AH-2007-10-19-1: Bugfix:    Bypass expensive sge_print_queues() if not needed
                             in qhost
+                 Bugster:   6619662
+                 Issue:     2411
                  Review:    RD
 
 AH-2007-10-19-0: Bugfix:    Bypass expensive but unneeded orphan queue checking
                             in qmaster upon qmod -d|-e|-s|-us
+                 Bugster:   6619657
+                 Issue:     2410
                  Review:    RD
 
 LP-2007-10-19-1: Enhancem.: JGDIShell now uses stderr to display errors

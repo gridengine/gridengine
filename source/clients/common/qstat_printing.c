@@ -229,29 +229,21 @@ lList **alpp
       int master, i;
 
       for_each(jatep, lGetList(jlep, JB_ja_tasks)) {
-         /*
-         ** TODO: handle shut_me_down and remove SGE_EXIT()
-         */
+         u_long32 jstate = lGetUlong(jatep, JAT_state);
+
          if (shut_me_down) {
             SGE_EXIT(NULL, 1);
          }
-            
+
+         if ((jstate & JSUSPENDED_ON_SUBORDINATE))
+            lSetUlong(jatep, JAT_state, jstate & ~JRUNNING);
+
          for_each (gdilep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
             if (!strcmp(lGetString(gdilep, JG_qname), qnm)) {
                int slot_adjust = 0;
                int lines_to_print;
                int slots_per_line, slots_in_queue = lGetUlong(gdilep, JG_slots); 
 
-               if (qinstance_state_is_manual_suspended(qep) ||
-                   qinstance_state_is_susp_on_sub(qep) ||
-                   qinstance_state_is_cal_suspended(qep)) {
-                  u_long32 jstate;
-
-                  jstate = lGetUlong(jatep, JAT_state);
-                  jstate &= ~JRUNNING;                 /* unset bit JRUNNING */
-                  jstate |= JSUSPENDED_ON_SUBORDINATE; /* set bit JSUSPENDED_ON_SUBORDINATE */
-                  lSetUlong(jatep, JAT_state, jstate);
-               }
                job_tag = lGetUlong(jatep, JAT_suitable);
                job_tag |= TAG_FOUND_IT;
                lSetUlong(jatep, JAT_suitable, job_tag);

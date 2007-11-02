@@ -1,0 +1,138 @@
+'\" t
+.\"___INFO__MARK_BEGIN__
+.\"
+.\" Copyright: 2004 by Sun Microsystems, Inc.
+.\"
+.\"___INFO__MARK_END__
+.\" $RCSfile: sge_st.8,v $     Last Update: $Date: 2007/10/30 16:54:07 $     Revision: $Revision: 1.1 $
+.\"
+.\"
+.\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
+.\"
+.de SB		\" small and bold
+.if !"\\$1"" \\s-2\\fB\&\\$1\\s0\\fR\\$2 \\$3 \\$4 \\$5
+..
+.\"
+.de T		\" switch to typewriter font
+.ft CW		\" probably want CW if you don't have TA font
+..
+.\"
+.de TY		\" put $1 in typewriter font
+.if t .T
+.if n ``\c
+\\$1\c
+.if t .ft P
+.if n \&''\c
+\\$2
+..
+.\"
+.de M		\" man page reference
+\\fI\\$1\\fR\\|(\\$2)\\$3
+..
+.TH SGE_ST 8 "$Date: 2007/10/30 16:54:07 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.SH NAME
+util/sgeST/sge_st \- xxQS_NAMExx Service Tags Support control command
+.\"
+.\"
+.SH SYNOPSIS
+.B sge_st
+.B enable |
+.B disable |
+.B register |
+.B unregister |
+.B check |
+.B enabled |
+.B supported |
+.B help
+.\"
+.\"
+.SH DESCRIPTION
+.PP
+.I "sge_st" 
+controls the xxQS_NAMExx support for Service Tags.
+A Service Tag support improve the monitoring of usages of the xxQS_NAMExx. 
+.br
+.\"
+.\"
+.SH OPTIONS
+.\"
+.IP "\fBenable\fP"
+Enables the Service Tags support for xxQS_NAMExx. 
+If the Service Tags packages are installed on the host, 
+the presence of the product instance service tag is checked 
+in every start of the qmaster daemon.
+.sp
+.IP "\fBdisable\fP"
+Disables the Service Tags support for xxQS_NAMExx.
+.sp
+.IP "\fBregister\fP"
+Create the product instance service tag.
+.sp
+.IP "\fBunregister\fP"
+Remove the product instance service tag.
+.sp
+.IP "\fBcheck\fP"
+Checks the status of the product instance service tag. If not registered, the option returns "unregistered".
+If registered, the option returns "registered:<product_instance_urn>"
+.sp
+.IP "\fBenabled\fP"
+Check the status of the service tags support. If the service tags are enabled by xxQS_NAMExx administrator, 
+the option returns "true", otherwise "false".
+.sp
+.IP "\fBsupported\fP"
+Checks if the Service Tags are supported on this host. This option validates the presence of the Service Tags packages on the host and 
+checks if they are correctly installed. If Service Tags are supported on this host,
+the option return a word "true", otherwise "false".
+.sp
+.\"
+.SH "The Service Tags Support"
+Service Tags enables automatic discovery of systems, software and services. 
+A service tag uniquely identifies each tagged asset, 
+and allows the asset information to be shared over a local network in a standard XML format.
+.PP
+The xxQS_NAMExx can create a service tag for one cluster installation.
+A service tag entry is stored in the Service Tag registry. 
+Each service tag has an unique instance identifier which is generated when the record is added to the registry. 
+This identifier is used as the key when accessing the record.
+.PP
+The discoverer and listener services installed together with Service Tags on a host. They provide a way to discover 
+a service tags via the network. The discoverer is a UDP-based application which exists to provide information about the listener.
+The listener is a TCP-based application which provides a way to gather service tag and associated environmental information.
+.PP
+The discoverer service is used by operating system upgrade or register tools to send the service tags data to SUN. 
+There is no other way, how to propagate the collected data to SUN than through the 
+registration tool. The data to be send can be inspected and accepted. The Service Tags Data is going to be analyzed.
+.\" 
+.SH "ENVIRONMENTAL VARIABLES"
+.\" 
+.IP "\fBxxQS_NAME_Sxx_ROOT\fP" 1.5i
+Specifies the location of the xxQS_NAMExx standard configuration
+files.
+.\"
+.IP "\fBxxQS_NAME_Sxx_CELL\fP" 1.5i
+If set, specifies the default xxQS_NAMExx cell. To address a xxQS_NAMExx
+cell
+.\"
+.\"
+.SH RESTRICTIONS
+.I sge_st
+The command must be called with xxQS_NAMExx admin rights or root permissions.
+.\"
+.\"
+.SH FILES
+\fBsge_st\fB creates a st.enabled file in \fBxxQS_NAME_Sxx_CELL\\common directory. If available, the 
+file contains the product related urn key. This key will be used for upgrading purposes. 
+.nf
+.ta \w'<xxqs_name_sxx_root>/     'u
+\fI<xxqs_name_sxx_root>/<cell>/common/st.enabled\fP
+	xxQS_NAMExx Service Tags Support enabling indicator
+.fi
+.\"
+.\"
+.SH "SEE ALSO"
+.M xxqs_name_sxx_qmaster 8 .
+.\"
+.SH "COPYRIGHT"
+See
+.M xxqs_name_sxx_intro 1
+for a full statement of rights and permissions.

@@ -39,9 +39,7 @@
 
 #include "basis_types.h"
 #include "gdi/sge_gdi_ctx.h"
-#include "sge_qmaster_main.h"
 #include "sgermon.h"
-#include "sge_mt_init.h"
 #include "sge_prog.h"
 #include "sge_log.h"
 #include "sge_unistd.h"
@@ -77,10 +75,27 @@
 #include "sge_qmaster_threads.h"
 #include "sge_job_qmaster.h"
 #include "sge_profiling.h"
-#include "uti/sge_monitor.h"
 #include "sge_conf.h"
 #include "sge_security.h"
 #include "sge_advance_reservation_qmaster.h"
+#include "qm_name.h"
+
+#include "uti/sge_monitor.h"
+
+#include "sge_thread_main.h"
+#include "sge_thread_ctrl.h"
+
+#include "sge_qmaster_main.h"
+#include "sge_qmaster_heartbeat.h"
+#include "sge_thread_jvm.h"
+#include "sge_thread_listener.h"
+#include "sge_thread_main.h"
+#include "sge_thread_signaler.h"
+#include "sge_thread_scheduler.h"
+#include "sge_thread_timer.h"
+#include "sge_thread_test.h"
+#include "sge_thread_worker.h"
+#include "sge_thread_deliverer.h"
 
 #if !defined(INTERIX)
 static void init_sig_action_and_mask(void);
@@ -274,14 +289,14 @@ int main(int argc, char* argv[])
    int max_enroll_tries;
    int ret_val;
    int file_descriptor_settings_result = 0;
-   int qmaster_exit_state = 0;
-   bool do_final_spool = true;
    bool has_daemonized = false;
    sge_gdi_ctx_class_t *ctx = NULL;
+   monitoring_t monitor;
 
    DENTER_MAIN(TOP_LAYER, "qmaster");
 
-   sge_prof_setup();
+   sge_monitor_init(&monitor, "MAIN", NONE_EXT, MT_WARNING, MT_ERROR);
+   prof_mt_init();
 
    sge_get_root_dir(true, NULL, 0, true);
    
@@ -290,31 +305,34 @@ int main(int argc, char* argv[])
    sge_init_language(NULL,NULL);   
 #endif 
 
-   /* qmaster doesn't support any commandline anymore,
-      but we should show version string and -help option */
+   /* 
+    * qmaster doesn't support any commandline anymore,
+    * but we should show version string and -help option 
+    */
    if (argc != 1) {
       sigset_t sig_set;
-      sge_mt_init();
       sigfillset(&sig_set);
       pthread_sigmask(SIG_SETMASK, &sig_set, NULL);
-      sge_qmaster_thread_init(&ctx, true);
+      sge_qmaster_thread_init(&ctx, QMASTER, MAIN_THREAD, true);
       sge_process_qmaster_cmdline(argv);
       SGE_EXIT((void**)&ctx, 1);
    }
 
+   /*
+    * daemonize qmaster
+    * set filedescripto limits
+    * and initialize librarrays to be used in multi threaded environment
+    * also take care that finished child processed of this process become
+    * zombie jobs
+    */
    has_daemonized = sge_daemonize_qmaster();
-
    file_descriptor_settings_result = set_file_descriptor_limit();
-
-   sge_mt_init();
-
-/* EB: TODO: INTERIX: might be enabled later */
 #if !defined(INTERIX)
    init_sig_action_and_mask();
 #endif
 
    /* init qmaster threads without becomming admin user */
-   sge_qmaster_thread_init(&ctx, false);
+   sge_qmaster_thread_init(&ctx, QMASTER, MAIN_THREAD, false);
 
    ctx->set_daemonized(ctx, has_daemonized);
 
@@ -323,12 +341,12 @@ int main(int argc, char* argv[])
    while (cl_com_get_handle(prognames[QMASTER],1) == NULL) {
       ctx->prepare_enroll(ctx);
       max_enroll_tries--;
-      if ( max_enroll_tries <= 0 ) {
+      if (max_enroll_tries <= 0) {
          /* exit after 30 seconds */
          CRITICAL((SGE_EVENT, MSG_QMASTER_COMMUNICATION_ERRORS ));
          SGE_EXIT((void**)&ctx, 1);
       }
-      if (  cl_com_get_handle(prognames[QMASTER],1) == NULL) {
+      if (cl_com_get_handle(prognames[QMASTER],1) == NULL) {
         /* sleep when prepare_enroll() failed */
         sleep(1);
       }
@@ -336,70 +354,103 @@ int main(int argc, char* argv[])
 
    /*
     * now the commlib up and running. Set qmaster application status function 
-    * ( commlib callback function for qping status information response 
-    *   messages (SIRM) )
+    * (commlib callback function for qping status information response 
+    *  messages (SIRM))
     */
    ret_val = cl_com_set_status_func(sge_qmaster_application_status);
    if (ret_val != CL_RETVAL_OK) {
-      ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
+      ERROR((SGE_EVENT, cl_get_error_text(ret_val)));
    }
 
-   /* now we become admin user */
+   /* 
+    * now we become admin user change into the correct root directory set the
+    * the target for logging messages
+    */
    sge_become_admin_user(ctx->get_admin_user(ctx));
-
    sge_chdir_exit(ctx->get_qmaster_spool_dir(ctx), 1);
-
    log_state_set_log_file(ERR_FILE);
-
    ctx->set_exit_func(ctx, sge_exit_func);
 
-   sge_start_heartbeat();
-
-   sge_register_event_handler(); 
+   /*
+    * We do increment the heartbeat manually here. This is the 'startup heartbeat'. 
+    * The first time the hearbeat will be incremented through the heartbeat event 
+    * handler is after about HEARTBEAT_INTERVAL seconds. The hardbeat event handler
+    * is setup during the initialisazion of the timer thread.
+    */
+   inc_qmaster_heartbeat(QMASTER_HEARTBEAT_FILE, HEARTBEAT_INTERVAL, NULL);
+     
+   /*
+    * Event master module has to be initialized already here because
+    * sge_setup_qmaster() might already access it although event delivery
+    * thread is not running.
+    *
+    * Corresponding shutdown is done in sge_deliverer_terminate();
+    *
+    * EB: In my opinion the init function should called in
+    * sge_deliverer_initialize(). Is it possible to move that call?
+    */ 
+   /* EB: TODO: ST: rename deliverer to event_master */
+   sge_event_master_init();
 
    sge_setup_qmaster(ctx, argv);
 
    if (file_descriptor_settings_result == 1) {
-      WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_LARGER_THAN_LIMIT_U, sge_u32c(FD_SETSIZE)));
-      WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_COMPILE_MESSAGE1_U, sge_u32c(FD_SETSIZE - 20)));
+      WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_LARGER_THAN_LIMIT_U, 
+               sge_u32c(FD_SETSIZE)));
+      WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_COMPILE_MESSAGE1_U, 
+               sge_u32c(FD_SETSIZE - 20)));
       WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_COMPILE_MESSAGE2));
       WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_COMPILE_MESSAGE3));
    }
 
-   sge_start_periodic_tasks();
+   /*
+    * Setup all threads and initialize corresponding modules. 
+    * Order is important!
+    */
+   sge_signaler_initialize();
+   /* EB: TODO: ST: exchange timer and deliverer initialize */
+   sge_timer_initialize(ctx, &monitor);
+   sge_deliverer_initialize(ctx);
+   sge_worker_initialize(ctx);
+#if 0
+   sge_test_initialize(ctx);
+#endif
+   sge_listener_initialize(ctx);
+   sge_scheduler_initialize();
+#ifdef JVM_THREAD
+   sge_jvm_initialize();
+#endif
 
-   sge_init_job_number();
-   sge_init_ar_id();
+   /*
+    * Block till signal from signal thread arrives us
+    */
+   sge_thread_wait_for_signal();
 
-   sge_setup_job_resend();
+   /* 
+    * Shutdown all threads and shutdown corresponding modules.
+    * Order is important!
+    */
+#ifdef JVM_THREAD
+   sge_jvm_terminate();
+#endif
+   sge_scheduler_terminate();
+   sge_listener_terminate();
+#if 0
+   sge_test_terminate(ctx);
+#endif
+   sge_worker_terminate(ctx);
+   sge_deliverer_terminate();
+   sge_timer_terminate();
+   sge_signaler_terminate();
 
-   sge_create_and_join_threads(ctx);
-
-   qmaster_exit_state = sge_get_qmaster_exit_state();
-   if (qmaster_exit_state == 100) {
-      /*
-       * another qmaster has taken over !!!
-       * sge_shutdown_qmaster_via_signal_thread()
-       * was used to set qmaster exit state 
-       */
-      do_final_spool = false;
-   }
-
-   if (do_final_spool == true) {
-      monitoring_t monitor;
-      sge_store_job_number(ctx, NULL, &monitor);
-      sge_store_ar_id(ctx, NULL, &monitor);
-   }
-
-   sge_qmaster_shutdown(ctx, do_final_spool);
-
-   sge_shutdown((void**)&ctx, qmaster_exit_state);
-
-   /* the code above will never be executed, sge_shutdown does an exit() */
-
-   /* TODO CR: this function is not called, because sge_shutdown is doing an
-               SGE_EXIT() */
+   /*
+    * Remaining shutdown operations
+    */
+   sge_clean_lists();
    sge_prof_cleanup();
+   sge_monitor_free(&monitor);
+
+   sge_shutdown((void**)&ctx, sge_qmaster_get_exit_state());
 
    DEXIT;
    return 0;

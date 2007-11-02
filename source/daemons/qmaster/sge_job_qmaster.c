@@ -212,7 +212,7 @@ static const char JOB_NAME_DEL = ':';
 int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
                     lListElem *jep, lList **alpp, lList **lpp, char *ruser,
                     char *rhost, uid_t uid, gid_t gid, char *group, 
-                    sge_gdi_request *request, monitoring_t *monitor) 
+                    sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task, monitoring_t *monitor) 
 {
    int ckpt_err;
    const char *pe_name = NULL;
@@ -494,8 +494,8 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
             DRETURN(STATUS_EUNKNOWN);
          }
 
-   #ifdef SGE_PQS_API
-   #if 0
+#ifdef SGE_PQS_API
+#if 0
          /* verify PE qsort_args */
          if ((qsort_args=lGetString(pep, PE_qsort_argv)) != NULL) {
             sge_assignment_t a = SGE_ASSIGNMENT_INIT;
@@ -512,8 +512,8 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
                DRETURN(STATUS_EUNKNOWN);
             }
          }
-   #endif
-   #endif
+#endif
+#endif
       }
 
       ckpt_err = 0;
@@ -820,7 +820,7 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       ** This also creates a forwardable credential for the user.
       */
       if (mconf_get_do_credentials()) {
-         if (store_sec_cred(sge_root, request, jep, mconf_get_do_authentication(), alpp) != 0) {
+         if (store_sec_cred(sge_root, packet, jep, mconf_get_do_authentication(), alpp) != 0) {
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             DRETURN(STATUS_EUNKNOWN);
          }
@@ -3499,7 +3499,7 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger)
 
 int sge_gdi_copy_job(sge_gdi_ctx_class_t *ctx,
                      lListElem *jep, lList **alpp, lList **lpp, char *ruser, char *rhost, 
-                     uid_t uid, gid_t gid, char *group, sge_gdi_request *request, 
+                     uid_t uid, gid_t gid, char *group, sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task, 
                      monitoring_t *monitor) 
 {  
    u_long32 seek_jid;
@@ -3553,7 +3553,7 @@ int sge_gdi_copy_job(sge_gdi_ctx_class_t *ctx,
    }
 
    /* call add() method */
-   ret = sge_gdi_add_job(ctx, new_jep, alpp, lpp, ruser, rhost, uid, gid, group, request, monitor);
+   ret = sge_gdi_add_job(ctx, new_jep, alpp, lpp, ruser, rhost, uid, gid, group, packet, task, monitor);
 
    lFreeElem(&new_jep);
 
@@ -3976,8 +3976,11 @@ static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, c
          } else {
             /* JG: TODO: this joblog seems to have an invalid job object! */
 /*                reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, ruser, rhost, NULL, job, NULL, NULL, MSG_LOG_DELETED); */
+
+#if 0 /* EB: TODO: this should not be necessary because events have been sent in sge_commit_job() above */
             sge_add_event(start_time, sgeE_JOB_DEL, job_number, 0, 
                           NULL, NULL, dupped_session, NULL);
+#endif
          }
       }
 

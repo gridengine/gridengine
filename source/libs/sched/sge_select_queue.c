@@ -3599,7 +3599,7 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
    int gslots = a->slots;
    int gslots_qend = 0;
    int host_seqno = 0;
-   double previous_load;
+   double previous_load = 0.0;
    bool previous_load_inited = false;
    int allocation_rule, minslots;
    dstring rule_name = DSTRING_INIT;

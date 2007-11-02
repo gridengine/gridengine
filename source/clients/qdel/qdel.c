@@ -36,7 +36,6 @@
 
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_gdi.h"
 #include "usage.h"
 #include "sge_all_listsL.h"
 #include "commlib.h"
@@ -55,6 +54,8 @@
 #include "sgeobj//sge_range.h"
 #include "sge_options.h"
 #include "sge_profiling.h"
+
+#include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 
 
@@ -81,11 +82,11 @@ int main(int argc, char **argv) {
 
    DENTER_MAIN(TOP_LAYER, "qdel");
 
-   sge_prof_setup();   
+   prof_mt_init();   
 
    log_state_set_log_gui(1);
 
-   if (sge_gdi2_setup(&ctx, QDEL, &alp) != AE_OK) {
+   if (sge_gdi2_setup(&ctx, QDEL, MAIN_THREAD, &alp) != AE_OK) {
       answer_list_output(&alp);
       goto error_exit;
    }

@@ -473,7 +473,6 @@ try_connect:
 	if (rem < 0)
 		exit(1);
 
-/* TODO: Test on a NECSX */
 #ifndef NECSX5
 	if (dflag &&
 	    setsockopt(rem, SOL_SOCKET, SO_DEBUG, &one, sizeof(one)) < 0)
@@ -919,7 +918,6 @@ reader(smask)
 	sa.sa_handler = oob;
 	(void)sigaction(SIGURG, &sa, (struct sigaction *) 0);
 	ppid = getppid();
-/* TODO: Test on a NECSX */
 #ifndef NECSX5
 	(void)fcntl(rem, F_SETOWN, pid);
 #endif

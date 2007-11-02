@@ -63,11 +63,6 @@
 #define RQS_T                 (1<<24)
 #define AR_T                  (1<<25)
 
-/*
- * The different list types defined in sge_gdi_request.h
- */
-
-
 #define QU_TEMPLATE              "template"
 #define EH_GLOBAL_HOST_TEMPLATE  "global"
 #define EH_EXEC_HOST_TEMPLATE    "template" 

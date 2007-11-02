@@ -39,7 +39,6 @@
 #include "sgermon.h"
 #include "symbols.h"
 #include "sge.h"
-#include "sge_gdi.h"
 #include "sge_time.h"
 #include "sge_log.h"
 #include "cull_list.h"
@@ -55,6 +54,8 @@
 #include "sge_answer.h"
 #include "sge_feature.h"
 #include "qstat_cmdline.h"
+
+#include "gdi/sge_gdi.h"
 
 #include "msg_common.h"
 #include "msg_qstat.h"

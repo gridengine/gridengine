@@ -97,7 +97,7 @@
 #include "sge_ulong.h"
 #include "sge_ja_task.h"
 #include "sge_string.h"
-#include "sge_gdi_ctx.h"
+#include "gdi/sge_gdi_ctx.h"
 #include "uti/sge_string.h"
 #include "uti/setup_path.h"
 

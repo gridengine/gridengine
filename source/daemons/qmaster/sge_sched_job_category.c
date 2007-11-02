@@ -39,8 +39,6 @@
 #include "sge_job.h"
 #include "sge_log.h"
 #include "sge_pe.h"
-#include "sge_schedd.h"
-#include "sge_process_events.h"
 #include "sge_prog.h"
 #include "sge_ctL.h"
 #include "sge_schedd_conf.h"
@@ -54,7 +52,7 @@
 #include "sge_dstring.h"
 #include "parse_qsubL.h"
 #include "parse.h"
-#include "sge_category.h"
+#include "sge_sched_job_category.h"
 #include "category.h"
 #include "sge_qinstanceL.h"
 #include "sge_qinstance.h"
@@ -134,13 +132,13 @@ void sge_print_categories(void)
    DEXIT;
 }
 /*-------------------------------------------------------------------------*/
-/*    add jobs' category to the�global category list, if it doesn�t        */
+/*    add jobs' category to the global category list, if it doesn't        */
 /*    already exist, and reference the category in the job element         */
 /*    The category_list is recreated for every scheduler run               */
 /*                                                                         */
 /*  NOTE: this function is not MT-Safe, because it uses global variables   */
 /*                                                                         */
-/*  TODO SG: split this into seperate functions                            */
+/* SG: TODO: split this into seperate functions                            */
 /*-------------------------------------------------------------------------*/
 int sge_add_job_category(lListElem *job, lList *acl_list, const lList *prj_list, const lList *rqs_list)
 {
@@ -320,7 +318,7 @@ int sge_delete_job_category(lListElem *job)
 static bool
 is_job_pending(lListElem *job)
 {
-         /* TODO SG:
+         /* SG: TODO:
          this is a very simple evaluation of the job state. It is not accurat
          and should be addopted to the real state model, but for now it is good
          enough to go with the ja_task as an identifier, if we have a pending job

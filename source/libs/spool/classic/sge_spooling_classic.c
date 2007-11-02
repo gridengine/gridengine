@@ -45,7 +45,7 @@
 #include "sge_profiling.h"
 
 #include "sge.h"
-#include "sge_gdi.h"
+#include "gdi/sge_gdi.h"
 #include "sge_answer.h"
 #include "setup_path.h"
 #include "sge_host.h"

@@ -127,7 +127,7 @@ extern int main(int argc, char** argv)
         do_shutdown = 1;
      }
 
-     cl_com_setup_commlib(CL_NO_THREAD , (cl_log_t)atoi(argv[1]), NULL );
+     cl_com_setup_commlib(CL_NO_THREAD , (cl_log_t)atoi(argv[1]), NULL);
    
      handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , CL_FALSE, atoi(argv[2]) , CL_TCP_DEFAULT,"virtual_gdi_client", 0, 1,0 );
      if (handle == NULL) {

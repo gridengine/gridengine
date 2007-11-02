@@ -98,7 +98,7 @@ The @fBHost Configuration@fR dialogue serves to add or remove hosts to/from the\
 @fBGrid Engine system@fR. There are four types of hosts available in Grid Engine.\n\
 \n\
 The @fBMaster Host@fR is central for the overall cluster activity. It runs the\n\
-master daemon @fBsge_qmaster@fR and usually the scheduler daemon @fBsge_schedd@fR.\n\
+master daemon @fBsge_qmaster@fR.\n\
 The master host requires no further configuration other than performed by the\n\
 installation procedure.\n\
 \n\
@@ -772,7 +772,7 @@ Grid Engine hosts are classified into four groups, depending on which Grid Engin
 the system and how the hosts are registered at @fBsge_qmaster@fR.\n\
 The @fBMaster Host@fR is central for the overall cluster activity. It runs the @fBsge_qmaster@fR\n\
 daemon which controls all Grid Engine components such as queues and jobs and maintains the status of the\n\
-system. The master host usually runs the @fBsge_schedd@fR scheduler daemon too.\n\
+system.\n\
 \n\
 @fBExecution hosts@fR are nodes having permission to execute Grid Engine jobs and are therefore hosting\n\
 Grid Engine queues. The @fBsge_execd@fR daemon runs on these hosts.\n\

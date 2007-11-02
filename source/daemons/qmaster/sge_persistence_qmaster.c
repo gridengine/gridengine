@@ -77,22 +77,29 @@ sge_initialize_persistence(sge_gdi_ctx_class_t *ctx, lList **answer_list)
          /* error message created in spool_startup_context */
          ret = false;
       } else {
-         time_t now = time(0);
-         te_event_t ev = NULL;
-
          /* set this context as default */
          spool_set_default_context(spooling_context);
-
-         /* initialize timer for spooling trigger function */
-         te_register_event_handler(spooling_trigger_handler, TYPE_SPOOLING_TRIGGER);
-         ev = te_new_event(now, TYPE_SPOOLING_TRIGGER, ONE_TIME_EVENT, 0, 0, NULL);
-         te_add_event(ev);
-         te_free_event(&ev);
       }
    }
 
    DEXIT;
    return ret;
+}
+
+void
+sge_initialize_persistance_timer(void)
+{
+   te_event_t ev = NULL;
+
+   DENTER(TOP_LAYER, "sge_initialize_persistance_timer");
+
+   te_register_event_handler(spooling_trigger_handler, TYPE_SPOOLING_TRIGGER);
+
+   ev = te_new_event(time(NULL), TYPE_SPOOLING_TRIGGER, ONE_TIME_EVENT, 0, 0, NULL);
+   te_add_event(ev);
+   te_free_event(&ev);
+
+   DRETURN_VOID;
 }
 
 bool

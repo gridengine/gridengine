@@ -39,7 +39,7 @@
 #include "sgermon.h"
 #include "symbols.h"
 #include "sge.h"
-#include "sge_gdi.h"
+#include "gdi/sge_gdi.h"
 #include "sge_time.h"
 #include "sge_log.h"
 #include "sge_stdlib.h"
@@ -226,7 +226,7 @@ char **argv
    sge_setup_sig_handlers(QSTAT);
    log_state_set_log_gui(true);
 
-   if (sge_gdi2_setup(&ctx, QSTAT, &alp) != AE_OK) {
+   if (sge_gdi2_setup(&ctx, QSTAT, MAIN_THREAD, &alp) != AE_OK) {
       answer_list_output(&alp);
       SGE_EXIT((void**)&ctx, 1);
    }

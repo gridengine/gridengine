@@ -34,14 +34,18 @@
 #include <stdlib.h>
 #include <errno.h>
 
+#include "comm/commd.h"
+
+#include "rmon/sgermon.h"
+
 #include "uti/sge_stdio.h"
-#include "sge_log.h"
-#include "sgermon.h"
+#include "uti/sge_log.h"
+#include "uti/setup_path.h"
+
+#include "gdi/qm_name.h"
+#include "gdi/sge_gdiP.h"
+
 #include "basis_types.h"
-#include "qm_name.h"
-#include "setup_path.h"
-#include "commd.h"
-#include "sge_gdiP.h"
 #include "msg_gdilib.h"
 
 /*-----------------------------------------------------------------------

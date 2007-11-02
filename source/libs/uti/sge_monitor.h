@@ -104,8 +104,11 @@ typedef enum {
    TET_WARNING   = 30,
    MT_WARNING    = 10,
    ST_WARNING    = 0,  /* no timeout for this thread */
-   EXECD_WARNING = 10   
+   EXECD_WARNING = 10,
+   SCT_WARNING   = 20
 }thread_warning_t;
+
+/* EB: TODO: ST: ??? */
 
 /**
  * qping thread error times in seconds
@@ -116,7 +119,8 @@ typedef enum {
    TET_ERROR   = 600,
    MT_ERROR    = 600,
    ST_ERROR    = 0,   /* no timeout for this thread */
-   EXECD_ERROR = 600   
+   EXECD_ERROR = 600,
+   SCT_ERROR   = 600   
 }thread_error_t;
 
 /**

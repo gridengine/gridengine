@@ -42,7 +42,7 @@
 #include <sys/resource.h>
 
 #include "sge_unistd.h"
-#include "sge_gdi.h"
+#include "gdi/sge_gdi.h"
 #include "sig_handlers.h"
 #include "commlib.h"
 #include "sge_prog.h"

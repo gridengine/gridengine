@@ -365,7 +365,7 @@ main(int argc, char *argv[])
 
    DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
 
-   if (sge_setup2(&ctx, SPOOLDEFAULTS, &answer_list) != AE_OK) {
+   if (sge_setup2(&ctx, SPOOLDEFAULTS, MAIN_THREAD, &answer_list, false) != AE_OK) {
       answer_list_output(&answer_list);
       SGE_EXIT(NULL, 1);
    }

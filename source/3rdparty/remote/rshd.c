@@ -1,4 +1,4 @@
-/*	$Id: rshd.c,v 1.20 2007/03/14 12:46:15 joga Exp $	*/
+/*	$Id: rshd.c,v 1.21 2007/11/02 18:42:54 ernst Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1989, 1992, 1993, 1994
@@ -562,7 +562,7 @@ fail:
    }
 
 	(void) setgid((gid_t)pwd->pw_gid);
-#if !defined(INTERIX) /* EB: TODO: There is no initgroups() in INTERIX? */
+#if !defined(INTERIX) /* EB: TODO: There is no initgroups() in INTERIX */
 	initgroups(pwd->pw_name, pwd->pw_gid);
 #endif
    

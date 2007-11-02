@@ -37,8 +37,13 @@
 
 #define GID_RANGE_NOT_ALLOWED_ID 100
 
-int write_configuration(int write_configuration, lList **alpp, const char *fname, const lListElem *conf_list, FILE *fpout, u_long32 flags);
+#include "cull/cull.h"
 
-lListElem *read_configuration(const char *fname, const char *conf_name, u_long32 flags);
+int 
+write_configuration(int write_configuration, lList **alpp, const char *fname, 
+                    const lListElem *conf_list, FILE *fpout, u_long32 flags);
+
+lListElem *
+read_configuration(const char *fname, const char *conf_name, u_long32 flags);
 
 #endif /* __RW_CONFIGURATION_H */

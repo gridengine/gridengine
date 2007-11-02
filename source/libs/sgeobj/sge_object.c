@@ -61,7 +61,6 @@
 #include "sge_cuser.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
-#include "sge_gdi.h"
 #include "sge_hostname.h"
 #include "sge_answer.h"
 #include "sge_range.h"
@@ -75,8 +74,11 @@
 #include "sge_utility.h"
 #include "cull_parse_util.h"
 #include "parse.h"
-#include "sgeobj/sge_suser.h"
 #include "sge_eval_expression.h"
+
+#include "gdi/sge_gdi.h"
+
+#include "sgeobj/sge_suser.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -163,6 +165,20 @@ typedef struct {
 /* the key for the thread local memeory */
 static pthread_key_t   obj_state_key;
 
+static pthread_once_t obj_once = PTHREAD_ONCE_INIT;
+
+static void 
+obj_state_destroy(void* st);
+
+static void
+obj_thread_local_once_init(void);
+
+static void
+obj_thread_local_once_init(void) 
+{
+   pthread_key_create(&obj_state_key, &obj_state_destroy);
+}
+
 static bool 
 object_parse_raw_field_from_string(lListElem *object, lList **answer_list, 
                                    const int nm, const char *value);
@@ -236,6 +252,7 @@ static void obj_state_global_init(obj_state_t* state)
 {
    int i;
 
+   DENTER(TOP_LAYER, "obj_state_global_init");
    state->global=true;
 
    if (state != NULL) {
@@ -251,6 +268,7 @@ static void obj_state_global_init(obj_state_t* state)
       /* SG: we need a error message */
       abort();
    }
+   DEXIT;
 }
 
 
@@ -306,7 +324,7 @@ static void obj_state_destroy(void* st)
 *******************************************************************************/
 void obj_mt_init(void) 
 {
-   pthread_key_create(&obj_state_key, &obj_state_destroy);
+   pthread_once(&obj_once, obj_thread_local_once_init);
 }
 
 void obj_init(bool is_global) 
@@ -314,6 +332,7 @@ void obj_init(bool is_global)
    obj_state_t *state = NULL;
    int ret = 0;
    bool init = false;
+   DENTER(TOP_LAYER, "obj_init");
 
    if((state = pthread_getspecific(obj_state_key)) == NULL) { 
       state = (obj_state_t*) malloc(sizeof(obj_state_t));
@@ -335,11 +354,11 @@ void obj_init(bool is_global)
             }
          }
          obj_state_global_init(state);
-      }
-      else {
+      } else {
          obj_state_init(state);
       }
    }
+   DEXIT;
 } 
 
 /****** sgeobj/object/object_has_type() ***************************************

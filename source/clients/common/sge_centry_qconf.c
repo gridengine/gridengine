@@ -32,26 +32,29 @@
 
 #include <string.h>
 
-#include "sge.h"
-#include "sgermon.h"
-#include "sge_conf.h"
-#include "sge_log.h"
-#include "sge_gdi.h"
-#include "sge_unistd.h"
+#include "rmon/sgermon.h"
 
-#include "sge_answer.h"
-#include "sge_centry_qconf.h"
-#include "sge_centry.h"
-#include "sge_object.h"
-#include "sge_io.h"
-#include "sge_edit.h"
-#include "sge_prog.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_object.h"
 
-#include "msg_common.h"
-#include "msg_clients_common.h"
+#include "uti/sge_log.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_io.h"
+#include "uti/sge_edit.h"
+#include "uti/sge_prog.h"
+
+#include "gdi/sge_gdi.h"
 
 #include "spool/flatfile/sge_flatfile.h"
 #include "spool/flatfile/sge_flatfile_obj.h"
+
+#include "sge.h"
+#include "sge_centry_qconf.h"
+
+#include "msg_common.h"
+#include "msg_clients_common.h"
 
 static bool 
 centry_provide_modify_context(sge_gdi_ctx_class_t *ctx, lListElem **this_elem, lList **answer_list);
@@ -567,7 +570,10 @@ centry_list_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx, lList **this_list, lLi
             int mode = (--number_req > 0) ? SGE_GDI_RECORD : SGE_GDI_SEND;
             del_id = ctx->gdi_multi(ctx, &gdi_answer_list, mode, 
                                    SGE_CENTRY_LIST, SGE_GDI_DEL, old_list,
-                                   NULL, NULL, &mal_answer_list, &state, false);
+                                   NULL, NULL, &state, false);
+            if (mode == SGE_GDI_SEND) {
+               ctx->gdi_wait(ctx, &gdi_answer_list, &mal_answer_list, &state);
+            }
             if (answer_list_has_error(&gdi_answer_list)) {
                answer_list_append_list(answer_list, &gdi_answer_list);
                DTRACE;
@@ -579,7 +585,10 @@ centry_list_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx, lList **this_list, lLi
             int mode = (--number_req > 0) ? SGE_GDI_RECORD : SGE_GDI_SEND;
             mod_id = ctx->gdi_multi(ctx, &gdi_answer_list, mode, 
                                    SGE_CENTRY_LIST, SGE_GDI_MOD, &modify_list,
-                                   NULL, NULL, &mal_answer_list, &state, false);
+                                   NULL, NULL, &state, false);
+            if (mode == SGE_GDI_SEND) {
+               ctx->gdi_wait(ctx, &gdi_answer_list, &mal_answer_list, &state);
+            }
             if (answer_list_has_error(&gdi_answer_list)) {
                answer_list_append_list(answer_list, &gdi_answer_list);
                DTRACE;
@@ -591,7 +600,10 @@ centry_list_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx, lList **this_list, lLi
             int mode = (--number_req > 0) ? SGE_GDI_RECORD : SGE_GDI_SEND;
             add_id = ctx->gdi_multi(ctx, &gdi_answer_list, mode, 
                                    SGE_CENTRY_LIST, SGE_GDI_ADD, &add_list,
-                                   NULL, NULL, &mal_answer_list, &state, false);
+                                   NULL, NULL, &state, false);
+            if (mode == SGE_GDI_SEND) {
+               ctx->gdi_wait(ctx, &gdi_answer_list, &mal_answer_list, &state);
+            }
             if (answer_list_has_error(&gdi_answer_list)) {
                answer_list_append_list(answer_list, &gdi_answer_list);
                DTRACE;

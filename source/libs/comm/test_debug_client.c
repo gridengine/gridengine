@@ -239,7 +239,7 @@ extern int main(int argc, char** argv)
 
 
   printf("startup commlib ...\n");
-  cl_com_setup_commlib(CL_NO_THREAD, (cl_log_t)atoi(argv[1]), NULL );
+  cl_com_setup_commlib(CL_NO_THREAD, (cl_log_t)atoi(argv[1]), NULL);
 
   printf("setting up handle for connect port %d\n", atoi(argv[2]) );
   handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_STREAM, CL_FALSE, atoi(argv[2]), /* CL_TCP_DEFAULT*/ CL_TCP_RESERVED_PORT ,"debug_client", 0, 1,0 );

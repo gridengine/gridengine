@@ -589,7 +589,7 @@ int main(int argc, char *argv[])
       SGE_EXIT(1);
    }   
 
-   evc = sge_evc_class_create(ctx, EV_ID_SCHEDD, &alp); 
+   evc = sge_evc_class_create(ctx, EV_ID_SCHEDD, &alp, false); 
 
    if (evc == NULL) {
       answer_list_output(&alp);

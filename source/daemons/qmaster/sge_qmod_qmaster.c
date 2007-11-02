@@ -44,7 +44,6 @@
 #include "sge_prog.h"
 #include "sge_queue_event_master.h"
 #include "sge_qmod_qmaster.h"
-#include "sge_gdi_request.h"
 #include "sge_job_qmaster.h"
 #include "sge_give_jobs.h"
 #include "sge_host.h"
@@ -125,9 +124,7 @@ static void qmod_job_reschedule(sge_gdi_ctx_class_t *ctx,
 /*-------------------------------------------------------------------------*/
 
 void 
-sge_gdi_qmod(sge_gdi_ctx_class_t *ctx, 
-             char *host, sge_gdi_request *request, sge_gdi_request *answer,
-             uid_t uid, gid_t gid, char *user, char *group,
+sge_gdi_qmod(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
              monitoring_t *monitor) 
 {
    lList *alp = NULL;
@@ -145,9 +142,9 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
    DENTER(TOP_LAYER, "sge_gdi_qmod");
 
 
-   if (!request->host || (strlen(user) == 0) || !request->commproc || !request->id) {
+   if (!packet->host || (strlen(packet->user) == 0) || !packet->commproc) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      answer_list_add(&(answer->alp), SGE_EVENT, 
+      answer_list_add(&(task->answer_list), SGE_EVENT, 
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       sge_dstring_free(&cqueue_buffer);
       sge_dstring_free(&hostname_buffer);
@@ -159,7 +156,7 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
    ** loop over the ids and change queue or job state and signal them
    ** if necessary
    */
-   for_each(dep, request->lp) {
+   for_each(dep, task->data_list) {
       lList *tmp_list = NULL;
       lList *qref_list = NULL;
       bool found_something = true;
@@ -198,7 +195,7 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
                qinstance_list = lGetList(cqueue, CQ_qinstances);
                qinstance = lGetElemHost(qinstance_list, QU_qhostname, hostname);
 
-               sge_change_queue_state(ctx, user, host, qinstance,
+               sge_change_queue_state(ctx, packet->user, packet->host, qinstance,
                      id_action, lGetUlong(dep, ID_force),
                      &alp, monitor);
                found = true;
@@ -265,7 +262,7 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
 
                      /* this specifies no queue, so lets probe for a job */
                      /* change state of job: */
-                     sge_change_job_state(ctx, user, host, job, tmp_task, 0,
+                     sge_change_job_state(ctx, packet->user, packet->host, job, tmp_task, 0,
                          action, lGetUlong(dep, ID_force), &alp, monitor);   
                      found = true;
                   }
@@ -277,7 +274,7 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
                   per task */
                if (alltasks && job_is_array(job)) {
                   if (!found) {
-                     sge_change_job_state(ctx, user, host, job, NULL, 0,
+                     sge_change_job_state(ctx, packet->user, packet->host, job, NULL, 0,
                          action, lGetUlong(dep, ID_force), &alp, monitor);   
                      found = true;
                   }
@@ -294,7 +291,7 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
                            ((taskid-start)%step) == 0) || alltasks) {
                            DPRINTF(("Modify job: "sge_u32"."sge_u32"\n", jobid,
                               taskid));
-                           sge_change_job_state(ctx, user, host, job, NULL, taskid,
+                           sge_change_job_state(ctx, packet->user, packet->host, job, NULL, taskid,
                                action, lGetUlong(dep, ID_force), &alp, monitor);   
                            found = true;
                         }
@@ -309,7 +306,7 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
                            ((taskid-start)%step) == 0) || alltasks) {
                            DPRINTF(("Modify job: "sge_u32"."sge_u32"\n", jobid,
                                     taskid));
-                           sge_change_job_state(ctx, user, host, job, NULL, taskid,
+                           sge_change_job_state(ctx, packet->user, packet->host, job, NULL, taskid,
                                                 action, lGetUlong(dep, ID_force), &alp, monitor);   
                            found = true;
                         }
@@ -327,7 +324,7 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
                            ((taskid-start)%step) == 0) || alltasks) {
                            DPRINTF(("Modify job: "sge_u32"."sge_u32"\n", jobid,
                                     taskid));
-                           sge_change_job_state(ctx, user, host, job, NULL, taskid,
+                           sge_change_job_state(ctx, packet->user, packet->host, job, NULL, taskid,
                                                 action, lGetUlong(dep, ID_force), &alp, monitor);   
                            found = true;
                         }
@@ -346,7 +343,7 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
                            ((taskid-start)%step) == 0) || alltasks) {
                            DPRINTF(("Modify job: "sge_u32"."sge_u32"\n", jobid,
                                     taskid));
-                           sge_change_job_state(ctx, user, host, job, NULL, taskid,
+                           sge_change_job_state(ctx, packet->user, packet->host, job, NULL, taskid,
                                                 action, lGetUlong(dep, ID_force), &alp, monitor);   
                            found = true;
                         }
@@ -371,7 +368,7 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
                   mod = lCopyElem(dep);
                   sprintf(job_id, sge_u32, lGetUlong(job, JB_job_number));
                   lSetString(mod, ID_str, job_id);
-                  lAppendElem(request->lp, mod);
+                  lAppendElem(task->data_list, mod);
                   found = true;
                }
             }
@@ -410,7 +407,7 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
    sge_dstring_free(&cqueue_buffer);
    sge_dstring_free(&hostname_buffer);
 
-   answer->alp = alp;
+   task->answer_list = alp;
    
    DEXIT;
 }

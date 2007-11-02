@@ -81,7 +81,7 @@ int test_params ()
    int ret = EXIT_SUCCESS;
 
    /* Test formerly broken actions for SGE_PROF_ALL level */
-   sge_prof_setup();
+   prof_mt_init();
 
    prof_start(SGE_PROF_ALL, NULL);
    
@@ -109,7 +109,7 @@ int do_test () {
 
    dstring error = DSTRING_INIT;
 
-   sge_prof_setup();
+   prof_mt_init();
 
 /*   set_thread_name(pthread_self(), "Main Loop");
    set_thread_prof_status_by_name(pthread_self(), "Main Loop", true);*/

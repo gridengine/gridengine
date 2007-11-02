@@ -32,40 +32,43 @@
 #include <fnmatch.h>
 #include <string.h>
 
-#include "sge.h"
-#include "sgermon.h"
-#include "sge_conf.h"
-#include "sge_log.h"
-#include "sge_gdi.h"
-#include "sge_unistd.h"
-#include "sge_string.h"
-#include "sge_hostname.h"
-#include "sge_eval_expression.h"
+#include "rmon/sgermon.h"
 
-#include "sge_attr.h"
-#include "sge_answer.h"
-#include "sge_cqueue.h"
-#include "sge_feature.h"
-#include "sge_object.h"
-#include "sge_qinstance.h"
-#include "sge_hgroup.h"
-#include "sge_href.h"
-#include "sge_qref.h"
-#include "sge_edit.h"
-#include "sge_cqueue_qconf.h"
-#include "sge_prog.h"
+#include "uti/sge_log.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_string.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_edit.h"
+#include "uti/sge_prog.h"
 
 #include "msg_common.h"
 #include "msg_clients_common.h"
 
 #include "spool/flatfile/sge_flatfile.h"
 #include "spool/flatfile/sge_flatfile_obj.h"
+
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_attr.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_href.h"
+#include "sgeobj/sge_qref.h"
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_str.h"
 #include "sgeobj/sge_userprj.h"
 #include "sgeobj/sge_subordinate.h"
+#include "sgeobj/sge_eval_expression.h"
+
+#include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
+
+#include "sge_cqueue_qconf.h"
+#include "sge.h"
 
 static void insert_custom_complex_values_writer(spooling_field *fields);
 static int write_QU_consumable_config_list(const lListElem *ep, int nm,
@@ -195,7 +198,7 @@ cqueue_hgroup_get_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_list, const l
       if (ret && fetch_all_hgroup) { 
          lEnumeration *what = lWhat("%T(ALL)", HGRP_Type);
          hgrp_id = ctx->gdi_multi(ctx, answer_list, SGE_GDI_RECORD, SGE_HGROUP_LIST, 
-                                 SGE_GDI_GET, NULL, NULL, what, NULL, &state, true);
+                                 SGE_GDI_GET, NULL, NULL, what, &state, true);
          lFreeWhat(&what);
       }  
       if (ret) {
@@ -204,7 +207,8 @@ cqueue_hgroup_get_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_list, const l
          what = enumeration_create_reduced_cq(fetch_all_qi, fetch_all_nqi);
          cq_id = ctx->gdi_multi(ctx, answer_list, SGE_GDI_SEND, SGE_CQUEUE_LIST,
                                SGE_GDI_GET, NULL, cqueue_where, what,
-                               &multi_answer_list, &state, true);
+                               &state, true);
+         ctx->gdi_wait(ctx, answer_list, &multi_answer_list, &state);
          lFreeWhat(&what);
       }
       if (ret && fetch_all_hgroup) {
@@ -264,14 +268,15 @@ cqueue_hgroup_get_all_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_list,
       /* HGRP */
       hgrp_what = lWhat("%T(ALL)", HGRP_Type);
       hgrp_id = ctx->gdi_multi(ctx, answer_list, SGE_GDI_RECORD, SGE_HGROUP_LIST,
-                              SGE_GDI_GET, NULL, NULL, hgrp_what, NULL, &state, true);
+                               SGE_GDI_GET, NULL, NULL, hgrp_what, &state, true);
       lFreeWhat(&hgrp_what);
 
       /* CQ */
       cqueue_what = lWhat("%T(ALL)", CQ_Type);
       cq_id = ctx->gdi_multi(ctx, answer_list, SGE_GDI_SEND, SGE_CQUEUE_LIST,
                             SGE_GDI_GET, NULL, NULL, cqueue_what,
-                            &multi_answer_list, &state, true);
+                            &state, true);
+      ctx->gdi_wait(ctx, answer_list, &multi_answer_list, &state);
       lFreeWhat(&cqueue_what);
 
       /* HGRP */

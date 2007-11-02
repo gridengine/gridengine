@@ -38,7 +38,7 @@
 /*
 **  global execd messages 
 */
-#define MSG_COM_ACK_UNKNOWN          _MESSAGE(29000, _("unknown ack event"))
+#define MSG_COM_ACK_UNKNOWN1          _MESSAGE(29000, _("unknown ack event"))
 
 
 /*

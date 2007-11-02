@@ -549,7 +549,8 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
    
    if (ctx != NULL) {
       me = ctx->get_who(ctx);
-      progname = ctx->get_progname(ctx);
+      /* EB: TODO: ST: rename variable; increase column length */
+      progname = ctx->get_thread_name(ctx);
       unqualified_hostname = ctx->get_unqualified_hostname(ctx);
       is_daemonized = ctx->is_daemonized(ctx);
    } else {
@@ -655,7 +656,7 @@ static void sge_do_log(u_long32 me, const char* progname, const char* unqualifie
 
          append_time((time_t)sge_get_gmt(), &msg, false); 
 
-         sge_dstring_sprintf_append(&msg, "|%s|%s|%c|%s\n",
+         sge_dstring_sprintf_append(&msg, "|%6.6s|%s|%c|%s\n",
                  progname,
                  unqualified_hostname,
                  aLevel,

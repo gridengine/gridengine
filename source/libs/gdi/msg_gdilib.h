@@ -105,26 +105,24 @@
 
 
 /* 
-** gdilib/sge_gdi_request.c
+** gdilib/...
 */
 #define MSG_GDI_POINTER_NULLPOINTERPASSEDTOSGEGDIMULIT   _MESSAGE(43117, _("NULL pointer passed to sge_gdi_multi()"))
-#define MSG_GDI_CANTCREATEGDIREQUEST                     _MESSAGE(43118, _("can't create gdi request"))
-#define MSG_GDI_CANT_SEND_MSG_TO_PORT_ON_HOST_SUSS       _MESSAGE(43121, _("unable to send message to "SFN" using port "sge_U32CFormat" on host "SFQ": "SFN))
-#define MSG_GDI_UNABLE_TO_CONNECT_SUS                    _MESSAGE(43122, _("unable to contact "SFN" using port "sge_U32CFormat" on host "SFQ))
-#define MSG_GDI_GETGRGIDXFAILEDERRORX_U                  _MESSAGE(43124, _("unable to resolve group name for group ID, "sge_U32CFormat))
-#define MSG_GDI_SENDINGGDIREQUESTFAILED                  _MESSAGE(43125, _("failed sending gdi request"))
-#define MSG_GDI_RECEIVEGDIREQUESTFAILED                  _MESSAGE(43126, _("failed receiving gdi request"))
-#define MSG_GDI_SIGNALED                                 _MESSAGE(43127, _("signaled"))
-#define MSG_GDI_GENERALERRORXSENDRECEIVEGDIREQUEST_I     _MESSAGE(43128, _("general error (%d) sending and receiving gdi request"))
-#define MSG_GDI_POINTER_NULLLISTPASSEDTOSGESENDRECEIVGDIREQUEST   _MESSAGE(43129, _("NULL list passed to sge_send_receive_gdi_request()"))
+#define MSG_GDI_CANT_SEND_MSG_TO_PORT_ON_HOST_SUSS       _MESSAGE(43118, _("unable to send message to "SFN" using port "sge_U32CFormat" on host "SFQ": "SFN))
+#define MSG_GDI_UNABLE_TO_CONNECT_SUS                    _MESSAGE(43119, _("unable to contact "SFN" using port "sge_U32CFormat" on host "SFQ))
+#define MSG_GDI_GETGRGIDXFAILEDERRORX_U                  _MESSAGE(43120, _("unable to resolve group name for group ID, "sge_U32CFormat))
+#define MSG_GDI_SENDINGGDIREQUESTFAILED                  _MESSAGE(43121, _("failed sending gdi request"))
+#define MSG_GDI_RECEIVEGDIREQUESTFAILED                  _MESSAGE(43122, _("failed receiving gdi request"))
+#define MSG_GDI_SIGNALED                                 _MESSAGE(43123, _("signaled"))
 #define MSG_GDI_MEMORY_NOTENOUGHMEMORYFORPACKINGGDIREQUEST        _MESSAGE(43131, _("not enough memory for packing gdi request"))
-#define MSG_GDI_REQUESTFORMATERROR                       _MESSAGE(43132, _("format error while packing gdi request"))
-#define MSG_GDI_UNEXPECTEDERRORWHILEPACKINGGDIREQUEST    _MESSAGE(43133, _("unexpected error while packing gdi request"))
-#define MSG_GDI_ERRORUNPACKINGGDIREQUEST_S               _MESSAGE(43134, _("error unpacking gdi request: "SFN))
-#define MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D           _MESSAGE(43137, _("invalid value ("sge_U32CFormat") for ar->op"))
-#define MSG_GDI_CANTUNPACKGDIREQUEST                     _MESSAGE(43138, _("can't unpack gdi request"))
-#define MSG_GDI_GDI_ALREADY_SETUP                        _MESSAGE(43139, _("GDI already setup"))
-#define MSG_GDI_SGEGDIFAILED_S                           _MESSAGE(43140, _("sge_gdi on list "SFQ" failed"))
+#define MSG_GDI_REQUESTFORMATERROR                       _MESSAGE(43124, _("format error while packing gdi request"))
+#define MSG_GDI_UNEXPECTEDERRORWHILEPACKINGGDIREQUEST    _MESSAGE(43125, _("unexpected error while packing gdi request"))
+#define MSG_GDI_ERRORUNPACKINGGDIREQUEST_S               _MESSAGE(43126, _("error unpacking gdi request: "SFN))
+#define MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D           _MESSAGE(43127, _("invalid value ("sge_U32CFormat") for ar->op"))
+#define MSG_GDI_GDI_ALREADY_SETUP                        _MESSAGE(43128, _("GDI already setup"))
+#define MSG_GDI_SGEGDIFAILED_S                           _MESSAGE(43129, _("sge_gdi on list "SFQ" failed"))
+#define MSG_GDI_GDI_VERIFY_REQUEST_FAILED                _MESSAGE(43130, _("verification of request failed"))
+#define MSG_GDI_MISMATCH_SEND_RECEIVE                    _MESSAGE(43131, _("GDI mismatch"))
 
 /**
  * cull/cull_where.c

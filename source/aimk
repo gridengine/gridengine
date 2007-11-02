@@ -1031,6 +1031,9 @@ case DARWIN_PPC:
    set XCFLAGS  = "-DNeedFunctionPrototypes -DNeedVarargsPrototypes -Wno-error $XMTDEF $XINCD"
    set XLIBD    = "-L$MOTIFHOME/lib -L/usr/X11R6/lib"
    set XLIBS    = "-lXm -lXpm -lXt -lXext -lX11 -lSM -lICE"
+   if ("$ADOC" == 1) then
+      set CFLAGS = "$CFLAGS -Wno-error"
+   endif
 
    switch ($REL)
    case "6.*":

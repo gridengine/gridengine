@@ -1,3 +1,11 @@
+EB-2007-12-02-0: Enhancem.: o scheduler as a thread in master
+                            o possibility to use GDI within master threads
+                            o hooks for the event/mirror interface to bypass 
+                              communication and packing in master threads
+                            o replaced all threads in master by "commlib-threads"
+                            o reworked steps done during startup/shutdown of master
+                 Review:    JG, AA
+
 EB-2007-11-02-0: CVS        Created EB_PRE_SAAT_TAG
 ---------------------------------------------------
 

@@ -526,7 +526,7 @@ bool test_lWhat_lSelect(void)
 int main(int argc, char *argv[])
 {
    lInit(nmv);
-   sge_prof_setup();
+   prof_mt_init();
 
    printf("lWhat() ... %s\n", 
           test_lWhat() ? "Ok" : "Failed");

@@ -151,11 +151,11 @@ int sge_init_languagefunc(char *package, char *localeDir)
   int   back;
   int   stop = 0;
 
-  DENTER(TOP_LAYER, "sge_init_language");
+  DENTER_(TOP_LAYER, "sge_init_language");
 
   LANGUAGE_LOCK();
 
-  DPRINTF(("****** starting localization procedure ... **********\n"));
+  DPRINTF_(("****** starting localization procedure ... **********\n"));
 
 
   while ( stop <= 2 ) {
@@ -188,9 +188,9 @@ int sge_init_languagefunc(char *package, char *localeDir)
         packName = strdup(package);
      } else if (getenv(PACKAGE) != NULL) {
         packName = strdup(getenv(PACKAGE));
-        DPRINTF(("try to get language package name from environment "SFQ"\n",PACKAGE));
+        DPRINTF_(("try to get language package name from environment "SFQ"\n",PACKAGE));
      } else {
-        DPRINTF(("could not get environment variable "SFQ"\n", PACKAGE));
+        DPRINTF_(("could not get environment variable "SFQ"\n", PACKAGE));
      }
    
      /* no package name given, using default one */
@@ -204,14 +204,14 @@ int sge_init_languagefunc(char *package, char *localeDir)
         locDir = strdup(localeDir);
      } else if ( getenv(LOCALEDIR) != NULL ) {
         if (stop != 0) {
-           DPRINTF(("ignoring environment "SFQ"\n",LOCALEDIR ));
+           DPRINTF_(("ignoring environment "SFQ"\n",LOCALEDIR ));
         } else {
            locDir = strdup(getenv(LOCALEDIR)); /* only the first time */
            stop++;
-           DPRINTF(("try to get language package directory path from environment "SFQ"\n",LOCALEDIR));
+           DPRINTF_(("try to get language package directory path from environment "SFQ"\n",LOCALEDIR));
         }
      } else {
-        DPRINTF(("could not get environment variable "SFQ"\n", LOCALEDIR));
+        DPRINTF_(("could not get environment variable "SFQ"\n", LOCALEDIR));
      }
    
      /* no directory given, using default one */
@@ -244,7 +244,7 @@ int sge_init_languagefunc(char *package, char *localeDir)
      }
    
      if (language_var == NULL) {
-        DPRINTF(("environment LANGUAGE or LANG is not set; no language selected - using defaults\n"));
+        DPRINTF_(("environment LANGUAGE or LANG is not set; no language selected - using defaults\n"));
         language_var = strdup("C");
      } 
      
@@ -254,11 +254,11 @@ int sge_init_languagefunc(char *package, char *localeDir)
         help1 = sge_language_functions.setlocale_func(LC_MESSAGES, "");
         if (help1 != NULL) {
            char* slash_pos = NULL;
-           DPRINTF(("setlocale() returns \"%s\"\n",help1)); 
+           DPRINTF_(("setlocale() returns \"%s\"\n",help1)); 
            slash_pos = strstr(help1,"_");
            if (slash_pos != NULL) {
               char* tmp_lang = NULL;
-              DPRINTF(("cutting of language string after \"_\":\n"));
+              DPRINTF_(("cutting of language string after \"_\":\n"));
               tmp_lang = strdup(help1);
               slash_pos = strstr(tmp_lang,"_");
               *slash_pos = 0;  /* cut off "_" */
@@ -270,7 +270,7 @@ int sge_init_languagefunc(char *package, char *localeDir)
               language = strdup(help1);
            }
         } else {
-           DPRINTF(("setlocale() returns NULL"));   
+           DPRINTF_(("setlocale() returns NULL"));   
            language = strdup(language_var);
         }
      }
@@ -279,20 +279,20 @@ int sge_init_languagefunc(char *package, char *localeDir)
         so we can now try to setup the choosen language package (*.mo - file) */
      pathName = malloc(sizeof(char)*(strlen(locDir)+strlen(language)+strlen(packName)+100));
      sprintf(pathName,"%s/%s/LC_MESSAGES/%s.mo",locDir,language,packName);
-     DPRINTF(("locale directory: >%s<\n",locDir));
-     DPRINTF(("package file:     >%s.mo<\n",packName));
-     DPRINTF(("language (LANG):  >%s<\n",language));
-     DPRINTF(("loading message file: %s\n",pathName ));
+     DPRINTF_(("locale directory: >%s<\n",locDir));
+     DPRINTF_(("package file:     >%s.mo<\n",packName));
+     DPRINTF_(("language (LANG):  >%s<\n",language));
+     DPRINTF_(("loading message file: %s\n",pathName ));
    
      /* is the package file allright */
      back = open (pathName, O_RDONLY);
      if (back >= 0) {
-        DPRINTF(("found message file - ok\n"));
+        DPRINTF_(("found message file - ok\n"));
         success = true;
         close(back);
         stop = 2;
      } else {
-        DPRINTF(("could not open message file - error\n"));
+        DPRINTF_(("could not open message file - error\n"));
         success = false;
      }
      if(stop==0) {
@@ -312,24 +312,24 @@ int sge_init_languagefunc(char *package, char *localeDir)
      char* help1 = NULL;
      help1 = sge_language_functions.setlocale_func(LC_MESSAGES, "");
      if (help1 != NULL) {
-        DPRINTF(("setlocale() returns \"%s\"\n",help1)); 
+        DPRINTF_(("setlocale() returns \"%s\"\n",help1)); 
      } else {
-        DPRINTF(("setlocale() returns NULL\n"));
+        DPRINTF_(("setlocale() returns NULL\n"));
      }
      help1 = sge_language_functions.bindtextdomain_func(packName, locDir );
      if (help1 != NULL) {
-        DPRINTF(("bindtextdomain() returns \"%s\"\n",help1));
+        DPRINTF_(("bindtextdomain() returns \"%s\"\n",help1));
      }else {
-        DPRINTF(("bindtextdomain() returns NULL\n"));
+        DPRINTF_(("bindtextdomain() returns NULL\n"));
      }
      help1 = sge_language_functions.textdomain_func(packName);
      if (help1 != NULL) {
-        DPRINTF(("textdomain() returns \"%s\"\n",help1));
+        DPRINTF_(("textdomain() returns \"%s\"\n",help1));
      }else {
-        DPRINTF(("textdomain() returns NULL\n"));
+        DPRINTF_(("textdomain() returns NULL\n"));
      }
   } else {
-     DPRINTF(("sge_init_language() called without valid sge_language_functions pointer!\n"));
+     DPRINTF_(("sge_init_language() called without valid sge_language_functions pointer!\n"));
      success = false;
   }
  
@@ -351,7 +351,7 @@ int sge_init_languagefunc(char *package, char *localeDir)
   sge_enable_msg_id_string = getenv(SGE_ENABLE_MSG_ID);
   if (sge_enable_msg_id_string != NULL) {
      int env_value = 0;
-     DPRINTF(("SGE_ENABLE_MSG_ID is set to \"%s\"\n", sge_enable_msg_id_string));  
+     DPRINTF_(("SGE_ENABLE_MSG_ID is set to \"%s\"\n", sge_enable_msg_id_string));  
      env_value = atoi(sge_enable_msg_id_string);
      if (env_value == 0) {
          sge_enable_msg_id = 0;
@@ -365,21 +365,20 @@ int sge_init_languagefunc(char *package, char *localeDir)
 
 
   if (sge_enable_msg_id == 0) {
-     DPRINTF(("error id output     : disabled\n"));
+     DPRINTF_(("error id output     : disabled\n"));
   } else {
-     DPRINTF(("error id output     : enabled\n"));
+     DPRINTF_(("error id output     : enabled\n"));
   }
 
   if (success == true) {
-    DPRINTF(("****** starting localization procedure ... success **\n"));
+    DPRINTF_(("****** starting localization procedure ... success **\n"));
   } else {
-    DPRINTF(("****** starting localization procedure ... failed  **\n"));
+    DPRINTF_(("****** starting localization procedure ... failed  **\n"));
   }
 
   LANGUAGE_UNLOCK();
 
-  DEXIT;
-  return (success);
+  DRETURN_(success);
 }
 
 /****** uti/language/sge_init_language_func() **********************************
@@ -421,7 +420,7 @@ void sge_init_language_func(gettext_func_type new_gettext,
                             bindtextdomain_func_type new_bindtextdomain,
                             textdomain_func_type new_textdomain) 
 {
-   DENTER(TOP_LAYER, "sge_init_language_func");
+   DENTER_(TOP_LAYER, "sge_init_language_func");
 
    LANGUAGE_LOCK();
 
@@ -453,8 +452,7 @@ void sge_init_language_func(gettext_func_type new_gettext,
 
    LANGUAGE_UNLOCK();
 
-   DEXIT;
-   return;
+   DRETURN_VOID_;
 }
 
 /****** uti/language/sge_set_message_id_output() *******************************
@@ -487,7 +485,7 @@ void sge_init_language_func(gettext_func_type new_gettext,
 void sge_set_message_id_output(int flag) {
    int *buf = NULL;
 
-   DENTER(CULL_LAYER, "sge_set_message_id_output");
+   DENTER_(CULL_LAYER, "sge_set_message_id_output");
 
    pthread_once(&message_id_once, message_id_once_init);
    
@@ -497,8 +495,7 @@ void sge_set_message_id_output(int flag) {
       *buf = flag;
    }
 
-   DEXIT;
-   return;
+   DRETURN_VOID_;
 }
 
 /****** uti/language/sge_get_message_id_output() *******************************
@@ -532,14 +529,13 @@ int sge_get_message_id_output(void)
 {
    int ret;
 
-   DENTER(TOP_LAYER, "sge_get_message_id_output");
+   DENTER_(TOP_LAYER, "sge_get_message_id_output");
 
    LANGUAGE_LOCK();
    ret = sge_get_message_id_output_implementation();
    LANGUAGE_UNLOCK();
 
-   DEXIT;
-   return ret;
+   DRETURN_(ret);
 }
 
 /****** uti/language/sge_get_message_id_output_implementation() ***************
@@ -576,16 +572,14 @@ int sge_get_message_id_output(void)
 static int sge_get_message_id_output_implementation(void) 
 {
    int *buf;
-   DENTER(CULL_LAYER, "sge_get_message_id_output_implementation");
+   DENTER_(CULL_LAYER, "sge_get_message_id_output_implementation");
 
    if (sge_enable_msg_id_to_every_message == 1) {
-      DEXIT;
-      return 1;
+      DRETURN_(1);
    }
 
    if (sge_enable_msg_id == 0) {
-      DEXIT;
-      return 0;
+      DRETURN_(0);
    }
 
    pthread_once(&message_id_once, message_id_once_init);
@@ -593,12 +587,9 @@ static int sge_get_message_id_output_implementation(void)
    buf = (int*) pthread_getspecific(message_id_key);
 
    if (buf != NULL) { 
-      DEXIT;
-      return 0;
-   }
-   else {
-      DEXIT;
-      return *buf;
+      DRETURN_(0);
+   } else {
+      DRETURN_(*buf);
    }
 }
 
@@ -672,13 +663,12 @@ const char *sge_gettext_(int msg_id, const char *msg_str)
    } message_p;
    long key;
 
-   DENTER(CULL_LAYER, "sge_gettext_");
+   DENTER_(CULL_LAYER, "sge_gettext_");
 
    message_p.l = NULL;
 
    if (msg_str == NULL) {
-      DEXIT;
-      return NULL;
+      DRETURN_(NULL);
    } 
 
    key = msg_id;
@@ -706,7 +696,7 @@ const char *sge_gettext_(int msg_id, const char *msg_str)
          trans_message = malloc(strlen(gettext_return_string)+1+8); /* max "(99999) "*/
          new_mp        = malloc(sizeof(sge_error_message_t));
          if (new_mp != NULL && org_message != NULL && trans_message != NULL) {
-            DPRINTF(("add new hash table entry for message id: %d\n",msg_id));
+            DPRINTF_(("add new hash table entry for message id: %d\n",msg_id));
             new_mp->id = msg_id;
             new_mp->category = 0;
             new_mp->counter = 1;
@@ -720,28 +710,24 @@ const char *sge_gettext_(int msg_id, const char *msg_str)
             new_mp->local_message = trans_message;
 
             sge_htable_store(sge_message_hash_table, &key, new_mp);
-            DEXIT;
-            return new_mp->local_message;
+            DRETURN_(new_mp->local_message);
          }
       } else {
          /* check element */
-         DPRINTF(("using old hash entry for message id: %d\n",msg_id));
+         DPRINTF_(("using old hash entry for message id: %d\n",msg_id));
          if (strcmp(msg_str,message_p.l->message) != 0) {
-            DPRINTF(("duplicate message id error: returning gettext() message"));
-            DPRINTF(("msg in : \"%s\"\n",msg_str));
-            DPRINTF(("msg out: \"%s\"\n",message_p.l->message));
-            DEXIT;
-            return sge_gettext__((char*)msg_str);
+            DPRINTF_(("duplicate message id error: returning gettext() message"));
+            DPRINTF_(("msg in : \"%s\"\n",msg_str));
+            DPRINTF_(("msg out: \"%s\"\n",message_p.l->message));
+            DRETURN_(sge_gettext__((char*)msg_str));
          } else {
             message_p.l->counter = (message_p.l->counter) + 1;
-            DPRINTF(("message count: "sge_U32CFormat"\n", sge_u32c(message_p.l->counter)));
-            DEXIT;
-            return message_p.l->local_message;
+            DPRINTF_(("message count: "sge_U32CFormat"\n", sge_u32c(message_p.l->counter)));
+            DRETURN_(message_p.l->local_message);
          }
       } 
    }
-   DEXIT;
-   return sge_gettext__((char*)msg_str);
+   DRETURN_(sge_gettext__((char*)msg_str));
 #endif
 }
 
@@ -778,22 +764,21 @@ const char *sge_gettext_(int msg_id, const char *msg_str)
 const char *sge_gettext__(char *x) 
 {
    char *z;
-   DENTER(BASIS_LAYER, "sge_gettext__");
+   DENTER_(BASIS_LAYER, "sge_gettext__");
 
    if ( (sge_language_functions.gettext_func != NULL) && 
         (sge_are_language_functions_installed == true)   ) {
       z = sge_language_functions.gettext_func(x);
    } else {
       z = x;
-      DPRINTF(("sge_gettext() called without valid gettext function pointer!\n"));
+      DPRINTF_(("sge_gettext() called without valid gettext function pointer!\n"));
    }
 
    /*z = gettext(x);*/
   
-   /*DPRINTF(("gettext: '%s' -> '%s'\n", x ? x : "", z ? z : ""));*/ 
+   /*DPRINTF_(("gettext: '%s' -> '%s'\n", x ? x : "", z ? z : ""));*/ 
 
-   DEXIT;
-   return z;
+   DRETURN_(z);
 }
 
 static void message_id_destroy(void* theState) 

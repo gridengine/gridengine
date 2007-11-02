@@ -50,7 +50,6 @@
 #include <Xmt/Procedures.h>
 
 #include "sge_all_listsL.h"
-#include "sge_gdi.h"
 #include "commlib.h"
 #include "sge.h"
 #include "sge_complex_schedd.h"
@@ -62,7 +61,8 @@
 #include "sge_host.h"
 #include "sge_hgroup.h"
 #include "sge_hgroup_qconf.h"
-#include "sge_gdi_ctx.h"
+#include "gdi/sge_gdi.h"
+#include "gdi/sge_gdi_ctx.h"
 
 #include "qmon_proto.h"
 #include "qmon_rmon.h"

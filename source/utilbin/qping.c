@@ -36,15 +36,13 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "msg_utilbin.h"
+#include "basis_types.h"
 #include "sge_time.h"
 #include "cl_commlib.h"
 #include "cl_util.h"
 #include "sge_arch.h"
 #include "version.h"
-#include "sge_gdi.h"
 #include "sge_mt_init.h"
-#include "sge_gdi_request.h"
 #include "sge_profiling.h"
 #include "sge_uidgid.h"
 #include "sge_signal.h"
@@ -54,8 +52,14 @@
 #include "sge_prog.h"
 #include "sge_security.h"
 #include "sge_all_listsL.h"
-#include "gdi/sge_gdi_ctx.h"
+#include "msg_utilbin.h"
+
 #include "sgeobj/sge_ack.h"
+
+#include "gdi/sge_gdi.h"
+#include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdi_packet.h"
+#include "gdi/sge_gdi_packet_pb_cull.h"
 
 #define ARGUMENT_COUNT 15
 static char*  cl_values[ARGUMENT_COUNT+2];
@@ -498,89 +502,90 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
                unsigned long buffer_length = 0;
                if (  cl_util_get_binary_buffer(message_debug_data, &binary_buffer , &buffer_length) == CL_RETVAL_OK) {
                   sge_pack_buffer buf;
-                  sge_gdi_request *req_head = NULL;  /* head of request linked list */
-                  sge_gdi_request *req = NULL;
-   
    
                   if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
-                     if ( sge_unpack_gdi_request(&buf, &req_head ) == 0) {
-                        int req_no = 0;
+                     sge_gdi_packet_class_t *packet = NULL;
+               
+                     if (sge_gdi_packet_unpack(&packet, NULL, &buf)) {
+                        sge_gdi_task_class_t *task = NULL;
+
                         printf("      unpacked gdi request (binary buffer length %lu):\n", buffer_length );
-                        for (req = req_head; req; req = req->next) {
-                           req_no++;
-                           printf("         request: %d\n", req_no);
-   
-                           if (req->op) {
-                              printf("op     : "sge_U32CFormat"\n", sge_u32c(req->op));
+
+                        printf("         packet:\n");
+
+                        if (packet->id) {
+                           printf("id   : "sge_U32CFormat"\n", sge_u32c(packet->id));
+                        } else {
+                           printf("id   : %s\n", "NULL");
+                        } 
+                        if (packet->host) {
+                           printf("host   : %s\n", packet->host);
+                        } else {
+                           printf("host   : %s\n", "NULL");
+                        }
+                        if (packet->commproc) {
+                           printf("commproc   : %s\n", packet->commproc);
+                        } else {
+                           printf("commproc   : %s\n", "NULL");
+                        }
+                        if (packet->version) {
+                           printf("version   : "sge_U32CFormat"\n", sge_u32c(packet->version));
+                        } else {
+                           printf("version   : %s\n", "NULL");
+                        }
+                        if (packet->auth_info) {
+                           printf("auth_info   : %s\n", packet->auth_info);
+                        } else {
+                           printf("auth_info   : %s\n", "NULL");
+                        }
+                        task = packet->first_task;
+                        while (task != NULL) {
+                           printf("         task:\n");
+
+                           if (task->command) {
+                              printf("op     : "sge_U32CFormat"\n", sge_u32c(task->command));
                            } else {
                               printf("op     : %s\n", "NULL");
                            }
-                           if (req->target) {
-                              printf("target : "sge_U32CFormat"\n", sge_u32c(req->target));
+                           if (task->target) {
+                              printf("target : "sge_U32CFormat"\n", sge_u32c(task->target));
                            } else {
                               printf("target : %s\n", "NULL");
                            }
    
-                           if (req->host) {
-                              printf("host   : %s\n", req->host);
-                           } else {
-                              printf("host   : %s\n", "NULL");
-                           }
-                           if (req->commproc) {
-                              printf("commproc   : %s\n", req->commproc);
-                           } else {
-                              printf("commproc   : %s\n", "NULL");
-                           }
-                           if (req->id) {
-                              printf("id   : "sge_U32CFormat"\n", sge_u32c(req->id));
-                           } else {
-                              printf("id   : %s\n", "NULL");
-                           } 
-                           if (req->version) {
-                              printf("version   : "sge_U32CFormat"\n", sge_u32c(req->version));
-                           } else {
-                              printf("version   : %s\n", "NULL");
-                           }
-                           if (req->lp) {
-                              lWriteListTo(req->lp,stdout); 
+                           if (task->data_list) {
+                              lWriteListTo(task->data_list,stdout); 
                            } else {
                               printf("lp   : %s\n", "NULL");
    
                            }
-                           if (req->alp) {
-                              lWriteListTo(req->alp,stdout); 
+                           if (task->answer_list) {
+                              lWriteListTo(task->answer_list,stdout); 
                            } else {
                               printf("alp   : %s\n", "NULL");
                            }
    
-                           if (req->cp) {
-                              lWriteWhereTo(req->cp,stdout); 
+                           if (task->condition) {
+                              lWriteWhereTo(task->condition,stdout); 
                            } else {
                               printf("cp   : %s\n", "NULL");
                            }
-                           if (req->enp) {
-                              lWriteWhatTo(req->enp,stdout); 
+                           if (task->enumeration) {
+                              lWriteWhatTo(task->enumeration,stdout); 
                            } else {
                               printf("enp   : %s\n", "NULL");
                            }
-                           if (req->auth_info) {
-                              printf("auth_info   : %s\n", req->auth_info);
+                           if (task->id) {
+                              printf("id     : "sge_U32CFormat"\n", sge_u32c(task->id));
                            } else {
-                              printf("auth_info   : %s\n", "NULL");
+                              printf("id    : %s\n", "NULL");
                            }
-                           if (req->sequence_id) {
-                              printf("sequence_id   : "sge_U32CFormat"\n", sge_u32c(req->sequence_id));
-                           } else {
-                              printf("sequence_id   : %s\n", "NULL");
-                           }
-                           if (req->request_id) {
-                              printf("request_id   : "sge_U32CFormat"\n", sge_u32c(req->request_id));
-                           } else {
-                              printf("request_id   : %s\n", "NULL");
-                           }
+   
+                           task = task->next;
                         }
                      }
-                     free_gdi_request(req_head);
+
+                     sge_gdi_packet_free(&packet);
                      clear_packbuffer(&buf);
                   }
                }
@@ -948,7 +953,6 @@ int main(int argc, char *argv[]) {
    sigaction(SIGHUP, &sa, NULL);
    sigaction(SIGPIPE, &sa, NULL);
 
-
    for (i=1;i<argc;i++) {
       if (argv[i][0] == '-') {
          if (strcmp( argv[i] , "-i") == 0) {
@@ -1116,7 +1120,7 @@ int main(int argc, char *argv[]) {
       exit(1);
    }
 
-   sge_prof_setup();
+   prof_mt_init();
    
    uidgid_mt_init();
    path_mt_init();
@@ -1124,15 +1128,13 @@ int main(int argc, char *argv[]) {
    bootstrap_mt_init(); 
    feature_mt_init();
 
-#ifndef NEW_GDI_STATE
    gdi_mt_init();
-#endif
 
    sge_getme(QPING);
 
    lInit(nmv);
 
-   retval = cl_com_setup_commlib(CL_RW_THREAD ,CL_LOG_OFF, NULL );
+   retval = cl_com_setup_commlib(CL_RW_THREAD ,CL_LOG_OFF, NULL);
    if (retval != CL_RETVAL_OK) {
       fprintf(stderr,"%s\n",cl_get_error_text(retval));
       exit(1);

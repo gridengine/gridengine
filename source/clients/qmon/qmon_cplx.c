@@ -51,7 +51,6 @@
 
 #include "Matrix.h"
 #include "sge_all_listsL.h"
-#include "sge_gdi.h"
 #include "commlib.h"
 #include "sge_complex_schedd.h"
 #include "sge_answer.h"
@@ -70,8 +69,10 @@
 #include "qmon_cplx.h"
 #include "qmon_globals.h"
 #include "AskForItems.h"
-#include "sge_gdi_ctx.h"
 #include "msg_qmaster.h"
+
+#include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdi.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 

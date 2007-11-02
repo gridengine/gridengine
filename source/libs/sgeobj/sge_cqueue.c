@@ -40,7 +40,7 @@
 #include "symbols.h"
 #include "sge.h"
 
-#include "sge_gdi.h"
+#include "gdi/sge_gdi.h"
 
 #include "parse.h"
 #include "sge_dstring.h"

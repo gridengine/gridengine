@@ -125,7 +125,9 @@
  * multithreading support, thread local
  **/
 
-static pthread_key_t   sc_state_key;  
+static pthread_key_t sc_state_key;  
+
+static pthread_once_t sc_once = PTHREAD_ONCE_INIT;
 
 /* a scheduling configuration structure which is stored thread local */
 typedef struct {
@@ -182,9 +184,16 @@ static void sc_state_destroy(void* state)
    free(state);
 }
 
-void sc_mt_init(void) 
+static void 
+sc_thread_local_once_init(void)
 {
    pthread_key_create(&sc_state_key, &sc_state_destroy);
+}
+
+
+void sc_mt_init(void) 
+{
+   pthread_once(&sc_once, sc_thread_local_once_init);
 } 
 
 /*-----*/

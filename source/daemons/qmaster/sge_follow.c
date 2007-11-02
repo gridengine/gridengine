@@ -51,7 +51,6 @@
 #include "sge_job_qmaster.h"
 #include "sge_follow.h"
 #include "sge_sched.h"
-#include "scheduler.h"
 #include "sgeee.h"
 #include "sge_support.h"
 #include "sge_userprj_qmaster.h"
@@ -79,8 +78,14 @@
 #include "sge_sharetree.h"
 #include "sge_cqueue.h"
 #include "sge_persistence_qmaster.h"
+
 #include "spool/sge_spooling.h"
+
+#include "lck/sge_lock.h"
+
 #include "sgeobj/sge_advance_reservation.h"
+
+#include "uti/sge_thread_ctrl.h"
 
 #include "msg_common.h"
 #include "msg_evmlib.h"
@@ -101,7 +106,93 @@ typedef struct {
    order_pos_t *cull_order_pos;        /* stores cull positions in the job, ja-task, and order structure */
 } sge_follow_t;
 
-static sge_follow_t Follow_Control = {PTHREAD_MUTEX_INITIALIZER, 0,NOT_DEFINED, 0, NULL};
+
+static sge_follow_t Follow_Control = {
+   PTHREAD_MUTEX_INITIALIZER, 
+   0,
+   NOT_DEFINED, 
+   0, 
+   NULL
+};
+
+/* EB: TODO: ST: remove code below ? */
+
+typedef struct {
+   pthread_mutex_t    add_order_mutex;    /* gards the access to the variables 
+                                             in this structure */
+   lList              *orders;            /* orders to process */
+   bool               is_currently_busy;  /* anothe thread is currently processing 
+                                             the orders */
+   bool               is_waiting;         /* is set, when a other thread is waiting */
+   pthread_cond_t     cond_var;           /* used for waiting till all orders 
+                                             are processed    */
+} sge_order_t;
+
+static sge_order_t Order_Control = {
+   PTHREAD_MUTEX_INITIALIZER, 
+   NULL, 
+   false, 
+   false, 
+   PTHREAD_COND_INITIALIZER
+};
+
+void sge_process_order_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, 
+                             monitoring_t *monitor)
+{
+   lList *orders = NULL;
+   bool end = false;
+   int order_count;
+   object_description *object_base = NULL;
+
+   DENTER(TOP_LAYER, "sge_process_order_event");
+   object_base = object_type_get_object_description();
+
+   while (!end) {
+      sge_mutex_lock("add_order_mutex", SGE_FUNC, __LINE__, &Order_Control.add_order_mutex);
+
+      orders = Order_Control.orders;
+      if (orders != NULL) {
+         Order_Control.orders = NULL;
+
+         Order_Control.is_currently_busy = true;
+      } else {
+         Order_Control.is_currently_busy = false;
+         if (Order_Control.is_waiting) {
+            pthread_cond_broadcast(&Order_Control.cond_var);
+         }
+      }
+      sge_mutex_unlock("add_order_mutex", SGE_FUNC, __LINE__, &Order_Control.add_order_mutex);
+
+      order_count = lGetNumberOfElem(orders);
+
+      if (orders != NULL) {
+         lList *ticket_orders = NULL;
+         lListElem *order = NULL;
+
+         MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
+         if (order_count > 1) {
+            sge_set_commit_required();
+         }
+
+         /* we need to do something... */
+         for_each(order, orders) {
+            sge_follow_order(ctx, order, NULL, NULL, NULL, 
+                             &ticket_orders, monitor, object_base);
+         }
+         if (order_count > 1) {
+            sge_commit();
+         }
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+         lFreeList(&orders);
+         lFreeList(&ticket_orders);
+      } else {
+         end = true;
+      }
+   }
+
+   DEXIT;
+   return;
+}
 
 /****** sge_follow/sge_set_next_spooling_time() ********************************
 *  NAME
@@ -1654,4 +1745,3 @@ int distribute_ticket_orders(sge_gdi_ctx_class_t *ctx, lList *ticket_orders, mon
 
    DRETURN(cl_err);
 }
-

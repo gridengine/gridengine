@@ -163,7 +163,7 @@ pack.o:		$(CULLLIB_DIR)/pack.c
 #---------------------------------------------------------------------
 # example1
 
-EXAMPLE1_OBJS = example1.o $(CULLLIB) $(UTILIB) $(WINGRIDLIB) $(RMONLIB) $(LCKLIB)
+EXAMPLE1_OBJS = example1.o $(CULLLIB) $(UTILIB) $(WINGRIDLIB) $(RMONLIB) $(COMMLISTSLIB) $(LCKLIB)
 
 example1: $(EXAMPLE1_OBJS)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o example1 $(EXAMPLE1_OBJS) $(LFLAGS) $(LIBS)
@@ -174,7 +174,7 @@ example1.o: $(CULLLIB_DIR)/example1.c
 #---------------------------------------------------------------------
 # example2
 
-EXAMPLE2_OBJS = example2.o $(CULLLIB) $(WINGRIDLIB) $(UTILIB) $(RMONLIB) $(LCKLIB)
+EXAMPLE2_OBJS = example2.o $(CULLLIB) $(WINGRIDLIB) $(UTILIB) $(RMONLIB) $(COMMLISTSLIB) $(LCKLIB)
 
 example2: $(EXAMPLE2_OBJS)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o example2 $(EXAMPLE2_OBJS) $(LFLAGS) $(LIBS)
@@ -184,36 +184,36 @@ example2.o: $(CULLLIB_DIR)/example2.c
 
 #---------------------------------------------------------------------
 # test programs
-test_cull_list: test_cull_list.o $(CULLLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(LCKLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_list $(LFLAGS) test_cull_list.o $(CULLLIB) $(WINGRIDLIB) $(UTILIB) $(RMONLIB) $(LCKLIB) $(LIBS)
+test_cull_list: test_cull_list.o $(CULLLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(COMMLISTSLIB) $(LCKLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_list $(LFLAGS) test_cull_list.o $(CULLLIB) $(WINGRIDLIB) $(UTILIB) $(RMONLIB) $(COMMLISTSLIB) $(LCKLIB) $(LIBS)
 
 test_cull_list.o: $(CULLLIB_DIR)/test_cull_list.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/test_cull_list.c
 
 #---
-test_cull_pack: test_cull_pack.o $(CULLLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(LCKLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_pack $(LFLAGS) test_cull_pack.o $(CULLLIB) $(WINGRIDLIB) $(UTILIB) $(RMONLIB) $(LCKLIB) $(LIBS)
+test_cull_pack: test_cull_pack.o $(CULLLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(COMMLISTSLIB) $(LCKLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_pack $(LFLAGS) test_cull_pack.o $(CULLLIB) $(WINGRIDLIB) $(UTILIB) $(RMONLIB) $(COMMLISTSLIB) $(LCKLIB) $(LIBS)
 
 test_cull_pack.o: $(CULLLIB_DIR)/test_cull_pack.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/test_cull_pack.c
 
 #---
-test_cull_db_pack: test_cull_db_pack.o $(SGELIB) $(CULLLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(LCKLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_db_pack $(LFLAGS) test_cull_db_pack.o $(SGELIB) $(CULLLIB) $(WINGRIDLIB) $(UTILIB) $(RMONLIB) $(LCKLIB) $(LIBS)
+test_cull_db_pack: test_cull_db_pack.o $(SGELIB) $(CULLLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(COMMLISTSLIB) $(LCKLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_db_pack $(LFLAGS) test_cull_db_pack.o $(SGELIB) $(CULLLIB) $(WINGRIDLIB) $(UTILIB) $(RMONLIB) $(COMMLISTSLIB) $(LCKLIB) $(LIBS)
 
 test_cull_db_pack.o: $(CULLLIB_DIR)/test_cull_db_pack.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/test_cull_db_pack.c
 
 #---
-test_cull_hash: test_cull_hash.o $(CULLLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(LCKLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_hash test_cull_hash.o $(LFLAGS) $(CULLLIB) $(WINGRIDLIB) $(UTILIB) $(RMONLIB) $(LCKLIB) $(LIBS)
+test_cull_hash: test_cull_hash.o $(CULLLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(COMMLISTSLIB) $(LCKLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_hash test_cull_hash.o $(LFLAGS) $(CULLLIB) $(WINGRIDLIB) $(UTILIB) $(RMONLIB) $(COMMLISTSLIB) $(LCKLIB) $(LIBS)
 
 test_cull_hash.o: $(CULLLIB_DIR)/test_cull_hash.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/test_cull_hash.c
 
 #---
-test_enumeration: test_enumeration.o $(CULLLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(LCKLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_enumeration test_enumeration.o $(LFLAGS) $(CULLLIB) $(WINGRIDLIB) $(UTILIB) $(RMONLIB) $(LCKLIB) $(LIBS) 
+test_enumeration: test_enumeration.o $(CULLLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(COMMLISTSLIB) $(LCKLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_enumeration test_enumeration.o $(LFLAGS) $(CULLLIB) $(WINGRIDLIB) $(UTILIB) $(RMONLIB) $(COMMLISTSLIB) $(LCKLIB) $(LIBS) 
 
 test_enumeration.o: $(CULLLIB_DIR)/test_enumeration.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/test_enumeration.c

@@ -46,7 +46,6 @@
 #include "sge_manop.h"
 #include "sge_range.h"
 #include "sge_htable.h"
-#include "sge_gdi.h"
 #include "sge_stdlib.h"
 #include "sge_var.h"
 #include "sge_path_alias.h"
@@ -61,6 +60,8 @@
 #include "symbols.h"
 #include "sge_mesobj.h"
 #include "sge_parse_num_par.h"
+
+#include "gdi/sge_gdi.h"
 
 #include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_qrefL.h"

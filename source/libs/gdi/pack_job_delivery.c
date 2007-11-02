@@ -29,10 +29,12 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-#include "cull.h"
+
+#include "cull/cull.h"
+
+#include "sgeobj/sge_feature.h"
 
 #include "pack_job_delivery.h"
-#include "sge_feature.h"
 
 /****** pack_job_delivery/pack_job_delivery() **********************************
 *  NAME

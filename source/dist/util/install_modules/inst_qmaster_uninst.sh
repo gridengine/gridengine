@@ -83,8 +83,8 @@ CheckRegisteredExecd()
 
 ShutdownMaster()
 {
-   $INFOTEXT "Shutting down scheduler and qmaster!"
-   $INFOTEXT -log "Shutting down scheduler and qmaster!"
+   $INFOTEXT "Shutting down qmaster!"
+   $INFOTEXT -log "Shutting down qmaster!"
 
    euid=`$SGE_UTILBIN/uidgid -euid`
    spool_dir_master=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`

@@ -115,7 +115,7 @@ char **argv
 
    DENTER_MAIN(TOP_LAYER, "qsub");
 
-   sge_prof_setup();
+   prof_mt_init();
 
    /* Set up the program information name */
    sge_setup_sig_handlers(QSUB);

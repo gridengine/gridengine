@@ -723,11 +723,11 @@ spool_classic_default_list_func(lList **answer_list,
       }
 
 
-   #ifdef DEBUG_FLATFILE
+#ifdef DEBUG_FLATFILE
       if (list != NULL && *list != NULL) {
          lWriteListTo(*list, stderr);
       }
-   #endif
+#endif
 
       /* validate complete list */
       if (ret) {

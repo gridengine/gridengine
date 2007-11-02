@@ -58,9 +58,10 @@
 #include "qmon_project.h"
 #include "qmon_appres.h"
 #include "sge_all_listsL.h"
-#include "sge_gdi.h"
 #include "sge_answer.h"
-#include "sge_gdi_ctx.h"
+
+#include "gdi/sge_gdi.h"
+#include "gdi/sge_gdi_ctx.h"
 
 #include "Matrix.h"
 

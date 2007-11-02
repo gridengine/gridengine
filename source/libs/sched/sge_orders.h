@@ -62,7 +62,10 @@ lList *sge_join_orders(order_t *orders);
 int sge_GetNumberOfOrders(order_t *orders); 
 
 int sge_send_orders2master(sge_evc_class_t *evc, lList **orders);
+
+#if 0
 int sge_send_job_start_orders(sge_evc_class_t *evc, order_t *orders);
+#endif
 
 #endif /* _SGE_ORDERS_H_ */
 

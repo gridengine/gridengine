@@ -41,9 +41,6 @@
 #include "sge_answer.h"
 #include "sge_prog.h"
 #include "sge_bootstrap.h"
-#include "sge_gdi.h"
-#include "sge_gdi_ctx.h"
-#include "sge_gdi2.h"
 #include "cl_errors.h"
 #include "sge_log.h"
 #include "sge_error_class.h"
@@ -55,6 +52,10 @@
 #include "qstat_printing.h"
 #include "sge_qinstance_state.h"
 #include "parse.h"
+
+#include "gdi/sge_gdi.h"
+#include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdi2.h"
 
 typedef struct {
    

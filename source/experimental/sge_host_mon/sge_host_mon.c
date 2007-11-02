@@ -35,7 +35,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <time.h>
-#include "sge_gdi.h"
+#include "gdi/sge_gdi.h"
 
 #include "sge_all_listsL.h"
 #include "sgermon.h"

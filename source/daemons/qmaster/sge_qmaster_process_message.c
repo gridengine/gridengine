@@ -41,7 +41,6 @@
 #include "sge_event_master.h"
 #include "sig_handlers.h"
 #include "sge_log.h"
-#include "sge_gdi_request.h"
 #include "sge_string.h"
 #include "sge_c_gdi.h"
 #include "sge_c_report.h"
@@ -60,91 +59,40 @@
 #include "spool/sge_spooling.h"
 #include "sgeobj/sge_ack.h"
 
+#include "gdi/sge_gdi_packet_pb_cull.h"
+#include "gdi/sge_gdi_packet_queue.h"
+#include "gdi/sge_gdi_packet_internal.h"
+
+#include "sge_thread_worker.h"
+
 #include "msg_qmaster.h"
 #include "msg_common.h"
 
-/***************************************************
- *
- * The next section ensures, that GDI multi request
- * will be handled atomic and that other requests do
- * not interfer with the GDI multi get requsts. 
- *
- * Some assumption have been made for the current
- * implementation. They should minimize the performance
- * impact of this serialisation.
- *
- * Assumption:
- * 1) If the first GDI multi request is a get request
- *    all GDI request in the GDI multi are get requests
- *
- * 2) if the first GDI multi request is not a get request
- *    all GDI requests are not a get request
- * 
- * Based on this assumption we can create the following
- * execution matrix (GDI is used for atomix GDI requests
- * and load/job reports:
- *
- *          |  GDI     |  M-GDI-R  | M-GDI-W
- *  --------|----------|-----------|---------
- *  GDI     | parallel |  seriel   | parallel
- *  --------|----------|-----------|---------
- *  M-GDI-R | seriel   | parallel  | seriel
- *  --------|----------|-----------|---------
- *  M-GDI-W | parallel | seriel    | parallel
- *          |          |           |
- *
- * states: 
- *  NONE     0
- *  GDI      1
- *  M-GDI-R  2
- *  M-GDI-W  1 
- *
- * Based on the matrix, we do not need seperated
- * states for GDI and M-GDI-W.
- *
- * The implementation will allow a new requst to
- * execute, when no other request is executed or
- * the exectuted request as the same state as the
- * new one. If that is not the case, the new request
- * will be blocked until the others have finished.
- *
- * Implementation:
- *
- *  eval_message_and_block - eval message and assign states
- *  eval_gdi_and_block     - eval gdi and assign states
- *
- *  eval_atomic            - check current execution and block
- *
- *  eval_atomic_end        - release current block
- */
- 
-typedef enum {
-   ATOMIC_NONE = 0,
-   ATOMIC_SINGLE = 1,
-   ATOMIC_MULTIPLE_WRITE = 1,
-   ATOMIC_MULTIPLE_READ = 2
-} request_handling_t;
-
-typedef struct {
-   request_handling_t type;      /* execution type*/
-   int                counter;   /* number of requests executed of type */
-   pthread_cond_t     cond_var;  /* used to block other threads */   
-   bool               signal;    /* need to signal? */
-   pthread_mutex_t    mutex;     /* mutex to gard this structure */
-} message_control_t;
-
-static message_control_t Master_Control = {ATOMIC_NONE, 0, PTHREAD_COND_INITIALIZER, false, PTHREAD_MUTEX_INITIALIZER};
+static message_control_t Master_Control_Master = {
+   ATOMIC_NONE, 
+   0, 
+   PTHREAD_COND_INITIALIZER, 
+   false, 
+   PTHREAD_MUTEX_INITIALIZER
+};
 
 static request_handling_t eval_message_and_block(struct_msg_t msg);
-static request_handling_t eval_gdi_and_block(sge_gdi_request *req_head);
-static void eval_atomic(request_handling_t type);
-static void eval_atomic_end(request_handling_t type); 
 
-static request_handling_t do_gdi_request(sge_gdi_ctx_class_t *ctx, struct_msg_t*, monitoring_t *monitor);
+static void 
+eval_atomic(request_handling_t type);
+
+static void 
+do_gdi_packet(sge_gdi_ctx_class_t *ctx, lList **answer_list, 
+              struct_msg_t *aMsg, monitoring_t *monitor);
+
 static void do_c_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t *monitor);
 
-static request_handling_t do_report_request(sge_gdi_ctx_class_t *ctx, struct_msg_t*, monitoring_t *monitor);
-static void do_event_client_exit(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t *monitor);
+static void 
+do_report_request(sge_gdi_ctx_class_t *ctx, struct_msg_t*, monitoring_t *monitor);
+
+static void 
+do_event_client_exit(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t *monitor);
+
 static void sge_c_job_ack(sge_gdi_ctx_class_t *ctx,
                           const char *host,
                           const char *commproc,
@@ -154,13 +102,12 @@ static void sge_c_job_ack(sge_gdi_ctx_class_t *ctx,
                           const char *ack_str,
                           monitoring_t *monitor);
 
-
 /*
  * Prevent these functions made inline by compiler. This is 
  * necessary for Solaris 10 dtrace pid provider to work.
  */
 #ifdef SOLARIS
-#pragma no_inline(do_gdi_request, do_c_ack, do_report_request)
+#pragma no_inline(do_gdi_packet, do_c_ack, do_report_request)
 #endif
 
 /****** sge_qmaster_process_message/eval_message_and_block() *******************
@@ -208,14 +155,14 @@ eval_message_and_block(struct_msg_t msg)
 *     eval_gdi_and_block() -- eval gdi request and proceed or block
 *
 *  SYNOPSIS
-*     static request_handling_t eval_gdi_and_block(sge_gdi_request *req_head) 
+*     static request_handling_t eval_gdi_and_block(sge_gdi_task_class_t *task) 
 *
 *  FUNCTION
 *     determines the current block type for a gdi request and proceeds or
 *     waits for another thread to finish.
 *
 *  INPUTS
-*     sge_gdi_request *req_head - ??? 
+*     sge_gdi_task_class_t *task - request task 
 *
 *  RESULT
 *     static request_handling_t - returns block type
@@ -225,25 +172,23 @@ eval_message_and_block(struct_msg_t msg)
 *     MT-NOTE: eval_gdi_and_block() is  MT safe 
 *
 *******************************************************************************/
-static request_handling_t 
-eval_gdi_and_block(sge_gdi_request *req_head) 
+request_handling_t 
+eval_gdi_and_block(sge_gdi_task_class_t *task) 
 {
    request_handling_t type = ATOMIC_NONE;
 
    DENTER(TOP_LAYER, "eval_gdi_and_block");
-  
-   if (req_head->next == NULL) {
+
+   if (task->next == NULL) {
       type = ATOMIC_SINGLE;     
-   } else if (req_head->op == SGE_GDI_GET) {
+   } else if (task->command == SGE_GDI_GET) {
       type = ATOMIC_MULTIPLE_READ; 
    } else {
       type = ATOMIC_MULTIPLE_WRITE;
    }
-  
    eval_atomic(type);
-  
-   DEXIT;
-   return type;
+
+   DRETURN(type); 
 }
 
 /****** sge_qmaster_process_message/eval_atomic() ******************************
@@ -278,31 +223,35 @@ eval_atomic(request_handling_t type)
       return;
    }
 
-   sge_mutex_lock("message_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+   sge_mutex_lock("message_master_mutex", SGE_FUNC, __LINE__, &Master_Control_Master.mutex);
 
-   DPRINTF(("eval before type %d, counter %d, wait %d --- ntype %d\n", Master_Control.type, 
-            Master_Control.counter, Master_Control.signal, type));
+   DPRINTF(("eval before type %d, counter %d, wait %d --- ntype %d\n", 
+            Master_Control_Master.type, 
+            Master_Control_Master.counter, 
+            Master_Control_Master.signal, type));
    
    do {
-      if (Master_Control.type == ATOMIC_NONE) {
-         Master_Control.type = type;
-         Master_Control.counter = 1;
+      if (Master_Control_Master.type == ATOMIC_NONE) {
+         Master_Control_Master.type = type;
+         Master_Control_Master.counter = 1;
          cond = true;
       }
-      else if (Master_Control.type == type) {
-         Master_Control.counter++;
+      else if (Master_Control_Master.type == type) {
+         Master_Control_Master.counter++;
          cond = true;
       }
       else {
-         Master_Control.signal = true;
-         pthread_cond_wait(&Master_Control.cond_var, &Master_Control.mutex);
+         Master_Control_Master.signal = true;
+         pthread_cond_wait(&Master_Control_Master.cond_var, &Master_Control_Master.mutex);
       }
    } while (!cond);
   
-   DPRINTF(("eval after type %d, counter %d, wait %d --- ntype %d\n", Master_Control.type, 
-            Master_Control.counter, Master_Control.signal, type));
+   DPRINTF(("eval after type %d, counter %d, wait %d --- ntype %d\n", 
+            Master_Control_Master.type, 
+            Master_Control_Master.counter, 
+            Master_Control_Master.signal, type));
    
-   sge_mutex_unlock("message_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+   sge_mutex_unlock("message_master_mutex", SGE_FUNC, __LINE__, &Master_Control_Master.mutex);
    DEXIT; 
 }
 
@@ -326,40 +275,41 @@ eval_atomic(request_handling_t type)
 *     MT-NOTE: eval_atomic_end() is MT safe 
 *
 *******************************************************************************/
-static void 
+void 
 eval_atomic_end(request_handling_t type) 
 {
  
    DENTER(TOP_LAYER, "eval_atomic_end");
 
    if (type == ATOMIC_NONE) {
+      DEXIT;
       return; 
    }
 
-   sge_mutex_lock("message_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+   sge_mutex_lock("message_master_mutex", SGE_FUNC, __LINE__, &Master_Control_Master.mutex);
 
-   DPRINTF(("end before type %d, counter %d, wait %d --- ntype %d\n", Master_Control.type, 
-            Master_Control.counter, Master_Control.signal, type));
+   DPRINTF(("end before type %d, counter %d, wait %d --- ntype %d\n", Master_Control_Master.type, 
+            Master_Control_Master.counter, Master_Control_Master.signal, type));
    
-   if (Master_Control.type != type) {
-      ERROR((SGE_EVENT, "we have a atomic type missmatch (expected = %d, got = %d\n", Master_Control.type, type));
+   if (Master_Control_Master.type != type) {
+      ERROR((SGE_EVENT, "we have a atomic type missmatch (expected = %d, got = %d\n", Master_Control_Master.type, type));
    }
    
-   Master_Control.counter--;
+   Master_Control_Master.counter--;
    
-   if (Master_Control.counter <= 0) {
-      Master_Control.type = ATOMIC_NONE;
+   if (Master_Control_Master.counter <= 0) {
+      Master_Control_Master.type = ATOMIC_NONE;
    }
    
-   if (Master_Control.signal) {
-      Master_Control.signal = false;
-      pthread_cond_broadcast(&Master_Control.cond_var);
+   if (Master_Control_Master.signal) {
+      Master_Control_Master.signal = false;
+      pthread_cond_broadcast(&Master_Control_Master.cond_var);
    }
    
-   DPRINTF(("end after stype %d, counter %d, wait %d --- ntype %d\n\n", Master_Control.type, 
-            Master_Control.counter, Master_Control.signal, type));
+   DPRINTF(("end after stype %d, counter %d, wait %d --- ntype %d\n\n", Master_Control_Master.type, 
+            Master_Control_Master.counter, Master_Control_Master.signal, type));
    
-   sge_mutex_unlock("message_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
+   sge_mutex_unlock("message_master_mutex", SGE_FUNC, __LINE__, &Master_Control_Master.mutex);
 
    DEXIT;
 }
@@ -386,11 +336,10 @@ eval_atomic_end(request_handling_t type)
 *     MT-NOTE: This function should only be used as a 'thread function'
 *
 *******************************************************************************/
-void *sge_qmaster_process_message(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
+void sge_qmaster_process_message(sge_gdi_ctx_class_t *ctx, monitoring_t *monitor)
 {
    int res;
    struct_msg_t msg;
-   request_handling_t type = ATOMIC_NONE;
 
    DENTER(TOP_LAYER, "sge_qmaster_process_message");
    
@@ -406,132 +355,137 @@ void *sge_qmaster_process_message(sge_gdi_ctx_class_t *ctx, void *anArg, monitor
     * timeout (syncron receive timeout) when no messages are there to read.
     *
     */
-   MONITOR_IDLE_TIME((res = sge_gdi2_get_any_request(ctx, msg.snd_host, msg.snd_name, &msg.snd_id, &msg.buf, 
-                                &msg.tag, 1, 0, &msg.request_mid)), monitor, mconf_get_monitor_time(),
-                                mconf_is_monitor_message());
+
+   MONITOR_IDLE_TIME((
+
+   res = sge_gdi2_get_any_request(ctx, msg.snd_host, msg.snd_name, 
+                                  &msg.snd_id, &msg.buf, &msg.tag, 1, 0, &msg.request_mid)
+
+   ), monitor, mconf_get_monitor_time(), mconf_is_monitor_message());
 
    MONITOR_MESSAGES(monitor);      
    
-   if (res != CL_RETVAL_OK) {
-      DPRINTF(("%s returned: %s\n", SGE_FUNC, cl_get_error_text(res)));
-      return anArg;              
+   if (res == CL_RETVAL_OK) {
+      switch (msg.tag) {
+         case TAG_GDI_REQUEST: 
+            do_gdi_packet(ctx, NULL, &msg, monitor);
+            break;
+         case TAG_ACK_REQUEST:
+            do_c_ack(ctx, &msg, monitor);
+            break;
+         case TAG_EVENT_CLIENT_EXIT:
+            do_event_client_exit(ctx, &msg, monitor);
+            MONITOR_ACK(monitor);   
+            break;
+         case TAG_REPORT_REQUEST: 
+            do_report_request(ctx, &msg, monitor);
+            break;
+         default: 
+            DPRINTF(("***** UNKNOWN TAG TYPE %d\n", msg.tag));
+      }
+      clear_packbuffer(&(msg.buf));
    }
-
-   switch (msg.tag)
-   {
-      case TAG_GDI_REQUEST: 
-         type = do_gdi_request(ctx, &msg, monitor);
-         break;
-      case TAG_ACK_REQUEST:
-         do_c_ack(ctx, &msg, monitor);
-         break;
-      case TAG_EVENT_CLIENT_EXIT:
-         do_event_client_exit(ctx, &msg, monitor);
-         MONITOR_ACK(monitor);   
-         break;
-      case TAG_REPORT_REQUEST: 
-         type = do_report_request(ctx, &msg, monitor);
-         break;
-      default: 
-         DPRINTF(("***** UNKNOWN TAG TYPE %d\n", msg.tag));
-   }
-   
-   eval_atomic_end(type);
-
-   clear_packbuffer(&(msg.buf));
-  
-   DRETURN(anArg); 
+ 
+   DRETURN_VOID; 
 } /* sge_qmaster_process_message */
 
-/****** sge_qmaster_process_message/do_gdi_request() ***************************
-*  NAME
-*     do_gdi_request() -- Process GDI request messages
-*
-*  SYNOPSIS
-*     static void do_gdi_request(struct_msg_t *aMsg) 
-*
-*  FUNCTION
-*     Process GDI request messages (TAG_GDI_REQUEST). Unpack a GDI request 
-*     from the pack buffer, which is part of 'aMsg'. 
-*     Process GDI request and send a response to 'commd'.
-*
-*  INPUTS
-*     struct_msg_t *aMsg - GDI request message
-*
-*  RESULT
-*     void - none
-*
-*  NOTES
-*     A pack buffer may contain more than a single GDI request. 
-*     This is a so called 'multi' GDI request. In case of a multi GDI 
-*     request, the 'sge_gdi_request' structure filled in by 
-*     'sge_unpack_gdi_request' is the head of a linked list of 
-*     'sge_gdi_request' structures.
-*******************************************************************************/
-static request_handling_t 
-do_gdi_request(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t *monitor)
+static void 
+do_gdi_packet(sge_gdi_ctx_class_t *ctx, lList **answer_list, 
+              struct_msg_t *aMsg, monitoring_t *monitor)
 {
-   request_handling_t type = ATOMIC_NONE;
+   sge_pack_buffer *pb_in = &(aMsg->buf);
+   sge_gdi_packet_class_t *packet = NULL;
+   bool local_ret;
 
-   sge_pack_buffer *buf = &(aMsg->buf);
-   sge_gdi_request *req_head = NULL;  /* head of request linked list */
-   sge_gdi_request *resp_head = NULL; /* head of response linked list */
-   sge_pack_buffer pb;
+   DENTER(TOP_LAYER, "do_gdi_packet");
 
-   DENTER(TOP_LAYER, "do_gdi_request");
+   /*
+    * unpack the packet and set values 
+    */
+   local_ret = sge_gdi_packet_unpack(&packet, answer_list, pb_in);
+   packet->host = sge_strdup(NULL, aMsg->snd_host);
+   packet->commproc = sge_strdup(NULL, aMsg->snd_name);
+   packet->commproc_id = aMsg->snd_id;
+   packet->is_intern_request = false;
 
-   if (sge_unpack_gdi_request(buf, &req_head)) {
-      ERROR((SGE_EVENT, MSG_GDI_FAILEDINSGEUNPACKGDIREQUEST_SSI, 
-            (char *)aMsg->snd_host, (char *)aMsg->snd_name, 
-            (int)aMsg->snd_id));
-   } else {
-      enum { ASYNC = 0, SYNC = 1 };
-      lList *alp = NULL;
-      sge_gdi_request *req = NULL;
-      sge_gdi_request *resp = NULL;
-
-      resp_head = new_gdi_request();
-      init_packbuffer(&pb, 1024, 0);
-
-      MONITOR_WAIT_TIME((type = eval_gdi_and_block(req_head)), monitor);
-
-      for (req = req_head; req; req = req->next) {
-         req->id = aMsg->snd_id;
-         req->commproc = sge_strdup(NULL, aMsg->snd_name);
-         req->host = sge_strdup(NULL, aMsg->snd_host);
-
-#ifndef __SGE_NO_USERMAPPING__
-         sge_map_gdi_request(req);
-#endif
-
-         if (req == req_head) {
-            resp = resp_head;
-         } else {
-            resp->next = new_gdi_request();
-            resp = resp->next;
-         }
-
-         /* this is needed to identify a multi-gdi pack buffer */
-         resp->next = ((req->next != NULL) ? resp : NULL);
-
-         sge_c_gdi(ctx, aMsg->snd_host, req, resp, &pb, monitor);
-      }
-
-      sge_gdi2_send_any_request(ctx, ASYNC, NULL,
-                                aMsg->snd_host, aMsg->snd_name, aMsg->snd_id, &pb,
-                                TAG_GDI_REQUEST, aMsg->request_mid, &alp);
-
-      clear_packbuffer(&pb);
-      MONITOR_MESSAGES_OUT(monitor);
-      answer_list_output (&alp);
+   /* 
+    * Security checks:
+    *    check version 
+    *    check auth_info (user)
+    *    check host, commproc 
+    */
+   if (local_ret) {
+      local_ret = sge_gdi_packet_verify_version(packet, &(packet->first_task->answer_list));
    }
-   
-   free_gdi_request(resp_head);
-   free_gdi_request(req_head);
+   if (local_ret) {
+      local_ret = sge_gdi_packet_parse_auth_info(packet, &(packet->first_task->answer_list),
+                                         &(packet->uid), packet->user, sizeof(packet->user), 
+                                      &(packet->gid), packet->group, sizeof(packet->group));
+   }
+   if (local_ret) {
+      const char *admin_user = ctx->get_admin_user(ctx);
+      const char *progname = ctx->get_progname(ctx);
 
-   DEXIT;
-   return type;
-} /* do_gdi_request */
+      if (!sge_security_verify_user(packet->host, packet->commproc, 
+                                    packet->id, admin_user, packet->user, progname)) {
+         CRITICAL((SGE_EVENT, MSG_SEC_CRED_SSSI, packet->user, packet->host, 
+                   packet->commproc, (int)packet->id));
+         answer_list_add(&(packet->first_task->answer_list), SGE_EVENT, 
+                         STATUS_ENOSUCHUSER, ANSWER_QUALITY_ERROR); 
+         local_ret = false;
+      }
+   }
+
+   /*
+    * EB: TODO: CLEANUP: Handle permission checks in listener not in worker thread.
+    *
+    * This would be the correct place to handle all permissions   
+    * checks which are currently done inside of sge_c_gdi.
+    * This can only be done if it is not neccessary anymore to pass a 
+    * packbuffer to a worker thread.
+    */
+   ;
+
+   /* 
+    * handle GDI packet and send response 
+    */
+   if (local_ret) {
+      /*
+       * Due to the GDI-GET optimization it is neccessary to initialize a pb
+       * that is passed to and filled by the worker thread
+       *
+       * EB: TODO: CLEANUP: Don't pass packbuffer to worker thread.
+       * 
+       * Better solution would be that the packbuffer is only used here
+       * by the listener thread. This would be possible if GDI get
+       * requests would be handled by read-only threads.
+       */
+      init_packbuffer(&(packet->pb), 0, 0);
+
+      /*
+       * Put the packet into the packet queue so that workers can handle it
+       * and then wait until the packet is handled
+       */
+      sge_gdi_packet_queue_store_notify_wait(&Master_Packet_Queue, packet);
+      sge_gdi_packet_wait_till_handled(packet);
+
+      /*
+       * Send the answer to the client
+       */
+      MONITOR_MESSAGES_OUT(monitor);
+      sge_gdi2_send_any_request(ctx, 0, NULL,
+                                aMsg->snd_host, aMsg->snd_name, aMsg->snd_id, &(packet->pb),
+                                TAG_GDI_REQUEST, aMsg->request_mid, answer_list);
+
+      /*
+       * Cleanup
+       */
+      clear_packbuffer(&(packet->pb));
+      sge_gdi_packet_free(&packet);
+   } 
+
+   DRETURN_VOID;
+}
 
 /****** sge_qmaster_process_message/do_report_request() ************************
 *  NAME
@@ -552,7 +506,8 @@ do_gdi_request(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t *monit
 *     void - none 
 *
 *******************************************************************************/
-static request_handling_t do_report_request(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t *monitor)
+static void 
+do_report_request(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t *monitor)
 {
    lList *rep = NULL;
    request_handling_t type = ATOMIC_NONE;
@@ -564,12 +519,12 @@ static request_handling_t do_report_request(sge_gdi_ctx_class_t *ctx, struct_msg
    /* Load reports are only accepted from admin/root user */
    if (!sge_security_verify_unique_identifier(true, admin_user, myprogname, 0,
                                             aMsg->snd_host, aMsg->snd_name, aMsg->snd_id)) {
-      DRETURN(type);
+      DRETURN_VOID;
     }
 
    if (cull_unpack_list(&(aMsg->buf), &rep)) {
       ERROR((SGE_EVENT,MSG_CULL_FAILEDINCULLUNPACKLISTREPORT));
-      DRETURN(type);
+      DRETURN_VOID;
    }
 
    MONITOR_WAIT_TIME((type = eval_message_and_block(*aMsg)), monitor); 
@@ -577,7 +532,9 @@ static request_handling_t do_report_request(sge_gdi_ctx_class_t *ctx, struct_msg
    sge_c_report(ctx, aMsg->snd_host, aMsg->snd_name, aMsg->snd_id, rep, monitor);
    lFreeList(&rep);
 
-   DRETURN(type);
+   eval_atomic_end(type);
+
+   DRETURN_VOID;
 } /* do_report_request */
 
 /****** qmaster/sge_qmaster_process_message/do_event_client_exit() *************

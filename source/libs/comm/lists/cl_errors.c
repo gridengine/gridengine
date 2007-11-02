@@ -1,9 +1,3 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-
-#include "cl_errors.h"
-
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -36,8 +30,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include "basis_types.h"
-#include "sge_language.h"
+#include "cl_errors.h"
 #include "msg_commlistslib.h"
 
 

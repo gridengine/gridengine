@@ -37,24 +37,26 @@
 
 #include "uti/sge_dstring.h"
 #include "uti/sge_stdio.h"
+
+#include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdi.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_userprj.h"
+
+#include "sge_sharetree_printing.h"
 #include "sgermon.h"
-#include "sge_gdi.h"
 #include "sge_all_listsL.h"
 #include "sge_usageL.h"
 #include "sge_time.h"
-#include "msg_schedd.h"
 #include "sge_language.h"
-#include "scheduler.h"
 #include "sgeee.h"
 #include "sge_support.h"
-#include "sge_answer.h"
-#include "sge_userprj.h"
 #include "sge_schedd_conf.h"
 #include "sge_profiling.h"
-#include "sgeobj/sge_object.h"
-#include "sge_sharetree_printing.h"
-#include "gdi/sge_gdi_ctx.h"
 
+#include "msg_smon.h"
 
 static int
 free_lists(lList **sharetree, lList **users, lList **projects, lList **usersets, lList **config)
@@ -84,8 +86,8 @@ setup_lists(sge_gdi_ctx_class_t *ctx, lList **sharetree, lList **users, lList **
 
    /* get share tree */
    what = lWhat("%T(ALL)", STN_Type);
-   sharetree_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_SHARETREE_LIST, SGE_GDI_GET, 
-                                NULL, NULL, what, NULL, &state, true);
+   sharetree_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_SHARETREE_LIST, 
+                                 SGE_GDI_GET, NULL, NULL, what, &state, true);
    lFreeWhat(&what);
    error = answer_list_output(&alp);
 
@@ -93,7 +95,7 @@ setup_lists(sge_gdi_ctx_class_t *ctx, lList **sharetree, lList **users, lList **
    if (!error) {
       what = lWhat("%T(ALL)", SC_Type);
       sched_conf_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_SC_LIST, SGE_GDI_GET, 
-                                    NULL, NULL, what, NULL, &state, true);
+                                    NULL, NULL, what, &state, true);
       lFreeWhat(&what);
       error = answer_list_output(&alp);
    }
@@ -102,7 +104,7 @@ setup_lists(sge_gdi_ctx_class_t *ctx, lList **sharetree, lList **users, lList **
    if (!error) {
       what = lWhat("%T(ALL)", UU_Type);
       user_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_USER_LIST, SGE_GDI_GET, 
-                              NULL, NULL, what, NULL, &state, true);
+                              NULL, NULL, what, &state, true);
       lFreeWhat(&what);
       error = answer_list_output(&alp);
    }
@@ -110,8 +112,8 @@ setup_lists(sge_gdi_ctx_class_t *ctx, lList **sharetree, lList **users, lList **
    /* get project list */
    if (!error) {
       what = lWhat("%T(ALL)", PR_Type);
-      project_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_PROJECT_LIST, SGE_GDI_GET, 
-                                 NULL, NULL, what, NULL, &state, true);
+      project_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_PROJECT_LIST, 
+                                  SGE_GDI_GET, NULL, NULL, what, &state, true);
       lFreeWhat(&what);
       error = answer_list_output(&alp);
    }
@@ -123,7 +125,8 @@ setup_lists(sge_gdi_ctx_class_t *ctx, lList **sharetree, lList **users, lList **
    if (!error) {
       what = lWhat("%T(ALL)", US_Type);
       userset_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_SEND, SGE_USERSET_LIST, SGE_GDI_GET, 
-                                 NULL, NULL, what, &malp, &state, true);
+                                 NULL, NULL, what, &state, true);
+      ctx->gdi_wait(ctx, &alp, &malp, &state);
       lFreeWhat(&what);
       error = answer_list_output(&alp);
    }
@@ -264,7 +267,7 @@ main(int argc, char **argv)
    
    DENTER_MAIN(TOP_LAYER, "share_mon");
 
-   sge_prof_setup();
+   prof_mt_init();
    obj_mt_init();
    sc_mt_init();
    
@@ -353,7 +356,7 @@ main(int argc, char **argv)
        names = (const char **)&argv[optind];
    }
 
-   if (sge_gdi2_setup(&ctx, SGE_SHARE_MON, &alp) != AE_OK) {
+   if (sge_gdi2_setup(&ctx, SGE_SHARE_MON, MAIN_THREAD, &alp) != AE_OK) {
       answer_list_output(&alp);
       SGE_EXIT((void**)&ctx, 1);
    }

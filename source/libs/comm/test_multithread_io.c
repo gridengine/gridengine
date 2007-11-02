@@ -38,7 +38,7 @@
 #include <signal.h>
 #include <unistd.h>
 
-
+#include "uti/sge_language.h"
 
 #include "cl_lists.h"
 #include "cl_commlib.h"
@@ -91,7 +91,7 @@ extern int main(void)
   sigaction(SIGHUP, &sa, NULL);
   sigaction(SIGPIPE, &sa, NULL);
 
-  cl_com_setup_commlib(CL_RW_THREAD ,CL_LOG_WARNING, NULL );
+  cl_com_setup_commlib(CL_RW_THREAD ,CL_LOG_WARNING, NULL);
   handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , CL_FALSE, 5000 , CL_TCP_DEFAULT,"client", 0, 1,0 );
   if (handle == NULL) {
      printf("could not get handle\n");

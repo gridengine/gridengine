@@ -55,7 +55,7 @@
 #define MSG_COM_NOSHUTDOWNPERMS           _MESSAGE(66012, _("shutdown requires manager privileges"))
 #define MSG_COM_SHUTDOWNNOTIFICATION_SUS  _MESSAGE(66013, _("sent shutdown notification to event client " SFN " with id " sge_U32CFormat " on host " SFN))
 #define MSG_EVE_QMASTERISGOINGDOWN        _MESSAGE(66014, _("do not accept new event clients. Qmaster is going down"))
-#define MSG_COM_KILLED_SCHEDULER_S        _MESSAGE(66015, _("sent shutdown notification to scheduler on host "SFQ))
+#define MSG_COM_KILLED_SCHEDULER          _MESSAGE(66015, _("sent shutdown notification to scheduler"))
 #define MSG_WRONG_USER_FORFIXEDID         _MESSAGE(66016, _("only a manager can register event clients with a fixed id"))
 #define MSG_TO_MANY_DYNAMIC_EC_U          _MESSAGE(66017, _("cannot register event client. Only "sge_U32CFormat" event clients are allowed in the system"))
 #define MSG_SET_MAXDYNEVENTCLIENT_U       _MESSAGE(66018, _("max dynamic event clients is set to "sge_U32CFormat))

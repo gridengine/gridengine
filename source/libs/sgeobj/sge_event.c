@@ -541,6 +541,7 @@ event_client_verify(const lListElem *event_client, lList **answer_list, bool add
    if (event_client == NULL) {
       answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
                               MSG_NULLELEMENTPASSEDTO_S, SGE_FUNC);
+      DTRACE;
       ret = false;
    }
 
@@ -549,6 +550,7 @@ event_client_verify(const lListElem *event_client, lList **answer_list, bool add
       if (!object_verify_cull(event_client, EV_Type)) {
          answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
                                  MSG_OBJECT_STRUCTURE_ERROR);
+         DTRACE;
          ret = false;
       }
    }
@@ -569,6 +571,7 @@ event_client_verify(const lListElem *event_client, lList **answer_list, bool add
             lNm2Str(EV_name), KEY_TABLE) != STATUS_OK) {
          answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
                                  MSG_EVENT_INVALIDNAME);
+         DTRACE;
          ret = false;
          DPRINTF(("EV name false\n"));
       }
@@ -586,6 +589,7 @@ event_client_verify(const lListElem *event_client, lList **answer_list, bool add
       if (add && id >= EV_ID_FIRST_DYNAMIC) {
          answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
                                  MSG_EVENT_INVALIDID);
+         DTRACE;
          ret = false;
          DPRINTF(("EV_id false: "sge_u32"\n", id));
 #if 0

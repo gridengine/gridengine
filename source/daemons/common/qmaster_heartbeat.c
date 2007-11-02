@@ -43,6 +43,7 @@
 
 #include "msg_daemons_common.h"
 
+/* EB: TODO: ST: remove this file??? */
 
 static int sge_testmode_timeout_value = 0;
 static int sge_testmode_timeout_at_heartbeat = 0;
@@ -213,7 +214,6 @@ FCLOSE_ERROR:
    DEXIT;
    return -5;
 }
-
 
 void set_inc_qmaster_heartbeat_test_mode(int value) {
    if (value > 0) {

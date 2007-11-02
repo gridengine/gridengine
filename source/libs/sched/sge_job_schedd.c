@@ -556,7 +556,7 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
 *******************************************************************************/
 void split_jobs(lList **job_list, lList **answer_list,
                 lList *queue_list, u_long32 max_aj_instances, 
-                lList **result_list[])
+                lList **result_list[], bool is_free_job_list)
 {
 #if 0 /* EB: DEBUG: enable debug messages for split_jobs() */
 #define JOB_SPLIT_DEBUG
@@ -877,8 +877,10 @@ void split_jobs(lList **job_list, lList **answer_list,
    /*
     * Could we dispense all jobs?
     */
-   if (lGetNumberOfElem(*job_list) == 0) {
-      lFreeList(job_list);
+   if (is_free_job_list == true) {
+      if (lGetNumberOfElem(*job_list) == 0) {
+         lFreeList(job_list);
+      }
    }
 
    DEXIT;

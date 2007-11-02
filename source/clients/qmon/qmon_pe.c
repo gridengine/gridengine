@@ -48,7 +48,7 @@
 
 #include "Spinbox.h"
 #include "sge_all_listsL.h"
-#include "sge_gdi.h"
+#include "gdi/sge_gdi.h"
 #include "sge_answer.h"
 #include "commlib.h"
 #include "qmon_proto.h"

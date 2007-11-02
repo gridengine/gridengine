@@ -1,5 +1,6 @@
-#ifndef __SGE_PROCESS_EVENTS_H
-#define __SGE_PROCESS_EVENTS_H
+#ifndef _SGE_THREAD_LISTENER_H_
+#define _SGE_THREAD_LISTENER_H_
+
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -25,29 +26,25 @@
  * 
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
  * 
- *   Copyright: 2001 by Sun Microsystems, Inc.
+ *   Copyright: 2003 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "mir/sge_mirror.h"
-#include "sgeobj/sge_object.h"
+#include <pthread.h>
 
-/* scheduling framework, layer 1: data model */
+#include "gdi/sge_gdi_ctx.h"
 
-/* which data do we want to be mirrored from qmaster */
-int subscribe_default_scheduler(sge_evc_class_t *evc);
+void
+sge_listener_initialize(sge_gdi_ctx_class_t *ctx);
 
-/* event post processing */
-int event_handler_default_scheduler(sge_evc_class_t *evc);
-#ifdef SCHEDULER_SAMPLES
-int event_handler_my_scheduler(sge_evc_class_t *evc);
-#endif
+void
+sge_listener_terminate(void);
 
-/* cleanup post processing */
-void cleanup_default_scheduler(sge_evc_class_t *evc);
+void *
+sge_listener_main(void *arg);
 
-#endif /* __SGE_PROCESS_EVENTS_H */
+#endif 
 

@@ -556,7 +556,7 @@ hgroup_del(sge_gdi_ctx_class_t *ctx,
                   answer_list_add(answer_list, SGE_EVENT, STATUS_OK, 
                                   ANSWER_QUALITY_INFO);
                } else {
-                  ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS,"host group entry",
+                  ERROR((SGE_EVENT, MSG_CANTSPOOL_SS,"host group entry",
                          name ));
                   answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST, 
                                   ANSWER_QUALITY_ERROR);

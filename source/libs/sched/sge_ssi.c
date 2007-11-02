@@ -35,7 +35,6 @@
 #include <strings.h>
 
 #include "cull.h"
-#include "sge_gdi.h"
 #include "sgermon.h"
 #include "sge_log.h"
 
@@ -50,6 +49,9 @@
 #include "sge_orderL.h"
 
 #include "sge_orders.h"
+
+#include "gdi/sge_gdi.h"
+
 #include "msg_schedd.h"
 
 #include "sge_ssi.h"

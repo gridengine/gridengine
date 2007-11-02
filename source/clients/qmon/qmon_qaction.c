@@ -88,8 +88,10 @@
 #include "sge_qinstance_state.h"
 #include "sge_attr.h"
 #include "sge_cqueue_qconf.h"
+
 #include "uti/sge_string.h"
-#include "sge_gdi_ctx.h"
+
+#include "gdi/sge_gdi_ctx.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 
@@ -1418,7 +1420,6 @@ static void qmonQCClone(Widget w, XtPointer cld, XtPointer cad)
       return;
    }
 
-   /* EB: TODO: */
    ql = qmonMirrorList(SGE_CQUEUE_LIST);
    n = lGetNumberOfElem(ql);
    if (n>0) {
@@ -1896,7 +1897,6 @@ static void qmonQCSOQ(Widget w, XtPointer cld, XtPointer cad)
    
    if (cbs->column == 0) {
       qmonMirrorMulti(CQUEUE_T);
-      /* EB: TODO: */
       ql = qmonMirrorList(SGE_CQUEUE_LIST);
       n = lGetNumberOfElem(ql);
       if (n>0) {
@@ -2144,7 +2144,6 @@ void updateQCQ(void)
       /* disable/enable redisplay while updating */
       XmtLayoutDisableLayout(cq_dialog);
       /* list with template sorted alphabetically */
-      /* EB: TODO: */
       qlf = lCopyList("qlf", qmonMirrorList(SGE_CQUEUE_LIST));
       lPSortList(qlf, "%I+", QU_qname);
       UpdateXmListFromCull(cq_queue_list, XmFONTLIST_DEFAULT_TAG, qlf, 

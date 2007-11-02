@@ -35,17 +35,16 @@
 include $(SDIR)/daemons/common/Makefile
 include $(SDIR)/daemons/execd/Makefile
 include $(SDIR)/daemons/qmaster/Makefile
-include $(SDIR)/daemons/schedd/Makefile
 include $(SDIR)/daemons/shadowd/Makefile
 include $(SDIR)/daemons/shepherd/Makefile
 
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-daemons: daemons_common execd qmaster schedd shadowd shepherd
+daemons: daemons_common execd qmaster shadowd shepherd
 
-daemons_clean: daemons_common_clean commlib_clean commlistslib_clean execd_clean qmaster_clean schedd_clean shadowd_clean shepherd_clean
+daemons_clean: daemons_common_clean commlib_clean commlistslib_clean execd_clean qmaster_clean shadowd_clean shepherd_clean
 
-daemons_depend: daemons_common_depend execd_depend qmaster_depend schedd_depend shadowd_depend shepherd_depend
+daemons_depend: daemons_common_depend execd_depend qmaster_depend shadowd_depend shepherd_depend
 
-daemons_messages: daemons_common_messages commd_messages execd_messages qmaster_messages schedd_messages shadowd_messages shepherd_messages
+daemons_messages: daemons_common_messages commd_messages execd_messages qmaster_messages shadowd_messages shepherd_messages

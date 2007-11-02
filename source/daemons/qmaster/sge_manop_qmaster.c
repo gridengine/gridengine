@@ -135,7 +135,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    if(!sge_event_spool(ctx, alpp, 0, eve, 
                        0, 0, manop_name, NULL, NULL,
                        added, NULL, NULL, true, true)) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, manop_name));
+      ERROR((SGE_EVENT, MSG_CANTSPOOL_SS, object_name, manop_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
    
       /* remove element from list */
@@ -241,7 +241,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    if (!sge_event_spool(ctx, alpp, 0, eve,
                         0, 0, manop_name, NULL, NULL,
                         NULL, NULL, NULL, true, true)) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, manop_name));
+      ERROR((SGE_EVENT, MSG_CANTSPOOL_SS, object_name, manop_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
    
       /* chain in again */

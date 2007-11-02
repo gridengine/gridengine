@@ -750,7 +750,7 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
                      }
 #if 0 
                /*
-                * CR TODO: (Issue Bug #1197) 
+                * CR: TODO: (Issue Bug #1197) 
                 * This partly solves some problems when slave tasks of a tight integrated
                 * job, running on more than one execd, are killed and qmaster has to kill and
                 * delete all tasks.

@@ -146,7 +146,7 @@ extern int main(int argc, char** argv)
 
   
 
-  cl_com_setup_commlib(tmode /* CL_NO_THREAD*/ /* CL_RW_THREAD */ /*  CL_THREAD_POOL */,CL_LOG_OFF, NULL );
+  cl_com_setup_commlib(tmode /* CL_NO_THREAD*/ /* CL_RW_THREAD */ /*  CL_THREAD_POOL */,CL_LOG_OFF, NULL);
 
   if (getenv("CL_PORT") != NULL) {
      port =atoi(getenv("CL_PORT"));

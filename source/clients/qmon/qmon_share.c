@@ -59,11 +59,11 @@
 #include "qmon_project.h"
 #include "qmon_globals.h"
 #include "sge_all_listsL.h"
-#include "sge_gdi.h"
 #include "sge_support.h"
 #include "sge_answer.h"
 #include "sge_string.h"
-#include "sge_gdi_ctx.h"
+#include "gdi/sge_gdi.h"
+#include "gdi/sge_gdi_ctx.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 

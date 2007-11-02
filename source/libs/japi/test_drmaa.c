@@ -654,7 +654,7 @@ int main(int argc, char *argv[])
    ** since drmaa doesn't give an explicit handle to the context and sge_gdi 
    ** is used below, we provide our own context here
    */
-   if (sge_gdi2_setup(&ctx, JAPI, &alp) != AE_OK) {
+   if (sge_gdi2_setup(&ctx, JAPI, MAIN_THREAD, &alp) != AE_OK) {
       answer_list_output(&alp);
       SGE_EXIT((void**)&ctx, 1);
    }

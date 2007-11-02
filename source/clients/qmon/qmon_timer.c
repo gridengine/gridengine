@@ -35,7 +35,8 @@
 #include "commlib.h"
 #include "sge_all_listsL.h"
 #include "sge_answer.h"
-#include "sge_gdi_ctx.h"
+
+#include "gdi/sge_gdi_ctx.h"
 
 #include "qmon_rmon.h"
 #include "qmon_cull.h"

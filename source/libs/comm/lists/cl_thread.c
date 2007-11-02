@@ -507,11 +507,9 @@ cl_thread_settings_t* cl_thread_get_thread_config(void) {
    pthread_mutex_lock(&global_thread_config_key_mutex);
    if (global_thread_config_key_done != 0) {
       settings = (cl_thread_settings_t*) pthread_getspecific(global_thread_config_key);
-      pthread_mutex_unlock(&global_thread_config_key_mutex);
-      return settings;
    }
    pthread_mutex_unlock(&global_thread_config_key_mutex);
-   return NULL;
+   return settings;
 }
 
 #ifdef __CL_FUNCTION__
@@ -548,7 +546,6 @@ int cl_thread_cleanup(cl_thread_settings_t* thread_config) {
       CL_LOG_STR(CL_LOG_DEBUG,"cleanup for thread ->", thread_config->thread_name);
    }
    
-
    /* destroy thread name */
    if (thread_config->thread_name) {
       free(thread_config->thread_name);

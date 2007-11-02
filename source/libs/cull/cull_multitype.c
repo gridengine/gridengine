@@ -866,10 +866,11 @@ const char *lGetString(const lListElem *ep, int name)
    DENTER(CULL_BASIS_LAYER, "lGetString");
 
    pos = lGetPosViaElem(ep, name, SGE_DO_ABORT);
-
-   if (mt_get_type(ep->descr[pos].mt) != lStringT)
+   
+   if (mt_get_type(ep->descr[pos].mt) != lStringT) {
       incompatibleType2(MSG_CULL_GETSTRING_WRONGTYPEFORFILEDXY_SS ,
                         lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
+   }
 
    DEXIT;
 

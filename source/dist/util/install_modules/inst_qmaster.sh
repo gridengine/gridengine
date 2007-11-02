@@ -1115,8 +1115,8 @@ InitCA()
 #
 StartQmaster()
 {
-   $INFOTEXT -u "\nGrid Engine qmaster and scheduler startup"
-   $INFOTEXT "\nStarting qmaster and scheduler daemon. Please wait ..."
+   $INFOTEXT -u "\nGrid Engine qmaster startup"
+   $INFOTEXT "\nStarting qmaster daemon. Please wait ..."
    $SGE_STARTUP_FILE -qmaster
 
    CheckRunningDaemon sge_qmaster

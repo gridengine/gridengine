@@ -114,6 +114,72 @@ static u_long32 guess_highest_ar_id(void);
 
 static void sge_ar_send_mail(lListElem *ar, int type);
 
+void
+ar_initialize_timer(sge_gdi_ctx_class_t *ctx, lList **answer_list, monitoring_t *monitor) 
+{
+   object_description *object_base = NULL;
+   lListElem *ar, *next_ar;
+   u_long32 now = sge_get_gmt();
+   lList *ar_master_list = NULL;
+
+   DENTER(TOP_LAYER, "ar_initialize_timer");
+
+   object_base = object_type_get_object_description();
+   ar_master_list = *object_base[SGE_TYPE_AR].list;
+
+   next_ar = lFirst(ar_master_list);
+
+   while((ar = next_ar)) {
+      te_event_t ev = NULL;
+
+      next_ar = lNext(ar);
+
+      if (now < lGetUlong(ar, AR_start_time)) {
+         sge_ar_state_set_waiting(ar);
+
+         ev = te_new_event((time_t)lGetUlong(ar, AR_start_time), TYPE_AR_EVENT,
+                     ONE_TIME_EVENT, lGetUlong(ar, AR_id), AR_RUNNING, NULL);
+         te_add_event(ev);
+         te_add_event(ev);
+         te_free_event(&ev);
+
+      } else if (now < lGetUlong(ar, AR_end_time)) {
+         sge_ar_state_set_running(ar);
+
+         ev = te_new_event((time_t)lGetUlong(ar, AR_end_time), TYPE_AR_EVENT,
+                     ONE_TIME_EVENT, lGetUlong(ar, AR_id), AR_EXITED, NULL);
+         te_add_event(ev);
+         te_free_event(&ev);
+      } else {
+         dstring buffer = DSTRING_INIT;
+         u_long32 ar_id = lGetUlong(ar, AR_id);
+
+         sge_ar_state_set_running(ar);
+
+         sge_ar_remove_all_jobs(ctx, ar_id, 1, monitor);
+
+         ar_do_reservation(ar, false);
+
+         reporting_create_ar_log_record(NULL, ar, ARL_TERMINATED,
+                                  "end time of AR reached",
+                                  now);
+         reporting_create_ar_acct_records(NULL, ar, now);
+
+         sge_dstring_sprintf(&buffer, sge_U32CFormat, ar_id);
+
+         lRemoveElem(ar_master_list, &ar);
+
+         spool_delete_object(answer_list, spool_get_default_context(),
+                             SGE_TYPE_AR,
+                             sge_dstring_get_string(&buffer),
+                             ctx->get_job_spooling(ctx));
+
+         sge_dstring_free(&buffer);
+      }
+   }
+   DRETURN_VOID;
+}
+
 /****** sge_advance_reservation_qmaster/ar_mod() *******************************
 *  NAME
 *     ar_mod() -- gdi callback function for adding modifing advance reservations
@@ -668,7 +734,7 @@ static u_long32 sge_get_ar_id(sge_gdi_ctx_class_t *ctx, monitoring_t *monitor)
 *  INPUTS
 *     sge_gdi_ctx_class_t *ctx - GDI context
 *     te_event_t anEvent       - event that triggered this function
-*     monitoring_t *monitor    - monitoring structure
+*     monitoring_t *monitor    - pointer to monitor (not used here)
 *
 *  NOTES
 *     MT-NOTE: sge_store_ar_id() is not MT safe 
@@ -1022,7 +1088,7 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
       /* TODO: splitted job lists must be freed */
 
       split_jobs(&job_list_copy, NULL, all_queue_list, 
-                 mconf_get_max_aj_instances(), splitted_job_lists);
+                 mconf_get_max_aj_instances(), splitted_job_lists, false);
 
       lFreeList(&job_list_copy);                  
    }

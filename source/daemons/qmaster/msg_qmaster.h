@@ -35,8 +35,6 @@
 
 #include "basis_types.h"
 
-#define MSG_SGETEXT_CANTSPOOL_SS      _MESSAGE(33001, _("qmaster is unable to spool "SFN" "SFQ))
-
 /*
 ** sge_ckptobj.c
 */
@@ -764,7 +762,7 @@
 #define MSG_AR_QUEUEDNOPERMISSIONS                  _MESSAGE(33924, _("queue "SFQ" has no permissions for selected users"))
 
 /* sge_qmaster_threads.c */
-#define MSG_QMASTER_THREADCOUNT_U                   _MESSAGE(33930, _(sge_U32CFormat" GDI threads are enabled"))
+#define MSG_QMASTER_THREADCOUNT_US                  _MESSAGE(33930, _(sge_U32CFormat" "SFN" threads are enabled"))
 
 #define MSG_AR_GRANTED_U                            _MESSAGE(33931, _("Your advance reservation "sge_U32CFormat" has been granted"))
 #define MSG_AR_MAXARSPERCLUSTER_U                   _MESSAGE(33932, _("rejected: only "sge_U32CFormat" advance reservations are allowed per cluster"))
@@ -780,6 +778,7 @@
 #define MSG_QUEUE_MODCMPLXDENYDUETOAR_SS            _MESSAGE(33943, _("denied: changing "SFQ" in "SFN" would break advance reservation"))
 #define MSG_QUEUE_MODNOCMPLXDENYDUETOAR_SS          _MESSAGE(33944, _("denied: changing "SFQ" in "SFN" would break advance reservations"))
 #define MSG_JOB_ARNOLONGERAVAILABE_U                _MESSAGE(33945, _("the advance reservation "sge_U32CFormat" is no longer available"))
+#define MSG_TRIGGER_NOTSUPPORTED_S                  _MESSAGE(33946, _("thread with name "SFQ" is not supported"))
       
 #define MSG_GDI_KEYSTR_QUESTIONMARK    _MESSAGE(33946, _("Questionmark"))
 #define MSG_GDI_KEYSTR_COMMA           _MESSAGE(33947, _("Comma"))

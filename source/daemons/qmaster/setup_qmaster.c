@@ -39,76 +39,86 @@
 #include <pthread.h>
 #include <sys/resource.h>
 
-#include "sge_bootstrap.h"
+#include "rmon/sgermon.h"
+
+#include "comm/commlib.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_time.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_io.h"
+#include "uti/sge_os.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_spool.h"
+#include "uti/setup_path.h"
+#include "uti/config_file.h"
+
+#include "evm/sge_event_master.h"
+
+#include "spool/sge_spooling.h"
+
+#include "gdi/qm_name.h"
+
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_resource_quota.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_ckpt.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/sge_manop.h"
+#include "sgeobj/sge_calendar.h"
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_cuser.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_sharetree.h"
+#include "sgeobj/sge_conf.h"
+
+#include "sched/sge_sched.h"
+
 #include "sge.h"
-#include "sge_conf.h"
-#include "commlib.h"
-#include "sge_subordinate_qmaster.h"
-#include "sge_calendar_qmaster.h"
-#include "sge_sched.h"
-#include "sge_all_listsL.h"
-#include "sge_host.h"
+#include "sge_resource_quota_qmaster.h"
+#include "sge_advance_reservation_qmaster.h"
+#include "sge_qinstance_qmaster.h"
+#include "sge_qmod_qmaster.h"
+#include "sge_persistence_qmaster.h"
+#include "sge_reporting_qmaster.h"
+#include "sge_ckpt_qmaster.h"
+#include "sge_sharetree_qmaster.h"
+#include "sge_userset_qmaster.h"
 #include "sge_host_qmaster.h"
 #include "sge_pe_qmaster.h"
 #include "sge_cqueue_qmaster.h"
 #include "sge_manop_qmaster.h"
 #include "sge_job_qmaster.h"
-#include "configuration_qmaster.h"
-#include "qmaster_heartbeat.h"
-#include "qm_name.h"
+#include "sge_subordinate_qmaster.h"
+#include "sge_calendar_qmaster.h"
 #include "sched_conf_qmaster.h"
-#include "sge_sharetree.h"
-#include "sge_sharetree_qmaster.h"
-#include "sge_userset.h"
-#include "sge_feature.h"
-#include "sge_userset_qmaster.h"
-#include "sge_ckpt_qmaster.h"
-#include "sge_answer.h"
-#include "sge_utility.h"
+#include "configuration_qmaster.h"
 #include "setup_qmaster.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "config_file.h"
-#include "sge_qmod_qmaster.h"
+#include "qmaster_heartbeat.h"
+#include "lock.h"
+#include "qmaster_to_execd.h"
+#include "usage.h"
+#include "reschedule.h"
+#include "shutdown.h"
 #include "sge_give_jobs.h"
-#include "setup_path.h"
+
 #include "msg_daemons_common.h"
 #include "msg_qmaster.h"
-#include "reschedule.h"
-#include "sge_job.h"
-#include "sge_unistd.h"
-#include "sge_uidgid.h"
-#include "sge_io.h"
-#include "sge_pe.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_cqueue.h"
-#include "sge_ckpt.h"
-#include "sge_userprj.h"
-#include "sge_manop.h"
-#include "sge_calendar.h"
-#include "sge_hgroup.h"
-#include "sge_cuser.h"
-#include "sge_centry.h"
-#include "sge_reporting_qmaster.h"
-#include "parse.h"
-#include "usage.h"
-#include "qmaster_to_execd.h"
-#include "shutdown.h"
-#include "sge_hostname.h"
-#include "sge_os.h"
-#include "lock.h"
-#include "sge_persistence_qmaster.h"
-#include "sge_spool.h"
-#include "sge_event_master.h"
 #include "msg_common.h"
-#include "spool/sge_spooling.h"
-#include "sgeobj/sge_resource_quota.h"
-#include "sge_resource_quota_qmaster.h"
-#include "sge_advance_reservation_qmaster.h"
-#include "sge_qinstance_qmaster.h"
-#include "uti/sge_time.h"
+
 
 static void   process_cmdline(char**);
 static lList* parse_cmdline_qmaster(char**, lList**);
@@ -193,8 +203,6 @@ int sge_setup_qmaster(sge_gdi_ctx_class_t *ctx, char* anArgv[])
    */
    sge_qmaster_pid_set(getpid());
 
-   reporting_initialize(NULL);
-
    DEXIT;
    return 0;
 } /* sge_setup_qmaster() */
@@ -224,7 +232,9 @@ int sge_setup_qmaster(sge_gdi_ctx_class_t *ctx, char* anArgv[])
 *     MT-NOTE: of a thread function.
 *
 *******************************************************************************/
-int sge_qmaster_thread_init(sge_gdi_ctx_class_t **ctx_ref, bool switch_to_admin_user)
+int 
+sge_qmaster_thread_init(sge_gdi_ctx_class_t **ctx_ref, u_long32 prog_id, 
+                        u_long32 thread_id, bool switch_to_admin_user)
 {
    const char *admin_user = NULL;
    lList *alp = NULL;
@@ -234,7 +244,7 @@ int sge_qmaster_thread_init(sge_gdi_ctx_class_t **ctx_ref, bool switch_to_admin_
 
    lInit(nmv);
 
-   if (sge_setup2(ctx_ref, QMASTER, &alp) != AE_OK) {
+   if (sge_setup2(ctx_ref, prog_id, thread_id, &alp, true) != AE_OK) {
       answer_list_output(&alp);
       SGE_EXIT((void**)ctx_ref, 1);
    }   
@@ -243,7 +253,7 @@ int sge_qmaster_thread_init(sge_gdi_ctx_class_t **ctx_ref, bool switch_to_admin_
    DEBUG((SGE_EVENT,"%s: qualified hostname \"%s\"\n", SGE_FUNC, ctx->get_qualified_hostname(ctx)));
    admin_user = ctx->get_admin_user(ctx);
   
-   if ( switch_to_admin_user == true ) {   
+   if (switch_to_admin_user == true) {   
       char str[1024];
       if (sge_set_admin_username(admin_user, str) == -1) {
          CRITICAL((SGE_EVENT, str));
@@ -960,6 +970,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
    spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_CQUEUE].list, SGE_TYPE_CQUEUE);
    answer_list_output(&answer_list);
    cqueue_list_set_unknown_state(*(object_base[SGE_TYPE_CQUEUE].list), NULL, false, true);
+
    /*
     * Initialize cached values for each qinstance:
     *    - fullname
@@ -1094,83 +1105,6 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
       cqueue_mod_qinstances(ctx, tmpqep, NULL, tmpqep, true, &monitor);
    }
 
-   /* Initialize
-    *    - setup timers
-    */
-   {
-      lListElem *ar, *next_ar;
-      u_long32 now = sge_get_gmt();
-      lList *ar_master_list = *object_base[SGE_TYPE_AR].list;
-
-      next_ar = lFirst(ar_master_list);
-
-      while((ar = next_ar)) {
-         te_event_t ev = NULL;
-
-         next_ar = lNext(ar);
-
-         if (now < lGetUlong(ar, AR_start_time)) {
-            sge_ar_state_set_waiting(ar);
-
-            ev = te_new_event((time_t)lGetUlong(ar, AR_start_time), TYPE_AR_EVENT,
-                        ONE_TIME_EVENT, lGetUlong(ar, AR_id), AR_RUNNING, NULL);
-            te_add_event(ev);
-            te_add_event(ev);
-            te_free_event(&ev);
-
-         } else if (now < lGetUlong(ar, AR_end_time)) {
-            sge_ar_state_set_running(ar);
-
-            ev = te_new_event((time_t)lGetUlong(ar, AR_end_time), TYPE_AR_EVENT,
-                        ONE_TIME_EVENT, lGetUlong(ar, AR_id), AR_EXITED, NULL);
-            te_add_event(ev);
-            te_free_event(&ev);
-         } else {
-            dstring buffer = DSTRING_INIT;
-            u_long32 ar_id = lGetUlong(ar, AR_id);
-
-            sge_ar_state_set_running(ar);
-
-            sge_ar_remove_all_jobs(ctx, ar_id, 1, &monitor);
-
-            ar_do_reservation(ar, false);
-
-            reporting_create_ar_log_record(NULL, ar, ARL_TERMINATED, 
-                                     "end time of AR reached",
-                                     now);  
-            reporting_create_ar_acct_records(NULL, ar, now);                        
-
-            sge_dstring_sprintf(&buffer, sge_U32CFormat, ar_id);
-
-            lRemoveElem(ar_master_list, &ar);
-
-            spool_delete_object(&answer_list, spool_get_default_context(), 
-                                SGE_TYPE_AR, 
-                                sge_dstring_get_string(&buffer),
-                                ctx->get_job_spooling(ctx));                     
-
-            sge_dstring_free(&buffer);
-
-         }
-      }
-   }
-
-   /* calendar */
-   {
-      lListElem *cep;
-      lList *ppList = NULL;
-
-      for_each (cep, *object_base[SGE_TYPE_CALENDAR].list) {
-         calendar_parse_year(cep, &answer_list);
-         calendar_parse_week(cep, &answer_list);
-         answer_list_output(&answer_list);
-
-         calendar_update_queue_states(ctx, cep, NULL, NULL, &ppList, &monitor);
-      }
-
-      lFreeList(&ppList);
-   }
-
    /* rebuild signal resend events */
    rebuild_signal_events();
 
@@ -1204,27 +1138,6 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
       lFreeList(&alp); 
    }
 
-   /* RU: */
-   /* initiate timer for all hosts because they start in 'unknown' state */ 
-   if (*object_base[SGE_TYPE_EXECHOST].list) {
-      lListElem *host               = NULL;
-      lListElem *global_host_elem   = NULL;
-      lListElem *template_host_elem = NULL;
-
-      /* get "global" element pointer */
-      global_host_elem   = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, SGE_GLOBAL_NAME);   
-
-      /* get "template" element pointer */
-      template_host_elem = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, SGE_TEMPLATE_NAME);
-  
-      for_each(host, *object_base[SGE_TYPE_EXECHOST].list) {
-         if ( (host != global_host_elem ) && (host != template_host_elem ) ) {
-            reschedule_add_additional_time(load_report_interval(host));
-            reschedule_unknown_trigger(host);
-            reschedule_add_additional_time(0); 
-         }
-      }
-   }
 
    init_categories();
 

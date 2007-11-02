@@ -35,7 +35,7 @@
 #include "sge_unistd.h"
 #include "sge.h"
 #include "sgermon.h"
-#include "sge_gdi.h"
+#include "gdi/sge_gdi.h"
 #include "sge_log.h"
 #include "read_write_manop.h"
 #include "cull.h"

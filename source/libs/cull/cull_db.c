@@ -791,6 +791,7 @@ lList *lSelectHashPack(const char *name, const lList *slp,
          size_t offset = 0;
          size_t used = 0;
          const char *pack_name = "";
+         int local_ret;
 
          if (name != NULL) {
             pack_name = name;
@@ -798,7 +799,12 @@ lList *lSelectHashPack(const char *name, const lList *slp,
             pack_name = slp->listname;
          }
 
-         cull_pack_list_summary(pb, slp, enp, pack_name, &offset, &used);
+         local_ret = cull_pack_list_summary(pb, slp, enp, pack_name, &offset, &used);
+         if (local_ret != PACK_SUCCESS) {
+            LERROR(LEMALLOC);
+            DEXIT;
+            return NULL;
+         }
 
          lSelectDPack(name, slp, cp, NULL, enp, isHash, pb, 
                       &number_of_packed_elements);
@@ -809,7 +815,6 @@ lList *lSelectHashPack(const char *name, const lList *slp,
          if (slp != NULL && pb != NULL) {
             char *old_cur_ptr = NULL;
             size_t old_used = 0;
-            int local_ret;
 
             old_cur_ptr = pb->cur_ptr;
             old_used = pb->bytes_used;

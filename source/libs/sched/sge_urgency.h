@@ -32,11 +32,13 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "scheduler.h"
+#include "sge_sched_thread.h"
 
 double sge_normalize_value(double value, double range_min, double range_max);
+
 void sge_do_urgency(u_long32 now, lList *running_jobs, lList *pending_jobs, 
-         sge_Sdescr_t *lists);
+                    scheduler_all_data_t *lists);
+
 int sge_job_slot_request(const lListElem *job, const lList *pe_list);
 
 

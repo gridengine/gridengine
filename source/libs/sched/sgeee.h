@@ -34,14 +34,13 @@
 
 #include "sge_boundaries.h"
 #include "cull.h"
-#include "sge_schedd.h"
-#include "scheduler.h"
 #include "sge_orders.h"
 
+#include "sge_sched_process_events.h"
 
 #define SGE_USAGE_INTERVAL 60
 
-int sgeee_scheduler( sge_Sdescr_t *lists,
+int sgeee_scheduler(scheduler_all_data_t *lists,
                     lList *running_jobs,
                     lList *finished_jobs,
                     lList *pending_jobs,
@@ -56,7 +55,7 @@ int  sort_host_list_by_share_load ( lList *host_list,       /* EH_Type */
 void sge_clear_job( lListElem *job, bool is_clear_all);
 
 void 
-sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_jobs,
+sge_build_sgeee_orders(scheduler_all_data_t *lists, lList *running_jobs, lList *queued_jobs,
                       lList *finished_jobs, order_t *orders,
                       bool update_usage_and_configuration, int seqno, bool update_execd);
 

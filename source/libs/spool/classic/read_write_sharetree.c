@@ -47,7 +47,6 @@
 #include "cull_parse_util.h"
 #include "sge_log.h"
 #include "sge_dstring.h"
-#include "scheduler.h"
 #include "sge_answer.h"
 #include "sgeee.h"                                                            
 #include "sge_support.h"                                                

@@ -73,7 +73,6 @@ BasicSettings()
 
   SGE_MASTER_NAME=sge_qmaster
   SGE_EXECD_NAME=sge_execd
-  SGE_SCHEDD_NAME=sge_schedd
   SGE_SHEPHERD_NAME=sge_shepherd
   SGE_SHADOWD_NAME=sge_shadowd
   SGE_SERVICE=sge_qmaster
@@ -336,7 +335,7 @@ CheckBinaries()
 
 BINFILES="sge_coshepherd \
           sge_execd sge_qmaster  \
-          sge_schedd sge_shadowd \
+          sge_shadowd \
           sge_shepherd qacct qalter qconf qdel qhold \
           qhost qlogin qmake qmod qmon qresub qrls qrsh qselect qsh \
           qstat qsub qtcsh qping qquota sgepasswd"
@@ -417,9 +416,9 @@ fi
          "qalter          qmake           qselect         sge_coshepherd\n" \
          "qconf           qmod            qsh             sge_execd\n" \
          "qdel            qmon            qstat           sge_qmaster\n" \
-         "qhold           qresub          qsub            sge_schedd\n" \
-         "qhost           qrls            qtcsh           sge_shadowd\n" \
-         "qping           qquota\n\n" \
+         "qhold           qresub          qsub            qhost\n" \
+         "qrls            qtcsh           sge_shadowd     qping\n" \
+         "qquota\n\n" \
          "and the binaries in >%s< should be:\n\n" \
          "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
          "authuser       checkprog      gethostbyname  now            rsh\n" \
@@ -434,9 +433,9 @@ fi
       "qalter          qmake           qselect         sge_coshepherd\n" \
       "qconf           qmod            qsh             sge_execd\n" \
       "qdel            qmon            qstat           sge_qmaster\n" \
-      "qhold           qresub          qsub            sge_schedd\n" \
-      "qhost           qrls            qtcsh           sge_shadowd\n" \
-      "qping           qquota\n\n" \
+      "qhold           qresub          qsub            qhost\n" \
+      "qrls            qtcsh           sge_shadowd     qping\n" \
+      "qquota\n\n" \
       "and the binaries in >%s< should be:\n\n" \
       "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
       "authuser       checkprog      gethostbyname  now            rsh\n" \
@@ -1038,7 +1037,7 @@ GiveHints()
 
       $INFOTEXT -u "\nGrid Engine startup scripts"
       $INFOTEXT "\nGrid Engine startup scripts can be found at:\n\n" \
-                "   %s (qmaster and scheduler)\n" \
+                "   %s (qmaster)\n" \
                 "   %s (execd)\n" $SGE_ROOT/$SGE_CELL/common/sgemaster $SGE_ROOT/$SGE_CELL/common/sgeexecd
 
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n \
@@ -1222,7 +1221,7 @@ AddSGEStartUpScript()
       STARTUP_FILE_NAME=sgemaster
       S95NAME=S95sgemaster
       K03NAME=K03sgemaster
-      DAEMON_NAME="qmaster/scheduler"
+      DAEMON_NAME="qmaster"
    elif [ $hosttype = "bdb" ]; then
       TMP_SGE_STARTUP_FILE=/tmp/sgebdb.$$
       STARTUP_FILE_NAME=sgebdb
@@ -1571,14 +1570,6 @@ CheckRunningDaemon()
           daemon_pid=`cat $QMDIR/qmaster.pid`
           $SGE_UTILBIN/checkprog $daemon_pid $daemon_name > /dev/null
           return $?      
-       fi
-      ;;
-
-      sge_schedd )
-       if [ -f $QMDIR/schedd/schedd.pid ]; then
-          daemon_pid=`cat $QMDIR/schedd/schedd.pid`
-          $SGE_UTILBIN/checkprog $daemon_pid $daemon_name > /dev/null
-          return $?
        fi
       ;;
 
@@ -2053,7 +2044,7 @@ RemoveRcScript()
       STARTUP_FILE_NAME=sgemaster
       S95NAME=S95sgemaster
       K03NAME=K03sgemaster
-      DAEMON_NAME="qmaster/scheduler"
+      DAEMON_NAME="qmaster"
    elif [ $hosttype = "bdb" ]; then
       TMP_SGE_STARTUP_FILE=/tmp/sgebdb.$$
       STARTUP_FILE_NAME=sgebdb

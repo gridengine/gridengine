@@ -46,7 +46,8 @@
 #define MSG_CONFIG_CANTRECREATEQEUEUE_SS        _MESSAGE(61005, _("cannot recreate queue "SFN" from disk because of unknown host "SFN))
 #define MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SSS     _MESSAGE(61006, _("cannot resolve "SFN" name "SFQ": "SFN))
 #define MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SS      _MESSAGE(61007, _("cannot resolve "SFN" name "SFQ))
-#define MSG_SGETEXT_CANTSPOOL_SS                _MESSAGE(61008, _("qmaster is unable to spool "SFN" "SFQ))
+/* EB: TODO: ST: move message */
+#define MSG_SGETEXT_CANTSPOOL1_SS               _MESSAGE(61008, _("qmaster is unable to spool "SFN" "SFQ))
 #define MSG_FILE_NOOPENDIR_S                    _MESSAGE(61009, _("can't open directory "SFQ))
 
 /*

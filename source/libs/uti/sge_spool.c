@@ -563,7 +563,7 @@ void sge_write_pid(const char *pid_log_file)
    return;
 FPRINTF_ERROR:
 FCLOSE_ERROR:
-   /* EB: TODO: make it possible that calling function handles this error */
+   /* EB: TODO: CLEANUP: make it possible that calling function handles this error */
    DEXIT;
    return;
 }  

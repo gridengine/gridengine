@@ -312,7 +312,8 @@ char *sge_strtok(const char *str, const char *delimitor)
 *     size_t sge_strlcpy(char *dst, const char *src, size_t dstsize) 
 *
 *  FUNCTION
-*     ??? 
+*     copies "dstsize"-1 characters from from "src" to "dst" and terminates
+*     the src string with '\0'- Returns the size of the "src" string.
 *
 *  INPUTS
 *     char *dst       - destination
@@ -322,14 +323,8 @@ char *sge_strtok(const char *str, const char *delimitor)
 *  RESULT
 *     size_t - strlen of src, not dst !!!
 *
-*  EXAMPLE
-*     ??? 
-*
 *  NOTES
 *     MT-NOTE: sge_strlcpy() is MT safe 
-*
-*  BUGS
-*     ??? 
 *******************************************************************************/
 size_t sge_strlcpy(char *dst, const char *src, size_t dstsize) {
    size_t index = 0;

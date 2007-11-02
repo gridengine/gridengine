@@ -141,7 +141,6 @@ void reschedule_unknown_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, moni
       DTRACE;
       goto Error;
    }
- 
    /*
     * Did someone change the timeout value?
     */

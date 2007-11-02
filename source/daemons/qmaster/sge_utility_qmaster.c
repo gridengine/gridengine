@@ -36,7 +36,7 @@
 #include "sgermon.h"
 #include "sge_string.h"
 #include "sge_log.h"
-#include "sge_gdi.h"
+#include "gdi/sge_gdi.h"
 #include "sge_answer.h"
 #include "sge_utility.h"
 #include "sge_parse_num_par.h"

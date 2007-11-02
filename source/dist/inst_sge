@@ -1066,7 +1066,7 @@ if [ $MAKE_RC = "true" ]; then
 
    $INFOTEXT -u "\nRC Startup Script Generation"   
    $INFOTEXT -wait -n "\nThis option allows you to create new startup scripts for\n" \
-                         "qmaster/scheduler/shadow daemon and the execution daemon.\n\n" \
+                         "qmaster/shadow daemon and the execution daemon.\n\n" \
                          "The new startup scripts will be saved in <sge_root>/<cell>/common.\n" \
                          "A copy of your old rc-scripts will be saved.\n\n" \
                          "Hit <RETURN> to continue >> "

@@ -36,49 +36,53 @@
 #include <math.h>
 #include <float.h>
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_string.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_log.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_parse_num_par.h"
+
+#include "comm/commlib.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/cull_parse_util.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_eval_expression.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_qinstance_type.h"
+#include "sgeobj/sge_ulong.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_schedd_conf.h"
+
+#include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdi.h"
+
+#include "sched/load_correction.h"
+#include "sched/sge_complex_schedd.h"
+#include "sched/sge_select_queue.h"
+
 #include "basis_types.h"
 #include "sge.h"
-
-#include "sge_bootstrap.h"
-
-#include "sge_gdi.h"
-#include "sge_all_listsL.h"
-#include "commlib.h"
 #include "sig_handlers.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_feature.h"
-#include "sge_unistd.h"
-#include "sge_stdlib.h"
-#include "cull_parse_util.h"
-#include "parse.h"
-#include "sge_host.h"
-#include "sge_complex_schedd.h"
-#include "sge_parse_num_par.h"
-#include "sge_select_queue.h"
 #include "qstat_printing.h"
-#include "sge_range.h"
-#include "load_correction.h"
-#include "sge_conf.h"
-#include "msg_common.h"
-#include "msg_clients_common.h"
-#include "sge_string.h"
-#include "sge_hostname.h"
-#include "sge_eval_expression.h"
-
-#include "sge_log.h"
-#include "sge_answer.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_qinstance_type.h"
-#include "sge_ulong.h"
-#include "sge_centry.h"
-#include "sge_profiling.h"
-#include "sgeobj/sge_schedd_conf.h"
 #include "sge_mt_init.h"
 #include "sge_qhost.h"
 #include "sge_qstat.h"
-#include "gdi/sge_gdi_ctx.h"
+
+#include "msg_common.h"
+#include "msg_clients_common.h"
 
 
 static int sge_print_queues(lList *ql, lListElem *hrl, lList *jl, lList *ul, lList *ehl, lList *cl, 
@@ -811,7 +815,7 @@ u_long32 show
    
    eh_id = ctx->gdi_multi(ctx,
                           answer_list, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET, 
-                          NULL, where, eh_all, NULL, &state, true);
+                          NULL, where, eh_all, &state, true);
    lFreeWhat(&eh_all);
    lFreeWhere(&where);
 
@@ -824,7 +828,7 @@ u_long32 show
       
       q_id = ctx->gdi_multi(ctx, 
                             answer_list, SGE_GDI_RECORD, SGE_CQUEUE_LIST, SGE_GDI_GET, 
-                            NULL, NULL, q_all, NULL, &state, true);
+                            NULL, NULL, q_all, &state, true);
       lFreeWhat(&q_all);
 
       if (answer_list_has_error(answer_list)) {
@@ -893,7 +897,7 @@ u_long32 show
 
       j_id = ctx->gdi_multi(ctx, 
                          answer_list, SGE_GDI_RECORD, SGE_JOB_LIST, SGE_GDI_GET, 
-                         NULL, jw, j_all, NULL, &state, true);
+                         NULL, jw, j_all, &state, true);
       lFreeWhat(&j_all);
       lFreeWhere(&jw);
 
@@ -908,7 +912,7 @@ u_long32 show
    ce_all = lWhat("%T(ALL)", CE_Type);
    ce_id = ctx->gdi_multi(ctx, 
                           answer_list, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET, 
-                          NULL, NULL, ce_all, NULL, &state, true);
+                          NULL, NULL, ce_all, &state, true);
    lFreeWhat(&ce_all);
 
    if (answer_list_has_error(answer_list)) {
@@ -922,7 +926,7 @@ u_long32 show
    
    pe_id = ctx->gdi_multi(ctx, 
                           answer_list, SGE_GDI_RECORD, SGE_PE_LIST, SGE_GDI_GET, 
-                          NULL, NULL, pe_all, NULL, &state, true);
+                          NULL, NULL, pe_all, &state, true);
    lFreeWhat(&pe_all);
 
    if (answer_list_has_error(answer_list)) {
@@ -937,7 +941,8 @@ u_long32 show
    
    gc_id = ctx->gdi_multi(ctx, 
                           answer_list, SGE_GDI_SEND, SGE_CONFIG_LIST, SGE_GDI_GET,
-                          NULL, gc_where, gc_what, &mal, &state, true);
+                          NULL, gc_where, gc_what, &state, true);
+   ctx->gdi_wait(ctx, answer_list, &mal, &state);
    lFreeWhat(&gc_what);
    lFreeWhere(&gc_where);
 

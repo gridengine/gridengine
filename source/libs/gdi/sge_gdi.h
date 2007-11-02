@@ -40,7 +40,10 @@
 extern "C" {
 #endif
 
-/* allowed values for op field of sge_gdi_request */
+/* 
+ * allowed values for command field of a gdi request 
+ * (see sge_gdi_packet_class_t and sge_gdi_task_class_t
+ */
 enum { 
    /* OPERATION -------------- */
    SGE_GDI_GET = 1, 
@@ -82,7 +85,10 @@ enum {
 #define SGE_GDI_GET_SUBCOMMAND(x) ((x)&SGE_GDI_SUBCOMMAND)
 #define SGE_GDI_IS_SUBCOMMAND_SET(x,y) ((x)&(y))
 
-/* allowed values for target field of sge_gdi_request */
+/* 
+ * allowed values for target field of GDI request 
+ * (see sge_gdi_packet_class_t and sge_gdi_task_class_t
+ */
 enum {
    SGE_ADMINHOST_LIST = 1,
    SGE_SUBMITHOST_LIST,
@@ -133,30 +139,18 @@ enum {
 };
 
 /* preserves state between multiple calls to sge_gdi_multi() */
-typedef struct _sge_gdi_request sge_gdi_request;
-typedef struct {
-   sge_gdi_request *first;
-   sge_gdi_request *last;
-   u_long32 sequence_id;
-} state_gdi_multi;
+typedef struct _state_gdi_multi state_gdi_multi;
+
+struct _state_gdi_multi {
+   void *packet; /* TODO: EB: this is a sge_gdi_packet_class_t pointer - fix includes */
+   lList **malpp;
+   state_gdi_multi *next;
+};
 
 /* to be used for initializing state_gdi_multi */
-#define STATE_GDI_MULTI_INIT { NULL, NULL, 0 }
+#define STATE_GDI_MULTI_INIT { NULL, NULL, NULL}
 
 bool sge_gdi_extract_answer(lList **alpp, u_long32 cmd, u_long32 target, int id, lList *mal, lList **olpp);
-
-/**
- * This struct stores the basic information for a async GDI
- * request. We need this data, to identify the answer...
- */
-typedef struct {
-   char rhost[CL_MAXHOSTLEN+1];       
-   char commproc[CL_MAXHOSTLEN+1];
-   u_short id;
-   u_long32 gdi_request_mid; /* message id of the send, used to identify the answer*/
-   state_gdi_multi out;
-} gdi_send_t;
-
 
 /* from gdi_checkpermissions.h */
 #define MANAGER_CHECK     (1<<0)
@@ -182,6 +176,7 @@ enum {
 #define EXECD_KILL        (1<<2)
 #define JOB_KILL          (1<<3)
 #define EVENTCLIENT_KILL  (1<<4)
+#define THREAD_START      (1<<5)
 
 #ifdef  __cplusplus
 }

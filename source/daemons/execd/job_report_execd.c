@@ -335,7 +335,8 @@ int do_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
             break;
  
          default:
-            ERROR((SGE_EVENT, MSG_COM_ACK_UNKNOWN));
+            /* EB: TODO: ST: unknown 1 ? */
+            ERROR((SGE_EVENT, MSG_COM_ACK_UNKNOWN1));
             break;
       }
 

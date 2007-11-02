@@ -45,6 +45,7 @@
 #include "sge.h"
 #include "sge_answer.h"
 #include "sge_profiling.h"
+#include "sge_conf.h"
 
 /* CULL */
 #include "cull_list.h"
@@ -76,12 +77,9 @@
 /* EVM */
 #include "sge_event_master.h"
 
-/* GDI */
-#include "sge_conf.h"
-#include "sge_gdi.h"
-#include "sge_gdi_request.h"
-#include "sge_gdiP.h"
-#include "sge_security.h"
+#include "gdi/sge_gdi.h"
+#include "gdi/sge_gdiP.h"
+#include "gdi/sge_security.h"
 
 /* SGEOBJ */
 #include "sge_cqueue.h"
@@ -410,7 +408,8 @@ int japi_init_mt(dstring *diag)
    /*
    ** TODO: return error reason in diag
    */
-   gdi_errno = sge_gdi2_setup(&ctx, prog_number, &alp);
+   /* EB: TODO: ST: review with AH */
+   gdi_errno = sge_gdi2_setup(&ctx, prog_number, MAIN_THREAD, &alp);
    if ((gdi_errno != AE_OK) && (gdi_errno != AE_ALREADY_SETUP)) {
       answer_to_dstring(lFirst(alp), diag);
       lFreeList(&alp);
@@ -3250,7 +3249,8 @@ static int japi_get_job(u_long32 jobid, lList **retrieved_job_list, dstring *dia
    }
    
    jb_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_SEND, SGE_JOB_LIST, SGE_GDI_GET, NULL, 
-         job_selection, job_fields, &mal, &state, true);
+                          job_selection, job_fields, &state, true);
+   ctx->gdi_wait(ctx, &alp, &mal, &state);
    lFreeWhere(&job_selection);
    lFreeWhat(&job_fields);
 
@@ -4007,7 +4007,7 @@ static void *japi_implementation_thread(void *p)
    
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
 
-   if (sge_gdi2_setup(&evc_ctx, prog_number, &alp) != AE_OK) {
+   if (sge_gdi2_setup(&evc_ctx, prog_number, MAIN_THREAD, &alp) != AE_OK) {
       DPRINTF(("error: sge_gdi2_setup() failed for event client thread\n"));
       if (p) {
          lListElem *aep = lFirst(alp);
@@ -4037,7 +4037,7 @@ static void *japi_implementation_thread(void *p)
 
    /* register at qmaster as event client */
    DPRINTF(("registering as event client ...\n"));
-   evc = sge_evc_class_create(evc_ctx, EV_ID_ANY, &alp); 
+   evc = sge_evc_class_create(evc_ctx, EV_ID_ANY, &alp, NULL, false); 
    if (!evc) {
       if (p) {
          lListElem *aep = lFirst(alp);
@@ -4081,7 +4081,7 @@ static void *japi_implementation_thread(void *p)
       goto SetupFailed;
    }
    
-   if (!evc->ec_register(evc, false, &alp)) {      
+   if (!evc->ec_register(evc, false, &alp, NULL, NULL)) {      
       DPRINTF(("error: ec_register() failed\n"));
       
       if (p) {
@@ -4120,6 +4120,8 @@ static void *japi_implementation_thread(void *p)
             break;
          }
          JAPI_UNLOCK_EC_STATE();
+
+         DTRACE;
         
          /* Bug Fix: Issuezilla #826
           * The first part of this bug fix is to keep the event client thread
@@ -4129,6 +4131,8 @@ static void *japi_implementation_thread(void *p)
           * we note here that we were able to communication with the qmaster
           * at least once before we started having problems. */
          qmaster_bound = true;
+
+         DTRACE;
 
          /* If we think we're disconnected, print a message saying we've
           * reconnected, and note that we're not disconnected. */
@@ -4144,6 +4148,8 @@ static void *japi_implementation_thread(void *p)
             DPRINTF ((MSG_JAPI_RECONNECTED));
             disconnected = false;
          }
+
+         DTRACE;
          
          for_each (event, event_list) {
             u_long32 type, intkey, intkey2;

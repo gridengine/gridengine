@@ -34,7 +34,6 @@
 #include <string.h>
 
 #include "sge_unistd.h"
-#include "sge_gdi_request.h"
 #include "sge_host.h"
 #include "sge_sched.h"
 #include "cull.h"

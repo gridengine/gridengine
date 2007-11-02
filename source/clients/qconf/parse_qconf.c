@@ -44,7 +44,6 @@
 #include "uti/sge_unistd.h"
 
 #include "sge.h"
-#include "sge_gdi.h"
 #include "sge_options.h"
 #include "sge_pe.h"
 #include "sge_dstring.h"
@@ -66,7 +65,6 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_str.h"
-#include "scheduler.h"
 #include "sge_support.h"
 #include "sge_stdlib.h"
 #include "sge_spool.h"
@@ -101,6 +99,7 @@
 #include "sgeobj/sge_range.h"
 #include "sgeobj/sge_cqueueL.h"
 #include "sgeobj/sge_subordinateL.h"
+#include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 
 #include "msg_common.h"
@@ -1803,6 +1802,24 @@ char *argv[]
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
          lFreeList(&lp);
+         spp++;
+         continue;
+      }
+/*----------------------------------------------------------------------------*/
+
+      /* -st <name> ... */
+      /* <name> may be "scheduler" */
+
+      if (strncmp("-st", *spp, 4) == 0) {
+         int opt = THREAD_START;
+         /* no adminhost/manager check needed here */
+
+         spp = sge_parser_get_next(spp);
+         lString2List(*spp, &lp, ID_Type, ID_str, ", ");
+         alp = ctx->kill(ctx, lp, default_cell, 0, opt);
+         lFreeList(&lp);
+         answer_list_on_error_print_or_exit(&alp, stderr);
+         lFreeList(&alp);
          spp++;
          continue;
       }
@@ -6164,7 +6181,7 @@ static int show_eventclients(sge_gdi_ctx_class_t *ctx)
       for_each(ep, lp) {
          printf("%8d ", (int)lGetUlong(ep, EV_id));
          printf("%-15s ", lGetString(ep, EV_name));
-         printf("%-25s\n", lGetHost(ep, EV_host));
+         printf("%-25s\n", (lGetHost(ep, EV_host) != NULL) ? lGetHost(ep, EV_host) : "-");
       }
    }
    else {

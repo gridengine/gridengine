@@ -1,5 +1,5 @@
-#ifndef __SGE_SCHEDD_H
-#define __SGE_SCHEDD_H
+#ifndef _SGE_THREAD_SCHEDULER_H_
+#define _SGE_THREAD_SCHEDULER_H_
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -25,37 +25,29 @@
  * 
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
  * 
- *   Copyright: 2001 by Sun Microsystems, Inc.
+ *   Copyright: 2003 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cull.h"
-#include "evc/sge_event_client.h"
+#include <pthread.h>
 
+void
+sge_scheduler_initialize(void);
 
-typedef struct {
-   char *name;
-   char *descr;
-   int (*subscribe_func)(sge_evc_class_t *evc);
-   int (*event_func)(sge_evc_class_t *evc); 
-   void *alg; /* can't make any assumption on this here 
-                 though it usually it will be:
-                  int (*alg)(sge_Sdescr_t *);        */
-} sched_func_struct;
+void
+sge_scheduler_trigger_cancel(void);
 
-extern sched_func_struct sched_funcs[];
-extern int current_scheduler;
+void
+sge_scheduler_cleanup_thread_pool(void);
 
-int use_alg(const char *alg_name);
-int sge_before_dispatch(sge_evc_class_t *evc);
-void sge_schedd_mirror_register(sge_evc_class_t *evc);
+void
+sge_scheduler_terminate(void);
 
-/* Scheduler spool directory defines */
-#define SCHED_BASE_DIR          "/usr/SGE"
-#define SCHED_SPOOL_DIR         "schedd"
-#define SCHED_PID_FILE          "sge_schedd.pid"
+void *
+sge_scheduler_main(void *arg);
 
-#endif /* __SGE_SCHEDD_H */
+#endif 
+

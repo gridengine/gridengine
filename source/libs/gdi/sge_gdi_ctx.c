@@ -41,30 +41,39 @@
 #include <sys/types.h>
 #include <sys/socket.h>  
 
-#include "sge.h"
-#include "sgermon.h"
-#include "sge_hostname.h"
-#include "sge_log.h"
-#include "sge_stdlib.h"
-#include "sge_string.h"
-#include "sge_unistd.h"
-#include "sge_env.h"
-#include "sge_prog.h"
-#include "setup_path.h"
-#include "sge_bootstrap.h"
-#include "commlib.h"
-#include "sge_answer.h"
-#include "msg_gdilib.h"
-#include "msg_utilib.h"
-#include "qm_name.h"
-#include "sge_uidgid.h"
-#include "sge_profiling.h"
-#include "sge_csp_path.h"
-#include "sge_feature.h"
-#include "sge_conf.h"
-#include "sge_object.h"
 #include "lck/sge_lock.h"
+
+#include "comm/commlib.h"
+#include "comm/lists/cl_util.h"
+
+#include "rmon/sgermon.h"
+
+#include "uti/sge_hostname.h"
+#include "uti/sge_log.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_string.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_env.h"
+#include "uti/sge_prog.h"
+#include "uti/setup_path.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_profiling.h"
+#include "uti/msg_utilib.h"
+#include "uti/sge_language.h"
 #include "uti/sge_spool.h"
+
+#include "sgeobj/sge_answer.h"
+
+#include "gdi/qm_name.h"
+
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_object.h"
+
+#include "sge.h"
+#include "sge_csp_path.h"
+#include "msg_gdilib.h"
 
 /*
 ** need this for lInit(nmv)
@@ -73,26 +82,16 @@ extern lNameSpace nmv[];
 
 #if  1
 /* TODO: throw this out asap */
-#include "sge_gdi.h"
-#include "sge_gdi_request.h"
+#include "gdi/sge_gdi.h"
+
 void gdi_once_init(void);
-void gdi_init_mt(void);
 void feature_mt_init(void);
 void sc_mt_init(void);
 #endif
 
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdi2.h"
-
-#ifdef NEW_GDI_STATE 
-typedef struct {
-   /* gdi request base */
-   u_long32 request_id;     /* incremented with each GDI request to have a unique request ID
-                               it is ensured that the request ID is also contained in answer */
-   gdi_send_t *async_gdi; /* used to store a async GDI request.*/
-} gdi_state_t;
-#endif
-
+#include "gdi/sge_gdi_packet_internal.h"
 
 typedef struct {
    sge_env_state_class_t* sge_env_state_obj;
@@ -101,6 +100,7 @@ typedef struct {
    sge_bootstrap_state_class_t* sge_bootstrap_state_obj;
    
    char* component_name;
+   char* thread_name;
    char* master;
    char* component_username;
    char* username;
@@ -116,16 +116,7 @@ typedef struct {
    sge_error_class_t *eh;
 
    bool is_setup;
-
-#ifdef NEW_GDI_STATE
-   /* gdi_state */
-   gdi_state_t gdi_state;
-#endif   
-
 } sge_gdi_ctx_t;
-
-#ifndef NEW_GDI_STATE
-static void gdi_free_request(gdi_send_t **async_gdi); 
 
 static pthread_key_t  gdi_state_key;
 static pthread_once_t gdi_once_control = PTHREAD_ONCE_INIT;
@@ -134,14 +125,7 @@ typedef struct {
    /* gdi request base */
    u_long32 request_id;     /* incremented with each GDI request to have a unique request ID
                                it is ensured that the request ID is also contained in answer */
-   int      made_setup;
-   int      isalive;
-
-   char     cached_master_name[CL_MAXHOSTLEN];
-
-   gdi_send_t *async_gdi; /* used to store a async GDI request.*/
 } gdi_state_t;
-
 
 static void gdi_state_destroy(void* state) {
    free(state);
@@ -153,11 +137,6 @@ void gdi_once_init(void) {
  
 static void gdi_state_init(gdi_state_t* state) {
    state->request_id = 0;
-   state->made_setup = 0;
-   state->isalive = 0;
-   strcpy(state->cached_master_name, "");
-
-   state->async_gdi = NULL;
 }
 
 /****** gid/gdi_setup/gdi_mt_init() ************************************************
@@ -200,177 +179,11 @@ void gdi_mt_init(void)
 ******************************************************************************/
 u_long32 gdi_state_get_next_request_id(void)
 {
-   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_next_request_id");
+   GET_SPECIFIC(gdi_state_t, gdi_state, 
+                gdi_state_init, gdi_state_key, "gdi_state_get_next_request_id");
    gdi_state->request_id++;
    return gdi_state->request_id;
 }
-
-#ifdef USE_GDI_STATE
-static void gdi_state_set_made_setup(int i)
-{
-   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_made_setup");
-   gdi_state->made_setup = i;
-}
-#endif
-
-
-int gdi_state_get_made_setup(void)
-{
-   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_made_setup");
-   return gdi_state->made_setup;
-}
-
-char *gdi_state_get_cached_master_name(void)
-{
-   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_cached_master_name");
-   return gdi_state->cached_master_name;
-}
-
-gdi_send_t*
-gdi_state_get_last_gdi_request(void) {
-   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, 
-                "gdi_state_get_last_gdi_request");
-
-   return gdi_state->async_gdi;
-}
-
-void 
-gdi_state_clear_last_gdi_request(void) 
-{
-   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, 
-                "gdi_state_clear_last_gdi_request");
-   gdi_free_request(&(gdi_state->async_gdi));
-}
-
-static void
-gdi_free_request(gdi_send_t **async_gdi) 
-{
-   (*async_gdi)->out.first = free_gdi_request((*async_gdi)->out.first);
-   FREE(*async_gdi);
-}
-
-bool
-gdi_set_request(const char* rhost, const char* commproc, u_short id, 
-                state_gdi_multi *out, u_long32 gdi_request_mid) 
-{
-   gdi_send_t *async_gdi = NULL;
- 
-   async_gdi = (gdi_send_t*) malloc(sizeof(gdi_send_t));
-   if (async_gdi == NULL) {
-      return false;
-   }
- 
-   sge_strlcpy(async_gdi->rhost, rhost, CL_MAXHOSTLEN);
-   sge_strlcpy(async_gdi->commproc, commproc, CL_MAXHOSTLEN);
-   async_gdi->id = id;
-   async_gdi->gdi_request_mid = gdi_request_mid;
-
-   /* copy gdi request and set the past in one to NULL */
-   async_gdi->out.first = out->first;
-   out->first = NULL;
-   async_gdi->out.last = out->last;
-   out->last = NULL;
-   async_gdi->out.sequence_id = out->sequence_id;
-   out->sequence_id = 0;
- 
-   { /* set thread specific value */
-      GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, 
-                   "gdi_set_request");
-      if (gdi_state->async_gdi != NULL) {
-         gdi_free_request(&(gdi_state->async_gdi));
-      }
-      gdi_state->async_gdi = async_gdi;
-   }
-  
-   return true;
-}
-
-#else
-
-static void gdi_free_request(gdi_send_t **async_gdi); 
-
-u_long32 gdi_state_get_next_request_id(sge_gdi_ctx_class_t *ctx)
-{
-   sge_gdi_ctx_t *gdi_ctx = (sge_gdi_ctx_t*)ctx->sge_gdi_ctx_handle;
-   gdi_state_t gdi_state = gdi_ctx->gdi_state;
-   gdi_state.request_id++;
-   return gdi_state.request_id;
-}
-
-gdi_send_t* gdi_state_get_last_gdi_request(sge_gdi_ctx_class_t *ctx) {
-   sge_gdi_ctx_t *gdi_ctx = (sge_gdi_ctx_t*)ctx->sge_gdi_ctx_handle;
-   gdi_state_t gdi_state = gdi_ctx->gdi_state;
-   return gdi_state.async_gdi;
-}
-
-void gdi_state_clear_last_gdi_request(sge_gdi_ctx_class_t *ctx) 
-{
-   sge_gdi_ctx_t *gdi_ctx = (sge_gdi_ctx_t*)ctx->sge_gdi_ctx_handle;
-   gdi_state_t gdi_state = gdi_ctx->gdi_state;
-   gdi_free_request(&(gdi_state.async_gdi));
-}
-
-static void gdi_free_request(gdi_send_t **async_gdi) 
-{
-   (*async_gdi)->out.first = free_gdi_request((*async_gdi)->out.first);
-   FREE(*async_gdi);
-}
-
-bool
-gdi_set_request(sge_gdi_ctx_class_t *ctx, const char* rhost, const char* commproc, u_short id, 
-                state_gdi_multi *out, u_long32 gdi_request_mid) 
-{
-   sge_gdi_ctx_t *gdi_ctx = (sge_gdi_ctx_t*)ctx->sge_gdi_ctx_handle;
-   gdi_state_t gdi_state = gdi_ctx->gdi_state;
-   gdi_send_t *async_gdi = NULL;
- 
-   DENTER(TOP_LAYER, "gdi_set_request");
-
-   async_gdi = (gdi_send_t*)malloc(sizeof(gdi_send_t));
-   if (async_gdi == NULL) {
-      DRETURN(false);
-   }
- 
-   sge_strlcpy(async_gdi->rhost, rhost, CL_MAXHOSTLEN);
-   sge_strlcpy(async_gdi->commproc, commproc, CL_MAXHOSTLEN);
-   async_gdi->id = id;
-   async_gdi->gdi_request_mid = gdi_request_mid;
-
-   /* copy gdi request and set the past in one to NULL */
-   async_gdi->out.first = out->first;
-   out->first = NULL;
-   async_gdi->out.last = out->last;
-   out->last = NULL;
-   async_gdi->out.sequence_id = out->sequence_id;
-   out->sequence_id = 0;
- 
-   /* set context specific value */
-   if (gdi_state.async_gdi != NULL) {
-      gdi_free_request(&(gdi_state.async_gdi));
-   }
-   gdi_state.async_gdi = async_gdi;
-
-#if 0
-   /* AA: async GDI DEBUG */
-   if (gdi_state.async_gdi) {
-      sge_gdi_request *req = gdi_state.async_gdi->out.first;
-      int count = 0;
-      while (req) {
-         printf("***************request %d is: (%s/%s/%d) request_id="sge_u32"\n",
-                 count, req->host, req->commproc, req->id, req->request_id);
-         count++;
-         req=req->next;
-      }           
-   }   
-#endif   
-  
-   DRETURN(true);
-}
-
-#endif /* NEW_GDI_STATE */
-
-
-
 
 typedef struct {
    sge_gdi_ctx_class_t* ctx;   
@@ -381,8 +194,6 @@ static pthread_key_t  sge_gdi_ctx_key;
 static void sge_gdi_thread_local_ctx_once_init(void);
 static void sge_gdi_thread_local_ctx_destroy(void* theState);
 static void sge_gdi_thread_local_ctx_init(sge_gdi_ctx_thread_local_t* theState);
-
-
 
 static void sge_gdi_thread_local_ctx_once_init(void)
 {
@@ -432,16 +243,12 @@ void sge_gdi_set_thread_local_ctx(sge_gdi_ctx_class_t* ctx) {
    DRETURN_VOID;
 }
 
-static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, 
-                              int prog_number,
-                              const char* component_name,
-                              const char* username,
-                              const char* groupname,
-                              const char *sge_root, 
-                              const char *sge_cell, 
-                              int sge_qmaster_port, 
-                              int sge_execd_port,
-                              bool from_services);
+static bool 
+sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const char* component_name,
+                  int thread_number, const char *thread_name, const char* username, 
+                  const char *groupname, const char *sge_root, const char *sge_cell, 
+                  int sge_qmaster_port, int sge_execd_port, bool from_services);
+
 static void sge_gdi_ctx_destroy(void *theState);
 
 static void sge_gdi_ctx_set_is_setup(sge_gdi_ctx_class_t *thiz, bool is_setup);
@@ -455,6 +262,7 @@ static sge_bootstrap_state_class_t* get_sge_bootstrap_state(sge_gdi_ctx_class_t 
 static int reresolve_qualified_hostname(sge_gdi_ctx_class_t *thiz);
 static cl_com_handle_t* get_com_handle(sge_gdi_ctx_class_t *thiz);
 static const char* get_component_name(sge_gdi_ctx_class_t *thiz);
+static const char* get_thread_name(sge_gdi_ctx_class_t *thiz);
 static const char* get_progname(sge_gdi_ctx_class_t *thiz);
 static u_long32 get_who(sge_gdi_ctx_class_t *thiz);
 static bool is_daemonized(sge_gdi_ctx_class_t *thiz);
@@ -498,11 +306,6 @@ static void ctx_set_last_commlib_error(sge_gdi_ctx_class_t *thiz, int cl_error);
 static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz);
 static int sge_gdi_ctx_class_connect(sge_gdi_ctx_class_t *thiz);
 static int sge_gdi_ctx_class_is_alive(sge_gdi_ctx_class_t *thiz);
-static lList* sge_gdi_ctx_class_gdi(sge_gdi_ctx_class_t *thiz, int target, int cmd, lList **lpp,
-                                 lCondition *where, lEnumeration *what);
-static int sge_gdi_ctx_class_gdi_multi(sge_gdi_ctx_class_t* ctx, lList **alpp, int mode, u_long32 target, u_long32 cmd,
-                  lList **lp, lCondition *cp, lEnumeration *enp, lList **malpp, 
-                  state_gdi_multi *state, bool do_copy);
                   
 static lList* sge_gdi_ctx_class_gdi_tsm(sge_gdi_ctx_class_t *thiz, const char *schedd_name, const char *cell);
 static lList* sge_gdi_ctx_class_gdi_kill(sge_gdi_ctx_class_t *thiz, lList *id_list, const char *cell, 
@@ -514,29 +317,14 @@ static int sge_gdi_ctx_log_flush_func(cl_raw_list_t* list_p);
 
 static void sge_gdi_ctx_class_dprintf(sge_gdi_ctx_class_t *ctx);
 
-static bool sge_gdi_ctx_class_gdi_receive_multi_async(sge_gdi_ctx_class_t* thiz, 
-                                            sge_gdi_request **answerp, 
-                                            lList **malpp, 
-                                            bool is_sync);
-static int sge_gdi_ctx_class_gdi_multi_sync(sge_gdi_ctx_class_t* thiz, 
-                                            lList **alpp, 
-                                            int mode, 
-                                            u_long32 target, 
-                                            u_long32 cmd,
-                                            lList **lpp, 
-                                            lCondition *cp, 
-                                            lEnumeration *enp, 
-                                            lList **malpp, 
-                                            state_gdi_multi *state, 
-                                            bool do_copy,
-                                            bool do_sync);
-
-
-sge_gdi_ctx_class_t *sge_gdi_ctx_class_create(int prog_number, const char* component_name,
-                                              const char* username, const char *groupname,
-                                              const char *sge_root, const char *sge_cell, 
-                                              int sge_qmaster_port, int sge_execd_port, bool from_services,
-                                              lList **alpp)
+sge_gdi_ctx_class_t *
+sge_gdi_ctx_class_create(int prog_number, const char *component_name, 
+                         int thread_number, const char *thread_name,
+                         const char *username, const char *groupname,
+                         const char *sge_root, const char *sge_cell, 
+                         int sge_qmaster_port, int sge_execd_port, 
+                         bool from_services, bool is_qmaster_internal_client, 
+                         lList **alpp)
 {
    sge_gdi_ctx_class_t *ret = (sge_gdi_ctx_class_t *)sge_malloc(sizeof(sge_gdi_ctx_class_t));
    sge_gdi_ctx_t *gdi_ctx = NULL;
@@ -544,29 +332,38 @@ sge_gdi_ctx_class_t *sge_gdi_ctx_class_create(int prog_number, const char* compo
    DENTER(TOP_LAYER, "sge_gdi_ctx_class_create");
 
    if (!ret) {
-      answer_list_add_sprintf(alpp, STATUS_EMALLOC, ANSWER_QUALITY_ERROR, MSG_MEMORY_MALLOCFAILED);
+      answer_list_add_sprintf(alpp, STATUS_EMALLOC, 
+                              ANSWER_QUALITY_ERROR, MSG_MEMORY_MALLOCFAILED);
       DRETURN(NULL);
    }
+
+   if (is_qmaster_internal_client) {
+      ret->sge_gdi_packet_execute = sge_gdi_packet_execute_internal; 
+      ret->sge_gdi_packet_wait_for_result = sge_gdi_packet_wait_for_result_internal;
+   } else {
+      ret->sge_gdi_packet_execute = sge_gdi_packet_execute_external; 
+      ret->sge_gdi_packet_wait_for_result = sge_gdi_packet_wait_for_result_external;
+   }
+   ret->gdi = sge_gdi2;
+   ret->gdi_multi = sge_gdi2_multi;
+   ret->gdi_wait = sge_gdi2_wait;
 
    ret->get_errors = sge_gdi_ctx_class_get_errors;
    ret->prepare_enroll = sge_gdi_ctx_class_prepare_enroll;
    ret->connect = sge_gdi_ctx_class_connect;
    ret->is_alive = sge_gdi_ctx_class_is_alive;
-   ret->gdi = sge_gdi_ctx_class_gdi;
-   ret->gdi_multi = sge_gdi_ctx_class_gdi_multi;
    ret->tsm = sge_gdi_ctx_class_gdi_tsm;
    ret->kill = sge_gdi_ctx_class_gdi_kill;
    ret->gdi_check_permission = sge_gdi_ctx_class_gdi_check_permission;
    ret->gdi_get_mapping_name = sge_gdi_ctx_class_gdi_get_mapping_name;
-   ret->gdi_multi_sync = sge_gdi_ctx_class_gdi_multi_sync;
-   ret->gdi_receive_multi_async = sge_gdi_ctx_class_gdi_receive_multi_async;
-   
+
    ret->get_sge_env_state = get_sge_env_state;
    ret->get_sge_prog_state = get_sge_prog_state;
    ret->get_sge_path_state = get_sge_path_state;
    ret->get_sge_bootstrap_state = get_sge_bootstrap_state;
    ret->reresolve_qualified_hostname = reresolve_qualified_hostname;
    ret->get_component_name = get_component_name;
+   ret->get_thread_name = get_thread_name;
    ret->get_progname = get_progname;
    ret->get_who = get_who;
    ret->is_daemonized = is_daemonized;
@@ -614,7 +411,8 @@ sge_gdi_ctx_class_t *sge_gdi_ctx_class_create(int prog_number, const char* compo
    memset(ret->sge_gdi_ctx_handle, 0, sizeof(sge_gdi_ctx_t));
 
    if (!ret->sge_gdi_ctx_handle) {
-      answer_list_add_sprintf(alpp, STATUS_EMALLOC, ANSWER_QUALITY_ERROR, MSG_MEMORY_MALLOCFAILED);
+      answer_list_add_sprintf(alpp, STATUS_EMALLOC, 
+                              ANSWER_QUALITY_ERROR, MSG_MEMORY_MALLOCFAILED);
       sge_gdi_ctx_class_destroy(&ret);
       DRETURN(NULL);
    }
@@ -625,12 +423,15 @@ sge_gdi_ctx_class_t *sge_gdi_ctx_class_create(int prog_number, const char* compo
    gdi_ctx = (sge_gdi_ctx_t*)ret->sge_gdi_ctx_handle;
    gdi_ctx->eh = sge_error_class_create();
    if (!gdi_ctx->eh) {
-      answer_list_add_sprintf(alpp, STATUS_EMALLOC, ANSWER_QUALITY_ERROR, MSG_MEMORY_MALLOCFAILED);
+      answer_list_add_sprintf(alpp, STATUS_EMALLOC, 
+                              ANSWER_QUALITY_ERROR, MSG_MEMORY_MALLOCFAILED);
       DRETURN(NULL);
    }
 
 
-   if (!sge_gdi_ctx_setup(ret, prog_number, component_name, username, groupname, sge_root, sge_cell, sge_qmaster_port, sge_execd_port, from_services)) {
+   if (!sge_gdi_ctx_setup(ret, prog_number, component_name, thread_number, thread_name, 
+                          username, groupname, sge_root, sge_cell, sge_qmaster_port, 
+                          sge_execd_port, from_services)) {
       sge_gdi_ctx_class_get_errors(ret, alpp, true);
       sge_gdi_ctx_class_destroy(&ret);
       DRETURN(NULL);
@@ -729,10 +530,11 @@ static bool sge_gdi_ctx_is_setup(sge_gdi_ctx_class_t *thiz)
 }
 
 
-static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const char* component_name,
-                              const char* username, const char *groupname,
-                              const char *sge_root, const char *sge_cell, int sge_qmaster_port, int sge_execd_port,
-                              bool from_services)
+static bool 
+sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const char* component_name,
+                  int thread_number, const char *thread_name, const char* username, 
+                  const char *groupname, const char *sge_root, const char *sge_cell, 
+                  int sge_qmaster_port, int sge_execd_port, bool from_services)
 {
    sge_gdi_ctx_t *es = (sge_gdi_ctx_t *)thiz->sge_gdi_ctx_handle;
    sge_error_class_t *eh = es->eh;
@@ -740,33 +542,20 @@ static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const 
    DENTER(TOP_LAYER, "sge_gdi_ctx_setup");
  
    /*
-   ** grrrhhh: we have to handle these inits
-   ** per process initialization
-   ** void gdi_once_init(void) {
-   **    // uti 
-   **    uidgid_mt_init();       <--- not yet
-   **    bootstrap_mt_init();
-   **    feature_mt_init();      <--- not yet
-   **    sge_prof_setup();
-   **    // gdi 
-   **    gdi_init_mt();          <--- not yet
-   **    path_mt_init();
-   **    // schedd conf
-   **    sc_mt_init()
-   ** }
-   */
-
-/*    gdi_once_init(); */
-   
-   /* TODO: profiling init, is this possible */
-   sge_prof_setup();
+    * Call all functions which have to be called once for each process.
+    * Those functions will then be called when the first thread of a process
+    * creates its context. 
+    */
+   prof_mt_init();
    feature_mt_init();
-#ifndef NEW_GDI_STATE   
    gdi_mt_init();
-#endif   
    sc_mt_init();
    obj_mt_init();
    bootstrap_mt_init();
+   sc_mt_init();
+   uidgid_mt_init();
+   path_mt_init();
+   
 
    /* TODO: shall we do that here ? */
    lInit(nmv);
@@ -799,6 +588,12 @@ static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const 
       es->component_name = strdup(prognames[prog_number]);
    } else {
       es->component_name = strdup(component_name);
+   }
+
+   if(thread_name == NULL) {
+      es->thread_name = strdup(prognames[prog_number]);
+   } else {
+      es->thread_name = strdup(thread_name);
    }
    
    /* set uid and gid */
@@ -901,11 +696,10 @@ static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const 
    DRETURN(true);
 }
 
-sge_gdi_ctx_class_t *sge_gdi_ctx_class_create_from_bootstrap(int prog_number,
-                                                             const char* component_name,
-                                                             const char* url,
-                                                             const char* username,
-                                                             lList **alpp) 
+sge_gdi_ctx_class_t *
+sge_gdi_ctx_class_create_from_bootstrap(int prog_number, const char* component_name,
+                                        int thread_number, const char *thread_name,
+                                        const char* url, const char* username, lList **alpp)
 {
    char sge_root[BUFSIZ];
    char sge_cell[BUFSIZ];
@@ -967,8 +761,9 @@ sge_gdi_ctx_class_t *sge_gdi_ctx_class_create_from_bootstrap(int prog_number,
    
    /* TODO we need a way to define the execd port, from_services is always false (certs from keystore) */
    
-   ret = sge_gdi_ctx_class_create(prog_number, component_name, username, NULL,
-                                  sge_root, sge_cell, sge_qmaster_p, sge_execd_p, false, alpp);
+   ret = sge_gdi_ctx_class_create(prog_number, component_name, thread_number, thread_name,
+                                  username, NULL, sge_root, sge_cell, sge_qmaster_p, sge_execd_p, 
+                                  false, false, alpp);
    
 #if 1
    /*
@@ -1454,81 +1249,6 @@ static int sge_gdi_ctx_class_is_alive(sge_gdi_ctx_class_t *thiz)
    DRETURN(cl_ret);
 }
 
-static lList* sge_gdi_ctx_class_gdi(sge_gdi_ctx_class_t *thiz, int target, int cmd, lList **lpp,
-                                 lCondition *where, lEnumeration *what)
-{
-   lList *alp = NULL;
-   
-   DENTER(TOP_LAYER, "sge_gdi_ctx_class_gdi");
-
-
-   /* thiz->dprintf(thiz); */
-   
-   alp = sge_gdi2(thiz, target, cmd, lpp, where, what);
-
-   DRETURN(alp);
-
-}
-
-static int sge_gdi_ctx_class_gdi_multi(sge_gdi_ctx_class_t* thiz, lList **alpp, int mode, u_long32 target, u_long32 cmd,
-                  lList **lpp, lCondition *cp, lEnumeration *enp, lList **malpp, 
-                  state_gdi_multi *state, bool do_copy) 
-{
-   int id = 0;
-   
-   DENTER(TOP_LAYER, "sge_gdi_ctx_class_gdi_multi");
-
-   /* thiz->dprintf(thiz); */
-   
-   id = sge_gdi2_multi(thiz, alpp, mode, target, cmd, lpp, cp, enp, malpp, state, do_copy); 
-
-   DRETURN(id);
-
-}
-
-static int sge_gdi_ctx_class_gdi_multi_sync(sge_gdi_ctx_class_t* thiz, 
-                                            lList **alpp, 
-                                            int mode, 
-                                            u_long32 target, 
-                                            u_long32 cmd,
-                                            lList **lpp, 
-                                            lCondition *cp, 
-                                            lEnumeration *enp, 
-                                            lList **malpp, 
-                                            state_gdi_multi *state, 
-                                            bool do_copy,
-                                            bool do_sync) 
-{
-   int id = 0;
-   
-   DENTER(TOP_LAYER, "sge_gdi_ctx_class_gdi_multi_sync");
-
-   /* thiz->dprintf(thiz); */
-   
-   id = sge_gdi2_multi_sync(thiz, alpp, mode, target, cmd, lpp, cp, enp, malpp, state, do_copy, do_sync); 
-
-   DRETURN(id);
-
-}
-
-static bool sge_gdi_ctx_class_gdi_receive_multi_async(sge_gdi_ctx_class_t* thiz, 
-                                            sge_gdi_request **answerp, 
-                                            lList **malpp, 
-                                            bool is_sync) 
-{
-   bool ret = false;
-
-   DENTER(TOP_LAYER, "sge_gdi_ctx_class_gdi_receive_multi_async");
-
-   /* thiz->dprintf(thiz); */
-   
-   ret = gdi2_receive_multi_async(thiz, answerp, malpp, is_sync); 
-
-   DRETURN(ret);
-
-}
-
-
 static lList* sge_gdi_ctx_class_gdi_tsm(sge_gdi_ctx_class_t *thiz, const char *schedd_name, const char *cell)
 {
    lList *alp = NULL;
@@ -1683,7 +1403,16 @@ static const char* get_component_name(sge_gdi_ctx_class_t *thiz) {
    DENTER(TOP_LAYER, "sge_gdi_ctx_class->get_component_name");
    ret = es->component_name;
    DRETURN(ret);
-}   
+}  
+
+static const char* get_thread_name(sge_gdi_ctx_class_t *thiz) {
+   sge_gdi_ctx_t *es = (sge_gdi_ctx_t *) thiz->sge_gdi_ctx_handle;
+   const char* ret = NULL;
+   DENTER(TOP_LAYER, "sge_gdi_ctx_class->get_thread_name");
+   ret = es->thread_name;
+   DRETURN(ret);
+}  
+ 
 static const char* get_progname(sge_gdi_ctx_class_t *thiz) {
    sge_prog_state_class_t* prog_state = thiz->get_sge_prog_state(thiz);
    const char *progname = NULL;
@@ -2023,7 +1752,9 @@ static int sge_gdi_ctx_log_flush_func(cl_raw_list_t* list_p)
 ** TODO: 
 ** only helper function to do the setup for clients similar to sge_setup()
 */
-int sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, lList **alpp)
+int 
+sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, u_long32 thread_id,
+           lList **alpp, bool is_qmaster_intern_client)
 {
    char  user[128] = "";
    char  group[128] = "";
@@ -2046,23 +1777,20 @@ int sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, lList **alpp)
    */
    sge_root = getenv("SGE_ROOT");
    if (sge_root == NULL) {
-      answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_CRITICAL, MSG_SGEROOTNOTSET);
+      answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, 
+                              ANSWER_QUALITY_CRITICAL, MSG_SGEROOTNOTSET);
       DRETURN(AE_ERROR);
    }
    sge_cell = getenv("SGE_CELL")?getenv("SGE_CELL"):DEFAULT_CELL;
    sge_qmaster_port = sge_get_qmaster_port(&from_services);
    sge_execd_port = sge_get_execd_port();
 
-/* sge_mt_init { */
-/*    sge_prof_setup(); */
+   /*
+    * uidgid_mt_init() needs to be called here already so that sge_uid2user()
+    * sge_gid2group() works correctly. Other *_mt_init() functions are called
+    * in sge_gdi_ctx_class_create();
+    */
    uidgid_mt_init();
-/*    path_mt_init(); */
-/*     bootstrap_mt_init();   */
-/*    feature_mt_init(); */
-/*    sc_mt_init(); */
-/*    obj_mt_init();  */
-/*    gdi_mt_init(); */
-/* } end sge_mt_init */
 
    if (sge_uid2user(geteuid(), user, sizeof(user), MAX_NIS_RETRIES)) {
       answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_CRITICAL, MSG_SYSTEM_RESOLVEUSER);
@@ -2075,8 +1803,10 @@ int sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, lList **alpp)
    }
 
    /* a dynamic eh handler is created */
-   *context = sge_gdi_ctx_class_create(progid, prognames[progid], user, group,
-                                       sge_root, sge_cell, sge_qmaster_port, sge_execd_port, from_services, alpp);
+   *context = sge_gdi_ctx_class_create(progid, prognames[progid], thread_id, threadnames[thread_id], user, group,
+                                       sge_root, sge_cell, sge_qmaster_port, 
+                                       sge_execd_port, from_services, 
+                                       is_qmaster_intern_client, alpp);
 
    if (*context == NULL) {
       DRETURN(AE_ERROR);
@@ -2102,31 +1832,13 @@ int sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, lList **alpp)
 ** TODO: 
 ** only helper function to do the setup for clients similar to sge_gdi_setup()
 */
-int sge_gdi2_setup(sge_gdi_ctx_class_t **context_ref, u_long32 progid, lList **alpp)
+int sge_gdi2_setup(sge_gdi_ctx_class_t **context_ref, u_long32 progid, u_long32 thread_id, lList **alpp)
 {
    int ret = AE_OK;
    bool alpp_was_null = true;
 
    DENTER(TOP_LAYER, "sge_gdi2_setup");
 
-#ifdef USE_GDI_STATE 
-   if (alpp != NULL && *alpp != NULL) {
-     alpp_was_null = false;
-   }
-
-   /* TODO: gdi_state_t should be part of context */
-   /* initialize libraries */
-   pthread_once(&gdi_once_control, gdi_once_init);
-   if (gdi_state_get_made_setup()) {
-      if (alpp_was_null) {
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GDI_ALREADY_SETUP));
-      } else {
-         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_WARNING,
-                                 MSG_GDI_GDI_ALREADY_SETUP);
-      }
-      DRETURN(AE_ALREADY_SETUP);
-   }
-#else   
    if (context_ref && sge_gdi_ctx_is_setup(*context_ref)) {
       if (alpp_was_null) {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GDI_ALREADY_SETUP));
@@ -2136,8 +1848,7 @@ int sge_gdi2_setup(sge_gdi_ctx_class_t **context_ref, u_long32 progid, lList **a
       }
       DRETURN(AE_ALREADY_SETUP);
    }
-#endif
-   ret = sge_setup2(context_ref, progid, alpp); 
+   ret = sge_setup2(context_ref, progid, thread_id, alpp, false); 
    if (ret != AE_OK) {
       DRETURN(ret);
    }
@@ -2147,12 +1858,7 @@ int sge_gdi2_setup(sge_gdi_ctx_class_t **context_ref, u_long32 progid, lList **a
       DRETURN(AE_QMASTER_DOWN);
    }
 
-#ifdef USE_GDI_STATE
-   /* TODO: gdi_state should be part of context */
-   gdi_state_set_made_setup(1);
-#else   
    sge_gdi_ctx_set_is_setup(*context_ref, true);
-#endif
 
    DRETURN(AE_OK);
 }

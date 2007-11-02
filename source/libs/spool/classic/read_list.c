@@ -1033,7 +1033,7 @@ const char *object_dir
    }
    if (strcmp(old_name, new_name)) {
       if (!write_host(1, 2, ep, nm, NULL)) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, new_name));
+         ERROR((SGE_EVENT, MSG_CANTSPOOL_SS, object_name, new_name));
          free(old_name);
          DRETURN(-1);
       }

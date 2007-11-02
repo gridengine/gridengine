@@ -1,5 +1,5 @@
-#ifndef __SGE_GDI_REQUEST_H
-#define __SGE_GDI_REQUEST_H
+#ifndef __SGE_PACKET_QUEUE_H
+#define __SGE_PACKET_QUEUE_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -25,62 +25,57 @@
  * 
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
  * 
- *   Copyright: 2001 by Sun Microsystems, Inc.
+ *   Copyright: 2007 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cull.h"
-#include "sge_gdi.h"
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
+typedef struct _sge_gdi_packet_queue_class_t sge_gdi_packet_queue_class_t;
 
-struct _sge_gdi_request {
-   u_long32         op;
-   u_long32         target;
+struct _sge_gdi_packet_queue_class_t {
+   /* 
+    * mutex to gard all members of this structure 
+    */
+   pthread_mutex_t mutex;
 
-   char             *host;
-   char             *commproc;
-   u_short          id;
+   /* 
+    * used to block/signal threads 
+    */
+   pthread_cond_t cond;
 
-   u_long32         version;
-   lList            *lp;
-   lList            *alp;
-   lCondition       *cp;
-   lEnumeration     *enp; 
-   char             *auth_info;     
-   u_long32         sequence_id;
-   u_long32         request_id;
-   sge_gdi_request  *next;   
+   /* 
+    * pointer to the first and last packet of a packet queue
+    */
+   sge_gdi_packet_class_t *first_packet;
+   sge_gdi_packet_class_t *last_packet;
+
+   /*
+    * number of elements in the queue
+    */
+   u_long32 counter;
+
+   /* 
+    * if "true" then at least one thread waits to be signalled
+    * with the pthread condition 'cond' part of this structure 
+    */
+   u_long32 waiting;
 };
 
-int sge_unpack_gdi_request(sge_pack_buffer *pb, sge_gdi_request **arp);
+extern sge_gdi_packet_queue_class_t Master_Packet_Queue;
+
+void
+sge_gdi_packet_queue_store_notify_wait(sge_gdi_packet_queue_class_t *packet_queue,
+                                       sge_gdi_packet_class_t *packet);
+
+void
+sge_gdi_packet_queue_wakeup_all_waiting(sge_gdi_packet_queue_class_t *packet_queue);
 
 bool
-gdi_request_pack_prefix(sge_gdi_request *ar, lList **answer_list,
-                        sge_pack_buffer *pb);
-bool
-gdi_request_pack_suffix(sge_gdi_request *ar, lList **answer_list,
-                        sge_pack_buffer *pb);
+sge_gdi_packet_queue_wait_for_new_packet(sge_gdi_packet_queue_class_t *packet_queue,
+                                         sge_gdi_packet_class_t **packet);
 
-bool
-gdi_request_pack_result(sge_gdi_request *ar, lList **answer_list,
-                        sge_pack_buffer *pb);
-
-bool 
-request_list_pack_results(sge_gdi_request *ar, lList **answer_list,
-                          sge_pack_buffer *pb);
-
-sge_gdi_request* free_gdi_request(sge_gdi_request *ar);
-
-sge_gdi_request* new_gdi_request(void);
-
-#ifdef  __cplusplus
-}
 #endif
 
-#endif /* __SGE_ANY_REQUEST_H */

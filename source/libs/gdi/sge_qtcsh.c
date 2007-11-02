@@ -39,20 +39,25 @@
 #include <errno.h>
 #include <pthread.h>
 
-#include "sge_gdi.h"
-#include "sge_answer.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "config.h"
-#include "sge_qtcsh.h"
-#include "setup_path.h"
-#include "sge_uidgid.h"
-#include "sge_prog.h"
-#include "sge_conf.h"
 #include "lck/sge_mtutil.h"
+
+#include "rmon/sgermon.h"
+
+#include "uti/setup_path.h"
+#include "uti/sge_log.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_prog.h"
 #include "uti/sge_stdio.h"
-#include "sge_string.h"
+#include "uti/sge_string.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/config.h"
+#include "sgeobj/sge_conf.h"
+
+#include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
+
+#include "sge_qtcsh.h"
 
 #include "msg_common.h"
 
@@ -518,7 +523,7 @@ print_func_t ostream
    /* TODO:
     *  sge_gdi_param(SET_EXIT_ON_ERROR, 0, NULL);
     */
-   if (sge_gdi2_setup(&ctx, QTCSH, NULL) == AE_OK) {
+   if (sge_gdi2_setup(&ctx, QTCSH, MAIN_THREAD, NULL) == AE_OK) {
       if (init_qtask_config(ctx, &alp, ostream) != 0 ) {
          mode_remote = 0;          
       } else {

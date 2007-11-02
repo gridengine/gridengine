@@ -100,11 +100,15 @@
 #include "sge_ulong.h"
 #include "sge_ja_task.h"
 #include "sge_string.h"
-#include "sge_gdi_ctx.h"
+#include "sge_qrsub.h"
+
+#include "gdi/sge_gdi_ctx.h"
+
 #include "uti/sge_string.h"
 #include "uti/setup_path.h"
+
 #include "sgeobj/sge_advance_reservation.h"
-#include "sge_qrsub.h"
+
 
 
 extern sge_gdi_ctx_class_t *ctx;

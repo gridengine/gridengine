@@ -48,7 +48,7 @@
 
 #include "qmon_rmon.h"
 #include "commlib.h"
-#include "sge_gdi.h"
+#include "gdi/sge_gdi.h"
 #include "sge_host.h"
 #include "sge_all_listsL.h"
 #include "qmon_cull.h"

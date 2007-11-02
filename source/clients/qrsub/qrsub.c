@@ -56,14 +56,14 @@ int main(int argc, char **argv) {
 
    DENTER_MAIN(TOP_LAYER, "qrsub");
 
-   sge_prof_setup();
+   prof_mt_init();
 
    /* Set up the program information name */
    sge_setup_sig_handlers(QRSUB);
 
    log_state_set_log_gui(1);
 
-   if (sge_gdi2_setup(&ctx, QRSUB, &alp) != AE_OK) {
+   if (sge_gdi2_setup(&ctx, QRSUB, MAIN_THREAD, &alp) != AE_OK) {
       answer_list_output(&alp);
       goto error_exit;
    }

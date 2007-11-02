@@ -53,7 +53,6 @@
 
 
 #include "sge_all_listsL.h"
-#include "sge_gdi.h"
 #include "commlib.h"
 #include "sge_answer.h"
 #include "sge_range.h"
@@ -74,7 +73,9 @@
 #include "spool/classic/rw_configuration.h"
 #include "AskForItems.h"
 #include "AskForTime.h"
+
 #include "uti/sge_string.h"
+#include "gdi/sge_gdi.h"
 
 /*-------------------------------------------------------------------------*/
 typedef struct _tCClEntry {

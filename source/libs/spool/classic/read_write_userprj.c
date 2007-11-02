@@ -45,7 +45,6 @@
 
 #include "sge_unistd.h"
 #include "sgermon.h"
-#include "sge_gdi_request.h"
 #include "sge_usageL.h"
 #include "config.h"
 #include "sge_feature.h"

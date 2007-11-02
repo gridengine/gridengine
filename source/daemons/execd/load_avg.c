@@ -41,7 +41,6 @@
 #include "sge_prog.h"
 #include "commlib.h"
 
-#include "sge_gdiP.h"
 #include "job_report_execd.h"
 #include "sge_host.h"
 #include "sge_load_sensor.h"
@@ -62,10 +61,14 @@
 #include "sge_qinstance.h"
 #include "sge_pe.h"
 #include "sge_report.h"
+
 #include "sgeobj/sge_object.h"
+
 #include "uti/sge_bootstrap.h"
+
 #include "gdi/version.h"
 #include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdiP.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"

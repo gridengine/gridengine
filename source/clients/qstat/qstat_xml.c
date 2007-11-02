@@ -39,7 +39,7 @@
 #include "sgermon.h"
 #include "symbols.h"
 #include "sge.h"
-#include "sge_gdi.h"
+#include "gdi/sge_gdi.h"
 #include "sge_time.h"
 #include "sge_log.h"
 #include "sge_stdlib.h"

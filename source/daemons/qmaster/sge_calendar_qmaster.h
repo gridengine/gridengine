@@ -51,5 +51,9 @@ int sge_del_calendar(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, char
 
 void sge_calendar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor);
 
+void
+calendar_initalize_timer(sge_gdi_ctx_class_t *ctx, monitoring_t *monitor);
+
+
 #endif /* __SGE_CALENDAR_QMASTER_H */
 

@@ -576,7 +576,7 @@ int jgdi_init_rmon_ctx(JNIEnv *env, const char* logger, rmon_ctx_t *ctx)
    jgdi_rmon_ctx_t *myctx = NULL;
    
    myctx = (jgdi_rmon_ctx_t*)sge_malloc(sizeof(jgdi_rmon_ctx_t));
-   
+  
    ctx->ctx = myctx;
    ctx->is_loggable = jgdi_rmon_is_loggable;
    ctx->menter = jgdi_rmon_menter;

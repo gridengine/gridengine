@@ -1,5 +1,5 @@
-#ifndef _SCHEDULER_H_
-#define _SCHEDULER_H_
+#ifndef __SGE_SCHED_THREAD_H
+#define __SGE_SCHED_THREAD_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,13 +32,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "evc/sge_event_client.h"
+#include "sge_event_client.h"
+#include "sge_sched_prepare_data.h"
+#include "sge_mirror.h"
 
-/* 
- *  internal interfaces between modules of default scheduler (private)
- */
-
-/* data model default scheduler */
 typedef struct {
    lList *host_list;        /* EH_Type */
    lList *queue_list;       /* QU_Type */
@@ -48,30 +45,41 @@ typedef struct {
    lList *centry_list;      /* CE_Type */
    lList *acl_list;         /* US_Type */
    lList *pe_list;          /* PE_Type */
-   lList *user_list;        /* UU_Type */
+   lList *user_list;        /* UP_Type */
    lList *dept_list;        /* US_Type */
-   lList *project_list;     /* PR_Type */
+   lList *project_list;     /* UP_Type */
    lList *share_tree;       /* STN_Type */
    lList *ckpt_list;        /* CK_Type */
    lList *running_per_user; /* JC_Type */
    lList *hgrp_list;        /* HGRP_Type */
    lList *rqs_list;         /* RQS_Type */
    lList *ar_list;          /* AR_Type */
-} sge_Sdescr_t;
+} scheduler_all_data_t;
 
-/*
- * external interface of default scheduler used schedd framework (public)
- */
+typedef struct {
+   pthread_mutex_t mutex;      /* used for mutual exclusion                         */
+   pthread_cond_t  cond_var;   /* used for waiting                                  */
+   bool            exit;       /* true -> exit event delivery                       */
+   bool            triggered;  /* new events addded, a scheduling run is triggered  */
+   lList           *new_events; /* the storage for new events                       */
+   bool            rebuild_categories;
+   bool            new_global_conf;
+} scheduler_control_t;
 
-typedef int (*default_scheduler_alg_t)(sge_evc_class_t *evc, sge_Sdescr_t *, lList**);
+extern scheduler_control_t Scheduler_Control;
 
-int scheduler(sge_evc_class_t *evc, sge_Sdescr_t *lists, lList **orders);
-
-#ifdef SCHEDULER_SAMPLES
-int my_scheduler(ge_evc_class_t *evc, sge_Sdescr_t *lists, lList **orders);
+#if 0
+void st_start_scheduler_thread(pthread_t *thread, const char* name); 
+void st_shutdown(pthread_t schedd_thread);
 #endif
 
+void st_set_flag_new_global_conf(bool new_value);
+bool st_get_flag_new_global_conf(void);
 
-u_long32 sgeee_get_scheduling_run_id(void);
+int subscribe_scheduler(sge_evc_class_t *evc, sge_where_what_t *where_what);
 
-#endif /* _SCHEDULER_H */
+void *scheduler_thread(void* anArg);
+
+int scheduler_method(sge_evc_class_t *evc, scheduler_all_data_t *lists, lList **order);
+
+#endif /* __SGE_SCHED_THREAD_H */

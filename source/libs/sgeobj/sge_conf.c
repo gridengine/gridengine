@@ -50,7 +50,6 @@
 #include "sge_prog.h"
 #include "setup_path.h"
 #include "sge_usageL.h"
-#include "sge_gdi.h"
 #include "sge_time.h"
 #include "sge_host.h"
 #include "sge_hostname.h"
@@ -59,10 +58,13 @@
 #include "sge_userset.h"
 #include "lck/sge_lock.h"
 
+#include "gdi/sge_gdi.h"
+
 #include "uti/sge_profiling.h"
 #include "uti/config_file.h"
 
 #include "sgeobj/msg_sgeobjlib.h"
+
 
 #define SGE_BIN "bin"
 #define STREESPOOLTIMEDEF 240
@@ -136,8 +138,10 @@ static bool do_authentication = true;
 static bool is_monitor_message = true;
 static bool use_qidle = false;
 static bool disable_reschedule = false;
-static bool prof_message_thrd = false;
+static bool prof_listener_thrd = false;
+static bool prof_worker_thrd = false;
 static bool prof_signal_thrd = false;
+static bool prof_scheduler_thrd = false;
 static bool prof_deliver_thrd = false;
 static bool prof_tevent_thrd = false;
 static bool prof_execd_thrd = false;
@@ -617,8 +621,10 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       simulate_hosts = false;
       simulate_execds = false;
       simulate_jobs = false;
-      prof_message_thrd = false;
+      prof_listener_thrd = false;
+      prof_worker_thrd = false;
       prof_signal_thrd = false;
+      prof_scheduler_thrd = false;
       prof_deliver_thrd = false;
       prof_tevent_thrd = false;
       monitor_time = 0;
@@ -633,7 +639,13 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
          if (parse_bool_param(s, "PROF_SIGNAL", &prof_signal_thrd)) {
             continue;
          }
-         if (parse_bool_param(s, "PROF_MESSAGE", &prof_message_thrd)) {
+         if (parse_bool_param(s, "PROF_SCHEDULER", &prof_scheduler_thrd)) {
+            continue;
+         }
+         if (parse_bool_param(s, "PROF_LISTENER", &prof_listener_thrd)) {
+            continue;
+         }
+         if (parse_bool_param(s, "PROF_WORKER", &prof_worker_thrd)) {
             continue;
          }
          if (parse_bool_param(s, "PROF_DELIVER", &prof_deliver_thrd)) {
@@ -1055,14 +1067,20 @@ void conf_update_thread_profiling(const char *thread_name)
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
    if (thread_name == NULL) {
       set_thread_prof_status_by_name("Signal Thread", prof_signal_thrd);
-      set_thread_prof_status_by_name("Message Thread", prof_message_thrd);
+      set_thread_prof_status_by_name("Scheduler Thread", prof_scheduler_thrd);
+      set_thread_prof_status_by_name("Listener Thread", prof_listener_thrd);
+      set_thread_prof_status_by_name("Worker Thread", prof_worker_thrd);
       set_thread_prof_status_by_name("Deliver Thread", prof_deliver_thrd);
       set_thread_prof_status_by_name("TEvent Thread", prof_tevent_thrd);
    } else {
       if (strcmp(thread_name, "Signal Thread") == 0) {
          set_thread_prof_status_by_name("Signal Thread", prof_signal_thrd);
-      } else if (strcmp(thread_name, "Message Thread") == 0) {
-         set_thread_prof_status_by_name("Message Thread", prof_message_thrd);
+      } else if (strcmp(thread_name, "Scheduler Thread") == 0) {
+         set_thread_prof_status_by_name("Scheduler Thread", prof_scheduler_thrd);
+      } else if (strcmp(thread_name, "Listener Thread") == 0) {
+         set_thread_prof_status_by_name("Listener Thread", prof_listener_thrd);
+      } else if (strcmp(thread_name, "Worker Thread") == 0) {
+         set_thread_prof_status_by_name("Worker Thread", prof_worker_thrd);
       } else if (strcmp(thread_name, "Deliver Thread") == 0) {
          set_thread_prof_status_by_name("Deliver Thread", prof_deliver_thrd);
       } else if (strcmp(thread_name, "TEvent Thread") == 0) {

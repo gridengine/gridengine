@@ -73,7 +73,7 @@
 #include "sge_security.h"
 #include "sge_answer.h"
 #include "sge_var.h"
-#include "sge_gdi.h"
+#include "gdi/sge_gdi.h"
 #include "sge_profiling.h"
 #include "sge_stdio.h"
 #include "sge_mt_init.h"
@@ -82,7 +82,8 @@
 #include "msg_qsh.h"
 #include "msg_common.h"
 #include "sge_hostname.h"
-#include "sge_gdi_ctx.h"
+
+#include "gdi/sge_gdi_ctx.h"
 
 sge_gdi_ctx_class_t *ctx = NULL;
 
@@ -1325,7 +1326,7 @@ int main(int argc, char **argv)
    log_state_set_log_gui(1);
    sge_setup_sig_handlers(my_who);
 
-   if (sge_gdi2_setup(&ctx, my_who, &alp) != AE_OK) {
+   if (sge_gdi2_setup(&ctx, my_who, MAIN_THREAD, &alp) != AE_OK) {
       answer_list_output(&alp);
       SGE_EXIT(NULL, 1);
    }

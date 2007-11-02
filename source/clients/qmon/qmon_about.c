@@ -41,8 +41,9 @@
 #include "sge_feature.h"
 #include "sge_dstring.h"
 #include "sge_prog.h"
-#include "version.h"
-#include "sge_gdi_ctx.h"
+
+#include "gdi/version.h"
+#include "gdi/sge_gdi_ctx.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 

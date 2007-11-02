@@ -34,7 +34,6 @@
 
 #include "basis_types.h"
 
-
 #define MSG_CL_RETVAL_OK                          _MESSAGE(80000, _("no error happened"))
 #define MSG_CL_RETVAL_MALLOC                      _MESSAGE(80001, _("can't allocate memory"))
 #define MSG_CL_RETVAL_PARAMS                      _MESSAGE(80002, _("got unexpected parameters"))

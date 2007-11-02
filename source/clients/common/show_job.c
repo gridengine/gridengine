@@ -32,31 +32,35 @@
 #include <time.h>
 #include <string.h>
 
-#include "sge_all_listsL.h"
-#include "sgermon.h"
-#include "sge_unistd.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_parse_num_par.h"
+
+#include "sched/sge_urgency.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_var.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_ulong.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/cull_parse_util.h"
+#include "sgeobj/sge_mailrec.h"
+
+#include "gdi/sge_gdi.h"
+
 #include "show_job.h"
 #include "parse_qsub.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "cull_parse_util.h"
 #include "get_path.h"
-#include "sge_parse_num_par.h"
-#include "sge_feature.h"
-#include "msg_clients_common.h"
-#include "sge_job.h"
 #include "symbols.h"
-#include "sge_var.h"
-#include "sge_range.h"
-#include "sge_ulong.h"
-#include "sge_centry.h"
-#include "sge_urgency.h"
-#include "sge_cqueue.h"
-#include "sge_qinstance_state.h"
-#include "sge_gdi.h"
-#include "sge_answer.h"
 
-#include "sgeobj/sge_mailrec.h"
+#include "msg_clients_common.h"
 
 static void sge_show_checkpoint(int how, int op);
 static void sge_show_y_n(int op, int how);

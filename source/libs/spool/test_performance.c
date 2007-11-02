@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
       SGE_EXIT(NULL, 1);
    }
    
-   if (sge_gdi2_setup(&ctx, QEVENT, NULL) != AE_OK) {
+   if (sge_gdi2_setup(&ctx, QEVENT, MAIN_THREAD, NULL) != AE_OK) {
       SGE_EXIT((void**)&ctx, 1);
    }
    

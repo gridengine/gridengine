@@ -84,7 +84,8 @@
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_ja_task.h"
-#include "sge_gdi_ctx.h"
+
+#include "gdi/sge_gdi_ctx.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 
@@ -655,7 +656,6 @@ void updateJobList(void)
  
    jl = lSelect("jl", qmonMirrorList(SGE_JOB_LIST), where_unfinished, what);
 
-   /* EB: TODO: get list of CQs instead of Qs */
    ql = lSelect("ql", qmonMirrorList(SGE_CQUEUE_LIST), where_no_template, 
                   what_queue);
    ehl = qmonMirrorList(SGE_EXECHOST_LIST);
@@ -793,7 +793,6 @@ void updateJobList(void)
                lList *ehl = qmonMirrorList(SGE_EXECHOST_LIST);
                lList *cl = qmonMirrorList(SGE_CENTRY_LIST);
                qnm = lGetString(lFirst(ql), JG_qname);
-               /* EB: TODO: find qinstance */
                qep = cqueue_list_locate_qinstance(qmonMirrorList(SGE_CQUEUE_LIST), qnm);
                if (qep) {
                   lList *st = lGetList(qep, QU_suspend_thresholds);

@@ -32,7 +32,7 @@
 
 #include <stdio.h>
 
-#include "version.h"
+#include "gdi/version.h"
 
 const char GDI_VERSION[] = "maintrunk";
 

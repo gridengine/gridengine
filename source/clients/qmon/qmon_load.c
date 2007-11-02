@@ -33,7 +33,7 @@
 #include <Xmt/InputField.h>
 #include <Xmt/Dialogs.h>
 
-#include "sge_gdi.h"
+#include "gdi/sge_gdi.h"
 #include "sge_str.h"
 #include "sge_centry.h"
 

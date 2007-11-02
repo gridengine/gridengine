@@ -39,7 +39,6 @@
 
 #include "sge_unistd.h"
 #include "commlib.h"
-#include "sge_gdi.h"
 #include "sge_answer.h"
 #include "sge_utility.h"
 #include "sge_all_listsL.h"
@@ -47,7 +46,6 @@
 #include "sge_time.h"
 #include "sge_job.h"
 #include "sge_id.h"
-#include "sge_gdi_ctx.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
 #include "qmon_comm.h"
@@ -56,6 +54,9 @@
 #include "qmon_globals.h"
 #include "qm_name.h"
 #include "qmon_init.h"
+
+#include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdi.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 
@@ -235,17 +236,19 @@ lList **answerp
 
    for (i=0; i<XtNumber(QmonMirrorList); i++) {
       if (selector & (1<<i)) {
+         int mode = (current == count) ? SGE_GDI_SEND : SGE_GDI_RECORD;
          current++;
          index = i + 1;
-         QmonMirrorList[index].id = ctx->gdi_multi(ctx, &alp, 
-                                 (current == count) ? SGE_GDI_SEND : SGE_GDI_RECORD,
+         QmonMirrorList[index].id = ctx->gdi_multi(ctx, &alp, mode,
                                  QmonMirrorList[index].type, 
                                  SGE_GDI_GET,
                                  NULL, 
                                  QmonMirrorList[index].where, 
                                  QmonMirrorList[index].what,
-                                 (current == count) ? &mal : NULL, 
                                  &state, true);
+         if (mode == SGE_GDI_SEND) {
+            ctx->gdi_wait(ctx, &alp, &mal, &state);
+         }
          if (QmonMirrorList[index].id == -1)
             goto error;
       }   

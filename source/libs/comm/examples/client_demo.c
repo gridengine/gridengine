@@ -169,7 +169,7 @@ extern int main(int argc, char** argv) {
    setup_signal_handler();
  
    /* setup commlib */
-   cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_OFF, on_communication_log );
+   cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_OFF, on_communication_log);
  
    /* setup commlib error function callback */
    cl_com_set_error_func(on_communication_error);

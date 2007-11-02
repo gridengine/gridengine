@@ -20,13 +20,14 @@
  *  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-/* $VER: $Id: adoc.yy,v 1.1 2001/07/18 11:05:53 root Exp $ */
+/* $VER: $Id: adoc.yy,v 1.2 2007/11/02 18:42:53 ernst Exp $ */
 
 %{
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <unistd.h>
 
 #include "adoc.h"
 #include "libfun.h"

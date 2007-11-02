@@ -46,12 +46,11 @@
 #
 # This script can be called with the following arguments:
 #
-#       start       start qmaster, scheduler or shadowd 
-#       stop        Terminates scheduler and qmaster if we are on the master
-#                   machine.
-#       -qmaster    only starts qmaster and scheduler
+#       start       start qmaster or shadowd 
+#       stop        Terminates qmaster if we are on the master machine.
+#       -qmaster    only starts qmaster 
 #       -shadowd    start shadwod if found in the "shadow_masters" file
-#       -migrate    shuts down qmaster and scheduler if they are running
+#       -migrate    shuts down qmaster if it is running
 #                   on another host and start the daemons on this host
 #
 # If the file "primary_qmaster" in the $SGE_ROOT/$SGE_CELL/common
@@ -441,9 +440,9 @@ usage()
    echo "   (no parameters): start qmaster and execution daemon if applicable"
    echo "   \"start\"        dto."
    echo "   \"stop\"         shutdown local Grid Engine processes and jobs"
-   echo "   \"-qmaster\"     only start/stop qmaster and scheduler (if applicable)"
+   echo "   \"-qmaster\"     only start/stop qmaster (if applicable)"
    echo "   \"-shadowd\"     only start/stop shadowd (if applicable)"   
-   echo "   \"-migrate\"     shutdown qmaster/scheduler if it's running on another"
+   echo "   \"-migrate\"     shutdown qmaster if it's running on another"
    echo "                    host and restart it on this host"
    echo "                    Migration only works if this host is an admin host"
    echo ""
@@ -527,14 +526,14 @@ if [ "$startup" = true ]; then
    primary_qmaster_host=`CheckIfPrimaryQmasterHost $HOST`
 
    if [ $qmaster = true -a $qmaster_host = true -a $migrate_qmaster = true ]; then
-      echo "   qmaster and scheduler running on this host. Will not migrate qmaster."
+      echo "   qmaster running on this host. Will not migrate qmaster."
       exit 1
    fi
 
    if [ $qmaster = true -a $qmaster_host = false -a  \
         \( $primary_qmaster_host = true -o $migrate_qmaster = true \) ]; then
        actual_qmaster_host=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
-       echo "   shutting down qmaster and scheduler on host \"$actual_qmaster_host\" ..."
+       echo "   shutting down qmaster on host \"$actual_qmaster_host\" ..."
        qconf_output=`$bin_dir/qconf -ks 2>&1 | grep "denied"`
        if [ "$qconf_output" != "" ]; then
           echo "   denied: host \"$HOST\" is no admin host."
@@ -591,8 +590,6 @@ if [ "$startup" = true ]; then
       $bin_dir/sge_qmaster
       [ $? -eq 0 -a -d /var/lock/subsys ] && touch /var/lock/subsys/sgemaster >/dev/null 2>&1
       CheckRunningQmaster
-      echo "   starting sge_schedd"
-      $bin_dir/sge_schedd
    elif [ $qmaster = true -a $qmaster_host = false ]; then
       echo
       echo "sge_qmaster didn't start!"
@@ -644,10 +641,6 @@ else
 
    if [ $qmaster = true ]; then
       if [ `CheckIfQmasterHost $HOST` = true ]; then
-         # Send SIGTERM to scheduler
-         echo "   Shutting down Grid Engine scheduler"
-         Shutdown sge_schedd $qmaster_spool_dir/schedd/schedd.pid
-
          # Send SIGTERM to qmaster
          echo "   Shutting down Grid Engine qmaster"
          Shutdown sge_qmaster $qmaster_spool_dir/qmaster.pid

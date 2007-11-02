@@ -34,7 +34,6 @@
 #include <stdlib.h>
 
 #include "sge_unistd.h"
-#include "sge_gdiP.h"
 #include "sge_all_listsL.h"
 #include "usage.h"
 #include "sig_handlers.h"
@@ -48,6 +47,8 @@
 #include "sge_mirror.h"
 #include "sge_event.h"
 #include "sge_answer.h"
+
+#include "gdi/sge_gdiP.h"
 
 
 static sge_callback_result
@@ -86,18 +87,19 @@ int main(int argc, char *argv[])
    sge_setup_sig_handlers(QEVENT);
 
    /* setup event client */
-   cl_err = sge_gdi2_setup(&ctx, QEVENT, &alp);
+   cl_err = sge_gdi2_setup(&ctx, QEVENT, MAIN_THREAD, &alp);
    if (cl_err != AE_OK) {
       answer_list_output(&alp);
       SGE_EXIT((void**)&ctx, 1);
    }
 
-   if (false == sge_gdi2_evc_setup(&evc, ctx, EV_ID_SCHEDD, &alp)) {
+   if (false == sge_gdi2_evc_setup(&evc, ctx, EV_ID_SCHEDD, &alp, NULL, false)) {
       answer_list_output(&alp);
       SGE_EXIT((void**)&ctx, 1);
    }
 
-   sge_mirror_initialize(evc, EV_ID_ANY, "test_sge_mirror", true);
+   sge_mirror_initialize(evc, EV_ID_ANY, "test_sge_mirror", true, 
+                         NULL, NULL, NULL, NULL, NULL);
    sge_mirror_subscribe(evc, SGE_TYPE_ALL, print_event, NULL, NULL, NULL, NULL);
    
    while(!shut_me_down) {

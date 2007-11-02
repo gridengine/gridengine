@@ -68,7 +68,7 @@ static u_long mtype_storage = RMON_NONE;
 #endif
 static FILE* rmon_fp;
 
-static void mwrite(char *message);
+static void mwrite(char *message, const char *thread_name);
 static int set_debug_level_from_env(void);
 static int set_debug_target_from_env(void);
 static void rmon_mprintf_va(int debug_class, const char* fmt, va_list args);
@@ -85,12 +85,15 @@ static rmon_print_callback_func_t rmon_print_callback = NULL;
 
 
 static pthread_key_t rmon_ctx_key;
-
 static pthread_once_t rmon_ctx_key_once = PTHREAD_ONCE_INIT;
-
-
 static void rmon_ctx_key_init(void);
 static void rmon_ctx_key_destroy(void * ctx);
+
+static pthread_key_t rmon_helper_key;
+static pthread_once_t rmon_helper_key_once = PTHREAD_ONCE_INIT;
+static void rmon_helper_key_init(void);
+static void rmon_helper_key_destroy(void * ctx);
+
 
 rmon_ctx_t* rmon_get_thread_ctx(void)
 {
@@ -113,6 +116,32 @@ static void rmon_ctx_key_init(void)
 static void rmon_ctx_key_destroy(void * ctx)
 {
   /* Nothing to destroy */
+}
+
+rmon_helper_t *rmon_get_helper(void)
+{
+   rmon_helper_t *helper = NULL;
+   
+   pthread_once(&rmon_helper_key_once, rmon_helper_key_init);
+
+   helper = pthread_getspecific(rmon_helper_key);
+   if (helper == NULL) {
+      helper = (rmon_helper_t *)malloc(sizeof(rmon_helper_t));
+
+      memset(helper, 0, sizeof(rmon_helper_t));
+      pthread_setspecific(rmon_helper_key, helper);
+   }
+   return helper;
+}
+
+static void rmon_helper_key_init(void)
+{
+   pthread_key_create(&rmon_helper_key, rmon_helper_key_destroy);
+}
+
+static void rmon_helper_key_destroy(void * ctx)
+{
+   free(ctx);
 }
 
 /****** rmon/Introduction ******************************************************
@@ -359,7 +388,7 @@ void rmon_mopen(int *argc, char *argv[], char *programname)
 *
 *******************************************************************************/
 
-void rmon_menter(const char *func)
+void rmon_menter(const char *func, const char *thread_name)
 {
    char msgbuf[RMON_BUF_SIZE];
 #ifdef RMON_USE_CTX
@@ -370,7 +399,7 @@ void rmon_menter(const char *func)
    }
 #endif      
    sprintf(msgbuf, "--> %s() {\n", func);
-   mwrite(msgbuf);
+   mwrite(msgbuf, thread_name);
 } /* rmon_enter() */
 
 
@@ -397,7 +426,7 @@ void rmon_menter(const char *func)
 *     MT-NOTE: 'rmon_mexit()' is MT safe with exceptions. See introduction! 
 *
 *******************************************************************************/
-void rmon_mexit(const char *func, const char *file, int line)
+void rmon_mexit(const char *func, const char *file, int line, const char *thread_name)
 {
    char msgbuf[RMON_BUF_SIZE];
 #ifdef RMON_USE_CTX   
@@ -408,7 +437,7 @@ void rmon_mexit(const char *func, const char *file, int line)
    }
 #endif
    sprintf(msgbuf, "<-- %s() %s %d }\n", func, file, line);
-   mwrite(msgbuf);
+   mwrite(msgbuf, thread_name);
 
 } /* rmon_mexit() */
 
@@ -434,7 +463,7 @@ void rmon_mexit(const char *func, const char *file, int line)
 *     MT-NOTE: 'rmon_mtrace()' is MT safe with exceptions. See introduction! 
 *
 *******************************************************************************/
-void rmon_mtrace(const char *func, const char *file, int line)
+void rmon_mtrace(const char *func, const char *file, int line, const char *thread_name)
 {
    char msgbuf[RMON_BUF_SIZE];
 #ifdef RMON_USE_CTX   
@@ -446,7 +475,7 @@ void rmon_mtrace(const char *func, const char *file, int line)
 #endif      
    strcpy(msgbuf, empty);
    sprintf(&msgbuf[4], "%s:%s:%d\n", func, file, line);
-   mwrite(msgbuf);
+   mwrite(msgbuf, thread_name);
 } /* rmon_mtrace() */
 
 /****** rmon_macros/rmon_mprintf() *********************************************
@@ -512,6 +541,7 @@ void rmon_mprintf_special(const char* fmt, ...) {
 
 static void rmon_mprintf_va(int debug_class, const char* fmt, va_list args) {
    char msgbuf[RMON_BUF_SIZE];
+   rmon_helper_t *helper = NULL;
 #ifdef RMON_USE_CTX   
    rmon_ctx_t *ctx = rmon_get_thread_ctx();
    if (ctx) {
@@ -519,9 +549,14 @@ static void rmon_mprintf_va(int debug_class, const char* fmt, va_list args) {
       return;
    }
 #endif
+   helper = rmon_get_helper();
    strcpy(msgbuf, empty);
    vsnprintf(&msgbuf[4], (RMON_BUF_SIZE) - 10 , fmt, args);
-   mwrite(msgbuf);
+   if ((helper != NULL) && (helper->thread_name != NULL) && (strlen(helper->thread_name) > 0)) {
+      mwrite(msgbuf, helper->thread_name);
+   } else {
+      mwrite(msgbuf, NULL);
+   }
 }
 
 /****** rmon_macros/mwrite() ***************************************************
@@ -551,7 +586,7 @@ static void rmon_mprintf_va(int debug_class, const char* fmt, va_list args) {
 *     MT-NOTE: mingled.
 *
 *******************************************************************************/
-static void mwrite(char *message)
+static void mwrite(char *message, const char *thread_name)
 {
    static u_long traceid = 0;
    unsigned long tmp_pid    = (unsigned long) getpid();
@@ -569,9 +604,12 @@ static void mwrite(char *message)
    }
    RMON_CALLBACK_FUNC_UNLOCK();
 #endif
-   
 
-   fprintf(rmon_fp, "%6ld %6d %ld ", traceid, (int)tmp_pid, (long int)tmp_thread);
+   if (thread_name != NULL) {
+      fprintf(rmon_fp, "%6ld %6d %12.12s ", traceid, (int)tmp_pid, thread_name);
+   } else {
+      fprintf(rmon_fp, "%6ld %6d %ld ", traceid, (int)tmp_pid, (long int)tmp_thread);
+   }
    fprintf(rmon_fp, "%s", message);
    fflush(rmon_fp);
 

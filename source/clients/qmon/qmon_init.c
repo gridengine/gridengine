@@ -48,15 +48,15 @@
 #include <Xmt/Color.h>
 
 #include "commlib.h" 
-#include "sge_gdi.h" 
 #include "sge_prog.h"
 #include "sge_all_listsL.h" 
 #include "sge_log.h"
 #include "sge_unistd.h"
 #include "qm_name.h"
 #include "sge_hostname.h"
-#include "sge_gdiP.h"
 #include "sgeobj/sge_answer.h"
+#include "gdi/sge_gdi.h" 
+#include "gdi/sge_gdiP.h"
 #include "gdi/sge_gdi_ctx.h"
 
 #include "qmon_rmon.h"
@@ -250,7 +250,7 @@ void qmonInitSge(sge_gdi_ctx_class_t **ctx_ref, char *progname, int usage)
       endless_loop = atoi(env_var);
    }
    log_state_set_log_gui(1);
-   error = sge_gdi2_setup(ctx_ref, QMON, &alp);
+   error = sge_gdi2_setup(ctx_ref, QMON, MAIN_THREAD, &alp);
 
    if (*ctx_ref != NULL) {
       ctx = *ctx_ref;

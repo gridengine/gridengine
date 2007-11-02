@@ -29,28 +29,32 @@
  *
  ************************************************************************/
 
-#include "sge.h"
-#include "sgermon.h"
-#include "sge_conf.h"
-#include "sge_log.h"
-#include "sge_gdi.h"
-#include "sge_unistd.h"
+#include "rmon/sgermon.h"
 
-#include "sge_answer.h"
-#include "sge_object.h"
-#include "sge_edit.h"
-#include "sge_hgroup.h"
+#include "uti/sge_log.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_edit.h"
+
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_href.h"
+#include "sgeobj/sge_hgroupL.h"
+
+#include "spool/flatfile/sge_flatfile.h"
+#include "spool/flatfile/sge_flatfile_obj.h"
+
+#include "gdi/sge_gdi.h"
+#include "gdi/sge_gdi_ctx.h"
+
+#include "sge.h"
 #include "sge_hgroup_qconf.h"
-#include "sge_href.h"
-#include "sge_prog.h"
 
 #include "msg_common.h"
 #include "msg_clients_common.h"
 
-#include "spool/flatfile/sge_flatfile.h"
-#include "spool/flatfile/sge_flatfile_obj.h"
-#include "sgeobj/sge_hgroupL.h"
-#include "gdi/sge_gdi_ctx.h"
 
 static void 
 hgroup_list_show_elem(lList *hgroup_list, const char *name, int indent);

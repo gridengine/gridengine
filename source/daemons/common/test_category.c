@@ -668,7 +668,7 @@ int main(int argc, char* argv[])
    int test_counter = 0;
    int failed = 0;
 
-   sge_prof_setup();
+   prof_mt_init();
 
    lInit(nmv);
    

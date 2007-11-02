@@ -1,3 +1,6 @@
+EB-2007-11-02-0: CVS        Created EB_PRE_SAAT_TAG
+---------------------------------------------------
+
 AH-2007-10-31-0: Bugfix:    - reduce amount of queue list copying in scheduler
                             - care for propagation of queue suspension state to
                               jobs in qmaster as to minimize data amount to be 

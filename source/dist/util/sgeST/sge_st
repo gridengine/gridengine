@@ -75,7 +75,7 @@ case $ARCH in
    if [ -z "$2" ]; then
       echo "The service tags are not supported"
    fi  
-   return 0
+   exit 0
    ;;  
 esac
 

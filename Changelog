@@ -1,4 +1,4 @@
-RD-2007-10-21-1: CVS        Created V61ARsnapshot3_TAG
+RD-2007-11-02-0: CVS        Created V61ARsnapshot3_TAG
 ------------------------------------------------------
 
 RD-2007-10-25-0: Bugfix:    - fixed execd reconnect on qmaster migration

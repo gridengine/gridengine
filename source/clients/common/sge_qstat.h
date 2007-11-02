@@ -70,6 +70,8 @@ struct qstat_env_str {
    lList* hgrp_list;
    lList* project_list;
    
+   bool need_queues;
+   
    int (*shut_me_down)(void);
    u_long32 global_showjobs;
    u_long32 global_showqueues;

@@ -2605,9 +2605,6 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
       if (now >= lGetUlong(event_client, EV_next_send_time)) {
          if ((busy_handling == EV_THROTTLE_FLUSH) || !lGetUlong(event_client, EV_busy)) {
             lList *lp = NULL;
-            char *host = NULL;
-            char *commproc = NULL;
-
 
             /* put only pointer in report - dont copy */
             lXchgList(event_client, EV_events, &lp);

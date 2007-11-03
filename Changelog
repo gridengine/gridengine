@@ -1,8 +1,10 @@
-EB-2007-11-02-0: BugFix:    o Disabled qstat enhancement checked in with AH-2007-10-31-0.
+EB-2007-11-03-0: BugFix:    o Fixed bug in event master introduced with EB-2007-11-02-1.
+
+EB-2007-11-02-2: BugFix:    o Disabled qstat enhancement checked in with AH-2007-10-31-0.
                               (qstat -f did not work)
                             o Fixed source/dist/util/sgeST/sge_st which broke installation. 
 
-EB-2007-11-02-0: Enhancem.: o scheduler as a thread in master
+EB-2007-11-02-1: Enhancem.: o scheduler as a thread in master
                             o possibility to use GDI within master threads
                             o hooks for the event/mirror interface to bypass 
                               communication and packing in master threads

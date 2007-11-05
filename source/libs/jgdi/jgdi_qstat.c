@@ -113,6 +113,7 @@ static jgdi_result_t jgdi_qstat_env_init(JNIEnv *env, sge_gdi_ctx_class_t *ctx, 
    qstat_env->ctx = ctx;
    qstat_env->full_listing = QSTAT_DISPLAY_ALL;
    qstat_env->explain_bits = QI_DEFAULT;
+   qstat_env->need_queues = true;
    qstat_env->job_info = 0;
    qstat_env->group_opt = 0;
    qstat_env->queue_state = U_LONG32_MAX;

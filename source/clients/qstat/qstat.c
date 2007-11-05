@@ -453,6 +453,7 @@ u_long32 *isXML
 
    DENTER(TOP_LAYER, "sge_parse_qstat");
 
+   qstat_env->need_queues = false;
    qstat_filter_add_core_attributes(qstat_env);
 
    /* Loop over all options. Only valid options can be in the
@@ -511,6 +512,7 @@ u_long32 *isXML
             qstat_env->full_listing |= QSTAT_DISPLAY_FULL;
             full = 0;
          }
+         qstat_env->need_queues = true;
          continue;
       }
 
@@ -534,12 +536,14 @@ u_long32 *isXML
          u_long32 filter = QI_AMBIGUOUS | QI_ALARM | QI_SUSPEND_ALARM | QI_ERROR;
          qstat_env->explain_bits = qinstance_state_from_string(argstr, &alp, filter);
          qstat_env->full_listing |= QSTAT_DISPLAY_FULL;
+         qstat_env->need_queues = true;
          FREE(argstr);
          continue;
       }
        
       while (parse_string(ppcmdline, "-F", &alp, &argstr)) {
          qstat_env->full_listing |= QSTAT_DISPLAY_QRESOURCES|QSTAT_DISPLAY_FULL;
+         qstat_env->need_queues = true;
          if (argstr) {
             if (qstat_env->qresource_list) {
                lFreeList(&(qstat_env->qresource_list));
@@ -562,6 +566,7 @@ u_long32 *isXML
       if (!qstat_env->qselect_mode ) {
          while (parse_flag(ppcmdline, "-urg", &alp, &full)) {
             qstat_filter_add_urg_attributes(qstat_env); 
+            qstat_env->need_queues = true;
             if (full) {
                qstat_env->full_listing |= QSTAT_DISPLAY_URGENCY;
                full = 0;
@@ -603,6 +608,7 @@ u_long32 *isXML
       while (parse_string(ppcmdline, "-qs", &alp, &argstr)) {
          u_long32 filter = 0xFFFFFFFF;
          qstat_env->queue_state = qinstance_state_from_string(argstr, &alp, filter);
+         qstat_env->need_queues = true;
          FREE(argstr);
          continue;
       }
@@ -610,6 +616,7 @@ u_long32 *isXML
       while (parse_string(ppcmdline, "-l", &alp, &argstr)) {
          qstat_filter_add_l_attributes(qstat_env);
          qstat_env->resource_list = centry_list_parse_from_string(qstat_env->resource_list, argstr, false);
+         qstat_env->need_queues = true;
          FREE(argstr);
          continue;
       }
@@ -620,21 +627,25 @@ u_long32 *isXML
       
       while (parse_multi_stringlist(ppcmdline, "-U", &alp, &(qstat_env->queue_user_list), ST_Type, ST_name)) {
          qstat_filter_add_U_attributes(qstat_env);
+         qstat_env->need_queues = true;
          continue;
       }   
       
       while (parse_multi_stringlist(ppcmdline, "-pe", &alp, &(qstat_env->peref_list), ST_Type, ST_name)) {
          qstat_filter_add_pe_attributes(qstat_env);
+         qstat_env->need_queues = true;
          continue;
       }   
 
       while (parse_multi_stringlist(ppcmdline, "-q", &alp, &(qstat_env->queueref_list), QR_Type, QR_name)) {
          qstat_filter_add_q_attributes(qstat_env);
+         qstat_env->need_queues = true;
          continue;
       }
 
       while (parse_multi_stringlist(ppcmdline, "-g", &alp, &plstringopt, ST_Type, ST_name)) {
          qstat_env->group_opt |= parse_group_options(plstringopt, &alp);
+         qstat_env->need_queues = true;
          lFreeList(&plstringopt);    
          continue;
       }

@@ -669,13 +669,13 @@ static void communication_setup(sge_gdi_ctx_class_t *ctx)
 
    cl_commlib_set_connection_param(cl_com_get_handle(prognames[QMASTER], 1), HEARD_FROM_TIMEOUT, mconf_get_max_unheard());
 
-   /*fetching qmaster_params and begin to parse*/
+   /* fetching qmaster_params and begin to parse */
    qmaster_params = mconf_get_qmaster_params();
 
-   /*updateing the commlib paramterlist with new or changed parameters*/
+   /* updateing the commlib paramterlist with new or changed parameters */
    cl_com_update_parameter_list(qmaster_params);
-
    DPRINTF(("received qmaster_params are: %s\n", qmaster_params));
+   FREE(qmaster_params);
    
    DEXIT;
    return;

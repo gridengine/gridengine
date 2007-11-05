@@ -4817,20 +4817,20 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             set the parameter list values */
          if (crm_message->params != NULL && *crm_message->params != '\0') {
             char* token = NULL;
-            char* sub_token1 = NULL;
-            char* sub_token2 = NULL;
             struct saved_vars_s *context = NULL;
-            struct saved_vars_s *context2 = NULL;
 
             token = sge_strtok_r(crm_message->params, ":", &context);
 
             while (token != NULL) {
-               if (token != NULL) {
-                  sub_token1 = sge_strtok_r(token, "=", &context2);
-                  sub_token2 = sge_strtok_r(NULL, "=", &context2);
-                  cl_com_set_parameter_list_value (sub_token1, sub_token2);
-                  context2 = NULL;
-               }
+               char* sub_token1 = NULL;
+               char* sub_token2 = NULL;
+               struct saved_vars_s *context2 = NULL;
+
+               sub_token1 = sge_strtok_r(token, "=", &context2);
+               sub_token2 = sge_strtok_r(NULL, "=", &context2);
+               cl_com_set_parameter_list_value (sub_token1, sub_token2);
+               sge_free_saved_vars(context2);
+
                token = sge_strtok_r(NULL, ":", &context);
             }
             sge_free_saved_vars(context);

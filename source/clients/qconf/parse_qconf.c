@@ -2267,6 +2267,7 @@ char *argv[]
             lp = lCreateList("host to mod", EH_Type);
             lAppendElem(lp, ep);
             alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
+            lFreeList(&lp);
 
             if (show_answer(alp) == 1) {
                lFreeList(&alp);

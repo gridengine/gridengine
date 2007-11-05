@@ -542,6 +542,7 @@ static int sge_send_receive_gdi2_request(sge_gdi_ctx_class_t *ctx,
       cl_com_get_parameter_list_value("gdi_retries", &gdi_retries);
       if (gdi_retries != NULL) {
          retries = atoi(gdi_retries);
+         FREE(gdi_retries);
          retries++;
       }
 
@@ -550,7 +551,6 @@ static int sge_send_receive_gdi2_request(sge_gdi_ctx_class_t *ctx,
       } 
 
       while (doit <= retries - 1) {
-
          DPRINTF(("calling the sge_get_gdi2_request: %d times\n",retries));
          DPRINTF(("retry: %d\n",doit));
          ret = sge_get_gdi2_request(ctx, commlib_error, rcv_rhost, rcv_commproc, &id, in, gdi_request_mid);
@@ -604,7 +604,6 @@ static int sge_send_receive_gdi2_request(sge_gdi_ctx_class_t *ctx,
          } 
       }
       free(cl_ping);
-      free(gdi_retries);
    }
 
    if (ret) {
@@ -1102,8 +1101,11 @@ gdi2_receive_multi_async(sge_gdi_ctx_class_t* ctx, sge_gdi_request **answer, lLi
 
       cl_com_get_parameter_list_value("cl_ping", &cl_ping);
       cl_com_get_parameter_list_value("gdi_retries", &gdi_retries);
-      retries = atoi(gdi_retries);
-      retries++;
+      if (gdi_retries != NULL) {
+         retries = atoi(gdi_retries);
+         FREE(gdi_retries);
+         retries++;
+      }
 
       if (retries <= 0) {
          doit = retries - 2;
@@ -1163,9 +1165,8 @@ gdi2_receive_multi_async(sge_gdi_ctx_class_t* ctx, sge_gdi_request **answer, lLi
          if (retries > 0) {
             doit++;
          }
-         free(cl_ping);
-         free(gdi_retries);
       }
+      free(cl_ping);
    }
   
    /* process return code */

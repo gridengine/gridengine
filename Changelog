@@ -1,3 +1,6 @@
+JG-2007-11-05-0: Bugfix:    Fixed memory leaks.
+                 Review:    MD
+
 JG-2007-10-31-1: Enhancem.: Raised version to 6.1u3.
 
 JG-2007-10-31-0: Bugfix:    ARCo ju_exit_status should provide means to 

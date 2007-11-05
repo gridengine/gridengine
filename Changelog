@@ -1,3 +1,6 @@
+EB-2007-11-05-1: Bugfix:    o merged missing code concerning JVM instatiation.
+                 Review:    RH
+
 EB-2007-11-05-0: Bugfix:    o Renamed preprocessor variable to enable the JVM thread code to 
                               "ENABLE_JVM_THREAD"
 

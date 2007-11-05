@@ -90,7 +90,7 @@
 
 #include "sge_thread_main.h"
 
-#ifdef ENABLE_JVM_THREAD   
+#ifndef NO_JNI
 
 #include <jni.h>
 
@@ -100,7 +100,7 @@ static int load_libs(JNIEnv *env, jclass main_class);
 
 #endif
 
-#ifdef ENABLE_JVM_THREAD
+#ifndef NO_JNI
 
 #ifdef LINUX
 #ifndef __USE_GNU
@@ -515,6 +515,7 @@ sge_jvm_main(void *arg)
    monitoring_t monitor;
    sge_gdi_ctx_class_t *ctx = NULL;
    bool jvm_started = false;
+   bool do_endlessly = true;
 
    DENTER(TOP_LAYER, "sge_jvm_main");
 
@@ -525,7 +526,7 @@ sge_jvm_main(void *arg)
    set_thread_name(pthread_self(), "JVM Thread");
    conf_update_thread_profiling("JVM Thread");
 
-   while (true) {
+   while (do_endlessly) {
       int execute = 0;
  
       thread_start_stop_profiling();

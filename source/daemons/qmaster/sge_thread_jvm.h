@@ -36,13 +36,7 @@
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdi_packet.h"
 
-#if 0
 #ifndef NO_JNI
-#define ENABLE_JVM_THREAD
-#endif
-#endif
-
-#ifdef ENABLE_JVM_THREAD
 
 void
 sge_jvm_initialize(void);

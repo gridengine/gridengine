@@ -1,3 +1,7 @@
+RH-2007-11-05-0: Bugfix:    o broken build on aix43
+                            o jvm thread is built if NO_JNI is not defined
+                 Review:    AA
+
 AA-2007-11-05-0: Bugfix:    o fix for broken jgdi_qstat due to AH-2007-10-31-0
 
 EB-2007-11-05-1: Bugfix:    o merged missing code concerning JVM instatiation.

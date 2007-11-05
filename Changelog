@@ -1,3 +1,6 @@
+EB-2007-11-05-0: Bugfix:    o Renamed preprocessor variable to enable the JVM thread code to 
+                              "ENABLE_JVM_THREAD"
+
 EB-2007-11-03-0: BugFix:    o Fixed bug in event master introduced with EB-2007-11-02-1.
 
 EB-2007-11-02-2: BugFix:    o Disabled qstat enhancement checked in with AH-2007-10-31-0.

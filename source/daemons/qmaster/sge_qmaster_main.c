@@ -417,7 +417,7 @@ int main(int argc, char* argv[])
 #endif
    sge_listener_initialize(ctx);
    sge_scheduler_initialize();
-#ifdef JVM_THREAD
+#ifdef ENABLE_JVM_THREAD
    sge_jvm_initialize();
 #endif
 
@@ -430,7 +430,7 @@ int main(int argc, char* argv[])
     * Shutdown all threads and shutdown corresponding modules.
     * Order is important!
     */
-#ifdef JVM_THREAD
+#ifdef ENABLE_JVM_THREAD
    sge_jvm_terminate();
 #endif
    sge_scheduler_terminate();

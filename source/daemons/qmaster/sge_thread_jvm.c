@@ -88,7 +88,7 @@
 
 #include "sge_thread_main.h"
 
-#ifdef JVM_THREAD   
+#ifdef ENABLE_JVM_THREAD   
 
 #include <jni.h>
 
@@ -98,7 +98,7 @@ static int load_libs(JNIEnv *env, jclass main_class);
 
 #endif
 
-#ifdef JVM_THREAD
+#ifdef ENABLE_JVM_THREAD
 
 #ifdef LINUX
 #ifndef __USE_GNU

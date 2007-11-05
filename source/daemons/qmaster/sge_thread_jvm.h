@@ -38,11 +38,11 @@
 
 #if 0
 #ifndef NO_JNI
-#define JVM_THREAD
+#define ENABLE_JVM_THREAD
 #endif
 #endif
 
-#ifdef JVM_THREAD
+#ifdef ENABLE_JVM_THREAD
 
 void
 sge_jvm_initialize(void);

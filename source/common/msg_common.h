@@ -600,23 +600,26 @@
 #define MSG_GDI_USAGE_mconf_OPT_HOSTLISTORGLOBAL         "[-mconf [host_list|global]]"
 #define MSG_GDI_UTEXT_mconf_OPT_HOSTLISTORGLOBAL         _MESSAGE(23374, _("modify configurations"))
 
+#define MSG_GDI_USAGE_Mconf_OPT_FILE_LIST                "[-Mconf file_list]"
+#define MSG_GDI_UTEXT_Mconf_OPT_FILE_LIST                _MESSAGE(23375, _("modify configurations from file_list"))
+
 #define MSG_GDI_USAGE_msconf_OPT                         "[-msconf]"
-#define MSG_GDI_UTEXT_msconf_OPT                         _MESSAGE(23375, _("modify scheduler configuration"))
+#define MSG_GDI_UTEXT_msconf_OPT                         _MESSAGE(23376, _("modify scheduler configuration"))
 
 #define MSG_GDI_USAGE_me_OPT_SERVER                      "[-me server]"
-#define MSG_GDI_UTEXT_me_OPT_SERVER                      _MESSAGE(23376, _("modify exec server"))
+#define MSG_GDI_UTEXT_me_OPT_SERVER                      _MESSAGE(23377, _("modify exec server"))
 
 #define MSG_GDI_USAGE_Me_OPT_FNAME                       "[-Me fname]"
-#define MSG_GDI_UTEXT_Me_OPT_FNAME                       _MESSAGE(23377, _("modify exec server from file"))
+#define MSG_GDI_UTEXT_Me_OPT_FNAME                       _MESSAGE(23378, _("modify exec server from file"))
 
 #define MSG_GDI_USAGE_mp_OPT_PE_NAME                     "[-mp pe-name]"  
-#define MSG_GDI_UTEXT_mp_OPT_PE_NAME                     _MESSAGE(23378, _("modify a parallel environment"))
+#define MSG_GDI_UTEXT_mp_OPT_PE_NAME                     _MESSAGE(23379, _("modify a parallel environment"))
 
 #define MSG_GDI_USAGE_Mp_OPT_FNAME                       "[-Mp fname]"
-#define MSG_GDI_UTEXT_Mp_OPT_FNAME                       _MESSAGE(23379, _("modify a parallel environment from file"))
+#define MSG_GDI_UTEXT_Mp_OPT_FNAME                       _MESSAGE(23380, _("modify a parallel environment from file"))
 
 #define MSG_GDI_USAGE_mq_OPT_QUEUE                       "[-mq queue]"
-#define MSG_GDI_UTEXT_mq_OPT_QUEUE                       _MESSAGE(23380, _("modify a queue"))
+#define MSG_GDI_UTEXT_mq_OPT_QUEUE                       _MESSAGE(23381, _("modify a queue"))
 
 #define MSG_GDI_USAGE_Mq_OPT_FNAME                       "[-Mq fname]"
 #define MSG_GDI_UTEXT_Mq_OPT_FNAME                       _MESSAGE(23382, _("modify a queue from file"))

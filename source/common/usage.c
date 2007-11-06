@@ -744,6 +744,10 @@ void sge_usage(u_long32 prog_number, FILE *fp) {
          MSG_GDI_UTEXT_mconf_OPT_HOSTLISTORGLOBAL);
    }
 
+   if (VALID_OPT(Mconf_OPT, prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_Mconf_OPT_FILE_LIST, MSG_GDI_UTEXT_Mconf_OPT_FILE_LIST );
+   }
+
    if (VALID_OPT(me_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_me_OPT_SERVER, MSG_GDI_UTEXT_me_OPT_SERVER);
    }

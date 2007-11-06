@@ -1,3 +1,16 @@
+JG-2007-11-06-0: Bugfix:    Merge from V61_BRANCH of JG-2007-10-30-1:
+                            qstat -ext didn't show the usage of parallel tasks
+                            in the summary view (without -g t)
+                 Bugster:   6391244
+                 Issue:     2419
+                 Review:    RD
+                            Merge from V61_BRANCH of JG-2007-10-31-0:
+                 Bugfix:    ARCo ju_exit_status should provide means to 
+                            recognize the intermediate record.
+                 Bugster:   6621482
+                 Issue:     2416
+                 Review:    RD
+
 JG-2007-10-29-0: Bugfix:    The start_time field was incorrect in intermediate 
                             accounting records.
                  Bugster:   6622842

@@ -1324,8 +1324,7 @@ int queue_name_length
    }
 
    /* is job logically running */
-   running = lGetUlong(jatep, JAT_status)==JRUNNING || 
-      lGetUlong(jatep, JAT_status)==JTRANSFERING;
+   running = lGetUlong(jatep, JAT_status)==JRUNNING || lGetUlong(jatep, JAT_status)==JTRANSFERING;
 
    /* deadline time */
    if (sge_urg) {
@@ -1343,11 +1342,16 @@ int queue_name_length
       lListElem *up, *pe, *task;
       lList *job_usage_list;
       const char *pe_name;
-      
-      if (!master || !strcmp(master, "MASTER"))
+      bool sum_pe_tasks = false;
+
+      if (master == NULL || strcmp(master, "MASTER") == 0) {
+         if (!(group_opt & GROUP_NO_PETASK_GROUPS)) {
+            sum_pe_tasks = true;
+         }
          job_usage_list = lCopyList(NULL, lGetList(jatep, JAT_scaled_usage_list));
-      else
+      } else {
          job_usage_list = lCreateList("", UA_Type);
+      }
 
       /* sum pe-task usage based on queue slots */
       if (job_usage_list) {
@@ -1356,7 +1360,7 @@ int queue_name_length
             lListElem *dst, *src, *ep;
             const char *qname;
 
-            if (!slots ||
+            if (sum_pe_tasks ||
                 (queue_name && 
                  ((ep=lFirst(lGetList(task, PET_granted_destin_identifier_list)))) &&
                  ((qname=lGetString(ep, JG_qname))) &&

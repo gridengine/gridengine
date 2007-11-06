@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_shadowd.8,v $     Last Update: $Date: 2007/09/27 13:25:19 $     Revision: $Revision: 1.9.20.2 $
+.\" $RCSfile: sge_shadowd.8,v $     Last Update: $Date: 2007/11/06 18:18:13 $     Revision: $Revision: 1.9.20.3 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_SHADOWD 8 "$Date: 2007/09/27 13:25:19 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_SHADOWD 8 "$Date: 2007/11/06 18:18:13 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_shadowd \- xxQS_NAMExx shadow master daemon
 .\"
@@ -57,7 +57,7 @@ shared root read/write access to the directory $xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sx
 as well as to the master daemon spool directory
 (by default $xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/spool/qmaster).
 The names of the shadow master hosts need to be contained in the file 
-$xxQS_NAME_Sxx_ROOT/<$xQS_NAME_Sxx_CELL/common/shadow_masters.
+$xxQS_NAME_Sxx_ROOT/$xQS_NAME_Sxx_CELL/common/shadow_masters.
 .\"
 .\"
 .SH RESTRICTIONS

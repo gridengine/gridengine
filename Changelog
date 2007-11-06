@@ -1,3 +1,6 @@
+OJ-2007-11-06-0: Bugfix:    Fixed minor issues in man pages
+                 Review:    
+
 MP-2007-11-06-0: Bugfix:    Fixed the break introcuded in testsuite test from
                             the commit MP-2007-10-24-0
                  Review:    JG

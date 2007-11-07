@@ -57,7 +57,6 @@ QMASTER_SRC = sge_qmaster_threads.c \
               sge_give_jobs.c \
               reschedule.c \
               job_exit.c \
-              sge_packet_qmaster.c \
               sge_host_qmaster.c \
               sge_job_qmaster.c \
               sge_manop_qmaster.c \
@@ -249,9 +248,6 @@ reschedule.o: $(QMASTER_DIR)/reschedule.c
 
 sge_host_qmaster.o: $(QMASTER_DIR)/sge_host_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_host_qmaster.c
-
-sge_packet_qmaster.o: $(QMASTER_DIR)/sge_packet_qmaster.c
-		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_packet_qmaster.c
 
 sge_pe_qmaster.o: $(QMASTER_DIR)/sge_pe_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_pe_qmaster.c

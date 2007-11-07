@@ -153,7 +153,6 @@ sge_timer_register_event_handler(void)
     
    te_register_event_handler(sge_ar_event_handler, TYPE_AR_EVENT);
 
-   te_register_event_handler(sge_process_order_event, TYPE_ORDER_PROCESSING_EVENT);
 
    DRETURN_VOID;
 }

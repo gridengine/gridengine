@@ -408,7 +408,6 @@ int japi_init_mt(dstring *diag)
    /*
    ** TODO: return error reason in diag
    */
-   /* EB: TODO: ST: review with AH */
    gdi_errno = sge_gdi2_setup(&ctx, prog_number, MAIN_THREAD, &alp);
    if ((gdi_errno != AE_OK) && (gdi_errno != AE_ALREADY_SETUP)) {
       answer_to_dstring(lFirst(alp), diag);

@@ -539,7 +539,7 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
    /* TODO: this must be kept for qmaster and should be done in a different
             way (qmaster context) !!! */
    u_long32 me = 0;
-   const char *progname = NULL;
+   const char *threadname = NULL;
    const char *unqualified_hostname = NULL;
    int is_daemonized = 0; 
 
@@ -549,8 +549,7 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
    
    if (ctx != NULL) {
       me = ctx->get_who(ctx);
-      /* EB: TODO: ST: rename variable; increase column length */
-      progname = ctx->get_thread_name(ctx);
+      threadname = ctx->get_thread_name(ctx);
       unqualified_hostname = ctx->get_unqualified_hostname(ctx);
       is_daemonized = ctx->is_daemonized(ctx);
    } else {
@@ -616,7 +615,7 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
       fprintf(stderr, "%s%s\n", levelstring, mesg);
    }
 
-   sge_do_log(me, progname, unqualified_hostname, levelchar, mesg);
+   sge_do_log(me, threadname, unqualified_hostname, levelchar, mesg);
 
    DRETURN(0);
 } /* sge_log() */

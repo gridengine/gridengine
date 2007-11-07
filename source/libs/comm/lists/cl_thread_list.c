@@ -328,7 +328,6 @@ int cl_thread_list_delete_thread_without_join(cl_raw_list_t* list_p, cl_thread_s
    /* unlock thread list */
    if ( (ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
       cl_thread_shutdown(thread);
-      /* EB: TODO: ST: don't do join... */
       cl_thread_join(thread);
       cl_thread_cleanup(thread);
       free(thread); 

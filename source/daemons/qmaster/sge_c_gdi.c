@@ -90,11 +90,10 @@
 #include "uti/sge_bootstrap.h"
 #include "sge_advance_reservation_qmaster.h"
 #include "sge_sched_process_events.h"
+#include "sge_thread_scheduler.h"
 
 #include "gdi/sge_gdi_packet_pb_cull.h"
-
-#include "sge_packet_qmaster.h"
-#include "sge_thread_scheduler.h"
+#include "gdi/sge_gdi_packet.h"
 
 static void
 sge_c_gdi_get(gdi_object_t *ao, sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task, monitoring_t *monitor);

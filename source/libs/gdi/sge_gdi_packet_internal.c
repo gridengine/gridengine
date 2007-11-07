@@ -177,7 +177,7 @@ sge_gdi_packet_create_multi_answer(sge_gdi_ctx_class_t* ctx, lList **answer_list
 *  SEE ALSO
 *     gdi/request_internal/Master_Packet_Queue
 *     gdi/request_internal/sge_gdi_packet_queue_wait_for_new_packet()
-*     gdi/request_internal/sge_gdi_packet_queue_store_notify_wait()
+*     gdi/request_internal/sge_gdi_packet_queue_store_notify()
 *     gdi/request_internal/sge_gdi_packet_broadcast_that_handled()
 *******************************************************************************/
 void
@@ -238,7 +238,7 @@ sge_gdi_packet_wait_till_handled(sge_gdi_packet_class_t *packet)
 *  SEE ALSO
 *     gdi/request_internal/Master_Packet_Queue
 *     gdi/request_internal/sge_gdi_packet_queue_wait_for_new_packet()
-*     gdi/request_internal/sge_gdi_packet_queue_store_notify_wait()
+*     gdi/request_internal/sge_gdi_packet_queue_store_notify()
 *     gdi/request_internal/sge_gdi_packet_wait_till_handled()
 *******************************************************************************/
 void
@@ -332,10 +332,10 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
     * pack packet into packbuffer
     */ 
    /* 
-    * EB: TODO: ST: dry run necessary to calculate initial buffer size?  
-    *    JG told me during review that it might be possible that
+    * EB: TODO: dry run necessary to calculate initial buffer size?  
+    *    JG told me during review of ST that it might be possible that
     *    the dry run to calculate the buffer size might be slower
-    *    than direcly packing. AH or RD might have done tests...
+    *    than direcly packing. RD might have done tests...
     */
    if (ret) {
       size_t size = sge_gdi_packet_get_pb_size(packet);
@@ -573,7 +573,7 @@ sge_gdi_packet_execute_internal(sge_gdi_ctx_class_t* ctx, lList **answer_list,
    /* 
     * append the packet to the packet list of the worker threads
     */
-   sge_gdi_packet_queue_store_notify_wait(&Master_Packet_Queue, packet);
+   sge_gdi_packet_queue_store_notify(&Master_Packet_Queue, packet);
 
 
    DRETURN(ret);

@@ -67,7 +67,7 @@ struct _sge_gdi_packet_queue_class_t {
 extern sge_gdi_packet_queue_class_t Master_Packet_Queue;
 
 void
-sge_gdi_packet_queue_store_notify_wait(sge_gdi_packet_queue_class_t *packet_queue,
+sge_gdi_packet_queue_store_notify(sge_gdi_packet_queue_class_t *packet_queue,
                                        sge_gdi_packet_class_t *packet);
 
 void

@@ -2420,8 +2420,7 @@ static bool ec2_commit_local(sge_evc_class_t *thiz, lList **alpp,
        *  to add may also means to modify
        *  - if this event client is already enrolled at qmaster
        */
-      /* TODO: EB: answer_list is missing! */
-      ret = ((evc_local->mod_func(sge_evc->ec, NULL, "admin_user", "qmaster_host") == STATUS_OK) ? true : false);
+      ret = ((evc_local->mod_func(sge_evc->ec, alpp, "admin_user", "qmaster_host") == STATUS_OK) ? true : false);
 
       if (ret) {
          lSetBool(sge_evc->ec, EV_changed, false);
@@ -2449,7 +2448,6 @@ static bool ec2_ack(sge_evc_class_t *thiz)
    } else {
       local_t *evc_local = &(thiz->ec_local);
 
-      /* EB: TODO: ST: answer_list missing */
       evc_local->ack_func(sge_evc->ec_reg_id, (ev_event) (sge_evc->next_event-1));
    }
    DRETURN(ret);

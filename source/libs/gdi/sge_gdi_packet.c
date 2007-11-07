@@ -134,7 +134,7 @@
 *    "Master_Packet_Queue" is guarded by the funtion calls
 *
 *        sge_gdi_packet_queue_wait_for_new_packet()
-*        sge_gdi_packet_queue_store_notify_wait()
+*        sge_gdi_packet_queue_store_notify()
 *        sge_gdi_packet_queue_wakeup_all_waiting()
 *
 *     Additional synchronisation functions are
@@ -146,6 +146,7 @@
 *     gdi/request_internal/Master_Packet_Queue
 *     gdi/request_internal/sge_gdi_task_create()
 *     gdi/request_internal/sge_gdi_task_free()
+*     gdi/request_internal/sge_gdi_task_get_operation_name()
 *     gdi/request_internal/sge_gdi_packet_append_task()
 *     gdi/request_internal/sge_gdi_packet_broadcast_that_handled()
 *     gdi/request_internal/sge_gdi_packet_create()
@@ -160,7 +161,7 @@
 *     gdi/request_internal/sge_gdi_packet_pack()
 *     gdi/request_internal/sge_gdi_packet_pack_task()
 *     gdi/request_internal/sge_gdi_packet_parse_auth_info()
-*     gdi/request_internal/sge_gdi_packet_queue_store_notify_wait()
+*     gdi/request_internal/sge_gdi_packet_queue_store_notify()
 *     gdi/request_internal/sge_gdi_packet_queue_wait_for_new_packet()
 *     gdi/request_internal/sge_gdi_packet_queue_wakeup_all_waiting()
 *     gdi/request_internal/sge_gdi_packet_unpack()
@@ -239,7 +240,7 @@ sge_gdi_task_verify(sge_gdi_task_class_t * task, lList **answer_list)
    operation = SGE_GDI_GET_OPERATION(task->command);
    list = task->data_list;
    target = task->target;
-   /* EB: TODO: ST: this modification does not work for AR objects why? */
+   /* EB: TODO: this check does not work for AR objects why? */
    if (!list
        && !(operation == SGE_GDI_PERMCHECK || operation == SGE_GDI_GET
             || operation == SGE_GDI_TRIGGER || (operation == SGE_GDI_DEL
@@ -285,7 +286,7 @@ sge_gdi_task_create(sge_gdi_packet_class_t * packet, lList **answer_list,
          task->condition = (((condition != NULL) && (*condition != NULL)) ?
                             lCopyWhere(*condition) : NULL);
          task->enumeration = (((enumeration != NULL) && (*enumeration != NULL)) ?
-             lCopyWhat(*enumeration) : NULL);
+                              lCopyWhat(*enumeration) : NULL);
       } else {
          if ((lp != NULL) && (*lp != NULL)) {
             task->data_list = *lp;
@@ -313,8 +314,12 @@ sge_gdi_task_create(sge_gdi_packet_class_t * packet, lList **answer_list,
          }
       }
       if (do_verify && !sge_gdi_task_verify(task, answer_list)) {
-         if (do_copy == false) {
-            /* EB: TODO: ST: free data */
+         if (do_copy == true) {
+            lFreeList(&(task->data_list));
+            lFreeList(&(task->answer_list));
+            lFreeWhere(&(task->condition));
+            lFreeWhat(&(task->enumeration));
+         } else {
             task->data_list = NULL;
             task->answer_list = NULL;
             task->condition = NULL;
@@ -467,9 +472,8 @@ sge_gdi_packet_create_base(lList **answer_list)
                                  MSG_MEMORY_MALLOCFAILED);
       }
    } else {
-      /* EB: TODO: ST: use msg from common directory */
       answer_list_add_sprintf(answer_list, STATUS_EMALLOC,
-                              ANSWER_QUALITY_ERROR, MSG_MEMORY_MALLOCFAILED);
+                              ANSWER_QUALITY_ERROR, MSG_SGETEXT_NOMEM);
    }
    DRETURN(ret);
 }
@@ -598,6 +602,65 @@ sge_gdi_packet_append_task(sge_gdi_packet_class_t * packet,
    DRETURN(ret);
 }
 
+/****** gdi/request_internal/sge_gdi_task_get_operation_name() ****************
+*  NAME
+*     sge_gdi_task_get_operation_name() -- get command name 
+*
+*  SYNOPSIS
+*     const char * 
+*     sge_gdi_task_get_operation_name(sge_gdi_task_class_t *task) 
+*
+*  FUNCTION
+*     This function returns a string of represending the command type
+*     of a task part of a multi GDI request (e.g the function will return
+*     "GET" when (task->command == SGE_GDI_GET))
+*
+*  INPUTS
+*     sge_gdi_task_class_t *task - gdi task 
+*
+*  RESULT
+*     const char * - string
+*
+*  NOTES
+*     MT-NOTE: sge_gdi_task_get_operation_name() is MT safe 
+*******************************************************************************/
+const char *
+sge_gdi_task_get_operation_name(sge_gdi_task_class_t *task)
+{
+   const char *ret = NULL;
+
+   switch (task->command) {
+      case SGE_GDI_GET:
+         ret = "GET";
+         break;
+      case SGE_GDI_ADD:
+         ret = "ADD";
+         break;
+      case SGE_GDI_DEL:
+         ret = "DEL";
+         break;
+      case SGE_GDI_MOD:
+         ret = "MOD";
+         break;
+      case SGE_GDI_COPY:
+         ret = "COPY";
+         break;
+      case SGE_GDI_TRIGGER:
+         ret = "TRIGGER";
+         break;
+      case SGE_GDI_PERMCHECK:
+         ret = "PERMCHECK";
+         break;
+      case SGE_GDI_REPLACE:
+         ret = "REPLACE";
+         break;
+      default:
+         ret = "???";
+         break;
+   }
+   return ret;
+}
+
 /****** gdi/request_internal/sge_gdi_packet_get_last_task_id() ****************
 *  NAME
 *     sge_gdi_packet_get_last_task_id() -- returns the last used task id
@@ -677,16 +740,17 @@ sge_gdi_packet_free(sge_gdi_packet_class_t ** packet)
    if (packet != NULL && *packet != NULL) {
       sge_gdi_task_class_t *task = NULL;
       sge_gdi_task_class_t *next_task = NULL;
-      int local_ret;
+      int local_ret1;
+      int local_ret2;
 
       next_task = (*packet)->first_task;
       while ((task = next_task) != NULL) {
          next_task = task->next;
          sge_gdi_task_free(&task);
       }
-      /* EB: TODO: ST: free also condition */
-      local_ret = pthread_mutex_destroy(&((*packet)->mutex));
-      if (local_ret != 0) {
+      local_ret1 = pthread_mutex_destroy(&((*packet)->mutex));
+      local_ret2 = pthread_cond_destroy(&((*packet)->cond));
+      if (local_ret1 != 0 || local_ret2 != 0) {
          ret = false;
       }
       (*packet)->host = sge_free((char *) (*packet)->host);

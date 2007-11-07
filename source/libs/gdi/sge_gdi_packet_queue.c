@@ -69,7 +69,7 @@
 *     and synchronize threads. 
 *
 *     Packet producers (listener thread, schedd thread, JVM thread) store 
-*     new packets by calling sge_gdi_packet_queue_store_notify_wait(). 
+*     new packets by calling sge_gdi_packet_queue_store_notify(). 
 *
 *     Packet consumers (worker threads) get incoming packets by calling 
 *     sge_gdi_packet_queue_wait_for_new_packet().
@@ -95,7 +95,7 @@
 *  SEE ALSO
 *     gdi/request_internal/sge_gdi_packet_queue_wait_for_new_packet()
 *     gdi/request_internal/sge_gdi_packet_queue_wakeup_all_waiting()
-*     gdi/request_internal/sge_gdi_packet_queue_store_notify_wait()
+*     gdi/request_internal/sge_gdi_packet_queue_store_notify()
 *     gdi/request_internal/sge_gdi_packet_wait_till_handled()
 *     gdi/request_internal/sge_gdi_packet_broadcast_that_handled()
 *****************************************************************************/
@@ -149,12 +149,12 @@ sge_gdi_packet_queue_wakeup_all_waiting(sge_gdi_packet_queue_class_t *packet_que
    sge_mutex_unlock(PACKET_QUEUE_MUTEX, SGE_FUNC, __LINE__, &(packet_queue->mutex));
 }
 
-/****** gdi/request_internal/sge_gdi_packet_queue_store_notify_wait() **********
+/****** gdi/request_internal/sge_gdi_packet_queue_store_notify() **********
 *  NAME
-*     sge_gdi_packet_queue_store_notify_wait() -- store a new packet and wait 
+*     sge_gdi_packet_queue_store_notify() -- store a new packet and notify 
 *
 *  SYNOPSIS
-*     void sge_gdi_packet_queue_store_notify_wait(
+*     void sge_gdi_packet_queue_store_notify(
 *                                   sge_gdi_packet_queue_class_t *packet_queue, 
 *                                   sge_gdi_packet_class_t *packet) 
 *
@@ -171,19 +171,18 @@ sge_gdi_packet_queue_wakeup_all_waiting(sge_gdi_packet_queue_class_t *packet_que
 *     void - none
 *
 *  NOTES
-*     MT-NOTE: sge_gdi_packet_queue_store_notify_wait() is MT safe 
+*     MT-NOTE: sge_gdi_packet_queue_store_notify() is MT safe 
 *
 *  SEE ALSO
 *     gdi/request_internal/sge_gdi_packet_queue_wait_for_new_packet() 
 *******************************************************************************/
-/* EB: TODO: ST: rename function */
 void
-sge_gdi_packet_queue_store_notify_wait(sge_gdi_packet_queue_class_t *packet_queue,
-                                       sge_gdi_packet_class_t *packet)
+sge_gdi_packet_queue_store_notify(sge_gdi_packet_queue_class_t *packet_queue,
+                                  sge_gdi_packet_class_t *packet)
 {
    cl_thread_settings_t *thread_config = NULL; 
 
-   DENTER(TOP_LAYER, "sge_gdi_packet_queue_store_notify_wait");
+   DENTER(TOP_LAYER, "sge_gdi_packet_queue_store_notify");
 
    thread_config = cl_thread_get_thread_config();
 
@@ -234,13 +233,13 @@ sge_gdi_packet_queue_store_notify_wait(sge_gdi_packet_queue_class_t *packet_queu
 *     functions blocks for maximally WORKER_WAIT_TIME_S seconds and tests 
 *     again if there is a packet available or if the shutdown process has begun.
 *
-*     find more information in sge_gdi_packet_queue_store_notify_wait() and
+*     find more information in sge_gdi_packet_queue_store_notify() and
 *     sge_gdi_packet_queue_wakeup_all_waiting()
 * 
 *      
 * 
 *     the thread is not in the process of terminatiion then the thread will block 
-*     until someone calls either sge_gdi_packet_queue_store_notify_wait() or
+*     until someone calls either sge_gdi_packet_queue_store_notify() or
 *     sge_gdi_packet_queue_wakeup_all_waiting().
 *
 *  INPUTS
@@ -257,7 +256,7 @@ sge_gdi_packet_queue_store_notify_wait(sge_gdi_packet_queue_class_t *packet_queu
 *     MT-NOTE: sge_gdi_packet_queue_wait_for_new_packet() is MT safe 
 *
 *  SEE ALSO
-*     gdi/request_internal/sge_gdi_packet_queue_store_notify_wait()
+*     gdi/request_internal/sge_gdi_packet_queue_store_notify()
 *     gdi/request_internal/sge_gdi_packet_queue_wakeup_all_waiting() 
 *******************************************************************************/
 bool
@@ -275,7 +274,7 @@ sge_gdi_packet_queue_wait_for_new_packet(sge_gdi_packet_queue_class_t *packet_qu
        * Wait until there is a packet in the queue or until we get the information 
        * that shutdown has begun. If none of the events occured then wait
        * that someone calls sge_gdi_packet_queue_wakeup_all_waiting() or
-       * sge_gdi_packet_queue_store_notify_wait()
+       * sge_gdi_packet_queue_store_notify()
        */
       packet_queue->waiting++;
       DPRINTF((SFN" is waiting for packet (packet_queue->waiting = "

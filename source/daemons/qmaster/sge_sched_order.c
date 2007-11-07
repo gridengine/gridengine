@@ -41,6 +41,8 @@
 
 #include "sge_sched_order.h"
 
+#include "msg_common.h"
+
 gdi_request_queue_t Master_Request_Queue = {
    NULL,
    NULL 
@@ -81,12 +83,14 @@ sge_schedd_send_orders(sge_gdi_ctx_class_t *ctx, lList **order_list, lList **ans
                Master_Request_Queue.last = state;
             }
          } else {
-            answer_list_handle_request_answer_list(answer_list, stderr);
+            answer_list_log(answer_list, false);
             ret = false;
          }
       } else {
-         /* EB: TODO: ST: do error handling */
-      }
+         answer_list_add(answer_list, MSG_SGETEXT_NOMEM, STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+         answer_list_log(answer_list, false);
+         ret = false;
+      } 
    }
 
    DRETURN(ret);
@@ -135,8 +139,7 @@ sge_schedd_block_until_oders_processed(sge_gdi_ctx_class_t *ctx,
       sge_gdi_extract_answer(&request_answer_list, SGE_GDI_ADD, SGE_ORDER_LIST,
                              order_id, multi_answer_list, NULL);
       if (request_answer_list != NULL) {
-         /* EB: TODO: ST: put errors into message file */
-         answer_list_handle_request_answer_list(&request_answer_list, stderr);
+         answer_list_log(&request_answer_list, false);
          ret = false;
       }
 

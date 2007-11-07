@@ -389,7 +389,6 @@ int main(int argc, char* argv[])
     * EB: In my opinion the init function should called in
     * sge_deliverer_initialize(). Is it possible to move that call?
     */ 
-   /* EB: TODO: ST: rename deliverer to event_master */
    sge_event_master_init();
 
    sge_setup_qmaster(ctx, argv);
@@ -408,9 +407,9 @@ int main(int argc, char* argv[])
     * Order is important!
     */
    sge_signaler_initialize();
-   /* EB: TODO: ST: exchange timer and deliverer initialize */
-   sge_timer_initialize(ctx, &monitor);
+   /* EB: TODO: ST: rename deliverer to event_master */
    sge_deliverer_initialize(ctx);
+   sge_timer_initialize(ctx, &monitor);
    sge_worker_initialize(ctx);
 #if 0
    sge_test_initialize(ctx);
@@ -439,8 +438,8 @@ int main(int argc, char* argv[])
    sge_test_terminate(ctx);
 #endif
    sge_worker_terminate(ctx);
-   sge_deliverer_terminate();
    sge_timer_terminate();
+   sge_deliverer_terminate();
    sge_signaler_terminate();
 
    /*

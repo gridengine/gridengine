@@ -2545,11 +2545,10 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
       }
      
       /* extract address of event client      */
-      /*Important:                            */
+      /* Important:                           */
       /*   host and commproc have to be freed */
 
       update_func = (event_client_update_func_t) lGetRef(event_client, EV_update_function);
-      /* EB: TODO: ST: host and commproc really needed? */
       if (update_func == NULL) {  
          host = strdup(lGetHost(event_client, EV_host));
          commproc = strdup(lGetString(event_client, EV_commproc));

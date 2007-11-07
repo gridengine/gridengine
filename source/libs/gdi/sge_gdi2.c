@@ -287,7 +287,6 @@ sge_gdi_extract_answer(lList **alpp, u_long32 cmd, u_long32 target, int id,
    DRETURN(true);
 }
 
-/* EB: TODO: ST: add adoc comment describing difference between intern and extern usage */
 lList* sge_gdi2(sge_gdi_ctx_class_t *ctx, u_long32 target, u_long32 cmd, 
                 lList **lpp, lCondition *cp, lEnumeration *enp) 
 {

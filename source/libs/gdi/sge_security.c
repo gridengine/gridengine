@@ -1237,8 +1237,10 @@ sge_gdi_packet_initialize_auth_info(sge_gdi_ctx_class_t *ctx,
 
    DENTER(TOP_LAYER, "sge_gdi_packet_initialize_auth_info");
 
+#if 0
    /* EB: TODO: ST: remove mutex lock */
    sge_mutex_lock(GDI_PACKET_MUTEX, SGE_FUNC, __LINE__, &(packet_handle->mutex));
+#endif
 
    uid = ctx->get_uid(ctx);
    gid = ctx->get_gid(ctx);
@@ -1265,7 +1267,9 @@ sge_gdi_packet_initialize_auth_info(sge_gdi_ctx_class_t *ctx,
       ret = false;
    }  
 
+#if 0
    sge_mutex_unlock(GDI_PACKET_MUTEX, SGE_FUNC, __LINE__, &(packet_handle->mutex));
+#endif
 
    DRETURN(ret);
 }

@@ -43,8 +43,6 @@
 
 #include "msg_daemons_common.h"
 
-/* EB: TODO: ST: remove this file??? */
-
 static int sge_testmode_timeout_value = 0;
 static int sge_testmode_timeout_at_heartbeat = 0;
 

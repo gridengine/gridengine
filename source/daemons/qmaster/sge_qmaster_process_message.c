@@ -466,7 +466,7 @@ do_gdi_packet(sge_gdi_ctx_class_t *ctx, lList **answer_list,
        * Put the packet into the packet queue so that workers can handle it
        * and then wait until the packet is handled
        */
-      sge_gdi_packet_queue_store_notify_wait(&Master_Packet_Queue, packet);
+      sge_gdi_packet_queue_store_notify(&Master_Packet_Queue, packet);
       sge_gdi_packet_wait_till_handled(packet);
 
       /*

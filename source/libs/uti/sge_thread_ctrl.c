@@ -54,7 +54,28 @@ thread_control_t Thread_Control = {
    false
 };
 
-/* EB: TODO: ST: add adoc comments */
+/****** libs/uti/sge_thread_has_shutdown_started() **********************
+*  NAME
+*     sge_thread_has_shutdown_started() -- shutdown in progress? 
+*
+*  SYNOPSIS
+*     bool sge_thread_has_shutdown_started(void) 
+*
+*  FUNCTION
+*     Service function which can be used to check if the executing
+*     component is already shutting down. 
+*
+*  INPUTS
+*     void - NONE
+*
+*  RESULT
+*     bool - is in progress?
+*        true  - yes
+*        false - no
+*
+*  NOTES
+*     MT-NOTE: sge_thread_has_shutdown_started() is MT safe 
+*******************************************************************************/
 bool
 sge_thread_has_shutdown_started(void)
 {
@@ -68,6 +89,32 @@ sge_thread_has_shutdown_started(void)
    return res;
 }
 
+/****** libs/uti/sge_thread_notify_all_waiting() ************************
+*  NAME
+*     sge_thread_notify_all_waiting() -- notify waiting thread 
+*
+*  SYNOPSIS
+*     void sge_thread_notify_all_waiting(void) 
+*
+*  FUNCTION
+*     After the main thread has initialized all needed components and 
+*     threads it waits for a certain condition to be signaled 
+*     (sge_thread_wait_for_signal).
+*     This signal will start the shutdown process of the master.
+*     This function triggers this signal.
+*
+*  INPUTS
+*     void - NONE 
+*
+*  RESULT
+*     void - NONE
+*
+*  NOTES
+*     MT-NOTE: sge_thread_notify_all_waiting() is MT safe 
+*
+*  SEE ALSO
+*     libs/uti/sge_thread_wait_for_signal()
+*******************************************************************************/
 void
 sge_thread_notify_all_waiting(void)
 {
@@ -83,6 +130,29 @@ sge_thread_notify_all_waiting(void)
    DRETURN_VOID;
 }
 
+/****** libs/uti/sge_thread_wait_for_signal() ***************************
+*  NAME
+*     sge_thread_wait_for_signal() -- block current thread till shutdown 
+*
+*  SYNOPSIS
+*     void sge_thread_wait_for_signal(void) 
+*
+*  FUNCTION
+*     A call of this function will block the executing thread until the 
+*     shutdown of the process is triggered via sge_thread_notify_all_waiting()
+*
+*  INPUTS
+*     void - NONE
+*
+*  RESULT
+*     void - NONE
+*
+*  NOTES
+*     MT-NOTE: sge_thread_wait_for_signal() is not MT safe 
+*
+*  SEE ALSO
+*     libs/uti/sge_thread_notify_all_waiting()
+*******************************************************************************/
 void 
 sge_thread_wait_for_signal(void)
 {

@@ -1,3 +1,6 @@
+AH-2007-11-07-0: Bugfix:    EB-2007-11-02-1 broke the schedule file
+                 Review:    EB
+
 EB-2007-11-07-0: Bugfix:    o worked on open TODO's due to review process
                               of for work package EB-2007-11-02-1 
                               (only cleanup)

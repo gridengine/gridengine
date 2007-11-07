@@ -54,6 +54,7 @@
 #include "uti/sge_bootstrap.h"
 #include "uti/setup_path.h"
 #include "uti/sge_os.h"
+#include "uti/sge_stdio.h"
 #include "uti/sge_spool.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_thread_ctrl.h"
@@ -68,6 +69,8 @@
 
 #include "gdi/qm_name.h"
 #include "gdi/sge_security.h"
+
+#include "sched/sge_serf.h"
 
 #include "sge_advance_reservation_qmaster.h"
 #include "sge_sched_process_events.h"
@@ -105,6 +108,71 @@
 
 #define SCHEDULER_TIMEOUT_S 10
 #define SCHEDULER_TIMEOUT_N 0
+
+static char schedule_log_path[SGE_PATH_MAX + 1] = "";
+const char *schedule_log_file = "schedule";
+
+static void schedd_set_serf_log_file(sge_gdi_ctx_class_t *ctx)
+{
+   const char *cell_root = ctx->get_cell_root(ctx);
+
+   DENTER(TOP_LAYER, "set_schedd_serf_log_path");
+
+   if (!*schedule_log_path) {
+      snprintf(schedule_log_path, sizeof(schedule_log_path), "%s/%s/%s", cell_root, "common", schedule_log_file);
+      DPRINTF(("schedule log path >>%s<<\n", schedule_log_path));
+   }
+
+   DRETURN_VOID;
+}
+
+/* MT-NOTE: schedd_serf_record_func() is not MT safe */
+static void
+schedd_serf_record_func(u_long32 job_id, u_long32 ja_taskid, const char *state,
+                        u_long32 start_time, u_long32 end_time,
+                        char level_char, const char *object_name,
+                        const char *name, double utilization)
+{
+   FILE *fp;
+
+   DENTER(TOP_LAYER, "schedd_serf_record_func");
+
+   if (!(fp = fopen(schedule_log_path, "a"))) {
+      DRETURN_VOID;
+   }
+
+   /* a new record */
+   fprintf(fp, sge_U32CFormat":"sge_U32CFormat":%s:"sge_U32CFormat":"
+           sge_U32CFormat":%c:%s:%s:%f\n", sge_u32c(job_id),
+           sge_u32c(ja_taskid), state, sge_u32c(start_time),
+           sge_u32c(end_time - start_time),
+           level_char, object_name, name, utilization);
+   FCLOSE(fp);
+
+   DRETURN_VOID;
+FCLOSE_ERROR:
+   DPRINTF((MSG_FILE_ERRORCLOSEINGXY_SS, schedule_log_path, strerror(errno)));
+   DRETURN_VOID;
+}
+
+/* MT-NOTE: schedd_serf_newline() is not MT safe */
+static void schedd_serf_newline(u_long32 time)
+{
+   FILE *fp;
+
+   DENTER(TOP_LAYER, "schedd_serf_newline");
+   fp = fopen(schedule_log_path, "a");
+   if (fp) {
+      /* well, some kind of new line indicating a new schedule run */
+      fprintf(fp, "::::::::\n");
+      FCLOSE(fp);
+   }
+   DRETURN_VOID;
+FCLOSE_ERROR:
+   DPRINTF((MSG_FILE_ERRORCLOSEINGXY_SS, schedule_log_path, strerror(errno)));
+   DRETURN_VOID;
+}
+
 
 static void
 sge_scheduler_cleanup_monitor(monitoring_t *monitor)
@@ -149,6 +217,7 @@ static void sge_scheduler_wait_for_event(void)
    };
    DEXIT;
 }
+
 
 typedef struct _master_scheduler_class_t master_scheduler_class_t;
         
@@ -337,7 +406,11 @@ sge_scheduler_main(void *arg)
    prof_set_level_name(SGE_PROF_CUSTOM6, "scheduler event loop", NULL);
    prof_set_level_name(SGE_PROF_CUSTOM7, "copy lists", NULL);
    prof_set_level_name(SGE_PROF_SCHEDLIB4, NULL, NULL);
-      
+
+   /* set-up needed for 'schedule' file */
+   serf_init(schedd_serf_record_func, schedd_serf_newline);
+   schedd_set_serf_log_file(ctx);
+
    /* 
     * prepare event client/mirror mechanism 
     */

@@ -1,3 +1,6 @@
+JG-2007-11-08-0: Enhancem.: Updated version to 6.0u12.
+                 Bugfix:    Fixed build for darwin.
+
 JG-2007-11-06-0: Bugfix:    Merge from V61_BRANCH of JG-2007-10-30-1:
                             qstat -ext didn't show the usage of parallel tasks
                             in the summary view (without -g t)

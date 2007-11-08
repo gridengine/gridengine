@@ -992,9 +992,9 @@ case DARWIN_X86:
    set NOERR_CFLAG = "-Wno-error"
    set NOERR_PROTO = "-Wno-strict-prototypes"
    set JAVA_ARCH = ""
-   if ( $BUILDARCH == "darwin" ) then
+   if ( $BUILDARCH == "DARWIN" ) then
       set JAVA_BINDIR = "Commands"
-      set JAVA_INCL = "Versions/1.3.1/Headers"
+      set JAVA_INCL = "../../1.3.1/Headers"
    endif
    set JAVA_SHAREDEXT = ".jnilib"
    unset REL

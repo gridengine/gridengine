@@ -56,6 +56,12 @@
 #include "msg_common.h"
 #include "msg_clients_common.h"
 
+#include "spool/flatfile/sge_flatfile.h"
+#include "spool/flatfile/sge_flatfile_obj.h"
+#include "sgeobj/msg_sgeobjlib.h"
+#include "sge_parse_num_par.h"
+
+
 static bool 
 centry_provide_modify_context(sge_gdi_ctx_class_t *ctx, lListElem **this_elem, lList **answer_list);
 static bool 
@@ -448,6 +454,14 @@ centry_list_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx, lList **this_list, lLi
             const char *name2 = NULL;
             const char *shortcut1 = NULL;
             const char *shortcut2 = NULL;
+           
+            const char *attrname;
+            double dval;
+            char error_msg[200];
+            
+            const char *urgency1 = NULL;
+            const char *urgency2 = NULL;
+
 
             /* Bugfix: Issuezilla 1161
              * Previously it was assumed that name and shortcut would never be
@@ -497,7 +511,32 @@ centry_list_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx, lList **this_list, lLi
                                        name1, shortcut1);
                cont = false;
             } 
-            
+            /* Let's also check if the new urgency is NULL */
+            /* Check first that the entry is not NULL  */
+            urgency1 = lGetString(centry_elem, CE_urgency_weight);
+            urgency2 = lGetString(cmp_elem, CE_urgency_weight);
+
+            if (urgency1 == NULL) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                             ANSWER_QUALITY_ERROR,
+                                             MSG_CENTRY_NULL_URGENCY);
+               DRETURN(false);
+            }
+            else if (urgency2 == NULL) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                              ANSWER_QUALITY_ERROR,
+                                              MSG_CENTRY_NULL_URGENCY);
+                 DRETURN(false);
+            }
+
+            /* Check then that the entry is valid  */
+              error_msg[0] = '\0';
+              attrname = lGetString(centry_elem, CE_name);
+  
+              if(!parse_ulong_val(&dval, NULL, TYPE_DOUBLE, urgency1, error_msg, 199) || !parse_ulong_val(&dval, NULL, TYPE_DOUBLE, urgency2, error_msg, 199)){answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, MSG_INVALID_CENTRY_PARSE_URGENCY_SS, attrname, error_msg);
+                   DRETURN(false);
+              }
+
             cmp_elem = lNext(cmp_elem);
          }
          

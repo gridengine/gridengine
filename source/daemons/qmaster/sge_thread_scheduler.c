@@ -591,24 +591,43 @@ sge_scheduler_main(void *arg)
             {
                lListElem *cqueue = NULL;
 
+               lEnumeration *what_queue3 = NULL;
+
                for_each(cqueue, master_cqueue_list) {
                   lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-                  lListElem *queue = NULL;
+                  lList *t;
 
-                  if (copy.all_queue_list == NULL) {
-                     copy.all_queue_list = lCreateList("qi", lGetListDescr(qinstance_list));
+                  if (!qinstance_list)
+                     continue;
+
+                  /* all_queue_list contains all queue instances with state and full queue name only */
+                  if (!what_queue3)
+                     what_queue3 = lWhat("%T(%I%I)", lGetListDescr(qinstance_list), QU_full_name, QU_state);
+                  t = lSelect("t", qinstance_list, where_what.where_queue, what_queue3);
+                  if (t) {
+                     if (copy.all_queue_list == NULL)
+                        copy.all_queue_list = lCreateList("all", lGetListDescr(t));
+                     lAppendList(copy.all_queue_list, t);
                   }
 
-                  for_each(queue, qinstance_list) {
-                     lListElem *ep = lCopyElem(queue);
-                     lAppendElem(copy.all_queue_list, ep);
+                  t = lSelect("t", qinstance_list, where_what.where_queue, where_what.what_queue2);
+                  if (t) {
+                     if (copy.queue_list == NULL)
+                        copy.queue_list = lCreateList("enabled", lGetListDescr(t));
+                     lAppendList(copy.queue_list, t);
+                  }
+
+                  t = lSelect("t", qinstance_list, where_what.where_queue2, where_what.what_queue2);
+                  if (t) {
+                     if (copy.dis_queue_list == NULL)
+                        copy.dis_queue_list = lCreateList("disabled", lGetListDescr(t));
+                     lAppendList(copy.dis_queue_list, t);
                   }
                }
-               copy.queue_list = lSelect("sel_qi_list", copy.all_queue_list, 
-                                         where_what.where_queue, where_what.what_queue2);
-               copy.dis_queue_list = lSelect("dis_qi_list", copy.all_queue_list, 
-                                             where_what.where_queue2, where_what.what_queue2);
+               if (what_queue3)
+                  lFreeWhat(&what_queue3);
             }
+
             if (sconf_is_job_category_filtering()) {
                copy.job_list = sge_category_job_copy(copy.queue_list, &orders);
             } else {

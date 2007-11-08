@@ -140,10 +140,6 @@ static const int qinstance_field_ids[] = {
    QU_min_cpu_interval,
    QU_notify,
 
-   QU_suspended_on_subordinate,
-   QU_last_suspend_threshold_ckeck,
-   QU_job_cnt,
-   QU_pending_job_cnt,
    QU_pe_list,
    QU_ckpt_list,
 

@@ -1,3 +1,6 @@
+AH-2007-11-08-0: Bugfix:    Part of AH-2007-10-31-0 was lost due to EB-2007-11-02-1
+                 Review:    MD
+
 AH-2007-11-07-1: Bugfix:    EB-2007-11-02-1 broke dtrace monitoring
                  Review:    EB
 

@@ -1864,7 +1864,7 @@ u_long32 isXML
             where = lOrWhere(where, newcp);
       }   
    }
-   what = lWhat("%T(%I%I%I%I%I%I%I%I%I%I%I%I%I->%T(%I)%I%I%I%I%I%I->%T(%I)%I%I%I%I->%T(%I%I%I%I%I))",
+   what = lWhat("%T(%I%I%I%I%I%I%I%I%I%I%I%I%I->%T(%I)%I%I%I%I%I%I->%T(%I)%I%I%I%I->%T(%I%I%I%I%I)%I%I)",
             JB_Type, JB_job_number, JB_exec_file, JB_submission_time, JB_owner,
             JB_uid, JB_group, JB_gid, JB_account, JB_merge_stderr, JB_mail_list,
             JB_notify, JB_job_name, JB_stdout_path_list, PN_Type, PN_path,
@@ -1872,7 +1872,7 @@ u_long32 isXML
             JB_hard_queue_list, JB_soft_queue_list, JB_shell_list, PN_Type,
             PN_path, JB_env_list, JB_job_args, JB_script_file, JB_ja_tasks,
             JAT_Type, JAT_status, JAT_task_number, JAT_scaled_usage_list,
-            JAT_task_list, JAT_message_list); 
+            JAT_task_list, JAT_message_list, JB_context, JB_cwd); 
    /* get job list */
    alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_GET, &jlp, where, what);
    lFreeWhere(&where);

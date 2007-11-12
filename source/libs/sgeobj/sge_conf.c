@@ -35,6 +35,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#ifdef LINUX
+#include <mcheck.h>
+#endif
+
 #include "sge.h"
 #include "basis_types.h"
 #include "sge_conf.h"
@@ -146,6 +150,10 @@ static bool prof_deliver_thrd = false;
 static bool prof_tevent_thrd = false;
 static bool prof_execd_thrd = false;
 static u_long32 monitor_time = 0;
+
+#ifdef LINUX
+static bool enable_mtrace = false;
+#endif
 
 static long ptf_max_priority = -999;
 static long ptf_min_priority = -999;
@@ -607,6 +615,9 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       char* qmaster_params = mconf_get_qmaster_params();
       char* execd_params = mconf_get_execd_params();
       char* reporting_params = mconf_get_reporting_params();
+#ifdef LINUX
+      bool mtrace_before = enable_mtrace;
+#endif
 
       SGE_LOCK(LOCK_MASTER_CONF, LOCK_WRITE);
       forbid_reschedule = false;
@@ -669,6 +680,11 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
          if (parse_bool_param(s, "ENABLE_FORCED_QDEL", &enable_forced_qdel)) {
             continue;
          } 
+#ifdef LINUX
+         if (parse_bool_param(s, "ENABLE_MTRACE", &enable_mtrace)) {
+            continue;
+         }
+#endif
          if (parse_time_param(s, "MONITOR_TIME", &monitor_time)) {
             continue;
          }
@@ -716,7 +732,22 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
       sge_free_saved_vars(conf_context);
       conf_context = NULL;
-      
+     
+#ifdef LINUX
+      /* enable/disable GNU malloc library facility for recording of all 
+         memory allocation/deallocation 
+         requires MALLOC_TRACE in environment (see mtrace(3) under Linux) */
+      if (enable_mtrace != mtrace_before) {
+         if (enable_mtrace == true) {
+            DPRINTF(("ENABLE_MTRACE=true ---> mtrace()\n"));
+            mtrace();
+         } else {
+            DPRINTF(("ENABLE_MTRACE=false ---> muntrace()\n"));
+            muntrace();
+         }
+      }
+#endif
+
       conf_update_thread_profiling(NULL);
 
       /* always initialize to defaults before we check execd_params */

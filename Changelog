@@ -1,3 +1,9 @@
+AH-2007-11-12-0: Enhancem:  Need GNU-lib mtrace()/muntrace() support in qmaster 
+                            for hunt on memory leaks
+                 Bugster:   6627903
+                 Issue:     2426
+                 Review:    HP
+
 MP-2007-11-09-0: Bugfix:    Fixed the break introcuded in testsuite test from
                             the commit MP-2007-10-26-0
                  Review:    JG

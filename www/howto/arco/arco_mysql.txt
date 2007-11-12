@@ -153,24 +153,26 @@ How to Set Up ARCo database:
 
 1. step: Log in to the database as a superuser
 # mysql -u root -p<password>
-2. step: Create user & grant privileges for arco_read, arco_write:
+
+2. step: Create user arco_write:
 
 mysql> GRANT ALL on *.* to 'arco_write'@'<database_host>' identified by '<password>' with GRANT OPTION;
 mysql> GRANT ALL on *.* to 'arco_write'@'%' identified by '<password>' with GRANT OPTION;
 
+3. step: Log in to the database as a arco_write user:
+# mysql -u arco_write -p<password>
+
+4. step: Create arco database:
+mysql> CREATE DATABASE <db_name>;
+
+5. step: Create user arco_read and grant privileges for arco_read:
 mysql> GRANT SELECT,SHOW VIEW on <db_name>.* to 'arco_read'@'<database_host>' identified by '<password>';
 mysql> GRANT SELECT,SHOW VIEW on <db_name>.* to 'arco_read'@'%' identified by '<password>';
 
 Note: 'arco_read'@'%' have to be created. If the MySQL database host is the same as the host where 
 the Java Web Console with ARCo is running, you need to create also a user 'arco_read'@'<database_host>'.
  
-3. step: Log in to the database as a arco_write user:
-# mysql -u arco_write -p<password>
-
-4. step: Create arco database:
-mysql> CREATE DATABASE ARCO;
-
-5. step: Copy the mysql jdbc driver into the $SGE_ROOT/dbwriter/lib/ and $SGE_ROOT/reporting/WEB-INF/lib/
+6. step: Copy the mysql jdbc driver into the $SGE_ROOT/dbwriter/lib/ and $SGE_ROOT/reporting/WEB-INF/lib/
          directories.
 
-6. step: Install the Accounting and Reporting Software
+7. step: Install the Accounting and Reporting Software

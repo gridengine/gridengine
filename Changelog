@@ -1,3 +1,8 @@
+CR-2007-11-14-0: Bugfix:    authuser binary checked real user id not the
+                            effective user id. Problem: Only root could
+                            start this binary.
+                 Review:    RH
+
 AA-2007-11-14-0: Enhancem:  - configuration of jvm thread
                               bootstrap->global/local configuration
                             - shutdown of jvm thread

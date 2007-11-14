@@ -780,8 +780,8 @@
 #define MSG_JOB_ARNOLONGERAVAILABE_U                _MESSAGE(33945, _("the advance reservation "sge_U32CFormat" is no longer available"))
 #define MSG_TRIGGER_NOTSUPPORTED_S                  _MESSAGE(33946, _("thread with name "SFQ" is not supported"))
       
-#define MSG_GDI_KEYSTR_QUESTIONMARK    _MESSAGE(33946, _("Questionmark"))
-#define MSG_GDI_KEYSTR_COMMA           _MESSAGE(33947, _("Comma"))
-#define MSG_GDI_KEYSTR_LENGTH_U        _MESSAGE(33948, _("string is longer than "sge_U32CFormat", this is not allowed for objectnames") )
+#define MSG_GDI_KEYSTR_QUESTIONMARK    _MESSAGE(33947, _("Questionmark"))
+#define MSG_GDI_KEYSTR_COMMA           _MESSAGE(33948, _("Comma"))
+#define MSG_GDI_KEYSTR_LENGTH_U        _MESSAGE(33949, _("string is longer than "sge_U32CFormat", this is not allowed for objectnames") )
 
 #endif

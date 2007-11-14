@@ -1,0 +1,93 @@
+
+/*___INFO__MARK_BEGIN__*/
+/*************************************************************************
+ *
+ *  The Contents of this file are made available subject to the terms of
+ *  the Sun Industry Standards Source License Version 1.2
+ *
+ *  Sun Microsystems Inc., March, 2001
+ *
+ *
+ *  Sun Industry Standards Source License Version 1.2
+ *  =================================================
+ *  The contents of this file are subject to the Sun Industry Standards
+ *  Source License Version 1.2 (the "License"); You may not use this file
+ *  except in compliance with the License. You may obtain a copy of the
+ *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+ *
+ *  Software provided under this License is provided on an "AS IS" basis,
+ *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+ *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+ *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+ *  See the License for the specific provisions governing your rights and
+ *  obligations concerning the Software.
+ *
+ *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ *
+ *   Copyright: 2001 by Sun Microsystems, Inc.
+ *
+ *   All Rights Reserved.
+ *
+ ************************************************************************/
+/*___INFO__MARK_END__*/
+
+/*
+ 
+grant codeBase "file:${java.home}/lib/ext/*" {
+   permission java.security.AllPermission;
+};
+
+grant {
+   permission java.util.PropertyPermission "*", "read";
+};
+
+grant codeBase "file:${java.home}/lib/*" {
+   permission java.util.logging.LoggingPermission "control";
+   permission java.lang.RuntimePermission "shutdownHooks";
+};
+
+
+grant {
+   permission java.util.PropertyPermission "*", "read";
+   permission java.util.logging.LoggingPermission "control";
+   permission java.lang.RuntimePermission "shutdownHooks";
+
+   permission javax.management.MBeanServerPermission "createMBeanServer";
+   permission javax.management.MBeanPermission "*", "*";
+   permission javax.management.MBeanTrustPermission "register";
+   permission java.lang.management.ManagementPermission "monitor";
+   permission java.lang.management.ManagementPermission "control";
+};
+
+grant codeBase "file:${com.sun.grid.jgdi.sgeRoot}/lib/jgdi.jar"  {
+   permission java.net.SocketPermission   "*:1024-", "accept,connect";
+   permission java.lang.RuntimePermission "loadLibrary.jgdi";
+   permission java.lang.RuntimePermission "shutdownHooks";
+   permission java.io.FilePermission      "classes/*", "read";
+   permission java.io.FilePermission      "src/logging.properties", "read";
+   permission javax.security.auth.AuthPermission "createLoginContext.jgdi";
+   permission javax.security.auth.AuthPermission "doAs";
+   permission javax.security.auth.AuthPermission "getSubject";
+   permission java.util.PropertyPermission "*", "read";
+   permission java.util.logging.LoggingPermission "control";
+};
+
+*/
+
+grant {
+   permission java.net.SocketPermission   "*:1024-", "accept,connect";
+   permission java.lang.RuntimePermission "loadLibrary.jgdi";
+   permission java.lang.RuntimePermission "shutdownHooks";
+   permission javax.security.auth.AuthPermission "createLoginContext.jgdi";
+   permission javax.security.auth.AuthPermission "doAs";
+   permission javax.security.auth.AuthPermission "getSubject";
+   permission java.util.PropertyPermission "*", "read";
+   permission java.util.logging.LoggingPermission "control";
+
+   permission javax.management.MBeanServerPermission "createMBeanServer";
+   permission javax.management.MBeanPermission "*", "*";
+   permission javax.management.MBeanTrustPermission "register";
+   permission java.lang.management.ManagementPermission "monitor";
+   permission java.lang.management.ManagementPermission "control";
+   
+};

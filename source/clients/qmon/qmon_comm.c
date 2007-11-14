@@ -236,8 +236,7 @@ lList **answerp
 
    for (i=0; i<XtNumber(QmonMirrorList); i++) {
       if (selector & (1<<i)) {
-         int mode = (current == count) ? SGE_GDI_SEND : SGE_GDI_RECORD;
-         current++;
+         int mode = (++current == count) ? SGE_GDI_SEND : SGE_GDI_RECORD;
          index = i + 1;
          QmonMirrorList[index].id = ctx->gdi_multi(ctx, &alp, mode,
                                  QmonMirrorList[index].type, 
@@ -249,8 +248,9 @@ lList **answerp
          if (mode == SGE_GDI_SEND) {
             ctx->gdi_wait(ctx, &alp, &mal, &state);
          }
-         if (QmonMirrorList[index].id == -1)
+         if (answer_list_has_error(&alp)) {
             goto error;
+         }   
       }   
    }      
 

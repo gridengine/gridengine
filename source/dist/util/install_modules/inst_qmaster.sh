@@ -1,4 +1,4 @@
-#! /bin/sh 
+#!/bin/sh
 #
 # SGE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
 # Scriptname: inst_qmaster.sh
@@ -825,6 +825,12 @@ PrintConf()
    $ECHO "auto_user_delete_time  86400"
    $ECHO "delegated_file_staging false"
    $ECHO "reprioritize           0"
+   if [ "$SGE_JVM_LIB_PATH" != "" ]; then
+      $ECHO "libjvm_path            $SGE_JVM_LIB_PATH"
+   fi
+   if [ "$SGE_ADDITIONAL_JVM_ARGS" != "" ]; then
+      $ECHO "additional_jvm_args            $SGE_ADDITIONAL_JVM_ARGS"
+   fi
 }
 
 
@@ -1016,6 +1022,18 @@ AddJMXFiles() {
       ExecuteAsAdmin cp util/jmxremote.password $jmx_dir/jmxremote.password
       ExecuteAsAdmin chmod 600 $jmx_dir/jmxremote.password
      
+      $INFOTEXT "Adding >jmx/%s< jmx logging configuration" logging.properties
+      ExecuteAsAdmin cp util/logging.properties.template $jmx_dir/logging.properties
+      ExecuteAsAdmin chmod 644 $jmx_dir/logging.properties
+
+      $INFOTEXT "Adding >jmx/%s< java policies configuration" java.policy
+      ExecuteAsAdmin cp util/java.policy.template $jmx_dir/java.policy
+      ExecuteAsAdmin chmod 644 $jmx_dir/java.policy
+
+      $INFOTEXT "Adding >jmx/%s< jaas configuration" jaas.config
+      ExecuteAsAdmin cp util/jaas.config.template $jmx_dir/jaas.config
+      ExecuteAsAdmin chmod 644 $jmx_dir/jaas.config
+
       ExecuteAsAdmin touch /tmp/management.properties.$$
       Execute sed -e "s#@@SGE_JMX_PORT@@#$SGE_JMX_PORT#g" \
                   -e "s#@@SGE_ROOT@@#$SGE_ROOT#g" \
@@ -1025,11 +1043,6 @@ AddJMXFiles() {
       ExecuteAsAdmin chmod $FILEPERM $jmx_dir/management.properties
       $INFOTEXT "Adding >jmx/%s< jmx configuration" management.properties
       
-      ExecuteAsAdmin touch /tmp/logging.properties.$$
-      Execute sed "s#@@MASTER_SPOOL_DIR@@#$QMDIR#g" util/logging.properties.template > /tmp/logging.properties.$$
-      ExecuteAsAdmin mv /tmp/logging.properties.$$ $jmx_dir/logging.properties
-      ExecuteAsAdmin chmod $FILEPERM $jmx_dir/logging.properties
-      $INFOTEXT "Adding >jmx/%s< jmx logging configuration" logging.properties
    fi
 }
 
@@ -1569,81 +1582,264 @@ GetQmasterPort()
 
 }
 
-GetJMXPort() {
-   $INFOTEXT -u "\nGrid Engine JMX MBean server"
-   if [ $AUTO != "true" ]; then
-      $INFOTEXT -ask "y" "n" -def "n" -n \
-           "Enable the JMX MBean server in qmaster (y/n) [n] >> "
-      ret=$?
-      if [ $ret -eq 1 ]; then
-         SGE_JMX_PORT=""
-         $INFOTEXT "\nJMX MBean server in qmaster disabled"
-         $INFOTEXT -wait -n "Hit <RETURN> to continue >> "
-         $CLEAR
-         return
-      fi
+########################################################
+#
+# Version to convert a version string in X.Y.Z-* or
+# X.Y.X_NN format to XYZNN format so can be treated as a
+# number.
+#
+# $1 = version string
+# Returns numerical version
+#
+########################################################
+JavaVersionString2Num () {
+
+   # Minor and micro default to 0 if not specified.
+   major=`echo $1 | awk -F. '{print $1}'`
+   minor=`echo $1 | awk -F. '{print $2}'`
+   if [ ! -n "$minor" ]; then
+      minor="0"
+   fi
+   micro=`echo $1 | awk -F. '{print $3}'`
+   if [ ! -n "$micro" ]; then
+      micro="0"
+   fi
+
+   # The micro version may further be extended to include a patch number.
+   # This is typically of the form <micro>_NN, where NN is the 2-digit
+   # patch number.  However it can also be of the form <micro>-XX, where
+   # XX is some arbitrary non-digit sequence (eg., "rc").  This latter
+   # form is typically used for internal-only release candidates or
+   # development builds.
+   #
+   # For these internal builds, we drop the -XX and assume a patch number 
+   # of "00".  Otherwise, we extract that patch number.
+   #
+   patch="00"
+   dash=`echo $micro | grep "-"`
+   if [ $? -eq 0 ]; then
+      # Must be internal build, so drop the trailing variant.
+      micro=`echo $micro | awk -F- '{print $1}'`
+   fi
+
+   underscore=`echo $micro | grep "_"`
+   if [ $? -eq 0 ]; then
+      # Extract the seperate micro and patch numbers, ignoring anything
+      # after the 2-digit patch.
+      patch=`echo $micro | awk -F_ '{print substr($2, 1, 2)}'`
+      micro=`echo $micro | awk -F_ '{print $1}'`
+   fi
+
+   echo "${major}${minor}${micro}${patch}"
+
+} # versionString2Num
+
+
+#---------------------------------------------------------------------------
+#  SetLibJvmPath
+#
+#     sets the env variable SGE_JVM_LIB_PATH
+SetLibJvmPath() {
+   
+   MIN_JAVA_VERSION=1.5.0
+   NUM_MIN_JAVA_VERSION=`JavaVersionString2Num $MIN_JAVA_VERSION`
+   
+   if [ "$JAVA_HOME" != "" ]; then
+      java_home=$JAVA_HOME
+   else
+      java_home=/usr/java
    fi
    
-   jmx_port_min=1
-   jmx_port_max=65500
-   
-   if [ "$SGE_JMX_PORT" != "" ]; then
-      if [ $SGE_JMX_PORT -ge $jmx_port_min -a $SGE_JMX_PORT -le $jmx_port_max ]; then
-         $INFOTEXT "\nUsing the environment variable\n\n" \
-                   "   \$SGE_JMX_PORT=%s\n\n" \
-                   "as port for JMX MBean server\n\n" $SGE_JMX_PORT
-         $INFOTEXT -log "Using SGE_JMX_PORT >%s<." $SGE_JMX_PORT
-         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-         $CLEAR
-         export SGE_JMX_PORT
-         return
-      else
-         $INFOTEXT "\nThe environment variable\n\n" \
-                   "   \$SGE_JMX_PORT=%s\n\n" \
-                   "has an invalid value (it must be in range %s..%s).\n\n" \
-                   "Please set the environment variable \$SGE_JMX_PORT and restart\n" \
-                   "the installation or configure the service >sge_qmaster<." $SGE_JMX_PORT $jmx_port_min $jmx_port_max
-         $INFOTEXT -log "Your \$SGE_JMX_PORT=%s\n\n" \
-                   "has an invalid value (it must be in range %s..%s).\n\n" \
-                   "Please check your configuration file and restart\n" \
-                   "the installation or configure the service >sge_qmaster<." $SGE_JMX_PORT $jmx_port_min $jmx_port_max
-         if [ $AUTO = "true" ]; then
-            MoveLog
-            exit 1
-         fi
-      fi
-   fi
-   if [ $AUTO = "true" ]; then
-      $CLEAR
-      return
-   fi
-   done=false
-   while [ $done != true ]; do
-      $INFOTEXT -n "Please enter an unused port number for the JMX MBean server >> "
-      INP=`Enter $SGE_JMX_PORT`
-      if [ "$INP" = "" ]; then
-         $INFOTEXT "\nInvalid input. Must be a number."
+   # set JRE_HOME 
+   isdone=false
+   while [ $isdone != true ]; do
+      $INFOTEXT -n "Please enter JAVA_HOME or press enter [%s] >> " "$java_home"
+      INP=`Enter $java_home`
+      if [ "$INP" = "" -a ! -x $INP/bin/java ]; then
+         $INFOTEXT "\nInvalid input. Must be a valid JAVA_HOME path."
          continue
       fi
-      chars=`echo $INP | wc -c`
-      chars=`expr $chars - 1`
-      digits=`expr $INP : "[0-9][0-9]*"`
-      if [ "$chars" != "$digits" ]; then
-         $INFOTEXT "\nInvalid input. Must be a number."
-      elif [ $INP -lt $jmx_port_min -o $INP -gt $jmx_port_max ]; then
-         $INFOTEXT "\nInvalid port number. Must be in range [%s..%s]." $jmx_port_min $jmx_port_max
-      elif [ $INP -le 1024 -a $euid != 0 ]; then
-         $INFOTEXT "\nYou are not user >root<. You need to use a port above 1024."
+      if [ "$INP" = "" -o ! -x $INP/bin/java ]; then
+         $INFOTEXT "\nInvalid input. Must be a valid JAVA_HOME path."
       else
-         done=true
+         java_home=$INP
+         isdone=true
       fi
    done
-   SGE_JMX_PORT=$INP
-   export SGE_JMX_PORT
-   $INFOTEXT "\nUsing port >%s< for Grid Engine JMX MBean server.\n" $SGE_JMX_PORT
-   $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-   $CLEAR
    
+   if [ -d $java_home/jre ]; then
+      java_home=$java_home/jre
+   fi
+
+   JAVA_VERSION=`$java_home/bin/java -version 2>&1 | head -1`
+   JAVA_VERSION=`echo $JAVA_VERSION | awk '{print $3}' | sed -e "s/\"//g"`
+   NUM_JAVA_VERSION=`JavaVersionString2Num $JAVA_VERSION`
+   
+   if [ $NUM_JAVA_VERSION -lt $NUM_MIN_JAVA_VERSION ]; then
+      $INFOTEXT "Warning: Cannot start jvm thread: Invalid java version (%s)), we need %s or higher" $JAVA_VERSION $MIN_JAVA_VERSION
+      return 1
+   fi
+   
+   case $ARCH in
+      sol-sparc64) 
+         jvm_lib_path=$java_home/lib/sparcv9/server/libjvm.so
+         ;;
+      sol-amd64)   
+         jvm_lib_path=$java_home/lib/amd64/server/libjvm.so
+         ;;
+      sol-x86)     
+         jvm_lib_path=$java_home/lib/i386/server/libjvm.so
+         ;;
+      lx*-amd64)   
+         jvm_lib_path=$java_home/lib/amd64/server/libjvm.so
+         ;;
+      lx*-x86)     
+         jvm_lib_path=$java_home/lib/i386/server/libjvm.so
+         ;;
+      darwin-ppc)
+         jvm_lib_path=$java_home/../Libraries/libjvm.dylib
+         ;;
+      darwin-x86)  
+         jvm_lib_path=$java_home/../Libraries/libjvm.dylib
+         ;;
+      *) 
+         $INFOTEXT "Warning: Cannot start jvm thread: Have no java support for $ARCH"
+         return 1
+         ;;
+   esac
+   
+   if [ ! -f "$jvm_lib_path" ]; then
+      $INFOTEXT "\nWarning: Cannot start jvm thread: jvm library %s not found" "$jvm_lib_path"
+      return 1
+   fi
+   export jvm_lib_path
+   return 0
+}
+
+#---------------------------------------------------------------------------
+#  GetJMXPort
+#
+#     sets the env variable SGE_LIBJVM_PATH, SGE_ADDITIONAL_JVM_ARGS, SGE_JMX_PORT
+#
+GetJMXPort() {
+
+   $INFOTEXT -u "\nGrid Engine JMX MBean server"
+
+   jmx_port_min=1
+   jmx_port_max=65500
+
+   if [ $AUTO = "true" ]; then
+
+      if [ "$SGE_ENABLE_JMX" = "false" ]; then
+            $INFOTEXT -log "\nJMX MBean server in qmaster disabled"
+      else       
+         if [ ! -f "$SGE_JVM_LIB_PATH" ]; then
+            $INFOTEXT -log "\nWarning: Cannot start jvm thread: jvm library %s not found" "$SGE_JVM_LIB_PATH"
+            MoveLog
+            exit 1
+         else   
+            $INFOTEXT -log "\nUsing jvm library >%s<" "$SGE_JVM_LIB_PATH"
+         fi
+
+         if [ "$SGE_JMX_PORT" != "" ]; then
+            if [ $SGE_JMX_PORT -ge $jmx_port_min -a $SGE_JMX_PORT -le $jmx_port_max ]; then
+               $INFOTEXT -log "Using SGE_JMX_PORT >%s<." $SGE_JMX_PORT
+            else
+               $INFOTEXT -log "Your \$SGE_JMX_PORT=%s\n\n" \
+                         "has an invalid value (it must be in range %s..%s).\n\n" \
+                         "Please check your configuration file and restart\n" \
+                         "the installation or configure the service >sge_qmaster<." $SGE_JMX_PORT $jmx_port_min $jmx_port_max
+               MoveLog
+               exit 1
+            fi
+         fi
+      fi 
+
+   else
+
+      sge_jvm_lib_path=""
+      sge_jmx_port=""
+      sge_additional_jvm_args=""
+      enable_jmx=false
+      alldone=false
+      while [ $alldone = false ]; do
+         $INFOTEXT -ask "y" "n" -def "n" -n \
+              "\nEnable the JMX MBean server in qmaster (y/n) [n] >> "
+         ret=$?
+         if [ $ret -eq 0 ]; then
+            enable_jmx=true
+         else   
+            enable_jmx=false
+         fi   
+
+         if [ "$enable_jmx" = "false" ]; then
+            $INFOTEXT "\nJMX MBean server in qmaster disabled"
+            $INFOTEXT -wait -n "Hit <RETURN> to continue >> "
+            $CLEAR
+            return
+         fi
+
+         $INFOTEXT -e "Please give some basic parameters for JMX MBean server\n" \
+         "We will ask for\n" \
+         "   - JAVA_HOME\n" \
+         "   - additional JVM arguments (optional)\n" \
+         "   - JMX MBean server port\n"
+         
+         # set sge_jvm_lib_path
+         SetLibJvmPath
+         sge_jvm_lib_path=$jvm_lib_path
+
+         # set SGE_ADDITIONAL_JVM_ARGS
+         $INFOTEXT -n "Please enter additional JVM arguments (optional) >> "
+         INP=`Enter "$sge_additional_jvm_args"`
+         sge_additional_jvm_args="$INP"
+
+         done=false
+         while [ $done != true ]; do
+            $INFOTEXT -n "Please enter an unused port number for the JMX MBean server >> "
+            INP=`Enter $sge_jmx_port`
+            if [ "$INP" = "" ]; then
+               $INFOTEXT "\nInvalid input. Must be a number."
+               continue
+            fi
+            chars=`echo $INP | wc -c`
+            chars=`expr $chars - 1`
+            digits=`expr $INP : "[0-9][0-9]*"`
+            if [ "$chars" != "$digits" ]; then
+               $INFOTEXT "\nInvalid input. Must be a number."
+            elif [ $INP -lt $jmx_port_min -o $INP -gt $jmx_port_max ]; then
+               $INFOTEXT "\nInvalid port number. Must be in range [%s..%s]." $jmx_port_min $jmx_port_max
+            elif [ $INP -le 1024 -a $euid != 0 ]; then
+               $INFOTEXT "\nYou are not user >root<. You need to use a port above 1024."
+            else
+               done=true
+            fi
+         done
+         sge_jmx_port=$INP
+
+         # show all parameters and redo if needed
+         $INFOTEXT "\nUsing the following JMX MBean server settings."
+         $INFOTEXT "   libjvm_path              >%s<" "$sge_jvm_lib_path"
+         $INFOTEXT "   Additional JVM arguments >%s<" "$sge_additional_jvm_args"
+         $INFOTEXT "   JMX port                 >%s<\n" "$sge_jmx_port"
+
+         $INFOTEXT -ask "y" "n" -def "y" -n \
+            "Do you want to use these data (y/n) [y] >> "
+         if [ $? = 0 ]; then
+            alldone=true
+            SGE_JVM_LIB_PATH=$sge_jvm_lib_path
+            SGE_ADDITIONAL_JVM_ARGS=$sge_additional_jvm_args
+            SGE_JMX_PORT=$sge_jmx_port
+            export SGE_JVM_LIB_PATH SGE_JMX_PORT SGE_ADDITIONAL_JVM_ARGS
+         else
+            $CLEAR
+         fi
+      done
+   fi
+
+   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
+   $CLEAR
+ 
 }
 
 #-------------------------------------------------------------------------

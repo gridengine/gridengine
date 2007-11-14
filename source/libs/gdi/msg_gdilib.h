@@ -114,7 +114,6 @@
 #define MSG_GDI_SENDINGGDIREQUESTFAILED                  _MESSAGE(43121, _("failed sending gdi request"))
 #define MSG_GDI_RECEIVEGDIREQUESTFAILED                  _MESSAGE(43122, _("failed receiving gdi request"))
 #define MSG_GDI_SIGNALED                                 _MESSAGE(43123, _("signaled"))
-#define MSG_GDI_MEMORY_NOTENOUGHMEMORYFORPACKINGGDIREQUEST        _MESSAGE(43131, _("not enough memory for packing gdi request"))
 #define MSG_GDI_REQUESTFORMATERROR                       _MESSAGE(43124, _("format error while packing gdi request"))
 #define MSG_GDI_UNEXPECTEDERRORWHILEPACKINGGDIREQUEST    _MESSAGE(43125, _("unexpected error while packing gdi request"))
 #define MSG_GDI_ERRORUNPACKINGGDIREQUEST_S               _MESSAGE(43126, _("error unpacking gdi request: "SFN))
@@ -123,6 +122,7 @@
 #define MSG_GDI_SGEGDIFAILED_S                           _MESSAGE(43129, _("sge_gdi on list "SFQ" failed"))
 #define MSG_GDI_GDI_VERIFY_REQUEST_FAILED                _MESSAGE(43130, _("verification of request failed"))
 #define MSG_GDI_MISMATCH_SEND_RECEIVE                    _MESSAGE(43131, _("GDI mismatch"))
+#define MSG_GDI_MEMORY_NOTENOUGHMEMORYFORPACKINGGDIREQUEST        _MESSAGE(43132, _("not enough memory for packing gdi request"))
 
 /**
  * cull/cull_where.c

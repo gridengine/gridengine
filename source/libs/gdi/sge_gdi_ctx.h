@@ -124,7 +124,6 @@ struct sge_gdi_ctx_class_str {
    const char* (*get_groupname)(sge_gdi_ctx_class_t *thiz);
    uid_t (*get_uid)(sge_gdi_ctx_class_t *thiz);
    gid_t (*get_gid)(sge_gdi_ctx_class_t *thiz);
-   const char* (*get_libjvm_path)(sge_gdi_ctx_class_t *thiz);
 
    /* credentials */
    void (*set_private_key)(sge_gdi_ctx_class_t *thiz, const char* pkey);

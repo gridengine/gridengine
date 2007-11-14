@@ -1,3 +1,10 @@
+AA-2007-11-14-0: Enhancem:  - configuration of jvm thread
+                              bootstrap->global/local configuration
+                            - shutdown of jvm thread
+                            - fix for qmon new data fetching
+                            - fix for 100% CPU usage in empty jvm thread
+                 Review:    RH
+
 AH-2007-11-12-0: Enhancem:  Need GNU-lib mtrace()/muntrace() support in qmaster 
                             for hunt on memory leaks
                  Bugster:   6627903

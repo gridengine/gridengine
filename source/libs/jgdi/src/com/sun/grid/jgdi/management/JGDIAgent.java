@@ -29,36 +29,39 @@
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/
-
 package com.sun.grid.jgdi.management;
 
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import javax.management.ObjectName;
 import javax.management.MBeanServer;
 import java.lang.management.ManagementFactory;
 
 import com.sun.grid.jgdi.management.mbeans.JGDIJMX;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 import java.util.logging.Logger;
 
 /**
  * JGDI JMX agent class.
  */
 public class JGDIAgent {
-    
+
     /**
      * Instantiate and register your MBeans.
      */
     public void init(String url) throws Exception {
-        
+
         //TODO Add your MBean registration code here
         this.url = url;
-        logger.log(Level.INFO,"init: " + JGDIAgent.getUrl() + "-----------------------");
-        
+        logger.log(Level.INFO, "init: " + JGDIAgent.getUrl() + "-----------------------");
+
         // Instantiate and register JGDIJMX MBean
         JGDIJMX mbean = new JGDIJMX();
         ObjectName mbeanName = new ObjectName("gridengine:type=JGDI");
         getMBeanServer().registerMBean(mbean, mbeanName);
-        logger.log(Level.INFO,"mbean " + mbeanName + " registered");
+        logger.log(Level.INFO, "mbean " + mbeanName + " registered");
 
     }
     
@@ -72,60 +75,74 @@ public class JGDIAgent {
         }
         return singleton;
     }
-    
+
     public static String getUrl() {
         return url;
     }
-    
+
     public MBeanServer getMBeanServer() {
         return mbs;
     }
     
     // Platform MBeanServer used to register your MBeans
     private final MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-    
     // Singleton instance
-    private static JGDIAgent singleton;
-    
-    // JGDI url string
-    private static String url;
 
+    private static JGDIAgent singleton;
+    // JGDI url string
+
+    private static String url;
     private final static Logger logger = Logger.getLogger(JGDIAgent.class.getName());
-    
-    public static void main(String [] args) {
+
+    public static void main(String[] args) {
         try {
-            if(args.length != 1) {
-                System.err.println("JGDIAgent <jgdi connect url>");
-                System.exit(1);
+            if (args.length != 1) {
+                logger.log(Level.SEVERE, "invalid arguments for JGDIAgent: JGDIAgent <jgdi connect url>");
+                return;
             }
             String sge_url = args[0];
-            
-            // start JGDIAgent
             JGDIAgent agent = JGDIAgent.getDefault(sge_url);
+       
+            waitForShutdown();
+
+            logger.log(Level.INFO, "JGDIAgent shuts down");
             
-            ShutdownHook shutdownHook = new ShutdownHook();
-            Runtime.getRuntime().addShutdownHook(shutdownHook);
-            shutdownHook.waitForShutdown();
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             logger.log(Level.SEVERE, "Unexpected error", ex);
+        } finally {
+            LogManager.getLogManager().reset();
+        }
+
+
+    }
+
+    private static final Lock shutdownLock = new ReentrantLock();
+    private static final Condition shutdownCondition = shutdownLock.newCondition();
+    private static boolean isRunning = true;
+    
+    
+    
+    private static void waitForShutdown() throws InterruptedException {
+        shutdownLock.lock();
+        try {
+            while(isRunning) {
+                shutdownCondition.await();
+            }
+        } finally {
+            shutdownLock.unlock();
         }
     }
     
-    private static class ShutdownHook extends Thread {
-        public void waitForShutdown() throws InterruptedException {
-            synchronized(this) {
-                wait();
-            }
-        }
-
-        @Override
-        public void run() {
-            synchronized(this) {
-                notifyAll();
-            }
+    public static void shutdown() {
+        shutdownLock.lock();
+        try {
+            isRunning = false;
+            shutdownCondition.signalAll();
+        } finally {
+            shutdownLock.unlock();
         }
     }
+    
+    
 }
-
-
 

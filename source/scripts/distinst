@@ -801,12 +801,12 @@ if [ $instcommon = true ]; then
       Execute rm -rf $DEST_SGE_ROOT/util
       MakeDir util
       Execute cp -r dist/util $DEST_SGE_ROOT
-      Execute cp libs/jgdi/util/rmiproxy.policy $DEST_SGE_ROOT/util
+      Execute cp libs/jgdi/util/java.policy.template $DEST_SGE_ROOT/util
       Execute cp libs/jgdi/util/rmiconsole.policy $DEST_SGE_ROOT/util
       Execute cp libs/jgdi/util/jmxremote.access $DEST_SGE_ROOT/util
       Execute cp libs/jgdi/util/jmxremote.password.template $DEST_SGE_ROOT/util/jmxremote.password
       Execute cp libs/jgdi/util/management.properties.template $DEST_SGE_ROOT/util
-      Execute cp libs/jgdi/util/jaas.config $DEST_SGE_ROOT/util
+      Execute cp libs/jgdi/util/jaas.config.template $DEST_SGE_ROOT/util
       Execute cp libs/jgdi/util/logging.properties.template $DEST_SGE_ROOT/util
       if [ $enforce_shlibpath = true ]; then
          Execute grep -v "#ENFORCE_SHLIBPATH#" dist/util/create_settings.sh > $DEST_SGE_ROOT/util/create_settings.sh

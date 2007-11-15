@@ -1,3 +1,6 @@
+EB-2007-11-15-1: Bugfix:    Fixed bug in scheduler (queue selection)
+                            Removed incorrect logging during scheduler initialisation
+
 AA-2007-11-15-0: Enhancem.: problem on sol-amd64, sol-sparc64 jvm_thread
                             -d64 option added in install
                  Review:    CR

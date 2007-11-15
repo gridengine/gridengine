@@ -291,12 +291,12 @@ ensure_valid_what_and_where(sge_where_what_t *where_what)
 
    /* jat */
    if (where_what->what_jat == NULL) {
-      where_what->what_jat = lIntVector2What(JB_Type, jat_nm);
+      where_what->what_jat = lIntVector2What(JAT_Type, jat_nm);
    }
 
    /* pet */
    if (where_what->what_pet == NULL) {
-      where_what->what_pet = lIntVector2What(JB_Type, pet_nm);
+      where_what->what_pet = lIntVector2What(PET_Type, pet_nm);
    }
 
    /* qinstances */
@@ -346,12 +346,12 @@ ensure_valid_what_and_where(sge_where_what_t *where_what)
    if (where_what->what_queue2 == NULL) {
       where_what->what_queue2 = lWhat("%T(ALL)", tmp_what_descr);
    }
-   if (where_what->where_all_queue) {
+   if (where_what->where_all_queue == NULL) {
       where_what->where_all_queue = lWhere("%T(%I!=%s)", QU_Type,
             QU_qname, SGE_TEMPLATE_NAME); 
    }
 
-   if (tmp_what_descr != NULL ||
+   if (tmp_what_descr == NULL ||
          where_what->where_acl == NULL || where_what->what_acl == NULL || 
          where_what->what_centry == NULL || where_what->what_cqueue == NULL ||
          where_what->where_dept == NULL || where_what->what_dept == NULL ||

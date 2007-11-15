@@ -123,7 +123,6 @@
 *******************************************************************************/
 void event_update_func(lList **alpp, lList *event_list) 
 {
-   
    DENTER(TOP_LAYER, "event_update_func");
 
    sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &Scheduler_Control.mutex);  
@@ -138,6 +137,8 @@ void event_update_func(lList **alpp, lList *event_list)
    }   
    
    Scheduler_Control.triggered = true;
+
+   DPRINTF(("EVENT UPDATE FUNCTION event_update_func() HAS BEEN TRIGGERED\n"));
 
    sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Scheduler_Control.mutex);
 
@@ -240,8 +241,8 @@ int sge_before_dispatch(sge_evc_class_t *evc)
       bool flush = (interval > 0) ? true : false;
       interval--;
       if (evc->ec_get_flush(evc, sgeE_JOB_DEL) != interval) {
-         evc->ec_set_flush(evc, sgeE_JOB_DEL,flush, interval);
-         evc->ec_set_flush(evc, sgeE_JOB_FINAL_USAGE,flush, interval);
+         evc->ec_set_flush(evc, sgeE_JOB_DEL, flush, interval);
+         evc->ec_set_flush(evc, sgeE_JOB_FINAL_USAGE, flush, interval);
          evc->ec_set_flush(evc, sgeE_JATASK_MOD, flush, interval);
          evc->ec_set_flush(evc, sgeE_JATASK_DEL, flush, interval);
       }     

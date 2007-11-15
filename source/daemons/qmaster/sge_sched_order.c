@@ -49,7 +49,7 @@ gdi_request_queue_t Master_Request_Queue = {
 };
 
 bool
-sge_schedd_send_orders(sge_gdi_ctx_class_t *ctx, lList **order_list, lList **answer_list)
+sge_schedd_send_orders(sge_gdi_ctx_class_t *ctx, lList **order_list, lList **answer_list, const char *name)
 {
    bool ret = true;
 

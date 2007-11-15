@@ -451,25 +451,6 @@ sge_scheduler_main(void *arg)
          lList *event_list = NULL;
          int execute = 0;
 
-         /* sleep until we get something to do */
-         sge_mutex_lock("scheduler_thread_cond_mutex", SGE_FUNC, __LINE__, 
-                        &Scheduler_Control.mutex);
-
-         MONITOR_IDLE_TIME(sge_scheduler_wait_for_event(), (&monitor), mconf_get_monitor_time(), 
-                           mconf_is_monitor_message());
-
-         /* taking out the new events */
-         event_list = Scheduler_Control.new_events;
-         Scheduler_Control.new_events = NULL;
-         Scheduler_Control.triggered = false;
-
-         sge_mutex_unlock("scheduler_thread_cond_mutex", SGE_FUNC, __LINE__, 
-                          &Scheduler_Control.mutex);
-         
-
-#if 0
-         thread_start_stop_profiling();
-#else
          if (sconf_get_profiling()) {
             prof_start(SGE_PROF_OTHER, NULL);
             prof_start(SGE_PROF_PACKING, NULL);
@@ -501,8 +482,25 @@ sge_scheduler_main(void *arg)
             prof_stop(SGE_PROF_CUSTOM7, NULL);
             prof_stop(SGE_PROF_SCHEDLIB4, NULL);
          }
-#endif
 
+         sge_mutex_lock("scheduler_thread_cond_mutex", SGE_FUNC, __LINE__, 
+                        &Scheduler_Control.mutex);
+
+         MONITOR_IDLE_TIME(sge_scheduler_wait_for_event(), (&monitor), mconf_get_monitor_time(), 
+                           mconf_is_monitor_message());
+
+         evc->ec_set_busy(evc, 1);
+
+         /* taking out the new events */
+         event_list = Scheduler_Control.new_events;
+         Scheduler_Control.new_events = NULL;
+         Scheduler_Control.triggered = false;
+
+         DPRINTF(("SCHEDULER TAKES FROM QUEUE\n"));
+
+         sge_mutex_unlock("scheduler_thread_cond_mutex", SGE_FUNC, __LINE__, 
+                          &Scheduler_Control.mutex);
+         
          if (event_list != NULL) {
             DPRINTF((SFN" got new events\n", thread_config->thread_name));
 

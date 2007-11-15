@@ -2215,7 +2215,6 @@ static bool ec2_set_busy(sge_evc_class_t *thiz, int busy)
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
    } else {
       lSetUlong(sge_evc->ec, EV_busy, busy);
-
       ret = true;
    }
 

@@ -259,9 +259,9 @@ int scheduler_method(sge_evc_class_t *evc, scheduler_all_data_t *lists, lList **
    remove_immediate_jobs(*(splitted_job_lists[SPLIT_PENDING]),
                          *(splitted_job_lists[SPLIT_RUNNING]), &orders);
 
-   sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders.configOrderList), NULL);
-   sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders.jobStartOrderList), NULL);
-   sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders.pendingOrderList), NULL);
+   sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders.configOrderList), NULL, "C: config orders");
+   sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders.jobStartOrderList), NULL, "C: job start orders");
+   sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders.pendingOrderList), NULL, "C: peding ticket orders");
 
    PROF_START_MEASUREMENT(SGE_PROF_SCHEDLIB4);
    {
@@ -354,9 +354,9 @@ int scheduler_method(sge_evc_class_t *evc, scheduler_all_data_t *lists, lList **
       }
    }
 
-   sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders.configOrderList), NULL);
-   sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders.jobStartOrderList), NULL);
-   sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders.pendingOrderList), NULL);
+   sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders.configOrderList), NULL, "D: config orders");
+   sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders.jobStartOrderList), NULL, "D: job start orders");
+   sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders.pendingOrderList), NULL, "D: pendig ticket orders");
 
    schedd_mes_release();
    schedd_mes_set_logging(0);
@@ -585,9 +585,9 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
                     *(splitted_job_lists[SPLIT_PENDING]),
                     orders);
 
-      sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders->configOrderList), NULL);
-      sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders->jobStartOrderList), NULL);
-      sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders->pendingOrderList), NULL);
+      sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders->configOrderList), NULL, "A: config orders");
+      sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders->jobStartOrderList), NULL, "A: job start orders");
+      sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders->pendingOrderList), NULL, "A: pendig ticket orders");
 
       if (prof_is_active(SGE_PROF_CUSTOM1)) {
          prof_stop_measurement(SGE_PROF_CUSTOM1, NULL);
@@ -832,9 +832,9 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
                   time = (time / 1000000) + (later.tv_sec - now.tv_sec);
 
                   if (time > 0.5) {
-                     sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders->configOrderList), NULL);
-                     sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders->jobStartOrderList), NULL);
-                     sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders->pendingOrderList), NULL);
+                     sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders->configOrderList), NULL, "B: config orders");
+                     sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders->jobStartOrderList), NULL, "B: job start orders");
+                     sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders->pendingOrderList), NULL, "B: pendig ticket orders");
                   }
                }
             }

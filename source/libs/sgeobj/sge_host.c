@@ -58,20 +58,21 @@ host_list_locate(const lList *host_list, const char *hostname)
    lListElem *ret = NULL;
    
    DENTER(TOP_LAYER, "host_list_locate");
-
    if (hostname != NULL && host_list != NULL) {
-      int nm = NoName;
       const lListElem *element = lFirst(host_list);
 
-      if (object_has_type(element, EH_Type)) {
-         nm = object_get_primary_key(EH_Type);
-      } else if (object_has_type(element, AH_Type)) {
-         nm = object_get_primary_key(AH_Type);
-      } else if (object_has_type(element, SH_Type)) {
-         nm = object_get_primary_key(SH_Type);
-      }
+      if (element != NULL) {
+         int nm = NoName;
 
-      ret = lGetElemHost(host_list, nm, hostname);
+         if (object_has_type(element, EH_Type)) {
+            nm = object_get_primary_key(EH_Type);
+         } else if (object_has_type(element, AH_Type)) {
+            nm = object_get_primary_key(AH_Type);
+         } else if (object_has_type(element, SH_Type)) {
+            nm = object_get_primary_key(SH_Type);
+         }
+         ret = lGetElemHost(host_list, nm, hostname);
+      }
    } else {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
    }

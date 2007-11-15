@@ -1109,8 +1109,7 @@
 #define MSG_GDI_USAGE_wc_ar_list_OPT      "wc_ar_list"
 #define MSG_GDI_UTEXT_wc_ar_list_OPT      _MESSAGE(60711, _("delete all advance reservations given in list"))
 #define MSG_PARSE_INVALIDOPTIONARGUMENT   _MESSAGE(60712, _("ERROR! invalid option argument!"))
-
-#define MSG_CANTSPOOL_SS                  _MESSAGE(60712, _("unable to spool "SFN" "SFQ))
+#define MSG_CANTSPOOL_SS                  _MESSAGE(60713, _("unable to spool "SFN" "SFQ))
 
 
 /* =================================================

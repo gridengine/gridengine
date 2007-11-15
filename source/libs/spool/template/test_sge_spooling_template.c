@@ -55,10 +55,6 @@ int main(int argc, char *argv[])
    const lDescr *descr;
    spooling_field *fields;
    const char *filepath;
-
-   dstring queue_str = DSTRING_INIT;
-   dstring copy_str  = DSTRING_INIT;
-
    int i;
    int width;
    char format[100];
@@ -198,9 +194,6 @@ int main(int argc, char *argv[])
 
    /* cleanup */
    lFreeList(&queue_list);
-
-   sge_dstring_free(&queue_str);
-   sge_dstring_free(&copy_str);
 
    fields = spool_free_spooling_fields(fields);
 

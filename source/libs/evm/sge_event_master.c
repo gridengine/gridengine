@@ -852,6 +852,7 @@ sge_event_master_process_mod_event_client(monitoring_t *monitor)
    lListElem *event_client=NULL;
    u_long32 id;
    u_long32 busy;
+   u_long32 busy_handling;
    u_long32 ev_d_time;
    lList *temp_evc_list = NULL;
    lListElem *clio = NULL;
@@ -887,8 +888,9 @@ sge_event_master_process_mod_event_client(monitoring_t *monitor)
       }
 
       /* these parameters can be changed */
-      busy         = lGetUlong(clio, EV_busy);
-      ev_d_time    = lGetUlong(clio, EV_d_time);
+      busy = lGetUlong(clio, EV_busy);
+      ev_d_time = lGetUlong(clio, EV_d_time);
+      busy_handling = lGetUlong(clio, EV_busy_handling);
 
       /* check for validity */
       if (ev_d_time < 1) {
@@ -980,6 +982,11 @@ sge_event_master_process_mod_event_client(monitoring_t *monitor)
       if (busy != lGetUlong(event_client, EV_busy)) {
          lSetUlong(event_client, EV_busy, busy);
       }
+      /* busy_handling changed */
+      if (busy_handling != lGetUlong(event_client, EV_busy_handling)) {
+         lSetUlong(event_client, EV_busy_handling, busy_handling);
+      }
+
       lSetRef(event_client, EV_update_function, lGetRef(clio, EV_update_function));
 
       lSetUlong(event_client, EV_state, EV_connected);
@@ -2108,8 +2115,7 @@ void sge_deliver_events_immediately(u_long32 aClientID)
 
    if ((client = get_event_client(aClientID)) == NULL) {
       ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(aClientID), "deliver events immediately"));
-   }
-   else {
+   } else {
       flush_events(client, 0);
       sge_mutex_lock("event_master_cond_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.cond_mutex);
 /*      Event_Master_Control.is_flush = true;*/
@@ -2726,6 +2732,7 @@ static void flush_events(lListElem *event_client, int interval)
       u_long32 busy_counter = lGetUlong(event_client, EV_busy);
       u_long32 ed_time = lGetUlong(event_client, EV_d_time);
       u_long32 flush_delay_rate = MAX(lGetUlong(event_client, EV_flush_delay), 1);
+
       if (busy_counter >= flush_delay_rate) {
          /* busy counters larger than flush delay cause events being 
             sent out in regular event delivery interval for alive protocol 

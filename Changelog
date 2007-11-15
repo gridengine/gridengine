@@ -1,3 +1,6 @@
+CR-2007-11-15-0: Bugfix:    added chmod for sge_st script in distinst
+                 Review:    AA
+
 EB-2007-11-15-0: Bugfix:    Added error logging.
                             removed unused MSG_ defines
 

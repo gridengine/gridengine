@@ -601,6 +601,21 @@ GetOldFiles()
    fi
 }
 
+# ModifyComplex is used for adding a complex entry. (need for 6.1ux upgrade)
+# we have to add a new complex entry by modifing the complex
+# do a dump with -sc, add entry and modify with -Mc
+UpdModifyComplex()
+{
+   QCONF_DUMP_SC="$SGE_BIN/qconf -sc"
+   QCONF_MOD_SC="$SGE_BIN/qconf -Mc"
+
+   ExecuteAsAdmin $QCONF_DUMP_SC > /tmp/dump_sc_$DATE.txt
+   echo "display_win_gui     dwg        BOOL        ==    YES         NO         0        0" >> /tmp/dump_sc_$DATE.txt
+   ExecuteAsAdmin $QCONF_MOD_SC /tmp/dump_sc_$DATE.txt
+   rm -fR /tmp/dump_sc_$DATE.txt
+}
+
+
 UpdateHints()
 {
    $INFOTEXT -u "Congratulation, your upgrade was successful!"

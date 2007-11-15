@@ -1,3 +1,10 @@
+MD-2007-11-15-0: Bugfix:    o upgrade from 6.0u2 and higher to 6.1u2 and 
+                              higher does not work 
+                 Bugster:   6630268 
+                 Issue:     2428
+                 Changed:   install 
+                 Review:    JG
+
 OJ-2007-11-06-0: Bugfix:    Fixed minor issues in man pages
                  Review:    
 

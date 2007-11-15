@@ -460,9 +460,9 @@ ErrUsage()
 {
    myname=`basename $0`
    $INFOTEXT -e \
-             "Usage: %s -m|-um|-x|-ux [all]|-rccreate|-sm|-usm|-s|-db|-udb|-updatedb \\\n" \
-             "       -upd <sge-root> <sge-cell>|-bup|-rst|-copycerts <host|hostlist>| \\\n" \
-             "       -v [-auto <filename>] | [-winupdate] [-csp] [-resport] [-afs] \\\n" \
+             "Usage: %s -m|-um|-x|-ux [all]|-rccreate|-sm|-usm|-s|-db|-udb|\\\n" \
+             "       -upd|-bup|-rst|-copycerts <host|hostlist>|-v \\\n" \
+             "       [-auto <filename>] | [-winupdate] [-csp] [-resport] [-afs] \\\n" \
              "       [-host <hostname>] [-rsh] [-noremote]\n" \
              "   -m         install qmaster host\n" \
              "   -um        uninstall qmaster host\n" \

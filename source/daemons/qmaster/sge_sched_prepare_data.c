@@ -280,9 +280,6 @@ ensure_valid_what_and_where(sge_where_what_t *where_what)
    if (where_what->where_host == NULL) {
       where_what->where_host = lWhere("%T(!(%Ic=%s))", EH_Type, EH_name, SGE_TEMPLATE_NAME);
    }
-   if (where_what->where_host == NULL) {
-      CRITICAL((SGE_EVENT, MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORHOSTFAILED));
-   }
    if (where_what->what_host == NULL) {
       where_what->what_host = lWhat("%T(ALL)", EH_Type);
    }
@@ -354,12 +351,20 @@ ensure_valid_what_and_where(sge_where_what_t *where_what)
             QU_qname, SGE_TEMPLATE_NAME); 
    }
 
+   if (tmp_what_descr != NULL ||
+         where_what->where_acl == NULL || where_what->what_acl == NULL || 
+         where_what->what_centry == NULL || where_what->what_cqueue == NULL ||
+         where_what->where_dept == NULL || where_what->what_dept == NULL ||
+         where_what->where_host == NULL || where_what->what_host == NULL ||
+         where_what->what_job == NULL || where_what->what_jat == NULL ||
+         where_what->what_pet == NULL || where_what->where_queue == NULL ||
+         where_what->what_queue == NULL || where_what->where_queue2 == NULL ||
+         where_what->what_queue2 == NULL || where_what->where_all_queue == NULL) {
+      CRITICAL((SGE_EVENT, MSG_SCHEDD_UNABLE_TO_SETUP_FILTER));
+   }
    /* cleanup tmp data */
    if (tmp_what_descr != NULL) {
       cull_hash_free_descr(tmp_what_descr);
-#if 0 /* EB: ST: INSURE */
-      tmp_what_descr = NULL;
-#endif
       tmp_what_descr = (lDescr *)sge_free((char *)tmp_what_descr);
    }
    DRETURN_VOID;

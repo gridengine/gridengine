@@ -196,18 +196,7 @@
 ** schedd/sge_schedd.c
 */
 #define MSG_FILE_REDIRECTFILEDESCRIPTORFAILED_I             _MESSAGE(47195, _("can't redirect file descriptor #%d"))
-#define MSG_SCHEDD_STARTSCHEDONMASTERHOST_S                 _MESSAGE(47196, _("please start schedd on same host as qmaster ("SFN")."))
-#define MSG_SCHEDD_CANTGOFURTHER                            _MESSAGE(47197, _("can't go on further"))
-#define MSG_SCHEDD_USERXMUSTBEMANAGERFORSCHEDDULING_S       _MESSAGE(47198, _("user "SFQ" must be manager for scheduling"))
-#define MSG_SCHEDD_HOSTXMUSTBEADMINHOSTFORSCHEDDULING_S     _MESSAGE(47199, _("host "SFQ" must be an admin host for scheduling"))
-#define MSG_SCHEDD_SCHEDD_ABORT_BY_USER                     _MESSAGE(47200, _("abort by user"))
-#define MSG_SCHEDD_ALREADY_RUNNING                          _MESSAGE(47201, _("scheduler already running"))
-
-#define MSG_SCHEDD_CANTINSTALLALGORITHMXUSINGDEFAULT_S      _MESSAGE(47202, _("can't install scheduling algorithm "SFQ" - using \"default\" algorithm"))
-#define MSG_SCHEDD_UNKNOWN                                  _MESSAGE(47203, _("<unknown>"))
-#define MSG_SCHEDD_CANTSWITCHTOADMINUSER                    _MESSAGE(47204, _("can't switch to amin_user"))
-#define MSG_SCHEDD_CANTSTARTUP                              _MESSAGE(47205, _("can't startup schedd"))
-#define MSG_QMASTERMOVEDEXITING_SS                          _MESSAGE(47287, _("qmaster moved from "SFQ" to "SFQ": exiting"))
+#define MSG_SCHEDD_UNKNOWN                                  _MESSAGE(47196, _("<unknown>"))
 
 /* 
 ** schedd/sge_select_queue.c
@@ -224,26 +213,12 @@
 #define MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S         _MESSAGE(47219, _("error: no complex attribute for threshold "SFN))
 #define MSG_SCHEDD_DUETORR                                  _MESSAGE(47220, _(" due to a reservation"))
 #define MSG_SCHEDD_NOMASTERHOST_U                           _MESSAGE(47226, _("no master host for job "sge_U32CFormat))
-#define MSG_SUBORDPOLICYCONFLICT_UUSS                       _MESSAGE(47288, _("Jobs "sge_U32CFormat" & "sge_U32CFormat" dispatched to master/subordinated queues "SFQ"/"SFQ". Suspend on subordinate to occur in same scheduling interval. Policy conflict!"))
-#define MSG_JOBMATCHINGUNEXPECTEDRESULT                     _MESSAGE(47290, _("job matching returned an unexpected result!"))
-
-
-/* 
-** schedd/sge_update_lists.c
-*/ 
-#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORQUEUEFAILED    _MESSAGE(47221, _("ensure_valid_where(): lWhere() for queue failed"))
-#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORALLQUEUESFAILED  _MESSAGE(47222, _("ensure_valid_where(): lWhere() for all queues failed" ))
-#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORHOSTFAILED     _MESSAGE(47223, _("ensure_valid_where(): lWhere() for host failed"))
-#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORDEPTFAILED     _MESSAGE(47224, _("ensure_valid_where(): lWhere() for dept failed"))
-#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORACLFAILED      _MESSAGE(47225, _("ensure_valid_where(): lWhere() for acl failed"))
-#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORJOBFAILED      _MESSAGE(47228, _("ensure_valid_where(): lWhat() for job failed"))
-
-/* 
-** schedd/scheduler.c
-*/ 
-#define MSG_SCHEDD_LOGLIST_QUEUESTEMPORARLYNOTAVAILABLEDROPPED _MESSAGE(47227, _("queues dropped because they are temporarily not available: "))
-#define MSG_SCHEDD_MON_NOPENDJOBSTOPERFORMSCHEDULINGON         _MESSAGE(47229, _("no pending jobs to perform scheduling on"))
-#define MSG_SCHEDD_SHOULDHAVEFINISHED_UUU                      _MESSAGE(47289, _("job "sge_U32CFormat"."sge_U32CFormat" should have finished since "sge_U32CFormat"s"))
+#define MSG_SUBORDPOLICYCONFLICT_UUSS                       _MESSAGE(47227, _("Jobs "sge_U32CFormat" & "sge_U32CFormat" dispatched to master/subordinated queues "SFQ"/"SFQ". Suspend on subordinate to occur in same scheduling interval. Policy conflict!"))
+#define MSG_JOBMATCHINGUNEXPECTEDRESULT                     _MESSAGE(47228, _("job matching returned an unexpected result!"))
+#define MSG_SCHEDD_UNABLE_TO_SETUP_FILTER                   _MESSAGE(47229, _("unable to setup filter objects correctly"))
+#define MSG_SCHEDD_LOGLIST_QUEUESTEMPORARLYNOTAVAILABLEDROPPED _MESSAGE(47230, _("queues dropped because they are temporarily not available: "))
+#define MSG_SCHEDD_MON_NOPENDJOBSTOPERFORMSCHEDULINGON         _MESSAGE(47231, _("no pending jobs to perform scheduling on"))
+#define MSG_SCHEDD_SHOULDHAVEFINISHED_UUU                      _MESSAGE(47232, _("job "sge_U32CFormat"."sge_U32CFormat" should have finished since "sge_U32CFormat"s"))
 
 /* 
 ** schedd/sge.c

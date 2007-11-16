@@ -1,3 +1,6 @@
+JG-2007-11-16-0: CVS:       Created V61u3_TAG
+---------------------------------------------
+
 MD-2007-11-15-0: Bugfix:    o upgrade from 6.0u2 and higher to 6.1u2 and 
                               higher does not work 
                  Bugster:   6630268 
@@ -72,7 +75,7 @@ JG-2007-10-25-0: Bugfix:    Fixed broken build on irix65.
 
 JG-2007-10-24-1: Bugfix:    Long running jobs caused incorrect usage 
                             information from ARCo database.
-                 
+                 Bugster:   6618599
                  Issue:     2414
                  Review:    RD
 

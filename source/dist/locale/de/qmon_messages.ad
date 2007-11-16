@@ -357,6 +357,7 @@ _Messages_.de.Job Args: Auftragsargumente
 _Messages_.de.Job Class [%]: Auftragsklasse [%]
 _Messages_.de.Job Control: Auftragsüberwachung
 _Messages_.de.Job Dependencies: Auftragsabhängigkeiten
+_Messages_.de.Hold Array Dependencies: Haltepunkt Kompakte Auftragsabhängigkeiten
 _Messages_.de.Job Name must not contain / !: Auftragsname darf / nicht enthalten !
 _Messages_.de.Job Name: Auftragsname
 _Messages_.de.Job Range required!: Auftragsbereich erforderlich!

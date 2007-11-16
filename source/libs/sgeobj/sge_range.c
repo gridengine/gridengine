@@ -643,8 +643,7 @@ void range_list_sort_uniq_compress(lList *range_list, lList **answer_list, bool 
        */
       tmp_list = lCreateList("", RN_Type);
       if (tmp_list) {
-         next_range1 = lFirst(range_list);
-         while ((range1 = next_range1)) {
+         for (next_range1 = lFirst(range_list); (range1 = next_range1); next_range1 = lNext(range1)) {
             next_range2 = lNext(next_range1);
             if (correct_end)
                range_correct_end(range1);
@@ -659,7 +658,6 @@ void range_list_sort_uniq_compress(lList *range_list, lList **answer_list, bool 
                   break;
                }
             }
-            next_range1 = lNext(range1);
          }
 
          /*

@@ -161,7 +161,7 @@ switch_list_qstat_parse_from_cmdline(lList **ppcmdline, lList **answer_list,
       if (!qselect_mode && (rp = parse_noopt(sp, "-ne", NULL, ppcmdline, answer_list)) != sp)
          continue;
 
-      /* -s [p|r|s|h|...] option */
+      /* -s [p|r|s|h|d|...] option */
       if (!qselect_mode && (rp = parse_until_next_opt(sp, "-s", NULL, ppcmdline, answer_list)) != sp)
          continue;
 
@@ -275,7 +275,7 @@ qstat_usage(int qselect_mode, FILE *fp, char *what)
       if (!qselect_mode) 
          fprintf(fp, "        [-r]                              %s\n",MSG_QSTAT_USAGE_SHOWREQUESTEDRESOURCESOFJOB);
       if (!qselect_mode) {
-         fprintf(fp, "        [-s {p|r|s|z|hu|ho|hs|hj|ha|h|a}] %s\n",MSG_QSTAT_USAGE_SHOWPENDINGRUNNINGSUSPENDESZOMBIEJOBS);
+         fprintf(fp, "        [-s {p|r|s|z|hu|ho|hs|hd|hj|ha|h|a}] %s\n",MSG_QSTAT_USAGE_SHOWPENDINGRUNNINGSUSPENDESZOMBIEJOBS);
          fprintf(fp, "                                          %s\n",MSG_QSTAT_USAGE_JOBSWITHAUSEROPERATORSYSTEMHOLD);
          fprintf(fp, "                                          %s\n",MSG_QSTAT_USAGE_JOBSWITHSTARTTIMEINFUTORE);
          fprintf(fp, "                                          %s\n",MSG_QSTAT_USAGE_HISABBREVIATIONFORHUHOHSHJHA);

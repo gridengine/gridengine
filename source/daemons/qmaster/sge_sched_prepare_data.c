@@ -165,6 +165,7 @@ static const int job_nm[] = {
    JB_ja_u_h_ids,
    JB_ja_s_h_ids,
    JB_ja_o_h_ids,
+   JB_ja_a_h_ids,
    JB_pe,
    JB_project,
    JB_department,

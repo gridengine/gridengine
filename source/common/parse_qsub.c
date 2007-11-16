@@ -800,6 +800,34 @@ u_long32 flags
       }
 
 /*-----------------------------------------------------------------------------*/
+      /* "-hold_jid_ad jid[,jid,...]" */
+
+      if (!strcmp("-hold_jid_ad", *sp)) {
+         lList *jid_ad_hold_list = NULL;
+
+         /* next field is hold_list */
+         sp++;
+         if (!*sp) {
+             answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                                      MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, "-hold_jid_ad");
+             DRETURN(answer);
+         }
+
+         DPRINTF(("\"-hold_jid_ad %s\"\n", *sp));
+         i_ret = cull_parse_jid_hold_list(&jid_ad_hold_list, *sp);
+         if (i_ret) {
+             answer_list_add_sprintf(&answer, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                        MSG_PARSE_WRONGJIDHOLDLISTFORMATXSPECTOHOLDJIDADOPTION_S, *sp);
+             DRETURN(answer);
+         }
+         ep_opt = sge_add_arg(pcmdline, hold_jid_ad_OPT, lListT, *(sp - 1), *sp);
+         lSetList(ep_opt, SPA_argval_lListT, jid_ad_hold_list);
+
+         sp++;
+         continue;
+      }
+
+/*-----------------------------------------------------------------------------*/
       /* "-j y|n" */
 
       if (!strcmp("-j", *sp)) {

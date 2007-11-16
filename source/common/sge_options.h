@@ -88,6 +88,7 @@ enum {
    d_OPT,
    us_OPT,
    hold_jid_OPT,
+   hold_jid_ad_OPT,
    JQ_DEST_OPR,
    ac_OPT,
    ah_OPT,

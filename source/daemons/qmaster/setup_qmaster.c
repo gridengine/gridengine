@@ -104,6 +104,7 @@
 #include "sge_job_qmaster.h"
 #include "sge_subordinate_qmaster.h"
 #include "sge_calendar_qmaster.h"
+#include "sge_task_depend.h"
 #include "sched_conf_qmaster.h"
 #include "configuration_qmaster.h"
 #include "setup_qmaster.h"
@@ -1031,6 +1032,13 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
 
          /* doing this operation we need the complete job list read in */
          job_suc_pre(jep);
+         
+         /* also do this for array dependency predecessors */
+         job_suc_pre_ad(jep);
+
+         /* array successor jobs need to have their cache rebuilt. this will
+            do nothing spectacular if the AD reqest list for this job is empty. */
+         sge_task_depend_init(jep, &answer_list);
 
          centry_list_fill_request(lGetList(jep, JB_hard_resource_list), 
                      NULL, *object_base[SGE_TYPE_CENTRY].list, false, true, false);

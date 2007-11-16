@@ -267,6 +267,7 @@ Qmon*submit_detail.xmtChildren: \
                      submit_soft_queue_list = soft_queue_list, \
                      submit_master_queue_list = master_queue_list, \
                      submit_hold_jid = hold_jid, \
+                     submit_hold_jid_ad = hold_jid_ad, \
                      submit_env = env_list, \
                      submit_ctx = ctx_list; \
    XmtChooser        submit_verify = verify_mode, \
@@ -325,6 +326,10 @@ Qmon*submit_detail.layout: \
          } \
          Row { \
             Caption tl "@{Job Dependencies}" Fixed 30 em submit_hold_jid \
+            <> \
+         } \
+         Row { \
+            Caption tl "@{Hold Array Dependencies}" Fixed 30 em submit_hold_jid_ad \
             <> \
          } \
          Row submit_deadline_row { \

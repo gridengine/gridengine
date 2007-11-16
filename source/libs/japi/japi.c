@@ -3018,7 +3018,8 @@ japi_sge_state_to_drmaa_state(lListElem *job, bool is_array_task, u_long32 jobid
             if (!range_list_is_id_within(lGetList(job, JB_ja_n_h_ids), taskid) &&
                 !range_list_is_id_within(lGetList(job, JB_ja_u_h_ids), taskid) &&
                 !range_list_is_id_within(lGetList(job, JB_ja_s_h_ids), taskid) &&
-                !range_list_is_id_within(lGetList(job, JB_ja_o_h_ids), taskid))
+                !range_list_is_id_within(lGetList(job, JB_ja_o_h_ids), taskid) &&
+                !range_list_is_id_within(lGetList(job, JB_ja_a_h_ids), taskid))
                task_finished = true;
          }
       }
@@ -3140,7 +3141,7 @@ japi_sge_state_to_drmaa_state(lListElem *job, bool is_array_task, u_long32 jobid
           * actually are the user's hold but DRMAA user interface does 
           * not know these hold * conditions.
           */
-         if ((ja_task_hold & (MINUS_H_TGT_OPERATOR|MINUS_H_TGT_SYSTEM)) || 
+         if ((ja_task_hold & (MINUS_H_TGT_OPERATOR|MINUS_H_TGT_SYSTEM|MINUS_H_TGT_JA_AD)) || 
              (lGetUlong(job, JB_execution_time) > sge_get_gmt()) ||
              lGetList(job, JB_jid_predecessor_list))
             *remote_ps |= DRMAA_PS_SUBSTATE_SYSTEM_SUSP;
@@ -3179,7 +3180,8 @@ japi_sge_state_to_drmaa_state(lListElem *job, bool is_array_task, u_long32 jobid
    if (range_list_is_id_within(lGetList(job, JB_ja_u_h_ids), taskid))
       *remote_ps |= DRMAA_PS_SUBSTATE_USER_SUSP;
    if (range_list_is_id_within(lGetList(job, JB_ja_s_h_ids), taskid) ||
-       range_list_is_id_within(lGetList(job, JB_ja_o_h_ids), taskid) /* ||
+       range_list_is_id_within(lGetList(job, JB_ja_o_h_ids), taskid) ||
+       range_list_is_id_within(lGetList(job, JB_ja_a_h_ids), taskid) /* ||
        (lGetUlong(job, JB_execution_time) > sge_get_gmt()) || 
                     lGetList(job, JB_jid_predecessor_list) */
        )
@@ -3230,7 +3232,7 @@ static int japi_get_job(u_long32 jobid, lList **retrieved_job_list, dstring *dia
 
    /* prepare GDI GET JOB selection */
    job_selection = lWhere("%T(%I==%u)", JB_Type, JB_job_number, jobid);
-   job_fields = lWhat("%T(%I%I%I%I%I%I%I%I%I%I)", JB_Type, 
+   job_fields = lWhat("%T(%I%I%I%I%I%I%I%I%I%I%I)", JB_Type, 
          JB_job_number, 
          JB_type, 
          JB_ja_structure, 
@@ -3238,6 +3240,7 @@ static int japi_get_job(u_long32 jobid, lList **retrieved_job_list, dstring *dia
          JB_ja_u_h_ids,
          JB_ja_s_h_ids,
          JB_ja_o_h_ids,
+         JB_ja_a_h_ids,
          JB_ja_tasks,
          JB_jid_predecessor_list, 
          JB_execution_time);
@@ -3449,6 +3452,27 @@ int japi_job_ps(const char *job_id_str, int *remote_ps, dstring *diag)
    drmaa_errno = japi_sge_state_to_drmaa_state(lFirst(retrieved_job_list), 
                                                is_array_task, jobid, taskid, 
                                                remote_ps, diag);
+
+   /* inactive code sample for retrieving master node information of a running job */
+#if 0
+   if (node) {
+      const lListElem *ja_task, *master_node;
+      switch (*remote_ps) {
+      case DRMAA_PS_RUNNING:
+      case DRMAA_PS_SYSTEM_SUSPENDED:
+      case DRMAA_PS_USER_SUSPENDED:
+      case DRMAA_PS_USER_SYSTEM_SUSPENDED:
+         if ((ja_task = job_search_task(lFirst(retrieved_job_list), NULL, taskid)) &&
+            (master_node = lFirst(lGetList(ja_task, JAT_granted_destin_identifier_list))))
+            sge_dstring_copy_string(node, lGetHost(master_node, JG_qhostname));
+         else
+            sge_dstring_copy_string(node, "<unknown>");
+         break;
+      default:
+         break;
+      }
+   }
+#endif
 
    japi_dec_threads(SGE_FUNC);
 
@@ -4058,6 +4082,7 @@ static void *japi_implementation_thread(void *p)
       required only for session reconnect (DRMAA) */
    if (restarting) {
       japi_subscribe_job_list(japi_session_key, evc);
+      evc->ec_mark4registration(evc);
       job_list_subscribed = true;
    }
 

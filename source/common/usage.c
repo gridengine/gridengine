@@ -634,6 +634,11 @@ void sge_usage(u_long32 prog_number, FILE *fp) {
       PRINTITD(MSG_GDI_USAGE_hold_jid_OPT , MSG_GDI_UTEXT_hold_jid_OPT );
       MARK(OA_JOB_IDENTIFIER_LIST);
    }
+
+   if (VALID_OPT(hold_jid_ad_OPT, prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_hold_jid_ad_OPT , MSG_GDI_UTEXT_hold_jid_ad_OPT );
+      MARK(OA_JOB_IDENTIFIER_LIST);
+   }
    
    if (VALID_OPT(i_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_i_OPT_PATH_LIST, MSG_GDI_UTEXT_i_OPT_PATH_LIST );

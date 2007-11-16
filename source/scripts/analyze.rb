@@ -103,9 +103,9 @@ end
 
 
 class Record
-	attr_reader :user, :wallclock, :qd, :sd, :ed, :rd, :cat, :project, :cpu, :queue, :host, :maxrss, :maxvmem
+	attr_reader :user, :wallclock, :qd, :sd, :ed, :rd, :cat, :project, :parallel, :cpu, :queue, :host, :maxrss, :maxvmem
 	def pending_time ; @sd - @qd ; end
-	def initialize(user, wallclock, qd, sd, ed, cat, project, cpu, queue, host, requeued, maxrss, maxvmem)
+	def initialize(user, wallclock, qd, sd, ed, cat, project, cpu, queue, host, parallel, requeued, maxrss, maxvmem)
 		@qd = qd
 		@sd = sd
 		@ed = ed
@@ -113,6 +113,7 @@ class Record
 		@user = user
 		@project = project
 		@queue = queue
+		@parallel = parallel
 		@host = host
 		@cat = cat
 		@cpu = cpu
@@ -162,19 +163,23 @@ class RecordHash < PrintableHash
 				   cat     = s[39]
 				   maxrss  = s[16].to_i
 				   maxvmem = s[42].to_i
-					if submit == 0 || start == 0 || ende == 0
-						# STDERR.puts "invalid record " + job.to_s + " submitted " + submit.to_s + " started " + start.to_s + " ended " + ende.to_s + " wallclock " + wc.to_s
+				   parallel = s[33]
+               # puts "PE = #{parallel}"
+
+					# if submit == 0 || start == 0 || ende == 0
+					if start == 0 || ende == 0
+						STDERR.puts "invalid record " + job.to_s + " submitted " + submit.to_s + " started " + start.to_s + " ended " + ende.to_s + " wallclock " + wc.to_s
                elsif ! inscope?(submit, start, ende, first, last)
-						# STDERR.puts "out of scope record " + job.to_s + " submitted " + submit.to_s + " started " + start.to_s + " ended " + ende.to_s + " wallclock " + wc.to_s
+						STDERR.puts "out of scope record " + job.to_s + " submitted " + submit.to_s + " started " + start.to_s + " ended " + ende.to_s + " wallclock " + wc.to_s
                else
                   rd = 0
                   index = 1
                   while self.has_key?([job, task, index]) do
                      rd = self[[job, task, index]].ed
                      index += 1
-                     puts "requeued job " + job.to_s + " task #{task} pending #{start - rd} requeued #{rd} #{s[5]}"
+                     # puts "requeued job " + job.to_s + " task #{task} pending #{start - rd} requeued #{rd} #{s[5]}"
 						end
-						self[[job, task, index]] = Record.new(user, wc, submit, start, ende, cat.strip, project, cpu, queue, host, rd, maxrss, maxvmem)
+						self[[job, task, index]] = Record.new(user, wc, submit, start, ende, cat.strip, project, cpu, queue, host, parallel, rd, maxrss, maxvmem)
 					end
 				end
 			end
@@ -281,6 +286,26 @@ class HostHash < PrintableHash
 	end
 	def print_all
 		super("host")
+	end
+end
+
+# ----------
+
+class Parallel < Debitable 
+end
+
+class ParallelHash < PrintableHash
+	def initialize(record)
+		record.each_value do |r|
+			if ! self.has_key?(r.parallel)
+				self[r.parallel] = Parallel.new()
+			end
+			self[r.parallel].debit_record(r)
+		end
+		debug "debug did parallel environments"
+	end
+	def print_all
+		super("parallel environment")
 	end
 end
 
@@ -550,6 +575,8 @@ class Analyzer
 				@do_users = true
 			when "-p"
 				@do_projects = true
+			when "-par"
+				@do_parallel = true
 			when "-q"
 				@do_queues = true
 			when "-h"
@@ -575,6 +602,7 @@ class Analyzer
 		puts '        -r                                records table'
 		puts '        -u                                users table'
 		puts '        -h                                hosts table'
+		puts '        -par                              parallel environment table'
 		puts '        -q                                queues table'
 		puts '        -p                                projects table'
 		puts '        -c                                categories table'
@@ -678,6 +706,7 @@ class Analyzer
 	def init_others
 		@user = UserHash.new(@record) if @do_users
 		@host = HostHash.new(@record) if @do_hosts
+		@parallel = ParallelHash.new(@record) if @do_parallel
 		@queue = QueueHash.new(@record) if @do_queues
 		@project = ProjectHash.new(@record) if @do_projects
 		@category = CategoryHash.new(@record) if @do_categories
@@ -713,6 +742,10 @@ class Analyzer
 		end
 		if @do_hosts # -h
 			@host.print_all
+			STDOUT.flush
+		end
+		if @do_parallel # -par
+			@parallel.print_all
 			STDOUT.flush
 		end
 		if @do_users # -u

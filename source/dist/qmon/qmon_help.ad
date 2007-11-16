@@ -665,6 +665,8 @@ submit command of a foreign queuing system connected to Grid Engine through the 
 Interface@fR.\n\
 In the @fBJob Dependencies@fR field the job numbers that the current job depends on, can be\n\
 entered.\n\
+In the @fBHold Array Dependencies@fR field the job numbers that the current job depends on with array dependency,\n\
+can be entered.\n\
 The @fBDeadline@fR field allows entering the deadline when a job shall be fulfilled.\n\
 This leads to an increase of the priority of this job when it approaches its deadline.\n\
 Only @fBDeadline Users@fR can submit deadline jobs.\n\

@@ -1,3 +1,7 @@
+AH-2007-11-16-0: Enhancem:  Merged -hold_jid_ad option from V61u1_ARI_BRANCH 
+                 Copyright: Added Rising Sun Pictures copyright
+                 Review:    CR
+
 EB-2007-11-15-1: Bugfix:    Fixed bug in scheduler (queue selection)
                             Removed incorrect logging during scheduler initialisation
 

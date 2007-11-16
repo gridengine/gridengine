@@ -1995,7 +1995,8 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
           */
          
          /* -hold_jid and -h are only allowed in qrsh mode */
-         if (!is_rsh && (!strcmp(cp, "-hold_jid") || !strcmp(cp, "-h"))){
+         if (!is_rsh && (!strcmp(cp, "-hold_jid") || !strcmp(cp, "-hold_jid_ad")
+             || !strcmp(cp, "-h"))){
             if (error) {
                ERROR((SGE_EVENT, MSG_ANSWER_UNKOWNOPTIONX_S, cp));
                sge_prof_cleanup();
@@ -2009,7 +2010,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
          if (strcmp(cp, "jobarg") && strcmp(cp, "script") && strcmp(cp, "-ar") &&
             strcmp(cp, "-A") && strcmp(cp, "-cell") && strcmp(cp, "-clear") && 
             strcmp(cp, "-cwd") && strcmp(cp, "-hard") && strcmp(cp, "-help") &&
-            strcmp(cp, "-hold_jid") && strcmp(cp, "-h") && 
+            strcmp(cp, "-hold_jid") && strcmp(cp, "-hold_jid_ad") && strcmp(cp, "-h") && 
             strcmp(cp, "-l") && strcmp(cp, "-m") && strcmp(cp, "-masterq") &&
             strcmp(cp, "-N") && strcmp(cp, "-noshell") && strcmp(cp, "-now") &&
             strcmp(cp, "-notify") && strcmp(cp, "-P") &&

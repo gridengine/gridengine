@@ -67,6 +67,7 @@ bool is_pe_master_task_send(lListElem *jatep);
 void sge_add_jatask_event(ev_event type, lListElem *jep, lListElem *jatask);
 
 void job_suc_pre(lListElem *jep);
+void job_suc_pre_ad(lListElem *jep);
 
 void sge_init_job_number(void); 
 void sge_store_job_number(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor);

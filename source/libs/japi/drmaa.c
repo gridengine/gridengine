@@ -3484,6 +3484,7 @@ o   -h                                     place user hold on job
 +   -hard                                  consider following requests "hard"
 -   -help                                  print this help
 +   -hold_jid job_identifier_list          define jobnet interdependencies
++   -hold_jid_ad job_identifier_list       define jobnet array interdependencies
 o   -i file_list                           specify standard input stream file(s)
 +   -j y|n                                 merge stdout and stderr stream of job
 +   -l resource_list                       request the given resources

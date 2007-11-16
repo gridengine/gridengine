@@ -223,6 +223,7 @@
 #define MSG_JOB_DELIVER2Q_UUS         _MESSAGE(33148, _("failed to deliver job "sge_U32CFormat"."sge_U32CFormat" to queue "SFQ))
 #define MSG_JOB_RESCHEDULE_UU         _MESSAGE(33159, _("rescheduling job "sge_U32CFormat"."sge_U32CFormat) ) 
 #define MSG_RU_CANCELED_S             _MESSAGE(33160, _("Due to a modification of the reschedule_unknown timeout rescheduling for host "SFN" was canceled."))
+#define MSG_JOB_DEPENDUPT4J_UU        _MESSAGE(33161, _("failed to update dependent tasks of completed job "sge_U32CFormat"."sge_U32CFormat)) 
 
 /* CR: don't localize mail subject, until we send it in Mime format!
  *  The message definition is not l10n'ed (no _() macro used)!!!     
@@ -364,6 +365,7 @@
 #define MSG_JOB_STDERRPATHLIST        _MESSAGE(33274, _("stderr path list"))
 #define MSG_JOB_STDOUTPATHLIST        _MESSAGE(33275, _("stdout path list"))
 #define MSG_JOB_HOLDLISTMOD_USS       _MESSAGE(33276, _("modified job id hold list of job "sge_U32CFormat"\n   blocking jobs: "SFN"\n   exited jobs:   "SFN))
+#define MSG_JOB_HOLDARRAYLISTMOD_USS  _MESSAGE(33285, _("modified job id hold array list of job "sge_U32CFormat"\n   blocking jobs: "SFN"\n   exited jobs:   "SFN))
 #define MSG_JOB_MERGEOUTPUT           _MESSAGE(33277, _("output merge behaviour"))
 #define MSG_JOB_RESERVE               _MESSAGE(33699, _("reservation behaviour"))
 #define MSG_JOB_HARDRESOURCELIST      _MESSAGE(33278, _("hard resource list"))
@@ -399,6 +401,8 @@
 #define MSG_JOB_MOD_CHANGEDRUNNINGJOBCONSUMABLE_S     _MESSAGE(33310, _("denied: can't change consumable resource request "SFQ" of running job"))
 #define MSG_JOB_MOD_GOTOWNJOBIDINHOLDJIDOPTION_U      _MESSAGE(33311, _("denied: job \""sge_U32CFormat"\" may not be it's own jobnet predecessor"))
 #define MSG_JOB_MOD_UNKOWNJOBTOWAITFOR_S              _MESSAGE(33312, _("denied: job "SFQ" not found"))
+#define MSG_JOB_MOD_CANONLYSPECIFYHOLDJIDADWITHADOPT _MESSAGE(33315, _("Can only specify \"-hold_jid_ad\" option with an array job (using \"-t\" option)"))
+#define MSG_JOB_MOD_ARRAYJOBMUSTHAVESAMERANGEWITHADOPT _MESSAGE(33316, _("This array job must have the same range of sub-tasks as the dependent array job specified with -hold_jid_ad"))
 #define MSG_SGETEXT_NEEDONEELEMENT_SS                 _MESSAGE(33317, _("denied: request format error: need at least one element in sublist "SFQ" in "SFN"()"))
 #define MSG_SGETEXT_CANT_MOD_RUNNING_JOBS_U           _MESSAGE(33318, _("job "sge_U32CFormat" can't modify running jobs") ) 
 #define MSG_SGETEXT_MUST_BE_OPR_TO_SS                 _MESSAGE(33319, _("denied: "SFQ" must be operator to "SFN))

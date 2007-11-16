@@ -123,6 +123,8 @@ struct qstat_stdout_ctx_str {
    int  master_hard_requested_queue_count;
    int  predecessor_requested_count;
    int  predecessor_count;
+   int  ad_predecessor_requested_count;
+   int  ad_predecessor_count;
 };
 
 static int qstat_stdout_init(qstat_handler_t *handler, lList **alpp);
@@ -178,6 +180,13 @@ static int job_stdout_predecessors_started(job_handler_t* handler, lList **alpp)
 static int job_stdout_predecessor(job_handler_t* handler, u_long32 jid, lList **alpp);
 static int job_stdout_predecessors_finished(job_handler_t* handler, lList **alpp);
 
+static int job_stdout_ad_predecessors_requested_started(job_handler_t* handler, lList **alpp);
+static int job_stdout_ad_predecessor_requested(job_handler_t* handler, const char* name, lList **alpp);
+static int job_stdout_ad_predecessors_requested_finished(job_handler_t* handler, lList **alpp);
+
+static int job_stdout_ad_predecessors_started(job_handler_t* handler, lList **alpp);
+static int job_stdout_ad_predecessor(job_handler_t* handler, u_long32 jid, lList **alpp);
+static int job_stdout_ad_predecessors_finished(job_handler_t* handler, lList **alpp);
 
 static void qselect_stdout_init(qselect_handler_t* handler, lList **alpp);
 static int qselect_stdout_report_queue(qselect_handler_t* handler, const char* qname, lList **alpp);
@@ -781,6 +790,14 @@ static int job_stdout_init(job_handler_t *handler, lList** alpp)
    handler->report_predecessors_started = job_stdout_predecessors_started;
    handler->report_predecessor = job_stdout_predecessor;
    handler->report_predecessors_finished = job_stdout_predecessors_finished;
+
+   handler->report_ad_predecessors_requested_started = job_stdout_ad_predecessors_requested_started;
+   handler->report_ad_predecessor_requested = job_stdout_ad_predecessor_requested;
+   handler->report_ad_predecessors_requested_finished = job_stdout_ad_predecessors_requested_finished;
+
+   handler->report_ad_predecessors_started = job_stdout_ad_predecessors_started;
+   handler->report_ad_predecessor = job_stdout_ad_predecessor;
+   handler->report_ad_predecessors_finished = job_stdout_ad_predecessors_finished;
 
    DEXIT;
    return 0;
@@ -1505,6 +1522,81 @@ static int job_stdout_predecessors_finished(job_handler_t* handler, lList **alpp
    return 0;
 }
 
+static int job_stdout_ad_predecessors_requested_started(job_handler_t* handler, lList **alpp) 
+{
+   qstat_stdout_ctx_t *ctx = (qstat_stdout_ctx_t*)handler->ctx;
+
+   DENTER(TOP_LAYER, "job_stdout_ad_predecessors_requested_started");
+
+   ctx->ad_predecessor_requested_count = 0;
+   printf("       Predecessor Array Jobs (request): ");
+
+   DEXIT;
+   return 0;
+}
+
+static int job_stdout_ad_predecessor_requested(job_handler_t* handler, const char* name, lList **alpp)
+{
+   qstat_stdout_ctx_t *ctx = (qstat_stdout_ctx_t*)handler->ctx;
+
+   DENTER(TOP_LAYER, "job_stdout_ad_predecessor_requested");
+
+   if(ctx->ad_predecessor_requested_count > 0) {
+      printf(", %s", name);
+   } else {
+      printf("%s", name);
+   }
+   ctx->ad_predecessor_requested_count++;
+   
+   DEXIT;
+   return 0;
+}
+
+static int job_stdout_ad_predecessors_requested_finished(job_handler_t* handler, lList **alpp) 
+{
+   DENTER(TOP_LAYER, "job_stdout_ad_predecessors_requested_finished");
+   putchar('\n');
+   DEXIT;
+   return 0;
+}
+
+static int job_stdout_ad_predecessors_started(job_handler_t* handler, lList **alpp) 
+{
+   qstat_stdout_ctx_t *ctx = (qstat_stdout_ctx_t*)handler->ctx;
+
+   DENTER(TOP_LAYER, "job_stdout_ad_predecessors_started");
+
+   ctx->ad_predecessor_count = 0;
+   printf("       Predecessor Array Jobs: ");
+
+   DEXIT;
+   return 0;
+}
+
+static int job_stdout_ad_predecessor(job_handler_t* handler, u_long32 jid, lList **alpp)
+{
+   qstat_stdout_ctx_t *ctx = (qstat_stdout_ctx_t*)handler->ctx;
+
+   DENTER(TOP_LAYER, "job_stdout_ad_predecessor");
+
+   if (ctx->ad_predecessor_count > 0) {
+      printf(", "sge_u32, jid);
+   } else {
+      printf(sge_u32, jid);
+   }
+   ctx->ad_predecessor_count++;
+
+   DEXIT;
+   return 0;
+}
+
+static int job_stdout_ad_predecessors_finished(job_handler_t* handler, lList **alpp) 
+{
+   DENTER(TOP_LAYER, "job_stdout_ad_predecessors_finished");
+   putchar('\n');
+   DEXIT;
+   return 0;
+}
 
 static int qstat_stdout_queue_summary(qstat_handler_t* handler, const char* qname, queue_summary_t *summary, lList **alpp) 
 {

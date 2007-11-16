@@ -230,6 +230,8 @@ static int qstat_xml_job_soft_requested_queue(job_handler_t *handler, const char
 static int qstat_xml_job_master_hard_requested_queue(job_handler_t* handler, const char* name, lList **alpp);
 static int qstat_xml_job_predecessor_requested(job_handler_t* handler, const char* name, lList **alpp);
 static int qstat_xml_job_predecessor(job_handler_t* handler, u_long32 jid, lList **alpp);
+static int qstat_xml_job_ad_predecessor_requested(job_handler_t* handler, const char* name, lList **alpp);
+static int qstat_xml_job_ad_predecessor(job_handler_t* handler, u_long32 jid, lList **alpp);
 
 static int qstat_xml_job_finished(job_handler_t* handler, u_long32 jid, lList **alpp);
 
@@ -334,6 +336,14 @@ int qstat_xml_handler_init(qstat_handler_t* handler, lList **alpp) {
    handler->job_handler.report_predecessors_started = qstat_xml_dummy_started;
    handler->job_handler.report_predecessor = qstat_xml_job_predecessor;
    handler->job_handler.report_predecessors_finished = qstat_xml_dummy_finished;
+
+   handler->job_handler.report_ad_predecessors_requested_started = qstat_xml_dummy_started;
+   handler->job_handler.report_ad_predecessor_requested = qstat_xml_job_ad_predecessor_requested;
+   handler->job_handler.report_ad_predecessors_requested_finished = qstat_xml_dummy_finished;
+
+   handler->job_handler.report_ad_predecessors_started = qstat_xml_dummy_started;
+   handler->job_handler.report_ad_predecessor = qstat_xml_job_ad_predecessor;
+   handler->job_handler.report_ad_predecessors_finished = qstat_xml_dummy_finished;
 
    handler->job_handler.report_job_finished = qstat_xml_job_finished;
 
@@ -742,6 +752,30 @@ static int qstat_xml_job_predecessor(job_handler_t* handler, u_long32 jid, lList
    DENTER(TOP_LAYER, "qstat_xml_job_predecessor");
 
    xml_append_Attr_I(attribute_list, "predecessor_jobs", (int)jid);
+   
+   DEXIT;
+   return 0;
+}
+
+static int qstat_xml_job_ad_predecessor_requested(job_handler_t* handler, const char* name, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   lList *attribute_list = lGetList(ctx->job_elem, XMLE_List);
+
+   DENTER(TOP_LAYER, "qstat_xml_job_ad_predecessor_requested");
+
+   xml_append_Attr_S(attribute_list, "ad_predecessor_jobs_req", name);
+   
+   DEXIT;
+   return 0;
+}
+
+static int qstat_xml_job_ad_predecessor(job_handler_t* handler, u_long32 jid, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   lList *attribute_list = lGetList(ctx->job_elem, XMLE_List);
+
+   DENTER(TOP_LAYER, "qstat_xml_job_ad_predecessor");
+
+   xml_append_Attr_I(attribute_list, "ad_predecessor_jobs", (int)jid);
    
    DEXIT;
    return 0;

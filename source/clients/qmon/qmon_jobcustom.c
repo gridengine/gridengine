@@ -174,6 +174,8 @@ static tJobField job_items[] = {
    { 0, JB_pe_range, "@{PERange}", 15, 30, PrintPERange },
    { 0, JB_jid_request_list, "@{Predecessors Req}", 12, 30, PrintPredecessors },
    { 0, JB_jid_predecessor_list, "@{Predecessors}", 12, 30, PrintPredecessorsNr },
+   { 0, JB_ja_ad_request_list, "@{Array Predecessors Req}", 12, 30, PrintPredecessors },
+   { 0, JB_ja_ad_predecessor_list, "@{Array Predecessors}", 12, 30, PrintPredecessorsNr },
    { 0, JAT_scaled_usage_list, "@{CPU}", 10, 30, PrintCPU },
    { 0, JAT_scaled_usage_list, "@{MEM}", 10, 30, PrintMEM },
    { 0, JAT_scaled_usage_list, "@{IO}", 10, 30, PrintIO },

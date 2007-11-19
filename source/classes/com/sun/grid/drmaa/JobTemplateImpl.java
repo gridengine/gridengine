@@ -95,11 +95,11 @@ import org.ggf.drmaa.UnsupportedAttributeException;
  *
  * <p>For various reasons, some options are silently ignored by DRMAA.  Setting
  * any of these options will have no effect.  The ignored options are:
- * &quot;-cwd&quot;, &quot;-help&quot;, &quot;-t&quot;, &quot;-verify&quot;,
- * &quot;-w w&quot;, and &quot;-w v&quot;.  The &quot;-cwd&quot; option can be
- * reenabled by setting the environment variable, SGE_DRMAA_ALLOW_CWD.  However,
- * the &quot;-cwd&quot; option is not thread safe and should not be used in a
- * multi-threaded context.</p>
+ * &quot;-cwd&quot;, &quot;-help&quot;, &quot;-sync&quot;, &quot;-t&quot;,
+ * &quot;-verify&quot;, &quot;-w w&quot;, and &quot;-w v&quot;.
+ * The &quot;-cwd&quot; option can be reenabled by setting the environment
+ * variable, SGE_DRMAA_ALLOW_CWD.  However, the &quot;-cwd&quot; option is not
+ * thread safe and should not be used in a multi-threaded context.</p>
  *
  * <h3>Attribute Correlations</h3>
  *

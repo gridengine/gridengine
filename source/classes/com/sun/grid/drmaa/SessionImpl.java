@@ -249,7 +249,7 @@ public class SessionImpl implements Session {
      * @return {@inheritDoc}
      */
     public Version getVersion() {
-        return new Version(0, 5);
+        return new Version(1, 0);
     }
     
     /**

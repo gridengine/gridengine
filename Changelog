@@ -1,3 +1,11 @@
+DT-2007-11-19-0: Bugfix:    o Corrected DRMAA Java version number
+                            o Added -sync to list of native switches removed by
+                              DRMAA
+                            o Added libdrmaa95.so to drmaa_clean target
+                 Review:    pending
+                 Bugster:   2253, 2430
+                 Issue:     6558329, 6631777
+
 RD-2007-11-19-0: Enhancem:  added README-Upgrade.txt to distribution
                  Review:    JG
 

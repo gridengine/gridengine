@@ -1832,13 +1832,14 @@ GetJMXPort() {
             "Do you want to use these data (y/n) [y] >> "
          if [ $? = 0 ]; then
             alldone=true
+            SGE_ENABLE_JMX=$enable_jmx
             SGE_JVM_LIB_PATH=$sge_jvm_lib_path
             SGE_ADDITIONAL_JVM_ARGS=$sge_additional_jvm_args
             if [ "$ARCH" = "sol-amd64" -o "$ARCH" = "sol-sparc64" ]; then
                SGE_ADDITIONAL_JVM_ARGS="-d64 $SGE_ADDITIONAL_JVM_ARGS"
             fi   
             SGE_JMX_PORT=$sge_jmx_port
-            export SGE_JVM_LIB_PATH SGE_JMX_PORT SGE_ADDITIONAL_JVM_ARGS
+            export SGE_JVM_LIB_PATH SGE_JMX_PORT SGE_ADDITIONAL_JVM_ARGS SGE_ENABLE_JMX
          else
             $CLEAR
          fi

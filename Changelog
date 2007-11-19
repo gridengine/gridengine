@@ -1,3 +1,6 @@
+AA-2007-11-19-0: Enhancem:  export SGE_ENABLE_JMX for bootstrap file
+                 Review:    EB
+
 AH-2007-11-16-0: Enhancem:  Merged -hold_jid_ad option from V61u1_ARI_BRANCH 
                  Copyright: Added Rising Sun Pictures copyright
                  Review:    CR

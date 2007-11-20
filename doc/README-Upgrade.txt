@@ -1,192 +1,88 @@
-          Upgrading from a Previous Release of Grid Engine Software
-          ---------------------------------------------------------
+Tutorial: How to perform an upgrade to new SGE 6.1
+--------------------------------------------------
 
-Content
--------
-1. Introduction
-2. Upgrading the Software
-3. Planning the Installation
+Upgrades to 6.1 are only possible from 6.0u2 or higher.
+Upgrades from version 5.3 or version 6.0/6.0u1 are not supported anymore.
+If you are still running 5.3 or 6.0/6.0u1 Versions, it is recommended to upgrade
+to 6.0u4 or higher and then to 6.1.
 
+ATTENTION: Before starting with upgrades, it is recommended that the cluster 
+holds no running and pending jobs. After the upgrade all jobs will be gone.
+It is also recommended to backup the cluster configuration. This can be done by
+using the backup functionality of the SGE installer (inst_sge -bup).
 
-1. Introduction
----------------
+IMPORTANT INFORMATION: (This is only necessary, if your Berkeley DB (BDB) RPC
+Server host is a sol-sparc64 machine). For Grid Engine 6.0, a 64bit BDB RPC
+Server was not available, instead the 32bit server was used. It is also
+necessary to backup the BDB database with the 32bit db_dump and db_load
+binaries from the sol-sparc package. The backup functionality of the SGE
+installer takes care of using the correct binaries.
+Due to an issue in u10, the backup will will fail because of the missing
+libdb-4.2.so file. This error is not critical and the workaround is to execute
+the following command:
 
-   This file describes the steps necessary to upgrade your existing software to
-   this release. You can upgrade from Sun ONE Grid Engine 5.3, Sun ONE Grid
-   Engine, Enterprise Edition 5.3 or from the open source version of Grid
-   Engine.
+   # touch $SGE_ROOT/lib/sol-sparc/libdb-4.2.so 
 
-   The upgrade procedure is non destructive. The upgrade procedure installs the
-   N1 Grid Engine 6 software on the master host by using the cluster
-   configuration information from the older version of the software. The older
-   version of the software will not be removed or modified in any way.
+Necessary steps to perform the upgrade
+--------------------------------------
 
-2. Upgrading the software
--------------------------
+Please note, <db_home> is the directory where the database files are stored. 
+This directory path was selected by the administrator at qmaster installation
+time in case of BDB spooling.
 
-   This procedure assumes that you have already extracted the Grid Engine
-   packages.
+1. Shutdown the whole cluster using the
 
-   1. Log in to the master host as root. 
+   # qconf -ke all -ks -km
 
-   2. Load the distribution files. 
+   command. If you're running a BDB RPC Server installation you also have to
+   shutdown the BDB RPC server.
 
-   3. Ensure that you have set the $SGE_ROOT environment variable by typing: 
+2. Create the cluster system backup by executing
 
-         # echo $SGE_ROOT   
+   # inst_sge -bup
 
-      If the $SGE_ROOT environment variable is not set, set it now, by typing: 
+   (More information how to perform a backup can be found in the Installation
+   Guide or Administration Guide)
 
-      # SGE_ROOT=<your_sge-root>; export SGE_ROOT 
+3. (Skip this step in case of classic spooling)
+   Because of a BDB version update the internal BDB database structures changed.
+   To adjust the structures execute the following command as sgeadmin user:
 
-   4. Change to the installation directory, sge-root.   
+   # $SGE_ROOT/utilbin/<arch>/db_dump -f /tmp/dump.out -h <db_home> sge
 
-      If the directory where the installation files reside is visible from the
-      master host, change directories (cd) to the installation directory
-      sge-root, and then proceed to Step 4.  If the directory is not visible
-      and cannot be made visible, do the following:
+   Execute this command on qmaster host. If you are using a BDB RPC Server, then
+   you must execute this command on the RPC Server host.
 
-         a. Create a local installation directory, sge-root, on the master
-            host.
+   Please verify that the command was executed correctly and the file
+   /tmp/dump.txt is now empty. 
 
-         b. Copy the installation files to the local installation directory
-            sge-root across the network (for example, by using ftp or rcp).
+   If the command succeeded remove the previous BDB database files by
+   executing the following command as sgeadmin user:
 
-         c. Change directories (cd) to the local sge-root directory. 
+   # rm -f on your <db_home>/* 
 
-   5. Run the upgrade command on the master host, and respond to the prompts.
-      This command starts the master host installation procedure.  You are asked
-      several questions, and you might be required to run some administrative
-      actions.
+   Please do not delete the whole directory, only the 
+   files within your <db_home>.
 
-      The syntax of the command is 
+4. Unpack the new binaries and the common package to your SGE_ROOT directory
 
-         # inst_sge -upd <5.3_sge-root_directory> <5.3_SGE_CELL_name>. 
+5. (Skip this step in case of classic spooling)
+   Now restore the database. Execute as sgeadmin user the following command:
 
-       In the following example, the 5.3 sge-root directory is /sge/gridware
-       and the cell name is default:
+   # $SGE_ROOT/utilbin/<arch>/db_load -f /tmp/dump.out -h <db_home> sge
 
-          # ./inst_sge -upd /sge/gridware default 
+   This command must be executed on the on qmaster host or in case of BDB RPC Server
+   on the RPC server host. 
 
-   6. Verify the sge-root directory setting. 
+6. The final step is to start the SGE installer upgrade routine as user root
+   on the qmaster host with:
 
-   7. Set up the TCP/IP services for the grid engine software. 
+   # ./inst_sge -upd 
 
-   8. Enter the name of your cell(s). 
+   The upgrade will create new settings and rc-script files, the old files
+   will be saved under the same filename with a time stamp attached. The
+   upgrade procedure starts the qmaster and scheduler daemon automatically,
+   execution host daemons needs to be started manually.
 
-   9. Specify a spool directory. 
-
-   10. Set the correct file permissions. 
-
-   11. Specify whether all of your grid engine system hosts are located in a
-       single DNS domain.
-
-   12. Specify whether you want to use classic spooling or Berkeley DB. 
-
-   13. Enter a group ID range
-
-   14. Verify the spooling directory for the execution daemon. 
-
-   15. Enter the email address of the user who should receive problem reports.
-
-   Once you answer this question, the installation process is nearly complete. 
-
-   Several screens of information will be displayed before the script exits. 
-   The commands that are noted in those screens are also documented in the
-   N1GE6 Installation Guide. The upgrade process uses your existing
-   configuration to customize the installation.
-
-   You will see output similar to the following: 
-
-      Creating >act_qmaster< file 
-      Creating >sgemaster< script 
-      Creating >sgeexecd< script 
-      creating directory: /tmp/centry 
-      Reading in complex attributes. 
-      Reading in administrative hosts. 
-      Reading in execution hosts. 
-      Reading in submit hosts. 
-      Reading in users: 
-      User "as114086". 
-      User "md121042". 
-      Reading in usersets: 
-      Userset "defaultdepartment". 
-      Userset "deadlineusers". 
-      Userset "admin". 
-      Userset "bchem1". 
-      Reading in calendars: 
-      Calendar "always_disabled". 
-      Calendar "always_suspend". 
-      Reading in projects: Project "ap1". Project "ap2". 
-      Reading in parallel environments: PE "bench_tight". PE "make". 
-      Creating settings files for >.profile/.cshrc< 
-
-   Caution: Do not rename any of the binaries of the distribution. 
-
-   If you use any scripts or tools in your cluster that monitor the daemons,
-   make sure to check for the new names. Eg: loadsensor scripts. The path's to
-   this scripts will be upgraded, so if you have a configured loadsensor in you
-   old cluster. It will be also configured in the new cluster. But the script
-   still lies in your old installation. In case of a deinstallation of the old
-   cluster the loadsensor script will be also deleted. Make sure to copy you
-   loadsensors to the new installation.
-
-   16. Set the environment variables 
-
-      Note: For the following examples, if you have only a single grid engine
-      system cluster, the value of cell is default.  If you are using a C shell,
-      type the following command:
-
-         % source sge-root/cell/common/settings.csh   
-
-      If you are using a Bourne shell or Korn shell, type the following command: 
-
-         $ . sge-root/cell/common/settings.sh 
-
-   17. Install or upgrade the execution hosts. 
-
-      There are two ways that you can install the N1 Grid Engine 6 software on
-      your execution hosts: installation or upgrade.
-
-      You need to log into each execution host, and run the following command:
-
-         # sge-root/inst_sge -x -upd
-
-      a. If you only have a few execution hosts, you can install them
-      interactively. You need to log into each execution host, and run the
-      following command:
-
-         # sge-root/inst_sge -x -upd
-
-      This will install a execution host without creating a local configuration
-      for this execution host. This is useful, to make sure, that the upgraded
-      hostconfiguration won't be overwritten. If you want to overwrite the host
-      configurations (which was take by the upgrade) you can use this command:
-
-         #  sge-root/inst_sge -x
-
-      b. If you have a large number of execution hosts, you should consider
-      installing them non-interactively.
-
-      CAUTION: If you use the automatic execution installation, then your
-      upgraded hostconfiguration will be overritten. To make sure, that nothing
-      will be overwritten, please do not use the automatic installation. Use:
-
-         # inst_sge -x -upd
-
-      If you have configured load sensors on your execution hosts, you will
-      need to copy these load sensors to the new directory location.
-
-   18. Check your complexes 
-
-      Both the structure of complexes and the rules for configuring complexes 
-      have changed. You can use qconf -sc to list your complexes.  
-      Review the log file that was generated during the master host upgrade,
-      in qmaster spool directory.  
-      If necessary, you can use qconf -mc to reconfigure your complexes.
-
-   19. Reconfigure your queues 
-
-      During the upgrade process, a single default cluster queue is created. 
-      Within this queue you will find all of your installed execution hosts. 
-      It is recommended that you reconfigure your queues.
+   After the upgrade, please check the newly created settings files and copy 
+   the new rc-scripts to your startup location (eg. /etc/init.d) 

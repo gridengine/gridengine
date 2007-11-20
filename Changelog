@@ -1,3 +1,9 @@
+LP-2007-11-20-0: Enhancem.: Removed Command, HistoryCommand interfaces from JGDIShell
+                 Enhancem.: JGDIShell now stores original argument lists
+                 Enhancem.: JGDI project attributes visibility changed from RO to HIDDEN
+                 Bugfix   : Fixed some command options and messages in JGDI
+                 Review:    AA
+
 DT-2007-11-19-0: Bugfix:    o Corrected DRMAA Java version number
                             o Added -sync to list of native switches removed by
                               DRMAA

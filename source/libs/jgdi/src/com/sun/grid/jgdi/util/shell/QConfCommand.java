@@ -33,7 +33,7 @@ package com.sun.grid.jgdi.util.shell;
 
 import com.sun.grid.jgdi.configuration.EventClient;
 import com.sun.grid.jgdi.JGDIException;
-import com.sun.grid.jgdi.JGDIFactory;
+import com.sun.grid.jgdi.configuration.ClusterQueue;
 import com.sun.grid.jgdi.configuration.ComplexEntry;
 import com.sun.grid.jgdi.configuration.ComplexEntryImpl;
 import com.sun.grid.jgdi.configuration.ExecHost;
@@ -44,12 +44,15 @@ import com.sun.grid.jgdi.configuration.ResourceQuotaSet;
 import com.sun.grid.jgdi.configuration.ShareTree;
 import com.sun.grid.jgdi.configuration.ShareTreeImpl;
 import com.sun.grid.jgdi.configuration.UserSet;
+import com.sun.grid.jgdi.configuration.UserSetImpl;
 import com.sun.grid.jgdi.util.OutputTable;
 import com.sun.grid.jgdi.util.shell.editor.EditorParser;
+import com.sun.grid.jgdi.util.shell.editor.EditorUtil;
 import com.sun.grid.jgdi.util.shell.editor.GEObjectEditor;
 import java.beans.IntrospectionException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -64,10 +67,6 @@ import static com.sun.grid.jgdi.util.shell.OptionAnnotation.MAX_ARG_VALUE;
  */
 @CommandAnnotation(value = "qconf")
 public class QConfCommand extends QConfCommandGenerated {
-
-    public String getUsage() {
-        return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qconf");
-    }
 
     public void run(String[] args) throws Exception {
         if (args.length == 0) {
@@ -86,6 +85,7 @@ public class QConfCommand extends QConfCommandGenerated {
     @OptionAnnotation(value = "-as", extra = MAX_ARG_VALUE)
     public void addSubmitHost(final OptionInfo oi) throws JGDIException {
         if (!isHostReachable(oi)) {
+            oi.optionDone();
             return;
         }
         final String hostName = oi.getFirstArg();
@@ -97,6 +97,7 @@ public class QConfCommand extends QConfCommandGenerated {
     @OptionAnnotation(value = "-ds", extra = MAX_ARG_VALUE)
     public void deleteSubmitHost(final OptionInfo oi) throws JGDIException {
         if (!isHostReachable(oi)) {
+            oi.optionDone();
             return;
         }
         List<JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
@@ -111,6 +112,7 @@ public class QConfCommand extends QConfCommandGenerated {
     @OptionAnnotation(value = "-ah", extra = MAX_ARG_VALUE)
     public void addAdminHost(final OptionInfo oi) throws JGDIException {
         if (!isHostReachable(oi)) {
+            oi.optionDone();
             return;
         }
         List<JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
@@ -122,6 +124,7 @@ public class QConfCommand extends QConfCommandGenerated {
     @OptionAnnotation(value = "-dh", extra = MAX_ARG_VALUE)
     public void deleteAdminHost(final OptionInfo oi) throws JGDIException {
         if (!isHostReachable(oi)) {
+            oi.optionDone();
             return;
         }
         List<JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
@@ -149,7 +152,7 @@ public class QConfCommand extends QConfCommandGenerated {
         if (userTypedText != null) {
             List<JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
             ShareTreeImpl node = new ShareTreeImpl();
-            node = (ShareTreeImpl) GEObjectEditor.updateObjectWithText(jgdi, node, userTypedText);
+            node = GEObjectEditor.updateObjectWithText(jgdi, node, userTypedText);
             // pw.println(node.dump());
             jgdi.updateShareTreeWithAnswer(node, answers);
             printAnswers(answers);
@@ -270,17 +273,18 @@ public class QConfCommand extends QConfCommandGenerated {
     @OptionAnnotation(value = "-cq", extra = MAX_ARG_VALUE)
     public void cleanQueue(final OptionInfo oi) throws JGDIException {
         final List<String> args = oi.getArgs();
+        oi.optionDone();
         final String[] queues = args.toArray(new String[oi.getArgs().size()]);
         List<JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
         jgdi.cleanQueuesWithAnswer(queues, answers);
         printAnswers(answers);
-        oi.optionDone();
     }
 
     //-kec
     @OptionAnnotation(value = "-kec", extra = MAX_ARG_VALUE)
     public void killEventClient(final OptionInfo oi) throws JGDIException {
         final List<String> args = oi.getArgs();
+        oi.optionDone();
         List<JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
         int[] ids = new int[args.size()];
         int i = 0;
@@ -300,7 +304,6 @@ public class QConfCommand extends QConfCommandGenerated {
         }
         jgdi.killEventClientsWithAnswer(ids, answers);
         printAnswers(answers);
-        oi.optionDone();
     }
 
     //-km
@@ -324,7 +327,13 @@ public class QConfCommand extends QConfCommandGenerated {
     public void showDetachedSettings(final OptionInfo oi) throws JGDIException {
         String sds;
         sds = jgdi.showDetachedSettingsAll();
-        out.println(sds);
+        //TODO LP: Check correct behaviour, for now expect that sds!="" is an error
+        if (sds == null || sds.length() == 0) {
+            out.println();
+        } else {
+            out.print(sds);
+            setExitCode(1);
+        }
         oi.optionDone();
     }
 
@@ -393,6 +402,7 @@ public class QConfCommand extends QConfCommandGenerated {
     @OptionAnnotation(value = "-ke", extra = MAX_ARG_VALUE)
     public void killExecd(final OptionInfo oi) throws JGDIException {
         final List<String> args = oi.getArgs();
+        oi.optionDone();
         killExecd(false, args);
     }
 
@@ -400,6 +410,7 @@ public class QConfCommand extends QConfCommandGenerated {
     @OptionAnnotation(value = "-kej", extra = MAX_ARG_VALUE)
     public void killExecdWithJobs(final OptionInfo oi) throws JGDIException {
         final List<String> args = oi.getArgs();
+        oi.optionDone();
         killExecd(true, args);
     }
 
@@ -421,6 +432,7 @@ public class QConfCommand extends QConfCommandGenerated {
     @OptionAnnotation(value = "-shgrp_tree")
     public void showHostgroupTree(final OptionInfo oi) throws JGDIException {
         final List<String> args = oi.getArgs();
+        oi.optionDone();
         List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
         int i = 0;
         while (i < args.size()) {
@@ -439,7 +451,7 @@ public class QConfCommand extends QConfCommandGenerated {
             if (obj != null) {
                 showHostgroupTree(obj, "", "   ");
             } else {
-                err.println(getErrorMessage("InvalidObjectArgument", oi.getOd().getOption()));
+                err.println(getErrorMessage("InvalidObjectArgument", oi.getOd().getOption(), hgroup));
                 setExitCode(getCustomExitCode("InvalidObjectArgument", oi.getOd().getOption()));
             }
         }
@@ -450,6 +462,7 @@ public class QConfCommand extends QConfCommandGenerated {
     @SuppressWarnings(value = "unchecked")
     public void showHostgroupResolved(final OptionInfo oi) throws JGDIException {
         final List<String> args = oi.getArgs();
+        oi.optionDone();
         List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
         int i = 0;
         while (i < args.size()) {
@@ -473,7 +486,7 @@ public class QConfCommand extends QConfCommandGenerated {
                 }
                 out.println(res.substring(0, res.length() - 1));
             } else {
-                err.println(getErrorMessage("InvalidObjectArgument", oi.getOd().getOption()));
+                err.println(getErrorMessage("InvalidObjectArgument", oi.getOd().getOption(), hgroup));
                 setExitCode(getCustomExitCode("InvalidObjectArgument", oi.getOd().getOption()));
             }
         }
@@ -763,7 +776,7 @@ public class QConfCommand extends QConfCommandGenerated {
         List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
         String textToEdit = "";
 
-
+        oi.optionDone();
         if (oi.getArgs().size() == 0) {
             rqsList = jgdi.getResourceQuotaSetListWithAnswer(answer);
             printAnswers(answer);
@@ -803,7 +816,7 @@ public class QConfCommand extends QConfCommandGenerated {
         List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
         String text = "";
 
-
+        oi.optionDone();
         if (oi.getArgs().size() == 0) {
             rqsList = jgdi.getResourceQuotaSetListWithAnswer(answer);
             oi.optionDone();
@@ -834,29 +847,78 @@ public class QConfCommand extends QConfCommandGenerated {
     @OptionAnnotation(value = "-au", min = 2, extra = MAX_ARG_VALUE)
     public void addUserSet(final OptionInfo oi) throws JGDIException {
         List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
-        final String userName = oi.getFirstArg();
-        String setName = oi.showLastArg();
-        UserSet obj = jgdi.getUserSet(setName);
-        obj.addEntries(userName);
-        jgdi.updateUserSetWithAnswer(obj, answer);
-        printAnswers(answer);
+        final List<String> setList = oi.getLastOriginalArgList();
+        final List<String> userList = oi.getArgs();
+        UserSet obj;
+        //This is the only call we want to make
+        oi.optionDone();
+        if (userList.size() == 0) {
+            //We are missing the set list and used usernames as sets
+            String msg = getErrorMessage("LessArguments", oi.getOd().getOption(), new ArrayList(setList));
+            throw new JGDIException(msg, getCustomExitCode("LessArguments", oi.getOd().getOption()));
+        }
+        boolean isNew;
+        //We add all the users to all the usersets
+        for (String set : setList) {
+            obj = jgdi.getUserSet(set);
+            isNew = false;
+            if (obj == null) {
+                obj = new UserSetImpl(true);
+                obj.setName(set);
+                isNew = true;
+            }
+            for (String user: userList) {
+                //TODO LP: CR XXXXXX addEntries curently add already existing elements
+                //Missing messages added user to set
+                obj.addEntries(user);
+            }
+            if (isNew) {
+                jgdi.addUserSetWithAnswer(obj, answer);
+            } else {
+                jgdi.updateUserSetWithAnswer(obj, answer);
+            }
+            printAnswers(answer);
+            answer.clear();
+        }
     }
 
     //-du
     @OptionAnnotation(value = "-du", min = 2, extra = MAX_ARG_VALUE)
     public void deleteUserSet(final OptionInfo oi) throws JGDIException {
         List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
-        final String userName = oi.getFirstArg();
-        String setName = oi.showLastArg();
-        UserSet obj = jgdi.getUserSet(setName);
-        if (obj == null) {
-            err.println(getErrorMessage("InvalidObjectArgument", oi.getOd().getOption(), setName));
-            setExitCode(getCustomExitCode("InvalidObjectArgument", oi.getOd().getOption()));
-            return;
+        final List<String> setList = oi.getLastOriginalArgList();
+        final List<String> userList = oi.getArgs();
+        UserSet obj;
+        
+        //This is the only call we want to make
+        oi.optionDone();
+        if (userList.size() == 0) {
+            //We are missing the set list and used usernames as sets
+            String msg = getErrorMessage("LessArguments", oi.getOd().getOption(), new ArrayList(setList));
+            throw new JGDIException(msg, getCustomExitCode("LessArguments", oi.getOd().getOption()));
         }
-        obj.removeEntries(userName);
-        jgdi.updateUserSetWithAnswer(obj, answer);
-        printAnswers(answer);
+        //We delete form all the sets
+        for (String set : setList) {
+            obj = jgdi.getUserSetWithAnswer(set, answer);
+            printAnswers(answer);
+            answer.clear();
+            if (obj == null) {
+                err.println(getErrorMessage("InvalidObjectArgument", oi.getOd().getOption(), set));
+                setExitCode(getCustomExitCode("InvalidObjectArgument", oi.getOd().getOption()));
+                //TODO LP: Missing message about invalid name
+                continue;
+            }
+            for (String user: userList) {
+                //TODO LP: CR XXXXXX addEntries curently add already existing elements
+                //Also messages are coming from the client!
+                //user "user3" is not in access list "set1"
+                //deleted user "user3" from access list "set2"
+                obj.removeEntries(user);
+            }
+            jgdi.updateUserSetWithAnswer(obj, answer);
+            printAnswers(answer);
+            answer.clear();
+        }
     }
 
     //-dul
@@ -864,14 +926,15 @@ public class QConfCommand extends QConfCommandGenerated {
     public void deleteUserSetList(final OptionInfo oi) throws JGDIException {
         List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
         final String setName = oi.getFirstArg();
-        UserSet obj = jgdi.getUserSet(setName);
+        UserSet obj = jgdi.getUserSetWithAnswer(setName, answer);
+        printAnswers(answer);
         if (obj == null) {
             err.println(getErrorMessage("InvalidObjectArgument", oi.getOd().getOption(), setName));
             setExitCode(getCustomExitCode("InvalidObjectArgument", oi.getOd().getOption()));
             return;
         }
-        obj.removeAllEntries();
-        jgdi.updateUserSetWithAnswer(obj, answer);
+        answer.clear();
+        jgdi.deleteUserSetWithAnswer(obj, answer);
         printAnswers(answer);
     }
     
@@ -879,6 +942,7 @@ public class QConfCommand extends QConfCommandGenerated {
     @OptionAnnotation(value = "-ae", min = 0, extra = 1)
     public void addExecHost(final OptionInfo oi) throws JGDIException {
         if (isHostReachable(oi)) {
+            oi.optionDone();
             return;
         }
         String arg = oi.getFirstArg();
@@ -900,6 +964,47 @@ public class QConfCommand extends QConfCommandGenerated {
             printAnswers(answer);
         }
         //oi.optionDone();
+    }
+    
+    //ATTR options
+    @OptionAnnotation(value = "-dattr", min = 4, extra = 0)
+    public void deleteAttribute(final OptionInfo oi) throws JGDIException {
+        List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
+        String name = "";
+        
+        String objectName = oi.getFirstArg().toLowerCase();
+        String attrName = oi.getFirstArg().toLowerCase();
+        String attrValue = oi.getFirstArg();
+        String objectIdList = oi.getFirstArg();
+        
+        if (objectName.equals("queue")) {
+            ClusterQueue q = jgdi.getClusterQueueWithAnswer(objectIdList, answer);
+            printAnswers(answer);
+            answer.clear();
+            //TODO LP: This exception should have been thrown from the jgdi.getClusterQueueWithAnswer for invalid queue name!
+            if (q == null) {
+                throw new JGDIException("denied: cluster queue \""+objectIdList+"\" does not exist",1);
+            }
+            //TODO LP: Investigate if we should be allowed to add/modify/replace/delete ANY atribute!!!
+            String val = GEObjectEditor.getPropertyAsText(q, EditorUtil.PROPERTIES_ALL, attrName);
+            int pos = val.indexOf(attrValue);
+            if (pos == -1) {
+                throw new JGDIException("JGDI Error: value \""+attrValue+"\" is not present in attribute \""+attrName+"\" for "+objectName+" object "+"\""+objectIdList+"\"",1);
+            }
+            name = val.split(" ")[0].trim();
+            val = val.replaceFirst(attrValue, "");
+            //Look if we removed last value and add NONE in necessary
+            if (val.trim().substring(name.length()).length() == 0) {
+                val = name + " NONE";
+            }
+            //Change the object ifself
+            q = GEObjectEditor.updateObjectWithText(jgdi, q, val);
+            //And send it back to qmaster
+            jgdi.updateClusterQueueWithAnswer(q, answer);
+            printAnswers(answer);
+        } else {
+            throw new JGDIException("JGDI Error: Unsupported object_name \""+objectName+"\"",1);
+        }
     }
     
     
@@ -930,15 +1035,39 @@ public class QConfCommand extends QConfCommandGenerated {
         super.addCheckpoint(oi);
     }
     
-    //Configuration
+    //CLUSTERQUEUE
+    @OptionAnnotation(value = "-sq", min = 0, extra = MAX_ARG_VALUE)
+    @Override
+    public void showClusterQueue(OptionInfo oi) throws JGDIException {
+        if (oi.getArgs().size() == 0) {
+            List<String> args = new LinkedList<String>();
+            args.add("template");
+            oi = new OptionInfo(oi.getOd(), new ArrayList(args), oi.getMap());
+        }
+        super.showClusterQueue(oi);
+    }
+    
+    //CONFIGURATION
     @OptionAnnotation(value = "-aconf", min = 0, extra = 1)
     @Override
     public void addConfiguration(final OptionInfo oi) throws JGDIException {
         if (isHostReachable(oi)) {
+            oi.optionDone();
             return;
         }
         //otherwise handle adding of the object
         super.addConfiguration(oi);
+    }
+
+    @OptionAnnotation(value = "-sconf", min = 0, extra = MAX_ARG_VALUE)
+    @Override
+    public void showConfiguration(OptionInfo oi) throws JGDIException {
+        if (oi.getArgs().size() == 0) {
+            List<String> args = new LinkedList<String>();
+            args.add("global");
+            oi = new OptionInfo(oi.getOd(), new ArrayList(args), oi.getMap());
+        }
+        super.showConfiguration(oi);
     }
 
     //PARALLEL ENVIRONMENT
@@ -970,6 +1099,7 @@ public class QConfCommand extends QConfCommandGenerated {
     @Override
     public void modifyExecHost(final OptionInfo oi) throws JGDIException {
         if (!isHostReachable(oi)) {
+            oi.optionDone();
             return;
         }
         super.modifyExecHost(oi);

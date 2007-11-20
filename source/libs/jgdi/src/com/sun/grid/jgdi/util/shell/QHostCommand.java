@@ -50,10 +50,6 @@ import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
 @CommandAnnotation(value = "qhost")
 public class QHostCommand extends AbstractCommand {
 
-    public String getUsage() {
-        return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qhost");
-    }
-
     public void run(String[] args) throws Exception {
 
         List<String> argList = new LinkedList<String>();

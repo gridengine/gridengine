@@ -41,10 +41,6 @@ import java.util.LinkedList;
 @CommandAnnotation(value = "qrdel")
 public class QrDelCommand extends AbstractCommand {
 
-    public String getUsage() {
-        return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qrdel");
-    }
-
     public void run(String[] args) throws Exception {
         String[] ars = null;
         boolean arargs = false;

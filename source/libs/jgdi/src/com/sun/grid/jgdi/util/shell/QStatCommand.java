@@ -53,10 +53,6 @@ public class QStatCommand extends AnnotatedCommand {
     
     boolean showXml = false;
     
-    public String getUsage() {
-        return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qstat");
-    }
-    
     public void run(String[] args) throws Exception {
         cqOptions = new ClusterQueueSummaryOptions();
         qiOptions = new QueueInstanceSummaryOptions();

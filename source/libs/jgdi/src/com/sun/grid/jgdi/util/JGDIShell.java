@@ -39,9 +39,8 @@ import com.sun.grid.jgdi.configuration.xml.XMLUtil;
 import com.sun.grid.jgdi.util.shell.AbortException;
 import com.sun.grid.jgdi.util.shell.AbstractCommand;
 import com.sun.grid.jgdi.util.shell.AnnotatedCommand;
-import com.sun.grid.jgdi.util.shell.Command;
 import com.sun.grid.jgdi.util.shell.CommandAnnotation;
-import com.sun.grid.jgdi.util.shell.HistoryCommand;
+import com.sun.grid.jgdi.util.shell.QStatCommand;
 import com.sun.grid.jgdi.util.shell.Shell;
 import java.io.BufferedReader;
 import java.io.EOFException;
@@ -77,6 +76,7 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 import java.io.File;
+import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.net.URL;
 import java.util.jar.JarEntry;
@@ -93,7 +93,7 @@ public class JGDIShell implements Runnable, Shell {
     private int historyIndex = 0;
     private int maxHistory = 30;
     private JGDI jgdi;
-    private Map<String, Command> cmdMap = new HashMap<String, Command>();
+    private Map<String, Class<? extends AbstractCommand>> cmdMap = new HashMap<String, Class<? extends AbstractCommand>>();
     private TreeSet<String> cmdSet = null;
     private ReadlineHandler readlineHandler;
     private static final ResourceBundle usageResources = ResourceBundle.getBundle("com.sun.grid.jgdi.util.shell.UsageResources");
@@ -106,13 +106,6 @@ public class JGDIShell implements Runnable, Shell {
     public JGDIShell() {
         out = new PrintWriter(System.out);
         err = new PrintWriter(System.err);
-        cmdMap.put("connect", new ConnectCommand());
-        cmdMap.put("exit", new ExitCommand());
-        cmdMap.put("help", new HelpCommand());
-        cmdMap.put("debug", new DebugCommand());
-        cmdMap.put("history", new PrintHistoryCommand());
-        cmdMap.put("xmldump", new XMLDumpCommand());
-        cmdMap.put("$?", new GetExitCodeCommand());
         // Register all command classes
         try {
             List<Class> classes = getAllAnnotatedClasses(this.getClass().getPackage(), CommandAnnotation.class);
@@ -120,9 +113,11 @@ public class JGDIShell implements Runnable, Shell {
                 addAnnotatedCommand(cls);
             }
         } catch (Exception ex) {
-            err.println("Not connected" + ex.getMessage());
+            err.println("Not connected " + ex.getMessage());
         }
-
+        //TODO LP: we need real qselect command, not just alias to qstat
+        cmdMap.put("qselect", QStatCommand.class);
+        
         cmdSet = new TreeSet<String>(cmdMap.keySet());
         readlineHandler = createReadlineHandler();
 
@@ -136,9 +131,11 @@ public class JGDIShell implements Runnable, Shell {
      */
     @SuppressWarnings(value = "unchecked")
     private void addAnnotatedCommand(Class cls) throws Exception {
+        AbstractCommand cmd = null;
         CommandAnnotation ca = (CommandAnnotation) cls.getAnnotation(CommandAnnotation.class);
-        if (Command.class.isAssignableFrom(cls)) {
-            cmdMap.put(ca.value(), (Command) cls.newInstance());
+        if (AbstractCommand.class.isAssignableFrom(cls)) {
+
+            cmdMap.put(ca.value(), cls);
             if (AnnotatedCommand.class.isAssignableFrom(cls)) {
                 AnnotatedCommand.initOptionDescriptorMap(cls, out, err);
             }
@@ -146,12 +143,20 @@ public class JGDIShell implements Runnable, Shell {
             throw new IllegalStateException("Can not assign " + cls.getName() + " from Command.class");
         }
     }
-
-    private Command getCommand(String name) throws Exception {
-        Command cmd = cmdMap.get(name);
-        // We need a new instance of command for each request
-        if (cmd instanceof AbstractCommand) {
-            cmd = cmd.getClass().newInstance();
+    
+    
+    private AbstractCommand getCommand(String name) throws Exception {
+        Class<? extends AbstractCommand> cls = cmdMap.get(name);
+        if (cls == null) {
+            return null;
+        }
+        AbstractCommand cmd = null;
+        //If JGDIShell inner class
+        if (cls.getName().contains(".JGDIShell$")) {
+            Constructor c = cls.getConstructor(new Class[]{JGDIShell.class});
+            cmd = (AbstractCommand) c.newInstance(new Object[]{this});
+        } else {
+            cmd = (AbstractCommand) cls.newInstance();
         }
         return cmd;
     }
@@ -241,24 +246,20 @@ public class JGDIShell implements Runnable, Shell {
                 }
             }
             ParsedLine parsedLine = new ParsedLine(line);
-            Command cmd = getCommand(parsedLine.cmd);
+            AbstractCommand cmd = getCommand(parsedLine.cmd);
             if (cmd == null) {
                 exitCode = runShellCommand(line);
                 return exitCode;
             }
-
-            if (cmd instanceof HistoryCommand) {
-                if (historyList.size() > maxHistory) {
-                    historyList.remove(0);
-                }
-                historyList.add(new HistoryElement(++historyIndex, line));
+            
+            if (historyList.size() > maxHistory) {
+                historyList.remove(0);
             }
+            historyList.add(new HistoryElement(++historyIndex, line));
 
             cmd.init(this);
             cmd.run(parsedLine.args);
-            if (cmd instanceof AbstractCommand) {
-                return ((AbstractCommand) cmd).getExitCode();
-            }
+            return cmd.getExitCode();
         } catch (AbortException expected) {
             exitCode = 0;
         } catch (JGDIException ex) {
@@ -444,66 +445,64 @@ public class JGDIShell implements Runnable, Shell {
             args = new String[argList.size()];
             argList.toArray(args);
         }
-    }
+    } 
 
-    class ExitCommand implements HistoryCommand {
-
-        public String getUsage() {
-            return "exit";
+    @CommandAnnotation(value="exit")
+    class ExitCommand extends AbstractCommand {
+        public ExitCommand() {
+            super();
         }
 
         public void run(String[] args) throws Exception {
             if (jgdi != null) {
-                try {
-                    jgdi.close();
-                } catch (JGDIException ex1) {
-                    final String msg = "close failed: " + ex1.getMessage();
-                    out.println(msg);
-                    logger.warning(msg);
-                }
+                jgdi.close();
+                logger.info("disconnect from " + jgdi);
             }
             readlineHandler.cleanup();
-            System.exit(0);
+            System.exit(lastExitCode);
         }
-
+        
+        @Override
         public void init(Shell shell) throws Exception {
         }
     }
-
-    class HelpCommand implements Command {
-
-        public String getUsage() {
-            return "help [command]";
+    
+    @CommandAnnotation(value="help")
+    class HelpCommand extends AbstractCommand {
+        public HelpCommand() {
+            super();
         }
 
         public void run(String[] args) throws Exception {
             switch (args.length) {
-                case 1:
+                case 0:
                     out.println("Available commands: ");
                     for (String cmd : cmdMap.keySet()) {
                         out.println(cmd);
                     }
                     break;
-                case 2:
-                    Command cmd = getCommand(args[0]);
+                case 1:
+                    AbstractCommand cmd = getCommand(args[0]);
                     if (cmd == null) {
                         out.println("command " + args[0] + " not found");
+                        return;
                     }
                     out.println(cmd.getUsage());
                     break;
                 default:
-                    throw new IllegalArgumentException(" not found");
+                    out.println(getUsage());
             }
         }
-
+        
+        @Override
         public void init(Shell shell) throws Exception {
         }
     }
 
-    class ConnectCommand implements HistoryCommand {
-
-        public String getUsage() {
-            return "connect bootstrap:///<sge_root>@<sge_cell>:<qmaster_post>";
+    @CommandAnnotation(value="connect")
+    class ConnectCommand extends AbstractCommand {
+        public ConnectCommand() {
+            super();
         }
 
         public void run(String[] args) throws Exception {
@@ -524,18 +523,20 @@ public class JGDIShell implements Runnable, Shell {
             logger.info("connect to " + args[0]);
             jgdi = JGDIFactory.newInstance(args[0]);
         }
-
+        
+        @Override
         public void init(Shell shell) throws Exception {
         }
     }
 
-    class DebugCommand implements HistoryCommand {
-
-        public String getUsage() {
-            return "debug [-l <logger>] [<level>]";
+    @CommandAnnotation(value="debug")
+    class DebugCommand extends AbstractCommand {
+        public DebugCommand() {
+            super();
         }
 
         // TODO Logger.global is deprecated, clean up this
+
         @SuppressWarnings(value = "deprecation")
         public void run(String[] args) throws Exception {
 
@@ -575,14 +576,15 @@ public class JGDIShell implements Runnable, Shell {
             }
         }
 
+        @Override
         public void init(Shell shell) throws Exception {
         }
     }
-
-    class PrintHistoryCommand implements Command {
-
-        public String getUsage() {
-            return "xmldump <object type> (all|<object name>)";
+    
+    @CommandAnnotation(value="history")
+    class PrintHistoryCommand extends AbstractCommand {
+        public PrintHistoryCommand() {
+            super();
         }
 
         public void run(String[] args) throws Exception {
@@ -590,15 +592,16 @@ public class JGDIShell implements Runnable, Shell {
                 out.printf("%5d %s%n", elem.getId(), elem.getLine());
             }
         }
-
+        
+        @Override
         public void init(Shell shell) throws Exception {
         }
     }
 
-    class XMLDumpCommand implements HistoryCommand {
-
-        public String getUsage() {
-            return "xmldump <object type> (all|<object name>)";
+    @CommandAnnotation(value="xmldump")
+    class XMLDumpCommand extends AbstractCommand {
+        public XMLDumpCommand() {
+            super();
         }
 
         public void run(String[] args) throws Exception {
@@ -611,7 +614,7 @@ public class JGDIShell implements Runnable, Shell {
             }
             if (args[1].equals("all")) {
                 Method method = JGDI.class.getMethod("get" + args[0] + "List", (java.lang.Class[]) null);
-                List list = (List) method.invoke(jgdi, (java.lang.Object[])null);
+                List list = (List) method.invoke(jgdi, (java.lang.Object[]) null);
                 Iterator iter = list.iterator();
                 while (iter.hasNext()) {
                     Object obj = iter.next();
@@ -622,28 +625,29 @@ public class JGDIShell implements Runnable, Shell {
                 Method method = JGDI.class.getMethod("Unknown error" + args[0], new Class[]{String.class});
                 Object obj = method.invoke(jgdi, new Object[]{args[1]});
                 XMLUtil.write((GEObject) obj, System.out);
-                System.out.flush();
             }
         }
-
+        
+        @Override
         public void init(Shell shell) throws Exception {
         }
     }
 
-    class GetExitCodeCommand implements HistoryCommand {
-        
-        public String getUsage() {
-            return "$?";
+    @CommandAnnotation(value="$?")
+    class GetExitCodeCommand extends AbstractCommand {
+        public GetExitCodeCommand() {
+            super();
         }
         
         public void run(String[] args) throws Exception {
             out.println(lastExitCode);
         }
         
+        @Override
         public void init(Shell shell) throws Exception {
         }
     }
-    
+
     static class HistoryElement {
 
         private int id;

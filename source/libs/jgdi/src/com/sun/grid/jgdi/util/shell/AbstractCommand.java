@@ -32,29 +32,39 @@
 package com.sun.grid.jgdi.util.shell;
 
 import com.sun.grid.jgdi.JGDI;
+import com.sun.grid.jgdi.JGDIFactory;
 import com.sun.grid.jgdi.configuration.JGDIAnswer;
+import com.sun.grid.jgdi.util.JGDIShell;
 import java.io.PrintWriter;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
  */
-public abstract class AbstractCommand implements HistoryCommand {
+public abstract class AbstractCommand  {
     Shell shell=null;
     JGDI jgdi = null;
     PrintWriter out=null;
     PrintWriter err=null;
     private int exitCode = 0;
     
-    public Logger getLogger() {
-        return shell.getLogger();
+    /** Gets the command usage */
+    public String getUsage() {
+        String usageKey = "usage." + this.getClass().getAnnotation(CommandAnnotation.class).value();
+        return JGDIFactory.getJGDIVersion() + "\n" + JGDIShell.getResourceString(usageKey);
     }
     
-    public Shell getShell() {
-        return shell;
-    }
+    /**
+     * Run the command
+     * @param args
+     * @throws java.lang.Exception
+     */
+    public abstract void run(String [] args) throws Exception;
     
+    /**
+     * Init command, set all needed arrtibutes from shell
+     * @param shell
+     * @throws java.lang.Exception
+     */
     public void init(Shell shell) throws Exception {
         this.shell=shell;
         this.jgdi = shell.getConnection();
@@ -62,55 +72,8 @@ public abstract class AbstractCommand implements HistoryCommand {
         this.err = shell.getErr();
     }
     
-    public String[] parseWCQueueList(String arg) {
-        String [] ret = arg.split(",");
-        if(getLogger().isLoggable(Level.FINE)) {
-            StringBuilder buf = new StringBuilder();
-            buf.append("wc_queue_list [");
-            for(int i = 0; i < ret.length; i++) {
-                if(i>0) {
-                    buf.append(", ");
-                }
-                buf.append(ret[i]);
-            }
-            buf.append("]");
-            getLogger().fine(buf.toString());
-        }
-        return ret;
-    }
-    
-    public String[] parseJobWCQueueList(String arg) {
-        String [] ret = arg.split(",");
-        if (getLogger().isLoggable(Level.FINE)) {
-            StringBuilder buf = new StringBuilder();
-            buf.append("job_wc_queue_list [");
-            for (int i = 0; i < ret.length; i++) {
-                if (i > 0) {
-                    buf.append(", ");
-                }
-                buf.append(ret[i]);
-            }
-            buf.append("]");
-            getLogger().fine(buf.toString());
-        }
-        return ret;
-    }
-    
-    public String[] parseJobList(String arg) {
-        String[] ret = arg.split(",");
-        if (getLogger().isLoggable(Level.FINE)) {
-            StringBuilder buf = new StringBuilder();
-            buf.append("job_list [");
-            for (int i = 0; i < ret.length; i++) {
-                if (i > 0) {
-                    buf.append(", ");
-                }
-                buf.append(ret[i]);
-            }
-            buf.append("]");
-            getLogger().fine(buf.toString());
-        }
-        return ret;
+    public Shell getShell() {
+        return shell;
     }
     
     /**
@@ -134,12 +97,18 @@ public abstract class AbstractCommand implements HistoryCommand {
                 exitCode = status;
             }
             text = answer.getText().trim();
-            if (text.length()>0 && !text.equals("ok")) out.println(answer.getText());
+            //To be compatible the C clients
+            if (text.startsWith("denied:")) {
+                text = "error: "+text;
+            }
+            if (text.length()>0 && !text.equals("ok")) out.println(text);
         }
         //Get the last
         answer = answers.get(i);
         status = answer.getQuality();
-        text = answer.getText();
+        text = answer.getText().trim();
+        //To be compatible the C clients
+        //TODO LP: This is not 100% correct some clients show only denied:
         
         if (status == 0 || status == 1 || exitCode != 0) {
             throw new IllegalArgumentException(text);

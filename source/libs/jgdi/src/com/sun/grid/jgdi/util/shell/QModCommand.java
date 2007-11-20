@@ -32,21 +32,17 @@
 package com.sun.grid.jgdi.util.shell;
 
 import com.sun.grid.jgdi.JGDI;
-import com.sun.grid.jgdi.JGDIFactory;
 import com.sun.grid.jgdi.configuration.JGDIAnswer;
 import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 
 /**
  *
  */
 @CommandAnnotation(value = "qmod")
 public class QModCommand extends AbstractCommand {
-
-    public String getUsage() {
-        return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qmod");
-    }
 
     public void run(String[] args) throws Exception {
         JGDI jgdi = getShell().getConnection();
@@ -203,5 +199,56 @@ public class QModCommand extends AbstractCommand {
                 throw new IllegalArgumentException("ERROR! invalid option argument \"" + args[i] + "\"");
             }
         }
+    }
+    
+    public String[] parseWCQueueList(String arg) {
+        String [] ret = arg.split(",");
+        if(getShell().getLogger().isLoggable(Level.FINE)) {
+            StringBuilder buf = new StringBuilder();
+            buf.append("wc_queue_list [");
+            for(int i = 0; i < ret.length; i++) {
+                if(i>0) {
+                    buf.append(", ");
+                }
+                buf.append(ret[i]);
+            }
+            buf.append("]");
+            getShell().getLogger().fine(buf.toString());
+        }
+        return ret;
+    }
+    
+    public String[] parseJobWCQueueList(String arg) {
+        String [] ret = arg.split(",");
+        if (getShell().getLogger().isLoggable(Level.FINE)) {
+            StringBuilder buf = new StringBuilder();
+            buf.append("job_wc_queue_list [");
+            for (int i = 0; i < ret.length; i++) {
+                if (i > 0) {
+                    buf.append(", ");
+                }
+                buf.append(ret[i]);
+            }
+            buf.append("]");
+            getShell().getLogger().fine(buf.toString());
+        }
+        return ret;
+    }
+    
+    public String[] parseJobList(String arg) {
+        String[] ret = arg.split(",");
+        if (getShell().getLogger().isLoggable(Level.FINE)) {
+            StringBuilder buf = new StringBuilder();
+            buf.append("job_list [");
+            for (int i = 0; i < ret.length; i++) {
+                if (i > 0) {
+                    buf.append(", ");
+                }
+                buf.append(ret[i]);
+            }
+            buf.append("]");
+            getShell().getLogger().fine(buf.toString());
+        }
+        return ret;
     }
 }

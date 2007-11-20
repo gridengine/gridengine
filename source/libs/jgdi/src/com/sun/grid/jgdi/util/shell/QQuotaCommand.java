@@ -52,10 +52,6 @@ import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
 @CommandAnnotation(value = "qquota")
 public class QQuotaCommand extends AbstractCommand {
     
-    public String getUsage() {
-        return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qquota");
-    }
-    
     public void run(String[] args) throws Exception {
         QQuotaOptions options = parse(args);
         if (options == null) {

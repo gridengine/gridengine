@@ -32,6 +32,7 @@
 
 package com.sun.grid.jgdi.util.shell.editor;
 
+import com.sun.grid.jgdi.JGDIException;
 import com.sun.grid.jgdi.configuration.ClusterQueue;
 import com.sun.grid.jgdi.configuration.Configuration;
 import com.sun.grid.jgdi.configuration.GEObject;
@@ -44,6 +45,7 @@ import com.sun.grid.jgdi.configuration.reflect.DefaultMapListPropertyDescriptor;
 import com.sun.grid.jgdi.configuration.reflect.DefaultMapPropertyDescriptor;
 import com.sun.grid.jgdi.configuration.reflect.PropertyDescriptor;
 import com.sun.grid.jgdi.configuration.reflect.SimplePropertyDescriptor;
+import com.sun.grid.jgdi.util.shell.AnnotatedCommand;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.StringReader;
@@ -205,11 +207,10 @@ public class EditorParser {
                 continue;
             }
             
-            if ((pd = getPropertyDescriptor(obj, attr)) == null) {
-                throw new IllegalArgumentException("Skipped: Unknown attribute \"" + attr + "\"");
-            }
-            if (pd.isReadOnly()) {
-                throw new IllegalArgumentException("Skipped: Read only attribute \"" + attr + "\"");
+            if ((pd = getPropertyDescriptor(obj, attr)) == null || pd.isReadOnly()) {
+                String msg = AnnotatedCommand.getDefaultErrorMessage("QConfCommand", "UnknownAttribute", attr);
+                int exitCode = AnnotatedCommand.getCustomExitCode("QConfCommand", "UnknownAttribute", "");
+                throw new JGDIException(msg, exitCode);
             }
             
             line = parseOnePlainTextLine(obj, pd, line.trim());

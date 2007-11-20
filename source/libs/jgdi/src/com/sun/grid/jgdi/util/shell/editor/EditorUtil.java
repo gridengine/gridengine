@@ -484,7 +484,7 @@ public class EditorUtil {
         } else if (type.equals("java.lang.String")) {
             return translateStringValueToObject(value);
         } else if (type.equals("com.sun.grid.jgdi.configuration.ConfigurationElement")) {
-            //jgdi.getCo
+            //TODO LP: What here?
         } else if (type.startsWith("com.sun.grid.jgdi.configuration.")) {
             if (translateStringValueToObject(value) == null) {
                 return null;

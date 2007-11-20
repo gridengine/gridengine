@@ -85,6 +85,7 @@
     */
    @OptionAnnotation(value = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
    public void add<%=objectType%>(final OptionInfo oi) throws JGDIException {
+      oi.optionDone();
       String arg = oi.getFirstArg();
       List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
       // create an object with defaults set
@@ -99,7 +100,6 @@
          jgdi.add<%=objectType%>WithAnswer(obj, answer);
          printAnswers(answer);
       }
-      oi.optionDone();
    }   
    <%
        } //end genAddMethod
@@ -113,7 +113,9 @@
     */
    @OptionAnnotation(value = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
    public void addFromFile<%=objectType%>(final OptionInfo oi) throws JGDIException {
-      final String fileName = oi.getFirstArg();
+      //Just look at the filename
+      final String fileName = oi.getArgs().get(0);
+      oi.optionDone();
       List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
       <%=objectType%> obj = new <%=objectType%>Impl(true);
       String inputText = readFile(oi);
@@ -129,7 +131,6 @@
       GEObjectEditor.updateObjectWithText(jgdi, obj, inputText);
       jgdi.add<%=objectType%>WithAnswer(obj, answer);
       printAnswers(answer);
-      oi.optionDone();
    }  
    <%
        } //end genAddFromFileMethod  
@@ -177,23 +178,36 @@
     */
    @OptionAnnotation(value = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
    public void modifyFromFile<%=objectType%>(final OptionInfo oi) throws JGDIException {
-      final String fileName = oi.getFirstArg();
+      //Just look at the filename
+      final String fileName = oi.getArgs().get(0);
+      oi.optionDone();
       List<JGDIAnswer> answer = new LinkedList<JGDIAnswer>();
       String inputText = readFile(oi);
       <%=objectType%> obj;
       <%if (objectType.equals("SchedConf")) {%>
-      obj = jgdi.getSchedConf();
+      obj = jgdi.getSchedConfWithAnswer(answer);
       <%} else {%>
       final String keyAttrValue = getKeyAttributeValueFromString(err, "<%=objectType%>", fileName, inputText);
       if (keyAttrValue == null) {
          return;
       }
-      obj = jgdi.get<%=objectType%>(keyAttrValue);
+      obj = jgdi.get<%=objectType%>WithAnswer(keyAttrValue, answer);
       <%} %>
-      GEObjectEditor.updateObjectWithText(jgdi, obj, inputText);
-      jgdi.update<%=objectType%>WithAnswer(obj, answer);
       printAnswers(answer);
-      oi.optionDone();
+      answer.clear();
+      if (obj != null) {
+          GEObjectEditor.updateObjectWithText(jgdi, obj, inputText);
+          jgdi.update<%=objectType%>WithAnswer(obj, answer);
+          printAnswers(answer);
+      } else {
+          //TODO LP: Check this is ever displayed
+          <%if (objectType.equals("SchedConf")) {%>
+          err.println(getErrorMessage("InvalidObjectArgument", oi.getOd().getOption()));
+          <%} else {%>
+          err.println(getErrorMessage("InvalidObjectArgument", oi.getOd().getOption(), keyAttrValue));
+          <%} %>
+          setExitCode(getCustomExitCode("InvalidObjectArgument", oi.getOd().getOption()));
+      }
    }  
    <%
        } //end genModifyFromFileMethod  

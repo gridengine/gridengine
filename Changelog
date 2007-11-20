@@ -1,3 +1,9 @@
+CR-2007-11-20-0: Bugfix:    authuser binary checked real user id not the
+                            effective user id. Problem: Only root could
+                            start this binary.
+                            (Hedeby issue, merged from maintrunk CR-2007-11-14-0)
+                 Review:    RH
+
 RD-2007-11-20-0: Bugfix:    - moved README-Upgrade-61.txt to README-Upgrade.txt
                  Review:    MD
 

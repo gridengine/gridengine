@@ -195,7 +195,7 @@ int main(int argc, char** argv) {
 #ifndef WINDOWS
 #define SGE_SUPERUSER_UID 0
    /* only root can successfull execute this */
-   if(getuid() != SGE_SUPERUSER_UID) {
+   if(geteuid() != SGE_SUPERUSER_UID) {
       print_error(MSG_AUTHUSER_ONLY_ROOT_S, argv[0]);
       return 1;
    }

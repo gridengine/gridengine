@@ -32,10 +32,13 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_gdi_request.h"
+#include "gdi/sge_gdi_ctx.h"
 
-int main(int argc, char* argv[]);
-unsigned long sge_qmaster_application_status(char** info_message);
+int 
+main(int argc, char* argv[]);
+
+unsigned long 
+sge_qmaster_application_status(char** info_message);
 
 #endif /* _SGE_QMASTER_MAIN_H_ */
 

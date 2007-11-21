@@ -61,8 +61,7 @@ extern "C" {
 *     PERM_req_username and PERM_sge_username values are filled up with 
 *     the correct user mapping names.
 *
-*     The gdi functions sge_gdi_check_permission() and 
-*     sge_gdi_get_mapping_name() are using the SGE_GDI_PERMCHECK gdi 
+*     sge_gdi_get_mapping_name() is using the SGE_GDI_PERMCHECK gdi 
 *     request. 
 * 
 *  EXAMPLE
@@ -83,7 +82,6 @@ extern "C" {
 *       
 *  SEE ALSO
 *    gdilib/sge_gdi_get_mapping_name()
-*    gdilib/sge_gdi_check_permission()
 *    gdilib/sge_gdi()
 *****************************************************************************/
 

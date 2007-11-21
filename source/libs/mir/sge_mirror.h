@@ -167,15 +167,12 @@ typedef enum {
 
 /* Initialization - Shutdown */
 sge_mirror_error 
-sge_mirror_initialize(sge_evc_class_t *evc, ev_registration_id id, const char *name, bool use_global_data);
-
-sge_mirror_error 
-sge_mirror_initialize_local(sge_evc_class_t *evc, ev_registration_id id, const char *name, 
-                            bool use_global_data,event_client_update_func_t update_func);
-
+sge_mirror_initialize(sge_evc_class_t *evc, ev_registration_id id, const char *name,
+                      bool use_global_data, event_client_update_func_t update_func,
+                      evm_mod_func_t mod_func, evm_add_func_t add_func,
+                      evm_remove_func_t remove_func, evm_ack_func_t ack_func);
 
 sge_mirror_error sge_mirror_shutdown(sge_evc_class_t *evc);
-sge_mirror_error sge_mirror_shutdown_local(sge_evc_class_t *evc);
 
 /* Subscription */
 sge_mirror_error sge_mirror_subscribe(sge_evc_class_t *evc, 
@@ -189,7 +186,12 @@ sge_mirror_error sge_mirror_unsubscribe(sge_evc_class_t *evc,
                                         sge_object_type type);
 
 /* Event Processing */
-sge_mirror_error sge_mirror_process_events(sge_evc_class_t *evc);
+
+sge_mirror_error
+sge_mirror_process_event_list(sge_evc_class_t *evc, lList *event_list);
+
+sge_mirror_error 
+sge_mirror_process_events(sge_evc_class_t *evc);
 
 sge_mirror_error 
 sge_mirror_update_master_list(lList **list, const lDescr *list_descr,

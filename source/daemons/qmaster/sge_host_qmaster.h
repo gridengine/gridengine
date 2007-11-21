@@ -37,7 +37,9 @@
 #include "sge_feature.h"
 #include "sge_qmaster_timed_event.h"
 #include "uti/sge_monitor.h"
+
 #include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdi_packet.h"
 
 
 /* funtions called via gdi and inside the qmaster */
@@ -56,14 +58,8 @@ void sge_mark_unheard(lListElem *hep, const char *target);
 
 int sge_add_host_of_type(sge_gdi_ctx_class_t *context, const char *hostname, u_long32 target, monitoring_t *monitor);
 
-void sge_gdi_kill_exechost(sge_gdi_ctx_class_t *context, 
-                           char *host, 
-                           sge_gdi_request *request, 
-                           sge_gdi_request *answer,
-                           uid_t uid, 
-                           gid_t gid, 
-                           char *user, 
-                           char *group);
+void sge_gdi_kill_exechost(sge_gdi_ctx_class_t *ctx,                            
+                           sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task);
 
 void sge_update_load_values(sge_gdi_ctx_class_t *context, char *rhost, lList *lp);
 
@@ -85,6 +81,9 @@ void host_diff_projects(const lListElem *new, const lListElem *old, lList **new_
 void host_diff_usersets(const lListElem *new, const lListElem *old, lList **new_acl, lList **old_acl);
 
 void sge_change_queue_version_exechost(sge_gdi_ctx_class_t *ctx, const char *exechost_name);
+
+void        
+host_initalitze_timer(void);
 
 #endif /* __SGE_HOST_QMASTER_H */
 

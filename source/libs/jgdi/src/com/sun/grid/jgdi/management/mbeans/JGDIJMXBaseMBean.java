@@ -45,6 +45,13 @@ import java.io.File;
 import java.util.List;
 import java.util.Set;
 
+// drmaa specific imports
+// import org.ggf.drmaa.DrmaaException;
+// import org.ggf.drmaa.JobInfo;
+// import org.ggf.drmaa.JobTemplate;
+// import org.ggf.drmaa.Version;
+
+
 /**
  * Interface JGDIJMXBaseMBean
  *
@@ -123,6 +130,23 @@ public interface JGDIJMXBaseMBean {
     public void rescheduleJobs(String[] jobs, boolean force) throws JGDIException;
     public String showDetachedSettings(String[] queues) throws JGDIException;
     public String showDetachedSettingsAll() throws JGDIException;
+
+
+//     // DRMAA specific methods
+//     public void drmaaInit(String contact) throws DrmaaException;
+//     public void drmaaExit() throws DrmaaException;
+//     // public JobTemplate drmaaCreateJobTemplate() throws DrmaaException;
+//     // public void deleteJobTemplate(JobTemplate jt) throws DrmaaException;
+//     public String drmaaRunJob(JobTemplate jt) throws DrmaaException;
+//     public List drmaaRunBulkJobs(JobTemplate jt, int start, int end, int incr) throws DrmaaException;
+//     public void drmaaControl(String jobId, int action) throws DrmaaException;
+//     public void drmaaSynchronize(List jobIds, long timeout, boolean dispose) throws DrmaaException;
+//     public JobInfo drmaaWait(String jobId, long timeout) throws DrmaaException;
+//     public int drmaaGetJobProgramStatus(String jobId) throws DrmaaException;
+//     public String drmaaGetContact();
+//     public Version drmaaGetVersion();
+//     public String drmaaGetDrmSystem();
+//     public String drmaaGetDrmaaImplementation();
     
 }
 

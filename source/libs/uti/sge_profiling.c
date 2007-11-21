@@ -121,7 +121,7 @@
 *     uti/profiling/prof_get_info_string()
 *
 *  NOTES
-*     MT-NOTE: this module is MT safe, if sge_prof_setup() and/or
+*     MT-NOTE: this module is MT safe, if prof_mt_init() and/or
 *              sge_prof_set_enabled() are called before
 *              profiling is started and sge_prof_cleanup() is called after
 *              all threads which make profiling calls have been stopped!
@@ -158,7 +158,7 @@
 *     functions to start or stop a measurement.
 *
 *  SEE ALSO
-*     uti/profiling/sge_prof_setup()
+*     uti/profiling/prof_mt_init()
 *     uti/profiling/sge_prof_cleanup()
 *     uti/profiling/prof_is_active()
 *     uti/profiling/prof_start_measurement()
@@ -193,6 +193,8 @@ static pthread_mutex_t thrdInfo_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_key_t thread_id_key;
 
 static bool profiling_enabled = true;
+
+static pthread_once_t prof_once = PTHREAD_ONCE_INIT;
 
 /*
  * TODO: If application starts more than MAX_THREAD_NUM threads,
@@ -246,7 +248,8 @@ void sge_prof_set_enabled(bool enabled) {
 *
 *  SEE ALSO
 *******************************************************************************/
-void sge_prof_setup(void) {
+static void prof_thread_local_once_init(void)
+{
    if (!profiling_enabled) {
       return;
    }
@@ -254,6 +257,10 @@ void sge_prof_setup(void) {
    init_thread_info();
    init_array_first();
    init_array(pthread_self());
+}
+
+void prof_mt_init(void) {
+   pthread_once(&prof_once, prof_thread_local_once_init);
 }
 
 

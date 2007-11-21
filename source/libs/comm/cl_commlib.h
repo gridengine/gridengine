@@ -34,13 +34,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
+#include "basis_types.h"
 
 #include "cl_lists.h"
 #include "cl_data_types.h"
 #include "cl_communication.h"
-
-
 
 #define CL_COM_DEBUG_CLIENT_NAME "debug_client"
 
@@ -51,8 +49,7 @@ cl_raw_list_t* cl_com_get_endpoint_list(void);
 
 /* application log functions */
 int cl_commlib_push_application_error(cl_log_t cl_err_type, int cl_error, const char* cl_info);
-
-int cl_com_setup_commlib(cl_thread_mode_t t_mode, cl_log_t debug_level , cl_log_func_t flush_func);
+int cl_com_setup_commlib(cl_thread_mode_t t_mode, cl_log_t debug_level, cl_log_func_t flush_func);
 cl_bool_t cl_com_setup_commlib_complete(void);
 int cl_com_cleanup_commlib(void);
 

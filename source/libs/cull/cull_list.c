@@ -682,7 +682,7 @@ static void lWriteElem_(const lListElem *ep, dstring *buffer, int nesting_level)
    lListElem *tep;
    const char *str;
 
-   DENTER(CULL_LAYER, "lWriteElem");
+   DENTER(TOP_LAYER, "lWriteElem");
 
    if (!ep) {
       LERROR(LEELEMNULL);
@@ -694,62 +694,76 @@ static void lWriteElem_(const lListElem *ep, dstring *buffer, int nesting_level)
    }
    space[i] = '\0';
 
+DTRACE;
    sge_dstring_sprintf_append(buffer, "%s-------------------------------\n", space);
 
    for (i = 0; ep->descr[i].mt != lEndT; i++)
    {
       bool changed = sge_bitfield_get(&(ep->changed), i);
+      const char *name = ((lNm2Str(ep->descr[i].nm) != NULL) ? lNm2Str(ep->descr[i].nm) : "(null)");
 
       switch (mt_get_type(ep->descr[i].mt)) {
       case lIntT:
-         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Integer) %c = %d\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosInt(ep, i));
+DTRACE;
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Integer) %c = %d\n", space, name, changed ? '*' : ' ', lGetPosInt(ep, i));
          break;
       case lUlongT:
-         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Ulong)   %c = " sge_u32"\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosUlong(ep, i));
+DTRACE;
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Ulong)   %c = " sge_u32"\n", space, name, changed ? '*' : ' ', lGetPosUlong(ep, i));
          break;
       case lStringT:
+DTRACE;
          str = lGetPosString(ep, i);
-         sge_dstring_sprintf_append(buffer, "%s%-20.20s (String)  %c = %s\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', str ? str : "(null)");
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (String)  %c = %s\n", space, name, changed ? '*' : ' ', str ? str : "(null)");
          break;
       case lHostT:
+DTRACE;
          str = lGetPosHost(ep, i);
-         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Host)    %c = %s\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', str ? str : "(null)");
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Host)    %c = %s\n", space, name, changed ? '*' : ' ', str ? str : "(null)");
          break;
       case lListT:
+DTRACE;
          tlp = lGetPosList(ep, i);
-         sge_dstring_sprintf_append(buffer, "%s%-20.20s (List)    %c = %s\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', tlp ? "full {" : "empty");
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (List)    %c = %s\n", space, name, changed ? '*' : ' ', tlp ? "full {" : "empty");
          if (tlp) {
             lWriteList_(tlp, buffer, nesting_level + 1);
             sge_dstring_sprintf_append(buffer, "%s}\n", space);
          }
          break;
       case lObjectT:
+DTRACE;
          tep = lGetPosObject(ep, i);
-         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Object)  %c = %s\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', tep ? "object {" : "none");
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Object)  %c = %s\n", space, name, changed ? '*' : ' ', tep ? "object {" : "none");
          if (tep) {
             lWriteElem_(tep, buffer, nesting_level + 1);
             sge_dstring_sprintf_append(buffer, "%s}\n", space);
          }
          break;
       case lFloatT:
-         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Float)   %c = %f\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosFloat(ep, i));
+DTRACE;
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Float)   %c = %f\n", space, name, changed ? '*' : ' ', lGetPosFloat(ep, i));
          break;
       case lDoubleT:
-         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Double)  %c = %f\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosDouble(ep, i));
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Double)  %c = %f\n", space, name, changed ? '*' : ' ', lGetPosDouble(ep, i));
          break;
       case lLongT:
-         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Long)    %c = %ld\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosLong(ep, i));
+DTRACE;
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Long)    %c = %ld\n", space, name, changed ? '*' : ' ', lGetPosLong(ep, i));
          break;
       case lBoolT:
-         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Bool)    %c = %s\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosBool(ep, i) ? "true" : "false");
+DTRACE;
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Bool)    %c = %s\n", space, name, changed ? '*' : ' ', lGetPosBool(ep, i) ? "true" : "false");
          break;
       case lCharT:
-         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Char)    %c = %c\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', isprint (lGetPosChar(ep, i)) ? lGetPosChar(ep, i) : '?');
+DTRACE;
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Char)    %c = %c\n", space, name, changed ? '*' : ' ', isprint (lGetPosChar(ep, i)) ? lGetPosChar(ep, i) : '?');
          break;
       case lRefT:
-         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Ref)     %c = %p\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosRef(ep, i));
+DTRACE;
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Ref)     %c = %p\n", space, name, changed ? '*' : ' ', lGetPosRef(ep, i));
          break;
       default:
+DTRACE;
          unknownType("lWriteElem");
       }
    }

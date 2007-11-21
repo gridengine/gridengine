@@ -35,12 +35,11 @@
 
 #include "sge_bootstrap.h"
 
-#include "sge_gdi.h"
+#include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
+#
 #include "sge_all_listsL.h"
-
 #include "sgermon.h"
-#include "sge_answer.h"
 #include "sge_log.h"
 #include "read_defaults.h"
 #include "parse_qsub.h"
@@ -59,6 +58,7 @@
 #include "qrstat_filter.h"
 
 #include "sgeobj/cull_parse_util.h"
+#include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_advance_reservation.h"
 #include "sgeobj/sge_range.h"
 #include "sgeobj/sge_centry.h"
@@ -158,14 +158,14 @@ int main(int argc, char **argv) {
 
    DENTER_MAIN(TOP_LAYER, "qrsub");
 
-   sge_prof_setup();
+   prof_mt_init();
 
    /* Set up the program information name */
    sge_setup_sig_handlers(QRSTAT);
 
    log_state_set_log_gui(1);
 
-   if (sge_gdi2_setup(&ctx, QRSTAT, &answer_list) != AE_OK) {
+   if (sge_gdi2_setup(&ctx, QRSTAT, MAIN_THREAD, &answer_list) != AE_OK) {
       answer_list_output(&answer_list);
       goto error_exit;
    }

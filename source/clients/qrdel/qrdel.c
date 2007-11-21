@@ -37,7 +37,7 @@
 
 #include "sge_bootstrap.h"
 
-#include "sge_gdi.h"
+#include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 #include "sge_all_listsL.h"
 
@@ -67,14 +67,14 @@ int main(int argc, char **argv) {
 
    DENTER_MAIN(TOP_LAYER, "qrdel");
 
-   sge_prof_setup();
+   prof_mt_init();
 
    /* Set up the program information name */
    sge_setup_sig_handlers(QRDEL);
 
    log_state_set_log_gui(1);
 
-   if (sge_gdi2_setup(&ctx, QRDEL, &alp) != AE_OK) {
+   if (sge_gdi2_setup(&ctx, QRDEL, MAIN_THREAD, &alp) != AE_OK) {
       answer_list_output(&alp);
       goto error_exit;
    }

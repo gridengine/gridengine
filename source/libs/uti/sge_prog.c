@@ -94,6 +94,19 @@ const char *prognames[] =
    "qtcsh"     ,       /* 35  */
    "sge_share_mon"     /* 36  */
 };
+
+const char *threadnames[] = {
+   "main",              /* 1 */
+   "listener",          /* 2 */
+   "deliverer",         /* 3 */
+   "timer",             /* 4 */
+   "worker",            /* 5 */
+   "signaler",          /* 6 */
+   "jvm",               /* 7 */
+   "schedd",            /* 8 */
+   "tester"             /* 9 */
+};
+
  
 typedef struct prog_state_str {
    char*           sge_formal_prog_name;  /* taken from prognames[] */
@@ -739,7 +752,9 @@ static void prog_state_init(prog_state_t *theState)
 
 
 /*-------------------------------------------------------------------------*/
-sge_prog_state_class_t *sge_prog_state_class_create(sge_env_state_class_t *sge_env, u_long32 program_number, sge_error_class_t *eh)
+sge_prog_state_class_t *
+sge_prog_state_class_create(sge_env_state_class_t *sge_env, 
+                            u_long32 program_number, sge_error_class_t *eh)
 {
    sge_prog_state_class_t *ret = (sge_prog_state_class_t *)sge_malloc(sizeof(sge_prog_state_class_t));
 

@@ -57,7 +57,6 @@
 #include "sge_centry.h"
 #include "sge_schedd_conf.h"
 #include "sge_qinstance.h"
-#include "sge_gqueue.h"
 #include "sge_answer.h"
 #include "sge_orders.h"
 
@@ -255,19 +254,21 @@ job_move_first_pending_to_running(lListElem **pending_job, lList **splitted_jobs
     * Create a running job if it does not exist aleady 
     */
    if (running_job == NULL) {
-      lList *n_h_ids, *u_h_ids, *o_h_ids, *s_h_ids, *r_tasks;
+      lList *n_h_ids, *u_h_ids, *o_h_ids, *s_h_ids, *a_h_ids, *r_tasks;
       
       n_h_ids = u_h_ids = o_h_ids = s_h_ids = r_tasks = NULL;
       lXchgList(*pending_job, JB_ja_n_h_ids, &n_h_ids);
       lXchgList(*pending_job, JB_ja_u_h_ids, &u_h_ids);
       lXchgList(*pending_job, JB_ja_o_h_ids, &o_h_ids);
       lXchgList(*pending_job, JB_ja_s_h_ids, &s_h_ids);
+      lXchgList(*pending_job, JB_ja_a_h_ids, &a_h_ids);
       lXchgList(*pending_job, JB_ja_tasks, &r_tasks);
       running_job = lCopyElem(*pending_job);
       lXchgList(*pending_job, JB_ja_n_h_ids, &n_h_ids);
       lXchgList(*pending_job, JB_ja_u_h_ids, &u_h_ids);
       lXchgList(*pending_job, JB_ja_o_h_ids, &o_h_ids);
       lXchgList(*pending_job, JB_ja_s_h_ids, &s_h_ids);
+      lXchgList(*pending_job, JB_ja_a_h_ids, &a_h_ids);
       lXchgList(*pending_job, JB_ja_tasks, &r_tasks);
       lAppendElem(*(splitted_jobs[SPLIT_RUNNING]), running_job); 
    } 
@@ -557,7 +558,7 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
 *******************************************************************************/
 void split_jobs(lList **job_list, lList **answer_list,
                 lList *queue_list, u_long32 max_aj_instances, 
-                lList **result_list[])
+                lList **result_list[], bool is_free_job_list)
 {
 #if 0 /* EB: DEBUG: enable debug messages for split_jobs() */
 #define JOB_SPLIT_DEBUG
@@ -575,6 +576,7 @@ void split_jobs(lList **job_list, lList **answer_list,
       lList *u_h_ids = NULL;
       lList *o_h_ids = NULL;
       lList *s_h_ids = NULL;
+      lList *a_h_ids = NULL;
       lList *target_tasks[SPLIT_LAST];
       lListElem *target_job[SPLIT_LAST];
       lList *target_ids = NULL;
@@ -607,6 +609,7 @@ void split_jobs(lList **job_list, lList **answer_list,
       lXchgList(job, JB_ja_u_h_ids, &u_h_ids);
       lXchgList(job, JB_ja_o_h_ids, &o_h_ids);
       lXchgList(job, JB_ja_s_h_ids, &s_h_ids);
+      lXchgList(job, JB_ja_a_h_ids, &a_h_ids);
 
       /*
        * Split enrolled tasks
@@ -681,20 +684,14 @@ void split_jobs(lList **job_list, lList **answer_list,
 #endif
                target = &(target_tasks[SPLIT_SUSPENDED]);
             } else {
-               /*
-                * Jobs in suspended queues are not in suspend state.
-                * Therefore we have to take this info from the queue state.
-                */
-               if (gqueue_is_suspended( 
-                        lGetList(ja_task, JAT_granted_destin_identifier_list),
-                        queue_list)) {
+               if ((lGetUlong(ja_task, JAT_state) & JSUSPENDED_ON_SUBORDINATE)) {
 #ifdef JOB_SPLIT_DEBUG
                   DPRINTF(("Task "sge_u32" is in suspended state\n",ja_task_id));
 #endif
                   target = &(target_tasks[SPLIT_SUSPENDED]);
                }
             }
-         } 
+         }
          if (target == NULL && result_list[SPLIT_RUNNING] && 
              ja_task_status != JIDLE) {
 #ifdef JOB_SPLIT_DEBUG
@@ -772,8 +769,8 @@ void split_jobs(lList **job_list, lList **answer_list,
          if ((target_tasks[i] != NULL) ||
              (i == target_for_ids && target_ids != NULL) ||
              (i == SPLIT_PENDING && n_h_ids != NULL ) ||
-             (i == SPLIT_HOLD && (u_h_ids != NULL ||
-                                         o_h_ids != NULL || s_h_ids != NULL))) {
+             (i == SPLIT_HOLD && (u_h_ids != NULL || o_h_ids != NULL || 
+                                  s_h_ids != NULL || a_h_ids != NULL))) {
             if (*(result_list[i]) == NULL) {
                const lDescr *reduced_decriptor = lGetElemDescr(job);
 
@@ -814,7 +811,8 @@ void split_jobs(lList **job_list, lList **answer_list,
       if ((lGetNumberOfElem(ja_task_list) > 0) ||
           (result_list[SPLIT_PENDING] == NULL && n_h_ids != NULL) ||
           (result_list[SPLIT_HOLD] == NULL && 
-                   (u_h_ids != NULL || o_h_ids != NULL || s_h_ids != NULL))) {
+                   (u_h_ids != NULL || o_h_ids != NULL || 
+                    s_h_ids != NULL || a_h_ids == NULL))) {
          if (move_job == 0) {
             /* 
              * We moved 'job' into a target list therefore it is necessary 
@@ -847,13 +845,15 @@ void split_jobs(lList **job_list, lList **answer_list,
          lXchgList(target_job[SPLIT_PENDING], JB_ja_n_h_ids, &n_h_ids);
       }
       if (result_list[SPLIT_HOLD] != NULL && 
-          (u_h_ids != NULL || o_h_ids != NULL || s_h_ids != NULL)) {
+          (u_h_ids != NULL || o_h_ids != NULL || 
+           s_h_ids != NULL || a_h_ids != NULL)) {
 #ifdef JOB_SPLIT_DEBUG
          DPRINTF(("Move not enrolled hold tasks\n"));
 #endif
          lXchgList(target_job[SPLIT_HOLD], JB_ja_u_h_ids, &u_h_ids);
          lXchgList(target_job[SPLIT_HOLD], JB_ja_o_h_ids, &o_h_ids);
          lXchgList(target_job[SPLIT_HOLD], JB_ja_s_h_ids, &s_h_ids);
+         lXchgList(target_job[SPLIT_HOLD], JB_ja_a_h_ids, &a_h_ids);
       }
       for (i = SPLIT_FIRST; i < SPLIT_LAST; i++) {
          if (target_tasks[i] != NULL) {
@@ -876,6 +876,7 @@ void split_jobs(lList **job_list, lList **answer_list,
          lXchgList(job, JB_ja_u_h_ids, &u_h_ids);
          lXchgList(job, JB_ja_o_h_ids, &o_h_ids);
          lXchgList(job, JB_ja_s_h_ids, &s_h_ids);
+         lXchgList(job, JB_ja_a_h_ids, &a_h_ids);
       } else {
          lFreeList(&ja_task_list);
       }
@@ -884,8 +885,10 @@ void split_jobs(lList **job_list, lList **answer_list,
    /*
     * Could we dispense all jobs?
     */
-   if (lGetNumberOfElem(*job_list) == 0) {
-      lFreeList(job_list);
+   if (is_free_job_list == true) {
+      if (lGetNumberOfElem(*job_list) == 0) {
+         lFreeList(job_list);
+      }
    }
 
    DEXIT;

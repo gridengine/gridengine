@@ -43,7 +43,6 @@
 #include "sge_host.h"
 #include "sge_manop.h"
 #include "sge_host_qmaster.h"
-#include "sge_gdi_request.h"
 #include "sge_answer.h"
 #include "sge_utility.h"
 #include "sge_event_master.h"
@@ -87,7 +86,11 @@
 #include "sge_reporting_qmaster.h"
 #include "sge_advance_reservation_qmaster.h"
 #include "sge_bootstrap.h"
+
+#include "sgeobj/sge_object.h"
+
 #include "spool/sge_spooling.h"
+
 #include "sched/sge_resource_utilization.h"
 #include "sched/sge_serf.h"
 #include "sched/debit.h"
@@ -95,15 +98,50 @@
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
+
 #include "sgeobj/msg_sgeobjlib.h"
 
-static void master_kill_execds(sge_gdi_ctx_class_t *ctx, sge_gdi_request *request, sge_gdi_request *answer);
+static void master_kill_execds(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task);
 static void host_trash_nonstatic_load_values(lListElem *host);
-static void notify(sge_gdi_ctx_class_t *ctx, lListElem *lel, sge_gdi_request *answer, int kill_jobs, int force);
+static void notify(sge_gdi_ctx_class_t *ctx, lListElem *lel, sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task, int kill_jobs, int force); 
+
 static int verify_scaling_list(lList **alpp, lListElem *host); 
 static void host_update_categories(const lListElem *new_hep, const lListElem *old_hep);
 static int attr_mod_threshold(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *qep, lListElem *new_ep,
                               int sub_command, char *attr_name, char *object_name);
+
+void 
+host_initalitze_timer(void)
+{
+   object_description *object_base = NULL;
+
+   DENTER(TOP_LAYER, "host_initalitze_timer");
+
+   object_base = object_type_get_object_description();
+
+   /* initiate timer for all hosts because they start in 'unknown' state */
+   if (*object_base[SGE_TYPE_EXECHOST].list) {
+      lListElem *host               = NULL;
+      lListElem *global_host_elem   = NULL;
+      lListElem *template_host_elem = NULL;
+
+      /* get "global" element pointer */
+      global_host_elem   = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, SGE_GLOBAL_NAME);
+
+      /* get "template" element pointer */
+      template_host_elem = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, SGE_TEMPLATE_NAME);
+      
+      for_each(host, *object_base[SGE_TYPE_EXECHOST].list) {
+         if ( (host != global_host_elem ) && (host != template_host_elem ) ) {
+            reschedule_add_additional_time(load_report_interval(host));
+            reschedule_unknown_trigger(host);
+            reschedule_add_additional_time(0);
+         }
+      }  
+   }
+   DRETURN_VOID;
+}
+
 
 /****** qmaster/host/host_trash_nonstatic_load_values() ***********************
 *  NAME
@@ -960,21 +998,21 @@ void sge_change_queue_version_exechost(sge_gdi_ctx_class_t *ctx, const char *exe
  **** Actutally only the permission is checked here
  **** and master_kill_execds is called to do the work.
  ****/
-void sge_gdi_kill_exechost(sge_gdi_ctx_class_t *ctx, char *host, sge_gdi_request *request, sge_gdi_request *answer,
-                           uid_t uid, gid_t gid, char *user, char *group)
+void sge_gdi_kill_exechost(sge_gdi_ctx_class_t *ctx, 
+                           sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task)
 {
 
    DENTER(GDI_LAYER, "sge_gdi_kill_exechost");
 
-   if (!manop_is_manager(user)) {
+   if (!manop_is_manager(packet->user)) {
       ERROR((SGE_EVENT, MSG_OBJ_SHUTDOWNPERMS)); 
-      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 
+      answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOMGR, 
                       ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
    }
 
-   master_kill_execds(ctx, request, answer);
+   master_kill_execds(ctx, packet, task);
    DEXIT;
 }
 
@@ -988,10 +1026,8 @@ void sge_gdi_kill_exechost(sge_gdi_ctx_class_t *ctx, char *host, sge_gdi_request
       If ID_force is 0, we don't kill jobs.
  *******************************************************************/
 static void master_kill_execds(
-sge_gdi_ctx_class_t *ctx,
-sge_gdi_request *request,
-sge_gdi_request *answer 
-) {
+sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task) 
+{
    int kill_jobs;
    lListElem *lel, *rep;
    char host[CL_MAXHOSTLEN];
@@ -999,37 +1035,37 @@ sge_gdi_request *answer
 
    DENTER(TOP_LAYER, "master_kill_execds");
 
-   if (lGetString(lFirst(request->lp), ID_str) == NULL) {
+   if (lGetString(lFirst(task->data_list), ID_str) == NULL) {
       /* this means, we have to kill every execd. */
 
-      kill_jobs = lGetUlong(lFirst(request->lp), ID_force)?1:0;
+      kill_jobs = lGetUlong(lFirst(task->data_list), ID_force)?1:0;
       /* walk over exechost list and send every exechosts execd a
          notification */
       for_each(lel, *object_type_get_master_list(SGE_TYPE_EXECHOST)) {  
          hostname = lGetHost(lel, EH_name);
          if (strcmp(hostname, SGE_TEMPLATE_NAME) && strcmp(hostname, SGE_GLOBAL_NAME)) {
-            notify(ctx, lel, answer, kill_jobs, 0); 
+            notify(ctx, lel, packet, task, kill_jobs, 0); 
 
             /* RU: */
             /* initiate timer for this host which turns into unknown state */
             reschedule_unknown_trigger(lel);
          }
       }
-      if (lGetNumberOfElem(answer->alp) == 0) {
+      if (lGetNumberOfElem(task->answer_list) == 0) {
          /* no exechosts have been killed */
          DPRINTF((MSG_SGETEXT_NOEXECHOSTS));
          INFO((SGE_EVENT, MSG_SGETEXT_NOEXECHOSTS));
-         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+         answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
       }
    } else {
       /* only specified exechosts should be killed. */
       
       /* walk over list with execd's to kill */
-      for_each(rep, request->lp) {
+      for_each(rep, task->data_list) {
          if ((getuniquehostname(lGetString(rep, ID_str), host, 0)) != CL_RETVAL_OK)
          {
             WARNING((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(rep, ID_str)));
-            answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
+            answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          } else {
             if ((lel = host_list_locate(*object_type_get_master_list(SGE_TYPE_EXECHOST), host))) {
                kill_jobs = lGetUlong(rep, ID_force)?1:0;
@@ -1038,13 +1074,13 @@ sge_gdi_request *answer
                ** this means that even if the host is unheard we try
                ** to kill it
                */
-               notify(ctx, lel, answer, kill_jobs, 1);
+               notify(ctx, lel, packet, task, kill_jobs, 1);
                /* RU: */
                /* initiate timer for this host which turns into unknown state */ 
                reschedule_unknown_trigger(lel);
             } else {
                WARNING((SGE_EVENT, MSG_SGETEXT_ISNOEXECHOST_S, host));
-               answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
+               answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
             }
          }
       }
@@ -1056,8 +1092,9 @@ sge_gdi_request *answer
 /********************************************************************
  Notify execd on a host to shutdown
  ********************************************************************/
-static void notify(sge_gdi_ctx_class_t *ctx, lListElem *lel, sge_gdi_request *answer,
-                   int kill_jobs, int force)
+static void 
+notify(sge_gdi_ctx_class_t *ctx, lListElem *lel, sge_gdi_packet_class_t *packet, 
+       sge_gdi_task_class_t *task, int kill_jobs, int force) 
 {
    const char *hostname;
    u_long execd_alive;
@@ -1081,7 +1118,7 @@ static void notify(sge_gdi_ctx_class_t *ctx, lListElem *lel, sge_gdi_request *an
 
    if (!force && !execd_alive) {
       WARNING((SGE_EVENT, MSG_OBJ_NOEXECDONHOST_S, hostname));
-      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ESEMANTIC, 
+      answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ESEMANTIC, 
                      ANSWER_QUALITY_WARNING);
    }
    if (execd_alive || force) {
@@ -1093,7 +1130,7 @@ static void notify(sge_gdi_ctx_class_t *ctx, lListElem *lel, sge_gdi_request *an
                (execd_alive ? "" : MSG_OBJ_UNKNOWN), hostname));
       }
       DPRINTF((SGE_EVENT));
-      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+      answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    }
 
    if (kill_jobs) {
@@ -1173,15 +1210,10 @@ static void notify(sge_gdi_ctx_class_t *ctx, lListElem *lel, sge_gdi_request *an
  ****
  **** gdi call for old request starting_up.
  ****/
-int sge_execd_startedup(
-sge_gdi_ctx_class_t *ctx,
-lListElem *host,
-lList **alpp,
-char *ruser,
-char *rhost,
-u_long32 target,
-monitoring_t *monitor,
-bool is_restart) {
+int 
+sge_execd_startedup(sge_gdi_ctx_class_t *ctx, lListElem *host, lList **alpp,
+                    char *ruser, char *rhost, u_long32 target,
+                    monitoring_t *monitor, bool is_restart) {
    lListElem *hep, *cqueue;
    dstring ds;
    char buffer[256];

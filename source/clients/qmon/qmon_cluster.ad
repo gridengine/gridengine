@@ -467,6 +467,8 @@ Qmon*cluster_extra_layout.xmtChildren: \
                   cluster_token_extend_time = token_extend_time, \
                   cluster_qlogin_daemon = qlogin_daemon, \
                   cluster_qlogin_command = qlogin_command, \
+                  cluster_jmx_libjvm_path = jmx_libjvm_path, \
+                  cluster_jmx_additional_jvm_args = jmx_additional_jvm_args, \
                   cluster_rsh_daemon = rsh_daemon, \
                   cluster_rsh_command = rsh_command, \
                   cluster_rlogin_daemon = rlogin_daemon, \
@@ -499,6 +501,8 @@ Qmon*cluster_extra_layout.layout: \
          Row { cluster_reporting_params_label <> Fixed 50 em cluster_reporting_params }\
          Row { "@{Execd Parameters}" <> Fixed 50 em cluster_execd_params }\
          Row { "@{Shepherd Command}" <> Fixed 50 em cluster_shepherd_cmd }\
+         Row { "@{libjvm path}" <> Fixed 50 em cluster_jmx_libjvm_path }\
+         Row { "@{Additional JVM args}" <> Fixed 50 em cluster_jmx_additional_jvm_args }\
       } \
       ## \
       Etched Through Caption tl "@{@fBInteractive Parameters}" Col { \
@@ -537,3 +541,5 @@ Qmon*cluster_extra_layout.cluster_rlogin_command.verifyCallback: TrimAndTrail(se
 Qmon*cluster_extra_layout.cluster_set_token_cmd.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_extra_layout.cluster_pag_cmd.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_extra_layout.cluster_token_extend_time.verifyCallback: TrimAndTrail(self);
+Qmon*cluster_extra_layout.cluster_jmx_libjvm_path.verifyCallback: TrimAndTrail(self);
+Qmon*cluster_extra_layout.cluster_jmx_additional_jvm_args.verifyCallback: TrimAndTrail(self);

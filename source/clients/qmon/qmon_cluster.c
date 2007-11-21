@@ -53,7 +53,6 @@
 
 
 #include "sge_all_listsL.h"
-#include "sge_gdi.h"
 #include "commlib.h"
 #include "sge_answer.h"
 #include "sge_range.h"
@@ -74,7 +73,9 @@
 #include "spool/classic/rw_configuration.h"
 #include "AskForItems.h"
 #include "AskForTime.h"
+
 #include "uti/sge_string.h"
+#include "gdi/sge_gdi.h"
 
 /*-------------------------------------------------------------------------*/
 typedef struct _tCClEntry {
@@ -122,6 +123,8 @@ typedef struct _tCClEntry {
    String rsh_command;
    String rlogin_daemon;
    String rlogin_command;
+   String jmx_libjvm_path;
+   String jmx_additional_jvm_args;
    String set_token_cmd;
    String pag_cmd;
    String token_extend_time;
@@ -304,6 +307,14 @@ XtResource ccl_resources[] = {
       sizeof(String), XtOffsetOf(tCClEntry, rlogin_command), 
       XtRImmediate, NULL },
 
+   { "jmx_libjvm_path", "jmx_libjvm_path", XtRString, 
+      sizeof(String), XtOffsetOf(tCClEntry, jmx_libjvm_path), 
+      XtRImmediate, NULL },
+
+   { "jmx_additional_jvm_args", "jmx_additional_jvm_args", XtRString, 
+      sizeof(String), XtOffsetOf(tCClEntry, jmx_additional_jvm_args), 
+      XtRImmediate, NULL },
+
    { "set_token_cmd", "set_token_cmd", XtRString, 
       sizeof(String), XtOffsetOf(tCClEntry, set_token_cmd), 
       XtRImmediate, NULL },
@@ -393,6 +404,8 @@ static Widget cluster_rsh_daemon = 0;
 static Widget cluster_rsh_command = 0;
 static Widget cluster_rlogin_daemon = 0;
 static Widget cluster_rlogin_command = 0;
+static Widget cluster_jmx_libjvm_path = 0;
+static Widget cluster_jmx_additional_jvm_args = 0;
 static Widget cluster_set_token_cmd = 0;
 static Widget cluster_pag_cmd = 0;
 static Widget cluster_token_extend_time = 0;
@@ -712,6 +725,8 @@ Widget parent
                            "cluster_rsh_command", &cluster_rsh_command,
                            "cluster_rlogin_daemon", &cluster_rlogin_daemon,
                            "cluster_rlogin_command", &cluster_rlogin_command,
+                           "cluster_jmx_libjvm_path", &cluster_jmx_libjvm_path,
+                           "cluster_jmx_additional_jvm_args", &cluster_jmx_additional_jvm_args,
                            "cluster_set_token_cmd", &cluster_set_token_cmd,
                            "cluster_set_token_cmd_label", &cluster_set_token_cmd_label,
                            "cluster_pag_cmd_label", &cluster_pag_cmd_label,
@@ -1334,6 +1349,32 @@ int local
          lAppendElem(lp, new);
       }
 
+      if (clen->jmx_libjvm_path && clen->jmx_libjvm_path[0] != '\0'
+           /* && strcmp(lGetString(ep, CF_value), clen->jmx_libjvm_path)*/) {
+         ep = lGetElemStr(confl, CF_name, "libjvm_path");
+         if (!ep) {
+            new = lCreateElem(CF_Type);
+            lSetString(new, CF_name, "libjvm_path");
+         }
+         else
+            new = lCopyElem(ep);
+         lSetString(new, CF_value, clen->jmx_libjvm_path);
+         lAppendElem(lp, new);
+      }
+
+      if (clen->jmx_additional_jvm_args && clen->jmx_additional_jvm_args[0] != '\0'
+           /* && strcmp(lGetString(ep, CF_value), clen->jmx_additional_jvm_args)*/) {
+         ep = lGetElemStr(confl, CF_name, "additional_jvm_args");
+         if (!ep) {
+            new = lCreateElem(CF_Type);
+            lSetString(new, CF_name, "additional_jvm_args");
+         }
+         else
+            new = lCopyElem(ep);
+         lSetString(new, CF_value, clen->jmx_additional_jvm_args);
+         lAppendElem(lp, new);
+      }
+
 #if 0
       if (clen->dfs == 0) {
          ep = lGetElemStr(confl, CF_name, "delegated_file_staging");
@@ -1834,6 +1875,26 @@ int local
          lDelElemStr(&confl, CF_name, "rlogin_command");
       }
 
+      if (clen->jmx_libjvm_path && clen->jmx_libjvm_path[0] != '\0') {
+         ep = lGetElemStr(confl, CF_name, "libjvm_path");
+         if (!ep)
+            ep = lAddElemStr(&confl, CF_name, "libjvm_path", CF_Type);
+         lSetString(ep, CF_value, clen->jmx_libjvm_path);
+      }
+      else {
+         lDelElemStr(&confl, CF_name, "libjvm_path");
+      }
+
+      if (clen->jmx_additional_jvm_args && clen->jmx_additional_jvm_args[0] != '\0') {
+         ep = lGetElemStr(confl, CF_name, "additional_jvm_args");
+         if (!ep)
+            ep = lAddElemStr(&confl, CF_name, "additional_jvm_args", CF_Type);
+         lSetString(ep, CF_value, clen->jmx_additional_jvm_args);
+      }
+      else {
+         lDelElemStr(&confl, CF_name, "additional_jvm_args");
+      }
+
 #if 0
       if (clen->starter_method && clen->starter_method[0] != '\0') {
          ep = lGetElemStr(confl, CF_name, "starter_method");
@@ -2165,6 +2226,12 @@ tCClEntry *clen
    if ((ep = lGetElemStr(confl, CF_name, "rlogin_command")))
       clen->rlogin_command = XtNewString(lGetString(ep, CF_value));
 
+   if ((ep = lGetElemStr(confl, CF_name, "libjvm_path")))
+      clen->jmx_libjvm_path = XtNewString(lGetString(ep, CF_value));
+
+   if ((ep = lGetElemStr(confl, CF_name, "additional_jvm_args")))
+      clen->jmx_additional_jvm_args = XtNewString(lGetString(ep, CF_value));
+
    if (feature_is_enabled(FEATURE_AFS_SECURITY)) {
       if ((ep = lGetElemStr(confl, CF_name, "set_token_cmd")))
          clen->set_token_cmd = XtNewString(lGetString(ep, CF_value));
@@ -2319,6 +2386,14 @@ tCClEntry *clen
    if (clen->rlogin_command) {
       XtFree((char*)clen->rlogin_command);
       clen->rlogin_command = NULL;
+   }
+   if (clen->jmx_libjvm_path) {
+      XtFree((char*)clen->jmx_libjvm_path);
+      clen->jmx_libjvm_path = NULL;
+   }
+   if (clen->jmx_additional_jvm_args) {
+      XtFree((char*)clen->jmx_additional_jvm_args);
+      clen->jmx_additional_jvm_args = NULL;
    }
    if (clen->set_token_cmd) {
       XtFree((char*)clen->set_token_cmd);

@@ -1,10 +1,3 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <limits.h>
-#include "cl_util.h"
-#include "cl_errors.h"
-
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -36,6 +29,15 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <limits.h>
+
+#include "basis_types.h"
+#include "cl_util.h"
+#include "cl_errors.h"
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__

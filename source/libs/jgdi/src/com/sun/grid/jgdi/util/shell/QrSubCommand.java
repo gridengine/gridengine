@@ -60,10 +60,6 @@ import static com.sun.grid.jgdi.util.shell.Util.*;
 public class QrSubCommand extends AnnotatedCommand {
     AdvanceReservation ar = null;
     
-    public String getUsage() {
-        return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qrsub");
-    }
-    
     public void run(String[] args) throws Exception {
         
         // new ar object

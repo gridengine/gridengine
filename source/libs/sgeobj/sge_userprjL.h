@@ -102,19 +102,19 @@ LISTDEF(PR_Type)
    SGE_ULONG(PR_pending_job_cnt, CULL_DEFAULT | CULL_JGDI_HIDDEN)
 
    /* UA_Type; decayed usage set and used by SGEEE schedd stored to qmaster; spooled */
-   SGE_MAP(PR_usage, UA_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
+   SGE_MAP(PR_usage, UA_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_HIDDEN)
 
    /* time stamp of last decay set when * PR_usage changes; set and used by SGEEE schedd stored to qmaster; spooled */
-   SGE_ULONG(PR_usage_time_stamp, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
+   SGE_ULONG(PR_usage_time_stamp, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_HIDDEN)
 
    /* usage sequence number set and used by SGE schedd, not stored to qmaster; not spooled */
    SGE_ULONG(PR_usage_seqno, CULL_DEFAULT | CULL_JGDI_HIDDEN)
 
    /* UA_Type; long term accumulated non-decayed i usage; set by SGEEE schedd stored to qmaster; spooled */
-   SGE_MAP(PR_long_term_usage, UA_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
+   SGE_MAP(PR_long_term_usage, UA_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_HIDDEN)
 
    /* UPP_Type; usage on a project basis set and used by SGEEE schedd stored to qmaster; spooled Only used by projects */
-   SGE_LIST(PR_project, UPP_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
+   SGE_LIST(PR_project, UPP_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_HIDDEN)
 
    /* US_Type but only names are filled configured excluded user access list used by SGEEE schedd; spooled */
    SGE_LIST(PR_acl, US_Type, CULL_DEFAULT | CULL_SPOOL_PROJECT | CULL_JGDI_CONF)
@@ -123,10 +123,10 @@ LISTDEF(PR_Type)
    SGE_LIST(PR_xacl, US_Type, CULL_DEFAULT | CULL_SPOOL_PROJECT | CULL_JGDI_CONF)
 
    /* UPU_Type (see below) still debited usage per job (set and used by SGEEE schedd) */
-   SGE_LIST(PR_debited_job_usage, UPU_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
+   SGE_LIST(PR_debited_job_usage, UPU_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_HIDDEN)
 
    /* user/project version, increments when usage is updated, stored to qmaster, not spooled */
-   SGE_ULONG(PR_version, CULL_DEFAULT | CULL_JGDI_RO)
+   SGE_ULONG(PR_version, CULL_DEFAULT | CULL_JGDI_HIDDEN)
 
    /* true, if project plays role with categories */
    SGE_BOOL(PR_consider_with_categories, CULL_DEFAULT | CULL_JGDI_HIDDEN)
@@ -217,28 +217,28 @@ LISTDEF(UU_Type)
    SGE_ULONG(UU_pending_job_cnt, CULL_DEFAULT | CULL_JGDI_HIDDEN)
 
    /* UA_Type; decayed usage set and used by SGEEE schedd stored to qmaster; spooled */
-   SGE_MAP(UU_usage, UA_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
+   SGE_MAP(UU_usage, UA_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_HIDDEN)
 
    /* time stamp of last decay set when UU_usage changes; set and used by SGEEE schedd stored to qmaster; spooled */
-   SGE_ULONG(UU_usage_time_stamp, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
+   SGE_ULONG(UU_usage_time_stamp, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_HIDDEN)
 
    /* usage sequence number set and used by SGE schedd, not stored to qmaster; not spooled */
    SGE_ULONG(UU_usage_seqno, CULL_DEFAULT | CULL_JGDI_HIDDEN)
 
    /* UA_Type; long term accumulated * non-decayed i usage; set by SGEEE schedd stored to qmaster; spooled */
-   SGE_MAP(UU_long_term_usage, UA_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
+   SGE_MAP(UU_long_term_usage, UA_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_HIDDEN)
 
    /* UPP_Type; usage on a project basis set and used by SGEEE schedd stored to qmaster; spooled Only used by projects */
-   SGE_LIST(UU_project, UPP_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
+   SGE_LIST(UU_project, UPP_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_HIDDEN)
 
    /* UPU_Type (see below) still debited usage per job (set and used by SGEEE schedd) */
-   SGE_LIST(UU_debited_job_usage, UPU_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
+   SGE_LIST(UU_debited_job_usage, UPU_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_HIDDEN)
 
    /* default project for user */
    SGE_STRING(UU_default_project, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)
 
    /* user/project version, increments when usage is updated, stored to qmaster, not spooled */
-   SGE_ULONG(UU_version, CULL_DEFAULT | CULL_JGDI_RO)
+   SGE_ULONG(UU_version, CULL_DEFAULT | CULL_JGDI_HIDDEN)
 
    /* true, if project plays role with categories */
    SGE_BOOL(UU_consider_with_categories, CULL_DEFAULT | CULL_JGDI_HIDDEN)

@@ -33,7 +33,6 @@
 #include <stdlib.h>
 
 #include "sge_all_listsL.h"
-#include "sge_gdi.h"
 #include "sig_handlers.h"
 #include "parse_qsub.h"
 #include "parse.h"
@@ -57,6 +56,7 @@
 #include "sgeobj//sge_range.h"
 #include "sge_options.h"
 #include "sge_profiling.h"
+#include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 
 static lList *sge_parse_cmdline_qmod(char **argv, char **envp, lList **ppcmdline);
@@ -80,12 +80,12 @@ char **argv
    
    DENTER_MAIN(TOP_LAYER, "qmod");
 
-   sge_prof_setup();
+   prof_mt_init();
 
    log_state_set_log_gui(1);
    sge_setup_sig_handlers(QMOD);
 
-   if (sge_gdi2_setup(&ctx, QMOD, &alp) != AE_OK) {
+   if (sge_gdi2_setup(&ctx, QMOD, MAIN_THREAD, &alp) != AE_OK) {
       answer_list_output(&alp);
       SGE_EXIT((void**)&ctx, 1);
    }

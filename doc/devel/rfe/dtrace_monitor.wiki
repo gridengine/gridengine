@@ -58,7 +58,7 @@ The list of the functions tracked by the monitor is:
 * cl_message_list_remove_send()
 * dispatch_jobs()
 * do_c_ack()
-* do_gdi_request()
+* do_gdi_packet()
 * report_list_send()
 * select_assign_debit()
 * sge_c_gdi_add()

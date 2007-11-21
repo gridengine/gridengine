@@ -37,9 +37,12 @@ GDILIB_DIR = $(SDIR)/libs/gdi
 GDILIB = libgdi$(LIBEXT)
 
 GDILIB_SRC = pack_job_delivery.c \
-             sge_gdi_request.c \
              sge_gdi_ctx.c \
              sge_gdi2.c \
+             sge_gdi_packet.c \
+             sge_gdi_packet_queue.c \
+             sge_gdi_packet_internal.c \
+             sge_gdi_packet_pb_cull.c \
              sge_qexec.c \
              qm_name.c \
              sge_security.c \
@@ -89,11 +92,20 @@ version.o:	$(GDILIB_DIR)/version.c
 sge_qexec.o:	$(GDILIB_DIR)/sge_qexec.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_qexec.c
 
-sge_gdi_request.o:	$(GDILIB_DIR)/sge_gdi_request.c
-		$(CC) -o $@ $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_gdi_request.c
-
 sge_gdi2.o:	$(GDILIB_DIR)/sge_gdi2.c
 		$(CC) -o $@ $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_gdi2.c
+		
+sge_gdi_packet.o:	$(GDILIB_DIR)/sge_gdi_packet.c
+		$(CC) -o $@ $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_gdi_packet.c
+		
+sge_gdi_packet_queue.o:	$(GDILIB_DIR)/sge_gdi_packet_queue.c
+		$(CC) -o $@ $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_gdi_packet_queue.c
+		
+sge_gdi_packet_internal.o:	$(GDILIB_DIR)/sge_gdi_packet_internal.c
+		$(CC) -o $@ $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_gdi_packet_internal.c
+		
+sge_gdi_packet_pb_cull.o:	$(GDILIB_DIR)/sge_gdi_packet_pb_cull.c
+		$(CC) -o $@ $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_gdi_packet_pb_cull.c
 		
 sge_gdi_ctx.o:	$(GDILIB_DIR)/sge_gdi_ctx.c
 		$(CC) -o $@ $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_gdi_ctx.c

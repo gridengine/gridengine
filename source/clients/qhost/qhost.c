@@ -41,7 +41,6 @@
 
 #include "sge_bootstrap.h"
 
-#include "sge_gdi.h"
 #include "sge_all_listsL.h"
 #include "commlib.h"
 #include "sig_handlers.h"
@@ -77,6 +76,7 @@
 #include "sge_mt_init.h"
 #include "sge_qhost.h"
 #include "sge_object.h"
+#include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 
 
@@ -401,7 +401,7 @@ int main(int argc, char **argv)
    log_state_set_log_gui(true);
    sge_setup_sig_handlers(QHOST);
 
-   if (sge_gdi2_setup(&ctx, QHOST, &alp) != AE_OK) {
+   if (sge_gdi2_setup(&ctx, QHOST, MAIN_THREAD, &alp) != AE_OK) {
       answer_list_output(&alp);
       sge_prof_cleanup();
       SGE_EXIT((void**)&ctx, 1);

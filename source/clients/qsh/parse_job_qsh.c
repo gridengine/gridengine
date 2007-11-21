@@ -252,6 +252,20 @@ lList *cull_parse_qsh_parameter(u_long32 prog_number, u_long32 uid, const char *
       lSetList(*pjob, JB_jid_request_list, jref_list);
    }
 
+   /* -hold_jid_ad */
+   if (lGetElemStr(cmdline, SPA_switch, "-hold_jid_ad")) {
+      lListElem *ep, *sep;
+      lList *jref_list = NULL;
+      while ((ep = lGetElemStr(cmdline, SPA_switch, "-hold_jid_ad"))) {
+         for_each(sep, lGetList(ep, SPA_argval_lListT)) {
+            DPRINTF(("-hold_jid_ad %s\n", lGetString(sep, ST_name)));
+            lAddElemStr(&jref_list, JRE_job_name, lGetString(sep, ST_name), JRE_Type);
+         }
+         lRemoveElem(cmdline, &ep);
+      }
+      lSetList(*pjob, JB_ja_ad_request_list, jref_list);
+   }
+
    /* not needed in job struct */
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-hard"))) {
       lRemoveElem(cmdline, &ep);

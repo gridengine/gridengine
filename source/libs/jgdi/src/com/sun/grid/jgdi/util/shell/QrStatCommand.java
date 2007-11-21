@@ -49,10 +49,6 @@ public class QrStatCommand extends AnnotatedCommand {
     boolean xml=false;
     boolean explain=false;
     
-    public String getUsage() {
-        return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qrstat");
-    }
-    
     public void run(String[] args) throws Exception {
         clear();
         

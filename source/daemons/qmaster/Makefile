@@ -38,6 +38,20 @@ QMASTER_DIR = $(SDIR)/daemons/qmaster
 QMASTER_TARGETS = sge_qmaster
 
 QMASTER_SRC = sge_qmaster_threads.c \
+              sge_thread_listener.c \
+              sge_thread_worker.c \
+              sge_thread_deliverer.c \
+              sge_thread_timer.c \
+              sge_thread_test.c \
+              sge_thread_scheduler.c \
+              sge_thread_signaler.c \
+              sge_thread_jvm.c \
+              sge_thread_main.c \
+              sge_sched_prepare_data.c \
+              sge_sched_job_category.c \
+              sge_sched_process_events.c \
+              sge_sched_thread.c \
+              sge_sched_order.c \
               sge_c_gdi.c \
               sge_follow.c \
               sge_give_jobs.c \
@@ -66,12 +80,14 @@ QMASTER_SRC = sge_qmaster_threads.c \
               setup_qmaster.c \
               sge_subordinate_qmaster.c \
               sge_qmaster_timed_event.c \
+              sge_qmaster_heartbeat.c \
               sge_utility_qmaster.c \
               sge_persistence_qmaster.c \
               sge_qmaster_process_message.c \
               sge_c_report.c \
               sge_reporting_qmaster.c \
               sge_resource_quota_qmaster.c \
+              sge_task_depend.c \
               sge_advance_reservation_qmaster.c
              
 QMASTER_ADD_SRC = usage.c sge_options.c \
@@ -86,15 +102,16 @@ QMASTER_ADD_SRC = usage.c sge_options.c \
               sge_dirent.c \
               sig_handlers.c \
               unparse_job_cull.c \
-              sge_mt_init.c
+              sge_mt_init.c 
 
 QMASTER_OBJS  = $(QMASTER_SRC:.c=.o)
 
 QMASTER_ADD_OBJS = $(QMASTER_ADD_SRC:.c=.o) 
 
-QMASTER_ADD_LIBS = $(SPOOLING_LIBS) -lsched $(EVMLIB) -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon $(DLLIB)
+QMASTER_ADD_LIBS = $(SPOOLING_LIBS) -lsched $(EVMLIB) -levc $(MIRLIB) -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon $(DLLIB)
 
-QMASTER_LIB_DEPENDS = $(SCHEDLIB) $(EVMLIB) $(GDILIB) $(SGEOBJLIB) \
+QMASTER_LIB_DEPENDS = $(SCHEDLIB) $(EVMLIB) $(EVCLIB) $(MIRLIB) \
+                      $(GDILIB) $(SGEOBJLIB) \
                       $(SPOOLING_DEPS) $(SGEOBJDLIB) \
                       $(SECLIBS) $(KRBLIBS) \
                       $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) \
@@ -158,6 +175,33 @@ sge_qmaster_main.o: 	$(QMASTER_DIR)/sge_qmaster_main.c
 sge_qmaster_threads.o: 	$(QMASTER_DIR)/sge_qmaster_threads.c
 		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_qmaster_threads.c
 
+sge_thread_listener.o: 	$(QMASTER_DIR)/sge_thread_listener.c
+		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_thread_listener.c
+
+sge_thread_worker.o: 	$(QMASTER_DIR)/sge_thread_worker.c
+		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_thread_worker.c
+
+sge_thread_deliverer.o: 	$(QMASTER_DIR)/sge_thread_deliverer.c
+		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_thread_deliverer.c
+
+sge_thread_timer.o: 	$(QMASTER_DIR)/sge_thread_timer.c
+		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_thread_timer.c
+
+sge_thread_test.o: 	$(QMASTER_DIR)/sge_thread_test.c
+		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_thread_test.c
+
+sge_thread_scheduler.o: 	$(QMASTER_DIR)/sge_thread_scheduler.c
+		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_thread_scheduler.c
+
+sge_thread_signaler.o: 	$(QMASTER_DIR)/sge_thread_signaler.c
+		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_thread_signaler.c
+
+sge_thread_jvm.o: 	$(QMASTER_DIR)/sge_thread_jvm.c
+		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_thread_jvm.c
+
+sge_thread_main.o: 	$(QMASTER_DIR)/sge_thread_main.c
+		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_thread_main.c
+
 sge_qmod_qmaster.o:	$(QMASTER_DIR)/sge_qmod_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_qmod_qmaster.c
 
@@ -181,6 +225,21 @@ sge_manop_qmaster.o:	$(QMASTER_DIR)/sge_manop_qmaster.c
 
 sge_follow.o:   $(QMASTER_DIR)/sge_follow.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_follow.c
+
+sge_sched_process_events.o: $(QMASTER_DIR)/sge_sched_process_events.c
+		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_sched_process_events.c
+
+sge_sched_thread.o: $(QMASTER_DIR)/sge_sched_thread.c
+		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_sched_thread.c
+
+sge_sched_order.o: $(QMASTER_DIR)/sge_sched_order.c
+		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_sched_order.c
+
+sge_sched_prepare_data.o: $(QMASTER_DIR)/sge_sched_prepare_data.c
+		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_sched_prepare_data.c
+
+sge_sched_job_category.o: $(QMASTER_DIR)/sge_sched_job_category.c
+		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_sched_job_category.c
 
 sge_give_jobs.o: $(QMASTER_DIR)/sge_give_jobs.c
 		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_give_jobs.c   
@@ -239,6 +298,9 @@ sge_subordinate_qmaster.o   : $(QMASTER_DIR)/sge_subordinate_qmaster.c
 sge_qmaster_timed_event.o   : $(QMASTER_DIR)/sge_qmaster_timed_event.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_qmaster_timed_event.c
 
+sge_qmaster_heartbeat.o   : $(QMASTER_DIR)/sge_qmaster_heartbeat.c
+		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_qmaster_heartbeat.c
+
 sge_utility_qmaster.o   : $(QMASTER_DIR)/sge_utility_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_utility_qmaster.c
 
@@ -265,6 +327,9 @@ sge_reporting_qmaster.o : $(QMASTER_DIR)/sge_reporting_qmaster.c
 
 sge_resource_quota_qmaster.o : $(QMASTER_DIR)/sge_resource_quota_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_resource_quota_qmaster.c
+
+sge_task_depend.o : $(QMASTER_DIR)/sge_task_depend.c
+		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_task_depend.c
 
 sge_advance_reservation_qmaster.o : $(QMASTER_DIR)/sge_advance_reservation_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_advance_reservation_qmaster.c

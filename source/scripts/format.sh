@@ -33,12 +33,12 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-indent_args="-T FILE -T u_long32 -T lList -T lListElem -T sge_conf_type \
+indent_args="-T FILE -T u_long32 -T lList -T lEnumeration -T lCondition -T lListElem -T sge_conf_type \
 -T XEvent -T String -T Cardinal -T IconListElement -T gdi_object_t \
 -T sge_gdi_request -T message -T commproc -T host -T message \
 -T sge_pack_buffer -T fd_set \
 -bad -bap -bbb -br -ce -cdw -brs -nut -i3 -ci3 -lp -ci3 -cbi0 -l79 \
--ip0 -bbo -hnl -nbfda -ss -npsl -npcs -lps -c3 -cd33 -ncdb -sc -nfca"
+-ip0 -bbo -hnl -nbfda -ss -psl -npcs -lps -c3 -cd33 -ncdb -sc -nfca"
 
 if [ $# -ge 1 ]; then
    for i in $*; do

@@ -68,7 +68,6 @@
 #include "qmon_qcustom.h"
 #include "qmon_globals.h"
 #include "sge_all_listsL.h"
-#include "sge_gdi.h"
 #include "sge_dstring.h"
 #include "sge_string.h"
 #include "sge_support.h"
@@ -86,7 +85,9 @@
 #include "qstat_printing.h"
 #include "sge_centry.h"
 #include "sge_qstat.h"
-#include "sge_gdi_ctx.h"
+
+#include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdi.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 
@@ -1798,7 +1799,6 @@ static void qmonCQChangeState(Widget w, XtPointer cld, XtPointer cad)
          }
       }
       if (ql) {
-         /* EB: TODO: */
          alp = qmonChangeStateList(SGE_CQUEUE_LIST, ql, force, action); 
       
          qmonMessageBox(w, alp, 0);

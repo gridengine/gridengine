@@ -539,7 +539,7 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
    /* TODO: this must be kept for qmaster and should be done in a different
             way (qmaster context) !!! */
    u_long32 me = 0;
-   const char *progname = NULL;
+   const char *threadname = NULL;
    const char *unqualified_hostname = NULL;
    int is_daemonized = 0; 
 
@@ -549,7 +549,7 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
    
    if (ctx != NULL) {
       me = ctx->get_who(ctx);
-      progname = ctx->get_progname(ctx);
+      threadname = ctx->get_thread_name(ctx);
       unqualified_hostname = ctx->get_unqualified_hostname(ctx);
       is_daemonized = ctx->is_daemonized(ctx);
    } else {
@@ -611,11 +611,11 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
 
    /* avoid double output in debug mode */
    if (!is_daemonized && !rmon_condition(TOP_LAYER, INFOPRINT) && 
-       (log_state_get_log_verbose() || log_level <= LOG_ERR)) {
+       (log_state_get_log_verbose() && log_level <= LOG_ERR)) {
       fprintf(stderr, "%s%s\n", levelstring, mesg);
    }
 
-   sge_do_log(me, progname, unqualified_hostname, levelchar, mesg);
+   sge_do_log(me, threadname, unqualified_hostname, levelchar, mesg);
 
    DRETURN(0);
 } /* sge_log() */
@@ -655,7 +655,7 @@ static void sge_do_log(u_long32 me, const char* progname, const char* unqualifie
 
          append_time((time_t)sge_get_gmt(), &msg, false); 
 
-         sge_dstring_sprintf_append(&msg, "|%s|%s|%c|%s\n",
+         sge_dstring_sprintf_append(&msg, "|%6.6s|%s|%c|%s\n",
                  progname,
                  unqualified_hostname,
                  aLevel,

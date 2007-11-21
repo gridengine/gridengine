@@ -32,26 +32,35 @@
 
 #include <string.h>
 
-#include "sge.h"
-#include "sgermon.h"
-#include "sge_conf.h"
-#include "sge_log.h"
-#include "sge_gdi.h"
-#include "sge_unistd.h"
+#include "rmon/sgermon.h"
 
-#include "sge_answer.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_object.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_io.h"
+#include "uti/sge_edit.h"
+#include "uti/sge_prog.h"
+
+#include "gdi/sge_gdi.h"
+
+#include "spool/flatfile/sge_flatfile.h"
+#include "spool/flatfile/sge_flatfile_obj.h"
+
+#include "sge.h"
 #include "sge_centry_qconf.h"
-#include "sge_centry.h"
-#include "sge_object.h"
-#include "sge_io.h"
-#include "sge_edit.h"
-#include "sge_prog.h"
 
 #include "msg_common.h"
 #include "msg_clients_common.h"
 
 #include "spool/flatfile/sge_flatfile.h"
 #include "spool/flatfile/sge_flatfile_obj.h"
+#include "sgeobj/msg_sgeobjlib.h"
+#include "sge_parse_num_par.h"
+
 
 static bool 
 centry_provide_modify_context(sge_gdi_ctx_class_t *ctx, lListElem **this_elem, lList **answer_list);
@@ -445,6 +454,14 @@ centry_list_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx, lList **this_list, lLi
             const char *name2 = NULL;
             const char *shortcut1 = NULL;
             const char *shortcut2 = NULL;
+           
+            const char *attrname;
+            double dval;
+            char error_msg[200];
+            
+            const char *urgency1 = NULL;
+            const char *urgency2 = NULL;
+
 
             /* Bugfix: Issuezilla 1161
              * Previously it was assumed that name and shortcut would never be
@@ -494,7 +511,32 @@ centry_list_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx, lList **this_list, lLi
                                        name1, shortcut1);
                cont = false;
             } 
-            
+            /* Let's also check if the new urgency is NULL */
+            /* Check first that the entry is not NULL  */
+            urgency1 = lGetString(centry_elem, CE_urgency_weight);
+            urgency2 = lGetString(cmp_elem, CE_urgency_weight);
+
+            if (urgency1 == NULL) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                             ANSWER_QUALITY_ERROR,
+                                             MSG_CENTRY_NULL_URGENCY);
+               DRETURN(false);
+            }
+            else if (urgency2 == NULL) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                              ANSWER_QUALITY_ERROR,
+                                              MSG_CENTRY_NULL_URGENCY);
+                 DRETURN(false);
+            }
+
+            /* Check then that the entry is valid  */
+              error_msg[0] = '\0';
+              attrname = lGetString(centry_elem, CE_name);
+  
+              if(!parse_ulong_val(&dval, NULL, TYPE_DOUBLE, urgency1, error_msg, 199) || !parse_ulong_val(&dval, NULL, TYPE_DOUBLE, urgency2, error_msg, 199)){answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, MSG_INVALID_CENTRY_PARSE_URGENCY_SS, attrname, error_msg);
+                   DRETURN(false);
+              }
+
             cmp_elem = lNext(cmp_elem);
          }
          
@@ -567,7 +609,10 @@ centry_list_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx, lList **this_list, lLi
             int mode = (--number_req > 0) ? SGE_GDI_RECORD : SGE_GDI_SEND;
             del_id = ctx->gdi_multi(ctx, &gdi_answer_list, mode, 
                                    SGE_CENTRY_LIST, SGE_GDI_DEL, old_list,
-                                   NULL, NULL, &mal_answer_list, &state, false);
+                                   NULL, NULL, &state, false);
+            if (mode == SGE_GDI_SEND) {
+               ctx->gdi_wait(ctx, &gdi_answer_list, &mal_answer_list, &state);
+            }
             if (answer_list_has_error(&gdi_answer_list)) {
                answer_list_append_list(answer_list, &gdi_answer_list);
                DTRACE;
@@ -579,7 +624,10 @@ centry_list_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx, lList **this_list, lLi
             int mode = (--number_req > 0) ? SGE_GDI_RECORD : SGE_GDI_SEND;
             mod_id = ctx->gdi_multi(ctx, &gdi_answer_list, mode, 
                                    SGE_CENTRY_LIST, SGE_GDI_MOD, &modify_list,
-                                   NULL, NULL, &mal_answer_list, &state, false);
+                                   NULL, NULL, &state, false);
+            if (mode == SGE_GDI_SEND) {
+               ctx->gdi_wait(ctx, &gdi_answer_list, &mal_answer_list, &state);
+            }
             if (answer_list_has_error(&gdi_answer_list)) {
                answer_list_append_list(answer_list, &gdi_answer_list);
                DTRACE;
@@ -591,7 +639,10 @@ centry_list_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx, lList **this_list, lLi
             int mode = (--number_req > 0) ? SGE_GDI_RECORD : SGE_GDI_SEND;
             add_id = ctx->gdi_multi(ctx, &gdi_answer_list, mode, 
                                    SGE_CENTRY_LIST, SGE_GDI_ADD, &add_list,
-                                   NULL, NULL, &mal_answer_list, &state, false);
+                                   NULL, NULL, &state, false);
+            if (mode == SGE_GDI_SEND) {
+               ctx->gdi_wait(ctx, &gdi_answer_list, &mal_answer_list, &state);
+            }
             if (answer_list_has_error(&gdi_answer_list)) {
                answer_list_append_list(answer_list, &gdi_answer_list);
                DTRACE;

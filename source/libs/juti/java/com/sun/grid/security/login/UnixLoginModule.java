@@ -219,6 +219,20 @@ public class UnixLoginModule implements LoginModule {
                                        new Object[] { ex.getLocalizedMessage() });
         }
         
+        String username = nameCallback.getName();
+        if (username == null || username.length() == 0) {
+            loginSucceded = false;            
+            LOGGER.exiting("UnixLoginModule", "login", Boolean.FALSE);
+            return loginSucceded;
+        }
+        
+        char [] pw = pwCallback.getPassword();
+        if (pw == null) {
+            loginSucceded = false;            
+            LOGGER.exiting("UnixLoginModule", "login", Boolean.FALSE);
+            return loginSucceded;
+        }
+        
         AuthUserWrapper authuser = null;
         if(authMethod == null) {
             throw RB.newLoginException("unixlogin.error.missing", 
@@ -237,7 +251,7 @@ public class UnixLoginModule implements LoginModule {
         }
 
         try {
-            Set p = authuser.authenticate(nameCallback.getName(), pwCallback.getPassword());
+            Set p = authuser.authenticate(username, pw);
             if( p!= null) {
                 LOGGER.log(Level.FINE, "unixlogin.authuser.principal.count", new Integer(p.size()));
                 principals.addAll(p);

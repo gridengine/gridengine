@@ -81,7 +81,8 @@
 #include "sge_object.h"
 #include "sge_centry.h"
 #include "sge_advance_reservation.h"
-#include "sge_gdi_ctx.h"
+
+#include "gdi/sge_gdi_ctx.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 

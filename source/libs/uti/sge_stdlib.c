@@ -66,20 +66,20 @@ char *sge_malloc(int size)
 {
    char *cp = NULL;
 
-   DENTER(BASIS_LAYER, "sge_malloc");
+   DENTER_(BASIS_LAYER, "sge_malloc");
 
    if (!size) {
-      DRETURN(NULL);
+      DRETURN_(NULL);
    }
 
    cp = (char *) malloc(size);
    if (!cp) {
       CRITICAL((SGE_EVENT, MSG_MEMORY_MALLOCFAILED));
-      DEXIT;
+      DEXIT_;
       abort();
    }
 
-   DRETURN(cp);
+   DRETURN_(cp);
 }   
 
 /****** uti/stdlib/sge_realloc() **********************************************
@@ -107,24 +107,24 @@ char *sge_realloc(char *ptr, int size)
 
    char *cp = NULL;
 
-   DENTER(BASIS_LAYER, "sge_realloc");
+   DENTER_(BASIS_LAYER, "sge_realloc");
 
    if (!size) {
       if (ptr) {
          FREE(ptr);
       }
-      DRETURN(NULL);
+      DRETURN_(NULL);
    }
 
    cp = (char *) realloc(ptr, size);
 
    if (!cp) {
       CRITICAL((SGE_EVENT, MSG_MEMORY_REALLOCFAILED));
-      DEXIT;
+      DEXIT_;
       abort();
    }
 
-   DRETURN(cp);
+   DRETURN_(cp);
 }             
 
 /****** uti/stdlib/sge_free() *************************************************
@@ -182,12 +182,11 @@ const char *sge_getenv(const char *env_str)
 {
    const char *cp=NULL;
  
-   DENTER(BASIS_LAYER, "sge_getenv");
+   DENTER_(BASIS_LAYER, "sge_getenv");
  
    cp = (char *) getenv(env_str);
- 
-   DEXIT;
-   return (cp);
+
+   DRETURN_(cp);
 }    
 
 /****** uti/stdlib/sge_putenv() ***********************************************

@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
    char *buffer;
 
    lInit(nmv);
-   sge_prof_setup();
+   prof_mt_init();
 
    /* create an element */
    ep = lCreateElem(TEST_Type);

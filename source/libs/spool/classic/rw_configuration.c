@@ -35,7 +35,6 @@
 #include <ctype.h>
 
 #include "sgermon.h"
-#include "sge_gdi_request.h"
 #include "rw_configuration.h"
 #include "sge_log.h"
 #include "sge_stdio.h"

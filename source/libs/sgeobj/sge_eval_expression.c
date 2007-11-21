@@ -89,41 +89,40 @@ char *tTypes[] = { "!<pattern>", "|<pattern>", "&<pattern>", "(", ")", "<end>",
 
 
 /****** sgeobj/sge_eval_expression/sge_eval_expression() **********************
- *  NAME
- *     sge_eval_expression() -- boolean expression extension of regular
- *                              expression evaluation function ( fnmatch )
- *
- *  SYNOPSIS
- *     int sge_eval_expression(u_long32 type, const char *expr, const char *value)
- *
- *  FUNCTION
- *     int sge_eval_expression()  boolean expression extension of regular
- *                              expression evaluation function ( fnmatch )
- *
- *  INPUTS
- *     u_long32 type - type of resource
- *     const char *expr - expression string to be evaluated
- *     const char *value - value string to be compared for
- *     lList **answer_list - answer list to pass back error messages
- *
- *  RESULT
- *     int - result if expression is true or
- *         0 - strings are the same or both NULL
- *         1 - if is false
- *        -1 - for empty expression, null, or other error
- *
- *  SEE ALSO
- *     uti/hostname/sge_hostcmp()
- *     fnmatch()
- *
- *  NOTES:
- *     MT-NOTE: sge_eval_expression() is MT safe
- *
- *  Call tree is:
- *
- *  
- ******************************************************************************/
-int sge_eval_expression(u_long32 type, const char *expr, const char *value, lList **answer_list) {
+*  NAME
+*     sge_eval_expression() -- boolean expression extension 
+*
+*  SYNOPSIS
+*     int sge_eval_expression(u_long32 type, 
+*                             const char *expr, 
+*                             const char *value)
+*
+*  FUNCTION
+*     boolean expression extension of regular expression evaluation function 
+*     fnmatch()
+*
+*  INPUTS
+*     u_long32 type - type of resource
+*     const char *expr - expression string to be evaluated
+*     const char *value - value string to be compared for
+*     lList **answer_list - answer list to pass back error messages
+*
+*  RESULT
+*     int - result if expression is true or
+*         0 - strings are the same or both NULL
+*         1 - if is false
+*        -1 - for empty expression, null, or other error
+*
+*  SEE ALSO
+*     uti/hostname/sge_hostcmp()
+*     fnmatch()
+*
+*  NOTES:
+*     MT-NOTE: sge_eval_expression() is MT safe
+*****************************************************************************/
+int 
+sge_eval_expression(u_long32 type, const char *expr, const char *value, lList **answer_list) 
+{
    int match;
    char pattern_buf[MAX_BUF],value_buf[MAX_BUF];
    

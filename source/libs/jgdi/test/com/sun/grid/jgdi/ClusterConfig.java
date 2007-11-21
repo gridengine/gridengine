@@ -67,7 +67,7 @@ public class ClusterConfig {
             ret.execdPort = Integer.parseInt(props.getProperty(prefix + ".execd_port"));
             ret.user = props.getProperty(prefix + ".user");
             ret.csp = Boolean.valueOf(props.getProperty(prefix + ".csp")).booleanValue();
-            ret.jaasLoginContext = props.getProperty(prefix + ".jass_login_context");
+            ret.jaasLoginContext = props.getProperty(prefix + ".jaas_login_context");
             
             str = props.getProperty(prefix + ".keystore_password");
             if(str != null) {

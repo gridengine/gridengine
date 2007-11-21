@@ -452,7 +452,7 @@ int flags
 ) {
    int i, n, ret;
 
-   lMultiType *cp;
+   lMultiType *cp = NULL;
 
    DENTER(CULL_LAYER, "cull_unpack_cont");
 
@@ -604,7 +604,7 @@ const lDescr *dp                  /* has to be NULL in case of free elements
 int cull_unpack_elem_partial(sge_pack_buffer *pb, lListElem **epp, const lDescr *dp, int flags) 
 {
    int ret;
-   lListElem *ep;
+   lListElem *ep = NULL;
 
    DENTER(CULL_LAYER, "cull_unpack_elem_partial");
 
@@ -837,7 +837,7 @@ int cull_pack_list_partial(sge_pack_buffer *pb, const lList *lp,
 
    PROF_START_MEASUREMENT(SGE_PROF_PACKING);
 
-   if (lp != NULL) {
+   if (lp != NULL && pb != NULL) {
       if((ret = packint(pb, 1)) != PACK_SUCCESS) {
          PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
          DEXIT;
@@ -886,6 +886,7 @@ int cull_pack_list_partial(sge_pack_buffer *pb, const lList *lp,
 
    if (lp != NULL) {
       /* pack each list element */
+
       for_each(ep, lp) {
          if((ret = cull_pack_elem_partial(pb, ep, what, flags)) != PACK_SUCCESS) {
             PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);

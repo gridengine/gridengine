@@ -119,6 +119,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
    DENTER(BASIS_LAYER, "qinstance_modify_attribute");
 #endif
 
+
    if (this_elem != NULL && cqueue != NULL && 
       attribute_name != NoName && cqueue_attibute_name != NoName) {
       const char *hostname = lGetHost(this_elem, QU_qhostname);
@@ -379,10 +380,11 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                                          matching_host_or_group,
                                          matching_group, is_ambiguous);
                if (old_value != new_value) {
-                  DPRINTF(("reserved slots %d\n", qinstance_slots_reserved(this_elem)));
-                  if (new_value < qinstance_slots_reserved(this_elem)) {
+                  int slots_reserved = qinstance_slots_reserved(this_elem);
+                  DPRINTF(("reserved slots %d\n", slots_reserved));
+                  if (new_value < slots_reserved) {
                      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                                             MSG_QINSTANCE_SLOTSRESERVED_USS, qinstance_slots_reserved(this_elem),
+                                             MSG_QINSTANCE_SLOTSRESERVED_USS, slots_reserved,
                                              lGetString(this_elem, QU_qname), hostname);
                      ret &= false;
                   } else {
@@ -1135,7 +1137,7 @@ bool
 sge_qmaster_qinstance_set_initial_state(lListElem *this_elem, bool is_restart)
 {
    bool ret = false;
-   const char *state_string = lGetString(this_elem, QU_initial_state);
+   const char *state_string = NULL; 
 
 #ifdef QINSTANCE_MODIFY_DEBUG
    DENTER(TOP_LAYER, "sge_qmaster_qinstance_set_initial_state");
@@ -1143,6 +1145,7 @@ sge_qmaster_qinstance_set_initial_state(lListElem *this_elem, bool is_restart)
    DENTER(BASIS_LAYER, "sge_qmaster_qinstance_set_initial_state");
 #endif
 
+   state_string = lGetString(this_elem, QU_initial_state);
    if (!is_restart && state_string != NULL && strcmp(state_string, "default")) {
       bool do_disable = strcmp(state_string, "disabled") == 0 ? true : false;
       bool is_disabled = qinstance_state_is_manual_disabled(this_elem);

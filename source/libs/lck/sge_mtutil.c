@@ -42,7 +42,7 @@
 
 
 /* enable or disable lock printing*/
-/*#define PRINT_LOCK*/
+/* #define PRINT_LOCK */
 
 /****** sge_mtutil/sge_mutex_lock() ********************************************
 *  NAME
@@ -88,7 +88,7 @@ void sge_mutex_lock(const char *mutex_name, const char *func, int line, pthread_
    {
       struct timeval now;
       gettimeofday(&now, NULL);
-      printf("%ld lock %lu:%lus %s\n", (long int) pthread_self(),now.tv_sec, now.tv_usec, mutex_name); 
+      printf("%ld lock %lu:%lus %s\n", (long int) pthread_self(),now.tv_sec, (long unsigned)now.tv_usec, mutex_name); 
    }   
 #endif  
   
@@ -103,7 +103,7 @@ void sge_mutex_lock(const char *mutex_name, const char *func, int line, pthread_
    {
       struct timeval now;
       gettimeofday(&now, NULL);
-      printf("%ld got lock %lu:%lus %s\n", (long int) pthread_self(),now.tv_sec, now.tv_usec, mutex_name); 
+      printf("%ld got lock %lu:%lu %s\n", (long int) pthread_self(),now.tv_sec, now.tv_usec, mutex_name); 
    }   
 #endif  
 
@@ -174,7 +174,7 @@ void sge_mutex_unlock(const char *mutex_name, const char *func, int line, pthrea
    {
       struct timeval now;
       gettimeofday(&now, NULL);
-      printf("%ld unlock %lu:%lus %s\n", (long int) pthread_self(),now.tv_sec, now.tv_usec, mutex_name); 
+      printf("%ld unlock %lu:%lu %s\n", (long int) pthread_self(),now.tv_sec, now.tv_usec, mutex_name); 
    }   
 #endif  
    

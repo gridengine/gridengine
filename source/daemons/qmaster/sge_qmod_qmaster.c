@@ -44,7 +44,6 @@
 #include "sge_prog.h"
 #include "sge_queue_event_master.h"
 #include "sge_qmod_qmaster.h"
-#include "sge_gdi_request.h"
 #include "sge_job_qmaster.h"
 #include "sge_give_jobs.h"
 #include "sge_host.h"
@@ -125,9 +124,7 @@ static void qmod_job_reschedule(sge_gdi_ctx_class_t *ctx,
 /*-------------------------------------------------------------------------*/
 
 void 
-sge_gdi_qmod(sge_gdi_ctx_class_t *ctx, 
-             char *host, sge_gdi_request *request, sge_gdi_request *answer,
-             uid_t uid, gid_t gid, char *user, char *group,
+sge_gdi_qmod(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
              monitoring_t *monitor) 
 {
    lList *alp = NULL;
@@ -145,9 +142,9 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
    DENTER(TOP_LAYER, "sge_gdi_qmod");
 
 
-   if (!request->host || (strlen(user) == 0) || !request->commproc || !request->id) {
+   if (!packet->host || (strlen(packet->user) == 0) || !packet->commproc) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      answer_list_add(&(answer->alp), SGE_EVENT, 
+      answer_list_add(&(task->answer_list), SGE_EVENT, 
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       sge_dstring_free(&cqueue_buffer);
       sge_dstring_free(&hostname_buffer);
@@ -159,7 +156,7 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
    ** loop over the ids and change queue or job state and signal them
    ** if necessary
    */
-   for_each(dep, request->lp) {
+   for_each(dep, task->data_list) {
       lList *tmp_list = NULL;
       lList *qref_list = NULL;
       bool found_something = true;
@@ -198,7 +195,7 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
                qinstance_list = lGetList(cqueue, CQ_qinstances);
                qinstance = lGetElemHost(qinstance_list, QU_qhostname, hostname);
 
-               sge_change_queue_state(ctx, user, host, qinstance,
+               sge_change_queue_state(ctx, packet->user, packet->host, qinstance,
                      id_action, lGetUlong(dep, ID_force),
                      &alp, monitor);
                found = true;
@@ -265,7 +262,7 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
 
                      /* this specifies no queue, so lets probe for a job */
                      /* change state of job: */
-                     sge_change_job_state(ctx, user, host, job, tmp_task, 0,
+                     sge_change_job_state(ctx, packet->user, packet->host, job, tmp_task, 0,
                          action, lGetUlong(dep, ID_force), &alp, monitor);   
                      found = true;
                   }
@@ -277,7 +274,7 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
                   per task */
                if (alltasks && job_is_array(job)) {
                   if (!found) {
-                     sge_change_job_state(ctx, user, host, job, NULL, 0,
+                     sge_change_job_state(ctx, packet->user, packet->host, job, NULL, 0,
                          action, lGetUlong(dep, ID_force), &alp, monitor);   
                      found = true;
                   }
@@ -294,7 +291,7 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
                            ((taskid-start)%step) == 0) || alltasks) {
                            DPRINTF(("Modify job: "sge_u32"."sge_u32"\n", jobid,
                               taskid));
-                           sge_change_job_state(ctx, user, host, job, NULL, taskid,
+                           sge_change_job_state(ctx, packet->user, packet->host, job, NULL, taskid,
                                action, lGetUlong(dep, ID_force), &alp, monitor);   
                            found = true;
                         }
@@ -309,7 +306,7 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
                            ((taskid-start)%step) == 0) || alltasks) {
                            DPRINTF(("Modify job: "sge_u32"."sge_u32"\n", jobid,
                                     taskid));
-                           sge_change_job_state(ctx, user, host, job, NULL, taskid,
+                           sge_change_job_state(ctx, packet->user, packet->host, job, NULL, taskid,
                                                 action, lGetUlong(dep, ID_force), &alp, monitor);   
                            found = true;
                         }
@@ -327,7 +324,7 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
                            ((taskid-start)%step) == 0) || alltasks) {
                            DPRINTF(("Modify job: "sge_u32"."sge_u32"\n", jobid,
                                     taskid));
-                           sge_change_job_state(ctx, user, host, job, NULL, taskid,
+                           sge_change_job_state(ctx, packet->user, packet->host, job, NULL, taskid,
                                                 action, lGetUlong(dep, ID_force), &alp, monitor);   
                            found = true;
                         }
@@ -346,7 +343,7 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
                            ((taskid-start)%step) == 0) || alltasks) {
                            DPRINTF(("Modify job: "sge_u32"."sge_u32"\n", jobid,
                                     taskid));
-                           sge_change_job_state(ctx, user, host, job, NULL, taskid,
+                           sge_change_job_state(ctx, packet->user, packet->host, job, NULL, taskid,
                                                 action, lGetUlong(dep, ID_force), &alp, monitor);   
                            found = true;
                         }
@@ -371,7 +368,7 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
                   mod = lCopyElem(dep);
                   sprintf(job_id, sge_u32, lGetUlong(job, JB_job_number));
                   lSetString(mod, ID_str, job_id);
-                  lAppendElem(request->lp, mod);
+                  lAppendElem(task->data_list, mod);
                   found = true;
                }
             }
@@ -410,7 +407,7 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
    sge_dstring_free(&cqueue_buffer);
    sge_dstring_free(&hostname_buffer);
 
-   answer->alp = alp;
+   task->answer_list = alp;
    
    DEXIT;
 }
@@ -423,6 +420,7 @@ sge_change_queue_state(sge_gdi_ctx_class_t *ctx,
    bool isoperator;
    bool isowner;
    int result = 0;
+   const char *ehname = lGetHost(qep, QU_qhostname);
    
    DENTER(TOP_LAYER, "sge_change_queue_state");
 
@@ -469,16 +467,17 @@ sge_change_queue_state(sge_gdi_ctx_class_t *ctx,
    sge_event_spool(ctx,
                    answer, 0, sgeE_QINSTANCE_MOD,
                    0, 0, lGetString(qep, QU_qname),
-                   lGetHost(qep, QU_qhostname), NULL,
+                   ehname, NULL,
                    qep, NULL, NULL, true, true);
 
    switch (action) {
-   case QI_DO_CLEAN:
-   case QI_DO_RESCHEDULE:
-      cqueue_list_del_all_orphaned(ctx, *(object_type_get_master_list(SGE_TYPE_CQUEUE)), answer);
-      break;
-   default:
-      break;
+      case QI_DO_CLEAN:
+      case QI_DO_RESCHEDULE:
+         cqueue_list_del_all_orphaned(ctx, *(object_type_get_master_list(SGE_TYPE_CQUEUE)), answer, 
+               lGetString(qep, QU_qname), ehname);
+         break;
+      default:
+         break;
    }
 
    DEXIT;
@@ -1081,6 +1080,31 @@ void resend_signal_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitorin
    return;
 }
 
+static void sge_propagate_queue_suspension(const char *qnm, int how)
+{
+   lListElem *jep, *jatep;
+
+   DENTER(TOP_LAYER, "sge_propagate_queue_suspension");
+
+   DPRINTF(("searching for all jobs in queue %s due to %s\n", qnm, sge_sig2str(how)));
+   for_each (jep, *object_type_get_master_list(SGE_TYPE_JOB)) {
+      for_each (jatep, lGetList(jep, JB_ja_tasks)) {
+         if (lGetElemStr(lGetList(jatep, JAT_granted_destin_identifier_list), JG_qname, qnm)) {
+            u_long32 jstate;
+            DPRINTF(("found "sge_u32"."sge_u32"\n", lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number)));
+            jstate = lGetUlong(jatep, JAT_state);
+            if (how == SGE_SIGSTOP)
+               jstate |= JSUSPENDED_ON_SUBORDINATE;
+            else
+               jstate &= ~JSUSPENDED_ON_SUBORDINATE;
+            lSetUlong(jatep, JAT_state, jstate);
+         }
+      }
+   }
+
+   DRETURN_VOID;
+}
+
 /************************************************************************
  This is called by the qmaster to:
  - send a signal to all jobs in a queue (job_number == 0);
@@ -1109,7 +1133,10 @@ monitoring_t *monitor
             (int)(jep?lGetUlong(jep,JB_job_number):-1),
             (int)(jatep?lGetUlong(jatep,JAT_task_number):-1)
         ));
-   
+ 
+   if (!jep && (how == SGE_SIGSTOP || how == SGE_SIGCONT))
+      sge_propagate_queue_suspension(lGetString(qep, QU_full_name), how);
+
    /* don't try to signal unheard queues */
    if (!qinstance_state_is_unknown(qep)) {
       const char *hnm, *pnm;
@@ -1161,7 +1188,7 @@ monitoring_t *monitor
 
          if (mconf_get_simulate_execds()) {
             i = CL_RETVAL_OK;
-            if (jep)
+            if (jep && how == SGE_SIGKILL)
                trigger_job_resend(sge_get_gmt(), NULL, lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number), 1);
          } else {
             if (pb_filled(&pb)) {
@@ -1197,12 +1224,15 @@ monitoring_t *monitor
             lGetHost(qep, QU_qhostname)));
       te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, lGetUlong(jep, JB_job_number),
          lGetUlong(jatep, JAT_task_number), NULL);
-      lSetUlong(jatep, JAT_pending_signal, how);
-      ev = te_new_event((time_t)next_delivery_time, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT,
-         lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number), NULL);
-      te_add_event(ev);
-      te_free_event(&ev);
-      lSetUlong(jatep, JAT_pending_signal_delivery_time, next_delivery_time); 
+
+      if (!mconf_get_simulate_execds()) {
+         lSetUlong(jatep, JAT_pending_signal, how);
+         ev = te_new_event((time_t)next_delivery_time, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT,
+            lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number), NULL);
+         te_add_event(ev);
+         te_free_event(&ev);
+         lSetUlong(jatep, JAT_pending_signal_delivery_time, next_delivery_time); 
+      }
    } else {
       te_event_t ev = NULL;
 
@@ -1210,12 +1240,15 @@ monitoring_t *monitor
             lGetString(qep, QU_full_name), sent?"sent":"queued", sge_sig2str(how), next_delivery_time - now,
             lGetHost(qep, QU_qhostname)));
       te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, 0, 0, lGetString(qep, QU_full_name));
-      lSetUlong(qep, QU_pending_signal, how);
-      ev = te_new_event((time_t)next_delivery_time, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT, 0, 0,
-         lGetString(qep, QU_full_name));
-      te_add_event(ev);
-      te_free_event(&ev);
-      lSetUlong(qep, QU_pending_signal_delivery_time, next_delivery_time);
+
+      if (!mconf_get_simulate_execds()) {
+         lSetUlong(qep, QU_pending_signal, how);
+         ev = te_new_event((time_t)next_delivery_time, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT, 0, 0,
+            lGetString(qep, QU_full_name));
+         te_add_event(ev);
+         te_free_event(&ev);
+         lSetUlong(qep, QU_pending_signal_delivery_time, next_delivery_time);
+      }
    }
 
    if (!jep) {/* signalling a queue ? - handle slave jobs in this queue */

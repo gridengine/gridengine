@@ -125,6 +125,10 @@ int pack_get_chunk(void)
 *     integer with value 0 is padded before the version information as first 
 *     word in the packbuffer. This triggeres error handling in former versions.
 *
+*     Functions using packing buffers in GDI or related code should use the 
+*     function sge_gdi_packet_get_pb_size() to find the correct
+*     "initial_size".  
+*
 *  INPUTS
 *     sge_pack_buffer *pb - the packbuffer to initialize
 *     int initial_size    - the amount of memory to be allocated at 
@@ -141,12 +145,13 @@ int pack_get_chunk(void)
 *           PACK_ENOMEM  if memory allocation fails
 *           PACK_FORMAT  if no valid packbuffer is passed
 *
+*  NOTES
+*     MT-NOTE: init_packbuffer() is MT safe (assumptions)
+*  
 *  SEE ALSO
 *     cull/pack/-Packing-typedefs
 *     cull/pack/pack_set_chunk()
-*  
-*  NOTES
-*     MT-NOTE: init_packbuffer() is MT safe (assumptions)
+*     gdi/request_internal/sge_gdi_packet_get_pb_size()
 *******************************************************************************/
 int 
 init_packbuffer(sge_pack_buffer *pb, int initial_size, int just_count) 
@@ -931,10 +936,8 @@ pb_print_to(sge_pack_buffer *pb, bool only_header, FILE* file)
 
    fprintf(file, "head_ptr: %p\n", pb->head_ptr);
    fprintf(file, "cur_ptr: %p\n", pb->cur_ptr);
-#if 0
-   fprintf(file, "mem_size: %d\n", pb->mem_size);
-   fprintf(file, "bytes_used: %d\n", pb->bytes_used);
-#endif
+   fprintf(file, "mem_size: %d\n", (int)pb->mem_size);
+   fprintf(file, "bytes_used: %d\n", (int)pb->bytes_used);
    fprintf(file, "buffer:\n");
    if (!only_header) {
       for (i = 0; i < pb->bytes_used; i++) {

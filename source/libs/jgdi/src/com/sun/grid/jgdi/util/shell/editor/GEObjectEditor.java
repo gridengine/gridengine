@@ -95,9 +95,9 @@ public class GEObjectEditor {
      * Updates GEObject based on the text. Text is parsed and if correct, object is updated.
      * Creates new objects where necessary, based on values provided in text, therefore
      * it is recommended to use method <CODE>updateObjectWithText(JGDI jgdi, GEObject obj, String text)</CODE>
-     * that retrived these objects from Grind Engine instead.
+     * that retrieves these objects from Grid Engine instead.
      */
-    public static GEObject updateObjectWithText(GEObject obj, String text) {
+    public static <T extends GEObject> T updateObjectWithText(T obj, String text) {
         return doUpdate(null, obj, text);
     }
     
@@ -106,14 +106,14 @@ public class GEObjectEditor {
      * Retrives objects from Grid Engine where necessary.
      * Recommended method.
      */
-    public static GEObject updateObjectWithText(JGDI jgdi, GEObject obj, String text) {
+    public static <T extends GEObject> T updateObjectWithText(JGDI jgdi, T obj, String text) {
         if (jgdi == null) {
             throw new IllegalArgumentException("JGDI is NULL");
         }
         return doUpdate(jgdi, obj, text);
     }
     
-    private static GEObject doUpdate(JGDI jgdi, GEObject obj, String text) {
+    private static <T extends GEObject> T doUpdate(JGDI jgdi, T obj, String text) {
         PropertyDescriptor pd;
         Object key;
         String line;
@@ -126,7 +126,7 @@ public class GEObjectEditor {
             try {
                 Map propertyMap = null;
                 if (obj instanceof ShareTreeImpl) {
-                    obj = EditorParser.parseShareTreeText(text);
+                    obj = (T) EditorParser.parseShareTreeText(text);
                 } else {
                     propertyMap = EditorParser.parsePlainText(obj, text, " ");
                     for (Iterator iter=propertyMap.keySet().iterator(); iter.hasNext();) {
@@ -134,7 +134,7 @@ public class GEObjectEditor {
                         line = (String) propertyMap.get(key);
                         updatePropertyValue(jgdi, obj, key, line);
                     }
-                }                    
+                }
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
@@ -142,7 +142,7 @@ public class GEObjectEditor {
         return obj;
     }
     
-    private static void updatePropertyValue(JGDI jgdi, GEObject obj, Object key, String values) throws JGDIException {
+    private static <T extends GEObject> void updatePropertyValue(JGDI jgdi, T obj, Object key, String values) throws JGDIException {
         if (key instanceof SimplePropertyDescriptor) {
             updateSimpleProperty(jgdi, obj, (SimplePropertyDescriptor)key, values);
         } else if (key instanceof DefaultListPropertyDescriptor) {
@@ -233,7 +233,7 @@ public class GEObjectEditor {
                     continue;
                 }
                 if (obj instanceof TestGEObject) {
-                    val = val+"="+strVal; //TODO LP: Check the tests
+                    val = subElems[0]+"="+strVal; //TODO LP: Check the tests
                 }
             } else {
                 name = elems[i];
@@ -346,6 +346,45 @@ public class GEObjectEditor {
         return sb.toString();
     }
     
+    public static String getPropertyAsText(GEObject obj, int propScope, String propName) throws JGDIException {
+        Object o;
+        int maxLen = 0;
+        String name, spaces;
+        Object value;
+        StringBuilder sb = new StringBuilder();
+        List subNames = null, subValues = null;
+        PropertyDescriptor pd = getProperty(obj, propScope, propName);
+        if (pd == null) {
+            throw new JGDIException("JGDI Error: Attribute \""+propName+"\" does not exits in "+obj.getName());
+        }
+        subNames = getStretchedElementNames(obj, pd);
+        if (subNames.size() > 0) {
+            subValues = getStretchedElementValues(obj, pd);
+            if (subNames.size() != subValues.size()) {
+                throw new IllegalArgumentException("Unknown error: Expecting name x value lists of a same size! Got sizes " + subNames.size() + " and " + subValues.size());
+            }
+            for (int j = 0; j < subNames.size(); j++) {
+                name = (String) subNames.get(j);
+                value = (String) subValues.get(j);
+                sb.append(name);
+                for (int i = name.length(); i < maxLen; i++) {
+                    sb.append(' ');
+                }
+                sb.append("    " + value + "\n");
+            }
+        } else {
+            name = EditorUtil.java2cName(obj, pd.getPropertyName());
+            value = EditorUtil.translateObjectToStringValue(pd.getPropertyName(), EditorUtil.getPropertyValue(obj, pd));
+            sb.append(name);
+            for (int i = name.length(); i < maxLen; i++) {
+                sb.append(' ');
+            }
+            spaces = "    ";
+            sb.append(spaces + value + "\n");
+        }
+        return sb.toString();
+    }
+    
     private static List getStretchedElementNames(GEObject obj, PropertyDescriptor pd) {
         return getStretchedElementList(obj, pd, ELEMENT_NAME);
     }
@@ -401,6 +440,22 @@ public class GEObjectEditor {
             }
         }
         return propList;
+    }
+    
+    static PropertyDescriptor getProperty(GEObject obj, int propScope, String name) {
+        List<PropertyDescriptor> propList = new ArrayList<PropertyDescriptor>();
+        ClassDescriptor cd = Util.getDescriptor(obj.getClass());
+        PropertyDescriptor pd = cd.getProperty(EditorUtil.unifyClientNamesWithAttr(obj, name));
+        if (pd == null) {
+            return null;
+        }
+        if (EditorUtil.doNotDisplayAttr(obj, pd, propScope)) {
+            return null;
+        }
+        if (isValidPropertyType(pd, propScope)) {
+            return pd;
+        }
+        return null;
     }
     
     static boolean isValidPropertyType(PropertyDescriptor pd, int propScope) {

@@ -53,10 +53,6 @@ public class QStatCommand extends AnnotatedCommand {
     
     boolean showXml = false;
     
-    public String getUsage() {
-        return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qstat");
-    }
-    
     public void run(String[] args) throws Exception {
         cqOptions = new ClusterQueueSummaryOptions();
         qiOptions = new QueueInstanceSummaryOptions();
@@ -72,7 +68,7 @@ public class QStatCommand extends AnnotatedCommand {
                 return;
             }
             @SuppressWarnings("unchecked")
-            List<ClusterQueueSummary> res = (List<ClusterQueueSummary>) jgdi.getClusterQueueSummary(cqOptions);
+            List<ClusterQueueSummary> res = jgdi.getClusterQueueSummary(cqOptions);
             if (res.size() == 0) {
                 return;
             }

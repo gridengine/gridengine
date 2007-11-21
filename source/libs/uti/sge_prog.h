@@ -47,45 +47,58 @@
 /* who - must match prognames[] in libs/uti/sge_prog.c */
 
 enum {
- QALTER =  1 , 
- QCONF           ,       /* 2  */        
- QDEL            ,       /* 3  */
- QHOLD           ,       /* 4  */
- QMASTER         ,       /* 5  */
- QMOD            ,       /* 6  */
- QRESUB          ,       /* 7  */
- QRLS            ,       /* 8  */
- QSELECT         ,       /* 9  */
- QSH             ,       /* 10 */
- QRSH            ,       /* 11 */
- QLOGIN          ,       /* 12 */
- QSTAT           ,       /* 13 */
- QSUB            ,       /* 14 */
- EXECD           ,       /* 15 */
- QEVENT          ,       /* 16 */
- QRSUB           ,       /* 17 */
- QRDEL           ,       /* 18 */
- QRSTAT          ,       /* 19 */
- QUSERDEFINED    ,       /* 20 */
- ALL_OPT         ,       /* 21 */
+   QALTER =  1 , 
+   QCONF           ,       /* 2  */        
+   QDEL            ,       /* 3  */
+   QHOLD           ,       /* 4  */
+   QMASTER         ,       /* 5  */
+   QMOD            ,       /* 6  */
+   QRESUB          ,       /* 7  */
+   QRLS            ,       /* 8  */
+   QSELECT         ,       /* 9  */
+   QSH             ,       /* 10 */
+   QRSH            ,       /* 11 */
+   QLOGIN          ,       /* 12 */
+   QSTAT           ,       /* 13 */
+   QSUB            ,       /* 14 */
+   EXECD           ,       /* 15 */
+   QEVENT          ,       /* 16 */
+   QRSUB           ,       /* 17 */
+   QRDEL           ,       /* 18 */
+   QRSTAT          ,       /* 19 */
+   QUSERDEFINED    ,       /* 20 */
+   ALL_OPT         ,       /* 21 */
 
-/* programs with numbers > ALL_OPT do not use the old parsing */
+   /* programs with numbers > ALL_OPT do not use the old parsing */
 
- QMON            ,       /* 22 */
- SCHEDD          ,       /* 23 */
- QACCT           ,       /* 24 */
- SHADOWD         ,       /* 25 */
- QHOST           ,       /* 26 */
- SPOOLDEFAULTS   ,       /* 27 */
- JAPI            ,       /* 28 */
- JAPI_EC         ,       /* 29 */
- DRMAA           ,       /* 30 */
- QPING           ,       /* 31 */
- SGE_PASSWD      ,       /* 32 */
- QQUOTA          ,       /* 33 */
- JGDI            ,       /* 34 */
- QTCSH           ,       /* 35 */
- SGE_SHARE_MON           /* 36 */
+   QMON            ,       /* 22 */
+   SCHEDD          ,       /* 23 */
+   QACCT           ,       /* 24 */
+   SHADOWD         ,       /* 25 */
+   QHOST           ,       /* 26 */
+   SPOOLDEFAULTS   ,       /* 27 */
+   JAPI            ,       /* 28 */
+   JAPI_EC         ,       /* 29 */
+   DRMAA           ,       /* 30 */
+   QPING           ,       /* 31 */
+   SGE_PASSWD      ,       /* 32 */
+   QQUOTA          ,       /* 33 */
+   JGDI            ,       /* 34 */
+   QTCSH           ,       /* 35 */
+   SGE_SHARE_MON           /* 36 */
+};
+
+enum {
+   MAIN_THREAD,         /* 1 */
+   LISTENER_THREAD,     /* 2 */
+   DELIVERER_THREAD,    /* 3 */
+   TIMER_THREAD,        /* 4 */
+   WORKER_THREAD,       /* 5 */        
+   SIGNALER_THREAD,     /* 6 */
+   JVM_THREAD,          /* 7 */
+   SCHEDD_THREAD,       /* 8 */
+   TESTER_THREAD        /* 9 */
+   
 };
 
 typedef void (*sge_exit_func_t)(void **ctx_ref, int);
@@ -123,8 +136,8 @@ struct sge_prog_state_class_str {
 sge_prog_state_class_t *sge_prog_state_class_create(sge_env_state_class_t *sge_env, u_long32 program_number, sge_error_class_t *eh);
 void sge_prog_state_class_destroy(sge_prog_state_class_t **pst);
 
-
 extern const char *prognames[];
+extern const char *threadnames[];
 
 #ifndef GDI_OFF
 

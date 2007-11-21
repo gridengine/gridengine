@@ -108,9 +108,13 @@ public class JobSummaryImpl extends JobInfoImpl implements JobSummary, Serializa
     private List<String> softRequestedMasterQueueList;
     
     private List<String> requestedPredecessorList;
+
+    private List<String> requestedArrayPredecessorList;
     
     private List<Integer> predecessorList;
     
+   private List<Integer> arrayPredecessorList;
+
     /** Creates a new instance of JobSummary */
     public JobSummaryImpl() {
     }
@@ -377,6 +381,21 @@ public class JobSummaryImpl extends JobInfoImpl implements JobSummary, Serializa
         }
         requestedPredecessorList.add(name);
     }
+
+   /**
+    *  add a requested array predecessor to the job
+    *  (array predecessor of a job can be requested with
+    *   qsub -hold_jid_ad)
+    *
+    *  @param  name of the array predecessor
+    */
+   public void addRequestedArrayPredecessor(String name) {
+      if (requestedArrayPredecessorList == null) {
+         requestedArrayPredecessorList = new ArrayList<String>();
+      }
+      requestedArrayPredecessorList.add(name);
+   }
+
     
     /**
      * Get a list of all requested predecessors
@@ -390,6 +409,18 @@ public class JobSummaryImpl extends JobInfoImpl implements JobSummary, Serializa
         }
     }
     
+   /**
+    * Get a list of all requested array predecessors
+    * @return list of requested array predecessors job names
+    */
+   public List<String> getRequestedArrayPredecessors() {
+      if(requestedArrayPredecessorList == null) {
+         return Collections.EMPTY_LIST;
+      } else {
+         return Collections.unmodifiableList(requestedArrayPredecessorList);
+      }
+   }
+
     /**
      *  Add the job id of a predecessor
      *  @param job_id job id of the predecessor
@@ -401,6 +432,17 @@ public class JobSummaryImpl extends JobInfoImpl implements JobSummary, Serializa
         predecessorList.add(new Integer(job_id));
     }
     
+   /**
+    *  Add the job id of an array predecessor
+    *  @param job_id job id of the array predecessor
+    */
+   public void addArrayPredecessor(int job_id) {
+      if (arrayPredecessorList == null) {
+         arrayPredecessorList = new ArrayList<Integer>();
+      }
+      arrayPredecessorList.add(new Integer(job_id));
+   }
+
     /**
      *  Get a list of all predecessor job id
      *  @return list of job ids (java.lang.Integer)
@@ -414,6 +456,18 @@ public class JobSummaryImpl extends JobInfoImpl implements JobSummary, Serializa
     }
     
     /**
+     *  Get a list of all array predecessor job id
+     *  @return list of job ids (java.lang.Integer)
+     */
+    public List<Integer> getArrayPredecessors() {
+       if(arrayPredecessorList == null) {
+          return Collections.EMPTY_LIST;
+       } else {
+          return Collections.unmodifiableList(arrayPredecessorList);
+       }
+    }
+ 
+   /**
      *  Get the jobs total urgency value in normalized fashion.
      *  @return the jobs total urgency value in normalized fashion
      */

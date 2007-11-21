@@ -56,7 +56,8 @@
 #include "spool/flatfile/sge_flatfile_obj.h"
 #include "msg_common.h"
 #include "msg_utilib.h"
-#include "sge_gdi_ctx.h"
+
+#include "gdi/sge_gdi_ctx.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 

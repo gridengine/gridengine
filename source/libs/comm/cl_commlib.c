@@ -463,19 +463,18 @@ char* cl_com_get_unresolvable_hosts(void) {
    return cl_commlib_debug_unresolvable_hosts;
 }
 
-
-
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_setup_commlib()"
-int cl_com_setup_commlib( cl_thread_mode_t t_mode, cl_log_t debug_level , cl_log_func_t flush_func ) {
+int cl_com_setup_commlib(cl_thread_mode_t t_mode, cl_log_t debug_level, cl_log_func_t flush_func)
+{
    int ret_val = CL_RETVAL_OK;
    cl_thread_settings_t* thread_p = NULL;
    cl_bool_t duplicate_call = CL_FALSE;
    cl_bool_t different_thread_mode = CL_FALSE;
    char* help = NULL;
-   
+
    /* setup global log list */
    pthread_mutex_lock(&cl_com_log_list_mutex);
    help = getenv("SGE_COMMLIB_DEBUG_RESOLVE");
@@ -504,9 +503,9 @@ int cl_com_setup_commlib( cl_thread_mode_t t_mode, cl_log_t debug_level , cl_log
 
    if (cl_com_log_list == NULL) {
 #ifdef CL_DO_COMMLIB_DEBUG
-      ret_val = cl_log_list_setup(&cl_com_log_list,"initiator thread",0, /* CL_LOG_FLUSHED */ CL_LOG_IMMEDIATE  , NULL ); 
+      ret_val = cl_log_list_setup(&cl_com_log_list,"initiator",0, /* CL_LOG_FLUSHED */ CL_LOG_IMMEDIATE  , NULL ); 
 #else
-      ret_val = cl_log_list_setup(&cl_com_log_list,"initiator thread",0, /* CL_LOG_FLUSHED */ CL_LOG_IMMEDIATE  , flush_func); 
+      ret_val = cl_log_list_setup(&cl_com_log_list,"initiator",0, /* CL_LOG_FLUSHED */ CL_LOG_IMMEDIATE  , flush_func); 
 #endif
       if (cl_com_log_list == NULL) {
          pthread_mutex_unlock(&cl_com_log_list_mutex);
@@ -892,10 +891,9 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    /* setup SSL configuration */
    new_handle->ssl_setup = NULL;
    switch(framework) {
-      case CL_CT_UNDEFINED:
-      case CL_CT_TCP: {
+      case CL_CT_UNDEFINED: 
+      case CL_CT_TCP: 
          break;
-      }
       case CL_CT_SSL: {
          pthread_mutex_lock(&cl_com_ssl_setup_mutex);
          if (cl_com_ssl_setup_config == NULL) {
@@ -1686,7 +1684,7 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
    cl_raw_list_lock(handle->connection_list);
    elem = cl_connection_list_get_first_elem(handle->connection_list);
    if (elem != NULL) {
-      CL_LOG(CL_LOG_ERROR,"->>>>>>>>>>>>>>>>>> connection list is not empty <<<<<<<<<<<<");
+      CL_LOG(CL_LOG_ERROR,"########## connection list is not empty ##########");
    }
    cl_raw_list_unlock(handle->connection_list);
 

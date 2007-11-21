@@ -39,16 +39,21 @@
 #include "sge_eventL.h"
 #include "sge_qmaster_timed_event.h"
 #include "uti/sge_monitor.h"
+
 #include "gdi/sge_gdi_ctx.h"
 
-int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx, lListElem *jepp, lList **alpp, lList **lpp, char *ruser, char *rhost, 
-                    uid_t uid, gid_t gid, char *group, sge_gdi_request *request, 
-                     monitoring_t *monitor);
-                    
-int sge_gdi_copy_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp, lList **lpp, char *ruser, char *rhost, 
-                     uid_t uid, gid_t gid, char *group, sge_gdi_request *request, 
-                     monitoring_t *monitor);
+#include "gdi/sge_gdi_packet.h"
 
+int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
+                    lListElem *jep, lList **alpp, lList **lpp, char *ruser,
+                    char *rhost, uid_t uid, gid_t gid, char *group,
+                    sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task, monitoring_t *monitor);
+
+int sge_gdi_copy_job(sge_gdi_ctx_class_t *ctx,
+                     lListElem *jep, lList **alpp, lList **lpp, char *ruser, char *rhost,
+                     uid_t uid, gid_t gid, char *group, sge_gdi_packet_class_t *packet, 
+                     sge_gdi_task_class_t *task, monitoring_t *monitor);
+                    
 int sge_gdi_mod_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp, char *ruser, char *rhost, int sub_command);
 
 int sge_gdi_del_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp, char *ruser, char *rhost, int sub_command, monitoring_t *monitor);
@@ -62,6 +67,7 @@ bool is_pe_master_task_send(lListElem *jatep);
 void sge_add_jatask_event(ev_event type, lListElem *jep, lListElem *jatask);
 
 void job_suc_pre(lListElem *jep);
+void job_suc_pre_ad(lListElem *jep);
 
 void sge_init_job_number(void); 
 void sge_store_job_number(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor);

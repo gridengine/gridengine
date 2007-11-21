@@ -38,7 +38,6 @@
 #include <sys/param.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include <netdb.h>
 #include "cl_lists.h"
 #include "cl_xml_parsing.h"
 

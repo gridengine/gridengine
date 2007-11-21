@@ -91,7 +91,7 @@ static sge_control_t Control = {PTHREAD_MUTEX_INITIALIZER, MAX_THREADS,0.0, PTHR
 
 static void has_finished(const char* str, double time) 
 {
-   DENTER(TOP_LAYER, "sge_add_orders");
+   DENTER(TOP_LAYER, "has_finished");
 
    sge_mutex_lock("has_finished", SGE_FUNC, __LINE__, &Control.mutex);
    Control.working--;

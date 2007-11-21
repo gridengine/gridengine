@@ -104,8 +104,11 @@ typedef enum {
    TET_WARNING   = 30,
    MT_WARNING    = 10,
    ST_WARNING    = 0,  /* no timeout for this thread */
-   EXECD_WARNING = 10   
+   EXECD_WARNING = 10,
+   SCT_WARNING   = 20
 }thread_warning_t;
+
+/* EB: TODO: ST: ??? */
 
 /**
  * qping thread error times in seconds
@@ -116,7 +119,8 @@ typedef enum {
    TET_ERROR   = 600,
    MT_ERROR    = 600,
    ST_ERROR    = 0,   /* no timeout for this thread */
-   EXECD_ERROR = 600   
+   EXECD_ERROR = 600,
+   SCT_ERROR   = 600   
 }thread_error_t;
 
 /**
@@ -212,7 +216,7 @@ void sge_monitor_reset(monitoring_t *monitor);
  *
  * TODO: it should be customized for read/write locks.
  */
-#define MONITOR_WAIT_TIME(execute, monitor)    if (monitor->monitor_time > 0){ \
+#define MONITOR_WAIT_TIME(execute, monitor)    if ((monitor != NULL) && (monitor->monitor_time > 0)){ \
                                     struct timeval before;  \
                                     struct timeval after; \
                                     double time; \
@@ -228,7 +232,7 @@ void sge_monitor_reset(monitoring_t *monitor);
                                     execute; \
                                  } \
 
-#define MONITOR_MESSAGES(monitor) if (monitor->monitor_time > 0) monitor->message_in_count++
+#define MONITOR_MESSAGES(monitor) if ((monitor != NULL) && (monitor->monitor_time > 0)) monitor->message_in_count++
 
 #define MONITOR_MESSAGES_OUT(monitor) if ((monitor != NULL) && (monitor->monitor_time > 0)) monitor->message_out_count++
 

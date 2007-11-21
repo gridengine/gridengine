@@ -34,56 +34,145 @@
 
 #ifndef NO_SGE_COMPILE_DEBUG
 
+#include <string.h>
 #include "rmon.h"
 
+#if defined(SOLARIS)
+#  include <note.h>
+#endif
 
-#define DENTER_MAIN(layer, program)        \
-   static const char SGE_FUNC[] = "main";  \
-   static const int xaybzc = layer;        \
-                                           \
-   rmon_mopen(&argc,argv,program);         \
-   if (rmon_condition(xaybzc, TRACE))      \
-      rmon_menter (SGE_FUNC)
+/* EB: TODO: ST: add adoc comments */
+
+#define DENTER_MAIN(layer, program)                                          \
+   static const char SGE_FUNC[] = "main";                                    \
+   static const int xaybzc = layer;                                          \
+                                                                             \
+   rmon_mopen(&argc,argv,program);                                           \
+   if (rmon_condition(xaybzc, TRACE)) {                                      \
+      cl_thread_settings_t* ___thread_config = cl_thread_get_thread_config();\
+      if (___thread_config != NULL) {                                        \
+         rmon_menter (SGE_FUNC, ___thread_config->thread_name);              \
+      } else {                                                               \
+         rmon_menter (SGE_FUNC, NULL);                                       \
+      }                                                                      \
+   }
  
-#define DENTER(layer, function)             \
-   static const char SGE_FUNC[] = function; \
-   static const int xaybzc = layer;         \
-                                            \
-   if (rmon_condition(xaybzc, TRACE))       \
-      rmon_menter (SGE_FUNC)
+#define DENTER(layer, function)                                              \
+   static const char SGE_FUNC[] = function;                                  \
+   static const int xaybzc = layer;                                          \
+                                                                             \
+   if (rmon_condition(xaybzc, TRACE)) {                                      \
+      cl_thread_settings_t* ___thread_config = cl_thread_get_thread_config();\
+      if (___thread_config != NULL) {                                        \
+         rmon_menter (SGE_FUNC, ___thread_config->thread_name);              \
+      } else {                                                               \
+         rmon_menter (SGE_FUNC, NULL);                                       \
+      }                                                                      \
+   } 
 
-#define DRETURN(ret)                            \
-   if (rmon_condition(xaybzc, TRACE))         \
-      rmon_mexit(SGE_FUNC, __FILE__, __LINE__); \
+#define DENTER_(layer, function)                                             \
+   static const char SGE_FUNC[] = function;                                  \
+   static const int xaybzc = layer;                                          \
+                                                                             \
+   if (rmon_condition(xaybzc, TRACE)) {                                      \
+      rmon_menter (SGE_FUNC, NULL);                                          \
+   }        
+
+#define DRETURN(ret)                                                             \
+   if (rmon_condition(xaybzc, TRACE)) {                                          \
+      cl_thread_settings_t* ___thread_config = cl_thread_get_thread_config();    \
+      if (___thread_config != NULL) {                                            \
+         rmon_mexit(SGE_FUNC, __FILE__, __LINE__, ___thread_config->thread_name);\
+      } else {                                                                   \
+         rmon_mexit(SGE_FUNC, __FILE__, __LINE__, NULL);                         \
+      }                                                                          \
+   }                                                                             \
    return ret
 
-#define DRETURN_VOID                            \
-   if (rmon_condition(xaybzc, TRACE))           \
-      rmon_mexit(SGE_FUNC, __FILE__, __LINE__); \
+#define DRETURN_(ret)                                                            \
+   if (rmon_condition(xaybzc, TRACE)) {                                          \
+      rmon_mexit(SGE_FUNC, __FILE__, __LINE__, NULL);                            \
+   }                                                                             \
+   return ret
+
+#define DRETURN_VOID                                                             \
+   if (rmon_condition(xaybzc, TRACE)) {                                          \
+      cl_thread_settings_t* ___thread_config = cl_thread_get_thread_config();    \
+      if (___thread_config != NULL) {                                            \
+         rmon_mexit(SGE_FUNC, __FILE__, __LINE__, ___thread_config->thread_name);\
+      } else {                                                                   \
+         rmon_mexit(SGE_FUNC, __FILE__, __LINE__, NULL);                         \
+      }                                                                          \
+   }                                                                             \
    return 
 
-#define DEXIT                                   \
-   if (rmon_condition(xaybzc, TRACE))           \
-      rmon_mexit(SGE_FUNC, __FILE__, __LINE__)
+#define DRETURN_VOID_                                                            \
+   if (rmon_condition(xaybzc, TRACE)) {                                          \
+      rmon_mexit(SGE_FUNC, __FILE__, __LINE__, NULL);   \
+   }                                                                             \
+   return 
 
-#define DTRACE                                \
-   if (rmon_condition(xaybzc, TRACE))         \
-      rmon_mtrace(SGE_FUNC, __FILE__, __LINE__)
+#define DEXIT                                                                    \
+   if (rmon_condition(xaybzc, TRACE)) {                                          \
+      cl_thread_settings_t* ___thread_config = cl_thread_get_thread_config();    \
+      if (___thread_config != NULL) {                                            \
+         rmon_mexit(SGE_FUNC, __FILE__, __LINE__, ___thread_config->thread_name);\
+      } else {                                                                   \
+         rmon_mexit(SGE_FUNC, __FILE__, __LINE__, NULL);                         \
+      }                                                                          \
+   }                                                                             \
 
-#define DLOCKPRINTF(msg)             \
-   if (rmon_condition(xaybzc, LOCK)) \
+#define DEXIT_                                                                   \
+   if (rmon_condition(xaybzc, TRACE)) {                                          \
+      rmon_mexit(SGE_FUNC, __FILE__, __LINE__, NULL);                            \
+   }                                                                             \
+
+#define DTRACE                                                                     \
+   if (rmon_condition(xaybzc, TRACE)) {                                            \
+      cl_thread_settings_t* ___thread_config = cl_thread_get_thread_config();      \
+      if (___thread_config != NULL) {                                              \
+         rmon_mtrace(SGE_FUNC, __FILE__, __LINE__, ___thread_config->thread_name); \
+      } else {                                                                     \
+         rmon_mtrace(SGE_FUNC, __FILE__, __LINE__, NULL);                          \
+      }                                                                            \
+   }
+
+#define DTRACE_                                                                  \
+   if (rmon_condition(xaybzc, TRACE)) {                                          \
+      rmon_mtrace(SGE_FUNC, __FILE__, __LINE__, NULL);                           \
+   }
+
+#define DLOCKPRINTF(msg)                                                         \
+   if (rmon_condition(xaybzc, LOCK))                                             \
       rmon_mprintf_lock msg
 
-#define DPRINTF(msg)                        \
-   if (rmon_condition(xaybzc, INFOPRINT))   \
-      rmon_mprintf_info msg
+#define DPRINTF(msg)                                                             \
+   if (rmon_condition(xaybzc, INFOPRINT)) {                                      \
+      rmon_helper_t *helper = rmon_get_helper();                                 \
+      if (helper != NULL) {                                                      \
+         cl_thread_settings_t* ___thread_config = cl_thread_get_thread_config(); \
+         if (___thread_config != NULL) {                                         \
+            strcpy(helper->thread_name, ___thread_config->thread_name);          \
+         }                                                                       \
+      }                                                                          \
+      rmon_mprintf_info msg ;                                                    \
+      if (helper != NULL) {                                                      \
+         helper->thread_name[0] = '\0';                                          \
+      }                                                                          \
+   }
 
-#define DTIMEPRINTF(msg)                \
-   if (rmon_condition(xaybzc, TIMING))  \
+#define DPRINTF_(msg)                                                            \
+   if (rmon_condition(xaybzc, INFOPRINT)) {                                      \
+      rmon_mprintf_info msg ;                                                    \
+   }
+
+
+#define DTIMEPRINTF(msg)                                                         \
+   if (rmon_condition(xaybzc, TIMING))                                           \
       rmon_mprintf_timing msg
 
-#define DSPECIALPRINTF(msg)              \
-   if (rmon_condition(xaybzc, SPECIAL))  \
+#define DSPECIALPRINTF(msg)                                                      \
+   if (rmon_condition(xaybzc, SPECIAL))                                          \
       rmon_mprintf_special msg
 
 #define ISTRACE (rmon_condition(xaybzc, TRACE))

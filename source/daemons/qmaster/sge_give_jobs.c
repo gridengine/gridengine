@@ -95,6 +95,7 @@
 #include "sge_centry.h"
 #include "sge_cqueue.h"
 #include "sge_lock.h"
+#include "sge_task_depend.h"
 
 #include "sge_persistence_qmaster.h"
 #include "sge_reporting_qmaster.h"
@@ -116,6 +117,12 @@ reduce_queue_limit(const lList* master_centry_list,
 
 static void 
 release_successor_jobs(lListElem *jep);
+
+static void 
+release_successor_jobs_ad(lListElem *jep);
+
+static void
+release_successor_tasks_ad(lListElem *jep, u_long32 task_id);
 
 static int 
 send_slave_jobs(sge_gdi_ctx_class_t *ctx, 
@@ -1022,7 +1029,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
                /* this info is not spooled */
                sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, 
                              "global", NULL, NULL, global_host_ep);
-               reporting_create_host_consumable_record(&answer_list, global_host_ep, now);
+               reporting_create_host_consumable_record(&answer_list, global_host_ep, jep, now);
                answer_list_output(&answer_list);
                lListElem_clear_changed_info(global_host_ep);
             }
@@ -1031,12 +1038,13 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
                /* this info is not spooled */
                sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, 
                              queue_hostname, NULL, NULL, host);
-               reporting_create_host_consumable_record(&answer_list, host, now);
+               reporting_create_host_consumable_record(&answer_list, host, jep, now);
                answer_list_output(&answer_list);
                lListElem_clear_changed_info(host);
             }
             qinstance_debit_consumable(queue, jep, master_centry_list, tmp_slot);
-            reporting_create_queue_consumable_record(&answer_list, queue, now);
+            reporting_create_queue_consumable_record(&answer_list, host, queue, jep, now);
+            answer_list_output(&answer_list);
             /* this info is not spooled */
             qinstance_add_event(queue, sgeE_QINSTANCE_MOD);
             lListElem_clear_changed_info(queue);
@@ -1090,7 +1098,6 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       {
          dstring buffer = DSTRING_INIT;
          /* JG: TODO: why don't we generate an event? */
-         lList *answer_list = NULL;
          spool_write_object(&answer_list, spool_get_default_context(), jatep, 
                             job_get_key(jobid, jataskid, NULL, &buffer), 
                             SGE_TYPE_JATASK, job_spooling);
@@ -1211,7 +1218,6 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       ja_task_clear_finished_pe_tasks(jatep);
       job_enroll(jep, NULL, jataskid);
       {
-         lList *answer_list = NULL;
          const char *session = lGetString (jep, JB_session);
          sge_event_spool(ctx, &answer_list, now, sgeE_JATASK_MOD, 
                          jobid, jataskid, NULL, NULL, session,
@@ -1241,6 +1247,10 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
 
       sge_job_finish_event(jep, jatep, jr, commit_flags, NULL); 
 
+      /* possibly release successor tasks if there are any array dependencies on this task */
+      if (jataskid) {
+         release_successor_tasks_ad(jep, jataskid);
+      }
       if (handle_zombies) {
          sge_to_zombies(jep, jatep);
       }
@@ -1267,7 +1277,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       sge_event_spool(ctx, &answer_list, 0, sgeE_JATASK_MOD, 
                       jobid, jataskid, NULL, NULL, session,
                       jep, jatep, NULL, false, true);
-
+      answer_list_output(&answer_list);
 
       if (job_get_not_enrolled_ja_tasks(jep)) {
          no_unlink = 1;
@@ -1283,8 +1293,10 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
 
       if (!no_unlink) {
          release_successor_jobs(jep);
+         release_successor_jobs_ad(jep);
          if ((lGetString(jep, JB_exec_file) != NULL) && job_spooling && !JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type))) {
             spool_delete_script(&answer_list, lGetUlong(jep, JB_job_number), jep);
+            answer_list_output(&answer_list);
          }
       }
       break;
@@ -1315,7 +1327,6 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       sge_clear_granted_resources(ctx, jep, jatep, 0, monitor);
       job_enroll(jep, NULL, jataskid);
       {
-         lList *answer_list = NULL;
          const char *session = lGetString (jep, JB_session);
          sge_event_spool(ctx, &answer_list, now, sgeE_JATASK_MOD, 
                          jobid, jataskid, NULL, NULL, session,
@@ -1431,6 +1442,99 @@ static void release_successor_jobs(lListElem *jep)
    return;
 }
 
+static void release_successor_jobs_ad(lListElem *jep) 
+{
+   lListElem *jid, *suc_jep;
+   u_long32 job_ident;
+
+   DENTER(TOP_LAYER, "release_successor_jobs_ad");
+
+   for_each(jid, lGetList(jep, JB_ja_ad_successor_list)) {
+      suc_jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), lGetUlong(jid, JRE_job_number));
+      if (suc_jep) {
+         int Modified = 0;
+         /* if we don't find it by job id we try it with the name */
+         job_ident = lGetUlong(jep, JB_job_number);
+         if (!lDelSubUlong(suc_jep, JRE_job_number, job_ident, JB_ja_ad_predecessor_list)) {
+             DPRINTF(("no reference "sge_u32" and %s to job "sge_u32" in array predecessor list of job "sge_u32"\n", 
+               job_ident, lGetString(jep, JB_job_name),
+               lGetUlong(suc_jep, JB_job_number), lGetUlong(jep, JB_job_number)));
+         } else {
+            if (lGetList(suc_jep, JB_ja_ad_predecessor_list)) {
+               DPRINTF(("removed job "sge_u32"'s array dependance from exiting job "sge_u32"\n",
+                  lGetUlong(suc_jep, JB_job_number), lGetUlong(jep, JB_job_number)));
+            } else {
+               DPRINTF(("job "sge_u32"'s job exit triggers release of array tasks in job "sge_u32"\n",
+                  lGetUlong(jep, JB_job_number), lGetUlong(suc_jep, JB_job_number)));
+            }
+            Modified = 1;
+         }
+         /* cascade unlink and flush ops into a single job mod event */
+         if (Modified) {
+            /* flush task dependency state for empty predecessors list */
+            sge_task_depend_flush(suc_jep, NULL);
+            sge_add_job_event(sgeE_JOB_MOD, suc_jep, NULL);
+         }
+      }
+   }
+
+   DEXIT;
+   return;
+}
+
+/*****************************************************************************
+ Efficiently release array dependencies based on a completed task of job jep
+ *****************************************************************************/
+static void release_successor_tasks_ad(lListElem *jep, u_long32 task_id) 
+{
+   const lListElem *jid;
+
+   DENTER(TOP_LAYER, "release_successor_tasks_ad");
+
+   /* every successor job of this job might have tasks to be released */
+   for_each(jid, lGetList(jep, JB_ja_ad_successor_list)) {
+      u_long32 job_ident = lGetUlong(jid, JRE_job_number);
+      lListElem *suc_range = NULL;
+      lListElem *suc_jep = NULL;
+      int Modified = 0;
+      u_long32 bmin, bmax, sb;
+
+      /* JA: should be doing something if this job cannot be located? */
+      suc_jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), job_ident);
+      if (!suc_jep) continue;
+
+      /* infer reverse dependencies from the completed predecessor task to this successor */
+      if (sge_task_depend_get_range(&suc_range, NULL, suc_jep, jep, task_id)) {
+         /* JA: this should not really happen at all.. maybe make it a proper error? */ 
+         u_long32 job_id = lGetUlong(jep, JB_job_number);
+         DPRINTF(("unknown error computing dependants of task %lu.%lu\n", job_id, task_id));
+         WARNING((SGE_EVENT, MSG_JOB_DEPENDUPT4J_UU, sge_u32c(job_id), sge_u32c(task_id)));
+         lFreeElem(&suc_range);
+         continue;
+      }
+      
+      /* fetch successor job dependency range ids */
+      range_get_all_ids(suc_range, &bmin, &bmax, &sb);
+
+      /* recalculate task dependency info for this range of tasks */
+      for ( ; bmin <= bmax; bmin += sb) {
+         /* returns true if suc_jep was modified */
+         if (sge_task_depend_update(suc_jep, NULL, bmin))
+            Modified = 1;
+      }
+      
+      /* for immediate scheduler reaction event emitting code is required */
+      if (Modified)
+         sge_add_job_event(sgeE_JOB_MOD, suc_jep, NULL);
+
+      /* cleanup */
+      lFreeElem(&suc_range);
+   }
+
+   DEXIT;
+   return;
+}
+
 /*****************************************************************************
  Clear granted resources for job.
  job->granted_destin_identifier_list->str0 contains the granted queue
@@ -1502,8 +1606,8 @@ static void sge_clear_granted_resources(sge_gdi_ctx_class_t *ctx,
             if (debit_host_consumable(job, global_host_ep, master_centry_list, -tmp_slot) > 0) {
                /* this info is not spooled */
                sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, 
-                             SGE_GLOBAL_NAME, NULL, NULL, global_host_ep);
-               reporting_create_host_consumable_record(&answer_list, global_host_ep, now);
+                             "global", NULL, NULL, global_host_ep);
+               reporting_create_host_consumable_record(&answer_list, global_host_ep, job, now);
                answer_list_output(&answer_list);
                lListElem_clear_changed_info(global_host_ep);
             }
@@ -1512,12 +1616,12 @@ static void sge_clear_granted_resources(sge_gdi_ctx_class_t *ctx,
                /* this info is not spooled */
                sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, 
                              queue_hostname, NULL, NULL, host);
-               reporting_create_host_consumable_record(&answer_list, host, now);
+               reporting_create_host_consumable_record(&answer_list, host, job, now);
                answer_list_output(&answer_list);
                lListElem_clear_changed_info(host);
             }
             qinstance_debit_consumable(queue, job, master_centry_list, -tmp_slot);
-            reporting_create_queue_consumable_record(&answer_list, queue, now);
+            reporting_create_queue_consumable_record(&answer_list, host, queue, job, now);
             /* this info is not spooled */
             qinstance_add_event(queue, sgeE_QINSTANCE_MOD);
             lListElem_clear_changed_info(queue);
@@ -1646,6 +1750,9 @@ static int sge_bury_job(bool job_spooling, const char *sge_root, lListElem *job,
          did not miss it, we do it again.... */
       release_successor_jobs(job);
 
+      /* and this too, also flushes task dependency cache */
+      release_successor_jobs_ad(job);
+
       /*
        * security hook
        */
@@ -1712,6 +1819,11 @@ static int sge_bury_job(bool job_spooling, const char *sge_root, lListElem *job,
             sge_dstring_free(&buffer);
          }
       }
+
+      /* release the successor tasks. this might have been done before
+         but to make sure, we do it again. we need to do this last to
+         make sure the task is gone when dependencies are calculated */
+      release_successor_tasks_ad(job, ja_task_id);
    }
 
    DEXIT;
@@ -1748,18 +1860,21 @@ static int sge_to_zombies(lListElem *job, lListElem *ja_task)
          lList *u_h_ids = NULL;     /* RN_Type */ 
          lList *o_h_ids = NULL;     /* RN_Type */ 
          lList *s_h_ids = NULL;     /* RN_Type */ 
+         lList *a_h_ids = NULL;     /* RN_Type */ 
          lList *ja_tasks = NULL;    /* JAT_Type */ 
 
          lXchgList(job, JB_ja_n_h_ids, &n_h_ids);
          lXchgList(job, JB_ja_u_h_ids, &u_h_ids);
          lXchgList(job, JB_ja_o_h_ids, &o_h_ids);
          lXchgList(job, JB_ja_s_h_ids, &s_h_ids);
+         lXchgList(job, JB_ja_a_h_ids, &a_h_ids);
          lXchgList(job, JB_ja_tasks, &ja_tasks);
          zombie = lCopyElem(job);
          lXchgList(job, JB_ja_n_h_ids, &n_h_ids);
          lXchgList(job, JB_ja_u_h_ids, &u_h_ids);
          lXchgList(job, JB_ja_o_h_ids, &o_h_ids);
          lXchgList(job, JB_ja_s_h_ids, &s_h_ids);
+         lXchgList(job, JB_ja_a_h_ids, &a_h_ids);
          lXchgList(job, JB_ja_tasks, &ja_tasks);
          lAppendElem(*master_zombie_list, zombie);
       }
@@ -1884,6 +1999,25 @@ setCheckpointObj(lListElem *job)
       }
    }
    DEXIT;
+   return ret;
+}
+
+bool gdil_del_all_orphaned(sge_gdi_ctx_class_t *ctx, const lList *gdil_list, lList **alpp)
+{
+   bool ret = true;
+   lListElem *gdil_ep;
+   
+   dstring cqueue_name = DSTRING_INIT;
+   dstring host_name = DSTRING_INIT;
+   bool has_hostname, has_domain;
+   for_each (gdil_ep, gdil_list) {
+      cqueue_name_split(lGetString(gdil_ep, JG_qname), &cqueue_name, &host_name, &has_hostname, &has_domain);
+      ret &= cqueue_list_del_all_orphaned(ctx, *(object_type_get_master_list(SGE_TYPE_CQUEUE)), alpp, 
+         sge_dstring_get_string(&cqueue_name), sge_dstring_get_string(&host_name));
+   }
+   sge_dstring_free(&cqueue_name);
+   sge_dstring_free(&host_name);
+
    return ret;
 }
 

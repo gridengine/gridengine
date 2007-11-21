@@ -36,7 +36,7 @@
 
 #include "sge_unistd.h"
 #include "sge.h"
-#include "sge_gdi.h"
+#include "gdi/sge_gdi.h"
 
 #include "sge_all_listsL.h"
 #include "sge_load_sensor.h"
@@ -149,7 +149,8 @@ int main(int argc, char **argv)
 
    DENTER_MAIN(TOP_LAYER, "execd");
 
-   sge_prof_setup();
+   prof_mt_init();
+
    set_thread_name(pthread_self(),"Execd Thread");
 
    prof_set_level_name(SGE_PROF_CUSTOM1, "Execd Thread", NULL); 
@@ -176,7 +177,7 @@ int main(int argc, char **argv)
    sge_sig_handler_in_main_loop = 0;
    sge_setup_sig_handlers(EXECD);
 
-   if (sge_setup2(&ctx, EXECD, &alp) != AE_OK) {
+   if (sge_setup2(&ctx, EXECD, MAIN_THREAD, &alp, false) != AE_OK) {
       answer_list_output(&alp);
       SGE_EXIT((void**)&ctx, 1);
    }
@@ -327,6 +328,7 @@ int main(int argc, char **argv)
          break; /* shut down, leave while */
       }
 
+      /* TODO: for execd this function always returns false */
       if (sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE) == true) {
          execd_exit_state = SGE_COM_ENDPOINT_NOT_UNIQUE;
          break; /* shut down, leave while */
@@ -424,7 +426,7 @@ int sge_execd_register_at_qmaster(sge_gdi_ctx_class_t *ctx, bool is_restart) {
    lList *hlp = NULL, *alp = NULL;
    lListElem *aep = NULL;
    lListElem *hep = NULL;
-   const char *master_host = ctx->get_master(ctx, false);
+   const char *master_host = ctx->get_master(ctx, is_restart);
    
    DENTER(TOP_LAYER, "sge_execd_register_at_qmaster");
 
@@ -439,19 +441,19 @@ int sge_execd_register_at_qmaster(sge_gdi_ctx_class_t *ctx, bool is_restart) {
       /*
        * This is a regular startup.
        */
-      alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_ADD,
-		     &hlp, NULL, NULL);
+      alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_ADD, &hlp, NULL, NULL);
    } else {
       /*
        * Indicate this is a restart to qmaster.
        */
       alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_ADD | SGE_GDI_EXECD_RESTART,
-		     &hlp, NULL, NULL);
+		               &hlp, NULL, NULL);
    }
    aep = lFirst(alp);
    if (!alp || (lGetUlong(aep, AN_status) != STATUS_OK)) {
       if (sge_last_register_error_flag == 0) {
-         WARNING((SGE_EVENT, MSG_COM_CANTREGISTER_S, aep?lGetString(aep, AN_text):MSG_COM_ERROR));
+         WARNING((SGE_EVENT, MSG_COM_CANTREGISTER_S, 
+                  aep?lGetString(aep, AN_text):MSG_COM_ERROR));
          sge_last_register_error_flag = 1;
       }
       return_value = 1;
@@ -504,6 +506,7 @@ static void execd_register(sge_gdi_ctx_class_t *ctx)
          ret_val = cl_commlib_trigger(handle, 1); /* this will block on errors for 1 second */
          switch(ret_val) {
             case CL_RETVAL_SELECT_TIMEOUT:
+            case CL_RETVAL_CONDITION_WAIT_TIMEOUT:
             case CL_RETVAL_OK:
                break;
             default:
@@ -519,7 +522,7 @@ static void execd_register(sge_gdi_ctx_class_t *ctx)
       }
 
       if (sge_execd_register_at_qmaster(ctx, false) != 0) {
-         if ( had_problems == 0) {
+         if (had_problems == 0) {
             had_problems = 1;
          }
          continue;

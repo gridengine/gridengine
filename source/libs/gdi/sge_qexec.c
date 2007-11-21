@@ -38,21 +38,27 @@
 #include <sys/wait.h>
 #include <errno.h>
 
-#include "cull.h"
-#include "commlib.h"
-#include "commd_message_flags.h"
-#include "sge_prog.h"
-#include "sge_gdi.h"
-#include "sge_uidgid.h"
-#include "sgermon.h"
-#include "pack_job_delivery.h"
-#include "sge_qexec.h"
-#include "sge_qexecL.h"
-#include "sge_ja_task.h"
-#include "sge_pe_task.h"
-#include "sge_str.h"
-#include "sge_security.h"
-#include "sge_var.h"
+#include "comm/commlib.h"
+#include "comm/commd_message_flags.h"
+
+#include "rmon/sgermon.h"
+
+#include "cull/cull.h"
+
+#include "uti/sge_prog.h"
+#include "uti/sge_uidgid.h"
+
+#include "sgeobj/sge_qexecL.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_pe_task.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_var.h"
+
+#include "gdi/sge_security.h"
+#include "gdi/sge_gdi.h"
+#include "gdi/sge_qexec.h"
+
+#include "pack_job_delivery.h"   
 
 #include "msg_common.h"
 #include "msg_gdilib.h"

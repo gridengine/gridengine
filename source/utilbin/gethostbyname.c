@@ -37,13 +37,19 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "basis_types.h"
-#include "msg_utilbin.h"
-#include "sge_string.h"
-#include "sge_hostname.h"
+
+#include "comm/lists/cl_util.h"
+#include "comm/cl_commlib.h"
+
+#include "uti/sge_string.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_language.h"
+
 #include "sge_arch.h"
 #include "version.h"
-#include "cl_commlib.h"
+#include "basis_types.h"
+
+#include "msg_utilbin.h"
 
 void usage(void)
 {
@@ -63,9 +69,6 @@ int main(int argc, char *argv[]) {
    char* unresolved_name = NULL;
    int system_error = 0;
 
-   
-
-  
    if (argc < 2 ) {
       usage();
    }
@@ -100,7 +103,7 @@ int main(int argc, char *argv[]) {
      unresolved_name = argv[2];
   }
      
-  retval = cl_com_setup_commlib(CL_NO_THREAD ,CL_LOG_OFF, NULL );
+  retval = cl_com_setup_commlib(CL_NO_THREAD ,CL_LOG_OFF, NULL);
   if (retval != CL_RETVAL_OK) {
      fprintf(stderr,"%s\n", cl_get_error_text(retval));
      exit(1);

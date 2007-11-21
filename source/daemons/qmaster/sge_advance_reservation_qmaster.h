@@ -104,5 +104,8 @@ ar_list_has_reservation_due_to_host_complex_attr(lList *ar_master_list,
                                                  lListElem *host, 
                                                  lList *ce_master_list);
 
+void
+ar_initialize_timer(sge_gdi_ctx_class_t *ctx, lList **answer_list, monitoring_t *monitor);
+
 
 #endif

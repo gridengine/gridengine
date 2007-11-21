@@ -1269,7 +1269,7 @@ int main(int argc, char *argv[])
 
    shared_ssl_func__ERR_load_crypto_strings();
    sge_dstring_init(&bw, buffer, sizeof(buffer));
-   sge_prof_setup();
+   prof_mt_init();
    uidgid_mt_init();
    path_mt_init();
    bootstrap_mt_init();

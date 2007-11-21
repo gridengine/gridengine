@@ -218,12 +218,12 @@ char qmaster_out_file[SGE_PATH_MAX];
 
    log_state_set_log_file(TMP_ERR_FILE_SHADOWD);
 
-   if (sge_setup2(&ctx, SHADOWD, &alp) != AE_OK) {
+   if (sge_setup2(&ctx, SHADOWD, MAIN_THREAD, &alp, false) != AE_OK) {
       answer_list_output(&alp);
       SGE_EXIT((void**)&ctx, 1);
    }
 
-   /* TODO: change this */
+   /* AA: TODO: change this */
    ctx->set_exit_func(ctx, shadowd_exit_func);
    sge_setup_sig_handlers(SHADOWD);
 

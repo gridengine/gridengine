@@ -229,7 +229,6 @@ void updateQueueList(void)
 #else   
    whatall = lWhat("%T(ALL)", CQ_Type);
 #endif  
-   /* EB: TODO: */
    qlp = lSelect("SQL", qmonMirrorList(SGE_CQUEUE_LIST), where, whatall); 
    lFreeWhere(&where);
    lFreeWhat(&whatall);
@@ -1430,7 +1429,6 @@ static void qmonQueueDeleteQuick(Widget w, XtPointer cld, XtPointer cad)
                      False, &answer, NULL);
          
       if (answer) { 
-         /* EB: TODO: */
          alp = qmonDelList(SGE_CQUEUE_LIST, qmonMirrorListRef(SGE_CQUEUE_LIST), 
                            CQ_name, &lp, NULL, what);
 
@@ -1483,7 +1481,6 @@ static void qmonQueueChangeState(Widget w, XtPointer cld, XtPointer cad)
    }
 
    if (ql) {
-      /* EB: TODO: */
       alp = qmonChangeStateList(SGE_CQUEUE_LIST, ql, force, action); 
    
       qmonMessageBox(w, alp, 0);

@@ -76,17 +76,17 @@ typedef struct {
 } struct_msg_t;
 
 lList
-*sge_gdi2(sge_gdi_ctx_class_t *ctx, u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp, lEnumeration *enp);
+*sge_gdi2(sge_gdi_ctx_class_t *ctx, u_long32 target, u_long32 cmd, 
+          lList **lpp, lCondition *cp, lEnumeration *enp);
 
 int
-sge_gdi2_multi(sge_gdi_ctx_class_t *ctx, lList **alpp, int mode, u_long32 target, u_long32 cmd, lList **lp, 
-              lCondition *cp, lEnumeration *enp, lList **malpp,
-              state_gdi_multi *state, bool do_copy);
+sge_gdi2_multi(sge_gdi_ctx_class_t *ctx, lList **alpp, int mode, 
+               u_long32 target, u_long32 cmd, lList **lp, 
+               lCondition *cp, lEnumeration *enp, state_gdi_multi *state, bool do_copy);
 
-int
-sge_gdi2_multi_sync(sge_gdi_ctx_class_t *ctx, lList **alpp, int mode, u_long32 target, u_long32 cmd, lList **lp,
-              lCondition *cp, lEnumeration *enp, lList **malpp,
-              state_gdi_multi *state, bool do_copy, bool do_sync);
+bool 
+sge_gdi2_wait(sge_gdi_ctx_class_t* ctx, lList **alpp, lList **malpp, 
+              state_gdi_multi *state);
 
 int sge_gdi2_get_any_request(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, u_short *id, sge_pack_buffer *pb, 
                     int *tag, int synchron, u_long32 for_request_mid, u_long32* mid);
@@ -130,12 +130,6 @@ int report_list_send(sge_gdi_ctx_class_t *ctx,
 
 int sge_gdi2_shutdown(void **context);
 
-#define ASYNC_GDI2
-#ifdef ASYNC_GDI2
-bool gdi2_receive_multi_async(sge_gdi_ctx_class_t* ctx, sge_gdi_request **answer, lList **malpp, bool is_sync);
-bool gdi2_send_multi_async(sge_gdi_ctx_class_t *ctx, lList **alpp, state_gdi_multi *state);
-#endif
-                                
 /* 
 ** commlib handler functions 
 */                                
@@ -161,6 +155,12 @@ void gdi_rmon_print_callback_function(const char *progname,
                                       unsigned long thread_id);
 #endif
 
+bool gdi2_send_multi_sync(sge_gdi_ctx_class_t* ctx, lList **alpp,
+                                 state_gdi_multi *state);
+
+bool
+sge_gdi_extract_answer(lList **alpp, u_long32 cmd, u_long32 target, int id,
+                       lList *mal, lList **olpp);
 
 #ifdef  __cplusplus
 }

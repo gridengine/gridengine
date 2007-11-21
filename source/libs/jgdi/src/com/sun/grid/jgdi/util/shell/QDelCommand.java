@@ -45,10 +45,6 @@ import java.util.List;
 @CommandAnnotation(value = "qdel")
 public class QDelCommand extends AbstractCommand {
 
-    public String getUsage() {
-        return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qdel");
-    }
-
     public void run(String[] args) throws Exception {
 
         boolean jobargs = false;

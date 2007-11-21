@@ -59,7 +59,6 @@ SGEOBJLIB_SRC = \
          sge_ckpt.c \
          sge_cuser.c \
          sge_event.c \
-         sge_gqueue.c \
          sge_host.c \
          sge_hgroup.c \
          sge_href.c \
@@ -198,9 +197,6 @@ sge_ckpt.o: $(SGEOBJLIB_DIR)/sge_ckpt.c
 
 sge_event.o:	$(SGEOBJLIB_DIR)/sge_event.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_event.c
-
-sge_gqueue.o:	$(SGEOBJLIB_DIR)/sge_gqueue.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_gqueue.c
 
 sge_host.o: $(SGEOBJLIB_DIR)/sge_host.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_host.c
@@ -343,8 +339,8 @@ sge_feature.o: $(SGEOBJLIB_DIR)/sge_feature.c
 test_sge_object: test_sge_object.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_object $(LFLAGS) test_sge_object.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(RMONLIB) $(DLLIB) $(LCKLIB) $(SECLIB) $(LIBS)
 
-test_sge_range: test_sge_range.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(LCKLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_range $(LFLAGS) test_sge_range.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(WINGRIDLIB) $(UTILIB) $(RMONLIB) $(LCKLIB) $(LIBS)
+test_sge_range: test_sge_range.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(COMMLISTSLIB) $(LCKLIB) 
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_range $(LFLAGS) test_sge_range.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(WINGRIDLIB) $(COMMLISTSLIB) $(UTILIB) $(RMONLIB) $(LCKLIB) $(LIBS)
 
 test_sge_attr: test_sge_attr.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_attr $(LFLAGS) test_sge_attr.o sig_handlers.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(WINGRIDLIB) $(UTILIB) $(RMONLIB) $(LIBS)

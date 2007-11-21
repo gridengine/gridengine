@@ -642,7 +642,9 @@ int main(int argc, char **argv)
    /* write our pid to file */
    pid = getpid();
 
-   shepherd_write_pid_file(pid);
+   if(!shepherd_write_pid_file(pid, &ds)) {
+      shepherd_error(sge_dstring_get_string(&ds));
+   }
 
    uid = getuid();
 
@@ -1236,9 +1238,9 @@ static void forward_signal_to_job(int pid, int timeout,
    ** jg: in qrsh case, replace job_pid with pid from qrsh_starter
    */
    /* cached info exists? */
-   if(replace_qrsh_pid) {
+   if (replace_qrsh_pid) {
       /* do we signal a qrsh job? */
-      if(search_conf_val("qrsh_pid_file") == NULL) {
+      if (search_conf_val("qrsh_pid_file") == NULL) {
          replace_qrsh_pid = 0;
       } else {
          char *qrsh_pid_file;
@@ -1248,7 +1250,7 @@ static void forward_signal_to_job(int pid, int timeout,
          qrsh_pid_file = get_conf_val("qrsh_pid_file");
 
          shepherd_read_qrsh_pid_file(qrsh_pid_file, &qrsh_pid,
-                            &replace_qrsh_pid);
+                                     &replace_qrsh_pid);
 
       }
    }

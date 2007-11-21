@@ -35,6 +35,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <pthread.h>
 
 #include <pwd.h>
 
@@ -43,85 +44,64 @@
 #endif
 #include <stdlib.h>
 
+#include "lck/sge_mtutil.h"
+
+#include "comm/commlib.h"
+
+#include "rmon/sgermon.h"
+
+#include "uti/sge_stdlib.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_parse_num_par.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_spool.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_hostname.h"
+#include "uti/setup_path.h"
+#include "uti/sge_env.h"
+#include "uti/sge_time.h"
+#include "uti/sge_bootstrap.h"
+
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_multiL.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_eventL.h"
+#include "sgeobj/sge_idL.h"
+#include "sgeobj/sge_hostL.h"
+#include "sgeobj/sge_confL.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_permissionL.h"
+#include "sgeobj/sge_conf.h"
+
+#include "gdi/qm_name.h"
+#include "gdi/sge_gdiP.h"
+#include "gdi/version.h"
+#include "gdi/sge_gdi2.h"
+#include "gdi/sge_security.h"
+#include "gdi/sge_gdi.h"
+#include "gdi/sge_gdi_packet.h"
+
 #include "basis_types.h"
 #include "sge.h"
-#include "sge_stdlib.h"
-#include "commlib.h"
-#include "sge_gdiP.h"
-#include "sge_gdi_request.h"
-#include "sge_mtutil.h"
-#include "sge_multiL.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_string.h"
-#include "sge_uidgid.h"
-#include "sge_parse_num_par.h"
-#include "sge_profiling.h"
-#include "sge_spool.h"
-#include "qm_name.h"
-#include "sge_unistd.h"
-#include "sge_hostname.h"
-#include "sge_answer.h"
-#include "uti/setup_path.h"
+#include "msg_common.h"
+#include "msg_gdilib.h"
+
 #ifdef KERBEROS
 #  include "krb_lib.h"
 #endif
-#include "msg_common.h"
-#include "msg_gdilib.h"
-#include "gdi/version.h"
 
-#include "sge_env.h"
-#include "sge_bootstrap.h"
-#include "sge_feature.h"
+static void 
+dump_send_info(const char* comp_host, const char* comp_name, int comp_id, 
+               cl_xml_ack_type_t ack_type, unsigned long tag, unsigned long* mid);
 
-#include "sge_time.h"
+static void 
+dump_receive_info(cl_com_message_t** message, cl_com_endpoint_t** sender);
 
-#include "sge_eventL.h"
-#include "sge_idL.h"
-#include "sge_hostL.h"
-#include "sge_confL.h"
-#include "sge_host.h"
-
-#include "sge_permissionL.h"
-
-#include "sge_conf.h"
-#include "sge_gdi2.h"
-#include "sge_security.h"
-#include "sgeobj/sge_ack.h"
-
-
-static void dump_send_info(const char* comp_host, const char* comp_name, int comp_id, cl_xml_ack_type_t ack_type, unsigned long tag, unsigned long* mid);
-static bool gdi2_send_multi_sync(sge_gdi_ctx_class_t* ctx, lList **alpp, 
-                                 state_gdi_multi *state, sge_gdi_request **answer, 
-                                 lList **malpp);
-static int sge_get_gdi2_request(sge_gdi_ctx_class_t *ctx,
-                                int *commlib_error,
-                                char *rhost,
-                                char *rcommproc,
-                                u_short *rid,
-                                sge_gdi_request** arp,
-                                unsigned long request_mid);
-static int sge_send_gdi2_request(int sync, sge_gdi_ctx_class_t *ctx,
-                         sge_gdi_request *ar,
-                         u_long32 *mid, unsigned long response_id, lList **alpp);
-static int sge_send_receive_gdi2_request(sge_gdi_ctx_class_t *ctx, 
-                                         int *commlib_error,
-                                         const char *rhost,
-                                         const char *rcommproc,
-                                         u_short rid,
-                                         sge_gdi_request *out,
-                                         sge_gdi_request **in,
-                                         lList **alpp);
-static int sge_get_gdi2_request_async(sge_gdi_ctx_class_t *ctx,
-                                      int *commlib_error,
-                                      char *rhost,
-                                      char *commproc,
-                                      u_short *id,
-                                      sge_gdi_request** arp,
-                                      unsigned long request_mid,
-                                      bool is_sync);
-static void dump_receive_info(cl_com_message_t** message, cl_com_endpoint_t** sender);
+static const 
+char *target2string(u_long32 target);
 
 static int gdi2_send_message(sge_gdi_ctx_class_t * ctx, 
                              int synchron, const char *tocomproc, int toid, 
@@ -129,606 +109,392 @@ static int gdi2_send_message(sge_gdi_ctx_class_t * ctx,
                              int buflen, u_long32 *mid);
 
 
-lList* sge_gdi2(sge_gdi_ctx_class_t *ctx, u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
-               lEnumeration *enp) 
+static const char *target2string(u_long32 target)
+{
+   const char *ret = NULL;
+
+   switch (target) {
+      case SGE_ADMINHOST_LIST:
+         ret = "SGE_ADMINHOST_LIST";
+         break;
+      case SGE_SUBMITHOST_LIST:
+         ret = "SGE_SUBMITHOST_LIST";
+         break;
+      case SGE_EXECHOST_LIST:
+         ret = "SGE_EXECHOST_LIST";
+         break;
+      case SGE_CQUEUE_LIST:
+         ret = "SGE_CQUEUE_LIST";
+         break;
+      case SGE_JOB_LIST:
+         ret = "SGE_JOB_LIST";
+         break;
+      case SGE_EVENT_LIST:
+         ret = "SGE_EVENT_LIST";
+         break;
+      case SGE_CENTRY_LIST:
+         ret = "SGE_CENTRY_LIST";
+         break;
+      case SGE_ORDER_LIST:
+         ret = "SGE_ORDER_LIST";
+         break;
+      case SGE_MASTER_EVENT:
+         ret = "SGE_MASTER_EVENT";
+         break;
+      case SGE_CONFIG_LIST:
+         ret = "SGE_CONFIG_LIST";
+         break;
+      case SGE_MANAGER_LIST:
+         ret = "SGE_MANAGER_LIST";
+         break;
+      case SGE_OPERATOR_LIST:
+         ret = "SGE_OPERATOR_LIST";
+         break;
+      case SGE_PE_LIST:
+         ret = "SGE_PE_LIST";
+         break;
+      case SGE_SC_LIST:
+         ret = "SGE_SC_LIST";
+         break;
+      case SGE_USER_LIST:
+         ret = "SGE_USER_LIST";
+         break;
+      case SGE_USERSET_LIST:
+         ret = "SGE_USERSET_LIST";
+         break;
+      case SGE_PROJECT_LIST:
+         ret = "SGE_PROJECT_LIST";
+         break;
+      case SGE_SHARETREE_LIST:
+         ret = "SGE_SHARETREE_LIST";
+         break;
+      case SGE_CKPT_LIST:
+         ret = "SGE_CKPT_LIST";
+         break;
+      case SGE_CALENDAR_LIST:
+         ret = "SGE_CALENDAR_LIST";
+         break;
+      case SGE_JOB_SCHEDD_INFO_LIST:
+         ret = "SGE_JOB_SCHEDD_INFO_LIST";
+         break;
+      case SGE_ZOMBIE_LIST:
+         ret = "SGE_ZOMBIE_LIST";
+         break;
+      case SGE_USER_MAPPING_LIST:
+         ret = "SGE_USER_MAPPING_LIST";
+         break;
+      case SGE_HGROUP_LIST:
+         ret = "SGE_HGROUP_LIST";
+         break;
+      case SGE_RQS_LIST:
+         ret = "SGE_RQS_LIST";
+         break;
+      case SGE_AR_LIST:
+         ret = "SGE_AR_LIST";
+         break;
+      default:
+         ret = "unknown list";
+   }
+   return ret;
+}
+
+/****** gdi/request/sge_gdi_extract_answer() **********************************
+*  NAME
+*     sge_gdi_extract_answer() -- exctact answers of a multi request.
+*
+*  SYNOPSIS
+*     lList* sge_gdi_extract_answer(u_long32 cmd, u_long32 target, 
+*                                   int id, lList* mal, lList** olpp) 
+*
+*  FUNCTION
+*     This function extracts the answer for each invidual request on 
+*     previous sge_gdi_multi() calls. 
+*
+*  INPUTS
+*     lList** alpp    - 
+*        List for answers if an error occurs in sge_gdi_extract_answer
+*        This list gets allocated by GDI. The caller is responsible for 
+*        freeing. A response is a list element containing a field with a 
+*        status value (AN_status). The value STATUS_OK is used in case of 
+*        success. STATUS_OK and other values are defined in sge_answerL.h. 
+*        The second field (AN_text) in a response list element is a string 
+*        that describes the performed operation or a description of an error.
+*
+*     u_long32 cmd    - 
+*        bitmask which decribes the operation 
+*        (see sge_gdi_multi)
+*
+*     u_long32 target - 
+*        unique id to identify masters list
+*        (see sge_gdi_multi) 
+*
+*     int id          - 
+*        unique id returned by a previous
+*        sge_gdi_multi() call. 
+*
+*     lList* mal      - List of answer/response lists returned from
+*        sge_gdi_multi(mode=SGE_GDI_SEND)
+*
+*     lList** olpp    - 
+*        This parameter is used to get a list in case of SGE_GDI_GET command. 
+         The caller is responsible for freeing by using lFreeList(). 
+*
+*  RESULT
+*     true   in case of success
+*     false  in case of error
+*
+*  NOTES
+*     MT-NOTE: sge_gdi_extract_answer() is MT safe
+******************************************************************************/
+bool
+sge_gdi_extract_answer(lList **alpp, u_long32 cmd, u_long32 target, int id,
+                       lList *mal, lList **olpp)
+{
+   lListElem *map = NULL;
+   int operation, sub_command;
+
+   DENTER(GDI_LAYER, "sge_gdi_extract_answer");
+
+   operation = SGE_GDI_GET_OPERATION(cmd);
+   sub_command = SGE_GDI_GET_SUBCOMMAND(cmd);
+
+   if (!mal || id < 0) {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      DRETURN(false);
+   }
+
+   map = lGetElemUlong(mal, MA_id, id);
+   if (!map) {
+      sprintf(SGE_EVENT, MSG_GDI_SGEGDIFAILED_S, target2string(target));
+      SGE_ADD_MSG_ID(SGE_EVENT);
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      DRETURN(false);
+   }
+
+   if ((operation == SGE_GDI_GET) || (operation == SGE_GDI_PERMCHECK) ||
+       (operation == SGE_GDI_ADD && sub_command == SGE_GDI_RETURN_NEW_VERSION )) {
+      if (!olpp) {
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         DRETURN(false);
+      }
+      lXchgList(map, MA_objects, olpp);
+   }
+
+   lXchgList(map, MA_answers, alpp);
+
+   DRETURN(true);
+}
+
+lList* sge_gdi2(sge_gdi_ctx_class_t *ctx, u_long32 target, u_long32 cmd, 
+                lList **lpp, lCondition *cp, lEnumeration *enp) 
 {
    lList *alp = NULL;
    lList *mal = NULL;
    u_long32 id;
+   bool local_ret;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
 
    DENTER(GDI_LAYER, "sge_gdi2");
 
    PROF_START_MEASUREMENT(SGE_PROF_GDI);
-
-   if ((id = sge_gdi2_multi(ctx, &alp, SGE_GDI_SEND, target, cmd, lpp, 
-                              cp, enp, &mal, &state, true)) == -1) {
-      PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
-      DRETURN(alp);
+   id = sge_gdi2_multi(ctx, &alp, SGE_GDI_SEND, target, cmd, lpp, 
+                       cp, enp, &state, true);
+   if (id != -1) {
+      local_ret = sge_gdi2_wait(ctx, &alp, &mal, &state); 
+      if (local_ret == true) {
+         sge_gdi_extract_answer(&alp, cmd, target, id, mal, lpp);
+      } 
+      lFreeList(&mal);
    }
-
-   sge_gdi_extract_answer(&alp, cmd, target, id, mal, lpp);
-
-   lFreeList(&mal);
-
    PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
-
    DRETURN(alp);
 }
 
-int sge_gdi2_multi(sge_gdi_ctx_class_t* ctx, lList **alpp, int mode, u_long32 target, u_long32 cmd,
-                  lList **lp, lCondition *cp, lEnumeration *enp, lList **malpp, 
-                  state_gdi_multi *state, bool do_copy) 
+int sge_gdi2_multi(sge_gdi_ctx_class_t* ctx, lList **alpp, 
+                   int mode, u_long32 target, u_long32 cmd,
+                   lList **lp, lCondition *cp, lEnumeration *enp,  
+                   state_gdi_multi *state, bool do_copy) 
 {
-  return sge_gdi2_multi_sync(ctx, alpp, mode, target, cmd, lp, cp, enp, malpp, 
-                            state, do_copy, true);
-}
+   bool local_ret;
+   int ret = -1;
+   sge_gdi_packet_class_t *packet;
 
+   DENTER(GDI_LAYER, "sge_gdi2_multi");
 
-int sge_gdi2_multi_sync(sge_gdi_ctx_class_t* ctx, lList **alpp, int mode, u_long32 target, u_long32 cmd,
-                  lList **lp, lCondition *cp, lEnumeration *enp, lList **malpp, 
-                  state_gdi_multi *state, bool do_copy, bool do_sync) 
-{
-   sge_gdi_request *request = NULL;
-   sge_gdi_request *answer = NULL;
-   int ret;
-   int operation;
-   uid_t uid;
-   gid_t gid;
-   char username[128];
-   char groupname[128];
-
-   DENTER(GDI_LAYER, "sge_gdi2_multi_sync");
-
-   PROF_START_MEASUREMENT(SGE_PROF_GDI);
-
-   operation = SGE_GDI_GET_OPERATION(cmd);
-
-   if ((!lp || !*lp) && !(operation == SGE_GDI_PERMCHECK || operation == SGE_GDI_GET 
-       || operation == SGE_GDI_TRIGGER || 
-       (operation == SGE_GDI_DEL && target == SGE_SHARETREE_LIST))) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_POINTER_NULLPOINTERPASSEDTOSGEGDIMULIT ));
-      goto error;
-   }
-
-   if (!(request = new_gdi_request())) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CANTCREATEGDIREQUEST ));
-      goto error;
-   }
-   
-   request->lp = NULL;
-   request->op = cmd;
-   request->target = target;
-   request->version = GRM_GDI_VERSION;
-   request->alp = NULL;
-   switch (operation) {
-   case SGE_GDI_MOD:
-      if (enp && lp != NULL) {
-         if (do_copy) {
-            request->lp = lSelect("lp", *lp, NULL, enp);
-         } else {
-            request->lp = *lp;
-            *lp = NULL;
-         }
-         break;
-      }
-      /* no break */
-   default:
-      if (lp != NULL) {
-         if (do_copy) {
-            request->lp = lCopyList("lp", *lp);
-         } else {
-               request->lp = *lp;
-               *lp = NULL;
-         }
-      }
-      break;
-   }
-   if ((operation == SGE_GDI_GET) || (operation == SGE_GDI_PERMCHECK)) {
-      request->cp =  lCopyWhere(cp);
-      request->enp = lCopyWhat(enp);
-   } else {
-      request->cp =  NULL;
-      request->enp = NULL; 
-   }
-
-#if 0
-   /* 
-   ** user info
-   */
-   uid = ctx->get_uid(ctx);
-   
-   if (sge_uid2user(uid, username, sizeof(username), MAX_NIS_RETRIES)) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_FUNC_GETPWUIDXFAILED_IS , 
-              (int)uid, strerror(errno)));
-      goto error;
-   }
-   DPRINTF(("uid = %d, username = %s\n", uid, username));
-#if defined( INTERIX )
-   /* Strip Windows domain name from user name */
-   {
-      char *plus_sign;
-
-      plus_sign = strstr(username, "+");
-      if(plus_sign!=NULL) {
-         plus_sign++;
-         strcpy(username, plus_sign);
-      }
-   }
-#endif
-   gid = ctx->get_gid(ctx);
-   if (sge_gid2group(gid, groupname, sizeof(groupname), MAX_NIS_RETRIES)) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GETGRGIDXFAILEDERRORX_U,
-                             sge_u32c(gid)));
-      goto error; 
-   }
-   DPRINTF(("gid = %d, groupname = %s\n", gid, groupname));
-
-   if (sge_set_auth_info(request, uid, username, gid, groupname) == -1) {
-      goto error;
-   }   
-#else
-   uid = ctx->get_uid(ctx);
-   gid = ctx->get_gid(ctx);
-   strncpy(username, ctx->get_username(ctx), sizeof(username));
-   strncpy(groupname, ctx->get_groupname(ctx), sizeof(groupname));
-
-#if defined(INTERIX)
    /*
-    * Map "Administrator" to "root", so the QMaster running on Unix
-    * or Linux will accept us as "root"
+    * Create a new packet (if it not already exist) and store it
+    * in state_gdi_multi structure
     */
-   if (sge_is_user_superuser(username)==true) {
-      strncpy(username, "root", sizeof(username));
+   packet = state->packet;
+   if (packet == NULL) {
+      packet = sge_gdi_packet_create(ctx, alpp);
+      state->packet = packet;
    }
-#endif  /* defined(INTERIX) */
-
-   DPRINTF(("sge_set_auth_info: username(uid) = %s(%d), groupname = %s(%d)\n",
-      username, uid, groupname, gid));
-
-   if (sge_set_auth_info(request, uid, username, gid, groupname) == -1) {
-      goto error;
-   }   
-#endif
 
    /*
-   ** append the new gdi request to the request list
-   */
-   ret = request->sequence_id = ++state->sequence_id;
-   
-   if (state->first) {
-      state->last->next = request;
-      state->last = request;
-   } else {
-      state->first = state->last = request;
-   }
-   
-   if (mode == SGE_GDI_SEND) {
-#ifdef ASYNC_GDI2   
-       gdi2_receive_multi_async(ctx, &answer, malpp, true);
-       if (do_sync) {
-#endif
-         if (!gdi2_send_multi_sync(ctx, alpp, state, &answer, malpp)) {
-            goto error;
-         }
-#ifdef ASYNC_GDI2   
-       } else { 
-          /* if this is null, we did not get an answer..., which means we return 0;*/
-         if (*malpp == NULL) {
-            ret = 0;
-          }
-
-          if (!gdi2_send_multi_async(ctx, alpp, state)) {
-             goto error;
-          }
-       }
-#endif
-
-   }
-
-   PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
-   DRETURN(ret);
-
-   error:
-      if (alpp != NULL) {
-         answer_list_add(alpp, SGE_EVENT, STATUS_NOQMASTER, ANSWER_QUALITY_ERROR);
-      }   
-      answer = free_gdi_request(answer);
-      state->first = free_gdi_request(state->first);
-      state->last = NULL;
-      state->sequence_id = 0;
-      PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
-      DRETURN(-1);
-}
-
-static bool
-gdi2_send_multi_sync(sge_gdi_ctx_class_t* ctx, lList **alpp, state_gdi_multi *state, sge_gdi_request **answer, lList **malpp)
-{
-   int commlib_error = CL_RETVAL_OK;
-   sge_gdi_request *an = NULL;
-   int status = 0;
-   lListElem *map = NULL;
-   lListElem *aep = NULL;
-   const char *mastername = ctx->get_master(ctx, false);
-   u_long32 sge_qmaster_port = ctx->get_sge_qmaster_port(ctx);
-   
-   DENTER(GDI_LAYER, "gdi2_send_multi_sync");
-
-#ifdef NEW_GDI_STATE
-   state->first->request_id = gdi_state_get_next_request_id(ctx);
-#else
-   /* the first request in the request list identifies the request uniquely */
-   state->first->request_id = gdi_state_get_next_request_id();
-#endif   
-
-#ifdef KERBEROS
-   /* request that the Kerberos library forward the TGT */
-   if (state->first->target == SGE_JOB_LIST && 
-         SGE_GDI_GET_OPERATION(state->first->op) == SGE_GDI_ADD) {
-      krb_set_client_flags(krb_get_client_flags() | KRB_FORWARD_TGT);
-      krb_set_tgt_id(state->first->request_id);
-   }
-#endif
-
-   status = sge_send_receive_gdi2_request(ctx,
-                                          &commlib_error,
-                                          mastername, prognames[QMASTER], 1,
-                                          state->first,
-                                          answer,
-                                          alpp);
-
-#ifdef KERBEROS
-   /* clear the forward TGT request */
-   if (state->first->target == SGE_JOB_LIST && 
-         SGE_GDI_GET_OPERATION(state->first->op) == SGE_GDI_ADD) {
-      krb_set_client_flags(krb_get_client_flags() & ~KRB_FORWARD_TGT);
-      krb_set_tgt_id(0);
-   }
-#endif
-
-   /* Print out non-error messages */
-   /* TODO SG: check for error messages and warnings */
-   for_each (aep, *alpp) {
-      if (lGetUlong (aep, AN_quality) == ANSWER_QUALITY_INFO) {
-         INFO ((SGE_EVENT, lGetString (aep, AN_text)));
-      }
-   }
-   
-   lFreeList(alpp);
-   
-   if (status != 0) {
-
-      /* failed to contact qmaster ? */
-      /* So we build an answer structure */
-      switch (status) {
-         case -2:
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_SENDINGGDIREQUESTFAILED));
-            break;
-         case -3:
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_RECEIVEGDIREQUESTFAILED));
-            break;
-         case -4:
-            /* gdi error */
-            /* For the default case, just print a simple message */
-            if (commlib_error == CL_RETVAL_CONNECT_ERROR ||
-                commlib_error == CL_RETVAL_CONNECTION_NOT_FOUND ) {
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_UNABLE_TO_CONNECT_SUS,
-                                      prognames[QMASTER],
-                                      sge_u32c(sge_qmaster_port),
-                                      mastername?mastername:"<NULL>"));
-            } else { /* For unusual errors, give more detail */
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
-                                      MSG_GDI_CANT_SEND_MSG_TO_PORT_ON_HOST_SUSS,
-                                      prognames[QMASTER],
-                                      sge_u32c(sge_qmaster_port),
-                                      mastername?mastername:"<NULL>",
-                                      cl_get_error_text(commlib_error)));
-            }
-            break;
-         case -5:
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_SIGNALED ));
-            break;
-         default:
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GENERALERRORXSENDRECEIVEGDIREQUEST_I , status));
-            break;
-      }
-      DPRINTF(("re-read act_qmaster file (gdi_send_multi_sync)\n"));
-      ctx->get_master(ctx, true);
-
-      DRETURN(false);
-   }
- 
-   for (an = (*answer); an; an = an->next) { 
-      int an_operation, an_sub_command;
-
-      map = lAddElemUlong(malpp, MA_id, an->sequence_id, MA_Type);
-      an_operation = SGE_GDI_GET_OPERATION(an->op);
-      an_sub_command = SGE_GDI_GET_SUBCOMMAND(an->op);
-      if (an_operation == SGE_GDI_GET || an_operation == SGE_GDI_PERMCHECK ||
-            (an_operation==SGE_GDI_ADD 
-             && an_sub_command==SGE_GDI_RETURN_NEW_VERSION )) {
-         lSetList(map, MA_objects, an->lp);
-         an->lp = NULL;
-      }
-      lSetList(map, MA_answers, an->alp);
-      an->alp = NULL;
-   }
-
-   (*answer) = free_gdi_request((*answer));
-   state->first = free_gdi_request(state->first);
-   state->last = NULL;
-   state->sequence_id = 0;
-   DRETURN(true);
-}
-
-/****** gdi/request/sge_send_receive_gdi2_request() ****************************
-*  NAME
-*     sge_send_receive_gdi2_request() -- snd and rcv a gdi structure 
-*
-*  SYNOPSIS
-*     static int sge_send_receive_gdi_request(cl_com_endpoint_t *to, 
-*                                sge_gdi_request *out, 
-*                                sge_gdi_request **in) 
-*
-*  FUNCTION
-*     sends and receives an gdi request structure 
-*
-*  INPUTS
-*     const char *rhost          - ??? 
-*     const char *commproc       - ??? 
-*     u_short id           - ??? 
-*     sge_gdi_request *out - ??? 
-*     sge_gdi_request **in - ??? 
-*
-*  RESULT
-*     static int - 
-*        0 ok
-*        -1 failed before communication
-*        -2 failed sending gdi request
-*        -3 failed receiving gdi request
-*        -4 check_isalive() failed
-*
-*  NOTES
-*     MT-NOTE: sge_send_receive_gdi_request() is MT safe (assumptions)
-******************************************************************************/
-static int sge_send_receive_gdi2_request(sge_gdi_ctx_class_t *ctx, 
-                                         int *commlib_error,
-                                         const char *rhost,
-                                         const char *rcommproc,
-                                         u_short rid,
-                                         sge_gdi_request *out,
-                                         sge_gdi_request **in,
-                                         lList **alpp)
-{
-   int ret;
-   char rcv_rhost[CL_MAXHOSTLEN+1];
-   char rcv_commproc[CL_MAXHOSTLEN+1];
-   u_short id = rid;
-   u_long32 gdi_request_mid;
-   
-   DENTER(GDI_LAYER, "sge_send_receive_gdi2_request");
-
-   if (!out) {
-      ERROR((SGE_EVENT,
-           MSG_GDI_POINTER_NULLLISTPASSEDTOSGESENDRECEIVGDIREQUEST ));
-      DRETURN(-1);
-   }
-
-   /* we send a gdi request and store the request id */
-   ret = sge_send_gdi2_request(1, ctx, out, &gdi_request_mid, 0,
-                              alpp);
-   *commlib_error = ret;
-
-
-   DPRINTF(("send request with id "sge_U32CFormat"\n", sge_u32c(gdi_request_mid)));
-   if (ret != CL_RETVAL_OK) {
-      if ((*commlib_error = ctx->is_alive(ctx)) != CL_RETVAL_OK) {
-         DRETURN(-4);
-      } else {
-         DRETURN(-2);
-      }
-   }
-
-   strcpy(rcv_rhost, rhost);
-   strcpy(rcv_commproc, rcommproc);
-   while (!(ret = sge_get_gdi2_request(ctx, commlib_error, rcv_rhost, rcv_commproc, 
-                                      &id, in, gdi_request_mid))) {
-
-      DPRINTF(("in: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
-            (*in)->request_id, (*in)->sequence_id, (*in)->target, (*in)->op));
-      DPRINTF(("out: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
-               out->request_id, out->sequence_id, out->target, out->op));
-
-      if (*in && ((*in)->request_id == out->request_id)) {
-         break;
-      } else {
-         *in = free_gdi_request(*in);
-         DPRINTF(("<<<<<<<<<<<<<<< GDI MISMATCH >>>>>>>>>>>>>>>>>>>\n"));
-      }
-   }
-
-   if (ret) {
-      if ((*commlib_error = ctx->is_alive(ctx)) != CL_RETVAL_OK) {
-         DRETURN(-4);
-      } else {
-         DRETURN(-3);
-      }   
-   }
-   
-   DRETURN(0);
-}
-
-
-
-/****** gdi/request/sge_send_gdi_request() ************************************
-*  NAME
-*     sge_send_gdi_request() -- send gdi request 
-*
-*  SYNOPSIS
-*     int sge_send_gdi_request(int sync, const char *rhost, 
-*                              const char *commproc, int id, 
-*                              sge_gdi_request *ar) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     int sync             - ??? 
-*     const char *rhost    - ??? 
-*     const char *commproc - ??? 
-*     int id               - ??? 
-*     sge_gdi_request *ar  - ??? 
-*
-*  RESULT
-*     int - 
-*         0 success
-*        -1 common failed sending
-*        -2 not enough memory
-*        -3 format error while unpacking
-*        -4 no commd
-*        -5 no peer enrolled   
-*
-*  NOTES
-*     MT-NOTE: sge_send_gdi_request() is MT safe (assumptions)
-*******************************************************************************/
-static int sge_send_gdi2_request(int sync, sge_gdi_ctx_class_t *ctx,
-                         sge_gdi_request *ar,
-                         u_long32 *mid, unsigned long response_id, lList **alpp) 
-{
-   int ret = 0;
-   sge_pack_buffer pb;
-   bool local_ret = false;
-   lList *answer_list = NULL;
-
-   /* TODO: to master only !!!!! */
-   const char* commproc = prognames[QMASTER];
-   const char* rhost = ctx->get_master(ctx, false);
-   int         id   = 1;
-   
-
-   DENTER(GDI_LAYER, "sge_send_gdi2_request");
-
-   PROF_START_MEASUREMENT(SGE_PROF_GDI_REQUEST);
-
-   if (init_packbuffer(&pb, 8192, 0) == PACK_SUCCESS) {
-      local_ret = request_list_pack_results(ar, &answer_list, &pb);
-   }
-   if (!local_ret) {
-      lListElem *answer = lFirst(answer_list);
-
-      if (answer != NULL) {
-         switch (answer_get_status(answer)) {
-            case STATUS_ERROR2:
-               ret = -2;
-               break;
-            case STATUS_ERROR3:
-               ret = -3;
-               break;
-            default:
+    * Add a task to the packet and if it is the last task of a
+    * multi GDI request (mode == SGE_GDI_SEND) then execute it
+    */
+   if (packet != NULL) {
+      local_ret = sge_gdi_packet_append_task(packet, alpp, target, cmd, lp, NULL, 
+                                             &cp, &enp, do_copy, true);
+      if (local_ret != false) {
+         ret = sge_gdi_packet_get_last_task_id(packet);
+         if (mode == SGE_GDI_SEND) {
+            /*
+             * One of two different functions might be called here:
+             *    -  If this call is executed in an external GDI client 
+             *       (like qstat, qhost, drmaa client ...)
+             *       then sge_gdi_packet_execute_external() will be called.
+             *    -  If it is executed in a qmaster internal thread then
+             *       sge_gdi_packet_execute_internal() will be invoked.
+             */
+            local_ret = ctx->sge_gdi_packet_execute(ctx, alpp, packet);
+            if (local_ret == false) {
+               /* answer has been written in ctx->sge_gdi_packet_execute() */
                ret = -1;
-         }
+            }
+         } 
+      } else {
+         /* answer list has been filled by sge_gdi_packet_append_task() */
+         ret = -1;
       }
    } else {
-      ret = sge_gdi2_send_any_request(ctx, sync, mid, rhost, commproc, id, &pb,
-                              TAG_GDI_REQUEST, response_id, alpp);
+      /* answer list has been filled by sge_gdi_packet_create() */
+      ret = -1;
    }
-   clear_packbuffer(&pb);
-   lFreeList(&answer_list);
-   PROF_STOP_MEASUREMENT(SGE_PROF_GDI_REQUEST);
-
    DRETURN(ret);
 }
 
-/****** gdi/request/sge_get_gdi2_request() *************************************
+/****** gdi/request/sge_gdi2_wait() *******************************************
 *  NAME
-*     sge_get_gdi_request() -- ??? 
+*     sge_gdi2_wait() -- wait till a GDI request is finished 
 *
 *  SYNOPSIS
-*     static int sge_get_gdi2_request(char *host, char *commproc, 
-*                                    u_short *id, sge_gdi_request** arp) 
+*     bool 
+*     sge_gdi2_wait(sge_gdi_ctx_class_t* ctx, lList **alpp, lList **malpp, 
+*                   state_gdi_multi *state) 
 *
 *  FUNCTION
-*     ??? 
+*     This functions waits until a GDI multi request is handled by
+*     a qmaster "worker" thread. This means that the thread executing this
+*     function will block till either the GDI request is done successfully
+*     or till a detailed list of error messages, describing the reason
+*     why the request could not be executed, is available.
+*
+*     Input parameters for this function are the GDI context "ctx" 
+*     and the "state" structure which has to be initialized by calling 
+*     sge_gdi2_multi(... mode=SGE_GDI_RECORED...) zero or multiple times
+*     and sge_gdi2_multi(... mode=SGE_GDI_SEND...) once.
+*
+*     If the function itself fails it will append answer list messages
+*     to "alpp" and return this "false" as return value". Otherwise
+*     the multi answer list "malpp" will be initialized, which can later 
+*     on be evaluated with sge_gdi_extract_answer(), and the function
+*     will return with "true".
 *
 *  INPUTS
-*     const char *host      - ??? 
-*     const char *commproc  - ??? 
-*     u_short *id           - ??? 
-*     sge_gdi_request** arp - ??? 
-*     bool is_sync          - recieve message sync(true) or async(false)
+*     sge_gdi_ctx_class_t* ctx - context object 
+*     lList **alpp             - answer list for this function 
+*     lList **malpp            - multi answer list 
+*     state_gdi_multi *state   - gdi state variable 
 *
 *  RESULT
-*     static int - 
-*         0 success 
-*        -1 common failed getting
-*        -2 not enough memory 
-*        -3 format error while unpacking
-*        -4 no commd
-*        -5 no peer enrolled
+*     bool - error state
+*        true  - success
+*        false - error
+*
+*  EXAMPLE
+*     {
+*        state_gdi_multi state = STATE_GDI_MULTI_INIT;
+*        lEnumeration *what_cqueue = lWhat("%T(ALL)", CQ_Type);
+*        lCondition *where_cqueue = NULL;
+*        lEnumeration *what_job = lWhat("%T(ALL)", JB_Type);
+*        lCondition *where_job = NULL;
+*        lList *local_answer_list = NULL;
+*        int cqueue_request_id;
+*        int job_request_id;
+*
+*        cqueue_request_id = ctx->gdi_multi(ctx, &local_answer_list, SGE_GDI_RECORD,
+*                                          SGE_CQUEUE_LIST, SGE_GDI_GET, NULL,
+*                                          where_cqueue, what_cqueue, &state, true);
+*        job_request_id = ctx->gdi_multi(ctx, &local_answer_list, SGE_GDI_SEND,
+*                                        SGE_JOB_LIST, SGE_GDI_GET, NULL,
+*                                        where_job, what_job, &state, true);
+*        if (cqueue_request_id != -1 && job_request_id != -1 &&
+*            answer_list_has_error(&local_answer_list) == false) {
+*           lList *multi_answer_list = NULL;
+*           lList *list_cqueue = NULL;
+*           lList *list_job = NULL;
+*           lList *answer_cqueue = NULL;
+*           lList *answer_job = NULL;
+*           bool local_ret;
+*
+*           local_ret = ctx->gdi_wait(ctx, &local_answer_list, &multi_answer_list, &state);
+*           sge_gdi_extract_answer(&answer_cqueue, SGE_GDI_GET, SGE_CQUEUE_LIST,
+*                                  cqueue_request_id, multi_answer_list, &list_cqueue);
+*           sge_gdi_extract_answer(&answer_job, SGE_GDI_GET, SGE_CQUEUE_LIST,
+*                                  job_request_id, multi_answer_list, &list_job);
+*
+*           if (local_ret == false || answer_list_has_error(&answer_cqueue) || 
+*               answer_list_has_error(&answer_job) || answer_list_has_error(&local_answer_list)) {
+*              ERROR((SGE_EVENT, "GDI multi request failed"));
+*           } else {
+*              INFO((SGE_EVENT, "GDI multi request was successfull"));
+*              INFO((SGE_EVENT, "got cqueue list with "sge_U32CFormat" and cqueue answer "
+*                    "list with "sge_U32CFormat" elements.", sge_u32c(lGetNumberOfElem(list_cqueue)),
+*                    sge_u32c(lGetNumberOfElem(answer_cqueue))));
+*              INFO((SGE_EVENT, "got job list with "sge_U32CFormat" and job answer "
+*                    "list with "sge_U32CFormat" elements.", sge_u32c(lGetNumberOfElem(list_job)),
+*                    sge_u32c(lGetNumberOfElem(answer_job))));
+*           }
+*           lFreeList(&multi_answer_list);
+*           lFreeList(&answer_cqueue);
+*           lFreeList(&answer_job);
+*           lFreeList(&list_cqueue);
+*           lFreeList(&list_job);
+*        } else {
+*           ERROR((SGE_EVENT, "QMASTER INTERNAL MULTI GDI TEST FAILED"));
+*           ERROR((SGE_EVENT, "unable to send intern gdi request (cqueue_request_id=%d, "
+*                  "job_request_id=%d", cqueue_request_id, job_request_id));
+*        }
+*
+*        lFreeList(&local_answer_list);
+*     }
 *
 *  NOTES
-*     MT-NOTE: sge_get_gdi2_request() is MT safe (assumptions)
+*     MT-NOTE: sge_gdi2_wait() is MT safe 
+*
+*  SEE ALSO
+*     gdi/request/sge_gdi2() 
+*     gdi/request/sge_gdi2_multi() 
+*     gdi/request/sge_gdi_extract_answer() 
 *******************************************************************************/
-static int sge_get_gdi2_request(sge_gdi_ctx_class_t *ctx,
-                                int *commlib_error,
-                                char *rhost,
-                                char *rcommproc,
-                                u_short *rid,
-                                sge_gdi_request** arp,
-                                unsigned long request_mid)
+bool 
+sge_gdi2_wait(sge_gdi_ctx_class_t* ctx, lList **alpp, lList **malpp, 
+              state_gdi_multi *state)
 {
-   return sge_get_gdi2_request_async(ctx, commlib_error, rhost, rcommproc, rid, arp, request_mid, true);
+   bool ret = true;  
+   sge_gdi_packet_class_t *packet = NULL;
+
+   DENTER(GDI_LAYER, "sge_gdi2_wait");
+   packet = state->packet;
+   state->packet = NULL;
+   if (packet != NULL) {
+      /*
+       * One of two different functions might be called here:
+       *    -  If this call is executed in an external GDI client (like qstat, qhost...)
+       *       then sge_gdi_packet_wait_for_result_extern() will be called.
+       *    -  If it is executed in a qmaster internal thread then
+       *       sge_gdi_packet_wait_for_result_intern() will be invoked.
+       */
+      ret = ctx->sge_gdi_packet_wait_for_result(ctx, alpp, &packet, malpp);
+   } 
+   DRETURN(ret); 
 }
 
-static int sge_get_gdi2_request_async(sge_gdi_ctx_class_t *ctx,
-                                      int *commlib_error,
-                                      char *rhost,
-                                      char *rcommproc,
-                                      u_short *id,
-                                      sge_gdi_request** arp,
-                                      unsigned long request_mid,
-                                      bool is_sync)
-{
-   sge_pack_buffer pb;
-   int tag = TAG_GDI_REQUEST; /* this is what we want */
-   int ret;
-
-   DENTER(GDI_LAYER, "sge_get_gdi2_request_async");
-   
-   if ((*commlib_error = sge_gdi2_get_any_request(ctx, rhost, rcommproc, id, &pb, &tag, is_sync, request_mid,0)) != CL_RETVAL_OK) {
-      DRETURN(-1);
-   }
-
-   ret = sge_unpack_gdi_request(&pb, arp);
-
-   switch (ret) {
-   case PACK_SUCCESS:
-      break;
-
-   case PACK_ENOMEM:
-      ret = -2;
-      ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret)));
-      break;
-
-   case PACK_FORMAT:
-      ret = -3;
-      ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret)));
-      break;
-
-   default:
-      ret = -1;
-      ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(ret)));
-      break;
-   }
-
-   /* 
-      we got the packing buffer filled by 
-      sge_get_any_request and have to recycle it 
-   */
-   clear_packbuffer(&pb);
-
-   DRETURN(ret);
-}
 
 /*---------------------------------------------------------
  *  sge_send_any_request
@@ -739,10 +505,11 @@ static int sge_get_gdi2_request_async(sge_gdi_ctx_class_t *ctx,
  *  NOTES
  *     MT-NOTE: sge_send_gdi_request() is MT safe (assumptions)
  *---------------------------------------------------------*/
-int sge_gdi2_send_any_request(sge_gdi_ctx_class_t *ctx, int synchron, u_long32 *mid,
-                         const char *rhost, const char *commproc, int id,
-                         sge_pack_buffer *pb, 
-                         int tag, u_long32  response_id, lList **alpp)
+int 
+sge_gdi2_send_any_request(sge_gdi_ctx_class_t *ctx, int synchron, u_long32 *mid,
+                          const char *rhost, const char *commproc, int id,
+                          sge_pack_buffer *pb, int tag, u_long32  response_id, 
+                          lList **alpp)
 {
    int i;
    cl_xml_ack_type_t ack_type = CL_MIH_MAT_NAK;
@@ -750,9 +517,9 @@ int sge_gdi2_send_any_request(sge_gdi_ctx_class_t *ctx, int synchron, u_long32 *
    unsigned long dummy_mid = 0;
    unsigned long* mid_pointer = NULL;
 
-   int         to_port   = ctx->get_sge_qmaster_port(ctx);
+   int to_port   = ctx->get_sge_qmaster_port(ctx);
    
-   DENTER(GDI_LAYER, "sge_gdi2_send_any_request");
+   DENTER(TOP_LAYER, "sge_gdi2_send_any_request");
 
 
    if (rhost == NULL) {
@@ -775,24 +542,23 @@ int sge_gdi2_send_any_request(sge_gdi_ctx_class_t *ctx, int synchron, u_long32 *
       ack_type = CL_MIH_MAT_ACK;
    }
   
-#if 0
-   SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_SENDINGMESSAGE_SIU, commproc,id,
-                          (unsigned long) pb->bytes_used));
-   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-#endif
-
    if (mid) {
       mid_pointer = &dummy_mid;
    }
 
    i = cl_commlib_send_message(handle, (char*) rhost, (char*) commproc, id,
-                                  ack_type, (cl_byte_t*)pb->head_ptr, (unsigned long) pb->bytes_used,
-                                  mid_pointer,  response_id,  tag , (cl_bool_t)1, (cl_bool_t)synchron);
+                               ack_type, (cl_byte_t*)pb->head_ptr, 
+                               (unsigned long) pb->bytes_used,
+                               mid_pointer,  response_id,  tag , (cl_bool_t)1, 
+                               (cl_bool_t)synchron);
+   
    if (i != CL_RETVAL_OK) {
       /* try again ( if connection timed out ) */
       i = cl_commlib_send_message(handle, (char*) rhost, (char*) commproc, id,
-                                  ack_type, (cl_byte_t*)pb->head_ptr, (unsigned long) pb->bytes_used,
-                                  mid_pointer,  response_id,  tag , (cl_bool_t)1, (cl_bool_t)synchron);
+                                  ack_type, (cl_byte_t*)pb->head_ptr, 
+                                  (unsigned long) pb->bytes_used, mid_pointer, 
+                                  response_id,  tag , (cl_bool_t)1, 
+                                  (cl_bool_t)synchron);
    }
 
    dump_send_info(rhost, commproc, id, ack_type, tag, mid_pointer);
@@ -827,8 +593,10 @@ int sge_gdi2_send_any_request(sge_gdi_ctx_class_t *ctx, int synchron, u_long32 *
  *    MT-NOTE: sge_get_any_request() is MT safe (assumptions)
  *----------------------------------------------------------*/
 int 
-sge_gdi2_get_any_request(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, u_short *id, sge_pack_buffer *pb, 
-                    int *tag, int synchron, u_long32 for_request_mid, u_long32* mid) 
+sge_gdi2_get_any_request(sge_gdi_ctx_class_t *ctx, char *rhost, 
+                         char *commproc, u_short *id, sge_pack_buffer *pb, 
+                         int *tag, int synchron, u_long32 for_request_mid, 
+                         u_long32* mid) 
 {
    int i;
    ushort usid=0;
@@ -856,16 +624,21 @@ sge_gdi2_get_any_request(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, 
    /* trigger communication or wait for a new message (select timeout) */
    cl_commlib_trigger(handle, synchron); /* RD: is this trigger really necessary? */
 
-   i = cl_commlib_receive_message(handle, rhost, commproc, usid, (cl_bool_t)synchron, for_request_mid, &message, &sender);
+   i = cl_commlib_receive_message(handle, rhost, commproc, usid, 
+                                  (cl_bool_t) synchron, for_request_mid, 
+                                  &message, &sender);
 
    if ( i == CL_RETVAL_CONNECTION_NOT_FOUND ) {
       if ( commproc[0] != '\0' && rhost[0] != '\0' ) {
          /* The connection was closed, reopen it */
          i = cl_commlib_open_connection(handle, (char*)rhost, (char*)commproc, usid);
-         INFO((SGE_EVENT,"reopen connection to %s,%s,"sge_U32CFormat" (2)\n", rhost, commproc, sge_u32c(usid)));
+         INFO((SGE_EVENT,"reopen connection to %s,%s,"sge_U32CFormat" (2)\n", 
+               rhost, commproc, sge_u32c(usid)));
          if (i == CL_RETVAL_OK) {
             INFO((SGE_EVENT,"reconnected successfully\n"));
-            i = cl_commlib_receive_message(handle, rhost, commproc, usid, (cl_bool_t) synchron, for_request_mid, &message, &sender);
+            i = cl_commlib_receive_message(handle, rhost, commproc, usid, 
+                                           (cl_bool_t) synchron, for_request_mid, 
+                                           &message, &sender);
          }
       } else {
          DEBUG((SGE_EVENT,"can't reopen a connection to unspecified host or commproc (2)\n"));
@@ -875,7 +648,7 @@ sge_gdi2_get_any_request(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, 
    if (i != CL_RETVAL_OK) {
       if (i != CL_RETVAL_NO_MESSAGE) {
          /* This if for errors */
-         DEBUG((SGE_EVENT, MSG_GDI_RECEIVEMESSAGEFROMCOMMPROCFAILED_SISS , 
+         DPRINTF((SGE_EVENT, MSG_GDI_RECEIVEMESSAGEFROMCOMMPROCFAILED_SISS , 
                (commproc[0] ? commproc : "any"), 
                (int) usid, 
                (commproc[0] ? commproc : "any"),
@@ -920,7 +693,8 @@ sge_gdi2_get_any_request(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, 
       /* TODO: there are two cases for any and addressed communication partner, 
                two functions are needed */
       if (sender != NULL ) {
-         DEBUG((SGE_EVENT,"received from: %s,"sge_U32CFormat"\n",sender->comp_host, sge_u32c(sender->comp_id) ));
+         DEBUG((SGE_EVENT,"received from: %s,"sge_U32CFormat"\n",sender->comp_host, 
+                sge_u32c(sender->comp_id) ));
          if (rhost[0] == '\0') {
             strcpy(rhost, sender->comp_host); /* If we receive from anybody return the sender */
          }
@@ -935,253 +709,6 @@ sge_gdi2_get_any_request(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, 
    PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
    DRETURN(CL_RETVAL_OK);
 }
-
-#ifdef ASYNC_GDI2
-
-/****** sge_gdi_request/gdi_receive_multi_async() ******************************
-*  NAME
-*     gdi_receive_multi_async() -- does a async gdi send
-*
-*  SYNOPSIS
-*     bool gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, 
-*     bool is_sync) 
-*
-*  FUNCTION
-*     The function checks, if an async send was done before. If not, it
-*     return true right away, otherwise it gets the send date from the
-*     thread specific storage. With that data it queries the comlib, if
-*     it has a reply for the send. If not, it returns false otherwise true.
-*
-*     If is_sync is set, the call blocks, till the comlib recieves an answer,
-*     otherwise it returns right away.
-*
-*  INPUTS
-*     sge_gdi_request **answer - answer list for errors during send
-*     lList **malpp            - message answer list
-*     bool is_sync             - if true, the function waits for an answer
-*
-*  RESULT
-*     bool - true, if everything went okay, otherwise false
-*
-*  NOTES
-*     MT-NOTE: gdi_receive_multi_async() is MT safe 
-*
-*  SEE ALSO
-*     sge_gdi_request/gdi_send_multi_sync
-*     sge_gdi_request/gdi_send_multi_async
-*******************************************************************************/
-bool
-gdi2_receive_multi_async(sge_gdi_ctx_class_t* ctx, sge_gdi_request **answer, lList **malpp, bool is_sync)
-{
-   char *rcv_rhost = NULL;
-   char *rcv_commproc = NULL;
-   u_short id = 0;
-   u_long32 gdi_request_mid = 0;
-   state_gdi_multi *state = NULL;
-   gdi_send_t *async_gdi = NULL;
-   int commlib_error = CL_RETVAL_OK;
-   int ret = 0;
-   sge_gdi_request *an = NULL;
-   lListElem *map = NULL; 
-   
-   DENTER(GDI_LAYER, "gdi2_receive_multi_async");
-
-   /* we have to check for an ongoing gdi reqest, if there is none, we have to exit */
-#ifdef NEW_GDI_STATE
-   if ((async_gdi = gdi_state_get_last_gdi_request(ctx)) != NULL) {
-#else
-   if ((async_gdi = gdi_state_get_last_gdi_request()) != NULL) {
-#endif   
-      rcv_rhost = async_gdi->rhost; /* rhost is a char array */
-      rcv_commproc = async_gdi->commproc; /* commproc is a char array */
-      id = async_gdi->id; /* id is u_short */
-      gdi_request_mid = async_gdi->gdi_request_mid;
-      state = &(async_gdi->out);
-#if 0      
-      /* AA: DEBUG async gdi */
-      printf("++++++++++ async gdi: rhost/commproc/id: (%s/%s/%d) gdi_request_mid: "sge_u32"\n", 
-                 rcv_rhost, rcv_commproc, id, gdi_request_mid);      
-#endif
-   } else {
-#if 0   
-      /* AA: DEBUG async gdi */
-      printf("-+-+-+-+-+ no async gdi\n"); 
-#endif      
-      /* nothing todo... */
-      DRETURN(true);
-   }
-   
-   /* receive answer */
-   while (!(ret = sge_get_gdi2_request_async(ctx, &commlib_error, rcv_rhost, rcv_commproc, &id ,answer, gdi_request_mid, is_sync))) {
-      DPRINTF(("in: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
-            (*answer)->request_id, (*answer)->sequence_id, (*answer)->target, (*answer)->op));
-      DPRINTF(("out: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
-               state->first->request_id, state->first->sequence_id, state->first->target, state->first->op));
-
-      if (*answer && ((*answer)->request_id == state->first->request_id)) {
-         break;
-      } else {
-         *answer = free_gdi_request(*answer);
-         DPRINTF(("<<<<<<<<<<<<<<< GDI MISMATCH >>>>>>>>>>>>>>>>>>>\n"));
-      }
-   }
-  
-   /* process return code */
-   if (ret) {
-      if (is_sync) {
-         if ((commlib_error = ctx->is_alive(ctx)) != CL_RETVAL_OK) {
-            /* gdi error */
-
-            /* For the default case, just print a simple message */
-            if (commlib_error == CL_RETVAL_CONNECT_ERROR ||
-                commlib_error == CL_RETVAL_CONNECTION_NOT_FOUND ) {
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_UNABLE_TO_CONNECT_SUS,
-                                   ctx->get_progname(ctx),
-                                   sge_u32c(ctx->get_sge_qmaster_port(ctx)), 
-                                   ctx->get_master(ctx, false)));
-            } else { /* For unusual errors, give more detail */
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
-                                      MSG_GDI_CANT_SEND_MSG_TO_PORT_ON_HOST_SUSS,
-                                      ctx->get_progname(ctx),
-                                      sge_u32c(ctx->get_sge_qmaster_port(ctx)), 
-                                      ctx->get_master(ctx, false),
-                                      cl_get_error_text(commlib_error)));
-            }
-         } else {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_RECEIVEGDIREQUESTFAILED));
-         }
-#ifdef NEW_GDI_STATE
-         gdi_state_clear_last_gdi_request(ctx); 
-#else
-         gdi_state_clear_last_gdi_request(); 
-#endif         
-      }
-      DRETURN(false);
-   }
-  
-   for (an = (*answer); an; an = an->next) { 
-      int an_operation, an_sub_command;
-
-      map = lAddElemUlong(malpp, MA_id, an->sequence_id, MA_Type);
-      an_operation = SGE_GDI_GET_OPERATION(an->op);
-      an_sub_command = SGE_GDI_GET_SUBCOMMAND(an->op);
-      if (an_operation == SGE_GDI_GET || an_operation == SGE_GDI_PERMCHECK ||
-            (an_operation==SGE_GDI_ADD 
-             && an_sub_command==SGE_GDI_RETURN_NEW_VERSION )) {
-         lSetList(map, MA_objects, an->lp);
-         an->lp = NULL;
-      }
-      lSetList(map, MA_answers, an->alp);
-      an->alp = NULL;
-   }
-
-   (*answer) = free_gdi_request((*answer));
-  
-#ifdef NEW_GDI_STATE
-   gdi_state_clear_last_gdi_request(ctx); 
-#else
-   gdi_state_clear_last_gdi_request(); 
-#endif         
-   
-   DRETURN(true);
-}
-
-/****** sge_gdi_request/gdi_send_multi_async() *********************************
-*  NAME
-*     gdi_send_multi_async() -- sends a request async
-*
-*  SYNOPSIS
-*     static bool gdi_send_multi_async(lList **alpp, state_gdi_multi *state) 
-*
-*  FUNCTION
-*     It sends the handed data and stores all connection info in a thread
-*     local storage. This can than be used in gdi_receive_multi_async to
-*     query the comlib for an anser
-*
-*  INPUTS
-*     lList **alpp           - answer list
-*     state_gdi_multi *state - date to send
-*
-*  RESULT
-*     static bool - returns true, if everything is okay
-*
-*
-*  NOTES
-*     MT-NOTE: gdi_send_multi_async() is MT safe 
-*
-*  SEE ALSO
-*     sge_gdi_request/gdi_receive_multi_async
-*******************************************************************************/
-bool
-gdi2_send_multi_async(sge_gdi_ctx_class_t *ctx, lList **alpp, state_gdi_multi *state)
-{
-   int commlib_error = CL_RETVAL_OK;
-   lListElem *aep = NULL;
-
-   u_long32 gdi_request_mid = 0;
-   u_short id = 1;
-   const char *rhost = NULL;
-   const char *commproc = prognames[QMASTER];
-   
-   DENTER(GDI_LAYER, "gdi2_send_multi_async");
-
-   rhost = ctx->get_master(ctx, false);
-
-   /* the first request in the request list identifies the request uniquely */
-#ifdef NEW_GDI_STATE
-   state->first->request_id = gdi_state_get_next_request_id(ctx);
-#else
-   state->first->request_id = gdi_state_get_next_request_id();
-#endif   
-
-   commlib_error = sge_send_gdi2_request(0, ctx, state->first, &gdi_request_mid, 0, alpp);
-   
-   /* Print out non-error messages */
-   /* TODO SG: check for error messages and warnings */
-   for_each (aep, *alpp) {
-      if (lGetUlong (aep, AN_quality) == ANSWER_QUALITY_INFO) {
-         INFO ((SGE_EVENT, lGetString (aep, AN_text)));
-      }
-   }
-   lFreeList(alpp);
-  
-   DPRINTF(("send request with id "sge_U32CFormat"\n", sge_u32c(gdi_request_mid)));
-   if (commlib_error != CL_RETVAL_OK) {
-      if ( (commlib_error = ctx->is_alive(ctx)) != CL_RETVAL_OK) {
-         /* gdi error */
-
-         /* For the default case, just print a simple message */
-         if (commlib_error == CL_RETVAL_CONNECT_ERROR ||
-             commlib_error == CL_RETVAL_CONNECTION_NOT_FOUND ) {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_UNABLE_TO_CONNECT_SUS,
-                                   ctx->get_progname(ctx),
-                                   sge_u32c(ctx->get_sge_qmaster_port(ctx)), 
-                                   ctx->get_master(ctx, false)));
-         } else { /* For unusual errors, give more detail */
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
-                                   MSG_GDI_CANT_SEND_MSG_TO_PORT_ON_HOST_SUSS,
-                                   ctx->get_progname(ctx),
-                                   sge_u32c(ctx->get_sge_qmaster_port(ctx)), 
-                                   ctx->get_master(ctx, false),
-                                   cl_get_error_text(commlib_error)));
-         }
-      } else {
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_SENDINGGDIREQUESTFAILED));
-      }
-      DRETURN(false);
-   }
-  
-
-   /* we have to store the data for the recieve....  */ 
-#ifdef NEW_GDI_STATE   
-   gdi_set_request(ctx, rhost, commproc, id, state, gdi_request_mid);
-#else
-   gdi_set_request(rhost, commproc, id, state, gdi_request_mid);
-#endif   
-   
-   DRETURN(true);
-}  
-#endif
 
 static void dump_receive_info(cl_com_message_t** message, cl_com_endpoint_t** sender) 
 {
@@ -1280,8 +807,8 @@ const char *cell
 ** NOTES
 **    MT-NOTE: gdi_kill() is MT safe (assumptions)
 */
-lList *gdi2_kill(sge_gdi_ctx_class_t *thiz, lList *id_list, const char *cell, u_long32 option_flags, 
-                u_long32 action_flag ) 
+lList *gdi2_kill(sge_gdi_ctx_class_t *thiz, lList *id_list, const char *cell, 
+                 u_long32 option_flags, u_long32 action_flag ) 
 {
    lList *alp = NULL, *tmpalp;
    bool id_list_created = false;
@@ -1303,6 +830,11 @@ lList *gdi2_kill(sge_gdi_ctx_class_t *thiz, lList *id_list, const char *cell, u_
       id_list_created = true;
       lAddElemStr(&id_list, ID_str, buffer, ID_Type);
       tmpalp = thiz->gdi(thiz, SGE_EVENT_LIST, SGE_GDI_TRIGGER, &id_list, NULL, NULL);
+      lAddList(alp, &tmpalp);  
+   }
+
+   if (action_flag & THREAD_START) {
+      tmpalp = thiz->gdi(thiz, SGE_DUMMY_LIST, SGE_GDI_TRIGGER, &id_list, NULL, NULL);
       lAddList(alp, &tmpalp);  
    }
 
@@ -1374,9 +906,6 @@ lList *gdi2_kill(sge_gdi_ctx_class_t *thiz, lList *id_list, const char *cell, u_
 *
 *  RESULT
 *     int true on success, false if not
-*
-*  SEE ALSO
-*     gdilib/sge_gdi_check_permission()
 ******************************************************************************/
 bool sge_gdi2_get_mapping_name(sge_gdi_ctx_class_t *ctx, const char *requestedHost, char *buf,
                              int buflen) 
@@ -1453,17 +982,17 @@ bool sge_gdi2_get_mapping_name(sge_gdi_ctx_class_t *ctx, const char *requestedHo
 *     gdilib/sge_gdi_get_mapping_name()
 *     gdilib/PERM_LOWERBOUND
 ******************************************************************************/
-bool sge_gdi2_check_permission(sge_gdi_ctx_class_t *ctx, lList **alpp, int option) 
+bool sge_gdi2_check_permission(sge_gdi_ctx_class_t *ctx, lList **alpp, int option)
 {
   bool access_status = false;
   int failed_checks = 0;
   lList* alp = NULL;
   lList* permList = NULL;
   lUlong value;
-  
+
   DENTER(GDI_LAYER, "sge_gdi2_check_permission");
 
-  permList = NULL; 
+  permList = NULL;
   alp = ctx->gdi(ctx, SGE_DUMMY_LIST, SGE_GDI_PERMCHECK ,  &permList , NULL,NULL );
 
   if (permList == NULL) {
@@ -1473,37 +1002,37 @@ bool sge_gdi2_check_permission(sge_gdi_ctx_class_t *ctx, lList **alpp, int optio
            *alpp = alp;
         } else {
            lAddList(*alpp, &alp);
-        }       
+        }
      }
      failed_checks++;
      DRETURN(false);
   } else {
      if (permList->first == NULL) {
-       DPRINTF(("Permlist has no entries\n")); 
+       DPRINTF(("Permlist has no entries\n"));
        failed_checks++;
      } else {
        /* check permissions */
-  
+
        /* manager check */
-       if (option & MANAGER_CHECK) { 
+       if (option & MANAGER_CHECK) {
           value = 0;
           value = lGetUlong(permList->first, PERM_manager);
-          if (value != 1) { 
+          if (value != 1) {
              failed_checks++;
           }
           DPRINTF(("MANAGER_CHECK: %ld\n", value));
        }
 
        /* operator check */
-       if (option & OPERATOR_CHECK) { 
+       if (option & OPERATOR_CHECK) {
           value = 0;
           value = lGetUlong(permList->first, PERM_operator);
-          if (value != 1) { 
+          if (value != 1) {
              failed_checks++;
           }
           DPRINTF(("OPERATOR_CHECK: %ld\n", value));
        }
-       
+
      }
   }
 
@@ -1535,7 +1064,7 @@ int gdi2_send_message_pb(sge_gdi_ctx_class_t *ctx,
                          const char *tohost, int tag, sge_pack_buffer *pb, 
                          u_long32 *mid) 
 {
-   long ret = 0;
+   int ret = 0;
 
    DENTER(GDI_LAYER, "gdi2_send_message_pb");
 
@@ -1568,7 +1097,7 @@ gdi2_send_message(sge_gdi_ctx_class_t *sge_ctx, int synchron, const char *tocomp
 {
    int ret;
    cl_com_handle_t* handle = NULL;
-   cl_xml_ack_type_t ack_type;
+   cl_xml_ack_type_t ack_type = CL_MIH_MAT_NAK;
    unsigned long dummy_mid;
    unsigned long* mid_pointer = NULL;
    int use_execd_handle = 0;
@@ -1630,7 +1159,6 @@ gdi2_send_message(sge_gdi_ctx_class_t *sge_ctx, int synchron, const char *tocomp
       }
    }
 
-   ack_type = CL_MIH_MAT_NAK;
    if (synchron) {
       ack_type = CL_MIH_MAT_ACK;
    }
@@ -1830,7 +1358,7 @@ lListElem **lepp
    u_long32 status;
    u_long32 me = ctx->get_who(ctx);
    
-   DENTER(TOP_LAYER, "gdi2_get_configuration");
+   DENTER(GDI_LAYER, "gdi2_get_configuration");
 
    if (!config_name || !gepp) {
       DRETURN(-1);
@@ -1953,7 +1481,7 @@ volatile int* abort_flag
    u_long32 progid = ctx->get_who(ctx);
    
 
-   DENTER(TOP_LAYER, "gdi2_get_conf_and_daemonize");
+   DENTER(GDI_LAYER, "gdi2_get_conf_and_daemonize");
    /*
     * for better performance retrieve 2 configurations
     * in one gdi call
@@ -2044,7 +1572,7 @@ lList **conf_list
    u_long32 progid = ctx->get_who(ctx);
    int ret;
 
-   DENTER(TOP_LAYER, "gdi2_get_merged_configuration");
+   DENTER(GDI_LAYER, "gdi2_get_merged_configuration");
 
    DPRINTF(("qualified hostname: %s\n",  qualified_hostname));
    ret = gdi2_get_configuration(ctx, qualified_hostname, &global, &local);
@@ -2102,7 +1630,7 @@ int sge_gdi2_shutdown(void **context)
 {
    sge_gdi_ctx_class_t **ref_ctx = (sge_gdi_ctx_class_t **)context;
 
-   DENTER(TOP_LAYER, "sge_gdi2_shutdown");
+   DENTER(GDI_LAYER, "sge_gdi2_shutdown");
 
    /* initialize libraries */
 /*    pthread_once(&gdi_once_control, gdi_once_init); */
@@ -2389,8 +1917,10 @@ void gdi_rmon_print_callback_function(const char *progname, const char *message,
 *  SEE ALSO
 *     sge_any_request/sge_get_com_error_flag()
 *******************************************************************************/
-void general_communication_error(const cl_application_error_list_elem_t* commlib_error) {
-   DENTER(TOP_LAYER, "general_communication_error");
+void 
+general_communication_error(const cl_application_error_list_elem_t* commlib_error) 
+{
+   DENTER(GDI_LAYER, "general_communication_error");
    if (commlib_error != NULL) {
       struct timeval now;
       unsigned long time_diff = 0;
@@ -2557,7 +2087,7 @@ void general_communication_error(const cl_application_error_list_elem_t* commlib
 *******************************************************************************/
 bool sge_get_com_error_flag(u_long32 progid, sge_gdi_stored_com_error_t error_type) {
    bool ret_val = false;
-   DENTER(TOP_LAYER, "sge_get_com_error_flag");
+   DENTER(GDI_LAYER, "sge_get_com_error_flag");
    sge_mutex_lock("general_communication_error_mutex", 
                   SGE_FUNC, __LINE__, &general_communication_error_mutex);  
 

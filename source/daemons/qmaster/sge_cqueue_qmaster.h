@@ -71,10 +71,10 @@ int
 cqueue_del(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, lList **alpp, char *ruser, char *rhost);
 
 bool
-cqueue_del_all_orphaned(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, lList **answer_list);
+cqueue_del_all_orphaned(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, lList **answer_list, const char *ehname);
 
 bool
-cqueue_list_del_all_orphaned(sge_gdi_ctx_class_t *ctx, lList *this_list, lList **answer_list);
+cqueue_list_del_all_orphaned(sge_gdi_ctx_class_t *ctx, lList *this_list, lList **answer_list, const char *cqname, const char *ehname);
 
 void
 cqueue_list_set_unknown_state(lList *this_list, const char *hostname,

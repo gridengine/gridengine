@@ -29,44 +29,51 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <stdio.h>
 #include <string.h>
 #include <pwd.h>
 #include <pthread.h>
 
-#include "cull.h"
-#include "sgermon.h"
-#include "sge_gdiP.h"
-#include "sge_gdi_request.h"
-#include "sge_log.h"
-#include "setup_path.h"
-#include "sge_string.h"
-#include "sge_afsutil.h"
-#include "execution_states.h"
-#include "sge_gdi.h"
-#include "qm_name.h"
-#include "sge_unistd.h"
-#include "sge_feature.h"
-#include "dispatcher.h"
-#include "sge_security.h"
-#include "sge_uidgid.h"
-#include "sge_io.h"
-#include "sge_stdio.h"
-#include "sge_prog.h"
-#include "sge_var.h"
-#include "sge_job.h"
-#include "sge_answer.h"
-#include "sge_time.h"
-#include "sge_bootstrap.h"
-#include "sge_string.h"
+#include "lck/sge_mtutil.h"
 
+#include "comm/cl_commlib.h"
+#include "comm/cl_ssl_framework.h"
+
+#include "rmon/sgermon.h"
+
+#include "cull/cull.h"
+
+#include "uti/sge_log.h"
+#include "uti/setup_path.h"
+#include "uti/sge_string.h"
+#include "uti/sge_afsutil.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_io.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_time.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_string.h"
+#include "uti/sge_hostname.h"
+
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_var.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_answer.h"
+
+#include "gdi/sge_gdi.h"
+#include "gdi/qm_name.h"
+#include "gdi/sge_gdiP.h"
+#include "gdi/sge_security.h"
+
+#include "execution_states.h"
+#include "dispatcher.h"
 
 #include "msg_common.h"
 #include "msg_gdilib.h"
-#include "sge_hostname.h"
-#include "cl_commlib.h"
-#include "sge_mtutil.h"
-#include "cl_ssl_framework.h"
+#include "msg_qmaster.h"
 
 #ifdef CRYPTO
 #include <openssl/evp.h>
@@ -75,8 +82,6 @@
 #ifdef INTERIX
 #include "misc.h"
 #endif
-
-#define SGE_SEC_BUFSIZE 1024
 
 #define ENCODE_TO_STRING   1
 #define DECODE_FROM_STRING 0
@@ -870,7 +875,7 @@ void delete_credentials(const char *sge_root, lListElem *jep)
  *  NOTES
  *     MT-NOTE: store_sec_cred() is MT safe (assumptions)
  */
-int store_sec_cred(const char* sge_root, sge_gdi_request *request, lListElem *jep, int do_authentication, lList** alpp)
+int store_sec_cred(const char* sge_root, sge_gdi_packet_class_t *packet, lListElem *jep, int do_authentication, lList** alpp)
 {
 
    DENTER(TOP_LAYER, "store_sec_cred");
@@ -1187,68 +1192,173 @@ void tgtcclr(lListElem *jep, const char *rhost, const char* target)
 #endif
 }
 
-
-/*
-** authentication information
-**
-** NOTES
-**    MT-NOTE: sge_set_auth_info() is MT safe (assumptions)
-**    MT-NOTE: sge_set_auth_info() is not MT safe when -DCRYPTO is set
-**
-*/
-int sge_set_auth_info(sge_gdi_request *request, uid_t uid, const char *user, 
-                        gid_t gid, const char *group)
+/****** gdi/request_internal/sge_gdi_packet_initialize_auth_info() ***********
+*  NAME
+*     sge_gdi_packet_initialize_auth_info() -- initialize auth_info string 
+*
+*  SYNOPSIS
+*     bool 
+*     sge_gdi_packet_initialize_auth_info(sge_gdi_ctx_class_t *ctx, 
+*                                         sge_gdi_packet_class_t *packet_handle) 
+*
+*  FUNCTION
+*     Initialize the "auth_info" substring part of the "packet_handle". 
+*     To initialize these values the functions get_uid(), get_gid(),
+*     get_username() and get_groupname() part of the ctx structure.
+*     will be used.
+*
+*  INPUTS
+*     sge_gdi_ctx_class_t *ctx              - context 
+*     sge_gdi_packet_class_t *packet_handle - context 
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - error
+*
+*  NOTES
+*     MT-NOTE: sge_gdi_packet_initialize_auth_info() is MT safe 
+*
+*  SEE ALSO
+*     gdi/request_internal/sge_gdi_packet_create()
+*     gdi/request_internal/sge_gdi_packet_parse_auth_info()
+*******************************************************************************/
+bool
+sge_gdi_packet_initialize_auth_info(sge_gdi_ctx_class_t *ctx,
+                                    sge_gdi_packet_class_t *packet_handle)
 {
+   bool ret = true;
+   uid_t uid;
+   gid_t gid;
+   char username[128];
+   char groupname[128];
    char buffer[SGE_SEC_BUFSIZE];
    char obuffer[3*SGE_SEC_BUFSIZE];
 
-   DENTER(TOP_LAYER, "sge_set_auth_info");
+   DENTER(TOP_LAYER, "sge_gdi_packet_initialize_auth_info");
 
-   sprintf(buffer, pid_t_fmt" "pid_t_fmt" %s %s", uid, gid, user, group);
-   if (!sge_encrypt(buffer, sizeof(buffer), obuffer, sizeof(obuffer))) {
-      DRETURN(-1);
-   }   
+#if 0
+   /* EB: TODO: ST: remove mutex lock */
+   sge_mutex_lock(GDI_PACKET_MUTEX, SGE_FUNC, __LINE__, &(packet_handle->mutex));
+#endif
 
-   request->auth_info = sge_strdup(NULL, obuffer);
+   uid = ctx->get_uid(ctx);
+   gid = ctx->get_gid(ctx);
+   strncpy(username, ctx->get_username(ctx), sizeof(username));
+   strncpy(groupname, ctx->get_groupname(ctx), sizeof(groupname));
 
-   DRETURN(0);
+#if defined(INTERIX)
+   /*
+    * Map "Administrator" to "root", so the QMaster running on Unix
+    * or Linux will accept us as "root"
+    */
+   if (sge_is_user_superuser(username)==true) {
+      strncpy(username, "root", sizeof(username));
+   }
+#endif  /* defined(INTERIX) */
+  
+   DPRINTF(("sge_set_auth_info: username(uid) = %s(%d), groupname = %s(%d)\n",
+            username, uid, groupname, gid));
+
+   sprintf(buffer, pid_t_fmt" "pid_t_fmt" %s %s", uid, gid, username, groupname);
+   if (sge_encrypt(buffer, sizeof(buffer), obuffer, sizeof(obuffer))) {
+      packet_handle->auth_info = sge_strdup(NULL, obuffer);
+   } else {
+      ret = false;
+   }  
+
+#if 0
+   sge_mutex_unlock(GDI_PACKET_MUTEX, SGE_FUNC, __LINE__, &(packet_handle->mutex));
+#endif
+
+   DRETURN(ret);
 }
 
-/*
-** NOTES
-**    MT-NOTE: sge_decrypt() is MT safe (assumptions)
-*/
-int sge_get_auth_info(sge_gdi_request *request, 
-                      uid_t *uid, char *user, size_t user_len, 
-                      gid_t *gid, char *group, size_t group_len)
+/****** gdi/request_internal/sge_gdi_packet_parse_auth_info() ******************
+*  NAME
+*     sge_gdi_packet_parse_auth_info() -- returns parsed auth_info 
+*
+*  SYNOPSIS
+*     bool 
+*     sge_gdi_packet_parse_auth_info(sge_gdi_packet_class_t *packet, 
+*                                    lList **answer_list, uid_t *uid, 
+*                                    char *user, size_t user_len, 
+*                                    gid_t *gid, char *group, 
+*                                    size_t group_len) 
+*
+*  FUNCTION
+*     Decrypts and parses the "auth_info" substring part of "packet" and
+*     writes that information into the variables "uid", "gid", "user" and
+*     "group". If the buffer sizes of "user" and/or "group" are to small
+*     than the strings will be truncated. Corresponding buffer sizes have 
+*     to be provided by "user_len" and "group_len".o
+*
+*     If "authinfo" does not contain unsefull information than
+*     the function will return with a value of "false" and answer_list 
+*     will be filled. 
+*
+*  INPUTS
+*     sge_gdi_packet_class_t *packet - GDI packet 
+*     lList **answer_list            - answer_list for error messages 
+*     uid_t *uid                     - user id 
+*     char *user                     - user name buffer
+*     size_t user_len                - length of buffer "user"
+*     gid_t *gid                     - group id 
+*     char *group                    - group name buffer?
+*     size_t group_len               - length of goup name buffer 
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - error 
+*
+*  NOTES
+*     MT-NOTE: sge_gdi_packet_parse_auth_info() is MT safe 
+*
+*  SEE ALSO
+*     gdi/request_internal/sge_gdi_packet_initialize_auth_info()
+*******************************************************************************/
+bool
+sge_gdi_packet_parse_auth_info(sge_gdi_packet_class_t *packet, lList **answer_list,
+                               uid_t *uid, char *user, size_t user_len, 
+                               gid_t *gid, char *group, size_t group_len)
 {
-   char dbuffer[2*SGE_SEC_BUFSIZE];
+   bool ret = false;
+   char dbuffer[2 * SGE_SEC_BUFSIZE];
    int dlen = 0;
-   char userbuf[2*SGE_SEC_BUFSIZE];
-   char groupbuf[2*SGE_SEC_BUFSIZE];
 
-   DENTER(TOP_LAYER, "sge_get_auth_info");
+   DENTER(TOP_LAYER, "sge_gdi_packet_parse_auth_info");
+   if (sge_decrypt(packet->auth_info, strlen(packet->auth_info), dbuffer, &dlen)) {
+      char userbuf[2 * SGE_SEC_BUFSIZE];
+      char groupbuf[2 * SGE_SEC_BUFSIZE];
 
-   if (!sge_decrypt(request->auth_info, strlen(request->auth_info), dbuffer, &dlen)) {
-      DRETURN(-1);
-   }   
-
-   if (sscanf(dbuffer, uid_t_fmt" "gid_t_fmt" %s %s", uid, gid, userbuf, groupbuf) != 4) {
-      DRETURN(-1);
-   }   
-
-   if (strlen(userbuf) > user_len) {
-      DRETURN(-1);
-   }   
-   if (strlen(groupbuf) > group_len) {
-      DRETURN(-1);
-   }   
-   sge_strlcpy(user, userbuf, user_len);
-   sge_strlcpy(group, groupbuf, group_len);
-
-   DRETURN(0);
+      if (sscanf(dbuffer, uid_t_fmt" "gid_t_fmt" %s %s", uid, gid, userbuf, groupbuf) == 4) {
+         if (strlen(userbuf) <= user_len && strlen(groupbuf) <= group_len) {
+            sge_strlcpy(user, userbuf, user_len);
+            sge_strlcpy(group, groupbuf, group_len);
+            if ((strlen(user) != 0) && (strlen(group) != 0)) {
+               DPRINTF(("uid/username = %d/%s, gid/groupname = %d/%s\n", (int)*uid, user, (int)*gid, group));
+               ret = true;
+            } else {
+               CRITICAL((SGE_EVENT, MSG_GDI_NULL_IN_GDI_SSS, 
+                        (strlen(user) == 0) ? MSG_OBJ_USER : "", 
+                        (strlen(group) == 0) ? MSG_OBJ_GROUP : "", packet->host)); 
+               answer_list_add(answer_list, SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
+            }
+         } else {
+            ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));      
+            answer_list_add(answer_list, SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
+         }
+      } else {
+         ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));      
+         answer_list_add(answer_list, SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
+      }
+   } else { 
+      ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));      
+      answer_list_add(answer_list, SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
+   } 
+   DRETURN(ret);
 }
-
 
 #ifndef CRYPTO
 /*
@@ -1454,8 +1564,8 @@ int sge_security_verify_user(const char *host, const char *commproc, u_long32 id
    }
 
    if (is_daemon(commproc) 
-       && strcmp(gdi_user, admin_user) != 0 
-       && sge_is_user_superuser(gdi_user) == false) {
+       && (strcmp(gdi_user, admin_user) != 0) 
+       && (sge_is_user_superuser(gdi_user) == false)) {
       DRETURN(False);
    }
 
@@ -1494,28 +1604,34 @@ bool sge_security_verify_unique_identifier(bool check_admin_user, const char* us
    }
 
    if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-     cl_com_handle_t* handle = NULL;
-     char* unique_identifier = NULL;
+      int ret = CL_RETVAL_OK;
+      cl_com_handle_t* handle = NULL;
+      char* unique_identifier = NULL;
 
-     handle = cl_com_get_handle(progname, progid);
-     if (cl_com_ssl_get_unique_id(handle, (char*)hostname, (char*)commproc, commid, &unique_identifier) == CL_RETVAL_OK) {
+      DPRINTF(("sge_security_verify_unique_identifier: progname, progid = %s, %d\n", progname, (int)progid));
+      handle = cl_com_get_handle(progname, progid);
+      DPRINTF(("sge_security_verify_unique_identifier: hostname, commproc, commid = %s, %s, %d\n", hostname, commproc, (int)commid));
+      ret = cl_com_ssl_get_unique_id(handle, (char*)hostname, (char*)commproc, commid, &unique_identifier);
+      if (ret == CL_RETVAL_OK) {
          DPRINTF(("unique identifier = "SFQ"\n", unique_identifier ));
          DPRINTF(("user = "SFQ"\n", user));
-     }
+      } else {
+         DPRINTF(("-------> CL_RETVAL: %s\n", cl_get_error_text(ret)));
+      }
 
-     if ( unique_identifier == NULL ) {
+      if ( unique_identifier == NULL ) {
          DPRINTF(("unique_identifier is NULL\n"));
          DRETURN(false);
       }
 
       if (check_admin_user) {
-        if (strcmp(unique_identifier, user) != 0 
+         if (strcmp(unique_identifier, user) != 0 
             && sge_is_user_superuser(unique_identifier) == false) { 
             DPRINTF((MSG_ADMIN_REQUEST_DENIED_FOR_USER_S, user ? user: "NULL"));
             WARNING((SGE_EVENT, MSG_ADMIN_REQUEST_DENIED_FOR_USER_S, user ? user: "NULL"));
             FREE(unique_identifier);
             DRETURN(false);
-        }     
+         }     
       } else {
          if (strcmp(unique_identifier, user) != 0) {
             DPRINTF((MSG_REQUEST_DENIED_FOR_USER_S, user ? user: "NULL"));
@@ -1534,9 +1650,10 @@ bool sge_security_verify_unique_identifier(bool check_admin_user, const char* us
 /* MT-NOTE: sge_security_ck_to_do() is MT safe (assumptions) */
 void sge_security_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor)
 {
-  
+   DENTER(TOP_LAYER, "sge_security_event_handler");  
 #ifdef KERBEROS
    krb_check_for_idle_clients();
 #endif
+   DEXIT;
 }
 

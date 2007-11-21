@@ -64,10 +64,6 @@ public class QSubCommand extends AnnotatedCommand {
     boolean verify = false;
     boolean binary = false;
     
-    public String getUsage() {
-        return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qsub");
-    }
-    
     public void run(String[] args) throws Exception {
         // empty job and job_task object
         clear();
@@ -249,6 +245,7 @@ public class QSubCommand extends AnnotatedCommand {
 // [-masterq wc_queue_list]                 bind master task to queue(s)
     @OptionAnnotation(value = "-masterq", extra = OptionAnnotation.MAX_ARG_VALUE)
     public void setMasterQueue(final OptionInfo oi) throws JGDIException {
+        oi.optionDone();
         for (String amasterQueue : oi.getArgs()) {
             if (hard) {
                 job.addMasterHardQueue(amasterQueue);
@@ -262,6 +259,7 @@ public class QSubCommand extends AnnotatedCommand {
     @OptionAnnotation(value = "-notify", min = 0, extra = 1)
     public void setNotify(final OptionInfo oi) throws JGDIException {
         boolean notify = true;
+        oi.optionDone();
         List<String> args = oi.getArgs();
         if (!args.isEmpty()) {
             notify = args.get(0).toLowerCase().startsWith("y");

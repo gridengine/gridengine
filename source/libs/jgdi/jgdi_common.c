@@ -41,8 +41,6 @@
 #include "sge_answer.h"
 #include "sge_prog.h"
 #include "sge_bootstrap.h"
-#include "sge_gdi.h"
-#include "sge_gdi2.h"
 #include "version.h"
 #include "cl_errors.h"
 #include "sge_log.h"
@@ -60,6 +58,9 @@
 #include "msg_common.h"
 #include "sge_edit.h"
 #include "sge_sharetree.h"
+
+#include "gdi/sge_gdi.h"
+#include "gdi/sge_gdi2.h"
 
 #define MAX_GDI_CTX_ARRAY_SIZE 1024
 
@@ -205,6 +206,8 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeInit(JNIEnv
          
          ctx = sge_gdi_ctx_class_create_from_bootstrap(JGDI_PROGNAME,
                                                        sge_dstring_get_string(&component_name),
+                                                       MAIN_THREAD,
+                                                       threadnames[MAIN_THREAD],
                                                        url, username, &alp);
          sge_dstring_free(&component_name);
 
@@ -4463,7 +4466,6 @@ error:
    DRETURN_VOID;
 }
 
-
 static void jgdi_detached_settings(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jstring *jdetachedStrPtr, jobject answers) {
    jgdi_result_t ret = JGDI_SUCCESS;
    rmon_ctx_t rmon_ctx;
@@ -4523,15 +4525,16 @@ static void jgdi_detached_settings(JNIEnv *env, jobject jgdi, jobjectArray obj_a
    /* HGRP */
    hgrp_what = lWhat("%T(ALL)", HGRP_Type);
    hgrp_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_HGROUP_LIST,
-                           SGE_GDI_GET, NULL, NULL, hgrp_what, NULL, &state, true);
+                           SGE_GDI_GET, NULL, NULL, hgrp_what, &state, true);
    lFreeWhat(&hgrp_what);
 
    /* CQ */
    cqueue_what = lWhat("%T(ALL)", CQ_Type);
    cq_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_SEND, SGE_CQUEUE_LIST,
                          SGE_GDI_GET, NULL, NULL, cqueue_what,
-                         &multi_answer_list, &state, true);
+                         &state, true);
    lFreeWhat(&cqueue_what);
+   ctx->gdi_wait(ctx, &alp, &multi_answer_list, &state);
 
    /* HGRP */
    sge_gdi_extract_answer(&local_answer_list, SGE_GDI_GET,

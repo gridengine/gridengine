@@ -45,7 +45,6 @@
 #include <Xmt/InputField.h>
 
 #include "sge_all_listsL.h"
-#include "sge_gdi.h"
 #include "sge_dstring.h"
 #include "sge_answer.h"
 #include "sge_calendar.h"
@@ -60,6 +59,8 @@
 #include "qmon_message.h"
 #include "qmon_calendar.h"
 #include "qmon_globals.h"
+
+#include "gdi/sge_gdi.h"
 
 static Widget qmon_cal = 0;
 static Widget cal_names = 0;

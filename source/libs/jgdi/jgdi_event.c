@@ -42,9 +42,6 @@
 #include "sge_answer.h"
 #include "sge_prog.h"
 #include "sge_bootstrap.h"
-#include "sge_gdi.h"
-#include "sge_gdi_ctx.h"
-#include "sge_gdi2.h"
 #include "cl_errors.h"
 #include "sge_log.h"
 #include "sge_error_class.h"
@@ -56,6 +53,11 @@
 #include "jgdi_wrapper.h"
 #include "jgdi_logging.h"
 #include "sge_event.h"
+
+#include "gdi/sge_gdi2.h"
+#include "gdi/sge_gdi.h"
+#include "gdi/sge_gdi_ctx.h"
+
 #define MAX_EVC_ARRAY_SIZE 1024
 static pthread_mutex_t sge_evc_mutex = PTHREAD_MUTEX_INITIALIZER;
 static sge_evc_class_t* sge_evc_array[MAX_EVC_ARRAY_SIZE];
@@ -131,7 +133,7 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_initNative
       goto error;
    }
 
-   evc = sge_evc_class_create(sge_gdi_ctx, (ev_registration_id)reg_id, &alp); 
+   evc = sge_evc_class_create(sge_gdi_ctx, (ev_registration_id)reg_id, &alp, NULL); 
    if (!evc) {
       throw_error_from_answer_list(env, JGDI_ERROR, alp);
       DRETURN(-1);
@@ -216,7 +218,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_registerNa
       DRETURN_VOID;
    }
    
-   if (!sge_evc->ec_register(sge_evc, false, &alp)) {
+   if (!sge_evc->ec_register(sge_evc, false, &alp, NULL, NULL)) {
       if (answer_list_has_error(&alp)) {
          throw_error_from_answer_list(env, JGDI_ERROR, alp);
       } else {
@@ -328,7 +330,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_nativeComm
       goto error;
    }
    
-   if (!sge_evc->ec_commit(sge_evc, &alp)) {
+   if (!sge_evc->ec_commit(sge_evc, &alp, NULL)) {
       throw_error_from_answer_list(env, JGDI_ERROR, alp);
       goto error;
    }
@@ -402,24 +404,24 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_fillEvents
    }
 
    logger = jgdi_get_logger(env, JGDI_EVENT_LOGGER);
-   if (jgdi_is_loggable(env, logger, FINE)) {
-      jgdi_log(env, logger, FINE, "before ec_get");
+   if (jgdi_is_loggable(env, logger, FINER)) {
+      jgdi_log(env, logger, FINER, "before ec_get");
    }
    sge_evc->ec_get(sge_evc, &elist, true);
 
-   if (jgdi_is_loggable(env, logger, FINE)) {
-      jgdi_log(env, logger, FINE, "after ec_get");
+   if (jgdi_is_loggable(env, logger, FINER)) {
+      jgdi_log(env, logger, FINER, "after ec_get");
    }
    for_each(ev, elist) {
       
-      if (jgdi_is_loggable(env, logger, FINE)) {
-         jgdi_log(env, logger, FINE, "before process_event");
+      if (jgdi_is_loggable(env, logger, FINER)) {
+         jgdi_log(env, logger, FINER, "before process_event");
       }
 
       ret = process_event(env, eventList, ev, &alp);
       
-      if (jgdi_is_loggable(env, logger, FINE)) {
-         jgdi_log(env, logger, FINE, "after process_event");
+      if (jgdi_is_loggable(env, logger, FINER)) {
+         jgdi_log(env, logger, FINER, "after process_event");
       }
       
       if (ret != JGDI_SUCCESS) {

@@ -35,7 +35,6 @@
 #include <stdlib.h>
 
 #include "uti/sge_stdio.h"
-#include "sge_gdi_request.h"
 #include "config.h"
 #include "read_object.h"
 #include "sgermon.h"

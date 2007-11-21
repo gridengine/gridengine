@@ -35,7 +35,6 @@
 #include "sge.h"
 #include "sgermon.h"
 #include "cull.h"
-#include "scheduler.h"
 #include "sge_urgency.h"
 #include "sge_schedd_conf.h"
 
@@ -49,6 +48,7 @@
 #include "sge_pe.h"
 #include "sge_string.h"
 #include "sge_log.h"
+#include "sge_sched_process_events.h"
 
 
 static void sge_normalize_urgency(lList *job_list, double min_urgency, 
@@ -80,7 +80,7 @@ static void sge_urgency(u_long32 now, double *min_urgency, double *max_urgency,
 *  NOTES
 *******************************************************************************/
 void sge_do_urgency(u_long32 now, lList *running_jobs, lList *pending_jobs, 
-            sge_Sdescr_t *lists)
+                    scheduler_all_data_t *lists)
 {
    double min_urgency = DBL_MAX;
    double max_urgency = DBL_MIN;

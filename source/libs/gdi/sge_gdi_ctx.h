@@ -50,13 +50,32 @@ typedef struct sge_gdi_ctx_class_str sge_gdi_ctx_class_t;
 #include "sge_gdi2.h"
 #include "sge_profiling.h"
 #include "sge_uidgid.h"
+#include "sge_gdi_packet.h"
 
-int sge_gdi2_setup(sge_gdi_ctx_class_t **context, u_long32 progid, lList **alpp);
-int sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, lList **alpp);
+int 
+sge_gdi2_setup(sge_gdi_ctx_class_t **context, u_long32 progid, u_long32 thread_id, lList **alpp);
+
+int 
+sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, u_long32 thread_id,
+           lList **alpp, bool is_qmaster_intern_client);
 
 struct sge_gdi_ctx_class_str {
    void *sge_gdi_ctx_handle;
-   
+
+   bool (*sge_gdi_packet_execute)        (sge_gdi_ctx_class_t* ctx, lList **answer_list,
+                                          sge_gdi_packet_class_t *packet);
+   bool (*sge_gdi_packet_wait_for_result)(sge_gdi_ctx_class_t* ctx, lList **answer_list,
+                                          sge_gdi_packet_class_t **packet_handle, lList **malpp);
+   bool (*gdi_wait)                      (sge_gdi_ctx_class_t* ctx, lList **alpp, lList **malpp,
+                                          state_gdi_multi *state);
+   lList* (*gdi)                         (sge_gdi_ctx_class_t *thiz, u_long32 target, 
+                                          u_long32 cmd, lList **lp, lCondition *where, 
+                                          lEnumeration *what);
+   int (*gdi_multi)                      (sge_gdi_ctx_class_t* ctx, lList **alpp, int mode, 
+                                          u_long32 target, u_long32 cmd, lList **lp, 
+                                          lCondition *cp, lEnumeration *enp, 
+                                          state_gdi_multi *state, bool do_copy);
+  
    sge_env_state_class_t* (*get_sge_env_state)(sge_gdi_ctx_class_t *thiz);
    sge_prog_state_class_t* (*get_sge_prog_state)(sge_gdi_ctx_class_t *thiz);
    sge_path_state_class_t* (*get_sge_path_state)(sge_gdi_ctx_class_t *thiz);
@@ -67,42 +86,15 @@ struct sge_gdi_ctx_class_str {
    int (*prepare_enroll)(sge_gdi_ctx_class_t *thiz);
    int (*connect)(sge_gdi_ctx_class_t *thiz);
    int (*is_alive)(sge_gdi_ctx_class_t *thiz);
-   lList* (*gdi)(sge_gdi_ctx_class_t *thiz, int target, int cmd, lList **lp, lCondition *where, lEnumeration *what);
    lList* (*tsm)(sge_gdi_ctx_class_t *thiz, const char *schedd_name, const char *cell);
    lList* (*kill)(sge_gdi_ctx_class_t *thiz, lList *id_list, const char *cell, u_long32 option_flags, u_long32 action_flag);
    bool (*gdi_check_permission)(sge_gdi_ctx_class_t *thiz, lList **alpp, int option);
    bool (*gdi_get_mapping_name)(sge_gdi_ctx_class_t *thiz, const char *requestedHost, char *buf, int buflen);
-   int (*gdi_multi)(sge_gdi_ctx_class_t* ctx, 
-                    lList **alpp, 
-                    int mode, 
-                    u_long32 target, 
-                    u_long32 cmd,
-                    lList **lp, 
-                    lCondition *cp, 
-                    lEnumeration *enp, 
-                    lList **malpp, 
-                    state_gdi_multi *state, 
-                    bool do_copy);
-   int (*gdi_multi_sync)(sge_gdi_ctx_class_t* ctx, 
-                    lList **alpp, 
-                    int mode, 
-                    u_long32 target, 
-                    u_long32 cmd,
-                    lList **lp, 
-                    lCondition *cp, 
-                    lEnumeration *enp, 
-                    lList **malpp, 
-                    state_gdi_multi *state, 
-                    bool do_copy,
-                    bool do_sync);
-   bool (*gdi_receive_multi_async)(sge_gdi_ctx_class_t *thiz, 
-                                   sge_gdi_request **answer,
-                                   lList **malpp, 
-                                   bool is_sync);
    const char* (*get_master)(sge_gdi_ctx_class_t *thiz, bool reread);
    u_long32 (*get_sge_qmaster_port)(sge_gdi_ctx_class_t *thiz);
    u_long32 (*get_sge_execd_port)(sge_gdi_ctx_class_t *thiz);
    const char* (*get_component_name)(sge_gdi_ctx_class_t *thiz);
+   const char* (*get_thread_name)(sge_gdi_ctx_class_t *thiz);
    const char* (*get_progname)(sge_gdi_ctx_class_t *thiz);
    const char* (*get_qualified_hostname)(sge_gdi_ctx_class_t *thiz);
    const char* (*get_unqualified_hostname)(sge_gdi_ctx_class_t *thiz);
@@ -132,7 +124,7 @@ struct sge_gdi_ctx_class_str {
    const char* (*get_groupname)(sge_gdi_ctx_class_t *thiz);
    uid_t (*get_uid)(sge_gdi_ctx_class_t *thiz);
    gid_t (*get_gid)(sge_gdi_ctx_class_t *thiz);
-   const char* (*get_libjvm_path)(sge_gdi_ctx_class_t *thiz);
+   bool (*is_qmaster_internal_client)(sge_gdi_ctx_class_t *thiz);
 
    /* credentials */
    void (*set_private_key)(sge_gdi_ctx_class_t *thiz, const char* pkey);
@@ -148,16 +140,14 @@ struct sge_gdi_ctx_class_str {
    void (*dprintf)(sge_gdi_ctx_class_t *thiz);
 };
 
-sge_gdi_ctx_class_t *sge_gdi_ctx_class_create(int prog_number, 
-                                              const char* component_name,
-                                              const char* username, 
-                                              const char* groupname, 
-                                              const char* sge_root, 
-                                              const char* sge_cell, 
-                                              int sge_qmaster_port, 
-                                              int sge_execd_port,
-                                              bool from_services,
-                                              lList **alpp);
+sge_gdi_ctx_class_t *
+sge_gdi_ctx_class_create(int prog_number, const char *component_name,
+                         int thread_number, const char *thread_name,
+                         const char* username, const char* groupname, 
+                         const char* sge_root, const char* sge_cell, 
+                         int sge_qmaster_port, int sge_execd_port,
+                         bool from_services, bool is_qmaster_intern_client,
+                         lList **alpp);
 
 
 
@@ -173,11 +163,10 @@ sge_gdi_ctx_class_t *sge_gdi_ctx_class_create(int prog_number,
 
    TODO we need a answer list to transport error messages to the caller
 */
-sge_gdi_ctx_class_t *sge_gdi_ctx_class_create_from_bootstrap(int prog_number,
-                                                             const char* component_name,
-                                                             const char* url,
-                                                             const char* username,
-                                                             lList **alpp);
+sge_gdi_ctx_class_t *
+sge_gdi_ctx_class_create_from_bootstrap(int prog_number, const char* component_name,
+                                        int thread_number, const char *thread_name,
+                                        const char* url, const char* username, lList **alpp);
 
 void sge_gdi_ctx_class_destroy(sge_gdi_ctx_class_t **pst);
 

@@ -150,7 +150,7 @@ static void sge_htable_resize(htable ht, int grow)
    char buffer[1024];
    dstring buffer_wrapper;
 
-   DENTER(BASIS_LAYER, "sge_htable_resize");
+   DENTER_(BASIS_LAYER, "sge_htable_resize");
 
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
 
@@ -169,8 +169,7 @@ static void sge_htable_resize(htable ht, int grow)
    } else if (ht->size > 2) {
       ht->size--;
    } else {
-      DEXIT;
-      return;
+      DRETURN_VOID_;
    }   
     
    ht->table = (Bucket **) calloc(1<<ht->size, sizeof(Bucket *));
@@ -192,7 +191,7 @@ static void sge_htable_resize(htable ht, int grow)
       DEBUG((SGE_EVENT, "hash stats after resizing: %s\n", sge_htable_statistics(ht, &buffer_wrapper)));
    }
    
-   DEXIT;
+   DRETURN_VOID_;
 }
 
 /****** uti/htable/sge_htable_create() ****************************************

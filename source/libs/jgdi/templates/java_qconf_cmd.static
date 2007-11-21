@@ -66,7 +66,8 @@
         int exitCode = 0;
         String option = oi.getOd().getOption();
         if (oi.getArgs().size() == 0) {
-            err.println(getErrorMessage("NoArgument", option));
+            msg = getErrorMessage("NoArgument", option);
+            //err.println(msg);
             setExitCode(getCustomExitCode("NoArgument", option));
             throw new JGDIException(msg, exitCode);
         }

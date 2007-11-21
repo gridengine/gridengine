@@ -40,7 +40,7 @@ TOPFILES="3rd_party bin catman ckpt doc examples include inst_sge \
 
 HASARCHDIR="bin lib examples/jobsbin utilbin"
 
-DEFAULTPROG="sge_qmaster sge_execd sge_shadowd sge_schedd \
+DEFAULTPROG="sge_qmaster sge_execd sge_shadowd \
              sge_shepherd sge_coshepherd qstat qsub qalter qconf qdel \
              qacct qmod qsh utilbin jobs qmon qhost qmake qtcsh qping \
              qloadsensor.exe sgepasswd qquota qrsub qrstat qrdel"
@@ -801,13 +801,13 @@ if [ $instcommon = true ]; then
       Execute rm -rf $DEST_SGE_ROOT/util
       MakeDir util
       Execute cp -r dist/util $DEST_SGE_ROOT
-      Execute cp libs/jgdi/util/rmiproxy.policy $DEST_SGE_ROOT/util
+      Execute cp libs/jgdi/util/java.policy.template $DEST_SGE_ROOT/util
       Execute cp libs/jgdi/util/rmiconsole.policy $DEST_SGE_ROOT/util
       Execute cp libs/jgdi/util/jmxremote.access $DEST_SGE_ROOT/util
       Execute cp libs/jgdi/util/jmxremote.password.template $DEST_SGE_ROOT/util/jmxremote.password
-      Execute cp libs/jgdi/util/management.properties $DEST_SGE_ROOT/util
-      Execute cp libs/jgdi/util/jaas.config $DEST_SGE_ROOT/util
-      Execute cp libs/jgdi/util/logging.properties $DEST_SGE_ROOT/util
+      Execute cp libs/jgdi/util/management.properties.template $DEST_SGE_ROOT/util
+      Execute cp libs/jgdi/util/jaas.config.template $DEST_SGE_ROOT/util
+      Execute cp libs/jgdi/util/logging.properties.template $DEST_SGE_ROOT/util
       if [ $enforce_shlibpath = true ]; then
          Execute grep -v "#ENFORCE_SHLIBPATH#" dist/util/create_settings.sh > $DEST_SGE_ROOT/util/create_settings.sh
          Execute grep -v "#ENFORCE_SHLIBPATH#" dist/util/rctemplates/sgemaster_template > $DEST_SGE_ROOT/util/rctemplates/sgemaster_template
@@ -851,6 +851,7 @@ if [ $instcommon = true ]; then
                         $DEST_SGE_ROOT/util/*.sh \
                         $DEST_SGE_ROOT/util/sgeremoterun \
                         $DEST_SGE_ROOT/util/sgeCA/sge_ca \
+                        $DEST_SGE_ROOT/util/sgeST/sge_st \
                         $DEST_SGE_ROOT/util/resources/loadsensors/* \
                         $DEST_SGE_ROOT/util/resources/starter_methods/*
 
@@ -1090,7 +1091,7 @@ if [ $instcommon = true ]; then
       echo "Installing README, ... files"
       Execute cp ../doc/*.asc   $DEST_SGE_ROOT/doc
       Execute cp ../doc/README-Autoinstall.txt $DEST_SGE_ROOT/doc
-#      Execute cp ../doc/README-Upgrade.txt $DEST_SGE_ROOT/doc
+      Execute cp ../doc/README-Upgrade.txt $DEST_SGE_ROOT/doc
       Execute cp ../doc/README-DRMAA.txt $DEST_SGE_ROOT/doc
       Execute chmod 644 $DEST_SGE_ROOT/doc/*
       Cleanup doc      
@@ -1223,7 +1224,7 @@ for i in $ARCH; do
                   fi
                fi
                ;;
-            sge_schedd|sge_shadowd|qmon|spooledit)
+            sge_shadowd|qmon|spooledit)
                if [ "$DSTARCH" != "win32-x86" ]; then
                   InstallProg $prog
                fi

@@ -660,7 +660,7 @@ int main(int argc, char *argv[])
       SGE_EXIT(NULL, 1);
    }
 
-   if (sge_gdi2_setup(&ctx, QEVENT, &answer_list) != AE_OK) {
+   if (sge_gdi2_setup(&ctx, QEVENT, MAIN_THREAD, &answer_list) != AE_OK) {
       answer_list_output(&answer_list);
       SGE_EXIT((void**)&ctx, 1);
    }
@@ -671,7 +671,7 @@ int main(int argc, char *argv[])
       SGE_EXIT((void**)&ctx, 1);
    }
 
-   if (false == sge_gdi2_evc_setup(&evc, ctx, EV_ID_SCHEDD, &answer_list)) {
+   if (false == sge_gdi2_evc_setup(&evc, ctx, EV_ID_SCHEDD, &answer_list, NULL)) {
       answer_list_output(&answer_list);
       SGE_EXIT((void**)&ctx, 1);
    }
@@ -697,7 +697,7 @@ int main(int argc, char *argv[])
    read_spooled_data(ctx);
    
    /* initialize mirroring */
-   sge_mirror_initialize(evc, EV_ID_ANY, "test_sge_mirror", true);
+   sge_mirror_initialize(evc, EV_ID_ANY, "test_sge_mirror", true, NULL, NULL, NULL, NULL, NULL);
    sge_mirror_subscribe(evc, SGE_TYPE_ALL, spool_event_before, spool_event_after, NULL, NULL, NULL);
    prof_start(SGE_PROF_ALL, NULL);
 

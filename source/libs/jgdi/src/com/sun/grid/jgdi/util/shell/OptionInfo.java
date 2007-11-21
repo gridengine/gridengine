@@ -43,7 +43,7 @@ import java.util.Map;
  * OptionInfo class holds information about the command option
  */
 public class OptionInfo {
-    private List<String> args=new ArrayList<String>();
+    private List<List<String>> args=new ArrayList<List<String>>();
     private OptionDescriptor od=null;
     private Map<String, OptionDescriptor> map=null;
     private boolean optionDone=false;
@@ -51,12 +51,12 @@ public class OptionInfo {
     /**
      * Constructs OptionInfo class
      * @param od
-     * @param args {@link List} of arguments for the current option
+     * @param args List<List<String>> of arguments for the current option
      * @param map
      */
-    public OptionInfo(OptionDescriptor od, List<String> args, Map<String, OptionDescriptor> map) {
+    public OptionInfo(OptionDescriptor od, List<List<String>> args, Map<String, OptionDescriptor> map) {
         this.od = od;
-        this.args = new ArrayList<String>(args); // TODO consider not to copy all of this
+        this.args.addAll(args);
         this.map = map;
     }
     
@@ -66,7 +66,7 @@ public class OptionInfo {
      * @param map a map of
      */
     public OptionInfo(OptionDescriptor od, Map<String, OptionDescriptor> map) {
-        this(od, new ArrayList<String>(), map);
+        this(od, new ArrayList<List<String>>(), map);
     }
     
     /**
@@ -112,11 +112,25 @@ public class OptionInfo {
     }
     
     /**
-     * Gets the arguments
+     * Gets the arguments. developer is responsible for calling optionDone() method to avoid infinity loop.
      * @return {@link List} of option arguments
      */
     public List<String> getArgs() {
-        List<String> ret = new ArrayList<String>(args);
+        List<String> ret = new ArrayList<String>();
+        for (List<String> temp : args) {
+            for (String arg : temp) {
+                ret.add(arg);
+            }
+        }
+        return ret;
+    }
+    
+    /**
+     * Gets the arguments
+     * @return List<List<String>> of original option arguments (comma separated lists are sub lists)
+     */
+    public List<List<String>> getOriginalArgs() {
+        List<List<String>> ret = new ArrayList<List<String>>(args);
         optionDone();
         return ret;
     }
@@ -130,9 +144,11 @@ public class OptionInfo {
             return "";
         }
         StringBuilder sb = new StringBuilder();
-        for(String arg: args){
-            sb.append(arg);
-            sb.append(",");
+        for (List<String> temp : args) {
+            for(String arg : temp){
+                sb.append(arg);
+                sb.append(",");
+            }
         }
         // Return string without the last comma
         optionDone();
@@ -173,11 +189,31 @@ public class OptionInfo {
         if (args == null || args.size() == 0) {
             return null;
         }
-        final String ret = args.remove(0);
-        if(args.isEmpty()) {
+        List<String> subList = args.remove(0);
+        final String ret = subList.remove(0);
+        if (subList.size() > 0) {
+            args.add(0, subList);
+        }
+        if (args.isEmpty()) {
             optionDone();
         }
         return ret;
+    }
+    
+    /**
+     * Contract method.
+     * Developer should use it to retreave last comma separated argument.
+     * @return List<String> - last comma separated argument
+     */
+    public List<String> getLastOriginalArgList() {
+        if (args == null || args.size() == 0) {
+            return null;
+        }
+        final List<String> subList = args.remove(args.size() - 1);
+        if (args.isEmpty()) {
+            optionDone();
+        }
+        return subList;
     }
     
     /**
@@ -190,8 +226,10 @@ public class OptionInfo {
         if (args == null || args.size() == 0) {
             return null;
         }
-        final String ret = args.get(args.size()-1);
-        if (args.size() ==1) {
+        List<String> subList = args.get(args.size() - 1);
+        final String ret = subList.get(subList.size() -1);
+        //TODO LP: Check if we need to end loop if we looked at the last arg
+        if (args.size() == 1 && subList.size() == 1) {
             optionDone();
         }
         return ret;

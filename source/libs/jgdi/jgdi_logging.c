@@ -47,16 +47,18 @@
 struct level_str {
    const char* name;
    jobject object;
+   jmethodID  mid;
+   const char* log_method_name;
 };
 
 static struct level_str LEVEL_CACHE [] = {
-   { "SEVERE", NULL  },
-   { "WARNING", NULL },
-   { "INFO", NULL    },
-   { "CONFIG", NULL  },
-   { "FINE", NULL    },
-   { "FINER", NULL   },
-   { "FINEST", NULL  }
+   { "SEVERE", NULL, NULL, "severe" },
+   { "WARNING", NULL, NULL, "warning" },
+   { "INFO", NULL, NULL, "info" },
+   { "CONFIG", NULL, NULL, "config" },
+   { "FINE", NULL, NULL, "fine" },
+   { "FINER", NULL, NULL, "finer" },
+   { "FINEST", NULL, NULL, "finest" }
 };
 
 typedef struct {
@@ -112,7 +114,7 @@ static jclass find_logger_class(JNIEnv *env)
  *-------------------------------------------------------------------------*/
 jobject jgdi_get_logger(JNIEnv *env , const char* name) {
 
-   static jmethodID mid = NULL; 
+   jmethodID mid = NULL; 
    jclass clazz = NULL;
 
    jstring name_obj = NULL;
@@ -336,67 +338,13 @@ void jgdi_log(JNIEnv *env, jobject logger, log_level_t level, const char* msg)
    if(clazz == NULL) {
       abort();
    }
-   
-   switch(level) {
-      case SEVERE: {
-         static jmethodID myMid = NULL;
-         if (myMid == NULL ) {
-            myMid = (*env)->GetMethodID(env, clazz, "severe", "(Ljava/lang/String;)V");
-         }
-         mid = myMid;
-         break;
-      }
-      case WARNING: {
-         static jmethodID myMid = NULL;
-         if (myMid == NULL ) {
-            myMid = (*env)->GetMethodID(env, clazz, "warning", "(Ljava/lang/String;)V");
-         }
-         mid = myMid;
-         break;
-      }
-      case INFO: {
-         static jmethodID myMid = NULL;
-         if (myMid == NULL ) {
-            myMid = (*env)->GetMethodID(env, clazz, "info", "(Ljava/lang/String;)V");
-         }
-         mid = myMid;
-         break;
-      }
-      case CONFIG: {
-         static jmethodID myMid = NULL;
-         if (myMid == NULL ) {
-            myMid = (*env)->GetMethodID(env, clazz, "config", "(Ljava/lang/String;)V");
-         }
-         mid = myMid;
-         break;
-      }
-      case FINE: {
-         static jmethodID myMid = NULL;
-         if (myMid == NULL ) {
-            myMid = (*env)->GetMethodID(env, clazz, "fine", "(Ljava/lang/String;)V");
-         }
-         mid = myMid;
-         break;
-      }
-      case FINER: {
-         static jmethodID myMid = NULL;
-         if (myMid == NULL ) {
-            myMid = (*env)->GetMethodID(env, clazz, "finer", "(Ljava/lang/String;)V");
-         }
-         mid = myMid;
-         break;
-      }
-      case FINEST: {
-         static jmethodID myMid = NULL;
-         if (myMid == NULL ) {
-            myMid = (*env)->GetMethodID(env, clazz, "finest", "(Ljava/lang/String;)V");
-         }
-         mid = myMid;
-         break;
-      }
-      default:
-         return;
+   if (level >= LOG_LEVEL_COUNT || level < 0) {
+      abort();
+   } 
+   if (LEVEL_CACHE[level].mid == NULL ) {
+      LEVEL_CACHE[level].mid = (*env)->GetMethodID(env, clazz, LEVEL_CACHE[level].log_method_name, "(Ljava/lang/String;)V");
    }
+   mid = LEVEL_CACHE[level].mid;
    
    if (mid == NULL) {
       return;
@@ -576,7 +524,7 @@ int jgdi_init_rmon_ctx(JNIEnv *env, const char* logger, rmon_ctx_t *ctx)
    jgdi_rmon_ctx_t *myctx = NULL;
    
    myctx = (jgdi_rmon_ctx_t*)sge_malloc(sizeof(jgdi_rmon_ctx_t));
-   
+  
    ctx->ctx = myctx;
    ctx->is_loggable = jgdi_rmon_is_loggable;
    ctx->menter = jgdi_rmon_menter;

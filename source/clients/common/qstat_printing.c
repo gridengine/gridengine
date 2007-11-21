@@ -229,29 +229,21 @@ lList **alpp
       int master, i;
 
       for_each(jatep, lGetList(jlep, JB_ja_tasks)) {
-         /*
-         ** TODO: handle shut_me_down and remove SGE_EXIT()
-         */
+         u_long32 jstate = lGetUlong(jatep, JAT_state);
+
          if (shut_me_down) {
             SGE_EXIT(NULL, 1);
          }
-            
+
+         if ((jstate & JSUSPENDED_ON_SUBORDINATE))
+            lSetUlong(jatep, JAT_state, jstate & ~JRUNNING);
+
          for_each (gdilep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
             if (!strcmp(lGetString(gdilep, JG_qname), qnm)) {
                int slot_adjust = 0;
                int lines_to_print;
                int slots_per_line, slots_in_queue = lGetUlong(gdilep, JG_slots); 
 
-               if (qinstance_state_is_manual_suspended(qep) ||
-                   qinstance_state_is_susp_on_sub(qep) ||
-                   qinstance_state_is_cal_suspended(qep)) {
-                  u_long32 jstate;
-
-                  jstate = lGetUlong(jatep, JAT_state);
-                  jstate &= ~JRUNNING;                 /* unset bit JRUNNING */
-                  jstate |= JSUSPENDED_ON_SUBORDINATE; /* set bit JSUSPENDED_ON_SUBORDINATE */
-                  lSetUlong(jatep, JAT_state, jstate);
-               }
                job_tag = lGetUlong(jatep, JAT_suitable);
                job_tag |= TAG_FOUND_IT;
                lSetUlong(jatep, JAT_suitable, job_tag);
@@ -354,6 +346,15 @@ lList **alpp
                             
                         if (!already_printed && (full_listing & QSTAT_DISPLAY_SYSTEMHOLD) &&
                             (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_SYSTEM)) {
+                           sge_print_job(jlep, jatep, qep, print_jobid,
+                              (master && different && (i==0))?"MASTER":"SLAVE", &dyn_task_str, full_listing,
+                              slots_in_queue+slot_adjust, i, ehl, centry_list, pe_list, indent, 
+                              group_opt, slots_per_line, queue_name_length, report_handler, alpp);
+                           already_printed = 1;
+                        }
+
+                        if (!already_printed && (full_listing & QSTAT_DISPLAY_JOBARRAYHOLD) &&
+                            (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_JA_AD)) {
                            sge_print_job(jlep, jatep, qep, print_jobid,
                               (master && different && (i==0))?"MASTER":"SLAVE", &dyn_task_str, full_listing,
                               slots_in_queue+slot_adjust, i, ehl, centry_list, pe_list, indent, 
@@ -1066,6 +1067,22 @@ lList **alpp
          ql = lGetList(job, JB_jid_predecessor_list);
          if (ql) {
             printf(QSTAT_INDENT "Predecessor Jobs: ");
+            for_each(qrep, ql) {
+               printf(sge_u32, lGetUlong(qrep, JRE_job_number));
+               printf("%s", lNext(qrep)?", ":"\n");
+            }
+         }
+         ql = lGetList(job, JB_ja_ad_request_list );
+         if (ql) {
+            printf(QSTAT_INDENT "Predecessor Array Jobs (request): ");
+            for_each(qrep, ql) {
+               printf("%s", lGetString(qrep, JRE_job_name));
+               printf("%s", lNext(qrep)?", ":"\n");
+            }
+         }
+         ql = lGetList(job, JB_ja_ad_predecessor_list);
+         if (ql) {
+            printf(QSTAT_INDENT "Predecessor Array Jobs: ");
             for_each(qrep, ql) {
                printf(sge_u32, lGetUlong(qrep, JRE_job_number));
                printf("%s", lNext(qrep)?", ":"\n");

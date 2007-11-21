@@ -515,14 +515,14 @@ int main(int argc, char *argv[])
    sge_setup_sig_handlers(QEVENT);
 
    /* setup event client */
-   gdi_setup = sge_gdi2_setup(&ctx, QEVENT, &alp);
+   gdi_setup = sge_gdi2_setup(&ctx, QEVENT, MAIN_THREAD, &alp);
    if (gdi_setup != AE_OK) {
       answer_list_output(&alp);
       sge_dstring_free(enabled_options.error_message);
       SGE_EXIT(NULL, 1);
    }
    /* TODO: how is the memory we allocate here released ???, SGE_EXIT doesn't */
-   if (false == sge_gdi2_evc_setup(&evc, ctx, EV_ID_ANY, &alp)) {
+   if (false == sge_gdi2_evc_setup(&evc, ctx, EV_ID_ANY, &alp, NULL)) {
       answer_list_output(&alp);
       sge_dstring_free(enabled_options.error_message);
       SGE_EXIT((void**)&ctx, 1);
@@ -550,7 +550,8 @@ int main(int argc, char *argv[])
       lCondition *where =NULL;
       lEnumeration *what = NULL;
 
-      sge_mirror_initialize(evc, EV_ID_ANY, "sge_mirror -trigger", true);
+      sge_mirror_initialize(evc, EV_ID_ANY, "sge_mirror -trigger", true, 
+                            NULL, NULL, NULL, NULL, NULL);
       evc->ec_set_busy_handling(evc, EV_BUSY_UNTIL_ACK);
 
       /* put out information about -trigger option */
@@ -674,7 +675,8 @@ static void qevent_testsuite_mode(sge_evc_class_t *evc)
    
    DENTER(TOP_LAYER, "qevent_testsuite_mode");
 
-   sge_mirror_initialize(evc, EV_ID_ANY, "qevent", true);
+   sge_mirror_initialize(evc, EV_ID_ANY, "qevent", true,
+                         NULL, NULL, NULL, NULL, NULL);
 
 #ifdef QEVENT_SHOW_ALL
    sge_mirror_subscribe(evc, SGE_TYPE_ALL, print_event, NULL, NULL, NULL, NULL);
@@ -756,7 +758,8 @@ static void qevent_subscribe_mode(sge_evc_class_t *evc)
    
    DENTER(TOP_LAYER, "qevent_subscribe_mode");
 
-   sge_mirror_initialize(evc, EV_ID_ANY, "qevent", true);
+   sge_mirror_initialize(evc, EV_ID_ANY, "qevent", true,
+                         NULL, NULL, NULL, NULL, NULL);
    sge_mirror_subscribe(evc, SGE_TYPE_SHUTDOWN, print_event, NULL, NULL, NULL, NULL);
    sge_mirror_subscribe(evc, SGE_TYPE_ADMINHOST, print_event, NULL, NULL, NULL, NULL);
 

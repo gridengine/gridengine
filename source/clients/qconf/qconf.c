@@ -34,7 +34,6 @@
 #include "sge_all_listsL.h"
 #include "usage.h"
 #include "parse_qconf.h"
-#include "sge_gdi.h"
 #include "sig_handlers.h"
 #include "commlib.h"
 #include "sge_prog.h"
@@ -44,8 +43,9 @@
 #include "msg_common.h"
 #include "sge_answer.h"
 #include "sge_mt_init.h"
-#include "gdi/sge_gdi_ctx.h"
 #include "sge_feature.h"
+#include "gdi/sge_gdi.h"
+#include "gdi/sge_gdi_ctx.h"
 
 
 extern char **environ;
@@ -63,7 +63,7 @@ int main(int argc, char **argv)
    log_state_set_log_gui(1);
    sge_setup_sig_handlers(QCONF);
    
-   if (sge_gdi2_setup(&ctx, QCONF, &alp) != AE_OK) {
+   if (sge_gdi2_setup(&ctx, QCONF, MAIN_THREAD, &alp) != AE_OK) {
       answer_list_output(&alp);
       SGE_EXIT((void**)&ctx, 1);
    }

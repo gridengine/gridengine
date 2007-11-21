@@ -42,7 +42,7 @@
 #include "sge_usageL.h"
 
 #include "cull.h"
-#include "sge_gdi.h"
+#include "gdi/sge_gdi.h"
 #include "sge_parse_num_par.h"
 #include "sge_complex_schedd.h"
 #include "sge_range.h"

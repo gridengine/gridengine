@@ -46,7 +46,6 @@
 #include <Xmt/InputField.h>
 
 #include "sge_all_listsL.h"
-#include "sge_gdi.h"
 #include "sge_answer.h"
 #include "sge_ckpt.h"
 #include "commlib.h"
@@ -62,6 +61,8 @@
 #include "qmon_ckpt.h"
 #include "qmon_globals.h"
 #include "AskForItems.h"
+
+#include "gdi/sge_gdi.h"
 
 static Widget qmon_ckpt = 0;
 static Widget ckpt_names = 0;

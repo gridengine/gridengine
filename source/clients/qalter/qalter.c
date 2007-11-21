@@ -32,7 +32,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "sge_gdi.h"
 #include "sge_unistd.h"
 #include "symbols.h"
 #include "sge_all_listsL.h"
@@ -53,6 +52,8 @@
 #include "read_defaults.h"
 #include "sge_centry.h"
 #include "sge_profiling.h"
+
+#include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 
 #include "msg_common.h"
@@ -94,7 +95,7 @@ char **argv
 
    DENTER_MAIN(TOP_LAYER, "qalter");
 
-   sge_prof_setup();
+   prof_mt_init();
 
    /*
    ** get command name: qalter or qresub
@@ -119,7 +120,7 @@ char **argv
    log_state_set_log_gui(1);
    sge_setup_sig_handlers(me_who);
 
-   if (sge_gdi2_setup(&ctx, me_who, &alp) != AE_OK) {
+   if (sge_gdi2_setup(&ctx, me_who, MAIN_THREAD, &alp) != AE_OK) {
       answer_list_output(&alp);
       SGE_EXIT((void**)&ctx, 1);
    }
@@ -438,6 +439,22 @@ int *all_users
          lSetList(job, JB_jid_request_list , jref_list);
          nm_set(job_field, JB_jid_request_list );
          nm_set(job_field, JB_jid_predecessor_list);
+      }
+
+      /* -hold_jid_ad */
+      if (lGetElemStr(cmdline, SPA_switch, "-hold_jid_ad")) {
+         lListElem *sep, *ep;
+         lList *jref_list = NULL;
+         while ((ep = lGetElemStr(cmdline, SPA_switch, "-hold_jid_ad"))) {
+            for_each(sep, lGetList(ep, SPA_argval_lListT)) {
+               DPRINTF(("-hold_jid_ad %s\n", lGetString(sep, ST_name)));
+               lAddElemStr(&jref_list, JRE_job_name, lGetString(sep, ST_name), JRE_Type);
+            }
+            lRemoveElem(cmdline, &ep);
+         }
+         lSetList(job, JB_ja_ad_request_list , jref_list);
+         nm_set(job_field, JB_ja_ad_request_list );
+         nm_set(job_field, JB_ja_ad_predecessor_list);
       }
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-R"))) {
@@ -829,6 +846,7 @@ int *all_users
          static int list_nm[] = {
             JB_stderr_path_list,
             JB_jid_request_list,
+            JB_ja_ad_request_list,
             JB_hard_resource_list,
             JB_soft_resource_list,
             JB_mail_list,

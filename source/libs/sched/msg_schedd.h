@@ -196,18 +196,7 @@
 ** schedd/sge_schedd.c
 */
 #define MSG_FILE_REDIRECTFILEDESCRIPTORFAILED_I             _MESSAGE(47195, _("can't redirect file descriptor #%d"))
-#define MSG_SCHEDD_STARTSCHEDONMASTERHOST_S                 _MESSAGE(47196, _("please start schedd on same host as qmaster ("SFN")."))
-#define MSG_SCHEDD_CANTGOFURTHER                            _MESSAGE(47197, _("can't go on further"))
-#define MSG_SCHEDD_USERXMUSTBEMANAGERFORSCHEDDULING_S       _MESSAGE(47198, _("user "SFQ" must be manager for scheduling"))
-#define MSG_SCHEDD_HOSTXMUSTBEADMINHOSTFORSCHEDDULING_S     _MESSAGE(47199, _("host "SFQ" must be an admin host for scheduling"))
-#define MSG_SCHEDD_SCHEDD_ABORT_BY_USER                     _MESSAGE(47200, _("abort by user"))
-#define MSG_SCHEDD_ALREADY_RUNNING                          _MESSAGE(47201, _("scheduler already running"))
-
-#define MSG_SCHEDD_CANTINSTALLALGORITHMXUSINGDEFAULT_S      _MESSAGE(47202, _("can't install scheduling algorithm "SFQ" - using \"default\" algorithm"))
-#define MSG_SCHEDD_UNKNOWN                                  _MESSAGE(47203, _("<unknown>"))
-#define MSG_SCHEDD_CANTSWITCHTOADMINUSER                    _MESSAGE(47204, _("can't switch to amin_user"))
-#define MSG_SCHEDD_CANTSTARTUP                              _MESSAGE(47205, _("can't startup schedd"))
-#define MSG_QMASTERMOVEDEXITING_SS                          _MESSAGE(47287, _("qmaster moved from "SFQ" to "SFQ": exiting"))
+#define MSG_SCHEDD_UNKNOWN                                  _MESSAGE(47196, _("<unknown>"))
 
 /* 
 ** schedd/sge_select_queue.c
@@ -224,26 +213,12 @@
 #define MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S         _MESSAGE(47219, _("error: no complex attribute for threshold "SFN))
 #define MSG_SCHEDD_DUETORR                                  _MESSAGE(47220, _(" due to a reservation"))
 #define MSG_SCHEDD_NOMASTERHOST_U                           _MESSAGE(47226, _("no master host for job "sge_U32CFormat))
-#define MSG_SUBORDPOLICYCONFLICT_UUSS                       _MESSAGE(47288, _("Jobs "sge_U32CFormat" & "sge_U32CFormat" dispatched to master/subordinated queues "SFQ"/"SFQ". Suspend on subordinate to occur in same scheduling interval. Policy conflict!"))
-#define MSG_JOBMATCHINGUNEXPECTEDRESULT                     _MESSAGE(47290, _("job matching returned an unexpected result!"))
-
-
-/* 
-** schedd/sge_update_lists.c
-*/ 
-#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORQUEUEFAILED    _MESSAGE(47221, _("ensure_valid_where(): lWhere() for queue failed"))
-#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORALLQUEUESFAILED  _MESSAGE(47222, _("ensure_valid_where(): lWhere() for all queues failed" ))
-#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORHOSTFAILED     _MESSAGE(47223, _("ensure_valid_where(): lWhere() for host failed"))
-#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORDEPTFAILED     _MESSAGE(47224, _("ensure_valid_where(): lWhere() for dept failed"))
-#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORACLFAILED      _MESSAGE(47225, _("ensure_valid_where(): lWhere() for acl failed"))
-#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORJOBFAILED      _MESSAGE(47228, _("ensure_valid_where(): lWhat() for job failed"))
-
-/* 
-** schedd/scheduler.c
-*/ 
-#define MSG_SCHEDD_LOGLIST_QUEUESTEMPORARLYNOTAVAILABLEDROPPED _MESSAGE(47227, _("queues dropped because they are temporarily not available: "))
-#define MSG_SCHEDD_MON_NOPENDJOBSTOPERFORMSCHEDULINGON         _MESSAGE(47229, _("no pending jobs to perform scheduling on"))
-#define MSG_SCHEDD_SHOULDHAVEFINISHED_UUU                      _MESSAGE(47289, _("job "sge_U32CFormat"."sge_U32CFormat" should have finished since "sge_U32CFormat"s"))
+#define MSG_SUBORDPOLICYCONFLICT_UUSS                       _MESSAGE(47227, _("Jobs "sge_U32CFormat" & "sge_U32CFormat" dispatched to master/subordinated queues "SFQ"/"SFQ". Suspend on subordinate to occur in same scheduling interval. Policy conflict!"))
+#define MSG_JOBMATCHINGUNEXPECTEDRESULT                     _MESSAGE(47228, _("job matching returned an unexpected result!"))
+#define MSG_SCHEDD_UNABLE_TO_SETUP_FILTER                   _MESSAGE(47229, _("unable to setup filter objects correctly"))
+#define MSG_SCHEDD_LOGLIST_QUEUESTEMPORARLYNOTAVAILABLEDROPPED _MESSAGE(47230, _("queues dropped because they are temporarily not available: "))
+#define MSG_SCHEDD_MON_NOPENDJOBSTOPERFORMSCHEDULINGON         _MESSAGE(47231, _("no pending jobs to perform scheduling on"))
+#define MSG_SCHEDD_SHOULDHAVEFINISHED_UUU                      _MESSAGE(47232, _("job "sge_U32CFormat"."sge_U32CFormat" should have finished since "sge_U32CFormat"s"))
 
 /* 
 ** schedd/sge.c
@@ -251,29 +226,7 @@
 /* #define MSG_FILE_OPENSTDOUTASFILEFAILED            _message(47229, _("Could not open stdout as file")) __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_SGE_UNABLETODUMPJOBLIST                _message(47230, _("Unable to dump job list")) __TS Removed automatically from testsuite!! TS__*/
 
-/* 
-** schedd/sge_share_mon.c
-*/ 
-#define MSG_USAGE				_MESSAGE(47231, _("usage:"))
-#define MSG_SGESHAREMON_NOSHARETREE             _MESSAGE(47232, _("No share tree"))
-#define MSG_SGESHAREMON_c_OPT_USAGE             _MESSAGE(47233, _("number of collections (default is infinite)"))
-#define MSG_SGESHAREMON_d_OPT_USAGE             _MESSAGE(47234, _("delimiter between columns (default is <TAB>)"))
-#define MSG_SGESHAREMON_f_OPT_USAGE             _MESSAGE(47235, _("list of fields to print"))
-#define MSG_SGESHAREMON_h_OPT_USAGE             _MESSAGE(47236, _("print a header containing the field names"))
-#define MSG_SGESHAREMON_i_OPT_USAGE             _MESSAGE(47237, _("collection interval in seconds (default is 15)"))
-#define MSG_SGESHAREMON_l_OPT_USAGE             _MESSAGE(47238, _("delimiter between nodes (default is <CR>)"))
-#define MSG_SGESHAREMON_m_OPT_USAGE             _MESSAGE(47239, _("output file fopen mode (default is \"w\")"))
-#define MSG_SGESHAREMON_n_OPT_USAGE             _MESSAGE(47240, _("use name=value format"))
-#define MSG_SGESHAREMON_o_OPT_USAGE             _MESSAGE(47241, _("output file"))
-#define MSG_SGESHAREMON_r_OPT_USAGE             _MESSAGE(47242, _("delimiter between collection records (default is <CR>)"))
-#define MSG_SGESHAREMON_s_OPT_USAGE             _MESSAGE(47243, _("format of displayed strings (default is %%s)"))
-#define MSG_SGESHAREMON_t_OPT_USAGE             _MESSAGE(47244, _("show formatted times"))
-#define MSG_SGESHAREMON_u_OPT_USAGE             _MESSAGE(47245, _("show decayed usage (since timestamp) in nodes"))
-#define MSG_SGESHAREMON_x_OPT_USAGE             _MESSAGE(47246, _("exclude non-leaf nodes"))
-
-#define MSG_ERROR_XISNOTAVALIDINTERVAL_S        _MESSAGE(47247, _(""SFN" is not a valid interval"))
-#define MSG_ERROR_XISNOTAVALIDCOUNT_S           _MESSAGE(47248, _(""SFN" is not a valid count"))
-#define MSG_FILE_COULDNOTOPENXFORY_SS           _MESSAGE(47249, _("could not open "SFN" for "SFN))
+/* NOTE: Id's from 47231 to 47249 are used in msg_smon.h */
 
 /* 
 ** schedd/schedd_conf.c

@@ -147,12 +147,24 @@ public interface JobSummary extends JobInfo {
      */
     public List getRequestedPredecessors();
     
+   /**
+    * Get a list of all requested array predecessors
+    * @return list of requested array predecessors job names
+    */
+   public List getRequestedArrayPredecessors();
+
     /**
      *  Get a list of all predecessor job id
      *  @return list of job ids (java.lang.Integer)
      */
     public List getPredecessors();
     
+    /**
+     *  Get a list of all array predecessor job id
+     *  @return list of job ids (java.lang.Integer)
+     */
+    public List getArrayPredecessors();
+
     /**
      *  Get the jobs total urgency value in normalized fashion.
      *  @return the jobs total urgency value in normalized fashion

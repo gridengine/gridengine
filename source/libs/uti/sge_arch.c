@@ -111,7 +111,7 @@ const char *sge_get_root_dir(int do_exit, char *buffer, size_t size, int do_erro
    char *sge_root; 
    char *s;
 
-   DENTER(TOP_LAYER, "sge_get_root_dir");
+   DENTER_(TOP_LAYER, "sge_get_root_dir");
 
    /*
     * Read some env variables
@@ -136,8 +136,7 @@ const char *sge_get_root_dir(int do_exit, char *buffer, size_t size, int do_erro
          s[strlen(s)-1] = '\0';
       }
    }
-   DEXIT;
-   return s;
+   DRETURN_(s);
 
 error:
    if (do_error_log) {
@@ -148,7 +147,7 @@ error:
       }
    }
 
-   DEXIT;
+   DEXIT_;
    if (do_exit) {
       SGE_EXIT(NULL, 1);   
    }
@@ -180,7 +179,7 @@ const char *sge_get_default_cell(void)
    char *sge_cell;
    char *s;
 
-   DENTER(TOP_LAYER, "sge_get_default_cell");
+   DENTER_(TOP_LAYER, "sge_get_default_cell");
    /*
     * Read some env variables
     */
@@ -208,8 +207,7 @@ const char *sge_get_default_cell(void)
          s[strlen(s)-1] = '\0';
       }
    }
-   DEXIT;
-   return s;
+   DRETURN_(s);
 }
 
 /****** uti/prog/sge_get_alias_path() *****************************************
@@ -233,7 +231,7 @@ const char *sge_get_alias_path(void)
    int len;
    SGE_STRUCT_STAT sbuf;
 
-   DENTER(TOP_LAYER, "sge_get_alias_path");
+   DENTER_(TOP_LAYER, "sge_get_alias_path");
 
    sge_root = sge_get_root_dir(1, NULL, 0, 1);
    sge_cell = sge_get_default_cell();
@@ -250,6 +248,5 @@ const char *sge_get_alias_path(void)
    }
 
    sprintf(cp, "%s/%s/%s/%s", sge_root, sge_cell, COMMON_DIR, ALIAS_FILE);
-   DEXIT;
-   return cp;
+   DRETURN_(cp);
 }

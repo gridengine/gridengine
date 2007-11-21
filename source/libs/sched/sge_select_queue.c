@@ -3241,8 +3241,10 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
 
          ar_queue = lGetSubStr(ar_ep, QU_full_name, qname, AR_reserved_queues);
 
-         /* we are only interested in the static complexes on queue/host level. These are tagged
-            in this function. The result doesn't matter */
+         /* 
+          * We are only interested in the static complexes on queue/host level. 
+          * These are tagged in this function. The result doesn't matter 
+          */
          for_each(rep, lGetList(a->job, JB_hard_resource_list)) {
             const char *attrname = lGetString(rep, CE_name);
             lListElem *cplx_el = lGetElemStr(a->centry_list, CE_name, attrname);
@@ -3272,7 +3274,7 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
                buff[strlen(buff) - 1] = 0;
             }
             schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNATHOST_SSS, buff,
-                  lGetHost(hep, EH_name), sge_dstring_get_string(&reason));
+                           lGetHost(hep, EH_name), sge_dstring_get_string(&reason));
          } else {
             result = sequential_queue_time(&tt_queue, a, &queue_violations, ar_queue);
             if (result != DISPATCH_OK) {
@@ -3285,6 +3287,7 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
             }
             tt_global = tt_host = tt_queue;
          }
+         sge_dstring_free(&reason);
       } else {
          queue_violations = global_violations;
 
@@ -3596,7 +3599,7 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
    int gslots = a->slots;
    int gslots_qend = 0;
    int host_seqno = 0;
-   double previous_load;
+   double previous_load = 0.0;
    bool previous_load_inited = false;
    int allocation_rule, minslots;
    dstring rule_name = DSTRING_INIT;

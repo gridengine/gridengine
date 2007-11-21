@@ -38,6 +38,22 @@
 #include "uti/sge_monitor.h"
 #include "gdi/sge_gdi_ctx.h"
 
+/* 
+ * The local event client has direct access to the event master. Every
+ * event client modification is not routed through the commlib and the
+ * GDI. Therefore we need a structure to register the event master
+ * modification functions. If we do not do that, we will generate a
+ * dependency between the event client and the event master, which we
+ * do not want. 
+ */
+typedef struct {
+   bool init;
+   evm_add_func_t add_func;
+   evm_mod_func_t mod_func;
+   evm_remove_func_t remove_func;
+   evm_ack_func_t ack_func;
+} local_t;
+
 #define DEFAULT_EVENT_DELIVERY_INTERVAL (10)
 
 typedef struct sge_evc_class_str sge_evc_class_t; 
@@ -45,9 +61,13 @@ typedef struct sge_evc_class_str sge_evc_class_t;
 struct sge_evc_class_str {
    void *sge_evc_handle;
 
+   local_t ec_local; 
+
    sge_gdi_ctx_class_t* (*get_gdi_ctx)(sge_evc_class_t *thiz);
-   bool (*ec_register)(sge_evc_class_t *thiz, bool exit_on_qmaster_down, lList **alpp);
+   bool (*ec_register)(sge_evc_class_t *thiz, bool exit_on_qmaster_down, lList **alpp, event_client_update_func_t update_func, monitoring_t *monitor);
    bool (*ec_deregister)(sge_evc_class_t *thiz);
+   bool (*ec_commit)(sge_evc_class_t *thiz, lList **alpp, event_client_update_func_t update_func);
+   bool (*ec_ack)(sge_evc_class_t *thiz); 
    bool (*ec_is_initialized)(sge_evc_class_t *thiz);
    lListElem* (*ec_get_event_client)(sge_evc_class_t *thiz);
 
@@ -82,28 +102,27 @@ struct sge_evc_class_str {
 
    ev_registration_id (*ec_get_id)(sge_evc_class_t *thiz);
 
-   bool (*ec_commit)(sge_evc_class_t *thiz, lList **alpp);
    bool (*ec_commit_multi)(sge_evc_class_t *thiz, lList **malp, state_gdi_multi *state);
 
    bool (*ec_get)(sge_evc_class_t *thiz, lList **event_list, bool exit_on_qmaster_down);
 
    void (*ec_mark4registration)(sge_evc_class_t *thiz);
    bool (*ec_need_new_registration)(sge_evc_class_t *thiz);
-      
-   bool (*ec_register_local)(sge_evc_class_t *thiz, bool exit_on_qmaster_down, lList **alpp);
-   bool (*ec_deregister_local)(sge_evc_class_t *thiz);
-   bool (*ec_commit_local)(sge_evc_class_t *thiz, event_client_update_func_t update_func);
+
    /* dump current settings */
    void (*dprintf)(sge_evc_class_t *thiz);
 };
 
-sge_evc_class_t *sge_evc_class_create(sge_gdi_ctx_class_t *sge_gdi_ctx,
-                                      ev_registration_id id,
-                                      lList **alpp);
+sge_evc_class_t *
+sge_evc_class_create(sge_gdi_ctx_class_t *sge_gdi_ctx, ev_registration_id reg_id,
+                     lList **alpp, const char *name);
 
-void sge_evc_class_destroy(sge_evc_class_t **pst);
+void 
+sge_evc_class_destroy(sge_evc_class_t **pst);
 
-bool sge_gdi2_evc_setup(sge_evc_class_t **evc_ref, sge_gdi_ctx_class_t *sge_gdi_ctx, ev_registration_id reg_id, lList **alpp);
+bool 
+sge_gdi2_evc_setup(sge_evc_class_t **evc_ref, sge_gdi_ctx_class_t *sge_gdi_ctx,
+                   ev_registration_id reg_id, lList **alpp, const char * name);
 
 #endif /* __SGE_C_EVENT2_H */
 

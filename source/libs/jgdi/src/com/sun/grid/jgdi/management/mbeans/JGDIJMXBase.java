@@ -36,6 +36,7 @@ import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.JGDIException;
 import com.sun.grid.jgdi.JGDIFactory;
 import com.sun.grid.jgdi.event.EventTypeEnum;
+import com.sun.grid.jgdi.management.JGDIAgent;
 import com.sun.grid.jgdi.management.NotificationBridge;
 import com.sun.grid.jgdi.management.NotificationBridgeFactory;
 import com.sun.grid.jgdi.monitoring.ClusterQueueSummaryOptions;
@@ -47,11 +48,15 @@ import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryOptions;
 import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryResult;
 import java.io.File;
 import java.lang.reflect.UndeclaredThrowableException;
-import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 import javax.management.*;
+//import org.ggf.drmaa.DrmaaException;
+//import org.ggf.drmaa.JobInfo;
+//import org.ggf.drmaa.JobTemplate;
+//import org.ggf.drmaa.Version;
 
 /**
  * Class JGDIJMXBase
@@ -63,7 +68,11 @@ public class JGDIJMXBase implements java.io.Serializable, JGDIJMXBaseMBean, Noti
     protected JGDI jgdi;
     private final String url;
     private final NotificationBridge notificationBridge;
-    
+
+    public JGDIJMXBase() throws JGDIException {
+        this(JGDIAgent.getUrl());
+    }
+
     /* Creates a new instance of JGDIJMXBase */
     public JGDIJMXBase(String url) throws JGDIException {
         this.url = url;
@@ -290,4 +299,91 @@ public class JGDIJMXBase implements java.io.Serializable, JGDIJMXBaseMBean, Noti
     public void postDeregister() {
         // Ignore
     }
+//
+//
+//    //-------------------------------------------------------------------------
+//    // DRMAA specific
+//    //-------------------------------------------------------------------------
+//    private String contact;
+//    private Version drmaaJMXVersion;
+//    private String drmSystem = "Unknown";
+//    private String drmaaImplementation = "Bi, Ba, Bo";
+//
+//    public void drmaaInit(String contact) throws DrmaaException {
+//        this.contact = contact;
+//        this.drmaaImplementation = "DRMAA-JMX-SGE";
+//        drmSystem = JGDIFactory.getJGDIVersion();
+//        drmaaJMXVersion = new Version(1, 1);
+//    }
+//    
+//    public void drmaaExit() throws DrmaaException {
+//        logger.fine("calling exit()");
+//    }
+//    
+//    public JobTemplate drmaaCreateJobTemplate() throws DrmaaException {
+//        JobTemplate jt = null;
+//        logger.fine("calling createJobTemplate()");
+//        return jt;
+//    }
+//    
+//    public void drmaaDeleteJobTemplate(JobTemplate jt)
+//            throws DrmaaException {
+//        logger.fine("calling deleteJobTemplate()");
+//    };
+//    
+//    public String drmaaRunJob(JobTemplate jt) throws DrmaaException {
+//        logger.fine("calling RunJob(JobTemplate jt)");
+//        String jobId = "dummyId";
+//        return jobId;
+//    };
+//    
+//    public List drmaaRunBulkJobs(JobTemplate jt, int start, int end, int incr)
+//             throws DrmaaException {
+//        logger.fine("calling runBulkJobs");
+//        List<String> jobs = new LinkedList<String>();
+//        for (int i=start; i<end; i += incr) {
+//            jobs.add("job" + i);
+//        }
+//        return jobs;
+//    }
+//    
+//    public void drmaaControl(String jobId, int action) throws DrmaaException {
+//        logger.fine("calling control for jobId=" + jobId + " and action="+ action);
+//    }
+//    
+//    public void drmaaSynchronize(List jobIds, long timeout, boolean dispose)
+//            throws DrmaaException {
+//        logger.fine("calling synchronize");
+//    }
+//    
+//    public JobInfo drmaaWait(String jobId, long timeout)
+//            throws DrmaaException {
+//        JobInfo ji = null;
+//        logger.fine("calling wait");
+//        return ji;
+//    }
+//    
+//    public int drmaaGetJobProgramStatus(String jobId) throws DrmaaException {
+//        logger.fine("calling getJobProgramStatus");
+//        int progStatus = 0;
+//        return progStatus;
+//    }
+//    
+//    public String drmaaGetContact() {
+//        logger.fine("calling getContact");
+//        return contact;
+//    }
+//    
+//    public Version drmaaGetVersion() {
+//        return drmaaJMXVersion;
+//    }
+//    
+//    public String drmaaGetDrmSystem() {
+//        return drmSystem;
+//    }
+//    
+//    public String drmaaGetDrmaaImplementation() {
+//        return drmaaImplementation;
+//    }
+//
 }

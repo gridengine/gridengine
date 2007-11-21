@@ -36,55 +36,60 @@
 #include <math.h>
 #include <float.h>
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_string.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_log.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_parse_num_par.h"
+
+#include "comm/commlib.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/cull_parse_util.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_eval_expression.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_qinstance_type.h"
+#include "sgeobj/sge_ulong.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_schedd_conf.h"
+
+#include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdi.h"
+
+#include "sched/load_correction.h"
+#include "sched/sge_complex_schedd.h"
+#include "sched/sge_select_queue.h"
+
 #include "basis_types.h"
 #include "sge.h"
-
-#include "sge_bootstrap.h"
-
-#include "sge_gdi.h"
-#include "sge_all_listsL.h"
-#include "commlib.h"
 #include "sig_handlers.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_feature.h"
-#include "sge_unistd.h"
-#include "sge_stdlib.h"
-#include "cull_parse_util.h"
-#include "parse.h"
-#include "sge_host.h"
-#include "sge_complex_schedd.h"
-#include "sge_parse_num_par.h"
-#include "sge_select_queue.h"
 #include "qstat_printing.h"
-#include "sge_range.h"
-#include "load_correction.h"
-#include "sge_conf.h"
-#include "msg_common.h"
-#include "msg_clients_common.h"
-#include "sge_string.h"
-#include "sge_hostname.h"
-#include "sge_eval_expression.h"
-
-#include "sge_log.h"
-#include "sge_answer.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_qinstance_type.h"
-#include "sge_ulong.h"
-#include "sge_centry.h"
-#include "sge_profiling.h"
-#include "sgeobj/sge_schedd_conf.h"
 #include "sge_mt_init.h"
 #include "sge_qhost.h"
 #include "sge_qstat.h"
-#include "gdi/sge_gdi_ctx.h"
+
+#include "msg_common.h"
+#include "msg_clients_common.h"
 
 
 static int sge_print_queues(lList *ql, lListElem *hrl, lList *jl, lList *ul, lList *ehl, lList *cl, 
                             lList *pel, u_long32 show, qhost_report_handler_t *report_handler, lList **alpp);
 static int sge_print_resources(lList *ehl, lList *cl, lList *resl, lListElem *host, u_long32 show, qhost_report_handler_t *report_handler, lList **alpp);
 static int sge_print_host(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList *centry_list, qhost_report_handler_t *report_handler, lList **alpp);
+
 static int reformatDoubleValue(char *result, const char *format, const char *oldmem);
 static bool get_all_lists(sge_gdi_ctx_class_t *ctx, lList **answer_list, lList **ql, lList **jl, lList **cl, lList **ehl, lList **pel, lList *hl, lList *ul, u_long32 show);
 static void free_all_lists(lList **ql, lList **jl, lList **cl, lList **ehl, lList **pel);
@@ -212,6 +217,11 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
       }
    }
    for_each(ep, ehl) {
+
+      if (shut_me_down) {
+         SGE_EXIT(NULL, 1);
+      }
+
       if(report_handler == NULL ) {
          if (print_header) {
             print_header = 0;
@@ -421,6 +431,7 @@ lList **alpp
    lListElem *qep, *cqueue;
    u_long32 interval;
    int ret = QHOST_SUCCESS;
+   const char *ehname = lGetHost(host, EH_name);
 
    DENTER(TOP_LAYER, "sge_print_queues");
 
@@ -432,139 +443,136 @@ lList **alpp
    for_each(cqueue, qlp) {
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
 
-      for_each(qep, qinstance_list) {
-         if (!sge_eval_expression(TYPE_HOST, lGetHost(host, EH_name),
-              lGetHost(qep, QU_qhostname), NULL)) {
-            char buf[80];
-            const char *qname = lGetString(qep, QU_qname);
-            
-            if (show & QHOST_DISPLAY_QUEUES) {
-               if (report_handler == NULL) {
-                  /*
-                  ** Header/indent
-                  */
-                  printf("   ");
-                  /*
-                  ** qname
-                  */
-                  printf("%-20s ", qname);
-               } else {
-                  ret = report_handler->report_queue_begin(report_handler, qname, alpp);
-                  if (ret != QHOST_SUCCESS ) {
-                     DRETURN(ret);
-                  }
-               }
+      if ((qep=lGetElemHost(qinstance_list, QU_qhostname, ehname))) {
+         char buf[80];
+         const char *qname = lGetString(qep, QU_qname);
+         
+         if (show & QHOST_DISPLAY_QUEUES) {
+            if (report_handler == NULL) {
                /*
-               ** qtype
+               ** Header/indent
                */
-               {
-                  dstring type_string = DSTRING_INIT;
-
-                  qinstance_print_qtype_to_dstring(qep, &type_string, true);
-                  if (report_handler == NULL) {
-                     printf("%-5.5s ", sge_dstring_get_string(&type_string));
-                  } else {
-                     ret = report_handler->report_queue_string_value(report_handler,
-                                           qname, 
-                                           "qtype_string", 
-                                           sge_dstring_get_string(&type_string),
-                                           alpp);
-                  }                        
-                  sge_dstring_free(&type_string);
-                  
-                  if (ret != QHOST_SUCCESS ) {
-                     DRETURN(ret);
-                  }
-               }
-
-               /* 
-               ** number of used/free slots 
-               */
-               if (report_handler == NULL) {
-                  sprintf(buf, "%d/%d ",
-                          qinstance_slots_used(qep),
-                          (int)lGetUlong(qep, QU_job_slots));
-                  printf("%-9.9s", buf);
-               } else {
-                  ret = report_handler->report_queue_ulong_value(report_handler,
-                                          qname, "slots_used",
-                                          qinstance_slots_used(qep),
-                                          alpp);
-                  if (ret != QHOST_SUCCESS ) {
-                     DRETURN(ret);
-                  }
-                                          
-                  ret = report_handler->report_queue_ulong_value(report_handler,
-                                            qname, "slots",
-                                            lGetUlong(qep, QU_job_slots),
-                                            alpp);
-                  
-                  if (ret != QHOST_SUCCESS ) {
-                     DRETURN(ret);
-                  }
-               }
-               
+               printf("   ");
                /*
-               ** state of queue
+               ** qname
                */
-               load_thresholds = lGetList(qep, QU_load_thresholds);
-               suspend_thresholds = lGetList(qep, QU_suspend_thresholds);
-               if (sge_load_alarm(NULL, qep, load_thresholds, ehl, cl, NULL, true)) {
-                  qinstance_state_set_alarm(qep, true);
-               }
-               parse_ulong_val(NULL, &interval, TYPE_TIM,
-                               lGetString(qep, QU_suspend_interval), NULL, 0);
-               if (lGetUlong(qep, QU_nsuspend) != 0 &&
-                   interval != 0 &&
-                   sge_load_alarm(NULL, qep, suspend_thresholds, ehl, cl, NULL, false)) {
-                  qinstance_state_set_suspend_alarm(qep, true);
-               }
-               {
-                  dstring state_string = DSTRING_INIT;
-
-                  qinstance_state_append_to_dstring(qep, &state_string);
-                  if (report_handler == NULL) {
-                     printf("%s", sge_dstring_get_string(&state_string));
-                  } else {
-                     ret = report_handler->report_queue_string_value(report_handler,
-                                               qname, 
-                                               "state_string", 
-                                               sge_dstring_get_string(&state_string),
-                                               alpp);
-                  }
-                  sge_dstring_free(&state_string);
-                  if (ret != QHOST_SUCCESS ) {
-                     DRETURN(ret);
-                  }
-               }
-               
-               /*
-               ** newline
-               */
-               if (report_handler == NULL) {
-                  printf("\n");
-               } else {
-                  ret = report_handler->report_queue_finished(report_handler, qname, alpp);
-                  if (ret != QHOST_SUCCESS ) {
-                     DRETURN(ret);
-                  }
+               printf("%-20s ", qname);
+            } else {
+               ret = report_handler->report_queue_begin(report_handler, qname, alpp);
+               if (ret != QHOST_SUCCESS ) {
+                  DRETURN(ret);
                }
             }
-
             /*
-            ** tag all jobs, we have only fetched running jobs, so every job
-            ** should be visible (necessary for the qstat printing functions)
+            ** qtype
             */
-            if (show & QHOST_DISPLAY_JOBS) {
-               u_long32 full_listing = (show & QHOST_DISPLAY_QUEUES) ?  
-                                       QSTAT_DISPLAY_FULL : 0;
-               full_listing = full_listing | QSTAT_DISPLAY_ALL;
-               /* TODO: sge_print_jobs_queue needs a return value */
-               sge_print_jobs_queue(qep, jl, pel, ul, ehl, cl, 1,
-                                    full_listing, "   ", 
-                                    GROUP_NO_PETASK_GROUPS, 10,
-                                    report_handler, alpp);
+            {
+               dstring type_string = DSTRING_INIT;
+
+               qinstance_print_qtype_to_dstring(qep, &type_string, true);
+               if (report_handler == NULL) {
+                  printf("%-5.5s ", sge_dstring_get_string(&type_string));
+               } else {
+                  ret = report_handler->report_queue_string_value(report_handler,
+                                        qname, 
+                                        "qtype_string", 
+                                        sge_dstring_get_string(&type_string),
+                                        alpp);
+               }                        
+               sge_dstring_free(&type_string);
+               
+               if (ret != QHOST_SUCCESS ) {
+                  DRETURN(ret);
+               }
             }
+
+            /* 
+            ** number of used/free slots 
+            */
+            if (report_handler == NULL) {
+               sprintf(buf, "%d/%d ",
+                       qinstance_slots_used(qep),
+                       (int)lGetUlong(qep, QU_job_slots));
+               printf("%-9.9s", buf);
+            } else {
+               ret = report_handler->report_queue_ulong_value(report_handler,
+                                       qname, "slots_used",
+                                       qinstance_slots_used(qep),
+                                       alpp);
+               if (ret != QHOST_SUCCESS ) {
+                  DRETURN(ret);
+               }
+                                       
+               ret = report_handler->report_queue_ulong_value(report_handler,
+                                         qname, "slots",
+                                         lGetUlong(qep, QU_job_slots),
+                                         alpp);
+               
+               if (ret != QHOST_SUCCESS ) {
+                  DRETURN(ret);
+               }
+            }
+            
+            /*
+            ** state of queue
+            */
+            load_thresholds = lGetList(qep, QU_load_thresholds);
+            suspend_thresholds = lGetList(qep, QU_suspend_thresholds);
+            if (sge_load_alarm(NULL, qep, load_thresholds, ehl, cl, NULL, true)) {
+               qinstance_state_set_alarm(qep, true);
+            }
+            parse_ulong_val(NULL, &interval, TYPE_TIM,
+                            lGetString(qep, QU_suspend_interval), NULL, 0);
+            if (lGetUlong(qep, QU_nsuspend) != 0 &&
+                interval != 0 &&
+                sge_load_alarm(NULL, qep, suspend_thresholds, ehl, cl, NULL, false)) {
+               qinstance_state_set_suspend_alarm(qep, true);
+            }
+            {
+               dstring state_string = DSTRING_INIT;
+
+               qinstance_state_append_to_dstring(qep, &state_string);
+               if (report_handler == NULL) {
+                  printf("%s", sge_dstring_get_string(&state_string));
+               } else {
+                  ret = report_handler->report_queue_string_value(report_handler,
+                                            qname, 
+                                            "state_string", 
+                                            sge_dstring_get_string(&state_string),
+                                            alpp);
+               }
+               sge_dstring_free(&state_string);
+               if (ret != QHOST_SUCCESS ) {
+                  DRETURN(ret);
+               }
+            }
+            
+            /*
+            ** newline
+            */
+            if (report_handler == NULL) {
+               printf("\n");
+            } else {
+               ret = report_handler->report_queue_finished(report_handler, qname, alpp);
+               if (ret != QHOST_SUCCESS ) {
+                  DRETURN(ret);
+               }
+            }
+         }
+
+         /*
+         ** tag all jobs, we have only fetched running jobs, so every job
+         ** should be visible (necessary for the qstat printing functions)
+         */
+         if (show & QHOST_DISPLAY_JOBS) {
+            u_long32 full_listing = (show & QHOST_DISPLAY_QUEUES) ?  
+                                    QSTAT_DISPLAY_FULL : 0;
+            full_listing = full_listing | QSTAT_DISPLAY_ALL;
+            /* TODO: sge_print_jobs_queue needs a return value */
+            sge_print_jobs_queue(qep, jl, pel, ul, ehl, cl, 1,
+                                 full_listing, "   ", 
+                                 GROUP_NO_PETASK_GROUPS, 10,
+                                 report_handler, alpp);
          }
       }
    }
@@ -773,7 +781,7 @@ u_long32 show
    lListElem *jatep = NULL;
    lList *mal = NULL;
    lList *conf_l = NULL;
-   int q_id, j_id = 0, ce_id, eh_id, pe_id, gc_id;
+   int q_id = 0, j_id = 0, ce_id, eh_id, pe_id, gc_id;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
    const char *cell_root = ctx->get_cell_root(ctx);
    u_long32 progid = ctx->get_who(ctx);
@@ -807,24 +815,25 @@ u_long32 show
    
    eh_id = ctx->gdi_multi(ctx,
                           answer_list, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET, 
-                          NULL, where, eh_all, NULL, &state, true);
+                          NULL, where, eh_all, &state, true);
    lFreeWhat(&eh_all);
    lFreeWhere(&where);
 
    if (answer_list_has_error(answer_list)) {
       DRETURN(false);
    }
-      
-
-   q_all = lWhat("%T(ALL)", QU_Type);
    
-   q_id = ctx->gdi_multi(ctx, 
-                         answer_list, SGE_GDI_RECORD, SGE_CQUEUE_LIST, SGE_GDI_GET, 
-                         NULL, NULL, q_all, NULL, &state, true);
-   lFreeWhat(&q_all);
+   if (show & QHOST_DISPLAY_JOBS || show & QHOST_DISPLAY_QUEUES) {
+      q_all = lWhat("%T(ALL)", QU_Type);
+      
+      q_id = ctx->gdi_multi(ctx, 
+                            answer_list, SGE_GDI_RECORD, SGE_CQUEUE_LIST, SGE_GDI_GET, 
+                            NULL, NULL, q_all, &state, true);
+      lFreeWhat(&q_all);
 
-   if (answer_list_has_error(answer_list)) {
-      DRETURN(false);
+      if (answer_list_has_error(answer_list)) {
+         DRETURN(false);
+      }
    }
 
    /* 
@@ -880,6 +889,7 @@ u_long32 show
                      JB_ja_u_h_ids,
                      JB_ja_s_h_ids,
                      JB_ja_o_h_ids,
+                     JB_ja_a_h_ids,
                      JB_ja_z_ids 
                     );
 
@@ -888,7 +898,7 @@ u_long32 show
 
       j_id = ctx->gdi_multi(ctx, 
                          answer_list, SGE_GDI_RECORD, SGE_JOB_LIST, SGE_GDI_GET, 
-                         NULL, jw, j_all, NULL, &state, true);
+                         NULL, jw, j_all, &state, true);
       lFreeWhat(&j_all);
       lFreeWhere(&jw);
 
@@ -903,7 +913,7 @@ u_long32 show
    ce_all = lWhat("%T(ALL)", CE_Type);
    ce_id = ctx->gdi_multi(ctx, 
                           answer_list, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET, 
-                          NULL, NULL, ce_all, NULL, &state, true);
+                          NULL, NULL, ce_all, &state, true);
    lFreeWhat(&ce_all);
 
    if (answer_list_has_error(answer_list)) {
@@ -917,7 +927,7 @@ u_long32 show
    
    pe_id = ctx->gdi_multi(ctx, 
                           answer_list, SGE_GDI_RECORD, SGE_PE_LIST, SGE_GDI_GET, 
-                          NULL, NULL, pe_all, NULL, &state, true);
+                          NULL, NULL, pe_all, &state, true);
    lFreeWhat(&pe_all);
 
    if (answer_list_has_error(answer_list)) {
@@ -932,7 +942,8 @@ u_long32 show
    
    gc_id = ctx->gdi_multi(ctx, 
                           answer_list, SGE_GDI_SEND, SGE_CONFIG_LIST, SGE_GDI_GET,
-                          NULL, gc_where, gc_what, &mal, &state, true);
+                          NULL, gc_where, gc_what, &state, true);
+   ctx->gdi_wait(ctx, answer_list, &mal, &state);
    lFreeWhat(&gc_what);
    lFreeWhere(&gc_where);
 
@@ -953,11 +964,13 @@ u_long32 show
    }
 
    /* --- queue */
-   sge_gdi_extract_answer(answer_list, SGE_GDI_GET, SGE_CQUEUE_LIST, q_id, 
-                                 mal, queue_l);
-   if (answer_list_has_error(answer_list)) {
-      lFreeList(&mal);
-      DRETURN(false);
+   if (show & QHOST_DISPLAY_JOBS || show & QHOST_DISPLAY_QUEUES) {
+      sge_gdi_extract_answer(answer_list, SGE_GDI_GET, SGE_CQUEUE_LIST, q_id, 
+                                    mal, queue_l);
+      if (answer_list_has_error(answer_list)) {
+         lFreeList(&mal);
+         DRETURN(false);
+      }
    }
 
    /* --- job */

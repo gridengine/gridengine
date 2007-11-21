@@ -384,7 +384,7 @@ int sge_del_ckpt(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, char *ru
    /* remove ckpt file 1st */
    if (!sge_event_spool(ctx, alpp, 0, sgeE_CKPT_DEL, 0, 0, ckpt_name, NULL, NULL,
                         NULL, NULL, NULL, true, true)) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, MSG_OBJ_CKPT, ckpt_name));
+      ERROR((SGE_EVENT, MSG_CANTSPOOL_SS, MSG_OBJ_CKPT, ckpt_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EDISK;

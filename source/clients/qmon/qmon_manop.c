@@ -44,7 +44,7 @@
 #include <Xmt/InputField.h>
 
 #include "sge_all_listsL.h"
-#include "sge_gdi.h"
+#include "gdi/sge_gdi.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"

@@ -171,6 +171,7 @@ static int test_normal_utilization(void)
    ret += do_utilization_test(cr, test_array);
    ret += do_qeti_test(cr, qeti_expected_result);
 
+   lFreeElem(&cr);
    return ret;
 }
 

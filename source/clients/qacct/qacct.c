@@ -47,7 +47,6 @@
 
 #include "sge.h"
 #include "sge_all_listsL.h"
-#include "sge_gdi.h"
 #include "sge_sched.h"
 #include "commlib.h"
 #include "sig_handlers.h"
@@ -69,8 +68,9 @@
 #include "sge_qinstance.h"
 #include "sge_cqueue.h"
 #include "sge_profiling.h"
-#include "gdi/sge_gdi_ctx.h"
 
+#include "gdi/sge_gdi.h"
+#include "gdi/sge_gdi_ctx.h"
 
 #include "msg_common.h"
 #include "msg_history.h"
@@ -183,11 +183,11 @@ int main(int argc, char **argv)
 
    DENTER_MAIN(TOP_LAYER, "qacct");
 
-   sge_prof_setup();
+   prof_mt_init();
 
    log_state_set_log_gui(1);
 
-   if (sge_gdi2_setup(&ctx, QACCT, &alp) != AE_OK) {
+   if (sge_gdi2_setup(&ctx, QACCT, MAIN_THREAD, &alp) != AE_OK) {
       answer_list_output(&alp);
       goto QACCT_EXIT;
    }
@@ -1542,7 +1542,7 @@ lList **hgrp_l
    if (ppcentries) {
       what = lWhat("%T(ALL)", CE_Type);
       ce_id = ctx->gdi_multi(ctx, alpp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET,
-                              NULL, NULL, what, NULL, &state, true);
+                             NULL, NULL, what, &state, true);
       lFreeWhat(&what);
 
       if (answer_list_has_error(alpp)) {
@@ -1556,7 +1556,7 @@ lList **hgrp_l
       where = lWhere("%T(%I!=%s)", EH_Type, EH_name, SGE_TEMPLATE_NAME);
       what = lWhat("%T(ALL)", EH_Type);
       eh_id = ctx->gdi_multi(ctx, alpp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET,
-                              NULL, where, what, NULL, &state, true);
+                              NULL, where, what, &state, true);
       lFreeWhat(&what);
       lFreeWhere(&where);
 
@@ -1571,7 +1571,7 @@ lList **hgrp_l
    if (hgrp_l) {
       what = lWhat("%T(ALL)", HGRP_Type);
       hgrp_id = ctx->gdi_multi(ctx, alpp, SGE_GDI_RECORD, SGE_HGROUP_LIST, SGE_GDI_GET, 
-                           NULL, NULL, what, NULL, &state, true);
+                           NULL, NULL, what, &state, true);
       lFreeWhat(&what);
 
       if (answer_list_has_error(alpp)) {
@@ -1583,7 +1583,8 @@ lList **hgrp_l
    */
    what = lWhat("%T(ALL)", QU_Type);
    q_id = ctx->gdi_multi(ctx, alpp, SGE_GDI_SEND, SGE_CQUEUE_LIST, SGE_GDI_GET,
-                           NULL, NULL, what, &mal, &state, true);
+                           NULL, NULL, what, &state, true);
+   ctx->gdi_wait(ctx, alpp, &mal, &state);
    lFreeWhat(&what);
 
    if (answer_list_has_error(alpp)) {

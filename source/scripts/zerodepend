@@ -49,11 +49,11 @@ files=" \
        clients/qrsub/qrsub_dependencies  \
        clients/qrdel/qrdel_dependencies  \
        clients/qrstat/qrstat_dependencies  \
+       clients/sge_share_mon/smon_dependencies \
        common/common_dependencies  \
        daemons/common/common_dependencies  \
        daemons/execd/execd_dependencies  \
        daemons/qmaster/qmaster_dependencies  \
-       daemons/schedd/schedd_dependencies  \
        daemons/shadowd/shadowd_dependencies  \
        daemons/shepherd/shepherd_dependencies  \
        libs/japi/japi_dependencies \

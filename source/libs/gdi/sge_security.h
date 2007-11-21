@@ -35,13 +35,15 @@
 #include "cull.h"
 #include "sge_gdiP.h"
 #include "sge_qmaster_timed_event.h"
+#include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdi_packet.h"
 
 
 #ifdef KERBEROS
 #   include "krb_lib.h"
 #endif
 
-
+#define SGE_SEC_BUFSIZE 1024
 
 void sge_security_exit(int i);
 
@@ -60,21 +62,14 @@ void tgtcclr(lListElem *jep, const char *rhost, const char* target);
 int set_sec_cred(const char *sge_root, const char *mastername, lListElem *job, lList **alpp);
 void delete_credentials(const char *sge_root, lListElem *jep);
 bool cache_sec_cred(const char *sge_root, lListElem *jep, const char *rhost);
-int store_sec_cred(const char *sge_root, sge_gdi_request *request, lListElem *jep, int do_authentication, lList **alpp);
+int store_sec_cred(const char *sge_root, sge_gdi_packet_class_t *packe, lListElem *jep, 
+                   int do_authentication, lList **alpp);
 int store_sec_cred2(const char* sge_root, 
                     const char* unqualified_hostname, 
                     lListElem *jelem, 
                     int do_authentication, 
                     int *general, 
                     dstring *err_str);
-
-int sge_set_auth_info(sge_gdi_request *request, 
-                      uid_t uid, const char *user, 
-                      gid_t gid, const char *group);
-
-int sge_get_auth_info(sge_gdi_request *request, 
-                      uid_t *uid, char *user, size_t user_len,
-                      gid_t *gid, char *group, size_t group_len);
 
 int sge_security_verify_user(const char *host, const char *commproc, u_long32 id,
                              const char *admin_user, const char *user, const char *progname); 
@@ -89,6 +84,14 @@ bool sge_security_verify_unique_identifier(bool check_admin_user,
 
 void sge_security_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor);
 
+bool
+sge_gdi_packet_initialize_auth_info(sge_gdi_ctx_class_t *ctx,
+                                    sge_gdi_packet_class_t *packet_handle);
+
+bool  
+sge_gdi_packet_parse_auth_info(sge_gdi_packet_class_t *packet, lList **answer_list,
+                               uid_t *uid, char *user, size_t user_len,
+                               gid_t *gid, char *group, size_t group_len);
 
 #endif /* __SGE_SECURITY_H */
 

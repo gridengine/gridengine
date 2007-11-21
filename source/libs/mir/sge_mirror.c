@@ -93,6 +93,10 @@ typedef struct {
    void *clientdata;                      /* client data passed to callback */
 } mirror_description;
 
+#ifdef SOLARIS
+#pragma no_inline(sge_mirror_process_event_list)
+#endif
+
 static sge_mirror_error 
 _sge_mirror_subscribe(sge_evc_class_t *evc,
                       sge_object_type type, sge_mirror_callback callback_before, 
@@ -140,11 +144,10 @@ static sge_callback_result
 ar_update_master_list(sge_evc_class_t *evc, object_description *object_base, sge_object_type type, 
                        sge_event_action action, lListElem *event, void *clientdata);
 
-static sge_mirror_error sge_mirror_update_master_list_ar_key(lList **list, const lDescr *list_descr, 
-                                                        int key_nm, const char *key, 
-                                                        sge_event_action action, lListElem *event);
-
-static sge_mirror_error sge_mirror_process_event_list(sge_evc_class_t *evc, lList *event_list);
+static 
+sge_mirror_error sge_mirror_update_master_list_ar_key(lList **list, const lDescr *list_descr, 
+                                                      int key_nm, const char *key, 
+                                                      sge_event_action action, lListElem *event);
 
 /* One entry per event type, this is the basic definition. Each thread
    will have its own table based on this one*/
@@ -265,69 +268,12 @@ static mirror_description *mir_get_mirror_base(void)
 /* End multithreading support */
 /*----------------------------*/
 
-/****** Eventmirror/sge_mirror_initialize() *************************************
+/****** Eventmirror/sge_mirror_initialize() ********************************************
 *  NAME
-*     sge_mirror_initialize() -- initialize the event mirror interface
+*     sge_mirror_initialize() -- initialize a process local event mirror interface
 *
 *  SYNOPSIS
 *     sge_mirror_error sge_mirror_initialize(ev_registration_id id, 
-*                                            const char *name) 
-*
-*  FUNCTION
-*     Initializes internal data structures and registers with qmaster
-*     using the event client mechanisms.
-*
-*     Events covering shutdown requests and qmaster shutdown notification
-*     are subscribed.
-*     
-*
-*  INPUTS
-*     ev_registration_id id - id used to register with qmaster
-*     const char *name      - name used to register with qmaster
-*     bool use_global_date  - This setting affects the storage of the master list
-*                             data. If it is true, the global master lists are used
-*                             if it is false, thread specific master lists. If the
-*                             global ones are used, the code is not thread safe. 
-*
-*  NOTES
-*    The current implementation allows only one mirror and one event client per thread
-*    since the data structures are stored thread global
-*
-*
-*  RESULT
-*     sge_mirror_error - SGE_EM_OK or an error code
-*
-*  SEE ALSO
-*     Eventmirror/sge_mirror_shutdown()
-*     Eventclient/-ID-numbers
-*******************************************************************************/
-sge_mirror_error 
-sge_mirror_initialize(sge_evc_class_t *evc, ev_registration_id id, const char *name, 
-                      bool use_global_data)
-{
-   DENTER(TOP_LAYER, "sge_mirror_initialize");
-
-   pthread_once(&mir_once_control, mir_mt_init);
-   obj_init(use_global_data);
-   
-/*    ec_prepare_registration(id, name); */
-
-   /* subscribe some events with default handling */
-   sge_mirror_subscribe(evc, SGE_TYPE_SHUTDOWN, NULL, NULL, NULL, NULL, NULL);
-   sge_mirror_subscribe(evc, SGE_TYPE_QMASTER_GOES_DOWN, NULL, NULL, NULL, NULL, NULL);
-
-   /* register with qmaster */
-   evc->ec_commit(evc, NULL);
-   DEXIT;
-   return SGE_EM_OK;
-}
-
-/****** Eventmirror/sge_mirror_initialize_local() *************************************
-*  NAME
-*     sge_mirror_initialize_local() -- initialize a process local event mirror interface
-*
-*  SYNOPSIS
-*     sge_mirror_error sge_mirror_initialize_local(ev_registration_id id, 
 *                                            const char *name) 
 *
 *  FUNCTION
@@ -355,26 +301,32 @@ sge_mirror_initialize(sge_evc_class_t *evc, ev_registration_id id, const char *n
 *     sge_mirror_error - SGE_EM_OK or an error code
 *
 *  SEE ALSO
-*     Eventmirror/sge_mirror_shutdown_local()
+*     Eventmirror/sge_mirror_shutdown()
 *     Eventclient/-ID-numbers
 *******************************************************************************/
 sge_mirror_error 
-sge_mirror_initialize_local(sge_evc_class_t *evc, ev_registration_id id, const char *name, 
-                            bool use_global_data, event_client_update_func_t update_func)
+sge_mirror_initialize(sge_evc_class_t *evc, ev_registration_id id, const char *name, 
+                      bool use_global_data, event_client_update_func_t update_func,
+                      evm_mod_func_t mod_func, evm_add_func_t add_func, 
+                      evm_remove_func_t remove_func, evm_ack_func_t ack_func)
 {
-   DENTER(TOP_LAYER, "sge_mirror_initialize_local");
+   DENTER(TOP_LAYER, "sge_mirror_initialize");
+
+   evc->ec_local.mod_func = mod_func;
+   evc->ec_local.add_func = add_func;
+   evc->ec_local.remove_func = remove_func;
+   evc->ec_local.ack_func = ack_func;
+   evc->ec_local.init = true;
 
    pthread_once(&mir_once_control, mir_mt_init);
    obj_init(use_global_data);
-   
-/*    ec_prepare_registration(id, name); */
-
+  
    /* subscribe some events with default handling */
    sge_mirror_subscribe(evc, SGE_TYPE_SHUTDOWN, NULL, NULL, NULL, NULL, NULL);
    sge_mirror_subscribe(evc, SGE_TYPE_QMASTER_GOES_DOWN, NULL, NULL, NULL, NULL, NULL);
 
    /* register with qmaster */
-   evc->ec_commit_local(evc, update_func);
+   evc->ec_commit(evc, NULL, update_func);
 
    DEXIT;
    return SGE_EM_OK;
@@ -405,39 +357,6 @@ sge_mirror_error sge_mirror_shutdown(sge_evc_class_t *evc)
    if (evc && evc->ec_is_initialized(evc)) {
       sge_mirror_unsubscribe(evc, SGE_TYPE_ALL);
       evc->ec_deregister(evc);
-   }
-
-   DEXIT;
-   return SGE_EM_OK;
-}   
-
-/****** Eventmirror/sge_mirror_shutdown_local() *******************************
-*  NAME
-*     sge_mirror_shutdown_local() -- shutdown mirroring with a process local EVM
-*
-*  SYNOPSIS
-*     sge_mirror_error sge_mirror_shutdown_local(void) 
-*
-*  FUNCTION
-*     Shuts down the event mirroring mechanism:
-*     Unsubscribes all events, deletes contents of the corresponding
-*     object lists and deregisteres from event master. This function
-*     can only be called, when the event client and event master are in the
-*     part of the process
-*
-*  RESULT
-*     sge_mirror_error - SGE_EM_OK or error code
-*
-*  SEE ALSO
-*     Eventmirror/sge_mirror_initialize_local()
-*******************************************************************************/
-sge_mirror_error sge_mirror_shutdown_local(sge_evc_class_t *evc)
-{
-   DENTER(TOP_LAYER, "sge_mirror_shutdown_local");
-
-   if (evc && evc->ec_is_initialized(evc)) {
-      sge_mirror_unsubscribe(evc, SGE_TYPE_ALL);
-      evc->ec_deregister_local(evc);
    }
 
    DEXIT;
@@ -1246,7 +1165,7 @@ static void sge_mirror_free_list(sge_object_type type)
    object_type_free_master_list(type);
 }
 
-static sge_mirror_error 
+sge_mirror_error 
 sge_mirror_process_event_list(sge_evc_class_t *evc, lList *event_list)
 { 
    lListElem *event = NULL;

@@ -97,7 +97,7 @@
 #include "sge_ulong.h"
 #include "sge_ja_task.h"
 #include "sge_string.h"
-#include "sge_gdi_ctx.h"
+#include "gdi/sge_gdi_ctx.h"
 #include "uti/sge_string.h"
 #include "uti/setup_path.h"
 
@@ -133,7 +133,8 @@ typedef struct _tSMEntry {
    lList    *master_queue_list;       /* QR_Type */
    lList    *env_list;              /* Environment */
    lList    *ctx_list;              /* Context */
-   lList    *hold_jid;              /* JB_jid_predecessor_list */
+   lList    *hold_jid;              /* JB_jid_request_list */
+   lList    *hold_jid_ad;           /* JB_ja_ad_request_list */
    int      mail_options;
    int      merge_output;
    int      priority;
@@ -304,6 +305,10 @@ XtResource sm_resources[] = {
 
    { "hold_jid", "hold_jid", QmonRJRE_Type,
       sizeof(lList*), XtOffsetOf(tSMEntry, hold_jid),
+      XtRImmediate, NULL },
+
+   { "hold_jid_ad", "hold_jid_ad", QmonRJRE_Type,
+      sizeof(lList*), XtOffsetOf(tSMEntry, hold_jid_ad),
       XtRImmediate, NULL },
 
    { "verify_mode", "verify_mode", XtRInt,
@@ -1833,6 +1838,8 @@ tSMEntry *data
 
    lFreeList(&(data->hold_jid));
 
+   lFreeList(&(data->hold_jid_ad));
+
    lFreeList(&(data->env_list));
 
    lFreeList(&(data->ctx_list));
@@ -1992,6 +1999,9 @@ char *prefix
    data->hold_jid = lCopyList("JB_jid_request_list", 
                                     lGetList(jep, JB_jid_request_list));; 
                                     
+   data->hold_jid_ad = lCopyList("JB_ja_ad_request_list", 
+                                    lGetList(jep, JB_ja_ad_request_list)); 
+
    data->restart = lGetUlong(jep, JB_restart);
 
    if ((pe = (StringConst)lGetString(jep, JB_pe))) {
@@ -2386,6 +2396,12 @@ int save
    lSetList(jep, JB_jid_request_list, 
                lCopyList("JB_jid_request_list", data->hold_jid));
    
+   DPRINTF(("data->hold_jid_ad is %s\n", 
+            data->hold_jid_ad ? "NOT NULL" : "NULL"));
+
+   lSetList(jep, JB_ja_ad_request_list, 
+               lCopyList("JB_ja_ad_request_list", data->hold_jid_ad));
+
    DPRINTF(("data->pe is %s\n", data->pe ? data->pe: "NULL"));
    if (data->pe && data->pe[0] != '\0') {
       strcpy(pe_tasks, data->pe);

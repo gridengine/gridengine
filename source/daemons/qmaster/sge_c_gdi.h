@@ -41,7 +41,9 @@
 #include "uti/sge_monitor.h"
 #include "cull.h"
 #include "sgeobj/sge_object.h"
+
 #include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdi_packet.h"
 
 typedef struct _gdi_object_t gdi_object_t;
 
@@ -90,9 +92,9 @@ struct _gdi_object_t {
 
 gdi_object_t *get_gdi_object(u_long32);
 
-void 
-sge_c_gdi(sge_gdi_ctx_class_t *ctx, char *host, sge_gdi_request *request, sge_gdi_request *answer,
-          sge_pack_buffer *pb, monitoring_t *monitor);
+void  
+sge_c_gdi(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, 
+          sge_gdi_task_class_t *task, lList **answer_list, monitoring_t *monitor);
 
 int 
 sge_gdi_add_mod_generic(sge_gdi_ctx_class_t *ctx, 
@@ -103,6 +105,7 @@ sge_gdi_add_mod_generic(sge_gdi_ctx_class_t *ctx,
 
 void sge_clean_lists(void); 
 
+/* EB: TODO: CLEANUP: should be replaced with sge_gdi_packet_verify_version() */
 int verify_request_version(lList **alpp, u_long32 version, char *host, 
                            char *commproc, int id);
 

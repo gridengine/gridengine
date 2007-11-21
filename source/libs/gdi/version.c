@@ -32,11 +32,11 @@
 
 #include <stdio.h>
 
-#include "version.h"
+#include "gdi/version.h"
 
 const char GDI_VERSION[] = "maintrunk";
 
-const gdi_ulong32 GRM_GDI_VERSION = 0x100020F0;
+const gdi_ulong32 GRM_GDI_VERSION = 0x100020F1;
 
 vdict_t GRM_GDI_VERSION_ARRAY[] = 
 {
@@ -53,6 +53,8 @@ vdict_t GRM_GDI_VERSION_ARRAY[] =
       { 0x10001000, "6.0u3" },
       { 0x10001001, "6.0u4" },
       { 0x10001002, "6.0u8_2" },
+      { 0x10002000, "6.1" },
+      { 0x100020F0, "6.1AR_snapshot1" },
       { 0, NULL}
 };
 

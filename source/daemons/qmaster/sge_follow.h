@@ -35,6 +35,7 @@
 #include "uti/sge_monitor.h"
 #include "sgeobj/sge_object.h"
 #include "gdi/sge_gdi_ctx.h"
+#include "sge_qmaster_timed_event.h"
 
 int 
 sge_follow_order(sge_gdi_ctx_class_t *ctx,
@@ -49,4 +50,9 @@ distribute_ticket_orders(sge_gdi_ctx_class_t *ctx,
 
 void 
 sge_set_next_spooling_time(void);
+
+/* EB: TODO: ST: remove this ? */
+void sge_process_order_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, 
+                        monitoring_t *monitor);
+
 #endif /* __SGE_FOLLOW_H */

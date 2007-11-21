@@ -4,6 +4,10 @@
 # search for symbols of non-reentrant functions in object modules, libraries and binaries
 #
 
+if [ "$SKIP_NONREENTRANT" != "" ]; then
+   exit 0
+fi
+
 
 Filter1()
 {

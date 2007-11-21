@@ -256,7 +256,7 @@ extern int main(int argc, char** argv)
         log_level=CL_LOG_OFF;
         break;
   }
-  cl_com_setup_commlib(CL_RW_THREAD, log_level, NULL );
+  cl_com_setup_commlib(CL_RW_THREAD, log_level, NULL);
 
   cl_com_set_alias_file("./alias_file");
 

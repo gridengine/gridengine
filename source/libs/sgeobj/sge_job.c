@@ -46,7 +46,6 @@
 #include "sge_manop.h"
 #include "sge_range.h"
 #include "sge_htable.h"
-#include "sge_gdi.h"
 #include "sge_stdlib.h"
 #include "sge_var.h"
 #include "sge_path_alias.h"
@@ -61,6 +60,8 @@
 #include "symbols.h"
 #include "sge_mesobj.h"
 #include "sge_parse_num_par.h"
+
+#include "gdi/sge_gdi.h"
 
 #include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_qrefL.h"
@@ -264,6 +265,9 @@ u_long32 job_get_ja_task_hold_state(const lListElem *job,
    if (range_list_is_id_within(lGetList(job, JB_ja_s_h_ids), ja_task_id)) {
       ret |= MINUS_H_TGT_SYSTEM;
    }
+   if (range_list_is_id_within(lGetList(job, JB_ja_a_h_ids), ja_task_id)) {
+      ret |= MINUS_H_TGT_JA_AD;
+   }
    DRETURN(ret);
 }
 
@@ -273,11 +277,11 @@ u_long32 job_get_ja_task_hold_state(const lListElem *job,
 *
 *  SYNOPSIS
 *     void job_create_hold_id_lists(const lListElem *job, 
-*                                   lList *id_list[8], 
-*                                   u_long32 hold_state[8]) 
+*                                   lList *id_list[16], 
+*                                   u_long32 hold_state[16]) 
 *
 *  FUNCTION
-*     This function creates eight 'id_lists'. Tasks whose id is 
+*     This function creates sixteen 'id_lists'. Tasks whose id is 
 *     contained in an id list has the hold state combination delivered 
 *     by 'hold_state'.
 *
@@ -286,17 +290,17 @@ u_long32 job_get_ja_task_hold_state(const lListElem *job,
 *
 *  INPUTS
 *     const lListElem *job   - JB_Type 
-*     lList *id_list[8]      - NULL initialized pointer array 
-*     u_long32 hold_state[8] - Array for hold state combinations 
+*     lList *id_list[16]      - NULL initialized pointer array 
+*     u_long32 hold_state[16] - Array for hold state combinations 
 *
 *  SEE ALSO
 *     sgeobj/job/job_destroy_hold_id_lists() 
 *******************************************************************************/
-void job_create_hold_id_lists(const lListElem *job, lList *id_list[8], 
-                              u_long32 hold_state[8]) 
+void job_create_hold_id_lists(const lListElem *job, lList *id_list[16], 
+                              u_long32 hold_state[16]) 
 {
    int i;
-   lList *list[7];
+   lList *list[24];
 
    DENTER(TOP_LAYER, "job_create_hold_id_lists");
 
@@ -304,59 +308,120 @@ void job_create_hold_id_lists(const lListElem *job, lList *id_list[8],
    hold_state[1] = MINUS_H_TGT_USER;
    hold_state[2] = MINUS_H_TGT_OPERATOR;
    hold_state[3] = MINUS_H_TGT_SYSTEM;
-   hold_state[4] = MINUS_H_TGT_USER | MINUS_H_TGT_OPERATOR;
-   hold_state[5] = MINUS_H_TGT_USER | MINUS_H_TGT_SYSTEM;
-   hold_state[6] = MINUS_H_TGT_OPERATOR | MINUS_H_TGT_SYSTEM;
-   hold_state[7] = MINUS_H_TGT_USER | MINUS_H_TGT_OPERATOR |
-                   MINUS_H_TGT_SYSTEM;
-   for (i = 0; i < 7; i++) {
+   hold_state[4] = MINUS_H_TGT_JA_AD;
+   hold_state[5] = MINUS_H_TGT_USER | MINUS_H_TGT_OPERATOR;
+   hold_state[6] = MINUS_H_TGT_USER | MINUS_H_TGT_SYSTEM;
+   hold_state[7] = MINUS_H_TGT_USER | MINUS_H_TGT_JA_AD;
+   hold_state[8] = MINUS_H_TGT_OPERATOR | MINUS_H_TGT_SYSTEM;
+   hold_state[9] = MINUS_H_TGT_OPERATOR | MINUS_H_TGT_JA_AD;
+   hold_state[10] = MINUS_H_TGT_SYSTEM | MINUS_H_TGT_JA_AD;
+   hold_state[11] = MINUS_H_TGT_USER | MINUS_H_TGT_OPERATOR |
+                    MINUS_H_TGT_SYSTEM;
+   hold_state[12] = MINUS_H_TGT_USER | MINUS_H_TGT_OPERATOR |
+                    MINUS_H_TGT_JA_AD;
+   hold_state[13] = MINUS_H_TGT_USER | MINUS_H_TGT_SYSTEM |
+                    MINUS_H_TGT_JA_AD;
+   hold_state[14] = MINUS_H_TGT_OPERATOR | MINUS_H_TGT_SYSTEM |
+                    MINUS_H_TGT_JA_AD;
+   hold_state[15] = MINUS_H_TGT_USER | MINUS_H_TGT_OPERATOR |
+                    MINUS_H_TGT_SYSTEM | MINUS_H_TGT_JA_AD;
+
+   for (i = 0; i < 24; i++) {
       list[i] = NULL;
    }
-   for (i = 0; i < 8; i++) {
+
+   for (i = 0; i < 16; i++) {
       id_list[i] = NULL;
    }
 
-   /* uo */
+   /* uo, us, ua, os, oa, sa, uos, uoa, usa, osa */
    range_list_calculate_intersection_set(&list[0], NULL, 
                   lGetList(job, JB_ja_u_h_ids), lGetList(job, JB_ja_o_h_ids));
-   /* us */
    range_list_calculate_intersection_set(&list[1], NULL, 
                   lGetList(job, JB_ja_u_h_ids), lGetList(job, JB_ja_s_h_ids));
-   /* os */
    range_list_calculate_intersection_set(&list[2], NULL, 
+                  lGetList(job, JB_ja_u_h_ids), lGetList(job, JB_ja_a_h_ids));
+   range_list_calculate_intersection_set(&list[3], NULL, 
                   lGetList(job, JB_ja_o_h_ids), lGetList(job, JB_ja_s_h_ids));
+   range_list_calculate_intersection_set(&list[4], NULL, 
+                  lGetList(job, JB_ja_o_h_ids), lGetList(job, JB_ja_a_h_ids));
+   range_list_calculate_intersection_set(&list[5], NULL, 
+                  lGetList(job, JB_ja_s_h_ids), lGetList(job, JB_ja_a_h_ids));
+   range_list_calculate_intersection_set(&list[6], NULL, list[0], list[3]);
+   range_list_calculate_intersection_set(&list[7], NULL, list[0], list[4]);
+   range_list_calculate_intersection_set(&list[8], NULL, list[1], list[5]);
+   range_list_calculate_intersection_set(&list[9], NULL, list[3], list[5]);
 
-   /* uos -> 7 */
-   range_list_calculate_intersection_set(&id_list[7], NULL, list[2], list[1]);
+   /* uosa -> 15 */
+   range_list_calculate_intersection_set(&id_list[15], NULL, list[6], list[7]); 
 
-   /* osU -> 6 */
-   range_list_calculate_difference_set(&id_list[6], NULL, list[2], id_list[7]);
-   /* usO -> 5 */
-   range_list_calculate_difference_set(&id_list[5], NULL, list[1], id_list[7]);
-   /* uoS -> 4 */
-   range_list_calculate_difference_set(&id_list[4], NULL, list[0], id_list[7]);
+   /* osaU -> 14 */
+   range_list_calculate_difference_set(&id_list[14], NULL, list[9], id_list[15]); 
 
-   /* sOU -> 3 */
-   range_list_calculate_difference_set(&list[6], NULL, 
-                  lGetList(job, JB_ja_s_h_ids), list[1]);
-   range_list_calculate_difference_set(&id_list[3], NULL, list[6], id_list[6]);       
+   /* usaO -> 13 */
+   range_list_calculate_difference_set(&id_list[13], NULL, list[8], id_list[15]); 
 
-   /* oUS -> 2 */
-   range_list_calculate_difference_set(&list[5], NULL, 
-                  lGetList(job, JB_ja_o_h_ids), list[0]);
-   range_list_calculate_difference_set(&id_list[2], NULL, list[5], id_list[6]);
+   /* uoaS -> 12 */
+   range_list_calculate_difference_set(&id_list[12], NULL, list[7], id_list[15]); 
+
+   /* uosA -> 11 */
+   range_list_calculate_difference_set(&id_list[11], NULL, list[6], id_list[15]); 
+
+   /* saUO -> 10 */
+   range_list_calculate_difference_set(&list[10], NULL, list[5], list[8]);
+   range_list_calculate_difference_set(&id_list[10], NULL, list[10], id_list[14]); 
+
+   /* oaUS -> 9 */
+   range_list_calculate_difference_set(&list[11], NULL, list[4], list[7]);
+   range_list_calculate_difference_set(&id_list[9], NULL, list[11], id_list[14]); 
+
+   /* osUA -> 8 */
+   range_list_calculate_difference_set(&list[12], NULL, list[3], list[6]);
+   range_list_calculate_difference_set(&id_list[8], NULL, list[12], id_list[14]); 
+
+   /* uaOS -> 7 */
+   range_list_calculate_difference_set(&list[13], NULL, list[2], list[7]);
+   range_list_calculate_difference_set(&id_list[7], NULL, list[13], id_list[13]); 
+
+   /* usOA -> 6 */
+   range_list_calculate_difference_set(&list[14], NULL, list[1], list[6]);
+   range_list_calculate_difference_set(&id_list[6], NULL, list[14], id_list[13]); 
    
-   /* uOS -> 1 */ 
-   range_list_calculate_difference_set(&list[4], NULL, 
-                  lGetList(job, JB_ja_u_h_ids), list[1]);
-   range_list_calculate_difference_set(&id_list[1], NULL, list[4], id_list[4]);
-   
-   /* UOS -> 0 */
+   /* uoSA -> 5 */
+   range_list_calculate_difference_set(&list[15], NULL, list[0], list[6]);
+   range_list_calculate_difference_set(&id_list[5], NULL, list[15], id_list[12]);
+
+   /* aUOS -> 4 */
+   range_list_calculate_difference_set(&list[16], NULL, 
+      lGetList(job, JB_ja_a_h_ids), list[2]);
+   range_list_calculate_difference_set(&list[17], NULL, list[16], list[11]);
+   range_list_calculate_difference_set(&id_list[4], NULL, list[17], id_list[10]);
+
+   /* sUOA -> 3 */
+   range_list_calculate_difference_set(&list[18], NULL, 
+      lGetList(job, JB_ja_s_h_ids), list[1]);
+   range_list_calculate_difference_set(&list[19], NULL, list[18], list[12]);
+   range_list_calculate_difference_set(&id_list[3], NULL, list[19], id_list[10]);
+
+   /* oUSA -> 2 */
+   range_list_calculate_difference_set(&list[20], NULL, 
+      lGetList(job, JB_ja_o_h_ids), list[0]);
+   range_list_calculate_difference_set(&list[21], NULL, list[20], list[12]);
+   range_list_calculate_difference_set(&id_list[2], NULL, list[21], id_list[9]);
+
+   /* uOSA -> 1 */
+   range_list_calculate_difference_set(&list[22], NULL, 
+      lGetList(job, JB_ja_u_h_ids), list[0]);
+   range_list_calculate_difference_set(&list[23], NULL, list[22], list[14]);
+   range_list_calculate_difference_set(&id_list[1], NULL, list[23], id_list[7]);
+
+   /* UOSA -> 0 */
    id_list[0] = lCopyList("task_id_range", lGetList(job, JB_ja_n_h_ids));
 
-   for (i = 0; i < 7; i++) {
+   for (i = 0; i < 24; i++) {
       lFreeList(&(list[i]));
    }
+
    DRETURN_VOID;
 }
 
@@ -379,12 +444,12 @@ void job_create_hold_id_lists(const lListElem *job, lList *id_list[8],
 *  SEE ALSO
 *     sgeobj/job/job_create_hold_id_lists 
 ******************************************************************************/
-void job_destroy_hold_id_lists(const lListElem *job, lList *id_list[8]) 
+void job_destroy_hold_id_lists(const lListElem *job, lList *id_list[16]) 
 {
    int i;
 
    DENTER(TOP_LAYER, "job_destroy_hold_id_lists");
-   for (i = 0; i < 8; i++) {
+   for (i = 0; i < 16; i++) {
       lFreeList(&(id_list[i]));
    }
    DRETURN_VOID;
@@ -417,7 +482,8 @@ bool job_is_enrolled(const lListElem *job, u_long32 task_number)
    if (range_list_is_id_within(lGetList(job, JB_ja_n_h_ids), task_number) ||
        range_list_is_id_within(lGetList(job, JB_ja_u_h_ids), task_number) ||
        range_list_is_id_within(lGetList(job, JB_ja_o_h_ids), task_number) ||
-       range_list_is_id_within(lGetList(job, JB_ja_s_h_ids), task_number)) {
+       range_list_is_id_within(lGetList(job, JB_ja_s_h_ids), task_number) ||
+       range_list_is_id_within(lGetList(job, JB_ja_a_h_ids), task_number)) {
       ret = false;
    }
    DRETURN(ret);
@@ -517,6 +583,7 @@ u_long32 job_get_ja_tasks(const lListElem *job)
 u_long32 job_get_not_enrolled_ja_tasks(const lListElem *job) 
 {
    lList *answer_list = NULL;
+   lList *uosa_ids = NULL;
    lList *uos_ids = NULL;
    lList *uo_ids = NULL;
    u_long32 ret = 0;
@@ -528,10 +595,13 @@ u_long32 job_get_not_enrolled_ja_tasks(const lListElem *job)
                                   lGetList(job, JB_ja_o_h_ids));
    range_list_calculate_union_set(&uos_ids, &answer_list, uo_ids, 
                                   lGetList(job, JB_ja_s_h_ids));
+   range_list_calculate_union_set(&uosa_ids, &answer_list, uos_ids, 
+                                  lGetList(job, JB_ja_a_h_ids));
 
    ret += range_list_get_number_of_ids(lGetList(job, JB_ja_n_h_ids));
    ret += range_list_get_number_of_ids(uos_ids);
 
+   lFreeList(&uosa_ids);
    lFreeList(&uos_ids);
    lFreeList(&uo_ids);
 
@@ -744,9 +814,9 @@ int job_count_pending_tasks(lListElem *job, bool count_all)
 void job_delete_not_enrolled_ja_task(lListElem *job, lList **answer_list, 
                                      u_long32 ja_task_number) 
 {
-   const int attributes = 4;
+   const int attributes = 5;
    const int attribute[] = {JB_ja_n_h_ids, JB_ja_u_h_ids, JB_ja_o_h_ids,
-                            JB_ja_s_h_ids};
+                            JB_ja_s_h_ids, JB_ja_a_h_ids};
    int i;
 
    DENTER(TOP_LAYER, "job_delete_not_enrolled_ja_task");
@@ -754,7 +824,7 @@ void job_delete_not_enrolled_ja_task(lListElem *job, lList **answer_list,
       object_delete_range_id(job, answer_list, attribute[i], ja_task_number);
    }
    DRETURN_VOID;
-} 
+}
 
 /****** sgeobj/job/job_add_as_zombie() ****************************************
 *  NAME
@@ -843,16 +913,19 @@ void job_set_hold_state(lListElem *job, lList **answer_list,
 {
    DENTER(TOP_LAYER, "job_set_hold_state");
    if (!job_is_enrolled(job, ja_task_id)) {
-      const int lists = 4;
+      const int lists = 5;
       const u_long32 mask[] = {MINUS_H_TGT_ALL, MINUS_H_TGT_USER, 
-                               MINUS_H_TGT_OPERATOR, MINUS_H_TGT_SYSTEM};
-      const int attribute[] = {JB_ja_n_h_ids, JB_ja_u_h_ids,
-                               JB_ja_o_h_ids, JB_ja_s_h_ids}; 
+                               MINUS_H_TGT_OPERATOR, MINUS_H_TGT_SYSTEM,
+                               MINUS_H_TGT_JA_AD};
+      const int attribute[] = {JB_ja_n_h_ids, JB_ja_u_h_ids, JB_ja_o_h_ids, 
+                               JB_ja_s_h_ids, JB_ja_a_h_ids}; 
       const range_remove_insert_t if_function[] = {range_list_remove_id,
+                                                   range_list_insert_id,
                                                    range_list_insert_id,
                                                    range_list_insert_id,
                                                    range_list_insert_id}; 
       const range_remove_insert_t else_function[] = {range_list_insert_id,
+                                                     range_list_remove_id,
                                                      range_list_remove_id,
                                                      range_list_remove_id,
                                                      range_list_remove_id};
@@ -920,12 +993,13 @@ u_long32 job_get_hold_state(lListElem *job, u_long32 ja_task_id)
          ret = 0;
       }
    } else {
-      int attribute[3] = {JB_ja_u_h_ids, JB_ja_o_h_ids, JB_ja_s_h_ids};
-      u_long32 hold_flag[3] = {MINUS_H_TGT_USER, MINUS_H_TGT_OPERATOR,
-                               MINUS_H_TGT_SYSTEM};
+      int attribute[4] = {JB_ja_u_h_ids, JB_ja_o_h_ids,
+                          JB_ja_s_h_ids, JB_ja_a_h_ids };
+      u_long32 hold_flag[4] = {MINUS_H_TGT_USER, MINUS_H_TGT_OPERATOR,
+                               MINUS_H_TGT_SYSTEM, MINUS_H_TGT_JA_AD};
       int i;
 
-      for (i = 0; i < 3; i++) {
+      for (i = 0; i < 4; i++) {
          lList *hold_list = lGetList(job, attribute[i]);
 
          if (range_list_is_id_within(hold_list, ja_task_id)) {
@@ -1355,13 +1429,14 @@ int job_set_submit_task_ids(lListElem *job, u_long32 start, u_long32 end,
 ******************************************************************************/
 u_long32 job_get_smallest_unenrolled_task_id(const lListElem *job)
 {
-   u_long32 n_h_id, u_h_id, o_h_id, s_h_id;
-   u_long32 ret = 0; 
+   u_long32 n_h_id, u_h_id, o_h_id, s_h_id, a_h_id;
+   u_long32 ret = 0;
 
    n_h_id = range_list_get_first_id(lGetList(job, JB_ja_n_h_ids), NULL);    
    u_h_id = range_list_get_first_id(lGetList(job, JB_ja_u_h_ids), NULL);    
    o_h_id = range_list_get_first_id(lGetList(job, JB_ja_o_h_ids), NULL);    
    s_h_id = range_list_get_first_id(lGetList(job, JB_ja_s_h_ids), NULL);    
+   a_h_id = range_list_get_first_id(lGetList(job, JB_ja_a_h_ids), NULL);    
    ret = n_h_id;
    if (ret > 0 && u_h_id > 0) {
       ret = MIN(ret, u_h_id);
@@ -1373,10 +1448,15 @@ u_long32 job_get_smallest_unenrolled_task_id(const lListElem *job)
    } else if (o_h_id > 0) {
       ret = o_h_id;
    }
-   if (ret == 0 && s_h_id > 0)  {
+   if (ret > 0 && s_h_id > 0)  {
       ret = MIN(ret, s_h_id);
-   } else if (s_h_id > 0 ){
-      ret = s_h_id; 
+   } else if (s_h_id > 0){
+      ret = s_h_id;
+   }
+   if (ret == 0 && a_h_id > 0)  {
+      ret = MIN(ret, a_h_id);
+   } else if (a_h_id > 0){
+      ret = a_h_id;
    }
    return ret;
 }
@@ -1445,13 +1525,14 @@ u_long32 job_get_smallest_enrolled_task_id(const lListElem *job)
 ******************************************************************************/
 u_long32 job_get_biggest_unenrolled_task_id(const lListElem *job)
 {
-   u_long32 n_h_id, u_h_id, o_h_id, s_h_id;
+   u_long32 n_h_id, u_h_id, o_h_id, s_h_id, a_h_id;
    u_long32 ret = 0;
  
    n_h_id = range_list_get_last_id(lGetList(job, JB_ja_n_h_ids), NULL);    
    u_h_id = range_list_get_last_id(lGetList(job, JB_ja_u_h_ids), NULL);    
    o_h_id = range_list_get_last_id(lGetList(job, JB_ja_o_h_ids), NULL);    
    s_h_id = range_list_get_last_id(lGetList(job, JB_ja_s_h_ids), NULL);    
+   a_h_id = range_list_get_last_id(lGetList(job, JB_ja_a_h_ids), NULL);    
    ret = n_h_id;
    if (ret > 0 && u_h_id > 0) {
       ret = MAX(ret, u_h_id);
@@ -1463,10 +1544,15 @@ u_long32 job_get_biggest_unenrolled_task_id(const lListElem *job)
    } else if (o_h_id > 0) {
       ret = o_h_id;
    }
-   if (ret == 0 && s_h_id > 0)  {
+   if (ret > 0 && s_h_id > 0)  {
       ret = MAX(ret, s_h_id);
    } else if (s_h_id > 0 ){
       ret = s_h_id; 
+   }
+   if (ret == 0 && a_h_id > 0)  {
+      ret = MAX(ret, a_h_id);
+   } else if (a_h_id > 0 ){
+      ret = a_h_id; 
    }
    return ret;
 }
@@ -1604,6 +1690,7 @@ int job_initialize_id_lists(lListElem *job, lList **answer_list)
       lSetList(job, JB_ja_u_h_ids, NULL);
       lSetList(job, JB_ja_o_h_ids, NULL);
       lSetList(job, JB_ja_s_h_ids, NULL);
+      lSetList(job, JB_ja_a_h_ids, NULL);
    }
    DRETURN(0);
 }
@@ -1835,6 +1922,7 @@ void job_check_correct_id_sublists(lListElem *job, lList **answer_list)
          JB_ja_u_h_ids,
          JB_ja_s_h_ids,
          JB_ja_o_h_ids,
+         JB_ja_a_h_ids,
          -1
       };
       int has_structure = 0;
@@ -3320,6 +3408,7 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
    /* TODO: JB_ja_u_h_ids */
    /* TODO: JB_ja_s_h_ids */
    /* TODO: JB_ja_o_h_ids */
+   /* TODO: JB_ja_a_h_ids */
    /* TODO: JB_ja_z_ids */
    /* TODO: JB_ja_template */
    /* TODO: JB_ja_tasks */

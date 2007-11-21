@@ -51,81 +51,45 @@
 
 #define EVENT_LAYER CULL_LAYER
 
-static const char THREAD_NAME[] = "TET";
-
-struct te_event {
-   time_t      when;        /* event delivery time                */
-   time_t      interval;    /* event interval, if recurring event */
-   te_type_t   type;        /* event type                         */
-   te_mode_t   mode;        /* event mode                         */
-   u_long32    ulong_key_1; /* 1st numeric key                    */
-   u_long32    ulong_key_2; /* 2nd numeric key                    */
-   const char* str_key;     /* alphanumeric key                   */
-   u_long32    seq_no;      /* event sequence number              */
-};
-
 #define EVENT_FRMT(x) SGE_FUNC, x->type, x->when, x->mode, x->str_key?x->str_key:MSG_SMALLNULL
 
-typedef struct {
-   pthread_mutex_t mutex;      /* used for mutual exclusion                         */
-   pthread_cond_t  cond_var;   /* used for waiting                                  */
-   bool            exit;       /* true -> exit event delivery                       */
-   bool            delete;     /* true -> at least one event has been deleted       */ 
-   lList*          list;       /* timed event list                                  */
-   lSortOrder*     sort_order; /* list sort order                                   */
-   u_long32        seq_no;     /* last added timed event sequence number            */
-   time_t          last;       /* last time, event delivery has been checked        */
-   time_t          next;       /* due date for next event, 0 -> event list is empty */
-} event_control_t;
-
-struct tbl_elem {
-   te_type_t    type;    /* event type    */
-   te_handler_t handler; /* event handler */
+event_control_t Event_Control = {
+   PTHREAD_MUTEX_INITIALIZER, 
+   PTHREAD_COND_INITIALIZER, 
+   false, 
+   false, 
+   NULL, 
+   NULL, 
+   0, 
+   0, 
+   0
 };
 
-typedef struct {
-   pthread_mutex_t  mutex; /* used for mutual exclusion            */
-   int              num;   /* number of event handler in table     */
-   int              max;   /* max number of handler, before resize */
-   struct tbl_elem* list;  /* event handler list                   */
-} handler_tbl_t;
+handler_tbl_t Handler_Tbl = {
+   PTHREAD_MUTEX_INITIALIZER, 
+   0, 
+   0, 
+   NULL
+};
 
-enum { TBL_GROW_FACTOR = 2, TBL_INIT_SIZE = 10 };
-
-
-static event_control_t Event_Control = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, false, false, NULL, NULL, 0, 0, 0};
-static handler_tbl_t   Handler_Tbl = {PTHREAD_MUTEX_INITIALIZER, 0, 0, NULL};
-static pthread_once_t  Timed_Event_Once = PTHREAD_ONCE_INIT;
-static pthread_t       Event_Thread;
-
-static void       timed_event_wait_empty(void);
-static void       timed_event_wait_next(te_event_t te, time_t now);
-static void       timed_event_once_init(void);
-static void*      timed_event_thread(void*);
-static void       check_time(time_t);
-static te_event_t event_from_list_elem(lListElem*);
-static void       scan_table_and_deliver(sge_gdi_ctx_class_t *ctx, te_event_t, monitoring_t *monitor);
-static bool       should_exit(void);
-
-
-/****** sge_qmaster_timed_event/timed_event_wait_empty() ***********************
+/****** sge_qmaster_timed_event/te_wait_empty() ***********************
 *  NAME
-*     timed_event_wait_empty() -- waits, if the event list is empty
+*     te_wait_empty() -- waits, if the event list is empty
 *
 *  SYNOPSIS
-*     static void timed_event_wait_empty(void) 
+*     static void te_wait_empty(void) 
 *
 *  FUNCTION
 *     waits, if the event list is empty
 *
 *  NOTES
-*     MT-NOTE: timed_event_wait_empty() is not MT safe 
+*     MT-NOTE: te_wait_empty() is not MT safe 
 *
 *******************************************************************************/
-static void timed_event_wait_empty(void) 
+void te_wait_empty(void) 
 {
 
-   DENTER(EVENT_LAYER, "timed_event_wait");
+   DENTER(EVENT_LAYER, "te_wait_empty");
    
    while (lGetNumberOfElem((const lList*)Event_Control.list) == 0) {
          DPRINTF(("%s: event list empty --> will wait\n", SGE_FUNC));
@@ -136,12 +100,12 @@ static void timed_event_wait_empty(void)
    DEXIT;
 }
 
-/****** sge_qmaster_timed_event/timed_event_wait_next() ************************
+/****** sge_qmaster_timed_event/te_wait_next() ************************
 *  NAME
-*     timed_event_wait_next() -- waits for the next event
+*     te_wait_next() -- waits for the next event
 *
 *  SYNOPSIS
-*     static void timed_event_wait_next(te_event_t te, time_t now) 
+*     static void te_wait_next(te_event_t te, time_t now) 
 *
 *  FUNCTION
 *    waits for the next event
@@ -151,13 +115,13 @@ static void timed_event_wait_empty(void)
 *     time_t now    - current time
 *
 *  NOTES
-*     MT-NOTE: timed_event_wait_next() is not MT safe 
+*     MT-NOTE: te_wait_next() is not MT safe 
 *
 *******************************************************************************/
-static void timed_event_wait_next(te_event_t te, time_t now) 
+void te_wait_next(te_event_t te, time_t now) 
 {
    struct timespec ts;
-   DENTER(EVENT_LAYER, "timed_event_wait_next");
+   DENTER(EVENT_LAYER, "te_wait_next");
 
    ts.tv_sec = te->when;
    ts.tv_nsec = 0;
@@ -166,7 +130,8 @@ static void timed_event_wait_next(te_event_t te, time_t now)
    {
       int res = 0;
 
-      DPRINTF(("%s: time:"sge_u32" next:"sge_u32" --> will wait\n", SGE_FUNC, now, Event_Control.next));
+      DPRINTF(("%s: time:"sge_u32" next:"sge_u32" --> will wait\n", 
+               SGE_FUNC, now, Event_Control.next));
 
       res = pthread_cond_timedwait(&Event_Control.cond_var, &Event_Control.mutex, &ts);
       if (ETIMEDOUT == res) { break; }
@@ -206,8 +171,6 @@ void te_register_event_handler(te_handler_t aHandler, te_type_t aType)
    DENTER(EVENT_LAYER, "te_add_event_handler");
 
    SGE_ASSERT(aHandler != NULL);
-
-   pthread_once(&Timed_Event_Once, timed_event_once_init);
 
    sge_mutex_lock("handler_table_mutex", SGE_FUNC, __LINE__, &Handler_Tbl.mutex);
 
@@ -513,51 +476,6 @@ int te_delete_one_time_event(te_type_t aType, u_long32 aKey1, u_long32 aKey2, co
    return res;
 } /* te_delete_one_time_event() */
 
-/****** qmaster/sge_qmaster_timed_event/te_shutdown() **************************
-*  NAME
-*     te_shutdown() -- Shutdown event delivery thread. 
-*
-*  SYNOPSIS
-*     void te_shutdown(void) 
-*
-*  FUNCTION
-*     Shutdown event delivery thread. Set event control structure 'exit' flag.
-*     Wait until event delivery thread did terminate.
-*
-*  INPUTS
-*     void - none 
-*
-*  RESULT
-*     void - none
-*
-*  NOTES
-*     MT-NOTE: 'te_shutdown()' is MT safe. 
-*     MT-NOTE:
-*     MT-NOTE: 'pthread_once()' is called for symmetry reasons. This module
-*     MT-NOTE: will be initialized on demand, i.e. each function may be
-*     MT-NOTE: invoked without any prerequisite.
-*
-*******************************************************************************/
-void te_shutdown(void)
-{
-   DENTER(EVENT_LAYER, "te_shutdown");
-
-   sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
-
-   Event_Control.exit = true;
-
-   sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
-
-   DPRINTF(("%s: wait for event thread termination\n", SGE_FUNC));
-
-   pthread_join(Event_Thread, NULL);
-
-   sge_free((char *)Handler_Tbl.list);
-
-   DEXIT;
-   return;
-} /* te_shutdown() */
-
 /****** qmaster/sge_qmaster_timed_event/te_get_when() **************************
 *  NAME
 *     te_get_when() -- Return timed event due date 
@@ -798,17 +716,16 @@ u_long32 te_get_sequence_number(te_event_t anEvent)
    return res;
 } /* te_get_sequence_number() */
 
-/****** qmaster/sge_qmaster_timed_event/timed_event_once_init() ****************
+/****** qmaster/sge_qmaster_timed_event/te_init() ****************
 *  NAME
-*     timed_event_once_init() -- one-time initialization 
+*     te_init() -- one-time initialization 
 *
 *  SYNOPSIS
-*     static void timed_event_once_init(void) 
+*     static void te_init(void) 
 *
 *  FUNCTION
 *     Create timed event list. Set list sort order to be ascending event due 
-*     time. Create event handler table of initial size. Create and kick off
-*     event delivery thread.
+*     time. Create event handler table of initial size. 
 *
 *  INPUTS
 *     void - none 
@@ -817,17 +734,15 @@ u_long32 te_get_sequence_number(te_event_t anEvent)
 *     void - none 
 *
 *  NOTES
-*     MT-NOTE: timed_event_once_init() is MT safe
+*     MT-NOTE: te_init() is not MT safe
 *     MT-NOTE:
 *     MT-NOTE: This function must only be used as a one-time initialization
-*     MT-NOTE: function in conjunction with 'pthread_once()'.
+*     MT-NOTE: function.
 *
 *******************************************************************************/
-static void timed_event_once_init(void)
+void te_init(void)
 {
-   pthread_attr_t attr;
-
-   DENTER(EVENT_LAYER, "timed_event_once_init");
+   DENTER(EVENT_LAYER, "te_init");
 
    Event_Control.list = lCreateList("timed event list", TE_Type);
    Event_Control.sort_order = lParseSortOrderVarArg(TE_Type, "%I+", TE_when);
@@ -836,144 +751,51 @@ static void timed_event_once_init(void)
    Handler_Tbl.max = TBL_INIT_SIZE;
    Handler_Tbl.num = 0;
 
-   pthread_attr_init(&attr);
-   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-   pthread_create(&Event_Thread, &attr, timed_event_thread, (void*)THREAD_NAME);
+   DEXIT;
+   return;
+} /* te_init() */
+
+/****** qmaster/sge_qmaster_timed_event/te_shutdown() **************************
+*  NAME
+*     te_shutdown() -- Shutdown event delivery thread. 
+*
+*  SYNOPSIS
+*     void te_shutdown(void) 
+*
+*  FUNCTION
+*     Shutdown event delivery thread. Set event control structure 'exit' flag.
+*     Wait until event delivery thread did terminate.
+*
+*  INPUTS
+*     void - none 
+*
+*  RESULT
+*     void - none
+*
+*  NOTES
+*     MT-NOTE: 'te_shutdown()' is MT safe. 
+*     MT-NOTE:
+*     MT-NOTE: 'pthread_once()' is called for symmetry reasons. This module
+*     MT-NOTE: will be initialized on demand, i.e. each function may be
+*     MT-NOTE: invoked without any prerequisite.
+*
+*******************************************************************************/
+void te_shutdown(void)
+{
+   DENTER(EVENT_LAYER, "te_shutdown");
+
+   sge_free((char *)Handler_Tbl.list);
 
    DEXIT;
    return;
-} /* timed_event_once_init() */
+} /* te_shutdown() */
 
-/****** qmaster/sge_qmaster_timed_event/timed_event_thread() ***********************
+/****** qmaster/sge_qmaster_timed_event/te_check_time() ***************************
 *  NAME
-*     timed_event_thread() -- Deliver timed events due
+*     te_check_time() -- check time
 *
 *  SYNOPSIS
-*     static void* timed_event_thread(void* anArg) 
-*
-*  FUNCTION
-*     Check whether system clock has been put back. If so, adjust event due
-*     times. Check if event list does contain events. If so, fetch first event
-*     and check whether it is due. If there is a due event, search event handler
-*     table for a matching event handler and invoke it.
-*
-*     After event delivery an event with event mode 'ONE_TIME_EVENT' will be
-*     removed. An event with event mode 'RECURRING_EVENT' will be delivered
-*     repeatedly.
-*
-*     The event list MUST be sorted in ascending event due time order.
-*
-*  INPUTS
-*     void* anArg - not used 
-*
-*  RESULT
-*     void* - none 
-*
-*  NOTES
-*     MT-NOTE: 'timed_event_thread()' is a thread function. Do NOT use this
-*     MT-NOTE: function in any other way!
-*     MT-NOTE:
-*     MT-NOTE: If the event list is empty, 'timed_event_thread()' will wait until
-*     MT-NOTE: an event has been added.
-*     MT-NOTE: 
-*     MT-NOTE: If no event is due, i.e. the due date of the next event does lie
-*     MT-NOTE: ahead, 'timed_event_thread()' does wait until the next event does
-*     MT-NOTE: become due, or an event which is due earlier has been added. If
-*     MT-NOTE: an event has been deleted while waiting ('Event_Control.delete'
-*     MT-NOTE: equals 'true'), skip the current event and start over. The
-*     MT-NOTE: deleted event maybe the event 'timed_event_thread()' has been
-*     MT-NOTE: waiting for.
-*     MT-NOTE:
-*     MT-NOTE: Before 'scan_table_and_deliver()' is invoked,
-*     MT-NOTE: 'Event_Control.mutex' MUST be unlocked. Otherwise, a deadlock
-*     MT-NOTE: may occur due to recursive mutex locking.
-*
-*******************************************************************************/
-static void* timed_event_thread(void* anArg)
-{
-   lListElem *le = NULL;
-   te_event_t te = NULL;
-   time_t now;
-   time_t next_prof_output = 0;
-   monitoring_t monitor;
-   sge_gdi_ctx_class_t *ctx = NULL;
-
-   DENTER(EVENT_LAYER, "timed_event_thread");
-
-   sge_monitor_init(&monitor, (char *) anArg, TET_EXT, TET_WARNING, TET_ERROR);
-   sge_qmaster_thread_init(&ctx, true);
-
-   /* register at profiling module */
-   set_thread_name(pthread_self(),"TEvent Thread");
-   conf_update_thread_profiling("TEvent Thread");
-
-   while (should_exit() == false) {
-      thread_start_stop_profiling();
-
-      sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
-
-      check_time(time(NULL));
-
-      Event_Control.last = time(NULL);
-
-      MONITOR_IDLE_TIME(timed_event_wait_empty(), (&monitor), mconf_get_monitor_time(),
-                        mconf_is_monitor_message());
-      MONITOR_MESSAGES((&monitor));  
-
-      MONITOR_TET_COUNT((&monitor));
-      MONITOR_TET_EVENT((&monitor), lGetNumberOfElem(Event_Control.list));
-
-      le = lFirst(Event_Control.list);
-      te = event_from_list_elem(le);
-      now = Event_Control.next = time(NULL);
-
-      if (te->when > now) {
-         
-         Event_Control.next = te->when;
-         Event_Control.delete = false;
-
-         MONITOR_IDLE_TIME(timed_event_wait_next(te, now), (&monitor), mconf_get_monitor_time(), 
-                           mconf_is_monitor_message());
-
-         if ((Event_Control.next < te->when) || (Event_Control.delete == true))
-         {
-            DPRINTF(("%s: event list changed - next:"sge_u32" --> start over\n", SGE_FUNC, Event_Control.next));
-
-            sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
-
-            te_free_event(&te);
-            sge_monitor_output(&monitor);
-            continue;
-         }
-      }
-
-      MONITOR_TET_EXEC((&monitor));
-      
-      lDechainElem(Event_Control.list, le);
-      lFreeElem(&le);
-
-      sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
-        
-      scan_table_and_deliver(ctx, te, &monitor);
-      te_free_event(&te);
-
-      sge_monitor_output(&monitor);
-      thread_output_profiling("timed event thread profiling summary:\n", 
-                              &next_prof_output);
-   }
-
-   sge_monitor_free(&monitor);
-   
-   DEXIT;
-   return NULL;
-}
-
-/****** qmaster/sge_qmaster_timed_event/check_time() ***************************
-*  NAME
-*     check_time() -- check time
-*
-*  SYNOPSIS
-*     static void check_time(time_t aTime) 
+*     void te_check_time(time_t aTime) 
 *
 *  FUNCTION
 *     Check if 'aTime' is a point in time BEFORE the last timed event has been
@@ -988,16 +810,16 @@ static void* timed_event_thread(void* anArg)
 *     void - none 
 *
 *  NOTES
-*     MT-NOTE: check_time() is NOT MT safe!
+*     MT-NOTE: te_check_time() is NOT MT safe!
 *     MT-NOTE:
 *     MT-NOTE: It may only be called with 'Event_Control.mutex' locked!
 *
 *******************************************************************************/
-static void check_time(time_t aTime)
+void te_check_time(time_t aTime)
 {
    lListElem* le;
 
-   DENTER(EVENT_LAYER, "check_time");
+   DENTER(EVENT_LAYER, "te_check_time");
 
    if (Event_Control.last > aTime)
    {
@@ -1015,14 +837,14 @@ static void check_time(time_t aTime)
 
    DEXIT;
    return;
-} /* check_time() */
+} /* te_check_time() */
 
-/****** qmaster/sge_qmaster_timed_event/event_from_list_elem() *****************
+/****** qmaster/sge_qmaster_timed_event/te_event_from_list_elem() *****************
 *  NAME
-*     event_from_list_elem() -- Allocate new timed event.
+*     te_event_from_list_elem() -- Allocate new timed event.
 *
 *  SYNOPSIS
-*     static te_event_t event_from_list_elem(lListElem* aListElem) 
+*     te_event_t te_event_from_list_elem(lListElem* aListElem) 
 *
 *  FUNCTION
 *     Allocate and initialize a new timed event. The new event will be
@@ -1038,15 +860,15 @@ static void check_time(time_t aTime)
 *     te_event_t - new timed event 
 *
 *  NOTES
-*     MT-NOTE: event_from_list_elem() is MT safe. 
+*     MT-NOTE: te_event_from_list_elem() is MT safe. 
 *
 *******************************************************************************/
-static te_event_t event_from_list_elem(lListElem* aListElem)
+te_event_t te_event_from_list_elem(lListElem* aListElem)
 {
    te_event_t ev = NULL;
    const char* str = NULL;
 
-   DENTER(EVENT_LAYER, "event_from_list_elem");
+   DENTER(EVENT_LAYER, "te_event_from_list_elem");
 
    ev = (te_event_t)sge_malloc(sizeof(struct te_event));
    
@@ -1063,14 +885,14 @@ static te_event_t event_from_list_elem(lListElem* aListElem)
 
    DEXIT;
    return ev;
-} /* event_from_list_elem() */
+} /* te_event_from_list_elem() */
 
-/****** qmaster/sge_qmaster_timed_event/scan_table_and_deliver() ***************
+/****** qmaster/sge_qmaster_timed_event/te_scan_table_and_deliver() ***************
 *  NAME
-*     scan_table_and_deliver() -- Scan event handler table and deliver event. 
+*     te_scan_table_and_deliver() -- Scan event handler table and deliver event. 
 *
 *  SYNOPSIS
-*     static void scan_table_and_deliver(te_event_t anEvent) 
+*     static void te_scan_table_and_deliver(te_event_t anEvent) 
 *
 *  FUNCTION
 *     Scan event handler table for an event handler which does match the event
@@ -1084,18 +906,18 @@ static te_event_t event_from_list_elem(lListElem* aListElem)
 *     void - none
 *
 *  NOTES
-*     MT-NOTE: scan_table_and_deliver() is MT safe. 
+*     MT-NOTE: te_scan_table_and_deliver() is MT safe. 
 *     MT-NOTE:
 *     MT-NOTE: Do NOT invoke this function with 'Event_Control.mutex' locked!
 *     MT-NOTE: Otherwise a deadlock may occur due to recursive mutex locking.
 *
 *******************************************************************************/
-static void scan_table_and_deliver(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor)
+void te_scan_table_and_deliver(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor)
 {
    int i = 0;
    te_handler_t handler = NULL;
 
-   DENTER(EVENT_LAYER, "scan_table_and_deliver");
+   DENTER(EVENT_LAYER, "te_scan_table_and_deliver");
 
    DPRINTF(("%s: event (t:"sge_u32" w:"sge_u32" m:"sge_u32" s:%s)\n", EVENT_FRMT(anEvent)));
 
@@ -1130,43 +952,4 @@ static void scan_table_and_deliver(sge_gdi_ctx_class_t *ctx, te_event_t anEvent,
 
    DEXIT;
    return;
-} /* scan_table_and_invoke_func() */
-
-/****** qmaster/sge_qmaster_timed_event/should_exit() **************************
-*  NAME
-*     should_exit() -- Should thread exit? 
-*
-*  SYNOPSIS
-*     static bool should_exit(void) 
-*
-*  FUNCTION
-*     Determine if thread should exit. Return event control structure 'exit' 
-*     flag.
-*
-*  INPUTS
-*     void - none 
-*
-*  RESULT
-*     false - continue 
-*     true  - exit
-*
-*  NOTES
-*     MT-NOTE: 'should_exit()' is MT safe. 
-*
-*******************************************************************************/
-static bool should_exit(void)
-{
-   bool res = false;
-
-   DENTER(EVENT_LAYER, "should_exit");
-
-   sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
-
-   res = Event_Control.exit;
-
-   sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
-
-   DEXIT;
-   return res;
-} /* should_exit() */
-
+} /* te_scan_table_and_deliver */

@@ -94,10 +94,5 @@ if [ $? -ne 0 ]; then
    echo "Couldn't read sge_qmaster pid from \$SGE_ROOT/$cell/spool/qmaster/qmaster.pid"
    exit 1
 fi
-schedd=`cat $qmaster_spool_dir/schedd/schedd.pid`
-if [ $? -ne 0 ]; then
-   echo "Couldn't read sge_schedd pid from \$SGE_ROOT/$cell/spool/qmaster/schedd/schedd.pid"
-   exit 1
-fi
 
-/usr/sbin/dtrace -s ./monitor.d $master $schedd $interval $spooling_probes $request_probes $verify
+/usr/sbin/dtrace -s ./monitor.d $master $interval $spooling_probes $request_probes $verify

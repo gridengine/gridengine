@@ -332,7 +332,7 @@ int sge_del_pe(sge_gdi_ctx_class_t *ctx, lListElem *pep, lList **alpp, char *rus
    /* remove host file */
    if (!sge_event_spool(ctx, alpp, 0, sgeE_PE_DEL,
                         0, 0, pe, NULL, NULL, NULL, NULL, NULL, true, true)) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, pe));
+      ERROR((SGE_EVENT, MSG_CANTSPOOL_SS, object_name, pe));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;

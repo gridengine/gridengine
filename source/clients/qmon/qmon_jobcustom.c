@@ -174,6 +174,8 @@ static tJobField job_items[] = {
    { 0, JB_pe_range, "@{PERange}", 15, 30, PrintPERange },
    { 0, JB_jid_request_list, "@{Predecessors Req}", 12, 30, PrintPredecessors },
    { 0, JB_jid_predecessor_list, "@{Predecessors}", 12, 30, PrintPredecessorsNr },
+   { 0, JB_ja_ad_request_list, "@{Array Predecessors Req}", 12, 30, PrintPredecessors },
+   { 0, JB_ja_ad_predecessor_list, "@{Array Predecessors}", 12, 30, PrintPredecessorsNr },
    { 0, JAT_scaled_usage_list, "@{CPU}", 10, 30, PrintCPU },
    { 0, JAT_scaled_usage_list, "@{MEM}", 10, 30, PrintMEM },
    { 0, JAT_scaled_usage_list, "@{IO}", 10, 30, PrintIO },
@@ -1029,7 +1031,6 @@ lListElem *jat,
 lList *eleml,
 int nm 
 ) {
-   lListElem *qep;
    lList *ql = NULL;
    int n;
    char buf[128] = "";
@@ -1079,15 +1080,8 @@ int nm
 
       /* check suspension of queue */
       if (n>0) {
-         /* EB: TODO: */
-         qep = cqueue_list_locate_qinstance(qmonMirrorList(SGE_CQUEUE_LIST), 
-                                 lGetString(lFirst(ql), JG_qname));
-         if (qep && 
-             (qinstance_state_is_manual_suspended(qep) ||
-              qinstance_state_is_susp_on_sub(qep) ||
-              qinstance_state_is_cal_suspended(qep))) {
-            tstate &= ~JRUNNING;                   /* unset bit JRUNNING */
-            tstate |= JSUSPENDED_ON_SUBORDINATE;   /* set bit JSUSPENDED_ON_SUBORDINATE */
+         if ((tstate & JSUSPENDED_ON_SUBORDINATE)) {
+            tstate &= ~JRUNNING;
             lSetUlong(jat, JAT_state, tstate);
          }
       }

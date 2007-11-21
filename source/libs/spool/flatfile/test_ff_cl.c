@@ -41,7 +41,7 @@
 #include <sys/wait.h>
 
 #include "sge_unistd.h"
-#include "sge_gdi.h"
+#include "gdi/sge_gdi.h"
 #include "sig_handlers.h"
 #include "commlib.h"
 #include "sge_prog.h"
@@ -1838,7 +1838,7 @@ static int EH_test(void)
    ep = spool_flatfile_read_object(&alp, EH_Type, NULL,
                                    fields, NULL, true, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, file1);
-      
+
    /* Write a EH file using flatfile spooling */
    file2 = spool_flatfile_write_object(&alp, ep, false,
                                        fields,

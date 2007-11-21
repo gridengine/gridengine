@@ -33,13 +33,14 @@
 #include <stdlib.h>
 
 #include "cull.h"
-#include "sge_gdi.h"
 #include "sge_client_access.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_string.h"
 #include "sge_answer.h"
 #include "sge_userset.h"
+
+#include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 
 #include "msg_qconf.h"

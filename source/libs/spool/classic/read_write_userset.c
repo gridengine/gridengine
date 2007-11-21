@@ -37,7 +37,6 @@
 #include "sge_unistd.h"
 #include "sge.h"
 #include "cull.h"
-#include "sge_gdi_request.h"
 #include "config.h"
 #include "sge_answer.h"
 #include "read_write_userset.h"

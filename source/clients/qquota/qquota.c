@@ -42,7 +42,7 @@
 
 #include "sge_bootstrap.h"
 
-#include "sge_gdi.h"
+#include "gdi/sge_gdi.h"
 #include "sge_all_listsL.h"
 #include "commlib.h"
 #include "sig_handlers.h"
@@ -228,7 +228,7 @@ int main(int argc, char **argv)
 
    log_state_set_log_gui(true);
 
-   if (sge_gdi2_setup(&ctx, QQUOTA, &alp) != AE_OK) {
+   if (sge_gdi2_setup(&ctx, QQUOTA, MAIN_THREAD, &alp) != AE_OK) {
       answer_list_output(&alp);
       sge_prof_cleanup();
       SGE_EXIT((void**)&ctx, 1);

@@ -76,7 +76,7 @@ void sge_mt_init(void)
    /* object */
    obj_mt_init(); 
 
-   sge_prof_setup();
+   prof_mt_init();
    uidgid_mt_init();
    path_mt_init();
 
@@ -84,8 +84,5 @@ void sge_mt_init(void)
    feature_mt_init();
 
    sc_mt_init();
-#ifndef NEW_GDI_STATE   
    gdi_mt_init();
-#endif   
-
 } /* sge_mt_init */

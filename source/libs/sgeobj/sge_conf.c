@@ -35,6 +35,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#ifdef LINUX
+#include <mcheck.h>
+#endif
+
 #include "sge.h"
 #include "basis_types.h"
 #include "sge_conf.h"
@@ -50,7 +54,6 @@
 #include "sge_prog.h"
 #include "setup_path.h"
 #include "sge_usageL.h"
-#include "sge_gdi.h"
 #include "sge_time.h"
 #include "sge_host.h"
 #include "sge_hostname.h"
@@ -59,10 +62,13 @@
 #include "sge_userset.h"
 #include "lck/sge_lock.h"
 
+#include "gdi/sge_gdi.h"
+
 #include "uti/sge_profiling.h"
 #include "uti/config_file.h"
 
 #include "sgeobj/msg_sgeobjlib.h"
+
 
 #define SGE_BIN "bin"
 #define STREESPOOLTIMEDEF 240
@@ -136,12 +142,18 @@ static bool do_authentication = true;
 static bool is_monitor_message = true;
 static bool use_qidle = false;
 static bool disable_reschedule = false;
-static bool prof_message_thrd = false;
+static bool prof_listener_thrd = false;
+static bool prof_worker_thrd = false;
 static bool prof_signal_thrd = false;
+static bool prof_scheduler_thrd = false;
 static bool prof_deliver_thrd = false;
 static bool prof_tevent_thrd = false;
 static bool prof_execd_thrd = false;
 static u_long32 monitor_time = 0;
+
+#ifdef LINUX
+static bool enable_mtrace = false;
+#endif
 
 static long ptf_max_priority = -999;
 static long ptf_min_priority = -999;
@@ -150,13 +162,18 @@ static bool keep_active = false;
 static bool enable_windomacc = false;
 static bool enable_addgrp_kill = false;
 
-/* reporting params */
+/* 
+ * reporting params 
+ * when you add new params, make sure to set them to default values in 
+ * parsing code (merge_configuration)
+ */
 static bool do_accounting         = true;
 static bool do_reporting          = false;
 static bool do_joblog             = false;
 static int reporting_flush_time   = 15;
-static int accounting_flush_time   = -1;
+static int accounting_flush_time  = -1;
 static int sharelog_time          = 0;
+static bool log_consumables       = true;
 
 /* allow the simulation of (non existent) hosts */
 static bool simulate_hosts = false;
@@ -598,6 +615,9 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       char* qmaster_params = mconf_get_qmaster_params();
       char* execd_params = mconf_get_execd_params();
       char* reporting_params = mconf_get_reporting_params();
+#ifdef LINUX
+      bool mtrace_before = enable_mtrace;
+#endif
 
       SGE_LOCK(LOCK_MASTER_CONF, LOCK_WRITE);
       forbid_reschedule = false;
@@ -612,8 +632,10 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       simulate_hosts = false;
       simulate_execds = false;
       simulate_jobs = false;
-      prof_message_thrd = false;
+      prof_listener_thrd = false;
+      prof_worker_thrd = false;
       prof_signal_thrd = false;
+      prof_scheduler_thrd = false;
       prof_deliver_thrd = false;
       prof_tevent_thrd = false;
       monitor_time = 0;
@@ -628,7 +650,13 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
          if (parse_bool_param(s, "PROF_SIGNAL", &prof_signal_thrd)) {
             continue;
          }
-         if (parse_bool_param(s, "PROF_MESSAGE", &prof_message_thrd)) {
+         if (parse_bool_param(s, "PROF_SCHEDULER", &prof_scheduler_thrd)) {
+            continue;
+         }
+         if (parse_bool_param(s, "PROF_LISTENER", &prof_listener_thrd)) {
+            continue;
+         }
+         if (parse_bool_param(s, "PROF_WORKER", &prof_worker_thrd)) {
             continue;
          }
          if (parse_bool_param(s, "PROF_DELIVER", &prof_deliver_thrd)) {
@@ -652,6 +680,11 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
          if (parse_bool_param(s, "ENABLE_FORCED_QDEL", &enable_forced_qdel)) {
             continue;
          } 
+#ifdef LINUX
+         if (parse_bool_param(s, "ENABLE_MTRACE", &enable_mtrace)) {
+            continue;
+         }
+#endif
          if (parse_time_param(s, "MONITOR_TIME", &monitor_time)) {
             continue;
          }
@@ -699,7 +732,22 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
       sge_free_saved_vars(conf_context);
       conf_context = NULL;
-      
+     
+#ifdef LINUX
+      /* enable/disable GNU malloc library facility for recording of all 
+         memory allocation/deallocation 
+         requires MALLOC_TRACE in environment (see mtrace(3) under Linux) */
+      if (enable_mtrace != mtrace_before) {
+         if (enable_mtrace == true) {
+            DPRINTF(("ENABLE_MTRACE=true ---> mtrace()\n"));
+            mtrace();
+         } else {
+            DPRINTF(("ENABLE_MTRACE=false ---> muntrace()\n"));
+            muntrace();
+         }
+      }
+#endif
+
       conf_update_thread_profiling(NULL);
 
       /* always initialize to defaults before we check execd_params */
@@ -717,11 +765,18 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       ptf_min_priority = -999;
       keep_active = false;
       enable_windomacc = false;
+      enable_addgrp_kill = false;
       use_qsub_gid = false;
       prof_execd_thrd = false;
       inherit_env = true;
       set_lib_path = false;
+      do_accounting = true;
+      do_reporting = false;
+      do_joblog = false;
+      reporting_flush_time = 15;
       accounting_flush_time = -1;
+      sharelog_time = 0;
+      log_consumables = true;
       enable_addgrp_kill = false;
 
       for (s=sge_strtok_r(execd_params, ",; ", &conf_context); s; s=sge_strtok_r(NULL, ",; ", &conf_context)) {
@@ -851,6 +906,9 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
             continue;
          }
          if (parse_int_param(s, "sharelog", &sharelog_time, TYPE_TIM)) {
+            continue;
+         }
+         if (parse_bool_param(s, "log_consumables", &log_consumables)) {
             continue;
          }
       }
@@ -1040,14 +1098,20 @@ void conf_update_thread_profiling(const char *thread_name)
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
    if (thread_name == NULL) {
       set_thread_prof_status_by_name("Signal Thread", prof_signal_thrd);
-      set_thread_prof_status_by_name("Message Thread", prof_message_thrd);
+      set_thread_prof_status_by_name("Scheduler Thread", prof_scheduler_thrd);
+      set_thread_prof_status_by_name("Listener Thread", prof_listener_thrd);
+      set_thread_prof_status_by_name("Worker Thread", prof_worker_thrd);
       set_thread_prof_status_by_name("Deliver Thread", prof_deliver_thrd);
       set_thread_prof_status_by_name("TEvent Thread", prof_tevent_thrd);
    } else {
       if (strcmp(thread_name, "Signal Thread") == 0) {
          set_thread_prof_status_by_name("Signal Thread", prof_signal_thrd);
-      } else if (strcmp(thread_name, "Message Thread") == 0) {
-         set_thread_prof_status_by_name("Message Thread", prof_message_thrd);
+      } else if (strcmp(thread_name, "Scheduler Thread") == 0) {
+         set_thread_prof_status_by_name("Scheduler Thread", prof_scheduler_thrd);
+      } else if (strcmp(thread_name, "Listener Thread") == 0) {
+         set_thread_prof_status_by_name("Listener Thread", prof_listener_thrd);
+      } else if (strcmp(thread_name, "Worker Thread") == 0) {
+         set_thread_prof_status_by_name("Worker Thread", prof_worker_thrd);
       } else if (strcmp(thread_name, "Deliver Thread") == 0) {
          set_thread_prof_status_by_name("Deliver Thread", prof_deliver_thrd);
       } else if (strcmp(thread_name, "TEvent Thread") == 0) {
@@ -2114,7 +2178,18 @@ int mconf_get_sharelog_time(void) {
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(ret);
+}
 
+int mconf_get_log_consumables(void) {
+   int ret;
+
+   DENTER(BASIS_LAYER, "mconf_get_log_consumables");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = log_consumables;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
 }
 
 bool mconf_get_enable_forced_qdel(void) {

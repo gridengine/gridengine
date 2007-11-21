@@ -282,7 +282,8 @@ static spooling_field HS_sub_fields[] = {
 static spooling_field RU_sub_fields[] = {
    {  RU_job_number,         0, NULL, NULL, NULL, NULL, NULL},
    {  RU_task_number,        0, NULL, NULL, NULL, NULL, NULL},
-   {  RU_state,              0, NULL, NULL, NULL, NULL, NULL}
+   {  RU_state,              0, NULL, NULL, NULL, NULL, NULL},
+   {  NoName,                0, NULL, NULL, NULL, NULL, NULL}
 };
 
 static spooling_field HL_sub_fields[] = {
@@ -761,7 +762,7 @@ static int write_PE_free_slots(const lListElem *ep, int nm, dstring *buffer, lLi
  * classic spooling uses two different field delimiters to represent the
  * field values. */
 spooling_field *sge_build_EH_field_list(bool spool, bool to_stdout,
-                                         bool history)
+                                        bool history)
 {
    /* There are 14 possible EH_Type fields. */
    spooling_field *fields = (spooling_field *)malloc(sizeof(spooling_field)*14);
@@ -919,7 +920,9 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
       !strcmp(name, "rsh_command") ||
       !strcmp(name, "qlogin_daemon") ||
       !strcmp(name, "rlogin_daemon") ||
-      !strcmp(name, "rsh_daemon")) {
+      !strcmp(name, "rsh_daemon") ||
+      !strcmp(name, "libjvm_path") ||
+      !strcmp(name, "additional_jvm_args")) {
       if (!(value = sge_strtok_r(buffer, "\t\n", &context))) {
          /* return line if value is empty */
          WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));

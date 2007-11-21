@@ -275,6 +275,19 @@ static void get_workload_info()
                    start_time > 0 ? ctime(&start_time) : "-\n");
          }
       }
+      /* output pending tasks with array hold */
+      for_each(range, lGetList(job, JB_ja_a_h_ids)) {
+         u_long32 ja_task_id, range_min, range_max, range_step;
+         
+         range_get_all_ids(range, &range_min, &range_max, &range_step);
+         
+         for(ja_task_id = range_min; ja_task_id <= range_max; ja_task_id += range_step) {
+            printf(dformat, job_get_id_string(job_id, ja_task_id, NULL, &id_dstring), 
+                   user, group, 
+                   (pe == NULL ? "-" : pe), procs, wclock,
+                   start_time > 0 ? ctime(&start_time) : "-\n");
+         }
+      }
    }
 
    printf("\n");
@@ -589,7 +602,7 @@ int main(int argc, char *argv[])
       SGE_EXIT(1);
    }   
 
-   evc = sge_evc_class_create(ctx, EV_ID_SCHEDD, &alp); 
+   evc = sge_evc_class_create(ctx, EV_ID_SCHEDD, &alp, false); 
 
    if (evc == NULL) {
       answer_list_output(&alp);

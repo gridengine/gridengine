@@ -117,7 +117,7 @@ extern int main(int argc, char** argv)
      printf("wrong parameters, param1 = server host, param2 = port number, param3 = client id, param4=debug_level, param5=sleep time, param6=do_close, [param7=framework(TCP/SSL)]\n");
      exit(1);
   }
-  cl_com_setup_commlib(CL_NO_THREAD, (cl_log_t)atoi(argv[4]), NULL );
+  cl_com_setup_commlib(CL_NO_THREAD, (cl_log_t)atoi(argv[4]), NULL);
   if (atoi(argv[6]) != 0) {
      close_connection = 1;
   }

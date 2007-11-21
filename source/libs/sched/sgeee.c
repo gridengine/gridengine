@@ -49,7 +49,6 @@
 #include "sge_time.h"
 #include "sge_prog.h"
 #include "sgermon.h"
-#include "scheduler.h"
 #include "sge_orders.h"
 #include "sge_job_schedd.h"
 #include "sge_urgency.h"
@@ -155,7 +154,8 @@ static void recompute_prio(sge_task_ref_t *tref, lListElem *task, double uc, dou
 static void calculate_pending_shared_override_tickets(sge_ref_t *job_ref, int num_jobs, int dependent ); 
 
 static double calc_job_tickets(sge_ref_t *ref);
-static int sge_calc_tickets (sge_Sdescr_t *lists,
+
+static int sge_calc_tickets (scheduler_all_data_t *lists,
                       lList *running_jobs,
                       lList *finished_jobs,
 	          	       lList *queued_jobs,
@@ -165,8 +165,8 @@ static int sge_calc_tickets (sge_Sdescr_t *lists,
 static lListElem *get_mod_share_tree(lListElem *node, lEnumeration *what, int seqno);
 static lList *sge_sort_pending_job_nodes(lListElem *root, lListElem *node,
                            double total_share_tree_tickets);
-static int sge_calc_node_targets(lListElem *root, lListElem *node, sge_Sdescr_t *lists);
-static int sge_calc_sharetree_targets(lListElem *root, sge_Sdescr_t *lists,
+static int sge_calc_node_targets(lListElem *root, lListElem *node, scheduler_all_data_t *lists);
+static int sge_calc_sharetree_targets(lListElem *root, scheduler_all_data_t *lists,
                            lList *decay_list, u_long curr_time,
                            u_long seqno);
 static int sge_init_share_tree_node_fields( lListElem *node, void *ptr );
@@ -196,7 +196,7 @@ static void task_ref_initialize_table(u_long32 number_of_tasks);
 static void task_ref_destroy_table(void);
 static sge_task_ref_t *task_ref_get_entry(u_long32 index);
 
-static sge_Sdescr_t *all_lists; /* thread local */
+static scheduler_all_data_t *all_lists; /* thread local */
 static u_long32 sge_scheduling_run = 0; /* thread local */
 
 static sge_task_ref_t *task_ref_table = NULL; /* thread local */
@@ -707,7 +707,7 @@ sge_set_job_refs( lListElem *job,
                   lListElem *ja_task,
                   sge_ref_t *ref,
                   sge_task_ref_t *tref,
-                  sge_Sdescr_t *lists,
+                  scheduler_all_data_t *lists,
                   int queued)
 {
    lListElem *root;
@@ -2518,7 +2518,7 @@ static void calc_pending_job_functional_tickets(sge_ref_t *ref,
  *--------------------------------------------------------------------*/
 
 static int
-sge_calc_tickets( sge_Sdescr_t *lists,
+sge_calc_tickets( scheduler_all_data_t *lists,
                   lList *running_jobs,
                   lList *finished_jobs,
                   lList *queued_jobs,
@@ -3464,7 +3464,7 @@ sge_sort_pending_job_nodes(lListElem *root,
 
 static int
 sge_calc_sharetree_targets( lListElem *root,
-                            sge_Sdescr_t *lists,
+                            scheduler_all_data_t *lists,
                             lList *decay_list,
                             u_long curr_time,
                             u_long seqno )
@@ -3499,7 +3499,7 @@ sge_calc_sharetree_targets( lListElem *root,
 static int
 sge_calc_node_targets( lListElem *root,
                        lListElem *node,
-                       sge_Sdescr_t *lists )
+                       scheduler_all_data_t *lists )
 {
    lList *children;
    lListElem *child;
@@ -3781,7 +3781,7 @@ get_mod_share_tree( lListElem *node,
 *
 *******************************************************************************/
 void 
-sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_jobs, 
+sge_build_sgeee_orders(scheduler_all_data_t *lists, lList *running_jobs, lList *queued_jobs, 
                        lList *finished_jobs, order_t *orders, 
                        bool update_usage_and_configuration, int seqno, bool update_execd)
 {
@@ -4092,7 +4092,7 @@ void sge_do_priority_job(lListElem *jep)
 *     int - 0 if everthing went fine, -1 if not
 *
 *******************************************************************************/
-int sgeee_scheduler( sge_Sdescr_t *lists,
+int sgeee_scheduler(scheduler_all_data_t *lists,
                lList *running_jobs,
                lList *finished_jobs,
                lList *pending_jobs,

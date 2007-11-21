@@ -94,7 +94,7 @@ extern int main(int argc, char** argv)
 
 
   printf("commlib setup ...\n");
-  cl_com_setup_commlib(CL_RW_THREAD, (cl_log_t)atoi(argv[1]),   NULL );
+  cl_com_setup_commlib(CL_RW_THREAD, (cl_log_t)atoi(argv[1]), NULL);
 
   printf("setting up service on port %d\n", atoi(argv[2]) );
   handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , CL_TRUE, atoi(argv[2]) , CL_TCP_DEFAULT,"server", 1, 2, 0 );

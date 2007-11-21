@@ -53,7 +53,7 @@ import java.util.Set;
 public abstract class AnnotatedCommand extends AbstractCommand {
     
     /* Map holding all commands and their respective optionDesriptorMap */
-    private static Map<Class<? extends Command>, Map<String, OptionDescriptor>> commandOptionMap = null;
+    private static Map<Class<? extends AbstractCommand>, Map<String, OptionDescriptor>> commandOptionMap = null;
     /* Map holding all options of selected command and methods that should be invoked for it */
     private Map<String, OptionDescriptor> optionDescriptorMap = null;
     /* List of all command options */
@@ -65,16 +65,16 @@ public abstract class AnnotatedCommand extends AbstractCommand {
     private static final ResourceBundle errorMessages = ResourceBundle.getBundle("com.sun.grid.jgdi.util.shell.ErrorMessagesResources");
 
     /* Extra argument list for extending commands that support it. Other have to explicitly check and throw error if not-null */
-    private List<String> extraArgs = null;
+    private List<List<String>> extraArgs = null;
     
     /**
      * Initialize the option map optionDescriptorMap if not yet created.
      * Map is created by scanning all OptionMethod annotated functions.
      * NOTE: Only options in the map will be recognized as implemented
      */
-    public static void initOptionDescriptorMap(Class<? extends Command> cls, PrintWriter out, PrintWriter err) throws Exception {
+    public static void initOptionDescriptorMap(Class<? extends AbstractCommand> cls, PrintWriter out, PrintWriter err) throws Exception {
         if (commandOptionMap == null) {
-            commandOptionMap = new HashMap<Class<? extends Command>, Map<String, OptionDescriptor>>(30);
+            commandOptionMap = new HashMap<Class<? extends AbstractCommand>, Map<String, OptionDescriptor>>(30);
         }
         if (!commandOptionMap.containsKey(cls)) {
             Map<String, OptionDescriptor> optionDescriptorMap = new HashMap<String, OptionDescriptor>(140);
@@ -128,6 +128,20 @@ public abstract class AnnotatedCommand extends AbstractCommand {
      * @return List<String>
     */
     protected List<String> getExtraArguments() {
+        List<String> out = new ArrayList<String>();
+        for (List<String> temp : extraArgs) {
+            for (String arg : temp) {
+                out.add(arg);
+            }
+        }
+        return out;
+    }
+    
+    /**
+     * Gets the original extra arguments (List of List of Stirng) for the command. Only certail commands actually need it: qrsub, qsub, qalter
+     * @return List<List<String>>
+    */
+    protected List<List<String>> getOriginalExtraArguments() {
         return extraArgs;
     }
 
@@ -143,7 +157,7 @@ public abstract class AnnotatedCommand extends AbstractCommand {
     protected void parseOptions(String[] args) throws Exception {
         optionList = new ArrayList<OptionInfo>();
         optionInfoMap = new HashMap<String, OptionInfo>();
-        List<String> argList = tokenizeArgs(args);
+        List<List<String>> argList = tokenizeArgs(args);
         while (!argList.isEmpty()) {
             //Get option info, token are divided by known option
             //to option and reladet arguments
@@ -187,17 +201,20 @@ public abstract class AnnotatedCommand extends AbstractCommand {
      * @param args command line option
      * @return List of tokens
      */
-    protected List<String> tokenizeArgs(String[] args) {
-        ArrayList<String> argList = new ArrayList<String>();
-        //Expand args to list of args, 'arg1,arg2 arg3' -> 3 args
+    protected List<List<String>> tokenizeArgs(String[] args) {
+        List<List<String>> argList = new ArrayList<List<String>>();
+        List<String> tempList = new ArrayList<String>();
+        //Expand args to list of args, 'arg1,arg2 arg3' -> List(List(arg1,arg2),List(arg3)) so we can do magic later on
         for (String arg : args) {
             String[] subElems = arg.split("[,]");
             for (String subElem : subElems) {
                 subElem = subElem.trim();
                 if (subElem.length() > 0) {
-                    argList.add(subElem);
+                    tempList.add(subElem);
                 }
             }
+            argList.add(new ArrayList<String>(tempList));
+            tempList.clear();
         }
         return argList;
     }
@@ -228,30 +245,29 @@ public abstract class AnnotatedCommand extends AbstractCommand {
      * @return return the option info structure
      */
     //TODO LP: Discuss this enhancement. We now accept "arg1,arg2 arg3,arg4" as 4 valid args
-    private OptionInfo getOptionInfo(final Map<String, OptionDescriptor> optMap, List<String> args) throws JGDIException {
+    private OptionInfo getOptionInfo(final Map<String, OptionDescriptor> optMap, List<List<String>> args) throws JGDIException {
         //Check we have a map set
         if (optMap.isEmpty()) {
             throw new UnsupportedOperationException("Cannot get OptionInfo. Option map is empty!");
         }
 
-        List<String> extraArgs = null;
-        String option = args.get(0);
+        List<List<String>> extraArgs = null;
+        List<String> tempArg = args.get(0);
+        String option = tempArg.get(0);
         String msg;
-
-        if (optMap.containsKey(option)) {
-            //We remove single known option from the list
-            args.remove(0);
-        //We have unknown option (qconf -ddd, qalter 45). It's either extra arguments or really an error
-        } else {
-            extraArgs = new ArrayList<String>();
+        boolean extraArgsValid = this.getClass().getAnnotation(CommandAnnotation.class).hasExtraArgs();
+        
+        //We have unknown option or extra arguments (qconf -ddd x qalter 45)
+        if (!optMap.containsKey(option)) {
+            extraArgs = new ArrayList<List<String>>();
             //Read all extra argument to the end of the of all args.
             while (!args.isEmpty()) {
                 extraArgs.add(args.remove(0));
                 //If some is recognized as valid option. First extra arg is InvalidArgument
-                if (optMap.containsKey(option)) {
+                if (!extraArgsValid || optMap.containsKey(option)) {
+                    msg = getErrorMessage("InvalidArgument", extraArgs.get(0).get(0));
+                    int exitCode = getCustomExitCode("InvalidArgument", extraArgs.get(0).get(0));
                     extraArgs = null;
-                    msg = getErrorMessage("InvalidArgument", extraArgs.get(0));
-                    int exitCode = getCustomExitCode("InvalidArgument", extraArgs.get(0));
                     throw new JGDIException(msg, exitCode);
                 }
             }
@@ -260,18 +276,40 @@ public abstract class AnnotatedCommand extends AbstractCommand {
             return null;    //null says now you have the extra args so save them
         }
         
+        //We take out first arg list
+        tempArg = args.remove(0);
+        //And remove the recognized option
+        tempArg.remove(0);
+        //And we put it back if not empty
+        if (tempArg.size()>0) {
+            args.add(0, tempArg);
+        }
         OptionDescriptor od = optMap.get(option);
-        List<String> argList = new ArrayList<String>();
+        List<List<String>> argList = new ArrayList<List<String>>();
+        List<String> tempList = new ArrayList<String>();
         String arg;
-        
+              
         if (!od.isWithoutArgs()) {
             int i = 0;
             
-            //Try to ge all mandatory args
-            while ((i < od.getMandatoryArgCount()) && (args.size() > 0)) {
-                arg = args.remove(0);
-                argList.add(arg);
-                i++;
+            //Try to get all mandatory args
+            while (i < od.getMandatoryArgCount() && args.size() > 0) {
+                tempArg = args.remove(0);
+                tempList.clear();
+                while (tempArg.size() > 0 && i < od.getMandatoryArgCount()) {
+                    arg = tempArg.remove(0);
+                    tempList.add(arg);
+                    i++;
+                }
+                if (tempList.size() > 0) {
+                    argList.add(new ArrayList<String>(tempList));
+                }
+            }
+            //We check we completed the subList (comma separated list) otherwise we mark it for continue
+            boolean appendToLastList = false;
+            if (tempArg.size() > 0) {
+                appendToLastList = true;
+                args.add(0, tempArg);
             }
             
             //Check we have all mandatory args
@@ -283,19 +321,46 @@ public abstract class AnnotatedCommand extends AbstractCommand {
             }
             
             //Try to get as many optional args as possible
+            String argVal;
+            boolean exit = false;
             i = 0;
-            
-            while ((i < od.getOptionalArgCount()) && (args.size() > 0)) {
-                arg = args.remove(0);
-                
-                //Not enough args?
-                if (optMap.containsKey(arg)) {
-                    args.add(0, arg);
-                    break;
+            while (!exit && (i < od.getOptionalArgCount() && args.size() > 0)) {
+                tempArg = args.remove(0);
+                tempList.clear();
+                if (appendToLastList) {
+                    appendToLastList = false;
+                    tempList = argList.remove(argList.size() - 1);
                 }
-                
-                argList.add(arg);
-                i++;
+                for (int j = 0; j<tempArg.size(); j++) {
+                    //We have comma separated list with more elems than required - Error 
+                    if (i >= od.getOptionalArgCount()) {
+                        final String msgType = "MoreArguments";
+                        msg = getErrorMessage(msgType, option, argList);
+                        int exitCode = getCustomExitCode(msgType, option);
+                        throw new JGDIException(msg, exitCode);
+                    }
+                    argVal = tempArg.get(j);
+                    //Not enough args?
+                    if (optMap.containsKey(argVal)) {
+                        if (j == 0) {
+                            //Next recognized option must be the first in the sub list
+                            exit = true;
+                            args.add(0, tempArg);
+                            break;
+                        } else {
+                            //This is an error since option is found in the list 
+                            //qconf -sq a,b c,d,-sh <= -sh is known option so whole command is wrong
+                            //qconf -sq a,g -sh would be accepted
+                            msg = getErrorMessage("InvalidArgument", option, argVal);
+                            int exitCode = getCustomExitCode("InvalidArgument", option);
+                            throw new JGDIException(msg, exitCode);
+                        }
+                    }
+                    tempList.add(argVal);
+                    i++;
+                }
+                //We should always add only complete sub lists.
+                argList.add(new ArrayList<String>(tempList));
             }
         }
         
@@ -318,26 +383,43 @@ public abstract class AnnotatedCommand extends AbstractCommand {
     
     /** Hepler method to get the right error message */
     String getErrorMessage(String msgType, String optionString) {
-        return getErrorMessage(msgType, optionString, new ArrayList<String>());
+        return getErrorMessage(msgType, optionString, new ArrayList<List<String>>());
     }
     
     /** Hepler method to get the right error message */
     String getErrorMessage(String msgType, String optionString, String arg) {
-        List<String> argList = new ArrayList<String>();
-        argList.add(arg);
+        List<List<String>> argList = new ArrayList<List<String>>();
+        List<String> temp = new ArrayList<String>();
+        temp.add(arg);
+        argList.add(temp);
         return getErrorMessage(msgType, optionString, argList);
     }
     
     /** Hepler method to get the right error message */
-    String getErrorMessage(String msgType, String optionString, List<String> args) {
+    String getErrorMessage(String msgType, String optionString, List<List<String>> args) {
         String[] tmp = this.getClass().getName().split("[.]");
         String cmdName = tmp[tmp.length-1];
+        return getErrorMessage(msgType, cmdName, optionString, args, getUsage());
+    }
+    
+    public static String getDefaultErrorMessage(String cmdName, String msgType, String arg) {
+        List<List<String>> argList = new ArrayList<List<String>>();
+        List<String> temp = new ArrayList<String>();
+        temp.add(arg);
+        argList.add(temp);
+        return getErrorMessage(msgType, cmdName, "", argList, "");
+    }
+    
+    /** Hepler method to get the right error message */
+    private static String getErrorMessage(String msgType, String cmdName, String optionString, List<List<String>> args, String usage) {
         String cmdString = cmdName.split("Command")[0].toLowerCase();
         String prefix = msgType+"."+cmdName+".";
         String argString = "";
         if (args != null && args.size() > 0) {
-            for (String arg : args) {
-                argString += arg + " ";
+            for (List<String> temp : args) {
+                for (String arg : temp) {
+                    argString += arg + " ";
+                }
             }
             argString = argString.substring(0, argString.length()-1);
         }
@@ -349,16 +431,20 @@ public abstract class AnnotatedCommand extends AbstractCommand {
             try { //Try to get command default message
                 msg = errorMessages.getString(prefix+"default");
             } catch (MissingResourceException dex) {
-                msg = errorMessages.getString(prefix+"general");
+                msg = errorMessages.getString(prefix+"generic");
             }
         }
-        return MessageFormat.format(msg, optionString, argString, "Usage: "+cmdString+" -help", getUsage());
+        return MessageFormat.format(msg, optionString, argString, "Usage: "+cmdString+" -help", usage);
     }
     
     /** Hepler method to get the right exit code for specified error (msgType) */
     int getCustomExitCode(String msgType, String optionString) {
         String[] tmp = this.getClass().getName().split("[.]");
         String cmdName = tmp[tmp.length-1];
+        return getCustomExitCode(msgType, cmdName, optionString);
+    }
+    
+    public static int getCustomExitCode(String msgType, String cmdName, String optionString) {
         String cmdString = cmdName.split("Command")[0].toLowerCase();
         String prefix = msgType+"."+cmdName+".";
         String argString = "";

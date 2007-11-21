@@ -34,29 +34,75 @@ import com.sun.grid.jgdi.JGDIException;
 import com.sun.grid.jgdi.configuration.JGDIAnswer;
 import com.sun.grid.jgdi.monitoring.*;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 /**
  *
  */
 public abstract class JGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
     
+    private final static Logger log = Logger.getLogger(JGDIBaseImpl.class.getName());
     private int ctxIndex = -1;
     private File sgeRoot;
     
+    private final static List<JGDIBaseImpl> instances = new LinkedList<JGDIBaseImpl>();
+    private static boolean shutdown = false;
+    
     public void init(String url) throws JGDIException {
+        synchronized(instances) {
+            if(shutdown) {
+                throw new JGDIException("qmaster is going down");
+            }
+            instances.add(this);
+        }
         ctxIndex = nativeInit(url);
+        if(log.isLoggable(Level.FINE)) {
+            log.log(Level.FINE, "native connection with id {1} established (url={0})", new Object [] { url, ctxIndex });
+        }
     }
     
     int getCtxIndex() {
         return ctxIndex;
     }
     
-    public synchronized void close() throws com.sun.grid.jgdi.JGDIException {
-        if (ctxIndex >= 0) {
-            nativeClose(ctxIndex);
+    public static void closeAllConnections() {
+        List<JGDIBaseImpl> currentInstances = null;
+        synchronized(instances) {
+            shutdown = true;
+           currentInstances = new ArrayList<JGDIBaseImpl>(instances);
+        }
+        for(JGDIBaseImpl jgdi: currentInstances) {
+            try {
+                jgdi.close();
+            } catch(JGDIException ex) {
+                LogRecord lr = new LogRecord(Level.FINE, "close of connection {0} failed");
+                lr.setParameters(new Object [] { jgdi.ctxIndex });
+                lr.setThrown(ex);
+                log.log(lr);
+            }
+        }
+    }
+    
+    public void close() throws com.sun.grid.jgdi.JGDIException {
+        int tmpCtxIndex = -1;
+        synchronized(this) {
+            tmpCtxIndex = ctxIndex;
             ctxIndex = -1;
+        }
+        if (tmpCtxIndex >= 0) {
+            log.log(Level.FINE,"Closing connection with id {0}", tmpCtxIndex);
+            synchronized(instances) {
+                instances.remove(this);            
+            }
+            nativeClose(tmpCtxIndex);
+            if(log.isLoggable(Level.FINE)) {
+                log.log(Level.FINE, "Connection with id {0} closed", tmpCtxIndex);
+            }
         }
     }
     

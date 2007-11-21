@@ -42,7 +42,6 @@
 
 typedef enum {
    JL_UNKNOWN = 0,   /* job is in unknown state - should never be seen */
-
    JL_PENDING,       /* job is pending */
    JL_SENT,          /* job has been sent to execd */
    JL_RESENT,        /* job has been resent to execd - sent hasn't been ack */
@@ -100,6 +99,7 @@ reporting_create_host_record(lList **answer_list,
 bool
 reporting_create_host_consumable_record(lList **answer_list,
                                         const lListElem *host,
+                                        const lListElem *job,
                                         u_long32 report_time);
 
 bool
@@ -109,8 +109,10 @@ reporting_create_queue_record(lList **answer_list,
 
 bool
 reporting_create_queue_consumable_record(lList **answer_list,
-                                        const lListElem *queue,
-                                        u_long32 report_time);
+                                         const lListElem *host,
+                                         const lListElem *queue,
+                                         const lListElem *job,
+                                         u_long32 report_time);
 
 bool
 reporting_is_intermediate_acct_required(const lListElem *job, 

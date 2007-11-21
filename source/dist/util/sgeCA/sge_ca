@@ -159,7 +159,7 @@ ExecuteAsAdmin()
    if [ $ADMINUSER = default ]; then
       $*
    else
-      $V5UTILBIN/adminrun $ADMINUSER $*
+      $V5UTILBIN/adminrun $ADMINUSER "$@"
    fi
 
    return $?

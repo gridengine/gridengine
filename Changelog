@@ -1,3 +1,5 @@
+PJ-2007-11-21-1: Bugfix:    ExecuteAsAdmin shorten the long command 
+
 HP-2007-11-21-0: Enhancem.: o new interactive job support
                             o starts interactive jobs directly, without rsh/rshd
                               or rlogin/rlogind or telnet/telnetd.

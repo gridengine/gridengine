@@ -328,33 +328,18 @@ STaddServiceTag()
          fi
          ;;
       esac
-
-# My version of ExecuteAsAdmin is there because too long arguments error
-      if [ $ADMINUSER = default ]; then
-         ${stclient} -a \
-         -p "${PRODUCT_NAME}" \
-         -e "${PRODUCT_VERSION}" \
-         -t "${PRODUCT_URN}" \
-         -F "${PRODUCT_PARENT_URN}" \
-         -P "${PRODUCT_PARENT_NAME}" \
-         -I "${product_defined_id}" \
-         -m "${PRODUCT_VENDOR}" \
-         -A "${platform_name}" \
-         -z "${zone}" \
-         -S "${PRODUCT_SOURCE}"  > /dev/null 2>&1
-      else
-         $V5UTILBIN/adminrun $ADMINUSER ${stclient} -a \
-         -p "${PRODUCT_NAME}" \
-         -e "${PRODUCT_VERSION}" \
-         -t "${PRODUCT_URN}" \
-         -F "${PRODUCT_PARENT_URN}" \
-         -P "${PRODUCT_PARENT_NAME}" \
-         -I "${product_defined_id}" \
-         -m "${PRODUCT_VENDOR}" \
-         -A "${platform_name}" \
-         -z "${zone}" \
-         -S "${PRODUCT_SOURCE}" > /dev/null  2>&1
-      fi
+      
+      ExecuteAsAdmin ${stclient} -a \
+      -p "${PRODUCT_NAME}" \
+      -e "${PRODUCT_VERSION}" \
+      -t "${PRODUCT_URN}" \
+      -F "${PRODUCT_PARENT_URN}" \
+      -P "${PRODUCT_PARENT_NAME}" \
+      -I "${product_defined_id}" \
+      -m "${PRODUCT_VENDOR}" \
+      -A "${platform_name}" \
+      -z "${zone}" \
+      -S "${PRODUCT_SOURCE}" > /dev/null 2>&1
    fi
 }
 

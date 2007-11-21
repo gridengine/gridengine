@@ -198,7 +198,7 @@ ExecuteAsAdmin()
    if [ $ADMINUSER = default ]; then
       $*
    else
-      $utilbin_dir/adminrun $ADMINUSER $* &
+      $utilbin_dir/adminrun $ADMINUSER "$@" &
    fi
 
    return 0

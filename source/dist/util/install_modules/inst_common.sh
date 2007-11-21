@@ -214,9 +214,9 @@ ExecuteAsAdmin()
       $*
    else
       if [ -f $SGE_UTILBIN/adminrun ]; then
-         $SGE_UTILBIN/adminrun $ADMINUSER $*
+         $SGE_UTILBIN/adminrun $ADMINUSER "$@"
       else
-         $SGE_ROOT/utilbin/$SGE_ARCH/adminrun $ADMINUSER $*
+         $SGE_ROOT/utilbin/$SGE_ARCH/adminrun $ADMINUSER "$@"
       fi
    fi
 

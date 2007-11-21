@@ -1,3 +1,8 @@
+PJ-2007-11-21-0: Bugfix:    ExecuteAsAdmin shorten the long command 
+                            line arguments an solaris host because of 
+                            /usr/bin/sh limitations
+                 Review:    AS           
+                            
 AH-2007-11-21-0: Bugfix:    Completized fix of dtrace monitor after 
                             EB-2007-11-02-1 reconstructions
                  Review:    RD

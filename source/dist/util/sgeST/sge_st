@@ -92,7 +92,7 @@ STArchVariables()
      . $SGE_ROOT/util/arch_variables
    else
       echo "Could not source arch_variables"
-      return 1
+      exit 1
    fi
 }
 
@@ -100,12 +100,13 @@ STArchVariables()
 #Service Tags Setting up 
 #
 STBasicSettings()
-{
+{  
+   stclient=""
    if [ -f "$SGE_ROOT/util/sgeST/st_settings.sh" ]; then
       . $SGE_ROOT/util/sgeST/st_settings.sh
    else
-      echo "Could not source Basic Settings"
-      return 1
+      echo "Could not source basic settings"
+      exit 1
    fi
 }
 
@@ -152,12 +153,13 @@ STEnable()
       echo $PRODUCT_URN >> $st_file
       result=`STShowEnabled`
       if [ $result = "true" ]; then
-         echo "The service tags are now enabled"
+         echo "Sun Service Tags are now enabled"
       else
-         echo "The service tags could not be enabled"
+         echo "Sun Service Tags could not be enabled"
          return 1
       fi
    fi   
+   return 0
 }
 
 #---------------------------------------------------------------------------
@@ -170,12 +172,13 @@ STDisable()
       ExecuteAsAdmin $RM $st_file
       result=`STShowEnabled`
       if [ $result = "false" ]; then
-         echo "The service tags are now disabled"
+         echo "Sun Service Tags are now disabled"
       else 
-         echo "The service tags could not be disabled"
+         echo "Sun Service Tags could not be disabled"
          return 1
       fi
    fi      
+   return 0
 }
 
 #---------------------------------------------------------------------------
@@ -214,18 +217,21 @@ STgetInstanceUrn()
 STgetServiceTagClient()
 {
    if [ -z "$stclient" ]; then
-      stclient="undefined"
-
       # library path setting required only for architectures where RUNPATH is not supported
       case $ARCH in
       lx*)
-         stclient=`rpm -ql sun-servicetag | grep stclient`
+         stclient=`rpm -ql sun-servicetag 2>/dev/null | grep bin/stclient`
          ;;
       sol*)
          # a strange error message comes from pkgchk -l, need to be filtered out
-         stclient=`pkgchk -l SUNWservicetagu | grep stclient | $AWK '{print $2}'`
+         if [ -x /usr/bin/stclient ]; then
+            stclient=/usr/bin/stclient
+         fi   
          ;;
       esac
+   fi
+   if [ -z "$stclient" ]; then
+      stclient="undefined"
    fi
    echo $stclient
 }
@@ -265,6 +271,8 @@ STShowSupported()
       #the executable file must exist
       if [ -x "$stclient" ]; then
          echo "true" 
+      else
+         echo "false"
       fi
    fi
 }
@@ -280,14 +288,15 @@ STShowRegistered()
    product_defined_id=$1
 
    STClient
-
-   #check again, to be sure wos done
-   instance_urn=`STgetInstanceUrn "$stclient" "$product_defined_id"`
-   if [ -n "$instance_urn" ]; then
-      echo "registered:$instance_urn"
-   else
-      echo "unregistered"
-   fi
+   if [ $? = 0 ]; then
+      #check again, to be sure wos done
+      instance_urn=`STgetInstanceUrn "$stclient" "$product_defined_id"`
+      if [ -n "$instance_urn" ]; then
+         echo "registered:$instance_urn"
+      else
+         echo "unregistered"
+      fi
+   fi   
 }
 
 #---------------------------------------------------------------------------
@@ -320,10 +329,32 @@ STaddServiceTag()
          ;;
       esac
 
-      output=`ExecuteAsAdmin $stclient -a -p "$PRODUCT_NAME" -e "$PRODUCT_VERSION" -t "$PRODUCT_URN" -F "$PRODUCT_PARENT_URN" -P "$PRODUCT_PARENT_NAME" -I "$product_defined_id" -m "$PRODUCT_VENDOR" -A "$platform_name" -z "$zone" -S "$PRODUCT_SOURCE"`
-
-      instance_urn=`echo "$output" | grep "Product instance URN" | $CUT -f2 -d=`
-      echo $output
+# My version of ExecuteAsAdmin is there because too long arguments error
+      if [ $ADMINUSER = default ]; then
+         ${stclient} -a \
+         -p "${PRODUCT_NAME}" \
+         -e "${PRODUCT_VERSION}" \
+         -t "${PRODUCT_URN}" \
+         -F "${PRODUCT_PARENT_URN}" \
+         -P "${PRODUCT_PARENT_NAME}" \
+         -I "${product_defined_id}" \
+         -m "${PRODUCT_VENDOR}" \
+         -A "${platform_name}" \
+         -z "${zone}" \
+         -S "${PRODUCT_SOURCE}"  > /dev/null 2>&1
+      else
+         $V5UTILBIN/adminrun $ADMINUSER ${stclient} -a \
+         -p "${PRODUCT_NAME}" \
+         -e "${PRODUCT_VERSION}" \
+         -t "${PRODUCT_URN}" \
+         -F "${PRODUCT_PARENT_URN}" \
+         -P "${PRODUCT_PARENT_NAME}" \
+         -I "${product_defined_id}" \
+         -m "${PRODUCT_VENDOR}" \
+         -A "${platform_name}" \
+         -z "${zone}" \
+         -S "${PRODUCT_SOURCE}" > /dev/null  2>&1
+      fi
    fi
 }
 
@@ -340,8 +371,7 @@ STremoveServiceTag()
    stclient=$1
    instance_urn=$2
    if [ -n "$instance_urn" ]; then
-      output=`ExecuteAsAdmin $stclient -d -i "$instance_urn"`
-      echo $output
+      ExecuteAsAdmin $stclient -d -i "$instance_urn"  > /dev/null  2>&1
    fi
 }
 
@@ -355,12 +385,15 @@ STRegister()
 
    #get the stclinet with full path
    STClient
-
-   STEnable
-   # get instance_urn
-   instance_urn=`STgetInstanceUrn "$stclient" "$product_defined_id"`
-   STaddServiceTag "$stclient" "$instance_urn" "$product_defined_id"
-   STShowRegistered "$product_defined_id"
+   if [ $? = 0 ]; then
+      STEnable
+      if [ $? = 0 ]; then
+         # get instance_urn
+         instance_urn=`STgetInstanceUrn "$stclient" "$product_defined_id"`
+         STaddServiceTag "$stclient" "$instance_urn" "$product_defined_id"
+         STShowRegistered "$product_defined_id"
+      fi   
+   fi   
 }
 
 #---------------------------------------------------------------------------
@@ -372,11 +405,12 @@ STUnregister()
    product_defined_id=$1
 
    STClient  
-
-   # get instance_urn
-   instance_urn=`STgetInstanceUrn "$stclient" "$product_defined_id"`
-   STremoveServiceTag "$stclient" "$instance_urn"
-   STShowRegistered "$product_defined_id"
+   if [ $? = 0 ]; then
+      # get instance_urn
+      instance_urn=`STgetInstanceUrn "$stclient" "$product_defined_id"`
+      STremoveServiceTag "$stclient" "$instance_urn"
+      STShowRegistered "$product_defined_id"
+   fi   
 }
 
 #---------------------------------------------------------------------------

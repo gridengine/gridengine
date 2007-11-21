@@ -143,6 +143,7 @@ static int                  (*cl_com_ssl_func__CRYPTO_num_locks)                
 static unsigned long        (*cl_com_ssl_func__ERR_get_error)                       (void);
 static void                 (*cl_com_ssl_func__ERR_error_string_n)                  (unsigned long e, char *buf, size_t len);
 static void                 (*cl_com_ssl_func__ERR_free_strings)                    (void);
+static void                 (*cl_com_ssl_func__ERR_clear_error)                     (void);
 static int                  (*cl_com_ssl_func__BIO_free)                            (BIO *a);
 static BIO*                 (*cl_com_ssl_func__BIO_new_fp)                          (FILE *stream, int flags);
 static BIO*                 (*cl_com_ssl_func__BIO_new_socket)                      (int sock, int close_flag);
@@ -899,6 +900,7 @@ static int cl_com_ssl_destroy_symbol_table(void) {
       cl_com_ssl_func__CRYPTO_num_locks   = NULL;
       cl_com_ssl_func__ERR_get_error   = NULL;
       cl_com_ssl_func__ERR_error_string_n   = NULL;
+      cl_com_ssl_func__ERR_clear_error = NULL;
       cl_com_ssl_func__ERR_free_strings   = NULL;
       cl_com_ssl_func__BIO_free   = NULL;
       cl_com_ssl_func__BIO_new_fp   = NULL;
@@ -1121,6 +1123,13 @@ static int cl_com_ssl_build_symbol_table(void) {
       func_name = "ERR_free_strings";
       cl_com_ssl_func__ERR_free_strings = (void (*)(void))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__ERR_free_strings == NULL) {
+         CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
+         had_errors++;
+      }
+
+      func_name = "ERR_clear_error";
+      cl_com_ssl_func__ERR_clear_error = (void (*)(void))dlsym(cl_com_ssl_crypto_handle, func_name);
+      if (cl_com_ssl_func__ERR_clear_error == NULL) {
          CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
          had_errors++;
       }
@@ -1805,6 +1814,7 @@ static int cl_com_ssl_build_symbol_table(void) {
       cl_com_ssl_func__CRYPTO_num_locks                    = CRYPTO_num_locks;
       cl_com_ssl_func__ERR_get_error                       = ERR_get_error;
       cl_com_ssl_func__ERR_error_string_n                  = ERR_error_string_n;
+      cl_com_ssl_func__ERR_clear_error                     = ERR_clear_error;
       cl_com_ssl_func__ERR_free_strings                    = ERR_free_strings;
       cl_com_ssl_func__BIO_free                            = BIO_free;
       cl_com_ssl_func__BIO_new_fp                          = BIO_new_fp;
@@ -2899,6 +2909,7 @@ int cl_com_ssl_connection_complete_shutdown(cl_com_connection_t*  connection) {
          }
 #ifdef CL_COM_ENABLE_SSL_THREAD_RETRY_BUGFIX
          case SSL_ERROR_SYSCALL: {
+            CL_LOG(CL_LOG_ERROR,"SSL_ERROR_SYSCALL error");
             return CL_RETVAL_UNCOMPLETE_READ;
          }
 #endif
@@ -4512,6 +4523,7 @@ int cl_com_ssl_write(cl_com_connection_t* connection, cl_byte_t* message, unsign
          if (FD_ISSET(private->sockfd, &writefds))
 #endif
          {
+            cl_com_ssl_func__ERR_clear_error();
             data_written = cl_com_ssl_func__SSL_write(private->ssl_obj, &message[data_complete], (int) (size - data_complete) );   
             if (data_written <= 0) {
                /* Try to find out more about the connect error */
@@ -4546,6 +4558,7 @@ int cl_com_ssl_write(cl_com_connection_t* connection, cl_byte_t* message, unsign
             break;
          }
       } else {
+         cl_com_ssl_func__ERR_clear_error();
          data_written = cl_com_ssl_func__SSL_write(private->ssl_obj, &message[data_complete], (int) (size - data_complete));
          if (data_written <= 0) {
             /* Try to find out more about the connect error */
@@ -4706,6 +4719,7 @@ int cl_com_ssl_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
             break;
          }
       } else {
+         cl_com_ssl_func__ERR_clear_error();
          data_read = cl_com_ssl_func__SSL_read(private->ssl_obj, &message[data_complete], (int) (size - data_complete) );
          if (data_read <= 0) {
 
@@ -4788,11 +4802,29 @@ int cl_com_ssl_get_unique_id(cl_com_handle_t* handle,
    cl_raw_list_lock(handle->connection_list);
 
    elem = cl_connection_list_get_first_elem(handle->connection_list);
+#if 0
+      if (elem == NULL) {
+         printf("------> no elem found\n");
+      }   
+#endif
    while(elem) {
       connection = elem->connection;
+#if 0
+      if (connection == NULL) {
+         printf("------> no connection found\n");
+      }   
+#endif
       if (connection != NULL) {
+#if 0
+         printf("------> connection found\n");
+         printf("------> connection->receiver: %s/%s/%ld\n", 
+                  connection->receiver->comp_host, connection->receiver->comp_name, connection->receiver->comp_id);
+#endif
          /* find correct client */
          if ( cl_com_compare_endpoints(connection->receiver, &client) ) {
+#if 0
+         printf("------> endpoint found\n");
+#endif
             private = cl_com_ssl_get_private(connection);
             if (private != NULL) {
                if (private->ssl_unique_id != NULL) {

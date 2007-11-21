@@ -671,7 +671,7 @@ int main(int argc, char *argv[])
       SGE_EXIT((void**)&ctx, 1);
    }
 
-   if (false == sge_gdi2_evc_setup(&evc, ctx, EV_ID_SCHEDD, &answer_list, NULL, false)) {
+   if (false == sge_gdi2_evc_setup(&evc, ctx, EV_ID_SCHEDD, &answer_list, NULL)) {
       answer_list_output(&answer_list);
       SGE_EXIT((void**)&ctx, 1);
    }

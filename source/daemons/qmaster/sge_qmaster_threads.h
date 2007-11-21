@@ -55,10 +55,6 @@ void sge_exit_func(void **ctx_ref, int);
 void sge_start_periodic_tasks(void);
 void sge_register_event_handler(void); 
 
-/* EB: TODO: ST: does this function still exist? */
-void set_schedd_thread(pthread_t aThread);
-pthread_t get_schedd_thread(void);
-
 int sge_shutdown_qmaster_via_signal_thread(int i);
 
 #endif /* _SGE_QMASTER_THREADS_H_ */

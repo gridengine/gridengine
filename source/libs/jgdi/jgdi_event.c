@@ -133,7 +133,7 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_initNative
       goto error;
    }
 
-   evc = sge_evc_class_create(sge_gdi_ctx, (ev_registration_id)reg_id, &alp, NULL, false); 
+   evc = sge_evc_class_create(sge_gdi_ctx, (ev_registration_id)reg_id, &alp, NULL); 
    if (!evc) {
       throw_error_from_answer_list(env, JGDI_ERROR, alp);
       DRETURN(-1);

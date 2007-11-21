@@ -427,9 +427,9 @@ do_gdi_packet(sge_gdi_ctx_class_t *ctx, lList **answer_list,
       const char *progname = ctx->get_progname(ctx);
 
       if (!sge_security_verify_user(packet->host, packet->commproc, 
-                                    packet->id, admin_user, packet->user, progname)) {
+                                    packet->commproc_id, admin_user, packet->user, progname)) {
          CRITICAL((SGE_EVENT, MSG_SEC_CRED_SSSI, packet->user, packet->host, 
-                   packet->commproc, (int)packet->id));
+                   packet->commproc, (int)packet->commproc_id));
          answer_list_add(&(packet->first_task->answer_list), SGE_EVENT, 
                          STATUS_ENOSUCHUSER, ANSWER_QUALITY_ERROR); 
          local_ret = false;

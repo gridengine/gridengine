@@ -522,7 +522,7 @@ int main(int argc, char *argv[])
       SGE_EXIT(NULL, 1);
    }
    /* TODO: how is the memory we allocate here released ???, SGE_EXIT doesn't */
-   if (false == sge_gdi2_evc_setup(&evc, ctx, EV_ID_ANY, &alp, NULL, false)) {
+   if (false == sge_gdi2_evc_setup(&evc, ctx, EV_ID_ANY, &alp, NULL)) {
       answer_list_output(&alp);
       sge_dstring_free(enabled_options.error_message);
       SGE_EXIT((void**)&ctx, 1);

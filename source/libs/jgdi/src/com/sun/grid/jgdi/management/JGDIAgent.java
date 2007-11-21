@@ -57,7 +57,7 @@ public class JGDIAgent {
 
         //TODO Add your MBean registration code here
         this.url = url;
-        logger.log(Level.INFO, "init: " + JGDIAgent.getUrl() + "-----------------------");
+        logger.log(Level.FINE, "init: " + JGDIAgent.getUrl());
 
         // Instantiate and register JGDIJMX MBean
         JGDIJMX mbean = new JGDIJMX();
@@ -104,7 +104,9 @@ public class JGDIAgent {
             }
             String sge_url = args[0];
             JGDIAgent agent = JGDIAgent.getDefault(sge_url);
-       
+
+            logger.log(Level.INFO, "JGDIAgent '" + sge_url + "' started");       
+            
             waitForShutdown();
 
             logger.log(Level.INFO, "JGDIAgent shuts down");
@@ -116,6 +118,7 @@ public class JGDIAgent {
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "Unexpected error", ex);
         } finally {
+            logger.log(Level.INFO, "JGDIAgent is down");
             LogManager.getLogManager().reset();
         }
 

@@ -115,6 +115,7 @@ typedef struct {
    int last_commlib_error;
    sge_error_class_t *eh;
 
+   bool is_qmaster_internal_client;
    bool is_setup;
 } sge_gdi_ctx_t;
 
@@ -247,7 +248,8 @@ static bool
 sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const char* component_name,
                   int thread_number, const char *thread_name, const char* username, 
                   const char *groupname, const char *sge_root, const char *sge_cell, 
-                  int sge_qmaster_port, int sge_execd_port, bool from_services);
+                  int sge_qmaster_port, int sge_execd_port, bool from_services,
+                  bool is_qmaster_internal_client);
 
 static void sge_gdi_ctx_destroy(void *theState);
 
@@ -301,6 +303,7 @@ static const char* get_private_key(sge_gdi_ctx_class_t *thiz);
 static const char* get_certificate(sge_gdi_ctx_class_t *thiz);
 static int ctx_get_last_commlib_error(sge_gdi_ctx_class_t *thiz);
 static void ctx_set_last_commlib_error(sge_gdi_ctx_class_t *thiz, int cl_error);
+static bool ctx_is_qmaster_internal_client(sge_gdi_ctx_class_t *thiz);
 
 static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz);
 static int sge_gdi_ctx_class_connect(sge_gdi_ctx_class_t *thiz);
@@ -402,6 +405,7 @@ sge_gdi_ctx_class_create(int prog_number, const char *component_name,
    ret->set_certificate = set_certificate;
    ret->get_private_key = get_private_key;
    ret->get_certificate = get_certificate;
+   ret->is_qmaster_internal_client = ctx_is_qmaster_internal_client;
 
    ret->dprintf = sge_gdi_ctx_class_dprintf;
 
@@ -429,7 +433,7 @@ sge_gdi_ctx_class_create(int prog_number, const char *component_name,
 
    if (!sge_gdi_ctx_setup(ret, prog_number, component_name, thread_number, thread_name, 
                           username, groupname, sge_root, sge_cell, sge_qmaster_port, 
-                          sge_execd_port, from_services)) {
+                          sge_execd_port, from_services, is_qmaster_internal_client)) {
       sge_gdi_ctx_class_get_errors(ret, alpp, true);
       sge_gdi_ctx_class_destroy(&ret);
       DRETURN(NULL);
@@ -532,7 +536,8 @@ static bool
 sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const char* component_name,
                   int thread_number, const char *thread_name, const char* username, 
                   const char *groupname, const char *sge_root, const char *sge_cell, 
-                  int sge_qmaster_port, int sge_execd_port, bool from_services)
+                  int sge_qmaster_port, int sge_execd_port, bool from_services,
+                  bool is_qmaster_internal_client)
 {
    sge_gdi_ctx_t *es = (sge_gdi_ctx_t *)thiz->sge_gdi_ctx_handle;
    sge_error_class_t *eh = es->eh;
@@ -557,6 +562,8 @@ sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const char* compon
 
    /* TODO: shall we do that here ? */
    lInit(nmv);
+
+   es->is_qmaster_internal_client = is_qmaster_internal_client;
 
    es->sge_env_state_obj = sge_env_state_class_create(sge_root, sge_cell, sge_qmaster_port, sge_execd_port, from_services, eh);
    if (!es->sge_env_state_obj) {
@@ -588,7 +595,7 @@ sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const char* compon
       es->component_name = strdup(component_name);
    }
 
-   if(thread_name == NULL) {
+   if (thread_name == NULL) {
       es->thread_name = strdup(prognames[prog_number]);
    } else {
       es->thread_name = strdup(thread_name);
@@ -708,14 +715,25 @@ sge_gdi_ctx_class_create_from_bootstrap(int prog_number, const char* component_n
    struct  saved_vars_s *url_ctx = NULL;
    int sge_qmaster_p = 0;
    int sge_execd_p = 0;
+   bool is_qmaster_internal_client = false;
 
    sge_gdi_ctx_class_t * ret = NULL;
    
    DENTER(TOP_LAYER, "sge_gdi_ctx_class_create_from_bootstrap");
 
+   /* determine the connection type: local/remote */
+   if (!strncmp(url, "internal://", (sizeof("internal://")-1))) {
+      DPRINTF(("**** Using internal context ****\n"));   
+      is_qmaster_internal_client = true;
+   }
+   
    /* parse the url */
    DPRINTF(("url = %s\n", url));
-   sscanf(url, "bootstrap://%s", sge_url);
+   if (is_qmaster_internal_client) {
+      sscanf(url, "internal://%s", sge_url);
+   } else {
+      sscanf(url, "bootstrap://%s", sge_url);
+   }
    DPRINTF(("sge_url = %s\n", sge_url));
    
    /* search for sge_root */
@@ -761,7 +779,7 @@ sge_gdi_ctx_class_create_from_bootstrap(int prog_number, const char* component_n
    
    ret = sge_gdi_ctx_class_create(prog_number, component_name, thread_number, thread_name,
                                   username, NULL, sge_root, sge_cell, sge_qmaster_p, sge_execd_p, 
-                                  false, false, alpp);
+                                  false, is_qmaster_internal_client, alpp);
    
 #if 1
    /*
@@ -1501,7 +1519,7 @@ static u_long32 get_gdi_thread_count(sge_gdi_ctx_class_t *thiz) {
 static sge_exit_func_t get_exit_func(sge_gdi_ctx_class_t *thiz) {
    sge_prog_state_class_t* prog_state = thiz->get_sge_prog_state(thiz);
    sge_exit_func_t exit_func = NULL;
-   DENTER(BASIS_LAYER, "sge_gdi_ctx_class->set_exit_func");
+   DENTER(TOP_LAYER, "sge_gdi_ctx_class->get_exit_func");
    exit_func = prog_state->get_exit_func(prog_state);
    DRETURN(exit_func);
 }
@@ -1672,6 +1690,11 @@ static gid_t ctx_get_gid(sge_gdi_ctx_class_t *thiz) {
    return es->gid;
 }
 
+static bool ctx_is_qmaster_internal_client(sge_gdi_ctx_class_t *thiz) {
+   sge_gdi_ctx_t *es = (sge_gdi_ctx_t *) thiz->sge_gdi_ctx_handle;
+   return es->is_qmaster_internal_client;
+}
+
 
 static int sge_gdi_ctx_log_flush_func(cl_raw_list_t* list_p) 
 {
@@ -1698,28 +1721,28 @@ static int sge_gdi_ctx_log_flush_func(cl_raw_list_t* list_p)
 
       switch(elem->log_type) {
          case CL_LOG_ERROR: 
-            if ( log_state_get_log_level() >= LOG_ERR) {
+            if (log_state_get_log_level() >= LOG_ERR) {
                ERROR((SGE_EVENT,  "%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
             } else {
                printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
             }
             break;
          case CL_LOG_WARNING:
-            if ( log_state_get_log_level() >= LOG_WARNING) {
+            if (log_state_get_log_level() >= LOG_WARNING) {
                WARNING((SGE_EVENT,"%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
             } else {
                printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
             }
             break;
          case CL_LOG_INFO:
-            if ( log_state_get_log_level() >= LOG_INFO) {
+            if (log_state_get_log_level() >= LOG_INFO) {
                INFO((SGE_EVENT,   "%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
             } else {
                printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
             }
             break;
          case CL_LOG_DEBUG:
-            if ( log_state_get_log_level() >= LOG_DEBUG) { 
+            if (log_state_get_log_level() >= LOG_DEBUG) { 
                DEBUG((SGE_EVENT,  "%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
             } else {
                printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);

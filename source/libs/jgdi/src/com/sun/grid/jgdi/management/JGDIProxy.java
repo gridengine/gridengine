@@ -192,6 +192,11 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
             try {
                 connector = JMXConnectorFactory.connect(url, env);
                 connection = connector.getMBeanServerConnection();
+//                Subject delegationSubject = new Subject(true,
+//                    Collections.singleton(new JMXPrincipal("delegate")),
+//                    Collections.EMPTY_SET,
+//                    Collections.EMPTY_SET);
+//                connection = connector.getMBeanServerConnection(delegationSubject);
                 // we need a random number and just take the current
                 // mbean count + 1
                 int randomId = connection.getMBeanCount() + 1;

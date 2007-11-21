@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
       SGE_EXIT((void**)&ctx, 1);
    }
 
-   if (false == sge_gdi2_evc_setup(&evc, ctx, EV_ID_SCHEDD, &alp, NULL, false)) {
+   if (false == sge_gdi2_evc_setup(&evc, ctx, EV_ID_SCHEDD, &alp, NULL)) {
       answer_list_output(&alp);
       SGE_EXIT((void**)&ctx, 1);
    }

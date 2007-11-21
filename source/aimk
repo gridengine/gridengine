@@ -534,6 +534,7 @@ while ($#argv >= 1 && $?found)
       set INSURE_FLAG = "-Zsl"
       set LFLAGS     = "-Zsl $LFLAGS"
       set DEBUGGED   = 1
+      setenv SKIP_NONREENTRANT 1
       breaksw
    case "-efence"
       set LFLAGS     = "-lefence $LFLAGS"

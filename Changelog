@@ -1,3 +1,11 @@
+AA-2007-11-21-0: Enhancem.: o jvm logging/startup
+                            o qmon qconf jvm option support
+                            o is_qmaster_internal_client in ctx to define if sge_evc
+                              is internal instead of extra local_client flag
+                            o SKIP_NONREENTRANT in aimk and scripts/nonreentrant.sh
+                              for insure 
+                 Review:    RH             
+                            
 RH-2007-11-21-0: Bugfix:    o JGDIAgent calls now AbstractEventClient.closeAll and 
                               JGDIBaseImpl.closeAll at shutdown
                             o UnixLoginModule does not call authuser if no username

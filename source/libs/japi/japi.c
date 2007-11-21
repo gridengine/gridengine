@@ -4060,7 +4060,7 @@ static void *japi_implementation_thread(void *p)
 
    /* register at qmaster as event client */
    DPRINTF(("registering as event client ...\n"));
-   evc = sge_evc_class_create(evc_ctx, EV_ID_ANY, &alp, NULL, false); 
+   evc = sge_evc_class_create(evc_ctx, EV_ID_ANY, &alp, NULL); 
    if (!evc) {
       if (p) {
          lListElem *aep = lFirst(alp);

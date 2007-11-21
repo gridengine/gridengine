@@ -415,7 +415,7 @@ sge_scheduler_main(void *arg)
     * prepare event client/mirror mechanism 
     */
    if (local_ret) {
-      local_ret = sge_gdi2_evc_setup(&evc, ctx, EV_ID_SCHEDD, &alp, "scheduler", true);
+      local_ret = sge_gdi2_evc_setup(&evc, ctx, EV_ID_SCHEDD, &alp, "scheduler");
       DPRINTF((SFN" prepared event client/mirror mechanism\n", thread_config->thread_name));
    }
       

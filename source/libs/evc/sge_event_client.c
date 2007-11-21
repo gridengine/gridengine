@@ -663,10 +663,11 @@ static sge_gdi_ctx_class_t *get_gdi_ctx(sge_evc_class_t *thiz);
 
 sge_evc_class_t *
 sge_evc_class_create(sge_gdi_ctx_class_t *sge_gdi_ctx, ev_registration_id reg_id, 
-                     lList **alpp, const char *name, bool local_client)
+                     lList **alpp, const char *name)
 {
    sge_evc_class_t *ret = (sge_evc_class_t *)sge_malloc(sizeof(sge_evc_class_t));
    sge_evc_t *sge_evc = NULL;
+   bool local_client = false;
 
    DENTER(EVC_LAYER, "sge_evc_class_create");
 
@@ -674,6 +675,13 @@ sge_evc_class_create(sge_gdi_ctx_class_t *sge_gdi_ctx, ev_registration_id reg_id
       answer_list_add_sprintf(alpp, STATUS_EMALLOC, ANSWER_QUALITY_ERROR, MSG_MEMORY_MALLOCFAILED);
       DRETURN(NULL);
    }
+
+   /*
+   ** get type of connection internal/external
+   */
+   local_client = sge_gdi_ctx->is_qmaster_internal_client(sge_gdi_ctx);
+   
+   DPRINTF(("creating %s event client context\n", local_client ? "internal" : "external"));
 
    if (local_client == true) {
       ret->ec_register = ec2_register_local;
@@ -1258,7 +1266,9 @@ bool ec2_deregister_local(sge_evc_class_t *thiz)
       local_t *evc_local = &(thiz->ec_local);
       u_long32 id = sge_evc->ec_reg_id;
 
-      evc_local->remove_func(id);
+      if (evc_local && evc_local->remove_func) {
+         evc_local->remove_func(id);
+      }
 
       /* clear state of this event client instance */
       lFreeElem(&(sge_evc->ec));
@@ -1327,7 +1337,9 @@ ec2_register_local(sge_evc_class_t *thiz, bool exit_on_qmaster_down, lList** alp
 
       DTRACE;
 
-      evc_local->add_func(sge_evc->ec, &alp, update_func, monitor);
+      if (evc_local && evc_local->add_func) {
+         evc_local->add_func(sge_evc->ec, &alp, update_func, monitor);
+      }
 
       DTRACE;
 
@@ -3053,8 +3065,7 @@ static bool get_event_list(sge_evc_class_t *thiz, int sync, lList **report_list,
 
 bool 
 sge_gdi2_evc_setup(sge_evc_class_t **evc_ref, sge_gdi_ctx_class_t *sge_gdi_ctx, 
-                   ev_registration_id reg_id, lList **alpp, const char * name, 
-                   bool local_client) 
+                   ev_registration_id reg_id, lList **alpp, const char * name)
 {
    sge_evc_class_t *evc = NULL;
 
@@ -3065,7 +3076,7 @@ sge_gdi2_evc_setup(sge_evc_class_t **evc_ref, sge_gdi_ctx_class_t *sge_gdi_ctx,
       DRETURN(false);
    }
    
-   evc = sge_evc_class_create(sge_gdi_ctx, reg_id, alpp, name, local_client); 
+   evc = sge_evc_class_create(sge_gdi_ctx, reg_id, alpp, name); 
    if (evc == NULL) {
       DRETURN(false);
    }

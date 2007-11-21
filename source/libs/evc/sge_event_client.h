@@ -40,7 +40,7 @@
 
 /* 
  * The local event client has direct access to the event master. Every
- * event client modification is not routed through the comlib and the
+ * event client modification is not routed through the commlib and the
  * GDI. Therefore we need a structure to register the event master
  * modification functions. If we do not do that, we will generate a
  * dependency between the event client and the event master, which we
@@ -115,15 +115,14 @@ struct sge_evc_class_str {
 
 sge_evc_class_t *
 sge_evc_class_create(sge_gdi_ctx_class_t *sge_gdi_ctx, ev_registration_id reg_id,
-                     lList **alpp, const char *name, bool local_client);
+                     lList **alpp, const char *name);
 
 void 
 sge_evc_class_destroy(sge_evc_class_t **pst);
 
 bool 
 sge_gdi2_evc_setup(sge_evc_class_t **evc_ref, sge_gdi_ctx_class_t *sge_gdi_ctx,
-                   ev_registration_id reg_id, lList **alpp, const char * name,
-                   bool local_client); 
+                   ev_registration_id reg_id, lList **alpp, const char * name);
 
 #endif /* __SGE_C_EVENT2_H */
 

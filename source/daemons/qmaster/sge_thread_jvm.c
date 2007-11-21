@@ -96,6 +96,7 @@ static int dummy_jvm;
 #include "uti/sge_thread_ctrl.h"
 #include "configuration_qmaster.h"
 #include "sgeobj/config.h"
+#include "uti/sge_dstring.h"
 
 #include "sge_thread_main.h"
 
@@ -134,7 +135,7 @@ typedef int (*JNI_CreateJavaVM_Func)(JavaVM **pvm, void **penv, void *args);
 int JNI_CreateJavaVM_Impl(JavaVM **pvm, void **penv, void *args);
 #endif
 
-static void *
+static bool
 sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor);
 
 static void
@@ -161,13 +162,14 @@ sge_qmaster_thread_jvm_cleanup_monitor(monitoring_t *monitor)
  *
  * DESCRIPTION
  *-------------------------------------------------------------------------*/
-static int shutdown_main(void) 
+static bool shutdown_main(void) 
 {
    char main_class_name[] = "com/sun/grid/jgdi/management/JGDIAgent";
 	jmethodID shutdown_mid;
    JNIEnv *env;
    jclass main_class;
    int ret = 0;
+   bool error_occured = false;
    JavaVMAttachArgs attach_args = { JNI_VERSION_1_2, NULL, NULL };
 
    DENTER(TOP_LAYER, "shutdown_main");
@@ -176,7 +178,7 @@ static int shutdown_main(void)
 
    if (myjvm == NULL) {
       pthread_mutex_unlock(&myjvm_mutex);
-      DRETURN(0);
+      DRETURN(true);
    }
 
    ret = (*myjvm)->AttachCurrentThread(myjvm, (void**) &env, &attach_args);
@@ -184,7 +186,7 @@ static int shutdown_main(void)
    if (ret < 0) { 
       CRITICAL((SGE_EVENT, "could not attach thread to vm\n"));
       pthread_mutex_unlock(&myjvm_mutex);
-      DRETURN(1);
+      DRETURN(false);
    }   
 
    if (env != NULL) {
@@ -193,35 +195,64 @@ static int shutdown_main(void)
 	      shutdown_mid = (*env)->GetStaticMethodID(env, main_class, "shutdown", "()V");
          if (shutdown_mid == NULL) {
             CRITICAL((SGE_EVENT, "class has no shutdown method\n"));
-            pthread_mutex_unlock(&myjvm_mutex);
-            DRETURN(1);
+            error_occured = true;
          }
       } else {
          CRITICAL((SGE_EVENT, "main_class is NULL\n"));
-         pthread_mutex_unlock(&myjvm_mutex);
-         DRETURN(1);
+         error_occured = true;
       }  
 
-	   (*env)->CallStaticVoidMethod(env, main_class, shutdown_mid);
+      if (!error_occured) {
+         (*env)->CallStaticVoidMethod(env, main_class, shutdown_mid);
 
-      if ((*env)->ExceptionOccurred(env)) {
-         (*env)->ExceptionClear(env);
-         CRITICAL((SGE_EVENT, "unexpected jvm exception\n"));
-         pthread_mutex_unlock(&myjvm_mutex);
-         DRETURN(1);
-      }
+         if ((*env)->ExceptionOccurred(env)) {
+            (*env)->ExceptionClear(env);
+            CRITICAL((SGE_EVENT, "unexpected jvm exception\n"));
+            error_occured = true;
+         }
+      }   
    }
 
    ret = (*myjvm)->DetachCurrentThread(myjvm);
    if (ret < 0) { 
       CRITICAL((SGE_EVENT, "could not detach thread from vm\n"));
-      pthread_mutex_unlock(&myjvm_mutex);
-      DRETURN(1);
+      error_occured = true;
    }   
 
    pthread_mutex_unlock(&myjvm_mutex);
-   DRETURN(0);
+
+   if (error_occured) {
+      DRETURN(false);
+   } else {
+      DRETURN(true);
+   }
 }
+
+static jint (JNICALL printVMErrors)(FILE *fp, const char *format, va_list args) {
+   jint rc = 0;
+   const char* str = NULL;
+   dstring ds = DSTRING_INIT;
+
+   DENTER(TOP_LAYER, "printVMErrors");
+   str = sge_dstring_vsprintf(&ds, format, args);
+   if (str != NULL) {
+      rc = strlen(str);
+      DPRINTF(("%s\n", str));
+      CRITICAL((SGE_EVENT, "JVM message: %s", str));
+   }
+   sge_dstring_free(&ds);
+   DRETURN(rc);
+}
+
+#if 0
+static void (JNICALL exitVM)(jint code) {
+    DENTER(TOP_LAYER, "exitVM");
+    DPRINTF(("CALLED exitVM %d\n", (int)code));
+    fflush(stdout);
+    DRETURN_VOID;
+}
+#endif
+
 
 /*-------------------------------------------------------------------------*
  * NAME
@@ -243,23 +274,30 @@ static JNIEnv* create_vm(const char *libjvm_path, int argc, char** argv)
 {
    void *libjvm_handle = NULL;
    bool ok = true;
-	JavaVM* jvm;
-	JNIEnv* env;
+	JavaVM* jvm = NULL;
+	JNIEnv* env = NULL;
 	JavaVMInitArgs args;
    JNI_CreateJavaVM_Func sge_JNI_CreateJavaVM = NULL;
    int i = 0;
 	JavaVMOption* options = NULL;
-	
+   const int extraOptionCount = 1;
+
    DENTER(GDI_LAYER, "create_vm");
 
-   options = (JavaVMOption*)malloc(argc*sizeof(JavaVMOption));
+   options = (JavaVMOption*)malloc((argc+extraOptionCount)*sizeof(JavaVMOption));
 
 	/* There is a new JNI_VERSION_1_4, but it doesn't add anything for the purposes of our example. */
 	args.version = JNI_VERSION_1_2;
-	args.nOptions = argc;
+	args.nOptions = argc+extraOptionCount;
+   options[0].optionString = "vfprintf";
+   options[0].extraInfo = (void*)printVMErrors;
+#if 0   
+   options[1].optionString = "exit";
+   options[1].extraInfo = exitVM;
+#endif   
    for(i=0; i < argc; i++) {
       /*printf("argv[%d] = %s\n", i, argv[i]);*/
-      options[i].optionString = argv[i];
+      options[i+extraOptionCount].optionString = argv[i];
    }
 
 	args.options = options;
@@ -325,16 +363,17 @@ static JNIEnv* create_vm(const char *libjvm_path, int argc, char** argv)
       }
    }
 
+   if (ok) {
 /* printf("------> Running22 as uid/euid: %d/%d\n", getuid(), geteuid()); */
-	if ((i = sge_JNI_CreateJavaVM(&jvm, (void **)&env, &args)) < 0) {
-      CRITICAL((SGE_EVENT, "can not create JVM (error code %d)\n", i));
-      env = NULL;
+      if ((i = sge_JNI_CreateJavaVM(&jvm, (void **)&env, &args)) < 0) {
+         CRITICAL((SGE_EVENT, "can not create JVM (error code %d)\n", i));
+         env = NULL;
+      }
+
+      pthread_mutex_lock(&myjvm_mutex);
+      myjvm = jvm;
+      pthread_mutex_unlock(&myjvm_mutex);
    }
-
-   pthread_mutex_lock(&myjvm_mutex);
-   myjvm = jvm;
-   pthread_mutex_unlock(&myjvm_mutex);
-
    free(options);
 	DRETURN(env);
 }
@@ -382,7 +421,7 @@ static int invoke_main(JNIEnv* env, jclass main_class, int argc, char** argv)
    
    if ((*env)->ExceptionOccurred(env)) {
       (*env)->ExceptionClear(env);
-      CRITICAL((SGE_EVENT, "unexpected exception in invoke main\n"));
+      CRITICAL((SGE_EVENT, "unexpected exception in invoke_main\n"));
       DRETURN(1);
    }
 
@@ -390,7 +429,7 @@ static int invoke_main(JNIEnv* env, jclass main_class, int argc, char** argv)
 }
 
 
-static void *
+static bool
 sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
 {
 
@@ -408,6 +447,7 @@ sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
    int additional_jvm_argc = 0;
    lListElem *confEntry = NULL;
    const int fixed_jvm_argc = 15;
+   bool ret = true;
 
    DENTER(TOP_LAYER, "sge_run_jvm");
 
@@ -422,7 +462,7 @@ sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
 
    if (libjvm_path == NULL) {
       WARNING((SGE_EVENT, "libjvm_path is NULL\n"));
-      DRETURN(NULL);
+      DRETURN(false);
    }  
 
    /*
@@ -458,7 +498,7 @@ sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
    /*
    ** adjust fixed_jvm_argc if an additional fixed argument line is added
    */
-   jvm_argv[0] = strdup(sge_dstring_sprintf(&ds, "-Djava.class.path=%s/lib/jgdi.jar", ctx->get_sge_root(ctx), ctx->get_sge_root(ctx)));
+   jvm_argv[0] = strdup(sge_dstring_sprintf(&ds, "-Djava.class.path=%s/lib/jgdi.jar:%s/lib/juti.jar", ctx->get_sge_root(ctx), ctx->get_sge_root(ctx)));
    jvm_argv[1] = strdup("-Djava.security.manager=com.sun.grid.jgdi.management.JGDISecurityManager");
    jvm_argv[2] = strdup(sge_dstring_sprintf(&ds, "-Djava.security.policy==%s/common/jmx/java.policy", ctx->get_cell_root(ctx)));
    jvm_argv[3] = strdup(sge_dstring_sprintf(&ds, "-Djava.rmi.server.codebase=file://%s/lib/jgdi.jar", ctx->get_sge_root(ctx)));
@@ -512,9 +552,11 @@ sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
       if (main_class != NULL) {
          if (invoke_main(env, main_class, sizeof(main_argv)/sizeof(char*), main_argv) != 0) {
             CRITICAL((SGE_EVENT, "invoke_main failed\n"));
+            ret = false;
          }
       } else {
          CRITICAL((SGE_EVENT, "main_class is NULL\n"));
+         ret = false;
       }  
    }
 
@@ -533,7 +575,7 @@ sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
    }  
    FREE(jvm_argv);
 
-   DRETURN(anArg);
+   DRETURN(ret);
 }
 
 void
@@ -549,6 +591,7 @@ sge_jvm_initialize(void)
    for (i = 0; i < max_initial_jvm_threads; i++) {
       dstring thread_name = DSTRING_INIT;      
 
+/*       INFO((SGE_EVENT, MSG_QMASTER_THREADCOUNT_US, sge_u32c(i), threadnames[JVM_THREAD])); */
       sge_dstring_sprintf(&thread_name, "%s%03d", threadnames[JVM_THREAD], i);
       cl_thread_list_create_thread(Main_Control.jvm_thread_pool, &dummy_thread_p,
                                    NULL, sge_dstring_get_string(&thread_name), i, 
@@ -567,7 +610,6 @@ sge_jvm_terminate(void)
    thread = cl_thread_list_get_first_thread(Main_Control.jvm_thread_pool);
    while (thread != NULL) {
       shutdown_main();
-
       DPRINTF((SFN" gets canceled\n", thread->thread_name));
       cl_thread_list_delete_thread(Main_Control.jvm_thread_pool, thread);
       thread = cl_thread_list_get_first_thread(Main_Control.jvm_thread_pool);
@@ -622,8 +664,7 @@ sge_jvm_main(void *arg)
       thread_start_stop_profiling();
 
       if (jvm_started == false) {
-         sge_run_jvm(ctx, arg, &monitor);
-         jvm_started = true;
+         jvm_started = sge_run_jvm(ctx, arg, &monitor);
       }
 
       thread_output_profiling("JVM thread profiling summary:\n", 
@@ -634,7 +675,9 @@ sge_jvm_main(void *arg)
       /* 
       ** to prevent high cpu load if jvm is not started
       */
-      sge_thread_wait_for_signal();
+      if (!jvm_started) {
+         sge_thread_wait_for_signal();
+      }
 
       /* pthread cancelation point */
       do {

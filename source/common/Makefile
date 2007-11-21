@@ -57,7 +57,9 @@ COMMON_SRC = \
             parse_qsub.c \
             sig_handlers.c \
             usage.c \
-            sge_mt_init.c
+            sge_mt_init.c \
+            sge_ijs_comm.c \
+            sge_ijs_threads.c
 
 COMMON_OBJS = $(COMMON_SRC:.c=.o)
 
@@ -89,3 +91,9 @@ usage.o: 	$(COMMON_DIR)/usage.c
 
 sge_mt_init.o: 	$(COMMON_DIR)/sge_mt_init.c
 		$(CC) $(CFLAGS) -c $(COMMON_DIR)/sge_mt_init.c
+
+sge_ijs_comm.o:	$(COMMON_DIR)/sge_ijs_comm.c 
+		$(CC) $(CFLAGS) -c $(COMMON_DIR)/sge_ijs_comm.c
+
+sge_ijs_threads.o:	$(COMMON_DIR)/sge_ijs_threads.c 
+		$(CC) $(CFLAGS) -c $(COMMON_DIR)/sge_ijs_threads.c

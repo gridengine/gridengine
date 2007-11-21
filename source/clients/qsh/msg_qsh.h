@@ -69,6 +69,8 @@
 #define MSG_QSH_SERVERDAEMONSUCCESSFULLYSTARTEDWITHTASKID_S _MESSAGE(17031, _("Server daemon successfully started with task id "SFQ))
 #define MSG_QSH_CLEANINGUPAFTERABNORMALEXITOF_S _MESSAGE(17032, _("cleaning up after abnormal exit of "SFN))
 #define MSG_QSH_READINGEXITCODEFROMSHEPHERD  _MESSAGE(17033, _("reading exit code from shepherd ... "))
+#define MSG_QSH_CREATINGCOMMLIBSERVER_S _MESSAGE(17034, _("creating a commlib server: "SFQ))
+#define MSG_QSH_GOTNOCONNECTIONWITHINSECONDS_I _MESSAGE(1735, _("got no connection within %d seconds"))
 
 #endif /* __MSG_QSH_H */
 

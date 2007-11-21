@@ -41,9 +41,9 @@ QSH_SRC = qsh.c parse_job_qsh.c
 QSH_ADD_SRC = parse_job_cull.c parse_qsub.c \
                sig_handlers.c read_defaults.c \
                show_job.c usage.c sge_options.c \
-               sge_mt_init.c
+               sge_mt_init.c sge_client_ijs.c
 
-QSH_OBJS = $(QSH_SRC:.c=.o)
+QSH_OBJS = $(QSH_SRC:.c=.o) sge_ijs_comm.o sge_ijs_threads.o
 
 QSH_ADD_OBJS = $(QSH_ADD_SRC:.c=.o)
 

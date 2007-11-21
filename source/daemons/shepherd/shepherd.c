@@ -95,6 +95,7 @@ struct rusage {
 #include "version.h"
 #include "sge_fileio.h"
 #include "sge_stdio.h"
+#include "sge_job.h"
 
 #include "sge_reportL.h"
 
@@ -106,6 +107,24 @@ struct rusage {
 #include "../../../utilbin/sge_passwd.h"
 #include "windows_gui.h"
 #endif
+
+#if defined(DARWIN)
+#  include <termios.h>
+#  include <sys/ttycom.h>
+#  include <sys/ioctl.h>    
+#elif defined(HP11) || defined(HP1164)
+#  include <termios.h>
+#elif defined(INTERIX)
+#  include <termios.h>
+#  include <sys/ioctl.h>
+#else
+#  include <termio.h>
+#endif
+
+#include "sge_pty.h"
+#include "sge_ijs_threads.h"
+#include "sge_ijs_comm.h"
+#include "sge_shepherd_ijs.h"
 
 #if defined(SOLARIS) || defined(ALPHA)
 /* ALPHA4 only has wait3() prototype if _XOPEN_SOURCE_EXTENDED is defined */
@@ -127,15 +146,21 @@ pid_t wait3(int *, int, struct rusage *);
 #define RESCHEDULE_EXIT_STATUS 99
 #define APPERROR_EXIT_STATUS 100
 
+bool g_new_interactive_job_support = false;
+int  g_noshell = 0;
 int signalled_ckpt_job = 0;   /* marker if signalled a ckpt job */
 int ckpt_signal = 0;          /* signal to send to ckpt job */
 
 static int notify_tasker(u_long32 exit_status);
 int main(int argc, char **argv);
-static int start_child(char *childname, char *script_file, pid_t *pidp, int timeout, int ckpt_type);
-static void forward_signal_to_job(int pid, int timeout, int *postponed_signal, int remaining_alarm, pid_t ctrl_pid[3]);
+static int start_child(char *childname, char *script_file, pid_t *pidp, 
+                       int timeout, int ckpt_type);
+static void forward_signal_to_job(int pid, int timeout, int *postponed_signal, 
+                       int remaining_alarm, pid_t ctrl_pid[3]);
 static int check_ckpttype(void);
-static int wait_my_child(int pid, int ckpt_pid, int ckpt_type, struct rusage *rusage, int timeout, int ckpt_interval, char *childname);
+static int wait_my_child(int pid, int ckpt_pid, int ckpt_type, 
+                         struct rusage *rusage, int timeout, 
+                         int ckpt_interval, char *childname);
 static void set_ckpt_params(int, char *, int, char *, int, char *, int, int *);
 static void set_ckpt_restart_command(char *, int, char *, int);
 static void handle_job_pid(int, int, int *);
@@ -179,6 +204,59 @@ void shepherd_deliver_signal(int sig,
                              pid_t *ctrl_pid);
 
 static int map_signal(int signal);
+
+/*TODO: remove this function */
+int my_error_printf(const char *fmt, ...)
+{
+   int     ret = 0;
+   va_list args;
+   char    buffer[64*1024+1];
+
+   va_start(args, fmt);
+   vsnprintf(buffer, 64*1024, fmt, args);
+   shepherd_trace(buffer);
+   va_end(args);
+
+   return ret;
+}
+
+static int wait_until_parent_has_registered_to_server(int fd_pipe_to_child[])
+{
+   int  ret;
+   char tmpbuf[100];
+
+   memset(tmpbuf, 0, sizeof(tmpbuf));
+
+   /* TODO: Why do we ingore SIGWINCH here? Why do we ignore only SIGWINCH here?*/
+   sigignore(SIGWINCH);
+
+   /* close parents end of out copy of the pipe */
+   shepherd_trace("Child: closing parents end of the pipe");
+   close(fd_pipe_to_child[1]);
+   fd_pipe_to_child[1] = -1;
+
+   /* wait until parent has registered at the server */
+   shepherd_trace("Child: trying to read from parent through the pipe");
+   ret = read(fd_pipe_to_child[0], tmpbuf, 11);
+   if (ret <= 0) {
+      shepherd_trace_sprintf("Child: Error communicating with parent: "
+         "%d, %s\n", errno, strerror(errno));
+      ret = -1;
+   } else {
+      /* close other side of our copy of the pipe */
+      close(fd_pipe_to_child[0]);
+      fd_pipe_to_child[0] = -1;
+      shepherd_trace_sprintf("Child: Parent sent us '%s'", tmpbuf);
+      sscanf(tmpbuf, "noshell = %d", &g_noshell);
+      shepherd_trace_sprintf("noshell = %d", g_noshell);
+      if (g_noshell != 0 && g_noshell != 1) {
+         shepherd_trace_sprintf("Child: Parent didn't register to server. "
+            "%d, %s\n", errno, strerror(errno));
+         ret = -1;
+      }
+   }
+   return ret;
+}
 
 static int map_signal(int sig) 
 {
@@ -601,6 +679,43 @@ int main(int argc, char **argv)
          shepherd_error("can't read configuration file: malloc() failure");
       }
    }
+
+   {
+      char *tmp_rsh_daemon;
+      char *tmp_rlogin_daemon;
+      char *tmp_qlogin_daemon;
+      
+      /*
+       * Check if we have to use the old or the new (builtin)
+       * interactive job support.
+       * TODO: Allow different configurations for rsh, rlogin and telnet,
+       *       allow dynamic configuration for each job.
+       */
+
+      config_errfunc = NULL;
+      tmp_rsh_daemon = get_conf_val("rsh_daemon");
+      if (tmp_rsh_daemon != NULL
+          && strcasecmp(tmp_rsh_daemon, "builtin") == 0) {
+         g_new_interactive_job_support = true;
+         shepherd_trace_sprintf("rsh_daemon = %s", tmp_rsh_daemon);
+       }
+
+       tmp_rlogin_daemon = get_conf_val("rlogin_daemon");
+       if (tmp_rlogin_daemon != NULL
+           && strcasecmp(tmp_rlogin_daemon, "builtin") == 0) {
+         g_new_interactive_job_support = true;
+         shepherd_trace_sprintf("rlogin_daemon = %s", tmp_rlogin_daemon);
+       }
+
+       tmp_qlogin_daemon = get_conf_val("qlogin_daemon");
+       if (tmp_qlogin_daemon != NULL
+           && strcasecmp(tmp_qlogin_daemon, "builtin") == 0) {
+         g_new_interactive_job_support = true;
+         shepherd_trace_sprintf("qlogin_daemon = %s", tmp_qlogin_daemon);
+       }
+       config_errfunc = shepherd_error;
+    }
+   
 #if defined( INTERIX )
    wl_set_use_sgepasswd((bool)atoi(get_conf_val("enable_windomacc")));
 #endif
@@ -826,7 +941,13 @@ int main(int argc, char **argv)
 
    if (search_conf_val("qrsh_control_port") != NULL) {
       shepherd_write_shepherd_about_to_exit_file();
-      write_exit_code_to_qrsh(exit_status_for_qrsh);
+      if (g_new_interactive_job_support == false) {
+         write_exit_code_to_qrsh(exit_status_for_qrsh);
+      } else {
+         shepherd_trace_sprintf("writing exit status to qrsh: %d", 
+                                exit_status_for_qrsh);
+         close_parent_loop(exit_status_for_qrsh);
+      }
    }
 	
    shepherd_trace_exit( );
@@ -865,6 +986,16 @@ int ckpt_type
    u_long32 wait_status = 0;
    int core_dumped, ckpt_interval, ckpt_pid = 0;
    int wexit_flag_true = 1; /* to please IRIX compiler */
+   int fd_pipe_in[2] = {-1, -1};
+   int fd_pipe_out[2] = {-1, -1};
+   int fd_pipe_err[2] = {-1, -1};
+   int fd_pipe_to_child[2] = {-1, -1};
+   int ret;
+   int fd_pty_master;
+   int pty = 1;
+   dstring err_msg = DSTRING_INIT;
+   bool is_interactive = false;
+
 
 #if defined(IRIX)
    ash_t ash = 0;
@@ -873,6 +1004,13 @@ int ckpt_type
 #elif defined(CRAY)
    int jobid = 0;
 #endif
+   /*TODO: Define a function or macro "is_interactive(script_file)"*/
+   /* Do we have an interactive job? */
+   if (strcasecmp(script_file, JOB_TYPE_STR_QLOGIN) == 0 ||
+       strcasecmp(script_file, JOB_TYPE_STR_QRSH) == 0 ||
+       strcasecmp(script_file, JOB_TYPE_STR_QRLOGIN) == 0) {
+      is_interactive = true;
+   }
    
    /* Don't care about checkpointing for "commands other than "job" */
    if (strcmp(childname, "job"))
@@ -903,18 +1041,61 @@ int ckpt_type
       shepherd_trace("restarting job from checkpoint arena");
       pid = start_async_command("restart", rest_command);
    }
-   else {
+   else { /* not job or job and not checkpointing */
+      if (g_new_interactive_job_support == false || !is_interactive) {
+         pid = fork();
+      } else {
+         /*
+          * Create a pipe to tell child when communication to client is set up
+          * and child can start the job.
+          */
+         ret = pipe(fd_pipe_to_child);
+         shepherd_trace_sprintf("fd_pipe_to_child[0] = %d, fd_pipe_to_child[1] = %d",
+                        fd_pipe_to_child[0], fd_pipe_to_child[1]);
+         if (ret < 0) {
+            shepherd_error_sprintf("can't create pipe! errno=%d: %s\n",
+               errno, strerror(errno));
+            return 1;
+         }
 
-      pid = fork();
-      if (pid==0) {
+         /*
+          * Open a pty and do the fork. The parent gets the pty master, the
+          * child gets the pty slave. The slave pty becomes stdin/stdout/stderr
+          * of the child.
+          */
+         if (pty == 1) {
+            shepherd_trace("calling fork_pty()");
+            pid = fork_pty(&fd_pty_master, fd_pipe_err, &err_msg);
+         } else {
+            shepherd_trace("calling fork_no_pty()");
+            pid = fork_no_pty(fd_pipe_in, fd_pipe_out, fd_pipe_err, &err_msg);
+         }
+      } 
+
+      if (pid==0) { /* child */
+         if (g_new_interactive_job_support == true && is_interactive) {
+            ret = wait_until_parent_has_registered_to_server(fd_pipe_to_child);
+            if (ret < 0) {
+               return ret;
+            }
+         }
+         shepherd_trace_sprintf("Child: Starting son(%s, %s, 0);\n",
+            childname, script_file);
+
          son(childname, script_file, 0);
       }
    }
 
    if (pid == -1) {
-      shepherd_error_sprintf("can't fork \"%s\"", childname);
+      if (g_new_interactive_job_support == false || !is_interactive) {
+         shepherd_error_sprintf("can't fork \"%s\"", childname);
+      } else {
+         shepherd_error_sprintf("can't fork \"%s\": %s\n", 
+            childname, sge_dstring_get_string(&err_msg));
+      }
    }
 
+   /* parent */
    shepherd_trace_sprintf("forked \"%s\" with pid %d", childname, pid);
 
    change_shepherd_signal_mask();
@@ -968,12 +1149,79 @@ int ckpt_type
    } else {
       shepherd_trace_sprintf("child: %s - pid: %d", childname, pid);
    }
-      
-   /* Wait until child finishes ----------------------------------------*/         
-   status = wait_my_child(pid, ckpt_pid, ckpt_type, 
-                          &rusage, timeout, ckpt_interval, childname);
-   alarm(0);
+         
+   if (g_new_interactive_job_support == false || !is_interactive) {
+      /* Wait until child finishes ----------------------------------------*/         
+      status = wait_my_child(pid, ckpt_pid, ckpt_type, 
+                             &rusage, timeout, ckpt_interval, childname);
+      alarm(0);
+   } else { /* g_new_interactive_job_support == true && is_interactive */
+      /* TODO: If possible, move this to a function */
+      char *address;
+      char *hostname;
+      char *username;
+      int  port;
+      char *separator;
+      char err_str[MAX_STRING_SIZE];
 
+      /* close childs end of the pipe */
+      shepherd_trace("Parent: closing childs end of the pipe");
+      close(fd_pipe_to_child[0]);
+      fd_pipe_to_child[0] = -1;
+
+      /* read destination host and port from config */
+      address = get_conf_val("qrsh_control_port");
+
+      if (address == NULL) {
+         SHEPHERD_TRACE((err_str, "config does not contain entry for qrsh_control_port"));
+         return 1;
+      }
+      address = strdup(address);
+
+      SHEPHERD_TRACE((err_str, "qrsh listens on address = %s", address));
+
+      separator = strchr(address, ':');
+      if (separator == NULL) {
+         SHEPHERD_TRACE((err_str, "illegal value for qrsh_control_port: "
+                                  "\"%s\". Should be host:port", address));
+         FREE(address);
+         return 2;
+      }
+     
+      *separator = '\0';
+      hostname = address;
+      port = atoi(separator + 1);
+
+      SHEPHERD_TRACE((err_str, "qrsh listens on - host = %s, port = %d", hostname, port));
+      shepherd_trace_sprintf("starting parent loop with hostname = %s, "
+                             "port = %d, fd_pty_master = %d, "
+                             "fd_pipe_in = %d, fd_pipe_out = %d, "
+                             "fd_pipe_err = %d, fd_pipe_to_child = %d",
+                             hostname, port, fd_pty_master, fd_pipe_in[0], 
+                             fd_pipe_out[0], fd_pipe_err[0], fd_pipe_to_child[0]);
+
+      username = get_conf_val("job_owner");
+      start_time = sge_get_gmt();
+
+      ret = parent_loop(hostname, port, fd_pty_master, fd_pipe_in, 
+                        fd_pipe_out, fd_pipe_err, fd_pipe_to_child,
+                        ckpt_pid, ckpt_type, timeout, ckpt_interval, 
+                        childname, username, &exit_status);
+      ckpt_interval = 0;
+
+      /* child exited, read usage */
+      status = wait_my_child(pid, ckpt_pid, ckpt_type, 
+                             &rusage, timeout, ckpt_interval, childname);
+
+      shepherd_trace_sprintf("wait_my_child returned:");
+      shepherd_trace_sprintf("   status = %d", status);
+      shepherd_trace_sprintf("   rusage.ru_stime.tv_sec  = %d", rusage.ru_stime.tv_sec);
+      shepherd_trace_sprintf("   rusage.ru_stime.tv_usec = %d", rusage.ru_stime.tv_usec);
+      shepherd_trace_sprintf("   rusage.ru_utime.tv_sec  = %d", rusage.ru_utime.tv_sec);
+      shepherd_trace_sprintf("   rusage.ru_utime.tv_usec = %d", rusage.ru_utime.tv_usec);
+      FREE(address);
+      /* END TODO: Move this to a function */
+   }
    end_time = sge_get_gmt();
 
    shepherd_trace_sprintf("reaped \"%s\" with pid %d", childname, pid);
@@ -1080,47 +1328,49 @@ int ckpt_type
    }
 
    if (!strcmp("job", childname)) {
-      if (search_conf_val("rsh_daemon") != NULL) {
-         int qrsh_exit_code = -1;
-         int success = 1; 
+      if (g_new_interactive_job_support == false) {
+         if (search_conf_val("rsh_daemon") != NULL) {
+            int qrsh_exit_code = -1;
+            int success = 1; 
 
-         sge_switch2start_user();
-         success = get_exit_code_of_qrsh_starter(&qrsh_exit_code);
-         delete_qrsh_pid_file();
-         sge_switch2admin_user();
+            sge_switch2start_user();
+            success = get_exit_code_of_qrsh_starter(&qrsh_exit_code);
+            delete_qrsh_pid_file();
+            sge_switch2admin_user();
 
-         if (success != 0) {
-            /* This case should never happen */
-            /* See Issue 1679 */
-            shepherd_trace_sprintf("can't get qrsh_exit_code\n");
-         }
+            if (success != 0) {
+               /* This case should never happen */
+               /* See Issue 1679 */
+               shepherd_trace_sprintf("can't get qrsh_exit_code\n");
+            }
 
-         /* normal exit */
-         if (WIFEXITED(qrsh_exit_code)) {
-            const char *qrsh_error;
+            /* normal exit */
+            if (WIFEXITED(qrsh_exit_code)) {
+               const char *qrsh_error;
 
-            exit_status = WEXITSTATUS(qrsh_exit_code);
+               exit_status = WEXITSTATUS(qrsh_exit_code);
 
-            qrsh_error = get_error_of_qrsh_starter();
-            if (qrsh_error != NULL) {
-               shepherd_error_sprintf("startup of qrsh job failed: "SFN"",
-                                      qrsh_error);
-               FREE(qrsh_error);
-            } else {
-               shepherd_trace_sprintf("job exited normally, exit code is %d", 
-                                      exit_status);
+               qrsh_error = get_error_of_qrsh_starter();
+               if (qrsh_error != NULL) {
+                  shepherd_error_sprintf("startup of qrsh job failed: "SFN"",
+                                         qrsh_error);
+                  FREE(qrsh_error);
+               } else {
+                  shepherd_trace_sprintf("job exited normally, exit code is %d", 
+                                         exit_status);
+               }
+            }
+
+            /* qrsh job was signaled */
+            if (WIFSIGNALED(qrsh_exit_code)) {
+               child_signal = WTERMSIG(qrsh_exit_code);
+               exit_status = 128 + child_signal;
+               shepherd_trace_sprintf("job exited on signal %d, exit code is "
+                                      "%d", child_signal, exit_status);
             }
          }
-
-         /* qrsh job was signaled */
-         if (WIFSIGNALED(qrsh_exit_code)) {
-            child_signal = WTERMSIG(qrsh_exit_code);
-            exit_status = 128 + child_signal;
-            shepherd_trace_sprintf("job exited on signal %d, exit code is "
-                                   "%d", child_signal, exit_status);
-         }
       }
-   
+
       /******* write usage to file "usage" ************/
       shepherd_write_usage_file(wait_status, exit_status,
                                 child_signal, start_time,
@@ -1729,6 +1979,194 @@ static int check_ckpttype(void)
 }
 
 /*------------------------------------------------------------------------*/
+void handle_signals_and_methods(
+   int npid,
+   int pid,
+   int *postponed_signal,
+   pid_t ctrl_pid[3],
+   int ckpt_interval,
+   int ckpt_type,
+   int *ckpt_cmd_pid,
+   int *rest_ckpt_interval,
+   int timeout,
+   int *migr_cmd_pid,
+   int ckpt_pid,
+   int *kill_job_after_checkpoint,
+   int status,
+   int *inArena,
+   int *inCkpt,
+   char *childname,
+   int *job_status,
+   int *job_pid)
+{
+   int remaining_alarm  = 0;
+   int i;
+
+   remaining_alarm = alarm(0);
+     
+   /* got a signal? should compare errno with EINTR */
+   if (npid == -1) {
+      /* got SIGALRM */ 
+      if (received_signal == SIGALRM) {
+         /* notify: postponed signals SIGSTOP, SIGKILL */
+         if (*postponed_signal) {
+            shepherd_trace_sprintf("kill(%d, %s) -> delivering postponed "
+                                   "signal", -pid, 
+                                   sge_sys_sig2str(*postponed_signal));
+            
+            shepconf_deliver_signal_or_method(*postponed_signal, -pid, 
+                                              ctrl_pid);
+            /*shepherd_signal_job(-pid, postponed_signal);*/
+            *postponed_signal = 0;
+         } else {
+            shepherd_trace("no postponed signal");
+
+            /* userdefined ckpt has always ckpt_interval = 0 */ 
+            if (ckpt_interval) {
+               if (ckpt_type & CKPT_KERNEL) {
+                  shepherd_trace("initiate regular kernel level checkpoint");
+                  *ckpt_cmd_pid = start_async_command("ckpt", ckpt_command);
+                  rest_ckpt_interval = 0;
+                  if (*ckpt_cmd_pid == -1) {
+                     *ckpt_cmd_pid = -999;
+                     *rest_ckpt_interval = ckpt_interval;
+                  }
+                  else
+                     *inCkpt = 1;
+               } else if (ckpt_type & CKPT_TRANS) {
+                  shepherd_trace("send checkpointing signal to transparent checkpointing job");
+                  sge_switch2start_user();
+                  kill(-pid, ckpt_signal);
+                  sge_switch2admin_user();
+               } else if (ckpt_type & CKPT_USER) {
+                  shepherd_trace("send checkpointing signal to userdefined checkpointing job");
+                  sge_switch2start_user();
+                  kill(-pid, ckpt_signal);
+                  sge_switch2admin_user();
+               }
+            } 
+            forward_signal_to_job(pid, timeout, postponed_signal,
+                                  remaining_alarm, ctrl_pid);
+         }
+      } else if (ckpt_pid && (received_signal == SIGTTOU)) {
+         shepherd_trace("initiate checkpoint due to migration request");
+         rest_ckpt_interval = 0; /* disable regular checkpoint */
+         if (!(*inCkpt)) {
+            *migr_cmd_pid = start_async_command("migrate", migr_command);
+            if (*migr_cmd_pid == -1) {
+               *migr_cmd_pid = -999;
+            } else {
+               *inCkpt = 1;
+               signalled_ckpt_job = 1;
+            }
+         } else {
+            /* kill job after end of ckpt_command */
+            *kill_job_after_checkpoint = 1; 
+         }
+      } else if (received_signal != 0 || *postponed_signal != 0) { /* received any other signal */
+#if defined(INTERIX)
+         sge_set_environment();
+         if(strcmp(childname, "job") == 0 &&
+            wl_get_GUI_mode(get_conf_val("display_win_gui")) == true) {
+            /*
+             * forward SIGKILL, swallow all other signals
+             */
+            int sig = map_signal(received_signal);
+            if(sig == SIGKILL) { 
+               char errormsg[MAX_STRING_SIZE];
+               wl_forward_signal_to_job(get_conf_val("job_id"),
+                                     &sig,
+                                     errormsg, MAX_STRING_SIZE);
+            }
+         } else
+#endif
+         {
+            forward_signal_to_job(pid, timeout, postponed_signal, 
+                                  remaining_alarm, ctrl_pid);
+         }
+      } else {
+         /*
+          * Didn't receive a signal, just continue, 
+          * the following code is prepared for it.
+          */
+      }
+   }
+         
+   /* here we reap the control action methods */
+   for (i=0; i<3; i++) {
+      static char *cm_descr[] = {
+         "resume",
+         "suspend",
+         "terminate"
+      };
+      if ((npid == ctrl_pid[i]) && ((WIFSIGNALED(status) || WIFEXITED(status)))) {
+         shepherd_trace_sprintf("reaped %s command", cm_descr[i]);
+         ctrl_pid[i] = -999;
+      }
+   }
+
+   /* here we reap the checkpoint command */
+   if ((npid == *ckpt_cmd_pid) && ((WIFSIGNALED(status) || WIFEXITED(status)))) {
+      *inCkpt = 0;
+      shepherd_trace("reaped checkpoint command");
+      if (!(*kill_job_after_checkpoint))
+         *rest_ckpt_interval = ckpt_interval; 
+      *ckpt_cmd_pid = -999;
+      if (WIFEXITED(status)) {
+         shepherd_trace("checkpoint command exited normally");
+         if (WEXITSTATUS(status)==0 && !(*inArena)) {
+            shepherd_trace("checkpoint is in the arena after regular checkpoint");
+            create_checkpointed_file(1);
+            *inArena = 1;
+         }                     
+      }
+      /* A migration request occured and we just did a regular checkpoint */
+      if (*kill_job_after_checkpoint) {
+          shepherd_trace("killing job after regular checkpoint due to migration request");
+          shepherd_signal_job(-pid, SIGKILL);   
+      }    
+   }
+
+   /* here we reap the migration command */
+   if ((npid == *migr_cmd_pid) && 
+       ((WIFSIGNALED(status) || WIFEXITED(status)))) {
+      /*
+       * If the migrate command exited but the job did 
+       * not stop (due to error in the migrate script) we have
+       * to reset internat state. As result further migrate
+       * commands will be executed (qmod -f -s).
+       */
+      *inCkpt = 0;
+      shepherd_trace("if jobs and shepherd do not exit there is some error "
+                     "in the migrate command");
+
+
+      shepherd_trace("reaped migration checkpoint command");
+      *migr_cmd_pid = -999;
+      if (WIFEXITED(status)) {
+         shepherd_trace("checkpoint command exited normally");
+         if (WEXITSTATUS(status) == 0 && !(*inArena)) {
+            shepherd_trace("checkpoint is in the arena after migration request");
+            create_checkpointed_file(1);
+            *inArena = 1;
+         }
+      }
+   }
+   
+   /* reap job */
+   if ((npid == pid) && ((WIFSIGNALED(status) || WIFEXITED(status)))) {
+      shepherd_trace_sprintf("%s exited with exit status %d", 
+                             childname, WEXITSTATUS(status));
+      *job_status = status;
+      *job_pid = -999;
+   }   
+
+   if ((npid == coshepherd_pid) && ((WIFSIGNALED(status) || WIFEXITED(status)))) {
+      shepherd_trace("reaped sge_coshepherd");
+      coshepherd_pid = -999;
+   }   
+}         
+/*------------------------------------------------------------------------*/
 static int wait_my_child(
 int pid,                   /* pid of job */
 int ckpt_pid,              /* pid of restarted job or same as pid */
@@ -1743,7 +2181,6 @@ char *childname            /* "job", "pe_start", ...     */
    int rest_ckpt_interval;
    int inArena, inCkpt, kill_job_after_checkpoint, job_pid;
    int postponed_signal = 0; /* used for implementing SIGSTOP/SIGKILL notifiy mechanism */
-   int remaining_alarm;
    pid_t ctrl_pid[3];
 
 #if defined(HPUX) || defined(INTERIX)
@@ -1788,7 +2225,7 @@ char *childname            /* "job", "pe_start", ...     */
 #endif
 
 #if defined(INTERIX)
-/* <Windows_GUI> */
+      /* <Windows_GUI> */
       sge_set_environment();
       if(strcmp(childname, "job") == 0 &&
          wl_get_GUI_mode(get_conf_val("display_win_gui")) == true) {
@@ -1806,7 +2243,7 @@ char *childname            /* "job", "pe_start", ...     */
                rusage_hp10.ru_utime);
          }
       } else 
-/* </Windows_GUI> */
+      /* </Windows_GUI> */
 #endif
 #if defined(HPUX) || defined(INTERIX)
       {
@@ -1815,10 +2252,12 @@ char *childname            /* "job", "pe_start", ...     */
       }
 #endif
 
-      remaining_alarm = alarm(0);
-     
       if (npid == -1) {
          shepherd_trace_sprintf("wait3 returned -1");
+         if (errno == ECHILD) {
+            shepherd_trace_sprintf("all childs have exited, quit wait3() loop.");
+            break;
+         }
       } else {
          shepherd_trace_sprintf("wait3 returned %d (status: %d; WIFSIGNALED: %d, "
                           " WIFEXITED: %d, WEXITSTATUS: %d)", npid, status,
@@ -1826,163 +2265,26 @@ char *childname            /* "job", "pe_start", ...     */
                           WEXITSTATUS(status));
       }
 
-      /* got a signal? should compare errno with EINTR */
-      if (npid == -1) {
-         /* got SIGALRM */ 
-         if (received_signal == SIGALRM) {
-            /* notify: postponed signals SIGSTOP, SIGKILL */
-            if (postponed_signal) {
-               shepherd_trace_sprintf("kill(%d, %s) -> delivering postponed "
-                                      "signal", -pid, 
-                                      sge_sys_sig2str(postponed_signal));
-               
-               shepconf_deliver_signal_or_method(postponed_signal, -pid, 
-                                                 ctrl_pid);
-               /*shepherd_signal_job(-pid, postponed_signal);*/
-               postponed_signal = 0;
-            } else {
-               shepherd_trace("no postponed signal");
+      handle_signals_and_methods(
+         npid,
+         pid,
+         &postponed_signal,
+         ctrl_pid,
+         ckpt_interval,
+         ckpt_type,
+         &ckpt_cmd_pid,
+         &rest_ckpt_interval,
+         timeout,
+         &migr_cmd_pid,
+         ckpt_pid,
+         &kill_job_after_checkpoint,
+         status,
+         &inArena,
+         &inCkpt,
+         childname,
+         &job_status,
+         &job_pid);
 
-               /* userdefined ckpt has always ckpt_interval = 0 */ 
-               if (ckpt_interval) {
-                  if (ckpt_type & CKPT_KERNEL) {
-                     shepherd_trace("initiate regular kernel level checkpoint");
-                     ckpt_cmd_pid = start_async_command("ckpt", ckpt_command);
-                     rest_ckpt_interval = 0;
-                     if (ckpt_cmd_pid == -1) {
-                        ckpt_cmd_pid = -999;
-                        rest_ckpt_interval = ckpt_interval;
-                     }
-                     else
-                        inCkpt = 1;
-                  } else if (ckpt_type & CKPT_TRANS) {
-                     shepherd_trace("send checkpointing signal to transparent checkpointing job");
-                     sge_switch2start_user();
-                     kill(-pid, ckpt_signal);
-                     sge_switch2admin_user();
-                  } else if (ckpt_type & CKPT_USER) {
-                     shepherd_trace("send checkpointing signal to userdefined checkpointing job");
-                     sge_switch2start_user();
-                     kill(-pid, ckpt_signal);
-                     sge_switch2admin_user();
-                  }
-               } 
-               forward_signal_to_job(pid, timeout, &postponed_signal,
-                                     remaining_alarm, ctrl_pid);
-            }
-         } else if (ckpt_pid && (received_signal == SIGTTOU)) {
-            shepherd_trace("initiate checkpoint due to migration request");
-            rest_ckpt_interval = 0; /* disable regular checkpoint */
-            if (!inCkpt) {
-               migr_cmd_pid = start_async_command("migrate", migr_command);
-               if (migr_cmd_pid == -1) {
-                  migr_cmd_pid = -999;
-               } else {
-                  inCkpt = 1;
-                  signalled_ckpt_job = 1;
-               }
-            } else {
-               /* kill job after end of ckpt_command */
-               kill_job_after_checkpoint = 1; 
-            }
-         } else {
-#if defined(INTERIX)
-            sge_set_environment();
-            if(strcmp(childname, "job") == 0 &&
-               wl_get_GUI_mode(get_conf_val("display_win_gui")) == true) {
-               /*
-                * forward SIGKILL, swallow all other signals
-                */
-               int sig = map_signal(received_signal);
-               if(sig == SIGKILL) { 
-                  char errormsg[MAX_STRING_SIZE];
-                  wl_forward_signal_to_job(get_conf_val("job_id"),
-                                        &sig,
-                                        errormsg, MAX_STRING_SIZE);
-               }
-            } else
-#endif
-            {
-               forward_signal_to_job(pid, timeout, &postponed_signal, 
-                                     remaining_alarm, ctrl_pid);
-            }
-         }
-      }
-            
-      /* here we reap the control action methods */
-      for (i=0; i<3; i++) {
-         static char *cm_descr[] = {
-            "resume",
-            "suspend",
-            "terminate"
-         };
-         if ((npid == ctrl_pid[i]) && ((WIFSIGNALED(status) || WIFEXITED(status)))) {
-            shepherd_trace_sprintf("reaped %s command", cm_descr[i]);
-            ctrl_pid[i] = -999;
-         }
-      }
-
-      /* here we reap the checkpoint command */
-      if ((npid == ckpt_cmd_pid) && ((WIFSIGNALED(status) || WIFEXITED(status)))) {
-         inCkpt = 0;
-         shepherd_trace("reaped checkpoint command");
-         if (!kill_job_after_checkpoint)
-            rest_ckpt_interval = ckpt_interval; 
-         ckpt_cmd_pid = -999;
-         if (WIFEXITED(status)) {
-            shepherd_trace("checkpoint command exited normally");
-            if (WEXITSTATUS(status)==0 && !inArena) {
-               shepherd_trace("checkpoint is in the arena after regular checkpoint");
-               create_checkpointed_file(1);
-               inArena = 1;
-            }                     
-         }
-         /* A migration request occured and we just did a regular checkpoint */
-         if (kill_job_after_checkpoint) {
-             shepherd_trace("killing job after regular checkpoint due to migration request");
-             shepherd_signal_job(-pid, SIGKILL);   
-         }    
-      }
-
-      /* here we reap the migration command */
-      if ((npid == migr_cmd_pid) && 
-          ((WIFSIGNALED(status) || WIFEXITED(status)))) {
-         /*
-          * If the migrate command exited but the job did 
-          * not stop (due to error in the migrate script) we have
-          * to reset internat state. As result further migrate
-          * commands will be executed (qmod -f -s).
-          */
-         inCkpt = 0;
-         shepherd_trace("if jobs and shepherd do not exit there is some error "
-                        "in the migrate command");
-
-
-         shepherd_trace("reaped migration checkpoint command");
-         migr_cmd_pid = -999;
-         if (WIFEXITED(status)) {
-            shepherd_trace("checkpoint command exited normally");
-            if (WEXITSTATUS(status) == 0 && !inArena) {
-               shepherd_trace("checkpoint is in the arena after migration request");
-               create_checkpointed_file(1);
-               inArena = 1;
-            }
-         }
-      }
-      
-      /* reap job */
-      if ((npid == pid) && ((WIFSIGNALED(status) || WIFEXITED(status)))) {
-         shepherd_trace_sprintf("%s exited with exit status %d", 
-                                childname, WEXITSTATUS(status));
-         job_status = status;
-         job_pid = -999;
-      }   
-
-      if ((npid == coshepherd_pid) && ((WIFSIGNALED(status) || WIFEXITED(status)))) {
-         shepherd_trace("reaped sge_coshepherd");
-         coshepherd_pid = -999;
-      }   
-         
       
    } while ((job_pid > 0) || (migr_cmd_pid > 0) || (ckpt_cmd_pid > 0) ||
             (ctrl_pid[0] > 0) || (ctrl_pid[1] > 0) || (ctrl_pid[2] > 0));

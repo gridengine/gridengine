@@ -30,21 +30,15 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-#ifdef NO_JNI
-
-static int dummy_jvm;
-
-#else
-
-#include "sge_thread_jvm.h"
-
 #include <signal.h>
 #include <pthread.h>
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
 
+#ifndef NO_JNI
+
+#include "sge_thread_jvm.h"
 #include "basis_types.h"
 #include "sge_qmaster_threads.h"
 #include "sgermon.h"
@@ -165,7 +159,7 @@ sge_qmaster_thread_jvm_cleanup_monitor(monitoring_t *monitor)
 static bool shutdown_main(void) 
 {
    char main_class_name[] = "com/sun/grid/jgdi/management/JGDIAgent";
-	jmethodID shutdown_mid;
+	jmethodID shutdown_mid = NULL;
    JNIEnv *env;
    jclass main_class;
    int ret = 0;

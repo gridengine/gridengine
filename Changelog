@@ -1,3 +1,32 @@
+HP-2007-11-21-0: Enhancem.: o new interactive job support
+                            o starts interactive jobs directly, without rsh/rshd
+                              or rlogin/rlogind or telnet/telnetd.
+                            o doesn't need reserved ports on exec host.
+                            o redirects input/output using commlib, i.e. this
+                              redirection is prepared for encryption.
+                 Added:     clients/common/sge_client_ijs.c 
+                            clients/common/sge_client_ijs.h 
+                            common/sge_ijs_comm.c 
+                            common/sge_ijs_comm.h 
+                            common/sge_ijs_threads.c 
+                            common/sge_ijs_threads.h 
+                            daemons/shepherd/sge_shepherd_ijs.c 
+                            daemons/shepherd/sge_shepherd_ijs.h 
+                            libs/uti/sge_pty.c source/libs/uti/sge_pty.h 
+                 Modified:  aimk
+                            common/Makefile
+                            clients/qsh/Makefile
+                            clients/qsh/msg_qsh.h
+                            clients/qsh/qsh.c
+                            common/Makefile
+                            daemons/qmaster/sge_thread_jvm.c
+                            daemons/shepherd/Makefile
+                            daemons/shepherd/builtin_starter.c
+                            daemons/shepherd/shepherd.c
+                            libs/uti/Makefile
+                            utilbin/Makefile
+                 Review:    JG
+
 PJ-2007-11-21-0: Bugfix:    ExecuteAsAdmin shorten the long command 
                             line arguments an solaris host because of 
                             /usr/bin/sh limitations

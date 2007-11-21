@@ -52,7 +52,7 @@ UTILBIN_SRC =  uidgid.c gethostname.c gethostbyname.c gethostbyaddr.c \
 UTILBIN_OBJS  = $(UTILBIN_SRC:.c=.o) 
 
 UTILBIN_TARGET_OBJS = checkprog.o loadcheck.o testsuidroot.o work.o \
-                      sge_passwd_main.o
+                      sge_passwd_main.o $(AUTHUSER_OBJ) $(LOADCHECK_OBJ) $(JUTI_OBJ)
 
 ###############################################################################
 # global rules: all, clean, depend, messages
@@ -60,7 +60,7 @@ UTILBIN_TARGET_OBJS = checkprog.o loadcheck.o testsuidroot.o work.o \
 utilbin:	$(UTILBIN_TARGETS)
 
 utilbin_clean:
-		$(RM) $(UTILBIN_TARGETS) $(UTILBIN_OBJS) $(UTILBIN_TARGET_OBJS) juti.obj
+		$(RM) $(UTILBIN_TARGETS) $(UTILBIN_OBJS) $(UTILBIN_TARGET_OBJS)
 
 utilbin_depend:
 	$(DEPEND) -f$(UTILBIN_DIR)/utilbin_dependencies $(UTILBIN_DIR)/*.c

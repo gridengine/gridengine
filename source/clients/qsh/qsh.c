@@ -85,6 +85,32 @@
 
 #include "gdi/sge_gdi_ctx.h"
 
+#if defined(DARWIN)
+#  include <termios.h>
+#  include <sys/ttycom.h>
+#  include <sys/ioctl.h>
+#elif defined(HP11) || defined(HP1164)
+#  include <termios.h>
+#elif defined(INTERIX)
+#  include <termios.h>
+#  include <sys/ioctl.h>
+#else
+#  include <termio.h>
+#endif
+
+#include "sge_client_ijs.h"
+#include "sge_pty.h"
+#include "sge_ijs_comm.h"
+#include "sge_ijs_threads.h"
+
+#define THISCOMPONENT  "pty_qrsh"
+#define OTHERCOMPONENT "pty_shepherd"
+
+extern COMMUNICATION_HANDLE *g_comm_handle;
+
+bool g_secure = false;
+bool g_new_interactive_job_support = false;
+
 sge_gdi_ctx_class_t *ctx = NULL;
 
 static void write_client_name_cache(const char *cache_path, const char *client_name);
@@ -967,6 +993,10 @@ get_client_name(sge_gdi_ctx_class_t *ctx, int is_rsh, int is_rlogin, int inherit
     * In case of qrsh -inherit, try to read client_command from a cache file.
     * The cache file is created in the jobs TMPDIR.
     */
+   /*
+    * In case of new IJS, the cache file contains "builtin" if the rsh_command
+    * rlogin_command or qlogin_command is builtin. So we can use it as before.
+    */
    if (inherit_job) {
       char *tmpdir = getenv("TMPDIR");
       /*
@@ -982,12 +1012,15 @@ get_client_name(sge_gdi_ctx_class_t *ctx, int is_rsh, int is_rlogin, int inherit
          sge_dstring_init(&cache_name_dstring, cache_name_buffer, SGE_PATH_MAX);
          cache_name = sge_dstring_sprintf(&cache_name_dstring, "%s/%s", 
                                           tmpdir, QRSH_CLIENT_CACHE);
-         /* try to read cache file - TODO: better call stat before? */
          cache = fopen(cache_name, "r");
          if (cache != NULL) {
             char cached_command[SGE_PATH_MAX];
 
             if (fgets(cached_command, SGE_PATH_MAX, cache) != NULL) {
+               if (strcasecmp(cached_command, "builtin") == 0) {
+                  g_new_interactive_job_support = true;
+               }
+
                FCLOSE(cache);
                DPRINTF(("found cached client name: %s\n", cached_command));
                DEXIT;
@@ -1057,6 +1090,9 @@ get_client_name(sge_gdi_ctx_class_t *ctx, int is_rsh, int is_rlogin, int inherit
       client_name = strdup(client_name);
    }
 
+   if (strcasecmp(client_name, "builtin") == 0) {
+      g_new_interactive_job_support = true;
+   }
 
    if (inherit_job) {
       /* cache client_name for use in further qrsh -inherit calls */
@@ -1119,7 +1155,7 @@ static void write_client_name_cache(const char *cache_path, const char *client_n
    }
    return;
 FCLOSE_ERROR:
-   /* TODO: error handling */
+   /* TODO: error handling, try to delete the file */
    return;
 }
 
@@ -1293,7 +1329,7 @@ int main(int argc, char **argv)
 
    lListElem *ep = NULL;
 
-   int sock;
+   int sock = 0;
 
    const char* progname = NULL;
    const char* unqualified_hostname = NULL;
@@ -1419,7 +1455,7 @@ int main(int argc, char **argv)
          lRemoveElem(opts_cmdline, &ep);
          nostdin = 1;
       }
-     
+
       while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-inherit"))) {
          lRemoveElem(opts_cmdline, &ep);
          inherit_job = 1;
@@ -1607,10 +1643,11 @@ int main(int argc, char **argv)
       just_verify = (lGetUlong(job, JB_verify_suitable_queues)==JUST_VERIFY);
    }
 
-   /*
-   ** open socket for qlogin communication and set host and port in environment QRSH_PORT 
-   */
-   {
+   if (g_new_interactive_job_support == false) {
+      /*
+      ** open socket for qlogin communication and set host and port 
+      ** in environment QRSH_PORT 
+      */
       char buffer[1024];
       int my_port = 0;
       lList *envlp = NULL;
@@ -1625,6 +1662,59 @@ int main(int argc, char **argv)
 
       var_list_set_string(&envlp, "QRSH_PORT", buffer);
       set_command_to_env(envlp, opts_qrsh);
+   } else {
+      /* TODO: Move this to a function */
+      int     ret;
+      dstring connection_params = DSTRING_INIT;
+      dstring error_msg = DSTRING_INIT;
+      lList   *envlp = NULL;
+
+      /*
+       * Set all signal handlers
+       */
+      sge_set_def_sig_mask(NULL, NULL);
+      sge_unblock_all_signals();
+      set_signal_handlers();
+
+      /*
+       * start the commlib server
+       */
+      DPRINTF(("starting commlib server\n"));
+      ret = comm_open_connection(true, 0, THISCOMPONENT, g_secure, username,
+                                 &g_comm_handle, &error_msg);
+
+      if (ret != 0) {
+         ERROR((SGE_EVENT, MSG_QSH_CREATINGCOMMLIBSERVER_S,
+               sge_dstring_get_string(&error_msg)));
+         sge_dstring_free(&connection_params); 
+         sge_dstring_free(&error_msg);
+         SGE_EXIT(NULL, 1);
+      }
+
+      comm_set_connection_param(g_comm_handle, HEARD_FROM_TIMEOUT, 0, &error_msg);
+
+      /*
+       * Write connection data to job object
+       */
+      sge_dstring_sprintf(&connection_params, "%s:%d",
+                          qualified_hostname, g_comm_handle->service_port);
+
+      if((envlp = lGetList(job, JB_env_list)) == NULL) {
+         envlp = lCreateList("environment list", VA_Type);
+         lSetList(job, JB_env_list, envlp);
+      }   
+      /* TODO: Instead of using env, use job field to transfer infos
+       *       JB_qrsh_port field.
+       */
+      var_list_set_string(&envlp, "QRSH_PORT", 
+                          sge_dstring_get_string(&connection_params));
+
+      /* TODO: write the command in JB_job_args field */
+      set_command_to_env(envlp, opts_qrsh);
+
+      sge_dstring_free(&connection_params);
+      sge_dstring_free(&error_msg);
+      /* END TODO: Move this to a function */
    }
 
    /* 
@@ -1652,25 +1742,21 @@ int main(int argc, char **argv)
       VERBOSE_LOG((stderr, MSG_QSH_SENDINGTASKTO_S, host)); 
       VERBOSE_LOG((stderr, "\n"));
 
-#if 0
-      /* if we had a connection to qmaster commd (to get configuration), close it and reset commproc id */
-      /* leave_commd() for old commlib */
-      cl_commlib_close_connection(cl_com_get_handle(progname,0),
-                                 (char*)mastername,
-                                 (char*)prognames[QMASTER],
-                                 1, CL_FALSE);
-#else
+      /* connection to qmaster is not needed any longer */
       cl_commlib_shutdown_handle(cl_com_get_handle(progname,0),CL_FALSE);
-#endif
 
+      /* start task in tightly integrated job */
+      /* directly connect to commlib of exec daemon and submit task */
       tid = sge_qexecve(ctx,
                         host, NULL, 
                         lGetString(job, JB_cwd), 
                         lGetList(job, JB_env_list),
                         lGetList(job, JB_path_aliases)); 
       if (tid == NULL) {
+         const char *qexec_lasterror = qexec_last_err();
+
          ERROR((SGE_EVENT, MSG_QSH_EXECUTINGTASKOFJOBFAILED_IS, existing_job,
-            qexec_last_err() ? qexec_last_err() : "unknown"));
+            qexec_lasterror != NULL ? qexec_lasterror : "unknown"));
          sge_prof_cleanup();
          SGE_EXIT(NULL, EXIT_FAILURE);
       }
@@ -1678,31 +1764,67 @@ int main(int argc, char **argv)
       VERBOSE_LOG((stderr, MSG_QSH_SERVERDAEMONSUCCESSFULLYSTARTEDWITHTASKID_S, tid)); 
       VERBOSE_LOG((stderr, "\n"));
 
-      if ((msgsock = wait_for_qrsh_socket(sock, QSH_SOCKET_FINAL_TIMEOUT)) == -1) {
-         ERROR((SGE_EVENT,MSG_QSH_CANNOTGETCONNECTIONTOQLOGIN_STARTER_SS,"shepherd", host));
-         sge_prof_cleanup();
-         SGE_EXIT(NULL, EXIT_FAILURE);
-      }
-   
-      FREE(host);
-      if (!get_client_server_context(msgsock, &port, &job_dir, &utilbin_dir, &host)) {
-         sge_prof_cleanup();
-         SGE_EXIT(NULL, EXIT_FAILURE);
+      if (g_new_interactive_job_support == false) {
+         /* wait for a client to connect */
+         if ((msgsock = wait_for_qrsh_socket(sock, QSH_SOCKET_FINAL_TIMEOUT)) == -1) {
+            ERROR((SGE_EVENT,MSG_QSH_CANNOTGETCONNECTIONTOQLOGIN_STARTER_SS,"shepherd", host));
+            sge_prof_cleanup();
+            SGE_EXIT(NULL, EXIT_FAILURE);
+         }
+      
+         FREE(host);
+         /* get host and port of rshd, job_dir and utilbin_dir over connection */
+         if (!get_client_server_context(msgsock, &port, &job_dir, &utilbin_dir, &host)) {
+            sge_prof_cleanup();
+            SGE_EXIT(NULL, EXIT_FAILURE);
+         }
+
+         VERBOSE_LOG((stderr, MSG_QSH_ESTABLISHINGREMOTESESSIONTO_SS, 
+            client_name, host));
+         VERBOSE_LOG((stderr, "\n")); 
+
+         /* start task via rsh on rshd */
+         exit_status = start_client_program(client_name, opts_qrsh, host, port,
+            job_dir, utilbin_dir, is_rsh, is_rlogin, nostdin, noshell, sock);
+      } else { /* g_new_interactive_job_support == true */
+         int     ret;
+         dstring err_msg = DSTRING_INIT;
+         int     random_poll = QSH_INTERACTIVE_POLLING_MIN + 
+                               (rand() % QSH_INTERACTIVE_POLLING_MIN);
+
+         /*
+          * Wait for the client (=shepherd) to connect to us
+          */
+         DPRINTF(("waiting for connection\n"));
+         ret = comm_wait_for_connection(g_comm_handle, OTHERCOMPONENT, 
+                                        QSH_SOCKET_FINAL_TIMEOUT, &host, &err_msg);
+         sge_dstring_free(&err_msg);
+         if (ret != COMM_RETVAL_OK) {
+            ERROR((SGE_EVENT, MSG_QSH_GOTNOCONNECTIONWITHINSECONDS_I, 
+                  QSH_SOCKET_FINAL_TIMEOUT));
+            return 1;
+         }
+
+         if (nostdin == 1) {
+            close(STDIN_FILENO);
+         }
+
+         /* TODO: Add proper error handling and error propagation to do_server_loop() */
+         ret = do_server_loop(random_poll, job_id, nostdin, 
+                              noshell, &exit_status);
+         if (ret != 0) {
+            return 1;
+         }
       }
 
-      VERBOSE_LOG((stderr, MSG_QSH_ESTABLISHINGREMOTESESSIONTO_SS, client_name, host));
-      VERBOSE_LOG((stderr, "\n")); 
-
-      exit_status = start_client_program(client_name, opts_qrsh, host, port, job_dir, utilbin_dir,
-                                         is_rsh, is_rlogin, nostdin, noshell, sock);
       /* CR: TODO: This code is not active because there is no need to wait for an
        *           task exit message. The exit_status is already reported by 
        *           start_client_program().
        *
-       *           The code who sends the task exit message is located in the execd code
-       *           in file reaper_execd.c, function clean_up_job(). Activate this code
-       *           to enable task exit messages again and use sge_qwaittid() to wait for
-       *           task exit messages.
+       *           The code which sends the task exit message is located in the
+       *           execd code in file reaper_execd.c, function clean_up_job(). 
+       *           Activate this code to enable task exit messages again and 
+       *           use sge_qwaittid() to wait for task exit messages.
        */
 #if 0
       sge_qwaittid(tid,&execd_status,1);
@@ -1728,7 +1850,9 @@ int main(int argc, char **argv)
       DPRINTF(("B E F O R E     S E N D I N G! ! ! ! ! ! ! ! ! ! ! ! ! !\n"));
       DPRINTF(("=====================================================\n"));
 
-      alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_ADD + SGE_GDI_RETURN_NEW_VERSION , &lp_jobs, NULL, NULL);
+      /* submit the job to the QMaster */
+      alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_ADD + SGE_GDI_RETURN_NEW_VERSION, 
+         &lp_jobs, NULL, NULL);
 
       /* reinitialize 'job' with pointer to new version from qmaster */
       job = lFirst(lp_jobs);
@@ -1788,52 +1912,110 @@ int main(int argc, char **argv)
 
          DPRINTF(("random polling set to %d\n", random_poll));
 
-         /* leave commd while waiting for connection / sleeping while polling (CR -> old commlib comment) */
-         /* next enroll will _not_ ask commd to get same client id as before (CR -> old commlib comment) */
+         /* close connection to QMaster */
          cl_commlib_close_connection(cl_com_get_handle(progname,0),
                                      (char*)mastername,
                                      (char*)prognames[QMASTER],
                                      1, CL_FALSE);
    
          if (is_qlogin) {
-            /* if qlogin_starter is used (qlogin, rsh, rlogin): wait for context */
-            msgsock = wait_for_qrsh_socket(sock, random_poll); 
+            if (g_new_interactive_job_support == false) {
+               /* if qlogin_starter is used (qlogin, rsh, rlogin): wait for context */
+               msgsock = wait_for_qrsh_socket(sock, random_poll); 
 
-            /* qlogin_starter reports "ready to start" */
-            if (msgsock >= 0) {
-               if (!get_client_server_context(msgsock, &port, &job_dir, &utilbin_dir, &host)) {
-                  cl_com_ignore_timeouts(CL_FALSE);
-                  cl_commlib_open_connection(cl_com_get_handle(progname,0),
-                                     (char*)mastername,
-                                     (char*)prognames[QMASTER],
-                                     1);
-                  delete_job(ctx, job_id, lp_jobs);
+               /* qlogin_starter reports "ready to start" */
+               if(msgsock >= 0) {
+                  if(!get_client_server_context(msgsock, &port, &job_dir, 
+                     &utilbin_dir, &host)) {
+                     cl_com_ignore_timeouts(CL_FALSE);
+                     cl_commlib_open_connection(cl_com_get_handle(progname,0),
+                                        (char*)mastername,
+                                        (char*)prognames[QMASTER],
+                                        1);
+                     delete_job(ctx, job_id, lp_jobs);
+                     do_exit = 1;
+                     exit_status = 1;
+                     break;
+                  }
+                  VERBOSE_LOG((stderr, "\n")); 
+                  VERBOSE_LOG((stderr, MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S, 
+                               job_get_id_string(job_id, 0, NULL, &id_dstring)));
+                  VERBOSE_LOG((stderr, "\n")); 
+                  VERBOSE_LOG((stderr, MSG_QSH_ESTABLISHINGREMOTESESSIONTO_SS, 
+                     client_name, host));
+                  VERBOSE_LOG((stderr, "\n")); 
+
+                  /* 
+                   * start client program (e.g. rsh) and wait blocking until
+                   * it quits.
+                   */
+                  exit_status = start_client_program(client_name, opts_qrsh, 
+                     host, port, job_dir, utilbin_dir, is_rsh, is_rlogin, 
+                     nostdin, noshell, sock);
+
+                  if(exit_status < 0) {
+                     WARNING((SGE_EVENT, MSG_QSH_CLEANINGUPAFTERABNORMALEXITOF_S, 
+                        client_name));
+                     cl_com_ignore_timeouts(CL_FALSE);
+                     cl_commlib_open_connection(cl_com_get_handle(progname,0),
+                        (char*)mastername, (char*)prognames[QMASTER], 1);
+                     delete_job(ctx, job_id, lp_jobs);
+                     exit_status = EXIT_FAILURE;
+                  }
+
                   do_exit = 1;
-                  exit_status = 1;
-                  break;
+                  continue;
+               } else {
+                  DPRINTF(("---- got NO valid socket! ----\n"));
                }
-               VERBOSE_LOG((stderr, "\n")); 
-               VERBOSE_LOG((stderr, MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S, 
-                            job_get_id_string(job_id, 0, NULL, &id_dstring)));
-               VERBOSE_LOG((stderr, "\n")); 
-               VERBOSE_LOG((stderr, MSG_QSH_ESTABLISHINGREMOTESESSIONTO_SS, client_name, host));
-               VERBOSE_LOG((stderr, "\n")); 
-
-               exit_status = start_client_program(client_name, opts_qrsh, host, port, job_dir, utilbin_dir,
-                                                  is_rsh, is_rlogin, nostdin, noshell, sock);
-               if (exit_status < 0) {
-                  WARNING((SGE_EVENT, MSG_QSH_CLEANINGUPAFTERABNORMALEXITOF_S, client_name));
-                  cl_com_ignore_timeouts(CL_FALSE);
-                  cl_commlib_open_connection(cl_com_get_handle(progname,0),
-                                     (char*)mastername,
-                                     (char*)prognames[QMASTER],
-                                     1);
-                  delete_job(ctx, job_id, lp_jobs);
-                  exit_status = EXIT_FAILURE;
+            } else { /* if (g_new_interactive_job_support == true) */
+               int     ret;
+               dstring err_msg = DSTRING_INIT;
+               /*
+                * Wait for the client to connect to us
+                */
+               DPRINTF(("waiting for connection\n"));
+               ret = comm_wait_for_connection(g_comm_handle, OTHERCOMPONENT, 
+                                              random_poll, &host, &err_msg);
+               if (ret != COMM_RETVAL_OK) {
+                  if (ret == COMM_GOT_TIMEOUT) {
+                     DPRINTF(("got no connection within timeout of %d s\n", random_poll));
+                     /* Loop again */
+                  } else {
+                     DPRINTF(("got error while waiting for connection\n"));
+                     cl_com_ignore_timeouts(CL_FALSE);
+                     cl_commlib_open_connection(cl_com_get_handle(progname,0),
+                                        (char*)mastername,
+                                        (char*)prognames[QMASTER],
+                                        1);
+                     delete_job(ctx, job_id, lp_jobs);
+                     do_exit = 1;
+                     exit_status = 1;
+                     break;
+                  } 
+               } else { /* if (ret == COMM_RETVAL_OK) */
+                  VERBOSE_LOG((stderr, "\n")); 
+                  VERBOSE_LOG((stderr, MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S, 
+                               job_get_id_string(job_id, 0, NULL, &id_dstring)));
+                  VERBOSE_LOG((stderr, "\n")); 
+                  VERBOSE_LOG((stderr, MSG_QSH_ESTABLISHINGREMOTESESSIONTO_SS, 
+                     client_name, host));
+                  VERBOSE_LOG((stderr, "\n")); 
+            
+                  if (nostdin == 1) {
+                     DPRINTF(("closing STDIN\n"));
+                     close(STDIN_FILENO);
+                  }
+                  /* do_server_loop() loops until the client has disconnected */
+                  ret = do_server_loop(random_poll, job_id, nostdin, 
+                                       noshell, &exit_status);
+                  if (ret == COMM_RETVAL_OK) {
+                     do_exit = 1;
+                     continue;
+                  }
+                  /* do_server_loop() didn't return 0, some unexpected error
+                   * occured -> do the while loop again. */
                }
-
-               do_exit = 1;
-               continue;
             }
          } else {
             /* wait for qsh job to be scheduled */
@@ -1841,9 +2023,10 @@ int main(int argc, char **argv)
          }   
          cl_com_ignore_timeouts(CL_FALSE);
          cl_commlib_open_connection(cl_com_get_handle(progname,0),
-                                   (char*)mastername,
-                                   (char*)prognames[QMASTER],
+                                    (char*)mastername,
+                                    (char*)prognames[QMASTER],
                                     1);
+
          /* get job from qmaster: to handle qsh and to detect deleted qrsh job */
          what = lWhat("%T(%I)", JB_Type, JB_ja_tasks); 
          where = lWhere("%T(%I==%u)", JB_Type, JB_job_number, job_id); 
@@ -1909,7 +2092,7 @@ int main(int argc, char **argv)
                if (is_qlogin) {
                   continue;
                } else {
-               /* qsh: xterm has been started -> exit */   
+                  /* qsh: xterm has been started -> exit */   
                   do_exit = 1;
                }
                break;
@@ -1931,7 +2114,17 @@ int main(int argc, char **argv)
             DPRINTF(("polling_interval set to %d\n", polling_interval));
          }
       } /* end of while (1) polling */
-   
+      if (g_new_interactive_job_support == true) {
+         dstring err_msg = DSTRING_INIT;
+         int     ret;
+
+         ret = comm_shutdown_connection(g_comm_handle, &err_msg);
+         if (ret != COMM_RETVAL_OK) {
+            DPRINTF(("comm_shutdown_connection() failed: %s (%d)",
+                     sge_dstring_get_string(&err_msg), ret));
+         }
+      }
+
       lFreeList(&lp_jobs);
       sge_dstring_free(&id_dstring);
    }

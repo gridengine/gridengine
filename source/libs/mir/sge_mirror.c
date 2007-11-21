@@ -93,6 +93,10 @@ typedef struct {
    void *clientdata;                      /* client data passed to callback */
 } mirror_description;
 
+#ifdef SOLARIS
+#pragma no_inline(sge_mirror_process_event_list)
+#endif
+
 static sge_mirror_error 
 _sge_mirror_subscribe(sge_evc_class_t *evc,
                       sge_object_type type, sge_mirror_callback callback_before, 

@@ -44,7 +44,7 @@ BEGIN
          "Time", "#wrt", "wrt/ms", "#rep", "#gdi", "#ack", "#dsp", "dsp/ms", "#sad", 
          "#snd", "#rcv", "#in++", "#in--", "#out++", "#out--", 
          "#lck0", "#ulck0", "#lck1", "#ulck1");
-   snd_schedd = 0;
+   snd = 0;
    rcv = 0;
    rep = 0;
    ack = 0;
@@ -90,8 +90,8 @@ profile:::tick-$2
 {
    printf("%20Y | %7d %7d|%4d %4d %4d|%7d %7d %7d|%7d %7d|%7d %7d %7d %7d|%7d %7d %7d %7d",
         walltimestamp, wrt, wrt_total/1000000, rep, gdi, ack, dsp, dsp_total, sad, 
-        snd_schedd, rcv, add_in, remove_in, add_out, remove_out, lck0, ulck0, lck1, ulck1);
-   snd_schedd = 0;
+        snd, rcv, add_in, remove_in, add_out, remove_out, lck0, ulck0, lck1, ulck1);
+   snd = 0;
    rcv = 0;
    rep = 0;
    ack = 0;
@@ -165,20 +165,14 @@ pid$1::select_assign_debit:return
 
 /* ---------------------------------- [synchronization] ------------------------------- */
 
-pid$1::report_list_send:entry
-{
-   /* printf("\t%s(%s) tid %d", probefunc, copyinstr(arg3), tid); */
-   self->event_target = copyinstr(arg3);
-}
-pid$1::report_list_send:return
-/self->event_target == "schedd" /
+pid$1::event_update_func:return
 { 
-   snd_schedd++;
+   snd++;
 }
 
-pid$1::sge_mirror_process_events:return
+pid$1::sge_mirror_process_event_list:return
 { 
-    rcv++;
+   rcv++;
 }
 
 /* --------------------------------------- [locks] ------------------------------------ */

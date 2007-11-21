@@ -1,3 +1,7 @@
+AH-2007-11-21-0: Bugfix:    Completized fix of dtrace monitor after 
+                            EB-2007-11-02-1 reconstructions
+                 Review:    RD
+
 AA-2007-11-21-0: Enhancem.: o jvm logging/startup
                             o qmon qconf jvm option support
                             o is_qmaster_internal_client in ctx to define if sge_evc
@@ -11,7 +15,6 @@ RH-2007-11-21-0: Bugfix:    o JGDIAgent calls now AbstractEventClient.closeAll a
                             o UnixLoginModule does not call authuser if no username
                               is specified
                  Review:    AA
-
 
 LP-2007-11-20-0: Enhancem.: Removed Command, HistoryCommand interfaces from JGDIShell
                  Enhancem.: JGDIShell now stores original argument lists

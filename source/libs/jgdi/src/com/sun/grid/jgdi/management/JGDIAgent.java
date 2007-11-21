@@ -31,6 +31,8 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.management;
 
+import com.sun.grid.jgdi.jni.AbstractEventClient;
+import com.sun.grid.jgdi.jni.JGDIBaseImpl;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
@@ -106,6 +108,10 @@ public class JGDIAgent {
             waitForShutdown();
 
             logger.log(Level.INFO, "JGDIAgent shuts down");
+            
+            AbstractEventClient.closeAll();
+            JGDIBaseImpl.closeAllConnections();
+            
             
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "Unexpected error", ex);

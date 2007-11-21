@@ -1,3 +1,10 @@
+RH-2007-11-21-0: Bugfix:    o JGDIAgent calls now AbstractEventClient.closeAll and 
+                              JGDIBaseImpl.closeAll at shutdown
+                            o UnixLoginModule does not call authuser if no username
+                              is specified
+                 Review:    AA
+
+
 LP-2007-11-20-0: Enhancem.: Removed Command, HistoryCommand interfaces from JGDIShell
                  Enhancem.: JGDIShell now stores original argument lists
                  Enhancem.: JGDI project attributes visibility changed from RO to HIDDEN

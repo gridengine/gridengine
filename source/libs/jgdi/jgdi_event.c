@@ -404,24 +404,24 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_fillEvents
    }
 
    logger = jgdi_get_logger(env, JGDI_EVENT_LOGGER);
-   if (jgdi_is_loggable(env, logger, FINE)) {
-      jgdi_log(env, logger, FINE, "before ec_get");
+   if (jgdi_is_loggable(env, logger, FINER)) {
+      jgdi_log(env, logger, FINER, "before ec_get");
    }
    sge_evc->ec_get(sge_evc, &elist, true);
 
-   if (jgdi_is_loggable(env, logger, FINE)) {
-      jgdi_log(env, logger, FINE, "after ec_get");
+   if (jgdi_is_loggable(env, logger, FINER)) {
+      jgdi_log(env, logger, FINER, "after ec_get");
    }
    for_each(ev, elist) {
       
-      if (jgdi_is_loggable(env, logger, FINE)) {
-         jgdi_log(env, logger, FINE, "before process_event");
+      if (jgdi_is_loggable(env, logger, FINER)) {
+         jgdi_log(env, logger, FINER, "before process_event");
       }
 
       ret = process_event(env, eventList, ev, &alp);
       
-      if (jgdi_is_loggable(env, logger, FINE)) {
-         jgdi_log(env, logger, FINE, "after process_event");
+      if (jgdi_is_loggable(env, logger, FINER)) {
+         jgdi_log(env, logger, FINER, "after process_event");
       }
       
       if (ret != JGDI_SUCCESS) {

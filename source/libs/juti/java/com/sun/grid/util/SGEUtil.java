@@ -128,10 +128,18 @@ public class SGEUtil {
     
     private static Map archMap = new HashMap();
     
+    private static Boolean isWindows;
     
-    public static boolean isWindows() {
-        String osname = System.getProperty("os.name").toLowerCase(Locale.US);
-        return osname.indexOf("windows") >= 0;
+    public static synchronized boolean isWindows() {
+        if (isWindows == null) {
+            String osname = System.getProperty("os.name").toLowerCase(Locale.US);
+            if(osname.indexOf("windows") >= 0) {
+                isWindows = Boolean.TRUE;
+            } else {
+                isWindows = Boolean.FALSE;
+            }
+        }
+        return isWindows.booleanValue();
     }
     
     /* Get the arch string for a gridengine installation
@@ -139,8 +147,7 @@ public class SGEUtil {
      * @throws java.io.IOException if the execution of the arch script fails
      * @return the arch string
      */
-    public static String getArch(File sgeRoot) throws IOException {
-        
+    public static synchronized String getArch(File sgeRoot) throws IOException {
         String ret = (String)archMap.get(sgeRoot);
         if(ret == null) {
             if(isWindows()) {
@@ -154,7 +161,7 @@ public class SGEUtil {
                 ArchExpectHandler archHandler = new ArchExpectHandler();
                 expect.add(archHandler);
                 try {
-                    int res = expect.exec(1000);
+                    int res = expect.exec(10000);
                     if(res != 0) {
                        throw new IOException("arch script exited with status (" + ret +")"); 
                     }

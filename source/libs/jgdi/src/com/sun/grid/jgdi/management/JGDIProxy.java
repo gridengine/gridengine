@@ -60,9 +60,7 @@ import javax.management.ObjectName;
 import javax.management.ReflectionException;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
-import javax.management.remote.JMXPrincipal;
 import javax.management.remote.JMXServiceURL;
-import javax.security.auth.Subject;
 
 /**
  *  <p>
@@ -80,8 +78,6 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
     private JMXConnector connector;
     private MBeanServerConnection connection;
     private Set<EventListener> listeners = Collections.<EventListener>emptySet();
-    
-    
     
     /**
      *  Create a new proxy the the jgdi MBean
@@ -195,12 +191,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
             }
             try {
                 connector = JMXConnectorFactory.connect(url, env);
-//                connection = connector.getMBeanServerConnection();
-                Subject delegationSubject = new Subject(true,
-                    Collections.singleton(new JMXPrincipal("delegate")),
-                    Collections.EMPTY_SET,
-                    Collections.EMPTY_SET);
-                connection = connector.getMBeanServerConnection(delegationSubject);
+                connection = connector.getMBeanServerConnection();
                 // we need a random number and just take the current
                 // mbean count + 1
                 int randomId = connection.getMBeanCount() + 1;
@@ -209,21 +200,30 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
                 ObjectInstance jgdiMBean = connection.createMBean("com.sun.grid.jgdi.management.mbeans.JGDIJMX", name);
                 connection.addNotificationListener(name, this, null, null);
                 connector.addConnectionNotificationListener(this, null, null);
+
             } catch (MalformedObjectNameException ex) {
+                close();
                 throw new JGDIException("jgdi mbean malformed object name", ex);
             } catch (MBeanRegistrationException ex) {
+                close();
                 throw new JGDIException("jgdi mbean registration failed", ex);
             } catch (MBeanException ex) {
+                close();
                 throw new JGDIException("jgdi mbean failed", ex);
             } catch (NotCompliantMBeanException ex) {
+                close();
                 throw new JGDIException("jgdi mbean not compliant", ex);
             } catch (ReflectionException ex) {
+                close();
                 throw new JGDIException("jgdi mbean not active in qmaster", ex);
             } catch (NullPointerException ex) {
+                close();
                 throw new JGDIException("jgdi mbean null", ex);
             } catch (InstanceNotFoundException ex) {
+                close();
                 throw new JGDIException("jgdi mbean not active in qmaster", ex);
             } catch (IOException ex) {
+                close();
                 throw new JGDIException("connection to " + url + "failed", ex);
             }
         }

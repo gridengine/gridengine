@@ -3496,6 +3496,7 @@ o   -o path_list                           specify standard output stream path(s
 +   -r y|n                                 define job as (not) restartable
 +   -sc context_list                       set job context (replaces old context)
 +   -soft                                  consider following requests as soft
+-   -sync                                  wait for job to complete
 +   -S path_list                           command interpreter to be used
 -   -t task_id_range                       create a job-array with these tasks
 o   -v variable_list                       export these environment variables
@@ -3537,6 +3538,10 @@ o   -V                                     export all environment variables
       while ((element = lGetElemStr(args, SPA_switch, "-cwd"))) {
          lRemoveElem(args, &element);
       }
+   }
+
+   while ((element = lGetElemStr(args, SPA_switch, "-sync"))) {
+      lRemoveElem(args, &element);
    }
    
    DRETURN_VOID;

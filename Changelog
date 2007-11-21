@@ -1,3 +1,12 @@
+DT-2007-11-21-0: Bugfix:    o Corrected DRMAA Java version number
+                            o Added -sync to list of native switches removed by
+                              DRMAA
+                            o Added libdrmaa95.so to drmaa_clean target
+                            - Merged from maintrunk DT-2007-11-19-0
+                 Review:    pending
+                 Bugster:   2253, 2430
+                 Issue:     6558329, 6631777
+
 CR-2007-11-20-0: Bugfix:    authuser binary checked real user id not the
                             effective user id. Problem: Only root could
                             start this binary.

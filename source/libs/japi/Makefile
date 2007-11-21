@@ -68,7 +68,7 @@ JAPI_DEPEND_OBJS = $(JAPI_ADD_OBJS)
 drmaa_all: drmaalib japilib drmaa_extras
 
 drmaa_clean: japi_clean drmaa_extras_clean
-	$(RM) $(DRMAALIB_OBJS) libdrmaa.a $(DRMAALIB) $(DRMAALIB_V)
+	$(RM) $(DRMAALIB_OBJS) libdrmaa.a libdrmaa95.so $(DRMAALIB) $(DRMAALIB_V)
 
 drmaa_extras_clean: drmaa_howto_clean
 	$(RM) test_drmaa test_drmaa.o example example.o test_drmaa_perf \

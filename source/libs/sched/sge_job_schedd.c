@@ -254,9 +254,13 @@ job_move_first_pending_to_running(lListElem **pending_job, lList **splitted_jobs
     * Create a running job if it does not exist aleady 
     */
    if (running_job == NULL) {
-      lList *n_h_ids, *u_h_ids, *o_h_ids, *s_h_ids, *a_h_ids, *r_tasks;
+      lList *n_h_ids = NULL;
+      lList *u_h_ids = NULL;
+      lList *o_h_ids = NULL;
+      lList *s_h_ids = NULL;
+      lList *a_h_ids = NULL;
+      lList *r_tasks = NULL;
       
-      n_h_ids = u_h_ids = o_h_ids = s_h_ids = r_tasks = NULL;
       lXchgList(*pending_job, JB_ja_n_h_ids, &n_h_ids);
       lXchgList(*pending_job, JB_ja_u_h_ids, &u_h_ids);
       lXchgList(*pending_job, JB_ja_o_h_ids, &o_h_ids);

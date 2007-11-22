@@ -1,3 +1,6 @@
+RH-2007-11-22-0: Bugfix:    broken jgdi build fixed
+                 Review:    AA
+
 AA-2007-11-22-0: Enhancem:  o better logging for JGDIAgent
                             o own MBeanServer instead of Platform MBeanServer
                  Review:    RH

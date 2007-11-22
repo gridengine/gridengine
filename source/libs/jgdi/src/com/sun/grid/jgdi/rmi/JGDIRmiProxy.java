@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.rmi;
 
-import com.sun.grid.jgdi.management.JGDIAgent;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
@@ -144,11 +143,6 @@ public class JGDIRmiProxy implements Unreferenced {
             reg.bind(serviceName, stub);
             
             logger.info("JGDIRemoteFactory bound to name " + serviceName );
-            
-            // start JGDIAgent
-            JGDIAgent agent = JGDIAgent.getDefault(sge_url);
-            // end JGDIAgent
-            logger.info("JGDIAgent.getDefault(" + sge_url + ")");
             
             ShutdownHook shutdownHook = new ShutdownHook(reg, serviceName);
             Runtime.getRuntime().addShutdownHook(shutdownHook);

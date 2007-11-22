@@ -1,3 +1,7 @@
+HP-2007-11-23-0: Bugfix:    new IJS: fixed broken environment setup for qrsh
+                            without command when environment of shepherd is 
+                            incomplete.
+
 RH-2007-11-22-0: Bugfix:    broken jgdi build fixed
                  Review:    AA
 

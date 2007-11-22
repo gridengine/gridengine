@@ -1580,19 +1580,27 @@ char *buf = NULL;
                sprintf(err_str, "can't get password entry for user id %d", (int)getuid());
                shepherd_error(err_str);
             }
-
-            my_env[0] = strcat(shell, pw->pw_shell);
-            my_env[1] = strcat(home, pw->pw_dir);
-            my_env[2] = strcat(term, getenv("TERM"));
-            my_env[3] = strcat(logname, pw->pw_name);
-            my_env[4] = strcat(timez, "");
-            my_env[5] = strcat(hertz, "");
+            i = 0;
+            if (pw != NULL && pw->pw_shell != NULL) {
+               my_env[i++] = strcat(shell, pw->pw_shell);
+            }
+            if (pw != NULL && pw->pw_dir != NULL) {
+               my_env[i++] = strcat(home, pw->pw_dir);
+            }
+            if (getenv("TERM") != NULL) {
+               my_env[i++] = strcat(term, getenv("TERM"));
+            }
+            if (pw != NULL && pw->pw_name != NULL) {
+               my_env[i++] = strcat(logname, pw->pw_name);
+            }
+            my_env[i++] = strcat(timez, "");
+            my_env[i++] = strcat(hertz, "");
 #if defined(LINUX86) || defined(LINUXAMD64) || defined(LINUXIA64) || defined(LINUXPPC) || defined (LINUXSPARC) || defined(LINUXSPARC64) || defined(ALINUX) || defined(DARWIN_PPC) || defined(DARWIN_X86)
-            my_env[6] = strcat(path, "/bin:/usr/bin");
+            my_env[i++] = strcat(path, "/bin:/usr/bin");
 #else
-            my_env[6] = strcat(path, "/usr/bin");
+            my_env[i++] = strcat(path, "/usr/bin");
 #endif
-            my_env[7] = NULL;
+            my_env[i] = NULL;
            
             for (i=0; my_env[i] != NULL; i++) {
                shepherd_trace_sprintf("env[%d] = \"%s\"\n", i, my_env[i]);

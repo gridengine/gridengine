@@ -1,3 +1,7 @@
+RD-2007-11-22-0: Bugfix:    - fixed wrong exit code for qconf -sprj
+                            - fixed schedd core dump because of hostname
+                 Review:    AH
+
 RD-2007-11-06-0: Enhancem:  added qconf -Mconf
                  Bugster:   6609633
                  Issue:     2422

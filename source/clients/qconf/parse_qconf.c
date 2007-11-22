@@ -5351,6 +5351,7 @@ char *argv[]
             lFreeList(&alp);
             lFreeList(&lp);
             spp++;
+            sge_parse_return = 1; 
             continue;
          }
 
@@ -5360,6 +5361,7 @@ char *argv[]
             fprintf(stderr, "\n");
             lFreeList(&lp);
             spp++;
+            sge_parse_return = 1; 
             continue;
          }
          ep = lFirst(lp);
@@ -6460,7 +6462,7 @@ const char *config_name
          lFreeList(&alp);
          DRETURN(1);
       }
-      printf("# %s:\n", cfn);
+      printf("#%s:\n", cfn);
       
       fields = sge_build_CONF_field_list(false);
       filename_stdout = spool_flatfile_write_object(&alp, ep, false, fields, &qconf_sfi,

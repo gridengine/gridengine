@@ -673,7 +673,9 @@ rqs_get_rue_string(dstring *name, const lListElem *rule, const char *user,
 
    if ((filter = lGetObject(rule, RQR_filter_hosts)) != NULL) {
       if (filter != NULL && host != NULL && lGetBool(filter, RQRF_expand) == true) {
-         sge_dstring_append(name, host); 
+         char buffer[10240];
+         sge_hostcpy(buffer, host);
+         sge_dstring_append(name, buffer); 
       }
    }
    sge_dstring_append(name, "/");

@@ -1,3 +1,11 @@
+RD-2007-11-22-0: Enhancem:  added qconf -Mconf
+                 Bugster:   6609633
+                 Issue:     2422
+                 Bugfix:    - fixed wrong exit code for qconf -sprj
+                            - fixed schedd core dump because of hostname
+                              resolving
+                 Review:    AA, AH
+
 CR-2007-11-22-0: Bugfix:    not initalized variable caused qmaster segfault on
                             solaris amd64 hosts
                  Review:    AA

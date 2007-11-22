@@ -208,28 +208,28 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
 
             } catch (MalformedObjectNameException ex) {
                 close();
-                throw new JGDIException("jgdi mbean malformed object name", ex);
+                throw new JGDIException(ex, "jgdi mbean malformed object name");
             } catch (MBeanRegistrationException ex) {
                 close();
-                throw new JGDIException("jgdi mbean registration failed", ex);
+                throw new JGDIException(ex, "jgdi mbean registration failed");
             } catch (MBeanException ex) {
                 close();
-                throw new JGDIException("jgdi mbean failed", ex);
+                throw new JGDIException(ex, "jgdi mbean failed");
             } catch (NotCompliantMBeanException ex) {
                 close();
-                throw new JGDIException("jgdi mbean not compliant", ex);
+                throw new JGDIException(ex, "jgdi mbean not compliant");
             } catch (ReflectionException ex) {
                 close();
-                throw new JGDIException("jgdi mbean not active in qmaster", ex);
+                throw new JGDIException(ex, "jgdi mbean not active in qmaster");
             } catch (NullPointerException ex) {
                 close();
-                throw new JGDIException("jgdi mbean null", ex);
+                throw new JGDIException(ex, "jgdi mbean null");
             } catch (InstanceNotFoundException ex) {
                 close();
-                throw new JGDIException("jgdi mbean not active in qmaster", ex);
+                throw new JGDIException(ex, "jgdi mbean not active in qmaster");
             } catch (IOException ex) {
                 close();
-                throw new JGDIException("connection to " + url + "failed", ex);
+                throw new JGDIException(ex, "connection to " + url + "failed");
             }
         }
     }

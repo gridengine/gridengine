@@ -33,6 +33,9 @@ package com.sun.grid.jgdi.management;
 
 import com.sun.grid.jgdi.jni.AbstractEventClient;
 import com.sun.grid.jgdi.jni.JGDIBaseImpl;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
@@ -41,88 +44,181 @@ import javax.management.MBeanServer;
 import java.lang.management.ManagementFactory;
 
 import com.sun.grid.jgdi.management.mbeans.JGDIJMX;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.logging.Logger;
+import javax.management.remote.JMXConnector;
+import javax.management.remote.JMXConnectorServer;
+import sun.management.jmxremote.ConnectorBootstrap;
 
 /**
  * JGDI JMX agent class.
  */
 public class JGDIAgent {
 
+    private JMXConnectorServer mbeanServerConnector;
+    // Platform MBeanServer used to register your MBeans
+    private MBeanServer mbs;
+    
+    private static final JGDIAgent agent = new JGDIAgent();
+    
     /**
      * Instantiate and register your MBeans.
      */
-    public void init(String url) throws Exception {
+    private void JGDIAgent() throws Exception {
+    }
+    
+    public void startMBeanServer() throws Exception {
+        
+        File managementFile = new File(getJmxDir(), "management.properties");
+        
+        logger.log(Level.FINE,"loading mbean server configuration from {0}", managementFile);
+        
+        final Properties props = new Properties();
+        props.load(new FileInputStream(managementFile));
 
-        //TODO Add your MBean registration code here
-        this.url = url;
-        logger.log(Level.FINE, "init: " + JGDIAgent.getUrl());
+        final String portStr = props.getProperty(ConnectorBootstrap.PropertyNames.PORT);
 
+        mbeanServerConnector = ConnectorBootstrap.initialize(portStr,props);
+        mbs = mbeanServerConnector.getMBeanServer();
+        logger.log(Level.FINE, "starting mbean server");
+        mbeanServerConnector.start();
+        logger.log(Level.INFO,"mbean server started (port={0})", portStr);
+    }
+    
+    private void stopMBeanServer() {
+        if(mbeanServerConnector != null) {
+            try {
+                logger.log(Level.FINE,"stopping mbean server");
+                mbeanServerConnector.stop();
+            } catch(Exception ex) {
+                logger.log(Level.WARNING, "cannot stop mbean server", ex);
+            }
+        }
+    }
+    
+    private void registerDefaultMBean() throws Exception {
         // Instantiate and register JGDIJMX MBean
         JGDIJMX mbean = new JGDIJMX();
         ObjectName mbeanName = new ObjectName("gridengine:type=JGDI");
         getMBeanServer().registerMBean(mbean, mbeanName);
-        logger.log(Level.INFO, "mbean " + mbeanName + " registered");
-
+        
+        logger.log(Level.INFO, "mbean {0} registered (jgdi_url={1} ", new Object[] { mbeanName, getUrl() });
     }
     
-    /**
-     * Returns an agent singleton.
-     */
-    public synchronized static JGDIAgent getDefault(String url) throws Exception {
-        if (singleton == null) {
-            singleton = new JGDIAgent();
-            singleton.init(url);
-        }
-        return singleton;
-    }
-
+    
     public static String getUrl() {
+        if(url == null) {
+            throw new IllegalStateException("JGDIAgent.url is not initialized");
+        }
         return url;
     }
 
-    public MBeanServer getMBeanServer() {
+    private static File sgeRoot;
+    
+    public static File getSgeRoot() {
+        if(sgeRoot == null) {
+            String sgeRootStr = System.getProperty("com.sun.grid.jgdi.sgeRoot");
+            if(sgeRootStr == null) {
+                throw new IllegalStateException("system properties com.sun.grid.jgdi.sgeRoot not found");
+            }
+            sgeRoot = new File(sgeRootStr);
+        }
+        return sgeRoot;
+    }
+    
+    public static String getSgeCell() {
+        String ret = System.getProperty("com.sun.grid.jgdi.sgeCell");
+        if(ret == null) {
+            throw new IllegalStateException("system properties com.sun.grid.jgdi.sgeCell not found");
+        }
+        return ret;
+    }
+    
+    private static File jmxDir;
+    
+    public static File getJmxDir() {
+        if(jmxDir == null) {
+            File sgeRoot = getSgeRoot();
+            jmxDir = new File(sgeRoot, getSgeCell() + File.separatorChar + "common" + File.separatorChar + "jmx");
+        }
+        return jmxDir;
+    }
+    
+    private MBeanServer getMBeanServer() throws IOException {
+        if(mbs == null) {
+            throw new IllegalStateException("mbean server is not started");
+        }
         return mbs;
     }
     
-    // Platform MBeanServer used to register your MBeans
-    private final MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-    // Singleton instance
-
-    private static JGDIAgent singleton;
     // JGDI url string
-
     private static String url;
     private final static Logger logger = Logger.getLogger(JGDIAgent.class.getName());
-
+    
+    
     public static void main(String[] args) {
         try {
+            
             if (args.length != 1) {
                 logger.log(Level.SEVERE, "invalid arguments for JGDIAgent: JGDIAgent <jgdi connect url>");
                 return;
             }
-            String sge_url = args[0];
-            JGDIAgent agent = JGDIAgent.getDefault(sge_url);
-
-            logger.log(Level.INFO, "JGDIAgent '" + sge_url + "' started");       
+            url = args[0];
             
-            waitForShutdown();
-
-            logger.log(Level.INFO, "JGDIAgent shuts down");
+            try {
+                FileOutputStream stdout = new FileOutputStream("jgdi.stdout", true);
+                System.setOut(new PrintStream(stdout, true));
+                logger.fine("stdout redirected to jgdi.stdout");
+            } catch(Exception ex) {
+                logger.log(Level.WARNING, "cannot redirect stdout to file jgdi.stdout", ex);
+            }            
+            try {
+                FileOutputStream stderr = new FileOutputStream("jgdi.stderr", true);
+                System.setErr(new PrintStream(stderr, true));
+                logger.fine("stderr redirected to jgdi.stderr");
+            } catch(Exception ex) {
+                logger.log(Level.WARNING, "cannot redirect stderr to file jgdi.stderr", ex);
+            }            
             
-            AbstractEventClient.closeAll();
-            JGDIBaseImpl.closeAllConnections();
+            try {
+                agent.startMBeanServer();
+            } catch(Exception ex) {
+                logger.log(Level.SEVERE,"startup of mbean server failed", ex);
+                return;
+            }
+            try {
+                
+                try {
+                    agent.registerDefaultMBean();
+                } catch(Exception ex) {
+                    logger.log(Level.SEVERE, "cannot register default mbean", ex);
+                    return;
+                }
+                
+                // The following code blocks until the shutdownMain method is called
+                waitForShutdown();
+            } catch(InterruptedException ex) {
+                logger.log(Level.FINE, "JGDIAgent has been interrupted");
+            } finally {
+                logger.log(Level.INFO, "JGDIAgent is going down");
+                try {
+                    AbstractEventClient.closeAll();
+                    JGDIBaseImpl.closeAllConnections();
+                } finally {
+                    agent.stopMBeanServer();
+                }
+            }
             
-            
-        } catch (Exception ex) {
-            logger.log(Level.SEVERE, "Unexpected error", ex);
+        } catch (Throwable ex) {
+            logger.log(Level.SEVERE, "unexpected error in JGDIAgent", ex);
         } finally {
             logger.log(Level.INFO, "JGDIAgent is down");
             LogManager.getLogManager().reset();
         }
-
-
     }
 
     private static final Lock shutdownLock = new ReentrantLock();

@@ -1,3 +1,7 @@
+AA-2007-11-22-0: Enhancem:  o better logging for JGDIAgent
+                            o own MBeanServer instead of Platform MBeanServer
+                 Review:    RH
+
 RD-2007-11-22-0: Enhancem:  added qconf -Mconf
                  Bugster:   6609633
                  Issue:     2422

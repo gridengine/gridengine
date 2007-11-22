@@ -32,11 +32,10 @@
 package com.sun.grid.jgdi.examples.jmxeventmonitor;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
@@ -48,7 +47,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JTree;
 import javax.swing.UIManager;
+import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
  *
@@ -58,8 +59,10 @@ public class ErrorDialog extends JDialog {
     private final static int COLUMNS = 40;
     private Throwable ex;
     
-    private JTextArea exceptionTextArea = new JTextArea(5, COLUMNS);
-    private JScrollPane exceptionScrollPane = new JScrollPane(exceptionTextArea);
+    private DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode();
+
+    private JTree exceptionTree = new JTree(rootNode);
+    private JScrollPane exceptionScrollPane = new JScrollPane(exceptionTree);
     private JPanel buttonPanel = new JPanel(new FlowLayout());
     
     private ErrorDialog(JFrame f, String msg, int type, boolean modal) {
@@ -105,11 +108,8 @@ public class ErrorDialog extends JDialog {
         } else {
             add(textArea, BorderLayout.NORTH);
         }
-        
-        exceptionTextArea.setBorder(
-                BorderFactory.createTitledBorder("Stacktrace:") );
-        exceptionTextArea.setEditable(false);
-        exceptionTextArea.setOpaque(false);
+        exceptionScrollPane.setVisible(false);
+        add(exceptionScrollPane,BorderLayout.CENTER);
         
         JButton btc = new JButton("Close");
         
@@ -124,7 +124,6 @@ public class ErrorDialog extends JDialog {
         
         
         add(buttonPanel, BorderLayout.SOUTH);
-        
     }
     
     /** Creates a new instance of ErrorDialog */
@@ -206,25 +205,39 @@ public class ErrorDialog extends JDialog {
         public void actionPerformed(ActionEvent e) {
             
             if(visible) {
-                remove(exceptionScrollPane);
-                pack();
+                exceptionScrollPane.setVisible(false);
                 visible = false;
             } else {
-                if(exceptionTextArea.getText().length() == 0) {
-                    StringWriter sw = new StringWriter();
-                    PrintWriter pw = new PrintWriter(sw);
-                    
-                    
-                    ex.printStackTrace(pw);
-                    pw.flush();
-                    exceptionTextArea.setText(sw.getBuffer().toString());
+                if(rootNode.getChildCount() == 0) {
+                   rootNode.add(new ExceptionNode(ErrorDialog.this.ex));
+
+                   for(Throwable te = ErrorDialog.this.ex.getCause(); te != null; te = te.getCause()) {
+                       rootNode.add(new ExceptionNode(te));
+                   }
+                   exceptionTree.expandRow(0);
                 }
-                
-                add(exceptionScrollPane, BorderLayout.CENTER);
-                pack();
+                exceptionScrollPane.setVisible(true);
                 visible = true;
             }
+            ErrorDialog.this.invalidate();
+            ErrorDialog.this.repaint();
         }
+        
+    }
+        
+    private class ExceptionNode extends DefaultMutableTreeNode {
+        
+        public ExceptionNode(Throwable t) {
+            super.setUserObject(String.format("%s: %s", t.getClass().getName(), t.getMessage()));
+            
+            StackTraceElement [] st = t.getStackTrace();
+            for(StackTraceElement elem: st) {
+                 DefaultMutableTreeNode node = new DefaultMutableTreeNode();
+                 node.setUserObject(elem.toString());
+                 add(node);
+            }
+        }
+        
         
     }
     

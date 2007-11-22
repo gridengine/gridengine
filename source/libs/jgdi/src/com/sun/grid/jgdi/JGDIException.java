@@ -58,6 +58,10 @@ public class JGDIException extends java.rmi.RemoteException {
         this.exitCode = exitCode;
     }
     
+    public JGDIException(Throwable ex, String msg) {
+        super(msg, ex);
+    }
+    
     public JGDIException(String msg, Object... params) {
         super(msg);
         this.params = params;

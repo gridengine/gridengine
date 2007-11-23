@@ -806,6 +806,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
                   is_pjob_resort = false;
                else
                   is_pjob_resort = true;
+
                job_move_first_pending_to_running(&orig_job, splitted_job_lists);
 
                /* 
@@ -1034,7 +1035,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
 
       if (is_start) {
 
-         DPRINTF(("### looking for immediate parallel assignment for job "
+         DPRINTF(("looking for immediate parallel assignment for job "
                   sge_U32CFormat"."sge_U32CFormat" requesting pe \"%s\" duration "sge_U32CFormat"\n",
                   a.job_id, a.ja_task_id, pe_name, a.duration));
 
@@ -1054,7 +1055,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
 
       if (result == DISPATCH_NOT_AT_TIME) {
          if (is_reserve) {
-            DPRINTF(("### looking for parallel reservation for job "
+            DPRINTF(("looking for parallel reservation for job "
                sge_U32CFormat"."sge_U32CFormat" requesting pe \"%s\" duration "sge_U32CFormat"\n",
                   a.job_id, a.ja_task_id, pe_name, a.duration));
             is_computed_reservation = true;
@@ -1080,7 +1081,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
 
       if (is_start) {
 
-         DPRINTF(("### looking for immediate sequential assignment for job "
+         DPRINTF(("looking for immediate sequential assignment for job "
                   sge_U32CFormat"."sge_U32CFormat" duration "sge_U32CFormat"\n", a.job_id,
                   a.ja_task_id, a.duration));
 
@@ -1102,7 +1103,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
       /* try to reserve for jobs that can be dispatched with the current configuration */
       if (result == DISPATCH_NOT_AT_TIME) {
          if (is_reserve) {
-            DPRINTF(("### looking for sequential reservation for job "
+            DPRINTF(("looking for sequential reservation for job "
                sge_U32CFormat"."sge_U32CFormat" duration "sge_U32CFormat"\n",
                   a.job_id, a.ja_task_id, a.duration));
             a.start = DISPATCH_TIME_QUEUE_END;

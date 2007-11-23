@@ -116,7 +116,10 @@ struct sge_gdi_ctx_class_str {
    const char* (*get_sge_root)(sge_gdi_ctx_class_t *thiz);
    bool (*get_job_spooling)(sge_gdi_ctx_class_t *thiz);
    void (*set_job_spooling)(sge_gdi_ctx_class_t *thiz, bool job_spooling);
-   u_long32 (*get_gdi_thread_count)(sge_gdi_ctx_class_t *thiz);
+   u_long32 (*get_listener_thread_count)(sge_gdi_ctx_class_t *thiz);
+   u_long32 (*get_worker_thread_count)(sge_gdi_ctx_class_t *thiz);
+   u_long32 (*get_scheduler_thread_count)(sge_gdi_ctx_class_t *thiz);
+   u_long32 (*get_jvm_thread_count)(sge_gdi_ctx_class_t *thiz);
    const char* (*get_spooling_method)(sge_gdi_ctx_class_t *thiz);
    const char* (*get_spooling_lib)(sge_gdi_ctx_class_t *thiz);
    const char* (*get_spooling_params)(sge_gdi_ctx_class_t *thiz);

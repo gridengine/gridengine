@@ -503,9 +503,9 @@ int cl_com_setup_commlib(cl_thread_mode_t t_mode, cl_log_t debug_level, cl_log_f
 
    if (cl_com_log_list == NULL) {
 #ifdef CL_DO_COMMLIB_DEBUG
-      ret_val = cl_log_list_setup(&cl_com_log_list,"initiator",0, /* CL_LOG_FLUSHED */ CL_LOG_IMMEDIATE  , NULL ); 
+      ret_val = cl_log_list_setup(&cl_com_log_list, "main", 0, /* CL_LOG_FLUSHED */ CL_LOG_IMMEDIATE  , NULL ); 
 #else
-      ret_val = cl_log_list_setup(&cl_com_log_list,"initiator",0, /* CL_LOG_FLUSHED */ CL_LOG_IMMEDIATE  , flush_func); 
+      ret_val = cl_log_list_setup(&cl_com_log_list, "main", 0, /* CL_LOG_FLUSHED */ CL_LOG_IMMEDIATE  , flush_func); 
 #endif
       if (cl_com_log_list == NULL) {
          pthread_mutex_unlock(&cl_com_log_list_mutex);

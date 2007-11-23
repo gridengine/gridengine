@@ -271,7 +271,10 @@ static bool is_daemonized(sge_gdi_ctx_class_t *thiz);
 static void set_daemonized(sge_gdi_ctx_class_t *thiz, bool daemonized);
 static bool get_job_spooling(sge_gdi_ctx_class_t *thiz);
 static void set_job_spooling(sge_gdi_ctx_class_t *thiz, bool job_spooling);
-static u_long32 get_gdi_thread_count(sge_gdi_ctx_class_t *thiz);
+static u_long32 get_listener_thread_count(sge_gdi_ctx_class_t *thiz);
+static u_long32 get_worker_thread_count(sge_gdi_ctx_class_t *thiz);
+static u_long32 get_scheduler_thread_count(sge_gdi_ctx_class_t *thiz);
+static u_long32 get_jvm_thread_count(sge_gdi_ctx_class_t *thiz);
 static const char* get_master(sge_gdi_ctx_class_t *thiz, bool reread);
 static u_long32 get_sge_qmaster_port(sge_gdi_ctx_class_t *thiz);
 static u_long32 get_sge_execd_port(sge_gdi_ctx_class_t *thiz);
@@ -372,7 +375,10 @@ sge_gdi_ctx_class_create(int prog_number, const char *component_name,
    ret->set_daemonized = set_daemonized;
    ret->get_job_spooling = get_job_spooling;
    ret->set_job_spooling = set_job_spooling;
-   ret->get_gdi_thread_count = get_gdi_thread_count;
+   ret->get_listener_thread_count = get_listener_thread_count;
+   ret->get_worker_thread_count = get_worker_thread_count;
+   ret->get_scheduler_thread_count = get_scheduler_thread_count;
+   ret->get_jvm_thread_count = get_jvm_thread_count;
    ret->get_qualified_hostname = get_qualified_hostname;
    ret->get_unqualified_hostname = get_unqualified_hostname;
    ret->get_master = get_master;
@@ -1507,13 +1513,40 @@ static const char* get_spooling_params(sge_gdi_ctx_class_t *thiz) {
    DRETURN(spooling_params);
 }
 
-static u_long32 get_gdi_thread_count(sge_gdi_ctx_class_t *thiz) {
+static u_long32 get_listener_thread_count(sge_gdi_ctx_class_t *thiz) {
    sge_bootstrap_state_class_t* bootstrap_state = thiz->get_sge_bootstrap_state(thiz);
-   u_long32 gdi_thread_count = 0;
+   u_long32 thread_count = 0;
    
-   DENTER(BASIS_LAYER, "sge_gdi_ctx_class->get_gdi_thread_count");
-   gdi_thread_count = bootstrap_state->get_gdi_thread_count(bootstrap_state);
-   DRETURN(gdi_thread_count);
+   DENTER(BASIS_LAYER, "sge_gdi_ctx_class->get_listenr_thread_count");
+   thread_count = bootstrap_state->get_listener_thread_count(bootstrap_state);
+   DRETURN(thread_count);
+}
+
+static u_long32 get_worker_thread_count(sge_gdi_ctx_class_t *thiz) {
+   sge_bootstrap_state_class_t* bootstrap_state = thiz->get_sge_bootstrap_state(thiz);
+   u_long32 thread_count = 0;
+   
+   DENTER(BASIS_LAYER, "sge_gdi_ctx_class->get_worker_thread_count");
+   thread_count = bootstrap_state->get_worker_thread_count(bootstrap_state);
+   DRETURN(thread_count);
+}
+
+static u_long32 get_scheduler_thread_count(sge_gdi_ctx_class_t *thiz) {
+   sge_bootstrap_state_class_t* bootstrap_state = thiz->get_sge_bootstrap_state(thiz);
+   u_long32 thread_count = 0;
+   
+   DENTER(BASIS_LAYER, "sge_gdi_ctx_class->get_scheduler_thread_count");
+   thread_count = bootstrap_state->get_scheduler_thread_count(bootstrap_state);
+   DRETURN(thread_count);
+}
+
+static u_long32 get_jvm_thread_count(sge_gdi_ctx_class_t *thiz) {
+   sge_bootstrap_state_class_t* bootstrap_state = thiz->get_sge_bootstrap_state(thiz);
+   u_long32 thread_count = 0;
+   
+   DENTER(BASIS_LAYER, "sge_gdi_ctx_class->get_jvm_thread_count");
+   thread_count = bootstrap_state->get_jvm_thread_count(bootstrap_state);
+   DRETURN(thread_count);
 }
 
 static sge_exit_func_t get_exit_func(sge_gdi_ctx_class_t *thiz) {

@@ -35,7 +35,7 @@
 #include <pthread.h>
 
 void
-sge_scheduler_initialize(void);
+sge_scheduler_initialize(sge_gdi_ctx_class_t *ctx);
 
 void
 sge_scheduler_trigger_cancel(void);

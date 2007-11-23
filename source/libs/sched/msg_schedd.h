@@ -201,6 +201,9 @@
 /* 
 ** schedd/sge_select_queue.c
 */ 
+#define MSG_SCHEDD_MON_NOPENDJOBSTOPERFORMSCHEDULINGON      _MESSAGE(47208, _("no pending jobs to perform scheduling on"))
+#define MSG_SCHEDD_SHOULDHAVEFINISHED_UUU                   _MESSAGE(47209, _("job "sge_U32CFormat"."sge_U32CFormat" should have finished since "sge_U32CFormat"s"))
+
 #define MSG_SCHEDD_FORDEFAULTREQUEST                        _MESSAGE(47210, _("for default request "  ))
 #define MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE_S              _MESSAGE(47211, _("job requests unknown resource (%s)"))
 #define MSG_SCHEDD_JOBREQUESTSNONREQUESTABLERESOURCE        _MESSAGE(47212, _("job requests non requestable resource "))
@@ -217,8 +220,6 @@
 #define MSG_JOBMATCHINGUNEXPECTEDRESULT                     _MESSAGE(47228, _("job matching returned an unexpected result!"))
 #define MSG_SCHEDD_UNABLE_TO_SETUP_FILTER                   _MESSAGE(47229, _("unable to setup filter objects correctly"))
 #define MSG_SCHEDD_LOGLIST_QUEUESTEMPORARLYNOTAVAILABLEDROPPED _MESSAGE(47230, _("queues dropped because they are temporarily not available: "))
-#define MSG_SCHEDD_MON_NOPENDJOBSTOPERFORMSCHEDULINGON         _MESSAGE(47231, _("no pending jobs to perform scheduling on"))
-#define MSG_SCHEDD_SHOULDHAVEFINISHED_UUU                      _MESSAGE(47232, _("job "sge_U32CFormat"."sge_U32CFormat" should have finished since "sge_U32CFormat"s"))
 
 /* 
 ** schedd/sge.c

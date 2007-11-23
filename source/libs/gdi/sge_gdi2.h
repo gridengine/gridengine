@@ -84,6 +84,9 @@ sge_gdi2_multi(sge_gdi_ctx_class_t *ctx, lList **alpp, int mode,
                u_long32 target, u_long32 cmd, lList **lp, 
                lCondition *cp, lEnumeration *enp, state_gdi_multi *state, bool do_copy);
 
+bool
+sge_gdi2_is_done(sge_gdi_ctx_class_t* ctx, lList **alpp, state_gdi_multi *state);
+
 bool 
 sge_gdi2_wait(sge_gdi_ctx_class_t* ctx, lList **alpp, lList **malpp, 
               state_gdi_multi *state);

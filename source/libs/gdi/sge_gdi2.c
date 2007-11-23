@@ -83,6 +83,7 @@
 #include "gdi/sge_security.h"
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_packet.h"
+#include "gdi/sge_gdi_packet_internal.h"
 
 #include "basis_types.h"
 #include "sge.h"
@@ -486,15 +487,67 @@ sge_gdi2_wait(sge_gdi_ctx_class_t* ctx, lList **alpp, lList **malpp,
       /*
        * One of two different functions might be called here:
        *    -  If this call is executed in an external GDI client (like qstat, qhost...)
-       *       then sge_gdi_packet_wait_for_result_extern() will be called.
+       *       then sge_gdi_packet_wait_for_result_external() will be called.
        *    -  If it is executed in a qmaster internal thread then
-       *       sge_gdi_packet_wait_for_result_intern() will be invoked.
+       *       sge_gdi_packet_wait_for_result_internal() will be invoked.
        */
       ret = ctx->sge_gdi_packet_wait_for_result(ctx, alpp, &packet, malpp);
    } 
    DRETURN(ret); 
 }
 
+
+/****** gdi/request/sge_gdi2_is_done() *****************************************
+*  NAME
+*     sge_gdi2_is_done() -- check if  GDI request is finished 
+*
+*  SYNOPSIS
+*     bool 
+*     sge_gdi2_is_done(sge_gdi_ctx_class_t* ctx, lList **alpp, state_gdi_multi *state) 
+*
+*  FUNCTION
+*     This function returns true if the GDI request which was previously been created
+*     via sge_gdi2_multi() is finished or if it is will waiting to be executed.
+*     A return value of "true" means that a call of sge_gdi2_wait() will return 
+*     immediatly because the request has been handled and an answer is available.
+*     "false" means that a call of sge_gdi2_wait() would block because the
+*     GDI request is not done till now. 
+*
+*     Input parameters for this function are the GDI context "ctx" 
+*     and the "state" structure which has to be initialized by calling 
+*     sge_gdi2_multi(... mode=SGE_GDI_RECORED...) zero or multiple times
+*     and sge_gdi2_multi(... mode=SGE_GDI_SEND...) once.
+*
+*  INPUTS
+*     sge_gdi_ctx_class_t* ctx - context object 
+*     lList **alpp             - answer list for this function 
+*     state_gdi_multi *state   - gdi state variable 
+*
+*  RESULT
+*     bool - is request already done? 
+*        true  - yes 
+*        false - no 
+*
+*  NOTES
+*     MT-NOTE: sge_gdi2_is_done() is MT safe 
+*
+*  SEE ALSO
+*     gdi/request/sge_gdi2() 
+*     gdi/request/sge_gdi2_multi() 
+*     gdi/request/sge_gdi_extract_answer() 
+*     gdi/request/sge_gdi2_wait()
+*******************************************************************************/
+bool
+sge_gdi2_is_done(sge_gdi_ctx_class_t* ctx, lList **alpp, state_gdi_multi *state) 
+{
+   bool ret = true;     
+                    
+   DENTER(GDI_LAYER, "sge_gdi2_is_done");  
+   if (state->packet != NULL) {
+      ret = sge_gdi_packet_is_handled(state->packet);
+   }                             
+   DRETURN(ret);          
+}
 
 /*---------------------------------------------------------
  *  sge_send_any_request

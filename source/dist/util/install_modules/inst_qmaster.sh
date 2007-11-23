@@ -707,9 +707,9 @@ PrintBootstrap()
    $ECHO "# Version: $SGE_VERSION"
    $ECHO "#"
    if [ $ADMINUSER != default ]; then
-      $ECHO "admin_user             $ADMINUSER"
+      $ECHO "admin_user              $ADMINUSER"
    else
-      $ECHO "admin_user             none"
+      $ECHO "admin_user              none"
    fi
    $ECHO "default_domain          $CFG_DEFAULT_DOMAIN"
    $ECHO "ignore_fqdn             $IGNORE_FQDN_DEFAULT"
@@ -719,6 +719,14 @@ PrintBootstrap()
    $ECHO "binary_path             $SGE_ROOT_VAL/bin"
    $ECHO "qmaster_spool_dir       $QMDIR"
    $ECHO "security_mode           $PRODUCT_MODE"
+   $ECHO "listener_threads        4"
+   $ECHO "worker_threads          4"
+   $ECHO "scheduler_threads       1"
+   if [ "$SGE_ENABLE_JMX" = "true" ]; then
+      $ECHO "jvm_threads             1"
+   else
+      $ECHO "jvm_threads             0"
+   fi
 }
 
 

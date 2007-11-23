@@ -101,6 +101,7 @@
 *     gdi/request_internal/sge_gdi_packet_execute_internal() 
 *     gdi/request_internal/sge_gdi_packet_wait_for_result_external()
 *     gdi/request_internal/sge_gdi_packet_wait_for_result_internal()
+*     sge_gdi_packet_is_handled()
 *******************************************************************************/
 static bool
 sge_gdi_packet_create_multi_answer(sge_gdi_ctx_class_t* ctx, lList **answer_list,
@@ -179,6 +180,7 @@ sge_gdi_packet_create_multi_answer(sge_gdi_ctx_class_t* ctx, lList **answer_list
 *     gdi/request_internal/sge_gdi_packet_queue_wait_for_new_packet()
 *     gdi/request_internal/sge_gdi_packet_queue_store_notify()
 *     gdi/request_internal/sge_gdi_packet_broadcast_that_handled()
+*     gdi/request_internal/sge_gdi_packet_is_handled()
 *******************************************************************************/
 void
 sge_gdi_packet_wait_till_handled(sge_gdi_packet_class_t *packet)
@@ -201,6 +203,52 @@ sge_gdi_packet_wait_till_handled(sge_gdi_packet_class_t *packet)
    }
 
    DRETURN_VOID;   
+}
+
+/****** gdi/request_internal/sge_gdi_packet_is_handled() ********************
+*  NAME
+*     sge_gdi_packet_is_handled() -- returns if packet was handled by worker
+*
+*  SYNOPSIS
+*     void 
+*     sge_gdi_packet_is_handled(sge_gdi_packet_class_t *packet) 
+*
+*  FUNCTION
+*     Returns if the given packet was already handled by a worker thread.
+*     "true" means that the packet is completely done so that a call
+*     to sge_gdi_packet_wait_till_handled() will return immediately. If 
+*     "false" is returned the the packet is not finished so a call to
+*     sge_gdi_packet_wait_till_handled() might block when it is called 
+*     afterwards.
+*
+*  INPUTS
+*     sge_gdi_packet_class_t *packet - packet element 
+*
+*  RESULT
+*     bool - true    packet was already handled by a worker
+*            false   packet is not done. 
+*
+*  NOTES
+*     MT-NOTE: sge_gdi_packet_is_handled() is MT safe 
+*
+*  SEE ALSO
+*     gdi/request_internal/Master_Packet_Queue
+*     gdi/request_internal/sge_gdi_packet_queue_wait_for_new_packet()
+*     gdi/request_internal/sge_gdi_packet_queue_store_notify()
+*     gdi/request_internal/sge_gdi_packet_broadcast_that_handled()
+*******************************************************************************/
+bool
+sge_gdi_packet_is_handled(sge_gdi_packet_class_t *packet)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "sge_gdi_packet_wait_till_handled");
+   if (packet != NULL) {   
+      sge_mutex_lock(GDI_PACKET_MUTEX, SGE_FUNC, __LINE__, &(packet->mutex));
+      ret = packet->is_handled;
+      sge_mutex_unlock(GDI_PACKET_MUTEX, SGE_FUNC, __LINE__, &(packet->mutex));
+   }
+   DRETURN(ret);
 }
 
 /****** gdi/request_internal/sge_gdi_packet_broadcast_that_handled() ********

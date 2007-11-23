@@ -363,7 +363,7 @@ int sge_del_host(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList **alpp,
        host_is_referenced(hep, alpp, 
                           *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
                           master_hGroup_List)) {
-      answer_list_log(alpp, false);                    
+      answer_list_log(alpp, false, true);                    
       DEXIT;
       return STATUS_ESEMANTIC;
    }

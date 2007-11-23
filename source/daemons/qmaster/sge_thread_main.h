@@ -53,8 +53,8 @@ typedef struct {
    /* Timed event thread */
    cl_raw_list_t *timer_thread_pool;
 
-   /* Event deliverer thread */
-   cl_raw_list_t *deliverer_thread_pool;
+   /* Event event master thread */
+   cl_raw_list_t *event_master_thread_pool;
 
    /* Scheduler thread */
    cl_raw_list_t *scheduler_thread_pool; 

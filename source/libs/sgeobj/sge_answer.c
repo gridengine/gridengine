@@ -47,7 +47,7 @@
 #define ANSWER_LAYER CULL_LAYER
 
 static bool answer_is_recoverable(const lListElem *answer);
-static bool answer_log(lListElem *answer);
+static bool answer_log(lListElem *answer, bool show_info);
 
 /****** sgeobj/answer/-AnswerList *********************************************
 *  NAME
@@ -899,7 +899,7 @@ void answer_list_append_list(lList **answer_list, lList **new_list)
 *
 *  SYNOPSIS
 *     bool
-*     answer_list_log(lList **answer_list, bool is_free_list)
+*     answer_list_log(lList **answer_list, bool is_free_list, bool show_info)
 *
 *  FUNCTION
 *     Prints all messages contained in "answer_list". 
@@ -917,11 +917,12 @@ void answer_list_append_list(lList **answer_list, lList **new_list)
 *  INPUTS
 *     lList **answer_list     - AN_Type list 
 *     bool is_free_list       - if true, frees the answer list
+*     bool show_info          - log also info messages
 *
 *  NOTES
 *     MT-NOTE: answer_list_print_err_warn() is MT safe
 ******************************************************************************/
-bool answer_list_log(lList **answer_list, bool is_free_list) {
+bool answer_list_log(lList **answer_list, bool is_free_list, bool show_info) {
 
    bool ret = false;
    lListElem *answer;   /* AN_Type */
@@ -930,7 +931,7 @@ bool answer_list_log(lList **answer_list, bool is_free_list) {
 
    if (answer_list != NULL && *answer_list != NULL) {
       for_each(answer, *answer_list) {
-         ret = answer_log(answer);
+         ret = answer_log(answer, show_info);
       }
       if (is_free_list) {
          lFreeList(answer_list);
@@ -962,7 +963,7 @@ bool answer_list_log(lList **answer_list, bool is_free_list) {
 *  NOTES
 *     MT-NOTE: answer_log() is MT safe
 ******************************************************************************/
-static bool answer_log(lListElem *answer) {
+static bool answer_log(lListElem *answer, bool show_info) {
 
    bool ret = false;
 
@@ -985,7 +986,9 @@ static bool answer_log(lListElem *answer) {
          WARNING((SGE_EVENT, lGetString(answer, AN_text)));
          break;
       case ANSWER_QUALITY_INFO:
-         INFO((SGE_EVENT, lGetString(answer, AN_text)));
+         if (show_info) {
+            INFO((SGE_EVENT, lGetString(answer, AN_text)));
+         }
          break;
       default:
          break;
@@ -1021,7 +1024,7 @@ static bool answer_log(lListElem *answer) {
 *     MT-NOTE: answer_list_output() is MT safe
 ******************************************************************************/
 bool answer_list_output(lList **answer_list) {
-   return answer_list_log(answer_list, true);
+   return answer_list_log(answer_list, true, true);
 }
 
 

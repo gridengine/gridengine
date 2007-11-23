@@ -134,7 +134,7 @@ static void
 sge_gdi_shutdown_event_client(sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
                               monitoring_t *monitor, object_description *object_base);
 
-static void sge_gdi_startup_thread(sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
+static void sge_gdi_startup_thread(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
                                    monitoring_t *monitor);
 
 static int  get_client_id(lListElem*, int*);
@@ -1094,11 +1094,11 @@ static void sge_c_gdi_trigger(sge_gdi_ctx_class_t *ctx,
        case SGE_EVENT_LIST:
             /* kill scheduler or event client */
             sge_gdi_shutdown_event_client(packet, task, monitor, object_base);
-            answer_list_log(&(task->answer_list), false);
+            answer_list_log(&(task->answer_list), false, true);
          break;
        case SGE_DUMMY_LIST:
-            sge_gdi_startup_thread(packet, task, monitor);
-            answer_list_log(&(task->answer_list), false);
+            sge_gdi_startup_thread(ctx, packet, task, monitor);
+            answer_list_log(&(task->answer_list), false, true);
          break;
        default:
             /* permissions should be checked in the functions. Here we don't
@@ -1112,7 +1112,7 @@ static void sge_c_gdi_trigger(sge_gdi_ctx_class_t *ctx,
    return;
 }
 
-static void sge_gdi_startup_thread(sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
+static void sge_gdi_startup_thread(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
                                    monitoring_t *monitor)
 {
    lListElem *elem = NULL; /* ID_Type */
@@ -1124,7 +1124,7 @@ static void sge_gdi_startup_thread(sge_gdi_packet_class_t *packet, sge_gdi_task_
       if (name != NULL) {
          /* startup the scheduler if it is not already started */
          if (strcmp(name, "scheduler") == 0) {
-            sge_scheduler_initialize();
+            sge_scheduler_initialize(ctx);
          } else {
             ERROR((SGE_EVENT, MSG_TRIGGER_NOTSUPPORTED_S, name));
             answer_list_add(&(task->answer_list), SGE_EVENT, 

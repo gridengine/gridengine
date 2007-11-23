@@ -98,7 +98,7 @@ const char *prognames[] =
 const char *threadnames[] = {
    "main",              /* 1 */
    "listener",          /* 2 */
-   "deliverer",         /* 3 */
+   "event_master",      /* 3 */
    "timer",             /* 4 */
    "worker",            /* 5 */
    "signaler",          /* 6 */

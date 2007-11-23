@@ -40,7 +40,7 @@ QMASTER_TARGETS = sge_qmaster
 QMASTER_SRC = sge_qmaster_threads.c \
               sge_thread_listener.c \
               sge_thread_worker.c \
-              sge_thread_deliverer.c \
+              sge_thread_event_master.c \
               sge_thread_timer.c \
               sge_thread_test.c \
               sge_thread_scheduler.c \
@@ -181,8 +181,8 @@ sge_thread_listener.o: 	$(QMASTER_DIR)/sge_thread_listener.c
 sge_thread_worker.o: 	$(QMASTER_DIR)/sge_thread_worker.c
 		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_thread_worker.c
 
-sge_thread_deliverer.o: 	$(QMASTER_DIR)/sge_thread_deliverer.c
-		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_thread_deliverer.c
+sge_thread_event_master.o: 	$(QMASTER_DIR)/sge_thread_event_master.c
+		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_thread_event_master.c
 
 sge_thread_timer.o: 	$(QMASTER_DIR)/sge_thread_timer.c
 		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_thread_timer.c

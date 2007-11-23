@@ -102,7 +102,7 @@ sge_listener_cleanup_monitor(monitoring_t *monitor)
 void 
 sge_listener_initialize(sge_gdi_ctx_class_t *ctx)
 {
-   const u_long32 max_initial_listener_threads = ctx->get_gdi_thread_count(ctx);
+   const u_long32 max_initial_listener_threads = ctx->get_listener_thread_count(ctx);
    cl_thread_settings_t* dummy_thread_p = NULL;
    u_long32 i;  
 
@@ -137,6 +137,11 @@ sge_listener_terminate(void)
    sge_add_event(0, sgeE_QMASTER_GOES_DOWN, 0, 0, NULL, NULL, NULL, NULL);
    DPRINTF(("triggered shutdown event for event master module\n"));
 
+   /* EB: TODO: ST: send pthread_cancel to all threads */
+
+   /*
+    * delete all threads
+    */
    thread = cl_thread_list_get_first_thread(Main_Control.listener_thread_pool);
    while (thread != NULL) {
       DPRINTF((SFN" gets canceled\n", thread->thread_name));

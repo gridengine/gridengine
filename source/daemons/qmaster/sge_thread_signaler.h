@@ -38,7 +38,7 @@
 #include "gdi/sge_gdi_packet.h"
 
 void
-sge_signaler_initialize(void);
+sge_signaler_initialize(sge_gdi_ctx_class_t *ctx);
 
 void
 sge_signaler_terminate(void);

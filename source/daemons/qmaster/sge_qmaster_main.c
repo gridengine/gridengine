@@ -89,13 +89,12 @@
 #include "sge_qmaster_heartbeat.h"
 #include "sge_thread_jvm.h"
 #include "sge_thread_listener.h"
-#include "sge_thread_main.h"
 #include "sge_thread_signaler.h"
 #include "sge_thread_scheduler.h"
 #include "sge_thread_timer.h"
 #include "sge_thread_test.h"
 #include "sge_thread_worker.h"
-#include "sge_thread_deliverer.h"
+#include "sge_thread_event_master.h"
 
 #if !defined(INTERIX)
 static void init_sig_action_and_mask(void);
@@ -384,10 +383,10 @@ int main(int argc, char* argv[])
     * sge_setup_qmaster() might already access it although event delivery
     * thread is not running.
     *
-    * Corresponding shutdown is done in sge_deliverer_terminate();
+    * Corresponding shutdown is done in sge_event_master_terminate();
     *
     * EB: In my opinion the init function should called in
-    * sge_deliverer_initialize(). Is it possible to move that call?
+    * sge_event_master_initialize(). Is it possible to move that call?
     */ 
    sge_event_master_init();
 
@@ -406,18 +405,17 @@ int main(int argc, char* argv[])
     * Setup all threads and initialize corresponding modules. 
     * Order is important!
     */
-   sge_signaler_initialize();
-   /* EB: TODO: ST: rename deliverer to event_master */
-   sge_deliverer_initialize(ctx);
+   sge_signaler_initialize(ctx);
+   sge_event_master_initialize(ctx);
    sge_timer_initialize(ctx, &monitor);
    sge_worker_initialize(ctx);
 #if 0
    sge_test_initialize(ctx);
 #endif
    sge_listener_initialize(ctx);
-   sge_scheduler_initialize();
+   sge_scheduler_initialize(ctx);
 #ifndef NO_JNI
-   sge_jvm_initialize();
+   sge_jvm_initialize(ctx);
 #endif
 
    /*
@@ -439,7 +437,7 @@ int main(int argc, char* argv[])
 #endif
    sge_worker_terminate(ctx);
    sge_timer_terminate();
-   sge_deliverer_terminate();
+   sge_event_master_terminate();
    sge_signaler_terminate();
 
    /*

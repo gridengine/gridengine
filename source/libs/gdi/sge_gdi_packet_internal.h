@@ -45,6 +45,9 @@ void
 sge_gdi_packet_broadcast_that_handled(sge_gdi_packet_class_t *packet);
 
 bool
+sge_gdi_packet_is_handled(sge_gdi_packet_class_t *packet);
+
+bool
 sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
                                 sge_gdi_packet_class_t *packet);
 

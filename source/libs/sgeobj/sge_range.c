@@ -72,8 +72,6 @@ static bool range_is_overlapping(const lListElem *range1,
 static void expand_range_list(lListElem *r, lList **rl);
 
 /* we keep a descending sorted list of non overlapping ranges */
-
-/* why descending? don't ask me! ask the initiator of this function */
 /* MT-NOTE: expand_range_list() is MT safe */
 static void expand_range_list(lListElem *r, lList **rl)
 {

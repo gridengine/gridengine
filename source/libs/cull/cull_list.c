@@ -854,7 +854,7 @@ static void lWriteList_(const lList *lp, dstring *buffer, int nesting_level)
    indent[i] = '\0';
 
    sge_dstring_sprintf_append(buffer, "\n%sList: <%s> %c #Elements: %d\n",    
-                              indent, lGetListName(lp), 
+                              indent, (lGetListName(lp) != NULL) ? lGetListName(lp) : "NULL", 
                               lp->changed ? '*' : ' ', lGetNumberOfElem(lp));
    for_each(ep, lp) {
       lWriteElem_(ep, buffer, nesting_level);

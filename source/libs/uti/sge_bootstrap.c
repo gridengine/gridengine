@@ -58,7 +58,10 @@ typedef struct {
     char* binary_path;
     char* qmaster_spool_dir;
     char* security_mode;
-    int   gdi_thread_count;
+    int   listener_thread_count;
+    int   worker_thread_count;
+    int   scheduler_thread_count;
+    int   jvm_thread_count;
     bool  job_spooling;
 } sge_bootstrap_state_t;
 
@@ -89,7 +92,10 @@ static const char* get_qmaster_spool_dir(sge_bootstrap_state_class_t *thiz);
 static const char* get_security_mode(sge_bootstrap_state_class_t *thiz);
 static bool get_ignore_fqdn(sge_bootstrap_state_class_t *thiz);
 static bool get_job_spooling(sge_bootstrap_state_class_t *thiz);
-static int get_gdi_thread_count(sge_bootstrap_state_class_t *thiz);
+static int get_listener_thread_count(sge_bootstrap_state_class_t *thiz);
+static int get_worker_thread_count(sge_bootstrap_state_class_t *thiz);
+static int get_scheduler_thread_count(sge_bootstrap_state_class_t *thiz);
+static int get_jvm_thread_count(sge_bootstrap_state_class_t *thiz);
 static void set_admin_user(sge_bootstrap_state_class_t *thiz, const char *admin_user);
 static void set_default_domain(sge_bootstrap_state_class_t *thiz, const char *default_domain);
 static void set_spooling_method(sge_bootstrap_state_class_t *thiz, const char *spooling_method);
@@ -100,7 +106,10 @@ static void set_qmaster_spool_dir(sge_bootstrap_state_class_t *thiz, const char 
 static void set_security_mode(sge_bootstrap_state_class_t *thiz, const char *security_mode);
 static void set_ignore_fqdn(sge_bootstrap_state_class_t *thiz, bool ignore_fqdn);
 static void set_job_spooling(sge_bootstrap_state_class_t *thiz, bool job_spooling);
-static void set_gdi_thread_count(sge_bootstrap_state_class_t *thiz, int gdi_thread_count);
+static void set_listener_thread_count(sge_bootstrap_state_class_t *thiz, int thread_count);
+static void set_worker_thread_count(sge_bootstrap_state_class_t *thiz, int thread_count);
+static void set_scheduler_thread_count(sge_bootstrap_state_class_t *thiz, int thread_count);
+static void set_jvm_thread_count(sge_bootstrap_state_class_t *thiz, int thread_count);
 
 static bool sge_bootstrap_state_class_init(sge_bootstrap_state_class_t *st, sge_error_class_t *eh);
 
@@ -312,22 +321,76 @@ void bootstrap_set_security_mode(const char *value)
    bootstrap->set_security_mode(bootstrap, value ); 
 }
 
-void bootstrap_set_gdi_thread_count(int value)
+void bootstrap_set_listener_thread_count(int value)
 {
    sge_bootstrap_state_class_t* bootstrap = NULL;
    GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
-                "bootstrap_set_gdi_thread_count");
+                "bootstrap_set_listener_thread_count");
    bootstrap = handle->current;                
-   bootstrap->set_gdi_thread_count(bootstrap, value ); 
+   bootstrap->set_listener_thread_count(bootstrap, value); 
 }
 
-int bootstrap_get_gdi_thread_count(void)
+void bootstrap_set_worker_thread_count(int value)
 {
    sge_bootstrap_state_class_t* bootstrap = NULL;
    GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
-                "bootstrap_get_gdi_thread_count");
+                "bootstrap_set_worker_thread_count");
    bootstrap = handle->current;                
-   return bootstrap->get_gdi_thread_count(bootstrap);
+   bootstrap->set_worker_thread_count(bootstrap, value); 
+}
+
+void bootstrap_set_scheduler_thread_count(int value)
+{
+   sge_bootstrap_state_class_t* bootstrap = NULL;
+   GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
+                "bootstrap_set_scheduler_thread_count");
+   bootstrap = handle->current;                
+   bootstrap->set_scheduler_thread_count(bootstrap, value); 
+}
+
+void bootstrap_set_jvm_thread_count(int value)
+{
+   sge_bootstrap_state_class_t* bootstrap = NULL;
+   GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
+                "bootstrap_set_jvm_thread_count");
+   bootstrap = handle->current;                
+   bootstrap->set_jvm_thread_count(bootstrap, value); 
+}
+
+int bootstrap_get_listener_thread_count(void)
+{
+   sge_bootstrap_state_class_t* bootstrap = NULL;
+   GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
+                "bootstrap_get_listener_thread_count");
+   bootstrap = handle->current;                
+   return bootstrap->get_listener_thread_count(bootstrap);
+}
+
+int bootstrap_get_worker_thread_count(void)
+{
+   sge_bootstrap_state_class_t* bootstrap = NULL;
+   GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
+                "bootstrap_get_worker_thread_count");
+   bootstrap = handle->current;                
+   return bootstrap->get_worker_thread_count(bootstrap);
+}
+
+int bootstrap_get_scheduler_thread_count(void)
+{
+   sge_bootstrap_state_class_t* bootstrap = NULL;
+   GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
+                "bootstrap_get_scheduler_thread_count");
+   bootstrap = handle->current;                
+   return bootstrap->get_scheduler_thread_count(bootstrap);
+}
+
+int bootstrap_get_jvm_thread_count(void)
+{
+   sge_bootstrap_state_class_t* bootstrap = NULL;
+   GET_SPECIFIC(sge_bootstrap_thread_local_t, handle, bootstrap_thread_local_init, sge_bootstrap_thread_local_key, 
+                "bootstrap_get_jvm_thread_count");
+   bootstrap = handle->current;                
+   return bootstrap->get_jvm_thread_count(bootstrap);
 }
 
 void bootstrap_set_job_spooling(bool value)
@@ -373,7 +436,7 @@ bool bootstrap_get_job_spooling(void)
 *  NOTES
 *     MT-NOTE: sge_bootstrap() is MT safe
 *******************************************************************************/
-#define NUM_BOOTSTRAP 11
+#define NUM_BOOTSTRAP 14
 #define NUM_REQ_BOOTSTRAP 9
 bool sge_bootstrap(const char *bootstrap_file, dstring *error_dstring) 
 {
@@ -390,7 +453,10 @@ bool sge_bootstrap(const char *bootstrap_file, dstring *error_dstring)
                                              {"qmaster_spool_dir", true},
                                              {"security_mode", true},
                                              {"job_spooling", false},
-                                             {"gdi_threads", false}
+                                             {"listener_threads", false},
+                                             {"worker_threads", false},
+                                             {"scheduler_threads", false},
+                                             {"jvm_threads", false}
                                      };
    char value[NUM_BOOTSTRAP][1025];
 
@@ -438,9 +504,23 @@ bool sge_bootstrap(const char *bootstrap_file, dstring *error_dstring)
       }   
       {
          u_long32 uval = 0;
-         parse_ulong_val(NULL, &uval, TYPE_INT, value[10], 
-                         NULL, 0);
-         bootstrap_set_gdi_thread_count(uval);
+         parse_ulong_val(NULL, &uval, TYPE_INT, value[10], NULL, 0);
+         bootstrap_set_listener_thread_count(uval);
+      }
+      {
+         u_long32 uval = 0;
+         parse_ulong_val(NULL, &uval, TYPE_INT, value[11], NULL, 0);
+         bootstrap_set_worker_thread_count(uval);
+      }
+      {
+         u_long32 uval = 0;
+         parse_ulong_val(NULL, &uval, TYPE_INT, value[12], NULL, 0);
+         bootstrap_set_scheduler_thread_count(uval);
+      }
+      {
+         u_long32 uval = 0;
+         parse_ulong_val(NULL, &uval, TYPE_INT, value[13], NULL, 0);
+         bootstrap_set_jvm_thread_count(uval);
       }
 
       DPRINTF(("admin_user          >%s<\n", bootstrap_get_admin_user()));
@@ -455,9 +535,12 @@ bool sge_bootstrap(const char *bootstrap_file, dstring *error_dstring)
       DPRINTF(("security_mode       >%s<\n", bootstrap_get_security_mode()));
       DPRINTF(("job_spooling        >%s<\n", bootstrap_get_job_spooling() ? 
                                              "true":"false"));
-      DPRINTF(("gdi_threads         >%d<\n", bootstrap_get_gdi_thread_count()));
+      DPRINTF(("listener_threads    >%d<\n", bootstrap_get_listener_thread_count()));
+      DPRINTF(("worker_threads      >%d<\n", bootstrap_get_worker_thread_count()));
+      DPRINTF(("scheduler_threads   >%d<\n", bootstrap_get_scheduler_thread_count()));
+      DPRINTF(("jvm_threads         >%d<\n", bootstrap_get_jvm_thread_count()));
    } 
-   
+
    DEXIT;
    return ret;
 }
@@ -597,7 +680,10 @@ static bool sge_bootstrap_state_class_init(sge_bootstrap_state_class_t *st, sge_
    st->get_qmaster_spool_dir = get_qmaster_spool_dir;
    st->get_security_mode = get_security_mode;
    st->get_job_spooling = get_job_spooling;
-   st->get_gdi_thread_count = get_gdi_thread_count;
+   st->get_listener_thread_count = get_listener_thread_count;
+   st->get_worker_thread_count = get_worker_thread_count;
+   st->get_scheduler_thread_count = get_scheduler_thread_count;
+   st->get_jvm_thread_count = get_jvm_thread_count;
 
    st->set_admin_user = set_admin_user;
    st->set_default_domain = set_default_domain;
@@ -609,7 +695,10 @@ static bool sge_bootstrap_state_class_init(sge_bootstrap_state_class_t *st, sge_
    st->set_qmaster_spool_dir = set_qmaster_spool_dir;
    st->set_security_mode = set_security_mode;   
    st->set_job_spooling = set_job_spooling;   
-   st->set_gdi_thread_count = set_gdi_thread_count;   
+   st->set_listener_thread_count = set_listener_thread_count;   
+   st->set_worker_thread_count = set_worker_thread_count;   
+   st->set_scheduler_thread_count = set_scheduler_thread_count;   
+   st->set_jvm_thread_count = set_jvm_thread_count;   
    
    st->sge_bootstrap_state_handle = sge_malloc(sizeof(sge_bootstrap_state_t));
    
@@ -676,7 +765,7 @@ static void bootstrap_state_destroy(sge_bootstrap_state_t* theState)
 
 static bool sge_bootstrap_state_setup(sge_bootstrap_state_class_t *thiz, sge_path_state_class_t *sge_paths, sge_error_class_t *eh)
 {
-   #define NUM_BOOTSTRAP 11
+   #define NUM_BOOTSTRAP 14
    #define REQ_BOOTSTRAP 9
 
    dstring error_dstring = DSTRING_INIT;
@@ -691,7 +780,10 @@ static bool sge_bootstrap_state_setup(sge_bootstrap_state_class_t *thiz, sge_pat
                                              {"qmaster_spool_dir", true},
                                              {"security_mode", true},
                                              {"job_spooling", false},
-                                             {"gdi_threads", false}
+                                             {"listener_threads", false},
+                                             {"worker_threads", false},
+                                             {"scheduler_threads", false},
+                                             {"jvm_threads", false}
                                      };
    char value[NUM_BOOTSTRAP][1025];
    int i;
@@ -730,8 +822,7 @@ static bool sge_bootstrap_state_setup(sge_bootstrap_state_class_t *thiz, sge_pat
    thiz->set_default_domain(thiz, value[1]);
    {
       u_long32 uval = 0;
-      parse_ulong_val(NULL, &uval, TYPE_BOO, value[2], 
-                      NULL, 0);
+      parse_ulong_val(NULL, &uval, TYPE_BOO, value[2], NULL, 0);
       thiz->set_ignore_fqdn(thiz, uval ? true : false);
    }
    thiz->set_spooling_method(thiz, value[3]);
@@ -742,20 +833,35 @@ static bool sge_bootstrap_state_setup(sge_bootstrap_state_class_t *thiz, sge_pat
    thiz->set_security_mode(thiz, value[8]);
    if (strcmp(value[9], "")) {
       u_long32 uval = 0;
-      parse_ulong_val(NULL, &uval, TYPE_BOO, value[9], 
-                      NULL, 0);
+      parse_ulong_val(NULL, &uval, TYPE_BOO, value[9], NULL, 0);
       thiz->set_job_spooling(thiz, uval ? true : false);
    } else {
       thiz->set_job_spooling(thiz, true);
    }
    {
       u_long32 uval = 0;
-      parse_ulong_val(NULL, &uval, TYPE_INT, value[10], 
-                      NULL, 0);
-      thiz->set_gdi_thread_count(thiz, uval);
+      parse_ulong_val(NULL, &uval, TYPE_INT, value[10], NULL, 0);
+      thiz->set_listener_thread_count(thiz, uval);
+   }
+   {
+      u_long32 uval = 0;
+      parse_ulong_val(NULL, &uval, TYPE_INT, value[11], NULL, 0);
+      thiz->set_worker_thread_count(thiz, uval);
+   }
+   {
+      u_long32 uval = 0;
+      parse_ulong_val(NULL, &uval, TYPE_INT, value[12], NULL, 0);
+      thiz->set_scheduler_thread_count(thiz, uval);
+   }
+   {
+      u_long32 uval = 0;
+      parse_ulong_val(NULL, &uval, TYPE_INT, value[13], NULL, 0);
+      thiz->set_jvm_thread_count(thiz, uval);
    }
 
-   /*thiz->dprintf(thiz);*/
+#if 0
+   thiz->dprintf(thiz);
+#endif
 
    DEXIT;
    return true;
@@ -777,8 +883,11 @@ static void sge_bootstrap_state_dprintf(sge_bootstrap_state_class_t *thiz)
    DPRINTF(("qmaster_spool_dir   >%s<\n", bs->qmaster_spool_dir));
    DPRINTF(("security_mode       >%s<\n", bs->security_mode));
    DPRINTF(("job_spooling        >%s<\n", bs->job_spooling ? "true" : "false"));
-   DPRINTF(("gdi_threads         >%d<\n", bs->gdi_thread_count));
-   
+   DPRINTF(("listener_threads    >%d<\n", bs->listener_thread_count));
+   DPRINTF(("worker_threads      >%d<\n", bs->worker_thread_count));
+   DPRINTF(("scheduler_threads   >%d<\n", bs->scheduler_thread_count));
+   DPRINTF(("jvm_threads         >%d<\n", bs->jvm_thread_count));
+
    DEXIT;
 }
 
@@ -842,10 +951,28 @@ static bool get_job_spooling(sge_bootstrap_state_class_t *thiz)
    return es->job_spooling;
 }
 
-static int get_gdi_thread_count(sge_bootstrap_state_class_t *thiz) 
+static int get_listener_thread_count(sge_bootstrap_state_class_t *thiz) 
 {
    sge_bootstrap_state_t *es = (sge_bootstrap_state_t *) thiz->sge_bootstrap_state_handle;
-   return es->gdi_thread_count;
+   return es->listener_thread_count;
+}
+
+static int get_worker_thread_count(sge_bootstrap_state_class_t *thiz) 
+{
+   sge_bootstrap_state_t *es = (sge_bootstrap_state_t *) thiz->sge_bootstrap_state_handle;
+   return es->worker_thread_count;
+}
+
+static int get_scheduler_thread_count(sge_bootstrap_state_class_t *thiz) 
+{
+   sge_bootstrap_state_t *es = (sge_bootstrap_state_t *) thiz->sge_bootstrap_state_handle;
+   return es->scheduler_thread_count;
+}
+
+static int get_jvm_thread_count(sge_bootstrap_state_class_t *thiz) 
+{
+   sge_bootstrap_state_t *es = (sge_bootstrap_state_t *) thiz->sge_bootstrap_state_handle;
+   return es->jvm_thread_count;
 }
 
 static void set_admin_user(sge_bootstrap_state_class_t *thiz, const char *admin_user)
@@ -908,15 +1035,51 @@ static void set_job_spooling(sge_bootstrap_state_class_t *thiz, bool job_spoolin
    es->job_spooling = job_spooling;
 }
 
-static void set_gdi_thread_count(sge_bootstrap_state_class_t *thiz, int gdi_thread_count)
+static void set_listener_thread_count(sge_bootstrap_state_class_t *thiz, int thread_count)
 {
    sge_bootstrap_state_t *es = (sge_bootstrap_state_t *) thiz->sge_bootstrap_state_handle;
-   if (gdi_thread_count <=0) {
-      gdi_thread_count = 2;
-   } else if (gdi_thread_count > 4) {
-      gdi_thread_count = 4;
-   }   
 
-   es->gdi_thread_count = gdi_thread_count;   
+   if (thread_count <= 0) {
+      thread_count = 2;
+   } else if (thread_count > 16) {
+      thread_count = 16;
+   }   
+   es->listener_thread_count = thread_count;   
+}
+
+static void set_worker_thread_count(sge_bootstrap_state_class_t *thiz, int thread_count)
+{
+   sge_bootstrap_state_t *es = (sge_bootstrap_state_t *) thiz->sge_bootstrap_state_handle;
+
+   if (thread_count <= 0) {
+      thread_count = 2;
+   } else if (thread_count > 16) {
+      thread_count = 16;
+   }   
+   es->worker_thread_count = thread_count;   
+}
+
+static void set_scheduler_thread_count(sge_bootstrap_state_class_t *thiz, int thread_count)
+{
+   sge_bootstrap_state_t *es = (sge_bootstrap_state_t *) thiz->sge_bootstrap_state_handle;
+
+   if (thread_count <= 0) {
+      thread_count = 0;
+   } else if (thread_count > 1) {
+      thread_count = 1;
+   }   
+   es->scheduler_thread_count = thread_count;   
+}
+
+static void set_jvm_thread_count(sge_bootstrap_state_class_t *thiz, int thread_count)
+{
+   sge_bootstrap_state_t *es = (sge_bootstrap_state_t *) thiz->sge_bootstrap_state_handle;
+
+   if (thread_count <= 0) {
+      thread_count = 0;
+   } else if (thread_count > 1) {
+      thread_count = 1;
+   }   
+   es->jvm_thread_count = thread_count;   
 }
 

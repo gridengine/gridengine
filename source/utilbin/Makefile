@@ -39,7 +39,7 @@ UTILBIN_TARGETS = uidgid gethostname gethostbyname gethostbyaddr \
                  signals loadcheck now \
                  adminrun checkuser languagetest \
                  testsuidroot infotext spooldefaults spooledit spoolinit \
-                 tst_pthread_signals fstype qping sgepasswd $(AUTHUSER_ALL) \
+                 tst_pthread_signals fstype qping sgepasswd sge_share_mon $(AUTHUSER_ALL) \
                  $(LOADCHECK_ALL)
 
 UTILBIN_SRC =  uidgid.c gethostname.c gethostbyname.c gethostbyaddr.c \
@@ -47,7 +47,7 @@ UTILBIN_SRC =  uidgid.c gethostname.c gethostbyname.c gethostbyaddr.c \
                checkuser.c adminrun.c range.c  \
                languagetest.c infotext.c \
                spooldefaults.c spooledit.c spoolinit.c \
-               tst_pthread_signals.c fstype.c qping.c authuser.c
+               tst_pthread_signals.c fstype.c qping.c authuser.c sge_share_mon.c
 
 UTILBIN_OBJS  = $(UTILBIN_SRC:.c=.o) 
 
@@ -255,6 +255,16 @@ sge_passwd_main.o: $(UTILBIN_DIR)/sge_passwd.c
 
 sge_passwd.o: $(UTILBIN_DIR)/sge_passwd.c
 		$(CC) $(CFLAGS) -ULOAD_OPENSSL $(NOERR_PROTO) $(NOERR_CFLAG) $(MEMCFLAG) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/sge_passwd.c
+
+#---------------------------------------------------------------------
+SMON_LIB_DEPENDS = $(SCHEDLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(WINGRIDLIB_DEP) $(RMONLIB) $(LCKLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB)
+SMON_ADD_LIBS = -lsched -levc -lgdi -lsgeobjd -lsgeobj $(SECLIB) $(KRBLIB) -lcull -lrmon -lcomm -lcommlists -luti $(WINGRIDLIB) -llck $(DLLIB)
+
+sge_share_mon: sge_share_mon.o sge_support.o $(SMON_LIB_DEPENDS)
+		$(LD_WRAPPER) $(CC) -o $@ $(LFLAGS) sge_share_mon.o sge_support.o $(SMON_ADD_LIBS) $(SLIBS) $(LIBS) 
+
+sge_share_mon.o: $(UTILBIN_DIR)/sge_share_mon.c
+		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/sge_share_mon.c
 
 #---------------------------------------------------------------------
 AUTHUSER_ADD_LIBS = -luti -llck -lrmon $(COMMLISTSLIB) $(DLLIB)

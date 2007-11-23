@@ -93,7 +93,7 @@
 #include "sge_thread_scheduler.h"
 
 void
-sge_signaler_initialize(void)
+sge_signaler_initialize(sge_gdi_ctx_class_t *ctx)
 {
    cl_thread_settings_t* dummy_thread_p = NULL;
    dstring thread_name = DSTRING_INIT; 

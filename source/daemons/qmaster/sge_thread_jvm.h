@@ -41,7 +41,7 @@
 
 
 void
-sge_jvm_initialize(void);
+sge_jvm_initialize(sge_gdi_ctx_class_t *ctx);
 
 void
 sge_jvm_terminate(void);

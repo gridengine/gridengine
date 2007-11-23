@@ -104,7 +104,7 @@ sge_worker_cleanup_monitor(monitoring_t *monitor)
 void 
 sge_worker_initialize(sge_gdi_ctx_class_t *ctx)
 {
-   const u_long32 max_initial_worker_threads = ctx->get_gdi_thread_count(ctx);
+   const u_long32 max_initial_worker_threads = ctx->get_worker_thread_count(ctx);
    cl_thread_settings_t* dummy_thread_p = NULL;
    int i;   
 

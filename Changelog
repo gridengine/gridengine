@@ -1,3 +1,23 @@
+EB-2007-11-23-0: Cleanup:   o Moved sge_share_mon from clients to utilbin
+                            o Added parameters to bootstrap file to enable threads
+                              or set the initial number of threads 
+                            o Added qmaster param temporaryly to limit the number
+                              of GDI order requests send by qmaster
+                            o Changed the initial number of worker an listener threads
+                            o Eleminated uneccessary pthread_cond_wait() call in worker 
+                              threads which reduced overall performance.
+                 Review:    JG 
+
+                 NOTE:      Reinstallation necessary or otherwise scheduler
+                            and JVM thread won't start during qmaster start.
+
+                              or
+
+                            Add following lines to your bootstrap file:
+                               listener_threads        2
+                               worker_threads          2
+                               scheduler_threads       1
+
 HP-2007-11-23-0: Bugfix:    new IJS: fixed broken environment setup for qrsh
                             without command when environment of shepherd is 
                             incomplete.

@@ -276,22 +276,22 @@ sge_gdi_packet_queue_wait_for_new_packet(sge_gdi_packet_queue_class_t *packet_qu
        * that someone calls sge_gdi_packet_queue_wakeup_all_waiting() or
        * sge_gdi_packet_queue_store_notify()
        */
-      packet_queue->waiting++;
-      DPRINTF((SFN" is waiting for packet (packet_queue->waiting = "
-               sge_U32CFormat")\n", thread_config->thread_name, 
-               packet_queue->waiting));
-      do {
-         struct timespec ts;
-         u_long32 current_time = 0; 
+      if (packet_queue->first_packet == NULL) {
+         packet_queue->waiting++;
+         DPRINTF((SFN" is waiting for packet (packet_queue->waiting = "
+                  sge_U32CFormat")\n", thread_config->thread_name, 
+                  packet_queue->waiting));
+         do {
+            struct timespec ts;
+            u_long32 current_time = 0; 
 
-         current_time = sge_get_gmt();
-         ts.tv_sec = (time_t)(current_time + WORKER_WAIT_TIME_S);
-         ts.tv_nsec = WORKER_WAIT_TIME_N;;
-         pthread_cond_timedwait(&(packet_queue->cond), &(packet_queue->mutex), &ts);
-      } while (packet_queue->first_packet == NULL &&
-               sge_thread_has_shutdown_started() == false);
-
-      packet_queue->waiting--;
+            current_time = sge_get_gmt();
+            ts.tv_sec = (time_t)(current_time + WORKER_WAIT_TIME_S);
+            ts.tv_nsec = WORKER_WAIT_TIME_N;;
+            pthread_cond_timedwait(&(packet_queue->cond), &(packet_queue->mutex), &ts);
+         } while (packet_queue->first_packet == NULL && sge_thread_has_shutdown_started() == false);
+         packet_queue->waiting--;
+      }
 
       /* 
        * If there is a packet then dechain it an return it to the caller 

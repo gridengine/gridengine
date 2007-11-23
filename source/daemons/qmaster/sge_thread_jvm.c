@@ -572,9 +572,9 @@ sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
 }
 
 void
-sge_jvm_initialize(void)
+sge_jvm_initialize(sge_gdi_ctx_class_t *ctx)
 {
-   const int max_initial_jvm_threads = 1;
+   const int max_initial_jvm_threads = ctx->get_jvm_thread_count(ctx);
    cl_thread_settings_t* dummy_thread_p = NULL;
    int i;
 

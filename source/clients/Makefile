@@ -48,17 +48,15 @@ include $(SDIR)/clients/qevent/Makefile
 include $(SDIR)/clients/qrsub/Makefile
 include $(SDIR)/clients/qrdel/Makefile
 include $(SDIR)/clients/qrstat/Makefile
-include $(SDIR)/clients/sge_share_mon/Makefile
 
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
 
-# EB: TODO: move sge_share_mon to utilbin
-clients: clients_common qacct qalter qconf qdel qhost qquota qmod qrsh qsh qstat qsub qevent qrsub qrdel qrstat sge_share_mon
+clients: clients_common qacct qalter qconf qdel qhost qquota qmod qrsh qsh qstat qsub qevent qrsub qrdel qrstat 
 
-clients_clean: clients_common_clean qacct_clean qalter_clean qconf_clean qdel_clean qhost_clean qquota_clean qmod_clean qrsh_clean qsh_clean qstat_clean qsub_clean qevent_clean qrsub_clean qrdel_clean qrstat_clean smon_clean
+clients_clean: clients_common_clean qacct_clean qalter_clean qconf_clean qdel_clean qhost_clean qquota_clean qmod_clean qrsh_clean qsh_clean qstat_clean qsub_clean qevent_clean qrsub_clean qrdel_clean qrstat_clean 
 
-clients_depend: clients_common_depend qacct_depend qalter_depend qconf_depend qdel_depend qhost_depend qquota_depend qmod_depend qrsh_depend qsh_depend qstat_depend qsub_depend qevent_depend qrsub_depend qrdel_depend qrstat_depend smon_depend
+clients_depend: clients_common_depend qacct_depend qalter_depend qconf_depend qdel_depend qhost_depend qquota_depend qmod_depend qrsh_depend qsh_depend qstat_depend qsub_depend qevent_depend qrsub_depend qrdel_depend qrstat_depend 
 
-clients_messages: clients_common_messages qacct_messages qalter_messages qconf_messages qdel_messages qhost_messages qquota_messages qmod_messages qrsh_messages qsh_messages qstat_messages qsub_messages qevent_messages qrsub_messages qrdel_message qrstat_message smon_message
+clients_messages: clients_common_messages qacct_messages qalter_messages qconf_messages qdel_messages qhost_messages qquota_messages qmod_messages qrsh_messages qsh_messages qstat_messages qsub_messages qevent_messages qrsub_messages qrdel_message qrstat_message 

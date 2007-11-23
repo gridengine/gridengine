@@ -245,8 +245,7 @@ job_move_first_pending_to_running(lListElem **pending_job, lList **splitted_jobs
    if (*(splitted_jobs[SPLIT_RUNNING]) == NULL) {
       const lDescr *descriptor = lGetElemDescr(*pending_job);
       *(splitted_jobs[SPLIT_RUNNING]) = lCreateList("", descriptor);
-   }
-   else {
+   } else {
       running_job = lGetElemUlong(*(splitted_jobs[SPLIT_RUNNING]), 
                                JB_job_number, job_id);
    }

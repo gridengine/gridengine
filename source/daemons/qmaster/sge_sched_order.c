@@ -34,6 +34,8 @@
 
 #include "rmon/sgermon.h"
 
+#include "uti/sge_log.h"
+
 #include "gdi/sge_gdi2.h"
 #include "gdi/sge_gdi_ctx.h"
 
@@ -45,55 +47,106 @@
 
 gdi_request_queue_t Master_Request_Queue = {
    NULL,
+   NULL,
    NULL 
 };
 
 bool
 sge_schedd_send_orders(sge_gdi_ctx_class_t *ctx, lList **order_list, lList **answer_list, const char *name)
 {
+   static bool is_initialized = false;
+   static int max_unhandled = 0;
    bool ret = true;
 
    DENTER(TOP_LAYER, "sge_schedd_send_orders");
-
+   if (!is_initialized) {
+      max_unhandled = mconf_get_max_order_limit();
+      INFO((SGE_EVENT, "Maximum number of unhandled GDI order requests limited to %d. Change this by setting MAX_ORDER_LIMT in qmaster_params and restart qmaster!\n", max_unhandled));
+      is_initialized = true;
+   }
    if ((order_list != NULL) && (*order_list != NULL) && (lGetNumberOfElem(*order_list) != 0)) {
-      state_gdi_multi *state = NULL;
-      
-      state = (state_gdi_multi *)sge_malloc(sizeof(state_gdi_multi));
-      if (state != NULL) {
-         int order_id;
+      int unhandled = 0;
 
-         memset(state, 0, sizeof(state_gdi_multi));
-         order_id = ctx->gdi_multi(ctx, answer_list, SGE_GDI_SEND, SGE_ORDER_LIST, SGE_GDI_ADD,
-                                   order_list, NULL, NULL, state, false);
-
-         if ((answer_list == NULL) && (order_id != -1)) {
-            /*
-             * Evaluation of the asyncron internal GDI request is in function 
-             * sge_schedd_block_until_oders_processed() which will be called 
-             * later on. The only remaining thing to do is to store the state
-             * variable into the request queue Master_Request_Queue
-             */
-            if (Master_Request_Queue.first == NULL) {
-               state->next = NULL;
-               Master_Request_Queue.first = state;
-               Master_Request_Queue.last = state;
-            } else {
-               state->next = NULL;
-               Master_Request_Queue.last->next = state;
-               Master_Request_Queue.last = state;
-            }
-         } else {
-            answer_list_log(answer_list, false);
-            ret = false;
-         }
+      /*
+       * Add the new orders 
+       */
+      if (Master_Request_Queue.order_list == NULL) {
+         Master_Request_Queue.order_list = *order_list;
+         *order_list = NULL;
       } else {
-         answer_list_add(answer_list, MSG_SGETEXT_NOMEM, STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-         answer_list_log(answer_list, false);
-         ret = false;
+         lAddList(Master_Request_Queue.order_list, order_list);
+      }
+
+      /*
+       * send order list only if maximum unhandled order count is not reached
+       */
+      unhandled = sge_schedd_get_unhandled_request_count(ctx, answer_list);
+      if (unhandled < max_unhandled) {
+         sge_schedd_add_gdi_order_request(ctx, answer_list, &Master_Request_Queue.order_list);
       } 
+#if 0
+      else {
+         INFO((SGE_EVENT, "### POSTPONING TO SEND ORDER BECAUSE THERE IS/ARE ALREADY %d UNHANDLED GDI ADD ORDER REQUEST(S)\n", unhandled));
+      }
+#endif
    }
 
    DRETURN(ret);
+}
+
+bool
+sge_schedd_add_gdi_order_request(sge_gdi_ctx_class_t *ctx, lList **answer_list, lList **order_list) 
+{
+   bool ret = true;
+   state_gdi_multi *state = NULL;
+
+   DENTER(TOP_LAYER, "sge_schedd_add_gdi_order_request");
+   state = (state_gdi_multi *)sge_malloc(sizeof(state_gdi_multi));
+   if (state != NULL) {
+      int order_id;
+
+      memset(state, 0, sizeof(state_gdi_multi));
+      order_id = ctx->gdi_multi(ctx, answer_list, SGE_GDI_SEND, SGE_ORDER_LIST, SGE_GDI_ADD,
+                                order_list, NULL, NULL, state, false);
+
+      if ((answer_list == NULL) && (order_id != -1)) {
+         if (Master_Request_Queue.first == NULL) {
+            state->next = NULL;
+            Master_Request_Queue.first = state;
+            Master_Request_Queue.last = state;
+         } else {
+            state->next = NULL;
+            Master_Request_Queue.last->next = state;
+            Master_Request_Queue.last = state;
+         }
+      } else {
+         answer_list_log(answer_list, false, false);
+         ret = false;
+      }
+   } else {
+      answer_list_add(answer_list, MSG_SGETEXT_NOMEM, STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+      ret = false;
+   } 
+   DRETURN(ret);
+}
+
+
+
+int
+sge_schedd_get_unhandled_request_count(sge_gdi_ctx_class_t *ctx,
+                                       lList **answer_list)
+{
+   int counter = 0;
+   state_gdi_multi *current_state, *next_state;
+
+   DENTER(TOP_LAYER, "sge_schedd_get_unhandled_request_count");
+   next_state = Master_Request_Queue.first;
+   while ((current_state = next_state) != NULL) {
+      next_state = current_state->next;
+
+      counter += (sge_gdi2_is_done(ctx, answer_list, current_state) ? 1 : 0);
+   }
+   DRETURN(counter);
 }
 
 bool
@@ -105,11 +158,23 @@ sge_schedd_block_until_oders_processed(sge_gdi_ctx_class_t *ctx,
 
    DENTER(TOP_LAYER, "sge_schedd_block_until_oders_processed");
 
+   /*
+    * send remaining orders if there are some
+    */
+   if (Master_Request_Queue.order_list != NULL) {
+      sge_schedd_add_gdi_order_request(ctx, answer_list, &Master_Request_Queue.order_list);
+   }
+
+   /*
+    * wait till all GDI order requests are finished
+    */
    next_state = Master_Request_Queue.first;
    while ((current_state = next_state) != NULL) {
       lList *request_answer_list = NULL;
       lList *multi_answer_list = NULL;
       int order_id;
+
+      DTRACE;
 
       /* 
        * get next element no so that we can destray the current one later 
@@ -133,13 +198,13 @@ sge_schedd_block_until_oders_processed(sge_gdi_ctx_class_t *ctx,
       ctx->gdi_wait(ctx, answer_list, &multi_answer_list, current_state);
 
       /*
-       * now we have an answer is it positive? 
+       * now we have an answer. is it positive? 
        */
       order_id = 1;
       sge_gdi_extract_answer(&request_answer_list, SGE_GDI_ADD, SGE_ORDER_LIST,
                              order_id, multi_answer_list, NULL);
       if (request_answer_list != NULL) {
-         answer_list_log(&request_answer_list, false);
+         answer_list_log(&request_answer_list, false, false);
          ret = false;
       }
 

@@ -23,7 +23,7 @@
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
  * 
- *   The Initial Developer of the Original Code is: Rising Sun Pictures
+ *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
  * 
  *   Copyright: 2007 by Rising Sun Pictures
  * 

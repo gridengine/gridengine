@@ -1,3 +1,6 @@
+AH-2007-11-23-0: Bugfix:    Fix broken qstat -s a caused by AH-2007-11-16-0
+                 Copyright: Fixed 'Initial Developer' statement in sge_task_depend.[ch]
+
 EB-2007-11-23-0: Cleanup:   o Moved sge_share_mon from clients to utilbin
                             o Added parameters to bootstrap file to enable threads
                               or set the initial number of threads 

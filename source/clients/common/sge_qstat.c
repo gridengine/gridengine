@@ -3297,7 +3297,7 @@ int build_job_state_filter(qstat_env_t *qstat_env, const char* job_state, lList 
        * come after multi byte options starting with the same character (e.g. "hs")!
        */
       static char* flags[] = {
-         "hu", "hs", "ho", "hj", "ha", "h", "p", "r", "s", "z", "a", NULL
+         "hu", "hs", "ho", "hd", "hj", "ha", "h", "p", "r", "s", "z", "a", NULL
       };
       static u_long32 bits[] = {
          (QSTAT_DISPLAY_USERHOLD|QSTAT_DISPLAY_PENDING), 

@@ -471,7 +471,6 @@ sge_scheduler_main(void *arg)
          int execute = 0;
          double prof_copy=0, prof_total=0, prof_init=0, prof_free=0, prof_run=0;
 
-
          if (sconf_get_profiling()) {
             prof_start(SGE_PROF_OTHER, NULL);
             prof_start(SGE_PROF_PACKING, NULL);
@@ -559,11 +558,7 @@ sge_scheduler_main(void *arg)
             lList *master_sharetree_list = *object_type_get_master_list(SGE_TYPE_SHARETREE);
             lList *selected_dept_list = NULL;
             lList *selected_acl_list = NULL;
-            u_long32 interval;
-            int submit_s;
-            int finish_s;
 
-            
             PROF_START_MEASUREMENT(SGE_PROF_CUSTOM6);
             PROF_START_MEASUREMENT(SGE_PROF_CUSTOM7);
 
@@ -761,11 +756,11 @@ sge_scheduler_main(void *arg)
             lFreeList(&(copy.hgrp_list));
             lFreeList(&(copy.rqs_list));
             lFreeList(&(copy.ar_list));
-
-            interval = sconf_get_schedule_interval();
-            /* EB: TODO: ST: enable again */
-            submit_s = 1; /*sconf_get_flush_submit_sec();*/
-            finish_s = 1; /*sconf_get_flush_finish_sec();*/
+         }
+         {
+            u_long32 interval = sconf_get_schedule_interval();
+            int submit_s = 1; /*sconf_get_flush_submit_sec();*/
+            int finish_s = 1; /*sconf_get_flush_finish_sec();*/
 
             if (evc->ec_get_edtime(evc) != interval) {
                  evc->ec_set_edtime(evc, interval);
@@ -798,7 +793,7 @@ sge_scheduler_main(void *arg)
                PROFILING((SGE_EVENT, "PROF: schedd run took: %.3f s (init: %.3f s, copy: %.3f s, "
                           "run:%.3f, free: %.3f s, jobs: %d, categories: %d/%d)",
                            prof_total, prof_init, prof_copy, prof_run, prof_free,
-                           lGetNumberOfElem(master_job_list), sge_category_count(),
+                           lGetNumberOfElem(*object_type_get_master_list(SGE_TYPE_JOB)), sge_category_count(),
                            sge_cs_category_count() ));
             }
             if (getenv("SGE_ND") != NULL) {

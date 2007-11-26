@@ -358,14 +358,10 @@ char qmaster_out_file[SGE_PATH_MAX];
                          !shadowd_is_old_master_enrolled(sge_test_heartbeat, sge_get_qmaster_port(NULL), oldqmaster) && 
                          (latest_heartbeat == heartbeat)) {
                         char qmaster_name[256];
-                        char schedd_name[256];
 
                         strcpy(qmaster_name, SGE_PREFIX);
-                        strcpy(schedd_name, SGE_PREFIX);
                         strcat(qmaster_name, prognames[QMASTER]); 
-                        strcat(schedd_name, prognames[SCHEDD]);
                         DPRINTF(("qmaster_name: "SFN"\n", qmaster_name)); 
-                        DPRINTF(("schedd_name: "SFN"\n", schedd_name)); 
 
                         /*
                          * open logfile as admin user for initial qmaster/schedd 
@@ -386,16 +382,6 @@ char qmaster_out_file[SGE_PATH_MAX];
                         sge_switch2start_user();
                         ret = startprog(out, err, NULL, binpath, qmaster_name, NULL);
                         sge_switch2admin_user();
-                        if (ret)
-                           ERROR((SGE_EVENT, MSG_SHADOWD_CANTSTARTQMASTER));
-                        else {
-                           sleep(5);
-                           sge_switch2start_user();
-                           ret = startprog(out, err, NULL, binpath, schedd_name, NULL);
-                           sge_switch2admin_user();
-                           if (ret)
-                              ERROR((SGE_EVENT, MSG_SHADOWD_CANTSTARTQMASTER));   
-                        }
                         close(out);
                      } else {
                         qmaster_unlock(QMASTER_LOCK_FILE);

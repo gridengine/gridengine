@@ -436,7 +436,7 @@ int main(int argc, char **argv)
          } else {
             slotsflag = 1;
          }
-      } 
+      }
       /*
       ** advance reservation
       */
@@ -493,8 +493,7 @@ int main(int argc, char **argv)
          } else {
             qacct_usage(&ctx, stderr);
          }
-      }
-      else if (!strcmp("-help",argv[ii])) {
+      } else if (!strcmp("-help",argv[ii])) {
          qacct_usage(&ctx, stdout);
       } else {
          qacct_usage(&ctx, stderr);
@@ -774,8 +773,10 @@ int main(int argc, char **argv)
          lListElem *queue;
          int selected;
      
-         sge_dstring_sprintf(&qi,"%s@%s", dusage.qname, dusage.hostname ); 
+         sge_dstring_sprintf(&qi,"%s@%s", dusage.qname, dusage.hostname );
          queue = cqueue_list_locate_qinstance_msg(queue_list, sge_dstring_get_string(&qi), false);
+         sge_dstring_free(&qi); 
+
          if (!queue) {
             /* 
             * queue no longer exists, we can't get the complex attributes for this job, 
@@ -784,7 +785,6 @@ int main(int argc, char **argv)
             ignored_jobs++;
             continue;
          }
-         sge_dstring_free(&qi); 
    
          sconf_set_qs_state(QS_STATE_EMPTY);
 
@@ -1083,7 +1083,8 @@ int main(int argc, char **argv)
          }
          if (owner != NULL) {
             print_full(column_sizes.owner, owner);
-         } else if (ownerflag) {
+         }
+         else if (ownerflag) {
             if (ep == NULL) {
                break;
             }
@@ -1091,7 +1092,8 @@ int main(int argc, char **argv)
          }
          if (project != NULL) {
               print_full(column_sizes.project, project);
-         } else if (projectflag) {
+         }
+         else if (projectflag) {
             if (ep == NULL) {
                break;
             }
@@ -1120,7 +1122,8 @@ int main(int argc, char **argv)
                break;
             }
             print_full_ulong(column_sizes.slots, lGetUlong(ep, QAJ_slots));
-         }         
+         }
+
          if (ar_number > 0) {
             print_full_ulong(column_sizes.arid, ar_number);
          } else if (arflag) {
@@ -1301,6 +1304,7 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
                column_size_data->project  = tmp_length + 1;
             }
          } 
+
          /* department  */
          tmp_string = lGetString(lep, QAJ_department);
          if ( tmp_string != NULL ) {
@@ -1317,12 +1321,14 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
                column_size_data->granted_pe  = tmp_length + 1;
             }
          } 
+
          /* slots */
          sprintf(tmp_buf,"%5"sge_fu32, lGetUlong(lep, QAJ_slots));
          tmp_length = strlen(tmp_buf);
          if (column_size_data->slots <= tmp_length) {
             column_size_data->slots  = tmp_length + 1;
          }
+
          /* advance reservations */
          sprintf(tmp_buf,"%5"sge_fu32, lGetUlong(lep, QAJ_arid));
          tmp_length = strlen(tmp_buf);

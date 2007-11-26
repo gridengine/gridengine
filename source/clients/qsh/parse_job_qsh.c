@@ -99,12 +99,14 @@ lList *cull_parse_qsh_parameter(u_long32 prog_number, u_long32 uid, const char *
    */
    if (path_alias_list_initialize(&path_alias, &answer, cell_root, username, 
                                   qualified_hostname) == -1) {
+      lFreeList(&path_alias);
       DEXIT;
       return answer;
    }
 
    job_initialize_env(*pjob, &answer, path_alias, unqualified_hostname, qualified_hostname);
    if (answer) {
+      lFreeList(&path_alias);
       DEXIT;
       return answer;
    }
@@ -214,6 +216,7 @@ lList *cull_parse_qsh_parameter(u_long32 prog_number, u_long32 uid, const char *
    job_set_submit_task_ids(*pjob, 1, 1, 1);
    job_initialize_id_lists(*pjob, &answer);
    if (answer != NULL) {
+      lFreeList(&path_alias);
       DEXIT;
       return answer;
    }
@@ -277,6 +280,7 @@ lList *cull_parse_qsh_parameter(u_long32 prog_number, u_long32 uid, const char *
       lRemoveElem(cmdline, &ep);
       sprintf(str, MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
       answer_list_add(&answer, str, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
+      lFreeList(&path_alias);
       DEXIT;
       return answer;
    }
@@ -430,12 +434,14 @@ lList *cull_parse_qsh_parameter(u_long32 prog_number, u_long32 uid, const char *
             /* If getcwd() fails... */
             answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
                             STATUS_EDISK, ANSWER_QUALITY_ERROR);
+            lFreeList(&path_alias);
             DRETURN(answer);
          }
          
          path = reroot_path(*pjob, tmp_str, &answer);
          
          if (path == NULL) {
+            lFreeList(&path_alias);
             DRETURN(answer);
          }
       }

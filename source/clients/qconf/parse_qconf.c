@@ -2283,6 +2283,7 @@ char *argv[]
             lp = lCreateList("host to mod", EH_Type);
             lAppendElem(lp, ep);
             alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
+            lFreeList(&lp);
 
             if (show_answer(alp) == 1) {
                lFreeList(&alp);
@@ -2391,7 +2392,6 @@ char *argv[]
                                                  fields, &qconf_sfi,
                                                  SP_DEST_TMP, SP_FORM_ASCII,
                                                  NULL, false);
-           
             lFreeList(&lp);
 
             if (answer_list_output(&alp)) {
@@ -3074,7 +3074,7 @@ char *argv[]
          FREE(hgroup_or_hostname);
          DRETURN(1);
       }
-      
+
       parse_name_list_to_cull("attribute list", &lp, US_Type, US_name, attr);
       if (cqueue_purge_host(cqueue, &alp, lp, hgroup_or_hostname) == true) {
          cqueue_add_del_mod_via_gdi(ctx, cqueue, &alp, SGE_GDI_MOD | SGE_GDI_SET_ALL);
@@ -3150,7 +3150,7 @@ char *argv[]
          
          /* else we let the check for lp != NULL catch the error below */
 
-         if ((lp == NULL) &&(sge_error_and_exit(MSG_FILE_ERRORREADINGINFILE))) {
+         if ((lp == NULL) && (sge_error_and_exit(MSG_FILE_ERRORREADINGINFILE))) {
             continue;
          }
 
@@ -3213,7 +3213,7 @@ char *argv[]
 
       /* "-mstree", "-Mstree file": modify sharetree */
 
-      if ((strcmp("-mstree", *spp) == 0) ||(strcmp("-Mstree", *spp) == 0)) {
+      if ((strcmp("-mstree", *spp) == 0) || (strcmp("-Mstree", *spp) == 0)) {
          lListElem *unspecified = NULL;
          
          if (strcmp("-mstree", *spp) == 0) {
@@ -3466,7 +3466,7 @@ char *argv[]
             answer_list_output(&alp);
          }
 
-         if ((ep != NULL) &&(userset_validate_entries(ep, &alp, 0) != STATUS_OK)) {
+         if ((ep != NULL) && (userset_validate_entries(ep, &alp, 0) != STATUS_OK)) {
             lFreeElem(&ep);
             answer_list_output(&alp);
          }
@@ -3933,7 +3933,7 @@ char *argv[]
                lSetHost(hep, EH_name, cp);
             }
             
-            switch((ret=sge_resolve_host(hep, EH_name))) {
+            switch ((ret=sge_resolve_host(hep, EH_name))) {
             case CL_RETVAL_OK:
                break;
             default:
@@ -4057,7 +4057,7 @@ char *argv[]
                
                lSetHost(hep, EH_name, cp);
                
-               switch(sge_resolve_host(hep, EH_name)) {
+               switch (sge_resolve_host(hep, EH_name)) {
                case CL_RETVAL_OK:
                   break;
                default:
@@ -4096,7 +4096,7 @@ char *argv[]
          hep = lCreateElem(EH_Type);
          lSetHost(hep, EH_name, *spp);
          
-         switch(sge_resolve_host(hep, EH_name)) {
+         switch (sge_resolve_host(hep, EH_name)) {
          case CL_RETVAL_OK:
             break;
          default:
@@ -4372,7 +4372,6 @@ char *argv[]
          lString2List(*spp, &arglp, STN_Type, STN_name, ", ");
 
          for_each(argep, arglp) {
-
             const char *nodepath = lGetString(argep, STN_name);
 
             if (nodepath) {
@@ -5561,11 +5560,8 @@ static int sge_error_and_exit(const char *ptr) {
    DRETURN(1); /* to prevent warning */
 }
 
-static bool add_host_of_type(
-sge_gdi_ctx_class_t *ctx,
-lList *arglp,
-u_long32 target 
-) {
+static bool add_host_of_type(sge_gdi_ctx_class_t *ctx, lList *arglp, u_long32 target)
+{
    lListElem *argep=NULL, *ep=NULL;
    lList *lp=NULL, *alp=NULL;
    const char *host = NULL;
@@ -5681,11 +5677,8 @@ static bool del_host_of_type(sge_gdi_ctx_class_t *ctx, lList *arglp, u_long32 ta
 
 /* ------------------------------------------------------------ */
 
-static lListElem* edit_exechost(
-lListElem *ep,
-uid_t uid,
-gid_t gid
-) {
+static lListElem *edit_exechost(lListElem *ep, uid_t uid, gid_t gid)
+{
    int status;
    lListElem *hep = NULL;
    spooling_field *fields = sge_build_EH_field_list(false, false, false);
@@ -5748,11 +5741,8 @@ gid_t gid
 
 /* ------------------------------------------------------------ */
 
-static lList* edit_sched_conf(
-lList *confl,
-uid_t uid,
-gid_t gid
-) {
+static lList* edit_sched_conf(lList *confl, uid_t uid, gid_t gid)
+{
    int status;
    char *fname = NULL;
    lList *alp=NULL, *newconfl=NULL;
@@ -5851,7 +5841,7 @@ gid_t gid
 
    DENTER(TOP_LAYER, "edit_user");
 
-   filename =(char *)spool_flatfile_write_object(&alp, ep, false, fields,
+   filename = (char *)spool_flatfile_write_object(&alp, ep, false, fields,
                                                   &qconf_sfi, SP_DEST_TMP,
                                                   SP_FORM_ASCII, NULL, false);
    if (answer_list_output(&alp)) {
@@ -6955,7 +6945,6 @@ static int qconf_modify_attribute(sge_gdi_ctx_class_t *ctx,
       *epp = spool_flatfile_read_object(alpp, info_entry->cull_descriptor, NULL,
                                 info_entry->fields, fields, true, info_entry->instr,
                                 SP_FORM_ASCII, NULL, filename);
-     
       unlink(filename);
       FREE(filename);
 

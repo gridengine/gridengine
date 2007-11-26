@@ -1,3 +1,6 @@
+JG-2007-11-26-0: Bugfix:    Fixed minor memory leaks.
+                 Review:    EB
+
 EB-2007-11-23-1: Bugfix:    Fixed broken scheduler due to EB-2007-11-23-0
 
 AH-2007-11-23-0: Bugfix:    Fix broken qstat -s a caused by AH-2007-11-16-0

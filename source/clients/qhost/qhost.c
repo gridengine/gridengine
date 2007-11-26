@@ -1109,7 +1109,6 @@ lWriteListTo(ehl, stdout);
       merge_configuration(NULL, lFirst(conf_l), local, NULL);
    }
    lFreeList(&alp);
-
    lFreeList(&mal);
 
    DEXIT;

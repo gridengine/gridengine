@@ -63,11 +63,11 @@ typedef struct sge_infotext_opt {
 
 
 static void  sge_infotext_welcome(void);
-static void  sge_infotext_raw(char* format_string);
+static void  sge_infotext_raw(char *format_string);
 static void  sge_infotext_usage(void);
-static int   sge_infotext_get_nr_of_substrings(char* buffer, char* substring);
+static int   sge_infotext_get_nr_of_substrings(const char* buffer, const char* substring);
 #if defined(ALPHA) || defined(SOLARISAMD64) || defined(ALPHA5) || defined(ALINUX) || defined(HPUX) || __GNUC__ >= 3 || defined(NETBSD)
-static char* sge_infotext_string_replace(dstring* buf, char* arg, char* what, char* with, int only_first );
+static char *sge_infotext_string_replace(dstring* buf, const char *arg, const char *what, const char *with, int only_first );
 #endif
 static char* sge_infotext_string_input_parsing(dstring* buf,char* string);
 static char* sge_infotext_string_output_parsing(dstring* buf,char* string);
@@ -546,15 +546,15 @@ static char* sge_infotext_string_output_parsing(dstring* string_buffer,char* str
 
 
 #if defined(ALPHA) || defined(SOLARISAMD64) || defined(ALPHA5) || defined(ALINUX) || defined(HPUX) || defined(IRIX65) || __GNUC__ >= 3 || defined(NETBSD)
-static char* sge_infotext_string_replace(dstring* tmp_buf, char* arg, char* what, char* with, int only_first) {
+static char *sge_infotext_string_replace(dstring* tmp_buf, const char *arg, const char *what, const char *with, int only_first) {
    int i;
-   char* p1;
-   char* p2;
+   char *p1;
+   const char *p2;
 
    dstring arg_copy = DSTRING_INIT;
 
-   sge_dstring_copy_string(&arg_copy,arg);
-   p2 = (char*) sge_dstring_get_string(&arg_copy);
+   sge_dstring_copy_string(&arg_copy, arg);
+   p2 = sge_dstring_get_string(&arg_copy);
 
    p1 = strstr(p2, what);
    if (p1 == NULL) {
@@ -574,27 +574,27 @@ static char* sge_infotext_string_replace(dstring* tmp_buf, char* arg, char* what
       if (only_first == 1) {
          sge_dstring_append(tmp_buf,p2);
          sge_dstring_free(&arg_copy);
-         return (char*) sge_dstring_get_string(tmp_buf);
+         return (char *)sge_dstring_get_string(tmp_buf);
       } 
 
       p1 = strstr(p2, what);
    }
    sge_dstring_append(tmp_buf,p2);
    sge_dstring_free(&arg_copy);
-   return (char*) sge_dstring_get_string(tmp_buf);
+   return (char *)sge_dstring_get_string(tmp_buf);
 }
 #endif
 
-static int  sge_infotext_get_nr_of_substrings(char* buffer, char* substring) {
-   char* p1 = NULL;
-   char* buf = NULL;
+static int sge_infotext_get_nr_of_substrings(const char* buffer, const char* substring) {
+   const char* p1 = NULL;
+   const char* buf = NULL;
    int nr = 0;
 
-   buf=buffer;
-   p1 = (char*)strstr(buf, substring);
+   buf = buffer;
+   p1 = strstr(buf, substring);
    while (p1 != NULL) {
       buf = ++p1;
-      p1 = (char*)strstr(buf, substring);
+      p1 = strstr(buf, substring);
       nr++;
    }
    return nr;
@@ -618,7 +618,7 @@ static void sge_infotext_welcome(void) {
 
 }
 
-static void sge_infotext_raw(char* format_string) {
+static void sge_infotext_raw(char *format_string) {
    const char* buffer = NULL;
    dstring tmp_buf = DSTRING_INIT;
 

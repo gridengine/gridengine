@@ -1,3 +1,7 @@
+JG-2007-11-26-0: Bugfix:    Fixed minor memory leaks.
+                            Make it build with gcc-4.2.
+                 Review:    EB
+
 JG-2007-11-20-0: CVS        Created V60u12_TAG
 ----------------------------------------------
 

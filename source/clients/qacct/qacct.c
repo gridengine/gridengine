@@ -783,6 +783,7 @@ char **argv
      
          sge_dstring_sprintf(&qi,"%s@%s", dusage.qname, dusage.hostname ); 
          queue = cqueue_list_locate_qinstance_msg(queue_list, sge_dstring_get_string(&qi), false);
+         sge_dstring_free(&qi); 
          if (!queue) {
             /* 
             * queue no longer exists, we can't get the complex attributes for this job, 
@@ -791,7 +792,6 @@ char **argv
             ignored_jobs++;
             continue;
          }         
-         sge_dstring_free(&qi); 
    
          sconf_set_qs_state(QS_STATE_EMPTY);
 

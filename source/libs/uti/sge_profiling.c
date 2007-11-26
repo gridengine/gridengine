@@ -44,6 +44,7 @@
 #include "sge_dstring.h"
 #include "sge_log.h"
 #include "uti/sge_time.h"
+#include "uti/sge_string.h"
 
 #include "sgermon.h"
 
@@ -1384,31 +1385,30 @@ static const char *prof_add_error_sprintf(dstring *buffer, const char *fmt, ...)
 bool prof_output_info(prof_level level, bool with_sub, const char *info)
 {
    bool ret = false;
-   int thread_num;
-   char* message = NULL;
-   char* pos = NULL;
-   pthread_t thread_id;
 
    DENTER(TOP_LAYER, "prof_output_info");
    
    if (profiling_enabled && (level <= SGE_PROF_ALL)) {
+      int thread_num;
+      pthread_t thread_id;
+
       thread_id = pthread_self();
-
       init_array(thread_id); 
-
       thread_num = get_prof_info_thread_id(thread_id);
 
-      if ((thread_num >= 0) && (thread_num < MAX_THREAD_NUM) &&
-          prof_is_active(level)) {
+      if ((thread_num >= 0) && (thread_num < MAX_THREAD_NUM) && prof_is_active(level)) {
          const char *info_message = NULL;
+         const char *message = NULL;
+         struct saved_vars_s *context = NULL;
 
          info_message = prof_get_info_string(level, with_sub, NULL);
          PROFILING((SGE_EVENT, "PROF(%d): %s%s", (int)thread_id, info, ""));
-         for (message = strtok_r((char*)info_message, "\n", &pos); message; 
-              message = strtok_r(NULL, "\n", &pos)) {
+         for (message = sge_strtok_r(info_message, "\n", &context); message != NULL; 
+              message = sge_strtok_r(NULL, "\n", &context)) {
             PROFILING((SGE_EVENT, "PROF(%d): %s", (int)thread_id, message));
          }
 
+         sge_free_saved_vars(context);
          ret = true;
       }
    }
@@ -1680,7 +1680,7 @@ static void init_thread_info(void) {
 
    if (thrdInfo == NULL) {
       thrdInfo = (sge_thread_info_t*)sge_malloc(MAX_THREAD_NUM * sizeof(sge_thread_info_t));
-      memset (thrdInfo, 0, MAX_THREAD_NUM * sizeof(sge_thread_info_t));
+      memset(thrdInfo, 0, MAX_THREAD_NUM * sizeof(sge_thread_info_t));
    }
 
    pthread_mutex_unlock(&thrdInfo_mutex);
@@ -1895,8 +1895,6 @@ int set_thread_prof_status_by_name(const char* thread_name, bool prof_status) {
 
 void sge_prof_cleanup(void) {
 
-   int c, i;
-
    if (!profiling_enabled) {
       return;
    }
@@ -1904,18 +1902,23 @@ void sge_prof_cleanup(void) {
    pthread_mutex_lock(&thrdInfo_mutex);
 
    pthread_key_delete (thread_id_key);
-   
-   for (c = 0; c < MAX_THREAD_NUM; c++) {
-      for (i = 0; i <= SGE_PROF_ALL; i++) {
-         if ( theInfo[c] != NULL) {
-            sge_dstring_free(&theInfo[c][i].info_string);
+  
+   if (theInfo != NULL) {
+      int c, i;
+
+      for (c = 0; c < MAX_THREAD_NUM; c++) {
+         for (i = 0; i <= SGE_PROF_ALL; i++) {
+            if ( theInfo[c] != NULL) {
+               sge_dstring_free(&theInfo[c][i].info_string);
+            }
          }
+         
+         FREE(theInfo[c]);
       }
-      
-      FREE(theInfo[c]);
+
+      FREE(theInfo);
    }
 
-   FREE(theInfo);
    FREE(thrdInfo);
    
    sge_prof_array_initialized = 0;

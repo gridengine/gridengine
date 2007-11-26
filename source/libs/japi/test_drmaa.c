@@ -2558,8 +2558,9 @@ static int test(int *argc, char **argv[], int parse_args)
          char jobid[1024];
          char buffer[100];
 
-         if (parse_args)
+         if (parse_args) {
             exit_job = NEXT_ARGV(argc, argv);
+         }   
          
          if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
@@ -5405,6 +5406,17 @@ static void free_order(int **order)
    FREE(order);
 }
 
+static void free_jobids(char *jobids[], int size)
+{
+   int i;
+   for (i = 0; i < size; i++) {
+      if (jobids[i] != NULL) {
+         free(jobids[i]);
+         jobids[i] = NULL;
+      }
+   }
+}
+
 static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
 {
    char diagnosis[DRMAA_ERROR_STRING_BUFFER];
@@ -5420,9 +5432,14 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
       fprintf(stderr, "failed parsing job run sequence string\n");
       return -1;
    }
-   
+
+   /* clear all_jobids array */
+   for (i = 0; i < njobs; i++) {
+      all_jobids[i] = NULL;
+   }
+
    /* submit jobs in hold */
-   for (i=0; i < njobs; i++) {
+   for (i = 0; i < njobs; i++) {
       int start = 0;
       int end = 0;
       int incr = 1;
@@ -5453,6 +5470,7 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
          if (drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
             free_order(order);
+            free_jobids(all_jobids, njobs);
             return -1;
          }
       
@@ -5470,6 +5488,7 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
    if (drmaa_control(DRMAA_JOB_IDS_SESSION_ALL, DRMAA_CONTROL_RELEASE, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
       fprintf(stderr, "drmaa_control(DRMAA_JOB_IDS_SESSION_ALL, DRMAA_CONTROL_RELEASE) failed: %s\n", diagnosis);
       free_order(order);
+      free_jobids(all_jobids, njobs);
       return -1;
    }
 
@@ -5482,20 +5501,22 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
 
          /* map jobid to job index */
          pos = -1;
-         for (i=0; i<njobs; i++) {
-            if (all_jobids[i] && !strcmp(jobid, all_jobids[i])) {
+         for (i = 0; i < njobs; i++) {
+            if (all_jobids[i] != NULL && strcmp(jobid, all_jobids[i]) == 0) {
                pos = i;
                break;
             }
          }
          if (pos == -1) {
             fprintf(stderr, "drmaa_wait() returned unexpected job: %s\n", jobid);
+            free_jobids(all_jobids, njobs);
             free_order(order);
             return -1;
          }
 
 
          if (job_run_sequence_verify(pos, all_jobids, order)) {
+            free_jobids(all_jobids, njobs);
             free_order(order);
             return -1;
          }
@@ -5513,6 +5534,7 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
       }
    } while (drmaa_errno == DRMAA_ERRNO_SUCCESS);
 
+   free_jobids(all_jobids, njobs);
    free_order(order);
    return 0;
 }

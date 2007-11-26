@@ -148,21 +148,23 @@ lListElem *hgroup_get_via_gdi(lList **answer_list, const char *name)
       lList *gdi_answer_list = NULL;
       lEnumeration *what = NULL;
       lCondition *where = NULL;
-      lList *houstgroup_list = NULL;
+      lList *hostgroup_list = NULL;
 
       what = lWhat("%T(ALL)", HGRP_Type);
       where = lWhere("%T(%I==%s)", HGRP_Type, HGRP_name, 
                      name);
       gdi_answer_list = sge_gdi(SGE_HGROUP_LIST, SGE_GDI_GET, 
-                                &houstgroup_list, where, what);
+                                &hostgroup_list, where, what);
       lFreeWhat(&what);
       lFreeWhere(&where);
 
       if (!answer_list_has_error(&gdi_answer_list)) {
-         ret = lFirst(houstgroup_list);
+         ret = lDechainElem(hostgroup_list, lFirst(hostgroup_list));
       } else {
          answer_list_replace(answer_list, &gdi_answer_list);
       }
+      lFreeList(&hostgroup_list);
+      lFreeList(&gdi_answer_list);
    } 
    DEXIT;
    return ret;
@@ -178,15 +180,17 @@ bool hgroup_provide_modify_context(lListElem **this_elem, lList **answer_list,
    
    DENTER(TOP_LAYER, "hgroup_provide_modify_context");
    if (this_elem != NULL && *this_elem != NULL) {
-      char *filename = NULL;
-      filename = (char *)spool_flatfile_write_object(answer_list, *this_elem,
+      const char *filename = NULL;
+      filename = spool_flatfile_write_object(answer_list, *this_elem,
                                                      false, HGRP_fields,
                                                      &hgqconf_sfi,
                                                      SP_DEST_TMP, SP_FORM_ASCII,
                                                      filename, false);
       if (answer_list_output(answer_list)) {
+         unlink(filename);
+         FREE(filename);
          DEXIT;
-         SGE_EXIT (1);
+         SGE_EXIT(1);
       }
       
       status = sge_edit(filename);
@@ -204,7 +208,7 @@ bool hgroup_provide_modify_context(lListElem **this_elem, lList **answer_list,
          }
 
          if (hgroup != NULL) {
-            missing_field = spool_get_unprocessed_field (HGRP_fields, fields_out, answer_list);
+            missing_field = spool_get_unprocessed_field(HGRP_fields, fields_out, answer_list);
          }
 
          if (missing_field != NoName) {
@@ -232,6 +236,7 @@ bool hgroup_provide_modify_context(lListElem **this_elem, lList **answer_list,
                          STATUS_ERROR1, ANSWER_QUALITY_ERROR);
       }
       unlink(filename);
+      FREE(filename);
    } 
    DEXIT;
    return ret;
@@ -277,8 +282,10 @@ bool hgroup_add(lList **answer_list, const char *name, bool is_name_validate )
       }
       if (ret) {
          ret = hgroup_add_del_mod_via_gdi(hgroup, answer_list, SGE_GDI_ADD); 
-      } 
-   }  
+      }
+
+      lFreeElem(&hgroup);
+   }
   
    DEXIT;
    return ret; 
@@ -369,12 +376,12 @@ bool hgroup_modify_from_file(lList **answer_list, const char *filename)
                                       HGRP_fields, fields_out, true, &hgqconf_sfi,
                                       SP_FORM_ASCII, NULL, filename);
             
-      if (answer_list_output (answer_list)) {
+      if (answer_list_output(answer_list)) {
          lFreeElem(&hgroup);
       }
 
       if (hgroup != NULL) {
-         missing_field = spool_get_unprocessed_field (HGRP_fields, fields_out, answer_list);
+         missing_field = spool_get_unprocessed_field(HGRP_fields, fields_out, answer_list);
       }
 
       if (missing_field != NoName) {
@@ -411,6 +418,7 @@ bool hgroup_delete(lList **answer_list, const char *name)
       if (hgroup != NULL) {
          ret = hgroup_add_del_mod_via_gdi(hgroup, answer_list, SGE_GDI_DEL); 
       }
+      lFreeElem(&hgroup);
    }
    DEXIT;
    return ret;
@@ -425,16 +433,18 @@ bool hgroup_show(lList **answer_list, const char *name)
       lListElem *hgroup = hgroup_get_via_gdi(answer_list, name); 
    
       if (hgroup != NULL) {
-         spool_flatfile_write_object(answer_list, hgroup, false, HGRP_fields,
+         const char *filename;
+         filename = spool_flatfile_write_object(answer_list, hgroup, false, HGRP_fields,
                                      &hgqconf_sfi, SP_DEST_STDOUT,
                                      SP_FORM_ASCII, NULL, false);
       
+         FREE(filename);
+         lFreeElem(&hgroup);
+
          if (answer_list_output(answer_list)) {
             DEXIT;
             SGE_EXIT (1);
          }
-
-         lFreeElem(&hgroup);
       } else {
          sprintf(SGE_EVENT, MSG_HGROUP_NOTEXIST_S, name);
          answer_list_add(answer_list, SGE_EVENT,
@@ -467,6 +477,8 @@ bool hgroup_show_structure(lList **answer_list, const char *name,
       answer_exit_if_not_recoverable(alep);
       if (answer_get_status(alep) != STATUS_OK) {
          fprintf(stderr, "%s\n", lGetString(alep, AN_text));
+         lFreeList(&alp);
+         DEXIT;
          return false;
       }
 
@@ -487,6 +499,8 @@ bool hgroup_show_structure(lList **answer_list, const char *name,
                printf("%s\n", sge_dstring_get_string(&string));
             }
             sge_dstring_free(&string);
+            lFreeList(&sub_host_list);
+            lFreeList(&sub_hgroup_list);
          }
       } else {
          sprintf(SGE_EVENT, MSG_HGROUP_NOTEXIST_S, name);
@@ -494,6 +508,9 @@ bool hgroup_show_structure(lList **answer_list, const char *name,
                          STATUS_ERROR1, ANSWER_QUALITY_ERROR); 
          ret = false;
       }
+
+      lFreeList(&hgroup_list);
+      lFreeList(&alp);
    }
    DEXIT;
    return ret;

@@ -582,19 +582,18 @@ static int test(data_entry_t *test, char *result, int count)
                break;
             }
          }
-       }
-       else {
+       } else {
          printf(" => test failed\n");
        }
        
        sge_dstring_free(&category_str);
-   }
-   else {
+   } else {
       printf("failed to create job for test %d\n", count);
       ret = 1;
    }
    lFreeElem(&job_elem);
    lFreeList(&access_list);
+   lFreeList(&project_list);
    return ret;
 }
 

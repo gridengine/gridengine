@@ -131,7 +131,6 @@ cqueue_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
 
          cqueue_list = lCreateList("", CQ_Type);
          lAppendElem(cqueue_list, this_elem);
-
          gdi_answer_list = sge_gdi(SGE_CQUEUE_LIST, gdi_command,
                                    &cqueue_list, NULL, NULL);
          answer_list_replace(answer_list, &gdi_answer_list);
@@ -182,6 +181,7 @@ cqueue_hgroup_get_via_gdi(lList **answer_list, const lList *qref_list,
    bool ret = true;
 
    DENTER(TOP_LAYER, "cqueue_hgroup_get_via_gdi");
+
    if (hgrp_list != NULL && cq_list != NULL) {
       state_gdi_multi state = STATE_GDI_MULTI_INIT;
       lList *multi_answer_list = NULL;
@@ -358,8 +358,8 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
    
    DENTER(TOP_LAYER, "cqueue_provide_modify_context");
    if (this_elem != NULL && *this_elem) {
-      char *filename = NULL;      
-      filename = (char *)spool_flatfile_write_object(answer_list, *this_elem,
+      const char *filename = NULL;      
+      filename = spool_flatfile_write_object(answer_list, *this_elem,
                                                      false, CQ_fields,
                                                      &cqqconf_sfi, SP_DEST_TMP,
                                                      SP_FORM_ASCII, filename,
@@ -395,7 +395,7 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
 
          if (missing_field != NoName) {
             lFreeElem(&cqueue);
-            answer_list_output (answer_list);
+            answer_list_output(answer_list);
          }
 
          if (cqueue != NULL) {
@@ -521,9 +521,7 @@ cqueue_modify(lList **answer_list, const char *name)
          ret &= cqueue_add_del_mod_via_gdi(cqueue, answer_list, 
                                            SGE_GDI_MOD | SGE_GDI_SET_ALL);
       }
-      if (cqueue != NULL) {
-         lFreeElem(&cqueue);
-      }
+      lFreeElem(&cqueue);
    }
 
    DEXIT;
@@ -726,7 +724,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                             * in the complex values list, we have to insert a
                             * custom writer for the complex_values field.  We do
                             * that with this function. */
-                           insert_custom_complex_values_writer (fields);
+                           insert_custom_complex_values_writer(fields);
 
                            if (is_first) {
                               is_first = false; 
@@ -841,12 +839,18 @@ cqueue_list_sick(lList **answer_list)
       for_each(cqueue, cqueue_list) {
          cqueue_sick(cqueue, answer_list, hgroup_list, &ds);
       }
+
       if (sge_dstring_get_string(&ds)) {
          printf(sge_dstring_get_string(&ds));
-	 ret = false;
+         ret = false;
       }
+
       sge_dstring_free(&ds);
    }
+
+   lFreeList(&hgroup_list);
+   lFreeList(&cqueue_list);
+
    DEXIT;
    return ret;
 }
@@ -995,7 +999,7 @@ static void insert_custom_complex_values_writer(spooling_field *fields)
       /* Next, insert the custom writer. */
       fields[count].write_func = write_QU_consumable_config_list;
    }
-   
+
    return;
 }
 
@@ -1032,44 +1036,44 @@ static int write_QU_consumable_config_list(const lListElem *ep, int nm,
     * use a new sub-instruction, this function will have to be changed to
     * to reflect this.  Otherwise, the complex values will be printed in a
     * different format from the other attributes. */
-   for_each (vep, lp) {
-      const char *name = lGetString (vep, CE_name);
+   for_each(vep, lp) {
+      const char *name = lGetString(vep, CE_name);
 
       if (strcmp (name, "slots") != 0) {
          const char *strval = NULL;
          
          /* we want to know if any elements from the list are available or not*/
          has_elems = true;
-         
+
          /* Print a separating space for all elements after the first */
          if (first) {
             first = false;
          }
          else {
-            sge_dstring_append (buffer, " ");
+            sge_dstring_append(buffer, " ");
          }
          
          /* Append name=value, where value could be a string of a number */
-         sge_dstring_append (buffer, name);
-         sge_dstring_append (buffer, "=");
+         sge_dstring_append(buffer, name);
+         sge_dstring_append(buffer, "=");
          
          strval = lGetString(vep, CE_stringval);
 
          if (strval != NULL) {
-            sge_dstring_append (buffer, strval);
+            sge_dstring_append(buffer, strval);
          }
          else {
             char tmp[MAX_STRING_SIZE];
             
             snprintf(tmp, MAX_STRING_SIZE, "%f", lGetDouble(ep, CE_doubleval));
-            sge_dstring_append (buffer, strdup (tmp));
+            sge_dstring_append(buffer, strdup (tmp));
          }
       }
    }
- 
+
    /* for CR 6433628, adding NONE string when there are no complex values */
    if (!has_elems){
       sge_dstring_append(buffer, NONE_STR);
-   }  
+   }
    return 1;
 }

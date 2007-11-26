@@ -300,7 +300,7 @@ int cl_endpoint_list_get_autoclose_mode(cl_raw_list_t* list_p, cl_com_endpoint_t
       if (cl_com_compare_endpoints(endpoint, elem->endpoint )) {
          /* found matching endpoint */
          back = CL_RETVAL_OK;
-         CL_LOG_INT(CL_LOG_ERROR,"setting autoclose to:", elem->autoclose);
+         CL_LOG_INT(CL_LOG_INFO,"setting autoclose to:", elem->autoclose);
          *autoclose = elem->autoclose;
          break;
       }

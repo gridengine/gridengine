@@ -89,6 +89,7 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
    u_long32 rversion;
    sge_pack_buffer pb;   
    bool is_pb_used = false;
+   bool send_tag_new_conf = false;
 
    DENTER(TOP_LAYER, "sge_c_report");
 
@@ -170,9 +171,7 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
          MONITOR_ECONF(monitor); 
          if (hep && (sge_compare_configuration(hep, lGetList(report, REP_list)) != 0)) {
             DPRINTF(("%s: configuration on host %s is not up to date\n", SGE_FUNC, rhost));
-            if (host_notify_about_new_conf(ctx, hep) != 0) {
-               ERROR((SGE_EVENT, MSG_CONF_CANTNOTIFYEXECHOSTXOFNEWCONF_S, rhost));
-            }
+            send_tag_new_conf = true;
          }
          break;
          
@@ -218,6 +217,13 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
       }
       clear_packbuffer(&pb);
    }
+
+   if (send_tag_new_conf == true) {
+      if (host_notify_about_new_conf(ctx, hep) != 0) {
+         ERROR((SGE_EVENT, MSG_CONF_CANTNOTIFYEXECHOSTXOFNEWCONF_S, rhost));
+      }
+   }
+
    
    DRETURN_VOID;
 } /* sge_c_report */

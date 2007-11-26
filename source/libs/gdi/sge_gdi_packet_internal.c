@@ -413,7 +413,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
       int response_id = 0;
       lList *tmp_answer_list = NULL;
 
-      commlib_error = sge_gdi2_send_any_request(ctx, 1, &message_id, host, commproc, id, &pb,
+      commlib_error = sge_gdi2_send_any_request(ctx, 0, &message_id, host, commproc, id, &pb,
                                                 TAG_GDI_REQUEST, response_id, &tmp_answer_list);
       if (commlib_error != CL_RETVAL_OK) {
          ret = false;

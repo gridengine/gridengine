@@ -2775,7 +2775,7 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
             CL_LOG_INT(CL_LOG_INFO,"receive buffer:",(int)cl_raw_list_get_elem_count(elem->connection->received_message_list) );
             CL_LOG_INT(CL_LOG_INFO,"send buffer   :",(int)cl_raw_list_get_elem_count(elem->connection->send_message_list) );
 
-            if( cl_raw_list_get_elem_count(elem->connection->send_message_list) == 0 && 
+            if (cl_raw_list_get_elem_count(elem->connection->send_message_list) == 0 && 
                 cl_raw_list_get_elem_count(elem->connection->received_message_list) == 0) {
                elem->connection->ccm_received = 2;
                elem->connection->connection_sub_state = CL_COM_SENDING_CCRM;
@@ -4622,6 +4622,10 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
                            the response id is not the same. -> We have to wait for the correct message */
                         if ( response_mid > connection->last_send_message_id || connection->last_send_message_id == 0 ) {
                            CL_LOG(CL_LOG_WARNING, "protocol error: can't wait for unsent message!!!");
+                           cl_raw_list_unlock(connection->received_message_list);
+                           cl_raw_list_unlock(handle->received_message_queue);
+                           pthread_mutex_unlock(handle->messages_ready_mutex);
+                           return CL_RETVAL_PROTOCOL_ERROR;
                         }
 
                         if ( response_mid > message_elem->message->message_response_id ) {
@@ -4677,7 +4681,6 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
                         CL_LOG_INT(CL_LOG_WARNING,"receive buffer:",(int)cl_raw_list_get_elem_count(connection->received_message_list) );
                         CL_LOG_INT(CL_LOG_WARNING,"send buffer   :",(int)cl_raw_list_get_elem_count(connection->send_message_list) );
                         CL_LOG_INT(CL_LOG_WARNING,"ccm_received  :",(int)connection->ccm_received);
-
 
                         if( cl_raw_list_get_elem_count(connection->send_message_list) == 0 && 
                             cl_raw_list_get_elem_count(connection->received_message_list) == 0 ) {
@@ -5226,7 +5229,7 @@ int cl_commlib_check_for_ack(cl_com_handle_t* handle, char* un_resolved_hostname
                      CL_LOG_INT(CL_LOG_WARNING,"receive buffer:",(int)cl_raw_list_get_elem_count(connection->received_message_list) );
                      CL_LOG_INT(CL_LOG_WARNING,"send buffer   :",(int)cl_raw_list_get_elem_count(connection->send_message_list) );
                      CL_LOG_INT(CL_LOG_WARNING,"ccm_received  :",(int)connection->ccm_received);
-           
+          
                      if( cl_raw_list_get_elem_count(connection->send_message_list) == 0 && 
                          cl_raw_list_get_elem_count(connection->received_message_list) == 0 ) {
                         connection->ccm_received = 2;
@@ -5476,7 +5479,7 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
                CL_LOG(CL_LOG_WARNING,"connection still alive ...");
                CL_LOG_INT(CL_LOG_WARNING,"receive buffer:",(int)cl_raw_list_get_elem_count(connection->received_message_list) );
                CL_LOG_INT(CL_LOG_WARNING,"send buffer   :",(int)cl_raw_list_get_elem_count(connection->send_message_list) );
-               
+              
                if ( connection->ccm_received == 1 && 
                     cl_raw_list_get_elem_count(connection->received_message_list) == 0 &&  
                     cl_raw_list_get_elem_count(connection->send_message_list) == 0 ) {
@@ -6052,7 +6055,7 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
                      CL_LOG_INT(CL_LOG_WARNING,"receive buffer:",(int)cl_raw_list_get_elem_count(connection->received_message_list) );
                      CL_LOG_INT(CL_LOG_WARNING,"send buffer   :",(int)cl_raw_list_get_elem_count(connection->send_message_list) );
                      CL_LOG_INT(CL_LOG_WARNING,"ccm_received  :",(int)connection->ccm_received);
-           
+         
                      if( cl_raw_list_get_elem_count(connection->send_message_list) == 0 && 
                          cl_raw_list_get_elem_count(connection->received_message_list) == 0 ) {
                         connection->ccm_received = 2;
@@ -7469,10 +7472,10 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                      if( cl_raw_list_get_elem_count(elem->connection->send_message_list)     == 0 && 
                          cl_raw_list_get_elem_count(elem->connection->received_message_list) == 0)   {
 
-                           elem->connection->ccm_received = 2;
-                           elem->connection->connection_sub_state = CL_COM_SENDING_CCRM;
-                           cl_commlib_send_ccrm_message(elem->connection);
-                           CL_LOG(CL_LOG_INFO,"sending ccrm");
+                        elem->connection->ccm_received = 2;
+                        elem->connection->connection_sub_state = CL_COM_SENDING_CCRM;
+                        cl_commlib_send_ccrm_message(elem->connection);
+                        CL_LOG(CL_LOG_INFO,"sending ccrm");
                      } else {
                         CL_LOG_INT(CL_LOG_INFO,"receive buffer:",(int)cl_raw_list_get_elem_count(elem->connection->received_message_list) );
                         CL_LOG_INT(CL_LOG_INFO,"send buffer   :",(int)cl_raw_list_get_elem_count(elem->connection->send_message_list) );

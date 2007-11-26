@@ -1,3 +1,6 @@
+JG-2007-11-26-0: Bugfix:    Fixed minor memory leaks.
+                 Review:    EB
+
 DT-2007-11-21-0: Bugfix:    o Corrected DRMAA Java version number
                             o Added -sync to list of native switches removed by
                               DRMAA

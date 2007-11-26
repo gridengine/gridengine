@@ -5428,13 +5428,14 @@ static void free_order(int **order)
    FREE(order);
 }
 
-static void free_jobids(char *jobids[]) 
+static void free_jobids(char *jobids[], int size)
 {
    int i = 0;
-   while (jobids[i] != NULL) {
-      free(jobids[i]);
-      jobids[i] = NULL;
-      i++;
+   for (i = 0; i < size; i++) {
+      if (jobids[i] != NULL) {
+         free(jobids[i]);
+         jobids[i] = NULL;
+      }
    }
 }
 
@@ -5455,7 +5456,7 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
    }
 
    /* clear all_jobids array */
-   for (i = 0; i < 9; i++) {
+   for (i = 0; i < njobs; i++) {
       all_jobids[i] = NULL;
    }
 
@@ -5491,7 +5492,7 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
          if (drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
             free_order(order);
-            free_jobids(all_jobids);
+            free_jobids(all_jobids, njobs);
             return -1;
          }
       
@@ -5509,7 +5510,7 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
    if (drmaa_control(DRMAA_JOB_IDS_SESSION_ALL, DRMAA_CONTROL_RELEASE, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
       fprintf(stderr, "drmaa_control(DRMAA_JOB_IDS_SESSION_ALL, DRMAA_CONTROL_RELEASE) failed: %s\n", diagnosis);
       free_order(order);
-      free_jobids(all_jobids);
+      free_jobids(all_jobids, njobs);
       return -1;
    }
 
@@ -5530,14 +5531,14 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
          }
          if (pos == -1) {
             fprintf(stderr, "drmaa_wait() returned unexpected job: %s\n", jobid);
-            free_jobids(all_jobids);
+            free_jobids(all_jobids, njobs);
             free_order(order);
             return -1;
          }
 
 
          if (job_run_sequence_verify(pos, all_jobids, order)) {
-            free_jobids(all_jobids);
+            free_jobids(all_jobids, njobs);
             free_order(order);
             return -1;
          }
@@ -5555,7 +5556,7 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
       }
    } while (drmaa_errno == DRMAA_ERRNO_SUCCESS);
 
-   free_jobids(all_jobids);
+   free_jobids(all_jobids, njobs);
    free_order(order);
    return 0;
 }

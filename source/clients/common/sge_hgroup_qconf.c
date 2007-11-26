@@ -269,6 +269,7 @@ bool hgroup_add_from_file(sge_gdi_ctx_class_t *ctx, lList **answer_list, const c
    int missing_field = NoName;
 
    DENTER(TOP_LAYER, "hgroup_add");
+
    if (filename != NULL) {
       lListElem *hgroup;
 
@@ -403,6 +404,7 @@ bool hgroup_show(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name
       
          FREE(filename);
          lFreeElem(&hgroup);
+
          if (answer_list_has_error(answer_list)) {
             DRETURN(false);
          }

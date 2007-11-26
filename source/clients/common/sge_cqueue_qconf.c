@@ -327,8 +327,10 @@ cqueue_provide_modify_context(sge_gdi_ctx_class_t *ctx, lListElem **this_elem, l
                                                      false);
       
       if (answer_list_output(answer_list)) {
-         unlink(filename);
-         FREE(filename);
+         if (filename != NULL) {
+            unlink(filename);
+            FREE(filename);
+         }
          DRETURN(false);
       }
  
@@ -787,7 +789,7 @@ cqueue_list_sick(sge_gdi_ctx_class_t *ctx, lList **answer_list)
 
       if (sge_dstring_get_string(&ds)) {
          printf(sge_dstring_get_string(&ds));
- 	      ret = false;
+         ret = false;
       }
 
       sge_dstring_free(&ds);

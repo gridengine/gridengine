@@ -981,7 +981,7 @@ get_client_name(sge_gdi_ctx_class_t *ctx, int is_rsh, int is_rlogin, int inherit
          sge_dstring_init(&cache_name_dstring, cache_name_buffer, SGE_PATH_MAX);
          cache_name = sge_dstring_sprintf(&cache_name_dstring, "%s/%s", 
                                           tmpdir, QRSH_CLIENT_CACHE);
-         /* try to read cache file - TODO: better call stat before? */
+         /* try to read cache file */
          cache = fopen(cache_name, "r");
          if (cache != NULL) {
             char cached_command[SGE_PATH_MAX];
@@ -1563,7 +1563,6 @@ int main(int argc, char **argv)
    opt_list_merge_command_lines(&opts_all, &opts_defaults, &opts_scriptfile,
                                 &opts_cmdline);
 
-
    alp = cull_parse_qsh_parameter(my_who, myuid, username, cell_root, unqualified_hostname, qualified_hostname, opts_all, &job);
    do_exit = parse_result_list(alp, &alp_error);
    lFreeList(&alp);
@@ -1667,6 +1666,7 @@ int main(int argc, char **argv)
                         lGetString(job, JB_cwd), 
                         lGetList(job, JB_env_list),
                         lGetList(job, JB_path_aliases)); 
+
       if (tid == NULL) {
          ERROR((SGE_EVENT, MSG_QSH_EXECUTINGTASKOFJOBFAILED_IS, existing_job,
             qexec_last_err() ? qexec_last_err() : "unknown"));
@@ -1682,7 +1682,7 @@ int main(int argc, char **argv)
          sge_prof_cleanup();
          SGE_EXIT(NULL, EXIT_FAILURE);
       }
-   
+
       FREE(host);
       if (!get_client_server_context(msgsock, &port, &job_dir, &utilbin_dir, &host)) {
          sge_prof_cleanup();
@@ -1945,8 +1945,8 @@ int main(int argc, char **argv)
 static void delete_job(sge_gdi_ctx_class_t *ctx, u_long32 job_id, lList *jlp) 
 {
    lListElem *jep;
-   lList* idlp = NULL;
-   lList* alp;
+   lList *idlp = NULL;
+   lList *alp;
    char job_str[128];
 
    if (jlp == NULL) {
@@ -1961,10 +1961,12 @@ static void delete_job(sge_gdi_ctx_class_t *ctx, u_long32 job_id, lList *jlp)
    lAddElemStr(&idlp, ID_str, job_str, ID_Type);
 
    alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_DEL, &idlp, NULL, NULL);
-
-   /* no error handling here, we try to delete the job if we can */
    lFreeList(&idlp);
    lFreeList(&alp);
+   /*
+   ** no error handling here, we try to delete the job
+   ** if we can
+   */
 }
 
 static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrated, bool error,

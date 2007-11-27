@@ -388,9 +388,9 @@ public class QueueInstanceSummaryPrinter {
             }
         };
 
-        ret.addCol("load_avg", "load_avg", 8, loadAvgCalc);
-        ret.addCol("arch", "arch", 22);
-        ret.addCol("state", "states", 10);
+        ret.addCol("load_avg", "load_avg", 8, new DecimalFormat("####0.00"), loadAvgCalc);
+        ret.addCol("arch", "arch", 13);
+        ret.addCol("state", "states", 6);
 
         return ret;
     }
@@ -477,7 +477,7 @@ public class QueueInstanceSummaryPrinter {
             jobSummaryTable = createJobSummaryTable(options);
             qiTable = createQueueInstanceSummaryTable();
         } catch (IntrospectionException ex) {
-            IllegalStateException ex1 = new IllegalStateException("intospection error");
+            IllegalStateException ex1 = new IllegalStateException("introspection error");
             ex1.initCause(ex);
             throw ex1;
         }

@@ -732,11 +732,18 @@ public class <%=classname%> extends <%
 
     /**
      *   Add a <%=attrType%> attribute.
+<% if (classname.equals("UserSetImpl") && gsname.equals("Entries") ) { %>
+     *   If the value already exists in the list it is not added <% } %>
      *   @param a<%=attrName%>  the new <%=attrType%> attribute
      */
     public void add<%=gsname%>(<%=attrType%> a<%=attrName%>) {   
         init<%=gsname%>();
+        <% if (classname.equals("UserSetImpl") && gsname.equals("Entries") ) { %>
+        if (!m_<%=attrName%>List.contains(a<%=attrName%>)) {
+            m_<%=attrName%>List.add(a<%=attrName%>);
+        } <% } else { %>
         m_<%=attrName%>List.add(a<%=attrName%>);
+        <% } %>
     }
    
    

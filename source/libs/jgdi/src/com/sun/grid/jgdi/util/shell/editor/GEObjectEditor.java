@@ -170,7 +170,11 @@ public class GEObjectEditor {
     
     private static void updateSimpleProperty(JGDI jgdi, GEObject obj, SimplePropertyDescriptor pd, String value) {
         String type = pd.getPropertyType().getName();
-        pd.setValue(obj, EditorUtil.getParsedValueAsObject(jgdi, pd.getPropertyName(), type, value));
+        Object val = EditorUtil.getParsedValueAsObject(jgdi, pd.getPropertyName(), type, value);
+        if (obj.getClass().getSimpleName().equals("CheckpointImpl") && val == null) {
+            val = "NONE";
+        }
+        pd.setValue(obj, val);
     }
     
     private static void updateListProperty(JGDI jgdi, GEObject obj, DefaultListPropertyDescriptor pd, String values) {
@@ -206,7 +210,17 @@ public class GEObjectEditor {
             }
             //TODO Should there be a 'val = getParsedValue(elem)' or map is just String
             val = EditorUtil.getParsedValueAsObject(jgdi, pd.getPropertyName(), pd.getPropertyType().getName(), elem);
-            pd.put(obj, key, EditorUtil.translateStringValueToObject(val));
+            val = EditorUtil.translateStringValueToObject(val);
+            //TODO LP: Since we do pd.removeAll() this works as setting null value, but some GEObjects expect to have default value set to null!
+            //LP: Temp fix for some objects
+            String cls = obj.getClass().getSimpleName();
+            boolean putNullValue = (
+                  //cls.equals("ExecHost") || 
+                  cls.equals("ClusterQueueImpl") //calendar NONE => needs @/=null
+                  ) ? true : false;
+            if (val != null || putNullValue) {
+                pd.put(obj, key, val);
+            }
         }
     }
     

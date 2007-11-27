@@ -614,6 +614,7 @@ public class EditorUtil {
         Object val;
         for (String key : pd.getKeys(obj)) {
             StringBuilder temp = new StringBuilder();
+            val = null;
             for (int i=0; i < pd.getCount(obj, key); i++) {
                 val = pd.get(obj, key, i);
                 //ClusterQueue - ComplexEntryImpl
@@ -626,14 +627,19 @@ public class EditorUtil {
                 //temp.append(val + ",");
                 temp.append(val + " ");
             }
-            if (temp.length() == 0) {
-                continue;
-            }
-            temp.deleteCharAt(temp.length()-1);
+            //Default key is always first
             if (key.equals(EditorUtil.VALUE_DEFAULT)) {
-                //Due to missing method in Java 1.4, we need to convert temp to String
-                sb.insert(0,temp.toString());
+                if (temp.length() == 0 && val == null) {
+                    temp = new StringBuilder(EditorUtil.VALUE_NONE);
+                } else {
+                    temp.deleteCharAt(temp.length()-1);
+                }
+                sb.insert(0,temp);
             } else {
+                if (temp.length() == 0) {
+                    continue;
+                }
+                temp.deleteCharAt(temp.length()-1);
                 sb.append(",[" + key + "=" + temp + "]");
             }
         }

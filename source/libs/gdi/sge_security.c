@@ -1953,7 +1953,7 @@ bool sge_security_verify_unique_identifier(bool check_admin_user, const char* us
          DPRINTF(("user = "SFQ"\n", user));
      }
 
-     if ( unique_identifier == NULL ) {
+     if (unique_identifier == NULL) {
          DPRINTF(("unique_identifier is NULL\n"));
          DEXIT;
          return false;

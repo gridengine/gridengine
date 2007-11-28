@@ -1880,18 +1880,8 @@ RestoreConfig()
 
 SwitchArchBup()
 {
-      if [ "$is_rpc" = 1 -a "$SGE_ARCH" = "sol-sparc64" ]; then
-         OLD_LD_PATH=$LD_LIBRARY_PATH
-         LD_LIBRARY_PATH="$OLD_LD_PATH:./lib/sol-sparc"
-         export LD_LIBRARY_PATH
-         DUMPIT="$SGE_ROOT/utilbin/sol-sparc/db_dump -f"
-         ExecuteAsAdmin $DUMPIT $backup_dir/$DATE.dump -h $db_home sge
-         LD_LIBRARY_PATH="$OLD_LD_PATH:./lib/sol-sparc64"
-         export LD_LIBRARY_PATH
-      else
-         DUMPIT="$SGE_UTILBIN/db_dump -f"
-         ExecuteAsAdmin $DUMPIT $backup_dir/$DATE.dump -h $db_home sge
-      fi
+   DUMPIT="$SGE_UTILBIN/db_dump -f"
+   ExecuteAsAdmin $DUMPIT $backup_dir/$DATE.dump -h $db_home sge
 
 }
 
@@ -1901,18 +1891,8 @@ SwitchArchRst()
 {
    dump_dir=$1
 
-         if [ "$is_rpc" = 1 -a "$SGE_ARCH" = "sol-sparc64" ]; then
-            OLD_LD_PATH=$LD_LIBRARY_PATH
-            LD_LIBRARY_PATH="$OLD_LD_PATH:./lib/sol-sparc"
-            export LD_LIBRARY_PATH
-            DB_LOAD="$SGE_ROOT/utilbin/sol-sparc/db_load -f"
-            ExecuteAsAdmin $DB_LOAD $dump_dir/*.dump -h $db_home sge
-            LD_LIBRARY_PATH="$OLD_LD_PATH:./lib/sol-sparc64"
-            export LD_LIBRARY_PATH
-         else
-            DB_LOAD="$SGE_UTILBIN/db_load -f" 
-            ExecuteAsAdmin $DB_LOAD $dump_dir/*.dump -h $db_home sge
-         fi
+   DB_LOAD="$SGE_UTILBIN/db_load -f" 
+   ExecuteAsAdmin $DB_LOAD $dump_dir/*.dump -h $db_home sge
 }
 
 

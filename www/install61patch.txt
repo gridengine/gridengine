@@ -3,12 +3,14 @@
 
 1) Who needs to read this document
 2) Prerequisites
-3) Stopping the Grid Engine cluster to start jobs
+3) Stopping the Grid Engine cluster to prevent start of jobs
 4) Shutting down the Grid Engine qmaster, scheduler and execution daemons
 5) Installing the patch and restarting the software
 6) Restarting the software
 7) New functionality delivered with SGE 6.1 update releases
-   9.1. New "qsub -terse" option (6.1u1)
+   7.1) New "qsub -terse" option (6.1u1)
+   7.2) New reporting parameter for consumable resources control (6.1u3)
+   
 
 
 1) Who needs to read this document
@@ -63,8 +65,8 @@
    and commands is not supported.
 
 
-3. Stopping the Grid Engine cluster to start jobs
--------------------------------------------------
+3. Stopping the Grid Engine cluster to prevent start of jobs
+------------------------------------------------------------
 
    Disable all queues so that no new jobs are started:
 
@@ -134,3 +136,21 @@
    The new qsub option "-terse" outputs only the job id (and task id for array
    jobs) while submitting a job using the qsub interface. This is helpful for
    those who need just the job id returned by qsub.
+
+   7.2. New reporting parameter for consumable resources control
+   -------------------------------------------------------------
+
+   The new reporting parameter "log_consumables" controls writing of
+   consumable resources to the reporting file. Default (log_consumables=true)
+   is to write information about all consumable resources (their current usage
+   and their capacity) to the reporting file, whenever a consumable resource
+   changes either in definition, or in capacity, or when the usage of a
+   consumable resource changes. When log_consumables is set to false, only
+   those variables will be written to the reporting file, that are configured
+   in the report_variables in the exec host configuration, see host_conf(5)
+   for further information about report_variables.
+
+   The default (log_consumables=true) has been chosen to be backward compatible
+   to 6.1u2, but it is recommended to switch to log_consumables=false, and add
+   the required consumables to the report_variables in the global host
+   (qconf -me global).

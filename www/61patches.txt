@@ -1,3 +1,63 @@
+Bugs fixed in SGE 6.1u3 since release 6.1u2
+-------------------------------------------
+
+Issue    Sun BugId Description
+-------- --------- ------------------------------------------------------------------------------------------
+376      4743006   problem with floating point job resource limits 
+1909     6353628   information provided by qstat -j and qstat -j -xml are not equivalent 
+2076     6440408   qstat -j messages disagree between plain, XML output 
+2077     6440412   qstat -j -xml messages incomplete 
+2138     6506667   forbid deletion of global config values 
+2194     6527836   authuser binary returns unusable error message! 
+2249     6568575   SGE does not work if primary group entry is too big in groups map 
+2270     6575720   ENABLE_ADDGRP_KILL is missing from sge_conf(5) 
+2272     6575727   sge_shadowd(8) man page is missing some env vars 
+2274     6564461   Duplicate scheduling info messages for reservation jobs 
+2276     6575731   share_tree(5) doesn't explain type field 
+2283     6565821   Oracle, Postgres DWB should prompt for tablespace where indexes and tables should be created 
+2293     6569088   Resource reservation broken for sequential jobs depending on RQS specified for subset of queues only 
+2303     6571749   parallel resource reservation broken when non-queue instance based quotas limits apply 
+2323     6576153   Creating a userset with NONE as a type results in a core dump 
+2327     6578213   qconf -(A,D,M,R)attr dumps core when the supplied file is empty 
+2328     6579232   high scheduler dispatching time with many sequential resource reservation jobs and resource quotas 
+2336     6287501   rctemplates lack of requirement 
+2338     6585721   Parallel RR broken if jobs wait for queue slots and no RQS configured 
+2342     6590010   Original primary group vanishes after newgrp command (USE_QSUB_GID=true) 
+2344     6590079   Resource reservation broken with sequences of identical jobs differing only in their -R y|n 
+2346     6604155   qmon binary job submit is broken 
+2351     6597463   qsub -t 1-N:N creates a normal job with one task 
+2352     6594665   Installation fails on Linux with glibc 2.6 
+2353     6597423   commit method of UnixLoginModule does not report RuntimeExceptions 
+2356     6600619   Userset spooling in classic mode is broken 
+2367     6597547   qdel does not recognize wc_job_range_list as it is defined 
+2369     6577034   Several qconf options display only single message when a list of messages should be printed 
+2372     6469494   clients should issue a more explicit error message when qmaster is busy 
+2374     6589459   Expose the availability of keyword "none" in the manual page of calendar_conf 
+2382     6569862   Unset old_value out of the scope 
+2383     6553062   qconf -mc accepts erroneous resource entries without an urgency; qmon gives (poor) error message 
+2387     6614041   Multiple occurrence of a name in RQS limit definition break classic spooling 
+2392     6614108   Specifying more than one drmaa_v_env attribute causes spurious error msg 
+2394     6608259   scheduler prints empty line in messages file after every 'sge_mirror' logging 
+2396     6608236   scheduling of parallel jobs does not respect consumables, if consumable is referenced in rqs 
+2400     6564543   sge_shepherd should exit if it cannot write to any of its essential files 
+2401     6617450   add option to reporting_params for switching off writing of consumables 
+2404     6618328   qmon displays wrong string for queue filtering 
+2406     6596931   Incorrect messages in qconf command 
+2407     6618619   the restore feature does not delete old configuration before restoring 
+2409     6619016   removing parameters from the reporting_params will not fallback to the default 
+2410     6619657   qmod -e|-d '*' times out in large clusters 
+2411     6619662   qhost becomes sluggish in large clusters 
+2414     6618599   Long running jobs cause incorrect usage summary for ARCo database 
+2415     6620930   ARCO view_accounting filters out parallel job usage incorrectly 
+2416     6621482   ju_exit_status should provide means to recognize the intermediate record 
+2417     6622842   the start_time field in intermediate accounting records is incorrect 
+2418     6588743   qrsh fails with "connection refused" error message 
+2419     6391244   qstat -ext reports wrong usage as compared to other commands such as qstat -t or qstat -j 
+2424     6620253   During the installation the admin user should create web.xml file 
+2428     6630268   upgrade from 6.0u2 and higher to 6.1u2 and higher does not work 
+2435     6599335   inst_sge help output for -upd switch is incorrect
+
+
 Bugs fixed in SGE 6.1u2 since release 6.1u1
 -------------------------------------------
 
@@ -91,7 +151,6 @@ Issue    Sun BugId Description
 2221     6521802   the binary check in inst_sge is wrong! 
 -        6537633   Extraneous space in qsub's "Invalid month specification." message 
 2222     6538293   Hybrid user/project share-tree is broken for user sharing amongst array jobs 
--        6513597   on Windows, automatically translate job user "root" to job user "local Administrator" 
 2180     6518684   Qconf usage x man page inconsistency 
 2181     6518689   Project man page contains different attribute names. 
 2171     6516288   Scheduler does not write pid file in daemonize phase 

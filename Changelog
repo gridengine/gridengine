@@ -1,3 +1,7 @@
+OJ-2007-11-29-0: Bugfix:    OJ-2007-09-10-0 also fixes CR 6559317
+                 Bugster:   6559317
+                 Issue:     2254
+
 MD-2007-11-29-0: Bugfix:    o the installation of two rpc databases on the some host fails 
                  Bugster:   6259265 
                  Issue:     2437
@@ -9,6 +13,7 @@ JG-2007-11-29-0: Bugfix:    Verify slots attribute in cluster queue and pe.
                  Issue:     2433
                  Review:    RD
 
+>>>>>>> 1.3671.2.190
 JG-2007-11-26-0: Bugfix:    Fixed minor memory leaks.
                  Review:    EB
 

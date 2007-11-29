@@ -1,5 +1,9 @@
-LP-2007-11-27-0: Bugfix   : Fixed some JGDI Shell options
-                 Bugfix   : Marked lt_heard_from as hidden in JGDI
+RD-2007-11-29-0: Bugfix:    fix 100% CPU usage qmaster if JVM thrad couldn't
+                            started
+                 Review:    AA
+
+LP-2007-11-27-0: Bugfix     Fixed some JGDI Shell options
+                 Bugfix     Marked lt_heard_from as hidden in JGDI
                  Review:    AA
 
 RD-2007-11-26-1: Bugfix:    disabled starting of sge_schedd by sge_shadowd

@@ -551,6 +551,8 @@ sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
          CRITICAL((SGE_EVENT, "main_class is NULL\n"));
          ret = false;
       }  
+   } else {
+      ret = false;
    }
 
    pthread_mutex_lock(&myjvm_mutex);

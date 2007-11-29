@@ -52,6 +52,9 @@ int
 pe_validate(lListElem *pep, lList **alpp, int startup);
 
 int 
+pe_validate_slots(lList **alpp, u_long32 slots);
+
+int 
 pe_validate_urgency_slots(lList **alpp, const char *s);
 
 int 

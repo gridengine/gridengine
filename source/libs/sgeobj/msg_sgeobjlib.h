@@ -309,4 +309,5 @@
 #define MSG_AR_EVENT_STATE_DELETED               _MESSAGE(64506, _("DELETED"))
 #define MSG_AR_EVENT_STATE_UNKNOWN               _MESSAGE(64507, _("UNKNOWN"))
 
+#define MSG_ATTR_INVALID_ULONGVALUE_USUU         _MESSAGE(64508, _(sge_U32CFormat" is an invalid value for the "SFQ" attribute - it must be a value between "sge_U32CFormat" and "sge_U32CFormat))
 #endif /* __MSG_SGEOBJLIB_H */

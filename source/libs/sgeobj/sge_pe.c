@@ -197,12 +197,11 @@ bool pe_is_referenced(const lListElem *pe, lList **answer_list,
    }
    if (!ret) {
       lListElem *cqueue = NULL, *cpl = NULL;
- 
+
       /* fix for bug 6422335
        * check cq configuration for pe references instead of qinstances
        */
       const char *pe_name = lGetString(pe, PE_name);
-
       for_each(cqueue, master_cqueue_list) {
          for_each(cpl, lGetList(cqueue, CQ_pe_list)){
             if (lGetSubStr(cpl, ST_name, pe_name, ASTRLIST_value))  {
@@ -256,13 +255,12 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
 
    DENTER(TOP_LAYER, "pe_validate");
    pe_name = lGetString(pep, PE_name);
-   if (pe_name && verify_str_key(
-         alpp, pe_name, MAX_VERIFY_STRING, MSG_OBJ_PE, KEY_TABLE) != STATUS_OK) {
-      if (alpp == NULL) { 
+   if (pe_name != NULL && verify_str_key(alpp, pe_name, MAX_VERIFY_STRING, MSG_OBJ_PE, KEY_TABLE) != STATUS_OK) {
+      if (alpp == NULL) {
          ERROR((SGE_EVENT, MSG_PE_INVALIDCHARACTERINPE_S, pe_name));
       } else {
-         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR, 
-                                 MSG_PE_INVALIDCHARACTERINPE_S, pe_name); 
+         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR,
+                                 MSG_PE_INVALIDCHARACTERINPE_S, pe_name);
       }
       DEXIT;
       return STATUS_EEXIST;
@@ -274,52 +272,57 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
    /* -------- start_proc_args */
    NULL_OUT_NONE(pep, PE_start_proc_args);
    s = lGetString(pep, PE_start_proc_args);
-   if (s && replace_params(s, NULL, 0, pe_variables )) {
+   if (s != NULL && replace_params(s, NULL, 0, pe_variables)) {
       if (alpp == NULL) {
          ERROR((SGE_EVENT, MSG_PE_STARTPROCARGS_SS, pe_name, err_msg));
       } else {
-         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR, 
-                                 MSG_PE_STARTPROCARGS_SS, pe_name, err_msg); 
+         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR,
+                                 MSG_PE_STARTPROCARGS_SS, pe_name, err_msg);
       }
       DEXIT;
       return STATUS_EEXIST;
    }
 
-
    /* -------- stop_proc_args */
    NULL_OUT_NONE(pep, PE_stop_proc_args);
    s = lGetString(pep, PE_stop_proc_args);
-   if (s && replace_params(s, NULL, 0, pe_variables )) {
+   if (s != NULL && replace_params(s, NULL, 0, pe_variables)) {
       if (alpp == NULL) {
          ERROR((SGE_EVENT, MSG_PE_STOPPROCARGS_SS, pe_name, err_msg));
       } else {
-         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR, 
+         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR,
                                  MSG_PE_STOPPROCARGS_SS, pe_name, err_msg); 
       }
       DEXIT;
       return STATUS_EEXIST;
    }
 
+   /* -------- slots */
+   if ((ret=pe_validate_slots(alpp, lGetUlong(pep, PE_slots))) != STATUS_OK) {
+      DEXIT;
+      return ret;
+   }
+
    /* -------- allocation_rule */
    s = lGetString(pep, PE_allocation_rule);
-   if (!s)  {
+   if (s == NULL) {
       if (alpp == NULL) {
          ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
                lNm2Str(PE_allocation_rule), "validate_pe"));
       } else {
-         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR, 
-                                 MSG_SGETEXT_MISSINGCULLFIELD_SS, 
-                                 lNm2Str(PE_allocation_rule), "validate_pe"); 
+         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR,
+                                 MSG_SGETEXT_MISSINGCULLFIELD_SS,
+                                 lNm2Str(PE_allocation_rule), "validate_pe");
       }
       DEXIT;
       return STATUS_EEXIST;
    }
 
-   if (replace_params(s, NULL, 0, pe_alloc_rule_variables )) {
+   if (replace_params(s, NULL, 0, pe_alloc_rule_variables)) {
       if (alpp == NULL) {
          ERROR((SGE_EVENT, MSG_PE_ALLOCRULE_SS, pe_name, err_msg));
       } else {
-         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR, 
+         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR,
                                  MSG_PE_ALLOCRULE_SS, pe_name, err_msg);
       }
       DEXIT;
@@ -346,7 +349,7 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
       DEXIT;
       return ret;
    }
-   
+
 #ifdef SGE_PQS_API
    /* -------- PE_qsort_args */
    NULL_OUT_NONE(pep, PE_qsort_args);
@@ -368,6 +371,46 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
    return STATUS_OK;
 }
 
+/****** sgeobj/pe/pe_validate_slots() *********************************
+*  NAME
+*     pe_validate_slots() -- Ensure urgency slot setting is valid.
+*
+*  SYNOPSIS
+*     int pe_validate_slots(lList **alpp, u_long32 slots) 
+*
+*  FUNCTION
+*     Validates slot setting.
+*
+*  INPUTS
+*     lList **alpp   - On error a context message is returned.
+*     u_long32 slots - The slots value.
+*
+*  RESULT
+*     int - values other than STATUS_OK indicate error condition 
+*
+*  NOTES
+*     MT-NOTE: pe_validate_slots() is MT safe
+*******************************************************************************/
+int pe_validate_slots(lList **alpp, u_long32 slots)
+{
+   DENTER(TOP_LAYER, "pe_validate_slots");
+
+   if (slots > MAX_SEQNUM) {
+      if (alpp == NULL) {
+         ERROR((SGE_EVENT, MSG_ATTR_INVALID_ULONGVALUE_USUU, sge_u32c(slots), 
+                "slots", sge_u32c(0), sge_u32c(MAX_SEQNUM)));
+      } else {
+         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR,
+                                 MSG_ATTR_INVALID_ULONGVALUE_USUU, sge_u32c(slots), 
+                                 "slots", sge_u32c(0), sge_u32c(MAX_SEQNUM));
+      }
+      DEXIT;
+      return STATUS_ESEMANTIC;
+   }
+
+   DEXIT;
+   return STATUS_OK;
+}
 /****** sgeobj/pe/pe_validate_urgency_slots() *********************************
 *  NAME
 *     pe_validate_urgency_slots() -- Ensure urgency slot setting is valid.

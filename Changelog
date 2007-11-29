@@ -1,3 +1,8 @@
+JG-2007-11-29-0: Bugfix:    Verify slots attribute in cluster queue and pe.
+                 Bugster:   4752829
+                 Issue:     2433
+                 Review:    RD
+
 RD-2007-11-29-0: Bugfix:    fix 100% CPU usage qmaster if JVM thrad couldn't
                             started
                  Review:    AA

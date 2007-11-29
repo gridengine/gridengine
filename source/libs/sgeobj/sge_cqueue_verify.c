@@ -58,6 +58,8 @@
 
 #include "msg_sgeobjlib.h"
 
+#include "sge_cqueue_verify.h"
+
 #define CQUEUE_VERIFY_LAYER TOP_LAYER
 
 /* EB: ADOC: add commets */
@@ -362,4 +364,49 @@ cqueue_verify_user_list(lListElem *cqueue, lList **answer_list,
 }
 
 
+
+/****** sge_cqueue_verify/cqueue_verify_job_slots() ****************************
+*  NAME
+*     cqueue_verify_job_slots() -- verify the queue slots attribute
+*
+*  SYNOPSIS
+*     bool 
+*     cqueue_verify_job_slots(lListElem *cqueue, lList **answer_list, 
+*                             lListElem *attr_elem)
+*
+*  FUNCTION
+*     Verifies if the slots attribute of a queue is in the expected range
+*     (0 .. MAX_SEQNUM). MAX_SEQNUM is 9999999.
+*
+*  INPUTS
+*     lListElem *cqueue    - The queue to verify.
+*     lList **answer_list  - answer list to report errors
+*     lListElem *attr_elem - the attribute to verify
+*
+*  RESULT
+*     bool - true on success, false on error
+*
+*  NOTES
+*     MT-NOTE: cqueue_verify_job_slots() is MT safe 
+*******************************************************************************/
+bool 
+cqueue_verify_job_slots(lListElem *cqueue, lList **answer_list, lListElem *attr_elem)
+{
+   bool ret = true;
+
+   DENTER(CQUEUE_VERIFY_LAYER, "cqueue_verify_job_slots");
+   if (cqueue != NULL && attr_elem != NULL) {
+      u_long32 slots = lGetUlong(attr_elem, AULNG_value);
+
+      if (slots > MAX_SEQNUM) {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
+                                 MSG_ATTR_INVALID_ULONGVALUE_USUU, sge_u32c(slots), "slots",
+                                 sge_u32c(0), sge_u32c(MAX_SEQNUM));
+         ret = false;
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
 

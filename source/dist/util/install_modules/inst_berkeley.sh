@@ -148,8 +148,6 @@ SpoolingCheckParams()
             #ExecuteAsAdmin $DB_CONFIG_COPY
             CreateRPCServerScript
             $INFOTEXT "\nNow we have to startup the rc script\n >%s< \non the RPC server machine\n" $SGE_ROOT/$COMMONDIR/sgebdb
-            $INFOTEXT -n "If you already have a configured Berkeley DB Spooling Server,\n you have to restart "
-            $INFOTEXT "the Database with the rc script now and continue with >NO<\n"
             $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Shall the installation script try to start the RPC server? (y/n) [y] >>"
 
             if [ $? = 0 ]; then

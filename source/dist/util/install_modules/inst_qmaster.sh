@@ -442,7 +442,8 @@ SetSpoolingOptionsBerkeleyDB()
          ret=`ps -efa | grep "berkeley_db_svc" | wc -l` 
       fi
       if [ $ret -gt 1 ]; then
-         $INFOTEXT "We found a running berkeley db server on this host!"
+         $INFOTEXT -u "Berkeley DB RPC Server installation"
+         $INFOTEXT "\nWe found a running berkeley db server on this host!"
          if [ "$AUTO" = "true" ]; then
                if [ $SPOOLING_SERVER = "none" ]; then
                   $ECHO
@@ -455,15 +456,15 @@ SetSpoolingOptionsBerkeleyDB()
                   exit 1
                fi
          else                 # $AUTO != true
-            $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" "Do you want to use an other host for spooling? (y/n) [n] >>"
-            if [ $? = 1 ]; then
-               $INFOTEXT "Please enter the path to your Berkeley DB startup script! >>"
-               TMP_STARTUP_SCRIPT=`Enter`
-               SpoolingQueryChange
-               EditStartupScript
-            else
-               exit 1
-            fi
+            $INFOTEXT "The installation script does not support the configuration of more then one"
+            $INFOTEXT "Berkeley DB on one Berkeley DB RPC host. This has to be done manually."
+            $INFOTEXT "By adding your Berkeley DB spooling directory to the sgebdb rc-script"
+            $INFOTEXT "and restarting the service, your Berkeley DB Server will be able to manage" 
+            $INFOTEXT "more than one database.\n In your sgebdb rc-script you will find a line like: BDBHOMES=\"-h <spool_dir>\""
+            $INFOTEXT "To add your DB, you have to add <your spool_dir> to this line which should"
+            $INFOTEXT "look like this after edit: BDBHOMES=\"-h <spool_dir> -h <your spool_dir>\""
+            $INFOTEXT "... exiting installation now! "
+            exit 1
          fi 
       else
          while [ $params_ok -eq 0 ]; do
@@ -585,7 +586,7 @@ SetSpoolingOptions()
 #
 SelectHostNameResolving()
 {
-   if [ $AUTO = true ]; then
+   if [ $AUTO = "true" ]; then
      IGNORE_FQDN_DEFAULT=$HOSTNAME_RESOLVING
      $INFOTEXT -log "Using >%s< as IGNORE_FQDN_DEFAULT." "$IGNORE_FQDN_DEFAULT"
      $INFOTEXT -log "If it's >true<, the domainname will be ignored."
@@ -612,7 +613,7 @@ SelectHostNameResolving()
      $CLEAR
    fi
 
-   if [ "$IGNORE_FQDN_DEFAULT" = false ]; then
+   if [ "$IGNORE_FQDN_DEFAULT" = "false" ]; then
       GetDefaultDomain
    else
       CFG_DEFAULT_DOMAIN=none

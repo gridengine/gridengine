@@ -1,3 +1,8 @@
+JG-2007-11-29-0: Bugfix:    Verify slots attribute in cluster queue and pe.
+                 Bugster:   4752829
+                 Issue:     2433
+                 Review:    RD
+
 JG-2007-11-26-0: Bugfix:    Fixed minor memory leaks.
                  Review:    EB
 

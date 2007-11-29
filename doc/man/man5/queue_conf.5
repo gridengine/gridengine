@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2007/07/19 08:17:17 $     Revision: $Revision: 1.24.2.4 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2007/11/29 07:59:15 $     Revision: $Revision: 1.24.2.5 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2007/07/19 08:17:17 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2007/11/29 07:59:15 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -278,7 +278,7 @@ The type of this parameter is boolean, thus either TRUE or FALSE can
 be specified. The default is FALSE, i.e. do not restart jobs automatically.
 .SS "\fBslots\fP"
 The maximum number of concurrently executing jobs allowed in the queue.
-Type is number.
+Type is number, valid values are 0 to 9999999.
 .SS "\fBtmpdir\fP"
 The \fBtmpdir\fP parameter specifies the absolute path to the base of the
 temporary directory filesystem. When 

@@ -65,17 +65,10 @@ static char object_name[] = "parallel environment";
 
 static void pe_update_categories(const lListElem *new_pe, const lListElem *old_pe);
 
-int pe_mod(
-sge_gdi_ctx_class_t *ctx,
-lList **alpp,
-lListElem *new_pe,
-lListElem *pe, /* reduced */
-int add,
-const char *ruser,
-const char *rhost,
-gdi_object_t *object,
-int sub_command, monitoring_t *monitor
-) {
+int pe_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_pe, lListElem *pe, /* reduced */
+           int add, const char *ruser, const char *rhost, gdi_object_t *object, int sub_command, 
+           monitoring_t *monitor)
+{
    int ret;
    const char *s, *pe_name;
 
@@ -83,19 +76,24 @@ int sub_command, monitoring_t *monitor
 
    /* ---- PE_name */
    if (add) {
-      if (attr_mod_str(alpp, pe, new_pe, PE_name, object->object_name))
+      if (attr_mod_str(alpp, pe, new_pe, PE_name, object->object_name)) {
          goto ERROR;
+      }
    }
    pe_name = lGetString(new_pe, PE_name);
 
    /* Name has to be a valid filename without pathchanges */
-   if (add && verify_str_key(
-         alpp, pe_name, MAX_VERIFY_STRING, MSG_OBJ_PE, KEY_TABLE) != STATUS_OK) {
+   if (add && verify_str_key(alpp, pe_name, MAX_VERIFY_STRING, MSG_OBJ_PE, KEY_TABLE) != STATUS_OK) {
       DEXIT;
       return STATUS_EUNKNOWN;
    }
 
    /* ---- PE_slots */
+   if (lGetPosViaElem(pe, PE_slots, SGE_NO_ABORT) >= 0) {
+      if (pe_validate_slots(alpp, lGetUlong(pe, PE_slots)) != STATUS_OK) {
+         goto ERROR;
+      }
+   }
    attr_mod_ulong(pe, new_pe, PE_slots, "slots");
 
    /* ---- PE_control_slaves */
@@ -105,48 +103,50 @@ int sub_command, monitoring_t *monitor
    attr_mod_bool(pe, new_pe, PE_job_is_first_task, "job_is_first_task");
 
    /* ---- PE_user_list */
-   if (lGetPosViaElem(pe, PE_user_list, SGE_NO_ABORT)>=0) {
+   if (lGetPosViaElem(pe, PE_user_list, SGE_NO_ABORT) >= 0) {
       DPRINTF(("got new PE_user_list\n"));
       /* check user_lists */
       normalize_sublist(pe, PE_user_list);
-      if (userset_list_validate_acl_list(lGetList(pe, PE_user_list), alpp)!=STATUS_OK)
+      if (userset_list_validate_acl_list(lGetList(pe, PE_user_list), alpp) != STATUS_OK) {
          goto ERROR;
+      }
 
-      attr_mod_sub_list(alpp, new_pe, PE_user_list, 
-         US_name, pe, sub_command, SGE_ATTR_USER_LISTS, SGE_OBJ_PE, 0); 
+      attr_mod_sub_list(alpp, new_pe, PE_user_list, US_name, pe, sub_command,
+                        SGE_ATTR_USER_LISTS, SGE_OBJ_PE, 0);
    }
 
    /* ---- PE_xuser_list */
-   if (lGetPosViaElem(pe, PE_xuser_list, SGE_NO_ABORT)>=0) {
+   if (lGetPosViaElem(pe, PE_xuser_list, SGE_NO_ABORT) >= 0) {
       DPRINTF(("got new QU_axcl\n"));
       /* check xuser_lists */
       normalize_sublist(pe, PE_xuser_list);
-      if (userset_list_validate_acl_list(lGetList(pe, PE_xuser_list), alpp)!=STATUS_OK)
+      if (userset_list_validate_acl_list(lGetList(pe, PE_xuser_list), alpp) != STATUS_OK) {
          goto ERROR;
-      attr_mod_sub_list(alpp, new_pe, PE_xuser_list,
-         US_name, pe, sub_command, SGE_ATTR_XUSER_LISTS, SGE_OBJ_PE, 0);      
+      }
+      attr_mod_sub_list(alpp, new_pe, PE_xuser_list, US_name, pe, sub_command,
+                        SGE_ATTR_XUSER_LISTS, SGE_OBJ_PE, 0);
    }
 
-   if (lGetPosViaElem(pe, PE_xuser_list, SGE_NO_ABORT)>=0 || lGetPosViaElem(pe, PE_user_list, SGE_NO_ABORT)>=0) {
-      if (multiple_occurances(
-            alpp,
-            lGetList(new_pe, PE_user_list),
-            lGetList(new_pe, PE_xuser_list),
-            US_name,
-            pe_name, object_name)) {
+   if (lGetPosViaElem(pe, PE_xuser_list, SGE_NO_ABORT) >= 0 ||
+       lGetPosViaElem(pe, PE_user_list, SGE_NO_ABORT) >= 0) {
+      if (multiple_occurances(alpp, lGetList(new_pe, PE_user_list), lGetList(new_pe, PE_xuser_list),
+                              US_name, pe_name, object_name)) {
          goto ERROR;
       }
    }
 
-   if (attr_mod_procedure(alpp, pe, new_pe, PE_start_proc_args, "start_proc_args", pe_variables)) goto ERROR;
-   if (attr_mod_procedure(alpp, pe, new_pe, PE_stop_proc_args, "stop_proc_args", pe_variables)) goto ERROR;
+   if (attr_mod_procedure(alpp, pe, new_pe, PE_start_proc_args, "start_proc_args", pe_variables)) {
+      goto ERROR;
+   }
+   if (attr_mod_procedure(alpp, pe, new_pe, PE_stop_proc_args, "stop_proc_args", pe_variables)) {
+      goto ERROR;
+   }
 
    /* -------- PE_allocation_rule */
-   if (lGetPosViaElem(pe, PE_allocation_rule, SGE_NO_ABORT)>=0) {
+   if (lGetPosViaElem(pe, PE_allocation_rule, SGE_NO_ABORT) >= 0) {
       s = lGetString(pe, PE_allocation_rule);
-      if (!s)  {
-         ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
-               lNm2Str(PE_allocation_rule), "validate_pe"));
+      if (s == NULL)  {
+         ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS, lNm2Str(PE_allocation_rule), "validate_pe"));
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EEXIST;
@@ -162,17 +162,16 @@ int sub_command, monitoring_t *monitor
    }
 
    /* -------- PE_urgency_slots */
-   if (lGetPosViaElem(pe, PE_urgency_slots, SGE_NO_ABORT)>=0) {
+   if (lGetPosViaElem(pe, PE_urgency_slots, SGE_NO_ABORT) >= 0) {
       s = lGetString(pe, PE_urgency_slots);
-      if (!s)  {
-         ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
-               lNm2Str(PE_allocation_rule), "validate_pe"));
+      if (s == NULL) {
+         ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS, lNm2Str(PE_allocation_rule), "validate_pe"));
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EEXIST;
       }
 
-      if ((ret=pe_validate_urgency_slots(alpp, s))!=STATUS_OK) {
+      if ((ret=pe_validate_urgency_slots(alpp, s)) != STATUS_OK) {
          DEXIT;
          return ret;
       }
@@ -181,13 +180,12 @@ int sub_command, monitoring_t *monitor
 
 #ifdef SGE_PQS_API
    /* -------- PE_qsort_args */
-   if (lGetPosViaElem(pe, PE_qsort_args, SGE_NO_ABORT)>=0) {
+   if (lGetPosViaElem(pe, PE_qsort_args, SGE_NO_ABORT) >= 0) {
       void *handle=NULL, *fn=NULL;
 
       s = lGetString(pe, PE_qsort_args);
 
-      if ((ret=pe_validate_qsort_args(alpp, s, new_pe,
-                  &handle, &fn))!=STATUS_OK) {
+      if ((ret=pe_validate_qsort_args(alpp, s, new_pe, &handle, &fn)) != STATUS_OK) {
          DEXIT;
          return ret;
       }
@@ -213,7 +211,6 @@ ERROR:
    DEXIT;
    return STATUS_EUNKNOWN;
 }
-
 
 int pe_spool(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *pep, gdi_object_t *object) 
 {

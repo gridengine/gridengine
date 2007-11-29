@@ -1750,10 +1750,6 @@ GetJMXPort() {
             $INFOTEXT -log "\nUsing jvm library >%s<" "$SGE_JVM_LIB_PATH"
          fi
 
-         if [ "$ARCH" = "sol-amd64" -o "$ARCH" = "sol-sparc64" ]; then
-            SGE_ADDITIONAL_JVM_ARGS="-d64 $SGE_ADDITIONAL_JVM_ARGS"
-         fi   
-
          if [ "$SGE_JMX_PORT" != "" ]; then
             if [ $SGE_JMX_PORT -ge $jmx_port_min -a $SGE_JMX_PORT -le $jmx_port_max ]; then
                $INFOTEXT -log "Using SGE_JMX_PORT >%s<." $SGE_JMX_PORT

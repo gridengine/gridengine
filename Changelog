@@ -1,3 +1,9 @@
+MD-2007-11-29-0: Bugfix:    o the installation of two rpc databases on the some host fails 
+                 Bugster:   6259265 
+                 Issue:     2437
+                 Changed:   install 
+                 Review:    JG
+
 AA-2007-11-29-0: Bugfix:    inst_qmaster.sh adding of -d64 on sol-sparc64 and
                             sol-amd64 prevents start of jvm_thread
                  Review:    RD           

@@ -312,6 +312,7 @@ sge_mirror_initialize(sge_evc_class_t *evc, ev_registration_id id, const char *n
 {
    DENTER(TOP_LAYER, "sge_mirror_initialize");
 
+   evc->ec_local.update_func = update_func;
    evc->ec_local.mod_func = mod_func;
    evc->ec_local.add_func = add_func;
    evc->ec_local.remove_func = remove_func;
@@ -326,7 +327,7 @@ sge_mirror_initialize(sge_evc_class_t *evc, ev_registration_id id, const char *n
    sge_mirror_subscribe(evc, SGE_TYPE_QMASTER_GOES_DOWN, NULL, NULL, NULL, NULL, NULL);
 
    /* register with qmaster */
-   evc->ec_commit(evc, NULL, update_func);
+   evc->ec_commit(evc, NULL);
 
    DEXIT;
    return SGE_EM_OK;

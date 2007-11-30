@@ -201,14 +201,14 @@ sge_gdi_packet_queue_store_notify(sge_gdi_packet_queue_class_t *packet_queue,
       packet_queue->counter++;
    }
 
-   DPRINTF((SFN" added new packet (packet_queue->counter = "
-            sge_U32CFormat")\n", thread_config->thread_name, packet_queue->counter));
+   DPRINTF((SFN" added new packet (packet_queue->counter = "sge_U32CFormat")\n",
+            thread_config ? thread_config->thread_name : "-NA-", packet_queue->counter));
 
    /*
     * Send a signal through the packet_queue->cond. Worker threads are waiting
     * for that signal so that they can handle the packet. 
     */
-   DPRINTF((SFN" notifys one worker\n", thread_config->thread_name));
+   DPRINTF((SFN" notifys one worker\n", thread_config ? thread_config->thread_name : "-NA-"));
    if (packet_queue->waiting > 0) {
       pthread_cond_signal(&(packet_queue->cond));
    }
@@ -279,7 +279,7 @@ sge_gdi_packet_queue_wait_for_new_packet(sge_gdi_packet_queue_class_t *packet_qu
       if (packet_queue->first_packet == NULL) {
          packet_queue->waiting++;
          DPRINTF((SFN" is waiting for packet (packet_queue->waiting = "
-                  sge_U32CFormat")\n", thread_config->thread_name, 
+                  sge_U32CFormat")\n", thread_config ? thread_config->thread_name : "-NA-", 
                   packet_queue->waiting));
          do {
             struct timespec ts;
@@ -309,12 +309,12 @@ sge_gdi_packet_queue_wait_for_new_packet(sge_gdi_packet_queue_class_t *packet_qu
          packet_queue->counter--;
          DPRINTF((SFN" takes packet from queue. (packet_queue->counter = "
                   sge_U32CFormat"; packet_queue->waiting = "sge_U32CFormat")\n",
-                  thread_config->thread_name, packet_queue->counter, 
+                  thread_config ? thread_config->thread_name : "-NA-", packet_queue->counter, 
                   packet_queue->waiting));
       } else {
          *packet = NULL;
          DPRINTF((SFN" wokeup but got no packet. (packet_queue->waiting = "
-                  sge_U32CFormat")\n", thread_config->thread_name,
+                  sge_U32CFormat")\n", thread_config ? thread_config->thread_name : "-NA-",
                   packet_queue->waiting));
       }
 

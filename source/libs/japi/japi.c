@@ -4105,7 +4105,7 @@ static void *japi_implementation_thread(void *p)
       goto SetupFailed;
    }
    
-   if (!evc->ec_register(evc, false, &alp, NULL, NULL)) {      
+   if (!evc->ec_register(evc, false, &alp, NULL)) {      
       DPRINTF(("error: ec_register() failed\n"));
       
       if (p) {

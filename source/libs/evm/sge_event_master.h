@@ -134,38 +134,61 @@ void sge_event_master_process_acks(monitoring_t *monitor);
 void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, lList *report_list, monitoring_t *monitor);
 void sge_event_master_wait_next(void);
 
-extern int    sge_add_event_client_local(lListElem *clio, lList **alpp, 
-                                         event_client_update_func_t update_func, monitoring_t *monitor);
-extern int    sge_add_event_client(lListElem*, lList**, lList**, char*, char*, monitoring_t *monitor);
+int sge_add_event_client(lListElem *ev,
+                         lList **alpp,
+                         lList **eclpp,
+                         char *ruser,
+                         char *rhost,
+                         event_client_update_func_t update_func,
+                         monitoring_t *monitor);
 
-extern int    sge_mod_event_client(lListElem*, lList**, char*, char*);
-extern bool   sge_has_event_client(u_long32);
-extern void   sge_remove_event_client(u_long32);
-extern lList* sge_select_event_clients(const char*, const lCondition*, const lEnumeration*);
-extern int    sge_shutdown_event_client(u_long32, const char*, uid_t, lList **alpp, monitoring_t *monitor);
-extern int    sge_shutdown_dynamic_event_clients(const char*, lList **alpp, monitoring_t *monitor);
+int sge_mod_event_client(lListElem *clio, lList **alpp, char *ruser, char *rhost);
+bool sge_has_event_client(u_long32 aClientID);
+void   sge_remove_event_client(u_long32 aClientID);
+lList* sge_select_event_clients(const char *aNewList, const lCondition *aCond, const lEnumeration *anEnum);
+int sge_shutdown_event_client(u_long32 aClientID, const char* anUser, uid_t anUID, lList **alpp, monitoring_t *monitor);
+int sge_shutdown_dynamic_event_clients(const char *anUser, lList **alpp, monitoring_t *monitor);
 
-extern bool sge_add_event( u_long32, ev_event, u_long32, u_long32, 
-                          const char*, const char*, const char*, lListElem*);
+bool sge_add_event(u_long32 timestamp,
+                   ev_event type,
+                   u_long32 intkey,
+                   u_long32 intkey2,
+                   const char *strkey,
+                   const char *strkey2, 
+                   const char *session,
+                   lListElem *element);
                           
-extern bool sge_add_event_for_client(u_long32, u_long32, ev_event, u_long32, u_long32, 
-                                    const char*, const char*, const char*, lListElem*);
+bool sge_add_event_for_client(u_long32 aClientID,
+                              u_long32 aTimestamp,
+                              ev_event type,
+                              u_long32 anIntKey1, 
+                              u_long32 anIntKey2,
+                              const char *aStrKey1,
+                              const char *aStrKey2, 
+                              const char *aSession,
+                              lListElem *element);
                                     
-extern bool sge_add_list_event( u_long32, ev_event, u_long32, u_long32, 
-                               const char*, const char*, const char*, lList*); 
+bool sge_add_list_event(u_long32 timestamp,
+                        ev_event type, 
+                        u_long32 intkey,
+                        u_long32 intkey2,
+                        const char *strkey, 
+                        const char *strkey2,
+                        const char *session,
+                        lList *list);
 
-extern void sge_handle_event_ack(u_long32, ev_event);
-extern void sge_deliver_events_immediately(u_long32);
+void sge_handle_event_ack(u_long32 aClientID, ev_event anEvent);
+void sge_deliver_events_immediately(u_long32 aClientID);
 
-extern int sge_resync_schedd(monitoring_t *monitor);
+int sge_resync_schedd(monitoring_t *monitor);
 
-extern u_long32 sge_set_max_dynamic_event_clients(u_long32 max);
-extern u_long32 sge_get_max_dynamic_event_clients(void);
+u_long32 sge_set_max_dynamic_event_clients(u_long32 max);
+u_long32 sge_get_max_dynamic_event_clients(void);
 
-extern void sge_event_master_shutdown(void);
-extern void sge_event_master_init(void);
-extern bool sge_commit(void);
-extern void sge_set_commit_required(void);
-extern bool sge_is_commit_required(void);
+void sge_event_master_shutdown(void);
+void sge_event_master_init(void);
+bool sge_commit(void);
+void sge_set_commit_required(void);
+bool sge_is_commit_required(void);
 
 #endif /* __SGE_M_EVENT_H */

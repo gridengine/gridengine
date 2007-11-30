@@ -253,7 +253,7 @@ int sge_before_dispatch(sge_evc_class_t *evc)
       if(evc->ec_get_flush(evc, sgeE_JOB_ADD) != interval) {
          evc->ec_set_flush(evc, sgeE_JOB_ADD, flush, interval);
       }
-      evc->ec_commit(evc, NULL, &event_update_func);
+      evc->ec_commit(evc, NULL);
    }
 
    /*

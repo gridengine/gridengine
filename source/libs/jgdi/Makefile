@@ -54,7 +54,7 @@ JGDI_OBJS  = $(JGDI_SRC:.c=.o)
 
 JGDI_ADD_SRC = sge_qhost.c sge_qstat.c sge_qquota.c sge_cqueue_qstat.c qstat_printing.c show_job.c sig_handlers.c
 
-JGDI_ADD_OBJS = $(JGDI_ADD_SRC:.c=.o) $(SCHEDLIB_OBJS) $(DRMAA_OBJS)
+JGDI_ADD_OBJS = $(JGDI_ADD_SRC:.c=.o) $(SCHEDLIB_OBJS) $(EVMLIB_OBJS) $(DRMAA_OBJS)
 
 JGDI_LIB=libjgdi$(SHAREDEXT)
 SGELIBPATH=-L.

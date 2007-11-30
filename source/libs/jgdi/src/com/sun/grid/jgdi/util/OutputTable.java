@@ -217,6 +217,8 @@ public class OutputTable {
             } else {
                 if (getFormat() == null) {
                     str = value.toString();
+                } else if (value.equals("-NA-")) {
+                    str = value.toString();                    
                 } else {
                     try {
                         str = getFormat().format(value);

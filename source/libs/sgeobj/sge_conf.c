@@ -124,6 +124,8 @@ struct confel {                       /* cluster configuration parameters */
     char        *auto_user_default_project; /* SGEEE automatic user default project */
     u_long32    auto_user_delete_time; /* SGEEE automatic user delete time */
     char        *delegated_file_staging; /*drmaa attribute: "true" or "false" */
+    char        *libjvm_path;         /* libjvm_path for jvm_thread */
+    char        *additional_jvm_args; /* additional_jvm_args for jvm_thread */
 };
 
 typedef struct confel sge_conf_type;
@@ -132,7 +134,7 @@ static sge_conf_type Master_Config = { NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                                        0, 0, 0, 0, 0, NULL, NULL, NULL, 0, 0, 0, 0, NULL,
                                        NULL, 0, NULL, NULL, NULL, NULL, NULL, 0, NULL,
                                        NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0,
-                                       0, 0, NULL, 0, NULL };
+                                       0, 0, NULL, 0, NULL, NULL, NULL };
 static bool is_new_config = false;
 static bool forbid_reschedule = false;
 static bool forbid_apperror = false;
@@ -332,6 +334,8 @@ static tConfEntry conf_entries[] = {
  { "auto_user_default_project", 0, "none",      1, NULL },
  { "auto_user_delete_time",     0, "0",         1, NULL },
  { "delegated_file_staging",    0, "false",     1, NULL },
+ { "libjvm_path",       1, "",                  1, NULL },
+ { "additional_jvm_args", 1, "",                1, NULL },
  { NULL,                0, NULL,                0, 0,   }
 };
 
@@ -517,6 +521,8 @@ lList *lpCfg
    chg_conf_val(lpCfg, "auto_user_default_project", &Master_Config.auto_user_default_project, NULL, 0);
    chg_conf_val(lpCfg, "auto_user_delete_time", NULL, &Master_Config.auto_user_delete_time, TYPE_TIM);
    chg_conf_val(lpCfg, "delegated_file_staging", &Master_Config.delegated_file_staging, NULL, 0);
+   chg_conf_val(lpCfg, "libjvm_path", &Master_Config.libjvm_path, NULL, 0);
+   chg_conf_val(lpCfg, "additional_jvm_args", &Master_Config.additional_jvm_args, NULL, 0);
    DRETURN_VOID;
 }
 
@@ -999,6 +1005,8 @@ void sge_show_conf()
    DPRINTF(("conf.auto_user_default_project >%s<\n", Master_Config.auto_user_default_project));
    DPRINTF(("conf.auto_user_delete_time  >%u<\n", Master_Config.auto_user_delete_time));
    DPRINTF(("conf.delegated_file_staging >%s<\n", Master_Config.delegated_file_staging));
+   DPRINTF(("conf.libjvm_path >%s<\n", Master_Config.libjvm_path));
+   DPRINTF(("conf.additional_jvm_args >%s<\n", Master_Config.additional_jvm_args));
 
    for_each (ep, Master_Config.user_lists) {
       DPRINTF(("%s             >%s<\n", 
@@ -1072,6 +1080,8 @@ static void clean_conf(void) {
    FREE(Master_Config.rlogin_command);
    FREE(Master_Config.auto_user_default_project);
    FREE(Master_Config.delegated_file_staging);
+   FREE(Master_Config.libjvm_path);
+   FREE(Master_Config.additional_jvm_args);
    
    memset(&Master_Config, 0, sizeof(sge_conf_type));
 

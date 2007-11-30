@@ -48,6 +48,7 @@
  */
 typedef struct {
    bool init;
+   event_client_update_func_t update_func;
    evm_add_func_t add_func;
    evm_mod_func_t mod_func;
    evm_remove_func_t remove_func;
@@ -64,9 +65,9 @@ struct sge_evc_class_str {
    local_t ec_local; 
 
    sge_gdi_ctx_class_t* (*get_gdi_ctx)(sge_evc_class_t *thiz);
-   bool (*ec_register)(sge_evc_class_t *thiz, bool exit_on_qmaster_down, lList **alpp, event_client_update_func_t update_func, monitoring_t *monitor);
+   bool (*ec_register)(sge_evc_class_t *thiz, bool exit_on_qmaster_down, lList **alpp, monitoring_t *monitor);
    bool (*ec_deregister)(sge_evc_class_t *thiz);
-   bool (*ec_commit)(sge_evc_class_t *thiz, lList **alpp, event_client_update_func_t update_func);
+   bool (*ec_commit)(sge_evc_class_t *thiz, lList **alpp);
    bool (*ec_ack)(sge_evc_class_t *thiz); 
    bool (*ec_is_initialized)(sge_evc_class_t *thiz);
    lListElem* (*ec_get_event_client)(sge_evc_class_t *thiz);

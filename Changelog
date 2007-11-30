@@ -1,3 +1,11 @@
+AA-2007-11-30-0: Enhancem.: - broken jgdi qstat output fix
+                            - internal event client for jgdi
+                            - update_func moved to local context
+                            - support of solaris jvms on solaris8/9
+                             link against -lthread instead of lpthread
+                             which prevented start of jvm_thread
+                 Review:    RD
+                             
 JG-2007-11-30-0: Enhancem.: Set default for reporting_params log_consumables to
                             resource friendly default "false".
                             Some cleanup.

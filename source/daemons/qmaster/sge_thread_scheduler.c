@@ -197,7 +197,7 @@ static void sge_scheduler_reset_busy(sge_evc_class_t *evc)
    if ((evc->ec_get_busy_handling(evc) == EV_BUSY_UNTIL_RELEASED)) {
       sge_schedd_block_until_oders_processed(evc->get_gdi_ctx(evc), NULL);
       evc->ec_set_busy(evc, 0);
-      evc->ec_commit(evc, NULL, &event_update_func);
+      evc->ec_commit(evc, NULL);
    }
    DEXIT;
 }
@@ -441,9 +441,9 @@ sge_scheduler_main(void *arg)
    if (local_ret) {
       sge_mirror_initialize(evc, EV_ID_SCHEDD, "scheduler",
                             false, &event_update_func, &sge_mod_event_client, 
-                            &sge_add_event_client_local, &sge_remove_event_client,
+                            &sge_add_event_client, &sge_remove_event_client,
                             &sge_handle_event_ack);
-      evc->ec_register(evc, false, NULL, &event_update_func, &monitor);
+      evc->ec_register(evc, false, NULL, &monitor);
       evc->ec_set_busy_handling(evc, EV_BUSY_UNTIL_RELEASED);
       DPRINTF((SFN" registered at event mirror\n", thread_config->thread_name));
    }

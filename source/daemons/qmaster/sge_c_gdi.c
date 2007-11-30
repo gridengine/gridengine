@@ -501,7 +501,7 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
                
                sge_add_event_client(ep, &(task->answer_list), 
                                     (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? &(task->data_list) : NULL, 
-                                    packet->user, packet->host, monitor);
+                                    packet->user, packet->host, (event_client_update_func_t)NULL, monitor);
             }
          }
       } else if (task->target == SGE_JOB_LIST) {

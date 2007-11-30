@@ -193,11 +193,12 @@ sge_gdi_packet_wait_till_handled(sge_gdi_packet_class_t *packet)
       sge_mutex_lock(GDI_PACKET_MUTEX, SGE_FUNC, __LINE__, &(packet->mutex));
 
       while (packet->is_handled == false) {
-         DPRINTF((SFN" is waiting for packet to be handling by worker\n", 
-                  thread_config->thread_name));
+         DPRINTF((SFN" is waiting for packet to be handling by worker\n",
+                  thread_config ? thread_config->thread_name : "-NA-"));
          pthread_cond_wait(&(packet->cond), &(packet->mutex));
       }
-      DPRINTF((SFN" got signal that packet is handled\n", thread_config->thread_name));
+      DPRINTF((SFN" got signal that packet is handled\n",
+               thread_config ? thread_config->thread_name : "-NA-"));
 
       sge_mutex_unlock(GDI_PACKET_MUTEX, SGE_FUNC, __LINE__, &(packet->mutex));
    }
@@ -298,7 +299,8 @@ sge_gdi_packet_broadcast_that_handled(sge_gdi_packet_class_t *packet)
 
    sge_mutex_lock(GDI_PACKET_MUTEX, SGE_FUNC, __LINE__, &(packet->mutex));
    packet->is_handled = true; 
-   DPRINTF((SFN" broadcasts that packet is handled\n", thread_config->thread_name));
+   DPRINTF((SFN" broadcasts that packet is handled\n",
+            thread_config ? thread_config->thread_name : "-NA-"));
    pthread_cond_broadcast(&(packet->cond));
    sge_mutex_unlock(GDI_PACKET_MUTEX, SGE_FUNC, __LINE__, &(packet->mutex));
 
@@ -622,7 +624,6 @@ sge_gdi_packet_execute_internal(sge_gdi_ctx_class_t* ctx, lList **answer_list,
     * append the packet to the packet list of the worker threads
     */
    sge_gdi_packet_queue_store_notify(&Master_Packet_Queue, packet);
-
 
    DRETURN(ret);
 }

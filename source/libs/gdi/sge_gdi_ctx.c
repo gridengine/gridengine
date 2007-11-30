@@ -729,7 +729,7 @@ sge_gdi_ctx_class_create_from_bootstrap(int prog_number, const char* component_n
 
    /* determine the connection type: local/remote */
    if (!strncmp(url, "internal://", (sizeof("internal://")-1))) {
-      DPRINTF(("**** Using internal context ****\n"));   
+      DPRINTF(("**** Using internal context for %s ****\n", component_name));   
       is_qmaster_internal_client = true;
    }
    

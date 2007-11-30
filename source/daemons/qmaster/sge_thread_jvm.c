@@ -336,7 +336,7 @@ static JNIEnv* create_vm(const char *libjvm_path, int argc, char** argv)
 #endif
 
    if (libjvm_handle == NULL) {
-      CRITICAL((SGE_EVENT, "could not load libjvmi %s", dlerror()));
+      CRITICAL((SGE_EVENT, "could not load libjvm %s", dlerror()));
       ok = false;
    }
 
@@ -492,18 +492,18 @@ sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
    /*
    ** adjust fixed_jvm_argc if an additional fixed argument line is added
    */
-   jvm_argv[0] = strdup(sge_dstring_sprintf(&ds, "-Djava.class.path=%s/lib/jgdi.jar:%s/lib/juti.jar", ctx->get_sge_root(ctx), ctx->get_sge_root(ctx)));
-   jvm_argv[1] = strdup(sge_dstring_sprintf(&ds, "-Djava.security.policy=%s/common/jmx/java.policy", ctx->get_cell_root(ctx)));
-   jvm_argv[2] = strdup("-Djava.security.manager=com.sun.grid.jgdi.management.JGDISecurityManager");
-   jvm_argv[3] = strdup(sge_dstring_sprintf(&ds, "-Djava.rmi.server.codebase=file://%s/lib/jgdi.jar", ctx->get_sge_root(ctx)));
-   jvm_argv[4] = strdup(sge_dstring_sprintf(&ds, "-Djava.library.path=%s/lib/%s", ctx->get_sge_root(ctx), sge_get_arch()));
-   jvm_argv[5] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.jmxremote.access.file=%s/common/jmx/jmxremote.access", ctx->get_cell_root(ctx)));
-   jvm_argv[6] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.jmxremote.password.file=%s/common/jmx/jmxremote.password", ctx->get_cell_root(ctx)));
-   jvm_argv[7] = strdup(sge_dstring_sprintf(&ds, "-Djava.security.auth.login.config=%s/common/jmx/jaas.config", ctx->get_cell_root(ctx)));
-   jvm_argv[8] = strdup(sge_dstring_sprintf(&ds, "-Djava.util.logging.config.file=%s/common/jmx/logging.properties", ctx->get_cell_root(ctx)));
-   jvm_argv[9] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.grid.jgdi.sgeRoot=%s", ctx->get_sge_root(ctx)));
-   jvm_argv[10] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.grid.jgdi.sgeCell=%s", ctx->get_default_cell(ctx)));
-   jvm_argv[11] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.grid.jgdi.sgeQmasterSpoolDir=%s", ctx->get_qmaster_spool_dir(ctx)));
+   jvm_argv[0] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.grid.jgdi.sgeRoot=%s", ctx->get_sge_root(ctx)));
+   jvm_argv[1] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.grid.jgdi.sgeCell=%s", ctx->get_default_cell(ctx)));
+   jvm_argv[2] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.grid.jgdi.sgeQmasterSpoolDir=%s", ctx->get_qmaster_spool_dir(ctx)));
+   jvm_argv[3] = strdup(sge_dstring_sprintf(&ds, "-Djava.class.path=%s/lib/jgdi.jar:%s/lib/juti.jar", ctx->get_sge_root(ctx), ctx->get_sge_root(ctx)));
+   jvm_argv[4] = strdup(sge_dstring_sprintf(&ds, "-Djava.security.policy=%s/common/jmx/java.policy", ctx->get_cell_root(ctx)));
+   jvm_argv[5] = strdup("-Djava.security.manager=com.sun.grid.jgdi.management.JGDISecurityManager");
+   jvm_argv[6] = strdup(sge_dstring_sprintf(&ds, "-Djava.rmi.server.codebase=file://%s/lib/jgdi.jar", ctx->get_sge_root(ctx)));
+   jvm_argv[7] = strdup(sge_dstring_sprintf(&ds, "-Djava.library.path=%s/lib/%s", ctx->get_sge_root(ctx), sge_get_arch()));
+   jvm_argv[8] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.jmxremote.access.file=%s/common/jmx/jmxremote.access", ctx->get_cell_root(ctx)));
+   jvm_argv[9] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.jmxremote.password.file=%s/common/jmx/jmxremote.password", ctx->get_cell_root(ctx)));
+   jvm_argv[10] = strdup(sge_dstring_sprintf(&ds, "-Djava.security.auth.login.config=%s/common/jmx/jaas.config", ctx->get_cell_root(ctx)));
+   jvm_argv[11] = strdup(sge_dstring_sprintf(&ds, "-Djava.util.logging.config.file=%s/common/jmx/logging.properties", ctx->get_cell_root(ctx)));
 /*    jvm_argv[13] = strdup("-Djava.util.logging.manager=com.sun.grid.jgdi.util.JGDILogManager"); */
    jvm_argv[12] = strdup("-Djava.util.logging.manager=java.util.logging.LogManager");
    jvm_argv[13] = strdup("-Xrs");
@@ -520,7 +520,7 @@ sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
    /*
    ** process arguments of main method
    */
-   main_argv[0] = strdup(sge_dstring_sprintf(&ds, "bootstrap://%s@%s:"sge_u32, ctx->get_sge_root(ctx),
+   main_argv[0] = strdup(sge_dstring_sprintf(&ds, "internal://%s@%s:"sge_u32, ctx->get_sge_root(ctx),
                          ctx->get_default_cell(ctx), ctx->get_sge_qmaster_port(ctx)));
 
    sge_dstring_free(&ds);
@@ -682,7 +682,7 @@ sge_jvm_main(void *arg)
          pthread_cleanup_pop(execute);
          if (sge_thread_has_shutdown_started()) {
             DPRINTF((SFN" is waiting for termination", thread_config->thread_name));
-            sleep(1);
+            usleep(10);
          }
       } while (sge_thread_has_shutdown_started()); 
    }

@@ -87,6 +87,9 @@ typedef int (*evm_mod_func_t)(
 typedef int (*evm_add_func_t)(
    lListElem *clio,                        /* the new event client */
    lList **alpp,                           /* the answer list */
+   lList **eclpp,                          /* list with added event client elem */
+   char *ruser,                            /* request user or <admin_user> for internal ec */
+   char *rhost,                            /* request host or <master_host> for internal ec */
    event_client_update_func_t update_func, /* the event client update_func */     
    monitoring_t *monitor                   /* the monitoring structure */
 );

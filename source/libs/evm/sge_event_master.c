@@ -71,6 +71,7 @@
 #include "cl_errors.h"
 #include "cl_commlib.h"
 #include "sge_profiling.h"
+#include "sge_spool.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -435,7 +436,7 @@ static void blockEvents(lListElem *event_client, ev_event ev_type, bool isBlock)
 *
 *******************************************************************************/
 int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser, 
-                         char *rhost, monitoring_t *monitor)
+                         char *rhost, event_client_update_func_t update_func, monitoring_t *monitor)
 {
    lListElem *ep=NULL;
    u_long32 now;
@@ -539,7 +540,12 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    if (id > EV_ID_ANY && id < EV_ID_FIRST_DYNAMIC) {
      
       MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
-      if (!manop_is_manager(ruser)) {
+      /*
+      ** we allow addition of a priviledged event client
+      ** for internal clients (==> update_func != NULL)
+      ** and manager/operator
+      */
+      if (!update_func && !manop_is_manager(ruser)) {
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
          unlock_all_clients();
          ERROR((SGE_EVENT, MSG_WRONG_USER_FORFIXEDID ));
@@ -564,6 +570,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    }
 
    ep=lCopyElem(clio);
+   lSetRef(ep, EV_update_function, (void*) update_func);
    lSetBool(clio, EV_changed, false);
 
    lAppendElem(Event_Master_Control.clients, ep);
@@ -612,154 +619,6 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
 
    DRETURN(STATUS_OK);
 } /* sge_add_event_client() */
-
-/****** sge_event_master/sge_add_event_client_local() **************************
-*  NAME
-*     sge_add_event_client_local() -- adds a local event client
-*
-*  SYNOPSIS
-*     int sge_add_event_client_local(lListElem *clio, lList **alpp, 
-*     event_client_update_func_t update_func, monitoring_t *monitor) 
-*
-*  FUNCTION
-*     Expects an event client with a fixed id. Event clients with
-*     dynamic ids will be rejected.
-*
-*  INPUTS
-*     lListElem *clio                        - event client structure
-*     lList **alpp                           - answer list
-*     event_client_update_func_t update_func - event hand over function
-*     monitoring_t *monitor                  - monitoring structure
-*
-*  RESULT
-*     int - STATUS_OK or errors.
-*
-*  NOTES
-*     MT-NOTE: sge_add_event_client_local() is MT safe 
-*
-*
-*  SEE ALSO
-*     sge_event_master/sge_add_event_client()
-*
-*******************************************************************************/
-int sge_add_event_client_local(lListElem *clio, lList **alpp,
-                         event_client_update_func_t update_func, monitoring_t *monitor)
-{
-   lListElem *ep=NULL;
-   u_long32 now;
-   u_long32 id;
-   u_long32 ed_time;
-   const char *name;
-   const char *host;
-   const char *commproc;
-   u_long32 commproc_id;
-
-   DENTER(TOP_LAYER,"sge_add_event_client_local");
-
-   id = lGetUlong(clio, EV_id);
-   name = lGetString(clio, EV_name);
-   ed_time = lGetUlong(clio, EV_d_time);
-   host = lGetHost(clio, EV_host);
-   commproc = lGetString(clio, EV_commproc);
-   commproc_id = lGetUlong(clio, EV_commid);
-
-   if (name == NULL) {
-      name = "unnamed";
-      lSetString(clio, EV_name, name);
-   }
-   
-   /* EV_ID_ANY is 0, therefor the compare is always true (Irix complained) */
-   if (id >= EV_ID_FIRST_DYNAMIC) { /* invalid request */
-      ERROR((SGE_EVENT, MSG_EVE_ILLEGALIDREGISTERED_U, sge_u32c(id)));
-      answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-
-      DRETURN(STATUS_ESEMANTIC);
-   }
-
-   if (lGetBool(clio, EV_changed) && lGetList(clio, EV_subscribed) == NULL) {
-      ERROR((SGE_EVENT, MSG_EVE_INVALIDSUBSCRIPTION));
-      answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-
-      DRETURN(STATUS_ESEMANTIC);
-   }
-
-   /* This also aquires the mutex. */
-   /* I have to lock all here because I have to search for the client by
-    * address, which means I need to have control over all the clients. */
-   lock_all_clients();
-
-   if (Event_Master_Control.is_prepare_shutdown) {
-      unlock_all_clients();
-      ERROR((SGE_EVENT, MSG_EVE_QMASTERISGOINGDOWN));
-      answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);      
-      DRETURN(STATUS_ESEMANTIC);
-   }
-   
-   if (id == EV_ID_ANY) {   /* qmaster shall give id dynamically */
-      unlock_all_clients();
-      ERROR((SGE_EVENT, "wrong event client ID for internal clients\n"));
-      answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-      DRETURN(STATUS_ESEMANTIC);
-   }
-   
-   /* special event clients: we allow only one instance */
-   /* if it already exists, delete the old one and register the new one */
-   if (id > EV_ID_ANY && id < EV_ID_FIRST_DYNAMIC) {
-     
-      if ((ep = get_event_client(id)) != NULL) {
-         /* we already have this special client */
-         ERROR((SGE_EVENT, MSG_EVE_CLIENTREREGISTERED_SSSU, name, host, 
-                commproc, sge_u32c(commproc_id)));         
-
-         /* delete old event client entry */
-         remove_event_client(ep, id, false);
-         ep = NULL;
-      } else {
-         INFO((SGE_EVENT, MSG_EVE_REG_SUU, name, sge_u32c(id), sge_u32c(ed_time)));
-         Event_Master_Control.indices_dirty = true;
-      }   
-   }
-
-   ep=lCopyElem(clio);
-   lSetRef(ep, EV_update_function, (void*) update_func);
-   lSetBool(clio, EV_changed, false);
-
-   lAppendElem(Event_Master_Control.clients, ep);
-   set_event_client(id, ep);
-   
-   /* Release the locks on all clients except the one on which we're working. */
-   /* This works because lock_all uses a special bit to indicate a global lock,
-    * rather than setting the lock for every client. */
-   lock_client_protected(id);
-   unlock_all_clients();
-   
-   lSetUlong(ep, EV_next_number, 1);
-
-   /* register this contact */
-   now = sge_get_gmt();
-   lSetUlong(ep, EV_last_send_time, 0);
-   lSetUlong(ep, EV_next_send_time, now + lGetUlong(ep, EV_d_time));
-   lSetUlong(ep, EV_last_heard_from, now);
-   lSetUlong(ep, EV_state, EV_connected);
-
-   /* Start with no pending events. */
-   
-   build_subscription(ep);
-
-   /* build events for total update */
-   total_update(ep, monitor);
-
-   /* flush initial list events */
-   flush_events(ep, 0);
-
-   unlock_client(id);
-   
-   INFO((SGE_EVENT, MSG_SGETEXT_ADDEDTOLIST_SSSS,
-         "admin_user", "master_host", name, MSG_EVE_EVENTCLIENT));
-   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-
-   DRETURN(STATUS_OK);
-}
 
 /****** Eventclient/Server/sge_mod_event_client() ******************************
 *  NAME
@@ -814,7 +673,7 @@ sge_mod_event_client(lListElem *clio, lList **alpp, char *ruser, char *rhost)
    DRETURN(STATUS_OK);
 }
 
-/****** Eventclient/Server/sge_mod_event_client() ******************************
+/****** Eventclient/Server/sge_event_master_process_mod_event_client() ********
 *  NAME
 *     sge_mod_event_client() -- modify event client
 *
@@ -1216,7 +1075,7 @@ u_long32 sge_get_max_dynamic_event_clients(void){
    DRETURN(actual_value);
 }
 
-/****** Eventclient/Server/sge_add_event_client() ******************************
+/****** Eventclient/Server/sge_has_event_client() ******************************
 *  NAME
 *     sge_has_event_client() -- Is a event client registered
 *
@@ -1888,6 +1747,7 @@ void sge_event_master_process_sends(monitoring_t *monitor)
                /* Keep going until we get a non-NULL client. */
                /*This shouldn't ever be NULL. The indices prevent it. */
                if (event_client == NULL) {
+                  DPRINTF(("event_client was NULL\n"));
                   unlock_client(ec_id);
                   continue; /* while */
                }
@@ -2000,7 +1860,7 @@ void sge_handle_event_ack(u_long32 aClientID, ev_event anEvent)
    lAppendElem(etlp, etp);
    lSetUlong(evp, EV_id, aClientID);
    lSetList(evp, EV_events, etlp);
-   
+
    sge_mutex_lock("event_master_ack_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.ack_mutex);
    
    lAppendElem(Event_Master_Control.ack_events, evp);
@@ -2033,7 +1893,7 @@ void sge_event_master_process_acks(monitoring_t *monitor)
       ack = lDechainElem(temp_ack_list, ack);
    
       ec_id = lGetUlong(ack, EV_id);
-      
+
       lock_client(ec_id, true);
 
       /* Either way, if we're here, the client is locked. */
@@ -2049,7 +1909,7 @@ void sge_event_master_process_acks(monitoring_t *monitor)
          DPRINTF((MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(ec_id), "process acknowledgements"));
       } else {
          int res = 0;
-         
+
          list = lGetList(client, EV_events);
 
          res = purge_event_list(list, 
@@ -2170,7 +2030,7 @@ int sge_resync_schedd(monitoring_t *monitor)
    }
    else {
       ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(EV_ID_SCHEDD),
-             "resyncronize"));
+             "resynchronize"));
       ret = -1;
    }
    
@@ -2555,10 +2415,8 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
       /*   host and commproc have to be freed */
 
       update_func = (event_client_update_func_t) lGetRef(event_client, EV_update_function);
-      if (update_func == NULL) {  
-         host = strdup(lGetHost(event_client, EV_host));
-         commproc = strdup(lGetString(event_client, EV_commproc));
-      } 
+      host = strdup(lGetHost(event_client, EV_host));
+      commproc = strdup(lGetString(event_client, EV_commproc));
       
       id = lGetUlong(event_client, EV_commid);
 
@@ -2590,15 +2448,10 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
       }
 
       if (now > (lGetUlong(event_client, EV_last_heard_from) + timeout)) {
-         if (update_func != NULL) {
-            ERROR((SGE_EVENT, MSG_COM_ACKTIMEOUT4EV_ISIS, (int) timeout, "qmaster_internal", 
-                 (int) id, "qmaster_host"));
-         } else {
-            ERROR((SGE_EVENT, MSG_COM_ACKTIMEOUT4EV_ISIS, (int) timeout, commproc, 
+         ERROR((SGE_EVENT, MSG_COM_ACKTIMEOUT4EV_ISIS, (int) timeout, commproc, 
                   (int) id, host));
-            FREE(commproc);
-            FREE(host);
-         }
+         FREE(commproc);
+         FREE(host);
          remove_event_client(event_client, ec_id, true);      
 
          unlock_client(ec_id);

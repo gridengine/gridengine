@@ -174,7 +174,7 @@ static bool do_joblog             = false;
 static int reporting_flush_time   = 15;
 static int accounting_flush_time  = -1;
 static int sharelog_time          = 0;
-static bool log_consumables       = true;
+static bool log_consumables       = false;
 
 /* allow the simulation of (non existent) hosts */
 static bool simulate_hosts = false;
@@ -783,7 +783,7 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       reporting_flush_time = 15;
       accounting_flush_time = -1;
       sharelog_time = 0;
-      log_consumables = true;
+      log_consumables = false;
       enable_addgrp_kill = false;
 
       for (s=sge_strtok_r(execd_params, ",; ", &conf_context); s; s=sge_strtok_r(NULL, ",; ", &conf_context)) {

@@ -61,6 +61,8 @@
 #include "gdi/sge_gdi_packet.h"
 #include "gdi/sge_gdi_packet_pb_cull.h"
 
+#include "uti/sge_string.h"
+
 #define ARGUMENT_COUNT 15
 static char*  cl_values[ARGUMENT_COUNT+2];
 static int    cl_short_host_name_option = 0;                                       
@@ -298,7 +300,7 @@ static void qping_printf_fill_up(FILE* fd, char* name, int length, char c, int b
 
 }
 
-static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
+static void qping_print_line(const char* buffer, int nonewline, int dump_tag) {
    int i=0;
    int max_name_length = 0;
    int full_width = 0;
@@ -308,6 +310,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
    char  time[512];
    char  msg_time[512];
    char  com_time[512];
+   struct saved_vars_s *context = NULL;
 
    for (i=0;i<ARGUMENT_COUNT;i++) {
       if (max_name_length < strlen(cl_names[i])) {
@@ -316,9 +319,9 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
    }
    
    i=0;
-   cl_values[i++]=strtok(buffer, "\t");
-   while( (cl_values[i++]=strtok(NULL, "\t\n")));
-
+   cl_values[i++] = sge_strtok_r(buffer, "\t", &context);
+   while ((cl_values[i++] = sge_strtok_r(NULL, "\t\n", &context)));
+   sge_free_saved_vars(context);
 
    i = atoi(cl_values[0]);
    /* check if this message version has tag info (qping after 60u3 release) */

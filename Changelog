@@ -1,4 +1,10 @@
-MD-2007-11-29-0: Bugfix:    o the installation of two rpc databases on the some host fails 
+JG-2007-11-30-0: Enhancem.: Set default for reporting_params log_consumables to
+                            resource friendly default "false".
+                            Some cleanup.
+                 Review:    RD           
+
+MD-2007-11-29-0: Bugfix:    o the installation of two rpc databases on the some
+                            host fails 
                  Bugster:   6259265 
                  Issue:     2437
                  Changed:   install 

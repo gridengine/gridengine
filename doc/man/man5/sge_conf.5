@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/10/23 11:04:43 $     Revision: $Revision: 1.63 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/11/30 08:40:44 $     Revision: $Revision: 1.64 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/10/23 11:04:43 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/11/30 08:40:44 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -1241,12 +1241,13 @@ for further information about sharelog.
 .PP
 .IP "\fIlog_consumables\fP"
 This parameter controls writing of consumable resources to the reporting file.
-Default (\fBlog_consumables=true\fB) is to write 
+When set to (\fBlog_consumables=true\fB)
 information about all consumable resources (their current usage and their capacity)
+will be written
 to the reporting file, whenever a consumable resource changes either in definition,
 or in capacity, 
 or when the usage of a consumable resource changes.
-When \fBlog_consumables\fB is set to \fBfalse\fB, only those variables will be written to the 
+When \fBlog_consumables\fB is set to \fBfalse\fB (default), only those variables will be written to the 
 reporting file, that are configured in the \fBreport_variables\fB in the exec host configuration, see
 .M host_conf 5
 for further information about \fBreport_variables\fB.

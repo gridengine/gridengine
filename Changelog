@@ -1,3 +1,6 @@
+RD-2007-12-03-0: Enhancem.: improved execd startup
+                 Review:    CR
+
 AA-2007-11-30-0: Enhancem.: - broken jgdi qstat output fix
                             - internal event client for jgdi
                             - update_func moved to local context

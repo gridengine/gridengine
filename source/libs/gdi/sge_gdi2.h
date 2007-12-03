@@ -121,10 +121,7 @@ int gdi2_get_configuration(sge_gdi_ctx_class_t *ctx, const char *config_name,
 int gdi2_get_merged_configuration(sge_gdi_ctx_class_t *ctx, 
                                   lList **conf_list);
 
-int gdi2_get_conf_and_daemonize(sge_gdi_ctx_class_t *ctx,
-                                tDaemonizeFunc dfunc,
-                                lList **conf_list,
-                                volatile int* abort_flag);
+int gdi2_wait_for_conf(sge_gdi_ctx_class_t *ctx, lList **conf_list);
                                 
 int report_list_send(sge_gdi_ctx_class_t *ctx,
                      const lList *rlp, const char *rhost,

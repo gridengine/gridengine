@@ -97,7 +97,7 @@ void sge_setup_sge_execd(sge_gdi_ctx_class_t *ctx, const char* tmp_err_file_name
       SGE_EXIT(NULL, 1);
    }
 
-   while (gdi2_get_conf_and_daemonize(ctx, daemonize_execd, &Execd_Config_List, NULL)) {
+   while (gdi2_wait_for_conf(ctx, &Execd_Config_List)) {
       if (allowed_get_conf_errors-- <= 0) {
          CRITICAL((SGE_EVENT, MSG_EXECD_CANT_GET_CONFIGURATION_EXIT));
          /* TODO: remove */

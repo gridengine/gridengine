@@ -1516,15 +1516,9 @@ lListElem **lepp
 }
 
 
-int gdi2_get_conf_and_daemonize(
-sge_gdi_ctx_class_t *ctx,
-tDaemonizeFunc dfunc,
-lList **conf_list,
-volatile int* abort_flag
-) {
+int gdi2_wait_for_conf(sge_gdi_ctx_class_t *ctx, lList **conf_list) {
    lListElem *global = NULL;
    lListElem *local = NULL;
-   int sleep_counter = 0;
    cl_com_handle_t* handle = NULL;
    int ret_val;
    int ret;
@@ -1546,44 +1540,19 @@ volatile int* abort_flag
          /* confict: COMMPROC ALREADY REGISTERED */
          DRETURN(-1);
       }
-      if (!ctx->is_daemonized(ctx)) {
-         /* do not daemonize the first time to be able
-            to report communication errors to stdout/stderr */
-         if (!getenv("SGE_ND") && sleep_counter > 2) {
-            ERROR((SGE_EVENT, MSG_CONF_NOCONFBG));
-            dfunc(ctx);
-         }
-         handle = ctx->get_com_handle(ctx);
-         ret_val = cl_commlib_trigger(handle, 1);
-         switch(ret_val) {
-            case CL_RETVAL_SELECT_TIMEOUT:
-            case CL_RETVAL_OK:
-               break;
-            default:
-               sleep(1);  /* for other errors */
-               break;
-         }
-         sleep_counter++;
-      } else {
-         /* here we are daemonized, we do a longer sleep when there is no connection */
-         DTRACE;
-         handle = ctx->get_com_handle(ctx);
-         ret_val = cl_commlib_trigger(handle, 1);
-         switch(ret_val) {
-            case CL_RETVAL_SELECT_TIMEOUT:
-               sleep(30);  /* If we could not establish the connection */
-               break;
-            case CL_RETVAL_OK:
-               break;
-            default:
-               sleep(30);  /* for other errors */
-               break;
-         }
-      }
-      if (abort_flag != NULL) {
-         if (*abort_flag != 0) {
-            DRETURN(-2);
-         }
+
+      DTRACE;
+      handle = ctx->get_com_handle(ctx);
+      ret_val = cl_commlib_trigger(handle, 1);
+      switch(ret_val) {
+         case CL_RETVAL_SELECT_TIMEOUT:
+            sleep(1);  /* If we could not establish the connection */
+            break;
+         case CL_RETVAL_OK:
+            break;
+         default:
+            sleep(1);  /* for other errors */
+            break;
       }
    }
   

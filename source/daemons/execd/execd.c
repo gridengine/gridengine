@@ -241,17 +241,26 @@ int main(int argc, char **argv)
       ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
    }
 
-   /* daemonizes if qmaster is unreachable */   
-   sge_setup_sge_execd(ctx, tmp_err_file_name);
+   /* test connection */
+   {
+      cl_com_SIRM_t* status = NULL;
+      ret_val = cl_commlib_get_endpoint_status(ctx->get_com_handle(ctx),
+                                               (char *)ctx->get_master(ctx, true),
+                                               (char*)prognames[QMASTER], 1, &status);
+      if (ret_val != CL_RETVAL_OK) {
+         ERROR((SGE_EVENT, cl_get_error_text(CL_RETVAL_CONNECT_ERROR)));
+         ERROR((SGE_EVENT, MSG_CONF_NOCONFBG));
+      }
+      cl_com_free_sirm_message(&status);
+   }
 
    /* finalize daeamonize */
    if (!getenv("SGE_ND")) {
-#if 1
       daemonize_execd(ctx);
-#else
-      sge_daemonize_finalize(ctx);
-#endif
    }
+
+   /* daemonizes if qmaster is unreachable */   
+   sge_setup_sge_execd(ctx, tmp_err_file_name);
 
    /* are we using qidle or not */
    sge_ls_qidle(mconf_get_use_qidle());

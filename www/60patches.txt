@@ -1,3 +1,43 @@
+Bugs fixed in SGE 6.0u12 since release 6.0u11
+---------------------------------------------
+
+Issue    Sun BugId Description
+-------- --------  ------------------------------------------------------------------------------------------
+376      4743006   problem with floating point job resource limits 
+2189     6525375   qacct ignores jobs in output 
+2249     6568575   SGE does not work if primary group entry is too big in groups map 
+2265     6280747   qmon loses sharetree changes 
+2270     6575720   ENABLE_ADDGRP_KILL is missing from sge_conf(5) 
+2272     6575727   sge_shadowd(8) man page is missing some env vars 
+2276     6575731   share_tree(5) doesn't explain type field 
+2289     6565951   Qmon panel does not check for valid data in Scheduler Configuration 
+2290     6566033   Help for Browser panel in qmon incomplete 
+2299     6536039   sgeremoterun not working 
+2307     6433628   qconf -sq all.q@myhost produces no value at all for complex_values (not even NONE) 
+2312     6482211   complex attributes whose deletion is denied don't reflect back after the denial message in qmon 
+2313     6410592   Double clicking in Consumables/Fixed Attributes list does not behave as a GUI should 
+2314     6513116   Qmon x qconf inconsistent in allowed characters in attribute names 
+2320     6513115   in qmon, under calendar configuration, it is possible to modify even if no calendar exists 
+2323     6576153   Creating a userset with NONE as a type results in a core dump 
+2324     6576197   Userset type should not accept empty string value 
+2325     6542987   drmaa_run_job(3) raises error if drmaa_native_specification has leading spaces 
+2344     6590079   Resource reservation broken with sequences of identical jobs differing only in their -R y|n 
+2346     6604155   qmon binary job submit is broken 
+2356     6600619   Userset spooling in classic mode is broken 
+2374     6589459   Expose the availability of keyword "none" in the manual page of calendar_conf 
+2375     6610788   qdel returns wrong exit code 
+2394     6608259   scheduler prints empty line in messages file after every 'sge_mirror' logging 
+2401     6617450   add option to reporting_params for switching off writing of consumables 
+2404     6618328   qmon displays wrong string for queue filtering 
+2409     6619016   removing parameters from the reporting_params will not fallback to the default 
+2414     6618599   Long running jobs cause incorrect usage summary for ARCo database 
+2417     6622842   the start_time field in intermediate accounting records is incorrect 
+2419     6391244   qstat -ext reports wrong usage as compared to other commands such as qstat -t or qstat -j 
+2424     6620253   During the installation the admin user should create web.xml file 
+-        6541085   NFS write error on N1GE trace file 
+-        6195248   QMON Job Control Window: Incomprehensible Priority Button 
+
+
 Bugs fixed in SGE 6.0u11 since release 6.0u10
 --------------------------------------------
 

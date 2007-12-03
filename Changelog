@@ -1,3 +1,6 @@
+RD-2007-12-03-0: Bugfix:    fixed broken build on darwin
+                 Review:    EB
+
 EB-2007-11-27-0: Bugfix:    o fixed bug in scheduler which might cause core of
                               scheduler if it is restarted.
                             o fixed bug which might cause core in logging code

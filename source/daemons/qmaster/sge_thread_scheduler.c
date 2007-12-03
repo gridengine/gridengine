@@ -411,13 +411,12 @@ sge_scheduler_cleanup_thread(void)
 void
 sge_scheduler_terminate(sge_gdi_ctx_class_t *ctx)
 {
-   bool thread_id_initialized = false;
-   pthread_t thread_id = -1;
    DENTER(TOP_LAYER, "sge_scheduler_terminate");
    
    sge_mutex_lock("master scheduler struct", SGE_FUNC, __LINE__, &(Master_Scheduler.mutex));
 
    if (Master_Scheduler.is_running) {
+      pthread_t thread_id;
       cl_thread_settings_t* thread = NULL;
 
       /* 
@@ -425,7 +424,6 @@ sge_scheduler_terminate(sge_gdi_ctx_class_t *ctx)
        */
       thread = cl_thread_list_get_first_thread(Main_Control.scheduler_thread_pool);
       thread_id = *(thread->thread_pointer);
-      thread_id_initialized = true;
 
       /* 
        * send cancel signal 
@@ -442,17 +440,17 @@ sge_scheduler_terminate(sge_gdi_ctx_class_t *ctx)
        * schedulers cancelation point in sge_scheduler_cleanup_thread() ...
        * ... therefore we have nothing more to do.
        */
-   }
 
-   sge_mutex_unlock("master scheduler struct", SGE_FUNC, __LINE__, &(Master_Scheduler.mutex));
-
-   /* 
-    * after releasing the lock it is safe to wait for the termination. 
-    * doing this inside the critical section (before the lock) this could 
-    * rise a deadlock situtaion this function would be called within a GDI request!
-    */
-   if (thread_id_initialized) {
+      sge_mutex_unlock("master scheduler struct", SGE_FUNC, __LINE__, &(Master_Scheduler.mutex));
+      /* 
+       * after releasing the lock it is safe to wait for the termination. 
+       * doing this inside the critical section (before the lock) this could 
+       * rise a deadlock situtaion this function would be called within a GDI request!
+       */
       pthread_join(thread_id, NULL); 
+       
+   } else {
+      sge_mutex_unlock("master scheduler struct", SGE_FUNC, __LINE__, &(Master_Scheduler.mutex));
    }
 
    DRETURN_VOID;

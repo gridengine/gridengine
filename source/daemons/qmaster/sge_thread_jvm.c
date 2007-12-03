@@ -839,14 +839,13 @@ sge_jvm_cleanup_thread(void)
 void
 sge_jvm_terminate(sge_gdi_ctx_class_t *ctx)
 {
-   bool thread_id_initialized = false;
-   pthread_t thread_id = -1;
 
    DENTER(TOP_LAYER, "sge_jvm_terminate");
 
    sge_mutex_lock("master jvm struct", SGE_FUNC, __LINE__, &(Master_Jvm.mutex));
 
    if (Master_Jvm.is_running) {
+      pthread_t thread_id; 
       cl_thread_settings_t* thread = NULL;
 
       /*
@@ -854,7 +853,6 @@ sge_jvm_terminate(sge_gdi_ctx_class_t *ctx)
        */
       thread = cl_thread_list_get_first_thread(Main_Control.jvm_thread_pool);
       thread_id = *(thread->thread_pointer);
-      thread_id_initialized = true;
 
       /* 
        * send cancel signal
@@ -871,17 +869,16 @@ sge_jvm_terminate(sge_gdi_ctx_class_t *ctx)
        * JVM threads cancelation point in sge_jvm_cleanup_thread() ...
        * ... therefore we have nothing more to do.
        */
-   }
+      sge_mutex_unlock("master jvm struct", SGE_FUNC, __LINE__, &(Master_Jvm.mutex));
 
-   sge_mutex_unlock("master jvm struct", SGE_FUNC, __LINE__, &(Master_Jvm.mutex));
-
-   /* 
-    * after releasing the lock it is safe to wait for the termination. 
-    * doing this inside the critical section (before the lock) could 
-    * rise a deadlock situtaion this function would be called within a GDI request!
-    */
-   if (thread_id_initialized) {
+      /* 
+       * after releasing the lock it is safe to wait for the termination. 
+       * doing this inside the critical section (before the lock) could 
+       * rise a deadlock situtaion this function would be called within a GDI request!
+       */
       pthread_join(thread_id, NULL);
+   } else {
+      sge_mutex_unlock("master jvm struct", SGE_FUNC, __LINE__, &(Master_Jvm.mutex));
    }
 
    DRETURN_VOID;

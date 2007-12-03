@@ -732,7 +732,10 @@ spool_berkeleydb_default_list_func(lList **answer_list,
       }
    }
 
-   DRETURN(ret);
+
+
+   DEXIT;
+   return ret;
 }
 
 /****** spool/berkeleydb/spool_berkeleydb_default_read_func() *****************
@@ -836,7 +839,8 @@ spool_berkeleydb_default_read_func(lList **answer_list,
       }
    }
 
-   DRETURN(ep);
+   DEXIT;
+   return ep;
 }
 
 /****** spool/berkeleydb/spool_berkeleydb_default_write_func() ****************
@@ -887,11 +891,20 @@ spool_berkeleydb_default_write_func(lList **answer_list,
    bool ret = true;
    bool local_transaction = false; /* did we start a transaction? */
    bdb_info info;
+   static unsigned long sleep_time = 0;
 
    DENTER(TOP_LAYER, "spool_berkeleydb_default_write_func");
 
    DPRINTF(("spool_berkeleydb_default_write_func called for %s with key %s\n",
             object_type_get_name(object_type), key != NULL ? key : "<null>"));
+
+   if (getenv("SPOOLING_WAIT_TIME_MS") != NULL) {
+      if (sleep_time == 0) {
+         sleep_time = atoi(getenv("SPOOLING_WAIT_TIME_MS"));
+      }
+      usleep( sleep_time );
+      sleep_time = sleep_time + 100000;
+   }
 
    info = (bdb_info)lGetRef(rule, SPR_clientdata);
    if (info == NULL) {
@@ -998,7 +1011,8 @@ spool_berkeleydb_default_write_func(lList **answer_list,
       }
    }
 
-   DRETURN(ret);
+   DEXIT;
+   return ret;
 }
 
 /****** spool/berkeleydb/spool_berkeleydb_default_delete_func() ***************
@@ -1182,5 +1196,6 @@ spool_berkeleydb_option_func(lList **answer_list, lListElem *rule,
       sge_free_saved_vars(context);
    }
 
-   DRETURN(ret);
+   DEXIT;
+   return ret;
 }

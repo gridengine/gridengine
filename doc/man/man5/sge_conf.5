@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/11/30 08:40:44 $     Revision: $Revision: 1.64 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/12/03 11:08:27 $     Revision: $Revision: 1.65 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/11/30 08:40:44 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/12/03 11:08:27 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -1043,7 +1043,30 @@ jobs at a later time. The default value is 3 seconds, and will be used if no val
 is entered. The range of valid values is > 0 and <= 5.
 (e.g. MAX_JOB_DELETION_TIME=1)
 .PP
-Changing \fBqmaster_params\fP will take immediate effect.
+.IP "\fIgdi_timeout\fp
+Sets how long the communication will wait for gdi send/receive operations.
+The default value is set to 60 seconds. After this time, the communication library will
+retry, if "gdi_retries" is configured, receiving the gdi request. In case of not configured
+"gdi_retries" the communication will return with a "gdi receive failure" 
+(e.g. gdi_timeout=120 will set the timeout time to 120 sec)
+Configuring no gdi_timeout value, the value defaults to 60 sec.
+.PP
+.IP "\fIgdi_retries\fp
+Sets how often the gdi receive call will be repeated until the gdi receive
+error appears. The default is set to 0. In this case the call will be done 1 time with no retry.
+Setting the value to -1 the call will be done permanently. In combination with gdi_timeout parameter
+it is possible to configure a system with eg. slow NFS, to make sure that all jobs will be submitted.
+(e.g. gdi_retries=4)
+.PP
+.IP "\fIcl_ping\fp
+Turns on/off a communication library ping. This parameter will create additional debug output. 
+This output shows information about the error messages which are returned by communication
+and it will give information about the application status of the qmaster. eg, if it's unclear what's the
+reason for gdi timeouts, this may show you some useful messages. The default value is false (off) 
+(e.g cl_ping=false)
+.PP
+Changing \fBqmaster_params\fP will take immediate effect, except gdi_timeout, gdi_retries, cl_ping, these
+will take effect only for new connections.
 The default for \fBqmaster_params\fP is none.
 .PP
 This value is a global configuration parameter only. It cannot be

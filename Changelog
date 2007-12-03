@@ -1,3 +1,10 @@
+MD-2007-10-04-0: Enhancem.: commlib enhancement, fix is still missing for this 
+                            CR clients should issue a more explicit error 
+                            message when qmaster is busy
+                 Bugster:   6469494
+                 Issue:     2372
+                 Changed:   commlib, spooling 
+
 RD-2007-12-03-0: Enhancem.: improved execd startup
                  Review:    CR
 

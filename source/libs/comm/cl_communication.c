@@ -45,6 +45,7 @@
 #include <netdb.h>
 
 #include "uti/sge_hostname.h"
+#include "uti/sge_string.h"
 #include "cl_commlib.h"
 #include "cl_util.h"
 #include "cl_data_types.h"
@@ -56,6 +57,7 @@
 #include "cl_connection_list.h"
 #include "cl_endpoint_list.h"
 #include "cl_communication.h"
+#include "cl_parameter_list.h"
 #include "msg_commlib.h"
 
 #define CL_DO_COMMUNICATION_DEBUG 0
@@ -3585,6 +3587,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
    int do_read_select = 0;
    int do_write_select = 0;
    char tmp_buffer[256];
+   char* params = NULL;
 
    unsigned long data_read = 0;
    unsigned long data_to_read;
@@ -4413,6 +4416,17 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             }
          }
    
+         {
+            char* tmp_str = NULL;
+            cl_com_get_parameter_list_string(&tmp_str);
+    
+            if (params == NULL) {
+               cl_com_transformString2XML(tmp_str, &params);
+               free(tmp_str);
+               tmp_str = NULL;
+            }
+         }
+
          connect_response_message_size = CL_CONNECT_RESPONSE_MESSAGE_SIZE;
          connect_response_message_size = connect_response_message_size + strlen(CL_CONNECT_RESPONSE_MESSAGE_VERSION);
          connect_response_message_size = connect_response_message_size + strlen(connection_status);
@@ -4429,10 +4443,18 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
          connect_response_message_size = connect_response_message_size + strlen(connection->sender->comp_host);
          connect_response_message_size = connect_response_message_size + strlen(connection->sender->comp_name);
          connect_response_message_size = connect_response_message_size + cl_util_get_ulong_number_length(connection->sender->comp_id);
+         if (params != NULL) {
+            connect_response_message_size = connect_response_message_size + strlen(params);
+         }
    
          gmsh_message_size = CL_GMSH_MESSAGE_SIZE + cl_util_get_ulong_number_length(connect_response_message_size);
    
          if (connection->data_buffer_size < (gmsh_message_size + connect_response_message_size + 1) ) {
+            if (params != NULL) {
+               free(params);
+               params=NULL;
+            }
+
             return CL_RETVAL_STREAM_BUFFER_OVERFLOW;
          }
    
@@ -4450,7 +4472,12 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                   connection->sender->comp_id,
                   connection->remote->comp_host, 
                   connection->remote->comp_name,
-                  connection->remote->comp_id);
+                  connection->remote->comp_id,
+                  params);
+         if (params != NULL) {
+            free(params);
+            params=NULL;
+         }
          connection->data_write_buffer_pos = 0;
          connection->data_write_buffer_processed = 0;
          connection->data_write_buffer_to_send = gmsh_message_size + connect_response_message_size ;
@@ -4785,6 +4812,29 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             CL_LOG_INT(CL_LOG_INFO,"requested sender component id from server is", (int)connection->sender->comp_id );
          }
    
+         /* here we are fetching the parameter from crm_message, parse it into tokens an
+            set the parameter list values */
+         if (crm_message->params != NULL && *crm_message->params != '\0') {
+            char* token = NULL;
+            struct saved_vars_s *context = NULL;
+
+            token = sge_strtok_r(crm_message->params, ":", &context);
+
+            while (token != NULL) {
+               char* sub_token1 = NULL;
+               char* sub_token2 = NULL;
+               struct saved_vars_s *context2 = NULL;
+
+               sub_token1 = sge_strtok_r(token, "=", &context2);
+               sub_token2 = sge_strtok_r(NULL, "=", &context2);
+               cl_com_set_parameter_list_value (sub_token1, sub_token2);
+               sge_free_saved_vars(context2);
+
+               token = sge_strtok_r(NULL, ":", &context);
+            }
+            sge_free_saved_vars(context);
+         }
+ 
          cl_com_free_crm_message(&crm_message);
          CL_LOG_INT(CL_LOG_INFO,"our local comp_id is:", (int)connection->local->comp_id);
    

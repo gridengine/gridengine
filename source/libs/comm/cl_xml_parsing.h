@@ -172,30 +172,33 @@
          <src host="CRM_SRC_HOST" comp="CRM_SRC_COMP" id="CRM_SRC_ID"></src>
          <dst host="CRM_DST_HOST" comp="CRM_DST_COMP" id="CRM_DST_ID"></dst>
          <rdata host="CRM_RDATA_HOST" comp="CRM_RDATA_COMP" id="CRM_RDATA_ID"></rdata>
+         <params>CRM_QMASTER_PARAMS</params>
       </crm>
 
-      CRM_VERSION:      Version number of CRM (e.g. "0.4")
-      CRM_CS_CONDITION: Connection Status: 
-                           "connected"                -> No Errors
-                           "access denied"            -> Service doesn't allow client to connect
-                           "unsupported data format"  -> Message Format error
-                           "endpoint not unique"      -> Client is already connected
-      CRM_CS_TEXT:      User defined connection status error text
-      CRM_SRC_HOST:     Host name of source endpoint
-      CRM_SRC_COMP:     Component name of source endpoint
-      CRM_SRC_ID:       Component id of source endpoint
-      CRM_DST_HOST:     Host name of destination endpoint
-      CRM_DST_COMP:     Component name of destination endpoint
-      CRM_DST_ID:       Component id of destination endpoint
-      CRM_RDATA_HOST:   Host name of routing host endpoint
-      CRM_RDATA_COMP:   Component name of routing host endpoint
-      CRM_RDATA_ID:     Component id of routing host endpoint
+      CRM_VERSION:        Version number of CRM (e.g. "0.4")
+      CRM_CS_CONDITION:   Connection Status: 
+                             "connected"                -> No Errors
+                             "access denied"            -> Service doesn't allow client to connect
+                             "unsupported data format"  -> Message Format error
+                             "endpoint not unique"      -> Client is already connected
+      CRM_CS_TEXT:        User defined connection status error text
+      CRM_SRC_HOST:       Host name of source endpoint
+      CRM_SRC_COMP:       Component name of source endpoint
+      CRM_SRC_ID:         Component id of source endpoint
+      CRM_DST_HOST:       Host name of destination endpoint
+      CRM_DST_COMP:       Component name of destination endpoint
+      CRM_DST_ID:         Component id of destination endpoint
+      CRM_RDATA_HOST:     Host name of routing host endpoint
+      CRM_RDATA_COMP:     Component name of routing host endpoint
+      CRM_RDATA_ID:       Component id of routing host endpoint
+      CRM_QMASTER_PARAMS: Qmaster params eg: name=value:name=value:.....
+      
 
 
 */
-#define CL_CONNECT_RESPONSE_MESSAGE                              "<crm version=\"%s\"><cs condition=\"%s\">%s</cs><src host=\"%s\" comp=\"%s\" id=\"%ld\"></src><dst host=\"%s\" comp=\"%s\" id=\"%ld\"></dst><rdata host=\"%s\" comp=\"%s\" id=\"%ld\"></rdata></crm>"
-#define CL_CONNECT_RESPONSE_MESSAGE_SIZE                         147
-#define CL_CONNECT_RESPONSE_MESSAGE_VERSION                      "0.1"
+#define CL_CONNECT_RESPONSE_MESSAGE                              "<crm version=\"%s\"><cs condition=\"%s\">%s</cs><src host=\"%s\" comp=\"%s\" id=\"%ld\"></src><dst host=\"%s\" comp=\"%s\" id=\"%ld\"></dst><rdata host=\"%s\" comp=\"%s\" id=\"%ld\"></rdata><params>%s</params></crm>"
+#define CL_CONNECT_RESPONSE_MESSAGE_SIZE                         164
+#define CL_CONNECT_RESPONSE_MESSAGE_VERSION                      "0.2"
 #define CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_OK         "connected"
 #define CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED     "access denied"
 #define CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_NOT_UNIQUE "endpoint not unique"
@@ -348,6 +351,8 @@ typedef struct cl_com_CM_type {
    cl_xml_data_format_t           df;
    cl_xml_connection_type_t       ct;
    cl_xml_connection_autoclose_t  ac;
+   /*ToDo: check if env is needed !!!*/
+   /*char* env;*/
    unsigned long                  port;  
    cl_com_endpoint_t*             src;
    cl_com_endpoint_t*             dst;
@@ -363,6 +368,7 @@ typedef struct cl_com_CRM_type {
    cl_com_endpoint_t*            src;
    cl_com_endpoint_t*            dst;
    cl_com_endpoint_t*            rdata;
+   char*                         params;
 } cl_com_CRM_t;
 
 typedef struct cl_com_MIH_type {

@@ -1222,13 +1222,15 @@ spool_write_object(lList **answer_list, const lListElem *context,
                                           lGetString(context, SPC_name),
                                           SGE_FUNC);
                    ret = false;
-               } else if (!func(answer_list, type, rule, object, key, object_type)) {
-                   answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+               } else {
+                  if (!func(answer_list, type, rule, object, key, object_type)) {
+                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                              ANSWER_QUALITY_WARNING, 
                                              MSG_SPOOL_RULEINCONTEXTFAILEDWRITING_SS,
                                              lGetString(rule, SPR_name), 
                                              lGetString(context, SPC_name));
-                   ret = false;
+                     ret = false;
+                  }
                }
             }
          }

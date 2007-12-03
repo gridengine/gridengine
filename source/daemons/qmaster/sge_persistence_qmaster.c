@@ -235,6 +235,15 @@ sge_event_spool(sge_gdi_ctx_class_t *ctx,
 
    DENTER(TOP_LAYER, "sge_event_spool");
 
+   if (getenv("SGE_TEST_SPOOLING_WAIT_TIME_US") != NULL) {
+      static unsigned long sleep_time = 0;
+      if (sleep_time == 0) {
+         sleep_time = atoi(getenv("SGE_TEST_SPOOLING_WAIT_TIME_US"));
+      }
+      usleep(sleep_time);
+      sleep_time = sleep_time + 100000;
+   }
+
    switch (event) {
       case sgeE_ADMINHOST_LIST:
       case sgeE_ADMINHOST_ADD:
@@ -568,7 +577,6 @@ sge_event_spool(sge_gdi_ctx_class_t *ctx,
                                     key);
             
          }
-
       }
    }
 

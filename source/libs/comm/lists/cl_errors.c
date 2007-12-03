@@ -428,6 +428,9 @@ const char* cl_get_error_text(int error_id) {
       case CL_RETVAL_SSL_CANT_SET_KEY_PEM_BYTE: {
          return MSG_CL_RETVAL_SSL_CANT_SET_KEY_PEM_BYTE;
       }
+      case CL_RETVAL_UNKNOWN_PARAMETER: {
+         return MSG_CL_RETVAL_UNKNOWN_PARAMETER;
+      }
    }
    return CL_RETVAL_UNDEFINED_STR;
 }

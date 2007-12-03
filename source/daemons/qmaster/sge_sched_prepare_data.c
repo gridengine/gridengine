@@ -485,19 +485,19 @@ sge_process_project_event_before(sge_evc_class_t *evc, object_description *objec
 
    switch (action) {
    case SGE_EMA_ADD:
-      if (lGetBool(new, PR_consider_with_categories) == true) {
+      if (new != NULL && lGetBool(new, PR_consider_with_categories) == true) {
          set_rebuild_categories(true);
          DPRINTF(("callback before project event: rebuild categories due to SGE_EMA_ADD(%s)\n", p));
       }
       break;
    case SGE_EMA_MOD:
-      if (lGetBool(new, PR_consider_with_categories) != lGetBool(old, PR_consider_with_categories)) {
+      if (new != NULL && old != NULL && lGetBool(new, PR_consider_with_categories) != lGetBool(old, PR_consider_with_categories)) {
          set_rebuild_categories(true);
          DPRINTF(("callback before project event: rebuild categories due to SGE_EMA_MOD(%s)\n", p));
       }
       break;
    case SGE_EMA_DEL:
-      if (lGetBool(old, PR_consider_with_categories) == true) {
+      if (old != NULL && lGetBool(old, PR_consider_with_categories) == true) {
          set_rebuild_categories(true);
          DPRINTF(("callback before project event: rebuild categories due to SGE_EMA_DEL(%s)\n", p));
       }

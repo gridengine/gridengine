@@ -91,6 +91,7 @@
 #include "sge_advance_reservation_qmaster.h"
 #include "sge_sched_process_events.h"
 #include "sge_thread_scheduler.h"
+#include "sge_thread_jvm.h"
 
 #include "gdi/sge_gdi_packet_pb_cull.h"
 #include "gdi/sge_gdi_packet.h"
@@ -131,11 +132,12 @@ static void sge_c_gdi_replace(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
 
 
 static void 
-sge_gdi_shutdown_event_client(sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
-                              monitoring_t *monitor, object_description *object_base);
+sge_gdi_shutdown_event_client(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, 
+                              sge_gdi_task_class_t *task, monitoring_t *monitor, 
+                              object_description *object_base);
 
-static void sge_gdi_startup_thread(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
-                                   monitoring_t *monitor);
+static void sge_gdi_startup_thread(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, 
+                                   sge_gdi_task_class_t *task, monitoring_t *monitor);
 
 static int  get_client_id(lListElem*, int*);
 
@@ -1093,7 +1095,7 @@ static void sge_c_gdi_trigger(sge_gdi_ctx_class_t *ctx,
 
        case SGE_EVENT_LIST:
             /* kill scheduler or event client */
-            sge_gdi_shutdown_event_client(packet, task, monitor, object_base);
+            sge_gdi_shutdown_event_client(ctx, packet, task, monitor, object_base);
             answer_list_log(&(task->answer_list), false, true);
          break;
        case SGE_DUMMY_LIST:
@@ -1125,6 +1127,8 @@ static void sge_gdi_startup_thread(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_clas
          /* startup the scheduler if it is not already started */
          if (strcmp(name, "scheduler") == 0) {
             sge_scheduler_initialize(ctx);
+         } else if (strcmp(name, "jvm") == 0) {
+            sge_jvm_initialize(ctx);
          } else {
             ERROR((SGE_EVENT, MSG_TRIGGER_NOTSUPPORTED_S, name));
             answer_list_add(&(task->answer_list), SGE_EVENT, 
@@ -1144,18 +1148,22 @@ static void sge_gdi_startup_thread(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_clas
 *     sge_gdi_shutdown_event_client() -- shutdown event client 
 *
 *  SYNOPSIS
-*     static void 
-*     sge_gdi_shutdown_event_client(sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
-*                                   monitoring_t *monitor, object_description *object_base)
+*     static void
+*     sge_gdi_shutdown_event_client(sge_gdi_ctx_class_t *ctx, 
+*                                   sge_gdi_packet_class_t *packet, 
+*                                   sge_gdi_task_class_t *task, 
+*                                   monitoring_t *monitor, 
+*                                   object_description *object_base)
 *
 *  FUNCTION
 *     Shutdown event clients by client id. tasks data_list does contain a list of 
 *     client id's. This is a list of 'ID_Type' elements.
 *
 *  INPUTS
+*     sge_gdi_ctx_class_t *ctx - context
 *     sge_gdi_packet_class_t *packet - request packet 
 *     sge_gdi_task_class_t *task - request task 
-*     monitoring_t    *monitor  - the monitoring structure 
+*     monitoring_t *monitor - the monitoring structure 
 *
 *  RESULT
 *     void - none 
@@ -1165,8 +1173,9 @@ static void sge_gdi_startup_thread(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_clas
 *
 *******************************************************************************/
 static void 
-sge_gdi_shutdown_event_client(sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
-                              monitoring_t *monitor, object_description *object_base)
+sge_gdi_shutdown_event_client(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, 
+                              sge_gdi_task_class_t *task, monitoring_t *monitor, 
+                              object_description *object_base)
 {
    lListElem *elem = NULL; /* ID_Type */
 
@@ -1183,11 +1192,9 @@ sge_gdi_shutdown_event_client(sge_gdi_packet_class_t *packet, sge_gdi_task_class
          continue;
       }
 
-#if 1      
       if (client_id == EV_ID_SCHEDD) {
-         sge_scheduler_trigger_cancel();
+         sge_scheduler_terminate(ctx);
       }
-#endif
 
       if (client_id == EV_ID_SCHEDD && !host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, packet->host)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, packet->host));

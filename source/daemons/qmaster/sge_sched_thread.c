@@ -78,6 +78,7 @@
 #include "uti/sge_log.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_time.h"
+#include "uti/sge_thread_ctrl.h"
 
 #include "sge_sched_prepare_data.h"
 #include "sge_sched_job_category.h"
@@ -259,9 +260,11 @@ int scheduler_method(sge_evc_class_t *evc, scheduler_all_data_t *lists, lList **
    remove_immediate_jobs(*(splitted_job_lists[SPLIT_PENDING]),
                          *(splitted_job_lists[SPLIT_RUNNING]), &orders);
 
-   sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders.configOrderList), NULL, "C: config orders");
-   sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders.jobStartOrderList), NULL, "C: job start orders");
-   sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders.pendingOrderList), NULL, "C: peding ticket orders");
+   if (sge_thread_has_shutdown_started() == false) {
+      sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders.configOrderList), NULL, "C: config orders");
+      sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders.jobStartOrderList), NULL, "C: job start orders");
+      sge_schedd_send_orders(evc->get_gdi_ctx(evc), &(orders.pendingOrderList), NULL, "C: peding ticket orders");
+   }
 
    PROF_START_MEASUREMENT(SGE_PROF_SCHEDLIB4);
    {

@@ -1,3 +1,13 @@
+EB-2007-11-27-0: Bugfix:    o fixed bug in scheduler which might cause core of
+                              scheduler if it is restarted.
+                            o fixed bug which might cause core in logging code
+                              when scheduler was shut down.
+                            o fixed bug which caused wrong runtime values in 
+                              throuput tests
+                            o reworked startup/shutdown code for scheduler and jvm
+                              thread in qmaster (client side is still missing) 
+                 Review:    AA 
+                     
 MD-2007-10-04-0: Enhancem.: commlib enhancement, fix is still missing for this 
                             CR clients should issue a more explicit error 
                             message when qmaster is busy

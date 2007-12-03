@@ -428,9 +428,9 @@ int main(int argc, char* argv[])
     * Order is important!
     */
 #ifndef NO_JNI
-   sge_jvm_terminate();
+   sge_jvm_terminate(ctx);
 #endif
-   sge_scheduler_terminate();
+   sge_scheduler_terminate(ctx);
    sge_listener_terminate();
 #if 0
    sge_test_terminate(ctx);

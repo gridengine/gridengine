@@ -102,7 +102,7 @@ static int cl_thread_list_del_thread(cl_raw_list_t* list_p, cl_thread_settings_t
  
    /* remove elem from list and delete elem */
    if (elem) {
-      cl_raw_list_remove_elem(list_p,elem->raw_elem);
+      cl_raw_list_remove_elem(list_p, elem->raw_elem);
       free(elem);
       return CL_RETVAL_OK;
    }
@@ -306,7 +306,7 @@ int cl_thread_list_delete_thread(cl_raw_list_t* list_p, cl_thread_settings_t* th
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
-#define __CL_FUNCTION__ "cl_thread_list_delete_thread()"
+#define __CL_FUNCTION__ "cl_thread_list_delete_thread_without_join()"
 int cl_thread_list_delete_thread_without_join(cl_raw_list_t* list_p, cl_thread_settings_t* thread) {
    int ret_val = CL_RETVAL_OK;
 

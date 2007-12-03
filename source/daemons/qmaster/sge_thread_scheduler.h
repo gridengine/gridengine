@@ -34,17 +34,39 @@
 
 #include <pthread.h>
 
-void
-sge_scheduler_initialize(sge_gdi_ctx_class_t *ctx);
+typedef struct _master_scheduler_class_t master_scheduler_class_t;
+
+struct _master_scheduler_class_t {
+   /* 
+    * mutex to gard all members of this structure 
+    */
+   pthread_mutex_t mutex;
+
+   /*
+    * is running
+    */
+   bool is_running;
+
+   /*
+    * next thread id to be used when scheduler is restarted
+    */
+   int thread_id;
+
+   /*
+    * use bootstrap info to identify if scheduler should be started (true)
+    * or ignore that information (false)
+    */
+   bool use_bootstrap;
+};
 
 void
-sge_scheduler_trigger_cancel(void);
+sge_scheduler_initialize(sge_gdi_ctx_class_t *ctx);
 
 void
 sge_scheduler_cleanup_thread_pool(void);
 
 void
-sge_scheduler_terminate(void);
+sge_scheduler_terminate(sge_gdi_ctx_class_t *ctx);
 
 void *
 sge_scheduler_main(void *arg);

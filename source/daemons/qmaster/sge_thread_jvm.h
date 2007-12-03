@@ -39,12 +39,48 @@
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdi_packet.h"
 
+typedef struct _master_jvm_class_t master_jvm_class_t;
+
+struct _master_jvm_class_t {
+   /* 
+    * mutex to gard all members of this structure 
+    */
+   pthread_mutex_t mutex;
+
+   /* 
+    * If the JVM thread can't start the JVM in will run into
+    * code which waits for this condition to be signalled. This
+    * prevents the JVM thread trying to start the JVM again and again.
+    */
+   pthread_cond_t  cond_var;
+
+   /* 
+    * has the JVM thread been started  
+    */
+   bool is_running;
+
+   /*
+    * next thread id to be used when jvm is restarted
+    */
+   int thread_id;
+
+   /*
+    * use bootstrap info to identify if scheduler should be started (true)
+    * or ignore that information (false) 
+    */                  
+   bool use_bootstrap;
+
+   /*
+    * true if shutdown should continue
+    */
+   bool shutdown_started;
+}; 
 
 void
 sge_jvm_initialize(sge_gdi_ctx_class_t *ctx);
 
 void
-sge_jvm_terminate(void);
+sge_jvm_terminate(sge_gdi_ctx_class_t *ctx);
 
 void * 
 sge_jvm_main(void *arg);

@@ -52,7 +52,7 @@ gdi_request_queue_t Master_Request_Queue = {
 };
 
 bool
-sge_schedd_send_orders(sge_gdi_ctx_class_t *ctx, lList **order_list, lList **answer_list, const char *name)
+sge_schedd_send_orders(sge_gdi_ctx_class_t *ctx, order_t *orders, lList **order_list, lList **answer_list, const char *name)
 {
    static bool is_initialized = false;
    static int max_unhandled = 0;
@@ -82,7 +82,7 @@ sge_schedd_send_orders(sge_gdi_ctx_class_t *ctx, lList **order_list, lList **ans
        */
       unhandled = sge_schedd_get_unhandled_request_count(ctx, answer_list);
       if (unhandled < max_unhandled) {
-         sge_schedd_add_gdi_order_request(ctx, answer_list, &Master_Request_Queue.order_list);
+         sge_schedd_add_gdi_order_request(ctx, orders, answer_list, &Master_Request_Queue.order_list);
       } 
 #if 0
       else {
@@ -95,7 +95,7 @@ sge_schedd_send_orders(sge_gdi_ctx_class_t *ctx, lList **order_list, lList **ans
 }
 
 bool
-sge_schedd_add_gdi_order_request(sge_gdi_ctx_class_t *ctx, lList **answer_list, lList **order_list) 
+sge_schedd_add_gdi_order_request(sge_gdi_ctx_class_t *ctx, order_t *orders, lList **answer_list, lList **order_list) 
 {
    bool ret = true;
    state_gdi_multi *state = NULL;
@@ -106,6 +106,8 @@ sge_schedd_add_gdi_order_request(sge_gdi_ctx_class_t *ctx, lList **answer_list, 
       int order_id;
 
       memset(state, 0, sizeof(state_gdi_multi));
+      orders->numberSendOrders += lGetNumberOfElem(*order_list);
+      orders->numberSendPackages++;
       order_id = ctx->gdi_multi(ctx, answer_list, SGE_GDI_SEND, SGE_ORDER_LIST, SGE_GDI_ADD,
                                 order_list, NULL, NULL, state, false);
 
@@ -157,13 +159,6 @@ sge_schedd_block_until_oders_processed(sge_gdi_ctx_class_t *ctx,
    state_gdi_multi *current_state, *next_state;
 
    DENTER(TOP_LAYER, "sge_schedd_block_until_oders_processed");
-
-   /*
-    * send remaining orders if there are some
-    */
-   if (Master_Request_Queue.order_list != NULL) {
-      sge_schedd_add_gdi_order_request(ctx, answer_list, &Master_Request_Queue.order_list);
-   }
 
    /*
     * wait till all GDI order requests are finished

@@ -581,6 +581,7 @@ sge_scheduler_main(void *arg)
          double prof_init = 0.0;
          double prof_free = 0.0;
          double prof_run = 0.0;
+         lList *orders = NULL;
 
          if (sconf_get_profiling()) {
             prof_start(SGE_PROF_OTHER, NULL);
@@ -678,8 +679,8 @@ sge_scheduler_main(void *arg)
           * and run the scheduler method 
           */
          if (handled_events == true) {
+            lList *answer_list = NULL;
             scheduler_all_data_t copy;
-            lList *orders = NULL;
             lList *master_cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
             lList *master_job_list = *object_type_get_master_list(SGE_TYPE_JOB);
             lList *master_userset_list = *object_type_get_master_list(SGE_TYPE_USERSET);
@@ -857,7 +858,7 @@ sge_scheduler_main(void *arg)
             prof_copy = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7, true, NULL);
             PROF_START_MEASUREMENT(SGE_PROF_CUSTOM7);
 
-            scheduler_method(evc, &copy, &orders);
+            scheduler_method(evc, &answer_list, &copy, &orders);
 
             PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
             prof_run = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7,true, NULL);
@@ -913,7 +914,9 @@ sge_scheduler_main(void *arg)
             }
 
             /* block till master handled all GDI orders */
-            sge_schedd_block_until_oders_processed(evc->get_gdi_ctx(evc), NULL);
+            if (handled_events) {  
+               sge_schedd_block_until_oders_processed(evc->get_gdi_ctx(evc), NULL);
+            }
 
             /* reset the busy state */
             if ((evc->ec_get_busy_handling(evc) == EV_BUSY_UNTIL_RELEASED)) {

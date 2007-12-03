@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sge_orders.h"
+
 typedef struct {
    lList *order_list;
    state_gdi_multi *first;
@@ -41,10 +43,10 @@ typedef struct {
 extern gdi_request_queue_t Master_Request_Queue;
 
 bool
-sge_schedd_add_gdi_order_request(sge_gdi_ctx_class_t *ctx, lList **answer_list, lList **order_list);
+sge_schedd_add_gdi_order_request(sge_gdi_ctx_class_t *ctx, order_t *orders, lList **answer_list, lList **order_list);
 
 bool
-sge_schedd_send_orders(sge_gdi_ctx_class_t *ctx, lList **order_list, lList **answer_list, const char *name);
+sge_schedd_send_orders(sge_gdi_ctx_class_t *ctx, order_t *orders, lList **order_list, lList **answer_list, const char *name);
 
 int
 sge_schedd_get_unhandled_request_count(sge_gdi_ctx_class_t *ctx,

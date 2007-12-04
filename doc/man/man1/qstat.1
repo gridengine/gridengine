@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2007/11/08 23:04:22 $     Revision: $Revision: 1.37 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2007/12/04 10:35:20 $     Revision: $Revision: 1.38 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2007/11/08 23:04:22 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2007/12/04 10:35:20 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -63,7 +63,7 @@ qstat \- show the status of xxQS_NAMExx jobs and queues
 ] [
 .B -r
 ] [
-.B -s {r|p|s|z|hu|ho|hs|hj|ha|h|a}[+]
+.B -s {r|p|s|z|hu|ho|hs|hd|hj|ha|h|a}[+]
 ] [
 .B -t
 ] [
@@ -213,15 +213,15 @@ Prints extended information about the resource requirements
 of the displayed jobs. Please refer to the \fBOUTPUT FORMATS\fP
 sub-section \fBExpanded Format\fP below for detailed information.
 .\"
-.IP "\fB\-s {p|r|s|z|hu|ho|hs|hj|ha|h|a}[+]\fP"
+.IP "\fB\-s {p|r|s|z|hu|ho|hs|hd|hj|ha|h|a}[+]\fP"
 
 Prints only jobs in the specified state, any combination of states is
 possible. \fB\-s prs\fP corresponds to the regular
 .I qstat
 output without \fB\-s\fP
 at all. To show recently finished jobs, use \fB\-s z\fP.
-To display jobs in user/operator/system hold,
-use the \fB\-s hu/ho/hs\fP 
+To display jobs in user/operator/system/array-dependency hold,
+use the \fB\-s hu/ho/hs/hd\fP 
 option. The 
 \fB\-s ha\fP option shows jobs which where
 submitted with the 
@@ -235,14 +235,14 @@ has entries in the job dependency list.
 \fB\-s h\fP
 is an abbreviation for
 .I qstat 
-\fB\-s huhohshjha\fP
+\fB\-s huhohshdhjha\fP
 and 
 .I qstat 
 \fB\-s a\fP is an abbreviation for
 .I qstat 
 \fB\-s psr\fP
-(see \fB\-a\fP
-and \fB\-hold_jid\fP option to
+(see \fB\-a\fP, \fB\-hold_jid\fP 
+and \fB\-hold_jid_ad\fP options to
 .M qsub 1 ).
 .\"
 .IP "\fB\-t\fP"
@@ -370,7 +370,7 @@ or the
 .M qsub 1
 \fB\-h\fP option or that the job is waiting for completion of the jobs
 to which job dependencies have been assigned to the job via the
-\fB\-hold_jid\fP option of
+\fB\-hold_jid\fP or \fB\-hold_jid-ad\fP options of
 .M qsub 1
 or
 .M qalter 1 .

@@ -56,5 +56,6 @@
 #define MSG_QCONF_GIVENOBJECTINSTANCEINCOMPLETE_S    _MESSAGE(5019, _("Given object_instance "SFQ" is incomplete"))
 #define MSG_QCONF_MODIFICATIONOFHOSTNOTSUPPORTED_S   _MESSAGE(5020, _("Modification of host "SFQ" not supported"))
 
+#define MSG_QCONF_POSITIVE_SHARE_VALUE    _MESSAGE(5021, _("share value must be positive"))
 #endif /* __MSG_QCONF_H */
 

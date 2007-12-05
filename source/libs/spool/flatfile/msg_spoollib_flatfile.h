@@ -46,5 +46,5 @@
 #define MSG_PARSINGLISTBADRECORDSTART_DS  _MESSAGE(62013, _("each value in the attribute value list in line %d should begin with "SFQ))
 #define MSG_PARSINGLISTBADRECORDEND_DS  _MESSAGE(62014, _("each value in the attribute value list in line %d should end with "SFQ))
 #define MSG_PARSINGLISTBADRECORDSEP_DS  _MESSAGE(62015, _("values in the attribute value list in line %d should be separated by "SFQ))
-
+#define MSG_MUST_BE_POSITIVE_VALUE_S    _MESSAGE(62016, _("parameter "SFQ" must be a positive number"))
 #endif /* __MSG_SPOOLLIB_FLATFILE_H */

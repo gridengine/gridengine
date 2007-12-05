@@ -1,3 +1,9 @@
+MP-2007-12-05-0: Bugfix:    It is possible to define negative ticket numbers and negative
+                            shares through qconf
+                 Bugster:   2150515
+                 Issue:     2315
+                 Review:    JG
+
 OJ-2007-11-29-0: Bugfix:    OJ-2007-09-10-0 also fixes CR 6559317
                  Bugster:   6559317
                  Issue:     2254

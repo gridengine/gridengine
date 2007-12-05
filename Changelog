@@ -1,3 +1,7 @@
+HP-2007-12-05-0: Bugfix:    fixed broken build with -no-jni option
+                 Changed:   sge_c_gdi.c
+                 Review:    AA
+
 AA-2007-12-05-0: Bugfix:    fixed accidental checkin of sge_log.c breaking
                             qrsh output
                  Review:    RD

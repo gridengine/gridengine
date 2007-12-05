@@ -1127,8 +1127,10 @@ static void sge_gdi_startup_thread(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_clas
          /* startup the scheduler if it is not already started */
          if (strcmp(name, "scheduler") == 0) {
             sge_scheduler_initialize(ctx);
+#ifndef NO_JNI
          } else if (strcmp(name, "jvm") == 0) {
             sge_jvm_initialize(ctx);
+#endif
          } else {
             ERROR((SGE_EVENT, MSG_TRIGGER_NOTSUPPORTED_S, name));
             answer_list_add(&(task->answer_list), SGE_EVENT, 

@@ -233,11 +233,14 @@ static void qping_convert_time(char* buffer, char* dest, cl_bool_t show_hour) {
    struct tm tm_buffer;
 #endif
    struct tm *tm;
-   help=strtok(buffer, ".");
-   help2=strtok(NULL,".");
+   struct saved_vars_s *context = NULL;
+
+   help=sge_strtok_r(buffer, ".", &context);
+   help2=sge_strtok_r(NULL,".", &context);
    if (help2 == NULL) {
       help2 = "NULL";
    }
+
    i = atoi(help);
 #ifndef HAS_LOCALTIME_R
    tm = localtime(&i);
@@ -249,6 +252,7 @@ static void qping_convert_time(char* buffer, char* dest, cl_bool_t show_hour) {
    } else {
       sprintf(dest, "%02d:%02d.%s", tm->tm_min, tm->tm_sec, help2);
    }
+   sge_free_saved_vars(context);
 }
 
 static void qping_general_communication_error(const cl_application_error_list_elem_t* commlib_error) {
@@ -321,7 +325,6 @@ static void qping_print_line(const char* buffer, int nonewline, int dump_tag) {
    i=0;
    cl_values[i++] = sge_strtok_r(buffer, "\t", &context);
    while ((cl_values[i++] = sge_strtok_r(NULL, "\t\n", &context)));
-   sge_free_saved_vars(context);
 
    i = atoi(cl_values[0]);
    /* check if this message version has tag info (qping after 60u3 release) */
@@ -339,7 +342,7 @@ static void qping_print_line(const char* buffer, int nonewline, int dump_tag) {
    
       qping_convert_time(cl_values[10], msg_time, CL_TRUE);
       cl_values[10] = msg_time;
-   
+ 
       qping_convert_time(cl_values[13], com_time, CL_FALSE);
       cl_values[13] = com_time;
    
@@ -347,7 +350,6 @@ static void qping_print_line(const char* buffer, int nonewline, int dump_tag) {
          char* help = NULL;
          char* help2 = NULL;
          char help_buffer[1024];
-   
    
          help = strstr(cl_values[1],".");
          if (help) {
@@ -828,6 +830,7 @@ static void qping_print_line(const char* buffer, int nonewline, int dump_tag) {
             printf("\n");
          }
       }
+      sge_free_saved_vars(context);
       return;
    }  /* end of CL_DMT_MESSAGE tag */
 
@@ -842,8 +845,11 @@ static void qping_print_line(const char* buffer, int nonewline, int dump_tag) {
          
          printf("--- APP: %s: %s\n", time, cl_values[1]);
       }
+      sge_free_saved_vars(context);
       return;
    }
+   sge_free_saved_vars(context);
+   return;
 }
 
 

@@ -1,3 +1,6 @@
+RD-2007-12-05-0: Bugfix:    fixed qping core dump
+                 Review:    MD
+
 AH-2007-12-04-0: Enhancem:  Merged -hold_jid_ad related man page changes from 
                             V61u1_ARI_BRANCH 
                  Bugster:   6367649

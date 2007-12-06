@@ -93,8 +93,11 @@ typedef struct {
    void *clientdata;                      /* client data passed to callback */
 } mirror_description;
 
+static sge_mirror_error 
+sge_mirror_process_event_list_(sge_evc_class_t *evc, lList *event_list);
+
 #ifdef SOLARIS
-#pragma no_inline(sge_mirror_process_event_list)
+#pragma no_inline(sge_mirror_process_event_list,sge_mirror_process_event_list_)
 #endif
 
 static sge_mirror_error 
@@ -1166,8 +1169,8 @@ static void sge_mirror_free_list(sge_object_type type)
    object_type_free_master_list(type);
 }
 
-sge_mirror_error 
-sge_mirror_process_event_list(sge_evc_class_t *evc, lList *event_list)
+static sge_mirror_error 
+sge_mirror_process_event_list_(sge_evc_class_t *evc, lList *event_list)
 { 
    lListElem *event = NULL;
    sge_mirror_error function_ret;
@@ -1538,6 +1541,14 @@ sge_mirror_process_event_list(sge_evc_class_t *evc, lList *event_list)
    
    DEXIT;
    return function_ret;
+}
+
+/* need this wrapping as to workaround dtrace problems with 
+   pid providers when function pointers are used */
+sge_mirror_error 
+sge_mirror_process_event_list(sge_evc_class_t *evc, lList *event_list)
+{
+   return sge_mirror_process_event_list_(evc, event_list);
 }
 
 static sge_mirror_error 

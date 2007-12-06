@@ -1,3 +1,8 @@
+AH-2007-12-06-0: Bugfix:    Use of function pointers in dtrace pid provider 
+                            functions broke master monitor
+                 Bugster:   6638313
+                 Review:    RD
+
 HP-2007-12-05-0: Bugfix:    fixed broken build with -no-jni option
                  Changed:   sge_c_gdi.c
                  Review:    AA

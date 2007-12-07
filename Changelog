@@ -1,3 +1,8 @@
+PJ-2007-12-07-0: Bugfix:    The Service tags settings should differ
+                            for sundist/mk_dist 
+                 Bugfix:    The error when no ARCH was defined.
+                 Review:    LP 
+
 RD-2007-12-07-0: Bugfix:    - fixed issue with unheard execd and diffed load
                               reports
                             - corrected weird compare for reprioritze at

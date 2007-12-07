@@ -98,11 +98,23 @@ report_source execd_report_sources[] = {
 };
 
 lUlong sge_execd_report_seqno = 0;
-static bool send_all = false;
+static bool send_all = true;
 static lListElem *last_lr = NULL;
 static lList *lr_list = NULL;
 
 extern lList *jr_list;
+
+static bool flush_lr = false;
+
+bool sge_get_flush_lr_flag(void)
+{
+   return flush_lr;
+}
+
+void sge_set_flush_lr_flag(bool new_val)
+{
+   flush_lr = new_val;
+}
 
 void execd_merge_load_report(u_long32 seqno)
 {
@@ -152,11 +164,12 @@ execd_add_load_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now
 
    DENTER(TOP_LAYER, "execd_add_load_report");
 
-   if (*next_send <= now) {
+   if (*next_send <= now || sge_get_flush_lr_flag()) {
       lListElem *report;
       lList *tmp_lr_list;
 
       *next_send = now + mconf_get_load_report_time();
+      sge_set_flush_lr_flag(false);
 
       /*
       ** problem: add some more error handling here
@@ -165,7 +178,11 @@ execd_add_load_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now
       ** 1. load report
       */
       report = lCreateElem(REP_Type);
-      lSetUlong(report, REP_type, NUM_REP_REPORT_LOAD);
+      if (send_all == true) {
+         lSetUlong(report, REP_type, NUM_REP_FULL_REPORT_LOAD);
+      } else {
+         lSetUlong(report, REP_type, NUM_REP_REPORT_LOAD);
+      }
       lSetUlong(report, REP_version, GRM_GDI_VERSION);
       lSetUlong(report, REP_seqno, sge_execd_report_seqno);
       lSetHost(report, REP_host, qualified_hostname);

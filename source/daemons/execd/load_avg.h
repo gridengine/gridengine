@@ -44,6 +44,8 @@ void execd_merge_load_report(u_long32 seqno);
 
 void execd_trash_load_report(void);
 
+bool sge_get_flush_lr_flag(void);
+void sge_set_flush_lr_flag(bool new_val);
 
 #endif /* __LOAD_AVG_H */
 

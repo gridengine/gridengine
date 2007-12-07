@@ -1,3 +1,10 @@
+RD-2007-12-07-0: Bugfix:    - fixed issue with unheard execd and diffed load
+                              reports
+                            - corrected weird compare for reprioritze at
+                              qmaster startup
+                            - fixed possible segfault with commlib params
+                 Review:    CR
+
 AH-2007-12-06-0: Bugfix:    Use of function pointers in dtrace pid provider 
                             functions broke master monitor
                  Bugster:   6638313

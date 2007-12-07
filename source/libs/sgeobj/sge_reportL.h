@@ -59,6 +59,9 @@ extern "C" {
 /* REP_list is JR_Type */
 #define NUM_REP_REPORT_JOB     5
 
+/* REP_list is LR_Type */
+#define NUM_REP_FULL_REPORT_LOAD  6 
+
 /* *INDENT-OFF* */ 
 
 /*

@@ -4473,7 +4473,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                   connection->remote->comp_host, 
                   connection->remote->comp_name,
                   connection->remote->comp_id,
-                  params);
+                  params ? params : "");
          if (params != NULL) {
             free(params);
             params=NULL;

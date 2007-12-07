@@ -592,12 +592,13 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx)
    }
 
    /* do timeout calculation */
-   if (sge_get_flush_jr_flag() || next_report <= now) {
+   if (sge_get_flush_jr_flag() || next_report <= now || sge_get_flush_lr_flag()) {
       if (next_report <= now) {
          next_report = now + mconf_get_load_report_time();
       }
 
-      if (last_report_send < now) {
+      /* send only 1 load report per second, unequal because system time could be set back */
+      if (last_report_send != now) {
          last_report_send = now;
          /* send all reports */
          was_communication_error = sge_send_all_reports(ctx, now, 0, execd_report_sources);

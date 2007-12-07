@@ -36,6 +36,7 @@
 
 int host_notify_about_new_conf(sge_gdi_ctx_class_t *ctx, lListElem *host);
 int host_notify_about_kill(sge_gdi_ctx_class_t *ctx, lListElem *host, int kill_command);
+int host_notify_about_full_load_report(sge_gdi_ctx_class_t *ctx, lListElem *host);
 
 #endif /* __QMASTER_TO_EXECD_H */
 

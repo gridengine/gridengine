@@ -1,3 +1,6 @@
+RD-2007-12-07-0: Bugfix:    - fixed possible segfault with commlib params
+                 Review:    CR 
+
 MP-2007-12-05-0: Bugfix:    It is possible to define negative ticket numbers and negative
                             shares through qconf
                  Bugster:   2150515
@@ -19,7 +22,6 @@ JG-2007-11-29-0: Bugfix:    Verify slots attribute in cluster queue and pe.
                  Issue:     2433
                  Review:    RD
 
->>>>>>> 1.3671.2.190
 JG-2007-11-26-0: Bugfix:    Fixed minor memory leaks.
                  Review:    EB
 

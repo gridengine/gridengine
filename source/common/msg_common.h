@@ -67,6 +67,7 @@
 #define MSG_CANNOT_REDIRECT_STDINOUTERR_I     _MESSAGE(23029, _("cannot redirect stdin/stdout/stderr (%d) to /dev/null"))
 #define MSG_FILE_CANNOT_WRITE_SS                                     _MESSAGE(23030, _("unable to write to file "SFN": "SFN))
 #define MSG_FILE_CANNOT_FLUSH_SS                                     _MESSAGE(23031, _("unable to flush file "SFN": "SFN))
+#define MSG_CONF_THEPATHGIVENFORXMUSTSTARTWITHANY_S                  _MESSAGE(23032, _("denied: the path given for "SFQ" must start with a \"/\""))
 
 /*
 ** parse_job_cull.c

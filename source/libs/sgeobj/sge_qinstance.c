@@ -1207,33 +1207,36 @@ qinstance_list_verify_execd_job(const lList *queue_list, lList **answer_list)
 bool 
 qinstance_verify(const lListElem *qep, lList **answer_list)
 {
+   bool ret = true;
 
    DENTER(TOP_LAYER, "qinstance_verify");
 
    if (qep == NULL) {
       answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
                               MSG_NULLELEMENTPASSEDTO_S, SGE_FUNC);
-      DRETURN(false);
+      ret = false;
    }
 
-   if (!verify_host_name(answer_list, lGetHost(qep, QU_qhostname))) {
-      DRETURN(false);
+   if (ret) {
+      ret = verify_host_name(answer_list, lGetHost(qep, QU_qhostname));
    }
 
-   if (verify_str_key(answer_list, lGetString(qep, QU_qname),
+   if (ret) {
+      if (verify_str_key(answer_list, lGetString(qep, QU_qname),
                          MAX_VERIFY_STRING, lNm2Str(QU_qname), KEY_TABLE) != STATUS_OK) {
-      DRETURN(false);
+         ret = false;
+      }
    }
 
-   if (!qinstance_verify_full_name(answer_list, lGetString(qep, QU_full_name))) {
-      DRETURN(false);
+   if (ret) {
+      ret = qinstance_verify_full_name(answer_list, lGetString(qep, QU_full_name));
    }
 
-   if (!path_verify(lGetString(qep, QU_shell), answer_list)) {
-      DRETURN(false);
+   if (ret) {
+      ret = path_verify(lGetString(qep, QU_shell), answer_list, "shell", true);
    }
 
-   DRETURN(true);
+   DRETURN(ret);
 }
 
 /****** sge_qinstance/qinstance_verify_full_name() *****************************

@@ -67,6 +67,7 @@
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
 #include "lck/sge_lock.h"
+#include "sgeobj/sge_path_alias.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -381,13 +382,13 @@ static int check_config(lList **alpp, lListElem *conf)
       name = lGetString(ep, CF_name);
       value = lGetString(ep, CF_value);
  
-      if (!name) {
+      if (name == NULL) {
          ERROR((SGE_EVENT, MSG_CONF_NAMEISNULLINCONFIGURATIONLISTOFX_S,
                conf_name));
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DRETURN(STATUS_EEXIST);
       }
-      if (!value) {
+      if (value == NULL) {
          ERROR((SGE_EVENT, MSG_CONF_VALUEISNULLFORATTRXINCONFIGURATIONLISTOFY_SS,
                 name, conf_name));
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
@@ -403,7 +404,6 @@ static int check_config(lList **alpp, lListElem *conf)
       }
 
       if (!strcmp(name, "shell_start_mode")) {
- 
          if ( (strcasecmp("unix_behavior",value) != 0) && 
               (strcasecmp("posix_compliant",value) != 0) &&
               (strcasecmp("script_from_stdin",value) != 0) ) {
@@ -486,9 +486,8 @@ static int check_config(lList **alpp, lListElem *conf)
          }
       }
 
-      if (!strcmp(name, "prolog")||!strcmp(name, "epilog")) {
-       
-         if (value && strcasecmp(value, "none")) {
+      if (!strcmp(name, "prolog") || !strcmp(name, "epilog")) {
+         if (strcasecmp(value, "none")) {
             const char *t, *script = value;
 
             /* skip user name */
@@ -513,11 +512,66 @@ static int check_config(lList **alpp, lListElem *conf)
 
       if (!strcmp(name, "auto_user_oticket") || !strcmp(name, "auto_user_fshare")) {
          u_long32 uval = 0;
-         if (!value || !extended_parse_ulong_val(NULL, &uval, TYPE_INT, value, NULL, 0, 0, true)) {
+         if (!extended_parse_ulong_val(NULL, &uval, TYPE_INT, value, NULL, 0, 0, true)) {
             ERROR((SGE_EVENT, MSG_CONF_FORMATERRORFORXINYCONFIG_SS, name, value ? value : "(NULL)"));
             answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             DRETURN(STATUS_EEXIST);
          }
+      }
+
+      /* 
+       * check paths, see also CR 6506580.
+       * The following must be none or a valid absolute path:
+       * - load_sensor
+       * - set_token_cmd
+       * - pag_cmd
+       * - shepherd_cmd
+       *
+       * The following must be a valid absolute path:
+       * - mailer
+       * - xterm
+       * - *_daemon, may also be "builtin"
+       */
+      if (strcmp(name, "set_token_cmd") == 0 ||
+          strcmp(name, "pag_cmd") == 0 ||
+          strcmp(name, "shepherd_cmd") == 0) {
+         if (strcasecmp(value, "none") != 0) {
+            if (!path_verify(value, alpp, name, true)) {
+               answer_list_log(alpp, false, false);
+               DRETURN(STATUS_EEXIST);
+            }
+         }
+      }
+      if (strcmp(name, "mailer") == 0 ||
+          strcmp(name, "xterm") == 0) {
+         if (!path_verify(value, alpp, name, true)) {
+            answer_list_log(alpp, false, false);
+            DRETURN(STATUS_EEXIST);
+         }
+      }
+      if (strcmp(name, "qlogin_daemon") == 0 ||
+          strcmp(name, "rlogin_daemon") == 0 ||
+          strcmp(name, "rsh_daemon") == 0) {
+         if (strcasecmp(value, "builtin") != 0) {
+            if (!path_verify(value, alpp, name, true)) {
+               answer_list_log(alpp, false, false);
+               DRETURN(STATUS_EEXIST);
+            }
+         }
+      }
+
+      /* load_sensor is a comma separated list of scripts */
+      if (strcmp(name, "load_sensor") == 0 && strcasecmp(value, "none") != 0) {
+         struct saved_vars_s *context = NULL;
+         const char *path = sge_strtok_r(value, ",", &context);
+         do {
+            if (!path_verify(path, alpp, name, true)) {
+               answer_list_log(alpp, false, false);
+               sge_free_saved_vars(context);
+               DRETURN(STATUS_EEXIST);
+            }
+         } while ((path = sge_strtok_r(NULL, ",", &context)) != NULL);
+         sge_free_saved_vars(context);
       }
    }
  

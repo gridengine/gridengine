@@ -1,3 +1,9 @@
+JG-2007-12-10-0: Bugfix:    Added missing verification to pathes in cluster
+                            configuration.
+                 Bugster:   6506580
+                 Issue:     2136
+                 Review:    MD
+
 PJ-2007-12-07-0: Bugfix:    The Service tags settings should differ
                             for sundist/mk_dist 
                  Bugfix:    The error when no ARCH was defined.

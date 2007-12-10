@@ -2906,7 +2906,7 @@ job_verify(const lListElem *job, lList **answer_list)
       const char *cwd = lGetString(job, JB_cwd);
 
       if (cwd != NULL) {
-         ret = path_verify(cwd, answer_list);
+         ret = path_verify(cwd, answer_list, "cwd", true);
       }
    }
 
@@ -2935,15 +2935,15 @@ job_verify(const lListElem *job, lList **answer_list)
    }
 
    if (ret) {
-      ret = path_list_verify(lGetList(job, JB_stdout_path_list), answer_list);
+      ret = path_list_verify(lGetList(job, JB_stdout_path_list), answer_list, "stdout path");
    }
 
    if (ret) {
-      ret = path_list_verify(lGetList(job, JB_stderr_path_list), answer_list);
+      ret = path_list_verify(lGetList(job, JB_stderr_path_list), answer_list, "stderr path");
    }
 
    if (ret) {
-      ret = path_list_verify(lGetList(job, JB_stdin_path_list), answer_list);
+      ret = path_list_verify(lGetList(job, JB_stdin_path_list), answer_list, "stdin path");
    }
 
    DRETURN(ret);
@@ -3044,9 +3044,9 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
 
    /* JB_exec_file must be a valid directory string */
    if (ret) {
-      const char *name = lGetString(job, JB_session);
+      const char *name = lGetString(job, JB_exec_file);
       if (name != NULL) {
-         ret = path_verify(name, answer_list);
+         ret = path_verify(name, answer_list, "exec_file", false);
       } 
    }
 
@@ -3054,7 +3054,7 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
    if (ret) {
       const char *name = lGetString(job, JB_script_file);
       if (name != NULL) {
-         ret = path_verify(name, answer_list);
+         ret = path_verify(name, answer_list, "script_file", false);
       } 
    }
    
@@ -3329,14 +3329,6 @@ job_verify_execd_job(const lListElem *job, lList **answer_list)
 
    if (ret) {
       ret = object_verify_string_not_null(job, answer_list, JB_owner);
-   }
-
-   if (ret) {
-      const char *cwd = lGetString(job, JB_cwd);
-
-      if (cwd != NULL) {
-         ret = path_verify(cwd, answer_list);
-      }
    }
 
    if (ret) {

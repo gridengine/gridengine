@@ -66,7 +66,7 @@ static char object_name[] = "parallel environment";
 static void pe_update_categories(const lListElem *new_pe, const lListElem *old_pe);
 
 int pe_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_pe, lListElem *pe, /* reduced */
-           int add, const char *ruser, const char *rhost, gdi_object_t *object, int sub_command, 
+           int add, const char *ruser, const char *rhost, gdi_object_t *object, int sub_command,
            monitoring_t *monitor)
 {
    int ret;

@@ -1388,7 +1388,7 @@ qinstance_verify(const lListElem *qep, lList **answer_list)
    }
 
    if (ret) {
-      ret = path_verify(lGetString(qep, QU_shell), answer_list);
+      ret = path_verify(lGetString(qep, QU_shell), answer_list, "shell", true);
    }
 
    DRETURN(ret);

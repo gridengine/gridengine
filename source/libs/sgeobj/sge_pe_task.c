@@ -327,7 +327,7 @@ pe_task_verify_request(const lListElem *petr, lList **answer_list) {
       const char *cwd = lGetString(petr, PETR_cwd);
 
       if (cwd != NULL) {
-         ret = path_verify(cwd, answer_list);
+         ret = path_verify(cwd, answer_list, "cwd", true);
       }
    }
 

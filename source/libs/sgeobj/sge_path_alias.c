@@ -456,16 +456,18 @@ int path_alias_list_get_path(const lList *path_aliases, lList **alpp,
 *
 *  SYNOPSIS
 *     bool 
-*     path_verify(const char *path, lList **answer_list) 
+*     path_verify(const char *path, lList **answer_list, const char *name,
+*                 bool absolute)
 *
 *  FUNCTION
 *     Verifies if a path string has valid contents.
-*     Currently only the length of the path string is verified,
-*     other checks (character set etc.) should be done.
 *
 *  INPUTS
 *     const char *path    - the string to verify
 *     lList **answer_list - answer list to pass back error messages
+*     const char *name    - name of the path to check, e.g. "prolog"
+*                           for error output
+*     bool absolute       - does it have to be an absolute path?
 *
 *  RESULT
 *     bool - true on success,
@@ -475,7 +477,7 @@ int path_alias_list_get_path(const lList *path_aliases, lList **alpp,
 *     MT-NOTE: path_verify() is MT safe 
 *******************************************************************************/
 bool 
-path_verify(const char *path, lList **answer_list)
+path_verify(const char *path, lList **answer_list, const char *name, bool absolute)
 {
    bool ret = true;
 
@@ -489,6 +491,15 @@ path_verify(const char *path, lList **answer_list)
       if (strlen(path) > SGE_PATH_MAX) {
          answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
                                  MSG_PATH_TOOLONG_I, SGE_PATH_MAX);
+         ret = false;
+      }
+   }
+
+   /* check for absolute path */
+   if (absolute) {
+      if (path[0] != '/') {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                 MSG_CONF_THEPATHGIVENFORXMUSTSTARTWITHANY_S, name);
          ret = false;
       }
    }
@@ -542,10 +553,10 @@ path_alias_verify(const lList *path_aliases, lList **answer_list)
        * they have to be valid paths.
        */
       if (ret) {
-         ret = path_verify(lGetString(ep, PA_origin), answer_list);
+         ret = path_verify(lGetString(ep, PA_origin), answer_list, "path_alias: origin", false);
       }
       if (ret) {
-         ret = path_verify(lGetString(ep, PA_translation), answer_list);
+         ret = path_verify(lGetString(ep, PA_translation), answer_list, "path_alias: translation", false);
       }
 
        /*
@@ -573,7 +584,8 @@ path_alias_verify(const lList *path_aliases, lList **answer_list)
 *
 *  SYNOPSIS
 *     bool 
-*     path_list_verify(const lList *path_list, lList **answer_list) 
+*     path_list_verify(const lList *path_list, lList **answer_list, 
+*                      const char *name) 
 *
 *  FUNCTION
 *     Verify a path list, e.g. the path specification in JB_stdout_path_list,
@@ -582,6 +594,7 @@ path_alias_verify(const lList *path_aliases, lList **answer_list)
 *  INPUTS
 *     const lList *path_list - the path list to verify
 *     lList **answer_list    - answer list to pass back error messages
+*     const char *name       - name of the checked attribute for error output
 *
 *  RESULT
 *     bool - true: everything ok, else false
@@ -590,7 +603,7 @@ path_alias_verify(const lList *path_aliases, lList **answer_list)
 *     MT-NOTE: path_list_verify() is MT safe 
 *******************************************************************************/
 bool 
-path_list_verify(const lList *path_list, lList **answer_list)
+path_list_verify(const lList *path_list, lList **answer_list, const char *name)
 {
    bool ret = true;
    const lListElem *ep;
@@ -598,7 +611,7 @@ path_list_verify(const lList *path_list, lList **answer_list)
    for_each (ep, path_list) {
       const char *host;
 
-      ret = path_verify(lGetString(ep, PN_path), answer_list);
+      ret = path_verify(lGetString(ep, PN_path), answer_list, name, false);
       if (!ret) {
          break;
       }

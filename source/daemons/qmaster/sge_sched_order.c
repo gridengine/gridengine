@@ -90,6 +90,7 @@ sge_schedd_send_orders(sge_gdi_ctx_class_t *ctx, order_t *orders, lList **order_
       }
 #endif
    }
+   lFreeList(order_list);
 
    DRETURN(ret);
 }

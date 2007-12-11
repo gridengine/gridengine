@@ -1,3 +1,7 @@
+RD-2007-12-11-0: Bugfix:    fixed some memory leaks introduced with the
+                            scheduler thread
+                 Review:    EB
+
 JG-2007-12-10-0: Bugfix:    Added missing verification to pathes in cluster
                             configuration.
                  Bugster:   6506580

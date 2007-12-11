@@ -235,7 +235,6 @@ void
 ensure_valid_what_and_where(sge_where_what_t *where_what) 
 {
    lDescr *tmp_what_descr = NULL;
-   lEnumeration *tmp_what_queue = NULL;
 
    DENTER(TOP_LAYER, "ensure_valid_what_and_where");
 
@@ -244,11 +243,14 @@ ensure_valid_what_and_where(sge_where_what_t *where_what)
        where_what->what_queue == NULL || where_what->where_queue == NULL) {
       int n = 0;
       int index = 0;
+      lEnumeration *tmp_what_queue = NULL;
 
       tmp_what_queue = lIntVector2What(QU_Type, qinstance_field_ids);
       n = lCountWhat(tmp_what_queue, QU_Type);
       tmp_what_descr = (lDescr *) malloc(sizeof(lDescr) * (n + 1));
       lPartialDescr(tmp_what_queue, QU_Type, tmp_what_descr, &index);
+
+      lFreeWhat(&tmp_what_queue); 
    }
 
    /* acl */

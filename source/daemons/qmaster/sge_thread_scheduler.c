@@ -765,6 +765,7 @@ sge_scheduler_main(void *arg)
                      if (copy.all_queue_list == NULL)
                         copy.all_queue_list = lCreateList("all", lGetListDescr(t));
                      lAppendList(copy.all_queue_list, t);
+                     lFreeList (&t);
                   }
 
                   t = lSelect("t", qinstance_list, where_what.where_queue, where_what.what_queue2);
@@ -772,6 +773,7 @@ sge_scheduler_main(void *arg)
                      if (copy.queue_list == NULL)
                         copy.queue_list = lCreateList("enabled", lGetListDescr(t));
                      lAppendList(copy.queue_list, t);
+                     lFreeList (&t);
                   }
 
                   t = lSelect("t", qinstance_list, where_what.where_queue2, where_what.what_queue2);
@@ -779,6 +781,7 @@ sge_scheduler_main(void *arg)
                      if (copy.dis_queue_list == NULL)
                         copy.dis_queue_list = lCreateList("disabled", lGetListDescr(t));
                      lAppendList(copy.dis_queue_list, t);
+                     lFreeList (&t);
                   }
                }
                if (what_queue3)

@@ -364,7 +364,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
    int commlib_error;
    u_long32 message_id;
 
-   DENTER(TOP_LAYER, "sge_gdi_packet_execute_extern");
+   DENTER(TOP_LAYER, "sge_gdi_packet_execute_external");
 
    /* here the packet gets a unique request id */
    packet->id = gdi_state_get_next_request_id();
@@ -548,6 +548,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
    }
 #endif
 
+   sge_gdi_packet_free(&ret_packet);
    DRETURN(ret);
 }
 

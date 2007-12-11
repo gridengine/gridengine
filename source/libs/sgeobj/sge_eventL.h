@@ -60,6 +60,7 @@ typedef enum {
  *   internal event clients / mirrors. 
  **/
 typedef void (*event_client_update_func_t)(
+   u_long32 id,                /* event client id */
    lList **alpp,               /* answer list */
    lList *event_list           /* list of new events stored in the report list */ 
 );

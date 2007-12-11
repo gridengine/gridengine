@@ -142,9 +142,14 @@ static jgdi_result_t jgdi_qstat_env_init(JNIEnv *env, sge_gdi_ctx_class_t *ctx, 
       qstat_filter_add_q_attributes(qstat_env);                    
    }
    
-   if ((ret=build_resource_filter(env, filter->resource_filter, &(qstat_env->resource_list), alpp)) != JGDI_SUCCESS) {
-      goto error;
+   if (filter->resource_filter != NULL) {
+      if ((ret=build_resource_filter(env, filter->resource_filter, &(qstat_env->resource_list), alpp)) != JGDI_SUCCESS) {
+         goto error;
+      }
+      qstat_filter_add_l_attributes(qstat_env);
    }
+
+
    if ((ret=build_resource_attribute_filter(env, filter->resource_attribute_filter, &(qstat_env->qresource_list), &(qstat_env->full_listing), alpp)) != JGDI_SUCCESS) {
       goto error;
    }
@@ -457,6 +462,7 @@ jgdi_result_t build_resource_filter(JNIEnv *env, jobject resource_filter,
       jgdi_log_printf(env, JGDI_QSTAT_LOGGER, FINE,
                       "END ------------- resource attribute filter --------------");
    }
+
 
 error:
    if (ret != JGDI_SUCCESS) {

@@ -846,14 +846,13 @@ sge_event_master_process_mod_event_client(monitoring_t *monitor)
          lSetUlong(event_client, EV_busy_handling, busy_handling);
       }
 
-      lSetRef(event_client, EV_update_function, lGetRef(clio, EV_update_function));
 
       lSetUlong(event_client, EV_state, EV_connected);
 
       MONITOR_EDT_MOD(monitor);
      
       thread_config = cl_thread_get_thread_config();
-      DEBUG((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS, thread_config->thread_name, 
+      DEBUG((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS, thread_config ? thread_config->thread_name : "-NA-", 
              "master host", lGetString(event_client, EV_name), MSG_EVE_EVENTCLIENT));
 
       unlock_client(id);
@@ -863,7 +862,7 @@ sge_event_master_process_mod_event_client(monitoring_t *monitor)
    lFreeList(&temp_evc_list);
 
    DRETURN_VOID;
-} /* sge_mod_event_client() */
+} /* sge_event_master_process_mod_event_client() */
 
 /****** evm/sge_event_master/sge_remove_event_client() *************************
 *  NAME
@@ -895,30 +894,12 @@ void sge_remove_event_client(u_long32 aClientID) {
    DENTER(TOP_LAYER, "sge_remove_event_client");
 
    lock_client(aClientID, true);
+
+   DPRINTF(("sge_remove_event_client id = %d\n", (int) aClientID));
+
    client = get_event_client(aClientID);
    
-   /* If we didn't find the client in the array, try the list as a backup.  The
-    * result should always be the same, but we do it anyway, just in case. */
-   if (client == NULL) {
-      /* Only lock in the case where we need to search the list. */
-      /* Since we already own the lock for this client, all we need is for the
-       * state of the list to hold still long enough for us to find the client.
-       * Thus it is OK that we just lock the mutex instead of locking all
-       * clients. */
-      sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__,
-                     &Event_Master_Control.mutex);
-      
-      client = lGetElemUlong(Event_Master_Control.clients, EV_id, aClientID);
-      
-      /* Correct the problem. */
-      Event_Master_Control.clients_array[aClientID] = client;
 
-      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__,
-                       &Event_Master_Control.mutex);
-      
-      ERROR((SGE_EVENT, MSG_ARRAY_OUT_OF_SYNC_U, sge_u32c(aClientID)));
-   }
-   
    if (client == NULL) {
       ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(aClientID), "remove"));
       unlock_client(aClientID);
@@ -972,19 +953,18 @@ u_long32 sge_set_max_dynamic_event_clients(u_long32 new_value){
    /* Set the max event clients if it changed. */
    if (max != Event_Master_Control.max_event_clients) {
 
-
       /* check max. file descriptors of qmaster communication handle */
-      handle = cl_com_get_handle("qmaster",1);
+      handle = cl_com_get_handle("qmaster", 1);
       if (handle != NULL) {
          unsigned long max_file_handles = 0;
-         cl_com_get_max_connections(handle,&max_file_handles);
-         if ( max_file_handles >= 19 ) {
+         cl_com_get_max_connections(handle, &max_file_handles);
+         if (max_file_handles >= 19) {
             max_allowed_value = (u_long32)max_file_handles - 19;
          } else {
             max_allowed_value = 1;
          }
 
-         if ( max > max_allowed_value ) {
+         if (max > max_allowed_value) {
             max = max_allowed_value;
             WARNING((SGE_EVENT, MSG_CONF_NR_DYNAMIC_EVENT_CLIENT_EXCEEDS_MAX_FILEDESCR_U, sge_u32c(max) ));
          }
@@ -1906,7 +1886,7 @@ void sge_event_master_process_acks(monitoring_t *monitor)
           * event acknowledge. Though this is ugly but it isn't known to cause any
           * perceivable error condition finally.
           */
-         DPRINTF((MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(ec_id), "process acknowledgements"));
+         DPRINTF((MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(ec_id), "process acknowledgements\n"));
       } else {
          int res = 0;
 
@@ -2084,7 +2064,7 @@ void sge_event_master_shutdown(void)
 *     void - none
 *
 *  NOTES
-*     MT-NOTE: sge_event_master_init() is MT safe 
+*     MT-NOTE: sge_event_master_init() is not MT safe 
 *
 *******************************************************************************/
 void sge_event_master_init(void)
@@ -2122,7 +2102,7 @@ void sge_event_master_init(void)
    }
 
    DRETURN_VOID;
-} /* event_master_one_init() */
+}
 
 /****** evm/sge_event_master/init_send_events() ********************************
 *  NAME
@@ -2282,12 +2262,12 @@ static void remove_event_client(lListElem *client, int aClientID, bool lock_even
       lSetRef(client, EV_sub_array, NULL);
    }
 
-   set_event_client(aClientID, NULL);
 
    if (lock_event_master) {
       sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.mutex);
    }
 
+   set_event_client(aClientID, NULL);
    lRemoveElem(Event_Master_Control.clients, &client);
    Event_Master_Control.indices_dirty = true;
 
@@ -2371,8 +2351,7 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
    u_long32 scheduler_timeout = mconf_get_scheduler_timeout();
    lListElem *event_client;
    int ret;
-   int id; 
-
+   int commid; 
    int deliver_interval;
    time_t now = time(NULL);
    u_long32 ec_id = 0;
@@ -2381,10 +2360,16 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
 
    DENTER(TOP_LAYER, "sge_event_master_send_events");
 
+   /*
+   ** assumption is that Event_Master_Control.clients_indices is
+   ** only modified in sge_thread_event_master.c thread, therefore
+   ** no locking of Event_Master_Control.clients_indices
+   */
    while (Event_Master_Control.clients_indices[count] != 0) {
       char *host = NULL;
       char *commproc = NULL;
-      ec_id = (u_long32)Event_Master_Control.clients_indices[count++];
+      ec_id = (u_long32)Event_Master_Control.clients_indices[count];
+      count++;
 
       if (!lock_client(ec_id, false)) {
          /* If we can't get access to this client right now, just leave it to
@@ -2415,10 +2400,10 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
       /*   host and commproc have to be freed */
 
       update_func = (event_client_update_func_t) lGetRef(event_client, EV_update_function);
+
       host = strdup(lGetHost(event_client, EV_host));
       commproc = strdup(lGetString(event_client, EV_commproc));
-      
-      id = lGetUlong(event_client, EV_commid);
+      commid = lGetUlong(event_client, EV_commid);
 
       deliver_interval = lGetUlong(event_client, EV_d_time);
       busy_handling = lGetUlong(event_client, EV_busy_handling);
@@ -2449,7 +2434,7 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
 
       if (now > (lGetUlong(event_client, EV_last_heard_from) + timeout)) {
          ERROR((SGE_EVENT, MSG_COM_ACKTIMEOUT4EV_ISIS, (int) timeout, commproc, 
-                  (int) id, host));
+                  (int) commid, host));
          FREE(commproc);
          FREE(host);
          remove_event_client(event_client, ec_id, true);      
@@ -2485,17 +2470,15 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
             unlock_client(ec_id);
 
             if (update_func != NULL) {
-               update_func(NULL, report_list);
+               update_func(ec_id, NULL, report_list);
                ret = CL_RETVAL_OK;
             } else {
-               ret = report_list_send(ctx, report_list, host, commproc, id, 0, NULL);
+               ret = report_list_send(ctx, report_list, host, commproc, commid, 0, NULL);
                MONITOR_MESSAGES_OUT(monitor);
             }
 
-            if (update_func == NULL) {
-               FREE(commproc);
-               FREE(host);
-            }
+            FREE(host);
+            FREE(commproc);
 
             lock_client(ec_id, true); 
 
@@ -2556,9 +2539,6 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
          }
       } /*if */
    
-      FREE(host);
-      FREE(commproc);
-
       unlock_client(ec_id);      
    } /* while */
    
@@ -3795,13 +3775,30 @@ static void unlock_all_clients(void)
 *******************************************************************************/
 static lListElem *get_event_client(u_long32 id)
 {
+   lListElem *client = NULL;
 
    if ((id < 1) ||
       (id > Event_Master_Control.max_event_clients + EV_ID_FIRST_DYNAMIC - 1)) {
       return NULL;
    }
 
-   return Event_Master_Control.clients_array[(int)id - 1];
+   client = Event_Master_Control.clients_array[(int)id - 1];
+
+   /* If we didn't find the client in the array, try the list as a backup.  The
+    * result should always be the same, but we do it anyway, just in case. */
+   if (client == NULL) {
+      /* Only lock in the case where we need to search the list. */
+      /* Since we already own the lock for this client, all we need is for the
+       * state of the list to hold still long enough for us to find the client.
+       * Thus it is OK that we just lock the mutex instead of locking all
+       * clients. */
+      client = lGetElemUlong(Event_Master_Control.clients, EV_id, id);
+      
+      /* Correct the problem. */
+      set_event_client(id, client);
+   }
+
+   return client;
 }
 
 /****** sge_event_master/set_event_client() ************************************

@@ -793,7 +793,7 @@ sge_gdi_ctx_class_create_from_bootstrap(int prog_number, const char* component_n
    ** jmx agent is marked as daemonized, this is checked in sge_csp_path_class_create
    ** check via pid comparison that JGDIAgent is started as master thread 
    */
-   if (getpid() == sge_qmaster_pid_get()) {
+   if (ret && ret->is_qmaster_internal_client(ret)) {
       ret->set_daemonized(ret, true);
    }
 #endif

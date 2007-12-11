@@ -49,6 +49,6 @@ int sge_before_dispatch(sge_evc_class_t *evc);
 
 void *scheduler_thread(void* anArg);
 
-void event_update_func(lList **alpp, lList *event_list);
+void event_update_func(u_long32 ec_id, lList **alpp, lList *event_list);
 
 #endif /* __SGE_SCHED_PROCESS_EVENTS_H */

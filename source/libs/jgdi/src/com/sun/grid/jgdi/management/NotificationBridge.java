@@ -60,48 +60,45 @@ import javax.management.NotificationListener;
  *
  */
 public class NotificationBridge implements EventListener {
-    
+
     private static final Logger log = Logger.getLogger(NotificationBridge.class.getName());
-    
     private final AtomicLong seqNumber = new AtomicLong();
     private final Map<Class, EventToNotification> eventMap = new HashMap<Class, EventToNotification>();
     private MBeanNotificationInfo[] notificationInfos;
-    
     private final String url;
     private EventClient eventClient;
-    
     private final List<NotificationListener> listeners = new LinkedList<NotificationListener>();
     private final Map<NotificationListener, Object> handbackMap = new HashMap<NotificationListener, Object>();
-    
+
     public NotificationBridge(String url) {
         this.url = url;
     }
-    
+
     private class EventToNotification {
-        
+
         private final String eventName;
         private final Class eventClass;
         private final MBeanNotificationInfo notificationInfo;
-        
+
         public EventToNotification(String eventName, Class eventClass) {
             this.eventName = eventName;
             this.eventClass = eventClass;
             this.notificationInfo = new MBeanNotificationInfo(new String[]{eventName}, eventClass.getName(), null);
         }
-        
+
         public MBeanNotificationInfo getNotificationInfo() {
             return notificationInfo;
         }
-        
+
         public Notification createNotification(Event event) {
             Notification notification = new Notification(eventName, EventClient.class.getName(), seqNumber.incrementAndGet());
             notification.setUserData(event);
             return notification;
         }
     }
-    
+
     public void eventOccured(Event evt) {
-        
+        log.entering("NotificationBridge", "eventOccured", evt);
         Notification n = null;
         List<NotificationListener> tmpLis = null;
         synchronized (this) {
@@ -114,52 +111,60 @@ public class NotificationBridge implements EventListener {
                 log.log(Level.WARNING, "Received unknown event {0}", evt);
             }
         }
-        
+
         if (n != null) {
             for (NotificationListener lis : tmpLis) {
                 log.log(Level.FINE, "send notification to {0}", lis);
                 lis.handleNotification(n, handbackMap.get(lis));
             }
         }
+        log.exiting("NotificationBridge", "eventOccured");
     }
-    
-    
+
     public synchronized void registerEvent(String eventName, Class eventClass) {
+        if(log.isLoggable(Level.FINER)) {
+            log.entering("NotificationBridge", "registerEvent", new Object[]{eventName, eventClass});
+        }
         EventToNotification evtNot = new EventToNotification(eventName, eventClass);
         eventMap.put(eventClass, evtNot);
+        log.exiting("NotificationBridge", "registerEvent");
     }
-    
+
     public synchronized MBeanNotificationInfo[] getMBeanNotificationInfo() {
+        log.entering("NotificationBridge", "getMBeanNotificationInfo");
         if (notificationInfos == null) {
             notificationInfos = new MBeanNotificationInfo[eventMap.size()];
             int i = 0;
-            
+
             for (Map.Entry<Class, EventToNotification> entry : eventMap.entrySet()) {
                 notificationInfos[i++] = entry.getValue().getNotificationInfo();
             }
         }
+        log.exiting("NotificationBridge", "getMBeanNotificationInfo", notificationInfos);
         return notificationInfos;
     }
-    
+
     public synchronized void removeNotificationListener(NotificationListener listener) throws JGDIException, ListenerNotFoundException {
-        log.entering("NotificationBridge", "removeNotificationListener");
+        log.entering("NotificationBridge", "removeNotificationListener", listener);
         listeners.remove(listener);
         handbackMap.remove(listener);
         commit();
         log.exiting("NotificationBridge", "removeNotificationListener");
     }
-    
+
     public synchronized void addNotificationListener(NotificationListener listener, NotificationFilter filter, Object handback) throws JGDIException {
-        log.entering("NotificationBridge", "addNotificationListener");
+        if(log.isLoggable(Level.FINER)) {
+            log.entering("NotificationBridge", "addNotificationListener", new Object [] { listener, filter, handback });
+        }
         listeners.add(listener);
         handbackMap.put(listener, handback);
         commit();
         log.exiting("NotificationBridge", "addNotificationListener");
     }
-    
     private static final Map<EventTypeEnum, Method> subscribeMethodMap = new HashMap<EventTypeEnum, Method>();
-    
+
     private static Method getSubscribeMethod(EventTypeEnum type) {
+        log.entering("NotificationBridge", "getSubscribeMethod", type);
         Method ret;
         synchronized (subscribeMethodMap) {
             ret = subscribeMethodMap.get(type);
@@ -172,9 +177,10 @@ public class NotificationBridge implements EventListener {
                 subscribeMethodMap.put(type, ret);
             }
         }
+        log.exiting("NotificationBridge", "getSubscribeMethod", ret);
         return ret;
     }
-    
+
     private synchronized void subscribe(EventTypeEnum type, boolean subscribe) throws JGDIException {
         if (log.isLoggable(Level.FINER)) {
             log.entering("NotificationBridge", "subscribe", new Object[]{type, subscribe});
@@ -201,14 +207,12 @@ public class NotificationBridge implements EventListener {
         }
         log.exiting("NotificationBridge", "subscribe");
     }
-    
     private Set<EventTypeEnum> subscribtion = new HashSet<EventTypeEnum>();
-    
-    
+
     private synchronized void commit() throws JGDIException {
-        
+
         log.entering("NotificationBridge", "commit");
-        
+
         if (log.isLoggable(Level.FINE)) {
             log.log(Level.FINE, "subscription is {0}", getSubscription());
         }
@@ -236,49 +240,52 @@ public class NotificationBridge implements EventListener {
                 log.log(Level.FINE, "changes at event client [{0}] commited", eventClient.getId());
             }
         }
-        
+
         log.exiting("NotificationBridge", "commit");
     }
-    
+
     public synchronized Set<EventTypeEnum> getSubscription() {
-        return Collections.unmodifiableSet(subscribtion);
+        log.entering("NotificationBridge", "getSubscription");
+        Set<EventTypeEnum> ret = Collections.unmodifiableSet(subscribtion);
+        log.exiting("NotificationBridge", "getSubscription", ret);
+        return ret;
     }
-    
+
     public synchronized void setSubscription(Set<EventTypeEnum> types) throws JGDIException {
-        
+
         log.entering("NotificationBridge", "setSubscription", types);
-        
+
         Set<EventTypeEnum> orgSubscription = new HashSet<EventTypeEnum>(subscribtion);
-        
+
         for (EventTypeEnum type : types) {
             if (!orgSubscription.remove(type)) {
                 // type has not been subscribed before
                 subscribe(type, true);
             }
         }
-        
+
         // Remove all previous subscribed events which are not contained in types
         for (EventTypeEnum type : orgSubscription) {
             subscribe(type, false);
         }
         commit();
+        log.exiting("NotificationBridge", "setSubscription");
     }
-    
+
     public synchronized void subscribe(EventTypeEnum type) throws JGDIException {
         log.entering("NotificationBridge", "subscribe", type);
         subscribe(type, true);
         eventClient.commit();
         log.exiting("NotificationBridge", "subscribe");
     }
-    
+
     public synchronized void unsubscribe(EventTypeEnum type) throws JGDIException {
         log.entering("NotificationBridge", "unsubscribe", type);
         subscribe(type, false);
         commit();
         log.exiting("NotificationBridge", "unsubscribe");
     }
-    
-    
+
     public synchronized void subscribe(Set<EventTypeEnum> eventTypes) throws JGDIException {
         log.entering("NotificationBridge", "subscribe", eventTypes);
         for (EventTypeEnum type : eventTypes) {
@@ -287,7 +294,7 @@ public class NotificationBridge implements EventListener {
         commit();
         log.exiting("NotificationBridge", "subscribe");
     }
-    
+
     public synchronized void unsubscribe(Set<EventTypeEnum> eventTypes) throws JGDIException {
         log.entering("NotificationBridge", "unsubscribe", eventTypes);
         for (EventTypeEnum type : eventTypes) {
@@ -296,24 +303,26 @@ public class NotificationBridge implements EventListener {
         commit();
         log.exiting("NotificationBridge", "unsubscribe");
     }
-    
+
     /**
      *  Close the event notification bridge
      *
      *  The JGDI event client will be stopped.
      */
     public void close() {
+        log.entering("NotificationBridge", "close");
         synchronized (this) {
             if (eventClient != null) {
                 try {
                     log.log(Level.FINE, "closing event client [" + eventClient.getId() + "]");
                     eventClient.close();
                 } catch (Exception ex) {
-                    // Ignore
+                // Ignore
                 } finally {
                     eventClient = null;
                 }
             }
         }
+        log.exiting("NotificationBridge", "close");
     }
 }

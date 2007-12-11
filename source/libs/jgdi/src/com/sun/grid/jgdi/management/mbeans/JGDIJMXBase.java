@@ -48,13 +48,11 @@ import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryOptions;
 import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryResult;
 import java.io.File;
 import java.lang.reflect.UndeclaredThrowableException;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 import javax.management.*;
 //import org.ggf.drmaa.DrmaaException;
-//import org.ggf.drmaa.JobInfo;
 //import org.ggf.drmaa.JobTemplate;
 //import org.ggf.drmaa.Version;
 

@@ -38,6 +38,7 @@ import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.cert.CertificateEncodingException;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.security.auth.Subject;
 import javax.security.auth.x500.X500PrivateCredential;
@@ -69,12 +70,26 @@ public class SecurityHelper {
     
     public static String getUsername() {
         
+        String ret = null;
         X500PrivateCredential cred = getPrivateCredentials();
         if (cred == null) {
-            logger.fine("user.name: " + System.getProperty("user.name"));
-            return System.getProperty("user.name");
+            Subject sub = Subject.getSubject(AccessController.getContext());
+            if(sub != null) {
+                Set p = sub.getPrincipals(JGDIPrincipal.class);
+                if (p != null && !p.isEmpty()) {
+                    ret = ((JGDIPrincipal)p.iterator().next()).getName();
+                }
+            }
+            if (ret == null) {
+                ret = System.getProperty("user.name");
+            }
+            
+            
+        } else {
+            return cred.getAlias();
         }
-        return cred.getAlias();
+        logger.log(Level.FINE, "user.name: {0}", ret);        
+        return ret;
     }
     
     

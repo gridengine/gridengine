@@ -60,7 +60,9 @@ import javax.management.ObjectName;
 import javax.management.ReflectionException;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
+import javax.management.remote.JMXPrincipal;
 import javax.management.remote.JMXServiceURL;
+import javax.security.auth.Subject;
 
 /**
  *  <p>
@@ -68,9 +70,8 @@ import javax.management.remote.JMXServiceURL;
  *  </p>
  */
 public class JGDIProxy implements InvocationHandler, NotificationListener {
-    
+
     private static final Map<Method, MethodInvocationHandler> handlerMap = new HashMap<Method, MethodInvocationHandler>();
-    
     private ObjectName name;
     private final JMXServiceURL url;
     private JGDIJMXMBean proxy;
@@ -78,7 +79,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
     private JMXConnector connector;
     private MBeanServerConnection connection;
     private Set<EventListener> listeners = Collections.<EventListener>emptySet();
-    
+
     /**
      *  Create a new proxy the the jgdi MBean
      *
@@ -94,9 +95,9 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
         this.url = url;
         this.credentials = credentials;
         Class<?>[] types = new Class<?>[]{JGDIJMXMBean.class};
-        proxy = (JGDIJMXMBean) Proxy.newProxyInstance(JGDIJMXMBean.class.getClassLoader(), types , this);
+        proxy = (JGDIJMXMBean) Proxy.newProxyInstance(JGDIJMXMBean.class.getClassLoader(), types, this);
     }
-    
+
     /**
      *   Get the dynamic proxy object
      *
@@ -105,7 +106,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
     public JGDIJMXMBean getProxy() {
         return proxy;
     }
-    
+
     /**
      *   Register an jgdi event listener.
      *
@@ -117,7 +118,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
         newListeners.add(lis);
         listeners = newListeners;
     }
-    
+
     /**
      *   Remove a jgdi event listener.
      *
@@ -128,7 +129,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
         newListeners.remove(lis);
         listeners = newListeners;
     }
-    
+
     /**
      *  JMX will call this method of a notification for the proxy is available.
      *
@@ -139,7 +140,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
      *  @param handback      the handback object
      */
     public void handleNotification(Notification notification, Object handback) {
-        
+
         if (notification.getUserData() instanceof Event) {
             Set<EventListener> tmpLis = null;
             synchronized (this) {
@@ -150,7 +151,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
             }
         }
     }
-    
+
     /**
      *   Determine of the connection to the JMX MBean servers is established
      *
@@ -160,29 +161,29 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
     public synchronized boolean isConnected() {
         return connection != null;
     }
-    
+
     /**
      *   Close the connection to the MBean server
      */
     public synchronized void close() {
-        
+
         if (connection != null) {
             try {
                 connection.unregisterMBean(name);
                 connector.close();
             } catch (MBeanRegistrationException ex) {
-                // ignore: ex.printStackTrace();
+            // ignore: ex.printStackTrace();
             } catch (InstanceNotFoundException ex) {
-                // ignore: ex.printStackTrace();
+            // ignore: ex.printStackTrace();
             } catch (IOException ex) {
-                // Ignore it
+            // Ignore it
             } finally {
                 connection = null;
                 connector = null;
             }
         }
     }
-    
+
     private void connect() throws JGDIException, InstanceAlreadyExistsException {
         if (connection == null) {
             Map<String, Object> env = new HashMap<String, Object>();
@@ -192,15 +193,9 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
             try {
                 connector = JMXConnectorFactory.connect(url, env);
                 connection = connector.getMBeanServerConnection();
-//                Subject delegationSubject = new Subject(true,
-//                    Collections.singleton(new JMXPrincipal("delegate")),
-//                    Collections.EMPTY_SET,
-//                    Collections.EMPTY_SET);
-//                connection = connector.getMBeanServerConnection(delegationSubject);
                 // we need a random number and just take the current
                 // mbean count + 1
                 int randomId = connection.getMBeanCount() + 1;
-//                System.out.println("connection.getMBeanCount() = " + connection.getMBeanCount());
                 name = new ObjectName("gridengine:type=JGDI,id=" + randomId);
                 ObjectInstance jgdiMBean = connection.createMBean("com.sun.grid.jgdi.management.mbeans.JGDIJMX", name);
                 connection.addNotificationListener(name, this, null, null);
@@ -233,7 +228,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
             }
         }
     }
-    
+
     /**
      *   Invoke a method on the remote MBean.
      *
@@ -245,8 +240,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
         connect();
         return getHandler(method).invoke(connection, name, args);
     }
-    
-    
+
     private static MethodInvocationHandler getHandler(Method m) {
         MethodInvocationHandler ret = null;
         synchronized (handlerMap) {
@@ -258,65 +252,66 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
         }
         return ret;
     }
-    
+
     private static MethodInvocationHandler createHandler(Method method) {
-        
+
         // Is the method an attribute getter?
         String attrname = isAttributeGetter(method);
         if (attrname != null) {
             return new AttributeGetter(attrname);
         }
-        
+
         // Is the method an attribute setter
         attrname = isAttributeSetter(method);
         if (attrname != null) {
             return new AttributeSetter(attrname);
         }
-        
+
         if (method.getName().equals("toString")) {
             return new ToStringMethodInvocationHandler();
         }
-        
+
         return new MethodInvoker(method);
     }
-    
+
     private static interface MethodInvocationHandler {
+
         public Object invoke(MBeanServerConnection connection, ObjectName name, Object[] args) throws Throwable;
     }
-    
+
     private static class AttributeGetter implements MethodInvocationHandler {
-        
+
         private String attribute;
-        
+
         public AttributeGetter(String attribute) {
             this.attribute = attribute;
         }
-        
+
         public Object invoke(MBeanServerConnection connection, ObjectName name, Object[] args) throws Throwable {
             return connection.getAttribute(name, attribute);
         }
     }
-    
+
     private static class AttributeSetter implements MethodInvocationHandler {
-        
+
         private String attribute;
-        
+
         public AttributeSetter(String attribute) {
             this.attribute = attribute;
         }
-        
+
         public Object invoke(MBeanServerConnection connection, ObjectName name, Object[] args) throws Throwable {
             connection.setAttribute(name, new Attribute(attribute, args[0]));
             return null;
         }
     }
-    
+
     private static class MethodInvoker implements MethodInvocationHandler {
-        
+
         private final String[] signature;
         private final String methodName;
-        private final Class  returnType;
-        
+        private final Class returnType;
+
         public MethodInvoker(Method method) {
             this.methodName = method.getName();
             Class<?>[] paramTypes = method.getParameterTypes();
@@ -326,17 +321,17 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
             }
             returnType = method.getReturnType();
         }
-        
+
         public Object invoke(MBeanServerConnection connection, ObjectName name, Object[] args) throws Throwable {
             try {
                 Object ret = connection.invoke(name, methodName, args, signature);
-                
-                if(ret != null) {
+
+                if (ret != null) {
                     try {
                         return returnType.cast(ret);
-                    } catch(Exception ex) {
+                    } catch (Exception ex) {
                         throw new IllegalStateException("return type does not match (" +
-                            typeToString(returnType) + " <-> " + typeToString(ret.getClass()));
+                                typeToString(returnType) + " <-> " + typeToString(ret.getClass()));
                     }
                 } else {
                     return ret;
@@ -350,30 +345,30 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
                 }
             }
         }
-        
+
         private static String typeToString(Class<?> clazz) {
-            if(clazz != null) {
+            if (clazz != null) {
                 return String.format("%s@%s(%s)", clazz.getName(), clazz.getProtectionDomain().getCodeSource(),
-                    clazz.getClassLoader().getClass().getName());
+                        clazz.getClassLoader().getClass().getName());
             } else {
                 return "null";
             }
         }
     }
-    
+
     private static class ToStringMethodInvocationHandler implements MethodInvocationHandler {
-        
+
         public Object invoke(MBeanServerConnection connection, ObjectName name, Object[] args) throws Throwable {
             return String.format("[JGDIClientProxy to %s]", name.toString());
         }
     }
-    
+
     private static String isAttributeGetter(Method method) {
-        
+
         Class returnType = method.getReturnType();
-        
+
         String attrName = null;
-        
+
         if (!returnType.equals(Void.TYPE)) {
             Class[] paramTypes = method.getParameterTypes();
             if (paramTypes.length == 0) {
@@ -385,10 +380,10 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
                 }
             }
         }
-        
+
         return attrName;
     }
-    
+
     /**
      * Get a new instanceof of <code>ComponentAttributeDescriptor</code> from an
      * attribute getter.
@@ -398,13 +393,11 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
      *         is not an attribute getter
      */
     public static String isAttributeSetter(Method method) {
-        
+
         Class[] paramTypes = method.getParameterTypes();
         Class returnType = method.getReturnType();
-        
-        if (returnType.equals(Void.TYPE) && paramTypes.length == 1
-            && method.getName().length() > 3
-            && method.getName().startsWith("set")) {
+
+        if (returnType.equals(Void.TYPE) && paramTypes.length == 1 && method.getName().length() > 3 && method.getName().startsWith("set")) {
             String attrName = method.getName();
             return attrName.substring(3);
         } else {

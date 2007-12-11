@@ -112,14 +112,12 @@ import javax.security.auth.spi.LoginModule;
  * 
  */
 public class UnixLoginModule implements LoginModule {
-    
+
     private final static Logger LOGGER = Logger.getLogger(UnixLoginModule.class.getName(), RB.BUNDLE);
-    
     private String confError;
     private String authMethod;
     private String pamService;
     private String command;
-    
     private Subject subject;
     private boolean loginSucceded;
     private boolean commitSucceded;
@@ -127,8 +125,7 @@ public class UnixLoginModule implements LoginModule {
     private String username;
     private Set principals = new HashSet();
     private AuthUserWrapper authuser;
- 
-    
+
     /**
      * Initialize the <code>UnixLoginModule</code>
      * @param subject   the current subject
@@ -139,53 +136,51 @@ public class UnixLoginModule implements LoginModule {
      * @param options contains the options for the <code>UnixLoginModule</code>.
      */
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
-       
-       LOGGER.entering("UnixLoginModule", "initialize");
-       
-       String sgeRoot = (String)options.get("sge_root");
-       if(sgeRoot != null) {
-           LOGGER.log(Level.FINE, "sge_root={0}", sgeRoot);
+
+        LOGGER.entering("UnixLoginModule", "initialize");
+
+        String sgeRoot = (String) options.get("sge_root");
+        if (sgeRoot != null) {
+            LOGGER.log(Level.FINE, "sge_root={0}", sgeRoot);
             try {
                 String arch = SGEUtil.getArch(new File(sgeRoot));
-                command = sgeRoot + File.separatorChar + "utilbin"
-                        + File.separatorChar + arch 
-                        + File.separatorChar + "authuser";
-                if(arch.equals("win32-x86")) {
+                command = sgeRoot + File.separatorChar + "utilbin" + File.separatorChar + arch + File.separatorChar + "authuser";
+                if (arch.equals("win32-x86")) {
                     command += ".exe";
                 }
                 LOGGER.log(Level.FINE, "command={0}", command);
             } catch (Exception ex) {
                 LOGGER.log(Level.WARNING, "unixlogin.error.arch", ex);
-                confError= RB.getString("unixlogin.error.arch", ex.getLocalizedMessage());
+                confError = RB.getString("unixlogin.error.arch", ex.getLocalizedMessage());
                 return;
             }
-       } else {
-           LOGGER.log(Level.WARNING, "unixlogin.error.arch", "sge_root");
-           confError = RB.getString("unixlogin.error.missing", "sge_root");
-           return;
-       }
-       authMethod = (String)options.get("auth_method");
-       if(authMethod == null) {
-           LOGGER.log(Level.WARNING,"unixlogin.error.missing", "auth_method");
-           confError = RB.getString("unixlogin.error.missing", "auth_method");
-           return;
-       }
-       LOGGER.log(Level.FINE, "auth_method={0}", authMethod);
-       if("pam".equals(authMethod)) {
-           pamService = (String)options.get("pam_service");
-           if(pamService == null) {
-               LOGGER.log(Level.WARNING,"unixlogin.error.missing", "pam_service");
-               confError = RB.getString("unixlogin.error.missing", "pam_service");
-               return;
-           } else {
-               LOGGER.log(Level.FINE, "pam_service={0}", pamService);
-           }
-       }
-       this.subject = subject;
-       this.callbackHandler = callbackHandler;
-       
-       LOGGER.entering("UnixLoginModule", "exiting");
-       
+        } else {
+            LOGGER.log(Level.WARNING, "unixlogin.error.arch", "sge_root");
+            confError = RB.getString("unixlogin.error.missing", "sge_root");
+            return;
+        }
+        authMethod = (String) options.get("auth_method");
+        if (authMethod == null) {
+            LOGGER.log(Level.WARNING, "unixlogin.error.missing", "auth_method");
+            confError = RB.getString("unixlogin.error.missing", "auth_method");
+            return;
+        }
+        LOGGER.log(Level.FINE, "auth_method={0}", authMethod);
+        if ("pam".equals(authMethod)) {
+            pamService = (String) options.get("pam_service");
+            if (pamService == null) {
+                LOGGER.log(Level.WARNING, "unixlogin.error.missing", "pam_service");
+                confError = RB.getString("unixlogin.error.missing", "pam_service");
+                return;
+            } else {
+                LOGGER.log(Level.FINE, "pam_service={0}", pamService);
+            }
+        }
+        this.subject = subject;
+        this.callbackHandler = callbackHandler;
+
+        LOGGER.entering("UnixLoginModule", "exiting");
+
     }
 
     /**
@@ -200,59 +195,59 @@ public class UnixLoginModule implements LoginModule {
      *         if username of password is invalid.
      */
     public boolean login() throws LoginException {
-        
+
         LOGGER.entering("UnixLoginModule", "login");
-        
-        if(confError != null) {
-            throw RB.newLoginException("unixlogin.error.conf", new Object[] { confError } );
+
+        if (confError != null) {
+            throw RB.newLoginException("unixlogin.error.conf", new Object[]{confError});
         }
         PasswordCallback pwCallback = new PasswordCallback(RB.getString("unixlogin.userprompt"), false);
         NameCallback nameCallback = new NameCallback(RB.getString("unixlogin.pwprompt"));
-        
+
         try {
-            callbackHandler.handle( new Callback[] { nameCallback, pwCallback });
+            callbackHandler.handle(new Callback[]{nameCallback, pwCallback});
         } catch (IOException ex) {
             throw RB.newLoginException("unixlogin.error.iocb", ex,
-                                       new Object[] { ex.getLocalizedMessage() });
+                    new Object[]{ex.getLocalizedMessage()});
         } catch (UnsupportedCallbackException ex) {
             throw RB.newLoginException("unixlogin.error.invalidcb", ex,
-                                       new Object[] { ex.getLocalizedMessage() });
+                    new Object[]{ex.getLocalizedMessage()});
         }
-        
+
         String username = nameCallback.getName();
         if (username == null || username.length() == 0) {
-            loginSucceded = false;            
+            loginSucceded = false;
             LOGGER.exiting("UnixLoginModule", "login", Boolean.FALSE);
             return loginSucceded;
         }
-        
-        char [] pw = pwCallback.getPassword();
+
+        char[] pw = pwCallback.getPassword();
         if (pw == null) {
-            loginSucceded = false;            
+            loginSucceded = false;
             LOGGER.exiting("UnixLoginModule", "login", Boolean.FALSE);
             return loginSucceded;
         }
-        
+
         AuthUserWrapper authuser = null;
-        if(authMethod == null) {
-            throw RB.newLoginException("unixlogin.error.missing", 
-                                       new Object [] {"auth_method"});
-        } else if("pam".equals(authMethod)) {
+        if (authMethod == null) {
+            throw RB.newLoginException("unixlogin.error.missing",
+                    new Object[]{"auth_method"});
+        } else if ("pam".equals(authMethod)) {
             authuser = AuthUserWrapper.newInstanceForPam(command, pamService);
         } else if ("shadow".equals(authMethod)) {
-            LOGGER.log(Level.WARNING, "unixlogin.deprecatedAuthMethod", 
-                       new Object [] { authMethod, "system" } );
+            LOGGER.log(Level.WARNING, "unixlogin.deprecatedAuthMethod",
+                    new Object[]{authMethod, "system"});
             authuser = AuthUserWrapper.newInstance(command);
         } else if ("system".equals(authMethod)) {
             authuser = AuthUserWrapper.newInstance(command);
         } else {
-            throw RB.newLoginException("unixlogin.error.unknownAuthMethod", 
-                                       new Object [] {authMethod});
+            throw RB.newLoginException("unixlogin.error.unknownAuthMethod",
+                    new Object[]{authMethod});
         }
 
         try {
             Set p = authuser.authenticate(username, pw);
-            if( p!= null) {
+            if (p != null) {
                 LOGGER.log(Level.FINE, "unixlogin.authuser.principal.count", new Integer(p.size()));
                 principals.addAll(p);
                 loginSucceded = true;
@@ -260,7 +255,7 @@ public class UnixLoginModule implements LoginModule {
                 LOGGER.log(Level.FINE, "unixlogin.authuser.principal.no");
                 loginSucceded = false;
             }
-        } catch(LoginException ex) {
+        } catch (LoginException ex) {
             LOGGER.throwing("UnixLoginModule", "login", ex);
             throw ex;
         }
@@ -275,13 +270,13 @@ public class UnixLoginModule implements LoginModule {
      */
     public boolean commit() {
         LOGGER.entering("UnixLoginModule", "commit");
-        if(loginSucceded) {
-           subject.getPrincipals().addAll(principals);
-           if(LOGGER.isLoggable(Level.FINER)) {
-               LOGGER.log(Level.FINE, "unixlogin.subject.principal", 
-                          new Integer(subject.getPrincipals().size()) );
-           }
-           commitSucceded = true; 
+        if (loginSucceded) {
+            subject.getPrincipals().addAll(principals);
+            if (LOGGER.isLoggable(Level.FINER)) {
+                LOGGER.log(Level.FINE, "unixlogin.subject.principal",
+                        new Integer(subject.getPrincipals().size()));
+            }
+            commitSucceded = true;
         }
         LOGGER.exiting("UnixLoginModule", "commit", Boolean.valueOf(commitSucceded));
         return commitSucceded;
@@ -302,7 +297,7 @@ public class UnixLoginModule implements LoginModule {
      * @return Always <code>true</code>
      */
     public boolean logout() {
-        if(commitSucceded) {
+        if (commitSucceded) {
             subject.getPrincipals().removeAll(principals);
         }
         subject = null;
@@ -313,5 +308,4 @@ public class UnixLoginModule implements LoginModule {
         commitSucceded = false;
         return true;
     }
-    
 }

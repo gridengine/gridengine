@@ -117,9 +117,7 @@ jgdi_qquota.o:  $(JGDI_DIR)/jgdi_qquota.c
 
 #############################################################################
 
-jgdi_template: $(JGDI_BUILD_DIR)/sge_all_listsL.template
-
-$(JGDI_BUILD_DIR)/sge_all_listsL.template: $(JGDI_SGEOBJ_DIR)/sge_all_listsL.h
+jgdi_template:
 	$(CC) -DJGDI_GENERATE -E $(CCFLAGS) $(CFLAGS) $(NOERR_CFLAG) $(CCCDLFLAGS) $(JGDI_INCLUDES) $(JNI_INCLUDES) $(CORE_INCLUDE) $(SHARED_CFLAGS) $(JGDI_SGEOBJ_DIR)/sge_all_listsL.h > $(JGDI_BUILD_DIR)/sge_all_listsL.txt; \
    sed -e '/SGE_REF(/d' -e '/CULL_ANY_SUBTYPE/d' $(JGDI_BUILD_DIR)/sge_all_listsL.txt > $(JGDI_BUILD_DIR)/sge_all_listsL.template
 

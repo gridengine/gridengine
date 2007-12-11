@@ -37,9 +37,16 @@ import com.sun.grid.jgdi.JGDIFactory;
 import com.sun.grid.jgdi.event.Event;
 import com.sun.grid.jgdi.event.EventListener;
 import com.sun.grid.jgdi.event.QmasterGoesDownEvent;
+import com.sun.grid.jgdi.event.ShutdownEvent;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -49,17 +56,18 @@ import java.util.logging.Logger;
  *
  */
 public abstract class AbstractEventClient implements Runnable {
-    
+
     private static final Logger logger = Logger.getLogger("com.sun.grid.jgdi.event");
     private int evc_index = -1;
     private int id;
     private JGDI jgdi;
     private Thread thread;
-    protected final Object syncObject = new Object();
-    
+    protected final Lock fairLock = new ReentrantLock(true);
+    private final Condition shutdownCondition = fairLock.newCondition();
+    private final Condition startupCondition = fairLock.newCondition();
     private static List<AbstractEventClient> instances = new LinkedList<AbstractEventClient>();
     private static boolean shutdown = false;
-    
+
     /**
      * Creates a new instance of EventClient
      * @param url  JGDI connection url in the form
@@ -69,8 +77,8 @@ public abstract class AbstractEventClient implements Runnable {
      * @throws com.sun.grid.jgdi.JGDIException
      */
     public AbstractEventClient(String url, int regId) throws JGDIException {
-        synchronized(instances) {
-            if(shutdown) {
+        synchronized (instances) {
+            if (shutdown) {
                 throw new JGDIException("qmaster is going down");
             }
             instances.add(this);
@@ -83,24 +91,24 @@ public abstract class AbstractEventClient implements Runnable {
             throw new IllegalArgumentException("JGDI must be instanceof " + JGDIImpl.class.getName());
         }
     }
-    
+
     public static void closeAll() {
         List<AbstractEventClient> currentInstances = null;
-        synchronized(instances) {
+        synchronized (instances) {
             currentInstances = new ArrayList<AbstractEventClient>(instances);
             shutdown = true;
         }
-        
-        for(AbstractEventClient evt: currentInstances) {
+
+        for (AbstractEventClient evt : currentInstances) {
             try {
                 evt.close();
-            } catch(Exception ex) {
-                // Ignore
+            } catch (Exception ex) {
+            // Ignore
             }
         }
-        
+
     }
-    
+
     /**
      * Get the id of this event client
      * @return the event client id
@@ -108,7 +116,7 @@ public abstract class AbstractEventClient implements Runnable {
     public int getId() {
         return id;
     }
-    
+
     /**
      * Set the event client id of this event client
      * <p><strong>This method is not intended to be call by the
@@ -122,107 +130,131 @@ public abstract class AbstractEventClient implements Runnable {
     public void setId(int id) {
         this.id = id;
     }
-    
+
     /**
      *  Get the index of this event client in the native event client
      *  list.
      *  @return index of this event client in the native event client list
      */
     public int getEVCIndex() {
-        synchronized (syncObject) {
+        fairLock.lock();
+        try {
             return evc_index;
+        } finally {
+            fairLock.unlock();
         }
     }
-    
+
     /**
      *  Close this event client
      */
     public void close() throws JGDIException, InterruptedException {
-        
+
         Thread aThread = null;
         int index = 0;
         JGDI aJgdi = null;
         int evcId;
-        synchronized (syncObject) {
+        fairLock.lock();
+        try {
             aThread = thread;
             thread = null;
             index = evc_index;
+            evc_index = -1;
             evcId = id;
+        } finally {
+            fairLock.unlock();
         }
+
         try {
             if (aThread != null) {
-                while (aThread.isAlive()) {
-                    logger.log(Level.FINE, "interrupting working thread for event client {0}", evcId);
-                    aThread.interrupt();
+                logger.log(Level.FINE, "interrupting working thread for event client {0}", evcId);
+                aThread.interrupt();
+            }
+            if (index >= 0) {
+                logger.log(Level.FINE, "closing native event client with id {0}", evcId);
+                closeNative(index);
+                logger.log(Level.FINE, "native event client with id {0} closed", evcId);
+            }
+            if (aThread != null) {
+                if (aThread.isAlive()) {
+                    logger.log(Level.FINE, "waiting for end working thread of event client {0}", evcId);
                     aThread.join();
                 }
                 logger.log(Level.FINE, "working thread for event client {0} died", evcId);
             }
         } finally {
-            synchronized (syncObject) {
-                index = evc_index;
-                evc_index = -1;
-                aJgdi = this.jgdi;
-                this.jgdi = null;
-                syncObject.notifyAll();
-            }
-            if (index >= 0) {
+            try {
+                fairLock.lock();
                 try {
-                        logger.log(Level.FINE, "closing native event client with id {0}", evcId);
-                        synchronized(instances) {
-                            instances.remove(this);
-                        }
-                        closeNative(index);
+                    aJgdi = this.jgdi;
+                    this.jgdi = null;
+                    shutdownCondition.signalAll();
                 } finally {
-                    if (aJgdi != null) {
-                        logger.log(Level.FINE, "closing jgdi connection for event client {0}", evcId);
-                        aJgdi.close();
-                    }
+                    fairLock.unlock();
+                }
+
+                if (aJgdi != null) {
+                    logger.log(Level.FINE, "closing jgdi connection for event client {0}", evcId);
+                    aJgdi.close();
+                    logger.log(Level.FINE, "jgdi connection for event client {0} closed", evcId);
+                }
+            } finally {
+                synchronized (instances) {
+                    instances.remove(this);
                 }
             }
         }
     }
-    
+
     /**
      *  Start the event client
      */
     public void start() throws InterruptedException {
-        synchronized (syncObject) {
+        fairLock.lock();
+        try {
             if (thread == null) {
                 thread = new Thread(this);
                 thread.setPriority(Thread.NORM_PRIORITY - 1);
                 thread.start();
-                syncObject.wait();
+                startupCondition.await();
             } else {
                 throw new IllegalStateException("event client is already running");
             }
+        } finally {
+            fairLock.unlock();
         }
     }
-    
+
     /**
      *  Run method of the event client thread
      */
     public void run() {
-        
+
         int evcId = 0;
         try {
-            
-            synchronized (syncObject) {
+
+            fairLock.lock();
+            try {
+
                 try {
                     this.register();
                 } finally {
-                    syncObject.notify();
+                    startupCondition.signal();
                 }
+            } finally {
+                fairLock.unlock();
             }
-            
+
             List<Event> eventList = new ArrayList<Event>();
             evcId = getId();
             logger.log(Level.FINE, "event client registered at qmaster (id = {0})", evcId);
-            
+
             while (!Thread.currentThread().isInterrupted()) {
                 boolean gotShutdownEvent = false;
                 try {
-                    synchronized (syncObject) {
+                    fairLock.lock();
+                    try {
+
                         if (thread == null) {
                             break;
                         }
@@ -231,36 +263,35 @@ public abstract class AbstractEventClient implements Runnable {
                         }
                         logger.log(Level.FINER, "calling native method fillEvents for event client {0}", evcId);
                         fillEvents(eventList);
-                    }
-                    if(Thread.currentThread().isInterrupted()) {
-                        break;
+                    } finally {
+                        fairLock.unlock();
                     }
                     if (logger.isLoggable(Level.FINER)) {
-                        logger.log(Level.FINE, "got {0} events from qmaster for event client {1}", 
-                                   new Object [] { eventList.size(), evcId });
+                        logger.log(Level.FINE, "got {0} events from qmaster for event client {1}",
+                                new Object[]{eventList.size(), evcId});
+                    }
+                    if (Thread.currentThread().isInterrupted()) {
+                        break;
                     }
                     for (Event event : eventList) {
                         try {
                             fireEventOccured(event);
-                            if (event instanceof QmasterGoesDownEvent) {
+                            if (event instanceof QmasterGoesDownEvent || event instanceof ShutdownEvent) {
                                 gotShutdownEvent = true;
                             }
                         } catch (Exception e) {
                             logger.log(Level.WARNING, "error in fire event", e);
                         }
                     }
-//give threads a different priority or use Thread.sleep() or queue events ?????
-//               Thread.sleep(1);
-                    Thread.yield();
                 } catch (Exception e) {
                     LogRecord lr = new LogRecord(Level.WARNING, "error in event loop of event client {0}");
-                    lr.setParameters(new Object [] { evcId });
+                    lr.setParameters(new Object[]{evcId});
                     lr.setThrown(e);
                     logger.log(lr);
                 }
                 eventList.clear();
                 if (gotShutdownEvent) {
-                    logger.log(Level.FINE, "got shutdown event from master, exiting working thread of event client {0}", evcId );
+                    logger.log(Level.FINE, "got shutdown event from master, exiting working thread of event client {0}", evcId);
                     break;
                 }
             }
@@ -268,129 +299,177 @@ public abstract class AbstractEventClient implements Runnable {
             deregister();
         } catch (Exception ex) {
             LogRecord lr = new LogRecord(Level.WARNING, "Unexpected error in event loop of event client {0}");
-            lr.setParameters(new Object [] { evcId });
+            lr.setParameters(new Object[]{evcId});
             lr.setThrown(ex);
             logger.log(lr);
         } finally {
             logger.exiting(getClass().getName(), "run");
-            this.thread = null;
+            fairLock.lock();
+            try {
+                this.thread = null;
+            } finally {
+                fairLock.unlock();
+            }
         }
     }
-    
+
     /**
      *  Determine if the event client is running
      *  @return <code>true</code> if the event client is running
      */
     public boolean isRunning() {
-        synchronized (syncObject) {
+        fairLock.lock();
+        try {
             return thread != null && thread.isAlive();
+        } finally {
+            fairLock.unlock();
         }
     }
-    
+
     protected void testConnected() throws JGDIException {
-        if (jgdi == null) {
-            throw new JGDIException("Not connected");
+        fairLock.lock();
+        try {
+
+            if (jgdi == null) {
+                throw new JGDIException("Not connected");
+            }
+        } finally {
+            fairLock.unlock();
         }
     }
-    
+
     /**
      *  Subscribe all events for this event client
      *  @throws JGDIException if the subscribtion is failed
      */
     public void subscribeAll() throws JGDIException {
-        synchronized (syncObject) {
+        fairLock.lock();
+        try {
             subscribeAllNative();
+        } finally {
+            fairLock.unlock();
         }
     }
-    
-    
+
     /**
      *  Unsubscribe all events for this event client
      *  @throws JGDIException if the unsubscribtion is failed
      */
     public void unsubscribeAll() {
-        synchronized (syncObject) {
+        fairLock.lock();
+        try {
             try {
                 unsubscribeAllNative();
             } catch (JGDIException jgdie) {
                 // TODO
                 jgdie.printStackTrace();
             }
+        } finally {
+            fairLock.unlock();
         }
     }
-    
-    
+
     protected void fireEventOccured(Event evt) {
-        
+
         logger.log(Level.FINER, "fire event {0}", evt);
-        EventListener[] lis = null;
-        synchronized (eventListeners) {
-            lis = new EventListener[eventListeners.size()];
-            eventListeners.toArray(lis);
+        Set<EventListener> tmp = null;
+        listenerLock.lock();
+        try {
+            tmp = eventListeners;
+        } finally {
+            listenerLock.unlock();
         }
-        
-        for (int i = 0; i < lis.length; i++) {
-            lis[i].eventOccured(evt);
+
+        for (EventListener lis : tmp) {
+            lis.eventOccured(evt);
         }
     }
-    
-    private List<EventListener> eventListeners = new ArrayList<EventListener>();
-    
+    private Set<EventListener> eventListeners = Collections.<EventListener>emptySet();
+    private final Lock listenerLock = new ReentrantLock();
+
     /**
      * Add an event listener to this event client
      * @param lis the event listener
      */
     public void addEventListener(EventListener lis) {
-        synchronized (eventListeners) {
+        listenerLock.lock();
+        try {
+            Set<EventListener> tmp = eventListeners;
+            eventListeners = new HashSet<EventListener>(tmp.size() + 1);
+            eventListeners.addAll(tmp);
             eventListeners.add(lis);
+        } finally {
+            listenerLock.unlock();
         }
     }
-    
+
     /**
      * Remove an event listener from this event client
      * @param lis the event listener
      */
     public void removeEventListener(EventListener lis) {
-        synchronized (eventListeners) {
+        listenerLock.lock();
+        try {
+            eventListeners = new HashSet<EventListener>(eventListeners);
             eventListeners.remove(lis);
+        } finally {
+            listenerLock.unlock();
         }
     }
-    
+
     public void commit() throws JGDIException {
-        synchronized (syncObject) {
+        fairLock.lock();
+        try {
             logger.log(Level.FINE, "commit");
             testConnected();
             nativeCommit();
+        } finally {
+            fairLock.unlock();
         }
     }
-    
+
     private void register() throws JGDIException {
-        synchronized (syncObject) {
+        fairLock.lock();
+        try {
             logger.log(Level.FINE, "register");
             testConnected();
             registerNative();
+        } finally {
+            fairLock.unlock();
         }
     }
-    
+
     private void deregister() throws JGDIException {
-        synchronized (syncObject) {
+        fairLock.lock();
+        try {
             if (evc_index >= 0) {
                 logger.log(Level.FINE, "deregistered");
                 deregisterNative();
             } else {
                 logger.log(Level.FINE, "can't deregister, already closed");
             }
+        } finally {
+            fairLock.unlock();
         }
     }
-    
+
     private native void nativeCommit() throws JGDIException;
+
     private native void subscribeNative(int type) throws JGDIException;
+
     private native void unsubscribeNative(int type) throws JGDIException;
+
     private native void subscribeAllNative() throws JGDIException;
+
     private native void unsubscribeAllNative() throws JGDIException;
+
     private native void closeNative(int evcIndex) throws JGDIException;
+
     private native int initNative(JGDI jgdi, int regId) throws JGDIException;
+
     private native void registerNative() throws JGDIException;
+
     private native void deregisterNative() throws JGDIException;
+
     private native void fillEvents(List eventList) throws JGDIException;
 }

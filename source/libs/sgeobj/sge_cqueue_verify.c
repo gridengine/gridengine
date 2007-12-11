@@ -410,3 +410,99 @@ cqueue_verify_job_slots(lListElem *cqueue, lList **answer_list, lListElem *attr_
    return ret;
 }
 
+/****** sge_cqueue_verify/cqueue_verify_memory_value() ****************************
+*  NAME
+*     cqueue_verify_memory_value() -- verify a queue memory attribute like h_vmem
+*
+*  SYNOPSIS
+*     bool 
+*     cqueue_verify_memory_value(lListElem *cqueue, lList **answer_list, 
+*                             lListElem *attr_elem)
+*
+*  FUNCTION
+*     Verifies if a memory attribute of a queue is in the expected range
+*     (0 .. INFINITY) NONE is no allowed value.
+*
+*  INPUTS
+*     lListElem *cqueue    - The queue to verify.
+*     lList **answer_list  - answer list to report errors
+*     lListElem *attr_elem - the attribute to verify
+*
+*  RESULT
+*     bool - true on success, false on error
+*
+*  NOTES
+*     MT-NOTE: cqueue_verify_memory_value() is MT safe 
+*******************************************************************************/
+bool
+cqueue_verify_memory_value(lListElem *cqueue, lList **answer_list,
+                       lListElem *attr_elem)
+{
+   bool ret = true;
+
+   DENTER(CQUEUE_VERIFY_LAYER, "cqueue_verify_memory_value");
+   if (cqueue != NULL && attr_elem != NULL) {
+      const char *memory_string = lGetString(attr_elem, AMEM_value);
+
+#if 1
+      lListElem *copy = lCopyElem(attr_elem);
+      if (!object_parse_field_from_string(copy, answer_list, AMEM_value, memory_string)) {
+         ret = false;
+      }
+      lFreeElem(&copy);
+#else
+      if (memory_string == NULL || !strcasecmp(memory_string, "none")) {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
+                         MSG_NONE_NOT_ALLOWED_S, "memory values");
+         ret = false;
+      }
+#endif      
+   }
+   DEXIT;
+   return ret;
+}
+
+/****** sge_cqueue_verify/cqueue_verify_time_value() ****************************
+*  NAME
+*     cqueue_verify_time_value() -- verify a queue time attribute like h_cpu
+*
+*  SYNOPSIS
+*     bool 
+*     cqueue_verify_time_value(lListElem *cqueue, lList **answer_list, 
+*                             lListElem *attr_elem)
+*
+*  FUNCTION
+*     Verifies if a time attribute of a queue is in the expected range
+*     (0:0:0 .. INFINITY) NONE is no allowed value.
+*
+*  INPUTS
+*     lListElem *cqueue    - The queue to verify.
+*     lList **answer_list  - answer list to report errors
+*     lListElem *attr_elem - the attribute to verify
+*
+*  RESULT
+*     bool - true on success, false on error
+*
+*  NOTES
+*     MT-NOTE: cqueue_verify_time_value() is MT safe 
+*******************************************************************************/
+bool
+cqueue_verify_time_value(lListElem *cqueue, lList **answer_list,
+                       lListElem *attr_elem)
+{
+   bool ret = true;
+
+   DENTER(CQUEUE_VERIFY_LAYER, "cqueue_verify_time_value");
+   if (cqueue != NULL && attr_elem != NULL) {
+      const char *time_string = lGetString(attr_elem, ATIME_value);
+
+      if (time_string == NULL || !strcasecmp(time_string, "none")) {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
+                         MSG_NONE_NOT_ALLOWED_S, "time values");
+         ret = false;
+      }
+   }
+   DEXIT;
+   return ret;
+}
+

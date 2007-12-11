@@ -121,7 +121,7 @@
 *     MT-NOTE: is MT safe. 
 *
 *******************************************************************************/
-void event_update_func(lList **alpp, lList *event_list) 
+void event_update_func(u_long32 ec_id, lList **alpp, lList *event_list) 
 {
    DENTER(TOP_LAYER, "event_update_func");
 

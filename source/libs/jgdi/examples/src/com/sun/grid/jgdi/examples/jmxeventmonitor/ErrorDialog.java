@@ -32,7 +32,6 @@
 package com.sun.grid.jgdi.examples.jmxeventmonitor;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -55,22 +54,19 @@ import javax.swing.tree.DefaultMutableTreeNode;
  *
  */
 public class ErrorDialog extends JDialog {
-    
-    private final static int COLUMNS = 40;
-    private Throwable ex;
-    
-    private DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode();
 
+    private Throwable ex;
+    private DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode();
     private JTree exceptionTree = new JTree(rootNode);
     private JScrollPane exceptionScrollPane = new JScrollPane(exceptionTree);
     private JPanel buttonPanel = new JPanel(new FlowLayout());
-    
+
     private ErrorDialog(JFrame f, String msg, int type, boolean modal) {
-        
+
         super(f, modal);
-        
+
         Icon icon = null;
-        switch(type) {
+        switch (type) {
             case JOptionPane.ERROR_MESSAGE:
                 setTitle("Error");
                 icon = UIManager.getIcon("OptionPane.errorIcon");
@@ -84,9 +80,9 @@ public class ErrorDialog extends JDialog {
                 icon = UIManager.getIcon("OptionPane.warningIcon");
                 break;
         }
-        
+
         setLayout(new BorderLayout());
-        
+
         JTextArea textArea = new JTextArea();
         textArea.setColumns(30);
         textArea.setText(msg);
@@ -94,160 +90,158 @@ public class ErrorDialog extends JDialog {
         textArea.setWrapStyleWord(true);
         textArea.setEditable(false);
         textArea.setOpaque(false);
-        
-        textArea.setBorder(BorderFactory.createEmptyBorder(10,20,10,20));
-        
-        
-        if(icon != null) {
+
+        textArea.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+
+
+        if (icon != null) {
             JPanel textPanel = new JPanel(new BorderLayout());
             textPanel.add(textArea, BorderLayout.CENTER);
             JLabel label = new JLabel(icon);
             textPanel.add(label, BorderLayout.WEST);
-            textPanel.setBorder(BorderFactory.createEmptyBorder(10,20,10,20));
+            textPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
             add(textPanel, BorderLayout.NORTH);
         } else {
             add(textArea, BorderLayout.NORTH);
         }
         exceptionScrollPane.setVisible(false);
-        add(exceptionScrollPane,BorderLayout.CENTER);
-        
+        add(exceptionScrollPane, BorderLayout.CENTER);
+
         JButton btc = new JButton("Close");
-        
+
         buttonPanel.add(btc);
-        
-        
-        btc.addActionListener( new ActionListener() {
+
+
+        btc.addActionListener(new ActionListener() {
+
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);
             }
         });
-        
-        
+
+
         add(buttonPanel, BorderLayout.SOUTH);
     }
-    
+
     /** Creates a new instance of ErrorDialog */
     private ErrorDialog(JFrame f, Throwable ex) {
         this(f, ex.getLocalizedMessage(), ex);
     }
-    
+
     private ErrorDialog(JFrame f, String msg, Throwable ex) {
         this(f, msg, JOptionPane.ERROR_MESSAGE, true);
         this.ex = ex;
-        if(ex != null) {
+        if (ex != null) {
             buttonPanel.add(new JButton(new ShowDetailsAction()));
         }
     }
-    
-    
+
     public static void showErrorDialog(JFrame frame, Throwable ex) {
         ErrorDialog dlg = new ErrorDialog(frame, ex);
         dlg.pack();
-        if(frame != null) {
+        if (frame != null) {
             dlg.setLocationRelativeTo(frame);
         }
         dlg.setVisible(true);
     }
-    
+
     public static void showErrorDialog(JFrame frame, String msg, Throwable ex) {
         ErrorDialog dlg = new ErrorDialog(frame, msg, ex);
         dlg.pack();
-        if(frame != null) {
+        if (frame != null) {
             dlg.setLocationRelativeTo(frame);
         }
         dlg.setVisible(true);
     }
-    
+
     public static void showErrorDialog(JFrame frame, String msg) {
         ErrorDialog dlg = new ErrorDialog(frame, msg, JOptionPane.ERROR_MESSAGE, true);
         dlg.pack();
-        if(frame != null) {
+        if (frame != null) {
             dlg.setLocationRelativeTo(frame);
         }
         dlg.setVisible(true);
     }
-    
+
     public static void showInfoDialog(JFrame frame, String msg) {
         ErrorDialog dlg = new ErrorDialog(frame, msg, JOptionPane.INFORMATION_MESSAGE, true);
         dlg.pack();
-        if(frame != null) {
+        if (frame != null) {
             dlg.setLocationRelativeTo(frame);
         }
         dlg.setVisible(true);
     }
-    
+
     public static void showWarnDialog(JFrame frame, String msg) {
         ErrorDialog dlg = new ErrorDialog(frame, msg, JOptionPane.WARNING_MESSAGE, true);
         dlg.pack();
-        if(frame != null) {
+        if (frame != null) {
             dlg.setLocationRelativeTo(frame);
         }
         dlg.setVisible(true);
     }
-    
+
     public static void showWarnDialog(JFrame frame, String msg, Throwable ex) {
         ErrorDialog dlg = new ErrorDialog(frame, msg, JOptionPane.WARNING_MESSAGE, true);
         dlg.pack();
-        if(frame != null) {
+        if (frame != null) {
             dlg.setLocationRelativeTo(frame);
         }
         dlg.setVisible(true);
     }
-    
+
     private class ShowDetailsAction extends AbstractAction {
-        
+
         boolean visible = false;
-        
+
         public ShowDetailsAction() {
             super("Details");
         }
-        
+
         public void actionPerformed(ActionEvent e) {
-            
-            if(visible) {
+
+            if (visible) {
                 exceptionScrollPane.setVisible(false);
                 visible = false;
             } else {
-                if(rootNode.getChildCount() == 0) {
-                   rootNode.add(new ExceptionNode(ErrorDialog.this.ex));
+                if (rootNode.getChildCount() == 0) {
+                    rootNode.add(new ExceptionNode(ErrorDialog.this.ex));
 
-                   for(Throwable te = ErrorDialog.this.ex.getCause(); te != null; te = te.getCause()) {
-                       rootNode.add(new ExceptionNode(te));
-                   }
-                   exceptionTree.expandRow(0);
+                    for (Throwable te = ErrorDialog.this.ex.getCause(); te != null; te = te.getCause()) {
+                        rootNode.add(new ExceptionNode(te));
+                    }
+                    exceptionTree.expandRow(0);
                 }
                 exceptionScrollPane.setVisible(true);
+                exceptionScrollPane.invalidate();
+                exceptionScrollPane.repaint();
                 visible = true;
             }
             ErrorDialog.this.invalidate();
             ErrorDialog.this.repaint();
         }
-        
     }
-        
+
     private class ExceptionNode extends DefaultMutableTreeNode {
-        
+
         public ExceptionNode(Throwable t) {
             super.setUserObject(String.format("%s: %s", t.getClass().getName(), t.getMessage()));
-            
-            StackTraceElement [] st = t.getStackTrace();
-            for(StackTraceElement elem: st) {
-                 DefaultMutableTreeNode node = new DefaultMutableTreeNode();
-                 node.setUserObject(elem.toString());
-                 add(node);
+
+            StackTraceElement[] st = t.getStackTrace();
+            for (StackTraceElement elem : st) {
+                DefaultMutableTreeNode node = new DefaultMutableTreeNode();
+                node.setUserObject(elem.toString());
+                add(node);
             }
         }
-        
-        
     }
-    
-    public static void main(String [] args) {
-        
+
+    public static void main(String[] args) {
+
         Exception ex = new Exception("Test exception");
         ex.initCause(new IllegalStateException("ex1"));
         ErrorDialog.showErrorDialog(null, ex);
         ErrorDialog.showInfoDialog(null, "blubber");
         System.exit(0);
     }
-    
 }

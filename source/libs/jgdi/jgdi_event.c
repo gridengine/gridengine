@@ -72,99 +72,130 @@ static jgdi_result_t fill_job_event(JNIEnv *env, jobject event_obj, lListElem *e
 static jgdi_result_t fill_generic_event(JNIEnv *env, jobject event_obj, const char* beanClassName, 
                                         lDescr *descr, int event_action, lListElem *ev, lList **alpp);
 
+static sge_evc_class_t *jgdi_get_evc_by_id(u_long32 evid) {
 
-typedef struct {
-   pthread_mutex_t mutex;      /* used for mutual exclusion                         */
-   pthread_cond_t  cond_var;   /* used for waiting                                  */
-   bool            exit;       /* true -> exit event delivery                       */
-   bool            triggered;  /* new events addded, a scheduling run is triggered  */
-   lList           *new_events; /* the storage for new events                       */
-   bool            rebuild_categories;
-   bool            new_global_conf;
-} JGDIEvent_control_t;
+   sge_evc_class_t *evc = NULL;
+   int i = 0;
 
+   DENTER(JGDI_LAYER, "jgdi_get_evc_by_id");
+   
+   pthread_mutex_lock(&sge_evc_mutex);
+   for (i = 0; i < MAX_EVC_ARRAY_SIZE; i++) {
+      sge_evc_class_t *tmp = sge_evc_array[i];
+      if (tmp && (tmp->ec_get_id(tmp) == evid)) {
+         evc = tmp;
+         break;
+      }
+   }
+   pthread_mutex_unlock(&sge_evc_mutex);
 
-static JGDIEvent_control_t JGDIEvent_Control = {
-   PTHREAD_MUTEX_INITIALIZER, 
-   PTHREAD_COND_INITIALIZER, 
-   false,
-   false,
-   NULL, 
-   true,  /* rebuild_categories */
-   false /* new_global_config */
-};
+   DRETURN(evc);
+}   
 
-
-static void jgdi_event_update_func(lList **alpp, lList *event_list) 
+static void jgdi_event_update_func(u_long32 evid, lList **alpp, lList *event_list) 
 {
+   ec_control_t *evco = NULL;
+   sge_evc_class_t *sge_evc = NULL;
+
    DENTER(TOP_LAYER, "jgdi_event_update_func");
 
-   sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &JGDIEvent_Control.mutex);  
+   sge_evc = jgdi_get_evc_by_id(evid);
+   if (sge_evc == NULL) {
+      DPRINTF(("EVENT UPDATE FUNCTION sge_evc IS NULL\n"));
+      DRETURN_VOID; 
+   }
+   evco = sge_evc->ec_get_event_control(sge_evc);
+   if (evco == NULL) {
+      DPRINTF(("EVENT UPDATE FUNCTION evco IS NULL\n"));
+      DRETURN_VOID;
+   }
+
+   sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &(evco->mutex));  
    
-   if (JGDIEvent_Control.new_events != NULL) {
+   if (evco->new_events != NULL) {
       lList *events = NULL;
       lXchgList(lFirst(event_list), REP_list, &(events));
-      lAddList(JGDIEvent_Control.new_events, &events);
+      lAddList(evco->new_events, &events);
       events = NULL;
    } else {
-      lXchgList(lFirst(event_list), REP_list, &(JGDIEvent_Control.new_events));
+      lXchgList(lFirst(event_list), REP_list, &(evco->new_events));
    }   
    
-   JGDIEvent_Control.triggered = true;
+   evco->triggered = true;
 
    DPRINTF(("EVENT UPDATE FUNCTION jgdi_event_update_func() HAS BEEN TRIGGERED\n"));
 
-   sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &JGDIEvent_Control.mutex);
+   sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &(evco->mutex));
 
-   pthread_cond_signal(&JGDIEvent_Control.cond_var);
+   pthread_cond_signal(&(evco->cond_var));
 
    DRETURN_VOID;
 }
 
-#define JGDI_TIMEOUT_S 10
+#define JGDI_TIMEOUT_S 10000
 #define JGDI_TIMEOUT_N 0
 
-static void jgdi_wait_for_event(void)
-{
+static lList *jgdi_event_get_func(sge_evc_class_t *sge_evc) {
+   lList *event_list = NULL;
+   ec_control_t * evco = NULL;
    u_long32 current_time = 0; 
    struct timespec ts;
-   DENTER(TOP_LAYER, "jgdi_wait_for_event");
+   
+
+   DENTER(TOP_LAYER, "jgdi_event_get_func");
+
+   if (sge_evc == NULL) {
+      DRETURN(NULL);
+   }
+   evco = sge_evc->ec_get_event_control(sge_evc);
+   if (evco == NULL) {
+      DRETURN(NULL);
+   }
+
+   sge_mutex_lock("jgdi_event_thread_cond_mutex", SGE_FUNC, __LINE__, 
+                  &(evco->mutex));
 
    current_time = sge_get_gmt();
-   while (!JGDIEvent_Control.triggered && !JGDIEvent_Control.exit &&
+   while (!evco->triggered && !evco->exit &&
           ((sge_get_gmt() - current_time) < JGDI_TIMEOUT_S)){
       ts.tv_sec = (long) current_time + JGDI_TIMEOUT_S;
       ts.tv_nsec = JGDI_TIMEOUT_N;
-      pthread_cond_timedwait(&JGDIEvent_Control.cond_var,
-                             &JGDIEvent_Control.mutex, &ts);
+      pthread_cond_timedwait(&(evco->cond_var),
+                             &(evco->mutex), &ts);
    }
-   DEXIT;
-}
-
-static lList *get_events_from_event_queue(sge_evc_class_t *evc) {
-   lList *event_list = NULL;
-
-   DENTER(TOP_LAYER, "get_events_from_event_queue");
-
-   sge_mutex_lock("jgdi_event_thread_cond_mutex", SGE_FUNC, __LINE__, 
-                  &JGDIEvent_Control.mutex);
-
-   jgdi_wait_for_event();
-
-   evc->ec_set_busy(evc, 1);
 
    /* taking out the new events */
-   event_list = JGDIEvent_Control.new_events;
-   JGDIEvent_Control.new_events = NULL;
-   JGDIEvent_Control.triggered = false;
+   event_list = evco->new_events;
+   evco->new_events = NULL;
+   evco->triggered = false;
 
    DPRINTF(("JGDI TAKES FROM EVENT QUEUE\n"));
 
    sge_mutex_unlock("jgdi_event_thread_cond_mutex", SGE_FUNC, __LINE__, 
-                    &JGDIEvent_Control.mutex);
+                    &(evco->mutex));
+
+   sge_evc->ec_ack(sge_evc);
+
+#if 1
+   sge_evc->ec_set_busy(sge_evc, 1);
+   sge_evc->ec_commit(sge_evc, NULL);
+#endif
 
    DRETURN(event_list);
 }   
+
+static void jgdi_event_wait_func(sge_evc_class_t *sge_evc) {
+#if 1
+   /*
+   ** reset busy, important otherwise no new events
+   */
+   sge_evc->ec_set_busy(sge_evc, 0);
+   sge_evc->ec_commit(sge_evc, NULL);
+#endif   
+
+}
+
+
 
 /*
  * Class:     com_sun_grid_jgdi_jni_AbstractEventClient
@@ -186,8 +217,17 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_closeNativ
    sge_evc_array[evc_index] = NULL;
    pthread_mutex_unlock(&sge_evc_mutex);
    if (evc) {
+      u_long32 reg_id = evc->ec_get_id(evc);
       /* shutdown the event client */
-      evc->ec_deregister(evc);
+      if (evc->ec_deregister(evc)) {
+         jobject logger = jgdi_get_logger(env, JGDI_EVENT_LOGGER);
+         if (jgdi_is_loggable(env, logger, FINER)) {
+            jgdi_log_printf(env, JGDI_EVENT_LOGGER, FINER,
+                            "deregistered sge_evc_array[%d] event client %d", evc_index, (int)reg_id);
+         }
+      } else {
+         THROW_ERROR((env, JGDI_ILLEGAL_STATE, "evc->ec_deregister failed"));
+      }
       /* destroy the event client */
       sge_evc_class_destroy(&evc);
    } else {
@@ -228,7 +268,7 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_initNative
       ret = JGDI_ILLEGAL_STATE;
       goto error;
    }
-   evc = sge_evc_class_create(sge_gdi_ctx, (ev_registration_id)reg_id, &alp, NULL); 
+   evc = sge_evc_class_create(sge_gdi_ctx, (ev_registration_id)reg_id, &alp, sge_gdi_ctx->get_component_name(sge_gdi_ctx)); 
    if (!evc) {
       throw_error_from_answer_list(env, JGDI_ERROR, alp);
       DRETURN(-1);
@@ -288,9 +328,16 @@ jgdi_result_t getEVC(JNIEnv *env, jobject evcobj, sge_evc_class_t **evc, lList *
       DRETURN(ret);
    }
    if (index >= 0 && index < MAX_EVC_ARRAY_SIZE) {
+       sge_evc_class_t *tmp_evc = NULL;
        pthread_mutex_lock(&sge_evc_mutex);
-       *evc = sge_evc_array[index];
+       tmp_evc = sge_evc_array[index];
        pthread_mutex_unlock(&sge_evc_mutex);
+       if (tmp_evc != NULL) {
+         *evc = tmp_evc;
+       } else {
+         answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, "event client sge_evc_array[%d] has already been closed", index);
+         ret = JGDI_ILLEGAL_STATE;
+       }
    } else {
        answer_list_add(alpp, "event has not a valid evc index", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
        ret = JGDI_ILLEGAL_STATE;
@@ -336,9 +383,13 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_registerNa
       }
    }
    sge_gdi_ctx = sge_evc->get_gdi_ctx(sge_evc);
+
+#if 1
    if (sge_gdi_ctx->is_qmaster_internal_client(sge_gdi_ctx)) {
       sge_evc->ec_set_busy_handling(sge_evc, EV_BUSY_UNTIL_RELEASED);
    }
+#endif   
+
    lFreeList(&alp);
    
    rmon_set_thread_ctx(NULL);
@@ -376,7 +427,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_deregister
       if (answer_list_has_error(&alp)) {
          throw_error_from_answer_list(env, JGDI_ERROR, alp);
       } else {
-         throw_error(env, JGDI_ERROR,"ec_deregister returned false");
+         throw_error(env, JGDI_ERROR, "ec_deregister returned false");
       }
    } else {
       DPRINTF(("event client with id %d successfully deregistered\n", id));
@@ -518,10 +569,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_fillEvents
 
    sge_gdi_ctx = sge_evc->get_gdi_ctx(sge_evc);
    if (sge_gdi_ctx->is_qmaster_internal_client(sge_gdi_ctx)) {
-      elist = get_events_from_event_queue(sge_evc);
-      sge_evc->ec_ack(sge_evc);
-      sge_evc->ec_set_busy(sge_evc, 1);
-      sge_evc->ec_commit(sge_evc, NULL);
+      elist = jgdi_event_get_func(sge_evc);
    } else {
       sge_evc->ec_get(sge_evc, &elist, true);
    }   
@@ -557,12 +605,10 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_fillEvents
    }
 
    if (sge_gdi_ctx->is_qmaster_internal_client(sge_gdi_ctx)) {
-      /*
-      ** reset busy, important otherwise no new events
-      */
-      sge_evc->ec_set_busy(sge_evc, 0);
-      sge_evc->ec_commit(sge_evc, NULL);
+      jgdi_event_wait_func(sge_evc);
    }
+
+   lFreeList(&elist);
 
    
    {

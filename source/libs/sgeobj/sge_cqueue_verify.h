@@ -82,4 +82,12 @@ cqueue_verify_user_list(lListElem *cqueue, lList **answer_list,
 bool
 cqueue_verify_job_slots(lListElem *cqueue, lList **answer_list,
                         lListElem *attr_elem);
+
+bool
+cqueue_verify_memory_value(lListElem *cqueue, lList **answer_list,
+                        lListElem *attr_elem);
+
+bool
+cqueue_verify_time_value(lListElem *cqueue, lList **answer_list,
+                        lListElem *attr_elem);
 #endif

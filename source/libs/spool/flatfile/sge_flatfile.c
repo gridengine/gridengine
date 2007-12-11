@@ -1590,6 +1590,10 @@ spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
       SGE_CHECK_POINTER_NULL(filepath, answer_list);
 
       if (sge_is_file(filepath) == 0) {
+         answer_list_add_sprintf(answer_list, STATUS_EDISK,
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_ERROROPENINGFILEFORREADING_SS,
+                                 filepath, strerror(errno));
          DRETURN(NULL);
       }
 

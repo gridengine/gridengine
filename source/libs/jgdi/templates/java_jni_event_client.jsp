@@ -83,8 +83,11 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
       *  @throws JGDIException if the subcribtion is failed
       */
      public void subscribe<%=name%>Add(boolean subscribe) throws JGDIException {
-        synchronized(syncObject) {
+        fairLock.lock();
+        try {
            nativeSubscribe<%=name%>Add(subscribe);
+        } finally {
+            fairLock.unlock();
         }
      }
      
@@ -98,8 +101,11 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
       *  @throws JGDIException on any error
       */
      public void set<%=name%>AddFlush(boolean flush, int interval) throws JGDIException {
-        synchronized(syncObject) {
+        fairLock.lock();
+        try {
            nativeSet<%=name%>AddFlush(flush, interval);
+        } finally {
+            fairLock.unlock();
         }
      }
 
@@ -111,8 +117,11 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
       * @return the flush time of the add <%=name%> event in seconds
       */
      public int get<%=name%>AddFlush() throws JGDIException {
-        synchronized(syncObject) {
+        fairLock.lock();
+        try {
            return nativeGet<%=name%>AddFlush();
+        } finally {
+            fairLock.unlock();
         }
      }
      
@@ -129,8 +138,11 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
       *  @throws JGDIException if the subcribtion is failed
       */
      public void subscribe<%=name%>Del(boolean subscribe) throws JGDIException {
-        synchronized(syncObject) {
+        fairLock.lock();
+        try {
            nativeSubscribe<%=name%>Del(subscribe);
+        } finally {
+            fairLock.unlock();
         }
      }
 
@@ -144,8 +156,11 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
       *  @throws JGDIException on any error
       */
      public void set<%=name%>DelFlush(boolean flush, int interval) throws JGDIException {
-        synchronized(syncObject) {
+        fairLock.lock();
+        try {
            nativeSet<%=name%>DelFlush(flush, interval);
+        } finally {
+            fairLock.unlock();
         }
      }
      
@@ -157,8 +172,11 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
       * @return the flush time of the add <%=name%> event in seconds
       */
      public int  get<%=name%>DelFlush() throws JGDIException {
-        synchronized(syncObject) {
+        fairLock.lock();
+        try {
            return nativeGet<%=name%>DelFlush();
+        } finally {
+            fairLock.unlock();
         }
      }
      
@@ -175,8 +193,11 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
       *  @throws JGDIException if the subcribtion is failed
       */
      public void subscribe<%=name%>List(boolean subscribe) throws JGDIException {
-        synchronized(syncObject) {
+        fairLock.lock();
+        try {
            nativeSubscribe<%=name%>List(subscribe);
+        } finally {
+            fairLock.unlock();
         }
      }
      
@@ -190,8 +211,11 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
       *  @throws JGDIException on any error
       */
      public void set<%=name%>ListFlush(boolean flush, int interval) throws JGDIException {
-        synchronized(syncObject) {
+        fairLock.lock();
+        try {
            nativeSet<%=name%>ListFlush(flush, interval);
+        } finally {
+            fairLock.unlock();
         }
      }
      
@@ -203,8 +227,11 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
       * @return the flush time of the add <%=name%> event in seconds
       */
      public int get<%=name%>ListFlush() throws JGDIException {
-        synchronized(syncObject) {
+        fairLock.lock();
+        try {
            return nativeGet<%=name%>ListFlush();
+        } finally {
+            fairLock.unlock();
         }
      }
      
@@ -221,8 +248,11 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
       *  @throws JGDIException if the subcribtion is failed
       */
      public void subscribe<%=name%>Mod(boolean subscribe) throws JGDIException {
-        synchronized(syncObject) {
+        fairLock.lock();
+        try {
            nativeSubscribe<%=name%>Mod(subscribe);
+        } finally {
+            fairLock.unlock();
         }
      }
      
@@ -236,8 +266,11 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
       *  @throws JGDIException on any error
       */
      public void set<%=name%>ModFlush(boolean flush, int interval) throws JGDIException {
-        synchronized(syncObject) {
+        fairLock.lock();
+        try {
            nativeSet<%=name%>ModFlush(flush, interval);
+        } finally {
+            fairLock.unlock();
         }
      }
 
@@ -249,8 +282,11 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
       * @return the flush time of the add <%=name%> event in seconds
       */
      public int  get<%=name%>ModFlush() throws JGDIException {
-        synchronized(syncObject) {
+        fairLock.lock();
+        try {
            return nativeGet<%=name%>ModFlush();  
+        } finally {
+            fairLock.unlock();
         }
      }
      
@@ -281,8 +317,11 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
       *  @throws JGDIException if the subcribtion is failed
       */
      public void subscribe<%=specialEvents[i]%>(boolean subscribe) throws JGDIException {
-        synchronized(syncObject) {
+        fairLock.lock();
+        try {
            nativeSubscribe<%=specialEvents[i]%>(subscribe);  
+        } finally {
+            fairLock.unlock();
         }
      }
    
@@ -296,8 +335,11 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
       *  @throws JGDIException on any error
       */
      public void set<%=specialEvents[i]%>Flush(boolean flush, int interval) throws JGDIException {
-        synchronized(syncObject) {
+        fairLock.lock();
+        try {
            nativeSet<%=specialEvents[i]%>Flush(flush, interval);  
+        } finally {
+            fairLock.unlock();
         }
      }
      
@@ -309,8 +351,11 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
       * @return the flush time of the <%=specialEvents[i]%> event in seconds
       */
      public int  getMod<%=specialEvents[i]%>Flush() throws JGDIException {
-        synchronized(syncObject) {
+        fairLock.lock();
+        try {
            return nativeGet<%=specialEvents[i]%>Flush();  
+        } finally {
+            fairLock.unlock();
         }
      }
      

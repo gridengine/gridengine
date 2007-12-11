@@ -1,4 +1,5 @@
-/*___INFO__MARK_BEGIN__*/ /*************************************************************************
+/*___INFO__MARK_BEGIN__*/
+/*************************************************************************
  *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
@@ -41,7 +42,6 @@ import java.awt.event.WindowEvent;
 import java.util.prefs.Preferences;
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
-import javax.swing.FocusManager;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -52,50 +52,49 @@ import javax.swing.JPasswordField;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.SwingUtilities;
 
 /**
  *
  */
 public class ConnectDialog extends JDialog {
-    
+
     private final JTextField hostTextField = new JTextField();
     private final SpinnerNumberModel portSpinnerModel = new SpinnerNumberModel(1, 1, 65536, 1);
     private final JSpinner portSpinner = new JSpinner(portSpinnerModel);
     private final JTextField usernameTextField = new JTextField();
     private final JPasswordField passwordTextField = new JPasswordField();
     private boolean canceled;
-    
+
     public ConnectDialog(JFrame frame) {
         super(frame, true);
-        
+
         setTitle("connect");
         JPanel panel = new JPanel(new GridBagLayout());
         getContentPane().add(panel, BorderLayout.CENTER);
-        
+
         portSpinner.setEditor(new JSpinner.NumberEditor(portSpinner, "0"));
         addLabelAndComponent(panel, 0, "Host:", hostTextField);
         addLabelAndComponent(panel, 1, "Port:", portSpinner);
         addLabelAndComponent(panel, 2, "Username:", usernameTextField);
         addLabelAndComponent(panel, 3, "Password:", passwordTextField);
-        
+
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        
+
         buttonPanel.add(new JButton(new OKAction()));
         buttonPanel.add(new JButton(new CancelAction()));
-        
+
         getContentPane().add(buttonPanel, BorderLayout.SOUTH);
-        
+
         setDefaultCloseOperation(HIDE_ON_CLOSE);
-        
+
         initFromPrefs();
-        
-        
+
+
         addWindowFocusListener(new MyWindowListener());
         pack();
     }
-    
+
     private static void addLabelAndComponent(JPanel panel, int y, String text, JComponent comp) {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -106,7 +105,7 @@ public class ConnectDialog extends JDialog {
         gbc.fill = GridBagConstraints.NONE;
         gbc.insets = new Insets(3, 3, 3, 10);
         panel.add(new JLabel(text), gbc);
-        
+
         gbc = new GridBagConstraints();
         gbc.gridx = 1;
         gbc.gridy = y;
@@ -117,56 +116,56 @@ public class ConnectDialog extends JDialog {
         gbc.insets = new Insets(3, 10, 3, 3);
         panel.add(comp, gbc);
     }
-    
+
     public boolean isCanceled() {
         return canceled;
     }
-    
+
     public String getHost() {
         return hostTextField.getText();
     }
-    
+
     public int getPort() {
         return portSpinnerModel.getNumber().intValue();
     }
-    
+
     public String getUsername() {
         return usernameTextField.getText();
     }
-    
+
     public char[] getPassword() {
         return passwordTextField.getPassword();
     }
-    
+
     private class OKAction extends AbstractAction {
-        
+
         public OKAction() {
             super("OK");
         }
-        
+
         public void actionPerformed(ActionEvent e) {
             canceled = false;
             setVisible(false);
         }
     }
-    
+
     private class CancelAction extends AbstractAction {
-        
+
         public CancelAction() {
             super("Cancel");
         }
-        
+
         public void actionPerformed(ActionEvent e) {
             setVisible(false);
         }
     }
-    
+
     private class MyWindowListener extends WindowAdapter {
-        
+
         @Override
         public void windowGainedFocus(WindowEvent e) {
-            if(hostTextField.getText().length() > 0) {
-                if(usernameTextField.getText().length() > 0) {
+            if (hostTextField.getText().length() > 0) {
+                if (usernameTextField.getText().length() > 0) {
                     passwordTextField.requestFocusInWindow();
                 } else {
                     usernameTextField.requestFocusInWindow();
@@ -175,29 +174,28 @@ public class ConnectDialog extends JDialog {
                 hostTextField.requestFocusInWindow();
             }
         }
-        
     }
-    
+
     private void initFromPrefs() {
-        
+
         Preferences prefs = Preferences.userNodeForPackage(ConnectDialog.class);
-        
+
         usernameTextField.setText(prefs.get("username", System.getProperty("user.name")));
         portSpinnerModel.setValue(prefs.getInt("port", 1025));
         hostTextField.setText(prefs.get("host", ""));
     }
-    
+
     public void saveInPrefs() {
-        
+
         Preferences prefs = Preferences.userNodeForPackage(ConnectDialog.class);
-        
+
         prefs.put("username", getUsername());
         prefs.putInt("port", getPort());
         prefs.put("host", getHost());
-        
-        
+
+
     }
-    
+
     @Override
     public void setVisible(boolean visible) {
         if (visible) {

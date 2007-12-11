@@ -54,15 +54,11 @@
     
     <target name="aimk.template" depends="aimk.init, init, aimk.template.required"
             unless="aimk.template.uptodate">
-        <dependset>
-            <srcfileset dir="${sge.srcdir}" includes="**/*L.h"/>
-            <targetfileset dir="${build.dir}" includes="sge_all_listsL.template"/>
-        </dependset>
+        <echo message="Rebuilding ${build.dir}/sge_all_listsL.template"/>        
         <aimk_call args="${aimk.targetbits} ${aimk.debug} -only-core jgdi_template"/>
     </target>
     
     <target name="init">
-        
         <echo>ant.java.version=${ant.java.version}</echo>
         <condition property="supported.jdk">
             <or>
@@ -113,9 +109,7 @@
         
         <path id="compile.classpath">
             <pathelement path="${libs.junit.classpath}"/>
-            <!-- <pathelement location="${drmaa.jar}"/> -->
-            <!-- <pathelement location="${comm.lib}"/> -->
-            <!-- <pathelement location="${cull.jar}"/> -->
+            <!-- pathelement location="${drmaa.jar}"/ -->
         </path>
         
         <path id="jgdi.srcpath">
@@ -129,7 +123,7 @@
         
     </target>
     
-    <target depends="init,compile.javah" name="javah"
+    <target depends="init, compile.javah" name="javah"
             description="Creates jgdi.h">    
         <javah outputFile="${build.dir}/jgdi_factory.h">
             <class name="com.sun.grid.jgdi.JGDIFactory"/>
@@ -221,7 +215,7 @@
     </target>
     
     <target name="jar.wait" depends="jar.init" unless="isJavaBuildHost">
-        <waitfor maxwait="${maxwait}" maxwaitunit="minute" checkevery="10" checkeveryunit="second">
+        <waitfor maxwait="${maxwait}" maxwaitunit="minute" checkevery="5" checkeveryunit="second">
             <available file="${jar}"/>
         </waitfor>
         
@@ -259,8 +253,8 @@
         
     </target>    
     
-    <target  name="javadoc" depends="javadoc.init" 
-             description="Javadoc for SGE Java Admin API.">
+    <target name="javadoc" depends="javadoc.init" 
+            description="Javadoc for SGE Java Admin API.">
         
         <javadoc destdir="${javadoc.dir}" 
                  packagenames="com.sun.grid.*"
@@ -338,36 +332,27 @@
     </target>
     
     <target name="gensrc.init" depends="jni.init, cullconv" if="isJavaBuildHost">
-        
         <taskdef name="cullconv" classname="com.sun.grid.cull.ant.CullConvAntTask">
-            <!--classpath location="${cullconv.jar}"/-->
             <classpath>
                 <pathelement path="${cullconv.jar}"/>
                 <pathelement path="${libs.junit.classpath}"/>
             </classpath>
         </taskdef>
-        
         <taskdef name="javaconv" classname="com.sun.grid.javaconv.ant.JavaConvAntTask">
-            <!--classpath location="${cullconv.jar}"/-->
             <classpath>
                 <pathelement path="${cullconv.jar}"/>
                 <pathelement path="${libs.junit.classpath}"/>
             </classpath>
         </taskdef>
-        
         <mkdir dir="${build.dir}/tmp"/>
-        
     </target>
     
     <target name="gensrc.debug" depends="jni.init"
             description="Start the source generation in debugging mode">  
-        
         <path id="cullconv.srcpath">
-        <path location="${basedir}/cullconv/src"/>
-        <path location="${basedir}/cullconv/build/gensrc"/>            
+            <path location="${basedir}/cullconv/src"/>
+            <path location="${basedir}/cullconv/build/gensrc"/>            
         </path>
-        
-        
         <nbjpdastart name="JGDI Code Generation" addressproperty="jpda.address" transport="dt_socket">
             <classpath>
                 <path path="java.class.path"/>
@@ -378,7 +363,6 @@
                 <path refid="cullconv.srcpath"/>
             </sourcepath>
         </nbjpdastart>
-        
         <java classname="org.apache.tools.ant.launch.Launcher" 
               fork="true" failonerror="true">
             <jvmarg line="${sge.jvmargs}"/>
@@ -394,17 +378,25 @@
     </target>
     
     
-    <target name="gensrc.forked" depends="gensrc.init, aimk.template">
-        
-        <dependset>
-            <srcfilelist dir="${build.dir}">
-                <file name="sge_all_listsL.template"/>
-                <file name="../templates/java_qconf.jsp.static"/>
-            </srcfilelist>
-            <targetfileset dir="${gensrc.dir}"/>
-        </dependset>
-        
+    <target name="gensrc.uptodate" depends="jni.init, gensrc.init, aimk.template">
+        <uptodate property="gensrc.isuptodate" targetfile="${jar}">
+            <srcfiles dir="${build.dir}" includes="sge_all_listsL.template"/>
+            <srcfiles dir="templates" includes="*"/>
+        </uptodate>
+            
+        <echo message="gensrc.isuptodate = ${gensrc.isuptodate}"/>    
+    </target>
+    
+    <target name="gensrc.forked" depends="gensrc.uptodate"
+            description="Create all generated java source files"
+            unless="gensrc.isuptodate">
+
+        <delete>
+            <fileset dir="${build.dir}/tmp" includes="**/*"/>
+        </delete>
+        <delete dir="${gensrc.dir}"/>
         <mkdir dir="${gensrc.dir}/com/sun/grid/jgdi/jni"/>
+        
         <echo>java.library.path: ${java.library.path}</echo>      
         <cullconv packageName="com.sun.grid.jgdi.configuration"
                   buildDir="${build.dir}/tmp"
@@ -413,13 +405,12 @@
             <classpath>
                 <path location="${cullconv.jar}"/>
             </classpath>
-            
+
             <templateconv scope="definition"
                           outputFile="${build.dir}/jgdi_mapping.c"
                           templateFile="templates/c_jgdi_mapping.jsp">
             </templateconv>            
-            
-            
+
             <templateconv scope="definition"
                           outputFile="${gensrc.dir}/com/sun/grid/jgdi/configuration/reflect/CullTypeMapping.java"
                           templateFile="templates/java_mapping.jsp">
@@ -445,23 +436,6 @@
                 </pattern>
             </javatemplateconv>
             
-            <!--         
-         <javatemplateconv outputDir="${gensrc.dir}"
-                           template="templates/javamodel_mbean.jsp"
-                           classSuffix="BeanMBean"
-                           scope="objects">   
-            <pattern objectFilter="root depend"/>
-         </javatemplateconv>
-
-         <javatemplateconv outputDir="${gensrc.dir}"
-                           template="templates/javamodel_impl_mbean.jsp"
-                           classSuffix="Bean"
-                           scope="objects">
-            <pattern objectFilter="root depend"/>
-         </javatemplateconv>
--->                  
-                  
-         
             <templateconv scope="definition"
                           outputFile="${gensrc.dir}/com/sun/grid/jgdi/configuration/ConfigurationFactory.java"
                           templateFile="templates/java_config_factory.jsp">
@@ -651,10 +625,10 @@
             </cullFiles>
         </cullconv>
     </target>
-    
-    <target name="gensrc.native" depends="jni.init, gensrc.init, compile, aimk.template"
+
+    <target name="gensrc.native" depends="gensrc.uptodate"
             description="Create all generated native source files"
-            if="isJavaBuildHost">  
+            unless="gensrc.isuptodate">  
         <cullconv packageName="com.sun.grid.jgdi.configuration"
                   source="${jgdi.javac.source}"
                   target="${jgdi.javac.target}"
@@ -884,7 +858,7 @@
         
         <fail message="Unsuported ARCH ${sge.arch}" unless="sge.src.arch"/>
         
-        <property name="sge.lib.path" value="${sge.srcdir}/${sge.src.arch}"/>       
+        <property name="sge.lib.path" value="${sge.srcdir}/${sge.src.arch}"/>
         <property name="sge.jvmargs"  value="-Djava.library.path=${sge.lib.path} ${datamodel}"/>
         <echo>sge.jvmargs = ${sge.jvmargs}</echo>
     </target>
@@ -977,7 +951,7 @@
     </target>
     
     <target name="compile.tests" depends="java.version.check, jni.init, jar, aimk" description="Compile junit tests"/>
-    
+
     <target name="test" depends="compile.tests" description="Run all jgdi tests">
         <condition property="format" value="plain" else="xml">
             <equals arg1="${junit.formatter}" arg2="plain"/>
@@ -1114,7 +1088,6 @@
     </target>
     
     <!-- CULLCONV =========================================================== -->
-
     <target name="cullconv.init" depends="init">
         <uptodate property="cullconv.uptodate" targetfile="${cullconv.jar}">
             <srcfiles dir="${cullconv.dir}">

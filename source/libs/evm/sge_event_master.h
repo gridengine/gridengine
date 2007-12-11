@@ -144,7 +144,7 @@ int sge_add_event_client(lListElem *ev,
 
 int sge_mod_event_client(lListElem *clio, lList **alpp, char *ruser, char *rhost);
 bool sge_has_event_client(u_long32 aClientID);
-void   sge_remove_event_client(u_long32 aClientID);
+void sge_remove_event_client(u_long32 aClientID);
 lList* sge_select_event_clients(const char *aNewList, const lCondition *aCond, const lEnumeration *anEnum);
 int sge_shutdown_event_client(u_long32 aClientID, const char* anUser, uid_t anUID, lList **alpp, monitoring_t *monitor);
 int sge_shutdown_dynamic_event_clients(const char *anUser, lList **alpp, monitoring_t *monitor);

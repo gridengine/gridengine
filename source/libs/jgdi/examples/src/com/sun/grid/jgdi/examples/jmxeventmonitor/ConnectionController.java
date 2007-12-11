@@ -50,89 +50,80 @@ import javax.management.NotificationBroadcasterSupport;
  *
  */
 public class ConnectionController {
-    
+
     private final static Logger log = Logger.getLogger(ConnectionController.class.getName());
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
-    
     private final List<Listener> listeners = new LinkedList<Listener>();
-    
-    
     private JGDIProxy jgdiProxy;
-    
     private Set<EventTypeEnum> subscription;
-    
     private NotificationBroadcasterSupport broadcaster = new NotificationBroadcasterSupport();
-    
+
     public void connect(String host, int port, Object credentials) {
         executor.submit(new ConnectAction(host, port, credentials));
     }
-    
+
     public void disconnect() {
         executor.submit(new DisconnectAction());
     }
-    
-    
+
     public void subscribe(Set<EventTypeEnum> types) {
         executor.submit(new SubscribeAction(types, true));
     }
-    
+
     public void unsubscribe(Set<EventTypeEnum> types) {
         executor.submit(new SubscribeAction(types, false));
     }
-    
-    
+
     public void addListener(Listener lis) {
         synchronized (listeners) {
             listeners.add(lis);
         }
     }
-    
+
     public void removeListener(Listener lis) {
         synchronized (listeners) {
             listeners.remove(lis);
         }
     }
-    
+
     private List<Listener> getListeners() {
         synchronized (listeners) {
             return new ArrayList<Listener>(listeners);
         }
     }
-    
     private final Set<EventListener> eventListeners = new HashSet<EventListener>();
-    
+
     public void addEventListener(EventListener lis) {
         eventListeners.add(lis);
     }
-    
+
     public void removeEventListener(EventListener lis) {
         eventListeners.remove(lis);
     }
-    
+
     private class SubscribeAction implements Runnable {
-        
+
         private final Set<EventTypeEnum> types;
         private final boolean subscribe;
-        
+
         public SubscribeAction(Set<EventTypeEnum> types, boolean subscribe) {
             this.types = types;
             this.subscribe = subscribe;
         }
-        
+
         public void run() {
-            
+
             try {
-                if(jgdiProxy != null) {
-                    
-                    
-                    if(subscribe) {
+                if (jgdiProxy != null) {
+
+                    if (subscribe) {
                         jgdiProxy.getProxy().subscribe(types);
-                        for(Listener lis: getListeners()) {
+                        for (Listener lis : getListeners()) {
                             lis.subscribed(types);
                         }
                     } else {
                         jgdiProxy.getProxy().unsubscribe(types);
-                        for(Listener lis: getListeners()) {
+                        for (Listener lis : getListeners()) {
                             lis.unsubscribed(types);
                         }
                     }
@@ -144,48 +135,47 @@ public class ConnectionController {
             }
         }
     }
-    
-    
+
     private class DisconnectAction implements Runnable {
-        
+
         public void run() {
-            
+
             try {
-                if(jgdiProxy != null) {
+                if (jgdiProxy != null) {
                     jgdiProxy.close();
                 }
-            } catch(Exception ex) {
+            } catch (Exception ex) {
                 log.log(Level.WARNING, "connector.close failed", ex);
             } finally {
                 jgdiProxy = null;
-                for(Listener lis: getListeners()) {
+                for (Listener lis : getListeners()) {
                     lis.disconnected();
                 }
             }
         }
     }
-    
+
     private class ConnectAction implements Runnable {
-        
+
         private final String host;
         private final int port;
         private final Object credentials;
-        
+
         public ConnectAction(String host, int port, Object credentials) {
             this.host = host;
             this.port = port;
             this.credentials = credentials;
         }
-        
+
         public void run() {
             try {
                 jgdiProxy = JGDIFactory.newJMXInstance(host, port, credentials);
-                for(EventListener lis: eventListeners) {
+                for (EventListener lis : eventListeners) {
                     jgdiProxy.addEventListener(lis);
                 }
                 subscription = jgdiProxy.getProxy().getSubscription();
-                
-                for(Listener lis: getListeners()) {
+
+                for (Listener lis : getListeners()) {
                     lis.connected(host, port, subscription);
                 }
             } catch (Exception ex) {
@@ -195,18 +185,17 @@ public class ConnectionController {
             }
         }
     }
-    
+
     public static interface Listener {
-        
+
         public void connected(String host, int port, Set<EventTypeEnum> subscription);
-        
+
         public void disconnected();
-        
+
         public void subscribed(Set<EventTypeEnum> types);
-        
+
         public void unsubscribed(Set<EventTypeEnum> typea);
-        
+
         public void errorOccured(Throwable ex);
     }
-    
 }

@@ -102,7 +102,7 @@ sge_dstring_vsprintf_copy_append(dstring *sb,
 
             if (vsnprintf_ret == -1) {
                dyn_size *= 2;
-               dyn_buffer = sge_realloc(dyn_buffer, dyn_size);
+               dyn_buffer = sge_realloc(dyn_buffer, dyn_size, 0);
             }
          }
          if (dyn_buffer != NULL) {
@@ -147,7 +147,7 @@ sge_dstring_allocate(dstring *sb, size_t request)
 
    /* allocate memory */
    if (sb->s != NULL) {
-      sb->s = realloc(sb->s, sb->size * sizeof(char));
+      sb->s = sge_realloc(sb->s, sb->size * sizeof(char), 1);
    } else {
       sb->s = malloc(sb->size * sizeof(char));
       sb->s[0] = '\0';
@@ -198,7 +198,7 @@ const char* sge_dstring_append(dstring *sb, const char *a)
 
       /* only allow to append a string with length 0
          for memory allocation */
-      if (len == 0 && sb->s != NULL) {
+      if (len == 0 && sb->s != NULL ) {
          DEXIT;
          return sb->s;
       }

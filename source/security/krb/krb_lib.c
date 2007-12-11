@@ -51,6 +51,8 @@
 #include "sge_time.h"
 #include "sge_hostname.h"
 
+#include "uti/sge_stdlib.h"
+
 /* #include "sgermon.h" */
 /* #include "basis_types.h" */
 
@@ -1470,7 +1472,7 @@ char *str
    *dest = 0;
 
    if (ostr == NULL)
-      str = (char *)realloc(str, dest-str+1);
+      str = (char *)sge_realloc(str, dest-str + 1, 1);
 
    return str;
 }

@@ -1332,7 +1332,7 @@ get_arsess_list(lnk_link_t *arsess_list)
    while ((num_ashes = syssgi(SGI_ENUMASHS, ashes, ash_max)) < 0 &&
           errno == ENOMEM) {
       ash_max += ASHMAXINC;
-      ashes = (ash_t *)realloc(ashes, sizeof(ash_t)*ash_max);
+      ashes = (ash_t *)sge_realloc(ashes, sizeof(ash_t)*ash_max, 1);
    }
 
    if (num_ashes > 0) {
@@ -2683,7 +2683,7 @@ struct psJob_s *psGetOneJob(JobID_t JobID)
 
    /* see if job is in list */
 
-   for(curr=job_list.next; curr != &job_list; curr=curr->next) {
+   for (curr=job_list.next; curr != &job_list; curr=curr->next) {
       job_elem = LNK_DATA(curr, job_elem_t, link);
       if (job_elem->precreated) continue; /* skip precreated jobs */
       if (job_elem->job.jd_jid == JobID) {
@@ -2703,7 +2703,7 @@ struct psJob_s *psGetOneJob(JobID_t JobID)
             lnk_link_t *currp;
             int nprocs = 0;
 
-            for(currp=job_elem->procs.next; currp != &job_elem->procs;
+            for (currp=job_elem->procs.next; currp != &job_elem->procs;
                      currp=currp->next) {
                psProc_t *proc = &(LNK_DATA(currp, proc_elem_t, link)->proc);
                memcpy(&rjob->proc[nprocs++], proc, sizeof(psProc_t));

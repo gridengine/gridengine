@@ -178,7 +178,7 @@ void te_register_event_handler(te_handler_t aHandler, te_type_t aType)
    {
       int sz = (TBL_GROW_FACTOR * Handler_Tbl.max) * sizeof(struct tbl_elem);
 
-      Handler_Tbl.list = (struct tbl_elem *)sge_realloc((char*)Handler_Tbl.list, sz);
+      Handler_Tbl.list = (struct tbl_elem *)sge_realloc((char*)Handler_Tbl.list, sz, 1);
       Handler_Tbl.max *= TBL_GROW_FACTOR;
 
       DPRINTF(("%s: grow handler table to %d elements\n", SGE_FUNC, Handler_Tbl.max));

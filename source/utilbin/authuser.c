@@ -642,15 +642,20 @@ static int add_group(struct group *grp, gid_t **groups_res, char*** group_names_
    char** group_names = *group_names_res;
    
    if (ngroups >= maxgroups) {
+      gid_t *new_groups;
+      char **new_group_names;
+
       maxgroups +=10;
-      groups = (gid_t*)realloc(groups, sizeof(gid_t) * maxgroups);
-      if(groups == NULL) {
+      new_groups = (gid_t*)realloc(groups, sizeof(gid_t) * maxgroups);
+      if (new_groups == NULL) {
          return -1;
       }
-      group_names = (char**)realloc(group_names, sizeof(char*) * maxgroups);
-      if(group_names == NULL) {
+      groups = new_groups;
+      new_group_names = (char**)realloc(group_names, sizeof(char*) * maxgroups);
+      if(new_group_names == NULL) {
          return -1;
       }
+      group_names = new_group_names;
    }
    groups[ngroups] = grp->gr_gid;
    group_names[ngroups++] = strdup(grp->gr_name);

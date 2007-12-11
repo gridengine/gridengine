@@ -534,14 +534,14 @@ int truncate_stderr_out
    foreground = 0;
 
    /* We have different possiblities to start the job script:
-      - We can start it as login shell or not
-        Login shell start means that argv[0] starts with a '-'
-      - We can try to be posix compliant and not to evaluate #!/bin/sh
-        as it is done by normal shellscript starts
-      - We can feed the shellscript to stdin of a started shell */
+    * - We can start it as login shell or not
+    *   Login shell start means that argv[0] starts with a '-'
+    * - We can try to be posix compliant and not to evaluate #!/bin/sh
+    *   as it is done by normal shellscript starts
+    * - We can feed the shellscript to stdin of a started shell
+    */
 
-
-   tmpdir = get_conf_val( "tmpdir" );
+   tmpdir = get_conf_val("tmpdir");
 
    merge_stderr = atoi(get_conf_val("merge_stderr"));
    fs_stdin  = atoi(get_conf_val("fs_stdin_file_staging"));
@@ -565,20 +565,20 @@ int truncate_stderr_out
       shell_start_mode = "unix_behaviour";
 
       if (!strcmp(childname, "prolog") || !strcmp(childname, "epilog")) {
-         stdin_path = strdup( "/dev/null" );
-         if( fs_stdin ) {
+         stdin_path = strdup("/dev/null");
+         if (fs_stdin) {
             /* we need the jobs stdin_path here in prolog,
                because the file must be copied */
-            stdin_path_for_fs = build_path( SGE_STDIN );
+            stdin_path_for_fs = build_path(SGE_STDIN);
          }
-         stdout_path = build_path( SGE_STDOUT );
-         if( !merge_stderr ) {
-            stderr_path = build_path( SGE_STDERR );
+         stdout_path = build_path(SGE_STDOUT);
+         if (!merge_stderr) {
+            stderr_path = build_path(SGE_STDERR);
          }
       } else {
          /* childname is "pe_start" or "pe_stop" */
-         stdin_path = strdup( "/dev/null" );
-         stdin_path_for_fs = build_path( SGE_STDIN );
+         stdin_path = strdup("/dev/null");
+         stdin_path_for_fs = build_path(SGE_STDIN);
 
          stdout_path  = build_path(SGE_PAR_STDOUT);
          if (!merge_stderr) {
@@ -594,83 +594,83 @@ int truncate_stderr_out
       }
       use_login_shell = atoi(get_conf_val("use_login_shell"));
 
-      stdin_path = build_path( SGE_STDIN );
-      stdin_path_for_fs = strdup( stdin_path );
-      stdout_path = build_path( SGE_STDOUT );
-      if( !merge_stderr ) {
-         stderr_path = build_path( SGE_STDERR );
+      stdin_path = build_path(SGE_STDIN);
+      stdin_path_for_fs = strdup(stdin_path);
+      stdout_path = build_path(SGE_STDOUT);
+      if (!merge_stderr) {
+         stderr_path = build_path(SGE_STDERR);
       }
    }
 
    if (fs_stdin) {
       /* Generate fs_input_tmp_path (etc.) from tmpdir+stdin_path */
-      if( stdin_path_for_fs && strlen( stdin_path_for_fs )>0 ) {
-         fs_stdin_file = strrchr( stdin_path_for_fs, '/' )+1;
-         sprintf( fs_stdin_tmp_path, "%s/%s", tmpdir, fs_stdin_file );
+      if (stdin_path_for_fs && strlen(stdin_path_for_fs) > 0) {
+         fs_stdin_file = strrchr(stdin_path_for_fs, '/') + 1;
+         sprintf(fs_stdin_tmp_path, "%s/%s", tmpdir, fs_stdin_file);
       }
 
       /* Set fs_input_path to old stdin_path and then
          stdin_path to just generated fs_input_tmp_path */
-      if( stdin_path_for_fs && strlen( stdin_path_for_fs )>0 ) {
-         strcpy( fs_stdin_path, stdin_path_for_fs );
+      if (stdin_path_for_fs && strlen(stdin_path_for_fs) > 0) {
+         strcpy(fs_stdin_path, stdin_path_for_fs);
       }
 
       /* Modify stdin_path, stdout_path and stderr_path only if
          file staging is wanted! */
       /* prolog, pe_start, epilog, pe_stop always get /dev/null as stdin_path,
-       only the job gets the file staged stdin file */ 
-      if( strcmp( childname, "prolog" ) &&
-          strcmp( childname, "pe_start" ) &&
-          strcmp( childname, "epilog" ) &&
-          strcmp( childname, "pe_stop" )) {
-         stdin_path = realloc( stdin_path, strlen( fs_stdin_tmp_path )+1 );            
-         strcpy( stdin_path, fs_stdin_tmp_path );
+       only the job gets the file staged stdin file */
+      if (strcmp(childname, "prolog") &&
+          strcmp(childname, "pe_start") &&
+          strcmp(childname, "epilog") &&
+          strcmp(childname, "pe_stop")) {
+         stdin_path = sge_realloc(stdin_path, strlen(fs_stdin_tmp_path) + 1, 1);
+         strcpy(stdin_path, fs_stdin_tmp_path);
       }
    }
 
-   if( fs_stdout ) {
-      if( stdout_path && strlen( stdout_path )>0 ) {
-         fs_stdout_file = strrchr( stdout_path, '/' )+1;
-         sprintf( fs_stdout_tmp_path, "%s/%s", tmpdir, fs_stdout_file );
+   if (fs_stdout) {
+      if (stdout_path && strlen(stdout_path) > 0) {
+         fs_stdout_file = strrchr(stdout_path, '/') + 1;
+         sprintf(fs_stdout_tmp_path, "%s/%s", tmpdir, fs_stdout_file);
       }
 
-      if( stdout_path && strlen( stdout_path )>0 ) {
-         strcpy( fs_stdout_path, stdout_path );
+      if (stdout_path && strlen(stdout_path) > 0) {
+         strcpy(fs_stdout_path, stdout_path);
       }
 
       /* prolog, pe_start, job, epilog and pe_stop get the
          file staged output (and error) file */
-      stdout_path = realloc( stdout_path, strlen(fs_stdout_tmp_path)+1 );
-      strcpy( stdout_path, fs_stdout_tmp_path );
+      stdout_path = sge_realloc(stdout_path, strlen(fs_stdout_tmp_path) + 1, 1);
+      strcpy(stdout_path, fs_stdout_tmp_path);
    }
 
-   if( fs_stderr ) {
-      if( stderr_path && strlen( stderr_path )>0 ) {
-         fs_stderr_file = strrchr( stderr_path, '/' )+1;
-         sprintf( fs_stderr_tmp_path, "%s/%s", tmpdir, fs_stderr_file );
+   if (fs_stderr) {
+      if (stderr_path && strlen(stderr_path) > 0) {
+         fs_stderr_file = strrchr( stderr_path, '/') + 1;
+         sprintf(fs_stderr_tmp_path, "%s/%s", tmpdir, fs_stderr_file);
       }
 
-      if( stderr_path && strlen( stderr_path )>0 ) {
-         strcpy( fs_stderr_path, stderr_path );
+      if (stderr_path && strlen(stderr_path) > 0) {
+         strcpy(fs_stderr_path, stderr_path);
       }
   
-      if( !merge_stderr ) {
-         stderr_path = realloc( stderr_path, strlen(fs_stderr_tmp_path)+1 );
+      if (!merge_stderr) {
+         stderr_path = sge_realloc(stderr_path, strlen(fs_stderr_tmp_path) + 1, 1);
          strcpy( stderr_path, fs_stderr_tmp_path );
       }
    }
 
    /* Now we have all paths generated, so we must
       write it to the config struct */
-   set_conf_val( "stdin_path", stdin_path );
-   set_conf_val( "stdout_path", stdout_path );
-   set_conf_val( "stderr_path", stderr_path );
-   set_conf_val( "fs_stdin_path", fs_stdin_path );
-   set_conf_val( "fs_stdout_path", fs_stdout_path );
-   set_conf_val( "fs_stderr_path", fs_stderr_path );
-   set_conf_val( "fs_stdin_tmp_path", fs_stdin_tmp_path );
-   set_conf_val( "fs_stdout_tmp_path", fs_stdout_tmp_path );
-   set_conf_val( "fs_stderr_tmp_path", fs_stderr_tmp_path );
+   set_conf_val("stdin_path", stdin_path);
+   set_conf_val("stdout_path", stdout_path);
+   set_conf_val("stderr_path", stderr_path);
+   set_conf_val("fs_stdin_path", fs_stdin_path);
+   set_conf_val("fs_stdout_path", fs_stdout_path);
+   set_conf_val("fs_stderr_path", fs_stderr_path);
+   set_conf_val("fs_stdin_tmp_path", fs_stdin_tmp_path);
+   set_conf_val("fs_stdout_tmp_path", fs_stdout_tmp_path);
+   set_conf_val("fs_stderr_tmp_path", fs_stderr_tmp_path);
   
 #if 0
    /* <DEBUGGING> */
@@ -714,19 +714,19 @@ int truncate_stderr_out
    /* Now we have to generate the command line for prolog, pe_start, epilog
     * or pe_stop from the config values
     */
-   if(!strcmp(childname, "prolog")) {
+   if (!strcmp(childname, "prolog")) {
       replace_params( get_conf_val("prolog"),
          script_file, sizeof(script_file)-1, prolog_epilog_variables );
       target_user = parse_script_params(&script_file);
-   } else if(!strcmp(childname, "epilog")) {
+   } else if (!strcmp(childname, "epilog")) {
       replace_params( get_conf_val("epilog"),
          script_file, sizeof(script_file)-1, prolog_epilog_variables );
       target_user = parse_script_params(&script_file);
-   } else if(!strcmp(childname, "pe_start")) {
+   } else if (!strcmp(childname, "pe_start")) {
       replace_params( get_conf_val("pe_start"),
          script_file, sizeof(script_file)-1, pe_variables );
       target_user = parse_script_params(&script_file);
-   } else if(!strcmp(childname, "pe_stop")) {
+   } else if (!strcmp(childname, "pe_stop")) {
       replace_params( get_conf_val("pe_stop"),
          script_file, sizeof(script_file)-1, pe_variables );
       target_user = parse_script_params(&script_file);

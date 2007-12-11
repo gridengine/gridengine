@@ -482,8 +482,8 @@ int kupdate(int avenrun[3])
       kn = kstat_data_lookup(ks, "ncpus");
       if (kn && kn->value.ui32 > ncpus) {
          ncpus = kn->value.ui32;
-         cpu_ks = (kstat_t **)realloc(cpu_ks, ncpus * sizeof(kstat_t *));
-         cpu_stat = (cpu_stat_t *)realloc(cpu_stat, ncpus * sizeof(cpu_stat_t));
+         cpu_ks = (kstat_t **)sge_realloc(cpu_ks, ncpus * sizeof(kstat_t *), 1);
+         cpu_stat = (cpu_stat_t *)sge_realloc(cpu_stat, ncpus * sizeof(cpu_stat_t), 1);
       }
 
       for (ks = kc->kc_chain; ks; ks = ks->ks_next) {

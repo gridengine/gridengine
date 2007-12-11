@@ -63,7 +63,7 @@
 
 char *sge_malloc(int size);
 
-char *sge_realloc(char *ptr, int size);
+void *sge_realloc(void *ptr, int size, int do_abort);
 
 char *sge_free(char *cp);        
 

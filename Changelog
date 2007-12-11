@@ -1,3 +1,7 @@
+JG-2007-12-11-0: Bugfix:    Replace realloc by sge_realloc, make sure that 
+                            memory is freed, when realloc fails.
+                 Review:    RD
+
 JG-2007-12-10-0: Bugfix:    Added missing verification to pathes in cluster
                             configuration.
                  Bugster:   6506580

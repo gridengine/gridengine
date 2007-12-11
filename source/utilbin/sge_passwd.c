@@ -63,6 +63,7 @@
 #include "uti/sge_prog.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_string.h"
+#include "uti/sge_stdlib.h"
 #if defined(DEFINE_SGE_PASSWD_MAIN)
 #include "sgermon.h"
 #endif
@@ -424,7 +425,7 @@ buffer_append(char **buffer, size_t *buffer_size, size_t *fill_size,
       memset(*buffer, 0, *buffer_size);
    } else if (*fill_size + size_append > *buffer_size) {
       *buffer_size += size_append;
-      *buffer = realloc(*buffer, *buffer_size);
+      *buffer = sge_realloc(*buffer, *buffer_size, 1);
    }
    memcpy(*buffer + *fill_size, buffer_append, size_append);
    *fill_size += size_append;
@@ -457,8 +458,7 @@ buffer_read_from_stdin(char **buffer, size_t *size)
          if (buffer_ptr == NULL) {
             buffer_ptr = malloc(buffer_length + 1);
          } else {
-            buffer_ptr = realloc(buffer_ptr, 
-                                 strlen(buffer_ptr) + buffer_length);
+            buffer_ptr = sge_realloc(buffer_ptr, strlen(buffer_ptr) + buffer_length, 0);
          }
          if (buffer_ptr != NULL) {
             memcpy(buffer_ptr + buffer_ptr_length, buffer, buffer_length);

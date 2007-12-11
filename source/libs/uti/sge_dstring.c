@@ -29,6 +29,7 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -38,6 +39,7 @@
 #include "sge_string.h"
 #include "sge_dstring.h"
 #include "sge_varargs.h"
+#include "sge_stdlib.h"
 
 #define REALLOC_CHUNK   1024
 #define BUFFER_SIZE 20000
@@ -94,7 +96,7 @@ sge_dstring_vsprintf_copy_append(dstring *sb,
 
             if (vsnprintf_ret == -1) {
                dyn_size *= 2;
-               dyn_buffer = sge_realloc(dyn_buffer, dyn_size);
+               dyn_buffer = sge_realloc(dyn_buffer, dyn_size, 0);
             }
          }
          if (dyn_buffer != NULL) {
@@ -139,7 +141,7 @@ sge_dstring_allocate(dstring *sb, size_t request)
 
    /* allocate memory */
    if (sb->s != NULL) {
-      sb->s = realloc(sb->s, sb->size * sizeof(char));
+      sb->s = sge_realloc(sb->s, sb->size * sizeof(char), 1);
    } else {
       sb->s = malloc(sb->size * sizeof(char));
       sb->s[0] = '\0';
@@ -214,13 +216,11 @@ const char* sge_dstring_append_char(dstring *sb, const char a)
    DENTER(DSTRING_LAYER, "sge_dstring_append_char");
 
    if (sb == NULL) {
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    if (a == '\0') {
-      DEXIT;
-      return sb->s;
+      DRETURN(sb->s);
    }
   
    if (sb->is_static) {
@@ -239,8 +239,7 @@ const char* sge_dstring_append_char(dstring *sb, const char a)
       sb->s[sb->length] = '\0';
    }
 
-   DEXIT;
-   return sb->s;
+   DRETURN(sb->s);
 }
 
 /****** uti/dstring/sge_dstring_append_dstring() ******************************

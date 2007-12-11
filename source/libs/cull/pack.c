@@ -159,7 +159,6 @@ init_packbuffer(sge_pack_buffer *pb, int initial_size, int just_count)
       return PACK_FORMAT;
    }   
 
-
    if (!just_count) {
       if (initial_size == 0) {
          initial_size = CHUNK;
@@ -193,8 +192,7 @@ init_packbuffer(sge_pack_buffer *pb, int initial_size, int just_count)
       pb->just_count = 1;
    }
 
-   DEXIT;
-   return PACK_SUCCESS;
+   DRETURN(PACK_SUCCESS);
 }
 
 /**************************************************************
@@ -210,8 +208,7 @@ init_packbuffer_from_buffer(sge_pack_buffer *pb, char *buf, u_long32 buflen)
    DENTER(PACK_LAYER, "init_packbuffer_from_buffer");
 
    if (!pb && !buf) {
-      DEXIT;
-      return PACK_FORMAT;
+      DRETURN(PACK_FORMAT);
    }   
 
    memset(pb, 0, sizeof(sge_pack_buffer));
@@ -222,7 +219,7 @@ init_packbuffer_from_buffer(sge_pack_buffer *pb, char *buf, u_long32 buflen)
    pb->bytes_used = 0;
 
    /* check cull version (only if buffer contains any data) */
-   if(buflen > 0) {
+   if (buflen > 0) {
       int ret;
       u_long32 pad, version;
 
@@ -313,7 +310,7 @@ int packint(sge_pack_buffer *pb, u_long32 i)
       if (pb->bytes_used + INTSIZE > pb->mem_size) {
          DPRINTF(("realloc(%d + %d)\n", pb->mem_size, CHUNK));
          pb->mem_size += CHUNK;
-         pb->head_ptr = realloc(pb->head_ptr, pb->mem_size);
+         pb->head_ptr = sge_realloc(pb->head_ptr, pb->mem_size, 0);
          if (!pb->head_ptr) {
             DEXIT;
             return PACK_ENOMEM;
@@ -336,14 +333,12 @@ int repackint(sge_pack_buffer *pb, u_long32 i)
 {
    u_long32 J=0;
 
-   DENTER(PACK_LAYER, "packint");
+   DENTER(PACK_LAYER, "repackint");
 
    if (!pb->just_count) {
-      {
-         J = htonl(i);
-         memcpy(pb->cur_ptr, (((char *) &J) + INTOFF), INTSIZE);
-         pb->cur_ptr += INTSIZE;
-      }
+      J = htonl(i);
+      memcpy(pb->cur_ptr, (((char *) &J) + INTOFF), INTSIZE);
+      pb->cur_ptr += INTSIZE;
    }
 
    DEXIT;
@@ -371,7 +366,7 @@ int packdouble(sge_pack_buffer *pb, double d) {
       if (pb->bytes_used + DOUBLESIZE > pb->mem_size) {
          DPRINTF(("realloc(%d + %d)\n", pb->mem_size, CHUNK));
          pb->mem_size += CHUNK;
-         pb->head_ptr = realloc(pb->head_ptr, pb->mem_size);
+         pb->head_ptr = sge_realloc(pb->head_ptr, pb->mem_size, 0);
          if (!pb->head_ptr) {
             DEXIT;
             return PACK_ENOMEM;
@@ -453,7 +448,7 @@ int packstr(sge_pack_buffer *pb, const char *str)
             /* realloc */
             DPRINTF(("realloc(%d + %d)\n", pb->mem_size, CHUNK));
             pb->mem_size += CHUNK;
-            pb->head_ptr = realloc(pb->head_ptr, pb->mem_size);
+            pb->head_ptr = sge_realloc(pb->head_ptr, pb->mem_size, 0);
             if (!pb->head_ptr) {
                DEXIT;
                return PACK_ENOMEM;
@@ -477,7 +472,7 @@ int packstr(sge_pack_buffer *pb, const char *str)
             DPRINTF(("realloc(%d + %d)\n", pb->mem_size, CHUNK));
             while ((pb->bytes_used + n) > pb->mem_size)
                pb->mem_size += CHUNK;
-            pb->head_ptr = realloc(pb->head_ptr, pb->mem_size);
+            pb->head_ptr = sge_realloc(pb->head_ptr, pb->mem_size, 0);
             if (!pb->head_ptr) {
                DEXIT;
                return PACK_ENOMEM;
@@ -576,7 +571,7 @@ u_long32 buf_size
          /* realloc */
          DPRINTF(("realloc(%d + %d)\n", pb->mem_size, CHUNK));
          pb->mem_size += CHUNK;
-         pb->head_ptr = realloc(pb->head_ptr, pb->mem_size);
+         pb->head_ptr = sge_realloc(pb->head_ptr, pb->mem_size, 0);
          if (!(pb->head_ptr)) {
             DEXIT;
             return PACK_ENOMEM;

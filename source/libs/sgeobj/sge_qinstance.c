@@ -78,7 +78,6 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
-
 #define QINSTANCE_LAYER TOP_LAYER
 
 /****** sgeobj/qinstance/qinstance_list_locate() ******************************
@@ -120,8 +119,8 @@ qinstance_list_locate(const lList *this_list, const char *hostname,
          const char *hname = lGetHost(ret, QU_qhostname);
 
          /* use qinstance expression */
-         if (!sge_eval_expression(TYPE_CSTR,cqueue_name,qname,NULL)) { 
-           if(!sge_eval_expression(TYPE_HOST,hostname,hname,NULL))  {
+         if (!sge_eval_expression(TYPE_CSTR, cqueue_name, qname, NULL)) { 
+           if (!sge_eval_expression(TYPE_HOST, hostname, hname, NULL))  {
              break;
            }
          }
@@ -1315,7 +1314,7 @@ qinstance_list_verify_execd_job(const lList *queue_list, lList **answer_list)
 {
    bool ret = true;
 
-   DENTER(TOP_LAYER, "qinstance_verify");
+   DENTER(TOP_LAYER, "qinstance_list_verify_execd_job");
 
    if (queue_list == NULL) {
       answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 

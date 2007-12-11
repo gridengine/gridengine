@@ -1366,7 +1366,7 @@ int job_set_submit_task_ids(lListElem *job, u_long32 start, u_long32 end,
 u_long32 job_get_smallest_unenrolled_task_id(const lListElem *job)
 {
    u_long32 n_h_id, u_h_id, o_h_id, s_h_id;
-   u_long32 ret = 0; 
+   u_long32 ret = 0;
 
    n_h_id = range_list_get_first_id(lGetList(job, JB_ja_n_h_ids), NULL);    
    u_h_id = range_list_get_first_id(lGetList(job, JB_ja_u_h_ids), NULL);    
@@ -1385,8 +1385,8 @@ u_long32 job_get_smallest_unenrolled_task_id(const lListElem *job)
    }
    if (ret == 0 && s_h_id > 0)  {
       ret = MIN(ret, s_h_id);
-   } else if (s_h_id > 0 ){
-      ret = s_h_id; 
+   } else if (s_h_id > 0){
+      ret = s_h_id;
    }
    return ret;
 }
@@ -2438,7 +2438,7 @@ int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list,
 
    DENTER(TOP_LAYER, "job_resolve_host_for_path_list");
 
-   for_each( ep, lGetList(job, name) ){
+   for_each(ep, lGetList(job, name)){
       int res = sge_resolve_host(ep, PN_host);
       DPRINTF(("after sge_resolve_host() which returned %s\n", cl_get_error_text(res)));
       if (res != CL_RETVAL_OK) { 

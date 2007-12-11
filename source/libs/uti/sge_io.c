@@ -40,6 +40,7 @@
 
 #include "uti/sge_io.h"
 #include "uti/sge_stdio.h"
+#include "uti/sge_stdlib.h"
 #include "uti/sge_unistd.h"
 #include "sgermon.h"
 #include "sge_log.h"
@@ -397,7 +398,7 @@ char *sge_bin2string(FILE *fp, int size)
          len = outp - outbuf;
 
          if (lastpos + len > dstbuflen) {
-            if ((dstbuf = realloc(dstbuf, lastpos + len + chunksize)) == NULL) {
+            if ((dstbuf = sge_realloc(dstbuf, lastpos + len + chunksize, 0)) == NULL) {
                error = true;
                break;
             }   
@@ -425,8 +426,9 @@ char *sge_bin2string(FILE *fp, int size)
       return NULL;
    }
    else {
-      if ((dstbuf = realloc(dstbuf, lastpos+1)) == NULL)
+      if ((dstbuf = sge_realloc(dstbuf, lastpos + 1, 0)) == NULL) {
          return NULL;
+      }
       dstbuf[lastpos] = '\0';
       return dstbuf;
    }
@@ -630,7 +632,7 @@ FCLOSE_ERROR:
 ******************************************************************************/ 
 char *sge_stream2string(FILE *fp, int *len)
 {
-   char *str, *new;
+   char *str;
    int filled = 0;
    int malloced_len, i;
  
@@ -646,13 +648,11 @@ char *sge_stream2string(FILE *fp, int *len)
    while ((i = fread(&str[filled], 1, malloced_len-filled-1, fp)) > 0) {
       filled += i;
       if (malloced_len == filled) {
-         new = realloc(str, malloced_len+FILE_CHUNK);
-         if (!new) {
-            free(str);
+         str = sge_realloc(str, malloced_len + FILE_CHUNK, 0);
+         if (str == NULL) {
             DEXIT;
             return NULL;
          }
-         str = new;
          malloced_len += FILE_CHUNK;
       }
  

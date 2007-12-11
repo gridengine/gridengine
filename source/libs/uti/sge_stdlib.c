@@ -87,14 +87,15 @@ char *sge_malloc(int size)
 *     sge_realloc() -- replacement for realloc 
 *
 *  SYNOPSIS
-*     char* sge_realloc(char *ptr, int size) 
+*     char* sge_realloc(char *ptr, int size, int abort) 
 *
 *  FUNCTION
 *     Reallocates a memory block. Aborts in case of an error. 
 *
 *  INPUTS
-*     char *ptr - pointer to a memory block 
-*     int size  - new size 
+*     char *ptr - pointer to a memory block
+*     int size  - new size
+*     int abort - do abort when realloc fails?
 *
 *  RESULT
 *     char* - pointer to the (new) memory block
@@ -102,30 +103,31 @@ char *sge_malloc(int size)
 *  NOTES
 *     MT-NOTE: sge_realloc() is MT safe
 ******************************************************************************/
-char *sge_realloc(char *ptr, int size) 
+void *sge_realloc(void *ptr, int size, int do_abort)
 {
-
-   char *cp = NULL;
+   void *cp = NULL;
 
    DENTER(BASIS_LAYER, "sge_realloc");
 
-   if (!size) {
-      if (ptr) {
-         FREE(ptr);
-      }
+   /* if new size is 0, just free the currently allocated memory */
+   if (size == 0) {
+      FREE(ptr);
       DRETURN(NULL);
    }
 
-   cp = (char *) realloc(ptr, size);
-
-   if (!cp) {
+   cp = realloc(ptr, size);
+   if (cp == NULL) {
       CRITICAL((SGE_EVENT, MSG_MEMORY_REALLOCFAILED));
-      DEXIT;
-      abort();
+      if (do_abort) {
+         DEXIT;
+         abort();
+      } else {
+         FREE(ptr);
+      }
    }
 
    DRETURN(cp);
-}             
+}
 
 /****** uti/stdlib/sge_free() *************************************************
 *  NAME
@@ -185,9 +187,8 @@ const char *sge_getenv(const char *env_str)
    DENTER(BASIS_LAYER, "sge_getenv");
  
    cp = (char *) getenv(env_str);
- 
-   DEXIT;
-   return (cp);
+
+   DRETURN(cp);
 }    
 
 /****** uti/stdlib/sge_putenv() ***********************************************

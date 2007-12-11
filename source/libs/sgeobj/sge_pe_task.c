@@ -94,12 +94,12 @@ pe_task_sum_past_usage(lListElem *container, const lListElem *pe_task)
    DENTER(TOP_LAYER, "pe_task_sum_past_usage");
 
    /* invalid input - nothing to do */
-   if(container == NULL || pe_task == NULL) {
+   if (container == NULL || pe_task == NULL) {
       DRETURN(NULL);
    }
 
    /* container and pe_task are the same element - nothing to do */
-   if(container == pe_task) {
+   if (container == pe_task) {
       DRETURN(container);
    }
 
@@ -107,12 +107,12 @@ pe_task_sum_past_usage(lListElem *container, const lListElem *pe_task)
    pe_task_usage   = lGetList(pe_task,   PET_scaled_usage);
 
    /* empty usage in pe task - nothing to do */
-   if(pe_task_usage == NULL) {
+   if (pe_task_usage == NULL) {
       DRETURN(container);
    }
 
    /* container has no usage list yet - create it */
-   if(container_usage == NULL) {
+   if (container_usage == NULL) {
       container_usage = lCreateList("usage", UA_Type);
       lSetList(container, PET_scaled_usage, container_usage);
    }
@@ -127,7 +127,7 @@ pe_task_sum_past_usage(lListElem *container, const lListElem *pe_task)
           !strcmp(name, USAGE_ATTR_MAXVMEM) ||
           !strcmp(name, USAGE_ATTR_MEM)) {
          lListElem *sum = lGetElemStr(container_usage, UA_name, name);
-         if(sum == NULL) {
+         if (sum == NULL) {
             lAppendElem(container_usage, lCopyElem(usage));
          } else {
             lSetDouble(sum, UA_value, lGetDouble(sum, UA_value) + lGetDouble(usage, UA_value));
@@ -169,13 +169,13 @@ lListElem *pe_task_sum_past_usage_all(lList *pe_task_list)
    DENTER(TOP_LAYER, "pe_task_sum_past_usage_all");
 
    /* no pe task list - nothing to do */
-   if(pe_task_list == NULL) {
+   if (pe_task_list == NULL) {
       DRETURN(NULL);
    }
 
    /* loop over all pe tasks and sum up usage */
    for_each(pe_task, pe_task_list) {
-      if(container == NULL) {
+      if (container == NULL) {
          container = pe_task_sum_past_usage_list(pe_task_list, pe_task);
       } else {
          pe_task_sum_past_usage(container, pe_task);

@@ -5656,16 +5656,15 @@ static int **job_run_sequence_parse(char *jrs_str)
 
    /* groups are delimited by dashes '-' */
    for (group_str=strtok_r(jrs_str_cp, "-", &iter_dash); group_str; group_str=strtok_r(NULL, "-", &iter_dash)) {
-
-   char  *iter_comma = NULL;
-   int *group;
-   int numbers_total;
-   int numbers_used;
-   int j = 0;
+      char  *iter_comma = NULL;
+      int *group;
+      int numbers_total;
+      int numbers_used;
+      int j = 0;
    
       if (++groups_used > groups_total) {
          groups_total += GROUP_CHUNK;
-         sequence = realloc(sequence, groups_total+1);
+         sequence = sge_realloc(sequence, groups_total + 1, 1);
       }
 
       numbers_total = NUMBER_CHUNK;
@@ -5677,7 +5676,7 @@ static int **job_run_sequence_parse(char *jrs_str)
       for (s=strtok_r(group_str, ",", &iter_comma); s; s=strtok_r(NULL, ",", &iter_comma)) {
          if (++numbers_used > numbers_total) {
             numbers_total += NUMBER_CHUNK;
-            group = realloc(sequence, numbers_total+1);
+            group = sge_realloc(group, numbers_total + 1, 1);
          }
          printf("%s ", s);
          group[j] = atoi(s);

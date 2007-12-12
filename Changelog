@@ -1,3 +1,7 @@
+JG-2007-12-12-0: Bugfix:    JG-2007-12-10-0 introduced too strict verification
+                            of the JB_cwd job attribute.
+                 Review:    RD
+
 JG-2007-12-11-0: Bugfix:    Replace realloc by sge_realloc, make sure that 
                             memory is freed, when realloc fails.
                  Review:    RD

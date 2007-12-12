@@ -136,42 +136,6 @@ CheckQmasterInstallation()
    $CLEAR
 
    GetAdminUser
-
-   if [ "$SGE_ARCH" = "win32-x86" ]; then
-      user=`grep admin_user $COMMONDIR/bootstrap | awk '{ print $2 }'`
-      user=`hostname | tr "a-z" "A-Z"`"+$user"
-   else
-      user=`grep admin_user $COMMONDIR/bootstrap | awk '{ print $2 }'`
-   fi
-
-   if [ "$user" != "" ]; then
-      if [ `echo "$user" |tr "A-Z" "a-z"` = "none" -a $euid = 0 ]; then
-         user=default
-      fi
-   fi
-
-   if [ "$ADMINUSER" != "$user" ]; then
-      if [ "$user" = default ]; then
-         $INFOTEXT "The admin user >%s< is different than the default user >root<\n" \
-                   "in the global cluster configuration.\n" $ADMINUSER
-         $INFOTEXT -log "The admin user >%s< is different than the default user >root<\n" \
-                   "in the global cluster configuration.\n" $ADMINUSER
-
-      else
-         $INFOTEXT "The admin user >%s< doesn't match the admin username >%s<\n" \
-                   "in the global cluster configuration.\n" $ADMINUSER $user
-         $INFOTEXT -log "The admin user >%s< doesn't match the admin username >%s<\n" \
-                   "in the global cluster configuration.\n" $ADMINUSER $user
-      fi
-      $INFOTEXT "Installation failed. Exit."
-      $INFOTEXT -log "Installation failed. Exit."
-
-      if [ $AUTO = true ]; then
-         MoveLog
-      fi
-
-      exit 1
-   fi
 }
 
 

@@ -1,3 +1,9 @@
+HP-2007-12-12-0: Bugfix:    Installation failed on Windows when installing as root
+                            without SGE admin user
+                 Changed:   dist/util/install_modules/inst_execd.sh
+                 Bugster:   6640885
+                 Review:    RD
+
 JG-2007-12-12-0: Bugfix:    JG-2007-12-10-0 introduced too strict verification
                             of the JB_cwd job attribute.
                  Review:    RD

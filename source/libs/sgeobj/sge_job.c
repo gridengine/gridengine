@@ -3110,7 +3110,12 @@ job_verify(const lListElem *job, lList **answer_list)
       const char *cwd = lGetString(job, JB_cwd);
 
       if (cwd != NULL) {
-         ret = path_verify(cwd, answer_list, "cwd", true);
+         /*
+          * cwd needn't be an absolute path, we also accept 
+          * relative paths, e.g. via -wd switch, 
+          * or even pseudo variables, e.g. $HOME used by drmaa submit
+          */
+         ret = path_verify(cwd, answer_list, "cwd", false);
       }
    }
 

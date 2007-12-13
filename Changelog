@@ -1,3 +1,7 @@
+EB-2007-12-13-0: Enhancem.: added possibilitie to start and stop scheduler
+                            and jvm thread
+                 Review:    MD
+
 RD-2007-12-13-0: Bugfix:    Fixed some more memory leaks introduced with the
                             scheduler thread, bdb jobscript spooling and the
                             abstract event client

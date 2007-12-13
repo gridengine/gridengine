@@ -101,6 +101,7 @@ enum {
    OA_AR_ID_LIST,
    OA_WC_AR_LIST,
    OA_WC_AR,
+   OA_THREAD_NAME,
 
    OA__END
 };

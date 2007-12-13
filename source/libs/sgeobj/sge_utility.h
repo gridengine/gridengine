@@ -34,6 +34,12 @@
 
 #include "sgeobj/sge_answer.h"
 
+typedef enum sge_thread_state_transitions_t_ {
+   SGE_THREAD_TRIGGER_NONE = 0,
+   SGE_THREAD_TRIGGER_START, 
+   SGE_THREAD_TRIGGER_STOP
+} sge_thread_state_transitions_t;
+
 #define SGE_CHECK_POINTER_NULL(pointer, answer_list)                 \
    if ((pointer) == NULL) {                                          \
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,          \

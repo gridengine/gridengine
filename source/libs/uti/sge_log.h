@@ -218,7 +218,7 @@ int sge_log(int log_level, const char *mesg, const char *file__,
 *     ...
 ******************************************************************************/ 
 #   define INFO(x)   (sprintf x,  \
-                      sge_log(LOG_INFO,   SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
+                      sge_log(LOG_INFO, SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
 
 /****** uti/log/DEBUG() ******************************************************
 *  NAME

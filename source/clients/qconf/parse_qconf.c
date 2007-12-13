@@ -1,4 +1,3 @@
-/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -94,11 +93,14 @@
 
 #include "spool/flatfile/sge_flatfile.h"
 #include "spool/flatfile/sge_flatfile_obj.h"
+
 #include "sgeobj/sge_usageL.h"
 #include "sgeobj/sge_userprjL.h"
 #include "sgeobj/sge_range.h"
 #include "sgeobj/sge_cqueueL.h"
 #include "sgeobj/sge_subordinateL.h"
+#include "sgeobj/sge_utility.h"
+
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 
@@ -1807,15 +1809,18 @@ char *argv[]
       }
 /*----------------------------------------------------------------------------*/
 
-      /* -st <name> ... */
-      /* <name> may be "scheduler" */
+      /* -at <name> ... */
+      /* <name> may be "scheduler", "jvm" */
 
-      if (strncmp("-st", *spp, 4) == 0) {
+      if (strncmp("-at", *spp, 4) == 0) {
          int opt = THREAD_START;
          /* no adminhost/manager check needed here */
 
          spp = sge_parser_get_next(spp);
          lString2List(*spp, &lp, ID_Type, ID_str, ", ");
+         for_each(ep, lp) {
+            lSetUlong(ep, ID_action, SGE_THREAD_TRIGGER_START);
+         }
          alp = ctx->kill(ctx, lp, default_cell, 0, opt);
          lFreeList(&lp);
          answer_list_on_error_print_or_exit(&alp, stderr);
@@ -1824,6 +1829,27 @@ char *argv[]
          continue;
       }
 
+/*----------------------------------------------------------------------------*/
+
+      /* -kt <name> ... */
+      /* <name> may be "scheduler", "jvm" */
+
+      if (strncmp("-kt", *spp, 4) == 0) {
+         int opt = THREAD_START;
+         /* no adminhost/manager check needed here */
+
+         spp = sge_parser_get_next(spp);
+         lString2List(*spp, &lp, ID_Type, ID_str, ", ");
+         for_each(ep, lp) {
+            lSetUlong(ep, ID_action, SGE_THREAD_TRIGGER_STOP);
+         }
+         alp = ctx->kill(ctx, lp, default_cell, 0, opt);
+         lFreeList(&lp);
+         answer_list_on_error_print_or_exit(&alp, stderr);
+         lFreeList(&alp);
+         spp++;
+         continue;
+      }
 /*----------------------------------------------------------------------------*/
 
       /* -ke[j] <host> ... */

@@ -238,6 +238,7 @@ static void sge_scheduler_wait_for_event(void)
 *     
 *  INPUTS
 *     sge_gdi_ctx_class_t *ctx - context object 
+*     lList **answer_list      - answer list
 *
 *  RESULT
 *     void - None
@@ -252,7 +253,7 @@ static void sge_scheduler_wait_for_event(void)
 *     qmaster/threads/sge_scheduler_main() 
 *******************************************************************************/
 void 
-sge_scheduler_initialize(sge_gdi_ctx_class_t *ctx)
+sge_scheduler_initialize(sge_gdi_ctx_class_t *ctx, lList **answer_list)
 {
    DENTER(TOP_LAYER, "sge_scheduler_initialize");
 
@@ -301,7 +302,16 @@ sge_scheduler_initialize(sge_gdi_ctx_class_t *ctx)
           */
          Master_Scheduler.thread_id++;
          Master_Scheduler.is_running = true;
+
+         INFO((SGE_EVENT, MSG_THREAD_XHASSTARTED_S, threadnames[SCHEDD_THREAD]));
+         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_INFO);
+      } else {
+         INFO((SGE_EVENT, MSG_THREAD_XSTARTDISABLED_S, threadnames[SCHEDD_THREAD]));
+         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_INFO);
       }
+   } else {
+      ERROR((SGE_EVENT, MSG_THREAD_XISRUNNING_S, threadnames[SCHEDD_THREAD]));
+      answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
    }
    sge_mutex_unlock("master scheduler struct", SGE_FUNC, __LINE__, &(Master_Scheduler.mutex));
    DRETURN_VOID;
@@ -395,6 +405,7 @@ sge_scheduler_cleanup_thread(void)
 *     
 *  INPUTS
 *     sge_gdi_ctx_class_t *ctx - context object 
+*     lList **answer_list      - answer list
 *
 *  RESULT
 *     void - None
@@ -409,7 +420,7 @@ sge_scheduler_cleanup_thread(void)
 *     qmaster/threads/sge_scheduler_main() 
 *******************************************************************************/
 void
-sge_scheduler_terminate(sge_gdi_ctx_class_t *ctx)
+sge_scheduler_terminate(sge_gdi_ctx_class_t *ctx, lList **answer_list)
 {
    DENTER(TOP_LAYER, "sge_scheduler_terminate");
    
@@ -440,17 +451,24 @@ sge_scheduler_terminate(sge_gdi_ctx_class_t *ctx)
        * schedulers cancelation point in sge_scheduler_cleanup_thread() ...
        * ... therefore we have nothing more to do.
        */
+      ;
 
       sge_mutex_unlock("master scheduler struct", SGE_FUNC, __LINE__, &(Master_Scheduler.mutex));
+
       /* 
        * after releasing the lock it is safe to wait for the termination. 
        * doing this inside the critical section (before the lock) this could 
        * rise a deadlock situtaion this function would be called within a GDI request!
        */
       pthread_join(thread_id, NULL); 
-       
+
+      INFO((SGE_EVENT, MSG_THREAD_XTERMINATED_S, threadnames[SCHEDD_THREAD]));
+      answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_INFO);
    } else {
       sge_mutex_unlock("master scheduler struct", SGE_FUNC, __LINE__, &(Master_Scheduler.mutex));
+
+      ERROR((SGE_EVENT, MSG_THREAD_XNOTRUNNING_S, threadnames[SCHEDD_THREAD]));
+      answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
    }
 
    DRETURN_VOID;

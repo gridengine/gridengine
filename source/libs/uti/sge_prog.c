@@ -103,7 +103,7 @@ const char *threadnames[] = {
    "worker",            /* 5 */
    "signaler",          /* 6 */
    "jvm",               /* 7 */
-   "schedd",            /* 8 */
+   "scheduler",         /* 8 */
    "tester"             /* 9 */
 };
 

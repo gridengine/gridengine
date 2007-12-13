@@ -38,7 +38,6 @@
 
 #ifndef NO_JNI
 
-#include "sge_thread_jvm.h"
 #include "basis_types.h"
 #include "sge_qmaster_threads.h"
 #include "sgermon.h"
@@ -87,6 +86,7 @@
 #include "sge_follow.h"
 #include "configuration_qmaster.h"
 #include "sge_thread_main.h"
+#include "sge_thread_jvm.h"
 
 #include "uti/sge_os.h"
 #include "uti/sge_string.h"
@@ -94,6 +94,216 @@
 #include "uti/sge_dstring.h"
 
 #include "sgeobj/config.h"
+
+
+master_jvm_class_t Master_Jvm = {
+   PTHREAD_MUTEX_INITIALIZER,
+   PTHREAD_COND_INITIALIZER,
+   false,
+   0,
+   true,
+   false
+};
+
+static bool shutdown_main(void);
+
+/****** qmaster/threads/sge_jvm_terminate() ***********************************
+*  NAME
+*     sge_jvm_terminate() -- trigger termination of JVM 
+*
+*  SYNOPSIS
+*     void sge_jvm_terminate(sge_gdi_ctx_class_t *ctx) 
+*
+*  FUNCTION
+*     A call of this function triggers the termination of the JVM thread .
+*  
+*     If ther JVM is running then JVM will be notified to terminate.
+*     The thread running the JVM will get a cancel signal.
+*
+*     If the JVM should be running but if it was not able to start due
+*     to some reason (missing library; wrong jvm parameters; ...) then
+*     the JVM thread is waiting only for a termination call which will be 
+*     send by this function.
+*
+*     'Master_Scheduler' is accessed by this function.
+*
+*  INPUTS
+*     sge_gdi_ctx_class_t *ctx - context object 
+*     lList **answer_list      - answer list
+*
+*  RESULT
+*     void - None
+*
+*  NOTES
+*     MT-NOTE: sge_jvm_terminate() is MT safe 
+*
+*  SEE ALSO
+*     qmaster/threads/sge_jvm_initialize() 
+*     qmaster/threads/sge_jvm_cleanup_thread() 
+*     qmaster/threads/sge_jvm_terminate() 
+*     qmaster/threads/sge_jvm_wait_for_terminate()
+*     qmaster/threads/sge_jvm_main() 
+*******************************************************************************/
+void
+sge_jvm_terminate(sge_gdi_ctx_class_t *ctx, lList **answer_list)
+{
+
+   DENTER(TOP_LAYER, "sge_jvm_terminate");
+
+   sge_mutex_lock("master jvm struct", SGE_FUNC, __LINE__, &(Master_Jvm.mutex));
+
+   if (Master_Jvm.is_running) {
+      pthread_t thread_id; 
+      cl_thread_settings_t* thread = NULL;
+
+      /*
+       * store thread id to use it later on
+       */
+      thread = cl_thread_list_get_first_thread(Main_Control.jvm_thread_pool);
+      thread_id = *(thread->thread_pointer);
+
+      /* 
+       * send cancel signal
+       * trigger shutdown in the JVM
+       * and signal the continuation to realease the JVM thread if it was unable to setup the JVM 
+       */
+      pthread_cancel(thread_id);
+      shutdown_main();
+      Master_Jvm.shutdown_started = true;
+      pthread_cond_broadcast(&Master_Jvm.cond_var);
+
+      /*
+       * cl_thread deletion and cl_thread_pool deletion will be done at 
+       * JVM threads cancelation point in sge_jvm_cleanup_thread() ...
+       * ... therefore we have nothing more to do.
+       */
+      sge_mutex_unlock("master jvm struct", SGE_FUNC, __LINE__, &(Master_Jvm.mutex));
+
+      /* 
+       * after releasing the lock it is safe to wait for the termination. 
+       * doing this inside the critical section (before the lock) could 
+       * rise a deadlock situtaion this function would be called within a GDI request!
+       */
+      pthread_join(thread_id, NULL);
+
+      INFO((SGE_EVENT, MSG_THREAD_XTERMINATED_S, threadnames[JVM_THREAD]));
+      answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_INFO);
+   } else {
+      sge_mutex_unlock("master jvm struct", SGE_FUNC, __LINE__, &(Master_Jvm.mutex));
+
+      ERROR((SGE_EVENT, MSG_THREAD_XNOTRUNNING_S, threadnames[JVM_THREAD]));
+      answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+   }
+
+   DRETURN_VOID;
+}
+
+/****** qmaster/threads/sge_jvm_initialize() ************************************
+*  NAME
+*     sge_jvm_initialize() -- setup and start the JVM thread 
+*
+*  SYNOPSIS
+*     void sge_jvm_initialize(sge_gdi_ctx_class_t *ctx) 
+*
+*  FUNCTION
+*     A call to this function initializes the JVM thread if it is not
+*     already running.
+*
+*     The first call to this function (during qmaster start) starts
+*     the JVM thread only if it is enabled in bootstrap configuration
+*     file. Otherwise the JVM will not be started.
+*
+*     Each subsequent call (triggered via GDI) will definitely try to
+*     start the JVM tread if it is not running.
+*
+*     Main routine for the created thread is sge_jvm_main().
+*
+*     'Master_Jvm' is accessed by this function.
+*
+*  INPUTS
+*     sge_gdi_ctx_class_t *ctx - context object 
+*     lList **answer_list      - answer list
+*
+*  RESULT
+*     void - None
+*
+*  NOTES
+*     MT-NOTE: sge_jvm_initialize() is MT safe 
+*
+*  SEE ALSO
+*     qmaster/threads/sge_jvm_initialize() 
+*     qmaster/threads/sge_jvm_cleanup_thread() 
+*     qmaster/threads/sge_jvm_terminate() 
+*     qmaster/threads/sge_jvm_wait_for_terminate()
+*     qmaster/threads/sge_jvm_main() 
+*******************************************************************************/
+void
+sge_jvm_initialize(sge_gdi_ctx_class_t *ctx, lList **answer_list)
+{
+   DENTER(TOP_LAYER, "sge_jvm_initialize");
+
+   sge_mutex_lock("master jvm struct", SGE_FUNC, __LINE__, &(Master_Jvm.mutex));
+  
+   if (Master_Jvm.is_running == false) {
+      bool start_thread = true;
+
+      /* 
+       * when this function is called the first time we will use the setting from
+       * the bootstrap file to identify if the Jvm should be started or not
+       * otherwise we have to start the thread due to a manual request through GDI.
+       * There is no option. We have to start it.
+       */
+      if (Master_Jvm.use_bootstrap == true) {
+         start_thread = ((ctx->get_jvm_thread_count(ctx) > 0) ? true : false);
+         Master_Jvm.use_bootstrap = false;
+      }
+
+      if (start_thread == true) {
+         cl_thread_settings_t* dummy_thread_p = NULL;
+         dstring thread_name = DSTRING_INIT;
+
+         /*
+          * initialize the thread pool
+          */
+         cl_thread_list_setup(&(Main_Control.jvm_thread_pool), "thread pool");
+  
+         /* 
+          * prepare a unique jvm thread name for each instance 
+          */
+         sge_dstring_sprintf(&thread_name, "%s%03d", threadnames[JVM_THREAD],
+                             Master_Jvm.thread_id);
+
+         /*
+          * start the JVM thread 
+          */
+         cl_thread_list_create_thread(Main_Control.jvm_thread_pool, &dummy_thread_p,
+                                      NULL, sge_dstring_get_string(&thread_name),
+                                      Master_Jvm.thread_id, sge_jvm_main, NULL, NULL);
+         sge_dstring_free(&thread_name);
+
+         /*
+          * Increase the thread id so that the next instance of a jvm will have a 
+          * different name and flag that jvm is running and that shutdown has not been
+          * triggered
+          */
+         Master_Jvm.shutdown_started = false;
+         Master_Jvm.thread_id++;
+         Master_Jvm.is_running = true;
+
+         INFO((SGE_EVENT, MSG_THREAD_XHASSTARTED_S, threadnames[JVM_THREAD]));
+         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_INFO);
+      } else {
+         INFO((SGE_EVENT, MSG_THREAD_XSTARTDISABLED_S, threadnames[JVM_THREAD]));
+         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_INFO);
+      }
+   } else {
+
+   }
+   sge_mutex_unlock("master jvm struct", SGE_FUNC, __LINE__, &(Master_Jvm.mutex));
+
+   DRETURN_VOID;
+}
+
 
 #include <jni.h>
 
@@ -115,15 +325,6 @@
 #ifdef SOLARIS
 #include <link.h>
 #endif
-
-master_jvm_class_t Master_Jvm = {
-   PTHREAD_MUTEX_INITIALIZER,
-   PTHREAD_COND_INITIALIZER,
-   false,
-   0,
-   true,
-   false
-};
 
 static JavaVM* myjvm = NULL;
 static pthread_mutex_t myjvm_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -581,103 +782,6 @@ sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
    DRETURN(ret);
 }
 
-/****** qmaster/threads/sge_jvm_initialize() ************************************
-*  NAME
-*     sge_jvm_initialize() -- setup and start the JVM thread 
-*
-*  SYNOPSIS
-*     void sge_jvm_initialize(sge_gdi_ctx_class_t *ctx) 
-*
-*  FUNCTION
-*     A call to this function initializes the JVM thread if it is not
-*     already running.
-*
-*     The first call to this function (during qmaster start) starts
-*     the JVM thread only if it is enabled in bootstrap configuration
-*     file. Otherwise the JVM will not be started.
-*
-*     Each subsequent call (triggered via GDI) will definitely try to
-*     start the JVM tread if it is not running.
-*
-*     Main routine for the created thread is sge_jvm_main().
-*
-*     'Master_Jvm' is accessed by this function.
-*
-*  INPUTS
-*     sge_gdi_ctx_class_t *ctx - context object 
-*
-*  RESULT
-*     void - None
-*
-*  NOTES
-*     MT-NOTE: sge_jvm_initialize() is MT safe 
-*
-*  SEE ALSO
-*     qmaster/threads/sge_jvm_initialize() 
-*     qmaster/threads/sge_jvm_cleanup_thread() 
-*     qmaster/threads/sge_jvm_terminate() 
-*     qmaster/threads/sge_jvm_wait_for_terminate()
-*     qmaster/threads/sge_jvm_main() 
-*******************************************************************************/
-void
-sge_jvm_initialize(sge_gdi_ctx_class_t *ctx)
-{
-   DENTER(TOP_LAYER, "sge_jvm_initialize");
-
-   sge_mutex_lock("master jvm struct", SGE_FUNC, __LINE__, &(Master_Jvm.mutex));
-  
-   if (Master_Jvm.is_running == false) {
-      bool start_thread = true;
-
-      /* 
-       * when this function is called the first time we will use the setting from
-       * the bootstrap file to identify if the Jvm should be started or not
-       * otherwise we have to start the thread due to a manual request through GDI.
-       * There is no option. We have to start it.
-       */
-      if (Master_Jvm.use_bootstrap == true) {
-         start_thread = ((ctx->get_jvm_thread_count(ctx) > 0) ? true : false);
-         Master_Jvm.use_bootstrap = false;
-      }
-
-      if (start_thread == true) {
-         cl_thread_settings_t* dummy_thread_p = NULL;
-         dstring thread_name = DSTRING_INIT;
-
-         /*
-          * initialize the thread pool
-          */
-         cl_thread_list_setup(&(Main_Control.jvm_thread_pool), "thread pool");
-  
-         /* 
-          * prepare a unique jvm thread name for each instance 
-          */
-         sge_dstring_sprintf(&thread_name, "%s%03d", threadnames[JVM_THREAD],
-                             Master_Jvm.thread_id);
-
-         /*
-          * start the JVM thread 
-          */
-         cl_thread_list_create_thread(Main_Control.jvm_thread_pool, &dummy_thread_p,
-                                      NULL, sge_dstring_get_string(&thread_name),
-                                      Master_Jvm.thread_id, sge_jvm_main, NULL, NULL);
-         sge_dstring_free(&thread_name);
-
-         /*
-          * Increase the thread id so that the next instance of a jvm will have a 
-          * different name and flag that jvm is running and that shutdown has not been
-          * triggered
-          */
-         Master_Jvm.shutdown_started = false;
-         Master_Jvm.thread_id++;
-         Master_Jvm.is_running = true;
-      }
-   }
-   sge_mutex_unlock("master jvm struct", SGE_FUNC, __LINE__, &(Master_Jvm.mutex));
-
-   DRETURN_VOID;
-}
-
 /****** qmaster/threads/sge_jvm_wait_for_terminate() ****************************
 *  NAME
 *     sge_jvm_wait_for_terminate() -- blocks the executing thread till shutdown 
@@ -800,89 +904,6 @@ sge_jvm_cleanup_thread(void)
    DRETURN_VOID;
 }
 
-/****** qmaster/threads/sge_jvm_terminate() ***********************************
-*  NAME
-*     sge_jvm_terminate() -- trigger termination of JVM 
-*
-*  SYNOPSIS
-*     void sge_jvm_terminate(sge_gdi_ctx_class_t *ctx) 
-*
-*  FUNCTION
-*     A call of this function triggers the termination of the JVM thread .
-*  
-*     If ther JVM is running then JVM will be notified to terminate.
-*     The thread running the JVM will get a cancel signal.
-*
-*     If the JVM should be running but if it was not able to start due
-*     to some reason (missing library; wrong jvm parameters; ...) then
-*     the JVM thread is waiting only for a termination call which will be 
-*     send by this function.
-*
-*     'Master_Scheduler' is accessed by this function.
-*
-*  INPUTS
-*     sge_gdi_ctx_class_t *ctx - context object 
-*
-*  RESULT
-*     void - None
-*
-*  NOTES
-*     MT-NOTE: sge_jvm_terminate() is MT safe 
-*
-*  SEE ALSO
-*     qmaster/threads/sge_jvm_initialize() 
-*     qmaster/threads/sge_jvm_cleanup_thread() 
-*     qmaster/threads/sge_jvm_terminate() 
-*     qmaster/threads/sge_jvm_wait_for_terminate()
-*     qmaster/threads/sge_jvm_main() 
-*******************************************************************************/
-void
-sge_jvm_terminate(sge_gdi_ctx_class_t *ctx)
-{
-
-   DENTER(TOP_LAYER, "sge_jvm_terminate");
-
-   sge_mutex_lock("master jvm struct", SGE_FUNC, __LINE__, &(Master_Jvm.mutex));
-
-   if (Master_Jvm.is_running) {
-      pthread_t thread_id; 
-      cl_thread_settings_t* thread = NULL;
-
-      /*
-       * store thread id to use it later on
-       */
-      thread = cl_thread_list_get_first_thread(Main_Control.jvm_thread_pool);
-      thread_id = *(thread->thread_pointer);
-
-      /* 
-       * send cancel signal
-       * trigger shutdown in the JVM
-       * and signal the continuation to realease the JVM thread if it was unable to setup the JVM 
-       */
-      pthread_cancel(thread_id);
-      shutdown_main();
-      Master_Jvm.shutdown_started = true;
-      pthread_cond_broadcast(&Master_Jvm.cond_var);
-
-      /*
-       * cl_thread deletion and cl_thread_pool deletion will be done at 
-       * JVM threads cancelation point in sge_jvm_cleanup_thread() ...
-       * ... therefore we have nothing more to do.
-       */
-      sge_mutex_unlock("master jvm struct", SGE_FUNC, __LINE__, &(Master_Jvm.mutex));
-
-      /* 
-       * after releasing the lock it is safe to wait for the termination. 
-       * doing this inside the critical section (before the lock) could 
-       * rise a deadlock situtaion this function would be called within a GDI request!
-       */
-      pthread_join(thread_id, NULL);
-   } else {
-      sge_mutex_unlock("master jvm struct", SGE_FUNC, __LINE__, &(Master_Jvm.mutex));
-   }
-
-   DRETURN_VOID;
-}
 
 /****** qmaster/threads/sge_jvm_main() ******************************************
 *  NAME

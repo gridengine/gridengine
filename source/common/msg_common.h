@@ -356,8 +356,7 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_WC_QUEUE             "wc_queue                wc_cqueue|wc_qdomain|wc_qinstance"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_WC_QUEUE_LIST        "wc_queue_list           wc_queue[,wc_queue,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_TIME                 "time                    hours:minutes:seconds | seconds"
-
-
+#define MSG_GDI_ARGUMENTSYNTAX_OA_THREAD_NAME          "thread_name             \"scheduler\"|\"jvm\"" 
 
 #define MSG_GDI_USAGE_a_OPT_DATE_TIME                    "[-a date_time]"
 #define MSG_GDI_UTEXT_a_OPT_DATE_TIME                    _MESSAGE(23290, _("request a start time"))
@@ -986,10 +985,17 @@
 
 #define MSG_COMMAND_REQUIRED_FOR_BINARY_JOB              _MESSAGE(23506, _("command required for a binary job"))
 
-#define MSG_GDI_USAGE_USAGESTRING                     _MESSAGE(23507, _("usage:"))
+#define MSG_GDI_USAGE_USAGESTRING                        _MESSAGE(23507, _("usage:"))
 
-#define MSG_GDI_USAGE_terse_OPT                            "[-terse]"
-#define MSG_GDI_UTEXT_terse_OPT                            _MESSAGE(23508, _("tersed output, print only the job-id"))
+#define MSG_GDI_USAGE_terse_OPT                          "[-terse]"
+#define MSG_GDI_UTEXT_terse_OPT                          _MESSAGE(23508, _("tersed output, print only the job-id"))
+
+#define MSG_GDI_USAGE_kt_OPT                             "[-kt thread_name]"
+#define MSG_GDI_UTEXT_kt_OPT                             _MESSAGE(23509, _("kill qmaster thread"))
+
+#define MSG_GDI_USAGE_at_OPT                             "[-at thread_name]"
+#define MSG_GDI_UTEXT_at_OPT                             _MESSAGE(23510, _("add/start qmaster thread"))
+
 
 /* =================================================
  * global error messages 

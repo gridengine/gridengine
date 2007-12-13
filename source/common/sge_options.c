@@ -487,7 +487,11 @@ unsigned short sge_options[][ALL_OPT + 1] =
 /* xml_OPT - generate xml output */ 
  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
 /* terse_OPT - show only the job id, terse output */
- {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1}
+ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1},
+/* at_OPT - add/start thread */
+ {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+/* kt_OPT - kill/terminate thread */
+ {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}
 
 /*               
   n  q  q  q  q  q  q  q  q  q  q  q  q  q  q  e  q  q  q  q  n  A

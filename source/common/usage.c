@@ -185,6 +185,8 @@ static char* get_argument_syntax(u_long32 prog_number, int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_WC_QUEUE;
      case OA_WC_QUEUE_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_WC_QUEUE_LIST;
+     case OA_THREAD_NAME:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_THREAD_NAME;
      case OA_OBJECT_NAME2:
          return MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME2;
      case OA_OBJECT_NAME3:
@@ -380,6 +382,11 @@ void sge_usage(u_long32 prog_number, FILE *fp) {
 
    if (VALID_OPT(Astree_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_ASTREE_FNAME, MSG_GDI_UTEXT_ASTREE_FNAME);
+   }
+
+   if (VALID_OPT(at_OPT, prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_at_OPT, MSG_GDI_UTEXT_at_OPT);
+      MARK(OA_THREAD_NAME);
    }
 
    if (VALID_OPT(au_OPT, prog_number)) {
@@ -678,6 +685,11 @@ void sge_usage(u_long32 prog_number, FILE *fp) {
    if (VALID_OPT(kec_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_kec_OPT, MSG_GDI_UTEXT_kec_OPT );
       MARK(OA_EVENTCLIENT_LIST);
+   }
+
+   if (VALID_OPT(kt_OPT, prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_kt_OPT, MSG_GDI_UTEXT_kt_OPT );
+      MARK(OA_THREAD_NAME);
    }
 
    if (VALID_OPT(l_OPT, prog_number)) {

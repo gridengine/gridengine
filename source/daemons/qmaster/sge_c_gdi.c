@@ -84,17 +84,21 @@
 #include "sge_centry.h"
 #include "sge_cqueue.h"
 #include "sge_lock.h"
-#include "msg_common.h"
-#include "msg_qmaster.h"
-#include "sgeobj/sge_event.h"
-#include "uti/sge_bootstrap.h"
 #include "sge_advance_reservation_qmaster.h"
 #include "sge_sched_process_events.h"
 #include "sge_thread_scheduler.h"
 #include "sge_thread_jvm.h"
 
+#include "uti/sge_bootstrap.h"
+
 #include "gdi/sge_gdi_packet_pb_cull.h"
 #include "gdi/sge_gdi_packet.h"
+
+#include "sgeobj/sge_event.h"
+#include "sgeobj/sge_utility.h"
+
+#include "msg_common.h"
+#include "msg_qmaster.h"
 
 static void
 sge_c_gdi_get(gdi_object_t *ao, sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task, monitoring_t *monitor);
@@ -136,8 +140,11 @@ sge_gdi_shutdown_event_client(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *
                               sge_gdi_task_class_t *task, monitoring_t *monitor, 
                               object_description *object_base);
 
-static void sge_gdi_startup_thread(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, 
-                                   sge_gdi_task_class_t *task, monitoring_t *monitor);
+static void 
+sge_gdi_tigger_thread_state_transition(sge_gdi_ctx_class_t *ctx, 
+                                       sge_gdi_packet_class_t *packet, 
+                                       sge_gdi_task_class_t *task, 
+                                       monitoring_t *monitor);
 
 static int  get_client_id(lListElem*, int*);
 
@@ -1043,9 +1050,9 @@ void sge_c_gdi_replace(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
 /*
  * MT-NOTE: sge_c_gdi_trigger() is MT safe
  */
-static void sge_c_gdi_trigger(sge_gdi_ctx_class_t *ctx,            
-                              sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
-                              monitoring_t *monitor)
+static void 
+sge_c_gdi_trigger(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, 
+                  sge_gdi_task_class_t *task, monitoring_t *monitor)
 {
    u_long32 target = task->target;
    object_description *object_base = object_type_get_object_description();
@@ -1053,7 +1060,6 @@ static void sge_c_gdi_trigger(sge_gdi_ctx_class_t *ctx,
    DENTER(GDI_LAYER, "sge_c_gdi_trigger");
 
    switch (target) {
-
       case SGE_EXECHOST_LIST: /* kill execd */
       case SGE_MASTER_EVENT:  /* kill master */
       case SGE_SC_LIST:       /* trigger scheduler monitoring */
@@ -1099,7 +1105,7 @@ static void sge_c_gdi_trigger(sge_gdi_ctx_class_t *ctx,
             answer_list_log(&(task->answer_list), false, true);
          break;
        case SGE_DUMMY_LIST:
-            sge_gdi_startup_thread(ctx, packet, task, monitor);
+            sge_gdi_tigger_thread_state_transition(ctx, packet, task, monitor);
             answer_list_log(&(task->answer_list), false, true);
          break;
        default:
@@ -1114,22 +1120,42 @@ static void sge_c_gdi_trigger(sge_gdi_ctx_class_t *ctx,
    return;
 }
 
-static void sge_gdi_startup_thread(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
-                                   monitoring_t *monitor)
+static void 
+sge_gdi_tigger_thread_state_transition(sge_gdi_ctx_class_t *ctx, 
+                                       sge_gdi_packet_class_t *packet, 
+                                       sge_gdi_task_class_t *task, 
+                                       monitoring_t *monitor)
 {
    lListElem *elem = NULL; /* ID_Type */
+   lList **answer_list = &(task->answer_list);
 
-   DENTER(TOP_LAYER, "sge_gdi_startup_thread");
+   DENTER(TOP_LAYER, "sge_gdi_tigger_thread_state_transition");
    for_each (elem, task->data_list) {
       const char *name = lGetString(elem, ID_str);
+      sge_thread_state_transitions_t action = (sge_thread_state_transitions_t) lGetUlong(elem, ID_action);
 
       if (name != NULL) {
-         /* startup the scheduler if it is not already started */
-         if (strcmp(name, "scheduler") == 0) {
-            sge_scheduler_initialize(ctx);
+         if (strcasecmp(name, threadnames[SCHEDD_THREAD]) == 0) {
+            if (action == SGE_THREAD_TRIGGER_START) {
+               sge_scheduler_initialize(ctx, answer_list);
+            } else if (action == SGE_THREAD_TRIGGER_STOP) {
+               sge_scheduler_terminate(ctx, answer_list);
+            } else {
+               ERROR((SGE_EVENT, MSG_TRIGGER_STATENOTSUPPORTED_DS, action, name));
+               answer_list_add(&(task->answer_list), SGE_EVENT, 
+                               STATUS_EEXIST, ANSWER_QUALITY_WARNING);
+            }
 #ifndef NO_JNI
-         } else if (strcmp(name, "jvm") == 0) {
-            sge_jvm_initialize(ctx);
+         } else if (strcasecmp(name, threadnames[JVM_THREAD]) == 0) {
+            if (action == SGE_THREAD_TRIGGER_START) {
+               sge_jvm_initialize(ctx, answer_list);
+            } else if (action == SGE_THREAD_TRIGGER_STOP) {
+               sge_jvm_terminate(ctx, answer_list);
+            } else {
+               ERROR((SGE_EVENT, MSG_TRIGGER_STATENOTSUPPORTED_DS, action, name));
+               answer_list_add(&(task->answer_list), SGE_EVENT, 
+                              STATUS_EEXIST, ANSWER_QUALITY_WARNING);
+            }
 #endif
          } else {
             ERROR((SGE_EVENT, MSG_TRIGGER_NOTSUPPORTED_S, name));
@@ -1188,17 +1214,13 @@ sge_gdi_shutdown_event_client(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *
       int client_id = EV_ID_ANY;
       int res = -1;
 
-
       if (get_client_id(elem, &client_id) != 0) {
          answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          continue;
       }
 
-      if (client_id == EV_ID_SCHEDD) {
-         sge_scheduler_terminate(ctx);
-      }
-
-      if (client_id == EV_ID_SCHEDD && !host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, packet->host)) {
+      if (client_id == EV_ID_SCHEDD && 
+          !host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, packet->host)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, packet->host));
          answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
          continue;
@@ -1207,6 +1229,11 @@ sge_gdi_shutdown_event_client(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *
          ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, packet->host));
          answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
          continue;
+      }
+
+      /* thread shutdown */
+      if (client_id == EV_ID_SCHEDD) {
+         sge_scheduler_terminate(ctx, NULL);
       }
 
       if (client_id == EV_ID_ANY) {

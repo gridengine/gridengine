@@ -77,10 +77,10 @@ struct _master_jvm_class_t {
 }; 
 
 void
-sge_jvm_initialize(sge_gdi_ctx_class_t *ctx);
+sge_jvm_initialize(sge_gdi_ctx_class_t *ctx, lList **answer_list);
 
 void
-sge_jvm_terminate(sge_gdi_ctx_class_t *ctx);
+sge_jvm_terminate(sge_gdi_ctx_class_t *ctx, lList **answer_list);
 
 void * 
 sge_jvm_main(void *arg);

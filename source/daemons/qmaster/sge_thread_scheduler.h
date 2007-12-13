@@ -60,13 +60,13 @@ struct _master_scheduler_class_t {
 };
 
 void
-sge_scheduler_initialize(sge_gdi_ctx_class_t *ctx);
+sge_scheduler_initialize(sge_gdi_ctx_class_t *ctx, lList **answer_list);
 
 void
 sge_scheduler_cleanup_thread_pool(void);
 
 void
-sge_scheduler_terminate(sge_gdi_ctx_class_t *ctx);
+sge_scheduler_terminate(sge_gdi_ctx_class_t *ctx, lList **answer_list);
 
 void *
 sge_scheduler_main(void *arg);

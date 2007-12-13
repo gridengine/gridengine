@@ -44,7 +44,7 @@
 /* EB: TODO: ST: add adoc comments */
 
 #define DENTER_MAIN(layer, program)                                          \
-   static const char SGE_FUNC[] = "main";                                    \
+   static const char SGE_FUNC[] = program;                                   \
    static const int xaybzc = layer;                                          \
                                                                              \
    rmon_mopen(&argc,argv,program);                                           \

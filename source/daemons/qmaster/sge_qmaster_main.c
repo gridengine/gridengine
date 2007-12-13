@@ -413,9 +413,9 @@ int main(int argc, char* argv[])
    sge_test_initialize(ctx);
 #endif
    sge_listener_initialize(ctx);
-   sge_scheduler_initialize(ctx);
+   sge_scheduler_initialize(ctx, NULL);
 #ifndef NO_JNI
-   sge_jvm_initialize(ctx);
+   sge_jvm_initialize(ctx, NULL);
 #endif
 
    /*
@@ -428,9 +428,9 @@ int main(int argc, char* argv[])
     * Order is important!
     */
 #ifndef NO_JNI
-   sge_jvm_terminate(ctx);
+   sge_jvm_terminate(ctx, NULL);
 #endif
-   sge_scheduler_terminate(ctx);
+   sge_scheduler_terminate(ctx, NULL);
    sge_listener_terminate();
 #if 0
    sge_test_terminate(ctx);

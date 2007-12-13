@@ -730,7 +730,12 @@
 #define MSG_JOBLOG_ACTION_FINISHED     _MESSAGE(33863, _("finished"))
 #define MSG_JOBLOG_ACTION_ERROR        _MESSAGE(33864, _("error"))
 
-#define MSG_REPORTING_INTERMEDIATE_SS  _MESSAGE(33870, _("write intermediate accounting record for job "SFQ" at "SFN))
+#define MSG_REPORTING_INTERMEDIATE_SS  _MESSAGE(33865, _("write intermediate accounting record for job "SFQ" at "SFN""))
+#define MSG_THREAD_XTERMINATED_S       _MESSAGE(33870, _(SFN" thread terminated"))
+#define MSG_THREAD_XNOTRUNNING_S       _MESSAGE(33871, _(SFN" thread is not running"))
+#define MSG_THREAD_XHASSTARTED_S       _MESSAGE(33872, _(SFN" has been started"))
+#define MSG_THREAD_XSTARTDISABLED_S    _MESSAGE(33873, _("start of "SFN" thread is disabled in bootstrap file"))
+#define MSG_THREAD_XISRUNNING_S        _MESSAGE(33874, _(SFN" thread is already running"))
 
 /*
  * other
@@ -782,9 +787,9 @@
 #define MSG_QUEUE_MODNOCMPLXDENYDUETOAR_SS          _MESSAGE(33944, _("denied: changing "SFQ" in "SFN" would break advance reservations"))
 #define MSG_JOB_ARNOLONGERAVAILABE_U                _MESSAGE(33945, _("the advance reservation "sge_U32CFormat" is no longer available"))
 #define MSG_TRIGGER_NOTSUPPORTED_S                  _MESSAGE(33946, _("thread with name "SFQ" is not supported"))
-      
-#define MSG_GDI_KEYSTR_QUESTIONMARK    _MESSAGE(33947, _("Questionmark"))
-#define MSG_GDI_KEYSTR_COMMA           _MESSAGE(33948, _("Comma"))
-#define MSG_GDI_KEYSTR_LENGTH_U        _MESSAGE(33949, _("string is longer than "sge_U32CFormat", this is not allowed for objectnames") )
+#define MSG_GDI_KEYSTR_QUESTIONMARK                 _MESSAGE(33947, _("Questionmark"))
+#define MSG_GDI_KEYSTR_COMMA                        _MESSAGE(33948, _("Comma"))
+#define MSG_GDI_KEYSTR_LENGTH_U                     _MESSAGE(33949, _("string is longer than "sge_U32CFormat", this is not allowed for objectnames") )
+#define MSG_TRIGGER_STATENOTSUPPORTED_DS            _MESSAGE(33950, _("state transition %d not supported for thread "SFQ))
 
 #endif

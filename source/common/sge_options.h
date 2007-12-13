@@ -281,7 +281,9 @@ enum {
    he_OPT,       /* error handling for qrsub */ 
    explain_OPT,  /* explain error in qrstat */
    xml_OPT,      /* generate xml outout */
-   terse_OPT     /* tersed output */
+   terse_OPT,    /* tersed output */
+   at_OPT,       /* add/start thread */
+   kt_OPT        /* kill/terminate thread */
 };
 
 /* macros used in parsing */

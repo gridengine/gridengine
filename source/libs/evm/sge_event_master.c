@@ -2477,9 +2477,6 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
                MONITOR_MESSAGES_OUT(monitor);
             }
 
-            FREE(host);
-            FREE(commproc);
-
             lock_client(ec_id, true); 
 
             event_client = get_event_client(ec_id); 
@@ -2538,6 +2535,8 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
             MONITOR_EDT_BUSY(monitor);
          }
       } /*if */
+      FREE(host);
+      FREE(commproc);
    
       unlock_client(ec_id);      
    } /* while */

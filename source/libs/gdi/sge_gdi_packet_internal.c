@@ -517,6 +517,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
       recv = ret_packet->first_task;
       while (send != NULL && recv != NULL) {
          if (send->id == recv->id) {
+            lFreeList(&send->data_list);
             send->data_list = recv->data_list;
             send->answer_list = recv->answer_list;
             recv->data_list = NULL;

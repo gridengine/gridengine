@@ -1013,7 +1013,7 @@ bool spool_berkeleydb_write_string(lList **answer_list, bdb_info info,
          key_dbt.data = (void *)key;
          key_dbt.size = strlen(key) + 1;
          data_dbt.data = (void *) str;
-         data_dbt.size = strlen(str);
+         data_dbt.size = strlen(str) + 1;
 
          DPRINTF(("storing string with key "SFQ", size = %d "
                   "to env = %p, db = %p, txn = %p, txn_id = %d\n", 

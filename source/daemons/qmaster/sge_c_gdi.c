@@ -535,7 +535,7 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
                      sge_gdi_add_job(ctx,
                                      clone, &(task->answer_list), 
                                      (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? 
-                                     &(task->answer_list) : NULL, 
+                                     &(task->data_list) : NULL, 
                                      packet->user, packet->host, packet->uid, packet->gid, packet->group, 
                                      packet, task, monitor);
                         lFreeElem(&clone);
@@ -546,7 +546,7 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
                   sge_gdi_add_job(ctx, 
                                   ep, &(task->answer_list), 
                                   (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? 
-                                  &(task->answer_list) : NULL, 
+                                  &(task->data_list) : NULL, 
                                   packet->user, packet->host, packet->uid, packet->gid, packet->group, 
                                   packet, task, monitor);
                }

@@ -1,3 +1,8 @@
+RD-2007-12-13-0: Bugfix:    Fixed some more memory leaks introduced with the
+                            scheduler thread, bdb jobscript spooling and the
+                            abstract event client
+                 Review:    CR
+
 HP-2007-12-12-0: Bugfix:    Installation failed on Windows when installing as root
                             without SGE admin user
                  Changed:   dist/util/install_modules/inst_execd.sh

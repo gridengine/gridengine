@@ -102,9 +102,7 @@ STArchVariables()
 STBasicSettings()
 {  
    stclient=""
-   if [ -f "$SGE_ROOT/util/sgeST/sge_st_settings.sh" ]; then
-      . $SGE_ROOT/util/sgeST/sge_st_settings.sh
-   elif [ -f "$SGE_ROOT/util/sgeST/st_settings.sh" ]; then
+   if [ -f "$SGE_ROOT/util/sgeST/st_settings.sh" ]; then
       . $SGE_ROOT/util/sgeST/st_settings.sh
    else
       echo "Could not source basic settings"

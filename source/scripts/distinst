@@ -827,10 +827,6 @@ if [ $instcommon = true ]; then
       Execute rm -rf $DEST_SGE_ROOT/util/update_commands
       Execute rm -f $DEST_SGE_ROOT/util/sge_update.sh
 
-      # Remove the SGE related registration settings file
-      # Then The pubic GE settings file will be used
-      Execute rm -f $DEST_SGE_ROOT/util/sgeST/sge_st_settings.sh
-
       # Install arch.dist as arch for installation process
       Execute rm -f $DEST_SGE_ROOT/util/arch
       Execute mv $DEST_SGE_ROOT/util/arch.dist $DEST_SGE_ROOT/util/arch

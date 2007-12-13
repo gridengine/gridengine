@@ -1,3 +1,7 @@
+PJ-2007-12-13-0: Bugfix:    ST, mk_dist should remove sge_st_settings.sh instead of distinst
+                 Bugfix:    ST, sundist does not have needed st_settings.sh
+                 Review:    RD
+
 EB-2007-12-13-0: Enhancem.: added possibilitie to start and stop scheduler
                             and jvm thread
                  Review:    MD

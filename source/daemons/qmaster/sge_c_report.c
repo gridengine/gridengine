@@ -89,6 +89,7 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
    u_long32 rversion;
    sge_pack_buffer pb;   
    bool is_pb_used = false;
+   bool send_tag_new_conf = false;
 
    DENTER(TOP_LAYER, "sge_c_report");
 
@@ -156,23 +157,26 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
 
       switch (rep_type) {
       case NUM_REP_REPORT_LOAD:
+      case NUM_REP_FULL_REPORT_LOAD:
          MONITOR_ELOAD(monitor); 
          /* Now handle execds load reports */
-         if (!is_pb_used) {
-            is_pb_used = true;
-            init_packbuffer(&pb, 1024, 0);
-         }
-         sge_update_load_values(ctx, rhost, lGetList(report, REP_list));
-         pack_ack(&pb, ACK_LOAD_REPORT, this_seqno, 0, NULL);
+         if (lGetUlong(hep, EH_lt_heard_from) == 0 && rep_type != NUM_REP_FULL_REPORT_LOAD) {
+            host_notify_about_full_load_report(ctx, hep);
+         } else {
+            if (!is_pb_used) {
+               is_pb_used = true;
+               init_packbuffer(&pb, 1024, 0);
+            }
 
+            sge_update_load_values(ctx, rhost, lGetList(report, REP_list));
+            pack_ack(&pb, ACK_LOAD_REPORT, this_seqno, 0, NULL);
+         }
          break;
       case NUM_REP_REPORT_CONF: 
          MONITOR_ECONF(monitor); 
          if (hep && (sge_compare_configuration(hep, lGetList(report, REP_list)) != 0)) {
             DPRINTF(("%s: configuration on host %s is not up to date\n", SGE_FUNC, rhost));
-            if (host_notify_about_new_conf(ctx, hep) != 0) {
-               ERROR((SGE_EVENT, MSG_CONF_CANTNOTIFYEXECHOSTXOFNEWCONF_S, rhost));
-            }
+            send_tag_new_conf = true;
          }
          break;
          
@@ -218,6 +222,13 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
       }
       clear_packbuffer(&pb);
    }
+
+   if (send_tag_new_conf == true) {
+      if (host_notify_about_new_conf(ctx, hep) != 0) {
+         ERROR((SGE_EVENT, MSG_CONF_CANTNOTIFYEXECHOSTXOFNEWCONF_S, rhost));
+      }
+   }
+
    
    DRETURN_VOID;
 } /* sge_c_report */

@@ -155,7 +155,8 @@ static void check_reprioritize_interval(sge_gdi_ctx_class_t *ctx, lList **alpp, 
 {
    DENTER(TOP_LAYER, "check_reprioritize_interval");
 
-   if (sconf_get_reprioritize_interval() != mconf_get_reprioritize()) {
+   if (((sconf_get_reprioritize_interval() == 0) && (mconf_get_reprioritize())) ||
+       ((sconf_get_reprioritize_interval() != 0) && (!mconf_get_reprioritize()))) {
       bool flag       = (sconf_get_reprioritize_interval() != 0) ? true : false;
       lListElem *conf = sge_get_configuration_for_host(SGE_GLOBAL_NAME);
 

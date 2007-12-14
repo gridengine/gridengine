@@ -4624,6 +4624,10 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
                            the response id is not the same. -> We have to wait for the correct message */
                         if ( response_mid > connection->last_send_message_id || connection->last_send_message_id == 0 ) {
                            CL_LOG(CL_LOG_WARNING, "protocol error: can't wait for unsent message!!!");
+                           cl_raw_list_unlock(connection->received_message_list);
+                           cl_raw_list_unlock(handle->received_message_queue);
+                           pthread_mutex_unlock(handle->messages_ready_mutex);
+                           return CL_RETVAL_PROTOCOL_ERROR;
                         }
 
                         if ( response_mid > message_elem->message->message_response_id ) {
@@ -6344,7 +6348,7 @@ cl_commlib_send_message(cl_com_handle_t* handle, char *un_resolved_hostname,
     */
 
 
-   if (mid == NULL && wait_for_ack == CL_FALSE && cl_com_create_threads != CL_NO_THREAD ) {
+   if (mid == NULL && wait_for_ack == CL_FALSE && cl_com_create_threads != CL_NO_THREAD) {
       cl_com_endpoint_t* destination_endpoint = NULL;
 
       /* using send_message_queue for this message */

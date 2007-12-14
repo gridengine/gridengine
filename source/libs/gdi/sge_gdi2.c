@@ -515,8 +515,7 @@ static int sge_send_receive_gdi2_request(sge_gdi_ctx_class_t *ctx,
    }
 
    /* we send a gdi request and store the request id */
-   ret = sge_send_gdi2_request(1, ctx, out, &gdi_request_mid, 0,
-                              alpp);
+   ret = sge_send_gdi2_request(1, ctx, out, &gdi_request_mid, 0, alpp);
    *commlib_error = ret;
 
 
@@ -695,7 +694,7 @@ static int sge_get_gdi2_request_async(sge_gdi_ctx_class_t *ctx,
 
    DENTER(GDI_LAYER, "sge_get_gdi2_request_async");
    
-   if ((*commlib_error = sge_gdi2_get_any_request(ctx, rhost, rcommproc, id, &pb, &tag, is_sync, request_mid,0)) != CL_RETVAL_OK) {
+   if ((*commlib_error = sge_gdi2_get_any_request(ctx, rhost, rcommproc, id, &pb, &tag, is_sync, request_mid, NULL)) != CL_RETVAL_OK) {
       DRETURN(-1);
    }
 
@@ -2275,6 +2274,8 @@ const char* sge_dump_message_tag(unsigned long tag) {
          return "TAG_TASK_EXIT";
       case TAG_TASK_TID:
          return "TAG_TASK_TID";
+      case TAG_FULL_LOAD_REPORT:
+         return "TAG_FULL_LOAD_REPORT";
       case TAG_EVENT_CLIENT_EXIT:
          return "TAG_EVENT_CLIENT_EXIT";
       default:

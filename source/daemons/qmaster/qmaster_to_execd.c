@@ -151,9 +151,7 @@ static int host_notify_about_X(sge_gdi_ctx_class_t *ctx,
 *******************************************************************************/
 int host_notify_about_new_conf(sge_gdi_ctx_class_t *ctx, lListElem *host) 
 {
-   u_long32 dummy = 0;  /* value has no special meaning */
-
-   return host_notify_about_X(ctx, host, dummy, TAG_GET_NEW_CONF, EXECD);
+   return host_notify_about_X(ctx, host, 0, TAG_GET_NEW_CONF, EXECD);
 }
 
 /****** qmaster/host/host_notify_about_kill() *********************************
@@ -180,3 +178,9 @@ int host_notify_about_kill(sge_gdi_ctx_class_t *ctx, lListElem *host, int kill_c
 {
    return host_notify_about_X(ctx, host, kill_command, TAG_KILL_EXECD, EXECD);
 }
+
+int host_notify_about_full_load_report(sge_gdi_ctx_class_t *ctx, lListElem *host)
+{
+   return host_notify_about_X(ctx, host, 0, TAG_FULL_LOAD_REPORT, EXECD);
+}
+

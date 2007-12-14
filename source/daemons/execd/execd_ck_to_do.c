@@ -592,7 +592,8 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx)
    }
 
    /* do timeout calculation */
-   if (sge_get_flush_jr_flag() || next_report <= now) {
+   if (sge_get_flush_lr_flag() || sge_get_flush_jr_flag()
+       || next_report <= now) {
       if (next_report <= now) {
          next_report = now + mconf_get_load_report_time();
       }

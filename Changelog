@@ -1,3 +1,10 @@
+RD-2007-12-14-0: Bugfix:    merges from maintrunk:
+                            - issue with unheard execd and diffed load reports
+                            - corrected weird compare for reprioritze at qmaster
+                              startup
+                            - fixed long qmaster shutdown time
+                 Review:    CR
+
 RD-2007-11-22-0: Bugfix:    - fixed wrong exit code for qconf -sprj
                             - fixed schedd core dump because of hostname
                  Review:    AH

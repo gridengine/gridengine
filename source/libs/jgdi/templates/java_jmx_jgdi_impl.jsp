@@ -62,7 +62,7 @@
     *   @throws JGDIException on any error
     */
    public <%=classname%> get<%=name%>() throws JGDIException {
-        return jgdi.get<%=name%>();
+        return getJGDI().get<%=name%>();
    }  
    
    /**
@@ -72,7 +72,7 @@
     *   @throws JGDIException on any error on the GDI layer
     */
    public <%=classname%> get<%=name%>WithAnswer(List<JGDIAnswer> answers) throws JGDIException {
-      return jgdi.get<%=name%>WithAnswer(answers);
+      return getJGDI().get<%=name%>WithAnswer(answers);
    }
    
    
@@ -99,7 +99,7 @@
          %> <%=pkType%> <%=pkName%><%
       }
    %>) throws JGDIException {
-        return jgdi.get<%=name%>(<%
+        return getJGDI().get<%=name%>(<%
       first = true;
       for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
          String pkName = entry.getKey();
@@ -141,7 +141,7 @@
        %> <%=pkType%> <%=pkName%> <%
     } // end of for
     %>, List<JGDIAnswer> answers) throws JGDIException {
-        return jgdi.get<%=name%>WithAnswer(<%
+        return getJGDI().get<%=name%>WithAnswer(<%
     first = true;
     for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
          String pkName = entry.getKey();
@@ -168,7 +168,7 @@
     *  @throws JGDIException on any error
     */
    public List get<%=name%>List() throws JGDIException {
-       return jgdi.get<%=name%>List();
+       return getJGDI().get<%=name%>List();
    }
    
    /**
@@ -178,7 +178,7 @@
     *   @throws JGDIException on any error on the GDI layer
     */
    public List get<%=name%>ListWithAnswer(List<JGDIAnswer> answers) throws JGDIException {
-       return jgdi.get<%=name%>ListWithAnswer(answers);
+       return getJGDI().get<%=name%>ListWithAnswer(answers);
    }
    
    
@@ -194,7 +194,7 @@
     *  @throws JGDIException on any error
     */
    public void update<%=name%>(<%=classname%> obj) throws JGDIException {
-        jgdi.update<%=name%>(obj);
+        getJGDI().update<%=name%>(obj);
    }
    
    /**
@@ -204,7 +204,7 @@
     *   @throws JGDIException on any error on the GDI layer
     */
    public void update<%=name%>WithAnswer(<%=classname%> obj, List<JGDIAnswer> answers) throws JGDIException {
-        jgdi.update<%=name%>WithAnswer(obj, answers);
+        getJGDI().update<%=name%>WithAnswer(obj, answers);
    }
    
 <%
@@ -219,7 +219,7 @@
     *  @throws JGDIException on any error
     */
    public void add<%=name%>(<%=classname%> obj) throws JGDIException {
-        jgdi.add<%=name%>(obj);
+        getJGDI().add<%=name%>(obj);
    }
    
    /**
@@ -229,7 +229,7 @@
     *   @throws JGDIException on any error on the GDI layer
     */
    public void add<%=name%>WithAnswer(<%=classname%> obj, List<JGDIAnswer> answers) throws JGDIException {
-       jgdi.add<%=name%>WithAnswer(obj, answers);
+       getJGDI().add<%=name%>WithAnswer(obj, answers);
    }
    
 <% if ((name.equals("Manager")) || 
@@ -242,7 +242,7 @@
     *   @throws JGDIException on any error on the GDI layer
     */
    public void add<%=name%>(String name) throws JGDIException {
-       jgdi.add<%=name%>(name);
+       getJGDI().add<%=name%>(name);
    }
    
    /**
@@ -252,7 +252,7 @@
     *   @throws JGDIException on any error on the GDI layer
     */
    public void add<%=name%>WithAnswer(String name, List<JGDIAnswer> answers) throws JGDIException {
-       jgdi.add<%=name%>WithAnswer(name, answers);
+       getJGDI().add<%=name%>WithAnswer(name, answers);
    }
 <%
      } // end if name.equals()
@@ -267,7 +267,7 @@
     *   @throws JGDIException on any error
     */
    public void delete<%=name%>(<%=classname%> obj) throws JGDIException {
-        jgdi.delete<%=name%>(obj);
+        getJGDI().delete<%=name%>(obj);
    }
    
    /**
@@ -277,7 +277,7 @@
     *   @throws JGDIException on any error on the GDI layer
     */
    public void delete<%=name%>WithAnswer(<%=classname%> obj, List<JGDIAnswer> answers) throws JGDIException {
-       jgdi.delete<%=name%>WithAnswer(obj, answers);
+       getJGDI().delete<%=name%>WithAnswer(obj, answers);
    }
    
 <%   
@@ -302,7 +302,7 @@
          %> <%=pkType%> <%=pkName%><%
       }
    %>) throws JGDIException {
-        jgdi.delete<%=name%>(<%
+        getJGDI().delete<%=name%>(<%
       first = true;
       for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
          String pkName = entry.getKey();
@@ -344,7 +344,7 @@
 <% if (name.equals("Job") || name.equals("AdvanceReservation")) {%>
     , boolean forced, UserFilter userFilter
 <% }%>    , List<JGDIAnswer> answers) throws JGDIException {
-        jgdi.delete<%=name%>sWithAnswer(<%
+        getJGDI().delete<%=name%>sWithAnswer(<%
       first = true;
     for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
        String pkName = entry.getKey();
@@ -387,6 +387,7 @@ import com.sun.grid.jgdi.JGDIFactory;
 import com.sun.grid.jgdi.configuration.JGDIAnswer;
 import com.sun.grid.jgdi.monitoring.filter.UserFilter;
 import java.util.logging.*;
+import com.sun.grid.jgdi.management.JGDISession;
 
 <% // Import all cull object names;
    for (JGDIJMXGenerator gen : generators) {
@@ -403,16 +404,10 @@ public class JGDIJMX extends JGDIJMXBase implements JGDIJMXMBean, JGDIJMXBaseMBe
    /**
     *   Create a new instance of <code>JGDIJMXImpl</code>.
     */
-   public JGDIJMX() throws JGDIException {
-      super();
+   public JGDIJMX(JGDISession owner) throws JGDIException {
+      super(owner);
    }
    
-   /**
-    *   Create a new instance of <code>JGDIJMXImpl</code>.
-    */
-   public JGDIJMX(String url) throws JGDIException {
-      super(url);
-   }
    
 <%
     for (JGDIJMXGenerator gen : generators) {

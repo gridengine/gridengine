@@ -258,7 +258,7 @@ com.sun.management.jmxremote.authenticate=true
 
 # For a non-default login configuration use the following line
 # com.sun.management.jmxremote.login.config=<config-name>
-#com.sun.management.jmxremote.login.config=GridwareConfig
+com.sun.management.jmxremote.login.config=TestConfig
 
 #
 # ################ RMI Password file location ##################

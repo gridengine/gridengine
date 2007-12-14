@@ -37,25 +37,20 @@ import com.sun.grid.jgdi.event.EventTypeEnum;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
-import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.management.Notification;
-import javax.management.NotificationListener;
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -69,6 +64,8 @@ import javax.swing.table.DefaultTableModel;
  */
 public class MainFrame extends JFrame {
     
+    private final static long serialVersionUID = -2007121301L;
+    
     //private final DefaultListModel subscriptionListModel = new DefaultListModel();
     //private final JList  subscriptionList = new JList(subscriptionListModel);
     private final ConnectionController controller = new ConnectionController();
@@ -81,9 +78,7 @@ public class MainFrame extends JFrame {
     private final JTable eventTable = new JTable(eventTableModel);
     private final ConnectAction connectAction = new ConnectAction();
     private final DisConnectAction disconnectAction = new DisConnectAction();
-    
-    private MyNotificationListener listener = new MyNotificationListener();
-    
+    private final ClearAction clearAction = new ClearAction();
     private JLabel statusLabel = new JLabel();
     
     /** Creates a new instance of MainFrame */
@@ -122,6 +117,8 @@ public class MainFrame extends JFrame {
         JToolBar toolBar = new JToolBar();
         toolBar.add(connectAction);
         toolBar.add(disconnectAction);
+        toolBar.addSeparator();
+        toolBar.add(clearAction);
         getContentPane().add(toolBar, BorderLayout.NORTH);
         
         JMenuBar mb = new JMenuBar();
@@ -131,6 +128,8 @@ public class MainFrame extends JFrame {
         
         menu.add(connectAction);
         menu.add(disconnectAction);
+        menu.addSeparator();
+        menu.add(clearAction);
         menu.addSeparator();
         menu.add(new ExitAction());
         setJMenuBar(mb);
@@ -217,9 +216,36 @@ public class MainFrame extends JFrame {
                 });
             }
         }
+
+        public void clearSubscription() {
+            if (SwingUtilities.isEventDispatchThread()) {
+                statusLabel.setText("event client has been stopped");
+                MainFrame.this.subscriptionTableModel.clearSubscription();
+            } else {
+                SwingUtilities.invokeLater(new Runnable() {
+                    
+                    public void run() {
+                        clearSubscription();
+                    }
+                });
+            }
+            
+        }
+    }
+    
+    private class ClearAction extends AbstractAction {
+        private final static long serialVersionUID = -2007121301L;
+        public ClearAction() {
+            super("clear");
+        }
+        
+        public void actionPerformed(ActionEvent e) {
+            eventTableModel.setRowCount(0);
+        }        
     }
     
     private class ConnectAction extends AbstractAction {
+        private final static long serialVersionUID = -2007121301L;
         
         ConnectDialog dlg = new ConnectDialog(MainFrame.this);
         
@@ -255,6 +281,7 @@ public class MainFrame extends JFrame {
     }
     
     private class ExitAction extends AbstractAction {
+        private final static long serialVersionUID = -2007121301L;
         
         public ExitAction() {
             super("Exit");
@@ -266,6 +293,7 @@ public class MainFrame extends JFrame {
     }
     
     private class DisConnectAction extends AbstractAction {
+        private final static long serialVersionUID = -2007121301L;
         
         public DisConnectAction() {
             super("disconnect");
@@ -302,6 +330,7 @@ public class MainFrame extends JFrame {
     private static final int SUB_COL = 0;
     
     private class SubscriptionTableModel extends AbstractTableModel implements ConnectionController.Listener {
+        private final static long serialVersionUID = -2007121301L;
         
         private final Map<EventTypeEnum, Boolean> subscription = new HashMap<EventTypeEnum, Boolean>();
         private final List<EventTypeEnum> subscriptionList;
@@ -312,7 +341,7 @@ public class MainFrame extends JFrame {
         public SubscriptionTableModel(ConnectionController controller) {
             
             this.controller = controller;
-            subscriptionList = new ArrayList(Arrays.asList(EventTypeEnum.values()));
+            subscriptionList = new ArrayList<EventTypeEnum>(Arrays.asList(EventTypeEnum.values()));
             
             Collections.sort(subscriptionList, new Comparator<EventTypeEnum>() {
                 
@@ -341,16 +370,32 @@ public class MainFrame extends JFrame {
                 case TYPE_COL:
                     return subscriptionList.get(rowIndex);
                 case SUB_COL:
-                    return subscription.get(subscriptionList.get(rowIndex));
+                {
+                    EventTypeEnum t = subscriptionList.get(rowIndex);
+                    switch (t) {
+                        case Shutdown:        return true;
+                        case QmasterGoesDown: return true;
+                        default:
+                            return subscription.get(t);
+                    }
+                }
                 default:
                     return "Error";
             }
         }
         
+        @Override
         public boolean isCellEditable(int rowIndex, int columnIndex) {
-            return columnIndex == SUB_COL;
+            EventTypeEnum t = subscriptionList.get(rowIndex);
+            switch(t) {
+                case Shutdown: return false;
+                case QmasterGoesDown: return false;
+                default:
+                     return columnIndex == SUB_COL;
+            }
         }
         
+        @Override
         public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
             if (columnIndex == SUB_COL) {
                 EventTypeEnum type = subscriptionList.get(rowIndex);
@@ -370,6 +415,7 @@ public class MainFrame extends JFrame {
             for (Map.Entry<EventTypeEnum, Boolean> entry : subscription.entrySet()) {
                 entry.setValue(false);
             }
+            fireTableDataChanged();
         }
         
         public EventTypeEnum getType(int row) {
@@ -385,6 +431,7 @@ public class MainFrame extends JFrame {
         }
         
         
+        @Override
         public String getColumnName(int column) {
             switch (column) {
                 case TYPE_COL:
@@ -396,6 +443,7 @@ public class MainFrame extends JFrame {
             }
         }
         
+        @Override
         public Class<?> getColumnClass(int columnIndex) {
             switch (columnIndex) {
                 case TYPE_COL:

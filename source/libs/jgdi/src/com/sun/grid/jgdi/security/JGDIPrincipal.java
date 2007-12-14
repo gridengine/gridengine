@@ -38,26 +38,39 @@ import java.security.Principal;
  */
 public class JGDIPrincipal implements Principal, java.io.Serializable {
 
-    /**
-     * @serial
-     */
-    private String name;
+    private final static long serialVersionUID = -2007121401L;
+    
+    private final long sessionId;
+    private final String name;
+    private final String username;
 
+    public final static String SESSION_ID_PREFIX = "(jgdiSessionId=[";
+    public final static String SESSION_ID_SUFFIX = "])";
+    
     /**
      * Create a JGDIPrincipal with a username.
      *
      * <p>
      *
-     * @param name the username for this user.
+     * @param username the username for this user.
      *
+     * @param sessionId the id of the session
      * @exception NullPointerException if the <code>name</code>
      *			is <code>null</code>.
      */
-    public JGDIPrincipal(String name) {
-        if (name == null) {
-            throw new NullPointerException("name must not be null");
+    public JGDIPrincipal(String username, long sessionId) {
+        if (username == null) {
+            throw new NullPointerException("username must not be null");
         }
-        this.name = name;
+        this.username = username;
+        this.sessionId = sessionId;
+        
+        StringBuilder sb = new StringBuilder();
+        sb.append(username);
+        sb.append(SESSION_ID_PREFIX);
+        sb.append(sessionId);
+        sb.append(SESSION_ID_SUFFIX);
+        this.name = sb.toString();
     }
 
     /**
@@ -80,7 +93,7 @@ public class JGDIPrincipal implements Principal, java.io.Serializable {
      */
     @Override
     public String toString() {
-        return String.format("JGDIPrincipal: name=%s", name);
+        return name;
     }
 
     /**
@@ -129,4 +142,21 @@ public class JGDIPrincipal implements Principal, java.io.Serializable {
     public int hashCode() {
         return name.hashCode();
     }
+
+    /**
+     * Get the session id
+     * @return the session id
+     */
+    public long getSessionId() {
+        return sessionId;
+    }
+
+    /**
+     * Get the username
+     * @return the username
+     */
+    public String getUsername() {
+        return username;
+    }
+    
 }

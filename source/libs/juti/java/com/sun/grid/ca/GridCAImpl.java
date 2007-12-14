@@ -37,7 +37,6 @@ import com.sun.grid.util.expect.ExpectHandler;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -365,7 +364,7 @@ public class GridCAImpl implements GridCA {
      *  @param username  name of the user
      *  @param days      validity of the new certificate in days
      *  @return the renewed certificate
-     *  @throws CAException if the certificate can not be renewed
+     *  @throws GridCAException if the certificate can not be renewed
      */
     public X509Certificate renewCertificate(String username, int days) throws GridCAException {
         LOGGER.entering("GridCAImpl", "renewCertificate");
@@ -389,7 +388,7 @@ public class GridCAImpl implements GridCA {
      *  @param daemon  name of the daemon
      *  @param days      validity of the new certificate in days
      *  @return the renewed certificate
-     *  @throws CAException if the certificate can not be renewed
+     *  @throws GridCAException if the certificate can not be renewed
      */
     public X509Certificate renewDaemonCertificate(String daemon, int days) throws GridCAException {
         LOGGER.entering("GridCAImpl", "renewDaemonCertificate");
@@ -433,7 +432,9 @@ public class GridCAImpl implements GridCA {
      *
      *  @param  username         name of the user
      *  @param  keystorePassword password used for encrypt the keystore
-     *  @throws GridCAException if the keystore could not be created
+     *  @param  privateKeyPassword password for the private key
+     *  @return the keystore
+     * @throws GridCAException if the keystore could not be created
      */
     public KeyStore createKeyStore(String username, char[] keystorePassword, char[] privateKeyPassword) throws GridCAException {
          return createKeyStore(TYPE_USER, username, keystorePassword, privateKeyPassword);

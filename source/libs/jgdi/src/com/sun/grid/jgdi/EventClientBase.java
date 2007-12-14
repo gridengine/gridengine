@@ -47,11 +47,14 @@ public interface EventClientBase {
     
     /**
      *  Close this event client
+     * @throws com.sun.grid.jgdi.JGDIException if the close operation failed
+     * @throws java.lang.InterruptedException if closing the event client has been interrupted
      */
     public void close() throws JGDIException, InterruptedException;
     
     /**
      *  Start the event client
+     * @throws java.lang.InterruptedException if the startup has been interrupted
      */
     public void start() throws InterruptedException;
     
@@ -62,6 +65,12 @@ public interface EventClientBase {
     public boolean isRunning();
     
     /**
+     *  Determine if the event client has been closed
+     *  @return <code>true</code> if the event client has been closed
+     */
+    public boolean isClosed();
+    
+    /**
      *  Subscribe all events for this event client
      *  @throws JGDIException if the subscribtion is failed
      */
@@ -69,9 +78,9 @@ public interface EventClientBase {
     
     /**
      *  Unsubscribe all events for this event client
-     *  @throws JGDIException if the unsubscribtion is failed
+     *  @throws JGDIException if the unsubscribe is failed
      */
-    public void unsubscribeAll();
+    public void unsubscribeAll() throws JGDIException;
     
     /**
      * Add an event listener to this event client

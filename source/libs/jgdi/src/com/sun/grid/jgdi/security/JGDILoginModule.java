@@ -33,6 +33,7 @@ package com.sun.grid.jgdi.security;
 
 import java.security.Principal;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.security.auth.Subject;
@@ -44,12 +45,13 @@ import javax.security.auth.spi.LoginModule;
  */
 public class JGDILoginModule implements LoginModule {
 
-    private final static Logger LOGGER = Logger.getLogger(JGDILoginModule.class.getName());
+    private final static Logger log = Logger.getLogger(JGDILoginModule.class.getName());
     private Subject subject;
     private boolean commitSucceded;
     private String trustedPrincipalClass;
     private JGDIPrincipal principal;
-
+    
+    private final static AtomicLong sessionId = new AtomicLong();
     /**
      * Initialize the <code>JGDILoginModule</code>
      * @param subject   the current subject
@@ -60,15 +62,13 @@ public class JGDILoginModule implements LoginModule {
      * @param options contains the options for the <code>JGDILoginModule</code>.
      */
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
-
-        LOGGER.entering("JGDILoginModule", "initialize");
+        log.entering("JGDILoginModule", "initialize");
 
         this.subject = subject;
         trustedPrincipalClass = (String) options.get("trustedPrincipal");
-        LOGGER.log(Level.FINE, "trustedPrincipalClass: {0}", trustedPrincipalClass);
+        log.log(Level.FINE, "trustedPrincipalClass: {0}", trustedPrincipalClass);
         
-        LOGGER.entering("JGDILoginModule", "exiting");
-
+        log.exiting("JGDILoginModule", "initialize");
     }
 
     /**
@@ -83,6 +83,8 @@ public class JGDILoginModule implements LoginModule {
      *         if username of password is invalid.
      */
     public boolean login() throws LoginException {
+        log.entering("JGDILoginModule", "login");
+        log.exiting("JGDILoginModule", "login", true);
         return true;
     }
 
@@ -92,12 +94,11 @@ public class JGDILoginModule implements LoginModule {
      * @return <code>true</code> of the principals has been added to the subject.
      */
     public boolean commit() {
-        LOGGER.entering("JGDILoginModule", "commit");
+        log.entering("JGDILoginModule", "commit");
 
         if (trustedPrincipalClass != null) {
             String trustedName = null;
             for (Principal p : subject.getPrincipals()) {
-                LOGGER.log(Level.FINE, "p.getClass().getName(): {0}", p.getClass().getName());
                 if (p.getClass().getName().equals(trustedPrincipalClass)) {
                     trustedName = p.getName();
                     break;
@@ -105,7 +106,9 @@ public class JGDILoginModule implements LoginModule {
             }
 
             if (trustedName != null) {
-                principal = new JGDIPrincipal(trustedName);
+                long sid =  sessionId.incrementAndGet();
+                principal = new JGDIPrincipal(trustedName, sid);
+                log.log(Level.FINE, "Adding JGDIPrincipal {0} to subject", principal);
                 subject.getPrincipals().add(principal);
                 commitSucceded = true;
             } else {
@@ -115,7 +118,7 @@ public class JGDILoginModule implements LoginModule {
             commitSucceded = false;
         }
 
-        LOGGER.exiting("JGDILoginModule", "commit", commitSucceded);
+        log.exiting("JGDILoginModule", "commit", commitSucceded);
         return commitSucceded;
     }
 
@@ -124,7 +127,9 @@ public class JGDILoginModule implements LoginModule {
      * @return Always <code>true</code>
      */
     public boolean abort() {
+        log.entering("JGDILoginModule", "abort");
         logout();
+        log.exiting("JGDILoginModule", "abort", true);
         return true;
     }
 
@@ -134,12 +139,14 @@ public class JGDILoginModule implements LoginModule {
      * @return Always <code>true</code>
      */
     public boolean logout() {
+        log.entering("JGDILoginModule", "logout");
         if (commitSucceded) {
             subject.getPrincipals().remove(principal);
         }
         subject = null;
         principal = null;
         commitSucceded = false;
+        log.exiting("JGDILoginModule", "logout", true);
         return true;
     }
 }

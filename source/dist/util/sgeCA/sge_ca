@@ -106,6 +106,7 @@ ErrUsage()
    "   -pkcs12pwf <file>   pkcs12 password file\n" \
    "   -pkcs12dir <dir>    pkcs12 output directory\n" \
    "   -usercert <file>    generate certificates and keys for the users in <file>\n" \
+   "   -userks             generate keystore for existing users\n" \
    "   -user <u:g:e>       generate certificates and keys for <u:g:e>\n" \
    "                       with u=Unix User, g=Common Name, e=email\n" \
    "   -grm_daemon <u:g:e> generate certificate and key for a GRM daemon\n" \
@@ -786,17 +787,47 @@ MakeUserCerts()
 }
 
 #--------------------------------------------------------------------------
+# MakeUserKeystores create keystores for existing users in 
+# $CALOCALTOP/userkeys 
+#
+MakeUserKeystores()
+{
+   if [ "$ksoutfile" = "" ]; then
+      ksoutfile_saved=$ksoutfile
+   fi
+   touch /tmp/tmp.$$
+   kspwfile=/tmp/tmp.$$
+   for user in `ls $CALOCALTOP/userkeys`; do
+      certfile=$CALOCALTOP/userkeys/$user/cert.pem
+      if [ -r $certfile ]; then 
+         ksoutfile=$CALOCALTOP/userkeys/$user/keystore
+         touch $ksoutfile
+         chown $user $ksoutfile
+         chmod 600 $ksoutfile
+         MakeKeystore "$user"
+      fi
+   done   
+   rm $kspwfile
+   ksoutfile=$ksoutfile_saved
+}
+
+#--------------------------------------------------------------------------
 # MakeKeystore create keystore file of user's certificate and key
 #
 # $1 = <unix user>
 #
 MakeKeystore()
 {
+   myuser=$1
+   if [ "$myuser" = "" ]; then 
+      PrintError "username is empty"
+      return 1
+   fi
    CA_ARGS="-catop $CATOP"
    CA_ARGS="$CA_ARGS -calocaltop $CALOCALTOP"
    CA_ARGS="$CA_ARGS -cascript $ROOT_PATH/util/sgeCA/sge_ca"
    CA_ARGS="$CA_ARGS -cahost $CAHOST -adminuser $ADMINUSER"
-   CA_ARGS="$CA_ARGS initks user $user $ksoutfile"
+   CA_ARGS="$CA_ARGS initks user $myuser $ksoutfile"
    if [ "$kspwfile" != "" ]; then
       CA_ARGS="$CA_ARGS $kspwfile"
    fi
@@ -971,6 +1002,7 @@ MakeCert()
       KEYFILE=$KEYDIR/key.pem
       REQFILE=$KEYDIR/req.pem
       CERTFILE=$KEYDIR/cert.pem
+      CERTFILE_PUBLIC_DIR=$CATOP/usercerts/$2
       RSFILE=$KEYDIR/rand.seed
       ExecRm $KEYDIR
       ExecuteAsAdmin $MKDIR $KEYDIR
@@ -1020,7 +1052,13 @@ MakeCert()
       PrintError "chmod as %s failed (%s)" $ADMINUSER $CERTFILE
       return 1
    fi
-
+   
+   if [ "$1" = user ]; then
+      ExecuteAsAdmin $MKDIR -m 755 -p $CERTFILE_PUBLIC_DIR
+      ExecuteAsAdmin $CP $CERTFILE $CERTFILE_PUBLIC_DIR
+      ExecuteAsAdmin $CHMOD 644 $CERTFILE_PUBLIC_DIR/cert.pem
+   fi
+   
    $RM -f $TMPFILE $TMPFILE1 
 
    Execute $CHMOD 700 $KEYDIR
@@ -1129,7 +1167,7 @@ RenewCert()
          $2=root
       fi
    else
-      $INFOTEXT -u "\nRenewing  '%s' $s certificate" "$2" "$1"
+      $INFOTEXT -u "\nRenewing  '%s' '%s' certificate" "$2" "$1"
    fi
 
    TMPFILE=/tmp/sge_ca$$.tmp
@@ -1181,6 +1219,7 @@ RenewCert()
       OLDCERTFILE=$NEWKEYDIR/cert.pem.old
       RSFILE=$NEWKEYDIR/rand.seed
       CRLFILE=$CATOP/ca-crl.pem
+      CERTFILE_PUBLIC_DIR=$CATOP/usercerts/$2
    else 
       PrintError "Unknown certificate type %s" $1
       return 1
@@ -1288,6 +1327,32 @@ RenewCert()
          if [ $? != 0 ]; then
             PrintError "chmod failed (%s)" $CERTFILE
             return 1
+         fi
+
+         # copy renewed cert.pem to $CERTFILE_PUBLIC_DIR
+         if [ "$1" = user ]; then
+            umask 022
+            if [ ! -d "$CERTFILE_PUBLIC_DIR" ]; then
+               ExecuteAsAdmin $MKDIR -m 755 -p $CERTFILE_PUBLIC_DIR
+               if [ $? != 0 ]; then
+                  umask 077
+                  PrintError "Could not create %s"  $CERTFILE_PUBLIC_DIR
+                  return 1
+               fi
+            fi
+            ExecuteAsAdmin $CP $CERTFILE $CERTFILE_PUBLIC_DIR
+            if [ $? != 0 ]; then
+               umask 077
+               PrintError "Could not copy file (%s -> %s)"  $CERTFILE $CERTFILE_PUBLIC_DIR
+               return 1
+            fi
+            ExecuteAsAdmin $CHMOD 644 $CERTFILE_PUBLIC_DIR/cert.pem
+            if [ $? != 0 ]; then
+               umask 077
+               PrintError "Could not chown 644 file %s"  $CERTFILE_PUBLIC_DIR/cert.pem
+               return 1
+            fi
+            umask 077
          fi
       
          if [ "$1" != daemon ]; then
@@ -1442,11 +1507,19 @@ MakeCADirs()
       return 1
    fi
 
+   $INFOTEXT "Creating %s" ${CATOP}/usercerts
+   $INFOTEXT -log "Creating %s" ${CATOP}/usercerts
+   ExecuteAsAdmin $MKDIR -m 755 -p ${CATOP}/usercerts
+   if [ $? != 0 ]; then
+      PrintError "mkdir failed (%s)" ${CATOP}/usercerts
+      return 1
+   fi
+
    $INFOTEXT "Creating %s" ${CALOCALTOP}/userkeys
    $INFOTEXT -log "Creating %s" ${CALOCALTOP}/userkeys
    ExecuteAsAdmin $MKDIR ${CALOCALTOP}/userkeys   
    if [ $? != 0 ]; then
-      PrintError "mkdir failed (%s)" ${CATOP}/userkeys
+      PrintError "mkdir failed (%s)" ${CALOCALTOP}/userkeys
       return 1
    fi
 
@@ -1854,6 +1927,9 @@ while [ $ARGC != 0 ]; do
       shift
       ARGC=`expr $ARGC - 1`
       ;;
+   -userks)
+      WHICH="userks"
+      ;;
    -user)
       WHICH="oneuser"
       if [ $ARGC -lt 2 ]; then
@@ -1968,6 +2044,9 @@ copy)
     ;;
 usercert) 
     MakeUserCerts $userfile
+    ;;
+userks) 
+    MakeUserKeystores
     ;;
 oneuser)
     MakeUserCert user "$user"

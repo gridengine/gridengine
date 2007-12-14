@@ -37,6 +37,7 @@ import com.sun.grid.jgdi.JGDIFactory;
 import com.sun.grid.jgdi.event.Event;
 import com.sun.grid.jgdi.event.EventListener;
 import com.sun.grid.jgdi.event.EventTypeEnum;
+import com.sun.grid.jgdi.event.ShutdownEvent;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -110,8 +111,10 @@ public class NotificationBridge implements EventListener {
             } else {
                 log.log(Level.WARNING, "Received unknown event {0}", evt);
             }
+            if (evt instanceof ShutdownEvent) {
+                subscribtion.clear();
+            }
         }
-
         if (n != null) {
             for (NotificationListener lis : tmpLis) {
                 log.log(Level.FINE, "send notification to {0}", lis);
@@ -185,27 +188,38 @@ public class NotificationBridge implements EventListener {
         if (log.isLoggable(Level.FINER)) {
             log.entering("NotificationBridge", "subscribe", new Object[]{type, subscribe});
         }
-        try {
-            if (eventClient != null) {
-                getSubscribeMethod(type).invoke(eventClient, subscribe);
-            }
-            if (subscribe) {
-                subscribtion.add(type);
-            } else {
-                subscribtion.remove(type);
-            }
-        } catch (IllegalArgumentException ex) {
-            throw new IllegalStateException("Can not invoke subscribe method", ex);
-        } catch (IllegalAccessException ex) {
-            throw new IllegalStateException("Can not invoke subscribe method", ex);
-        } catch (InvocationTargetException ex) {
-            if (ex.getTargetException() instanceof JGDIException) {
-                throw (JGDIException) ex.getTargetException();
-            } else {
-                throw new IllegalStateException("Can not invoke subscribe method", ex.getTargetException());
-            }
+        boolean callNative = false;
+        if (subscribe) {
+            callNative = subscribtion.add(type);
+        } else {
+            callNative = subscribtion.remove(type);
+        }
+        if (callNative) {
+            subscribeNative(type, subscribe);
         }
         log.exiting("NotificationBridge", "subscribe");
+    }
+    
+    private synchronized void subscribeNative(EventTypeEnum type, boolean subscribe) throws JGDIException {
+        if (log.isLoggable(Level.FINER)) {
+            log.entering("NotificationBridge", "subscribeNative", new Object[]{type, subscribe});
+        }
+        if (eventClient != null && !eventClient.isClosed()) {
+            try {
+                getSubscribeMethod(type).invoke(eventClient, subscribe);
+            } catch (IllegalArgumentException ex) {
+                throw new IllegalStateException("Can not invoke subscribe method", ex);
+            } catch (IllegalAccessException ex) {
+                throw new IllegalStateException("Can not invoke subscribe method", ex);
+            } catch (InvocationTargetException ex) {
+                if (ex.getTargetException() instanceof JGDIException) {
+                    throw (JGDIException) ex.getTargetException();
+                } else {
+                    throw new IllegalStateException("Can not invoke subscribe method", ex.getTargetException());
+                }
+            }
+        }
+        log.exiting("NotificationBridge", "subscribeNative");
     }
     private Set<EventTypeEnum> subscribtion = new HashSet<EventTypeEnum>();
 
@@ -219,16 +233,27 @@ public class NotificationBridge implements EventListener {
         if (subscribtion.isEmpty() || listeners.isEmpty()) {
             close();
         } else {
+            boolean createNew = false;
             if (eventClient == null) {
+                log.log(Level.FINER, "creating new event client");
+                createNew = true;
+            } else if (eventClient.isClosed()) {
+                log.log(Level.FINER, "event client has been closed, create a new one");
+                createNew = true;
+            }          
+            if (createNew) {
                 eventClient = JGDIFactory.createEventClient(url, 0);
                 log.log(Level.FINE, "event client to {0} created", url);
                 for (EventTypeEnum type : subscribtion) {
-                    subscribe(type, true);
+                    subscribeNative(type, true);
                 }
+                log.log(Level.FINER, "adding me as event listener");
                 eventClient.addEventListener(this);
+                log.log(Level.FINER, "I am now a event listener");
             }
             if (!eventClient.isRunning()) {
                 try {
+                    log.log(Level.FINER, "starting event client [{0}]", eventClient.getId());
                     eventClient.start();
                     log.log(Level.FINE, "event client [{0}] started", eventClient.getId());
                 } catch (InterruptedException ex) {
@@ -236,6 +261,7 @@ public class NotificationBridge implements EventListener {
                     throw new JGDIException("startup of event client has been interrupted", ex);
                 }
             } else {
+                log.log(Level.FINER, "commiting event client [{0}]", eventClient.getId());
                 eventClient.commit();
                 log.log(Level.FINE, "changes at event client [{0}] commited", eventClient.getId());
             }
@@ -314,12 +340,13 @@ public class NotificationBridge implements EventListener {
         synchronized (this) {
             if (eventClient != null) {
                 try {
-                    log.log(Level.FINE, "closing event client [" + eventClient.getId() + "]");
+                    log.log(Level.FINE, "closing event client [{0}]", eventClient.getId());
                     eventClient.close();
                 } catch (Exception ex) {
                 // Ignore
                 } finally {
                     eventClient = null;
+                    subscribtion.clear();
                 }
             }
         }

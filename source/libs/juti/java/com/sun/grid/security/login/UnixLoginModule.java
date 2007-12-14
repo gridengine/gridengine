@@ -113,6 +113,8 @@ import javax.security.auth.spi.LoginModule;
  */
 public class UnixLoginModule implements LoginModule {
 
+    private static final String AUTHZ_IDENTITY = "authzIdentity";    
+    
     private final static Logger LOGGER = Logger.getLogger(UnixLoginModule.class.getName(), RB.BUNDLE);
     private String confError;
     private String authMethod;
@@ -125,6 +127,8 @@ public class UnixLoginModule implements LoginModule {
     private String username;
     private Set principals = new HashSet();
     private AuthUserWrapper authuser;
+    private String authzIdentity;
+    
 
     /**
      * Initialize the <code>UnixLoginModule</code>
@@ -176,6 +180,11 @@ public class UnixLoginModule implements LoginModule {
                 LOGGER.log(Level.FINE, "pam_service={0}", pamService);
             }
         }
+        authzIdentity = (String) options.get(AUTHZ_IDENTITY);
+        if(authzIdentity != null && authzIdentity.length() == 0) {
+            authzIdentity = null;
+        }
+        
         this.subject = subject;
         this.callbackHandler = callbackHandler;
 
@@ -250,6 +259,10 @@ public class UnixLoginModule implements LoginModule {
             if (p != null) {
                 LOGGER.log(Level.FINE, "unixlogin.authuser.principal.count", new Integer(p.size()));
                 principals.addAll(p);
+                if (authzIdentity != null) {
+                    principals.add(new UserPrincipal(authzIdentity));
+                }
+                
                 loginSucceded = true;
             } else {
                 LOGGER.log(Level.FINE, "unixlogin.authuser.principal.no");

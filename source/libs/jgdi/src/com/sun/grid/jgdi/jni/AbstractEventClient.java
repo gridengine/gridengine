@@ -58,15 +58,22 @@ import java.util.logging.Logger;
 public abstract class AbstractEventClient implements Runnable {
 
     private static final Logger logger = Logger.getLogger("com.sun.grid.jgdi.event");
+    
+    private static List<AbstractEventClient> instances = new LinkedList<AbstractEventClient>();
+    private static boolean shutdown = false;
+    
     private int evc_index = -1;
     private int id;
     private JGDI jgdi;
     private Thread thread;
+    
     protected final Lock fairLock = new ReentrantLock(true);
     private final Condition shutdownCondition = fairLock.newCondition();
     private final Condition startupCondition = fairLock.newCondition();
-    private static List<AbstractEventClient> instances = new LinkedList<AbstractEventClient>();
-    private static boolean shutdown = false;
+    
+    private Set<EventListener> eventListeners = Collections.<EventListener>emptySet();
+    private final Lock listenerLock = new ReentrantLock();
+    
 
     /**
      * Creates a new instance of EventClient
@@ -83,10 +90,10 @@ public abstract class AbstractEventClient implements Runnable {
             }
             instances.add(this);
         }
-        JGDI jgdi = JGDIFactory.newInstance(url);
-        if (jgdi instanceof JGDIImpl) {
-            this.jgdi = jgdi;
-            evc_index = initNative(jgdi, regId);
+        JGDI aJgdi = JGDIFactory.newInstance(url);
+        if (aJgdi instanceof JGDIImpl) {
+            this.jgdi = aJgdi;
+            evc_index = initNative(aJgdi, regId);
         } else {
             throw new IllegalArgumentException("JGDI must be instanceof " + JGDIImpl.class.getName());
         }
@@ -144,9 +151,11 @@ public abstract class AbstractEventClient implements Runnable {
             fairLock.unlock();
         }
     }
-
+    
     /**
      *  Close this event client
+     * @throws com.sun.grid.jgdi.JGDIException if the connection could not be closed
+     * @throws java.lang.InterruptedException if the close has been interrupted
      */
     public void close() throws JGDIException, InterruptedException {
 
@@ -208,6 +217,7 @@ public abstract class AbstractEventClient implements Runnable {
 
     /**
      *  Start the event client
+     * @throws java.lang.InterruptedException if the startup has been interrupted
      */
     public void start() throws InterruptedException {
         fairLock.lock();
@@ -232,10 +242,8 @@ public abstract class AbstractEventClient implements Runnable {
 
         int evcId = 0;
         try {
-
             fairLock.lock();
             try {
-
                 try {
                     this.register();
                 } finally {
@@ -295,8 +303,7 @@ public abstract class AbstractEventClient implements Runnable {
                     break;
                 }
             }
-            // Deregister the event clients, no new message will be accepted
-            deregister();
+            close();
         } catch (Exception ex) {
             LogRecord lr = new LogRecord(Level.WARNING, "Unexpected error in event loop of event client {0}");
             lr.setParameters(new Object[]{evcId});
@@ -314,13 +321,26 @@ public abstract class AbstractEventClient implements Runnable {
     }
 
     /**
-     *  Determine if the event client is running
-     *  @return <code>true</code> if the event client is running
+     *  Determine if the event client has been closed
+     *  @return <code>true</code> if the event client has been closed
+     */
+    public boolean isClosed() {
+        fairLock.lock();
+        try {
+            return evc_index < 0 || !isRunning();
+        } finally {
+            fairLock.unlock();
+        }
+    }
+    
+    /**
+     * Determine if the event client is running
+     * @return <code>true</code> if the event client is running
      */
     public boolean isRunning() {
         fairLock.lock();
         try {
-            return thread != null && thread.isAlive();
+            return thread != null && thread.isAlive() && !thread.isInterrupted();
         } finally {
             fairLock.unlock();
         }
@@ -329,7 +349,6 @@ public abstract class AbstractEventClient implements Runnable {
     protected void testConnected() throws JGDIException {
         fairLock.lock();
         try {
-
             if (jgdi == null) {
                 throw new JGDIException("Not connected");
             }
@@ -355,15 +374,10 @@ public abstract class AbstractEventClient implements Runnable {
      *  Unsubscribe all events for this event client
      *  @throws JGDIException if the unsubscribtion is failed
      */
-    public void unsubscribeAll() {
+    public void unsubscribeAll() throws JGDIException {
         fairLock.lock();
         try {
-            try {
-                unsubscribeAllNative();
-            } catch (JGDIException jgdie) {
-                // TODO
-                jgdie.printStackTrace();
-            }
+            unsubscribeAllNative();
         } finally {
             fairLock.unlock();
         }
@@ -384,8 +398,6 @@ public abstract class AbstractEventClient implements Runnable {
             lis.eventOccured(evt);
         }
     }
-    private Set<EventListener> eventListeners = Collections.<EventListener>emptySet();
-    private final Lock listenerLock = new ReentrantLock();
 
     /**
      * Add an event listener to this event client

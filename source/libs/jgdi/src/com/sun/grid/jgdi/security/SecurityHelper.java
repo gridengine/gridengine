@@ -77,7 +77,7 @@ public class SecurityHelper {
             if(sub != null) {
                 Set p = sub.getPrincipals(JGDIPrincipal.class);
                 if (p != null && !p.isEmpty()) {
-                    ret = ((JGDIPrincipal)p.iterator().next()).getName();
+                    ret = ((JGDIPrincipal)p.iterator().next()).getUsername();
                 }
             }
             if (ret == null) {

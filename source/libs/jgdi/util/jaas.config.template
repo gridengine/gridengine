@@ -1,19 +1,94 @@
+/*___INFO__MARK_BEGIN__*/
+/*************************************************************************
+ *
+ *  The Contents of this file are made available subject to the terms of
+ *  the Sun Industry Standards Source License Version 1.2
+ *
+ *  Sun Microsystems Inc., March, 2001
+ *
+ *
+ *  Sun Industry Standards Source License Version 1.2
+ *  =================================================
+ *  The contents of this file are subject to the Sun Industry Standards
+ *  Source License Version 1.2 (the "License"); You may not use this file
+ *  except in compliance with the License. You may obtain a copy of the
+ *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+ *
+ *  Software provided under this License is provided on an "AS IS" basis,
+ *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+ *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+ *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+ *  See the License for the specific provisions governing your rights and
+ *  obligations concerning the Software.
+ *
+ *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ *
+ *   Copyright: 2006 by Sun Microsystems, Inc
+ *
+ *   All Rights Reserved.
+ *
+ ************************************************************************/
+/*___INFO__MARK_END__*/
 
+
+
+
+/*
+ * The GridwareConfig works only with java 6 due to LdapLoginModule
+ */
+GridwareConfig {
+
+    com.sun.grid.security.login.GECATrustManagerLoginModule requisite
+         caTop="${com.sun.grid.jgdi.sgeRoot}/${com.sun.grid.jgdi.sgeCell}/common/sgeCA"
+         authzIdentity=controlRole;
+
+    /*
+     * The LdapLoginModule is only available in java 6 
+     */
+    /*
+    com.sun.security.auth.module.LdapLoginModule requisite
+        userProvider="ldap://sun-ds/ou=people,dc=sun,dc=com"
+        userFilter="(&(uid={USERNAME})(objectClass=inetOrgPerson))"
+        authzIdentity=controlRole
+        useSSL=false;
+    */
+
+    /*
+     *  UnixLoginModule does not work if SGE_ROOT is installed
+     *  on nosuid file system
+     */
+    com.sun.security.auth.module.UnixLoginModule requisite
+        sge_root="${com.sun.grid.jgdi.sgeRoot}"
+        auth_method="system"
+        authzIdentity=controlRole;
+
+    /*
+     *  The JGDILoginModule creates the jgdi session id
+     *  therefore it is mandatory
+     */
+    com.sun.grid.jgdi.security.JGDILoginModule optional
+        trustedPrincipal="com.sun.security.auth.UserPrincipal";
+};
+
+/*
+ *  TestConfig accepts any user. Only for testing
+ */
+TestConfig {
+
+    com.sun.grid.security.login.TestLoginModule requisite
+        authzIdentity=controlRole;
+
+    com.sun.grid.jgdi.security.JGDILoginModule optional
+        trustedPrincipal="com.sun.grid.security.login.UserPrincipal";
+
+};
+
+/* 
+ *  Mandatory of native jgdi is used with a csp system
+ *  (e.g. jgdish in csp mode)
+ */
 jgdi {
    com.sun.security.auth.module.KeyStoreLoginModule required 
                                                     keyStoreURL="file:./keystore";
 };
 
-Blub {
-    com.sun.security.auth.module.UnixLoginModule required
-        authzIdentity=controlRole
-        useSSL=false;
-};
-
-GridwareConfig {
-    com.sun.security.auth.module.LdapLoginModule REQUIRED
-        userProvider="ldap://sun-ds/ou=people,dc=sun,dc=com"
-        userFilter="(&(uid={USERNAME})(objectClass=inetOrgPerson))"
-        authzIdentity=controlRole
-        useSSL=false;
-};

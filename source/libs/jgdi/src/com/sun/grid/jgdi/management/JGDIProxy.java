@@ -32,37 +32,40 @@
 package com.sun.grid.jgdi.management;
 
 import com.sun.grid.jgdi.JGDIException;
+import com.sun.grid.jgdi.event.ConnectionClosedEvent;
+import com.sun.grid.jgdi.event.ConnectionFailedEvent;
 import com.sun.grid.jgdi.event.Event;
 import com.sun.grid.jgdi.event.EventListener;
 import com.sun.grid.jgdi.management.mbeans.JGDIJMXMBean;
+import com.sun.grid.jgdi.util.Base64;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.Signature;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import javax.management.Attribute;
 import javax.management.InstanceAlreadyExistsException;
 import javax.management.InstanceNotFoundException;
+import javax.management.ListenerNotFoundException;
 import javax.management.MBeanException;
-import javax.management.MBeanRegistrationException;
 import javax.management.MBeanServerConnection;
-import javax.management.MalformedObjectNameException;
-import javax.management.NotCompliantMBeanException;
 import javax.management.Notification;
 import javax.management.NotificationListener;
-import javax.management.ObjectInstance;
 import javax.management.ObjectName;
-import javax.management.ReflectionException;
+import javax.management.remote.JMXConnectionNotification;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
-import javax.management.remote.JMXPrincipal;
 import javax.management.remote.JMXServiceURL;
-import javax.security.auth.Subject;
 
 /**
  *  <p>
@@ -84,11 +87,10 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
      *  Create a new proxy the the jgdi MBean
      *
      *  @param url  jmx connection url to qmaster
-     *  @param name name of the MBean in qmasters MBean server
-     *  @param credentials credentials for authenticating user. If the MBeanServer
      *         allows username/password authentication this parameter must be a
      *         string array. The for element is the username, the second elements
      *         is the password.
+     * @param credentials the credentials for jmx authentication
      *
      */
     public JGDIProxy(JMXServiceURL url, Object credentials) {
@@ -141,13 +143,41 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
      */
     public void handleNotification(Notification notification, Object handback) {
 
+        Event evt = null;
         if (notification.getUserData() instanceof Event) {
+            evt = (Event)notification.getUserData();
+        } else if (JMXConnectionNotification.CLOSED.equals(notification.getType())) {
+            synchronized(this) {
+                if(connector != null) {
+                    try {
+                        connector.removeConnectionNotificationListener(this);
+                        close();
+                        evt = new ConnectionClosedEvent(System.currentTimeMillis() / 1000, 0);
+                    } catch (ListenerNotFoundException ex) {
+                        // Ignore
+                    }
+                }
+            }
+        } else if (JMXConnectionNotification.FAILED.equals(notification.getType())) {
+            synchronized(this) {
+                if(connector != null) {
+                    try {
+                        connector.removeConnectionNotificationListener(this);
+                        close();
+                        evt = new ConnectionFailedEvent(System.currentTimeMillis() / 1000, 0);
+                    } catch (ListenerNotFoundException ex) {
+                        // Ignore
+                    }
+                }
+            }
+        }
+        if(evt != null) {
             Set<EventListener> tmpLis = null;
             synchronized (this) {
                 tmpLis = listeners;
             }
             for (EventListener lis : tmpLis) {
-                lis.eventOccured((Event) notification.getUserData());
+                lis.eventOccured(evt);
             }
         }
     }
@@ -169,12 +199,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
 
         if (connection != null) {
             try {
-                connection.unregisterMBean(name);
                 connector.close();
-            } catch (MBeanRegistrationException ex) {
-            // ignore: ex.printStackTrace();
-            } catch (InstanceNotFoundException ex) {
-            // ignore: ex.printStackTrace();
             } catch (IOException ex) {
             // Ignore it
             } finally {
@@ -193,29 +218,11 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
             try {
                 connector = JMXConnectorFactory.connect(url, env);
                 connection = connector.getMBeanServerConnection();
-                // we need a random number and just take the current
-                // mbean count + 1
-                int randomId = connection.getMBeanCount() + 1;
-                name = new ObjectName("gridengine:type=JGDI,id=" + randomId);
-                ObjectInstance jgdiMBean = connection.createMBean("com.sun.grid.jgdi.management.mbeans.JGDIJMX", name);
+                
+                name = JGDIAgent.getObjectNameFromConnectionId(connector.getConnectionId());
                 connection.addNotificationListener(name, this, null, null);
-                connector.addConnectionNotificationListener(this, null, null);
+                connector.addConnectionNotificationListener(this, null, connector.getConnectionId());
 
-            } catch (MalformedObjectNameException ex) {
-                close();
-                throw new JGDIException(ex, "jgdi mbean malformed object name");
-            } catch (MBeanRegistrationException ex) {
-                close();
-                throw new JGDIException(ex, "jgdi mbean registration failed");
-            } catch (MBeanException ex) {
-                close();
-                throw new JGDIException(ex, "jgdi mbean failed");
-            } catch (NotCompliantMBeanException ex) {
-                close();
-                throw new JGDIException(ex, "jgdi mbean not compliant");
-            } catch (ReflectionException ex) {
-                close();
-                throw new JGDIException(ex, "jgdi mbean not active in qmaster");
             } catch (NullPointerException ex) {
                 close();
                 throw new JGDIException(ex, "jgdi mbean null");
@@ -404,4 +411,53 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
             return null;
         }
     }
+    
+    /**
+     * Create JMX credentials for password less authentication with a keystore
+     * @param ks        the keystore
+     * @param username  the username
+     * @param pw        password of the private key in the keystore
+     * @return the jmx credentials
+     * @throws com.sun.grid.jgdi.JGDIException
+     */
+    public static String[] createCredentialsFromKeyStore(KeyStore ks, String username, char[] pw) throws JGDIException {
+        try {
+
+            PrivateKey pk = (PrivateKey) ks.getKey(username, pw);
+            
+            String algorithm = "MD5withRSA";
+            Signature s = Signature.getInstance(algorithm);
+            s.initSign(pk);
+            
+            byte [] message = "Super secret message".getBytes();
+            
+            s.update(message);
+            
+            byte [] signature = s.sign();
+            
+            Properties props = new Properties();
+            props.put("algorithm", algorithm);
+            props.put("message", Base64.encode(message));
+            props.put("signature", Base64.encode(signature));
+            
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            props.store(bos, null);
+            
+            return new String [] {
+                username,
+                bos.toString()
+            };
+        } catch (Exception ex) {
+            throw new JGDIException("Can not create credentials from keystore", ex);
+        }
+        
+        
+        
+        
+        
+        
+        
+    }
+    
+    
 }

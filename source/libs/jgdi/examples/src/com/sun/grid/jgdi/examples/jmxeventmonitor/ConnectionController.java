@@ -32,19 +32,22 @@
 package com.sun.grid.jgdi.examples.jmxeventmonitor;
 
 import com.sun.grid.jgdi.JGDIFactory;
+import com.sun.grid.jgdi.event.ConnectionClosedEvent;
+import com.sun.grid.jgdi.event.ConnectionFailedEvent;
+import com.sun.grid.jgdi.event.Event;
 import com.sun.grid.jgdi.event.EventListener;
 import com.sun.grid.jgdi.event.EventTypeEnum;
+import com.sun.grid.jgdi.event.QmasterGoesDownEvent;
+import com.sun.grid.jgdi.event.ShutdownEvent;
 import com.sun.grid.jgdi.management.JGDIProxy;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.management.NotificationBroadcasterSupport;
 
 /**
  *
@@ -53,10 +56,23 @@ public class ConnectionController {
 
     private final static Logger log = Logger.getLogger(ConnectionController.class.getName());
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
-    private final List<Listener> listeners = new LinkedList<Listener>();
+    private final Set<Listener> listeners = new HashSet<Listener>();
+    private final Set<EventListener> eventListeners = new HashSet<EventListener>();
     private JGDIProxy jgdiProxy;
-    private Set<EventTypeEnum> subscription;
-    private NotificationBroadcasterSupport broadcaster = new NotificationBroadcasterSupport();
+    
+    private final  EventListener shutdownListener = new EventListener() {
+        public void eventOccured(Event evt) {
+            if(evt instanceof QmasterGoesDownEvent || evt instanceof ConnectionClosedEvent || evt instanceof ConnectionFailedEvent) {
+                disconnect();
+            } else if (evt instanceof ShutdownEvent) {
+                executor.submit(new ClearSubscribtionAction());
+            }
+        }
+    };
+    
+    public ConnectionController() {
+        eventListeners.add(shutdownListener);
+    }
 
     public void connect(String host, int port, Object credentials) {
         executor.submit(new ConnectAction(host, port, credentials));
@@ -91,7 +107,6 @@ public class ConnectionController {
             return new ArrayList<Listener>(listeners);
         }
     }
-    private final Set<EventListener> eventListeners = new HashSet<EventListener>();
 
     public void addEventListener(EventListener lis) {
         eventListeners.add(lis);
@@ -101,6 +116,13 @@ public class ConnectionController {
         eventListeners.remove(lis);
     }
 
+    private class ClearSubscribtionAction implements Runnable {
+        public void run() {
+            for (Listener lis : getListeners()) {
+                lis.clearSubscription();
+            }
+        }
+    }
     private class SubscribeAction implements Runnable {
 
         private final Set<EventTypeEnum> types;
@@ -173,8 +195,7 @@ public class ConnectionController {
                 for (EventListener lis : eventListeners) {
                     jgdiProxy.addEventListener(lis);
                 }
-                subscription = jgdiProxy.getProxy().getSubscription();
-
+                Set<EventTypeEnum> subscription = jgdiProxy.getProxy().getSubscription();
                 for (Listener lis : getListeners()) {
                     lis.connected(host, port, subscription);
                 }
@@ -197,5 +218,7 @@ public class ConnectionController {
         public void unsubscribed(Set<EventTypeEnum> typea);
 
         public void errorOccured(Throwable ex);
+        
+        public void clearSubscription();
     }
 }

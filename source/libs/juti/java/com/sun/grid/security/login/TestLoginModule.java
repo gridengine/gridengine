@@ -48,13 +48,16 @@ import javax.security.auth.spi.LoginModule;
  */
 public class TestLoginModule implements LoginModule {
 
+    private static final String AUTHZ_IDENTITY = "authzIdentity";    
+    
     private CallbackHandler callbackHandler;
     private final static Logger log = Logger.getLogger(TestLoginModule.class.getName());
     private Subject subject;
     private boolean commitSucceded;
     private String username;
     private UserPrincipal principal;
-
+    private UserPrincipal authzPrincipal;
+    private String authzIdentity;
     /**
      * Initialize the <code>TestLoginModule</code>
      * @param subject   the current subject
@@ -68,6 +71,12 @@ public class TestLoginModule implements LoginModule {
         log.entering("TestLoginModule", "initialize", options);
         this.subject = subject;
         this.callbackHandler = callbackHandler;
+        
+        authzIdentity = (String) options.get(AUTHZ_IDENTITY);
+        if(authzIdentity != null && authzIdentity.length() == 0) {
+            authzIdentity = null;
+        }
+        
         log.exiting("TestLoginModule", "initialize");
     }
 
@@ -114,6 +123,10 @@ public class TestLoginModule implements LoginModule {
             subject.getPrincipals().add(principal);
             log.log(Level.FINE, "TestLoginModule: username={0}", username);
             username = null;
+            if (authzIdentity != null) {
+                authzPrincipal = new UserPrincipal(authzIdentity);
+                subject.getPrincipals().add(authzPrincipal);
+            }
             commitSucceded = true;
         } else {
             commitSucceded = false;
@@ -142,9 +155,13 @@ public class TestLoginModule implements LoginModule {
         log.entering("TestLoginModule", "logout");
         if (commitSucceded) {
             subject.getPrincipals().remove(principal);
+            if(authzPrincipal != null) {
+                subject.getPrincipals().remove(authzPrincipal);
+            }
         }
         subject = null;
         principal = null;
+        authzPrincipal = null;
         commitSucceded = false;
         log.exiting("TestLoginModule", "logout", Boolean.TRUE);
         return true;

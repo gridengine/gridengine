@@ -1,3 +1,7 @@
+RH-2007-12-17-0: Enhancem.: o JGDI JMX authentication improved
+                            o docu for sample jaas.config added
+                 Review:    AA
+ 
 MD-2007-12-14-0: Enhancem.: o switched gelint script from lint to splint
                             o script enhanement
 

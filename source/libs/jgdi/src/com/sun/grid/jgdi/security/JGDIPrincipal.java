@@ -93,7 +93,7 @@ public class JGDIPrincipal implements Principal, java.io.Serializable {
      */
     @Override
     public String toString() {
-        return name;
+        return String.format("JGDIPrincipal: %s", name);
     }
 
     /**

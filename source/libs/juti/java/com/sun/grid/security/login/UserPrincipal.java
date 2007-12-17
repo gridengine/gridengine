@@ -38,6 +38,8 @@ import java.security.Principal;
  */
 public class UserPrincipal implements Principal, java.io.Serializable {
    
+    private final static long serialVersionUID = -2007121701L;
+    
    /**
     * @serial
     */
@@ -97,18 +99,24 @@ public class UserPrincipal implements Principal, java.io.Serializable {
     *		<code>UserPrincipal</code>.
     */
    public boolean equals(Object o) {
-      if (o == null)
+      if (o == null) {
          return false;
+      }
       
-      if (this == o)
+      if (this == o) {
          return true;
+      }
       
-      if (!(o instanceof UserPrincipal))
+      if (!(o instanceof UserPrincipal)) {
          return false;
+      }
+      
       UserPrincipal that = (UserPrincipal)o;
       
-      if (this.getName().equals(that.getName()))
+      if (this.getName().equals(that.getName())) {
          return true;
+      }
+      
       return false;
    }
    

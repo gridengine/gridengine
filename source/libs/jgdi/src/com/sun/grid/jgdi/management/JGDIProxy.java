@@ -54,7 +54,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import javax.management.Attribute;
-import javax.management.InstanceAlreadyExistsException;
 import javax.management.InstanceNotFoundException;
 import javax.management.ListenerNotFoundException;
 import javax.management.MBeanException;
@@ -209,7 +208,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
         }
     }
 
-    private void connect() throws JGDIException, InstanceAlreadyExistsException {
+    private void connect() throws JGDIException {
         if (connection == null) {
             Map<String, Object> env = new HashMap<String, Object>();
             if (credentials != null) {
@@ -220,6 +219,9 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
                 connection = connector.getMBeanServerConnection();
                 
                 name = JGDIAgent.getObjectNameFromConnectionId(connector.getConnectionId());
+                if(name == null) {
+                    throw new JGDIException("jmx connection id contains no jgdi session id. Please check qmaster's JAAS configuration (JGDILoginModule)");
+                }
                 connection.addNotificationListener(name, this, null, null);
                 connector.addConnectionNotificationListener(this, null, connector.getConnectionId());
 

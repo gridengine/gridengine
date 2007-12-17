@@ -65,7 +65,7 @@ public class ConnectionController {
             if(evt instanceof QmasterGoesDownEvent || evt instanceof ConnectionClosedEvent || evt instanceof ConnectionFailedEvent) {
                 disconnect();
             } else if (evt instanceof ShutdownEvent) {
-                executor.submit(new ClearSubscribtionAction());
+                executor.submit(new ClearSubscriptionAction());
             }
         }
     };
@@ -116,7 +116,7 @@ public class ConnectionController {
         eventListeners.remove(lis);
     }
 
-    private class ClearSubscribtionAction implements Runnable {
+    private class ClearSubscriptionAction implements Runnable {
         public void run() {
             for (Listener lis : getListeners()) {
                 lis.clearSubscription();

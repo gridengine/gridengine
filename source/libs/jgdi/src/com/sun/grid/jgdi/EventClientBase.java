@@ -72,13 +72,13 @@ public interface EventClientBase {
     
     /**
      *  Subscribe all events for this event client
-     *  @throws JGDIException if the subscribtion is failed
+     *  @throws JGDIException if subscribe failed
      */
     public void subscribeAll() throws JGDIException;
     
     /**
      *  Unsubscribe all events for this event client
-     *  @throws JGDIException if the unsubscribe is failed
+     *  @throws JGDIException if unsubscribe failed
      */
     public void unsubscribeAll() throws JGDIException;
     
@@ -95,7 +95,7 @@ public interface EventClientBase {
     public void removeEventListener(EventListener lis);
     
     /**
-     * Commit the subscribtion
+     * Commit the subscription
      * @throws JGDIException if the commit has failed
      */
     public void commit() throws JGDIException;

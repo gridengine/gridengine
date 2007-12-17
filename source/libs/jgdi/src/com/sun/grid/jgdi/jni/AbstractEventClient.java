@@ -359,7 +359,7 @@ public abstract class AbstractEventClient implements Runnable {
 
     /**
      *  Subscribe all events for this event client
-     *  @throws JGDIException if the subscribtion is failed
+     *  @throws JGDIException if subscribe failed
      */
     public void subscribeAll() throws JGDIException {
         fairLock.lock();
@@ -372,7 +372,7 @@ public abstract class AbstractEventClient implements Runnable {
 
     /**
      *  Unsubscribe all events for this event client
-     *  @throws JGDIException if the unsubscribtion is failed
+     *  @throws JGDIException if unsubscribe failed
      */
     public void unsubscribeAll() throws JGDIException {
         fairLock.lock();

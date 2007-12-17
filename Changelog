@@ -1,3 +1,8 @@
+AA-2007-12-17-0: Bugfix:    - subscription before eventClient.start()
+                              fails
+                            - typos  
+                 Review:    RH             
+
 JG-2007-12-17-0: Enhancem.: higher precision for cpu, ru_utime, ru_stime
                  Bugster:   6288965
                  Issue:     869

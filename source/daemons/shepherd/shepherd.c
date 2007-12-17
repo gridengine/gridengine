@@ -1210,7 +1210,7 @@ int ckpt_type
       ckpt_interval = 0;
 
       /* child exited, read usage */
-      status = wait_my_child(pid, ckpt_pid, ckpt_type, 
+      status = wait_my_child(pid, ckpt_pid, ckpt_type,
                              &rusage, timeout, ckpt_interval, childname);
 
       shepherd_trace_sprintf("wait_my_child returned:");
@@ -2227,20 +2227,20 @@ char *childname            /* "job", "pe_start", ...     */
 #if defined(INTERIX)
       /* <Windows_GUI> */
       sge_set_environment();
-      if(strcmp(childname, "job") == 0 &&
+      if (strcmp(childname, "job") == 0 &&
          wl_get_GUI_mode(get_conf_val("display_win_gui")) == true) {
-         if(npid != -1) {      
+         if (npid != -1) {      
             char errormsg[MAX_STRING_SIZE];
 
             memset(&rusage_hp10, 0, sizeof(rusage_hp10));
 
             shepherd_trace_sprintf("retrieving remote usage");
-            if(wl_getrusage_remote(get_conf_val("job_id"), 
-                                &status, &rusage_hp10, errormsg)!=0) {
+            if (wl_getrusage_remote(get_conf_val("job_id"),
+                                   &status, &rusage_hp10, errormsg) != 0) {
                shepherd_trace(errormsg);
             }
-            shepherd_trace_sprintf("retrieved remote usage: %d", 
-               rusage_hp10.ru_utime);
+            shepherd_trace_sprintf("retrieved remote usage: %d",
+                                   rusage_hp10.ru_utime);
          }
       } else 
       /* </Windows_GUI> */
@@ -2290,17 +2290,26 @@ char *childname            /* "job", "pe_start", ...     */
             (ctrl_pid[0] > 0) || (ctrl_pid[1] > 0) || (ctrl_pid[2] > 0));
 
 #if defined(CRAY) || defined(NECSX4) || defined(NECSX5)
-
    times(&t2);
+   {
+      /* compute utime and stime (seconds and micro seconds) */
+      clock_t u_ticks  = t2.tms_cutime - t1.tms_cutime; /* user time in clock ticks */
+      clock_t s_ticks  = t2.tms_cstime - t1.tms_cstime; /* system time in clock ticks */
+      clock_t clk_tck  = sysconf(_SC_CLK_TCK);          /* clock ticks per second */
+      clock_t tck_usec = 1000000 / clk_tck;             /* length of a clock tick in micro seconds */
 
-   rusage->ru_utime.tv_sec  = (t2.tms_cutime - t1.tms_cutime) / sysconf(_SC_CLK_TCK);
-   rusage->ru_stime.tv_sec  = (t2.tms_cstime - t1.tms_cstime) / sysconf(_SC_CLK_TCK);
-   
+      rusage->ru_utime.tv_sec  = u_ticks / clk_tck;
+      rusage->ru_utime.tv_usec  = (u_ticks % clk_tck) * tck_usec;
+      rusage->ru_stime.tv_sec  = s_ticks / clk_tck;
+      rusage->ru_stime.tv_usec  = (s_ticks % clk_tck) * tck_usec;
+   }
 #endif  /* CRAY */
 
 #if defined(HPUX) || defined(INTERIX)
    rusage->ru_utime.tv_sec = rusage_hp10.ru_utime.tv_sec;
+   rusage->ru_utime.tv_usec = rusage_hp10.ru_utime.tv_usec;
    rusage->ru_stime.tv_sec = rusage_hp10.ru_stime.tv_sec;
+   rusage->ru_stime.tv_usec = rusage_hp10.ru_stime.tv_usec;
 #endif
 
    return job_status;

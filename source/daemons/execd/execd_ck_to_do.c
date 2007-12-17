@@ -579,8 +579,8 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx)
                wallclock = lGetUlong(jatep, JAT_end_time) - lGetUlong(jatep, JAT_start_time);
                add_usage(jr, "ru_wallclock", NULL, wallclock);
                add_usage(jr, USAGE_ATTR_CPU_ACCT, NULL, wallclock * 0.5);
-               add_usage(jr, "ru_utime", NULL, wallclock * 0.4 );
-               add_usage(jr, "ru_utime", NULL, wallclock * 0.1 );
+               add_usage(jr, "ru_utime", NULL, wallclock * 0.4);
+               add_usage(jr, "ru_stime", NULL, wallclock * 0.1);
                add_usage(jr, "exit_status", NULL, 0);
             
                

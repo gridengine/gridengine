@@ -1134,7 +1134,7 @@ int main(int argc, char **argv)
          }         
          
          if (summary_view) {
-             printf("%13.0f %13.0f %13.0f %13.0f %18.3f %18.3f %18.3f\n",
+             printf("%13.0f %13.3f %13.3f %13.3f %18.3f %18.3f %18.3f\n",
                    lGetDouble(ep, QAJ_ru_wallclock),
                    lGetDouble(ep, QAJ_ru_utime),
                    lGetDouble(ep, QAJ_ru_stime),
@@ -1148,7 +1148,7 @@ int main(int argc, char **argv)
                break;
             }
          } else {
-            printf("%13.0f %13.0f %13.0f %13.0f %18.3f %18.3f %18.3f\n",
+            printf("%13.0f %13.3f %13.3f %13.3f %18.3f %18.3f %18.3f\n",
                 totals.ru_wallclock,
                 totals.ru_utime,
                 totals.ru_stime,
@@ -1462,8 +1462,8 @@ sge_rusage_type *dusage
    printf("%-13.12s%-20"sge_fu32"\n",MSG_HISTORY_SHOWJOB_EXITSTATUS, dusage->exit_status);
    printf("%-13.12s%-13.0f\n",MSG_HISTORY_SHOWJOB_RUWALLCLOCK, dusage->ru_wallclock);  
 
-   printf("%-13.12s%-13.0f\n",MSG_HISTORY_SHOWJOB_RUUTIME, dusage->ru_utime);    /* user time used */
-   printf("%-13.12s%-13.0f\n", MSG_HISTORY_SHOWJOB_RUSTIME, dusage->ru_stime);    /* system time used */
+   printf("%-13.12s%-13.3f\n",MSG_HISTORY_SHOWJOB_RUUTIME, dusage->ru_utime);    /* user time used */
+   printf("%-13.12s%-13.3f\n", MSG_HISTORY_SHOWJOB_RUSTIME, dusage->ru_stime);    /* system time used */
       printf("%-13.12s%-20"sge_fu32"\n",MSG_HISTORY_SHOWJOB_RUMAXRSS,  dusage->ru_maxrss);     /* maximum resident set size */
       printf("%-13.12s%-20"sge_fu32"\n",MSG_HISTORY_SHOWJOB_RUIXRSS,  dusage->ru_ixrss);       /* integral shared text size */
       printf("%-13.12s%-20"sge_fu32"\n",MSG_HISTORY_SHOWJOB_RUISMRSS,  dusage->ru_ismrss);     /* integral shared memory size*/
@@ -1480,7 +1480,7 @@ sge_rusage_type *dusage
    printf("%-13.12s%-20"sge_fu32"\n",MSG_HISTORY_SHOWJOB_RUNVCSW,      dusage->ru_nvcsw);      /* voluntary context switches */
    printf("%-13.12s%-20"sge_fu32"\n",MSG_HISTORY_SHOWJOB_RUNIVCSW,     dusage->ru_nivcsw);     /* involuntary */
 
-   printf("%-13.12s%-13.0f\n",   MSG_HISTORY_SHOWJOB_CPU,          dusage->cpu);
+   printf("%-13.12s%-13.3f\n",   MSG_HISTORY_SHOWJOB_CPU,          dusage->cpu);
    printf("%-13.12s%-18.3f\n",   MSG_HISTORY_SHOWJOB_MEM,          dusage->mem);
    printf("%-13.12s%-18.3f\n",   MSG_HISTORY_SHOWJOB_IO,           dusage->io);
    printf("%-13.12s%-18.3f\n",   MSG_HISTORY_SHOWJOB_IOW,          dusage->iow);
@@ -1808,7 +1808,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
    if (!pc) {
       DRETURN(-1);
    }
-   d->ru_utime = atol(pc);
+   d->ru_utime = atof(pc);
 
    /*
     * ru_stime
@@ -1817,7 +1817,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
    if (!pc) {
       DRETURN(-1);
    }
-   d->ru_stime = atol(pc);
+   d->ru_stime = atof(pc);
 
    /*
     * ru_maxrss

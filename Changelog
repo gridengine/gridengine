@@ -1,3 +1,8 @@
+JG-2007-12-17-0: Enhancem.: higher precision for cpu, ru_utime, ru_stime
+                 Bugster:   6288965
+                 Issue:     869
+                 Review:    HP
+
 RH-2007-12-17-0: Enhancem.: o JGDI JMX authentication improved
                             o docu for sample jaas.config added
                  Review:    AA

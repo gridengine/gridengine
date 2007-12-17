@@ -172,13 +172,8 @@ shepherd_write_usage_file(u_long32 wait_status, int exit_status,
 #endif
 #endif
 
-#if defined(SOLARIS) || defined(CRAY)
-      FPRINTF((fp, "ru_utime=%ld\n", rusage->ru_utime.tv_sec));
-      FPRINTF((fp, "ru_stime=%ld\n", rusage->ru_stime.tv_sec));
-#else
-
-      FPRINTF((fp, "ru_utime=%d\n", (int)rusage->ru_utime.tv_sec));
-      FPRINTF((fp, "ru_stime=%d\n", (int)rusage->ru_stime.tv_sec));
+      FPRINTF((fp, "ru_utime=%f\n", (double)rusage->ru_utime.tv_sec + (double)rusage->ru_utime.tv_usec / 1000000.0));
+      FPRINTF((fp, "ru_stime=%f\n", (double)rusage->ru_stime.tv_sec + (double)rusage->ru_stime.tv_usec / 1000000.0));
       FPRINTF((fp, "ru_maxrss=%ld\n", rusage->ru_maxrss));
       FPRINTF((fp, "ru_ixrss=%ld\n", rusage->ru_ixrss));
 #if defined(ultrix)
@@ -196,7 +191,7 @@ shepherd_write_usage_file(u_long32 wait_status, int exit_status,
       FPRINTF((fp, "ru_nsignals=%ld\n", rusage->ru_nsignals));
       FPRINTF((fp, "ru_nvcsw=%ld\n", rusage->ru_nvcsw));
       FPRINTF((fp, "ru_nivcsw=%ld\n", rusage->ru_nivcsw));
-#endif
+
       FCLOSE(fp);
 
    } else {

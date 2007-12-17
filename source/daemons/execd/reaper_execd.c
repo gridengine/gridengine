@@ -1756,7 +1756,8 @@ lListElem *jr
    char sge_mail_body[10*2048];
    char sge_mail_start[128];
    char sge_mail_end[128];
-   u_long32 jobid, taskid, failed, ru_utime, ru_stime, ru_wallclock;
+   u_long32 jobid, taskid, failed;
+   double ru_utime, ru_stime, ru_wallclock;
    double ru_cpu = 0.0, ru_maxvmem = 0.0;
    int exit_status = -1, signo = -1;
    const char *q, *h, *u;
@@ -1798,17 +1799,17 @@ lListElem *jr
       strcpy(sge_mail_end, MSG_MAIL_UNKNOWN_NAME);
 
    if ((ep=lGetSubStr(jr, UA_name, "ru_utime", JR_usage)))
-      ru_utime = (u_long32)lGetDouble(ep, UA_value); 
+      ru_utime = lGetDouble(ep, UA_value); 
    else
       ru_utime = 0;
 
    if ((ep=lGetSubStr(jr, UA_name, "ru_stime", JR_usage)))
-      ru_stime = (u_long32)lGetDouble(ep, UA_value); 
+      ru_stime = lGetDouble(ep, UA_value); 
    else
       ru_stime = 0;
 
    if ((ep=lGetSubStr(jr, UA_name, "ru_wallclock", JR_usage)))
-      ru_wallclock = (u_long32)lGetDouble(ep, UA_value); 
+      ru_wallclock = lGetDouble(ep, UA_value); 
    else
       ru_wallclock = 0;
 

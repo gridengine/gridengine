@@ -57,7 +57,7 @@
 
 #define ACTFILE_FPRINTF_FORMAT \
 "%s%c%s%c%s%c%s%c%s%c"sge_u32"%c%s%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c" \
-sge_u32"%c"sge_u32"%c"sge_u32"%c%f%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c%f%c" \
+sge_u32"%c%f%c%f%c%f%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c%f%c" \
 sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c%s%c%s%c%s%c%d%c"sge_u32"%c%f%c%f%c%f%c%s%c%f%c%s%c%f%c"sge_u32"" \
 ARCH_COLUMN \
 "\n"
@@ -303,8 +303,8 @@ sge_write_rusage(dstring *buffer,
           lGetUlong(jr, JR_failed), delimiter,
           exit_status, delimiter,
           usage_list_get_ulong_usage(usage_list, "ru_wallclock", 0), delimiter,
-          usage_list_get_ulong_usage(usage_list, "ru_utime", 0), delimiter,
-          usage_list_get_ulong_usage(usage_list, "ru_stime", 0), delimiter,
+          usage_list_get_double_usage(usage_list, "ru_utime", 0), delimiter,
+          usage_list_get_double_usage(usage_list, "ru_stime", 0), delimiter,
           usage_list_get_double_usage(usage_list, "ru_maxrss", 0), delimiter,
           usage_list_get_ulong_usage(usage_list, "ru_ixrss", 0), delimiter,
           usage_list_get_ulong_usage(usage_list, "ru_ismrss", 0), delimiter,

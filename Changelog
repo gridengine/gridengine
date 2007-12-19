@@ -1,3 +1,7 @@
+GH-2007-12-19-0: Bugfix:    Reprioritize disappears after sge_qmaster restart
+                 Bugster:   6574269
+                 Review:    JG
+
 HP-2007-12-12-0: Bugfix:    Installation failed on Windows when installing as root
                             without SGE admin user
                  Changed:   dist/util/install_modules/inst_execd.sh

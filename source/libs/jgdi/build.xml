@@ -153,7 +153,7 @@
         
     </target>
     
-    <target depends="init, gensrc" name="compile.javah">
+    <target name="compile.javah" depends="init, gensrc" if="isJavaBuildHost">
         <javac debug="${javac.debug}"
                deprecation="${javac.deprecated}"
                destdir="${classes.dir}"
@@ -184,7 +184,7 @@
     </target>
     
     
-    <target name="jar.init" depends="init">
+    <target name="jar.init" depends="init" if="isJavaBuildHost">
         <fileset id="jar.classes" dir="${classes.dir}">
             <include name="**/*.class"/>
             <exclude name="com/sun/grid/jgdi/examples/**/*"/>

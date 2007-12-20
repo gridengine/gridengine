@@ -1,3 +1,7 @@
+CR-2007-12-20-1: Bugfix:    o fixed some ant build targets in build.xml
+                              files
+                 Review:    AA
+
 CR-2007-12-20-0: Bugfix:    o fixed some ant build targets in build.xml
                               files
                  Review:    AA

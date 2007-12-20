@@ -13,6 +13,7 @@
          <!-- attribute name="args" default="${sge.ant.args}"/ -->
          <attribute name="dir" default="${basedir}"/>
          <sequential>
+            <echo>myant: Doing target="@{target}" on directory "@{dir}"</echo>
             <java classname="org.apache.tools.ant.launch.Launcher" 
                fork="true" failonerror="true"
                dir="@{dir}">
@@ -40,7 +41,7 @@
    </target>
     
    <target name="drmaa.clean" depends="init">
-      <myant dir="classes" target="clean"/>
+      <ant dir="classes" antfile="build.xml" target="clean"/>
    </target>
 
    <target name="drmaa.javadoc" depends="init">
@@ -57,7 +58,7 @@
    </target>
     
    <target name="juti.clean" depends="init">
-      <myant dir="libs/juti" target="clean"/>
+      <ant dir="libs/juti" antfile="build.xml" target="clean"/>
    </target>
     
    <target name="juti.javadoc" depends="init">
@@ -74,7 +75,7 @@
    </target>
     
    <target name="jgdi.clean" depends="init">
-      <myant dir="libs/jgdi" target="clean"/>
+      <ant dir="libs/jgdi" antfile="build.xml" target="clean"/>
    </target>
 
    <target name="jgdi.javadoc" depends="init">

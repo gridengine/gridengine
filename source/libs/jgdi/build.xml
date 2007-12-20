@@ -36,7 +36,7 @@
         </macrodef>
     </target>
     
-    <target name="aimk" depends="aimk.init, gensrc.native, javah">
+    <target name="aimk" depends="aimk.init, javah">
         <!-- echo message="aimk.targetbits = ${aimk.targetbits}"/ -->
         <aimk_call args="${aimk.targetbits} ${aimk.insure} ${aimk.debug} -only-core jgdi_all"/>
     </target>
@@ -124,7 +124,7 @@
     </target>
     
     <target depends="init, compile.javah" name="javah"
-            description="Creates jgdi.h">    
+            description="Creates jgdi.h" if="isJavaBuildHost">    
         <javah outputFile="${build.dir}/jgdi_factory.h">
             <class name="com.sun.grid.jgdi.JGDIFactory"/>
             <classpath>
@@ -348,7 +348,7 @@
     </target>
     
     <target name="gensrc.debug" depends="jni.init"
-            description="Start the source generation in debugging mode">  
+            description="Start the source generation in debugging mode" if="isJavaBuildHost">  
         <path id="cullconv.srcpath">
             <path location="${basedir}/cullconv/src"/>
             <path location="${basedir}/cullconv/build/gensrc"/>            

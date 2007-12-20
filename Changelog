@@ -1,3 +1,7 @@
+CR-2007-12-20-0: Bugfix:    o fixed some ant build targets in build.xml
+                              files
+                 Review:    AA
+
 AA-2007-12-17-0: Bugfix:    - subscription before eventClient.start()
                               fails
                             - typos  

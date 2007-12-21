@@ -89,6 +89,7 @@ static bool g_keep_files_open = true; /* default: Open files at start and keep
 
 extern pid_t coshepherd_pid;
 extern int   shepherd_state;  /* holds exit status for shepherd_error() */
+extern bool  g_new_interactive_job_support;
 int foreground = 1;           /* usability of stderr/out */
 
 /* Forward declaration of static functions */
@@ -454,7 +455,8 @@ void shepherd_error_impl(const char *str, int do_exit)
       sge_switch2admin_user();
    }   
      
-   if(search_conf_val("qrsh_control_port") != NULL) {
+   if(g_new_interactive_job_support == false && 
+      search_conf_val("qrsh_control_port") != NULL) {
       char buffer[1024];
       snprintf(buffer, 1024, "1:%s", str);
       write_to_qrsh(buffer);  

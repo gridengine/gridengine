@@ -67,6 +67,7 @@
 #define COMM_CANT_GET_CLIENT_STATUS      17
 #define COMM_NO_SELECT_DESCRIPTORS       18
 #define COMM_CONNECTION_NOT_FOUND        19
+#define COMM_NO_SECURITY_COMPILED_IN     20
 
 typedef struct recv_message_s {
    unsigned char type;

@@ -60,6 +60,7 @@
 
 #include "basis_types.h"
 #include "sgermon.h"
+#include "err_trace.h"
 #include "sge_stdlib.h"
 #include "sge_dstring.h"
 #include "sge_pty.h"
@@ -88,9 +89,6 @@
 extern int received_signal;
 /*extern volatile sig_atomic_t received_signal;*/
 
-static void* pty_to_commlib(void *t_conf);
-static void* commlib_to_pty(void *t_conf);
-
 int my_error_printf(const char *fmt, ...);
 
 static int                  g_ptym           = -1;
@@ -106,9 +104,12 @@ static int                  g_timeout             = 0;
 static int                  g_ckpt_interval       = 0;
 static char                 *g_childname          = NULL;
 static int                  g_raised_event        = 0;
+static struct rusage        *g_rusage             = NULL;
+static int                  *g_exit_status        = NULL;
+static int                  g_job_pid             = 0;
 
 char                        *g_hostname      = NULL;
-bool                        g_secure         = false;
+extern bool                 g_csp_mode;  /* defined in shepherd.c */
 
 void handle_signals_and_methods(
    int npid,
@@ -255,7 +256,7 @@ int send_buf(char *pbuf, int buf_bytes, int message_type)
 *
 *  SEE ALSO
 *******************************************************************************/
-void* pty_to_commlib(void *t_conf)
+static void* pty_to_commlib(void *t_conf)
 {
    int                  do_exit = 0;
    int                  fd_max = 0;
@@ -266,22 +267,17 @@ void* pty_to_commlib(void *t_conf)
    char                 *stderr_buf = NULL;
    int                  stdout_bytes = 0;
    int                  stderr_bytes = 0;
-
-   int postponed_signal = 0;
-   pid_t ctrl_pid[3];
-   int ckpt_cmd_pid = -999;
-   int migr_cmd_pid = -999;
-   int rest_ckpt_interval = g_ckpt_interval;
-   int kill_job_after_checkpoint = 0;
-   int status = 0;
-   int inArena, inCkpt = 0;
-   int job_status = 0;
-   int job_id = 0;
-   int i;
-   int pid;
-   int job_pid;
-   int npid;
-   struct rusage my_rusage;
+   int                  postponed_signal = 0;
+   pid_t                ctrl_pid[3];
+   int                  ckpt_cmd_pid = -999;
+   int                  migr_cmd_pid = -999;
+   int                  rest_ckpt_interval = g_ckpt_interval;
+   int                  kill_job_after_checkpoint = 0;
+   int                  status = 0;
+   int                  inArena, inCkpt = 0;
+   int                  job_id = 0;
+   int                  i;
+   int                  npid;
 
    DENTER(TOP_LAYER, "pty_to_commlib");
 
@@ -293,7 +289,7 @@ void* pty_to_commlib(void *t_conf)
    stdout_buf = sge_malloc(BUFSIZE);
    stderr_buf = sge_malloc(BUFSIZE);
 
-   memset(&my_rusage, 0, sizeof(my_rusage));
+   memset(g_rusage, 0, sizeof(*g_rusage));
 
    /* Write info that we already have a checkpoint in the arena */
    if (g_ckpt_type & CKPT_REST_KERNEL) {
@@ -307,26 +303,40 @@ void* pty_to_commlib(void *t_conf)
       ctrl_pid[i] = -999;
    }
 
-   pid = getpid();
-   job_pid = pid;
-
    while (do_exit == 0) {
       /* if a signal was received, process it */
       DPRINTF(("pty_to_commlib: checking if any of our children exited\n"));
 #if defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(INTERIX)
       npid = waitpid(-1, &status, WNOHANG);
 #else
-      npid = wait3(&status, WNOHANG, &my_rusage);
+      npid = wait3(&status, WNOHANG, g_rusage);
 #endif
-
+#if 0 
+      /* Check if our child was killed */
+      if (status != 0 || npid != 0) {
+         shepherd_trace_sprintf("----- status = %d, npid = %d ----", status, npid);
+         shepherd_trace_sprintf("----- usage.ru_stime.tv_sec  = %d", g_rusage->ru_stime.tv_sec);
+         shepherd_trace_sprintf("----- usage.ru_stime.tv_usec = %d", g_rusage->ru_stime.tv_usec);
+         shepherd_trace_sprintf("----- usage.ru_utime.tv_sec  = %d", g_rusage->ru_utime.tv_sec);
+         shepherd_trace_sprintf("----- usage.ru_utime.tv_usec = %d", g_rusage->ru_utime.tv_usec);
+      }
+#endif
       DPRINTF(("pty_to_commlib: wait3 returned %d\n", npid));
       DPRINTF(("pty_to_commlib: received_signal = %d\n", received_signal)); 
-      /* We always want to handle signals and methods, so we set npid = -1 */
-      npid = -1;
+      /* We always want to handle signals and methods, so we set npid = -1
+       * - except when wait3() returned a valid pid.
+       */
+      if (npid > 0) {
+         do_exit = 1;
+      }
+      if (npid == 0) {
+         npid = -1;
+      }
+
       DPRINTF(("pty_to_commlib: handle_signals_and_methods()\n"));
       handle_signals_and_methods(
          npid,
-         job_pid,
+         g_job_pid,
          &postponed_signal,
          ctrl_pid,
          g_ckpt_interval,
@@ -341,7 +351,7 @@ void* pty_to_commlib(void *t_conf)
          &inArena,
          &inCkpt,
          g_childname,
-         &job_status,
+         g_exit_status,
          &job_id);
       DPRINTF(("pty_to_commlib: After handle_signals_and_methods()\n"));
 
@@ -380,8 +390,18 @@ void* pty_to_commlib(void *t_conf)
                do_exit = 1;
             }
          }
-         timeout.tv_sec = 1;
-         timeout.tv_usec = 0;
+         /* 
+          * Wait for further data only if we don't have to exit.
+          * Otherwise, just peek into the fds to read all data
+          * from the buffers.
+          */
+         if (do_exit == 0) {
+            timeout.tv_sec = 1;
+            timeout.tv_usec = 0;
+         } else {
+            timeout.tv_sec = 0;
+            timeout.tv_usec = 0;
+         }
       }
 
       DPRINTF(("pty_to_commlib: doing select() with %d seconds, %d usec timeout\n", 
@@ -626,10 +646,10 @@ int parent_loop(char *hostname, int port, int ptym,
                 int *fd_pipe_to_child, 
                 int ckpt_pid, int ckpt_type, int timeout, 
                 int ckpt_interval, char *childname,
-                char *user_name, int *exit_status)
+                char *user_name, int *exit_status, struct rusage *rusage,
+                int job_pid, dstring *err_msg)
 {
    int               ret;
-   dstring           err_str = DSTRING_INIT;
    THREAD_LIB_HANDLE *thread_lib_handle     = NULL;
    THREAD_HANDLE     *thread_pty_to_commlib = NULL;
    THREAD_HANDLE     *thread_commlib_to_pty = NULL;
@@ -651,8 +671,11 @@ int parent_loop(char *hostname, int port, int ptym,
    g_timeout             = timeout;
    g_ckpt_interval       = ckpt_interval;
    g_childname           = childname;
+   g_rusage              = rusage;
+   g_exit_status         = exit_status;
+   g_job_pid             = job_pid;
 
-   ret = comm_init_lib(&err_str);
+   ret = comm_init_lib(err_msg);
    if (ret != 0) {
       DPRINTF(("main: can't open communication library"));
       return 1;
@@ -661,12 +684,16 @@ int parent_loop(char *hostname, int port, int ptym,
    /*
     * Open the connection port so we can connect to our server
     */
-   ret = comm_open_connection(false, port, THISCOMPONENT, g_secure, user_name,
-                              &g_comm_handle, &err_str);
-   if (ret != 0) {
+   DPRINTF(("main: opening connection to qrsh/qlogin client\n"));
+   ret = comm_open_connection(false, port, THISCOMPONENT, g_csp_mode, user_name,
+                              &g_comm_handle, err_msg);
+   if (ret != COMM_RETVAL_OK) {
       DPRINTF(("main: can't open commlib stream\n"));
       return 1;
    }
+   DPRINTF(("main: g_comm_handle = %p\n", g_comm_handle));
+   DPRINTF(("main: err_msg = %s\n", sge_dstring_get_string(err_msg) != NULL ? 
+      sge_dstring_get_string(err_msg): "<null>"));
 
    /*
     * register at server. The answer of the server (a WINDOW_SIZE_CTRL_MSG)
@@ -674,12 +701,12 @@ int parent_loop(char *hostname, int port, int ptym,
     */
    DPRINTF(("main: sending REGISTER_CTRL_MSG\n"));
    ret = (int)comm_write_message(g_comm_handle, g_hostname, OTHERCOMPONENT, 1, 
-                      (unsigned char*)" ", 1, REGISTER_CTRL_MSG, &err_str);
+                      (unsigned char*)" ", 1, REGISTER_CTRL_MSG, err_msg);
    if (ret == 0) {
       /* No bytes written - error */
       DPRINTF(("main: can't send REGISTER_CTRL_MSG\n"));
       DPRINTF(("main: comm_write_message returned: %s\n", 
-               sge_dstring_get_string(&err_str)));
+               sge_dstring_get_string(err_msg)));
       return 1;
    }
    DPRINTF(("main: comm_write_message succeeded\n"));
@@ -791,7 +818,7 @@ int parent_loop(char *hostname, int port, int ptym,
    /* From here on, only the main thread is running */
    thread_cleanup_lib(&thread_lib_handle);
 
-   sge_dstring_free(&err_str);
+   sge_dstring_free(err_msg);
    DEXIT;
    return 0;
 }
@@ -857,7 +884,7 @@ int close_parent_loop(int exit_status)
    comm_shutdown_connection(g_comm_handle, &err_msg);
    DPRINTF(("main: comm_cleanup_lib()\n"));
    ret = comm_cleanup_lib(&err_msg);
-   if (ret != CL_RETVAL_OK) {
+   if (ret != COMM_RETVAL_OK) {
       DPRINTF(("main: error in comm_cleanup_lib(): %d\n", ret));
    }
 

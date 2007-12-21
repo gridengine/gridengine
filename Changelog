@@ -1,3 +1,7 @@
+HP-2007-12-21-0: Enhancm.:  o Activated csp mode in new interactive job support
+                            o Fixed broken build with aimk -no-secure 
+                 Review:    MD
+
 RD-2007-12-21-0: Enhancm:   commlib scalability enhancments
                             - added hashed access for connection list
                             - added hashed access for endpoint list

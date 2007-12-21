@@ -35,7 +35,8 @@ int parent_loop(char *hostname, int port, int ptym,
                 int *fd_pipe_to_child,
                 int ckpt_pid, int ckpt_type, int timeout, 
                 int ckpt_interval, char *childname,
-                char *user_name, int *exit_status);
+                char *user_name, int *exit_status, 
+                struct rusage *rusage, int job_pid, dstring *err_msg);
  
 
 int close_parent_loop(int exit_status);

@@ -56,6 +56,12 @@
 extern char *g_hostname;
 extern sig_atomic_t received_signal;
 
+static void ijs_general_communication_error(
+               const cl_application_error_list_elem_t *commlib_error)
+{
+   /* ignore errors */
+}
+
 /****** sge_ijs_comm/comm_init_lib() *******************************************
 *  NAME
 *     comm_init_lib() -- Initializes the communication library
@@ -211,6 +217,8 @@ int comm_open_connection(bool                 b_server,
                          COMMUNICATION_HANDLE **handle, 
                          dstring              *err_msg)
 {
+   const char       *progname               = "pty";
+   int              ret;
    int              ret_val                 = COMM_RETVAL_OK;
    int              commlib_error           = CL_RETVAL_OK;
    cl_framework_t   communication_framework = CL_CT_TCP;
@@ -226,45 +234,77 @@ int comm_open_connection(bool                 b_server,
       DEXIT;
       return COMM_INVALID_PARAMETER;
    }
-
    if (b_secure == true) {
-      int ret;
-
+#ifdef SECURE
       communication_framework = CL_CT_SSL;
 
-      ret = sge_ssl_setup_security_path("pty", user_name);
-      if (ret != CL_RETVAL_OK) {
+      if (strcmp(component_name, "pty_shepherd") == 0) {
+         /* pretend we are the execd to access it's credentials */
+         progname = "execd";
+      }
+      ret = sge_ssl_setup_security_path(progname, user_name);
+      if (ret != 0) {
          sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
          DPRINTF(("sge_ssl_setup_security_path() failed: %s (%d)\n",
                   sge_dstring_get_string(err_msg), ret));
          ret_val = COMM_CANT_SETUP_SSL; 
       }
+#else
+      /* 
+       * If secure communication was requested but we cannot provide it
+       * because seclib support was not compiled in, we must not fall back to 
+       * insecure mode, instead we must return with a fatal error.
+       */
+      sge_dstring_sprintf(err_msg, "No security support compiled into this binary!");
+      DPRINTF(("%s\n", sge_dstring_get_string(err_msg)));
+      return COMM_NO_SECURITY_COMPILED_IN;      
+#endif
 /* TODO: Got to call cl_com_create_ssl_setup()? */
 /* See libs/gdi/sge_gdi_ctx.c:1156 */
    } 
 
    if (ret_val == COMM_RETVAL_OK) {
-      if (b_server == false) {
-         *handle = cl_com_create_handle(&commlib_error, communication_framework, 
-                                       connection_type, CL_FALSE, port, 
-                                       connect_type, (char*)component_name, 0, 1, 0);
+      /*
+       * Define a error handling function for the commlib here -
+       * the default error handling function of the commlib prints
+       * error messages to stderr!
+       */
+      ret = cl_com_set_error_func(ijs_general_communication_error);
+      if (ret != CL_RETVAL_OK) {
+         sge_dstring_sprintf(err_msg, "can't set commlib error function: %s",
+                             cl_get_error_text(ret));
+         DPRINTF(("cl_com_set_error_func() failed: %s (%d)\n",
+                  sge_dstring_get_string(err_msg), ret));
+         ret_val = COMM_CANT_SETUP_COMMLIB;
       } else {
-         *handle = cl_com_create_handle(&commlib_error, communication_framework, 
-                                       connection_type, CL_TRUE, port, 
-                                       connect_type, (char*)component_name, 1, 1, 0);
-      }
+         DPRINTF(("trying to create commlib handle\n"));
+         if (b_server == false) {
+            *handle = cl_com_create_handle(&commlib_error, 
+                                          communication_framework, 
+                                          connection_type, CL_FALSE, port, 
+                                          connect_type, (char*)component_name,
+                                          0, 1, 0);
+         } else {
+            *handle = cl_com_create_handle(&commlib_error, 
+                                          communication_framework, 
+                                          connection_type, CL_TRUE, port, 
+                                          connect_type, (char*)component_name, 
+                                          1, 1, 0);
+         }
 
-      if (*handle == NULL) {
-         sge_dstring_sprintf(err_msg, cl_get_error_text(commlib_error));
-         DPRINTF(("cl_com_create_handle() failed: %s (%d)\n",
-                  sge_dstring_get_string(err_msg), commlib_error));
-         ret_val = COMM_CANT_CREATE_HANDLE;
+         if (*handle == NULL) {
+            sge_dstring_sprintf(err_msg, cl_get_error_text(commlib_error));
+            DPRINTF(("cl_com_create_handle() failed: %s (%d)\n",
+                     sge_dstring_get_string(err_msg), commlib_error));
+            ret_val = COMM_CANT_CREATE_HANDLE;
+         } else {
+            /* Set connection timeout to 'infinite' */
+            (*handle)->connection_timeout = 0x0fffffff;
+            DPRINTF(("(*handle)->connect_port = %d\n", (*handle)->connect_port));
+            DPRINTF(("(*handle)->service_port = %d\n", (*handle)->service_port));
+         }
       }
-      /* Set connection timeout to 'infinite' */
-      (*handle)->connection_timeout = 0x0fffffff;
    }
-   DPRINTF(("(*handle)->connect_port = %d\n", (*handle)->connect_port));
-   DPRINTF(("(*handle)->service_port = %d\n", (*handle)->service_port));
    DPRINTF(("OTHERCOMPONENT = %s\n", OTHERCOMPONENT));
 
    DEXIT;
@@ -308,7 +348,7 @@ int comm_shutdown_connection(COMMUNICATION_HANDLE *handle, dstring *err_msg)
    int ret_val = COMM_RETVAL_OK;
 
    DENTER(TOP_LAYER, "comm_shutdown_connection");
-
+   
    ret = cl_commlib_close_connection(handle, g_hostname, 
                                      OTHERCOMPONENT, 1, CL_FALSE);
    if (ret != CL_RETVAL_OK) {
@@ -596,6 +636,7 @@ int comm_wait_for_no_connection(COMMUNICATION_HANDLE *handle, char *component,
           && endpoint_list->elem_count > 0
           && waited_usec/1000000 < wait_secs) {
          cl_endpoint_list_cleanup(&endpoint_list);
+         endpoint_list = NULL;
          usleep(10000);
          waited_usec += 10000;
          if (received_signal == SIGINT) {
@@ -603,7 +644,7 @@ int comm_wait_for_no_connection(COMMUNICATION_HANDLE *handle, char *component,
             continue;
          }
       } else {
-         DPRINTF(("No known endpoint left -> exit loop\n"));
+         DPRINTF(("No known endpoint left or timeout -> exit loop\n"));
          do_exit = true;
          continue;
       }

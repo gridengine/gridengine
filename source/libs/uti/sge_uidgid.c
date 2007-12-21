@@ -1926,11 +1926,15 @@ int uidgid_read_passwd(const char *user, char **pass, char *err_str)
          sprintf(err_str, MSG_SYSTEM_NO_PASSWD_ENTRY_SS, user, passwd_file);
          ret = 2;
       } else {
+#if defined(SECURE)
          buffer_deco_length = strlen(encrypted_pwd[i]);
          buffer_decode_hex((unsigned char*)encrypted_pwd[i],
                             &buffer_deco_length, &buffer_deco);
          ret = buffer_decrypt((const char*)buffer_deco, buffer_deco_length,
                    &buffer_decr, &buffer_decr_size, &buffer_decr_length, err_str);
+#else
+         ret = 1;
+#endif
          if (ret == 1) {
              ret = 3; //password is not correct need to distinguish from passwd_file_error
          }
@@ -1940,7 +1944,7 @@ int uidgid_read_passwd(const char *user, char **pass, char *err_str)
    }
    return ret;
 }
-#endif
+#endif /* #if defined(INTERIX) */
 
 #ifdef SGE_THREADSAFE_UTIL
 

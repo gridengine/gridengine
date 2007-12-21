@@ -1,4 +1,4 @@
-/*	$Id: rshd.c,v 1.21 2007/11/02 18:42:54 ernst Exp $	*/
+/*	$Id: rshd.c,v 1.22 2007/12/21 21:18:20 pollinger Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1989, 1992, 1993, 1994
@@ -131,6 +131,8 @@ int	check_all;
 int   check_nologin = 1;
 int	log_success;		/* If TRUE, log all successful accesses */
 int	sent_null;
+
+bool  g_new_interactive_job_support = false; /* This is needed in err_trace.c */
 
 extern int foreground;
 

@@ -147,6 +147,7 @@ pid_t wait3(int *, int, struct rusage *);
 #define APPERROR_EXIT_STATUS 100
 
 bool g_new_interactive_job_support = false;
+bool g_csp_mode = false;        /* communication between shepherd and qsh client */
 int  g_noshell = 0;
 int signalled_ckpt_job = 0;   /* marker if signalled a ckpt job */
 int ckpt_signal = 0;          /* signal to send to ckpt job */
@@ -206,6 +207,7 @@ void shepherd_deliver_signal(int sig,
 static int map_signal(int signal);
 
 /*TODO: remove this function */
+#if !defined(HP11) && !defined(HP1164)
 int my_error_printf(const char *fmt, ...)
 {
    int     ret = 0;
@@ -219,6 +221,12 @@ int my_error_printf(const char *fmt, ...)
 
    return ret;
 }
+#else
+int my_error_printf(const char *fmt, ...)
+{
+   return 0;
+}
+#endif
 
 static int wait_until_parent_has_registered_to_server(int fd_pipe_to_child[])
 {
@@ -628,7 +636,7 @@ int main(int argc, char **argv)
       }
    }
    sge_mt_init();
-#if defined( INTERIX )
+#if defined(INTERIX) && defined(SECURE)
    sge_init_shared_ssl_lib();
 #endif
    shepherd_trace_init( );
@@ -698,23 +706,34 @@ int main(int argc, char **argv)
           && strcasecmp(tmp_rsh_daemon, "builtin") == 0) {
          g_new_interactive_job_support = true;
          shepherd_trace_sprintf("rsh_daemon = %s", tmp_rsh_daemon);
-       }
+      }
 
-       tmp_rlogin_daemon = get_conf_val("rlogin_daemon");
-       if (tmp_rlogin_daemon != NULL
-           && strcasecmp(tmp_rlogin_daemon, "builtin") == 0) {
+      tmp_rlogin_daemon = get_conf_val("rlogin_daemon");
+      if (tmp_rlogin_daemon != NULL
+          && strcasecmp(tmp_rlogin_daemon, "builtin") == 0) {
          g_new_interactive_job_support = true;
          shepherd_trace_sprintf("rlogin_daemon = %s", tmp_rlogin_daemon);
-       }
+      }
 
-       tmp_qlogin_daemon = get_conf_val("qlogin_daemon");
-       if (tmp_qlogin_daemon != NULL
-           && strcasecmp(tmp_qlogin_daemon, "builtin") == 0) {
+      tmp_qlogin_daemon = get_conf_val("qlogin_daemon");
+      if (tmp_qlogin_daemon != NULL
+          && strcasecmp(tmp_qlogin_daemon, "builtin") == 0) {
          g_new_interactive_job_support = true;
          shepherd_trace_sprintf("qlogin_daemon = %s", tmp_qlogin_daemon);
-       }
-       config_errfunc = shepherd_error;
-    }
+      }
+      config_errfunc = shepherd_error;
+
+      /* 
+       * For performance reasons, we read the csp state from the config,
+       * not from the bootstrap file. The bootstrap file may reside on
+       * a very, very slow drive.
+       */
+      if (strcasecmp(get_conf_val("csp"), "true") == 0 ||
+          strcasecmp(get_conf_val("csp"), "1") == 0) {
+         g_csp_mode = true;
+      }
+      shepherd_trace_sprintf("csp = %d", g_csp_mode);
+   }
    
 #if defined( INTERIX )
    wl_set_use_sgepasswd((bool)atoi(get_conf_val("enable_windomacc")));
@@ -982,7 +1001,7 @@ int ckpt_type
    u_long32 end_time;
    int pid;
    struct rusage rusage;
-   int  status, child_signal=0, exit_status;
+   int  status, child_signal=0, exit_status=0;
    u_long32 wait_status = 0;
    int core_dumped, ckpt_interval, ckpt_pid = 0;
    int wexit_flag_true = 1; /* to please IRIX compiler */
@@ -1163,6 +1182,7 @@ int ckpt_type
       int  port;
       char *separator;
       char err_str[MAX_STRING_SIZE];
+      dstring err_msg = DSTRING_INIT;
 
       /* close childs end of the pipe */
       shepherd_trace("Parent: closing childs end of the pipe");
@@ -1206,14 +1226,24 @@ int ckpt_type
       ret = parent_loop(hostname, port, fd_pty_master, fd_pipe_in, 
                         fd_pipe_out, fd_pipe_err, fd_pipe_to_child,
                         ckpt_pid, ckpt_type, timeout, ckpt_interval, 
-                        childname, username, &exit_status);
+                        childname, username, &exit_status, &rusage,
+                        pid, &err_msg);
+      if (ret != 0) {
+         shepherd_error_sprintf("startup of qrsh job failed: "SFN"",
+            sge_dstring_get_string(&err_msg));
+      }
+      sge_dstring_free(&err_msg);
+      status = exit_status;
       ckpt_interval = 0;
-
+#if 0  /* TODO: This block seems to be not needed any more as the wait3()
+        *       call was moved into parent_loop()
+        */        
       /* child exited, read usage */
       status = wait_my_child(pid, ckpt_pid, ckpt_type,
                              &rusage, timeout, ckpt_interval, childname);
-
       shepherd_trace_sprintf("wait_my_child returned:");
+      shepherd_trace_sprintf("   status = %d", status);
+#endif
       shepherd_trace_sprintf("   status = %d", status);
       shepherd_trace_sprintf("   rusage.ru_stime.tv_sec  = %d", rusage.ru_stime.tv_sec);
       shepherd_trace_sprintf("   rusage.ru_stime.tv_usec = %d", rusage.ru_stime.tv_usec);
@@ -2152,7 +2182,7 @@ void handle_signals_and_methods(
          }
       }
    }
-   
+  
    /* reap job */
    if ((npid == pid) && ((WIFSIGNALED(status) || WIFEXITED(status)))) {
       shepherd_trace_sprintf("%s exited with exit status %d", 

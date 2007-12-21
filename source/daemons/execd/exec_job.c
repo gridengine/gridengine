@@ -273,6 +273,8 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
    const char *binary_path = ctx->get_binary_path(ctx);
    const char *admin_user = ctx->get_admin_user(ctx);
    const char *masterhost = ctx->get_master(ctx, false);
+   sge_bootstrap_state_class_t *bootstrap_state = NULL;
+   bool csp_mode = false;
    sigset_t sigset, sigset_oset;
    struct passwd pw_struct;
    char buffer[20480];
@@ -1345,6 +1347,12 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
 
    /* should the addgrp-id be used to kill processes */
    fprintf(fp, "enable_addgrp_kill=%d\n", (int)mconf_get_enable_addgrp_kill());
+
+   bootstrap_state = ctx->get_sge_bootstrap_state(ctx);
+   if (strcasecmp(bootstrap_state->get_security_mode(bootstrap_state), "csp") == 0) {
+      csp_mode = true;
+   }
+   fprintf(fp, "csp=%d\n", (int)csp_mode);
 
 #ifdef INTERIX
    /* should the job display it's gui to the visible desktop? */

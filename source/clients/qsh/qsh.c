@@ -108,7 +108,7 @@
 
 extern COMMUNICATION_HANDLE *g_comm_handle;
 
-bool g_secure = false;
+bool g_csp_mode = false;
 bool g_new_interactive_job_support = false;
 
 sge_gdi_ctx_class_t *ctx = NULL;
@@ -1341,6 +1341,7 @@ int main(int argc, char **argv)
    const char* mastername = NULL;
 
    sge_gdi_ctx_class_t *ctx = NULL;
+   sge_bootstrap_state_class_t *bootstrap_state = NULL;
 
    DENTER_MAIN(TOP_LAYER, "qsh");
 
@@ -1375,6 +1376,11 @@ int main(int argc, char **argv)
    myuid = ctx->get_uid(ctx);
    username = ctx->get_username(ctx);
    mastername = ctx->get_master(ctx, false);
+
+   bootstrap_state = ctx->get_sge_bootstrap_state(ctx);
+   if (strcasecmp(bootstrap_state->get_security_mode(bootstrap_state), "csp") == 0) {
+      g_csp_mode = true;
+   }
 
    /*
    ** begin to work
@@ -1680,7 +1686,7 @@ int main(int argc, char **argv)
        * start the commlib server
        */
       DPRINTF(("starting commlib server\n"));
-      ret = comm_open_connection(true, 0, THISCOMPONENT, g_secure, username,
+      ret = comm_open_connection(true, 0, THISCOMPONENT, g_csp_mode, username,
                                  &g_comm_handle, &error_msg);
 
       if (ret != 0) {

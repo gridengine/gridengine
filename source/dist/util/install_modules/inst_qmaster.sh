@@ -822,7 +822,17 @@ PrintConf()
    $ECHO "gid_range              $CFG_GID_RANGE"
    $ECHO "qlogin_command         $QLOGIN_COMMAND"
    $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
+   if [ "$RLOGIN_COMMAND" != "undef" ]; then
+      $ECHO "rlogin_command         $RLOGIN_COMMAND"
+   fi
    $ECHO "rlogin_daemon          $RLOGIN_DAEMON"
+   if [ "$RSH_COMMAND" != "undef" ]; then
+      $ECHO "rsh_command            $RSH_COMMAND"
+   fi
+   if [ "$RSH_DAEMON" != "undef" ]; then
+      $ECHO "rsh_daemon             $RSH_DAEMON"
+   fi
+
    $ECHO "max_aj_instances       2000"
    $ECHO "max_aj_tasks           75000"
    $ECHO "max_u_jobs             0"

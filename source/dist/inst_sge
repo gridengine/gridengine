@@ -83,6 +83,7 @@ MAKE_RC=false
 WIN_UPDATE=false
 COPY_CA="false"
 RECREATE_SETTINGS="false"
+USE_OLD_IJS="false"
 
 QMASTER="undef"
 EXECD="undef"
@@ -279,6 +280,9 @@ while [ $ARGC != 0 ]; do
      CERT_COPY_HOST_LIST=$*
      ARGC=`expr $ARGC - 1`
      ;;
+   -oldijs)
+      USE_OLD_IJS="true"
+     ;;
    -afs)
      AFS=true
      ;;
@@ -300,6 +304,15 @@ done
 
 if [ $AUTO = "false" -a $QMASTER = "undef" -a $EXECD = "install" -a $SHADOW = "install" ]; then
    ErrUsage
+fi
+
+if [ $USE_OLD_IJS = "false" ]; then
+   QLOGIN_DAEMON="builtin"
+   QLOGIN_COMMAND="builtin"
+   RLOGIN_DAEMON="builtin"
+   RLOGIN_COMMAND="builtin"
+   RSH_DAEMON="builtin"
+   RSH_COMMAND="builtin"
 fi
 
 if [ $WIN_UPDATE = "true" ]; then

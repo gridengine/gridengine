@@ -461,8 +461,8 @@ ErrUsage()
    $INFOTEXT -e \
              "Usage: %s -m|-um|-x|-ux [all]|-rccreate|-sm|-usm|-s|-db|-udb|-updatedb \\\n" \
              "       -upd <sge-root> <sge-cell>|-bup|-rst|-copycerts <host|hostlist>| \\\n" \
-             "       -v [-auto <filename>] | [-winupdate] [-csp] [-resport] [-afs] \\\n" \
-             "       [-host <hostname>] [-rsh] [-noremote]\n" \
+             "       -v [-auto <filename>] | [-winupdate] [-csp] [-resport] [-oldijs] \\\n" \
+             "       [-afs] [-host <hostname>] [-rsh] [-noremote]\n" \
              "   -m         install qmaster host\n" \
              "   -um        uninstall qmaster host\n" \
              "   -x         install execution host\n" \
@@ -487,6 +487,7 @@ ErrUsage()
              "   -winupdate update to add gui features to a existing execd installation\n" \
              "   -csp       install system with security framework protocol\n" \
              "              functionality\n" \
+             "   -oldijs    configure old interactive job support\n" \
              "   -afs       install system with AFS functionality\n" \
              "   -noremote  supress remote installation during autoinstall\n" \
              "   -help      show this help text\n\n" \
@@ -1093,12 +1094,16 @@ PrintLocalConf()
    else
       $ECHO "xterm                  $XTERM"
    fi
-   $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
-   $ECHO "rlogin_daemon          $RLOGIN_DAEMON"
+   if [ "$QLOGIN_DAEMON" != "undef" -a "$QLOGIN_DAEMON" != "builtin" ]; then
+      $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
+   fi
+   if [ "$RLOGIN_DAEMON" != "undef" -a "$RLOGIN_DAEMON" != "builtin" ]; then
+      $ECHO "rlogin_daemon          $RLOGIN_DAEMON"
+   fi
    if [ "$LOCAL_EXECD_SPOOL" != "undef" ]; then
       $ECHO "execd_spool_dir        $LOCAL_EXECD_SPOOL"
    fi
-   if [ "$RSH_DAEMON" != "undef" ]; then
+   if [ "$RSH_DAEMON" != "undef" -a "$RSH_DAEMON" != "builtin" ]; then
       $ECHO "rsh_daemon             $RSH_DAEMON"
    fi
    if [ "$LOADSENSOR_COMMAND" != "undef" ]; then

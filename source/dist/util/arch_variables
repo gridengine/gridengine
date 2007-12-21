@@ -39,6 +39,14 @@
 # Grid Engine utility script.
 #
 
+
+QLOGIN_DAEMON="undef"
+QLOGIN_COMMAND="undef"
+RLOGIN_DAEMON="undef"
+RLOGIN_COMMAND="undef"
+RSH_DAEMON="undef"
+RSH_COMMAND="undef"
+
 ARCH=UNKNOWN
 
 if [ -f util/arch ]; then

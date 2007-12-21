@@ -1,3 +1,8 @@
+HP-2007-12-21-2: Enhancem.: Installation changed so that the new interactive jobs are now used
+                            by default.
+                 Changed:   inst_sge, arch_variables, inst_common.sh, inst_qmaster.sh
+                 Review:    MD
+
 HP-2007-12-21-1: Bugfix:    Fixed wrong library path in settings.[c]sh file on HP1164
                  Changed:   dist/util/create_settings.sh
                  Review:    MD

@@ -78,7 +78,7 @@ int cl_raw_list_setup(cl_raw_list_t** list_p, char* list_name ,int enable_list_l
    if (*list_p == NULL) {
       return CL_RETVAL_MALLOC;
    }
-   memset(*list_p, 0,sizeof(cl_raw_list_t));
+   memset(*list_p, 0, sizeof(cl_raw_list_t));
 
    (*list_p)->list_name = strdup(list_name);
    if ((*list_p)->list_name == NULL) {
@@ -226,7 +226,7 @@ cl_raw_list_elem_t* cl_raw_list_append_elem(cl_raw_list_t* list_p, void* data) {
    /* initialize new list element with data */
    new_elem->data = data;
 
-   cl_raw_list_append_dechained_elem(list_p,new_elem);
+   cl_raw_list_append_dechained_elem(list_p, new_elem);
 
 #ifdef CL_DO_COMMLIB_DEBUG
    /* ENABLE THIS ONLY FOR LIST DEBUGING */
@@ -437,7 +437,7 @@ int cl_raw_list_unlock(cl_raw_list_t* list_p){
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_raw_list_get_first_elem()"
-cl_raw_list_elem_t* cl_raw_list_get_first_elem  (cl_raw_list_t* list_p) {   /* CR check */
+cl_raw_list_elem_t* cl_raw_list_get_first_elem (cl_raw_list_t* list_p) {   /* CR check */
    cl_raw_list_elem_t* elem = NULL;
 
    if (list_p != NULL) {
@@ -450,7 +450,7 @@ cl_raw_list_elem_t* cl_raw_list_get_first_elem  (cl_raw_list_t* list_p) {   /* C
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_raw_list_get_least_elem()"
-cl_raw_list_elem_t* cl_raw_list_get_least_elem  (cl_raw_list_t* list_p) {   /* CR check */
+cl_raw_list_elem_t* cl_raw_list_get_least_elem (cl_raw_list_t* list_p) {   /* CR check */
    cl_raw_list_elem_t* elem = NULL;
    if (list_p != NULL) {
       elem = list_p->last_elem;

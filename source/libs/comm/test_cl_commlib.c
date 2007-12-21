@@ -380,7 +380,7 @@ extern int main(int argc, char** argv)
                                 sender->comp_host, 
                                 sender->comp_name, 
                                 sender->comp_id, CL_MIH_MAT_NAK,  
-                                message->message, 
+                                &message->message, 
                                 message->message_length, 
                                 NULL, message->message_id,0, 
                                 CL_FALSE,CL_FALSE);
@@ -394,7 +394,6 @@ extern int main(int argc, char** argv)
            cl_com_application_debug(handle, "message sent (2)");
         }
 
-        message->message = NULL;
         cl_com_free_message(&message);
         cl_com_free_endpoint(&sender);
         message = NULL;

@@ -101,7 +101,7 @@ gethostbyname.o:	$(UTILBIN_DIR)/gethostbyname.c
 
 #---------------------------------------------------------------------
 qping:	qping.o version.o $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(GDILIB) $(COMMLIB) $(COMMLISTSLIB) $(SECLIBS) $(LCKLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB)
-		$(CC) -o $@ qping.o version.o $(LFLAGS) -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon $(DLLIB) $(SLIBS) $(LIBS)
+		$(CC) -o $@ qping.o version.o $(LFLAGS) -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon $(DLLIB) $(SLIBS) $(LIBS)
 
 qping.o:	$(UTILBIN_DIR)/qping.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/qping.c

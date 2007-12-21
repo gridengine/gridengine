@@ -619,8 +619,8 @@ struct hostent *sge_copy_hostent(struct hostent *orig)
       for (p = orig->h_aliases; *p != 0; p++) {
          int tmp_size = (strlen(*p) + 1) * sizeof(char);
 
-         copy->h_aliases[count] = (char *)malloc (tmp_size);
-         memcpy (copy->h_aliases[count++], *p, tmp_size);
+         copy->h_aliases[count] = (char *)malloc(tmp_size);
+         memcpy(copy->h_aliases[count++], *p, tmp_size);
       }
       
       copy->h_aliases[count] = NULL;

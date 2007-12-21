@@ -444,10 +444,10 @@ int main(int argc, char* argv[])
     * Remaining shutdown operations
     */
    sge_clean_lists();
-   sge_prof_cleanup();
    sge_monitor_free(&monitor);
 
    sge_shutdown((void**)&ctx, sge_qmaster_get_exit_state());
+   sge_prof_cleanup();
 
    DEXIT;
    return 0;

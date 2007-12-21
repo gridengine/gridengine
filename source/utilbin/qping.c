@@ -1338,6 +1338,7 @@ int main(int argc, char *argv[]) {
          if ( retval != CL_RETVAL_OK) {
             if ( retval == CL_RETVAL_CONNECTION_NOT_FOUND ) {
                 char command_buffer[256];
+                cl_byte_t *reference = (cl_byte_t *)command_buffer;
                 printf("open connection to \"%s/%s/"sge_U32CFormat"\" ... " ,resolved_comp_host , comp_name, sge_u32c(comp_id) );
                 retval = cl_commlib_open_connection(handle, resolved_comp_host , comp_name, comp_id);
                 printf("%s\n", cl_get_error_text(retval));
@@ -1367,7 +1368,7 @@ int main(int argc, char *argv[]) {
                 cl_commlib_send_message(handle,
                                     resolved_comp_host, comp_name, comp_id,
                                     CL_MIH_MAT_NAK, 
-                                    (cl_byte_t*)command_buffer, strlen(command_buffer)+1, 
+                                    &reference, strlen(command_buffer)+1, 
                                     NULL, 0, 0, CL_TRUE, CL_FALSE);
 
                 /*
@@ -1382,7 +1383,7 @@ int main(int argc, char *argv[]) {
                 cl_commlib_send_message(handle,
                                     resolved_comp_host, comp_name, comp_id,
                                     CL_MIH_MAT_NAK, 
-                                    (cl_byte_t*)command_buffer, strlen(command_buffer)+1, 
+                                    &reference, strlen(command_buffer)+1, 
                                     NULL, 0, 0, CL_TRUE, CL_FALSE);
 
                             
@@ -1419,7 +1420,7 @@ int main(int argc, char *argv[]) {
                 cl_commlib_send_message(handle,
                                     resolved_comp_host, comp_name, comp_id,
                                     CL_MIH_MAT_NAK, 
-                                    (cl_byte_t*)command_buffer, strlen(command_buffer)+1, 
+                                    &reference, strlen(command_buffer)+1, 
                                     NULL, 0, 0, CL_TRUE, CL_FALSE);
             }
          } else {

@@ -204,7 +204,7 @@ void *my_multi_thread(void *t_conf) {
 
       sprintf(message,"This message is from %s", thread_config->thread_name);
       message_length = strlen(message) + 1;
-      ret_val = cl_commlib_send_message(handle, "es-ergb01-01", "server", 1, CL_MIH_MAT_ACK, (cl_byte_t*)message ,message_length , &mid , 0, 0, CL_TRUE, CL_TRUE);
+      ret_val = cl_commlib_send_message(handle, "es-ergb01-01", "server", 1, CL_MIH_MAT_ACK, (cl_byte_t**)&message ,message_length , &mid , 0, 0, CL_TRUE, CL_TRUE);
       if (ret_val != CL_RETVAL_OK) {
          CL_LOG_STR(CL_LOG_ERROR,"cl_commlib_send_message() returned", cl_get_error_text(ret_val));
       } 

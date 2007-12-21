@@ -86,16 +86,14 @@ int cl_com_ssl_setup_connection(cl_com_connection_t**         connection,
 
 /* create/destroy connection functions */
 int cl_com_ssl_open_connection(cl_com_connection_t*   connection,
-                               int                    timeout,
-                               unsigned long          only_once);
+                               int                    timeout);
 
 int cl_com_ssl_close_connection(cl_com_connection_t** connection);
 
 int cl_com_ssl_connection_complete_shutdown(cl_com_connection_t*  connection);
 
 int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
-                                          long                  timeout,
-                                          unsigned long         only_once);
+                                          long                  timeout);
 
 
 

@@ -90,7 +90,7 @@ COMMLIBS = $(COMMLIB) $(COMMLISTSLIB)
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-comm_all: commlib commlists_all commexamples_all test_cl_tcp_framework test_cl_commlib test_cl_commlib_client \
+comm_all: commlib commlists_all commexamples_all test_cl_commlib test_cl_commlib_client \
      test_cl_hostname_list test_cl_hostalias_list test_multithread_io test_status_info \
      test_server_connection test_cl_endpoint_list test_cl_com_parameter_list test_virtual_qmaster \
      test_virtual_event_client test_virtual_gdi_client test_debug_client test_general \

@@ -234,7 +234,7 @@ extern int main(int argc, char** argv)
 
 /*     CL_LOG(CL_LOG_ERROR,"sending ack message ..."); */
      
-     my_sent_error = cl_commlib_send_message(handle, argv[1], "server", 1, CL_MIH_MAT_ACK, (cl_byte_t*)welcome_text , welcome_text_size, &mid ,0,0, CL_TRUE, CL_FALSE);
+     my_sent_error = cl_commlib_send_message(handle, argv[1], "server", 1, CL_MIH_MAT_ACK, (cl_byte_t**)&welcome_text , welcome_text_size, &mid ,0,0, CL_TRUE, CL_FALSE);
      if ( retval == CL_RETVAL_CONNECTION_NOT_FOUND ) {
         CL_LOG(CL_LOG_ERROR,"after new connection");
      }

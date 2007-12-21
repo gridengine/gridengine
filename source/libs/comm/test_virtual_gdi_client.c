@@ -38,14 +38,14 @@
 #include <signal.h>
 #include <unistd.h>
 
-
-
 #include "cl_lists.h"
 #include "cl_commlib.h"
 
+#include "uti/sge_profiling.h"
 
 /* shutdown when test client can't connect for more than 15 min */
 #define SGE_TEST_VIRTUAL_CLIENT_SHUTDOWN_TIMEOUT 15*60
+#define DATA_SIZE 5000
 
 
 /* counters */
@@ -88,17 +88,32 @@ extern int main(int argc, char** argv)
   time_t shutdown_time = 0;
   time_t last_time = 0;
   int no_output = 0;
+  int reconnect = 0;
+  char data[DATA_SIZE] = "gdi request";
 
-  if (argc < 4) {
-      printf("syntax: debug_level vmaster_port vmaster_host [no_output]\n");
+  cl_xml_ack_type_t ack_type = CL_MIH_MAT_NAK;
+  cl_bool_t synchron = CL_FALSE;
+
+  prof_mt_init();
+
+  if (argc < 5) {
+      printf("syntax: debug_level vmaster_port vmaster_host reconnect [no_output]\n");
       exit(1);
   }
 
-  if (argc >= 5) {
-     if (strcmp(argv[4],"no_output") == 0) {
+  if (argc >= 6) {
+     if (strcmp(argv[5],"no_output") == 0) {
         no_output = 1;
         printf("virtual gdi client: no_output option set\n");
      }
+  }
+
+  reconnect = atoi(argv[4]);
+
+  if (reconnect == 1) {
+   /* do all stuff synchron */
+      ack_type = CL_MIH_MAT_ACK;
+      synchron = CL_TRUE; 
   }
 
   /* setup signalhandling */
@@ -110,17 +125,16 @@ extern int main(int argc, char** argv)
   sigaction(SIGHUP, &sa, NULL);
   sigaction(SIGPIPE, &sa, NULL);
 
-  gettimeofday(&now,NULL);
+  gettimeofday(&now, NULL);
   shutdown_time = now.tv_sec + SGE_TEST_VIRTUAL_CLIENT_SHUTDOWN_TIMEOUT;
 
   printf("virtual gdi client is connecting to the virtual qmaster for each request.\n"); 
 
-  while(do_shutdown == 0) {
-     gettimeofday(&now,NULL);
-     if (now.tv_sec != last_time && !no_output) {
-        printf("virtual gdi client message count[received |%d| / sent |%d|]...\n",rcv_messages,snd_messages);
-        last_time = now.tv_sec;
-     }
+  cl_com_setup_commlib(CL_NO_THREAD , (cl_log_t)atoi(argv[1]), NULL );
+
+  while (do_shutdown == 0) {
+     char *snd_data = NULL;
+     gettimeofday(&now, NULL);
 
      if (now.tv_sec > shutdown_time ) {
         printf("shutting down test - timeout\n");
@@ -129,12 +143,12 @@ extern int main(int argc, char** argv)
 
      cl_com_setup_commlib(CL_NO_THREAD , (cl_log_t)atoi(argv[1]), NULL);
    
-     handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , CL_FALSE, atoi(argv[2]) , CL_TCP_DEFAULT,"virtual_gdi_client", 0, 1,0 );
+     handle = cl_com_create_handle(NULL, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, atoi(argv[2]), CL_TCP_DEFAULT, "virtual_gdi_client", 0, 1, 0);
      if (handle == NULL) {
         printf("could not get handle\n");
         exit(1);
      }
-   
+
 #if 0
      printf("local hostname is \"%s\"\n", handle->local->comp_host);
      printf("local component is \"%s\"\n", handle->local->comp_name);
@@ -149,13 +163,14 @@ extern int main(int argc, char** argv)
      }
 #endif
    
-     
-     
-     while( do_shutdown == 0 ) {
+     while (do_shutdown == 0) {
         int                retval  = 0;
         cl_com_message_t*  message = NULL;
         cl_com_endpoint_t* sender  = NULL;
-        char data[13000];
+        if (snd_data == NULL) {
+           snd_data = malloc(DATA_SIZE);
+           memcpy(snd_data, data, DATA_SIZE);
+        }
    
         gettimeofday(&now,NULL);
         if (now.tv_sec > shutdown_time ) {
@@ -163,28 +178,39 @@ extern int main(int argc, char** argv)
            do_shutdown = 1;
         }
 
-        sprintf(data,"gdi request");
         retval = cl_commlib_send_message(handle, argv[3], "virtual_master", 1,
-                                         CL_MIH_MAT_NAK,
-                                         (cl_byte_t*) data , 13000,
-                                         NULL, 0, 0 , CL_TRUE, CL_FALSE );
-        if ( retval == CL_RETVAL_OK ) {
+                                         ack_type,
+                                         (cl_byte_t**)(&snd_data), DATA_SIZE,
+                                         NULL, 0, 0 , CL_FALSE, synchron);
+        if (retval == CL_RETVAL_OK) {
            snd_messages++;
            retval = cl_commlib_receive_message(handle, NULL, NULL, 0,  /* handle, comp_host, comp_name , comp_id, */
                                                CL_TRUE, 0,                   /* syncron, response_mid */
-                                               &message, &sender );
-           if ( retval == CL_RETVAL_OK) {
+                                               &message, &sender);
+           if (retval == CL_RETVAL_OK) {
                  rcv_messages++;
                  gettimeofday(&now,NULL);
                  shutdown_time = now.tv_sec + SGE_TEST_VIRTUAL_CLIENT_SHUTDOWN_TIMEOUT;
+
+                 snd_data = (char*)message->message;
+                 message->message = NULL;
+
                  cl_com_free_message(&message);
                  cl_com_free_endpoint(&sender);
-                 break;
+
+                 if (now.tv_sec != last_time && !no_output) {
+                    printf("virtual gdi client message count[received |%d| / sent |%d|]...\n", rcv_messages, snd_messages);
+                    last_time = now.tv_sec;
+                 }
            } else {
               /* shutdown when virtual qmaster is not running anymore */
               if (rcv_messages > 0) {
                  printf("cl_commlib_receive_message returned: %s\n", cl_get_error_text(retval));
                  do_shutdown = 1;
+              } else {
+                /* we are not connected, sleep one second */
+                sleep(1);
+
               }
            }
         } else {
@@ -194,9 +220,13 @@ extern int main(int argc, char** argv)
               do_shutdown = 1;
            }
         } 
+        if (reconnect == 1) {
+            break;
+        }
      }
-     cl_com_cleanup_commlib();
+     cl_commlib_shutdown_handle(handle, CL_FALSE);
   }
+  cl_com_cleanup_commlib();
   
   printf("main done\n");
   return 0;

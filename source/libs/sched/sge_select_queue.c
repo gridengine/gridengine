@@ -3102,7 +3102,8 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
    dispatch_t result;
    u_long32 tt_global = a->start;
    dispatch_t best_queue_result = DISPATCH_NEVER_CAT;
-   int global_violations = 0, queue_violations;
+   int global_violations = 0;
+   int queue_violations = 0;
    lListElem *qep;
 
    DENTER(TOP_LAYER, "sequential_tag_queues_suitable4job");

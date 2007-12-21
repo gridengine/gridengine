@@ -81,7 +81,6 @@
 #include "sge_cqueue_qstat.h"
 #include "sge_qref.h"
 
-#include "sge_mt_init.h"
 #include "read_defaults.h"
 #include "setup_path.h"
 #include "sgeobj/sge_ulong.h"

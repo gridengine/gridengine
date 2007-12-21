@@ -255,9 +255,7 @@ init_packbuffer_from_buffer(sge_pack_buffer *pb, char *buf, u_long32 buflen)
 
 /**************************************************************/
 /* MT-NOTE: clear_packbuffer() is MT safe */
-void clear_packbuffer(
-sge_pack_buffer *pb 
-) {
+void clear_packbuffer(sge_pack_buffer *pb) {
    if (pb != NULL) {
       FREE(pb->head_ptr);
    }

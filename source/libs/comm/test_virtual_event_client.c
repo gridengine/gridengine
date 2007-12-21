@@ -42,6 +42,8 @@
 #include "cl_commlib.h"
 #include "basis_types.h"
 
+#include "uti/sge_profiling.h"
+
 /* shutdown when test client can't connect for more than 15 min */
 #define SGE_TEST_VIRTUAL_CLIENT_SHUTDOWN_TIMEOUT 15*60
 
@@ -86,6 +88,7 @@ extern int main(int argc, char** argv)
   int i,first_message_sent = 0;
   int no_output = 0;
 
+  prof_mt_init();
 
   if (argc < 4) {
       printf("syntax: debug_level vmaster_port vmaster_host [no_output]\n");
@@ -186,10 +189,11 @@ extern int main(int argc, char** argv)
 #endif
 
      if (  first_message_sent == 0) {
+        char data[6] = "event";
         first_message_sent = 1;
         retval = cl_commlib_send_message(handle, argv[3], "virtual_master", 1,
                                          CL_MIH_MAT_ACK,
-                                         (cl_byte_t*) "event" , 6,
+                                         (cl_byte_t**)&data, 6,
                                          NULL, 0, 0 , CL_TRUE, CL_TRUE );
         if (retval == CL_RETVAL_OK) {
            snd_messages++;

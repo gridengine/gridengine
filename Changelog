@@ -1,3 +1,12 @@
+RD-2007-12-21-0: Enhancm:   commlib scalability enhancments
+                            - added hashed access for connection list
+                            - added hashed access for endpoint list
+                            - added hashed access for host list
+                            - reduces protocol overhead by removing unused
+                              fields
+                            - optimized memory usage
+                 Review:    CR
+
 CR-2007-12-20-1: Bugfix:    o fixed some ant build targets in build.xml
                               files
                  Review:    AA

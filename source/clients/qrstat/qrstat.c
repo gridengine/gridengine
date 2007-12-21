@@ -158,8 +158,6 @@ int main(int argc, char **argv) {
 
    DENTER_MAIN(TOP_LAYER, "qrsub");
 
-   prof_mt_init();
-
    /* Set up the program information name */
    sge_setup_sig_handlers(QRSTAT);
 
@@ -249,13 +247,13 @@ int main(int argc, char **argv) {
       }
    }
 
-   sge_prof_cleanup();
    sge_gdi2_shutdown((void**)&ctx);
+   sge_prof_cleanup();
    DRETURN(ret);
 
 error_exit:
-   sge_prof_cleanup();
    sge_gdi2_shutdown((void**)&ctx);
+   sge_prof_cleanup();
    SGE_EXIT((void**)&ctx, 1);
    DRETURN(1);
 }

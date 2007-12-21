@@ -43,6 +43,10 @@
 #include "cl_lists.h"
 #include "cl_commlib.h"
 
+#include "uti/sge_profiling.h"
+
+#define DATA_SIZE 5000
+
 void sighandler_client(int sig);
 static int do_shutdown = 0;
 
@@ -110,7 +114,7 @@ extern int main(int argc, char** argv)
   int i;
   int time_interval = 0;
 
-
+  prof_mt_init();
 
   if (argc != 4) {
       
@@ -129,14 +133,9 @@ extern int main(int argc, char** argv)
   sigaction(SIGHUP, &sa, NULL);
   sigaction(SIGPIPE, &sa, NULL);
 
-
-
-
-
   printf("startup commlib ...\n");
   cl_com_setup_commlib(CL_RW_THREAD /* CL_THREAD_POOL */ , (cl_log_t)atoi(argv[1]), NULL);
   cl_com_set_status_func(my_application_status); 
-
 
   printf("setting up service on port %d\n", atoi(argv[2]) );
   handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , CL_TRUE, atoi(argv[2]) , CL_TCP_DEFAULT,"virtual_master", 1 , 1,0 );
@@ -223,7 +222,6 @@ extern int main(int argc, char** argv)
   }
   cl_thread_list_cleanup(&thread_list);
 
-  
   cl_com_ignore_timeouts(CL_TRUE);
 
   printf("shutdown commlib ...\n");
@@ -283,7 +281,7 @@ void *my_message_thread(void *t_conf) {
                                                                         message->message, message->message_length);
 #endif
 
-         if ( strcmp((char*)message->message,"event") == 0) {
+         if (strcmp((char*)message->message,"event") == 0) {
             int i,help;
 #if 0
             printf(" \"%s\" -> new event client\n", thread_config->thread_name);
@@ -305,9 +303,6 @@ void *my_message_thread(void *t_conf) {
             } 
          } else {
             /* no event client, just return message to sender */
-            char data[13000];
-            memset(data, 0, 13000);
-            sprintf(data,"gdi response");
 #if 0
             printf(" \"%s\" -> send gdi response to %s/%s/%ld\n", thread_config->thread_name, 
                            sender->comp_host, sender->comp_name, sender->comp_id);
@@ -324,8 +319,8 @@ void *my_message_thread(void *t_conf) {
 #endif
             ret_val = cl_commlib_send_message(handle, sender->comp_host, sender->comp_name, sender->comp_id,
                                       CL_MIH_MAT_NAK,
-                                      (cl_byte_t*) data , 13000,
-                                      NULL, 0, 0 , CL_TRUE, CL_FALSE );
+                                      &(message->message), message->message_length,
+                                      NULL, 0, 0 , CL_FALSE, CL_FALSE);
             if (ret_val == CL_RETVAL_OK) {
                snd_messages++;
             }
@@ -379,10 +374,9 @@ void *my_event_thread(void *t_conf) {
          for (i=0;i<MAX_EVENT_CLIENTS;i++) {
             cl_com_endpoint_t* client = event_client_array[i];
             if ( client != NULL) {
-               char help[13000];
-               memset(help, 0, 13000);
+               char help[DATA_SIZE];
+               memset(help, 0, DATA_SIZE);
    
-
                if (first == 0) {
                   event_nr++;
                   first = 1;
@@ -393,8 +387,8 @@ void *my_event_thread(void *t_conf) {
                                                                  client->comp_host, client->comp_name, client->comp_id  );
 #endif
                ret_val = cl_commlib_send_message(handle, client->comp_host, client->comp_name, client->comp_id,
-                                                 CL_MIH_MAT_NAK, (cl_byte_t*) help , 13000,
-                                                 NULL, 0, 0 , CL_TRUE, CL_FALSE );
+                                                 CL_MIH_MAT_NAK, (cl_byte_t**)&help , DATA_SIZE,
+                                                 NULL, 0, 0 , CL_TRUE, CL_FALSE);
              
                if ( ret_val != CL_RETVAL_OK) {
                   cl_com_free_endpoint(&(event_client_array[i])); /* should be locked at this point */

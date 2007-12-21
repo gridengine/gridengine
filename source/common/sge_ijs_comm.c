@@ -816,7 +816,7 @@ unsigned long comm_write_message(COMMUNICATION_HANDLE *handle,
                            component_name,
                            component_id,
                            CL_MIH_MAT_NAK, 
-                           sendbuf,
+                           &sendbuf,
                            size+1,
                            0,
                            0,
@@ -825,7 +825,6 @@ unsigned long comm_write_message(COMMUNICATION_HANDLE *handle,
                            CL_TRUE); /* wait blocking until all data was sent */
 
    /* sendbuf was freed by the commlib */
-   sendbuf = NULL;
    sge_dstring_sprintf(err_msg, "%s", cl_get_error_text(ret));
 
    if (ret == CL_RETVAL_OK) {

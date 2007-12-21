@@ -84,7 +84,6 @@ int cl_message_list_append_message(cl_raw_list_t* list_p, cl_com_message_t* mess
 
    gettimeofday(&(message->message_insert_time),NULL);
 
-   
    /* unlock the thread list */
    if (lock_list == 1) {
       if (  ( ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
@@ -171,7 +170,6 @@ cl_message_list_elem_t* cl_message_list_get_next_elem(cl_message_list_elem_t* el
 cl_message_list_elem_t* cl_message_list_get_last_elem(cl_message_list_elem_t* elem) {  /* CR check */
    cl_raw_list_elem_t* last_raw_elem = NULL;
    
-
    if (elem != NULL) {
       cl_raw_list_elem_t* raw_elem = elem->raw_elem;
       last_raw_elem = cl_raw_list_get_last_elem(raw_elem);

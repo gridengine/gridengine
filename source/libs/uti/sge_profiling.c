@@ -228,12 +228,12 @@ void sge_prof_set_enabled(bool enabled) {
    profiling_enabled = enabled;
 }
 
-/****** uti/profiling/sge_prof_setup() ************************************
+/****** uti/profiling/prof_thread_local_once_init() ************************************
 *  NAME
-*     sge_prof_setup() -- inititalizes the profiling array 
+*     prof_thread_local_once_init() -- inititalizes the profiling array 
 *
 *  SYNOPSIS
-*     void sge_prof_setup(void) 
+*     void prof_thread_local_once_init(void) 
 *
 *  FUNCTION
 *     Initializes the profiling array.
@@ -243,7 +243,7 @@ void sge_prof_set_enabled(bool enabled) {
 *  RESULT
 *
 *  NOTES
-*     MT-NOTE: sge_prof_setup() is MT safe only if called before any other
+*     MT-NOTE: prof_thread_local_once_init() is MT safe only if called before any other
 *              profiling calls other than sge_prof_set_enabled()
 *
 *  SEE ALSO

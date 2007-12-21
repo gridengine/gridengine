@@ -294,12 +294,8 @@ int cl_com_get_parameter_list_value(char* parameter, char** value) {
    cl_parameter_list_elem_t* elem = NULL;
    int retval = CL_RETVAL_UNKNOWN_PARAMETER;
 
-   if (parameter == NULL || value == NULL) {
+   if (parameter == NULL || value == NULL || *value != NULL) {
       return CL_RETVAL_PARAMS;
-   }
-
-   if (*value != NULL) {
-      return CL_RETVAL_PARAMS; 
    }
 
    pthread_mutex_lock(&cl_com_parameter_list_mutex);
@@ -989,13 +985,13 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    int sec_param = 0;
    char help_buffer[80];
    char* local_hostname = NULL;
+   struct in_addr local_addr;
    cl_handle_list_elem_t* elem = NULL;
 #if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
    struct rlimit64 application_rlimits;
 #else
    struct rlimit application_rlimits;
 #endif
-
 
    cl_commlib_check_callback_functions();
 
@@ -1048,7 +1044,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       elem = cl_handle_list_get_next_elem(elem);
    }
 
-   return_value = cl_com_gethostname(&local_hostname, NULL, NULL, NULL);
+   return_value = cl_com_gethostname(&local_hostname, &local_addr, NULL, NULL);
    if (return_value != CL_RETVAL_OK) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(return_value));
       cl_commlib_push_application_error(CL_LOG_ERROR, return_value, NULL);
@@ -1227,7 +1223,6 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    }
    memset(new_handle->statistic, 0, sizeof(cl_com_handle_statistic_t));
 
-
    gettimeofday(&(new_handle->statistic->last_update),NULL);
    gettimeofday(&(new_handle->start_time),NULL);
 
@@ -1297,8 +1292,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       return NULL;
    }
 
-
-   new_handle->local = cl_com_create_endpoint(local_hostname, component_name, component_id );
+   new_handle->local = cl_com_create_endpoint(local_hostname, component_name, component_id, &local_addr);
    if (new_handle->local == NULL) {
       int mutex_ret_val;
       mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
@@ -1419,13 +1413,9 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       return NULL;
    }
  
- 
-
-
    /* local host name not needed anymore */
    free(local_hostname);
    local_hostname = NULL;
-
 
    if (new_handle->service_provider == CL_TRUE) {
       /* create service */
@@ -1502,7 +1492,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
             
       /* Set handle service port, when we use random port */
-      if ( new_handle->service_port == 0) {
+      if (new_handle->service_port == 0) {
          int service_port = 0;
          if (cl_com_connection_get_service_port(new_con,&service_port) == CL_RETVAL_OK) {
             new_handle->service_port = service_port;
@@ -1695,7 +1685,7 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
       elem = cl_connection_list_get_first_elem(handle->connection_list);
       while(elem) {
          connection_list_empty = CL_FALSE;
-         if ( elem->connection->data_flow_type == CL_CM_CT_MESSAGE) {
+         if (elem->connection->data_flow_type == CL_CM_CT_MESSAGE) {
             have_message_connections = CL_TRUE;
             if ( elem->connection->connection_state     == CL_CONNECTED     && 
                  elem->connection->connection_sub_state == CL_COM_WORK      &&   
@@ -1956,7 +1946,7 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
       }
       cl_raw_list_unlock(handle->connection_list);
    
-      cl_connection_list_destroy_connections_to_close(handle->connection_list,1); /* OK */
+      cl_connection_list_destroy_connections_to_close(handle->connection_list);
       
       /* shutdown of service */
       if (handle->service_provider == CL_TRUE) {
@@ -1972,15 +1962,13 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
       cl_string_list_cleanup(&(handle->allowed_host_list));
     
       if (handle->messages_ready_mutex != NULL) {
-         ret_val = pthread_mutex_destroy(handle->messages_ready_mutex);
-         if (ret_val != EBUSY) {
+         if (pthread_mutex_destroy(handle->messages_ready_mutex) != EBUSY) {
             free(handle->messages_ready_mutex); 
             handle->messages_ready_mutex = NULL;
          }
       }
       if (handle->connection_list_mutex != NULL) {
-         ret_val = pthread_mutex_destroy(handle->connection_list_mutex);
-         if (ret_val != EBUSY) {
+         if (pthread_mutex_destroy(handle->connection_list_mutex) != EBUSY) {
             free(handle->connection_list_mutex); 
             handle->connection_list_mutex = NULL;
          }
@@ -2104,12 +2092,10 @@ int cl_com_get_max_connection_close_mode(cl_com_handle_t* handle, cl_max_count_t
 #endif
 #define __CL_FUNCTION__ "cl_com_set_max_connections()"
 int cl_com_set_max_connections(cl_com_handle_t* handle, unsigned long value) {
-   if (handle == NULL) {
+   if (handle == NULL || value < 1) {
       return CL_RETVAL_PARAMS;
    }
-   if (value < 1) {
-      return CL_RETVAL_PARAMS;
-   }
+
    handle->max_open_connections = value;
    return CL_RETVAL_OK;
 }
@@ -2119,12 +2105,10 @@ int cl_com_set_max_connections(cl_com_handle_t* handle, unsigned long value) {
 #endif
 #define __CL_FUNCTION__ "cl_com_get_max_connections()"
 int cl_com_get_max_connections(cl_com_handle_t* handle, unsigned long* value) {
-   if (handle == NULL) {
+   if (handle == NULL || value == NULL) {
       return CL_RETVAL_PARAMS;
    }  
-   if (value == NULL) {
-      return CL_RETVAL_PARAMS;
-   } 
+
    *value = handle->max_open_connections;
    return CL_RETVAL_OK;
 }
@@ -2166,7 +2150,7 @@ cl_com_handle_t* cl_com_get_handle(const char* component_name, unsigned long com
       /* if component id is zero, we just search for the name */
       if (handle->local->comp_id == component_id || component_id == 0) {
          if (strcmp(handle->local->comp_name, component_name) == 0) {
-            if ( ret_handle != NULL) {
+            if (ret_handle != NULL) {
                CL_LOG(CL_LOG_ERROR,"cl_com_get_handle() - found more than one handle");
             } else {
                ret_handle = handle;
@@ -2198,16 +2182,16 @@ cl_thread_mode_t cl_commlib_get_thread_state(void) {
 #endif
 #define __CL_FUNCTION__ "cl_com_set_alias_file()"
 int cl_com_set_alias_file(const char* alias_file) {
-   int ret_val;
+   int ret_val =  CL_RETVAL_NO_FRAMEWORK_INIT;
+
    if (alias_file == NULL) {
       return CL_RETVAL_PARAMS;
    }
    
    if (cl_com_host_list != NULL) {
       ret_val = cl_host_list_set_alias_file(cl_com_get_host_list(), alias_file );
-   } else {
-      ret_val = CL_RETVAL_NO_FRAMEWORK_INIT;
-   }
+   } 
+
    return ret_val;
 }
 
@@ -2216,13 +2200,12 @@ int cl_com_set_alias_file(const char* alias_file) {
 #endif
 #define __CL_FUNCTION__ "cl_com_set_alias_file_dirty()"
 int cl_com_set_alias_file_dirty(void) {
-   int ret_val;
+   int ret_val = CL_RETVAL_NO_FRAMEWORK_INIT;
    
    if (cl_com_host_list != NULL) {
       ret_val = cl_host_list_set_alias_file_dirty(cl_com_get_host_list());
-   } else {
-      ret_val = CL_RETVAL_NO_FRAMEWORK_INIT;
-   }
+   } 
+
    return ret_val;
 
 }
@@ -2235,6 +2218,7 @@ int cl_com_set_alias_file_dirty(void) {
 int cl_com_append_host_alias(char* local_resolved_name, char* alias_name) {
    int ret_val = CL_RETVAL_OK;
    cl_host_list_data_t* ldata = NULL;
+
    if (local_resolved_name == NULL || alias_name == NULL) {
       return CL_RETVAL_PARAMS;
    }
@@ -2302,44 +2286,40 @@ cl_com_append_known_endpoint_from_name(char* unresolved_comp_host,
                                        cl_xml_connection_autoclose_t autoclose,
                                        cl_bool_t is_static) 
 {
-   int retval = CL_RETVAL_OK;
-   int function_return = CL_RETVAL_OK;
-
+   int retval;
    char* resolved_hostname = NULL;
+   struct in_addr in_addr;
    cl_com_endpoint_t* endpoint = NULL;
 
-   if ( unresolved_comp_host == NULL || comp_name == NULL ) {
+   if (unresolved_comp_host == NULL || comp_name == NULL) {
       return CL_RETVAL_PARAMS;
    }
 
-   retval = cl_com_cached_gethostbyname(unresolved_comp_host, &resolved_hostname, NULL, NULL, NULL );
+   retval = cl_com_cached_gethostbyname(unresolved_comp_host, &resolved_hostname, &in_addr, NULL, NULL );
    if (retval != CL_RETVAL_OK) {
-      CL_LOG_STR(CL_LOG_ERROR,"could not resolve host",unresolved_comp_host);
+      CL_LOG_STR(CL_LOG_ERROR,"could not resolve host", unresolved_comp_host);
       return retval;
    }
 
-   endpoint = cl_com_create_endpoint(resolved_hostname,comp_name , comp_id );
+   endpoint = cl_com_create_endpoint(resolved_hostname, comp_name, comp_id, &in_addr);
    if (endpoint == NULL) {
       free(resolved_hostname); 
       return CL_RETVAL_MALLOC;
    }
 
-   function_return = cl_com_append_known_endpoint(endpoint, comp_port, autoclose , is_static );
+   retval = cl_com_append_known_endpoint(endpoint, comp_port, autoclose, is_static);
 
    free(resolved_hostname); 
    cl_com_free_endpoint(&endpoint);
    
-   return function_return;
+   return retval;
 }
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_append_known_endpoint()"
-int cl_com_append_known_endpoint(cl_com_endpoint_t* endpoint, int service_port, cl_xml_connection_autoclose_t autoclose, cl_bool_t is_static ) {
-   if (endpoint == NULL) {
-      return CL_RETVAL_PARAMS;
-   }
+int cl_com_append_known_endpoint(cl_com_endpoint_t* endpoint, int service_port, cl_xml_connection_autoclose_t autoclose, cl_bool_t is_static) {
    return cl_endpoint_list_define_endpoint(cl_com_get_endpoint_list(), endpoint, service_port, autoclose, is_static);
 }
 
@@ -2348,9 +2328,6 @@ int cl_com_append_known_endpoint(cl_com_endpoint_t* endpoint, int service_port, 
 #endif
 #define __CL_FUNCTION__ "cl_com_remove_known_endpoint()"
 int cl_com_remove_known_endpoint(cl_com_endpoint_t* endpoint) {
-   if (endpoint == NULL) {
-      return CL_RETVAL_PARAMS;
-   }
    return cl_endpoint_list_undefine_endpoint(cl_com_get_endpoint_list(), endpoint);
 }
 
@@ -2360,10 +2337,6 @@ int cl_com_remove_known_endpoint(cl_com_endpoint_t* endpoint) {
 #endif
 #define __CL_FUNCTION__ "cl_com_get_known_endpoint_autoclose_mode()"
 int cl_com_get_known_endpoint_autoclose_mode(cl_com_endpoint_t* endpoint, cl_xml_connection_autoclose_t* auto_close_mode ) {
-   if (endpoint == NULL || auto_close_mode == NULL) {
-      return CL_RETVAL_PARAMS;
-   }
-
    return cl_endpoint_list_get_autoclose_mode(cl_com_get_endpoint_list(), endpoint,  auto_close_mode);
 
 }
@@ -2372,11 +2345,7 @@ int cl_com_get_known_endpoint_autoclose_mode(cl_com_endpoint_t* endpoint, cl_xml
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_get_known_endpoint_port()"
-int cl_com_get_known_endpoint_port(cl_com_endpoint_t* endpoint, int* service_port ) {
-   if (endpoint == NULL || service_port == NULL) {
-      return CL_RETVAL_PARAMS;
-   }
-
+int cl_com_get_known_endpoint_port(cl_com_endpoint_t* endpoint, int* service_port) {
    return cl_endpoint_list_get_service_port(cl_com_get_endpoint_list(), endpoint, service_port);
 }
 
@@ -2387,34 +2356,34 @@ int cl_com_get_known_endpoint_port(cl_com_endpoint_t* endpoint, int* service_por
 #endif
 #define __CL_FUNCTION__ "cl_com_remove_known_endpoint_from_name()"
 int cl_com_remove_known_endpoint_from_name(char* unresolved_comp_host, char* comp_name, unsigned long comp_id) {
-   int retval = CL_RETVAL_OK;
-   int function_return = CL_RETVAL_OK;
+   int ret_val = CL_RETVAL_PARAMS;
 
    char* resolved_hostname = NULL;
+   struct in_addr in_addr;
    cl_com_endpoint_t* endpoint = NULL;
 
-   if ( unresolved_comp_host == NULL || comp_name == NULL ) {
-      return CL_RETVAL_PARAMS;
+   if (unresolved_comp_host == NULL || comp_name == NULL) {
+      return ret_val;
    }
 
-   retval = cl_com_cached_gethostbyname(unresolved_comp_host, &resolved_hostname, NULL, NULL, NULL );
-   if (retval != CL_RETVAL_OK) {
-      CL_LOG_STR(CL_LOG_ERROR,"could not resolve host",unresolved_comp_host);
-      return retval;
+   ret_val = cl_com_cached_gethostbyname(unresolved_comp_host, &resolved_hostname, &in_addr, NULL, NULL );
+   if (ret_val != CL_RETVAL_OK) {
+      CL_LOG_STR(CL_LOG_ERROR,"could not resolve host", unresolved_comp_host);
+      return ret_val;
    }
 
-   endpoint = cl_com_create_endpoint(resolved_hostname,comp_name , comp_id );
+   endpoint = cl_com_create_endpoint(resolved_hostname, comp_name, comp_id, &in_addr);
    if (endpoint == NULL) {
       free(resolved_hostname); 
       return CL_RETVAL_MALLOC;
    }
 
-   function_return = cl_com_remove_known_endpoint(endpoint);
+   ret_val = cl_com_remove_known_endpoint(endpoint);
 
    free(resolved_hostname); 
    cl_com_free_endpoint(&endpoint);
    
-   return function_return;
+   return ret_val;
 }
 
 
@@ -2423,34 +2392,34 @@ int cl_com_remove_known_endpoint_from_name(char* unresolved_comp_host, char* com
 #endif
 #define __CL_FUNCTION__ "cl_com_get_known_endpoint_autoclose_mode_from_name()"
 int cl_com_get_known_endpoint_autoclose_mode_from_name(char* unresolved_comp_host, char* comp_name, unsigned long comp_id, cl_xml_connection_autoclose_t* auto_close_mode ) {
-  int retval = CL_RETVAL_OK;
-   int function_return = CL_RETVAL_OK;
+   int retval = CL_RETVAL_PARAMS;
 
    char* resolved_hostname = NULL;
+   struct in_addr in_addr;
    cl_com_endpoint_t* endpoint = NULL;
 
-   if ( unresolved_comp_host == NULL || comp_name == NULL ) {
-      return CL_RETVAL_PARAMS;
+   if (unresolved_comp_host == NULL || comp_name == NULL) {
+      return retval;
    }
 
-   retval = cl_com_cached_gethostbyname(unresolved_comp_host, &resolved_hostname, NULL, NULL, NULL );
+   retval = cl_com_cached_gethostbyname(unresolved_comp_host, &resolved_hostname, &in_addr, NULL, NULL );
    if (retval != CL_RETVAL_OK) {
       CL_LOG_STR(CL_LOG_ERROR,"could not resolve host",unresolved_comp_host);
       return retval;
    }
 
-   endpoint = cl_com_create_endpoint(resolved_hostname,comp_name , comp_id );
+   endpoint = cl_com_create_endpoint(resolved_hostname,comp_name , comp_id, &in_addr);
    if (endpoint == NULL) {
       free(resolved_hostname); 
       return CL_RETVAL_MALLOC;
    }
 
-   function_return = cl_com_get_known_endpoint_autoclose_mode(endpoint, auto_close_mode);
+   retval = cl_com_get_known_endpoint_autoclose_mode(endpoint, auto_close_mode);
 
    free(resolved_hostname); 
    cl_com_free_endpoint(&endpoint);
    
-   return function_return;
+   return retval;
 }
 
 
@@ -2460,33 +2429,33 @@ int cl_com_get_known_endpoint_autoclose_mode_from_name(char* unresolved_comp_hos
 #define __CL_FUNCTION__ "cl_com_get_known_service_port_from_name()"
 int cl_com_get_known_endpoint_port_from_name(char* unresolved_comp_host, char* comp_name, unsigned long comp_id, int* service_port ) {
    int retval = CL_RETVAL_OK;
-   int function_return = CL_RETVAL_OK;
 
    char* resolved_hostname = NULL;
+   struct in_addr in_addr;
    cl_com_endpoint_t* endpoint = NULL;
 
-   if ( unresolved_comp_host == NULL || comp_name == NULL ) {
+   if (unresolved_comp_host == NULL || comp_name == NULL) {
       return CL_RETVAL_PARAMS;
    }
 
-   retval = cl_com_cached_gethostbyname(unresolved_comp_host, &resolved_hostname, NULL, NULL, NULL );
+   retval = cl_com_cached_gethostbyname(unresolved_comp_host, &resolved_hostname, &in_addr, NULL, NULL );
    if (retval != CL_RETVAL_OK) {
       CL_LOG_STR(CL_LOG_ERROR,"could not resolve host",unresolved_comp_host);
       return retval;
    }
 
-   endpoint = cl_com_create_endpoint(resolved_hostname,comp_name , comp_id );
+   endpoint = cl_com_create_endpoint(resolved_hostname,comp_name , comp_id, &in_addr);
    if (endpoint == NULL) {
       free(resolved_hostname); 
       return CL_RETVAL_MALLOC;
    }
 
-   function_return = cl_com_get_known_endpoint_port(endpoint,service_port);
+   retval = cl_com_get_known_endpoint_port(endpoint,service_port);
 
    free(resolved_hostname); 
    cl_com_free_endpoint(&endpoint);
    
-   return function_return;
+   return retval ;
 }
 
 
@@ -2506,8 +2475,7 @@ int cl_com_set_handle_fds(cl_com_handle_t* handle, fd_set* file_descriptor_set) 
    }
 
    if (handle->service_handler != NULL) {
-      cl_com_connection_get_fd(handle->service_handler, &fd);
-      if (fd >= 0) {
+      if (cl_com_connection_get_fd(handle->service_handler, &fd) == CL_RETVAL_OK) {
          FD_SET(fd, file_descriptor_set);
          ret_val = CL_RETVAL_OK;
       }
@@ -2517,10 +2485,8 @@ int cl_com_set_handle_fds(cl_com_handle_t* handle, fd_set* file_descriptor_set) 
    elem = cl_connection_list_get_first_elem(handle->connection_list);    
    while(elem) {
       connection = elem->connection;
-      fd = -1;
-      cl_com_connection_get_fd(connection, &fd);
-      if (fd >= 0) {
-         FD_SET(fd,file_descriptor_set);
+      if (cl_com_connection_get_fd(connection, &fd) == CL_RETVAL_OK) {
+         FD_SET(fd, file_descriptor_set);
          ret_val = CL_RETVAL_OK;
       }
       elem = cl_connection_list_get_next_elem(elem);
@@ -2577,12 +2543,12 @@ int cl_com_get_connect_port(cl_com_handle_t* handle, int* port) {
       return CL_RETVAL_PARAMS;
    }
 
-   if ( handle->connect_port > 0 ) { 
+   if (handle->connect_port > 0) { 
       *port = handle->connect_port;
       return CL_RETVAL_OK;
-   } else {
-      return CL_RETVAL_UNKNOWN;
    }
+
+  return CL_RETVAL_UNKNOWN;
 }
 
 
@@ -2593,6 +2559,7 @@ int cl_com_get_connect_port(cl_com_handle_t* handle, int* port) {
 int cl_com_add_allowed_host(cl_com_handle_t* handle, char* hostname) {
    int retval = CL_RETVAL_OK;
    char* resolved_name = NULL;
+
    if (handle == NULL) {
       CL_LOG(CL_LOG_ERROR,"no handle specified");
       return CL_RETVAL_PARAMS;
@@ -2608,7 +2575,7 @@ int cl_com_add_allowed_host(cl_com_handle_t* handle, char* hostname) {
    }
    free(resolved_name);
    resolved_name = NULL;
-   retval = cl_string_list_append_string(handle->allowed_host_list, hostname ,1);
+   retval = cl_string_list_append_string(handle->allowed_host_list, hostname, 1);
    if (retval != CL_RETVAL_OK) {
       CL_LOG_STR(CL_LOG_WARNING,"could not add host to allowed host list:", hostname);
    } else {
@@ -2642,32 +2609,32 @@ int cl_com_remove_allowed_host(cl_com_handle_t* handle, char* hostname) {
 int cl_commlib_trigger(cl_com_handle_t* handle, int synchron) {
 
    cl_commlib_check_callback_functions();
-   if (handle == NULL) {
-      return CL_RETVAL_PARAMS;
+
+   if (handle != NULL) {
+      switch(cl_com_create_threads) {
+         case CL_NO_THREAD:
+            return cl_com_trigger(handle, synchron);
+         case CL_RW_THREAD: {
+            int ret_val = CL_RETVAL_OK;
+            /* application has nothing to do, wait for next message */
+            pthread_mutex_lock(handle->messages_ready_mutex);
+            if ((handle->messages_ready_for_read == 0) && (synchron == 1)) {
+               CL_LOG(CL_LOG_INFO,"NO MESSAGES to READ, WAITING ...");
+               pthread_mutex_unlock(handle->messages_ready_mutex);
+               ret_val = cl_thread_wait_for_thread_condition(handle->app_condition ,
+                                                            handle->select_sec_timeout,
+                                                            handle->select_usec_timeout);
+            } else {
+               pthread_mutex_unlock(handle->messages_ready_mutex);
+            }
+            if (ret_val != CL_RETVAL_OK) {
+               return ret_val;
+            }
+            return CL_RETVAL_THREADS_ENABLED;
+         }   
+      }
    }
-   switch(cl_com_create_threads) {
-      case CL_NO_THREAD:
-         return cl_com_trigger(handle, synchron);
-      case CL_RW_THREAD: {
-         int ret_val = CL_RETVAL_OK;
-         /* application has nothing to do, wait for next message */
-         pthread_mutex_lock(handle->messages_ready_mutex);
-         if ((handle->messages_ready_for_read == 0) && (synchron == 1)) {
-            CL_LOG(CL_LOG_INFO,"NO MESSAGES to READ, WAITING ...");
-            pthread_mutex_unlock(handle->messages_ready_mutex);
-            ret_val = cl_thread_wait_for_thread_condition(handle->app_condition ,
-                                                         handle->select_sec_timeout,
-                                                         handle->select_usec_timeout);
-         } else {
-            pthread_mutex_unlock(handle->messages_ready_mutex);
-         }
-         if (ret_val != CL_RETVAL_OK) {
-            return ret_val;
-         }
-         return CL_RETVAL_THREADS_ENABLED;
-      }   
-   }
-   return CL_RETVAL_UNKNOWN;
+   return CL_RETVAL_PARAMS;
 }
 
 /* this function is used for no thread implementation and must be called 
@@ -2683,7 +2650,7 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
    int retval = CL_RETVAL_OK;
    cl_com_connection_t* the_handler = NULL;
    char tmp_string[1024];
-
+   cl_bool_t ignore_timeouts = CL_FALSE;
 
    if (handle == NULL) {
       CL_LOG(CL_LOG_ERROR,"no handle specified");
@@ -2698,7 +2665,7 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
 
    /* remove broken connections */
    /* when threads enabled: this is done by cl_com_handle_service_thread() - OK */
-   cl_connection_list_destroy_connections_to_close(handle->connection_list,1); /* OK */
+   cl_connection_list_destroy_connections_to_close(handle->connection_list);
 
    /* calculate statistics each second */
    gettimeofday(&now,NULL);
@@ -2707,10 +2674,8 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
       cl_commlib_handle_debug_clients(handle, CL_TRUE);
    }
 
-
    /* check number of connections */
    cl_commlib_check_connection_count(handle);
-
 
    /* get service handle for virtual select call */
    if (handle->do_shutdown == 0 && handle->max_connection_count_reached == CL_FALSE) {
@@ -2727,8 +2692,7 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
                                              handle->select_sec_timeout,
                                              handle->select_usec_timeout,
                                              CL_RW_SELECT);
-   }
-   else {
+   } else {
       retval = cl_com_open_connection_request_handler(handle->framework, 
                                              handle->connection_list, 
                                              the_handler,
@@ -2738,12 +2702,12 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
          
    }
 
+   ignore_timeouts = cl_com_get_ignore_timeouts_flag();
 
    /* read / write messages */
    cl_raw_list_lock(handle->connection_list);
 
    elem = cl_connection_list_get_first_elem(handle->connection_list);     
-   
    while(elem) {
 
       if (elem->connection->connection_state == CL_DISCONNECTED) {
@@ -2761,30 +2725,26 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
          if (elem->connection->data_read_flag == CL_COM_DATA_READY ||
             (elem->connection->fd_ready_for_write == CL_COM_DATA_READY && elem->connection->data_write_flag == CL_COM_DATA_READY) ) {
 
-            return_value = cl_com_open_connection(elem->connection, handle->open_connection_timeout,NULL , NULL, NULL, NULL);
+            return_value = cl_com_open_connection(elem->connection, handle->open_connection_timeout, NULL, NULL);
 
-            if (return_value != CL_RETVAL_OK && 
-                return_value != CL_RETVAL_UNCOMPLETE_WRITE) {
-               CL_LOG_STR(CL_LOG_ERROR,"could not open connection:",cl_get_error_text(return_value));
-               elem->connection->connection_state = CL_CLOSING;
-               elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+            if (return_value != CL_RETVAL_OK) {
+               if (ignore_timeouts == CL_TRUE || return_value != CL_RETVAL_UNCOMPLETE_WRITE) {
+                  CL_LOG_STR(CL_LOG_ERROR,"could not open connection:",cl_get_error_text(return_value));
+                  elem->connection->connection_state = CL_CLOSING;
+                  elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+               }
             }
-            if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
-               CL_LOG(CL_LOG_WARNING,"setting connection state to closing");
-               elem->connection->connection_state = CL_CLOSING;
-               elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
-            } 
          }  else {
             /* check timeouts */
             if ( elem->connection->read_buffer_timeout_time != 0) {
-               if ( now.tv_sec >= elem->connection->read_buffer_timeout_time || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
+               if ( now.tv_sec >= elem->connection->read_buffer_timeout_time || ignore_timeouts == CL_TRUE) {
                   CL_LOG(CL_LOG_ERROR,"read timeout for connection opening");
                   elem->connection->connection_state = CL_CLOSING;
                   elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                }
             }
             if ( elem->connection->write_buffer_timeout_time != 0) {
-               if ( now.tv_sec >= elem->connection->write_buffer_timeout_time || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
+               if ( now.tv_sec >= elem->connection->write_buffer_timeout_time || ignore_timeouts == CL_TRUE) {
                   CL_LOG(CL_LOG_ERROR,"write timeout for connection opening");
                   elem->connection->connection_state = CL_CLOSING;
                   elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
@@ -2798,20 +2758,17 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
          if (elem->connection->data_read_flag == CL_COM_DATA_READY ||
             (elem->connection->fd_ready_for_write == CL_COM_DATA_READY && elem->connection->data_write_flag == CL_COM_DATA_READY) ) {
 
-            return_value = cl_com_connection_complete_accept(elem->connection,handle->open_connection_timeout,1);
-            if (return_value != CL_RETVAL_OK && 
-                return_value != CL_RETVAL_UNCOMPLETE_READ && 
-                return_value != CL_RETVAL_UNCOMPLETE_WRITE && 
-                return_value != CL_RETVAL_SELECT_ERROR ) {
-               CL_LOG_STR(CL_LOG_ERROR,"connection accept error:",cl_get_error_text(return_value));
-               elem->connection->connection_state = CL_CLOSING;
-               elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
-            }
-            if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
-               elem->connection->connection_state = CL_CLOSING;
-               elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
-            } 
-            if (return_value == CL_RETVAL_OK) {
+            return_value = cl_com_connection_complete_accept(elem->connection,handle->open_connection_timeout);
+            if (return_value != CL_RETVAL_OK) {
+               if (ignore_timeouts == CL_TRUE ||
+                   (return_value != CL_RETVAL_UNCOMPLETE_READ && 
+                    return_value != CL_RETVAL_UNCOMPLETE_WRITE && 
+                    return_value != CL_RETVAL_SELECT_ERROR)) {
+                  CL_LOG_STR(CL_LOG_ERROR,"connection accept error:",cl_get_error_text(return_value));
+                  elem->connection->connection_state = CL_CLOSING;
+                  elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+               }
+            } else {
                elem->connection->connection_state = CL_CONNECTING;
                elem->connection->connection_sub_state = CL_COM_READ_INIT;
                elem->connection->data_read_flag = CL_COM_DATA_NOT_READY;
@@ -2839,20 +2796,18 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
          int return_value;
          if (elem->connection->data_read_flag == CL_COM_DATA_READY ||
             (elem->connection->fd_ready_for_write == CL_COM_DATA_READY && elem->connection->data_write_flag == CL_COM_DATA_READY) ) {
-            return_value = cl_com_connection_complete_request(elem->connection,handle->open_connection_timeout,1, CL_RW_SELECT);
-            if (return_value != CL_RETVAL_OK && 
-                return_value != CL_RETVAL_UNCOMPLETE_READ && 
-                return_value != CL_RETVAL_UNCOMPLETE_WRITE && 
-                return_value != CL_RETVAL_SELECT_ERROR ) {
-               CL_LOG_STR(CL_LOG_ERROR,"connection establish error:",cl_get_error_text(return_value));
-               elem->connection->connection_state = CL_CLOSING;
-               elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+            return_value = cl_com_connection_complete_request(handle->connection_list, elem, handle->open_connection_timeout, CL_RW_SELECT);
+            if (return_value != CL_RETVAL_OK) {
+               if (ignore_timeouts == CL_TRUE ||
+                   (return_value != CL_RETVAL_UNCOMPLETE_READ && 
+                    return_value != CL_RETVAL_UNCOMPLETE_WRITE && 
+                    return_value != CL_RETVAL_SELECT_ERROR)) {
+                  CL_LOG_STR(CL_LOG_ERROR,"connection establish error:",cl_get_error_text(return_value));
+                  elem->connection->connection_state = CL_CLOSING;
+                  elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+               } 
             }
-            if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
-               elem->connection->connection_state = CL_CLOSING;
-               elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
-            } 
-            if ( elem->connection->connection_state == CL_CONNECTED ) {
+            if (elem->connection->connection_state == CL_CONNECTED) {
                cl_commlib_finish_request_completeness(elem->connection);
                /* connection is now in connect state, do select before next reading */
                elem->connection->data_read_flag = CL_COM_DATA_NOT_READY;
@@ -2860,14 +2815,16 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
          } else {
             /* check timeouts */
             if ( elem->connection->read_buffer_timeout_time != 0) {
-               if ( now.tv_sec >= elem->connection->read_buffer_timeout_time || cl_com_get_ignore_timeouts_flag() == CL_TRUE  ) {
+               if (now.tv_sec >= elem->connection->read_buffer_timeout_time ||
+                   ignore_timeouts == CL_TRUE) {
                   CL_LOG(CL_LOG_ERROR,"read timeout for connection completion");
                   elem->connection->connection_state = CL_CLOSING;
                   elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                }
             }
             if ( elem->connection->write_buffer_timeout_time != 0) {
-               if ( now.tv_sec >= elem->connection->write_buffer_timeout_time || cl_com_get_ignore_timeouts_flag() == CL_TRUE ) {
+               if (now.tv_sec >= elem->connection->write_buffer_timeout_time ||
+                   ignore_timeouts == CL_TRUE) {
                   CL_LOG(CL_LOG_ERROR,"write timeout for connection completion");
                   elem->connection->connection_state = CL_CLOSING;
                   elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
@@ -2884,21 +2841,19 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
              elem->connection->ccrm_sent      == 0                 && 
              elem->connection->ccrm_received  == 0                    ) {
             return_value = cl_commlib_handle_connection_read(elem->connection);
-            if ( return_value != CL_RETVAL_OK && 
-                 return_value != CL_RETVAL_UNCOMPLETE_READ && 
-                 return_value != CL_RETVAL_SELECT_ERROR ) {
-               elem->connection->connection_state = CL_CLOSING;
-               elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
-               CL_LOG_STR(CL_LOG_ERROR,"read from connection: setting close flag! Reason:", cl_get_error_text(return_value));
-               snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
-                        elem->connection->remote->comp_host,
-                        elem->connection->remote->comp_name,
-                        sge_u32c(elem->connection->remote->comp_id));
-               cl_commlib_push_application_error(CL_LOG_ERROR, return_value,tmp_string);
-            }
-            if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
-               elem->connection->connection_state = CL_CLOSING;
-               elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+            if (return_value != CL_RETVAL_OK) {
+               if (ignore_timeouts == CL_TRUE ||
+                   (return_value != CL_RETVAL_UNCOMPLETE_READ && 
+                    return_value != CL_RETVAL_SELECT_ERROR) ) {
+                  elem->connection->connection_state = CL_CLOSING;
+                  elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+                  CL_LOG_STR(CL_LOG_ERROR,"read from connection: setting close flag! Reason:", cl_get_error_text(return_value));
+                  snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
+                           elem->connection->remote->comp_host,
+                           elem->connection->remote->comp_name,
+                           sge_u32c(elem->connection->remote->comp_id));
+                  cl_commlib_push_application_error(CL_LOG_ERROR, return_value,tmp_string);
+               }
             }
          } else {
             /* check timeouts */
@@ -2921,21 +2876,19 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
              elem->connection->data_write_flag    == CL_COM_DATA_READY &&
              elem->connection->ccrm_sent == 0 ) {
             return_value = cl_commlib_handle_connection_write(elem->connection);
-            if (return_value != CL_RETVAL_OK && 
-                return_value != CL_RETVAL_UNCOMPLETE_WRITE && 
-                return_value != CL_RETVAL_SELECT_ERROR ) {
-               elem->connection->connection_state = CL_CLOSING;
-               elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
-               CL_LOG_STR(CL_LOG_ERROR,"write to connection: setting close flag! Reason:", cl_get_error_text(return_value));
-               snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
-                        elem->connection->remote->comp_host,
-                        elem->connection->remote->comp_name,
-                        sge_u32c(elem->connection->remote->comp_id));
-               cl_commlib_push_application_error(CL_LOG_ERROR, return_value, tmp_string);
-            }
-            if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
-               elem->connection->connection_state = CL_CLOSING;
-               elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+            if (return_value != CL_RETVAL_OK) {
+               if (ignore_timeouts == CL_TRUE ||
+                   (return_value != CL_RETVAL_UNCOMPLETE_WRITE && 
+                    return_value != CL_RETVAL_SELECT_ERROR)) {
+                  elem->connection->connection_state = CL_CLOSING;
+                  elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+                  CL_LOG_STR(CL_LOG_ERROR,"write to connection: setting close flag! Reason:", cl_get_error_text(return_value));
+                  snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
+                           elem->connection->remote->comp_host,
+                           elem->connection->remote->comp_name,
+                           sge_u32c(elem->connection->remote->comp_id));
+                  cl_commlib_push_application_error(CL_LOG_ERROR, return_value, tmp_string);
+               }
             }
          } else {
             /* check timeouts */
@@ -2975,12 +2928,12 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
       elem = cl_connection_list_get_next_elem(elem);
    }
 
-   /* now take list entry and add it at least if there are more connections */
+   /* now take list entry and add it at the end if there are more connections */
    /* this must be done in order to NOT prefer the first connection in list */
-   if ( cl_raw_list_get_elem_count(handle->connection_list) > 1) {
-         elem = cl_connection_list_get_first_elem(handle->connection_list);
-         cl_raw_list_dechain_elem(handle->connection_list,elem->raw_elem);
-         cl_raw_list_append_dechained_elem(handle->connection_list,elem->raw_elem);
+   if (cl_raw_list_get_elem_count(handle->connection_list) > 1) {
+       elem = cl_connection_list_get_first_elem(handle->connection_list);
+       cl_raw_list_dechain_elem(handle->connection_list,elem->raw_elem);
+       cl_raw_list_append_dechained_elem(handle->connection_list,elem->raw_elem);
    }
 
    cl_raw_list_unlock(handle->connection_list);
@@ -2999,11 +2952,10 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
          new_con->handler = handle->service_handler->handler;
          CL_LOG(CL_LOG_INFO,"adding new client");
          new_con->read_buffer_timeout_time = now.tv_sec + handle->open_connection_timeout;
-         cl_connection_list_append_connection(handle->connection_list, new_con,1);
+         cl_connection_list_append_connection(handle->connection_list, new_con, 1);
          new_con = NULL;
       }
    }
-
 
    return retval;
 }
@@ -3033,8 +2985,8 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
    if (connection->data_flow_type == CL_CM_CT_STREAM) {
       cl_bool_t is_debug_client = CL_FALSE;
 
-      if ( connection->remote != NULL ) {
-         if ( connection->remote->comp_name != NULL) {
+      if (connection->remote != NULL) {
+         if (connection->remote->comp_name != NULL) {
             if (strcmp(connection->remote->comp_name, CL_COM_DEBUG_CLIENT_NAME) == 0) {
                is_debug_client = CL_TRUE;
             }
@@ -3067,42 +3019,32 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                   if (strcmp("set tag ALL",(char*)connection->data_read_buffer) == 0) {
                      connection->handler->debug_client_setup->dc_mode = CL_DEBUG_CLIENT_ALL;
                      changed_mode = CL_TRUE;
-                  }
-                  if (strcmp("set tag MSG",(char*)connection->data_read_buffer) == 0) {
+                  } else if (strcmp("set tag MSG",(char*)connection->data_read_buffer) == 0) {
                      connection->handler->debug_client_setup->dc_mode = CL_DEBUG_CLIENT_MSG;
                      changed_mode = CL_TRUE;
-                  }
-                  if (strcmp("set tag APP",(char*)connection->data_read_buffer) == 0) {
+                  } else if (strcmp("set tag APP",(char*)connection->data_read_buffer) == 0) {
                      connection->handler->debug_client_setup->dc_mode = CL_DEBUG_CLIENT_APP;
                      changed_mode = CL_TRUE;
-                  }
-                  if (strcmp("set dump OFF",(char*)connection->data_read_buffer) == 0) {
+                  } else if (strcmp("set dump OFF",(char*)connection->data_read_buffer) == 0) {
                      connection->handler->debug_client_setup->dc_dump_flag = CL_FALSE;
-                  }
-                  if (strcmp("set dump ON",(char*)connection->data_read_buffer) == 0) {
+                  } else if (strcmp("set dump ON",(char*)connection->data_read_buffer) == 0) {
                      connection->handler->debug_client_setup->dc_dump_flag = CL_TRUE;
-                  }
-                  if (strcmp("set debug OFF",(char*)connection->data_read_buffer) == 0) {
+                  } else if (strcmp("set debug OFF",(char*)connection->data_read_buffer) == 0) {
                      connection->handler->debug_client_setup->dc_app_log_level = 0;
                      changed_mode = CL_TRUE;
-                  }
-                  if (strcmp("set debug ERROR",(char*)connection->data_read_buffer) == 0) {
+                  } else  if (strcmp("set debug ERROR",(char*)connection->data_read_buffer) == 0) {
                      connection->handler->debug_client_setup->dc_app_log_level = 1;
                      changed_mode = CL_TRUE;
-                  }
-                  if (strcmp("set debug WARNING",(char*)connection->data_read_buffer) == 0) {
+                  } else if (strcmp("set debug WARNING",(char*)connection->data_read_buffer) == 0) {
                      connection->handler->debug_client_setup->dc_app_log_level = 2;
                      changed_mode = CL_TRUE;
-                  }
-                  if (strcmp("set debug INFO",(char*)connection->data_read_buffer) == 0) {
+                  } else if (strcmp("set debug INFO",(char*)connection->data_read_buffer) == 0) {
                      connection->handler->debug_client_setup->dc_app_log_level = 3;
                      changed_mode = CL_TRUE;
-                  }
-                  if (strcmp("set debug DEBUG",(char*)connection->data_read_buffer) == 0) {
+                  } else if (strcmp("set debug DEBUG",(char*)connection->data_read_buffer) == 0) {
                      connection->handler->debug_client_setup->dc_app_log_level = 4;
                      changed_mode = CL_TRUE;
-                  }
-                  if (strcmp("set debug DPRINTF",(char*)connection->data_read_buffer) == 0) {
+                  } else if (strcmp("set debug DPRINTF",(char*)connection->data_read_buffer) == 0) {
                      connection->handler->debug_client_setup->dc_app_log_level = 5;
                      changed_mode = CL_TRUE;
                   }
@@ -3145,21 +3087,17 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
          }
 
          /* Touch endpoint, he is still active */
-         if ( cl_com_connection_get_connect_port(connection ,&connect_port) == CL_RETVAL_OK) {
+         if (cl_com_connection_get_connect_port(connection ,&connect_port) == CL_RETVAL_OK) {
             cl_endpoint_list_define_endpoint(cl_com_get_endpoint_list(),
                                              connection->remote, 
                                              connect_port, 
-                                             connection->auto_close_type, CL_FALSE );
+                                             connection->auto_close_type, CL_FALSE);
          }
          gettimeofday(&connection->last_transfer_time,NULL);   /* set receive time */
          connection->statistic->bytes_received = connection->statistic->bytes_received + size;
          connection->statistic->real_bytes_received = connection->statistic->real_bytes_received + size;
          return return_value;
       } else {
-         return_value = cl_com_create_message(&message);
-         if (return_value != CL_RETVAL_OK) {
-            return return_value;   
-         }
          gettimeofday(&now,NULL);
          connection->read_buffer_timeout_time = now.tv_sec + connection->handler->read_timeout;
    
@@ -3168,17 +3106,19 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
          connection->read_buffer_timeout_time = 0;
    
          if (return_value != CL_RETVAL_OK && return_value != CL_RETVAL_UNCOMPLETE_READ) {
-            cl_com_free_message(&message);
             return return_value;
          }
-   
+
+         return_value = cl_com_create_message(&message);
+         if (return_value != CL_RETVAL_OK) {
+            return return_value;   
+         }
          
-         CL_LOG_STR(CL_LOG_INFO,"received stream message from:", connection->receiver->comp_host);
+         CL_LOG_STR(CL_LOG_INFO,"received stream message from:", connection->remote->comp_host);
          message->message_state  = CL_MS_READY;         /* set message state */
          message->message_mat    = CL_MIH_MAT_NAK;      /* no acknoledge for stream messages */
          message->message_length = size;                    /* set message size */
-         gettimeofday(&message->message_receive_time,NULL);   /* set receive time */
-   
+         gettimeofday(&message->message_receive_time, NULL);   /* set receive time */
    
          /* Touch endpoint, he is still active */
          if ( cl_com_connection_get_connect_port(connection ,&connect_port) == CL_RETVAL_OK) {
@@ -3189,7 +3129,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
          }
          
          /* set last transfer time of connection */
-         memcpy(&connection->last_transfer_time, &message->message_receive_time ,sizeof (struct timeval));
+         memcpy(&connection->last_transfer_time, &message->message_receive_time, sizeof(struct timeval));
    
          message->message = (cl_byte_t*) malloc(sizeof(cl_byte_t) * size);
          if (message->message == NULL) {
@@ -3207,8 +3147,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                cl_app_message_queue_append(handle->received_message_queue, connection, NULL, CL_MIH_MAT_UNDEFINED, NULL, 0,0,0,1);
                pthread_mutex_unlock(handle->messages_ready_mutex);
 
-               
-                  cl_thread_trigger_thread_condition(handle->app_condition,1);
+               cl_thread_trigger_thread_condition(handle->app_condition, 1);
 
             }
          }
@@ -3216,9 +3155,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
          connection->statistic->real_bytes_received = connection->statistic->real_bytes_received + size;
          return return_value;
       }
-   }
-
-   if (connection->data_flow_type == CL_CM_CT_MESSAGE) {
+   } else if (connection->data_flow_type == CL_CM_CT_MESSAGE) {
 
       cl_raw_list_lock(connection->received_message_list);
 
@@ -3327,7 +3264,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
          message->message_tag         = mih_message->tag;
          message->message_response_id = mih_message->rid;
          cl_com_free_mih_message(&mih_message);
-         message->message = (cl_byte_t*) malloc( sizeof(cl_byte_t) * message->message_length );
+         message->message = (cl_byte_t*) malloc( sizeof(cl_byte_t) * message->message_length);
          if (message->message == NULL) {
             cl_raw_list_unlock(connection->received_message_list);
             return CL_RETVAL_MALLOC;
@@ -3361,9 +3298,9 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
             }
          }
 
-         CL_LOG_STR_STR_INT(CL_LOG_INFO, "received message from:", connection->receiver->comp_host,
-                                                                      connection->receiver->comp_name,
-                                                                      (int)connection->receiver->comp_id); 
+         CL_LOG_STR_STR_INT(CL_LOG_INFO, "received message from:", connection->remote->comp_host,
+                                                                   connection->remote->comp_name,
+                                                                   (int)connection->remote->comp_id); 
     
          gettimeofday(&message->message_receive_time,NULL);
          /* set last transfer time of connection */
@@ -3452,13 +3389,12 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                if (connection->handler != NULL) { 
                   cl_com_handle_t* handle = connection->handler;
                   char* application_info = "not available";
-                  
+                 
                   /* we force an statistic update */
                   cl_commlib_calculate_statistic(handle,CL_TRUE,0);
                   if ( handle->statistic->application_info != NULL ) {
                      application_info = handle->statistic->application_info;
                   }
-
 
                   gettimeofday(&now,NULL);
                   run_time = (unsigned long)now.tv_sec - handle->start_time.tv_sec;
@@ -3638,8 +3574,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
             cl_app_message_queue_append(connection->handler->received_message_queue, connection, NULL, CL_MIH_MAT_UNDEFINED, NULL, 0,0,0,1);
             pthread_mutex_unlock(connection->handler->messages_ready_mutex);
 
-
-               cl_thread_trigger_thread_condition(connection->handler->app_condition,1);
+            cl_thread_trigger_thread_condition(connection->handler->app_condition, 1);
          }
       }
 
@@ -4012,10 +3947,7 @@ static int cl_commlib_handle_debug_clients(cl_com_handle_t* handle, cl_bool_t lo
 #define __CL_FUNCTION__ "cl_com_get_actual_statistic_data()"
 int cl_com_get_actual_statistic_data(cl_com_handle_t* handle, cl_com_handle_statistic_t** statistics) {
    int ret_val = CL_RETVAL_OK;
-   if (handle == NULL || statistics == NULL) {
-      return CL_RETVAL_PARAMS;
-   }
-   if (*statistics != NULL) {
+   if (handle == NULL || statistics == NULL || *statistics != NULL) {
       return CL_RETVAL_PARAMS;
    }
 
@@ -4024,7 +3956,6 @@ int cl_com_get_actual_statistic_data(cl_com_handle_t* handle, cl_com_handle_stat
       return CL_RETVAL_MALLOC;
    }
    
-
    cl_raw_list_lock(handle->connection_list);
    if ( (ret_val=cl_commlib_calculate_statistic(handle, CL_TRUE, 0)) == CL_RETVAL_OK) {
       memcpy(*statistics, handle->statistic, sizeof(cl_com_handle_statistic_t));
@@ -4083,14 +4014,10 @@ int cl_com_application_debug(cl_com_handle_t* handle, const char* message) {
    unsigned long                dm_buffer_len     = 0;
    cl_com_debug_message_tag_t   debug_message_tag = CL_DMT_APP_MESSAGE;
    struct timeval now;
-   unsigned long i;
-   int found_last = 0;
-
 
    if (handle == NULL || message == NULL) {
       return CL_RETVAL_PARAMS;
    }
-
    
    /* don't add default case for this switch! */
    switch(handle->debug_client_setup->dc_mode) {
@@ -4115,6 +4042,8 @@ int cl_com_application_debug(cl_com_handle_t* handle, const char* message) {
    if (dm_buffer == NULL) {
       return CL_RETVAL_MALLOC;
    } else {
+      unsigned long i;
+      int found_last = 0;
       snprintf(dm_buffer,dm_buffer_len,CL_DEBUG_DMT_APP_MESSAGE_FORMAT_STRING,
                          (unsigned long)debug_message_tag,
                          time_now,
@@ -4324,21 +4253,23 @@ static int cl_commlib_finish_request_completeness(cl_com_connection_t* connectio
 
    if (connection->was_accepted == CL_TRUE) {
       int connect_port = 0;
-      if (cl_com_connection_get_connect_port(connection,&connect_port) == CL_RETVAL_OK) {
-         if ( connect_port > 0 ) {
+      if (cl_com_connection_get_connect_port(connection, &connect_port) == CL_RETVAL_OK) {
+         if (connect_port > 0) {
             CL_LOG_STR(CL_LOG_INFO,"comp_host :", connection->remote->comp_host);
             CL_LOG_STR(CL_LOG_INFO,"comp_name :", connection->remote->comp_name);
             CL_LOG_INT(CL_LOG_INFO,"comp_id   :", (int)connection->remote->comp_id);
             CL_LOG_INT(CL_LOG_INFO,"new connected client can be reached at port", (int)connect_port);
-            if ( connection->auto_close_type == CL_CM_AC_ENABLED) {
+            if (connection->auto_close_type == CL_CM_AC_ENABLED) {
                CL_LOG(CL_LOG_INFO,"new connected client supports auto close");
             }
             cl_com_append_known_endpoint(connection->remote, connect_port, connection->auto_close_type, CL_FALSE);
+
          } else {
             CL_LOG(CL_LOG_INFO,"client does not provide service port");
          }
       }
    }
+
    return CL_RETVAL_OK;
 }
 
@@ -4426,9 +4357,7 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
                                               connection->auto_close_type, CL_FALSE );
           }
        }
-    }
-  
-    if (connection->data_flow_type == CL_CM_CT_MESSAGE) {
+    } else if (connection->data_flow_type == CL_CM_CT_MESSAGE) {
 
        cl_raw_list_lock(connection->send_message_list);
        message = NULL;
@@ -4461,14 +4390,12 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
           unsigned long mih_message_size = 0;
 
           mih_message_size = CL_MIH_MESSAGE_SIZE;
-          mih_message_size = mih_message_size + strlen(CL_MIH_MESSAGE_VERSION);
-          mih_message_size = mih_message_size + cl_util_get_ulong_number_length(message->message_id);
-          mih_message_size = mih_message_size + cl_util_get_ulong_number_length(message->message_length);
-          mih_message_size = mih_message_size + strlen(cl_com_get_mih_df_string(message->message_df));
-          mih_message_size = mih_message_size + strlen(cl_com_get_mih_mat_string(message->message_mat));
-          mih_message_size = mih_message_size + cl_util_get_ulong_number_length(message->message_tag);
-          mih_message_size = mih_message_size + cl_util_get_ulong_number_length(message->message_response_id);
-
+          mih_message_size += cl_util_get_ulong_number_length(message->message_id);
+          mih_message_size += cl_util_get_ulong_number_length(message->message_length);
+          mih_message_size += strlen(cl_com_get_mih_df_string(message->message_df));
+          mih_message_size += strlen(cl_com_get_mih_mat_string(message->message_mat));
+          mih_message_size += cl_util_get_ulong_number_length(message->message_tag);
+          mih_message_size += cl_util_get_ulong_number_length(message->message_response_id);
 
           if (connection->data_buffer_size < (mih_message_size + 1) ) {
              cl_raw_list_unlock(connection->send_message_list);
@@ -4481,7 +4408,6 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
              return CL_RETVAL_STREAM_BUFFER_OVERFLOW;
           }
           snprintf((char*)connection->data_write_buffer, connection->data_buffer_size, CL_GMSH_MESSAGE , mih_message_size);
-
 
           gettimeofday(&now,NULL);
           connection->write_buffer_timeout_time = now.tv_sec + connection->handler->write_timeout;
@@ -4595,9 +4521,9 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
 
        if (message->message_state == CL_MS_READY) {
 
-          CL_LOG_STR_STR_INT(CL_LOG_INFO, "sent message to:      ", connection->receiver->comp_host,
-                                                                    connection->receiver->comp_name,
-                                                                    (int)connection->receiver->comp_id);
+          CL_LOG_STR_STR_INT(CL_LOG_INFO, "sent message to:      ", connection->remote->comp_host,
+                                                                    connection->remote->comp_name,
+                                                                    (int)connection->remote->comp_id);
 
           connection->statistic->bytes_sent = connection->statistic->bytes_sent + message->message_length;
           connection->statistic->real_bytes_sent = connection->statistic->real_bytes_sent + message->message_length  ;
@@ -4745,15 +4671,7 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
 
    cl_commlib_check_callback_functions();
 
-
-   if (message == NULL) {
-      return CL_RETVAL_PARAMS;
-   }
-   if (*message != NULL) {
-      return CL_RETVAL_PARAMS;
-   }
-
-   if (handle == NULL) {
+   if (handle == NULL ||  message == NULL || *message != NULL) {
       return CL_RETVAL_PARAMS;
    }
 
@@ -4762,7 +4680,7 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
       my_timeout = now.tv_sec + handle->synchron_receive_timeout;
    }
 
-   if ( un_resolved_hostname != NULL || component_name != NULL || component_id != 0) {
+   if (un_resolved_hostname != NULL || component_name != NULL || component_id != 0) {
       CL_LOG(CL_LOG_DEBUG,"message filtering not supported");
    }
    do {
@@ -4844,9 +4762,7 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
                      cl_raw_list_unlock(connection->received_message_list);
     
                      if (sender != NULL) {
-                        *sender = cl_com_create_endpoint(connection->receiver->comp_host,
-                                                         connection->receiver->comp_name,
-                                                         connection->receiver->comp_id );
+                        *sender = cl_com_dup_endpoint(connection->remote);
                      }
 
                     
@@ -4902,9 +4818,6 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
                            break;
                         }
                      }
-#if 0
-                     CL_LOG_STR(CL_LOG_ERROR,"commlib returns message: ", connection->tag_name_func((*message)->message_tag));
-#endif
                      return CL_RETVAL_OK;
                   }
                }
@@ -4953,7 +4866,7 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
                break;
          }
          /* at this point the handle->connection_list must be unlocked */
-         if ( leave_reason == CL_RETVAL_CONNECTION_NOT_FOUND) {
+         if (leave_reason == CL_RETVAL_CONNECTION_NOT_FOUND) {
             /* 
              *  we are no service provider AND we have no connection !
              *  we can't wait for a (possible) new connection, so we return immediately 
@@ -4995,7 +4908,7 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
 int cl_commlib_search_endpoint(cl_com_handle_t* handle,
                                char* un_resolved_hostname, char* component_name, unsigned long component_id, 
                                cl_bool_t only_connected,
-                               cl_raw_list_t** endpoint_list ) {
+                               cl_raw_list_t** endpoint_list) {
 
    cl_com_connection_t* connection = NULL;
    cl_connection_list_elem_t* elem = NULL;
@@ -5003,11 +4916,7 @@ int cl_commlib_search_endpoint(cl_com_handle_t* handle,
    int retval = CL_RETVAL_OK;
 
 
-   if ( handle == NULL || endpoint_list == NULL ) {
-      return CL_RETVAL_PARAMS;
-   }
-
-   if (*endpoint_list != NULL) {
+   if (handle == NULL || endpoint_list == NULL || *endpoint_list != NULL) {
       return CL_RETVAL_PARAMS;
    }
 
@@ -5033,21 +4942,21 @@ int cl_commlib_search_endpoint(cl_com_handle_t* handle,
       connection = elem->connection;
       elem = cl_connection_list_get_next_elem(elem);
 
-      if ( connection->remote != NULL ) {
-         if ( component_id > 0 ) {
-            if ( connection->remote->comp_id == component_id ) {
+      if (connection->remote != NULL) {
+         if (component_id > 0) {
+            if (connection->remote->comp_id == component_id) {
                cl_endpoint_list_define_endpoint(*endpoint_list, connection->remote, 0, connection->auto_close_type, CL_FALSE );
                continue;
             } 
          }
-         if ( component_name != NULL && connection->remote->comp_name != NULL  ) {
-            if ( strcmp(connection->remote->comp_name, component_name) == 0 ) {
+         if (component_name != NULL && connection->remote->comp_name != NULL ) {
+            if (strcasecmp(connection->remote->comp_name, component_name) == 0) {
                cl_endpoint_list_define_endpoint(*endpoint_list, connection->remote, 0, connection->auto_close_type, CL_FALSE );
                continue;
             }
          }
-         if ( resolved_hostname != NULL) {
-            if ( cl_com_compare_hosts( resolved_hostname, connection->remote->comp_host ) == CL_RETVAL_OK ) {
+         if (resolved_hostname != NULL) {
+            if (cl_com_compare_hosts(resolved_hostname, connection->remote->comp_host ) == CL_RETVAL_OK) {
                cl_endpoint_list_define_endpoint(*endpoint_list, connection->remote, 0, connection->auto_close_type, CL_FALSE );
                continue;
             }
@@ -5127,21 +5036,16 @@ static int cl_commlib_send_ack_message(cl_com_connection_t* connection, cl_com_m
       return CL_RETVAL_PARAMS;
    }
    
-
    ack_message_size = CL_AM_MESSAGE_SIZE;
-   ack_message_size = ack_message_size + strlen(CL_AM_MESSAGE_VERSION);
    ack_message_size = ack_message_size + cl_util_get_ulong_number_length(message->message_id);
    
    ack_message_data = (cl_byte_t*)malloc(sizeof(cl_byte_t)* ( ack_message_size + 1) ) ;
    if (ack_message_data == NULL) {
       return CL_RETVAL_MALLOC;
    }
-   sprintf((char*)ack_message_data,CL_AM_MESSAGE  ,
-                  CL_AM_MESSAGE_VERSION,
-                  message->message_id );
+   sprintf((char*)ack_message_data,CL_AM_MESSAGE, CL_AM_MESSAGE_VERSION, message->message_id);
 
- 
-   ret_val = cl_com_setup_message(&ack_message, connection, ack_message_data , ack_message_size ,CL_MIH_MAT_NAK , 0 ,0);
+   ret_val = cl_com_setup_message(&ack_message, connection, ack_message_data, ack_message_size, CL_MIH_MAT_NAK, 0, 0);
    if (ret_val != CL_RETVAL_OK) {
       return ret_val;
    }
@@ -5149,7 +5053,7 @@ static int cl_commlib_send_ack_message(cl_com_connection_t* connection, cl_com_m
 
    CL_LOG_INT(CL_LOG_INFO,"sending ack for message=", (int)message->message_id);
    
-   ret_val = cl_message_list_append_send(connection, ack_message,1);
+   ret_val = cl_message_list_append_send(connection, ack_message, 1);
 
    return ret_val;
 }
@@ -5170,13 +5074,12 @@ static int cl_commlib_send_ccm_message(cl_com_connection_t* connection) {
    }
 
    ccm_message_size = CL_CCM_MESSAGE_SIZE;
-   ccm_message_size = ccm_message_size + strlen(CL_CCM_MESSAGE_VERSION);
    
    ccm_message_data = (cl_byte_t*)malloc(sizeof(cl_byte_t)* ( ccm_message_size + 1) ) ;
    if (ccm_message_data == NULL) {
       return CL_RETVAL_MALLOC;
    }
-   sprintf((char*)ccm_message_data,CL_CCM_MESSAGE , CL_CCM_MESSAGE_VERSION );
+   sprintf((char*)ccm_message_data, CL_CCM_MESSAGE, CL_CCM_MESSAGE_VERSION);
 
    ret_val = cl_com_setup_message(&ccm_message, connection, ccm_message_data , ccm_message_size , CL_MIH_MAT_NAK , 0 ,0);
    if (ret_val != CL_RETVAL_OK) {
@@ -5200,13 +5103,12 @@ static int cl_commlib_send_sim_message(cl_com_connection_t* connection, unsigned
    }
 
    sim_message_size = CL_SIM_MESSAGE_SIZE;
-   sim_message_size = sim_message_size + strlen(CL_SIM_MESSAGE_VERSION);
    
    sim_message_data = (cl_byte_t*)malloc(sizeof(cl_byte_t)* ( sim_message_size + 1) ) ;
    if (sim_message_data == NULL) {
       return CL_RETVAL_MALLOC;
    }
-   sprintf((char*)sim_message_data,CL_SIM_MESSAGE , CL_SIM_MESSAGE_VERSION );
+   sprintf((char*)sim_message_data, CL_SIM_MESSAGE, CL_SIM_MESSAGE_VERSION);
 
    ret_val = cl_com_setup_message(&sim_message, connection, sim_message_data , sim_message_size , CL_MIH_MAT_NAK , 0 ,0);
    if (ret_val != CL_RETVAL_OK) {
@@ -5247,17 +5149,16 @@ static int cl_commlib_send_sirm_message(cl_com_connection_t* connection,
    }
 
    sirm_message_size = CL_SIRM_MESSAGE_SIZE;
-   sirm_message_size = sirm_message_size + strlen(CL_SIRM_MESSAGE_VERSION);
-   sirm_message_size = sirm_message_size + cl_util_get_ulong_number_length(message->message_id);
-   sirm_message_size = sirm_message_size + cl_util_get_ulong_number_length(starttime);
-   sirm_message_size = sirm_message_size + cl_util_get_ulong_number_length(runtime);
-   sirm_message_size = sirm_message_size + cl_util_get_ulong_number_length(buffered_read_messages);
-   sirm_message_size = sirm_message_size + cl_util_get_ulong_number_length(buffered_write_messages);
-   sirm_message_size = sirm_message_size + cl_util_get_ulong_number_length(connection_count);
-   sirm_message_size = sirm_message_size + cl_util_get_ulong_number_length(application_status);
-   sirm_message_size = sirm_message_size + strlen(xml_infotext);
+   sirm_message_size += cl_util_get_ulong_number_length(message->message_id);
+   sirm_message_size += cl_util_get_ulong_number_length(starttime);
+   sirm_message_size += cl_util_get_ulong_number_length(runtime);
+   sirm_message_size += cl_util_get_ulong_number_length(buffered_read_messages);
+   sirm_message_size += cl_util_get_ulong_number_length(buffered_write_messages);
+   sirm_message_size += cl_util_get_ulong_number_length(connection_count);
+   sirm_message_size += cl_util_get_ulong_number_length(application_status);
+   sirm_message_size += strlen(xml_infotext);
 
-   sirm_message_data = (cl_byte_t*)malloc(sizeof(cl_byte_t)* ( sirm_message_size + 1) ) ;
+   sirm_message_data = (cl_byte_t*)malloc(sizeof(cl_byte_t)* (sirm_message_size + 1) ) ;
    if (sirm_message_data == NULL) {
       if (xml_infotext != NULL) {
          free(xml_infotext);
@@ -5274,7 +5175,7 @@ static int cl_commlib_send_sirm_message(cl_com_connection_t* connection,
            buffered_write_messages,
            connection_count,
            application_status,
-           xml_infotext );
+           xml_infotext);
 
    if (xml_infotext != NULL) {
       free(xml_infotext);
@@ -5309,13 +5210,12 @@ static int cl_commlib_send_ccrm_message(cl_com_connection_t* connection) {
    }
 
    ccrm_message_size = CL_CCRM_MESSAGE_SIZE;
-   ccrm_message_size = ccrm_message_size + strlen(CL_CCRM_MESSAGE_VERSION);
    
-   ccrm_message_data = (cl_byte_t*)malloc(sizeof(cl_byte_t)* ( ccrm_message_size + 1) ) ;
+   ccrm_message_data = (cl_byte_t*)malloc(sizeof(cl_byte_t)* (ccrm_message_size + 1)) ;
    if (ccrm_message_data == NULL) {
       return CL_RETVAL_MALLOC;
    }
-   sprintf((char*)ccrm_message_data,CL_CCRM_MESSAGE , CL_CCRM_MESSAGE_VERSION );
+   sprintf((char*)ccrm_message_data, CL_CCRM_MESSAGE, CL_CCRM_MESSAGE_VERSION);
 
    ret_val = cl_com_setup_message(&ccrm_message, connection, ccrm_message_data , ccrm_message_size , CL_MIH_MAT_NAK , 0 ,0);
    if (ret_val != CL_RETVAL_OK) {
@@ -5344,15 +5244,15 @@ int cl_commlib_check_for_ack(cl_com_handle_t* handle, char* un_resolved_hostname
    int found_message = 0;
    int message_added = 0;
    cl_connection_list_elem_t* elem = NULL;
-   cl_com_connection_t* connection;
+   cl_com_connection_t* connection = NULL;
    cl_com_endpoint_t receiver;
    cl_message_list_elem_t* message_list_elem = NULL;
    cl_message_list_elem_t* next_message_list_elem = NULL;
    cl_com_message_t*     message = NULL;
    int return_value = CL_RETVAL_OK;
    char* unique_hostname = NULL;
+   struct in_addr in_addr;
    int do_stop = 0;
-
 
    cl_commlib_check_callback_functions();
 
@@ -5366,7 +5266,7 @@ int cl_commlib_check_for_ack(cl_com_handle_t* handle, char* un_resolved_hostname
    }
 
    /* resolve hostname */
-   return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname, NULL, NULL, NULL);
+   return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname, &in_addr, NULL, NULL);
    if (return_value != CL_RETVAL_OK) {
       return return_value;
    }
@@ -5375,24 +5275,19 @@ int cl_commlib_check_for_ack(cl_com_handle_t* handle, char* un_resolved_hostname
    receiver.comp_host = unique_hostname;
    receiver.comp_name = component_name;
    receiver.comp_id   = component_id;
+   receiver.addr.s_addr = in_addr.s_addr;
+   receiver.hash_id = cl_create_endpoint_string(&receiver);
 
    while(do_stop == 0) {
       found_message = 0;
       /* lock handle connection list */
       cl_raw_list_lock(handle->connection_list);
       
-      elem = cl_connection_list_get_first_elem(handle->connection_list);     
       connection = NULL;
-      while(elem) {
+      elem = cl_connection_list_get_elem_endpoint(handle->connection_list, &receiver);
+      if (elem != NULL) {
          connection = elem->connection;
-         if ( cl_com_compare_endpoints(connection->receiver, &receiver) ) {
-            break;
-         }
-         elem = cl_connection_list_get_next_elem(elem);
-         connection = NULL;
-      }
-    
-      if (connection != NULL) {
+
          /* check for message acknowledge */
          cl_raw_list_lock(connection->send_message_list);
    
@@ -5430,6 +5325,7 @@ int cl_commlib_check_for_ack(cl_com_handle_t* handle, char* un_resolved_hostname
 
                   cl_raw_list_unlock(handle->connection_list);
                   free(unique_hostname);
+                  free(receiver.hash_id);
                   CL_LOG_INT(CL_LOG_INFO,"got message acknowledge:",(int)mid);
                   if (message_added) {
                      switch(cl_com_create_threads) {
@@ -5445,7 +5341,6 @@ int cl_commlib_check_for_ack(cl_com_handle_t* handle, char* un_resolved_hostname
                      }
                   }
 
-
                   return CL_RETVAL_OK;
                } else {
                   CL_LOG_INT(CL_LOG_INFO,"message is not acknowledged:", (int)mid);
@@ -5458,6 +5353,7 @@ int cl_commlib_check_for_ack(cl_com_handle_t* handle, char* un_resolved_hostname
          CL_LOG_STR(CL_LOG_ERROR,"can't find connection to:", receiver.comp_host);
          cl_raw_list_unlock(handle->connection_list);
          free(unique_hostname);
+         free(receiver.hash_id);
          return CL_RETVAL_CONNECTION_NOT_FOUND; 
       }
       cl_raw_list_unlock(handle->connection_list);
@@ -5465,6 +5361,7 @@ int cl_commlib_check_for_ack(cl_com_handle_t* handle, char* un_resolved_hostname
       if (found_message == 0) {
          CL_LOG_INT(CL_LOG_ERROR,"message not found or removed because of ack timeout", (int)mid);
          free(unique_hostname);
+         free(receiver.hash_id);
          return CL_RETVAL_MESSAGE_ACK_ERROR; /* message not found or removed because of ack timeout */
       }
 
@@ -5482,6 +5379,7 @@ int cl_commlib_check_for_ack(cl_com_handle_t* handle, char* un_resolved_hostname
          } /* switch */
       } else  {
          free(unique_hostname);
+         free(receiver.hash_id);
          return CL_RETVAL_MESSAGE_WAIT_FOR_ACK;
       }
    } /* while (1) */
@@ -5497,6 +5395,7 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
 
    int ret_val;
    char* unique_hostname = NULL;
+   struct in_addr in_addr;
    cl_bool_t messages_for_app = CL_FALSE;
    cl_com_endpoint_t receiver;
    cl_connection_list_elem_t* elem = NULL;
@@ -5504,43 +5403,41 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
    cl_com_connection_t* new_con = NULL;
    cl_com_endpoint_t* remote_endpoint = NULL;
    cl_com_endpoint_t* local_endpoint  = NULL;
-   cl_com_endpoint_t* receiver_endpoint  = NULL;
-   cl_com_endpoint_t* sender_endpoint  = NULL;
 
    int shutdown_received = 0;
 
    cl_commlib_check_callback_functions();
 
    /* check endpoint parameters: un_resolved_hostname , componenet_name and componenet_id */
-   if ( un_resolved_hostname == NULL || component_name == NULL || component_id == 0 ) {
+   if (un_resolved_hostname == NULL || component_name == NULL || component_id == 0 ) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(CL_RETVAL_UNKNOWN_ENDPOINT));
       return CL_RETVAL_UNKNOWN_ENDPOINT;
    }
-
 
    CL_LOG_STR(CL_LOG_INFO,"open host           :",un_resolved_hostname );
    CL_LOG_STR(CL_LOG_INFO,"open component_name :",component_name );
    CL_LOG_INT(CL_LOG_INFO,"open component_id   :",(int)component_id );
 
 
-   if ( handle == NULL) {
+   if (handle == NULL) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(CL_RETVAL_HANDLE_NOT_FOUND));
       return CL_RETVAL_HANDLE_NOT_FOUND;
    }
  
    /* resolve hostname */
    ret_val = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname,
-                                         NULL, NULL, NULL);
+                                         &in_addr, NULL, NULL);
    if (ret_val != CL_RETVAL_OK) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(ret_val));
       return ret_val;
    }
 
-
    /* setup endpoint */
    receiver.comp_host = unique_hostname;
    receiver.comp_name = component_name;
    receiver.comp_id   = component_id;
+   receiver.addr.s_addr = in_addr.s_addr;
+   receiver.hash_id = cl_create_endpoint_string(&receiver);
 
    /* lock handle mutex, because we don't want to allow more threads to create a new 
       connection for the same receiver endpoint */
@@ -5550,37 +5447,32 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
    /* lock handle connection list */
    cl_raw_list_lock(handle->connection_list);
 
-   elem = cl_connection_list_get_first_elem(handle->connection_list);     
    connection = NULL;
-   while(elem) {
-
+   elem = cl_connection_list_get_elem_endpoint(handle->connection_list, &receiver);
+   if (elem != NULL) {
+      struct timeval now;
       connection = elem->connection;
-      if ( cl_com_compare_endpoints(connection->receiver, &receiver) ) {
-         struct timeval now;
 
-         if (connection->ccm_received != 0) {
+      if (connection->ccm_received != 0) {
 
-            /* we have sent connection close response, do not accept any new message */
-            /* we wait till connection is down and try to reconnect  */
-            CL_LOG(CL_LOG_ERROR,"connection is open, but going down now");
-            gettimeofday(&now,NULL);
-            connection->shutdown_timeout = now.tv_sec + handle->acknowledge_timeout + handle->close_connection_timeout;
-            shutdown_received = 1;
-            break;
-         }
-
-         if (connection->connection_state == CL_CONNECTED &&
-             connection->connection_sub_state != CL_COM_WORK) {
-            CL_LOG(CL_LOG_ERROR,"connection is open, but going down now");
-            gettimeofday(&now,NULL);
-            connection->shutdown_timeout = now.tv_sec + handle->acknowledge_timeout + handle->close_connection_timeout;
-            shutdown_received = 2;
-            break;
-         }
+         /* we have sent connection close response, do not accept any new message */
+         /* we wait till connection is down and try to reconnect  */
+         CL_LOG(CL_LOG_ERROR,"connection is open, but going down now");
+         gettimeofday(&now,NULL);
+         connection->shutdown_timeout = now.tv_sec + handle->acknowledge_timeout + handle->close_connection_timeout;
+         shutdown_received = 1;
+      } else if (connection->connection_state == CL_CONNECTED &&
+          connection->connection_sub_state != CL_COM_WORK) {
+         CL_LOG(CL_LOG_ERROR,"connection is open, but going down now");
+         gettimeofday(&now,NULL);
+         connection->shutdown_timeout = now.tv_sec + handle->acknowledge_timeout + handle->close_connection_timeout;
+         shutdown_received = 2;
+      } else {
          /* connection is open, just return */
          cl_raw_list_unlock(handle->connection_list);
          CL_LOG(CL_LOG_WARNING,"connection is already open");
          free(unique_hostname);
+         free(receiver.hash_id);
          unique_hostname = NULL;
          receiver.comp_host = NULL;
 
@@ -5588,8 +5480,6 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
          pthread_mutex_unlock(handle->connection_list_mutex);
          return CL_RETVAL_OK;
       }
-      elem = cl_connection_list_get_next_elem(elem);
-      connection = NULL;
    }
    cl_raw_list_unlock(handle->connection_list);
 
@@ -5604,9 +5494,10 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
       /* we don't have a port to connect to, re open would fail, return now */
       if (handle->connect_port <= 0) {
          int tcp_port = 0;
-         if ( cl_com_get_known_endpoint_port(&receiver, &tcp_port) != CL_RETVAL_OK) {
+         if (cl_com_get_known_endpoint_port(&receiver, &tcp_port) != CL_RETVAL_OK) {
             CL_LOG(CL_LOG_ERROR,"no port to connect");
             free(unique_hostname); /* don't access receiver after this */
+            free(receiver.hash_id);
             unique_hostname = NULL;
             receiver.comp_host = NULL;
             /* unlock connection list */
@@ -5621,85 +5512,82 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
          still_in_list = 0;
          /* lock handle connection list */
          cl_raw_list_lock(handle->connection_list);
-         elem = cl_connection_list_get_first_elem(handle->connection_list);
-         while(elem) {
-            message_sent = 0;
+
+         elem = cl_connection_list_get_elem_endpoint(handle->connection_list, &receiver);
+         if (elem != NULL) {
+            struct timeval now;
             connection = elem->connection;
-            if ( cl_com_compare_endpoints(connection->receiver, &receiver)) {
-               struct timeval now;
-               still_in_list = 1;
-/**/
-               if ( shutdown_received == 1 ) {
-                  if (connection->ccm_received == 0) {  
-                     /* This must be a new connection ( initiated from other endpoint ), so 
-                        we return that connection is already open */
-                     cl_raw_list_unlock(handle->connection_list);
-                     free(unique_hostname);
-                     unique_hostname = NULL;
-                     receiver.comp_host = NULL;
+            still_in_list = 1;
 
-                     pthread_mutex_unlock(handle->connection_list_mutex);
-                     CL_LOG(CL_LOG_INFO,"This is a new connected client, don't reopen, use new connection");
-                     return CL_RETVAL_OK;
-                  }
-               } else {
-                  if ( (connection->connection_state == CL_CONNECTED && connection->connection_sub_state == CL_COM_WORK) || 
-                        connection->connection_state == CL_OPENING ||
-                        connection->connection_state == CL_ACCEPTING ||
-                        connection->connection_state == CL_CONNECTING ||
-                        connection->connection_state == CL_DISCONNECTED) {
-                     /* This must be a new connection ( initiated from other endpoint ), so 
-                        we return that connection is already open */
-                     cl_raw_list_unlock(handle->connection_list);
-                     free(unique_hostname);
-                     unique_hostname = NULL;
-                     receiver.comp_host = NULL;
-
-                     pthread_mutex_unlock(handle->connection_list_mutex);
-                     CL_LOG(CL_LOG_INFO,"This is a new connected client, don't reopen, use new connection");
-                     return CL_RETVAL_OK;
-                  }
-               }
-/**/
-               CL_LOG(CL_LOG_WARNING,"connection still alive ...");
-               CL_LOG_INT(CL_LOG_WARNING,"receive buffer:",(int)cl_raw_list_get_elem_count(connection->received_message_list) );
-               CL_LOG_INT(CL_LOG_WARNING,"send buffer   :",(int)cl_raw_list_get_elem_count(connection->send_message_list) );
-              
-               if ( connection->ccm_received == 1 && 
-                    cl_raw_list_get_elem_count(connection->received_message_list) == 0 &&  
-                    cl_raw_list_get_elem_count(connection->send_message_list) == 0 ) {
-                  CL_LOG(CL_LOG_WARNING,"received ccm");
-                  connection->ccm_received = 2;
-                  connection->connection_sub_state = CL_COM_SENDING_CCRM;
-                  cl_commlib_send_ccrm_message(connection);
-                  message_sent = 1;
-                  CL_LOG(CL_LOG_WARNING,"sending ccrm");
-               }
-
-               /* There are messages to read for application, return */
-               if ( cl_raw_list_get_elem_count(connection->received_message_list) != 0 ) {
-                  messages_for_app = CL_TRUE;
-               }
-
-               gettimeofday(&now,NULL);
-               if (connection->shutdown_timeout <= now.tv_sec || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
-                  CL_LOG(CL_LOG_WARNING,"got timeout while waiting for connection close");
-                  connection->connection_state = CL_CLOSING;
-                  connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+            if ( shutdown_received == 1 ) {
+               if (connection->ccm_received == 0) {  
+                  /* This must be a new connection ( initiated from other endpoint ), so 
+                     we return that connection is already open */
                   cl_raw_list_unlock(handle->connection_list);
                   free(unique_hostname);
+                  free(receiver.hash_id);
                   unique_hostname = NULL;
                   receiver.comp_host = NULL;
 
-                  /* unlock connection list */
                   pthread_mutex_unlock(handle->connection_list_mutex);
-                  return CL_RETVAL_CONNECTION_GOING_DOWN;
+                  CL_LOG(CL_LOG_INFO,"This is a new connected client, don't reopen, use new connection");
+                  return CL_RETVAL_OK;
+               }
+            } else {
+               if ( (connection->connection_state == CL_CONNECTED && connection->connection_sub_state == CL_COM_WORK) || 
+                     connection->connection_state == CL_CONNECTING ||
+                     connection->connection_state == CL_DISCONNECTED) {
+                  /* This must be a new connection ( initiated from other endpoint ), so 
+                     we return that connection is already open */
+                  cl_raw_list_unlock(handle->connection_list);
+                  free(unique_hostname);
+                  free(receiver.hash_id);
+                  unique_hostname = NULL;
+                  receiver.comp_host = NULL;
+
+                  pthread_mutex_unlock(handle->connection_list_mutex);
+                  CL_LOG(CL_LOG_INFO,"This is a new connected client, don't reopen, use new connection");
+                  return CL_RETVAL_OK;
                }
             }
-            elem = cl_connection_list_get_next_elem(elem);
+
+            CL_LOG(CL_LOG_WARNING,"connection still alive ...");
+            CL_LOG_INT(CL_LOG_WARNING,"receive buffer:",(int)cl_raw_list_get_elem_count(connection->received_message_list) );
+            CL_LOG_INT(CL_LOG_WARNING,"send buffer   :",(int)cl_raw_list_get_elem_count(connection->send_message_list) );
+            
+            if ( connection->ccm_received == 1 && 
+                 cl_raw_list_get_elem_count(connection->received_message_list) == 0 &&  
+                 cl_raw_list_get_elem_count(connection->send_message_list) == 0 ) {
+               CL_LOG(CL_LOG_WARNING,"received ccm");
+               connection->ccm_received = 2;
+               connection->connection_sub_state = CL_COM_SENDING_CCRM;
+               cl_commlib_send_ccrm_message(connection);
+               message_sent = 1;
+               CL_LOG(CL_LOG_WARNING,"sending ccrm");
+            }
+
+            /* There are messages to read for application, return */
+            if ( cl_raw_list_get_elem_count(connection->received_message_list) != 0 ) {
+               messages_for_app = CL_TRUE;
+            }
+
+            gettimeofday(&now,NULL);
+            if (connection->shutdown_timeout <= now.tv_sec || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
+               CL_LOG(CL_LOG_WARNING,"got timeout while waiting for connection close");
+               connection->connection_state = CL_CLOSING;
+               connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+               cl_raw_list_unlock(handle->connection_list);
+               free(unique_hostname);
+               free(receiver.hash_id);
+               unique_hostname = NULL;
+               receiver.comp_host = NULL;
+
+               /* unlock connection list */
+               pthread_mutex_unlock(handle->connection_list_mutex);
+               return CL_RETVAL_CONNECTION_GOING_DOWN;
+            }
          }
          cl_raw_list_unlock(handle->connection_list);
-         
 
          if (still_in_list == 1) {
             switch(cl_com_create_threads) {
@@ -5722,6 +5610,7 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
 
          if ( messages_for_app == CL_TRUE ) {
             free(unique_hostname);
+            free(receiver.hash_id);
             unique_hostname = NULL;
             receiver.comp_host = NULL;
 
@@ -5741,6 +5630,7 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
       CL_LOG(CL_LOG_ERROR,"could not setup connection");
       cl_com_close_connection(&new_con);
       free(unique_hostname);
+      free(receiver.hash_id);
       unique_hostname = NULL;
       receiver.comp_host = NULL;
 
@@ -5750,27 +5640,22 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
    }
   
    /* now open connection to the endpoint */
-   local_endpoint    = cl_com_create_endpoint(handle->local->comp_host, handle->local->comp_name, handle->local->comp_id);
-   sender_endpoint   = cl_com_create_endpoint(handle->local->comp_host, handle->local->comp_name, handle->local->comp_id);
-   remote_endpoint   = cl_com_create_endpoint(receiver.comp_host, component_name , component_id);
-   receiver_endpoint = cl_com_create_endpoint(receiver.comp_host, component_name , component_id);
+   local_endpoint    = cl_com_dup_endpoint(handle->local);
+   remote_endpoint   = cl_com_dup_endpoint(&receiver);
       
    ret_val = cl_com_open_connection(new_con, 
                                     handle->open_connection_timeout,
                                     remote_endpoint,
-                                    local_endpoint,
-                                    receiver_endpoint,
-                                    sender_endpoint);
+                                    local_endpoint);
 
    cl_com_free_endpoint(&remote_endpoint);
    cl_com_free_endpoint(&local_endpoint);
-   cl_com_free_endpoint(&receiver_endpoint);
-   cl_com_free_endpoint(&sender_endpoint);
 
    if (ret_val != CL_RETVAL_OK && ret_val != CL_RETVAL_UNCOMPLETE_WRITE ) {
       CL_LOG(CL_LOG_ERROR,"could not open connection");
       cl_com_close_connection(&new_con);
       free(unique_hostname);
+      free(receiver.hash_id);
       unique_hostname = NULL;
       receiver.comp_host = NULL;
 
@@ -5799,16 +5684,11 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
    cl_raw_list_lock(handle->connection_list);
    
    /* Check if this connection is unique */
-   elem = cl_connection_list_get_first_elem(handle->connection_list);
-   while(elem != NULL) {
-      if ( cl_com_compare_endpoints(elem->connection->receiver, &receiver)) {
-         break;
-      }
-      elem = cl_connection_list_get_next_elem(elem);
-   }
+   elem = cl_connection_list_get_elem_endpoint(handle->connection_list, &receiver);
+
    if (elem == NULL) {
       /* endpoint is unique, add it to connection list */
-      ret_val = cl_connection_list_append_connection(handle->connection_list, new_con,0);
+      ret_val = cl_connection_list_append_connection(handle->connection_list, new_con, 0);
       cl_raw_list_unlock(handle->connection_list);
    } else {
       if ( elem->connection->connection_state != CL_CLOSING ) {
@@ -5816,7 +5696,8 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
 
          cl_raw_list_unlock(handle->connection_list);
          cl_com_close_connection(&new_con);
-         free(unique_hostname); /* don't access receiver after this */
+         free(unique_hostname);
+         free(receiver.hash_id);
          unique_hostname = NULL;
          receiver.comp_host = NULL;
 
@@ -5827,7 +5708,8 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
          CL_LOG(CL_LOG_ERROR,"client not unique error, can't add opened connection into connection list");
          cl_raw_list_unlock(handle->connection_list);
          cl_com_close_connection(&new_con);
-         free(unique_hostname); /* don't access receiver after this */
+         free(unique_hostname);
+         free(receiver.hash_id);
          unique_hostname = NULL;
          receiver.comp_host = NULL;
 
@@ -5837,7 +5719,8 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
       }
    }
 
-   free(unique_hostname); /* don't access receiver after this */
+   free(unique_hostname);
+   free(receiver.hash_id);
    unique_hostname = NULL;
    receiver.comp_host = NULL;
 
@@ -5871,6 +5754,7 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
    int return_value = CL_RETVAL_OK;
    cl_bool_t trigger_write = CL_FALSE;
    char* unique_hostname = NULL;
+   struct in_addr in_addr;
    cl_com_endpoint_t receiver;
    cl_connection_list_elem_t* elem = NULL;
    cl_com_connection_t* connection = NULL;
@@ -5884,12 +5768,12 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
       return CL_RETVAL_HANDLE_NOT_FOUND;
    }
    /* check endpoint parameters: un_resolved_hostname , componenet_name and componenet_id */
-   if ( un_resolved_hostname == NULL || component_name == NULL || component_id == 0 ) {
+   if (un_resolved_hostname == NULL || component_name == NULL || component_id == 0) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(CL_RETVAL_UNKNOWN_ENDPOINT));
       return CL_RETVAL_UNKNOWN_ENDPOINT;
    }
    /* resolve hostname */
-   return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname,NULL, NULL, NULL);
+   return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname, &in_addr, NULL, NULL);
    if (return_value != CL_RETVAL_OK) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(return_value));
       return return_value;
@@ -5898,6 +5782,8 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
    receiver.comp_host = unique_hostname;
    receiver.comp_name = component_name;
    receiver.comp_id   = component_id;
+   receiver.addr.s_addr = in_addr.s_addr;
+   receiver.hash_id = cl_create_endpoint_string(&receiver);
 
    /* flush send message queue */
    cl_raw_list_lock(handle->send_message_queue);
@@ -5923,38 +5809,33 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
    /* lock handle connection list */
    cl_raw_list_lock(handle->connection_list);
 
-   elem = cl_connection_list_get_first_elem(handle->connection_list);     
    connection = NULL;
-   while(elem) {
+   elem = cl_connection_list_get_elem_endpoint(handle->connection_list, &receiver);
+   if (elem != NULL) {
       connection = elem->connection;
-      if ( cl_com_compare_endpoints(connection->receiver, &receiver) ) {
-         if (connection->data_flow_type == CL_CM_CT_MESSAGE) {
-            if (connection->connection_state == CL_CONNECTED &&
-                connection->connection_sub_state == CL_COM_WORK  &&
-                connection->ccm_received         == 0) {
-               cl_commlib_send_ccm_message(connection);
-               trigger_write = CL_TRUE;
-               connection->connection_sub_state = CL_COM_SENDING_CCM;
-               CL_LOG_STR(CL_LOG_WARNING,"closing connection to host:", connection->remote->comp_host );
-               CL_LOG_STR(CL_LOG_WARNING,"component name:            ", connection->remote->comp_name );
-               CL_LOG_INT(CL_LOG_WARNING,"component id:              ", (int)connection->remote->comp_id );
-               closed = 1;
-            }
-         } 
-
-         if (connection->data_flow_type == CL_CM_CT_STREAM) {
-            CL_LOG(CL_LOG_WARNING,"closing stream connection");
+      if (connection->data_flow_type == CL_CM_CT_MESSAGE) {
+         if (connection->connection_state == CL_CONNECTED &&
+             connection->connection_sub_state == CL_COM_WORK  &&
+             connection->ccm_received         == 0) {
+            cl_commlib_send_ccm_message(connection);
+            trigger_write = CL_TRUE;
+            connection->connection_sub_state = CL_COM_SENDING_CCM;
             CL_LOG_STR(CL_LOG_WARNING,"closing connection to host:", connection->remote->comp_host );
             CL_LOG_STR(CL_LOG_WARNING,"component name:            ", connection->remote->comp_name );
             CL_LOG_INT(CL_LOG_WARNING,"component id:              ", (int)connection->remote->comp_id );
-            connection->connection_state = CL_CLOSING;
-            connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
             closed = 1;
          }
+      } else if (connection->data_flow_type == CL_CM_CT_STREAM) {
+         CL_LOG(CL_LOG_WARNING,"closing stream connection");
+         CL_LOG_STR(CL_LOG_WARNING,"closing connection to host:", connection->remote->comp_host );
+         CL_LOG_STR(CL_LOG_WARNING,"component name:            ", connection->remote->comp_name );
+         CL_LOG_INT(CL_LOG_WARNING,"component id:              ", (int)connection->remote->comp_id );
+         connection->connection_state = CL_CLOSING;
+         connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+         closed = 1;
       }
-      elem = cl_connection_list_get_next_elem(elem);
-      connection = NULL;
    }
+
    cl_raw_list_unlock(handle->connection_list);
 
    if ( trigger_write == CL_TRUE ) {
@@ -5982,55 +5863,50 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
 
          /* is connection still in list ??? */
          cl_raw_list_lock(handle->connection_list);
-         elem = cl_connection_list_get_first_elem(handle->connection_list);     
-         connection = NULL;
-         while(elem) {
+
+         elem = cl_connection_list_get_elem_endpoint(handle->connection_list, &receiver);
+         if (elem != NULL) {
+            cl_message_list_elem_t* message_elem = NULL;
+            cl_message_list_elem_t* current_message_elem = NULL;
+
             connection = elem->connection;
-            if ( cl_com_compare_endpoints(connection->receiver, &receiver) ) {
-               cl_message_list_elem_t* message_elem = NULL;
-               cl_message_list_elem_t* current_message_elem = NULL;
+            connection_removed = CL_FALSE;
 
-               connection_removed = CL_FALSE;
+            cl_raw_list_lock(connection->received_message_list);
+            if (cl_raw_list_get_elem_count(connection->received_message_list) > 0) {
+               message_elem = cl_message_list_get_first_elem(connection->received_message_list);
+               while(message_elem) {
+                  /* set current message element */
+                  current_message_elem = message_elem;
 
-               cl_raw_list_lock(connection->received_message_list);
-               if (cl_raw_list_get_elem_count(connection->received_message_list) > 0) {
-                  message_elem = cl_message_list_get_first_elem(connection->received_message_list);
-                  while(message_elem) {
-                     /* set current message element */
-                     current_message_elem = message_elem;
+                  /* get next message */
+                  message_elem = cl_message_list_get_next_elem(message_elem);
+                  
+                  if (current_message_elem->message->message_state == CL_MS_READY) {
+                     /* there are messages in ready to deliver state for this connection */
+                     if (return_for_messages == CL_TRUE) {
+                        do_return_after_trigger = CL_TRUE;
+                     } else {
+                        cl_com_message_t* message = NULL;
 
-                     /* get next message */
-                     message_elem = cl_message_list_get_next_elem(message_elem);
-                     
-                     if (current_message_elem->message->message_state == CL_MS_READY) {
-                        /* there are messages in ready to deliver state for this connection */
-                        if (return_for_messages == CL_TRUE) {
-                           do_return_after_trigger = CL_TRUE;
-                        } else {
-                           cl_com_message_t* message = NULL;
+                        /* remove message from received message list*/
+                        message = current_message_elem->message;
+                        cl_message_list_remove_receive(connection, message, 0);
 
-                           /* remove message from received message list*/
-                           message = current_message_elem->message;
-                           cl_message_list_remove_receive(connection, message, 0);
+                        /* decrease counter for ready messages */
+                        pthread_mutex_lock(handle->messages_ready_mutex);
+                        handle->messages_ready_for_read = handle->messages_ready_for_read - 1;
+                        cl_app_message_queue_remove(handle->received_message_queue, connection, 1, CL_FALSE);
+                        pthread_mutex_unlock(handle->messages_ready_mutex);
 
-                           /* decrease counter for ready messages */
-                           pthread_mutex_lock(handle->messages_ready_mutex);
-                           handle->messages_ready_for_read = handle->messages_ready_for_read - 1;
-                           cl_app_message_queue_remove(handle->received_message_queue, connection, 1, CL_FALSE);
-                           pthread_mutex_unlock(handle->messages_ready_mutex);
-
-                           /* delete message */
-                           cl_com_free_message(&message);
-                        }
+                        /* delete message */
+                        cl_com_free_message(&message);
                      }
                   }
-                  
                }
-               cl_raw_list_unlock(connection->received_message_list);
-               break;
+               
             }
-            elem = cl_connection_list_get_next_elem(elem);
-            connection = NULL;
+            cl_raw_list_unlock(connection->received_message_list);
          }
          cl_raw_list_unlock(handle->connection_list);
 
@@ -6048,16 +5924,16 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
          }
          if (do_return_after_trigger == CL_TRUE) {
             free(unique_hostname);
-            unique_hostname = NULL;
+            free(receiver.hash_id);
             return CL_RETVAL_MESSAGE_IN_BUFFER;
          }
       }
       free(unique_hostname);
-      unique_hostname = NULL;
+      free(receiver.hash_id);
       return CL_RETVAL_OK;
    }
    free(unique_hostname);
-   unique_hostname = NULL;
+   free(receiver.hash_id);
    return CL_RETVAL_CONNECTION_NOT_FOUND;
 }
 
@@ -6065,9 +5941,10 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_commlib_get_endpoint_status()"
-int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
-                                   char* un_resolved_hostname, char* component_name, unsigned long component_id,
-                                   cl_com_SIRM_t** status) {
+int cl_commlib_get_endpoint_status(cl_com_handle_t* handle, char* un_resolved_hostname,
+                                   char* component_name, unsigned long component_id,
+                                   cl_com_SIRM_t** status)
+{
 
 
    cl_com_connection_t* connection = NULL;
@@ -6078,6 +5955,7 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
    int return_value = CL_RETVAL_OK;
    cl_com_endpoint_t receiver;
    char* unique_hostname = NULL;
+   struct in_addr in_addr;
    int retry_send = 1;
    int found_message = 0;
    int do_stop = 0;
@@ -6094,22 +5972,20 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
    }
 
    /* check endpoint parameters: un_resolved_hostname , componenet_name and componenet_id */
-   if ( un_resolved_hostname == NULL || component_name == NULL || component_id == 0 ) {
+   if (un_resolved_hostname == NULL || component_name == NULL || component_id == 0) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(CL_RETVAL_UNKNOWN_ENDPOINT));
       return CL_RETVAL_UNKNOWN_ENDPOINT;
    }
-
-   
 
    if (*status != NULL) {
       CL_LOG(CL_LOG_ERROR,"expected empty status pointer address");
       return CL_RETVAL_PARAMS;
    }
    
-   CL_LOG_STR_STR_INT(CL_LOG_INFO, "ping",un_resolved_hostname, component_name, (int)component_id );
+   CL_LOG_STR_STR_INT(CL_LOG_INFO, "ping",un_resolved_hostname, component_name, (int)component_id);
 
    /* resolve hostname */
-   return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname,NULL, NULL, NULL);
+   return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname, &in_addr, NULL, NULL);
    if (return_value != CL_RETVAL_OK) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(return_value));
       return return_value;
@@ -6119,45 +5995,36 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
    receiver.comp_host = unique_hostname;
    receiver.comp_name = component_name;
    receiver.comp_id   = component_id;
-
+   receiver.addr.s_addr = in_addr.s_addr;
+   receiver.hash_id = cl_create_endpoint_string(&receiver);
 
    while(retry_send != 0) {
    
       /* lock handle connection list */
       cl_raw_list_lock(handle->connection_list);
-      elem = cl_connection_list_get_first_elem(handle->connection_list);     
+
       connection = NULL;
-      while(elem) {
-   
+      elem = cl_connection_list_get_elem_endpoint(handle->connection_list, &receiver);
+      if (elem != NULL) {
          connection = elem->connection;
-   
-         /* send message to client (no broadcast) */
-         if ( cl_com_compare_endpoints(connection->receiver, &receiver) ) {
-   
-            if (connection->ccm_received != 0) {  
-               /* we have sent connection close response, do not accept any new message */
-               /* we wait till connection is down and try to reconnect  */
-               CL_LOG(CL_LOG_ERROR,"connection is going down now, can't send message (ccrm sent)");
-               break;
-            }
-   
-            if (connection->connection_state == CL_CONNECTED && connection->connection_sub_state != CL_COM_WORK) {
-               CL_LOG(CL_LOG_WARNING,"connection is going down now, can't send message");
-               break;
-            }
-   
+
+         if (connection->ccm_received != 0) {  
+            /* we have sent connection close response, do not accept any new message */
+            /* we wait till connection is down and try to reconnect  */
+            CL_LOG(CL_LOG_ERROR,"connection is going down now, can't send message (ccrm sent)");
+         } else if (connection->connection_state == CL_CONNECTED && connection->connection_sub_state != CL_COM_WORK) {
+            CL_LOG(CL_LOG_WARNING,"connection is going down now, can't send message");
+         } else {
             return_value = cl_commlib_send_sim_message(connection, &my_mid); 
    
             if (return_value != CL_RETVAL_OK) {
                cl_raw_list_unlock(handle->connection_list);
                free(unique_hostname);
+               free(receiver.hash_id);
                return return_value;
             }
             message_added = 1;
-            break;
          }
-         elem = cl_connection_list_get_next_elem(elem);
-         connection = NULL;
       }
       cl_raw_list_unlock(handle->connection_list);
 
@@ -6167,6 +6034,7 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
          return_value = cl_commlib_open_connection(handle, un_resolved_hostname, component_name, component_id);
          if (return_value != CL_RETVAL_OK) {
             free(unique_hostname);
+            free(receiver.hash_id);
             CL_LOG_STR(CL_LOG_ERROR,"cl_commlib_open_connection() returned: ",cl_get_error_text(return_value));
             return return_value;
          }
@@ -6197,6 +6065,7 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
       }
    } else {
       free(unique_hostname);
+      free(receiver.hash_id);
       return CL_RETVAL_SEND_ERROR;
    } 
  
@@ -6205,18 +6074,11 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
       found_message = 0;
       /* lock handle connection list */
       cl_raw_list_lock(handle->connection_list);
-      
-      elem = cl_connection_list_get_first_elem(handle->connection_list);     
+
+      elem = cl_connection_list_get_elem_endpoint(handle->connection_list, &receiver);
       connection = NULL;
-      while(elem) {
+      if (elem != NULL) {
          connection = elem->connection;
-         if ( cl_com_compare_endpoints(connection->receiver, &receiver) ) {
-            break;
-         }
-         elem = cl_connection_list_get_next_elem(elem);
-         connection = NULL;
-      }
-      if (connection != NULL) {
          /* check for message acknowledge */
          cl_raw_list_lock(connection->send_message_list);
    
@@ -6257,6 +6119,7 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
 
                   cl_raw_list_unlock(handle->connection_list);
                   free(unique_hostname);
+                  free(receiver.hash_id);
                   CL_LOG_INT(CL_LOG_WARNING,"got SIRM for SIM with id:",(int)my_mid);
 
                   if (new_message_added) {
@@ -6285,6 +6148,7 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
          CL_LOG(CL_LOG_ERROR,"no connection FOUND");
          cl_raw_list_unlock(handle->connection_list);
          free(unique_hostname);
+         free(receiver.hash_id);
          return CL_RETVAL_CONNECTION_NOT_FOUND; 
       }
       cl_raw_list_unlock(handle->connection_list);
@@ -6292,6 +6156,7 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
       if (found_message == 0) {
          CL_LOG_INT(CL_LOG_ERROR,"SIM not found or removed because of SIRM ack timeout", (int)my_mid);
          free(unique_hostname);
+         free(receiver.hash_id);
          return CL_RETVAL_MESSAGE_ACK_ERROR; /* message not found or removed because of ack timeout */
       }
 
@@ -6329,7 +6194,6 @@ static int cl_commlib_send_message_to_endpoint(cl_com_handle_t*   handle,
    int message_added = 0;
    int return_value = CL_RETVAL_OK;
    int retry_send = 1;
-   cl_bool_t ignore_connection = CL_FALSE;
 
    /* check acknowledge method */
    if (ack_type == CL_MIH_MAT_UNDEFINED || data == NULL || size == 0 ) {
@@ -6361,79 +6225,50 @@ static int cl_commlib_send_message_to_endpoint(cl_com_handle_t*   handle,
    
       /* lock handle connection list */
       cl_raw_list_lock(handle->connection_list);
-      elem = cl_connection_list_get_first_elem(handle->connection_list);     
-      while(elem) {
-         ignore_connection = CL_FALSE;
+      elem = cl_connection_list_get_elem_endpoint(handle->connection_list, endpoint);
+      if (elem != NULL) {
          connection = elem->connection;
-   
-         if (connection->was_accepted == CL_TRUE) {
-            /* ignore duplicate endpoints */
-            switch (connection->crm_state) {
-               case CL_CRM_CS_UNDEFINED:
-               case CL_CRM_CS_CONNECTED: {
-                  ignore_connection = CL_FALSE;
-                  break;
-               }
-               default: {
-                  ignore_connection = CL_TRUE;
-                  CL_LOG(CL_LOG_WARNING,"ignore connection with unexpected connection state");
-                  break;
-               }
-            }
-         }
-         
-         if (ignore_connection == CL_FALSE && 
-             cl_com_compare_endpoints(connection->receiver, endpoint)) {
-   
+  
+         if (connection->was_accepted == CL_TRUE &&
+             connection->crm_state != CL_CRM_CS_UNDEFINED &&
+             connection->crm_state != CL_CRM_CS_CONNECTED) {
+               CL_LOG(CL_LOG_WARNING,"ignore connection with unexpected connection state");
+         } else {
             /* send message to client (no broadcast) */
-
-            if (connection->ccm_received != 0) {  
-               /* we have sent connection close response, do not accept any new message */
-               /* we wait till connection is down and try to reconnect  */
-               CL_LOG(CL_LOG_ERROR,"connection is going down now, can't send message (ccrm sent)");
-               break;
-            }
-   
-            if (connection->connection_state == CL_CONNECTED && connection->connection_sub_state != CL_COM_WORK) {
+            if (connection->ccm_received != 0 ||
+                (connection->connection_state == CL_CONNECTED && connection->connection_sub_state != CL_COM_WORK)) {
                CL_LOG(CL_LOG_WARNING,"connection is going down now, can't send message");
-               break;
+            } else {
+               if (response_mid > 0 && response_mid > connection->last_received_message_id) {
+                  CL_LOG_INT(CL_LOG_DEBUG,"last_received_message_id:", (int)connection->last_received_message_id );
+                  CL_LOG_INT(CL_LOG_DEBUG,"last_send_message_id    :", (int)connection->last_send_message_id);
+                  CL_LOG_INT(CL_LOG_DEBUG,"response_mid to send    :", (int)response_mid);
+
+                  CL_LOG(CL_LOG_ERROR,"Protocol error: haven't received such a high message id till now");
+                  cl_raw_list_unlock(handle->connection_list);
+                  return CL_RETVAL_PROTOCOL_ERROR;
+               }    
+
+               CL_LOG_STR_STR_INT(CL_LOG_INFO, "sending it to:        ", connection->remote->comp_host,
+                                                                         connection->remote->comp_name,
+                                                                         (int)connection->remote->comp_id);
+
+               return_value = cl_com_setup_message(&message, connection, data, size, ack_type,response_mid,tag);
+
+               if (return_value != CL_RETVAL_OK) {
+                  cl_raw_list_unlock(handle->connection_list);
+                  return return_value;
+               }
+      
+               return_value = cl_message_list_append_send(connection, message, 1);
+               if (return_value != CL_RETVAL_OK) {
+                  cl_com_free_message(&message);
+                  cl_raw_list_unlock(handle->connection_list);
+                  return return_value;
+               }
+               message_added = 1;
             }
-   
-
-            if (  response_mid > 0 && response_mid > connection->last_received_message_id ) {
-               CL_LOG_INT(CL_LOG_DEBUG,"last_received_message_id:", (int)connection->last_received_message_id );
-               CL_LOG_INT(CL_LOG_DEBUG,"last_send_message_id    :", (int)connection->last_send_message_id);
-               CL_LOG_INT(CL_LOG_DEBUG,"response_mid to send    :", (int)response_mid);
-
-               CL_LOG(CL_LOG_ERROR,"Protocol error: haven't received such a high message id till now");
-               cl_raw_list_unlock(handle->connection_list);
-               return CL_RETVAL_PROTOCOL_ERROR;
-            }    
-
-            CL_LOG_STR_STR_INT(CL_LOG_INFO, "sending it to:        ", connection->receiver->comp_host,
-                                                                      connection->receiver->comp_name,
-                                                                      (int)connection->receiver->comp_id);
-
-            return_value = cl_com_setup_message(&message, connection, data, size, ack_type,response_mid,tag);
-
-
-   
-            if (return_value != CL_RETVAL_OK) {
-               cl_raw_list_unlock(handle->connection_list);
-               return return_value;
-            }
-   
-            return_value = cl_message_list_append_send(connection, message, 1);
-            if (return_value != CL_RETVAL_OK) {
-               cl_com_free_message(&message);
-               cl_raw_list_unlock(handle->connection_list);
-               return return_value;
-            }
-            message_added = 1;
-            
-            break;
          }
-         elem = cl_connection_list_get_next_elem(elem);
       }
       cl_raw_list_unlock(handle->connection_list);
 
@@ -6469,7 +6304,7 @@ static int cl_commlib_send_message_to_endpoint(cl_com_handle_t*   handle,
 int 
 cl_commlib_send_message(cl_com_handle_t* handle, char *un_resolved_hostname, 
                         char *component_name, unsigned long component_id, 
-                        cl_xml_ack_type_t ack_type, cl_byte_t *data, 
+                        cl_xml_ack_type_t ack_type, cl_byte_t **data, 
                         unsigned long size, unsigned long *mid, 
                         unsigned long response_mid, unsigned long tag ,
                         cl_bool_t copy_data, cl_bool_t wait_for_ack) 
@@ -6482,14 +6317,14 @@ cl_commlib_send_message(cl_com_handle_t* handle, char *un_resolved_hostname,
    int return_value = CL_RETVAL_OK;
    cl_com_endpoint_t receiver;
    char* unique_hostname = NULL;
+   struct in_addr in_addr;
    cl_byte_t* help_data = NULL;
    int retry_send = 1;
-   cl_bool_t ignore_connection = CL_FALSE;
 
    cl_commlib_check_callback_functions();
 
    /* check acknowledge method */
-   if (ack_type == CL_MIH_MAT_UNDEFINED || data == NULL || size == 0 ) {
+   if (ack_type == CL_MIH_MAT_UNDEFINED || data == NULL || *data == NULL || size == 0 ) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(CL_RETVAL_PARAMS));
       return CL_RETVAL_PARAMS;
    }
@@ -6500,20 +6335,21 @@ cl_commlib_send_message(cl_com_handle_t* handle, char *un_resolved_hostname,
    }
 
    /* check endpoint parameters: un_resolved_hostname , componenet_name and componenet_id */
-   if ( un_resolved_hostname == NULL || component_name == NULL || component_id == 0 ) {
+   if (un_resolved_hostname == NULL || component_name == NULL || component_id == 0) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(CL_RETVAL_UNKNOWN_ENDPOINT));
       return CL_RETVAL_UNKNOWN_ENDPOINT;
    }
 
-   /* make a copy of the message date (if wished) */
+   /* make a copy of the message data (if wished) */
    if (copy_data == CL_TRUE) {
-      help_data = (cl_byte_t*) malloc((sizeof(cl_byte_t)*size));
+      help_data = (cl_byte_t*)malloc((sizeof(cl_byte_t)*size));
       if (help_data == NULL) {
          return CL_RETVAL_MALLOC;
       }
-      memcpy(help_data, data, (sizeof(cl_byte_t)*size) );
+      memcpy(help_data, *data, (sizeof(cl_byte_t)*size));
    } else {
-      help_data = data;
+      help_data = *data;
+      *data = NULL;
    }
 
 
@@ -6537,7 +6373,7 @@ cl_commlib_send_message(cl_com_handle_t* handle, char *un_resolved_hostname,
       CL_LOG_STR_STR_INT(CL_LOG_INFO, "add message into send queue for:      ", un_resolved_hostname, component_name, (int)component_id);
     
       /* resolve hostname and create endpoint structure */
-      return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname,NULL, NULL, NULL);
+      return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname, &in_addr, NULL, NULL);
       if (return_value != CL_RETVAL_OK) {
          CL_LOG(CL_LOG_ERROR,cl_get_error_text(return_value));
          if (copy_data == CL_TRUE) {
@@ -6546,7 +6382,7 @@ cl_commlib_send_message(cl_com_handle_t* handle, char *un_resolved_hostname,
          return return_value;
       }
 
-      destination_endpoint = cl_com_create_endpoint(unique_hostname,component_name,component_id);
+      destination_endpoint = cl_com_create_endpoint(unique_hostname, component_name, component_id, &in_addr);
       free(unique_hostname);
       unique_hostname = NULL;
 
@@ -6568,24 +6404,14 @@ cl_commlib_send_message(cl_com_handle_t* handle, char *un_resolved_hostname,
          return return_value;
       }
 
-      switch(cl_com_create_threads) {
-         case CL_NO_THREAD:
-            CL_LOG(CL_LOG_INFO,"no threads enabled");
-            /* we just want to trigger write , no wait for read*/
-            cl_commlib_trigger(handle, 1);
-            break;
-         case CL_RW_THREAD:
-            /* we just want to trigger write , no wait for read*/
-            cl_thread_trigger_event(handle->write_thread);
-            break;
-      }
+      cl_thread_trigger_event(handle->write_thread);
 
    } else {
 
       CL_LOG_STR_STR_INT(CL_LOG_INFO, "add new message for:      ", un_resolved_hostname, component_name, (int)component_id);
    
       /* resolve hostname */
-      return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname,NULL, NULL, NULL);
+      return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname, &in_addr, NULL, NULL);
       if (return_value != CL_RETVAL_OK) {
          CL_LOG(CL_LOG_ERROR,cl_get_error_text(return_value));
          if (copy_data == CL_TRUE) {
@@ -6599,51 +6425,29 @@ cl_commlib_send_message(cl_com_handle_t* handle, char *un_resolved_hostname,
       receiver.comp_host = unique_hostname;
       receiver.comp_name = component_name;
       receiver.comp_id   = component_id;
+      receiver.addr.s_addr = in_addr.s_addr;
+      receiver.hash_id = cl_create_endpoint_string(&receiver);
    
       while(retry_send != 0) {
       
          /* lock handle connection list */
          cl_raw_list_lock(handle->connection_list);
-         elem = cl_connection_list_get_first_elem(handle->connection_list);     
-         while(elem) {
-            ignore_connection = CL_FALSE;
+
+         elem = cl_connection_list_get_elem_endpoint(handle->connection_list, &receiver);
+         if (elem != NULL) {
             connection = elem->connection;
-      
-            if (connection->was_accepted == CL_TRUE) {
-               /* ignore duplicate endpoints */
-               switch (connection->crm_state) {
-                  case CL_CRM_CS_UNDEFINED:
-                  case CL_CRM_CS_CONNECTED: {
-                     ignore_connection = CL_FALSE;
-                     break;
-                  }
-                  default: {
-                     ignore_connection = CL_TRUE;
-                     CL_LOG(CL_LOG_WARNING,"ignore connection with unexpected connection state");
-                     break;
-                  }
-               }
-            }
-            
-            if (ignore_connection == CL_FALSE && 
-                cl_com_compare_endpoints(connection->receiver, &receiver)) {
-      
+     
+            if (connection->was_accepted == CL_TRUE &&
+                connection->crm_state != CL_CRM_CS_UNDEFINED &&
+                connection->crm_state != CL_CRM_CS_CONNECTED) {
+                  CL_LOG(CL_LOG_WARNING,"ignore connection with unexpected connection state");
+            } else {
                /* send message to client (no broadcast) */
-   
-               if (connection->ccm_received != 0) {  
-                  /* we have sent connection close response, do not accept any new message */
-                  /* we wait till connection is down and try to reconnect  */
-                  CL_LOG(CL_LOG_ERROR,"connection is going down now, can't send message (ccrm sent)");
-                  break;
-               }
-      
-               if (connection->connection_state == CL_CONNECTED && connection->connection_sub_state != CL_COM_WORK) {
+
+               if (connection->ccm_received != 0 || (
+                   connection->connection_state == CL_CONNECTED && connection->connection_sub_state != CL_COM_WORK)) {
                   CL_LOG(CL_LOG_WARNING,"connection is going down now, can't send message");
-                  break;
-               }
-      
-   
-               if (  response_mid > 0 && response_mid > connection->last_received_message_id ) {
+               } else if (response_mid > 0 && response_mid > connection->last_received_message_id ) {
                   CL_LOG_INT(CL_LOG_DEBUG,"last_received_message_id:", (int)connection->last_received_message_id );
                   CL_LOG_INT(CL_LOG_DEBUG,"last_send_message_id    :", (int)connection->last_send_message_id);
                   CL_LOG_INT(CL_LOG_DEBUG,"response_mid to send    :", (int)response_mid);
@@ -6651,21 +6455,23 @@ cl_commlib_send_message(cl_com_handle_t* handle, char *un_resolved_hostname,
                   CL_LOG(CL_LOG_ERROR,"Protocol error: haven't received such a high message id till now");
                   cl_raw_list_unlock(handle->connection_list);
                   free(unique_hostname);
+                  free(receiver.hash_id);
                   if (copy_data == CL_TRUE) {
                      free(help_data);
                   }
                   return CL_RETVAL_PROTOCOL_ERROR;
                }    
    
-               CL_LOG_STR_STR_INT(CL_LOG_INFO, "sending it to:        ", connection->receiver->comp_host,
-                                                                         connection->receiver->comp_name,
-                                                                         (int)connection->receiver->comp_id);
+               CL_LOG_STR_STR_INT(CL_LOG_INFO, "sending it to:        ", connection->remote->comp_host,
+                                                                         connection->remote->comp_name,
+                                                                         (int)connection->remote->comp_id);
 
                return_value = cl_com_setup_message(&message, connection, help_data, size, ack_type,response_mid,tag);
 
                if (return_value != CL_RETVAL_OK) {
                   cl_raw_list_unlock(handle->connection_list);
                   free(unique_hostname);
+                  free(receiver.hash_id);
                   if (copy_data == CL_TRUE) {
                      free(help_data);
                   }
@@ -6681,23 +6487,23 @@ cl_commlib_send_message(cl_com_handle_t* handle, char *un_resolved_hostname,
                   cl_com_free_message(&message);
                   cl_raw_list_unlock(handle->connection_list);
                   free(unique_hostname);
+                  free(receiver.hash_id);
                   return return_value;
                }
                message_added = 1;
                
-               break;
             }
-            elem = cl_connection_list_get_next_elem(elem);
          }
          cl_raw_list_unlock(handle->connection_list);
    
          /* if message is not added, the connection was not found -> try to open it */
          if (message_added != 1) {
             retry_send++;  
-            return_value = cl_commlib_open_connection(handle, un_resolved_hostname, component_name, component_id );
+            return_value = cl_commlib_open_connection(handle, un_resolved_hostname, component_name, component_id);
             if (return_value != CL_RETVAL_OK) {
                free(unique_hostname);
-               CL_LOG_STR(CL_LOG_ERROR,"cl_commlib_open_connection() returned: ",cl_get_error_text(return_value));
+               free(receiver.hash_id);
+               CL_LOG_STR(CL_LOG_ERROR,"cl_commlib_open_connection() returned: ", cl_get_error_text(return_value));
                if (copy_data == CL_TRUE) {
                   free(help_data);
                }
@@ -6726,6 +6532,7 @@ cl_commlib_send_message(cl_com_handle_t* handle, char *un_resolved_hostname,
          }
       } else {
          free(unique_hostname);
+         free(receiver.hash_id);
          if (copy_data == CL_TRUE) {
             free(help_data);
          }
@@ -6734,17 +6541,20 @@ cl_commlib_send_message(cl_com_handle_t* handle, char *un_resolved_hostname,
     
       if (ack_type == CL_MIH_MAT_NAK) {
          free(unique_hostname);
+         free(receiver.hash_id);
          return CL_RETVAL_OK;
       }
    
       if (wait_for_ack == CL_FALSE) {
          free(unique_hostname);
+         free(receiver.hash_id);
          return CL_RETVAL_OK;
       }
    
       CL_LOG_INT(CL_LOG_INFO,"message acknowledge expected, waiting for ack", (int)my_mid);
       return_value = cl_commlib_check_for_ack(handle, receiver.comp_host, component_name, component_id, my_mid, CL_TRUE);
       free(unique_hostname);
+      free(receiver.hash_id);
 
       {
          char* gdi_timeout = NULL;
@@ -6778,6 +6588,7 @@ int cl_commlib_get_last_message_time(cl_com_handle_t* handle,
                                     unsigned long* message_time) {
 
    char* unique_hostname = NULL;
+   struct in_addr in_addr;
    int return_value;
    cl_com_endpoint_t receiver;
 
@@ -6797,7 +6608,7 @@ int cl_commlib_get_last_message_time(cl_com_handle_t* handle,
    }
 
    /* resolve hostname */
-   return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname, NULL, NULL, NULL);
+   return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname, &in_addr, NULL, NULL);
    if (return_value != CL_RETVAL_OK) {
       return return_value;
    }
@@ -6806,50 +6617,21 @@ int cl_commlib_get_last_message_time(cl_com_handle_t* handle,
    receiver.comp_host = unique_hostname;
    receiver.comp_name = component_name;
    receiver.comp_id   = component_id;
+   receiver.addr.s_addr = in_addr.s_addr;
+   receiver.hash_id = cl_create_endpoint_string(&receiver);
 
 
-   return_value = cl_endpoint_list_get_last_touch_time(cl_com_get_endpoint_list(),&receiver,message_time);
+   return_value = cl_endpoint_list_get_last_touch_time(cl_com_get_endpoint_list(), &receiver, message_time);
    if (message_time) {
       CL_LOG_STR(CL_LOG_DEBUG,"host              :", receiver.comp_host);
       CL_LOG_STR(CL_LOG_DEBUG,"component         :", receiver.comp_name);
       CL_LOG_INT(CL_LOG_DEBUG,"last transfer time:", (int)*message_time);
    }
 
-   free(unique_hostname); /* don't touch receiver object after this */
+   free(unique_hostname);
+   free(receiver.hash_id);
 
    return return_value;
-
-#if 0
-
-   /* This was old behaviour, when there was no cl_endpoint_list !!! */
-   /* This code can be removed when endpoint list is used in future - CR */
-
-   /* lock handle connection list */
-   cl_raw_list_lock(handle->connection_list);
-
-   elem = cl_connection_list_get_first_elem(handle->connection_list);
-   while(elem) {
-      connection = elem->connection;
-      if ( cl_com_compare_endpoints(connection->receiver, &receiver) ) {
-         /* found endpoint */
-         if (time) {
-            *time = (connection->last_transfer_time).tv_sec;
-         }
-         CL_LOG(CL_LOG_INFO,"found connection");
-         cl_raw_list_unlock(handle->connection_list);
-         free(unique_hostname); /* don't touch receiver object after this */
-         return CL_RETVAL_OK;
-      }
-      elem = cl_connection_list_get_next_elem(handle->connection_list, elem);
-   }
-
-   /* unlock handle connection list */
-   cl_raw_list_unlock(handle->connection_list);
-
-   CL_LOG(CL_LOG_WARNING,"can't find connection");
-   free(unique_hostname); /* don't touch receiver object after this */
-   return CL_RETVAL_CONNECTION_NOT_FOUND;
-#endif
 }
 
 
@@ -6960,17 +6742,6 @@ static void *cl_com_handle_service_thread(void *t_conf) {
             elem = cl_thread_list_get_next_elem(elem);
          }
          cl_raw_list_unlock(cl_com_thread_list);
-#if 0   
-         cl_raw_list_lock(handle->work_thread_list);
-         elem = cl_thread_list_get_first_elem(handle->work_thread_list);
-         while(elem) {
-            if (elem->thread_config->thread_last_cancel_test_time.tv_sec + 15 < now.tv_sec ) {
-               CL_LOG_STR(CL_LOG_ERROR,"POSSIBLE DEADLOCK DETECTED (work list) => ",elem->thread_config->thread_name );
-            }
-            elem = cl_thread_list_get_next_elem(elem);
-         }
-         cl_raw_list_unlock(handle->work_thread_list);
-#endif
       }
 #endif /* CL_DO_COMMLIB_DEBUG */
 
@@ -7075,7 +6846,7 @@ static void *cl_com_handle_read_thread(void *t_conf) {
          /* check number of connections */
          cl_commlib_check_connection_count(handle);
 
-         cl_connection_list_destroy_connections_to_close(handle->connection_list,1); /* OK */
+         cl_connection_list_destroy_connections_to_close(handle->connection_list);
 
          if (handle->do_shutdown == 0 && handle->max_connection_count_reached == CL_FALSE) {
             the_handler = handle->service_handler;
@@ -7151,7 +6922,7 @@ static void *cl_com_handle_read_thread(void *t_conf) {
                case CL_OPENING: {
                   /* trigger connect */
                   if (elem->connection->data_read_flag == CL_COM_DATA_READY) {
-                     return_value = cl_com_open_connection(elem->connection, handle->open_connection_timeout,NULL , NULL, NULL, NULL);
+                     return_value = cl_com_open_connection(elem->connection, handle->open_connection_timeout, NULL, NULL);
                      if (return_value != CL_RETVAL_OK && return_value != CL_RETVAL_UNCOMPLETE_WRITE ) {
                         CL_LOG_STR(CL_LOG_ERROR,"could not open connection:",cl_get_error_text(return_value));
                         elem->connection->connection_state = CL_CLOSING;
@@ -7185,20 +6956,19 @@ static void *cl_com_handle_read_thread(void *t_conf) {
                case CL_ACCEPTING: {
                   int return_value;
                   if (elem->connection->data_read_flag == CL_COM_DATA_READY  ) {
-                     return_value = cl_com_connection_complete_accept(elem->connection,handle->open_connection_timeout,1);
-                     if (return_value != CL_RETVAL_OK && 
-                         return_value != CL_RETVAL_UNCOMPLETE_READ && 
-                         return_value != CL_RETVAL_UNCOMPLETE_WRITE && 
-                         return_value != CL_RETVAL_SELECT_ERROR ) {
-                        CL_LOG_STR(CL_LOG_ERROR,"connection accept error:",cl_get_error_text(return_value));
-                        elem->connection->connection_state = CL_CLOSING;
-                        elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
-                     }
-                     if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
-                        elem->connection->connection_state = CL_CLOSING;
-                        elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
-                     } 
-                     if (return_value == CL_RETVAL_OK) {
+                     return_value = cl_com_connection_complete_accept(elem->connection,handle->open_connection_timeout);
+                     if (return_value != CL_RETVAL_OK) {
+                        if (return_value != CL_RETVAL_UNCOMPLETE_READ && 
+                            return_value != CL_RETVAL_UNCOMPLETE_WRITE && 
+                            return_value != CL_RETVAL_SELECT_ERROR ) {
+                           CL_LOG_STR(CL_LOG_ERROR,"connection accept error:",cl_get_error_text(return_value));
+                           elem->connection->connection_state = CL_CLOSING;
+                           elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+                        } else if (cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
+                           elem->connection->connection_state = CL_CLOSING;
+                           elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+                        } 
+                     } else {
                         elem->connection->connection_state = CL_CONNECTING;
                         elem->connection->connection_sub_state = CL_COM_READ_INIT;
                         elem->connection->data_read_flag = CL_COM_DATA_NOT_READY;
@@ -7224,29 +6994,29 @@ static void *cl_com_handle_read_thread(void *t_conf) {
                }
    
                case CL_CONNECTING: {
-                  if ( elem->connection->data_read_flag == CL_COM_DATA_READY  ) {
-                     return_value = cl_com_connection_complete_request(elem->connection,handle->open_connection_timeout,1,CL_R_SELECT );
-   
-                     if (return_value != CL_RETVAL_OK && 
-                         return_value != CL_RETVAL_UNCOMPLETE_READ && 
-                         return_value != CL_RETVAL_UNCOMPLETE_WRITE && 
-                         return_value != CL_RETVAL_SELECT_ERROR ) {
-                        CL_LOG_STR(CL_LOG_ERROR,"connection establish error:",cl_get_error_text(return_value));
-                        elem->connection->connection_state = CL_CLOSING;
-                        elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+                  if (elem->connection->data_read_flag == CL_COM_DATA_READY) {
+                     return_value = cl_com_connection_complete_request(handle->connection_list, elem, handle->open_connection_timeout, CL_R_SELECT);
+  
+                     if (return_value != CL_RETVAL_OK) {
+                        if (return_value != CL_RETVAL_UNCOMPLETE_READ && 
+                            return_value != CL_RETVAL_UNCOMPLETE_WRITE && 
+                            return_value != CL_RETVAL_SELECT_ERROR) {
+                           CL_LOG_STR(CL_LOG_ERROR,"connection establish error:", cl_get_error_text(return_value));
+                           elem->connection->connection_state = CL_CLOSING;
+                           elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+                        } else if (cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
+                           elem->connection->connection_state = CL_CLOSING;
+                           elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+                        } 
                      }
-                     if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
-                        elem->connection->connection_state = CL_CLOSING;
-                        elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
-                     } 
-                     if ( elem->connection->connection_state == CL_CONNECTED ) {
+                     if (elem->connection->connection_state == CL_CONNECTED ) {
                         cl_commlib_finish_request_completeness(elem->connection);
                         /* connection is now in connect state, do select before next reading */
                         elem->connection->data_read_flag = CL_COM_DATA_NOT_READY;
                      }
                   } else {
                      /* check timeouts */
-                     if ( elem->connection->read_buffer_timeout_time != 0) {
+                     if (elem->connection->read_buffer_timeout_time != 0) {
                         if ( now.tv_sec >= elem->connection->read_buffer_timeout_time || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                            CL_LOG(CL_LOG_ERROR,"read timeout for connection completion");
                            elem->connection->connection_state = CL_CLOSING;
@@ -7274,21 +7044,21 @@ static void *cl_com_handle_read_thread(void *t_conf) {
                       elem->connection->ccrm_received  == 0) {
                      /* TODO: use read thread pool */
                      return_value = cl_commlib_handle_connection_read(elem->connection);
-                     if ( return_value != CL_RETVAL_OK && 
-                          return_value != CL_RETVAL_UNCOMPLETE_READ && 
-                          return_value != CL_RETVAL_SELECT_ERROR ) {
-                        elem->connection->connection_state = CL_CLOSING;
-                        elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
-                        CL_LOG_STR(CL_LOG_ERROR,"read from connection: setting close flag! Reason:", cl_get_error_text(return_value));
-                        snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
-                                 elem->connection->remote->comp_host,
-                                 elem->connection->remote->comp_name,
-                                 sge_u32c(elem->connection->remote->comp_id));
-                        cl_commlib_push_application_error(CL_LOG_ERROR, return_value, tmp_string);
-                     }
-                     if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
-                        elem->connection->connection_state = CL_CLOSING;
-                        elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+                     if (return_value != CL_RETVAL_OK) {
+                        if (return_value != CL_RETVAL_UNCOMPLETE_READ && 
+                             return_value != CL_RETVAL_SELECT_ERROR ) {
+                           elem->connection->connection_state = CL_CLOSING;
+                           elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+                           CL_LOG_STR(CL_LOG_ERROR,"read from connection: setting close flag! Reason:", cl_get_error_text(return_value));
+                           snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
+                                    elem->connection->remote->comp_host,
+                                    elem->connection->remote->comp_name,
+                                    sge_u32c(elem->connection->remote->comp_id));
+                           cl_commlib_push_application_error(CL_LOG_ERROR, return_value, tmp_string);
+                        } else if (cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
+                           elem->connection->connection_state = CL_CLOSING;
+                           elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+                        }
                      }
                      message_received = 1;
                   } else {
@@ -7332,7 +7102,6 @@ static void *cl_com_handle_read_thread(void *t_conf) {
          }
          cl_raw_list_unlock(handle->connection_list);
 
-
          /* check for new connections */
          if (handle->service_provider                == CL_TRUE           && 
              handle->service_handler->data_read_flag == CL_COM_DATA_READY) {
@@ -7346,7 +7115,7 @@ static void *cl_com_handle_read_thread(void *t_conf) {
                CL_LOG(CL_LOG_INFO,"adding new client");
                gettimeofday(&now,NULL);
                new_con->read_buffer_timeout_time = now.tv_sec + handle->open_connection_timeout;
-               cl_connection_list_append_connection(handle->connection_list, new_con,1);
+               cl_connection_list_append_connection(handle->connection_list, new_con, 1);
                handle->statistic->new_connections = handle->statistic->new_connections + 1;
                new_con = NULL;
             }
@@ -7482,7 +7251,7 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                                                           handle->service_handler,
                                                           handle->select_sec_timeout ,
                                                           handle->select_usec_timeout,
-                                                          CL_W_SELECT  );
+                                                          CL_W_SELECT);
          switch (ret_val) {
             case CL_RETVAL_SELECT_TIMEOUT:
                CL_LOG(CL_LOG_INFO,"write select timeout");
@@ -7508,16 +7277,17 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                         /* trigger connect */
                         if (elem->connection->fd_ready_for_write == CL_COM_DATA_READY &&
                              elem->connection->data_write_flag == CL_COM_DATA_READY ) {
-                           return_value = cl_com_open_connection(elem->connection, handle->open_connection_timeout,NULL , NULL, NULL, NULL);
-                           if (return_value != CL_RETVAL_OK && return_value != CL_RETVAL_UNCOMPLETE_WRITE ) {
-                              CL_LOG_STR(CL_LOG_ERROR,"could not open connection:",cl_get_error_text(return_value));
-                              elem->connection->connection_state = CL_CLOSING;
-                              elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
-                           }
-                           if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
-                              CL_LOG(CL_LOG_WARNING,"setting connection state to closing");
-                              elem->connection->connection_state = CL_CLOSING;
-                              elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+                           return_value = cl_com_open_connection(elem->connection, handle->open_connection_timeout, NULL, NULL);
+                           if (return_value != CL_RETVAL_OK) {
+                              if (return_value != CL_RETVAL_UNCOMPLETE_WRITE ) {
+                                 CL_LOG_STR(CL_LOG_ERROR,"could not open connection:",cl_get_error_text(return_value));
+                                 elem->connection->connection_state = CL_CLOSING;
+                                 elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+                              } else if (cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
+                                 CL_LOG(CL_LOG_WARNING,"setting connection state to closing");
+                                 elem->connection->connection_state = CL_CLOSING;
+                                 elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+                              }
                            }
                         } else {
                            /* check timeouts */
@@ -7545,20 +7315,19 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                         
                         if (elem->connection->fd_ready_for_write == CL_COM_DATA_READY && 
                             elem->connection->data_write_flag == CL_COM_DATA_READY        ) {
-                           return_value = cl_com_connection_complete_accept(elem->connection,handle->open_connection_timeout,1);
-                           if (return_value != CL_RETVAL_OK && 
-                               return_value != CL_RETVAL_UNCOMPLETE_READ && 
-                               return_value != CL_RETVAL_UNCOMPLETE_WRITE && 
-                               return_value != CL_RETVAL_SELECT_ERROR ) {
-                              CL_LOG_STR(CL_LOG_ERROR,"connection accept error:",cl_get_error_text(return_value));
-                              elem->connection->connection_state = CL_CLOSING;
-                              elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
-                           }
-                           if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
-                              elem->connection->connection_state = CL_CLOSING;
-                              elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
-                           } 
-                           if (return_value == CL_RETVAL_OK) {
+                           return_value = cl_com_connection_complete_accept(elem->connection,handle->open_connection_timeout);
+                           if (return_value != CL_RETVAL_OK) {
+                              if (return_value != CL_RETVAL_UNCOMPLETE_READ && 
+                                  return_value != CL_RETVAL_UNCOMPLETE_WRITE && 
+                                  return_value != CL_RETVAL_SELECT_ERROR ) {
+                                 CL_LOG_STR(CL_LOG_ERROR,"connection accept error:",cl_get_error_text(return_value));
+                                 elem->connection->connection_state = CL_CLOSING;
+                                 elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+                              } else if (cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
+                                 elem->connection->connection_state = CL_CLOSING;
+                                 elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+                              } 
+                           } else {
                               elem->connection->connection_state = CL_CONNECTING;
                               elem->connection->connection_sub_state = CL_COM_READ_INIT;
                               elem->connection->data_read_flag = CL_COM_DATA_NOT_READY;
@@ -7586,20 +7355,20 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                      case CL_CONNECTING: {
                         if ( elem->connection->fd_ready_for_write == CL_COM_DATA_READY &&
                              elem->connection->data_write_flag == CL_COM_DATA_READY ) {
-                           return_value = cl_com_connection_complete_request(elem->connection,handle->open_connection_timeout,1,CL_W_SELECT );
-                           if (return_value != CL_RETVAL_OK && 
-                               return_value != CL_RETVAL_UNCOMPLETE_READ && 
-                               return_value != CL_RETVAL_UNCOMPLETE_WRITE && 
-                               return_value != CL_RETVAL_SELECT_ERROR ) {
-                              CL_LOG_STR(CL_LOG_ERROR,"connection establish error:",cl_get_error_text(return_value));
-                              elem->connection->connection_state = CL_CLOSING;
-                              elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+                           return_value = cl_com_connection_complete_request(handle->connection_list, elem, handle->open_connection_timeout, CL_W_SELECT);
+                           if (return_value != CL_RETVAL_OK) {
+                              if (return_value != CL_RETVAL_UNCOMPLETE_READ && 
+                                  return_value != CL_RETVAL_UNCOMPLETE_WRITE && 
+                                  return_value != CL_RETVAL_SELECT_ERROR ) {
+                                 CL_LOG_STR(CL_LOG_ERROR,"connection establish error:",cl_get_error_text(return_value));
+                                 elem->connection->connection_state = CL_CLOSING;
+                                 elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+                              } else if (cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
+                                 elem->connection->connection_state = CL_CLOSING;
+                                 elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+                              }
                            }
-                           if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
-                              elem->connection->connection_state = CL_CLOSING;
-                              elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
-                           }
-                           if ( elem->connection->connection_state == CL_CONNECTED ) {
+                           if (elem->connection->connection_state == CL_CONNECTED) {
                               cl_commlib_finish_request_completeness(elem->connection);
                               /* connection is now in connect state, do select before next reading */
                               elem->connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
@@ -7630,21 +7399,21 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                             elem->connection->ccrm_sent == 0 ) {
                            /* TODO implement thread pool for data writing */
                            return_value = cl_commlib_handle_connection_write(elem->connection);
-                           if (return_value != CL_RETVAL_OK && 
-                               return_value != CL_RETVAL_UNCOMPLETE_WRITE && 
-                               return_value != CL_RETVAL_SELECT_ERROR ) {
-                              elem->connection->connection_state = CL_CLOSING;
-                              elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
-                              CL_LOG_STR(CL_LOG_ERROR,"write to connection: setting close flag! Reason:", cl_get_error_text(return_value));
-                              snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
-                                       elem->connection->remote->comp_host,
-                                       elem->connection->remote->comp_name,
-                                       sge_u32c(elem->connection->remote->comp_id));
-                              cl_commlib_push_application_error(CL_LOG_ERROR, return_value, tmp_string);
-                           }
-                           if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
-                              elem->connection->connection_state = CL_CLOSING;
-                              elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+                           if (return_value != CL_RETVAL_OK) {
+                              if (return_value != CL_RETVAL_UNCOMPLETE_WRITE && 
+                                  return_value != CL_RETVAL_SELECT_ERROR ) {
+                                 elem->connection->connection_state = CL_CLOSING;
+                                 elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+                                 CL_LOG_STR(CL_LOG_ERROR,"write to connection: setting close flag! Reason:", cl_get_error_text(return_value));
+                                 snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
+                                          elem->connection->remote->comp_host,
+                                          elem->connection->remote->comp_name,
+                                          sge_u32c(elem->connection->remote->comp_id));
+                                 cl_commlib_push_application_error(CL_LOG_ERROR, return_value, tmp_string);
+                              } else if (cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
+                                 elem->connection->connection_state = CL_CLOSING;
+                                 elem->connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+                              }
                            }
                         } else {
                            /* check timeouts */
@@ -7760,7 +7529,7 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases) {
          free(resolved_host);
          return CL_RETVAL_HOSTNAME_LENGTH_ERROR;
       }
-      snprintf(hostout, CL_MAXHOSTLEN, "%s", resolved_host );
+      snprintf(hostout, CL_MAXHOSTLEN, "%s", resolved_host);
       free(resolved_host);
    }
    return ret_val;

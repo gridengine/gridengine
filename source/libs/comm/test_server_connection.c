@@ -133,7 +133,7 @@ extern int main(int argc, char** argv)
                                 sender->comp_host, 
                                 sender->comp_name, 
                                 sender->comp_id, CL_MIH_MAT_NAK,  
-                                message->message, 
+                                &message->message, 
                                 message->message_length, 
                                 &mid, message->message_id,0, 
                                 CL_FALSE, CL_FALSE);
@@ -141,10 +141,7 @@ extern int main(int argc, char** argv)
 /*           printf("cl_commlib_send_message() returned: %s\n",cl_get_error_text(ret_val)); */
            if (ret_val == CL_RETVAL_PROTOCOL_ERROR) { 
            }
-        } else {
-           message->message = NULL; /* don't delete this message, it's deleted when sent */
-        }
-
+        } 
         
 #if 0
 

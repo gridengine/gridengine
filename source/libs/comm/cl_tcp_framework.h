@@ -37,11 +37,6 @@
 #include "cl_lists.h"
 #include "cl_data_types.h"
 
-
-
-
-void cl_dump_tcp_private(cl_com_connection_t* connection); 
-
 int cl_com_tcp_get_fd(cl_com_connection_t* connection, int* fd);
 int cl_com_tcp_get_service_port(cl_com_connection_t* connection, int* port);
 int cl_com_tcp_get_connect_port(cl_com_connection_t* connection, int* port);
@@ -58,7 +53,7 @@ int cl_com_tcp_setup_connection(cl_com_connection_t** connection,
                                 cl_xml_data_format_t           data_format_type,
                                 cl_tcp_connect_t               tcp_connect_mode);
 
-int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, unsigned long only_once);
+int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout);
 int cl_com_tcp_close_connection(cl_com_connection_t** connection);
 int cl_com_tcp_open_connection_request_handler(cl_raw_list_t*       connection_list,
                                                cl_com_connection_t* service_connection,

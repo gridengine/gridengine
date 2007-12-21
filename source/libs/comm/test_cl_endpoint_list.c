@@ -42,6 +42,8 @@
 #include "cl_commlib.h"
 #include "cl_endpoint_list.h"
 
+#include "uti/sge_profiling.h"
+
 
 
 
@@ -53,21 +55,23 @@ main(int argc, char** argv)
   int touches = 5;
   int service_port = 0;
   char* local_host = NULL;
+  struct in_addr in_addr;
   cl_raw_list_t* endpoint_list = NULL;
   cl_endpoint_list_data_t* list_data = NULL;
   cl_endpoint_list_elem_t* elem = NULL;
   cl_com_endpoint_t* last_endpoint = NULL;
   cl_com_handle_t* handle = NULL;
-  
-  
 
+  in_addr.s_addr = 0;
 
+  
   if (argc < 3) {
       printf("usage: test_cl_endpoint_list <DEBUGLEVEL> endpoint_names\n");
       exit(1);
   }
-
   
+  prof_mt_init();
+
   printf("\nfirst testing only endpoint list functionality ...\n");
   printf(  "================================================================\n");
 
@@ -87,7 +91,7 @@ main(int argc, char** argv)
      cl_com_endpoint_t* new = NULL;
 
      printf("append \"%s\" (static):\n", argv[arg]);
-     new = cl_com_create_endpoint(argv[arg], "name", 1);
+     new = cl_com_create_endpoint(argv[arg], "name", 1, &in_addr);
      retval = cl_endpoint_list_define_endpoint(endpoint_list, new, 1024+ arg,CL_CM_AC_DISABLED , CL_TRUE );
      printf("%s\n\n",cl_get_error_text(retval));
      retval = cl_endpoint_list_define_endpoint(endpoint_list, new, 1024+ arg,CL_CM_AC_DISABLED,  CL_TRUE );
@@ -98,7 +102,7 @@ main(int argc, char** argv)
      
 
      printf("append \"%s\" (non static):\n", argv[arg]);
-     new = cl_com_create_endpoint(argv[arg], "name", 2);
+     new = cl_com_create_endpoint(argv[arg], "name", 2, &in_addr);
      retval = cl_endpoint_list_define_endpoint(endpoint_list, new, 1024 +arg,CL_CM_AC_DISABLED , CL_FALSE );
      printf("%s\n\n",cl_get_error_text(retval));
      cl_com_free_endpoint(&new);
@@ -107,7 +111,7 @@ main(int argc, char** argv)
   }
  
   arg--;
-  last_endpoint = cl_com_create_endpoint(argv[arg], "name", 2);
+  last_endpoint = cl_com_create_endpoint(argv[arg], "name", 2, &in_addr);
 
 
   list_data = cl_endpoint_list_get_data(endpoint_list);
@@ -119,6 +123,7 @@ main(int argc, char** argv)
      
   } else {
      printf("ERROR: could not get list data");
+     sge_prof_cleanup();
      exit(1);
   }
   
@@ -183,6 +188,7 @@ main(int argc, char** argv)
 
   if (retval == CL_RETVAL_OK) {
      printf("error this endpoint should not be in list\n");
+     sge_prof_cleanup();
      exit(1);
   } else {
      printf("%s (hint: last action must have produced an error)\n\n",cl_get_error_text(retval));
@@ -192,6 +198,7 @@ main(int argc, char** argv)
   retval = cl_endpoint_list_get_service_port(endpoint_list, last_endpoint, &service_port);
   if (retval == CL_RETVAL_OK) {
      printf("error this endpoint should not be in list\n");
+     sge_prof_cleanup();
      exit(1);
   } else {
      printf("%s (hint: last action must have produced an error)\n\n",cl_get_error_text(retval));
@@ -207,7 +214,7 @@ main(int argc, char** argv)
      cl_com_endpoint_t* new = NULL;
      printf("elements in list: %ld\n", cl_raw_list_get_elem_count(endpoint_list));
      printf("delete %s/%s/%ld (static):\n", argv[arg], "name", (unsigned long)1);
-     new = cl_com_create_endpoint(argv[arg], "name", 1);
+     new = cl_com_create_endpoint(argv[arg], "name", 1, &in_addr);
      retval = cl_endpoint_list_undefine_endpoint(endpoint_list,new);
      printf("%s\n\n",cl_get_error_text(retval));
      cl_com_free_endpoint(&new);
@@ -226,7 +233,6 @@ main(int argc, char** argv)
   printf("%s\n\n",cl_get_error_text(retval));
 
 
-
   printf("\nnow testing commlib endpoint list functionality without threads ...\n");
   printf(  "===================================================================\n");
   sleep(4);
@@ -238,6 +244,7 @@ main(int argc, char** argv)
   handle = cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , CL_TRUE, 4545 , CL_TCP_DEFAULT,"client", 1,1,0 );
   if (handle == NULL) {
      printf("could not get handle\n");
+     sge_prof_cleanup();
      exit(1);
   }
 
@@ -266,6 +273,7 @@ main(int argc, char** argv)
   printf("%s\n\n",cl_get_error_text(retval));
   if ( service_port != 1024 ) {
      printf("port is not 1024\n");
+     sge_prof_cleanup();
      exit(1);
   }
 
@@ -276,6 +284,7 @@ main(int argc, char** argv)
   printf("%s\n\n",cl_get_error_text(retval));
   if ( service_port != 1025 ) {
      printf("port is not 1025\n");
+     sge_prof_cleanup();
      exit(1);
   }
   
@@ -306,11 +315,13 @@ main(int argc, char** argv)
   printf("%s\n\n",cl_get_error_text(retval));
   if ( service_port != 1025 ) {
      printf("port is not 1025\n");
+     sge_prof_cleanup();
      exit(1);
   }
 
   if (cl_raw_list_get_elem_count(  cl_com_get_endpoint_list() ) != 1 ) {
-     printf("error: number of endpoint entries schould be 1\n");
+     printf("error: number of endpoint entries should be 1\n");
+     sge_prof_cleanup();
      exit(1);
   }
 
@@ -319,14 +330,14 @@ main(int argc, char** argv)
   printf("%s\n\n",cl_get_error_text(retval));
 
   if (cl_raw_list_get_elem_count(  cl_com_get_endpoint_list() ) != 1 ) {
-     printf("error: number of endpoint entries schould be 1, but is %ld\n",cl_raw_list_get_elem_count(  cl_com_get_endpoint_list() ) );
+     printf("error: number of endpoint entries should be 1, but is %ld\n",cl_raw_list_get_elem_count(  cl_com_get_endpoint_list() ) );
+     sge_prof_cleanup();
      exit(1);
   }
 
   printf("commlib cleanup ...\n");
   retval = cl_com_cleanup_commlib();
   printf("%s\n\n",cl_get_error_text(retval));
-
 
 
   printf("\nnow testing commlib endpoint list functionality with threads ...\n");
@@ -340,6 +351,7 @@ main(int argc, char** argv)
   handle = cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , CL_TRUE, 4545 , CL_TCP_DEFAULT,"client", 1,1, CL_FALSE );
   if (handle == NULL) {
      printf("could not get handle\n");
+     sge_prof_cleanup();
      exit(1);
   }
 
@@ -368,6 +380,7 @@ main(int argc, char** argv)
   printf("%s\n\n",cl_get_error_text(retval));
   if ( service_port != 1024 ) {
      printf("port is not 1024\n");
+     sge_prof_cleanup();
      exit(1);
   }
 
@@ -378,6 +391,7 @@ main(int argc, char** argv)
   printf("%s\n\n",cl_get_error_text(retval));
   if ( service_port != 1025 ) {
      printf("port is not 1025\n");
+     sge_prof_cleanup();
      exit(1);
   }
   
@@ -408,11 +422,13 @@ main(int argc, char** argv)
   printf("%s\n\n",cl_get_error_text(retval));
   if ( service_port != 1025 ) {
      printf("port is not 1025\n");
+     sge_prof_cleanup();
      exit(1);
   }
 
   if (cl_raw_list_get_elem_count(  cl_com_get_endpoint_list() ) != 1 ) {
-     printf("error: number of endpoint entries schould be 1\n");
+     printf("error: number of endpoint entries should be 1\n");
+     sge_prof_cleanup();
      exit(1);
   }
 
@@ -421,16 +437,14 @@ main(int argc, char** argv)
   printf("%s\n\n",cl_get_error_text(retval));
 
   if (cl_raw_list_get_elem_count(  cl_com_get_endpoint_list() ) != 1 ) {
-     printf("error: number of endpoint entries schould be 1\n");
+     printf("error: number of endpoint entries should be 1\n");
+     sge_prof_cleanup();
      exit(1);
   }
 
   printf("commlib cleanup ...\n");
   retval = cl_com_cleanup_commlib();
   printf("%s\n\n",cl_get_error_text(retval));
-
-
- 
 
   printf("main done\n");
   return 0;

@@ -35,6 +35,7 @@
 
 #include "cl_lists.h"
 #include "cl_data_types.h"
+#include "sge_htable.h"
 
 #define CL_HOST_LIST_DEFAULT_RERESOLVE_TIME  1  * 60       /*  1 min */
 #define CL_HOST_LIST_DEFAULT_UPDATE_TIME     2  * 60       /*  2 min */
@@ -60,6 +61,7 @@ typedef struct cl_host_list_data_type {                      /* list specific da
    unsigned long               entry_update_time;       /* max valid time of entry before reresolving */
    unsigned long               entry_reresolve_time;    /* time for reresolving if host is not resolvable */
    long                        last_refresh_time;       /* last refresh check */
+   htable                      ht;                      /* hashtable for host_list */
 } cl_host_list_data_t;
 
 
@@ -84,6 +86,7 @@ int cl_host_list_set_alias_file_dirty(cl_raw_list_t* list_p);
 
 
 /* thread functions that will not lock the list */
+cl_host_list_elem_t* cl_host_list_get_elem_host(cl_raw_list_t* list_p, const char *unresolved_hostname);
 cl_host_list_data_t* cl_host_list_get_data(cl_raw_list_t* list_p);
 cl_host_list_elem_t* cl_host_list_get_first_elem(cl_raw_list_t* list_p);
 cl_host_list_elem_t* cl_host_list_get_least_elem(cl_raw_list_t* list_p);

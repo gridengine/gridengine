@@ -211,7 +211,7 @@ extern int main(int argc, char** argv) {
                                  sender->comp_host, 
                                  sender->comp_name, 
                                  sender->comp_id, CL_MIH_MAT_NAK,  
-                                 (cl_byte_t*) response_message, 
+                                 (cl_byte_t**)&response_message, 
                                  strlen(response_message)+1, 
                                  NULL, 0, 0, 
                                  CL_TRUE,CL_FALSE);

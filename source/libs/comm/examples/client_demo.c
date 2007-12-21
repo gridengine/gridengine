@@ -202,7 +202,7 @@ extern int main(int argc, char** argv) {
       ret_val = cl_commlib_send_message(handle, 
                                         server_host, "server", 1, 
                                         CL_MIH_MAT_NAK, 
-                                        (cl_byte_t*) hello_message, strlen(hello_message)+1,
+                                        (cl_byte_t**)&hello_message, strlen(hello_message)+1,
                                         NULL, 0, 0,
                                         CL_TRUE, CL_FALSE);
       if (ret_val != CL_RETVAL_OK) {

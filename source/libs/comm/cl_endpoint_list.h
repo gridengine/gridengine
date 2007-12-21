@@ -35,6 +35,7 @@
 
 #include "cl_lists.h"
 #include "cl_data_types.h"
+#include "sge_htable.h"
 
 #define CL_ENDPOINT_LIST_DEFAULT_LIFE_TIME     60 * 60 * 24  /* 24 h   (without hearing anything from and endpoint) */
 #define CL_ENDPOINT_LIST_DEFAULT_REFRESH_TIME  10            /*   1 s   (refresh list every 10 seconds */
@@ -57,6 +58,7 @@ typedef struct cl_endpoint_list_data_type {          /* list specific data */
    long                        entry_life_time;         /* max life time of an endpoint */
    long                        refresh_interval;        /* refresh interval */
    long                        last_refresh_time;       /* last life time check */
+   htable                      ht;                      /* endpoint list hash table */
 } cl_endpoint_list_data_t;
 
 
@@ -83,6 +85,7 @@ cl_endpoint_list_elem_t* cl_endpoint_list_get_first_elem(cl_raw_list_t* list_p);
 cl_endpoint_list_elem_t* cl_endpoint_list_get_least_elem(cl_raw_list_t* list_p);
 cl_endpoint_list_elem_t* cl_endpoint_list_get_next_elem(cl_endpoint_list_elem_t* elem);
 cl_endpoint_list_elem_t* cl_endpoint_list_get_last_elem(cl_endpoint_list_elem_t* elem);
+cl_endpoint_list_elem_t* cl_endpoint_list_get_elem_endpoint(cl_raw_list_t* list_p, cl_com_endpoint_t *endpoint);
 
 
 #endif /* __CL_ENDPOINT_LIST_H */

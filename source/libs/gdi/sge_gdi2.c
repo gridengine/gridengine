@@ -53,7 +53,6 @@
 #include "uti/sge_stdlib.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_log.h"
-#include "uti/sge_string.h"
 #include "uti/sge_uidgid.h"
 #include "uti/sge_parse_num_par.h"
 #include "uti/sge_profiling.h"
@@ -106,7 +105,7 @@ char *target2string(u_long32 target);
 
 static int gdi2_send_message(sge_gdi_ctx_class_t * ctx, 
                              int synchron, const char *tocomproc, int toid, 
-                             const char *tohost, int tag, char *buffer, 
+                             const char *tohost, int tag, char **buffer, 
                              int buflen, u_long32 *mid);
 
 
@@ -600,20 +599,11 @@ sge_gdi2_send_any_request(sge_gdi_ctx_class_t *ctx, int synchron, u_long32 *mid,
    }
 
    i = cl_commlib_send_message(handle, (char*) rhost, (char*) commproc, id,
-                               ack_type, (cl_byte_t*)pb->head_ptr, 
+                               ack_type, (cl_byte_t**)&pb->head_ptr, 
                                (unsigned long) pb->bytes_used,
-                               mid_pointer,  response_id,  tag , (cl_bool_t)1, 
+                               mid_pointer,  response_id,  tag, CL_FALSE, 
                                (cl_bool_t)synchron);
    
-   if (i != CL_RETVAL_OK) {
-      /* try again ( if connection timed out ) */
-      i = cl_commlib_send_message(handle, (char*) rhost, (char*) commproc, id,
-                                  ack_type, (cl_byte_t*)pb->head_ptr, 
-                                  (unsigned long) pb->bytes_used, mid_pointer, 
-                                  response_id,  tag , (cl_bool_t)1, 
-                                  (cl_bool_t)synchron);
-   }
-
    dump_send_info(rhost, commproc, id, ack_type, tag, mid_pointer);
    
    if (mid) {
@@ -1127,7 +1117,7 @@ int gdi2_send_message_pb(sge_gdi_ctx_class_t *ctx,
        DRETURN(ret);
    }
 
-   ret = gdi2_send_message(ctx, synchron, tocomproc, toid, tohost, tag, pb->head_ptr, pb->bytes_used, mid);
+   ret = gdi2_send_message(ctx, synchron, tocomproc, toid, tohost, tag, &pb->head_ptr, pb->bytes_used, mid);
 
    DRETURN(ret);
 }
@@ -1145,7 +1135,7 @@ int gdi2_send_message_pb(sge_gdi_ctx_class_t *ctx,
 *************************************************************/
 static int 
 gdi2_send_message(sge_gdi_ctx_class_t *sge_ctx, int synchron, const char *tocomproc, int toid, 
-                 const char *tohost, int tag, char *buffer, 
+                 const char *tohost, int tag, char **buffer, 
                  int buflen, u_long32 *mid) 
 {
    int ret;
@@ -1220,14 +1210,8 @@ gdi2_send_message(sge_gdi_ctx_class_t *sge_ctx, int synchron, const char *tocomp
    }
 
    ret = cl_commlib_send_message(handle, (char*)tohost ,(char*)tocomproc ,toid , 
-                                 ack_type, (cl_byte_t*)buffer, (unsigned long)buflen,
-                                 mid_pointer, 0, tag, (cl_bool_t)1, (cl_bool_t)synchron);
-   if (ret != CL_RETVAL_OK) {
-      /* try again ( if connection timed out) */
-      ret = cl_commlib_send_message(handle, (char*)tohost ,(char*)tocomproc ,toid , 
-                                    ack_type, (cl_byte_t*)buffer, (unsigned long)buflen,
-                                    mid_pointer, 0, tag, (cl_bool_t)1, (cl_bool_t)synchron);
-   }
+                                 ack_type, (cl_byte_t**)buffer, (unsigned long)buflen,
+                                 mid_pointer, 0, tag, CL_FALSE, (cl_bool_t)synchron);
 
    if (mid != NULL) {
       *mid = dummy_mid;

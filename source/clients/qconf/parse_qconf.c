@@ -6714,7 +6714,7 @@ u_long32 flags
      
    alp = ctx->gdi(ctx, SGE_CONFIG_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
    lFreeList(&lp);
-            
+
    /* report results */
    ep = lFirst(alp);                   
         

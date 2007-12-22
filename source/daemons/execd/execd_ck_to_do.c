@@ -91,7 +91,6 @@ static int reprioritization_enabled = 0;
 
 extern volatile int waiting4osjid;
 
-
 static bool 
 sge_execd_ja_task_is_tightly_integrated(const lListElem *ja_task);
 static bool
@@ -366,6 +365,7 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx)
    lListElem *jep, *jatep;
    int return_value = 0;
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
+   bool fetched_usage = false;
 
    DENTER(TOP_LAYER, "execd_ck_to_do");
 
@@ -393,15 +393,18 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx)
     * jobs/tasks on this execution host.
     * do this at maximum once per second
     */
-   if (lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_JOB))) > 0 &&
-       next_usage <= now) {
+   if (lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_JOB))) > 0 && next_usage <= now) {
       next_usage = now + USAGE_INTERVAL;
 #ifdef COMPILE_DC
-      notify_ptf();
 
-      sge_switch2start_user();
-      ptf_update_job_usage();
-      sge_switch2admin_user();
+      if (mconf_get_reprioritize() || check_for_queue_limits()) {
+         notify_ptf();
+
+         sge_switch2start_user();
+         ptf_update_job_usage();
+         sge_switch2admin_user();
+         fetched_usage = true;
+      }
 
       if (mconf_get_reprioritize()) {
          sge_switch2start_user();
@@ -458,16 +461,13 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx)
          }
          reprioritization_enabled = 0;
       }
-#endif
-      /* update the usage list in our job report list */
-      update_job_usage(qualified_hostname);
 
-#ifdef COMPILE_DC
       /* check for job limits */
-      force_job_rlimit(qualified_hostname);
+      if (check_for_queue_limits()) {
+         force_job_rlimit(qualified_hostname);
+      }
 #endif
    }
-      
 
    if (sge_sig_handler_dead_children != 0) {
       /* reap max. 10 jobs which generated a SIGCLD */
@@ -600,6 +600,17 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx)
       /* send only 1 load report per second, unequal because system time could be set back */
       if (last_report_send != now) {
          last_report_send = now;
+
+         /* update the usage list in our job report list */
+         if (lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_JOB))) > 0 && !fetched_usage) { 
+            notify_ptf();
+
+            sge_switch2start_user();
+            ptf_update_job_usage();
+            sge_switch2admin_user();
+         }
+         update_job_usage(qualified_hostname);
+
          /* send all reports */
          was_communication_error = sge_send_all_reports(ctx, now, 0, execd_report_sources);
       }

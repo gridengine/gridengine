@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <stdlib.h>
+#include <float.h>
 
 #include "cull.h"
 #include "sge_report_execd.h"
@@ -49,9 +50,12 @@
 #include "sge_report.h"
 #include "sgeobj/sge_ack.h"
 #include "load_avg.h"
+#include "sgeobj/sge_qinstance.h"
+#include "uti/sge_parse_num_par.h"
 
 lList *jr_list = NULL;
 static bool flush_jr = false;
+static int check_queue_limits = 0;
 
 void sge_set_flush_jr_flag(bool value) {
    flush_jr =value;
@@ -377,4 +381,70 @@ execd_get_acct_multiplication_factor(const lListElem *pe,
    DPRINTF(("reserved usage will be multiplied by %d\n", factor));
 
    DRETURN(factor);
+}
+
+void modify_queue_limits_flag_for_job(const char *qualified_hostname, lListElem *jep, bool increase)
+{
+   lListElem *jatep;
+   lListElem *gdil_ep;
+
+   for_each(jatep, lGetList(jep, JB_ja_tasks)) {
+      for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
+         double lim;
+         lListElem *q;
+
+         if (sge_hostcmp(qualified_hostname, lGetHost(gdil_ep, JG_qhostname)) 
+             || !(q = lGetObject(gdil_ep, JG_queue))) {
+            continue;
+         }
+
+         parse_ulong_val(&lim, NULL, TYPE_TIM, lGetString(q, QU_s_cpu), NULL, 0);
+         if (lim != DBL_MAX) {
+            if (increase) {
+               check_queue_limits++;
+            } else {
+               check_queue_limits--;
+            }
+            break;
+         }
+         parse_ulong_val(&lim, NULL, TYPE_TIM, lGetString(q, QU_h_cpu), NULL, 0);
+         if (lim != DBL_MAX) {
+            if (increase) {
+               check_queue_limits++;
+            } else {
+               check_queue_limits--;
+            }
+            break;
+         }
+         parse_ulong_val(&lim, NULL, TYPE_TIM, lGetString(q, QU_s_vmem), NULL, 0);
+         if (lim != DBL_MAX) {
+            if (increase) {
+               check_queue_limits++;
+            } else {
+               check_queue_limits--;
+            }
+            break;
+         }
+         parse_ulong_val(&lim, NULL, TYPE_TIM, lGetString(q, QU_h_vmem), NULL, 0);
+         if (lim != DBL_MAX) {
+            if (increase) {
+               check_queue_limits++;
+            } else {
+               check_queue_limits--;
+            }
+            break;
+         }
+      }
+   }
+}
+
+bool check_for_queue_limits(void)
+{
+   bool ret = false;
+
+   if (check_queue_limits != 0) {
+      ret = true;
+   }
+
+   return ret;
 }

@@ -52,4 +52,7 @@ int do_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg);
 int
 execd_get_acct_multiplication_factor(const lListElem *pe, 
                                      int slots, bool task);
+void modify_queue_limits_flag_for_job(const char *qualified_hostname, lListElem *jep, bool increase);
+bool check_for_queue_limits(void);
+
 #endif /* _JOB_REPORT_EXECD_H_ */

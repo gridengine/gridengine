@@ -956,6 +956,9 @@ lListElem *jr
          /* unchain pe task element from task list */
          lRemoveElem(lGetList(jatep, JAT_task_list), &petep);
       } else {
+         /* check if job has queue limits and decrease global flag if necessary */
+         modify_queue_limits_flag_for_job(ctx->get_unqualified_hostname(ctx), jep, false);
+
          lRemoveElem(*(object_type_get_master_list(SGE_TYPE_JOB)), &jep);
       }
       del_job_report(jr);   

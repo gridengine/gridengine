@@ -368,8 +368,8 @@ int main(int argc, char **argv)
       }
    }   
 
-   sge_prof_cleanup();
    sge_shutdown((void**)&ctx, execd_exit_state);
+   sge_prof_cleanup();
    DRETURN(0);
 }
 

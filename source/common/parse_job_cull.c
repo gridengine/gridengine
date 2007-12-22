@@ -870,6 +870,13 @@ u_long32 flags
 
             /* delete trailing garbage */
             if (parameters != NULL) {
+               char *additional_comment;
+
+               /* don't copy additional comments */
+               if ((additional_comment = strchr(parameters, '#')) != NULL) {
+                  additional_comment[0] = '\0';
+               }
+
                /* Start one character before the NULL terminator. */
                i = strlen(parameters) - 1;
                

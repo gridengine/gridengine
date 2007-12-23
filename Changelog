@@ -1,3 +1,7 @@
+RD-2007-12-23-0: Bugfix:    queue changes with an AR generated a lot of
+                            unnecessary events
+                 Review:    TBD
+
 RD-2007-12-22-0: Enhancem.: - optimized execd data collector execution
                             - qsub now allows comment after script directive
                  Review:    TBD

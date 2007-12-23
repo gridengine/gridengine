@@ -467,7 +467,7 @@ bool sge_ar_has_errors(lListElem *ar) {
    bool ret = false;
    lListElem *qinstance;
 
-   DENTER(TOP_LAYER, "sge_ar_list_set_error_state");
+   DENTER(TOP_LAYER, "sge_ar_has_errors");
 
    for_each(qinstance, lGetList(ar, AR_reserved_queues)) {
       if (qinstance_state_is_manual_disabled(qinstance) ||

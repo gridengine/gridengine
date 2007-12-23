@@ -2041,6 +2041,18 @@ void sge_ar_list_set_error_state(lList *ar_list, const char *qname, u_long32 err
    for_each(ar, ar_list) {
       lListElem *qinstance;
       lList *granted_slots = lGetList(ar, AR_reserved_queues);
+
+      if (set_error) {
+         if (lGetUlong(ar, AR_state) == AR_ERROR || lGetUlong(ar, AR_state) == AR_WARNING) {
+             /* ignore, AR is already in error state */
+             continue;
+         }
+      } else {
+         if (lGetUlong(ar, AR_state) == AR_RUNNING || lGetUlong(ar, AR_state) == AR_WAITING) {
+             /* ignore, AR is already in non error state */
+             continue;
+         }
+      }
       
       if (lGetUlong(ar, AR_state) == AR_RUNNING || lGetUlong(ar, AR_state) == AR_ERROR) {
          start_time_reached= true;
@@ -2049,8 +2061,8 @@ void sge_ar_list_set_error_state(lList *ar_list, const char *qname, u_long32 err
       }
 
       if ((qinstance =lGetElemStr(granted_slots, QU_full_name, qname)) != NULL) {
-            sge_dstring_sprintf(&buffer, MSG_AR_RESERVEDQUEUEHASERROR_SS, qname,
-                                qinstance_state_as_string(error_type));
+         sge_dstring_sprintf(&buffer, MSG_AR_RESERVEDQUEUEHASERROR_SS, qname,
+                             qinstance_state_as_string(error_type));
          qinstance_set_error(qinstance, error_type, sge_dstring_get_string(&buffer), set_error);
 
          /* update states */

@@ -326,8 +326,6 @@
 #define MSG_JOB_DELETEX_SSU           _MESSAGE(33244, _(SFN" has deleted "SFN" "sge_U32CFormat))
 #define MSG_JOB_DISCONTINUEDTRANS_SU  _MESSAGE(33245, _("Discontinued delete transaction of user "SFQ" after job "sge_U32CFormat))
 #define MSG_JOB_UNABLE2FINDQOFJOB_S   _MESSAGE(33246, _("can't locate the queue "SFQ" associated with this job"))
-#define MSG_JOB_DISCONTTASKTRANS_SUU  _MESSAGE(33865, _("Discontinued delete transaction of user "SFQ" in job "sge_U32CFormat" at task "sge_U32CFormat))
-#define MSG_JOB_ALREADYDELETED_U      _MESSAGE(33866, _("job "sge_U32CFormat" is already in deletion"))
 
 /* CR: don't localize mail subject, until we send it in Mime format!
  *  The message definition is not l10n'ed (no _() macro used)!!!     
@@ -731,6 +729,7 @@
 #define MSG_JOBLOG_ACTION_ERROR        _MESSAGE(33864, _("error"))
 
 #define MSG_REPORTING_INTERMEDIATE_SS  _MESSAGE(33865, _("write intermediate accounting record for job "SFQ" at "SFN""))
+
 #define MSG_THREAD_XTERMINATED_S       _MESSAGE(33870, _(SFN" thread terminated"))
 #define MSG_THREAD_XNOTRUNNING_S       _MESSAGE(33871, _(SFN" thread is not running"))
 #define MSG_THREAD_XHASSTARTED_S       _MESSAGE(33872, _(SFN" has been started"))
@@ -791,5 +790,10 @@
 #define MSG_GDI_KEYSTR_COMMA                        _MESSAGE(33948, _("Comma"))
 #define MSG_GDI_KEYSTR_LENGTH_U                     _MESSAGE(33949, _("string is longer than "sge_U32CFormat", this is not allowed for objectnames") )
 #define MSG_TRIGGER_STATENOTSUPPORTED_DS            _MESSAGE(33950, _("state transition %d not supported for thread "SFQ))
+
+#define MSG_GOTUSAGEREPORTFORUNKNOWNPETASK_S        _MESSAGE(33951, _("got usage report for unknown pe_task "SFQ))
+
+#define MSG_JOB_DISCONTTASKTRANS_SUU  _MESSAGE(33952, _("Discontinued delete transaction of user "SFQ" in job "sge_U32CFormat" at task "sge_U32CFormat))
+#define MSG_JOB_ALREADYDELETED_U      _MESSAGE(33953, _("job "sge_U32CFormat" is already in deletion"))
 
 #endif

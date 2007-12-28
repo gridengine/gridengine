@@ -844,3 +844,42 @@ cleanup:
 }
 #endif
 
+/****** sge_pe/pe_do_accounting_summary() **************************************
+*  NAME
+*     pe_do_accounting_summary() -- do accounting summary?
+*
+*  SYNOPSIS
+*     bool 
+*     pe_do_accounting_summary(const lListElem *pe)
+*
+*  FUNCTION
+*     Returns whether for tightly integrated jobs
+*     - a single accounting record shall be created (true), or
+*     - an individual accounting record shall be created for every task,
+*       and an accounting record for the master task (job script).
+*
+*  INPUTS
+*     const lListElem *pe - the parallel environment
+*
+*  RESULT
+*     bool - true (do summary), or false (many records)
+*
+*  NOTES
+*     MT-NOTE: pe_do_accounting_summary() is MT safe 
+*******************************************************************************/
+bool
+pe_do_accounting_summary(const lListElem *pe)
+{
+   bool ret = false;
+
+   /*
+    * the accounting_summary attribute has only a meaning
+    * for tightly integrated jobs
+    */
+   if (pe != NULL && lGetBool(pe, PE_control_slaves)) {
+      ret = lGetBool(pe, PE_accounting_summary) ? true : false;
+   }
+
+   return ret;
+}
+

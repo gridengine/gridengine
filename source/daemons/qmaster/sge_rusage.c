@@ -44,9 +44,12 @@
 #include "sgeobj/sge_report.h"
 #include "sgeobj/sge_usage.h"
 #include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_object.h"
 
 #include "sched/sge_job_schedd.h"
 
+#include "msg_qmaster.h"
 #include "sge_rusage.h"
 
 #ifdef NEC_ACCOUNTING_ENTRIES
@@ -73,9 +76,128 @@ sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","
 #define SET_HOST_DEFAULT(jr, nm, s) if (!lGetHost(jr, nm)) \
                                       lSetHost(jr, nm, s);
 
-static double 
-reporting_get_double_usage(lList *usage_list, lList *reported_list, 
-                            const char *name, const char *rname, double def);
+/****** sge_rusage/reporting_get_double_usage() ********************************
+*  NAME
+*     reporting_get_double_usage() -- return usage of a certain attribute
+*
+*  SYNOPSIS
+*     static double
+*     reporting_get_double_usage(const lList *usage_list, lList *reported_list, 
+*                                const char *name, double def) 
+*
+*  FUNCTION
+*     Return the usage information of a certain attribute (e.g. cpu, mem, ...).
+*     If already usage had been reported for the same job (ja_task, pe_task),
+*     do only report the newly added usage.
+*     If no usage information is available for the given attribute, a default
+*     value will be returned.
+*
+*  INPUTS
+*     const lList *usage_list - the usage (of a ja_task or pe_task)
+*     lList *reported_list    - the already (earlier) reported usage
+*     const char *name        - the name of the attribute
+*     double def              - default value
+*
+*  RESULT
+*     static double - the usage
+*
+*  NOTES
+*     MT-NOTE: reporting_get_double_usage() is MT safe 
+*
+*  SEE ALSO
+*     sgeobj/usage/usage_list_get_double_usage()
+*******************************************************************************/
+static double
+reporting_get_double_usage(const lList *usage_list, lList *reported_list,
+                           const char *name, double def) 
+{
+   /* total usage */
+   double usage = usage_list_get_double_usage(usage_list, name, def);
+
+   if (reported_list != NULL) {
+      double reported;
+
+      /* usage already reported */
+      reported = usage_list_get_double_usage(reported_list, name, def);
+
+      /* after this action, we'll have reported the total usage */
+      usage_list_set_double_usage(reported_list, name, usage);
+
+      /* in this intermediate accounting record, we'll report the usage 
+       * consumed since the last intermediate accounting record.
+       */
+      usage -= reported;
+   }
+
+   return usage;
+}
+
+/****** sge_rusage/reporting_get_double_usage_sum() ****************************
+*  NAME
+*     reporting_get_double_usage_sum() -- return usage for a certain attribute
+*
+*  SYNOPSIS
+*     static double
+*     reporting_get_double_usage_sum(const lList *usage_list, lList *reported_list,
+*                                    bool accounting_summary, const lListElem *ja_task,
+*                                    const char *name, double def)
+*
+*  FUNCTION
+*     Return the usage information of a certain attribute (e.g. cpu, mem, ...).
+*     If already usage had been reported for the same job (ja_task, pe_task),
+*     do only report the newly added usage.
+*     If no usage information is available for the given attribute, a default
+*     value will be returned.
+*     If accounting_summary is true, the usage of all pe_tasks in the given
+*     ja_task object will be summed up as well.
+*     If reported_usage is NULL, no usage will be booked as already reported,
+*     e.g. for maximum values.
+*
+*  INPUTS
+*     const lList *usage_list  - the usage (of a ja_task or pe_task)
+*     lList *reported_list     - the already (earlier) reported usage
+*     bool accounting_summary  - shall we sum up pe_task usage?
+*     const lListElem *ja_task - ja_task having pe_tasks
+*     const char *name         - the name of the attribute
+*     double def               - default value
+*
+*  RESULT
+*     static double - the usage
+*
+*  NOTES
+*     MT-NOTE: reporting_get_double_usage_sum() is MT safe 
+*
+*  SEE ALSO
+*     sge_rusage/reporting_get_double_usage()
+*******************************************************************************/
+static double
+reporting_get_double_usage_sum(const lList *usage_list, lList *reported_list,
+                               bool accounting_summary, const lListElem *ja_task,
+                               const char *name, double def)
+{
+   double usage = reporting_get_double_usage(usage_list, reported_list, name, def);
+
+   /* when we do an accounting summary, we also have to sum up the pe task usage */
+   if (accounting_summary) {
+      lListElem *pe_task = NULL;
+      lList *pe_tasks = lGetList(ja_task, JAT_task_list);
+
+      for_each (pe_task, pe_tasks) {
+         lList *pe_usage_list = lGetList(pe_task, PET_scaled_usage);
+         if (pe_usage_list != NULL) {
+            lList *pe_reported_list = NULL;
+            if (reported_list != NULL) {
+               pe_reported_list = lGetOrCreateList(pe_task, PET_reported_usage,
+                                                   "reported_usage", UA_Type);
+            }
+            usage += reporting_get_double_usage(pe_usage_list, pe_reported_list, name, def);
+         }
+      }
+   }
+
+   return usage;
+}
+
 /* ------------------------------------------------------------
 
    write usage to a dstring buffer
@@ -104,7 +226,9 @@ sge_write_rusage(dstring *buffer,
                  const char *category_str, const char delimiter, 
                  bool intermediate)
 {
-   lList *usage_list, *reported_list;
+   lList *usage_list        = NULL; /* usage list of ja_task or pe_task */
+   lList *reported_list     = NULL; /* already reported usage of ja_task or pe_task */
+
    const char *pe_task_id;
 #ifdef NEC_ACCOUNTING_ENTRIES
    char arch_dep_usage_buffer[MAX_STRING_SIZE];
@@ -120,50 +244,72 @@ sge_write_rusage(dstring *buffer,
    u_long32 end_time        = 0;
    u_long32 now             = sge_get_gmt();
    u_long32 exit_status     = 0;
+   bool do_accounting_summary = false;
 
    DENTER(TOP_LAYER, "sge_write_rusage");
 
    /* invalid input data */
    if (buffer == NULL) {
-      DEXIT;   
-      return ret;
-   } 
+      DRETURN(ret);
+   }
 
 #ifdef NEC_ACCOUNTING_ENTRIES
    sge_dstring_init(&arch_dep_usage_dstring, arch_dep_usage_buffer, 
                     sizeof(arch_dep_usage_buffer));
 #endif
 
-   /* for tasks we take usage from job report */
-   if ((pe_task_id=lGetString(jr, JR_pe_task_id_str))) {
-      pe_task = lGetElemStr(lGetList(ja_task, JAT_task_list), 
-                                     PET_id, pe_task_id);
-      if (pe_task == NULL) {
-         ERROR((SGE_EVENT, "got usage report for unknown pe_task "SFN"\n",
-                           pe_task_id));
-         return ret;
-      }
-      usage_list = lGetList(pe_task, PET_usage);
-   } else {
-      usage_list = lGetList(ja_task, JAT_usage_list);
+   /* 
+    * Figure out if it is a parallel job,
+    * and if we shall write individual accounting entries or a summary.
+    */
+   if (lGetString(ja_task, JAT_granted_pe) != NULL) {
+      object_description *object_base = object_type_get_object_description();
+      const lListElem *pe = pe_list_locate(*object_base[SGE_TYPE_PE].list, 
+                            lGetString(ja_task, JAT_granted_pe));
+      do_accounting_summary = pe_do_accounting_summary(pe);
    }
 
-   /* for intermediate usage reporting, we need a list containing the already
-    * reported usage. If it doesn't exist yet, create it
+   /*
+    * Now figure out the usage lists:
+    * - the pe task usage list for pe tasks
+    * - the ja_task list for ja tasks
+    */
+   if ((pe_task_id = lGetString(jr, JR_pe_task_id_str)) != NULL) {
+      /* nothing to be done for pe task, if summary is requested */
+      if (do_accounting_summary) {
+         DRETURN(ret);
+      }
+
+      /* try to find the pe_task */
+      pe_task = lGetElemStr(lGetList(ja_task, JAT_task_list), PET_id, pe_task_id);
+      if (pe_task == NULL) {
+         dstring err_buffer = DSTRING_INIT;
+         ERROR((SGE_EVENT, MSG_GOTUSAGEREPORTFORUNKNOWNPETASK_S,
+                           job_get_id_string(lGetUlong(job, JB_job_number), 
+                                             lGetUlong(ja_task, JAT_task_number), 
+                                             pe_task_id, &err_buffer)));
+         sge_dstring_free(&err_buffer);
+         DRETURN(ret);
+      }
+
+      /* we output pe_task usage */
+      usage_list = lGetList(pe_task, PET_scaled_usage);
+   } else {
+      /* we output ja_task usage */
+      usage_list = lGetList(ja_task, JAT_scaled_usage_list);
+   }
+
+   /*
+    * For intermediate records, we store the reported usage in 
+    * ja_task or pe_task reported_list.
     */
    if (intermediate) {
       if (pe_task != NULL) {
-         reported_list = lGetList(pe_task, PET_reported_usage);
-         if (reported_list == NULL) {
-            reported_list = lCreateList("reported_usage", UA_Type);
-            lSetList(pe_task, PET_reported_usage, reported_list);
-         }
+         reported_list = lGetOrCreateList(pe_task, PET_reported_usage, 
+                                          "reported_usage", UA_Type);
       } else {
-         reported_list = lGetList(ja_task, JAT_reported_usage_list);
-         if (reported_list == NULL) {
-            reported_list = lCreateList("reported_usage", UA_Type);
-            lSetList(ja_task, JAT_reported_usage_list, reported_list);
-         }
+         reported_list = lGetOrCreateList(ja_task, JAT_reported_usage_list, 
+                                          "reported_usage", UA_Type);
       }
 
       /* 
@@ -175,16 +321,11 @@ sge_write_rusage(dstring *buffer,
       /* now set actual time as time of last intermediate usage report */
       usage_list_set_ulong_usage(reported_list, LAST_INTERMEDIATE, 
                                  now);
-   } else {
-      reported_list = NULL;
    }
-
-
 
    SET_STR_DEFAULT(jr, JR_queue_name, "UNKNOWN@UNKNOWN");
 
-   /* job name and account get taken 
-      from local job structure */
+   /* job name and account get taken from local job structure */
    if (lGetString(job, JB_job_name) == NULL) {
       lSetString(job, JB_job_name, "UNKNOWN");
    }   
@@ -193,16 +334,16 @@ sge_write_rusage(dstring *buffer,
    }   
 
 #ifdef NEC_ACCOUNTING_ENTRIES
+#if defined(NECSX4) || defined(NECSX5)
    /* values which will be written for a special architecture */
    {
-#if defined(NECSX4) || defined(NECSX5)
       char *arch_string = "";
 
-      ep=lGetElemStr(usage_list, UA_name, "necsx_necsx4");
+      ep = lGetElemStr(usage_list, UA_name, "necsx_necsx4");
       if (ep != NULL) {
          arch_string = "necsx4";
       }   
-      ep=lGetElemStr(usage_list, UA_name, "necsx_necsx5");
+      ep = lGetElemStr(usage_list, UA_name, "necsx_necsx5");
       if (ep != NULL) {
          arch_string = "necsx5";
       }   
@@ -232,10 +373,11 @@ sge_write_rusage(dstring *buffer,
          usage_list_get_ulong_usage(usage_list, "necsx_multi_single", 0),
          usage_list_get_ulong_usage(usage_list, "necsx_max_nproc", 0)
       );
-#endif
-      DPRINTF(("arch_string: %s\n", arch_dep_usage_string));
    }
-#endif 
+#endif
+#endif
+
+   /* figure out queue name and host name */
    {
       dstring cqueue = DSTRING_INIT;
       dstring hname = DSTRING_INIT;
@@ -288,6 +430,15 @@ sge_write_rusage(dstring *buffer,
       exit_status = usage_list_get_ulong_usage(usage_list, "exit_status", 0);
    }
    
+   /*
+    * Output all the usage information.
+    * For cpu, mem, io, iow we have to take into account,
+    * that usage might already have been reported in intermediate accounting
+    * records.
+    * All the ru_* attributes are only reported at process end,
+    * see man page getrusage(2), so nothing to be done for intermediate
+    * records.
+    */
    ret = sge_dstring_sprintf(buffer, ACTFILE_FPRINTF_FORMAT, 
           qname, delimiter,
           hostname, delimiter,
@@ -325,60 +476,27 @@ sge_write_rusage(dstring *buffer,
           none_string(lGetString(ja_task, JAT_granted_pe)), delimiter,
           sge_granted_slots(lGetList(ja_task, JAT_granted_destin_identifier_list)), delimiter,
           job_is_array(job) ? lGetUlong(ja_task, JAT_task_number) : 0, delimiter,
-          reporting_get_double_usage(usage_list, reported_list, 
-            intermediate ? USAGE_ATTR_CPU : USAGE_ATTR_CPU_ACCT, 
-            USAGE_ATTR_CPU, 0), delimiter,
-          reporting_get_double_usage(usage_list, reported_list, 
-             intermediate ? USAGE_ATTR_MEM : USAGE_ATTR_MEM_ACCT,
-             USAGE_ATTR_MEM, 0), delimiter,
-          reporting_get_double_usage(usage_list, reported_list, 
-             intermediate ? USAGE_ATTR_IO : USAGE_ATTR_IO_ACCT, 
-             USAGE_ATTR_IO, 0), delimiter,
+          reporting_get_double_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task,
+                                         USAGE_ATTR_CPU, 0), delimiter,
+          reporting_get_double_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task,
+                                         USAGE_ATTR_MEM, 0), delimiter,
+          reporting_get_double_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task,
+                                         USAGE_ATTR_IO, 0), delimiter,
           none_string(category_str), delimiter,
-          reporting_get_double_usage(usage_list, reported_list, 
-             intermediate ? USAGE_ATTR_IOW : USAGE_ATTR_IOW_ACCT, 
-             USAGE_ATTR_IOW, 0), delimiter,
+          reporting_get_double_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task,
+                                         USAGE_ATTR_IOW, 0), delimiter,
           none_string(pe_task_id), delimiter,
-          usage_list_get_double_usage(usage_list,  
-             intermediate ? USAGE_ATTR_MAXVMEM : USAGE_ATTR_MAXVMEM_ACCT, 0), delimiter, 
+          reporting_get_double_usage_sum(usage_list, NULL, do_accounting_summary, ja_task,
+                                         USAGE_ATTR_MAXVMEM, 0), delimiter, 
           lGetUlong(job, JB_ar)
 #ifdef NEC_ACCOUNTING_ENTRIES
           , delimiter, arch_dep_usage_string
 #endif 
              );
-     
+
    FREE(qname);
    FREE(hostname);
+
    DRETURN(ret);
 }
 
-/*
-* NOTES
-*     MT-NOTE: reporting_get_double_usage() is MT-safe
-*/
-static double 
-reporting_get_double_usage(lList *usage_list, lList *reported_list, 
-                            const char *name, const char *rname, double def) 
-{
-   double usage;
-
-   /* total usage */
-   usage = usage_list_get_double_usage(usage_list, name, def);
-
-   if (reported_list != NULL) {
-      double reported;
-
-      /* usage already reported */
-      reported = usage_list_get_double_usage(reported_list, rname, def);
-
-      /* after this action, we'll have reported the total usage */
-      usage_list_set_double_usage(reported_list, rname, usage);
-
-      /* in this intermediate accounting record, we'll report the usage 
-       * consumed since the last intermediate accounting record.
-       */
-      usage -= reported;
-   }
-
-   return usage;
-}

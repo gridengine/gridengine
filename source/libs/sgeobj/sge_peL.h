@@ -102,6 +102,11 @@ extern "C" {
 *        string is passed to the function as the second argument.
 *        NOTE: This is only available when compiled with -DSGE_PQS_API
 *
+*     SGE_BOOL(PE_accounting_summary)
+*        For tightly integrated parallel jobs.
+*        Specifies if a single accounting record is written for the whole job,
+*        or if every task gets an individual accounting record.
+*
 ******************************************************************************/
 enum {
    PE_name = PE_LOWERBOUND,  
@@ -115,12 +120,11 @@ enum {
    PE_job_is_first_task,
    PE_free_slots,
    PE_resource_utilization,
-#ifdef SGE_PQS_API
    PE_urgency_slots,
-   PE_qsort_args
-#else
-   PE_urgency_slots
+#ifdef SGE_PQS_API
+   PE_qsort_args,
 #endif
+   PE_accounting_summary
 };
 
 
@@ -142,6 +146,7 @@ LISTDEF(PE_Type)
 #ifdef SGE_PQS_API
    SGE_STRING(PE_qsort_args, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)
 #endif
+   SGE_BOOL_D(PE_accounting_summary, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF, "FALSE")
 LISTEND 
 
 NAMEDEF(PEN)
@@ -160,6 +165,7 @@ NAMEDEF(PEN)
 #ifdef SGE_PQS_API
    NAME("PE_qsort_args")
 #endif
+   NAME("PE_accounting_summary")
 NAMEEND
 
 /* *INDENT-ON* */ 

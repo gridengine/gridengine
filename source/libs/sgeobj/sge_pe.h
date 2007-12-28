@@ -84,4 +84,7 @@ pe_validate_qsort_args(lList **alpp, const char *qsort_args,
                        lListElem *pe, void **lib, void **fn);
 #endif
 
+bool
+pe_do_accounting_summary(const lListElem *pe);
+
 #endif /* __SGE_PE_H */

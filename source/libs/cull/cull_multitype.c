@@ -1047,6 +1047,51 @@ lList* lGetList(const lListElem *ep, int name)
    return (lList *) ep->cont[pos].glp;
 }
 
+/****** cull/multitype/lGetOrCreateList() **************************************
+*  NAME
+*     lGetOrCreateList() -- Returns the CULL list for a field name
+*
+*  SYNOPSIS
+*     lList* 
+*     lGetOrCreateList(lListElem *ep, int name, const char *list_name, 
+*                      const lDescr *descr) 
+*
+*  FUNCTION
+*     Returns the CULL list for a field name.
+*     If the list does not yet exist, create it.
+*
+*  INPUTS
+*     lListElem *ep         - element
+*     int name              - field name value
+*     const char *list_name - list name for list creation
+*     const lDescr *descr   - descriptor for list creation
+*
+*  RESULT
+*     lList* - CULL list pointer
+*
+*  NOTES
+*     MT-NOTE: lGetOrCreateList() is MT safe 
+*
+*  SEE ALSO
+*     cull/multitype/lGetList()
+*     cull/list/lCreateList()
+*******************************************************************************/
+lList* lGetOrCreateList(lListElem *ep, int name, 
+                        const char *list_name, const lDescr *descr)
+{
+   lList *list = NULL;
+
+   if (ep != NULL) {
+      list = lGetList(ep, name);
+      if (list == NULL) {
+         list = lCreateList(list_name, descr);
+         lSetList(ep, name, list);
+      }
+   }
+
+   return list;
+}
+
 /****** cull/multitype/lGetPosFloat() *****************************************
 *  NAME
 *     lGetPosFloat() -- Returns the float value at position pos 
@@ -2500,7 +2545,7 @@ int lSetObject(lListElem *ep, int name, lListElem *value)
 *     int lSetList(lListElem *ep, int name, lList *value) 
 *
 *  FUNCTION
-*     Sets a list at the given field name id. List will not be copyed.
+*     Sets a list at the given field name id. List will not be copied.
 *
 *  INPUTS
 *     lListElem *ep - element 

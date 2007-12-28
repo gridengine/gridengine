@@ -711,39 +711,42 @@ spooling_field *sge_build_PE_field_list(bool spool, bool to_stdout)
 #endif
    int count = 0;
    
-   create_spooling_field (&fields[count++], PE_name, 17, "pe_name",
+   create_spooling_field (&fields[count++], PE_name, 18, "pe_name",
                           NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], PE_slots, 17, "slots",
+   create_spooling_field (&fields[count++], PE_slots, 18, "slots",
                           NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], PE_user_list, 17, "user_lists",
+   create_spooling_field (&fields[count++], PE_user_list, 18, "user_lists",
                           US_sub_fields, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], PE_xuser_list, 17, "xuser_lists",
+   create_spooling_field (&fields[count++], PE_xuser_list, 18, "xuser_lists",
                           US_sub_fields, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], PE_start_proc_args, 17, "start_proc_args",
+   create_spooling_field (&fields[count++], PE_start_proc_args, 18, "start_proc_args",
                           NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], PE_stop_proc_args, 17, "stop_proc_args",
+   create_spooling_field (&fields[count++], PE_stop_proc_args, 18, "stop_proc_args",
                           NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], PE_allocation_rule, 17, "allocation_rule",
+   create_spooling_field (&fields[count++], PE_allocation_rule, 18, "allocation_rule",
                           NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], PE_control_slaves, 17, "control_slaves",
+   create_spooling_field (&fields[count++], PE_control_slaves, 18, "control_slaves",
                           NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], PE_job_is_first_task, 17, "job_is_first_task",
+   create_spooling_field (&fields[count++], PE_job_is_first_task, 18, "job_is_first_task",
                           NULL, NULL, NULL, NULL);
    
-   create_spooling_field (&fields[count++], PE_urgency_slots, 17, "urgency_slots",
+   create_spooling_field (&fields[count++], PE_urgency_slots, 18, "urgency_slots",
                           NULL, NULL, NULL, NULL);
    
 #ifdef SGE_PQS_API
-   create_spooling_field (&fields[count++], PE_qsort_args, 17, "qsort_args",
+   create_spooling_field (&fields[count++], PE_qsort_args, 18, "qsort_args",
                           NULL, NULL, NULL, NULL);
 #endif
 
+   create_spooling_field (&fields[count++], PE_accounting_summary, 18, "accounting_summary",
+                          NULL, NULL, NULL, NULL);
+
    if (!spool && to_stdout && getenv("MORE_INFO")) {
-      create_spooling_field (&fields[count++], PE_free_slots, 17, "free_slots",
+      create_spooling_field (&fields[count++], PE_free_slots, 18, "free_slots",
                              NULL, NULL, NULL, write_PE_free_slots);
    }
    
-   create_spooling_field (&fields[count++], NoName, 17, NULL, NULL, NULL, NULL,
+   create_spooling_field (&fields[count++], NoName, 18, NULL, NULL, NULL, NULL,
                           NULL);
    
    return fields;

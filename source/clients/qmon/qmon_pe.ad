@@ -113,6 +113,7 @@ Qmon*pe_ask_shell.pe_ask_layout.xmtChildren: \
    InputField     pe_qsort_args; \
    XmToggleButton pe_control_slaves; \
    XmToggleButton pe_job_is_first_task; \
+   XmToggleButton pe_accounting_summary; \
    XmPushButton   pe_ok, pe_cancel, pe_usersPB, pe_xusersPB;
 
 Qmon*pe_ask_layout.layout: \
@@ -139,6 +140,7 @@ Qmon*pe_ask_layout.layout: \
          Row { \
             Fixed pe_control_slaves \
             Fixed pe_job_is_first_task \
+            Fixed pe_accounting_summary \
          } \
          Fixed Caption tl "@{Qsort Args} " pe_qsort_args \
       } \
@@ -153,6 +155,9 @@ Qmon*pe_ask_layout.pe_control_slaves.labelString: @{@fBControl Slaves}
 
 Qmon*pe_ask_layout.pe_job_is_first_task.alignment: ALIGNMENT_BEGINNING
 Qmon*pe_ask_layout.pe_job_is_first_task.labelString: @{@fBJob is first task}
+
+Qmon*pe_ask_layout.pe_accounting_summary.alignment: ALIGNMENT_BEGINNING
+Qmon*pe_ask_layout.pe_accounting_summary.labelString: @{@fBAccounting Summary}
 
 Qmon*pe_ask_layout.pe_ok.labelString:     @{Ok}
 Qmon*pe_ask_layout.pe_cancel.labelString: @{Cancel}

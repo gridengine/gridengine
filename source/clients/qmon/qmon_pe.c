@@ -81,6 +81,7 @@ static Widget pe_alloc_w = 0;
 static Widget pe_urgency_w = 0;
 static Widget pe_control_slaves_w = 0;
 static Widget pe_job_is_first_task_w = 0;
+static Widget pe_accounting_summary_w = 0;
 static Widget pe_qsort_args_w = 0;
 static int add_mode = 0;
 
@@ -203,8 +204,11 @@ lListElem *ep
       DEXIT;
       return;
    }
-   
-   itemCount = 10;
+
+   itemCount = 11;
+#ifdef SGE_PQS_API
+   itemCount++;
+#endif
    items = (XmString*) XtMalloc(sizeof(XmString)*itemCount); 
 
    i = 0;
@@ -270,6 +274,11 @@ lListElem *ep
             (int)lGetBool(ep, PE_job_is_first_task) ? "true" : "false");
    items[i++] = XmStringCreateLocalized(buf);
 
+   /* accounting summary */
+   sprintf(buf, "%-20.20s %s", "Accounting Summary", 
+            (int)lGetBool(ep, PE_accounting_summary) ? "true" : "false");
+   items[i++] = XmStringCreateLocalized(buf);
+
 #ifdef SGE_PQS_API
    /* qsort_args */
    str = (StringConst)lGetString(ep, PE_qsort_args);
@@ -277,10 +286,10 @@ lListElem *ep
    items[i++] = XmStringCreateLocalized(buf);
 #endif
    
-   XtVaSetValues( pe_conf_list, 
-                  XmNitems, items,
-                  XmNitemCount, itemCount,
-                  NULL);
+   XtVaSetValues(pe_conf_list, 
+                 XmNitems, items,
+                 XmNitemCount, itemCount,
+                 NULL);
    XmStringTableFree(items, itemCount);
 
    DEXIT;
@@ -360,7 +369,7 @@ Widget parent
 
    DENTER(GUI_LAYER, "qmonCreatePEAsk");
    
-   pe_ask_layout = XmtBuildQueryDialog( parent, "pe_ask_shell",
+   pe_ask_layout = XmtBuildQueryDialog(parent, "pe_ask_shell",
                            NULL, 0,
                            "pe_ok", &pe_ok,
                            "pe_cancel", &pe_cancel,
@@ -368,7 +377,7 @@ Widget parent
                            "pe_xusersPB", &pe_xusersPB,
                            "pe_name", &pe_name_w,
                            "pe_slots", &pe_slots_w,
-                           "pe_users", &pe_acl_w, 
+                           "pe_users", &pe_acl_w,
                            "pe_xusers", &pe_xacl_w,
                            "pe_start_proc_args", &pe_start_w,
                            "pe_stop_proc_args", &pe_stop_w,
@@ -376,6 +385,7 @@ Widget parent
                            "pe_urgency_slots", &pe_urgency_w,
                            "pe_control_slaves", &pe_control_slaves_w,
                            "pe_job_is_first_task", &pe_job_is_first_task_w,
+                           "pe_accounting_summary", &pe_accounting_summary_w,
                            "pe_qsort_args", &pe_qsort_args_w,
                            NULL);
 
@@ -652,11 +662,15 @@ lListElem *pep
    XmToggleButtonSetState(pe_job_is_first_task_w, 
                lGetBool(pep, PE_job_is_first_task), False);
 
+   XmToggleButtonSetState(pe_accounting_summary_w, 
+               lGetBool(pep, PE_accounting_summary), False);
+
 #ifdef SGE_PQS_API
    qsort_args = (StringConst)lGetString(pep, PE_qsort_args);
    if (qsort_args)
       XmtInputFieldSetString(pe_qsort_args_w, qsort_args);
 #endif
+
 
    DEXIT;
 }
@@ -690,6 +704,8 @@ static void qmonPEResetAsk(void)
 
    XmToggleButtonSetState(pe_job_is_first_task_w, 0, False);
 
+   XmToggleButtonSetState(pe_accounting_summary_w, 0, False);
+
 #ifdef SGE_PQS_API
    XmtInputFieldSetString(pe_qsort_args_w, "NONE");
 #endif
@@ -705,6 +721,7 @@ lListElem *pep
    u_long32 pe_slots = 0;
    u_long32 pe_control_slaves = 0;
    u_long32 pe_job_is_first_task = 0;
+   u_long32 pe_accounting_summary = 0;
    lList *acl = NULL;
    lList *xacl = NULL;
    String start_args = NULL;
@@ -766,6 +783,9 @@ lListElem *pep
 
    pe_job_is_first_task = XmToggleButtonGetState(pe_job_is_first_task_w); 
    lSetBool(pep, PE_job_is_first_task, pe_job_is_first_task);
+
+   pe_accounting_summary = XmToggleButtonGetState(pe_accounting_summary_w); 
+   lSetBool(pep, PE_accounting_summary, pe_accounting_summary);
 
 #ifdef SGE_PQS_API
    qsort_args = XmtInputFieldGetString(pe_qsort_args_w);

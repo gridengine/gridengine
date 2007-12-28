@@ -946,7 +946,7 @@ the lists showing already attached @fBUser Lists@fR and @fBXuser Lists@fR.\n\
 In the @fBStart Proc Args and Stop Proc Args@fR the precise invocation sequence\n\
 of the PE start-up and stop procedures is entered.\n\
 Further information on the use of @fBAllocation Rule@fR, @fBUrgency Slots@fR,\n\
-@fBControl Slaves@fR and @fBJob is first Task@fR can be found in @fBsge_pe(5)@fR.\n\n\
+@fBControl Slaves@fR, @fBAccounting Summary@fR and @fBJob is first Task@fR can be found in @fBsge_pe(5)@fR.\n\n\
 By pressing the @fBOk@fR button the added/modified PE configuration is checked and added to the Grid Engine\n\
 system. The @fBCancel@fR button discards any changes.\n\
 \n\

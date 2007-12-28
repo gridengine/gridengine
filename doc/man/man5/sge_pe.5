@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2007/11/29 10:24:42 $     Revision: $Revision: 1.17 $
+.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2007/12/28 19:43:09 $     Revision: $Revision: 1.18 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_PE 5 "$Date: 2007/11/29 10:24:42 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_PE 5 "$Date: 2007/12/28 19:43:09 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_pe \- xxQS_NAMExx parallel environment configuration file format
@@ -293,6 +293,29 @@ possible due to the PE's \fBslots\fP setting is assumed.
 .IP "\fBavg\fP:" 1i
 The average of all numbers occurring within the job's PE range 
 request is assumed.
+.\"
+.\"
+.SS "\fBaccounting_summary\fP"
+This parameter is only checked if
+.B control_slaves
+(see above) is set to TRUE 
+and thus xxQS_NAMExx is the creator of the slave tasks of a parallel 
+application via
+.M xxqs_name_sxx_execd 8
+and
+.M xxqs_name_sxx_shepherd 8 .
+In this case, accounting information is available for every single
+slave task started by xxQS_NAMExx.
+.PP
+The
+.B accounting_summary
+parameter can be set to TRUE or FALSE. A value of 
+TRUE indicates that only a single accounting record is written to the
+.M accounting 5
+file, containing the accounting summary of the whole job including all slave tasks,
+while a value of FALSE indicates an individual
+.M accounting 5
+record is written for every slave task, as well as for the master task.
 .\"
 .\"
 .SH RESTRICTIONS

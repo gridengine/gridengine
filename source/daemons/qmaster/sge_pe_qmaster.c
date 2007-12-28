@@ -204,6 +204,9 @@ int pe_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_pe, lListElem 
    }
 #endif
 
+   /* ---- PE_accounting_summary */
+   attr_mod_bool(pe, new_pe, PE_accounting_summary, "accounting_summary");
+
    /* -------- PE_resource_utilization */
    if (add) {
       if (pe_set_slots_used(new_pe, 0)) {

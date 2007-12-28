@@ -46,8 +46,7 @@
 #include "sgeobj/sge_pe_task.h"
 #include "sgeobj/sge_var.h"
 #include "sgeobj/sge_utility.h"
-
-#include "sgeobj/sge_usageL.h"
+#include "sgeobj/sge_usage.h"
 
 #include "msg_common.h"
 #include "sgeobj/msg_sgeobjlib.h"
@@ -74,12 +73,6 @@
 *  RESULT
 *     lListElem* - the container object
 *
-*  NOTES
-*     JG: TODO: The code summing up usage should better be in a 
-*               module libs/gdi/sge_usage.* containing all usage 
-*               related functions the same or similar functionality 
-*               is needed in many places in Grid Engine.
-*
 *  SEE ALSO
 *     sgeobj/pe_task/pe_task_sum_past_usage_all()
 *     sgeobj/pe_task/pe_task_sum_past_usage_list()
@@ -89,7 +82,8 @@ pe_task_sum_past_usage(lListElem *container, const lListElem *pe_task)
 {
    lList *container_usage;
    const lList *pe_task_usage;
-   const lListElem *usage;
+   lList *container_reported_usage;
+   const lList *pe_task_reported_usage;
    
    DENTER(TOP_LAYER, "pe_task_sum_past_usage");
 
@@ -98,41 +92,26 @@ pe_task_sum_past_usage(lListElem *container, const lListElem *pe_task)
       DRETURN(NULL);
    }
 
-   /* container and pe_task are the same element - nothing to do */
    if (container == pe_task) {
+      /* container and pe_task are the same element - nothing to do */
       DRETURN(container);
    }
 
-   container_usage = lGetList(container, PET_scaled_usage);
-   pe_task_usage   = lGetList(pe_task,   PET_scaled_usage);
-
-   /* empty usage in pe task - nothing to do */
-   if (pe_task_usage == NULL) {
-      DRETURN(container);
+   /* we sum up the scaled_usage */
+   container_usage = lGetOrCreateList(container, PET_scaled_usage, "reported_usage", UA_Type);
+   pe_task_usage = lGetList(pe_task, PET_scaled_usage);
+   if (pe_task_usage != NULL) {
+      usage_list_sum(container_usage, pe_task_usage);
    }
 
-   /* container has no usage list yet - create it */
-   if (container_usage == NULL) {
-      container_usage = lCreateList("usage", UA_Type);
-      lSetList(container, PET_scaled_usage, container_usage);
-   }
-
-   /* sum up usage */
-   for_each(usage, pe_task_usage) {
-      const char *name = lGetString(usage, UA_name);
-      if (!strcmp(name, USAGE_ATTR_CPU) ||
-          !strcmp(name, USAGE_ATTR_IO)  ||
-          !strcmp(name, USAGE_ATTR_IOW) ||
-          !strcmp(name, USAGE_ATTR_VMEM) ||
-          !strcmp(name, USAGE_ATTR_MAXVMEM) ||
-          !strcmp(name, USAGE_ATTR_MEM)) {
-         lListElem *sum = lGetElemStr(container_usage, UA_name, name);
-         if (sum == NULL) {
-            lAppendElem(container_usage, lCopyElem(usage));
-         } else {
-            lAddDouble(sum, UA_value, lGetDouble(usage, UA_value));
-         }
-      }   
+   /* 
+    * and we sum up the already reported usage
+    * (for long running jobs having intermediate usage records) 
+    */
+   container_reported_usage = lGetOrCreateList(container, PET_reported_usage, "reported_usage", UA_Type);
+   pe_task_reported_usage = lGetList(pe_task, PET_reported_usage);
+   if (pe_task_reported_usage != NULL) {
+      usage_list_sum(container_reported_usage, pe_task_reported_usage);
    }
 
    DRETURN(container);
@@ -219,13 +198,13 @@ pe_task_sum_past_usage_list(lList *pe_task_list, const lListElem *pe_task)
    DENTER(TOP_LAYER, "pe_task_sum_past_usage_list");
 
    /* no pe task list - nothing to do */
-   if(pe_task_list == NULL) {
+   if (pe_task_list == NULL) {
       DRETURN(NULL);
    }
 
    /* get container - if it does not yet exist, create it as first element in pe task list */
    container = lGetElemStr(pe_task_list, PET_id, PE_TASK_PAST_USAGE_CONTAINER);
-   if(container == NULL) {
+   if (container == NULL) {
       container = lCreateElem(PET_Type);
       lSetString(container, PET_id, PE_TASK_PAST_USAGE_CONTAINER);
       lInsertElem(pe_task_list, NULL, container);

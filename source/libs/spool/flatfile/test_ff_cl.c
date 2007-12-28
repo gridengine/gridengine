@@ -224,6 +224,7 @@ static int PE_test(void)
 #ifdef SGE_PQS_API
    lSetString(ep, PE_qsort_args, "qsort_args");
 #endif
+   lSetBool(ep, PE_accounting_summary, true);
    
    lp = lCreateList("Resource Utilization List", RUE_Type);
    

@@ -30,6 +30,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <string.h>
+
 #include "cull.h"
 #include "sge_usage.h"
 
@@ -39,7 +41,7 @@
 *
 *  SYNOPSIS
 *     u_long32 
-*     usage_list_get_ulong_usage(lList *usage_list, const char *name, 
+*     usage_list_get_ulong_usage(const lList *usage_list, const char *name, 
 *                                u_long32 def) 
 *
 *  FUNCTION
@@ -49,9 +51,9 @@
 *     If no such element is found, return the given default value.
 *
 *  INPUTS
-*     lList *usage_list - the usage list
-*     const char *name  - name of the element to search
-*     u_long32 def      - default value
+*     const lList *usage_list - the usage list
+*     const char *name        - name of the element to search
+*     u_long32 def            - default value
 *
 *  RESULT
 *     u_long32 - value of found object or default
@@ -59,12 +61,12 @@
 *  SEE ALSO
 *     gdi/usage/usage_list_get_double_usage()
 *******************************************************************************/
-u_long32 usage_list_get_ulong_usage (lList *usage_list, 
-                                     const char *name, 
-                                     u_long32 def)
+u_long32
+usage_list_get_ulong_usage(const lList *usage_list, const char *name,
+                           u_long32 def)
 {
    lListElem *ep = lGetElemStr(usage_list, UA_name, name);
-   if(ep != NULL) {
+   if (ep != NULL) {
       return (u_long32)lGetDouble(ep, UA_value);
    } else {
       return def;
@@ -76,8 +78,8 @@ u_long32 usage_list_get_ulong_usage (lList *usage_list,
 *     usage_list_get_double_usage() -- return double usage value
 *
 *  SYNOPSIS
-*     u_long32 
-*     usage_list_get_double_usage(lList *usage_list, const char *name, 
+*     double
+*     usage_list_get_double_usage(const lList *usage_list, const char *name, 
 *                                 double def) 
 *
 *  FUNCTION
@@ -87,9 +89,9 @@ u_long32 usage_list_get_ulong_usage (lList *usage_list,
 *     If no such element is found, return the given default value.
 *
 *  INPUTS
-*     lList *usage_list - the usage list
-*     const char *name  - name of the element to search
-*     double def        - default value
+*     const lList *usage_list - the usage list
+*     const char *name        - name of the element to search
+*     double def              - default value
 *
 *  RESULT
 *     double - value of found object or default
@@ -97,8 +99,9 @@ u_long32 usage_list_get_ulong_usage (lList *usage_list,
 *  SEE ALSO
 *     gdi/usage/usage_list_get_ulong_usage()
 *******************************************************************************/
-double usage_list_get_double_usage(lList *usage_list, const char *name, 
-                                   double def)
+double
+usage_list_get_double_usage(const lList *usage_list, const char *name,
+                            double def)
 {
    lListElem *ep = lGetElemStr(usage_list, UA_name, name);
    if(ep != NULL) {
@@ -175,5 +178,56 @@ usage_list_set_double_usage(lList *usage_list, const char *name, double value)
    }
 
    lSetDouble(ep, UA_value, value);
+}
+
+/****** sge_usage/usage_list_sum() *********************************************
+*  NAME
+*     usage_list_sum() -- sum up usage of two lists
+*
+*  SYNOPSIS
+*     void 
+*     usage_list_sum(lList *usage_list, const lList *add_usage_list) 
+*
+*  FUNCTION
+*     Add the usage reported in add_usage_list to usage_list.
+*     Summing up of usage will only be done for certain attributes:
+*        - cpu
+*        - io
+*        - iow
+*        - mem
+*        - vmem
+*        - maxvmem
+*        - all ru_* attributes (see man getrusage.2)
+*
+*  INPUTS
+*     lList *usage_list           - the usage list to contain all usage
+*     const lList *add_usage_list - usage to add to usage_list
+*
+*  NOTES
+*     MT-NOTE: usage_list_sum() is MT safe 
+*******************************************************************************/
+void
+usage_list_sum(lList *usage_list, const lList *add_usage_list)
+{
+   const lListElem *usage;
+
+   for_each(usage, add_usage_list) {
+      const char *name = lGetString(usage, UA_name);
+      /* Sum up all usage attributes. */
+      if (strcmp(name, USAGE_ATTR_CPU) == 0 ||
+          strcmp(name, USAGE_ATTR_IO) == 0 ||
+          strcmp(name, USAGE_ATTR_IOW) == 0 ||
+          strcmp(name, USAGE_ATTR_VMEM) == 0 ||
+          strcmp(name, USAGE_ATTR_MAXVMEM) == 0 ||
+          strcmp(name, USAGE_ATTR_MEM) == 0 || 
+          strncmp(name, "ru_", 3) == 0) {
+         lListElem *sum = lGetElemStr(usage_list, UA_name, name);
+         if (sum == NULL) {
+            lAppendElem(usage_list, lCopyElem(usage));
+         } else {
+            lAddDouble(sum, UA_value, lGetDouble(usage, UA_value));
+         }
+      }   
+   }
 }
 

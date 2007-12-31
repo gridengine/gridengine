@@ -5148,7 +5148,7 @@ static int cl_commlib_send_sirm_message(cl_com_connection_t* connection,
       return ret_val;
    }
 
-   sirm_message_size = CL_SIRM_MESSAGE_SIZE;
+   sirm_message_size = CL_SIRM_MESSAGE_SIZE; /* already contains sizeof version */
    sirm_message_size += cl_util_get_ulong_number_length(message->message_id);
    sirm_message_size += cl_util_get_ulong_number_length(starttime);
    sirm_message_size += cl_util_get_ulong_number_length(runtime);
@@ -5158,7 +5158,7 @@ static int cl_commlib_send_sirm_message(cl_com_connection_t* connection,
    sirm_message_size += cl_util_get_ulong_number_length(application_status);
    sirm_message_size += strlen(xml_infotext);
 
-   sirm_message_data = (cl_byte_t*)malloc(sizeof(cl_byte_t)* (sirm_message_size + 1) ) ;
+   sirm_message_data = (cl_byte_t*)malloc(sizeof(cl_byte_t)* (sirm_message_size + 1));
    if (sirm_message_data == NULL) {
       if (xml_infotext != NULL) {
          free(xml_infotext);
@@ -5166,7 +5166,7 @@ static int cl_commlib_send_sirm_message(cl_com_connection_t* connection,
       }
       return CL_RETVAL_MALLOC;
    }
-   sprintf((char*)sirm_message_data, CL_SIRM_MESSAGE , 
+   sprintf((char*)sirm_message_data, CL_SIRM_MESSAGE,
            CL_SIRM_MESSAGE_VERSION,
            message->message_id,
            starttime,

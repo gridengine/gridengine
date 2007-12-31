@@ -1,3 +1,6 @@
+JG-2007-12-31-0: Bugfix:    Fixed broken CL_SIRM_MESSAGE definition.
+                 Review:    TBD
+
 JG-2007-12-28-0: Enhancem.: Added option to suppress individual accounting
                             records for tightly integrated parallel jobs.
                  Bugster:   6572326

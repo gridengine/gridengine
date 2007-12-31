@@ -254,7 +254,7 @@
       
 
  */
-#define CL_SIRM_MESSAGE            "<sirm version=\"%s\"><mid>%ld</mid><starttime>%ld</starttime><runtime>%ld</runtime><application><messages><brm>%ld</b rm><bwm>%ld</bwm></messages><connections><noc>%ld</noc></connections><status>%ld</status></application><info>%s</info></sirm>"
+#define CL_SIRM_MESSAGE            "<sirm version=\"%s\"><mid>%ld</mid><starttime>%ld</starttime><runtime>%ld</runtime><application><messages><brm>%ld</brm><bwm>%ld</bwm></messages><connections><noc>%ld</noc></connections><status>%ld</status></application><info>%s</info></sirm>"
 #define CL_SIRM_MESSAGE_VERSION    "0.1" 
 #define CL_SIRM_MESSAGE_SIZE       218  /* sizeof(CL_SIRM_MESSAGE) + sizeof(CL_SIRM_MESSAGE_VERSION) */
 

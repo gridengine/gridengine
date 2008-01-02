@@ -755,6 +755,7 @@
 
 #define MSG_QMASTER_INVALIDJOBSUBMISSION_SSS   _MESSAGE(33920, _("invalid job object in job submission from user "SFQ", commproc "SFQ" on host "SFQ))
 #define MSG_QMASTER_INVALIDEVENTCLIENT_SSS   _MESSAGE(33921, _("invalid event client request from user "SFQ", commproc "SFQ" on host "SFQ))
+#define MSG_GOTUSAGEREPORTFORUNKNOWNPETASK_S        _MESSAGE(33922, _("got usage report for unknown pe_task "SFQ))
 
 /* sge_qmaster_threads.c */
 #define MSG_QMASTER_THREADCOUNT_U                   _MESSAGE(33930, _(sge_U32CFormat" GDI threads are enabled"))

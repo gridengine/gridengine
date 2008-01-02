@@ -103,6 +103,7 @@ lUlong      lGetUlong(const lListElem *ep, int name);
 const char *lGetString(const lListElem *ep, int name);
 const char *lGetHost(const lListElem *ep, int name);
 lList      *lGetList(const lListElem *ep, int name);
+lList      *lGetOrCreateList(lListElem *ep, int name, const char *list_name, const lDescr *descr);
 lFloat      lGetFloat(const lListElem *ep, int name);
 lDouble     lGetDouble(const lListElem *ep, int name);
 lLong       lGetLong(const lListElem *ep, int name);

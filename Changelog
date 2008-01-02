@@ -1,3 +1,7 @@
+JG-2008-01-01-0: Enhancem.: Improved error output and cleanup merged from 
+                            maintrunk checkin JG-2007-12-28-0.
+                 Review:    HP
+
 GH-2007-12-19-0: Bugfix:    Reprioritize disappears after sge_qmaster restart
                  Bugster:   6574269
                  Review:    JG

@@ -140,15 +140,10 @@ RETURN
          in the apropriate objects
 
    ---------------------------------------- */
-void process_job_report(
-sge_gdi_ctx_class_t *ctx,
-lListElem *report, 
-lListElem *hep,
-char *rhost,
-char *commproc,
-sge_pack_buffer *pb,
-monitoring_t *monitor
-) {
+void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
+                       lListElem *hep, char *rhost, char *commproc,
+                       sge_pack_buffer *pb, monitoring_t *monitor)
+{
    lList* jrl = NULL; /* JR_Type */
    lListElem *jep, *jr, *ep, *jatep = NULL; 
    u_long32 jobid, rstate = 0, jataskid = 0;
@@ -211,74 +206,13 @@ monitoring_t *monitor
       }
 
       jep = job_list_locate(*object_base[SGE_TYPE_JOB].list, jobid);
-      if(jep != NULL) {
+      if (jep != NULL) {
          jatep = lGetElemUlong(lGetList(jep, JB_ja_tasks), JAT_task_number, jataskid);
       }
 
       if (jep && jatep) {
          status = lGetUlong(jatep, JAT_status);
       }
-
-#if 0
-
-      /* This is only for debugging */
-
-      if (status & JIDLE) {
-         DPRINTF(("job status is JIDLE\n"));
-      }
-      if (status & JIDLE) {
-            DPRINTF(("job status is JIDLE\n"));
-      }
-      if (status & JHELD) {
-            DPRINTF(("job status is JHELD\n"));
-      }
-      if (status & JMIGRATING) {
-            DPRINTF(("job status is JMIGRATING\n"));
-      }
-      if (status & JQUEUED) {
-            DPRINTF(("job status is JQUEUED\n"));
-      }
-      if (status & JRUNNING) {
-            DPRINTF(("job status is JRUNNING\n"));
-      }
-      if (status & JSUSPENDED) {
-            DPRINTF(("job status is JSUSPENDED\n"));
-      }
-      if (status & JTRANSFERING) {
-            DPRINTF(("job status is JTRANSFERING\n"));
-      }
-      if (status & JDELETED) {
-            DPRINTF(("job status is JDELETED\n"));
-      }
-      if (status & JWAITING) {
-            DPRINTF(("job status is JWAITING\n"));
-      }
-      if (status & JEXITING) {
-            DPRINTF(("job status is JEXITING\n"));
-      }
-      if (status & JWRITTEN) {
-            DPRINTF(("job status is JWRITTEN\n"));
-      }
-      if (status & JWAITING4OSJID) {
-            DPRINTF(("job status is JWAITING4OSJID\n"));
-      }
-      if (status & JERROR) {
-            DPRINTF(("job status is JERROR\n"));
-      }
-      if (status & JFINISHED) {
-            DPRINTF(("job status is JFINISHED\n"));
-      }
-      if (status & JSUSPENDED_ON_THRESHOLD) {
-            DPRINTF(("job status is JSUSPENDED_ON_THRESHOLD\n"));
-      }
-      
-      if (status & JSLAVE) {
-            DPRINTF(("job status is JSLAVE\n"));
-      }
-      if (status & JSIMULATED) {
-            DPRINTF(("job status is JSIMULATED\n"));
-      }
-#endif 
       queue_name = (s=lGetString(jr, JR_queue_name))?s:(char*)MSG_OBJ_UNKNOWNQ;
       
       if ((pe_task_id_str = lGetString(jr, JR_pe_task_id_str)) && jep && jatep) {
@@ -420,8 +354,7 @@ monitoring_t *monitor
                         if (!(jg = lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)))) {
                            shouldbe_queue_name = "<not running>";
                            shouldbe_host_name = "<not running>";
-                        }
-                        else {
+                        } else {
                            shouldbe_queue_name = (s=lGetString(jg, JG_qname))?s: MSG_OBJ_UNKNOWN;
                            shouldbe_host_name = (s=lGetHost(jg, JG_qhostname))?s: MSG_OBJ_UNKNOWN;
                         }
@@ -510,14 +443,7 @@ monitoring_t *monitor
                if (lGetUlong(first_at_host, JG_tag_slave_job) != 0) {
 
                   DPRINTF(("slave job "sge_u32" arrived at %s\n", jobid, rhost));
-#if 0 /* EB: DEBUG: This code can be used to provoke IZ 1619 */
-                  srand(time(0));
-                  if (rand() > RAND_MAX / 2) {
-                     lSetUlong(first_at_host, JG_tag_slave_job, 0);
-                  }
-#else
                   lSetUlong(first_at_host, JG_tag_slave_job, 0);
-#endif
 
                   /* should trigger a fast delivery of the job to master execd 
                      script but only when all other slaves have also arrived */ 
@@ -532,118 +458,54 @@ monitoring_t *monitor
                   }
                }
             } else {
-               {
-                  /* clear state with regards to slave controlled container */
-                  lListElem *host;
+               /* clear state with regards to slave controlled container */
+               lListElem *host;
 
-                  host = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, rhost);
-                  update_reschedule_unknown_list_for_job(host, jobid, jataskid);
+               host = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, rhost);
+               update_reschedule_unknown_list_for_job(host, jobid, jataskid);
 
-                  DPRINTF(("RU: CLEANUP FOR SLAVE JOB "sge_u32"."sge_u32" on host "SFN"\n", 
-                     jobid, jataskid, rhost));
-               }
+               DPRINTF(("RU: CLEANUP FOR SLAVE JOB "sge_u32"."sge_u32" on host "SFN"\n", 
+                  jobid, jataskid, rhost));
 
                /* clean up */
                pack_job_exit(pb, jobid, jataskid, pe_task_id_str);
             }
          }
          break;
-      case JEXITING:   
+      case JEXITING:
       {
          int skip_job_exit = 0;
 
          if (!jep || !jatep || (jep && status==JFINISHED)) {
-            /* must be retry of execds job exit */ 
+            /* must be retry of execds job exit */
             /* or job was deleted using "qdel -f" */
             /* while execd was down or .. */
-            if (!jatep) {
+            if (jatep == NULL) {
                DPRINTF(("exiting job "sge_u32" does not exist\n", jobid));
             } else {
                DPRINTF(("exiting job "sge_u32"."sge_u32" does not exist\n", jobid, jataskid));
-            }   
+            }
          } else {
-            /* job exited */  
-            if (!pe_task_id_str) {
+            /* job exited */
+            if (pe_task_id_str == NULL) {
 
                /* store unscaled usage directly in job */
                lXchgList(jr, JR_usage, lGetListRef(jatep, JAT_usage_list));
 
                /* update jobs scaled usage list */
-               lSetList(jatep, JAT_scaled_usage_list, 
+               lSetList(jatep, JAT_scaled_usage_list,
                   lCopyList("scaled", lGetList(jatep, JAT_usage_list)));
                scale_usage(lGetList(hep, EH_usage_scaling_list),
                            lGetList(jatep, JAT_previous_usage_list),
                            lGetList(jatep, JAT_scaled_usage_list));
-               /* skip sge_job_exit() and pack_job_exit() in case there 
+               /* skip sge_job_exit() and pack_job_exit() in case there
                   are still running tasks, since execd resends job exit */
                for_each (petask, lGetList(jatep, JAT_task_list)) {
-#if 0
-                  /* This is only for debugging */
-
-                  u_long32 tmp_PET_status = lGetUlong(petask, PET_status);
-                  DPRINTF(("tmp_PET_status = "sge_U32CFormat"\n", sge_u32c(tmp_PET_status)));
-                  {
-                     if (tmp_PET_status & JIDLE) {
-                        DPRINTF(("job tmp_PET_status is JIDLE\n"));
-                     }
-                     if (tmp_PET_status & JIDLE) {
-                           DPRINTF(("job tmp_PET_status is JIDLE\n"));
-                     }
-                     if (tmp_PET_status & JHELD) {
-                           DPRINTF(("job tmp_PET_status is JHELD\n"));
-                     }
-                     if (tmp_PET_status & JMIGRATING) {
-                           DPRINTF(("job tmp_PET_status is JMIGRATING\n"));
-                     }
-                     if (tmp_PET_status & JQUEUED) {
-                           DPRINTF(("job tmp_PET_status is JQUEUED\n"));
-                     }
-                     if (tmp_PET_status & JRUNNING) {
-                           DPRINTF(("job tmp_PET_status is JRUNNING\n"));
-                     }
-                     if (tmp_PET_status & JSUSPENDED) {
-                           DPRINTF(("job tmp_PET_status is JSUSPENDED\n"));
-                     }
-                     if (tmp_PET_status & JTRANSFERING) {
-                           DPRINTF(("job tmp_PET_status is JTRANSFERING\n"));
-                     }
-                     if (tmp_PET_status & JDELETED) {
-                           DPRINTF(("job tmp_PET_status is JDELETED\n"));
-                     }
-                     if (tmp_PET_status & JWAITING) {
-                           DPRINTF(("job tmp_PET_status is JWAITING\n"));
-                     }
-                     if (tmp_PET_status & JEXITING) {
-                           DPRINTF(("job tmp_PET_status is JEXITING\n"));
-                     }
-                     if (tmp_PET_status & JWRITTEN) {
-                           DPRINTF(("job tmp_PET_status is JWRITTEN\n"));
-                     }
-                     if (tmp_PET_status & JWAITING4OSJID) {
-                           DPRINTF(("job tmp_PET_status is JWAITING4OSJID\n"));
-                     }
-                     if (tmp_PET_status & JERROR) {
-                           DPRINTF(("job tmp_PET_status is JERROR\n"));
-                     }
-                     if (tmp_PET_status & JFINISHED) {
-                           DPRINTF(("job tmp_PET_status is JFINISHED\n"));
-                     }
-                     if (tmp_PET_status & JSUSPENDED_ON_THRESHOLD) {
-                           DPRINTF(("job tmp_PET_status is JSUSPENDED_ON_THRESHOLD\n"));
-                     }
-                     
-                     if (tmp_PET_status & JSLAVE) {
-                           DPRINTF(("job tmp_PET_status is JSLAVE\n"));
-                     }
-                     if (tmp_PET_status & JSIMULATED) {
-                           DPRINTF(("job tmp_PET_status is JSIMULATED\n"));
-                     }
-                  }
-#endif
                   if (lGetUlong(petask, PET_status)==JRUNNING) {
                      DPRINTF(("job exit for job "sge_u32": still waiting for task %s\n", 
                         jobid, lGetString(petask, PET_id)));
                      skip_job_exit = 1;
+                     break;
                   }
                }
 
@@ -682,7 +544,7 @@ monitoring_t *monitor
                }
             } else {
                lListElem *pe;
-               if ( lGetString(jatep, JAT_granted_pe)
+               if (lGetString(jatep, JAT_granted_pe)
                   && (pe=pe_list_locate(*object_base[SGE_TYPE_PE].list, lGetString(jatep, JAT_granted_pe)))
                   && lGetBool(pe, PE_control_slaves)
                   && lGetElemHost(lGetList(jatep, JAT_granted_destin_identifier_list), JG_qhostname, rhost)) {
@@ -719,21 +581,18 @@ monitoring_t *monitor
 
                      if (lGetUlong(petask, PET_status)==JRUNNING ||
                          lGetUlong(petask, PET_status)==JTRANSFERING) {
-                        u_long32 failed;
-
-                        failed = lGetUlong(jr, JR_failed);
+                        u_long32 failed = lGetUlong(jr, JR_failed);
 
                         DPRINTF(("--- petask "sge_u32"."sge_u32"/%s -> final usage\n", 
                            jobid, jataskid, pe_task_id_str));
                         lSetUlong(petask, PET_status, JFINISHED);
 
-                        reporting_create_acct_record(ctx, NULL, jr, jep, jatep, 
-                                                     false);
+                        reporting_create_acct_record(ctx, NULL, jr, jep, jatep, false);
 
                         /* add tasks (scaled) usage to past usage container */
                         {
                            lListElem *container = lGetSubStr(jatep, PET_id, PE_TASK_PAST_USAGE_CONTAINER, JAT_task_list);
-                           if(container == NULL) {
+                           if (container == NULL) {
                               lList *answer_list = NULL;
                               container = pe_task_sum_past_usage_list(lGetList(jatep, JAT_task_list), petask);
                               /* usage container will be spooled */
@@ -746,8 +605,8 @@ monitoring_t *monitor
                               lList *answer_list = NULL;
 
                               pe_task_sum_past_usage(container, petask);
-                              /* usage container will not be spooled (?) */
-                              sge_add_list_event( 0, sgeE_JOB_USAGE, 
+                              /* create list event for the USAGE_CONTAINER */
+                              sge_add_list_event(0, sgeE_JOB_USAGE, 
                                                  jobid, jataskid, 
                                                  PE_TASK_PAST_USAGE_CONTAINER, 
                                                  NULL,
@@ -782,8 +641,8 @@ monitoring_t *monitor
                            exited with a core dump */
                         if (failed==SSTATE_FAILURE_AFTER_JOB
                               && (ep=lGetElemStr(lGetList(jr, JR_usage), UA_name, "signal"))) {
-                           u_long32 sge_signo;
-                           sge_signo = (int)lGetDouble(ep, UA_value);
+                           u_long32 sge_signo = (u_long32)lGetDouble(ep, UA_value);
+
                            switch (sge_signo) {
                            case SGE_SIGXFSZ:
                               INFO((SGE_EVENT, MSG_JOB_FILESIZEEXCEED_SSUU, 
@@ -798,24 +657,16 @@ monitoring_t *monitor
                                    pe_task_id_str, rhost, sge_u32c(jobid), sge_u32c(jataskid), sge_sig2str(sge_signo)));
                               break;
                            }   
-                        } else {
-                           if (failed==0) {
-                              INFO((SGE_EVENT, MSG_JOB_TASKFINISHED_SSUU, 
+                        } else  if (failed==0) {
+                           INFO((SGE_EVENT, MSG_JOB_TASKFINISHED_SSUU, 
                                  pe_task_id_str, rhost, sge_u32c(jobid), sge_u32c(jataskid)));
-                           } else {
-                              INFO((SGE_EVENT, MSG_JOB_TASKFAILED_SSUUU,
-                                 pe_task_id_str, rhost, sge_u32c(jobid), sge_u32c(jataskid), sge_u32c(failed)));
-                           }
+                        } else {
+                           INFO((SGE_EVENT, MSG_JOB_TASKFAILED_SSUUU,
+                                pe_task_id_str, rhost, sge_u32c(jobid), sge_u32c(jataskid), sge_u32c(failed)));
                         }
                         if (failed == SSTATE_FAILURE_AFTER_JOB && 
                               !lGetString(jep, JB_checkpoint_name)) {
                            u_long32 state  = lGetUlong(jatep, JAT_state);
-#if 0 /* JG: do not send an abort mail for each parallel task */
-                           job_ja_task_send_abort_mail(jep, jatep,
-                                                       uti_state_get_user_name(),
-                                                       uti_state_get_qualified_hostname(),
-                                                       lGetString(jr, JR_err_str)); 
-#endif
                            if (!(state & JDELETED)) {
                               dstring id_dstring = DSTRING_INIT;
                               job_mark_job_as_deleted(ctx, jep, jatep);
@@ -825,91 +676,6 @@ monitoring_t *monitor
                            }
                         }
                      }
-#if 0 
-               /*
-                * CR TODO: (Issue Bug #1197) 
-                * This partly solves some problems when slave tasks of a tight integrated
-                * job, running on more than one execd, are killed and qmaster has to kill and
-                * delete all tasks.
-                * 
-                * There seems to be a problem when the slave task on one host is killed and
-                * the other host has not reported the job start yet.
-                *
-                */
-
-               /* skip sge_job_exit() and pack_job_exit() in case there 
-                  are still running tasks, since execd resends job exit */
-
-               for_each (petask, lGetList(jatep, JAT_task_list)) {
-                  u_long32 tmp_PET_status = lGetUlong(petask, PET_status);
-                  DPRINTF(("tmp_PET_status = "sge_U32CFormat"\n", sge_u32c(tmp_PET_status)));
-
-                   {
-                     if (tmp_PET_status & JIDLE) {
-                        DPRINTF(("job tmp_PET_status is JIDLE\n"));
-                     }
-                     if (tmp_PET_status & JIDLE) {
-                           DPRINTF(("job tmp_PET_status is JIDLE\n"));
-                     }
-                     if (tmp_PET_status & JHELD) {
-                           DPRINTF(("job tmp_PET_status is JHELD\n"));
-                     }
-                     if (tmp_PET_status & JMIGRATING) {
-                           DPRINTF(("job tmp_PET_status is JMIGRATING\n"));
-                     }
-                     if (tmp_PET_status & JQUEUED) {
-                           DPRINTF(("job tmp_PET_status is JQUEUED\n"));
-                     }
-                     if (tmp_PET_status & JRUNNING) {
-                           DPRINTF(("job tmp_PET_status is JRUNNING\n"));
-                     }
-                     if (tmp_PET_status & JSUSPENDED) {
-                           DPRINTF(("job tmp_PET_status is JSUSPENDED\n"));
-                     }
-                     if (tmp_PET_status & JTRANSFERING) {
-                           DPRINTF(("job tmp_PET_status is JTRANSFERING\n"));
-                     }
-                     if (tmp_PET_status & JDELETED) {
-                           DPRINTF(("job tmp_PET_status is JDELETED\n"));
-                     }
-                     if (tmp_PET_status & JWAITING) {
-                           DPRINTF(("job tmp_PET_status is JWAITING\n"));
-                     }
-                     if (tmp_PET_status & JEXITING) {
-                           DPRINTF(("job tmp_PET_status is JEXITING\n"));
-                     }
-                     if (tmp_PET_status & JWRITTEN) {
-                           DPRINTF(("job tmp_PET_status is JWRITTEN\n"));
-                     }
-                     if (tmp_PET_status & JWAITING4OSJID) {
-                           DPRINTF(("job tmp_PET_status is JWAITING4OSJID\n"));
-                     }
-                     if (tmp_PET_status & JERROR) {
-                           DPRINTF(("job tmp_PET_status is JERROR\n"));
-                     }
-                     if (tmp_PET_status & JFINISHED) {
-                           DPRINTF(("job tmp_PET_status is JFINISHED\n"));
-                     }
-                     if (tmp_PET_status & JSUSPENDED_ON_THRESHOLD) {
-                           DPRINTF(("job tmp_PET_status is JSUSPENDED_ON_THRESHOLD\n"));
-                     }
-                     
-                     if (tmp_PET_status & JSLAVE) {
-                           DPRINTF(("job tmp_PET_status is JSLAVE\n"));
-                     }
-                     if (tmp_PET_status & JSIMULATED) {
-                           DPRINTF(("job tmp_PET_status is JSIMULATED\n"));
-                     }
-                   }
-                   if (lGetUlong(petask, PET_status)==JRUNNING) {
-                     DPRINTF(("job exit for job "sge_u32": still waiting for task %s\n", 
-                        jobid, lGetString(petask, PET_id)));
-                     skip_job_exit = 1;
-                   } else {
-                     DPRINTF(("SKIP check for other tasks, PET_status is not JRUNNING\n"));
-                   }
-               }
-#endif
                   }
                } else {
                   lListElem *jg;
@@ -921,8 +687,7 @@ monitoring_t *monitor
                          JAT_granted_destin_identifier_list)))) {
                         shouldbe_queue_name = MSG_OBJ_NOTRUNNING;
                         shouldbe_host_name = MSG_OBJ_NOTRUNNING;
-                     }
-                     else {
+                     } else {
                         shouldbe_queue_name = (s=lGetString(jg, JG_qname))?s: 
                           MSG_OBJ_UNKNOWN;
                         shouldbe_host_name = (s=lGetHost(jg, JG_qhostname))?s:
@@ -934,7 +699,7 @@ monitoring_t *monitor
                            pe_task_id_str?pe_task_id_str:MSG_MASTER, queue_name, 
                            shouldbe_queue_name, shouldbe_host_name, 
                            status2str(lGetUlong(jatep, JAT_status))));
-                     }
+                  }
                }
             }
          }

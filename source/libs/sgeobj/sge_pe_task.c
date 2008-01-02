@@ -74,12 +74,6 @@
 *  RESULT
 *     lListElem* - the container object
 *
-*  NOTES
-*     JG: TODO: The code summing up usage should better be in a 
-*               module libs/gdi/sge_usage.* containing all usage 
-*               related functions the same or similar functionality 
-*               is needed in many places in Grid Engine.
-*
 *  SEE ALSO
 *     sgeobj/pe_task/pe_task_sum_past_usage_all()
 *     sgeobj/pe_task/pe_task_sum_past_usage_list()

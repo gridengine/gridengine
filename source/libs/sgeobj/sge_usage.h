@@ -35,9 +35,9 @@
 #include "sge_usageL.h"
 
 u_long32
-usage_list_get_ulong_usage(lList *usage_list, const char *name, u_long32 def);
+usage_list_get_ulong_usage(const lList *usage_list, const char *name, u_long32 def);
 double
-usage_list_get_double_usage(lList *usage_list, const char *name, double def);
+usage_list_get_double_usage(const lList *usage_list, const char *name, double def);
 
 void
 usage_list_set_ulong_usage(lList *usage_list, const char *name, u_long32 value);

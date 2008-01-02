@@ -841,9 +841,10 @@ const char *lGetString(const lListElem *ep, int name)
 
    pos = lGetPosViaElem(ep, name, SGE_DO_ABORT);
 
-   if (mt_get_type(ep->descr[pos].mt) != lStringT)
+   if (mt_get_type(ep->descr[pos].mt) != lStringT) {
       incompatibleType2(MSG_CULL_GETSTRING_WRONGTYPEFORFILEDXY_SS ,
                         lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
+   }
 
    DEXIT;
 
@@ -1019,6 +1020,51 @@ lGetList(const lListElem *ep, int name)
                         lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
    DEXIT;
    return (lList *) ep->cont[pos].glp;
+}
+
+/****** cull/multitype/lGetOrCreateList() **************************************
+*  NAME
+*     lGetOrCreateList() -- Returns the CULL list for a field name
+*
+*  SYNOPSIS
+*     lList* 
+*     lGetOrCreateList(lListElem *ep, int name, const char *list_name, 
+*                      const lDescr *descr) 
+*
+*  FUNCTION
+*     Returns the CULL list for a field name.
+*     If the list does not yet exist, create it.
+*
+*  INPUTS
+*     lListElem *ep         - element
+*     int name              - field name value
+*     const char *list_name - list name for list creation
+*     const lDescr *descr   - descriptor for list creation
+*
+*  RESULT
+*     lList* - CULL list pointer
+*
+*  NOTES
+*     MT-NOTE: lGetOrCreateList() is MT safe 
+*
+*  SEE ALSO
+*     cull/multitype/lGetList()
+*     cull/list/lCreateList()
+*******************************************************************************/
+lList* lGetOrCreateList(lListElem *ep, int name, 
+                        const char *list_name, const lDescr *descr)
+{
+   lList *list = NULL;
+
+   if (ep != NULL) {
+      list = lGetList(ep, name);
+      if (list == NULL) {
+         list = lCreateList(list_name, descr);
+         lSetList(ep, name, list);
+      }
+   }
+
+   return list;
 }
 
 /****** cull/multitype/lGetPosFloat() *****************************************
@@ -2474,7 +2520,7 @@ int lSetObject(lListElem *ep, int name, lListElem *value)
 *     int lSetList(lListElem *ep, int name, lList *value) 
 *
 *  FUNCTION
-*     Sets a list at the given field name id. List will not be copyed.
+*     Sets a list at the given field name id. List will not be copied.
 *
 *  INPUTS
 *     lListElem *ep - element 
@@ -2514,7 +2560,7 @@ int lSetList(lListElem *ep, int name, lList *value)
       return -1;
    }
 
-   if(value != ep->cont[pos].glp) {
+   if (value != ep->cont[pos].glp) {
       /* free old list */
       lFreeList(&(ep->cont[pos].glp));
 
@@ -3747,8 +3793,7 @@ lListElem *lGetElemStr(const lList *lp, int nm, const char *str)
    DENTER(CULL_LAYER, "lGetElemStr");
    
    ret = lGetElemStrFirst(lp, nm, str, &iterator);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** cull/multitype/lGetElemStrFirst() *************************************
@@ -3794,8 +3839,7 @@ lListElem *lGetElemStrFirst(const lList *lp, int nm, const char *str,
 
    /* empty list ? */
    if (!lp) {
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    listDescriptor = lGetListDescr(lp);
@@ -3806,16 +3850,14 @@ lListElem *lGetElemStrFirst(const lList *lp, int nm, const char *str,
    /* run time type checking */
    if (pos < 0) {
       CRITICAL((SGE_EVENT, MSG_CULL_GETELEMSTRERRORXRUNTIMETYPE_S , lNm2Str(nm)));
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    dataType = lGetPosType(listDescriptor,pos);
    if (dataType != lStringT) {
       DPRINTF(("error: lGetElemStrFirst called to field which is no lStringT type\n"));
       CRITICAL((SGE_EVENT, MSG_CULL_GETELEMSTRERRORXRUNTIMETYPE_S , lNm2Str(nm)));
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    *iterator = NULL;
@@ -4915,8 +4957,7 @@ lListElem *lGetSubHost(const lListElem *ep, int nm, const char *str, int snm)
 
    ret = lGetElemHost(ep->cont[sublist_pos].glp, nm, str);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** cull/multitype/lDelElemHost() ****************************************

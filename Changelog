@@ -1,3 +1,9 @@
+AP-2008-01-02-0: Bugfix:    incomplete error loging in case of classic spooling 
+                            failures
+                 Bugster:   6363756
+                 Issue:     2442
+                 Review:    JG
+
 JG-2007-12-31-0: Bugfix:    Fixed broken CL_SIRM_MESSAGE definition.
                  Review:    TBD
 

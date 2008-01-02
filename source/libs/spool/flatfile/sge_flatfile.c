@@ -1642,7 +1642,12 @@ spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
    object = _spool_flatfile_read_object(answer_list, descr, root, instr, 
                                         fields, fields_out, &token, NULL,
                                         parse_values);
-
+   if (object == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_FLATFILE_ERROR_READINGFILE_S, 
+                              filepath);
+   }
    spool_scanner_shutdown();
 
    /* if we opened the file, we also have to close it */

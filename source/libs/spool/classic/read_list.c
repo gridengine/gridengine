@@ -138,7 +138,12 @@ int sge_read_host_group_entries_from_disk()
               printf("\n");
            }
 
-           ep = cull_read_in_host_group(HGROUP_DIR, hostGroupEntry , 1, 0, NULL, NULL); 
+           ep = cull_read_in_host_group(HGROUP_DIR, hostGroupEntry , 1, 0, NULL, NULL);
+           if (ep == NULL) {
+               ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, HGROUP_DIR,
+               hostGroupEntry));
+               DRETURN(-1);
+           }
            if (strcmp(hostGroupEntry, lGetHost(ep, HGRP_name))) {
                ERROR((SGE_EVENT, MSG_HGROUP_INCFILE_S, hostGroupEntry));
                DRETURN(-1);
@@ -192,7 +197,7 @@ int sge_read_user_mapping_entries_from_disk()
             if (ep != NULL) {
                lAppendElem(*(cuser_master_list), ep);
             } else {
-               WARNING((SGE_EVENT, MSG_ANSWER_IGNORINGMAPPINGFOR_S,  ume ));  
+               ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, UME_DIR, ume));
                lFreeElem(&ep);
                ep = NULL; 
             } 
@@ -240,6 +245,7 @@ int sge_read_exechost_list_from_disk(lList **list, const char *directory, lList 
             ep = cull_read_in_host(directory, host, CULL_READ_SPOOL, EH_name, 
                                    NULL, NULL);
             if (!ep) {
+               ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, directory, host));
                lFreeList(&direntries);
                DRETURN(-1);
             }
@@ -305,6 +311,7 @@ int sge_read_adminhost_list_from_disk(lList **list, const char *directory, lList
             DPRINTF(("Host: %s\n", host));
             ep = cull_read_in_host(directory, host, CULL_READ_SPOOL, AH_name, NULL, NULL);
             if (!ep) {
+               ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, directory, host));
                lFreeList(&direntries);
                DRETURN(-1);
             } 
@@ -352,6 +359,7 @@ int sge_read_submithost_list_from_disk(lList **list, const char *directory, lLis
             ep = cull_read_in_host(directory, host, CULL_READ_SPOOL, 
                SH_name, NULL, NULL);
             if (!ep) {
+               ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, directory, host));
                lFreeList(&direntries);
                DRETURN(-1);
             } 
@@ -404,6 +412,7 @@ int sge_read_pe_list_from_disk(lList **list, const char *directory, lList **alpp
             }       
             ep = cull_read_in_pe(directory, pe, 1, 0, NULL, NULL);
             if (!ep) {
+               ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, directory, pe));
                ret = -1;
                break;
             }
@@ -459,6 +468,7 @@ int sge_read_cal_list_from_disk(lList **list, const char *directory, lList **alp
             }      
             ep = cull_read_in_cal(directory, cal, 1, 0, NULL, NULL);
             if (!ep) {
+               ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, directory, cal));
                ret = -1;
                break;
             }
@@ -512,6 +522,7 @@ int sge_read_ckpt_list_from_disk(lList **list, const char *directory, lList **al
             }
             ep = cull_read_in_ckpt(directory, ckpt, 1, 0, NULL, NULL);
             if (!ep) {
+               ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, directory, ckpt));
                DRETURN(-1);
             }
 
@@ -1028,6 +1039,9 @@ int read_all_centries(lList **list, const char *directory, lList **alpp)
       }
       if (el) {
          lAppendElem(*list, el);
+      }
+      else {
+         ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, directory, dent->d_name));
       }
    }
 

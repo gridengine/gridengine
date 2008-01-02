@@ -1,3 +1,9 @@
+AP-2008-01-02-0: Bugfix:    incomplete error loging in case of classic spooling 
+                            failures
+                 Bugster:   6363756
+                 Issue:     2442
+                 Review:    JG
+
 JG-2008-01-01-0: Enhancem.: Improved error output and cleanup merged from 
                             maintrunk checkin JG-2007-12-28-0.
                  Review:    HP

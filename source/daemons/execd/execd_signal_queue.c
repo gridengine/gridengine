@@ -377,7 +377,7 @@ void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, lListElem *jep,
 
        /* get values */       
        if (jep != NULL) {
-          job_sub_time = lGetUlong(jep,JB_submission_time);
+          job_sub_time = lGetUlong(jep, JB_submission_time);
           jobid        = lGetUlong(jep, JB_job_number);
           mail_users   = lGetList(jep, JB_mail_list);
           job_name     = lGetString(jep, JB_job_name);
@@ -385,7 +385,7 @@ void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, lListElem *jep,
         }
 
        if (jatep != NULL) {
-          job_exec_time    = lGetUlong(jatep,JAT_start_time );
+          job_exec_time    = lGetUlong(jatep, JAT_start_time );
           taskid           = lGetUlong(jatep, JAT_task_number );
           job_master_queue = lGetString(jatep, JAT_master_queue);
        }

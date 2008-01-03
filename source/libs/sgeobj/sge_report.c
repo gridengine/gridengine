@@ -118,14 +118,14 @@ void job_report_init_from_job(lListElem *job_report,
    lSetUlong(job_report, JR_job_number, job_id);
    lSetUlong(job_report, JR_ja_task_number, ja_task_id);
 
-   if(pe_task != NULL) {
+   if (pe_task != NULL) {
       lSetString(job_report, JR_pe_task_id_str, lGetString(pe_task, PET_id));
    }
 
    lSetString(job_report, JR_owner, lGetString(job, JB_owner));
 
    if (lGetUlong(ja_task, JAT_status) == JSLAVE){
-      if(pe_task == NULL) {
+      if (pe_task == NULL) {
          lSetUlong(job_report, JR_state, JSLAVE);
       } else {
          lSetUlong(job_report, JR_state, JWRITTEN);
@@ -134,7 +134,7 @@ void job_report_init_from_job(lListElem *job_report,
       lSetUlong(job_report, JR_state, JWRITTEN);
    }
 
-   if(pe_task != NULL) {
+   if (pe_task != NULL) {
       queue = lFirst(lGetList(pe_task, PET_granted_destin_identifier_list));
    } else {
       queue = lFirst(lGetList(ja_task, JAT_granted_destin_identifier_list));

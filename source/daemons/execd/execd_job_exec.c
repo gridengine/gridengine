@@ -739,14 +739,16 @@ int *synchron
    jobid    = lGetUlong(petrep, PETR_jobid);
    jataskid = lGetUlong(petrep, PETR_jataskid);
 
-   jep=lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, jobid, &iterator);
-   while(jep != NULL) {
+   jep = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)),
+                            JB_job_number, jobid, &iterator);
+   while (jep != NULL) {
       jatep = job_search_task(jep, NULL, jataskid);
-      if(jatep != NULL) {
+      if (jatep != NULL) {
          break;
       }
 
-      jep = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, jobid, &iterator);
+      jep = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)),
+                              JB_job_number, jobid, &iterator);
    }
    
    if (jep == NULL) {
@@ -759,9 +761,8 @@ int *synchron
       goto Error;
    }
 
-   if (false == sge_security_verify_unique_identifier(false, 
-                                         lGetString(jep, JB_owner), progname, 0,
-                                         de->host, de->commproc, de->id)) {
+   if (!sge_security_verify_unique_identifier(false, lGetString(jep, JB_owner), progname, 0,
+                                              de->host, de->commproc, de->id)) {
       goto Error;
    }
 
@@ -784,7 +785,7 @@ int *synchron
    lSetString(petep, PET_id, new_task_id);
 
    /* set taskid for next task to be started */
-   lSetUlong(jatep, JAT_next_pe_task_id, tid+1);
+   lSetUlong(jatep, JAT_next_pe_task_id, tid + 1);
 
    lSetString(petep, PET_name, "petask");
    lSetUlong(petep, PET_submission_time, lGetUlong(petrep, PETR_submission_time));
@@ -803,20 +804,19 @@ int *synchron
 
    gdil = job_get_queue_for_task(jatep, petep, qualified_hostname, requested_queue);
          
-   if (!gdil) { /* ran through list without finding matching queue */ 
+   if (gdil == NULL) { /* ran through list without finding matching queue */ 
       gdil = job_get_queue_with_task_about_to_exit(jep, jatep, petep, qualified_hostname, requested_queue);
    }
          
-   if(!gdil) {  /* also no already exited task found -> no way to start new task */
+   if (gdil == NULL) {  /* also no already exited task found -> no way to start new task */
       ERROR((SGE_EVENT, MSG_JOB_NOFREEQ_USSS, sge_u32c(jobid), 
              lGetString(petrep, PETR_owner), de->host, qualified_hostname));
       goto Error;
    }
 
    /* put task into task_list of slave/master job */ 
-   if(!lGetList(jatep, JAT_task_list)) {
+   if(lGetList(jatep, JAT_task_list) == NULL) {
 DTRACE;
-   /* put task into task_list of slave/master job */ 
       lSetList(jatep, JAT_task_list, lCreateList("task_list", PET_Type));
    }
 DTRACE;
@@ -837,9 +837,12 @@ DTRACE;
     * At this time we are sure that we have the task on disk.
     * Now add a new "running" element for this job to the job 
     * report which is used as ACK for this job send request.
-    *
+    * Add the submission time for the task here.
     */
-   add_job_report(jobid, jataskid, new_task_id, jep);
+   {
+      lListElem *jr = add_job_report(jobid, jataskid, new_task_id, jep);
+      add_usage(jr, "submission_time", NULL, lGetUlong(petep, PET_submission_time));
+   }
 DTRACE;
 
    /* for debugging: never start job but report a failure */
@@ -847,7 +850,7 @@ DTRACE;
       execd_job_start_failure(jep, jatep, petep, "FAILURE_BEFORE_START", 0);
    }   
 
-   if(sge_make_pe_task_active_dir(jep, jatep, petep, NULL) == NULL) {
+   if (sge_make_pe_task_active_dir(jep, jatep, petep, NULL) == NULL) {
      goto Error;
    }
 

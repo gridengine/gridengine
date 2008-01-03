@@ -98,28 +98,27 @@ lListElem *jep
  
    DENTER(TOP_LAYER, "add_job_report");
 
-   if (!jr_list) 
+   if (jr_list == NULL) 
       jr_list = lCreateList("job report list", JR_Type);
   
-   if (!jr_list || !(jr=lCreateElem(JR_Type))) {
+   if (jr_list == NULL || (jr=lCreateElem(JR_Type)) == NULL) {
       ERROR((SGE_EVENT, MSG_JOB_TYPEMALLOC));  
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    lSetUlong(jr, JR_job_number, jobid);
    lSetUlong(jr, JR_ja_task_number, jataskid);
-   if(petaskid != NULL) {
+   if (petaskid != NULL) {
       lSetString(jr, JR_pe_task_id_str, petaskid);
    }
 
    lAppendElem(jr_list, jr);
 
-   if(jep != NULL) {
+   if (jep != NULL) {
       jatep = job_search_task(jep, NULL, jataskid);
       if (jatep != NULL) { 
          lListElem *petep = NULL;
-         if(petaskid != NULL) {
+         if (petaskid != NULL) {
             petep = ja_task_search_pe_task(jatep, petaskid);
          }   
          job_report_init_from_job(jr, jep, jatep, petep);

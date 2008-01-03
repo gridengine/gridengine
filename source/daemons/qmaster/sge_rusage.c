@@ -114,14 +114,12 @@ sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","
 *  SEE ALSO
 *     sgeobj/usage/usage_list_get_double_usage()
 *******************************************************************************/
-static double 
-reporting_get_double_usage(const lList *usage_list, lList *reported_list, 
+static double
+reporting_get_double_usage(const lList *usage_list, lList *reported_list,
                            const char *name, double def) 
 {
-   double usage;
-
    /* total usage */
-   usage = usage_list_get_double_usage(usage_list, name, def);
+   double usage = usage_list_get_double_usage(usage_list, name, def);
 
    if (reported_list != NULL) {
       double reported;
@@ -181,7 +179,7 @@ sge_write_rusage(dstring *buffer,
    /* invalid input data */
    if (buffer == NULL) {
       DRETURN(ret);
-   } 
+   }
 
 #ifdef NEC_ACCOUNTING_ENTRIES
    sge_dstring_init(&arch_dep_usage_dstring, arch_dep_usage_buffer, 
@@ -262,11 +260,11 @@ sge_write_rusage(dstring *buffer,
    {
       char *arch_string = "";
 
-      ep=lGetElemStr(usage_list, UA_name, "necsx_necsx4");
+      ep = lGetElemStr(usage_list, UA_name, "necsx_necsx4");
       if (ep != NULL) {
          arch_string = "necsx4";
       }   
-      ep=lGetElemStr(usage_list, UA_name, "necsx_necsx5");
+      ep = lGetElemStr(usage_list, UA_name, "necsx_necsx5");
       if (ep != NULL) {
          arch_string = "necsx5";
       }   
@@ -298,7 +296,7 @@ sge_write_rusage(dstring *buffer,
       );
    }
 #endif
-#endif 
+#endif
    {
       char *pos = NULL;
       const char *qi_name = NULL;
@@ -353,7 +351,7 @@ sge_write_rusage(dstring *buffer,
    }
    
    ret = sge_dstring_sprintf(buffer, ACTFILE_FPRINTF_FORMAT, 
-         qname, delimiter,
+          qname, delimiter,
           lGetHost(jr, JR_host_name), delimiter,
           lGetString(jr, JR_group), delimiter,
           lGetString(jr, JR_owner), delimiter,
@@ -400,9 +398,9 @@ sge_write_rusage(dstring *buffer,
           , delimiter, arch_dep_usage_string
 #endif 
              );
-     
+
    FREE(qname);
-   DEXIT;   
-   return ret;
+
+   DRETURN(ret);
 }
 

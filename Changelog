@@ -1,3 +1,6 @@
+JG-2008-01-03-1: Enhancem.: Some cleanup done while merging JG-2008-01-03-0
+                            to maintrunk.
+
 JG-2008-01-03-0: Bugfix:    accounting records for parallel job tasks didn't
                             contain the task submission time.
                  Bugster:   6469605

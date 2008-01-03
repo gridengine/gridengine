@@ -125,8 +125,7 @@ lListElem *jep
       }
    }
  
-   DEXIT;
-   return jr;
+   DRETURN(jr);
 }
 
 lListElem *
@@ -152,20 +151,16 @@ get_job_report(u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id)
       jr = lGetElemUlongNext(jr_list, JR_job_number, job_id, &iterator);
    }
 
-   DEXIT;
-   return jr;
+   DRETURN(jr);
 }
 
-void del_job_report(
-lListElem *jr 
-) {
+void del_job_report(lListElem *jr)
+{
    lRemoveElem(jr_list, &jr);
 }
 
-void cleanup_job_report(
-u_long32 jobid,
-u_long32 jataskid 
-) {
+void cleanup_job_report(u_long32 jobid, u_long32 jataskid)
+{
    lListElem *nxt, *jr;
 
    DENTER(TOP_LAYER, "cleanup_job_report");
@@ -184,8 +179,7 @@ u_long32 jataskid
       }
    }
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /* ------------------------------------------------------------
@@ -309,8 +303,7 @@ execd_c_ack(sge_gdi_ctx_class_t *ctx,
 
             if ((jr = get_job_report(jobid, jataskid, pe_task_id_str))) {
                remove_acked_job_exit(ctx, jobid, jataskid, pe_task_id_str, jr);
-            } 
-            else {
+            } else {
                DPRINTF(("acknowledged job "sge_u32"."sge_u32" not found\n", jobid, jataskid));
             }
 
@@ -333,7 +326,7 @@ execd_c_ack(sge_gdi_ctx_class_t *ctx,
 */
             {
                u_long32 signo;
- 
+
                unpackint(pb, &jobid);
                unpackint(pb, &jataskid);
                unpackint(pb, &signo);
@@ -361,8 +354,8 @@ execd_c_ack(sge_gdi_ctx_class_t *ctx,
        */
       cl_commlib_trigger(cl_com_get_handle("execd",1) ,0);
    }
-   DEXIT;
-   return 0;
+
+   DRETURN(0);
 }
 
 int
@@ -391,6 +384,5 @@ execd_get_acct_multiplication_factor(const lListElem *pe,
 
    DPRINTF(("reserved usage will be multiplied by %d\n", factor));
 
-   DEXIT;
-   return factor;
+   DRETURN(factor);
 }

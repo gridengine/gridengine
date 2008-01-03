@@ -192,8 +192,7 @@ sge_tid_t sge_qexecve(sge_gdi_ctx_class_t *ctx,
 
    pack_job_delivery(&pb, petrep, NULL, NULL);
 
-   ret = gdi2_send_message_pb(ctx, 
-                              1, prognames[EXECD], 1, hostname,
+   ret = gdi2_send_message_pb(ctx, 1, prognames[EXECD], 1, hostname,
                               TAG_JOB_EXECUTION, &pb, &dummymid);
 
    clear_packbuffer(&pb);
@@ -201,7 +200,7 @@ sge_tid_t sge_qexecve(sge_gdi_ctx_class_t *ctx,
    lFreeElem(&petrep);
 
    if (ret != CL_RETVAL_OK) {
-      sprintf(lasterror, MSG_GDI_SENDTASKTOEXECDFAILED_SS , hostname, cl_get_error_text(ret));
+      sprintf(lasterror, MSG_GDI_SENDTASKTOEXECDFAILED_SS, hostname, cl_get_error_text(ret));
       DRETURN(NULL);
    }
   

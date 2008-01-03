@@ -133,11 +133,11 @@ int execd_job_exec(sge_gdi_ctx_class_t *ctx,
    /* if request comes from qmaster: start a job
     * else it is a request to start a pe task
     */
-   if(strcmp(de->commproc, prognames[QMASTER]) == 0) {
+   if (strcmp(de->commproc, prognames[QMASTER]) == 0) {
       lListElem *job, *ja_task;
       lList *answer_list = NULL;
 
-      if (false == sge_security_verify_unique_identifier(true, admin_user, progname, 0,
+      if (!sge_security_verify_unique_identifier(true, admin_user, progname, 0,
                                             de->host, de->commproc, de->id)) {
          DRETURN(0);
       }
@@ -164,12 +164,12 @@ int execd_job_exec(sge_gdi_ctx_class_t *ctx,
       
       /* we expect one jatask to start per request */
       ja_task = lFirst(lGetList(job, JB_ja_tasks));
-      if(ja_task != NULL) {
+      if (ja_task != NULL) {
          DPRINTF(("new job %ld.%ld\n", 
             (long) lGetUlong(job, JB_job_number),
             (long) lGetUlong(ja_task, JAT_task_number)));
          ret = handle_job(ctx, job, ja_task, de, pb, 0);
-         if(ret != 0) {
+         if (ret != 0) {
             lFreeElem(&job);
          }
       }
@@ -197,7 +197,7 @@ int execd_job_exec(sge_gdi_ctx_class_t *ctx,
       lFreeElem(&petrep);
    }
    
-   if(ret == 0) {
+   if (ret == 0) {
       jobs_to_start = 1;
    }
 
@@ -289,7 +289,7 @@ int slave
     * We can ignore this job because job is resend by qmaster.
     */
    jep = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, jobid, &iterator);
-   while(jep != NULL) {
+   while (jep != NULL) {
       jep_jatep = job_search_task(jep, NULL, jataskid);
       if(jep_jatep != NULL) {
          DPRINTF(("Job "sge_u32"."sge_u32" is already running - skip the new one\n", 
@@ -592,9 +592,9 @@ static lList *job_get_queue_with_task_about_to_exit(lListElem *jep,
    
    for_each(petask, lGetList(jatep, JAT_task_list)) {
       lListElem *pe_task_queue = lFirst(lGetList(petask, PET_granted_destin_identifier_list));
-      if(pe_task_queue != NULL) {
+      if (pe_task_queue != NULL) {
          /* if a certain queue is requested, skip non matching tasks */
-         if(queuename != NULL && strcmp(queuename, lGetString(pe_task_queue, JG_qname)) != 0) {
+         if (queuename != NULL && strcmp(queuename, lGetString(pe_task_queue, JG_qname)) != 0) {
             continue;
          } else {
             dstring shepherd_about_to_exit = DSTRING_INIT;
@@ -612,7 +612,7 @@ static lList *job_get_queue_with_task_about_to_exit(lListElem *jep,
                                          "shepherd_about_to_exit");
             DPRINTF(("checking for file %s\n", sge_dstring_get_string(&shepherd_about_to_exit)));
 
-            if(SGE_STAT(sge_dstring_get_string(&shepherd_about_to_exit), &stat_buffer) == 0) {
+            if (SGE_STAT(sge_dstring_get_string(&shepherd_about_to_exit), &stat_buffer) == 0) {
                lList *jat_gdil = job_set_queue_info_in_task(qualified_hostname, 
                                        lGetString(pe_task_queue, JG_qname), petep);
                DPRINTF(("task %s of job %d.%d already exited, using its slot for new task\n", 
@@ -727,13 +727,11 @@ int *synchron
    lSetString(petep, PET_source, source);
 
 #ifdef KERBEROS
-
    if (krb_verify_user(de->host, de->commproc, de->id,
                        lGetString(petrep, PETR_owner)) < 0) {
       ERROR((SGE_EVENT, MSG_SEC_KRB_CRED_SSSI, lGetString(petrep, PETR_owner), de->host, de->commproc, de->id));
       goto Error;
    }
-
 #endif /* KERBEROS */
 
    jobid    = lGetUlong(petrep, PETR_jobid);
@@ -815,7 +813,7 @@ int *synchron
    }
 
    /* put task into task_list of slave/master job */ 
-   if(lGetList(jatep, JAT_task_list) == NULL) {
+   if (lGetList(jatep, JAT_task_list) == NULL) {
 DTRACE;
       lSetList(jatep, JAT_task_list, lCreateList("task_list", PET_Type));
    }

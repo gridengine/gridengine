@@ -95,15 +95,15 @@ void trace_jr()
 }
 
 lListElem *add_job_report(u_long32 jobid, u_long32 jataskid, const char *petaskid, lListElem *jep)
-{  
+{
    lListElem *jr, *jatep = NULL;
  
    DENTER(TOP_LAYER, "add_job_report");
 
-   if (!jr_list) 
+   if (jr_list == NULL) 
       jr_list = lCreateList("job report list", JR_Type);
   
-   if (!jr_list || !(jr=lCreateElem(JR_Type))) {
+   if (jr_list == NULL || (jr=lCreateElem(JR_Type)) == NULL) {
       ERROR((SGE_EVENT, MSG_JOB_TYPEMALLOC));  
       DRETURN(NULL);
    }

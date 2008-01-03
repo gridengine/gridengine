@@ -1,3 +1,9 @@
+JG-2008-01-03-0: Bugfix:    accounting records for parallel job tasks didn't
+                            contain the task submission time.
+                 Bugster:   6469605
+                 Issue:     1689
+                 Review:    MD
+
 AP-2008-01-02-0: Bugfix:    incomplete error loging in case of classic spooling 
                             failures
                  Bugster:   6363756

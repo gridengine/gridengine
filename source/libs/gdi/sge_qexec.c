@@ -47,6 +47,7 @@
 
 #include "uti/sge_prog.h"
 #include "uti/sge_uidgid.h"
+#include "uti/sge_time.h"
 
 #include "sgeobj/sge_qexecL.h"
 #include "sgeobj/sge_ja_task.h"
@@ -127,46 +128,40 @@ sge_tid_t sge_qexecve(sge_gdi_ctx_class_t *ctx,
 
    DENTER(TOP_LAYER, "sge_qexecve");
 
-   if(hostname == NULL) {
+   if (hostname == NULL) {
       sprintf(lasterror, MSG_GDI_INVALIDPARAMETER_SS, "sge_qexecve", "hostname");
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    /* resolve user */
-   if(sge_uid2user((uid=getuid()), myname, sizeof(myname)-1, MAX_NIS_RETRIES)) {
+   if (sge_uid2user((uid=getuid()), myname, sizeof(myname)-1, MAX_NIS_RETRIES)) {
       sprintf(lasterror, MSG_GDI_RESOLVINGUIDTOUSERNAMEFAILED_IS , 
-            uid, strerror(errno));
-      DEXIT;
-      return NULL;
+              uid, strerror(errno));
+      DRETURN(NULL);
    }
    
-   if((s=getenv("JOB_ID")) == NULL) {
+   if ((s=getenv("JOB_ID")) == NULL) {
       sprintf(lasterror, MSG_GDI_MISSINGINENVIRONMENT_S, "JOB_ID");
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
-   if(sscanf(s, sge_u32, &jobid) != 1) {
+   if (sscanf(s, sge_u32, &jobid) != 1) {
       sprintf(lasterror, MSG_GDI_STRINGISINVALID_SS, s, "JOB_ID");
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
-   if((s=getenv(env_var_name)) != NULL) {
-      if(strcmp(s, "undefined") == 0) {
+   if ((s=getenv(env_var_name)) != NULL) {
+      if (strcmp(s, "undefined") == 0) {
          jataskid = 1;
       } else {
-         if(sscanf(s, sge_u32, &jataskid) != 1) {
+         if (sscanf(s, sge_u32, &jataskid) != 1) {
             sprintf(lasterror, MSG_GDI_STRINGISINVALID_SS, s, env_var_name);
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
       }
    } else {
       sprintf(lasterror, MSG_GDI_MISSINGINENVIRONMENT_S, env_var_name);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    /* ---- build up pe task request structure (see gdilib/sge_petaskL.h) */
@@ -175,6 +170,7 @@ sge_tid_t sge_qexecve(sge_gdi_ctx_class_t *ctx,
    lSetUlong(petrep, PETR_jobid, jobid);
    lSetUlong(petrep, PETR_jataskid, jataskid);
    lSetString(petrep, PETR_owner, myname);
+   lSetUlong(petrep, PETR_submission_time, sge_get_gmt());
 
    if (cwd != NULL) {
       lSetString(petrep, PETR_cwd, cwd);
@@ -196,8 +192,7 @@ sge_tid_t sge_qexecve(sge_gdi_ctx_class_t *ctx,
    if (init_packbuffer(&pb, 1024, 0) != PACK_SUCCESS) {
       lFreeElem(&petrep);
       sprintf(lasterror, MSG_GDI_OUTOFMEMORY);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    pack_job_delivery(&pb, petrep);
@@ -211,8 +206,7 @@ sge_tid_t sge_qexecve(sge_gdi_ctx_class_t *ctx,
 
    if (ret != CL_RETVAL_OK) {
       sprintf(lasterror, MSG_GDI_SENDTASKTOEXECDFAILED_SS, hostname, cl_get_error_text(ret));
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
   
    /* add list into our remote task list */
@@ -230,10 +224,9 @@ sge_tid_t sge_qexecve(sge_gdi_ctx_class_t *ctx,
    }
 
    /* now close message to execd */
-   cl_commlib_shutdown_handle(cl_com_get_handle("execd_handle", 0),CL_FALSE);
+   cl_commlib_shutdown_handle(cl_com_get_handle("execd_handle", 0), CL_FALSE);
 
-   DEXIT;
-   return tid;
+   DRETURN(tid);
 }
 
 /*

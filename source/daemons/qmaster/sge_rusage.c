@@ -305,10 +305,10 @@ sge_write_rusage(dstring *buffer,
     */
    if (intermediate) {
       if (pe_task != NULL) {
-         reported_list = lGetOrCreateList(pe_task, PET_reported_usage, 
+         reported_list = lGetOrCreateList(pe_task, PET_reported_usage,
                                           "reported_usage", UA_Type);
       } else {
-         reported_list = lGetOrCreateList(ja_task, JAT_reported_usage_list, 
+         reported_list = lGetOrCreateList(ja_task, JAT_reported_usage_list,
                                           "reported_usage", UA_Type);
       }
 
@@ -319,8 +319,7 @@ sge_write_rusage(dstring *buffer,
       start_time = usage_list_get_ulong_usage(reported_list, LAST_INTERMEDIATE, 0),
 
       /* now set actual time as time of last intermediate usage report */
-      usage_list_set_ulong_usage(reported_list, LAST_INTERMEDIATE, 
-                                 now);
+      usage_list_set_ulong_usage(reported_list, LAST_INTERMEDIATE, now);
    }
 
    SET_STR_DEFAULT(jr, JR_queue_name, "UNKNOWN@UNKNOWN");
@@ -394,8 +393,13 @@ sge_write_rusage(dstring *buffer,
 
    /* get submission_time, start_time, end_time */
    end_time = usage_list_get_ulong_usage(usage_list, "end_time", 0);
+   submission_time = usage_list_get_ulong_usage(usage_list, "submission_time", 0);
 
    if (intermediate) {
+      /*
+       * for the job, we don't have the submission time in the job report 
+       * before job exit 
+       */
       if (job != NULL && pe_task == NULL) {
          submission_time = lGetUlong(job, JB_submission_time);
       }
@@ -425,7 +429,6 @@ sge_write_rusage(dstring *buffer,
        */
       exit_status = usage_list_get_ulong_usage(usage_list, "exit_status", -1);
    } else {
-      submission_time = usage_list_get_ulong_usage(usage_list, "submission_time", 0);
       start_time = usage_list_get_ulong_usage(usage_list, "start_time", 0);
       exit_status = usage_list_get_ulong_usage(usage_list, "exit_status", 0);
    }

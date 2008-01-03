@@ -71,7 +71,7 @@
 #include "msg_common.h"
 #include "msg_execd.h"
 #include "msg_gdilib.h"
-#if defined(INTERIX) 
+#if defined(INTERIX)
    #include "../../libs/wingrid/misc.h"
 #endif
 
@@ -121,14 +121,14 @@ int do_job_exec(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, sge_pack_buffer *a
          ERROR((SGE_EVENT, MSG_EXECD_INVALIDJOBREQUEST_SS, aMsg->snd_name, aMsg->snd_host));
          DRETURN(0);
       }
-      
+
       #if defined(INTERIX) 
          if (strcmp(lGetString(job, JB_owner), "root") == 0) {
             char buffer[1000];
             wl_get_superuser_name(buffer, 1000);
             lSetString(job, JB_owner, buffer);            
          }
-      #endif      
+      #endif
       
       /* we expect one jatask to start per request */
       ja_task = lFirst(lGetList(job, JB_ja_tasks));
@@ -654,14 +654,16 @@ static int handle_task(sge_gdi_ctx_class_t *ctx, lListElem *petrep, char *commpr
    jobid    = lGetUlong(petrep, PETR_jobid);
    jataskid = lGetUlong(petrep, PETR_jataskid);
 
-   jep=lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, jobid, &iterator);
-   while(jep != NULL) {
+   jep = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)),
+                            JB_job_number, jobid, &iterator);
+   while (jep != NULL) {
       jatep = job_search_task(jep, NULL, jataskid);
       if (jatep != NULL) {
          break;
       }
 
-      jep = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, jobid, &iterator);
+      jep = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)),
+                              JB_job_number, jobid, &iterator);
    }
    
    if (jep == NULL) {
@@ -699,7 +701,7 @@ static int handle_task(sge_gdi_ctx_class_t *ctx, lListElem *petrep, char *commpr
    lSetString(petep, PET_id, new_task_id);
 
    /* set taskid for next task to be started */
-   lSetUlong(jatep, JAT_next_pe_task_id, tid+1);
+   lSetUlong(jatep, JAT_next_pe_task_id, tid + 1);
 
    lSetString(petep, PET_name, "petask");
    lSetUlong(petep, PET_submission_time, lGetUlong(petrep, PETR_submission_time));
@@ -713,15 +715,15 @@ static int handle_task(sge_gdi_ctx_class_t *ctx, lListElem *petrep, char *commpr
 
    DPRINTF(("got task ("sge_u32"/%s) from (%s/%s/%d) %s queue selection\n", 
             lGetUlong(jep, JB_job_number), new_task_id,
-            commproc, host,id, 
+            commproc, host, id,
             requested_queue != NULL ? "with" : "without"));
 
    gdil = job_get_queue_for_task(jatep, petep, qualified_hostname, requested_queue);
          
-   if (!gdil) { /* ran through list without finding matching queue */ 
+   if (gdil == NULL) { /* ran through list without finding matching queue */ 
       gdil = job_get_queue_with_task_about_to_exit(jep, jatep, petep, qualified_hostname, requested_queue);
 
-      if (!gdil) {  /* also no already exited task found -> no way to start new task */
+      if (gdil == NULL) {  /* also no already exited task found -> no way to start new task */
          ERROR((SGE_EVENT, MSG_JOB_NOFREEQ_USSS, sge_u32c(jobid), 
                 lGetString(petrep, PETR_owner), host, qualified_hostname));
          goto Error;
@@ -729,9 +731,8 @@ static int handle_task(sge_gdi_ctx_class_t *ctx, lListElem *petrep, char *commpr
    }
          
    /* put task into task_list of slave/master job */ 
-   if (!lGetList(jatep, JAT_task_list)) {
+   if (lGetList(jatep, JAT_task_list) == NULL) {
 DTRACE;
-   /* put task into task_list of slave/master job */ 
       lSetList(jatep, JAT_task_list, lCreateList("task_list", PET_Type));
    }
 DTRACE;
@@ -756,9 +757,12 @@ DTRACE;
     * At this time we are sure that we have the task on disk.
     * Now add a new "running" element for this job to the job 
     * report which is used as ACK for this job send request.
-    *
+    * Add the submission time for the task here.
     */
-   add_job_report(jobid, jataskid, new_task_id, jep);
+   {
+      lListElem *jr = add_job_report(jobid, jataskid, new_task_id, jep);
+      add_usage(jr, "submission_time", NULL, lGetUlong(petep, PET_submission_time));
+   }
 DTRACE;
 
    /* for debugging: never start job but report a failure */

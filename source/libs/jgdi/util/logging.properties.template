@@ -51,6 +51,8 @@ handlers = java.util.logging.FileHandler
 #com.sun.grid.jgdi.rmi.level = FINE
 #com.sun.grid.jgdi.configuration.xml.XMLUtil.level = FINE
 #com.sun.grid.jgdi.configuration.ClusterQueueTestCase.level = FINE
+#com.sun.grid.jgdi.management.level = FINER
+#com.sun.grid.jgdi.event.level = FINER
 
 # ------------------------------------------------------------------------------
 #  Settings for ConsoleHandler 
@@ -69,5 +71,26 @@ java.util.logging.FileHandler.level = ALL
 # qmaster runs in qmaster spool dir, so the file is created there
 java.util.logging.FileHandler.pattern=jgdi%u.log
 java.util.logging.FileHandler.formatter=com.sun.grid.jgdi.util.SGEFormatter
+
+#
+# Possible columns:
+#
+#   time    timestamp of the log message
+#   host    hostname of the log message
+#   name    name of the logger
+#   thread  id of the thread
+#   level   log level (short form)
+#   source  class and method name
+#   level_long log_level long form
+#
+com.sun.grid.jgdi.util.SGEFormatter.columns = time thread source level message
+
+#
+#  Print the stacktrace of the log record
+#
 com.sun.grid.jgdi.util.SGEFormatter.withStacktrace=true
 
+#
+#  Delimiter between columns
+#
+com.sun.grid.jgdi.util.SGEFormatter.delimiter = |

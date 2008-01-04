@@ -3911,7 +3911,14 @@ char *argv[]
          (strcmp("-mconf", *spp) == 0) ||
          (strcmp("-Mconf", *spp) == 0) ||
          (strcmp("-Aconf", *spp) == 0)) {
-         int action = 0;
+         typedef enum {
+            ACTION_sconf = 0,
+            ACTION_aconf,
+            ACTION_mconf,
+            ACTION_Aconf,
+            ACTION_Mconf
+         } action_enum;   
+         action_enum action = ACTION_sconf;
          char *host_list = NULL;
          int ret, first = 1;
          lListElem *hep;
@@ -3920,17 +3927,17 @@ char *argv[]
          if (!strcmp("-aconf", *spp)) {
             qconf_is_manager(ctx, username);
             qconf_is_adminhost(ctx, qualified_hostname);
-            action = 1;
+            action = ACTION_aconf;
          } else if (!strcmp("-mconf", *spp)) {
             qconf_is_manager(ctx, username);
             if (qconf_is_adminhost(ctx, qualified_hostname) != 0) {
                DRETURN(1);
             }
-            action = 2;
+            action = ACTION_mconf;
          } else if (!strcmp("-Aconf", *spp)) {
-            action = 3;
+            action = ACTION_Aconf;
          } else if (!strcmp("-Mconf", *spp)) {
-            action = 4;
+            action = ACTION_Mconf;
          }
 
          if (!sge_next_is_an_opt(spp))  {
@@ -3953,7 +3960,7 @@ char *argv[]
             /*
             ** it would be uncomfortable if you could only give files in .
             */
-            if ((action == 3 || action == 4) && cp && strrchr(cp, '/')) {
+            if ((action == ACTION_Aconf || action == ACTION_Mconf) && cp && strrchr(cp, '/')) {
                lSetHost(hep, EH_name, strrchr(cp, '/') + 1);
             } else {
                lSetHost(hep, EH_name, cp);
@@ -3969,29 +3976,35 @@ char *argv[]
             }
             host = lGetHost(hep, EH_name);
 
-            if (action == 0) {
+            first = 0;
+
+            if (ret != CL_RETVAL_OK && (action == ACTION_sconf || action == ACTION_aconf) ) {
+               sge_parse_return = 1;
+               continue;
+            }   
+               
+            if (action == ACTION_sconf) {
                if (print_config(ctx, host) != 0) {
                   sge_parse_return = 1;
                }
-            } else if (action == 1) {
+            } else if (action == ACTION_aconf) {
                if (add_modify_config(ctx, host, NULL, 1) != 0) {
                   sge_parse_return = 1;
                }
-            } else if (action == 2) {
+            } else if (action == ACTION_mconf) {
                if (add_modify_config(ctx, host, NULL, 0) != 0) {
                   sge_parse_return = 1;
                }
-            } else if (action == 3) {
+            } else if (action == ACTION_Aconf) {
                if (add_modify_config(ctx, host, cp, 0) != 0) {
                   sge_parse_return = 1;
                }
-            } else if (action == 4) {
+            } else if (action == ACTION_Mconf) {
                if (add_modify_config(ctx, host, cp, 2) != 0) {
                   sge_parse_return = 1;
                }
             }
 
-            first = 0;
          } /* end for */
          
          FREE(host_list);

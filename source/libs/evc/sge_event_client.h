@@ -55,18 +55,6 @@ typedef struct {
    evm_ack_func_t ack_func;
 } local_t;
 
-#if 1
-/* should be in sge_event_client.c */
-typedef struct {
-   pthread_mutex_t mutex;      /* used for mutual exclusion                         */
-   pthread_cond_t  cond_var;   /* used for waiting                                  */
-   bool            exit;       /* true -> exit event delivery                       */
-   bool            triggered;  /* new events addded, a scheduling run is triggered  */
-   lList           *new_events; /* the storage for new events                       */
-   bool            rebuild_categories;
-   bool            new_global_conf;
-} ec_control_t;
-#endif
 
 #define DEFAULT_EVENT_DELIVERY_INTERVAL (10)
 
@@ -123,7 +111,8 @@ struct sge_evc_class_str {
    void (*ec_mark4registration)(sge_evc_class_t *thiz);
    bool (*ec_need_new_registration)(sge_evc_class_t *thiz);
 
-   ec_control_t* (*ec_get_event_control)(sge_evc_class_t *thiz);
+   void (*ec_signal)(sge_evc_class_t *thiz, lList **alpp, lList *event_list);
+   void (*ec_wait)(sge_evc_class_t *thiz);
 
    /* dump current settings */
    void (*dprintf)(sge_evc_class_t *thiz);

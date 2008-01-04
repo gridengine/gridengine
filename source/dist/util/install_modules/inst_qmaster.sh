@@ -1707,7 +1707,9 @@ SetLibJvmPath() {
          jvm_lib_path=$java_home/lib/amd64/server/libjvm.so
          ;;
       sol-x86)     
-         jvm_lib_path=$java_home/lib/i386/server/libjvm.so
+         #causes a SEGV of libjvm.so for JVM_RawMonitorCreate
+         #jvm_lib_path=$java_home/lib/i386/server/libjvm.so
+         jvm_lib_path=$java_home/lib/i386/client/libjvm.so
          ;;
       lx*-amd64)   
          jvm_lib_path=$java_home/lib/amd64/server/libjvm.so
@@ -1850,9 +1852,6 @@ GetJMXPort() {
             SGE_ENABLE_JMX=$enable_jmx
             SGE_JVM_LIB_PATH=$sge_jvm_lib_path
             SGE_ADDITIONAL_JVM_ARGS=$sge_additional_jvm_args
-            if [ "$ARCH" = "sol-amd64" -o "$ARCH" = "sol-sparc64" ]; then
-               SGE_ADDITIONAL_JVM_ARGS="-d64 $SGE_ADDITIONAL_JVM_ARGS"
-            fi   
             SGE_JMX_PORT=$sge_jmx_port
             export SGE_JVM_LIB_PATH SGE_JMX_PORT SGE_ADDITIONAL_JVM_ARGS SGE_ENABLE_JMX
          else

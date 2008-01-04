@@ -651,8 +651,6 @@ sge_scheduler_main(void *arg)
           */
          {
             PROF_START_MEASUREMENT(SGE_PROF_CUSTOM6);
-            evc->ec_set_busy(evc, 1);
-
             /* taking out the new events */
             event_list = Scheduler_Control.new_events;
             Scheduler_Control.new_events = NULL;
@@ -661,6 +659,10 @@ sge_scheduler_main(void *arg)
             sge_mutex_unlock("scheduler_thread_cond_mutex", SGE_FUNC, __LINE__, 
                              &Scheduler_Control.mutex);
             
+            evc->ec_ack(evc);
+            evc->ec_set_busy(evc, 1);
+            evc->ec_commit(evc, NULL);
+
             if (event_list != NULL) {
                do_shutdown = (lGetElemUlong(event_list, ET_type, sgeE_SHUTDOWN) != NULL) ? true : false;
 
@@ -669,7 +671,6 @@ sge_scheduler_main(void *arg)
                } 
                lFreeList(&event_list);
             }
-            evc->ec_ack(evc);
 
             if (do_shutdown == true) {
                /* skip loop immediately */

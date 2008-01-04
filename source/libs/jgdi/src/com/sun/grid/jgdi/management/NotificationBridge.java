@@ -71,6 +71,8 @@ public class NotificationBridge implements EventListener {
     private final List<NotificationListener> listeners = new LinkedList<NotificationListener>();
     private final Map<NotificationListener, Object> handbackMap = new HashMap<NotificationListener, Object>();
     private final Set<EventTypeEnum> subscription = new HashSet<EventTypeEnum>();
+    private static final Map<EventTypeEnum, Method> subscribeMethodMap = new HashMap<EventTypeEnum, Method>();
+    private static final Map<EventTypeEnum, Method> setFlushMethodMap = new HashMap<EventTypeEnum, Method>();
 
     public NotificationBridge(String url) {
         this.url = url;
@@ -166,7 +168,6 @@ public class NotificationBridge implements EventListener {
         commit();
         log.exiting("NotificationBridge", "addNotificationListener");
     }
-    private static final Map<EventTypeEnum, Method> subscribeMethodMap = new HashMap<EventTypeEnum, Method>();
 
     private static Method getSubscribeMethod(EventTypeEnum type) {
         log.entering("NotificationBridge", "getSubscribeMethod", type);
@@ -186,6 +187,24 @@ public class NotificationBridge implements EventListener {
         return ret;
     }
 
+    private static Method getSetFlushMethod(EventTypeEnum type) {
+        log.entering("NotificationBridge", "getSetFlushMethod", type);
+        Method ret;
+        synchronized (setFlushMethodMap) {
+            ret = setFlushMethodMap.get(type);
+            if (ret == null) {
+                try {
+                    ret = EventClient.class.getMethod("set" + type.toString() + "Flush", Boolean.TYPE, Integer.TYPE);
+                } catch (Exception ex) {
+                    throw new IllegalStateException("setFlush method for type " + type + " not found", ex);
+                }
+                setFlushMethodMap.put(type, ret);
+            }
+        }
+        log.exiting("NotificationBridge", "getSetFlushMethod", ret);
+        return ret;
+    }
+
     private synchronized void subscribe(EventTypeEnum type, boolean subscribe) throws JGDIException {
         if (log.isLoggable(Level.FINER)) {
             log.entering("NotificationBridge", "subscribe", new Object[]{type, subscribe});
@@ -196,10 +215,8 @@ public class NotificationBridge implements EventListener {
         } else {
             callNative = subscription.remove(type);
         }
-        if (callNative) {
+        if (callNative && eventClient != null && !eventClient.isClosed()) {
             subscribeNative(type, subscribe);
-        } else {
-            log.log(Level.FINER, "callNative was false, ignoring inconsistent subscription");
         }
         log.exiting("NotificationBridge", "subscribe");
     }
@@ -208,9 +225,12 @@ public class NotificationBridge implements EventListener {
         if (log.isLoggable(Level.FINER)) {
             log.entering("NotificationBridge", "subscribeNative", new Object[]{type, subscribe});
         }
-        if (eventClient != null && !eventClient.isClosed()) {
+        if (eventClient != null) {
             try {
                 getSubscribeMethod(type).invoke(eventClient, subscribe);
+                // if (subscribe) {
+                //     getSetFlushMethod(type).invoke(eventClient, true, 0);
+                // }
             } catch (IllegalArgumentException ex) {
                 throw new IllegalStateException("Can not invoke subscribe method", ex);
             } catch (IllegalAccessException ex) {
@@ -250,6 +270,10 @@ public class NotificationBridge implements EventListener {
                 //       it should work regardless if called before or after eventClient.start()
                 eventClient = JGDIFactory.createEventClient(url, 0);
                 log.log(Level.FINE, "event client to {0} created", url);
+                for (EventTypeEnum type : subscription) {
+                    log.log(Level.FINE, "subscription of {0}", type);
+                    subscribeNative(type, true);
+                }
                 try {
                     log.log(Level.FINER, "starting event client [{0}]", eventClient.getId());
                     eventClient.start();
@@ -258,16 +282,14 @@ public class NotificationBridge implements EventListener {
                     close();
                     throw new JGDIException("startup of event client has been interrupted", ex);
                 }
-                for (EventTypeEnum type : subscription) {
-                    subscribeNative(type, true);
-                }
                 log.log(Level.FINER, "adding me as event listener");
                 eventClient.addEventListener(this);
                 log.log(Level.FINER, "I am now a event listener");
+            } else {
+                log.log(Level.FINER, "commiting event client [{0}]", eventClient.getId());
+                eventClient.commit();
+                log.log(Level.FINE, "changes at event client [{0}] commited", eventClient.getId());
             }
-            log.log(Level.FINER, "commiting event client [{0}]", eventClient.getId());
-            eventClient.commit();
-            log.log(Level.FINE, "changes at event client [{0}] commited", eventClient.getId());
         }
 
         log.exiting("NotificationBridge", "commit");
@@ -304,7 +326,7 @@ public class NotificationBridge implements EventListener {
     public synchronized void subscribe(EventTypeEnum type) throws JGDIException {
         log.entering("NotificationBridge", "subscribe", type);
         subscribe(type, true);
-        eventClient.commit();
+        commit();
         log.exiting("NotificationBridge", "subscribe");
     }
 

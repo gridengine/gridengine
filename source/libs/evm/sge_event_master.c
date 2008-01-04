@@ -602,7 +602,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    }
 
    /* Start with no pending events. */
-   
+
    build_subscription(ep);
 
    /* build events for total update */
@@ -660,7 +660,14 @@ sge_mod_event_client(lListElem *clio, lList **alpp, char *ruser, char *rhost)
    DENTER(TOP_LAYER,"sge_mod_event_client");
 
    sge_mutex_lock("event_master_change_evc_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.change_evc_mutex);
-   
+#ifdef EVC_DEBUG
+{   
+dstring dsbuf;
+char buf[1024];
+sge_dstring_init(&dsbuf, buf, sizeof(buf));
+printf("##### sge_mod_event_client at %s\n", sge_ctime(0, &dsbuf));
+}
+#endif
    lAppendElem(Event_Master_Control.change_evc, lCopyElem(clio));
    DEBUG((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS,
          ruser, rhost, lGetString(clio, EV_name), MSG_EVE_EVENTCLIENT));   
@@ -718,6 +725,14 @@ sge_event_master_process_mod_event_client(monitoring_t *monitor)
 
    DENTER(TOP_LAYER, "sge_event_master_process_mod_event_client");
 
+#ifdef EVC_DEBUG
+{   
+dstring dsbuf;
+char buf[1024];
+sge_dstring_init(&dsbuf, buf, sizeof(buf));
+printf("##### sge_event_master_process_mod_event_client at %s\n", sge_ctime(0, &dsbuf));
+}
+#endif
    MONITOR_WAIT_TIME(sge_mutex_lock("event_master_change_evc_mutex", SGE_FUNC, __LINE__, 
                      &Event_Master_Control.change_evc_mutex), monitor);
    if (lGetNumberOfElem(Event_Master_Control.change_evc) > 0) {    
@@ -788,6 +803,14 @@ sge_event_master_process_mod_event_client(monitoring_t *monitor)
          new_sub = lGetRef(clio, EV_sub_array);
          old_sub = lGetRef(event_client, EV_sub_array);
    
+#ifdef EVC_DEBUG
+{   
+dstring dsbuf;
+char buf[1024];
+sge_dstring_init(&dsbuf, buf, sizeof(buf));
+printf("+++++++ sge_event_master_process_mod_event_client subscription changed at %s\n", sge_ctime(0, &dsbuf));
+}
+#endif
          MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
    
          check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_ADMINHOST_LIST, master_table);
@@ -845,9 +868,6 @@ sge_event_master_process_mod_event_client(monitoring_t *monitor)
       if (busy_handling != lGetUlong(event_client, EV_busy_handling)) {
          lSetUlong(event_client, EV_busy_handling, busy_handling);
       }
-
-
-      lSetUlong(event_client, EV_state, EV_connected);
 
       MONITOR_EDT_MOD(monitor);
      
@@ -1689,6 +1709,14 @@ void sge_event_master_process_sends(monitoring_t *monitor)
    
    DENTER(TOP_LAYER, "sge_event_master_process_sends");
 
+#ifdef EVC_DEBUG
+{   
+dstring dsbuf;
+char buf[1024];
+sge_dstring_init(&dsbuf, buf, sizeof(buf));
+printf("##### sge_event_master_process_sends at %s\n", sge_ctime(0, &dsbuf));
+}
+#endif
    MONITOR_WAIT_TIME(sge_mutex_lock("event_master_send_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.send_mutex), monitor);
       temp_send_events = Event_Master_Control.send_events;
       Event_Master_Control.send_events = new_send_events;
@@ -1862,6 +1890,14 @@ void sge_event_master_process_acks(monitoring_t *monitor)
 
    DENTER(TOP_LAYER, "sge_event_master_process_acks");
 
+#ifdef EVC_DEBUG
+{   
+dstring dsbuf;
+char buf[1024];
+sge_dstring_init(&dsbuf, buf, sizeof(buf));
+printf("##### sge_event_master_process_acks at %s\n", sge_ctime(0, &dsbuf));
+}
+#endif
    MONITOR_WAIT_TIME(sge_mutex_lock("event_master_ack_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.ack_mutex), monitor);
    if (lGetNumberOfElem(Event_Master_Control.ack_events) > 0) {
       temp_ack_list = Event_Master_Control.ack_events;
@@ -2360,6 +2396,14 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
 
    DENTER(TOP_LAYER, "sge_event_master_send_events");
 
+#ifdef EVC_DEBUG
+{   
+dstring dsbuf;
+char buf[1024];
+sge_dstring_init(&dsbuf, buf, sizeof(buf));
+printf("##### sge_event_master_send_events at %s\n", sge_ctime(0, &dsbuf));
+}
+#endif
    /*
    ** assumption is that Event_Master_Control.clients_indices is
    ** only modified in sge_thread_event_master.c thread, therefore

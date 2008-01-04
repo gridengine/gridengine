@@ -48,13 +48,17 @@
     <target name="aimk.template.required" depends="aimk.init, init">
         <uptodate targetfile="${build.dir}/sge_all_listsL.template"
                   property="aimk.template.uptodate">
-            <srcfiles dir="${sge.srcdir}" includes="**/*L.h"/>
+            <srcfiles dir="${sge.srcdir}" includes="libs/sgeobj/*L.h"/>
+            <srcfiles dir="${sge.srcdir}" includes="libs/spool/*L.h"/>
+            <srcfiles dir="${sge.srcdir}" includes="libs/japi/*L.h"/>
+            <srcfiles dir="${sge.srcdir}" includes="libs/schedd/*L.h"/>
+            <srcfiles dir="${sge.srcdir}" includes="libs/cull/*L.h"/>
         </uptodate>
     </target>
     
     <target name="aimk.template" depends="aimk.init, init, aimk.template.required"
             unless="aimk.template.uptodate">
-        <echo message="Rebuilding ${build.dir}/sge_all_listsL.template"/>        
+        <echo message="Rebuilding ${build.dir}/sge_all_listsL.template"/>
         <aimk_call args="${aimk.targetbits} ${aimk.debug} -only-core jgdi_template"/>
     </target>
     
@@ -200,7 +204,6 @@
             <srcfileset refid="jar.properties"/>
             <targetfileset file="${jar}"/>
         </dependset>
-        
     </target>
     
     <target name="jar" depends="jar.build, jar.wait"/>
@@ -383,7 +386,6 @@
             <srcfiles dir="${build.dir}" includes="sge_all_listsL.template"/>
             <srcfiles dir="templates" includes="*"/>
         </uptodate>
-            
         <echo message="gensrc.isuptodate = ${gensrc.isuptodate}"/>    
     </target>
     
@@ -396,7 +398,6 @@
         </delete>
         <delete dir="${gensrc.dir}"/>
         <mkdir dir="${gensrc.dir}/com/sun/grid/jgdi/jni"/>
-        
         <echo>java.library.path: ${java.library.path}</echo>      
         <cullconv packageName="com.sun.grid.jgdi.configuration"
                   buildDir="${build.dir}/tmp"

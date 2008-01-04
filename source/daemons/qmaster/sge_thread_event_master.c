@@ -186,6 +186,14 @@ sge_event_master_main(void *arg)
       sge_mutex_lock("event_master_cond_mutex", SGE_FUNC, __LINE__, 
                      &Event_Master_Control.cond_mutex);
 
+#ifdef EVC_DEBUG
+{   
+dstring dsbuf;
+char buf[1024];
+sge_dstring_init(&dsbuf, buf, sizeof(buf));
+printf("##### before sge_event_master_wait_next() at %s\n", sge_ctime(0, &dsbuf));
+}
+#endif
       /*
        * did a new event arrive which has a flush time of 0 seconds?
        */
@@ -230,6 +238,14 @@ sge_event_master_main(void *arg)
       thread_output_profiling("event master thread profiling summary:\n",
                               &next_prof_output);
 
+#ifdef EVC_DEBUG
+{   
+dstring dsbuf;
+char buf[1024];
+sge_dstring_init(&dsbuf, buf, sizeof(buf));
+printf("##### after processing event_master funcs at %s\n", sge_ctime(0, &dsbuf));
+}
+#endif
       /* pthread cancelation point */
       pthread_cleanup_push((void (*)(void *))sge_event_master_cleanup_monitor,
                            (void *)&monitor);

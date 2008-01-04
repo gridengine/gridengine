@@ -1,3 +1,12 @@
+AA-2008-01-04-0: Enhancem.: - jgdi_event.c functions moved to sge_event_client.c
+                            - cleanups in sge_event_client.c
+                            - sol-x86 libjvm fix
+                            - qconf -*conf, -sconf and -aconf fail and don't open editor
+                            - debugging messages if compiled with EVC_DEBUG
+                            - NotificationBridge.java subscribe before register fix
+                            - logging.properties.template cleanup
+                 Review:    CR,EB
+
 JG-2008-01-03-0: Bugfix:    accounting records for parallel job tasks didn't
                             contain the task submission time.
                  Bugster:   6469605

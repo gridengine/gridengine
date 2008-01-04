@@ -87,26 +87,29 @@ ShutdownMaster()
    $INFOTEXT -log "Shutting down qmaster!"
 
    euid=`$SGE_UTILBIN/uidgid -euid`
-   spool_dir_master=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
-   master_pid=`cat $spool_dir_master/qmaster.pid`
    GetAdminUser
+   
+   if [ "$SGE_ENABLE_SMF" != "true" ]; then
+      spool_dir_master=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
+      master_pid=`cat $spool_dir_master/qmaster.pid`
 
-   `qconf -ks`
-   `qconf -km`
+      `qconf -ks`
+      `qconf -km`
 
-   ret=0
-   while [ $ret -eq 0 ]; do 
-      sleep 5
-      if [ -f $master_pid ]; then
-         $SGE_UTILBIN/checkprog $master_pid sge_qmaster > /dev/null
-         ret=$?
-      else
-         ret=1
-      fi
-      $INFOTEXT "sge_qmaster is going down ...., please wait!"
-   done
+      ret=0
+      while [ $ret -eq 0 ]; do 
+         sleep 5
+         if [ -f $master_pid ]; then
+            $SGE_UTILBIN/checkprog $master_pid sge_qmaster > /dev/null
+            ret=$?
+         else
+            ret=1
+         fi
+         $INFOTEXT "sge_qmaster is going down ...., please wait!"
+      done
 
       $INFOTEXT "sge_qmaster is down!"
+   fi
 
    master_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
 

@@ -44,6 +44,7 @@ ErrUsage()
    echo "usage: `basename $0` outdir"
    echo "       \$SGE_ROOT must be set"
    echo "       \$SGE_CELL, \$SGE_QMASTER_PORT and \$SGE_EXECD_PORT must be set if used in your environment"
+   echo "       \$SGE_CLUSTER_NAME must be set or \$SGE_ROOT and \$SGE_CELL must be set"
    exit 1
 }
 
@@ -52,7 +53,7 @@ if [ $# != 1 ]; then
    ErrUsage
 fi
 
-if [ "$SGE_ROOT" = "" ]; then
+if [ -z "$SGE_ROOT" -o -z "$SGE_CELL" ]; then
    ErrUsage
 fi
 
@@ -75,6 +76,8 @@ echo ""                                                  >> $SP_CSH
 #else
 #   echo "unsetenv SGE_CELL"                              >> $SP_CSH
 #fi
+
+echo "setenv SGE_CLUSTER_NAME `cat $SGE_ROOT/$SGE_CELL/common/cluster_name  2>/dev/null`" >> $SP_CSH
 
 if [ "$SGE_QMASTER_PORT" != "" ]; then
    echo "setenv SGE_QMASTER_PORT $SGE_QMASTER_PORT"                  >> $SP_CSH
@@ -132,6 +135,8 @@ if [ "$SGE_CELL" != "" ]; then
 else
    echo "unset SGE_CELL"                                         >> $SP_SH
 fi
+
+echo "SGE_CLUSTER_NAME=`cat $SGE_ROOT/$SGE_CELL/common/cluster_name  2>/dev/null`" >> $SP_SH
 
 if [ "$SGE_QMASTER_PORT" != "" ]; then
    echo "SGE_QMASTER_PORT=$SGE_QMASTER_PORT; export SGE_QMASTER_PORT"  >> $SP_SH

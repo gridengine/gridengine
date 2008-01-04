@@ -147,26 +147,7 @@ SpoolingCheckParams()
             #DB_CONFIG_COPY="cp ./util/install_modules/DB_CONFIG $SPOOLING_DIR/DB_CONFIG"
             #ExecuteAsAdmin $DB_CONFIG_COPY
             CreateRPCServerScript
-            $INFOTEXT "\nNow we have to startup the rc script\n >%s< \non the RPC server machine\n" $SGE_ROOT/$COMMONDIR/sgebdb
-            $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Shall the installation script try to start the RPC server? (y/n) [y] >>"
-
-            if [ $? = 0 ]; then
-               $INFOTEXT -log "Starting rpc server on host %s!" $SPOOLING_SERVER
-               $INFOTEXT "Starting rpc server on host %s!" $SPOOLING_SERVER
-               ExecuteRPCServerScript start
-               sleep 5
-               $INFOTEXT "The Berkeley DB has been started with these parameters:\n\n"
-               $INFOTEXT "Spooling Server Name: %s" $SPOOLING_SERVER
-               $INFOTEXT "DB Spooling Directory: %s\n" $SPOOLING_DIR
-               $INFOTEXT -wait -auto $AUTO -n "Please remember these values, during Qmaster installation\n you will be asked for! Hit <RETURN> to continue!"
-            else
-               $INFOTEXT "Please start the rc script \n>%s< on the RPC server machine\n" $SGE_ROOT/$COMMONDIR/sgebdb
-               $INFOTEXT "If your database is already running, then continue with <RETURN>\n"
-               $INFOTEXT -auto $AUTO -wait -n "Hit <RETURN> to continue >>"
-            fi
-
-            $INFOTEXT "The Berkeley DB installation is completed now!"
-            $INFOTEXT -log "The Berkeley DB installation is completed now!"
+            $INFOTEXT -wait -auto $AUTO -n "Please remember these values, during Qmaster installation\n you will be asked for! Hit <RETURN> to continue!"
          else
             $INFOTEXT "Please start the Berkeley DB RPC Server installation locally on host %s!" $SPOOLING_SERVER
             $INFOTEXT -log "Please start the Berkeley DB RPC Server installation locally on host %s!" $SPOOLING_SERVER
@@ -176,6 +157,21 @@ SpoolingCheckParams()
       fi 
    return 1
    fi
+}
+
+PrepareRPCServerStart()
+{
+            $INFOTEXT -log "Starting rpc server on host %s!" $SPOOLING_SERVER
+            $INFOTEXT "Starting rpc server on host %s!" $SPOOLING_SERVER
+            ExecuteRPCServerScript start
+            sleep 5
+            $INFOTEXT "The Berkeley DB has been started with these parameters:\n\n"
+            $INFOTEXT "Spooling Server Name: %s" $SPOOLING_SERVER
+            $INFOTEXT "DB Spooling Directory: %s\n" $SPOOLING_DIR
+            $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue!"
+
+            $INFOTEXT "The Berkeley DB installation is completed now!"
+            $INFOTEXT -log "The Berkeley DB installation is completed now!"
 }
 
 CreateRPCServerScript()
@@ -224,7 +220,26 @@ CheckLocalFilesystem()
 # The Script is either executed on the local host and not on a remote host
 ExecuteRPCServerScript()
 {
-   ExecuteAsAdmin $SGE_ROOT/$SGE_CELL/common/sgebdb $1
+   if [ "$SGE_ENABLE_SMF" = "true" ]; then
+      if [ "$1" = "stop" ]; then
+         action=disable
+      else
+         action=enable
+      fi
+      $SVCADM $action -s "svc:/application/sge_$SGE_SMF_VERSION/bdb:$SGE_CLUSTER_NAME"
+      if [ $? -ne 0 ]; then
+         $INFOTEXT "\nFailed to $1 Berkeley DB RPC Server over SMF. Check service by issuing "\
+                   "svcs -l svc:/application/sge_$SGE_SMF_VERSION/bdb:$SGE_CLUSTER_NAME"
+         $INFOTEXT -log "\nFailed to $1 Berkeley DB RPC Server over SMF. Check service by issuing "\
+                        "svcs -l svc:/application/sge_$SGE_SMF_VERSION/bdb:$SGE_CLUSTER_NAME"
+         if [ $AUTO = true ]; then
+            MoveLog
+         fi
+         exit 1
+      fi
+   else
+      ExecuteAsAdmin $SGE_ROOT/$SGE_CELL/common/sgebdb $1
+   fi
 }
 
 DeleteSpoolingDir()
@@ -243,7 +258,7 @@ EditStartupScript()
  BDBHOMES=" -h "$TMP_BDBHOME" -h "$BDBHOME
 
 
- cat $TMP_STARTUP_SCRIPT | sed -e s§\"$TMP_BDBHOME\"§\"$BDBHOMES\"§g > $TMP_STARTUP_SCRIPT.0
+ cat $TMP_STARTUP_SCRIPT | sed -e s?\"$TMP_BDBHOME\"?\"$BDBHOMES\"?g > $TMP_STARTUP_SCRIPT.0
  `cp $TMP_STARTUP_SCRIPT.0 $TMP_STARTUP_SCRIPT`
  rm $TMP_STARTUP_SCRIPT.0
 

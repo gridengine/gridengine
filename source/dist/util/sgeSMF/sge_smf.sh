@@ -1,4 +1,7 @@
 #!/bin/sh
+#
+# Sun Grid Engine SMF client
+#
 #___INFO__MARK_BEGIN__
 ##########################################################################
 #
@@ -31,4 +34,10 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-exec ./inst_sge -m "$@"
+if [ ! -f ./sge_smf_support.sh ]; then
+   echo "SMF support script sge_smf_support.sh is missing!"
+   exit 1
+fi
+
+. ./sge_smf_support.sh
+SMF $@

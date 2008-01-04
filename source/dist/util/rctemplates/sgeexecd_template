@@ -112,6 +112,54 @@ case $ARCH in
 esac
 
 #---------------------------------------------------------------------------
+# DetectSMFService - sets service to a mask maching the name
+# $1 ... name
+#
+DetectSMFService()
+{
+   name=$1
+   service=""
+   #Otherwise we try is it's available of the system
+   if [ -f /lib/svc/share/smf_include.sh ]; then
+      . /lib/svc/share/smf_include.sh
+      smf_present
+      if [ $? -ne 0 ]; then
+         return
+      fi
+   fi
+
+   #Cluster name must be unique
+   SGE_CLUSTER_NAME=`cat $SGE_ROOT/$SGE_CELL/common/cluster_name 2>/dev/null`
+
+   service="svc:/application/sge_v62/$name:$SGE_CLUSTER_NAME"
+   #Check if service exists
+   /usr/bin/svcs $service > /dev/null 2>&1
+   if [ $? -ne 0 ]; then
+      #No such service found in the system
+      service=""
+   fi
+}
+
+
+#---------------------------------------------------------------------------
+# ShutdownSMF
+#
+ShutdownSMF()
+{
+   DetectSMFService execd
+   if [ -z "$service" ]; then
+      #We don't have any such SMF service we use normal Shutdown
+      return
+   fi
+   pid=`/usr/bin/svcs -l -p $service | grep "/sge_execd$" | grep -v "^grep" | awk '{print $2}'`
+   if [ -n "$pid" ]; then
+      usingSMF="true"
+      /usr/sbin/svcadm disable -st $service
+   fi
+}
+
+
+#---------------------------------------------------------------------------
 # Shutdown
 # Send SIGTERM to process name $1 with pid in file $2
 #
@@ -208,8 +256,6 @@ GetExecdSpoolDir()
    if [ "$EXECD_SPOOL_DIR" = "" ]; then
       EXECD_SPOOL_DIR=`$bin_dir/qconf -sconf | grep execd_spool_dir | awk '{ print $2 }'`
    fi
-
-
 }
 
 #---------------------------------------------------------------------------
@@ -217,12 +263,10 @@ usage()
 {
    echo "Grid Engine start/stop script. Valid parameters are:"
    echo ""
-   echo "   (no parameters): start qmaster and execution daemon if applicable"
+   echo "   (no parameters): start execution daemon if applicable"
    echo "   \"start\"        dto."
    echo "   \"stop\"         shutdown local Grid Engine processes and jobs"
    echo "   \"softstop\"     shutdown local Grid Engine processes (no jobs)"
-   echo "                    host and restart it on this host"
-   echo "                    Migration only works if this host is an admin host"
    echo ""
    echo "Only one of the parameters \"start\", \"stop\" or \"softstop\" is allowed."
    echo "Only one of the parameters beginning  with \"-\" is allowed." 
@@ -277,32 +321,61 @@ HOST=`$utilbin_dir/gethostname -aname`
 UQHOST=`$utilbin_dir/gethostname -name | cut -f1 -d.`
 
 if [ "$startup" = true ]; then
-
-   # execution daemon is started on this host!
-
+      DetectSMFService execd
+      #EXECD_SMF is set to true when script gets called via SMF
+      #We want to use smf
+      if [ -z "$EXECD_SMF" -a -n "$service"  ]; then
+         svcadm enable -st $service
+         exit $?
+      fi
+      # execution daemon is started on this host!
+      if [ -z "$SGE_EXECD_PORT" ]; then
+         SGE_EXECD_PORT=`$utilbin_dir/getservbyname -number sge_execd`
+      fi
       echo "   starting sge_execd"
-      exec 1>/dev/null 2>&1
+      #exec 1>/dev/null 2>&1
       $bin_dir/sge_execd
       [ $? -eq 0 -a -d /var/lock/subsys ] && touch /var/lock/subsys/sgeexecd
+      
+      #Don't exit until daemon is up
+      $bin_dir/qping -info "$HOST" "$SGE_EXECD_PORT" execd 1 > /dev/null 2>&1
+      ret=$?
+      loop=0
+      while [ $ret -ne 0 -a $loop -ne 61 ]; do
+         sleep 1
+         $bin_dir/qping -info "$HOST" "$SGE_EXECD_PORT" execd 1 > /dev/null 2>&1
+         ret=$?
+         loop=`expr $loop + 1`
+      done
+      if [ $loop -eq 61 ]; then
+         echo "Execd did not start in 61 seconds!"
+         exit 1
+      fi
       exit 0
 else
+   # Shutdown execution daemon
    if [ $execd = true ]; then
-      # Shutdown execution daemon
       GetExecdSpoolDir
       execd_spool_dir=$EXECD_SPOOL_DIR/$UQHOST
 
-      # Send SIGTERM to execd
+      usingSMF=false
       echo "   Shutting down Grid Engine execution daemon"
-      Shutdown sge_execd $execd_spool_dir/execd.pid
-      ret=$?
-      if [ -f /var/lock/subsys/sgeexecd ]; then
-          uid=`$utilbin_dir/uidgid -uid` 
-          if [ "$uid" = "0" -a "$ret" = "0" ]; then
-             rm -f /var/lock/subsys/sgeexecd >/dev/null 2>&1
-          else
-             echo "Can't shut down execd!"
-             exit 1
-          fi
+      #We try to use SMF 
+      ShutdownSMF
+      #Otherwise we use normal shutdown
+      if [ "$usingSMF" != true ]; then
+         # Send SIGTERM to execd
+         Shutdown sge_execd $execd_spool_dir/execd.pid
+         ret=$?
+         if [ -f /var/lock/subsys/sgeexecd ]; then
+             uid=`$utilbin_dir/uidgid -uid` 
+             if [ "$uid" = "0" -a "$ret" = "0" ]; then
+                rm -f /var/lock/subsys/sgeexecd >/dev/null 2>&1
+             else
+                echo "Can't shut down execd!"
+                exit 1
+             fi
+         fi
       fi
       if [ $softstop = false ]; then
          # Send SIGTERM to all shepherds

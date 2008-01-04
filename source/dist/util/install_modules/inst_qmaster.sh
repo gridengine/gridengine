@@ -1149,20 +1149,35 @@ StartQmaster()
 {
    $INFOTEXT -u "\nGrid Engine qmaster startup"
    $INFOTEXT "\nStarting qmaster daemon. Please wait ..."
-   $SGE_STARTUP_FILE -qmaster
 
-   CheckRunningDaemon sge_qmaster
-   run=$?
-   if [ $run -ne 0 ]; then
-      $INFOTEXT "sge_qmaster daemon didn't start. Please check your\n" \
-                "configuration! Installation failed!"
-      $INFOTEXT -log "sge_qmaster daemon didn't start. Please check your\n" \
-                     "autoinstall configuration file! Installation failed!"
-      if [ $AUTO = true ]; then
-         MoveLog
+   if [ "$SGE_ENABLE_SMF" = "true" ]; then
+      $SVCADM enable -s "svc:/application/sge_$SGE_SMF_VERSION/qmaster:$SGE_CLUSTER_NAME"
+      if [ $? -ne 0 ]; then
+         $INFOTEXT "\nFailed to start qmaster deamon over SMF. Check service by issuing "\
+                   "svcs -l svc:/application/sge_$SGE_SMF_VERSION/qmaster:$SGE_CLUSTER_NAME"
+         $INFOTEXT -log "\nFailed to start qmaster deamon over SMF. Check service by issuing "\
+                        "svcs -l svc:/application/sge_$SGE_SMF_VERSION/qmaster:$SGE_CLUSTER_NAME"
+         if [ $AUTO = true ]; then
+            MoveLog
+         fi
+         exit 1
       fi
+   else
+      $SGE_STARTUP_FILE -qmaster
 
-      exit 1
+      CheckRunningDaemon sge_qmaster
+      run=$?
+      if [ $run -ne 0 ]; then
+         $INFOTEXT "sge_qmaster daemon didn't start. Please check your\n" \
+                   "configuration! Installation failed!"
+         $INFOTEXT -log "sge_qmaster daemon didn't start. Please check your\n" \
+                        "autoinstall configuration file! Installation failed!"
+         if [ $AUTO = true ]; then
+            MoveLog
+         fi
+
+         exit 1
+      fi
    fi
    $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
    $CLEAR
@@ -1245,7 +1260,7 @@ AddHosts()
                 "to the list of administrative hosts.\n\n" \
                 "If you are not sure, it is also possible to add or remove hosts after the\n" \
                 "installation with <qconf -ah hostname> for adding and <qconf -dh hostname>\n" \
-                "for removing this host\n\nAttention: This is not the shadow host installation" \
+                "for removing this host\n\nAttention: This is not the shadow host installation\n" \
                 "procedure.\n You still have to install the shadow host separately\n\n"
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
                 "Do you want to add your shadow host(s) now? (y/n) [y] >> "
@@ -1466,15 +1481,15 @@ PrintHostGroup()
 GetQmasterPort()
 {
 
-    if [ $RESPORT = true ]; then
-       comm_port_max=1023
-    else
-       comm_port_max=65500
-    fi
+   if [ $RESPORT = true ]; then
+      comm_port_max=1023
+   else
+      comm_port_max=65500
+   fi
 
-    CheckServiceAndPorts service $SGE_QMASTER_SRV
+   CheckServiceAndPorts service $SGE_QMASTER_SRV
 
-    if [ "$SGE_QMASTER_PORT" != "" ]; then
+   if [ "$SGE_QMASTER_PORT" != "" ]; then
       $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
 
       if [ $SGE_QMASTER_PORT -ge 1 -a $SGE_QMASTER_PORT -le $comm_port_max ]; then
@@ -1500,8 +1515,8 @@ GetQmasterPort()
                    "Please check your configuration file and restart\n" \
                    "the installation or configure the service >sge_qmaster<." $SGE_QMASTER_PORT $comm_port_max
       fi
-   fi         
-      $INFOTEXT -u "\nGrid Engine TCP/IP service >sge_qmaster<"
+   fi
+   $INFOTEXT -u "\nGrid Engine TCP/IP service >sge_qmaster<"
    if [ $ret != 0 ]; then
       $INFOTEXT "\nThere is no service >sge_qmaster< available in your >/etc/services< file\n" \
                 "or in your NIS/NIS+ database.\n\n" \
@@ -1586,15 +1601,20 @@ GetQmasterPort()
          $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
          $CLEAR
       else
-         unset SGE_QMASTER_PORT
-         $INFOTEXT "\nService >sge_qmaster< is now available.\n"
+         SGE_QMASTER_PORT=`$SGE_UTILBIN/getservbyname -number $SGE_QMASTER_SRV`
+         export SGE_QMASTER_PORT
+         port="$SGE_QMASTER_PORT/tcp"
+         $INFOTEXT "\nService >sge_qmaster %s< is now available.\n" $port
          $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
          $CLEAR
       fi
    else
+      SGE_QMASTER_PORT=`$SGE_UTILBIN/getservbyname -number $SGE_QMASTER_SRV`
+      export SGE_QMASTER_PORT
+      port="$SGE_QMASTER_PORT/tcp"
       $INFOTEXT "\nUsing the service\n\n" \
-                "   sge_qmaster\n\n" \
-                "for communication with Grid Engine.\n"
+                "   sge_qmaster %s\n\n" \
+                "for communication with Grid Engine.\n" $port
       $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
       $CLEAR
    fi
@@ -2009,15 +2029,20 @@ GetExecdPort()
          $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
          $CLEAR
       else
-         unset SGE_EXECD_PORT
-         $INFOTEXT "\nService >sge_execd< is now available.\n"
+         SGE_EXECD_PORT=`$SGE_UTILBIN/getservbyname -number $SGE_EXECD_SRV`
+         export SGE_EXECD_PORT
+         port="$SGE_EXECD_PORT/tcp"
+         $INFOTEXT "\nService >sge_execd %s< is now available.\n" $port
          $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
          $CLEAR
       fi
    else
+      SGE_EXECD_PORT=`$SGE_UTILBIN/getservbyname -number $SGE_EXECD_SRV`
+      export SGE_EXECD_PORT
+      port="$SGE_EXECD_PORT/tcp"
       $INFOTEXT "\nUsing the service\n\n" \
-                "   sge_execd\n\n" \
-                "for communication with Grid Engine.\n"
+                "   sge_execd %s\n\n" \
+                "for communication with Grid Engine.\n" $port
       $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
       $CLEAR
    fi

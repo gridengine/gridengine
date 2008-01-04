@@ -482,6 +482,9 @@ ExecuteAsAdmin()
    if [ $ADMINUSER = default ]; then
       $*
    else
+      if [ -z "$V5UTILBIN" ]; then
+         V5UTILBIN=$SGE_ROOT/utilbin/$SGE_ARCH
+      fi
       $V5UTILBIN/adminrun $ADMINUSER "$@"
    fi
 

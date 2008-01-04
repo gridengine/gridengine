@@ -323,11 +323,41 @@ CheckRunningQmaster()
 }
 
 #---------------------------------------------------------------------------
+# DetectSMFService - sets service to a mask maching the name
+# $1 ... name
+#
+DetectSMFService()
+{
+   name=$1
+   service=""
+   #Otherwise we try is it's available of the system
+   if [ -f /lib/svc/share/smf_include.sh ]; then
+      . /lib/svc/share/smf_include.sh
+      smf_present
+      if [ $? -ne 0 ]; then
+         return
+      fi
+   fi
+
+   #Cluster name must be unique
+   SGE_CLUSTER_NAME=`cat $SGE_ROOT/$SGE_CELL/common/cluster_name 2>/dev/null`
+
+   service="svc:/application/sge_v62/$name:$SGE_CLUSTER_NAME"
+   #Check if service exists
+   /usr/bin/svcs $service > /dev/null 2>&1
+   if [ $? -ne 0 ]; then
+      #No such service found in the system
+      service=""
+   fi
+}
+
+
+#---------------------------------------------------------------------------
 usage()
 {
    echo "Grid Engine start/stop script. Valid parameters are:"
    echo ""
-   echo "   (no parameters): start qmaster and execution daemon if applicable"
+   echo "   (no parameters): start qmaster and shadow daemon if applicable"
    echo "   \"start\"        dto."
    echo "   \"stop\"         shutdown local Grid Engine processes and jobs"
    echo "   \"-qmaster\"     only start/stop qmaster (if applicable)"
@@ -420,6 +450,7 @@ if [ "$startup" = true ]; then
       exit 1
    fi
 
+   #TODO improve migrate support with SMF
    if [ $qmaster = true -a $qmaster_host = false -a  \
         \( $primary_qmaster_host = true -o $migrate_qmaster = true \) ]; then
        actual_qmaster_host=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
@@ -475,6 +506,13 @@ if [ "$startup" = true ]; then
    fi
 
    if [ $qmaster = true -a $qmaster_host = true ]; then
+      DetectSMFService qmaster
+      #QMASTER_SMF is set to true when script gets called via SMF
+      #We want to use smf
+      if [ -z "$QMASTER_SMF" -a -n "$service"  ]; then
+         svcadm enable -st $service
+         exit $?
+      fi
       echo "   starting sge_qmaster"
       $bin_dir/sge_qmaster
       [ $? -eq 0 -a -d /var/lock/subsys ] && touch /var/lock/subsys/sgemaster >/dev/null 2>&1
@@ -511,6 +549,13 @@ if [ "$startup" = true ]; then
       fi
 
       if [ $start_shadowd = true ]; then
+         DetectSMFService shadowd
+         #SHADOWD_SMF is set to true when script gets called via SMF
+         #We want to use smf
+         if [ -z "$SHADOWD_SMF" -a -n "$service"  ]; then
+            svcadm enable -st $service
+            exit $?
+         fi
          echo "   starting sge_shadowd"
          $bin_dir/sge_shadowd
       else
@@ -521,6 +566,11 @@ else
    if [ $shadow_host = true ]; then
       # Send SIGTERM to shadowd
       echo "   Shutting down Grid Engine shadowd"
+      DetectSMFService shadowd
+      if [ -n "$service"  ]; then
+            svcadm disable -st $service
+            exit $?
+      fi
       if [ -f $qmaster_spool_dir/shadowd_$UQHOST.pid ]; then
          Shutdown sge_shadowd $qmaster_spool_dir/shadowd_$UQHOST.pid
       elif [ -f $qmaster_spool_dir/shadowd_$HOST.pid ]; then
@@ -532,6 +582,11 @@ else
       if [ `CheckIfQmasterHost $HOST` = true ]; then
          # Send SIGTERM to qmaster
          echo "   Shutting down Grid Engine qmaster"
+         DetectSMFService qmaster
+         if [ -n "$service"  ]; then
+            svcadm disable -st $service
+            exit $?
+         fi
          Shutdown sge_qmaster $qmaster_spool_dir/qmaster.pid
          ret=$?
          if [ -f /var/lock/subsys/sgemaster ]; then

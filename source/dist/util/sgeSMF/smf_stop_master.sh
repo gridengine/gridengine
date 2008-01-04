@@ -1,4 +1,9 @@
 #!/bin/sh
+#
+#
+#
+# Sun Grid Engine SMF stop script
+#
 #___INFO__MARK_BEGIN__
 ##########################################################################
 #
@@ -31,4 +36,31 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-exec ./inst_sge -m "$@"
+. /lib/svc/share/smf_include.sh
+
+#Service FMRI we are stopping
+service="$1"
+#Main contract_id associated with the FMRI
+contract_id="$2"
+#Currect service state
+state="$3"
+#Next service state
+next_state="$4"
+
+#echo "   State is $3, next_state: $4"
+
+#We make kill timeout 60sec if not defined
+if [ -z "$SGE_SMF_KILL_TIMEOUT" ]; then
+   SGE_SMF_KILL_TIMEOUT=60
+fi
+
+
+#We try to kill the contract
+if [ -n "$contract_id" ]; then
+   smf_kill_contract "$contract_id" 15 1 "$SGE_SMF_KILL_TIMEOUT"
+fi
+
+#If we are not at disabled we transition there
+if [ "$state" != "disabled" -a "$next_state" != "disabled" ]; then
+   /usr/sbin/svcadm disable -t "$service"
+fi

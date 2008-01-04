@@ -490,6 +490,7 @@ ErrUsage()
              "   -oldijs    configure old interactive job support\n" \
              "   -afs       install system with AFS functionality\n" \
              "   -noremote  supress remote installation during autoinstall\n" \
+             "   -nosmf     disable SMF for Solaris 10+ machines (RC scripts are used)" \
              "   -help      show this help text\n\n" \
              "   Examples:\n" \
              "   inst_sge -m -x\n" \
@@ -991,6 +992,99 @@ ProcessSGERoot()
    $CLEAR
 }
 
+#-------------------------------------------------------------------------
+# GetClusterName: Sets the default cluster name
+#
+GetDefaultClusterName() {
+   if [ -z "$SGE_CLUSTER_NAME" ]; then
+      SGE_CLUSTER_NAME="p$SGE_QMASTER_PORT"
+   fi
+}
+
+#-------------------------------------------------------------------------
+# ProcessSGEClusterName: Ask for cluster name
+#                        If SGE_ENABLE_SMF is not true, it does nothing
+#
+ProcessSGEClusterName()
+{
+   SGE_CLUSTER_NAME=`cat $SGE_ROOT/$SGE_CELL/common/cluster_name 2>/dev/null`
+   # If it's set we don't ask
+   if [ -n "$SGE_CLUSTER_NAME" ]; then
+      return
+   fi
+
+   if [ "$SGE_QMASTER_PORT" = "" ]; then
+      SGE_QMASTER_PORT=`./utilbin/$SGE_ARCH/getservbyname -number sge_qmaster`
+   fi
+   GetDefaultClusterName
+
+   if [ -z "$SGE_ROOT" -o -z "$SGE_CELL" ]; then
+      $INFOTEXT "ProcessSGEClusterName: Missing SGE_ROOT and SGE_CELL!!!"
+      exit 1
+   fi
+
+   $CLEAR
+   $INFOTEXT -u "\nUnique cluster name"
+   $INFOTEXT "\nSince there can be multiple Grid Engine instances installed, the cluster name \n" \
+             "will allow to uniquely identify this SGE cluster. The cluster name will be used \n" \
+             "by the SGE startup scripts and the Accounting and Reporting Console (ARCo).\n\n" \
+             "The cluster name should be unique throughout your entire organization. The name \n" \
+             " is not related to the SGE cell.\n\n" \
+             "The cluster name must start with a letter ([A-Za-z]), followed by letters, \n" \
+             "digits ([0-9]), dash ("-") or underscore ("_")."
+   #TODO LP: Check for allowed values
+   $ECHO
+   SGE_CLUSTER_NAME_VAL=`eval echo $SGE_CLUSTER_NAME`
+
+   $INFOTEXT -n "Enter new cluster name or hit <RETURN>\n" \
+                "to use default [%s] >> " $SGE_CLUSTER_NAME_VAL
+
+   eval SGE_CLUSTER_NAME=`Enter $SGE_CLUSTER_NAME_VAL`
+
+   if [ ! -f $SGE_CELL/common/cluster_name ]; then
+      ExecuteAsAdmin $MKDIR -p $SGE_ROOT/$SGE_CELL/common
+      ExecuteAsAdmin $TOUCH $SGE_ROOT/$SGE_CELL/common/cluster_name
+      echo $SGE_CLUSTER_NAME > $SGE_ROOT/$SGE_CELL/common/cluster_name
+      ExecuteAsAdmin chmod 644 $SGE_ROOT/$SGE_CELL/common/cluster_name
+   fi
+
+   $ECHO
+   $INFOTEXT "Your \$SGE_CLUSTER_NAME: %s\n" $SGE_CLUSTER_NAME
+   $INFOTEXT -log "Your \$SGE_CLUSTER_NAME: %s" $SGE_CLUSTER_NAME
+   $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+   $CLEAR
+}
+
+#-------------------------------------------------------------------------
+# CheckForSMF: Sets SGE_ENABLE_SMF to true if support SMF is desired and possible
+#              false if machine does not support it
+#
+CheckForSMF()
+{
+   #SGE_ENABLE_SMF=true now mean we want to try to use it means we want and have SMF
+   if [ "$SGE_ENABLE_SMF" = "true" ]; then
+      if [ -f /lib/svc/share/smf_include.sh ]; then 
+         . /lib/svc/share/smf_include.sh
+         smf_present
+         SGE_ENABLE_SMF="$?"
+         if [ $SGE_ENABLE_SMF -eq 0 ]; then
+            SGE_ENABLE_SMF="true"
+            if [ ! -f ./util/sgeSMF/sge_smf_support.sh ]; then
+               $INFOTEXT "Missing ./util/sgeSMF/sge_smf_support.sh file!!!"
+               exit 1
+            fi
+            . ./util/sgeSMF/sge_smf_support.sh
+         else
+            $INFOTEXT "Disabling SMF - SVC repository not found!!!" 
+            SGE_ENABLE_SMF="false"
+         fi
+      else
+         $INFOTEXT "Disabling SMF - /lib/svc/share/smf_include.sh not found!!!" 
+         SGE_ENABLE_SMF="false"
+      fi
+   fi
+   #SGE_ENABLE_SMF=true from now on means USE SMF
+}
  
 #-------------------------------------------------------------------------
 # GiveHints: give some useful hints at the end of the installation
@@ -1015,6 +1109,7 @@ GiveHints()
                 "This will set or expand the following environment variables:\n\n" \
                 "   - \$SGE_ROOT         (always necessary)\n" \
                 "   - \$SGE_CELL         (if you are using a cell other than >default<)\n" \
+                "   - \$SGE_CLUSTER_NAME (always necessary)\n" \
                 "   - \$SGE_QMASTER_PORT (if you haven't added the service >sge_qmaster<)\n" \
                 "   - \$SGE_EXECD_PORT   (if you haven't added the service >sge_execd<)\n" \
                 "   - \$PATH/\$path       (to find the Grid Engine binaries)\n" \
@@ -1029,10 +1124,17 @@ GiveHints()
       master_spool=`dirname $tmp_spool`
 
       $INFOTEXT -u "\nGrid Engine messages"
-      $INFOTEXT "\nGrid Engine messages can be found at:\n\n" \
-                "   /tmp/qmaster_messages (during qmaster startup)\n" \
-                "   /tmp/execd_messages   (during execution daemon startup)\n\n" \
-                "After startup the daemons log their messages in their spool directories.\n\n" \
+      if [ "$SGE_ENABLE_SMF" = true ]; then
+         $INFOTEXT "\nGrid Engine messages can be found at:\n\n" \
+                   "   Startup messages can be found in SMF service log files.\n" \
+                   "   You can get the name of the log file by calling svcs -l <SERVICE_NAME> \n" \
+                   "   E.g.: svcs -l svc:/application/sge_$SGE_SMF_VERSION/qmaster:$SGE_CLUSTER_NAME\n\n"
+      else
+         $INFOTEXT "\nGrid Engine messages can be found at:\n\n" \
+                   "   /tmp/qmaster_messages (during qmaster startup)\n" \
+                   "   /tmp/execd_messages   (during execution daemon startup)\n\n"
+      fi
+      $INFOTEXT "After startup the daemons log their messages in their spool directories.\n\n" \
                 "   Qmaster:     %s\n" \
                 "   Exec daemon: <execd_spool_dir>/<hostname>/messages\n" $master_spool/qmaster/messages
 
@@ -1148,49 +1250,31 @@ CreateSGEStartUpScripts()
    if [ $create = true ]; then
 
       if [ $hosttype = "master" ]; then
-         ExecuteAsAdmin sed -e "s%GENROOT%${SGE_ROOT_VAL}%g" \
-                            -e "s%GENCELL%${SGE_CELL_VAL}%g" \
-                            -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
-                            util/rctemplates/sgemaster_template > ${TMP_SGE_STARTUP_FILE}.0
-
-         if [ "$SGE_QMASTER_PORT" != "" ]; then
-            ExecuteAsAdmin sed -e "s/=GENSGE_QMASTER_PORT/=$SGE_QMASTER_PORT/" \
-                               ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
-         else
-            ExecuteAsAdmin sed -e "/GENSGE_QMASTER_PORT/d" \
-                               ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
-         fi
-
-         if [ "$SGE_EXECD_PORT" != "" ]; then
-            ExecuteAsAdmin sed -e "s/=GENSGE_EXECD_PORT/=$SGE_EXECD_PORT/" \
-                               ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
-         else
-            ExecuteAsAdmin sed -e "/GENSGE_EXECD_PORT/d" \
-                               ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
-         fi
+         template="util/rctemplates/sgemaster_template"
       else
-         ExecuteAsAdmin sed -e "s%GENROOT%${SGE_ROOT_VAL}%g" \
+         template="util/rctemplates/sgeexecd_template"
+      fi
+
+      ExecuteAsAdmin sed -e "s%GENROOT%${SGE_ROOT_VAL}%g" \
                             -e "s%GENCELL%${SGE_CELL_VAL}%g" \
                             -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
-                            util/rctemplates/sgeexecd_template > ${TMP_SGE_STARTUP_FILE}.0
+                            $template > ${TMP_SGE_STARTUP_FILE}.0
 
-         if [ "$SGE_QMASTER_PORT" != "" ]; then
-            ExecuteAsAdmin sed -e "s/=GENSGE_QMASTER_PORT/=$SGE_QMASTER_PORT/" \
-                               ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
-         else
-            ExecuteAsAdmin sed -e "/GENSGE_QMASTER_PORT/d" \
-                               ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
-         fi
+      if [ "$SGE_QMASTER_PORT" != "" ]; then
+         ExecuteAsAdmin sed -e "s/=GENSGE_QMASTER_PORT/=$SGE_QMASTER_PORT/" \
+                            ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
+      else
+         ExecuteAsAdmin sed -e "/GENSGE_QMASTER_PORT/d" \
+                            ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
+      fi
 
-         if [ "$SGE_EXECD_PORT" != "" ]; then
-            ExecuteAsAdmin sed -e "s/=GENSGE_EXECD_PORT/=$SGE_EXECD_PORT/" \
-                               ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
-         else
-            ExecuteAsAdmin sed -e "/GENSGE_EXECD_PORT/d" \
-                               ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
-         fi
-
-       fi
+      if [ "$SGE_EXECD_PORT" != "" ]; then
+         ExecuteAsAdmin sed -e "s/=GENSGE_EXECD_PORT/=$SGE_EXECD_PORT/" \
+                            ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
+      else
+         ExecuteAsAdmin sed -e "/GENSGE_EXECD_PORT/d" \
+                            ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
+      fi
 
       ExecuteAsAdmin $CP $TMP_SGE_STARTUP_FILE $SGE_STARTUP_FILE
       ExecuteAsAdmin $CHMOD a+x $SGE_STARTUP_FILE
@@ -1220,28 +1304,36 @@ AddSGEStartUpScript()
    euid=$1
    hosttype=$2
 
+   if [ -z "$SGE_CLUSTER_NAME" ]; then
+      $INFOTEXT "AddSGEStartUpScript error: expected SGE_CLUSTER_NAME!!!"
+      exit 1
+   fi
+
    $CLEAR
-   if [ $hosttype = "master" ]; then
+   if [ $hosttype = "master" -o $hosttype = "shadow" ]; then
+      script_name=sgemaster
       TMP_SGE_STARTUP_FILE=/tmp/sgemaster.$$
-      STARTUP_FILE_NAME=sgemaster
-      S95NAME=S95sgemaster
-      K03NAME=K03sgemaster
+      STARTUP_FILE_NAME=sgemaster.$SGE_CLUSTER_NAME
+      S95NAME=S95sgemaster.$SGE_CLUSTER_NAME
+      K03NAME=K03sgemaster.$SGE_CLUSTER_NAME
       DAEMON_NAME="qmaster"
    elif [ $hosttype = "bdb" ]; then
+      script_name=sgebdb
       TMP_SGE_STARTUP_FILE=/tmp/sgebdb.$$
       STARTUP_FILE_NAME=sgebdb
       S95NAME=S94sgebdb
       K03NAME=K04sgebdb
       DAEMON_NAME="berkeleydb"
    else
+      script_name=sgeexecd
       TMP_SGE_STARTUP_FILE=/tmp/sgeexecd.$$
-      STARTUP_FILE_NAME=sgeexecd
-      S95NAME=S96sgeexecd
-      K03NAME=K02sgeexecd
+      STARTUP_FILE_NAME=sgeexecd.$SGE_CLUSTER_NAME
+      S95NAME=S96sgeexecd.$SGE_CLUSTER_NAME
+      K03NAME=K02sgeexecd.$SGE_CLUSTER_NAME
       DAEMON_NAME="execd"
    fi
 
-   SGE_STARTUP_FILE=$SGE_ROOT/$SGE_CELL/common/$STARTUP_FILE_NAME
+   SGE_STARTUP_FILE=$SGE_ROOT/$SGE_CELL/common/$script_name
 
    InstallRcScript 
 
@@ -1253,24 +1345,46 @@ AddSGEStartUpScript()
 InstallRcScript()
 {
    if [ $euid != 0 ]; then
+      SGE_ENABLE_SMF=false
       return 0
    fi
 
    $INFOTEXT -u "\n%s startup script" $DAEMON_NAME
 
    # --- from here only if root installs ---
-   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
-             "\nWe can install the startup script that will\n" \
+   if [ "$SGE_ENABLE_SMF" = true ]; then
+      #Normally qmaster and shadowd share the same RC script
+      if [ "$hosttype" = shadow ]; then
+         DAEMON_NAME=shadowd
+      fi
+      $INFOTEXT "\nDo you want to start %s automatically at machine boot?" "$DAEMON_NAME"
+      $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
+                "NOTE: If you select \"n\" SMF will be not used at all! (y/n) [y] >> "
+   else
+      $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nWe can install the startup script that will\n" \
              "start %s at machine boot (y/n) [y] >> " $DAEMON_NAME
-
+   fi
    ret=$?
    if [ $AUTO = "true" -a $ADD_TO_RC = "false" ]; then
+      SGE_ENABLE_SMF=false
       $CLEAR
       return
    else
       if [ $ret = 1 ]; then
+         SGE_ENABLE_SMF=false
          return
       fi
+   fi
+      
+   #SMF
+   if [ "$SGE_ENABLE_SMF" = true ]; then
+      #DBwriter does not have CLUSTER NAME at this point
+      if [ -z "$SGE_CLUSTER_NAME" ]; then
+         SGE_CLUSTER_NAME=`cat $SGE_ROOT/$SGE_CELL/common/cluster_name 2>/dev/null`
+      fi
+#echo "QP=$SGE_QMASTER_PORT EP=$SGE_EXECD_PORT root=$SGE_ROOT ver=$SGE_SMF_VERSION cn=$SGE_CLUSTER_NAME"
+      SMFRegister "$DAEMON_NAME"
+      return
    fi
 
    # If system is Linux Standard Base (LSB) compliant, use the install_initd utility
@@ -2088,9 +2202,12 @@ RemoveRcScript()
          return
       fi
    fi
-
+   
+   #If Solaris 10+ and SMF enabled
+   if [ "$SGE_ENABLE_SMF" = "true" ]; then
+      SMFUnregister $service
    # If system is Linux Standard Base (LSB) compliant, use the install_initd utility
-   if [ "$RC_FILE" = lsb ]; then
+   elif [ "$RC_FILE" = lsb ]; then
       echo /usr/lib/lsb/remove_initd $RC_PREFIX/$STARTUP_FILE_NAME
       Execute /usr/lib/lsb/remove_initd $RC_PREFIX/$STARTUP_FILE_NAME
       # Several old Red Hat releases do not create/remove startup links from LSB conform

@@ -72,6 +72,10 @@ cqueue_verify_shell_start_mode(lListElem *cqueue, lList **answer_list,
                                lListElem *attr_elem);
 
 bool
+cqueue_verify_shell(lListElem *cqueue, lList **answer_list,
+                               lListElem *attr_elem);
+
+bool
 cqueue_verify_subordinate_list(lListElem *cqueue, lList **answer_list,
                                lListElem *attr_elem);
 

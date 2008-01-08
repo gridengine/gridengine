@@ -216,6 +216,7 @@
 #define MSG_CQUEUE_UNKNOWNCALENDAR_S   _MESSAGE(64215, _("Calendar "SFQ" does not exist"))
 #define MSG_CQUEUE_UNKNOWNINITSTATE_S  _MESSAGE(64216, _("Invalid value "SFQ" as initial state"))
 #define MSG_CQUEUE_UNKNOWNSTARTMODE_S  _MESSAGE(64217, _("Invalid value "SFQ" as shell start mode"))
+#define MSG_CQUEUE_UNKNOWNSHELL_S  _MESSAGE(64217, _("Invalid value "SFQ" for shell "))
 
 #define MSG_ATTR_VALUEMULDEFINED_S     _MESSAGE(64218, _("Value for "SFQ" is multiply defined"))
 #define MSG_ATTR_NONEWATTRSETTING_S    _MESSAGE(64219, _("Cannot create new attribute setting for host "SFQ))

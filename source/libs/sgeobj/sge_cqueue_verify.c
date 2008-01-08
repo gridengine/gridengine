@@ -50,6 +50,7 @@
 #include "sge_centry.h"
 #include "sge_cqueue.h"
 #include "sge_object.h"
+#include "sge_path_alias.h"
 #include "sge_pe.h"
 #include "sge_range.h"
 #include "sge_subordinate.h"
@@ -290,6 +291,44 @@ cqueue_verify_shell_start_mode(lListElem *cqueue, lList **answer_list,
    DEXIT;
    return ret;
 }
+
+bool
+   cqueue_verify_shell(lListElem *cqueue, lList **answer_list,
+                                    lListElem *attr_elem)
+   {
+      bool ret = true;
+  
+      DENTER(CQUEUE_VERIFY_LAYER, "cqueue_verify_shell");
+
+      /* We initialize for standard shell paths */
+      if (cqueue != NULL && attr_elem != NULL) {
+         const char *names[] = {
+            "/bin/csh", NULL
+      };
+      const char *name = lGetString(attr_elem, ASTR_value);
+      bool found = false;
+
+      /* Check also if it is an absolute valid path */
+      bool path_found = path_verify(name, answer_list, "shell", true);
+
+      int i = 0;
+   
+       while (names[i] != NULL) {
+          if (!strcasecmp(name, names[i]) || !path_found ) {
+               found = true;
+          }
+            i++;
+          }
+          if (!found) {
+              sprintf(SGE_EVENT, MSG_CQUEUE_UNKNOWNSHELL_S, name);
+              answer_list_add(answer_list, SGE_EVENT,
+                              STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+              ret = false;
+          }
+       }
+       DEXIT;
+       return ret;
+   }
 
 bool
 cqueue_verify_subordinate_list(lListElem *cqueue, lList **answer_list,

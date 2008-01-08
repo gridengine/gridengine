@@ -566,6 +566,7 @@
 #define MSG_CONF_PARAMETERXINCONFIGURATION_SS _MESSAGE(33553, _("denied: parameter "SFQ" in configuration: "SFQ))
 #define MSG_CONF_INFNOTALLOWEDFORATTRXINCONFLISTOFY_SS _MESSAGE(33554, _("infinity not allowed for attribute "SFQ" in configuration list of "SFQ))
 #define MSG_CONF_FORMATERRORFORXINYCONFIG_SS _MESSAGE(33555, _("format error for "SFQ" in "SFQ" configuration"))
+#define MSG_CONF_GOTINVALIDVALUEXFORSHELL_S _MESSAGE(33551, _("denied: got invalid value "SFQ" for shell"))
 
 
 /*

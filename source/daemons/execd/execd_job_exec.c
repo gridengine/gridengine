@@ -828,9 +828,12 @@ DTRACE;
     * At this time we are sure that we have the task on disk.
     * Now add a new "running" element for this job to the job 
     * report which is used as ACK for this job send request.
-    *
+    * Add the submission time for the task here.
     */
-   add_job_report(jobid, jataskid, new_task_id, jep);
+   {
+      lListElem *jr = add_job_report(jobid, jataskid, new_task_id, jep);
+      add_usage(jr, "submission_time", NULL, lGetUlong(petep, PET_submission_time));
+   }
 DTRACE;
 
    /* for debugging: never start job but report a failure */

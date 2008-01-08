@@ -1,3 +1,10 @@
+JG-2008-01-08-0: Bugfix:    accounting records for parallel job tasks didn't
+                            contain the task submission time.
+                            Merge of JG-2008-01-03-0 from V61_BRANCH.
+                 Bugster:   6469605
+                 Issue:     1689
+                 Review:    MD
+
 MD-2007-11-28-0: Bugfix:    o merged parts from CR 6291021 from Checkin 
                               MD-2007-02-14-0 containing fix for this CR 6540827
                  Cleanup:   o code formatting

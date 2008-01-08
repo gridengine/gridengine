@@ -55,6 +55,8 @@
 #include "sge_security.h"
 #include "sge_var.h"
 
+#include "uti/sge_time.h"
+
 #include "msg_common.h"
 #include "msg_gdilib.h"
 
@@ -108,8 +110,8 @@ sge_tid_t sge_qexecve(const char *hostname, const char *queuename,
                       const char *cwd, const lList *environment,
                       const lList *path_aliases)
 {
-char myname[256];
-const char *s;
+   char myname[256];
+   const char *s;
    int ret, uid;
    sge_tid_t tid = NULL;
    lListElem *petrep;
@@ -169,6 +171,7 @@ const char *s;
    lSetUlong(petrep, PETR_jobid, jobid);
    lSetUlong(petrep, PETR_jataskid, jataskid);
    lSetString(petrep, PETR_owner, myname);
+   lSetUlong(petrep, PETR_submission_time, sge_get_gmt());
 
    if(cwd != NULL) {
       lSetString(petrep, PETR_cwd, cwd);

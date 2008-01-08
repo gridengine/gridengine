@@ -262,8 +262,13 @@ sge_write_rusage(dstring *buffer,
 
    /* get submission_time, start_time, end_time */
    end_time = usage_list_get_ulong_usage(usage_list, "end_time", 0);
+   submission_time = usage_list_get_ulong_usage(usage_list, "submission_time", 0);
 
    if (intermediate) {
+      /*
+       * for the job, we don't have the submission time in the job report 
+       * before job exit 
+       */
       if (job != NULL && pe_task == NULL) {
          submission_time = lGetUlong(job, JB_submission_time);
       }
@@ -293,7 +298,6 @@ sge_write_rusage(dstring *buffer,
        */
       exit_status = usage_list_get_ulong_usage(usage_list, "exit_status", -1);
    } else {
-      submission_time = usage_list_get_ulong_usage(usage_list, "submission_time", 0);
       start_time = usage_list_get_ulong_usage(usage_list, "start_time", 0);
       exit_status = usage_list_get_ulong_usage(usage_list, "exit_status", 0);
    }
@@ -355,7 +359,7 @@ sge_write_rusage(dstring *buffer,
           , delimiter, arch_dep_usage_string
 #endif 
              );
-     
+
    FREE(qname);
    DEXIT;   
    return ret;

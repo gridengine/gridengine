@@ -42,51 +42,17 @@
 # This script requires the that $SGE_ROOT and $SGE_CELL be set
 #
 
-SGE_SMF_VERSION="v62"      #Will become part of the service name
-
-#---------------------------------------------------------------------------
-# Show the usage of the standalone command
-SMFusage()
-{
-   $ECHO "Usage: sge_smf <command>"
-   $ECHO ""
-   $ECHO "Commands:"
-   $ECHO "   register   [qmaster|shadowd|execd|bdb|dbwriter|all] CLUSTER_NAME   ... register SGE as SMF service"
-   $ECHO "   unregister [qmaster|shadowd|execd|bdb|dbwriter|all] CLUSTER_NAME   ... unregister SGE SMF service"
-   #$ECHO "   enabled         ... check if the SGE via SMF is enabled"
-   $ECHO "   supported       ... check if the SMF can be used on current host"
-   $ECHO "   help            ... this help"
-   $ECHO
-   $ECHO "CLUSTER_NAME ... name of this cluster (installation), used as instance name in SMF"
-   $ECHO "                 MUST be the same as you entered during the istallation"
-}
-
-
-#-------------------------------------------------------------------------
-# Arch_variables Setting up common variables and paths
-#
-ArchVariables()
-{
-   if [ -f "$SGE_ROOT/util/arch_variables" ]; then
-      . $SGE_ROOT/util/arch_variables
-   elif [ -f "./util/arch_variables" ]; then
-      . ./util/arch_variables
-   else
-      $ECHO "Could not source arch_variables"
-      exit 1
-   fi
-}
-
-
-SED="/usr/bin/sed"
+SED=sed
 SVCADM="/usr/sbin/svcadm"
 SVCCFG="/usr/sbin/svccfg"
-
-#Architecture related variables echo
-ArchVariables
+SVCS="/usr/bin/svcs"
+RM=rm
 
 if [ -z "$SGE_ROOT" -o -z "$SGE_CELL" ]; then
-   $ECHO "\$SGE_ROOT and \$SGE_CELL must be set!"
+   if [ -z "$INFOTEXT" ]; then
+      INFOTEXT=echo
+   fi
+   $INFOTEXT "\$SGE_ROOT and \$SGE_CELL must be set!"
    exit 1
 fi
 
@@ -94,19 +60,42 @@ if [ -z "$ARCH" ]; then
    ARCH=`$SGE_ROOT/util/arch`
 fi
 
-if [ -f /lib/svc/share/smf_include.sh ]; then 
-   . /lib/svc/share/smf_include.sh
-   smf_present
-   hasSMF="$?"
-   if [ $hasSMF -ne 0 ]; then
-      hasSMF=0
-   else
-      hasSMF=1
+#Setup INFOTEXT
+if [ -z "$INFOTEXT" ]; then
+   INFOTEXT=$SGE_ROOT/utilbin/$ARCH/infotext
+   if [ ! -x $INFOTEXT ]; then
+      echo "Error: Can't find binary \"$INFOTEXT\""
+      echo "Please verify your setup and restart this script. Exit."
+      exit 1
    fi
-else
-   hasSMF=0
+
+   # Test the infotext binary
+   tmp=`$INFOTEXT test 2>&1`
+   if [ $? -ne 0 ]; then
+      echo "Error: Execution of $INFOTEXT failed: $tmp"
+      echo "Please verify your setup and restart this script. Exit."
+      exit 1
+   fi
+   SGE_INFOTEXT_MAX_COLUMN=5000; export SGE_INFOTEXT_MAX_COLUMN
 fi
 
+#---------------------------------------------------------------------------
+# Show the usage of the standalone command
+SMFusage()
+{
+   $INFOTEXT "Usage: sge_smf <command>"
+   $INFOTEXT ""
+   $INFOTEXT "Commands:"
+   $INFOTEXT "   register      [qmaster|shadowd|execd|bdb|dbwriter|all] SGE_CLUSTER_NAME"
+   $INFOTEXT "                 ... register SGE as SMF service"
+   $INFOTEXT "   unregister    [qmaster|shadowd|execd|bdb|dbwriter|all] SGE_CLUSTER_NAME"
+   $INFOTEXT "                 ... unregister SGE SMF service"
+   $INFOTEXT "   supported     ... check if the SMF can be used on current host"
+   $INFOTEXT "   help          ... this help"
+   $INFOTEXT "\n"
+   $INFOTEXT "SGE_CLUSTER_NAME ... name of this cluster (installation), used as instance name in SMF"
+   $INFOTEXT "                     MUST be the same as you entered during the istallation" 
+}
 
 #-------------------------------------------------------------------------
 # SMFImportService: Import service descriptor
@@ -117,16 +106,16 @@ SMFImportService()
    SMFValidateContent $file
    res="$?"
    if [ "$res" != 0 ]; then
-      $ECHO "Service descriptor $file is corrupted, exiting!"
-      exit 1
+      $INFOTEXT "Service descriptor %s is corrupted, exiting!" $file
+      return 1
    fi
    #Strangly svccfg import does not return non-zero exit code if there was 
    #an error such as permission denied
    res=`$SVCCFG import $file 2>&1 | head -1`
-   if [ -n "$res" ]; then
-      $ECHO $res
-      $ECHO "Importing service was NOT successful!"
-      exit 1
+   if [ -n "$res" ]; then      
+      $INFOTEXT "%s" $res
+      $INFOTEXT "Importing service was NOT successful!"
+      return 1
    fi
 }
 
@@ -147,7 +136,6 @@ SMFReplaceXMLTemplateValues()
    cat $file > $file.tmp
    #Replace SGE_ROOT
    $SED -e "s|@@@CLUSTER_NAME@@@|$SGE_CLUSTER_NAME|g" \
-        -e "s|@@@SGE_SMF_VERSION@@@|$SGE_SMF_VERSION|g" \
         -e "s|@@@SGE_ROOT@@@|$SGE_ROOT|g" \
         -e "s|@@@SGE_CELL@@@|$SGE_CELL|g" \
         -e "s|@@@SGE_QMASTER_PORT@@@|$SGE_QMASTER_PORT|g" \
@@ -156,34 +144,67 @@ SMFReplaceXMLTemplateValues()
    $RM $file.tmp
 }
 
+#---------------------------------------------------------------------------
+# ServiceAlreadyExists - sets service to a mask maching the name
+#                        SGE_CLUSTER_NAME must be set
+# $1 ... name
+# return 0  if does not exist
+#        1  if service exists
+#
+ServiceAlreadyExists()
+{
+   service_name="svc:/application/sge/$1:$SGE_CLUSTER_NAME"
+   #Check if service exists
+   $SVCS $service_name > /dev/null 2>&1
+   if [ $? -ne 0 ]; then
+      return 0
+   else
+      return 1
+   fi
+}
+
 #-------------------------------------------------------------------------
 # SMFCreateAndImportServiceFromTemplate: Replaces template values and 
 #                                        imports it to the repository
 #
 SMFCreateAndImportService()
 {
-   prefix="$SGE_ROOT"
+   ServiceAlreadyExists $1
+   ret=$?
+   if [ $ret -eq 1 ]; then
+      $INFOTEXT "Service %s already exists!" $service_name
+      $INFOTEXT "SGE_CLUSTER_NAME must by unique throughout your organization."
+      $INFOTEXT "Check existing SGE services with svcs \"*sge*\""
+      return 1
+   fi
+   if [ "$1" != "dbwriter" ]; then
+      prefix="$SGE_ROOT"
+   else
+      prefix="$SGE_ROOT/dbwriter"
+   fi
    template_file="$prefix/util/sgeSMF/$1_template.xml"
    suffix="${SGE_CLUSTER_NAME}"
    service_file="$prefix/util/sgeSMF/$1_$suffix.xml"
-   if [ ! -f $template_file ]; then
-      echo "$template_file is missing!"
-      exit 1
+   if [ ! -f $template_file ]; then 
+      $INFOTEXT "%s is missing!" $template_file
+      return 1
    fi
    cat $template_file > $service_file
    SMFReplaceXMLTemplateValues $service_file
    SMFImportService $service_file
    $RM $service_file
-   $ECHO "$1 service imported successfully!"
 }
 
 #---------------------------------------------------------------------------
 # Register SMF service
 # return Registered messages or nothing
 SMFRegister()
-{   
+{  
    case "$1" in
    qmaster)
+      SMFCreateAndImportService "qmaster"
+      ;;
+   master)
       SMFCreateAndImportService "qmaster"
       ;;
    shadowd)
@@ -203,15 +224,21 @@ SMFRegister()
       ;;
    all)
       SMFCreateAndImportService "qmaster"
+      if [ $? -ne 0 ]; then
+         return 1
+      fi
       SMFCreateAndImportService "shadowd"
+      if [ $? -ne 0 ]; then
+         return 1
+      fi
       SMFCreateAndImportService "execd"
       ;;
    *)
-      $ECHO "Unknown parameter to sge_smf register"
-      exit 1
+      $INFOTEXT "Unknown parameter to sge_smf register"
+      return 1
       ;;
    esac
-   return 0
+   return $?
 }
 
 
@@ -219,40 +246,38 @@ SMFRegister()
 # SMFHaltAndDeleteService: Stops the service and deletes it
 # arg1 ... SMF service name
 SMFHaltAndDeleteService()
-{
-   if [ ! -f "$SGE_ROOT/$SGE_CELL/common/cluster_name" ]; then
-      $ECHO "Missing $SGE_ROOT/$SGE_CELL/common/cluster_name file!"
-      exit 1
+{  
+   ServiceAlreadyExists $1
+   ret=$?
+   if [ $ret -eq 0 ]; then
+      $INFOTEXT "Service %s does not exists!" $service_name
+      $INFOTEXT "Check existing SGE services with svcs \"*sge*\""
+      return 1
    fi
-   if [ -z "$SGE_SMF_VERSION" ]; then
-      $ECHO "Missing SGE_SMF_VERSION!!!"
-      exit 1
-   fi
-   cluster_name=`cat "$SGE_ROOT/$SGE_CELL/common/cluster_name"`
-   service_name="svc:/application/sge_$SGE_SMF_VERSION/$1:$cluster_name"
 
-   $INFOTEXT "$1 is going down ...., please wait!"
    $SVCADM disable -s "$service_name"
    if [ "$?" -ne 0 ]; then
-      "Could not disable the service \"$service_name\"! Exiting"
-      exit 1
+      $INFOTEXT "Could not disable the service %s! Exiting" $service_name
+      return 1
    fi
-   $INFOTEXT "$1 is down!"
+
    $SVCCFG delete "$service_name"
    if [ "$?" -ne 0 ]; then
-      "Could not delete the service \"$service_name\"! Exiting"
-      exit 1
+      $INFOTEXT "Could not delete the service %s! Exiting" $service_name
+      return 1
    fi
-   $ECHO "Unregistered $service_name"
 }
 
 #---------------------------------------------------------------------------
 # Unregister SMF service
 # return registered or not to stdout
 SMFUnregister()
-{   
+{  
    case "$1" in
    qmaster)
+      SMFHaltAndDeleteService "qmaster"
+      ;;
+   master)
       SMFHaltAndDeleteService "qmaster"
       ;;
    shadowd)
@@ -271,16 +296,22 @@ SMFUnregister()
       SMFHaltAndDeleteService "dbwriter"
       ;;
    all)
-      SMFHaltAndDeleteService "qmaster"
-      SMFHaltAndDeleteService "shadowd"
       SMFHaltAndDeleteService "execd"
+      if [ $? -ne 0 ]; then
+         return 1
+      fi
+      SMFHaltAndDeleteService "qmaster"
+      if [ $? -ne 0 ]; then
+         return 1
+      fi
+      SMFHaltAndDeleteService "shadowd"
       ;;
    *)
-      $ECHO "Unknown parameter to sge_smf unregister"
-      exit 1
+      $INFOTEXT "Unknown parameter to sge_smf unregister"
+      return 1
       ;;
    esac
-   return 0
+   return $?
 }
 
 
@@ -290,57 +321,72 @@ SMFUnregister()
 # return a stdout output
 SMF()
 {   
+   if [ -f /lib/svc/share/smf_include.sh ]; then 
+      . /lib/svc/share/smf_include.sh
+      smf_present
+      hasSMF="$?"
+      if [ $hasSMF -eq 0 ]; then
+         hasSMF=true
+      fi
+   fi
+
+   if [ "$hasSMF" != "true" ]; then
+      $INFOTEXT "SMF is NOT supported on your system."
+      return 1
+   fi
+
    cmd="$1"
 
-   if [ "$#" -lt 1 -o  "$#" -gt 3 -o "$cmd" = "-h" -o "$cmd" = "help"  -o "$cmd" = "--help" ]; then
+   if [ "$#" -lt 1 -o  "$#" -gt 3 -o "$cmd" = -h -o "$cmd" = help  -o "$cmd" = --help ]; then
       SMFusage
-      exit 1
+      return 1
    fi
  
+   #Check args
    if [ "$cmd" = "register" -o "$cmd" = "unregister" ]; then
       if [ "$#" -lt 2 ]; then
-         echo "Missing an argument!"
+         $INFOTEXT "Missing an argument!"
          SMFusage
-         exit 1
+         return 1
       fi
       opt="$2"
-      #Check we have valid values
-      if [ "$opt" != "qmaster" -a "$opt" != "execd" -a "$opt" != "all" ]; then
-         $ECHO "Invalid argument $opt!"
-         SMFusage
-         exit 1
-      fi
       #We source the settings if we don't have qmaster or execd port 
       if [ -z "$SGE_QMASTER_PORT" -o -z "$SGE_EXECD_PORT" ]; then
-         . "$SGE_ROOT/$SGE_CELL/common/settings.sh"
+         if [ -r $SGE_ROOT/$SGE_CELL/common/settings.sh ]; then
+            . "$SGE_ROOT/$SGE_CELL/common/settings.sh"
+         else
+            $INFOTEXT "Can't read \$SGE_ROOT/\$SGE_CELL/common/settings.sh"
+            $INFOTEXT "Missing SGE_QMASTER_PORT or SGE_EXECD_PORT!"
+            return 1
+         fi
       fi
       SGE_CLUSTER_NAME="$3"
       if [ -z "$SGE_CLUSTER_NAME" ]; then
-         $ECHO "Missing cluster name."
+         $INFOTEXT "Missing cluster name."
          SMFusage
-         exit 1
+         return 1
       fi
    fi
 
-   #Standalone version of supported. We never use this option in installation script
+   #The commands
    if [ "$cmd" = "supported" ]; then
-      if [ $hasSMF ]; then
-         $ECHO "SMF is supported on your system."
-      fi
-      exit 0
-   fi
-   #We return if we don't have SMF
-   if [ ! $hasSMF ]; then
-      exit 1
-   fi
-
-   if [ "$cmd" = "register" ]; then
+      $INFOTEXT "SMF is supported on your system."
+      ret=0
+   elif [ "$cmd" = "register" ]; then
       SMFRegister $opt
+      ret=$?
+      if [ $ret -ne 0 ]; then
+         $INFOTEXT "Register failed."
+      fi
    elif [ "$cmd" = "unregister" ]; then
       SMFUnregister $opt
+      ret=$?
+      if [ $ret -ne 0 ]; then
+         $INFOTEXT "Unregister failed."
+      fi
    else
       SMFusage
-      exit 1
+      ret=1
    fi
-   return 0
+   return $ret
 }

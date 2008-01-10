@@ -37,10 +37,10 @@ NOTE:  This service manifest is not editable. Make customizations in a different
        file.
 -->
 
-<service_bundle type='manifest' name='sge_@@@SGE_SMF_VERSION@@@:qmaster'>
+<service_bundle type='manifest' name='sge:qmaster'>
 
 <service
-        name='application/sge_@@@SGE_SMF_VERSION@@@/qmaster'
+        name='application/sge/qmaster'
         type='service'
         version='1'>
                      

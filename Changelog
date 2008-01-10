@@ -1,3 +1,11 @@
+LP-2008-01-10-0: Enhancem.: Added correct permissions for SMF files to disinst
+                 Enhancem.: Improved sge_smf_support.sh
+                 Enhancem.: Removed version string v62 from the service names
+                 Enhancem.: Improved autoinstall log reporting.
+                 Enhancem.: Changed sgemaster (script) shutdown logic
+                 Bugfix:    Fixed broken autoinstall due to LP-2008-01-04-0
+                 Review:    EB
+
 EB-2008-01-09-0: Enhancem.: improved shutown speed (pthread_cancel is sent earlier)
                  Review:    LP
 

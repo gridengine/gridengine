@@ -37,10 +37,10 @@ NOTE:  This service manifest is not editable. Make customizations in a different
        file.
 -->
 
-<service_bundle type='manifest' name='sge_@@@SGE_SMF_VERSION@@@:bdb'>
+<service_bundle type='manifest' name='sge:bdb'>
 
 <service
-        name='application/sge_@@@SGE_SMF_VERSION@@@/bdb'
+        name='application/sge/bdb'
         type='service'
         version='1'>
 

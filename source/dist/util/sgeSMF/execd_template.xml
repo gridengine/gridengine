@@ -38,10 +38,10 @@ NOTE:  This service manifest is not editable; its contents will be
        system upgrade.  Make customizations in a different file.
 -->
 
-<service_bundle type='manifest' name='sge_@@@SGE_SMF_VERSION@@@:execd'>
+<service_bundle type='manifest' name='sge:execd'>
 
 <service
-        name='application/sge_@@@SGE_SMF_VERSION@@@/execd'
+        name='application/sge/execd'
         type='service'
         version='1'>
 

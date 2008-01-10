@@ -226,12 +226,12 @@ ExecuteRPCServerScript()
       else
          action=enable
       fi
-      $SVCADM $action -s "svc:/application/sge_$SGE_SMF_VERSION/bdb:$SGE_CLUSTER_NAME"
+      $SVCADM $action -s "svc:/application/sge/bdb:$SGE_CLUSTER_NAME"
       if [ $? -ne 0 ]; then
-         $INFOTEXT "\nFailed to $1 Berkeley DB RPC Server over SMF. Check service by issuing "\
-                   "svcs -l svc:/application/sge_$SGE_SMF_VERSION/bdb:$SGE_CLUSTER_NAME"
-         $INFOTEXT -log "\nFailed to $1 Berkeley DB RPC Server over SMF. Check service by issuing "\
-                        "svcs -l svc:/application/sge_$SGE_SMF_VERSION/bdb:$SGE_CLUSTER_NAME"
+         $INFOTEXT "\nFailed to %s Berkeley DB RPC Server over SMF. Check service by issuing "\
+                   "svcs -l svc:/application/sge/bdb:%s" $1 $SGE_CLUSTER_NAME
+         $INFOTEXT -log "\nFailed to %s Berkeley DB RPC Server over SMF. Check service by issuing "\
+                        "svcs -l svc:/application/sge/bdb:%s" $1 $SGE_CLUSTER_NAME
          if [ $AUTO = true ]; then
             MoveLog
          fi

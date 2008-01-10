@@ -37,10 +37,10 @@ NOTE:  This service manifest is not editable. Make customizations in a different
        file.
 -->
 
-<service_bundle type='manifest' name='sge_@@@SGE_SMF_VERSION@@@:shadowd'>
+<service_bundle type='manifest' name='sge:shadowd'>
 
 <service
-        name='application/sge_@@@SGE_SMF_VERSION@@@/shadowd'
+        name='application/sge/shadowd'
         type='service'
         version='1'>
                      

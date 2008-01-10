@@ -138,27 +138,6 @@ CheckQmasterInstallation()
    GetAdminUser
 }
 
-#-------------------------------------------------------------------------
-# Check whether the cluster_name file is present in smf directory and set it
-#
-CheckSMFClusterName()
-{
-   if [ "$SGE_ENABLE_SMF" = "true" ]; then
-      if [ ! -f "$SGE_ROOT/$SGE_CELL/common/cluster_name" ]; then
-         $INFOTEXT "\Missing cluster_name from the qmaster installation.\n" \
-                   "If you used -nosmf flag during qmaster installation, you must use it here as well!\n"
-         $INFOTEXT -log "\Missing cluster_name from the qmaster installation.\n" \
-                        "If you used -nosmf flag during qmaster installation, you must use here as well!\n"
-         if [ $AUTO = true ]; then
-            MoveLog
-         fi
-         exit 1
-      fi
-      SGE_CLUSTER_NAME=`cat "$SGE_ROOT/$SGE_CELL/common/cluster_name"`
-      $INFOTEXT "\nDetected cluster_name: >%s<\n" $SGE_CLUSTER_NAME
-      $INFOTEXT -log "n\Detected cluster_name: >%s<\n" $SGE_CLUSTER_NAME
-   fi
-}
 
 #-------------------------------------------------------------------------
 # Check whether the qmaster is installed and the file systems is shared
@@ -438,12 +417,12 @@ StartExecd()
       if [ -z "$SGE_CLUSTER_NAME" ]; then
          SGE_CLUSTER_NAME=`cat $SGE_ROOT/$SGE_CELL/common/cluster_name 2>/dev/null`
       fi
-      $SVCADM enable -s "svc:/application/sge_$SGE_SMF_VERSION/execd:$SGE_CLUSTER_NAME"
+      $SVCADM enable -s "svc:/application/sge/execd:$SGE_CLUSTER_NAME"
       if [ $? -ne 0 ]; then
          $INFOTEXT "\nFailed to start execution deamon over SMF.\n" \
-                   "Check service by issuing svcs -l svc:/application/sge_$SGE_SMF_VERSION/execd:$SGE_CLUSTER_NAME"
+                   "Check service by issuing svcs -l svc:/application/sge/execd:%s" $SGE_CLUSTER_NAME
          $INFOTEXT -log "\nFailed to start execution deamon over SMF.\n" \
-                        "Check service by issuing svcs -l svc:/application/sge_$SGE_SMF_VERSION/execd:$SGE_CLUSTER_NAME"
+                        "Check service by issuing svcs -l svc:/application/sge/execd:%s" $SGE_CLUSTER_NAME
          if [ $AUTO = true ]; then
             MoveLog
          fi

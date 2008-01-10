@@ -587,10 +587,26 @@ CheckRSHConnection()
 #
 CheckConfigFile()
 {
+   if [ "$SGE_CLUSTER_NAME" = "" ]; then
+      $INFOTEXT -log "The SGE_CLUSTER_NAME has not been set in config file!\n"
+      MoveLog
+      exit 1
+   fi
+
    if [ "$SGE_EXECD_PORT" = "" ]; then
       $INFOTEXT -log "The SGE_EXECD_PORT has not been set in config file!\n"
       MoveLog
       exit 1
+   fi
+
+   if [ "$SGE_ENABLE_JMX" = true ]; then
+      if [ -z "$JMX_PORT" -o -z "$SGE_JVM_LIB_PATH" ]; then
+         $INFOTEXT -log "The JMX_PORT or SGE_JVM_LIB_PATH has not been set in config file!\n"
+         MoveLog
+         exit 1
+      fi
+   else
+      SGE_ENABLE_JMX=false
    fi
 
    if [ "$CSP" = "true" ]; then
@@ -1007,9 +1023,10 @@ GetDefaultClusterName() {
 #
 ProcessSGEClusterName()
 {
-   SGE_CLUSTER_NAME=`cat $SGE_ROOT/$SGE_CELL/common/cluster_name 2>/dev/null`
-   # If it's set we don't ask
-   if [ -n "$SGE_CLUSTER_NAME" ]; then
+   TMP_CLUSTER_NAME=`cat $SGE_ROOT/$SGE_CELL/common/cluster_name 2>/dev/null`
+   # We always use the name in cluster_name file
+   if [ -n "$TMP_CLUSTER_NAME" ]; then
+      SGE_CLUSTER_NAME=$TMP_CLUSTER_NAME
       return
    fi
 
@@ -1025,13 +1042,11 @@ ProcessSGEClusterName()
 
    $CLEAR
    $INFOTEXT -u "\nUnique cluster name"
-   $INFOTEXT "\nSince there can be multiple Grid Engine instances installed, the cluster name \n" \
-             "will allow to uniquely identify this SGE cluster. The cluster name will be used \n" \
-             "by the SGE startup scripts and the Accounting and Reporting Console (ARCo).\n\n" \
-             "The cluster name should be unique throughout your entire organization. The name \n" \
+   $INFOTEXT "\nThe cluster name uniquely identifies a specific Sun Grid Engine cluster.\n" \
+             "The cluster name must be unique throughout your organization. The name \n" \
              " is not related to the SGE cell.\n\n" \
              "The cluster name must start with a letter ([A-Za-z]), followed by letters, \n" \
-             "digits ([0-9]), dash ("-") or underscore ("_")."
+             "digits ([0-9]), dashes ("-") or underscores ("_")."
    #TODO LP: Check for allowed values
    $ECHO
    SGE_CLUSTER_NAME_VAL=`eval echo $SGE_CLUSTER_NAME`
@@ -1079,7 +1094,6 @@ CheckForSMF()
             SGE_ENABLE_SMF="false"
          fi
       else
-         $INFOTEXT "Disabling SMF - /lib/svc/share/smf_include.sh not found!!!" 
          SGE_ENABLE_SMF="false"
       fi
    fi
@@ -1128,7 +1142,7 @@ GiveHints()
          $INFOTEXT "\nGrid Engine messages can be found at:\n\n" \
                    "   Startup messages can be found in SMF service log files.\n" \
                    "   You can get the name of the log file by calling svcs -l <SERVICE_NAME> \n" \
-                   "   E.g.: svcs -l svc:/application/sge_$SGE_SMF_VERSION/qmaster:$SGE_CLUSTER_NAME\n\n"
+                   "   E.g.: svcs -l svc:/application/sge/qmaster:%s\n\n" $SGE_CLUSTER_NAME
       else
          $INFOTEXT "\nGrid Engine messages can be found at:\n\n" \
                    "   /tmp/qmaster_messages (during qmaster startup)\n" \
@@ -1365,8 +1379,7 @@ InstallRcScript()
              "start %s at machine boot (y/n) [y] >> " $DAEMON_NAME
    fi
    ret=$?
-   if [ $AUTO = "true" -a $ADD_TO_RC = "false" ]; then
-      SGE_ENABLE_SMF=false
+   if [ "$AUTO" = "true" -a "$ADD_TO_RC" = "false" -a "$SGE_ENABLE_SMF" != "true" ]; then
       $CLEAR
       return
    else
@@ -1377,13 +1390,26 @@ InstallRcScript()
    fi
       
    #SMF
-   if [ "$SGE_ENABLE_SMF" = true ]; then
+   if [ "$SGE_ENABLE_SMF" = "true" ]; then
       #DBwriter does not have CLUSTER NAME at this point
       if [ -z "$SGE_CLUSTER_NAME" ]; then
          SGE_CLUSTER_NAME=`cat $SGE_ROOT/$SGE_CELL/common/cluster_name 2>/dev/null`
       fi
-#echo "QP=$SGE_QMASTER_PORT EP=$SGE_EXECD_PORT root=$SGE_ROOT ver=$SGE_SMF_VERSION cn=$SGE_CLUSTER_NAME"
+      if [ "$AUTO" = "true" ]; then
+         OLD_INFOTEXT=$INFOTEXT
+         INFOTEXT="$INFOTEXT -log"
+      fi
+
       SMFRegister "$DAEMON_NAME"
+      ret=$?
+
+      if [ "$AUTO" = "true" ]; then
+         INFOTEXT=$OLD_INFOTEXT
+      fi
+      if [ $ret -ne 0 ]; then
+         MoveLog
+         exit 1
+      fi
       return
    fi
 
@@ -2205,7 +2231,21 @@ RemoveRcScript()
    
    #If Solaris 10+ and SMF enabled
    if [ "$SGE_ENABLE_SMF" = "true" ]; then
+      if [ "$AUTO" = "true" ]; then
+         OLD_INFOTEXT=$INFOTEXT
+         INFOTEXT="$INFOTEXT -log"
+      fi
+
       SMFUnregister $service
+      ret=$?
+
+      if [ "$AUTO" = "true" ]; then
+         INFOTEXT=$OLD_INFOTEXT
+      fi
+      if [ $ret -ne 0 ]; then
+         MoveLog
+         exit 1
+      fi
    # If system is Linux Standard Base (LSB) compliant, use the install_initd utility
    elif [ "$RC_FILE" = lsb ]; then
       echo /usr/lib/lsb/remove_initd $RC_PREFIX/$STARTUP_FILE_NAME
@@ -2867,7 +2907,8 @@ GetAdminUser()
    ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
    euid=`$SGE_UTILBIN/uidgid -euid`
 
-   if [ `echo "$ADMINUSER" |tr "A-Z" "a-z"` = "none" -a $euid = 0 ]; then
+   TMP_USER=`echo "$ADMINUSER" |tr "A-Z" "a-z"`
+   if [ \( -z "$TMP_USER" -o "$TMP_USER" = "none" \) -a $euid = 0 ]; then
       ADMINUSER=default
    fi
 

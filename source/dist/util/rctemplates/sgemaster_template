@@ -121,16 +121,17 @@ Shutdown()
    pidfile=$2
    if [ -f $pidfile ]; then
       pid=`cat $pidfile`
-      maxretries=6
+      maxretries=20
       i=0
       while [ $i -lt $maxretries ]; do
          $utilbin_dir/checkprog $pid $name > /dev/null
          if [ "$?" = 0 ]; then
+            #We keep killing Qmaster so that child processes get killed
             kill $pid
          else
             return 0
          fi
-         sleep `expr 2 + $i`
+         sleep 2
          i=`expr $i + 1`
 
       done
@@ -337,12 +338,14 @@ DetectSMFService()
       if [ $? -ne 0 ]; then
          return
       fi
+   else
+      return
    fi
 
    #Cluster name must be unique
    SGE_CLUSTER_NAME=`cat $SGE_ROOT/$SGE_CELL/common/cluster_name 2>/dev/null`
 
-   service="svc:/application/sge_v62/$name:$SGE_CLUSTER_NAME"
+   service="svc:/application/sge/$name:$SGE_CLUSTER_NAME"
    #Check if service exists
    /usr/bin/svcs $service > /dev/null 2>&1
    if [ $? -ne 0 ]; then

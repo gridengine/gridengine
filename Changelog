@@ -1,3 +1,8 @@
+MP-2008-01-10-0: Bugfix:    Unclear exit status in the accounting file.
+                 Bugster:   6517626
+                 Issue:     2455
+                 Review:    JG
+
 OJ-2008-01-07-0: Bugfix:    'NONE' as value is not rejected for queue_conf(5) 
                             shell and qsub(1) -S
                  Bugster:   6453563

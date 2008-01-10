@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: accounting.5,v $     Last Update: $Date: 2007/06/26 22:21:10 $     Revision: $Revision: 1.13.2.1 $
+.\" $RCSfile: accounting.5,v $     Last Update: $Date: 2008/01/10 08:12:50 $     Revision: $Revision: 1.13.2.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH ACCOUNTING 5 "$Date: 2007/06/26 22:21:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH ACCOUNTING 5 "$Date: 2008/01/10 08:12:50 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 accounting \- xxQS_NAMExx accounting file format
@@ -87,6 +87,15 @@ the same job ID.
 .SS "\fBexit_status\fP"
 Exit status of the job script (or xxQS_NAMExx specific status in case
 of certain error conditions).
+The exit status is determined by following the normal shell conventions.
+If the command terminates normally the value of the command is its exit status.
+However, in the case that the command exits abnormally, a value of 0200 (octal), 
+128 (decimal) is added to the value of the command to make up the exit status.
+.P
+.RS
+For example: If a job dies through signal 9 (SIGKILL) then the exit status 
+becomes 128 + 9 = 137.
+.RE
 .SS "\fBru_wallclock\fP"
 Difference between \fBend_time\fP and \fBstart_time\fP (see above).
 .PP

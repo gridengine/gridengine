@@ -135,28 +135,58 @@ sge_worker_initialize(sge_gdi_ctx_class_t *ctx)
 void
 sge_worker_terminate(sge_gdi_ctx_class_t *ctx)
 {
-   cl_thread_settings_t* thread = NULL;
    bool do_final_spooling;
 
    DENTER(TOP_LAYER, "sge_worker_terminate");
 
    sge_gdi_packet_queue_wakeup_all_waiting(&Master_Packet_Queue);
 
-   thread = cl_thread_list_get_first_thread(Main_Control.worker_thread_pool);
-   while (thread != NULL) {
-      DPRINTF((SFN" gets canceled\n", thread->thread_name));
-      cl_thread_list_delete_thread(Main_Control.worker_thread_pool, thread);
+   /*
+    * trigger pthread_cancel for each thread so that further 
+    * shutdown process will be faster
+    */
+   {
+      cl_thread_list_elem_t *thr = NULL;
+      cl_thread_list_elem_t *thr_nxt = NULL;
+
+      thr_nxt = cl_thread_list_get_first_elem(Main_Control.worker_thread_pool);
+      while ((thr = thr_nxt) != NULL) {
+         thr_nxt = cl_thread_list_get_next_elem(thr);
+
+         cl_thread_shutdown(thr->thread_config); 
+      }
+   }
+
+   /*
+    * Shutdown/delete the therads and wait for termination
+    */
+   {
+      cl_thread_settings_t *thread = NULL;
 
       thread = cl_thread_list_get_first_thread(Main_Control.worker_thread_pool);
-   }  
-   DPRINTF(("all "SFN"threads terminated\n", threadnames[WORKER_THREAD]));
+      while (thread != NULL) {
+         DPRINTF((SFN" gets canceled\n", thread->thread_name));
+         cl_thread_list_delete_thread(Main_Control.worker_thread_pool, thread);
+
+         thread = cl_thread_list_get_first_thread(Main_Control.worker_thread_pool);
+      }  
+      DPRINTF(("all "SFN" threads terminated\n", threadnames[WORKER_THREAD]));
+   }
 
    do_final_spooling = sge_qmaster_do_final_spooling();
 
    reporting_shutdown(ctx, NULL, do_final_spooling);
    DPRINTF(("accounting and reporting module has been shutdown\n"));
 
-   if (do_final_spooling  == true) {
+   /*
+    * final spooling is only done if the shutdown of the current instance
+    * of this master process is not triggered due to the fact that
+    * shadowd started another instance which is currently running ...
+    *
+    * ... in that case we would overwrite data which might have already
+    * changed in the second instance of the master
+    */
+   if (do_final_spooling == true) {
       sge_store_job_number(ctx, NULL, NULL);
       sge_store_ar_id(ctx, NULL, NULL);
       DPRINTF(("job/ar counter were made persistant\n"));
@@ -164,6 +194,7 @@ sge_worker_terminate(sge_gdi_ctx_class_t *ctx)
       sge_userprj_spool(ctx); /* spool the latest usage */
       DPRINTF(("final job and user/project spooling has been triggered\n"));
    }
+
    sge_shutdown_persistence(NULL);
    DPRINTF(("persistance module has been shutdown\n"));
 

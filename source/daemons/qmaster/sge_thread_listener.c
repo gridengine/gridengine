@@ -137,10 +137,24 @@ sge_listener_terminate(void)
    sge_add_event(0, sgeE_QMASTER_GOES_DOWN, 0, 0, NULL, NULL, NULL, NULL);
    DPRINTF(("triggered shutdown event for event master module\n"));
 
-   /* EB: TODO: ST: send pthread_cancel to all threads */
+   /*
+    * trigger pthread_cancel for each thread so that further 
+    * shutdown process will be faster
+    */
+   {
+      cl_thread_list_elem_t *thr = NULL;
+      cl_thread_list_elem_t *thr_nxt = NULL;
+
+      thr_nxt = cl_thread_list_get_first_elem(Main_Control.listener_thread_pool);
+      while ((thr = thr_nxt) != NULL) {
+         thr_nxt = cl_thread_list_get_next_elem(thr);
+
+         cl_thread_shutdown(thr->thread_config);
+      }
+   }
 
    /*
-    * delete all threads
+    * delete all threads and wait for termination
     */
    thread = cl_thread_list_get_first_thread(Main_Control.listener_thread_pool);
    while (thread != NULL) {

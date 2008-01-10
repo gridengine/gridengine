@@ -3968,7 +3968,7 @@ bool sge_commit(void)
    }
    sge_mutex_unlock("event_master_t_add_event_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.t_add_event_mutex);
   
-   if (ret){
+   if (ret) {
       sge_mutex_unlock("event_master_transaction_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.transaction_mutex);
    }
    

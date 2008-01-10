@@ -1302,8 +1302,7 @@ reporting_create_record(lList **answer_list,
                               REPORTING_DELIMITER,
                               type,
                               REPORTING_DELIMITER,
-                              data,
-                              REPORTING_DELIMITER);
+                              data);
    sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
 
    DRETURN(ret);

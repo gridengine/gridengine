@@ -40,6 +40,7 @@
 #define CL_DEFINE_READ_TIMEOUT                       30
 #define CL_DEFINE_WRITE_TIMEOUT                      30
 #define CL_DEFINE_ACK_TIMEOUT                        60
+#define CL_DEFINE_MESSAGE_TIMEOUT                    3600 /* default timeout for trashing received but not application fetched messages */
 #define CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT 60   /* default timeout for accepting a connection */
 #define CL_DEFINE_DELETE_MESSAGES_TIMEOUT_AFTER_CCRM 60   /* default timeout for unread message deletion after connection shutdown */
 #define CL_DEFINE_SYNCHRON_RECEIVE_TIMEOUT           60   /* default timeout for synchron send messages */

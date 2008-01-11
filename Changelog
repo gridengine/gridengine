@@ -1,3 +1,9 @@
+RD-2008-01-11-0: Bugfix:    fixed protocol issue which lead a execd to consume
+                            100% CPU time.
+                 Issue:     2457
+                 Bugster:   6649528
+                 Review:    JG
+
 RD-2007-12-23-0: Bugfix:    queue changes with an AR generated a lot of
                             unnecessary events
                  Review:    TBD

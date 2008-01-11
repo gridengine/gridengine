@@ -518,7 +518,6 @@ static int sge_send_receive_gdi2_request(sge_gdi_ctx_class_t *ctx,
    ret = sge_send_gdi2_request(1, ctx, out, &gdi_request_mid, 0, alpp);
    *commlib_error = ret;
 
-
    DPRINTF(("send request with id "sge_U32CFormat"\n", sge_u32c(gdi_request_mid)));
    if (ret != CL_RETVAL_OK) {
       if ((*commlib_error = ctx->is_alive(ctx)) != CL_RETVAL_OK) {
@@ -605,7 +604,7 @@ static int sge_send_gdi2_request(int sync, sge_gdi_ctx_class_t *ctx,
    int         id   = 1;
    
 
-   DENTER(GDI_LAYER, "sge_send_gdi2_request");
+   DENTER(TOP_LAYER, "sge_send_gdi2_request");
 
    PROF_START_MEASUREMENT(SGE_PROF_GDI_REQUEST);
 
@@ -692,7 +691,7 @@ static int sge_get_gdi2_request_async(sge_gdi_ctx_class_t *ctx,
    int tag = TAG_GDI_REQUEST; /* this is what we want */
    int ret;
 
-   DENTER(GDI_LAYER, "sge_get_gdi2_request_async");
+   DENTER(TOP_LAYER, "sge_get_gdi2_request_async");
    
    if ((*commlib_error = sge_gdi2_get_any_request(ctx, rhost, rcommproc, id, &pb, &tag, is_sync, request_mid, NULL)) != CL_RETVAL_OK) {
       DRETURN(-1);
@@ -751,7 +750,7 @@ int sge_gdi2_send_any_request(sge_gdi_ctx_class_t *ctx, int synchron, u_long32 *
 
    int         to_port   = ctx->get_sge_qmaster_port(ctx);
    
-   DENTER(GDI_LAYER, "sge_gdi2_send_any_request");
+   DENTER(TOP_LAYER, "sge_gdi2_send_any_request");
 
 
    if (rhost == NULL) {
@@ -787,12 +786,6 @@ int sge_gdi2_send_any_request(sge_gdi_ctx_class_t *ctx, int synchron, u_long32 *
    i = cl_commlib_send_message(handle, (char*) rhost, (char*) commproc, id,
                                   ack_type, (cl_byte_t*)pb->head_ptr, (unsigned long) pb->bytes_used,
                                   mid_pointer,  response_id,  tag , (cl_bool_t)1, (cl_bool_t)synchron);
-   if (i != CL_RETVAL_OK) {
-      /* try again ( if connection timed out ) */
-      i = cl_commlib_send_message(handle, (char*) rhost, (char*) commproc, id,
-                                  ack_type, (cl_byte_t*)pb->head_ptr, (unsigned long) pb->bytes_used,
-                                  mid_pointer,  response_id,  tag , (cl_bool_t)1, (cl_bool_t)synchron);
-   }
 
    dump_send_info(rhost, commproc, id, ack_type, tag, mid_pointer);
    

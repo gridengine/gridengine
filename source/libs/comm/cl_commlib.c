@@ -161,6 +161,7 @@ static cl_raw_list_t*  cl_com_thread_list = NULL;
 static pthread_mutex_t cl_com_application_error_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 static cl_raw_list_t*  cl_com_application_error_list = NULL;
 
+static void cl_commlib_app_message_queue_cleanup(cl_com_handle_t* handle);
 
 
 /* global flags/variables */
@@ -982,6 +983,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    new_handle->open_connection_timeout = CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT;
    new_handle->close_connection_timeout = CL_DEFINE_DELETE_MESSAGES_TIMEOUT_AFTER_CCRM;
    new_handle->acknowledge_timeout = CL_DEFINE_ACK_TIMEOUT;
+   new_handle->message_timeout = CL_DEFINE_MESSAGE_TIMEOUT;
    new_handle->select_sec_timeout = sec_param;
    new_handle->select_usec_timeout = usec_rest;
    new_handle->synchron_receive_timeout = CL_DEFINE_SYNCHRON_RECEIVE_TIMEOUT;  /* default from old commlib */
@@ -2792,6 +2794,8 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
       elem = cl_connection_list_get_next_elem(elem);
    }
 
+   cl_commlib_app_message_queue_cleanup(handle);
+
    /* now take list entry and add it at least if there are more connections */
    /* this must be done in order to NOT prefer the first connection in list */
    if ( cl_raw_list_get_elem_count(handle->connection_list) > 1) {
@@ -3181,7 +3185,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
          CL_LOG_STR_STR_INT(CL_LOG_INFO, "received message from:", connection->receiver->comp_host,
                                                                       connection->receiver->comp_name,
                                                                       (int)connection->receiver->comp_id); 
-    
+   
          gettimeofday(&message->message_receive_time,NULL);
          /* set last transfer time of connection */
          memcpy(&connection->last_transfer_time,&message->message_receive_time,sizeof (struct timeval));
@@ -3234,7 +3238,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
       /* send a message acknowledge when message arives at commlib layer */
       if (message->message_state == CL_MS_READY) {
          /* send acknowledge for CL_MIH_MAT_ACK type (application removed message from buffer) */
-         if ( message->message_mat == CL_MIH_MAT_ACK) {
+         if (message->message_mat == CL_MIH_MAT_ACK) {
             cl_commlib_send_ack_message(connection, message);
          } 
       }
@@ -4624,10 +4628,6 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
                            the response id is not the same. -> We have to wait for the correct message */
                         if ( response_mid > connection->last_send_message_id || connection->last_send_message_id == 0 ) {
                            CL_LOG(CL_LOG_WARNING, "protocol error: can't wait for unsent message!!!");
-                           cl_raw_list_unlock(connection->received_message_list);
-                           cl_raw_list_unlock(handle->received_message_queue);
-                           pthread_mutex_unlock(handle->messages_ready_mutex);
-                           return CL_RETVAL_PROTOCOL_ERROR;
                         }
 
                         if ( response_mid > message_elem->message->message_response_id ) {
@@ -4737,6 +4737,19 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
          cl_raw_list_unlock(handle->received_message_queue); 
          pthread_mutex_unlock(handle->messages_ready_mutex);
          CL_LOG(CL_LOG_INFO,"got no message, but thought there should be one");
+
+         /* cl_commlib_received is used together with cl_commlib_trigger.
+            If the received message list is not empty the trigger does not
+            sleep and if the desired message is not in the list this 
+            behaviour would cause the application to use 100% CPU. To
+            prevent this we do the core part of the trigger and wait
+            for the timeout or till a new message was received */
+         if (cl_com_create_threads == CL_RW_THREAD) {
+            cl_thread_wait_for_thread_condition(handle->app_condition ,
+                                                         handle->select_sec_timeout,
+                                                         handle->select_usec_timeout);
+         }
+
       } else {
          pthread_mutex_unlock(handle->messages_ready_mutex);
 
@@ -7190,6 +7203,8 @@ static void *cl_com_handle_read_thread(void *t_conf) {
          /* cleanup all trigger events */
          cl_thread_clear_events(thread_config);
       }
+
+      cl_commlib_app_message_queue_cleanup(handle);
    }
 
    CL_LOG(CL_LOG_INFO, "exiting ...");
@@ -7570,3 +7585,47 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases) {
    return ret_val;
 }
 
+static void cl_commlib_app_message_queue_cleanup(cl_com_handle_t* handle) {
+   /*
+      do some connection cleanup
+      - remove received messages not fetched by application
+    */
+   pthread_mutex_lock(handle->messages_ready_mutex); 
+   if (handle->messages_ready_for_read != 0) {
+      cl_app_message_queue_elem_t* app_mq_elem = NULL;
+      struct timeval now;
+      long timeout_time = 0;
+      cl_com_connection_t* connection = NULL;
+
+      /* compute timeout */
+      gettimeofday(&now, NULL);
+
+      cl_raw_list_lock(handle->received_message_queue);
+      app_mq_elem = cl_app_message_queue_get_first_elem(handle->received_message_queue);
+      while(app_mq_elem) {
+         cl_message_list_elem_t* message_elem = NULL;
+         cl_message_list_elem_t* next_message_elem = NULL;
+
+         connection = app_mq_elem->rcv_connection;
+         app_mq_elem = cl_app_message_queue_get_next_elem(app_mq_elem);
+
+         cl_raw_list_lock(connection->received_message_list);
+         next_message_elem = cl_message_list_get_first_elem(connection->received_message_list);
+         while(next_message_elem) {
+            message_elem = next_message_elem;
+            next_message_elem = cl_message_list_get_next_elem(message_elem);
+            timeout_time = message_elem->message->message_receive_time.tv_sec + handle->acknowledge_timeout;
+            if (timeout_time <= now.tv_sec) {
+               cl_com_message_t* message = message_elem->message;
+               cl_message_list_remove_receive(connection, message, 0);
+               handle->messages_ready_for_read = handle->messages_ready_for_read - 1;
+               cl_app_message_queue_remove(handle->received_message_queue, connection, 0, CL_FALSE);
+               cl_com_free_message(&message);
+            }
+         }
+         cl_raw_list_unlock(connection->received_message_list);
+      }
+      cl_raw_list_unlock(handle->received_message_queue);
+   }
+   pthread_mutex_unlock(handle->messages_ready_mutex);
+}

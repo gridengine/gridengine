@@ -135,9 +135,8 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx, char* err_str, void (*e
          clear_packbuffer(&(msg.buf));
          if (is_apb_used) {
             if (pb_filled(&apb)) {
-               u_long32 dummyid = 0;
                gdi2_send_message_pb(ctx, 0, msg.snd_name, msg.snd_id, msg.snd_host, 
-                                atag, &apb, &dummyid);
+                                atag, &apb, NULL);
             }
             clear_packbuffer(&apb);
          }

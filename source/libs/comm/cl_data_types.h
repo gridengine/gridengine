@@ -337,6 +337,7 @@ typedef struct cl_com_handle {
    int write_timeout;
    int open_connection_timeout; 
    int acknowledge_timeout;
+   int message_timeout;      /* timeout when to trash message from the received message queue */
    int synchron_receive_timeout;
    int last_heard_from_timeout;      /* do not use, just for compatibility */
    

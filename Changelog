@@ -1,3 +1,9 @@
+RD-2008-01-11-0: Bugfix:    fixed protocol issue which lead a execd to consume
+                            100% CPU time.
+                 Issue:     2457
+                 Bugster:   6649528
+                 Review:    JG
+
 LP-2008-01-10-0: Enhancem.: Added correct permissions for SMF files to disinst
                  Enhancem.: Improved sge_smf_support.sh
                  Enhancem.: Removed version string v62 from the service names

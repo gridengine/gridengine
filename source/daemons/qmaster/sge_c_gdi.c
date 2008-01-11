@@ -744,6 +744,7 @@ sge_c_gdi_del(sge_gdi_ctx_class_t *ctx,
       for_each (ep, task->data_list) {
 
          MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
+         sge_set_commit_required();
 
          /* try to remove the element */
          switch (task->target)
@@ -759,9 +760,7 @@ sge_c_gdi_del(sge_gdi_ctx_class_t *ctx,
                break;
 
             case SGE_JOB_LIST:
-               sge_set_commit_required();
                sge_gdi_del_job(ctx, ep, &(task->answer_list), packet->user, packet->host, sub_command, monitor);
-               sge_commit();
                break;
 
             case SGE_CENTRY_LIST:
@@ -821,6 +820,7 @@ sge_c_gdi_del(sge_gdi_ctx_class_t *ctx,
                break;
          } /* switch target */
            
+         sge_commit();
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       } /* for_each element */
    }

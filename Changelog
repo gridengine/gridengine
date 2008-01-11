@@ -1,3 +1,9 @@
+AH-2008-01-11-0: Bugfix:    Inefficient single-job event commit pattern with qdel 
+                            jobid1 jobid2 jobid3
+                 Bugster:   6649547
+                 Issue:     2458
+                 Review:    TBD
+
 MD-2008-01-11-0: Bugfix:    fixed memory allocation bug in getloadavg
                             which was introduced with one of the last checkins
                  Review:    JG

@@ -43,6 +43,7 @@
 #include "sge_log.h"
 #include "sgermon.h"
 #include "sge_getloadavg.h"
+#include "sge_stdlib.h"
 
 #if defined(SOLARIS) 
 #  include <nlist.h> 
@@ -392,8 +393,8 @@ int Ncpus;
 #if defined(SOLARIS)
 
 static kstat_ctl_t *kc = NULL;
-static kstat_t **cpu_ks;
-static cpu_stat_t *cpu_stat;
+static kstat_t **cpu_ks = NULL;
+static cpu_stat_t *cpu_stat = NULL;
 
 #define UPDKCID(nk,ok) \
 if (nk == -1) { \
@@ -494,7 +495,7 @@ int kupdate(int avenrun[3])
 
             cpu_ks[ncpu] = ks;
             ncpu++;
-            if (ncpu > ncpus) {
+            if (ncpu >= ncpus) {
                fprintf(stderr, "kstat finds too many cpus: should be %d\n", ncpus);
                return -1;
             }

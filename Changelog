@@ -1,3 +1,7 @@
+MD-2008-01-11-0: Bugfix:    fixed memory allocation bug in getloadavg
+                            which was introduced with one of the last checkins
+                 Review:    JG
+
 RD-2008-01-11-0: Bugfix:    fixed protocol issue which lead a execd to consume
                             100% CPU time.
                  Issue:     2457

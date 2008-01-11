@@ -1,3 +1,7 @@
+MD-2008-01-11-0: Bugfix:    fixed memory allocation bug in getloadavg
+                            which was introduced with one of the last checkins
+                 Review:    JG
+
 MP-2008-01-10-0: Bugfix:    Unclear exit status in the accounting file.
                  Bugster:   6517626
                  Issue:     2455

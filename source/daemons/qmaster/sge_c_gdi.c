@@ -741,10 +741,10 @@ sge_c_gdi_del(sge_gdi_ctx_class_t *ctx,
          return;
       }
 
-      for_each (ep, task->data_list) {
+      MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
+      sge_set_commit_required();
 
-         MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
-         sge_set_commit_required();
+      for_each (ep, task->data_list) {
 
          /* try to remove the element */
          switch (task->target)
@@ -820,9 +820,10 @@ sge_c_gdi_del(sge_gdi_ctx_class_t *ctx,
                break;
          } /* switch target */
            
-         sge_commit();
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       } /* for_each element */
+
+      sge_commit();
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
    }
 
    DEXIT;

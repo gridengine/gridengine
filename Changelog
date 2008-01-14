@@ -1,3 +1,9 @@
+MP-2008-01-14-0: Bugfix:    filtering of qstat has broken shell_path and 
+                            missing project fields.
+                 Bugster:   6640688, 6647620
+                 Issue:     2460, 2461
+                 Review:    JG
+
 MD-2008-01-11-0: Bugfix:    fixed memory allocation bug in getloadavg
                             which was introduced with one of the last checkins
                  Review:    JG

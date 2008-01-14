@@ -447,7 +447,7 @@ fi
          MoveLog
       fi
 
-      exit 1
+      exit 2 # ToDo: documentation, do not change, exit code used for hedeby
    fi
 }
 

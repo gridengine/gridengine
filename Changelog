@@ -1,3 +1,8 @@
+MD-2008-01-14-0: Bugfix:    fixed commlib CRM message xml parser 
+                 Review:    CR
+                 Bugfix:    fixed wrong inst_sge exit code
+                 Changed:   commlib, inst_sge
+ 
 AH-2008-01-11-0: Bugfix:    Inefficient single-job event commit pattern with qdel 
                             jobid1 jobid2 jobid3
                  Bugster:   6649547

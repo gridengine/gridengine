@@ -1,3 +1,7 @@
+MD-2008-01-15-0: Bugfix:    merged from maintrunk (MD-2008-01-15-0), perfomance
+                            issue, iintroduced with checkin  MD-2007-10-04-0
+                 Changed:   commlib
+
 MP-2008-01-14-0: Bugfix:    filtering of qstat has broken shell_path and 
                             missing project fields.
                  Bugster:   6640688, 6647620

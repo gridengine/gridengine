@@ -290,8 +290,7 @@ int cl_com_set_status_func(cl_app_status_func_t status_func) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_get_parameter_list_value()"
-int cl_com_get_parameter_list_value(char* parameter, char** value) 
-{
+int cl_com_get_parameter_list_value(char* parameter, char** value) {
    cl_parameter_list_elem_t* elem = NULL;
    int retval = CL_RETVAL_UNKNOWN_PARAMETER;
 
@@ -6746,19 +6745,6 @@ cl_commlib_send_message(cl_com_handle_t* handle, char *un_resolved_hostname,
       return_value = cl_commlib_check_for_ack(handle, receiver.comp_host, component_name, component_id, my_mid, CL_TRUE);
       free(unique_hostname);
 
-      {
-         char* gdi_timeout = NULL;
-         int timeout = 0;
-         int retval = 0;
-         retval = cl_com_get_parameter_list_value("gdi_timeout", &gdi_timeout);
-         if (retval != CL_RETVAL_OK || gdi_timeout == NULL) {
-            cl_com_set_synchron_receive_timeout(handle, 60);
-         } else {
-            timeout = atoi(gdi_timeout);
-            cl_com_set_synchron_receive_timeout(handle, timeout);
-            free(gdi_timeout);
-         }
-      }
    }
    return return_value;
 }

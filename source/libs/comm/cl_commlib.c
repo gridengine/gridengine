@@ -353,7 +353,6 @@ int cl_com_set_parameter_list_value(char* parameter, char* value) {
       return CL_RETVAL_PARAMS;
    }
 
-
    pthread_mutex_lock(&cl_com_parameter_list_mutex);
 
    cl_raw_list_lock(cl_com_parameter_list);
@@ -6556,7 +6555,7 @@ cl_commlib_send_message(cl_com_handle_t* handle, char *un_resolved_hostname,
          }
          return CL_RETVAL_SEND_ERROR;
       } 
-    
+   
       if (ack_type == CL_MIH_MAT_NAK) {
          free(unique_hostname);
          free(receiver.hash_id);
@@ -6574,19 +6573,6 @@ cl_commlib_send_message(cl_com_handle_t* handle, char *un_resolved_hostname,
       free(unique_hostname);
       free(receiver.hash_id);
 
-      {
-         char* gdi_timeout = NULL;
-         int timeout = 0;
-         int retval = 0;
-         retval = cl_com_get_parameter_list_value("gdi_timeout", &gdi_timeout);
-         if (retval != CL_RETVAL_OK || gdi_timeout == NULL) {
-            cl_com_set_synchron_receive_timeout(handle, 60);
-         } else {
-            timeout = atoi(gdi_timeout);
-            cl_com_set_synchron_receive_timeout(handle, timeout);
-            free(gdi_timeout);
-         }
-      }
    }
    return return_value;
 }

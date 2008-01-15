@@ -47,6 +47,7 @@
 
 #include "msg_qmaster.h"
 
+static unsigned long spooling_wait_time = 0;
 
 bool
 sge_initialize_persistence(sge_gdi_ctx_class_t *ctx, lList **answer_list)
@@ -59,6 +60,10 @@ sge_initialize_persistence(sge_gdi_ctx_class_t *ctx, lList **answer_list)
    const char *spooling_params = ctx->get_spooling_params(ctx);
 
    DENTER(TOP_LAYER, "sge_initialize_persistence");
+
+   if (getenv("SGE_TEST_SPOOLING_WAIT_TIME_US") != NULL) {
+         spooling_wait_time=atoi(getenv("SGE_TEST_SPOOLING_WAIT_TIME_US"));
+   }
 
    /* create spooling context */
    spooling_context = spool_create_dynamic_context(answer_list, 
@@ -235,10 +240,12 @@ sge_event_spool(sge_gdi_ctx_class_t *ctx,
 
    DENTER(TOP_LAYER, "sge_event_spool");
 
-   if (getenv("SGE_TEST_SPOOLING_WAIT_TIME_US") != NULL) {
+   /*for testing a fixed gid_error, this has been introduced. We need it to slowdown*/
+   /*the spooling mechanism, to simulate the situation where this error appears*/ 
+   if (spooling_wait_time != 0) {
       static unsigned long sleep_time = 0;
       if (sleep_time == 0) {
-         sleep_time = atoi(getenv("SGE_TEST_SPOOLING_WAIT_TIME_US"));
+         sleep_time = spooling_wait_time;
       }
       usleep(sleep_time);
       sleep_time = sleep_time + 100000;

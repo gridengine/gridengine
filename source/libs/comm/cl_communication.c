@@ -4354,12 +4354,28 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
 
                sub_token1 = sge_strtok_r(token, "=", &context2);
                sub_token2 = sge_strtok_r(NULL, "=", &context2);
+               CL_LOG_STR(CL_LOG_INFO,"setting parameter, got from CRM:", sub_token1);
+               CL_LOG_STR(CL_LOG_INFO,"setting value, got from CRM:", sub_token2);
                cl_com_set_parameter_list_value(sub_token1, sub_token2);
                sge_free_saved_vars(context2);
 
                token = sge_strtok_r(NULL, ":", &context);
             }
             sge_free_saved_vars(context);
+         }
+
+         {
+            char* gdi_timeout = NULL;
+            int timeout = 0;
+            int retval = 0;
+            retval = cl_com_get_parameter_list_value("gdi_timeout", &gdi_timeout);
+            if (retval != CL_RETVAL_OK || gdi_timeout == NULL) {
+               cl_com_set_synchron_receive_timeout(connection->handler, 60);
+            } else {
+               timeout = atoi(gdi_timeout);
+               cl_com_set_synchron_receive_timeout(connection->handler, timeout);
+               free(gdi_timeout);
+            }
          }
  
          cl_com_free_crm_message(&crm_message);

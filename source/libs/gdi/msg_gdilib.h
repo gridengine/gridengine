@@ -123,6 +123,7 @@
 #define MSG_GDI_GDI_VERIFY_REQUEST_FAILED                _MESSAGE(43130, _("verification of request failed"))
 #define MSG_GDI_MISMATCH_SEND_RECEIVE                    _MESSAGE(43131, _("GDI mismatch"))
 #define MSG_GDI_MEMORY_NOTENOUGHMEMORYFORPACKINGGDIREQUEST        _MESSAGE(43132, _("not enough memory for packing gdi request"))
+#define MSG_GDI_SYNCRECEIVETIMEOUT                       _MESSAGE(43133, _("got gdi request receive timeout"))
 
 /**
  * cull/cull_where.c

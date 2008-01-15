@@ -1,3 +1,5 @@
+MD-2008-01-15-1: Enhancem:  changed ge_lint script from lint to splint
+
 MD-2008-01-15-0: Bugfix:    merged from maintrunk (MD-2008-01-15-0), perfomance
                             issue, iintroduced with checkin  MD-2007-10-04-0
                  Changed:   commlib

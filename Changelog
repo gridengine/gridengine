@@ -1,3 +1,8 @@
+AH-2008-01-16-1: Bugfix:    Parallel scheduling memory leak in sge_schedd
+                 Bugster:   6562190
+                 Issue:     2187
+                 Review:    JG
+
 JG-2008-01-08-0: Bugfix:    accounting records for parallel job tasks didn't
                             contain the task submission time.
                             Merge of JG-2008-01-03-0 from V61_BRANCH.

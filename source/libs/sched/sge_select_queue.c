@@ -470,6 +470,7 @@ sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
             
             if (result != DISPATCH_OK) {
                best_result = find_best_result(best_result, result);
+               assignment_release(&tmp);
                continue;
             }
 
@@ -518,6 +519,7 @@ sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
             result = parallel_maximize_slots_pe(&tmp, &available_slots);
                         
             if (result != DISPATCH_OK) {
+               assignment_release(&tmp);
                schedd_mes_add(best->job_id, SCHEDD_INFO_PESLOTSNOTINRANGE_SI, pe_name, available_slots); 
                best_result = find_best_result(best_result, result);
                continue;
@@ -872,8 +874,6 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots) {
    DPRINTF(("MAXIMIZE SLOT FOR "sge_u32" using \"%s\" FROM %d TO %d\n", 
       best->job_id, pe_name, min_slots, max_slots));
 
-   assignment_copy(&tmp, best, false);
-
    old_logging = schedd_mes_get_logging(); /* store logging mode */  
 
    if ((max_slots < min_slots) ||
@@ -893,6 +893,8 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots) {
       DRETURN(DISPATCH_NEVER_CAT);
    }
    
+   assignment_copy(&tmp, best, false);
+
    /* --- work on the different slot ranges and try to find the best one --- */
    if (alg == SCHEDD_PE_BINARY) {
       int min = 0; 
@@ -916,6 +918,7 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots) {
         
          if (result == DISPATCH_OK) {
             assignment_copy(best, &tmp, true);
+            assignment_release(&tmp);
             match_current = current;
             min = current + 1;
          }
@@ -957,6 +960,7 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots) {
             
             match_current = current;
             assignment_copy(best, &tmp, true);
+            assignment_release(&tmp);
          }
       }
       else { /* optimistic search */
@@ -976,6 +980,7 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots) {
 
             if (result == DISPATCH_OK) {          /* we have a match, stop */
                assignment_copy(best, &tmp, true); /* all other runs will also match */
+               assignment_release(&tmp);
                match_current = current;
                break;
             } /* end if*/
@@ -1110,6 +1115,8 @@ sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host,
       }
       if (q_access == 0) {
          DPRINTF(("no access\n"));
+         assignment_release(&a);
+         DEXIT;
          return false; 
       } else {
          DPRINTF(("ok\n"));
@@ -1122,11 +1129,13 @@ sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host,
       if ( (project = lGetString(job, JB_project)) ) { 
          if ((!(projects = lGetList(queue, QU_projects)))) {
             DPRINTF(("no access because queue has no project\n"));
+            assignment_release(&a);
             DEXIT;
             return false;
          }
          if ((!userprj_list_locate(projects, project))) {
             DPRINTF(("no access because project not contained in queues project list"));
+            assignment_release(&a);
             DEXIT;
             return false;
          }
@@ -1138,6 +1147,7 @@ sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host,
             if (((project = lGetString(job, JB_project)) &&
                  userprj_list_locate(projects, project))) {
                DPRINTF(("no access\n"));
+               assignment_release(&a);
                DEXIT;
                return false;
             }
@@ -1163,6 +1173,7 @@ sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host,
             DPRINTF(("denied because queue \"%s\" is not contained in the hard "
                      "queue list (-q) that was requested by job %d\n",
                      qname, lGetUlong(job, JB_job_number)));
+            assignment_release(&a);
             DEXIT; 
             return false;
          }

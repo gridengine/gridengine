@@ -1,3 +1,8 @@
+AH-2008-01-16-0: Bugfix:    Parallel scheduling memory leak in sge_schedd
+                 Bugster:   6562190
+                 Issue:     2187
+                 Review:    JG
+
 MD-2008-01-15-1: Enhancem:  changed ge_lint script from lint to splint
 
 MD-2008-01-15-0: Bugfix:    merged from maintrunk (MD-2008-01-15-0), perfomance

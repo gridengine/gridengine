@@ -432,6 +432,7 @@ sge_select_parallel_environment(sge_assignment_t *best, lList *pe_list)
             if (result != DISPATCH_OK) {
                schedd_mes_add(best->job_id, SCHEDD_INFO_PESLOTSNOTINRANGE_SI, pe_name, best->slots); 
                best_result = find_best_result(best_result, result);
+               assignment_release(&tmp);
                continue;
             }
 
@@ -448,57 +449,58 @@ sge_select_parallel_environment(sge_assignment_t *best, lList *pe_list)
    } else {
        /* now assignments */
   
-         for_each(pe, pe_list) {
+      for_each(pe, pe_list) {
 
-            if (!pe_is_matching(pe, pe_request)) {
+         if (!pe_is_matching(pe, pe_request)) {
+            continue;
+         }
+
+         pe_name = lGetString(pe, PE_name);
+         matched_pe_count++;
+
+         if (best->gdil == NULL) {
+            int available_slots = 0;
+            best->pe = pe;
+            best->pe_name = pe_name;
+            result = parallel_maximize_slots_pe(best, &available_slots);
+
+            if (result != DISPATCH_OK) {
+               schedd_mes_add(best->job_id, SCHEDD_INFO_PESLOTSNOTINRANGE_SI, pe_name, available_slots); 
+               best_result = find_best_result(best_result, result);
+               continue;
+            }
+            DPRINTF(("### first ### assignment in PE \"%s\" with %d soft violations\n",
+                  pe_name, best->soft_violations));
+         } else {
+            int available_slots = 0;
+            sge_assignment_t tmp = SGE_ASSIGNMENT_INIT;
+
+            assignment_copy(&tmp, best, false);
+            tmp.pe = pe;
+            tmp.pe_name = pe_name;
+
+            result = parallel_maximize_slots_pe(&tmp, &available_slots);
+                        
+            if (result != DISPATCH_OK) {
+               assignment_release(&tmp);
+               schedd_mes_add(best->job_id, SCHEDD_INFO_PESLOTSNOTINRANGE_SI, pe_name, available_slots); 
+               best_result = find_best_result(best_result, result);
                continue;
             }
 
-            pe_name = lGetString(pe, PE_name);
-            matched_pe_count++;
-
-            if (best->gdil == NULL) {
-               int available_slots = 0;
-               best->pe = pe;
-               best->pe_name = pe_name;
-               result = parallel_maximize_slots_pe(best, &available_slots);
-
-               if (result != DISPATCH_OK) {
-                  schedd_mes_add(best->job_id, SCHEDD_INFO_PESLOTSNOTINRANGE_SI, pe_name, available_slots); 
-                  best_result = find_best_result(best_result, result);
-                  continue;
-               }
-               DPRINTF(("### first ### assignment in PE \"%s\" with %d soft violations\n",
-                     pe_name, best->soft_violations));
-            } else {
-               int available_slots = 0;
-               sge_assignment_t tmp = SGE_ASSIGNMENT_INIT;
-
-               assignment_copy(&tmp, best, false);
-               tmp.pe = pe;
-               tmp.pe_name = pe_name;
-
-               result = parallel_maximize_slots_pe(&tmp, &available_slots);
-                           
-               if (result != DISPATCH_OK) {
-                  schedd_mes_add(best->job_id, SCHEDD_INFO_PESLOTSNOTINRANGE_SI, pe_name, available_slots); 
-                  best_result = find_best_result(best_result, result);
-                  continue;
-               }
-
-               if ((tmp.slots > best->slots) || 
-                   (tmp.start == best->start && 
-                    tmp.soft_violations < best->soft_violations)) {
-                  assignment_copy(best, &tmp, true);
-                  DPRINTF(("### better ### assignment in PE \"%s\" with %d soft violations\n",
-                           pe_name, best->soft_violations));
-               }
-
-               assignment_release(&tmp);
+            if ((tmp.slots > best->slots) || 
+                (tmp.start == best->start && 
+                 tmp.soft_violations < best->soft_violations)) {
+               assignment_copy(best, &tmp, true);
+               DPRINTF(("### better ### assignment in PE \"%s\" with %d soft violations\n",
+                        pe_name, best->soft_violations));
             }
+
+            assignment_release(&tmp);
          }
       }
-    
+   }
+
 
    if (matched_pe_count == 0) {
       schedd_mes_add(best->job_id, SCHEDD_INFO_NOPEMATCH_ ); 
@@ -827,8 +829,6 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots)
    DPRINTF(("MAXIMIZE SLOT FOR "sge_u32" using \"%s\" FROM %d TO %d\n", 
       best->job_id, pe_name, min_slots, max_slots));
 
-   assignment_copy(&tmp, best, false);
-
    old_logging = schedd_mes_get_logging(); /* store logging mode */  
 
    if ((max_slots < min_slots) ||
@@ -848,6 +848,8 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots)
       DRETURN(DISPATCH_NEVER_CAT);
    }
    
+   assignment_copy(&tmp, best, false);
+
    /* --- work on the different slot ranges and try to find the best one --- */
    if (alg == SCHEDD_PE_BINARY) {
       int min = 0; 
@@ -873,6 +875,7 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots)
         
          if (result == DISPATCH_OK) {
             assignment_copy(best, &tmp, true);
+            assignment_release(&tmp);
             match_current = current;
             min = current + 1;
          } else {
@@ -915,6 +918,7 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots)
             
             match_current = current;
             assignment_copy(best, &tmp, true);
+            assignment_release(&tmp);
          }
       }
       else { /* optimistic search */
@@ -936,6 +940,7 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots)
 
             if (result == DISPATCH_OK) {          /* we have a match, stop */
                assignment_copy(best, &tmp, true); /* all other runs will also match */
+               assignment_release(&tmp);
                match_current = current;
                break;
             }
@@ -1071,6 +1076,7 @@ sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host,
       }
       if (q_access == 0) {
          DPRINTF(("no access\n"));
+         assignment_release(&a);
          DRETURN(false); 
       } else {
          DPRINTF(("ok\n"));
@@ -1083,10 +1089,12 @@ sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host,
       if ( (project = lGetString(job, JB_project)) ) { 
          if ((!(projects = lGetList(queue, QU_projects)))) {
             DPRINTF(("no access because queue has no project\n"));
+            assignment_release(&a);
             DRETURN(false);
          }
          if ((!userprj_list_locate(projects, project))) {
             DPRINTF(("no access because project not contained in queues project list"));
+            assignment_release(&a);
             DRETURN(false);
          }
          DPRINTF(("ok\n"));
@@ -1097,6 +1105,7 @@ sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host,
             if (((project = lGetString(job, JB_project)) &&
                  userprj_list_locate(projects, project))) {
                DPRINTF(("no access\n"));
+               assignment_release(&a);
                DRETURN(false);
             }
          }
@@ -1121,6 +1130,7 @@ sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host,
             DPRINTF(("denied because queue \"%s\" is not contained in the hard "
                      "queue list (-q) that was requested by job %d\n",
                      qname, lGetUlong(job, JB_job_number)));
+            assignment_release(&a);
             DRETURN(false);
          }
       }

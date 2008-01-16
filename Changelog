@@ -1,3 +1,6 @@
+LP-2008-01-16-0: Bugfix:    SMF was used in autoinstall with missing SGE_ENABLE_SMF
+                 Review:    CR
+
 EB-2008-01-16-0: Enhancem.: Added missing qconf manpage entries
                  Review:    JG
 

@@ -525,6 +525,9 @@ ErrUsage()
 #
 GetConfigFromFile()
 {
+  SGE_ENABLE_SMF_LAST=$SGE_ENABLE_SMF
+  SGE_ENABLE_SMF=""
+
   IFS="
 "
   if [ $FILE != "undef" ]; then
@@ -536,6 +539,12 @@ GetConfigFromFile()
   IFS="   
 "
    CheckConfigFile
+
+   #-nosmf takes precedence over the value in the autoinstall template
+   if [ "$SGE_ENABLE_SMF_LAST" = false ]; then
+      SGE_ENABLE_SMF=false;
+   fi
+
    if [ "$BACKUP" = "false" ]; then
       SGE_CELL=$CELL_NAME
       DB_SPOOLING_SERVER=`ResolveHosts $DB_SPOOLING_SERVER`
@@ -597,6 +606,15 @@ CheckConfigFile()
       $INFOTEXT -log "The SGE_EXECD_PORT has not been set in config file!\n"
       MoveLog
       exit 1
+   fi
+
+   if [ "$SGE_SMF_ENABLE" = "" ]; then
+      $INFOTEXT -log "The SGE_SMF_ENABLE has not been set in config file!\n"
+      #If -nosmf was specified we don't require the SGE_SMF_ENABLE to be set
+      if [ "$SGE_SMF_ENABLE_LAST" != false ]; then  
+         MoveLog
+         exit 1
+      fi
    fi
 
    if [ "$SGE_ENABLE_JMX" = true ]; then

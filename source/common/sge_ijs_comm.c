@@ -61,7 +61,7 @@ static void ijs_general_communication_error(
 {
    /* ignore errors */
 }
-/*
+#if 0 
  * only for debugging
 int my_log_list_flush_list(cl_raw_list_t* list_p) {        /* CR check */
    int ret_val;
@@ -136,7 +136,7 @@ int my_log_list_flush_list(cl_raw_list_t* list_p) {        /* CR check */
    } 
    return CL_RETVAL_OK;
 }
-*/
+#endif
 
 
 /****** sge_ijs_comm/comm_init_lib() *******************************************

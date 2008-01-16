@@ -1,3 +1,6 @@
+HP-2008-01-16-1: Bugfix:    Fixed broken build on irix65 after checkin HP-2008-01-16-0
+                 Changed:   sge_ijs_comm.c, sge_shepherd_ijs.c
+
 HP-2008-01-16-0: Bugfix:    Fixed several bugs in new IJS regarding faulty
                             pthreads implementation on some architectures,
                             added commlib tracing to shepherd,

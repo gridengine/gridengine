@@ -151,7 +151,7 @@ static int messages_in_send_queue(COMMUNICATION_HANDLE *handle)
       }
       cl_raw_list_unlock(handle->connection_list);
    } 
-   return elems;
+   return (int)elems;
 }
 
 /****** append_to_buf() ******************************************************

@@ -43,6 +43,7 @@ int thread_cleanup_lib(THREAD_LIB_HANDLE **thread_lib_handle);
 
 int create_thread(THREAD_LIB_HANDLE *thread_lib_handle,
                   THREAD_HANDLE **thread,
+                  cl_raw_list_t *log_list,
                   const char *thread_name,
                   int thread_id,
                   void* thread_func(void*));

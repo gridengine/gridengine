@@ -45,11 +45,12 @@ int thread_cleanup_lib(THREAD_LIB_HANDLE **thread_lib_handle)
 
 int create_thread(THREAD_LIB_HANDLE *thread_lib_handle,
                   THREAD_HANDLE **thread,
+                  cl_raw_list_t *log_list,
                   const char *thread_name,
                   int thread_id,
                   void* thread_func(void*))
 {
-   return cl_thread_list_create_thread(thread_lib_handle, thread, NULL, 
+   return cl_thread_list_create_thread(thread_lib_handle, thread, log_list, 
                                        thread_name, thread_id,
                                        thread_func, NULL, NULL);
 }
@@ -111,6 +112,7 @@ int thread_join(THREAD_HANDLE *thread)
 int thread_setcancelstate(int enabled)
 {
    int state = enabled != 0 ? PTHREAD_CANCEL_ENABLE : PTHREAD_CANCEL_DISABLE;
+   pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
    return pthread_setcancelstate(state, NULL);
 }
 

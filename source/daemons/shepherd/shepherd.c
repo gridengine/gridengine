@@ -2912,4 +2912,5 @@ static void shepherd_signal_handler(int dummy) {
 #if 0
    shepherd_trace("SIGPIPE received");
 #endif
+   received_signal = dummy;
 }

@@ -61,6 +61,83 @@ static void ijs_general_communication_error(
 {
    /* ignore errors */
 }
+/*
+ * only for debugging
+int my_log_list_flush_list(cl_raw_list_t* list_p) {        /* CR check */
+   int ret_val;
+   cl_log_list_elem_t* elem = NULL;
+   struct timeval now;
+
+   FILE *fp = NULL;
+
+   
+   if (list_p == NULL) {
+      return CL_RETVAL_LOG_NO_LOGLIST;
+   }
+
+   if ((ret_val = cl_raw_list_lock(list_p)) != CL_RETVAL_OK) {
+      return ret_val;
+   }
+
+   if ((fp = fopen("/tmp/cl_log.txt", "a")) == NULL) {
+      return CL_RETVAL_NOT_OPEN; 
+   }
+
+   while ((elem = cl_log_list_get_first_elem(list_p)) != NULL) {
+      /* TODO: rework logging output (log to file? call foreign log function, got by function pointer ?) */
+
+      gettimeofday(&now,NULL);
+
+      fprintf(fp, "%-76s|", elem->log_module_name);
+      if (elem->log_parameter == NULL) {
+#define CL_COM_PRINT_THREAD_ID 0
+
+#if CL_COM_PRINT_THREAD_ID
+         fprintf(fp, "%ld.%ld|%20s|%4d|%10s|%8s| %s\n",
+#else
+         fprintf(fp, "%ld.%ld|%20s|%10s|%8s| %s\n",
+#endif
+
+         (long)now.tv_sec,
+         (long)now.tv_usec,
+         elem->log_thread_name,
+#if CL_COM_PRINT_THREAD_ID
+         elem->log_thread_id, 
+#endif
+         cl_thread_convert_state_id(elem->log_thread_state),
+         cl_log_list_convert_type_id(elem->log_type),
+         elem->log_message);
+      } else {
+#if CL_COM_PRINT_THREAD_ID
+         fprintf(fp, "%ld.%ld|%20s|%4d|%10s|%8s| %s %s\n",
+#else
+         fprintf(fp, "%ld.%ld|%20s|%10s|%8s| %s %s\n",
+#endif
+
+         (long)now.tv_sec,
+         (long)now.tv_usec,
+         elem->log_thread_name,
+#if CL_COM_PRINT_THREAD_ID
+         elem->log_thread_id, 
+#endif
+         cl_thread_convert_state_id(elem->log_thread_state),
+         cl_log_list_convert_type_id(elem->log_type),
+         elem->log_message,
+         elem->log_parameter);
+      }
+      cl_log_list_del_log(list_p);
+      fflush(fp);
+   }
+
+   fclose(fp);
+
+   if ((ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
+      return ret_val;
+   } 
+   return CL_RETVAL_OK;
+}
+*/
+
 
 /****** sge_ijs_comm/comm_init_lib() *******************************************
 *  NAME
@@ -96,7 +173,7 @@ int comm_init_lib(dstring *err_msg)
 
    DENTER(TOP_LAYER, "comm_init_lib");
 
-   ret = cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_OFF, NULL);
+   ret = cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_DEBUG, NULL/*my_log_list_flush_list*/);
    if (ret != CL_RETVAL_OK) {
       sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
       DPRINTF(("cl_com_setup_commlib() failed: %s (%d)\n",
@@ -937,7 +1014,9 @@ int comm_recv_message(COMMUNICATION_HANDLE *handle, cl_bool_t b_synchron,
 
    if (b_synchron == CL_TRUE) {
       ret = cl_commlib_trigger(handle, 1);
-      if (ret != CL_RETVAL_OK && ret != CL_RETVAL_SELECT_TIMEOUT) {
+      if (ret != CL_RETVAL_OK && 
+          ret != CL_RETVAL_SELECT_TIMEOUT &&
+          ret != CL_RETVAL_SELECT_INTERRUPT) {
          sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
          DPRINTF(("cl_commlib_trigger() failed: %s (%d)\n",
                   sge_dstring_get_string(err_msg), ret));
@@ -947,6 +1026,9 @@ int comm_recv_message(COMMUNICATION_HANDLE *handle, cl_bool_t b_synchron,
          DPRINTF(("cl_commlib_trigger() failed: %s (%d)\n",
                   sge_dstring_get_string(err_msg), ret));
          ret_val = COMM_GOT_TIMEOUT;
+      } else if (ret == CL_RETVAL_SELECT_INTERRUPT) {
+         sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
+         ret_val = COMM_SELECT_INTERRUPT;
       }
    }
 

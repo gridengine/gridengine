@@ -68,6 +68,7 @@
 #define COMM_NO_SELECT_DESCRIPTORS       18
 #define COMM_CONNECTION_NOT_FOUND        19
 #define COMM_NO_SECURITY_COMPILED_IN     20
+#define COMM_SELECT_INTERRUPT            21
 
 typedef struct recv_message_s {
    unsigned char type;

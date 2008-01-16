@@ -561,12 +561,15 @@ int do_server_loop(int random_poll, u_long32 job_id, int nostdin,
    THREAD_HANDLE     *pthread_tty_to_commlib = NULL;
    THREAD_HANDLE     *pthread_commlib_to_tty = NULL;
    THREAD_LIB_HANDLE *thread_lib_handle = NULL;
+   cl_raw_list_t     *cl_com_log_list = NULL;
 
    DENTER(TOP_LAYER, "do_server_loop");
 
    if (p_exit_status == NULL) {
       return 1;
    }
+
+   cl_com_log_list = cl_com_get_log_list();
 
    g_nostdin = nostdin;
    g_noshell = noshell;
@@ -588,7 +591,7 @@ int do_server_loop(int random_poll, u_long32 job_id, int nostdin,
     */
    DPRINTF(("creating worker thread\n"));
    thread_init_lib(&thread_lib_handle);
-   ret = create_thread(thread_lib_handle, &pthread_tty_to_commlib,
+   ret = create_thread(thread_lib_handle, &pthread_tty_to_commlib, cl_com_log_list,
       "tty_to_commlib thread", 1, tty_to_commlib);
    if (ret != CL_RETVAL_OK) {
       DPRINTF(("can't create tty_to_commlib thread, return value = %d\n",
@@ -596,7 +599,7 @@ int do_server_loop(int random_poll, u_long32 job_id, int nostdin,
       goto cleanup;
    }
 
-   ret = create_thread(thread_lib_handle, &pthread_commlib_to_tty,
+   ret = create_thread(thread_lib_handle, &pthread_commlib_to_tty, cl_com_log_list,
       "commlib_to_tty thread", 1, commlib_to_tty);
    if (ret != CL_RETVAL_OK) {
       DPRINTF(("can't create commlib_to_tty thread, return value = %d\n",
@@ -616,10 +619,12 @@ int do_server_loop(int random_poll, u_long32 job_id, int nostdin,
 
    DPRINTF(("shutting down tty_to_commlib thread\n"));
    thread_shutdown(pthread_tty_to_commlib);
+/*
+ * TODO: Why doesn't this work on some hosts (e.g. oin)  
 
    DPRINTF(("wait until there is no client connected any more\n"));
    comm_wait_for_no_connection(g_comm_handle, OTHERCOMPONENT, 10, &err_msg);
-
+*/
    DPRINTF(("shut down the connection from our side\n"));
    comm_shutdown_connection(g_comm_handle, &err_msg);
 

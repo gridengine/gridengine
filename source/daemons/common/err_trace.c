@@ -43,6 +43,7 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <signal.h>
+#include <pthread.h>
 
 #if defined(DARWIN) || defined(FREEBSD) || defined(NETBSD)
 #  include <sys/param.h>
@@ -86,6 +87,7 @@ static char  g_shepherd_file_path[3][SGE_PATH_MAX];
 static char g_job_owner[SGE_PATH_MAX] = "";
 static bool g_keep_files_open = true; /* default: Open files at start and keep
                                                   them open for writing */
+static pthread_mutex_t g_trace_mutex;
 
 extern pid_t coshepherd_pid;
 extern int   shepherd_state;  /* holds exit status for shepherd_error() */
@@ -296,7 +298,11 @@ int shepherd_trace(const char *str)
    char        buffer[128];
    char        header_str[256];
    int         ret=1;
+   int         old_cancelstate;
 	struct stat statbuf;
+
+   pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &old_cancelstate);
+   pthread_mutex_lock(&g_trace_mutex);
 
 	/* File was closed (e.g. by an exec()) but fp was not set to NULL */
 	if( shepherd_trace_fp 
@@ -329,6 +335,9 @@ int shepherd_trace(const char *str)
       }
 		ret=0;	
 	}
+
+   pthread_mutex_unlock(&g_trace_mutex);
+   pthread_setcancelstate(old_cancelstate, NULL);
    return ret;
 }
 

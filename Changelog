@@ -1,3 +1,10 @@
+HP-2008-01-16-0: Bugfix:    Fixed several bugs in new IJS regarding faulty
+                            pthreads implementation on some architectures,
+                            added commlib tracing to shepherd,
+                            improved error detection in communication.
+                 Changed:   qrsh, shepherd
+                 Review:    MD
+
 MP-2008-01-16-0: Bugfix:    Merged changes of MP-2008-01-14-0 from the 
                             V61_BRANCH.
                  Review:    JG

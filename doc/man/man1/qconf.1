@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2007/11/22 13:38:26 $     Revision: $Revision: 1.30 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2008/01/16 16:03:10 $     Revision: $Revision: 1.31 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2007/11/22 13:38:26 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2008/01/16 16:03:10 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -534,6 +534,14 @@ from the editor, the PE is registered with
 .M xxqs_name_sxx_qmaster 8 .
 Requires root/manager privileges.
 .\"
+.IP "\fB\-at thread_name\fP \fI<activates thread in master>\fP"
+Activates an additional thread in the master process. 
+.B thread_name 
+might be either "scheduler" or "jvm". The corresponding thread
+is only started when it is not already running. There might be
+only one scheduler and only one jvm thread in the master process
+at the same time.
+.\"
 .IP "\fB\-aprj\fP	\fI<add new project>\fP"
 Adds a project description to the list of registered projects (see
 .M project 5 ).
@@ -756,6 +764,12 @@ host list, all running
 processes are shutdown.
 .br
 Requires root or manager privileges.
+.\"
+.IP "\fB\-kt thread_name\fP   \fI<terminate master thread>\fP""
+Terminates a thread in the master process. Currently it is only
+supported to shutdown the "scheduler" and the "jvm" thread. The
+command will only be successfull if the corresponding thread is 
+running.
 .\"
 .IP "\fB\-kec {id,...|all}\fP	\fI<kill event client>\fP"
 Used to shutdown event clients registered at 

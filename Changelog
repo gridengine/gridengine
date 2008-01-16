@@ -1,3 +1,6 @@
+EB-2008-01-16-0: Enhancem.: Added missing qconf manpage entries
+                 Review:    JG
+
 AH-2008-01-16-2: Bugfix:    Parallel scheduling memory leak in master
                  Bugster:   6562190
                  Issue:     2187

@@ -1,3 +1,8 @@
+AH-2008-01-16-2: Bugfix:    Parallel scheduling memory leak in master
+                 Bugster:   6562190
+                 Issue:     2187
+                 Review:    JG
+
 HP-2008-01-16-1: Bugfix:    Fixed broken build on irix65 after checkin HP-2008-01-16-0
                  Changed:   sge_ijs_comm.c, sge_shepherd_ijs.c
 

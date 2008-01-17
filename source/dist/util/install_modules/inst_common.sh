@@ -610,7 +610,7 @@ CheckConfigFile()
 
    if [ "$SGE_ENABLE_SMF" = "" ]; then
       $INFOTEXT -log "The SGE_ENABLE_SMF has not been set in config file!\n"
-      #If -nosmf was specified we don't require the SGE_SMF_ENABLE to be set
+      #If -nosmf was specified we don't require the SGE_ENABLE_SMF to be set
       if [ "$SGE_ENABLE_SMF_LAST" != false ]; then  
          MoveLog
          exit 1

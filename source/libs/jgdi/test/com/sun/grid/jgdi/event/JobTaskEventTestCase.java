@@ -35,6 +35,8 @@ import com.sun.grid.jgdi.BaseTestCase;
 import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.EventClient;
 import com.sun.grid.jgdi.JobSubmitter;
+import java.util.HashMap;
+import java.util.Map;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -77,23 +79,20 @@ public class JobTaskEventTestCase extends BaseTestCase {
         
         int jobid = JobSubmitter.submitJob(getCurrentCluster(), new String[]{"-t", "1-" + numberOfTasks, "$SGE_ROOT/examples/jobs/sleeper.sh", "1"});
         
+        Map<EventTypeEnum,Integer> map = new HashMap<EventTypeEnum,Integer>();
+        map.put(EventTypeEnum.JobTaskAdd, 1);
+        map.put(EventTypeEnum.JobTaskDel, 1);
+        map.put(EventTypeEnum.JobDel, 1);
         
-        evc.subscribeJobTaskAdd(true);
-        evc.setJobTaskAddFlush(true, 1);
-        
-        evc.subscribeJobTaskDel(true);
-        evc.setJobTaskDelFlush(true, 1);
-        
-        evc.subscribeJobDel(true);
-        evc.setJobDelFlush(true, 1);
-        
+        evc.subscribe(map.keySet());
+        evc.setFlush(map);
         
         JobTaskEventListener lis = new JobTaskEventListener(jobid);
         evc.addEventListener(lis);
         
-        evc.start();
+        evc.commit();
         
-        Thread.currentThread().sleep(2);
+        Thread.sleep(2);
         
         jgdi.enableQueues(new String[]{"*"}, false);
         

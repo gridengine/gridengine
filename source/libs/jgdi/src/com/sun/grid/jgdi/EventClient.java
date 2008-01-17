@@ -32,12 +32,15 @@
 package com.sun.grid.jgdi;
 
 import com.sun.grid.jgdi.event.EventListener;
+import com.sun.grid.jgdi.event.EventTypeEnum;
+import java.util.Map;
+import java.util.Set;
 
 
 /**
  *
  */
-public interface EventClientBase {
+public interface EventClient {
     
     /**
      * Get the id of this event client
@@ -51,12 +54,6 @@ public interface EventClientBase {
      * @throws java.lang.InterruptedException if closing the event client has been interrupted
      */
     public void close() throws JGDIException, InterruptedException;
-    
-    /**
-     *  Start the event client
-     * @throws java.lang.InterruptedException if the startup has been interrupted
-     */
-    public void start() throws InterruptedException;
     
     /**
      *  Determine if the event client is running
@@ -82,6 +79,18 @@ public interface EventClientBase {
      */
     public void unsubscribeAll() throws JGDIException;
     
+    public void subscribe(EventTypeEnum type) throws JGDIException;
+    public void unsubscribe(EventTypeEnum type) throws JGDIException;
+    public void subscribe(Set<EventTypeEnum> types) throws JGDIException;
+    public void unsubscribe(Set<EventTypeEnum> types) throws JGDIException;
+    
+    public void setSubscription(Set<EventTypeEnum> types) throws JGDIException;
+    
+    public void setFlush(Map<EventTypeEnum,Integer> map) throws JGDIException;
+    public void setFlush(EventTypeEnum type, int time) throws JGDIException;
+    public int getFlush(EventTypeEnum type) throws JGDIException;
+    
+    public Set<EventTypeEnum> getSubscription() throws JGDIException;
     /**
      * Add an event listener to this event client
      * @param lis the event listener

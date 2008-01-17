@@ -62,6 +62,11 @@ public interface JGDIJMXBaseMBean {
     public String getCurrentJGDIVersion() throws JGDIException;
     
     /**
+     * Close the jgdi session
+     */
+    public void close();
+    
+    /**
      *   Subscribe a set of event types if they are not already subscribed.
      *
      *   @param eventTypeSet  set of event types

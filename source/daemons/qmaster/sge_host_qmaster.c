@@ -696,6 +696,9 @@ const char *target    /* prognames[QSTD|EXECD] */
 
    lSetUlong(hep, EH_lt_heard_from, 0);
 
+   /* hedeby depends on this event */
+   sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, host, NULL, NULL, hep);
+
    DRETURN_VOID;
 }
 

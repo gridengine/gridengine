@@ -49,10 +49,7 @@ public class QEvent implements EventListener {
         evc = JGDIFactory.createEventClient(url, 0);
         evc.addEventListener(this);
         evc.subscribeAll();
-    }
-
-    public void start() throws InterruptedException {
-        evc.start();
+        evc.commit();
     }
 
     public static void main(String[] args) {
@@ -63,7 +60,6 @@ public class QEvent implements EventListener {
 
         try {
             QEvent qevt = new QEvent(args[0]);
-            qevt.start();
             Runtime.getRuntime().addShutdownHook(qevt.new ShutdownHandler());
             Thread.sleep(Integer.MAX_VALUE);
         } catch (Exception e) {

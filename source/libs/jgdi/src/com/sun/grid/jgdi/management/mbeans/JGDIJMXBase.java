@@ -88,6 +88,13 @@ public class JGDIJMXBase implements java.io.Serializable, JGDIJMXBaseMBean, Noti
         return ret;
     }
     
+    /**
+     * Close the session of this jgdi mbean
+     */
+    public void close() {
+        owner.close();
+    }
+    
     protected NotificationBridge getNB() throws JGDIException {
         log.entering("JGDIJMXBase", "getNB");
         NotificationBridge ret = owner.getNotificationBridge();

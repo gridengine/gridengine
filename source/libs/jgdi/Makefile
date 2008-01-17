@@ -41,6 +41,7 @@ JGDI_SRC   = jgdi.c \
              jgdi_common.c \
              jgdi_event.c \
              jgdi_event_gen.c \
+             jgdi_event_map.c \
              jgdi_qhost.c \
              jgdi_qstat.c \
              jgdi_qquota.c \
@@ -99,6 +100,9 @@ jgdi_logging.o:  $(JGDI_DIR)/jgdi_logging.c
 
 jgdi_mapping.o:  $(JGDI_BUILD_DIR)/jgdi_mapping.c
 	$(CC) $(CCFLAGS) $(CFLAGS) $(NOERR_CFLAG) $(CCCDLFLAGS) $(JGDI_INCLUDES) $(JNI_INCLUDES) $(CORE_INCLUDE) $(SHARED_CFLAGS) -c $(JGDI_BUILD_DIR)/jgdi_mapping.c
+
+jgdi_event_map.o:  $(JGDI_BUILD_DIR)/jgdi_event_map.c
+	$(CC) $(CCFLAGS) $(CFLAGS) $(NOERR_CFLAG) $(CCCDLFLAGS) $(JGDI_INCLUDES) $(JNI_INCLUDES) $(CORE_INCLUDE) $(SHARED_CFLAGS) -c $(JGDI_BUILD_DIR)/jgdi_event_map.c
 
 jgdi_event.o:  $(JGDI_DIR)/jgdi_event.c
 	$(CC) $(CCFLAGS) $(CFLAGS) $(NOERR_CFLAG) $(CCCDLFLAGS) $(JGDI_INCLUDES) $(JNI_INCLUDES) $(CORE_INCLUDE) $(SHARED_CFLAGS) -c $(JGDI_DIR)/jgdi_event.c

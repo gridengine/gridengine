@@ -39,6 +39,7 @@ import com.sun.grid.jgdi.configuration.Checkpoint;
 import com.sun.grid.jgdi.configuration.ConfigurationFactory;
 import com.sun.grid.jgdi.event.Event;
 import com.sun.grid.jgdi.event.EventListener;
+import com.sun.grid.jgdi.event.EventTypeEnum;
 
 /**
  * Simple example which demonstrates how to receive events from the
@@ -64,11 +65,9 @@ public class EventExample {
                 
                 EventClient evc = JGDIFactory.createEventClient(url, 0);
                 
-                evc.start();
-                
-                evc.subscribeCheckpointAdd(true);
-                evc.subscribeCheckpointMod(true);
-                evc.subscribeCheckpointDel(true);
+                evc.subscribe(EventTypeEnum.CheckpointAdd);
+                evc.subscribe(EventTypeEnum.CheckpointMod);
+                evc.subscribe(EventTypeEnum.CheckpointDel);
                 
                 evc.commit();
                 

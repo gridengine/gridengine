@@ -75,127 +75,184 @@ public class XMLUtil {
     
     private static final String NONE = "NONE";
     
-    public static boolean write(GEObject obj, Writer wr) throws IOException {
+    
+    public static class Context {
         
-        IndentedPrintWriter p = new IndentedPrintWriter(wr);
-        p.println(HEADER);
-        write(obj, obj.getClass(), p);
-        p.flush();
-        return p.checkError();
+        private final IndentedPrintWriter p;
+        private boolean hideReadOnly;
+        private boolean hideConfigurable;
+        private boolean hideBrowseable;
+        
+        public Context(IndentedPrintWriter p) {
+            this.p = p;
+            setHideReadOnly(true);
+            setHideConfigurable(false);
+            setHideBrowseable(false);
+        }
+        
+        public Context(Writer wr)  {
+            this(new IndentedPrintWriter(wr));
+        }
+        
+        public Context(OutputStream out) {
+            this(new IndentedPrintWriter(out));
+        }
+
+        public Context(File file) throws IOException {
+            this(new IndentedPrintWriter(file));
+        }
+        
+        public boolean include(PropertyDescriptor pd) {
+            if(pd.isReadOnly() && hideReadOnly) {
+                return false;
+            } else if (pd.isConfigurable() && hideConfigurable) {
+                return false;
+            } else if (pd.isBrowsable() && hideBrowseable) {
+                return false;
+            }
+            return true;
+        }
+
+        public boolean isHideReadOnly() {
+            return hideReadOnly;
+        }
+
+        public void setHideReadOnly(boolean hideReadOnly) {
+            this.hideReadOnly = hideReadOnly;
+        }
+
+        public boolean isHideConfigurable() {
+            return hideConfigurable;
+        }
+
+        public void setHideConfigurable(boolean hideConfigurable) {
+            this.hideConfigurable = hideConfigurable;
+        }
+
+        public boolean isHideBrowseable() {
+            return hideBrowseable;
+        }
+
+        public void setHideBrowseable(boolean hideBrowseable) {
+            this.hideBrowseable = hideBrowseable;
+        }
+        
     }
     
+    public static boolean write(GEObject obj, Context ctx) {
+        ctx.p.println(HEADER);
+        write(obj, obj.getClass(), ctx);
+        ctx.p.close();
+        return ctx.p.checkError();
+    }
+    
+    public static boolean write(GEObject obj, Writer wr) throws IOException {
+        Context ctx = new Context(wr);
+        return write(obj, ctx);
+    }
+
     public static boolean write(GEObject obj, OutputStream out) throws IOException {
-        
-        IndentedPrintWriter p = new IndentedPrintWriter(out);
-        p.println(HEADER);
-        write(obj, obj.getClass(), p);
-        p.flush();
-        return p.checkError();
+        Context ctx = new Context(out);
+        return write(obj, ctx);
     }
     
     public static boolean write(GEObject obj, File file) throws IOException {
-        
-        IndentedPrintWriter p = new IndentedPrintWriter(file);
-        p.println(HEADER);
-        write(obj, obj.getClass(), p);
-        p.flush();
-        p.close();
-        return p.checkError();
+        Context ctx = new Context(file);
+        return write(obj, ctx);
     }
     
-    private static void write(GEObject obj, Class clazz, IndentedPrintWriter p) {
+    private static void write(GEObject obj, Class clazz, Context ctx) {
         
         ClassDescriptor cd = Util.getDescriptor(clazz);
-        
-        p.print('<');
-        p.print(cd.getCullName());
-        p.print('>');
+        ctx.p.print('<');
+        ctx.p.print(cd.getCullName());
+        ctx.p.print('>');
         if (obj == null) {
-            p.print(NONE);
+            ctx.p.print(NONE);
         } else {
-            p.println();
-            p.indent();
+            ctx.p.println();
+            ctx.p.indent();
             for(int i = 0; i < cd.getPropertyCount(); i++) {
                 PropertyDescriptor pd = cd.getProperty(i);
                 
-                if (pd.isReadOnly()) {
+                if (!ctx.include(pd)) {
                     continue;
                 }
                 if (pd instanceof SimplePropertyDescriptor) {
-                    write(obj, (SimplePropertyDescriptor)pd, p);
+                    write(obj, (SimplePropertyDescriptor)pd, ctx);
                 } else if (pd instanceof ListPropertyDescriptor) {
-                    write(obj, (ListPropertyDescriptor)pd, p);
+                    write(obj, (ListPropertyDescriptor)pd, ctx);
                 } else if (pd instanceof MapPropertyDescriptor) {
-                    write(obj, (MapPropertyDescriptor)pd, p);
+                    write(obj, (MapPropertyDescriptor)pd, ctx);
                 } else if (pd instanceof MapListPropertyDescriptor) {
-                    write(obj, (MapListPropertyDescriptor)pd, p);
+                    write(obj, (MapListPropertyDescriptor)pd, ctx);
                 } else {
                     throw new IllegalStateException("Unknown property type " + pd.getClass());
                 }
                 
             }
-            p.deindent();
+            ctx.p.deindent();
         }
-        p.print("</");
-        p.print(cd.getCullName());
-        p.println('>');
+        ctx.p.print("</");
+        ctx.p.print(cd.getCullName());
+        ctx.p.println('>');
         
     }
     
-    private static void write(GEObject obj, SimplePropertyDescriptor pd, IndentedPrintWriter p) {
+    private static void write(GEObject obj, SimplePropertyDescriptor pd, Context ctx) {
         
         Object value = pd.getValue(obj);
         if (value != null) {
-            p.print('<');
-            p.print(pd.getPropertyName());
-            p.print('>');
+            ctx.p.print('<');
+            ctx.p.print(pd.getPropertyName());
+            ctx.p.print('>');
             if (GEObject.class.isAssignableFrom(pd.getPropertyType())) {
                 if (value == null) {
-                    write((GEObject)value, pd.getPropertyType(), p);
+                    write((GEObject)value, pd.getPropertyType(), ctx);
                 } else {
-                    write((GEObject)value, value.getClass(), p);
+                    write((GEObject)value, value.getClass(), ctx);
                 }
             } else {
-                p.print(quoteCharacters(value.toString()));
+                ctx.p.print(quoteCharacters(value.toString()));
             }
-            p.print("</");
-            p.print(pd.getPropertyName());
-            p.println('>');
+            ctx.p.print("</");
+            ctx.p.print(pd.getPropertyName());
+            ctx.p.println('>');
         }
     }
     
-    private static void write(GEObject obj, ListPropertyDescriptor pd, IndentedPrintWriter p) {
+    private static void write(GEObject obj, ListPropertyDescriptor pd, Context ctx) {
         
         int count = pd.getCount(obj);
         
-        p.print('<');
-        p.print(pd.getPropertyName());
-        p.print('>');
+        ctx.p.print('<');
+        ctx.p.print(pd.getPropertyName());
+        ctx.p.print('>');
         if (count == 0) {
-            p.print(NONE);
+            ctx.p.print(NONE);
         } else {
-            p.println();
-            p.indent();
+            ctx.p.println();
+            ctx.p.indent();
             for(int i = 0; i < count; i++) {
                 Object value = pd.get(obj,i);
                 if (GEObject.class.isAssignableFrom(pd.getPropertyType())) {
                     if (value == null) {
-                        write((GEObject)value, pd.getPropertyType(), p);
+                        write((GEObject)value, pd.getPropertyType(), ctx);
                     } else {
-                        write((GEObject)value, value.getClass(), p);
+                        write((GEObject)value, value.getClass(), ctx);
                     }
                 } else {
-                    writePrimitive(value, pd.getPropertyType(), p);
+                    writePrimitive(value, pd.getPropertyType(), ctx);
                 }
             }
-            p.deindent();
+            ctx.p.deindent();
         }
-        p.print("</");
-        p.print(pd.getPropertyName());
-        p.println('>');
+        ctx.p.print("</");
+        ctx.p.print(pd.getPropertyName());
+        ctx.p.println('>');
     }
     
-    private static void write(GEObject obj, MapPropertyDescriptor pd, IndentedPrintWriter p) {
+    private static void write(GEObject obj, MapPropertyDescriptor pd, Context ctx) {
         
         Set keys = pd.getKeys(obj);
         
@@ -203,30 +260,30 @@ public class XMLUtil {
         while(keyIter.hasNext()) {
             Object key = keyIter.next();
             Object value = pd.get(obj,key);
-            p.print('<');
-            p.print(pd.getPropertyName());
-            p.print(" key='");
-            p.print(quoteCharacters(key.toString()));
-            p.print("'>");
+            ctx.p.print('<');
+            ctx.p.print(pd.getPropertyName());
+            ctx.p.print(" key='");
+            ctx.p.print(quoteCharacters(key.toString()));
+            ctx.p.print("'>");
             if (GEObject.class.isAssignableFrom(pd.getPropertyType())) {
-                p.println();
-                p.indent();
+                ctx.p.println();
+                ctx.p.indent();
                 if (value == null) {
-                    write((GEObject)value, pd.getPropertyType(), p);
+                    write((GEObject)value, pd.getPropertyType(), ctx);
                 } else {
-                    write((GEObject)value, value.getClass(), p);
+                    write((GEObject)value, value.getClass(), ctx);
                 }
-                p.deindent();
+                ctx.p.deindent();
             } else {
                 if (value == null) {
-                    p.print(NONE);
+                    ctx.p.print(NONE);
                 } else {
-                    p.print(quoteCharacters(value.toString()));
+                    ctx.p.print(quoteCharacters(value.toString()));
                 }
             }
-            p.print("</");
-            p.print(pd.getPropertyName());
-            p.println('>');
+            ctx.p.print("</");
+            ctx.p.print(pd.getPropertyName());
+            ctx.p.println('>');
         }
     }
     
@@ -238,7 +295,7 @@ public class XMLUtil {
     public static final String DOUBLE_TAG = "double";
     public static final String FLOAT_TAG = "float";
     
-    private static void writePrimitive(Object value, Class clazz, IndentedPrintWriter p) {
+    private static void writePrimitive(Object value, Class clazz, Context ctx) {
         
         String tag = null;
         if (String.class.isAssignableFrom(clazz)) {
@@ -264,66 +321,66 @@ public class XMLUtil {
         } else {
             throw new IllegalArgumentException("Unknown primitive type " + clazz.getName());
         }
-        p.print("<");
-        p.print(tag);
-        p.print('>');
+        ctx.p.print("<");
+        ctx.p.print(tag);
+        ctx.p.print('>');
         if (value == null) {
             if (String.class.isAssignableFrom(clazz)) {
-                p.print(NONE);
+                ctx.p.print(NONE);
             } else {
                 throw new IllegalArgumentException("Don't know howto handle null value for type " + clazz.getName());
             }
         } else {
-            p.print(quoteCharacters(value.toString()));
+            ctx.p.print(quoteCharacters(value.toString()));
         }
-        p.print("</");
-        p.print(tag);
-        p.println('>');
+        ctx.p.print("</");
+        ctx.p.print(tag);
+        ctx.p.println('>');
         
     }
     
-    private static void write(GEObject obj, MapListPropertyDescriptor pd, IndentedPrintWriter p) {
+    private static void write(GEObject obj, MapListPropertyDescriptor pd, Context ctx) {
         
         Set keys = pd.getKeys(obj);
         
         Iterator keyIter = keys.iterator();
         while(keyIter.hasNext()) {
             Object key = keyIter.next();
-            p.print('<');
-            p.print(pd.getPropertyName());
-            p.print(" key='");
-            p.print(quoteCharacters(key.toString()));
-            p.print("'>");
+            ctx.p.print('<');
+            ctx.p.print(pd.getPropertyName());
+            ctx.p.print(" key='");
+            ctx.p.print(quoteCharacters(key.toString()));
+            ctx.p.print("'>");
             int count = pd.getCount(obj, key);
             if (count == 0) {
-                p.println();
-                p.indent();
+                ctx.p.println();
+                ctx.p.indent();
                 if (GEObject.class.isAssignableFrom(pd.getPropertyType())) {
-                    write((GEObject)null, pd.getPropertyType(), p);
+                    write((GEObject)null, pd.getPropertyType(), ctx);
                 } else {
-                    writePrimitive(null, pd.getPropertyType(),p);
+                    writePrimitive(null, pd.getPropertyType(), ctx);
                 }
-                p.deindent();
+                ctx.p.deindent();
             } else {
-                p.println();
-                p.indent();
+                ctx.p.println();
+                ctx.p.indent();
                 for(int i = 0; i < count; i++) {
                     Object value = pd.get(obj, key, i);
                     if (GEObject.class.isAssignableFrom(pd.getPropertyType())) {
                         if (value == null) {
-                            write((GEObject)value, pd.getPropertyType(), p);
+                            write((GEObject)value, pd.getPropertyType(), ctx);
                         } else {
-                            write((GEObject)value, value.getClass(), p);
+                            write((GEObject)value, value.getClass(), ctx);
                         }
                     } else {
-                        writePrimitive(value, pd.getPropertyType(),p);
+                        writePrimitive(value, pd.getPropertyType(), ctx);
                     }
                 }
-                p.deindent();
+                ctx.p.deindent();
             }
-            p.print("</");
-            p.print(pd.getPropertyName());
-            p.println('>');
+            ctx.p.print("</");
+            ctx.p.print(pd.getPropertyName());
+            ctx.p.println('>');
         }
     }
     

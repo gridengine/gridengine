@@ -36,7 +36,7 @@ fi
 
 PRE_ARGS="$PRE_ARGS -Djava.util.logging.config.file=util/shell_logging.properties"
 
-if [ $SGE_ROOT != "" ]; then
+if [ "$SGE_ROOT" != "" ]; then
    CP=$SGE_ROOT/lib/jgdi.jar
 else
    CP=build/jgdi.jar
@@ -57,6 +57,17 @@ if [ "$READLINE_LIB_PATH" ]; then
    fi
 fi
 
+if [ $ARCH = "darwin-x86" -o $ARCH = "darwin-ppc" ]; then
+   PRE_ARGS="$PRE_ARGS -Djava.awt.headless=true"
+   DYLD_LIBRARY_PATH=$LD_LIBRARY_PATH:$DYLD_LIBRARY_PATH
+   export DYLD_LIBRARY_PATH
+fi   
+
+if [ $ARCH = "aix51" ]; then
+   LIBPATH=$LD_LIBRARY_PATH:$LIBPATH
+   export LIBPATH 
+fi   
+
 if [ $CONNECT -eq 1 ]; then
   if [ "$SGE_ROOT" = "" ]; then
      echo "Please source \$SGE_ROOT/\$SGE_CELL/common/settings.(c)sh !"
@@ -68,5 +79,12 @@ fi
 POST_ARGS="$POST_ARGS $POSTPOST_ARGS"
 
 # echo "run $PRE_ARGS -cp $CP -- com.sun.grid.jgdi.util.JGDIShell $POST_ARGS"
-run $PRE_ARGS -cp $CP -- com.sun.grid.jgdi.util.JGDIShell $POST_ARGS
+# run $PRE_ARGS -cp $CP -- com.sun.grid.jgdi.util.JGDIShell $POST_ARGS
+if [ $ARCH = "darwin-x86" ]; then
+   #echo $DYLD_LIBRARY_PATH
+   java -Djava.awt.headless=true $PRE_ARGS -cp $CP com.sun.grid.jgdi.util.JGDIShell $POST_ARGS
+else
+   # echo "run $PRE_ARGS -cp $CP -- com.sun.grid.jgdi.util.JGDIShell $POST_ARGS"
+   run $PRE_ARGS -cp $CP -- com.sun.grid.jgdi.util.JGDIShell $POST_ARGS
+fi
 

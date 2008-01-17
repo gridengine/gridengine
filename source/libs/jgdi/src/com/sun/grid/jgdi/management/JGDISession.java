@@ -34,6 +34,7 @@ package com.sun.grid.jgdi.management;
 import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.JGDIException;
 import com.sun.grid.jgdi.JGDIFactory;
+import com.sun.grid.jgdi.event.ConnectionClosedEvent;
 import com.sun.grid.jgdi.security.JGDIPrincipal;
 import java.security.AccessController;
 import java.util.HashMap;
@@ -146,6 +147,7 @@ public class JGDISession {
                     log.log(lr);
                 }
             }
+            notificationBridge.eventOccured(new ConnectionClosedEvent(System.currentTimeMillis(),-1));
         } finally {
             lock.unlock();
         }
@@ -217,7 +219,7 @@ public class JGDISession {
         sessionLock.writeLock().lock();
         try {
             JGDISession session = sessionMap.remove(sessionId);
-            if (session != null && !session.isClosed()) {
+            if (session != null) {
                 session.close();
                 ret = session;
             }
@@ -244,7 +246,7 @@ public class JGDISession {
             if (!sessionMap.containsKey(sessionId)) {
                 JGDISession session = new JGDISession(sessionId, url);
                 sessionMap.put(sessionId, session);
-                log.log(Level.FINE, "No jgdi jmx session with id {0} created", sessionId);
+                log.log(Level.FINE, "New jgdi jmx session with id {0} created", sessionId);
                 ret = session;
             } else {
                 log.log(Level.WARNING, "Do not create new session for session id {0}, this session already exists", sessionId);

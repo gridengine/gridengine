@@ -40,6 +40,8 @@ import com.sun.grid.jgdi.configuration.ClusterQueue;
 import com.sun.grid.jgdi.configuration.ParallelEnvironment;
 import com.sun.grid.jgdi.configuration.ParallelEnvironmentImpl;
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -127,22 +129,20 @@ public class PETaskEventTestCase extends BaseTestCase {
         
         int jobid = JobSubmitter.submitJob(getCurrentCluster(), new String[]{"-pe", pe.getName(), Integer.toString(numberOfTasks), peJobFile.getAbsolutePath(), peTaskFile.getAbsolutePath(), Integer.toString(numberOfTasks), Integer.toString(taskRuntime)});
         
+        Map<EventTypeEnum,Integer> map = new HashMap<EventTypeEnum,Integer>();
+        map.put(EventTypeEnum.PETaskAdd, 1);
+        map.put(EventTypeEnum.PETaskDel, 1);
+        map.put(EventTypeEnum.JobDel, 1);
         
-        evc.subscribePETaskAdd(true);
-        evc.setPETaskAddFlush(true, 1);
-        
-        evc.subscribePETaskDel(true);
-        evc.setPETaskDelFlush(true, 1);
-        
-        evc.subscribeJobDel(true);
-        evc.setJobDelFlush(true, 1);
+        evc.subscribe(map.keySet());
+        evc.setFlush(map);
         
         PETaskEventListener lis = new PETaskEventListener(jobid);
         evc.addEventListener(lis);
         
-        evc.start();
+        evc.commit();
         
-        Thread.currentThread().sleep(2);
+        Thread.sleep(2);
         
         jgdi.enableQueues(new String[]{queue.getName()}, false);
         

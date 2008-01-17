@@ -191,12 +191,6 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_nativeGet<
 <%
     com.sun.grid.cull.CullObject cullObj = null;
     SubscribeMethodGenerator gen = new SubscribeMethodGenerator();
-    for (String name : cullDef.getObjectNames()) {
-      cullObj = cullDef.getCullObject(name); 
-      gen.setObj(cullObj);
-      gen.generate();
-    } // end of for 
-    
    // special events
     
    String [][] specialEvents = {
@@ -211,11 +205,7 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_nativeGet<
        { "QueueInstanceUnsuspend", "sgeE_QINSTANCE_USOS" }
 
    };
-   
-   for(int i = 0; i < specialEvents.length; i++) {
-       gen.generate(specialEvents[i][0], specialEvents[i][1]);
-       gen.generateFlush(specialEvents[i][0], specialEvents[i][1]);
-   }
+
 %>
 
 jgdi_result_t process_generic_event(JNIEnv *env,  jobject *event, lListElem *ev, lList** alpp) {

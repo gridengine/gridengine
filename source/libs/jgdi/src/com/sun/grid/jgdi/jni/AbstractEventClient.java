@@ -31,75 +31,87 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.jni;
 
+import com.sun.grid.jgdi.EventClient;
 import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.JGDIException;
 import com.sun.grid.jgdi.JGDIFactory;
 import com.sun.grid.jgdi.event.Event;
+import com.sun.grid.jgdi.event.Event;
 import com.sun.grid.jgdi.event.EventListener;
+import com.sun.grid.jgdi.event.EventTypeEnum;
+import com.sun.grid.jgdi.event.EventTypeMapping;
 import com.sun.grid.jgdi.event.QmasterGoesDownEvent;
 import com.sun.grid.jgdi.event.ShutdownEvent;
 import java.util.ArrayList;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
-import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 /**
  * Abstract base clase for the event client
  *
  */
-public abstract class AbstractEventClient implements Runnable {
+public class AbstractEventClient implements EventClient {
 
-    private static final Logger logger = Logger.getLogger("com.sun.grid.jgdi.event");
+    private static final Logger log = Logger.getLogger("com.sun.grid.jgdi.event");
     
     private static List<AbstractEventClient> instances = new LinkedList<AbstractEventClient>();
-    private static boolean shutdown = false;
-    
-    private int evc_index = -1;
-    private int id;
-    private JGDI jgdi;
-    private Thread thread;
-    
-    protected final Lock fairLock = new ReentrantLock(true);
-    private final Condition shutdownCondition = fairLock.newCondition();
-    private final Condition startupCondition = fairLock.newCondition();
-    
+    private static volatile boolean shutdown = false;
+
     private Set<EventListener> eventListeners = Collections.<EventListener>emptySet();
     private final Lock listenerLock = new ReentrantLock();
     
-
+    private final Lock executorLock = new ReentrantLock();
+    private ExecutorService executor = null;
+    private Future  eventLoopFuture = null;
+    
+    private final EventLoopAction eventLoop;
+    
     /**
      * Creates a new instance of EventClient
      * @param url  JGDI connection url in the form
      *             <code>bootstrap://&lt;SGE_ROOT&gt;@&lt;SGE_CELL&gt;:&lt;SGE_QMASTER_PORT&gt;</code>
      * @param regId  Registration id for the event client (0 => qmaster assignes a
      *               event client id dynamically)
-     * @throws com.sun.grid.jgdi.JGDIException
      */
-    public AbstractEventClient(String url, int regId) throws JGDIException {
-        synchronized (instances) {
-            if (shutdown) {
-                throw new JGDIException("qmaster is going down");
-            }
+    public AbstractEventClient(String url, int regId) {
+        eventLoop = new EventLoopAction(url, regId);
+        synchronized(instances) {
             instances.add(this);
-        }
-        JGDI aJgdi = JGDIFactory.newInstance(url);
-        if (aJgdi instanceof JGDIImpl) {
-            this.jgdi = aJgdi;
-            evc_index = initNative(aJgdi, regId);
-        } else {
-            throw new IllegalArgumentException("JGDI must be instanceof " + JGDIImpl.class.getName());
         }
     }
 
+
+    /**
+     * Get the id of this event client
+     * @return the event client id
+     */
+    public int getId() {
+        log.entering(getClass().getName(), "getId");
+        int ret = eventLoop.getId();
+        log.exiting(getClass().getName(), "getId", ret);
+        return ret;
+    }
+
+    /**
+     * Close all instances of the EventClient
+     */
     public static void closeAll() {
+        log.entering(AbstractEventClient.class.getName(), "closeAll");
         List<AbstractEventClient> currentInstances = null;
         synchronized (instances) {
             currentInstances = new ArrayList<AbstractEventClient>(instances);
@@ -110,227 +122,67 @@ public abstract class AbstractEventClient implements Runnable {
             try {
                 evt.close();
             } catch (Exception ex) {
-            // Ignore
+                // Ignore
             }
         }
-
-    }
-
-    /**
-     * Get the id of this event client
-     * @return the event client id
-     */
-    public int getId() {
-        return id;
-    }
-
-    /**
-     * Set the event client id of this event client
-     * <p><strong>This method is not intended to be call by the
-     *         user. </strong>
-     * The native part of the <code>AbstractEventClient</code> uses this method
-     * to set a dynamic event client id into the java object.</p>
-     *
-     * @param id the event client id
-     *
-     */
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    /**
-     *  Get the index of this event client in the native event client
-     *  list.
-     *  @return index of this event client in the native event client list
-     */
-    public int getEVCIndex() {
-        fairLock.lock();
-        try {
-            return evc_index;
-        } finally {
-            fairLock.unlock();
-        }
+        log.exiting(AbstractEventClient.class.getName(), "closeAll");
     }
     
     /**
      *  Close this event client
-     * @throws com.sun.grid.jgdi.JGDIException if the connection could not be closed
-     * @throws java.lang.InterruptedException if the close has been interrupted
      */
-    public void close() throws JGDIException, InterruptedException {
-
-        Thread aThread = null;
-        int index = 0;
-        JGDI aJgdi = null;
-        int evcId;
-        fairLock.lock();
+    public void close()  {
+        log.entering(getClass().getName(), "close");
+        executorLock.lock();
         try {
-            aThread = thread;
-            thread = null;
-            index = evc_index;
-            evc_index = -1;
-            evcId = id;
-        } finally {
-            fairLock.unlock();
-        }
-
-        try {
-            if (aThread != null) {
-                logger.log(Level.FINE, "interrupting working thread for event client {0}", evcId);
-                aThread.interrupt();
-            }
-            if (index >= 0) {
-                logger.log(Level.FINE, "closing native event client with id {0}", evcId);
-                closeNative(index);
-                logger.log(Level.FINE, "native event client with id {0} closed", evcId);
-            }
-            if (aThread != null) {
-                if (aThread.isAlive()) {
-                    logger.log(Level.FINE, "waiting for end working thread of event client {0}", evcId);
-                    aThread.join();
-                }
-                logger.log(Level.FINE, "working thread for event client {0} died", evcId);
-            }
-        } finally {
-            try {
-                fairLock.lock();
+            // Stop the event loop execution
+            if (eventLoopFuture != null) {
                 try {
-                    aJgdi = this.jgdi;
-                    this.jgdi = null;
-                    shutdownCondition.signalAll();
+                    if(!eventLoopFuture.isCancelled()) {
+                        eventLoopFuture.cancel(true);
+                        eventLoop.interrupt();
+                    }
+                    if(!eventLoopFuture.isDone()) {
+                        eventLoopFuture.get();
+                    }
+                } catch(Exception ex) {
+                    log.log(Level.WARNING,"Stopping of event loop failed", ex);
                 } finally {
-                    fairLock.unlock();
-                }
-
-                if (aJgdi != null) {
-                    logger.log(Level.FINE, "closing jgdi connection for event client {0}", evcId);
-                    aJgdi.close();
-                    logger.log(Level.FINE, "jgdi connection for event client {0} closed", evcId);
-                }
-            } finally {
-                synchronized (instances) {
-                    instances.remove(this);
+                    eventLoopFuture = null;
                 }
             }
-        }
-    }
-
-    /**
-     *  Start the event client
-     * @throws java.lang.InterruptedException if the startup has been interrupted
-     */
-    public void start() throws InterruptedException {
-        fairLock.lock();
-        try {
-            if (thread == null) {
-                thread = new Thread(this);
-                thread.setPriority(Thread.NORM_PRIORITY - 1);
-                thread.start();
-                startupCondition.await();
-            } else {
-                throw new IllegalStateException("event client is already running");
-            }
-        } finally {
-            fairLock.unlock();
-        }
-    }
-
-    /**
-     *  Run method of the event client thread
-     */
-    public void run() {
-
-        int evcId = 0;
-        try {
-            fairLock.lock();
-            try {
+            if (executor != null && !executor.isShutdown()) {
+                executor.shutdown();
                 try {
-                    this.register();
-                } finally {
-                    startupCondition.signal();
-                }
-            } finally {
-                fairLock.unlock();
-            }
-
-            List<Event> eventList = new ArrayList<Event>();
-            evcId = getId();
-            logger.log(Level.FINE, "event client registered at qmaster (id = {0})", evcId);
-
-            while (!Thread.currentThread().isInterrupted()) {
-                boolean gotShutdownEvent = false;
-                try {
-                    fairLock.lock();
-                    try {
-
-                        if (thread == null) {
-                            break;
-                        }
-                        if (evc_index < 0) {
-                            break;
-                        }
-                        logger.log(Level.FINER, "calling native method fillEvents for event client {0}", evcId);
-                        fillEvents(eventList);
-                    } finally {
-                        fairLock.unlock();
-                    }
-                    if (logger.isLoggable(Level.FINER)) {
-                        logger.log(Level.FINE, "got {0} events from qmaster for event client {1}",
-                                new Object[]{eventList.size(), evcId});
-                    }
-                    if (Thread.currentThread().isInterrupted()) {
-                        break;
-                    }
-                    for (Event event : eventList) {
-                        try {
-                            fireEventOccured(event);
-                            if (event instanceof QmasterGoesDownEvent || event instanceof ShutdownEvent) {
-                                gotShutdownEvent = true;
-                            }
-                        } catch (Exception e) {
-                            logger.log(Level.WARNING, "error in fire event", e);
-                        }
-                    }
-                } catch (Exception e) {
-                    LogRecord lr = new LogRecord(Level.WARNING, "error in event loop of event client {0}");
-                    lr.setParameters(new Object[]{evcId});
-                    lr.setThrown(e);
-                    logger.log(lr);
-                }
-                eventList.clear();
-                if (gotShutdownEvent) {
-                    logger.log(Level.FINE, "got shutdown event from master, exiting working thread of event client {0}", evcId);
-                    break;
+                    executor.awaitTermination(60, TimeUnit.SECONDS);
+                } catch (InterruptedException ex) {
+                    // Ingore
+                } finally {                  
+                    executor = null;
                 }
             }
-            close();
-        } catch (Exception ex) {
-            LogRecord lr = new LogRecord(Level.WARNING, "Unexpected error in event loop of event client {0}");
-            lr.setParameters(new Object[]{evcId});
-            lr.setThrown(ex);
-            logger.log(lr);
+        } catch(Throwable ex) {
+            log.log(Level.WARNING,"Close of event client failed", ex);
         } finally {
-            logger.exiting(getClass().getName(), "run");
-            fairLock.lock();
-            try {
-                this.thread = null;
-            } finally {
-                fairLock.unlock();
+            executorLock.unlock();
+            synchronized (instances) {
+                instances.remove(this);
             }
         }
+        log.exiting(getClass().getName(), "close");
     }
+
 
     /**
      *  Determine if the event client has been closed
      *  @return <code>true</code> if the event client has been closed
      */
     public boolean isClosed() {
-        fairLock.lock();
-        try {
-            return evc_index < 0 || !isRunning();
-        } finally {
-            fairLock.unlock();
-        }
+        boolean ret = false;
+        log.entering(getClass().getName(), "isClosed");
+        ret = eventLoop.getState().equals(State.STOPPED);
+        log.exiting(getClass().getName(), "isClosed", ret);
+        return ret;
     }
     
     /**
@@ -338,54 +190,16 @@ public abstract class AbstractEventClient implements Runnable {
      * @return <code>true</code> if the event client is running
      */
     public boolean isRunning() {
-        fairLock.lock();
-        try {
-            return thread != null && thread.isAlive() && !thread.isInterrupted();
-        } finally {
-            fairLock.unlock();
-        }
-    }
-
-    protected void testConnected() throws JGDIException {
-        fairLock.lock();
-        try {
-            if (jgdi == null) {
-                throw new JGDIException("Not connected");
-            }
-        } finally {
-            fairLock.unlock();
-        }
-    }
-
-    /**
-     *  Subscribe all events for this event client
-     *  @throws JGDIException if subscribe failed
-     */
-    public void subscribeAll() throws JGDIException {
-        fairLock.lock();
-        try {
-            subscribeAllNative();
-        } finally {
-            fairLock.unlock();
-        }
-    }
-
-    /**
-     *  Unsubscribe all events for this event client
-     *  @throws JGDIException if unsubscribe failed
-     */
-    public void unsubscribeAll() throws JGDIException {
-        fairLock.lock();
-        try {
-            unsubscribeAllNative();
-        } finally {
-            fairLock.unlock();
-        }
+        boolean ret = false;
+        log.entering(getClass().getName(), "isRunning");
+        ret = eventLoop.getState().equals(State.RUNNING);
+        log.exiting(getClass().getName(), "isRunning", ret);
+        return ret;
     }
 
     protected void fireEventOccured(Event evt) {
-
-        logger.log(Level.FINER, "fire event {0}", evt);
+        log.entering(getClass().getName(), "fireEventOccured", evt);
+        log.log(Level.FINER, "fire event {0}", evt);
         Set<EventListener> tmp = null;
         listenerLock.lock();
         try {
@@ -397,6 +211,7 @@ public abstract class AbstractEventClient implements Runnable {
         for (EventListener lis : tmp) {
             lis.eventOccured(evt);
         }
+        log.exiting(getClass().getName(), "fireEventOccured");
     }
 
     /**
@@ -404,6 +219,8 @@ public abstract class AbstractEventClient implements Runnable {
      * @param lis the event listener
      */
     public void addEventListener(EventListener lis) {
+        log.entering(getClass().getName(), "addEventListener", lis);
+        
         listenerLock.lock();
         try {
             Set<EventListener> tmp = eventListeners;
@@ -413,6 +230,7 @@ public abstract class AbstractEventClient implements Runnable {
         } finally {
             listenerLock.unlock();
         }
+        log.exiting(getClass().getName(), "addEventListener");
     }
 
     /**
@@ -420,6 +238,7 @@ public abstract class AbstractEventClient implements Runnable {
      * @param lis the event listener
      */
     public void removeEventListener(EventListener lis) {
+        log.entering(getClass().getName(), "removeEventListener", lis);
         listenerLock.lock();
         try {
             eventListeners = new HashSet<EventListener>(eventListeners);
@@ -427,61 +246,624 @@ public abstract class AbstractEventClient implements Runnable {
         } finally {
             listenerLock.unlock();
         }
+        log.exiting(getClass().getName(), "removeEventListener");
     }
 
+    /**
+     *  Start the event client
+     */
+    private void start() throws JGDIException {
+        log.entering(getClass().getName(), "start");
+        boolean started = false;
+        executorLock.lock();
+        try {
+            if(eventLoop.getState().equals(State.STOPPED)) {
+                if(shutdown) {
+                    throw new JGDIException("Can not start event client, shutdown is in progress");
+                }
+                // the close method is smart enough to do nothing
+                // if the event client is already stopped
+                // However it can happen that the executor thread is still
+                // active => close it
+                close();
+                executor = Executors.newSingleThreadExecutor();
+                eventLoopFuture = executor.submit(eventLoop);
+                started = true;
+            } 
+        } finally {
+            executorLock.unlock();
+        }
+        if(started) {
+            log.log(Level.FINE, "Waiting for worker thread startup");
+            eventLoop.waitForStartup();
+            log.log(Level.FINE, "worker thread started");
+        }
+        log.exiting(getClass().getName(), "start");
+    }
+    
+    /**
+     * Commit the changed subscription
+     * @throws com.sun.grid.jgdi.JGDIException
+     */
     public void commit() throws JGDIException {
-        fairLock.lock();
-        try {
-            logger.log(Level.FINE, "commit");
-            testConnected();
-            nativeCommit();
-        } finally {
-            fairLock.unlock();
-        }
+        log.entering(getClass().getName(), "commit");
+        // The first commit starts the event client automatically
+        start();
+        // Commit the changes
+        eventLoop.commit();
+        log.exiting(getClass().getName(), "commit");
     }
 
-    private void register() throws JGDIException {
-        fairLock.lock();
-        try {
-            logger.log(Level.FINE, "register");
-            testConnected();
-            registerNative();
-        } finally {
-            fairLock.unlock();
-        }
+    /**
+     * Subscribe an additional event.
+     * @param type the event type
+     */
+    public void subscribe(EventTypeEnum type) {
+        log.entering(getClass().getName(), "subscribe", type);
+        eventLoop.subscribe(type);
+        log.exiting(getClass().getName(), "subscribe");
+    }
+    
+    /**
+     * Add a set of events to the subscription
+     * @param types set of event types
+     */
+    public void subscribe(Set<EventTypeEnum> types) {
+        log.entering(getClass().getName(), "subscribe", types);
+        eventLoop.subscribe(types);
+        log.exiting(getClass().getName(), "subscribe");
     }
 
-    private void deregister() throws JGDIException {
-        fairLock.lock();
-        try {
-            if (evc_index >= 0) {
-                logger.log(Level.FINE, "deregistered");
-                deregisterNative();
-            } else {
-                logger.log(Level.FINE, "can't deregister, already closed");
-            }
-        } finally {
-            fairLock.unlock();
-        }
+    /**
+     * Remove a event from the subscription
+     * @param type the event type
+     */
+    public void unsubscribe(EventTypeEnum type) {
+        log.entering(getClass().getName(), "unsubscribe", type);
+        eventLoop.unsubscribe(type);
+        log.exiting(getClass().getName(), "unsubscribe");
+    }
+    
+    /**
+     * Remove a set of events from the subscription
+     * @param types the set of events
+     */
+    public void unsubscribe(Set<EventTypeEnum> types) {
+        log.entering(getClass().getName(), "unsubscribe", types);
+        eventLoop.unsubscribe(types);
+        log.exiting(getClass().getName(), "unsubscribe");
     }
 
-    private native void nativeCommit() throws JGDIException;
+    /**
+     *  Subscribe all events for this event client
+     */
+    public void subscribeAll() {
+        log.entering(getClass().getName(), "subscribeAll"); 
+        eventLoop.subscribeAll();
+        log.exiting(getClass().getName(), "subscribeAll");
+    }
 
-    private native void subscribeNative(int type) throws JGDIException;
+    /**
+     *  Unsubscribe all events for this event client
+     */
+    public void unsubscribeAll() {
+        log.entering(getClass().getName(), "unsubscribeAll");        
+        eventLoop.unsubscribeAll();
+        log.exiting(getClass().getName(), "unsubscribeAll");
+    }
+    
+    /**
+     * Set the subscription of this event client
+     * @param types set of event types
+     */
+    public void setSubscription(Set<EventTypeEnum> types) {
+        log.entering(getClass().getName(), "setSubscription", types);        
+        eventLoop.setSubscription(types);
+        log.exiting(getClass().getName(), "setSubscription");
+    }
 
-    private native void unsubscribeNative(int type) throws JGDIException;
+    /**
+     * Get the current subscriptions
+     * @return the current subscription
+     */
+    public Set<EventTypeEnum> getSubscription() {
+        log.entering(getClass().getName(), "getSubscription");
+        Set<EventTypeEnum> ret = eventLoop.getSubscription();
+        log.exiting(getClass().getName(), "getSubscription", ret);
+        return ret;
+    }
+    
+    /**
+     * Set the flush time for subscribed events
+     * @param map   map with event type as key and flush time as value
+     */
+    public void setFlush(Map<EventTypeEnum,Integer> map) {
+        log.entering(getClass().getName(), "setFlush", map);
+        eventLoop.setFlush(map);
+        log.exiting(getClass().getName(), "setFlush");
+    }
+    
+    /**
+     * Set the flush time for subscribed event
+     * @param type the event type
+     * @param time the flush time
+     */
+    public void setFlush(EventTypeEnum type, int time) {
+        if(log.isLoggable(Level.FINER)) {
+            log.entering(getClass().getName(), "setFlush", new Object [] { type, time });
+        }
+        eventLoop.setFlush(type, time);
+        log.exiting(getClass().getName(), "setFlush");
+    }
+    
+    /**
+     * Get the flush time of a event
+     * @param type  the event type
+     * @return the flush time
+     */
+    public int getFlush(EventTypeEnum type) {
+        log.entering(getClass().getName(), "getFlush", type);
+        int ret = eventLoop.getFlush(type);
+        log.exiting(getClass().getName(), "setFlush", ret);
+        return ret;
+    }
 
-    private native void subscribeAllNative() throws JGDIException;
+    private native void commitNative(int evcIndex) throws JGDIException;
+    
+    private native void setFlushNative(int evcIndex, int type, boolean flush, int time) throws JGDIException;
+    
+    private native int getFlushNative(int evcIndex, int type) throws JGDIException;
 
-    private native void unsubscribeAllNative() throws JGDIException;
-
+    private native void interruptNative(int evcIndex) throws JGDIException;
+    
     private native void closeNative(int evcIndex) throws JGDIException;
 
     private native int initNative(JGDI jgdi, int regId) throws JGDIException;
 
-    private native void registerNative() throws JGDIException;
+    private native int registerNative(int evcIndex) throws JGDIException;
 
-    private native void deregisterNative() throws JGDIException;
+    private native void fillEvents(int evcIndex, List eventList) throws JGDIException;
+    
+    private native void subscribeNative(int evcIndex, int evenType, boolean subcribe) throws JGDIException;
+    
+    enum State {
 
-    private native void fillEvents(List eventList) throws JGDIException;
+        STARTING,
+        RUNNING,
+        STOPPING,
+        STOPPED,
+        ERROR
+    }
+    
+    private static EventTypeEnum [] ALWAYS_SUBSCRIBED = {
+        EventTypeEnum.QmasterGoesDown, EventTypeEnum.Shutdown
+    };
+    
+    private class EventLoopAction implements Runnable {
+        
+        
+        private State state = State.STOPPED;
+        private final String url;
+        private final int regId;
+        private final Lock lock = new ReentrantLock();
+        private final Condition stateChangedCondition = lock.newCondition(); 
+        
+        private final Map<EventTypeEnum, Integer> subscription = new HashMap<EventTypeEnum, Integer>();
+        private final Set<EventTypeEnum> nativeSubscription = new HashSet<EventTypeEnum>();
+        
+        private int evcId;
+        private int evcIndex;
+        
+        private boolean commitFlag;
+        private JGDIException error;
+        
+        public EventLoopAction(String url, int regId) {
+            this.url = url;
+            this.regId = regId;
+            for(EventTypeEnum type: ALWAYS_SUBSCRIBED) {
+                subscription.put(type, null);
+                nativeSubscription.add(type);
+            }
+        }
+        
+        public int getId() {
+            lock.lock();
+            try {
+                return evcId;
+            } finally {
+                lock.unlock();
+            }
+        }
+        
+        public void commit() throws JGDIException {
+            lock.lock();
+            try {
+                if(!state.equals(State.RUNNING)) {
+                    throw new JGDIException("Cannot commit, event client is not started");
+                }
+                commitFlag = true;
+                interruptNative(evcIndex);
+            } finally {
+                lock.unlock();
+            }
+        }
+        
+        public void interrupt() throws JGDIException {
+            lock.lock();
+            try {
+                if(evcIndex >= 0) {
+                    interruptNative(evcIndex);
+                }
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        private void setState(State state) {
+            lock.lock();
+            try {
+                if(!this.state.equals(state)) {
+                    this.state = state;
+                    stateChangedCondition.signalAll();
+                }
+            } finally {
+                lock.unlock();
+            }
+        }
+        
+        public State getState() {
+            lock.lock();
+            try {
+                return state;
+            }finally {
+                lock.unlock();
+            }
+        }
+        
+        private void error(JGDIException ex) {
+            lock.lock();
+            try {
+                this.error = ex;
+                this.state = State.ERROR;
+                stateChangedCondition.signalAll();
+            } finally {
+                lock.unlock();
+            }
+            log.log(Level.WARNING, "error in event loop", ex);
+        }
+        
+        public void waitForStartup() throws JGDIException {
+            lock.lock();
+            try {
+                while(true) {
+                    switch(state) {
+                        case RUNNING: 
+                            return;
+                        case ERROR:
+                            throw error;
+                        case STOPPING:
+                            throw new JGDIException("event client is going down");
+                        default:
+                            stateChangedCondition.await();
+                    }
+                    
+                }
+            } catch (InterruptedException ex) {
+                throw new JGDIException(ex, "Startup of event client has been interrupted");
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        public boolean isAlwaysSubscribed(EventTypeEnum type) {
+            for(EventTypeEnum tmpType: ALWAYS_SUBSCRIBED) {
+                if(tmpType.equals(type)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        private void doCommit(int evcIndex) throws JGDIException {
+            log.entering(getClass().getName(), "doCommit");
+            lock.lock(); 
+            try {
+                if(commitFlag) {
+                    log.log(Level.FINE, "commiting subscription");
+                    commitFlag = false;
+                    Set<EventTypeEnum> rmSub = new HashSet<EventTypeEnum>(nativeSubscription);
+                    Set<EventTypeEnum> newSub = new HashSet<EventTypeEnum>();
+                    for (EventTypeEnum type : subscription.keySet()) {
+                        if (!rmSub.remove(type)) {
+                            newSub.add(type);
+                        }
+                    }
+                    for (EventTypeEnum type : rmSub) {
+                        if(!isAlwaysSubscribed(type)) {
+                            log.log(Level.FINE,"unsubscribing event {0}", type);
+                            subscribeNative(evcIndex, EventTypeMapping.getNativeEventType(type), false);
+                            nativeSubscription.remove(type);
+                        }
+                    }
+                    for (EventTypeEnum type : newSub) {
+                        if(!isAlwaysSubscribed(type)) {
+                            log.log(Level.FINE,"subscribing event {0}", type);
+                            subscribeNative(evcIndex, EventTypeMapping.getNativeEventType(type), true);
+                            nativeSubscription.add(type);
+                        }
+                    }
+
+                    for (Map.Entry<EventTypeEnum, Integer> entry : subscription.entrySet()) {
+                        if (entry.getValue() != null) {
+                            if(log.isLoggable(Level.FINE)) {
+                                log.log(Level.FINE,"setting flush for event {0} = ", new Object [] { entry.getKey(), entry.getValue() });
+                            }
+                            setFlushNative(evcIndex, EventTypeMapping.getNativeEventType(entry.getKey()), true, entry.getValue());
+                        }
+                    }
+                    commitNative(evcIndex);
+                }
+            } finally {
+                lock.unlock();
+            }
+            log.exiting(getClass().getName(), "doCommit", null);
+        }
+        
+        public void run() {
+            log.entering(getClass().getName(), "run");
+
+            JGDI jgdi = null;
+            try {
+                setState(State.STARTING);
+                jgdi = JGDIFactory.newInstance(url);
+                
+                log.log(Level.FINER, "calling initNative({0})", regId);
+                evcIndex = initNative(jgdi, regId);
+                
+                log.log(Level.FINER, "calling registerNative({0})", evcIndex);
+                int id = registerNative(evcIndex);
+                log.log(Level.FINER, "event client registered (id={0})", id);
+                lock.lock();
+                try {
+                    this.evcId = id;
+                } finally {
+                    lock.unlock();
+                }
+                setState(State.RUNNING);
+                
+                boolean gotShutdownEvent = false;
+                List<Event> eventList = new ArrayList<Event>();
+
+                while (true) {
+                    if (Thread.currentThread().isInterrupted()) {
+                        log.log(Level.FINE,"event loop has been interrupted");
+                        break;
+                    }
+                    if (gotShutdownEvent) {
+                        break;
+                    }
+                    
+                    doCommit(evcIndex);
+                    
+                    log.log(Level.FINER, "calling native method fillEvents for event client {0}", evcId);
+                    fillEvents(evcIndex, eventList);
+
+                    if (log.isLoggable(Level.FINER)) {
+                        log.log(Level.FINE, "got {0} events from qmaster for event client {1}",
+                                new Object[]{eventList.size(), evcId});
+                    }
+
+                    if (Thread.currentThread().isInterrupted()) {
+                        log.log(Level.FINE,"event loop has been interrupted");
+                        break;
+                    }
+                    for (Event event : eventList) {
+                        try {
+                            fireEventOccured(event);
+                            if (event instanceof QmasterGoesDownEvent || event instanceof ShutdownEvent) {
+                                if (gotShutdownEvent == false) {
+                                    log.log(Level.FINE, "got shutdown event");
+                                    gotShutdownEvent = true;
+                                }
+                            }
+                        } catch (Exception e) {
+                            log.log(Level.WARNING, "error in fire event", e);
+                        }
+                    }
+                    eventList.clear();
+                }
+            } catch(JGDIException ex) {
+                error(ex);
+            } catch(Throwable ex) {
+                error(new JGDIException(ex, "Unknown error in event loop"));
+            } finally {
+                setState(State.STOPPING);
+                if(evcIndex >= 0 ) {
+                    try {
+                        closeNative(evcIndex);
+                    } catch(Exception ex) {
+                        // Ignore
+                    } finally {
+                        evcIndex = -1;
+                    }
+                }
+                if(jgdi != null) {
+                    try {
+                        jgdi.close();
+                    } catch(Exception ex) {
+                        // Igore
+                    }
+                }
+                setState(State.STOPPED);
+                subscription.clear();
+                nativeSubscription.clear();
+                for (EventTypeEnum type : ALWAYS_SUBSCRIBED) {
+                    subscription.put(type, null);
+                    nativeSubscription.add(type);
+                }
+            }
+            log.exiting(getClass().getName(), "run");
+        }
+        
+        public void subscribe(EventTypeEnum type) {
+            log.entering(getClass().getName(), "subscribe", type);
+            lock.lock();
+            try {
+                subscription.put(type, null);
+            } finally {
+                lock.unlock();
+            }
+            log.exiting(getClass().getName(), "subscribe");
+        }
+
+        public void subscribe(Set<EventTypeEnum> types) {
+            log.entering(getClass().getName(), "subscribe", types);
+            lock.lock();
+            try {
+                for (EventTypeEnum type : types) {
+                    subscription.put(type, null);
+                }
+            } finally {
+                lock.unlock();
+            }
+            log.exiting(getClass().getName(), "subscribe");
+        }
+
+        public void unsubscribe(EventTypeEnum type) {
+            log.entering(getClass().getName(), "unsubscribe", type);
+
+            lock.lock();
+            try {
+                if(!isAlwaysSubscribed(type)) {
+                    subscription.remove(type);
+                }
+            } finally {
+                lock.unlock();
+            }
+            log.exiting(getClass().getName(), "unsubscribe");
+        }
+
+        public void unsubscribe(Set<EventTypeEnum> types) {
+            log.entering(getClass().getName(), "unsubscribe", types);
+
+            lock.lock();
+            try {
+                for (EventTypeEnum type : types) {
+                    if(!isAlwaysSubscribed(type)) {
+                        subscription.remove(type);
+                    }
+                }
+            } finally {
+                lock.unlock();
+            }
+            log.exiting(getClass().getName(), "unsubscribe");
+        }
+
+        /**
+         *  Subscribe all events for this event client
+         *  @throws JGDIException if subscribe failed
+         */
+        public void subscribeAll() {
+            log.entering(getClass().getName(), "subscribeAll");
+            lock.lock();
+            try {
+                subscription.clear();
+                for (EventTypeEnum type : EventTypeEnum.values()) {
+                    subscription.put(type, null);
+                }
+            } finally {
+                lock.unlock();
+            }
+            log.exiting(getClass().getName(), "subscribeAll");
+        }
+
+        /**
+         *  Unsubscribe all events for this event client
+         *  @throws JGDIException if unsubscribe failed
+         */
+        public void unsubscribeAll() {
+            log.entering(getClass().getName(), "unsubscribeAll");
+            lock.lock();
+            try {
+                subscription.clear();
+                for(EventTypeEnum type: ALWAYS_SUBSCRIBED) {
+                    subscription.put(type, null);
+                }
+            } finally {
+                lock.unlock();
+            }
+            log.exiting(getClass().getName(), "unsubscribeAll");
+        }
+
+        public void setSubscription(Set<EventTypeEnum> types) {
+            log.entering(getClass().getName(), "setSubscription", types);
+            lock.lock();
+            try {
+                subscription.clear();
+                for(EventTypeEnum type: ALWAYS_SUBSCRIBED) {
+                    subscription.put(type, null);
+                }
+                subscribe(types);
+            } finally {
+                lock.unlock();
+            }
+            log.exiting(getClass().getName(), "setSubscription");
+        }
+
+        public Set<EventTypeEnum> getSubscription() {
+            log.entering(getClass().getName(), "getSubscription");
+            Set<EventTypeEnum> ret = null;
+            lock.lock();
+            try {
+                ret = new HashSet<EventTypeEnum>(subscription.keySet());
+            } finally {
+                lock.unlock();
+            }
+            log.exiting(getClass().getName(), "getSubscription", ret);
+            return ret;
+        }
+
+        public void setFlush(Map<EventTypeEnum, Integer> map) {
+            log.entering(getClass().getName(), "setFlush", map);
+            lock.lock();
+            try {
+                for (Map.Entry<EventTypeEnum, Integer> entry : map.entrySet()) {
+                    setFlush(entry.getKey(), entry.getValue());
+                }
+            } finally {
+                lock.unlock();
+            }
+            log.exiting(getClass().getName(), "setFlush");
+        }
+
+        public void setFlush(EventTypeEnum type, int time) {
+            if (log.isLoggable(Level.FINER)) {
+                log.entering(getClass().getName(), "setFlush", new Object[]{type, time});
+            }
+            lock.lock();
+            try {
+                if (subscription.containsKey(type)) {
+                    subscription.put(type, time);
+                }
+            } finally {
+                lock.unlock();
+            }
+            log.exiting(getClass().getName(), "setFlush");
+        }
+
+        public int getFlush(EventTypeEnum type) {
+            log.entering(getClass().getName(), "getFlush", type);
+            Integer retObj = null;
+            lock.lock();
+            try {
+                retObj = subscription.get(type);
+            } finally {
+                lock.unlock();
+            }
+            int ret = (retObj != null) ? retObj.intValue() : 0;
+            log.exiting(getClass().getName(), "setFlush", ret);
+            return ret;
+        }
+
+    }
 }

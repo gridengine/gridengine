@@ -31,12 +31,14 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi;
 
+import com.sun.grid.jgdi.jni.AbstractEventClient;
 import com.sun.grid.jgdi.management.JGDIProxy;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.MalformedURLException;
+import java.util.logging.Logger;
 import javax.management.remote.JMXServiceURL;
 
 /**
@@ -46,6 +48,7 @@ import javax.management.remote.JMXServiceURL;
  */
 public class JGDIFactory {
     
+    private final static Logger log = Logger.getLogger(JGDIFactory.class.getName());
     private static String versionString;
     private static boolean libNotLoaded = true;
     
@@ -71,10 +74,11 @@ public class JGDIFactory {
      * @return the <code>JGDI<code> instance
      */
     public static JGDI newInstance(String url) throws JGDIException {
+        log.entering(JGDIFactory.class.getName(), "newInstance", url);
         initLib();
         com.sun.grid.jgdi.jni.JGDIImpl ret = new com.sun.grid.jgdi.jni.JGDIImpl();
         ret.init(url);
-        
+        log.exiting(JGDIFactory.class.getName(), "newInstance", ret);
         return ret;
     }
     
@@ -122,7 +126,7 @@ public class JGDIFactory {
      * @return the new event client
      */
     public static EventClient createEventClient(String url, int evcId) throws JGDIException {
-        return new com.sun.grid.jgdi.jni.EventClientImpl(url, evcId);
+        return new AbstractEventClient(url, evcId);
     }
     
     /**

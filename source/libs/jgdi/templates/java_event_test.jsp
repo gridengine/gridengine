@@ -78,27 +78,26 @@
 
       int flushInterval = 1; // in seconds
       long timeout = flushInterval * 1000 * 3;
+     Map<EventTypeEnum,Integer> map = new HashMap<EventTypeEnum,Integer>();
       try {
 
          evc.addEventListener(waitThread);
 
-         evc.subscribe<%=name%>Add(true);
-         evc.set<%=name%>AddFlush(true, flushInterval);
+         map.put(EventTypeEnum.<%=name%>Add, flushInterval);
+         map.put(EventTypeEnum.<%=name%>Del, flushInterval);
          
-         evc.subscribe<%=name%>Del(true);
-         evc.set<%=name%>DelFlush(true, flushInterval);
 <% 
    if (cullObj.hasModifyOperation()) {
 %>         
-         evc.subscribe<%=name%>Mod(true);            
-         evc.set<%=name%>ModFlush(true, flushInterval);
+         map.put(EventTypeEnum.<%=name%>Mod, flushInterval);
 <%
    }
 %>         
+        evc.subscribe(map.keySet());            
+        evc.setFlush(map);
 
          evc.commit();
-         // evc.start();
-
+         
          waitThread.start();
 
          Thread.yield();
@@ -141,14 +140,7 @@
 
       } finally {
          waitThread.interrupt();
-         evc.subscribe<%=name%>Add(false);
-         evc.subscribe<%=name%>Del(false);
-<% 
-   if (cullObj.hasModifyOperation()) {
-%>         evc.subscribe<%=name%>Mod(false);            
-<%
-   }
-%>         
+         evc.unsubscribe(map.keySet());
          evc.commit();
          
          if (testObj != null) {
@@ -190,8 +182,8 @@
 
          evc.addEventListener(waitThread);
 
-         evc.subscribe<%=name%>Mod(true);
-         evc.set<%=name%>ModFlush(true, flushInterval);
+         evc.subscribe(EventTypeEnum.<%=name%>Mod);
+         evc.setFlush(EventTypeEnum.<%=name%>Mod, flushInterval);
          
          evc.commit();
          waitThread.start();
@@ -210,7 +202,7 @@
          
       } finally {
          waitThread.interrupt();
-         evc.subscribe<%=name%>Mod(false);
+         evc.unsubscribe(EventTypeEnum.<%=name%>Mod);
          evc.commit();
 
          testObj = jgdi.get<%=name%>();
@@ -240,7 +232,7 @@ import com.sun.grid.jgdi.configuration.*;
 import com.sun.grid.jgdi.configuration.reflect.*;
 import junit.framework.*;
 import com.sun.grid.jgdi.BaseTestCase;
-import java.util.Hashtable;
+import java.util.HashMap;
 import com.sun.grid.jgdi.EventClient;
 import com.sun.grid.jgdi.JGDIFactory;
 import java.util.Collection;
@@ -265,7 +257,6 @@ public class <%=cullObj.getIdlName()%>EventTestCase extends BaseTestCase {
 
       jgdi = createJGDI();
       evc = createEventClient(0);
-      evc.start();
       super.setUp();
       logger.fine("SetUp done");
    }

@@ -111,8 +111,11 @@ struct sge_evc_class_str {
    void (*ec_mark4registration)(sge_evc_class_t *thiz);
    bool (*ec_need_new_registration)(sge_evc_class_t *thiz);
 
-   void (*ec_signal)(sge_evc_class_t *thiz, lList **alpp, lList *event_list);
+   int (*ec_signal)(sge_evc_class_t *thiz, lList **alpp, lList *event_list);
    void (*ec_wait)(sge_evc_class_t *thiz);
+
+   bool (*ec_evco_triggered)(sge_evc_class_t *thiz);
+   bool (*ec_evco_exit)(sge_evc_class_t *thiz);
 
    /* dump current settings */
    void (*dprintf)(sge_evc_class_t *thiz);

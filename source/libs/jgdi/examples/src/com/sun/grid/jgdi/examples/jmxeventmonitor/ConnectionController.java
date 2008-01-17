@@ -41,6 +41,7 @@ import com.sun.grid.jgdi.event.QmasterGoesDownEvent;
 import com.sun.grid.jgdi.event.ShutdownEvent;
 import com.sun.grid.jgdi.management.JGDIProxy;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -62,7 +63,7 @@ public class ConnectionController {
     
     private final  EventListener shutdownListener = new EventListener() {
         public void eventOccured(Event evt) {
-            if(evt instanceof QmasterGoesDownEvent || evt instanceof ConnectionClosedEvent || evt instanceof ConnectionFailedEvent) {
+            if (evt instanceof QmasterGoesDownEvent || evt instanceof ConnectionClosedEvent || evt instanceof ConnectionFailedEvent) {
                 disconnect();
             } else if (evt instanceof ShutdownEvent) {
                 executor.submit(new ClearSubscriptionAction());
@@ -82,6 +83,23 @@ public class ConnectionController {
         executor.submit(new DisconnectAction());
     }
 
+    public void setSubscription(Set<EventTypeEnum> types) {
+        executor.submit(new SetSubscriptionAction(types));
+    }
+    
+    public void subscribeAll() {
+        EventTypeEnum[] values = EventTypeEnum.values();
+        Set<EventTypeEnum> subs = new HashSet<EventTypeEnum>(values.length);
+        for (EventTypeEnum value : values) {
+            subs.add(value);
+        }
+        subscribe(subs);
+    }
+    
+    public void unsubscribeAll() {
+        executor.submit(new UnsubscribeAllAction());
+    }
+    
     public void subscribe(Set<EventTypeEnum> types) {
         executor.submit(new SubscribeAction(types, true));
     }
@@ -115,11 +133,52 @@ public class ConnectionController {
     public void removeEventListener(EventListener lis) {
         eventListeners.remove(lis);
     }
+    
+    private class UnsubscribeAllAction implements Runnable {
+        public void run() {
+            try {
+                if (jgdiProxy != null) {
+                    jgdiProxy.getProxy().setSubscription(Collections.<EventTypeEnum>emptySet());
+                }
+                for (Listener lis : getListeners()) {
+                    lis.clearSubscription();
+                }
+            } catch (Exception ex) {
+                for (Listener lis : getListeners()) {
+                    lis.errorOccured(ex);
+                }
+            }
+        }
+    }
+    
 
     private class ClearSubscriptionAction implements Runnable {
         public void run() {
             for (Listener lis : getListeners()) {
                 lis.clearSubscription();
+            }
+        }
+    }
+
+    private class SetSubscriptionAction implements Runnable {
+        private final Set<EventTypeEnum> types;
+
+        public SetSubscriptionAction(Set<EventTypeEnum> types) {
+            this.types = types;
+            
+        }
+        public void run() {
+            try {
+                if (jgdiProxy != null) {
+                    jgdiProxy.getProxy().setSubscription(types);
+                    for (Listener lis : getListeners()) {
+                        lis.subscriptionSet(types);
+                    }
+                }
+            } catch (Exception ex) {
+                for (Listener lis : getListeners()) {
+                    lis.errorOccured(ex);
+                }
             }
         }
     }
@@ -213,6 +272,8 @@ public class ConnectionController {
 
         public void disconnected();
 
+        public void subscriptionSet(Set<EventTypeEnum> types);
+        
         public void subscribed(Set<EventTypeEnum> types);
 
         public void unsubscribed(Set<EventTypeEnum> typea);

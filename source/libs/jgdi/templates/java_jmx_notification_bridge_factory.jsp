@@ -40,19 +40,80 @@
 package com.sun.grid.jgdi.management;
 
 import javax.management.MBeanNotificationInfo;
+import javax.management.Notification;
 import com.sun.grid.jgdi.EventClient;
+import com.sun.grid.jgdi.event.Event;
 import java.util.*;
-
+import java.util.logging.Logger;
+import java.util.logging.Level;
 /** 
  *  Helper class for mapping JGDI Events to JMX notifications
  *
  */
 public class NotificationBridgeFactory {
 
-    public static NotificationBridge newInstance(String url) {
+    private static final Logger log = Logger.getLogger(NotificationBridgeFactory.class.getName());
+    private static final Map<Class, EventToNotification> eventMap = new HashMap<Class, EventToNotification>();
+
+    private static class EventToNotification {
+
+        private final String eventName;
+        private final Class eventClass;
+        private final MBeanNotificationInfo notificationInfo;
+
+        public EventToNotification(String eventName, Class eventClass) {
+            this.eventName = eventName;
+            this.eventClass = eventClass;
+            this.notificationInfo = new MBeanNotificationInfo(new String[]{eventName}, eventClass.getName(), null);
+        }
+
+        public MBeanNotificationInfo getNotificationInfo() {
+            return notificationInfo;
+        }
+
+        public Notification createNotification(Event event, long seqNumber) {
+            Notification notification = new Notification(eventName, EventClient.class.getName(), seqNumber);
+            notification.setUserData(event);
+            return notification;
+        }
+    }
+
+    public static Notification createNotification(Event evt, long seqNumber) {
+        EventToNotification bridge = eventMap.get(evt.getClass());
+        if (bridge != null) {
+            log.log(Level.FINE, "create notification for event {0}", evt);
+            return bridge.createNotification(evt, seqNumber);
+        } else {
+            return null;
+        }
+    }
     
-        NotificationBridge ret = new NotificationBridge(url);
+    public static NotificationBridge newInstance(String url) {    
+        return new NotificationBridge(url);
+    }
     
+    private static void registerEvent(String eventName, Class eventClass) {
+        if (log.isLoggable(Level.FINER)) {
+            log.entering("NotificationBridgeFactory", "registerEvent", new Object[]{eventName, eventClass});
+        }
+        EventToNotification evtNot = new EventToNotification(eventName, eventClass);
+        eventMap.put(eventClass, evtNot);
+        log.exiting("NotificationBridgeFactory", "registerEvent");
+    }
+
+    public static MBeanNotificationInfo[] createMBeanNotificationInfo() {
+        log.entering("NotificationBridgeFactory", "createMBeanNotificationInfo");
+        MBeanNotificationInfo [] ret = new MBeanNotificationInfo[eventMap.size()];
+        int i = 0;
+        for (Map.Entry<Class, EventToNotification> entry : eventMap.entrySet()) {
+            ret[i++] = entry.getValue().getNotificationInfo();
+        }
+        log.exiting("NotificationBridgeFactory", "createMBeanNotificationInfo", ret);
+        return ret;
+    }
+    
+    
+    static {
 <%
     com.sun.grid.cull.CullObject cullObj = null;    
     for (String name : cullDef.getObjectNames()) {
@@ -71,22 +132,22 @@ public class NotificationBridgeFactory {
       String classname = null;
       if(cullObj.hasAddEvent()) {
 %>
-      ret.registerEvent("Add<%=name%>", com.sun.grid.jgdi.event.<%=cullObj.getIdlName()%>AddEvent.class);
+      registerEvent("Add<%=name%>", com.sun.grid.jgdi.event.<%=cullObj.getIdlName()%>AddEvent.class);
 <%    } 
       
       if(cullObj.hasDeleteEvent()) {
 %>
-      ret.registerEvent("Del<%=name%>", com.sun.grid.jgdi.event.<%=cullObj.getIdlName()%>DelEvent.class);
+      registerEvent("Del<%=name%>", com.sun.grid.jgdi.event.<%=cullObj.getIdlName()%>DelEvent.class);
 <%
       }
       if(cullObj.hasModifyEvent()) {
 %>
-      ret.registerEvent("Mod<%=name%>", com.sun.grid.jgdi.event.<%=cullObj.getIdlName()%>ModEvent.class);
+      registerEvent("Mod<%=name%>", com.sun.grid.jgdi.event.<%=cullObj.getIdlName()%>ModEvent.class);
 <%
       }
       if(cullObj.hasGetListEvent()) {
 %>
-      ret.registerEvent("List<%=name%>", com.sun.grid.jgdi.event.<%=cullObj.getIdlName()%>ListEvent.class);
+      registerEvent("List<%=name%>", com.sun.grid.jgdi.event.<%=cullObj.getIdlName()%>ListEvent.class);
 <%
       }
    } // end of for
@@ -100,16 +161,16 @@ public class NotificationBridgeFactory {
        "JobFinalUsage",
        "JobPriorityMod",
        "QueueInstanceSuspend",
-       "QueueInstanceUnsuspend"
+       "QueueInstanceUnsuspend",
+       "ConnectionClosed"
    };
    
    for (int i = 0; i < specialEvents.length; i++) {
 
 %>
-      ret.registerEvent("<%=specialEvents[i]%>", com.sun.grid.jgdi.event.<%=specialEvents[i]%>Event.class);
+      registerEvent("<%=specialEvents[i]%>", com.sun.grid.jgdi.event.<%=specialEvents[i]%>Event.class);
 <%
    } // end of for special events
 %>
-      return ret;
    }
 }

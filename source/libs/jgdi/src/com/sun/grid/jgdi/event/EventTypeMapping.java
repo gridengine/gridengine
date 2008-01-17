@@ -1,6 +1,3 @@
-#ifndef JGDI_EVENT_H
-#define JGDI_EVENT_H
-
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -33,12 +30,43 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "evc/sge_event_client.h"
+package com.sun.grid.jgdi.event;
 
-jgdi_result_t process_generic_event(JNIEnv *env,  jobject *event, lListElem *ev, lList** alpp);
-jgdi_result_t create_generic_event(JNIEnv *env, jobject *event_obj, const char* beanClassName, 
-                                   const char* cullTypeName, lDescr *descr, int event_action, lListElem *ev, lList **alpp);
+import java.util.HashMap;
+import java.util.Map;
 
-#include "jgdi_event_gen.h"
+/**
+ *
+ */
+public class EventTypeMapping {
 
-#endif
+    private final static Map<EventTypeEnum,Integer> javaToNativeMap = new HashMap<EventTypeEnum,Integer>();
+    private final static Map<Integer,EventTypeEnum> nativeToJavaMap = new HashMap<Integer,EventTypeEnum>();
+
+    private static native void nativeInit();
+    
+    private synchronized static void init() {
+        if(javaToNativeMap.isEmpty()) {
+            nativeInit();
+        }
+    }
+    
+    public static EventTypeEnum getEventEnumType(int nativeEventId) {
+        init();
+        return nativeToJavaMap.get(nativeEventId);
+    }
+    
+    
+    public static void registerEvent(String eventTypeEnumName, int nativeEventId) {
+         EventTypeEnum type = EventTypeEnum.valueOf(eventTypeEnumName);
+         javaToNativeMap.put(type, nativeEventId);
+         nativeToJavaMap.put(nativeEventId, type);
+    }
+    
+    
+    public static int getNativeEventType(EventTypeEnum eventType) {
+        init();
+        return javaToNativeMap.get(eventType);
+    }
+    
+}

@@ -81,7 +81,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
     private JMXConnector connector;
     private MBeanServerConnection connection;
     private Set<EventListener> listeners = Collections.<EventListener>emptySet();
-
+    private boolean closeEventSent = false;
     /**
      *  Create a new proxy the the jgdi MBean
      *
@@ -171,12 +171,19 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
             }
         }
         if(evt != null) {
-            Set<EventListener> tmpLis = null;
-            synchronized (this) {
-                tmpLis = listeners;
+            boolean isCloseEvent = ConnectionClosedEvent.class.isAssignableFrom(evt.getClass());
+            if(!isCloseEvent || !closeEventSent) {
+                Set<EventListener> tmpLis = null;
+                synchronized (this) {
+                    tmpLis = listeners;
+                }
+                for (EventListener lis : tmpLis) {
+                    lis.eventOccured(evt);
+                }
             }
-            for (EventListener lis : tmpLis) {
-                lis.eventOccured(evt);
+            if(isCloseEvent) {
+                closeEventSent = true;
+                close();
             }
         }
     }
@@ -215,6 +222,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
                 env.put("jmx.remote.credentials", credentials);
             }
             try {
+                closeEventSent = false;
                 connector = JMXConnectorFactory.connect(url, env);
                 connection = connector.getMBeanServerConnection();
                 
@@ -224,7 +232,6 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
                 }
                 connection.addNotificationListener(name, this, null, null);
                 connector.addConnectionNotificationListener(this, null, connector.getConnectionId());
-
             } catch (NullPointerException ex) {
                 close();
                 throw new JGDIException(ex, "jgdi mbean null");

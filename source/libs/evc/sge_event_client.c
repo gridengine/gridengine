@@ -672,10 +672,12 @@ static ev_registration_id ec2_get_id(sge_evc_class_t *thiz);
 static sge_gdi_ctx_class_t *get_gdi_ctx(sge_evc_class_t *thiz);
 static bool ec2_get_local(sge_evc_class_t *thiz, lList **event_list, bool exit_on_qmaster_down);
 static void ec2_wait_local(sge_evc_class_t *thiz);
-static void ec2_signal_local(sge_evc_class_t *thiz, lList **alpp, lList *event_list);
+static int ec2_signal_local(sge_evc_class_t *thiz, lList **alpp, lList *event_list);
 static void ec2_wait(sge_evc_class_t *thiz);
-static void ec2_signal(sge_evc_class_t *thiz, lList **alpp, lList *event_list);
+static int ec2_signal(sge_evc_class_t *thiz, lList **alpp, lList *event_list);
 static ec_control_t *ec2_get_event_control(sge_evc_class_t *thiz);
+static bool ec2_evco_triggered(sge_evc_class_t *thiz);
+static bool ec2_evco_exit(sge_evc_class_t *thiz);
 
 sge_evc_class_t *
 sge_evc_class_create(sge_gdi_ctx_class_t *sge_gdi_ctx, ev_registration_id reg_id, 
@@ -742,6 +744,8 @@ sge_evc_class_create(sge_gdi_ctx_class_t *sge_gdi_ctx, ev_registration_id reg_id
    ret->ec_mark4registration = ec2_mark4registration;
    ret->ec_need_new_registration = ec2_need_new_registration;
    ret->ec_ack = ec2_ack;
+   ret->ec_evco_triggered = ec2_evco_triggered;
+   ret->ec_evco_exit = ec2_evco_exit;
 
    ret->sge_evc_handle = NULL;
 
@@ -3183,7 +3187,7 @@ static bool ec2_get_local(sge_evc_class_t *thiz, lList **elist, bool exit_on_qma
    dstring dsbuf;
    char buffer[1024];
 
-   DENTER(TOP_LAYER, "ec2_get_local");
+   DENTER(EVC_LAYER, "ec2_get_local");
 
    sge_dstring_init(&dsbuf, buffer, sizeof(buffer));
 
@@ -3233,45 +3237,49 @@ printf("EVENT_CLIENT %d ends to wait at %s\n", thiz->ec_get_id(thiz), sge_ctime(
 }   
 
 static void ec2_wait_local(sge_evc_class_t *thiz) {
+
+   DENTER(EVC_LAYER, "ec2_wait_local");
    /*
    ** reset busy, important otherwise no new events
    */
    thiz->ec_set_busy(thiz, 0);
    thiz->ec_commit(thiz, NULL);
+
+   DRETURN_VOID;
 }
 
-static void ec2_signal_local(sge_evc_class_t *thiz, lList **alpp, lList *event_list) {
+static int ec2_signal_local(sge_evc_class_t *thiz, lList **alpp, lList *event_list) {
 
    ec_control_t *evco = NULL;
+   int num_events = 0;
 
    DENTER(EVC_LAYER, "ec2_signal_local");
 
    if (thiz == NULL) {
       DPRINTF(("EVENT UPDATE FUNCTION thiz IS NULL\n"));
-      DRETURN_VOID; 
+      DRETURN(-1); 
    }
    evco = ec2_get_event_control(thiz);
    if (evco == NULL) {
       DPRINTF(("EVENT UPDATE FUNCTION evco IS NULL\n"));
-      DRETURN_VOID;
+      DRETURN(-1);
    }
 
-   sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &(evco->mutex));  
-   
-   if (evco->new_events != NULL) {
-      lList *events = NULL;
-      lXchgList(lFirst(event_list), REP_list, &(events));
-      lAddList(evco->new_events, &events);
-      events = NULL;
-   } else {
-      lXchgList(lFirst(event_list), REP_list, &(evco->new_events));
-   }   
-   
-   evco->triggered = true;
+   if ((num_events = lGetNumberOfElem(lGetList(lFirst(event_list), REP_list))) > 0) {
+      sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &(evco->mutex));  
+      if (evco->new_events != NULL) {
+         lList *events = NULL;
+         lXchgList(lFirst(event_list), REP_list, &(events));
+         lAddList(evco->new_events, &events);
+         events = NULL;
+      } else {
+         lXchgList(lFirst(event_list), REP_list, &(evco->new_events));
+      }   
+      
+      evco->triggered = true;
+      DPRINTF(("EVENT UPDATE FUNCTION jgdi_event_update_func() HAS BEEN TRIGGERED\n"));
 
-   DPRINTF(("EVENT UPDATE FUNCTION jgdi_event_update_func() HAS BEEN TRIGGERED\n"));
-
-   pthread_cond_signal(&(evco->cond_var));
+      pthread_cond_broadcast(&(evco->cond_var));
 #ifdef EVC_DEBUG      
 {
 dstring dsbuf;
@@ -3280,18 +3288,57 @@ sge_dstring_init(&dsbuf, buf, sizeof(buf));
 printf("EVENT_CLIENT %d has been signaled at %s\n", thiz->ec_get_id(thiz), sge_ctime(0, &dsbuf));
 }
 #endif
-   sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &(evco->mutex));
+      sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &(evco->mutex));
+   }
 
-
-   DRETURN_VOID;
+   DRETURN(num_events);
 }
 
 static void ec2_wait(sge_evc_class_t *thiz) {
    /* do nothing */
 }
 
-static void ec2_signal(sge_evc_class_t *thiz, lList **alpp, lList *event_list) {
+static int ec2_signal(sge_evc_class_t *thiz, lList **alpp, lList *event_list) {
    /* do nothing */
+   return 1;
+}
+
+static bool ec2_evco_triggered(sge_evc_class_t *thiz) {
+   bool ret = false;
+   ec_control_t *evco = NULL;
+
+   DENTER(EVC_LAYER, "ec2_evco_triggered");
+   if (thiz == NULL) {
+      DRETURN(false); 
+   }
+   evco = ec2_get_event_control(thiz);
+   if (evco == NULL) {
+      DRETURN(false);
+   }
+   sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &(evco->mutex));  
+   ret = evco->triggered;
+   sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &(evco->mutex));
+
+   DRETURN(ret);
+}
+
+static bool ec2_evco_exit(sge_evc_class_t *thiz) {
+   bool ret = false;
+   ec_control_t *evco = NULL;
+
+   DENTER(EVC_LAYER, "ec2_evco_exit");
+   if (thiz == NULL) {
+      DRETURN(false); 
+   }
+   evco = ec2_get_event_control(thiz);
+   if (evco == NULL) {
+      DRETURN(false);
+   }
+   sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &(evco->mutex));  
+   ret = evco->exit;
+   sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &(evco->mutex));
+
+   DRETURN(ret);
 }
 
 /****** Eventclient/event_text() **********************************************

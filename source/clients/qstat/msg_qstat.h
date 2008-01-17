@@ -35,7 +35,7 @@
 #include "basis_types.h"
 
 #define MSG_QSTAT_USAGE_VIEWALSOSCHEDULINGATTRIBUTES     _MESSAGE(19010, _("view additional attributes"))
-#define MSG_QSTAT_USAGE_EXPLAINOPT                       _MESSAGE(19011, _("show reason for c(onfiguration amiguous), a(larm), suspend A(larm), E(rror) state"))
+#define MSG_QSTAT_USAGE_EXPLAINOPT                       _MESSAGE(19011, _("show reason for c(onfiguration ambiguous), a(larm), suspend A(larm), E(rror) state"))
 #define MSG_QSTAT_USAGE_FULLOUTPUT                       _MESSAGE(19012, _("full output"))
 #define MSG_QSTAT_USAGE_FULLOUTPUTANDSHOWRESOURCESOFQUEUES    _MESSAGE(19013, _("full output and show (selected) resources of queue(s)"))
 #define MSG_QSTAT_USAGE_DISPLAYALLJOBARRAYTASKS    _MESSAGE(19014, _("display all job-array tasks (do not group)"))

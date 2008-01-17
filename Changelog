@@ -1,3 +1,8 @@
+MP-2008-01-17-0: Bugfix:    qstat usage contains typo. Other issues in this
+                            CR will be moved to a new CR.
+                 Bugster:   6595754
+                 Review:    JG
+
 AH-2008-01-16-0: Bugfix:    Parallel scheduling memory leak in sge_schedd
                  Bugster:   6562190
                  Issue:     2187

@@ -269,8 +269,8 @@ static tConfEntry conf_entries[] = {
  { "load_sensor",       1, "none",              1, NULL },
  { "prolog",            1, PROLOG,              1, NULL },
  { "epilog",            1, EPILOG,              1, NULL },
- { "shell_start_mode",  1, SHELL_START_MODE,    1, NULL },
- { "login_shells",      1, LOGIN_SHELLS,        1, NULL },
+ { "shell_start_mode",  0, SHELL_START_MODE,    1, NULL },
+ { "login_shells",      0, LOGIN_SHELLS,        1, NULL },
  { "min_uid",           0, MIN_UID,             1, NULL },
  { "min_gid",           0, MIN_GID,             1, NULL },
  { "user_lists",        0, "none",              1, NULL },
@@ -517,6 +517,63 @@ tConfEntry conf[]
      
  DEXIT;
  return NULL;
+}
+
+/****** sge_conf/validate_config() *****************************************
+*  NAME
+*     validate_config() -- validate global configuration
+*
+*  SYNOPSIS
+*     int validate_config(lList *alpp, lListElem *conf) 
+*
+*  FUNCTION
+*     Check if global configuration contains all the relevant attributes set
+*     i.e all the attributes marked as 'global configuration only' defined in
+*     conf_entries
+*
+*  INPUTS
+*     lList **lpp       - Answer list
+*     lListElem *conf   - global configuration
+*
+*  RESULT
+*     int - 0 success
+*          -1 missing global configuration
+*
+*******************************************************************************/
+
+int validate_config( lList **alpp, lListElem *gconf ) {
+   int i=0;
+   lList *gconfl;
+   lListElem *ep;
+   bool has_error = 0;
+ 
+   DENTER(TOP_LAYER, "validate_config");
+ 
+   /* List of supplied global conf attribs...*/
+   gconfl = lGetList(gconf, CONF_entries);
+
+   /* for each required global conf attrib...*/
+   for (i=0; conf_entries[i].name; ++i) {
+
+      /* we need to enforce required(!local) attribs only 
+       * REPRIORITIZE is obtained dynamically so we donot validate it
+       */
+      if(conf_entries[i].local || 
+        !strcasecmp("delegated_file_staging", conf_entries[i].name) || 
+	     !strcasecmp(REPRIORITIZE, conf_entries[i].name)){
+         continue;
+      }
+
+      if ((ep = lGetElemStr(gconfl, CF_name, conf_entries[i].name)) == NULL){
+         answer_list_add_sprintf(alpp, STATUS_ERROR1, ANSWER_QUALITY_ERROR, 
+			 MSG_GDI_CONFIGMISSINGARGUMENT_S, conf_entries[i].name);
+         has_error = 1;
+      }
+   }
+   if (has_error) {
+      DRETURN(-1);
+   }
+   DRETURN(0);
 }
 
 /****** sge_conf/merge_configuration() *****************************************

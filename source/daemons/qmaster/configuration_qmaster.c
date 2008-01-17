@@ -552,6 +552,13 @@ lListElem *conf
       }
    }
  
+   /* validate only `global' config to check if all the required entries are 
+    * present
+    */
+   if (strcasecmp(SGE_GLOBAL_NAME, conf_name) == 0  && validate_config(alpp, conf) != 0){
+      DRETURN(STATUS_EEXIST);
+   }
+
    DEXIT;
    return 0;
 }

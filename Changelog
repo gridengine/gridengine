@@ -1,3 +1,8 @@
+RN-2008-01-17-0: Bugfix:    Forbid deletion of global config values
+                 Bugster:   6506667
+                 Issue:     2138
+                 Review:    JG
+
 AH-2008-01-16-1: Bugfix:    Parallel scheduling memory leak in sge_schedd
                  Bugster:   6562190
                  Issue:     2187

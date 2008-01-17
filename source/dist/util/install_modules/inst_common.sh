@@ -542,7 +542,7 @@ GetConfigFromFile()
 
    #-nosmf takes precedence over the value in the autoinstall template
    if [ "$SGE_ENABLE_SMF_LAST" = false ]; then
-      SGE_ENABLE_SMF=false;
+      SGE_ENABLE_SMF=false
    fi
 
    if [ "$BACKUP" = "false" ]; then
@@ -608,13 +608,15 @@ CheckConfigFile()
       exit 1
    fi
 
-   if [ "$SGE_SMF_ENABLE" = "" ]; then
-      $INFOTEXT -log "The SGE_SMF_ENABLE has not been set in config file!\n"
+   if [ "$SGE_ENABLE_SMF" = "" ]; then
+      $INFOTEXT -log "The SGE_ENABLE_SMF has not been set in config file!\n"
       #If -nosmf was specified we don't require the SGE_SMF_ENABLE to be set
-      if [ "$SGE_SMF_ENABLE_LAST" != false ]; then  
+      if [ "$SGE_ENABLE_SMF_LAST" != false ]; then  
          MoveLog
          exit 1
       fi
+   elif [ "$SGE_ENABLE_SMF" = false ]; then
+      SMF_FLAGS="-nosmf"
    fi
 
    if [ "$SGE_ENABLE_JMX" = true ]; then
@@ -1110,9 +1112,11 @@ CheckForSMF()
          else
             $INFOTEXT "Disabling SMF - SVC repository not found!!!" 
             SGE_ENABLE_SMF="false"
+            SMF_FLAGS="-nosmf"
          fi
       else
          SGE_ENABLE_SMF="false"
+         SMF_FLAGS="-nosmf"
       fi
    fi
    #SGE_ENABLE_SMF=true from now on means USE SMF

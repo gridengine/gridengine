@@ -516,6 +516,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
     inst_counter=0
     install_is_done="false"
     max_retries=20
+    #This is too late log file needs to be ready before source the auto template
     Stdout2Log
     . $SGE_ROOT/$SGE_CELL/common/settings.sh
 
@@ -548,7 +549,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
                if [ $hti = `$SGE_UTILBIN/gethostname -aname` ]; then
                   $INFOTEXT -log "local execd installation on host %s" $hti #the selected host is the local host, start
                   qconf -ah $hti                                            #installation without rsh/ssh
-                  ./inst_sge -x -auto $FILE -noremote &
+                  ./inst_sge -x $SMF_FLAGS -auto $FILE -noremote &
                   inst_counter=`expr $inst_counter + 1`
                   CURRENTLY_INSTALLING_HOSTS="$CURRENTLY_INSTALLING_HOSTS $hti"
                   EXEC_HOSTS_TO_INSTALL_TMP=`RemoveHostFromList "$EXEC_HOSTS_TO_INSTALL_TMP" "$hti"`
@@ -558,7 +559,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
                      #host is remote, start installation via rsh/ssh
                      $INFOTEXT -log "remote execd installation on host %s" $hti
                      qconf -ah $hti
-                     echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sge -x -auto $FILE -noremote" | $SHELL_NAME $hti /bin/sh &
+                     echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sge -x $SMF_FLAGS -auto $FILE -noremote" | $SHELL_NAME $hti /bin/sh &
                      inst_counter=`expr $inst_counter + 1`
                      CURRENTLY_INSTALLING_HOSTS="$CURRENTLY_INSTALLING_HOSTS $hti"
                      EXEC_HOSTS_TO_INSTALL_TMP=`RemoveHostFromList "$EXEC_HOSTS_TO_INSTALL_TMP" "$hti"`
@@ -576,7 +577,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
                INSTALLED_EXEC_HOSTS="$INSTALLED_EXEC_HOSTS $hti"
             fi
          else
-            LOCALINST="true"              # in this case: inst_sge -x -auto <conffile> -noremote was executed (mostly by isnt_sge script)
+            LOCALINST="true"              # in this case: inst_sge -x $SMF_FLAGS -auto <conffile> -noremote was executed (mostly by isnt_sge script)
             EXEC_HOSTS_TO_INSTALL_TMP=""  # no other EXEC host has to be installed. The list can be cleared
             break                         # the the loop and jump to local installation
          fi
@@ -692,7 +693,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       AddQueue
       GiveHints
       
-      # This code will be executed in case inst_sge -x -host <remote host> 
+      # This code will be executed in case inst_sge -x $SMF_FLAGS -host <remote host> 
       if [ -f $EXEC_HOST_LIST ]; then
          for h in `cat $EXEC_HOST_LIST`; do
            if [ "$QMASTER" = "install" -o "$NOREMOTE" = "false" ]; then
@@ -711,7 +712,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
                $INFOTEXT -n "Please enter which shell you want to use for remote login (rsh/ssh) or\n hit <RETURN> to use [%s] >> " $SHELL_NAME
                SHELL_NAME=`Enter $SHELL_NAME` 
                $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-               echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sge -x -auto $CONFIG_FILE -noremote" | $SHELL_NAME $h /bin/sh &
+               echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sge -x $SMF_FLAGS -auto $CONFIG_FILE -noremote" | $SHELL_NAME $h /bin/sh &
            fi
          done
       else
@@ -732,7 +733,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
                   $INFOTEXT -n "Please enter which shell you want to use for remote login (rsh/ssh) or\n hit <RETURN> to use [%s] >> " $SHELL_NAME
                   SHELL_NAME=`Enter $SHELL_NAME`
                   $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-                  echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sge -x -auto $CONFIG -noremote" | $SHELL_NAME $h /bin/sh &
+                  echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sge -x $SMF_FLAGS -auto $CONFIG -noremote" | $SHELL_NAME $h /bin/sh &
               fi
             done
          fi

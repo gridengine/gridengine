@@ -1,3 +1,6 @@
+LP-2008-01-17-0: Bugfix:    Fixed and improved LP-2008-01-16-0
+                 Review:    JG
+
 LP-2008-01-16-0: Bugfix:    SMF was used in autoinstall with missing SGE_ENABLE_SMF
                  Review:    CR
 

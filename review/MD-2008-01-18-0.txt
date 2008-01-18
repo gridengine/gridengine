@@ -8,8 +8,9 @@ Date: 2008-01-18
 
 MD-2008-01-18-0: Bugfix:    o autoinstall configfile should be parsed and checked 
                               for valid input!
-                 Bugster:   6513435 
-                 Issue:     2459
+                            o automatic backup is broken
+                 Bugster:   6513435, 6550644 
+                 Issue:     2459, 2466
                  Changed:   install 
                  Review:    HP 
 

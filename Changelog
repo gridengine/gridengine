@@ -1,3 +1,9 @@
+OJ-2008-01-14-0: Bugfix:    Modified OJ-2008-01-07-0, took out /bin/csh, fixed
+                            mesg numbers.
+                 Bugster:   6453563
+                 Issue:     2445
+		 Review:    JG
+
 MD-2008-01-18-0: Bugfix:    o autoinstall configfile should be parsed and checked 
                               for valid input!
                             o automatic backup is broken

@@ -297,35 +297,24 @@ bool
                                     lListElem *attr_elem)
    {
       bool ret = true;
+      bool path_found = true;
+
+      const char *name = NULL;
   
       DENTER(CQUEUE_VERIFY_LAYER, "cqueue_verify_shell");
 
-      /* We initialize for standard shell paths */
-      if (cqueue != NULL && attr_elem != NULL) {
-         const char *names[] = {
-            "/bin/csh", NULL
-      };
-      const char *name = lGetString(attr_elem, ASTR_value);
-      bool found = false;
+      name = lGetString(attr_elem, ASTR_value);
 
       /* Check also if it is an absolute valid path */
-      bool path_found = path_verify(name, answer_list, "shell", true);
+      path_found = path_verify(name, answer_list, "shell", true);
 
-      int i = 0;
-   
-       while (names[i] != NULL) {
-          if (!strcasecmp(name, names[i]) || !path_found ) {
-               found = true;
-          }
-            i++;
-          }
-          if (!found) {
+          if (!path_found) {
               sprintf(SGE_EVENT, MSG_CQUEUE_UNKNOWNSHELL_S, name);
               answer_list_add(answer_list, SGE_EVENT,
                               STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
               ret = false;
           }
-       }
+       
        DEXIT;
        return ret;
    }

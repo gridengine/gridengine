@@ -216,7 +216,6 @@
 #define MSG_CQUEUE_UNKNOWNCALENDAR_S   _MESSAGE(64215, _("Calendar "SFQ" does not exist"))
 #define MSG_CQUEUE_UNKNOWNINITSTATE_S  _MESSAGE(64216, _("Invalid value "SFQ" as initial state"))
 #define MSG_CQUEUE_UNKNOWNSTARTMODE_S  _MESSAGE(64217, _("Invalid value "SFQ" as shell start mode"))
-#define MSG_CQUEUE_UNKNOWNSHELL_S  _MESSAGE(64217, _("Invalid value "SFQ" for shell "))
 
 #define MSG_ATTR_VALUEMULDEFINED_S     _MESSAGE(64218, _("Value for "SFQ" is multiply defined"))
 #define MSG_ATTR_NONEWATTRSETTING_S    _MESSAGE(64219, _("Cannot create new attribute setting for host "SFQ))
@@ -364,5 +363,6 @@
 #define MSG_RQS_REQUEST_DUPLICATE_NAME_S         _MESSAGE(64386, _("Resource quota replacement request contains rqs name "SFQ" multiple times"))
 
 #define MSG_ATTR_INVALID_ULONGVALUE_USUU         _MESSAGE(64387, _(sge_U32CFormat" is an invalid value for the "SFQ" attribute - it must be a value between "sge_U32CFormat" and "sge_U32CFormat))
+#define MSG_CQUEUE_UNKNOWNSHELL_S  _MESSAGE(64388, _("Invalid value "SFQ" for shell "))
 
 #endif /* __MSG_SGEOBJLIB_H */

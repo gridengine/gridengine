@@ -53,7 +53,7 @@ if [ -z "$SGE_ROOT" -o -z "$SGE_CELL" ]; then
       INFOTEXT=echo
    fi
    $INFOTEXT "\$SGE_ROOT and \$SGE_CELL must be set!"
-   exit 1
+   exit 2
 fi
 
 if [ -z "$ARCH" ]; then
@@ -66,7 +66,7 @@ if [ -z "$INFOTEXT" ]; then
    if [ ! -x $INFOTEXT ]; then
       echo "Error: Can't find binary \"$INFOTEXT\""
       echo "Please verify your setup and restart this script. Exit."
-      exit 1
+      exit 2
    fi
 
    # Test the infotext binary
@@ -74,7 +74,7 @@ if [ -z "$INFOTEXT" ]; then
    if [ $? -ne 0 ]; then
       echo "Error: Execution of $INFOTEXT failed: $tmp"
       echo "Please verify your setup and restart this script. Exit."
-      exit 1
+      exit 2
    fi
    SGE_INFOTEXT_MAX_COLUMN=5000; export SGE_INFOTEXT_MAX_COLUMN
 fi

@@ -397,6 +397,7 @@ SetSpoolingOptionsBerkeleyDB()
                ret=$?               
                if [ $AUTO = true ]; then
                   $INFOTEXT -log "The spooling directory already exists!\n Please remove it or choose any other spooling directory!"
+                  MoveLog
                   exit 1
                fi
  
@@ -548,6 +549,7 @@ SetSpoolingOptionsDynamic()
       *)
          $INFOTEXT "\nUnknown spooling method. Exit."
          $INFOTEXT -log "\nUnknown spooling method. Exit."
+         MoveLog
          exit 1
          ;;
    esac
@@ -574,6 +576,7 @@ SetSpoolingOptions()
       *)
          $INFOTEXT "\nUnknown spooling method. Exit."
          $INFOTEXT -log "\nUnknown spooling method. Exit."
+         MoveLog
          exit 1
          ;;
    esac
@@ -1558,6 +1561,7 @@ GetQmasterPort()
             else
                if [ $AUTO = true ]; then
                   $INFOTEXT -log "Please use an unused port number!"
+                  MoveLog
                   exit 1
                fi
 
@@ -1974,6 +1978,7 @@ GetExecdPort()
 
                if [ $AUTO = true ]; then
                   $INFOTEXT -log "Please use an unused port number!"
+                  MoveLog
                   exit 1
                fi
 
@@ -1985,7 +1990,7 @@ GetExecdPort()
                      $INFOTEXT -log "Please use any other port number!!!"
                      $INFOTEXT -log "This %s port number is used by sge_qmaster" $SGE_QMASTER_PORT
                      $INFOTEXT -log "Installation failed!!!"
-
+                     MoveLog
                      exit 1
                   fi
                fi

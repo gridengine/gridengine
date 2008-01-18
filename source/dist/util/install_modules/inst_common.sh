@@ -85,7 +85,7 @@ BasicSettings()
      $ECHO "Can't find binaries for architecture: $SGE_ARCH!"
      $ECHO "Please check your binaries. Installation failed!"
      $ECHO "Exiting installation."
-     exit 1
+     exit 2
   fi
 
    if [ "$SGE_ARCH" != "win32-x86" ]; then
@@ -94,21 +94,21 @@ BasicSettings()
       if [ ! -f $SPOOLDEFAULTS ]; then
          $ECHO "can't find \"$SPOOLDEFAULTS\""
          $ECHO "Installation failed."
-         exit 1
+         exit 2
       fi
 
       SPOOLINIT=$SGE_UTILBIN/spoolinit
       if [ ! -f $SPOOLINIT ]; then
          $ECHO "can't find \"$SPOOLINIT\""
          $ECHO "Installation failed."
-         exit 1
+         exit 2
       fi
    fi
 
   HOST=`$SGE_UTILBIN/gethostname -name`
   if [ "$HOST" = "" ]; then
      $INFOTEXT -e "can't get hostname of this machine. Installation failed."
-     exit 1
+     exit 2
   fi
 
   RM="rm -f"
@@ -139,7 +139,7 @@ INFOTEXT=$INFOTXT_DUMMY
 if [ ! -f $INFOTXT_DUMMY ]; then
    $ECHO "can't find \"$INFOTXT_DUMMY\""
    $ECHO "Installation failed."
-   exit 1
+   exit 2
 fi
 }
 
@@ -443,10 +443,7 @@ fi
       "filestat       getservbyname  qrsh_starter   testsuidroot\n\n" \
       "Installation failed. Exit.\n" $SGE_BIN $SGE_UTILBIN
 
-      if [ $AUTO = true ]; then
-         MoveLog
-      fi
-
+      MoveLog
       exit 2 # ToDo: documentation, do not change, exit code used for hedeby
    fi
 }
@@ -513,11 +510,8 @@ ErrUsage()
 
    $INFOTEXT -log "It seems, that you have entered a wrong option, please check the usage!"
 
-      if [ "$AUTO" = true ]; then
-         MoveLog
-      fi
-
-   exit 1
+   MoveLog
+   exit 2
 }
 
 #--------------------------------------------------------------------------
@@ -538,23 +532,10 @@ GetConfigFromFile()
   fi
   IFS="   
 "
-   CheckConfigFile
-
    #-nosmf takes precedence over the value in the autoinstall template
    if [ "$SGE_ENABLE_SMF_LAST" = false ]; then
       SGE_ENABLE_SMF=false
    fi
-
-   if [ "$BACKUP" = "false" ]; then
-      SGE_CELL=$CELL_NAME
-      DB_SPOOLING_SERVER=`ResolveHosts $DB_SPOOLING_SERVER`
-      ADMIN_HOST_LIST=`ResolveHosts $ADMIN_HOST_LIST`
-      SUBMIT_HOST_LIST=`ResolveHosts $SUBMIT_HOST_LIST`
-      EXEC_HOST_LIST=`ResolveHosts $EXEC_HOST_LIST`
-      SHADOW_HOST=`ResolveHosts $SHADOW_HOST`
-      EXEC_HOST_LIST_RM=`ResolveHosts $EXEC_HOST_LIST_RM`
-   fi
-  
 }
 
 #--------------------------------------------------------------------------
@@ -596,75 +577,417 @@ CheckRSHConnection()
 #
 CheckConfigFile()
 {
-   if [ "$SGE_CLUSTER_NAME" = "" ]; then
-      $INFOTEXT -log "The SGE_CLUSTER_NAME has not been set in config file!\n"
-      MoveLog
-      exit 1
-   fi
+   CONFIG_FILE=$1
+   KNOWN_CONFIG_FILE_ENTRIES_INSTALL="SGE_ROOT SGE_QMASTER_PORT SGE_EXECD_PORT CELL_NAME ADMIN_USER QMASTER_SPOOL_DIR EXECD_SPOOL_DIR GID_RANGE SPOOLING_METHOD DB_SPOOLING_SERVER DB_SPOOLING_DIR PAR_EXECD_INST_COUNT ADMIN_HOST_LIST SUBMIT_HOST_LIST EXEC_HOST_LIST EXECD_SPOOL_DIR_LOCAL HOSTNAME_RESOLVING SHELL_NAME COPY_COMMAND DEFAULT_DOMAIN ADMIN_MAIL ADD_TO_RC SET_FILE_PERMS RESCHEDULE_JOBS SCHEDD_CONF SHADOW_HOST EXEC_HOST_LIST_RM REMOVE_RC WINDOWS_SUPPORT WIN_ADMIN_NAME WIN_DOMAIN_ACCESS CSP_RECREATE CSP_COPY_CERTS CSP_COUNTRY_CODE CSP_STATE CSP_LOCATION CSP_ORGA CSP_ORGA_UNIT CSP_MAIL_ADDRESS SERVICE_TAGS SGE_ENABLE_SMF SGE_CLUSTER_NAME SGE_ENABLE_JMX SGE_JMX_PORT SGE_JVM_LIB_PATH SGE_ADDITIONAL_JVM_ARGS"
+   KNOWN_CONFIG_FILE_ENTRIES_BACKUP="SGE_ROOT SGE_CELL BACKUP_DIR TAR BACKUP_FILE"
+   MAX_GID=2147483647 #unsigned int = 32bit - 1
+   MIN_GID=100        #from 0 - 100 may be reserved GIDs
+   is_valid="true"
 
-   if [ "$SGE_EXECD_PORT" = "" ]; then
-      $INFOTEXT -log "The SGE_EXECD_PORT has not been set in config file!\n"
-      MoveLog
-      exit 1
-   fi
+   #translate the CELL_NAME entry to SGE_CELL as needed by installscript   
+   SGE_CELL=$CELL_NAME
 
-   if [ "$SGE_ENABLE_SMF" = "" ]; then
-      $INFOTEXT -log "The SGE_ENABLE_SMF has not been set in config file!\n"
-      #If -nosmf was specified we don't require the SGE_ENABLE_SMF to be set
-      if [ "$SGE_ENABLE_SMF_LAST" != false ]; then  
-         MoveLog
-         exit 1
+   CONFIG_ENTRIES=`grep -v "^\#" $CONFIG_FILE | cut -d"=" -f1`
+
+   if [ "$BACKUP" = "true" ]; then
+      for e in $CONFIG_ENTRIES; do
+         echo $KNOWN_CONFIG_FILE_ENTRIES_BACKUP | grep $e 2> /dev/null > /dev/null
+         if [ $? != 0 ]; then
+            $INFOTEXT -e "Your configuration entry >%s< is not allowed or not in the list of known\nentries!" $e
+            $INFOTEXT -e "Please check your autobackup config file!\n >%s<" $FILE
+            exit 2
+         fi
+      done
+      if [ -z "$SGE_ROOT" ]; then
+         $INFOTEXT -e "Your >SGE_ROOT< entry is not set!"
+         is_valid="false" 
+      elif [ ! -d "$SGE_ROOT" ]; then
+         $INFOTEXT -e "Your >SGE_ROOT< directory %s does not exist!" $SGE_ROOT
+         is_valid="false" 
       fi
-   elif [ "$SGE_ENABLE_SMF" = false ]; then
-      SMF_FLAGS="-nosmf"
-   fi
-
-   if [ "$SGE_ENABLE_JMX" = true ]; then
-      if [ -z "$JMX_PORT" -o -z "$SGE_JVM_LIB_PATH" ]; then
-         $INFOTEXT -log "The JMX_PORT or SGE_JVM_LIB_PATH has not been set in config file!\n"
-         MoveLog
-         exit 1
+      if [ -z "$SGE_CELL" ]; then
+         $INFOTEXT -e "Your >CELL_NAME< entry is not set!" 
+         is_valid="false"
+      elif [ ! -d "$SGE_ROOT/$SGE_CELL" ]; then
+         $INFOTEXT -e "Your >CELL_NAME< directory %s does not exist!" $SGE_ROOT/$SGE_CELL
+         is_valid="false"
       fi
-   else
-      SGE_ENABLE_JMX=false
+      if [ -z "$BACKUP_DIR" ]; then
+         $INFOTEXT -e "Your >BACKUP_DIR< directory is not set!"
+         is_valid="false" 
+      fi
+      if [ -z "$TAR" ]; then
+         $INFOTEXT -e "Your >TAR< flag is not set!"
+         is_valid="false"
+      fi 
+      if [ "$TAR" = "1" ]; then
+         TAR="true"
+      elif [ "$TAR" = "0" ]; then
+         TAR="false"
+      fi
+      TAR=`echo $TAR | tr [A-Z] [a-z]`
+      if [ "$TAR" != "true" -a "$TAR" != "false" ]; then
+         $INFOTEXT -e "Your >TAR< flag is wrong! Valid values are: 0, 1, true, false"
+         is_valid="false" 
+      fi
+      if [ -z "$BACKUP_FILE" -a "$TAR" = "true" ]; then
+         $INFOTEXT -e "Your >BACKUP_FILE< name is not set!"
+         is_valid="false" 
+      fi
+      if [ "$is_valid" = "false" ]; then
+         $INFOTEXT -e "\nAn invalid entry was found in your autobackup configuration file"
+         $INFOTEXT -e "Please check your autobackup configuration file!\n >%s<" $FILE
+         exit 2  #ToDo: documentation exit 2 configuration file error 
+      fi
+      return
    fi
 
-   if [ "$CSP" = "true" ]; then
+   #do hostname resolving. fetching hostname from config file, try to resolve and
+   #and recreate the hostname lists
+   if [ "$DB_SPOOLING_SERVER" != "none" ]; then
+      DB_SPOOLING_SERVER=`ResolveHosts $DB_SPOOLING_SERVER`
+   fi
+   ADMIN_HOST_LIST=`ResolveHosts $ADMIN_HOST_LIST`
+   SUBMIT_HOST_LIST=`ResolveHosts $SUBMIT_HOST_LIST`
+   EXEC_HOST_LIST=`ResolveHosts $EXEC_HOST_LIST`
+   SHADOW_HOST=`ResolveHosts $SHADOW_HOST`
+   EXEC_HOST_LIST_RM=`ResolveHosts $EXEC_HOST_LIST_RM`
+
+   if [ "$QMASTER" = "install" -o "$EXECD" = "install" -o "$QMASTER" = "uninstall" -o "$EXECD" = "uninstall" ]; then
+      for e in $CONFIG_ENTRIES; do
+         echo $KNOWN_CONFIG_FILE_ENTRIES_INSTALL | grep $e 2> /dev/null > /dev/null
+         if [ $? != 0 ]; then
+            $INFOTEXT -e "Your configuration entry >%s< is not allowed or not in the list of known\nentries!" $e
+            $INFOTEXT -e "Please check your autoinstall config file!\n >%s<" $FILE
+            exit 2
+         fi
+      done
+      if [ -z "$SGE_ROOT" ]; then
+         $INFOTEXT -e "Your >SGE_ROOT< entry is not set!"
+         is_valid="false" 
+      elif [ ! -d "$SGE_ROOT" ]; then
+         $INFOTEXT -e "Your >SGE_ROOT< directory %s does not exist!" $SGE_ROOT
+         is_valid="false" 
+      fi
+      if [ -z "$SGE_CELL" ]; then
+         $INFOTEXT -e "Your >CELL_NAME< entry is not set!"
+         is_valid="false"
+      fi 
+   fi 
+
+   if [ "$QMASTER" = "install" ]; then
+      if [ -d "$SGE_ROOT/$SGE_CELL" ]; then
+         $INFOTEXT -e "Your >CELL_NAME< directory %s already exist!" $SGE_ROOT/$SGE_CELL
+         $INFOTEXT -e "The automatic installation stops, if the >SGE_CELL< directory already exists"
+         $INFOTEXT -e "to ensure, that existing installations are not overwritten!"
+         is_valid="false"
+      fi
+      if [ "$SPOOLING_METHOD" != "berkeleydb" -a "$SPOOLING_METHOD" != "classic" ]; then
+         $INFOTEXT -e "Your >SPOOLING_METHOD< entry is wrong, only >berkeleydb< or >classic< is allowed!"
+         is_valid="false"
+      fi
+      if [ "$SPOOLING_METHOD" = "berkeleydb" -a -z "$DB_SPOOLING_SERVER" ]; then
+         $INFOTEXT -e "Your >DB_SPOOLING_SERVER< entry is wrong, it has to contain the server hostname\nor >none<."
+         is_valid="false" 
+      fi
+      if [ "$SPOOLING_METHOD" = "berkeleydb" -a -z "$DB_SPOOLING_DIR" ]; then
+         $INFOTEXT -e "Your >DB_SPOOLING_DIR< is empty. You have to enter a directory!"
+         is_valid="false"
+      elif [ "$SPOOLING_METHOD" = "berkeleydb" -a -d "$DB_SPOOLING_DIR" ]; then
+         $INFOTEXT -e "Your >DB_SPOOLING_DIR< already exists. Please check, if this directory is still"
+         $INFOTEXT -e "in use. If you still need this directory, please choose any other!"
+         is_valid="false"
+      fi
+    
+      if [ -z "$QMASTER_SPOOL_DIR" -o  "`echo "$QMASTER_SPOOL_DIR" | cut -d"/" -f1`" = "`echo "$QMASTER_SPOOL_DIR" | cut -d"/" -f2`" ]; then
+         $INFOTEXT -e "Your >QMASTER_SPOOL_DIR< is empty or an invalid path. It must be a valid path!"
+         is_valid="false"
+      fi
+
+      if [ -z "$EXECD_SPOOL_DIR" -o  "`echo "$EXECD_SPOOL_DIR" | cut -d"/" -f1`" = "`echo "$EXECD_SPOOL_DIR" | cut -d"/" -f2`" ]; then
+         $INFOTEXT -e "Your >EXECD_SPOOL_DIR< is empty or an invalid path. It must be a valid path!"
+         is_valid="false"
+      fi
+      `IsNumeric "$SGE_QMASTER_PORT"`
+      if [ "$?" -eq 1 ]; then
+         $INFOTEXT -e "Your >SGE_QMASTER_PORT< entry is invalid. It must be empty for using a service\nor a valid port number."
+         is_valid="false"
+      elif [ "$SGE_QMASTER_PORT" -le 1 -o "$SGE_QMASTER_PORT" -ge 65536 ]; then
+         $INFOTEXT -e "Your >SGE_QMASTER_PORT< entry is invalid. It must be a number between 2 and 65535!"
+         is_valid="false"
+      fi
+      `IsNumeric "$SGE_EXECD_PORT"`
+      if [ "$?" -eq 1 ]; then
+         $INFOTEXT -e "Your >SGE_EXECD_PORT< entry is invalid. It must be empty for using a service\nor a valid port number."
+         is_valid="false"
+      elif [ "$SGE_EXECD_PORT" -le 1 -o "$SGE_EXECD_PORT" -ge 65536 ]; then
+         $INFOTEXT -e "Your >SGE_EXECD_PORT< entry is invalid. It must be a number between 2 and 65535!"
+         is_valid="false"
+      fi
+      `IsNumeric "$PAR_EXECD_INST_COUNT"`
+      if [ "$?" -eq 1 ]; then
+         $INFOTEXT -e "Your >PAR_EXECD_INST_COUNT< entry is invalid, please enter a number between 1\n and number of execution host"
+         is_valid="false"
+      fi 
+
+      low_gid=`echo $GID_RANGE | cut -d"-" -f1`
+      high_gid=`echo $GID_RANGE | cut -d"-" -f2`
+
+      if [ "$low_gid" = "$GID_RANGE" -o "$high_gid" = "$GID_RANGE" -o "$low_gid" = "" -o "$high_gid" = "" ]; then
+         $INFOTEXT -e "Your >GID_RANGE< entry is wrong. You have to enter a range, e.g. 10000-10100!"
+         is_valid="false"
+      elif [ "$low_gid" -lt "$MIN_GID" -o "$high_gid" -gt "$MAX_GID" -o "$low_gid" -gt "$high_gid" ]; then
+         $INFOTEXT -e "Your >GID_RANGE< has invalid values."
+         is_valid="false"
+      fi 
+      if [ "`echo "$EXECD_SPOOL_DIR_LOCAL" | cut -d"/" -f1`" = "`echo "$EXECD_SPOOL_DIR_LOCAL" | cut -d"/" -f2`" -a ! -z "$EXECD_SPOOL_DIR_LOCAL" ]; then
+         $INFOTEXT -e "Your >EXECD_SPOOL_DIR_LOCAL< entry is not a path. It must be a valid path or empty!"
+         is_valid="false"
+      fi
+      if [ -z "$SERVICE_TAGS" ]; then
+         $INFOTEXT -e "Your >SERVICE_TAGS< flag is not set!"
+         is_valid="false"
+      fi
+      if [ "$SERVICE_TAGS" = "1" -o "$SERVICE_TAGS" = "true" -o "$SERVICE_TAGS" = "TRUE" ]; then
+         SERVICE_TAGS="enable"
+      elif [ "$SERVICE_TAGS" = "0" -o "$SERVICE_TAGS" = "false" -o "$SERVICE_TAGS" = "false" ]; then
+         SERVICE_TAGS="disable"
+      fi
+      SERVICE_TAGS=`echo "$SERVICE_TAGS" | tr [A-Z] [a-z]`
+      if [ "$SERVICE_TAGS" != "enable" -a "$SERVICE_TAGS" != "disable" ]; then
+         $INFOTEXT -e "Your >SERVICE_TAGS< flag is wrong! Valid values are:enable,disable,0,1,true,false,TRUE,FALSE"
+         is_valid="false" 
+      fi
+      if [ -z "$HOSTNAME_RESOLVING" ]; then
+         $INFOTEXT -e "Your >HOSTNAME_RESOLVING< flag is not set!"
+         is_valid="false" 
+      fi 
+      if [ "$HOSTNAME_RESOLVING" = "1" ]; then
+         HOSTNAME_RESOLVING="true"
+      elif [ "$HOSTNAME_RESOLVING" = "0" ]; then
+         HOSTNAME_RESOLVING="false"
+      fi
+      HOSTNAME_RESOLVING=`echo "$HOSTNAME_RESOLVING" | tr [A-Z] [a-z]`
+      if [ "$HOSTNAME_RESOLVING" != "true" -a "$HOSTNAME_RESOLVING" != "false" ]; then
+         $INFOTEXT -e "Your >HOSTNAME_RESOLVING< flag is wrong! Valid values are: 0, 1, true, false"
+         is_valid="false" 
+      fi
+
+      if [ -z "$SGE_ENABLE_JMX" ]; then
+         $INFOTEXT -e "Your >SGE_ENABLE_JMX< flag is not set!"
+         is_valid="false" 
+      fi 
+      if [ "$SGE_ENABLE_JMX" = "1" ]; then
+         SGE_ENABLE_JMX="true"
+      elif [ "$SGE_ENABLE_JMX" = "0" ]; then
+         SGE_ENABLE_JMX="false"
+      fi
+      SGE_ENABLE_JMX=`echo "$SGE_ENABLE_JMX" | tr [A-Z] [a-z]`
+      if [ "$SGE_ENABLE_JMX" != "true" -a "$SGE_ENABLE_JMX" != "false" ]; then
+         $INFOTEXT -e "Your >SGE_ENABLE_JMX< flag is wrong! Valid values are:0,1,true,false,TRUE,FALSE"
+         is_valid="false" 
+      fi   
+      `IsNumeric "$SGE_JMX_PORT"`
+      if [ "$?" -eq 1 ]; then
+         $INFOTEXT -e "Your >SGE_JMX_PORT< entry is invalid, please enter a number between 1\n and number of execution host"
+         is_valid="false"
+      elif [ "$SGE_JMX_PORT" -le 1 -a "$SGE_JMX_PORT" -ge 65536 ]; then
+         $INFOTEXT -e "Your >SGE_JMX_PORT< entry is invalid. It must be a number between 1 and 65536!"
+         is_valid="false"
+      fi
+      if [ -z "$SGE_JVM_LIB_PATH" -o  "`echo "$SGE_JVM_LIB_PATH" | cut -d"/" -f1`" = "`echo "$SGE_JVM_LIB_PATH" | cut -d"/" -f2`" ]; then
+         $INFOTEXT -e "Your >SGE_JVM_LIB_PATH< is empty or an invalid path. It must be a full path!"
+         is_valid="false"
+      fi   
+      if [ -z "$DEFAULT_DOMAIN" ]; then
+            $INFOTEXT -e "Your >DEFAULT_DOMAIN< entry is invalid, valid entries are >none< or a domain name"
+            is_valid="false"
+      fi
+      `IsMailAdress "$ADMIN_MAIL"`
+      if [ "$?" -eq 1 -a "$ADMIN_MAIL" != "none" ]; then 
+           $INFOTEXT -e "Your >ADMIN_MAIL< entry is an invalid email adress or not >none<"
+           is_valid="false"
+      fi
+
+      if [ -z "$SET_FILE_PERMS" ]; then
+         $INFOTEXT -e "Your >SET_FILE_PERMS< flag is not set!"
+         is_valid="false" 
+      fi 
+      if [ "$SET_FILE_PERMS" = "1" ]; then
+         SET_FILE_PERMS="true"
+      elif [ "$SET_FILE_PERMS" = "0" ]; then
+         SET_FILE_PERMS="false"
+      fi
+      SET_FILE_PERMS=`echo $SET_FILE_PERMS | tr [A-Z] [a-z]`
+      if [ "$SET_FILE_PERMS" != "true" -a "$SET_FILE_PERMS" != "false" ]; then
+         $INFOTEXT -e "Your >SET_FILE_PERMS< flag is wrong! Valid values are: 0, 1, true, false"
+         is_valid="false" 
+      fi
+
+      if [ -z "$WINDOWS_SUPPORT" ]; then
+         $INFOTEXT -e "Your >WINDOWS_SUPPORT< flag is not set!"
+         is_valid="false" 
+      fi 
+      if [ "$WINDOWS_SUPPORT" = "1" ]; then
+         WINDOWS_SUPPORT="true"
+      elif [ "$WINDOWS_SUPPORT" = "0" ]; then
+         WINDOWS_SUPPORT="false"
+      fi
+      WINDOWS_SUPPORT=`echo $WINDOWS_SUPPORT | tr [A-Z] [a-z]`
+      if [ "$WINDOWS_SUPPORT" != "true" -a "$WINDOWS_SUPPORT" != "false" ]; then
+         $INFOTEXT -e "Your >WINDOWS_SUPPORT< flag is wrong! Valid values are: 0, 1, true, false"
+         is_valid="false" 
+      fi
+      if [ "$WINDOWS_SUPPORT" = "true" -a -z "$WIN_ADMIN_NAME" ]; then
+         $INFOTEXT -e "Your >WIN_ADMIN_NAME< entry is not set! Please enter a valid WINDOWS Administrator name!"
+         is_valid="false" 
+      fi
+
+      if [ "$SCHEDD_CONF" -ne 1 -a "$SCHEDD_CONF" -ne 2 -a "$SCHEDD_CONF" -ne 3 ]; then
+         $INFOTEXT -e "Your >SCHEDD_CONF< entry has a wrong value, allowed values are: 1,2 or 3"
+         is_valid="false"
+      fi 
+   fi
+
+   if [ "$QMASTER" = "install" -o "$EXECD" = "install" ]; then
+      if [ -z "$ADD_TO_RC" ]; then
+         $INFOTEXT -e "Your >ADD_TO_RC< flag is not set!"
+         is_valid="false" 
+      fi 
+      if [ "$ADD_TO_RC" = "1" ]; then
+         ADD_TO_RC="true"
+      elif [ "$ADD_TO_RC" = "0" ]; then
+         ADD_TO_RC="false"
+      fi
+      ADD_TO_RC=`echo $ADD_TO_RC | tr [A-Z] [a-z]`
+      if [ "$ADD_TO_RC" != "true" -a "$ADD_TO_RC" != "false" ]; then
+         $INFOTEXT -e "Your >ADD_TO_RC< flag is wrong! Valid values are: 0, 1, true, false"
+         is_valid="false" 
+      fi
+      if [ "$SHELL_NAME" != "ssh" -a "$SHELL_NAME" != "rsh" ]; then
+           $INFOTEXT -e "Your >SHELL_NAME< entry is wrong. Allowed values are >ssh< or >rsh<"
+           is_valid="false"
+      fi
+      if [ -z "$SGE_ENABLE_SMF" ]; then
+         $INFOTEXT -e "Your >SGE_ENABLE_SMF< flag is not set!"
+         is_valid="false" 
+      fi 
+      if [ "$SGE_ENABLE_SMF" = "1" ]; then
+         SGE_ENABLE_SMF="true"
+      elif [ "$SGE_ENABLE_SMF" = "0" ]; then
+         SGE_ENABLE_SMF="false"
+      fi
+      SGE_ENABLE_SMF=`echo $SGE_ENABLE_SMF | tr [A-Z] [a-z]`
+      if [ "$SGE_ENABLE_SMF" != "true" -a "$SGE_ENABLE_SMF" != "false" ]; then
+         $INFOTEXT -e "Your >SGE_ENABLE_SMF< flag is wrong! Valid values are: 0, 1, true, false"
+         is_valid="false" 
+      fi
+   fi
+
+   if [  "$EXECD" = "install" ]; then
+      if [ -z "$EXEC_HOST_LIST" ]; then
+         $INFOTEXT -e "Your >EXEC_HOST_LIST< is empty!"
+         $INFOTEXT -e "For a automatic execd installation you have to enter a valid exechost name!"
+         is_valid="false"
+      fi      
+   fi
+
+   if [ "$QMASTER" = "uninstall" -o "$EXECD" = "uninstall" ]; then
+      if [ -z "$REMOVE_RC" ]; then
+         $INFOTEXT -e "Your >REMOVE_RC< flag is not set!"
+         is_valid="false" 
+      fi
+      if [ "$REMOVE_RC" = "1" ]; then
+         REMOVE_RC="true"
+      elif [ "$REMOVE_RC" = "0" ]; then
+         REMOVE_RC="false"
+      fi
+      REMOVE_RC=`echo $REMOVE_RC | tr [A-Z] [a-z]`
+      if [ "$REMOVE_RC" != "true" -a "$REMOVE_RC" != "false" ]; then
+         $INFOTEXT -e "Your >REMOVE_RC< flag is wrong! Valid values are: 0, 1, true, false"
+         is_valid="false" 
+      fi
+
+      if [ "$SGE_ENABLE_JMX" = "true" ]; then
+         if [ -z "$JMX_PORT" -o -z "$SGE_JVM_LIB_PATH" ]; then
+            $INFOTEXT -e "The JMX_PORT or SGE_JVM_LIB_PATH has not been set in config file!\n"
+            is_valid="false"
+         fi
+      fi
+   fi
+
+   if [  "$EXECD" = "uninstall" ]; then
+      if [ -z "$EXEC_HOST_LIST_RM" ]; then
+         $INFOTEXT -e "Your >EXEC_HOST_LIST_RM< is empty!"
+         $INFOTEXT -e "For a automatic execd unintallation you have to enter a valid exechost name!"
+         is_valid="false"
+      fi      
+   fi
+
+   if [ "$CSP" = "true" -o "$WINDOWS_SUPPORT" = "true" ]; then
       if [ "$CSP_COUNTRY_CODE" = "" -o `echo $CSP_COUNTRY_CODE | wc -c` != 3 ]; then
-         $INFOTEXT -log "The CSP_COUNTRY_CODE entry contains more or less than 2 characters!\n"
-         MoveLog
-         exit 1
+         $INFOTEXT -e "The >CSP_COUNTRY_CODE< entry contains more or less than 2 characters!\n"
+         is_valid="false"
       fi
-
       if [ "$CSP_STATE" = "" ]; then
-         $INFOTEXT -log "The CSP_STATE entry is empty!\n"
-         MoveLog
-         exit 1
+         $INFOTEXT -e "The CSP_STATE entry is empty!\n"
+         is_valid="false"
       fi
-
       if [ "$CSP_LOCATION" = "" ]; then
-         $INFOTEXT -log "The CSP_LOCATION entry is empty!\n"
-         MoveLog
-         exit 1
+         $INFOTEXT -e "The CSP_LOCATION entry is empty!\n"
+         is_valid="false"
       fi
-
       if [ "$CSP_ORGA" = "" ]; then
-         $INFOTEXT -log "The CSP_ORGA entry is empty!\n"
-         MoveLog
-         exit 1
+         $INFOTEXT -e "The CSP_ORGA entry is empty!\n"
+         is_valid="false"
       fi
-
       if [ "$CSP_ORGA_UNIT" = "" ]; then
-         $INFOTEXT -log "The CSP_ORGA_UNIT entry is empty!\n"
-         MoveLog
-         exit 1
+         $INFOTEXT -e "The CSP_ORGA_UNIT entry is empty!\n"
+         is_valid="false"
+      fi
+      if [ "$CSP_MAIL_ADDRESS" = "" ]; then
+         $INFOTEXT -e "The CSP_MAIL_ADDRESS entry is empty!\n"
+         is_valid="false"
+      fi
+      if [ "$COPY_COMMAND" != "scp" -a "$COPY_COMMAND" != "rcp" ]; then
+         $INFOTEXT -e "Your >COPY_COMMAND< entry is invalid"
+         is_valid="false"
+      fi
+      if [ -z "$CSP_RECREATE" ]; then
+         $INFOTEXT -e "Your >CSP_RECREATE< flag is not set!"
+         is_valid="false" 
+      fi 
+      if [ "$CSP_RECREATE" = "1" ]; then
+         CSP_RECREATE="true"
+      elif [ "$CSP_RECREATE" = "0" ]; then
+         CSP_RECREATE="false"
+      fi
+      CSP_RECREATE=`echo $CSP_RECREATE | tr [A-Z] [a-z]`
+      if [ "$CSP_RECREATE" != "true" -a "$CSP_RECREATE" != "false" ]; then
+         $INFOTEXT -e "Your >CSP_RECREATE< flag is wrong! Valid values are: 0, 1, true, false"
+         is_valid="false" 
       fi
 
-      if [ "$CSP_MAIL_ADDRESS" = "" ]; then
-         $INFOTEXT -log "The CSP_MAIL_ADDRESS entry is empty!\n"
-         MoveLog
-         exit 1
+      if [ -z "$CSP_COPY_CERTS" ]; then
+         $INFOTEXT -e "Your >CSP_COPY_CERTS< flag is not set!"
+         is_valid="false" 
+      fi 
+      if [ "$CSP_COPY_CERTS" = "1" ]; then
+         CSP_COPY_CERTS="true"
+      elif [ "$CSP_COPY_CERTS" = "0" ]; then
+         CSP_COPY_CERTS="false"
       fi
+      CSP_COPY_CERTS=`echo $CSP_COPY_CERTS | tr [A-Z] [a-z]`
+      if [ "$CSP_COPY_CERTS" != "true" -a "$CSP_COPY_CERTS" != "false" ]; then
+         $INFOTEXT -e "Your >CSP_COPY_CERTS< flag is wrong! Valid values are:0, 1, true, false"
+         is_valid="false" 
+      fi
+   fi
+
+   if [ "$is_valid" = "false" ]; then
+      $INFOTEXT -e "\nAn invalid entry was found in your autoinstall configuration file."
+      $INFOTEXT -e "Please check your autoinstall configuration file!\n >%s<" $FILE
+      exit 2  #ToDo: documentation exit 2 configuration file error 
    fi
 }
 
@@ -2979,4 +3302,29 @@ LicenseAgreement()
       fi
       $CLEAR
    fi
+}
+
+IsNumeric(){
+   if [ -z "$1" ]; then
+      return 1
+   fi
+   case $1 in
+      *[!0-9]*) 
+         return 1;; # all characters are invalid, only number are good
+      *) 
+         return 0;; # valid entry
+   esac
+}
+
+IsMailAdress() {
+   case $1 in
+      [A-Za-z0-9.-]*@[a-zA-Z0-9-]*.[a-zA-z][a-zA-Z]) 
+         return 0;; 
+      [A-Za-z0-9.-]*@[a-zA-Z0-9-]*.[a-zA-z][a-zA-Z][a-zA-Z]) 
+         return 0;; 
+      [A-Za-z0-9.-]*@[a-zA-Z0-9-]*.[a-zA-z][a-zA-Z][a-zA-Z][a-zA-Z]) 
+         return 0;;
+      *)
+         return 1;; 
+   esac
 }

@@ -122,10 +122,7 @@ CheckQmasterInstallation()
       $INFOTEXT -log "\nObviously there was no qmaster installation yet!\nCall >install_qmaster<\n" \
                   "on the machine which shall run the Grid Engine qmaster\n"
 
-      if [ $AUTO = true ]; then
-         MoveLog
-      fi
-
+      MoveLog
       exit 1
    else
       $INFOTEXT "\nUsing cell: >%s<\n" $SGE_CELL_VAL
@@ -184,6 +181,7 @@ CheckCellDirectory()
                 "directory (e.g. shared with NFS) for your installation.\n\n" \
                 "The installation of the execution daemon will abort now.\n"
 
+      MoveLog
       exit 1
    fi
 }
@@ -282,10 +280,7 @@ CheckHostNameResolving()
             $INFOTEXT "$MODE failed"
             $INFOTEXT -log "Cannot contact qmaster! $MODE failed"
 
-            if [ $AUTO = true ]; then
-               MoveLog
-            fi
-
+            MoveLog
             exit 1
          fi
       else
@@ -761,6 +756,7 @@ InstWinHelperSvc()
       $INFOTEXT -log "\n ... service could not be installed!"
       $INFOTEXT " ... exiting installation"
       $INFOTEXT -log " ... exiting installation"
+      MoveLog
       exit 1
    fi
 
@@ -773,6 +769,7 @@ InstWinHelperSvc()
       $INFOTEXT -log "\n ... service could not be started!"
       $INFOTEXT " ... exiting installation"
       $INFOTEXT -log " ... exiting installation"
+      MoveLog
       exit 1
    fi
 
@@ -839,6 +836,7 @@ SetupWinSvc()
       $INFOTEXT -log "file to setup a proper environment."
       $INFOTEXT -log "... exiting now!"
 
+      MoveLog
       exit 1 
    fi
 

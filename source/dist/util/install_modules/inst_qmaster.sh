@@ -1,4 +1,4 @@
-#! /bin/sh 
+#!/bin/sh
 #
 # SGE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
 # Scriptname: inst_qmaster.sh
@@ -397,6 +397,7 @@ SetSpoolingOptionsBerkeleyDB()
                ret=$?               
                if [ $AUTO = true ]; then
                   $INFOTEXT -log "The spooling directory already exists!\n Please remove it or choose any other spooling directory!"
+                  MoveLog
                   exit 1
                fi
  
@@ -548,6 +549,7 @@ SetSpoolingOptionsDynamic()
       *)
          $INFOTEXT "\nUnknown spooling method. Exit."
          $INFOTEXT -log "\nUnknown spooling method. Exit."
+         MoveLog
          exit 1
          ;;
    esac
@@ -574,6 +576,7 @@ SetSpoolingOptions()
       *)
          $INFOTEXT "\nUnknown spooling method. Exit."
          $INFOTEXT -log "\nUnknown spooling method. Exit."
+         MoveLog
          exit 1
          ;;
    esac
@@ -1105,10 +1108,8 @@ StartQmaster()
                 "configuration! Installation failed!"
       $INFOTEXT -log "sge_qmaster daemon didn't start. Please check your\n" \
                      "autoinstall configuration file! Installation failed!"
-      if [ $AUTO = true ]; then
-         MoveLog
-      fi
 
+      MoveLog
       exit 1
    fi
    $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
@@ -1413,15 +1414,15 @@ PrintHostGroup()
 GetQmasterPort()
 {
 
-    if [ $RESPORT = true ]; then
-       comm_port_max=1023
-    else
-       comm_port_max=65500
-    fi
+   if [ $RESPORT = true ]; then
+      comm_port_max=1023
+   else
+      comm_port_max=65500
+   fi
 
-    CheckServiceAndPorts service $SGE_QMASTER_SRV
+   CheckServiceAndPorts service $SGE_QMASTER_SRV
 
-    if [ "$SGE_QMASTER_PORT" != "" ]; then
+   if [ "$SGE_QMASTER_PORT" != "" ]; then
       $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
 
       if [ $SGE_QMASTER_PORT -ge 1 -a $SGE_QMASTER_PORT -le $comm_port_max ]; then
@@ -1447,8 +1448,8 @@ GetQmasterPort()
                    "Please check your configuration file and restart\n" \
                    "the installation or configure the service >sge_qmaster<." $SGE_QMASTER_PORT $comm_port_max
       fi
-   fi         
-      $INFOTEXT -u "\nGrid Engine TCP/IP service >sge_qmaster<"
+   fi
+   $INFOTEXT -u "\nGrid Engine TCP/IP service >sge_qmaster<"
    if [ $ret != 0 ]; then
       $INFOTEXT "\nThere is no service >sge_qmaster< available in your >/etc/services< file\n" \
                 "or in your NIS/NIS+ database.\n\n" \
@@ -1490,6 +1491,7 @@ GetQmasterPort()
             else
                if [ $AUTO = true ]; then
                   $INFOTEXT -log "Please use an unused port number!"
+                  MoveLog
                   exit 1
                fi
 
@@ -1637,6 +1639,7 @@ GetExecdPort()
 
                if [ $AUTO = true ]; then
                   $INFOTEXT -log "Please use an unused port number!"
+                  MoveLog
                   exit 1
                fi
 
@@ -1648,7 +1651,7 @@ GetExecdPort()
                      $INFOTEXT -log "Please use any other port number!!!"
                      $INFOTEXT -log "This %s port number is used by sge_qmaster" $SGE_QMASTER_PORT
                      $INFOTEXT -log "Installation failed!!!"
-
+                     MoveLog
                      exit 1
                   fi
                fi

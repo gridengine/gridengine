@@ -1,3 +1,10 @@
+MD-2008-01-18-0: Bugfix:    o autoinstall configfile should be parsed and checked 
+                              for valid input!
+                 Bugster:   6513435 
+                 Issue:     2459
+                 Changed:   install 
+                 Review:    HP
+
 MP-2008-01-17-0: Bugfix:    qstat usage contains typo. Other issues in this
                             CR will be moved to a new CR.
                  Bugster:   6595754

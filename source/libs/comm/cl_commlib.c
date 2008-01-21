@@ -2674,6 +2674,7 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
    if (handle->statistic->last_update.tv_sec != now.tv_sec) {
       cl_commlib_calculate_statistic(handle, CL_FALSE, 1); /* do not force update */
       cl_commlib_handle_debug_clients(handle, CL_TRUE);
+      cl_commlib_app_message_queue_cleanup(handle); /* do message queue cleanup only every second */
    }
 
    /* check number of connections */
@@ -2929,8 +2930,6 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
       }
       elem = cl_connection_list_get_next_elem(elem);
    }
-
-   cl_commlib_app_message_queue_cleanup(handle);
 
    /* now take list entry and add it at the end if there are more connections */
    /* this must be done in order to NOT prefer the first connection in list */
@@ -6753,6 +6752,8 @@ static void *cl_com_handle_service_thread(void *t_conf) {
       cl_commlib_calculate_statistic(handle, CL_FALSE, 1);
       /* ceck for debug clients */
       cl_commlib_handle_debug_clients(handle, CL_TRUE);
+      /* do received message queue cleanup every second */
+      cl_commlib_app_message_queue_cleanup(handle);
 
       /* there is nothing to do, wait for events */
       CL_LOG(CL_LOG_INFO,"wait for event ...");
@@ -7568,7 +7569,7 @@ static void cl_commlib_app_message_queue_cleanup(cl_com_handle_t* handle) {
          while(next_message_elem) {
             message_elem = next_message_elem;
             next_message_elem = cl_message_list_get_next_elem(message_elem);
-            timeout_time = message_elem->message->message_receive_time.tv_sec + handle->acknowledge_timeout;
+            timeout_time = message_elem->message->message_receive_time.tv_sec + handle->message_timeout;
             if (timeout_time <= now.tv_sec) {
                cl_com_message_t* message = message_elem->message;
                cl_message_list_remove_receive(connection, message, 0);

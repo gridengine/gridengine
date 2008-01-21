@@ -272,7 +272,7 @@ void *my_message_thread(void *t_conf) {
       cl_commlib_trigger(handle, 1);
       ret_val = cl_commlib_receive_message(handle, NULL, NULL, 0,      /* handle, comp_host, comp_name , comp_id, */
                                            CL_FALSE, 0,                       /* syncron, response_mid */
-                                           &message, &sender );
+                                           &message, &sender);
       if (ret_val == CL_RETVAL_OK) {
          rcv_messages++;
 #if 0
@@ -344,6 +344,7 @@ void *my_event_thread(void *t_conf) {
    int do_exit = 0;
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
+   cl_byte_t *reference = NULL;
 
    /* set thread config data */
    if (cl_thread_set_thread_config(thread_config) != CL_RETVAL_OK) {
@@ -386,8 +387,9 @@ void *my_event_thread(void *t_conf) {
                printf(" \"%s\" -> sending event to %s/%s/%ld\n", thread_config->thread_name, 
                                                                  client->comp_host, client->comp_name, client->comp_id  );
 #endif
+               reference = (cl_byte_t *)help;
                ret_val = cl_commlib_send_message(handle, client->comp_host, client->comp_name, client->comp_id,
-                                                 CL_MIH_MAT_NAK, (cl_byte_t**)&help , DATA_SIZE,
+                                                 CL_MIH_MAT_NAK, &reference, DATA_SIZE,
                                                  NULL, 0, 0 , CL_TRUE, CL_FALSE);
              
                if ( ret_val != CL_RETVAL_OK) {

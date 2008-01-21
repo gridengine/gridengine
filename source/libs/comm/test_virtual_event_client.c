@@ -87,6 +87,7 @@ extern int main(int argc, char** argv)
   time_t shutdown_time = 0;
   int i,first_message_sent = 0;
   int no_output = 0;
+  cl_byte_t *reference = NULL;
 
   prof_mt_init();
 
@@ -190,10 +191,11 @@ extern int main(int argc, char** argv)
 
      if (  first_message_sent == 0) {
         char data[6] = "event";
+        reference = (cl_byte_t *)data;
         first_message_sent = 1;
         retval = cl_commlib_send_message(handle, argv[3], "virtual_master", 1,
                                          CL_MIH_MAT_ACK,
-                                         (cl_byte_t**)&data, 6,
+                                         &reference, 6,
                                          NULL, 0, 0 , CL_TRUE, CL_TRUE );
         if (retval == CL_RETVAL_OK) {
            snd_messages++;

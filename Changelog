@@ -1,3 +1,7 @@
+RD-2008-01-21-0: Bugfix:    - corrected message queue cleanup
+                            - fixed event message handling for virtual clients
+                 Review:    CR
+
 MD-2008-01-18-0: Bugfix:    o autoinstall configfile should be parsed and checked 
                               for valid input!
                             o automatic backup is broken

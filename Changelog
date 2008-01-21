@@ -1,3 +1,6 @@
+PJ-2008-01-21-0: Enhancem.: using INFOTEXT instead of echo
+                 Review:    LP
+
 AA-2008-01-21-0: Doc:       - man page additions in sge_conf(5)
                               bootstrap(5) for scheduler thread
                               and jvm thread

@@ -47,6 +47,7 @@ SVCADM="/usr/sbin/svcadm"
 SVCCFG="/usr/sbin/svccfg"
 SVCS="/usr/bin/svcs"
 RM=rm
+SGE_SMF_SUPPORT_SOURCED=true
 
 if [ -z "$SGE_ROOT" -o -z "$SGE_CELL" ]; then
    if [ -z "$INFOTEXT" ]; then

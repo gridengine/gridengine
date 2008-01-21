@@ -210,7 +210,7 @@ ExecuteAsAdmin()
       $ECHO $*
    fi
 
-   if [ $ADMINUSER = default ]; then
+   if [ "$ADMINUSER" = default ]; then
       $*
    else
       if [ -f $SGE_UTILBIN/adminrun ]; then
@@ -260,7 +260,7 @@ ExecuteAsAdminForUpgrade()
       $ECHO $*
    fi
 
-   if [ $ADMINUSER = default ]; then
+   if [ "$ADMINUSER" = default ]; then
       $*
    else
       cmd=$1
@@ -358,7 +358,7 @@ WINUTILFILES="SGE_Helper_Service.exe adminrun checkprog checkuser filestat \
 
 THIRD_PARTY_FILES="openssl"
 
-if [ $SGE_ARCH = "win32-x86" ]; then
+if [ "$SGE_ARCH" = "win32-x86" ]; then
    BINFILES="$WINBINFILES"
    UTILFILES="$WINUTILFILES"
 fi
@@ -881,6 +881,8 @@ CheckConfigFile()
       if [ "$SGE_ENABLE_SMF" != "true" -a "$SGE_ENABLE_SMF" != "false" ]; then
          $INFOTEXT -e "Your >SGE_ENABLE_SMF< flag is wrong! Valid values are: 0, 1, true, false"
          is_valid="false" 
+      elif [ "$SGE_ENABLE_SMF" = "false" ]; then
+         SMF_FLAGS="-nosmf"
       fi
    fi
 
@@ -1312,7 +1314,7 @@ ProcessSGERoot()
       # do not check for correct SGE_ROOT in case of -nostrict
       if [ "$strict" = true ]; then
          # create a file in SGE_ROOT
-         if [ $ADMINUSER != default ]; then
+         if [ "$ADMINUSER" != default ]; then
             $SGE_UTILBIN/adminrun $ADMINUSER $TOUCH $SGE_ROOT_VAL/tst$$ 2> /dev/null > /dev/null
          else
             touch $SGE_ROOT_VAL/tst$$ 2> /dev/null > /dev/null
@@ -1366,6 +1368,14 @@ GetDefaultClusterName() {
 #
 ProcessSGEClusterName()
 {
+   if [ "$SGE_SMF_SUPPORT_SOURCED" != true ]; then
+      if [ ! -f ./util/sgeSMF/sge_smf_support.sh ]; then
+         $INFOTEXT "Missing ./util/sgeSMF/sge_smf_support.sh file!!!"
+         exit 1
+      fi
+      . ./util/sgeSMF/sge_smf_support.sh
+   fi
+
    TMP_CLUSTER_NAME=`cat $SGE_ROOT/$SGE_CELL/common/cluster_name 2>/dev/null`
    # We always use the name in cluster_name file
    if [ -n "$TMP_CLUSTER_NAME" ]; then
@@ -1427,11 +1437,6 @@ CheckForSMF()
          SGE_ENABLE_SMF="$?"
          if [ $SGE_ENABLE_SMF -eq 0 ]; then
             SGE_ENABLE_SMF="true"
-            if [ ! -f ./util/sgeSMF/sge_smf_support.sh ]; then
-               $INFOTEXT "Missing ./util/sgeSMF/sge_smf_support.sh file!!!"
-               exit 1
-            fi
-            . ./util/sgeSMF/sge_smf_support.sh
          else
             $INFOTEXT "Disabling SMF - SVC repository not found!!!" 
             SGE_ENABLE_SMF="false"
@@ -1442,7 +1447,6 @@ CheckForSMF()
          SMF_FLAGS="-nosmf"
       fi
    fi
-   #SGE_ENABLE_SMF=true from now on means USE SMF
 }
  
 #-------------------------------------------------------------------------
@@ -1640,7 +1644,7 @@ CreateSGEStartUpScripts()
 
       rm -f $TMP_SGE_STARTUP_FILE ${TMP_SGE_STARTUP_FILE}.0 ${TMP_SGE_STARTUP_FILE}.1
 
-      if [ $euid = 0 -a $ADMINUSER != default -a $QMASTER = "install" -a $hosttype = "master" ]; then
+      if [ $euid = 0 -a "$ADMINUSER" != default -a $QMASTER = "install" -a $hosttype = "master" ]; then
          AddDefaultManager root $ADMINUSER
          AddDefaultOperator $ADMINUSER
       elif [ $euid != 0 -a $hosttype = "master" ]; then
@@ -1705,6 +1709,7 @@ InstallRcScript()
 {
    if [ $euid != 0 ]; then
       SGE_ENABLE_SMF=false
+      SMF_FLAGS="-nosmf"
       return 0
    fi
 
@@ -1730,6 +1735,7 @@ InstallRcScript()
    else
       if [ $ret = 1 ]; then
          SGE_ENABLE_SMF=false
+         SMF_FLAGS="-nosmf"
          return
       fi
    fi

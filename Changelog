@@ -1,3 +1,7 @@
+LP-2008-01-21-0: Bugfix.:   Could not start install without SGE_ROOT set
+                 Bugfix.:   Added missing SMF_FLAGS in the installation
+                 Review:    PJ
+
 PJ-2008-01-21-0: Enhancem.: using INFOTEXT instead of echo
                  Review:    LP
 

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/12/03 11:08:27 $     Revision: $Revision: 1.65 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/01/21 13:29:05 $     Revision: $Revision: 1.66 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/12/03 11:08:27 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/01/21 13:29:05 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -1430,6 +1430,23 @@ This value is a global configuration parameter only. It cannot be
 overridden by the execution host local configuration.
 .\"
 .\"
+.SS "\fBlibjvm_path\fP"
+\fBlibjvm_path\fP is usually set during qmaster installation and points to the absolute path of libjvm.so.
+(or the corresponding library depending on your architecture - e.g. /usr/java/jre/lib/i386/server/libjvm.so) The referenced libjvm version must be at least 1.5.
+It is needed by the jvm qmaster thread only. If the java vm needs additional starting parameters they can be set in \fBadditional_jvm_args\fP. If the jvm thread is started at all can be defined in the 
+.M bootstrap 5
+file. If libjvm_path is empty or an incorrect path the jvm thread fails to start.
+.sp 1
+The global configuration entry for this value may be overwritten by the
+execution host local configuration.
+.\"
+.\"
+.SS "\fBadditional_jvm_args\fP"
+\fBadditional_jvm_args\fP is usually set during qmaster installation.
+Details about possible values \fBadditional_jvm_args\fP can be found in the help output of the accompanying java command. This setting is normally not needed.
+.sp 1
+The global configuration entry for this value may be overwritten by the
+execution host local configuration.
 .\"
 .\"
 .SH "SEE ALSO"

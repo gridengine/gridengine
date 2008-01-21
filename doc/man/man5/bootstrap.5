@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: bootstrap.5,v $     Last Update: $Date: 2007/07/19 09:04:32 $     Revision: $Revision: 1.8 $
+.\" $RCSfile: bootstrap.5,v $     Last Update: $Date: 2008/01/21 13:29:05 $     Revision: $Revision: 1.9 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/07/19 09:04:32 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/01/21 13:29:05 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx bootstrap file
@@ -173,13 +173,30 @@ master spool directory is <xxqs_name_sxx_root>/<cell>/spool/qmaster.
 .PP
 .\"
 .\"
-.SS "\fBproduct_mode\fP"
-The product mode defines the set of features the installed cluster is using.
+.SS "\fBsecurity_mode\fP"
+The security mode defines the set of security features the installed cluster is using.
 .PP
-Both the basic product modes sge (xxQS_NAMExx standard mode) and 
-sgeee (xxQS_NAMExx Enterprise Edition) as well as additional features
-(AFS, DCE, KERBEROS, RESERVED_PORT security model, CSP security model) are 
-specified by this parameter.
+Possible security mode settings are none, afs, dce, kerberos, csp.
+(no additional security, AFS, DCE, KERBEROS, CSP security model).
+.\"
+.\"
+.SS "\fBlistener_threads\fP"
+The number of listener threads (defaults set by installation).
+.\"
+.\"
+.SS "\fBworker_threads\fP"
+The number of worker threads (defaults set by installation).
+.\"
+.\"
+.SS "\fBscheduler_threads\fP"
+The number of scheduler threads (allowed: 0-1, default set by installation: 1, off: 0).
+(see 
+.M qconf 1
+-kt/-at option)
+.\"
+.\"
+.SS "\fBjvm_threads\fP"
+The number of jvm threads (allowed: 0-1, default set by installation, off: 0).
 .\"
 .\"
 .SH "COPYRIGHT"

@@ -1,3 +1,8 @@
+AA-2008-01-21-0: Doc:       - man page additions in sge_conf(5)
+                              bootstrap(5) for scheduler thread
+                              and jvm thread
+                 Review:    EB
+
 RD-2008-01-21-0: Bugfix:    - corrected message queue cleanup
                             - fixed event message handling for virtual clients
                  Review:    CR

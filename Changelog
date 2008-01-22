@@ -1,3 +1,10 @@
+RD-2008-01-22-1: Bugfix     - fixed load report issue due to improved
+                              qmaster-execd-protocol
+                            - fixed advance reservation soft error handling
+                 Bugster:   6652219, 6649605
+                 Issue:     2469, 2470
+                 Review:    CR
+
 MD-2008-01-22-1: Bugfix:    changed output string, which brakes testuite test
                  Changed:   install
 

@@ -6666,7 +6666,7 @@ static dispatch_t match_static_advance_reservation(const sge_assignment_t *a)
             }
             
             /* is ar running? */
-            if (lGetUlong(ar, AR_state) != AR_RUNNING) {
+            if (lGetUlong(ar, AR_state) != AR_RUNNING && lGetUlong(ar, AR_state) != AR_ERROR) {
                schedd_mes_add(a->job_id, SCHEDD_INFO_EXECTIME_); 
                DRETURN(DISPATCH_NEVER_CAT);
             }

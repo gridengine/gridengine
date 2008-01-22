@@ -51,6 +51,7 @@ int main(int argc, char **argv) {
    lList *pcmdline = NULL;
    lList *alp = NULL;
    sge_gdi_ctx_class_t *ctx = NULL;
+   lList *ar_lp = NULL;
 
    lListElem *ar = NULL;
 
@@ -117,33 +118,19 @@ int main(int argc, char **argv) {
       goto error_exit;
    }
 
-   /* test code */
-   {
-      lList *ar_lp = NULL;
+   ar_lp = lCreateList(NULL, AR_Type);
+   lAppendElem(ar_lp, ar);
 
-      ar_lp = lCreateList(NULL, AR_Type);
-      lAppendElem(ar_lp, ar);
-
-      /*
-      ** for debugging
-      */
-      if (rmon_mlgetl(&RMON_DEBUG_ON, TOP_LAYER) & INFOPRINT) {
-         printf("___AR_LIST______________________________\n");
-         lWriteListTo(ar_lp, stdout);
-         printf("________________________________________\n");
-      }
-
-      alp = ctx->gdi(ctx, SGE_AR_LIST, SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION, &ar_lp, NULL, NULL);
-      lFreeList(&ar_lp);
-      answer_list_on_error_print_or_exit(&alp, stdout);
-      if (answer_list_has_error(&alp)) {
-         sge_prof_cleanup();
-         sge_gdi2_shutdown((void**)&ctx);
-         if (answer_list_has_status(&alp, STATUS_NOTOK_DOAGAIN)) {
-            DRETURN(25);
-         } else {
-            DRETURN(1);
-         }
+   alp = ctx->gdi(ctx, SGE_AR_LIST, SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION, &ar_lp, NULL, NULL);
+   lFreeList(&ar_lp);
+   answer_list_on_error_print_or_exit(&alp, stdout);
+   if (answer_list_has_error(&alp)) {
+      sge_gdi2_shutdown((void**)&ctx);
+      sge_prof_cleanup();
+      if (answer_list_has_status(&alp, STATUS_NOTOK_DOAGAIN)) {
+         DRETURN(25);
+      } else {
+         DRETURN(1);
       }
    }
 

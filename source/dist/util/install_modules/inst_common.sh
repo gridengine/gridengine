@@ -668,7 +668,7 @@ CheckConfigFile()
    fi 
 
    if [ "$QMASTER" = "install" ]; then
-      if [ -d "$SGE_ROOT/$SGE_CELL" ]; then
+      if [ -d "$SGE_ROOT/$SGE_CELL" -a ! -z "$DB_SPOOLING_SERVER" -a "$DB_SPOOLING_SERVER" != "none" ]; then
          $INFOTEXT -e "Your >CELL_NAME< directory %s already exist!" $SGE_ROOT/$SGE_CELL
          $INFOTEXT -e "The automatic installation stops, if the >SGE_CELL< directory already exists"
          $INFOTEXT -e "to ensure, that existing installations are not overwritten!"
@@ -861,23 +861,23 @@ CheckConfigFile()
          is_valid="false"
       fi
       if [ "$CSP_STATE" = "" ]; then
-         $INFOTEXT -e "The CSP_STATE entry is empty!\n"
+         $INFOTEXT -e "The >CSP_STATE< entry is empty!\n"
          is_valid="false"
       fi
       if [ "$CSP_LOCATION" = "" ]; then
-         $INFOTEXT -e "The CSP_LOCATION entry is empty!\n"
+         $INFOTEXT -e "The >CSP_LOCATION< entry is empty!\n"
          is_valid="false"
       fi
       if [ "$CSP_ORGA" = "" ]; then
-         $INFOTEXT -e "The CSP_ORGA entry is empty!\n"
+         $INFOTEXT -e "The >CSP_ORGA< entry is empty!\n"
          is_valid="false"
       fi
       if [ "$CSP_ORGA_UNIT" = "" ]; then
-         $INFOTEXT -e "The CSP_ORGA_UNIT entry is empty!\n"
+         $INFOTEXT -e "The >CSP_ORGA_UNIT< entry is empty!\n"
          is_valid="false"
       fi
       if [ "$CSP_MAIL_ADDRESS" = "" ]; then
-         $INFOTEXT -e "The CSP_MAIL_ADDRESS entry is empty!\n"
+         $INFOTEXT -e "The>CSP_MAIL_ADDRESS< entry is empty!\n"
          is_valid="false"
       fi
       if [ "$COPY_COMMAND" != "scp" -a "$COPY_COMMAND" != "rcp" ]; then

@@ -1,3 +1,7 @@
+MD-2008-01-22-0: Bugfix:    moved clear command which confused testsuite
+                 Review:    JG
+                 Changed:   install
+
 OJ-2008-01-14-0: Bugfix:    Modified OJ-2008-01-07-0, took out /bin/csh, fixed
                             mesg numbers.
                  Bugster:   6453563

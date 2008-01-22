@@ -676,9 +676,9 @@ CheckConfigFile()
    fi 
 
    if [ "$QMASTER" = "install" ]; then
-      if [ -d "$SGE_ROOT/$SGE_CELL" ]; then
+      if [ -d "$SGE_ROOT/$SGE_CELL" -a ! -z "$DB_SPOOLING_SERVER" -a "$DB_SPOOLING_SERVER" != "none" ]; then
          $INFOTEXT -e "Your >CELL_NAME< directory %s already exist!" $SGE_ROOT/$SGE_CELL
-         $INFOTEXT -e "The automatic installation stops, if the >SGE_CELL< directory already exists"
+         $INFOTEXT -e "The automatic installation stops, if the >CELL_NAME< directory already exists"
          $INFOTEXT -e "to ensure, that existing installations are not overwritten!"
          is_valid="false"
       fi
@@ -729,6 +729,11 @@ CheckConfigFile()
          $INFOTEXT -e "Your >PAR_EXECD_INST_COUNT< entry is invalid, please enter a number between 1\n and number of execution host"
          is_valid="false"
       fi 
+      `IsValidClusterName "$SGE_CLUSTER_NAME"`
+      if [ "$?" -eq 1 ]; then
+         $INFOTEXT -e "Your >SGE_CLUSTER_NAME< entry is invalid. Valid Clustername is e.g. p_1234"
+         is_valid="false"
+      fi
 
       low_gid=`echo $GID_RANGE | cut -d"-" -f1`
       high_gid=`echo $GID_RANGE | cut -d"-" -f2`
@@ -3324,13 +3329,23 @@ IsNumeric(){
 
 IsMailAdress() {
    case $1 in
-      [A-Za-z0-9.-]*@[a-zA-Z0-9-]*.[a-zA-z][a-zA-Z]) 
+      [A-Za-z0-9.-]*@[a-zA-Z0-9-]*.[a-zA-z][a-zA-Z])  #valid
          return 0;; 
-      [A-Za-z0-9.-]*@[a-zA-Z0-9-]*.[a-zA-z][a-zA-Z][a-zA-Z]) 
+      [A-Za-z0-9.-]*@[a-zA-Z0-9-]*.[a-zA-z][a-zA-Z][a-zA-Z]) #valid 
          return 0;; 
-      [A-Za-z0-9.-]*@[a-zA-Z0-9-]*.[a-zA-z][a-zA-Z][a-zA-Z][a-zA-Z]) 
+      [A-Za-z0-9.-]*@[a-zA-Z0-9-]*.[a-zA-z][a-zA-Z][a-zA-Z][a-zA-Z]) #valid 
          return 0;;
       *)
          return 1;; 
+   esac
+}
+
+IsValidClusterName() {
+   case $1 in
+      [A-Za-z][A-Za-z0-9_]*) # valid entry
+         return 0;;
+
+      *)
+         return 1;;
    esac
 }

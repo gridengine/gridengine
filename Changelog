@@ -1,3 +1,8 @@
+MD-2008-01-22-0: Bugfix:    moved clear command which confused testsuite
+                 Enhancem.: added IsValidClusterName function to installer
+                 Review:    JG
+                 Changed:   install
+
 LP-2008-01-21-0: Bugfix.:   Could not start install without SGE_ROOT set
                  Bugfix.:   Added missing SMF_FLAGS in the installation
                  Review:    PJ

@@ -48,7 +48,6 @@ PATH=/bin:/usr/bin:/usr/sbin:/usr/bsd:/usr/ucb
 # Easy way to prevent clearing of screen
 #
 CLEAR=clear
-$CLEAR
 
 # The same as clear!
 #
@@ -320,6 +319,8 @@ fi
 if [ $AUTO = "true" ]; then
    CheckConfigFile $FILE
 fi
+
+$CLEAR
 
 if [ $USE_OLD_IJS = "false" ]; then
    QLOGIN_DAEMON="builtin"

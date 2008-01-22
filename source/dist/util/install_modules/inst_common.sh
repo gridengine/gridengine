@@ -576,9 +576,6 @@ CheckConfigFile()
    MIN_GID=100        #from 0 - 100 may be reserved GIDs
    is_valid="true"
 
-   #translate the CELL_NAME entry to SGE_CELL as needed by installscript   
-   SGE_CELL=$CELL_NAME
-
    CONFIG_ENTRIES=`grep -v "^\#" $CONFIG_FILE | cut -d"=" -f1`
 
    if [ "$BACKUP" = "true" ]; then
@@ -598,10 +595,10 @@ CheckConfigFile()
          is_valid="false" 
       fi
       if [ -z "$SGE_CELL" ]; then
-         $INFOTEXT -e "Your >CELL_NAME< entry is not set!" 
+         $INFOTEXT -e "Your >SGE_CELL< entry is not set!" 
          is_valid="false"
       elif [ ! -d "$SGE_ROOT/$SGE_CELL" ]; then
-         $INFOTEXT -e "Your >CELL_NAME< directory %s does not exist!" $SGE_ROOT/$SGE_CELL
+         $INFOTEXT -e "Your >SGE_CELL< directory %s does not exist!" $SGE_ROOT/$SGE_CELL
          is_valid="false"
       fi
       if [ -z "$BACKUP_DIR" ]; then
@@ -633,6 +630,9 @@ CheckConfigFile()
       fi
       return
    fi
+
+   #translate the CELL_NAME entry to SGE_CELL as needed by installscript   
+   SGE_CELL=$CELL_NAME
 
    #do hostname resolving. fetching hostname from config file, try to resolve and
    #and recreate the hostname lists

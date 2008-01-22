@@ -175,7 +175,7 @@ execd_add_load_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now
       ** 1. load report
       */
       report = lCreateElem(REP_Type);
-      if (send_all) {
+      if (send_all == true) {
          lSetUlong(report, REP_type, NUM_REP_FULL_REPORT_LOAD);
       } else {
          lSetUlong(report, REP_type, NUM_REP_REPORT_LOAD);
@@ -210,9 +210,12 @@ execd_add_load_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now
                   found = true;
 
                   if (!send_all && sge_strnullcmp(lGetString(ep, LR_value), value) == 0) {
-                     /* value hasn't changed, removed it from list */ 
+                     /* value hasn't changed, remove it from list */ 
                      lRemoveElem(tmp_lr_list, &ep);
                   }
+
+                  /* Old value is no longer valid */
+                  lSetString(lr, LR_value, NULL);
                   break;
                }
             }

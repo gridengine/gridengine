@@ -1,3 +1,11 @@
+RD-2008-01-22-1: Bugfix     - fixed load report issue due to improved
+                              qmaster-execd-protocol
+                            - fixed advance reservation soft error handling
+                            - Parallel scheduling memory leak in master
+                 Bugster:   6652219, 6649605, 6562190
+                 Issue:     2469, 2470, 2187
+                 Review:    CR
+
 RD-2008-01-11-0: Bugfix:    fixed protocol issue which lead a execd to consume
                             100% CPU time.
                  Issue:     2457

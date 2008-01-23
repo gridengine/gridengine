@@ -1,3 +1,8 @@
+CR-2008-01-23-0: Bugfix:    fixed commlib test binaries:
+                               test_cl_commlib
+                               test_cl_commlib_client
+                 Review:    RD
+
 RD-2008-01-22-1: Bugfix     - fixed load report issue due to improved
                               qmaster-execd-protocol
                             - fixed advance reservation soft error handling

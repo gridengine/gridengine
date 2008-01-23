@@ -42,6 +42,7 @@
 #include "cl_commlib.h"
 #include "cl_log_list.h"
 #include "cl_endpoint_list.h"
+#include "uti/sge_profiling.h"
 #define CL_DO_SLOW 0
 
 void sighandler_server(int sig);
@@ -190,6 +191,7 @@ extern int main(int argc, char** argv)
       exit(1);
   }
 
+  prof_mt_init();
   if (argv[2]) {
      framework = CL_CT_UNDEFINED;
      if (strcmp(argv[2], "TCP") == 0) {

@@ -62,14 +62,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Abstract base clase for the event client
+ * event client implementation
  *
  */
-public class AbstractEventClient implements EventClient {
+public class EventClientImpl implements EventClient {
 
     private static final Logger log = Logger.getLogger("com.sun.grid.jgdi.event");
     
-    private static List<AbstractEventClient> instances = new LinkedList<AbstractEventClient>();
+    private static List<EventClientImpl> instances = new LinkedList<EventClientImpl>();
     private static volatile boolean shutdown = false;
 
     private Set<EventListener> eventListeners = Collections.<EventListener>emptySet();
@@ -82,13 +82,13 @@ public class AbstractEventClient implements EventClient {
     private final EventLoopAction eventLoop;
     
     /**
-     * Creates a new instance of EventClient
+     * Creates a new instance of EventClientImpl
      * @param url  JGDI connection url in the form
      *             <code>bootstrap://&lt;SGE_ROOT&gt;@&lt;SGE_CELL&gt;:&lt;SGE_QMASTER_PORT&gt;</code>
      * @param regId  Registration id for the event client (0 => qmaster assignes a
      *               event client id dynamically)
      */
-    public AbstractEventClient(String url, int regId) {
+    public EventClientImpl(String url, int regId) {
         eventLoop = new EventLoopAction(url, regId);
         synchronized(instances) {
             instances.add(this);
@@ -108,24 +108,24 @@ public class AbstractEventClient implements EventClient {
     }
 
     /**
-     * Close all instances of the EventClient
+     * Close all instances of the EventClientImpl
      */
     public static void closeAll() {
-        log.entering(AbstractEventClient.class.getName(), "closeAll");
-        List<AbstractEventClient> currentInstances = null;
+        log.entering(EventClientImpl.class.getName(), "closeAll");
+        List<EventClientImpl> currentInstances = null;
         synchronized (instances) {
-            currentInstances = new ArrayList<AbstractEventClient>(instances);
+            currentInstances = new ArrayList<EventClientImpl>(instances);
             shutdown = true;
         }
 
-        for (AbstractEventClient evt : currentInstances) {
+        for (EventClientImpl evt : currentInstances) {
             try {
                 evt.close();
             } catch (Exception ex) {
                 // Ignore
             }
         }
-        log.exiting(AbstractEventClient.class.getName(), "closeAll");
+        log.exiting(EventClientImpl.class.getName(), "closeAll");
     }
     
     /**

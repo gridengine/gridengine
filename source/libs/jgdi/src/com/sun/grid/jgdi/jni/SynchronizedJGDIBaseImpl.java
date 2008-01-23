@@ -173,6 +173,19 @@ public class SynchronizedJGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
             jgdi.killSchedulerWithAnswer(answers);
         }
     }
+
+    public void startScheduler() throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.startScheduler();
+        }
+    }
+    
+    public void startSchedulerWithAnswer(List<JGDIAnswer> answers) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.startSchedulerWithAnswer(answers);
+        }
+    }
+    
     
     public void killExecd(String[] hosts, boolean terminateJobs) throws JGDIException {
         synchronized(jgdi) {

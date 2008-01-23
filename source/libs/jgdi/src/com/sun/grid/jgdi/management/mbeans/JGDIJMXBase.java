@@ -284,6 +284,13 @@ public class JGDIJMXBase implements java.io.Serializable, JGDIJMXBaseMBean, Noti
         log.exiting("JGDIJMXBase", "killScheduler");
     }
 
+    public void startScheduler() throws JGDIException {
+        log.entering("JGDIJMXBase", "startScheduler");
+        getJGDI().startScheduler();
+        log.exiting("JGDIJMXBase", "startScheduler");
+    }
+
+
     public void killExecd(String[] hosts, boolean terminateJobs) throws JGDIException {
         if(log.isLoggable(Level.FINER)) {
             log.entering("JGDIJMXBase", "killExecd", new Object[] { hosts, terminateJobs} );

@@ -36,134 +36,6 @@
 <%
   final com.sun.grid.cull.JavaHelper jh = (com.sun.grid.cull.JavaHelper)params.get("javaHelper");
   com.sun.grid.cull.CullDefinition cullDef = (com.sun.grid.cull.CullDefinition)params.get("cullDef");
-  
-  
-  class SubscribeMethodGenerator {
-     
-     private com.sun.grid.cull.CullObject cullObj;
-     private String name;
-     
-     
-     public void setObj(com.sun.grid.cull.CullObject cullObj) {
-      
-         this.cullObj = cullObj;
-         name = cullObj.getIdlName();
-         
-         if(name == null) {
-            throw new IllegalStateException("Have no idl name for " + cullObj.getName());
-         }
-     }
-     public void generate() {
-        if (this.cullObj.hasAddEvent()) {
-           generate(name + "Add", cullObj.getAddEventName());
-           generateFlush(name + "Add", cullObj.getAddEventName());
-        }
-        if (this.cullObj.hasDeleteEvent()) {
-           generate(name + "Del", cullObj.getDeleteEventName());
-           generateFlush(name + "Del", cullObj.getDeleteEventName());
-        }
-        if (this.cullObj.hasGetListEvent()) {
-           generate(name + "List", cullObj.getGetListEventName());
-           generateFlush(name + "List", cullObj.getGetListEventName());
-        }
-        if (this.cullObj.hasModifyEvent()) {
-           generate(name + "Mod", cullObj.getModifyEventName());
-           generateFlush(name + "Mod", cullObj.getModifyEventName());
-        }
-     }
-     
-     public void generate(String methodSuffix, String eventName) {
-        
-%>
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_EventClientImpl_nativeSubscribe<%=methodSuffix%>(JNIEnv *env, jobject evcobj, jboolean subscribe)
-{
-   lList *alp = NULL;
-   sge_evc_class_t *sge_evc = NULL;
-   jgdi_result_t ret = JGDI_SUCCESS;
-
-   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_EventClientImpl_nativeSubscribe<%=methodSuffix%>");
-
-   if ((ret = getEVC(env, evcobj, &sge_evc, &alp)) != JGDI_SUCCESS) {
-      throw_error_from_answer_list(env, ret, alp);
-      DEXIT;
-      return;
-   }
-
-   if (subscribe == true) {
-      DPRINTF(("event client (%d) subscribes <%=eventName%>\n", sge_evc->ec_get_id(sge_evc)));
-      if (!sge_evc->ec_subscribe(sge_evc, <%=eventName%>)) {
-         THROW_ERROR((env, JGDI_ERROR, "ec_subscribe %d failed", <%=eventName%>));
-         DEXIT;
-         return;
-      }
-   } else {
-      DPRINTF(("event client (%d) unsubscribes <%=eventName%>\n", sge_evc->ec_get_id(sge_evc)));
-      if (!sge_evc->ec_unsubscribe(sge_evc, <%=eventName%>)) {
-         THROW_ERROR((env, JGDI_ERROR, "ec_unsubscribe %d failed", <%=eventName%>));
-         DEXIT;
-         return;
-      }
-   }
-   DEXIT;
-}
-<%
-        
-     } // end of generate
-     
-     
-     public void generateFlush(String method, String eventName) {
-        
-%>
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_EventClientImpl_nativeSet<%=method%>Flush(JNIEnv *env, jobject evcobj, jboolean flush, jint interval) {
-   
-   lList *alp = NULL;
-   sge_evc_class_t *sge_evc = NULL;
-   jgdi_result_t ret = JGDI_SUCCESS;
-
-   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_EventClientImpl_nativeSet<%=method%>Flush");
-
-   if ((ret = getEVC(env, evcobj, &sge_evc, &alp)) != JGDI_SUCCESS) {
-      throw_error_from_answer_list(env, ret, alp);
-      DEXIT;
-      return;
-   }
-
-   if (!sge_evc->ec_set_flush(sge_evc, <%=eventName%>, (bool)flush, (u_long32)interval) ) {
-      THROW_ERROR((env, JGDI_ERROR, "ec_set_flush failed"));
-      DEXIT;
-      return;
-   }
-
-   DEXIT;
-}
-
-JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_nativeGet<%=method%>Flush(JNIEnv *env, jobject evcobj) {
-   
-   lList *alp = NULL;
-   sge_evc_class_t *sge_evc = NULL;
-   jgdi_result_t ret = JGDI_SUCCESS;
-   jint result = 0;
-   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_AbstractEventClient_nativeGet<%=method%>Flush");
-
-   if ((ret = getEVC(env, evcobj, &sge_evc, &alp)) != JGDI_SUCCESS) {
-      throw_error_from_answer_list(env, ret, alp);
-      DEXIT;
-      return 0;
-   }
-
-   result = (jint)sge_evc->ec_get_flush(sge_evc, <%=eventName%>);
-   
-   DEXIT;
-   return result;
-}
-
-<%
-        
-     } // end of generate flush
-     
-     
-  } // end of class SubscribeMethodGenerator
-  
 %>
 #include <ctype.h>
 #include <string.h>
@@ -189,29 +61,6 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_nativeGet<
 #include "jgdi_wrapper.h"
 
 <%
-    com.sun.grid.cull.CullObject cullObj = null;
-    SubscribeMethodGenerator gen = new SubscribeMethodGenerator();
-   // special events
-    
-   String [][] specialEvents = {
-       { "QmasterGoesDown", "sgeE_QMASTER_GOES_DOWN" },
-       { "SchedulerRun",    "sgeE_SCHEDDMONITOR" },
-       { "Shutdown",        "sgeE_SHUTDOWN" },
-       { "JobFinish",       "sgeE_JOB_FINISH" },
-       { "JobUsage",        "sgeE_JOB_USAGE" },
-       { "JobFinalUsage",   "sgeE_JOB_FINAL_USAGE" },
-       { "JobPriorityMod",  "sgeE_JOB_MOD_SCHED_PRIORITY" },
-       { "QueueInstanceSuspend", "sgeE_QINSTANCE_SOS" },
-       { "QueueInstanceUnsuspend", "sgeE_QINSTANCE_USOS" }
-
-   };
-
-%>
-
-jgdi_result_t process_generic_event(JNIEnv *env,  jobject *event, lListElem *ev, lList** alpp) {
-
-   switch( lGetUlong(ev, ET_type)) {
-<%
    class EvtInfo {
        
        private String classname;
@@ -221,7 +70,7 @@ jgdi_result_t process_generic_event(JNIEnv *env,  jobject *event, lListElem *ev,
        private String delEvent;
        private String listEvent;
                
-       public EvtInfo(com.sun.grid.cull.CullObject cullObj, SubscribeMethodGenerator gen) {
+       public EvtInfo(com.sun.grid.cull.CullObject cullObj) {
            classname = jh.getFullClassName(cullObj).replace('.', '/');
            cullObjName = cullObj.getName();         
            if(cullObj.hasModifyEvent()) {
@@ -236,15 +85,6 @@ jgdi_result_t process_generic_event(JNIEnv *env,  jobject *event, lListElem *ev,
            if(cullObj.hasDeleteEvent()) {
                delEvent = cullObj.getDeleteEventName();
            }
-       }
-       
-       public EvtInfo(String classname, String cullObjName, String addEvent, String modEvent, String delEvent, String listEvent) {
-           this.classname = classname;
-           this.cullObjName = cullObjName;
-           this.addEvent = addEvent;
-           this.modEvent = modEvent;
-           this.delEvent = delEvent;
-           this.listEvent = listEvent;
        }
        
        public void generate() {
@@ -274,12 +114,22 @@ jgdi_result_t process_generic_event(JNIEnv *env,  jobject *event, lListElem *ev,
        }
        } // end of generate
    } // end of class EvtInfo
-       
+   
+   com.sun.grid.cull.CullObject cullObj = null;
+   // special events
+    
    java.util.List<EvtInfo> evtList = new java.util.LinkedList<EvtInfo>();
    for (String name : cullDef.getObjectNames()) {
       cullObj = cullDef.getCullObject(name); 
-      evtList.add(new EvtInfo(cullObj, gen));
+      evtList.add(new EvtInfo(cullObj));
    } // end of for     
+
+%>
+
+jgdi_result_t process_generic_event(JNIEnv *env,  jobject *event, lListElem *ev, lList** alpp) {
+
+   switch( lGetUlong(ev, ET_type)) {
+<%
    
    // generate the c code
    for (EvtInfo info : evtList) {

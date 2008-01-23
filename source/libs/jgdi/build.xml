@@ -148,7 +148,7 @@
             </classpath>
         </javah>    
         <javah outputFile="${build.dir}/jgdi_event_gen.h">
-            <class name="com.sun.grid.jgdi.jni.AbstractEventClient"/>
+            <class name="com.sun.grid.jgdi.jni.EventClientImpl"/>
             <classpath>
                 <pathelement location="${classes.dir}"/>
             </classpath>
@@ -166,7 +166,7 @@
         <javac debug="${javac.debug}"
                deprecation="${javac.deprecated}"
                destdir="${classes.dir}"
-               includes="com/sun/grid/jgdi/jni/JGDIImpl.java, com/sun/grid/jgdi/jni/JGDIBase.java, com/sun/grid/jgdi/jni/EventClient.java"
+               includes="com/sun/grid/jgdi/jni/JGDIImpl.java, com/sun/grid/jgdi/jni/JGDIBase.java, com/sun/grid/jgdi/jni/EventClientImpl.java"
                target="${jgdi.javac.target}"
                source="${jgdi.javac.source}">
             <src refid="jgdi.srcpath"/>
@@ -754,11 +754,6 @@
                     <pathelement location="${build.dir}/classes"/>
                     <pathelement location="${cullconv.jar}"/>
                 </classpath>
-                <package name="com.sun.grid.jgdi.jni">
-                    <include name="EventClient"/>
-                    <include name="AbstractEventClient"/>
-                    <exclude name="EventClientImpl"/>
-                </package>
                 <package name="com.sun.grid.jgdi.event">
                     <include name="EventFactory"/>
                     <include name="EventTypeMapping"/>

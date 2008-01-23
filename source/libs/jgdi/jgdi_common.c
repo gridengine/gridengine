@@ -58,6 +58,7 @@
 #include "msg_common.h"
 #include "sge_edit.h"
 #include "sge_sharetree.h"
+#include "sge_utility.h"
 
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi2.h"
@@ -4780,6 +4781,26 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeKillSchedul
    DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeKillSchedulerWithAnswer");
 
    jgdi_kill(env, jgdi, NULL, SCHEDD_KILL, answers);
+
+   DRETURN_VOID;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeStartSchedulerWithAnswer
+ * Signature: (Ljava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeStartSchedulerWithAnswer(JNIEnv *env, jobject jgdi, jobject answers)
+{
+   lList *lp = NULL;
+   lListElem *ep = NULL;
+
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeStartSchedulerWithAnswer");
+
+   ep = lAddElemStr(&lp, ID_str, "scheduler", ID_Type);
+   lSetUlong(ep, ID_action, SGE_THREAD_TRIGGER_START); 
+   jgdi_kill(env, jgdi, lp, THREAD_START, answers);
+   lFreeList(&lp);
 
    DRETURN_VOID;
 }

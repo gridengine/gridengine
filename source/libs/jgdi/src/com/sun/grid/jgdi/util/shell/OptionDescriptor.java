@@ -39,6 +39,7 @@ import java.lang.reflect.Method;
  */
 public class OptionDescriptor {
     private String option;
+    private String defaultArg;
     private int mandatoryArgCount;
     private int optionalArgCount;
     private Method method;
@@ -54,8 +55,9 @@ public class OptionDescriptor {
      * @throws java.lang.InstantiationException
      * @throws java.lang.IllegalAccessException
      */
-    public OptionDescriptor(String option, int mandatory, int optional, Method method, PrintWriter out, PrintWriter err) throws InstantiationException,IllegalAccessException  {
+    public OptionDescriptor(String option, String defaultArg, int mandatory, int optional, Method method, PrintWriter out, PrintWriter err) throws InstantiationException,IllegalAccessException  {
         this.option = option;
+        this.defaultArg = defaultArg;
         this.mandatoryArgCount = mandatory;
         this.optionalArgCount = optional;
         this.method = method;
@@ -134,4 +136,8 @@ public class OptionDescriptor {
     public PrintWriter getErr() {
         return err;
     }
+
+    public String getDefaultArg() {
+        return defaultArg;
+}
 }

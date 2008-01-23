@@ -39,7 +39,7 @@ import com.sun.grid.jgdi.event.Event;
 import com.sun.grid.jgdi.event.EventListener;
 import com.sun.grid.jgdi.event.EventTypeEnum;
 import com.sun.grid.jgdi.event.ShutdownEvent;
-import com.sun.grid.jgdi.jni.AbstractEventClient;
+import com.sun.grid.jgdi.jni.EventClientImpl;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -72,7 +72,7 @@ public class NotificationBridge implements EventListener {
     private final Map<NotificationListener, Object> handbackMap = new HashMap<NotificationListener, Object>();
 
     public NotificationBridge(String url) {
-        eventClient = new AbstractEventClient(url, 0);
+        eventClient = new EventClientImpl(url, 0);
         eventClient.addEventListener(this);
     }
 

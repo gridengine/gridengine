@@ -49,6 +49,11 @@ public @interface OptionAnnotation {
      * @return String
      */
     String value();
+    
+    /** default arg in case of no arguments string
+     * @return String
+     */
+    String defaultStringArg()   default "";
     /** number of required args
      * @return int
      */

@@ -87,6 +87,10 @@ setup_env() {
                   JAVA_DATA_MODEL=-d64
                   DEBUGGER=dbx
                   ;;
+       sol-x86)   SRC_ARCH=SOLARIS86
+                  JAVA_ARCH=i386
+                  DEBUGGER=dbx
+                  ;;
         lx26-x86) SRC_ARCH=LINUX86_26
                   JAVA_ARCH=i386
                   DEBUGGER=gdb

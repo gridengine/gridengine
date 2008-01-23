@@ -90,7 +90,7 @@ public abstract class AnnotatedCommand extends AbstractCommand {
                             }
                         }
                         //Add method to the optionDescriptorMap
-                        optionDescriptorMap.put(o.value(), new OptionDescriptor(o.value(), o.min(), o.extra(), m, out, err));
+                        optionDescriptorMap.put(o.value(), new OptionDescriptor(o.value(), o.defaultStringArg(), o.min(), o.extra(), m, out, err));
                     }
                 }
             }
@@ -369,6 +369,12 @@ public abstract class AnnotatedCommand extends AbstractCommand {
         if (argList.size() > od.getMaxArgCount()) {
             msg = "Expected only " + od.getMaxArgCount() + " arguments for " + option + " option. Got " + argList.size() + ".";
             throw new IllegalArgumentException(msg);
+        }
+        
+        if (argList.size() == 0 && od.getMandatoryArgCount() == 0 && od.getOptionalArgCount() != 0 && od.getDefaultArg().length()> 0) {
+             tempList = new ArrayList<String>();
+             tempList.add(od.getDefaultArg());
+             argList.add(tempList);
         }
         
         boolean hasNoArgs = (od.getMandatoryArgCount() == 0) && (od.getOptionalArgCount() == 0);

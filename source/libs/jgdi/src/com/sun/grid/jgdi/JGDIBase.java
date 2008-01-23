@@ -217,6 +217,26 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
      */
     public void killSchedulerWithAnswer(List<JGDIAnswer> answers) throws JGDIException;
+
+    /**
+     * Send the schedduler a start signal.
+     *
+     * <p>The CLI equivialent for this method is <code>qconf -at scheduler</code> (see man qconf(1)).</p>
+     *
+     * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
+     */
+    public void startScheduler() throws JGDIException;
+    
+    /**
+     * Send the schedduler a kill signal.
+     *
+     * <p>The CLI equivialent for this method is <code>qconf -at scheduler</code> (see man qconf(1)).</p>
+     *
+     * @param answers   the <code>answer list</code> object
+     * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
+     */
+    public void startSchedulerWithAnswer(List<JGDIAnswer> answers) throws JGDIException;
+    
     
     /**
      * Send some execution hosts a kill signal.

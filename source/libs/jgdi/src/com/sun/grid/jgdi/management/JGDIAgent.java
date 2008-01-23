@@ -31,7 +31,7 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.management;
 
-import com.sun.grid.jgdi.jni.AbstractEventClient;
+import com.sun.grid.jgdi.jni.EventClientImpl;
 import com.sun.grid.jgdi.jni.JGDIBaseImpl;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -190,7 +190,7 @@ public class JGDIAgent {
                 logger.log(Level.INFO, "JGDIAgent is going down");
                 try {
                     JGDISession.closeAllSessions();
-                    AbstractEventClient.closeAll();
+                    EventClientImpl.closeAll();
                     JGDIBaseImpl.closeAllConnections();
                 } finally {
                     agent.stopMBeanServer();

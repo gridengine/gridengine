@@ -112,11 +112,11 @@ static jgdi_result_t lockEVC(const char *func, int index, sge_evc_elem_t **outel
    DENTER(JGDI_LAYER, "lockEVC");
    if (index >= 0 && index < MAX_EVC_ARRAY_SIZE) {
       sge_evc_elem_t *elem = &sge_evc_array[index];
-      DPRINTF(("%s lockEVC: event client at evc_index %d\n", func, index));
+/*       DPRINTF(("%s lockEVC: event client at evc_index %d\n", func, index)); */
       pthread_mutex_lock(&(elem->elem_mutex));
       if (elem->sge_evc == NULL) {
          *outelem = NULL;
-         DPRINTF(("%s unlockEVC: event client at evc_index %d\n", func, index));
+/*          DPRINTF(("%s unlockEVC: event client at evc_index %d\n", func, index)); */
          pthread_mutex_unlock(&(elem->elem_mutex));
          answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
                                 "event client sge_evc_index[%d] is already closed", index);
@@ -135,7 +135,7 @@ static jgdi_result_t lockEVC(const char *func, int index, sge_evc_elem_t **outel
 static void unlockEVC(const char *func, int index) {
    DENTER(JGDI_LAYER, "unlockEVC");
    if (index >= 0 && index < MAX_EVC_ARRAY_SIZE) {
-      DPRINTF(("%s unlockEVC: event client at evc_index %d\n", func, index));
+/*       DPRINTF(("%s unlockEVC: event client at evc_index %d\n", func, index)); */
       pthread_mutex_unlock(&(sge_evc_array[index].elem_mutex));
    }   
    DRETURN_VOID;
@@ -227,29 +227,29 @@ static void jgdi_event_update_func(u_long32 evid, lList **alpp, lList *event_lis
 }
 
 /*
- * Class:     com_sun_grid_jgdi_jni_AbstractEventClient
+ * Class:     com_sun_grid_jgdi_jni_EventClientImpl
  * Method:    interruptNative
  * Signature: (I)V
  */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_interruptNative(JNIEnv *env, jobject evcobj, jint evc_index)
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_EventClientImpl_interruptNative(JNIEnv *env, jobject evcobj, jint evc_index)
 {
    sge_evc_elem_t *elem = NULL;
    rmon_ctx_t rmon_ctx;
    lList *alp = NULL;
    int ret = JGDI_ERROR;
 
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_EventClient_interruptNative");
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_EventClientImpl_interruptNative");
 
    jgdi_init_rmon_ctx(env, JGDI_EVENT_LOGGER, &rmon_ctx);
    rmon_set_thread_ctx(&rmon_ctx);
    
-   if ((ret = lockEVC("Java_com_sun_grid_jgdi_jni_EventClient_interruptNative", evc_index, &elem, &alp)) == JGDI_SUCCESS) {
+   if ((ret = lockEVC("Java_com_sun_grid_jgdi_jni_EventClientImpl_interruptNative", evc_index, &elem, &alp)) == JGDI_SUCCESS) {
       elem->state = INTERRUPTED;
       pthread_cond_broadcast(&(elem->cond_var));
       jgdi_log_printf(env, JGDI_EVENT_LOGGER, FINER,
                       "interrupting sge_evc_array[%d] event client", evc_index);
                       
-      unlockEVC("Java_com_sun_grid_jgdi_jni_EventClient_closeNative", evc_index);
+      unlockEVC("Java_com_sun_grid_jgdi_jni_EventClientImpl_closeNative", evc_index);
    } else {
       throw_error_from_answer_list(env, ret, alp);
    }
@@ -263,25 +263,25 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_interruptN
 
 
 /*
- * Class:     com_sun_grid_jgdi_jni_AbstractEventClient
+ * Class:     com_sun_grid_jgdi_jni_EventClientImpl
  * Method:    closeNative
  * Signature: (I)V
  */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_closeNative(JNIEnv *env, jobject evcobj, jint evc_index)
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_EventClientImpl_closeNative(JNIEnv *env, jobject evcobj, jint evc_index)
 {
    sge_evc_elem_t *elem = NULL;
    rmon_ctx_t rmon_ctx;
    lList *alp = NULL;
    int ret = JGDI_ERROR;
 
-   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_EventClient_closeNative");
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_EventClientImpl_closeNative");
 
    jgdi_init_rmon_ctx(env, JGDI_EVENT_LOGGER, &rmon_ctx);
    rmon_set_thread_ctx(&rmon_ctx);
    
    pthread_mutex_lock(&sge_evc_mutex);
 
-   if ((ret = lockEVC("Java_com_sun_grid_jgdi_jni_EventClient_closeNative", evc_index, &elem, &alp)) == JGDI_SUCCESS) {
+   if ((ret = lockEVC("Java_com_sun_grid_jgdi_jni_EventClientImpl_closeNative", evc_index, &elem, &alp)) == JGDI_SUCCESS) {
       u_long32 reg_id = elem->sge_evc->ec_get_id(elem->sge_evc);
 
       elem->state = STOPPED;
@@ -303,7 +303,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_closeNativ
       sge_evc_class_destroy(&(elem->sge_evc));
       sge_evc_array[evc_index].sge_evc = NULL;
       pthread_cond_broadcast(&(elem->cond_var));
-      unlockEVC("Java_com_sun_grid_jgdi_jni_EventClient_closeNative", evc_index);
+      unlockEVC("Java_com_sun_grid_jgdi_jni_EventClientImpl_closeNative", evc_index);
    } else {
       throw_error_from_answer_list(env, ret, alp);
    }
@@ -317,11 +317,11 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_closeNativ
 }
 
 /*
- * Class:     com_sun_grid_jgdi_jni_AbstractEventClient
+ * Class:     com_sun_grid_jgdi_jni_EventClientImpl
  * Method:    initNative
  * Signature: (Lcom/sun/grid/jgdi/jni/JGDI;I)I
  */
-JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_initNative(JNIEnv *env, jobject evcobj, jobject jgdi, jint reg_id)
+JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_EventClientImpl_initNative(JNIEnv *env, jobject evcobj, jobject jgdi, jint reg_id)
 {
    char* argv[] = { "" };
    int argc = 1;
@@ -335,7 +335,7 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_initNative
    jgdi_result_t ret = JGDI_SUCCESS;
    rmon_ctx_t rmon_ctx;
    
-   DENTER_MAIN(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_AbstractEventClient_initNative");
+   DENTER_MAIN(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_EventClientImpl_initNative");
 
    jgdi_init_rmon_ctx(env, JGDI_EVENT_LOGGER, &rmon_ctx);
    rmon_set_thread_ctx(&rmon_ctx);
@@ -398,11 +398,11 @@ error:
 
 
 /*
- * Class:     com_sun_grid_jgdi_jni_AbstractEventClient
+ * Class:     com_sun_grid_jgdi_jni_EventClientImpl
  * Method:    register
  * Signature: ()V
  */
-JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_registerNative(JNIEnv *env, jobject evcobj, jint evc_index)
+JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_EventClientImpl_registerNative(JNIEnv *env, jobject evcobj, jint evc_index)
 {
    lList *alp = NULL;
    sge_evc_elem_t *elem = NULL;
@@ -410,12 +410,12 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_registerNa
    ev_registration_id id = 0;
    rmon_ctx_t rmon_ctx;
    
-   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_AbstractEventClient_registerNative");
+   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_EventClientImpl_registerNative");
 
    jgdi_init_rmon_ctx(env, JGDI_EVENT_LOGGER, &rmon_ctx);
    rmon_set_thread_ctx(&rmon_ctx);
    
-   if ((ret = lockEVC("Java_com_sun_grid_jgdi_jni_AbstractEventClient_registerNative", evc_index, &elem, &alp)) == JGDI_SUCCESS) {
+   if ((ret = lockEVC("Java_com_sun_grid_jgdi_jni_EventClientImpl_registerNative", evc_index, &elem, &alp)) == JGDI_SUCCESS) {
       if (!elem->sge_evc->ec_register(elem->sge_evc, false, &alp, NULL)) {
          if (answer_list_has_error(&alp)) {
             throw_error_from_answer_list(env, JGDI_ERROR, alp);
@@ -426,7 +426,7 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_registerNa
          id = elem->sge_evc->ec_get_id(elem->sge_evc);
          DPRINTF(("event client with id %d successfully registered\n", id));
       }
-      unlockEVC("Java_com_sun_grid_jgdi_jni_AbstractEventClient_registerNative", evc_index);
+      unlockEVC("Java_com_sun_grid_jgdi_jni_EventClientImpl_registerNative", evc_index);
    } else {
       throw_error_from_answer_list(env, ret, alp);
    }
@@ -439,11 +439,11 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_registerNa
 }
 
 /*
- * Class:     com_sun_grid_jgdi_jni_EventClient
+ * Class:     com_sun_grid_jgdi_jni_EventClientImpl
  * Method:    setFlushNative
  * Signature: (I)V
  */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_setFlushNative(JNIEnv *env, jobject evcobj, jint evcIndex, jint eventId, jboolean flush, jint time)
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_EventClientImpl_setFlushNative(JNIEnv *env, jobject evcobj, jint evcIndex, jint eventId, jboolean flush, jint time)
 {
    lList *alp = NULL;
    sge_evc_elem_t *elem = NULL;
@@ -451,16 +451,16 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_setFlushNa
    rmon_ctx_t rmon_ctx;
    ev_event myevent = (ev_event)eventId;
 
-   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_AbstractEventClient_setFlushNative");
+   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_EventClientImpl_setFlushNative");
 
    jgdi_init_rmon_ctx(env, JGDI_EVENT_LOGGER, &rmon_ctx);
    rmon_set_thread_ctx(&rmon_ctx);
    
-   if ((ret = lockEVC("Java_com_sun_grid_jgdi_jni_AbstractEventClient_setFlushNative", evcIndex, &elem, &alp)) == JGDI_SUCCESS) {
+   if ((ret = lockEVC("Java_com_sun_grid_jgdi_jni_EventClientImpl_setFlushNative", evcIndex, &elem, &alp)) == JGDI_SUCCESS) {
       if (!elem->sge_evc->ec_set_flush(elem->sge_evc, myevent, flush, time)) {
          THROW_ERROR((env, JGDI_ERROR, "ec_set_flush failed"));
       }
-      unlockEVC("Java_com_sun_grid_jgdi_jni_AbstractEventClient_setFlushNative", evcIndex);
+      unlockEVC("Java_com_sun_grid_jgdi_jni_EventClientImpl_setFlushNative", evcIndex);
    } else {
       throw_error_from_answer_list(env, ret, alp);
    }
@@ -473,11 +473,11 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_setFlushNa
 }
 
 /*
- * Class:     com_sun_grid_jgdi_jni_EventClient
+ * Class:     com_sun_grid_jgdi_jni_EventClientImpl
  * Method:    getFlushNative
  * Signature: (I)I
  */
-JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_getFlushNative(JNIEnv *env, jobject evcobj, jint evc_index, jint eventId)
+JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_EventClientImpl_getFlushNative(JNIEnv *env, jobject evcobj, jint evc_index, jint eventId)
 {
    lList *alp = NULL;
    sge_evc_elem_t *elem = NULL;
@@ -485,14 +485,14 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_getFlushNa
    rmon_ctx_t rmon_ctx;
    ev_event myevent = (ev_event)eventId;
    jint time = 0;
-   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_AbstractEventClient_getFlushNative");
+   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_EventClientImpl_getFlushNative");
 
    jgdi_init_rmon_ctx(env, JGDI_EVENT_LOGGER, &rmon_ctx);
    rmon_set_thread_ctx(&rmon_ctx);
    
-   if ((ret = lockEVC("Java_com_sun_grid_jgdi_jni_AbstractEventClient_getFlushNative", evc_index, &elem, &alp)) == JGDI_SUCCESS) {
+   if ((ret = lockEVC("Java_com_sun_grid_jgdi_jni_EventClientImpl_getFlushNative", evc_index, &elem, &alp)) == JGDI_SUCCESS) {
       time = elem->sge_evc->ec_get_flush(elem->sge_evc, myevent);
-      unlockEVC("Java_com_sun_grid_jgdi_jni_AbstractEventClient_getFlushNative", evc_index);
+      unlockEVC("Java_com_sun_grid_jgdi_jni_EventClientImpl_getFlushNative", evc_index);
    } else {
       throw_error_from_answer_list(env, ret, alp);
    }
@@ -505,11 +505,11 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_getFlushNa
 }
 
 /*
- * Class:     com_sun_grid_jgdi_jni_EventClient
+ * Class:     com_sun_grid_jgdi_jni_EventClientImpl
  * Method:    subscribeNative
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_subscribeNative(JNIEnv *env, jobject evcobj, jint evc_index, jint eventId, jboolean subscribe)
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_EventClientImpl_subscribeNative(JNIEnv *env, jobject evcobj, jint evc_index, jint eventId, jboolean subscribe)
 {
    lList *alp = NULL;
    sge_evc_elem_t *elem = NULL;
@@ -517,12 +517,12 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_subscribeN
    rmon_ctx_t rmon_ctx;
    ev_event myevent = (ev_event)eventId;
 
-   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_AbstractEventClient_subscribeNative");
+   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_EventClientImpl_subscribeNative");
 
    jgdi_init_rmon_ctx(env, JGDI_EVENT_LOGGER, &rmon_ctx);
    rmon_set_thread_ctx(&rmon_ctx);
    
-   if ((ret = lockEVC("Java_com_sun_grid_jgdi_jni_AbstractEventClient_subscribeNative", evc_index, &elem, &alp)) == JGDI_SUCCESS) {
+   if ((ret = lockEVC("Java_com_sun_grid_jgdi_jni_EventClientImpl_subscribeNative", evc_index, &elem, &alp)) == JGDI_SUCCESS) {
       if (subscribe) {
          if (!elem->sge_evc->ec_subscribe(elem->sge_evc, myevent)) {
             THROW_ERROR((env, JGDI_ERROR, "ec_subscribe failed"));
@@ -532,7 +532,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_subscribeN
             THROW_ERROR((env, JGDI_ERROR, "ec_unsubscribe failed"));
          }
       }
-      unlockEVC("Java_com_sun_grid_jgdi_jni_AbstractEventClient_subscribeNative", evc_index);
+      unlockEVC("Java_com_sun_grid_jgdi_jni_EventClientImpl_subscribeNative", evc_index);
    } else {
       throw_error_from_answer_list(env, ret, alp);
    }
@@ -544,23 +544,23 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_subscribeN
    DRETURN_VOID;
 }
 
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_commitNative(JNIEnv *env, jobject evcobj, jint evc_index)
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_EventClientImpl_commitNative(JNIEnv *env, jobject evcobj, jint evc_index)
 {
    lList *alp = NULL;
    sge_evc_elem_t *elem = NULL;
    jgdi_result_t ret = JGDI_SUCCESS;
    rmon_ctx_t rmon_ctx;
 
-   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_AbstractEventClient_commitNative");
+   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_EventClientImpl_commitNative");
 
    jgdi_init_rmon_ctx(env, JGDI_EVENT_LOGGER, &rmon_ctx);
    rmon_set_thread_ctx(&rmon_ctx);
    
-   if ((ret = lockEVC("Java_com_sun_grid_jgdi_jni_AbstractEventClient_commitNative", evc_index, &elem, &alp)) == JGDI_SUCCESS) {
+   if ((ret = lockEVC("Java_com_sun_grid_jgdi_jni_EventClientImpl_commitNative", evc_index, &elem, &alp)) == JGDI_SUCCESS) {
       if (!elem->sge_evc->ec_commit(elem->sge_evc, &alp)) {
          throw_error_from_answer_list(env, JGDI_ERROR, alp);
       }
-      unlockEVC("Java_com_sun_grid_jgdi_jni_AbstractEventClient_commitNative", evc_index);
+      unlockEVC("Java_com_sun_grid_jgdi_jni_EventClientImpl_commitNative", evc_index);
    } else {
       throw_error_from_answer_list(env, ret, alp);
    }
@@ -574,11 +574,11 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_commitNati
 
 
 /*
- * Class:     com_sun_grid_jgdi_jni_EventClient
+ * Class:     com_sun_grid_jgdi_jni_EventClientImpl
  * Method:    fillEvents
  * Signature: (Ljava/util/List;)V
  */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_fillEvents(JNIEnv *env, jobject evcobj, jint evc_index, jobject eventList)
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_EventClientImpl_fillEvents(JNIEnv *env, jobject evcobj, jint evc_index, jobject eventList)
 {
    lList *elist = NULL;
    lList *alp = NULL;
@@ -588,7 +588,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_fillEvents
    jobject logger = NULL;
    rmon_ctx_t rmon_ctx;
    
-   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_AbstractEventClient_fillEvents");
+   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_EventClientImpl_fillEvents");
 
    jgdi_init_rmon_ctx(env, JGDI_EVENT_LOGGER, &rmon_ctx);
    rmon_set_thread_ctx(&rmon_ctx);
@@ -597,7 +597,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_fillEvents
    if (jgdi_is_loggable(env, logger, FINER)) {
       jgdi_log(env, logger, FINER, "before ec_get");
    }
-   ret = waitEVC("Java_com_sun_grid_jgdi_jni_AbstractEventClient_fillEvents wait", evc_index, &elist, &alp);
+   ret = waitEVC("Java_com_sun_grid_jgdi_jni_EventClientImpl_fillEvents wait", evc_index, &elist, &alp);
    if (ret != JGDI_SUCCESS) {
       throw_error_from_answer_list(env, ret, alp);
       goto error;
@@ -637,11 +637,11 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_fillEvents
       jgdi_log(env, logger, FINER, "before ec_wait");
    }
 
-   if ((ret = lockEVC("Java_com_sun_grid_jgdi_jni_AbstractEventClient_fillEvents 2", evc_index, &elem, &alp)) == JGDI_SUCCESS) {
+   if ((ret = lockEVC("Java_com_sun_grid_jgdi_jni_EventClientImpl_fillEvents 2", evc_index, &elem, &alp)) == JGDI_SUCCESS) {
       if (elem->state == RUNNING) {
          elem->sge_evc->ec_wait(elem->sge_evc);
       }   
-      unlockEVC("Java_com_sun_grid_jgdi_jni_AbstractEventClient_fillEvents 2", evc_index);
+      unlockEVC("Java_com_sun_grid_jgdi_jni_EventClientImpl_fillEvents 2", evc_index);
    } else {
       throw_error_from_answer_list(env, ret, alp);
       goto error;

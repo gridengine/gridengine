@@ -181,7 +181,7 @@ public class OptionInfo {
     
     /**
      * Contract method.
-     * Developer should use it to retreave option arguments one-by-one. So the
+     * Developer should use it to retrieve option arguments one-by-one. So the
      * option loop is terminated.
      * @return String - first argument of the option or null if no arg
      */

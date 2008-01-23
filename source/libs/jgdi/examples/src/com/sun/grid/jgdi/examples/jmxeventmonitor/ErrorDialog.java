@@ -213,12 +213,9 @@ public class ErrorDialog extends JDialog {
                     exceptionTree.expandRow(0);
                 }
                 exceptionScrollPane.setVisible(true);
-                exceptionScrollPane.invalidate();
-                exceptionScrollPane.repaint();
                 visible = true;
             }
-            ErrorDialog.this.invalidate();
-            ErrorDialog.this.repaint();
+            ErrorDialog.this.pack();
         }
     }
 

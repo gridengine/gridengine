@@ -1036,14 +1036,10 @@ public class QConfCommand extends QConfCommandGenerated {
     }
     
     //CLUSTERQUEUE
-    @OptionAnnotation(value = "-sq", min = 0, extra = MAX_ARG_VALUE)
+    //TODO: Template is not a know queue, but 'qconf -sq' prints the template in clients
+    @OptionAnnotation(value = "-sq", defaultStringArg="template", min = 0, extra = MAX_ARG_VALUE)
     @Override
     public void showClusterQueue(OptionInfo oi) throws JGDIException {
-        if (oi.getArgs().size() == 0) {
-            List<String> args = new LinkedList<String>();
-            args.add("template");
-            oi = new OptionInfo(oi.getOd(), new ArrayList(args), oi.getMap());
-        }
         super.showClusterQueue(oi);
     }
     
@@ -1059,14 +1055,9 @@ public class QConfCommand extends QConfCommandGenerated {
         super.addConfiguration(oi);
     }
 
-    @OptionAnnotation(value = "-sconf", min = 0, extra = MAX_ARG_VALUE)
+    @OptionAnnotation(value = "-sconf", defaultStringArg="global", min = 0, extra = MAX_ARG_VALUE)
     @Override
     public void showConfiguration(OptionInfo oi) throws JGDIException {
-        if (oi.getArgs().size() == 0) {
-            List<String> args = new LinkedList<String>();
-            args.add("global");
-            oi = new OptionInfo(oi.getOd(), new ArrayList(args), oi.getMap());
-        }
         super.showConfiguration(oi);
     }
 

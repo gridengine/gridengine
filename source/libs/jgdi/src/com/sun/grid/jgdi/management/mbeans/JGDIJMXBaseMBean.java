@@ -29,7 +29,6 @@
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/
-
 package com.sun.grid.jgdi.management.mbeans;
 
 import com.sun.grid.jgdi.JGDIException;
@@ -51,92 +50,122 @@ import java.util.Set;
 // import org.ggf.drmaa.JobTemplate;
 // import org.ggf.drmaa.Version;
 
-
 /**
  * Interface JGDIJMXBaseMBean
  *
  *
  */
 public interface JGDIJMXBaseMBean {
-    
+
     public String getCurrentJGDIVersion() throws JGDIException;
-    
+
     /**
      * Close the jgdi session
      */
     public void close();
-    
+
     /**
      *   Subscribe a set of event types if they are not already subscribed.
      *
      *   @param eventTypeSet  set of event types
      */
     public void subscribe(Set<EventTypeEnum> eventTypeSet) throws JGDIException;
-    
+
     /**
      *   Unsubcribe a set of event types if the are not already unsubscribed.
      *
      *   @param eventTypeSet  set of event type which should be unsubcribed
      */
     public void unsubscribe(Set<EventTypeEnum> eventTypeSet) throws JGDIException;
-    
+
     /**
      *  Get the current event subscription.
      *
      *  @return set of event types which are currently subscribed
      */
     public Set<EventTypeEnum> getSubscription();
-    
+
     /**
      *   Set the current event subscription.
      *
      *   @param eventTypeSet  the set of event types to subscribe
      */
     public void setSubscription(Set<EventTypeEnum> eventTypeSet);
-    
+
     // ========= JGDIBase methods ================================
     public String getAdminUser() throws JGDIException;
+
     public File getSGERoot() throws JGDIException;
+
     public String getSGECell() throws JGDIException;
+
     public String getActQMaster() throws JGDIException;
+
     public List getRealExecHostList() throws com.sun.grid.jgdi.JGDIException;
-    
+
     // -------- Monitoring interface --------------------------------------------
     public QHostOptions newQHostOptions() throws JGDIException;
+
     public ClusterQueueSummaryOptions newClusterQueueSummaryOptions() throws JGDIException;
+
     public QueueInstanceSummaryOptions newQueueInstanceSummaryOptions() throws JGDIException;
+
     public QQuotaOptions newQQuotaOptions() throws JGDIException;
-    
+
     public QHostResult execQHost(QHostOptions options) throws JGDIException;
+
     public List getClusterQueueSummary(ClusterQueueSummaryOptions options) throws JGDIException;
+
     public QueueInstanceSummaryResult getQueueInstanceSummary(QueueInstanceSummaryOptions options) throws JGDIException;
+
     public QQuotaResult getQQuota(QQuotaOptions options) throws JGDIException;
-    
+
     // -------- Managing interface methods --------------------------------------
     public void clearShareTreeUsage() throws JGDIException;
+
     public void cleanQueues(String[] queues) throws JGDIException;
+
     public void killMaster() throws JGDIException;
+
     public void killScheduler() throws JGDIException;
+
+    public void startScheduler() throws JGDIException;
+    
     public void killExecd(String[] hosts, boolean terminateJobs) throws JGDIException;
+
     public void killAllExecds(boolean terminateJobs) throws JGDIException;
-    public void killEventClients(int [] ids) throws JGDIException;
+
+    public void killEventClients(int[] ids) throws JGDIException;
+
     public void killAllEventClients() throws JGDIException;
+
     public void triggerSchedulerMonitoring() throws JGDIException;
+
     public String getSchedulerHost() throws JGDIException;
+
     public void enableQueues(String[] queues, boolean force) throws JGDIException;
+
     public void disableQueues(String[] queues, boolean force) throws JGDIException;
+
     public void suspendQueues(String[] queues, boolean force) throws JGDIException;
+
     public void suspendJobs(String[] jobs, boolean force) throws JGDIException;
+
     public void unsuspendQueues(String[] queues, boolean force) throws JGDIException;
+
     public void unsuspendJobs(String[] jobs, boolean force) throws JGDIException;
+
     public void clearQueues(String[] queues, boolean force) throws JGDIException;
+
     public void clearJobs(String[] jobs, boolean force) throws JGDIException;
+
     public void rescheduleQueues(String[] queues, boolean force) throws JGDIException;
+
     public void rescheduleJobs(String[] jobs, boolean force) throws JGDIException;
+
     public String showDetachedSettings(String[] queues) throws JGDIException;
+
     public String showDetachedSettingsAll() throws JGDIException;
-
-
 //     // DRMAA specific methods
 //     public void drmaaInit(String contact) throws DrmaaException;
 //     public void drmaaExit() throws DrmaaException;
@@ -152,6 +181,5 @@ public interface JGDIJMXBaseMBean {
 //     public Version drmaaGetVersion();
 //     public String drmaaGetDrmSystem();
 //     public String drmaaGetDrmaaImplementation();
-    
 }
 

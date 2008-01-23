@@ -82,6 +82,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
     private MBeanServerConnection connection;
     private Set<EventListener> listeners = Collections.<EventListener>emptySet();
     private boolean closeEventSent = false;
+
     /**
      *  Create a new proxy the the jgdi MBean
      *
@@ -144,35 +145,35 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
 
         Event evt = null;
         if (notification.getUserData() instanceof Event) {
-            evt = (Event)notification.getUserData();
+            evt = (Event) notification.getUserData();
         } else if (JMXConnectionNotification.CLOSED.equals(notification.getType())) {
-            synchronized(this) {
-                if(connector != null) {
+            synchronized (this) {
+                if (connector != null) {
                     try {
                         connector.removeConnectionNotificationListener(this);
                         close();
                         evt = new ConnectionClosedEvent(System.currentTimeMillis() / 1000, 0);
                     } catch (ListenerNotFoundException ex) {
-                        // Ignore
+                    // Ignore
                     }
                 }
             }
         } else if (JMXConnectionNotification.FAILED.equals(notification.getType())) {
-            synchronized(this) {
-                if(connector != null) {
+            synchronized (this) {
+                if (connector != null) {
                     try {
                         connector.removeConnectionNotificationListener(this);
                         close();
                         evt = new ConnectionFailedEvent(System.currentTimeMillis() / 1000, 0);
                     } catch (ListenerNotFoundException ex) {
-                        // Ignore
+                    // Ignore
                     }
                 }
             }
         }
-        if(evt != null) {
+        if (evt != null) {
             boolean isCloseEvent = ConnectionClosedEvent.class.isAssignableFrom(evt.getClass());
-            if(!isCloseEvent || !closeEventSent) {
+            if (!isCloseEvent || !closeEventSent) {
                 Set<EventListener> tmpLis = null;
                 synchronized (this) {
                     tmpLis = listeners;
@@ -181,7 +182,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
                     lis.eventOccured(evt);
                 }
             }
-            if(isCloseEvent) {
+            if (isCloseEvent) {
                 closeEventSent = true;
                 close();
             }
@@ -225,9 +226,9 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
                 closeEventSent = false;
                 connector = JMXConnectorFactory.connect(url, env);
                 connection = connector.getMBeanServerConnection();
-                
+
                 name = JGDIAgent.getObjectNameFromConnectionId(connector.getConnectionId());
-                if(name == null) {
+                if (name == null) {
                     throw new JGDIException("jmx connection id contains no jgdi session id. Please check qmaster's JAAS configuration (JGDILoginModule)");
                 }
                 connection.addNotificationListener(name, this, null, null);
@@ -420,7 +421,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
             return null;
         }
     }
-    
+
     /**
      * Create JMX credentials for password less authentication with a keystore
      * @param ks        the keystore
@@ -433,40 +434,38 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
         try {
 
             PrivateKey pk = (PrivateKey) ks.getKey(username, pw);
-            
+
             String algorithm = "MD5withRSA";
             Signature s = Signature.getInstance(algorithm);
             s.initSign(pk);
-            
-            byte [] message = "Super secret message".getBytes();
-            
+
+            byte[] message = "Super secret message".getBytes();
+
             s.update(message);
-            
-            byte [] signature = s.sign();
-            
+
+            byte[] signature = s.sign();
+
             Properties props = new Properties();
             props.put("algorithm", algorithm);
             props.put("message", Base64.encode(message));
             props.put("signature", Base64.encode(signature));
-            
+
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             props.store(bos, null);
-            
-            return new String [] {
+
+            return new String[]{
                 username,
                 bos.toString()
             };
         } catch (Exception ex) {
             throw new JGDIException("Can not create credentials from keystore", ex);
         }
-        
-        
-        
-        
-        
-        
-        
+
+
+
+
+
+
+
     }
-    
-    
 }

@@ -2521,25 +2521,21 @@ calendar_is_referenced(const lListElem *calendar, lList **answer_list,
                        const lList *master_cqueue_list)
 {
    bool ret = false;
-   lListElem *cqueue = NULL;
+   lListElem *cqueue = NULL, *cal = NULL;
  
    /*
     * fix for bug 6422335
     * check the cq configuration for calendar references instead of qinstances
     */
    const char *calendar_name = lGetString(calendar, CAL_name);     
-   for_each(cqueue, master_cqueue_list) {
-      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-      lListElem *qinstance = NULL;
-
-      for_each(qinstance, qinstance_list) {
-         if (qinstance_is_calendar_referenced(qinstance, calendar)) {
-            const char *name = lGetString(qinstance, QU_full_name);
-
+   for_each (cqueue, master_cqueue_list) {
+      for_each (cal, lGetList(cqueue, CQ_calendar)) {
+         if (!strcmp(lGetString(cal, ASTR_value), calendar_name)) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
-                                    ANSWER_QUALITY_INFO, 
-                                    MSG_CALENDAR_REFINQUEUE_SS, 
-                                    calendar_name, name);
+                                    ANSWER_QUALITY_INFO,
+                                    MSG_CALENDAR_REFINQUEUE_SS,
+                                    calendar_name,
+                                    lGetString(cqueue, CQ_name));
             ret = true;
             break;
          }

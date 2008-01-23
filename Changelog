@@ -1,3 +1,6 @@
+JG-2008-01-23-1: Bugfix:    Reintegrated fix for IZ 2050 (RN-2007-05-28-0).
+                 Review:    AA
+
 JG-2008-01-23-0: Bugfix:    fixed spooledit dump <job script>.
                  Review:    RD
 

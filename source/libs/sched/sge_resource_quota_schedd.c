@@ -1016,7 +1016,7 @@ parallel_limit_slots_by_time(const sge_assignment_t *a, lList *requests,
    result = parallel_rc_slots_by_time(a, requests, slots, 
                                       slots_qend, tmp_centry_list, tmp_rue_list, NULL,  
                                       false, NULL, DOMINANT_LAYER_RQS, 0.0, RQS_TAG,
-                                      false, SGE_RQS_NAME);
+                                      false, SGE_RQS_NAME, true);
    
    lFreeList(&tmp_centry_list);
    lFreeList(&tmp_rue_list);
@@ -1161,6 +1161,7 @@ parallel_rqs_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, con
 
                if (result != DISPATCH_OK || (slots == 0 && (!a->is_reservation || slots_qend == 0))) {
                   DPRINTF(("RQS PARALLEL SORT OUT\n"));
+                  
                   schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNRQSGLOBAL_SS,
                         sge_dstring_get_string(&rue_string), sge_dstring_get_string(&rule_name));
                   rqs_exceeded_sort_out_par(a, rule, &rule_name, queue, host);

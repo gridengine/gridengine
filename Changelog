@@ -1,3 +1,9 @@
+MP-2008-01-23-0: Bugfix:    Pending PE job qstat -j output displays additional
+                            useless message when not running because of RQs
+                 Bugster:   6594807
+                 Issue:     2465
+                 Review:    AH, JG
+
 MD-2008-01-22-1: Bugfix:    changed output string, which brakes testuite test
                  Changed:   install
 

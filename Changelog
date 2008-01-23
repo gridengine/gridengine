@@ -1,3 +1,6 @@
+JG-2008-01-23-0: Bugfix:    fixed spooledit dump <job script>.
+                 Review:    RD
+
 CR-2008-01-23-0: Bugfix:    fixed commlib test binaries:
                                test_cl_commlib
                                test_cl_commlib_client

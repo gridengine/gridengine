@@ -1808,9 +1808,9 @@ spool_berkeleydb_read_object(lList **answer_list, bdb_info info,
          /* We specified DB_DBT_MALLOC - BDB will malloc memory for each
           * object found and we have to free it.
           */
-          if (data_dbt.data != NULL) {
+         if (data_dbt.data != NULL) {
             FREE(data_dbt.data);
-          }
+         }
       }
    }
 

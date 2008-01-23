@@ -809,7 +809,7 @@ spool_berkeleydb_default_read_func(lList **answer_list,
                char *db_key = jobscript_parse_key(dup, &exec_file);
                char *str;
                str = spool_berkeleydb_read_string(answer_list, info, BDB_JOB_DB,
-                                                 db_key);              
+                                                  db_key);              
 
                if (str != NULL) {
                   ep = lCreateElem(STU_Type);

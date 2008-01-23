@@ -225,14 +225,28 @@ dump_object(bdb_info info, const char *key)
       answer_list_output(&answer_list);
       ret = EXIT_FAILURE;
    } else {
-      /* read object */
-      lListElem *object;
-      object = spool_berkeleydb_read_object(&answer_list, info, database, key);
-      if (object == NULL) {
-         answer_list_output(&answer_list);
-         ret = EXIT_FAILURE;
+      /* job script is spooled as string, not as cull object */
+      if (strncmp(key, "JOBSCRIPT:", 10) == 0) {
+         const char *job_script;
+         job_script = spool_berkeleydb_read_string(&answer_list, info, database, key);
+         if (job_script == NULL) {
+            answer_list_output(&answer_list);
+            ret = EXIT_FAILURE;
+         } else {
+            printf(job_script);
+            FREE(job_script);
+         }
       } else {
-         lDumpElemFp(stdout, object, 0);
+         /* read object */
+         lListElem *object;
+         object = spool_berkeleydb_read_object(&answer_list, info, database, key);
+         if (object == NULL) {
+            answer_list_output(&answer_list);
+            ret = EXIT_FAILURE;
+         } else {
+            lDumpElemFp(stdout, object, 0);
+            lFreeElem(&object);
+         }
       }
    }
 

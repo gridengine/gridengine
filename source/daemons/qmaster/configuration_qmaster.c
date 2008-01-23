@@ -412,6 +412,17 @@ static int check_config(lList **alpp, lListElem *conf)
             DRETURN(STATUS_EEXIST);
          }
       }
+  
+      if (!strcmp(name, "shell")) {
+         bool path_found = path_verify(name, alpp, "shell", true);
+         if ( !path_found ) {
+            ERROR((SGE_EVENT, MSG_CONF_GOTINVALIDVALUEXFORSHELL_S, value));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+            DRETURN(STATUS_EEXIST);
+         }
+      }
+
+
 
       if (!strcmp(name, "load_report_time")) {
          /* do not allow infinity entry for load_report_time */

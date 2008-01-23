@@ -1,3 +1,9 @@
+OJ-2008-01-23-0: Bugfix:    'NONE' as value is not rejected for queue_conf(5)
+                            shell and qsub(1) -S
+                 Bugster:   6453563
+                 Issue:     2445
+                 Review:    RD, JG
+
 AA-2008-01-23-0: Enhancem.: - renaming AbstractEventClient->EventClientImpl, corr. cleanups
                             - added nativeStartScheduler()
                             - JMXEventMonitor smaller corrections

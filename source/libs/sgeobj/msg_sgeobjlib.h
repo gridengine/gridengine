@@ -310,4 +310,5 @@
 #define MSG_AR_EVENT_STATE_UNKNOWN               _MESSAGE(64507, _("UNKNOWN"))
 
 #define MSG_ATTR_INVALID_ULONGVALUE_USUU         _MESSAGE(64508, _(sge_U32CFormat" is an invalid value for the "SFQ" attribute - it must be a value between "sge_U32CFormat" and "sge_U32CFormat))
+#define MSG_CQUEUE_UNKNOWNSHELL_S  _MESSAGE(64509, _("Invalid value "SFQ" for shell "))
 #endif /* __MSG_SGEOBJLIB_H */

@@ -59,6 +59,7 @@
 #include "msg_sgeobjlib.h"
 
 #include "sge_cqueue_verify.h"
+#include "sge_path_alias.h"
 
 #define CQUEUE_VERIFY_LAYER TOP_LAYER
 
@@ -290,6 +291,30 @@ cqueue_verify_shell_start_mode(lListElem *cqueue, lList **answer_list,
    DEXIT;
    return ret;
 }
+bool
+cqueue_verify_shell(lListElem *cqueue, lList **answer_list,
+                                     lListElem *attr_elem)
+    {
+       bool ret = true;
+       bool path_found = true;
+
+       const char *name = lGetString(attr_elem, ASTR_value);
+
+       DENTER(CQUEUE_VERIFY_LAYER, "cqueue_verify_shell");
+
+       /* Check also if it is an absolute valid path */
+       path_found = path_verify(name, answer_list, "shell", true);
+
+           if (!path_found) {
+               sprintf(SGE_EVENT, MSG_CQUEUE_UNKNOWNSHELL_S, name);
+               answer_list_add(answer_list, SGE_EVENT,
+                               STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+               ret = false;
+           }
+        
+        DEXIT;
+        return ret;
+   }
 
 bool
 cqueue_verify_subordinate_list(lListElem *cqueue, lList **answer_list,

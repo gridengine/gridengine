@@ -2528,16 +2528,19 @@ calendar_is_referenced(const lListElem *calendar, lList **answer_list,
     * check the cq configuration for calendar references instead of qinstances
     */
    const char *calendar_name = lGetString(calendar, CAL_name);     
-   for_each (cqueue, master_cqueue_list) {
-      for_each (cal, lGetList(cqueue, CQ_calendar)) {
-         if (!strcmp(lGetString(cal, ASTR_value), calendar_name)) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
-                                    ANSWER_QUALITY_INFO,
-                                    MSG_CALENDAR_REFINQUEUE_SS,
-                                    calendar_name,
-                                    lGetString(cqueue, CQ_name));
-            ret = true;
-            break;
+   if (calendar_name != NULL) {
+      for_each (cqueue, master_cqueue_list) {
+         for_each (cal, lGetList(cqueue, CQ_calendar)) {
+            const char *qcal_name = lGetString(cal, ASTR_value);
+            if (qcal_name && !strcmp(qcal_name, calendar_name)) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                       ANSWER_QUALITY_INFO,
+                                       MSG_CALENDAR_REFINQUEUE_SS,
+                                       calendar_name,
+                                       lGetString(cqueue, CQ_name));
+               ret = true;
+               break;
+            }
          }
       }
    }

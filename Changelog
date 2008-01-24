@@ -1,3 +1,9 @@
+MP-2008-01-24-0: Bugfix:    Merged the changes from MP-2008-01-23-0 in V61_BRANCH
+                            to maintrunk
+                 Bugster:   6594807
+                 Issue:     2465
+                 Review:    AH, JG
+
 AA-2008-01-24-0: Bugfix:    del calendar can lead to SEGV
                  Review:    JG
 

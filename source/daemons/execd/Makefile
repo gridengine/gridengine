@@ -70,10 +70,10 @@ EXECD_ADD_SRC =  usage.c \
               startprog.c \
               shutdown.c  \
               sge_mt_init.c
-              
+
 EXECD_OBJS    = $(EXECD_SRC:.c=.o)
 
-EXECD_ADD_OBJS = $(EXECD_ADD_SRC:.c=.o)  
+EXECD_ADD_OBJS = $(EXECD_ADD_SRC:.c=.o)
 
 EXECD_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon $(DLLIB)
 

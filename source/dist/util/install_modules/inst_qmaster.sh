@@ -1167,20 +1167,19 @@ StartQmaster()
       fi
    else
       $SGE_STARTUP_FILE -qmaster
-
-      CheckRunningDaemon sge_qmaster
-      run=$?
-      if [ $run -ne 0 ]; then
-         $INFOTEXT "sge_qmaster daemon didn't start. Please check your\n" \
-                   "configuration! Installation failed!"
-         $INFOTEXT -log "sge_qmaster daemon didn't start. Please check your\n" \
-                        "autoinstall configuration file! Installation failed!"
-         if [ $AUTO = true ]; then
-            MoveLog
-         fi
-
-         exit 1
+   fi
+   CheckRunningDaemon sge_qmaster
+   run=$?
+   if [ $run -ne 0 ]; then
+      $INFOTEXT "sge_qmaster daemon didn't start. Please check your\n" \
+                "configuration! Installation failed!"
+      $INFOTEXT -log "sge_qmaster daemon didn't start. Please check your\n" \
+                     "autoinstall configuration file! Installation failed!"
+      if [ $AUTO = true ]; then
+         MoveLog
       fi
+
+      exit 1
    fi
    $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
    $CLEAR

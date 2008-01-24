@@ -53,6 +53,10 @@
 #include "msg_common.h"
 #include "msg_daemons_common.h"
 
+#if defined(SOLARIS)
+#   include "sge_smf.h"
+#endif
+
 #if defined(SOLARIS) || defined(ALPHA)
 /* ALPHA only has wait3() prototype if _XOPEN_SOURCE_EXTENDED is defined */
 pid_t wait3(int *, int, struct rusage *);
@@ -129,6 +133,7 @@ const char *buf
 ) {
    int pid;
    int pid2;
+   int i;
    int exit_status;
    int pipefds[2];
    FILE *fp;
@@ -154,11 +159,24 @@ const char *buf
 
    alarm(0);
 
-
-   if (fork()) {
+#if defined(SOLARIS)
+   char err_str[256];
+   i = sge_smf_contract_fork(err_str, 256);
+#else
+   i = fork();
+#endif
+   if (i>0) {
       DPRINTF(("PARENT RETURNS\n"));
       DEXIT;
       return;
+   }
+   /* We just log that fork was not succesful */
+   else if (i<0) {
+#if defined(SOLARIS)
+       ERROR((SGE_EVENT, MSG_SMF_MAIL_FORK_FAILED_S, err_str));
+#else
+       ERROR((SGE_EVENT, MSG_MAIL_NOFORK));
+#endif
    }
 
    DPRINTF(("CHILD CONTINUES\n"));
@@ -175,6 +193,7 @@ const char *buf
       ERROR((SGE_EVENT, MSG_MAIL_NOPIPE));
       exit(1);
    }
+   /* Don't need to start in new contract on Solaris - already in new one */
    if ((pid = fork()) < 0) {
       ERROR((SGE_EVENT, MSG_MAIL_NOFORK));
       exit(1);

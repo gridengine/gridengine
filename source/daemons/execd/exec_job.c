@@ -97,6 +97,9 @@
 #include "msg_execd.h"
 #include "msg_daemons_common.h"
 
+#if defined(SOLARIS)
+#   include "sge_smf.h"
+#endif
 
 #define ENVIRONMENT_FILE "environment"
 #define CONFIG_FILE "config"
@@ -1557,8 +1560,19 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
    if (getenv("SGE_FAILURE_BEFORE_FORK")) {
       i = -1;
    }
-   else
+   else {
+#if defined(SOLARIS)
+       i = sge_smf_contract_fork(err_str, err_length);
+       if (i == -4) {
+           /* Could not load libcontract or libscf */
+           SGE_EXIT((void**)&ctx, 1);
+       } else if (i < -1) {
+           i = -2; /* Disable queue */
+       }
+#else
       i = fork();
+#endif
+   }
 
    if (i != 0) { /* parent or -1 */
       sigprocmask(SIG_SETMASK, &sigset_oset, NULL);

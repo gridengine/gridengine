@@ -75,6 +75,9 @@
 #include "msg_daemons_common.h"
 #include "msg_shadowd.h"
 
+#if defined(SOLARIS)
+#   include "sge_smf.h"
+#endif
 
 #ifndef FALSE
 #   define FALSE 0
@@ -226,6 +229,13 @@ char qmaster_out_file[SGE_PATH_MAX];
    /* AA: TODO: change this */
    ctx->set_exit_func(ctx, shadowd_exit_func);
    sge_setup_sig_handlers(SHADOWD);
+   
+#if defined(SOLARIS)
+   /* Init shared SMF libs if necessary */
+   if (sge_smf_used() == 1 && sge_smf_init_libs() != 0) {
+       SGE_EXIT((void**)&ctx, 1);
+   }
+#endif
 
    if (ctx->get_qmaster_spool_dir(ctx) != NULL) {
       char *shadowd_name = SGE_SHADOWD;

@@ -102,11 +102,11 @@ QMASTER_ADD_SRC = usage.c sge_options.c \
               sge_dirent.c \
               sig_handlers.c \
               unparse_job_cull.c \
-              sge_mt_init.c 
+              sge_mt_init.c
 
 QMASTER_OBJS  = $(QMASTER_SRC:.c=.o)
 
-QMASTER_ADD_OBJS = $(QMASTER_ADD_SRC:.c=.o) 
+QMASTER_ADD_OBJS = $(QMASTER_ADD_SRC:.c=.o)
 
 QMASTER_ADD_LIBS = $(SPOOLING_LIBS) -lsched $(EVMLIB) -levc $(MIRLIB) -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon $(DLLIB)
 

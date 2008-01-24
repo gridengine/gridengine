@@ -69,6 +69,9 @@
 #   include "sgedefs.h"
 #endif
 
+#if defined(SOLARIS)
+#   include "sge_smf.h"
+#endif
 
 
 
@@ -182,6 +185,13 @@ int main(int argc, char **argv)
       SGE_EXIT((void**)&ctx, 1);
    }
    ctx->set_exit_func(ctx, execd_exit_func);
+   
+#if defined(SOLARIS)
+   /* Init shared SMF libs if necessary */
+   if (sge_smf_used() == 1 && sge_smf_init_libs() != 0) {
+       SGE_EXIT((void**)&ctx, 1);
+   }
+#endif
 
    /* prepare daemonize */
    if (!getenv("SGE_ND")) {
@@ -253,7 +263,7 @@ int main(int argc, char **argv)
       }
       cl_com_free_sirm_message(&status);
    }
-
+   
    /* finalize daeamonize */
    if (!getenv("SGE_ND")) {
       daemonize_execd(ctx);
@@ -273,7 +283,7 @@ int main(int argc, char **argv)
       lList *report_list = sge_build_load_report(ctx->get_qualified_hostname(ctx), ctx->get_binary_path(ctx));
       lFreeList(&report_list);
    }
-
+   
    execd_register(ctx);
 
    sge_write_pid(EXECD_PID_FILE);
@@ -391,6 +401,11 @@ static void execd_exit_func(void **ctx_ref, int i)
    ptf_stop();
 #endif
 
+#if defined(SOLARIS)
+   if (sge_smf_used() == 1) {
+      sge_smf_temporary_disable_instance();
+   }
+#endif   
    DEXIT;
 }
 

@@ -48,10 +48,15 @@
 #include "uti/sge_uidgid.h"
 #include "sgermon.h"
 #include "basis_types.h"
-#include "sge_log.h"     
+#include "sge_log.h"
+#include "sge_os.h"
 
 #include "msg_common.h"
 #include "msg_utilib.h"
+
+#if defined(SOLARIS)
+#   include "sge_smf.h"
+#endif
 
 #ifdef NO_SGE_COMPILE_DEBUG
 #   undef SGE_EXIT
@@ -166,11 +171,21 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
       }
    }
 
+#if defined(SOLARIS)
+   pid = sge_smf_contract_fork(err_str, 256);
+#else
    pid = fork();
+#endif
    if (pid == 0) {  /* child */
-      close(pipefds[0][1]);
-      close(pipefds[1][0]);
-      close(pipefds[2][0]);
+      fd_set keep_open;
+      FD_ZERO(&keep_open);     
+      FD_SET(0, &keep_open);
+      FD_SET(1, &keep_open);
+      FD_SET(2, &keep_open);
+      FD_SET(pipefds[0][0], &keep_open);
+      FD_SET(pipefds[1][1], &keep_open);
+      FD_SET(pipefds[2][1], &keep_open);
+      sge_close_all_fds(&keep_open);
 
       /* shall we redirect stderr to /dev/null? */
       if (null_stderr) {
@@ -282,11 +297,16 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
       SGE_EXIT(NULL, 1);
    }
  
-   if (pid == -1) {
+   if (pid < 0) {
       for (i=0; i<3; i++) {
          close(pipefds[i][0]);
          close(pipefds[i][1]);
       }
+#if defined(SOLARIS)
+      if (pid < -1 && err_str) {
+          ERROR((SGE_EVENT, MSG_SMF_FORK_FAILED_SS, "sge_peopen()", err_str));
+      }
+#endif
       DEXIT;
       return -1;
    }

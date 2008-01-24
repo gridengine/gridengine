@@ -71,7 +71,6 @@ NOTE:  This service manifest is not editable; its contents will be
                       <envvar name='SGE_CELL' value='@@@SGE_CELL@@@'/>
                       <envvar name='SGE_QMASTER_PORT' value='@@@SGE_QMASTER_PORT@@@'/>
                       <envvar name='SGE_EXECD_PORT' value='@@@SGE_EXECD_PORT@@@'/>
-                      <envvar name='EXECD_SMF' value='true'/>
                    </method_environment>
                 </method_context>
            </exec_method>
@@ -79,18 +78,12 @@ NOTE:  This service manifest is not editable; its contents will be
            <exec_method
                 type='method'
                 name='stop'
-                exec='@@@SGE_ROOT@@@/util/sgeSMF/smf_stop_execd.sh %f %{restarter/contract} %{restarter/state} %{restarter/next_state}'
+                exec=':kill'
                 timeout_seconds='60'>
-                <method_context>
-                   <method_environment>
-                      <envvar name='SGE_ROOT' value='@@@SGE_ROOT@@@'/>
-                      <envvar name='SGE_CELL' value='@@@SGE_CELL@@@'/>
-                   </method_environment>
-                </method_context>
            </exec_method>
 
            <property_group name='startd' type='framework'>
-                <propval name='ignore_error' type='astring' value='signal' />
+                <propval name='ignore_error' type='astring' value='core,signal' />
            </property_group>
         </instance>
         

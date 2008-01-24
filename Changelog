@@ -1,3 +1,10 @@
+LP-2008-01-24-0: Enhancem.: Subprocesses start in new contracts if SMF is used
+                 Enhancem.: Various SMF support improvements
+                 Enhancem.: Startup scripts now support -nosmf option
+                 Bugfix:    load sensor might block execd port
+                 Bugster:   6654696
+                 Review:    RD
+
 MP-2008-01-24-0: Bugfix:    Merged the changes from MP-2008-01-23-0 in V61_BRANCH
                             to maintrunk
                  Bugster:   6594807

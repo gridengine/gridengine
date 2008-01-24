@@ -331,6 +331,10 @@ DetectSMFService()
 {
    name=$1
    service=""
+
+   if [ "$noSMF" = true ]; then
+      return
+   fi
    #Otherwise we try is it's available of the system
    if [ -f /lib/svc/share/smf_include.sh ]; then
       . /lib/svc/share/smf_include.sh
@@ -342,10 +346,22 @@ DetectSMFService()
       return
    fi
 
+   #Check we have cluster_name file
+   if [ ! -r "$SGE_ROOT/$SGE_CELL/common/cluster_name" ]; then
+      echo "Error: could not find $SGE_ROOT/$SGE_CELL/common/cluster_name!"
+      exit $SMF_EXIT_ERR_CONFIG
+   fi
    #Cluster name must be unique
    SGE_CLUSTER_NAME=`cat $SGE_ROOT/$SGE_CELL/common/cluster_name 2>/dev/null`
-
+   
    service="svc:/application/sge/$name:$SGE_CLUSTER_NAME"
+
+   if [ -n "$SMF_FMRI" -a "$service" != "$SMF_FMRI" ]; then
+      #Someone is trying to fool us
+      echo "Error: $service does not match FMRI $SMF_FMRI provided by SMF!"
+      echo "Check that service instance $SGE_CLUSTER_NAME exist on your system"
+      exit $SMF_EXIT_ERR_CONFIG
+   fi
    #Check if service exists
    /usr/bin/svcs $service > /dev/null 2>&1
    if [ $? -ne 0 ]; then
@@ -393,6 +409,7 @@ shadowd=true
 qstd=false
 migrate_qmaster=false
 softstop=false
+noSMF=false
 
 for i in $*; do
    if [ "$i" = start ]; then
@@ -412,6 +429,8 @@ for i in $*; do
       migrate_qmaster=true
       qmaster=true
       shadowd=false
+   elif [ "$i" = -nosmf ]; then
+      noSMF=true
    else
       usage
    fi
@@ -510,9 +529,8 @@ if [ "$startup" = true ]; then
 
    if [ $qmaster = true -a $qmaster_host = true ]; then
       DetectSMFService qmaster
-      #QMASTER_SMF is set to true when script gets called via SMF
       #We want to use smf
-      if [ -z "$QMASTER_SMF" -a -n "$service"  ]; then
+      if [ -z "$SMF_FMRI" -a -n "$service"  ]; then
          svcadm enable -st $service
          exit $?
       fi
@@ -553,9 +571,8 @@ if [ "$startup" = true ]; then
 
       if [ $start_shadowd = true ]; then
          DetectSMFService shadowd
-         #SHADOWD_SMF is set to true when script gets called via SMF
          #We want to use smf
-         if [ -z "$SHADOWD_SMF" -a -n "$service"  ]; then
+         if [ -z "$SMF_FMRI" -a -n "$service"  ]; then
             svcadm enable -st $service
             exit $?
          fi
@@ -567,13 +584,13 @@ if [ "$startup" = true ]; then
    fi
 else
    if [ $shadow_host = true ]; then
-      # Send SIGTERM to shadowd
       echo "   Shutting down Grid Engine shadowd"
       DetectSMFService shadowd
-      if [ -n "$service"  ]; then
+      if [ -z "$SMF_FMRI" -a -n "$service"  ]; then
             svcadm disable -st $service
             exit $?
       fi
+      # Send SIGTERM to shadowd
       if [ -f $qmaster_spool_dir/shadowd_$UQHOST.pid ]; then
          Shutdown sge_shadowd $qmaster_spool_dir/shadowd_$UQHOST.pid
       elif [ -f $qmaster_spool_dir/shadowd_$HOST.pid ]; then
@@ -583,13 +600,13 @@ else
 
    if [ $qmaster = true ]; then
       if [ `CheckIfQmasterHost $HOST` = true ]; then
-         # Send SIGTERM to qmaster
          echo "   Shutting down Grid Engine qmaster"
          DetectSMFService qmaster
-         if [ -n "$service"  ]; then
+         if [ -z "$SMF_FMRI" -a -n "$service"  ]; then
             svcadm disable -st $service
             exit $?
          fi
+         # Send SIGTERM to qmaster
          Shutdown sge_qmaster $qmaster_spool_dir/qmaster.pid
          ret=$?
          if [ -f /var/lock/subsys/sgemaster ]; then

@@ -62,7 +62,6 @@ NOTE:  This service manifest is not editable. Make customizations in a different
                       <envvar name='SGE_ROOT' value='@@@SGE_ROOT@@@'/>
                       <envvar name='SGE_CELL' value='@@@SGE_CELL@@@'/>
                       <envvar name='SGE_QMASTER_PORT' value='@@@SGE_QMASTER_PORT@@@'/>
-                      <envvar name='SHADOWD_SMF' value='true'/>
                    </method_environment>
                 </method_context>
            </exec_method>

@@ -96,6 +96,10 @@
 #include "sge_thread_worker.h"
 #include "sge_thread_event_master.h"
 
+#if defined(SOLARIS)
+#   include "sge_smf.h"
+#endif
+
 #if !defined(INTERIX)
 static void init_sig_action_and_mask(void);
 #endif
@@ -369,6 +373,13 @@ int main(int argc, char* argv[])
    sge_chdir_exit(ctx->get_qmaster_spool_dir(ctx), 1);
    log_state_set_log_file(ERR_FILE);
    ctx->set_exit_func(ctx, sge_exit_func);
+
+#if defined(SOLARIS)
+   /* Init shared SMF libs if necessary */
+   if (sge_smf_used() == 1 && sge_smf_init_libs() != 0) {
+       SGE_EXIT((void**)&ctx, 1);
+   }
+#endif
 
    /*
     * We do increment the heartbeat manually here. This is the 'startup heartbeat'. 

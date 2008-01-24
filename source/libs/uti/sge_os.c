@@ -359,7 +359,7 @@ bool sge_daemonize_prepare(sge_gdi_ctx_class_t *ctx) {
       DRETURN(false);
    }
 
-   /* close all fd's expect pipe and first 3 */
+   /* close all fd's except pipe and first 3 */
    FD_ZERO(&keep_open);
    FD_SET(0,&keep_open);
    FD_SET(1,&keep_open);

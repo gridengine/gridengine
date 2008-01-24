@@ -137,7 +137,7 @@ now.o:		$(UTILBIN_DIR)/now.c
 
 #---------------------------------------------------------------------
 checkprog:	checkprog.o peopen_standalone.o pids_standalone.o version.o $(WINGRIDLIB_DEP) $(UTILIB) $(COMMLISTSLIB) $(LCKLIB) $(RMONLIB)
-		$(CC) $(CFLAGS) -o $@ checkprog.o peopen_standalone.o pids_standalone.o version.o $(LFLAGS) -luti $(WINGRIDLIB) $(COMMLISTSLIB) -llck -lrmon $(LIBS)
+		$(CC) $(CFLAGS) -o $@ checkprog.o peopen_standalone.o pids_standalone.o version.o $(LFLAGS) -luti $(WINGRIDLIB) $(COMMLISTSLIB) -llck -lrmon $(LIBS) $(DLLIB)
 
 checkprog.o:	$(UTILBIN_DIR)/checkprog.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/checkprog.c
@@ -227,7 +227,7 @@ testsuidroot.o: $(UTILBIN_DIR)/testsuidroot.c
 
 #---------------------------------------------------------------------
 work:	work.o version.o $(UTILIB) $(WINGRIDLIB_DEP) $(COMMLISTSLIB) $(LCKLIB) $(RMONLIB)
-	$(CC) -o $@ work.o version.o $(LFLAGS) $(UTILIB) $(WINGRIDLIB) $(COMMLISTSLIB) $(LCKLIB) $(RMONLIB) $(LIBS)
+	$(CC) -o $@ work.o version.o $(LFLAGS) $(UTILIB) $(WINGRIDLIB) $(COMMLISTSLIB) $(LCKLIB) $(RMONLIB) $(LIBS) $(DLLIB)
 
 work.o:	$(UTILBIN_DIR)/work.c
 	$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/work.c

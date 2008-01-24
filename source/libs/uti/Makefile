@@ -68,12 +68,13 @@ UTILIB_DRMAA_SRC = \
          sge_unistd.c \
          sge_env.c \
          sge_error_class.c \
-         sge_csp_path.c 
+         sge_csp_path.c \
+	 sge_smf.c
 
 UTILIB_SRC = sge_pty.c sge_loadmem.c sge_getloadavg.c sge_monitor.c $(UTILIB_DRMAA_SRC)
 
 UTILIB_DRMAA_OBJS = $(UTILIB_DRMAA_SRC:.c=.o)
-UTILIB_OBJS = $(UTILIB_SRC:.c=.o)
+UTILIB_OBJS = $(UTILIB_SRC:.c=.o) 
 
 UTILIB_ADD_OBJS = peopen_standalone.o pids_standalone.o
 
@@ -131,6 +132,9 @@ config_file.o:  $(UTILIB_DIR)/config_file.c
 
 setup_path.o:  $(UTILIB_DIR)/setup_path.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/setup_path.c
+
+sge_smf.o: 	$(UTILIB_DIR)/sge_smf.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_smf.c
 
 sge_hostname.o:	$(UTILIB_DIR)/sge_hostname.c
 		$(CC) $(CFLAGS) $(NOERR_CFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_hostname.c

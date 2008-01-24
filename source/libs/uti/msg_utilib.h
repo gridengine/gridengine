@@ -240,6 +240,23 @@
 #define MSG_UTI_DAEMONIZE_TIMEOUT              _MESSAGE(59144, _("daemonize error: timeout while waiting for daemonize state"))
 
 #define MSG_POINTER_INVALIDSTRTOKCALL1         _MESSAGE(49145, _("Invalid sge_strtok_r call, last is NULL"))
+
+/* 
+** libs/uti/sge_stdio.c 
+*/
+#define MSG_SMF_FORK_FAILED_SS            _MESSAGE(59153, _(SFQ" failed: "SFQ))
+
+/* 
+** libs/uti/sge_smf.c 
+*/
+#define MSG_SMF_PTHREAD_ONCE_FAILED_S       _MESSAGE(59145, _(SFQ" -> pthread_once call failed"))
+#define MSG_SMF_CONTRACT_CREATE_FAILED      _MESSAGE(59146, _("can't create new contract"))
+#define MSG_SMF_CONTRACT_CREATE_FAILED_S    _MESSAGE(59147, _("can't create new contract: "SFQ))
+#define MSG_SMF_CONTRACT_CONTROL_OPEN_FAILED_S    _MESSAGE(59148, _("can't open contract ctl file: "SFQ))
+#define MSG_SMF_CONTRACT_ABANDON_FAILED_US  _MESSAGE(59149, _("can't abandon contract "sge_U32CFormat": "SFQ))
+#define MSG_SMF_LOAD_LIBSCF_FAILED_S        _MESSAGE(59150, _(SFQ" -> can't load libscf"))
+#define MSG_SMF_LOAD_LIB_FAILED             _MESSAGE(59151, _("can't load libcontract and libscf"))
+#define MSG_SMF_DISABLE_FAILED_SS           _MESSAGE(59152, _("can't temporary disable instance "SFQ" : "SFQ))
                                                                                                                                                  
 #endif /* __MSG_UTILIB_H */
 

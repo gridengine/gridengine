@@ -269,6 +269,10 @@ DetectSMFService()
 {
    name=$1
    service=""
+
+   if [ "$noSMF" = true ]; then
+      return
+   fi
    #Otherwise we try is it's available of the system
    if [ -f /lib/svc/share/smf_include.sh ]; then
       . /lib/svc/share/smf_include.sh
@@ -280,10 +284,22 @@ DetectSMFService()
       return
    fi
 
+   #Check we have cluster_name file
+   if [ ! -r "$SGE_ROOT/$SGE_CELL/common/cluster_name" ]; then
+      echo "Error: could not find $SGE_ROOT/$SGE_CELL/common/cluster_name!"
+      exit $SMF_EXIT_ERR_CONFIG
+   fi
    #Cluster name must be unique
    SGE_CLUSTER_NAME=`cat $SGE_ROOT/$SGE_CELL/common/cluster_name 2>/dev/null`
-
+   
    service="svc:/application/sge/$name:$SGE_CLUSTER_NAME"
+
+   if [ -n "$SMF_FMRI" -a "$service" != "$SMF_FMRI" ]; then
+      #Someone is trying to fool us
+      echo "Error: $service does not match FMRI $SMF_FMRI provided by SMF!"
+      echo "Check that service instance $SGE_CLUSTER_NAME exist on your system"
+      exit $SMF_EXIT_ERR_CONFIG
+   fi
    #Check if service exists
    /usr/bin/svcs $service > /dev/null 2>&1
    if [ $? -ne 0 ]; then
@@ -313,11 +329,15 @@ if [ "$#" -gt 1 -o "$#" -lt 1 -o "$1" = "-h" -o "$1" = "help" ]; then
    usage
 fi
 
+noSMF=false
+
 for i in $*; do
    if [ "$i" = start ]; then
       startup=true
    elif [ "$i" = stop ]; then
       startup=false
+   elif [ "$i" = -nosmf ]; then
+      noSMF=true
    else
       usage
    fi
@@ -331,7 +351,7 @@ fi
 
 if [ "$startup" = true ]; then
    DetectSMFService bdb
-   if [ -z "$BDB_SMF" -a -n "$service" ]; then
+   if [ -z "$SMF_FMRI" -a -n "$service" ]; then
       /usr/sbin/svcadm enable -st $service
       exit $?
    fi

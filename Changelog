@@ -1,3 +1,8 @@
+MP-2008-01-25-0: Bugfix:    Merged the changes from MP-2008-01-17-0 in V61_BRANCH
+                            to maintrunk
+                 Bugster:   6595754
+                 Review:    JG
+
 RD-2008-01-25-0: Enhancem.: lowered execd CPU overhead to improve job performance
                             - PTF run is only triggered when priorization tickets
                               arrive

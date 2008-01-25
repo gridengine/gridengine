@@ -1,3 +1,7 @@
+LP-2008-01-25-0: Enhancem.: Fixed some typos and function description
+                 Bugfix:    Fixed duplicate message id from LP-2008-01-24-0
+                 Review:    PJ
+
 LP-2008-01-24-0: Enhancem.: Subprocesses start in new contracts if SMF is used
                  Enhancem.: Various SMF support improvements
                  Enhancem.: Startup scripts now support -nosmf option

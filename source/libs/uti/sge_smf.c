@@ -718,7 +718,7 @@ static int contracts_pre_fork(void)
 *                                   int err_length)
 *
 *  FUNCTION
-*    To be called after fork(). Close the contarct templated created in 
+*    To be called after fork(). Close the contract templated created in 
 *    contract_pre_fork(). In parent process we abandon the new contract.
 *
 *  INPUTS
@@ -794,16 +794,17 @@ static int contracts_post_fork(int ctfd, int pid, char *err_str, int err_length)
 
 /*************************** sge_smf_contract_fork() ***************************
 *  NAME
-*    sge_smf_contract_fork() -- once initialize useSMF ad return it's value
+*    sge_smf_contract_fork() -- fork() with child in new contract
 *
 *  SYNOPSIS
-*    int sge_smf_contract_fork(void)
+*    int sge_smf_contract_fork(char *err_str, int err_length)
 *
 *  FUNCTION
 *    Once initialize useSMF ad return it's value
 *
 *  INPUTS
-*    void
+*    char *err_str  - error message
+*    int err_length - max error message length
 *
 *  RESULT
 *    int - result
@@ -877,8 +878,8 @@ int sge_smf_contract_fork(char *err_str, int err_length)
 *     Can be called only if sge_smf_used() return 1 and sge_smf_used() was 
 *     previously called.
 *
-*     MT-NOTES: sge_smf_contract_fork is MT-safe because it modifies once 
-*               static variables (libscfLoaded) and returns it's value next time
+*     MT-NOTES: sge_smf_temporary_disable_instance is MT-safe because it 
+*               modifies once static variables (libscfLoaded)
 *
 *  SEE ALSO
 *     execd/execd_exit_func()

@@ -1,3 +1,9 @@
+RD-2008-01-25-0: Enhancem.: lowered execd CPU overhead to improve job performance
+                            - PTF run is only triggered when priorization tickets
+                              arrive
+                            - added execd param PDC_INTERVAL to reduce PDC runs
+                 Review:    JG
+
 LP-2008-01-25-0: Enhancem.: Fixed some typos and function description
                  Bugfix:    Fixed duplicate message id from LP-2008-01-24-0
                  Review:    PJ

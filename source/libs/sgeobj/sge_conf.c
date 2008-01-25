@@ -164,6 +164,7 @@ static int max_order_limit = 99;
 static bool keep_active = false;
 static bool enable_windomacc = false;
 static bool enable_addgrp_kill = false;
+static u_long32 pdc_interval = 1;
 
 /* 
  * reporting params 
@@ -622,6 +623,7 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       char* qmaster_params = mconf_get_qmaster_params();
       char* execd_params = mconf_get_execd_params();
       char* reporting_params = mconf_get_reporting_params();
+      u_long32 load_report_time = mconf_get_load_report_time();
 #ifdef LINUX
       bool mtrace_before = enable_mtrace;
 #endif
@@ -875,6 +877,20 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
             continue;
          }
          if (parse_bool_param(s, "INHERIT_ENV", &inherit_env)) {
+            continue;
+         }
+         if (!strncasecmp(s, "PDC_INTERVAL", sizeof("PDC_INTERVAL")-1)) {
+            if (!strcasecmp(s, "PDC_INTERVAL=NEVER")) {
+               pdc_interval = U_LONG32_MAX;
+            } else if (!strcasecmp(s, "PDC_INTERVAL=PER_LOAD_REPORT")) {
+               pdc_interval = load_report_time;
+            } else if (parse_time_param(s, "PDC_INTERVAL", &pdc_interval)) {
+            } else {
+               answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_WARNING,
+                                       MSG_CONF_INVALIDPARAM_SSI, "execd_params", "PDC_INTERVAL",
+                                       1);
+               pdc_interval = 1;
+            }
             continue;
          }
       }
@@ -1888,6 +1904,17 @@ bool mconf_get_enable_addgrp_kill(void) {
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = enable_addgrp_kill;
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+u_long32 mconf_get_pdc_interval(void) {
+   u_long32 ret;
+
+   DENTER(BASIS_LAYER, "mconf_get_pdc_interval");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = pdc_interval;
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(ret);
 }

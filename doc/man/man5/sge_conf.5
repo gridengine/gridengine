@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/01/21 13:29:05 $     Revision: $Revision: 1.66 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/01/25 11:38:19 $     Revision: $Revision: 1.67 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/01/21 13:29:05 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/01/25 11:38:19 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -1142,13 +1142,6 @@ signal name then this signal will be sent as notification signal.
 If this parameter is set to true, the usage of reserved resources is taken for the 
 xxQS_NAMExx share tree consumption instead of measured usage.
 .PP
-Changing \fBexecd_params\fP will take immediate effect.
-The default for \fBexecd_params\fP is none.
-.PP
-The global configuration entry for this value
-may be overwritten by the execution host local configuration.
-.\"
-.\"
 .IP "\fIUSE_QSUB_GID\fP"
 If this parameter is set to true, the primary group id  active when a
 job was submitted will be set to become the primary group id for job
@@ -1206,6 +1199,35 @@ when a job is deleted, or when
 .M xxqs_name_sxx_shepherd 8
 cleans up after job termination.
 .PP
+.IP "\fIPDC_INTERVAL\fP"
+This parameter defines the interval how often the PDC (Portable Data Collector)
+is executed by the execution daemon. The PDC is responsible for enforcing
+the resource limits s_cpu, h_cpu, s_vmem and h_vmem (see
+.M queue_conf 5 )
+and job usage collection.
+The parameter can be set
+to a time_specifier (see
+.M sge_types 5 )
+, to \fBPER_LOAD_REPORT\fP or to \fBNEVER\fP.
+.br
+If this parameter is set to \fBPER_LOAD_REPORT\fP the PDC is triggered in the
+same interval as \fBload_report_time\fP (see above). If this parmeter is set
+to \fBNEVER\fP the PDC run is never trigged. The default is 1 second.
+.br
+\fBNote:\fP A PDC run is quite compute extensive may degrade the
+performance of the running jobs. But if the PDC runs less often or never the
+online usage can be incomplete or totally missing (for example online usage of very short
+running jobs might be missing) and the resource limit enforcement is
+less accurate or would not happen if PDC is turned of completely.
+.PP
+Changing \fBexecd_params\fP will take effect after it was propagated to the
+execution daemons. The propagation is done in one load report interval.
+The default for \fBexecd_params\fP is none.
+.PP
+The global configuration entry for this value
+may be overwritten by the execution host local configuration.
+.\"
+.\"
 .SS "\fBreporting_params\fP"
 Used to define the behavior of reporting modules in the xxQS_NAMExx 
 qmaster. Changes to the \fBreporting_params\fP takes immediate effect.

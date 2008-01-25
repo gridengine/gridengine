@@ -2517,7 +2517,7 @@ printf("##### sge_event_master_send_events at %s\n", sge_ctime(0, &dsbuf));
                update_func(ec_id, NULL, report_list);
                ret = CL_RETVAL_OK;
             } else {
-               ret = report_list_send(ctx, report_list, host, commproc, commid, 0, NULL);
+               ret = report_list_send(ctx, report_list, host, commproc, commid, 0);
                MONITOR_MESSAGES_OUT(monitor);
             }
 

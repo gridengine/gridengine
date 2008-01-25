@@ -85,10 +85,6 @@
 
 #include "sge_str.h"
 
-#if COMPILE_DC
-static int reprioritization_enabled = 0;
-#endif
-
 extern volatile int waiting4osjid;
 
 static bool 
@@ -349,14 +345,13 @@ execd_get_wallclock_limit(const char *qualified_hostname, lList *gdil_list, int 
  do cyclic jobs
  ******************************************************/
 /* TODO: what are the intended intervals? */
-#define USAGE_INTERVAL 1
 #define SIGNAL_RESEND_INTERVAL 1
 #define OLD_JOB_INTERVAL 60
 
 int do_ck_to_do(sge_gdi_ctx_class_t *ctx)
 {
    u_long32 now;
-   static u_long next_usage = 0;
+   static u_long next_pdc = 0;
    static u_long next_signal = 0;
    static u_long next_old_job = 0;
    static u_long next_report = 0;
@@ -365,7 +360,6 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx)
    lListElem *jep, *jatep;
    int return_value = 0;
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
-   bool fetched_usage = false;
 
    DENTER(TOP_LAYER, "execd_ck_to_do");
 
@@ -388,86 +382,27 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx)
       sge_start_jobs(ctx);
    }
 
-   /*
-    * Collecting usage and repriorization is only necessary if there are
-    * jobs/tasks on this execution host.
-    * do this at maximum once per second
-    */
-   if (lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_JOB))) > 0 && next_usage <= now) {
-      next_usage = now + USAGE_INTERVAL;
 #ifdef COMPILE_DC
+   /*
+    * Collecting usage is only necessary if there are
+    * jobs/tasks on this execution host.
+    * do this according to execd_param PDC_INTERVAL
+    */
+   if (lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_JOB))) > 0 && next_pdc <= now) {
+      next_pdc = now + mconf_get_pdc_interval();
 
-      if (mconf_get_reprioritize() || check_for_queue_limits()) {
-         notify_ptf();
+      notify_ptf();
 
-         sge_switch2start_user();
-         ptf_update_job_usage();
-         sge_switch2admin_user();
-         fetched_usage = true;
-      }
-
-      if (mconf_get_reprioritize()) {
-         sge_switch2start_user();
-         DPRINTF(("ADJUST PRIORITIES\n"));
-         ptf_adjust_job_priorities();
-         sge_switch2admin_user();
-         reprioritization_enabled = 1;
-      } else {
-         /* Here we will make sure that each job which was started
-            in SGEEE-Mode (reprioritization) will get its initial
-            queue priority if this execd alternates to SGE-Mode */
-         if (reprioritization_enabled) {
-            lListElem *job, *jatask, *petask;
-
-            sge_switch2start_user();
-
-            for_each(job, *(object_type_get_master_list(SGE_TYPE_JOB))) {
-               lListElem *master_queue;
-
-               for_each (jatask, lGetList(job, JB_ja_tasks)) {
-                  int priority;
-
-                  master_queue = responsible_queue(job, jatask, NULL);
-                  priority = atoi(lGetString(master_queue, QU_priority));
-
-                  DPRINTF(("Set priority of job "sge_u32"."sge_u32" running in"
-                     " queue  %s to %d\n", 
-                  lGetUlong(job, JB_job_number), 
-                  lGetUlong(jatask, JAT_task_number),
-                  lGetString(master_queue, QU_full_name), priority));
-                  ptf_reinit_queue_priority(lGetUlong(job, JB_job_number),
-                                            lGetUlong(jatask, JAT_task_number),
-                                            NULL, priority);
-
-                  for_each(petask, lGetList(jatask, JAT_task_list)) {
-                     master_queue = responsible_queue(job, jatask, petask);
-                     priority = atoi(lGetString(master_queue, QU_priority));
-                     DPRINTF(("Set priority of task "sge_u32"."sge_u32"-%s running "
-                              "in queue %s to %d\n", 
-                     lGetUlong(job, JB_job_number), 
-                     lGetUlong(jatask, JAT_task_number),
-                     lGetString(petask, PET_id),
-                     lGetString(master_queue, QU_full_name), priority));
-                     ptf_reinit_queue_priority(lGetUlong(job, JB_job_number),
-                                               lGetUlong(jatask, JAT_task_number),
-                                                lGetString(petask, PET_id),
-                                                priority);
-                  }
-               }
-            }
-            sge_switch2admin_user();
-         } else {
-            DPRINTF(("LEAVE PRIORITIES UNTOUCHED\n"));
-         }
-         reprioritization_enabled = 0;
-      }
+      sge_switch2start_user();
+      ptf_update_job_usage();
+      sge_switch2admin_user();
 
       /* check for job limits */
       if (check_for_queue_limits()) {
          force_job_rlimit(qualified_hostname);
       }
-#endif
    }
+#endif
 
    if (sge_sig_handler_dead_children != 0) {
       /* reap max. 10 jobs which generated a SIGCLD */
@@ -475,7 +410,6 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx)
       /* SIGCHILD signal is blocked from dispatcher(), so
        * we can be sure that sge_sig_handler_dead_children is untouched here
        */
-
       sge_sig_handler_dead_children = sge_reap_children_execd(10);
    }
 
@@ -595,20 +529,18 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx)
    if (sge_get_flush_jr_flag() || next_report <= now || sge_get_flush_lr_flag()) {
       if (next_report <= now) {
          next_report = now + mconf_get_load_report_time();
+
+         /* if pdc_interval is equals load_report time syncronize both calls to
+            make the online usage acurate as possible */
+         if (mconf_get_load_report_time() == mconf_get_pdc_interval()) {
+            next_pdc = next_report;
+         }
       }
 
       /* send only 1 load report per second, unequal because system time could be set back */
       if (last_report_send != now) {
          last_report_send = now;
 
-         /* update the usage list in our job report list */
-         if (lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_JOB))) > 0 && !fetched_usage) { 
-            notify_ptf();
-
-            sge_switch2start_user();
-            ptf_update_job_usage();
-            sge_switch2admin_user();
-         }
          update_job_usage(qualified_hostname);
 
          /* send all reports */

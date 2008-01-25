@@ -1663,7 +1663,6 @@ int sge_gdi2_shutdown(void **context)
 *     const char *commproc - Component name
 *     int id               - Component id
 *     int synchron         - true or false
-*     u_long32 *mid        - Message id
 *
 *  RESULT
 *     int - error state
@@ -1679,7 +1678,7 @@ int sge_gdi2_shutdown(void **context)
 int report_list_send(sge_gdi_ctx_class_t *ctx, 
                      const lList *rlp, 
                      const char *rhost, const char *commproc, int id,
-                     int synchron, u_long32 *mid)
+                     int synchron)
 {
    sge_pack_buffer pb;
    int ret; 
@@ -1699,23 +1698,20 @@ int report_list_send(sge_gdi_ctx_class_t *ctx,
    case PACK_ENOMEM:
       ERROR((SGE_EVENT, MSG_GDI_REPORTNOMEMORY_I , 1024));
       clear_packbuffer(&pb);
-      DEXIT;
-      return -2;
+      DRETURN(-2);
 
    case PACK_FORMAT:
       ERROR((SGE_EVENT, MSG_GDI_REPORTFORMATERROR));
       clear_packbuffer(&pb);
-      DEXIT;
-      return -3;
+      DRETURN(-3);
 
    default:
       ERROR((SGE_EVENT, MSG_GDI_REPORTUNKNOWERROR));
       clear_packbuffer(&pb);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
-   ret = sge_gdi2_send_any_request(ctx, synchron, mid, rhost, commproc, id, &pb, TAG_REPORT_REQUEST, 0, &alp);
+   ret = sge_gdi2_send_any_request(ctx, synchron, NULL, rhost, commproc, id, &pb, TAG_REPORT_REQUEST, 0, &alp);
 
    clear_packbuffer(&pb);
    answer_list_output (&alp);

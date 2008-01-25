@@ -110,7 +110,7 @@ int sge_send_all_reports(sge_gdi_ctx_class_t *ctx, u_long32 now, int which,
             sge_execd_report_seqno = 0;
          }
          ret = report_list_send(ctx, report_list, master_host, 
-                                prognames[QMASTER], 1, 0, NULL);
+                                prognames[QMASTER], 1, 0);
       } else {
          ret = CL_RETVAL_OK;
       }

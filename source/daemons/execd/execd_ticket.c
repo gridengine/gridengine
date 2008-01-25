@@ -30,20 +30,21 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_pe.h"
-#include "sge_ja_task.h"
 #include "sgermon.h"
 
-#ifdef COMPILE_DC
-#  include "ptf.h"
-#endif
 
 #include "dispatcher.h"
 #include "execd_ticket.h"
 #include "sge_log.h"
 #include "msg_execd.h"
 #include "sge_feature.h"
-#include "sge_job.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_ja_task.h"
+
+#ifdef COMPILE_DC
+#  include "ptf.h"
+#endif
 
 /*************************************************************************
  EXECD function called by dispatcher
@@ -63,7 +64,8 @@ int do_ticket(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
    while (pb_unused(&(aMsg->buf))>0) {
       lList *jatasks = NULL;
 
-      if (unpackint(&(aMsg->buf), &jobid) || unpackint(&(aMsg->buf), &jataskid) || unpackdouble(&(aMsg->buf), &ticket)) {
+      if (unpackint(&(aMsg->buf), &jobid) || unpackint(&(aMsg->buf), &jataskid)
+          || unpackdouble(&(aMsg->buf), &ticket)) {
          ERROR((SGE_EVENT, MSG_JOB_TICKETFORMAT));
          DRETURN(0);
       }
@@ -79,6 +81,7 @@ int do_ticket(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
    }
   
    DPRINTF(("got new tickets for %d jobs\n", lGetNumberOfElem(ticket_modifier)));
+
 #ifdef COMPILE_DC
    { 
       int ptf_error;
@@ -88,6 +91,11 @@ int do_ticket(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
             lGetNumberOfElem(ticket_modifier), 
             ptf_errstr(ptf_error)));
       }
+
+      sge_switch2start_user();
+      DPRINTF(("ADJUST PRIORITIES\n"));
+      ptf_adjust_job_priorities();
+      sge_switch2admin_user();
    }
 #endif
 

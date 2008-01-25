@@ -127,7 +127,7 @@ int gdi2_wait_for_conf(sge_gdi_ctx_class_t *ctx, lList **conf_list);
 int report_list_send(sge_gdi_ctx_class_t *ctx,
                      const lList *rlp, const char *rhost,
                      const char *commproc, int id,
-                     int synchron, u_long32 *mid);
+                     int synchron);
 
 int sge_gdi2_shutdown(void **context);
 

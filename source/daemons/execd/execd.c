@@ -399,12 +399,6 @@ static void execd_exit_func(void **ctx_ref, int i)
 
 #ifdef COMPILE_DC
    ptf_stop();
-#endif
-
-#if defined(SOLARIS)
-   if (sge_smf_used() == 1) {
-      sge_smf_temporary_disable_instance();
-   }
 #endif   
    DEXIT;
 }

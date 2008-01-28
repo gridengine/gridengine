@@ -52,6 +52,8 @@ NOTE:  This service manifest is not editable. Make customizations in a different
                 <service_fmri value='svc:/system/filesystem/autofs' />
         </dependency>
         
+        @@@BDB_DEPENDENCY@@@
+        
         <instance name='@@@CLUSTER_NAME@@@' enabled='false'>     
            <exec_method type='method'
                 name='start'

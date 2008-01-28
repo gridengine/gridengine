@@ -63,6 +63,10 @@
 #include "execd_ck_to_do.h"
 #include "load_avg.h"
 
+#if defined(SOLARIS)
+#   include "sge_smf.h"
+#endif
+
 int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx, char* err_str, void (*errfunc)(const char *))
 {
    monitoring_t monitor;
@@ -119,6 +123,11 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx, char* err_str, void (*e
                break;
             case TAG_KILL_EXECD:
                do_kill_execd(ctx, &msg);
+#if defined(SOLARIS)
+               if (sge_smf_used() == 1) {
+                  sge_smf_temporary_disable_instance();
+               }
+#endif   
                break;
             case TAG_GET_NEW_CONF:
                do_get_new_conf(ctx, &msg);

@@ -284,9 +284,9 @@ usage()
    echo "   \"start\"        dto."
    echo "   \"stop\"         shutdown local Grid Engine processes and jobs"
    echo "   \"softstop\"     shutdown local Grid Engine processes (no jobs)"
+   echo "   \"-nosmf\"       force no SMF"
    echo ""
    echo "Only one of the parameters \"start\", \"stop\" or \"softstop\" is allowed."
-   echo "Only one of the parameters beginning  with \"-\" is allowed." 
    echo
    echo "Default argument is \"start\" for all components."
    echo "Default for \"stop\" is shutting down all components."

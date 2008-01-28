@@ -316,6 +316,7 @@ usage()
    echo ""
    echo "   \"start\"        startup Grid Engine RPC Server"
    echo "   \"stop\"         shutdown Grid Engine RPC Server"
+   echo "   \"-nosmf\"       force no SMF"
    echo
    exit 1
 }

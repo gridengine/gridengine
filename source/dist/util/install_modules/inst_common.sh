@@ -1369,7 +1369,8 @@ GetDefaultClusterName() {
 
 #-------------------------------------------------------------------------
 # ProcessSGEClusterName: Ask for cluster name
-#                        If SGE_ENABLE_SMF is not true, it does nothing
+#                        Requires SGE_ROOT and SGE_CELL to be set                   
+# $1 ... compoment we are installing
 #
 ProcessSGEClusterName()
 {
@@ -1391,30 +1392,59 @@ ProcessSGEClusterName()
    if [ "$SGE_QMASTER_PORT" = "" ]; then
       SGE_QMASTER_PORT=`./utilbin/$SGE_ARCH/getservbyname -number sge_qmaster`
    fi
-   GetDefaultClusterName
 
-   if [ -z "$SGE_ROOT" -o -z "$SGE_CELL" ]; then
-      $INFOTEXT "ProcessSGEClusterName: Missing SGE_ROOT and SGE_CELL!!!"
-      exit 1
-   fi
+   done=false
 
-   $CLEAR
-   $INFOTEXT -u "\nUnique cluster name"
-   $INFOTEXT "\nThe cluster name uniquely identifies a specific Sun Grid Engine cluster.\n" \
-             "The cluster name must be unique throughout your organization. The name \n" \
-             " is not related to the SGE cell.\n\n" \
-             "The cluster name must start with a letter ([A-Za-z]), followed by letters, \n" \
-             "digits ([0-9]), dashes ("-") or underscores ("_")."
-   #TODO LP: Check for allowed values
-   $ECHO
-   SGE_CLUSTER_NAME_VAL=`eval echo $SGE_CLUSTER_NAME`
+   while [ $done = false ]; do
+      GetDefaultClusterName
+      $CLEAR
+      $INFOTEXT -u "\nUnique cluster name"
+      $INFOTEXT "\nThe cluster name uniquely identifies a specific Sun Grid Engine cluster.\n" \
+                "The cluster name must be unique throughout your organization. The name \n" \
+                " is not related to the SGE cell.\n\n" \
+                "The cluster name must start with a letter ([A-Za-z]), followed by letters, \n" \
+                "digits ([0-9]), dashes ("-") or underscores ("_")."
+      $ECHO
+      SGE_CLUSTER_NAME_VAL=`eval echo $SGE_CLUSTER_NAME`
 
-   $INFOTEXT -n "Enter new cluster name or hit <RETURN>\n" \
-                "to use default [%s] >> " $SGE_CLUSTER_NAME_VAL
+      $INFOTEXT -n "Enter new cluster name or hit <RETURN>\n" \
+                   "to use default [%s] >> " $SGE_CLUSTER_NAME_VAL
 
-   eval SGE_CLUSTER_NAME=`Enter $SGE_CLUSTER_NAME_VAL`
+      eval SGE_CLUSTER_NAME=`Enter $SGE_CLUSTER_NAME_VAL`
 
-   if [ ! -f $SGE_CELL/common/cluster_name ]; then
+      IsValidClusterName $SGE_CLUSTER_NAME
+      if [ $? -eq 0 ]; then
+         #Name is valid, we check if service already exists
+         ServiceAlreadyExists $1
+         if [ $? -eq 1 ]; then
+            $INFOTEXT  "Specified cluster name already exists in your system!\n"
+            if [ $AUTO = true ]; then
+               $INFOTEXT  -log "Specified cluster name >\$SGE_CLUSTER_NAME=$SGE_CLUSTER_NAME< is already used by your system!\n"
+               MoveLog
+               exit 1
+            fi
+            $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to enter new cluster name >> "
+         else
+            done=true
+         fi
+      else    
+         $INFOTEXT "Specified cluster name is not valid!\n" \
+                   "The cluster name must start with a letter ([A-Za-z]), followed by letters, \n" \
+                   "digits ([0-9]), dashes ("-") or underscores ("_")."  
+         if [ $AUTO = true ]; then
+            $INFOTEXT  -log "Specified cluster name is not valid!\n" \
+               "The cluster name must start with a letter ([A-Za-z]), followed by letters, \n" \
+               "digits ([0-9]), dashes ("-") or underscores ("_")."
+            MoveLog
+            exit 1
+         fi
+         SGE_CLUSTER_NAME=""
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to enter new cluster name >> "
+      fi   
+   done
+      
+   #Only BDB or qmaster installation can create cluster_name file
+   if [ \( "$1" = "bdb" -o "$1" = "qmaster" \) -a ! -f $SGE_CELL/common/cluster_name ]; then
       ExecuteAsAdmin $MKDIR -p $SGE_ROOT/$SGE_CELL/common
       ExecuteAsAdmin $TOUCH $SGE_ROOT/$SGE_CELL/common/cluster_name
       echo $SGE_CLUSTER_NAME > $SGE_ROOT/$SGE_CELL/common/cluster_name
@@ -1756,14 +1786,16 @@ InstallRcScript()
          INFOTEXT="$INFOTEXT -log"
       fi
 
-      SMFRegister "$DAEMON_NAME"
+      SMFRegister "$DAEMON_NAME" "$is_server"
       ret=$?
 
       if [ "$AUTO" = "true" ]; then
          INFOTEXT=$OLD_INFOTEXT
       fi
       if [ $ret -ne 0 ]; then
-         MoveLog
+         if [ "$AUTO" = "true" ]; then
+            MoveLog
+         fi
          exit 1
       fi
       return

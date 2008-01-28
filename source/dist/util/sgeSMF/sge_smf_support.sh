@@ -87,9 +87,9 @@ SMFusage()
    $INFOTEXT "Usage: sge_smf <command>"
    $INFOTEXT ""
    $INFOTEXT "Commands:"
-   $INFOTEXT "   register      [qmaster|shadowd|execd|bdb|dbwriter|all] SGE_CLUSTER_NAME"
+   $INFOTEXT "   register      [qmaster|shadowd|execd|bdb|dbwriter] SGE_CLUSTER_NAME"
    $INFOTEXT "                 ... register SGE as SMF service"
-   $INFOTEXT "   unregister    [qmaster|shadowd|execd|bdb|dbwriter|all] SGE_CLUSTER_NAME"
+   $INFOTEXT "   unregister    [qmaster|shadowd|execd|bdb|dbwriter] SGE_CLUSTER_NAME"
    $INFOTEXT "                 ... unregister SGE SMF service"
    $INFOTEXT "   supported     ... check if the SMF can be used on current host"
    $INFOTEXT "   help          ... this help"
@@ -140,7 +140,8 @@ SMFReplaceXMLTemplateValues()
         -e "s|@@@SGE_ROOT@@@|$SGE_ROOT|g" \
         -e "s|@@@SGE_CELL@@@|$SGE_CELL|g" \
         -e "s|@@@SGE_QMASTER_PORT@@@|$SGE_QMASTER_PORT|g" \
-        -e "s|@@@SGE_EXECD_PORT@@@|$SGE_EXECD_PORT|g" $file.tmp > $file
+        -e "s|@@@SGE_EXECD_PORT@@@|$SGE_EXECD_PORT|g" \
+        -e "s|@@@BDB_DEPENDENCY@@@|$BDB_DEPENDENCY|g" $file.tmp > $file
    #Delete tmp file
    $RM $file.tmp
 }
@@ -193,7 +194,9 @@ SMFCreateAndImportService()
    cat $template_file > $service_file
    SMFReplaceXMLTemplateValues $service_file
    SMFImportService $service_file
+   ret=$?
    $RM $service_file
+   return $ret
 }
 
 #---------------------------------------------------------------------------
@@ -202,10 +205,23 @@ SMFCreateAndImportService()
 SMFRegister()
 {  
    case "$1" in
-   qmaster)
-      SMFCreateAndImportService "qmaster"
-      ;;
-   master)
+   master | qmaster)
+      if [ "$2" = "true" ]; then
+         ServiceAlreadyExists bdb
+         #Service exists and BDB server was chosen as spooling method
+         if [ $? -eq 1 ]; then
+            BDB_DEPENDENCY="<dependency name='bdb' grouping='require_all' restart_on='none' type='service'><service_fmri value=\'svc:/application/sge/bdb:$SGE_CLUSTER_NAME\' /></dependency>"
+         else
+         #Error we expect BDB to be using SMF as well
+            $INFOTEXT "You chose to install qmaster with SMF and you use Berkley DB server, but bdb \n" \
+                      "SMF service was not found!\n" \
+                      "Either start qmaster installation with -nosmf, or reinstall Berkley DB server \n" \
+                      "to use SMF (do not use -nosmf flag)."
+            return 1
+         fi
+      else
+         BDB_DEPENDENCY=""
+      fi
       SMFCreateAndImportService "qmaster"
       ;;
    shadowd)
@@ -214,25 +230,11 @@ SMFRegister()
    execd)
       SMFCreateAndImportService "execd"
       ;;
-   bdb)
-      SMFCreateAndImportService "bdb"
-      ;;
-   berkeleydb)
+   bdb | berkeleydb)
       SMFCreateAndImportService "bdb"
       ;;
    dbwriter)
       SMFCreateAndImportService "dbwriter"
-      ;;
-   all)
-      SMFCreateAndImportService "qmaster"
-      if [ $? -ne 0 ]; then
-         return 1
-      fi
-      SMFCreateAndImportService "shadowd"
-      if [ $? -ne 0 ]; then
-         return 1
-      fi
-      SMFCreateAndImportService "execd"
       ;;
    *)
       $INFOTEXT "Unknown parameter to sge_smf register"

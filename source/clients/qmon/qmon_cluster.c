@@ -70,12 +70,12 @@
 #include "qmon_globals.h"
 #include "sge_feature.h"
 #include "sge_host.h"
-#include "spool/classic/rw_configuration.h"
 #include "AskForItems.h"
 #include "AskForTime.h"
 
 #include "uti/sge_string.h"
 #include "gdi/sge_gdi.h"
+#include "sgeobj/sge_conf.h"
 
 /*-------------------------------------------------------------------------*/
 typedef struct _tCClEntry {

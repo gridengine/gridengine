@@ -61,7 +61,6 @@
 #define MSG_GDI_RHOSTISNULLFORGETANYREQUEST           _MESSAGE(43052, _("parameter rhost = NULL for sge_get_any_request()"))
 #define MSG_GDI_RECEIVEMESSAGEFROMCOMMPROCFAILED_SISS _MESSAGE(43053, _("can't receive message from commproc ("SFN":%d) on host "SFQ": "SFN))
 #define MSG_GDI_NOCOMMHANDLE                          _MESSAGE(43054, _("can't get communication handle"))
-#define MSG_GDI_SENDINGMESSAGE_SIU                    _MESSAGE(43055, _("sending to id: "SFN",%d, size of message: " sge_U32CFormat))
 
 /* 
 ** gdilib/sge_qexec.c
@@ -107,13 +106,11 @@
 /* 
 ** gdilib/...
 */
-#define MSG_GDI_POINTER_NULLPOINTERPASSEDTOSGEGDIMULIT   _MESSAGE(43117, _("NULL pointer passed to sge_gdi_multi()"))
 #define MSG_GDI_CANT_SEND_MSG_TO_PORT_ON_HOST_SUSS       _MESSAGE(43118, _("unable to send message to "SFN" using port "sge_U32CFormat" on host "SFQ": "SFN))
 #define MSG_GDI_UNABLE_TO_CONNECT_SUS                    _MESSAGE(43119, _("unable to contact "SFN" using port "sge_U32CFormat" on host "SFQ))
 #define MSG_GDI_GETGRGIDXFAILEDERRORX_U                  _MESSAGE(43120, _("unable to resolve group name for group ID, "sge_U32CFormat))
 #define MSG_GDI_SENDINGGDIREQUESTFAILED                  _MESSAGE(43121, _("failed sending gdi request"))
 #define MSG_GDI_RECEIVEGDIREQUESTFAILED                  _MESSAGE(43122, _("failed receiving gdi request"))
-#define MSG_GDI_SIGNALED                                 _MESSAGE(43123, _("signaled"))
 #define MSG_GDI_REQUESTFORMATERROR                       _MESSAGE(43124, _("format error while packing gdi request"))
 #define MSG_GDI_UNEXPECTEDERRORWHILEPACKINGGDIREQUEST    _MESSAGE(43125, _("unexpected error while packing gdi request"))
 #define MSG_GDI_ERRORUNPACKINGGDIREQUEST_S               _MESSAGE(43126, _("error unpacking gdi request: "SFN))

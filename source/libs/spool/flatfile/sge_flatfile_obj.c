@@ -74,8 +74,6 @@
  * functions is that some field lists are always that same, while others
  * change depending on the context from which they're called. */
 
-#define GID_RANGE_NOT_ALLOWED_ID 100
-
 #define allow_delete_time_modification
 
 /* read_func's and write_func's -- signature is defined in

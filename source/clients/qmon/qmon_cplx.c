@@ -33,6 +33,7 @@
 
 #include <stdio.h>
 #include <ctype.h>
+#include <errno.h>
 
 #include <Xm/Xm.h>
 #include <Xm/List.h>
@@ -56,7 +57,8 @@
 #include "sge_answer.h"
 #include "sge_centry.h"
 #include "sge_centry_qconf.h"
-#include "spool/classic/read_write_complex.h"
+#include "spool/flatfile/sge_flatfile.h"
+#include "spool/flatfile//sge_flatfile_obj.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
@@ -70,9 +72,12 @@
 #include "qmon_globals.h"
 #include "AskForItems.h"
 #include "msg_qmaster.h"
+#include "msg_common.h"
 
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdi.h"
+
+#include "uti/sge_io.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 
@@ -605,7 +610,10 @@ static void qmonCplxLoadAttr(Widget matrix)
                               NULL);
 
    if (status == True) {
-      entries = read_cmplx(filename, "dummy", &alp);
+      entries = spool_flatfile_read_list(&alp, CE_Type,
+                                   CE_fields, NULL, true, &qconf_ce_list_sfi,
+                                   SP_FORM_ASCII, NULL, filename);
+
       /* fill the matrix with the values from list */ 
       if (alp) {
          qmonMessageBox(matrix, alp, 0);
@@ -629,6 +637,7 @@ static void qmonCplxLoadAttr(Widget matrix)
 static void qmonCplxSaveAttr(Widget matrix)
 {
    static char filename[BUFSIZ];
+   char *file_tmp = NULL;
    static char directory[BUFSIZ];
    int status;
    lList *entries;
@@ -647,8 +656,23 @@ static void qmonCplxSaveAttr(Widget matrix)
    if (status == True) {
       entries = qmonGetCE_Type(matrix);
       /* Save Cplx Dialog Box */
-      write_cmplx(0, filename, entries, NULL, &alp); 
+      file_tmp = (char*)spool_flatfile_write_list(&alp, entries,
+                                           CE_fields,
+                                           &qconf_ce_list_sfi,
+                                           SP_DEST_TMP, 
+                                           SP_FORM_ASCII, 
+                                           NULL, false);
+      if (file_tmp != NULL) {
+         if (sge_copy_append(file_tmp, filename, SGE_MODE_COPY) == -1) {
+            answer_list_add_sprintf(&alp, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_ERRORRENAMING_SSS, 
+                                    file_tmp, filename, strerror(errno));
+         }
+      }
       qmonMessageBox(matrix, alp, 0);
+      unlink(file_tmp);
+      FREE(file_tmp);
       lFreeList(&alp);
       lFreeList(&entries);
    }

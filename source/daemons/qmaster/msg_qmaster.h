@@ -610,7 +610,6 @@
 */
 #define MSG_STARTUP_BEGINWITHSTARTUP              _MESSAGE(33590, _("begin with start up"))
 #define MSG_STARTUP_SETUPFAILED              _MESSAGE(33591, _("setup failed"))
-#define MSG_GDI_FAILEDINSGEUNPACKGDIREQUEST_SSI           _MESSAGE(33594, _("Failed in sge_unpack_gdi_request ("SFN"/"SFN"/%d)"))
 #define MSG_CULL_FAILEDINCULLUNPACKLISTREPORT              _MESSAGE(33595, _("Failed in cull_unpack_list report"))
 #define MSG_SHUTDOWN_SHUTTINGDOWNQMASTERREQUIRESMANAGERPRIVILEGES              _MESSAGE(33596, _("shutting down qmaster requires manager privileges"))
 #define MSG_GOTSTATUSREPORTOFUNKNOWNCOMMPROC_S    _MESSAGE(33597, _("got load report of unknown commproc "SFQ))
@@ -776,7 +775,6 @@
 #define MSG_JOB_JOBARSET_SSUU                       _MESSAGE(33934, _(SFN"@"SFN" sets job advance reservation of job "sge_U32CFormat" to "sge_U32CFormat))
 #define MSG_JOB_CHANGEJOBAR                         _MESSAGE(33935, _("changed job advance reservation"))
 #define MSG_JOB_NOAREXISTS_U                        _MESSAGE(33936, _("the advance reservation id "sge_U32CFormat" is invalid"))
-#define MSG_JOB_WITHARANDNODEFAULTHRT               _MESSAGE(33937, _("the default job duration limit for jobs with advance reservations should be configured"))
 #define MSG_JOB_HRTLIMITTOOLONG_U                   _MESSAGE(33938, _("the job duration is longer than duration of the advance reservation id "sge_U32CFormat))
 #define MSG_JOB_HRTLIMITOVEREND_U                   _MESSAGE(33939, _("the job duration exceeds the end time of the advance reservation id "sge_U32CFormat))
 #define MSG_AR_RESERVEDQUEUEHASERROR_SS             _MESSAGE(33940, _("reserved queue "SFN" is "SFN))

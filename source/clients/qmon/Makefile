@@ -119,8 +119,6 @@ QMON_ADD_SRC = parse_job_cull.c unparse_job_cull.c \
             sge_centry_qconf.c sge_hgroup_qconf.c \
             sge_cqueue_qconf.c sge_mt_init.c \
             sge_cqueue_qstat.c \
-            read_write_complex.c \
-            read_object.c \
             sge_qstat.c \
             sge_qrsub.c \
             sge_resource_quota_qconf.c
@@ -300,7 +298,7 @@ qmon_calendar.o:    $(QMON_DIR)/qmon_calendar.c
 	$(CC) $(CFLAGS) $(XCFLAGS) -c $(QMON_DIR)/qmon_calendar.c
 
 qmon_preferences.o:    $(QMON_DIR)/qmon_preferences.c
-	$(CC) $(CFLAGS) $(XCFLAGS) -c $(QMON_DIR)/qmon_preferences.c
+	$(CC) $(CFLAGS) $(XCFLAGS) $(MEMCFLAG) -c $(QMON_DIR)/qmon_preferences.c
 
 qmon_resource_quota.o:    $(QMON_DIR)/qmon_resource_quota.c
 	$(CC) $(CFLAGS) $(XCFLAGS) -c $(QMON_DIR)/qmon_resource_quota.c

@@ -39,9 +39,6 @@ QACCT_TARGETS = qacct
 QACCT_SRC = qacct.c
 
 QACCT_ADD_SRC = \
-            read_write_complex.c \
-            read_object.c \
-            read_write_host.c \
             execution_states.c \
             sig_handlers.c
 

@@ -39,7 +39,7 @@ SHADOWD_TARGETS = sge_shadowd
 SHADOWD_SRC =   shadowd.c 
 
 SHADOWD_ADD_SRC = sig_handlers.c qmaster_heartbeat.c \
-               startprog.c lock.c rw_configuration.c \
+               startprog.c lock.c \
                usage.c sge_options.c shutdown.c sge_mt_init.c
 
 SHADOWD_OBJS = $(SHADOWD_SRC:.c=.o)

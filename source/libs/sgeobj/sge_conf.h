@@ -38,6 +38,8 @@
    not spooled and is not shown in qconf -mconf */
 #define REPRIORITIZE "reprioritize"
 
+#define GID_RANGE_NOT_ALLOWED_ID 100
+
 typedef int (*tDaemonizeFunc)(void *ctx);
 
 /* This list is *ONLY* used by the execd and should be moved eventually */

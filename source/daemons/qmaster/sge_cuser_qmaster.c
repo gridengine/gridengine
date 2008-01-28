@@ -52,7 +52,6 @@
 #include "sge_event_master.h"
 #include "sge_persistence_qmaster.h"
 
-#include "spool/classic/read_write_ume.h"
 #include "spool/sge_spooling.h"
 
 #include "msg_common.h"

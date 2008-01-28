@@ -67,7 +67,6 @@
 
 #include "msg_common.h"
 #include "spool/msg_spoollib.h"
-#include "spool/classic/msg_spoollib_classic.h"
 #include "spool/flatfile/msg_spoollib_flatfile.h"
 
 #include "spool/flatfile/sge_flatfile.h"

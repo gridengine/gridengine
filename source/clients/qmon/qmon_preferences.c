@@ -39,6 +39,7 @@
 
 #include "uti/sge_string.h"
 #include "uti/sge_stdio.h"
+#include "uti/sge_unistd.h"
 
 #include "sge.h"
 #include "qmon_prefL.h"
@@ -46,15 +47,24 @@
 #include "sge_str.h"
 #include "qmon_preferences.h"
 #include "config.h"
-#include "spool/classic/read_object.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "version.h"
 #include "sge_feature.h"
 #include "sge_answer.h"
-#include "sge_centry.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_conf.h"
 
 #include "msg_common.h"
+#include "msg_qmon.h"
+
+typedef int (*ReadWorkFuncT)(lList **alpp, lList **clpp, int fields[], lListElem *ep, int spool, int flag, int *tag, int parsing_type);
+
+struct read_object_args {
+   lDescr *objtype;
+   char *objname;
+   ReadWorkFuncT work_func;
+};
 
 static int read_pref_work(lList **alpp, lList **clpp, int fields[], lListElem *ep, int spool, int flag, int *tag, int parsing_type);
 
@@ -62,11 +72,14 @@ static lListElem *cull_read_in_pref(char *dirname, char *filename, int spool, in
 
 static lList* write_pref(char *filename, lListElem *ep);
 
+static lListElem* read_object( const char *dirname, const char *filename, int spool, int flag,
+                        int read_config_list_flag, struct read_object_args *args,
+                        int *tag, int fields[]);
+
 /*
 ** the qmon preferences are kept here
 */
 static lListElem *qmon_preferences = NULL;
-
 
 lListElem *qmonGetPreferences(void)
 {
@@ -378,6 +391,109 @@ lListElem *ep
    return NULL;
 FCLOSE_ERROR:
    /* TODO: error handling */
+   DEXIT;
+   return NULL;
+}
+
+static lListElem* read_object( const char *dirname, const char *filename, int spool, int flag,
+                        int read_config_list_flag, struct read_object_args *args,
+                        int *tag, int fields[]) {
+   int ret;
+   stringT fullname;
+   FILE *fp;
+   lListElem *ep, *unused;
+   lList *alp = NULL, *clp = NULL;
+   SGE_STRUCT_STAT sb;
+   size_t size;
+   char *buf;
+
+   DENTER(TOP_LAYER, "read_object");
+
+   /* build full filename */
+   if(dirname && filename)
+      sprintf(fullname, "%s/%s", dirname, filename);
+   else if(dirname)
+      sprintf(fullname, "%s", dirname);
+   else
+      sprintf(fullname, "%s", filename);
+      
+   /* open file */
+   if(!(fp = fopen(fullname, "r"))) {
+      ERROR((SGE_EVENT, MSG_SGETEXT_CANT_OPEN_SS, fullname, strerror(errno)));
+      DEXIT;
+      return NULL;
+   }
+
+   if (!SGE_STAT(fullname, &sb)) {
+      size = MAX(sb.st_size, 10000);
+      if ((SGE_OFF_T)size != MAX(sb.st_size, 10000) ||
+         (buf = (char *) malloc(size)) == NULL) {
+         FCLOSE(fp);
+         ERROR((SGE_EVENT, MSG_MEMORY_CANTMALLOCBUFFERFORXOFFILEY_SS, 
+               args->objname, fullname));
+         DEXIT;
+         return NULL;
+      }
+   } else {
+      ERROR((SGE_EVENT, MSG_FILE_CANTDETERMINESIZEFORXOFFILEY_SS, 
+             args->objname, fullname));
+      FCLOSE(fp);
+      DEXIT;
+      return NULL;
+   }
+
+
+   /* create List Element */
+   if (!(ep = lCreateElem(args->objtype))) {
+      FCLOSE(fp);
+      free(buf);
+      ERROR((SGE_EVENT, MSG_SGETEXT_NOMEM));
+      DEXIT;
+      return NULL;
+   }
+
+   /* read in config file */
+   if (read_config_list(fp, &clp, &alp, CF_Type, CF_name, CF_value,
+                        CF_sublist, NULL, read_config_list_flag, buf, size)) {
+      ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
+      lFreeList(&alp);
+      FCLOSE(fp);
+      free(buf);
+      DEXIT;
+      return NULL;
+   }
+
+   free(buf);
+   FCLOSE(fp);
+
+   /* well, let's do the work... */
+   ret = args->work_func(&alp, &clp, fields, ep, spool, flag, tag, 0);
+   if (ret) {
+      if (alp) 
+         ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
+      lFreeList(&alp);
+      lFreeList(&clp);
+      lFreeElem(&ep);
+      DEXIT;
+      return NULL;
+   }
+
+   /* complain about unused configuration elements */
+   if ((unused = lFirst(clp))) {
+      ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_CONFIG_VALUE_SSS,
+         lGetString(unused, CF_name), args->objname, fullname));
+      lFreeList(&clp);
+      lFreeElem(&ep);
+      DEXIT;
+      return NULL;
+   }
+
+   /* remove warnings in alp */
+   lFreeList(&alp);
+
+   DEXIT;
+   return ep;
+FCLOSE_ERROR:
    DEXIT;
    return NULL;
 }

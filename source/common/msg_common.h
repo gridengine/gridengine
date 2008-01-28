@@ -55,14 +55,10 @@
 #define MSG_FILE_NOOPEN_SS                                     _MESSAGE(23018, _("can't open file "SFN": "SFN))
 #define MSG_ERROR_COULDNOTOPENSTDOUTASFILE                     _MESSAGE(23019, _("Could not open stdout as file"))
 #define MSG_ERROR_UNABLETODUMPJOBLIST                          _MESSAGE(23020, _("Unable to dump job list"))
-#define MSG_CONFIG_CONF_ERROROPENINGSPOOLFILE_SS               _MESSAGE(23021, _("error opening the configuration spool file "SFN": "SFN))
-#define MSG_CONFIG_CONF_VERSIONNOTFOUNDONREADINGSPOOLFILE      _MESSAGE(23022, _("conf_version not found on reading spool file"))
 #define MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S               _MESSAGE(23023, _("no value given for configuration attribute "SFQ))
 #define MSG_CONFIG_CONF_INCORRECTVALUEFORCONFIGATTRIB_SS       _MESSAGE(23024, _("incorrect value "SFQ" given for configuration attribute "SFQ))
 #define MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I           _MESSAGE(23025, _("minimum group id in gid_range may not be less than %d in cluster configuration"))
 #define MSG_CONFIG_CONF_ONLYSINGLEVALUEFORCONFIGATTRIB_S       _MESSAGE(23026, _("only a single value is allowed for configuration attribute "SFQ))
-#define MSG_CONFIG_CONF_ERRORSTORINGCONFIGVALUE_S              _MESSAGE(23027, _("error storing configuration attribute "SFQ))
-#define MSG_CONFIG_CONF_ERRORCLOSEINGSPOOLFILE_SS              _MESSAGE(23028, _("error closing the configuration spool file "SFN": "SFN))
 
 #define MSG_CANNOT_REDIRECT_STDINOUTERR_I     _MESSAGE(23029, _("cannot redirect stdin/stdout/stderr (%d) to /dev/null"))
 #define MSG_FILE_CANNOT_WRITE_SS                                     _MESSAGE(23030, _("unable to write to file "SFN": "SFN))
@@ -205,7 +201,6 @@
 #define MSG_QCONF_NOEXECUTIONHOSTSDEFINED         _MESSAGE(23168, _("no execution hosts defined"))
 #define MSG_QCONF_NOEVENTCLIENTSREGISTERED        _MESSAGE(23169, _("no event clients registered"))
 #define MSG_ANSWER_COMPLEXXALREADYEXISTS_SS       _MESSAGE(23172, _("complex with name "SFN" or shortcut "SFN" already exists"))
-#define MSG_ANSWER_IGNORINGMAPPINGFOR_S           _MESSAGE(23187, _("usermapping for "SFQ" not accepted"))
 #define MSG_FILE_ERRORWRITINGUSERSETTOFILE        _MESSAGE(23196, _("error writing userset to file"))
 #define MSG_FILE_ERRORREADINGUSERSETFROMFILE_S    _MESSAGE(23197, _("error reading userset from file "SFN))
 #define MSG_ANSWER_CONFIGXNOTDEFINED_S            _MESSAGE(23201, _("configuration "SFN" not defined"))
@@ -222,20 +217,7 @@
 */
 #define MSG_TREE_UNABLETOLACATEXINSHARETREE_S     _MESSAGE(23208, _("Unable to locate "SFN" in sharetree"))
 #define MSG_OBJ_NOSTREEELEM           _MESSAGE(23209, _("no sharetree element"))
-#define MSG_STREE_UNEXPECTEDNAMEFIELD  _MESSAGE(23210, _("unexpected name field"))
-#define MSG_STREE_UNEXPECTEDTYPEFIELD  _MESSAGE(23211, _("unexpected type field"))
-#define MSG_STREE_UNEXPECTEDVERSIONFIELD  _MESSAGE(23212, _("unexpected version field"))
-#define MSG_STREE_UNEXPECTEDSHARESFIELD  _MESSAGE(23213, _("unexpected shares field"))
-#define MSG_STREE_UNEXPECTEDCHILDNODEFIELD  _MESSAGE(23214, _("unexpected childnodes field"))
-#define MSG_STREE_NAMETWICE_I         _MESSAGE(23215, _("double defined name in line %d"))
-#define MSG_STREE_TYPETWICE_I         _MESSAGE(23216, _("double defined type in line %d"))
-#define MSG_STREE_SHARESTWICE_I       _MESSAGE(23217, _("double defined shares in line %d"))
-#define MSG_STREE_CHILDNODETWICE_I     _MESSAGE(23218, _("double defined child node list in line %d"))
-#define MSG_STREE_NOFATHERNODE_U      _MESSAGE(23219, _("could not find father node for node "sge_U32CFormat))
-#define MSG_STREE_NOPARSECHILDNODES   _MESSAGE(23220, _("error parsing child node list"))
-#define MSG_STREE_NOPARSELINE_I       _MESSAGE(23221, _("error parsing line %d"))
 #define MSG_STREE_NOVALIDNODEREF_U    _MESSAGE(23222, _("found reference to node " sge_U32CFormat " but no specification"))
-#define MSG_FILE_FILEEMPTY            _MESSAGE(23223, _("empty file"))
 
 
 /*
@@ -244,7 +226,6 @@
 /* #define MSG_SCHEDCONF_ALPPISNULLNOSCHEDULERCONFIGURATION    _message(23224, _("alpp == NULL - no scheduler configuration")) __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_ANSWER_NOSCHEDULERCONFIGURATION    _message(23225, _("no scheduler configuration")) __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_SCHEDCONF_CANTOPENSCHEDULERCONFIGURATIONFILE_SS    _message(23226, _("cant open scheduler configuration file "SFQ": "SFN)) __TS Removed automatically from testsuite!! TS__*/
-#define MSG_SCHEDCONF_INVALIDVALUEXFORQUEUESORTMETHOD_S    _MESSAGE(23227, _("invalid value "SFQ" for queue_sort_method"))
 #define MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION    _MESSAGE(23228, _("can't create scheduler configuration"))
 
 /* read_write_job.c */
@@ -258,13 +239,6 @@
 ** complex.c
 */
 #define MSG_COMPLEX_STARTSCOMMENTBUTNOSAVE _MESSAGE(23246, _(">#< starts a comment but comments are not saved across edits --------"))
-#define MSG_PARSE_CANTPARSECPLX_S     _MESSAGE(23247, _("parse error in file "SFN))
-#define MSG_PARSE_CANTPARSECPLX_SI    _MESSAGE(23248, _("parse error in file "SFN" in line %d"))
-#define MSG_PARSE_INVALIDCPLXTYPE_SS    _MESSAGE(23249, _("parse error in file "SFN", unknown type "SFN))
-#define MSG_PARSE_INVALIDCPLXRELOP_SS   _MESSAGE(23250, _("parse error in file "SFN", invalid relation operator "SFN))
-#define MSG_PARSE_INVALIDCPLXCONSUM_SSS _MESSAGE(23251, _("error in file "SFN": attribute "SFN" may not be consumable because it is of type "SFN))
-#define MSG_PARSE_INVALIDCPLXENTRY_SSS  _MESSAGE(23252, _("parse error in file "SFN", invalid "SFN" entry "SFN))
-#define MSG_PARSE_INVALIDCPLXREQ_SS     _MESSAGE(23253, _("parse error in file "SFN", invalid requestable entry "SFN))
 #define MSG_CPLX_VALUEMISSING_S       _MESSAGE(23255, _("denied: missing value for request "SFQ))
 #define MSG_CPLX_WRONGTYPE_SSS        _MESSAGE(23256, _("wrong type in \""SFN"="SFN"\" - "SFN" expected"))
 #define MSG_SGETEXT_INVALIDHOST_S               _MESSAGE(23257, _("invalid hostname "SFQ))
@@ -1016,7 +990,6 @@
 #define MSG_ERROROPENINGFILEFORWRITING_SS _MESSAGE(60204, _("error opening file "SFQ" for writing: "SFN))
 #define MSG_ERRORCLOSINGFILE_SS           _MESSAGE(60205, _("error closing file "SFQ": "SFN))
 #define MSG_ERRORWRITINGFILE_SS          _MESSAGE(60207, _("error writing to file "SFQ": "SFN))
-#define MSG_ERRORREADINGCWD_S             _MESSAGE(60208, _("error reading current working directory: "SFN))
 #define MSG_ERRORCHANGINGCWD_SS            _MESSAGE(60209, _("error changing current working directory to "SFN": "SFN))
 #define MSG_ERRORRENAMING_SSS             _MESSAGE(60210, _("error renaming file "SFQ" to "SFQ": "SFN))
 #define MSG_ERRORDELETINGFILE_SS          _MESSAGE(60211, _("error deleting file "SFQ": "SFN))
@@ -1066,7 +1039,6 @@
 
 #define MSG_GDI_USAGE_sick_OPT             "[-sds]"
 #define MSG_GDI_UTEXT_sick_OPT             _MESSAGE(60612, _("show detached settings"))
-#define MSG_FUNC_GETPWUIDXFAILED_IS        _MESSAGE(60613, _("failed to getpwuid(%d): "SFN))
 #define MSG_WARN_CHANGENOTEFFECTEDUNTILRESTARTOFEXECHOSTS   _MESSAGE(60614, _("Change of "SFQ" will not be effective before sge_execd restart as described in sge_conf(5)"))
 
 #define MSG_OBJ_RQS                        _MESSAGE(60615, _("resource quota set"))
@@ -1119,7 +1091,6 @@
 #define MSG_GDI_USAGE_w_OPT_EV            "[-w e|v]"
 #define MSG_GDI_UTEXT_w_OPT_EV            _MESSAGE(60709, _("validate availability of AR request (error|verify) for jobs"))
 #define MSG_GDI_USAGE_ar_list_OPT         "[-ar ar_id_list]"
-#define MSG_GDI_UTEXT_ar_list_OPT         _MESSAGE(60710, _("show information for given advance reservations"))
 #define MSG_GDI_USAGE_wc_ar_list_OPT      "wc_ar_list"
 #define MSG_GDI_UTEXT_wc_ar_list_OPT      _MESSAGE(60711, _("delete all advance reservations given in list"))
 #define MSG_PARSE_INVALIDOPTIONARGUMENT   _MESSAGE(60712, _("ERROR! invalid option argument!"))

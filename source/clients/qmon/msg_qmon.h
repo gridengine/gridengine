@@ -34,5 +34,9 @@
 
 #include "basis_types.h"
 
+#define MSG_MEMORY_CANTMALLOCBUFFERFORXOFFILEY_SS  _MESSAGE(61100, _("can't malloc buffer for "SFN" of file "SFQ))
+#define MSG_FILE_CANTDETERMINESIZEFORXOFFILEY_SS   _MESSAGE(61101, _("can't determine size for "SFN" of file "SFQ))
+#define MSG_SGETEXT_UNKNOWN_CONFIG_VALUE_SSS       _MESSAGE(61102, _("unknown attribute "SFQ" in "SFN" configuration in file "SFN) ) 
+
 #endif /* __MSG_QMON_H */
 

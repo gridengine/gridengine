@@ -1,3 +1,6 @@
+RD-2008-01-28-1: Cleanup:   removed obsolete classic spooling code
+                 Review:    AA
+
 LP-2008-01-28-0: Enhancem.: SGE_CLUSTER_NAME is valided before installation 
                             proceeds any further
                  Enhancem.: qmaster service depends on bdb if installed

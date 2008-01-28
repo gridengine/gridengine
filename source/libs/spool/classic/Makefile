@@ -37,30 +37,7 @@ OLDSPOOLCLIB_DIR = $(SDIR)/libs/spool/classic
 OLDSPOOLCLIB = libspoolc_old$(LIBEXT)
 
 OLDSPOOLCLIB_SRC = \
-         sge_spooling_classic.c \
-         read_write_sharetree.c \
-         read_write_complex.c \
-         read_list.c \
-         read_object.c \
-         read_write_advance_reservation.c \
-         read_write_cal.c \
-         read_write_ckpt.c \
-         read_write_cqueue.c \
-         read_write_host.c \
-         read_write_host_group.c \
-         read_write_centry.c \
-         read_write_job.c \
-         read_write_resource_quota.c \
-         read_write_manop.c \
-         read_write_pe.c \
-         read_write_qinstance.c \
-         read_write_ume.c \
-         read_write_userprj.c \
-         read_write_userset.c \
-         rw_configuration.c \
-         sched_conf.c
-         
-
+         read_write_job.c
 OLDSPOOLCLIB_OBJS = $(OLDSPOOLCLIB_SRC:.c=.o)
 
 ###############################################################################
@@ -98,71 +75,6 @@ include $(OLDSPOOLCLIB_DIR)/spoolc_old_dependencies
 ###############################################################################
 # rules to build object codes
 ###############################################################################
-sge_spooling_classic.o: $(OLDSPOOLCLIB_DIR)/sge_spooling_classic.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(OLDSPOOLCLIB_DIR)/sge_spooling_classic.c
-
-read_write_sharetree.o: $(OLDSPOOLCLIB_DIR)/read_write_sharetree.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(OLDSPOOLCLIB_DIR)/read_write_sharetree.c
-
-read_write_complex.o: $(OLDSPOOLCLIB_DIR)/read_write_complex.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(OLDSPOOLCLIB_DIR)/read_write_complex.c
-
-read_object.o:   $(OLDSPOOLCLIB_DIR)/read_object.c
-		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(OLDSPOOLCLIB_DIR)/read_object.c
-
-read_write_cal.o:	$(OLDSPOOLCLIB_DIR)/read_write_cal.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(OLDSPOOLCLIB_DIR)/read_write_cal.c
-
-read_write_advance_reservation.o:	$(OLDSPOOLCLIB_DIR)/read_write_advance_reservation.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(OLDSPOOLCLIB_DIR)/read_write_advance_reservation.c
-
-read_write_centry.o:	$(OLDSPOOLCLIB_DIR)/read_write_centry.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(OLDSPOOLCLIB_DIR)/read_write_centry.c
-
-read_write_ckpt.o:	$(OLDSPOOLCLIB_DIR)/read_write_ckpt.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(OLDSPOOLCLIB_DIR)/read_write_ckpt.c
-
-read_write_cqueue.o:	$(OLDSPOOLCLIB_DIR)/read_write_cqueue.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(OLDSPOOLCLIB_DIR)/read_write_cqueue.c
-
-read_write_host.o   : $(OLDSPOOLCLIB_DIR)/read_write_host.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(OLDSPOOLCLIB_DIR)/read_write_host.c
-
-read_write_host_group.o:	$(OLDSPOOLCLIB_DIR)/read_write_host_group.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(OLDSPOOLCLIB_DIR)/read_write_host_group.c
-
 read_write_job.o:	$(OLDSPOOLCLIB_DIR)/read_write_job.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(OLDSPOOLCLIB_DIR)/read_write_job.c
 
-read_write_resource_quota.o:	$(OLDSPOOLCLIB_DIR)/read_write_resource_quota.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(OLDSPOOLCLIB_DIR)/read_write_resource_quota.c
-
-read_write_manop.o:	$(OLDSPOOLCLIB_DIR)/read_write_manop.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(OLDSPOOLCLIB_DIR)/read_write_manop.c
-
-read_write_pe.o:	$(OLDSPOOLCLIB_DIR)/read_write_pe.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(OLDSPOOLCLIB_DIR)/read_write_pe.c
-
-read_write_qinstance.o:	$(OLDSPOOLCLIB_DIR)/read_write_qinstance.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(OLDSPOOLCLIB_DIR)/read_write_qinstance.c
-
-read_write_ume.o:	$(OLDSPOOLCLIB_DIR)/read_write_ume.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(OLDSPOOLCLIB_DIR)/read_write_ume.c
-
-read_write_userprj.o:	$(OLDSPOOLCLIB_DIR)/read_write_userprj.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(OLDSPOOLCLIB_DIR)/read_write_userprj.c
-
-read_write_userset.o:	$(OLDSPOOLCLIB_DIR)/read_write_userset.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(OLDSPOOLCLIB_DIR)/read_write_userset.c
-
-rw_configuration.o:  $(OLDSPOOLCLIB_DIR)/rw_configuration.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(OLDSPOOLCLIB_DIR)/rw_configuration.c
-
-sched_conf.o   : $(OLDSPOOLCLIB_DIR)/sched_conf.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(OLDSPOOLCLIB_DIR)/sched_conf.c
-
-read_list.o   : $(OLDSPOOLCLIB_DIR)/read_list.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(OLDSPOOLCLIB_DIR)/read_list.c
-
-#---------------------------------------------------------------------
-# test programs

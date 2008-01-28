@@ -62,7 +62,6 @@ EXECD_ADD_SRC =  usage.c \
               admin_mail.c \
               config_file.c \
               mail.c \
-              read_object.c \
               read_write_job.c \
               sge_dirent.c \
               execution_states.c \

@@ -54,7 +54,6 @@
 #include "sge_log.h"
 #include "sge_time.h"
 #include "commlib.h"
-#include "spool/classic/rw_configuration.h"
 #include "sge_all_listsL.h"
 #include "sge_feature.h"
 #include "setup_path.h"
@@ -392,6 +391,9 @@ char qmaster_out_file[SGE_PATH_MAX];
                         sge_switch2start_user();
                         ret = startprog(out, err, NULL, binpath, qmaster_name, NULL);
                         sge_switch2admin_user();
+                        if (ret) {
+                           ERROR((SGE_EVENT, MSG_SHADOWD_CANTSTARTQMASTER));
+                        }
                         close(out);
                      } else {
                         qmaster_unlock(QMASTER_LOCK_FILE);

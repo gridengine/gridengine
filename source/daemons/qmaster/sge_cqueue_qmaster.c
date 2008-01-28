@@ -80,7 +80,6 @@
 #include "sge_userprj_qmaster.h"
 #include "sge_userset_qmaster.h"
 
-#include "spool/classic/read_write_ume.h"
 #include "spool/sge_spooling.h"
 
 #include "msg_common.h"

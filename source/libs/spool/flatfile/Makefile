@@ -48,14 +48,10 @@ SPOOLCLIB_ADD_SRC = \
          read_write_job.c 
 
 SPOOLCLIB_TEST_PROGS_OBJ = \
-         test_sge_spooling_flatfile.o \
-         test_ff_cl.o \
-         test_ff_cl_perf.o
+         test_sge_spooling_flatfile.o
 
 SPOOLCLIB_TEST_PROGS = \
-         test_sge_spooling_flatfile \
-         test_ff_cl \
-         test_ff_cl_perf
+         test_sge_spooling_flatfile
 
 SPOOLCLIB_ADD_OBJS = $(SPOOLCLIB_ADD_SRC:.c=.o)
 
@@ -124,24 +120,3 @@ test_sge_spooling_flatfile: test_sge_spooling_flatfile.o sge_mt_init.o $(SPOOLLI
 
 test_sge_spooling_flatfile.o: $(SPOOLCLIB_DIR)/test_sge_spooling_flatfile.c
 	$(CC) $(CFLAGS) -c $(SPOOLCLIB_DIR)/test_sge_spooling_flatfile.c
-
-test_ff_cl: test_ff_cl.o sig_handlers.o sge_mt_init.o $(SPOOLLIB) $(SPOOLCLIB) $(SCHEDLIB) $(SGEOBJLIB) \
-                        $(SGEOBJDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB) \
-                        $(RMONLIB) $(UTILIB) $(OLDSPOOLCLIB) $(WINGRIDLIB_DEP)
-	$(CC) $(CFLAGS) -o test_ff_cl $(LFLAGS) test_ff_cl.o sge_mt_init.o sig_handlers.o $(SPOOLCLIB) \
-                         $(SPOOLLIB) $(OLDSPOOLCLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
-                         $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB) \
-                         $(UTILIB) $(RMONLIB) $(WINGRIDLIB) $(LIBS) $(SECLIB) $(SLIBS) $(DLLIB) 
-test_ff_cl.o: $(SPOOLCLIB_DIR)/test_ff_cl.c
-	$(CC) $(CFLAGS) -c $(SPOOLCLIB_DIR)/test_ff_cl.c
-
-test_ff_cl_perf: test_ff_cl_perf.o sig_handlers.o sge_mt_init.o $(SPOOLLIB) $(SPOOLCLIB) $(SCHEDLIB) $(SGEOBJLIB) \
-                        $(SGEOBJDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB) \
-                        $(RMONLIB) $(UTILIB) $(OLDSPOOLCLIB) $(WINGRIDLIB_DEP)
-	$(CC) $(CFLAGS) -o test_ff_cl_perf $(LFLAGS) test_ff_cl_perf.o sge_mt_init.o sig_handlers.o $(SPOOLCLIB) \
-                         $(SPOOLLIB) $(OLDSPOOLCLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
-                         $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB) \
-                         $(UTILIB) $(RMONLIB) $(WINGRIDLIB) $(LIBS) $(SECLIB) $(SLIBS) $(DLLIB) 
-
-test_ff_cl_perf.o: $(SPOOLCLIB_DIR)/test_ff_cl_perf.c
-	$(CC) $(CFLAGS) -c $(SPOOLCLIB_DIR)/test_ff_cl_perf.c

@@ -56,8 +56,6 @@
 #include "sge.h"
 #include "spool/sge_spooling.h"
 #include "spool/loader/sge_spooling_loader.h"
-#include "spool/classic/read_list.h"
-#include "spool/classic/read_write_sharetree.h"
 #include "spool/flatfile/sge_spooling_flatfile.h"
 #include "spool/flatfile/sge_flatfile_obj.h"
 #include "spool/flatfile/sge_flatfile.h"

@@ -179,7 +179,6 @@ enum {
    DRMAA_ERRNO_DEFAULT_CONTACT_STRING_ERROR, /* DRMAA could not use the default
                                                 contact string to connect to DRM
                                                       system. */
-#ifndef DRMAA_95
    DRMAA_ERRNO_NO_DEFAULT_CONTACT_STRING_SELECTED, /* No default contact string
                                                       was provided or selected.
                                                       DRMAA requires that the
@@ -190,7 +189,6 @@ enum {
                                                       multiple DRMAA
                                                       implementation contained
                                                       in the binary module. */
-#endif
    DRMAA_ERRNO_DRMS_INIT_FAILED, /* Initialization failed due to failure to init
                                     DRM system. */
    DRMAA_ERRNO_ALREADY_ACTIVE_SESSION, /* Initialization failed due to existing
@@ -229,10 +227,8 @@ enum {
    DRMAA_ERRNO_NO_RUSAGE, /* This error code is returned by drmaa_wait() when a
                              job has finished but no rusage and stat data could
                              be provided. */
-#ifndef DRMAA_95
    DRMAA_ERRNO_NO_MORE_ELEMENTS, /* There are no more elements in the opaque
                                     string vector. */
-#endif
 
    DRMAA_NO_ERRNO
 };
@@ -294,7 +290,6 @@ int drmaa_get_next_attr_value(drmaa_attr_values_t* values, char *value,
 int drmaa_get_next_job_id(drmaa_job_ids_t* values, char *value,
                           size_t value_len);
 
-#ifndef DRMAA_95
 /*
  * get element count of opaque string vector
  *
@@ -304,7 +299,6 @@ int drmaa_get_next_job_id(drmaa_job_ids_t* values, char *value,
 int drmaa_get_num_attr_names(drmaa_attr_names_t* values, int *size);
 int drmaa_get_num_attr_values(drmaa_attr_values_t* values, int *size);
 int drmaa_get_num_job_ids(drmaa_job_ids_t* values, int *size);
-#endif
 
 /* 
  * release opaque string vector 

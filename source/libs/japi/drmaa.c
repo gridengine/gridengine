@@ -1909,7 +1909,6 @@ int drmaa_get_next_job_id(drmaa_job_ids_t* values, char *value, size_t value_len
    return japi_string_vector_get_next((drmaa_attr_values_t*)values, value?&val:NULL);
 }
 
-#ifndef DRMAA_95
 /****** DRMAA/drmaa_get_num_attr_names() **************************************
 *  NAME
 *     drmaa_get_num_attr_names() -- Get the number of entries in the vector
@@ -1978,7 +1977,6 @@ int drmaa_get_num_job_ids(drmaa_job_ids_t* values, int *size)
 {
    return japi_string_vector_get_num((drmaa_attr_values_t*)values, size);
 }
-#endif
 
 /****** DRMAA/drmaa_release_attr_values() **************************************
 *  NAME
@@ -2089,12 +2087,10 @@ int drmaa_get_DRM_system(char *drm_system, size_t drm_system_len,
    }
 /* This will change the previous behavior for this method, so we have to make it
  * specific to the new library version. */
-#ifndef DRMAA_95
    else {
       drmaa_errno = DRMAA_ERRNO_INVALID_ARGUMENT;
       japi_standard_error(drmaa_errno, diagp);
    }
-#endif
    
    return drmaa_errno;
 }
@@ -2184,12 +2180,10 @@ int drmaa_get_contact(char *contact, size_t contact_len,
    }
 /* This will change the previous behavior for this method, so we have to make it
  * specific to the new library version. */
-#ifndef DRMAA_95
    else {
       drmaa_errno = DRMAA_ERRNO_INVALID_ARGUMENT;
       japi_standard_error(drmaa_errno, diagp);
    }
-#endif
 
    return drmaa_errno;
 }
@@ -2228,7 +2222,6 @@ int drmaa_version(unsigned int *major, unsigned int *minor,
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
    }
 
-#ifndef DRMAA_95
    if (major != NULL) {
       *major = 1;
    }
@@ -2236,15 +2229,6 @@ int drmaa_version(unsigned int *major, unsigned int *minor,
    if (minor != NULL) {
       *minor = 0;
    }
-#else
-   if (major != NULL) {
-      *major = 0;
-   }
-   
-   if (minor != NULL) {
-      *minor = 95;
-   }
-#endif
 
    return DRMAA_ERRNO_SUCCESS;
 }

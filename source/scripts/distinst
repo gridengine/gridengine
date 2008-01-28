@@ -73,7 +73,7 @@ BERKELEYDB_SHARED_LIBRARIES="libdb-4.4"
 
 DRMAA_SHARED_LIBRARIES="libdrmaa"
 # The last number listed here will be the verson linked from libdrmaa.so
-DRMAA_SHARED_LIB_VERSIONS="0.95 1.0"
+DRMAA_SHARED_LIB_VERSIONS="1.0"
 DRMAA_HEADER_FILES="libs/japi/drmaa.h"
 DRMAAJ_FILES="CLASSES/drmaa"
 
@@ -954,36 +954,6 @@ if [ $instcommon = true ]; then
             exit 1
          fi
       done
-
-      if [ "$DRMAAJ05BASE" != "" ]; then
-         for filename in $DRMAAJ_FILES; do
-            filename=`basename $filename`
-            filename05="${filename}-0.5.jar"
-            filename="${filename}.jar"
-            if [ -f $DRMAAJ05BASE/$filename ]; then
-               echo Installing $filename05
-               Execute rm -f $DEST_SGE_ROOT/lib/$filename05
-               MakeDir lib
-               Install 0.0 644 $DRMAAJ05BASE/$filename $DEST_SGE_ROOT/lib/$filename05
-            elif [ -f $DRMAAJ05BASE/$filename05 ]; then
-               echo Installing $filename05
-               Execute rm -f $DEST_SGE_ROOT/lib/$filename05
-               MakeDir lib
-               Install 0.0 644 $DRMAAJ05BASE/$filename05 $DEST_SGE_ROOT/lib/$filename05
-            elif [ $exit_on_error = true ]; then
-               echo "\"$DRMAAJ05BASE/$filename05\" not found. Installation failed."
-               exit 1
-            else
-               echo
-               echo "\"$DRMAAJ05BASE/$filename05\" not found. Skipping."
-               echo
-            fi
-         done
-      else
-         echo
-         echo "WARNING: DRMAA Java Language Binding 0.5 files will not be installed!!!"
-         echo
-      fi
 
       Cleanup include
    fi

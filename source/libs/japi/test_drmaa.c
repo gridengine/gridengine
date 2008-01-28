@@ -760,7 +760,6 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
              test_error_code("DRMAA_ERRNO_NO_MEMORY", DRMAA_ERRNO_NO_MEMORY, 6) &&
              test_error_code("DRMAA_ERRNO_INVALID_CONTACT_STRING", DRMAA_ERRNO_INVALID_CONTACT_STRING, 7) &&
              test_error_code("DRMAA_ERRNO_DEFAULT_CONTACT_STRING_ERROR", DRMAA_ERRNO_DEFAULT_CONTACT_STRING_ERROR, 8) &&
-#ifndef DRMAA_95
              test_error_code("DRMAA_ERRNO_NO_DEFAULT_CONTACT_STRING_SELECTED", DRMAA_ERRNO_NO_DEFAULT_CONTACT_STRING_SELECTED, 9) &&
              test_error_code("DRMAA_ERRNO_DRMS_INIT_FAILED", DRMAA_ERRNO_DRMS_INIT_FAILED, 10) &&
              test_error_code("DRMAA_ERRNO_ALREADY_ACTIVE_SESSION", DRMAA_ERRNO_ALREADY_ACTIVE_SESSION, 11) &&
@@ -778,23 +777,6 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
              test_error_code("DRMAA_ERRNO_EXIT_TIMEOUT", DRMAA_ERRNO_EXIT_TIMEOUT, 23) &&
              test_error_code("DRMAA_ERRNO_NO_RUSAGE", DRMAA_ERRNO_NO_RUSAGE, 24) &&
              test_error_code("DRMAA_ERRNO_NO_MORE_ELEMENTS", DRMAA_ERRNO_NO_MORE_ELEMENTS, 25)
-#else
-             test_error_code("DRMAA_ERRNO_DRMS_INIT_FAILED", DRMAA_ERRNO_DRMS_INIT_FAILED, 9) &&
-             test_error_code("DRMAA_ERRNO_ALREADY_ACTIVE_SESSION", DRMAA_ERRNO_ALREADY_ACTIVE_SESSION, 10) &&
-             test_error_code("DRMAA_ERRNO_DRMS_EXIT_ERROR", DRMAA_ERRNO_DRMS_EXIT_ERROR, 11) &&
-             test_error_code("DRMAA_ERRNO_INVALID_ATTRIBUTE_FORMAT", DRMAA_ERRNO_INVALID_ATTRIBUTE_FORMAT, 12) &&
-             test_error_code("DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE", DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE, 13) &&
-             test_error_code("DRMAA_ERRNO_CONFLICTING_ATTRIBUTE_VALUES", DRMAA_ERRNO_CONFLICTING_ATTRIBUTE_VALUES, 14) &&
-             test_error_code("DRMAA_ERRNO_TRY_LATER", DRMAA_ERRNO_TRY_LATER, 15) &&
-             test_error_code("DRMAA_ERRNO_DENIED_BY_DRM", DRMAA_ERRNO_DENIED_BY_DRM, 16) &&
-             test_error_code("DRMAA_ERRNO_INVALID_JOB", DRMAA_ERRNO_INVALID_JOB, 17) &&
-             test_error_code("DRMAA_ERRNO_RESUME_INCONSISTENT_STATE", DRMAA_ERRNO_RESUME_INCONSISTENT_STATE, 18) &&
-             test_error_code("DRMAA_ERRNO_SUSPEND_INCONSISTENT_STATE", DRMAA_ERRNO_SUSPEND_INCONSISTENT_STATE, 19) &&
-             test_error_code("DRMAA_ERRNO_HOLD_INCONSISTENT_STATE", DRMAA_ERRNO_HOLD_INCONSISTENT_STATE, 20) &&
-             test_error_code("DRMAA_ERRNO_RELEASE_INCONSISTENT_STATE", DRMAA_ERRNO_RELEASE_INCONSISTENT_STATE, 21) &&
-             test_error_code("DRMAA_ERRNO_EXIT_TIMEOUT", DRMAA_ERRNO_EXIT_TIMEOUT, 22) &&
-             test_error_code("DRMAA_ERRNO_NO_RUSAGE", DRMAA_ERRNO_NO_RUSAGE, 23)
-#endif
          ) {
             break;
          }
@@ -1157,16 +1139,12 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             
             printf("submitted bulk job with jobids:\n");
 
-#ifndef DRMAA_95
             drmaa_errno = drmaa_get_num_job_ids(jobids, &size);
             
             if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
                fprintf(stderr, "failed getting # job ids: %s\n", drmaa_strerror(drmaa_errno));
                return 1;
             }
-#else
-            size = JOB_CHUNK;
-#endif
             
             for (j = 0; j < size; j++) {
                drmaa_errno = drmaa_get_next_job_id(jobids, jobid, sizeof(jobid)-1);
@@ -1180,17 +1158,10 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
 
             drmaa_errno = drmaa_get_next_job_id(jobids, jobid, sizeof(jobid)-1);
 
-#ifndef DRMAA_95
             if (drmaa_errno != DRMAA_ERRNO_NO_MORE_ELEMENTS) {
                fprintf(stderr, "Got incorrect return value from drmaa_get_next_job_id()\n");
                return 1;
             }
-#else
-            if (drmaa_errno != DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE) {
-               fprintf(stderr, "Got incorrect return value from drmaa_get_next_job_id()\n");
-               return 1;
-            }
-#endif
 
             drmaa_release_job_ids(jobids);
          }
@@ -1907,14 +1878,12 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             return 1;
          }             
 
-#ifndef DRMAA_95
          drmaa_errno = drmaa_get_num_attr_names(vector, &size);
          
          if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_get_num_attr_names() failed: %s\n", drmaa_strerror(drmaa_errno));
             return 1;
          }
-#endif
 
          while ((drmaa_errno=drmaa_get_next_attr_name(vector, attr_name, sizeof(attr_name)-1))==DRMAA_ERRNO_SUCCESS) {
             size--;
@@ -1922,7 +1891,6 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
          }
 
 
-#ifndef DRMAA_95
          if (size != 0) {
             fprintf(stderr, "Got incorrect size from drmaa_get_num_attr_names()\n");
             return 1;
@@ -1932,12 +1900,6 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             fprintf(stderr, "Got incorrect return value from drmaa_get_next_attr_name()\n");
             return 1;
          }
-#else
-         if (drmaa_errno != DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE) {
-            fprintf(stderr, "Got incorrect return value from drmaa_get_next_attr_name()\n");
-            return 1;
-         }
-#endif
 
          if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
@@ -1960,17 +1922,10 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
 
          printf("version %d.%d\n", major, minor);
 
-#ifndef DRMAA_95
          if ((major != 1) || (minor != 0)) {
             fprintf(stderr, "drmaa_version() failed -- incorrect version number : %d.%d\n", major, minor);
             return 1;
          }
-#else
-         if ((major != 0) || (minor != 95)) {
-            fprintf(stderr, "drmaa_version() failed -- incorrect version number : %d.%d\n", major, minor);
-            return 1;
-         }
-#endif
       }
       break;
 
@@ -4136,21 +4091,18 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             return 1;
          }
          
-#ifndef DRMAA_95
          drmaa_errno = drmaa_get_num_attr_values(rusage, &size);
          
          if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_get_num_attr_values() failed: %s\n", drmaa_strerror(drmaa_errno));
             return 1;
          }
-#endif
          
          while ((drmaa_errno=drmaa_get_next_attr_value(rusage, value, 127))==DRMAA_ERRNO_SUCCESS) {
             size--;
             printf("%s\n", value);
          }
       
-#ifndef DRMAA_95
          if (size != 0) {
             fprintf(stderr, "Got incorrect size from drmaa_get_num_attr_values()\n");
             return 1;
@@ -4160,12 +4112,6 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             fprintf(stderr, "Got incorrect return value from drmaa_get_next_attr_value()\n");
             return 1;
          }
-#else
-         if (drmaa_errno != DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE) {
-            fprintf(stderr, "Got incorrect return value from drmaa_get_next_attr_value()\n");
-            return 1;
-         }
-#endif
          
          break;
       }

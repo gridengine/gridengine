@@ -38,6 +38,3 @@ OPENSSLBASE=/vol2/tools/SW/openssl-0.9.7l-origin
 BERKELEYDBBASE=/vol2/SW/db-4.4.20
 
 TAR=gtar
-
-# Base directory where the DRMAA Java Language Binding 0.5 resides
-DRMAAJ05BASE=/vol2/tools/SW/java/drmaa-0.5

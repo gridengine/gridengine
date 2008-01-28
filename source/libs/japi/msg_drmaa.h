@@ -49,9 +49,6 @@ extern "C" {
 
 #define MSG_JDRMAA_BAD_JOB_TEMPLATE    _MESSAGE(45101, _("Requested job template does not exist"))
 #define MSG_JDRMAA_NULL_POINTER_S      _MESSAGE(45102, _("The "SFN" may not be null"))
-#ifdef DRMAA_95
-#define MSG_JDRMAA_OVERFLOW_DS         _MESSAGE(45103, _("More than %d "SFN" were received"))
-#endif
 
 #ifdef	__cplusplus
 }

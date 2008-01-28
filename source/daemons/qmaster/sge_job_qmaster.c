@@ -952,18 +952,19 @@ int sge_gdi_del_job(sge_gdi_ctx_class_t *ctx, lListElem *idep, lList **alpp, cha
       DRETURN(STATUS_EUNKNOWN);
    }
 
+   if (lGetPosViaElem(idep, ID_force, SGE_NO_ABORT) >= 0) {
+      if (lGetUlong(idep, ID_force) == 1) {
+         forced = true;
+      }
+   } else {
+      CRITICAL((SGE_EVENT, MSG_NMNOTINELEMENT_S, "ID_force"));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DRETURN(STATUS_EUNKNOWN);
+   }
+
    /* first lets make sure they have permission if a force is involved */
    if (!mconf_get_enable_forced_qdel()) {/* Flag ENABLE_FORCED_QDEL in qmaster_params */
 
-      if (lGetPosViaElem(idep, ID_force, SGE_NO_ABORT) >= 0) {
-         if (lGetUlong(idep, ID_force) == 1) {
-            forced = true;
-         }
-      } else {
-         CRITICAL((SGE_EVENT, MSG_NMNOTINELEMENT_S, "ID_force"));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DRETURN(STATUS_EUNKNOWN);
-      }
 
       if (forced && !manop_is_manager(ruser)) {
          ERROR((SGE_EVENT, MSG_JOB_FORCEDDELETEPERMS_S, ruser));
@@ -4354,9 +4355,7 @@ static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, c
                if ((lGetUlong(tmp_task, JAT_status) & JFINISHED) ||
                    (lGetUlong(tmp_task, JAT_state) & JDELETED &&
                    lGetUlong(tmp_task, JAT_pending_signal_delivery_time) > sge_get_gmt() &&
-                   !forced
-                  )
-                 ) {
+                   !forced)) {
                   INFO((SGE_EVENT, MSG_JOB_ALREADYDELETED_U, sge_u32c(job_number)));
                   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
                   continue;

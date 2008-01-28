@@ -1,3 +1,7 @@
+RD-2008-01-28-2: Bugfix:    - fixed qdel force
+                            - corrected qrdel value parser
+                 Review:    JG
+
 RD-2008-01-28-1: Cleanup:   removed obsolete classic spooling code
                  Review:    AA
 
@@ -6,6 +10,11 @@ LP-2008-01-28-0: Enhancem.: SGE_CLUSTER_NAME is valided before installation
                  Enhancem.: qmaster service depends on bdb if installed
                  Bugfix.:   Execd uses libscf only on -ke request          
                  Review:    RD
+
+RD-2008-01-28-0: Cleanup:   removed drmaa 0.95 and drmaa-05.jar
+                 Bugster:   6655773
+                 Issue:     2443
+                 Review:    AH
 
 MP-2008-01-25-0: Bugfix:    Merged the changes from MP-2008-01-17-0 in V61_BRANCH
                             to maintrunk

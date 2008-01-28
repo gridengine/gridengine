@@ -2775,8 +2775,7 @@ int object_verify_name(const lListElem *object, lList **answer_list, int name,
          ERROR((SGE_EVENT, MSG_OBJECT_INVALID_NAME_S, object_name));
          answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          ret = STATUS_EUNKNOWN;
-      }
-      else {
+      } else {
          if (verify_str_key(
                answer_list, object_name, MAX_VERIFY_STRING,
                lNm2Str(name), QSUB_TABLE) != STATUS_OK) {

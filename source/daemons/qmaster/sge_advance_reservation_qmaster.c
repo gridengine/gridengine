@@ -541,12 +541,34 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **master
    }
 
    if (id_str != NULL && (strcmp(id_str, "0") != 0)) {
+      char *dptr;
       lCondition *new_where = NULL;
-      if (isdigit(id_str[0])) {
-         new_where = lWhere("%T(%I==%u)", AR_Type, AR_id, atol(id_str)); 
+
+      u_long32 value = strtol(id_str, &dptr, 0);
+      if (dptr[0] == '\0') {
+         /* is numeric value */
+         new_where = lWhere("%T(%I==%u)", AR_Type, AR_id, value); 
       } else {
-         new_where = lWhere("%T(%I p= %s)", AR_Type, AR_name, id_str);
+         bool error = false;
+         if (isdigit(id_str[0])) {
+            ERROR((SGE_EVENT, MSG_OBJECT_INVALID_NAME_S, id_str));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            error = true;
+         } else if (verify_str_key(alpp, id_str, MAX_VERIFY_STRING,
+                    lNm2Str(AR_name), KEY_TABLE) != STATUS_OK) {
+            error = true;
+         } else {
+            new_where = lWhere("%T(%I p= %s)", AR_Type, AR_name, id_str);
+         }
+
+         if (error) {
+            sge_dstring_free(&buffer);
+            lFreeWhere(&new_where);
+            lFreeWhere(&ar_where);
+            DRETURN(STATUS_EUNKNOWN);
+         }
       }
+
       if (!ar_where) {
          ar_where = new_where;
       } else {

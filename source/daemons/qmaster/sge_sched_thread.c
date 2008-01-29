@@ -229,12 +229,14 @@ int scheduler_method(sge_evc_class_t *evc, lList **answer_list, scheduler_all_da
 
       if (!what || !where) {
          DPRINTF(("failed creating where or what describing non available queues\n"));
-      }
-      qlp = lSelect("", lists->all_queue_list, where, what);
+      } else {
+         qlp = lSelect("", lists->all_queue_list, where, what);
 
-      for_each(mes_queues, qlp) {
-         schedd_mes_add_global(SCHEDD_INFO_QUEUENOTAVAIL_,
-                                   lGetString(mes_queues, QU_full_name));
+         for_each(mes_queues, qlp) {
+            schedd_mes_add_global(SCHEDD_INFO_QUEUENOTAVAIL_,
+                                      lGetString(mes_queues, QU_full_name));
+         }
+
       }
 
       for_each(mes_queues, lists->dis_queue_list) {

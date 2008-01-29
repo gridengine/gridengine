@@ -777,9 +777,10 @@ sge_scheduler_main(void *arg)
                      continue;
 
                   /* all_queue_list contains all queue instances with state and full queue name only */
-                  if (!what_queue3)
+                  if (!what_queue3) {
                      what_queue3 = lWhat("%T(%I%I)", lGetListDescr(qinstance_list), QU_full_name, QU_state);
-                  t = lSelect("t", qinstance_list, where_what.where_queue, what_queue3);
+                  }
+                  t = lSelect("t", qinstance_list, NULL, what_queue3);
                   if (t) {
                      if (copy.all_queue_list == NULL)
                         copy.all_queue_list = lCreateList("all", lGetListDescr(t));

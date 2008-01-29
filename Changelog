@@ -1,3 +1,7 @@
+RD-2008-01-29-0: Bugfix:    fixed broken scheduler messages introduced with by
+                            performance enhancement
+                 Review:    AH
+
 RD-2008-01-28-2: Bugfix:    - fixed qdel force
                             - corrected qrdel value parser
                  Review:    JG

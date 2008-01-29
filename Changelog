@@ -1,3 +1,9 @@
+MD-2008-01-29-0: Bugfix:    o qhost -l h=<hostname> does not work
+                 Bugster:   4680766
+                 Issue:     245
+                 Changed:   clients
+                 Review:    JG
+
 RD-2008-01-29-0: Bugfix:    fixed broken scheduler messages introduced with by
                             performance enhancement
                  Review:    AH

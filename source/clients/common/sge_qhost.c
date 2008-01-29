@@ -165,10 +165,19 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
                continue;
             }
 
-            DPRINTF(("matching host %s with qhost -l\n", lGetHost(ep, EH_name)));
-
             selected = sge_select_queue(resource_match_list, NULL, ep, ehl, cl, 
                                         true, -1, NULL, NULL, NULL);
+            {
+               lListElem *tmp_resource_list = NULL;
+               const char* val = NULL;
+               if ((tmp_resource_list = lGetElemStr(resource_match_list, CE_name, "hostname"))) {
+                  val = lGetString(tmp_resource_list, CE_stringval); 
+                  if (sge_hostcmp(val, lGetHost(ep, EH_name)) == 0 ) {
+                     DPRINTF(("matching host %s with qhost -l\n", lGetHost(ep, EH_name)));
+                     selected=1;
+                  }
+               }
+            }
 
             if (selected) { 
                lSetUlong(ep, EH_tagged, 1);

@@ -654,7 +654,6 @@ int cl_com_tcp_close_connection(cl_com_connection_t** connection) {
 int cl_com_tcp_write(cl_com_connection_t* connection, cl_byte_t* message, unsigned long size, unsigned long *only_one_write) {
    cl_com_tcp_private_t* private = NULL;
    long data_written = 0;
-   long data_complete = 0;
    int my_errno;
 
    if (message == NULL) {
@@ -694,7 +693,7 @@ int cl_com_tcp_write(cl_com_connection_t* connection, cl_byte_t* message, unsign
    }
 
    errno = 0;
-   data_written = write(private->sockfd, &message[data_complete], size - data_complete);   
+   data_written = write(private->sockfd, message, size);   
    my_errno = errno;
    if (data_written < 0) {
       if (my_errno != EWOULDBLOCK && my_errno != EAGAIN && my_errno != EINTR) {
@@ -704,12 +703,14 @@ int cl_com_tcp_write(cl_com_connection_t* connection, cl_byte_t* message, unsign
          }
          CL_LOG_INT(CL_LOG_ERROR,"send error errno:", my_errno);
          return CL_RETVAL_SEND_ERROR;
+      } else {
+         CL_LOG_INT(CL_LOG_INFO,"send error errno:", my_errno);
+         data_written = 0;
       }
-   } else {
-      data_complete = data_complete + data_written;
-   }
-   *only_one_write = data_complete;
-   if (data_complete != size) {
+   } 
+
+   *only_one_write = data_written;
+   if (data_written != size) {
       struct timeval now;
 
       gettimeofday(&now,NULL);
@@ -729,7 +730,6 @@ int cl_com_tcp_write(cl_com_connection_t* connection, cl_byte_t* message, unsign
 int cl_com_tcp_read(cl_com_connection_t* connection, cl_byte_t* message, unsigned long size, unsigned long* only_one_read) {
    cl_com_tcp_private_t* private = NULL;
    long data_read = 0;
-   long data_complete = 0;
    int my_errno;
 
    if (message == NULL) {
@@ -770,7 +770,7 @@ int cl_com_tcp_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
    }
 
    errno = 0;
-   data_read = read(private->sockfd, &message[data_complete], size - data_complete );
+   data_read = read(private->sockfd, message, size);
    my_errno = errno;
    if (data_read <= 0) {
       if (data_read == 0) {
@@ -785,12 +785,14 @@ int cl_com_tcp_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
          }
          CL_LOG_INT(CL_LOG_ERROR,"receive error (only_one_read != NULL) errno:", my_errno);
          return CL_RETVAL_READ_ERROR;
+      } else {
+         CL_LOG_INT(CL_LOG_INFO,"receive error errno:", my_errno);
+         data_read = 0;
       }
-   } else {
-      data_complete = data_complete + data_read;
-   }
-   *only_one_read = data_complete;
-   if (data_complete != size) {
+   } 
+
+   *only_one_read = data_read;
+   if (data_read != size) {
       struct timeval now;
       gettimeofday(&now,NULL);
       if ( now.tv_sec >= connection->read_buffer_timeout_time ) {
@@ -811,6 +813,7 @@ int cl_com_tcp_read_GMSH(cl_com_connection_t* connection, unsigned long *only_on
    unsigned long processed_data = 0;
 
    if (connection == NULL || only_one_read == NULL) {
+      CL_LOG(CL_LOG_ERROR,"parameters not initalized");
       return CL_RETVAL_PARAMS;
    }
 
@@ -1324,6 +1327,12 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
       do_write_select = 1;
    }
 
+   /* lock list */
+   if ( cl_raw_list_lock(connection_list) != CL_RETVAL_OK) {
+      CL_LOG(CL_LOG_ERROR,"could not lock connection list");
+      return CL_RETVAL_LOCK_ERROR;
+   }
+
 #ifndef USE_POLL
    /* If we do only a write select, don't use select timeout */
    if (select_mode == CL_W_SELECT) {
@@ -1341,10 +1350,12 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
       /* this is to come out of select when for new connections */
       if(cl_com_tcp_get_private(service_connection) == NULL ) {
          CL_LOG(CL_LOG_ERROR,"service framework is not initalized");
+         cl_raw_list_unlock(connection_list);
          return CL_RETVAL_NO_FRAMEWORK_INIT;
       }
       if( service_connection->service_handler_flag != CL_COM_SERVICE_HANDLER) {
          CL_LOG(CL_LOG_ERROR,"service connection is no service handler");
+         cl_raw_list_unlock(connection_list);
          return CL_RETVAL_NOT_SERVICE_HANDLER;
       }
       server_fd = cl_com_tcp_get_private(service_connection)->sockfd;
@@ -1357,11 +1368,6 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
       service_connection->data_read_flag = CL_COM_DATA_NOT_READY;
    }
 
-   /* lock list */
-   if ( cl_raw_list_lock(connection_list) != CL_RETVAL_OK) {
-      CL_LOG(CL_LOG_ERROR,"could not lock connection list");
-      return CL_RETVAL_LOCK_ERROR;
-   }
 
    if ( connection_list->list_data == NULL) {
       cl_raw_list_unlock(connection_list);
@@ -1622,11 +1628,11 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
     
    if ((nr_of_descriptors != ldata->last_nr_of_descriptors) &&
        (nr_of_descriptors == 1 && service_connection != NULL && do_read_select != 0)) {
-      /* This is to return as far as possible if this connection has a service and
+      /* This is to return as fast as possible if this connection has a service and
           a client was disconnected */
 
       /* a connection is done and no more connections (beside service connection itself) is alive,
-         return to application as far as possible, don't wait for a new connect */
+         return to application as fast as possible, don't wait for a new connect */
       ldata->last_nr_of_descriptors = nr_of_descriptors;
       cl_raw_list_unlock(connection_list); 
       CL_LOG(CL_LOG_INFO,"last connection closed");
@@ -1660,6 +1666,7 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
 #ifdef USE_POLL
       free(ufds);
 #endif
+      CL_LOG(CL_LOG_INFO,"no select descriptors");
       return CL_RETVAL_NO_SELECT_DESCRIPTORS;
    }
    switch(select_back) {

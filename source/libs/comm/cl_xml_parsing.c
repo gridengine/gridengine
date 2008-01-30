@@ -256,7 +256,7 @@ int cl_com_transformString2XML(const char* input, char** output) {
       cl_bool_t found = CL_FALSE;
       int add_length = 1;
       for (s=0 ; s < CL_XML_SEQUENCE_ARRAY_SIZE; s++) {
-         if (input[i] == cl_com_sequence_array[s].character ) {
+         if (input[i] == cl_com_sequence_array[s].character) {
             found = CL_TRUE;
             add_length = cl_com_sequence_array[s].sequence_length;
             break;
@@ -267,7 +267,6 @@ int cl_com_transformString2XML(const char* input, char** output) {
          /* worst case, need to realloc */
          malloced_size += malloced_size;
          *output = realloc(*output, malloced_size + 1);
-         printf("realloc\n");
       }
 
       if (found == CL_FALSE) {

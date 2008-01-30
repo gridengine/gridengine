@@ -1,3 +1,7 @@
+CR-2008-01-30-0: Bugfix:    - fixed commlib issue with message cleanup
+                            - code cleanup in tcp/ssl framework
+                 Review:    RD, HP
+
 EB-2008-01-30-0: Enhancem.: - implemented FIFO lock as a replacement for
                               pthread locking
                               (pthread lock can be enabled by removing 

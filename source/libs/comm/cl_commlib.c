@@ -2660,10 +2660,8 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
    }
  
    /* when threads enabled: this is done by cl_com_trigger_thread() - OK */
-   if (cl_commlib_get_thread_state() == CL_NO_THREAD) {
-      cl_com_host_list_refresh(cl_com_get_host_list());
-      cl_com_endpoint_list_refresh(cl_com_get_endpoint_list());
-   }
+   cl_com_host_list_refresh(cl_com_get_host_list());
+   cl_com_endpoint_list_refresh(cl_com_get_endpoint_list());
 
    /* remove broken connections */
    /* when threads enabled: this is done by cl_com_handle_service_thread() - OK */
@@ -3187,6 +3185,8 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
             CL_LOG(CL_LOG_ERROR,"error appending new empty read message");
             return return_value;   
          }
+      } else {
+         CL_LOG(CL_LOG_INFO, "continue previous read for message ...");
       } 
          
       if (message->message_state == CL_MS_INIT_RCV) {
@@ -3555,7 +3555,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                return CL_RETVAL_OK;
             }
             default: {
-               CL_LOG(CL_LOG_ERROR,"reseived unsupported protocol message");
+               CL_LOG(CL_LOG_ERROR,"received unsupported protocol message");
                return_value = cl_message_list_remove_receive(connection, message, 0);
                if (return_value == CL_RETVAL_OK) {
                   cl_com_free_message(&message);
@@ -3641,7 +3641,7 @@ static int cl_commlib_handle_connection_ack_timeouts(cl_com_connection_t* connec
              connection->connection_state == CL_CONNECTED &&
              connection->connection_sub_state == CL_COM_WORK) {
             cl_commlib_send_sim_message(connection, &(connection->check_endpoint_mid)); 
-            CL_LOG(CL_LOG_INFO,"sending sim to connection to check its availability");
+            CL_LOG(CL_LOG_WARNING, "sending sim to connection to check its availability");
          }
       }
 
@@ -4378,7 +4378,7 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
           } 
           message = message_list_elem->message;
           break;
-       } 
+       }
 
        if (message == NULL) {
           connection->data_write_flag = CL_COM_DATA_NOT_READY;
@@ -4759,6 +4759,7 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
                   if (message_match == 1) {
                      /* remove message from received message list*/
                      *message = message_elem->message;
+                     CL_LOG(CL_LOG_INFO, "fetched message from received message queue");
                      cl_message_list_remove_receive(connection, *message, 0);
 
                      /* release the message list */
@@ -7540,6 +7541,11 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases) {
    return ret_val;
 }
 
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_commlib_app_message_queue_cleanup()"
 static void cl_commlib_app_message_queue_cleanup(cl_com_handle_t* handle) {
    /*
       do some connection cleanup
@@ -7567,15 +7573,20 @@ static void cl_commlib_app_message_queue_cleanup(cl_com_handle_t* handle) {
          cl_raw_list_lock(connection->received_message_list);
          next_message_elem = cl_message_list_get_first_elem(connection->received_message_list);
          while(next_message_elem) {
+            cl_com_message_t* message = NULL;
             message_elem = next_message_elem;
             next_message_elem = cl_message_list_get_next_elem(message_elem);
-            timeout_time = message_elem->message->message_receive_time.tv_sec + handle->message_timeout;
-            if (timeout_time <= now.tv_sec) {
-               cl_com_message_t* message = message_elem->message;
-               cl_message_list_remove_receive(connection, message, 0);
-               handle->messages_ready_for_read = handle->messages_ready_for_read - 1;
-               cl_app_message_queue_remove(handle->received_message_queue, connection, 0, CL_FALSE);
-               cl_com_free_message(&message);
+            message = message_elem->message;
+            if (message != NULL && message->message_state == CL_MS_READY) {
+               timeout_time = message->message_receive_time.tv_sec + handle->message_timeout;
+               if (timeout_time <= now.tv_sec) {
+                  CL_LOG(CL_LOG_WARNING,"removing message because of message_timeout");
+
+                  cl_message_list_remove_receive(connection, message, 0);
+                  handle->messages_ready_for_read = handle->messages_ready_for_read - 1;
+                  cl_app_message_queue_remove(handle->received_message_queue, connection, 0, CL_FALSE);
+                  cl_com_free_message(&message);
+               }
             }
          }
          cl_raw_list_unlock(connection->received_message_list);

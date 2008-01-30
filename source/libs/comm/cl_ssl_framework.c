@@ -4380,9 +4380,12 @@ int cl_com_ssl_write(cl_com_connection_t* connection, cl_byte_t* message, unsign
    struct timeval now;
    cl_com_ssl_private_t* private = NULL;
    long data_written = 0;
-   long data_complete = 0;
    int ssl_error;
-   int select_back = 0;
+
+   if (only_one_write == NULL) {
+      CL_LOG(CL_LOG_ERROR,"only_one_write == NULL");
+      return CL_RETVAL_PARAMS;
+   }
 
    if (connection == NULL) {
       CL_LOG(CL_LOG_ERROR,"no connection object");
@@ -4410,125 +4413,49 @@ int cl_com_ssl_write(cl_com_connection_t* connection, cl_byte_t* message, unsign
    }
 
    if (size > CL_DEFINE_MAX_MESSAGE_LENGTH) {
-      CL_LOG_INT(CL_LOG_ERROR,"data to write is > max message length =", CL_DEFINE_MAX_MESSAGE_LENGTH );
+      CL_LOG_INT(CL_LOG_ERROR,"data to write is > max message length =", CL_DEFINE_MAX_MESSAGE_LENGTH);
       cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_MAX_READ_SIZE, NULL);
       return CL_RETVAL_MAX_READ_SIZE;
    }
 
    if (int_size < CL_COM_SSL_FRAMEWORK_MIN_INT_SIZE && size > CL_COM_SSL_FRAMEWORK_MAX_INT ) {
-      CL_LOG_INT(CL_LOG_ERROR,"can't send such a long message, because on this architecture the sizeof integer is", (int)int_size );
+      CL_LOG_INT(CL_LOG_ERROR,"can't send such a long message, because on this architecture the sizeof integer is", (int)int_size);
       cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_MAX_READ_SIZE, MSG_CL_COMMLIB_SSL_MESSAGE_SIZE_EXEED_ERROR);
       return CL_RETVAL_MAX_READ_SIZE;
    }
 
-
-   /*
-    * INFO: this can be a boddle neck if only_one_write is not set,
-    * because if the message can't be read complete, we must try it later 
-    */
-
-   while ( data_complete != size ) {
-      if (only_one_write == NULL) {
-#ifdef USE_POLL
-         struct pollfd ufds;
-
-         ufds.fd = private->sockfd;
-         ufds.events = POLLOUT;
-
-         select_back = poll(&ufds, 1, 0);
-#else
-         fd_set writefds;
-         struct timeval timeout;
-
-         FD_ZERO(&writefds);
-         FD_SET(private->sockfd, &writefds);
-         timeout.tv_sec = 0; 
-         timeout.tv_usec = 0;  /* 0 us */
-         /* do select */
-         select_back = select(private->sockfd + 1, NULL, &writefds, NULL , &timeout);
-#endif
-   
-         if (select_back == -1) {
-            CL_LOG(CL_LOG_INFO,"select error");
-            return CL_RETVAL_SELECT_ERROR;
-         }
-
-#ifdef USE_POLL
-         if (ufds.revents & POLLOUT)
-#else
-         if (FD_ISSET(private->sockfd, &writefds))
-#endif
-         {
-            cl_com_ssl_func__ERR_clear_error();
-            data_written = cl_com_ssl_func__SSL_write(private->ssl_obj, &message[data_complete], (int) (size - data_complete) );   
-            if (data_written <= 0) {
-               /* Try to find out more about the connect error */
-               ssl_error = cl_com_ssl_func__SSL_get_error(private->ssl_obj, data_written);
-               private->ssl_last_error = ssl_error;
-               switch(ssl_error) {
+   cl_com_ssl_func__ERR_clear_error();
+   data_written = cl_com_ssl_func__SSL_write(private->ssl_obj, message, (int)size);
+   if (data_written <= 0) {
+      /* Try to find out more about the connect error */
+      ssl_error = cl_com_ssl_func__SSL_get_error(private->ssl_obj, data_written);
+      private->ssl_last_error = ssl_error;
+      switch(ssl_error) {
 #ifdef CL_COM_ENABLE_SSL_THREAD_RETRY_BUGFIX
-                  case SSL_ERROR_SYSCALL:
+         case SSL_ERROR_SYSCALL:
 #endif
-                  case SSL_ERROR_WANT_READ: 
-                  case SSL_ERROR_WANT_WRITE: {
-                     CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
-                     break;
-                  }
-                  default: {
-                     CL_LOG_STR(CL_LOG_ERROR,"SSL write error", cl_com_ssl_get_error_text(ssl_error));
-                     cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-                     return CL_RETVAL_SEND_ERROR;
-                  }
-               }
-            } else {
-               data_complete = data_complete + data_written;
-            }
-         }
-         if (data_complete != size) {
-            gettimeofday(&now,NULL);
-            if ( now.tv_sec >= connection->write_buffer_timeout_time ) {
-               CL_LOG(CL_LOG_ERROR,"send timeout error");
-               return CL_RETVAL_SEND_TIMEOUT;
-            }
-         } else {
+         case SSL_ERROR_WANT_READ: 
+         case SSL_ERROR_WANT_WRITE: {
+            CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
             break;
          }
-      } else {
-         cl_com_ssl_func__ERR_clear_error();
-         data_written = cl_com_ssl_func__SSL_write(private->ssl_obj, &message[data_complete], (int) (size - data_complete));
-         if (data_written <= 0) {
-            /* Try to find out more about the connect error */
-            ssl_error = cl_com_ssl_func__SSL_get_error(private->ssl_obj, data_written);
-            private->ssl_last_error = ssl_error;
-            switch(ssl_error) {
-#ifdef CL_COM_ENABLE_SSL_THREAD_RETRY_BUGFIX
-               case SSL_ERROR_SYSCALL:
-#endif
-               case SSL_ERROR_WANT_READ: 
-               case SSL_ERROR_WANT_WRITE: {
-                  CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
-                  break;
-               }
-               default: {
-                  CL_LOG_STR(CL_LOG_ERROR,"SSL write error", cl_com_ssl_get_error_text(ssl_error));
-                  cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-                  return CL_RETVAL_SEND_ERROR;
-               }
-            }
-         } else {
-            data_complete = data_complete + data_written;
+         default: {
+            CL_LOG_STR(CL_LOG_ERROR,"SSL write error", cl_com_ssl_get_error_text(ssl_error));
+            cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
+            return CL_RETVAL_SEND_ERROR;
          }
-         *only_one_write = data_complete;
-         if (data_complete != size) {
-            gettimeofday(&now,NULL);
-            if ( now.tv_sec >= connection->write_buffer_timeout_time ) {
-               CL_LOG(CL_LOG_ERROR,"send timeout error");
-               return CL_RETVAL_SEND_TIMEOUT;
-            }
-            return CL_RETVAL_UNCOMPLETE_WRITE;
-         }
-         return CL_RETVAL_OK;
       }
+      data_written = 0;
+   }
+
+   *only_one_write = data_written;
+   if (data_written != size) {
+      gettimeofday(&now,NULL);
+      if ( now.tv_sec >= connection->write_buffer_timeout_time ) {
+         CL_LOG(CL_LOG_ERROR,"send timeout error");
+         return CL_RETVAL_SEND_TIMEOUT;
+      }
+      return CL_RETVAL_UNCOMPLETE_WRITE;
    }
    return CL_RETVAL_OK;
 }
@@ -4542,7 +4469,6 @@ int cl_com_ssl_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
    struct timeval now;
    cl_com_ssl_private_t* private = NULL;
    long data_read = 0;
-   long data_complete = 0;
    int ssl_error;
 
    if (connection == NULL || only_one_read == NULL) {
@@ -4584,7 +4510,7 @@ int cl_com_ssl_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
    }
 
    cl_com_ssl_func__ERR_clear_error();
-   data_read = cl_com_ssl_func__SSL_read(private->ssl_obj, &message[data_complete], (int) (size - data_complete) );
+   data_read = cl_com_ssl_func__SSL_read(private->ssl_obj, message, (int)size);
    if (data_read <= 0) {
 
       /* Try to find out more about the connect error */
@@ -4606,11 +4532,11 @@ int cl_com_ssl_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
             return CL_RETVAL_READ_ERROR;
          }
       }
-   } else {
-      data_complete = data_complete + data_read;
+      data_read = 0;
    }
-   *only_one_read = data_complete;
-   if (data_complete != size) {
+
+   *only_one_read = data_read;
+   if (data_read != size) {
       gettimeofday(&now,NULL);
       if ( now.tv_sec >= connection->read_buffer_timeout_time ) {
          return CL_RETVAL_READ_TIMEOUT;

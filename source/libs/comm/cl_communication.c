@@ -909,10 +909,10 @@ int cl_com_read_GMSH(cl_com_connection_t* connection, unsigned long *only_one_re
 
    switch(connection->framework_type ) {
       case CL_CT_TCP: {
-         return cl_com_tcp_read_GMSH(connection,only_one_read);
+         return cl_com_tcp_read_GMSH(connection, only_one_read);
       }
       case CL_CT_SSL: {
-         return cl_com_ssl_read_GMSH(connection,only_one_read);
+         return cl_com_ssl_read_GMSH(connection, only_one_read);
       }
       case CL_CT_UNDEFINED: {
          break;

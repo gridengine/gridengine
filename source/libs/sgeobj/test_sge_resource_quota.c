@@ -96,6 +96,8 @@ int main(int argc, char *argv[])
       {{NULL, NULL, NULL, NULL, "host1", NULL}, {"*", "staff", "*", "*", "@hgrp*", "*"}, false},
       {{NULL, NULL, NULL, NULL, "ho*", NULL}, {"*", "staff", "*", "*", "@hgrp*", "*"}, false},
       {{NULL, NULL, NULL, NULL, "ho*", NULL}, {"*", "staff", "*", "*", "*", "*"}, false},
+      {{NULL, NULL, NULL, NULL, "!@hgrp1", NULL}, {"*", "staff", "*", "*", "*", "*"}, false},
+      {{NULL, NULL, NULL, NULL, "!@hgrp1", NULL}, {"*", "staff", "*", "*", "@hgrp*", "*"}, false},
    /* userset definition */
       {{"@userset1", NULL, NULL, NULL, NULL, NULL}, {"user1", "staff", "*", "*", "*", "*"}, false},
       {{"@userset1", NULL, NULL, NULL, NULL, NULL}, {"use*", "staff", "*", "*", "*", "*"}, false},
@@ -107,6 +109,7 @@ int main(int argc, char *argv[])
       {{"use*", NULL, NULL, NULL, NULL, NULL}, {"@use*", "staff", "*", "*", "*", "*"}, false},
       {{"@user*2", NULL, NULL, NULL, NULL, NULL}, {"user1", "staff", "*", "*", "*", "*"}, false},
       {{"@user*2", NULL, NULL, NULL, NULL, NULL}, {"user1", "*", "*", "*", "*", "*"}, false},
+      {{"!@user*", NULL, NULL, NULL, NULL, NULL}, {"*", "*", "*", "*", "*", "*"}, false},
    /* project definition */
       {{NULL, NULL, "!*", NULL, NULL, NULL}, {"*", "staff", NULL, "*", "*", "*"}, false},
    /* end test */
@@ -136,6 +139,8 @@ int main(int argc, char *argv[])
       {{NULL, NULL, NULL, NULL, "!@hgrp1", NULL}, {"*", "staff", "*", "*", "ho*", "*"}, false},
       {{NULL, NULL, NULL, NULL, "!@hgr*", NULL}, {"*", "staff", "*", "*", "host1", "*"}, false},
       {{NULL, NULL, NULL, NULL, "!@hgr*", NULL}, {"*", "staff", "*", "*", "hos*", "*"}, false},
+      {{NULL, NULL, NULL, NULL, "!hgrp1", NULL}, {"*", "staff", "*", "*", "hgrp1", "*"}, false},
+      {{NULL, NULL, NULL, NULL, "!hgrp*", NULL}, {"*", "staff", "*", "*", "hgrp*", "*"}, false},
    /* userset definition */
       {{"!@userset1", NULL, NULL, NULL, NULL, NULL}, {"user1", "staff", "*", "*", "*", "*"}, false},
       {{"!@userset1", NULL, NULL, NULL, NULL, NULL}, {"use*", "staff", "*", "*", "*", "*"}, false},
@@ -166,6 +171,10 @@ int main(int argc, char *argv[])
    hgroup = lCreateElem(HGRP_Type);
    lSetHost(hgroup, HGRP_name, "@hgrp1");
    lAddSubHost(hgroup, HR_name, "host1", HGRP_host_list, HR_Type);
+   lAppendElem(hgroup_list, hgroup);
+   hgroup = lCreateElem(HGRP_Type);
+   lSetHost(hgroup, HGRP_name, "@hgrp2");
+   lAddSubHost(hgroup, HR_name, "host2", HGRP_host_list, HR_Type);
    lAppendElem(hgroup_list, hgroup);
 
    userset_list = lCreateList("", US_Type);

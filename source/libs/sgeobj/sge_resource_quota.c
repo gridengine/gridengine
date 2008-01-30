@@ -57,7 +57,7 @@
 #include "sgeobj/sge_cqueue.h"
 #include "uti/sge_string.h"
 
-static bool rqs_match_user_host_scope(lList *scope, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list, const char *group);
+static bool rqs_match_user_host_scope(lList *scope, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list, const char *group, bool is_xscope);
 
 /****** sge_resource_quota/rqs_parse_filter_from_string() *************************
 *  NAME
@@ -921,7 +921,7 @@ rqs_debit_rule_usage(lListElem *job, lListElem *rule, dstring *rue_name, int slo
 *  SEE ALSO
 *     sge_resource_quota/rqs_match_user_host_scope()
 *******************************************************************************/
-static bool rqs_match_user_host_scope(lList *scope, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list, const char *group) {
+static bool rqs_match_user_host_scope(lList *scope, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list, const char *group, bool is_xscope) {
 
    bool found = false;
    lListElem *ep;
@@ -929,6 +929,7 @@ static bool rqs_match_user_host_scope(lList *scope, int filter_type, const char 
    DENTER(TOP_LAYER, "rqs_match_user_host_scope");
 
    if (!sge_is_pattern(value)) {
+      /* used in scheduler/qmaster and qquota */
       if (lGetElemStr(scope, ST_name, value) != NULL) {
          found = true;
       } else {
@@ -1031,14 +1032,28 @@ static bool rqs_match_user_host_scope(lList *scope, int filter_type, const char 
          }
       }
    } else {
+      /* only used in qquota */ 
       for_each(ep, scope) {
          const char *cp = lGetString(ep, ST_name);
          const char *group_name = NULL;
          const char *query = NULL;
 
          if (fnmatch(value, cp, 0) == 0) {
-            found = true;
-            break;
+            if (!is_xscope) {
+               found = true;
+               break;
+            } else {
+               if (strcmp(value, cp) == 0) {
+                  /* amount of sets is equal */
+                  found = true;
+                  break;
+               } else {
+                  /* amount of sets does not overlap. We can not reject in
+                     xscope context and have to wave through */
+                  found = false;
+                  break;
+               }
+            }
          }
          if (sge_is_pattern(cp) && (fnmatch(cp, value, 0) == 0)) {
             found = true;
@@ -1185,7 +1200,7 @@ rqs_is_matching_rule(lListElem *rule, const char *user, const char *group, const
 *  NOTES
 *     MT-NOTE: rqs_match_host_scope() is MT safe 
 *******************************************************************************/
-static bool rqs_match_host_scope(lList *scope, const char *name, lList *master_hgroup_list) 
+static bool rqs_match_host_scope(lList *scope, const char *name, lList *master_hgroup_list, bool is_xscope) 
 {
    lListElem *ep;
 
@@ -1196,7 +1211,7 @@ static bool rqs_match_host_scope(lList *scope, const char *name, lList *master_h
    }
    
    if (sge_is_pattern(name) || is_hgroup_name(name)) {
-      DRETURN(rqs_match_user_host_scope(scope, FILTER_HOSTS, name, NULL, master_hgroup_list, NULL));
+      DRETURN(rqs_match_user_host_scope(scope, FILTER_HOSTS, name, NULL, master_hgroup_list, NULL, is_xscope));
    }
 
    /* at this stage we know 'name' is a simple hostname */
@@ -1253,10 +1268,9 @@ rqs_filter_match(lListElem *filter, int filter_type, const char *value, lList *m
          case FILTER_HOSTS:
             DPRINTF(("matching hosts with %s\n", value));
             /* inverse logic because of xscope */
-            ret = rqs_match_host_scope(xscope, value, master_hgroup_list) ? false: true;
-            if (ret == true) { 
-               bool found = rqs_match_host_scope(scope, value, master_hgroup_list);
-               if (scope != NULL && found == false) {
+            ret = rqs_match_host_scope(xscope, value, master_hgroup_list, true) ? false: true;
+            if (ret == true && scope != NULL) { 
+               if (!rqs_match_host_scope(scope, value, master_hgroup_list, false)) {
                   ret = false;
                }
             }
@@ -1266,10 +1280,9 @@ rqs_filter_match(lListElem *filter, int filter_type, const char *value, lList *m
          {  
             DPRINTF(("matching users or hosts with %s\n", value));
             /* inverse logic because of xscope */
-            ret = rqs_match_user_host_scope(xscope, filter_type, value, master_userset_list, NULL, group) ? false: true;
-            if (ret == true) { 
-               bool found = rqs_match_user_host_scope(scope, filter_type, value, master_userset_list, NULL, group);
-               if (scope != NULL && found == false) {
+            ret = rqs_match_user_host_scope(xscope, filter_type, value, master_userset_list, NULL, group, true) ? false: true;
+            if (ret == true && scope != NULL) { 
+               if (!rqs_match_user_host_scope(scope, filter_type, value, master_userset_list, NULL, group, false)) {
                   ret = false;
                }
             }

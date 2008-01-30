@@ -210,10 +210,12 @@ sge_fifo_lock(sge_fifo_rw_lock_t *lock, bool is_reader)
        */
       do {
          if (is_reader) {
-            do_wait = ((lock->writer_active > 0) &&
-                       (lock->head == lock->tail && (lock->reader_waiting + lock->writer_waiting) > 0));
+            do_wait = (bool)((lock->writer_active > 0) &&
+                                (lock->head == lock->tail && 
+                                (lock->reader_waiting + lock->writer_waiting) > 0));
          } else {
-            do_wait = (lock->head == lock->tail && (lock->reader_waiting + lock->writer_waiting) > 0);
+            do_wait = (bool)(lock->head == lock->tail && 
+                               (lock->reader_waiting + lock->writer_waiting) > 0);
          }
          if (do_wait) {
             lock->waiting++;
@@ -235,9 +237,9 @@ sge_fifo_lock(sge_fifo_rw_lock_t *lock, bool is_reader)
        *    reader or writer.
        */
       if (is_reader) {
-         do_wait_in_queue = (lock->writer_active > 0);
+         do_wait_in_queue = (bool)(lock->writer_active > 0);
       } else {
-         do_wait_in_queue = (lock->writer_active + lock->reader_active > 0);
+         do_wait_in_queue = (bool)(lock->writer_active + lock->reader_active > 0);
       }
       if (do_wait_in_queue) {
          int index;

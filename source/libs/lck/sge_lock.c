@@ -187,7 +187,7 @@ void sge_lock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_
    } else if (aMode == LOCK_WRITE) {
        DLOCKPRINTF(("%s() about to lock rwlock \"%s\" for writing\n", func, locktype_names[aType]));
 #ifdef SGE_USE_LOCK_FIFO
-      res = sge_fifo_lock(SGE_RW_Locks[aType], false);
+      res = sge_fifo_lock(SGE_RW_Locks[aType], false) ? 0 : 1;
 #else
       res = pthread_rwlock_wrlock(SGE_RW_Locks[aType]);
 #endif

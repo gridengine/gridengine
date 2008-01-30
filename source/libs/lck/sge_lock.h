@@ -40,7 +40,7 @@
 #define SGE_DEBUG_LOCK_TIME 
 #endif
 
-#if 0
+#if 1
 #define SGE_USE_LOCK_FIFO
 #endif
 

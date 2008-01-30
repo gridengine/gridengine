@@ -1,3 +1,8 @@
+RD-2008-01-30-0: Bugfix:    fixed qquota for negated host or user scope
+                 Bugster:   6655195
+                 Issue:     2472
+                 Review:    JG
+
 MD-2008-01-29-0: Bugfix:    o qhost -l h=<hostname> does not work
                  Bugster:   4680766
                  Issue:     245

@@ -538,22 +538,28 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    /* special event clients: we allow only one instance */
    /* if it already exists, delete the old one and register the new one */
    if (id > EV_ID_ANY && id < EV_ID_FIRST_DYNAMIC) {
-     
+    
+#ifdef DO_LATE_LOCK 
       MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
+#endif
       /*
       ** we allow addition of a priviledged event client
       ** for internal clients (==> update_func != NULL)
       ** and manager/operator
       */
       if (!update_func && !manop_is_manager(ruser)) {
+#ifdef DO_LATE_LOCK
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
+#endif
          unlock_all_clients();
          ERROR((SGE_EVENT, MSG_WRONG_USER_FORFIXEDID ));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
          DRETURN(STATUS_ESEMANTIC);
       }
+#ifdef DO_LATE_LOCK
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
+#endif
       
       if ((ep = get_event_client(id)) != NULL) {
          /* we already have this special client */
@@ -1211,15 +1217,21 @@ int sge_shutdown_event_client(u_long32 aClientID, const char* anUser,
 
    if (client != NULL) {
 
+#ifdef DO_LATE_LOCK
       MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
+#endif
       if (!manop_is_manager(anUser) && (anUID != lGetUlong(client, EV_uid))) {
+#ifdef DO_LATE_LOCK
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
+#endif
          answer_list_add(alpp, MSG_COM_NOSHUTDOWNPERMS, STATUS_DENIED,
                          ANSWER_QUALITY_ERROR);
          unlock_client(aClientID);
          DRETURN(EPERM);
       }
+#ifdef DO_LATE_LOCK
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
+#endif
       
       add_list_event_for_client(aClientID, 0, sgeE_SHUTDOWN, 0, 0, NULL, NULL,
                                 NULL, NULL, true);
@@ -1285,15 +1297,21 @@ int sge_shutdown_dynamic_event_clients(const char *anUser, lList **alpp, monitor
 
    DENTER(TOP_LAYER, "sge_shutdown_dynamic_event_clients");
 
+#ifdef DO_LATE_LOCK
    MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
+#endif
    if (!manop_is_manager(anUser)) {
+#ifdef DO_LATE_LOCK
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
+#endif
       answer_list_add(alpp, MSG_COM_NOSHUTDOWNPERMS, STATUS_DENIED,
                       ANSWER_QUALITY_ERROR);
 
       DRETURN(EPERM);
    }
+#ifdef DO_LATE_LOCK
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
+#endif
 
    while (Event_Master_Control.clients_indices[count] != 0) {
       id = (u_long32)Event_Master_Control.clients_indices[count++];
@@ -2680,8 +2698,10 @@ static void total_update(lListElem *event_client, monitoring_t *monitor)
    master_table = object_type_get_global_object_description();
 
    blockEvents(event_client, sgeE_ALL_EVENTS, true);
-   
+  
+#ifdef DO_LATE_LOCK 
    MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
+#endif
    
    sge_set_commit_required();
   
@@ -2714,7 +2734,9 @@ static void total_update(lListElem *event_client, monitoring_t *monitor)
 
    sge_commit();
 
+#ifdef DO_LATE_LOCK
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
+#endif
    
    DRETURN_VOID;
 } /* total_update() */

@@ -42,18 +42,21 @@ LCKLIB = liblck$(LIBEXT)
 
 LCKLIB_SRC = \
               sge_lock.c \
+              sge_lock_fifo.c \
               sge_mtutil.c
 
 LCKLIB_OBJS = $(LCKLIB_SRC:.c=.o)
 
-LCKLIB_TEST_ADD_LIBS = -luti -llck -lrmon
+LCKLIB_TEST_ADD_LIBS = -llck -lrmon
 
-LCKLIB_TEST_LIB_DEPENDS = $(RMONLIB) $(LCKLIB)
+LCKLIB_TEST_LIB_DEPENDS = $(LCKLIB) $(RMONLIB) 
 
 LCKLIB_TEST_OBJS = \
               test_sge_lock_main.o \
               test_sge_lock_simple.o \
               test_sge_lock_multiple.o \
+              test_sge_lock_fifo.o \
+              test_sge_mutex_fifo.o \
               test_sge_deadlock.o \
               test_sge_recursive.o
 
@@ -102,6 +105,9 @@ include $(LCKLIB_DIR)/lck_dependencies
 sge_lock.o:	$(LCKLIB_DIR)/sge_lock.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(LCKLIB_DIR)/sge_lock.c
 
+sge_lock_fifo.o:	$(LCKLIB_DIR)/sge_lock_fifo.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(LCKLIB_DIR)/sge_lock_fifo.c
+
 sge_mtutil.o:	$(LCKLIB_DIR)/sge_mtutil.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(LCKLIB_DIR)/sge_mtutil.c
 
@@ -111,8 +117,20 @@ sge_mtutil.o:	$(LCKLIB_DIR)/sge_mtutil.c
 test_sge_lock_simple:	test_sge_lock_main.o test_sge_lock_simple.o $(COMMLISTSLIB) $(LCKLIB) $(LCKLIB_TEST_LIB_DEPENDS)
 		$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_lock_simple $(LFLAGS) test_sge_lock_main.o test_sge_lock_simple.o $(LCKLIB_TEST_ADD_LIBS) $(COMMLISTSLIB) $(LIBS)
 
+test_sge_lock_fifo: test_sge_lock_fifo.o $(COMMLISTSLIB) $(LCKLIB) $(LCKLIB_TEST_LIB_DEPENDS)
+		$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_lock_fifo $(LFLAGS) test_sge_lock_fifo.o $(LCKLIB_TEST_ADD_LIBS) $(COMMLISTSLIB) $(LIBS)
+
+test_sge_mutex_fifo: test_sge_mutex_fifo.o $(COMMLISTSLIB) $(LCKLIB) $(LCKLIB_TEST_LIB_DEPENDS)
+		$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_mutex_fifo $(LFLAGS) test_sge_mutex_fifo.o $(LCKLIB_TEST_ADD_LIBS) $(COMMLISTSLIB) $(LIBS)
+
 test_sge_lock_main.o:	$(LCKLIB_DIR)/test_sge_lock_main.c
 		$(CC) $(CFLAGS) -c $(LCKLIB_DIR)/test_sge_lock_main.c
+
+test_sge_lock_fifo.o:	$(LCKLIB_DIR)/test_sge_lock_fifo.c
+		$(CC) $(CFLAGS) -c $(LCKLIB_DIR)/test_sge_lock_fifo.c
+
+test_sge_mutex_fifo.o:	$(LCKLIB_DIR)/test_sge_mutex_fifo.c
+		$(CC) $(CFLAGS) -c $(LCKLIB_DIR)/test_sge_mutex_fifo.c
 
 test_sge_lock_simple.o:	$(LCKLIB_DIR)/test_sge_lock_simple.c
 		$(CC) $(CFLAGS) -c $(LCKLIB_DIR)/test_sge_lock_simple.c

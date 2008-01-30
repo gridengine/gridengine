@@ -1,3 +1,14 @@
+EB-2008-01-30-0: Enhancem.: - implemented FIFO lock as a replacement for
+                              pthread locking
+                              (pthread lock can be enabled by removing 
+                              SGE_USE_LOCK_FIFO in libs/lck/sge_lock.h) 
+                            - removed monitor. Now global locking is done 
+                              earlier
+                              (old behaviour can be enabled with 
+                              the preprocessor define DO_LATE_LOCK
+                              in libs/lck/sge_lock.h)
+                 Review:    JG, CR
+
 JG-2008-01-30-0: Bugfix:    qselect without options didn't show any queues.
                  Review:    AH
 

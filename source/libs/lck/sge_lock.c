@@ -33,15 +33,26 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <string.h>
+#include <float.h>
 
 #include "lck/sge_lock.h"
+#include "lck/sge_lock_fifo.h"
 #include "lck/sge_mtutil.h"
 #include "lck/msg_lcklib.h"
 
-#include "uti/sge_log.h"
-
 #include <stdio.h>
 #include "sgermon.h"
+
+#ifdef SGE_DEBUG_LOCK_TIME
+static double reader_min[NUM_OF_LOCK_TYPES] = {DBL_MAX, DBL_MAX};
+static double reader_max[NUM_OF_LOCK_TYPES] = {0.0, 0.0};
+static double reader_all[NUM_OF_LOCK_TYPES] = {0.0, 0.0};
+static double reader_count[NUM_OF_LOCK_TYPES] = {0.0, 0.0};
+static double writer_min[NUM_OF_LOCK_TYPES] = {DBL_MAX, DBL_MAX};
+static double writer_max[NUM_OF_LOCK_TYPES] = {0.0, 0.0};
+static double writer_all[NUM_OF_LOCK_TYPES] = {0.0, 0.0};
+static double writer_count[NUM_OF_LOCK_TYPES] = {0.0, 0.0};
+#endif
 
 /****** sge_lock/Introduction ****************************************************
 *  NAME
@@ -80,16 +91,37 @@
 *  SEE ALSO
 *     sge_lock/sge_lock.h
 *******************************************************************************/
+#ifdef SGE_USE_LOCK_FIFO
+static sge_fifo_rw_lock_t Global_Lock;
+static sge_fifo_rw_lock_t Master_Conf_Lock;
+static sge_fifo_rw_lock_t Masert_atomic_mutli_gdi;
+
+/* watch out. The order in this array has to be the same as in the sge_fifo_rw_lock_t type */
+static sge_fifo_rw_lock_t *SGE_RW_Locks[NUM_OF_LOCK_TYPES] = {
+   &Global_Lock, 
+   &Master_Conf_Lock,
+   &Masert_atomic_mutli_gdi
+};
+
+#else
 static pthread_rwlock_t Global_Lock;
 static pthread_rwlock_t Master_Conf_Lock;
+static pthread_rwlock_t Masert_atomic_mutli_gdi;
 
 /* watch out. The order in this array has to be the same as in the sge_locktype_t type */
-static pthread_rwlock_t *SGE_RW_Locks[NUM_OF_LOCK_TYPES] = {&Global_Lock, &Master_Conf_Lock};
+static pthread_rwlock_t *SGE_RW_Locks[NUM_OF_LOCK_TYPES] = {
+   &Global_Lock, 
+   &Master_Conf_Lock,
+   &Masert_atomic_mutli_gdi
+};
+#endif
+
 
 /* 'locktype_names' has to be in sync with the definition of 'sge_locktype_t' */
 static const char* locktype_names[NUM_OF_LOCK_TYPES] = {
-   "global",       /* LOCK_GLOBAL */
-   "master_config" /* LOCK_MASTER_CONF */ 
+   "global",          /* LOCK_GLOBAL */
+   "master_config",   /* LOCK_MASTER_CONF */ 
+   "atomic_multi_gdi" /* LOCK_ATOMIC_MULTI_GDI */
 };
 
 static pthread_once_t lock_once = PTHREAD_ONCE_INIT;
@@ -135,6 +167,7 @@ void sge_lock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_
    DENTER(BASIS_LAYER, "sge_lock");
 
    pthread_once(&lock_once, lock_once_init);
+
 #ifdef PRINT_LOCK
    {
       struct timeval now;
@@ -145,20 +178,26 @@ void sge_lock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_
 
    if (aMode == LOCK_READ) {
       DLOCKPRINTF(("%s() about to lock rwlock \"%s\" for reading\n", func, locktype_names[aType]));
+#if SGE_USE_LOCK_FIFO
+      res = sge_fifo_lock(SGE_RW_Locks[aType], true) ? 0 : 1;
+#else
       res = pthread_rwlock_rdlock(SGE_RW_Locks[aType]);
+#endif
       DLOCKPRINTF(("%s() locked rwlock \"%s\" for reading\n", func, locktype_names[aType]));
-   }
-   else if (aMode == LOCK_WRITE) {
+   } else if (aMode == LOCK_WRITE) {
        DLOCKPRINTF(("%s() about to lock rwlock \"%s\" for writing\n", func, locktype_names[aType]));
-       res = pthread_rwlock_wrlock(SGE_RW_Locks[aType]);
-       DLOCKPRINTF(("%s() locked rwlock \"%s\" for writing\n", func, locktype_names[aType]));
-   }
-   else {
-      ERROR((SGE_EVENT, "wrong lock type for global lock\n")); 
+#if SGE_USE_LOCK_FIFO
+      res = sge_fifo_lock(SGE_RW_Locks[aType], false);
+#else
+      res = pthread_rwlock_wrlock(SGE_RW_Locks[aType]);
+#endif
+      DLOCKPRINTF(("%s() locked rwlock \"%s\" for writing\n", func, locktype_names[aType]));
+   } else {
+      DLOCKPRINTF(("wrong lock type for global lock\n")); 
    }   
 
    if (res != 0) {
-      CRITICAL((SGE_EVENT, MSG_LCK_RWLOCKFORWRITINGFAILED_SSS, func, locktype_names[aType], strerror(res)));
+      DLOCKPRINTF((MSG_LCK_RWLOCKFORWRITINGFAILED_SSS, func, locktype_names[aType], strerror(res)));
       abort();
    }
 
@@ -178,23 +217,66 @@ void sge_lock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_
 {
    int res = -1;
 
+#ifdef SGE_DEBUG_LOCK_TIME
+   struct timeval before;
+   struct timeval after;
+   double time;
+#endif
+
    DENTER(BASIS_LAYER, "sge_lock");
    
    pthread_once(&lock_once, lock_once_init);
+
+#ifdef SGE_DEBUG_LOCK_TIME
+   gettimeofday(&before, NULL);
+#endif
+
    if (aMode == LOCK_READ) {
+#ifdef SGE_USE_LOCK_FIFO
+      res = sge_fifo_lock(SGE_RW_Locks[aType], true) ? 0 : 1;
+#else
       res = pthread_rwlock_rdlock(SGE_RW_Locks[aType]);
-   }
-   else if (aMode == LOCK_WRITE) {
-       res = pthread_rwlock_wrlock(SGE_RW_Locks[aType]);
-   }
-   else {
-      ERROR((SGE_EVENT, "wrong lock type for global lock\n")); 
+#endif
+   } else if (aMode == LOCK_WRITE) {
+#ifdef SGE_USE_LOCK_FIFO
+      res = sge_fifo_lock(SGE_RW_Locks[aType], false) ? 0 : 1;
+#else
+      res = pthread_rwlock_wrlock(SGE_RW_Locks[aType]);
+#endif
+   } else {
+      DLOCKPRINTF(("wrong lock type for global lock\n")); 
    } 
 
    if (res != 0) {
-      CRITICAL((SGE_EVENT, MSG_LCK_RWLOCKFORWRITINGFAILED_SSS, func, locktype_names[aType], strerror(res)));
+      DLOCKPRINTF((MSG_LCK_RWLOCKFORWRITINGFAILED_SSS, func, locktype_names[aType], strerror(res)));
       abort();
    }
+
+#ifdef SGE_DEBUG_LOCK_TIME
+   gettimeofday(&after, NULL);
+   time = after.tv_usec - before.tv_usec;
+   time = after.tv_sec - before.tv_sec + (time/1000000);
+
+   if (aMode == LOCK_READ) {
+      if (time < reader_min[aType]) {
+         reader_min[aType] = time;
+      }  
+      if (time > reader_max[aType]) {
+         reader_max[aType] = time;
+      } 
+      reader_all[aType] += time;
+      reader_count[aType]++; 
+   } else {
+      if (time < writer_min[aType]) {
+         writer_min[aType] = time;
+      }  
+      if (time > writer_max[aType]) {
+         writer_max[aType] = time;
+      } 
+      writer_all[aType] += time;
+      writer_count[aType]++; 
+   }
+#endif
 
    DRETURN_VOID;
 } /* sge_lock */
@@ -232,8 +314,13 @@ void sge_unlock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sg
    DENTER(BASIS_LAYER, "sge_unlock");
 
    pthread_once(&lock_once, lock_once_init);
-   if ((res = pthread_rwlock_unlock(SGE_RW_Locks[aType])) != 0) {
-      CRITICAL((SGE_EVENT, MSG_LCK_RWLOCKUNLOCKFAILED_SSS, func, locktype_names[aType], strerror(res)));
+#ifdef SGE_USE_LOCK_FIFO
+   res = sge_fifo_ulock(SGE_RW_Locks[aType], (aMode == LOCK_READ)) ? 0 : 1;
+#else
+   res = pthread_rwlock_unlock(SGE_RW_Locks[aType]);
+#endif
+   if (res != 0) {
+      DLOCKPRINTF((MSG_LCK_RWLOCKUNLOCKFAILED_SSS, func, locktype_names[aType], strerror(res)));
       abort();
    }
    DLOCKPRINTF(("%s() unlocked rwlock \"%s\"\n", func, locktype_names[aType]));
@@ -256,8 +343,14 @@ void sge_unlock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sg
    DENTER(BASIS_LAYER, "sge_unlock");
 
    pthread_once(&lock_once, lock_once_init);
-   if ((res = pthread_rwlock_unlock(SGE_RW_Locks[aType])) != 0) {
-      CRITICAL((SGE_EVENT, MSG_LCK_RWLOCKUNLOCKFAILED_SSS, func, locktype_names[aType], strerror(res)));
+
+#ifdef SGE_USE_LOCK_FIFO
+   res = sge_fifo_ulock(SGE_RW_Locks[aType], (aMode == LOCK_READ)) ? 0 : 1;
+#else
+   res = pthread_rwlock_unlock(SGE_RW_Locks[aType]);
+#endif
+   if (res != 0) {
+      DLOCKPRINTF((MSG_LCK_RWLOCKUNLOCKFAILED_SSS, func, locktype_names[aType], strerror(res)));
       abort();
    }
 
@@ -329,8 +422,13 @@ sge_locker_t sge_locker_id(void)
 *******************************************************************************/
 static void lock_once_init(void)
 {
+#ifdef SGE_USE_LOCK_FIFO
+   sge_fifo_lock_init(&Global_Lock);
+   sge_fifo_lock_init(&Master_Conf_Lock);
+#else
    pthread_rwlock_init(&Global_Lock, NULL); 
    pthread_rwlock_init(&Master_Conf_Lock, NULL);
+#endif
    return;
 } /* prog_once_init() */
 
@@ -359,5 +457,16 @@ static sge_locker_t id_callback_impl(void)
    return (sge_locker_t)pthread_self();
 } /* id_callback */
 
-
-
+#ifdef SGE_DEBUG_LOCK_TIME
+void sge_debug_time(sge_locktype_t aType) 
+{
+      fprintf(stderr, "reader_min   = %f\n", reader_min[aType]);
+      fprintf(stderr, "reader_max   = %f\n", reader_max[aType]);
+      fprintf(stderr, "reader_avg   = %f\n", reader_all[aType]/reader_count[aType]);
+      fprintf(stderr, "reader_count = %f\n", reader_count[aType]);
+      fprintf(stderr, "writer_min   = %f\n", writer_min[aType]);
+      fprintf(stderr, "writer_max   = %f\n", writer_max[aType]);
+      fprintf(stderr, "writer_avg   = %f\n", writer_all[aType]/writer_count[aType]);
+      fprintf(stderr, "writer_count = %f\n", writer_count[aType]);
+}
+#endif

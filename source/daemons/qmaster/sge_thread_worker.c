@@ -223,7 +223,9 @@ sge_worker_main(void *arg)
  
    while (do_endlessly) {
       sge_gdi_packet_class_t *packet = NULL;
+#ifdef DO_LATE_LOCK
       request_handling_t type = ATOMIC_NONE;
+#endif
 
       /*
        * Wait for packets. As long as packets are available cancelation 
@@ -234,25 +236,69 @@ sge_worker_main(void *arg)
       sge_gdi_packet_queue_wait_for_new_packet(&Master_Packet_Queue, &packet);
       if (packet != NULL) {
          sge_gdi_task_class_t *task = packet->first_task;
+#ifdef DO_LATE_LOCK
+#else
+         bool is_only_read_request = true;
+#endif
 
          thread_start_stop_profiling();
 
          DPRINTF((SFN" waits for atomic slot\n", thread_config->thread_name));
 
-         MONITOR_WAIT_TIME((type = eval_gdi_and_block(task)), (&monitor));
+#ifdef DO_LATE_LOCK
+         MONITOR_WAIT_TIME((type = eval_gdi_and_block(task)), &monitor);
+#else
+         /*
+          * test if a write lock is neccessary
+          */
+         task = packet->first_task;
+         while (task != NULL) {
+            u_long32 command = SGE_GDI_GET_OPERATION(task->command); 
 
+            if (command != SGE_GDI_GET) {
+               is_only_read_request = false;
+               break;
+            }
+            task = task->next;            
+         }
+
+         /*
+          * acquire the correct lock
+          */
+         if (is_only_read_request) {
+            MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), &monitor); 
+         } else {
+            MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), &monitor);
+         }
+#endif
+
+         /*
+          * do the GDI request
+          */
+         task = packet->first_task;
          while (task != NULL) {
             sge_c_gdi(ctx, packet, task, &(task->answer_list), &monitor);
 
             task = task->next;
          }
-
+     
          sge_gdi_packet_broadcast_that_handled(packet);
 
          thread_output_profiling("worker thread profiling summary:\n",
                                  &next_prof_output);
 
+#ifdef DO_LATE_LOCK
          eval_atomic_end(type);
+#else
+         /*
+          * do unlock
+          */
+         if (is_only_read_request) {
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ)
+         } else {
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE)
+         }
+#endif
       } else { 
          int execute = 0;
 

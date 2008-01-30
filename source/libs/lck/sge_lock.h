@@ -36,12 +36,17 @@
 #include "basis_types.h"
 #include "sgermon.h"
 
+#if 0
+#define SGE_DEBUG_LOCK_TIME 
+#endif
 
-typedef enum {
-   LOCK_GLOBAL  = 0,  /* global lock */
-   LOCK_MASTER_CONF = 1,
-   NUM_OF_LOCK_TYPES = 2
-} sge_locktype_t;
+#if 1
+#define SGE_USE_LOCK_FIFO
+#endif
+
+#if 0
+#define DO_LATE_LOCK 
+#endif
 
 #if defined(LINUX)
 #undef LOCK_READ
@@ -55,12 +60,31 @@ typedef enum {
 
 typedef u_long32 sge_locker_t;
 
-/*
- * Lock user interface
- */
-void sge_lock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID);
-void sge_unlock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID);
-sge_locker_t sge_locker_id(void);
+typedef enum {
+   /* 
+    * global lock 
+    */
+   LOCK_GLOBAL  = 0, 
+
+   LOCK_MASTER_CONF = 1,
+
+   /* 
+    * this lock takes care that MULTI GDI GET requests will be handled
+    * as an atomar operations.  
+    */
+   LOCK_ATOMIC_MULTI_GDI = 2, 
+
+   NUM_OF_LOCK_TYPES = 3
+} sge_locktype_t;
+
+void 
+sge_lock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID);
+
+void 
+sge_unlock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID);
+
+sge_locker_t 
+sge_locker_id(void);
 
 #if defined(SGE_LOCK)
 #error "SGE_LOCK already defined!"

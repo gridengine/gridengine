@@ -68,11 +68,12 @@
 #include "msg_qmaster.h"
 #include "msg_common.h"
 
+#ifdef DO_LATE_LOCK
 static message_control_t Master_Control_Master = {
-   ATOMIC_NONE, 
-   0, 
-   PTHREAD_COND_INITIALIZER, 
-   false, 
+   ATOMIC_NONE,
+   0,
+   PTHREAD_COND_INITIALIZER,
+   false,
    PTHREAD_MUTEX_INITIALIZER
 };
 
@@ -80,6 +81,7 @@ static request_handling_t eval_message_and_block(struct_msg_t msg);
 
 static void 
 eval_atomic(request_handling_t type);
+#endif
 
 static void 
 do_gdi_packet(sge_gdi_ctx_class_t *ctx, lList **answer_list, 
@@ -110,6 +112,7 @@ static void sge_c_job_ack(sge_gdi_ctx_class_t *ctx,
 #pragma no_inline(do_gdi_packet, do_c_ack, do_report_request)
 #endif
 
+#ifdef DO_LATE_LOCK
 /****** sge_qmaster_process_message/eval_message_and_block() *******************
 *  NAME
 *     eval_message_and_block() -- eval a message and proceed or block
@@ -235,12 +238,10 @@ eval_atomic(request_handling_t type)
          Master_Control_Master.type = type;
          Master_Control_Master.counter = 1;
          cond = true;
-      }
-      else if (Master_Control_Master.type == type) {
+      } else if (Master_Control_Master.type == type) {
          Master_Control_Master.counter++;
          cond = true;
-      }
-      else {
+      } else {
          Master_Control_Master.signal = true;
          pthread_cond_wait(&Master_Control_Master.cond_var, &Master_Control_Master.mutex);
       }
@@ -313,6 +314,8 @@ eval_atomic_end(request_handling_t type)
 
    DEXIT;
 }
+
+#endif
 
 /****** qmaster/sge_qmaster_process_message/sge_qmaster_process_message() ******
 *  NAME
@@ -510,7 +513,9 @@ static void
 do_report_request(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t *monitor)
 {
    lList *rep = NULL;
+#ifdef DO_LATE_LOCK
    request_handling_t type = ATOMIC_NONE;
+#endif
    const char *admin_user = ctx->get_admin_user(ctx);
    const char *myprogname = ctx->get_progname(ctx);
 
@@ -527,12 +532,20 @@ do_report_request(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t *mo
       DRETURN_VOID;
    }
 
+#ifdef DO_LATE_LOCK 
    MONITOR_WAIT_TIME((type = eval_message_and_block(*aMsg)), monitor); 
+#else
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
+#endif
 
    sge_c_report(ctx, aMsg->snd_host, aMsg->snd_name, aMsg->snd_id, rep, monitor);
    lFreeList(&rep);
 
+#ifdef DO_LATE_LOCK 
    eval_atomic_end(type);
+#else
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+#endif
 
    DRETURN_VOID;
 } /* do_report_request */
@@ -621,6 +634,11 @@ static void do_c_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t 
 
    DENTER(TOP_LAYER, "do_c_ack");
 
+#ifdef DO_LATE_LOCK
+#else
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
+#endif
+
    /* Do some validity tests */
    while (pb_unused(&(aMsg->buf)) > 0) {
       if (cull_unpack_elem(&(aMsg->buf), &ack, NULL)) {
@@ -641,6 +659,10 @@ static void do_c_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t 
          */
          if (false == sge_security_verify_unique_identifier(true, admin_user, myprogname, 0,
                                                   aMsg->snd_host, aMsg->snd_name, aMsg->snd_id)) {
+#ifdef DO_LATE_LOCK
+#else
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE)
+#endif
             DRETURN_VOID;
          }
          /* an execd sends a job specific acknowledge ack_ulong == jobid of received job */
@@ -662,6 +684,11 @@ static void do_c_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t 
       }
       lFreeElem(&ack);
    }
+
+#ifdef DO_LATE_LOCK
+#else
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE)
+#endif
   
    DRETURN_VOID;
 }
@@ -681,7 +708,9 @@ static void sge_c_job_ack(sge_gdi_ctx_class_t *ctx, const char *host, const char
       DRETURN_VOID;
    }
 
+#ifdef DO_LATE_LOCK
    MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor); 
+#endif
 
    switch (ack_tag) {
    case ACK_SIGJOB:
@@ -693,13 +722,17 @@ static void sge_c_job_ack(sge_gdi_ctx_class_t *ctx, const char *host, const char
          /* ack_ulong is the jobid */
          if (!(jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), ack_ulong))) {
             ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKOWNJOB_U, sge_u32c(ack_ulong) ));
+#ifdef DO_LATE_LOCK
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+#endif
             DRETURN_VOID;
          }
          jatep = job_search_task(jep, NULL, ack_ulong2);
          if (jatep == NULL) {
             ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKNOWNTASKOFJOB_UU, sge_u32c(ack_ulong2), sge_u32c(ack_ulong)));
+#ifdef DO_LATE_LOCK
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+#endif
             DRETURN_VOID;
          }
 
@@ -745,7 +778,9 @@ static void sge_c_job_ack(sge_gdi_ctx_class_t *ctx, const char *host, const char
 
          if (qinstance == NULL) {
             ERROR((SGE_EVENT, MSG_COM_ACK_QUEUE_S, ack_str));
+#ifdef DO_LATE_LOCK
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+#endif
             DRETURN_VOID;
          }
       
@@ -763,7 +798,9 @@ static void sge_c_job_ack(sge_gdi_ctx_class_t *ctx, const char *host, const char
       ERROR((SGE_EVENT, MSG_COM_ACK_UNKNOWN));
    }
 
+#ifdef DO_LATE_LOCK
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+#endif
    
    DRETURN_VOID;
 }

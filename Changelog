@@ -1,3 +1,11 @@
+AH-2008-01-30-0: Bugfix:    Healed reserveration scheduling: Parts of 
+                            AH-2007-10-10-0 got lost due to the move of 
+                            daemons/schedd/scheduler.c to 
+                            daemons/qmaster/sge_sched_thread.c somewhen 
+                            in the process of the scheduler-as-a-thread 
+                            workpackage.
+                 Review:    RD
+
 MD-2008-01-29-0: Bugfix:    o qhost -l h=<hostname> does not work
                  Bugster:   4680766
                  Issue:     245

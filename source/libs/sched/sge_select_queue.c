@@ -137,13 +137,11 @@ static dispatch_t
 parallel_tag_queues_suitable4job(sge_assignment_t *assignment, category_use_t *use_category, int *available_slots);
 
 static dispatch_t 
-parallel_global_slots(const sge_assignment_t *a, int *slots, int *slots_qend, 
-                     int *violations);
+parallel_global_slots(const sge_assignment_t *a, int *slots, int *slots_qend);
 
 static dispatch_t
 parallel_tag_hosts_queues(sge_assignment_t *a, lListElem *hep, int *slots, 
-                   int *slots_qend, int host_soft_violations, bool *master_host, int *host_seqno, 
-                   double *previous_load, bool *previous_load_inited, category_use_t *use_category,
+                   int *slots_qend, bool *master_host, category_use_t *use_category,
                    lList **unclear_cqueue_list);
 
 #ifdef SOLARIS
@@ -156,7 +154,7 @@ parallel_max_host_slots(sge_assignment_t *a, lListElem *host);
 
 static dispatch_t
 parallel_queue_slots(sge_assignment_t *a,lListElem *qep, int *slots, int *slots_qend, 
-                    int *violations, bool allow_non_requestable);
+                    bool allow_non_requestable);
 
 static 
 void clean_up_parallel_job(sge_assignment_t *a); 
@@ -1368,7 +1366,6 @@ rc_time_by_slots(const sge_assignment_t *a, lList *requested, lList *load_attr, 
    if (slots == -1) {
       slots = 1;
    }   
-
    /* explicit requests */
    for_each (attr, requested) {
       const char *attr_name = lGetString(attr, CE_name);
@@ -3602,16 +3599,12 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
    lListElem *job = a->job;
    bool need_master_host = (lGetList(job, JB_master_hard_queue_list) != NULL) ? true : false;
 
-   int global_soft_violations = 0;
    int accu_host_slots, accu_host_slots_qend;
    bool have_master_host, have_master_host_qend, suited_as_master_host, suited_as_master_host_qend = false;
    lListElem *hep;
    dispatch_t best_result = DISPATCH_NEVER_CAT; 
    int gslots = a->slots;
    int gslots_qend = 0;
-   int host_seqno = 0;
-   double previous_load = 0.0;
-   bool previous_load_inited = false;
    int allocation_rule, minslots;
    dstring rule_name = DSTRING_INIT;
    dstring rue_name = DSTRING_INIT;
@@ -3630,7 +3623,7 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
    clean_monitor_alp();
 
    if (lGetUlong(a->job, JB_ar) == 0) {
-      parallel_global_slots(a, &gslots, &gslots_qend, &global_soft_violations); 
+      parallel_global_slots(a, &gslots, &gslots_qend); 
    }
 
    if (gslots < a->slots) {
@@ -3729,9 +3722,8 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
 
             if (lGetElemHost(a->queue_list, QU_qhostname, eh_name)) {
 
-               parallel_tag_hosts_queues(a, hep, &hslots, &hslots_qend, global_soft_violations, 
-                   &suited_as_master_host, &host_seqno, &previous_load, &previous_load_inited, use_category,
-                   &unclear_cqueue_list);
+               parallel_tag_hosts_queues(a, hep, &hslots, &hslots_qend, 
+                   &suited_as_master_host, use_category, &unclear_cqueue_list);
 
                if (hslots >= minslots) {
                   /* Now RQ limit debitation can be performed for each queue instance based on QU_tag.
@@ -3898,8 +3890,6 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                }
 
                /* tag full amount or zero */
-               lSetUlong(hep, EH_tagged, hslots); 
-               lSetUlong(hep, EH_master_host, suited_as_master_host?1:0); 
                have_master_host |= suited_as_master_host;
                have_master_host_qend |= suited_as_master_host_qend;
             }
@@ -4012,8 +4002,8 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
 *  RESULT
 *******************************************************************************/
 static dispatch_t 
-parallel_host_slots(sge_assignment_t *a, int *slots, int *slots_qend, int *host_soft_violations,
-                   lListElem *hep, bool allow_non_requestable) {
+parallel_host_slots(sge_assignment_t *a, int *slots, int *slots_qend, 
+      lListElem *hep, bool allow_non_requestable) {
 
    int hslots = 0, hslots_qend = 0;
    const char *eh_name;
@@ -4067,11 +4057,6 @@ parallel_host_slots(sge_assignment_t *a, int *slots, int *slots_qend, int *host_
    *slots = hslots;
    *slots_qend = hslots_qend;
 
-   if (host_soft_violations != NULL) {
-      *host_soft_violations= compute_soft_violations(a, NULL,*host_soft_violations, load_list, config_attr, 
-                                                 actual_attr, DOMINANT_LAYER_HOST, 0, HOST_TAG);
-   }      
-
    if (result == DISPATCH_OK) {
       DPRINTF(("\tparallel_host_slots(%s) returns %d/%d\n", eh_name, hslots, hslots_qend));
    } 
@@ -4124,9 +4109,6 @@ parallel_host_slots(sge_assignment_t *a, int *slots, int *slots_qend, int *host_
 *     int *slots_qend              - out: # free slots in the far far future
 *     int global_soft_violations   - # of global soft violations
 *     bool *master_host            - out: if true, found a master host
-*     int  *host_seqno             -  
-*     double *previous_load        -
-*     bool *previous_load_inited   -
 *     category_use_t *use_category - int/out : how to use the job category
 *
 *  RESULT
@@ -4140,9 +4122,7 @@ parallel_host_slots(sge_assignment_t *a, int *slots, int *slots_qend, int *host_
 *******************************************************************************/
 static dispatch_t
 parallel_tag_hosts_queues(sge_assignment_t *a, lListElem *hep, int *slots, int *slots_qend, 
-                          int global_soft_violations, bool *master_host, int *host_seqno, 
-                          double *previous_load, bool *previous_load_inited,
-                          category_use_t *use_category, 
+                          bool *master_host, category_use_t *use_category, 
                           lList **unclear_cqueue_list) 
 {
    bool suited_as_master_host = false;
@@ -4152,7 +4132,6 @@ parallel_tag_hosts_queues(sge_assignment_t *a, lListElem *hep, int *slots, int *
    int qslots, qslots_qend;
    int hslots = 0;
    int hslots_qend = 0;
-   int host_soft_violations, queue_soft_violations;
    const char *cqname, *qname, *eh_name = lGetHost(hep, EH_name);
    lListElem *qep, *next_queue; 
    dispatch_t result = DISPATCH_OK;
@@ -4167,10 +4146,8 @@ parallel_tag_hosts_queues(sge_assignment_t *a, lListElem *hep, int *slots, int *
       min_host_slots = max_host_slots = allocation_rule;
    }
 
-   host_soft_violations = global_soft_violations;
-
    if (lGetUlong(a->job, JB_ar) == 0) {
-      parallel_host_slots(a, &hslots, &hslots_qend, &host_soft_violations, hep, false);
+      parallel_host_slots(a, &hslots, &hslots_qend, hep, false);
    } else {
       lList *config_attr = lGetList(hep, EH_consumable_config_list);
       lList *actual_attr = lGetList(hep, EH_resource_utilization);
@@ -4257,21 +4234,10 @@ parallel_tag_hosts_queues(sge_assignment_t *a, lListElem *hep, int *slots, int *
             continue;
          }
          
-         queue_soft_violations = host_soft_violations;
-
          DPRINTF(("checking queue %s because cqueue %s is not rejected\n", qname, cqname));
-         result = parallel_queue_slots(a, qep, &qslots, &qslots_qend, &queue_soft_violations, false);
+         result = parallel_queue_slots(a, qep, &qslots, &qslots_qend, false);
 
          if (result == DISPATCH_OK && (qslots > 0 || qslots_qend > 0)) {
-
-            /* in case the load of two hosts is equal this
-               must be also reflected by the sequence number */
-            if (*previous_load_inited && (*previous_load < lGetDouble(hep, EH_sort_value))) {
-               (*host_seqno)++;
-            }   
-            *previous_load_inited = true;
-            *previous_load = lGetDouble(hep, EH_sort_value);
-            lSetUlong(qep, QU_host_seq_no, *host_seqno);
 
             /* could this host be a master host */
             if (!suited_as_master_host && lGetUlong(qep, QU_tagged4schedule)) {
@@ -4811,7 +4777,7 @@ parallel_assignment(sge_assignment_t *a, category_use_t *use_category, int *avai
 ******************************************************************************/
 static dispatch_t
 parallel_queue_slots(sge_assignment_t *a, lListElem *qep, int *slots, int *slots_qend, 
-                    int *violations, bool allow_non_requestable) 
+                    bool allow_non_requestable) 
 {
    lList *hard_requests = lGetList(a->job, JB_hard_resource_list);
    lList *config_attr = lGetList(qep, QU_consumable_config_list);
@@ -4884,11 +4850,6 @@ parallel_queue_slots(sge_assignment_t *a, lListElem *qep, int *slots, int *slots
 
       if ((gdil=lGetElemStr(a->gdil, JG_qname, lGetString(qep, QU_full_name))))
          qslots -= lGetUlong(gdil, JG_slots);
-
-      if (violations != NULL) {
-         *violations = compute_soft_violations(a, qep, *violations, NULL, config_attr, 
-                                           actual_attr, DOMINANT_LAYER_QUEUE, 0, QUEUE_TAG);
-      }
    }
 
 
@@ -5148,7 +5109,7 @@ sequential_global_time(u_long32 *start, const sge_assignment_t *a, int *violatio
 *                  -1 assignment will never be possible for all jobs of that category
 ******************************************************************************/
 static dispatch_t 
-parallel_global_slots(const sge_assignment_t *a, int *slots, int *slots_qend, int *violations)
+parallel_global_slots(const sge_assignment_t *a, int *slots, int *slots_qend)
 {
    dispatch_t result = DISPATCH_NEVER_CAT;
    lList *hard_request = lGetList(a->job, JB_hard_resource_list);
@@ -5181,11 +5142,6 @@ parallel_global_slots(const sge_assignment_t *a, int *slots, int *slots_qend, in
 
    *slots      = gslots;
    *slots_qend = gslots_qend;
-
-   if (violations != NULL) {
-      *violations = compute_soft_violations(a, NULL, *violations, load_attr, config_attr, 
-                                        actual_attr, DOMINANT_LAYER_GLOBAL, 0, GLOBAL_TAG);
-   }
 
    if (result == DISPATCH_OK) {
       DPRINTF(("\tparallel_global_slots() returns %d/%d\n", gslots, gslots_qend));

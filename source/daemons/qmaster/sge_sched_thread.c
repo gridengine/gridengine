@@ -132,7 +132,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
                     lList *pe_list, lList *ckpt_list, lList *centry_list, lList *host_list,
                     lList *acl_list, lList **user_list, lList **group_list, order_t *orders,
                     double *total_running_job_tickets, int *sort_hostlist, bool is_start,
-                    bool is_reserve, lList **load_list, lList *hgrp_list, lList *rqs_list,
+                    bool is_reserve, bool is_schedule_based, lList **load_list, lList *hgrp_list, lList *rqs_list,
                     lList *ar_list);
 
 void st_set_flag_new_global_conf(bool new_value)
@@ -426,6 +426,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
                                 /* e.g. if load correction was computed */
    int nr_pending_jobs=0;
    int max_reserve = sconf_get_max_reservations();
+   bool is_schedule_based = (max_reserve > 0) ? true: false;
 
    DENTER(TOP_LAYER, "dispatch_jobs");
 
@@ -783,6 +784,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
                   &sort_hostlist,
                   is_start,
                   is_reserve,
+                  is_schedule_based,
                   &consumable_load_list,
                   lists->hgrp_list,
                   lists->rqs_list,
@@ -988,7 +990,7 @@ static dispatch_t
 select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, lListElem *ja_task,
                     lList *pe_list, lList *ckpt_list, lList *centry_list, lList *host_list, lList *acl_list,
                     lList **user_list, lList **group_list, order_t *orders, double *total_running_job_tickets,
-                    int *sort_hostlist, bool is_start,  bool is_reserve, lList **load_list, lList *hgrp_list,
+                    int *sort_hostlist, bool is_start,  bool is_reserve, bool is_schedule_based, lList **load_list, lList *hgrp_list,
                     lList *rqs_list, lList *ar_list)
 {
    lListElem *granted_el;
@@ -1001,6 +1003,8 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
 
    assignment_init(&a, job, ja_task, true);
    a.queue_list       = *queue_list;
+
+
    a.host_list        = host_list;
    a.centry_list      = centry_list;
    a.acl_list         = acl_list;
@@ -1015,8 +1019,17 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
       DRETURN(DISPATCH_NEVER_CAT);
    }
 
+   if (is_reserve) {
+      if (*queue_list == NULL) { 
+         *queue_list = lCreateList("temp queue", lGetListDescr(*dis_queue_list));
+         a.queue_list       = *queue_list;
+      }
+      a.care_reservation = is_computed_reservation = true;
+      lAppendList(*queue_list, *dis_queue_list);
+   }
 
    a.duration = duration_add_offset(a.duration, sconf_get_duration_offset());
+   a.is_schedule_based = is_schedule_based;
 
    /*------------------------------------------------------------------ 
     * seek for ckpt interface definition requested by the job 
@@ -1050,15 +1063,6 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
 
          a.start = DISPATCH_TIME_NOW;
          a.is_reservation = false;
-         if (is_reserve) {
-            if (*queue_list == NULL) {
-               *queue_list = lCreateList("temp queue", lGetListDescr(*dis_queue_list));
-               a.queue_list       = *queue_list;
-            }
-            is_computed_reservation = true;
-            lAppendList(*queue_list, *dis_queue_list);
-         }
-
          result = sge_select_parallel_environment(&a, pe_list);
       }
 
@@ -1070,6 +1074,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
             is_computed_reservation = true;
             a.start = DISPATCH_TIME_QUEUE_END;
             a.is_reservation = true;
+            assignment_clear_cache(&a);
 
             result = sge_select_parallel_environment(&a, pe_list);
 
@@ -1096,14 +1101,6 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
 
          a.start = DISPATCH_TIME_NOW;
          a.is_reservation = false;
-         if (is_reserve) {
-            is_computed_reservation = true;
-            if (*queue_list == NULL) {
-               *queue_list  = lCreateList("temp queue", lGetListDescr(*dis_queue_list));
-               a.queue_list = *queue_list;
-            }
-            lAppendList(*queue_list, *dis_queue_list);
-         }
          result = sge_sequential_assignment(&a);
 
          DPRINTF(("sge_sequential_assignment(immediate) returned %d\n", result));
@@ -1117,6 +1114,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
                   a.job_id, a.ja_task_id, a.duration));
             a.start = DISPATCH_TIME_QUEUE_END;
             a.is_reservation = true;
+            assignment_clear_cache(&a);
 
             result = sge_sequential_assignment(&a);
             if (result == DISPATCH_OK) {

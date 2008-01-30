@@ -207,10 +207,10 @@ int scheduler_method(sge_evc_class_t *evc, lList **answer_list, scheduler_all_da
    split_jobs(&(lists->job_list), NULL, lists->all_queue_list,
               mconf_get_max_aj_instances(), splitted_job_lists, false);
 
-   { /* add global queue messages */
-      lList *qlp;
-      lCondition *where;
-      lEnumeration *what;
+   if (lists->all_queue_list != NULL) { /* add global queue messages */
+      lList *qlp = NULL;
+      lCondition *where = NULL;
+      lEnumeration *what = NULL;
       const lDescr *dp = lGetListDescr(lists->all_queue_list);
       lListElem *mes_queues;
 
@@ -227,7 +227,7 @@ int scheduler_method(sge_evc_class_t *evc, lList **answer_list, scheduler_all_da
          QU_state, QI_AMBIGUOUS,
          QU_state, QI_UNKNOWN);         /* only known queues              */
 
-      if (!what || !where) {
+      if (what == NULL || where == NULL) {
          DPRINTF(("failed creating where or what describing non available queues\n"));
       } else {
          qlp = lSelect("", lists->all_queue_list, where, what);

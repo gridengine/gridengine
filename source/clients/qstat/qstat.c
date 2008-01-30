@@ -467,9 +467,8 @@ u_long32 *isXML
    /* Loop over all options. Only valid options can be in the
       ppcmdline list. 
    */
-   while(lGetNumberOfElem(*ppcmdline))
-   {
-      if(parse_flag(ppcmdline, "-help",  &alp, &helpflag)) {
+   while (lGetNumberOfElem(*ppcmdline)) {
+      if (parse_flag(ppcmdline, "-help",  &alp, &helpflag)) {
          usageshowed = qstat_usage(qstat_env->qselect_mode, stdout, NULL);
          DEXIT;
          SGE_EXIT(NULL, 0);

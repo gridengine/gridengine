@@ -156,7 +156,7 @@ lListElem *new_ep,
 int nm,
 char *attr_name 
 ) {
-   DENTER(TOP_LAYER, "attr_mod_str");
+   DENTER(TOP_LAYER, "attr_mod_zerostr");
 
    /* ---- attribute nm */
    if (lGetPosViaElem(qep, nm, SGE_NO_ABORT)>=0) {
@@ -234,8 +234,7 @@ char *attr_name
       lSetBool(new_ep, nm, lGetBool(qep, nm));
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /* raw ulongs without any verification */       

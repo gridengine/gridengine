@@ -263,7 +263,7 @@ static void client_check_window_change(COMMUNICATION_HANDLE *handle)
                             WINDOW_SIZE_CTRL_MSG, &err_msg);
       } else {
          DPRINTF(("client_check_windows_change: ioctl() failed! "
-            "sending dummy WINDOWS_SIZE_CTRL_MSG to fullfill protocol.\n"));
+            "sending dummy WINDOW_SIZE_CTRL_MSG to fullfill protocol.\n"));
          sprintf(buf, "WS 60 80 480 640");
          comm_write_message(handle, g_hostname, OTHERCOMPONENT, 1,
             (unsigned char*)buf, strlen(buf), WINDOW_SIZE_CTRL_MSG, &err_msg);
@@ -432,14 +432,15 @@ void* commlib_to_tty(void *t_conf)
       recv_mess.data = NULL;
 
       ret = comm_trigger(g_comm_handle, 1, &err_msg);
-      DPRINTF(("commlib_to_tty: cl_commlib_trigger returned %d\n", ret));
+      DPRINTF(("commlib_to_tty: comm_trigger() returned %d, %s\n",
+              ret, &err_msg));
 
       DPRINTF(("commlib_to_tty: recv_message()\n"));
       ret = comm_recv_message(g_comm_handle, CL_FALSE, &recv_mess, &err_msg);
       if (ret != COMM_RETVAL_OK) {
          /* check if we are still connected to anybody. */
          /* if not - exit. */
-         DPRINTF(("commlib_to_tty: received unknown message: %s\n", 
+         DPRINTF(("commlib_to_tty: error receiving message: %s\n", 
                   sge_dstring_get_string(&err_msg)));
          if (comm_get_connection_count(g_comm_handle, &err_msg) == 0) {
             DPRINTF(("commlib_to_tty: no endpoint found\n"));
@@ -494,8 +495,9 @@ void* commlib_to_tty(void *t_conf)
                   DPRINTF(("commlib_to_tty: received register message!\n"));
                   /* Send the settings in response */
                   sprintf(buf, "noshell = %d", g_noshell);
-                  comm_write_message(g_comm_handle, g_hostname, OTHERCOMPONENT, 1,
+                  ret = (int)comm_write_message(g_comm_handle, g_hostname, OTHERCOMPONENT, 1,
                      (unsigned char*)buf, strlen(buf)+1, SETTINGS_CTRL_MSG, &err_msg);
+                  DPRINTF(("commlib_to_tty: sent SETTINGS_CTRL_MSG, ret = %d\n", ret));
                }
                break;
             case UNREGISTER_CTRL_MSG:
@@ -583,7 +585,6 @@ int do_server_loop(int random_poll, u_long32 job_id, int nostdin,
       DPRINTF(("can't set terminal to raw mode: %s (%d)\n",
          strerror(ret), ret));
       /* continue with terminal in un-raw mode */
-      /*goto cleanup;*/
    }
 
    /*

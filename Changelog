@@ -1,3 +1,7 @@
+HP-2008-01-31-2: Bugfix:    Fixed some bugs in new IJS in shut down procedures
+                 Changed:   qsh, shepherd
+                 Review:    MD
+
 HP-2008-01-31-1: Bugfix:    Fixed broken build on Irix65 after checkin RD-2008-01-31-0
                  Changed:   sge_resource_quota_qmaster.c
 

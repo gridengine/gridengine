@@ -45,7 +45,6 @@
 #include <sys/timeb.h>
 #include <sys/resource.h>
 
-
 #if defined(DARWIN)
 #  include <termios.h>
 #  include <sys/ttycom.h>
@@ -76,21 +75,11 @@
 
 #define RESPONSE_MSG_TIMEOUT 120
 
-/* Enable this to redirect DPRINTFs to the shepherd trace file */
-#if 0
-#if defined(DPRINTF)
-#undef DPRINTF
-#endif
-#define DPRINTF(msg) my_error_printf msg
-#endif
-
 /* copy from shepherd.c */
 #define CKPT_REST_KERNEL 0x080     /* set for all restarted kernel ckpt jobs */
 /* end copy from shepherd.c */
 
-
 extern int received_signal;
-/*extern volatile sig_atomic_t received_signal;*/
 
 int my_error_printf(const char *fmt, ...);
 
@@ -242,14 +231,15 @@ int send_buf(char *pbuf, int buf_bytes, int message_type)
 
    DENTER(TOP_LAYER, "send_buf");
 
-   DPRINTF(("writing to commlib: %d bytes: %s\n", buf_bytes, pbuf));
    if (comm_write_message(g_comm_handle, g_hostname, 
       OTHERCOMPONENT, 1, (unsigned char*)pbuf, 
       (unsigned long)buf_bytes, message_type, &err_msg) != buf_bytes) {
-      DPRINTF(("couldn't write all data: %s\n", sge_dstring_get_string(&err_msg)));
+      shepherd_trace_sprintf("couldn't write all data: %s\n", 
+                             sge_dstring_get_string(&err_msg));
       ret = 1;
    } else {
-      DPRINTF(("successfully wrote all data: %s\n", sge_dstring_get_string(&err_msg)));
+      shepherd_trace_sprintf("successfully wrote all data: %s\n", 
+                             sge_dstring_get_string(&err_msg));
    }
 
    sge_dstring_free(&err_msg);
@@ -312,7 +302,7 @@ static void* pty_to_commlib(void *t_conf)
    /* Set this thread to be cancelled (=killed) at any time. */
    thread_setcancelstate(1);
 
-   /* Allocate working buffer, BUFSIZE = 64k */
+   /* Allocate working buffers, BUFSIZE = 64k */
    stdout_buf = sge_malloc(BUFSIZE);
    stderr_buf = sge_malloc(BUFSIZE);
 
@@ -380,72 +370,49 @@ static void* pty_to_commlib(void *t_conf)
       /* Do this only if commlib doesn't have many messages to send in it's
        * queue. Otherwise, don't read from pty and don't send to commlib.
        */
-#if 0
-{
-struct timeb ts;
-ftime(&ts);
-shepherd_trace_sprintf("pty_to_comlib: timestamp1: %d.%03d ++++", (int)ts.time, (int)ts.millitm);
-}
       comm_trigger(g_comm_handle, 0, &err_msg);
-      shepherd_trace_sprintf("pty_to_commlib: messages_in_send_queue(): %d", 
-         messages_in_send_queue(g_comm_handle));
-      if (messages_in_send_queue(g_comm_handle) < 5) {
-#endif
-         if (g_ptym != -1) {
-            FD_SET(g_ptym, &read_fds);
-         }
-         if (g_fd_pipe_out[0] != -1) {
-            FD_SET(g_fd_pipe_out[0], &read_fds);
-         }
-         if (g_fd_pipe_err[0] != -1) {
-            FD_SET(g_fd_pipe_err[0], &read_fds);
-         }
-         fd_max = MAX(g_ptym, g_fd_pipe_out[0]);
-         fd_max = MAX(fd_max, g_fd_pipe_err[0]);
-
-         shepherd_trace_sprintf("pty_to_commlib: g_ptym = %d, g_fd_pipe_out[0] = %d, "
-                                "g_fd_pipe_err[0] = %d, fd_max = %d",
-                                g_ptym, g_fd_pipe_out[0], g_fd_pipe_err[0], fd_max);
-
-         /* Fill timeout struct for select */
-         b_select_timeout = false;
-         if (do_exit == 1) {
-            /* If we know that we have to exit, don't wait for data,
-             * just peek into the fds and read all data available from the buffers. */
-            timeout.tv_sec  = 0;
-            timeout.tv_usec = 0;
-         } else {
-            if (stdout_bytes > 0 && stdout_bytes < 256) {
-               /* 
-                * If we just received few data, wait another 10 milliseconds if new 
-                * data arrives to avoid sending data over the network in too small junks.
-                */
-               timeout.tv_sec  = 0;
-               timeout.tv_usec = 10000;
-            } else {
-               /* Standard timeout is one second */
-               timeout.tv_sec = 1;
-               timeout.tv_usec = 0;
-            }
-         }
-#if 0
-     } else {
-         timeout.tv_sec = 0;
-         timeout.tv_usec = 1000;
+      if (g_ptym != -1) {
+         FD_SET(g_ptym, &read_fds);
       }
-#endif
+      if (g_fd_pipe_out[0] != -1) {
+         FD_SET(g_fd_pipe_out[0], &read_fds);
+      }
+      if (g_fd_pipe_err[0] != -1) {
+         FD_SET(g_fd_pipe_err[0], &read_fds);
+      }
+      fd_max = MAX(g_ptym, g_fd_pipe_out[0]);
+      fd_max = MAX(fd_max, g_fd_pipe_err[0]);
 
-#if 0
-{
-struct timeb ts;
-ftime(&ts);
-shepherd_trace_sprintf("+++++ timestamp2: %d.%03d ++++", (int)ts.time, (int)ts.millitm);
-}
-#endif
+      shepherd_trace_sprintf("pty_to_commlib: g_ptym = %d, g_fd_pipe_out[0] = %d, "
+                             "g_fd_pipe_err[0] = %d, fd_max = %d",
+                             g_ptym, g_fd_pipe_out[0], g_fd_pipe_err[0], fd_max);
+
+      /* Fill timeout struct for select */
+      b_select_timeout = false;
+      if (do_exit == 1) {
+         /* If we know that we have to exit, don't wait for data,
+          * just peek into the fds and read all data available from the buffers. */
+         timeout.tv_sec  = 0;
+         timeout.tv_usec = 0;
+      } else {
+         if (stdout_bytes > 0 && stdout_bytes < 256) {
+            /* 
+             * If we just received few data, wait another 10 milliseconds if new 
+             * data arrives to avoid sending data over the network in too small junks.
+             */
+            timeout.tv_sec  = 0;
+            timeout.tv_usec = 10000;
+         } else {
+            /* Standard timeout is one second */
+            timeout.tv_sec = 1;
+            timeout.tv_usec = 0;
+         }
+      }
       shepherd_trace_sprintf("pty_to_commlib: doing select() with %d seconds, "
                              "%d usec timeout", timeout.tv_sec, timeout.tv_usec);
 
       /* Wait blocking for data from pty or pipe */
+      errno = 0;
       ret = select(fd_max+1, &read_fds, NULL, NULL, &timeout);
       shepherd_trace_sprintf("pty_to_commlib: select() returned %d", ret);
       if (ret < 0) {
@@ -453,8 +420,13 @@ shepherd_trace_sprintf("+++++ timestamp2: %d.%03d ++++", (int)ts.time, (int)ts.m
          shepherd_trace_sprintf("pty_to_commlib: select() returned %d, reason: %d, %s",
                                 ret, errno, strerror(errno));
          if (errno == EINTR) {
-            /* Just continue, the top of the loop will handle signals */
+            /* If we have a buffer, send it now (as we don't want to care about
+             * how long we acutally waited), then just continue, the top of the 
+             * loop will handle signals.
+             * b_select_timeout tells the bottom of the loop to send the buffer.
+             */
             shepherd_trace("pty_to_commlib: continuing to handle signal");
+            b_select_timeout = true;
          } else {
             shepherd_trace("pty_to_commlib: select() error -> exiting");
             do_exit = 1;
@@ -491,8 +463,8 @@ shepherd_trace_sprintf("+++++ timestamp2: %d.%03d ++++", (int)ts.time, (int)ts.m
          shepherd_trace_sprintf("pty_to_commlib: appended %d bytes to buffer", ret);
          if (ret < 0) {
             /* A fd was closed, likely our child has exited, we can exit, too. */
-            shepherd_trace_sprintf("pty_to_commlib: append_to_buf() returned %d "
-                                   "-> exiting", ret);
+            shepherd_trace_sprintf("pty_to_commlib: append_to_buf() returned %d, "
+                                   "errno %d, %s -> exiting", ret, errno, strerror(errno));
             do_exit = 1;
          }
       }
@@ -513,7 +485,7 @@ shepherd_trace_sprintf("+++++ timestamp2: %d.%03d ++++", (int)ts.time, (int)ts.m
        * OR if we will exit the loop now and there is data in the stdout_buf
        */
       if (stdout_bytes >= 256 ||
-          b_select_timeout == true ||
+          (b_select_timeout == true && stdout_bytes > 0) ||
           (do_exit == 1 && stdout_bytes > 0)) {
          ret = send_buf(stdout_buf, stdout_bytes, STDOUT_DATA_MSG);
          stdout_bytes = 0;
@@ -531,7 +503,7 @@ shepherd_trace_sprintf("+++++ timestamp2: %d.%03d ++++", (int)ts.time, (int)ts.m
 
 /* TODO: This could cause race conditions in the main thread, replace with pthread_condition */
    shepherd_trace("pty_to_commlib: raising event for main thread");
-   g_raised_event = 1;
+   g_raised_event = 2;
    thread_trigger_event(&g_thread_main);
    sge_dstring_free(&err_msg);
 
@@ -592,13 +564,6 @@ static void* commlib_to_pty(void *t_conf)
    }
 
    while (do_exit == 0) {
-#if 0
-{
-struct timeb ts;
-ftime(&ts);
-shepherd_trace_sprintf("+++++ timestampC1: %d.%03d ++++", (int)ts.time, (int)ts.millitm);
-}
-#endif
       /* 
        * Check if the thread was cancelled. Exit thread if it was.
        * It shouldn't be neccessary to do the check here, as the cancel state 
@@ -607,31 +572,24 @@ shepherd_trace_sprintf("+++++ timestampC1: %d.%03d ++++", (int)ts.time, (int)ts.
        */
       DPRINTF(("commlib_to_pty: cl_thread_func_testcancel()\n"));
       thread_testcancel(t_conf);
-#if 0
-{
-struct timeb ts;
-ftime(&ts);
-shepherd_trace_sprintf("+++++ timestampC2: %d.%03d ++++", (int)ts.time, (int)ts.millitm);
-}
-#endif
+
       /* wait blocking for a message from commlib */
       recv_mess.cl_message = NULL;
       recv_mess.data       = NULL;
       sge_dstring_free(&err_msg);
-      ret = comm_recv_message(g_comm_handle, CL_TRUE, &recv_mess, &err_msg);
+      sge_dstring_sprintf(&err_msg, "");
 
-      if (g_raised_event == 1) {
+      ret = cl_commlib_trigger(g_comm_handle, 1);
+      ret = comm_recv_message(g_comm_handle, CL_FALSE, &recv_mess, &err_msg);
+      shepherd_trace_sprintf("commlib_to_pty: comm_recv_message() returned %d, err_msg: %s",
+         ret, sge_dstring_get_string(&err_msg));
+
+      if (g_raised_event != 0) {
+         shepherd_trace("commlib_to_pty: received event -> exiting");
          DEXIT;
          return NULL;
       }
 
-#if 0
-{
-struct timeb ts;
-ftime(&ts);
-shepherd_trace_sprintf("+++++ timestampC3: %d.%03d ++++", (int)ts.time, (int)ts.millitm);
-}
-#endif
       if (ret != COMM_RETVAL_OK) {
          /* handle error cases */
          switch (ret) {
@@ -665,26 +623,29 @@ shepherd_trace_sprintf("+++++ timestampC3: %d.%03d ++++", (int)ts.time, (int)ts.
             case COMM_CANT_TRIGGER:
                shepherd_trace("commlib_to_pty: can't trigger communication, likely the "
                         "communication was shut down by other thread -> exiting");
-               shepherd_trace_sprintf("commlib_to_pty: err_msg of trigger: %s", 
-                        sge_dstring_get_string(&err_msg));
-               shepherd_trace_sprintf("commlib_to_pty: g_comm_handle = %p", g_comm_handle);
-               shepherd_trace_sprintf("commlib_to_pty: connect_port  = %d", g_comm_handle->connect_port);
-               shepherd_trace_sprintf("commlib_to_pty: service_port  = %d", g_comm_handle->service_port);
+               shepherd_trace_sprintf("commlib_to_pty: err_msg: %s",
+                                      sge_dstring_get_string(&err_msg));
                do_exit = 1;
                break;
             case COMM_CANT_RECEIVE_MESSAGE:
-               DPRINTF(("commlib_to_pty: can't receive message -> trying again\n"));
-               shepherd_trace("commlib_to_pty: can't receive message -> trying again");
+               if (check_client_alive(g_comm_handle, &err_msg) != COMM_RETVAL_OK) {
+                  shepherd_trace("commlib_to_pty: not connected any more -> exiting.");
+                  do_exit = 1;
+               } else {
+                  shepherd_trace_sprintf("commlib_to_pty: can't receive message, reason: %s "
+                                          "-> trying again", 
+                                          sge_dstring_get_string(&err_msg));
+               }
                b_was_connected = 1;
                break;
             case COMM_GOT_TIMEOUT:
                DPRINTF(("commlib_to_pty: got timeout -> trying again\n"));
                shepherd_trace("commlib_to_pty: got timeout -> trying again");
-               shepherd_trace("commlib_to_pty: sleeping for 1 second");
                b_was_connected = 1;
                break;
             case COMM_SELECT_INTERRUPT:
                /* Don't do tracing here */
+               /* shepherd_trace("commlib_to_pty: interrupted select"); */
                b_was_connected = 1;
                break;
             default:
@@ -701,40 +662,40 @@ shepherd_trace_sprintf("+++++ timestampC3: %d.%03d ++++", (int)ts.time, (int)ts.
          switch (recv_mess.type) {
             case STDIN_DATA_MSG:
                /* data message, write data to stdin of child */
-               DPRINTF(("commlib_to_pty: received data message\n"));
-               DPRINTF(("commlib_to_pty: writing data to stdin of child, length = %d\n",
-                  recv_mess.cl_message->message_length-1));
+               shepherd_trace("commlib_to_pty: received data message");
+               shepherd_trace_sprintf("commlib_to_pty: writing data to stdin of child, "
+                                 "length = %d", recv_mess.cl_message->message_length-1);
 
                if (writen(fd_write,  
                           recv_mess.data, 
                           recv_mess.cl_message->message_length-1) 
                       != recv_mess.cl_message->message_length-1) {
-                  DPRINTF(("commlib_to_pty: error writing to stdin of "
-                           "child: %d, %s\n", errno, strerror(errno)));
+                  shepherd_trace_sprintf("commlib_to_pty: error writing to stdin of "
+                           "child: %d, %s", errno, strerror(errno));
                }
                b_was_connected = 1;
                break;
 
             case WINDOW_SIZE_CTRL_MSG:
                /* control message, set size of pty */
-               DPRINTF(("commlib_to_pty: received window size message, "
-                  "changing window size\n"));
+               shepherd_trace("commlib_to_pty: received window size message, "
+                  "changing window size");
                ioctl(g_ptym, TIOCSWINSZ, &(recv_mess.ws));
                b_was_connected = 1;
                break;
             case SETTINGS_CTRL_MSG:
                /* control message */
-               DPRINTF(("commlib_to_pty: recevied settings message\n"));
+               shepherd_trace("commlib_to_pty: recevied settings message\n");
                /* Forward the settings to the child process.
                 * This is also tells the child process that it can start
                 * the job 'in' the pty now.
                 */
-               DPRINTF(("commlib_to_pty: writing to child %d bytes: %s\n",
-                        strlen(recv_mess.data), recv_mess.data));
+               shepherd_trace_sprintf("commlib_to_pty: writing to child %d bytes: %s",
+                        strlen(recv_mess.data), recv_mess.data);
                if (write(g_fd_pipe_to_child[1], recv_mess.data, 
                          strlen(recv_mess.data)) != strlen(recv_mess.data)) {
-                  DPRINTF(("commlib_to_pty: error in communicating "
-                     "with child -> exiting\n"));
+                  shepherd_trace("commlib_to_pty: error in communicating "
+                     "with child -> exiting");
                   do_exit = 1;
                }
                b_was_connected = 1;
@@ -749,12 +710,12 @@ shepherd_trace_sprintf("+++++ timestampC3: %d.%03d ++++", (int)ts.time, (int)ts.
 
    sge_dstring_free(&err_msg);
 
-   DPRINTF(("commlib_to_pty: leaving commlib_to_pty function\n"));
+   shepherd_trace("commlib_to_pty: leaving commlib_to_pty function\n");
    thread_func_cleanup(t_conf);
 /* TODO: pthread_condition, see other thread*/
 
    shepherd_trace("commlib_to_pty: raising event for main thread");
-   g_raised_event = 1;
+   g_raised_event = 3;
    thread_trigger_event(&g_thread_main);
 
    shepherd_trace("commlib_to_pty: leaving commlib_to_pty thread");
@@ -815,33 +776,32 @@ int parent_loop(char *hostname, int port, int ptym,
    /*
     * Open the connection port so we can connect to our server
     */
-   DPRINTF(("main: opening connection to qrsh/qlogin client\n"));
    shepherd_trace("main: opening connection to qrsh/qlogin client");
    ret = comm_open_connection(false, port, THISCOMPONENT, g_csp_mode, user_name,
                               &g_comm_handle, err_msg);
    if (ret != COMM_RETVAL_OK) {
-      DPRINTF(("main: can't open commlib stream\n"));
+      shepherd_trace("main: can't open commlib stream");
       return 1;
    }
-   DPRINTF(("main: g_comm_handle = %p\n", g_comm_handle));
-   DPRINTF(("main: err_msg = %s\n", sge_dstring_get_string(err_msg) != NULL ? 
-      sge_dstring_get_string(err_msg): "<null>"));
+   shepherd_trace_sprintf("main: g_comm_handle = %p", g_comm_handle);
+   shepherd_trace_sprintf("main: err_msg = %s", sge_dstring_get_string(err_msg) != NULL ? 
+      sge_dstring_get_string(err_msg): "<null>");
 
    /*
     * register at server. The answer of the server (a WINDOW_SIZE_CTRL_MSG)
     * will be handled in the commlib_to_pty thread.
     */
-   DPRINTF(("main: sending REGISTER_CTRL_MSG\n"));
+   shepherd_trace("main: sending REGISTER_CTRL_MSG");
    ret = (int)comm_write_message(g_comm_handle, g_hostname, OTHERCOMPONENT, 1, 
                       (unsigned char*)" ", 1, REGISTER_CTRL_MSG, err_msg);
    if (ret == 0) {
       /* No bytes written - error */
-      DPRINTF(("main: can't send REGISTER_CTRL_MSG\n"));
-      DPRINTF(("main: comm_write_message returned: %s\n", 
-               sge_dstring_get_string(err_msg)));
+      shepherd_trace("main: can't send REGISTER_CTRL_MSG");
+      shepherd_trace_sprintf("main: comm_write_message returned: %s", 
+               sge_dstring_get_string(err_msg));
       return 1;
    }
-   DPRINTF(("main: comm_write_message succeeded\n"));
+   shepherd_trace_sprintf("main: comm_write_message succeeded");
 
    /*
     * Setup thread list, setup this main thread so it can be triggered
@@ -865,7 +825,6 @@ int parent_loop(char *hostname, int port, int ptym,
                        "pty_to_commlib thread",
                        2,
                        pty_to_commlib);
-   DPRINTF(("created pty_to_commlib thread returned %d\n", ret));
    shepherd_trace_sprintf("created pty_to_commlib thread returned %d", ret);
 
    ret = create_thread(thread_lib_handle,
@@ -883,39 +842,12 @@ int parent_loop(char *hostname, int port, int ptym,
     * the server was shut down or the user application (likely the shell)
     * exited.
     */
-   DPRINTF(("main: waiting for event\n"));
    shepherd_trace("main: waiting for event");
    while (g_raised_event == 0) {
       ret = thread_wait_for_event(&g_thread_main, 0, 0);
    }
-   DPRINTF(("main: received event %d\n", ret));
-   shepherd_trace("main: received event");
-
-   shepherd_trace_sprintf("main: g_comm_handle == %p", g_comm_handle);
-
-   /*
-    * Wait for all messages to be sent
-    */
-   if (g_comm_handle != NULL) {
-      unsigned long elems = 0;
-
-      DPRINTF(("found connection, searching message list\n"));
-      shepherd_trace("main: found connection, searching message list");
-      do {
-         elems = 0;
-         ret = cl_commlib_trigger(g_comm_handle, 0);
-         DPRINTF(("cl_commlib_trigger returned %d\n", ret));
-         shepherd_trace_sprintf("main: cl_commlib_trigger() returned %d", ret);
-         elems = messages_in_send_queue(g_comm_handle);
-         if (elems > 0) {
-            DPRINTF(("message_list->elem_count = %ld\n",  elems));
-            shepherd_trace_sprintf("main: message_list->elem_count = %ld", elems);
-            if (elems > 0) {
-               usleep(10000);
-            }
-         }
-      } while (elems > 0);
-   }
+   DPRINTF(("main: received event %d, g_raised_event = %d\n", ret, g_raised_event));
+   shepherd_trace_sprintf("main: received event %d, g_raised_event = %d\n", ret, g_raised_event);
 
    /* 
     * One of the threads sent an event, so shut down both threads now
@@ -923,17 +855,9 @@ int parent_loop(char *hostname, int port, int ptym,
    DPRINTF(("main: shutting down pty_to_commlib thread\n"));
    shepherd_trace("main: shutting down pty_to_commlib thread\n");
    ret = thread_shutdown(thread_pty_to_commlib);
-/*
-   DPRINTF(("main: cl_thread_shutdown(pty_to_commlib) returned %d\n", ret));
-   shepherd_trace_sprintf("main: cl_thread_shutdown(pty_to_commlib) returned %d\n", ret);
-*/
    ret = thread_shutdown(thread_commlib_to_pty);
-/*
-   DPRINTF(("main: cl_thread_shutdown(commlib_to_pty) returned %d\n", ret));
    shepherd_trace_sprintf("main: cl_thread_shutdown(commlib_to_pty) returned %d\n", ret);
 
-   DPRINTF(("main: close(g_ptym)\n"));
-*/
    close(g_ptym);
 
    DPRINTF(("main: close(g_fd_pipe_in)\n"));
@@ -947,34 +871,38 @@ int parent_loop(char *hostname, int port, int ptym,
    /*
     * Wait until both threads have shut down
     */
-#if 0
-{
-struct timeb ts;
-ftime(&ts);
-shepherd_trace_sprintf("+++++ timestampA: %d.%03d ++++", (int)ts.time, (int)ts.millitm);
-}
-#endif
    DPRINTF(("main: cl_thread_join(thread_pty_to_commlib)\n"));
    thread_join(thread_pty_to_commlib);
 
 #if 0
-{
-struct timeb ts;
-ftime(&ts);
-shepherd_trace_sprintf("+++++ timestampA1: %d.%03d ++++", (int)ts.time, (int)ts.millitm);
-}
-#endif
-#if 0
    DPRINTF(("main: cl_thread_join(thread_commlib_to_pty)\n"));
    thread_join(thread_commlib_to_pty);
 #endif
-#if 0
-{
-struct timeb ts;
-ftime(&ts);
-shepherd_trace_sprintf("+++++ timestampB: %d.%03d ++++", (int)ts.time, (int)ts.millitm);
-}
-#endif
+   /*
+    * Wait for all messages to be sent
+    */
+   if (g_comm_handle != NULL) {
+      unsigned long elems = 0;
+
+      DPRINTF(("found connection, searching message list\n"));
+      shepherd_trace("main: found connection, searching message list");
+      do {
+         elems = 0;
+         ret = cl_commlib_trigger(g_comm_handle, 0);
+         DPRINTF(("cl_commlib_trigger returned %d\n", ret));
+         shepherd_trace_sprintf("main: cl_commlib_trigger() returned %d, %s", 
+                                ret, cl_get_error_text(ret));
+         elems = messages_in_send_queue(g_comm_handle);
+         if (elems > 0) {
+            DPRINTF(("message_list->elem_count = %ld\n",  elems));
+            shepherd_trace_sprintf("main: message_list->elem_count = %ld", elems);
+            if (elems > 0) {
+               usleep(10000);
+            }
+         }
+      } while (elems > 0);
+   }
+
    {
       int npid;
       int status;
@@ -986,13 +914,6 @@ shepherd_trace_sprintf("+++++ timestampB: %d.%03d ++++", (int)ts.time, (int)ts.m
    #if defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(INTERIX)
          npid = waitpid(-1, &status, 0);
    #else
-#if 0
-{
-struct timeb ts;
-ftime(&ts);
-shepherd_trace_sprintf("+++++ timestampC: %d.%03d ++++", (int)ts.time, (int)ts.millitm);
-}
-#endif
          npid = wait3(&status, 0, &tmp_usage);
          shepherd_trace_sprintf("---- main: status = %d, npid = %d ----", status, npid);
          if (npid == -1) {
@@ -1036,16 +957,19 @@ int close_parent_loop(int exit_status)
     * Send UNREGISTER_CTRL_MSG
     */
    snprintf(sz_exit_status, 20, "%d", exit_status);
-   DPRINTF(("sending UNREGISTER_CTRL_MSG with exit_status = \"%s\"\n", sz_exit_status));
-   DPRINTF(("sending to host: %s\n", g_hostname != NULL ? g_hostname : "<null>"));
+   shepherd_trace_sprintf("sending UNREGISTER_CTRL_MSG with exit_status = \"%s\"", 
+                          sz_exit_status);
+   shepherd_trace_sprintf("sending to host: %s", 
+                          g_hostname != NULL ? g_hostname : "<null>");
    ret = (int)comm_write_message(g_comm_handle, g_hostname,
       OTHERCOMPONENT, 1, (unsigned char*)sz_exit_status, strlen(sz_exit_status), 
       UNREGISTER_CTRL_MSG, &err_msg);
 
    if (ret != strlen(sz_exit_status)) {
-      DPRINTF(("comm_write_message returned: %s\n", sge_dstring_get_string(&err_msg)));
-      DPRINTF(("close_parent_loop: comm_write_message() returned %d instead of %d!!!\n",
-                ret, strlen(sz_exit_status)));
+      shepherd_trace_sprintf("comm_write_message returned: %s", 
+                             sge_dstring_get_string(&err_msg));
+      shepherd_trace_sprintf("close_parent_loop: comm_write_message() returned %d "
+                             "instead of %d!!!", ret, strlen(sz_exit_status));
    }
 
    /*
@@ -1055,16 +979,16 @@ int close_parent_loop(int exit_status)
       int                  count = 0;
       recv_message_t       recv_mess;
 
-      DPRINTF(("waiting for UNREGISTER_RESPONSE_CTRL_MSG\n"));
+      shepherd_trace("waiting for UNREGISTER_RESPONSE_CTRL_MSG");
       while (count < RESPONSE_MSG_TIMEOUT) {
          ret = comm_recv_message(g_comm_handle, CL_TRUE, &recv_mess, &err_msg);
          if (ret == COMM_GOT_TIMEOUT) {
             count++;
          } else if (recv_mess.type == UNREGISTER_RESPONSE_CTRL_MSG) {
-            DPRINTF(("Received UNREGISTER_RESPONSE_CTRL_MSG\n"));
+            shepherd_trace("Received UNREGISTER_RESPONSE_CTRL_MSG");
             break;
          } else {
-            DPRINTF(("No connection or timeout while waiting for message\n"));
+            shepherd_trace("No connection or timeout while waiting for message");
             break;
          }
          comm_free_message(&recv_mess, &err_msg);
@@ -1076,18 +1000,18 @@ int close_parent_loop(int exit_status)
     * Tell the communication to shut down immediately, don't wait for 
     * the next timeout
     */
-   DPRINTF(("main: cl_com_ignore_timeouts\n"));
+   shepherd_trace("main: cl_com_ignore_timeouts");
    comm_ignore_timeouts(true, &err_msg);
 
    /*
     * Do cleanup
     */
-   DPRINTF(("main: cl_com_cleanup_commlib()\n"));
+   shepherd_trace("main: cl_com_cleanup_commlib()");
    comm_shutdown_connection(g_comm_handle, &err_msg);
-   DPRINTF(("main: comm_cleanup_lib()\n"));
+   shepherd_trace("main: comm_cleanup_lib()");
    ret = comm_cleanup_lib(&err_msg);
    if (ret != COMM_RETVAL_OK) {
-      DPRINTF(("main: error in comm_cleanup_lib(): %d\n", ret));
+      shepherd_trace_sprintf("main: error in comm_cleanup_lib(): %d", ret);
    }
 
    FREE(g_hostname);

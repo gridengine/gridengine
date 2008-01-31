@@ -61,8 +61,9 @@ static void ijs_general_communication_error(
 {
    /* ignore errors */
 }
-#if 0 
- * only for debugging
+
+/* redirects the commlib logging to a file */
+/* this is a modified copy of the cl_log_list_flush_list() */
 int my_log_list_flush_list(cl_raw_list_t* list_p) {        /* CR check */
    int ret_val;
    cl_log_list_elem_t* elem = NULL;
@@ -79,7 +80,7 @@ int my_log_list_flush_list(cl_raw_list_t* list_p) {        /* CR check */
       return ret_val;
    }
 
-   if ((fp = fopen("/tmp/cl_log.txt", "a")) == NULL) {
+   if ((fp = fopen("cl_log.txt", "a")) == NULL) {
       return CL_RETVAL_NOT_OPEN; 
    }
 
@@ -136,8 +137,6 @@ int my_log_list_flush_list(cl_raw_list_t* list_p) {        /* CR check */
    } 
    return CL_RETVAL_OK;
 }
-#endif
-
 
 /****** sge_ijs_comm/comm_init_lib() *******************************************
 *  NAME
@@ -173,7 +172,7 @@ int comm_init_lib(dstring *err_msg)
 
    DENTER(TOP_LAYER, "comm_init_lib");
 
-   ret = cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_DEBUG, NULL/*my_log_list_flush_list*/);
+   ret = cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_OFF, NULL /*my_log_list_flush_list*/);
    if (ret != CL_RETVAL_OK) {
       sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
       DPRINTF(("cl_com_setup_commlib() failed: %s (%d)\n",
@@ -850,24 +849,18 @@ int comm_get_connection_count(COMMUNICATION_HANDLE *handle, dstring *err_msg)
 *******************************************************************************/
 int comm_trigger(COMMUNICATION_HANDLE *handle, int synchron, dstring *err_msg)
 {
-/*
    int ret;
-*/
    int ret_val = COMM_RETVAL_OK;
 
    DENTER(TOP_LAYER, "comm_trigger");
 
-   cl_commlib_trigger(handle, synchron);
-/*   ret = cl_commlib_trigger(handle, synchron); */
-/*
-TODO: Do proper error handling!
+   ret = cl_commlib_trigger(handle, synchron);
    if (ret != CL_RETVAL_OK) {
       sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
       DPRINTF(("cl_commlib_trigger() failed: %s (%d)\n",
                sge_dstring_get_string(err_msg), ret));
       ret_val = COMM_CANT_TRIGGER;
    }
-*/
    DEXIT;
    return ret_val;
 }
@@ -936,11 +929,11 @@ unsigned long comm_write_message(COMMUNICATION_HANDLE *handle,
                            CL_MIH_MAT_NAK, 
                            &sendbuf,
                            size+1,
+                           NULL,
                            0,
                            0,
-                           0,
-                           CL_FALSE, /* don't copy the sendbuf */
-                           CL_TRUE); /* wait blocking until all data was sent */
+                           CL_FALSE,  /* don't copy the sendbuf */
+                           CL_FALSE); /* don't wait for ack */
 
    /* sendbuf was freed by the commlib */
    sge_dstring_sprintf(err_msg, "%s", cl_get_error_text(ret));

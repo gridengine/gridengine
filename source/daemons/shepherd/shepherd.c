@@ -1504,6 +1504,8 @@ static void forward_signal_to_job(int pid, int timeout,
 
    /* store signal if we got one */
    if (received_signal) {
+      shepherd_trace_sprintf("forward_signal_to_job(): mapping signal %d", 
+                             received_signal);
       sig = map_signal(received_signal);
 
       received_signal = 0;
@@ -2912,5 +2914,4 @@ static void shepherd_signal_handler(int dummy) {
 #if 0
    shepherd_trace("SIGPIPE received");
 #endif
-   received_signal = dummy;
 }

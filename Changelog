@@ -1,3 +1,9 @@
+OJ-2008-01-31-1: Bugfix:    execd installation does not test absolute path for 
+                            local spool dir
+                 Bugster:   6528315
+                 Issue:     2195
+                 Review:    MD
+
 OJ-2008-01-31-0: Bugfix:    Set SGE_QMASTER_PORT in settings file if sge_qmaster is 
                             not found in /etc/services file
                  Bugster:   6589297 

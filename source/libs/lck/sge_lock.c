@@ -315,7 +315,7 @@ void sge_unlock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sg
 
    pthread_once(&lock_once, lock_once_init);
 #ifdef SGE_USE_LOCK_FIFO
-   res = sge_fifo_ulock(SGE_RW_Locks[aType], (aMode == LOCK_READ)) ? 0 : 1;
+   res = sge_fifo_ulock(SGE_RW_Locks[aType], (bool)(aMode == LOCK_READ)) ? 0 : 1;
 #else
    res = pthread_rwlock_unlock(SGE_RW_Locks[aType]);
 #endif

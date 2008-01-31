@@ -460,6 +460,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
       char* cl_ping = NULL;
       char* gdi_retries = NULL;
       int retries = 1;
+      bool do_cl_ping = false;
       int doit = 0;
       int gdi_error = CL_RETVAL_OK;
 
@@ -467,8 +468,13 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
       strcpy(rcv_commproc, commproc);
 
       cl_com_get_parameter_list_value("cl_ping", &cl_ping);
+      if (cl_ping != NULL) {
+         if (strcasecmp(cl_ping, "true") == 0) {
+            do_cl_ping = true;
+         }
+         FREE(cl_ping);
+      }
       cl_com_get_parameter_list_value("gdi_retries", &gdi_retries);
-
       if (gdi_retries != NULL) {
          retries = atoi(gdi_retries);
          FREE(gdi_retries);
@@ -518,11 +524,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
                   handle = ctx->get_com_handle(ctx);
 
                   DPRINTF(("gdi timeout is set to: %d\n", handle->synchron_receive_timeout));
-                  if (cl_ping != NULL) {
-                     DPRINTF(("cl_ping: %s\n", cl_ping));
-                  }
-                 
-                  if (cl_ping != NULL && strncasecmp(cl_ping, "true", sizeof("true")-1) == 0 && strlen(cl_ping) == sizeof("true")-1) {
+                  if (do_cl_ping) {
                      DPRINTF(("sending qping to commlib!\n"));
                      cl_commlib_get_endpoint_status(handle, rcv_host, rcv_commproc, id, &cl_endpoint_status);
 

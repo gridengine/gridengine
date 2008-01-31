@@ -1,3 +1,8 @@
+MP-2008-01-31-0: Bugfix:    Spelling mistakes in the qmon help menus
+                 Bugster:   6629016
+                 Issue:     2467
+                 Review:    MD
+
 RD-2008-01-31-0: Bugfix     fixed redebitation if RQS gets enabled by -mattr
                  Bugster:   6657521
                  Issue:     2476

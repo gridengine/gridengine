@@ -1,3 +1,6 @@
+HP-2008-01-31-1: Bugfix:    Fixed broken build on Irix65 after checkin RD-2008-01-31-0
+                 Changed:   sge_resource_quota_qmaster.c
+
 JG-2008-01-31-1: Bugfix:    Fixed a memory leak in gdi.
                  Review:    EB
 

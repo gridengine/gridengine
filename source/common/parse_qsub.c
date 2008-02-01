@@ -115,6 +115,7 @@ u_long32 flags
    char **sp;
    lList *answer = NULL;
    char str[1024 + 1];
+   char i_opt[SGE_PATH_MAX + 1];
    lListElem *ep_opt;
    int i_ret;
    u_long32 is_qalter = flags & FLG_QALTER;
@@ -514,6 +515,7 @@ u_long32 flags
              DRETURN(answer);
          }
 
+        
          DPRINTF(("\"-i %s\"\n", *sp));
 
          i_ret = cull_parse_path_list(&path_list, *sp);
@@ -524,6 +526,9 @@ u_long32 flags
          }
          ep_opt = sge_add_arg(pcmdline, i_OPT, lListT, *(sp - 1), *sp);
          lSetList(ep_opt, SPA_argval_lListT, path_list);
+
+         /* Save it for later comparison */
+	 strcpy(i_opt, *sp); 
 
          sp++;
          continue;
@@ -909,8 +914,16 @@ u_long32 flags
                     MSG_PARSE_WRONGSTDOUTPATHLISTFORMATXSPECTOOOPTION_S, *sp );
              DRETURN(answer);
          }
+
          ep_opt = sge_add_arg(pcmdline, o_OPT, lListT, *(sp - 1), *sp);
          lSetList(ep_opt, SPA_argval_lListT, stdout_path_list);
+
+	 if (strcmp(i_opt, *sp) == 0) {
+	     answer_list_add_sprintf(&answer, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                    MSG_PARSE_SAMEPATHFORINPUTANDOUTPUT_SS, i_opt, *sp );
+             DRETURN(answer);
+	     DEXIT;
+          }
 
          sp++;
          continue;

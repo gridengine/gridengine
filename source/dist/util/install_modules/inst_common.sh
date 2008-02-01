@@ -457,7 +457,7 @@ ErrUsage()
    myname=`basename $0`
    $INFOTEXT -e \
              "Usage: %s -m|-um|-x|-ux [all]|-rccreate|-sm|-usm|-s|-db|-udb|-updatedb \\\n" \
-             "       -upd <sge-root> <sge-cell>|-bup|-rst|-copycerts <host|hostlist>| \\\n" \
+             "       -upd |-bup|-rst|-copycerts <host|hostlist>| \\\n" \
              "       -v [-auto <filename>] | [-winupdate] [-csp] [-resport] [-oldijs] \\\n" \
              "       [-afs] [-host <hostname>] [-rsh] [-noremote]\n" \
              "   -m         install qmaster host\n" \
@@ -473,7 +473,7 @@ ErrUsage()
              "   -rst       restore configuration from backup\n" \
              "   -copycerts copy local certificates to given hosts\n" \
              "   -v         print version\n" \
-             "   -upd       upgrade cluster from 6.0u2 or higher to 6.1\n" \
+             "   -upd       upgrade cluster from 6.1 or higher to 6.2\n" \
              "   -rccreate  create startup scripts from templates\n" \
              "   -host      hostname for shadow master installation or uninstallation \n" \
              "              (eg. exec host)\n" \
@@ -487,7 +487,7 @@ ErrUsage()
              "   -oldijs    configure old interactive job support\n" \
              "   -afs       install system with AFS functionality\n" \
              "   -noremote  supress remote installation during autoinstall\n" \
-             "   -nosmf     disable SMF for Solaris 10+ machines (RC scripts are used)" \
+             "   -nosmf     disable SMF for Solaris 10+ machines (RC scripts are used)\n" \
              "   -help      show this help text\n\n" \
              "   Examples:\n" \
              "   inst_sge -m -x\n" \
@@ -1368,9 +1368,299 @@ GetDefaultClusterName() {
 }
 
 #-------------------------------------------------------------------------
-# ProcessSGEClusterName: Ask for cluster name
-#                        Requires SGE_ROOT and SGE_CELL to be set                   
+# SetupRcScriptNames: Sets up RC script name variables
+# $1 ... hosttype (master|shadow|bdb|execd|dbwriter)
+#
+SetupRcScriptNames61()
+{
+   case $1 in
+      qmaster)
+         hosttype="master";;
+      shadow)
+         return;;
+      *)
+         hosttype=$1;;
+   esac
+   if [ $hosttype = "master" ]; then
+      TMP_SGE_STARTUP_FILE=/tmp/sgemaster.$$
+      STARTUP_FILE_NAME=sgemaster
+      S95NAME=S95sgemaster
+      K03NAME=K03sgemaster
+      DAEMON_NAME="qmaster"
+   elif [ $hosttype = "bdb" ]; then
+      TMP_SGE_STARTUP_FILE=/tmp/sgebdb.$$
+      STARTUP_FILE_NAME=sgebdb
+      S95NAME=S94sgebdb
+      K03NAME=K04sgebdb
+      DAEMON_NAME="berkeleydb"
+   elif [ $hosttype = "dbwriter" ]; then
+      TMP_SGE_STARTUP_FILE=/tmp/sgedbwriter.$$
+      STARTUP_FILE_NAME=sgedbwriter
+      S95NAME=S96sgedbwriter
+      K03NAME=K03sgedbwriter
+      DAEMON_NAME="dbwriter"
+   elif [ $hosttype = "execd" ]; then
+      TMP_SGE_STARTUP_FILE=/tmp/sgeexecd.$$
+      STARTUP_FILE_NAME=sgeexecd
+      S95NAME=S96sgeexecd
+      K03NAME=K02sgeexecd
+      DAEMON_NAME="execd"
+   else
+      $INFOTEXT "Unknown option $1 to SetupRcScriptNames61()."
+      $INFOTEXT -log "Unknown option $1 to SetupRcScriptNames61()."
+      MoveLog
+      exit 1
+   fi
+   SGE_STARTUP_FILE=$SGE_ROOT/$SGE_CELL/common/$STARTUP_FILE_NAME
+}
+
+#-------------------------------------------------------------------------
+# SetupRcScriptNames: Sets up RC script name variables
+# $1 ... hosttype (master|bdb|execd|dbwriter)
+# $2 ... empty or "61" to call SetupRcScriptNames61 instead
+#
+SetupRcScriptNames()
+{
+   if [ "$2" = "61" ]; then
+      SetupRcScriptNames61
+      return
+   fi
+
+   case $1 in
+      qmaster)
+         hosttype="master";;
+      shadow)
+         return;;
+      *)
+         hosttype=$1;;
+   esac
+   if [ $hosttype = "master" ]; then
+      script_name=sgemaster
+      TMP_SGE_STARTUP_FILE=/tmp/sgemaster.$$
+      STARTUP_FILE_NAME=sgemaster.$SGE_CLUSTER_NAME
+      S95NAME=S95sgemaster.$SGE_CLUSTER_NAME
+      K03NAME=K03sgemaster.$SGE_CLUSTER_NAME
+      DAEMON_NAME="qmaster"
+   elif [ $hosttype = "bdb" ]; then
+      script_name=sgebdb
+      TMP_SGE_STARTUP_FILE=/tmp/sgebdb.$$
+      STARTUP_FILE_NAME=sgebdb
+      S95NAME=S94sgebdb
+      K03NAME=K04sgebdb
+      DAEMON_NAME="berkeleydb"
+   elif [ $hosttype = "dbwriter" ]; then
+      script_name=sgedbwriter
+      TMP_SGE_STARTUP_FILE=/tmp/sgedbwriter.$$
+      STARTUP_FILE_NAME=sgedbwriter.$SGE_CLUSTER_NAME
+      S95NAME=S97sgedbwriter.$SGE_CLUSTER_NAME
+      K03NAME=K03sgedbwriter.$SGE_CLUSTER_NAME
+      DAEMON_NAME="dbwriter"
+   elif [ $hosttype = "execd" ]; then
+      script_name=sgeexecd
+      TMP_SGE_STARTUP_FILE=/tmp/sgeexecd.$$
+      STARTUP_FILE_NAME=sgeexecd.$SGE_CLUSTER_NAME
+      S95NAME=S96sgeexecd.$SGE_CLUSTER_NAME
+      K03NAME=K02sgeexecd.$SGE_CLUSTER_NAME
+      DAEMON_NAME="execd"
+   else
+      $INFOTEXT "Unknown option $1 to SetupRcScriptNames()."
+      $INFOTEXT -log "Unknown option $1 to SetupRcScriptNames()."
+      MoveLog
+      exit 1
+   fi
+   SGE_STARTUP_FILE=$SGE_ROOT/$SGE_CELL/common/$script_name
+}
+
+#-------------------------------------------------------------------------
+# CheckRCfiles: Check for presence RC scripts
+#               Requires SGE_ROOT and SGE_CELL to be set                   
+# $1 ... can be empty or "61" to detect darwin RC script on 61
+#
+CheckRCfiles()
+{
+   rc_ret=0
+   rc_path=""
+   # LSB, etc.
+   if [ "$RC_FILE" = "lsb" -o "$RC_FILE" = "insserv-linux" -o "$RC_FILE" = "update-rc.d" ]; then
+      rc_path="$RC_PREFIX/$STARTUP_FILE_NAME"
+   # System V
+   elif [ "$RC_FILE" = "sysv_rc" ]; then
+      rc_path="$RC_PREFIX/init.d/$STARTUP_FILE_NAME"
+   # Freebsd
+   elif [ "$RC_FILE" = "freebsd" ]; then
+      rc_path="$RC_PREFIX/sge${RC_SUFFIX}"
+   # Darwin
+   elif [ "$RC_FILE" = "SGE" ]; then
+      if [ "$1" = "61" ]; then
+         rc_path="$RC_PREFIX/$RC_DIR/$RC_FILE"
+      else
+         rc_path="$RC_PREFIX/$RC_DIR.$SGE_CLUSTER_NAME/$RC_FILE"
+      fi
+   # Other
+   else
+      grep $STARTUP_FILE_NAME $RC_FILE > /dev/null 2>&1
+      if [ $? -eq 0 ]; then
+         rc_ret=1
+      fi
+   fi
+
+   if [ -n "$rc_path" -a -f "$rc_path" ]; then
+      rc_ret=1
+   fi
+   return $rc_ret
+}
+
+#-------------------------------------------------------------------------
+# CheckIfClusterNameAlreadyExists: Check for presence of SMF service and RC script
+#                                  Requires SGE_ROOT and SGE_CELL to be set                   
 # $1 ... compoment we are installing
+#
+CheckIfClusterNameAlreadyExists() 
+{
+   if [ -z "$1" ]; then
+      return 0
+   fi
+
+   hosttype=$1
+   infotext_temp_msg=""
+   ret=0
+   #Try if SMF service already exists
+   ServiceAlreadyExists $hosttype
+   if [ $? -eq 1 ]; then
+      infotext_temp_msg="Specified cluster name >\$SGE_CLUSTER_NAME=%s< is already used by your system!\nDetected SMF service application/sge/$hosttype:%s."
+      if [ $AUTO = true ]; then
+         $INFOTEXT  -log "$infotext_temp_msg" $SGE_CLUSTER_NAME $SGE_CLUSTER_NAME
+      else
+         $INFOTEXT  "$infotext_temp_msg" $SGE_CLUSTER_NAME $SGE_CLUSTER_NAME
+      fi
+      ret=1
+   fi
+
+   # Shadowd does not have RC script
+   if [ "$hosttype" = "shadowd" ]; then
+      return $ret
+   fi
+
+   #Check for RCscript
+   SetupRcScriptNames $hosttype
+
+   CheckRCfiles
+   rc_res=$?
+  
+   #Prepare correct return value and message
+   if [ $rc_res -eq 1 ]; then
+      if [ $ret -eq 1 ]; then
+         infotext_temp_msg="Detected a presence of old SGE RC scripts for cluster >\$SGE_CLUSTER_NAME=%s< as well!\n%s\n"
+         ret=3
+      else
+         infotext_temp_msg="Specified cluster name >\$SGE_CLUSTER_NAME=%s< is already used by your system!\nDetected a presence of old SGE RC scripts.\n%s\n"
+         ret=2
+      fi
+      if [ "$AUTO" = "true" ]; then
+         $INFOTEXT  -log "$infotext_temp_msg" $SGE_CLUSTER_NAME $rc_path
+      else
+         $INFOTEXT  "$infotext_temp_msg" $SGE_CLUSTER_NAME $rc_path
+      fi
+   fi
+   
+   return $ret
+}
+
+#-------------------------------------------------------------------------
+# RemoveRC_SMF: Remove RC files or SMF service
+# $1 ... service name 
+# $2 ... exit code from CheckIfClusterNameAlreadyExists 
+#        valid values are: 0 1 2 3
+#
+RemoveRC_SMF()
+{
+   rem_res=0
+   case $2 in
+      1) SMFUnregister $1
+         rem_res=$?
+         ;;
+      2) RemoveRcScript $HOST $1 $euid
+         rem_res=$?
+         ;;
+      3) SMFUnregister $1
+         rem_res=$?
+         if [ $rem_res -eq 0 ]; then
+            RemoveRcScript $HOST $1 $euid
+            rem_res=$?
+         fi
+         ;;
+   esac
+   if [ $rem_res -ne 0 ]; then
+      $INFOTEXT "Removal not successful!"
+      if [ "$AUTO"=true ]; then
+         $INFOTEXT -log "Removal not successful!"
+         MoveLog
+      fi
+      exit 1
+   fi
+}
+
+
+#-------------------------------------------------------------------------
+# SearchForExistingInstallations
+# $1 .. list of components to search for
+#
+SearchForExistingInstallations()
+{
+   #Check services with the old clustername we are about to delete
+   SGE_CLUSTER_NAME=`cat $SGE_ROOT/$SGE_CELL_VAL/common/cluster_name 2>/dev/null`
+   if [ -z "$SGE_CLUSTER_NAME" ]; then
+      return
+   fi
+
+   #We try to source SMF support
+   if [ "$SGE_SMF_SUPPORT_SOURCED" != true ]; then
+      if [ ! -f ./util/sgeSMF/sge_smf_support.sh ]; then
+         $INFOTEXT "Missing ./util/sgeSMF/sge_smf_support.sh file!!!"
+         exit 1
+      fi
+      . ./util/sgeSMF/sge_smf_support.sh
+   fi
+    
+   TMP_DAEMON_LIST=$1
+   exists=0
+   for TMP_DAEMON in $TMP_DAEMON_LIST; do
+      CheckIfClusterNameAlreadyExists $TMP_DAEMON
+      eval "$TMP_DAEMON"_ret=$?
+      eval test_val=$"$TMP_DAEMON"_ret
+      if [ $test_val -ne 0 ]; then 
+         exists=1
+      fi
+   done
+   #If service/RC exits we ask first to uninstall and exit
+   if [ $exists -eq 1 ]; then
+      if [ "$AUTO" = "true" ]; then
+         $INFOTEXT -log "Remove existing component(s) of cluster > %s < first!\n" $SGE_CLUSTER_NAME
+         MoveLog
+         exit 1
+      else
+         $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Stop the installation (YES) or remove detected cluster (NO)? (y/n) [y] >> "
+         if [ $? -eq 0 ]; then
+            exit 1
+         fi
+         #Remove old files
+         for TMP_DAEMON in $TMP_DAEMON_LIST; do
+            eval test_val=$"$TMP_DAEMON"_ret
+            if [ $test_val -ne 0 ]; then
+               RemoveRC_SMF $TMP_DAEMON $test_val
+            fi
+         done
+      fi
+   fi
+}
+
+
+#-------------------------------------------------------------------------
+# ProcessSGEClusterName: Ask for cluster name
+#                        Requires SGE_ROOT and SGE_CELL to be set
+# $1 ... compoment we are installing
+#        valid values are: bdb, master, shadowd, execd, dbwriter
+#                          "" - no service checking
 #
 ProcessSGEClusterName()
 {
@@ -1414,16 +1704,21 @@ ProcessSGEClusterName()
 
       IsValidClusterName $SGE_CLUSTER_NAME
       if [ $? -eq 0 ]; then
-         #Name is valid, we check if service already exists
-         ServiceAlreadyExists $1
-         if [ $? -eq 1 ]; then
-            $INFOTEXT  "Specified cluster name already exists in your system!\n"
-            if [ $AUTO = true ]; then
-               $INFOTEXT  -log "Specified cluster name >\$SGE_CLUSTER_NAME=$SGE_CLUSTER_NAME< is already used by your system!\n"
+         #Name is valid, we check if service/RC script already exists
+         CheckIfClusterNameAlreadyExists $1
+         validation_res=$?
+         if [ $validation_res -ne 0 ]; then
+            if [ "$AUTO" = true ]; then
                MoveLog
-               exit 1
+               exit 2
             fi
-            $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to enter new cluster name >> "
+            $INFOTEXT "Do you want to remove them?"
+            $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
+                      "\nNOTE: Choose 'n' to select new SGE_CLUSTER_NAME  (y/n) [y] >> "
+            if [ $? -eq 0 ]; then
+               RemoveRC_SMF $1 $validation_res
+               done=true
+            fi                  
          else
             done=true
          fi
@@ -1624,11 +1919,9 @@ CreateSGEStartUpScripts()
    if [ $hosttype = "master" ]; then
       TMP_SGE_STARTUP_FILE=/tmp/sgemaster.$$
       STARTUP_FILE_NAME=sgemaster
-      S95NAME=S95sgemaster
    else
       TMP_SGE_STARTUP_FILE=/tmp/sgeexecd.$$
       STARTUP_FILE_NAME=sgeexecd
-      S95NAME=S95sgeexecd
    fi
 
    if [ -f $TMP_SGE_STARTUP_FILE ]; then
@@ -1693,7 +1986,6 @@ CreateSGEStartUpScripts()
 }
 
 
-
 #-------------------------------------------------------------------------
 # AddSGEStartUpScript: Add startup script to rc files if root installs
 #
@@ -1706,32 +1998,10 @@ AddSGEStartUpScript()
       $INFOTEXT "AddSGEStartUpScript error: expected SGE_CLUSTER_NAME!!!"
       exit 1
    fi
-
+   
    $CLEAR
-   if [ $hosttype = "master" -o $hosttype = "shadow" ]; then
-      script_name=sgemaster
-      TMP_SGE_STARTUP_FILE=/tmp/sgemaster.$$
-      STARTUP_FILE_NAME=sgemaster.$SGE_CLUSTER_NAME
-      S95NAME=S95sgemaster.$SGE_CLUSTER_NAME
-      K03NAME=K03sgemaster.$SGE_CLUSTER_NAME
-      DAEMON_NAME="qmaster"
-   elif [ $hosttype = "bdb" ]; then
-      script_name=sgebdb
-      TMP_SGE_STARTUP_FILE=/tmp/sgebdb.$$
-      STARTUP_FILE_NAME=sgebdb
-      S95NAME=S94sgebdb
-      K03NAME=K04sgebdb
-      DAEMON_NAME="berkeleydb"
-   else
-      script_name=sgeexecd
-      TMP_SGE_STARTUP_FILE=/tmp/sgeexecd.$$
-      STARTUP_FILE_NAME=sgeexecd.$SGE_CLUSTER_NAME
-      S95NAME=S96sgeexecd.$SGE_CLUSTER_NAME
-      K03NAME=K02sgeexecd.$SGE_CLUSTER_NAME
-      DAEMON_NAME="execd"
-   fi
-
-   SGE_STARTUP_FILE=$SGE_ROOT/$SGE_CELL/common/$script_name
+    
+   SetupRcScriptNames $hosttype   
 
    InstallRcScript 
 
@@ -1751,14 +2021,17 @@ InstallRcScript()
    $INFOTEXT -u "\n%s startup script" $DAEMON_NAME
 
    # --- from here only if root installs ---
-   if [ "$SGE_ENABLE_SMF" = true ]; then
+   if [ "$SGE_ENABLE_SMF" = "true" ]; then
       #Normally qmaster and shadowd share the same RC script
-      if [ "$hosttype" = shadow ]; then
+      if [ "$hosttype" = "shadow" ]; then
          DAEMON_NAME=shadowd
       fi
       $INFOTEXT "\nDo you want to start %s automatically at machine boot?" "$DAEMON_NAME"
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
                 "NOTE: If you select \"n\" SMF will be not used at all! (y/n) [y] >> "
+   # RC on shadow are in qmaster already
+   elif [ "$hosttype" = "shadow" ]; then
+      return 0
    else
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nWe can install the startup script that will\n" \
              "start %s at machine boot (y/n) [y] >> " $DAEMON_NAME
@@ -1768,7 +2041,7 @@ InstallRcScript()
       $CLEAR
       return
    else
-      if [ $ret = 1 ]; then
+      if [ $ret -ne 0 ]; then
          SGE_ENABLE_SMF=false
          SMF_FLAGS="-nosmf"
          return
@@ -1882,6 +2155,7 @@ InstallRcScript()
       echo  cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
       Execute cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
    elif [ "$RC_FILE" = "SGE" ]; then
+      RC_DIR="$RC_DIR.$SGE_CLUSTER_NAME"
       echo  mkdir -p "$RC_PREFIX/$RC_DIR"
       Execute mkdir -p "$RC_PREFIX/$RC_DIR"
 
@@ -1919,6 +2193,7 @@ PLIST
           "$DARWIN_TEMPLATE" > "$RC_PREFIX/$RC_DIR/$RC_FILE.$$"
      Execute chmod a+x "$RC_PREFIX/$RC_DIR/$RC_FILE.$$"
      Execute mv "$RC_PREFIX/$RC_DIR/$RC_FILE.$$" "$RC_PREFIX/$RC_DIR/$RC_FILE"
+     RC_DIR="SGE"
    else
       # if this is not System V we simple add the call to the
       # startup script to RC_FILE
@@ -2561,39 +2836,24 @@ CheckArchBins()
 }
 
 
-
+#-------------------------------------------------------------------------
+# RemoveRcScript: Remove the rc files
+# $1 ... HOST
+# $2 ... hosttype
+# $3 ... euid
+# $4 ... empty or "61" to remove scripts for 6.1 version (No cluster name)
+#
 RemoveRcScript()
 {
    host=$1
    hosttype=$2
    euid=$3
+   v61=$4
    
 
    $INFOTEXT "Checking for installed rc startup scripts!\n"
 
-
-   if [ $hosttype = "master" ]; then
-      TMP_SGE_STARTUP_FILE=/tmp/sgemaster.$$
-      STARTUP_FILE_NAME=sgemaster
-      S95NAME=S95sgemaster
-      K03NAME=K03sgemaster
-      DAEMON_NAME="qmaster"
-   elif [ $hosttype = "bdb" ]; then
-      TMP_SGE_STARTUP_FILE=/tmp/sgebdb.$$
-      STARTUP_FILE_NAME=sgebdb
-      S95NAME=S94sgebdb
-      K03NAME=K04sgebdb
-      DAEMON_NAME="berkeleydb"
-   else
-      TMP_SGE_STARTUP_FILE=/tmp/sgeexecd.$$
-      STARTUP_FILE_NAME=sgeexecd
-      S95NAME=S96sgeexecd
-      K03NAME=K02sgeexecd
-      DAEMON_NAME="execd"
-   fi
-
-   SGE_STARTUP_FILE=$SGE_ROOT/$SGE_CELL/common/$STARTUP_FILE_NAME
-
+   SetupRcScriptNames $hosttype $v61
 
    if [ $euid != 0 ]; then
       return 0
@@ -2617,8 +2877,8 @@ RemoveRcScript()
       fi
    fi
    
-   #If Solaris 10+ and SMF enabled
-   if [ "$SGE_ENABLE_SMF" = "true" ]; then
+   #If Solaris 10+ and SMF enabled and 6.1 version not specified
+   if [ "$SGE_ENABLE_SMF" = "true" -a -n "$service" -a -z "$v61" ]; then
       if [ "$AUTO" = "true" ]; then
          OLD_INFOTEXT=$INFOTEXT
          INFOTEXT="$INFOTEXT -log"
@@ -2691,6 +2951,9 @@ RemoveRcScript()
       echo  rm $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
       Execute rm $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
    elif [ "$RC_FILE" = "SGE" ]; then
+      if [ -z "$v61" ]; then
+         RC_DIR="$RC_DIR.$SGE_CLUSTER_NAME"
+      fi
       if [ $hosttype = "master" ]; then
         DARWIN_GEN_REPLACE="#GENMASTERRC"
       elif [ $hosttype = "bdb" ]; then
@@ -2710,6 +2973,7 @@ RemoveRcScript()
          echo rm -rf "$RC_PREFIX/$RC_DIR"
          Execute  rm -rf "$RC_PREFIX/$RC_DIR"
       fi
+      RC_DIR="SGE"
    else
       # if this is not System V we simple add the call to the
       # startup script to RC_FILE
@@ -3373,11 +3637,11 @@ IsMailAdress() {
 }
 
 IsValidClusterName() {
-   case $1 in
-      [A-Za-z][A-Za-z0-9_]*) # valid entry
-         return 0;;
-
-      *)
-         return 1;;
-   esac
+   res=`echo "$1" | $AWK ' \
+      /^[A-Za-z][A-Za-z0-9_-]*$/ { print "OK" } \
+   '`
+   if [ "$res" = "OK" ]; then
+      return 0
+   fi
+   return 1
 }

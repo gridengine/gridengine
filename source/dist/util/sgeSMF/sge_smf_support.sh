@@ -171,14 +171,6 @@ ServiceAlreadyExists()
 #
 SMFCreateAndImportService()
 {
-   ServiceAlreadyExists $1
-   ret=$?
-   if [ $ret -eq 1 ]; then
-      $INFOTEXT "Service %s already exists!" $service_name
-      $INFOTEXT "SGE_CLUSTER_NAME must by unique throughout your organization."
-      $INFOTEXT "Check existing SGE services with svcs \"*sge*\""
-      return 1
-   fi
    if [ "$1" != "dbwriter" ]; then
       prefix="$SGE_ROOT"
    else
@@ -260,14 +252,23 @@ SMFHaltAndDeleteService()
 
    $SVCADM disable -s "$service_name"
    if [ "$?" -ne 0 ]; then
-      $INFOTEXT "Could not disable the service %s! Exiting" $service_name
+      $INFOTEXT "Could not disable the service %s!" $service_name
       return 1
    fi
 
    $SVCCFG delete "$service_name"
    if [ "$?" -ne 0 ]; then
-      $INFOTEXT "Could not delete the service %s! Exiting" $service_name
+      $INFOTEXT "Could not delete the service %s!" $service_name
       return 1
+   fi
+   #Check if we should remove the whole service (no more instances)
+   $SVCCFG export "svc:/application/sge/$1" | grep "<instance " 1>/dev/null 2>&1
+   if [ "$?" -ne 0 ]; then
+      $SVCCFG delete "svc:/application/sge/$1"
+      if [ "$?" -ne 0 ]; then
+         $INFOTEXT "Could not delete empty service %s!" "svc:/application/sge/$1"
+         return 1
+      fi
    fi
 }
 
@@ -277,10 +278,7 @@ SMFHaltAndDeleteService()
 SMFUnregister()
 {  
    case "$1" in
-   qmaster)
-      SMFHaltAndDeleteService "qmaster"
-      ;;
-   master)
+   master | qmaster)
       SMFHaltAndDeleteService "qmaster"
       ;;
    shadowd)
@@ -289,25 +287,11 @@ SMFUnregister()
    execd)
       SMFHaltAndDeleteService "execd"
       ;;
-   bdb)
-      SMFHaltAndDeleteService "bdb"
-      ;;
-   berkeleydb)
+   bdb | berkeleydb)
       SMFHaltAndDeleteService "bdb"
       ;;
    dbwriter)
       SMFHaltAndDeleteService "dbwriter"
-      ;;
-   all)
-      SMFHaltAndDeleteService "execd"
-      if [ $? -ne 0 ]; then
-         return 1
-      fi
-      SMFHaltAndDeleteService "qmaster"
-      if [ $? -ne 0 ]; then
-         return 1
-      fi
-      SMFHaltAndDeleteService "shadowd"
       ;;
    *)
       $INFOTEXT "Unknown parameter to sge_smf unregister"

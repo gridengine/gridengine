@@ -229,7 +229,7 @@ while [ $ARGC != 0 ]; do
      . ./util/install_modules/inst_qmaster.sh
      . ./util/install_modules/inst_berkeley.sh
      . ./util/install_modules/inst_update.sh
-     #update from 6.0u2 or higher to 6.1
+     #update from 6.1 or higher to 6.2
      ;;
    -winupdate)
      #update to new Gridengine Helper Service
@@ -359,6 +359,15 @@ if [ $UPDATE = "true" ]; then
    GetCell
    SetCellDependentVariables
    GetAdminUser
+
+   list="master bdb execd"
+   for TMP_DAEMON in $list; do
+      SetupRcScriptNames61 "$TMP_DAEMON"
+      CheckRCfiles "61"
+      if [ $? -ne 0 ] ; then
+         RemoveRcScript $HOST $TMP_DAEMON $euid "61"
+      fi
+   done
 
    spooling_method=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "spooling_method" | awk '{ print $2 }'`
    QMASTER_SPOOL_DIR=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "qmaster_spool_dir" | awk '{ print $2 }'`
@@ -862,6 +871,9 @@ if [ $SHADOW = "install" ]; then
       SGE_CELL=`Enter default`
       export SGE_CELL
       . $SGE_ROOT/$SGE_CELL/common/settings.sh
+
+      SearchForExistingInstallations "shadowd"
+
       ProcessSGEClusterName shadowd
       CheckHostNameResolving install
  

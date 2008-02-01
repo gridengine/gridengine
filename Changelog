@@ -1,3 +1,11 @@
+LP-2008-02-01-0: Enhancem:  Improved qmaster installation with BDB server
+                 Enhancem:  Cluster reinstallation can remove old cluster first
+                 Enhancem:  Installation detects RC / SMF services for selected 
+                            cluster name.
+                 Bugfix:    Cluster name validation was not working
+                 Bugfix:    darwin_template started qmaster before bdb
+                 Review:    MD
+
 JG-2008-01-31-0: Bugfix:    Fixed memory leaks and qhost -j core dump.
                  Review:    RD
 

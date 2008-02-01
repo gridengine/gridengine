@@ -117,23 +117,40 @@ GetCell()
             if [ $? = 0 ]; then
                is_done="false"
             else
-               $INFOTEXT -n "You can overwrite or delete this directory. If you choose overwrite\n" \
-                            "(YES option) only the \"bootstrap\" file will be deleted).\n" \
-                            "Delete (NO option) - will delete the whole directory!\n"
-               $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Do you want to overwrite [y] or delete [n] the directory? (y/n) [y] >> "
-               if [ $? = 0 ]; then
-                  $INFOTEXT "Deleting bootstrap file!"
-                  ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL_VAL/common/bootstrap
-                  is_done="true"
+               with_bdb=0
+               if [ ! -f $SGE_ROOT/$SGE_CELL/common/bootstrap -a -f $SGE_ROOT/$SGE_CELL/common/sgebdb ]; then
+                  $INFOTEXT -n "Do you want to keep this directory? Choose\n" \
+                               "(YES option) - if you installed BDB server.\n" \
+                               "(NO option)  - to delete the whole directory!\n"
+                  $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Do you want to keep [y] or delete [n] the directory? (y/n) [y] >> "
+                  with_bdb=1
                else
+                  $INFOTEXT -n "You can overwrite or delete this directory. If you choose overwrite\n" \
+                               "(YES option) only the \"bootstrap\" and \"cluster_name\" files will be deleted).\n" \
+                               "Delete (NO option) - will delete the whole directory!\n"
+                  $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Do you want to overwrite [y] or delete [n] the directory? (y/n) [y] >> "
+               fi
+               sel_ret=$?
+               SearchForExistingInstallations "qmaster shadowd execd dbwriter"
+               if [ $sel_ret = 0 -a $with_bdb = 0 ]; then
+                  $INFOTEXT "Deleting bootstrap and cluster_name files!"
+                  ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL_VAL/common/bootstrap
+                  ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL_VAL/common/cluster_name
+               elif [ $sel_ret -ne 0 ]; then
                   $INFOTEXT "Deleting directory \"%s\" now!" $SGE_ROOT/$SGE_CELL_VAL
                   ExecuteAsAdmin rm -rf $SGE_ROOT/$SGE_CELL_VAL
-                  is_done="true"
                fi
+               is_done="true"
             fi
          else
             is_done="true"
          fi
+      elif [ "$BERKELEY" = "install" ]; then
+         SearchForExistingInstallations "bdb"
+         is_done="true"
+      elif [ "$DBWRITER" = "install" ]; then
+         SearchForExistingInstallations "dbwriter"
+         is_done="true"
       else
          is_done="true"
       fi

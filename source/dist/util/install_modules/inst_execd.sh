@@ -184,6 +184,11 @@ CheckCellDirectory()
       MoveLog
       exit 1
    fi
+
+   #Check for exiting service
+   if [ "$EXECD" = "install" ]; then
+      SearchForExistingInstallations "execd"
+   fi
 }
 
 

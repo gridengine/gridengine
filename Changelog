@@ -6,6 +6,15 @@ LP-2008-02-01-0: Enhancem:  Improved qmaster installation with BDB server
                  Bugfix:    darwin_template started qmaster before bdb
                  Review:    MD
 
+OJ-2008-01-31-0: Bugfix:    execd installation does not test absolute path for
+                            local spool dir;
+                            Set SGE_QMASTER_PORT in settings file if sge_qmaster is
+                            not found in /etc/services file
+                 Bugster:   6528315, 6589297
+                 Issue:     2195, 2477
+                 Review:    JG, MD
+
+
 JG-2008-01-31-0: Bugfix:    Fixed memory leaks and qhost -j core dump.
                  Review:    RD
 

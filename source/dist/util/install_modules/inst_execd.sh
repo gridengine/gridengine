@@ -251,7 +251,10 @@ CheckHostNameResolving()
    loop_counter=0
    loop_max=10
    done=false
+   . $SGE_ROOT/util/install_modules/inst_qmaster.sh
    while [ $done = false ]; do
+      PortCollision $SGE_QMASTER_SRV
+
       $CLEAR
       $INFOTEXT -u "\nChecking hostname resolving"
 
@@ -536,10 +539,16 @@ GetLocalExecdSpoolDir()
    #fi
 
    if [ $AUTO = "true" ]; then
-      if [ "$EXECD_SPOOL_DIR_LOCAL" != "" ]; then
+      execd_spool_dir_local_exists=`echo $EXECD_SPOOL_DIR_LOCAL |  grep "^\/" | wc -w`
+     if [ "$EXECD_SPOOL_DIR_LOCAL" != "" -a "$execd_spool_dir_local_exists" = 1 ]; then
          LOCAL_EXECD_SPOOL=$EXECD_SPOOL_DIR_LOCAL
          $INFOTEXT -log "Using local execd spool directory [%s]" $LOCAL_EXECD_SPOOL
          MakeLocalSpoolDir
+      fi
+     
+      if [ "$execd_spool_dir_local_exists" = 0 ]; then
+         $INFOTEXT -log "Local execd spool directory [%s] is not a valid path" $LOCAL_EXECD_SPOOL
+      ret=1
       fi
    fi
 }

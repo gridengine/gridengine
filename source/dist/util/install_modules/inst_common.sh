@@ -3645,3 +3645,80 @@ IsValidClusterName() {
    fi
    return 1
 }
+CheckPortsCollision()
+{
+   check_val=$1
+
+   collision_flag=services_only
+   sge_settings_flag=0
+   services_flag=0
+   env_flag=0
+
+   services_out=` $SGE_UTILBIN/getservbyname  $check_val | wc -w`
+
+   if [ $services_out != 0 ]; then
+      services_flag=1
+   fi
+
+   if [ -f $SGE_ROOT/$SGE_CELL/common/settings.csh ]; then
+      sge_settings_flag=1
+   fi
+
+   if [ -f $SGE_ROOT/$SGE_CELL/common/settings.sh ]; then
+      sge_settings_flag=1
+   fi
+
+ if [ $check_val = "sge_qmaster" ]; then
+      ENV_VAR="$SGE_QMASTER_PORT"
+   fi
+
+   if [ $check_val = "sge_execd" ]; then
+      ENV_VAR="$SGE_EXECD_PORT"
+   fi
+
+   if [ "X$ENV_VAR" != "X" ]; then
+      env_flag=1
+   fi
+
+   # Check which 2 or more settings are present, return appropiate $ret
+
+   if [ $sge_settings_flag = 1 -a $services_flag = 1 -a $env_flag = 0 ] ; then
+           collision_flag=settings_services
+           return
+   fi
+
+
+   if [ $sge_settings_flag = 0 -a $services_flag = 1 -a $env_flag = 0 ] ; then
+           collision_flag=services_only
+           return
+   fi
+
+   if [ $sge_settings_flag = 1 -a $services_flag = 0 -a $env_flag = 0 ] ; then
+           collision_flag=settings_only
+           return
+   fi
+
+  # Now with env_flag on
+
+   if [ $sge_settings_flag = 0 -a $services_flag = 0 -a $env_flag = 1 ] ; then
+           collision_flag=env_only
+           return
+   fi
+
+   if [ $sge_settings_flag = 1 -a $services_flag = 1 -a $env_flag = 1 ] ; then
+           collision_flag=settings_services_env
+           return
+   fi
+
+   if [ $sge_settings_flag = 0 -a $services_flag = 1 -a $env_flag = 1 ] ; then
+           collision_flag=services_env
+           return
+   fi
+
+   if [ $sge_settings_flag = 1 -a $services_flag = 0 -a $env_flag = 1 ] ; then
+           collision_flag=settings_env
+           return
+   fi
+
+}
+

@@ -1506,6 +1506,8 @@ GetQmasterPort()
       comm_port_max=65500
    fi
 
+   PortCollision $SGE_QMASTER_SRV
+
    CheckServiceAndPorts service $SGE_QMASTER_SRV
 
    if [ "$SGE_QMASTER_PORT" != "" ]; then
@@ -1916,6 +1918,9 @@ GetExecdPort()
     else
        comm_port_max=65500
     fi
+
+    PortCollision $SGE_QMASTER_SRV
+
     CheckServiceAndPorts service $SGE_EXECD_SRV
 
     if [ "$SGE_EXECD_PORT" != "" ]; then
@@ -2234,4 +2239,93 @@ AddWindowsAdmin()
       $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
       $CLEAR
    fi
+}
+
+#-------------------------------------------------------------------------
+# PortCollision: Is there port collison for service, SGE_QMASTER or
+#                  SGE_EXECD
+PortCollision() 
+{
+   
+   service=$1 
+   # Call CheckPortsCollision conflict and depending on $ret, print out
+   # appropriate text
+
+   CheckPortsCollision $service
+
+   #$ECHO "collision_flag is $collision_flag \n"
+
+   case "$collision_flag" in
+
+      settings_services_env)
+         $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
+         $INFOTEXT "\nThe port for %s is set by SGE settings \n\n" \
+                   "by getservbyname and by shell environment. Enter Ctl-C \n " \
+                   "and modify the appropriate files to use a unique port. " $service
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+
+      ;;
+
+      env_only)
+         $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
+         $INFOTEXT "\nThe port for %s  is set by the shell environment. \n\n" \
+                   "Enter Ctl-C and modify the appropriate files \n " \
+                   "if you wish to use a different port. " $service
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+
+      ;;
+      settings_only)
+         $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
+         $INFOTEXT "\nThe port for %s  is set by SGE settings. \n\n" \
+                   "Enter Ctl-C and modify the appropriate files \n " \
+                   "if you wish to use a different port. " $service
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+  
+      ;;
+
+      services_only)
+         $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
+         $INFOTEXT "\nThe port for %s  is set by getservbyname. \n\n" \
+                   "Enter Ctl-C and modify the appropriate files \n " \
+                   "if you wish to use a different port. " $service
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+
+      ;;
+
+
+      settings_services)
+         $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
+         $INFOTEXT "\nThe port for %s is set BOTH by SGE settings \n\n" \
+                   "and by getservbyname. Enter Ctl-C \n " \
+                   "and modify the appropriate files to use a unique port. " $service
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+
+      ;;
+
+     services_env)
+         $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
+         $INFOTEXT "\nThe port for %s is set BOTH by getservbyname \n\n" \
+                   "and by the SGE settings. Enter Ctl-C \n " \
+                   "and modify the appropriate files to use a unique port. " $service
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+
+      ;;
+
+      settings_env)
+         $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
+         $INFOTEXT "\nThe port for %s is set BOTH by SGE settings \n\n" \
+                   "and by the shell environment. Enter Ctl-C \n " \
+                   "and modify the appropriate files to use a unique port. " $service
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+
+      ;;
+
+      *)
+         $INFOTEXT -u "\nGrid Engine general settings "
+         $INFOTEXT "\nThe SGE general settings are not set \n\n" \
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+       ;;
+
+   esac
+
 }

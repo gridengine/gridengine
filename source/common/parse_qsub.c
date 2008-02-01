@@ -921,8 +921,8 @@ u_long32 flags
 	 if (strcmp(i_opt, *sp) == 0) {
 	     answer_list_add_sprintf(&answer, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
                     MSG_PARSE_SAMEPATHFORINPUTANDOUTPUT_SS, i_opt, *sp );
-             DRETURN(answer);
 	     DEXIT;
+             DRETURN(answer);
           }
 
          sp++;

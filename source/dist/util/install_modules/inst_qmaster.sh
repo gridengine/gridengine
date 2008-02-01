@@ -120,7 +120,7 @@ GetCell()
                with_bdb=0
                if [ ! -f $SGE_ROOT/$SGE_CELL/common/bootstrap -a -f $SGE_ROOT/$SGE_CELL/common/sgebdb ]; then
                   $INFOTEXT -n "Do you want to keep this directory? Choose\n" \
-                               "(YES option) - if you installed BDB server.\n" \
+                               "(YES option) - if you have installed BDB server.\n" \
                                "(NO option)  - to delete the whole directory!\n"
                   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Do you want to keep [y] or delete [n] the directory? (y/n) [y] >> "
                   with_bdb=1

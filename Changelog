@@ -1,3 +1,6 @@
+LP-2008-02-01-1: Bugfix:    Fix for broken shell test on empty REMOVE_RC
+                 Review:    PJ
+
 LP-2008-02-01-0: Enhancem:  Improved qmaster installation with BDB server
                  Enhancem:  Cluster reinstallation can remove old cluster first
                  Enhancem:  Installation detects RC / SMF services for selected 

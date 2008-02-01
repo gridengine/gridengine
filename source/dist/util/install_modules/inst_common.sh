@@ -2867,7 +2867,7 @@ RemoveRcScript()
              "for %s at this machine? (y/n) [y] >> " $DAEMON_NAME
 
    ret=$?
-   if [ $AUTO = "true" -a $REMOVE_RC = "false" ]; then
+   if [ "$AUTO" = "true" -a "$REMOVE_RC" = "false" ]; then
       $CLEAR
       return
    else

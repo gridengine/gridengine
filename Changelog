@@ -1,3 +1,6 @@
+JG-2008-01-31-0: Bugfix:    Fixed memory leaks and qhost -j core dump.
+                 Review:    RD
+
 HP-2008-01-31-2: Bugfix:    Fixed some bugs in new IJS in shut down procedures
                  Changed:   qsh, shepherd
                  Review:    MD

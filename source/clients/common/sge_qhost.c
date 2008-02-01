@@ -871,7 +871,7 @@ u_long32 show
             jw = lAndWhere(jw, nw);
       }
 
-      j_all = lWhat("%T(%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I)", JB_Type, 
+      j_all = lWhat("%T(%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I)", JB_Type,
                      JB_job_number, 
                      JB_script_file,
                      JB_owner,

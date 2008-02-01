@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
    }
    printf("%d positiv test(s) failed\n", pos_tests_failed);
 
-   for (i=0; ; i++){
+   for (i=0; ; i++) {
       lListElem *rule = lCreateElem(RQR_Type);
       filter_t rule_filter = negativ_test[i].rule;
       filter_t query_filter = negativ_test[i].query;
@@ -240,18 +240,21 @@ int main(int argc, char *argv[])
       if (rqs_parse_filter_from_string(&filter, rule_filter.queues, NULL)) {
          lSetObject(rule, RQR_filter_queues, filter);
       }
-      if(rqs_is_matching_rule(rule, query_filter.users, query_filter.group, query_filter.projects, 
+      if (rqs_is_matching_rule(rule, query_filter.users, query_filter.group, query_filter.projects, 
                                 query_filter.pes, query_filter.hosts, query_filter.queues,
                                 userset_list, hgroup_list)) {
          printf("negativ filter matching failed (test %d)\n", i+1);
          
          neg_tests_failed++;
       }
+
+      lFreeElem(&rule);
+
       if (negativ_test[i].last == true) {
          break;
       }
-      lFreeElem(&rule);
   }
+
   printf("%d negativ test(s) failed\n", neg_tests_failed);
   
   lFreeList(&hgroup_list);

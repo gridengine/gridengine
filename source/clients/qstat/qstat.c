@@ -1932,27 +1932,27 @@ u_long32 isXML
             schedd_info = false;
          }
       }
-      lFreeList(&alp);
    }
+   lFreeList(&alp);
 
    /* build 'where' for all jobs */
    where = NULL;
    for_each(j_elem, jid_list) {
       const char *job_name = lGetString(j_elem, ST_name);
 
-      if (isdigit(job_name[0])){
+      if (isdigit(job_name[0])) {
          u_long32 jid = atol(lGetString(j_elem, ST_name));
          newcp = lWhere("%T(%I==%u)", JB_Type, JB_job_number, jid);
-      }
-      else {
+      } else {
          newcp = lWhere("%T(%I p= %s)", JB_Type, JB_job_name, job_name);
       }
-      if (newcp){ 
-         if (!where)
+      if (newcp) {
+         if (!where) {
             where = newcp;
-         else
+         } else {
             where = lOrWhere(where, newcp);
-      }   
+         }
+      }
    }
    what = lWhat("%T(%I%I%I%I%I%I%I%I%I%I%I%I%I%I->%T%I%I%I%I%I%I->%T%I%I%I%I->%T(%I%I%I%I%I)%I%I%I)",
             JB_Type, JB_job_number, JB_exec_file, JB_submission_time, JB_owner,
@@ -1962,7 +1962,7 @@ u_long32 isXML
             JB_hard_queue_list, JB_soft_queue_list, JB_shell_list, PN_Type,
             JB_env_list, JB_job_args, JB_script_file, JB_ja_tasks,
             JAT_Type, JAT_status, JAT_task_number, JAT_scaled_usage_list,
-            JAT_task_list, JAT_message_list, JB_context, JB_cwd, JB_stderr_path_list); 
+            JAT_task_list, JAT_message_list, JB_context, JB_cwd, JB_stderr_path_list);
    /* get job list */
    alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_GET, &jlp, where, what);
    lFreeWhere(&where);

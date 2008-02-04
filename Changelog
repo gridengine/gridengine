@@ -1,3 +1,10 @@
+OJ-2008-02-04-0: Bugfix:    use of the same pathes for input/output stream must be 
+                            dealt with 
+                            DEXIT not needed in code
+                 Bugster:   6310194 
+                 Issue:     1751
+                 Review:    RD
+
 RN-2008-02-04-0: Bugfix:    o Failed to deliver STOP signal for subordinated jobs
                             o Missing array job task usage in the accounting file
                             o qhost/qstat can't be interrupted with ctrl-c

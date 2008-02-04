@@ -1658,7 +1658,7 @@ SearchForExistingInstallations()
    for TMP_DAEMON in $TMP_DAEMON_LIST; do
       CheckIfClusterNameAlreadyExists $TMP_DAEMON
       eval "$TMP_DAEMON"_ret=$?
-      eval test_val=$"$TMP_DAEMON"_ret
+      eval test_val='$'"$TMP_DAEMON"_ret
       if [ $test_val -ne 0 ]; then 
          exists=1
       fi
@@ -1676,7 +1676,7 @@ SearchForExistingInstallations()
          fi
          #Remove old files
          for TMP_DAEMON in $TMP_DAEMON_LIST; do
-            eval test_val=$"$TMP_DAEMON"_ret
+            eval test_val='$'"$TMP_DAEMON"_ret
             if [ $test_val -ne 0 ]; then
                RemoveRC_SMF $TMP_DAEMON $test_val
             fi

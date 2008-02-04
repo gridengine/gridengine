@@ -7,39 +7,12 @@ NAME
 
 DESCRIPTION
      The Grid Engine user interface consists of several  programs
-     and  files.  Some  command-line  switches  and  several file
+     and  files.  Some  command  line  switches  and several file
      attributes  are  types.  The  syntax  for  these  types   is
      explained in this page.
 
 TYPES
      The syntax of Grid Engine types in alphabetic order:
-
-  expression
-     The wildcard expression is a regular boolean expression that
-     consists  of  a couple of <I>pattern</I>'s joined by boolean opera-
-     tors and priority brackets. When ever  expression  are  used
-     the following definition applies:
-
-     expression= ["!"] ["("] valExp [")"] [ AND_OR expression  ]*
-     valExp  = pattern | expression AND_OR  = "&amp;" | "|"
-
-     where:
-
-     "!"     not operator negate the following pattern or expresion
-     "&amp;"     and operator logically and with the following expression
-     "|"     or operator logically or with the following expression
-     "("     open bracket begin the priority evaluated expression. The close bracket is required
-     ")"     close bracket ends the priority evaluated expression.
-     "pattern"see the <I>pattern</I> definition
-
-     The wildcard expresion itself should  be  put  into  '"'  to
-     ensure, that the clients get the expression.
-
-     e.g.
-          "!(lx*|sol*)&amp;*64*"not begin with lx or sol, but contain
-          64 "(rh_3*|suse_[89]*)&amp;!rh_3.1"attribute rh_3*, suse_8*
-          or suse_9*, but do not on a rh_3.1
-
 
   pattern
      When  ever  patterns  are  used  the  following   definition
@@ -50,15 +23,8 @@ TYPES
      "?"     matches any character. It cannot be no character
      "."     is the character ".". It has no other meaning
      "\"     escape character. "\\" = "\", "\*" = "*", "\?" = "?"
-     "[...]" specifies an array or a range of allowed
-             characters for one character at a specific position.
-             Character ranges may be specified using the a-z notation.
-             The caret symbol (^) is not interpreted as a logical
-             not; it is intrepreted literally.
-
-     For more details please see
-     <B><A HREF="../htmlman5/fnmatch.html">fnmatch(5)</A></B>
-
+     "[xx]"  specifies an array or a range of allowed
+             characters for one character at a specific position
 
      The pattern itself should be put into '"'  to  ensure,  that
      the clients get the pattern. The or '|' operator is not sup-
@@ -79,18 +45,18 @@ TYPES
      A  wildcard  host  specification  (<I>wc</I>_<I>host</I>)  is  a  wildcard
      expression  which  might match one or more hosts used in the
      cluster.  The first character of that  string  never  begins
-     with  an  at-character  ('@'), even if the expression begins
-     with a wildcard character.
+     with  an at-character '@' even if the expression begins with
+     a wildcard character.
 
      e.g.
           *            all hosts
           a*           all host beginning with an 'a'
 
   wc_hostgroup
-     A wildcard hostgroup specification (<I>wc</I>_<I>hostgroup</I>) is a wild-
-     card  expression  which  might match one or more hostgroups.
-     The first character of that string is always an at-character
-     ('@').
+     A  wildcard  hostgroup  specification  (<I>wc</I>_<I>hostgroup</I>)  is  a
+     wildcard  expression  which  might  match  one or more host-
+     groups.  The first character of that string is always a  at-
+     character '@'.
 
      More information concerning hostgroups can be found in <I>host-</I>
      <B><A HREF="../htmlman5/group.html">group(5)</A></B>
@@ -101,9 +67,9 @@ TYPES
 
   wc_job
      The wildcard job specification is a placeholder for job ids,
-     job  names  include job name pattern. A job id always refer-
-     ences one job, while the names and pattern  might  reference
-     multiple jobs.
+     job  names  include  job name wildcard expressions. A job id
+     always references one job,  while  the  names  and  patterns
+     might reference multiple jobs.
 
      wc_job := job-id | job-name | pattern
 
@@ -135,10 +101,10 @@ TYPES
   wc_qdomain
      <I>wc</I>_<I>qdomain</I> := <I>wc</I>_<I>cqueue</I> "@" <I>wc</I>_<I>hostgroup</I>
 
-     A   wildcard   expression   queue    domain    specification
-     (<I>wc</I>_<I>qdomain</I>) starts with a wildcard expression cluster queue
-     name (<I>wc</I>_<I>cqueue</I>) followed by an at-character '@' and a wild-
-     card expression hostgroup specification (<I>wc</I>_<I>hostgroup</I>).
+     A wildcard queue domain  specification  (<I>wc</I>_<I>qdomain</I>)  starts
+     with  a  wildcard cluster queue name (<I>wc</I>_<I>cqueue</I>) followed by
+     an at-character '@' and a wildcard  hostgroup  specification
+     (<I>wc</I>_<I>hostgroup</I>).
 
      <I>wc</I>_<I>qdomain</I> are used to address a group of  queue  instances.
      All  queue  instances  residing  on a hosts which is part of
@@ -148,97 +114,78 @@ TYPES
      e.g.
           *@@*         all queue instances whose underlaying
                        host is part of at least one hostgroup
-          a*@@e*       all queue instances begins with a whose underlaying
-                       host is part of at least one hostgroup begin with e
           *@@solaris   all queue instances on hosts part of
                        the @solaris hostgroup
 
   wc_cqueue
-     A   wildcard   expression   cluster   queue    specification
-     (<I>wc</I>_<I>cqueue</I>)  is  a wildcard expression which might match one
-     or more cluster queues used in  the  cluster.   That  string
-     never contains an at-character ('@'), even if the expression
-     begins with a wildcard character.
+     A wildcard cluster  queue  specification  (<I>wc</I>_<I>cqueue</I>)  is  a
+     wildcard  expression  which  might match one or more cluster
+     queues used in the cluster.  That string never  contains  an
+     at-character  '@' even if the expression begins with a wild-
+     card character.
+
      e.g.
           *            all cluster queues
           a*           all cluster queues beginning with an 'a'
-          a*&amp;!adam     all cluster queues beginning with an 'a',but not adam
 
   wc_qinstance
      <I>wc</I>_<I>qinstance</I> := <I>wc</I>_<I>cqueue</I> "@" <I>wc</I>_<I>host</I>
 
-     A   wildcard   expression   queue   instance   specification
-     (<I>wc</I>_<I>qinstance</I>)  starts  with  a  wildcard expression cluster
-     queue name (<I>wc</I>_<I>cqueue</I>) followed by an at-character '@' and a
-     wildcard expression hostname (<I>wc</I>_<I>host</I>).
+     A  wildcard  queue  instance  specification   (<I>wc</I>_<I>qinstance</I>)
+     starts  with  a wildcard cluster queue name (<I>wc</I>_<I>cqueue</I>) fol-
+     lowed  by  an  at-character  '@'  and  a  wildcard  hostname
+     (<I>wc</I>_<I>host</I>).
 
      <I>wc</I>_<I>qinstance</I> expressions are used  to  address  a  group  of
      queue instances whose underlaying hostname matches the given
-     expression.  Please note that the first character of <I>wc</I>_<I>host</I>
+     pattern.  Please note that the first  character  of  <I>wc</I>_<I>host</I>
      does never match the at-character '@'.
 
      e.g.
           *@*          all queue instances in the cluster
           *@b*         all queue instances whose
                        hostname begins with a 'b'
-          *@b*|c*      all queue instances whose
-                       hostname begins with a 'b' or 'c'
 
   wc_queue
      <I>wc</I>_<I>queue</I> := <I>wc</I>_<I>cqueue</I> | <I>wc</I>_<I>qdomain</I> | <I>wc</I>_<I>qinstance</I>
 
      A wildcard queue expression (<I>wc</I>_<I>queue</I>)  might  either  be  a
-     wildcard  expression cluster queue specification (<I>wc</I>_<I>cqueue</I>)
-     or  a  wildcard  expression   queue   domain   specification
-     (<I>wc</I>_<I>qdomain</I>) or a wildcard expression queue instance specif-
-     ication (<I>wc</I>_<I>qinstance</I>).
+     wildcard  cluster queue specification (<I>wc</I>_<I>cqueue</I>) or a wild-
+     card queue domain specification (<I>wc</I>_<I>qdomain</I>) or  a  wildcard
+     queue instance specification (<I>wc</I>_<I>qinstance</I>).
 
      e.g.
           big_*1           cluster queues which begin with
                            "big_" and end with "1"
-          big_*&amp;!*1        cluster queues which begin with
-                           "big_" ,but does not end with "1"
+          big_11@@solaris  @solaris queue domain
           *@fangorn        all qinstances residing on host
                            fangorn
 
   wc_queue_list
      <I>wc</I>_<I>queue</I>_<I>list</I> := <I>wc</I>_<I>queue</I> ["," <I>wc</I>_<I>queue</I> "," ...]
 
-     Comma separated list of wc_queue elements.
+     Comma separated list of wildcard queue expressions.
 
      e.g.
           big, medium_*@@sol*, *@fangorn.sun.com
 
   wc_user
-     A wildcard user name pattern is either a wildcard user  name
-     specification or a full user name.
+     A wildcard user name expression is either  a  wildcard  user
+     name specification or a full user name.
 
      wc_user := user_name | pattern
+
 
   wc_user_list
      A list of user names.
 
      wc_user_list := wc_user [ , wc_user , ...]
 
-  wc_project
-     A wildcard project name pattern is either a wildcard project
-     name specification or a full project name.
-
-     wc_project := project | pattern
-
-  wc_pe_name
-     A wildcard parallel environment name  pattern  is  either  a
-     wildcard pe name specification or a full pe name.
-
-     wc_pe_name := pe_name | pattern
-
 SEE ALSO
-     <B><A HREF="../htmlman1/qacct.html">qacct(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>, <B><A HREF="../htmlman1/qquota.html">qquota(1)</A></B>
+     <B><A HREF="../htmlman1/qacct.html">qacct(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>
 
 COPYRIGHT
-     Copyright: 2004-2007 by Sun Microsystems, Inc.
-
-
+     Copyright: 2004 by Sun Microsystems, Inc.
 
 
 

@@ -1,3 +1,0 @@
-Mathematica from [http://www.wolfram.com Wolfram Research Inc.] is a software with rich means for scientific computing.
-
-The [http://www.wolfram.com/products/gridmathematica/extras.html gridMathematica2 Cluster Integration Package] brings a DRMAA-based integration for parallel computations in Grid Engine clusters (6.0u4 or later).

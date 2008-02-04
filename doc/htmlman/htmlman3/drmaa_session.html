@@ -34,22 +34,8 @@ DESCRIPTION
      will  return a DRMAA_ERRNO_NO_ACTIVE_SESSION error.  <I>Contact</I>
      is an implementation dependent string which may be  used  to
      specify  which  Grid Engine cell to use. If <I>contact</I> is NULL,
-     the default Grid Engine cell will be used. In the 1.0 imple-
-     mentation    <I>contact</I>   may   have   the   following   value:
-     <I>session</I>=&lt;<I>session</I>_<I>id</I>&gt;.   To  determine  the  session_id,  the
-     <B><A HREF="../htmlman3/drmaa_get_contact.html">drmaa_get_contact(3)</A></B>  function  should  be  called after the
-     session  has  already  been  initialized.   By  passing  the
-     <I>session</I>=&lt;<I>session</I>_<I>id</I>&gt;  string  to  the drmaa_init() function,
-     instead of creating a new session,  DRMAA  will  attempt  to
-     reconnect  to  the session indicated by the <I>session</I>_<I>id</I>.  The
-     result of reconnecting to a previous  session  is  that  all
-     jobs  previously  submitted  in  that session that are still
-     running will be available in the DRMAA session.  Note,  how-
-     ever,  that jobs which ended before the call to drmaa_init()
-     may not be available or may have no associated exit informa-
-     tion or resource usage data.
-
-     In the 0.95 implementation, setting <I>contact</I> has no effect.
+     the default Grid Engine cell will be used.  In  the  current
+     implementation setting <I>contact</I> has no effect.
 
   drmaa_exit()
      The drmaa_exit() function closes the DRMAA session  for  all
@@ -152,6 +138,20 @@ ERRORS
 
 SEE ALSO
      <B><A HREF="../htmlman3/drmaa_submit.html">drmaa_submit(3)</A></B>.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

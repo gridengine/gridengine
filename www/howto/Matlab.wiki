@@ -1,6 +1,0 @@
-The Matlab-Integration is still in brain-storming phase.
-So far all we know is the integration is doable:
-
-* [http://www.mathworks.com/products/distribtb/ http://www.mathworks.com/products/distribtb/]
-* [http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=2600 http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=2600]
-* [http://www.mathworks.com/access/helpdesk/help/toolbox/distcomp/ http://www.mathworks.com/access/helpdesk/help/toolbox/distcomp/]

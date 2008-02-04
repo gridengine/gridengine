@@ -1,25 +1,906 @@
+RD-2008-02-04-1: CVS:       Created V62alpha1_TAG
+-------------------------------------------------
+
+EB-2008-02-01-0: Bugfix:    Fixed bug which caused deadlock in master when scheduler
+                            thread was shutdown via qconf -ks
+                 Review:    AH
+
+RD-2008-02-04-0: Bugfix:    - fixed broken build on irix
+                            - fixed broken build for classic targets
+
+AA-2008-02-04-0: Enhancem.: SSL suport changes for JMX server
+                            - enable java.policy and GridwareConfig default login
+                            - adaption of install scripts and sge_ca script
+                            - correction for jvm thread startup in CSP mode
+                 Review:    RH           
+
+LP-2008-02-01-1: Bugfix:    Fix for broken shell test on empty REMOVE_RC
+                 Review:    PJ
+
+LP-2008-02-01-0: Enhancem:  Improved qmaster installation with BDB server
+                 Enhancem:  Cluster reinstallation can remove old cluster first
+                 Enhancem:  Installation detects RC / SMF services for selected 
+                            cluster name.
+                 Bugfix:    Cluster name validation was not working
+                 Bugfix:    darwin_template started qmaster before bdb
+                 Review:    MD
+
+OJ-2008-01-31-0: Bugfix:    execd installation does not test absolute path for
+                            local spool dir;
+                            Set SGE_QMASTER_PORT in settings file if sge_qmaster is
+                            not found in /etc/services file
+                 Bugster:   6528315, 6589297
+                 Issue:     2195, 2477
+                 Review:    JG, MD
+
+
+JG-2008-01-31-0: Bugfix:    Fixed memory leaks and qhost -j core dump.
+                 Review:    RD
+
+HP-2008-01-31-2: Bugfix:    Fixed some bugs in new IJS in shut down procedures
+                 Changed:   qsh, shepherd
+                 Review:    MD
+
+HP-2008-01-31-1: Bugfix:    Fixed broken build on Irix65 after checkin RD-2008-01-31-0
+                 Changed:   sge_resource_quota_qmaster.c
+
+JG-2008-01-31-1: Bugfix:    Fixed a memory leak in gdi.
+                 Review:    EB
+
+AA-2008-01-31-0: Bugfix     fixed RMON_USE_CTX again
+                 Review:    EB
+
+RD-2008-01-31-0: Bugfix     fixed redebitation if RQS gets enabled by -mattr
+                 Bugster:   6657521
+                 Issue:     2476
+                 Review:    AH
+
+HP-2008-01-31-0: Bugfix:    Fixed broken build on Irix65 after checkin EB-2008-01-30-1
+                 Changed:   sge_lock.c
+
+EB-2008-01-30-1: Bugfix:    Enabled FIFO locking
+
+HP-2008-01-30-0: Bugfix:    Fixed broken build on Irix65 after checkin EB-2008-01-30-0
+                 Changed:   sge_lock_fifo.c
+
+JG-2008-01-30-1: Bugfix:    Fixed qmaster core dump.
+                 Review:    AH
+
+AA-2008-01-30-0: Enhancem.: - broken build due to #if instead of
+                              #ifdef
+                 Review:    EB
+
+CR-2008-01-30-0: Bugfix:    - fixed commlib issue with message cleanup
+                            - code cleanup in tcp/ssl framework
+                 Review:    RD, HP
+
+EB-2008-01-30-0: Enhancem.: - implemented FIFO lock as a replacement for
+                              pthread locking
+                              (pthread lock can be enabled by removing 
+                              SGE_USE_LOCK_FIFO in libs/lck/sge_lock.h) 
+                            - removed monitor. Now global locking is done 
+                              earlier
+                              (old behaviour can be enabled with 
+                              the preprocessor define DO_LATE_LOCK
+                              in libs/lck/sge_lock.h)
+                 Review:    JG, CR
+
+JG-2008-01-30-0: Bugfix:    qselect without options didn't show any queues.
+                 Review:    AH
+
+RD-2008-01-30-0: Bugfix:    fixed qquota for negated host or user scope
+                 Bugster:   6655195
+                 Issue:     2472
+                 Review:    JG
+
+AH-2008-01-30-0: Bugfix:    Healed reserveration scheduling: Parts of 
+                            AH-2007-10-10-0 got lost due to the move of 
+                            daemons/schedd/scheduler.c to 
+                            daemons/qmaster/sge_sched_thread.c somewhen 
+                            in the process of the scheduler-as-a-thread 
+                            workpackage.
+                 Review:    RD
+
+MD-2008-01-29-0: Bugfix:    o qhost -l h=<hostname> does not work
+                 Bugster:   4680766
+                 Issue:     245
+                 Changed:   clients
+                 Review:    JG
+
+RD-2008-01-29-0: Bugfix:    fixed broken scheduler messages introduced with by
+                            performance enhancement
+                 Review:    AH
+
+RD-2008-01-28-2: Bugfix:    - fixed qdel force
+                            - corrected qrdel value parser
+                 Review:    JG
+
+RD-2008-01-28-1: Cleanup:   removed obsolete classic spooling code
+                 Review:    AA
+
+LP-2008-01-28-0: Enhancem.: SGE_CLUSTER_NAME is valided before installation 
+                            proceeds any further
+                 Enhancem.: qmaster service depends on bdb if installed
+                 Bugfix.:   Execd uses libscf only on -ke request          
+                 Review:    RD
+
+RD-2008-01-28-0: Cleanup:   removed drmaa 0.95 and drmaa-05.jar
+                 Bugster:   6655773
+                 Issue:     2443
+                 Review:    AH
+
+MP-2008-01-25-0: Bugfix:    Merged the changes from MP-2008-01-17-0 in V61_BRANCH
+                            to maintrunk
+                 Bugster:   6595754
+                 Review:    JG
+
+RD-2008-01-25-0: Enhancem.: lowered execd CPU overhead to improve job performance
+                            - PTF run is only triggered when priorization tickets
+                              arrive
+                            - added execd param PDC_INTERVAL to reduce PDC runs
+                 Review:    JG
+
+LP-2008-01-25-0: Enhancem.: Fixed some typos and function description
+                 Bugfix:    Fixed duplicate message id from LP-2008-01-24-0
+                 Review:    PJ
+
+LP-2008-01-24-0: Enhancem.: Subprocesses start in new contracts if SMF is used
+                 Enhancem.: Various SMF support improvements
+                 Enhancem.: Startup scripts now support -nosmf option
+                 Bugfix:    load sensor might block execd port
+                 Bugster:   6654696
+                 Review:    RD
+
+MP-2008-01-24-0: Bugfix:    Merged the changes from MP-2008-01-23-0 in V61_BRANCH
+                            to maintrunk
+                 Bugster:   6594807
+                 Issue:     2465
+                 Review:    AH, JG
+
+AA-2008-01-24-0: Bugfix:    del calendar can lead to SEGV
+                 Review:    JG
+
+OJ-2008-01-23-0: Bugfix:    'NONE' as value is not rejected for queue_conf(5)
+                            shell and qsub(1) -S
+                 Bugster:   6453563
+                 Issue:     2445
+                 Review:    RD, JG
+
+AA-2008-01-23-0: Enhancem.: - renaming AbstractEventClient->EventClientImpl, corr. cleanups
+                            - added nativeStartScheduler()
+                            - JMXEventMonitor smaller corrections
+                            - jgdish, qconf -sconf fix
+                 Review:    RH
+
+JG-2008-01-23-1: Bugfix:    Reintegrated fix for IZ 2050 (RN-2007-05-28-0).
+                 Review:    AA
+
+JG-2008-01-23-0: Bugfix:    fixed spooledit dump <job script>.
+                 Review:    RD
+
+CR-2008-01-23-0: Bugfix:    fixed commlib test binaries:
+                               test_cl_commlib
+                               test_cl_commlib_client
+                 Review:    RD
+
+RD-2008-01-22-1: Bugfix     - fixed load report issue due to improved
+                              qmaster-execd-protocol
+                            - fixed advance reservation soft error handling
+                 Bugster:   6652219, 6649605
+                 Issue:     2469, 2470
+                 Review:    CR
+
+MD-2008-01-22-1: Bugfix:    changed output string, which brakes testuite test
+                 Changed:   install
+
+RD-2008-01-22-0: Bugfix:    added cluster_name to backup files
+
+MD-2008-01-22-0: Bugfix:    moved clear command which confused testsuite
+                 Enhancem.: added IsValidClusterName function to installer
+                 Review:    JG
+                 Changed:   install
+
+LP-2008-01-21-0: Bugfix.:   Could not start install without SGE_ROOT set
+                 Bugfix.:   Added missing SMF_FLAGS in the installation
+                 Review:    PJ
+
+PJ-2008-01-21-0: Enhancem.: using INFOTEXT instead of echo
+                 Review:    LP
+
+AA-2008-01-21-0: Doc:       - man page additions in sge_conf(5)
+                              bootstrap(5) for scheduler thread
+                              and jvm thread
+                 Review:    EB
+
+RD-2008-01-21-0: Bugfix:    - corrected message queue cleanup
+                            - fixed event message handling for virtual clients
+                 Review:    CR
+
+MD-2008-01-18-0: Bugfix:    o autoinstall configfile should be parsed and checked 
+                              for valid input!
+                            o automatic backup is broken
+                 Bugster:   6513435, 6550644 
+                 Issue:     2459, 2466
+                 Changed:   install 
+                 Review:    HP
+
+AA-2008-01-17-0: Enhancem:  - event client hang fixes of jgdi client
+                               - NotificationBridge rewrite
+                               - AbstractEventClient rewrite
+                                 adaption in jgdi_event.c and
+                                 evc/sge_event_client.c
+                               - improvements in JGDIProxy and jmxeventmon  
+                               - close method in JGDIJMXBean
+                            - exec host mod event is send if no last unheard 
+                            - darwin x86 arch support in jgdi helper scripts
+                 Review:    RH
+
+LP-2008-01-17-0: Bugfix:    Fixed and improved LP-2008-01-16-0
+                 Review:    JG
+
+LP-2008-01-16-0: Bugfix:    SMF was used in autoinstall with missing SGE_ENABLE_SMF
+                 Review:    CR
+
+EB-2008-01-16-0: Enhancem.: Added missing qconf manpage entries
+                 Review:    JG
+
+AH-2008-01-16-2: Bugfix:    Parallel scheduling memory leak in master
+                 Bugster:   6562190
+                 Issue:     2187
+                 Review:    JG
+
+HP-2008-01-16-1: Bugfix:    Fixed broken build on irix65 after checkin HP-2008-01-16-0
+                 Changed:   sge_ijs_comm.c, sge_shepherd_ijs.c
+
+HP-2008-01-16-0: Bugfix:    Fixed several bugs in new IJS regarding faulty
+                            pthreads implementation on some architectures,
+                            added commlib tracing to shepherd,
+                            improved error detection in communication.
+                 Changed:   qrsh, shepherd
+                 Review:    MD
+
+MP-2008-01-16-0: Bugfix:    Merged changes of MP-2008-01-14-0 from the 
+                            V61_BRANCH.
+                 Review:    JG
+
+MD-2008-01-15-0: Bugfix:    merged from V61_BRANCH MD-2007-10-04-0
+                            some changes have been made due to differences between
+                            V61_BRANCH and maintrunk
+                 Review:    JG
+                 Changed:   commlib, gdi
+
+MD-2008-01-14-0: Bugfix:    fixed commlib CRM message xml parser 
+                 Review:    CR
+                 Bugfix:    fixed wrong inst_sge exit code
+                 Changed:   commlib, inst_sge
+ 
+AH-2008-01-11-0: Bugfix:    Inefficient single-job event commit pattern with qdel 
+                            jobid1 jobid2 jobid3
+                 Bugster:   6649547
+                 Issue:     2458
+                 Review:    JG
+
+MD-2008-01-11-0: Bugfix:    fixed memory allocation bug in getloadavg
+                            which was introduced with one of the last checkins
+                 Review:    JG
+
+RD-2008-01-11-0: Bugfix:    fixed protocol issue which lead a execd to consume
+                            100% CPU time.
+                 Issue:     2457
+                 Bugster:   6649528
+                 Review:    JG
+
+LP-2008-01-10-0: Enhancem.: Added correct permissions for SMF files to disinst
+                 Enhancem.: Improved sge_smf_support.sh
+                 Enhancem.: Removed version string v62 from the service names
+                 Enhancem.: Improved autoinstall log reporting.
+                 Enhancem.: Changed sgemaster (script) shutdown logic
+                 Bugfix:    Fixed broken autoinstall due to LP-2008-01-04-0
+                 Review:    EB
+
+EB-2008-01-09-0: Enhancem.: improved shutown speed (pthread_cancel is sent earlier)
+                 Review:    LP
+
+LP-2008-01-04-0: Enhancem.: Initial SMF support
+                 Review:    JG
+
+AA-2008-01-04-0: Enhancem.: - jgdi_event.c functions moved to sge_event_client.c
+                            - cleanups in sge_event_client.c
+                            - sol-x86 libjvm fix
+                            - qconf -*conf, -sconf and -aconf fail and don't open editor
+                            - debugging messages if compiled with EVC_DEBUG
+                            - NotificationBridge.java subscribe before register fix
+                            - logging.properties.template cleanup
+                 Review:    CR,EB
+
+JG-2008-01-03-0: Bugfix:    accounting records for parallel job tasks didn't
+                            contain the task submission time.
+                 Bugster:   6469605
+                 Issue:     1689
+                 Review:    MD
+
+AP-2008-01-02-0: Bugfix:    incomplete error loging in case of classic spooling 
+                            failures
+                 Bugster:   6363756
+                 Issue:     2442
+                 Review:    JG
+
+JG-2007-12-31-0: Bugfix:    Fixed broken CL_SIRM_MESSAGE definition.
+                 Review:    TBD
+
+JG-2007-12-28-0: Enhancem.: Added option to suppress individual accounting
+                            records for tightly integrated parallel jobs.
+                 Bugster:   6572326
+                 Issue:     2451
+                 Review:    HP
+
+JG-2007-12-27-0: Bugfix:    Fixed duplicate message ids.
+
+RD-2007-12-23-0: Bugfix:    queue changes with an AR generated a lot of
+                            unnecessary events
+                 Review:    TBD
+
+RD-2007-12-22-0: Enhancem.: - optimized execd data collector execution
+                            - qsub now allows comment after script directive
+                 Review:    TBD
+
+HP-2007-12-21-2: Enhancem.: Installation changed so that the new interactive jobs are now used
+                            by default.
+                 Changed:   inst_sge, arch_variables, inst_common.sh, inst_qmaster.sh
+                 Review:    MD
+
+HP-2007-12-21-1: Bugfix:    Fixed wrong library path in settings.[c]sh file on HP1164
+                 Changed:   dist/util/create_settings.sh
+                 Review:    MD
+
+HP-2007-12-21-0: Enhancm.:  o Activated csp mode in new interactive job support
+                            o Fixed broken build with aimk -no-secure 
+                 Review:    MD
+
+RD-2007-12-21-0: Enhancm:   commlib scalability enhancments
+                            - added hashed access for connection list
+                            - added hashed access for endpoint list
+                            - added hashed access for host list
+                            - reduces protocol overhead by removing unused
+                              fields
+                            - optimized memory usage
+                 Review:    CR
+
+CR-2007-12-20-1: Bugfix:    o fixed some ant build targets in build.xml
+                              files
+                 Review:    AA
+
+CR-2007-12-20-0: Bugfix:    o fixed some ant build targets in build.xml
+                              files
+                 Review:    AA
+
+AA-2007-12-17-0: Bugfix:    - subscription before eventClient.start()
+                              fails
+                            - typos  
+                 Review:    RH             
+
+JG-2007-12-17-0: Enhancem.: higher precision for cpu, ru_utime, ru_stime
+                 Bugster:   6288965
+                 Issue:     869
+                 Review:    HP
+
+RH-2007-12-17-0: Enhancem.: o JGDI JMX authentication improved
+                            o docu for sample jaas.config added
+                 Review:    AA
+ 
+MD-2007-12-14-0: Enhancem.: o switched gelint script from lint to splint
+                            o script enhanement
+
+RH-2007-12-14-0: Enhancem.: o JGDI jmx session created
+                                - JGDILoginModule creates the session id
+                                - JGDIAgent registers for each session a mbean
+                                - correct connection shutdown handling
+                                - only the owning connection can access this mbean
+                            o Bugfixes in NotificationBridge and JGDProxy
+                            o password less login with keystores 
+                            o sge_ca creates keystores for users and copies user certificates
+                              into $SGE_ROOT/$SGE_CELL/common/sgeCA/usercerts
+                 Review:    AA
+
+PJ-2007-12-13-0: Bugfix:    ST, mk_dist should remove sge_st_settings.sh instead of distinst
+                 Bugfix:    ST, sundist does not have needed st_settings.sh
+                 Review:    RD
+
+EB-2007-12-13-0: Enhancem.: added possibilitie to start and stop scheduler
+                            and jvm thread
+                 Review:    MD
+
+RD-2007-12-13-0: Bugfix:    Fixed some more memory leaks introduced with the
+                            scheduler thread, bdb jobscript spooling and the
+                            abstract event client
+                 Review:    CR
+
+HP-2007-12-12-0: Bugfix:    Installation failed on Windows when installing as root
+                            without SGE admin user
+                 Changed:   dist/util/install_modules/inst_execd.sh
+                 Bugster:   6640885
+                 Review:    RD
+
+JG-2007-12-12-0: Bugfix:    JG-2007-12-10-0 introduced too strict verification
+                            of the JB_cwd job attribute.
+                 Review:    RD
+
+AA-2007-12-11-0: Bugfix:    - AbstractEventClient fix
+                            - evc/evm fixes
+                            - jgdi_qstat -l option fix
+                            - build.xml dependencies
+                            - jgdi qconf -mq, h_rss etc. verify 
+                 Review:    RH
+
+JG-2007-12-11-0: Bugfix:    Replace realloc by sge_realloc, make sure that 
+                            memory is freed, when realloc fails.
+                 Review:    RD
+
+RD-2007-12-11-0: Bugfix:    fixed some memory leaks introduced with the
+                            scheduler thread
+                 Review:    EB
+
+JG-2007-12-10-0: Bugfix:    Added missing verification to pathes in cluster
+                            configuration.
+                 Bugster:   6506580
+                 Issue:     2136
+                 Review:    MD
+
+PJ-2007-12-07-0: Bugfix:    The Service tags settings should differ
+                            for sundist/mk_dist 
+                 Bugfix:    The error when no ARCH was defined.
+                 Review:    LP 
+
+RD-2007-12-07-0: Bugfix:    - fixed issue with unheard execd and diffed load
+                              reports
+                            - corrected weird compare for reprioritze at
+                              qmaster startup
+                            - fixed possible segfault with commlib params
+                 Review:    CR
+
+AH-2007-12-06-0: Bugfix:    Use of function pointers in dtrace pid provider 
+                            functions broke master monitor
+                 Bugster:   6638313
+                 Review:    RD
+
+HP-2007-12-05-0: Bugfix:    fixed broken build with -no-jni option
+                 Changed:   sge_c_gdi.c
+                 Review:    AA
+
+AA-2007-12-05-0: Bugfix:    fixed accidental checkin of sge_log.c breaking
+                            qrsh output
+                 Review:    RD
+
+                        
+RD-2007-12-05-0: Bugfix:    fixed qping core dump
+                 Review:    MD
+
+AH-2007-12-04-0: Enhancem:  Merged -hold_jid_ad related man page changes from 
+                            V61u1_ARI_BRANCH 
+                 Bugster:   6367649
+                 Issue:     1832
+                 Review:    RD
+
+EB-2007-12-03-1: Bugfix:    o order number in profiling output of scheduler was
+                              not correct
+                 Review:    JG
+
+RD-2007-12-03-0: Bugfix:    fixed broken build on darwin
+                 Review:    EB
+
+EB-2007-12-03-0: Bugfix:    o fixed bug in scheduler which might cause core of
+                              scheduler if it is restarted.
+                            o fixed bug which might cause core in logging code
+                              when scheduler was shut down.
+                            o fixed bug which caused wrong runtime values in 
+                              throuput tests
+                            o reworked startup/shutdown code for scheduler and jvm
+                              thread in qmaster (client side is still missing) 
+                 Review:    AA 
+                     
+MD-2007-10-04-0: Enhancem.: commlib enhancement, fix is still missing for this 
+                            CR clients should issue a more explicit error 
+                            message when qmaster is busy
+                 Bugster:   6469494
+                 Issue:     2372
+                 Changed:   commlib, spooling 
+
+RD-2007-12-03-0: Enhancem.: improved execd startup
+                 Review:    CR
+
+AA-2007-11-30-0: Enhancem.: - broken jgdi qstat output fix
+                            - internal event client for jgdi
+                            - update_func moved to local context
+                            - support of solaris jvms on solaris8/9
+                             link against -lthread instead of lpthread
+                             which prevented start of jvm_thread
+                 Review:    RD
+                             
+JG-2007-11-30-0: Enhancem.: Set default for reporting_params log_consumables to
+                            resource friendly default "false".
+                            Some cleanup.
+                 Review:    RD           
+
+MD-2007-11-29-0: Bugfix:    o the installation of two rpc databases on the some
+                            host fails 
+                 Bugster:   6259265 
+                 Issue:     2437
+                 Changed:   install 
+                 Review:    JG
+
+AA-2007-11-29-0: Bugfix:    inst_qmaster.sh adding of -d64 on sol-sparc64 and
+                            sol-amd64 prevents start of jvm_thread
+                 Review:    RD           
+
+JG-2007-11-29-0: Bugfix:    Verify slots attribute in cluster queue and pe.
+                 Bugster:   4752829
+                 Issue:     2433
+                 Review:    RD
+
+RD-2007-11-29-0: Bugfix:    fix 100% CPU usage qmaster if JVM thrad couldn't
+                            started
+                 Review:    AA
+
+LP-2007-11-27-0: Bugfix     Fixed some JGDI Shell options
+                 Bugfix     Marked lt_heard_from as hidden in JGDI
+                 Review:    AA
+
+RD-2007-11-26-1: Bugfix:    disabled starting of sge_schedd by sge_shadowd
+                 Review:    EB
+
+RD-2007-11-26-0: Bugfix:    Fixed long qmaster shutdown time
+                 Review:    CR
+
+JG-2007-11-26-0: Bugfix:    Fixed minor memory leaks.
+                 Review:    EB
+
+EB-2007-11-23-1: Bugfix:    Fixed broken scheduler due to EB-2007-11-23-0
+
+AH-2007-11-23-0: Bugfix:    Fix broken qstat -s a caused by AH-2007-11-16-0
+                 Copyright: Fixed 'Initial Developer' statement in sge_task_depend.[ch]
+                 Review:    RD
+
+EB-2007-11-23-0: Cleanup:   o Moved sge_share_mon from clients to utilbin
+                            o Added parameters to bootstrap file to enable threads
+                              or set the initial number of threads 
+                            o Added qmaster param temporaryly to limit the number
+                              of GDI order requests send by qmaster
+                            o Changed the initial number of worker an listener threads
+                            o Eleminated uneccessary pthread_cond_wait() call in worker 
+                              threads which reduced overall performance.
+                 Review:    JG 
+
+                 NOTE:      Reinstallation necessary or otherwise scheduler
+                            and JVM thread won't start during qmaster start.
+
+                              or
+
+                            Add following lines to your bootstrap file:
+                               listener_threads        2
+                               worker_threads          2
+                               scheduler_threads       1
+
+HP-2007-11-23-0: Bugfix:    new IJS: fixed broken environment setup for qrsh
+                            without command when environment of shepherd is 
+                            incomplete.
+
+RH-2007-11-22-0: Bugfix:    broken jgdi build fixed
+                 Review:    AA
+
+AA-2007-11-22-0: Enhancem:  o better logging for JGDIAgent
+                            o own MBeanServer instead of Platform MBeanServer
+                 Review:    RH
+
+RD-2007-11-22-0: Enhancem:  added qconf -Mconf
+                 Bugster:   6609633
+                 Issue:     2422
+                 Bugfix:    - fixed wrong exit code for qconf -sprj
+                            - fixed schedd core dump because of hostname
+                              resolving
+                 Review:    AA, AH
+
+CR-2007-11-22-0: Bugfix:    not initalized variable caused qmaster segfault on
+                            solaris amd64 hosts
+                 Review:    AA
+
+PJ-2007-11-21-1: Bugfix:    ExecuteAsAdmin shorten the long command 
+
+HP-2007-11-21-0: Enhancem.: o new interactive job support
+                            o starts interactive jobs directly, without rsh/rshd
+                              or rlogin/rlogind or telnet/telnetd.
+                            o doesn't need reserved ports on exec host.
+                            o redirects input/output using commlib, i.e. this
+                              redirection is prepared for encryption.
+                 Added:     clients/common/sge_client_ijs.c 
+                            clients/common/sge_client_ijs.h 
+                            common/sge_ijs_comm.c 
+                            common/sge_ijs_comm.h 
+                            common/sge_ijs_threads.c 
+                            common/sge_ijs_threads.h 
+                            daemons/shepherd/sge_shepherd_ijs.c 
+                            daemons/shepherd/sge_shepherd_ijs.h 
+                            libs/uti/sge_pty.c source/libs/uti/sge_pty.h 
+                 Modified:  aimk
+                            common/Makefile
+                            clients/qsh/Makefile
+                            clients/qsh/msg_qsh.h
+                            clients/qsh/qsh.c
+                            common/Makefile
+                            daemons/qmaster/sge_thread_jvm.c
+                            daemons/shepherd/Makefile
+                            daemons/shepherd/builtin_starter.c
+                            daemons/shepherd/shepherd.c
+                            libs/uti/Makefile
+                            utilbin/Makefile
+                 Review:    JG
+
+PJ-2007-11-21-0: Bugfix:    ExecuteAsAdmin shorten the long command 
+                            line arguments an solaris host because of 
+                            /usr/bin/sh limitations
+                 Review:    AS           
+                            
+AH-2007-11-21-0: Bugfix:    Completized fix of dtrace monitor after 
+                            EB-2007-11-02-1 reconstructions
+                 Review:    RD
+
+AA-2007-11-21-0: Enhancem.: o jvm logging/startup
+                            o qmon qconf jvm option support
+                            o is_qmaster_internal_client in ctx to define if sge_evc
+                              is internal instead of extra local_client flag
+                            o SKIP_NONREENTRANT in aimk and scripts/nonreentrant.sh
+                              for insure 
+                 Review:    RH             
+                            
+RH-2007-11-21-0: Bugfix:    o JGDIAgent calls now AbstractEventClient.closeAll and 
+                              JGDIBaseImpl.closeAll at shutdown
+                            o UnixLoginModule does not call authuser if no username
+                              is specified
+                 Review:    AA
+
+LP-2007-11-20-0: Enhancem.: Removed Command, HistoryCommand interfaces from JGDIShell
+                 Enhancem.: JGDIShell now stores original argument lists
+                 Enhancem.: JGDI project attributes visibility changed from RO to HIDDEN
+                 Bugfix   : Fixed some command options and messages in JGDI
+                 Review:    AA
+
+DT-2007-11-19-0: Bugfix:    o Corrected DRMAA Java version number
+                            o Added -sync to list of native switches removed by
+                              DRMAA
+                            o Added libdrmaa95.so to drmaa_clean target
+                 Review:    pending
+                 Bugster:   2253, 2430
+                 Issue:     6558329, 6631777
+
+RD-2007-11-19-0: Enhancem:  added README-Upgrade.txt to distribution
+                 Review:    JG
+
+AA-2007-11-19-0: Enhancem:  export SGE_ENABLE_JMX for bootstrap file
+                 Review:    EB
+
+AH-2007-11-16-0: Enhancem:  Merged -hold_jid_ad option from V61u1_ARI_BRANCH 
+                 Copyright: Added Rising Sun Pictures copyright
+                 Review:    CR
+
+EB-2007-11-15-1: Bugfix:    Fixed bug in scheduler (queue selection)
+                            Removed incorrect logging during scheduler initialisation
+
+AA-2007-11-15-0: Enhancem.: problem on sol-amd64, sol-sparc64 jvm_thread
+                            -d64 option added in install
+                 Review:    CR
+
+CR-2007-11-15-0: Bugfix:    added chmod for sge_st script in distinst
+                 Review:    AA
+
+EB-2007-11-15-0: Bugfix:    Added error logging.
+                            removed unused MSG_ defines
+
+EB-2007-11-14-0: Bugfix:    Suspend thresholds were broken.
+                 Review:    JG (AH)
+                 Bugfix:    host_list_locate() used with empty execd, admin,
+                            or submit hostlist caused error logging in message 
+                            file
+                 Review:    JG
+                 Bugfix:    jobs where scheduled twice or deleted twice due to
+                            error in busy state handling of schedd
+                 Review:    JG
+
+CR-2007-11-14-0: Bugfix:    authuser binary checked real user id not the
+                            effective user id. Problem: Only root could
+                            start this binary.
+                 Review:    RH
+
+AA-2007-11-14-0: Enhancem:  - configuration of jvm thread
+                              bootstrap->global/local configuration
+                            - shutdown of jvm thread
+                            - fix for qmon new data fetching
+                            - fix for 100% CPU usage in empty jvm thread
+                 Review:    RH
+
+AH-2007-11-12-0: Enhancem:  Need GNU-lib mtrace()/muntrace() support in qmaster 
+                            for hunt on memory leaks
+                 Bugster:   6627903
+                 Issue:     2426
+                 Review:    HP
+
+MP-2007-11-09-0: Bugfix:    Fixed the break introcuded in testsuite test from
+                            the commit MP-2007-10-26-0
+                 Review:    JG
+
+OJ-2007-11-06-1: Bugfix:    Fixed minor issues in man pages
+                 Review:
+
+OJ-2007-11-08-0: Bugfix:    Fix qconf -mc accepts erroneous resource entries
+                            without an urgency; qmon gives (poor) error message
+                Bugster:    6553062
+                Issue:      2383
+                Review:     AH
+
+AH-2007-11-08-0: Bugfix:    Part of AH-2007-10-31-0 was lost due to EB-2007-11-02-1
+                 Review:    MD
+
+AH-2007-11-07-1: Bugfix:    EB-2007-11-02-1 broke dtrace monitoring
+                 Review:    EB
+
+AH-2007-11-07-0: Bugfix:    EB-2007-11-02-1 broke the schedule file
+                 Review:    EB
+
+EB-2007-11-07-0: Bugfix:    o worked on open TODO's due to review process
+                              of for work package EB-2007-11-02-1 
+                              (only cleanup)
+                 Review:    MD 
+
+RH-2007-11-05-0: Bugfix:    o broken build on aix43
+                            o jvm thread is built if NO_JNI is not defined
+                 Review:    AA
+
+AA-2007-11-05-0: Bugfix:    o fix for broken jgdi_qstat due to AH-2007-10-31-0
+
+EB-2007-11-05-1: Bugfix:    o merged missing code concerning JVM instatiation.
+                 Review:    RH
+
+EB-2007-11-05-0: Bugfix:    o Renamed preprocessor variable to enable the JVM thread code to 
+                              "ENABLE_JVM_THREAD"
+
+EB-2007-11-03-0: BugFix:    o Fixed bug in event master introduced with EB-2007-11-02-1.
+
+EB-2007-11-02-2: BugFix:    o Disabled qstat enhancement checked in with AH-2007-10-31-0.
+                              (qstat -f did not work)
+                            o Fixed source/dist/util/sgeST/sge_st which broke installation. 
+
+EB-2007-11-02-1: Enhancem.: o scheduler as a thread in master
+                            o possibility to use GDI within master threads
+                            o hooks for the event/mirror interface to bypass 
+                              communication and packing in master threads
+                            o replaced all threads in master by "commlib-threads"
+                            o reworked steps done during startup/shutdown of master
+                 Review:    JG, AA
+
+EB-2007-11-02-0: CVS        Created EB_PRE_SAAT_TAG
+---------------------------------------------------
+
+AH-2007-10-31-0: Bugfix:    - reduce amount of queue list copying in scheduler
+                            - care for propagation of queue suspension state to
+                              jobs in qmaster as to minimize data amount to be 
+                              fetched by clients
+                            - add support for queue suspension to SIMULATE_EXECD 
+                              mode
+                 Bugster:   6595856
+                 Issue:     2350
+                 Review:    MD
+                  
+
+JG-2007-10-31-0: Bugfix:    Merge from V61_BRANCH of JG-2007-10-30-1:
+                            qstat -ext didn't show the usage of parallel tasks
+                            in the summary view (without -g t)
+                 Bugster:   6391244
+                 Issue:     2419
+                 Review:    RD
+                            Merge from V61_BRANCH of JG-2007-10-31-0:
+                 Bugfix:    ARCo ju_exit_status should provide means to 
+                            recognize the intermediate record.
+                 Bugster:   6621482
+                 Issue:     2416
+                 Review:    RD
+
+PJ-2007-10-31-0: BugFix.  : Needs to be executable file
+
+PJ-2007-10-30-0: Enhancem.: The GE Service Tags support
+                 Review:    RD
+
+JG-2007-10-30-0: Bugfix:    qrsh -no now set all queues in error state when the
+                            qrsh was unavailable when the job was scheduled.
+                 Bugster:   6588743
+                 Issue:     2418
+                 Review:    HP, EB
+
+AA-2007-10-29-0: Enhancem:  o jvm_thread fix for using certs for JGDIAgent
+                            o multiple mbean instances
+                            o JGDIShell problem for macos
+                            o tpyo fix jass -> jaas, update your 
+                              ClusterConfig*.properties *jass*->*jaas* 
+                 Review:    RH
+
+JG-2007-10-29-0: Bugfix:    The start_time field was incorrect in intermediate 
+                            accounting records.
+                 Bugster:   6622842
+                 Issue:     2417
+                 Review:    RD
+
+MD-2007-10-26-0: Bugfix:    o Incorrect messages in qconf command,
+                            o rctemplates lack of requirement,
+                            o the restore feature does not delete old 
+                              configuration before restoring 
+                 Bugster:   6596931, 6287501, 6618619
+                 Issue:     2406, 2336, 2407
+                 Changed:   clients, install, backup_restore 
+                 Review:    HP
+
+MP-2007-10-26-1: Bugfix:    sge_shepherd should exit if it cannot
+                            write to any of its essential files
+                 Bugster:   6564543
+                 Issue:     2400
+                 Review:    JG
+
+MP-2007-10-26-0: Bugfix:    qstat -j -xml shows more detailed information than
+                            qstat -j
+                 Bugster:   6353628
+                 Issue:     1909
+                 Review:    JG
+
+RH-2007-10-26-0: Enhancem:  Installer enhancement for JMX MBean Server added
+                 Review:    MD
+
 RD-2007-10-25-0: Bugfix:    - fixed execd reconnect on qmaster migration
                             - fixed incorrect error reporting for job script
                               spooling
                  Review:    JG
+
+JG-2007-10-24-1: Bugfix:    Long running jobs caused incorrect usage 
+                            information from ARCo database.
+                 Bugster:   6618599
+                 Issue:     2414
+                 Review:    RD
 
 JG-2007-10-24-0: Bugfix:    Fixed memory leaks / memory access errors.
                  Review:    RD
 
 RD-2007-10-24-0: Bugfix:    raised GDI version
 
+JG-2007-10-22-0: Bugfix:    add a parameter to reporting_params to switch off 
+                            writing of all consumables
+                 Bugster:   6617450
+                 Issue:     2401
+                            removing parameters from the reporting_params will 
+                            not fallback to default values
+                 Bugster:   6619016
+                 Issue:     2409
+                 Review:    EB
+
+HP-2007-10-22-0: Bugfix:    Fixed broken build after checkin AH-2007-10-22-1
+                 Changed:   clients/common/sge_qhost.c
+
+AH-2007-10-22-1: Bugfix:    Further reduction with orphan queue checking overhead
+                            and qhost optimization.
+                 Bugster:   6619657,6619662
+                 Issue:     2410,2411
+                 Review:    EB
+
 RD-2007-10-21-0: CVS        Created V61ARsnapshot3_BRANCH
 ---------------------------------------------------------
 
-RD-2007-10-21-1: CVS        Created V61ARsnapshot3_TAG
+RD-2007-10-21-0: CVS        Created V61ARsnapshot3_TAG
 ------------------------------------------------------
 
 AH-2007-10-19-1: Bugfix:    Bypass expensive sge_print_queues() if not needed
                             in qhost
+                 Bugster:   6619662
+                 Issue:     2411
                  Review:    RD
 
 AH-2007-10-19-0: Bugfix:    Bypass expensive but unneeded orphan queue checking
                             in qmaster upon qmod -d|-e|-s|-us
+                 Bugster:   6619657
+                 Issue:     2410
                  Review:    RD
 
 LP-2007-10-19-1: Enhancem.: JGDIShell now uses stderr to display errors

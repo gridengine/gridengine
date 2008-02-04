@@ -128,13 +128,14 @@ struct sge_gdi_ctx_class_str {
    uid_t (*get_uid)(sge_gdi_ctx_class_t *thiz);
    gid_t (*get_gid)(sge_gdi_ctx_class_t *thiz);
    bool (*is_qmaster_internal_client)(sge_gdi_ctx_class_t *thiz);
+   const char* (*get_ca_root)(sge_gdi_ctx_class_t *thiz);
+   const char* (*get_ca_local_root)(sge_gdi_ctx_class_t *thiz);
 
    /* credentials */
    void (*set_private_key)(sge_gdi_ctx_class_t *thiz, const char* pkey);
    void (*set_certificate)(sge_gdi_ctx_class_t *thiz, const char* cert);
    const char* (*get_private_key)(sge_gdi_ctx_class_t *thiz);
    const char* (*get_certificate)(sge_gdi_ctx_class_t *thiz);
-
 
    /* commlib */
    cl_com_handle_t* (*get_com_handle)(sge_gdi_ctx_class_t *thiz);

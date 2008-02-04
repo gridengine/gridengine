@@ -82,9 +82,6 @@ sge_jvm_initialize(sge_gdi_ctx_class_t *ctx, lList **answer_list);
 void
 sge_jvm_terminate(sge_gdi_ctx_class_t *ctx, lList **answer_list);
 
-void * 
-sge_jvm_main(void *arg);
-
 #endif
 
 #endif

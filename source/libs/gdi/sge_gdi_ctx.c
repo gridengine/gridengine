@@ -98,6 +98,7 @@ typedef struct {
    sge_prog_state_class_t* sge_prog_state_obj;
    sge_path_state_class_t* sge_path_state_obj;
    sge_bootstrap_state_class_t* sge_bootstrap_state_obj;
+   sge_csp_path_class_t* sge_csp_path_obj;
    
    char* component_name;
    char* thread_name;
@@ -110,7 +111,7 @@ typedef struct {
 
    char *ssl_private_key;
    char *ssl_certificate;
-   
+
    lList *alp;
    int last_commlib_error;
    sge_error_class_t *eh;
@@ -260,12 +261,15 @@ static void sge_gdi_ctx_class_error(sge_gdi_ctx_class_t *thiz, int error_type, i
 static sge_env_state_class_t* get_sge_env_state(sge_gdi_ctx_class_t *thiz);
 static sge_prog_state_class_t* get_sge_prog_state(sge_gdi_ctx_class_t *thiz);
 static sge_path_state_class_t* get_sge_path_state(sge_gdi_ctx_class_t *thiz);
+static sge_csp_path_class_t* get_sge_csp_path(sge_gdi_ctx_class_t *thiz);
 static sge_bootstrap_state_class_t* get_sge_bootstrap_state(sge_gdi_ctx_class_t *thiz);
 static int reresolve_qualified_hostname(sge_gdi_ctx_class_t *thiz);
 static cl_com_handle_t* get_com_handle(sge_gdi_ctx_class_t *thiz);
 static const char* get_component_name(sge_gdi_ctx_class_t *thiz);
 static const char* get_thread_name(sge_gdi_ctx_class_t *thiz);
 static const char* get_progname(sge_gdi_ctx_class_t *thiz);
+static const char* get_ca_local_root(sge_gdi_ctx_class_t *thiz);
+static const char* get_ca_root(sge_gdi_ctx_class_t *thiz);
 static u_long32 get_who(sge_gdi_ctx_class_t *thiz);
 static bool is_daemonized(sge_gdi_ctx_class_t *thiz);
 static void set_daemonized(sge_gdi_ctx_class_t *thiz, bool daemonized);
@@ -411,6 +415,8 @@ sge_gdi_ctx_class_create(int prog_number, const char *component_name,
    ret->set_certificate = set_certificate;
    ret->get_private_key = get_private_key;
    ret->get_certificate = get_certificate;
+   ret->get_ca_root = get_ca_root;
+   ret->get_ca_local_root = get_ca_local_root;
    ret->is_qmaster_internal_client = ctx_is_qmaster_internal_client;
 
    ret->dprintf = sge_gdi_ctx_class_dprintf;
@@ -543,7 +549,7 @@ sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const char* compon
                   int thread_number, const char *thread_name, const char* username, 
                   const char *groupname, const char *sge_root, const char *sge_cell, 
                   int sge_qmaster_port, int sge_execd_port, bool from_services,
-                  bool is_qmaster_internal_client)
+                  bool qmaster_internal_client)
 {
    sge_gdi_ctx_t *es = (sge_gdi_ctx_t *)thiz->sge_gdi_ctx_handle;
    sge_error_class_t *eh = es->eh;
@@ -569,9 +575,9 @@ sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const char* compon
    /* TODO: shall we do that here ? */
    lInit(nmv);
 
-   es->is_qmaster_internal_client = is_qmaster_internal_client;
+   es->is_qmaster_internal_client = qmaster_internal_client;
 
-   es->sge_env_state_obj = sge_env_state_class_create(sge_root, sge_cell, sge_qmaster_port, sge_execd_port, from_services, eh);
+   es->sge_env_state_obj = sge_env_state_class_create(sge_root, sge_cell, sge_qmaster_port, sge_execd_port, from_services, qmaster_internal_client, eh);
    if (!es->sge_env_state_obj) {
       DRETURN(false);
    }   
@@ -595,6 +601,11 @@ sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const char* compon
       DRETURN(false);
    }   
    
+   es->sge_csp_path_obj = sge_csp_path_class_create(es->sge_env_state_obj, es->sge_prog_state_obj, eh);
+   if (!es->sge_csp_path_obj) {
+      DRETURN(false);
+   }   
+
    if (component_name == NULL) {
       es->component_name = strdup(prognames[prog_number]);
    } else {
@@ -816,6 +827,7 @@ static void sge_gdi_ctx_destroy(void *theState)
    sge_prog_state_class_destroy(&(s->sge_prog_state_obj));
    sge_path_state_class_destroy(&(s->sge_path_state_obj));
    sge_bootstrap_state_class_destroy(&(s->sge_bootstrap_state_obj));
+   sge_csp_path_class_destroy(&(s->sge_csp_path_obj));
    sge_free(s->master);
    sge_free(s->username);
    sge_free(s->groupname);
@@ -855,9 +867,6 @@ static int sge_gdi_ctx_class_connect(sge_gdi_ctx_class_t *thiz)
 
 static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
    
-   sge_gdi_ctx_t *gdi_ctx = (sge_gdi_ctx_t *)thiz->sge_gdi_ctx_handle;
-   sge_env_state_class_t* sge_env = thiz->get_sge_env_state(thiz);
-   sge_prog_state_class_t* prog_state = thiz->get_sge_prog_state(thiz);
    sge_path_state_class_t* path_state = thiz->get_sge_path_state(thiz);
    sge_bootstrap_state_class_t * bootstrap_state = thiz->get_sge_bootstrap_state(thiz);
    cl_host_resolve_method_t resolve_method = CL_SHORT;
@@ -986,10 +995,10 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
       /*
       ** CSP initialize
       */
-      if (strcasecmp(bootstrap_state->get_security_mode(bootstrap_state), "csp") == 0 ) {
+      if (strcasecmp(bootstrap_state->get_security_mode(bootstrap_state), "csp") == 0) {
          cl_ssl_setup_t *sec_ssl_setup_config = NULL;
          cl_ssl_cert_mode_t ssl_cert_mode = CL_SSL_PEM_FILE;
-         sge_csp_path_class_t *sge_csp = sge_csp_path_class_create(sge_env, prog_state, gdi_ctx->eh);
+         sge_csp_path_class_t *sge_csp = get_sge_csp_path(thiz);
 
          if (thiz->get_certificate(thiz) != NULL) {
             ssl_cert_mode = CL_SSL_PEM_BYTE;
@@ -1019,7 +1028,6 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
                                progname, 0, 
                                sge_qmaster_port,
                                cl_get_error_text(cl_ret));
-            sge_csp_path_class_destroy(&sge_csp);
             DRETURN(cl_ret);
          }
 
@@ -1033,11 +1041,9 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
                                (char*)thiz->get_component_name(thiz), 0,
                                sge_qmaster_port,
                                cl_get_error_text(cl_ret));
-            sge_csp_path_class_destroy(&sge_csp);
             cl_com_free_ssl_setup(&sec_ssl_setup_config);
             DRETURN(cl_ret);
          }
-         sge_csp_path_class_destroy(&sge_csp);
          cl_com_free_ssl_setup(&sec_ssl_setup_config);
       }
 
@@ -1369,6 +1375,12 @@ static sge_path_state_class_t* get_sge_path_state(sge_gdi_ctx_class_t *thiz)
    return es->sge_path_state_obj;
 }
 
+static sge_csp_path_class_t* get_sge_csp_path(sge_gdi_ctx_class_t *thiz) 
+{
+   sge_gdi_ctx_t *es = (sge_gdi_ctx_t *) thiz->sge_gdi_ctx_handle;
+   return es->sge_csp_path_obj;
+}
+
 static sge_bootstrap_state_class_t* get_sge_bootstrap_state(sge_gdi_ctx_class_t *thiz)
 {
    sge_gdi_ctx_t *es = (sge_gdi_ctx_t *) thiz->sge_gdi_ctx_handle;
@@ -1592,7 +1604,7 @@ static void set_certificate(sge_gdi_ctx_class_t *thiz, const char *cert) {
 
    DENTER(BASIS_LAYER, "sge_gdi_ctx_class->set_certificate");
 
-   if ( es->ssl_certificate != NULL ) {
+   if (es->ssl_certificate != NULL) {
       FREE(es->ssl_certificate);
    }
    es->ssl_certificate = cert ? strdup(cert) : NULL;
@@ -1609,6 +1621,27 @@ static const char* get_certificate(sge_gdi_ctx_class_t *thiz) {
    DRETURN(cert);
 }
 
+static const char* get_ca_local_root(sge_gdi_ctx_class_t *thiz) {
+   sge_csp_path_class_t *sge_csp = get_sge_csp_path(thiz);
+   const char *ca_local_root = NULL;
+   
+   DENTER(BASIS_LAYER, "sge_gdi_ctx_class->get_ca_local_root");
+   if (sge_csp != NULL) {
+      ca_local_root = sge_csp->get_ca_local_root(sge_csp);
+   }   
+   DRETURN(ca_local_root);
+}
+
+static const char* get_ca_root(sge_gdi_ctx_class_t *thiz) {
+   sge_csp_path_class_t *sge_csp = get_sge_csp_path(thiz);
+   const char *ca_root = NULL;
+   
+   DENTER(BASIS_LAYER, "sge_gdi_ctx_class->get_ca_root");
+   if (sge_csp != NULL) {
+      ca_root = sge_csp->get_ca_root(sge_csp);
+   }
+   DRETURN(ca_root);
+}
 
 static const char* get_default_cell(sge_gdi_ctx_class_t *thiz) {
    sge_prog_state_class_t* prog_state = thiz->get_sge_prog_state(thiz);

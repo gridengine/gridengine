@@ -42,6 +42,8 @@ struct sge_csp_path_class_str {
    void *sge_csp_path_handle;
 
    void (*dprintf)(sge_csp_path_class_t *thiz);
+   const char* (*get_ca_root)(sge_csp_path_class_t *thiz);
+   const char* (*get_ca_local_root)(sge_csp_path_class_t *thiz);
    const char* (*get_CA_cert_file)(sge_csp_path_class_t *thiz);
    const char* (*get_CA_key_file)(sge_csp_path_class_t *thiz);
    const char* (*get_cert_file)(sge_csp_path_class_t *thiz);

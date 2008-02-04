@@ -57,7 +57,6 @@ import javax.management.NotificationListener;
 import javax.management.remote.JMXConnectionNotification;
 import javax.management.remote.JMXConnectorServer;
 import javax.security.auth.Subject;
-import sun.management.jmxremote.ConnectorBootstrap;
 
 /**
  * JGDI JMX agent class.

@@ -53,7 +53,7 @@ FILELIST="3rd_party bin ckpt examples inst_sge install_execd install_qmaster \
 
 OPTFILES="catman doc include man"  
 
-SUIDFILES="utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot bin/*/sgepasswd"
+SUIDFILES="utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot bin/*/sgepasswd utilbin/*/authuser"
 
 umask 022
 
@@ -164,6 +164,7 @@ else
    $ECHO "   \$SGE_ROOT/utilbin/<arch>/rsh"
    $ECHO "   \$SGE_ROOT/utilbin/<arch>/testsuidroot"
    $ECHO "   \$SGE_ROOT/bin/<arch>/sgepasswd"
+   $ECHO "   \$SGE_ROOT/bin/<arch>/authuser"
    $ECHO
 
    TEXT="Do you want to set the file permissions (yes/no) [NO] >> \c"

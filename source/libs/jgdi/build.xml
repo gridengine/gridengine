@@ -113,6 +113,7 @@
         
         <path id="compile.classpath">
             <pathelement path="${libs.junit.classpath}"/>
+            <pathelement path="${juti.jar}"/>
             <!-- pathelement location="${drmaa.jar}"/ -->
         </path>
         

@@ -62,10 +62,10 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
 /**
- * The GECATrustManager validates the certificates against the CA certifcate
+ * The GECATrustManager validates the certificates against the CA certificate
  * of a Grid Engine CSP system
  */
-public class GECATrustManager {
+public class GECATrustManager implements X509TrustManager {
     
     private final static Logger log = Logger.getLogger(GECATrustManager.class.getName());
     
@@ -78,7 +78,7 @@ public class GECATrustManager {
 
     private long lastUpdate;
     private X509TrustManager trustManager;
-    private X509Certificate  caCertifiate;
+    private X509Certificate  caCertificate;
     
     /**
      *  Creates a new instance of GECATrustManager.
@@ -225,7 +225,7 @@ public class GECATrustManager {
         X509Certificate ret = null;
         synchronized(syncObject) {
             reinit();
-            ret = caCertifiate;
+            ret = caCertificate;
         }
         log.exiting("GECATrustManager", "getCACertificate", ret);
         return ret;
@@ -263,7 +263,7 @@ public class GECATrustManager {
             try {
                 X509Certificate cert = (X509Certificate)certFac.generateCertificate(in);
                 ks.setCertificateEntry(CA_ALIAS, cert);
-                caCertifiate = cert;
+                caCertificate = cert;
             } finally {
                 try {
                     in.close();

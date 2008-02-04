@@ -106,6 +106,7 @@ master_jvm_class_t Master_Jvm = {
 };
 
 static bool shutdown_main(void);
+static void *sge_jvm_main(void *arg);
 
 /****** qmaster/threads/sge_jvm_terminate() ***********************************
 *  NAME
@@ -649,7 +650,7 @@ sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
    char** additional_jvm_argv = NULL;
    int additional_jvm_argc = 0;
    lListElem *confEntry = NULL;
-   const int fixed_jvm_argc = 14;
+   const int fixed_jvm_argc = 16;
    bool ret = true;
 
    DENTER(TOP_LAYER, "sge_run_jvm");
@@ -703,19 +704,21 @@ sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
    */
    jvm_argv[0] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.grid.jgdi.sgeRoot=%s", ctx->get_sge_root(ctx)));
    jvm_argv[1] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.grid.jgdi.sgeCell=%s", ctx->get_default_cell(ctx)));
-   jvm_argv[2] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.grid.jgdi.sgeQmasterSpoolDir=%s", ctx->get_qmaster_spool_dir(ctx)));
-   jvm_argv[3] = strdup(sge_dstring_sprintf(&ds, "-Djava.class.path=%s/lib/jgdi.jar:%s/lib/juti.jar", ctx->get_sge_root(ctx), ctx->get_sge_root(ctx)));
-   jvm_argv[4] = strdup(sge_dstring_sprintf(&ds, "-Djava.security.policy=%s/common/jmx/java.policy", ctx->get_cell_root(ctx)));
-   jvm_argv[5] = strdup("-Djava.security.manager=com.sun.grid.jgdi.management.JGDISecurityManager");
-   jvm_argv[6] = strdup(sge_dstring_sprintf(&ds, "-Djava.rmi.server.codebase=file://%s/lib/jgdi.jar", ctx->get_sge_root(ctx)));
-   jvm_argv[7] = strdup(sge_dstring_sprintf(&ds, "-Djava.library.path=%s/lib/%s", ctx->get_sge_root(ctx), sge_get_arch()));
-   jvm_argv[8] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.jmxremote.access.file=%s/common/jmx/jmxremote.access", ctx->get_cell_root(ctx)));
-   jvm_argv[9] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.jmxremote.password.file=%s/common/jmx/jmxremote.password", ctx->get_cell_root(ctx)));
-   jvm_argv[10] = strdup(sge_dstring_sprintf(&ds, "-Djava.security.auth.login.config=%s/common/jmx/jaas.config", ctx->get_cell_root(ctx)));
-   jvm_argv[11] = strdup(sge_dstring_sprintf(&ds, "-Djava.util.logging.config.file=%s/common/jmx/logging.properties", ctx->get_cell_root(ctx)));
+   jvm_argv[2] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.grid.jgdi.caTop=%s", ctx->get_ca_root(ctx)));
+   jvm_argv[3] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.grid.jgdi.serverKeystore=%s/userkeys/%s/keystore", ctx->get_ca_local_root(ctx), ctx->get_admin_user(ctx)));
+   jvm_argv[4] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.grid.jgdi.sgeQmasterSpoolDir=%s", ctx->get_qmaster_spool_dir(ctx)));
+   jvm_argv[5] = strdup(sge_dstring_sprintf(&ds, "-Djava.class.path=%s/lib/jgdi.jar:%s/lib/juti.jar", ctx->get_sge_root(ctx), ctx->get_sge_root(ctx)));
+   jvm_argv[6] = strdup(sge_dstring_sprintf(&ds, "-Djava.security.policy=%s/common/jmx/java.policy", ctx->get_cell_root(ctx)));
+   jvm_argv[7] = strdup("-Djava.security.manager=com.sun.grid.jgdi.management.JGDISecurityManager");
+   jvm_argv[8] = strdup(sge_dstring_sprintf(&ds, "-Djava.rmi.server.codebase=file://%s/lib/jgdi.jar", ctx->get_sge_root(ctx)));
+   jvm_argv[9] = strdup(sge_dstring_sprintf(&ds, "-Djava.library.path=%s/lib/%s", ctx->get_sge_root(ctx), sge_get_arch()));
+   jvm_argv[10] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.jmxremote.access.file=%s/common/jmx/jmxremote.access", ctx->get_cell_root(ctx)));
+   jvm_argv[11] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.jmxremote.password.file=%s/common/jmx/jmxremote.password", ctx->get_cell_root(ctx)));
+   jvm_argv[12] = strdup(sge_dstring_sprintf(&ds, "-Djava.security.auth.login.config=%s/common/jmx/jaas.config", ctx->get_cell_root(ctx)));
+   jvm_argv[13] = strdup(sge_dstring_sprintf(&ds, "-Djava.util.logging.config.file=%s/common/jmx/logging.properties", ctx->get_cell_root(ctx)));
 /*    jvm_argv[13] = strdup("-Djava.util.logging.manager=com.sun.grid.jgdi.util.JGDILogManager"); */
-   jvm_argv[12] = strdup("-Djava.util.logging.manager=java.util.logging.LogManager");
-   jvm_argv[13] = strdup("-Xrs");
+   jvm_argv[14] = strdup("-Djava.util.logging.manager=java.util.logging.LogManager");
+   jvm_argv[15] = strdup("-Xrs");
 
    /*
    ** add additional_jvm_args
@@ -934,7 +937,7 @@ sge_jvm_cleanup_thread(void)
 *     qmaster/threads/sge_jvm_wait_for_terminate()
 *     qmaster/threads/sge_jvm_main() 
 *******************************************************************************/
-void *
+static void *
 sge_jvm_main(void *arg)
 {
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)arg;

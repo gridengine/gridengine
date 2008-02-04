@@ -115,7 +115,9 @@ ErrUsage()
    "                       with g=Common Name of the GRM daemon\n" \
    "   -ks <user>          generate a keystore file for <user>\n" \
    "   -kspwf <file>       keystore pw file\n" \
-   "   -ksout <file>       keystore output file \n" \
+   "   -ksout <file>       keystore output file\n" \
+   "   -showCaTop          echo caTop path\n" \
+   "   -showCaLocalTop     echo caLocalTop path\n" \
    $myname
 
    exit 1
@@ -298,7 +300,7 @@ RequestCert()
 #
 SignCert()
 {
-    $CA -policy policy_anything $DAYS $BATCHMODE -notext -out $outdir/$newcert -infiles $indir/$newreq
+    $CA -config $SGE_ROOT/util/sgeCA/sge_ssl.cnf -policy policy_anything $DAYS $BATCHMODE -notext -out $outdir/$newcert -infiles $indir/$newreq
     RET=$?
     if [ $RET = 0 ]; then
       $INFOTEXT "Signed certificate is in %s" $outdir/$newcert
@@ -795,8 +797,13 @@ MakeUserKeystores()
    if [ "$ksoutfile" = "" ]; then
       ksoutfile_saved=$ksoutfile
    fi
-   touch /tmp/tmp.$$
-   kspwfile=/tmp/tmp.$$
+
+   remove_kspwfile=false
+   if [ "$kspwfile" = "" ]; then
+      touch /tmp/tmp.$$
+      kspwfile=/tmp/tmp.$$
+      remove_kspwfile=true
+   fi   
    for user in `ls $CALOCALTOP/userkeys`; do
       certfile=$CALOCALTOP/userkeys/$user/cert.pem
       if [ -r $certfile ]; then 
@@ -807,7 +814,9 @@ MakeUserKeystores()
          MakeKeystore "$user"
       fi
    done   
-   rm $kspwfile
+   if [ "$remove_kspwfile" = "true" ]; then
+      rm $kspwfile
+   fi
    ksoutfile=$ksoutfile_saved
 }
 
@@ -1770,6 +1779,12 @@ while [ $ARGC != 0 ]; do
       shift
       ARGC=`expr $ARGC - 1`
       ;;
+   -showCaTop)
+      WHICH="showCaTop"
+      ;;
+   -showCaLocalTop)
+      WHICH="showCaLocalTop"
+      ;;
    -printkey)
       if [ $ARGC -lt 2 ]; then
          PrintError "-printkey needs argument"
@@ -2113,6 +2128,12 @@ grm_pkcs12)
     if [ $? != 0 ]; then
        exit 1
     fi
+    ;;
+showCaTop)
+    echo "$CATOP"
+    ;;
+showCaLocalTop)
+    echo "$CALOCALTOP"
     ;;
 version)
     echo "sge_ca 6.5"

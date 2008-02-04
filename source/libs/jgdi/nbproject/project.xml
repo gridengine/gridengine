@@ -167,7 +167,7 @@
                 <package-root>src</package-root>
                 <package-root>test</package-root>
                 <package-root>examples/src</package-root>
-                <classpath mode="compile">${libs.junit.classpath}</classpath>
+                <classpath mode="compile">${libs.junit.classpath}:${juti.jar}</classpath>
                 <built-to>build/jgdi.jar</built-to>
                 <source-level>1.5</source-level>
             </compilation-unit>

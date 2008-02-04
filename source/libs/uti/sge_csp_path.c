@@ -70,6 +70,8 @@
 
 
 typedef struct {
+   char* ca_root;                /* path of ca_root directory */
+   char* ca_local_root;          /* path of ca_local_root directory */
    char* CA_cert_file;           /* CA certificate file */
    char* CA_key_file;            /* CA's private key file */
    char* cert_file;              /* user certificate file */
@@ -88,6 +90,8 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz,
                                sge_error_class_t *eh);
 static void sge_csp_path_destroy(void *theState);
 static void sge_csp_path_dprintf(sge_csp_path_class_t *thiz);
+static const char* get_ca_root(sge_csp_path_class_t *thiz);
+static const char* get_ca_local_root(sge_csp_path_class_t *thiz);
 static const char* get_CA_cert_file(sge_csp_path_class_t *thiz);
 static const char* get_CA_key_file(sge_csp_path_class_t *thiz);
 static const char* get_cert_file(sge_csp_path_class_t *thiz);
@@ -98,6 +102,8 @@ static const char* get_crl_file(sge_csp_path_class_t *thiz);
 static const char* get_password(sge_csp_path_class_t *thiz);
 static int get_refresh_time(sge_csp_path_class_t *thiz);
 static cl_ssl_verify_func_t get_verify_func(sge_csp_path_class_t *thiz);
+static void set_ca_root(sge_csp_path_class_t *thiz, const char *ca_root);
+static void set_ca_local_root(sge_csp_path_class_t *thiz, const char *CA_cert_file);
 static void set_CA_cert_file(sge_csp_path_class_t *thiz, const char *CA_cert_file);
 static void set_CA_key_file(sge_csp_path_class_t *thiz, const char *CA_key_file);
 static void set_cert_file(sge_csp_path_class_t *thiz, const char *cert_file);
@@ -110,40 +116,19 @@ static void set_password(sge_csp_path_class_t *thiz, const char *password);
 static void set_verify_func(sge_csp_path_class_t *thiz, cl_ssl_verify_func_t func);
 static cl_bool_t ssl_cert_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value);
 
-
-/* TODO: move to sge_prog.c */
-static bool is_daemon(sge_prog_state_class_t *sge_prog);
-/* static bool is_master(const char* progname); */
-
-static bool is_daemon(sge_prog_state_class_t *sge_prog) {
+static bool is_daemon(sge_env_state_class_t *sge_env, sge_prog_state_class_t *sge_prog) {
    const char *progname = sge_prog->get_sge_formal_prog_name(sge_prog);
    if (progname != NULL) {
       if ( !strcmp(prognames[QMASTER], progname) ||
-           !strcmp(prognames[EXECD]  , progname) ||
-#if 1   
-           /*
-           ** TODO: AA problem CSP mode and jvm thread
-           */
-           sge_prog->get_daemonized(sge_prog) ||
-#endif   
-
+           !strcmp(prognames[EXECD], progname) ||
+           (!strcmp(prognames[JGDI], progname) &&
+           sge_env->is_qmaster_internal(sge_env)) ||
            !strcmp(prognames[SCHEDD] , progname)) {
          return true;
       }
    }
    return false;
 }
-
-#if 0
-static bool is_master(const char* progname) {
-   if (progname != NULL) {
-      if ( !strcmp(prognames[QMASTER],progname)) {
-         return true;
-      } 
-   }
-   return false;
-}
-#endif
 
 static cl_bool_t ssl_cert_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value) {
 
@@ -237,6 +222,8 @@ sge_csp_path_class_t *sge_csp_path_class_create(sge_env_state_class_t *sge_env, 
 
    ret->dprintf = sge_csp_path_dprintf;
    
+   ret->get_ca_root = get_ca_root;
+   ret->get_ca_local_root = get_ca_local_root;
    ret->get_CA_cert_file = get_CA_cert_file;
    ret->get_CA_key_file = get_CA_key_file;
    ret->get_cert_file = get_cert_file;
@@ -298,8 +285,6 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
    dstring bw;
    const char* sge_root = NULL;
    const char* sge_cell = NULL;
-   const char* ca_root = NULL;
-   const char* ca_local_root = NULL;
    const char* user_dir = NULL;
    const char* user_local_dir = NULL;
    const char* username = NULL;
@@ -343,14 +328,14 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
    sge_dstring_init(&bw, buffer, sizeof(buffer)); 
 
    sge_dstring_sprintf(&bw, "%s/%s/%s", sge_root, sge_cell, CA_DIR);
-   ca_root = strdup(sge_dstring_get_string(&bw));
+   set_ca_root(thiz, sge_dstring_get_string(&bw));
 
    if (!is_from_services) {
       sge_dstring_sprintf(&bw, "%s/port%d/%s", CA_LOCAL_DIR, sge_qmaster_port, sge_cell);   
    } else {
       sge_dstring_sprintf(&bw, "%s/%s/%s", CA_LOCAL_DIR, SGE_COMMD_SERVICE, sge_cell);   
    }
-   ca_local_root = strdup(sge_dstring_get_string(&bw));
+   set_ca_local_root(thiz, sge_dstring_get_string(&bw));
 
    /*
    ** determine user_dir: 
@@ -359,9 +344,9 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
    **   and as fallback
    **   /var/sgeCA/{port$COMMD_PORT|SGE_COMMD_SERVICE}/$SGE_CELL/userkeys/$USER/{cert.pem,key.pem}
    */
-   if (is_daemon(sge_prog)) {
-      user_dir = strdup(ca_root);
-      user_local_dir = strdup(ca_local_root);
+   if (is_daemon(sge_env, sge_prog)) {
+      user_dir = strdup(get_ca_root(thiz));
+      user_local_dir = strdup(get_ca_local_root(thiz));
    } else {
       struct passwd *pw;
       struct passwd pw_struct;
@@ -387,23 +372,23 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
       FREE(buffer);
    }
 
-   sge_dstring_sprintf(&bw, "%s/%s", ca_root, CaCert);   
+   sge_dstring_sprintf(&bw, "%s/%s", get_ca_root(thiz), CaCert);   
    thiz->set_CA_cert_file(thiz, sge_dstring_get_string(&bw));
 
    if ((sge_cakeyfile=getenv("SGE_CAKEYFILE"))) {
       thiz->set_CA_key_file(thiz, sge_cakeyfile);
    } else {
-      sge_dstring_sprintf(&bw, "%s/private/%s", ca_local_root, CaKey);
+      sge_dstring_sprintf(&bw, "%s/private/%s", get_ca_local_root(thiz), CaKey);
       thiz->set_CA_key_file(thiz, sge_dstring_get_string(&bw));
    }
 
    if ((sge_certfile = getenv("SGE_CERTFILE"))) {
       thiz->set_cert_file(thiz, sge_certfile);
    } else {   
-      if (is_daemon(sge_prog)) {
+      if (is_daemon(sge_env, sge_prog)) {
          sge_dstring_sprintf(&bw, "%s/certs/%s", user_dir, UserCert);
       } else {
-         sge_dstring_sprintf(&bw, "%s/userkeys/%s/%s", ca_local_root, username, UserCert);
+         sge_dstring_sprintf(&bw, "%s/userkeys/%s/%s", get_ca_local_root(thiz), username, UserCert);
       }
       thiz->set_cert_file(thiz, sge_dstring_get_string(&bw));
    }
@@ -411,10 +396,10 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
    if ((sge_keyfile = getenv("SGE_KEYFILE"))) {
       thiz->set_key_file(thiz, sge_keyfile); 
    } else {   
-      if (is_daemon(sge_prog)) {
+      if (is_daemon(sge_env, sge_prog)) {
          sge_dstring_sprintf(&bw, "%s/private/%s", user_local_dir, UserKey);   
       } else {
-         sge_dstring_sprintf(&bw, "%s/userkeys/%s/%s", ca_local_root, username, UserKey);
+         sge_dstring_sprintf(&bw, "%s/userkeys/%s/%s", get_ca_local_root(thiz), username, UserKey);
       }   
       thiz->set_key_file(thiz, sge_dstring_get_string(&bw));
    }   
@@ -422,10 +407,10 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
    sge_dstring_sprintf(&bw, "%s/%s", user_dir, RandFile);
    thiz->set_rand_file(thiz, sge_dstring_get_string(&bw));
    if (SGE_STAT(thiz->get_rand_file(thiz), &sbuf)) { 
-      if (is_daemon(sge_prog)) {
+      if (is_daemon(sge_env, sge_prog)) {
          sge_dstring_sprintf(&bw, "%s/private/%s", user_local_dir, RandFile);   
       } else {
-         sge_dstring_sprintf(&bw, "%s/userkeys/%s/%s", ca_local_root, username, RandFile);
+         sge_dstring_sprintf(&bw, "%s/userkeys/%s/%s", get_ca_local_root(thiz), username, RandFile);
       }   
       thiz->set_rand_file(thiz, sge_dstring_get_string(&bw));
    }   
@@ -433,7 +418,7 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
    sge_dstring_sprintf(&bw, "%s/%s", user_dir, ReconnectFile);
    thiz->set_reconnect_file(thiz, sge_dstring_get_string(&bw));
 
-   sge_dstring_sprintf(&bw, "%s/%s", ca_root, CrlFile);
+   sge_dstring_sprintf(&bw, "%s/%s", get_ca_root(thiz), CrlFile);
    thiz->set_crl_file(thiz, sge_dstring_get_string(&bw));
 
    thiz->set_password(thiz, NULL);
@@ -441,12 +426,10 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
 
    thiz->set_verify_func(thiz, ssl_cert_verify_func);
 
-   FREE(ca_root);
-   FREE(ca_local_root);
    FREE(user_dir);
    FREE(user_local_dir);
 
-   /*thiz->dprintf(thiz);*/
+/*    thiz->dprintf(thiz); */
 
    DEXIT;
    return true;
@@ -458,6 +441,8 @@ static void sge_csp_path_destroy(void *theState)
 
    DENTER(TOP_LAYER, "sge_csp_path_destroy");
 
+   FREE(s->ca_root);
+   FREE(s->ca_local_root);
    FREE(s->CA_cert_file);
    FREE(s->CA_key_file);
    FREE(s->cert_file);
@@ -477,6 +462,8 @@ static void sge_csp_path_dprintf(sge_csp_path_class_t *thiz)
 
    DENTER(TOP_LAYER, "sge_csp_path_dprintf");
 
+   DPRINTF(("ca_root             >%s<\n", es->ca_root ? es->ca_root : "NA"));
+   DPRINTF(("ca_local_root       >%s<\n", es->ca_local_root ? es->ca_local_root : "NA"));
    DPRINTF(("CA_cert_file        >%s<\n", es->CA_cert_file ? es->CA_cert_file : "NA"));
    DPRINTF(("CA_key_file         >%s<\n", es->CA_key_file ? es->CA_key_file : "NA"));
    DPRINTF(("cert_file           >%s<\n", es->cert_file ? es->cert_file : "NA"));
@@ -488,6 +475,18 @@ static void sge_csp_path_dprintf(sge_csp_path_class_t *thiz)
    DPRINTF(("password            >%s<\n", es->password ? es->password : "NA"));
 
    DEXIT;
+}
+
+static const char* get_ca_root(sge_csp_path_class_t *thiz) 
+{
+   sge_csp_path_t *es = (sge_csp_path_t *) thiz->sge_csp_path_handle;
+   return es->ca_root;
+}
+
+static const char* get_ca_local_root(sge_csp_path_class_t *thiz) 
+{
+   sge_csp_path_t *es = (sge_csp_path_t *) thiz->sge_csp_path_handle;
+   return es->ca_local_root;
 }
 
 static const char* get_CA_cert_file(sge_csp_path_class_t *thiz) 
@@ -548,6 +547,18 @@ static cl_ssl_verify_func_t get_verify_func(sge_csp_path_class_t *thiz)
 {
    sge_csp_path_t *es = (sge_csp_path_t *) thiz->sge_csp_path_handle;
    return es->verify_func;
+}
+
+static void set_ca_root(sge_csp_path_class_t *thiz, const char *ca_root)
+{
+   sge_csp_path_t *es = (sge_csp_path_t *) thiz->sge_csp_path_handle;
+   es->ca_root = sge_strdup(es->ca_root, ca_root);
+}
+
+static void set_ca_local_root(sge_csp_path_class_t *thiz, const char *ca_local_root)
+{
+   sge_csp_path_t *es = (sge_csp_path_t *) thiz->sge_csp_path_handle;
+   es->ca_local_root = sge_strdup(es->ca_local_root, ca_local_root);
 }
 
 static void set_CA_cert_file(sge_csp_path_class_t *thiz, const char *CA_cert_file)

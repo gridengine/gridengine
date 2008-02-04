@@ -1077,6 +1077,10 @@ AddJMXFiles() {
       Execute sed -e "s#@@SGE_JMX_PORT@@#$SGE_JMX_PORT#g" \
                   -e "s#@@SGE_ROOT@@#$SGE_ROOT#g" \
                   -e "s#@@SGE_CELL@@#$SGE_CELL#g" \
+                  -e "s#@@SGE_JMX_SSL@@#$SGE_JMX_SSL#g" \
+                  -e "s#@@SGE_JMX_SSL_CLIENT@@#$SGE_JMX_SSL_CLIENT#g" \
+                  -e "s#@@SGE_JMX_SSL_KEYSTORE@@#$SGE_JMX_SSL_KEYSTORE#g" \
+                  -e "s#@@SGE_JMX_SSL_KEYSTORE_PW@@#$SGE_JMX_SSL_KEYSTORE_PW#g" \
                   util/management.properties.template > /tmp/management.properties.$$
       ExecuteAsAdmin mv /tmp/management.properties.$$ $jmx_dir/management.properties
       ExecuteAsAdmin chmod $FILEPERM $jmx_dir/management.properties
@@ -1139,7 +1143,7 @@ CreateSettingsFile()
 InitCA()
 {
 
-   if [ "$CSP" = true -o \( "$WINDOWS_SUPPORT" = "true" -a "$WIN_DOMAIN_ACCESS" = "true" \) ]; then
+   if [ "$CSP" = true -o \( "$WINDOWS_SUPPORT" = "true" -a "$WIN_DOMAIN_ACCESS" = "true" \) -o "$SGE_JMX_SSL" = true ]; then
       # Initialize CA, make directories and get DN info
       #
       SGE_CA_CMD=util/sgeCA/sge_ca
@@ -1155,6 +1159,14 @@ InitCA()
       fi
 
       #  TODO: CAErrUsage no longer available, error handling ???:w
+
+      if [ "$SGE_JMX_SSL" = true ]; then
+         touch /tmp/pwfile.$$
+         chmod 600 /tmp/pwfile.$$
+         echo "$SGE_JMX_SSL_KEYSTORE_PW" > /tmp/pwfile.$$
+         $SGE_CA_CMD -userks -kspwf /tmp/pwfile.$$
+         rm /tmp/pwfile.$$
+      fi
       
       $INFOTEXT -auto $AUTO -wait -n "Hit <RETURN> to continue >> "
       $CLEAR
@@ -1776,7 +1788,10 @@ SetLibJvmPath() {
       $INFOTEXT "\nWarning: Cannot start jvm thread: jvm library %s not found" "$jvm_lib_path"
       return 1
    fi
-   export jvm_lib_path
+   if [ "$JAVA_HOME" = "" ]; then
+      JAVA_HOME=$java_home
+   fi
+   export jvm_lib_path JAVA_HOME
    return 0
 }
 
@@ -1817,6 +1832,14 @@ GetJMXPort() {
                exit 1
             fi
          fi
+
+         # if not set initialize to false
+         if [ "$SGE_JMX_SSL" = "" ]; then
+            SGE_JMX_SSL=false
+         fi
+         if [ "$SGE_JMX_SSL_CLIENT" = "" ]; then
+            SGE_JMX_SSL_CLIENT=false
+         fi
       fi 
 
    else
@@ -1824,6 +1847,10 @@ GetJMXPort() {
       sge_jvm_lib_path=""
       sge_jmx_port=""
       sge_additional_jvm_args=""
+      sge_jmx_ssl=false
+      sge_jmx_ssl_client=false
+      sge_jxm_ssl_keystore=""
+      sge_jxm_ssl_keystore_pw=""
       enable_jmx=false
       alldone=false
       while [ $alldone = false ]; do
@@ -1847,7 +1874,11 @@ GetJMXPort() {
          "We will ask for\n" \
          "   - JAVA_HOME\n" \
          "   - additional JVM arguments (optional)\n" \
-         "   - JMX MBean server port\n"
+         "   - JMX MBean server port\n" \
+         "   - JMX ssl authentication\n" \
+         "   - JMX ssl client authentication\n" \
+         "   - JMX ssl server keystore path\n" \
+         "   - JMX ssl server keystore password\n"
          
          # set sge_jvm_lib_path
          SetLibJvmPath
@@ -1881,11 +1912,54 @@ GetJMXPort() {
          done
          sge_jmx_port=$INP
 
+         # set SGE_JMX_SSL
+         $INFOTEXT -ask "y" "n" -def "y" -n \
+            "Enable JMX SSL server authentication (y/n) [y] >> "
+         if [ $? = 0 ]; then
+            sge_jmx_ssl="true"
+         else    
+            sge_jmx_ssl="false"
+         fi   
+
+         if [ "$sge_jmx_ssl" = true ]; then
+            # set SGE_JMX_SSL_CLIENT
+            $INFOTEXT -ask "y" "n" -def "n" -n \
+               "Enable JMX SSL client authentication (y/n) [n] >> "
+            if [ $? = 0 ]; then
+               sge_jmx_ssl_client="true"
+            else    
+               sge_jmx_ssl_client="false"
+            fi   
+
+            # set SGE_JMX_SSL_KEYSTORE
+            if [ "$SGE_QMASTER_PORT" != "" ]; then
+               ca_port=port$SGE_QMASTER_PORT
+            else
+               ca_port=sge_qmaster
+            fi
+            if [ "$sge_jmx_ssl_keystore" = "" ]; then 
+               sge_jmx_ssl_keystore=/var/sgeCA/$ca_port/$SGE_CELL/userkeys/$ADMINUSER/keystore
+            fi
+            $INFOTEXT -n "Enter JMX SSL server keystore path [%s] >> " "$sge_jmx_ssl_keystore"
+            INP=`Enter "$sge_jmx_ssl_keystore"`
+            sge_jmx_ssl_keystore="$INP"
+
+            # set SGE_JMX_SSL_KEYSTORE_PW
+            $INFOTEXT -n "Enter JMX SSL server keystore pw >> "
+            INP=`Enter "$sge_jmx_ssl_keystore_pw"`
+            sge_jmx_ssl_keystore_pw="$INP"
+         fi
+
          # show all parameters and redo if needed
          $INFOTEXT "\nUsing the following JMX MBean server settings."
          $INFOTEXT "   libjvm_path              >%s<" "$sge_jvm_lib_path"
          $INFOTEXT "   Additional JVM arguments >%s<" "$sge_additional_jvm_args"
-         $INFOTEXT "   JMX port                 >%s<\n" "$sge_jmx_port"
+         $INFOTEXT "   JMX port                 >%s<" "$sge_jmx_port"
+         $INFOTEXT "   JMX ssl                  >%s<" "$sge_jmx_ssl"
+         $INFOTEXT "   JMX client ssl           >%s<" "$sge_jmx_ssl_client"
+         $INFOTEXT "   JMX server keystore      >%s<" "$sge_jmx_ssl_keystore"
+         $INFOTEXT "   JMX server keystore pw   >%s<" "$sge_jmx_ssl_keystore_pw"
+         $INFOTEXT "\n"
 
          $INFOTEXT -ask "y" "n" -def "y" -n \
             "Do you want to use these data (y/n) [y] >> "
@@ -1895,7 +1969,11 @@ GetJMXPort() {
             SGE_JVM_LIB_PATH=$sge_jvm_lib_path
             SGE_ADDITIONAL_JVM_ARGS=$sge_additional_jvm_args
             SGE_JMX_PORT=$sge_jmx_port
-            export SGE_JVM_LIB_PATH SGE_JMX_PORT SGE_ADDITIONAL_JVM_ARGS SGE_ENABLE_JMX
+            SGE_JMX_SSL=$sge_jmx_ssl
+            SGE_JMX_SSL_CLIENT=$sge_jmx_ssl_client
+            SGE_JMX_SSL_KEYSTORE=$sge_jmx_ssl_keystore
+            SGE_JMX_SSL_KEYSTORE_PW=$sge_jmx_ssl_keystore_pw
+            export SGE_JVM_LIB_PATH SGE_JMX_PORT SGE_ADDITIONAL_JVM_ARGS SGE_ENABLE_JMX SGE_JMX_SSL SGE_JMX_SSL_CLIENT SGE_JMX_SSL_KEYSTORE SGE_JMX_SSL_KEYSTORE_PW
          else
             $CLEAR
          fi

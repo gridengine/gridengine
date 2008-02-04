@@ -30,9 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
-
 /*
  * Default login configuration for qmaster's jmx server
  */
@@ -43,7 +40,7 @@ GridwareConfig {
      *  the CA certificate.
      */
     com.sun.grid.security.login.GECATrustManagerLoginModule requisite
-         caTop="${com.sun.grid.jgdi.sgeRoot}/${com.sun.grid.jgdi.sgeCell}/common/sgeCA";
+         caTop="${com.sun.grid.jgdi.caTop}";
 
     /*
      *  Accepts all clients which has a valid username/password.
@@ -116,6 +113,7 @@ TestConfig {
  */
 jgdi {
    com.sun.security.auth.module.KeyStoreLoginModule required 
-                                                    keyStoreURL="file:./keystore";
+                                                    keyStoreURL="file:./keystore"
+                                                    debug=false;
 };
 

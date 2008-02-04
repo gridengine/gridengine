@@ -40,9 +40,6 @@
 #include "spool/berkeleydb/sge_spooling_berkeleydb.h"
 #endif
 #ifdef SPOOLING_classic
-#include "spool/classic/sge_spooling_classic.h"
-#endif
-#ifdef SPOOLING_flatfile
 #include "spool/flatfile/sge_spooling_flatfile.h"
 #endif
 #ifdef SPOOLING_postgres

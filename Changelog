@@ -1,3 +1,7 @@
+EB-2008-02-01-0: Bugfix:    Fixed bug which caused deadlock in master when scheduler
+                            thread was shutdown via qconf -ks
+                 Review:    AH
+
 RD-2008-02-04-1: CVS:       Created V62alpha1_TAG
 -------------------------------------------------
 

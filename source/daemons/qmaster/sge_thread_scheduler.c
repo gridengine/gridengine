@@ -455,13 +455,6 @@ sge_scheduler_terminate(sge_gdi_ctx_class_t *ctx, lList **answer_list)
 
       sge_mutex_unlock("master scheduler struct", SGE_FUNC, __LINE__, &(Master_Scheduler.mutex));
 
-      /* 
-       * after releasing the lock it is safe to wait for the termination. 
-       * doing this inside the critical section (before the lock) this could 
-       * rise a deadlock situtaion this function would be called within a GDI request!
-       */
-      pthread_join(thread_id, NULL); 
-
       INFO((SGE_EVENT, MSG_THREAD_XTERMINATED_S, threadnames[SCHEDD_THREAD]));
       answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_INFO);
    } else {

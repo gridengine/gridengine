@@ -1,3 +1,10 @@
+RN-2008-02-04-0: Bugfix:    o Failed to deliver STOP signal for subordinated jobs
+                            o Missing array job task usage in the accounting file
+                            o qhost/qstat can't be interrupted with ctrl-c
+                 Review:    JG
+                 Bugster:   2478, 2479, 2480
+                 Issue:     6623174, 6625420, 6619046
+
 OJ-2008-02-01-0: Bugfix:    use of the same pathes for input/output stream must be 
                             dealt with
                  Bugster:   6310194 

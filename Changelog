@@ -1,5 +1,5 @@
 AH-2008-02-04-0: Bugfix:    Fixed shell error during inst_execd on (Darwin x86)
-                 Review:    TBD
+                 Review:    MD
 
 AA-2008-02-04-1: Bugfix:    project.xml file of jgdi fix for SSLHelper warnings
                  Review:    RH

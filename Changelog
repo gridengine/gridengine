@@ -1,3 +1,10 @@
+RN-2008-02-05-0: Bugfix:    o Failed to deliver STOP signal for subordinated jobs
+                            o Missing array job task usage in the accounting file
+                            o qhost/qstat can't be interrupted with ctrl-c
+                 Bugster:   6623174, 6625420, 6619046
+                 Issue:     2478, 2479, 2480
+                 Review:    JG
+
 RN-2008-01-17-0: Bugfix:    Forbid deletion of global config values
                  Bugster:   6506667
                  Issue:     2138

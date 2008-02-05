@@ -1539,7 +1539,6 @@ int err_length) {
       sigaddset(&sigset, SIGUSR1);
       sigaddset(&sigset, SIGUSR2);
       sigaddset(&sigset, SIGCONT);
-      sigaddset(&sigset, SIGWINCH);
       sigaddset(&sigset, SIGTSTP);
       sigprocmask(SIG_BLOCK, &sigset, &sigset_oset);
    }

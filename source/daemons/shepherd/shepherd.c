@@ -185,6 +185,9 @@ static int map_signal(int sig)
    int ret = sig;
 
    if (sig == SIGTTIN) {
+     /* SIGSTOP would also be delivered using SIGTTIN due to problems with
+      * delivering SIGWINCH to shepherd, see CR 6623174
+      */ 
       FILE *signal_file = fopen("signal", "r");
 
       if (signal_file != NULL) {
@@ -200,8 +203,6 @@ static int map_signal(int sig)
 #else
       ret = SIGKILL;
 #endif
-   } else if (sig == SIGWINCH) {
-      ret = SIGSTOP; 
    } else if (sig == SIGTSTP) {
       ret = SIGKILL;
    } else if (sig == SIGUSR1 || sig == SIGCONT) {
@@ -1680,7 +1681,6 @@ static void set_shepherd_signal_mask(void)
       sigaddset(&sigset, SIGUSR1);
       sigaddset(&sigset, SIGUSR2);
       sigaddset(&sigset, SIGCONT);
-      sigaddset(&sigset, SIGWINCH);
       sigaddset(&sigset, SIGTSTP);
       sge_set_def_sig_mask(&sigset, NULL);
    }
@@ -1706,7 +1706,6 @@ static void set_shepherd_signal_mask(void)
    sigaction(SIGUSR1, &sigact, &sigact_old);
    sigaction(SIGUSR2, &sigact, &sigact_old);
    sigaction(SIGCONT, &sigact, &sigact_old);
-   sigaction(SIGWINCH, &sigact, &sigact_old);
    sigaction(SIGTSTP, &sigact, &sigact_old);
    sigaction(SIGALRM, &sigact, &sigact_old);
 
@@ -1716,7 +1715,6 @@ static void set_shepherd_signal_mask(void)
    sigdelset(&mask, SIGUSR1);
    sigdelset(&mask, SIGUSR2);
    sigdelset(&mask, SIGCONT);
-   sigdelset(&mask, SIGWINCH);
    sigdelset(&mask, SIGTSTP);
    sigdelset(&mask, SIGALRM);
 
@@ -2602,7 +2600,7 @@ static int notify_tasker(u_long32 exit_status)
       shepherd_error_sprintf("can't open signal info file \"%s\": %s",
                              sig_info_file, strerror(errno));
    } else {
-      char *job_owner;
+      char *job_owner=NULL;
       struct passwd *pw=NULL;
       struct passwd pw_struct;
       char buffer[2048];

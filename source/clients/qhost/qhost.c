@@ -126,6 +126,7 @@ char **argv
       SGE_EXIT(1);
    }
 
+   sge_sig_handler_in_main_loop = 0;
    sge_setup_sig_handlers(QHOST);
 
    /*

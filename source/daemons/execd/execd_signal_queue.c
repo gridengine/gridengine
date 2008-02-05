@@ -206,7 +206,7 @@ execd_signal_queue(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buff
  SIGUSR1           | SIGUSR1
  SIGUSR2           | SIGXCPU
  SIGCONT           | SIGCONT
- SIGWINCH          | SIGSTOP
+ SIGWINCH          | SIGSTOP (not used anymore, use SIGTTIN to fwd SIGSTOP )
  SIGTSTP           | SIGKILL
 
  SIGTTIN forces the shepherd to look into the "signal" file. This file
@@ -492,15 +492,12 @@ const char *pe_task_id
        SIGUSR1           | SIGUSR1
        SIGUSR2           | SIGXCPU
        SIGCONT           | SIGCONT
-       SIGWINCH          | SIGSTOP
+       SIGWINCH          | SIGSTOP (not used anymore, use SIGTTIN to fwd SIGSTOP )
        SIGTSTP           | SIGKILL
    */ 
    direct_signal = 1;
 
    switch (sig) {
-   case SIGSTOP:
-      sig = SIGWINCH;
-      break;
    case SIGKILL:
       sig = SIGTSTP;
       break;
@@ -513,6 +510,7 @@ const char *pe_task_id
    case SIGUSR1:
    case SIGCONT:
       break;
+   /* We now fwd SIGSTOP using file(SIGTTIN) rather than SIGWINCH, refer CR6623174 */
    default:
       direct_signal = 0;        /* communication has to be done via file */
    }

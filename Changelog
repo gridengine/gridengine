@@ -1,3 +1,9 @@
+OJ-2008-02-06-0: Bugfix:    use of the same pathes for input/output stream must be 
+                            dealt with
+                 Bugster:   6310194 
+                 Issue:     1751 
+                 Review:    MP,RD
+
 AH-2008-02-04-0: Bugfix:    Fixed shell error during inst_execd on (Darwin x86)
                  Review:    MD
 

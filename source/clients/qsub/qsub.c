@@ -61,6 +61,8 @@
 #include "msg_qsub.h"
 #include "msg_qmaster.h"
 #include "basis_types.h"
+#include "msg_common.h"
+
 
 extern sge_gdi_ctx_class_t *ctx;
 
@@ -90,6 +92,8 @@ char **argv
    lListElem *job = NULL;
    lList *alp = NULL;
    lListElem *ep;
+   lListElem *i_opt;
+   lListElem *o_opt;
    int exit_status = 0;
    int just_verify;
    int tmp_ret;
@@ -214,6 +218,18 @@ char **argv
       
       lRemoveElem(opts_all, &ep);
    }
+
+   i_opt = lGetElemStr(opts_all, SPA_switch, "-i");
+   o_opt = lGetElemStr(opts_all, SPA_switch, "-o");
+
+   if (i_opt == o_opt) {
+      fprintf(stderr, MSG_PARSE_SAMEPATHFORINPUTANDOUTPUT_SS,
+             (lListElem *)i_opt, (lListElem *)o_opt);
+      fprintf(stderr, "\n");
+      DEXIT;
+      SGE_EXIT(NULL, 1);
+   }
+
    
    if (wait_for_job) {
       DPRINTF(("Wait for job end\n"));

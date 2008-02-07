@@ -333,35 +333,35 @@ CheckPath()
 CheckBinaries()
 {
 
-BINFILES="sge_coshepherd \
-          sge_execd sge_qmaster  \
-          sge_shadowd \
-          sge_shepherd qacct qalter qconf qdel qhold \
-          qhost qlogin qmake qmod qmon qresub qrls qrsh qselect qsh \
-          qstat qsub qtcsh qping qquota sgepasswd"
+   BINFILES="sge_coshepherd \
+             sge_execd sge_qmaster  \
+             sge_shadowd \
+             sge_shepherd qacct qalter qconf qdel qhold \
+             qhost qlogin qmake qmod qmon qresub qrls qrsh qselect qsh \
+             qstat qsub qtcsh qping qquota sgepasswd"
 
-WINBINFILES="sge_coshepherd sge_execd sge_shepherd  \
-             qacct qalter qconf qdel qhold qhost qlogin \
-             qmake qmod qresub qrls qrsh qselect qsh \
-             qstat qsub qtcsh qping qquota qloadsensor.exe"
+   WINBINFILES="sge_coshepherd sge_execd sge_shepherd  \
+                qacct qalter qconf qdel qhold qhost qlogin \
+                qmake qmod qresub qrls qrsh qselect qsh \
+                qstat qsub qtcsh qping qquota qloadsensor.exe"
 
-UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
-           gethostname getservbyname loadcheck now qrsh_starter rlogin rsh rshd \
-           testsuidroot authuser uidgid infotext"
+   UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
+              gethostname getservbyname loadcheck now qrsh_starter rlogin rsh rshd \
+              testsuidroot authuser uidgid infotext"
 
-WINUTILFILES="SGE_Helper_Service.exe adminrun checkprog checkuser filestat \
-              gethostbyaddr gethostbyname gethostname getservbyname loadcheck.exe \
-              now qrsh_starter rlogin rsh rshd testsuidroot authuser.exe uidgid \
-              infotext"
+   WINUTILFILES="SGE_Helper_Service.exe adminrun checkprog checkuser filestat \
+                 gethostbyaddr gethostbyname gethostname getservbyname loadcheck.exe \
+                 now qrsh_starter rlogin rsh rshd testsuidroot authuser.exe uidgid \
+                 infotext"
 
-#SUIDFILES="rsh rlogin testsuidroot sgepasswd"
+   #SUIDFILES="rsh rlogin testsuidroot sgepasswd"
 
-THIRD_PARTY_FILES="openssl"
+   THIRD_PARTY_FILES="openssl"
 
-if [ "$SGE_ARCH" = "win32-x86" ]; then
-   BINFILES="$WINBINFILES"
-   UTILFILES="$WINUTILFILES"
-fi
+   if [ "$SGE_ARCH" = "win32-x86" ]; then
+      BINFILES="$WINBINFILES"
+      UTILFILES="$WINUTILFILES"
+   fi
 
    missing=false
    for f in $BINFILES; do
@@ -678,7 +678,7 @@ CheckConfigFile()
    if [ "$QMASTER" = "install" ]; then
       if [ -d "$SGE_ROOT/$SGE_CELL" -a ! -z "$DB_SPOOLING_SERVER" -a "$DB_SPOOLING_SERVER" != "none" ]; then
          $INFOTEXT -e "Your >CELL_NAME< directory %s already exist!" $SGE_ROOT/$SGE_CELL
-         $INFOTEXT -e "The automatic installation stops, if the >CELL_NAME< directory already exists"
+         $INFOTEXT -e "The automatic installation stops, if the >SGE_CELL< directory already exists"
          $INFOTEXT -e "to ensure, that existing installations are not overwritten!"
          is_valid="false"
       fi
@@ -693,7 +693,7 @@ CheckConfigFile()
       if [ "$SPOOLING_METHOD" = "berkeleydb" -a -z "$DB_SPOOLING_DIR" ]; then
          $INFOTEXT -e "Your >DB_SPOOLING_DIR< is empty. You have to enter a directory!"
          is_valid="false"
-      elif [ "$SPOOLING_METHOD" = "berkeleydb" -a -d "$DB_SPOOLING_DIR" ]; then
+      elif [ "$SPOOLING_METHOD" = "berkeleydb" -a -d "$DB_SPOOLING_DIR" -a "$DB_SPOOLING_SERVER" = "none" ]; then
          $INFOTEXT -e "Your >DB_SPOOLING_DIR< already exists. Please check, if this directory is still"
          $INFOTEXT -e "in use. If you still need this directory, please choose any other!"
          is_valid="false"
@@ -968,23 +968,23 @@ CheckConfigFile()
          is_valid="false"
       fi
       if [ "$CSP_STATE" = "" ]; then
-         $INFOTEXT -e "The CSP_STATE entry is empty!\n"
+         $INFOTEXT -e "The >CSP_STATE< entry is empty!\n"
          is_valid="false"
       fi
       if [ "$CSP_LOCATION" = "" ]; then
-         $INFOTEXT -e "The CSP_LOCATION entry is empty!\n"
+         $INFOTEXT -e "The >CSP_LOCATION< entry is empty!\n"
          is_valid="false"
       fi
       if [ "$CSP_ORGA" = "" ]; then
-         $INFOTEXT -e "The CSP_ORGA entry is empty!\n"
+         $INFOTEXT -e "The >CSP_ORGA< entry is empty!\n"
          is_valid="false"
       fi
       if [ "$CSP_ORGA_UNIT" = "" ]; then
-         $INFOTEXT -e "The CSP_ORGA_UNIT entry is empty!\n"
+         $INFOTEXT -e "The >CSP_ORGA_UNIT< entry is empty!\n"
          is_valid="false"
       fi
       if [ "$CSP_MAIL_ADDRESS" = "" ]; then
-         $INFOTEXT -e "The CSP_MAIL_ADDRESS entry is empty!\n"
+         $INFOTEXT -e "The>CSP_MAIL_ADDRESS< entry is empty!\n"
          is_valid="false"
       fi
       if [ "$COPY_COMMAND" != "scp" -a "$COPY_COMMAND" != "rcp" ]; then
@@ -3648,7 +3648,7 @@ IsNumeric(){
    fi
    case $1 in
       *[!0-9]*) 
-         return 1;; # all characters are invalid, only number are good
+         return 1;; # at least one character is invalid, only numbers are good
       *) 
          return 0;; # valid entry
    esac
@@ -3699,7 +3699,7 @@ CheckPortsCollision()
       sge_settings_flag=1
    fi
 
- if [ $check_val = "sge_qmaster" ]; then
+   if [ $check_val = "sge_qmaster" ]; then
       ENV_VAR="$SGE_QMASTER_PORT"
    fi
 
@@ -3752,4 +3752,3 @@ CheckPortsCollision()
    fi
 
 }
-

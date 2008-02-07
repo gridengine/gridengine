@@ -38,7 +38,6 @@
 #include <sys/param.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include <netdb.h>
 #include "cl_lists.h"
 #include "cl_xml_parsing.h"
 
@@ -436,8 +435,6 @@ struct cl_com_connection_type {
 
    cl_com_endpoint_t*    remote;   /* dst on local host in CM */
    cl_com_endpoint_t*    local;    /* src on local host in CM */
-   cl_com_endpoint_t*    sender;   /* for routing */
-   cl_com_endpoint_t*    receiver; /* for routing  ( rdata ) */
 
    unsigned long         last_send_message_id;
    unsigned long         last_received_message_id;

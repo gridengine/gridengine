@@ -81,8 +81,6 @@ int main(int argc, char **argv) {
 
    DENTER_MAIN(TOP_LAYER, "qdel");
 
-   sge_prof_setup();   
-
    log_state_set_log_gui(1);
 
    if (sge_gdi2_setup(&ctx, QDEL, &alp) != AE_OK) {
@@ -271,8 +269,8 @@ int main(int argc, char **argv) {
    lFreeList(&alp);
    lFreeList(&jlp);
    lFreeList(&ref_list);
-   sge_prof_cleanup();
    sge_gdi2_shutdown((void**)&ctx);
+   sge_prof_cleanup();
    SGE_EXIT((void**)&ctx, ret);
    return ret;
 
@@ -280,8 +278,8 @@ error_exit:
    lFreeList(&alp);
    lFreeList(&jlp);
    lFreeList(&ref_list);
-   sge_prof_cleanup();
    sge_gdi2_shutdown((void**)&ctx);
+   sge_prof_cleanup();
    SGE_EXIT((void**)&ctx, 1);
    DEXIT;
    return 1;

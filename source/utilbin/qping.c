@@ -57,6 +57,7 @@
 #include "gdi/sge_gdi_ctx.h"
 #include "sgeobj/sge_ack.h"
 
+#include "uti/sge_string.h"
 #define ARGUMENT_COUNT 15
 static char*  cl_values[ARGUMENT_COUNT+2];
 static int    cl_short_host_name_option = 0;                                       
@@ -227,11 +228,14 @@ static void qping_convert_time(char* buffer, char* dest, cl_bool_t show_hour) {
    struct tm tm_buffer;
 #endif
    struct tm *tm;
-   help=strtok(buffer, ".");
-   help2=strtok(NULL,".");
+   struct saved_vars_s *context = NULL;
+
+   help=sge_strtok_r(buffer, ".", &context);
+   help2=sge_strtok_r(NULL,".", &context);
    if (help2 == NULL) {
       help2 = "NULL";
    }
+
    i = atoi(help);
 #ifndef HAS_LOCALTIME_R
    tm = localtime(&i);
@@ -243,6 +247,7 @@ static void qping_convert_time(char* buffer, char* dest, cl_bool_t show_hour) {
    } else {
       sprintf(dest, "%02d:%02d.%s", tm->tm_min, tm->tm_sec, help2);
    }
+   sge_free_saved_vars(context);
 }
 
 static void qping_general_communication_error(const cl_application_error_list_elem_t* commlib_error) {
@@ -294,7 +299,7 @@ static void qping_printf_fill_up(FILE* fd, char* name, int length, char c, int b
 
 }
 
-static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
+static void qping_print_line(const char* buffer, int nonewline, int dump_tag) {
    int i=0;
    int max_name_length = 0;
    int full_width = 0;
@@ -304,6 +309,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
    char  time[512];
    char  msg_time[512];
    char  com_time[512];
+   struct saved_vars_s *context = NULL;
 
    for (i=0;i<ARGUMENT_COUNT;i++) {
       if (max_name_length < strlen(cl_names[i])) {
@@ -312,8 +318,8 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
    }
    
    i=0;
-   cl_values[i++]=strtok(buffer, "\t");
-   while( (cl_values[i++]=strtok(NULL, "\t\n")));
+   cl_values[i++] = sge_strtok_r(buffer, "\t", &context);
+   while ((cl_values[i++] = sge_strtok_r(NULL, "\t\n", &context)));
 
 
    i = atoi(cl_values[0]);
@@ -332,7 +338,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
    
       qping_convert_time(cl_values[10], msg_time, CL_TRUE);
       cl_values[10] = msg_time;
-   
+ 
       qping_convert_time(cl_values[13], com_time, CL_FALSE);
       cl_values[13] = com_time;
    
@@ -340,7 +346,6 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
          char* help = NULL;
          char* help2 = NULL;
          char help_buffer[1024];
-   
    
          help = strstr(cl_values[1],".");
          if (help) {
@@ -820,6 +825,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
             printf("\n");
          }
       }
+      sge_free_saved_vars(context);
       return;
    }  /* end of CL_DMT_MESSAGE tag */
 
@@ -834,8 +840,11 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
          
          printf("--- APP: %s: %s\n", time, cl_values[1]);
       }
+      sge_free_saved_vars(context);
       return;
    }
+   sge_free_saved_vars(context);
+   return;
 }
 
 
@@ -1132,7 +1141,7 @@ int main(int argc, char *argv[]) {
 
    lInit(nmv);
 
-   retval = cl_com_setup_commlib(CL_RW_THREAD ,CL_LOG_OFF, NULL );
+   retval = cl_com_setup_commlib(CL_RW_THREAD ,CL_LOG_OFF, NULL);
    if (retval != CL_RETVAL_OK) {
       fprintf(stderr,"%s\n",cl_get_error_text(retval));
       exit(1);
@@ -1327,6 +1336,7 @@ int main(int argc, char *argv[]) {
          if ( retval != CL_RETVAL_OK) {
             if ( retval == CL_RETVAL_CONNECTION_NOT_FOUND ) {
                 char command_buffer[256];
+                cl_byte_t *reference = (cl_byte_t *)command_buffer;
                 printf("open connection to \"%s/%s/"sge_U32CFormat"\" ... " ,resolved_comp_host , comp_name, sge_u32c(comp_id) );
                 retval = cl_commlib_open_connection(handle, resolved_comp_host , comp_name, comp_id);
                 printf("%s\n", cl_get_error_text(retval));
@@ -1356,7 +1366,7 @@ int main(int argc, char *argv[]) {
                 cl_commlib_send_message(handle,
                                     resolved_comp_host, comp_name, comp_id,
                                     CL_MIH_MAT_NAK, 
-                                    (cl_byte_t*)command_buffer, strlen(command_buffer)+1, 
+                                    &reference, strlen(command_buffer)+1, 
                                     NULL, 0, 0, CL_TRUE, CL_FALSE);
 
                 /*
@@ -1371,7 +1381,7 @@ int main(int argc, char *argv[]) {
                 cl_commlib_send_message(handle,
                                     resolved_comp_host, comp_name, comp_id,
                                     CL_MIH_MAT_NAK, 
-                                    (cl_byte_t*)command_buffer, strlen(command_buffer)+1, 
+                                    &reference, strlen(command_buffer)+1, 
                                     NULL, 0, 0, CL_TRUE, CL_FALSE);
 
                             
@@ -1408,7 +1418,7 @@ int main(int argc, char *argv[]) {
                 cl_commlib_send_message(handle,
                                     resolved_comp_host, comp_name, comp_id,
                                     CL_MIH_MAT_NAK, 
-                                    (cl_byte_t*)command_buffer, strlen(command_buffer)+1, 
+                                    &reference, strlen(command_buffer)+1, 
                                     NULL, 0, 0, CL_TRUE, CL_FALSE);
             }
          } else {

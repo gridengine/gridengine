@@ -71,6 +71,7 @@ COMMLIB_TEST_SRC = \
          test_cl_hostname_list.c  \
          test_cl_hostalias_list.c \
          test_cl_endpoint_list.c \
+         test_cl_com_parameter_list.c \
          test_multithread_io.c  \
          test_virtual_qmaster.c \
          test_virtual_event_client.c \
@@ -89,10 +90,11 @@ COMMLIBS = $(COMMLIB) $(COMMLISTSLIB)
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-comm_all: commlib commlists_all commexamples_all test_cl_tcp_framework test_cl_commlib test_cl_commlib_client \
+comm_all: commlib commlists_all commexamples_all test_cl_commlib test_cl_commlib_client \
      test_cl_hostname_list test_cl_hostalias_list test_multithread_io test_status_info \
-     test_server_connection test_cl_endpoint_list test_virtual_qmaster test_virtual_event_client \
-     test_virtual_gdi_client test_debug_client test_general test_issues test_thread_throughput
+     test_server_connection test_cl_endpoint_list test_cl_com_parameter_list test_virtual_qmaster \
+     test_virtual_event_client test_virtual_gdi_client test_debug_client test_general \
+     test_issues test_thread_throughput
 
 depend: commlib_depend commlistslib_depend
 
@@ -106,7 +108,7 @@ commlib_clean: commlistslib_clean
 		$(RM) $(COMMLIB_OBJS) $(COMMLIB_TEST_OBJS) libcomm.a libcomm$(SHAREDEXT) \
       test_cl_tcp_framework test_cl_commlib_client test_cl_commlib test_cl_hostname_list \
       test_cl_hostalias_list test_multithread_io test_status_info test_server_connection \
-      test_cl_endpoint_list test_virtual_qmaster test_virtual_event_client \
+      test_cl_endpoint_list test_cl_com_parameter_list test_virtual_qmaster test_virtual_event_client \
       test_virtual_gdi_client test_debug_client test_general test_issues test_thread_throughput
 
 commlib_depend: commlistslib_depend
@@ -184,6 +186,9 @@ test_cl_hostname_list: test_cl_hostname_list.o $(COMMLIB) $(COMMLISTSLIB) $(WING
 test_cl_endpoint_list: test_cl_endpoint_list.o $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB)
 	$(CC) -o test_cl_endpoint_list $(LFLAGS) test_cl_endpoint_list.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
+test_cl_com_parameter_list: test_cl_com_parameter_list.o $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_cl_com_parameter_list $(LFLAGS) test_cl_com_parameter_list.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
+
 test_cl_hostalias_list: test_cl_hostalias_list.o $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB) 
 	$(CC) -o test_cl_hostalias_list $(LFLAGS) test_cl_hostalias_list.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
@@ -229,6 +234,8 @@ test_cl_hostname_list.o: $(COMMLIB_DIR)/test_cl_hostname_list.c
 	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_cl_hostname_list.c
 test_cl_endpoint_list.o: $(COMMLIB_DIR)/test_cl_endpoint_list.c
 	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_cl_endpoint_list.c
+test_cl_com_parameter_list.o: $(COMMLIB_DIR)/test_cl_com_parameter_list.c
+	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_cl_com_parameter_list.c
 test_cl_hostalias_list.o: $(COMMLIB_DIR)/test_cl_hostalias_list.c
 	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_cl_hostalias_list.c
 test_multithread_io.o: $(COMMLIB_DIR)/test_multithread_io.c
@@ -249,4 +256,3 @@ test_thread_throughput.o: $(COMMLIB_DIR)/test_thread_throughput.c
 	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_thread_throughput.c
 test_debug_client.o: $(COMMLIB_DIR)/test_debug_client.c
 	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_debug_client.c
-

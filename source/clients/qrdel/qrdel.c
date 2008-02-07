@@ -67,8 +67,6 @@ int main(int argc, char **argv) {
 
    DENTER_MAIN(TOP_LAYER, "qrdel");
 
-   sge_prof_setup();
-
    /* Set up the program information name */
    sge_setup_sig_handlers(QRDEL);
 
@@ -114,13 +112,13 @@ int main(int argc, char **argv) {
    }
    answer_list_on_error_print_or_exit(&alp, stdout);
 
-   sge_prof_cleanup();
    sge_gdi2_shutdown((void**)&ctx);
+   sge_prof_cleanup();
    DRETURN(0);
 
 error_exit:
-   sge_prof_cleanup();
    sge_gdi2_shutdown((void**)&ctx);
+   sge_prof_cleanup();
    SGE_EXIT((void**)&ctx, 1);
    DRETURN(1);
 }

@@ -166,7 +166,7 @@ extern int main(int argc, char** argv) {
    setup_signal_handler();
  
    /* setup commlib */
-   cl_com_setup_commlib(CL_RW_THREAD, CL_LOG_WARNING, on_communication_log );
+   cl_com_setup_commlib(CL_RW_THREAD, CL_LOG_WARNING, on_communication_log);
  
    /* setup commlib error function callback */
    cl_com_set_error_func(on_communication_error);
@@ -211,7 +211,7 @@ extern int main(int argc, char** argv) {
                                  sender->comp_host, 
                                  sender->comp_name, 
                                  sender->comp_id, CL_MIH_MAT_NAK,  
-                                 (cl_byte_t*) response_message, 
+                                 (cl_byte_t**)&response_message, 
                                  strlen(response_message)+1, 
                                  NULL, 0, 0, 
                                  CL_TRUE,CL_FALSE);

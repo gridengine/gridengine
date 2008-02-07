@@ -36,6 +36,7 @@
 #include "cl_data_types.h"
 #include "cl_list_types.h"
 #include "cl_xml_parsing.h"
+#include "cl_connection_list.h"
 
 #define CL_DEFINE_READ_TIMEOUT                       30
 #define CL_DEFINE_WRITE_TIMEOUT                      30
@@ -66,23 +67,17 @@
 int  cl_com_compare_endpoints(cl_com_endpoint_t* endpoint1, cl_com_endpoint_t* endpoint2);
 void cl_com_dump_endpoint(cl_com_endpoint_t* endpoint, const char* text);
 
-
 int cl_com_endpoint_list_refresh(cl_raw_list_t* endpoint_list);
-
-struct in_addr*   cl_com_copy_in_addr(struct in_addr *in_addr);
-cl_com_hostent_t* cl_com_copy_hostent(cl_com_hostent_t* hostent);
 
 /* debug client functions */
 int cl_com_add_debug_message(cl_com_connection_t* connection, const char* message, cl_com_message_t* ms);
-
 
 int cl_com_gethostname(char **unique_hostname,struct in_addr *copy_addr,struct hostent **he_copy, int* system_error_value);
 int cl_com_host_list_refresh(cl_raw_list_t* host_list);
 int cl_com_cached_gethostbyname( char *hostname, char **unique_hostname, struct in_addr *copy_addr,struct hostent **he_copy, int* system_error_value);
 int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname,struct hostent **he_copy,int* system_error_val );
 char* cl_com_get_h_error_string(int h_error);
-int cl_com_compare_hosts(char* host1, char* host2);
-cl_bool_t cl_com_is_ip_address_string(char* hostname, struct in_addr* addr);
+int cl_com_compare_hosts(const char* host1, const char* host2);
 int cl_com_set_resolve_method(cl_host_resolve_method_t method, char* local_domain_name);
 
 int cl_com_free_handle_statistic(cl_com_handle_statistic_t** statistic);
@@ -115,11 +110,6 @@ int cl_com_create_ssl_setup(cl_ssl_setup_t** new_setup,
 int cl_com_dup_ssl_setup(cl_ssl_setup_t** new_setup, cl_ssl_setup_t* source);
 int cl_com_free_ssl_setup(cl_ssl_setup_t** del_setup);
 
-/* debug / help functions */
-void cl_dump_connection(cl_com_connection_t* connection);                     /* CR check */
-void cl_dump_private(cl_com_connection_t* connection);
-
-
 const char* cl_com_get_framework_type(cl_com_connection_t* connection);       /* CR check */
 const char* cl_com_get_connection_type(cl_com_connection_t* connection);      /* CR check */
 const char* cl_com_get_service_handler_flag(cl_com_connection_t* connection); /* CR check */
@@ -150,8 +140,7 @@ int cl_com_free_connection(cl_com_connection_t** connection);
 
 
 int cl_com_connection_complete_accept(cl_com_connection_t* connection,
-                                      long timeout,
-                                      unsigned long only_once);
+                                      long timeout);
 
 int cl_com_connection_complete_shutdown(cl_com_connection_t* connection);
 
@@ -159,9 +148,7 @@ int cl_com_connection_complete_shutdown(cl_com_connection_t* connection);
 int cl_com_open_connection(cl_com_connection_t* connection, 
                                             int timeout, 
                              cl_com_endpoint_t* remote_endpoint, 
-                             cl_com_endpoint_t* local_endpoint, 
-                             cl_com_endpoint_t* receiver_endpoint ,
-                             cl_com_endpoint_t* sender_endpoint);    /* CR check */
+                             cl_com_endpoint_t* local_endpoint);    /* CR check */
 
 int cl_com_close_connection(cl_com_connection_t** connection);  /* CR check */
 
@@ -200,7 +187,7 @@ int cl_com_open_connection_request_handler(cl_framework_t framework_type,
                                            int timeout_val_usec,
                                            cl_select_method_t select_mode );
 
-int cl_com_connection_complete_request(cl_com_connection_t* connection, long timeout,unsigned long only_once, cl_select_method_t select_mode );
+int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connection_list_elem_t* elem, long timeout, cl_select_method_t select_mode );
 
 
 #endif /* __CL_COMMUNICATION_H */

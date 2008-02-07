@@ -2912,7 +2912,7 @@ static void send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, lList *repo
                update_func(NULL, report_list);
                ret = CL_RETVAL_OK;
             } else {
-               ret = report_list_send(ctx, report_list, host, commproc, id, 0, NULL);
+               ret = report_list_send(ctx, report_list, host, commproc, id, 0);
                MONITOR_MESSAGES_OUT(monitor);
             }
 

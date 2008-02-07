@@ -143,6 +143,7 @@ static int                  (*cl_com_ssl_func__CRYPTO_num_locks)                
 static unsigned long        (*cl_com_ssl_func__ERR_get_error)                       (void);
 static void                 (*cl_com_ssl_func__ERR_error_string_n)                  (unsigned long e, char *buf, size_t len);
 static void                 (*cl_com_ssl_func__ERR_free_strings)                    (void);
+static void                 (*cl_com_ssl_func__ERR_clear_error)                     (void);
 static int                  (*cl_com_ssl_func__BIO_free)                            (BIO *a);
 static BIO*                 (*cl_com_ssl_func__BIO_new_fp)                          (FILE *stream, int flags);
 static BIO*                 (*cl_com_ssl_func__BIO_new_socket)                      (int sock, int close_flag);
@@ -899,6 +900,7 @@ static int cl_com_ssl_destroy_symbol_table(void) {
       cl_com_ssl_func__CRYPTO_num_locks   = NULL;
       cl_com_ssl_func__ERR_get_error   = NULL;
       cl_com_ssl_func__ERR_error_string_n   = NULL;
+      cl_com_ssl_func__ERR_clear_error = NULL;
       cl_com_ssl_func__ERR_free_strings   = NULL;
       cl_com_ssl_func__BIO_free   = NULL;
       cl_com_ssl_func__BIO_new_fp   = NULL;
@@ -1121,6 +1123,13 @@ static int cl_com_ssl_build_symbol_table(void) {
       func_name = "ERR_free_strings";
       cl_com_ssl_func__ERR_free_strings = (void (*)(void))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__ERR_free_strings == NULL) {
+         CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
+         had_errors++;
+      }
+
+      func_name = "ERR_clear_error";
+      cl_com_ssl_func__ERR_clear_error = (void (*)(void))dlsym(cl_com_ssl_crypto_handle, func_name);
+      if (cl_com_ssl_func__ERR_clear_error == NULL) {
          CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
          had_errors++;
       }
@@ -1805,6 +1814,7 @@ static int cl_com_ssl_build_symbol_table(void) {
       cl_com_ssl_func__CRYPTO_num_locks                    = CRYPTO_num_locks;
       cl_com_ssl_func__ERR_get_error                       = ERR_get_error;
       cl_com_ssl_func__ERR_error_string_n                  = ERR_error_string_n;
+      cl_com_ssl_func__ERR_clear_error                     = ERR_clear_error;
       cl_com_ssl_func__ERR_free_strings                    = ERR_free_strings;
       cl_com_ssl_func__BIO_free                            = BIO_free;
       cl_com_ssl_func__BIO_new_fp                          = BIO_new_fp;
@@ -2899,6 +2909,7 @@ int cl_com_ssl_connection_complete_shutdown(cl_com_connection_t*  connection) {
          }
 #ifdef CL_COM_ENABLE_SSL_THREAD_RETRY_BUGFIX
          case SSL_ERROR_SYSCALL: {
+            CL_LOG(CL_LOG_ERROR,"SSL_ERROR_SYSCALL error");
             return CL_RETVAL_UNCOMPLETE_READ;
          }
 #endif
@@ -2917,8 +2928,7 @@ int cl_com_ssl_connection_complete_shutdown(cl_com_connection_t*  connection) {
 #endif
 #define __CL_FUNCTION__ "cl_com_ssl_connection_complete_accept()"
 int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
-                                          long                  timeout,
-                                          unsigned long         only_once) {
+                                          long                  timeout) {
 
    cl_com_ssl_private_t* private = NULL;
    cl_com_ssl_private_t* service_private = NULL;
@@ -3027,10 +3037,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
 #ifdef CL_COM_ENABLE_SSL_THREAD_RETRY_BUGFIX
             case SSL_ERROR_SYSCALL:
 #endif
-                    {
-               /* do it again */
-               /* TODO!!! : make code for only_once == 0 */
-
+            {
                gettimeofday(&now,NULL);
                if (connection->write_buffer_timeout_time <= now.tv_sec || 
                    cl_com_get_ignore_timeouts_flag()     == CL_TRUE       ) {
@@ -3049,9 +3056,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
                   return CL_RETVAL_SSL_ACCEPT_HANDSHAKE_TIMEOUT;
                }
 
-               if (only_once != 0) {
-                  return CL_RETVAL_UNCOMPLETE_WRITE;
-               }
+               return CL_RETVAL_UNCOMPLETE_WRITE;
             }
 
             default: {
@@ -3083,7 +3088,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_ssl_open_connection()"
-int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, unsigned long only_once) {
+int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout) {
    cl_com_ssl_private_t* private = NULL;
    int tmp_error = CL_RETVAL_OK;
    char tmp_buffer[256];
@@ -3094,9 +3099,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
    }
 
    if (connection->remote   == NULL ||
-       connection->local    == NULL ||
-       connection->receiver == NULL ||
-       connection->sender   == NULL) {
+       connection->local    == NULL) {
       return CL_RETVAL_PARAMS;
    }
 
@@ -3247,10 +3250,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
             case EINPROGRESS:
             case EALREADY: {
                connection->connection_sub_state = CL_COM_OPEN_CONNECT_IN_PROGRESS;
-               if (only_once != 0) {
-                  return CL_RETVAL_UNCOMPLETE_WRITE;
-               }
-               break;
+               return CL_RETVAL_UNCOMPLETE_WRITE;
             }
             default: {
                /* we have an connect error */
@@ -3270,66 +3270,35 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
    }
 
    if ( connection->connection_sub_state == CL_COM_OPEN_CONNECT_IN_PROGRESS ) {
-      int do_stop = 0;
-      CL_LOG(CL_LOG_DEBUG,"connection_sub_state is CL_COM_OPEN_CONNECT_IN_PROGRESS");
-
-      while (do_stop == 0) {
-         int select_back = 0;
-         struct timeval now;
-         int socket_error = 0;
+      struct timeval now;
+      int socket_error = 0;
 
 #if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5) || defined(HP1164)
-         int socklen = sizeof(socket_error);
+      int socklen = sizeof(socket_error);
 #else
-         socklen_t socklen = sizeof(socket_error);
+      socklen_t socklen = sizeof(socket_error);
 #endif
 
-         if (only_once == 0) {
-#ifdef USE_POLL
-            struct pollfd ufds;
-
-            ufds.fd = private->sockfd;
-            ufds.events = POLLOUT;
-
-            select_back = poll(&ufds, 1, 5); /* 5 ms */
-#else
-            struct timeval stimeout;
-            fd_set writefds;
-
-            FD_ZERO(&writefds);
-            FD_SET(private->sockfd, &writefds);
-            stimeout.tv_sec = 0; 
-            stimeout.tv_usec = 5*1000;   /* 5 ms */
-         
-            select_back = select(private->sockfd + 1, NULL, &writefds, NULL, &stimeout);
-#endif
-
-            if (select_back < 0) {
-               CL_LOG(CL_LOG_ERROR,"select error");
-               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SELECT_ERROR, MSG_CL_TCP_FW_SELECT_ERROR);
-               return CL_RETVAL_SELECT_ERROR;
-            }
-         }
+      CL_LOG(CL_LOG_DEBUG,"connection_sub_state is CL_COM_OPEN_CONNECT_IN_PROGRESS");
 
 #if defined(SOLARIS) && !defined(SOLARIS64)
-         getsockopt(private->sockfd,SOL_SOCKET, SO_ERROR, (void*)&socket_error, &socklen);
+      getsockopt(private->sockfd,SOL_SOCKET, SO_ERROR, (void*)&socket_error, &socklen);
 #else
-         getsockopt(private->sockfd,SOL_SOCKET, SO_ERROR, &socket_error, &socklen);
+      getsockopt(private->sockfd,SOL_SOCKET, SO_ERROR, &socket_error, &socklen);
 #endif
-         if (socket_error == 0 || socket_error == EISCONN) {
-            CL_LOG(CL_LOG_INFO,"connected");
-            connection->write_buffer_timeout_time = 0;
-            connection->connection_sub_state = CL_COM_OPEN_CONNECTED;
-            break; /* we are connected */
-         } else {
-            if (socket_error != EINPROGRESS && socket_error != EALREADY) {
-               CL_LOG_INT(CL_LOG_ERROR,"socket error errno:", socket_error);
-               shutdown(private->sockfd, 2);
-               close(private->sockfd);
-               private->sockfd = -1;
-               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_CONNECT_ERROR, strerror(socket_error));
-               return CL_RETVAL_CONNECT_ERROR;
-            }
+      if (socket_error == 0 || socket_error == EISCONN) {
+         CL_LOG(CL_LOG_INFO,"connected");
+         connection->write_buffer_timeout_time = 0;
+         connection->connection_sub_state = CL_COM_OPEN_CONNECTED;
+         /* we are connected */
+      } else {
+         if (socket_error != EINPROGRESS && socket_error != EALREADY) {
+            CL_LOG_INT(CL_LOG_ERROR,"socket error errno:", socket_error);
+            shutdown(private->sockfd, 2);
+            close(private->sockfd);
+            private->sockfd = -1;
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_CONNECT_ERROR, strerror(socket_error));
+            return CL_RETVAL_CONNECT_ERROR;
          }
 
          gettimeofday(&now,NULL);
@@ -3346,11 +3315,8 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
             return CL_RETVAL_CONNECT_TIMEOUT;
          }
 
-
-         if (only_once != 0) {
-            return CL_RETVAL_UNCOMPLETE_WRITE;
-         }
-      }  /* while do_stop */
+         return CL_RETVAL_UNCOMPLETE_WRITE;
+      }
    }
 
    if ( connection->connection_sub_state == CL_COM_OPEN_CONNECTED) {
@@ -3440,11 +3406,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
 #ifdef CL_COM_ENABLE_SSL_THREAD_RETRY_BUGFIX
             case SSL_ERROR_SYSCALL:
 #endif
-                    {
-               /* do it again */
-               /* TODO!!! : make code for only_once == 0 */
-
-
+            {
                gettimeofday(&now,NULL);
                if (connection->write_buffer_timeout_time <= now.tv_sec || 
                    cl_com_get_ignore_timeouts_flag()     == CL_TRUE       ) {
@@ -3456,9 +3418,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
                   return CL_RETVAL_SSL_CONNECT_HANDSHAKE_TIMEOUT;
                }
 
-               if (only_once != 0) {
-                  return CL_RETVAL_UNCOMPLETE_WRITE;
-               }
+               return CL_RETVAL_UNCOMPLETE_WRITE;
             }
 
             default: {
@@ -3487,27 +3447,20 @@ int cl_com_ssl_read_GMSH(cl_com_connection_t* connection, unsigned long *only_on
    unsigned long data_read = 0;
    unsigned long processed_data = 0;
 
-   if (connection == NULL) {
+   if (connection == NULL || only_one_read == NULL) {
       return CL_RETVAL_PARAMS;
    }
 
    /* first read size of gmsh header without data */
-   if ( connection->data_read_buffer_pos < CL_GMSH_MESSAGE_SIZE ) {
-      if (only_one_read != NULL) {
-         data_read = 0;
-         retval = cl_com_ssl_read(connection,
-                                  &(connection->data_read_buffer[connection->data_read_buffer_pos]),
-                                  CL_GMSH_MESSAGE_SIZE - connection->data_read_buffer_pos,
-                                  &data_read);
-         connection->data_read_buffer_pos = connection->data_read_buffer_pos + data_read;
-         *only_one_read = data_read;
-      } else {
-         retval = cl_com_ssl_read(connection,
-                               connection->data_read_buffer,
-                               CL_GMSH_MESSAGE_SIZE ,
-                               NULL);
-         connection->data_read_buffer_pos = connection->data_read_buffer_pos + CL_GMSH_MESSAGE_SIZE;
-      }
+   if (connection->data_read_buffer_pos < CL_GMSH_MESSAGE_SIZE) {
+      data_read = 0;
+      retval = cl_com_ssl_read(connection,
+                               &(connection->data_read_buffer[connection->data_read_buffer_pos]),
+                               CL_GMSH_MESSAGE_SIZE - connection->data_read_buffer_pos,
+                               &data_read);
+      connection->data_read_buffer_pos = connection->data_read_buffer_pos + data_read;
+      *only_one_read = data_read;
+
       if ( retval != CL_RETVAL_OK) {
          CL_LOG_STR(CL_LOG_INFO,"uncomplete read:", cl_get_error_text(retval));
          return retval;
@@ -3523,21 +3476,15 @@ int cl_com_ssl_read_GMSH(cl_com_connection_t* connection, unsigned long *only_on
          CL_LOG(CL_LOG_WARNING,"buffer overflow");
          return CL_RETVAL_STREAM_BUFFER_OVERFLOW;
       }
-      if (only_one_read != NULL) {
-         data_read = 0;
-         retval = cl_com_ssl_read(connection,
-                                  &(connection->data_read_buffer[connection->data_read_buffer_pos]),
-                                  1,
-                                  &data_read);
-         connection->data_read_buffer_pos = connection->data_read_buffer_pos + data_read;
-         *only_one_read = data_read;
-      } else {
-         retval = cl_com_ssl_read(connection,
-                                  &(connection->data_read_buffer[connection->data_read_buffer_pos]),
-                                  1,
-                                  NULL);
-         connection->data_read_buffer_pos = connection->data_read_buffer_pos + 1;
-      }
+      
+      data_read = 0;
+      retval = cl_com_ssl_read(connection,
+                               &(connection->data_read_buffer[connection->data_read_buffer_pos]),
+                               1,
+                               &data_read);
+      connection->data_read_buffer_pos = connection->data_read_buffer_pos + data_read;
+      *only_one_read = data_read;
+
       if (retval != CL_RETVAL_OK) {
          CL_LOG(CL_LOG_WARNING,"uncomplete read(2):");
          return retval;
@@ -4433,9 +4380,12 @@ int cl_com_ssl_write(cl_com_connection_t* connection, cl_byte_t* message, unsign
    struct timeval now;
    cl_com_ssl_private_t* private = NULL;
    long data_written = 0;
-   long data_complete = 0;
    int ssl_error;
-   int select_back = 0;
+
+   if (only_one_write == NULL) {
+      CL_LOG(CL_LOG_ERROR,"only_one_write == NULL");
+      return CL_RETVAL_PARAMS;
+   }
 
    if (connection == NULL) {
       CL_LOG(CL_LOG_ERROR,"no connection object");
@@ -4463,123 +4413,49 @@ int cl_com_ssl_write(cl_com_connection_t* connection, cl_byte_t* message, unsign
    }
 
    if (size > CL_DEFINE_MAX_MESSAGE_LENGTH) {
-      CL_LOG_INT(CL_LOG_ERROR,"data to write is > max message length =", CL_DEFINE_MAX_MESSAGE_LENGTH );
+      CL_LOG_INT(CL_LOG_ERROR,"data to write is > max message length =", CL_DEFINE_MAX_MESSAGE_LENGTH);
       cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_MAX_READ_SIZE, NULL);
       return CL_RETVAL_MAX_READ_SIZE;
    }
 
    if (int_size < CL_COM_SSL_FRAMEWORK_MIN_INT_SIZE && size > CL_COM_SSL_FRAMEWORK_MAX_INT ) {
-      CL_LOG_INT(CL_LOG_ERROR,"can't send such a long message, because on this architecture the sizeof integer is", (int)int_size );
+      CL_LOG_INT(CL_LOG_ERROR,"can't send such a long message, because on this architecture the sizeof integer is", (int)int_size);
       cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_MAX_READ_SIZE, MSG_CL_COMMLIB_SSL_MESSAGE_SIZE_EXEED_ERROR);
       return CL_RETVAL_MAX_READ_SIZE;
    }
 
-
-   /*
-    * INFO: this can be a boddle neck if only_one_write is not set,
-    * because if the message can't be read complete, we must try it later 
-    */
-
-   while ( data_complete != size ) {
-      if (only_one_write == NULL) {
-#ifdef USE_POLL
-         struct pollfd ufds;
-
-         ufds.fd = private->sockfd;
-         ufds.events = POLLOUT;
-
-         select_back = poll(&ufds, 1, 0);
-#else
-         fd_set writefds;
-         struct timeval timeout;
-
-         FD_ZERO(&writefds);
-         FD_SET(private->sockfd, &writefds);
-         timeout.tv_sec = 0; 
-         timeout.tv_usec = 0;  /* 0 us */
-         /* do select */
-         select_back = select(private->sockfd + 1, NULL, &writefds, NULL , &timeout);
-#endif
-   
-         if (select_back == -1) {
-            CL_LOG(CL_LOG_INFO,"select error");
-            return CL_RETVAL_SELECT_ERROR;
-         }
-
-#ifdef USE_POLL
-         if (ufds.revents & POLLOUT)
-#else
-         if (FD_ISSET(private->sockfd, &writefds))
-#endif
-         {
-            data_written = cl_com_ssl_func__SSL_write(private->ssl_obj, &message[data_complete], (int) (size - data_complete) );   
-            if (data_written <= 0) {
-               /* Try to find out more about the connect error */
-               ssl_error = cl_com_ssl_func__SSL_get_error(private->ssl_obj, data_written);
-               private->ssl_last_error = ssl_error;
-               switch(ssl_error) {
+   cl_com_ssl_func__ERR_clear_error();
+   data_written = cl_com_ssl_func__SSL_write(private->ssl_obj, message, (int)size);
+   if (data_written <= 0) {
+      /* Try to find out more about the connect error */
+      ssl_error = cl_com_ssl_func__SSL_get_error(private->ssl_obj, data_written);
+      private->ssl_last_error = ssl_error;
+      switch(ssl_error) {
 #ifdef CL_COM_ENABLE_SSL_THREAD_RETRY_BUGFIX
-                  case SSL_ERROR_SYSCALL:
+         case SSL_ERROR_SYSCALL:
 #endif
-                  case SSL_ERROR_WANT_READ: 
-                  case SSL_ERROR_WANT_WRITE: {
-                     CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
-                     break;
-                  }
-                  default: {
-                     CL_LOG_STR(CL_LOG_ERROR,"SSL write error", cl_com_ssl_get_error_text(ssl_error));
-                     cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-                     return CL_RETVAL_SEND_ERROR;
-                  }
-               }
-            } else {
-               data_complete = data_complete + data_written;
-            }
-         }
-         if (data_complete != size) {
-            gettimeofday(&now,NULL);
-            if ( now.tv_sec >= connection->write_buffer_timeout_time ) {
-               CL_LOG(CL_LOG_ERROR,"send timeout error");
-               return CL_RETVAL_SEND_TIMEOUT;
-            }
-         } else {
+         case SSL_ERROR_WANT_READ: 
+         case SSL_ERROR_WANT_WRITE: {
+            CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
             break;
          }
-      } else {
-         data_written = cl_com_ssl_func__SSL_write(private->ssl_obj, &message[data_complete], (int) (size - data_complete));
-         if (data_written <= 0) {
-            /* Try to find out more about the connect error */
-            ssl_error = cl_com_ssl_func__SSL_get_error(private->ssl_obj, data_written);
-            private->ssl_last_error = ssl_error;
-            switch(ssl_error) {
-#ifdef CL_COM_ENABLE_SSL_THREAD_RETRY_BUGFIX
-               case SSL_ERROR_SYSCALL:
-#endif
-               case SSL_ERROR_WANT_READ: 
-               case SSL_ERROR_WANT_WRITE: {
-                  CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
-                  break;
-               }
-               default: {
-                  CL_LOG_STR(CL_LOG_ERROR,"SSL write error", cl_com_ssl_get_error_text(ssl_error));
-                  cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-                  return CL_RETVAL_SEND_ERROR;
-               }
-            }
-         } else {
-            data_complete = data_complete + data_written;
+         default: {
+            CL_LOG_STR(CL_LOG_ERROR,"SSL write error", cl_com_ssl_get_error_text(ssl_error));
+            cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
+            return CL_RETVAL_SEND_ERROR;
          }
-         *only_one_write = data_complete;
-         if (data_complete != size) {
-            gettimeofday(&now,NULL);
-            if ( now.tv_sec >= connection->write_buffer_timeout_time ) {
-               CL_LOG(CL_LOG_ERROR,"send timeout error");
-               return CL_RETVAL_SEND_TIMEOUT;
-            }
-            return CL_RETVAL_UNCOMPLETE_WRITE;
-         }
-         return CL_RETVAL_OK;
       }
+      data_written = 0;
+   }
+
+   *only_one_write = data_written;
+   if (data_written != size) {
+      gettimeofday(&now,NULL);
+      if ( now.tv_sec >= connection->write_buffer_timeout_time ) {
+         CL_LOG(CL_LOG_ERROR,"send timeout error");
+         return CL_RETVAL_SEND_TIMEOUT;
+      }
+      return CL_RETVAL_UNCOMPLETE_WRITE;
    }
    return CL_RETVAL_OK;
 }
@@ -4593,11 +4469,9 @@ int cl_com_ssl_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
    struct timeval now;
    cl_com_ssl_private_t* private = NULL;
    long data_read = 0;
-   long data_complete = 0;
-   int select_back = 0;
    int ssl_error;
 
-   if (connection == NULL) {
+   if (connection == NULL || only_one_read == NULL) {
       CL_LOG(CL_LOG_ERROR,"no connection object");
       return CL_RETVAL_PARAMS;
    }
@@ -4635,112 +4509,39 @@ int cl_com_ssl_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
       return CL_RETVAL_MAX_READ_SIZE;
    }
 
-   /* TODO: this is a boddle neck if only_one_read is not set.
-            because if the message can't be read
-            complete, we must try it later !!!!!!!!!!!!!!! */
+   cl_com_ssl_func__ERR_clear_error();
+   data_read = cl_com_ssl_func__SSL_read(private->ssl_obj, message, (int)size);
+   if (data_read <= 0) {
 
-   while ( data_complete != size ) {
-      if (only_one_read == NULL) {
-#ifdef USE_POLL
-         struct pollfd ufds;
-
-         ufds.fd = private->sockfd;
-         ufds.events = POLLIN|POLLPRI;
-
-         select_back = poll(&ufds, 1, 250);  /* 250 ms */
-#else
-         fd_set readfds;
-         struct timeval timeout;
-
-         FD_ZERO(&readfds);
-         FD_SET(private->sockfd, &readfds);
-         timeout.tv_sec = 0; 
-         timeout.tv_usec = 250 * 1000;  /* 250 ms */
-   
-         /* do select */
-         select_back = select(private->sockfd + 1, &readfds,NULL , NULL , &timeout);
-#endif
-
-         if (select_back == -1) {
-            CL_LOG(CL_LOG_INFO,"select error");
-            return CL_RETVAL_SELECT_ERROR;
-         }
-
-#ifdef USE_POLL
-         if (ufds.revents & (POLLIN|POLLPRI))
-#else         
-         if (FD_ISSET(private->sockfd, &readfds))
-#endif
-         {
-            data_read = cl_com_ssl_func__SSL_read(private->ssl_obj, &message[data_complete], (int) (size - data_complete) );
-            if (data_read <= 0) {
-
-               /* Try to find out more about the connect error */
-               ssl_error = cl_com_ssl_func__SSL_get_error(private->ssl_obj, data_read);
-               private->ssl_last_error = ssl_error;
-               switch(ssl_error) {
+      /* Try to find out more about the connect error */
+      ssl_error = cl_com_ssl_func__SSL_get_error(private->ssl_obj, data_read);
+      private->ssl_last_error = ssl_error;
+     
+      switch(ssl_error) {
 #ifdef CL_COM_ENABLE_SSL_THREAD_RETRY_BUGFIX
-                  case SSL_ERROR_SYSCALL:
+         case SSL_ERROR_SYSCALL:
 #endif
-                  case SSL_ERROR_WANT_READ: 
-                  case SSL_ERROR_WANT_WRITE: {
-                     CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
-                     break;
-                  }
-                  default: {
-                     CL_LOG_STR(CL_LOG_ERROR,"SSL write error:", cl_com_ssl_get_error_text(ssl_error));
-                     cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-                     return CL_RETVAL_READ_ERROR;
-                  }
-               }
-            } else {
-               data_complete = data_complete + data_read;
-            }
-         }
-         if (data_complete != size) {
-            gettimeofday(&now,NULL);
-            if ( now.tv_sec >= connection->read_buffer_timeout_time ) {
-               return CL_RETVAL_READ_TIMEOUT;
-            }
-         } else {
+         case SSL_ERROR_WANT_READ: 
+         case SSL_ERROR_WANT_WRITE: {
+            CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
             break;
          }
-      } else {
-         data_read = cl_com_ssl_func__SSL_read(private->ssl_obj, &message[data_complete], (int) (size - data_complete) );
-         if (data_read <= 0) {
-
-            /* Try to find out more about the connect error */
-            ssl_error = cl_com_ssl_func__SSL_get_error(private->ssl_obj, data_read);
-            private->ssl_last_error = ssl_error;
-           
-            switch(ssl_error) {
-#ifdef CL_COM_ENABLE_SSL_THREAD_RETRY_BUGFIX
-               case SSL_ERROR_SYSCALL:
-#endif
-               case SSL_ERROR_WANT_READ: 
-               case SSL_ERROR_WANT_WRITE: {
-                  CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
-                  break;
-               }
-               default: {
-                  CL_LOG_STR(CL_LOG_ERROR,"SSL read error:", cl_com_ssl_get_error_text(ssl_error));
-                  cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-                  return CL_RETVAL_READ_ERROR;
-               }
-            }
-         } else {
-            data_complete = data_complete + data_read;
+         default: {
+            CL_LOG_STR(CL_LOG_ERROR,"SSL read error:", cl_com_ssl_get_error_text(ssl_error));
+            cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
+            return CL_RETVAL_READ_ERROR;
          }
-         *only_one_read = data_complete;
-         if (data_complete != size) {
-            gettimeofday(&now,NULL);
-            if ( now.tv_sec >= connection->read_buffer_timeout_time ) {
-               return CL_RETVAL_READ_TIMEOUT;
-            }
-            return CL_RETVAL_UNCOMPLETE_READ;
-         }
-         return CL_RETVAL_OK;
       }
+      data_read = 0;
+   }
+
+   *only_one_read = data_read;
+   if (data_read != size) {
+      gettimeofday(&now,NULL);
+      if ( now.tv_sec >= connection->read_buffer_timeout_time ) {
+         return CL_RETVAL_READ_TIMEOUT;
+      }
+      return CL_RETVAL_UNCOMPLETE_READ;
    }
    return CL_RETVAL_OK;
 }
@@ -4792,7 +4593,7 @@ int cl_com_ssl_get_unique_id(cl_com_handle_t* handle,
       connection = elem->connection;
       if (connection != NULL) {
          /* find correct client */
-         if ( cl_com_compare_endpoints(connection->receiver, &client) ) {
+         if ( cl_com_compare_endpoints(connection->remote, &client) ) {
             private = cl_com_ssl_get_private(connection);
             if (private != NULL) {
                if (private->ssl_unique_id != NULL) {
@@ -5051,8 +4852,7 @@ int cl_com_ssl_connection_complete_shutdown(cl_com_connection_t*  connection) {
 }
 
 int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
-                                          long                  timeout,
-                                          unsigned long         only_once) {
+                                          long                  timeout) {
    cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }

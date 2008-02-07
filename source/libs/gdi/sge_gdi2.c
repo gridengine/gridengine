@@ -125,7 +125,7 @@ static void dump_receive_info(cl_com_message_t** message, cl_com_endpoint_t** se
 
 static int gdi2_send_message(sge_gdi_ctx_class_t * ctx, 
                              int synchron, const char *tocomproc, int toid, 
-                             const char *tohost, int tag, char *buffer, 
+                             const char *tohost, int tag, char **buffer, 
                              int buflen, u_long32 *mid);
 
 
@@ -773,20 +773,16 @@ int sge_gdi2_send_any_request(sge_gdi_ctx_class_t *ctx, int synchron, u_long32 *
       ack_type = CL_MIH_MAT_ACK;
    }
   
-#if 0
-   SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_SENDINGMESSAGE_SIU, commproc,id,
-                          (unsigned long) pb->bytes_used));
-   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-#endif
-
    if (mid) {
       mid_pointer = &dummy_mid;
    }
 
    i = cl_commlib_send_message(handle, (char*) rhost, (char*) commproc, id,
-                                  ack_type, (cl_byte_t*)pb->head_ptr, (unsigned long) pb->bytes_used,
-                                  mid_pointer,  response_id,  tag , (cl_bool_t)1, (cl_bool_t)synchron);
-
+                               ack_type, (cl_byte_t**)&pb->head_ptr, 
+                               (unsigned long) pb->bytes_used,
+                               mid_pointer,  response_id,  tag, CL_FALSE, 
+                               (cl_bool_t)synchron);
+   
    dump_send_info(rhost, commproc, id, ack_type, tag, mid_pointer);
    
    if (mid) {
@@ -1537,7 +1533,7 @@ int gdi2_send_message_pb(sge_gdi_ctx_class_t *ctx,
        DRETURN(ret);
    }
 
-   ret = gdi2_send_message(ctx, synchron, tocomproc, toid, tohost, tag, pb->head_ptr, pb->bytes_used, mid);
+   ret = gdi2_send_message(ctx, synchron, tocomproc, toid, tohost, tag, &pb->head_ptr, pb->bytes_used, mid);
 
    DRETURN(ret);
 }
@@ -1555,7 +1551,7 @@ int gdi2_send_message_pb(sge_gdi_ctx_class_t *ctx,
 *************************************************************/
 static int 
 gdi2_send_message(sge_gdi_ctx_class_t *sge_ctx, int synchron, const char *tocomproc, int toid, 
-                 const char *tohost, int tag, char *buffer, 
+                 const char *tohost, int tag, char **buffer, 
                  int buflen, u_long32 *mid) 
 {
    int ret;
@@ -1630,14 +1626,8 @@ gdi2_send_message(sge_gdi_ctx_class_t *sge_ctx, int synchron, const char *tocomp
    }
 
    ret = cl_commlib_send_message(handle, (char*)tohost ,(char*)tocomproc ,toid , 
-                                 ack_type, (cl_byte_t*)buffer, (unsigned long)buflen,
-                                 mid_pointer, 0, tag, (cl_bool_t)1, (cl_bool_t)synchron);
-   if (ret != CL_RETVAL_OK) {
-      /* try again ( if connection timed out) */
-      ret = cl_commlib_send_message(handle, (char*)tohost ,(char*)tocomproc ,toid , 
-                                    ack_type, (cl_byte_t*)buffer, (unsigned long)buflen,
-                                    mid_pointer, 0, tag, (cl_bool_t)1, (cl_bool_t)synchron);
-   }
+                                 ack_type, (cl_byte_t**)buffer, (unsigned long)buflen,
+                                 mid_pointer, 0, tag, CL_FALSE, (cl_bool_t)synchron);
 
    if (mid != NULL) {
       *mid = dummy_mid;
@@ -1821,7 +1811,7 @@ lListElem **lepp
    u_long32 status;
    u_long32 me = ctx->get_who(ctx);
    
-   DENTER(TOP_LAYER, "gdi2_get_configuration");
+   DENTER(GDI_LAYER, "gdi2_get_configuration");
 
    if (!config_name || !gepp) {
       DRETURN(-1);
@@ -1944,7 +1934,7 @@ volatile int* abort_flag
    u_long32 progid = ctx->get_who(ctx);
    
 
-   DENTER(TOP_LAYER, "gdi2_get_conf_and_daemonize");
+   DENTER(GDI_LAYER, "gdi2_get_conf_and_daemonize");
    /*
     * for better performance retrieve 2 configurations
     * in one gdi call
@@ -2035,7 +2025,7 @@ lList **conf_list
    u_long32 progid = ctx->get_who(ctx);
    int ret;
 
-   DENTER(TOP_LAYER, "gdi2_get_merged_configuration");
+   DENTER(GDI_LAYER, "gdi2_get_merged_configuration");
 
    DPRINTF(("qualified hostname: %s\n",  qualified_hostname));
    ret = gdi2_get_configuration(ctx, qualified_hostname, &global, &local);
@@ -2093,7 +2083,7 @@ int sge_gdi2_shutdown(void **context)
 {
    sge_gdi_ctx_class_t **ref_ctx = (sge_gdi_ctx_class_t **)context;
 
-   DENTER(TOP_LAYER, "sge_gdi2_shutdown");
+   DENTER(GDI_LAYER, "sge_gdi2_shutdown");
 
    /* initialize libraries */
 /*    pthread_once(&gdi_once_control, gdi_once_init); */
@@ -2120,7 +2110,6 @@ int sge_gdi2_shutdown(void **context)
 *     const char *commproc - Component name
 *     int id               - Component id
 *     int synchron         - true or false
-*     u_long32 *mid        - Message id
 *
 *  RESULT
 *     int - error state
@@ -2136,7 +2125,7 @@ int sge_gdi2_shutdown(void **context)
 int report_list_send(sge_gdi_ctx_class_t *ctx, 
                      const lList *rlp, 
                      const char *rhost, const char *commproc, int id,
-                     int synchron, u_long32 *mid)
+                     int synchron)
 {
    sge_pack_buffer pb;
    int ret; 
@@ -2156,23 +2145,20 @@ int report_list_send(sge_gdi_ctx_class_t *ctx,
    case PACK_ENOMEM:
       ERROR((SGE_EVENT, MSG_GDI_REPORTNOMEMORY_I , 1024));
       clear_packbuffer(&pb);
-      DEXIT;
-      return -2;
+      DRETURN(-2);
 
    case PACK_FORMAT:
       ERROR((SGE_EVENT, MSG_GDI_REPORTFORMATERROR));
       clear_packbuffer(&pb);
-      DEXIT;
-      return -3;
+      DRETURN(-3);
 
    default:
       ERROR((SGE_EVENT, MSG_GDI_REPORTUNKNOWERROR));
       clear_packbuffer(&pb);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
-   ret = sge_gdi2_send_any_request(ctx, synchron, mid, rhost, commproc, id, &pb, TAG_REPORT_REQUEST, 0, &alp);
+   ret = sge_gdi2_send_any_request(ctx, synchron, NULL, rhost, commproc, id, &pb, TAG_REPORT_REQUEST, 0, &alp);
 
    clear_packbuffer(&pb);
    answer_list_output (&alp);
@@ -2382,8 +2368,10 @@ void gdi_rmon_print_callback_function(const char *progname, const char *message,
 *  SEE ALSO
 *     sge_any_request/sge_get_com_error_flag()
 *******************************************************************************/
-void general_communication_error(const cl_application_error_list_elem_t* commlib_error) {
-   DENTER(TOP_LAYER, "general_communication_error");
+void
+general_communication_error(const cl_application_error_list_elem_t* commlib_error)
+{
+   DENTER(GDI_LAYER, "general_communication_error");
    if (commlib_error != NULL) {
       struct timeval now;
       unsigned long time_diff = 0;
@@ -2550,7 +2538,7 @@ void general_communication_error(const cl_application_error_list_elem_t* commlib
 *******************************************************************************/
 bool sge_get_com_error_flag(u_long32 progid, sge_gdi_stored_com_error_t error_type) {
    bool ret_val = false;
-   DENTER(TOP_LAYER, "sge_get_com_error_flag");
+   DENTER(GDI_LAYER, "sge_get_com_error_flag");
    sge_mutex_lock("general_communication_error_mutex", 
                   SGE_FUNC, __LINE__, &general_communication_error_mutex);  
 

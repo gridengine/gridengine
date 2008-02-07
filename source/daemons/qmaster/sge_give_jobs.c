@@ -350,9 +350,6 @@ send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpj
 #ifndef __SGE_NO_USERMAPPING__    
    const char *old_mapped_user = NULL;
 #endif   
-   bool is_clean_pb = false;
-   bool is_init_pb = true;
-   sge_pack_buffer pb;
    object_description *object_base = object_type_get_object_description();
    const char *sge_root = ctx->get_sge_root(ctx);
    bool simulate_execd = mconf_get_simulate_execds();
@@ -364,6 +361,7 @@ send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpj
       lListElem *hep;
       const char* hostname = NULL;
       unsigned long last_heard_from;
+      sge_pack_buffer pb;
 
       if (!lGetUlong(gdil_ep, JG_tag_slave_job)) {
          continue;
@@ -402,8 +400,8 @@ send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpj
       /*
       ** get credential for job
       */
-      if ((mconf_get_do_credentials()) && (cache_sec_cred(sge_root, tmpjep, hostname))) { 
-         is_init_pb = true;
+      if (mconf_get_do_credentials()) {
+         cache_sec_cred(sge_root, tmpjep, hostname);
       }
   
 #ifndef __SGE_NO_USERMAPPING__ 
@@ -422,26 +420,14 @@ send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpj
                      owner, mapped_user, hostname));
             lSetString(tmpjep, JB_owner, mapped_user);
          }
-
-         if ((old_mapped_user != NULL) && (strcmp(old_mapped_user, mapped_user) != 0)) {
-            is_init_pb = true;
-         }   
-         old_mapped_user = mapped_user;
       }
 #endif
 
-      if (is_init_pb) {
-         if (is_clean_pb) {
-            clear_packbuffer(&pb); 
-         }
-         if (init_packbuffer(&pb, 0, 0) != PACK_SUCCESS) {
-            ret = -1;
-            break;
-         }
-         pack_job_delivery(&pb, tmpjep);
-         is_clean_pb = true;
-         is_init_pb = false;
+      if (init_packbuffer(&pb, 0, 0) != PACK_SUCCESS) {
+         ret = -1;
+         break;
       }
+      pack_job_delivery(&pb, tmpjep);
 
       /*
       ** security hook
@@ -464,6 +450,7 @@ send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpj
          ERROR((SGE_EVENT, MSG_COM_SENDJOBTOHOST_US, sge_u32c(lGetUlong(tmpjep, JB_job_number)), hostname));
          ERROR((SGE_EVENT, "commlib error: %s\n", cl_get_error_text(failed)));
          sge_mark_unheard(hep, target);
+         clear_packbuffer(&pb);
          ret = -1;
          break;
       } else {
@@ -472,12 +459,7 @@ send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpj
       }
    }
 
-   if (is_clean_pb) {
-      clear_packbuffer(&pb);     
-   }
-
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }   
 
 static int 

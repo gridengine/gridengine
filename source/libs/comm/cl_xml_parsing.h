@@ -33,6 +33,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <arpa/inet.h>
+
 #define CL_DEFINE_MAX_MESSAGE_LENGTH                 1024 * 1024 * 1024 /* 1GB max message length */
 
 
@@ -87,8 +89,8 @@
 
  */
 #define CL_MIH_MESSAGE          "<mih version=\"%s\"><mid>%ld</mid><dl>%ld</dl><df>%s</df><mat>%s</mat><tag>%ld</tag><rid>%ld</rid></mih>"
-#define CL_MIH_MESSAGE_SIZE     84
 #define CL_MIH_MESSAGE_VERSION  "0.1"
+#define CL_MIH_MESSAGE_SIZE     87 /* sizeof(CL_MIH_MESSAGE) + sizeof(CCL_MIH_MESSAGE_VERSION */
 #define CL_MIH_MESSAGE_ACK_TYPE_NAK     "nak"
 #define CL_MIH_MESSAGE_ACK_TYPE_ACK     "ack"
 #define CL_MIH_MESSAGE_ACK_TYPE_SYNC    "sync"
@@ -117,8 +119,8 @@
 
 */
 #define CL_AM_MESSAGE       "<am version=\"%s\"><mid>%ld</mid></am>"
-#define CL_AM_MESSAGE_SIZE  31
 #define CL_AM_MESSAGE_VERSION "0.1"
+#define CL_AM_MESSAGE_SIZE  34 /* sizeof(CL_AM_MESSAGE) + sizeof(CL_AM_MESSAGE_VERSION) */
 
 /* (4) connect message (CM) 
 
@@ -151,9 +153,9 @@
                       count is reached at service component.
 
 */
-#define CL_CONNECT_MESSAGE         "<cm version=\"%s\"><df>%s</df><ct>%s</ct><src host=\"%s\" comp=\"%s\" id=\"%ld\"></src><dst host=\"%s\" comp=\"%s\" id=\"%ld\"></dst><rdata host=\"%s\" comp=\"%s\" id=\"%ld\"></rdata><port>%ld</port><ac>%s</ac></cm>"
-#define CL_CONNECT_MESSAGE_SIZE    141 + ( 22 )
-#define CL_CONNECT_MESSAGE_VERSION "0.2"
+#define CL_CONNECT_MESSAGE         "<cm version=\"%s\"><df>%s</df><ct>%s</ct><rdata host=\"%s\" comp=\"%s\" id=\"%ld\"></rdata><port>%ld</port><ac>%s</ac></cm>"
+#define CL_CONNECT_MESSAGE_VERSION "0.3"
+#define CL_CONNECT_MESSAGE_SIZE   100  /* sizeof(CL_CONNECT_MESSAGE) + sizeof(CL_CONNECT_MESSAGE_VERSION) */
 #define CL_CONNECT_MESSAGE_DATA_FORMAT_BIN    "bin"
 #define CL_CONNECT_MESSAGE_DATA_FORMAT_XML    "xml"
 #define CL_CONNECT_MESSAGE_DATA_FLOW_STREAM   "stream"
@@ -172,30 +174,33 @@
          <src host="CRM_SRC_HOST" comp="CRM_SRC_COMP" id="CRM_SRC_ID"></src>
          <dst host="CRM_DST_HOST" comp="CRM_DST_COMP" id="CRM_DST_ID"></dst>
          <rdata host="CRM_RDATA_HOST" comp="CRM_RDATA_COMP" id="CRM_RDATA_ID"></rdata>
+         <params>CRM_QMASTER_PARAMS</params>
       </crm>
 
-      CRM_VERSION:      Version number of CRM (e.g. "0.4")
-      CRM_CS_CONDITION: Connection Status: 
-                           "connected"                -> No Errors
-                           "access denied"            -> Service doesn't allow client to connect
-                           "unsupported data format"  -> Message Format error
-                           "endpoint not unique"      -> Client is already connected
-      CRM_CS_TEXT:      User defined connection status error text
-      CRM_SRC_HOST:     Host name of source endpoint
-      CRM_SRC_COMP:     Component name of source endpoint
-      CRM_SRC_ID:       Component id of source endpoint
-      CRM_DST_HOST:     Host name of destination endpoint
-      CRM_DST_COMP:     Component name of destination endpoint
-      CRM_DST_ID:       Component id of destination endpoint
-      CRM_RDATA_HOST:   Host name of routing host endpoint
-      CRM_RDATA_COMP:   Component name of routing host endpoint
-      CRM_RDATA_ID:     Component id of routing host endpoint
+      CRM_VERSION:        Version number of CRM (e.g. "0.4")
+      CRM_CS_CONDITION:   Connection Status: 
+                             "connected"                -> No Errors
+                             "access denied"            -> Service doesn't allow client to connect
+                             "unsupported data format"  -> Message Format error
+                             "endpoint not unique"      -> Client is already connected
+      CRM_CS_TEXT:        User defined connection status error text
+      CRM_SRC_HOST:       Host name of source endpoint
+      CRM_SRC_COMP:       Component name of source endpoint
+      CRM_SRC_ID:         Component id of source endpoint
+      CRM_DST_HOST:       Host name of destination endpoint
+      CRM_DST_COMP:       Component name of destination endpoint
+      CRM_DST_ID:         Component id of destination endpoint
+      CRM_RDATA_HOST:     Host name of routing host endpoint
+      CRM_RDATA_COMP:     Component name of routing host endpoint
+      CRM_RDATA_ID:       Component id of routing host endpoint
+      CRM_QMASTER_PARAMS: Qmaster params eg: name=value:name=value:.....
+      
 
 
 */
-#define CL_CONNECT_RESPONSE_MESSAGE                              "<crm version=\"%s\"><cs condition=\"%s\">%s</cs><src host=\"%s\" comp=\"%s\" id=\"%ld\"></src><dst host=\"%s\" comp=\"%s\" id=\"%ld\"></dst><rdata host=\"%s\" comp=\"%s\" id=\"%ld\"></rdata></crm>"
-#define CL_CONNECT_RESPONSE_MESSAGE_SIZE                         147
-#define CL_CONNECT_RESPONSE_MESSAGE_VERSION                      "0.1"
+#define CL_CONNECT_RESPONSE_MESSAGE                              "<crm version=\"%s\"><cs condition=\"%s\">%s</cs><rdata host=\"%s\" comp=\"%s\" id=\"%ld\"></rdata><params>%s</params></crm>"
+#define CL_CONNECT_RESPONSE_MESSAGE_VERSION                      "0.3"
+#define CL_CONNECT_RESPONSE_MESSAGE_SIZE                         101 /* sizeof(CL_CONNECT_RESPONSE_MESSAGE) + sizeof(CL_CONNECT_RESPONSE_MESSAGE_VERSION) */
 #define CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_OK         "connected"
 #define CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED     "access denied"
 #define CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_NOT_UNIQUE "endpoint not unique"
@@ -213,8 +218,8 @@
 
 */
 #define CL_SIM_MESSAGE               "<sim version=\"%s\"></sim>"
-#define CL_SIM_MESSAGE_SIZE          sizeof(CL_SIM_MESSAGE) - 3  /* 22   TODO: can we make this easier? */ 
 #define CL_SIM_MESSAGE_VERSION       "0.1"
+#define CL_SIM_MESSAGE_SIZE          25 /* sizeof(CL_SIM_MESSAGE) + sizeof(CL_SIM_MESSAGE_VERSION */
 
 /* (7) status information response message (SIRM)
    
@@ -250,8 +255,8 @@
 
  */
 #define CL_SIRM_MESSAGE            "<sirm version=\"%s\"><mid>%ld</mid><starttime>%ld</starttime><runtime>%ld</runtime><application><messages><brm>%ld</brm><bwm>%ld</bwm></messages><connections><noc>%ld</noc></connections><status>%ld</status></application><info>%s</info></sirm>"
-#define CL_SIRM_MESSAGE_SIZE       sizeof(CL_SIRM_MESSAGE) - 20 - 3 - 3
-#define CL_SIRM_MESSAGE_VERSION    "0.1"
+#define CL_SIRM_MESSAGE_VERSION    "0.1" 
+#define CL_SIRM_MESSAGE_SIZE       218  /* sizeof(CL_SIRM_MESSAGE) + sizeof(CL_SIRM_MESSAGE_VERSION) */
 
 
 /* (8) connection close message (CCM) 
@@ -265,8 +270,8 @@
 
  */
 #define CL_CCM_MESSAGE                              "<ccm version=\"%s\"></ccm>" 
-#define CL_CCM_MESSAGE_SIZE                         22
 #define CL_CCM_MESSAGE_VERSION                      "0.1"
+#define CL_CCM_MESSAGE_SIZE                         25 /* sizeof(CL_CCM_MESSAGE) + sizeof(CL_CCM_MESSAGE_VERSION) */
 
 /* (9) connection close response message (CCRM) 
 
@@ -278,8 +283,8 @@
 
 */
 #define CL_CCRM_MESSAGE                              "<ccrm version=\"%s\"></ccrm>"
-#define CL_CCRM_MESSAGE_SIZE                         24
 #define CL_CCRM_MESSAGE_VERSION                      "0.1"
+#define CL_CCRM_MESSAGE_SIZE                         27 /* sizeof(CL_CCRM_MESSAGE) + sizeof(CL_CCRM_MESSAGE_VERSION) */
 
 
 
@@ -288,6 +293,8 @@ typedef struct cl_com_endpoint {
    char*         comp_host;           
    char*         comp_name;
    unsigned long comp_id;
+   struct in_addr addr;
+   char*         hash_id;
 } cl_com_endpoint_t ;
 
 
@@ -349,9 +356,7 @@ typedef struct cl_com_CM_type {
    cl_xml_connection_type_t       ct;
    cl_xml_connection_autoclose_t  ac;
    unsigned long                  port;  
-   cl_com_endpoint_t*             src;
-   cl_com_endpoint_t*             dst;
-   cl_com_endpoint_t*             rdata;
+   cl_com_endpoint_t*             rdata; /* remote */
 } cl_com_CM_t;
 
 
@@ -360,9 +365,8 @@ typedef struct cl_com_CRM_type {
    cl_xml_connection_status_t    cs_condition;
    char*                         cs_text;
    char*                         formats;   /* each format is seperated with "," not supported TODO  */
-   cl_com_endpoint_t*            src;
-   cl_com_endpoint_t*            dst;
    cl_com_endpoint_t*            rdata;
+   char*                         params;
 } cl_com_CRM_t;
 
 typedef struct cl_com_MIH_type {
@@ -411,7 +415,10 @@ const char* cl_com_get_mih_mat_string(cl_xml_ack_type_t mat);
 
 
 /* endpoint helper functions */
-cl_com_endpoint_t* cl_com_create_endpoint(const char* comp_host, const char* comp_name, unsigned long comp_id);
+cl_com_endpoint_t* cl_com_create_endpoint(const char* comp_host,
+                                          const char* comp_name,
+                                          unsigned long comp_id,
+                                          const struct in_addr *in_addr);
 cl_com_endpoint_t* cl_com_dup_endpoint(cl_com_endpoint_t* endpoint);
 int  cl_com_free_endpoint(cl_com_endpoint_t** endpoint);
 

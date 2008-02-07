@@ -41,7 +41,10 @@
 #include "cl_host_list.h"
 #include "cl_host_alias_list.h"
 #include "cl_commlib.h"
+#include "uti/sge_hostname.h"
 
+static struct in_addr*   cl_com_copy_in_addr(struct in_addr *in_addr);
+static cl_com_hostent_t* cl_com_copy_hostent(cl_com_hostent_t* hostent);
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
@@ -76,7 +79,7 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
    }
 
 
-   if ( ldata->entry_life_time == 0) {
+   if (entry_life_time == 0) {
       unsigned long help_value = 0;
 
       help_value = cl_util_get_ulong_value(getenv("SGE_COMMLIB_HOST_LIST_LIFE_TIME"));
@@ -89,7 +92,7 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
       }
    }
 
-   if ( ldata->entry_update_time == 0) {
+   if (entry_update_time == 0) {
       unsigned long help_value = 0;
 
       help_value = cl_util_get_ulong_value(getenv("SGE_COMMLIB_HOST_LIST_UPDATE_TIME"));
@@ -102,7 +105,7 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
       }
    }
 
-   if ( ldata->entry_reresolve_time == 0) {
+   if (entry_reresolve_time == 0) {
       unsigned long help_value = 0;
 
       help_value = cl_util_get_ulong_value(getenv("SGE_COMMLIB_HOST_LIST_RERESOLVE_TIME"));
@@ -213,6 +216,9 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
       CL_LOG(CL_LOG_INFO,"no local domain specified");
    }
 
+   /* create hashtable */
+   ldata->ht =  sge_htable_create(4, dup_func_string, hash_func_string, hash_compare_string);
+
    CL_LOG_INT(CL_LOG_INFO,"entry_life_time is", (int)ldata->entry_life_time);
    CL_LOG_INT(CL_LOG_INFO,"entry_update_time is", (int)ldata->entry_update_time);
    CL_LOG_INT(CL_LOG_INFO,"entry_reresolve_time is", (int)ldata->entry_reresolve_time);
@@ -229,14 +235,13 @@ int cl_host_list_copy(cl_raw_list_t** destination, cl_raw_list_t* source) {
    cl_host_list_data_t* ldata_source = NULL;
    cl_host_list_data_t* ldata_dest = NULL;
    cl_host_alias_list_elem_t* alias_elem = NULL;
-   cl_host_list_elem_t*       host_elem = NULL;
+   cl_host_list_elem_t* host_elem = NULL;
 
-
-   if (  source == NULL ) {
+   if (source == NULL) {
       return CL_RETVAL_PARAMS;
    }  
 
-   ret_val = cl_raw_list_lock( source );
+   ret_val = cl_raw_list_lock(source);
    if (ret_val != CL_RETVAL_OK) {
       return ret_val;
    }
@@ -269,15 +274,14 @@ int cl_host_list_copy(cl_raw_list_t** destination, cl_raw_list_t* source) {
    ldata_dest->alias_file_changed = ldata_source->alias_file_changed;
    ldata_dest->last_refresh_time  = ldata_source->last_refresh_time;
 
-
    /* now copy alias list */
    cl_raw_list_lock(ldata_source->host_alias_list);
 
    alias_elem = cl_host_alias_list_get_first_elem(ldata_source->host_alias_list);
    while(alias_elem) {
-      ret_val = cl_host_alias_list_append_host( ldata_dest->host_alias_list, 
-                                                alias_elem->local_resolved_hostname,
-                                                alias_elem->alias_name, 0  );
+      ret_val = cl_host_alias_list_append_host(ldata_dest->host_alias_list, 
+                                               alias_elem->local_resolved_hostname,
+                                               alias_elem->alias_name, 0);
       if (ret_val != CL_RETVAL_OK) {
          cl_raw_list_unlock(ldata_source->host_alias_list);
          cl_raw_list_unlock(source);
@@ -287,8 +291,6 @@ int cl_host_list_copy(cl_raw_list_t** destination, cl_raw_list_t* source) {
       alias_elem = cl_host_alias_list_get_next_elem(alias_elem);
    }
    cl_raw_list_unlock(ldata_source->host_alias_list);
-
-
 
    /* ok, now copy the entries */
    host_elem = cl_host_list_get_first_elem(source);
@@ -355,14 +357,10 @@ int cl_host_list_copy(cl_raw_list_t** destination, cl_raw_list_t* source) {
          new_host_spec->hostent = NULL;
       }
 
-
-      cl_host_list_append_host( (*destination) , new_host_spec, 0 );
+      cl_host_list_append_host((*destination), new_host_spec, 0);
       host_elem = cl_host_list_get_next_elem(host_elem);
    }
    
-
-
-
    ret_val = cl_raw_list_unlock( source );
    return ret_val;
 }
@@ -376,7 +374,7 @@ cl_host_list_data_t* cl_host_list_get_data(cl_raw_list_t* list_p) {
    cl_host_list_data_t* ldata = NULL;
    cl_raw_list_t* hostlist = NULL;
 
-   if ( list_p == NULL) {
+   if (list_p == NULL) {
       hostlist = cl_com_get_host_list();
    } else {
       hostlist = list_p;
@@ -502,14 +500,14 @@ int cl_host_list_cleanup(cl_raw_list_t** list_p) {
 
    /* clean list private data */
    ldata = (*list_p)->list_data;
-   (*list_p)->list_data = NULL;
-   if ( ldata != NULL ) {
+   if (ldata != NULL) {
+      sge_htable_destroy(ldata->ht);
       cl_host_alias_list_cleanup(&(ldata->host_alias_list));
       free(ldata->local_domain_name);
       free(ldata->host_alias_file);
       free(ldata);
-      ldata = NULL;
    }
+   (*list_p)->list_data = NULL;
 
    return cl_raw_list_cleanup(list_p);
 }
@@ -553,6 +551,12 @@ int cl_host_list_append_host(cl_raw_list_t* list_p,cl_com_host_spec_t* host, int
       }
       return CL_RETVAL_MALLOC;
    }
+
+   /* add element to hash table */
+   if (host->unresolved_name != NULL) {
+      cl_host_list_data_t* ldata = list_p->list_data;
+      sge_htable_store(ldata->ht, host->unresolved_name, new_elem);
+   }
    
    /* unlock the thread list */
    if (lock_list == 1) {
@@ -571,7 +575,7 @@ int cl_host_list_append_host(cl_raw_list_t* list_p,cl_com_host_spec_t* host, int
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_host_list_remove_host()"
-int cl_host_list_remove_host(cl_raw_list_t* list_p, cl_com_host_spec_t* host, int lock_list ) {
+int cl_host_list_remove_host(cl_raw_list_t* list_p, cl_com_host_spec_t* host, int lock_list) {
    int ret_val = CL_RETVAL_OK;
    int function_return = CL_RETVAL_UNKOWN_HOST_ERROR;
    cl_host_list_elem_t* elem = NULL;
@@ -587,29 +591,46 @@ int cl_host_list_remove_host(cl_raw_list_t* list_p, cl_com_host_spec_t* host, in
       }
    }
 
-   elem = cl_host_list_get_first_elem(list_p);
-   while ( elem != NULL) { 
-      if (elem->host_spec == host) {
-         /* found matching element */
+    elem = cl_host_list_get_elem_host(list_p, host->unresolved_name);
+    if (elem != NULL) {
+
+         /* remove element from hash table */
+         if (host->unresolved_name != NULL) {
+            cl_host_list_data_t* ldata = list_p->list_data;
+            sge_htable_delete(ldata->ht, host->unresolved_name);
+         }
+   
          cl_raw_list_remove_elem(list_p, elem->raw_elem);
          function_return = CL_RETVAL_OK;
-         cl_com_free_hostspec(&( elem->host_spec ));
+         cl_com_free_hostspec(&(elem->host_spec));
          free(elem);
-         elem = NULL;
-         break;
-      }
-      elem = cl_host_list_get_next_elem(elem);
-   } 
+    }
 
    if (lock_list != 0) {
       /* unlock list */
-      if ( (ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
+      if ((ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
          return ret_val;
       }
    }
    return function_return;
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_host_list_get_elem_host()"
+cl_host_list_elem_t* cl_host_list_get_elem_host(cl_raw_list_t* list_p, const char *unresolved_hostname) {
+   void *elem = NULL;
+
+   if (list_p != NULL) {
+      cl_host_list_data_t* ldata = list_p->list_data;
+
+      if (sge_htable_lookup(ldata->ht, unresolved_hostname, (const void **)&elem) == True) {
+         return elem;
+      }
+   }
+   return NULL;
+}
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
@@ -669,5 +690,50 @@ cl_host_list_elem_t* cl_host_list_get_last_elem(cl_host_list_elem_t* elem) {
       }
    }
    return NULL;
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_copy_in_addr()"
+static struct in_addr* cl_com_copy_in_addr(struct in_addr *addr) {
+   struct in_addr* copy = NULL;    
+   
+   if (addr == NULL) {
+      return NULL;
+   }
+
+   copy = (struct in_addr*) malloc(sizeof(struct in_addr));
+   if (copy != NULL) {
+      memcpy((char*) copy , addr, sizeof(struct in_addr));
+   }
+   return copy;
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_copy_hostent()"
+static cl_com_hostent_t* cl_com_copy_hostent(cl_com_hostent_t* hostent) {
+   cl_com_hostent_t* copy = NULL;
+
+   if (hostent == NULL) {
+      return NULL;
+   }
+
+   copy = (cl_com_hostent_t*)malloc(sizeof(cl_com_hostent_t));
+   if (copy != NULL) {
+      copy->he = NULL;
+
+      if (hostent->he != NULL) {
+         copy->he = sge_copy_hostent(hostent->he);
+         if (copy->he == NULL ) {
+            CL_LOG(CL_LOG_ERROR,"could not copy hostent structure");
+            free(copy);
+            return NULL;
+         }
+      } 
+   }
+   return copy;
 }
 

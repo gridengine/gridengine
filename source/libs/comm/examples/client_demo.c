@@ -169,7 +169,7 @@ extern int main(int argc, char** argv) {
    setup_signal_handler();
  
    /* setup commlib */
-   cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_OFF, on_communication_log );
+   cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_OFF, on_communication_log);
  
    /* setup commlib error function callback */
    cl_com_set_error_func(on_communication_error);
@@ -202,7 +202,7 @@ extern int main(int argc, char** argv) {
       ret_val = cl_commlib_send_message(handle, 
                                         server_host, "server", 1, 
                                         CL_MIH_MAT_NAK, 
-                                        (cl_byte_t*) hello_message, strlen(hello_message)+1,
+                                        (cl_byte_t**)&hello_message, strlen(hello_message)+1,
                                         NULL, 0, 0,
                                         CL_TRUE, CL_FALSE);
       if (ret_val != CL_RETVAL_OK) {

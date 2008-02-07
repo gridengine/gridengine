@@ -44,6 +44,8 @@
 #include "cl_thread_list.h"
 #include "cl_commlib.h"
 
+#include "uti/sge_profiling.h"
+
 /* some global things */
 int test_server_port = 0;
 char* test_server_host = NULL;
@@ -107,6 +109,8 @@ extern int main(int argc, char** argv)
   unsigned long message_counter = 0;
   cl_thread_mode_t tmode = CL_NO_THREAD;
   int arg_found = 0;
+
+  sge_prof_setup();
   
   if (argc != 2) {
      printf("usage: test_thread_throughput <thread mode>\n");
@@ -146,7 +150,7 @@ extern int main(int argc, char** argv)
 
   
 
-  cl_com_setup_commlib(tmode /* CL_NO_THREAD*/ /* CL_RW_THREAD */ /*  CL_THREAD_POOL */,CL_LOG_OFF, NULL );
+  cl_com_setup_commlib(tmode /* CL_NO_THREAD*/ /* CL_RW_THREAD */ /*  CL_THREAD_POOL */,CL_LOG_OFF, NULL);
 
   if (getenv("CL_PORT") != NULL) {
      port =atoi(getenv("CL_PORT"));
@@ -220,7 +224,7 @@ extern int main(int argc, char** argv)
         if ((sender!=NULL) &&strcmp((char*)sender->comp_name, "client") == 0) {
            client = sender;
            cl_commlib_send_message(handle, client->comp_host, client->comp_name, client->comp_id, 
-                                      CL_MIH_MAT_NAK, message->message, message->message_length,
+                                      CL_MIH_MAT_NAK, &message->message, message->message_length,
                                       NULL, message->message_id, 0,
                                       CL_TRUE, CL_FALSE);
            is_route_message = 0;
@@ -233,19 +237,19 @@ extern int main(int argc, char** argv)
               message_counter++;
 
               cl_commlib_send_message(handle, client->comp_host, client->comp_name, client->comp_id, 
-                                      CL_MIH_MAT_NAK, message->message, message->message_length,
+                                      CL_MIH_MAT_NAK, &message->message, message->message_length,
                                       NULL, 0, 0,
                                       CL_TRUE, CL_FALSE);
               cl_commlib_send_message(handle, client->comp_host, client->comp_name, client->comp_id, 
-                                      CL_MIH_MAT_NAK, message->message, message->message_length,
+                                      CL_MIH_MAT_NAK, &message->message, message->message_length,
                                       NULL, 0, 0,
                                       CL_TRUE, CL_FALSE);
               cl_commlib_send_message(handle, client->comp_host, client->comp_name, client->comp_id, 
-                                      CL_MIH_MAT_NAK, message->message, message->message_length,
+                                      CL_MIH_MAT_NAK, &message->message, message->message_length,
                                       NULL, 0, 0,
                                       CL_TRUE, CL_FALSE);
               cl_commlib_send_message(handle, client->comp_host, client->comp_name, client->comp_id, 
-                                      CL_MIH_MAT_NAK, message->message, message->message_length,
+                                      CL_MIH_MAT_NAK, &message->message, message->message_length,
                                       NULL, 0, 0,
                                       CL_TRUE, CL_FALSE);
            }
@@ -277,6 +281,7 @@ extern int main(int argc, char** argv)
   cl_com_cleanup_commlib();
 
   printf("main done\n");
+  sge_prof_cleanup();
   return 0;
 }
 
@@ -323,7 +328,7 @@ void *my_receive_thread(void *t_conf) {
    thread_config->thread_user_data = (void*)handle;
 
    cl_commlib_send_message(handle, test_server_host, "server", 1, 
-                           CL_MIH_MAT_NAK, (cl_byte_t*) message, strlen(message) + 1,
+                           CL_MIH_MAT_NAK, (cl_byte_t**)&message, strlen(message) + 1,
                            NULL, 0, 0,
                            CL_TRUE, CL_FALSE);
 
@@ -450,7 +455,7 @@ void *my_sender_thread(void *t_conf) {
       
       for (i=0;i<24;i++) {
          cl_commlib_send_message(handle, test_server_host, "server", 1, 
-                              CL_MIH_MAT_ACK, (cl_byte_t*) message, 12048,
+                              CL_MIH_MAT_ACK, (cl_byte_t**)&message, 12048,
                               NULL, 0, 0,
                               CL_TRUE, CL_TRUE);
          message_counter++;

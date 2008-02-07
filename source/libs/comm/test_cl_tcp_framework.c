@@ -220,7 +220,7 @@ void server_cleanup_conlist(cl_raw_list_t** connection_list) {
          con_elem = cl_connection_list_get_next_elem(con_elem);
       }
       cl_raw_list_unlock(*connection_list);
-      cl_connection_list_destroy_connections_to_close(*connection_list,1);
+      cl_connection_list_destroy_connections_to_close(*connection_list);
       cl_connection_list_cleanup(connection_list);
    }
 }
@@ -253,8 +253,7 @@ void *server_thread(void *t_conf) {
    cl_raw_list_t* connection_list = NULL;
    cl_com_endpoint_t* local_host = NULL;
    char* local_hostname = NULL;
-
-
+   struct in_addr in_addr;
 
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
@@ -269,8 +268,8 @@ void *server_thread(void *t_conf) {
    /* setup thread */
    CL_LOG(CL_LOG_INFO, "starting initialization ...");
 
-   cl_com_gethostname(&local_hostname,NULL, NULL, NULL);
-   local_host = cl_com_create_endpoint(local_hostname, "server", 1 );
+   cl_com_gethostname(&local_hostname, &in_addr, NULL, NULL);
+   local_host = cl_com_create_endpoint(local_hostname, "server", 1, &in_addr);
    free(local_hostname);
    local_hostname = NULL;
 
@@ -316,7 +315,7 @@ void *server_thread(void *t_conf) {
 
       if (retval == CL_RETVAL_OK && new_con != NULL) {
          CL_LOG(CL_LOG_INFO,"new connection!!!");
-         while( (retval=cl_com_connection_complete_request(new_con, CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT, 0, CL_RW_SELECT)) != CL_RETVAL_OK) {
+         while( (retval=cl_com_connection_complete_request(connection_list, con_elem, CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT, CL_RW_SELECT)) != CL_RETVAL_OK) {
             if (retval != CL_RETVAL_UNCOMPLETE_WRITE && retval != CL_RETVAL_UNCOMPLETE_READ) {
                break;
             }
@@ -325,6 +324,7 @@ void *server_thread(void *t_conf) {
             cl_com_tcp_close_connection(&new_con);
             CL_LOG(CL_LOG_ERROR,"error receiving connection data");
          } else {
+            printf("RD: 1\n");
             cl_connection_list_append_connection(connection_list, new_con,1);
          }
          
@@ -370,7 +370,7 @@ void *server_thread(void *t_conf) {
       }
 
       CL_LOG_INT(CL_LOG_INFO, "--> nr of connections: ", (int)cl_raw_list_get_elem_count(connection_list) );
-      cl_connection_list_destroy_connections_to_close(connection_list,1);
+      cl_connection_list_destroy_connections_to_close(connection_list);
       CL_LOG_INT(CL_LOG_INFO, "--> nr of connections: ", (int)cl_raw_list_get_elem_count(connection_list) );
 
 #if 1
@@ -417,9 +417,8 @@ void *client_thread(void *t_conf) {
    cl_com_connection_t* con = NULL;
    cl_com_endpoint_t* local_host = NULL;
    cl_com_endpoint_t* remote_host = NULL;
-   cl_com_endpoint_t* sender_host = NULL;
-   cl_com_endpoint_t* receiver_host = NULL;
    char* local_hostname = NULL;
+   struct in_addr local_addr;
 
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
@@ -431,11 +430,9 @@ void *client_thread(void *t_conf) {
 
    /* setup thread */
    CL_LOG( CL_LOG_INFO, "starting initialization ...");
-   cl_com_gethostname(&local_hostname,NULL,NULL, NULL);
-   local_host    = cl_com_create_endpoint(local_hostname, thread_config->thread_name, 0 );
-   remote_host   = cl_com_create_endpoint(local_hostname, "server", 1 );
-   sender_host   = cl_com_create_endpoint(local_hostname, thread_config->thread_name, 0 );
-   receiver_host = cl_com_create_endpoint(local_hostname, "server", 1 );
+   cl_com_gethostname(&local_hostname, &local_addr ,NULL, NULL);
+   local_host    = cl_com_create_endpoint(local_hostname, thread_config->thread_name, 0, &local_addr);
+   remote_host   = cl_com_create_endpoint(local_hostname, "server", 1, &local_addr);
    free(local_hostname);
    local_hostname = NULL;
 
@@ -452,7 +449,7 @@ void *client_thread(void *t_conf) {
 
       if (con == NULL) {
          cl_com_tcp_setup_connection(&con, 5000, 5000,CL_CM_CT_STREAM, CL_CM_AC_DISABLED, CL_CT_TCP, CL_CM_DF_BIN, CL_TCP_DEFAULT );
-         while( (retval = cl_com_open_connection(con, 5, remote_host, local_host, receiver_host, sender_host)) == CL_RETVAL_UNCOMPLETE_WRITE) {
+         while( (retval = cl_com_open_connection(con, 5, remote_host, local_host)) == CL_RETVAL_UNCOMPLETE_WRITE) {
             sleep(1);
          }
          CL_LOG_STR( CL_LOG_INFO, "cl_com_open_connection() returned ", cl_get_error_text(retval) );
@@ -461,7 +458,7 @@ void *client_thread(void *t_conf) {
             CL_LOG_STR(CL_LOG_INFO, "cl_com_close_connection() returned ", cl_get_error_text(retval) );
          } 
 
-         while( ( retval= cl_com_connection_complete_request(con, CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT, 0, CL_RW_SELECT )) != CL_RETVAL_OK) {
+         while( ( retval= cl_com_connection_complete_request(con, CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT, CL_RW_SELECT )) != CL_RETVAL_OK) {
             if (retval != CL_RETVAL_UNCOMPLETE_WRITE && retval != CL_RETVAL_UNCOMPLETE_READ) {
                break;
             }

@@ -94,7 +94,7 @@ extern int main(int argc, char** argv)
 
 
   printf("commlib setup ...\n");
-  cl_com_setup_commlib(CL_RW_THREAD, (cl_log_t)atoi(argv[1]),   NULL );
+  cl_com_setup_commlib(CL_RW_THREAD, (cl_log_t)atoi(argv[1]), NULL);
 
   printf("setting up service on port %d\n", atoi(argv[2]) );
   handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , CL_TRUE, atoi(argv[2]) , CL_TCP_DEFAULT,"server", 1, 2, 0 );
@@ -133,7 +133,7 @@ extern int main(int argc, char** argv)
                                 sender->comp_host, 
                                 sender->comp_name, 
                                 sender->comp_id, CL_MIH_MAT_NAK,  
-                                message->message, 
+                                &message->message, 
                                 message->message_length, 
                                 &mid, message->message_id,0, 
                                 CL_FALSE, CL_FALSE);
@@ -141,10 +141,7 @@ extern int main(int argc, char** argv)
 /*           printf("cl_commlib_send_message() returned: %s\n",cl_get_error_text(ret_val)); */
            if (ret_val == CL_RETVAL_PROTOCOL_ERROR) { 
            }
-        } else {
-           message->message = NULL; /* don't delete this message, it's deleted when sent */
-        }
-
+        } 
         
 #if 0
 

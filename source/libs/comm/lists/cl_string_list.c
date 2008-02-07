@@ -156,8 +156,9 @@ int cl_string_list_remove_string(cl_raw_list_t* list_p, char* string, int lock_l
    while ( elem != NULL) { 
       if (strcmp(elem->string,string) == 0 ) {
          /* found matching element */
-         free(cl_raw_list_remove_elem(list_p, elem->raw_elem));
+         cl_raw_list_remove_elem(list_p, elem->raw_elem);
          function_return = CL_RETVAL_OK;
+         free(elem->string);
          free(elem);
          elem = NULL;
          break;

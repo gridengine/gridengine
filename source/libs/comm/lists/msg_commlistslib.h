@@ -34,7 +34,6 @@
 
 #include "basis_types.h"
 
-
 #define MSG_CL_RETVAL_OK                          _MESSAGE(80000, _("no error happened"))
 #define MSG_CL_RETVAL_MALLOC                      _MESSAGE(80001, _("can't allocate memory"))
 #define MSG_CL_RETVAL_PARAMS                      _MESSAGE(80002, _("got unexpected parameters"))
@@ -160,5 +159,6 @@
 #define MSG_CL_RETVAL_SSL_CANT_SET_CERT_PEM_BYTE       _MESSAGE(80122, _("can't set certificate bytes"))
 #define MSG_CL_RETVAL_SSL_SET_CERT_PEM_BYTE_IS_NULL    _MESSAGE(80123, _("certificate bytes are NULL"))
 #define MSG_CL_RETVAL_SSL_CANT_SET_KEY_PEM_BYTE        _MESSAGE(80124, _("can't set key bytes"))
+#define MSG_CL_RETVAL_UNKNOWN_PARAMETER                _MESSAGE(80125, _("parameter not found"))
 
 #endif /* __MSG_COMMLISTSLIB_H */

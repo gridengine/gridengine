@@ -42,6 +42,7 @@
 #include "cl_commlib.h"
 #include "cl_log_list.h"
 #include "cl_endpoint_list.h"
+#include "uti/sge_profiling.h"
 #define CL_DO_SLOW 0
 
 void sighandler_server(int sig);
@@ -190,6 +191,7 @@ extern int main(int argc, char** argv)
       exit(1);
   }
 
+  sge_prof_setup();
   if (argv[2]) {
      framework = CL_CT_UNDEFINED;
      if (strcmp(argv[2], "TCP") == 0) {
@@ -256,7 +258,13 @@ extern int main(int argc, char** argv)
         log_level=CL_LOG_OFF;
         break;
   }
-  cl_com_setup_commlib(CL_RW_THREAD, log_level, NULL );
+  cl_com_setup_commlib(CL_RW_THREAD, log_level, NULL);
+
+
+  cl_com_set_parameter_list_value("parameter1","value1");
+  cl_com_set_parameter_list_value("parameter2","value2");
+  cl_com_set_parameter_list_value("parameter3","value3");
+  cl_com_set_parameter_list_value("parameter4","value4");
 
   cl_com_set_alias_file("./alias_file");
 
@@ -374,7 +382,7 @@ extern int main(int argc, char** argv)
                                 sender->comp_host, 
                                 sender->comp_name, 
                                 sender->comp_id, CL_MIH_MAT_NAK,  
-                                message->message, 
+                                &message->message, 
                                 message->message_length, 
                                 NULL, message->message_id,0, 
                                 CL_FALSE,CL_FALSE);
@@ -388,7 +396,6 @@ extern int main(int argc, char** argv)
            cl_com_application_debug(handle, "message sent (2)");
         }
 
-        message->message = NULL;
         cl_com_free_message(&message);
         cl_com_free_endpoint(&sender);
         message = NULL;

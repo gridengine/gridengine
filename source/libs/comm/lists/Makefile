@@ -40,6 +40,7 @@ COMMLISTSLIB_SRC =           \
          cl_util.c          \
          cl_errors.c        \
          cl_raw_list.c      \
+         cl_parameter_list.c   \
          cl_log_list.c      \
          cl_string_list.c   \
          cl_thread.c        \
@@ -48,6 +49,7 @@ COMMLISTSLIB_SRC =           \
          
 COMMLISTSLIB_TEST_SRC = \
          test_cl_raw_list.c    \
+         test_cl_parameter_list.c    \
          test_cl_util.c        \
          test_cl_errors.c      \
          test_cl_log_list.c    \
@@ -63,12 +65,12 @@ COMMLISTSLIB_TEST_OBJS = $(COMMLISTSLIB_TEST_SRC:.c=.o)
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-commlists_all: commlistslib test_cl_raw_list test_cl_util test_cl_errors test_cl_log_list test_cl_thread test_cl_thread_list
+commlists_all: commlistslib test_cl_raw_list test_cl_parameter_list test_cl_util test_cl_errors test_cl_log_list test_cl_thread test_cl_thread_list
 
 commlistslib: $(COMMLISTSLIB)
 
 commlistslib_clean:
-		$(RM) $(COMMLISTSLIB_OBJS) $(COMMLISTSLIB_TEST_OBJS) libcommlists.a libcommlists$(SHAREDEXT) test_cl_raw_list test_cl_util test_cl_errors test_cl_log_list test_cl_thread test_cl_thread_list
+		$(RM) $(COMMLISTSLIB_OBJS) $(COMMLISTSLIB_TEST_OBJS) libcommlists.a libcommlists$(SHAREDEXT) test_cl_raw_list test_cl_parameter_list test_cl_util test_cl_errors test_cl_log_list test_cl_thread test_cl_thread_list
 
 commlistslib_depend:
 		$(DEPEND) -f $(COMMLISTSLIB_DIR)/commlistslib_dependencies $(COMMLISTSLIB_DIR)/*.c
@@ -107,6 +109,8 @@ cl_log_list.o: $(COMMLISTSLIB_DIR)/cl_log_list.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLISTSLIB_DIR)/cl_log_list.c
 cl_string_list.o: $(COMMLISTSLIB_DIR)/cl_string_list.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLISTSLIB_DIR)/cl_string_list.c
+cl_parameter_list.o: $(COMMLISTSLIB_DIR)/cl_parameter_list.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLISTSLIB_DIR)/cl_parameter_list.c
 cl_thread.o: $(COMMLISTSLIB_DIR)/cl_thread.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLISTSLIB_DIR)/cl_thread.c
 cl_thread_list.o: $(COMMLISTSLIB_DIR)/cl_thread_list.c 
@@ -118,10 +122,12 @@ cl_thread_list.o: $(COMMLISTSLIB_DIR)/cl_thread_list.c
 
 test_cl_raw_list: test_cl_raw_list.o $(COMMLISTSLIB) $(COMMLISTSBIN_DEPEND)
 	$(CC) -o test_cl_raw_list $(LFLAGS) test_cl_raw_list.o $(COMMLISTSLIB) $(LIBS)
+test_cl_parameter_list: test_cl_parameter_list.o $(COMMLISTSLIB) $(COMMLISTSBIN_DEPEND)
+	$(CC) -o test_cl_parameter_list $(LFLAGS) test_cl_parameter_list.o $(COMMLISTSLIB) $(LIBS)
 test_cl_util: test_cl_util.o $(COMMLISTSLIB) $(COMMLISTSBIN_DEPEND)
 	$(CC) -o test_cl_util $(LFLAGS) test_cl_util.o $(COMMLISTSLIB) $(LIBS)
 test_cl_errors: test_cl_errors.o $(COMMLISTSLIB) $(COMMLISTSBIN_DEPEND)
-	$(CC) -o test_cl_errors $(LFLAGS) test_cl_errors.o $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
+	$(CC) -o test_cl_errors $(LFLAGS) test_cl_errors.o $(COMMLISTSLIB) $(UTILIB) $(COMMLISTSLIB) $(LCKLIB) $(RMONLIB) $(LIBS)
 test_cl_log_list: test_cl_log_list.o $(COMMLISTSLIB) $(COMMLISTSBIN_DEPEND)
 	$(CC) -o test_cl_log_list $(LFLAGS) test_cl_log_list.o $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
 test_cl_thread: test_cl_thread.o $(COMMLISTSLIB) $(COMMLISTSBIN_DEPEND)
@@ -131,6 +137,8 @@ test_cl_thread_list: test_cl_thread_list.o $(COMMLISTSLIB) $(COMMLISTSBIN_DEPEND
 
 test_cl_raw_list.o: $(COMMLISTSLIB_DIR)/test_cl_raw_list.c
 	$(CC) $(CFLAGS) -c $(COMMLISTSLIB_DIR)/test_cl_raw_list.c
+test_cl_parameter_list.o: $(COMMLISTSLIB_DIR)/test_cl_parameter_list.c
+	$(CC) $(CFLAGS) -c $(COMMLISTSLIB_DIR)/test_cl_parameter_list.c
 test_cl_util.o: $(COMMLISTSLIB_DIR)/test_cl_util.c
 	$(CC) $(CFLAGS) -c $(COMMLISTSLIB_DIR)/test_cl_util.c
 test_cl_errors.o: $(COMMLISTSLIB_DIR)/test_cl_errors.c

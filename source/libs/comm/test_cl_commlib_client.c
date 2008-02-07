@@ -41,6 +41,7 @@
 #include "cl_commlib.h"
 #include "cl_connection_list.h"
 
+#include "uti/sge_profiling.h"
 
 #define CL_DO_SLOW 1
 void sighandler_client(int sig);
@@ -117,7 +118,8 @@ extern int main(int argc, char** argv)
      printf("wrong parameters, param1 = server host, param2 = port number, param3 = client id, param4=debug_level, param5=sleep time, param6=do_close, [param7=framework(TCP/SSL)]\n");
      exit(1);
   }
-  cl_com_setup_commlib(CL_NO_THREAD, (cl_log_t)atoi(argv[4]), NULL );
+  sge_prof_setup();
+  cl_com_setup_commlib(CL_NO_THREAD, (cl_log_t)atoi(argv[4]), NULL);
   if (atoi(argv[6]) != 0) {
      close_connection = 1;
   }
@@ -234,7 +236,7 @@ extern int main(int argc, char** argv)
 
 /*     CL_LOG(CL_LOG_ERROR,"sending ack message ..."); */
      
-     my_sent_error = cl_commlib_send_message(handle, argv[1], "server", 1, CL_MIH_MAT_ACK, (cl_byte_t*)welcome_text , welcome_text_size, &mid ,0,0, CL_TRUE, CL_FALSE);
+     my_sent_error = cl_commlib_send_message(handle, argv[1], "server", 1, CL_MIH_MAT_ACK, (cl_byte_t**)&welcome_text , welcome_text_size, &mid ,0,0, CL_TRUE, CL_FALSE);
      if ( retval == CL_RETVAL_CONNECTION_NOT_FOUND ) {
         CL_LOG(CL_LOG_ERROR,"after new connection");
      }

@@ -38,7 +38,7 @@
 #include <signal.h>
 #include <unistd.h>
 
-
+#include "uti/sge_language.h"
 
 #include "cl_lists.h"
 #include "cl_commlib.h"
@@ -91,7 +91,7 @@ extern int main(void)
   sigaction(SIGHUP, &sa, NULL);
   sigaction(SIGPIPE, &sa, NULL);
 
-  cl_com_setup_commlib(CL_RW_THREAD ,CL_LOG_WARNING, NULL );
+  cl_com_setup_commlib(CL_RW_THREAD ,CL_LOG_WARNING, NULL);
   handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , CL_FALSE, 5000 , CL_TCP_DEFAULT,"client", 0, 1,0 );
   if (handle == NULL) {
      printf("could not get handle\n");
@@ -204,7 +204,7 @@ void *my_multi_thread(void *t_conf) {
 
       sprintf(message,"This message is from %s", thread_config->thread_name);
       message_length = strlen(message) + 1;
-      ret_val = cl_commlib_send_message(handle, "es-ergb01-01", "server", 1, CL_MIH_MAT_ACK, (cl_byte_t*)message ,message_length , &mid , 0, 0, CL_TRUE, CL_TRUE);
+      ret_val = cl_commlib_send_message(handle, "es-ergb01-01", "server", 1, CL_MIH_MAT_ACK, (cl_byte_t**)&message ,message_length , &mid , 0, 0, CL_TRUE, CL_TRUE);
       if (ret_val != CL_RETVAL_OK) {
          CL_LOG_STR(CL_LOG_ERROR,"cl_commlib_send_message() returned", cl_get_error_text(ret_val));
       } 

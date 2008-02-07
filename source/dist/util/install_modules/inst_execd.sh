@@ -1,10 +1,40 @@
-#! /bin/sh 
+#! /bin/sh
 #
 # SGE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
 # Scriptname: inst_execd.sh
 # Module: execd installation functions
 #
-# (c) 2007 Sun Microsystems, Inc. Use is subject to license terms.  
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
 
 #set -x
 
@@ -92,10 +122,7 @@ CheckQmasterInstallation()
       $INFOTEXT -log "\nObviously there was no qmaster installation yet!\nCall >install_qmaster<\n" \
                   "on the machine which shall run the Grid Engine qmaster\n"
 
-      if [ $AUTO = true ]; then
-         MoveLog
-      fi
-
+      MoveLog
       exit 1
    else
       $INFOTEXT "\nUsing cell: >%s<\n" $SGE_CELL_VAL
@@ -106,42 +133,6 @@ CheckQmasterInstallation()
    $CLEAR
 
    GetAdminUser
-
-   if [ "$SGE_ARCH" = "win32-x86" ]; then
-      user=`grep admin_user $COMMONDIR/bootstrap | awk '{ print $2 }'`
-      user=`hostname | tr "a-z" "A-Z"`"+$user"
-   else
-      user=`grep admin_user $COMMONDIR/bootstrap | awk '{ print $2 }'`
-   fi
-
-   if [ "$user" != "" ]; then
-      if [ `echo "$user" |tr "A-Z" "a-z"` = "none" -a $euid = 0 ]; then
-         user=default
-      fi
-   fi
-
-   if [ "$ADMINUSER" != "$user" ]; then
-      if [ "$user" = default ]; then
-         $INFOTEXT "The admin user >%s< is different than the default user >root<\n" \
-                   "in the global cluster configuration.\n" $ADMINUSER
-         $INFOTEXT -log "The admin user >%s< is different than the default user >root<\n" \
-                   "in the global cluster configuration.\n" $ADMINUSER
-
-      else
-         $INFOTEXT "The admin user >%s< doesn't match the admin username >%s<\n" \
-                   "in the global cluster configuration.\n" $ADMINUSER $user
-         $INFOTEXT -log "The admin user >%s< doesn't match the admin username >%s<\n" \
-                   "in the global cluster configuration.\n" $ADMINUSER $user
-      fi
-      $INFOTEXT "Installation failed. Exit."
-      $INFOTEXT -log "Installation failed. Exit."
-
-      if [ $AUTO = true ]; then
-         MoveLog
-      fi
-
-      exit 1
-   fi
 }
 
 
@@ -190,6 +181,7 @@ CheckCellDirectory()
                 "directory (e.g. shared with NFS) for your installation.\n\n" \
                 "The installation of the execution daemon will abort now.\n"
 
+      MoveLog
       exit 1
    fi
 }
@@ -197,9 +189,16 @@ CheckCellDirectory()
 
 #--------------------------------------------------------------------------
 # CheckCSP check that there are no old certs/keys
+# And for windows host, also check and create the right windows specific certs
+# eg. certs for Administrator are created, but certs for HOSTNAME+Administrator
+# are also needed.
 #
 CheckCSP()
 {
+   if [ "$SGE_ARCH" = "win32-x86" ]; then
+      util/certtool.sh $SGE_ROOT $SGE_CELL
+   fi
+
    if [ $CSP = false ]; then
       return
    fi
@@ -285,10 +284,7 @@ CheckHostNameResolving()
             $INFOTEXT "$MODE failed"
             $INFOTEXT -log "Cannot contact qmaster! $MODE failed"
 
-            if [ $AUTO = true ]; then
-               MoveLog
-            fi
-
+            MoveLog
             exit 1
          fi
       else
@@ -770,6 +766,7 @@ InstWinHelperSvc()
       $INFOTEXT -log "\n ... service could not be installed!"
       $INFOTEXT " ... exiting installation"
       $INFOTEXT -log " ... exiting installation"
+      MoveLog
       exit 1
    fi
 
@@ -782,6 +779,7 @@ InstWinHelperSvc()
       $INFOTEXT -log "\n ... service could not be started!"
       $INFOTEXT " ... exiting installation"
       $INFOTEXT -log " ... exiting installation"
+      MoveLog
       exit 1
    fi
 
@@ -848,6 +846,7 @@ SetupWinSvc()
       $INFOTEXT -log "file to setup a proper environment."
       $INFOTEXT -log "... exiting now!"
 
+      MoveLog
       exit 1 
    fi
 

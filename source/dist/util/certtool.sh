@@ -108,8 +108,8 @@ fi
 is_su="false"
 is_csp=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep security_mode | awk '{ print $2 }'`
 
-if [ "$is_csp" != "csp" ]; then
-   echo CSP mode is not enabled, no need to copy certificates
+if [ "$is_csp" != "csp" -a "$SGE_ARCH" != "win32-x86" ]; then
+   echo Neither CSP mode, nor WINDOWS support is enabled, no need to copy certificates
 else
    ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep admin_user | awk '{ print $2 }'`
 

@@ -1,10 +1,40 @@
-#! /bin/sh 
+#!/bin/sh
 #
 # SGE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
 # Scriptname: inst_qmaster.sh
 # Module: qmaster installation functions
 #
-# (c) 2007 Sun Microsystems, Inc. Use is subject to license terms.  
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
 
 #set -x
 
@@ -291,6 +321,7 @@ SetSpoolingOptionsBerkeleyDB()
    SPOOLING_LIB=libspoolb
    SPOOLING_SERVER=none
    SPOOLING_DIR="spooldb"
+   MKDIR="mkdir -p"
    params_ok=0
    if [ "$AUTO" = "true" ]; then
       SPOOLING_SERVER=$DB_SPOOLING_SERVER
@@ -366,6 +397,7 @@ SetSpoolingOptionsBerkeleyDB()
                ret=$?               
                if [ $AUTO = true ]; then
                   $INFOTEXT -log "The spooling directory already exists!\n Please remove it or choose any other spooling directory!"
+                  MoveLog
                   exit 1
                fi
  
@@ -411,11 +443,12 @@ SetSpoolingOptionsBerkeleyDB()
          ret=`ps -efa | grep "berkeley_db_svc" | wc -l` 
       fi
       if [ $ret -gt 1 ]; then
-         $INFOTEXT "We found a running berkeley db server on this host!"
+         $INFOTEXT -u "Berkeley DB RPC Server installation"
+         $INFOTEXT "\nWe found a running berkeley db server on this host!"
          if [ "$AUTO" = "true" ]; then
                if [ $SPOOLING_SERVER = "none" ]; then
                   $ECHO
-                  Makedir $SPOOLING_DIR
+                  ExecuteAsAdmin $MKDIR $SPOOLING_DIR
                   SPOOLING_ARGS="$SPOOLING_DIR"
                else
                   $INFOTEXT -log "We found a running berkeley db server on this host!"
@@ -424,15 +457,15 @@ SetSpoolingOptionsBerkeleyDB()
                   exit 1
                fi
          else                 # $AUTO != true
-            $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" "Do you want to use an other host for spooling? (y/n) [n] >>"
-            if [ $? = 1 ]; then
-               $INFOTEXT "Please enter the path to your Berkeley DB startup script! >>"
-               TMP_STARTUP_SCRIPT=`Enter`
-               SpoolingQueryChange
-               EditStartupScript
-            else
-               exit 1
-            fi
+            $INFOTEXT "The installation script does not support the configuration of more then one"
+            $INFOTEXT "Berkeley DB on one Berkeley DB RPC host. This has to be done manually."
+            $INFOTEXT "By adding your Berkeley DB spooling directory to the sgebdb rc-script"
+            $INFOTEXT "and restarting the service, your Berkeley DB Server will be able to manage" 
+            $INFOTEXT "more than one database.\n In your sgebdb rc-script you will find a line like: BDBHOMES=\"-h <spool_dir>\""
+            $INFOTEXT "To add your DB, you have to add <your spool_dir> to this line which should"
+            $INFOTEXT "look like this after edit: BDBHOMES=\"-h <spool_dir> -h <your spool_dir>\""
+            $INFOTEXT "... exiting installation now! "
+            exit 1
          fi 
       else
          while [ $params_ok -eq 0 ]; do
@@ -472,7 +505,7 @@ SetSpoolingOptionsBerkeleyDB()
 
    if [ "$SPOOLING_SERVER" = "none" ]; then
       $ECHO
-      Makedir $SPOOLING_DIR
+      ExecuteAsAdmin $MKDIR $SPOOLING_DIR
       SPOOLING_ARGS="$SPOOLING_DIR"
    else
       SPOOLING_ARGS="$SPOOLING_SERVER:`basename $SPOOLING_DIR`"
@@ -516,6 +549,7 @@ SetSpoolingOptionsDynamic()
       *)
          $INFOTEXT "\nUnknown spooling method. Exit."
          $INFOTEXT -log "\nUnknown spooling method. Exit."
+         MoveLog
          exit 1
          ;;
    esac
@@ -542,6 +576,7 @@ SetSpoolingOptions()
       *)
          $INFOTEXT "\nUnknown spooling method. Exit."
          $INFOTEXT -log "\nUnknown spooling method. Exit."
+         MoveLog
          exit 1
          ;;
    esac
@@ -554,7 +589,7 @@ SetSpoolingOptions()
 #
 SelectHostNameResolving()
 {
-   if [ $AUTO = true ]; then
+   if [ $AUTO = "true" ]; then
      IGNORE_FQDN_DEFAULT=$HOSTNAME_RESOLVING
      $INFOTEXT -log "Using >%s< as IGNORE_FQDN_DEFAULT." "$IGNORE_FQDN_DEFAULT"
      $INFOTEXT -log "If it's >true<, the domainname will be ignored."
@@ -581,7 +616,7 @@ SelectHostNameResolving()
      $CLEAR
    fi
 
-   if [ "$IGNORE_FQDN_DEFAULT" = false ]; then
+   if [ "$IGNORE_FQDN_DEFAULT" = "false" ]; then
       GetDefaultDomain
    else
       CFG_DEFAULT_DOMAIN=none
@@ -1073,10 +1108,8 @@ StartQmaster()
                 "configuration! Installation failed!"
       $INFOTEXT -log "sge_qmaster daemon didn't start. Please check your\n" \
                      "autoinstall configuration file! Installation failed!"
-      if [ $AUTO = true ]; then
-         MoveLog
-      fi
 
+      MoveLog
       exit 1
    fi
    $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
@@ -1380,17 +1413,17 @@ PrintHostGroup()
 GetQmasterPort()
 {
 
-    if [ $RESPORT = true ]; then
-       comm_port_max=1023
-    else
-       comm_port_max=65500
-    fi
+   if [ $RESPORT = true ]; then
+      comm_port_max=1023
+   else
+      comm_port_max=65500
+   fi
 
     PortCollision $SGE_QMASTER_SRV
     
     CheckServiceAndPorts service $SGE_QMASTER_SRV
 
-    if [ "$SGE_QMASTER_PORT" != "" ]; then
+   if [ "$SGE_QMASTER_PORT" != "" ]; then
       $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
 
       if [ $SGE_QMASTER_PORT -ge 1 -a $SGE_QMASTER_PORT -le $comm_port_max ]; then
@@ -1416,8 +1449,8 @@ GetQmasterPort()
                    "Please check your configuration file and restart\n" \
                    "the installation or configure the service >sge_qmaster<." $SGE_QMASTER_PORT $comm_port_max
       fi
-   fi         
-      $INFOTEXT -u "\nGrid Engine TCP/IP service >sge_qmaster<"
+   fi
+   $INFOTEXT -u "\nGrid Engine TCP/IP service >sge_qmaster<"
    if [ $ret != 0 ]; then
       $INFOTEXT "\nThere is no service >sge_qmaster< available in your >/etc/services< file\n" \
                 "or in your NIS/NIS+ database.\n\n" \
@@ -1459,6 +1492,7 @@ GetQmasterPort()
             else
                if [ $AUTO = true ]; then
                   $INFOTEXT -log "Please use an unused port number!"
+                  MoveLog
                   exit 1
                fi
 
@@ -1609,6 +1643,7 @@ GetExecdPort()
 
                if [ $AUTO = true ]; then
                   $INFOTEXT -log "Please use an unused port number!"
+                  MoveLog
                   exit 1
                fi
 
@@ -1620,7 +1655,7 @@ GetExecdPort()
                      $INFOTEXT -log "Please use any other port number!!!"
                      $INFOTEXT -log "This %s port number is used by sge_qmaster" $SGE_QMASTER_PORT
                      $INFOTEXT -log "Installation failed!!!"
-
+                     MoveLog
                      exit 1
                   fi
                fi
@@ -1842,11 +1877,6 @@ AddWindowsAdmin()
       $SGE_BIN/qconf -am $WIN_ADMIN_NAME
       $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
       $CLEAR
-      if [ "$CSP" = "true" ]; then
-         $SGE_ROOT/util/sgeCA/sge_ca -user "$WIN_ADMIN_NAME"
-         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-         $CLEAR
-      fi
    fi
 }
 

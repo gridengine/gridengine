@@ -224,7 +224,7 @@ char **argv
 
       if (i_opt == o_opt) { 
          fprintf(stderr, MSG_PARSE_SAMEPATHFORINPUTANDOUTPUT_SS, 
-             (lListElem *)i_opt, (lListElem *)o_opt);
+             "", "");
          fprintf(stderr, "\n");
          DEXIT;
          SGE_EXIT(NULL, 1);

@@ -113,7 +113,7 @@ void sge_pset_create_processor_set(void)
          else { /* critical --> use err_str to indicate error */
             shepherd_trace("critical error in set_processor_range - bailing out");
             shepherd_state = SSTATE_PROCSET_NOTSET;
-            shepherd_error(err_str);
+            shepherd_error(1, err_str);
          }
       } else {
          sge_switch2admin_user();
@@ -136,23 +136,23 @@ void sge_pset_free_processor_set(void)
          switch (ret) {
          case PROC_SET_WARNING: /* not critical - e.g. not root */
             shepherd_trace("warning: processor set not freed in free_processor_set - "
-                   "did no exist, probably");
+                           "did no exist, probably");
             break;
          case PROC_SET_ERROR: /* critical - err_str indicates error */
             shepherd_trace("critical error in free_processor_set - bailing out");
             shepherd_state = SSTATE_PROCSET_NOTFREED;
-            shepherd_error(err_str);
+            shepherd_error(1, err_str);
             break;
          case PROC_SET_BUSY: /* still processes running in processor set */
             shepherd_trace("error in releasing processor set");
             shepherd_state = SSTATE_PROCSET_NOTFREED;
-            shepherd_error(err_str);
+            shepherd_error(1, err_str);
             break;
          default: /* should not occur */
             sprintf(err_str,
                "internal error after free_processor_set - ret=%d", ret);
             shepherd_state = SSTATE_PROCSET_NOTFREED;
-            shepherd_error(err_str);
+            shepherd_error(1, err_str);
             break;
          }
       } else {

@@ -84,37 +84,21 @@ static void print_scheduling_parameters(dispset2_t attr);
 
 #if defined(NECSX4) || defined(NECSX5)
 
-static void print_scheduling_parameters(
-dispset2_t attr 
-) {
-   char message_str[256];
-
-   sprintf(message_str, "basepr     %d", attr.basepri);
-   shepherd_trace(message_str);
-   sprintf(message_str, "modcpu     %d", attr.modcpu);
-   shepherd_trace(message_str);
-   sprintf(message_str, "tickcnt    %d", attr.tickcnt);
-   shepherd_trace(message_str);
-   sprintf(message_str, "dcyfctr    %d", attr.dcyfctr);
-   shepherd_trace(message_str);
-   sprintf(message_str, "dcyintvl   %d", attr.dcyintvl);
-   shepherd_trace(message_str);
-   sprintf(message_str, "tmslice    %d", attr.tmslice);
-   shepherd_trace(message_str);
-   sprintf(message_str, "mempri     %d", attr.mempri);
-   shepherd_trace(message_str);
-   sprintf(message_str, "szefctmrt  %d", attr.szefctmrt);
-   shepherd_trace(message_str);
-   sprintf(message_str, "priefctmrt %d", attr.priefctmrt);
-   shepherd_trace(message_str);
-   sprintf(message_str, "minmrt     %d", attr.minmrt);
-   shepherd_trace(message_str);
-   sprintf(message_str, "agrange    %d", attr.agrange);
-   shepherd_trace(message_str);
-   sprintf(message_str, "spinherit  %d", attr.spinherit);
-   shepherd_trace(message_str);
-   sprintf(message_str, "concpu     %d", attr.concpu);
-   shepherd_trace(message_str);
+static void print_scheduling_parameters(dispset2_t attr) 
+{
+   shepherd_trace("basepr     %d", attr.basepri);
+   shepherd_trace("modcpu     %d", attr.modcpu);
+   shepherd_trace("tickcnt    %d", attr.tickcnt);
+   shepherd_trace("dcyfctr    %d", attr.dcyfctr);
+   shepherd_trace("dcyintvl   %d", attr.dcyintvl);
+   shepherd_trace("tmslice    %d", attr.tmslice);
+   shepherd_trace("mempri     %d", attr.mempri);
+   shepherd_trace("szefctmrt  %d", attr.szefctmrt);
+   shepherd_trace("priefctmrt %d", attr.priefctmrt);
+   shepherd_trace("minmrt     %d", attr.minmrt);
+   shepherd_trace("agrange    %d", attr.agrange);
+   shepherd_trace("spinherit  %d", attr.spinherit);
+   shepherd_trace("concpu     %d", attr.concpu);
 }
 
 #endif 
@@ -122,10 +106,8 @@ dispset2_t attr
 void setosjobid(pid_t sid, gid_t *add_grp_id_ptr, struct passwd *pw)
 {
    FILE *fp=NULL;
-   char err_str[2*SGE_PATH_MAX+128];
 
-   sprintf(err_str, "setosjobid: uid = "pid_t_fmt", euid = "pid_t_fmt, getuid(), geteuid());
-   shepherd_trace(err_str);
+   shepherd_trace("setosjobid: uid = "pid_t_fmt", euid = "pid_t_fmt, getuid(), geteuid());
 
 #  if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) || defined(FREEBSD) || defined(DARWIN)
       /* Read SgeId from config-File and create Addgrpid-File */
@@ -136,26 +118,27 @@ void setosjobid(pid_t sid, gid_t *add_grp_id_ptr, struct passwd *pw)
          else
             *add_grp_id_ptr = 0;
       }
-      if (!(fp = fopen("addgrpid", "w")))
-         shepherd_error("can't open \"addgrpid\" file");   
+      if ((fp = fopen("addgrpid", "w")) == NULL) {
+         shepherd_error(1, "can't open \"addgrpid\" file");   
+      }
       fprintf(fp, gid_t_fmt"\n", *add_grp_id_ptr);
       FCLOSE(fp);   
 # elif defined(HP1164) || defined(AIX)
     {
-      if (!(fp = fopen("addgrpid", "w")))
-         shepherd_error("can't open \"addgrpid\" file");
+      if ((fp = fopen("addgrpid", "w")) == NULL) {
+         shepherd_error(1, "can't open \"addgrpid\" file");
+      }
       fprintf(fp, pid_t_fmt"\n", getpgrp());
       FCLOSE(fp);
     }
 #  else
    {
       char osjobid[100];
+      if ((fp = fopen("osjobid", "w")) == NULL) {
+         shepherd_error(1, "can't open \"osjobid\" file");
+      }
 
-         if (!(fp = fopen("osjobid", "w")))
-            shepherd_error("can't open \"osjobid\" file");
-
-
-         if(sge_switch2start_user() == 0) {
+      if(sge_switch2start_user() == 0) {
 #     if defined(IRIX)
       {
          /* The following block contains the operations necessary for
@@ -169,8 +152,7 @@ void setosjobid(pid_t sid, gid_t *add_grp_id_ptr, struct passwd *pw)
          shepherd_trace("in irix code");
          /* get _local_ array session id */
          if ((ret=newarraysess())) {
-            sprintf(err_str, "error: can't create ASH; errno=%d", ret);
-            shepherd_error(err_str);
+            shepherd_error(1, "error: can't create ASH; errno=%d", ret);
          }
 
          /* retrieve array session id we just assigned to the process and
@@ -185,44 +167,36 @@ void setosjobid(pid_t sid, gid_t *add_grp_id_ptr, struct passwd *pw)
          strcpy(spi.spi_spi, "Job ");
          strncat(spi.spi_spi, get_conf_val("job_id"),11);
          if ((ret=setspinfo(&spi))) {
-            sprintf(err_str, "error: can't set SPI; errno=%d", ret);
-            shepherd_error(err_str);
+            shepherd_error(1, "error: can't set SPI; errno=%d", ret);
          }
          
          if ((cp = search_conf_val("acct_project"))) {
             prid_t proj; 
             if (strcasecmp(cp, "none") && ((proj = projid(cp)) >= 0)) {
-               sprintf(err_str, "setting project \"%s\" to id %lld", cp, proj);
-               shepherd_trace(err_str);
+               shepherd_trace("setting project \"%s\" to id %lld", cp, proj);
                if (setprid(proj) == -1)
                   shepherd_trace("failed setting project id");
             }
             else {   
-               sprintf(err_str, "can't get id for project \"%s\"", cp);
-               shepherd_trace(err_str);
+               shepherd_trace("can't get id for project \"%s\"", cp);
             }
-         }
-         else  
+         } else {
             shepherd_trace("can't get configuration entry for projects");
-         
+         }
       }
 #     elif defined(CRAY)
       {
-      	 char *cp;
-          char err_str[2*SGE_PATH_MAX+128];
-
+         char *cp;
 	      {
 	         int jobid;
 
-	         if ((jobid=setjob(pw->pw_uid, 0))<0) {
-	            sprintf(err_str, "error: can't set job ID; errno = %d", errno);
-	            shepherd_error(err_str);
+	         if ((jobid=setjob(pw->pw_uid, 0)) < 0) {
+	            shepherd_error(1, "error: can't set job ID; errno = %d", errno);
 	         }
 
 	         if (sesscntl(jobid, S_ADDFL, S_BATCH) == -1) {
-	            sprintf(err_str, "error: sesscntl(%d, S_ADDFL, S_BATCH) failed,"
-		         " errno = %d", sid, errno);
-	            shepherd_error(err_str);
+	            shepherd_error(1, "error: sesscntl(%d, S_ADDFL, S_BATCH) failed,"
+		                        " errno = %d", sid, errno);
 	         } 
 	         sprintf(osjobid, "%d", jobid);
 	      }
@@ -230,21 +204,20 @@ void setosjobid(pid_t sid, gid_t *add_grp_id_ptr, struct passwd *pw)
 	      if ((cp = search_conf_val("acct_project"))) {
 	         int proj; 
 	         if (strcasecmp(cp, "none") && ((proj = nam2acid(cp)) >= 0)) {
-	            sprintf(err_str, "setting project \"%s\" to acid %d", cp, proj);
-	            shepherd_trace(err_str);
-	            if (acctid(0, proj) == -1)
+	            shephed_trace("setting project \"%s\" to acid %d", cp, proj);
+	            if (acctid(0, proj) == -1) {
 		            shepherd_trace("failed setting project id (acctid)");
+               }
 	         } else {   
-	            sprintf(err_str, "can't get id for project \"%s\"", cp);
-	            shepherd_trace(err_str);
+	            shepherd_trace("can't get id for project \"%s\"", cp);
 	         }
-	      } else  
+	      } else {
 	         shepherd_trace("can't get configuration entry for projects");
+         }
       }
 #     elif defined(NECSX4) || defined(NECSX5)
       {
          id_t jobid = 0;
-			char err_str[2*SGE_PATH_MAX+128];
 		 	dispset2_t attr;	
 			int value;
 
@@ -252,13 +225,10 @@ void setosjobid(pid_t sid, gid_t *add_grp_id_ptr, struct passwd *pw)
           * Create new Super-UX job
           */
          if (setjid() == -1) {
-            sprintf(err_str, "ERROR: can't set jobid: %s[%d]", 
-               strerror(errno), errno);
-            shepherd_trace(err_str);
+            shepherd_trace("ERROR: can't set jobid: %s[%d]", strerror(errno), errno);
          } else {
             jobid = getjid(0);
-            sprintf(err_str, "Created job with id: "sge_u32, (u_long32) jobid);
-            shepherd_trace(err_str);
+            shepherd_trace("Created job with id: "sge_u32, (u_long32) jobid);
          }  
          sprintf(osjobid, sge_u32, (u_long32) jobid); 
 
@@ -284,26 +254,21 @@ void setosjobid(pid_t sid, gid_t *add_grp_id_ptr, struct passwd *pw)
                sprintf(fsg_dev_string, "/dev/rsg/%d", rsg_id);
                fd = open(fsg_dev_string, O_RDONLY);
                if (fd <= 0) {
-                  sprintf(err_str, "ERROR: can't switch to rsg%d because "
-                     "can't open device: %s[%d]", rsg_id, strerror(errno), 
-                     errno);
-                  shepherd_trace(err_str);
+                  shepherd_trace("ERROR: can't switch to rsg%d because can't open"
+                                 "device: %s[%d]", rsg_id, strerror(errno), errno);
                } else {
                   if (ioctl(fd, RSG_JUMP, NULL) == -1) {
                      close(fd);
-                     sprintf(err_str, "ERROR: can't switch to rsg%d: %s[%d]", 
-                        rsg_id, strerror(errno), errno);
-                     shepherd_trace(err_str);
+                     shepherd_trace("ERROR: can't switch to rsg%d: %s[%d]", 
+                                    rsg_id, strerror(errno), errno);
                      return;
                   } else {
                      close(fd);
-                     sprintf(err_str, "switched to rsg%d", rsg_id);
-                     shepherd_trace(err_str);
+                     shepherd_trace("switched to rsg%d", rsg_id);
                   }
                }
             } else {
-               sprintf(err_str, "using default rsg", rsg_id);
-               shepherd_trace(err_str);
+               shepherd_trace("using default rsg", rsg_id);
             }
          } 
 
@@ -324,17 +289,14 @@ void setosjobid(pid_t sid, gid_t *add_grp_id_ptr, struct passwd *pw)
             && ((attr.spinherit = atoi(get_conf_val("nec_slavepriority"))) != NEC_UNDEF_VALUE)
             && ((attr.concpu = atoi(get_conf_val("nec_cpu_count"))) != NEC_UNDEF_VALUE)) {
             if (dispcntl(SG_JID, getjid(0), DCNTL_SET2, &attr) == -1) {
-               sprintf(err_str, "ERROR: can't set scheduling parameter: %s[%d]",
-                  strerror(errno), errno);
-               shepherd_trace(err_str);
+               shepherd_trace("ERROR: can't set scheduling parameter: %s[%d]",
+                              strerror(errno), errno);
             } else {
-               sprintf(err_str, "control parameters for active process scheduling modified");
-               shepherd_trace(err_str);
+               shepherd_trace("control parameters for active process scheduling modified");
                print_scheduling_parameters(attr);
             }
          } else {
-            sprintf(err_str, "we do not control active process scheduling");
-            shepherd_trace(err_str);
+            shepherd_trace("we do not control active process scheduling");
          }
       }               
 #     else
@@ -354,5 +316,5 @@ void setosjobid(pid_t sid, gid_t *add_grp_id_ptr, struct passwd *pw)
 #  endif
    return;
 FCLOSE_ERROR:
-   shepherd_error("can't close file"); 
+   shepherd_error(1, "can't close file"); 
 }

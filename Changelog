@@ -1,3 +1,12 @@
+HP-2008-02-07-0: Bugfix:    fixed high CPU utilitzation by shepherd
+                 Cleanup:   replaced shepherd_trace_sprintf and SHEPHERD_TRACE by
+                            an improved shepherd_trace function, replaced
+                            shepherd_error_sprintf, shepherd_error_impl and
+                            SHEPHERD_ERROR by an improved shepherd_error function.
+                 Changed:   shepherd, qsh
+                 Bugster:   6659191
+                 Review:    MD
+
 MD-2008-02-07-0: Bugfix:   o configfile check in automatic installation is to 
                            strict
                            o certtool did not set and copy certs for WINDOWS

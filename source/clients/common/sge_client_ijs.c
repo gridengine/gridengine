@@ -318,7 +318,6 @@ void* tty_to_commlib(void *t_conf)
    }
 
    while (do_exit == 0) {
-
       FD_ZERO(&read_fds);
       if (g_nostdin == 0) {
          /* wait for input on tty */
@@ -329,6 +328,7 @@ void* tty_to_commlib(void *t_conf)
 
       ret = select(STDIN_FILENO+1, &read_fds, NULL, NULL, &timeout);
 
+      thread_testcancel(t_conf);
       client_check_window_change(g_comm_handle);
 
       if (received_signal == SIGHUP ||
@@ -423,6 +423,7 @@ void* commlib_to_tty(void *t_conf)
 
    DENTER(TOP_LAYER, "commlib_to_tty");
    thread_func_startup(t_conf);
+   thread_setcancelstate(1);
 
    while (do_exit == 0) {
       /*
@@ -450,6 +451,7 @@ void* commlib_to_tty(void *t_conf)
       }
       DPRINTF(("commlib_to_tty: received a message\n"));
 
+      thread_testcancel(t_conf);
       client_check_window_change(g_comm_handle);
       DPRINTF(("'parsing' message\n"));
 
@@ -628,6 +630,7 @@ int do_server_loop(int random_poll, u_long32 job_id, int nostdin,
 */
    DPRINTF(("shut down the connection from our side\n"));
    comm_shutdown_connection(g_comm_handle, &err_msg);
+   close(STDIN_FILENO);
 
    DPRINTF(("waiting for end of tty_to_commlib thread\n"));
    thread_join(pthread_tty_to_commlib);

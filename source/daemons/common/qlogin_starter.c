@@ -63,8 +63,6 @@
 #  include "misc.h"
 #endif
 
-static char err_str[1024];
-
 /****** qrsh_starter/delete_qrsh_pid_file() *****************************************
 *  NAME
 *     delete_qrsh_pid_file() -- delete the pid file from $TMPDIR
@@ -90,12 +88,12 @@ int delete_qrsh_pid_file()
    int ret = 1;
 
    if((pid_file_name = search_conf_val("qrsh_pid_file")) == NULL) {
-      SHEPHERD_TRACE((err_str, "cannot get variable %s", pid_file_name));
+      shepherd_trace("cannot get variable %s", pid_file_name);
       return 0;
    }
    
    if (unlink(pid_file_name) != 0) {
-      SHEPHERD_TRACE((err_str, "cannot delete qrsh pid file %s", pid_file_name));
+      shepherd_trace("cannot delete qrsh pid file %s", pid_file_name);
       ret = 0;
    }   
    
@@ -143,21 +141,22 @@ int write_to_qrsh(const char *data)
    struct sockaddr_in server;
    struct hostent *hp;
 
-   SHEPHERD_TRACE((err_str, "write_to_qrsh - data = %s", data));
+   shepherd_trace("write_to_qrsh - data = %s", data);
 
    /* read destination host and port from config */
    address = get_conf_val("qrsh_control_port");
 
    if (address == NULL) {
-      SHEPHERD_TRACE((err_str, "config does not contain entry for qrsh_control_port"));
+      shepherd_trace("config does not contain entry for qrsh_control_port");
       return 1;
    }
 
-   SHEPHERD_TRACE((err_str, "write_to_qrsh - address = %s", address));
+   shepherd_trace("write_to_qrsh - address = %s", address);
 
    c = strchr(address, ':');
    if (c == NULL) {
-      SHEPHERD_TRACE((err_str, "illegal value for qrsh_control_port: \"%s\". Should be host:port", address));
+      shepherd_trace("illegal value for qrsh_control_port: \"%s\". "
+                     "Should be host:port", address);
       return 2;
    }
   
@@ -165,12 +164,12 @@ int write_to_qrsh(const char *data)
    host = address;
    port = atoi(c + 1);
   
-   SHEPHERD_TRACE((err_str, "write_to_qrsh - host = %s, port = %d", host, port));
+   shepherd_trace("write_to_qrsh - host = %s, port = %d", host, port);
 
    /* create socket. */
    sock = socket( AF_INET, SOCK_STREAM, 0);
    if (sock == -1) {
-      SHEPHERD_TRACE(("error opening stream socket: %s", strerror(errno)));
+      shepherd_trace("error opening stream socket: %s", strerror(errno));
       return 3;
    }
 
@@ -183,7 +182,7 @@ int write_to_qrsh(const char *data)
    * of the specified host.
    */
    if (hp == (struct hostent *) 0) {
-      SHEPHERD_TRACE((err_str, "%s: unknown host", host));
+      shepherd_trace("%s: unknown host", host);
       close(sock);
       return 4;
    }
@@ -192,7 +191,7 @@ int write_to_qrsh(const char *data)
    server.sin_port = htons(port);
  
    if (connect(sock, (struct sockaddr *) &server, sizeof server) == -1) {
-      SHEPHERD_TRACE((err_str, "error connecting stream socket: %s", strerror(errno)));
+      shepherd_trace("error connecting stream socket: %s", strerror(errno));
       close(sock);
       return 5;
    }
@@ -200,7 +199,7 @@ int write_to_qrsh(const char *data)
    /* write data */
    datalen = strlen(data) + 1;
    if (write(sock, data, datalen) != datalen) {
-     SHEPHERD_TRACE((err_str, "error writing data to qrsh_control_port"));
+     shepherd_trace("error writing data to qrsh_control_port");
      close(sock);
      return 6;
    }
@@ -239,12 +238,12 @@ void write_exit_code_to_qrsh(int exit_code)
    *buffer = 0;
 
    /* rshd exited with OK: try to get returncode from qrsh_starter file */
-   SHEPHERD_TRACE((err_str, "write_exit_code_to_qrsh(%d)", exit_code));
+   shepherd_trace("write_exit_code_to_qrsh(%d)", exit_code);
 
    /* write exit code as string number to qrsh */
    sprintf(buffer, "%d", exit_code);
    if (write_to_qrsh(buffer) != 0) {
-      SHEPHERD_TRACE((err_str, "writing exit code to qrsh failed"));
+      shepherd_trace("writing exit code to qrsh failed");
    }
 }
 
@@ -286,8 +285,8 @@ int get_exit_code_of_qrsh_starter(int* exit_code)
 
       tmpdir = search_conf_val("qrsh_tmpdir");
       taskid = search_conf_val("pe_task_id");
-      SHEPHERD_TRACE((err_str, "get_exit_code_of_qrsh_starter - TMPDIR = %s,"
-         " pe_task_id = %s", tmpdir ? tmpdir : "0", taskid ? taskid : "0"));
+      shepherd_trace("get_exit_code_of_qrsh_starter - TMPDIR = %s, pe_task_id = %s",
+                     tmpdir ? tmpdir : "0", taskid ? taskid : "0");
       if (tmpdir != NULL) {
          if (taskid != NULL) {
             sprintf(buffer, "%s/qrsh_exit_code.%s", tmpdir, taskid);
@@ -299,23 +298,22 @@ int get_exit_code_of_qrsh_starter(int* exit_code)
          if (errorfile != NULL) {
             ret = 0;
             if (fscanf(errorfile, "%d", exit_code) == 1) {
-               SHEPHERD_TRACE((err_str, "error code from remote command "
-                  "is %d", *exit_code));
+               shepherd_trace("error code from remote command is %d", *exit_code);
             }
             FCLOSE(errorfile);
             if (unlink(buffer) != 0) {
-               SHEPHERD_TRACE((err_str, "can't delete %s", buffer));
+               shepherd_trace("can't delete %s", buffer);
             }
          } else {
-            SHEPHERD_TRACE((err_str, "can't open file %s: %s", buffer, strerror(errno)));
+            shepherd_trace("can't open file %s: %s", buffer, strerror(errno));
          }
       } else {
-        SHEPHERD_TRACE((err_str, "unable to get qrsh_tmpdir"));
+        shepherd_trace("unable to get qrsh_tmpdir");
       }
    }
    return ret;        
 FCLOSE_ERROR:
-   SHEPHERD_TRACE((err_str, MSG_FILE_NOCLOSE_SS, buffer, strerror(errno)));
+   shepherd_trace(MSG_FILE_NOCLOSE_SS, buffer, strerror(errno));
    return ret;
 }
 
@@ -348,7 +346,7 @@ const char *get_error_of_qrsh_starter(void)
    *buffer = 0;
 
    /* rshd exited with OK: try to get error messages from qrsh_starter file */
-   SHEPHERD_TRACE((err_str, "get_error_of_qrsh_starter()")); 
+   shepherd_trace("get_error_of_qrsh_starter()"); 
 
    /* we only have an error file in TMPDIR in case of rsh */
    if (search_conf_val("rsh_daemon") != NULL) {
@@ -358,8 +356,8 @@ const char *get_error_of_qrsh_starter(void)
 
       tmpdir = search_conf_val("qrsh_tmpdir");
       taskid = search_conf_val("qrsh_task_id");
-      SHEPHERD_TRACE((err_str, "get_error_of_qrsh_starter - TMPDIR = %s,"
-         " qrsh_task_id = %s", tmpdir ? tmpdir : "0", taskid ? taskid : "0"));
+      shepherd_trace("get_error_of_qrsh_starter - TMPDIR = %s, qrsh_task_id = %s", 
+                     tmpdir ? tmpdir : "0", taskid ? taskid : "0");
       if (tmpdir != NULL) {
          if (taskid != NULL) {
             sprintf(buffer, "%s/qrsh_error.%s", tmpdir, taskid);
@@ -372,20 +370,19 @@ const char *get_error_of_qrsh_starter(void)
             char buffer[MAX_STRING_SIZE];
 
             if (fgets(buffer, MAX_STRING_SIZE, errorfile) != NULL) {
-               SHEPHERD_TRACE((err_str, "error string from qrsh_starter "
-                  "is %s", buffer));
+               shepherd_trace("error string from qrsh_starter is %s", buffer);
                ret = strdup(buffer);
             }
             FCLOSE(errorfile);
             if (unlink(buffer) != 0) {
-               SHEPHERD_TRACE((err_str, "can't delete %s", buffer));
+               shepherd_trace("can't delete %s", buffer);
             }
          }
       }
    }
    return ret;  
 FCLOSE_ERROR:
-   SHEPHERD_TRACE((err_str, MSG_FILE_NOCLOSE_SS, buffer, strerror(errno)));
+   shepherd_trace(MSG_FILE_NOCLOSE_SS, buffer, strerror(errno));
    return ret;
 
 }
@@ -462,20 +459,20 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
        setuid(SGE_SUPERUSER_UID) ||
        setegid(SGE_SUPERUSER_GID) ||
        seteuid(SGE_SUPERUSER_UID)) {
-      SHEPHERD_TRACE((err_str, "cannot change uid/gid\n"));
+      shepherd_trace("cannot change uid/gid\n");
       return 4;
    }
-   SHEPHERD_TRACE((err_str, "uid = " uid_t_fmt ", euid = " uid_t_fmt ", gid = " gid_t_fmt ", egid = " gid_t_fmt "", 
-                   getuid(), geteuid(), getgid(), getegid()));
+   shepherd_trace("uid = "uid_t_fmt", euid = "uid_t_fmt", gid = "gid_t_fmt 
+                  ", egid = "gid_t_fmt, getuid(), geteuid(), getgid(), getegid());
    
    /* socket stuff from here */
    sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
    if (sockfd == -1) {
-      SHEPHERD_TRACE((err_str, "cannot open socket."));
+      shepherd_trace("cannot open socket.");
       return 5;
    }
-   SHEPHERD_TRACE((err_str, "using sfd %d", sockfd));
+   shepherd_trace("using sfd %d", sockfd);
 
    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on));
    
@@ -486,7 +483,7 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
    serv_addr.sin_addr.s_addr = INADDR_ANY;
    ret = bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)); 
    if (ret != 0) {
-      SHEPHERD_TRACE((err_str, "cannot bind socket: %s", strerror(errno)));
+      shepherd_trace("cannot bind socket: %s", strerror(errno));
       shutdown(sockfd, 2);
       close(sockfd);
       return 6;
@@ -495,7 +492,7 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
    /* find out assigned port number and pass it to caller */
    length = sizeof(serv_addr);
    if (getsockname(sockfd,(struct sockaddr *) &serv_addr, &length) == -1) {
-      SHEPHERD_TRACE((err_str, "getting socket name failed: %s", strerror(errno)));
+      shepherd_trace("getting socket name failed: %s", strerror(errno));
       shutdown(sockfd, 2);
       close(sockfd);
       return 7;
@@ -503,7 +500,7 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
    
    /* listen on socked - make connections be accepted */
    if (listen(sockfd, 1) != 0) {
-      SHEPHERD_TRACE((err_str, "listen failed: %s", strerror(errno)));
+      shepherd_trace("listen failed: %s", strerror(errno));
       shutdown(sockfd, 2);
       close(sockfd);
       return 8;
@@ -513,13 +510,13 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
     * directory 
     */
    port = ntohs(serv_addr.sin_port);
-   SHEPHERD_TRACE((err_str, "bound to port %d", port));
+   shepherd_trace("bound to port %d", port);
  
    sge_root = sge_get_root_dir(0, NULL, 0, 1);
    arch = sge_get_arch();
    
    if (sge_root == NULL || arch == NULL) {
-      SHEPHERD_TRACE((err_str, "reading environment SGE_ROOT and ARC failed"));
+      shepherd_trace("reading environment SGE_ROOT and ARC failed");
       shutdown(sockfd, 2);
       close(sockfd);
       return 9;
@@ -529,21 +526,21 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
             port, sge_root, arch, cwd, get_conf_val("host"));
 
    if (write_to_qrsh(buffer) != 0) {
-      SHEPHERD_TRACE((err_str, "communication with qrsh failed"));
+      shepherd_trace("communication with qrsh failed");
       shutdown(sockfd, 2);
       close(sockfd);
       return 10;
    }
    
    /* wait for connection */
-   SHEPHERD_TRACE((err_str, "waiting for connection."));
+   shepherd_trace("waiting for connection.");
    /* use a reasonable timeout (60 seconds) to prevent hanging here forever */
    FD_ZERO(&fds);
    FD_SET(sockfd, &fds);
    timeout.tv_sec = 60;
    timeout.tv_usec = 0;
    if (select(sockfd+1, &fds, NULL, NULL, &timeout) < 1) {
-      SHEPHERD_TRACE((err_str, "nobody connected to the socket"));
+      shepherd_trace("nobody connected to the socket");
       shutdown(sockfd, 2);
       close(sockfd);
       return 11;
@@ -552,12 +549,12 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
    /* accept connection */
    newsfd = accept(sockfd, (struct sockaddr *)(&serv_addr), &len);
    if (newsfd == -1) {
-      SHEPHERD_TRACE((err_str, "error when accepting socket conection"));
+      shepherd_trace("error when accepting socket conection");
       shutdown(sockfd, 2);
       close(sockfd);
       return 12;
    }
-   SHEPHERD_TRACE((err_str, "accepted connection on fd %d", newsfd));
+   shepherd_trace("accepted connection on fd %d", newsfd);
 
    /* now we have a connection and do no longer need the "well known" port 
     * free this resource.
@@ -580,7 +577,7 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
    for (fd=3; fd<FD_SETSIZE; fd++)
       close(fd);
 
-   SHEPHERD_TRACE((err_str, "daemon to start: |%s|", daemon));
+   shepherd_trace("daemon to start: |%s|", daemon);
 
    /* split daemon commandline into single arguments */
    /* JG: TODO: might contain quoted arguments containing spaces 
@@ -591,9 +588,9 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
 #if 0
    {
       int i = 0;
-      SHEPHERD_TRACE((err_str, "daemon commandline split to %d arguments", argc));
+      shepherd_trace("daemon commandline split to %d arguments", argc);
       while (args[i] != NULL) {
-         SHEPHERD_TRACE((err_str, "daemon argv[%d] = |%s|", i, args[i]));
+         shepherd_trace("daemon argv[%d] = |%s|", i, args[i]);
          i++;
       }
    }

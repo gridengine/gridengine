@@ -1815,6 +1815,7 @@ int main(int argc, char **argv)
             close(STDIN_FILENO);
          }
 
+         DPRINTF(("starting server loop\n"));
          /* TODO: Add proper error handling and error propagation to do_server_loop() */
          ret = do_server_loop(random_poll, job_id, nostdin, 
                               noshell, &exit_status);

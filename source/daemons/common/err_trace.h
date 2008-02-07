@@ -32,28 +32,21 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#define SHEPHERD_ERROR(x) (sprintf x, shepherd_error(err_str))
-#define SHEPHERD_TRACE(x) (sprintf x, shepherd_trace(err_str))
-
-typedef int (*tShepherd_trace)(const char *str); 
+typedef int (*tShepherd_trace)(const char *format, ...); 
 
 extern int foreground;      /* != 0 if we can write to stderr/out     */
 
-void shepherd_trace_init( void );
-void shepherd_trace_exit( void );
-void shepherd_trace_chown( const char* job_owner );
+void shepherd_trace_init(void);
+void shepherd_trace_exit(void);
+void shepherd_trace_chown(const char* job_owner);
 
-void shepherd_error_init( void );
-void shepherd_error_exit( void );
-void shepherd_error_chown( const char* job_owner );
+void shepherd_error_init(void);
+void shepherd_error_exit(void);
+void shepherd_error_chown(const char* job_owner);
 
-int  shepherd_trace(const char *str);
-int  shepherd_trace_sprintf(const char *format, ...);
-
-void shepherd_error(const char *str);
-void shepherd_error_impl(const char *str, int do_exit);
-void shepherd_error_sprintf(const char *format, ...);
-
+int  shepherd_trace(const char *format, ...);
+void shepherd_error(int do_exit, const char *format, ...);
+void shepherd_error_ptr(const char *text);
 void shepherd_write_exit_status( const char *exit_status );
 
 int  is_shepherd_trace_fd( int fd );

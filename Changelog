@@ -1,3 +1,7 @@
+OJ-2008-02-07-0: Bugfix:    Fix broken check in of OJ-2008-02-01-0
+                 Issue:   1751
+                 Reviewed:    HP, AA
+
 OJ-2008-02-06-0: Bugfix:    use of the same pathes for input/output stream must be 
                             dealt with
                  Bugster:   6310194 

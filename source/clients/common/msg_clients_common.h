@@ -98,6 +98,7 @@
 #define MSG_OPTIONS_WRONGARGUMENTTOSOPT                      _MESSAGE(1052, _("ERROR! wrong argument to -s option"))
 
 #define MSG_PARSE_NOOPTIONARGUMENT                           _MESSAGE(1053, _("ERROR! no option argument"))
+#define MSG_CENTRY_NULL_URGENCY          _MESSAGE(1054, _("Complex urgency definition is missing"))
 
 #define MSG_HEADER_RULE "resource quota rule"
 #define MSG_HEADER_LIMIT "limit"

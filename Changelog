@@ -3,7 +3,9 @@ MD-2008-02-07-0: Bugfix:   o configfile check in automatic installation is to
                            o certtool did not set and copy certs for WINDOWS
                              installations 
                  Bugster:  6659855
-                 Review:   installation, certtool
+                 Review:   HP
+                 Changed:  installation, certtool
+
 OJ-2008-02-07-0: Bugfix:    Fix broken check in of OJ-2008-02-01-0
                  Issue:   1751
                  Reviewed:    HP, AA

@@ -38,6 +38,11 @@
 
 #include "sge_orders.h"
 
+extern int prof_par_global, prof_par_rqs, prof_par_cqstat, prof_par_hstat, 
+     prof_par_qstat, prof_par_hdyn, prof_par_qdyn;
+extern int prof_seq_global, prof_seq_rqs, prof_seq_cqstat, prof_seq_hstat, 
+     prof_seq_qstat, prof_seq_hdyn, prof_seq_qdyn;
+
 bool
 sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host, lList *exechost_list,
                  lList *centry_list, bool allow_non_requestable, int slots, lList *queue_user_list, 

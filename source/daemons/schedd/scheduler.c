@@ -96,6 +96,7 @@
 sge_Sdescr_t lists =
 {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 
+
 static int 
 dispatch_jobs(sge_evc_class_t *evc, sge_Sdescr_t *lists, order_t *orders, lList **splitted_job_list[]);
 
@@ -936,6 +937,28 @@ static int dispatch_jobs(sge_evc_class_t *evc, sge_Sdescr_t *lists, order_t *ord
                  fast_soft_runs,
                  comprehensive_runs,
                  nreservation));
+      {
+         static bool first_time = true;
+         if (first_time) {
+            PROFILING((SGE_EVENT, "PROF: parallel matching   %12.12s %12.12s %12.12s %12.12s %12.12s %12.12s %12.12s", 
+               "global", "rqs", "cqstatic", "hstatic", 
+                  "qstatic", "hdynamic", "qdyn"));
+            PROFILING((SGE_EVENT, "PROF: sequential matching %12.12s %12.12s %12.12s %12.12s %12.12s %12.12s %12.12s", 
+               "global", "rqs", "cqstatic", "hstatic", 
+                  "qstatic", "hdynamic", "qdyn"));
+            first_time = false;
+         }
+         PROFILING((SGE_EVENT, "PROF: parallel matching   %12d %12d %12d %12d %12d %12d %12d",
+            prof_par_global, prof_par_rqs, prof_par_cqstat, prof_par_hstat, 
+            prof_par_qstat, prof_par_hdyn, prof_par_qdyn));
+         PROFILING((SGE_EVENT, "PROF: sequential matching %12d %12d %12d %12d %12d %12d %12d",
+            prof_seq_global, prof_seq_rqs, prof_seq_cqstat, prof_seq_hstat, 
+            prof_seq_qstat, prof_seq_hdyn, prof_seq_qdyn));
+         prof_par_global = prof_par_rqs = prof_par_cqstat = prof_par_hstat = 
+            prof_par_qstat = prof_par_hdyn = prof_par_qdyn = 0;
+         prof_seq_global = prof_seq_rqs = prof_seq_cqstat = prof_seq_hstat = 
+            prof_seq_qstat = prof_seq_hdyn = prof_seq_qdyn = 0;
+      }
    }
 
    lFreeList(&user_list);

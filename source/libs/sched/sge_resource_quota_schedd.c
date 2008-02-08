@@ -1104,6 +1104,8 @@ parallel_rqs_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, con
       dstring rue_string = DSTRING_INIT;
       dstring limit_name = DSTRING_INIT;
 
+      prof_par_rqs++;
+
       for_each(rqs, a->rqs_list) {
          lListElem *rule = NULL;
          lListElem *exec_host = host_list_locate(a->host_list, host);

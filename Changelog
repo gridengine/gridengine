@@ -1,3 +1,6 @@
+RH-2008-02-08-0: Bugfix:    jgdi: Missing permission in java.policy.template added
+                 Review:    AA
+
 HP-2008-02-07-0: Bugfix:    fixed high CPU utilitzation by shepherd
                  Cleanup:   replaced shepherd_trace_sprintf and SHEPHERD_TRACE by
                             an improved shepherd_trace function, replaced

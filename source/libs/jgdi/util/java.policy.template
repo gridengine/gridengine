@@ -134,6 +134,7 @@ grant {
    permission java.io.FilePermission "${com.sun.grid.jgdi.caTop}", "read";
    permission java.io.FilePermission "${com.sun.grid.jgdi.caTop}/cacert.pem", "read";
    permission java.io.FilePermission "${com.sun.grid.jgdi.caTop}/ca-crl.pem", "read";
+   permission java.io.FilePermission "${com.sun.grid.jgdi.caTop}/usercerts/-", "read";
    permission java.io.FilePermission "${com.sun.grid.jgdi.serverKeystore}", "read";
 };
 

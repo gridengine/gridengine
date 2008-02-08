@@ -1,3 +1,12 @@
+LP-2008-02-08-0: Bugfix:    Permission problems writing the cluster_name file
+                 Bugfix:    Unable to remove the SMF startup script
+                 Bugfix:    missing clear in inst_sge -db
+                 Bugfix:    Uninstall does not remove the SGE_STARTUP_SCRIPT
+                 Bugfix:    inst_sge -ux all -um fails
+                 Bugster:   6659196, 6659203, 6659195, 6659880, 6660899
+                 Bugfix:    Other minor install fixes
+                 Review:    PJ, RD
+
 RH-2008-02-08-0: Bugfix:    jgdi: Missing permission in java.policy.template added
                  Review:    AA
 

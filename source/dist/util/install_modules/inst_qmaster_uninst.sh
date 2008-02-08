@@ -93,7 +93,6 @@ ShutdownMaster()
       spool_dir_master=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
       master_pid=`cat $spool_dir_master/qmaster.pid`
 
-      `qconf -ks`
       `qconf -km`
 
       ret=0

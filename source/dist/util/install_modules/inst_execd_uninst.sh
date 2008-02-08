@@ -59,6 +59,7 @@ WelcomeUninstall()
 
 FetchHostname()
 {
+   HOSTS=""
    euid=`$SGE_UTILBIN/uidgid -euid`
    local_host=`$SGE_UTILBIN/gethostname -aname`
    LOCAL_UNINST="false";
@@ -73,28 +74,27 @@ FetchHostname()
             tmp_host_list="$tmp_host_list $h"
          fi
       done
-      HOST="$tmp_host_list $tmp_local"
+      HOSTS="$tmp_host_list $tmp_local"
    fi
 
    if [ "$ALL_EXECDS" = true ]; then
-      HOST=`qconf -sel`
+      HOSTS=`qconf -sel`
    fi
 
-   for h in $HOST; do
-
-   if [ "$NOREMOTE" = "true" -a "$h" = "$local_host" ]; then    #only the local host (from RM list) should be uninstalled and 
-      LOCAL_UNINST="true"                                    #if actual host is equal to local host do uninstallation
-      doUninstall $h
-      break;                                                 #break loop, if host found and uninstalled
-   fi
-
-   if [ "$NOREMOTE" = "false" ]; then                            #also uninstall remote hosts
-      if [ "$h" = "$local_host" ]; then                          #if actual host equals to local_host, no rsh/ssh is used for
-         LOCAL_UNINST="true"                                    #uninstallation
+   for h in $HOSTS; do
+      if [ "$NOREMOTE" = "true" -a "$h" = "$local_host" ]; then    #only the local host (from RM list) should be uninstalled and 
+         LOCAL_UNINST="true"                                    #if actual host is equal to local host do uninstallation
+         doUninstall $h
+         break;                                                 #break loop, if host found and uninstalled
       fi
-      doUninstall $h                                         
-      LOCAL_UNINST="false"                                   #reset LOCAL_UNINST variable for following uninstallations
-   fi
+
+      if [ "$NOREMOTE" = "false" ]; then                            #also uninstall remote hosts
+         if [ "$h" = "$local_host" ]; then                          #if actual host equals to local_host, no rsh/ssh is used for
+            LOCAL_UNINST="true"                                    #uninstallation
+         fi
+         doUninstall $h                                         
+         LOCAL_UNINST="false"                                   #reset LOCAL_UNINST variable for following uninstallations
+      fi
    done
 
 }

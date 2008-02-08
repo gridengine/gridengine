@@ -943,7 +943,7 @@ CheckConfigFile()
       REMOVE_RC=`echo $REMOVE_RC | tr [A-Z] [a-z]`
       if [ "$REMOVE_RC" != "true" -a "$REMOVE_RC" != "false" ]; then
          $INFOTEXT -e "Your >REMOVE_RC< flag is wrong! Valid values are: 0, 1, true, false"
-         is_valid="false" 
+         is_valid="false"
       fi
 
       if [ "$SGE_ENABLE_JMX" = "true" ]; then
@@ -959,7 +959,7 @@ CheckConfigFile()
          $INFOTEXT -e "Your >EXEC_HOST_LIST_RM< is empty!"
          $INFOTEXT -e "For a automatic execd unintallation you have to enter a valid exechost name!"
          is_valid="false"
-      fi      
+      fi
    fi
 
    if [ "$CSP" = "true" -o "$WINDOWS_SUPPORT" = "true" ]; then
@@ -1461,6 +1461,7 @@ SetupRcScriptNames()
       qmaster)
          hosttype="master";;
       shadow)
+         DAEMON_NAME="shadow"
          return;;
       *)
          hosttype=$1;;
@@ -1633,25 +1634,35 @@ RemoveRC_SMF()
 
 
 #-------------------------------------------------------------------------
+# SourceSmfSupport: Call to ensure SMF suppport is available
+#
+SourceSmfSupport()
+{
+   if [ "$SGE_SMF_SUPPORT_SOURCED" != true ]; then
+      if [ ! -f ./util/sgeSMF/sge_smf_support.sh ]; then
+         $INFOTEXT "Missing ./util/sgeSMF/sge_smf_support.sh file!"
+         $INFOTEXT -log "Missing ./util/sgeSMF/sge_smf_support.sh file!"
+         MoveLog
+         exit 2
+      fi
+      . ./util/sgeSMF/sge_smf_support.sh
+   fi
+}
+
+
+#-------------------------------------------------------------------------
 # SearchForExistingInstallations
 # $1 .. list of components to search for
 #
 SearchForExistingInstallations()
 {
    #Check services with the old clustername we are about to delete
-   SGE_CLUSTER_NAME=`cat $SGE_ROOT/$SGE_CELL_VAL/common/cluster_name 2>/dev/null`
+   SGE_CLUSTER_NAME=`cat $SGE_ROOT/$SGE_CELL/common/cluster_name 2>/dev/null`
    if [ -z "$SGE_CLUSTER_NAME" ]; then
       return
    fi
 
-   #We try to source SMF support
-   if [ "$SGE_SMF_SUPPORT_SOURCED" != true ]; then
-      if [ ! -f ./util/sgeSMF/sge_smf_support.sh ]; then
-         $INFOTEXT "Missing ./util/sgeSMF/sge_smf_support.sh file!!!"
-         exit 1
-      fi
-      . ./util/sgeSMF/sge_smf_support.sh
-   fi
+   SourceSmfSupport
     
    TMP_DAEMON_LIST=$1
    exists=0
@@ -1678,6 +1689,7 @@ SearchForExistingInstallations()
          for TMP_DAEMON in $TMP_DAEMON_LIST; do
             eval test_val='$'"$TMP_DAEMON"_ret
             if [ $test_val -ne 0 ]; then
+               $CLEAR
                RemoveRC_SMF $TMP_DAEMON $test_val
             fi
          done
@@ -1695,20 +1707,13 @@ SearchForExistingInstallations()
 #
 ProcessSGEClusterName()
 {
-   if [ "$SGE_SMF_SUPPORT_SOURCED" != true ]; then
-      if [ ! -f ./util/sgeSMF/sge_smf_support.sh ]; then
-         $INFOTEXT "Missing ./util/sgeSMF/sge_smf_support.sh file!!!"
-         exit 1
-      fi
-      . ./util/sgeSMF/sge_smf_support.sh
-   fi
-
+   SourceSmfSupport
    TMP_CLUSTER_NAME=`cat $SGE_ROOT/$SGE_CELL/common/cluster_name 2>/dev/null`
    # We always use the name in cluster_name file
    if [ -n "$TMP_CLUSTER_NAME" ]; then
       SGE_CLUSTER_NAME=$TMP_CLUSTER_NAME
       return
-   fi
+   fi   
 
    if [ "$SGE_QMASTER_PORT" = "" ]; then
       SGE_QMASTER_PORT=`./utilbin/$SGE_ARCH/getservbyname -number sge_qmaster`
@@ -1747,6 +1752,7 @@ ProcessSGEClusterName()
             $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
                       "\nNOTE: Choose 'n' to select new SGE_CLUSTER_NAME  (y/n) [y] >> "
             if [ $? -eq 0 ]; then
+               $CLEAR
                RemoveRC_SMF $1 $validation_res
                done=true
             fi                  
@@ -1770,11 +1776,11 @@ ProcessSGEClusterName()
    done
       
    #Only BDB or qmaster installation can create cluster_name file
-   if [ \( "$1" = "bdb" -o "$1" = "qmaster" \) -a ! -f $SGE_CELL/common/cluster_name ]; then
+   if [ \( "$1" = "bdb" -o "$1" = "qmaster" \) -a ! -f $SGE_ROOT/$SGE_CELL/common/cluster_name ]; then
       ExecuteAsAdmin $MKDIR -p $SGE_ROOT/$SGE_CELL/common
       ExecuteAsAdmin $TOUCH $SGE_ROOT/$SGE_CELL/common/cluster_name
-      echo $SGE_CLUSTER_NAME > $SGE_ROOT/$SGE_CELL/common/cluster_name
-      ExecuteAsAdmin chmod 644 $SGE_ROOT/$SGE_CELL/common/cluster_name
+      ExecuteAsAdmin sh -c "$ECHO $SGE_CLUSTER_NAME > $SGE_ROOT/$SGE_CELL/common/cluster_name"
+      ExecuteAsAdmin $CHMOD 644 $SGE_ROOT/$SGE_CELL/common/cluster_name
    fi
 
    $ECHO
@@ -2879,12 +2885,12 @@ RemoveRcScript()
    host=$1
    hosttype=$2
    euid=$3
-   v61=$4
+   upgrade=$4
    
 
    $INFOTEXT "Checking for installed rc startup scripts!\n"
 
-   SetupRcScriptNames $hosttype $v61
+   SetupRcScriptNames $hosttype $upgrade
 
    if [ $euid != 0 ]; then
       return 0
@@ -2908,14 +2914,15 @@ RemoveRcScript()
       fi
    fi
    
-   #If Solaris 10+ and SMF enabled and 6.1 version not specified
-   if [ "$SGE_ENABLE_SMF" = "true" -a -n "$service" -a -z "$v61" ]; then
+   ServiceAlreadyExists $hosttype
+   #If Solaris 10+ and SMF used and 6.1 version not specified
+   if [ $? -eq 1 -a "$SGE_ENABLE_SMF" = "true" -a -z "$upgrade" ]; then
       if [ "$AUTO" = "true" ]; then
          OLD_INFOTEXT=$INFOTEXT
          INFOTEXT="$INFOTEXT -log"
       fi
 
-      SMFUnregister $service
+      SMFUnregister $hosttype
       ret=$?
 
       if [ "$AUTO" = "true" ]; then
@@ -2947,6 +2954,7 @@ RemoveRcScript()
             fi
          done
       fi
+      Execute rm -f $RC_PREFIX/$STARTUP_FILE_NAME
    # If we have System V we need to put the startup script to $RC_PREFIX/init.d
    # and make a link in $RC_PREFIX/rc2.d to $RC_PREFIX/init.d
    elif [ "$RC_FILE" = "sysv_rc" ]; then
@@ -2974,13 +2982,13 @@ RemoveRcScript()
        esac
 
    elif [ "$RC_FILE" = "insserv-linux" ]; then
-      echo  rm $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
       echo /sbin/insserv -r $RC_PREFIX/$STARTUP_FILE_NAME
-      Execute rm $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
+      echo rm -f $RC_PREFIX/$STARTUP_FILE_NAME
       /sbin/insserv -r $RC_PREFIX/$STARTUP_FILE_NAME
+      Execute rm -f $RC_PREFIX/$STARTUP_FILE_NAME
    elif [ "$RC_FILE" = "freebsd" ]; then
-      echo  rm $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
-      Execute rm $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
+      echo  rm -f $RC_PREFIX/sge${RC_SUFFIX}
+      Execute rm -f $RC_PREFIX/sge${RC_SUFFIX}
    elif [ "$RC_FILE" = "SGE" ]; then
       if [ -z "$v61" ]; then
          RC_DIR="$RC_DIR.$SGE_CLUSTER_NAME"

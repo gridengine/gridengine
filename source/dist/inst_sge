@@ -447,9 +447,9 @@ if [ "$BERKELEY" = "install" ]; then
       COMMONDIR=$SGE_CELL/common
       Makedir $SGE_CELL
       Makedir $COMMONDIR
-      ProcessSGEClusterName bdb
+      ProcessSGEClusterName "bdb"
       SetSpoolingOptions
-      AddSGEStartUpScript $euid bdb
+      AddSGEStartUpScript $euid "bdb"
       PrepareRPCServerStart
       GiveBerkelyHints
    else
@@ -664,7 +664,8 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       ProcessSGERoot
       CheckQmasterInstallation
       CheckCellDirectory
-      ProcessSGEClusterName execd
+      . $SGE_ROOT/$SGE_CELL/common/settings.sh
+      SearchForExistingInstallations "execd"
       CheckCSP
       CheckHostNameResolving install
       GetLocalExecdSpoolDir
@@ -685,7 +686,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
           $INFOTEXT "Execd on host %s is not started!\n" $h
           $INFOTEXT -log "Execd on host %s is not started!\n" $h
           MoveLog
-          exit 1
+          exit 2
       fi
 
    fi
@@ -697,7 +698,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       CheckQmasterInstallation
       CheckCellDirectory
       . $SGE_ROOT/$SGE_CELL/common/settings.sh
-      ProcessSGEClusterName execd
+      SearchForExistingInstallations "execd"
       CheckWinAdminUser
       CheckCSP
       CheckHostNameResolving install
@@ -771,7 +772,7 @@ if [ "$EXECD" = "uninstall" ]; then
 
    if [ "$SGE_ROOT" = "" -o "$SGE_CELL" = "" ]; then
       $INFOTEXT -wait -auto $AUTO "Your SGE_ROOT or SGE_CELL variable is not set!\n" \
-                                  "Please, enter SGE_ROOT and SGE_CELL in the following\n" \
+                                  "Enter SGE_ROOT and SGE_CELL in the following\n" \
                                   "screens!\n\nHit, <RETURN> to continue!"
       $CLEAR
       ProcessSGERoot
@@ -779,10 +780,13 @@ if [ "$EXECD" = "uninstall" ]; then
       $INFOTEXT -n "Please enter your SGE_CELL directory or use the default [default] >> "
 
       SGE_CELL=`Enter default`
-      export SGE_CELL
+      export SGE_CELL 
    fi
 
    . $SGE_ROOT/$SGE_CELL/common/settings.sh
+
+   SourceSmfSupport
+   
    CheckHostNameResolving uninstall
    if [ "$?" = "1" ]; then
       $INFOTEXT "This host is not an admin host. Uninstallation is not allowed\nfrom this host!"
@@ -795,7 +799,7 @@ if [ "$EXECD" = "uninstall" ]; then
    
    MoveLog
    
-   if [ $QMASTER != "uninstall" ]; then 
+   if [ $QMASTER != "uninstall" ]; then
       exit 0
    fi
 
@@ -812,11 +816,12 @@ if [ $BERKELEY = "uninstall" ]; then
       ProcessSGERoot
       GetCell
       ADMINUSER=`$SGE_UTILBIN/filestat -owner . 2> /dev/null`
+      SourceSmfSupport
       #SMF will stop the service on its own in RemoveRCScript
       if [ "$SGE_ENABLE_SMF" != "true" ]; then
          ExecuteRPCServerScript stop
       fi
-      RemoveRcScript $HOST bdb $euid
+      RemoveRcScript $HOST "bdb" $euid
       DeleteSpoolingDir
    else
       $INFOTEXT -log "remote berkeley rpc server uninstallation on host %s" $DB_SPOOLING_SERVER
@@ -848,8 +853,9 @@ if [ $QMASTER = "uninstall" ]; then
    fi
 
    . $SGE_ROOT/$SGE_CELL/common/settings.sh
-   RemoveQmaster
+   SourceSmfSupport
    ServiceTagsSupport
+   RemoveQmaster
    MoveLog
 fi
 
@@ -874,7 +880,6 @@ if [ $SHADOW = "install" ]; then
 
       SearchForExistingInstallations "shadowd"
 
-      ProcessSGEClusterName shadowd
       CheckHostNameResolving install
  
       if [ $HOST != "" ]; then
@@ -891,7 +896,7 @@ if [ $SHADOW = "install" ]; then
       #check if spooling is supported!
       spooling_method=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap 2>/dev/null | grep "spooling_method" | awk '{ print $2 }'`
       #if spooling_params contains no "/" then we have rpc server spooling
-      `cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep spooling_params | awk '{ print $2 }' | grep "/"`
+      temp=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep spooling_params | awk '{ print $2 }' | grep "/"`
       if [ $? = 0 ]; then
          db_home=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap 2>/dev/null | grep "spooling_params" | awk '{ print $2 }' | cut -d";" -f1`
          fstype=`$SGE_UTILBIN/fstype $db_home`

@@ -222,12 +222,14 @@ char **argv
       i_opt = lGetElemStr(opts_all, SPA_switch, "-i");
       o_opt = lGetElemStr(opts_all, SPA_switch, "-o");
 
-      if (i_opt == o_opt) { 
-         fprintf(stderr, MSG_PARSE_SAMEPATHFORINPUTANDOUTPUT_SS, 
+      if (opt_list_is_X_true(opts_cmdline, "-i")) {
+         if (i_opt == o_opt) { 
+            fprintf(stderr, MSG_PARSE_SAMEPATHFORINPUTANDOUTPUT_SS, 
              "", "");
-         fprintf(stderr, "\n");
-         DEXIT;
-         SGE_EXIT(NULL, 1);
+            fprintf(stderr, "\n");
+            DEXIT;
+            SGE_EXIT(NULL, 1);
+         }
       }
 
 

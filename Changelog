@@ -1,3 +1,9 @@
+LP-2008-02-08-0: Bugfix:   Uninstall does not remove the SGE_STARTUP_SCRIPT
+                 Bugfix:   inst_sge -ux all -um fails
+                 Bugfix:   load sensor might block execd port
+                 Bugster:  6659880, 6660899, 6654696
+                 Review:   HP
+
 MD-2008-02-07-0: Bugfix:   o configfile check in automatic installation is to
                            strict
                            o certtool did not set and copy certs for WINDOWS

@@ -2406,6 +2406,7 @@ RemoveRcScript()
             fi
          done
       fi
+      Execute rm -f $RC_PREFIX/$STARTUP_FILE_NAME
    # If we have System V we need to put the startup script to $RC_PREFIX/init.d
    # and make a link in $RC_PREFIX/rc2.d to $RC_PREFIX/init.d
    elif [ "$RC_FILE" = "sysv_rc" ]; then
@@ -2433,13 +2434,13 @@ RemoveRcScript()
        esac
 
    elif [ "$RC_FILE" = "insserv-linux" ]; then
-      echo  rm $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
       echo /sbin/insserv -r $RC_PREFIX/$STARTUP_FILE_NAME
-      Execute rm $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
+      echo rm -f $RC_PREFIX/$STARTUP_FILE_NAME
       /sbin/insserv -r $RC_PREFIX/$STARTUP_FILE_NAME
+      Execute rm -f $RC_PREFIX/$STARTUP_FILE_NAME
    elif [ "$RC_FILE" = "freebsd" ]; then
-      echo  rm $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
-      Execute rm $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
+      echo  rm -f $RC_PREFIX/sge${RC_SUFFIX}
+      Execute rm -f $RC_PREFIX/sge${RC_SUFFIX}
    elif [ "$RC_FILE" = "SGE" ]; then
       if [ $hosttype = "master" ]; then
         DARWIN_GEN_REPLACE="#GENMASTERRC"

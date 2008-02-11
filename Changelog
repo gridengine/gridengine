@@ -1,3 +1,7 @@
+HP-2008-02-11-1: Bugfix:    qrsh <no command> had 1 s delays from time to time
+                 Changed:   shepherd
+                 Review:    CR
+
 HP-2008-02-11-0: Bugfix:    qrsh doesn't work if system runs as unprivileged user
                  Changed:   shepherd
                  Bugster:   6660886

@@ -385,13 +385,18 @@ static void* pty_to_commlib(void *t_conf)
          timeout.tv_sec  = 0;
          timeout.tv_usec = 0;
       } else {
-         if (stdout_bytes > 0 && stdout_bytes < 256) {
+         if ((stdout_bytes > 0 && stdout_bytes < 256)
+             || messages_in_send_queue(g_comm_handle) > 0) {
             /* 
              * If we just received few data, wait another 10 milliseconds if new 
              * data arrives to avoid sending data over the network in too small junks.
+             * Also retry to send the messages that are still in the queue ASAP.
              */
             timeout.tv_sec  = 0;
             timeout.tv_usec = 10000;
+            if (messages_in_send_queue(g_comm_handle) > 0) {
+               shepherd_trace("pty_to_commlib: messages_in_send_queue() > 0!");
+            } 
          } else {
             /* Standard timeout is one second */
             timeout.tv_sec = 1;
@@ -868,6 +873,9 @@ int parent_loop(char *hostname, int port, int ptym,
 #endif
    /*
     * Wait for all messages to be sent
+    * TODO: This shouldn't be neccessary, the shutdown of the
+    *       connection should do a flush.
+    *       Test it, and if it works, remove this code.
     */
    if (g_comm_handle != NULL) {
       unsigned long elems = 0;
@@ -884,6 +892,7 @@ int parent_loop(char *hostname, int port, int ptym,
          }
       } while (elems > 0);
    }
+
    /* 
     * Get usage of child processes, if it was not already retrieved 
     */

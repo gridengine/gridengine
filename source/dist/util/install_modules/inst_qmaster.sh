@@ -172,7 +172,7 @@ GetQmasterSpoolDir()
 
       if [ $euid = 0 ]; then
          if [ $ADMINUSER = default ]; then
-            $INFOTEXT "User >root< on this host must have read/write accessto the qmaster\n" \
+            $INFOTEXT "User >root< on this host must have read/write access to the qmaster\n" \
                       "spool directory.\n"
          else
             $INFOTEXT "The admin user >%s< must have read/write access\n" \
@@ -237,7 +237,7 @@ SetPermissions()
                       "verify and set the file permissions of your distribution (enter: y)\n\n" \
                       "In some cases, eg: the binaries are stored on a NTFS or on any other\n" \
                       "filesystem, which provides additional file permissions, the UNIX file\n" \
-                      "permissions can be wrong. In this case we would advise to verfiy and\n" \
+                      "permissions can be wrong. In this case we would advise to verify and\n" \
                       "to set the file permissions (enter: n) (y/n) [n] >> "
          else
             $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
@@ -592,7 +592,7 @@ SelectHostNameResolving()
    if [ $AUTO = "true" ]; then
      IGNORE_FQDN_DEFAULT=$HOSTNAME_RESOLVING
      $INFOTEXT -log "Using >%s< as IGNORE_FQDN_DEFAULT." "$IGNORE_FQDN_DEFAULT"
-     $INFOTEXT -log "If it's >true<, the domainname will be ignored."
+     $INFOTEXT -log "If it's >true<, the domain name will be ignored."
      
    else
      $CLEAR
@@ -607,10 +607,10 @@ SelectHostNameResolving()
                "Are all hosts of your cluster in a single DNS domain (y/n) [y] >> "
      if [ $? = 0 ]; then
         IGNORE_FQDN_DEFAULT=true
-        $INFOTEXT "Ignoring domainname when comparing hostnames."
+        $INFOTEXT "Ignoring domain name when comparing hostnames."
      else
         IGNORE_FQDN_DEFAULT=false
-        $INFOTEXT "The domainname is not ignored when comparing hostnames."
+        $INFOTEXT "The domain name is not ignored when comparing hostnames."
      fi
      $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
      $CLEAR
@@ -1064,7 +1064,7 @@ CreateSettingsFile()
 
 
 #--------------------------------------------------------------------------
-# InitCA Create CA and initialize it for deamons and users
+# InitCA Create CA and initialize it for daemons and users
 #
 InitCA()
 {
@@ -1193,7 +1193,7 @@ AddHosts()
                 "to the list of administrative hosts.\n\n" \
                 "If you are not sure, it is also possible to add or remove hosts after the\n" \
                 "installation with <qconf -ah hostname> for adding and <qconf -dh hostname>\n" \
-                "for removing this host\n\nAttention: This is not the shadow host installation" \
+                "for removing this host\n\nAttention: This is not the shadow host installation\n" \
                 "procedure.\n You still have to install the shadow host separately\n\n"
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
                 "Do you want to add your shadow host(s) now? (y/n) [y] >> "
@@ -1606,7 +1606,7 @@ GetExecdPort()
                 "   sge_execd <port_number>/tcp\n\n" \
                 "to your services database and make sure to use an unused port number.\n"
 
-         $INFOTEXT "Make sure to use a different port number for the Executionhost\n" \
+         $INFOTEXT "Make sure to use a different port number for the Execution host\n" \
                    "as on the qmaster machine\n"
          $INFOTEXT "The qmaster port SGE_QMASTER_PORT = %s\n" $SGE_QMASTER_PORT
 
@@ -1778,7 +1778,7 @@ SetScheddConfig()
       $INFOTEXT -n "3) Max\n          Immediate Scheduling, report no scheduling information,\n" \
                    "          actual load\n"
 
-      $INFOTEXT -auto $AUTO -n "Enter the number of your prefered configuration and hit <RETURN>! \n" \
+      $INFOTEXT -auto $AUTO -n "Enter the number of your preferred configuration and hit <RETURN>! \n" \
                    "Default configuration is [1] >> "
       SCHEDD=`Enter 1`
 

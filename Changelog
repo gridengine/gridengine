@@ -1,3 +1,8 @@
+MP-2008-02-11-0: Bugfix:   Correct spelling mistakes in the install script
+                 Bugster:  6650827
+                 Issue:    2485
+                 Review:   MD
+
 LP-2008-02-08-0: Bugfix:   Uninstall does not remove the SGE_STARTUP_SCRIPT
                  Bugfix:   inst_sge -ux all -um fails
                  Bugfix:   load sensor might block execd port

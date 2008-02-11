@@ -833,6 +833,7 @@ printf("+++++++ sge_event_master_process_mod_event_client subscription changed a
          check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_PE_LIST, master_table);
          check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_PROJECT_LIST, master_table);
          check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_CQUEUE_LIST, master_table);
+         check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_SCHED_CONF, master_table);
          check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_SUBMITHOST_LIST, master_table);
          check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_USER_LIST, master_table);
          check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_USERSET_LIST, master_table);

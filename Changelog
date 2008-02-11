@@ -1,3 +1,7 @@
+EB-2008-02-01-0: Bugfix:    - sconf_* functions in scheduler access data
+                              sent via event mirror now
+                 Review:    RD 
+
 LP-2008-02-08-0: Bugfix:    Permission problems writing the cluster_name file
                  Bugfix:    Unable to remove the SMF startup script
                  Bugfix:    missing clear in inst_sge -db
@@ -28,11 +32,11 @@ MD-2008-02-07-0: Bugfix:   o configfile check in automatic installation is to
                  Changed:  installation, certtool
 
 OJ-2008-02-07-0: Bugfix:    Fix broken check in of OJ-2008-02-01-0
-                 Issue:   1751
-                 Reviewed:    HP, AA
+                 Issue:     1751
+                 Reviewed:  HP, AA
 
-OJ-2008-02-06-0: Bugfix:    use of the same pathes for input/output stream must be 
-                            dealt with
+OJ-2008-02-06-0: Bugfix:    use of the same pathes for input/output stream must 
+                            be dealt with
                  Bugster:   6310194 
                  Issue:     1751 
                  Review:    MP,RD

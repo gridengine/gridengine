@@ -130,6 +130,7 @@ print_event(sge_evc_class_t *evc, object_description *object_base, sge_object_ty
    return SGE_EMA_OK;
 }
 
+#ifndef QEVENT_SHOW_ALL
 static sge_callback_result
 print_jatask_event(sge_evc_class_t *evc, object_description *object_base, sge_object_type type, 
                    sge_event_action action, lListElem *event, void *clientdata)
@@ -202,7 +203,7 @@ print_jatask_event(sge_evc_class_t *evc, object_description *object_base, sge_ob
    DEXIT;
    return SGE_EMA_OK;
 }
-
+#endif
 
 static sge_callback_result
 analyze_jatask_event(sge_evc_class_t *evc, object_description *object_base,sge_object_type type, 

@@ -106,6 +106,7 @@ static lList *Master_Pe_List = NULL;
 static lList *Master_SUser_List = NULL;
 static lList *Master_RQS_List = NULL;
 static lList *Master_AR_List = NULL;
+static lList *Master_SchedulerConfig_List = NULL;
 
 #ifndef __SGE_NO_USERMAPPING__
 static lList *Master_Cuser_List = NULL;
@@ -132,7 +133,7 @@ static object_description object_base[SGE_TYPE_ALL] = {
    { &Master_Project_List,         NULL,                   "PROJECT",           PR_Type,   PR_name           },
    { &Master_CQueue_List,          NULL,                   "CQUEUE",            CQ_Type,   CQ_name           },
    { NULL,                         NULL,                   "QINSTANCE",         QU_Type,   QU_qname          },
-   { NULL,                         sconf_validate_config_, "SCHEDD_CONF",       SC_Type,   NoName            },
+   { &Master_SchedulerConfig_List, sconf_validate_config_, "SCHEDD_CONF",       SC_Type,   NoName            },
    { NULL,                         NULL,                   "SCHEDD_MONITOR",    NULL,      NoName            },
    { NULL,                         NULL,                   "SHUTDOWN",          NULL,      NoName            },
    { NULL,                         NULL,                   "QMASTER_GOES_DOWN", NULL,      NoName            },

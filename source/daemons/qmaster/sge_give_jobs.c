@@ -1744,8 +1744,12 @@ static int sge_bury_job(bool job_spooling, const char *sge_root, lListElem *job,
        * do not try to remove script file for interactive jobs 
        */
       if ((lGetString(job, JB_exec_file) != NULL) && job_spooling) {
+         lList *answer_list = NULL;
          PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
-         unlink(lGetString(job, JB_exec_file));
+         if (!JOB_TYPE_IS_BINARY(lGetUlong(job, JB_type))) {
+            spool_delete_script(&answer_list, lGetUlong(job, JB_job_number), job);
+            answer_list_output(&answer_list);
+         }         
          lSetString(job, JB_exec_file, NULL);
          PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
       }

@@ -262,7 +262,6 @@ int ptys_open(int fdm, char *pts_name)
    if (ioctl(fds, I_PUSH, "ptem") < 0) {
       close(fdm);
       close(fds);
-printf("errno: %d %s\n", errno, strerror(errno));
       return -6;
    }
    if (ioctl(fds, I_PUSH, "ldterm") < 0) {
@@ -322,8 +321,15 @@ pid_t fork_pty(int *ptrfdm, int *fd_pipe_err, dstring *err_msg)
    char  pts_name[20];
    int   old_euid;
 
+   /* 
+    * We run this either as root with euid="sge admin user" or as an unprivileged 
+    * user.  If we are root with euid="sge admin user", we must change our
+    * euid back to root for this function.
+    */
    old_euid = geteuid();
-   seteuid(SGE_SUPERUSER_UID);
+   if (getuid() == SGE_SUPERUSER_UID) {
+      seteuid(SGE_SUPERUSER_UID);
+   }
    if ((fdm = ptym_open(pts_name)) < 0) {
       sge_dstring_sprintf(err_msg, "can't open master pty \"%s\": %d, %s",
                           pts_name, errno, strerror(errno));
@@ -344,14 +350,8 @@ pid_t fork_pty(int *ptrfdm, int *fd_pipe_err, dstring *err_msg)
                              errno, strerror(errno));
          return -1;
       }
-      /* got to be root here*/
-      if (getuid() != SGE_SUPERUSER_UID) {
-         sge_dstring_sprintf(err_msg, "not root! uid=%d, euid=%d", 
-                             (int)getuid(), (int)geteuid());
-         return -1;
-      }
 
-      /* SVR4 acquires controlling terminal on open() */
+      /* Open pty slave */
       if ((fds = ptys_open(fdm, pts_name)) < 0) {
          seteuid(old_euid);
          sge_dstring_sprintf(err_msg, "can't open slave pty: %d", fds);

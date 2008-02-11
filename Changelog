@@ -1,3 +1,7 @@
+EB-2008-02-11-0: Bugfix:    Improved waiting section at the end of the scheduler
+                            main loop
+                 Review:    CR
+
 EB-2008-02-01-0: Bugfix:    - sconf_* functions in scheduler access data
                               sent via event mirror now
                  Review:    RD 

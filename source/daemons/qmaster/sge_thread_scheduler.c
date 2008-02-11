@@ -929,7 +929,9 @@ sge_scheduler_main(void *arg)
                stored_finish = finish_s;
             }
 
-            /* block till master handled all GDI orders */
+            /* 
+             * block till master handled all GDI orders 
+             */
             if (handled_events) {  
                sge_schedd_block_until_oders_processed(evc->get_gdi_ctx(evc), NULL);
             }

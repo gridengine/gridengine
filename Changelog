@@ -1,4 +1,10 @@
-OJ-2008-02-12-0: Bugfix:   Moified common/msg_common.h message to work with IZ 1751
+OJ-2008-02-12-1: Bugfix:   sgeexecd startup script shouldn't suppress error messages 
+                           from sge_execd binary
+                 Bugster:  6609754
+                 Issue:    NA
+                 Review:   RD, HP
+
+OJ-2008-02-12-0: Bugfix:   Modified common/msg_common.h message to work with IZ 1751
                  Bugster:  6310194
                  Issue:    1751
                  Review:   AP

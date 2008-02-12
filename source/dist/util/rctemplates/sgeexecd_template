@@ -282,7 +282,6 @@ if [ "$startup" = true ]; then
    # execution daemon is started on this host!
 
       echo "   starting sge_execd"
-      exec 1>/dev/null 2>&1
       $bin_dir/sge_execd
       [ $? -eq 0 -a -d /var/lock/subsys ] && touch /var/lock/subsys/sgeexecd
       exit 0

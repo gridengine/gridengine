@@ -31,63 +31,157 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.management;
 
-import java.util.logging.Logger;
 import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509KeyManager;
-import javax.net.ssl.X509TrustManager;
 
 
 import com.sun.grid.security.login.GECATrustManager;
 import com.sun.grid.security.login.GECAKeyManager;
 import java.io.File;
+import java.security.KeyStore;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
 
 /**
  * Helper class for SSL setup.
- *
  */
 public final class SSLHelper {
 
-    private static final Logger log = Logger.getLogger(SSLHelper.class.getName());
     private final static String SSL_PROTOCOL = "SSL";
-    private static SSLContext ctx = null;
 
-    private SSLHelper() {
+    private static SSLContext ctx;
+    private static final GECAKeyManager keyManager = new GECAKeyManager();
+    private static final GECATrustManager trustManager = new GECATrustManager();
+    private static final Lock lock = new ReentrantLock();
+    
+    private SSLHelper () {
     }
-        
-    static void init(File caTop, File serverKeystore, char[] serverKeystorePassword) {    
-
-        X509TrustManager trustManager = new GECATrustManager(caTop);
-        X509KeyManager keyManager = new GECAKeyManager(serverKeystore, serverKeystorePassword);
-
+    
+    private static void initSSLContext() {
+        lock.lock();
         try {
-            ctx = SSLContext.getInstance(SSL_PROTOCOL);
-            ctx.init(new KeyManager[]{keyManager},
-                    new TrustManager[]{trustManager},
-                    null);
-        } catch (Exception ex) {
-            throw new SecurityException("Cannot create SSLContext", ex);
+            if(ctx == null) {
+                try {
+                    ctx = SSLContext.getInstance(SSL_PROTOCOL);
+                    ctx.init(new KeyManager[]{keyManager},
+                            new TrustManager[]{trustManager},
+                            null);
+                } catch (Exception ex) {
+                    throw new SecurityException("Cannot create SSLContext", ex);
+                }
+            }
+        } finally {
+            lock.unlock();
         }
-        
-        // SSLContext.setDefault(getSSLContext());
     }
-
+    
     /**
-     *  Get the ssl context for the application.
-     *
-     *  @return the ssl context of <code>null</code>
+     * Set ca top for the SSL context (is used to find a ca certificate.
+     * @param catop  the ca top directory
      */
-    static SSLContext getSSLContext() {
-        return ctx;
+    static void setCaTop(File catop) {
+        lock.lock();
+        try {
+            initSSLContext();
+            trustManager.setCaTop(catop);
+        } finally {
+            lock.unlock();
+        }
     }
-
+    
+    /**
+     * Initialize the SSL setup
+     * @param caTop  the ca top directory
+     * @param ks     the keystore
+     * @param pw     the password for the keystore
+     */
+    static void init(File caTop, KeyStore ks, char [] pw) {
+        lock.lock();
+        try {
+            setCaTop(caTop);
+            setKeystore(ks, pw);
+        } finally {
+            lock.unlock();
+        }
+    }
+    
+    /**
+     * Initialize the SSL setup
+     * @param caTop  the ca top directory
+     * @param ks     the keystore file
+     * @param pw     the password for the keystore
+     */
+    static void init(File caTop, File ks, char [] pw) {
+        lock.lock();
+        try {
+            setCaTop(caTop);
+            setKeystore(ks, pw);
+        } finally {
+            lock.unlock();
+        }
+    }
+    
+    /**
+     * Set the keystore for the JGDI ssl context
+     * @param ks   the keystore
+     * @param pw   the password for the keystore
+     */
+    static void setKeystore(KeyStore ks, char [] pw) {
+        lock.lock();
+        try {
+            initSSLContext();
+            keyManager.setKeystore(ks, pw);
+        } finally {
+            lock.unlock();
+        }
+    }
+    
+    /**
+     * Set the keystore for the JGDI ssl context
+     * @param keystore   the keystore file
+     * @param pw   the password for the keystore
+     */
+    static void setKeystore(File keystore, char [] pw) {
+        lock.lock();
+        try {
+            initSSLContext();
+            keyManager.setKeystore(keystore, pw);
+        } finally {
+            lock.unlock();
+        }
+    }
+    
+    /**
+     * Reset the JGDI ssl context
+     */
+    static void reset() {
+        lock.lock();
+        try {
+            ctx = null;
+            keyManager.reset();
+            trustManager.setCaTop(null);
+        } finally {
+            lock.unlock();
+        }
+    }
+            
+    
     /**
      *  Get the ssl socket factory for the application
      *  @return the socket factor for the application
      */
     static SSLSocketFactory getSocketFactory() {
-        return (SSLSocketFactory) ctx.getSocketFactory();
+        lock.lock();
+        try {
+            if(ctx == null) {
+                return (SSLSocketFactory)SSLSocketFactory.getDefault();
+            } else {
+                return ctx.getSocketFactory();
+            }
+        } finally {
+            lock.unlock();
+        }
     }
 }

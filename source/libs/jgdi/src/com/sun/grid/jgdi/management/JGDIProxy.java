@@ -39,6 +39,7 @@ import com.sun.grid.jgdi.event.EventListener;
 import com.sun.grid.jgdi.management.mbeans.JGDIJMXMBean;
 import com.sun.grid.jgdi.util.Base64;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -107,6 +108,33 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
      */
     public JGDIJMXMBean getProxy() {
         return proxy;
+    }
+    
+    /**
+     * Set up the ssl context
+     * @param caTop  ca top directory if the Grid Engine CA ($SGE_ROOT/$SGE_CELL/common/sgeCA
+     * @param ks     keystore of the user
+     * @param pw     password for the keystore
+     */
+    public static void setupSSL(File caTop, KeyStore ks, char [] pw) {
+        SSLHelper.init(caTop, ks, pw);
+    }
+
+    /**
+     * Set up the ssl context
+     * @param caTop  ca top directory if the Grid Engine CA ($SGE_ROOT/$SGE_CELL/common/sgeCA
+     * @param ks     keystore file of the user
+     * @param pw     password for the keystore
+     */
+    public static void setupSSL(File caTop, File ks, char [] pw) {
+        SSLHelper.init(caTop, ks, pw);
+    }
+    
+    /**
+     * Reset the SSL setup
+     */
+    public static void resetSSLSetup() {
+        SSLHelper.reset();
     }
 
     /**
@@ -421,7 +449,8 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
             return null;
         }
     }
-
+    
+    
     /**
      * Create JMX credentials for password less authentication with a keystore
      * @param ks        the keystore
@@ -460,12 +489,5 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
         } catch (Exception ex) {
             throw new JGDIException("Can not create credentials from keystore", ex);
         }
-
-
-
-
-
-
-
     }
 }

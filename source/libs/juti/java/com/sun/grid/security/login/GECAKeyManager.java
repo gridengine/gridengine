@@ -51,8 +51,11 @@ import javax.net.ssl.X509KeyManager;
 public class GECAKeyManager implements X509KeyManager {
 
     private final static Logger log = Logger.getLogger(GECAKeyManager.class.getName());
-    private final X509KeyManager keyManager;
+    private X509KeyManager keyManager;
 
+    public GECAKeyManager() {
+    }
+            
     /**
      *  Creates a new instance of GECAKeyManager.
      *
@@ -60,16 +63,27 @@ public class GECAKeyManager implements X509KeyManager {
      * @param pw keystore password
      */
     public GECAKeyManager(File serverKeystore, char[] pw) throws SecurityException {
-
+        setKeystore(serverKeystore, pw);
+    }
+    
+    public synchronized void setKeystore(KeyStore serverKeystore, char[] pw) throws SecurityException {
+        try {
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+            kmf.init(serverKeystore, pw);
+            keyManager = (X509KeyManager)kmf.getKeyManagers()[0];
+        } catch (Exception ex) {
+            throw new SecurityException("Cannnot create keymanager", ex);
+        }        
+    }
+    
+    public synchronized void setKeystore(File serverKeystore, char[] pw) throws SecurityException {
         FileInputStream fi = null;
         try {
             log.log(Level.FINER, "loading keystore file {0}", serverKeystore);
             KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
             fi = new FileInputStream(serverKeystore);
             ks.load(fi, pw);
-            KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-            kmf.init(ks, pw);
-            keyManager = (X509KeyManager) kmf.getKeyManagers()[0];
+            setKeystore(ks, pw);
         } catch (Exception ex) {
             throw new SecurityException("Cannnot create keymanager", ex);
         } finally {
@@ -79,28 +93,51 @@ public class GECAKeyManager implements X509KeyManager {
             }
         }
     }
+    
+    public synchronized void reset() {
+        keyManager = null;
+    }
+            
 
-    public String[] getClientAliases(String arg0, Principal[] arg1) {
+    public synchronized String[] getClientAliases(String arg0, Principal[] arg1) {
+        if(keyManager == null) {
+            return new String[0];
+        }
         return keyManager.getClientAliases(arg0, arg1);
     }
 
-    public String chooseClientAlias(String[] keyType, Principal[] arg1, Socket arg2) {
+    public synchronized String chooseClientAlias(String[] keyType, Principal[] arg1, Socket arg2) {
+        if(keyManager == null) {
+            return null;
+        }
         return keyManager.chooseClientAlias(keyType, arg1, arg2);
     }
 
-    public String[] getServerAliases(String arg0, Principal[] arg1) {
+    public synchronized String[] getServerAliases(String arg0, Principal[] arg1) {
+        if(keyManager == null) {
+            return new String[0];
+        }
         return keyManager.getServerAliases(arg0, arg1);
     }
 
-    public String chooseServerAlias(String arg0, Principal[] arg1, Socket arg2) {
+    public synchronized String chooseServerAlias(String arg0, Principal[] arg1, Socket arg2) {
+        if(keyManager == null) {
+            return null;
+        }
         return keyManager.chooseServerAlias(arg0, arg1, arg2);
     }
 
-    public X509Certificate[] getCertificateChain(String arg0) {
+    public synchronized X509Certificate[] getCertificateChain(String arg0) {
+        if(keyManager == null) {
+            return new X509Certificate[0];
+        }
         return keyManager.getCertificateChain(arg0);
     }
 
-    public PrivateKey getPrivateKey(String arg0) {
+    public synchronized PrivateKey getPrivateKey(String arg0) {
+        if(keyManager == null) {
+            return null;
+        }
         return keyManager.getPrivateKey(arg0);
     }
 }

@@ -1,7 +1,12 @@
-PJ-2008-02-11-0: Bugfix.: Bdb jobscript spooling, job scripts will stay in the database
-                 Changed: qmaster 
-                 Bugster: 6660859
-                 Review:  LP
+RH-2008-02-12-0: Bugfix.:   jgdi client ssl setup added
+                 Changed:   jgdi
+                 Review:    CR
+
+
+PJ-2008-02-11-0: Bugfix.:   Bdb jobscript spooling, job scripts will stay in the database
+                 Changed:   qmaster 
+                 Bugster:   6660859
+                 Review:    LP
 
 HP-2008-02-11-1: Bugfix:    qrsh <no command> had 1 s delays from time to time
                  Changed:   shepherd

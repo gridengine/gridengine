@@ -525,7 +525,7 @@ public final class ConnectorBootstrap {
 
         if (useSsl || useRegistrySsl) {
 
-            csf = new SslRMIClientSocketFactory();
+            csf = new JGDISslRMIClientSocketFactory();
             ssf = new JGDISslRMIServerSocketFactory(enabledCipherSuites,
                     enabledProtocols, sslNeedClientAuth);
         }

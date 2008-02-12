@@ -534,16 +534,16 @@ GetLocalExecdSpoolDir()
    #fi
 
    if [ $AUTO = "true" ]; then
-      execd_spool_dir_local_exists=`echo $EXECD_SPOOL_DIR_LOCAL |  grep "^\/" | wc -w`
-     if [ "$EXECD_SPOOL_DIR_LOCAL" != "" -a "$execd_spool_dir_local_exists" = 1 ]; then
+      execd_spool_dir_local_exists=`echo $EXECD_SPOOL_DIR_LOCAL |  grep "^\/"`
+      if [ "$EXECD_SPOOL_DIR_LOCAL" != "" -a "$execd_spool_dir_local_exists" != "" ]; then
          LOCAL_EXECD_SPOOL=$EXECD_SPOOL_DIR_LOCAL
          $INFOTEXT -log "Using local execd spool directory [%s]" $LOCAL_EXECD_SPOOL
          MakeLocalSpoolDir
       fi
      
-      if [ "$execd_spool_dir_local_exists" = 0 ]; then
+      if [ "$execd_spool_dir_local_exists" = "" ]; then
          $INFOTEXT -log "Local execd spool directory [%s] is not a valid path" $LOCAL_EXECD_SPOOL
-      ret=1
+         ret=1
       fi
    fi
 }

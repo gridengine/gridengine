@@ -1,3 +1,14 @@
+OJ-2008-02-13-0: Bugfix:   sgeexecd startup script shouldn't suppress error messages
+                           from sge_execd binary
+                 Bugster:  6609754
+                 Issue:    NA
+                 Review:   RD, HP
+
+                 Bugfix:   Modified common/msg_common.h message to work with IZ 1751
+                 Bugster:  6310194
+                 Issue:    1751
+                 Review:   AP
+
 AA-2008-02-13-0: Bugfix.:   - jgdi client shall use SGE Daemon keystore for JMX ssl mode
                             - jmxeventmon support for SSL, eventmon script
                             - memory leaks qmon, cull

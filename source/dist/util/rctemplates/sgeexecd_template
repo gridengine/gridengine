@@ -353,7 +353,7 @@ if [ "$startup" = true ]; then
          SGE_EXECD_PORT=`$utilbin_dir/getservbyname -number sge_execd`
       fi
       echo "   starting sge_execd"
-      #exec 1>/dev/null 2>&1
+      exec 1>/dev/null 2>&1
       $bin_dir/sge_execd
       [ $? -eq 0 -a -d /var/lock/subsys ] && touch /var/lock/subsys/sgeexecd
       

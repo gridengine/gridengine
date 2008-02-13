@@ -52,7 +52,6 @@ import javax.net.ssl.TrustManager;
 public final class SSLHelper {
 
     private final static String SSL_PROTOCOL = "SSL";
-
     private static SSLContext ctx;
     private static final GECAKeyManager keyManager = new GECAKeyManager();
     private static final GECATrustManager trustManager = new GECATrustManager();
@@ -85,7 +84,7 @@ public final class SSLHelper {
         }
         return ret;
     }
-    
+
     /**
      * Get the instance of the SSLHelper
      * @param sgeRoot  the sge root directory of the addressed cluster
@@ -115,7 +114,7 @@ public final class SSLHelper {
             lock.unlock();
         }
     }
-    
+
     /**
      * Set the keystore for the JGDI ssl context
      * @param ks   the keystore
@@ -130,7 +129,7 @@ public final class SSLHelper {
             lock.unlock();
         }
     }
-    
+
     /**
      * Set the keystore for the JGDI ssl context
      * @param keystore   the keystore file
@@ -145,7 +144,7 @@ public final class SSLHelper {
             lock.unlock();
         }
     }
-    
+
     /**
      * Reset the JGDI ssl context
      */
@@ -158,8 +157,7 @@ public final class SSLHelper {
             lock.unlock();
         }
     }
-            
-    
+
     /**
      *  Get the ssl socket factory for the application
      *  @return the socket factor for the application
@@ -167,8 +165,8 @@ public final class SSLHelper {
     SSLSocketFactory getSocketFactory() {
         lock.lock();
         try {
-            if(ctx == null) {
-                return (SSLSocketFactory)SSLSocketFactory.getDefault();
+            if (ctx == null) {
+                return (SSLSocketFactory) SSLSocketFactory.getDefault();
             } else {
                 return ctx.getSocketFactory();
             }

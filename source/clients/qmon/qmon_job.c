@@ -889,6 +889,7 @@ void updateJobList(void)
    lFreeWhere(&where_run);
    lFreeWhere(&where_exiting);
    lFreeWhere(&where_notexiting);
+   lFreeWhere(&where_no_template);
    lFreeWhere(&where_unfinished);
    lFreeWhat(&what);
    lFreeWhat(&what_queue);

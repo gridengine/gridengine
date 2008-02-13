@@ -1164,7 +1164,7 @@ InitCA()
          touch /tmp/pwfile.$$
          chmod 600 /tmp/pwfile.$$
          echo "$SGE_JMX_SSL_KEYSTORE_PW" > /tmp/pwfile.$$
-         $SGE_CA_CMD -userks -kspwf /tmp/pwfile.$$
+         $SGE_CA_CMD -sysks -kspwf /tmp/pwfile.$$
          rm /tmp/pwfile.$$
       fi
       
@@ -1938,7 +1938,7 @@ GetJMXPort() {
                ca_port=sge_qmaster
             fi
             if [ "$sge_jmx_ssl_keystore" = "" ]; then 
-               sge_jmx_ssl_keystore=/var/sgeCA/$ca_port/$SGE_CELL/userkeys/$ADMINUSER/keystore
+               sge_jmx_ssl_keystore=/var/sgeCA/$ca_port/$SGE_CELL/private/keystore
             fi
             $INFOTEXT -n "Enter JMX SSL server keystore path [%s] >> " "$sge_jmx_ssl_keystore"
             INP=`Enter "$sge_jmx_ssl_keystore"`

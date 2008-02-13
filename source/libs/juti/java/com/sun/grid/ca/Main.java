@@ -224,12 +224,15 @@ public class Main {
     
     public static final int TYPE_USER = 1;
     public static final int TYPE_DAEMON = 2;
+    public static final int TYPE_SGE_DAEMON = 3;
     
     public static int parseType(String type) {
         if(type.equals("user")) {
             return TYPE_USER;
         } else if (type.equals("daemon")) {
             return TYPE_DAEMON;
+        } else if (type.equals("sge_daemon")) {
+            return TYPE_SGE_DAEMON;
         } else {
             usage("invalid <type> '" + type + "'", 1);
             return 0;
@@ -329,6 +332,7 @@ public class Main {
             char [] pw = null;
             switch(type) {
                 case TYPE_USER:
+                case TYPE_SGE_DAEMON:    
                     if(pwFile == null) {
                         CallbackHandler cbh = new TextCallbackHandler();
                         
@@ -353,7 +357,11 @@ public class Main {
                             pw = line.toCharArray();
                         }
                     }
-                    ks = ca.createKeyStore(name, pw, pw);
+                    if (type == TYPE_USER) {
+                        ks = ca.createKeyStore(name, pw, pw);
+                    } else {
+                        ks = ca.createSGEDaemonKeyStore(name, pw, pw);
+                    }    
                     break;
                 case TYPE_DAEMON:
                     pw = new char[0];

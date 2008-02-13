@@ -1700,7 +1700,7 @@ Widget parent
 
    DENTER(GUI_LAYER, "qmonCreateHostgroupAsk");
    
-   hg_ask_layout = XmtBuildQueryDialog( parent, "hg_ask_shell",
+   hg_ask_layout = XmtBuildQueryDialog(parent, "hg_ask_shell",
                            NULL, 0,
                            "hg_ok", &hg_ok,
                            "hg_cancel", &hg_cancel,

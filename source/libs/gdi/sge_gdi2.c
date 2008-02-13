@@ -1036,7 +1036,7 @@ bool sge_gdi2_check_permission(sge_gdi_ctx_class_t *ctx, lList **alpp, int optio
   DENTER(GDI_LAYER, "sge_gdi2_check_permission");
 
   permList = NULL;
-  alp = ctx->gdi(ctx, SGE_DUMMY_LIST, SGE_GDI_PERMCHECK ,  &permList , NULL,NULL );
+  alp = ctx->gdi(ctx, SGE_DUMMY_LIST, SGE_GDI_PERMCHECK, &permList, NULL, NULL);
 
   if (permList == NULL) {
      DPRINTF(("Permlist is NULL\n"));

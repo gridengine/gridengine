@@ -639,6 +639,7 @@ va_list *app
       cp = sum(dp, state, app);
 
       if (scan(NULL, state) != KET) {
+         lFreeWhere(&cp);
          LERROR(LESYNTAX);
          DRETURN(NULL);
       }

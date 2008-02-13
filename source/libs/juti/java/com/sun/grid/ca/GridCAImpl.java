@@ -277,7 +277,7 @@ public class GridCAImpl implements GridCA {
     }
     
     /**
-     * Create private key and certificate for a grm daemon.
+     * Create private key and certificate for a sdm daemon.
      *
      * @param daemon name of the daemon
      * @param user   username of the daemon (owner of the process)
@@ -287,7 +287,7 @@ public class GridCAImpl implements GridCA {
     public void createDaemon(String daemon, String user, String email) throws GridCAException {
         LOGGER.entering("GridCAImpl", "createDaemon");
         Expect pb = createProcess();
-        pb.command().add("-grm_daemon");
+        pb.command().add("-sdm_daemon");
         pb.command().add(user + ":" + daemon + ":" + email);
 
         execute(pb);
@@ -393,7 +393,7 @@ public class GridCAImpl implements GridCA {
     public X509Certificate renewDaemonCertificate(String daemon, int days) throws GridCAException {
         LOGGER.entering("GridCAImpl", "renewDaemonCertificate");
         Expect pb = createProcess();
-        pb.command().add("-renew_grm");
+        pb.command().add("-renew_sdm");
         pb.command().add(daemon);
         pb.command().add("-days");
         pb.command().add(Integer.toString(days));
@@ -444,17 +444,34 @@ public class GridCAImpl implements GridCA {
      * Get the keystore for a daemon.
      *
      * This method can be used be the installation to create keystore for
-     * the daemon of a grm system.
+     * the daemon of a sdm system.
      *
      * @param daemon name of the daemon
      * @throws com.sun.grid.ca.GridCAException 
      * @return the keystore of the daemon
      */
     public KeyStore createDaemonKeyStore(String daemon) throws GridCAException {
-         return createKeyStore(TYPE_GRM_DAEMON, daemon, new char[0], new char[0]);
+         return createKeyStore(TYPE_SDM_DAEMON, daemon, new char[0], new char[0]);
     }
     
-    private final static String TYPE_GRM_DAEMON = "grm_daemon";
+    /**
+     *  Get the keystore for a SGE daemon.
+     *
+     *  This method can be used be the installation to create keystore for
+     *  the daemon of a sdm system.
+     *
+     *  @param daemon name of the daemon
+     *  @param  keystorePassword password used to encrypt the keystore
+     *  @param  privateKeyPassword password used to encrypt the key
+     *  @throws com.sun.grid.ca.GridCAException 
+     *  @return the keystore of the daemon
+     */
+    public KeyStore createSGEDaemonKeyStore(String daemon, char[] keystorePassword, char[] privateKeyPassword) throws GridCAException {
+         return createKeyStore(TYPE_SGE_DAEMON, daemon, keystorePassword, privateKeyPassword);
+    }
+    
+    private final static String TYPE_SGE_DAEMON = "sge_daemon";
+    private final static String TYPE_SDM_DAEMON = "sdm_daemon";
     private final static String TYPE_USER       = "user";
     
     private KeyStore createKeyStore(String type, String entity, char[] keystorePassword, char[] privateKeyPassword) throws GridCAException {
@@ -541,12 +558,14 @@ public class GridCAImpl implements GridCA {
                 GridCAX500Name name = GridCAX500Name.parse(cert.getSubjectX500Principal().getName());
 
                 
-                if(TYPE_GRM_DAEMON.equals(type)) {
+                if(TYPE_SDM_DAEMON.equals(type)) {
                     if(!name.isDaemon()) {
                         throw RB.newGridCAException("gridCAImpl.error.notADaemonCert", 
                                                     cert.getSubjectX500Principal().getName());
                     }
                     alias = name.getDaemonName();
+                } else if(TYPE_SGE_DAEMON.equals(type)) {
+                    alias = name.getUsername();
                 } else if (TYPE_USER.endsWith(type)) {
                     if(name.isDaemon()) {
                         throw RB.newGridCAException("gridCAImpl.error.notAUserCert", 
@@ -593,8 +612,10 @@ public class GridCAImpl implements GridCA {
 
                 if(type.equals("user")) {
                     pb.command().add("-pkcs12");
-                } else if (type.equals("grm_daemon")) {
-                    pb.command().add("-grm_pkcs12");
+                } else if (type.equals("sdm_daemon")) {
+                    pb.command().add("-sdm_pkcs12");
+                } else if (type.equals("sge_daemon")) {
+                    pb.command().add("-sys_pkcs12");
                 }
                 pb.command().add(username);
                 pb.command().add("-pkcs12pwf");

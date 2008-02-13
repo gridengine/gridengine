@@ -705,7 +705,7 @@ sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
    jvm_argv[0] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.grid.jgdi.sgeRoot=%s", ctx->get_sge_root(ctx)));
    jvm_argv[1] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.grid.jgdi.sgeCell=%s", ctx->get_default_cell(ctx)));
    jvm_argv[2] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.grid.jgdi.caTop=%s", ctx->get_ca_root(ctx)));
-   jvm_argv[3] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.grid.jgdi.serverKeystore=%s/userkeys/%s/keystore", ctx->get_ca_local_root(ctx), ctx->get_admin_user(ctx)));
+   jvm_argv[3] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.grid.jgdi.serverKeystore=%s/private/keystore", ctx->get_ca_local_root(ctx), ctx->get_admin_user(ctx)));
    jvm_argv[4] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.grid.jgdi.sgeQmasterSpoolDir=%s", ctx->get_qmaster_spool_dir(ctx)));
    jvm_argv[5] = strdup(sge_dstring_sprintf(&ds, "-Djava.class.path=%s/lib/jgdi.jar:%s/lib/juti.jar", ctx->get_sge_root(ctx), ctx->get_sge_root(ctx)));
    jvm_argv[6] = strdup(sge_dstring_sprintf(&ds, "-Djava.security.policy=%s/common/jmx/java.policy", ctx->get_cell_root(ctx)));

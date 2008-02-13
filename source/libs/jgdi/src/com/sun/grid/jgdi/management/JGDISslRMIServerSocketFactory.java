@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.management;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -46,6 +47,8 @@ import javax.rmi.ssl.SslRMIServerSocketFactory;
  */
 public class JGDISslRMIServerSocketFactory extends SslRMIServerSocketFactory {
 
+    private final File caTop;
+    
     /**
      * <p>Creates a new <code>SslRMIServerSocketFactory</code> with
      * the default SSL socket configuration.</p>
@@ -53,15 +56,17 @@ public class JGDISslRMIServerSocketFactory extends SslRMIServerSocketFactory {
      * <p>SSL connections accepted by server sockets created by this
      * factory have the default cipher suites and protocol versions
      * enabled and do not require client authentication.</p>
+     * @param caTop the catop directory if the cluster
      */
-    public JGDISslRMIServerSocketFactory() {
-        this(null, null, false);
+    public JGDISslRMIServerSocketFactory(File caTop) {
+        this(caTop, null, null, false);
     }
 
     /**
      * <p>Creates a new <code>SslRMIServerSocketFactory</code> with
      * the specified SSL socket configuration.</p>
      *
+     * @param caTop the catop directory if the cluster
      * @param enabledCipherSuites names of all the cipher suites to
      * enable on SSL connections accepted by server sockets created by
      * this factory, or <code>null</code> to use the cipher suites
@@ -88,11 +93,12 @@ public class JGDISslRMIServerSocketFactory extends SslRMIServerSocketFactory {
      * @see SSLSocket#setEnabledProtocols
      * @see SSLSocket#setNeedClientAuth
      */
-    public JGDISslRMIServerSocketFactory(String[] enabledCipherSuites,
+    public JGDISslRMIServerSocketFactory(File caTop, String[] enabledCipherSuites,
             String[] enabledProtocols,
             boolean needClientAuth)
             throws IllegalArgumentException {
 
+        this.caTop = caTop;
         // Initialize the configuration parameters.
         //
         this.enabledCipherSuites = enabledCipherSuites == null ? null : (String[]) enabledCipherSuites.clone();
@@ -103,7 +109,7 @@ public class JGDISslRMIServerSocketFactory extends SslRMIServerSocketFactory {
         // rather than delaying it to the first time createServerSocket()
         // is called.
         //
-        final SSLSocketFactory sslSocketFactory = SSLHelper.getSocketFactory();
+        final SSLSocketFactory sslSocketFactory = SSLHelper.getInstanceByCaTop(caTop).getSocketFactory();
         SSLSocket sslSocket = null;
         if (this.enabledCipherSuites != null || this.enabledProtocols != null) {
             try {
@@ -131,10 +137,11 @@ public class JGDISslRMIServerSocketFactory extends SslRMIServerSocketFactory {
      * <p>Creates a server socket that accepts SSL connections
      * configured according to this factory's SSL socket configuration
      * parameters.</p>
+     * @throws java.io.IOException if the socket can not be created
      */
     @Override
     public ServerSocket createServerSocket(int port) throws IOException {
-        final SSLSocketFactory sslSocketFactory = SSLHelper.getSocketFactory();
+        final SSLSocketFactory sslSocketFactory = SSLHelper.getInstanceByCaTop(caTop).getSocketFactory();
         return new ServerSocket(port) {
 
             @Override

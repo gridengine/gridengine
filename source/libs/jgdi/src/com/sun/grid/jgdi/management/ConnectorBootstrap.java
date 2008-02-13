@@ -345,13 +345,12 @@ public final class ConnectorBootstrap {
             // setup SSLContext to use different TrustManager and KeyManager
             final String serverKeystore = props.getProperty(PropertyNames.SSL_SERVER_KEYSTORE);
             final String serverKeystorePassword = props.getProperty(PropertyNames.SSL_SERVER_KEYSTORE_PASSWORD);
-            final String caTopName = System.getProperty("com.sun.grid.jgdi.caTop");
-            File caTop = new File(caTopName);
             File serverKeystoreFile = new File(serverKeystore);
+            File caTop = JGDIAgent.getCaTop();
             char[]pw = (serverKeystorePassword != null) ? serverKeystorePassword.toCharArray() : "".toCharArray();
             log.log(Level.FINE, "SSLHelper.init: caTop = {0} serverKeystore = {1} serverKeystorePW = {2}",
                     new Object[]{caTop, serverKeystore, (serverKeystorePassword != null) ? serverKeystorePassword : "-empty pw-" });
-            SSLHelper.init(caTop, serverKeystoreFile, pw);
+            SSLHelper.getInstanceByCaTop(caTop).setKeystore(serverKeystoreFile, pw);
         }
 
         if (log.isLoggable(Level.FINE)) {
@@ -524,9 +523,8 @@ public final class ConnectorBootstrap {
         RMIServerSocketFactory ssf = null;
 
         if (useSsl || useRegistrySsl) {
-
-            csf = new JGDISslRMIClientSocketFactory();
-            ssf = new JGDISslRMIServerSocketFactory(enabledCipherSuites,
+            csf = new JGDISslRMIClientSocketFactory(JGDIAgent.getCaTop());
+            ssf = new JGDISslRMIServerSocketFactory(JGDIAgent.getCaTop(), enabledCipherSuites,
                     enabledProtocols, sslNeedClientAuth);
         }
 

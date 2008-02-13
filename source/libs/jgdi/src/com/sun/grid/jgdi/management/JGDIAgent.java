@@ -111,6 +111,20 @@ public class JGDIAgent {
         }
         return url;
     }
+    
+    private static File caTop;
+
+    public static File getCaTop() {
+        if (caTop == null) {
+            String str = System.getProperty("com.sun.grid.jgdi.caTop");
+            if (str == null) {
+                throw new IllegalStateException("system properties com.sun.grid.jgdi.caTop not found");
+            }
+            caTop = new File(str);
+        }
+        return caTop;
+    }
+    
     private static File sgeRoot;
 
     public static File getSgeRoot() {

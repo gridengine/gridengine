@@ -38,6 +38,8 @@ import com.sun.grid.security.login.GECATrustManager;
 import com.sun.grid.security.login.GECAKeyManager;
 import java.io.File;
 import java.security.KeyStore;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.net.ssl.SSLContext;
@@ -56,10 +58,47 @@ public final class SSLHelper {
     private static final GECATrustManager trustManager = new GECATrustManager();
     private static final Lock lock = new ReentrantLock();
     
-    private SSLHelper () {
+    private SSLHelper(File caTop) {
+        trustManager.setCaTop(caTop);
     }
     
-    private static void initSSLContext() {
+    private static final Lock instanceLock = new ReentrantLock();
+    private static final Map<File,SSLHelper> instanceMap = new HashMap<File,SSLHelper>();
+    
+    /**
+     * Get the instance of the SSLHelper by the caTop directory
+     * @param caTop the caTop directory
+     * @return the SSLHelper
+     */
+    public static SSLHelper getInstanceByCaTop(File caTop) {
+        SSLHelper ret = null;
+        instanceLock.lock();
+        try {
+            ret = instanceMap.get(caTop);
+            
+            if(ret == null) {
+                ret = new SSLHelper(caTop);
+                instanceMap.put(caTop, ret);
+            }
+        } finally {
+            instanceLock.unlock();
+        }
+        return ret;
+    }
+    
+    /**
+     * Get the instance of the SSLHelper
+     * @param sgeRoot  the sge root directory of the addressed cluster
+     * @param cell     the cell name of of the addressed cluster
+     * @return the SSLHelper
+     */
+    public static SSLHelper getInstance(File sgeRoot, String cell) {
+        File caTop = new File(sgeRoot, cell + File.separator + "common" + File.separator + "sgeCA");
+        return getInstanceByCaTop(caTop);
+    }
+            
+            
+    private void initSSLContext() {
         lock.lock();
         try {
             if(ctx == null) {
@@ -78,57 +117,11 @@ public final class SSLHelper {
     }
     
     /**
-     * Set ca top for the SSL context (is used to find a ca certificate.
-     * @param catop  the ca top directory
-     */
-    static void setCaTop(File catop) {
-        lock.lock();
-        try {
-            initSSLContext();
-            trustManager.setCaTop(catop);
-        } finally {
-            lock.unlock();
-        }
-    }
-    
-    /**
-     * Initialize the SSL setup
-     * @param caTop  the ca top directory
-     * @param ks     the keystore
-     * @param pw     the password for the keystore
-     */
-    static void init(File caTop, KeyStore ks, char [] pw) {
-        lock.lock();
-        try {
-            setCaTop(caTop);
-            setKeystore(ks, pw);
-        } finally {
-            lock.unlock();
-        }
-    }
-    
-    /**
-     * Initialize the SSL setup
-     * @param caTop  the ca top directory
-     * @param ks     the keystore file
-     * @param pw     the password for the keystore
-     */
-    static void init(File caTop, File ks, char [] pw) {
-        lock.lock();
-        try {
-            setCaTop(caTop);
-            setKeystore(ks, pw);
-        } finally {
-            lock.unlock();
-        }
-    }
-    
-    /**
      * Set the keystore for the JGDI ssl context
      * @param ks   the keystore
      * @param pw   the password for the keystore
      */
-    static void setKeystore(KeyStore ks, char [] pw) {
+    void setKeystore(KeyStore ks, char [] pw) {
         lock.lock();
         try {
             initSSLContext();
@@ -143,7 +136,7 @@ public final class SSLHelper {
      * @param keystore   the keystore file
      * @param pw   the password for the keystore
      */
-    static void setKeystore(File keystore, char [] pw) {
+    void setKeystore(File keystore, char [] pw) {
         lock.lock();
         try {
             initSSLContext();
@@ -156,12 +149,11 @@ public final class SSLHelper {
     /**
      * Reset the JGDI ssl context
      */
-    static void reset() {
+    void reset() {
         lock.lock();
         try {
             ctx = null;
             keyManager.reset();
-            trustManager.setCaTop(null);
         } finally {
             lock.unlock();
         }
@@ -172,7 +164,7 @@ public final class SSLHelper {
      *  Get the ssl socket factory for the application
      *  @return the socket factor for the application
      */
-    static SSLSocketFactory getSocketFactory() {
+    SSLSocketFactory getSocketFactory() {
         lock.lock();
         try {
             if(ctx == null) {

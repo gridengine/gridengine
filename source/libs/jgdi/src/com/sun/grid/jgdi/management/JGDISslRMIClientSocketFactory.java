@@ -39,6 +39,7 @@
 package com.sun.grid.jgdi.management;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.StringTokenizer;
@@ -57,6 +58,12 @@ public class JGDISslRMIClientSocketFactory extends SslRMIClientSocketFactory {
 
     private final static long serialVersionUID = -2008021101L;
 
+    private final File caTop;
+    
+    public JGDISslRMIClientSocketFactory(File caTop) {
+        this.caTop = caTop;
+    }
+    
     /**
      * <p>Creates an SSL socket.</p>
      *
@@ -87,7 +94,7 @@ public class JGDISslRMIClientSocketFactory extends SslRMIClientSocketFactory {
 
         // Retrieve the SSLSocketFactory
         //
-        final SocketFactory sslSocketFactory = SSLHelper.getSocketFactory();
+        final SocketFactory sslSocketFactory = SSLHelper.getInstanceByCaTop(caTop).getSocketFactory();
         
         // Create the SSLSocket
         //

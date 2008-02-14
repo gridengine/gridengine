@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# ___INFO__MARK_BEGIN__
+#___INFO__MARK_BEGIN__
 ##########################################################################
 #
 #  The Contents of this file are made available subject to the terms of

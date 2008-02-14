@@ -1,3 +1,7 @@
+AH-2008-02-14-0: Bugfix:    JAT_granted_pe was not set back to NULL if the advance 
+                            reservation does not exist at job delivery time
+                 Review:    TBD
+
 AH-2008-02-07-1: Enhancem.: Added matching statistics to scheduler profiling
                  Review:    RD
 

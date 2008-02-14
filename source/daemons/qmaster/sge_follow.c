@@ -285,6 +285,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
                    sge_u32c(lGetUlong(jep, JB_ar)),
                    sge_u32c(lGetUlong(jep, JB_job_number))));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            lSetString(jatp, JAT_granted_pe, NULL);
             DRETURN(-2);
          }
          lSetUlong(jatp, JAT_wallclock_limit, (lGetUlong(ar, AR_end_time) - sge_get_gmt() - sconf_get_duration_offset()));

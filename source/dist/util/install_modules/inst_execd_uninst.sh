@@ -234,49 +234,40 @@ RemoveReferences()
 RemoveSpoolDir()
 {
    exechost=$1
-
-   $INFOTEXT "Checking global spooldir configuration!\n"
-   $INFOTEXT -log "Checking global spooldir configuration!\n"
+   $INFOTEXT "Checking global spooldir configuration for host \"%s\"!" $exechost
+   $INFOTEXT -log "Checking global spooldir configuration for host \"%s\"!" $exechost
    SPOOL_DIR=`qconf -sconf | grep execd_spool_dir | awk '{ print $2 }'`
    HOST_DIR=`echo $exechost | tr "[A-Z]" "[a-z]"`
 
+   # Check global spool dir for execd host
    if [ -d "$SPOOL_DIR/$HOST_DIR" ]; then
-
       $INFOTEXT "Removing spool directory [%s]" $SPOOL_DIR/$HOST_DIR
       $INFOTEXT -log "Removing spool directory [%s]" $SPOOL_DIR/$HOST_DIR
-      ExecuteAsAdmin `rm -R $SPOOL_DIR/$HOST_DIR`
- 
-      if [ `ls -la $SPOOL_DIR | wc -l` -lt 4 ]; then
-         ExecuteAsAdmin `rm -R $SPOOL_DIR`
-      fi
-
+      ExecuteAsAdmin rm -R $SPOOL_DIR/$HOST_DIR
    fi
 
-   $INFOTEXT "Checking local spooldir configuration!\n"
-   $INFOTEXT -log "Checking local spooldir configuration!\n"
-
+   $INFOTEXT "Checking local spooldir configuration for host \"%s\"!" $exechost
+   $INFOTEXT -log "Checking local spooldir configuration for host \"%s\"!" $exechost
    SPOOL_DIR=`qconf -sconf $exechost | grep execd_spool_dir | awk '{ print $2 }'`
+
+   $INFOTEXT "Delete configuration for host \"%s\"!" $exechost
+   $INFOTEXT -log "Delete configuration for host \"%s\"!" $exechost
    qconf -dconf $exechost
 
    if [ "$SPOOL_DIR" != "" -a $LOCAL_UNINST = "false" ]; then
-
       $INFOTEXT -n "For removing the local spool directory, the uninstall script has to\n" \
                    "login to the uninstalled execution host. Please enter the shell name\n" \
                    "which should be used! (rsh/ssh) >>"
       SHELL_NAME=`Enter $SHELL_NAME`
  
-
-      $INFOTEXT "Removing local spool directory [%s]" "$SPOOL_DIR"
-      $INFOTEXT -log "Removing local spool directory [%s]" "$SPOOL_DIR"
+      $INFOTEXT "Removing local spool directory [%s]" "$SPOOL_DIR/$HOST_DIR"
+      $INFOTEXT -log "Removing local spool directory [%s]" "$SPOOL_DIR/$HOST_DIR"
       echo "rm -R $SPOOL_DIR/$HOST_DIR" | $SHELL_NAME $exechost /bin/sh 
-      echo "rm -fR $SPOOL_DIR" | $SHELL_NAME $exechost /bin/sh 
-
    else
       if [ "$SPOOL_DIR" != "" ]; then
-         $INFOTEXT "Removing local spool directory [%s]" "$SPOOL_DIR"
-         $INFOTEXT -log "Removing local spool directory [%s]" "$SPOOL_DIR"
-         rm -R $SPOOL_DIR/$HOST_DIR  
-         rm -fR $SPOOL_DIR 
+         $INFOTEXT "Removing local spool directory [%s]" "$SPOOL_DIR/$HOST_DIR"
+         $INFOTEXT -log "Removing local spool directory [%s]" "$SPOOL_DIR/$HOST_DIR"
+         ExecuteAsAdmin rm -R $SPOOL_DIR/$HOST_DIR
       fi
    fi
 }

@@ -437,7 +437,7 @@ public class GridCAImpl implements GridCA {
      * @throws GridCAException if the keystore could not be created
      */
     public KeyStore createKeyStore(String username, char[] keystorePassword, char[] privateKeyPassword) throws GridCAException {
-         return createKeyStore(TYPE_USER, username, keystorePassword, privateKeyPassword);
+         return createKeyStore(GridCAX500Name.TYPE_USER, username, keystorePassword, privateKeyPassword);
     }
     
     /**
@@ -451,7 +451,7 @@ public class GridCAImpl implements GridCA {
      * @return the keystore of the daemon
      */
     public KeyStore createDaemonKeyStore(String daemon) throws GridCAException {
-         return createKeyStore(TYPE_SDM_DAEMON, daemon, new char[0], new char[0]);
+         return createKeyStore(GridCAX500Name.TYPE_SDM_DAEMON, daemon, new char[0], new char[0]);
     }
     
     /**
@@ -467,12 +467,9 @@ public class GridCAImpl implements GridCA {
      *  @return the keystore of the daemon
      */
     public KeyStore createSGEDaemonKeyStore(String daemon, char[] keystorePassword, char[] privateKeyPassword) throws GridCAException {
-         return createKeyStore(TYPE_SGE_DAEMON, daemon, keystorePassword, privateKeyPassword);
+         return createKeyStore(GridCAX500Name.TYPE_SGE_DAEMON, daemon, keystorePassword, privateKeyPassword);
     }
     
-    private final static String TYPE_SGE_DAEMON = "sge_daemon";
-    private final static String TYPE_SDM_DAEMON = "sdm_daemon";
-    private final static String TYPE_USER       = "user";
     
     private KeyStore createKeyStore(String type, String entity, char[] keystorePassword, char[] privateKeyPassword) throws GridCAException {
         LOGGER.entering("GridCAImpl", "createKeyStore");
@@ -558,15 +555,15 @@ public class GridCAImpl implements GridCA {
                 GridCAX500Name name = GridCAX500Name.parse(cert.getSubjectX500Principal().getName());
 
                 
-                if(TYPE_SDM_DAEMON.equals(type)) {
+                if(GridCAX500Name.TYPE_SDM_DAEMON.equals(type)) {
                     if(!name.isDaemon()) {
                         throw RB.newGridCAException("gridCAImpl.error.notADaemonCert", 
                                                     cert.getSubjectX500Principal().getName());
                     }
                     alias = name.getDaemonName();
-                } else if(TYPE_SGE_DAEMON.equals(type)) {
+                } else if(GridCAX500Name.TYPE_SGE_DAEMON.equals(type)) {
                     alias = name.getUsername();
-                } else if (TYPE_USER.endsWith(type)) {
+                } else if (GridCAX500Name.TYPE_USER.endsWith(type)) {
                     if(name.isDaemon()) {
                         throw RB.newGridCAException("gridCAImpl.error.notAUserCert", 
                                                     cert.getSubjectX500Principal().getName());

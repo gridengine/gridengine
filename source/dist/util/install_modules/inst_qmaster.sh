@@ -740,8 +740,8 @@ PrintBootstrap()
    $ECHO "binary_path             $SGE_ROOT_VAL/bin"
    $ECHO "qmaster_spool_dir       $QMDIR"
    $ECHO "security_mode           $PRODUCT_MODE"
-   $ECHO "listener_threads        4"
-   $ECHO "worker_threads          4"
+   $ECHO "listener_threads        2"
+   $ECHO "worker_threads          2"
    $ECHO "scheduler_threads       1"
    if [ "$SGE_ENABLE_JMX" = "true" ]; then
       $ECHO "jvm_threads             1"

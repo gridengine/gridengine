@@ -84,11 +84,6 @@ sge_schedd_send_orders(sge_gdi_ctx_class_t *ctx, order_t *orders, lList **order_
       if (unhandled < max_unhandled) {
          sge_schedd_add_gdi_order_request(ctx, orders, answer_list, &Master_Request_Queue.order_list);
       } 
-#if 0
-      else {
-         INFO((SGE_EVENT, "### POSTPONING TO SEND ORDER BECAUSE THERE IS/ARE ALREADY %d UNHANDLED GDI ADD ORDER REQUEST(S)\n", unhandled));
-      }
-#endif
    }
    lFreeList(order_list);
 
@@ -109,6 +104,10 @@ sge_schedd_add_gdi_order_request(sge_gdi_ctx_class_t *ctx, order_t *orders, lLis
       memset(state, 0, sizeof(state_gdi_multi));
       orders->numberSendOrders += lGetNumberOfElem(*order_list);
       orders->numberSendPackages++;
+
+      /*
+       * order_list will be NULL after the call of gdi_multi. This saves a copy operation.
+       */
       order_id = ctx->gdi_multi(ctx, answer_list, SGE_GDI_SEND, SGE_ORDER_LIST, SGE_GDI_ADD,
                                 order_list, NULL, NULL, state, false);
 

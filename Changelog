@@ -1,3 +1,8 @@
+CR-2008-02-15-0: Bugfix:    check if local spool directory already was deleted
+                            by global spool directory deletion in inst_execd_unist.sh
+                            (Additional fix to CR-2008-02-14-0)
+                 Review:    RD
+
 EB-2008-02-15-0: Bugfix:    - changed initial number of worker/listerner threads to 2 
                               according to performance tests
                             - added/removed comments 

@@ -1,3 +1,7 @@
+JG-2008-02-18-0: Enhancem.: output event timestamp instead of current time in
+                            qevent client
+                 Review:    RD
+
 AH-2008-02-18-0: Bugfix:    JAT_granted_pe was not set back to NULL if the advance 
                             reservation does not exist at job delivery time
                  Review:    TBD

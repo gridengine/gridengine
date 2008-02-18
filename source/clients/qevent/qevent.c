@@ -136,18 +136,17 @@ print_jatask_event(sge_evc_class_t *evc, object_description *object_base, sge_ob
                    sge_event_action action, lListElem *event, void *clientdata)
 {
    char buffer[1024];
-   u_long32 timestamp;
    dstring buffer_wrapper;
 
    DENTER(TOP_LAYER, "print_jatask_event");
 
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
    
-   timestamp = sge_get_gmt();
-
    DPRINTF(("%s\n", event_text(event, &buffer_wrapper)));
    if (lGetPosViaElem(event, ET_type, SGE_NO_ABORT) >= 0) {
       u_long32 type = lGetUlong(event, ET_type);
+      u_long32 timestamp = lGetUlong(event, ET_timestamp);
+      
       if (type == sgeE_JATASK_MOD) { 
          lList *jat = lGetList(event,ET_new_version);
          u_long job_id  = lGetUlong(event, ET_intkey);
@@ -483,7 +482,7 @@ int main(int argc, char *argv[])
 
    DENTER_MAIN(TOP_LAYER, "qevent");
 
-   sge_mt_init();
+/*    sge_mt_init(); */
 
    /* dump pid to file */
    qevent_dump_pid_file();

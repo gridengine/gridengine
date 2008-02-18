@@ -1,3 +1,12 @@
+RD-2008-02-18-0: Bugfix:    - fixed missing projects/users after qmaster restart
+                              with sharetree
+                            - fixed qmaster crash with long host eval expression
+                            - reintegrated slave task job delivery caching lost due to
+                              RD-2007-12-21-0
+                 Bugster:   6664502, 6664503
+                 Issue:     2490, 2492
+                 Review:    JG
+
 EB-2008-02-18-0: Enhancem.: - execd reports will now be handled in worker
                             JG
 

@@ -232,9 +232,9 @@ void sge_monitor_reset(monitoring_t *monitor);
                                     execute; \
                                  } \
 
-#define MONITOR_MESSAGES(monitor) if ((monitor != NULL) && (monitor->monitor_time > 0)) monitor->message_in_count++
+#define MONITOR_MESSAGES(monitor) if ((monitor != NULL) && ((monitor)->monitor_time > 0)) (monitor)->message_in_count++
 
-#define MONITOR_MESSAGES_OUT(monitor) if ((monitor != NULL) && (monitor->monitor_time > 0)) monitor->message_out_count++
+#define MONITOR_MESSAGES_OUT(monitor) if (((monitor) != NULL) && ((monitor)->monitor_time > 0)) (monitor)->message_out_count++
 
 /*--------------------------------*/
 /*   EXTENSION SECTION            */

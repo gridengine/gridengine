@@ -409,6 +409,7 @@ do_gdi_packet(sge_gdi_ctx_class_t *ctx, lList **answer_list,
    packet->host = sge_strdup(NULL, aMsg->snd_host);
    packet->commproc = sge_strdup(NULL, aMsg->snd_name);
    packet->commproc_id = aMsg->snd_id;
+   packet->response_id = aMsg->request_mid;
    packet->is_intern_request = false;
 
    /* 
@@ -453,6 +454,7 @@ do_gdi_packet(sge_gdi_ctx_class_t *ctx, lList **answer_list,
     * handle GDI packet and send response 
     */
    if (local_ret) {
+#ifdef SEND_ANSWER_IN_LISTENER
       /*
        * Due to the GDI-GET optimization it is neccessary to initialize a pb
        * that is passed to and filled by the worker thread
@@ -464,12 +466,16 @@ do_gdi_packet(sge_gdi_ctx_class_t *ctx, lList **answer_list,
        * requests would be handled by read-only threads.
        */
       init_packbuffer(&(packet->pb), 0, 0);
+#else
+#endif
 
       /*
        * Put the packet into the packet queue so that workers can handle it
        * and then wait until the packet is handled
        */
       sge_gdi_packet_queue_store_notify(&Master_Packet_Queue, packet);
+
+#ifdef SEND_ANSWER_IN_LISTENER
       sge_gdi_packet_wait_till_handled(packet);
 
       /*
@@ -485,6 +491,12 @@ do_gdi_packet(sge_gdi_ctx_class_t *ctx, lList **answer_list,
        */
       clear_packbuffer(&(packet->pb));
       sge_gdi_packet_free(&packet);
+#else
+#  ifdef BLOCK_LISTENER
+      sge_gdi_packet_wait_till_handled(packet);
+      sge_gdi_packet_free(&packet);
+#  endif
+#endif
    } 
 
    DRETURN_VOID;

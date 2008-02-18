@@ -102,7 +102,7 @@ struct _sge_gdi_packet_class_t {
 
    /*
     * true if this structure was created by a qmaster
-    * internal thread (listener, scheduler, JVM...)
+    * internal thread (scheduler, JVM...)
     */
    bool is_intern_request;
 
@@ -121,6 +121,7 @@ struct _sge_gdi_packet_class_t {
    char *host;
    char *commproc;
    u_short commproc_id;
+   u_long32 response_id;
 
    /*
     * GDI version of this structure

@@ -245,6 +245,16 @@ sge_worker_main(void *arg)
 
          DPRINTF((SFN" waits for atomic slot\n", thread_config->thread_name));
 
+#ifdef SEND_ANSWER_IN_LISTENER
+#else
+         /*
+          * prepare buffer for sending an answer 
+          */
+         if (packet->is_intern_request == false) {
+            init_packbuffer(&(packet->pb), 0, 0);
+         }
+#endif
+
 #ifdef DO_LATE_LOCK
          MONITOR_WAIT_TIME((type = eval_gdi_and_block(task)), &monitor);
 #else
@@ -281,11 +291,6 @@ sge_worker_main(void *arg)
 
             task = task->next;
          }
-     
-         sge_gdi_packet_broadcast_that_handled(packet);
-
-         thread_output_profiling("worker thread profiling summary:\n",
-                                 &next_prof_output);
 
 #ifdef DO_LATE_LOCK
          eval_atomic_end(type);
@@ -299,6 +304,33 @@ sge_worker_main(void *arg)
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE)
          }
 #endif
+
+#ifdef SEND_ANSWER_IN_LISTENER
+         sge_gdi_packet_broadcast_that_handled(packet);
+#else
+         /*
+          * Send the answer to the client
+          */
+         if (packet->is_intern_request == false) {
+            MONITOR_MESSAGES_OUT(&monitor);
+            sge_gdi2_send_any_request(ctx, 0, NULL,
+                                      packet->host, packet->commproc, packet->commproc_id, 
+                                      &(packet->pb), TAG_GDI_REQUEST, 
+                                      packet->response_id, NULL);
+            clear_packbuffer(&(packet->pb));
+#  ifdef BLOCK_LISTENER
+            sge_gdi_packet_broadcast_that_handled(packet);
+#  else
+            sge_gdi_packet_free(&packet);
+#  endif
+         } else {
+            sge_gdi_packet_broadcast_that_handled(packet);
+         }
+#endif
+     
+         thread_output_profiling("worker thread profiling summary:\n",
+                                 &next_prof_output);
+
       } else { 
          int execute = 0;
 

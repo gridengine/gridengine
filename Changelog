@@ -1,3 +1,8 @@
+MP-2008-02-18-0: Bugfix:   Error message for unsupported platforms should be more verbose
+                 Bugster:  6561179
+                 Issue:    2494
+                 Review:   JG, OJ
+
 OJ-2008-02-12-1: Bugfix:   sgeexecd startup script shouldn't suppress error messages 
                            from sge_execd binary
                  Bugster:  6609754

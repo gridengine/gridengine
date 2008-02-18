@@ -1,3 +1,12 @@
+RD-2008-02-18-0: Bugfix:    - fixed missing projects/users after qmaster restart
+                              with sharetree
+                            - fixed qmaster crash with long host eval expression
+                            - reintegrated slave task job delivery caching lost due to
+                              RD-2008-02-07-1
+                 Bugster:   6664502, 6664503
+                 Issue:     2490, 2492
+                 Review:    JG
+
 AH-2008-02-14-0: Bugfix:    JAT_granted_pe was not set back to NULL if the advance 
                             reservation does not exist at job delivery time
                  Review:    TBD

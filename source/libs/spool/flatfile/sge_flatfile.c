@@ -330,6 +330,26 @@ const spool_flatfile_instr qconf_sub_rqs_sfi =
    { NoName, NoName, NoName }
 };
 
+const spool_flatfile_instr qconf_sub_spool_usage_sfi = 
+{
+   NULL,
+   false,
+   false,
+   false,
+   false,
+   false,
+   false,
+   false,
+   true,
+   '\0',
+   ' ',
+   '\0',
+   '\0',
+   '\n',
+   &qconf_sub_name_value_comma_sfi,
+   { NoName, NoName, NoName }
+};
+
 const spool_flatfile_instr qconf_rqs_sfi = 
 {
    NULL,
@@ -1590,6 +1610,10 @@ spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
       SGE_CHECK_POINTER_NULL(filepath, answer_list);
 
       if (sge_is_file(filepath) == 0) {
+         answer_list_add_sprintf(answer_list, STATUS_EDISK,
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_ERROROPENINGFILEFORREADING_SS,
+                                 filepath, strerror(errno));
          DRETURN(NULL);
       }
 
@@ -1638,6 +1662,12 @@ spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
    object = _spool_flatfile_read_object(answer_list, descr, root, instr, 
                                         fields, fields_out, &token, NULL,
                                         parse_values);
+   if (object == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_FLATFILE_ERROR_READINGFILE_S, 
+                              filepath);
+   }
 
    spool_scanner_shutdown();
 

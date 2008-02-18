@@ -138,30 +138,22 @@ int sge_eval_expression(u_long32 type, const char *expr, const char *value, lLis
       DEXIT;
       return 1;
    }
-   if (expr==NULL && value==NULL) {
-      DEXIT;
-      return 0;
+   if (expr == NULL && value == NULL) {
+      DRETURN(0);
    }
+
    /* To long arguments */
-   if(strlen(value)>=MAX_BUF){
-      if(answer_list!=NULL && answer_list!=0) {
-         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX,
-         ANSWER_QUALITY_ERROR, MSG_EVAL_EXPRESSION_LONG_VALUE, MAX_BUF);
-      }
-      
-      ERROR((SGE_EVENT, MSG_EVAL_EXPRESSION_LONG_VALUE, MAX_BUF ));
-      DEXIT;
-      return -1;
+   if (strlen(value) >= MAX_BUF){
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                              MSG_EVAL_EXPRESSION_LONG_VALUE, MAX_BUF);
+      ERROR((SGE_EVENT, MSG_EVAL_EXPRESSION_LONG_VALUE, MAX_BUF));
+      DRETURN(-1);
    }
-   if(strlen(expr)>=MAX_BUF){
-      if(answer_list!=NULL && answer_list!=0) {
-         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX,
-         ANSWER_QUALITY_ERROR, MSG_EVAL_EXPRESSION_LONG_EXPRESSION, MAX_BUF );
-      }
-      
+   if (strlen(expr) >= MAX_BUF){
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                              MSG_EVAL_EXPRESSION_LONG_EXPRESSION, MAX_BUF );
       ERROR((SGE_EVENT, MSG_EVAL_EXPRESSION_LONG_EXPRESSION, MAX_BUF));
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }   
   
    { 
@@ -174,11 +166,8 @@ int sge_eval_expression(u_long32 type, const char *expr, const char *value, lLis
 	   token.et=T_EXP;            /* Type of expected token */
 	   token.type=type;
 	   token.answer_list=answer_list;
-	   #if 1                      /* 0 .. switch of the optim., 1 .. switch on  */
 	   token.has_patterns = sge_is_expression(token.expr); /*  pattern is detected latter */
-	   #else 
-	   token.has_patterns =true;
-	   #endif
+
 	   if(token.has_patterns){
 	      uncaseValue(&token,value_buf);   /* Check the value needs to be lowered */
 	      match = OrExpression(&token, false);
@@ -188,17 +177,17 @@ int sge_eval_expression(u_long32 type, const char *expr, const char *value, lLis
 	       * and the token must be T_END
 	       */
 	      if (token.tt != T_END ) {
-		 match=Error(&token, T_END);
+            match=Error(&token, T_END);
 	      } else if (token.s[0] != '\0') { /*Something is missing? */
-		 match=Error(&token, token.et);
+            match=Error(&token, token.et);
 	      }
 	   } else {
 	      token.pattern=(char *) token.expr;
 	      match = MatchPattern(&token, false); 
 	   }
    }
-   DEXIT;
-   return match; /* return match */
+
+   DRETURN(match); /* return match */
 }
 
 /*-----------------------------------------------------------
@@ -312,12 +301,10 @@ static bool is_pattern(const char c){
 static int Error(s_token *token_p, int expected) {
    DENTER(GUI_LAYER, "sge_eval_expression:Error");
    if(token_p->tt!=T_ERROR){
-      if(token_p->answer_list!=NULL && token_p->answer_list!=0) {
-         answer_list_add_sprintf(token_p->answer_list, STATUS_ESYNTAX,
-         ANSWER_QUALITY_ERROR, MSG_EVAL_EXPRESSION_PARSE_ERROR,
-         token_p->s - token_p->expr , token_p->expr);
-      }
-      ERROR((SGE_EVENT, MSG_EVAL_EXPRESSION_PARSE_ERROR, (int)( token_p->s - token_p->expr ) , token_p->expr));
+      answer_list_add_sprintf(token_p->answer_list, STATUS_ESYNTAX,
+                              ANSWER_QUALITY_ERROR, MSG_EVAL_EXPRESSION_PARSE_ERROR,
+                              token_p->s - token_p->expr , token_p->expr);
+      ERROR((SGE_EVENT, MSG_EVAL_EXPRESSION_PARSE_ERROR, (int)(token_p->s - token_p->expr) , token_p->expr));
       token_p->et=expected;
       token_p->tt=T_ERROR;
    }
@@ -447,7 +434,7 @@ static void uncaseValue(s_token *token_p, char *value_buf ) {
    switch(token_p->type){
       case TYPE_CSTR:
       case TYPE_HOST:
-         for(i=0;token_p->value[i]!='\0' && i <MAX_BUF ;i++){
+         for(i=0;token_p->value[i]!='\0' && i < MAX_BUF ;i++){
             value_buf[i]=tolower(token_p->value[i]);
          }
          value_buf[i]='\0'; /*Terminate string */

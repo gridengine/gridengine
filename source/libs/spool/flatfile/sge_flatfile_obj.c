@@ -317,7 +317,7 @@ static spooling_field UPP_sub_fields[] = {
 
 static spooling_field UPU_sub_fields[] = {
    {  UPU_job_number,      0, NULL,                NULL, NULL, NULL, NULL},
-   {  UPU_old_usage_list,  0, NULL,                UA_sub_fields, NULL, NULL, NULL},
+   {  UPU_old_usage_list,  0, NULL,                UA_sub_fields, &qconf_sub_name_value_comma_sfi, NULL, NULL},
    {  NoName,              0, NULL,                NULL, NULL, NULL, NULL}
 };
 
@@ -601,11 +601,11 @@ spooling_field *sge_build_PR_field_list(bool spool)
                           NULL, NULL, NULL, NULL);
    if (spool) {
       create_spooling_field(&fields[count++], PR_usage, 0, "usage",
-                             UA_sub_fields, NULL, NULL, NULL);
+                             UA_sub_fields, &qconf_sub_name_value_space_sfi, NULL, NULL);
       create_spooling_field(&fields[count++], PR_usage_time_stamp, 0, "usage_time_stamp",
                              NULL, NULL, NULL, NULL);
       create_spooling_field(&fields[count++], PR_long_term_usage, 0, "long_term_usage",
-                             UA_sub_fields, NULL, NULL, NULL);
+                             UA_sub_fields, &qconf_sub_name_value_space_sfi, NULL, NULL);
       create_spooling_field(&fields[count++], PR_project, 0, "project",
                              UPP_sub_fields, NULL, NULL, NULL);
    }
@@ -614,8 +614,8 @@ spooling_field *sge_build_PR_field_list(bool spool)
    create_spooling_field(&fields[count++], PR_xacl, 0, "xacl",
                           US_sub_fields, NULL, NULL, NULL);
    if (spool) {
-      create_spooling_field(&fields[count++], PR_debited_job_usage, 0, NULL,
-                             UPU_sub_fields, NULL, NULL, NULL);
+      create_spooling_field(&fields[count++], PR_debited_job_usage, 0, "debited_job_usage",
+                             UPU_sub_fields, &qconf_sub_spool_usage_sfi, NULL, NULL);
    }
    create_spooling_field(&fields[count++], NoName, 0, NULL, NULL, NULL, NULL,
                           NULL);
@@ -646,19 +646,19 @@ spooling_field *sge_build_UU_field_list(bool spool)
                             NULL, NULL, NULL, NULL);
 #endif
       create_spooling_field(&fields[count++], UU_usage, 0, "usage",
-                             UA_sub_fields, NULL, NULL, NULL);
+                             UA_sub_fields, &qconf_sub_name_value_space_sfi, NULL, NULL);
       create_spooling_field(&fields[count++], UU_usage_time_stamp, 0, "usage_time_stamp",
                              NULL, NULL, NULL, NULL);
       create_spooling_field(&fields[count++], UU_long_term_usage, 0, "long_term_usage",
-                             UA_sub_fields, NULL, NULL, NULL);
+                             UA_sub_fields, &qconf_sub_name_value_space_sfi, NULL, NULL);
       create_spooling_field(&fields[count++], UU_project, 0, "project",
-                             UPP_sub_fields, NULL, NULL, NULL);
+                             UPP_sub_fields, &qconf_sub_spool_usage_sfi, NULL, NULL);
    }
    create_spooling_field(&fields[count++], UU_default_project, 0,
                              "default_project", NULL, NULL, NULL, NULL);
    if (spool) {
-      create_spooling_field(&fields[count++], UU_debited_job_usage, 0, NULL,
-                             UPU_sub_fields, NULL, NULL, NULL);
+      create_spooling_field(&fields[count++], UU_debited_job_usage, 0, "debited_job_usage",
+                             UPU_sub_fields, &qconf_sub_spool_usage_sfi, NULL, NULL);
    }
    create_spooling_field(&fields[count++], NoName, 0, NULL, NULL, NULL, NULL,
                           NULL);

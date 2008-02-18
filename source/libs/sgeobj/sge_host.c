@@ -212,22 +212,23 @@ const char *host_get_load_value(lListElem *host, const char *name)
 /* MT-NOTE: sge_resolve_host() is MT safe */
 int sge_resolve_host(lListElem *ep, int nm) 
 {
-   int pos, ret;
+   int pos;
+   int ret = CL_RETVAL_OK;
    int dataType;
    char unique[CL_MAXHOSTLEN];
    const char *hostname;
 
    DENTER(TOP_LAYER, "sge_resolve_host");
 
+   memset(unique, 0, CL_MAXHOSTLEN);
+
    if (ep == NULL) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    /* ep is no host element, if ep has no nm */
    if ((pos = lGetPosViaElem(ep, nm, SGE_NO_ABORT)) < 0) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    dataType = lGetPosType(lGetElemDescr(ep),pos);
@@ -245,24 +246,26 @@ int sge_resolve_host(lListElem *ep, int nm)
 
        default:
           hostname = NULL;
+          ret = CL_RETVAL_GETHOSTNAME_ERROR;
           break;
    }
-   ret = sge_resolve_hostname(hostname, unique, nm);
+   /* Check to find hostname only if it was not contained in expression */
+   if (hostname != NULL && !sge_is_expression(hostname)) {
+      ret = sge_resolve_hostname(hostname, unique, nm);
 
-   if (ret == CL_RETVAL_OK) {
-      switch (dataType) {
-       case lStringT:
-          lSetPosString(ep, pos, unique);
-          break;
-          
-
-       case lHostT:
-          lSetPosHost(ep, pos, unique);
-          break;
+      if (ret == CL_RETVAL_OK) {
+         switch (dataType) {
+          case lStringT:
+             lSetPosString(ep, pos, unique);
+             break;
+          case lHostT:
+             lSetPosHost(ep, pos, unique);
+             break;
+         }
       }
    }
-   DEXIT;
-   return ret;
+
+   DRETURN(ret);
 }
 
 /* MT-NOTE: sge_resolve_hostname() is MT safe */
@@ -276,33 +279,37 @@ int sge_resolve_hostname(const char *hostname, char *unique, int nm)
       DEXIT;
       return CL_RETVAL_PARAMS;
    }
-   /* Optimized algorithm for resolving the names (to possitive logic) */
-   strcpy(unique, hostname);
 
-   /* Check to find hostname only if it was not contained in expression */
-   if (!sge_is_expression(hostname)) {
-      /* 
-       * these "spezial" names are resolved:
-       *    "global", "unknown", "template")
-       */
-      switch (nm) {
-      case CE_stringval:
-         if (strcmp(hostname, SGE_UNKNOWN_NAME)!=0) {
-            ret = getuniquehostname(hostname, unique, 0);
-         }
-         break;
-      case EH_name:
-      case CONF_hname:
-         if ((strcmp(hostname, SGE_GLOBAL_NAME)!=0) && 
-             (strcmp(hostname, SGE_TEMPLATE_NAME)!=0)) {
-            ret = getuniquehostname(hostname, unique, 0);
-         }
-         break;
-      default:
+   /* 
+    * these "special" names are resolved:
+    *    "global", "unknown", "template")
+    */
+   switch (nm) {
+   case CE_stringval:
+      if (strcmp(hostname, SGE_UNKNOWN_NAME) != 0) {
          ret = getuniquehostname(hostname, unique, 0);
-         break;
+      } else {
+         strcpy(unique, hostname);
       }
-   } 
+
+      break;
+   case EH_name:
+   case CONF_name:
+      if ((strcmp(hostname, SGE_GLOBAL_NAME)!=0) && 
+          (strcmp(hostname, SGE_TEMPLATE_NAME)!=0)) {
+         ret = getuniquehostname(hostname, unique, 0);
+      } else {
+         strcpy(unique, hostname);
+      }
+      break;
+   default:
+      ret = getuniquehostname(hostname, unique, 0);
+      break;
+   }
+
+   if (ret != CL_RETVAL_OK) {
+      strncpy(unique, hostname, CL_MAXHOSTLEN-1);
+   }
 
    DRETURN(ret);
 }

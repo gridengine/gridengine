@@ -1,3 +1,8 @@
+RD-2008-02-18-0: Bugfix:    fixed qmaster crash with long host eval expression
+                 Bugster:   6664503
+                 Issue:     2492
+                 Review:    JG
+
 MP-2008-02-18-0: Bugfix:   Error message for unsupported platforms should be more verbose
                  Bugster:  6561179
                  Issue:    2494

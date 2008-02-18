@@ -82,6 +82,7 @@
 #include "sge_advance_reservation_qmaster.h"
 #include "sge_sched_process_events.h"
 #include "sge_follow.h"
+#include "sge_c_report.h"
 
 #include "gdi/sge_gdi_packet.h"
 #include "gdi/sge_gdi_packet_queue.h"
@@ -250,26 +251,34 @@ sge_worker_main(void *arg)
          /*
           * prepare buffer for sending an answer 
           */
-         if (packet->is_intern_request == false) {
+         if (packet->is_intern_request == false && packet->is_gdi_request == true) {
             init_packbuffer(&(packet->pb), 0, 0);
          }
 #endif
 
 #ifdef DO_LATE_LOCK
-         MONITOR_WAIT_TIME((type = eval_gdi_and_block(task)), &monitor);
+         if (packet->is_gdi_request == true) {
+            MONITOR_WAIT_TIME((type = eval_gdi_and_block(task)), &monitor);
+         } else {
+            MONITOR_WAIT_TIME((type = eval_message_and_block(*aMsg)), monitor); 
+         }
 #else
-         /*
-          * test if a write lock is neccessary
-          */
-         task = packet->first_task;
-         while (task != NULL) {
-            u_long32 command = SGE_GDI_GET_OPERATION(task->command); 
+         if (packet->is_gdi_request == true) {
+            /*
+             * test if a write lock is neccessary
+             */
+            task = packet->first_task;
+            while (task != NULL) {
+               u_long32 command = SGE_GDI_GET_OPERATION(task->command); 
 
-            if (command != SGE_GDI_GET) {
-               is_only_read_request = false;
-               break;
+               if (command != SGE_GDI_GET) {
+                  is_only_read_request = false;
+                  break;
+               }
+               task = task->next;            
             }
-            task = task->next;            
+         } else {
+            is_only_read_request = false;
          }
 
          /*
@@ -282,14 +291,20 @@ sge_worker_main(void *arg)
          }
 #endif
 
-         /*
-          * do the GDI request
-          */
-         task = packet->first_task;
-         while (task != NULL) {
-            sge_c_gdi(ctx, packet, task, &(task->answer_list), &monitor);
+         if (packet->is_gdi_request == true) {
+            /*
+             * do the GDI request
+             */
+            task = packet->first_task;
+            while (task != NULL) {
+               sge_c_gdi(ctx, packet, task, &(task->answer_list), &monitor);
 
-            task = task->next;
+               task = task->next;
+            }
+         } else {
+            task = packet->first_task;
+            sge_c_report(ctx, packet->host, packet->commproc, packet->commproc_id, 
+                         task->data_list, &monitor);
          }
 
 #ifdef DO_LATE_LOCK
@@ -305,28 +320,32 @@ sge_worker_main(void *arg)
          }
 #endif
 
+         if (packet->is_gdi_request == true) {
 #ifdef SEND_ANSWER_IN_LISTENER
-         sge_gdi_packet_broadcast_that_handled(packet);
+            sge_gdi_packet_broadcast_that_handled(packet);
 #else
-         /*
-          * Send the answer to the client
-          */
-         if (packet->is_intern_request == false) {
-            MONITOR_MESSAGES_OUT(&monitor);
-            sge_gdi2_send_any_request(ctx, 0, NULL,
-                                      packet->host, packet->commproc, packet->commproc_id, 
-                                      &(packet->pb), TAG_GDI_REQUEST, 
-                                      packet->response_id, NULL);
-            clear_packbuffer(&(packet->pb));
+            /*
+             * Send the answer to the client
+             */
+            if (packet->is_intern_request == false) {
+               MONITOR_MESSAGES_OUT(&monitor);
+               sge_gdi2_send_any_request(ctx, 0, NULL,
+                                         packet->host, packet->commproc, packet->commproc_id, 
+                                         &(packet->pb), TAG_GDI_REQUEST, 
+                                         packet->response_id, NULL);
+               clear_packbuffer(&(packet->pb));
 #  ifdef BLOCK_LISTENER
-            sge_gdi_packet_broadcast_that_handled(packet);
+               sge_gdi_packet_broadcast_that_handled(packet);
 #  else
-            sge_gdi_packet_free(&packet);
+               sge_gdi_packet_free(&packet);
 #  endif
-         } else {
-            sge_gdi_packet_broadcast_that_handled(packet);
-         }
+            } else {
+               sge_gdi_packet_broadcast_that_handled(packet);
+            }
 #endif
+         } else {
+            sge_gdi_packet_free(&packet);
+         }
      
          thread_output_profiling("worker thread profiling summary:\n",
                                  &next_prof_output);

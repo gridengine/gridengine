@@ -1,3 +1,6 @@
+EB-2008-02-18-0: Enhancem.: - execd reports will now be handled in worker
+                            JG
+
 JG-2008-02-18-0: Enhancem.: output event timestamp instead of current time in
                             qevent client
                  Review:    RD

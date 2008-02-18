@@ -454,6 +454,7 @@ sge_gdi_packet_create_base(lList **answer_list)
       local_ret2 = pthread_cond_init(&(ret->cond), NULL);
       if (local_ret1 == 0 && local_ret2 == 0) {
          ret->is_intern_request = false;
+         ret->is_gdi_request = true;
          ret->is_handled = false;
          ret->id = 0;
          ret->host = NULL;

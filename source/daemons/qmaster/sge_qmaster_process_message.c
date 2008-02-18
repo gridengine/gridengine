@@ -411,6 +411,7 @@ do_gdi_packet(sge_gdi_ctx_class_t *ctx, lList **answer_list,
    packet->commproc_id = aMsg->snd_id;
    packet->response_id = aMsg->request_mid;
    packet->is_intern_request = false;
+   packet->is_gdi_request = true;
 
    /* 
     * Security checks:
@@ -530,6 +531,7 @@ do_report_request(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t *mo
 #endif
    const char *admin_user = ctx->get_admin_user(ctx);
    const char *myprogname = ctx->get_progname(ctx);
+   sge_gdi_packet_class_t *packet = NULL;
 
    DENTER(TOP_LAYER, "do_report_request");
 
@@ -544,20 +546,27 @@ do_report_request(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t *mo
       DRETURN_VOID;
    }
 
-#ifdef DO_LATE_LOCK 
-   MONITOR_WAIT_TIME((type = eval_message_and_block(*aMsg)), monitor); 
-#else
-   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
-#endif
+   /*
+    * create a GDI packet to transport the list to the worker where
+    * it will be handled
+    */   
+   packet = sge_gdi_packet_create_base(NULL);
+   packet->host = sge_strdup(NULL, aMsg->snd_host);
+   packet->commproc = sge_strdup(NULL, aMsg->snd_name);
+   packet->commproc_id = aMsg->snd_id;
+   packet->response_id = aMsg->request_mid;
+   packet->is_intern_request = false;
+   packet->is_gdi_request = false;
 
-   sge_c_report(ctx, aMsg->snd_host, aMsg->snd_name, aMsg->snd_id, rep, monitor);
-   lFreeList(&rep);
+   /* 
+    * Append a pseudo GDI task
+    */ 
+   sge_gdi_packet_append_task(packet, NULL, 0, 0, &rep, NULL, NULL, NULL, false, false);
 
-#ifdef DO_LATE_LOCK 
-   eval_atomic_end(type);
-#else
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
+   /*
+    * Put the packet into the packet queue so that workers can handle it
+    */
+   sge_gdi_packet_queue_store_notify(&Master_Packet_Queue, packet);
 
    DRETURN_VOID;
 } /* do_report_request */

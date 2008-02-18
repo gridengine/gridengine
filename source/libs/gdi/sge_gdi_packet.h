@@ -107,6 +107,12 @@ struct _sge_gdi_packet_class_t {
    bool is_intern_request;
 
    /*
+    * true if the packet contains a GDI request otherwise
+    * is containes a report request
+    */
+   bool is_gdi_request;
+
+   /*
     * unique id identifying this packet uniquely in the context
     * of the creating process/thread
     */

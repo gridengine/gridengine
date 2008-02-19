@@ -48,10 +48,6 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
-/* Constants */
-#define MAX_BUF 256
-
-
 /* Local variables and definitions  */
 typedef struct _s_token {
    u_long32 type;       /* resource type, how to be compared */
@@ -80,7 +76,7 @@ static int MatchPattern(s_token *, bool);
 static void uncaseValue(s_token *,char *);
 
 /* arrays and enums.  */
-enum {  T_NOT, T_OR, T_AND, T_BRACEOPEN, T_BRACECLOSE, T_END, T_EXP, T_ERROR };
+enum { T_NOT, T_OR, T_AND, T_BRACEOPEN, T_BRACECLOSE, T_END, T_EXP, T_ERROR };
 
 /* ATTENTION! The order of TERMINALS and enumTypes have to match */
 const int eTypes[] = {T_NOT, T_OR, T_AND, T_BRACEOPEN, T_BRACECLOSE, T_END};
@@ -124,34 +120,32 @@ int
 sge_eval_expression(u_long32 type, const char *expr, const char *value, lList **answer_list) 
 {
    int match;
-   char pattern_buf[MAX_BUF],value_buf[MAX_BUF];
+   char pattern_buf[MAX_STRING_SIZE], value_buf[MAX_STRING_SIZE];
    
    DENTER(BASIS_LAYER, "sge_eval_expression");
    
    /* Null values are supported in str_cmp_null way */
    if (expr==NULL && value!=NULL) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }              
    if (expr!=NULL && value==NULL) {
-      DEXIT;
-      return 1;
+      DRETURN(1);
    }
    if (expr == NULL && value == NULL) {
       DRETURN(0);
    }
 
    /* To long arguments */
-   if (strlen(value) >= MAX_BUF){
+   if (strlen(value) >= MAX_STRING_SIZE) {
       answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                              MSG_EVAL_EXPRESSION_LONG_VALUE, MAX_BUF);
-      ERROR((SGE_EVENT, MSG_EVAL_EXPRESSION_LONG_VALUE, MAX_BUF));
+                              MSG_EVAL_EXPRESSION_LONG_VALUE, MAX_STRING_SIZE);
+      ERROR((SGE_EVENT, MSG_EVAL_EXPRESSION_LONG_VALUE, MAX_STRING_SIZE));
       DRETURN(-1);
    }
-   if (strlen(expr) >= MAX_BUF){
+   if (strlen(expr) >= MAX_STRING_SIZE) {
       answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                              MSG_EVAL_EXPRESSION_LONG_EXPRESSION, MAX_BUF );
-      ERROR((SGE_EVENT, MSG_EVAL_EXPRESSION_LONG_EXPRESSION, MAX_BUF));
+                              MSG_EVAL_EXPRESSION_LONG_EXPRESSION, MAX_STRING_SIZE);
+      ERROR((SGE_EVENT, MSG_EVAL_EXPRESSION_LONG_EXPRESSION, MAX_STRING_SIZE));
       DRETURN(-1);
    }   
   
@@ -175,18 +169,18 @@ sge_eval_expression(u_long32 type, const char *expr, const char *value, lList **
 	       * the input stream must be empty
 	       * and the token must be T_END
 	       */
-	      if (token.tt != T_END ) {
+	      if (token.tt != T_END) {
             match=Error(&token, T_END);
 	      } else if (token.s[0] != '\0') { /*Something is missing? */
             match=Error(&token, token.et);
 	      }
 	   } else {
-	      token.pattern=(char *) token.expr;
-	      match = MatchPattern(&token, false); 
+         token.pattern=(char *) token.expr;
+         match = MatchPattern(&token, false);
 	   }
    }
 
-   DRETURN(match); /* return match */
+   DRETURN(match);
 }
 
 /*-----------------------------------------------------------
@@ -195,15 +189,16 @@ sge_eval_expression(u_long32 type, const char *expr, const char *value, lList **
  *    set "token" to T_NOT, T_AND, T_OR, T_BRACEOPEN, T_BRACECLOSE, T_EXP
  *    set "s" to NULL and "token" to T_END of string is completely read
  *-----------------------------------------------------------*/
-static void NextToken(s_token *token_p, bool skip) {
+static void NextToken(s_token *token_p, bool skip)
+{
    token_p->et=token_p->tt;
    
    while (token_p->s[0] == ' ') token_p->s++; /*skip white chars */
    
-   if(token_p->s == NULL ) return;    /* Should not happen */
-   if(token_p->tt==T_ERROR) return;   /*Previous error */
+   if (token_p->s == NULL ) return;    /* Should not happen */
+   if (token_p->tt==T_ERROR) return;   /*Previous error */
    
-   if(token_p->s[0] == '\0' ) {       /* At the end of expression */
+   if (token_p->s[0] == '\0' ) {       /* At the end of expression */
       token_p->tt = T_END;
       return;
    }
@@ -217,7 +212,8 @@ static void NextToken(s_token *token_p, bool skip) {
  * ParseTerminal
  * return 1 .. isTeminal, 0..isNonTerminal
  *-----------------------------------------------------------*/
-static int ParseTerminal(s_token *token_p, bool skip){
+static int ParseTerminal(s_token *token_p, bool skip)
+{
    int index;
    if ((index=indexOfTerminal(token_p->s[0]))!=-1){
       token_p->tt=eTypes[index]; /*The order is same as enum */
@@ -235,14 +231,14 @@ static void ParseNonTerminal(s_token *token_p, bool skip)
 {
    char *index;
    token_p->tt = T_EXP;
-   if(skip==false) { /* expression is not in skip mode */
+   if (skip==false) { /* expression is not in skip mode */
       token_p->has_patterns=false; /* the pattern detected */
       index = token_p->pattern; /* skip first test, allready tested */
       while (index==token_p->pattern || indexOfTerminal(token_p->s[0])==-1) {
-         if(token_p->has_patterns==false && is_pattern(token_p->s[0])) {
+         if (token_p->has_patterns==false && is_pattern(token_p->s[0])) {
             token_p->has_patterns=true; /* the pattern detected */
          }
-         switch(token_p->type){
+         switch (token_p->type){
             case TYPE_CSTR:
             case TYPE_HOST:
                index[0]=tolower(token_p->s[0]);
@@ -266,7 +262,8 @@ static void ParseNonTerminal(s_token *token_p, bool skip)
  * indexOfTerminal
  *    return index of terminal, -1 if it is not terminal
  *-----------------------------------------------------------*/
-static int indexOfTerminal(const char c){
+static int indexOfTerminal(const char c)
+{
    switch (c) {
       case '!': return 0;
       case '|': return 1;
@@ -283,7 +280,8 @@ static int indexOfTerminal(const char c){
  * is_pattern
  *    return bool is there is an pattern sign
  *-----------------------------------------------------------*/
-static bool is_pattern(const char c){
+static bool is_pattern(const char c)
+{
    switch (c) {
       case '*':
       case '?':
@@ -297,9 +295,10 @@ static bool is_pattern(const char c){
  * Error
  *    print simple error message
  *-----------------------------------------------------------*/
-static int Error(s_token *token_p, int expected) {
+static int Error(s_token *token_p, int expected)
+{
    DENTER(GUI_LAYER, "sge_eval_expression:Error");
-   if(token_p->tt!=T_ERROR){
+   if (token_p->tt!=T_ERROR){
       answer_list_add_sprintf(token_p->answer_list, STATUS_ESYNTAX,
                               ANSWER_QUALITY_ERROR, MSG_EVAL_EXPRESSION_PARSE_ERROR,
                               token_p->s - token_p->expr , token_p->expr);
@@ -315,14 +314,15 @@ static int Error(s_token *token_p, int expected) {
  * Evaluate an OR expression
  * same input/output parameters as for Expression()
  *----------------------------------------------------------*/
-static int OrExpression(s_token *token_p, bool skip) {
+static int OrExpression(s_token *token_p, bool skip)
+{
    int match;
    
    NextToken(token_p, skip);
    match = AndExpression(token_p, skip);
    while (token_p->tt == T_OR) {
       NextToken(token_p, skip); /* Negative logic 0=true,  or is and */
-      if(match==0) {
+      if (match==0) {
          AndExpression(token_p, true); /* skip other for true */
       } else {
          match = AndExpression(token_p, skip);
@@ -335,13 +335,14 @@ static int OrExpression(s_token *token_p, bool skip) {
  * AndExpression
  * Evaluate an AND expression
  *----------------------------------------------------------*/
-static int AndExpression(s_token *token_p, bool skip) {
+static int AndExpression(s_token *token_p, bool skip)
+{
    int match;
    
    match = SimpleExpression(token_p, skip);
    while (token_p->tt == T_AND) {
       NextToken(token_p, skip); /* Negative logic 0=true,  or is and */
-      if(match!=0) {
+      if (match!=0) {
          SimpleExpression(token_p, true); /* skip other for false */
       } else {
          match = SimpleExpression(token_p, skip);
@@ -358,7 +359,8 @@ static int AndExpression(s_token *token_p, bool skip) {
  *         2) !expression
  *         3) (exp)
  *----------------------------------------------------------*/
-static int SimpleExpression(s_token *token_p, bool skip) {
+static int SimpleExpression(s_token *token_p, bool skip)
+{
    int match;
    if (token_p->tt==T_ERROR) {
       match = -1;
@@ -387,16 +389,17 @@ static int SimpleExpression(s_token *token_p, bool skip) {
  *    Evalute a pattern expression
  *    RETURNS match depend on type of resource
  *----------------------------------------------------------*/
-static int MatchPattern(s_token *token_p, bool skip) {
+static int MatchPattern(s_token *token_p, bool skip)
+{
    int match;
    /*printf("Match pattern %i: '%s'=='%s'\n", skip,token_p->pattern, token_p->value); */
-   if(skip==true){
+   if (skip==true){
       return -1;
    }
-   if(token_p->pattern==NULL){
+   if (token_p->pattern==NULL){
       return -1;
    }
-   if(token_p->has_patterns ){
+   if (token_p->has_patterns ){
       switch(token_p->type){
          case TYPE_STR:
          case TYPE_CSTR:
@@ -428,12 +431,13 @@ static int MatchPattern(s_token *token_p, bool skip) {
  * uncaseValue
  *    Change token_p->value to case lowered value stored in buffer
  *----------------------------------------------------------*/
-static void uncaseValue(s_token *token_p, char *value_buf ) {
+static void uncaseValue(s_token *token_p, char *value_buf)
+{
    int i;
-   switch(token_p->type){
+   switch (token_p->type){
       case TYPE_CSTR:
       case TYPE_HOST:
-         for(i=0;token_p->value[i]!='\0' && i < MAX_BUF ;i++){
+         for (i = 0; token_p->value[i] != '\0' && i < MAX_STRING_SIZE; i++) {
             value_buf[i]=tolower(token_p->value[i]);
          }
          value_buf[i]='\0'; /*Terminate string */

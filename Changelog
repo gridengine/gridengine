@@ -1,3 +1,8 @@
+JG-2008-02-19-0: Bugfix:    qsub does not accept resource strings > 256 bytes
+                 Bugster:   6664567
+                 Issue:     2495
+                 Review:    RD
+
 LP-2008-02-19-0: Enhancem.: Fixed typo
                  Bugfix:    Auto installation fails with exit state 2
                  Bugster:   6662616

@@ -686,7 +686,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
           $INFOTEXT "Execd on host %s is not started!\n" $h
           $INFOTEXT -log "Execd on host %s is not started!\n" $h
           MoveLog
-          exit 2
+          exit 1
       fi
 
    fi

@@ -1746,7 +1746,7 @@ ProcessSGEClusterName()
          if [ $validation_res -ne 0 ]; then
             if [ "$AUTO" = true ]; then
                MoveLog
-               exit 2
+               exit 1
             fi
             $INFOTEXT "Do you want to remove them?"
             $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
@@ -3684,6 +3684,7 @@ IsValidClusterName() {
    fi
    return 1
 }
+
 CheckPortsCollision()
 {
    check_val=$1
@@ -3693,7 +3694,7 @@ CheckPortsCollision()
    services_flag=0
    env_flag=0
 
-   services_out=` $SGE_UTILBIN/getservbyname  $check_val | wc -w`
+   services_out=`$SGE_UTILBIN/getservbyname $check_val 2>/dev/null | wc -w`
 
    if [ $services_out != 0 ]; then
       services_flag=1

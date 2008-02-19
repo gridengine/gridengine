@@ -1,3 +1,9 @@
+LP-2008-02-19-0: Enhancem.: Fixed typo
+                 Bugfix:    Auto installation fails with exit state 2
+                 Bugster:   6662616
+                 Issue:     2496
+                 Review:    RH
+
 RD-2008-02-18-0: Bugfix:    - fixed missing projects/users after qmaster restart
                               with sharetree
                             - fixed qmaster crash with long host eval expression

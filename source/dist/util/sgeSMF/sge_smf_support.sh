@@ -95,7 +95,7 @@ SMFusage()
    $INFOTEXT "   help          ... this help"
    $INFOTEXT "\n"
    $INFOTEXT "SGE_CLUSTER_NAME ... name of this cluster (installation), used as instance name in SMF"
-   $INFOTEXT "                     MUST be the same as you entered during the istallation" 
+   $INFOTEXT "                     MUST be the same as you entered during the installation"
 }
 
 #-------------------------------------------------------------------------
@@ -324,7 +324,7 @@ SMF()
 
    cmd="$1"
 
-   if [ "$#" -lt 1 -o  "$#" -gt 3 -o "$cmd" = -h -o "$cmd" = help  -o "$cmd" = --help ]; then
+   if [ "$#" -lt 1 -o  "$#" -gt 3 -o "$cmd" = "-h" -o "$cmd" = "help"  -o "$cmd" = "-help" "$cmd" = "--help" ]; then
       SMFusage
       return 1
    fi

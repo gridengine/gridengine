@@ -1,3 +1,6 @@
+AH-2008-02-19-0: Bugfix:    Fix broken aimk -no-secure compilation
+                 Review:    TBD
+
 JG-2008-02-19-0: Bugfix:    qsub does not accept resource strings > 256 bytes
                  Bugster:   6664567
                  Issue:     2495

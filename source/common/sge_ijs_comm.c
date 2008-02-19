@@ -293,7 +293,6 @@ int comm_open_connection(bool                 b_server,
                          COMMUNICATION_HANDLE **handle, 
                          dstring              *err_msg)
 {
-   const char       *progname               = "pty";
    int              ret;
    int              ret_val                 = COMM_RETVAL_OK;
    int              commlib_error           = CL_RETVAL_OK;
@@ -312,6 +311,7 @@ int comm_open_connection(bool                 b_server,
    }
    if (b_secure == true) {
 #ifdef SECURE
+      const char       *progname               = "pty";
       communication_framework = CL_CT_SSL;
 
       if (strcmp(component_name, "pty_shepherd") == 0) {

@@ -4835,8 +4835,7 @@ int cl_com_ssl_setup_connection(cl_com_connection_t**         connection,
 
 /* create/destroy connection functions */
 int cl_com_ssl_open_connection(cl_com_connection_t*   connection,
-                               int                    timeout,
-                               unsigned long          only_once) {
+                               int                    timeout) {
    cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }

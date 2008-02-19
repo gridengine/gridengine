@@ -230,6 +230,7 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *jep, lL
    int ret=0;
    bool is_pe_jobs = false;
    lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
+   u_long32 t1, t2;
 
    DENTER(TOP_LAYER, "send_slave_jobs");
 
@@ -245,7 +246,8 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *jep, lL
       DRETURN(1);
    }
 
-/* prepare the data to be send.... */
+   t1 = sge_get_gmt();
+   /* prepare the data to be send.... */
 
    /* create a copy of the job */
    if ((tmpjep = copyJob(jep, jatep)) == NULL) {
@@ -306,8 +308,25 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *jep, lL
    if (pe) {
       lSetObject(tmpjatep, JAT_pe_object, lCopyElem(pe));
    }
+   t2 = sge_get_gmt();
+   if (t2-t1 > 30) {
+      WARNING((SGE_EVENT, "job delivery: preparation for job "sge_U32CFormat" took %d s", 
+      lGetUlong(jep, JB_job_number), (int)(t2-t1)));
+   } else {
+      INFO((SGE_EVENT, "job delivery: preparation for job "sge_U32CFormat" took %d s", 
+      lGetUlong(jep, JB_job_number), (int)(t2-t1)));
+   }
 
+   t1 = sge_get_gmt();
    ret = send_slave_jobs_wc(ctx, target, tmpjep, jatep, monitor);
+   t2 = sge_get_gmt();
+   if (t2-t1 > 30) {
+      WARNING((SGE_EVENT, "job delivery: sending job "sge_U32CFormat" took %d s", 
+      lGetUlong(jep, JB_job_number), (int)(t2-t1)));
+   } else {
+      INFO((SGE_EVENT, "job delivery: sending job "sge_U32CFormat" took %d s", 
+      lGetUlong(jep, JB_job_number), (int)(t2-t1)));
+   }
 
    lFreeElem(&tmpjep);
 
@@ -478,6 +497,7 @@ send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpj
                   lGetUlong(tmpjep, JB_job_number), hostname));
       }
    }
+   INFO((SGE_EVENT, "send %d time %d bytes", lGetNumberOfElem(lGetList(jatep, JAT_granted_destin_identifier_list)), (int)pb.bytes_used));
    clear_packbuffer(&pb);
 
    DRETURN(ret);

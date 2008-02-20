@@ -1,3 +1,6 @@
+JG-2008-02-20-0: Bugfix:    auto install did not set local execd spool dir
+                 Review:    RD
+
 JG-2008-02-19-0: Bugfix:    qsub does not accept resource strings > 256 bytes
                  Bugster:   6664567
                  Issue:     2495

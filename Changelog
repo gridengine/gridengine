@@ -1,3 +1,7 @@
+AH-2008-02-20-0: Bugfix:    Memory leak in drmaa_run_job()/drmaa_run_bulk_job()
+                 Issue:     2497
+                 Review:    RD
+
 AH-2008-02-19-0: Bugfix:    Fix broken aimk -no-secure compilation
                  Review:    TBD
 

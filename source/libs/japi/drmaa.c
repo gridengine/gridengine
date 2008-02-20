@@ -3178,6 +3178,7 @@ static int opt_list_append_opts_from_drmaa_attr(lList **args, const lList *attrs
       DPRINTF (("\"%s\"\n", sge_dstring_get_string(&env)));
       
       ep_opt = sge_add_arg (args, v_OPT, lListT, "-v", sge_dstring_get_string(&env));
+      sge_dstring_free(&env);
       lSetList (ep_opt, SPA_argval_lListT, nlp);
    }
 
@@ -3231,6 +3232,7 @@ static int opt_list_append_opts_from_drmaa_attr(lList **args, const lList *attrs
       DPRINTF (("\"%s\"\n", sge_dstring_get_string(&email)));
       
       ep_opt = sge_add_arg (args, M_OPT, lListT, "-M", sge_dstring_get_string(&email));
+      sge_dstring_free(&email);
       lSetList (ep_opt, SPA_argval_lListT, nlp);
    }
 

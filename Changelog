@@ -1,3 +1,7 @@
+AH-2008-02-20-2: Bugfix:    Memory leak in drmaa_run_job()/drmaa_run_bulk_job()
+                 Issue:     2497
+                 Review:    RD
+
 RN-2008-02-05-0: Bugfix:    o Failed to deliver STOP signal for subordinated jobs
                             o Missing array job task usage in the accounting file
                             o qhost/qstat can't be interrupted with ctrl-c

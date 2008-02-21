@@ -1,3 +1,10 @@
+HP-2008-02-21-0: Bugfix:    o Fixed broken terminal environment after qrsh ran.
+                            o Fixed dropping of last lines of output of a 
+                              # qrsh cat largefile.txt
+                 Bugster:   6662700, 6664827
+                 Changed:   qrsh, shepherd, commlib
+                 Review:    RD, CR
+                              
 AH-2008-02-20-0: Bugfix:    Memory leak in drmaa_run_job()/drmaa_run_bulk_job()
                  Bugster:   6665417
                  Issue:     2497

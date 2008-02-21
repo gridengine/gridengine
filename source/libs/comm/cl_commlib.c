@@ -7595,3 +7595,51 @@ static void cl_commlib_app_message_queue_cleanup(cl_com_handle_t* handle) {
    }
    pthread_mutex_unlock(handle->messages_ready_mutex);
 }
+
+/****** cl_commlib/cl_com_messages_in_send_queue() ****************************
+*  NAME
+*     cl_com_messages_in_send_queue() -- Returns the number of messages in the
+*                                        send queue of the communication library
+*
+*  SYNOPSIS
+*     unsigned long cl_com_messages_in_send_queue(cl_com_handle_t *handle)
+*
+*  FUNCTION
+*     Returns the number of messages in the send queue of the commlib
+*     library, i.e. the messages that were placed into the send queue
+*     using the cl_commlib_send_message() function but were not 
+*     immediately sent.
+*
+*  INPUTS
+*     cl_com_handle_t *handle - Handle of the commlib instance.
+*
+*  RESULT
+*     unsigned long - Number of messages in send queue.
+*
+*  NOTES
+*     MT-NOTE: cl_com_messages_in_send_queue() is MT safe 
+*
+*  SEE ALSO
+*     cl_commlib/cl_commlib_send_message
+*******************************************************************************/
+unsigned long cl_com_messages_in_send_queue(cl_com_handle_t *handle)
+{
+   cl_connection_list_elem_t *con_elem = NULL;
+   unsigned long elems = 0;
+
+   if (handle != NULL) {
+      if (handle->connection_list != NULL) {
+         cl_raw_list_lock(handle->connection_list);
+         con_elem = cl_connection_list_get_first_elem(handle->connection_list);
+
+         if (con_elem != NULL) {
+            cl_raw_list_lock(con_elem->connection->send_message_list);
+            elems = cl_raw_list_get_elem_count(con_elem->connection->send_message_list);
+            cl_raw_list_unlock(con_elem->connection->send_message_list);
+         }
+         cl_raw_list_unlock(handle->connection_list);
+      } 
+   }    
+   return elems;
+}
+

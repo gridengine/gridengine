@@ -128,6 +128,8 @@ int cl_com_set_application_debug_client_callback_func(cl_app_debug_client_func_t
 char* cl_com_get_resolvable_hosts(void);
 char* cl_com_get_unresolvable_hosts(void);
 
+unsigned long cl_com_messages_in_send_queue(cl_com_handle_t *handle);
+
 
 
 cl_thread_mode_t cl_commlib_get_thread_state(void);

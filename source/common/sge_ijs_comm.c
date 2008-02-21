@@ -950,6 +950,72 @@ unsigned long comm_write_message(COMMUNICATION_HANDLE *handle,
    return nwritten;
 }
 
+/****** sge_ijs_comm/comm_flush_write_messages() ******************************
+*  NAME
+*     comm_flush_write_messages() -- Flush all messages still in the write list
+*                                    of the communication library
+*
+*  SYNOPSIS
+*     int comm_flush_write_messages(COMMUNICATION_HANDLE *handle, dstring *err_msg)
+*
+*  FUNCTION
+*     Flushes all messages still in the write list of the communication library.
+*     comm_write_message() adds a message to the write list and tries to send
+*     it immediately. This isn't always possible, so comm_flush_write_messages()
+*     makes sure all messages are really written. 
+*
+*  INPUTS
+*     COMMUNICATION_HANDLE *handle - Handle of the connection.
+*     dstring *err_msg             - Contains error message in case of error.
+*
+*  RESULT
+*     int - 0: Ok, all messages were flushed.
+*          <0: Retries needed to flush all messages * -1
+*          >0: An error occured, error number is a commlib error.
+*
+*  NOTES
+*     MT-NOTE: comm_flush_write_messages() is not MT safe 
+*
+*  SEE ALSO
+*     communication/comm_write_message
+*******************************************************************************/
+int comm_flush_write_messages(COMMUNICATION_HANDLE *handle, dstring *err_msg)
+{
+   unsigned long elems = 0;
+   int           ret = 0, retries = 0;
+
+   elems = cl_com_messages_in_send_queue(handle);
+   while (elems > 0) {
+      /*
+       * Don't set the cl_commlib_trigger()-call to be blocking and
+       * get rid of the usleep() - it's much slower!
+       * The last cl_commlib_trigger()-call will take 1 s.
+       */
+      ret = cl_commlib_trigger(handle, 0);
+      /* 
+       * Bail out if trigger fails with an error that indicates that we
+       * won't be able to send the messages in the near future.
+       */
+      if (ret != CL_RETVAL_OK && 
+          ret != CL_RETVAL_SELECT_TIMEOUT &&
+          ret != CL_RETVAL_SELECT_INTERRUPT) {
+         sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
+         retries = ret;  
+         break;   
+      }
+      elems = cl_com_messages_in_send_queue(handle);
+      /* 
+       * We just tried to send the messages and it wasn't possible to send
+       * all messages - give the network some time to recover.
+       */
+      if (elems > 0) {
+         usleep(10000);
+         retries--;
+      }
+   }
+   return retries;
+}
+
 /****** sge_ijs_comm/comm_recv_message() **************************************
 *  NAME
 *     comm_recv_message() -- Receives a message from the connection

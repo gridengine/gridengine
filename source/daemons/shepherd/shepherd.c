@@ -1320,7 +1320,13 @@ int ckpt_type
    }
 
    if (!strcmp("job", childname)) {
-      if (g_new_interactive_job_support == false) {
+      /*
+       * The new interactive job support uses the qrsh_starter in case of
+       * qrsh <with command> jobs.
+       */
+      if (g_new_interactive_job_support == false ||
+          (g_new_interactive_job_support == true &&
+           strcasecmp(script_file, JOB_TYPE_STR_QRSH) == 0)) {
          if (search_conf_val("rsh_daemon") != NULL) {
             int qrsh_exit_code = -1;
             int success = 1; 

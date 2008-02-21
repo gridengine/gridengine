@@ -68,49 +68,6 @@ static struct termios prev_termios;
 static int            g_raw_mode = 0;
 int                   g_newpgrp = -1;
 
-/****** sge_pty/writen() *******************************************************
-*  NAME
-*     writen() -- writes until all bytes are written
-*
-*  SYNOPSIS
-*     int writen(int fd, const void *buf, int nbytes) 
-*
-*  FUNCTION
-*     writes until all bytes are written, even on a device where not all
-*     bytes can be written at once.
-*
-*  INPUTS
-*     int fd          - Descriptor of the device
-*     const void *buf - Data to write
-*     int nbytes      - Data length
-*
-*  RESULT
-*     int -  >0: Number of bytes written
-*           <=0: Error code of write(2) system call.
-*
-*  NOTES
-*     MT-NOTE: writen() is not MT safe 
-*******************************************************************************/
-int writen(int fd, const void *buf, int nbytes)
-{
-   int        nleft, nwritten;
-   const char *p_cur_pos;
-
-   p_cur_pos = (const char*)buf;
-   nleft = nbytes;
-   while (nleft > 0) {
-      nwritten = write(fd, p_cur_pos, nleft);
-      if (nwritten <= 0) {
-         return nwritten;
-      }
-
-      nleft     -= nwritten;
-      p_cur_pos += nwritten;
-   }
-   return nbytes;
-}
-
-
 /****** sge_pty/ptym_open() ****************************************************
 *  NAME
 *     ptym_open() -- Opens a pty master device
@@ -534,12 +491,12 @@ int terminal_enter_raw_mode(void)
    struct termios tio;
    int            ret = 0;
 
-   if (tcgetattr(fileno(stdout), &tio) == -1) {
+   if (tcgetattr(STDOUT_FILENO, &tio) == -1) {
       ret = errno;
    } else {
-      prev_termios = tio;
+      memcpy(&prev_termios, &tio, sizeof(struct termios));
       tio.c_iflag |= IGNPAR;
-      tio.c_iflag &= ~(ISTRIP | INLCR | IGNCR | ICRNL | IXON | IXANY | IXOFF);
+      tio.c_iflag &=  ~(BRKINT | ISTRIP | INLCR | IGNCR | ICRNL | IXANY | IXOFF);
    #ifdef IUCLC
       tio.c_iflag &= ~IUCLC;
    #endif
@@ -551,7 +508,7 @@ int terminal_enter_raw_mode(void)
       tio.c_cc[VMIN] = 1;
       tio.c_cc[VTIME] = 0;
 
-      if (tcsetattr(fileno(stdout), TCSADRAIN, &tio) == -1) {
+      if (tcsetattr(STDOUT_FILENO, TCSADRAIN, &tio) == -1) {
          ret = errno;
       } else {
          g_raw_mode = 1;
@@ -584,7 +541,7 @@ int terminal_leave_raw_mode(void)
    int ret = 0;
 
    if (g_raw_mode == 1) {
-      if (tcsetattr(fileno(stdin), TCSADRAIN, &prev_termios) == -1) {
+      if (tcsetattr(STDOUT_FILENO, TCSADRAIN, &prev_termios) == -1) {
          ret = errno;
       } else {
          g_raw_mode = 0;

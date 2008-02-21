@@ -65,6 +65,7 @@
 #include "sge_pty.h"
 #include "sge_ijs_comm.h"
 #include "sge_ijs_threads.h"
+#include "sge_io.h"
 #include "sge_fileio.h"
 
 #include "sge_unistd.h"
@@ -77,6 +78,12 @@
 /* copy from shepherd.c */
 #define CKPT_REST_KERNEL 0x080     /* set for all restarted kernel ckpt jobs */
 /* end copy from shepherd.c */
+
+/* 
+ * Compile with EXTENSIVE_TRACING defined to get lots of trace messages form
+ * the two worker threads.
+ */
+#undef EXTENSIVE_TRACING
 
 extern int received_signal;
 
@@ -122,25 +129,6 @@ void handle_signals_and_methods(
    char *childname,
    int *job_status,
    int *job_pid);
-
-static int messages_in_send_queue(COMMUNICATION_HANDLE *handle)
-{
-   cl_connection_list_elem_t *con_elem = NULL;
-   unsigned long elems = 0;
-
-   if (handle->connection_list) {
-      cl_raw_list_lock(handle->connection_list);
-      con_elem = cl_connection_list_get_first_elem(handle->connection_list);
-
-      if (con_elem != NULL) {
-         cl_raw_list_lock(con_elem->connection->send_message_list);
-         elems = cl_raw_list_get_elem_count(con_elem->connection->send_message_list);
-         cl_raw_list_unlock(con_elem->connection->send_message_list);
-      }
-      cl_raw_list_unlock(handle->connection_list);
-   } 
-   return (int)elems;
-}
 
 /****** append_to_buf() ******************************************************
 *  NAME
@@ -228,10 +216,10 @@ int send_buf(char *pbuf, int buf_bytes, int message_type)
                      sge_dstring_get_string(&err_msg));
       ret = 1;
    } else {
-/*
+#ifdef EXTENSIVE_TRACING
       shepherd_trace("successfully wrote all data: %s\n", 
                      sge_dstring_get_string(&err_msg));
-*/
+#endif
    }
 
    sge_dstring_free(&err_msg);
@@ -312,17 +300,20 @@ static void* pty_to_commlib(void *t_conf)
    /* The main loop of this thread */
    while (do_exit == 0) {
       /* If a signal was received, process it */
-   /* shepherd_trace("pty_to_commlib: calling wait3() to check if a child process exited."); */
+#ifdef EXTENSIVE_TRACING
+      shepherd_trace("pty_to_commlib: calling wait3() to check if a child process exited.");
+#endif
 #if defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(INTERIX)
       npid = waitpid(-1, &status, WNOHANG);
 #else
       npid = wait3(&status, WNOHANG, &tmp_usage);
 #endif
-   /*
+#ifdef EXTENSIVE_TRACING
       shepherd_trace("pty_to_commlib: wait3() returned npid = %d, status = %d, "
                      "errno = %d, %s.", status, npid, errno, strerror(errno));
       shepherd_trace("pty_to_commlib: received_signal = %d", received_signal);
-   */
+#endif
+
       /* We always want to handle signals and methods, so we set npid = -1
        * - except when wait3() returned a valid pid.
        */
@@ -372,11 +363,12 @@ static void* pty_to_commlib(void *t_conf)
       }
       fd_max = MAX(g_ptym, g_fd_pipe_out[0]);
       fd_max = MAX(fd_max, g_fd_pipe_err[0]);
-/*
+
+#ifdef EXTENSIVE_TRACING
       shepherd_trace("pty_to_commlib: g_ptym = %d, g_fd_pipe_out[0] = %d, "
                      "g_fd_pipe_err[0] = %d, fd_max = %d",
                      g_ptym, g_fd_pipe_out[0], g_fd_pipe_err[0], fd_max);
-*/
+#endif
       /* Fill timeout struct for select */
       b_select_timeout = false;
       if (do_exit == 1) {
@@ -386,7 +378,7 @@ static void* pty_to_commlib(void *t_conf)
          timeout.tv_usec = 0;
       } else {
          if ((stdout_bytes > 0 && stdout_bytes < 256)
-             || messages_in_send_queue(g_comm_handle) > 0) {
+             || cl_com_messages_in_send_queue(g_comm_handle) > 0) {
             /* 
              * If we just received few data, wait another 10 milliseconds if new 
              * data arrives to avoid sending data over the network in too small junks.
@@ -394,39 +386,39 @@ static void* pty_to_commlib(void *t_conf)
              */
             timeout.tv_sec  = 0;
             timeout.tv_usec = 10000;
-            if (messages_in_send_queue(g_comm_handle) > 0) {
-               shepherd_trace("pty_to_commlib: messages_in_send_queue() > 0!");
-            } 
          } else {
             /* Standard timeout is one second */
             timeout.tv_sec = 1;
             timeout.tv_usec = 0;
          }
       }
-/*
+#ifdef EXTENSIVE_TRACING
       shepherd_trace("pty_to_commlib: doing select() with %d seconds, "
                      "%d usec timeout", timeout.tv_sec, timeout.tv_usec);
-*/
+#endif
       /* Wait blocking for data from pty or pipe */
       errno = 0;
       ret = select(fd_max+1, &read_fds, NULL, NULL, &timeout);
       thread_testcancel(t_conf);
-/*      shepherd_trace("pty_to_commlib: select() returned %d", ret); */
+#ifdef EXTENSIVE_TRACING
+      shepherd_trace("pty_to_commlib: select() returned %d", ret);
+#endif
       if (ret < 0) {
          /* select error */
-/*
+#ifdef EXTENSIVE_TRACING
          shepherd_trace("pty_to_commlib: select() returned %d, reason: %d, %s",
                         ret, errno, strerror(errno));
-*/
+#endif
          if (errno == EINTR) {
             /* If we have a buffer, send it now (as we don't want to care about
              * how long we acutally waited), then just continue, the top of the 
              * loop will handle signals.
              * b_select_timeout tells the bottom of the loop to send the buffer.
              */
-/*
-            shepherd_trace("pty_to_commlib: continuing to handle signal");
-*/
+
+            /* ATTENTION: Don't call shepherd_trace() here, because on some
+             * architectures it causes another EINTR, leading to a infinte loop.
+             */
             b_select_timeout = true;
          } else {
             shepherd_trace("pty_to_commlib: select() error -> exiting");
@@ -434,7 +426,9 @@ static void* pty_to_commlib(void *t_conf)
          }
       } else if (ret == 0) {
          /* timeout, if we have a buffer, send it now */
-/*        shepherd_trace("pty_to_commlib: select() timeout"); */
+#ifdef EXTENSIVE_TRACING
+         shepherd_trace("pty_to_commlib: select() timeout");
+#endif
          b_select_timeout = true;
       } else {
          /* at least one fd is ready to read from */
@@ -448,22 +442,28 @@ static void* pty_to_commlib(void *t_conf)
             g_fd_pipe_to_child[1] = -1;
          }
          if (g_ptym != -1 && FD_ISSET(g_ptym, &read_fds)) {
-/*            shepherd_trace("pty_to_commlib: reading from ptym"); */
+#ifdef EXTENSIVE_TRACING
+            shepherd_trace("pty_to_commlib: reading from ptym");
+#endif
             ret = append_to_buf(g_ptym, stdout_buf, &stdout_bytes);
          }
          if (ret >= 0 && g_fd_pipe_out[0] != -1
              && FD_ISSET(g_fd_pipe_out[0], &read_fds)) {
+#ifdef EXTENSIVE_TRACING
             shepherd_trace("pty_to_commlib: reading from pipe_out");
+#endif
             ret = append_to_buf(g_fd_pipe_out[0], stdout_buf, &stdout_bytes);
          }
          if (ret >= 0 && g_fd_pipe_err[0] != -1
              && FD_ISSET(g_fd_pipe_err[0], &read_fds)) {
+#ifdef EXTENSIVE_TRACING
             shepherd_trace("pty_to_commlib: reading from pipe_err");
+#endif
             ret = append_to_buf(g_fd_pipe_err[0], stderr_buf, &stderr_bytes);
          }
-/*
+#ifdef EXTENSIVE_TRACING
          shepherd_trace("pty_to_commlib: appended %d bytes to buffer", ret);
-*/
+#endif
          if (ret < 0) {
             /* A fd was closed, likely our child has exited, we can exit, too. */
             shepherd_trace("pty_to_commlib: append_to_buf() returned %d, "
@@ -490,12 +490,16 @@ static void* pty_to_commlib(void *t_conf)
       if (stdout_bytes >= 256 ||
           (b_select_timeout == true && stdout_bytes > 0) ||
           (do_exit == 1 && stdout_bytes > 0)) {
+#ifdef EXTENSIVE_TRACING
+         shepherd_trace("pty_to_commlib: sending stdout buffer");
+#endif
          ret = send_buf(stdout_buf, stdout_bytes, STDOUT_DATA_MSG);
          stdout_bytes = 0;
          if (ret != 0) {
             shepherd_trace("pty_to_commlib: send_buf() failed -> exiting");
             do_exit = 1;
-         } 
+         }
+         comm_flush_write_messages(g_comm_handle, &err_msg);
       }
    }
 
@@ -540,6 +544,7 @@ static void* commlib_to_pty(void *t_conf)
 {
    recv_message_t       recv_mess;
    int                  b_was_connected = 0;
+   bool                 b_sent_to_child = false;
    int                  ret;
    int                  do_exit = 0;
    int                  fd_write = -1;
@@ -565,6 +570,9 @@ static void* commlib_to_pty(void *t_conf)
       sge_dstring_free(&err_msg);
       sge_dstring_sprintf(&err_msg, "");
 
+#ifdef EXTENSIVE_TRACING
+      shepherd_trace("commlib_to_pty: waiting in commlib_trigger() for data");
+#endif
       ret = cl_commlib_trigger(g_comm_handle, 1);
       ret = comm_recv_message(g_comm_handle, CL_FALSE, &recv_mess, &err_msg);
 
@@ -576,10 +584,11 @@ static void* commlib_to_pty(void *t_conf)
        */
       thread_testcancel(t_conf);
 
-/*
+#ifdef EXTENSIVE_TRACING
       shepherd_trace("commlib_to_pty: comm_recv_message() returned %d, err_msg: %s",
                      ret, sge_dstring_get_string(&err_msg));
-*/
+#endif
+
       if (g_raised_event != 0) {
          shepherd_trace("commlib_to_pty: received event -> exiting");
          return NULL;
@@ -602,6 +611,20 @@ static void* commlib_to_pty(void *t_conf)
             case COMM_CONNECTION_NOT_FOUND:
                if (b_was_connected == 0) {
                   shepherd_trace("commlib_to_pty: our server is not running -> exiting");
+                  /*
+                   * On some architectures (e.g. Darwin), the child doesn't recognize
+                   * when the pipe gets closed, so we have to send the information
+                   * that the parent will exit soon to the child.
+                   * "noshell" may be 0 or 1, everything else indicates an error.
+                   */
+                  if (b_sent_to_child == false) {
+                     if (write(g_fd_pipe_to_child[1], "noshell = 9", 11) != 11) {
+                        shepherd_trace("commlib_to_pty: error in communicating "
+                           "with child -> exiting");
+                     } else {
+                        b_sent_to_child = true;
+                     }
+                  }
                   do_exit = 1;
                }
                break;
@@ -622,18 +645,18 @@ static void* commlib_to_pty(void *t_conf)
                   shepherd_trace("commlib_to_pty: not connected any more -> exiting.");
                   do_exit = 1;
                } else {
-/*
+#ifdef EXTENSIVE_TRACING
                   shepherd_trace("commlib_to_pty: can't receive message, reason: %s "
                                  "-> trying again", 
                                  sge_dstring_get_string(&err_msg));
-*/
+#endif
                }
                b_was_connected = 1;
                break;
             case COMM_GOT_TIMEOUT:
-/*
+#ifdef EXTENSIVE_TRACING
                shepherd_trace("commlib_to_pty: got timeout -> trying again");
-*/
+#endif
                b_was_connected = 1;
                break;
             case COMM_SELECT_INTERRUPT:
@@ -643,10 +666,10 @@ static void* commlib_to_pty(void *t_conf)
                break;
             default:
                /* Unknown error, just try again */
-/*
+#ifdef EXTENSIVE_TRACING
                shepherd_trace("commlib_to_pty: comm_recv_message() returned %d -> "
                               "trying again\n", ret);
-*/
+#endif
                b_was_connected = 1;
                break;
          }
@@ -655,15 +678,16 @@ static void* commlib_to_pty(void *t_conf)
          switch (recv_mess.type) {
             case STDIN_DATA_MSG:
                /* data message, write data to stdin of child */
-/*
+#ifdef EXTENSIVE_TRACING
                shepherd_trace("commlib_to_pty: received data message");
                shepherd_trace("commlib_to_pty: writing data to stdin of child, "
                               "length = %d", recv_mess.cl_message->message_length-1);
-*/
-               if (writen(fd_write,  
+#endif
+
+               if (sge_writenbytes(fd_write,  
                           recv_mess.data, 
-                          recv_mess.cl_message->message_length-1) 
-                      != recv_mess.cl_message->message_length-1) {
+                          (int)(recv_mess.cl_message->message_length-1)) 
+                       != (int)(recv_mess.cl_message->message_length-1)) {
                   shepherd_trace("commlib_to_pty: error writing to stdin of "
                                  "child: %d, %s", errno, strerror(errno));
                }
@@ -691,6 +715,8 @@ static void* commlib_to_pty(void *t_conf)
                   shepherd_trace("commlib_to_pty: error in communicating "
                      "with child -> exiting");
                   do_exit = 1;
+               } else {
+                  b_sent_to_child = true;
                }
                b_was_connected = 1;
                break;
@@ -788,7 +814,12 @@ int parent_loop(char *hostname, int port, int ptym,
       /* No bytes written - error */
       shepherd_trace("main: can't send REGISTER_CTRL_MSG, comm_write_message() "
                      "returned: %s", sge_dstring_get_string(err_msg));
-      return 1;
+   /* Don't exit here, the error handling is done in the commlib_to_tty-thread */
+   /* Most likely, the qrsh client is not running, so it's not the shepherds fault,
+    * we shouldn't return 1 (which leads to a shepherd_exit which sets the whole
+    * queue in error!).
+    */
+   /*   return 1;*/
    }
 
    /*
@@ -878,19 +909,7 @@ int parent_loop(char *hostname, int port, int ptym,
     *       Test it, and if it works, remove this code.
     */
    if (g_comm_handle != NULL) {
-      unsigned long elems = 0;
-      do {
-         /*
-          * Don't set the cl_commlib_trigger()-call to be blocking and
-          * get rid of the usleep() - it's much slower!
-          * The last cl_commlib_trigger()-call will take 1 s.
-          */
-         ret = cl_commlib_trigger(g_comm_handle, 0);
-         elems = messages_in_send_queue(g_comm_handle);
-         if (elems > 0) {
-            usleep(10000);
-         }
-      } while (elems > 0);
+      comm_flush_write_messages(g_comm_handle, err_msg);
    }
 
    /* 

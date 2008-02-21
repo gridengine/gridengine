@@ -112,6 +112,8 @@ unsigned long comm_write_message(COMMUNICATION_HANDLE *handle,
                   unsigned char type,
                   dstring *err_msg);
 
+int comm_flush_write_messages(COMMUNICATION_HANDLE *handle, dstring *err_msg);
+
 int comm_recv_message(COMMUNICATION_HANDLE *handle, 
                  cl_bool_t b_synchron, 
                  recv_message_t *recv_mess, 

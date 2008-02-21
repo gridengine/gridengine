@@ -50,6 +50,7 @@
 #endif
 
 #include "sgermon.h"
+#include "sge_io.h"
 #include "sge_utility.h"
 #include "sge_pty.h"
 #include "sge_ijs_comm.h"
@@ -326,6 +327,7 @@ void* tty_to_commlib(void *t_conf)
       timeout.tv_sec  = 1;
       timeout.tv_usec = 0;
 
+      DPRINTF(("tty_to_commlib: Waiting in select() for data\n"));
       ret = select(STDIN_FILENO+1, &read_fds, NULL, NULL, &timeout);
 
       thread_testcancel(t_conf);
@@ -359,14 +361,11 @@ void* tty_to_commlib(void *t_conf)
             if (comm_write_message(g_comm_handle, g_hostname, 
                OTHERCOMPONENT, 1, (unsigned char*)pbuf, 
                (unsigned long)nread, STDIN_DATA_MSG, &err_msg) != nread) {
-               /*
-                * TODO: Retry blocking until all data was sent!
-                * Do this in comm_write_message()
-                */
                DPRINTF(("tty_to_commlib: couldn't write all data\n"));
             } else {
                DPRINTF(("tty_to_commlib: data successfully written\n"));
             }
+            comm_flush_write_messages(g_comm_handle, &err_msg);
          }
       } else {
          /*
@@ -432,6 +431,7 @@ void* commlib_to_tty(void *t_conf)
       recv_mess.cl_message = NULL;
       recv_mess.data = NULL;
 
+      DPRINTF(("commlib_to_tty: Waiting in comm_trigger() for data\n"));
       ret = comm_trigger(g_comm_handle, 1, &err_msg);
       DPRINTF(("commlib_to_tty: comm_trigger() returned %d, %s\n",
               ret, &err_msg));
@@ -465,18 +465,24 @@ void* commlib_to_tty(void *t_conf)
             case STDOUT_DATA_MSG:
                DPRINTF(("commlib_to_tty: received stdout message, writing to tty.\n"));
                DPRINTF(("commlib_to_tty: message is: %s\n", recv_mess.data));
-               if (writen(STDOUT_FILENO, recv_mess.data,
-                          recv_mess.cl_message->message_length-1)
-                       != recv_mess.cl_message->message_length-1) {
-                  DPRINTF(("commlib_to_tty: writen error\n"));
+/* TODO: If it's not possible to write all data to the tty, retry blocking
+ *       until all data was written. The commlib must block then, too.
+ */
+               if (sge_writenbytes(STDOUT_FILENO, recv_mess.data,
+                          (int)(recv_mess.cl_message->message_length-1))
+                       != (int)(recv_mess.cl_message->message_length-1)) {
+                  DPRINTF(("commlib_to_tty: sge_writenbytes() error\n"));
                }
                break;
             case STDERR_DATA_MSG:
                DPRINTF(("commlib_to_tty: received stderr message, writing to tty.\n"));
-               if (writen(STDERR_FILENO, recv_mess.data,
-                          recv_mess.cl_message->message_length-1)
-                       != recv_mess.cl_message->message_length-1) {
-                  DPRINTF(("commlib_to_tty: writen error\n"));
+/* TODO: If it's not possible to write all data to the tty, retry blocking
+ *       until all data was written. The commlib must block then, too.
+ */
+               if (sge_writenbytes(STDERR_FILENO, recv_mess.data,
+                          (int)(recv_mess.cl_message->message_length-1))
+                       != (int)(recv_mess.cl_message->message_length-1)) {
+                  DPRINTF(("commlib_to_tty: sge_writenbytes() error\n"));
                }
                break;
             case WINDOW_SIZE_CTRL_MSG:
@@ -630,6 +636,10 @@ int do_server_loop(int random_poll, u_long32 job_id, int nostdin,
 */
    DPRINTF(("shut down the connection from our side\n"));
    comm_shutdown_connection(g_comm_handle, &err_msg);
+   /*
+    * Close stdin to awake the tty_to_commlib-thread from the select() call.
+    * thread_shutdown() doesn't work on all architectures.
+    */
    close(STDIN_FILENO);
 
    DPRINTF(("waiting for end of tty_to_commlib thread\n"));
@@ -641,7 +651,8 @@ cleanup:
     * by OS on process end, but we want to be sure.
     */
    sge_dstring_free(&err_msg);
-   terminal_leave_raw_mode();
+   ret = terminal_leave_raw_mode();
+   DPRINTF(("terminal_leave_raw_mode() returned %d (%s)\n", ret, strerror(ret)));
    *p_exit_status = g_exit_status;
    DEXIT;
    return 0;

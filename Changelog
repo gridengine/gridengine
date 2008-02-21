@@ -1,3 +1,8 @@
+MP-2008-02-21-0: Bugfix:    qstat -j output missing fields
+                 Bugster:   6657615
+                 Issue:     2501
+                 Review:    JG
+
 AH-2008-02-20-1: Bugfix:    Memory leak in drmaa_run_job()/drmaa_run_bulk_job()
                  Bugster:   6665417
                  Issue:     2497

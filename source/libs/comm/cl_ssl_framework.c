@@ -286,6 +286,7 @@ typedef struct cl_com_ssl_private_type {
    int                connect_port;        /* port to connect to */
    int                connect_in_port;     /* port from where client is connected (used for reserved port check) */
    int                sockfd;              /* socket file descriptor */
+   int                pre_sockfd;          /* socket which was prepared for later listen call (only_prepare_service == TRUE */
    struct sockaddr_in client_addr;         /* used in connect for storing client addr of connection partner */ 
 
    /* SSL specific */
@@ -351,6 +352,7 @@ static int                   cl_com_ssl_verify_callback(int preverify_ok, X509_S
 static int                   cl_com_ssl_set_default_mode(SSL_CTX *ctx, SSL *ssl);
 static void                  cl_com_ssl_log_mode_settings(long mode);
 static int                   cl_com_ssl_fill_private_from_peer_cert(cl_com_ssl_private_t *private, cl_bool_t is_server);
+static int cl_com_ssl_connection_request_handler_setup_finalize(cl_com_connection_t* connection);
 
 
 #ifdef __CL_FUNCTION__
@@ -2558,7 +2560,11 @@ int cl_com_ssl_get_fd(cl_com_connection_t* connection, int* fd) {
       return CL_RETVAL_PARAMS;
    }
    if ( (private=cl_com_ssl_get_private(connection)) != NULL) {
-      *fd = private->sockfd;
+      if (private->sockfd < 0) {
+         *fd = private->pre_sockfd;
+      } else {
+         *fd = private->sockfd;
+      }
       return CL_RETVAL_OK;
    }
    return CL_RETVAL_UNKNOWN;
@@ -2692,6 +2698,7 @@ int cl_com_ssl_setup_connection(cl_com_connection_t**          connection,
 
    /* setup ssl private struct */
    com_private->sockfd = -1;
+   com_private->pre_sockfd = -1;
    com_private->server_port = server_port;
    com_private->connect_port = connect_port;
 
@@ -3519,13 +3526,59 @@ int cl_com_ssl_read_GMSH(cl_com_connection_t* connection, unsigned long *only_on
    return retval;
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_ssl_connection_request_handler_setup_finalize()"
+static int cl_com_ssl_connection_request_handler_setup_finalize(cl_com_connection_t* connection) {
+   int sockfd = 0;
+   cl_com_ssl_private_t* private = NULL;
+
+   if (connection == NULL ) {
+      CL_LOG(CL_LOG_ERROR,"no connection");
+      return CL_RETVAL_PARAMS;
+   }
+   private = cl_com_ssl_get_private(connection);
+   if (private == NULL) {
+      CL_LOG(CL_LOG_ERROR,"framework not initalized");
+      return CL_RETVAL_PARAMS; 
+   }
+ 
+   sockfd = private->pre_sockfd;
+   if (sockfd < 0) {
+      CL_LOG(CL_LOG_ERROR, "pre_sockfd not valid");
+      return CL_RETVAL_PARAMS;
+   }
+
+
+   /* make socket listening for incoming connects */
+   if (listen(sockfd, 5) != 0) {   /* TODO: set listen params */
+      shutdown(sockfd, 2);
+      close(sockfd);
+      CL_LOG(CL_LOG_ERROR,"listen error");
+      return CL_RETVAL_LISTEN_ERROR;
+   }
+   CL_LOG_INT(CL_LOG_INFO,"listening with backlog=", 5);
+
+   /* set server socked file descriptor and mark connection as service handler */
+   private->sockfd = sockfd;
+   
+
+   CL_LOG(CL_LOG_INFO,"===============================");
+   CL_LOG(CL_LOG_INFO,"SSL server setup done:");
+   CL_LOG_STR(CL_LOG_INFO,"host:     ",connection->local->comp_host);
+   CL_LOG_STR(CL_LOG_INFO,"component:",connection->local->comp_name);
+   CL_LOG_INT(CL_LOG_INFO,"id:       ",(int)connection->local->comp_id);
+   CL_LOG(CL_LOG_INFO,"===============================");
+   return CL_RETVAL_OK;
+}
 
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_ssl_connection_request_handler_setup()"
-int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection) {
+int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection, cl_bool_t only_prepare_service) {
    int sockfd = 0;
    struct sockaddr_in serv_addr;
    cl_com_ssl_private_t* private = NULL;
@@ -3610,26 +3663,17 @@ int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection)
       CL_LOG_INT(CL_LOG_INFO,"random server port is:", private->server_port);
    }
 
-   /* make socket listening for incoming connects */
-   if (listen(sockfd, 5) != 0) {   /* TODO: set listen params */
-      shutdown(sockfd, 2);
-      close(sockfd);
-      CL_LOG(CL_LOG_ERROR,"listen error");
-      return CL_RETVAL_LISTEN_ERROR;
+   /* if only_prepare_service is enabled we don't want to set the port into
+      listen mode now, we have to do it later */
+   private->pre_sockfd = sockfd;
+   if (only_prepare_service == CL_TRUE) {
+      CL_LOG_INT(CL_LOG_INFO,"service socket prepared for listen, using sockfd=", sockfd);
+      return CL_RETVAL_OK;
    }
-   CL_LOG_INT(CL_LOG_INFO,"listening with backlog=", 5);
 
-   /* set server socked file descriptor and mark connection as service handler */
-   private->sockfd = sockfd;
-
-   CL_LOG(CL_LOG_INFO,"===============================");
-   CL_LOG(CL_LOG_INFO,"SSL server setup done:");
-   CL_LOG_STR(CL_LOG_INFO,"host:     ",connection->local->comp_host);
-   CL_LOG_STR(CL_LOG_INFO,"component:",connection->local->comp_name);
-   CL_LOG_INT(CL_LOG_INFO,"id:       ",(int)connection->local->comp_id);
-   CL_LOG(CL_LOG_INFO,"===============================");
-   return CL_RETVAL_OK;
+   return cl_com_ssl_connection_request_handler_setup_finalize(connection);
 }
+
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
@@ -3830,6 +3874,9 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
 #endif
 
    if (service_connection != NULL && do_read_select != 0) {
+      cl_com_ssl_private_t* private = NULL;
+      int tmp_retval = CL_RETVAL_OK;
+
       /* this is to come out of select when for new connections */
       if(cl_com_ssl_get_private(service_connection) == NULL ) {
          CL_LOG(CL_LOG_ERROR,"service framework is not initalized");
@@ -3839,7 +3886,21 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
          CL_LOG(CL_LOG_ERROR,"service connection is no service handler");
          return CL_RETVAL_NOT_SERVICE_HANDLER;
       }
-      server_fd = cl_com_ssl_get_private(service_connection)->sockfd;
+      private = cl_com_ssl_get_private(service_connection);
+      /* check if service is already in listen mode. This might happen
+         when only_prepare_service was set to true at 
+         cl_com_tcp_connection_request_handler_setup() */
+      if (private->sockfd == -1 && private->pre_sockfd != -1 ) {
+         /* finalize server socket setup */
+         tmp_retval = cl_com_ssl_connection_request_handler_setup_finalize(service_connection);
+         if (tmp_retval != CL_RETVAL_OK ) {
+            cl_raw_list_unlock(connection_list);
+            return tmp_retval;
+         } else {
+            private->pre_sockfd = -1;
+         }
+      }
+      server_fd = private->sockfd;
       max_fd = MAX(max_fd,server_fd);
 #ifndef USE_POLL
       FD_SET(server_fd,&my_read_fds); 

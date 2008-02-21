@@ -192,6 +192,8 @@ int cl_commlib_search_endpoint    (cl_com_handle_t* handle,
 #define HEARD_FROM_TIMEOUT 1  /* dummy parameter */
 int cl_commlib_set_connection_param(cl_com_handle_t* handle, int parameter, int value);
 int cl_commlib_get_connection_param(cl_com_handle_t* handle, int parameter, int* value);
+cl_bool_t cl_commlib_get_global_param(cl_global_settings_params_t parameter);
+int cl_commlib_set_global_param(cl_global_settings_params_t parameter, cl_bool_t value);
 int cl_commlib_get_last_message_time(cl_com_handle_t* handle, char* un_resolved_hostname, char* component_name, unsigned long component_id, unsigned long* msg_time);
 
 

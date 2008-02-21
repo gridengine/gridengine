@@ -54,6 +54,10 @@ typedef enum cl_tcp_connect_def {
    CL_TCP_RESERVED_PORT          /* use reserved port security */
 } cl_tcp_connect_t;
 
+/* typedef for global boolean commlib params */
+typedef enum cl_global_settings_params_def {
+   CL_COMMLIB_DELAYED_LISTEN = 1
+} cl_global_settings_params_t;
 
 /* typedef for Connection Type (CT) */
 typedef enum cl_framework_def {

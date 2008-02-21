@@ -694,6 +694,9 @@ static void communication_setup(sge_gdi_ctx_class_t *ctx)
    cl_com_update_parameter_list(qmaster_params);
    DPRINTF(("received qmaster_params are: %s\n", qmaster_params));
    FREE(qmaster_params);
+
+   /* now enable qmaster communication */
+   cl_commlib_set_global_param(CL_COMMLIB_DELAYED_LISTEN, CL_FALSE);
    
    DEXIT;
    return;

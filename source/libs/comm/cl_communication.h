@@ -180,9 +180,7 @@ int cl_com_connection_request_handler(cl_com_connection_t* connection,
 int cl_com_connection_request_handler_cleanup(cl_com_connection_t* connection);
 
 /* check open connection list for new messages */
-int cl_com_open_connection_request_handler(cl_framework_t framework_type,
-                                           cl_raw_list_t* connection_list,
-                                           cl_com_connection_t* service_connection,
+int cl_com_open_connection_request_handler(cl_com_handle_t* handle,
                                            int timeout_val_sec,
                                            int timeout_val_usec,
                                            cl_select_method_t select_mode );

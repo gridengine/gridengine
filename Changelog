@@ -1,3 +1,8 @@
+CR-2008-02-21-0: Enhancem.: Enable qmaster connections after complete qmaster startup
+                 Bugster:   6665939
+                 Issue:     2500
+                 Review:    RD
+
 HP-2008-02-21-0: Bugfix:    o Fixed broken terminal environment after qrsh ran.
                             o Fixed dropping of last lines of output of a 
                               # qrsh cat largefile.txt

@@ -205,6 +205,15 @@ static pthread_mutex_t  cl_com_ssl_setup_mutex = PTHREAD_MUTEX_INITIALIZER;
 static cl_ssl_setup_t*  cl_com_ssl_setup_config = NULL;
 
 
+/* this is the offical commlib boolean parameter setup 
+   TODO: merge all global settings into this structure */
+typedef struct cl_com_global_settings_def {
+   cl_bool_t delayed_listen;
+} cl_com_global_settings_t;
+
+static pthread_mutex_t cl_com_global_settings_mutex = PTHREAD_MUTEX_INITIALIZER;
+static cl_com_global_settings_t cl_com_global_settings = {CL_FALSE};
+
 static int cl_message_list_append_send(cl_com_connection_t* c, cl_com_message_t* m, int l);
 static int cl_message_list_remove_send(cl_com_connection_t* c, cl_com_message_t* m, int l);
 static int cl_message_list_append_receive(cl_com_connection_t* c, cl_com_message_t* m, int l);
@@ -945,6 +954,40 @@ int cl_commlib_get_connection_param(cl_com_handle_t* handle, int parameter, int*
    }
    return CL_RETVAL_OK;
 }
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_commlib_set_global_param()"
+int cl_commlib_set_global_param(cl_global_settings_params_t parameter, cl_bool_t value) {
+    pthread_mutex_lock(&cl_com_global_settings_mutex);
+    switch(parameter)  {
+       case CL_COMMLIB_DELAYED_LISTEN: {
+          cl_com_global_settings.delayed_listen = value;
+          break;
+       }
+    }
+    pthread_mutex_unlock(&cl_com_global_settings_mutex);
+    return CL_RETVAL_OK;
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_commlib_get_global_param()"
+cl_bool_t cl_commlib_get_global_param(cl_global_settings_params_t parameter) {
+    cl_bool_t retval = CL_FALSE;
+    pthread_mutex_lock(&cl_com_global_settings_mutex);
+    switch(parameter)  {
+       case CL_COMMLIB_DELAYED_LISTEN: {
+          retval = cl_com_global_settings.delayed_listen;
+          break;
+       }
+    }
+    pthread_mutex_unlock(&cl_com_global_settings_mutex);
+    return retval;
+}
+
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
@@ -2650,7 +2693,6 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
    
    struct timeval now;
    int retval = CL_RETVAL_OK;
-   cl_com_connection_t* the_handler = NULL;
    char tmp_string[1024];
    cl_bool_t ignore_timeouts = CL_FALSE;
 
@@ -2678,29 +2720,11 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
    /* check number of connections */
    cl_commlib_check_connection_count(handle);
 
-   /* get service handle for virtual select call */
-   if (handle->do_shutdown == 0 && handle->max_connection_count_reached == CL_FALSE) {
-      the_handler = handle->service_handler;
-   } else {
-      the_handler = NULL;
-   }
-  
    /* do virtual select */
    if (synchron == 1) {
-      retval = cl_com_open_connection_request_handler(handle->framework, 
-                                             handle->connection_list, 
-                                             the_handler,
-                                             handle->select_sec_timeout,
-                                             handle->select_usec_timeout,
-                                             CL_RW_SELECT);
+      retval = cl_com_open_connection_request_handler(handle, handle->select_sec_timeout, handle->select_usec_timeout, CL_RW_SELECT);
    } else {
-      retval = cl_com_open_connection_request_handler(handle->framework, 
-                                             handle->connection_list, 
-                                             the_handler,
-                                             0,
-                                             0,
-                                             CL_RW_SELECT);
-         
+      retval = cl_com_open_connection_request_handler(handle, 0, 0, CL_RW_SELECT);
    }
 
    ignore_timeouts = cl_com_get_ignore_timeouts_flag();
@@ -6799,7 +6823,6 @@ static void *cl_com_handle_read_thread(void *t_conf) {
    int message_received = 0;
    int trigger_write_thread = 0;
    cl_connection_list_elem_t* elem = NULL;
-   cl_com_connection_t* the_handler = NULL;
    char tmp_string[1024];
 
 
@@ -6854,12 +6877,6 @@ static void *cl_com_handle_read_thread(void *t_conf) {
 
          cl_connection_list_destroy_connections_to_close(handle->connection_list);
 
-         if (handle->do_shutdown == 0 && handle->max_connection_count_reached == CL_FALSE) {
-            the_handler = handle->service_handler;
-         } else {
-            the_handler = NULL;
-         }
-
          cl_raw_list_lock(handle->send_message_queue);
          while((mq_elem = cl_app_message_queue_get_first_elem(handle->send_message_queue)) != NULL) {
             mq_return_value = cl_commlib_send_message_to_endpoint(handle, mq_elem->snd_destination,
@@ -6878,12 +6895,7 @@ static void *cl_com_handle_read_thread(void *t_conf) {
          cl_raw_list_unlock(handle->send_message_queue);
 
 
-         ret_val = cl_com_open_connection_request_handler(handle->framework, 
-                                                          handle->connection_list, 
-                                                          the_handler,
-                                                          handle->select_sec_timeout ,
-                                                          handle->select_usec_timeout,
-                                                          CL_R_SELECT);
+         ret_val = cl_com_open_connection_request_handler(handle, handle->select_sec_timeout , handle->select_usec_timeout, CL_R_SELECT);
       
          switch (ret_val) {
             case CL_RETVAL_SELECT_TIMEOUT:
@@ -7252,12 +7264,7 @@ static void *cl_com_handle_write_thread(void *t_conf) {
 
 
          /* do write select */
-         ret_val = cl_com_open_connection_request_handler(handle->framework, 
-                                                          handle->connection_list, 
-                                                          handle->service_handler,
-                                                          handle->select_sec_timeout ,
-                                                          handle->select_usec_timeout,
-                                                          CL_W_SELECT);
+         ret_val = cl_com_open_connection_request_handler(handle, handle->select_sec_timeout , handle->select_usec_timeout, CL_W_SELECT);
          switch (ret_val) {
             case CL_RETVAL_SELECT_TIMEOUT:
                CL_LOG(CL_LOG_INFO,"write select timeout");

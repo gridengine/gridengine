@@ -1265,6 +1265,9 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
                                                    CL_CM_AC_DISABLED ,
                                                    CL_TRUE);
 
+            /* do a later qmaster commlib listen before creating qmaster handle */
+            cl_commlib_set_global_param(CL_COMMLIB_DELAYED_LISTEN, CL_TRUE);
+
             handle = cl_com_create_handle(&cl_ret, 
                                           communication_framework, 
                                           CL_CM_CT_MESSAGE, /* message based tcp communication */

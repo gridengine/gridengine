@@ -3089,8 +3089,9 @@ int cl_com_print_host_info(cl_com_hostent_t *hostent_p ) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_connection_request_handler_setup()"
-int cl_com_connection_request_handler_setup(cl_com_connection_t* connection,cl_com_endpoint_t* local_endpoint) {
+int cl_com_connection_request_handler_setup(cl_com_connection_t* connection, cl_com_endpoint_t* local_endpoint) {
    int retval = CL_RETVAL_OK;
+   cl_bool_t only_prepare_service = CL_FALSE;
    if (connection != NULL) {
       if (connection->local    != NULL ||
           connection->remote   != NULL      ) {
@@ -3106,13 +3107,14 @@ int cl_com_connection_request_handler_setup(cl_com_connection_t* connection,cl_c
       connection->service_handler_flag = CL_COM_SERVICE_HANDLER;
 
       retval = CL_RETVAL_UNKNOWN;
+      only_prepare_service = cl_commlib_get_global_param(CL_COMMLIB_DELAYED_LISTEN);
       switch(connection->framework_type) {
          case CL_CT_TCP: {
-            retval = cl_com_tcp_connection_request_handler_setup(connection);
+            retval = cl_com_tcp_connection_request_handler_setup(connection, only_prepare_service);
             break;
          }
          case CL_CT_SSL: {
-            retval = cl_com_ssl_connection_request_handler_setup(connection);
+            retval = cl_com_ssl_connection_request_handler_setup(connection, only_prepare_service);
             break;
          }
          case CL_CT_UNDEFINED: {
@@ -3321,10 +3323,29 @@ int cl_com_connection_request_handler_cleanup(cl_com_connection_t* connection) {
 /* WARNING connection list must be locked */
 
 
-int cl_com_open_connection_request_handler(cl_framework_t framework_type, cl_raw_list_t* connection_list, cl_com_connection_t* service_connection, int timeout_val_sec, int timeout_val_usec , cl_select_method_t select_mode) {  /* CR check */
-
+int cl_com_open_connection_request_handler(cl_com_handle_t* handle, int timeout_val_sec, int timeout_val_usec, cl_select_method_t select_mode) {
+   cl_com_connection_t* service_connection = NULL;
    int usec_rest = timeout_val_usec;
    int sec_param = timeout_val_sec;
+
+   if (handle == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+   service_connection = handle->service_handler;
+
+   /* as long as global CL_COMMLIB_DELAYED_LISTEN is enabled we don't want to
+      do a select on the service connection */
+   if (cl_commlib_get_global_param(CL_COMMLIB_DELAYED_LISTEN) == CL_TRUE) {
+      service_connection = NULL;
+   } else {
+      /* for read select calls we have to check if max. conneciton count is reached or
+         handle is going down ... */
+      if (select_mode == CL_RW_SELECT || select_mode == CL_R_SELECT) {
+         if (handle->do_shutdown != 0 || handle->max_connection_count_reached == CL_TRUE) {
+            service_connection = NULL;
+         }
+      }
+   }
 
    if (timeout_val_usec >= 1000000) {
       int full_usec_seconds = 0;
@@ -3334,15 +3355,15 @@ int cl_com_open_connection_request_handler(cl_framework_t framework_type, cl_raw
       sec_param = timeout_val_sec + full_usec_seconds;  /* add full seconds from usec parameter to timeout_val_sec parameter */
    } 
 
-   if (connection_list != NULL) {
-      switch(framework_type) {
+   if (handle->connection_list != NULL) {
+      switch(handle->framework) {
          case CL_CT_TCP: {
-            return cl_com_tcp_open_connection_request_handler(connection_list,service_connection,
-                                                              sec_param , usec_rest,select_mode );
+            return cl_com_tcp_open_connection_request_handler(handle->connection_list, service_connection,
+                                                              sec_param , usec_rest, select_mode);
          }
          case CL_CT_SSL: {
-            return cl_com_ssl_open_connection_request_handler(connection_list,service_connection,
-                                                              sec_param , usec_rest,select_mode );
+            return cl_com_ssl_open_connection_request_handler(handle->connection_list, service_connection,
+                                                              sec_param , usec_rest, select_mode);
          }
          case CL_CT_UNDEFINED: {
             break;

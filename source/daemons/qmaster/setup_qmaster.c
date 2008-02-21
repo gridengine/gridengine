@@ -668,6 +668,9 @@ static void communication_setup(sge_gdi_ctx_class_t *ctx)
 
    cl_commlib_set_connection_param(cl_com_get_handle(prognames[QMASTER], 1), HEARD_FROM_TIMEOUT, mconf_get_max_unheard());
 
+   /* now enable qmaster communication */
+   cl_commlib_set_global_param(CL_COMMLIB_DELAYED_LISTEN, CL_FALSE);
+   
    DEXIT;
    return;
 } /* communication_setup() */

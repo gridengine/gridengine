@@ -1,3 +1,9 @@
+CR-2008-02-22-0: Bugfix:    Disabled delayed commlib listen() for qmaster.
+                            Introduced with CR-2008-02-21-0
+                            Some components rely on early qmaster commlib
+                            availability (shadowd, qmaster startup on migrate
+                            host, etc.)
+
 CR-2008-02-21-0: Enhancem.: Enable qmaster connections after complete qmaster startup
                             (Merged from maintrunk)
                  Bugster:   6665939

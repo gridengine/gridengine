@@ -1,3 +1,9 @@
+CR-2008-02-22-0: Bugfix:    Disabled delayed commlib listen() for qmaster.
+                            Introduced with CR-2008-02-21-0
+                            Some components rely on early qmaster commlib
+                            availability (shadowd, qmaster startup on migrate
+                            host, etc.)
+
 MP-2008-02-22-0: Bugfix:    qstat -j output missing fields
                  Bugster:   6657615
                  Issue:     2501

@@ -1101,7 +1101,10 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
                                                    CL_TRUE);
 
             /* do a later qmaster commlib listen before creating qmaster handle */
-            cl_commlib_set_global_param(CL_COMMLIB_DELAYED_LISTEN, CL_TRUE);
+            /* TODO: CL_COMMLIB_DELAYED_LISTEN is set to CL_FALSE, because
+                     enabling it might cause problems with current shadowd and
+                     startup qmaster implementation */
+            cl_commlib_set_global_param(CL_COMMLIB_DELAYED_LISTEN, CL_FALSE);
 
             handle = cl_com_create_handle(&cl_ret, 
                                           communication_framework, 

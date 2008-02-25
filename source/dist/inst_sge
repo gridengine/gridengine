@@ -670,6 +670,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       CheckHostNameResolving install
       GetLocalExecdSpoolDir
       AddLocalConfiguration_With_Qconf
+      AddSubmitHostsExecd
       AddSGEStartUpScript $euid execd
       SetupWinSvc execinst #service install during execd installation -> param: execinst
       StartExecd

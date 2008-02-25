@@ -593,51 +593,45 @@ MakeLocalSpoolDir()
       ExecuteAsAdmin mkdir -p $LOCAL_EXECD_SPOOL
    fi
 }
+#-------------------------------------------------------------------------
+# AddSubmitHostIfNotExisting 
+#    Param 1: host to add
+#    Param 2: current submit host list
+#
+AddSubmitHostIfNotExisting()
+{
+   hostname=$1
+   submithosts=$2
+   for h in $submithosts; do
+      if [ "$h" = "$hostname" ]; then
+         $INFOTEXT -log "Host >%s< already in submit host list!" $hostname
+         return 0
+      fi
+   done
+
+   $INFOTEXT -log "Adding submit host >%s<" $hostname
+   $SGE_BIN/qconf -as $hostname
+   return 0
+}
 
 #-------------------------------------------------------------------------
-# AddHostsAuto
+# AddSubmitHostsExecd 
 #
-AddHostsAuto()
+AddSubmitHostsExecd()
 {
    if [ "$AUTO" = "true" ]; then
-      for h in $ADMIN_HOST_LIST; do
-        if [ -f $h ]; then
-           $INFOTEXT -log "Adding ADMIN_HOSTS from file %s" $h
-           for tmp in `cat $h`; do
-             $INFOTEXT -log "Adding ADMIN_HOST %s" $tmp
-             $SGE_BIN/qconf -ah $tmp
-           done
-        else
-             $INFOTEXT -log "Adding ADMIN_HOST %s" $h
-             $SGE_BIN/qconf -ah $h
-        fi
-      done
-      
+      # Add submit hosts only if not already in submit host list
+      submithostlist=`qconf -ss`
       for h in $SUBMIT_HOST_LIST; do
-        if [ -f $h ]; then
+        if [ -f "$h" ]; then
            $INFOTEXT -log "Adding SUBMIT_HOSTS from file %s" $h
            for tmp in `cat $h`; do
-             $INFOTEXT -log "Adding SUBMIT_HOST %s" $tmp
-             $SGE_BIN/qconf -as $tmp
+             AddSubmitHostIfNotExisting "$tmp" "$submithostlist"
            done
         else
-             $INFOTEXT -log "Adding SUBMIT_HOST %s" $h
-             $SGE_BIN/qconf -as $h
+           AddSubmitHostIfNotExisting "$h" "$submithostlist"
         fi
       done  
-
-      for h in $SHADOW_HOST; do
-        if [ -f $h ]; then
-           $INFOTEXT -log "Adding SHADOW_HOSTS from file %s" $h
-           for tmp in `cat $h`; do
-             $INFOTEXT -log "Adding SHADOW_HOST %s" $tmp
-             $SGE_BIN/qconf -ah $tmp
-           done
-        else
-             $INFOTEXT -log "Adding SHADOW_HOST %s" $h
-             $SGE_BIN/qconf -ah $h
-        fi
-      done
    fi
 }
 

@@ -224,4 +224,6 @@ double sconf_get_decay_constant(void);
 
 void sconf_reset_jobs(void);
 
+void sconf_get_weight_ticket_urgency_priority(double *ticket, double *urgency, double *priority);
+
 #endif /* __SGE_SCHEDD_CONF_H */

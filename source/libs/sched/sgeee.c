@@ -632,11 +632,13 @@ static void recompute_prio(sge_task_ref_t *tref, lListElem *task, double nurg, d
 {
    double min_tix, max_tix, prio;
    double ntix = 0.5; 
-   double weight_ticket = sconf_get_weight_ticket();
-   double weight_urgency = sconf_get_weight_urgency();
-   double weight_priority = sconf_get_weight_priority();
+   double weight_ticket = 0.0; 
+   double weight_urgency = 0.0;
+   double weight_priority = 0.0;
 
    DENTER(TOP_LAYER, "recompute_prio");
+
+   sconf_get_weight_ticket_urgency_priority(&weight_ticket, &weight_urgency, &weight_priority);
 
    /* need to know min/max tix values to normalize new ticket value */
    tix_range_get(&min_tix, &max_tix);
@@ -4291,11 +4293,12 @@ static void sgeee_priority(lListElem *task, u_long32 jobid, double nsu,
 {
 
    double nta, geee_priority;
-   double weight_ticket = sconf_get_weight_ticket();
-   double weight_urgency = sconf_get_weight_urgency();
-   double weight_priority = sconf_get_weight_priority();
+   double weight_ticket = 0.0;
+   double weight_urgency = 0.0;
+   double weight_priority = 0.0; 
 
    DENTER(TOP_LAYER, "sgeee_priority");
+   sconf_get_weight_ticket_urgency_priority(&weight_ticket, &weight_urgency, &weight_priority);
 
    /* now compute normalized ticket amount (NTA) for each job/task */
    nta = sge_normalize_value(lGetDouble(task, JAT_tix), min_tix, max_tix);

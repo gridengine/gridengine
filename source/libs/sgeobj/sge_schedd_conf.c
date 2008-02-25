@@ -1892,6 +1892,20 @@ double sconf_get_weight_ticket(void)
    return weight;
 }     
 
+void sconf_get_weight_ticket_urgency_priority(double *ticket, double *urgency, double *priority) 
+{
+   sge_mutex_lock("Sched_Conf_Lock", "", __LINE__, &pos.mutex);
+   
+   if (pos.weight_ticket != -1 && pos.weight_urgency != -1 && pos.weight_priority != -1) {
+      const lListElem *sc_ep = lFirst(*(object_type_get_master_list(SGE_TYPE_SCHEDD_CONF)));
+      *ticket = lGetPosDouble(sc_ep, pos.weight_ticket);
+      *urgency = lGetPosDouble(sc_ep, pos.weight_urgency);
+      *priority = lGetPosDouble(sc_ep, pos.weight_priority);
+   }   
+   
+   sge_mutex_unlock("Sched_Conf_Lock", "", __LINE__, &pos.mutex);
+}
+
 /****** sge_schedd_conf/sconf_get_weight_waiting_time() ************************
 *  NAME
 *     sconf_get_weight_waiting_time() -- ??? 

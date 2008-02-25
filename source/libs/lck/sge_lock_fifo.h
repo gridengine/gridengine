@@ -80,6 +80,11 @@ typedef struct sge_fifo_rw_lock_t__ {
     * number of threads which do neither get a lock nor get a free position in the array
     */
    int waiting;       
+
+   /*
+    * number of waiting threads which have been signaled so that they wake up (maximum is 1)
+    */
+   int signaled;
 } sge_fifo_rw_lock_t;
 
 bool 

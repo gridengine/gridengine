@@ -1,3 +1,7 @@
+EB-2008_02-25-0: Bugfix:    fixed very critical bug which might cause two or more
+                            threads to get the global or confguration lock.
+                 Review:    CR
+
 CR-2008-02-22-0: Bugfix:    Disabled delayed commlib listen() for qmaster.
                             Introduced with CR-2008-02-21-0
                             Some components rely on early qmaster commlib

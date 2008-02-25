@@ -1,3 +1,6 @@
+HP-2008-02-25-0: Enhancem.: Added automounter prefix of Darwin to sge_aliases file
+                 Changed:   dist/util/sge_aliases
+
 CR-2008-02-25-0: Bugfix:    Auto execd installation did not support adding
                             submit hosts
                  Bugster:   6667218

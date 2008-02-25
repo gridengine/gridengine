@@ -34,6 +34,6 @@
 
 #include "gdi/sge_gdi_ctx.h"
 
-int sge_execd_register_at_qmaster(sge_gdi_ctx_class_t *ctx);
+int sge_execd_register_at_qmaster(sge_gdi_ctx_class_t *ctx, bool is_restart);
 
 #endif /* __EXECD_MAIN_H */

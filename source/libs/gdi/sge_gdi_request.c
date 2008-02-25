@@ -224,6 +224,7 @@ int sge_unpack_gdi_request(sge_pack_buffer *pb, sge_gdi_request **arp)
       case SGE_GDI_ADD:
       case SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION:
       case SGE_GDI_ADD | SGE_GDI_SET_ALL:
+      case SGE_GDI_ADD | SGE_GDI_EXECD_RESTART:
          DPRINTF(("unpacking SGE_GDI_ADD request\n"));
          break;
       case SGE_GDI_DEL:
@@ -296,6 +297,7 @@ sge_pack_gdi_info(u_long32 command)
    case SGE_GDI_ADD:
    case SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION:
    case SGE_GDI_ADD | SGE_GDI_SET_ALL:
+   case SGE_GDI_ADD | SGE_GDI_EXECD_RESTART:
       DPRINTF(("packing SGE_GDI_ADD request\n"));
       break;
    case SGE_GDI_DEL:

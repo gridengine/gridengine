@@ -71,7 +71,7 @@ void sge_load_value_cleanup_handler(sge_gdi_ctx_class_t *context, te_event_t anE
 
 int sge_execd_startedup(sge_gdi_ctx_class_t *context, 
                         lListElem *hep, lList **alpp, char *ruser, char *rhost, 
-                        u_long32 target, monitoring_t *monitor);
+                        u_long32 target, monitoring_t *monitor, bool is_restart);
 
 u_long32 load_report_interval(lListElem *hep); 
 u_long32 sge_get_max_unheard_value(void); 

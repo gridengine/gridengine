@@ -67,11 +67,12 @@ enum {
    SGE_GDI_CHANGE  = (1<<11),  /* change the given elements */
    SGE_GDI_APPEND  = (1<<12),  /* add some elements into a sublist */
    SGE_GDI_REMOVE  = (1<<13),  /* remove some elements from a sublist */
-   SGE_GDI_SET_ALL = (1<<14)   /* 
+   SGE_GDI_SET_ALL = (1<<14),  /* 
                                 * overwrite the sublist with given values
                                 * and erase all domain/host specific values
                                 * not given with the current request
                                 */
+   SGE_GDI_EXECD_RESTART = (1<<15)
 };
 
 #define SGE_GDI_OPERATION (0xFF)

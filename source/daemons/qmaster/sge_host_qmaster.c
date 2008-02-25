@@ -1273,7 +1273,9 @@ lListElem *host,
 lList **alpp,
 char *ruser,
 char *rhost,
-u_long32 target, monitoring_t *monitor) {
+u_long32 target,
+monitoring_t *monitor,
+bool is_restart) {
    lListElem *hep, *cqueue;
    dstring ds;
    char buffer[256];
@@ -1320,7 +1322,8 @@ u_long32 target, monitoring_t *monitor) {
       qinstance = lGetElemHostFirst(qinstance_list, QU_qhostname, 
                                     rhost, &iterator);
       while (qinstance != NULL) {
-         bool state_changed = qinstance_set_initial_state(qinstance);
+         bool state_changed = qinstance_set_initial_state(qinstance,
+			                                  is_restart);
 
          if (state_changed) {
             lList *answer_list = NULL;

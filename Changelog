@@ -1,3 +1,8 @@
+GH-2008-02-25-0: Bugfix:    qmaster failover should not change the
+                            state of any queue
+                 Bugster:   6396036
+                 Review:    AH, JG
+
 MP-2008-02-22-0: Bugfix:    prolog and epilog descriptions should include exit codes
                  Bugster:   6575740
                  Issue:     2287

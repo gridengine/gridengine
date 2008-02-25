@@ -638,14 +638,14 @@ qinstance_state_is_cal_suspended(const lListElem *this_elem)
 
 /* ret: did the state change */
 bool
-qinstance_set_initial_state(lListElem *this_elem)
+qinstance_set_initial_state(lListElem *this_elem, bool is_restart)
 {
    bool ret = false;
    const char *state_string = lGetString(this_elem, QU_initial_state);
 
    DENTER(QINSTANCE_STATE_LAYER, "qinstance_set_initial_state");
 
-   if (state_string != NULL && strcmp(state_string, "default")) {
+   if (!is_restart && state_string != NULL && strcmp(state_string, "default")) {
       bool do_disable = strcmp(state_string, "disabled") == 0 ? true : false;
       bool is_disabled = qinstance_state_is_manual_disabled(this_elem);
 

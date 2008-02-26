@@ -3139,7 +3139,7 @@ CheckPortsCollision()
    services_flag=0
    env_flag=0
 
-   services_out=` $SGE_UTILBIN/getservbyname  $check_val | wc -w`
+   services_out=`$SGE_UTILBIN/getservbyname $check_val 2>/dev/null | wc -w`
 
    if [ $services_out != 0 ]; then
       services_flag=1

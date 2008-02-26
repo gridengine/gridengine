@@ -1,3 +1,6 @@
+LP-2008-02-26-0: Bugfix:    Install - CheckPortCollision fix
+                 Review:    AP
+
 GH-2008-02-25-0: Bugfix:    qmaster failover should not change the
                             state of any queue
                  Bugster:   6396036

@@ -1,3 +1,6 @@
+RD-2008-02-26-1: CVS        Created V61ARsnapshot3_4_TAG
+--------------------------------------------------------
+
 RD-2008-02-26-0: Enhancem:  - added qmaster_params ENABLE_RESCHEDULE_KILL
                               and ENABLE_RESCHEDULE_SLAVE
                             - reduced amount of data for tight slave tasks

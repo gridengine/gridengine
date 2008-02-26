@@ -122,7 +122,7 @@ int rqs_mod(sge_gdi_ctx_class_t *ctx,
 {
    const char *rqs_name = NULL; 
    bool rules_changed = false;
-   bool previous_enabled = lGetBool(new_rqs, RQS_enabled);
+   bool previous_enabled = (bool)lGetBool(new_rqs, RQS_enabled);
 
    DENTER(TOP_LAYER, "rqs_mod");
 

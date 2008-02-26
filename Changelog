@@ -1,3 +1,8 @@
+JG-2008-02-26-0: Bugfix:    Fixed broken build.
+                 Enhancem.: Improved qevent -ts time precision.
+                            Updated version to 6.1u4.
+                 Review:    CR
+
 LP-2008-02-26-0: Bugfix:    Install - CheckPortCollision fix
                  Review:    AP
 

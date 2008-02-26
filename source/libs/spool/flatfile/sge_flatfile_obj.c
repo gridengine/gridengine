@@ -607,7 +607,7 @@ spooling_field *sge_build_PR_field_list(bool spool)
       create_spooling_field(&fields[count++], PR_long_term_usage, 0, "long_term_usage",
                              UA_sub_fields, &qconf_sub_name_value_space_sfi, NULL, NULL);
       create_spooling_field(&fields[count++], PR_project, 0, "project",
-                             UPP_sub_fields, NULL, NULL, NULL);
+                             UPP_sub_fields, &qconf_sub_spool_usage_sfi, NULL, NULL);
    }
    create_spooling_field(&fields[count++], PR_acl, 0, "acl", US_sub_fields,
                           NULL, NULL, NULL);

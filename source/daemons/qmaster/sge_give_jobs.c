@@ -125,8 +125,7 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx,
 
 static int 
 send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, 
-                   const char *target, lListElem *tmpjep, lListElem *jatep, 
-                   monitoring_t *monitor);
+                   const char *target, lListElem *tmpjep, monitoring_t *monitor);
 
 static int 
 send_job(sge_gdi_ctx_class_t *ctx, const char *rhost, const char *target, lListElem *jep, lListElem *jatep, 
@@ -252,9 +251,7 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *jep, lL
    /* create a copy of the job */
    if ((tmpjep = copyJob(jep, jatep)) == NULL) {
       DRETURN(-1);
-   } else {
-      tmpjatep = lFirst(lGetList(tmpjep, JB_ja_tasks));
-   }
+   } 
 
    /* insert ckpt object if required **now**. it is only
    ** needed in the execd and we have no need to keep it
@@ -272,7 +269,6 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *jep, lL
     * (so the execd can decide on which processors (-sets) the job will be run).
     */
    tmpjatep = lFirst(lGetList(tmpjep, JB_ja_tasks));   
-   
    for_each (gdil_ep, lGetList(tmpjatep, JAT_granted_destin_identifier_list)) {
       const char *src_qname = lGetString(gdil_ep, JG_qname);
       lListElem *src_qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), src_qname);
@@ -318,7 +314,7 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *jep, lL
    }
 
    t1 = sge_get_gmt();
-   ret = send_slave_jobs_wc(ctx, target, tmpjep, jatep, monitor);
+   ret = send_slave_jobs_wc(ctx, target, tmpjep, monitor);
    t2 = sge_get_gmt();
    if (t2-t1 > 30) {
       WARNING((SGE_EVENT, "job delivery: sending job "sge_U32CFormat" took %d s", 
@@ -347,9 +343,6 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *jep, lL
 *  INPUTS
 *     const char *target - ??? 
 *     lListElem *tmpjep  - prepared job structure
-*     lListElem *jatep   - ja-taks (most likely the templete)
-*     lListElem *pe      - target pe
-*     lList *qlp         - prepared queue instance list
 *
 *  RESULT
 *     static int -  0 : everything is fine
@@ -360,17 +353,21 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *jep, lL
 *
 *******************************************************************************/
 static int 
-send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpjep, lListElem *jatep, 
+send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *jep, 
                    monitoring_t *monitor)
 {
+   lList *saved_gdil = NULL;
+   lList *gdil;
    lListElem *gdil_ep = NULL;
+   lListElem *next_gdil_ep = NULL;
+   lListElem *jatep = lFirst(lGetList(jep, JB_ja_tasks));
    int ret = 0;
    int failed = CL_RETVAL_OK;
+   int bytes = 0;
+   int tasks = 0;
 #ifndef __SGE_NO_USERMAPPING__    
    const char *old_mapped_user = NULL;
 #endif   
-   sge_pack_buffer pb;
-   bool initialize_pb = true;
 
    object_description *object_base = object_type_get_object_description();
    const char *sge_root = ctx->get_sge_root(ctx);
@@ -378,14 +375,18 @@ send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpj
 
    DENTER(TOP_LAYER, "send_slave_jobs_wc");
 
-   if (init_packbuffer(&pb, 0, 0) != PACK_SUCCESS) {
-      DRETURN(-1); 
-   }
+   gdil = saved_gdil = lCreateList("", JG_Type);
+   lXchgList(jatep, JAT_granted_destin_identifier_list, &saved_gdil);
 
-   for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) { 
+   tasks = lGetNumberOfElem(saved_gdil);
+
+   next_gdil_ep = lFirst(saved_gdil);
+   while((gdil_ep = next_gdil_ep)) {
       lListElem *hep;
       const char* hostname = NULL;
       unsigned long last_heard_from;
+
+      next_gdil_ep = lNext(gdil_ep);
 
       if (!lGetUlong(gdil_ep, JG_tag_slave_job)) {
          continue;
@@ -411,10 +412,11 @@ send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpj
 
       if (!simulate_execd) {
          /* do ask_commproc() only if we are missing load reports */
-         cl_commlib_get_last_message_time(cl_com_get_handle(prognames[QMASTER], 0), (char*)hostname, (char*)target, 1, &last_heard_from);
+         cl_commlib_get_last_message_time(cl_com_get_handle(prognames[QMASTER], 0),
+                                          (char*)hostname, (char*)target, 1, &last_heard_from);
          if (last_heard_from + mconf_get_max_unheard() <= sge_get_gmt()) {
 
-            ERROR((SGE_EVENT, MSG_COM_CANT_DELIVER_UNHEARD_SSU, target, hostname, sge_u32c(lGetUlong(tmpjep, JB_job_number))));
+            ERROR((SGE_EVENT, MSG_COM_CANT_DELIVER_UNHEARD_SSU, target, hostname, sge_u32c(lGetUlong(jep, JB_job_number))));
             sge_mark_unheard(hep, target);
             ret = -1;
             break;
@@ -424,8 +426,8 @@ send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpj
       /*
       ** get credential for job
       */
-      if (mconf_get_do_credentials() && cache_sec_cred(sge_root, tmpjep, hostname)) {
-         initialize_pb = true;
+      if (mconf_get_do_credentials()) {
+         cache_sec_cred(sge_root, jep, hostname);
       }
   
 #ifndef __SGE_NO_USERMAPPING__ 
@@ -433,7 +435,7 @@ send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpj
       ** This is for administrator user mapping 
       */
       {
-         const char *owner = lGetString(tmpjep, JB_owner);
+         const char *owner = lGetString(jep, JB_owner);
          const char *mapped_user;
 
          DPRINTF(("send_job(): Starting job of %s\n", owner));
@@ -442,39 +444,29 @@ send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpj
          if (strcmp(mapped_user, owner)) {
             DPRINTF(("execution mapping: user %s mapped to %s on host %s\n", 
                      owner, mapped_user, hostname));
-            lSetString(tmpjep, JB_owner, mapped_user);
-            initialize_pb = true;
+            lSetString(jep, JB_owner, mapped_user);
          }
       }
 #endif
 
-      if (initialize_pb) {
-         if (pb_filled(&pb)) {
-            clear_packbuffer(&pb); 
-         }
-         if (init_packbuffer(&pb, 0, 0) != PACK_SUCCESS) {
-            ret = -1;
-            break;
-         }
-         pack_job_delivery(&pb, tmpjep);
-         initialize_pb = false;
-      }
+      lDechainElem(saved_gdil, gdil_ep);
+      lAppendElem(gdil, gdil_ep);
 
       /*
       ** security hook
       */
-      tgt2cc(tmpjep, hostname, target);
+      tgt2cc(jep, hostname, target);
       if (simulate_execd) {
          failed = CL_RETVAL_OK;
       } else {
          u_long32 dummymid = 0;
          sge_pack_buffer send_pb;
 
-         send_pb.head_ptr = (char *)malloc(pb.bytes_used);
-         memcpy(send_pb.head_ptr, pb.head_ptr, pb.bytes_used);
-         send_pb.cur_ptr = send_pb.head_ptr;
-         send_pb.mem_size = pb.bytes_used;
-         send_pb.bytes_used = pb.bytes_used;
+         init_packbuffer(&send_pb, 0, 0);
+
+         pack_job_delivery(&send_pb, jep);
+
+         bytes+=send_pb.bytes_used;
 
          failed = gdi2_send_message_pb(ctx, 0, target, 1, hostname, TAG_SLAVE_ALLOW, &send_pb, &dummymid);
          clear_packbuffer(&send_pb);
@@ -483,22 +475,24 @@ send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpj
       /*
       ** security hook
       */
-      tgtcclr(tmpjep, hostname, target); 
+      tgtcclr(jep, hostname, target); 
 
       if (failed != CL_RETVAL_OK) { 
          /* we failed sending the job to the execd */
-         ERROR((SGE_EVENT, MSG_COM_SENDJOBTOHOST_US, sge_u32c(lGetUlong(tmpjep, JB_job_number)), hostname));
+         ERROR((SGE_EVENT, MSG_COM_SENDJOBTOHOST_US, sge_u32c(lGetUlong(jep, JB_job_number)), hostname));
          ERROR((SGE_EVENT, "commlib error: %s\n", cl_get_error_text(failed)));
          sge_mark_unheard(hep, target);
          ret = -1;
          break;
       } else {
          DPRINTF(("successfully sent slave job "sge_u32" to host \"%s\"\n", 
-                  lGetUlong(tmpjep, JB_job_number), hostname));
+                  lGetUlong(jep, JB_job_number), hostname));
       }
+      lRemoveElem(gdil, &gdil_ep);
    }
-   INFO((SGE_EVENT, "send %d time %d bytes", lGetNumberOfElem(lGetList(jatep, JAT_granted_destin_identifier_list)), (int)pb.bytes_used));
-   clear_packbuffer(&pb);
+   lFreeList(&saved_gdil);
+
+   INFO((SGE_EVENT, "send %d times %d bytes", tasks, bytes/tasks));
 
    DRETURN(ret);
 }   

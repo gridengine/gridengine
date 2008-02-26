@@ -1295,7 +1295,13 @@ decay_and_sum_usage( sge_ref_t *ref,
     *-------------------------------------------------------------*/
 
    if (ja_task != NULL) {
-      job_usage_list = lCopyList(NULL, lGetList(ja_task, JAT_scaled_usage_list));
+      lCondition *where = lWhere("%T(%I==%s||%I==%s||%I==%s||%I==%s)", UA_Type, UA_name, USAGE_ATTR_CPU, UA_name, USAGE_ATTR_MEM, UA_name, USAGE_ATTR_IO, UA_name, "finished_jobs");
+      lEnumeration *what = lWhat("%T(ALL)", UA_Type);
+
+      job_usage_list = lSelect("", lGetList(ja_task, JAT_scaled_usage_list), where, what);
+
+      lFreeWhere(&where);
+      lFreeWhat(&what);
 
       /* sum sub-task usage into job_usage_list */
       if (job_usage_list) {
@@ -1400,14 +1406,6 @@ decay_and_sum_usage( sge_ref_t *ref,
                    *user_long_term_usage=NULL,
                    *project_long_term_usage=NULL;
          const char *usage_name = lGetString(job_usage, UA_name);
-
-         /* only copy CPU, memory, and I/O usage */
-         /* or usage explicitly in decay list */
-         if (strcmp(usage_name, USAGE_ATTR_CPU) != 0 &&
-             strcmp(usage_name, USAGE_ATTR_MEM) != 0 &&
-             strcmp(usage_name, USAGE_ATTR_IO) != 0 &&
-             !lGetElemStr(decay_list, UA_name, usage_name))
-             continue;
 
          /*---------------------------------------------------------
           * Locate the corresponding usage element for the job
@@ -3948,7 +3946,7 @@ sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_j
       if (lists->project_list) {
          norders = lGetNumberOfElem(order_list); 
          if ((up_list = lSelect("", lists->project_list, prj_where, prj_usage_what))) {
-            if (lGetNumberOfElem(up_list)>0) {
+            if (lGetNumberOfElem(up_list) > 0) {
                order = lCreateElem(OR_Type);
                lSetUlong(order, OR_type, ORT_update_project_usage);
                lSetList(order, OR_joker, up_list);

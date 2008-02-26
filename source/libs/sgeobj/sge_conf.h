@@ -136,5 +136,7 @@ int mconf_get_sharelog_time(void);
 bool mconf_get_enable_forced_qdel(void);
 int mconf_get_max_job_deletion_time(void);
 bool mconf_get_enable_addgrp_kill(void);
+bool mconf_get_enable_reschedule_kill(void);
+bool mconf_get_enable_reschedule_slave(void);
 
 #endif /* __SGE_CONF_H */

@@ -640,7 +640,7 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx)
          }
    }
 
-   if (return_value == 0 && was_communication_error != CL_RETVAL_OK ) {
+   if (return_value == 0 && was_communication_error != CL_RETVAL_OK) {
       DPRINTF(("was_communication_error is %s\n", cl_get_error_text(was_communication_error)));
       return_value = 1;  /* leave dispatcher */
    }

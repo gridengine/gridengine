@@ -142,6 +142,8 @@ static bool prof_deliver_thrd = false;
 static bool prof_tevent_thrd = false;
 static bool prof_execd_thrd = false;
 static u_long32 monitor_time = 0;
+static bool enable_reschedule_kill = false;
+static bool enable_reschedule_slave = false;
 
 static long ptf_max_priority = -999;
 static long ptf_min_priority = -999;
@@ -620,6 +622,8 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       scheduler_timeout = 0;
       max_dynamic_event_clients = 99;
       max_job_deletion_time = 3;
+      enable_reschedule_kill = false;
+      enable_reschedule_slave = false;
 
       for (s=sge_strtok_r(qmaster_params, ",; ", &conf_context); s; s=sge_strtok_r(NULL, ",; ", &conf_context)) {
          if (parse_bool_param(s, "FORBID_RESCHEDULE", &forbid_reschedule)) {
@@ -693,6 +697,12 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
                                        3);
                max_job_deletion_time = 3;
             }
+            continue;
+         }
+         if (parse_bool_param(s, "ENABLE_RESCHEDULE_KILL", &enable_reschedule_kill)) {
+            continue;
+         }
+         if (parse_bool_param(s, "ENABLE_RESCHEDULE_SLAVE", &enable_reschedule_slave)) {
             continue;
          }
       }
@@ -1807,6 +1817,28 @@ bool mconf_get_enable_addgrp_kill(void) {
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = enable_addgrp_kill;
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+bool mconf_get_enable_reschedule_kill(void) {
+   bool ret;
+
+   DENTER(BASIS_LAYER, "mconf_get_enable_reschedule_kill");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = enable_reschedule_kill;
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+bool mconf_get_enable_reschedule_slave(void) {
+   bool ret;
+
+   DENTER(BASIS_LAYER, "mconf_get_enable_reschedule_slave");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = enable_reschedule_slave;
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(ret);
 }

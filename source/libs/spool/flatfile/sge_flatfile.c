@@ -345,7 +345,7 @@ const spool_flatfile_instr qconf_sub_spool_usage_sfi =
    ' ',
    '\0',
    '\0',
-   '\n',
+   ';',
    &qconf_sub_name_value_comma_sfi,
    { NoName, NoName, NoName }
 };

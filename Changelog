@@ -1,3 +1,12 @@
+RD-2008-02-26-0: Enhancem:  - added qmaster_params ENABLE_RESCHEDULE_KILL
+                              and ENABLE_RESCHEDULE_SLAVE
+                            - reduced amount of data for tight slave tasks
+                            - reduced job_usage data in sharetree scheduling
+                              orders
+                            - improved advance reservation error message
+                            - added test for flatfile spooling
+                 Review:    JG
+
 CR-2008-02-22-0: Bugfix:    Disabled delayed commlib listen() for qmaster.
                             Introduced with CR-2008-02-21-0
                             Some components rely on early qmaster commlib

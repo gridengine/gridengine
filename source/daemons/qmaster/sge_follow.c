@@ -266,8 +266,6 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          DRETURN(-1);
       }
 
-      cqueue_list_set_tag(*object_base[SGE_TYPE_CQUEUE].list, 0, true);
-
       if (lGetString(jep, JB_pe)) {
          pe = pe_list_locate(*object_base[SGE_TYPE_PE].list, or_pe);
          if (!pe) {
@@ -353,7 +351,6 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
             master_qep = qep;
          }   
 
-         
          DPRINTF(("Queue version: %d\n", q_version));
 
          /* ensure that the jobs owner has access to this queue */
@@ -399,10 +396,6 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
             DRETURN(-1);
          }  
 
-         /* set tagged field in queue; this is needed for building */
-         /* up job_list in the queue after successful job sending */
-         lSetUlong(qep, QU_tag, q_slots); 
-
          /* ---------------------- 
           *  find and check host 
           */
@@ -413,9 +406,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
             lFreeList(&gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DRETURN(-2);
-         }
-
-         if (hep) {
+         } else {
             lListElem *ruep;
 
             for_each(ruep, lGetList(hep, EH_reschedule_unknown_list)) {
@@ -524,7 +515,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          cqueue_list_x_on_subordinate_gdil(ctx, master_list, true, gdil, monitor);
       }
    }    
-      break;
+   break;
 
  /* ----------------------------------------------------------------------- 
     * SET PRIORITY VALUES TO NULL
@@ -540,7 +531,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          lListElem *next_ja_task = NULL;
 
          job_number = lGetUlong(ep, OR_job_number);
-         if(job_number == 0) {
+         if (job_number == 0) {
             ERROR((SGE_EVENT, MSG_JOB_NOJOBID));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
@@ -628,7 +619,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          
          sge_mutex_unlock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);         
          
-      } /* just ignore them being not in SGEEE mode */
+      }
       break;
       
    /* ----------------------------------------------------------------------- 
@@ -753,7 +744,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
             lGetDouble(jatp, JAT_prio)));
 #endif
 
-      } /* just ignore them being not in SGEEE mode */
+      }
       break;
 
 
@@ -771,10 +762,8 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
 
       DPRINTF(("ORDER ORT_tickets\n"));
       {
-
          lList *oeql;
          lListElem *joker;
-         int skip_ticket_order = 0;
 
          job_number=lGetUlong(ep, OR_job_number);
          if(!job_number) {
@@ -824,10 +813,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
                DEXIT;
                return 0;
             }
-            skip_ticket_order = 1;
-         }
-
-         if (!skip_ticket_order) {
+         } else {
             bool destribute_tickets = false;
             /* modify jobs ticket amount and spool job */
             lSetDouble(jatp, JAT_tix, lGetDouble(ep, OR_ticket));
@@ -940,12 +926,12 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
 
                   lFreeList(&oeql);
 
-               } 
-               else if (lGetPosViaElem(jatp, JAT_granted_destin_identifier_list, SGE_NO_ABORT) !=-1 )
-                     lAppendElem(*topp, lCopyElem(ep));
+               } else if (lGetPosViaElem(jatp, JAT_granted_destin_identifier_list, SGE_NO_ABORT) !=-1 ) {
+                  lAppendElem(*topp, lCopyElem(ep));
+               }
             }
          }
-      } /* just ignore them being not in sge mode */
+      }
       break;
 
    /* ----------------------------------------------------------------------- 
@@ -1033,8 +1019,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          if (!JOB_TYPE_IS_IMMEDIATE(lGetUlong(jep, JB_type))) {
             if (lGetString(jep, JB_script_file)) {
                ERROR((SGE_EVENT, MSG_JOB_REMOVENONINTERACT_U, sge_u32c(lGetUlong(jep, JB_job_number))));
-            }
-            else {
+            } else {
                ERROR((SGE_EVENT, MSG_JOB_REMOVENONIMMEDIATE_U,  sge_u32c(lGetUlong(jep, JB_job_number))));
             }
             answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
@@ -1083,23 +1068,18 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          
          if (Follow_Control.is_spooling == NOT_DEFINED) {
        
-            Follow_Control.now = sge_get_gmt();
+            now = Follow_Control.now = sge_get_gmt();
       
-            now = Follow_Control.now; 
-           
             DPRINTF((">>next spooling now:%ld next: %ld\n",Follow_Control.now, Follow_Control.last_update));
             
             if (now >= Follow_Control.last_update) {
                Follow_Control.is_spooling = DO_SPOOL;
-            }
-            else {
+               is_spool = true;
+            } else {
                Follow_Control.is_spooling = DONOT_SPOOL;
             }
-         }
-
-         now =  Follow_Control.now;
-         if (Follow_Control.is_spooling == DO_SPOOL) {
-            is_spool = true;
+         } else {
+            now =  Follow_Control.now;
          }
         
          sge_mutex_unlock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);
@@ -1201,7 +1181,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
                answer_list_output(&answer_list);
             }
          }
-      } /* just ignore them being not in sge mode */
+      }
       break;
 
    /* ----------------------------------------------------------------------- 
@@ -1225,34 +1205,27 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          u_long32 now = 0;
          bool is_spool = false;
 
-         
          sge_mutex_lock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);
          
          if (Follow_Control.is_spooling == NOT_DEFINED) {
        
-            Follow_Control.now = sge_get_gmt();
+            now = Follow_Control.now = sge_get_gmt();
       
-            now = Follow_Control.now; 
-           
             DPRINTF((">>next spooling now:%ld next: %ld\n",Follow_Control.now, Follow_Control.last_update));
             
             if (now >= Follow_Control.last_update) {
                Follow_Control.is_spooling = DO_SPOOL;
-            }
-            else {
+               is_spool = true;
+            } else {
                Follow_Control.is_spooling = DONOT_SPOOL;
             }
-         }
-
-         now =  Follow_Control.now;
-         if (Follow_Control.is_spooling == DO_SPOOL) {
-            is_spool = true;
+         } else {
+            now =  Follow_Control.now;
          }
         
          sge_mutex_unlock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);
 
-         DPRINTF(("ORDER: update %d users\n", 
-            lGetNumberOfElem(lGetList(ep, OR_joker))));
+         DPRINTF(("ORDER: update %d users\n", lGetNumberOfElem(lGetList(ep, OR_joker))));
 
          for_each (up_order, lGetList(ep, OR_joker)) {
             if ((pos=lGetPosViaElem(up_order, UU_name, SGE_NO_ABORT))<0 || 
@@ -1343,15 +1316,13 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
             
             {
                lList *answer_list = NULL;
-               sge_event_spool(ctx, &answer_list, now,
-                               (or_type == ORT_update_user_usage) ? 
-                                          sgeE_USER_MOD:sgeE_PROJECT_MOD,
+               sge_event_spool(ctx, &answer_list, now, sgeE_USER_MOD,
                                0, 0, up_name, NULL, NULL,
                                up, NULL, NULL, true, is_spool);
                answer_list_output(&answer_list);
             }
          }
-      } /* just ignore them being not in sge mode */
+      }
       break;
 
    /* ----------------------------------------------------------------------- 
@@ -1366,7 +1337,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          DPRINTF(("ORDER: ORT_share_tree failed\n" ));
          DEXIT;
          return -1;
-      } /* just ignore it being not in sge mode */
+      }
        
       break;
 
@@ -1374,16 +1345,15 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
     * UPDATE FIELDS IN SCHEDULING CONFIGURATION 
     * ----------------------------------------------------------------------- */
    case ORT_sched_conf:
-      {
-         lListElem *joker;
+      if (sconf_is()) {
          int pos;
+         lListElem *joker = lFirst(lGetList(ep, OR_joker));;
 
          DPRINTF(("ORDER: ORT_sched_conf\n" ));
-         joker = lFirst(lGetList(ep, OR_joker));
 
-         if (sconf_is() && joker != NULL) {
+         if (joker != NULL) {
             if ((pos=lGetPosViaElem(joker, SC_weight_tickets_override, SGE_NO_ABORT)) > -1) {
-               sconf_set_weight_tickets_override( lGetPosUlong(joker, pos));
+               sconf_set_weight_tickets_override(lGetPosUlong(joker, pos));
             }   
          }
          /* no need to spool sched conf */
@@ -1460,8 +1430,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
             || !lGetList(jatp, JAT_granted_destin_identifier_list)) {
             /* don't panic - it is probably an exiting job */  
             WARNING((SGE_EVENT, MSG_JOB_UNSUSPOTNOTRUN_UU, sge_u32c(jobid), sge_u32c(task_number)));
-         } 
-         else {
+         } else {
             const char *qnm = lGetString(lFirst(lGetList(jatp, JAT_granted_destin_identifier_list)), JG_qname);
             queueep = cqueue_list_locate_qinstance(*object_base[SGE_TYPE_CQUEUE].list, qnm);
             if (!queueep) {
@@ -1499,32 +1468,30 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
 
    case ORT_job_schedd_info:
       {
-         lList *sub_order_list = NULL;
-         lListElem *sme  = NULL; /* SME_Type */
+         lList *sub_order_list = lGetList(ep, OR_joker);
 
          DPRINTF(("ORDER: ORT_job_schedd_info\n"));
-         sub_order_list = lGetList(ep, OR_joker);
          
          if (sub_order_list != NULL) {
-            sme = lFirst(sub_order_list);
-            lDechainElem(sub_order_list, sme);
+            lListElem *sme  = lFirst(sub_order_list);
+
+            if (sme != NULL) {
+               lListElem *first;
+               lList **master_job_schedd_info_list = object_base[SGE_TYPE_JOB_SCHEDD_INFO].list;
+
+               while ((first = lFirst(*master_job_schedd_info_list))) {
+                  lRemoveElem(*master_job_schedd_info_list, &first);
+               }
+               if (*master_job_schedd_info_list == NULL) {
+                  *master_job_schedd_info_list = lCreateList("schedd info", SME_Type);
+               }
+               lDechainElem(sub_order_list, sme);
+               lAppendElem(*master_job_schedd_info_list, sme);
+
+               /* this information is not spooled (but might be usefull in a db) */
+               sge_add_event(0, sgeE_JOB_SCHEDD_INFO_MOD, 0, 0, NULL, NULL, NULL, sme);
+            }              
          }
-
-         if (sme != NULL) {
-            lList **master_job_schedd_info_list = object_base[SGE_TYPE_JOB_SCHEDD_INFO].list;
-
-            while (lGetNumberOfElem(*master_job_schedd_info_list) > 0) {
-               lListElem *first = lFirst(*master_job_schedd_info_list);
-               lRemoveElem(*master_job_schedd_info_list,&first);
-            }
-            if (*master_job_schedd_info_list == NULL) {
-               *master_job_schedd_info_list = lCreateList("schedd info", SME_Type);
-            }
-            lAppendElem(*master_job_schedd_info_list, sme);
-
-            /* this information is not spooled (but might be usefull in a db) */
-            sge_add_event( 0, sgeE_JOB_SCHEDD_INFO_MOD, 0, 0, NULL, NULL, NULL, sme);
-         }              
       }
       break;
 
@@ -1532,8 +1499,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
       break;
    }
 
-  DEXIT;
-  return STATUS_OK;
+  DRETURN(STATUS_OK);
 }
 
 /*

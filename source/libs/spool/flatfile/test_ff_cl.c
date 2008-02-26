@@ -73,23 +73,6 @@
 #include "sgeobj/sge_userprj.h"
 #include "sgeobj/sge_usersetL.h"
 #include "sgeobj/sge_resource_quotaL.h"
-#include "spool/classic/read_write_pe.h"
-#include "spool/classic/read_write_cal.h"
-#include "spool/classic/read_write_centry.h"
-#include "spool/classic/read_write_complex.h"
-#include "spool/classic/read_write_ckpt.h"
-#include "spool/classic/read_write_cqueue.h"
-#include "spool/classic/read_write_host.h"
-#include "spool/classic/read_write_host_group.h"
-#include "spool/classic/read_write_qinstance.h"
-#include "spool/classic/read_write_ume.h"
-#include "spool/classic/read_write_userprj.h"
-#include "spool/classic/read_write_userset.h"
-#include "spool/classic/read_write_sharetree.h"
-#include "spool/classic/read_write_resource_quota.h"
-#include "spool/classic/read_write_advance_reservation.h"
-#include "spool/classic/rw_configuration.h"
-#include "spool/classic/sched_conf.h"
 #include "spool/sge_spooling_utilities.h"
 #include "spool/flatfile/sge_flatfile.h"
 #include "spool/flatfile/sge_flatfile_obj.h"
@@ -335,14 +318,18 @@ static int PE_test(void)
    
    lSetList(ep, PE_xuser_list, lp);
 
-   ep2 = lCopyElem(ep);
+   fields = sge_build_PE_field_list(true, false);
    
-   printf("PE: spool = 0\n");
+   printf("PE: spool\n");
    /* Write a PE file using classic spooling */
-   file1 = write_pe(0, 1, ep);
+   file1 = spool_flatfile_write_object(&alp, ep, false,
+                                       fields,
+                                       &qconf_sfi,
+                                       SP_DEST_TMP,
+                                       SP_FORM_ASCII, 
+                                       file1, false);
 
    /* Read a PE file using flatfile spooling */
-   fields = sge_build_PE_field_list(false, false);
    lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, PE_Type, NULL,
                                    fields, NULL, true, &qconf_sfi,
@@ -357,12 +344,6 @@ static int PE_test(void)
                                        file2, false);
 
    lFreeElem(&ep);
-   ep = cull_read_in_pe(NULL, file2, 0, 0, NULL, NULL);
-   unlink(file2);
-   FREE(file2);
-   
-   file2 = write_pe(0, 1, ep);
-   
    ret = diff(file1, file2);
    
    unlink(file1);
@@ -371,52 +352,8 @@ static int PE_test(void)
    FREE(file2);
    FREE(fields);
 
-   lFreeElem(&ep);
-   if (ret != 0) {
-      printf("PE diff returned %d\n", ret);
-      return ret;
-   }
-   ep = ep2;
-   
-   printf("PE: spool = 1\n");
-   /* Write a PE file using classic spooling */
-   file1 = write_pe(1, 1, ep);
-   
-   /* Read a PE file using flatfile spooling */
-   fields = sge_build_PE_field_list(true, false);
-   lFreeElem(&ep);
-   ep = spool_flatfile_read_object(&alp, PE_Type, NULL,
-                                   fields, NULL, true, &qconf_sfi,
-                                   SP_FORM_ASCII, NULL, file1);
-   
-   /* Write a PE file using flatfile spooling */
-   file2 = spool_flatfile_write_object(&alp, ep, false,
-                                       fields,
-                                       &qconf_sfi,
-                                       SP_DEST_TMP,
-                                       SP_FORM_ASCII, 
-                                       file2, true);
-   
-   lFreeElem(&ep);
-   ep = cull_read_in_pe(NULL, file2, 0, 0, NULL, NULL);
-   unlink(file2);
-   FREE(file2);
-   
-   file2 = write_pe(1, 1, ep);
-      
-   ret = diff(file1, file2);
-   
-   unlink(file1);
-   unlink(file2);
-   FREE(file1);
-   FREE(file2);
-   FREE(fields);
-   
-   lFreeElem(&ep);
-   
    answer_list_output(&alp);   
-   lFreeList(&alp);
-   
+
    return ret;
 }
 
@@ -424,7 +361,6 @@ static int CAL_test(void)
 {
    int ret = 0;
    lListElem *ep = NULL;
-   lListElem *ep2 = NULL;
    lList *alp = NULL;
    const char *file1 = NULL, *file2 = NULL;
    
@@ -433,11 +369,14 @@ static int CAL_test(void)
    lSetString(ep, CAL_year_calendar, "2004");
    lSetString(ep, CAL_week_calendar, "KW 05");
 
-   ep2 = lCopyElem(ep);
-   
-   printf("CAL: spool = 0\n");
+   printf("CAL: spool\n");
    /* Write a CAL file using classic spooling */
-   file1 = write_cal(0, 1, ep);
+   file1 = spool_flatfile_write_object(&alp, ep, false,
+                                       CAL_fields,
+                                       &qconf_sfi,
+                                       SP_DEST_TMP,
+                                       SP_FORM_ASCII, 
+                                       file1, false);
    
    /* Read a CAL file using flatfile spooling */
    lFreeElem(&ep);
@@ -454,11 +393,6 @@ static int CAL_test(void)
                                        file2, false);
    
    lFreeElem(&ep);
-   ep = cull_read_in_cal(NULL, file2, 0, 0, NULL, NULL);
-   unlink(file2);
-   FREE(file2);
-   
-   file2 = write_cal(0, 1, ep);
    
    ret = diff(file1, file2);
    
@@ -466,47 +400,6 @@ static int CAL_test(void)
    unlink(file2);
    FREE(file1);
    FREE(file2);
-   
-   lFreeElem(&ep);
-   ep = ep2;
-
-   if (ret != 0) {
-      return ret;
-   }
-   
-   printf("CAL: spool = 1\n");
-   /* Write a CAL file using classic spooling */
-   file1 = write_cal(1, 1, ep);
-   
-   /* Read a CAL file using flatfile spooling */
-   lFreeElem(&ep);
-   ep = spool_flatfile_read_object(&alp, CAL_Type, NULL,
-                                   CAL_fields, NULL, true, &qconf_sfi,
-                                   SP_FORM_ASCII, NULL, file1);
-   
-   /* Write a CAL file using flatfile spooling */
-   file2 = spool_flatfile_write_object(&alp, ep, false,
-                                       CAL_fields,
-                                       &qconf_sfi,
-                                       SP_DEST_TMP,
-                                       SP_FORM_ASCII, 
-                                       file2, true);
-   
-   lFreeElem(&ep);
-   ep = cull_read_in_cal(NULL, file2, 0, 0, NULL, NULL);
-   unlink(file2);
-   FREE(file2);
-   
-   file2 = write_cal(1, 1, ep);
-   
-   ret = diff(file1, file2);
-   
-   unlink(file1);
-   unlink(file2);
-   FREE(file1);
-   FREE(file2);
-   
-   lFreeElem(&ep);
    
    answer_list_output(&alp);   
    lFreeList(&alp);
@@ -518,7 +411,6 @@ static int CK_test(void)
 {
    int ret = 0;
    lListElem *ep = NULL;
-   lListElem *ep2 = NULL;
    lList *alp = NULL;
    const char *file1 = NULL, *file2 = NULL;
    
@@ -534,11 +426,14 @@ static int CK_test(void)
    lSetUlong(ep, CK_job_pid, 1313);
    lSetString(ep, CK_clean_command, "clean_command");
    
-   ep2 = lCopyElem(ep);
-   
-   printf("CK: spool = 0\n");
+   printf("CK: spool\n");
    /* Write a CK file using classic spooling */
-   file1 = write_ckpt(0, 1, ep);
+   file1 = spool_flatfile_write_object(&alp, ep, false,
+                                       CK_fields,
+                                       &qconf_sfi,
+                                       SP_DEST_TMP,
+                                       SP_FORM_ASCII, 
+                                       file1, false);
    
    /* Read a CK file using flatfile spooling */
    lFreeElem(&ep);
@@ -555,11 +450,6 @@ static int CK_test(void)
                                        file2, false);
    
    lFreeElem(&ep);
-   ep = cull_read_in_ckpt(NULL, file2, 0, 0, NULL, NULL);
-   unlink(file2);
-   FREE(file2);
-   
-   file2 = write_ckpt(0, 1, ep);
    
    ret = diff(file1, file2);
    
@@ -567,51 +457,9 @@ static int CK_test(void)
    unlink(file2);
    FREE(file1);
    FREE(file2);
-
-   lFreeElem(&ep);
-   ep = ep2;
-
-   if (ret != 0) {
-      return ret;
-   }
-   
-   printf("CK: spool = 1\n");
-   /* Write a CK file using classic spooling */
-   file1 = write_ckpt(1, 1, ep);
-   
-   /* Read a CK file using flatfile spooling */
-   lFreeElem(&ep);
-   ep = spool_flatfile_read_object(&alp, CK_Type, NULL,
-                                   CK_fields, NULL, true, &qconf_sfi,
-                                   SP_FORM_ASCII, NULL, file1);
-   
-   /* Write a CK file using flatfile spooling */
-   file2 = spool_flatfile_write_object(&alp, ep, false,
-                                       CK_fields,
-                                       &qconf_sfi,
-                                       SP_DEST_TMP,
-                                       SP_FORM_ASCII, 
-                                       file2, true);
-   
-   lFreeElem(&ep);
-   ep = cull_read_in_ckpt(NULL, file2, 0, 0, NULL, NULL);
-   unlink(file2);
-   FREE(file2);
-   
-   file2 = write_ckpt(1, 1, ep);
-   
-   ret = diff(file1, file2);
-   
-   unlink(file1);
-   unlink(file2);
-   FREE(file1);
-   FREE(file2);
-   
-   lFreeElem(&ep);
    
    answer_list_output(&alp);   
-   lFreeList(&alp);
-   
+
    return ret;
 }
 
@@ -624,9 +472,8 @@ static int STN_test() {
    lList *lp2 = NULL;
    lList *alp = NULL;
    spooling_field *fields = NULL;
-   const char *file1 = "/var/tmp/STN_cl";
+   const char *file1 = NULL;
    const char *file2 = NULL;
-   char buffer[512];
    
    ep = lCreateElem(STN_Type);
    lSetString(ep, STN_name, "Test_Name");
@@ -685,177 +532,18 @@ static int STN_test() {
    
    lSetList(ep, STN_children, lp);
 
-   ep2 = lCopyElem(ep);
-   
-   printf("STN: spool = 0, recurse = 0, root_node = 0\n");
-   /* Write a STN file using classic spooling */
-   write_sharetree(&alp, ep,(char *)file1, NULL, 0, 0, 0);
-
-   /* Read a STN file using flatfile spooling */
-   fields = sge_build_STN_field_list(false, false);
-   lFreeElem(&ep);
-   ep = spool_flatfile_read_object(&alp, STN_Type, NULL,
-                                   fields, NULL, true, &qconf_name_value_list_sfi,
-                                   SP_FORM_ASCII, NULL, file1);
-   
-   /* Write a STN file using flatfile spooling */
-   file2 = spool_flatfile_write_object(&alp, ep, false,
-                                       fields,
-                                       &qconf_name_value_list_sfi,
-                                       SP_DEST_TMP,
-                                       SP_FORM_ASCII, 
-                                       file2, false);
-
-   lFreeElem(&ep);
-   ep = read_sharetree((char *)file2, NULL, 0, buffer, 0, NULL);
-   unlink(file2);
-   FREE(file2);
-   
-   file2 = "/var/tmp/STN_ff";
-   write_sharetree(&alp, ep,(char *)file2, NULL, 0, 0, 0);
-   
-   ret = diff(file1, file2);
-   
-   unlink(file1);
-   unlink(file2);
-   FREE(fields);
-
-   if (ret != 0) {
-      return ret;
-   }
-   
-   printf("STN: spool = 0, recurse = 0, root_node = 1 -- INVALID\n");
-
-   lFreeElem(&ep);
-   ep = lCopyElem(ep2);
-   
-   printf("STN: spool = 0, recurse = 1, root_node = 0\n");
-   /* Write a STN file using classic spooling */
-   write_sharetree(&alp, ep,(char *)file1, NULL, 0, 1, 0);
-   
-   /* Read a STN file using flatfile spooling */
-   fields = sge_build_STN_field_list(false, true);
-   lFreeElem(&ep);
-   ep = spool_flatfile_read_object(&alp, STN_Type, NULL,
-                                   fields, NULL, true, &qconf_name_value_list_sfi,
-                                   SP_FORM_ASCII, NULL, file1);
-   
-   /* Write a STN file using flatfile spooling */
-   file2 = spool_flatfile_write_object(&alp, ep, false,
-                                       fields,
-                                       &qconf_name_value_list_sfi,
-                                       SP_DEST_TMP,
-                                       SP_FORM_ASCII, 
-                                       file2, false);
-   lFreeElem(&ep);
-   ep = read_sharetree((char *)file2, NULL, 0, buffer, 1, NULL);
-   unlink(file2);
-   FREE(file2);
-   
-   file2 = "/var/tmp/STN_ff";
-   write_sharetree(&alp, ep,(char *)file2, NULL, 0, 1, 0);
-   
-   ret = diff(file1, file2);
-   
-   unlink(file1);
-   unlink(file2);
-   FREE(fields);
-
-   lFreeElem(&ep);
-   ep = lCopyElem(ep2);
-
-   if (ret != 0) {
-      return ret;
-   }
-   
-   printf("STN: spool = 0, recurse = 1, root_node = 1\n");
-   /* Write a STN file using classic spooling */
-   write_sharetree(&alp, ep,(char *)file1, NULL, 0, 1, 1);
-   
-   /* Read a STN file using flatfile spooling */
-   fields = sge_build_STN_field_list(false, true);
-   lFreeElem(&ep);
-   ep = spool_flatfile_read_object(&alp, STN_Type, NULL,
-                                   fields, NULL, true, &qconf_name_value_list_sfi,
-                                   SP_FORM_ASCII, NULL, file1);
-   
-   /* Write a STN file using flatfile spooling */
-   file2 = spool_flatfile_write_object(&alp, ep, true,
-                                       fields,
-                                       &qconf_name_value_list_sfi,
-                                       SP_DEST_TMP,
-                                       SP_FORM_ASCII, 
-                                       file2, false);
-
-   lFreeElem(&ep);
-   ep = read_sharetree((char *)file2, NULL, 0, buffer, 1, NULL);
-   unlink(file2);
-   FREE(file2);
-   
-   file2 = "/var/tmp/STN_ff";
-   write_sharetree(&alp, ep,(char *)file2, NULL, 0, 1, 1);
-   
-   ret = diff(file1, file2);
-   
-   unlink(file1);
-   unlink(file2);
-   FREE(fields);
-
-   lFreeElem(&ep);
-   ep = lCopyElem(ep2);
-
-   if (ret != 0) {
-      return ret;
-   }
-   
-   printf("STN: spool = 1, recurse = 0, root_node = 0\n");
-   /* Write a STN file using classic spooling */
-   write_sharetree(&alp, ep,(char *)file1, NULL, 1, 0, 0);
-   
-   /* Read a STN file using flatfile spooling */
-   fields = sge_build_STN_field_list(true, false);
-   lFreeElem(&ep);
-   ep = spool_flatfile_read_object(&alp, STN_Type, NULL,
-                                   fields, NULL, true, &qconf_name_value_list_sfi,
-                                   SP_FORM_ASCII, NULL, file1);
-   
-   /* Write a STN file using flatfile spooling */
-   file2 = spool_flatfile_write_object(&alp, ep, false,
-                                       fields,
-                                       &qconf_name_value_list_sfi,
-                                       SP_DEST_TMP,
-                                       SP_FORM_ASCII, 
-                                       file2, false);
-
-   lFreeElem(&ep);
-   ep = read_sharetree((char *)file2, NULL, 1, buffer, 0, NULL);
-   unlink(file2);
-   FREE(file2);
-   
-   file2 = "/var/tmp/STN_ff";
-   write_sharetree(&alp, ep,(char *)file2, NULL, 1, 0, 0);
-   
-   ret = diff(file1, file2);
-   
-   unlink(file1);
-   unlink(file2);
-   FREE(fields);
-
-   if (ret != 0) {
-      return ret;
-   }
-   
-   printf("STN: spool = 1, recurse = 0, root_node = 1 -- INVALID\n");
-
-   lFreeElem(&ep);
-   ep = lCopyElem(ep2);
-   
-   printf("STN: spool = 1, recurse = 1, root_node = 0\n");
-   /* Write a STN file using classic spooling */
-   write_sharetree(&alp, ep,(char *)file1, NULL, 1, 1, 0);
-   
-   /* Read a STN file using flatfile spooling */
    fields = sge_build_STN_field_list(true, true);
+   
+   printf("STN: spool\n");
+   /* Write a STN file using classic spooling */
+   file1 = spool_flatfile_write_object(&alp, ep, false,
+                                       fields,
+                                       &qconf_name_value_list_sfi,
+                                       SP_DEST_TMP,
+                                       SP_FORM_ASCII, 
+                                       file1, false);
+
+   /* Read a STN file using flatfile spooling */
    lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, STN_Type, NULL,
                                    fields, NULL, true, &qconf_name_value_list_sfi,
@@ -868,65 +556,19 @@ static int STN_test() {
                                        SP_DEST_TMP,
                                        SP_FORM_ASCII, 
                                        file2, false);
-
    lFreeElem(&ep);
-   ep = read_sharetree((char *)file2, NULL, 1, buffer, 1, NULL);
-   unlink(file2);
-   FREE(file2);
-   
-   file2 = "/var/tmp/STN_ff";
-   write_sharetree(&alp, ep,(char *)file2, NULL, 1, 1, 0);
+
    
    ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
-   FREE(fields);
-
-   lFreeElem(&ep);
-   ep = ep2;
-
-   if (ret != 0) {
-      return ret;
-   }
-   
-   printf("STN: spool = 1, recurse = 1, root_node = 1\n");
-   /* Write a STN file using classic spooling */
-   write_sharetree(&alp, ep,(char *)file1, NULL, 1, 1, 1);
-   
-   /* Read a STN file using flatfile spooling */
-   fields = sge_build_STN_field_list(true, true);
-   lFreeElem(&ep);
-   ep = spool_flatfile_read_object(&alp, STN_Type, NULL,
-                                   fields, NULL, true, &qconf_name_value_list_sfi,
-                                   SP_FORM_ASCII, NULL, file1);
-   
-   /* Write a STN file using flatfile spooling */
-   file2 = spool_flatfile_write_object(&alp, ep, true,
-                                       fields,
-                                       &qconf_name_value_list_sfi,
-                                       SP_DEST_TMP,
-                                       SP_FORM_ASCII, 
-                                       file2, true);
-
-   lFreeElem(&ep);
-   ep = read_sharetree((char *)file2, NULL, 1, buffer, 1, NULL);
-   unlink(file2);
+   FREE(file1);
    FREE(file2);
-   
-   file2 = "/var/tmp/STN_ff";
-   write_sharetree(&alp, ep,(char *)file2, NULL, 1, 1, 1);
-   
-   ret = diff(file1, file2);
-   
-   unlink(file1);
-   unlink(file2);
+
    FREE(fields);
-   
-   lFreeElem(&ep);
-   
+
    answer_list_output(&alp);   
-   lFreeList(&alp);
    
    return ret;
 }
@@ -935,7 +577,6 @@ static int CE_test(void)
 {
    int ret = 0;
    lListElem *ep = NULL;
-   lListElem *ep2 = NULL;
    lList *alp = NULL;
    const char *file1 = NULL, *file2 = NULL;
    
@@ -949,11 +590,14 @@ static int CE_test(void)
    lSetUlong(ep, CE_requestable, REQU_NO);
    lSetString(ep, CE_urgency_weight, "20");
    
-   ep2 = lCopyElem(ep);
-   
-   printf("CE: spool = 0\n");
+   printf("CE: spool\n");
    /* Write a CE file using classic spooling */
-   file1 = write_centry(0, 1, ep);
+   file1 = spool_flatfile_write_object(&alp, ep, false,
+                                       CE_fields,
+                                       &qconf_sfi,
+                                       SP_DEST_TMP,
+                                       SP_FORM_ASCII, 
+                                       file1, false);
    
    /* Read a CE file using flatfile spooling */
    lFreeElem(&ep);
@@ -970,11 +614,6 @@ static int CE_test(void)
                                        file2, false);
 
    lFreeElem(&ep);
-   ep = cull_read_in_centry(NULL, file2, 0, NULL, NULL);
-   unlink(file2);
-   FREE(file2);
-   
-   file2 = write_centry(0, 1, ep);
    
    ret = diff(file1, file2);
    
@@ -982,50 +621,8 @@ static int CE_test(void)
    unlink(file2);
    FREE(file1);
    FREE(file2);
-   
-   lFreeElem(&ep);
-   ep = ep2;
-
-   if (ret != 0) {
-      return ret;
-   }
-   
-   printf("CE: spool = 1\n");
-   /* Write a CE file using classic spooling */
-   file1 = write_centry(1, 1, ep);
-   
-   /* Read a CE file using flatfile spooling */
-   lFreeElem(&ep);
-   ep = spool_flatfile_read_object(&alp, CE_Type, NULL,
-                                   CE_fields, NULL, true, &qconf_sfi,
-                                   SP_FORM_ASCII, NULL, file1);
-         
-   /* Write a CE file using flatfile spooling */
-   file2 = spool_flatfile_write_object(&alp, ep, false,
-                                       CE_fields,
-                                       &qconf_sfi,
-                                       SP_DEST_TMP,
-                                       SP_FORM_ASCII, 
-                                       file2, true);
-
-   lFreeElem(&ep);
-   ep = cull_read_in_centry(NULL, file2, 1, NULL, NULL);
-   unlink(file2);
-   FREE(file2);
-   
-   file2 = write_centry(1, 1, ep);
-   
-   ret = diff(file1, file2);
-   
-   unlink(file1);
-   unlink(file2);
-   FREE(file1);
-   FREE(file2);
-   
-   lFreeElem(&ep);
    
    answer_list_output(&alp);   
-   lFreeList(&alp);
    
    return ret;
 }
@@ -1035,9 +632,8 @@ static int CEL_test(void)
    int ret = 0;
    lListElem *ep = NULL;
    lList *lp = NULL;
-   lList *lp2 = NULL;
    lList *alp = NULL;
-   const char *file1 = "/var/tmp/CEL_ff";
+   const char *file1 = NULL;
    const char *file2 = NULL;
    
    lp = lCreateList("Complex List", CE_Type);
@@ -1066,11 +662,14 @@ static int CEL_test(void)
    
    spool_flatfile_align_list(&alp,(const lList *)lp, CE_fields, 0);
    
-   lp2 = lCopyList("Complex List", lp);
-   
-   printf("CEL: spool = 0\n");
+   printf("CEL: spool\n");
    /* Write a CEL file using classic spooling */
-   write_cmplx(0,(char *)file1, lp, NULL, &alp);
+   file1 = spool_flatfile_write_list(&alp, lp,
+                                     CE_fields,
+                                     &qconf_ce_list_sfi,
+                                     SP_DEST_TMP, 
+                                     SP_FORM_ASCII, 
+                                     file1, false);
    
    /* Read a CE file using flatfile spooling */
    lFreeList(&lp);
@@ -1085,62 +684,17 @@ static int CEL_test(void)
                                      SP_DEST_TMP, 
                                      SP_FORM_ASCII, 
                                      NULL, false);
-
    lFreeList(&lp);
-   lp = read_cmplx(file2, NULL, NULL);
-   unlink(file2);
-   FREE(file2);
-   
-   file2 = "/var/tmp/CEL_cl";
-   write_cmplx(0,(char *)file2, lp, NULL, &alp);
+
    
    ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
-   
-   lFreeList(&lp);
-   lp = lp2;
-
-   if (ret != 0) {
-      return ret;
-   }
-   
-   printf("CEL: spool = 1\n");
-   /* Write a CEL file using classic spooling */
-   write_cmplx(1,(char *)file1, lp, NULL, &alp);
-   
-   /* Read a CE file using flatfile spooling */
-   lFreeList(&lp);
-   lp = spool_flatfile_read_list(&alp, CE_Type,
-                                   CE_fields, NULL, true, &qconf_ce_list_sfi,
-                                   SP_FORM_ASCII, NULL, file1);
-   
-   /* Write a CEL file using flatfile spooling */
-   file2 = spool_flatfile_write_list(&alp, lp,
-                                     CE_fields,
-                                     &qconf_ce_list_sfi,
-                                     SP_DEST_TMP,
-                                     SP_FORM_ASCII, 
-                                     file2, true);
-
-   lFreeList(&lp);
-   lp = read_cmplx(file2, NULL, NULL);
-   unlink(file2);
+   FREE(file1);
    FREE(file2);
-   
-   file2 = "/var/tmp/CEL_cl";
-   write_cmplx(1,(char *)file2, lp, NULL, &alp);
-
-   lFreeList(&lp);
-   
-   ret = diff(file1, file2);
-   
-   unlink(file1);
-   unlink(file2);
    
    answer_list_output(&alp);   
-   lFreeList(&alp);
    
    return ret;
 }
@@ -1324,56 +878,56 @@ static lList *buildProjectList(void) {
 static lList *buildDebitedUsageList(void) {
    lList *lp = NULL;
    lList *lp2 = NULL;
-   lListElem *ep2 = NULL;
-   lListElem *ep3 = NULL;
+   lListElem *ep = NULL;
+   lListElem *ep1 = NULL;
 
    lp = lCreateList("Debited Usage List", UPU_Type);
    
-   ep2 = lCreateElem(UPU_Type);
-   lSetUlong(ep2, UPU_job_number, 13579);
+   ep = lCreateElem(UPU_Type);
+   lSetUlong(ep, UPU_job_number, 13579);
    
    lp2 = lCreateList("Old Usage List", UA_Type);
    
-   ep3 = lCreateElem(UA_Type);
-   lSetString(ep3, UA_name, "Test_Name26");
-   lSetDouble(ep3, UA_value, 11.22);
-   lAppendElem(lp2, ep3);
+   ep1 = lCreateElem(UA_Type);
+   lSetString(ep1, UA_name, "Test_Name26");
+   lSetDouble(ep1, UA_value, 11.22);
+   lAppendElem(lp2, ep1);
    
-   ep3 = lCreateElem(UA_Type);
-   lSetString(ep3, UA_name, "Test_Name27");
-   lSetDouble(ep3, UA_value, 33.44);
-   lAppendElem(lp2, ep3);
+   ep1 = lCreateElem(UA_Type);
+   lSetString(ep1, UA_name, "Test_Name27");
+   lSetDouble(ep1, UA_value, 33.44);
+   lAppendElem(lp2, ep1);
    
-   ep3 = lCreateElem(UA_Type);
-   lSetString(ep3, UA_name, "Test_Name28");
-   lSetDouble(ep3, UA_value, 55.66);
-   lAppendElem(lp2, ep3);
+   ep1 = lCreateElem(UA_Type);
+   lSetString(ep1, UA_name, "Test_Name28");
+   lSetDouble(ep1, UA_value, 55.66);
+   lAppendElem(lp2, ep1);
       
-   lSetList(ep2, UPU_old_usage_list, lp2);
-   lAppendElem(lp, ep2);
+   lSetList(ep, UPU_old_usage_list, lp2);
+   lAppendElem(lp, ep);
    
-   ep2 = lCreateElem(UPU_Type);
-   lSetUlong(ep2, UPU_job_number, 97531);
+   ep = lCreateElem(UPU_Type);
+   lSetUlong(ep, UPU_job_number, 97531);
    
    lp2 = lCreateList("Old Usage List", UA_Type);
    
-   ep3 = lCreateElem(UA_Type);
-   lSetString(ep3, UA_name, "Test_Name29");
-   lSetDouble(ep3, UA_value, 11.22);
-   lAppendElem(lp2, ep3);
+   ep1 = lCreateElem(UA_Type);
+   lSetString(ep1, UA_name, "Test_Name29");
+   lSetDouble(ep1, UA_value, 11.22);
+   lAppendElem(lp2, ep1);
    
-   ep3 = lCreateElem(UA_Type);
-   lSetString(ep3, UA_name, "Test_Name30");
-   lSetDouble(ep3, UA_value, 33.44);
-   lAppendElem(lp2, ep3);
+   ep1 = lCreateElem(UA_Type);
+   lSetString(ep1, UA_name, "Test_Name30");
+   lSetDouble(ep1, UA_value, 33.44);
+   lAppendElem(lp2, ep1);
    
-   ep3 = lCreateElem(UA_Type);
-   lSetString(ep3, UA_name, "Test_Name31");
-   lSetDouble(ep3, UA_value, 55.66);
-   lAppendElem(lp2, ep3);
+   ep1 = lCreateElem(UA_Type);
+   lSetString(ep1, UA_name, "Test_Name31");
+   lSetDouble(ep1, UA_value, 55.66);
+   lAppendElem(lp2, ep1);
       
-   lSetList(ep2, UPU_old_usage_list, lp2);
-   lAppendElem(lp, ep2);
+   lSetList(ep, UPU_old_usage_list, lp2);
+   lAppendElem(lp, ep);
 
    return lp;
 }   
@@ -1418,7 +972,7 @@ static int UU_test(void) {
    lList *lp = NULL;
    lList *alp = NULL;
    spooling_field *fields = NULL;
-   const char *file1 = "/var/tmp/UU_cl";
+   const char *file1 = NULL;
    const char *file2 = NULL;
    
    user = lCreateElem(UU_Type);
@@ -1442,45 +996,38 @@ static int UU_test(void) {
    lp = buildDebitedUsageList();
    lSetList(user, UU_debited_job_usage, lp);
 
-   printf("UU: spool = 0, user = 1\n");
-   /* Write a UU file using classic spooling */
-   write_userprj(&alp, user,(char *)file1, NULL, 0, 1);
-   
-   /* Read a UU file using flatfile spooling */
+   printf("UU: spool\n");
+
+   fields = sge_build_UU_field_list(true);
+
+   /* Write a UU file using flatfile spooling */
+   file1 = spool_flatfile_write_object(&alp, user, false,
+                                     fields,
+                                     &qconf_sfi,
+                                     SP_DEST_TMP,
+                                     SP_FORM_ASCII, 
+                                     file1, false);
    lFreeElem(&user);
-   fields = sge_build_UU_field_list(false);
    user = spool_flatfile_read_object(&alp, UU_Type, NULL,
                                    fields, NULL, true, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, file1);
-         
-   /* Write a UU file using flatfile spooling */
    file2 = spool_flatfile_write_object(&alp, user, false,
                                      fields,
                                      &qconf_sfi,
                                      SP_DEST_TMP,
                                      SP_FORM_ASCII, 
                                      file2, false);
-
    lFreeElem(&user);
-   user = cull_read_in_userprj(NULL, file2, 0, 1, NULL);
-   unlink(file2);
-   FREE(file2);
-
-   file2 = "/var/tmp/UU_ff";
-   write_userprj(&alp, user, (char *)file2, NULL, 0, 1);
-   
    ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
+   FREE(file1);
+   FREE(file2);
+
    FREE(fields);
    
-   lFreeElem(&user);
-   
-   printf("UU: spool = 1, user = 1 -- INVALID\n");
-   
    answer_list_output(&alp);   
-   lFreeList(&alp);
    
    return ret;
 }
@@ -1491,7 +1038,7 @@ static int PR_test(void) {
    lList *lp = NULL;
    lList *alp = NULL;
    spooling_field *fields = NULL;
-   const char *file1 = "/var/tmp/PR_cl";
+   const char *file1 = NULL;
    const char *file2 = NULL;
    
    prj = lCreateElem(PR_Type);
@@ -1518,13 +1065,19 @@ static int PR_test(void) {
    lp = buildDebitedUsageList();
    lSetList(prj, PR_debited_job_usage, lp);
 
-   printf("PR: spool = 0, user = 0\n");
+   fields = sge_build_PR_field_list(true);
+
+   printf("PR: spool\n");
    /* Write a PR file using classic spooling */
-   write_userprj(&alp, prj,(char *)file1, NULL, 0, 0);
+   file1 = spool_flatfile_write_object(&alp, prj, false,
+                                     fields,
+                                     &qconf_sfi,
+                                     SP_DEST_TMP,
+                                     SP_FORM_ASCII, 
+                                     file1, false);
    
    /* Read a PR file using flatfile spooling */
    lFreeElem(&prj);
-   fields = sge_build_PR_field_list(false);
    prj = spool_flatfile_read_object(&alp, PR_Type, NULL,
                                    fields, NULL, true, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, file1);
@@ -1538,25 +1091,17 @@ static int PR_test(void) {
                                      file2, false);
 
    lFreeElem(&prj);
-   prj = cull_read_in_userprj(NULL, file2, 0, 0, NULL);
-   unlink(file2);
-   FREE(file2);
-
-   file2 = "/var/tmp/PR_ff";
-   write_userprj(&alp, prj, (char *)file2, NULL, 0, 0);
+   answer_list_output(&alp);   
    
    ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
+   FREE(file1);
+   FREE(file2);
    FREE(fields);
    
-   lFreeElem(&prj);
-
-   printf("PR: spool = 1, user = 0 -- INVALID\n");
-   
    answer_list_output(&alp);   
-   lFreeList(&alp);
    
    return ret;
 }
@@ -1568,7 +1113,7 @@ static int US_test(void)
    lListElem *ep2 = NULL;
    lList *lp = NULL;
    lList *alp = NULL;
-   const char *file1 = "/var/tmp/US_cl";
+   const char *file1 = NULL;
    const char *file2 = NULL;
    
    ep = lCreateElem(US_Type);
@@ -1595,7 +1140,12 @@ static int US_test(void)
    
    printf("US: NO ARGS\n");
    /* Write a US file using classic spooling */
-   write_userset(&alp, ep,(char *)file1, NULL, 0);
+   file1 = spool_flatfile_write_object(&alp, ep, false,
+                                       US_fields,
+                                       &qconf_param_sfi,
+                                       SP_DEST_TMP,
+                                       SP_FORM_ASCII, 
+                                       file1, false);
 
    /* Read a US file using flatfile spooling */
    lFreeElem(&ep);
@@ -1611,23 +1161,17 @@ static int US_test(void)
                                        SP_FORM_ASCII, 
                                        file2, false);
    
-   lFreeElem(&ep);
-   ep = cull_read_in_userset(NULL, file2, 0, 0, NULL);
-   unlink(file2);
-   FREE(file2);
-
-   file2 = "/var/tmp/US_ff";
-   write_userset(&alp, ep,(char *)file2, NULL, 0);
    
    ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
+   FREE(file1);
+   FREE(file2);
    
    lFreeElem(&ep);
    
    answer_list_output(&alp);   
-   lFreeList(&alp);
    
    return ret;
 }
@@ -1828,13 +1372,19 @@ static int EH_test(void)
    
    lSetList(ep, EH_report_variables, lp);
 
-   printf("EH: spool = 0\n");
+   fields = sge_build_EH_field_list(true, false, false);
+
+   printf("EH: spool\n");
    /* Write a EH file using classic spooling */
-   file1 = write_host(0, 1, ep, EH_name, NULL);
+   file1 = spool_flatfile_write_object(&alp, ep, false,
+                                       fields,
+                                       &qconf_sfi,
+                                       SP_DEST_TMP,
+                                       SP_FORM_ASCII, 
+                                       file1, false);
    
    /* Read a EH file using flatfile spooling */
    lFreeElem(&ep);
-   fields = sge_build_EH_field_list(false, false, false);
    ep = spool_flatfile_read_object(&alp, EH_Type, NULL,
                                    fields, NULL, true, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, file1);
@@ -1846,13 +1396,6 @@ static int EH_test(void)
                                        SP_DEST_TMP,
                                        SP_FORM_ASCII, 
                                        file2, false);
-   
-   lFreeElem(&ep);
-   ep = cull_read_in_host(NULL, file2, 0, EH_name, 0, NULL);
-   unlink(file2);
-   FREE(file2);
-
-   file2 = write_host(0, 1, ep, EH_name, NULL);
    
    ret = diff(file1, file2);
    
@@ -1868,10 +1411,7 @@ static int EH_test(void)
       return ret;
    }
    
-   printf("EH: spool = 1 -- INVALID\n");
-   
    answer_list_output(&alp);   
-   lFreeList(&alp);
    
    return ret;
 }
@@ -2630,7 +2170,12 @@ static int CQ_test(void) {
 
    printf("CQ: No Args\n");   
    /* Write a CQ file using classic spooling */
-   file1 = write_cqueue(0, 1, ep);
+   file1 = spool_flatfile_write_object(&alp, ep, false,
+                                       CQ_fields,
+                                       &qconf_sfi,
+                                       SP_DEST_TMP,
+                                       SP_FORM_ASCII, 
+                                       file1, false);
    
    /* Read a CQ file using flatfile spooling */
    lFreeElem(&ep);
@@ -2647,11 +2192,6 @@ static int CQ_test(void) {
                                        file2, false);
    
    lFreeElem(&ep);
-   ep = cull_read_in_cqueue(NULL, file2, 0, 0, NULL, NULL);
-   unlink(file2);
-   FREE(file2);
-
-   file2 = write_cqueue(0, 1, ep);
    
    ret = diff(file1, file2);
    
@@ -2660,10 +2200,7 @@ static int CQ_test(void) {
    FREE(file1);
    FREE(file2);
    
-   lFreeElem(&ep);
-   
    answer_list_output(&alp);   
-   lFreeList(&alp);
    
    return ret;
 }
@@ -2757,7 +2294,12 @@ static int SC_test(void)
 
    printf("SC: No Args\n");   
    /* Write a SC file using classic spooling */
-   file1 = write_sched_configuration(0, 1, NULL, ep);
+   file1 = spool_flatfile_write_object(&alp, ep, false,
+                                       SC_fields,
+                                       &qconf_comma_sfi,
+                                       SP_DEST_TMP,
+                                       SP_FORM_ASCII, 
+                                       file1, false);
    
    /* Read a SC file using flatfile spooling */
    lFreeElem(&ep);
@@ -2774,13 +2316,6 @@ static int SC_test(void)
                                        file2, false);
    
    lFreeElem(&ep);
-   ep = cull_read_in_schedd_conf(NULL, file2, 0, NULL);
-
-   unlink(file2);
-   FREE(file2);
-   
-   file2 = write_sched_configuration(0, 1, NULL, ep);
-   lFreeElem(&ep);
    
    ret = diff(file1, file2);
    
@@ -2790,7 +2325,6 @@ static int SC_test(void)
    FREE(file2);
    
    answer_list_output(&alp);   
-   lFreeList(&alp);
    
    return ret;
 }
@@ -2800,7 +2334,7 @@ static int QU_test(void)
    int ret = 0;
    lListElem *ep = NULL;
    lList * alp = NULL;
-   spooling_field *fields = sge_build_QU_field_list(false, true);
+   spooling_field *fields = NULL;
    const char *file1 = NULL, *file2 = NULL;
    
    ep = lCreateElem(QU_Type);
@@ -2813,9 +2347,16 @@ static int QU_test(void)
    lSetUlong(ep, QU_queue_number, 5); /* unused */
 
    printf("QU: No Args\n");   
+
+   fields = sge_build_QU_field_list(false, true);
    
    /* Write a QU file using classic spooling */
-   file1 = write_qinstance(0, 1, ep);
+   file1 = spool_flatfile_write_object(&alp, ep, false,
+                                       fields,
+                                       &qconf_sfi,
+                                       SP_DEST_TMP,
+                                       SP_FORM_ASCII, 
+                                       file1, false);
    
    /* Read a QU file using flatfile spooling */
    lFreeElem(&ep);
@@ -2832,11 +2373,6 @@ static int QU_test(void)
                                        file2, false);
    
    lFreeElem(&ep);
-   ep = cull_read_in_qinstance(NULL, file2, 1, 0, NULL, NULL);
-   unlink(file2);
-   FREE(file2);
-   
-   file2 = write_qinstance(0, 1, ep);
    
    ret = diff(file1, file2);
    
@@ -2844,12 +2380,10 @@ static int QU_test(void)
    unlink(file2);
    FREE(file1);
    FREE(file2);
+
    FREE(fields);
    
-   lFreeElem(&ep);
-   
    answer_list_output(&alp);   
-   lFreeList(&alp);
    
    return ret;
 }
@@ -2871,14 +2405,18 @@ static int HGRP_test(void)
    printf("HGRP: No Args\n");   
    
    /* Write a HGRP file using classic spooling */
-   file1 = write_host_group(1, 1, ep);
+   file1 = spool_flatfile_write_object(&alp, ep, false,
+                                       HGRP_fields,
+                                       &qconf_sfi,
+                                       SP_DEST_TMP,
+                                       SP_FORM_ASCII, 
+                                       file1, false);
    
    /* Read a HGRP file using flatfile spooling */
    lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, HGRP_Type, NULL,
                                    HGRP_fields, NULL, true, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, file1);
-   answer_list_output(&alp);
    
    /* Write a HGRP file using flatfile spooling */
    file2 = spool_flatfile_write_object(&alp, ep, false,
@@ -2887,14 +2425,7 @@ static int HGRP_test(void)
                                        SP_DEST_TMP,
                                        SP_FORM_ASCII, 
                                        file2, false);
-   answer_list_output(&alp);
-   
    lFreeElem(&ep);
-   ep = cull_read_in_host_group(NULL, file2, 1, 0, NULL, NULL);
-   unlink(file2);
-   FREE(file2);
-   
-   file2 = write_host_group(1, 1, ep);
    
    ret = diff(file1, file2);
    
@@ -2903,10 +2434,7 @@ static int HGRP_test(void)
    FREE(file1);
    FREE(file2);
    
-   lFreeElem(&ep);
-   
    answer_list_output(&alp);   
-   lFreeList(&alp);
    
    return ret;
 }
@@ -3011,7 +2539,12 @@ static int CU_test(void)
    printf("CU: No Args\n");   
    
    /* Write a CU file using classic spooling */
-   file1 = write_ume(0, 1, ep);
+   file1 = spool_flatfile_write_object(&alp, ep, false,
+                                       CU_fields,
+                                       &qconf_comma_braced_sfi,
+                                       SP_DEST_TMP,
+                                       SP_FORM_ASCII, 
+                                       file1, false);
    
    /* Read a CU file using flatfile spooling */
    lFreeElem(&ep);
@@ -3028,11 +2561,6 @@ static int CU_test(void)
                                        file2, false);
    
    lFreeElem(&ep);
-   ep = cull_read_in_ume(NULL, file2, 1, 0, 0, NULL);
-   unlink(file2);
-   FREE(file2);
-   
-   file2 = write_ume(0, 1, ep);
    
    ret = diff(file1, file2);
    
@@ -3041,10 +2569,8 @@ static int CU_test(void)
    FREE(file1);
    FREE(file2);
    
-   lFreeElem(&ep);
    
    answer_list_output(&alp);   
-   lFreeList(&alp);
    
    return ret;
 }
@@ -3057,7 +2583,7 @@ static int CONF_test(void) {
    lList * lp = NULL;
    lList * alp = NULL;
    spooling_field *fields;
-   const char *file1 = "/var/tmp/CONF_cl";
+   const char *file1 = NULL;
    const char *file2 = NULL;
    
    ep = lCreateElem(CONF_Type);
@@ -3105,10 +2631,15 @@ static int CONF_test(void) {
    
    printf("CONF: No Args\n");
 
-   fields = sge_build_CONF_field_list(false);
+   fields = sge_build_CONF_field_list(true);
    
    /* Write a CU file using classic spooling */
-   write_configuration(0, &alp,(char *)file1, ep, NULL, 0);
+   file1 = spool_flatfile_write_object(&alp, ep, false,
+                                       fields,
+                                       &qconf_sfi,
+                                       SP_DEST_TMP,
+                                       SP_FORM_ASCII, 
+                                       file1, true);
 
    
    /* Read a CU file using flatfile spooling */
@@ -3126,24 +2657,17 @@ static int CONF_test(void) {
                                        file2, true);
 
    lFreeElem(&ep);
-   ep = read_configuration(file2, "Test_Name", 0);
-   unlink(file2);
-   FREE(file2);
-
-   file2 = strdup("/var/tmp/CONF_ff");
-   ret = write_configuration(0, &alp,(char *)file2, ep, NULL, 0);
    
    ret = diff(file1, file2);
    
    unlink(file1);
    unlink(file2);
+   FREE(file1);
    FREE(file2);
    FREE(fields);
    
-   lFreeElem(&ep);
    
    answer_list_output(&alp);   
-   lFreeList(&alp);
    
    return ret;
 }
@@ -3158,7 +2682,7 @@ static int RQS_test(void) {
    lList *limit_list= NULL;
    lList *alp = NULL;
    spooling_field *fields = NULL;
-   const char *file1 = "/var/tmp/RQS_cl";
+   const char *file1 = NULL;
    const char *file2 = NULL;
    lList* rqs_list = lCreateList("test", RQS_Type);
 
@@ -3251,33 +2775,21 @@ static int RQS_test(void) {
    lSetList(ep, RQS_rule, lp1);
    lAppendElem(rqs_list, ep);
 
-   fields = sge_build_RQS_field_list(false, false);
+   fields = sge_build_RQS_field_list(true, false);
 
    printf("RQRF: No Args\n");   
 
    /* Write a RQS file using classic spooling */
-   file1 = write_rqs_list(0, 1, rqs_list);
+   file1 = spool_flatfile_write_list(&alp, rqs_list, fields, &qconf_rqs_sfi, SP_DEST_TMP, SP_FORM_ASCII, file1, false);
 
    /* Read a RQS file using flatfile spooling */
    lFreeList(&rqs_list);
    rqs_list = spool_flatfile_read_list(&alp, RQS_Type, fields, NULL, true, &qconf_rqs_sfi,
                                    SP_FORM_ASCII, NULL, file1);
-   answer_list_output(&alp);
 
    /* Write a RQS file using flatfile spooling */
    file2 = spool_flatfile_write_list(&alp, rqs_list, fields, &qconf_rqs_sfi, SP_DEST_TMP, SP_FORM_ASCII, file2, false);
-
-   answer_list_output(&alp);
-
-   /* Read a RQS file using classic spooling */
    lFreeList(&rqs_list);
-   rqs_list = cull_read_in_rqs_list(file2, &alp);
-
-   unlink(file2);
-   FREE(file2);
-
-   file2 = spool_flatfile_write_list(&alp, rqs_list, fields, &qconf_rqs_sfi, SP_DEST_TMP, SP_FORM_ASCII, file2, false);
-
 
    ret = diff(file1, file2);
 
@@ -3289,8 +2801,6 @@ static int RQS_test(void) {
    FREE(fields);
 
    answer_list_output(&alp);
-
-   lFreeList(&rqs_list);
 
    return ret;
 }
@@ -3361,7 +2871,12 @@ static int AR_test(void) {
    printf("AR: No Args\n");   
    
    /* Write a AR file using classic spooling */
-   file1 = write_ar(1, 1, ep);
+   file1 = spool_flatfile_write_object(&alp, ep, false,
+                                       AR_fields,
+                                       &qconf_sfi,
+                                       SP_DEST_TMP,
+                                       SP_FORM_ASCII, 
+                                       file1, true);
 
    /* Read a AR file using flatfile spooling */
    lFreeElem(&ep);
@@ -3376,14 +2891,8 @@ static int AR_test(void) {
                                        SP_DEST_TMP,
                                        SP_FORM_ASCII, 
                                        file2, true);
-  
    lFreeElem(&ep);
-   ep = cull_read_in_ar(NULL, file2, 1, 0, NULL, NULL);
-   unlink(file2);
-   FREE(file2);
-   
-   file2 = write_ar(1, 1, ep);
-   
+
    ret = diff(file1, file2);
   
    unlink(file1);
@@ -3391,9 +2900,6 @@ static int AR_test(void) {
    FREE(file1);
    FREE(file2);
    
-   lFreeElem(&ep);
-   
    answer_list_output(&alp);   
-   lFreeList(&alp);
    return ret;
 }

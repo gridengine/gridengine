@@ -1391,14 +1391,15 @@ bool sge_add_event(u_long32 timestamp, ev_event type, u_long32 intkey,
    const char *session, lListElem *element) 
 {
    lList *lp = NULL;
-   lList *temp_sub_lp = NULL;
-   int sub_list_elem = 0;
    
    if (get_number_of_subscriptions(type) <= 0) {
       return true; /* no event client has this event subscribed */
    }
 
    if (element != NULL) {
+      lList *temp_sub_lp = NULL;
+      int sub_list_elem = 0;
+
       /* ignore the sublist in case of the following events. We have
          extra events to handle the sub-lists */
       if (type == sgeE_JOB_MOD) {

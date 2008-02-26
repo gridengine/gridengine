@@ -118,7 +118,7 @@ add_pe_slots_to_category(category_use_t *use_category, u_long32 *max_slotsp, lLi
 /* -- these implement parallel assignemnt ------------------------- */
 
 static dispatch_t
-parallel_reservation_max_time_slots(sge_assignment_t *best);
+parallel_reservation_max_time_slots(sge_assignment_t *best, int *available_slots);
 
 static dispatch_t
 parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots);
@@ -405,6 +405,7 @@ sge_select_parallel_environment(sge_assignment_t *best, lList *pe_list)
       }
 
       for_each(pe, pe_list) {
+         int available_slots = 0;
 
          if (!pe_is_matching(pe, pe_request)) {
             continue;
@@ -418,9 +419,9 @@ sge_select_parallel_environment(sge_assignment_t *best, lList *pe_list)
             best->pe_name = pe_name;
 
             /* determine earliest start time with that PE */
-            result = parallel_reservation_max_time_slots(best);
+            result = parallel_reservation_max_time_slots(best, &available_slots);
             if (result != DISPATCH_OK) {
-               schedd_mes_add(best->job_id, SCHEDD_INFO_PESLOTSNOTINRANGE_SI, pe_name, best->slots); 
+               schedd_mes_add(best->job_id, SCHEDD_INFO_PESLOTSNOTINRANGE_SI, pe_name, available_slots); 
                best_result = find_best_result(best_result, result);
                continue;
             }
@@ -435,10 +436,10 @@ sge_select_parallel_environment(sge_assignment_t *best, lList *pe_list)
 
             /* try to find earlier assignment again with minimum slot amount */
             tmp.slots = 0;
-            result = parallel_reservation_max_time_slots(&tmp); 
+            result = parallel_reservation_max_time_slots(&tmp, &available_slots); 
             
             if (result != DISPATCH_OK) {
-               schedd_mes_add(best->job_id, SCHEDD_INFO_PESLOTSNOTINRANGE_SI, pe_name, best->slots); 
+               schedd_mes_add(best->job_id, SCHEDD_INFO_PESLOTSNOTINRANGE_SI, pe_name, available_slots); 
                best_result = find_best_result(best_result, result);
                assignment_release(&tmp);
                continue;
@@ -647,7 +648,7 @@ void clean_up_parallel_job(sge_assignment_t *a)
 *     MT-NOTE: parallel_reservation_max_time_slots() is not MT safe 
 *******************************************************************************/
 static dispatch_t 
-parallel_reservation_max_time_slots(sge_assignment_t *best) 
+parallel_reservation_max_time_slots(sge_assignment_t *best, int *available_slots) 
 {
    u_long32 pe_time, first_time;
    sge_assignment_t tmp_assignment = SGE_ASSIGNMENT_INIT;
@@ -689,7 +690,6 @@ parallel_reservation_max_time_slots(sge_assignment_t *best)
 
    old_logging = schedd_mes_get_logging(); /* store logging mode */  
    for (pe_time = first_time ; pe_time; pe_time = sge_qeti_next(qeti)) {
-      int available_slots = 0;
       DPRINTF(("SELECT PE TIME(%s, "sge_u32") tries at "sge_u32"\n", 
                best->pe_name, best->job_id, pe_time));
       tmp_assignment.start = pe_time;
@@ -705,7 +705,7 @@ parallel_reservation_max_time_slots(sge_assignment_t *best)
          schedd_mes_off();
       }
       
-      result = parallel_assignment(&tmp_assignment, &use_category, &available_slots);
+      result = parallel_assignment(&tmp_assignment, &use_category, available_slots);
       assignment_clear_cache(&tmp_assignment);
 
       if (result == DISPATCH_OK) {
@@ -4731,9 +4731,11 @@ parallel_assignment(sge_assignment_t *a, category_use_t *use_category, int *avai
    }
 
    if ((lGetUlong(a->job, JB_ar) == 0) &&  (ret = parallel_available_slots(a, &pslots, &pslots_qend)) != DISPATCH_OK) {
+      *available_slots = MIN(pslots, pslots_qend);
       DRETURN(ret); 
    }
    if (a->slots > pslots) {
+      *available_slots = MIN(pslots, pslots_qend);
       DRETURN((a->slots > pslots_qend)? DISPATCH_NEVER_CAT : DISPATCH_NOT_AT_TIME);
    }
 

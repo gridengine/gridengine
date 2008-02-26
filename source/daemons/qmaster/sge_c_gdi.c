@@ -602,7 +602,7 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
                     case -1 :
                     case -3 :
                               /* stop the order processing */
-                              DPRINTF(("Failed to follow order . Remaining %d orders unprocessed.\n", 
+                              WARNING((SGE_EVENT, "Remaining %d orders unprocessed due to configuration changes.\n", 
                                         lGetNumberOfRemainingElem(ep)));
                               ep = lLast(task->data_list); 
                        break;

@@ -131,7 +131,6 @@ void event_update_func(u_long32 ec_id, lList **alpp, lList *event_list)
       lList *events = NULL;
       lXchgList(lFirst(event_list), REP_list, &(events));
       lAddList(Scheduler_Control.new_events, &events);
-      events = NULL;
    } else {
       lXchgList(lFirst(event_list), REP_list, &(Scheduler_Control.new_events));
    }   

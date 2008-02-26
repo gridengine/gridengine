@@ -170,6 +170,8 @@ int main(int argc, char *argv[]) {
       ret=ret|test_match(TYPE_HOST, "Latte*", "latte3.czech.sun.com", T);
       ret=ret|test_match(TYPE_HOST, "latte* & !*3.czech.sun.com", "latte3.czech.sun.com", F);
       ret=ret|test_match(TYPE_HOST, "Latte* | Mocca*", "latte3.czech.sun.com", T);
+      ret=ret|test_match(TYPE_HOST, "!(a*|b*|c*|d*|e*|f*|g*|h*|i*|j*|k*|l*|m*|n*|o*|p*|q*|r*|s*|t*|u*|v*|w*|x*|y*|z*|baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa*)", "bla", F);
+
       
       fprintf(stdout, "For evaluation a single expression try: test_eval_expression <expr> <value> \n");
       fprintf(stdout, "Complex set of tests result is: %s \n", RESULT(ret));

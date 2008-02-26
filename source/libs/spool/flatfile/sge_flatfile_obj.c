@@ -74,8 +74,6 @@
  * functions is that some field lists are always that same, while others
  * change depending on the context from which they're called. */
 
-#define allow_delete_time_modification
-
 /* read_func's and write_func's -- signature is defined in
  * sge_spooling_utilities.h:spooling_field. */
 static void create_spooling_field (
@@ -88,7 +86,6 @@ static void create_spooling_field (
    int (*read_func) (lListElem *ep, int nm, const char *buffer, lList **alp), 
    int (*write_func) (const lListElem *ep, int nm, dstring *buffer, lList **alp)
 );
-static int write_PE_free_slots(const lListElem *ep, int nm, dstring *buffer, lList **alp);
 static int read_SC_queue_sort_method(lListElem *ep, int nm,
                                      const char *buffer, lList **alp);
 static int write_SC_queue_sort_method(const lListElem *ep, int nm,
@@ -562,6 +559,32 @@ spooling_field AR_fields[] = {
    {  NoName,             20,   NULL,                NULL, NULL, NULL}
 };
 
+spooling_field PE_fields[] = {
+   {  PE_name,            18,   "pe_name",           NULL, NULL, NULL},
+   {  PE_slots,           18,   "slots",             NULL, NULL, NULL},
+   {  PE_user_list,       18,   "user_lists",        US_sub_fields, NULL, NULL},
+   {  PE_xuser_list,      18,   "xuser_lists",       US_sub_fields, NULL, NULL},
+   {  PE_start_proc_args, 18,   "start_proc_args",   NULL, NULL, NULL},
+   {  PE_stop_proc_args,  18,   "stop_proc_args",    NULL, NULL, NULL},
+   {  PE_allocation_rule, 18,   "allocation_rule",   NULL, NULL, NULL},
+   {  PE_control_slaves,  18,   "control_slaves",    NULL, NULL, NULL},
+   {  PE_job_is_first_task, 18,   "job_is_first_task", NULL, NULL, NULL},
+   {  PE_urgency_slots,   18,   "urgency_slots",     NULL, NULL, NULL},
+#ifdef SGE_PQS_API
+   {  PE_qsort_args,      18,   "qsort_args",        NULL, NULL, NULL},
+#endif
+   {  PE_accounting_summary, 18,   "accounting_summary", NULL, NULL, NULL},
+   {  NoName,             18,   NULL,                NULL, NULL, NULL}
+};
+
+spooling_field RQS_fields[] = {
+   {  RQS_name,           12,   "name",              NULL, NULL, NULL},
+   {  RQS_description,    12,   "description",       NULL, NULL, NULL},
+   {  RQS_enabled,        12,   "enabled",           NULL, NULL, NULL},
+   {  RQS_rule,           12,   "limit",             RQR_sub_fields, &qconf_sub_rqs_sfi, NULL},
+   {  NoName,             12,   NULL,                NULL, NULL, NULL}
+};
+
 static void create_spooling_field (
    spooling_field *field,
    int nm, 
@@ -605,7 +628,7 @@ spooling_field *sge_build_PR_field_list(bool spool)
       create_spooling_field(&fields[count++], PR_long_term_usage, 0, "long_term_usage",
                              UA_sub_fields, &qconf_sub_name_value_space_sfi, NULL, NULL);
       create_spooling_field(&fields[count++], PR_project, 0, "project",
-                             UPP_sub_fields, NULL, NULL, NULL);
+                             UPP_sub_fields,  &qconf_sub_spool_usage_sfi, NULL, NULL);
    }
    create_spooling_field(&fields[count++], PR_acl, 0, "acl", US_sub_fields,
                           NULL, NULL, NULL);
@@ -634,15 +657,9 @@ spooling_field *sge_build_UU_field_list(bool spool)
                           NULL, NULL, NULL, NULL);
    create_spooling_field(&fields[count++], UU_fshare, 0, "fshare",
                           NULL, NULL, NULL, NULL);
-#if defined(allow_delete_time_modification)
    create_spooling_field(&fields[count++], UU_delete_time, 0,
                              "delete_time", NULL, NULL, NULL, NULL);
-#endif
    if (spool) {
-#if !defined(allow_delete_time_modification)
-      create_spooling_field(&fields[count++], UU_delete_time, 0, "delete_time",
-                            NULL, NULL, NULL, NULL);
-#endif
       create_spooling_field(&fields[count++], UU_usage, 0, "usage",
                              UA_sub_fields, &qconf_sub_name_value_space_sfi, NULL, NULL);
       create_spooling_field(&fields[count++], UU_usage_time_stamp, 0, "usage_time_stamp",
@@ -696,66 +713,6 @@ spooling_field *sge_build_STN_field_list(bool spool, bool recurse)
                           NULL);
    
    return fields;
-}
-
-spooling_field *sge_build_PE_field_list(bool spool, bool to_stdout)
-{
-#ifdef SGE_PQS_API
-   /* There are 15 possible PE_Type fields. */
-   spooling_field *fields = (spooling_field *)malloc(sizeof(spooling_field)*15);
-#else
-   /* There are 13 possible PE_Type fields. */
-   spooling_field *fields = (spooling_field *)malloc(sizeof(spooling_field)*13);
-#endif
-   int count = 0;
-   
-   create_spooling_field (&fields[count++], PE_name, 18, "pe_name",
-                          NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], PE_slots, 18, "slots",
-                          NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], PE_user_list, 18, "user_lists",
-                          US_sub_fields, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], PE_xuser_list, 18, "xuser_lists",
-                          US_sub_fields, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], PE_start_proc_args, 18, "start_proc_args",
-                          NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], PE_stop_proc_args, 18, "stop_proc_args",
-                          NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], PE_allocation_rule, 18, "allocation_rule",
-                          NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], PE_control_slaves, 18, "control_slaves",
-                          NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], PE_job_is_first_task, 18, "job_is_first_task",
-                          NULL, NULL, NULL, NULL);
-   
-   create_spooling_field (&fields[count++], PE_urgency_slots, 18, "urgency_slots",
-                          NULL, NULL, NULL, NULL);
-   
-#ifdef SGE_PQS_API
-   create_spooling_field (&fields[count++], PE_qsort_args, 18, "qsort_args",
-                          NULL, NULL, NULL, NULL);
-#endif
-
-   create_spooling_field (&fields[count++], PE_accounting_summary, 18, "accounting_summary",
-                          NULL, NULL, NULL, NULL);
-
-   if (!spool && to_stdout && getenv("MORE_INFO")) {
-      create_spooling_field (&fields[count++], PE_free_slots, 18, "free_slots",
-                             NULL, NULL, NULL, write_PE_free_slots);
-   }
-   
-   create_spooling_field (&fields[count++], NoName, 18, NULL, NULL, NULL, NULL,
-                          NULL);
-   
-   return fields;
-}
-
-static int write_PE_free_slots(const lListElem *ep, int nm, dstring *buffer, lList **alp)
-{
-   sge_dstring_sprintf_append(buffer, sge_U32CFormat,
-                     sge_u32c(lGetUlong(ep, PE_slots) - pe_get_slots_used(ep)));
-   
-   return 1;
 }
 
 /* The spool_flatfile_read_object() function will fail to read the
@@ -1126,27 +1083,6 @@ spooling_field *sge_build_QU_field_list(bool to_stdout, bool to_file)
    create_spooling_field (&fields[count++], NoName, 21, NULL, NULL, NULL, NULL,
                           NULL);
    
-   return fields;
-}
-
-spooling_field *sge_build_RQS_field_list(bool spool, bool to_stdout)
-{
-   spooling_field *fields = (spooling_field *)malloc(sizeof(spooling_field)*5);
-
-   int count = 0;
-
-   create_spooling_field(&fields[count++], RQS_name, 12, "name",
-                          NULL, NULL, NULL, NULL);
-   create_spooling_field(&fields[count++], RQS_description, 12, "description",
-                          NULL, NULL, NULL, NULL);
-   create_spooling_field(&fields[count++], RQS_enabled, 12, "enabled",
-                          NULL, NULL, NULL, NULL);
-   create_spooling_field(&fields[count++], RQS_rule, 12, "limit",
-                          RQR_sub_fields, &qconf_sub_rqs_sfi, NULL, NULL);
-
-   create_spooling_field(&fields[count++], NoName, 12, NULL, NULL, NULL, NULL,
-                          NULL);
-
    return fields;
 }
 

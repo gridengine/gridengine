@@ -626,6 +626,9 @@ sge_scheduler_main(void *arg)
             prof_stop(SGE_PROF_SCHEDLIB4, NULL);
          }
 
+         /* reset the busy state */
+         evc->ec_set_busy(evc, 0);
+         evc->ec_commit(evc, NULL);
 
          sge_mutex_lock("scheduler_thread_cond_mutex", SGE_FUNC, __LINE__, 
                         &Scheduler_Control.mutex);
@@ -636,6 +639,8 @@ sge_scheduler_main(void *arg)
          MONITOR_IDLE_TIME(sge_scheduler_wait_for_event(), (&monitor), mconf_get_monitor_time(), 
                            mconf_is_monitor_message());
 
+         PROF_START_MEASUREMENT(SGE_PROF_CUSTOM6);
+
          /*
           * Set state to "busy" 
           * check if we have to shutdown
@@ -643,7 +648,6 @@ sge_scheduler_main(void *arg)
           * ack all events
           */
          {
-            PROF_START_MEASUREMENT(SGE_PROF_CUSTOM6);
             /* taking out the new events */
             event_list = Scheduler_Control.new_events;
             Scheduler_Control.new_events = NULL;
@@ -661,35 +665,13 @@ sge_scheduler_main(void *arg)
 
                if (do_shutdown == false && sge_mirror_process_event_list(evc, event_list) == SGE_EM_OK) {
                   handled_events = true;
-               } 
+               } else {
+                  DPRINTF((SFN" events contain shutdown event\n", thread_config->thread_name));
+               }
                lFreeList(&event_list);
-            }
-
-            if (do_shutdown == true) {
-               /* skip loop immediately */
-               DPRINTF((SFN" events contain shutdown event\n", thread_config->thread_name));
             }
          }
          
-         if (handled_events == true) {
-            PROF_START_MEASUREMENT(SGE_PROF_CUSTOM7);
-
-            if (__CONDITION(INFOPRINT)) {
-               dstring ds;
-               char buffer[128];
-
-               sge_dstring_init(&ds, buffer, sizeof(buffer));
-               DPRINTF(("================[SCHEDULING-EPOCH %s]==================\n", 
-                        sge_at_time(0, &ds)));
-               sge_dstring_free(&ds);
-            }
-         }
-
-         /* 
-          * If there were new events then
-          * copy/filter data necessary for the scheduler run
-          * and run the scheduler method 
-          */
          if (handled_events == true) {
             lList *answer_list = NULL;
             scheduler_all_data_t copy;
@@ -708,6 +690,24 @@ sge_scheduler_main(void *arg)
             lList *master_sharetree_list = *object_type_get_master_list(SGE_TYPE_SHARETREE);
             lList *selected_dept_list = NULL;
             lList *selected_acl_list = NULL;
+
+            PROF_START_MEASUREMENT(SGE_PROF_CUSTOM7);
+
+            if (__CONDITION(INFOPRINT)) {
+               dstring ds;
+               char buffer[128];
+
+               sge_dstring_init(&ds, buffer, sizeof(buffer));
+               DPRINTF(("================[SCHEDULING-EPOCH %s]==================\n", 
+                        sge_at_time(0, &ds)));
+               sge_dstring_free(&ds);
+            }
+
+            /* 
+             * If there were new events then
+             * copy/filter data necessary for the scheduler run
+             * and run the scheduler method 
+             */
 
             memset(&copy, 0, sizeof(copy));
 
@@ -936,10 +936,6 @@ sge_scheduler_main(void *arg)
                sge_schedd_block_until_oders_processed(evc->get_gdi_ctx(evc), NULL);
             }
 
-            /* reset the busy state */
-            if ((evc->ec_get_busy_handling(evc) == EV_BUSY_UNTIL_RELEASED)) {
-               evc->ec_set_busy(evc, 0);
-            }
 
             /* give information to event master */
             evc->ec_commit(evc, NULL);

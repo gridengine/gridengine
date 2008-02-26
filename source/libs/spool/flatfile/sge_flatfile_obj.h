@@ -51,16 +51,16 @@ extern spooling_field CU_fields[];
 extern spooling_field SH_fields[];
 extern spooling_field AH_fields[];
 extern spooling_field AR_fields[];
+extern spooling_field PE_fields[];
+extern spooling_field RQS_fields[];
 
 spooling_field *sge_build_PR_field_list(bool spool);
 spooling_field *sge_build_UU_field_list(bool spool);
 spooling_field *sge_build_STN_field_list(bool spool, bool recurse);
-spooling_field *sge_build_PE_field_list(bool spool, bool to_stdout);
 spooling_field *sge_build_EH_field_list(bool spool, bool to_stdout,
                                             bool history);
 spooling_field *sge_build_CONF_field_list(bool spool_config);
 spooling_field *sge_build_QU_field_list(bool to_stdout, bool to_file);
-spooling_field *sge_build_RQS_field_list(bool spool, bool to_stdout);
 
 #ifdef	__cplusplus
 }

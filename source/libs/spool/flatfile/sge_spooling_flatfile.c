@@ -214,7 +214,7 @@ spool_classic_create_context(lList **answer_list, const char *args)
                   field_info[i].instr  = &qconf_sfi;
                   break;
                case SGE_TYPE_PE:
-                  field_info[i].fields = sge_build_PE_field_list(true, false);
+                  field_info[i].fields = PE_fields;
                   field_info[i].instr  = &qconf_sfi;
                   break;
                case SGE_TYPE_CKPT:
@@ -243,7 +243,7 @@ spool_classic_create_context(lList **answer_list, const char *args)
                   field_info[i].instr  = &qconf_sfi;
                   break;
                case SGE_TYPE_RQS:
-                  field_info[i].fields = sge_build_RQS_field_list(true, false);
+                  field_info[i].fields = RQS_fields;
                   field_info[i].instr  = &qconf_rqs_sfi;
                   break;
                case SGE_TYPE_AR:

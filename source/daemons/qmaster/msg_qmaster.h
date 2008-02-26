@@ -228,11 +228,11 @@
 /* CR: don't localize mail subject, until we send it in Mime format!
  *  The message definition is not l10n'ed (no _() macro used)!!!     
  */
-/* #define MSG_RU_MAILSUB_SS             _MESSAGE(33162, _("Pushed rescheduling of "SFN" "SFN)) */
 #define MSG_RU_MAILSUB_SS             "Pushed rescheduling of "SFN" "SFN
 
 
 
+#define MSG_RU_REAPING_NOT_RESTARTABLE_SS _MESSAGE(33162, _("Reaping not restartable "SFN" "SFN))
 #define MSG_RU_MAILBODY_SSSS          _MESSAGE(33163, _("Your "SFN" "SFN" is was running on host "SFN". "SFN" manually/automatic rescheduling for this "SFN"."))
 #define MSG_RU_MAILTYPE               _MESSAGE(33164, _("job rescheduling"))
 #define MSG_RU_PUSHEDR                _MESSAGE(33165, _("Pushed"))

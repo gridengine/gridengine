@@ -165,7 +165,7 @@ sge_event_master_main(void *arg)
 
    DPRINTF((SFN" started", thread_config->thread_name));
    cl_thread_func_startup(thread_config);
-   sge_monitor_init(&monitor, thread_config->thread_name, TET_EXT, TET_WARNING, TET_ERROR);
+   sge_monitor_init(&monitor, thread_config->thread_name, EDT_EXT, EMT_WARNING, EMT_ERROR);
    sge_qmaster_thread_init(&ctx, QMASTER, DELIVERER_THREAD, true);
 
    /* register at profiling module */

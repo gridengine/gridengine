@@ -94,13 +94,11 @@ bool rqs_show(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name)
 
    if (ret && lGetNumberOfElem(rqs_list)) {
       const char* filename;
-      spooling_field *fields = sge_build_RQS_field_list(false, true);
-      filename = spool_flatfile_write_list(answer_list, rqs_list, fields, 
+      filename = spool_flatfile_write_list(answer_list, rqs_list, RQS_fields, 
                                         &qconf_rqs_sfi,
                                         SP_DEST_STDOUT, SP_FORM_ASCII, NULL,
                                         false);
       FREE(filename);
-      FREE(fields);
    }
    if (lGetNumberOfElem(rqs_list) == 0) {
       answer_list_add(answer_list, MSG_NORQSFOUND, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
@@ -346,10 +344,9 @@ bool rqs_add_from_file(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char
    DENTER(TOP_LAYER, "rqs_add_from_file");
    if (filename != NULL) {
       lList *rqs_list = NULL;
-      spooling_field *fields = sge_build_RQS_field_list(false, true);
 
       /* fields_out field does not work for rqs because of duplicate entry */
-      rqs_list = spool_flatfile_read_list(answer_list, RQS_Type, fields,
+      rqs_list = spool_flatfile_read_list(answer_list, RQS_Type, RQS_fields,
                                           NULL, true, &qconf_rqs_sfi,
                                           SP_FORM_ASCII, NULL, filename);
       if (!answer_list_has_error(answer_list)) {
@@ -358,7 +355,6 @@ bool rqs_add_from_file(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char
       }
 
       lFreeList(&rqs_list);
-      FREE(fields);
    }
    DRETURN(ret);
 }
@@ -394,7 +390,6 @@ static bool rqs_provide_modify_context(sge_gdi_ctx_class_t *ctx, lList **rqs_lis
    bool ret = false;
    int status = 0;
    const char *filename = NULL;
-   spooling_field *fields = NULL;
    uid_t uid = ctx->get_uid(ctx);
    gid_t gid = ctx->get_gid(ctx);
    
@@ -410,15 +405,13 @@ static bool rqs_provide_modify_context(sge_gdi_ctx_class_t *ctx, lList **rqs_lis
       *rqs_list = lCreateList("", RQS_Type);
    }
 
-   fields = sge_build_RQS_field_list(false, true);
-   filename = spool_flatfile_write_list(answer_list, *rqs_list, fields,
+   filename = spool_flatfile_write_list(answer_list, *rqs_list, RQS_fields,
                                         &qconf_rqs_sfi, SP_DEST_TMP,
                                         SP_FORM_ASCII, filename, false);
 
    if (answer_list_has_error(answer_list)) {
       unlink(filename);
       FREE(filename);
-      FREE(fields);
       DRETURN(ret);
    }
 
@@ -428,7 +421,7 @@ static bool rqs_provide_modify_context(sge_gdi_ctx_class_t *ctx, lList **rqs_lis
       lList *new_rqs_list = NULL;
 
       /* fields_out field does not work for rqs because of duplicate entry */
-      new_rqs_list = spool_flatfile_read_list(answer_list, RQS_Type, fields,
+      new_rqs_list = spool_flatfile_read_list(answer_list, RQS_Type, RQS_fields,
                                                NULL, true, &qconf_rqs_sfi,
                                                SP_FORM_ASCII, NULL, filename);
       if (answer_list_has_error(answer_list)) {
@@ -458,7 +451,6 @@ static bool rqs_provide_modify_context(sge_gdi_ctx_class_t *ctx, lList **rqs_lis
 
    unlink(filename);
    FREE(filename);
-   FREE(fields);
    DRETURN(ret);
 }
 
@@ -544,9 +536,8 @@ bool rqs_modify_from_file(sge_gdi_ctx_class_t *ctx, lList **answer_list, const c
    if (filename != NULL) {
       lList *rqs_list = NULL;
 
-      spooling_field *fields = sge_build_RQS_field_list(false, true);
       /* fields_out field does not work for rqs because of duplicate entry */
-      rqs_list = spool_flatfile_read_list(answer_list, RQS_Type, fields,
+      rqs_list = spool_flatfile_read_list(answer_list, RQS_Type, RQS_fields,
                                           NULL, true, &qconf_rqs_sfi,
                                           SP_FORM_ASCII, NULL, filename);
       if (rqs_list != NULL) {
@@ -582,7 +573,6 @@ bool rqs_modify_from_file(sge_gdi_ctx_class_t *ctx, lList **answer_list, const c
                                            gdi_command); 
          }
       }
-      FREE(fields);
       lFreeList(&rqs_list);
    }
    DRETURN(ret);

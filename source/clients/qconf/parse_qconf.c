@@ -716,7 +716,6 @@ char *argv[]
 
       if ((strcmp("-ap", *spp) == 0) ||
           (strcmp("-Ap", *spp) == 0)) {
-         spooling_field *fields = sge_build_PE_field_list(false, false);
 
          if (!strcmp("-ap", *spp)) {
             qconf_is_adminhost(ctx, qualified_hostname);
@@ -727,13 +726,12 @@ char *argv[]
             /* get a generic parallel environment */
             ep = pe_create_template(*spp); 
             filename = (char *)spool_flatfile_write_object(&alp, ep, false,
-                                                 fields, &qconf_sfi,
+                                                 PE_fields, &qconf_sfi,
                                                  SP_DEST_TMP, SP_FORM_ASCII,
                                                  NULL, false);
             lFreeElem(&ep);
             
             if (answer_list_output(&alp)) {
-               FREE(fields);
                FREE(filename);
                sge_error_and_exit(NULL);
             }
@@ -744,7 +742,6 @@ char *argv[]
                unlink(filename);
                FREE(filename);
                if (sge_error_and_exit(MSG_PARSE_EDITFAILED)) {
-                  FREE(fields);
                   continue;
                }
             }
@@ -753,7 +750,6 @@ char *argv[]
                unlink(filename);
                FREE(filename);
                if (sge_error_and_exit(MSG_FILE_FILEUNCHANGED)) {
-                  FREE(fields);
                   continue;
                }
             }
@@ -761,7 +757,7 @@ char *argv[]
             /* read it in again */
             fields_out[0] = NoName;
             ep = spool_flatfile_read_object(&alp, PE_Type, NULL,
-                                            fields, fields_out,  true, &qconf_sfi,
+                                            PE_fields, fields_out,  true, &qconf_sfi,
                                             SP_FORM_ASCII, NULL, filename);
             unlink(filename);
             FREE(filename);
@@ -771,11 +767,9 @@ char *argv[]
             }
 
             if (ep != NULL) {
-               missing_field = spool_get_unprocessed_field(fields, fields_out, &alp);
+               missing_field = spool_get_unprocessed_field(PE_fields, fields_out, &alp);
             }
 
-            FREE(fields);
-            
             if (missing_field != NoName) {
                lFreeElem(&ep);
                answer_list_output(&alp);
@@ -796,7 +790,7 @@ char *argv[]
 
             fields_out[0] = NoName;
             ep = spool_flatfile_read_object(&alp, PE_Type, NULL,
-                                            fields, fields_out, true, &qconf_sfi,
+                                            PE_fields, fields_out, true, &qconf_sfi,
                                             SP_FORM_ASCII, NULL, *spp);
             
             if (answer_list_output(&alp)) {
@@ -804,11 +798,9 @@ char *argv[]
             }
 
             if (ep != NULL) {
-               missing_field = spool_get_unprocessed_field(fields, fields_out, &alp);
+               missing_field = spool_get_unprocessed_field(PE_fields, fields_out, &alp);
             }
 
-            FREE(fields);
-            
             if (missing_field != NoName) {
                lFreeElem(&ep);
                answer_list_output(&alp);
@@ -2377,7 +2369,6 @@ char *argv[]
 
       if ((strcmp("-mp", *spp) == 0) || 
           (strcmp("-Mp", *spp) == 0)) {
-         spooling_field *fields = sge_build_PE_field_list(false, false);
 
          if (!strcmp("-mp", *spp)) {
             qconf_is_adminhost(ctx, qualified_hostname);
@@ -2396,7 +2387,6 @@ char *argv[]
             answer_exit_if_not_recoverable(aep);
             if (answer_get_status(aep) != STATUS_OK) {
                fprintf(stderr, "%s\n", lGetString(aep, AN_text));
-               FREE(fields);
                lFreeList(&alp);
                spp++;
                continue;
@@ -2406,7 +2396,6 @@ char *argv[]
             if (lp == NULL || lGetNumberOfElem(lp) == 0) {
                fprintf(stderr, MSG_PARALLEL_XNOTAPARALLELEVIRONMENT_S, *spp);
                fprintf(stderr, "\n");
-               FREE(fields);
                lFreeList(&lp);
                DRETURN(1);
             }
@@ -2415,13 +2404,12 @@ char *argv[]
 
             /* write pe to temp file */
             filename = (char *)spool_flatfile_write_object(&alp, ep, false,
-                                                 fields, &qconf_sfi,
+                                                 PE_fields, &qconf_sfi,
                                                  SP_DEST_TMP, SP_FORM_ASCII,
                                                  NULL, false);
             lFreeList(&lp);
 
             if (answer_list_output(&alp)) {
-               FREE(fields);
                sge_error_and_exit(NULL);
             }
 
@@ -2430,7 +2418,6 @@ char *argv[]
             if (status < 0) {
                unlink(filename);
                if (sge_error_and_exit(MSG_PARSE_EDITFAILED)) {
-                  FREE(fields);
                   FREE(filename);
                   continue;
                }
@@ -2439,7 +2426,6 @@ char *argv[]
             if (status > 0) {
                unlink(filename);
                if (sge_error_and_exit(MSG_FILE_FILEUNCHANGED)) {
-                  FREE(fields);
                   FREE(filename);
                   continue;
                }
@@ -2447,7 +2433,7 @@ char *argv[]
 
             fields_out[0] = NoName;
             ep = spool_flatfile_read_object(&alp, PE_Type, NULL,
-                                            fields, fields_out, true, &qconf_sfi,
+                                            PE_fields, fields_out, true, &qconf_sfi,
                                             SP_FORM_ASCII, NULL, filename);
             
             unlink(filename);
@@ -2458,11 +2444,9 @@ char *argv[]
             }
 
             if (ep != NULL) {
-               missing_field = spool_get_unprocessed_field(fields, fields_out, &alp);
+               missing_field = spool_get_unprocessed_field(PE_fields, fields_out, &alp);
             }
 
-            FREE(fields);
-            
             if (missing_field != NoName) {
                lFreeElem(&ep);
                answer_list_output(&alp);
@@ -2483,7 +2467,7 @@ char *argv[]
 
             fields_out[0] = NoName;
             ep = spool_flatfile_read_object(&alp, PE_Type, NULL,
-                                            fields, fields_out, true, &qconf_sfi,
+                                            PE_fields, fields_out, true, &qconf_sfi,
                                             SP_FORM_ASCII, NULL, *spp);
             
             if (answer_list_output(&alp)) {
@@ -2491,11 +2475,9 @@ char *argv[]
             }
 
             if (ep != NULL) {
-               missing_field = spool_get_unprocessed_field(fields, fields_out, &alp);
+               missing_field = spool_get_unprocessed_field(PE_fields, fields_out, &alp);
             }
 
-            FREE(fields);
-            
             if (missing_field != NoName) {
                lFreeElem(&ep);
                answer_list_output(&alp);
@@ -2928,11 +2910,11 @@ char *argv[]
       info_entry[0].fields = CQ_fields;
       /* These have to be freed later */
       info_entry[1].fields = sge_build_EH_field_list(false, false, false);
-      info_entry[2].fields = sge_build_PE_field_list(false, false);
-      info_entry[5].fields = sge_build_RQS_field_list(false, false);
       /* These do not */
+      info_entry[2].fields = PE_fields;
       info_entry[3].fields = CK_fields;
       info_entry[4].fields = HGRP_fields;
+      info_entry[5].fields = RQS_fields;
       
       /* no adminhost/manager check needed here */
         
@@ -2969,8 +2951,6 @@ char *argv[]
       if (!info_entry[index].object_name) {
          fprintf(stderr, "Modification of object "SFQ" not supported\n", *spp);
          FREE(info_entry[1].fields);
-         FREE(info_entry[2].fields);
-         FREE(info_entry[5].fields);
          DRETURN(1);
       } 
 
@@ -2998,15 +2978,11 @@ char *argv[]
          lFreeList(&alp);   
          if (exit) {
             FREE(info_entry[1].fields);
-            FREE(info_entry[2].fields);
-            FREE(info_entry[5].fields);
             DRETURN(1);
          }
       }
       
       FREE(info_entry[1].fields);
-      FREE(info_entry[2].fields);
-      FREE(info_entry[5].fields);
       
       continue;
    }
@@ -4303,13 +4279,11 @@ char *argv[]
          ep = lFirst(lp);
          
          {
-            spooling_field *fields = sge_build_PE_field_list(false, true);
             filename_stdout = spool_flatfile_write_object(&alp, ep, false,
-                                                 fields, &qconf_sfi,
+                                                 PE_fields, &qconf_sfi,
                                                  SP_DEST_STDOUT, SP_FORM_ASCII,
                                                  NULL, false);
             lFreeList(&lp);
-            FREE(fields);
             FREE(filename_stdout);
             
             if (answer_list_output(&alp)) {

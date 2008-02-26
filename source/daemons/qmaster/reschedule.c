@@ -67,6 +67,7 @@
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
+#include "sge_give_jobs.h"
 
 u_long32 add_time = 0;
 
@@ -141,6 +142,7 @@ void reschedule_unknown_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, moni
       DTRACE;
       goto Error;
    }
+
    /*
     * Did someone change the timeout value?
     */
@@ -382,9 +384,9 @@ int reschedule_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, l
        * on that queue/host
        *
        * PE-Jobs will only be rescheduled when the master task
-       * is running in that queue/host
+       * is running in that queue/host or RESCHEDULE_SLAVE is set
        */
-      if (first_granted_queue &&
+      if (!mconf_get_enable_reschedule_slave() && first_granted_queue &&
           ((qep && (strcmp(lGetString(first_granted_queue, JG_qname),
               lGetString(qep, QU_full_name))))
           || ((hep && sge_hostcmp(lGetHost(first_granted_queue, JG_qhostname),
@@ -398,10 +400,18 @@ int reschedule_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, l
        * If the forced flag is set we will also reschedule this job!
        */
       if (!force && lGetUlong(jep, JB_restart) == 2) {
-         INFO((SGE_EVENT, MSG_RU_NOT_RESTARTABLE_SS, 
-               mail_type, mail_ids));
-         answer_list_add(answer, SGE_EVENT, 
-                         STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
+         if (mconf_get_enable_reschedule_kill()) {
+            INFO((SGE_EVENT, MSG_RU_REAPING_NOT_RESTARTABLE_SS, 
+                  mail_type, mail_ids));
+            sge_commit_job(ctx, jep, this_jatep, NULL, COMMIT_ST_FINISHED_FAILED_EE,
+                           COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
+            continue;
+         } else {
+            INFO((SGE_EVENT, MSG_RU_NOT_RESTARTABLE_SS, 
+                  mail_type, mail_ids));
+            answer_list_add(answer, SGE_EVENT, 
+                            STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
+         }
          continue;
       }
 
@@ -480,11 +490,20 @@ int reschedule_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, l
                            lGetString(first_granted_queue, JG_qname));
          }
          if (!lGetBool(queue, QU_rerun)) {
-            INFO((SGE_EVENT, MSG_RU_NORERUNQUEUE_SSS, mail_type, mail_ids, 
-               lGetString(queue, QU_full_name)));
-            answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, 
-               ANSWER_QUALITY_WARNING);
-            continue;
+            if (mconf_get_enable_reschedule_kill()) {
+               INFO((SGE_EVENT, MSG_RU_REAPING_NOT_RESTARTABLE_SS, 
+                     mail_type, mail_ids));
+               sge_commit_job(ctx, jep, this_jatep, NULL, COMMIT_ST_FINISHED_FAILED_EE,
+                              COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
+               continue;
+
+            } else {
+               INFO((SGE_EVENT, MSG_RU_NORERUNQUEUE_SSS, mail_type, mail_ids, 
+                  lGetString(queue, QU_full_name)));
+               answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, 
+                  ANSWER_QUALITY_WARNING);
+               continue;
+            }
          }
       }
 

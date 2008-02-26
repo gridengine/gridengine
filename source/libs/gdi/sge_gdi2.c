@@ -1806,6 +1806,8 @@ const char* sge_dump_message_tag(unsigned long tag) {
          return "TAG_TASK_EXIT";
       case TAG_TASK_TID:
          return "TAG_TASK_TID";
+      case TAG_FULL_LOAD_REPORT:
+         return "TAG_FULL_LOAD_REPORT";
       case TAG_EVENT_CLIENT_EXIT:
          return "TAG_EVENT_CLIENT_EXIT";
       default:
@@ -1919,8 +1921,8 @@ void gdi_rmon_print_callback_function(const char *progname, const char *message,
 *  SEE ALSO
 *     sge_any_request/sge_get_com_error_flag()
 *******************************************************************************/
-void 
-general_communication_error(const cl_application_error_list_elem_t* commlib_error) 
+void
+general_communication_error(const cl_application_error_list_elem_t* commlib_error)
 {
    DENTER(GDI_LAYER, "general_communication_error");
    if (commlib_error != NULL) {

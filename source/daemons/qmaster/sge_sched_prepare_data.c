@@ -74,6 +74,7 @@
 #include "sge_parse_num_par.h"
 #include "sge_qinstance_state.h"
 #include "sgeee.h"
+#include "sgeobj/sge_usage.h"
 
 #include "sge_sched_prepare_data.h"
 #include "sge_sched_process_events.h"
@@ -396,8 +397,6 @@ sge_process_schedd_conf_event_before(sge_evc_class_t *evc, object_description *o
 
    new = lFirst(lGetList(event, ET_new_version));
 
-   evc->ec_set_busy(evc, 1);
-
    if (new == NULL) {
       ERROR((SGE_EVENT, "> > > > > no scheduler configuration available < < < < <\n"));
       DEXIT;
@@ -417,8 +416,7 @@ sge_process_schedd_conf_event_before(sge_evc_class_t *evc, object_description *o
          answer_list_output(&alpp);
          if (old) {
             lSetString(new, SC_load_formula, lGetString(old, SC_load_formula) );
-         }
-         else {
+         } else {
             lSetString(new, SC_load_formula, "none");
          }
       } else {
@@ -724,9 +722,22 @@ sge_process_ja_task_event_after(sge_evc_class_t *evc, object_description *object
          DEXIT;
          return SGE_EMA_FAILURE;
       }
-   }
-   else
+   } else if (action == SGE_EMA_ADD || action == SGE_EMA_MOD) {
+      lListElem *job =  job_list_locate(*sge_master_list(object_base, SGE_TYPE_JOB), lGetUlong(event, ET_intkey));
+      lListElem *jatask = job_search_task(job, NULL,  lGetUlong(event, ET_intkey2));
+
+      lCondition *where = lWhere("%T(%I==%s||%I==%s||%I==%s||%I==%s)", UA_Type, UA_name, USAGE_ATTR_CPU, UA_name, USAGE_ATTR_MEM, UA_name, USAGE_ATTR_IO, UA_name, "finished_jobs");
+      lEnumeration *what = lWhat("%T(ALL)", UA_Type);
+
+      lList *job_usage_list = lSelect("", lGetList(jatask, JAT_scaled_usage_list), where, what);
+      lXchgList(jatask, JAT_scaled_usage_list, &job_usage_list);
+      lFreeList(&job_usage_list);
+
+      lFreeWhere(&where);
+      lFreeWhat(&what);
+   } else {
       DPRINTF(("callback processing ja_task event after default rule\n"));
+   }
 
    DEXIT;
    return SGE_EMA_OK;

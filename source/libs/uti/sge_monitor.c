@@ -634,9 +634,9 @@ static void ext_edt_output(dstring *message, void *monitoring_extension, double 
             edt_ext->skip_event_count / time);
 }
 
-/****** sge_monitor/ext_edt_output() *******************************************
+/****** sge_monitor/ext_tet_output() *******************************************
 *  NAME
-*     ext_edt_output() -- generates a string from the GDI extension
+*     ext_tet_output() -- generates a string from the GDI extension
 *
 *  SYNOPSIS
 *     static void ext_edt_output(char *message, int size, void 
@@ -651,7 +651,7 @@ static void ext_edt_output(dstring *message, void *monitoring_extension, double 
 *     double time                - length of the mesurement interval
 *
 *  NOTES
-*     MT-NOTE: ext_edt_output() is MT safe 
+*     MT-NOTE: ext_tet_output() is MT safe 
 *
 *******************************************************************************/
 

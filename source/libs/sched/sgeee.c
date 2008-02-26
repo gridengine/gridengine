@@ -1297,7 +1297,7 @@ decay_and_sum_usage( sge_ref_t *ref,
     *-------------------------------------------------------------*/
 
    if (ja_task != NULL) {
-      job_usage_list = lCopyList(NULL, lGetList(ja_task, JAT_scaled_usage_list));
+      job_usage_list = lCopyList("", lGetList(ja_task, JAT_scaled_usage_list));
 
       /* sum sub-task usage into job_usage_list */
       if (job_usage_list) {
@@ -1402,14 +1402,6 @@ decay_and_sum_usage( sge_ref_t *ref,
                    *user_long_term_usage=NULL,
                    *project_long_term_usage=NULL;
          const char *usage_name = lGetString(job_usage, UA_name);
-
-         /* only copy CPU, memory, and I/O usage */
-         /* or usage explicitly in decay list */
-         if (strcmp(usage_name, USAGE_ATTR_CPU) != 0 &&
-             strcmp(usage_name, USAGE_ATTR_MEM) != 0 &&
-             strcmp(usage_name, USAGE_ATTR_IO) != 0 &&
-             !lGetElemStr(decay_list, UA_name, usage_name))
-             continue;
 
          /*---------------------------------------------------------
           * Locate the corresponding usage element for the job

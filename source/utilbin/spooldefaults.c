@@ -327,12 +327,7 @@ static int spool_users(int argc, char *argv[])
 
 static int spool_pes(int argc, char *argv[])
 {
-   const spooling_field *fields = sge_build_PE_field_list(true, false);
-   int ret; 
-
-   ret = spool_object_list(argv[2], fields, &qconf_sfi, PE_Type, SGE_TYPE_PE);
-   FREE(fields);
-   return ret;
+   return spool_object_list(argv[2], PE_fields, &qconf_sfi, PE_Type, SGE_TYPE_PE);
 }
 
 static int spool_usersets(int argc, char *argv[])

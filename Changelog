@@ -1,3 +1,7 @@
+LP-2008-02-26-0: Bugfix:    Merged fix for inst_sge -ux all -um fails
+                 Bugster:   6660899
+                 Review:    AP
+
 AH-2008-02-20-2: Bugfix:    Memory leak in drmaa_run_job()/drmaa_run_bulk_job()
                  Bugster:   6665417
                  Issue:     2497

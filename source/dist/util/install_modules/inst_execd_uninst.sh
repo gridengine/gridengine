@@ -59,6 +59,7 @@ WelcomeUninstall()
 
 FetchHostname()
 {
+   HOSTS=""
    euid=`$SGE_UTILBIN/uidgid -euid`
    local_host=`$SGE_UTILBIN/gethostname -aname`
    LOCAL_UNINST="false";
@@ -73,14 +74,14 @@ FetchHostname()
             tmp_host_list="$tmp_host_list $h"
          fi
       done
-      HOST="$tmp_host_list $tmp_local"
+      HOSTS="$tmp_host_list $tmp_local"
    fi
 
    if [ "$ALL_EXECDS" = true ]; then
-      HOST=`qconf -sel`
+      HOSTS=`qconf -sel`
    fi
 
-   for h in $HOST; do
+   for h in $HOSTS; do
 
    if [ "$NOREMOTE" = "true" -a "$h" = "$local_host" ]; then    #only the local host (from RM list) should be uninstalled and 
       LOCAL_UNINST="true"                                    #if actual host is equal to local host do uninstallation

@@ -1,3 +1,7 @@
+PJ-2008-02-27-0: Bugfix:    - Wrong detection of sge_qmaster port
+                 Bugster: 6659854
+                 Review:  LP
+
 JG-2008-02-26-0: Bugfix:    Fixed broken build.
                  Enhancem.: Improved qevent -ts time precision.
                             Updated version to 6.1u4.

@@ -1648,7 +1648,7 @@ GetExecdPort()
                fi
 
 
-               if [ $INP = $SGE_QMASTER_PORT ]; then
+               if [ "$INP" = "$SGE_QMASTER_PORT" ]; then
                   $INFOTEXT "Please use any other port number!!!"
                   $INFOTEXT "This %s port number is used by sge_qmaster" $SGE_QMASTER_PORT
                   if [ $AUTO = "true" ]; then
@@ -1960,12 +1960,12 @@ PortCollision()
 
       *)
          $INFOTEXT -u "\nGrid Engine general settings "
-         $INFOTEXT "\nThe SGE general settings are not set \n\n" \
+         $INFOTEXT "\nThe SGE general settings are not set \n\n" 
          $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
        ;;
 
    esac
-
+   $CLEAR
 }
 
 

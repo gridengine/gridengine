@@ -3689,7 +3689,7 @@ CheckPortsCollision()
 {
    check_val=$1
 
-   collision_flag=services_only
+   collision_flag="empty"
    sge_settings_flag=0
    services_flag=0
    env_flag=0

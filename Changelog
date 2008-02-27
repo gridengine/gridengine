@@ -1,3 +1,7 @@
+PJ-2008-02-27-0: Bugfix:    - Wrong detection of sge_qmaster port
+                 Bugster: 6659854
+                 Review:  LP
+
 AA-2008-02-27-0: Bugfix:  - default exit func
                             (commlib error: got read error (closing "xyz/qconf/2"))
                           - qmon advanced reservation delete bug

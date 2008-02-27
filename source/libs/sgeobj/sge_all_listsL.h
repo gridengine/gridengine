@@ -98,6 +98,7 @@
 #include "sgeobj/sge_resource_quotaL.h"
 #include "sgeobj/sge_advance_reservationL.h"
 #include "sgeobj/sge_ackL.h"
+#include "sgeobj/sge_event_requestL.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -277,7 +278,9 @@ extern "C" {
       {AR_LOWERBOUND, ARS, ARN},                /* advance reservation */ 
       {ARA_LOWERBOUND, ARAS, ARAN},             /* advance reservation acl*/ 
       
-      {ACK_LOWERBOUND, ACKS, ACKN},             /* acknowledge */ 
+      {ACK_LOWERBOUND, ACKS, ACKN},             /* acknowledge */
+
+      {EVR_LOWERBOUND, EVRS, EVRN},             /* event master requests */
 
       {0, 0, NULL}
    };

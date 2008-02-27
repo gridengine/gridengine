@@ -206,9 +206,9 @@
 *     List filtering -- Configuration of the list filtering 
 *
 *  FUNCTION
-*    The date send with an event can be filtered on the master side.
-*    Therefore one can set a where and what condition. If the
-*    all client date is removed via where condition, no event will
+*    The data sent with an event can be filtered on the master side.
+*    Therefore one can set a where and what condition. If
+*    all client data is removed via where condition, no event will
 *    be send.
 *
 *    The method expects a lListElem representation of the lCondition
@@ -218,13 +218,13 @@
 *  NOTES
 *    One has to be carefull reducing the elements via what condition.
 *    One has to ensure, that all elements have a custom descriptor
-*    and that not elements with different descriptors are mixed in
+*    and that elements with different descriptors are not mixed in
 *    the same list.
 *
-*    The master and client can benifit (in speed and memory consumption)
-*    a lot by requesting only the data, the client needs.
+*    The master and client can benefit (in speed and memory consumption)
+*    a lot by requesting only the data, the client actually needs.
 *
-*    All registered events for the same cull data structure needs to have
+*    All registered events for the same cull data structure need to have
 *    the same what and where filter.
 *
 *    The JAT_Type list is handled special, because it is subscribable as
@@ -250,10 +250,10 @@
 *     An event client may have time periods where it is busy doing some
 *     processing and can not accept new events.
 *     
-*     In this case, qmaster should not send out new events but spool them,
+*     In this case, qmaster should not send out new events but buffer them,
 *     as otherwise timeouts would occur waiting for acknowledges.
 *
-*     Therefore an event client can set a policy that describes how busy
+*     Therefore an event client can set a policy that defines how busy
 *     states are set and unset.
 *
 *     Which policy to use is set with the ev_set_busy_handling() function 
@@ -546,9 +546,9 @@
 *
 *  EXAMPLE
 *     clients/qevent/qevent.c can serve as a simple example.
-*     The scheduler (daemons/schedd/sge_schedd.c) is also implemented
-*     as event client and uses all mechanisms of the event client 
-*     interface.
+*     The scheduler (daemons/qmaster/sge_thread_scheduler.c) 
+*     is also implemented as (local) event client and uses all 
+*     mechanisms of the event client interface.
 *
 *  SEE ALSO
 *     Eventclient/--Event_Client_Interface

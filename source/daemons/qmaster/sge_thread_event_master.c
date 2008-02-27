@@ -144,8 +144,6 @@ sge_event_master_terminate(void)
    }  
    DPRINTF(("all "SFN" threads terminated\n", threadnames[DELIVERER_THREAD]));
 
-   sge_event_master_shutdown();
-
    DRETURN_VOID;
 }
 
@@ -186,14 +184,6 @@ sge_event_master_main(void *arg)
       sge_mutex_lock("event_master_cond_mutex", SGE_FUNC, __LINE__, 
                      &Event_Master_Control.cond_mutex);
 
-#ifdef EVC_DEBUG
-{   
-dstring dsbuf;
-char buf[1024];
-sge_dstring_init(&dsbuf, buf, sizeof(buf));
-printf("##### before sge_event_master_wait_next() at %s\n", sge_ctime(0, &dsbuf));
-}
-#endif
       /*
        * did a new event arrive which has a flush time of 0 seconds?
        */
@@ -205,47 +195,15 @@ printf("##### before sge_event_master_wait_next() at %s\n", sge_ctime(0, &dsbuf)
 
       MONITOR_MESSAGES((&monitor));
       MONITOR_EDT_COUNT((&monitor));
-      /* If the client array has changed, rebuild the indices. */
-      MONITOR_WAIT_TIME(sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__,
-                        &Event_Master_Control.mutex), (&monitor));
-    
       MONITOR_CLIENT_COUNT((&monitor), lGetNumberOfElem(Event_Master_Control.clients));
 
-      if (Event_Master_Control.indices_dirty) {
-         lListElem *ep = NULL;
-         int count = 0;
-
-         DPRINTF(("Rebuilding indices\n"));
-
-         /* For a large number of event clients, this loop would be faster as
-          * a for loop that walks through the clients_array. */
-         for_each(ep, Event_Master_Control.clients) {
-            Event_Master_Control.clients_indices[count++] = (int)lGetUlong(ep, EV_id);
-         }
-
-         Event_Master_Control.clients_indices[count] = 0;
-         Event_Master_Control.indices_dirty = false;
-      }
-
-      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.mutex);
-
-      sge_event_master_process_mod_event_client(&monitor);
-      sge_event_master_process_acks(&monitor);
-      sge_event_master_process_sends(&monitor);
+      sge_event_master_process_requests(&monitor);
       sge_event_master_send_events(ctx, report, report_list, &monitor);
       sge_monitor_output(&monitor);
 
       thread_output_profiling("event master thread profiling summary:\n",
                               &next_prof_output);
 
-#ifdef EVC_DEBUG
-{   
-dstring dsbuf;
-char buf[1024];
-sge_dstring_init(&dsbuf, buf, sizeof(buf));
-printf("##### after processing event_master funcs at %s\n", sge_ctime(0, &dsbuf));
-}
-#endif
       /* pthread cancelation point */
       pthread_cleanup_push((void (*)(void *))sge_event_master_cleanup_monitor,
                            (void *)&monitor);

@@ -943,7 +943,7 @@ int cl_xml_parse_CRM(unsigned char* buffer, unsigned long buffer_length, cl_com_
          }
          i++;
       }
-      help_buf[help_buf_pointer] = 0;
+      help_buf[help_buf_pointer] = '\0';
       (*message)->rdata->comp_name = strdup(help_buf);
 
       tag_begin = 0;
@@ -964,7 +964,7 @@ int cl_xml_parse_CRM(unsigned char* buffer, unsigned long buffer_length, cl_com_
          }
          i++;
       }
-      help_buf[help_buf_pointer] = 0;
+      help_buf[help_buf_pointer] = '\0';
       (*message)->rdata->comp_id = cl_util_get_ulong_value(help_buf);
       (*message)->rdata->hash_id = NULL;
    }
@@ -977,7 +977,7 @@ int cl_xml_parse_CRM(unsigned char* buffer, unsigned long buffer_length, cl_com_
          help_buf[help_buf_pointer++] = buffer[i];
          i++;
       }
-      help_buf[help_buf_pointer] = 0;
+      help_buf[help_buf_pointer] = '\0';
       (*message)->params = strdup(help_buf);
    }
 

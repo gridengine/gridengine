@@ -1,3 +1,7 @@
+JG-2008-02-27-0: Enhancem.: Event master simplification, cleanup, fixes.
+                            First step of bigger cleanup effort.
+                 Review:    EB
+
 RD-2008-02-26-0: Enhancem:  - added qmaster_params ENABLE_RESCHEDULE_KILL
                               and ENABLE_RESCHEDULE_SLAVE
                             - reduced amount of data for tight slave tasks

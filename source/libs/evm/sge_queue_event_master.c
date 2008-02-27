@@ -31,31 +31,31 @@
 /*___INFO__MARK_END__*/
 
 #include "sge.h"
-#include "sgermon.h"
+#include "rmon/sgermon.h"
 
-#include "sge_cqueue.h"
-#include "sge_event.h"
-#include "sge_qinstance.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_event.h"
+#include "sgeobj/sge_qinstance.h"
 
 #include "sge_event_master.h"
 #include "sge_queue_event_master.h"
 
-void 
+void
 qinstance_add_event(lListElem *this_elem, ev_event type)
 {
    DENTER(TOP_LAYER, "qinstance_add_event");
-   sge_add_event(0, type, 0, 0, 
-                 lGetString(this_elem, QU_qname), 
+   sge_add_event(0, type, 0, 0,
+                 lGetString(this_elem, QU_qname),
                  lGetHost(this_elem, QU_qhostname), NULL, this_elem);
-   DEXIT;
+   DRETURN_VOID;
 }
 
-void 
+void
 cqueue_add_event(lListElem *this_elem, ev_event type)
 {
    DENTER(TOP_LAYER, "cqueue_add_event");
-   sge_add_event( 0, type, 0, 0, 
+   sge_add_event(0, type, 0, 0,
                  lGetString(this_elem, CQ_name), NULL,
                  NULL, this_elem);
-   DEXIT;
+   DRETURN_VOID;
 }

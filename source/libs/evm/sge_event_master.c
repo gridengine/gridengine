@@ -371,7 +371,7 @@ static bool       add_list_event_for_client(u_long32, u_long32, ev_event, u_long
 static void       add_list_event_direct(lListElem *event_client,
                                         lListElem *event, bool copy_event);
 static void       total_update_event(lListElem*, ev_event, object_description *master_table, bool new_subscription);
-static bool       list_select(subscription_t*, int, lList**, lList*, const lCondition*, const lEnumeration*, const lDescr*);
+static bool       list_select(subscription_t*, int, lList**, lList*, const lCondition*, const lEnumeration*, const lDescr*, bool);
 static lListElem* elem_select(subscription_t*, lListElem*, const int[], const lCondition*, const lEnumeration*, const lDescr*, int);    
 static lListElem* eventclient_list_locate_by_adress(const char*, const char*, u_long32);
 static const lDescr* getDescriptorL(subscription_t*, const lList*, int);
@@ -2669,7 +2669,7 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
          DPRINTF(("Reducing event data\n"));
          
          if (!list_select(subscription, type, &clp, lp, selection, fields,
-                          descr)) {
+                          descr, internal_client)) {
             clp = lSelectDPack("updating list", lp, selection, descr,
                                fields, internal_client, NULL, NULL);
          }
@@ -2904,7 +2904,7 @@ static void total_update_event(lListElem *event_client, ev_event type, object_de
 *  SYNOPSIS
 *     static bool list_select(subscription_t *subscription, int type, lList 
 *     **reduced_lp, lList *lp, const lCondition *selection, const lEnumeration 
-*     *fields, const lDescr *descr) 
+*     *fields, const lDescr *descr, bool do_hash) 
 *
 *  FUNCTION
 *     Only works on job events. All others are ignored. The job events
@@ -2921,6 +2921,7 @@ static void total_update_event(lListElem *event_client, ev_event type, object_de
 *     const lCondition *selection  - where filter 
 *     const lEnumeration *fields   - what filter 
 *     const lDescr *descr          - reduced descriptor 
+*     bool do_hash                 - create hash tables in the target list
 *
 *  RESULT
 *     static bool - true, if it was a job event 
@@ -2929,7 +2930,7 @@ static void total_update_event(lListElem *event_client, ev_event type, object_de
 static bool list_select(subscription_t *subscription, int type,
                         lList **reduced_lp, lList *lp,
                         const lCondition *selection, const lEnumeration *fields,
-                        const lDescr *descr)
+                        const lDescr *descr, bool do_hash)
 {
    bool ret = false;
    int entry_counter;
@@ -2956,7 +2957,7 @@ static bool list_select(subscription_t *subscription, int type,
                lListElem *reduced_el = NULL;
 
                ret = true;
-               *reduced_lp = lCreateListHash("update", descr, false);
+               *reduced_lp = lCreateListHash("update", descr, do_hash);
 
                for_each(element, lp) {
                   reduced_el = elem_select(subscription, element,

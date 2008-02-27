@@ -1,3 +1,7 @@
+JG-2008-02-27-1: Bugfix:    Internal event clients didn't have hash tables
+                            on their master lists.
+                 Review:    EB
+
 JG-2008-02-27-0: Enhancem.: Event master simplification, cleanup, fixes.
                             First step of bigger cleanup effort.
                  Review:    EB

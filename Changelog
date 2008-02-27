@@ -1,3 +1,11 @@
+AA-2008-02-27-0: Bugfix:  - default exit func
+                            (commlib error: got read error (closing "xyz/qconf/2"))
+                          - qmon advanced reservation delete bug
+                          - jvm restart
+                          - jgdi event test fix
+                 Bugster: 6660955
+                 Review:  JG, RH
+
 JG-2008-02-27-1: Bugfix:    Internal event clients didn't have hash tables
                             on their master lists.
                  Review:    EB

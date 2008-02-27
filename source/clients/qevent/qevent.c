@@ -91,8 +91,6 @@ static void qevent_start_trigger_script(int qevent_event, const char* script_fil
 static qevent_options* qevent_get_option_struct(void);
 static void qevent_set_option_struct(qevent_options *option_struct);
 
-int main(int argc, char *argv[]);
-
 
 static void  qevent_set_option_struct(qevent_options *option_struct) {
    Global_qevent_options=option_struct;
@@ -498,8 +496,7 @@ int main(int argc, char *argv[])
    if (enabled_options.help_option) {
       qevent_show_usage();
       sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT(NULL, 0);
-      return 0;
+      SGE_EXIT((void**)&ctx, 0);
    }
 
    /* are there command line parsing errors ? */
@@ -507,7 +504,7 @@ int main(int argc, char *argv[])
       ERROR((SGE_EVENT, "%s", sge_dstring_get_string(enabled_options.error_message) ));
       qevent_show_usage();
       sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
 
@@ -627,7 +624,6 @@ int main(int argc, char *argv[])
    sge_dstring_free(enabled_options.error_message);
    sge_prof_cleanup();
    SGE_EXIT((void**)&ctx, 1);
-   DEXIT;
    return 1;
 }
 

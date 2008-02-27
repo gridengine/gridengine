@@ -121,6 +121,8 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeClose(JNIEn
    sge_gdi_ctx_array[ctx_index] = NULL;
    pthread_mutex_unlock(&sge_gdi_ctx_mutex);
    if (ctx) {
+      cl_com_handle_t *handle = cl_com_get_handle(ctx->get_component_name(ctx), 0);
+      cl_commlib_shutdown_handle(handle, CL_FALSE);
       sge_gdi_ctx_class_destroy(&ctx);
    } else {
       THROW_ERROR((env, JGDI_ERROR, "ctx is NULL"));

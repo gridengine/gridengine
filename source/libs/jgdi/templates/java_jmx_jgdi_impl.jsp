@@ -322,7 +322,7 @@
     for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
        String pkName = entry.getKey();
        // String pkType = entry.getValue();
-%>    *  @param String[] <%=pkName%>s   array of <%=pkName%> of the <code><%=name%></code> objects
+%>    *  @param <%=pkName%>s   array of <%=pkName%> of the <code><%=name%></code> objects
 <%
     } // end of for
 %>    *  @param answers   the <code>answer list</code> object

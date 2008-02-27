@@ -259,12 +259,12 @@ sge_qmaster_thread_init(sge_gdi_ctx_class_t **ctx_ref, u_long32 prog_id,
       char str[1024];
       if (sge_set_admin_username(admin_user, str) == -1) {
          CRITICAL((SGE_EVENT, str));
-         SGE_EXIT(NULL, 1);
+         SGE_EXIT((void**)ctx_ref, 1);
       }
 
       if (sge_switch2admin_user()) {
          CRITICAL((SGE_EVENT, MSG_ERROR_CANTSWITCHTOADMINUSER));
-         SGE_EXIT(NULL, 1);
+         SGE_EXIT((void**)ctx_ref, 1);
       }
    }
 

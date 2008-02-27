@@ -78,23 +78,23 @@
 
       int flushInterval = 1; // in seconds
       long timeout = flushInterval * 1000 * 3;
-     Map<EventTypeEnum,Integer> map = new HashMap<EventTypeEnum,Integer>();
+      Map<EventTypeEnum,Integer> map = new HashMap<EventTypeEnum,Integer>();
       try {
 
-         evc.addEventListener(waitThread);
+          evc.addEventListener(waitThread);
 
-         map.put(EventTypeEnum.<%=name%>Add, flushInterval);
-         map.put(EventTypeEnum.<%=name%>Del, flushInterval);
+          map.put(EventTypeEnum.<%=name%>Add, flushInterval);
+          map.put(EventTypeEnum.<%=name%>Del, flushInterval);
          
 <% 
    if (cullObj.hasModifyOperation()) {
 %>         
-         map.put(EventTypeEnum.<%=name%>Mod, flushInterval);
+          map.put(EventTypeEnum.<%=name%>Mod, flushInterval);
 <%
    }
 %>         
-        evc.subscribe(map.keySet());            
-        evc.setFlush(map);
+         evc.subscribe(map.keySet());            
+         evc.setFlush(map);
 
          evc.commit();
          

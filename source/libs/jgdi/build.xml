@@ -247,7 +247,8 @@
             <!-- exclude name="com/sun/grid/jgdi/configuration/xml/*.java"/ -->
             <!-- exclude name="com/sun/grid/jgdi/configuration/Util.java"/ -->
             <exclude name="com/sun/grid/jgdi/event/QEvent.java"/>
-            <exclude name="com/sun/grid/jgdi/security/*.java"/>
+            <!--exclude name="com/sun/grid/jgdi/security/*.java"/-->
+            <exclude name="com/sun/grid/jgdi/management/SSLHelper.java"/>
         </fileset>
         
         <fileset id="javadoc.gensrc.files" dir="${gensrc.dir}">

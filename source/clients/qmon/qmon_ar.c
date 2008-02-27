@@ -672,13 +672,15 @@ lList **local
       /* is this row selected */ 
       if (XbaeMatrixIsRowSelected(matrix, i)) {
          str = XbaeMatrixGetCell(matrix, i, 0);
-         if ( str && *str != '\0' ) { 
+         if (str && *str != '\0') { 
             DPRINTF(("ARId to delete: %s\n", str));
-            if (isdigit(str[0])) {
-               lAddElemUlong(&ardl, AR_id, atoi(str), AR_Type);
-            } else {
-               lAddElemStr(&ardl, AR_name, str, AR_Type);
-            }
+            lAddElemStr(&ardl, ID_str, str, ID_Type);
+         }
+      }
+      if (force != 0) {
+         lListElem *id;
+         for_each(id, ardl){
+            lSetUlong(id, ID_force, force);
          }
       }
    }

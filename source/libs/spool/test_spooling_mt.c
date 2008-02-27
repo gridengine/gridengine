@@ -240,13 +240,13 @@ int main(int argc, char *argv[])
    /* initialize spooling */
    spooling_context = spool_create_dynamic_context(&answer_list, NULL, url, NULL);
    answer_list_output(&answer_list);
-   if(spooling_context == NULL) {
+   if (spooling_context == NULL) {
       SGE_EXIT(NULL, EXIT_FAILURE);
    }
 
    spool_set_default_context(spooling_context);
 
-   if(!spool_startup_context(&answer_list, spooling_context, true)) {
+   if (!spool_startup_context(&answer_list, spooling_context, true)) {
       answer_list_output(&answer_list);
       SGE_EXIT(NULL, EXIT_FAILURE);
    }

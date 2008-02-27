@@ -349,7 +349,7 @@ main(int argc, char **argv)
    if (err) {
       usage();
       sge_prof_cleanup();
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void **)&ctx, 1);
    }
 
    if ((argc - optind) > 0) {

@@ -773,6 +773,7 @@ static void qping_print_line(const char* buffer, int nonewline, int dump_tag) {
          case TAG_KILL_EXECD
          case TAG_NEW_FEATURES
          case TAG_GET_NEW_CONF
+         case TAG_FULL_LOAD_REPORT
          ...
          are missing !!!
    #endif

@@ -349,7 +349,7 @@ sge_scheduler_initialize(sge_gdi_ctx_class_t *ctx, lList **answer_list)
 *     qmaster/threads/sge_scheduler_main() 
 *******************************************************************************/
 void
-sge_scheduler_cleanup_thread(void)
+sge_scheduler_cleanup_thread(void *ctx_ref)
 {
    DENTER(TOP_LAYER, "sge_scheduler_cleanup_thread");
    
@@ -383,6 +383,10 @@ sge_scheduler_cleanup_thread(void)
        */
       Master_Scheduler.is_running = false;
 
+      /*
+      ** free the ctx too
+      */
+      sge_gdi_ctx_class_destroy((sge_gdi_ctx_class_t **)ctx_ref);
    }
 
    sge_mutex_unlock("master scheduler struct", SGE_FUNC, __LINE__, &(Master_Scheduler.mutex));
@@ -978,7 +982,7 @@ sge_scheduler_main(void *arg)
              * sge_scheduler_cleanup_thread() is the last function which should 
              * be called so it is pushed first 
              */
-            pthread_cleanup_push((void (*)(void *))sge_scheduler_cleanup_thread, NULL);
+            pthread_cleanup_push(sge_scheduler_cleanup_thread, (void *) &ctx);
             pthread_cleanup_push((void (*)(void *))sge_scheduler_cleanup_monitor,
                                  (void *)&monitor);
             pthread_cleanup_push((void (*)(void *))sge_scheduler_cleanup_event_client,

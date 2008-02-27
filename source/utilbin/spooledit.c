@@ -381,7 +381,7 @@ main(int argc, char *argv[])
 
    if (sge_setup2(&ctx, SPOOLDEFAULTS, MAIN_THREAD, &answer_list, false) != AE_OK) {
       answer_list_output(&answer_list);
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    if (ret == EXIT_SUCCESS) {
@@ -440,7 +440,7 @@ main(int argc, char *argv[])
 
    answer_list_output(&answer_list);
 
-   SGE_EXIT(NULL, ret);
+   SGE_EXIT((void**)&ctx, ret);
 
    DRETURN(ret);
 }

@@ -1365,7 +1365,7 @@ int main(int argc, char **argv)
 
    if (sge_gdi2_setup(&ctx, my_who, MAIN_THREAD, &alp) != AE_OK) {
       answer_list_output(&alp);
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    progname = ctx->get_progname(ctx);
@@ -1405,7 +1405,7 @@ int main(int argc, char **argv)
 
    if (alp_error) {
       sge_prof_cleanup();
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    /*
@@ -1417,7 +1417,7 @@ int main(int argc, char **argv)
 
    if (alp_error) {
       sge_prof_cleanup();
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    job = lCreateElem(JB_Type);
@@ -1431,14 +1431,14 @@ int main(int argc, char **argv)
       
       if (alp_error) {
          sge_prof_cleanup();
-         SGE_EXIT(NULL, 1);
+         SGE_EXIT((void**)&ctx, 1);
       }
    }
 
    if (opt_list_has_X(opts_cmdline, "-help")) {
       sge_usage(my_who, stdout);
       sge_prof_cleanup();
-      SGE_EXIT(NULL, 0);
+      SGE_EXIT((void**)&ctx, 0);
    }
 
    /* set verbosity */
@@ -1474,13 +1474,13 @@ int main(int argc, char **argv)
                ERROR((SGE_EVENT, MSG_QSH_INVALIDJOB_ID_SS, "JOB_ID",
                       s_existing_job));
                sge_prof_cleanup();
-               SGE_EXIT(NULL, 1);
+               SGE_EXIT((void**)&ctx, 1);
             }
          } else {
             ERROR((SGE_EVENT, MSG_QSH_INHERITBUTJOB_IDNOTSET_SSS, "qrsh",
                    "-inherit","JOB_ID"));
             sge_prof_cleanup();
-            SGE_EXIT(NULL, 1);
+            SGE_EXIT((void**)&ctx, 1);
          }
       }   
 
@@ -1521,7 +1521,7 @@ int main(int argc, char **argv)
             ERROR((SGE_EVENT, MSG_QSH_INHERITUSAGE_SS, "-inherit", 
                    "qrsh -inherit ... <host> <command> [args]"));
             sge_prof_cleanup();
-            SGE_EXIT(NULL, 1);
+            SGE_EXIT((void**)&ctx, 1);
          } else {
             is_rsh = 0;
             is_rlogin = 1;
@@ -1580,7 +1580,7 @@ int main(int argc, char **argv)
 
          if (alp_error) {
             sge_prof_cleanup();
-            SGE_EXIT(NULL, 1);
+            SGE_EXIT((void**)&ctx, 1);
          }
 
          /* set length and script contents in job */
@@ -1613,14 +1613,14 @@ int main(int argc, char **argv)
    lFreeList(&opts_all);
    if (alp_error) {
       sge_prof_cleanup();
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    if (is_qlogin) {
       /* get configuration from qmaster */
       if ((client_name = get_client_name(ctx, is_rsh, is_rlogin, inherit_job)) == NULL) {
          sge_prof_cleanup();
-         SGE_EXIT(NULL, 1);
+         SGE_EXIT((void**)&ctx, 1);
       } 
    }   
    
@@ -1635,7 +1635,7 @@ int main(int argc, char **argv)
       if (lGetUlong(job, JB_verify)) {
          cull_show_job(job, 0);
          sge_prof_cleanup();
-         SGE_EXIT(NULL, 0);
+         SGE_EXIT((void**)&ctx, 0);
       }
 
       /*
@@ -1643,7 +1643,7 @@ int main(int argc, char **argv)
       */
       if (set_sec_cred(sge_root, mastername, job, &alp) != 0) {
          answer_list_output(&alp);
-         SGE_EXIT(NULL, 1);
+         SGE_EXIT((void**)&ctx, 1);
       }   
 
       just_verify = (lGetUlong(job, JB_verify_suitable_queues)==JUST_VERIFY);
@@ -1694,7 +1694,7 @@ int main(int argc, char **argv)
                sge_dstring_get_string(&error_msg)));
          sge_dstring_free(&connection_params); 
          sge_dstring_free(&error_msg);
-         SGE_EXIT(NULL, 1);
+         SGE_EXIT((void**)&ctx, 1);
       }
 
       comm_set_connection_param(g_comm_handle, HEARD_FROM_TIMEOUT, 0, &error_msg);
@@ -1764,7 +1764,7 @@ int main(int argc, char **argv)
          ERROR((SGE_EVENT, MSG_QSH_EXECUTINGTASKOFJOBFAILED_IS, existing_job,
             qexec_lasterror != NULL ? qexec_lasterror : "unknown"));
          sge_prof_cleanup();
-         SGE_EXIT(NULL, EXIT_FAILURE);
+         SGE_EXIT((void **)&ctx, EXIT_FAILURE);
       }
 
       VERBOSE_LOG((stderr, MSG_QSH_SERVERDAEMONSUCCESSFULLYSTARTEDWITHTASKID_S, tid)); 
@@ -1775,14 +1775,14 @@ int main(int argc, char **argv)
          if ((msgsock = wait_for_qrsh_socket(sock, QSH_SOCKET_FINAL_TIMEOUT)) == -1) {
             ERROR((SGE_EVENT,MSG_QSH_CANNOTGETCONNECTIONTOQLOGIN_STARTER_SS,"shepherd", host));
             sge_prof_cleanup();
-            SGE_EXIT(NULL, EXIT_FAILURE);
+            SGE_EXIT((void **)&ctx, EXIT_FAILURE);
          }
       
          FREE(host);
          /* get host and port of rshd, job_dir and utilbin_dir over connection */
          if (!get_client_server_context(msgsock, &port, &job_dir, &utilbin_dir, &host)) {
             sge_prof_cleanup();
-            SGE_EXIT(NULL, EXIT_FAILURE);
+            SGE_EXIT((void **)&ctx, EXIT_FAILURE);
          }
 
          VERBOSE_LOG((stderr, MSG_QSH_ESTABLISHINGREMOTESESSIONTO_SS, 
@@ -1894,10 +1894,10 @@ int main(int argc, char **argv)
          lFreeList(&lp_jobs);
          if (status == STATUS_NOTOK_DOAGAIN) { 
             sge_prof_cleanup();
-            SGE_EXIT(NULL, status);
+            SGE_EXIT((void **)&ctx, status);
          } else {
             sge_prof_cleanup();
-            SGE_EXIT(NULL, 1);
+            SGE_EXIT((void **)&ctx, 1);
          }
       }
       
@@ -2138,7 +2138,7 @@ int main(int argc, char **argv)
 
    FREE(client_name);
    sge_prof_cleanup();
-   SGE_EXIT(NULL, exit_status);
+   SGE_EXIT((void **)&ctx, exit_status);
    DEXIT;
    return exit_status;
 }

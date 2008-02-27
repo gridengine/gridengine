@@ -1,15 +1,3 @@
 grant {
    permission java.security.AllPermission;
 };
-
-/*
-grant {
-   permission java.lang.RuntimePermission        "loadLibrary.jgdi";
-   permission javax.security.auth.AuthPermission "getSubject";
-   permission javax.security.auth.PrivateCredentialPermission "read";
-   permission javax.security.auth.AuthPermission "createLoginContext.jgdi";
-   permission javax.security.auth.AuthPermission "doAs";
-   permission java.util.PropertyPermission       "*", "read,write";
-   permission java.io.FilePermission             "-", "read";
-};
-*/

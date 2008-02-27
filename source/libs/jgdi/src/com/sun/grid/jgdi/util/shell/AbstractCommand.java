@@ -126,7 +126,7 @@ public abstract class AbstractCommand  {
     
     /**
      * <p>Sets the commands exit code to newCode</p>
-     * @param int newCode new exitCode of this command
+     * @param newCode new exitCode of this command
      */
     protected void setExitCode(int newCode) {
         exitCode = newCode;

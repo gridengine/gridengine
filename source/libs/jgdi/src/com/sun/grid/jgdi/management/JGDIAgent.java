@@ -61,13 +61,29 @@ import javax.security.auth.Subject;
 /**
  * JGDI JMX agent class.
  */
-public class JGDIAgent {
+public class JGDIAgent implements Runnable {
 
+    enum State {
+        STOPPED,
+        START,
+        RUNNING,
+        SHUTDOWN
+    }
     private JMXConnectorServer mbeanServerConnector;
     // Platform MBeanServer used to register your MBeans
+
     private MBeanServer mbs;
+    private static File sgeRoot;
+    private static File caTop;
     private final static Logger log = Logger.getLogger(JGDIAgent.class.getName());
     private static final JGDIAgent agent = new JGDIAgent();
+    // JGDI url string
+
+    private static String url;
+    private static File jmxDir;
+    private final Lock stateLock = new ReentrantLock();
+    private final Condition stateChangedCondition = stateLock.newCondition();
+    private State state = State.STOPPED;
 
     /**
      * JGDIAgent can not be instantiate from outside
@@ -75,11 +91,21 @@ public class JGDIAgent {
     private JGDIAgent() {
     }
 
+    private void setState(State state) {
+        stateLock.lock();
+        try {
+            this.state = state;
+            stateChangedCondition.signalAll();
+        } finally {
+            stateLock.unlock();
+        }
+    }
+
     public void startMBeanServer() throws Exception {
 
         File managementFile = new File(getJmxDir(), "management.properties");
 
-        logger.log(Level.FINE, "loading mbean server configuration from {0}", managementFile);
+        log.log(Level.FINE, "loading mbean server configuration from {0}", managementFile);
 
         final Properties props = new Properties();
         props.load(new FileInputStream(managementFile));
@@ -89,18 +115,18 @@ public class JGDIAgent {
         mbeanServerConnector = ConnectorBootstrap.initialize(portStr, props);
         mbeanServerConnector.addNotificationListener(new MyNotificationListener(), null, null);
         mbs = mbeanServerConnector.getMBeanServer();
-        logger.log(Level.FINE, "starting mbean server");
+        log.log(Level.FINE, "starting mbean server");
         mbeanServerConnector.start();
-        logger.log(Level.INFO, "mbean server started (port={0})", portStr);
+        log.log(Level.INFO, "mbean server started (port={0})", portStr);
     }
 
     private void stopMBeanServer() {
         if (mbeanServerConnector != null) {
             try {
-                logger.log(Level.FINE, "stopping mbean server");
+                log.log(Level.FINE, "stopping mbean server");
                 mbeanServerConnector.stop();
             } catch (Exception ex) {
-                logger.log(Level.WARNING, "cannot stop mbean server", ex);
+                log.log(Level.WARNING, "cannot stop mbean server", ex);
             }
         }
     }
@@ -112,8 +138,6 @@ public class JGDIAgent {
         return url;
     }
     
-    private static File caTop;
-
     public static File getCaTop() {
         if (caTop == null) {
             String str = System.getProperty("com.sun.grid.jgdi.caTop");
@@ -125,8 +149,6 @@ public class JGDIAgent {
         return caTop;
     }
     
-    private static File sgeRoot;
-
     public static File getSgeRoot() {
         if (sgeRoot == null) {
             String sgeRootStr = System.getProperty("com.sun.grid.jgdi.sgeRoot");
@@ -145,7 +167,6 @@ public class JGDIAgent {
         }
         return ret;
     }
-    private static File jmxDir;
 
     public static File getJmxDir() {
         if (jmxDir == null) {
@@ -160,15 +181,43 @@ public class JGDIAgent {
         }
         return mbs;
     }
-    // JGDI url string
-    private static String url;
-    private final static Logger logger = Logger.getLogger(JGDIAgent.class.getName());
+
+    public void run() {
+
+        EventClientImpl.resetShutdown();
+        JGDIBaseImpl.resetShutdown();
+        setState(State.RUNNING);
+        try {
+            log.log(Level.FINE, "starting mbean server");
+            startMBeanServer();
+        } catch (Exception ex) {
+            log.log(Level.SEVERE, "startup of mbean server failed", ex);
+            return;
+        }
+        try {
+            // The following code blocks until the stop or shutdown methods are called
+            log.log(Level.FINE, "waitForStop");
+            waitForStop();
+        } catch (InterruptedException ex) {
+            log.log(Level.FINE, "JGDIAgent has been interrupted");
+        } finally {
+            log.log(Level.INFO, "JGDIAgent is going down");
+            try {
+                JGDISession.closeAllSessions();
+                EventClientImpl.closeAll();
+                JGDIBaseImpl.closeAllConnections();
+            } finally {
+                log.log(Level.FINE, "stopping mbean server");
+                stopMBeanServer();
+                setState(State.STOPPED);
+            }
+        }
+    }
 
     public static void main(String[] args) {
         try {
-
             if (args.length != 1) {
-                logger.log(Level.SEVERE, "invalid arguments for JGDIAgent: JGDIAgent <jgdi connect url>");
+                log.log(Level.SEVERE, "invalid arguments for JGDIAgent: JGDIAgent <jgdi connect url>");
                 return;
             }
             url = args[0];
@@ -176,63 +225,41 @@ public class JGDIAgent {
             try {
                 FileOutputStream stdout = new FileOutputStream("jgdi.stdout", true);
                 System.setOut(new PrintStream(stdout, true));
-                logger.fine("stdout redirected to jgdi.stdout");
+                log.fine("stdout redirected to jgdi.stdout");
             } catch (Exception ex) {
-                logger.log(Level.WARNING, "cannot redirect stdout to file jgdi.stdout", ex);
+                log.log(Level.WARNING, "cannot redirect stdout to file jgdi.stdout", ex);
             }
             try {
                 FileOutputStream stderr = new FileOutputStream("jgdi.stderr", true);
                 System.setErr(new PrintStream(stderr, true));
-                logger.fine("stderr redirected to jgdi.stderr");
+                log.fine("stderr redirected to jgdi.stderr");
             } catch (Exception ex) {
-                logger.log(Level.WARNING, "cannot redirect stderr to file jgdi.stderr", ex);
+                log.log(Level.WARNING, "cannot redirect stderr to file jgdi.stderr", ex);
             }
 
-            try {
-                agent.startMBeanServer();
-            } catch (Exception ex) {
-                logger.log(Level.SEVERE, "startup of mbean server failed", ex);
-                return;
-            }
-            try {
-                // The following code blocks until the shutdownMain method is called
-                waitForShutdown();
-            } catch (InterruptedException ex) {
-                logger.log(Level.FINE, "JGDIAgent has been interrupted");
-            } finally {
-                logger.log(Level.INFO, "JGDIAgent is going down");
-                try {
-                    JGDISession.closeAllSessions();
-                    EventClientImpl.closeAll();
-                    JGDIBaseImpl.closeAllConnections();
-                } finally {
-                    agent.stopMBeanServer();
-                }
-            }
-
+            Thread t = new Thread(agent);
+            t.setContextClassLoader(agent.getClass().getClassLoader());
+            t.start();
+            t.join();
         } catch (Throwable ex) {
-            logger.log(Level.SEVERE, "unexpected error in JGDIAgent", ex);
+            log.log(Level.SEVERE, "unexpected error in JGDIAgent", ex);
         } finally {
-            logger.log(Level.INFO, "JGDIAgent is down");
-            LogManager.getLogManager().reset();
+            log.log(Level.INFO, "JGDIAgent is down");
+        // LogManager.getLogManager().reset();
         }
     }
-    
-    private static final Lock shutdownLock = new ReentrantLock();
-    private static final Condition shutdownCondition = shutdownLock.newCondition();
-    private static boolean isRunning = true;
 
-    private static void waitForShutdown() throws InterruptedException {
-        log.entering("JGDIAgent", "waitForShutdown");
-        shutdownLock.lock();
+    private void waitForStop() throws InterruptedException {
+        log.entering("JGDIAgent", "waitForStop");
+        stateLock.lock();
         try {
-            while (isRunning) {
-                shutdownCondition.await();
+            while (state == State.RUNNING) {
+                stateChangedCondition.await();
             }
         } finally {
-            shutdownLock.unlock();
+            stateLock.unlock();
         }
-        log.exiting("JGDIAgent", "waitForShutdown");
+        log.exiting("JGDIAgent", "waitForStop");
     }
 
     /**
@@ -240,14 +267,20 @@ public class JGDIAgent {
      */
     public static void shutdown() {
         log.entering("JGDIAgent", "shutdown");
-        shutdownLock.lock();
-        try {
-            isRunning = false;
-            shutdownCondition.signalAll();
-        } finally {
-            shutdownLock.unlock();
-        }
+        agent.setState(State.SHUTDOWN);
         log.exiting("JGDIAgent", "shutdown");
+    }
+
+    public static void start() {
+        log.entering("JGDIAgent", "start");
+        agent.setState(State.START);
+        log.exiting("JGDIAgent", "start");
+    }
+
+    public static void stop() {
+        log.entering("JGDIAgent", "stop");
+        agent.setState(State.STOPPED);
+        log.exiting("JGDIAgent", "stop");
     }
 
     /**
@@ -260,13 +293,13 @@ public class JGDIAgent {
         log.entering("JGDIAgent", "getObjectNameFromConnectionId", connectionId);
         long sessionId = getSessionIdFromConnectionId(connectionId);
         ObjectName ret = null;
-        if(sessionId >= 0) {
+        if (sessionId >= 0) {
             ret = getObjectNameForSessionMBean(sessionId);
         }
         log.exiting("JGDIAgent", "getObjectNameFromConnectionId", ret);
         return ret;
     }
-    
+
     /**
      * Get the name of the session mbean
      * @param sessionId the session id
@@ -285,7 +318,7 @@ public class JGDIAgent {
         log.exiting("JGDIAgent", "getObjectNameForSessionMBean", ret);
         return ret;
     }
-    
+
     /**
      * Get the session id out of the connection id
      * @param connectionId the connection id
@@ -318,7 +351,7 @@ public class JGDIAgent {
         log.exiting("JGDIAgent", "getSessionIdFromConnectionId", ret);
         return ret;
     }
-    
+
     private void registerSessionMBean(JGDISession session) {
         log.entering("JGDIAgent", "registerSessionMBean", session);
         try {
@@ -349,40 +382,39 @@ public class JGDIAgent {
         }
         log.exiting("JGDIAgent", "unregisterSessionMBean");
     }
-    
 
     class MyNotificationListener implements NotificationListener {
 
         public void handleNotification(Notification notification, Object handback) {
 
             if (notification instanceof JMXConnectionNotification) {
-                
+
                 JMXConnectionNotification jn = (JMXConnectionNotification) notification;
 
                 if (log.isLoggable(Level.FINE)) {
                     Subject sub = Subject.getSubject(AccessController.getContext());
                     log.log(Level.FINE, "Got notification from client {0}, subject = {1}", new Object[]{jn.getConnectionId(), sub});
                 }
-                
+
                 long sessionId = getSessionIdFromConnectionId(jn.getConnectionId());
-                if(sessionId >= 0) {
+                if (sessionId >= 0) {
                     if (JMXConnectionNotification.CLOSED.equals(jn.getType())) {
                         log.log(Level.FINE, "client connection {0} closed", jn.getConnectionId());
                         JGDISession session = JGDISession.closeSession(sessionId);
-                        if(session != null) {
+                        if (session != null) {
                             unregisterSessionMBean(session);
                         }
                     } else if (JMXConnectionNotification.FAILED.equals(jn.getType())) {
                         log.log(Level.FINE, "client connection {0} failed", jn.getConnectionId());
                         JGDISession session = JGDISession.closeSession(sessionId);
-                        if(session != null) {
+                        if (session != null) {
                             unregisterSessionMBean(session);
                         }
                     } else if (JMXConnectionNotification.NOTIFS_LOST.equals(jn.getType())) {
                         log.log(Level.WARNING, "client connection {0} losts notification", jn.getConnectionId());
                     } else if (JMXConnectionNotification.OPENED.equals(jn.getType())) {
-                        if(log.isLoggable(Level.FINE)) {
-                            log.log(Level.FINE, "client connection {0} opened", new Object [] { jn.getConnectionId() });
+                        if (log.isLoggable(Level.FINE)) {
+                            log.log(Level.FINE, "client connection {0} opened", new Object[]{jn.getConnectionId()});
                         }
                         JGDISession session = JGDISession.createNewSession(sessionId, url);
                         registerSessionMBean(session);

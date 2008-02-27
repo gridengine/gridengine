@@ -46,7 +46,10 @@
 #include "sgermon.h"
 #include "sge_log.h"
 
+
+#ifdef SGE_USE_PROFILING
 #include "uti/sge_profiling.h"
+#endif
 
 /****** uti/htable/--Hashtable ***********************************************
 *  NAME
@@ -146,7 +149,10 @@ static void sge_htable_resize(htable ht, int grow)
    int otablesize;
    Bucket *bucket, *next, **head;
    int i;
+   
+#ifdef SGE_USE_PROFILING
    clock_t start = 0;
+#endif   
    char buffer[1024];
    dstring buffer_wrapper;
 
@@ -154,12 +160,14 @@ static void sge_htable_resize(htable ht, int grow)
 
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
 
+#ifdef SGE_USE_PROFILING
    if(prof_is_active(SGE_PROF_HT_RESIZE) && log_state_get_log_level() >= LOG_DEBUG) {
       struct tms t_buf;
       DEBUG((SGE_EVENT, "hash stats before resizing: %s\n", 
                sge_htable_statistics(ht, &buffer_wrapper)));
       start = times(&t_buf);
    } 
+#endif   
 
    otable = ht->table;
    otablesize = 1 << ht->size;
@@ -185,11 +193,13 @@ static void sge_htable_resize(htable ht, int grow)
    }
    free((char *) otable);
 
+#ifdef SGE_USE_PROFILING
    if(prof_is_active(SGE_PROF_HT_RESIZE) && log_state_get_log_level() >= LOG_DEBUG) {
       struct tms t_buf;
       DEBUG((SGE_EVENT, "resizing of hash table took %.3fs\n", (times(&t_buf) - start) * 1.0 / sysconf(_SC_CLK_TCK)));
       DEBUG((SGE_EVENT, "hash stats after resizing: %s\n", sge_htable_statistics(ht, &buffer_wrapper)));
    }
+#endif   
    
    DRETURN_VOID_;
 }

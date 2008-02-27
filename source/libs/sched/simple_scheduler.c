@@ -599,7 +599,7 @@ int main(int argc, char *argv[])
    }
 
    if (ctx && (ctx->reresolve_qualified_hostname(ctx) != CL_RETVAL_OK)) {
-      SGE_EXIT(1);
+      SGE_EXIT(&ctx, 1);
    }   
 
    evc = sge_evc_class_create(ctx, EV_ID_SCHEDD, &alp, false); 

@@ -56,7 +56,7 @@ public abstract class JGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
     public void init(String url) throws JGDIException {
         synchronized (instances) {
             if (shutdown) {
-                throw new JGDIException("qmaster is going down");
+                throw new JGDIException("shutdown in progress");
             }
             instances.add(this);
         }
@@ -68,6 +68,12 @@ public abstract class JGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
 
     int getCtxIndex() {
         return ctxIndex;
+    }
+
+    public static void resetShutdown() {
+        synchronized (instances) {
+            shutdown = false;
+        }
     }
 
     public static void closeAllConnections() {

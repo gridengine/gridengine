@@ -103,6 +103,12 @@ public class EventClientImpl implements EventClient {
         return ret;
     }
 
+    public static void resetShutdown() {
+        synchronized (instances) {
+            shutdown = false;
+        }
+    }
+
     /**
      * Close all instances of the EventClientImpl
      */
@@ -440,6 +446,7 @@ public class EventClientImpl implements EventClient {
         private final int regId;
         private final Lock lock = new ReentrantLock();
         private final Condition stateChangedCondition = lock.newCondition();
+        private final Condition commitCondition = lock.newCondition();
         private final Map<EventTypeEnum, Integer> subscription = new HashMap<EventTypeEnum, Integer>();
         private final Set<EventTypeEnum> nativeSubscription = new HashSet<EventTypeEnum>();
         private int evcId;
@@ -473,6 +480,9 @@ public class EventClientImpl implements EventClient {
                 }
                 commitFlag = true;
                 interruptNative(evcIndex);
+                commitCondition.await();
+            } catch (InterruptedException ex) {
+                // ignore
             } finally {
                 lock.unlock();
             }
@@ -586,12 +596,13 @@ public class EventClientImpl implements EventClient {
                     for (Map.Entry<EventTypeEnum, Integer> entry : subscription.entrySet()) {
                         if (entry.getValue() != null) {
                             if (log.isLoggable(Level.FINE)) {
-                                log.log(Level.FINE, "setting flush for event {0} = ", new Object[]{entry.getKey(), entry.getValue()});
+                                log.log(Level.FINE, "setting flush for event {0} = {1}", new Object[]{entry.getKey(), entry.getValue()});
                             }
                             setFlushNative(evcIndex, EventTypeMapping.getNativeEventType(entry.getKey()), true, entry.getValue());
                         }
                     }
                     commitNative(evcIndex);
+                    commitCondition.signalAll();
                 }
             } finally {
                 lock.unlock();
@@ -691,6 +702,7 @@ public class EventClientImpl implements EventClient {
                     subscription.put(type, null);
                     nativeSubscription.add(type);
                 }
+                commitCondition.signalAll();
             }
             log.exiting(getClass().getName(), "run");
         }

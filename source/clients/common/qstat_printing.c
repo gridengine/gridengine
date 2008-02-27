@@ -197,7 +197,7 @@ int indent
 /*-------------------------------------------------------------------------*/
 /* print jobs per queue                                                    */
 /*-------------------------------------------------------------------------*/
-void sge_print_jobs_queue(
+int sge_print_jobs_queue(
 lListElem *qep,
 lList *job_list,
 const lList *pe_list,
@@ -232,7 +232,7 @@ lList **alpp
          u_long32 jstate = lGetUlong(jatep, JAT_state);
 
          if (shut_me_down) {
-            SGE_EXIT(NULL, 1);
+            DRETURN(1);
          }
 
          if ((jstate & JSUSPENDED_ON_SUBORDINATE))
@@ -370,7 +370,7 @@ lList **alpp
    }
    sge_dstring_free(&dyn_task_str);
 
-   DRETURN_VOID;
+   DRETURN(0);
 }
 
 void sge_printf_header(u_long32 full_listing, u_long32 sge_ext)

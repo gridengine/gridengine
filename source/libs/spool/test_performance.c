@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
    /* parse commandline parameters */
    if(argc != 4) {
       ERROR((SGE_EVENT, "usage: test_sge_spooling <method> <shared lib> <arguments>\n"));
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
    
    if (sge_gdi2_setup(&ctx, QEVENT, MAIN_THREAD, NULL) != AE_OK) {
@@ -190,15 +190,15 @@ int main(int argc, char *argv[])
    /* initialize spooling */
    spooling_context = spool_create_dynamic_context(&answer_list, argv[1], argv[2], argv[3]); 
    answer_list_output(&answer_list);
-   if(spooling_context == NULL) {
-      SGE_EXIT(NULL, EXIT_FAILURE);
+   if (spooling_context == NULL) {
+      SGE_EXIT((void**)&ctx, EXIT_FAILURE);
    }
 
    spool_set_default_context(spooling_context);
 
-   if(!spool_startup_context(&answer_list, spooling_context, true)) {
+   if (!spool_startup_context(&answer_list, spooling_context, true)) {
       answer_list_output(&answer_list);
-      SGE_EXIT(NULL, EXIT_FAILURE);
+      SGE_EXIT((void**)&ctx, EXIT_FAILURE);
    }
    answer_list_output(&answer_list);
    

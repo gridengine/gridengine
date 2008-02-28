@@ -1,3 +1,10 @@
+LP-2008-02-28-0: Bugfix:   Uninstall does not remove the SGE_STARTUP_SCRIPT
+                 Bugfix:   qmaster crashes when SGE_ND=1, dl 2 and BDB server spooling
+                 Bugster:  6659880, 6666732
+                 Bugfix:   Replaced N1 with Sun in the logs
+                 Enhancem: Old cluster_name checked only for root installation
+                 Review:   PJ
+
 PJ-2008-02-27-0: Bugfix:    - Wrong detection of sge_qmaster port
                  Bugster: 6659854
                  Review:  LP

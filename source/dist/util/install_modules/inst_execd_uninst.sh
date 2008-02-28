@@ -55,6 +55,7 @@ WelcomeUninstall()
    fi
    
    $INFOTEXT -wait -n "\nHit <RETURN> to continue >> "
+   $CLEAR
 }
 
 FetchHostname()
@@ -79,20 +80,43 @@ FetchHostname()
 
    if [ "$ALL_EXECDS" = true ]; then
       HOSTS=`qconf -sel`
+   else
+      HOSTS="$HOST"
    fi
 
    for h in $HOSTS; do
       if [ "$NOREMOTE" = "true" -a "$h" = "$local_host" ]; then    #only the local host (from RM list) should be uninstalled and 
          LOCAL_UNINST="true"                                    #if actual host is equal to local host do uninstallation
          doUninstall $h
-         break;                                                 #break loop, if host found and uninstalled
+         break                                                  #break loop, if host found and uninstalled
       fi
 
       if [ "$NOREMOTE" = "false" ]; then                            #also uninstall remote hosts
          if [ "$h" = "$local_host" ]; then                          #if actual host equals to local_host, no rsh/ssh is used for
             LOCAL_UNINST="true"                                    #uninstallation
+            doUninstall $h
+         else
+            $INFOTEXT -n "The uninstall script has to login to the uninstalled execution host $h\n" \
+                         "Please enter the shell name which should be used! (rsh/ssh) >>"
+            SHELL_NAME=`Enter $SHELL_NAME`
+            SHELL_NAME=`echo "$SHELL_NAME" | tr [A-Z] [a-z]`
+            if [ "$SHELL_NAME" != "rsh" -a "$SHELL_NAME" != "ssh" ]; then
+               $INFOTEXT -n "Skipping uninstallation of exec host $host.\n"\
+                            "Invalid shell name $SHELL_NAME was selected."
+               LOCAL_UNINST="false"
+               continue
+            fi
+            which $SHELL_NAME >/dev/null 2>&1
+            if [ $? -ne 0 ]; then
+               $INFOTEXT ">>%s<< is not on your PATH!" $SHELL_NAME
+               continue
+            fi
+            #h must be admin host
+            qconf -ah $h >/dev/null 2>&1
+            echo "cd $SGE_ROOT; . $SGE_ROOT/$SGE_CELL/common/settings.sh; ./inst_sge -ux" | $SHELL_NAME $h /bin/sh
+            #In case we failed we better remove admin host
+            qconf -dh $h >/dev/null 2>&1
          fi
-         doUninstall $h                                         
          LOCAL_UNINST="false"                                   #reset LOCAL_UNINST variable for following uninstallations
       fi
    done
@@ -212,7 +236,7 @@ RemoveExecd()
    qconf -de $exechost
    sleep 1
    qconf -dh $exechost
- 
+
 
 }
 

@@ -775,13 +775,13 @@ CheckConfigFile()
       HOSTNAME_RESOLVING=`echo "$HOSTNAME_RESOLVING" | tr [A-Z] [a-z]`
       if [ "$HOSTNAME_RESOLVING" != "true" -a "$HOSTNAME_RESOLVING" != "false" ]; then
          $INFOTEXT -e "Your >HOSTNAME_RESOLVING< flag is wrong! Valid values are: 0, 1, true, false"
-         is_valid="false" 
+         is_valid="false"
       fi
 
       if [ -z "$SGE_ENABLE_JMX" ]; then
          $INFOTEXT -e "Your >SGE_ENABLE_JMX< flag is not set!"
-         is_valid="false" 
-      fi 
+         is_valid="false"
+      fi
       if [ "$SGE_ENABLE_JMX" = "1" ]; then
          SGE_ENABLE_JMX="true"
       elif [ "$SGE_ENABLE_JMX" = "0" ]; then
@@ -1739,8 +1739,21 @@ ProcessSGEClusterName()
       eval SGE_CLUSTER_NAME=`Enter $SGE_CLUSTER_NAME_VAL`
 
       IsValidClusterName $SGE_CLUSTER_NAME
-      if [ $? -eq 0 ]; then
-         #Name is valid, we check if service/RC script already exists
+      if [ $? -ne 0 ]; then
+         $INFOTEXT "Specified cluster name is not valid!\n" \
+                   "The cluster name must start with a letter ([A-Za-z]), followed by letters, \n" \
+                   "digits ([0-9]), dashes ("-") or underscores ("_")."  
+         if [ $AUTO = true ]; then
+            $INFOTEXT  -log "Specified cluster name is not valid!\n" \
+               "The cluster name must start with a letter ([A-Za-z]), followed by letters, \n" \
+               "digits ([0-9]), dashes ("-") or underscores ("_")."
+            MoveLog
+            exit 1
+         fi
+         SGE_CLUSTER_NAME=""
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to enter new cluster name >> "
+      elif [ $euid -eq 0 ]; then
+         #Name is valid, we check if service/RC script already exists only is root
          CheckIfClusterNameAlreadyExists $1
          validation_res=$?
          if [ $validation_res -ne 0 ]; then
@@ -1758,21 +1771,10 @@ ProcessSGEClusterName()
             fi                  
          else
             done=true
-         fi
-      else    
-         $INFOTEXT "Specified cluster name is not valid!\n" \
-                   "The cluster name must start with a letter ([A-Za-z]), followed by letters, \n" \
-                   "digits ([0-9]), dashes ("-") or underscores ("_")."  
-         if [ $AUTO = true ]; then
-            $INFOTEXT  -log "Specified cluster name is not valid!\n" \
-               "The cluster name must start with a letter ([A-Za-z]), followed by letters, \n" \
-               "digits ([0-9]), dashes ("-") or underscores ("_")."
-            MoveLog
-            exit 1
-         fi
-         SGE_CLUSTER_NAME=""
-         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to enter new cluster name >> "
-      fi   
+         fi      
+      else
+         done=true
+      fi
    done
       
    #Only BDB or qmaster installation can create cluster_name file
@@ -2887,14 +2889,13 @@ RemoveRcScript()
    euid=$3
    upgrade=$4
    
+   if [ $euid != 0 ]; then
+      return 0
+   fi
 
    $INFOTEXT "Checking for installed rc startup scripts!\n"
 
    SetupRcScriptNames $hosttype $upgrade
-
-   if [ $euid != 0 ]; then
-      return 0
-   fi
 
    $INFOTEXT -u "\nRemoving %s startup script" $DAEMON_NAME
 

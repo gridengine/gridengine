@@ -1,3 +1,9 @@
+AH-2008-02-28-0: Docs:      Added documentation for qmaster_params 
+                            ENABLE_RESCHEDULE_KILL and ENABLE_RESCHEDULE_SLAVE 
+                            to sge_conf(5).
+                 Issue:     2491
+                 Review:    BB,RD
+
 RD-2008-02-26-1: CVS        Created V61ARsnapshot3_4_TAG
 --------------------------------------------------------
 

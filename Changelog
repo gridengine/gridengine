@@ -1,3 +1,6 @@
+JG-2008-02-29-0: Bugfix:    Fixed memory leaks in japi, drmaa, test_drmaa.
+                 Review:    EB
+
 JO-2008-02-29-0: Doc:      howto arco_mysql.txt - added InnoDB storage engine requirement
 
 LP-2008-02-28-0: Bugfix:   Uninstall does not remove the SGE_STARTUP_SCRIPT

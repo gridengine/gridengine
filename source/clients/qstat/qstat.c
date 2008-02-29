@@ -1815,6 +1815,7 @@ u_long32 isXML
    bool jobs_exist = true;
    lListElem* mes;
    lListElem *tmpElem;
+   lListElem *job_n;
 
    DENTER(TOP_LAYER, "qstat_show_job");
 
@@ -1875,6 +1876,34 @@ u_long32 isXML
    lFreeWhere(&where);
    lFreeWhat(&what);
   
+   /* Filtering using the lWhere does not seem to filter out unwanted jobs.
+    * The following code does the filtering out of jobs that are not requested
+    * in the command line.
+   */
+   job_n = lFirst(jlp);
+   while(job_n) {  
+      bool found = false;
+      tmpElem = lNext(job_n);
+      for_each(j_elem, jid_list) {
+         const char *job_name = lGetString(j_elem, ST_name);
+         if (isdigit(job_name[0])){
+            u_long32 jid = atol(lGetString(j_elem, ST_name));
+            if(lGetUlong(job_n, JB_job_number) == jid) {
+               found = true;
+            }               
+         } else {
+            if(strcmp(lGetString(job_n, JB_job_name), job_name) == 0) {
+               found = true;
+            }
+         }
+      }
+      if (!found) {
+         lRemoveElem(jlp, &job_n);
+         found = false;
+      }
+      job_n = tmpElem;
+   }
+
    if (isXML) {
       /* filter the message list to contain only jobs that have been requested.
          First remove all enteries in the job_number_list that are not in the 

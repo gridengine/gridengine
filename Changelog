@@ -1,3 +1,10 @@
+MP-2008-02-29-0: Bugfix:    Calling qstat -j does not filter the job list
+                            based on command line parameters.
+                 Review:    JB
+                 NOTE:      This is only a temporary fix. The lWhere needs
+                            to filter the list properly during the lselect
+                            statement.
+
 JG-2008-02-29-0: Bugfix:    Fixed memory leaks in japi, drmaa, test_drmaa.
                  Review:    EB
 

@@ -1,3 +1,5 @@
+JO-2008-02-29-0: Doc:      howto arco_mysql.txt - added InnoDB storage engine requirement
+
 LP-2008-02-28-0: Bugfix:   Uninstall does not remove the SGE_STARTUP_SCRIPT
                  Bugfix:   qmaster crashes when SGE_ND=1, dl 2 and BDB server spooling
                  Bugster:  6659880, 6666732

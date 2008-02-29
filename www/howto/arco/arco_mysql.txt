@@ -67,12 +67,29 @@ MySQL programs:
 # chown -R mysql ${installation_directory}/mysql-standard-5.0.26-solaris10-i386/data
 # chgrp -R mysql ${installation_directory}/mysql-standard-5.0.26-solaris10-i386
 
-5. step: Start the MySQL server
+5. step: Configure MySQL server to use InnoDB as the default storage engine
+MySQL supports several storage engines that act as handlers for different table types. MySQL storage engines 
+include both, those that handle transaction-safe tables, and those that handle non-transaction-safe tables. 
+ARCo installation requires the use of transaction-safe tables.
+
+Edit the my.cnf file and set the option default_storage_engine=innodb
+Configure other innodb properties such as innodb_data_home_dir, innodb_data_file_path. 
+
+For details on InnoDB storage configuration refer to: 
+http://dev.mysql.com/doc/refman/5.0/en/innodb-configuration.html
+         
+6. step: Start the MySQL server
 # bin/mysqld_safe --user=mysql &
 
-6. step: Set up the root password
+7. step: Set up the root password
 # ./bin/mysqladmin -u root password 'new-password'
 # ./bin/mysqladmin -u root -h ${hostname} password 'new-password'
+
+8. step: Verify that your database is configured with the correct storage engine
+Create a test table (see examples below) and issue an sql command:
+SHOW TABLE STATUS FROM <database_name> LIKE '<test_table_name>'
+
+The field 'Engine' should have a value InnoDB.
 
 Tips:
 =====

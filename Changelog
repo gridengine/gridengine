@@ -1,3 +1,7 @@
+JG-2008-02-29-0: Bugfix:    Fixed memory leaks in japi, drmaa, test_drmaa.
+                            Fixed broken build on irix65.
+                 Review:    EB
+
 LP-2008-02-26-0: Bugfix:    Merged fix for inst_sge -ux all -um fails
                  Bugster:   6660899
                  Review:    AP

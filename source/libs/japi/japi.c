@@ -512,7 +512,7 @@ int japi_init(const char *contact, const char *session_key_in,
    /* Bugfix: Issuezilla 1076
     * We set this here so that the enable_job_wait() can be certain about
     * whether init called it or not. */
-   init_thread = pthread_self ();
+   init_thread = pthread_self();
    JAPI_UNLOCK_SESSION();
 
    /* This variable must be false when we enter drmaa_init(), but we set it
@@ -672,7 +672,7 @@ int japi_enable_job_wait(const char *session_key_in, dstring *session_key_out,
    /* When init_thread is set in japi_init(), it's guarded by the session
     * mutex, so we know there's no race condition here. */
    else if ((japi_session == JAPI_SESSION_INITIALIZING) && 
-            (init_thread != pthread_self ())) {
+            (init_thread != pthread_self())) {
       JAPI_UNLOCK_SESSION();
       japi_standard_error(DRMAA_ERRNO_ALREADY_ACTIVE_SESSION, diag);
       DEXIT;
@@ -755,7 +755,8 @@ int japi_enable_job_wait(const char *session_key_in, dstring *session_key_out,
          sge_dstring_sprintf(diag, MSG_JAPI_EC_THREAD_NOT_STARTED_S,
                              strerror(errno));
       }
-      
+
+      DEXIT;
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
 
@@ -963,8 +964,7 @@ int japi_exit(int flag, dstring *diag)
     */
    JAPI_LOCK_EC_STATE();
    DPRINTF(("Notify event client about shutdown\n"));
-   if ((japi_ec_state == JAPI_EC_UP) || (japi_ec_state == JAPI_EC_STARTING) || 
-                                        (japi_ec_state == JAPI_EC_RESTARTING)) {
+   if ((japi_ec_state == JAPI_EC_UP) || (japi_ec_state == JAPI_EC_STARTING) || (japi_ec_state == JAPI_EC_RESTARTING)) {
       int my_state = japi_ec_state;
       /* If the event client thread is running, it will check the state at the
        * beginning of every cycle.  If the state is set to JAPI_EC_FINISHING
@@ -1152,16 +1152,16 @@ int japi_string_vector_get_next(drmaa_attr_values_t* iter, dstring *val)
       if (val != NULL) {
          sge_dstring_sprintf(val, "%ld.%d", iter->it.ji.jobid, iter->it.ji.next_pos);
       }
-      
+
       iter->it.ji.next_pos += iter->it.ji.incr;
       DRETURN(DRMAA_ERRNO_SUCCESS);
    case JAPI_ITERATOR_STRINGS:
       if (!iter->it.si.next_pos) {
          DEXIT;
 #ifdef DRMAA_10
-         DRETURN(DRMAA_ERRNO_NO_MORE_ELEMENTS);
+         return DRMAA_ERRNO_NO_MORE_ELEMENTS;
 #else
-         DRETURN(DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE);
+         return DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE;
 #endif
       }
 
@@ -1684,7 +1684,7 @@ static int japi_user_hold_add_jobid(u_long32 gdi_action, lList **request_list,
          sge_dstring_sprintf(diag, MSG_JAPI_TASK_REF_TWICE_UU, 
                taskid, jobid);
       }
-      
+
       DRETURN(DRMAA_ERRNO_INVALID_ARGUMENT);
    }
    
@@ -1830,7 +1830,6 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
                id_list_build_from_str_list(&id_list, &alp, ref_list,
                                            QI_DO_UNSUSPEND, 0);
             }
-            
             alp = sge_gdi(SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, 
                           &id_list, NULL, NULL);
             lFreeList(&id_list);
@@ -1871,11 +1870,11 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
 
          if (strcmp(jobid_str, DRMAA_JOB_IDS_SESSION_ALL) == 0) {
             lListElem *japi_job = NULL;
-            
+
             JAPI_LOCK_JOB_LIST();    
             for_each (japi_job, Master_japi_job_list) {
                jobid = lGetUlong(japi_job, JJ_jobid);
-               
+
                if (!JOB_TYPE_IS_ARRAY(lGetUlong(japi_job, JJ_type))) {
                   drmaa_errno = japi_user_hold_add_jobid(gdi_action,
                                                          &request_list, 
@@ -1891,7 +1890,7 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
                   }
                } else {
                   lListElem *range = NULL;
-                  
+
                   for_each (range, lGetList(japi_job, JJ_not_yet_finished_ids)) {
                      u_long32 min, max, step;
 
@@ -1901,7 +1900,8 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
                         drmaa_errno = japi_user_hold_add_jobid(gdi_action,
                                                                &request_list,
                                                                jobid, 
-                                                               taskid, true,
+                                                               taskid,
+                                                               true,
                                                                diag);
 
                         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
@@ -1954,7 +1954,7 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
                   return ret;
                }
             }
-            
+
             lFreeList(&alp);
          }
       }
@@ -2061,7 +2061,7 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
             sge_dstring_sprintf(&job_task_specifier, sge_u32, jobid);
             id_entry = lAddElemStr(&id_list, ID_str, sge_dstring_get_string(&job_task_specifier), ID_Type);
             if (array) {
-               lList *tlp;
+               lList *tlp = NULL;
                lXchgList(id_entry, ID_ja_structure, &tlp);
                range_list_insert_id(&tlp, NULL, taskid);
                lXchgList(id_entry, ID_ja_structure, &tlp);
@@ -2296,7 +2296,6 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
    if (sync_all == true) {
       lListElem *ep = NULL;
       u_long32 id = 0;
-      char *char_id = NULL;
       int count = 0;
       sync_list = lCreateList ("Synchronize Job List", ST_Type);
       
@@ -2331,7 +2330,7 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
             for (task_id = min; task_id <= max; task_id += step) {
                /* The largest number representable by 64 unsigned bits is 19
                 * characters long. */
-               char_id = (char *)malloc (sizeof (char) * 40);
+               char char_id[40];
                snprintf (char_id, 40, sge_u32 "." sge_u32, id, task_id);
 
                DPRINTF (("Synchronize All: adding %s to id list\n", char_id));
@@ -2751,7 +2750,7 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat,
 
    if ((event_mask & JAPI_JOB_FINISH) && (rusage != NULL) && !got_usage_info) {
       japi_standard_error (DRMAA_ERRNO_NO_RUSAGE, diag);
-      DEXIT;   
+      DEXIT;
       return DRMAA_ERRNO_NO_RUSAGE;
    }
    else {
@@ -3281,7 +3280,7 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
          }
       }
 
-      DEXIT; /* ???  */
+      DEXIT;
       return DRMAA_ERRNO_SUCCESS;
    }
   
@@ -3933,10 +3932,11 @@ const char *japi_strerror(int drmaa_errno)
 
    int i;
 
-   for (i=0; error_text[i].drmaa_errno != DRMAA_NO_ERRNO; i++)
-      if (drmaa_errno == error_text[i].drmaa_errno) 
+   for (i=0; error_text[i].drmaa_errno != DRMAA_NO_ERRNO; i++) {
+      if (drmaa_errno == error_text[i].drmaa_errno) {
          return error_text[i].str;
-
+      }
+   }
    return NULL; 
 }
 
@@ -4052,6 +4052,7 @@ int japi_get_drm_system(dstring *drm, dstring *diag, int me)
    sge_dstring_free(&buffer);
    return DRMAA_ERRNO_SUCCESS;
 }
+
 
 /****** japi/japi_subscribe_job_list() *****************************************
 *  NAME
@@ -4279,7 +4280,7 @@ static void *japi_implementation_thread(void *p)
             break;
          }
          JAPI_UNLOCK_EC_STATE();
-         
+
          /* Bug Fix: Issuezilla #826
           * The first part of this bug fix is to keep the event client thread
           * from dying when the qmaster goes down.  In distinguish between
@@ -4300,7 +4301,7 @@ static void *japi_implementation_thread(void *p)
                ec_mark4registration();
                job_list_subscribed = true;
             }
-            
+
             DPRINTF ((MSG_JAPI_RECONNECTED));
             disconnected = false;
          }
@@ -4361,7 +4362,7 @@ static void *japi_implementation_thread(void *p)
                /* Now add any left over jobs to the master job list. */
                for_each(sge_job, sge_job_list) {
                   lList *task_list = NULL;
-                  
+
                   japi_job = lAddElemUlong(&Master_japi_job_list, JJ_jobid,
                                            lGetUlong(sge_job, JB_job_number),
                                            JJ_Type);
@@ -4370,7 +4371,7 @@ static void *japi_implementation_thread(void *p)
                   lSetList(japi_job, JJ_not_yet_finished_ids, task_list);
                   finished_tasks = japi_sync_job_tasks (japi_job, sge_job);
                }
-               
+
                /* signal all application threads waiting for a job to finish */
                if (finished_tasks)
                   pthread_cond_broadcast(&Master_japi_job_list_finished_cv);
@@ -4517,7 +4518,6 @@ static void *japi_implementation_thread(void *p)
             JAPI_UNLOCK_EC_STATE();
             up_and_running = true;
          }
-         
       } /* else */
 
       if (!stop_ec) {
@@ -4562,7 +4562,7 @@ static void *japi_implementation_thread(void *p)
    } else {
       DPRINTF(("... unregistered.\n"));
    }
-      
+
    JAPI_LOCK_EC_STATE();
    /* We have to check here whether the event client ever got the first job list
     * event.  If not, being here counts as a failure. */
@@ -5013,7 +5013,7 @@ static int japi_read_dynamic_attributes(dstring *diag)
 *  NOTES
 *     MT-NOTES: do_gdi_delete() is MT safe
 *******************************************************************************/
-static int do_gdi_delete (lList **id_list, int action, bool delete_all,
+static int do_gdi_delete(lList **id_list, int action, bool delete_all,
                           dstring *diag)
 {
    lList *alp = NULL;

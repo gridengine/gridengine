@@ -544,8 +544,7 @@ tConfEntry conf[]
 int validate_config( lList **alpp, lListElem *gconf ) {
    int i=0;
    lList *gconfl;
-   lListElem *ep;
-   bool has_error = 0;
+   bool has_error = false;
  
    DENTER(TOP_LAYER, "validate_config");
  
@@ -564,10 +563,10 @@ int validate_config( lList **alpp, lListElem *gconf ) {
          continue;
       }
 
-      if ((ep = lGetElemStr(gconfl, CF_name, conf_entries[i].name)) == NULL){
+      if (lGetElemStr(gconfl, CF_name, conf_entries[i].name) == NULL) {
          answer_list_add_sprintf(alpp, STATUS_ERROR1, ANSWER_QUALITY_ERROR, 
 			 MSG_GDI_CONFIGMISSINGARGUMENT_S, conf_entries[i].name);
-         has_error = 1;
+         has_error = true;
       }
    }
    if (has_error) {

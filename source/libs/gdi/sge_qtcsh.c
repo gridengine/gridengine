@@ -424,7 +424,7 @@ char** pargs /* The array to contain the parsed arguments */
 *     sge_get_qtask_args() -- get args for a qtask entry
 *
 *  SYNOPSIS
-*     char** sge_get_qtask_args (char *taskname, lList *alp)
+*     char** sge_get_qtask_args(char *taskname, lList **answer_list)
 *
 *  FUNCTION
 *     This function reads the qtask files and returns an array of args for the
@@ -432,9 +432,9 @@ char** pargs /* The array to contain the parsed arguments */
 *     framework, if it has not already been initialized.
 *
 *  INPUTS
-*     char *taskname    The name of the entry for which to look in the qtask
-*                       files
-*     lList *alp        For returning error information
+*     char *taskname      - The name of the entry for which to look in the qtask
+*                           files
+*     lList **answer_list - For returning error information
 *
 *  RESULT
 *     char **           A NULL-terminated array of args for the given qtask
@@ -447,7 +447,7 @@ char** pargs /* The array to contain the parsed arguments */
 *              task_config global variable.
 *
 *******************************************************************************/
-char **sge_get_qtask_args (char *taskname, lList *alp)
+char **sge_get_qtask_args(char *taskname, lList **answer_list)
 {
    const char *value = NULL; 
    int num_args = 0;
@@ -471,7 +471,7 @@ char **sge_get_qtask_args (char *taskname, lList *alp)
    if (task_config == NULL) {
       /* Just using printf here since we don't really have an exciting function
        * like xprintf to pass in.  This was really meant for use with qtsch. */
-      if (init_qtask_config (&alp, (print_func_t)printf) != 0) {
+      if (init_qtask_config(answer_list, (print_func_t)printf) != 0) {
          sge_mutex_unlock("qtask_mutex", SGE_FUNC, __LINE__, &qtask_mutex);
          DEXIT;
          return args;

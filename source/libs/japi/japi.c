@@ -2235,7 +2235,6 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
    if (sync_all == true) {
       lListElem *ep = NULL;
       u_long32 id = 0;
-      char *char_id = NULL;
       int count = 0;
       sync_list = lCreateList ("Synchronize Job List", ST_Type);
       
@@ -2270,7 +2269,7 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
             for (task_id = min; task_id <= max; task_id += step) {
                /* The largest number representable by 64 unsigned bits is 19
                 * characters long. */
-               char_id = (char *)malloc (sizeof (char) * 40);
+               char char_id[40];
                snprintf (char_id, 40, sge_u32 "." sge_u32, id, task_id);
 
                DPRINTF (("Synchronize All: adding %s to id list\n", char_id));
@@ -3334,6 +3333,7 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list
    } 
    
    lFreeList(&alp);
+   lFreeList(&mal);
 
    DRETURN(DRMAA_ERRNO_SUCCESS);
 }

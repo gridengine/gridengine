@@ -1,6 +1,9 @@
-PJ-2008-02-27-0: Bugfix:    - Wrong detection of sge_qmaster port
-                 Bugster: 6659854
-                 Review:  LP
+JG-2008-02-29-0: Bugfix:    Fixed memory leaks in japi, drmaa, test_drmaa.
+                 Review:    EB
+
+PJ-2008-02-27-0: Bugfix:    Wrong detection of sge_qmaster port.
+                 Bugster:   6659854
+                 Review:    LP
 
 JG-2008-02-26-0: Bugfix:    Fixed broken build.
                  Enhancem.: Improved qevent -ts time precision.

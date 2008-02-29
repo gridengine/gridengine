@@ -574,7 +574,7 @@ typedef struct {
    int time;
 } test_job_t;
 static int test_dispatch_order_njobs(int n, test_job_t jobs[], char *jsr_str);
-static int job_run_sequence_verify(int pos, char *all_jobids[], int *order[]);
+static int job_run_sequence_verify(int pos, const char *all_jobids[], int *order[]);
 static int **job_run_sequence_parse(char *jrs_str);
 
 static int test_case;
@@ -590,6 +590,23 @@ char *sleeper_job = NULL,
      *email_addr = NULL;
 int ctrl_op = -1;
 
+static void init_jobids(const char *jobids[], int size)
+{
+   int i = 0;
+   for (i = 0; i < size; i++) {
+      jobids[i] = NULL;
+   }
+}
+
+static void free_jobids(const char *jobids[], int size)
+{
+   int i = 0;
+   for (i = 0; i < size; i++) {
+      if (jobids[i] != NULL) {
+         FREE(jobids[i]);
+      }
+   }
+}
 
 static void usage(void)
 {
@@ -1208,12 +1225,16 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
 
    case ST_BULK_SINGLESUBMIT_WAIT_INDIVIDUAL:
       {
-         const char *all_jobids[NBULKS*JOB_CHUNK + JOB_CHUNK+1];
+         const int size_all_jobids = NBULKS*JOB_CHUNK + JOB_CHUNK + 1;
+         const char *all_jobids[NBULKS*JOB_CHUNK + JOB_CHUNK + 1];
          char jobid[100];
          int pos = 0;
-         
-         if (parse_args)
+        
+         init_jobids(all_jobids, size_all_jobids);
+
+         if (parse_args) {
             sleeper_job = NEXT_ARGV(argc, argv);
+         }
 
          if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
@@ -1228,7 +1249,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             fprintf(stderr, "create_sleeper_job_template() failed\n");
             return 1;
          }
-         for (i=0; i<NBULKS; i++) {
+         for (i = 0; i < NBULKS; i++) {
             drmaa_job_ids_t *jobids;
             int j;
 
@@ -1239,11 +1260,12 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             } 
             if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
                fprintf(stderr, "drmaa_run_bulk_jobs() failed: %s\n", diagnosis);
+               free_jobids(all_jobids, size_all_jobids);
                return 1;
             }
 
             printf("submitted bulk job with jobids:\n");
-            for (j=0; j<JOB_CHUNK; j++) {
+            for (j = 0; j < JOB_CHUNK; j++) {
                drmaa_get_next_job_id(jobids, jobid, sizeof(jobid)-1);
                all_jobids[pos++] = strdup(jobid);
                printf("\t \"%s\"\n", jobid);
@@ -1258,6 +1280,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
           */
          if (!(jt = create_sleeper_job_template(5, 0, 0))) {
             fprintf(stderr, "create_sleeper_job_template() failed\n");
+            free_jobids(all_jobids, size_all_jobids);
             return 1;
          }
          for (i=0; i<JOB_CHUNK; i++) {
@@ -1268,6 +1291,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             }
             if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
                fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               free_jobids(all_jobids, size_all_jobids);
                return 1;
             }
             all_jobids[pos++] = strdup(jobid);
@@ -1295,11 +1319,15 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
 
             if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
                fprintf(stderr, "drmaa_wait(%s) failed: %s\n", all_jobids[pos], diagnosis);
+               free_jobids(all_jobids, size_all_jobids);
                return 1;
             }
             printf("waited job \"%s\"\n", all_jobids[pos]);
             FREE(all_jobids[pos]);
          }
+
+         free_jobids(all_jobids, size_all_jobids);
+
          if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
             return 1;
@@ -1405,11 +1433,14 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
          - then drmaa_exit() is called */
 
       {
-         const char *all_jobids[NBULKS*JOB_CHUNK + JOB_CHUNK+1];
+         int size_all_jobids = NBULKS*JOB_CHUNK + JOB_CHUNK + 1;
+         const char *all_jobids[NBULKS*JOB_CHUNK + JOB_CHUNK + 1];
          const char *session_all[] = { DRMAA_JOB_IDS_SESSION_ALL, NULL };
          char jobid[100];
          int pos = 0;
          
+         init_jobids(all_jobids, size_all_jobids);
+
          if (parse_args)
             sleeper_job = NEXT_ARGV(argc, argv);
 
@@ -1437,6 +1468,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             } 
             if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
                fprintf(stderr, "drmaa_run_bulk_jobs() failed: %s\n", diagnosis);
+               free_jobids(all_jobids, size_all_jobids);
                return 1;
             }
 
@@ -1466,6 +1498,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             }
             if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
                fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               free_jobids(all_jobids, size_all_jobids);
                return 1;
             }
             printf("\t \"%s\"\n", jobid);
@@ -1483,6 +1516,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
          drmaa_errno = drmaa_synchronize(session_all, DRMAA_TIMEOUT_WAIT_FOREVER, 0, diagnosis, sizeof(diagnosis)-1);
          if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, dispose) failed: %s\n", diagnosis);
+            free_jobids(all_jobids, size_all_jobids);
             return 1;
          }
          printf("synchronized with all jobs\n");
@@ -1503,11 +1537,14 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
 
             if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
                fprintf(stderr, "drmaa_wait(%s) failed: %s\n", all_jobids[pos], diagnosis);
+               free_jobids(all_jobids, size_all_jobids);
                return 1;
             }
             printf("waited job \"%s\"\n", all_jobids[pos]);
             FREE(all_jobids[pos]);
          }
+         free_jobids(all_jobids, size_all_jobids);
+
          if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
             return 1;
@@ -1522,10 +1559,13 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
            to wait for all jobs to finish
          - then drmaa_exit() is called */
       {
-         const char *all_jobids[NBULKS*JOB_CHUNK + JOB_CHUNK+1];
+         int size_all_jobids = NBULKS*JOB_CHUNK + JOB_CHUNK + 1;
+         const char *all_jobids[NBULKS*JOB_CHUNK + JOB_CHUNK + 1];
          char jobid[100];
          int pos = 0;
-         
+        
+         init_jobids(all_jobids, size_all_jobids);
+        
          if (parse_args)
             sleeper_job = NEXT_ARGV(argc, argv);
 
@@ -1553,6 +1593,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             } 
             if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
                fprintf(stderr, "drmaa_run_bulk_jobs() failed: %s\n", diagnosis);
+               free_jobids(all_jobids, size_all_jobids);
                return 1;
             }
 
@@ -1572,6 +1613,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
           */
          if (!(jt = create_sleeper_job_template(5, 0, 0))) {
             fprintf(stderr, "create_sleeper_job_template() failed\n");
+            free_jobids(all_jobids, size_all_jobids);
             return 1;
          }
          for (i=0; i<JOB_CHUNK; i++) {
@@ -1582,6 +1624,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             }
             if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
                fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               free_jobids(all_jobids, size_all_jobids);
                return 1;
             }
             printf("\t \"%s\"\n", jobid);
@@ -1597,6 +1640,8 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
           *   synchronize with all jobs
           */
          drmaa_errno = drmaa_synchronize(all_jobids, DRMAA_TIMEOUT_WAIT_FOREVER, 1, diagnosis, sizeof(diagnosis)-1);
+         free_jobids(all_jobids, size_all_jobids);
+
          if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, dispose) failed: %s\n", diagnosis);
             return 1;
@@ -1620,10 +1665,13 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
          - then drmaa_exit() is called */
 
       {
+         int size_all_jobids = NBULKS*JOB_CHUNK + JOB_CHUNK+1;
          const char *all_jobids[NBULKS*JOB_CHUNK + JOB_CHUNK+1];
          char jobid[100];
          int pos = 0;
          
+         init_jobids(all_jobids, size_all_jobids);
+
          if (parse_args)
             sleeper_job = NEXT_ARGV(argc, argv);
 
@@ -1651,6 +1699,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             } 
             if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
                fprintf(stderr, "drmaa_run_bulk_jobs() failed: %s\n", diagnosis);
+               free_jobids(all_jobids, size_all_jobids);
                return 1;
             }
 
@@ -1669,6 +1718,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
           */
          if (!(jt = create_sleeper_job_template(5, 0, 0))) {
             fprintf(stderr, "create_sleeper_job_template() failed\n");
+            free_jobids(all_jobids, size_all_jobids);
             return 1;
          }
          for (i=0; i<JOB_CHUNK; i++) {
@@ -1679,6 +1729,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             }
             if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
                fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               free_jobids(all_jobids, size_all_jobids);
                return 1;
             }
             printf("\t \"%s\"\n", jobid);
@@ -1696,6 +1747,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
          drmaa_errno = drmaa_synchronize(all_jobids, DRMAA_TIMEOUT_WAIT_FOREVER, 0, diagnosis, sizeof(diagnosis)-1);
          if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, dispose) failed: %s\n", diagnosis);
+            free_jobids(all_jobids, size_all_jobids);
             return 1;
          }
          printf("synchronized with all jobs\n");
@@ -1716,10 +1768,13 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
 
             if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
                fprintf(stderr, "drmaa_wait(%s) failed: %s\n", all_jobids[pos], diagnosis);
+               free_jobids(all_jobids, size_all_jobids);
                return 1;
             }
             printf("waited job \"%s\"\n", all_jobids[pos]);
          }
+         free_jobids(all_jobids, size_all_jobids);
+
          if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
             return 1;
@@ -1735,9 +1790,12 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
          - do drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, dispose)
          - then drmaa_exit() is called */
       {
-         const char *all_jobids[2+1];
+         int size_all_jobids = 2 + 1;
+         const char *all_jobids[2 + 1];
          char jobid[100];
          int pos = 0;
+
+         init_jobids(all_jobids, size_all_jobids);
 
          if (parse_args)
             sleeper_job = NEXT_ARGV(argc, argv);
@@ -1760,6 +1818,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
                      sizeof(diagnosis)-1);
             if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
                fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               free_jobids(all_jobids, size_all_jobids);
                return 1;
             }
             printf("\t \"%s\"\n", jobid);
@@ -1783,6 +1842,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
           *   synchronize with all jobs
           */
          drmaa_errno = drmaa_synchronize(all_jobids, DRMAA_TIMEOUT_WAIT_FOREVER, 1, diagnosis, sizeof(diagnosis)-1);
+         free_jobids(all_jobids, size_all_jobids);
          if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, dispose) failed: %s\n", diagnosis);
             return 1;
@@ -1921,6 +1981,9 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             printf("%s\n", attr_name);
          }
 
+         /* we don't need vector any longer - free it */
+         drmaa_release_attr_names(vector);
+         vector = NULL;
 
 #ifndef DRMAA_95
          if (size != 0) {
@@ -2184,9 +2247,12 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
    case ST_BULK_SUBMIT_IN_HOLD_SINGLE_DELETE:
       {
          const char *session_all[] = { DRMAA_JOB_IDS_SESSION_ALL, NULL };
-         const char *all_jobids[JOB_CHUNK+1];
+         int size_all_jobids = JOB_CHUNK + 1;
+         const char *all_jobids[JOB_CHUNK + 1];
          int job_state, pos = 0; 
          int ctrl_op;
+
+         init_jobids(all_jobids, size_all_jobids);
 
          if (parse_args)
             sleeper_job = NEXT_ARGV(argc, argv);
@@ -2223,11 +2289,13 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
 
                if (drmaa_job_ps(jobid, &job_state, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
                   fprintf(stderr, "drmaa_job_ps(\"%s\")) failed: %s\n", jobid, diagnosis);
+                  free_jobids(all_jobids, size_all_jobids);
                   return 1;
                }
                if (job_state != DRMAA_PS_USER_ON_HOLD && job_state != DRMAA_PS_USER_SYSTEM_ON_HOLD) {
                   fprintf(stderr, "job \"%s\" is not in user hold state: %s\n", 
                            jobid, drmaa_state2str(job_state));
+                  free_jobids(all_jobids, size_all_jobids);
                   return 1;
                }
             } 
@@ -2254,6 +2322,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
                                  sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
                   fprintf(stderr, "drmaa_control(%s, %s) failed: %s\n", 
                            all_jobids[pos], drmaa_ctrl2str(ctrl_op), diagnosis);
+                  free_jobids(all_jobids, size_all_jobids);
                   return 1;
                }
             }
@@ -2267,6 +2336,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
                               sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
                fprintf(stderr, "drmaa_control(%s, %s) failed: %s\n", 
                         DRMAA_JOB_IDS_SESSION_ALL, drmaa_ctrl2str(ctrl_op), diagnosis);
+               free_jobids(all_jobids, size_all_jobids);
                return 1;
             }
          }
@@ -2276,6 +2346,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
          if ((drmaa_errno = drmaa_synchronize(session_all, DRMAA_TIMEOUT_WAIT_FOREVER, 0, 
                      diagnosis, sizeof(diagnosis)-1))!=DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, dispose) failed: %s\n", diagnosis);
+            free_jobids(all_jobids, size_all_jobids);
             return 1;
          }
          printf("synchronized with job finish\n");
@@ -2286,6 +2357,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
          for (pos=0; pos<JOB_CHUNK; pos++) {
             if (drmaa_job_ps(all_jobids[pos], &job_state, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
                fprintf(stderr, "drmaa_job_ps(\"%s\")) failed: %s\n", all_jobids[pos], diagnosis);
+               free_jobids(all_jobids, size_all_jobids);
                return 1;
             }
 
@@ -2295,9 +2367,12 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
                  ((test_case == ST_BULK_SUBMIT_IN_HOLD_SINGLE_DELETE || 
                    test_case == ST_BULK_SUBMIT_IN_HOLD_SESSION_DELETE) && job_state != DRMAA_PS_FAILED)) {
                fprintf(stderr, "job \"%s\" terminated with unexpected state \"%s\"\n", all_jobids[pos], drmaa_state2str(job_state));
+               free_jobids(all_jobids, size_all_jobids);
                return 1;
             }
          }
+
+         free_jobids(all_jobids, size_all_jobids);
 
          if (wait_n_jobs(JOB_CHUNK) != DRMAA_ERRNO_SUCCESS) {
             return 1;
@@ -2572,10 +2647,13 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
          - then drmaa_exit() is called */
       {
          char diagnosis[1024];
-         char *all_jobids[256];
+         int size_all_jobids = 256;
+         const char *all_jobids[256];
          const char *job_argv[2];
          char jobid[1024];
          char buffer[100];
+
+         init_jobids(all_jobids, size_all_jobids);
 
          if (parse_args) {
             exit_job = NEXT_ARGV(argc, argv);
@@ -2609,6 +2687,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             }
             if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
                fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               free_jobids(all_jobids, size_all_jobids);
                return 1;
             }
             printf("\t \"%s\"\n", jobid);
@@ -2641,22 +2720,27 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             printf("job %d with job id %s finished\n", i, all_jobids[i]);
             if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
                fprintf(stderr, "drmaa_wait(%s) failed: %s\n", all_jobids[i], diagnosis);
+               free_jobids(all_jobids, size_all_jobids);
                return 1;
             }
           
             drmaa_wifexited(&exited, stat, NULL, 0);
             if (!exited) {
                fprintf(stderr, "job \"%s\" did not exit cleanly\n", all_jobids[i]);
+               free_jobids(all_jobids, size_all_jobids);
                return 1;
             }
             drmaa_wexitstatus(&exit_status, stat, NULL, 0);
             if (exit_status != i) {
                fprintf(stderr, "job \"%s\" returned wrong exit status %d instead of %d\n", 
                                  all_jobids[i], exit_status, i);
+               free_jobids(all_jobids, size_all_jobids);
                return 1;
             }
 
          }
+
+         free_jobids(all_jobids, size_all_jobids);
 
          printf("waited all jobs\n");
          if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
@@ -4126,12 +4210,11 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
          if (drmaa_errno == DRMAA_ERRNO_NO_RUSAGE) {
             fprintf(stderr, "drmaa_wait(%s) did not return usage information.\n", jobid);
             return 1;
-         }
-         else if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+         } else if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_wait(%s) failed: %s\n", jobid, diagnosis);
+            drmaa_release_attr_values(rusage);
             return 1;
-         }
-         else if (rusage == NULL) {
+         } else if (rusage == NULL) {
             fprintf (stderr, "drmaa_wait(%s) did not return usage information and did not return DRMAA_ERRNO_NO_RUSAGE\n", jobid);
             return 1;
          }
@@ -4141,6 +4224,8 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
          
          if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_get_num_attr_values() failed: %s\n", drmaa_strerror(drmaa_errno));
+            drmaa_release_attr_values(rusage);
+            rusage = NULL;
             return 1;
          }
 #endif
@@ -4149,6 +4234,9 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             size--;
             printf("%s\n", value);
          }
+
+         drmaa_release_attr_values(rusage);
+         rusage = NULL;
       
 #ifndef DRMAA_95
          if (size != 0) {
@@ -4179,7 +4267,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
          char *szPath;
          char *szTemp;
          char attr_name[DRMAA_ATTR_BUFFER];
-         drmaa_attr_names_t *vector;
+         drmaa_attr_names_t *vector = NULL;
          const char *session_all[] = { DRMAA_JOB_IDS_SESSION_ALL, NULL };
 
          if (parse_args)
@@ -4202,6 +4290,10 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
                break;
             }
          }
+         /* we don't need vector any longer - free it */
+         drmaa_release_attr_names(vector);
+         vector = NULL;
+
          if( !bFound ) {
             fprintf( stderr, "DRMAA_TRANSFER_FILES is not supported!\n" );
             return 1;
@@ -4304,11 +4396,11 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
          if (parse_args) {
             sleeper_job            = NEXT_ARGV(argc, argv);
             job_spec[0].native     = NEXT_ARGV(argc, argv);
-            job_spec[0].time       = 20;
+            job_spec[0].time       = 10;
             job_spec[1].native     = NEXT_ARGV(argc, argv);
-            job_spec[1].time       = 20;
+            job_spec[1].time       = 10;
             job_spec[2].native     = NEXT_ARGV(argc, argv);
-            job_spec[2].time       = 20;
+            job_spec[2].time       = 10;
          }
 
          if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
@@ -4389,10 +4481,12 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
          
          if (test_case == ST_UNSUPPORTED_ATTR) {
             drmaa_errno = drmaa_set_attribute(jt, "blah", "blah", diagnosis, sizeof(diagnosis)-1);
-         }
-         else {
+         } else {
             drmaa_errno = drmaa_set_vector_attribute(jt, "blah", (const char**)values, diagnosis, sizeof(diagnosis)-1);
          }
+
+         drmaa_delete_job_template(jt, NULL, 0);
+         jt = NULL;
 
          if (drmaa_errno != DRMAA_ERRNO_INVALID_ARGUMENT) {
             fprintf(stderr, "drmaa_set_attribute()/drmaa_set_vector_attribute() allowed invalid attribute\n");
@@ -4610,6 +4704,10 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
                                   DRMAA_TIMEOUT_WAIT_FOREVER, &rusage, diagnosis,
                                   DRMAA_ERROR_STRING_BUFFER);
 
+         /* we don't use rusage here - free it! */
+         drmaa_release_attr_values(rusage);
+         rusage = NULL;
+
          if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_wait() failed: %s\n", diagnosis);
             exit_code = 1;
@@ -4620,6 +4718,10 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
          drmaa_errno = drmaa_wait(jobid2, buffer, DRMAA_JOBNAME_BUFFER, &stat,
                                   DRMAA_TIMEOUT_WAIT_FOREVER, &rusage, diagnosis,
                                   DRMAA_ERROR_STRING_BUFFER);
+
+         /* we don't use rusage here - free it! */
+         drmaa_release_attr_values(rusage);
+         rusage = NULL;
 
          if ((drmaa_errno != DRMAA_ERRNO_INVALID_JOB) &&
              (drmaa_errno != DRMAA_ERRNO_NO_RUSAGE)) {
@@ -4634,6 +4736,10 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
                                   DRMAA_TIMEOUT_WAIT_FOREVER, &rusage, diagnosis,
                                   DRMAA_ERROR_STRING_BUFFER);
 
+         /* we don't use rusage here - free it! */
+         drmaa_release_attr_values(rusage);
+         rusage = NULL;
+
          /* This one must be found, because another task in this job is still
           * held.  The only option is to complain about no rusage info. */
          if (drmaa_errno != DRMAA_ERRNO_NO_RUSAGE) {
@@ -4646,6 +4752,10 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
          drmaa_errno = drmaa_wait(jobid4, buffer, DRMAA_JOBNAME_BUFFER, &stat,
                                   DRMAA_TIMEOUT_NO_WAIT, &rusage, diagnosis,
                                   DRMAA_ERROR_STRING_BUFFER);
+
+         /* we don't use rusage here - free it! */
+         drmaa_release_attr_values(rusage);
+         rusage = NULL;
 
          if (drmaa_errno != DRMAA_ERRNO_EXIT_TIMEOUT) {
             fprintf(stderr, "drmaa_wait() did not fail as expected: %s\n",
@@ -4847,6 +4957,7 @@ static int submit_sleeper(int n)
       /* We don't care about the error code from this one.  It doesn't affect
        * anything. */
       drmaa_delete_job_template(jt, NULL, 0);
+      jt = NULL;
    }
 
    return ret;
@@ -4983,7 +5094,10 @@ static int wait_all_jobs(int n)
 
    do {
       drmaa_errno = drmaa_wait(DRMAA_JOB_IDS_SESSION_ANY, jobid, sizeof(jobid)-1, &stat, DRMAA_TIMEOUT_WAIT_FOREVER, &rusage, NULL, 0);
-      
+      /* we don't use rusage here - free it! */
+      drmaa_release_attr_values(rusage);
+      rusage = NULL;
+
       if (drmaa_errno == DRMAA_ERRNO_SUCCESS) {
          printf("waited job \"%s\"\n", jobid);
          if (n != -1) {
@@ -5428,21 +5542,10 @@ static void free_order(int **order)
    FREE(order);
 }
 
-static void free_jobids(char *jobids[], int size)
-{
-   int i = 0;
-   for (i = 0; i < size; i++) {
-      if (jobids[i] != NULL) {
-         free(jobids[i]);
-         jobids[i] = NULL;
-      }
-   }
-}
-
 static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
 {
    char diagnosis[DRMAA_ERROR_STRING_BUFFER];
-   char *all_jobids[10];
+   const char *all_jobids[10];
    char jobid[100];
    drmaa_job_template_t *jt;
    int drmaa_errno, i, pos = 0;
@@ -5455,10 +5558,7 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
       return -1;
    }
 
-   /* clear all_jobids array */
-   for (i = 0; i < njobs; i++) {
-      all_jobids[i] = NULL;
-   }
+   init_jobids(all_jobids, njobs);
 
    /* submit jobs in hold */
    for (i = 0; i < njobs; i++) {
@@ -5544,8 +5644,7 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
          }
 
          /* NULL-ify finished ones */
-         free(all_jobids[pos]);
-         all_jobids[pos] = NULL;
+         FREE(all_jobids[pos]);
 
          if (--nwait == 0) {
             printf("waited for last job\n");
@@ -5561,7 +5660,7 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
    return 0;
 }
 
-static int job_run_sequence_verify(int pos, char *all_jobids[], int *order[])
+static int job_run_sequence_verify(int pos, const char *all_jobids[], int *order[])
 {
    int test_index, i, j;
    int found_group = 0;

@@ -148,8 +148,8 @@ static void merge_drmaa_options(lList **opts_all, lList **opts_default,
 static int opt_list_append_opts_from_drmaa_attr(lList **args, const lList *attrs,
                                                 const lList *vattrs, int is_bulk, dstring *diag);
 static char *drmaa_time2sge_time(const char *drmaa_time, dstring *diag);
-static char *drmaa_get_home_directory(const char *username, lList *alp);
-static char *drmaa_expand_wd_path(const char *username, const char *path, lList *alp);
+static char *drmaa_get_home_directory(const char *username, lList **answer_list);
+static char *drmaa_expand_wd_path(const char *username, const char *path, lList **answer_list);
 static int drmaa_set_bulk_range(lList **opts, int start, int end, int step,
                                  lList **alp);
 static drmaa_attr_names_t *drmaa_fill_supported_nonvector_attributes(dstring *diag);
@@ -501,26 +501,17 @@ int drmaa_allocate_job_template(drmaa_job_template_t **jtp, char *error_diagnosi
 int drmaa_delete_job_template(drmaa_job_template_t *jt, char *error_diagnosis, size_t error_diag_len)
 {
    dstring diag;
-   dstring *diagp = NULL;
-   int ret = DRMAA_ERRNO_SUCCESS;
 
    DENTER(TOP_LAYER, "drmaa_delete_job_template");
 
    if (error_diagnosis != NULL) {
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
-      diagp = &diag;
    }
 
    if (jt == NULL) {
       japi_standard_error(DRMAA_ERRNO_INVALID_ARGUMENT, &diag);
       DRETURN(DRMAA_ERRNO_INVALID_ARGUMENT);
    } 
- 
-   ret = japi_was_init_called(diagp);
-   if (ret != DRMAA_ERRNO_SUCCESS) {
-      /* diagp written by japi_was_init_called() */
-      DRETURN(ret);
-   }
 
    lFreeList(&(jt->strings));
    lFreeList(&(jt->string_vectors));
@@ -2643,6 +2634,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
       lFreeElem(&jt);
       DRETURN(DRMAA_ERRNO_DENIED_BY_DRM);
    }
+   lFreeList(&alp);
 
    /*
     * append the native spec switches to the list if they exist
@@ -2692,6 +2684,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
          DRETURN(DRMAA_ERRNO_DENIED_BY_DRM);
       }
    }
+   lFreeList(&alp);
 
    if ((drmaa_errno = opt_list_append_opts_from_drmaa_attr(&opts_drmaa, 
                            drmaa_jt->strings, drmaa_jt->string_vectors,
@@ -2731,7 +2724,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
       if (opt_list_has_X(opts_drmaa, "-wd")) {
          ep = lGetElemStr(opts_drmaa, SPA_switch, "-wd");
          path = lGetString(ep, SPA_argval_lStringT);
-         path = drmaa_expand_wd_path(username, path, alp);
+         path = drmaa_expand_wd_path(username, path, &alp);
          
          if (path == NULL) {
             answer_list_to_dstring(alp, diag);
@@ -2739,16 +2732,18 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
             lFreeList(&opts_native);
             lFreeList(&opts_drmaa);
             lFreeList(&opts_default);
-            lFreeList(&alp);
             lFreeElem(&jt);
+            lFreeList(&alp);
             DRETURN(DRMAA_ERRNO_DENIED_BY_DRM);
          }
+         lFreeList(&alp);
       }
       /* -cwd could also theoretically appear in opts_default, but since I
        * control what goes into opts_default, I know it isn't. */
       else if ((!(opt_list_has_X(opts_native, "-cwd"))) &&
                (!(opt_list_has_X(opts_defaults, "-cwd")))){
-         path = drmaa_get_home_directory(username, alp);
+         path = drmaa_get_home_directory(username, &alp);
+         lFreeList(&alp);
       }
 
       if (path != NULL) {
@@ -2773,6 +2768,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
          lFreeElem(&jt);
          DRETURN(DRMAA_ERRNO_DENIED_BY_DRM);
       }
+      lFreeList(&alp);
       
       /* Note that we parsed the script file for command line options so that
        * we can reneg on it later if we need to. */
@@ -2802,24 +2798,19 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
       if ((ep = lGetElemStr(opts_drmaa, SPA_switch, "-cat")) != NULL) {
          job_cat = strdup(lGetString(ep, SPA_argval_lStringT));
          lRemoveElem(opts_drmaa, &ep);
-      }
-      else if ((ep = lGetElemStr(opts_scriptfile, SPA_switch, "-cat")) != NULL) {
+      } else if ((ep = lGetElemStr(opts_scriptfile, SPA_switch, "-cat")) != NULL) {
          job_cat = strdup(lGetString(ep, SPA_argval_lStringT));
          lRemoveElem(opts_scriptfile, &ep);
-      }
-      else if ((ep = lGetElemStr(opts_native, SPA_switch, "-cat")) != NULL) {
+      } else if ((ep = lGetElemStr(opts_native, SPA_switch, "-cat")) != NULL) {
          job_cat = strdup(lGetString(ep, SPA_argval_lStringT));
          lRemoveElem(opts_native, &ep);
-      }
-      else if ((ep = lGetElemStr(opts_defaults, SPA_switch, "-cat")) != NULL) {
+      } else if ((ep = lGetElemStr(opts_defaults, SPA_switch, "-cat")) != NULL) {
          job_cat = strdup(lGetString(ep, SPA_argval_lStringT));
          lRemoveElem(opts_defaults, &ep);
-      }
-      else if ((ep = lGetElemStr(opts_default, SPA_switch, "-cat")) != NULL) {
+      } else if ((ep = lGetElemStr(opts_default, SPA_switch, "-cat")) != NULL) {
          job_cat = strdup(lGetString(ep, SPA_argval_lStringT));
          lRemoveElem(opts_default, &ep);
-      }
-      else {
+      } else {
          /* This theoretically can't happen. */
          sge_dstring_copy_string(diag, MSG_DRMAA_SWITCH_WITH_NO_CAT);
          lFreeList(&opts_defaults);
@@ -2827,7 +2818,6 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
          lFreeList(&opts_drmaa);
          lFreeList(&opts_default);
          lFreeList(&opts_scriptfile);
-         lFreeList(&alp);
          lFreeElem(&jt);
          DRETURN(DRMAA_ERRNO_DENIED_BY_DRM);
       }
@@ -2836,7 +2826,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
       /* We need to document a standard practice for naming job categories so
        * they don't conflict with command names.  I think something like
        * <cat_name>.cat would work fine. */
-      args = sge_get_qtask_args(ctx, job_cat, alp);
+      args = sge_get_qtask_args(ctx, job_cat, &alp);
       
       if (answer_list_has_error(&alp)) {
          answer_list_to_dstring(alp, diag);
@@ -2849,6 +2839,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
          lFreeElem(&jt);
          DRETURN(DRMAA_ERRNO_DENIED_BY_DRM);
       }
+      lFreeList(&alp);
 
       FREE(job_cat);
       
@@ -2866,9 +2857,11 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
             lFreeList(&opts_default);
             lFreeList(&opts_scriptfile);
             lFreeList(&opts_job_cat);
+            lFreeList(&alp);
             lFreeElem(&jt);
             DRETURN(DRMAA_ERRNO_DENIED_BY_DRM);
          }
+         lFreeList(&alp);
          
          /* Now, since the job category can affect whether the script files
           * get parsed for options, we have to step back a bit and make sure
@@ -2913,6 +2906,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
                   lFreeElem(&jt);
                   DRETURN(DRMAA_ERRNO_DENIED_BY_DRM);
                }
+               lFreeList(&alp);
             }
          }
       } else {
@@ -2924,7 +2918,6 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
          lFreeList(&opts_default);
          lFreeList(&opts_scriptfile);
          lFreeList(&opts_job_cat);
-         lFreeList(&alp);
          lFreeElem(&jt);
          DRETURN(DRMAA_ERRNO_DENIED_BY_DRM);
       }
@@ -2940,10 +2933,12 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
    if (is_bulk) {
       if (drmaa_set_bulk_range(&opts_all, start, end, step, &alp) != 0) {
          answer_list_to_dstring(alp, diag);
+         lFreeList(&alp);
          lFreeElem(&jt);
          lFreeList(&opts_all);
          DRETURN(DRMAA_ERRNO_DENIED_BY_DRM);
       }
+      lFreeList(&alp);
    }
 
    alp = cull_parse_job_parameter(myuid, username, cell_root, unqualified_hostname, qualified_hostname, opts_all, &jt);
@@ -2952,8 +2947,10 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
       answer_list_to_dstring(alp, diag);
       lFreeElem(&jt);
       lFreeList(&opts_all);
+      lFreeList(&alp);
       DRETURN(DRMAA_ERRNO_DENIED_BY_DRM);
    }
+   lFreeList(&alp);
 
    *jtp = jt;
    lFreeList(&opts_all);
@@ -3868,7 +3865,7 @@ static char *drmaa_time2sge_time(const char *drmaa_time, dstring *diag)
 *     drmaa_expand_wd_path() -- convert DRMAA_WD to a usable path
 *
 *  SYNOPSIS
-*     void drmaa_expand_wd_path(const char *path, lList *alp)
+*     void drmaa_expand_wd_path(const char *path, lList **answer_list)
 *
 *  FUNCTION
 *     The DRMAA_WD is translated into a usable path by converting $drmaa_hd_ph$
@@ -3883,7 +3880,7 @@ static char *drmaa_time2sge_time(const char *drmaa_time, dstring *diag)
 *     lList *path              - the DRMAA_WD string
 *
 *  OUTPUTS
-*     lList *alp               - errors
+*     lList **answer_list      - errors
 *
 *  RESULT
 *     char *   - The expanded path as a string
@@ -3892,7 +3889,7 @@ static char *drmaa_time2sge_time(const char *drmaa_time, dstring *diag)
 *     MT-NOTE: drmaa_expand_wd_path() is MT safe except on AIX4.2 and FreeBSD
 *
 *******************************************************************************/
-static char *drmaa_expand_wd_path(const char*username, const char *path, lList *alp)
+static char *drmaa_expand_wd_path(const char*username, const char *path, lList **answer_list)
 {
    char *file = NULL;
    char str[256 + 1];
@@ -3903,7 +3900,7 @@ static char *drmaa_expand_wd_path(const char*username, const char *path, lList *
    /* First look for the job index placeholder.  It is illegal. */
    if (strstr(path, "$TASK_ID") != NULL) {
          sprintf(str, MSG_DRMAA_INC_NOT_ALLOWED);
-         answer_list_add(&alp, str, STATUS_ENOSUCHUSER, 
+         answer_list_add(answer_list, str, STATUS_ENOSUCHUSER, 
                          ANSWER_QUALITY_ERROR);
          DRETURN(NULL);
    }
@@ -3914,7 +3911,7 @@ static char *drmaa_expand_wd_path(const char*username, const char *path, lList *
     * host. */
    if (!strncmp(path, "$HOME", 5)) {
       int length = 0;
-      char *homedir = drmaa_get_home_directory(username, alp);
+      char *homedir = drmaa_get_home_directory(username, answer_list);
 
       if (homedir == NULL) {
          DRETURN(NULL);
@@ -3942,13 +3939,13 @@ static char *drmaa_expand_wd_path(const char*username, const char *path, lList *
 *     drmaa_get_home_directory() -- get the user's home directory
 *
 *  SYNOPSIS
-*     void drmaa_get_home_directory(lList *alp)
+*     void drmaa_get_home_directory(lList **answer_list)
 *
 *  FUNCTION
 *     Returns the user's home directory as determined from nsswitch.conf.
 *
 *  OUTPUTS
-*     lList *alp               - errors
+*     lList **answer_list - errors
 *
 *  RESULT
 *     char *   - the home directory path as a string
@@ -3958,7 +3955,7 @@ static char *drmaa_expand_wd_path(const char*username, const char *path, lList *
 *     MT-NOTE: FreeBSD
 *
 *******************************************************************************/
-static char *drmaa_get_home_directory(const char* username, lList *alp)
+static char *drmaa_get_home_directory(const char* username, lList **answer_list)
 {
    struct passwd *pwd = NULL;
    char str[256 + 1];
@@ -3971,14 +3968,14 @@ static char *drmaa_get_home_directory(const char* username, lList *alp)
 
    if (!pwd) {
       sprintf(str, MSG_USER_INVALIDNAMEX_S, username);
-      answer_list_add(&alp, str, STATUS_ENOSUCHUSER, 
+      answer_list_add(answer_list, str, STATUS_ENOSUCHUSER, 
                       ANSWER_QUALITY_ERROR);
       DRETURN(NULL);
    }
 
    if (!pwd->pw_dir) {
       sprintf(str, MSG_USER_NOHOMEDIRFORUSERX_S, username);
-      answer_list_add(&alp, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
+      answer_list_add(answer_list, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       DRETURN(NULL);
    }
    

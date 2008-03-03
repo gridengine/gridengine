@@ -105,6 +105,9 @@ sge_gdi_packet_queue_class_t Master_Packet_Queue = {
    NULL,
    NULL,
    0,
+   NULL,
+   NULL,
+   0,
    false
 };
 
@@ -178,7 +181,7 @@ sge_gdi_packet_queue_wakeup_all_waiting(sge_gdi_packet_queue_class_t *packet_que
 *******************************************************************************/
 void
 sge_gdi_packet_queue_store_notify(sge_gdi_packet_queue_class_t *packet_queue,
-                                  sge_gdi_packet_class_t *packet)
+                                  sge_gdi_packet_class_t *packet, bool high_prio)
 {
    cl_thread_settings_t *thread_config = NULL; 
 
@@ -192,13 +195,23 @@ sge_gdi_packet_queue_store_notify(sge_gdi_packet_queue_class_t *packet_queue,
     * Append the packet at the end of the queue
     */
    if (packet != NULL) {
-      if (packet_queue->first_packet == NULL) {
-         packet_queue->first_packet = packet;
+      if (high_prio) {
+         if (packet_queue->first_packet_prio == NULL) {
+            packet_queue->first_packet_prio = packet;
+         } else {
+            packet_queue->last_packet_prio->next = packet;
+         }
+         packet_queue->last_packet_prio = packet;
+         packet_queue->counter_prio++;
       } else {
-         packet_queue->last_packet->next = packet;
+         if (packet_queue->first_packet == NULL) {
+            packet_queue->first_packet = packet;
+         } else {
+            packet_queue->last_packet->next = packet;
+         }
+         packet_queue->last_packet = packet;
+         packet_queue->counter++;
       }
-      packet_queue->last_packet = packet;
-      packet_queue->counter++;
    }
 
    DPRINTF((SFN" added new packet (packet_queue->counter = "sge_U32CFormat")\n",
@@ -276,7 +289,7 @@ sge_gdi_packet_queue_wait_for_new_packet(sge_gdi_packet_queue_class_t *packet_qu
        * that someone calls sge_gdi_packet_queue_wakeup_all_waiting() or
        * sge_gdi_packet_queue_store_notify()
        */
-      if (packet_queue->first_packet == NULL) {
+      if (packet_queue->first_packet == NULL && packet_queue->first_packet_prio == NULL) {
          packet_queue->waiting++;
          DPRINTF((SFN" is waiting for packet (packet_queue->waiting = "
                   sge_U32CFormat")\n", thread_config ? thread_config->thread_name : "-NA-", 
@@ -289,14 +302,34 @@ sge_gdi_packet_queue_wait_for_new_packet(sge_gdi_packet_queue_class_t *packet_qu
             ts.tv_sec = (time_t)(current_time + WORKER_WAIT_TIME_S);
             ts.tv_nsec = WORKER_WAIT_TIME_N;;
             pthread_cond_timedwait(&(packet_queue->cond), &(packet_queue->mutex), &ts);
-         } while (packet_queue->first_packet == NULL && sge_thread_has_shutdown_started() == false);
+         } while (packet_queue->first_packet == NULL && packet_queue->first_packet_prio == NULL && 
+                  sge_thread_has_shutdown_started() == false);
          packet_queue->waiting--;
       }
 
       /* 
        * If there is a packet then dechain it an return it to the caller 
        */
-      if (packet_queue->first_packet != NULL) {
+      if (packet_queue->first_packet_prio != NULL) {
+         *packet = packet_queue->first_packet_prio;
+
+         if (packet_queue->first_packet_prio == packet_queue->last_packet_prio) {
+            packet_queue->last_packet_prio = NULL;
+            packet_queue->first_packet_prio = NULL;
+         } else {
+            packet_queue->first_packet_prio = (*packet)->next;
+         }
+         (*packet)->next = NULL;
+         packet_queue->counter_prio--;
+         DPRINTF((SFN" takes packet from priority queue. ("
+                  "packet_queue->counter_prio = "sge_U32CFormat
+                  "; packet_queue->counter = "sge_U32CFormat
+                  "; packet_queue->waiting = "sge_U32CFormat")\n",
+                  thread_config ? thread_config->thread_name : "-NA-", 
+                  packet_queue->counter_prio, 
+                  packet_queue->counter, 
+                  packet_queue->waiting));
+      } else if (packet_queue->first_packet != NULL) {
          *packet = packet_queue->first_packet;
 
          if (packet_queue->first_packet == packet_queue->last_packet) {
@@ -307,14 +340,23 @@ sge_gdi_packet_queue_wait_for_new_packet(sge_gdi_packet_queue_class_t *packet_qu
          }
          (*packet)->next = NULL;
          packet_queue->counter--;
-         DPRINTF((SFN" takes packet from queue. (packet_queue->counter = "
-                  sge_U32CFormat"; packet_queue->waiting = "sge_U32CFormat")\n",
-                  thread_config ? thread_config->thread_name : "-NA-", packet_queue->counter, 
+         DPRINTF((SFN" takes packet from priority queue. ("
+                  "packet_queue->counter_prio = "sge_U32CFormat
+                  "; packet_queue->counter = "sge_U32CFormat
+                  "; packet_queue->waiting = "sge_U32CFormat")\n",
+                  thread_config ? thread_config->thread_name : "-NA-", 
+                  packet_queue->counter_prio, 
+                  packet_queue->counter, 
                   packet_queue->waiting));
       } else {
          *packet = NULL;
-         DPRINTF((SFN" wokeup but got no packet. (packet_queue->waiting = "
-                  sge_U32CFormat")\n", thread_config ? thread_config->thread_name : "-NA-",
+         DPRINTF((SFN" wokeup but got no packet. ("
+                  "packet_queue->counter_prio = "sge_U32CFormat
+                  "; packet_queue->counter = "sge_U32CFormat
+                  "; packet_queue->waiting = "sge_U32CFormat")\n",
+                  thread_config ? thread_config->thread_name : "-NA-", 
+                  packet_queue->counter_prio, 
+                  packet_queue->counter, 
                   packet_queue->waiting));
       }
 

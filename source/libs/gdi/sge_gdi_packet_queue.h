@@ -47,6 +47,17 @@ struct _sge_gdi_packet_queue_class_t {
    pthread_cond_t cond;
 
    /* 
+    * pointer to the first and last packet of a priority packet queue
+    */
+   sge_gdi_packet_class_t *first_packet_prio;
+   sge_gdi_packet_class_t *last_packet_prio;
+
+   /*
+    * number of elements in the priority queue
+    */
+   u_long32 counter_prio;
+
+   /* 
     * pointer to the first and last packet of a packet queue
     */
    sge_gdi_packet_class_t *first_packet;
@@ -68,7 +79,7 @@ extern sge_gdi_packet_queue_class_t Master_Packet_Queue;
 
 void
 sge_gdi_packet_queue_store_notify(sge_gdi_packet_queue_class_t *packet_queue,
-                                       sge_gdi_packet_class_t *packet);
+                                       sge_gdi_packet_class_t *packet, bool high_prio);
 
 void
 sge_gdi_packet_queue_wakeup_all_waiting(sge_gdi_packet_queue_class_t *packet_queue);

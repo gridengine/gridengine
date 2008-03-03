@@ -1,3 +1,7 @@
+EB-2008-03-03-0: Bugfix:    added code for additional performance test.
+                            disabled logging in locking module.
+                 Review:    TBD
+
 AH-2008-03-03-0: Bugfix     Fix drmaa_job_ps() memory leak
                  Issue:     2505
                  Review:    RD
@@ -5,26 +9,26 @@ AH-2008-03-03-0: Bugfix     Fix drmaa_job_ps() memory leak
 JG-2008-02-29-0: Bugfix:    Fixed memory leaks in japi, drmaa, test_drmaa.
                  Review:    EB
 
-JO-2008-02-29-0: Doc:      howto arco_mysql.txt - added InnoDB storage engine requirement
+JO-2008-02-29-0: Doc:       howto arco_mysql.txt - added InnoDB storage engine requirement
 
-LP-2008-02-28-0: Bugfix:   Uninstall does not remove the SGE_STARTUP_SCRIPT
-                 Bugfix:   qmaster crashes when SGE_ND=1, dl 2 and BDB server spooling
-                 Bugster:  6659880, 6666732
-                 Bugfix:   Replaced N1 with Sun in the logs
-                 Enhancem: Old cluster_name checked only for root installation
-                 Review:   PJ
+LP-2008-02-28-0: Bugfix:    Uninstall does not remove the SGE_STARTUP_SCRIPT
+                 Bugfix:    qmaster crashes when SGE_ND=1, dl 2 and BDB server spooling
+                 Bugster:   6659880, 6666732
+                 Bugfix:    Replaced N1 with Sun in the logs
+                 Enhancem:  Old cluster_name checked only for root installation
+                 Review:    PJ
 
 PJ-2008-02-27-0: Bugfix:    - Wrong detection of sge_qmaster port
-                 Bugster: 6659854
-                 Review:  LP
+                 Bugster:   6659854
+                 Review:    LP
 
-AA-2008-02-27-0: Bugfix:  - default exit func
+AA-2008-02-27-0: Bugfix:    - default exit func
                             (commlib error: got read error (closing "xyz/qconf/2"))
-                          - qmon advanced reservation delete bug
-                          - jvm restart
-                          - jgdi event test fix
-                 Bugster: 6660955
-                 Review:  JG, RH
+                            - qmon advanced reservation delete bug
+                            - jvm restart
+                            - jgdi event test fix
+                 Bugster:   6660955
+                 Review:    JG, RH
 
 JG-2008-02-27-1: Bugfix:    Internal event clients didn't have hash tables
                             on their master lists.

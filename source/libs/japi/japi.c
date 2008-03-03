@@ -3248,6 +3248,7 @@ static int japi_get_job(u_long32 jobid, lList **retrieved_job_list, dstring *dia
    lFreeWhat(&job_fields);
 
    sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_JOB_LIST, jb_id, mal, retrieved_job_list);
+   lFreeList(&mal);
    aep = lFirst(alp);
    
    if (aep == NULL) {
@@ -3264,8 +3265,6 @@ static int japi_get_job(u_long32 jobid, lList **retrieved_job_list, dstring *dia
    } 
    
    lFreeList(&alp);
-   lFreeList(&mal);
-
    DRETURN(DRMAA_ERRNO_SUCCESS);
 }
 

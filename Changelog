@@ -1,3 +1,7 @@
+AH-2008-03-03-0: Bugfix     Fix drmaa_job_ps() memory leak
+                 Issue:     2505
+                 Review:    RD
+
 JG-2008-02-29-0: Bugfix:    Fixed memory leaks in japi, drmaa, test_drmaa.
                  Review:    EB
 

@@ -3288,6 +3288,7 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list
          JB_execution_time);
    
    if (!job_selection || !job_fields) {
+      lFreeList(&mal);
       japi_standard_error(DRMAA_ERRNO_NO_MEMORY, diag);
       DRETURN(DRMAA_ERRNO_NO_MEMORY);
    }
@@ -3303,6 +3304,7 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list
    
    if (aep == NULL) {
       sge_dstring_copy_string(diag, MSG_JAPI_BAD_GDI_ANSWER_LIST);
+      lFreeList(&mal);
       DRETURN(DRMAA_ERRNO_INTERNAL_ERROR);
    }
 
@@ -3311,12 +3313,14 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list
    if (quality == ANSWER_QUALITY_ERROR) {
       answer_to_dstring(aep, diag);
       lFreeList(&alp);
+      lFreeList(&mal);
       DRETURN(DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE);
    } 
 
     lFreeList(&alp);
 
    sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_JOB_LIST, jb_id, mal, retrieved_job_list);
+   lFreeList(&mal);
    aep = lFirst(alp);
    
    if (aep == NULL) {
@@ -3333,7 +3337,6 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list
    } 
    
    lFreeList(&alp);
-   lFreeList(&mal);
 
    DRETURN(DRMAA_ERRNO_SUCCESS);
 }

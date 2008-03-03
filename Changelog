@@ -1,3 +1,7 @@
+AH-2008-03-03-1: Bugfix     Fix drmaa_job_ps() memory leak 
+                 Issue:     2505
+                 Review:    RD
+
 MP-2008-02-29-0: Bugfix:    Calling qstat -j does not filter the job list
                             based on command line parameters.
                  Review:    JB

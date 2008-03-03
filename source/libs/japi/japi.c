@@ -3394,6 +3394,7 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list
    
    if (aep == NULL) {
       sge_dstring_copy_string(diag, MSG_JAPI_BAD_GDI_ANSWER_LIST);
+      lFreeList(&mal);
       DEXIT;
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
@@ -3403,6 +3404,7 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list
    if (quality == ANSWER_QUALITY_ERROR) {
       answer_to_dstring(aep, diag);
       lFreeList(&alp);
+      lFreeList(&mal);
       DEXIT;
       return DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE;
    } 
@@ -3410,6 +3412,7 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list
     lFreeList(&alp);
 
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_JOB_LIST, jb_id, mal, retrieved_job_list);
+   lFreeList(&mal);
    aep = lFirst(alp);
    
    if (aep == NULL) {

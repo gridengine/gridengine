@@ -950,7 +950,7 @@ spool_berkeleydb_write_object(lList **answer_list, bdb_info info,
                DPRINTF(("storing object with key "SFQ", size = %d "
                         "to env = %p, db = %p, txn = %p, txn_id = %d\n", 
                         key, data_dbt.size, bdb_get_env(info), db, 
-                        txn, txn->id(txn)));
+                        txn, (txn->id == NULL) ? 0 : txn->id(txn)));
 
                /* Store a key/data pair. */
                PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);

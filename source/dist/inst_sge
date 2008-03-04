@@ -729,29 +729,33 @@ if [ "$EXECD" = "uninstall" ]; then
       $INFOTEXT -log "Starting execution host uninstallation!"
    fi
 
-   WelcomeUninstall 
+   if [ "$SGE_REMOTE_FLAG" != "REMOTE_EXECD_UNINSTALL" ]; then 
+      WelcomeUninstall 
 
-   if [ "$SGE_ROOT" = "" -o "$SGE_CELL" = "" ]; then
-      $INFOTEXT -wait -auto $AUTO "Your SGE_ROOT or SGE_CELL variable is not set!\n" \
-                                  "Please, enter SGE_ROOT and SGE_CELL in the following\n" \
-                                  "screens!\n\nHit, <RETURN> to continue!"
-      $CLEAR
-      ProcessSGERoot
+      if [ "$SGE_ROOT" = "" -o "$SGE_CELL" = "" ]; then
+         $INFOTEXT -wait -auto $AUTO "Your SGE_ROOT or SGE_CELL variable is not set!\n" \
+                                     "Enter SGE_ROOT and SGE_CELL in the following\n" \
+                                     "screens!\n\nHit, <RETURN> to continue!"
+         $CLEAR
+         ProcessSGERoot
 
-      $INFOTEXT -n "Please enter your SGE_CELL directory or use the default [default] >> "
+         $INFOTEXT -n "Please enter your SGE_CELL directory or use the default [default] >> "
 
-      SGE_CELL=`Enter default`
-      export SGE_CELL
+         SGE_CELL=`Enter default`
+         export SGE_CELL 
+      fi
+      . $SGE_ROOT/$SGE_CELL/common/settings.sh
+      CheckHostNameResolving uninstall
+      if [ "$?" = "1" ]; then
+         $INFOTEXT "This host is not an admin host. Uninstallation is not allowed\nfrom this host!"
+         $INFOTEXT -log "This host is not an admin host. Uninstallation is not allowed\nfrom this host!"
+         MoveLog
+         exit 1
+      fi
+   else
+      . $SGE_ROOT/$SGE_CELL/common/settings.sh
    fi
-
-   . $SGE_ROOT/$SGE_CELL/common/settings.sh
-   CheckHostNameResolving uninstall
-   if [ "$?" = "1" ]; then
-      $INFOTEXT "This host is not an admin host. Uninstallation is not allowed\nfrom this host!"
-      $INFOTEXT -log "This host is not an admin host. Uninstallation is not allowed\nfrom this host!"
-      MoveLog
-      exit 1
-   fi
+   
    FetchHostname
    SetupWinSvc uninstall
    
@@ -846,7 +850,7 @@ if [ $SHADOW = "install" ]; then
       #check if spooling is supported!
       spooling_method=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap 2>/dev/null | grep "spooling_method" | awk '{ print $2 }'`
       #if spooling_params contains no "/" then we have rpc server spooling
-      `cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep spooling_params | awk '{ print $2 }' | grep "/"`
+      temp=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep spooling_params | awk '{ print $2 }' | grep "/"`
       if [ $? = 0 ]; then
          db_home=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap 2>/dev/null | grep "spooling_params" | awk '{ print $2 }' | cut -d";" -f1`
          fstype=`$SGE_UTILBIN/fstype $db_home`
@@ -897,7 +901,7 @@ if [ $SHADOW = "install" ]; then
          . $SGE_ROOT/$SGE_CELL/common/settings.sh
          SGE_ARCH=`$SGE_ROOT/util/arch`
          $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &
-         AddSGEStartUpScript $euid master 
+         AddSGEStartUpScript $euid shadow 
       else
         for shs in `cat $SGE_ROOT/$SGE_CELL/common/shadow_masters`; do
            echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $shs /bin/sh &
@@ -927,7 +931,7 @@ if [ $SHADOW = "install" ]; then
             . $SGE_ROOT/$SGE_CELL/common/settings.sh
             SGE_ARCH=`$SGE_ROOT/util/arch`
             $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &
-            AddSGEStartUpScript $euid master 
+            AddSGEStartUpScript $euid shadow
          else
               echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $SHADOW /bin/sh &
               #TODO: install rc script
@@ -976,7 +980,7 @@ if [ $SHADOW = "uninstall" ]; then
          MoveLog
          exit 0
       else
-         echo "cd $SGE_ROOT; . $SGE_ROOT/$SGE_CELL/common/settings.sh; inst_sge -usm" | $SHELL_NAME $s_host /bin/sh &   
+         echo "cd $SGE_ROOT; . $SGE_ROOT/$SGE_CELL/common/settings.sh; ./inst_sge -usm" | $SHELL_NAME $s_host /bin/sh &   
       fi
    else
       if [ "$is_local" = "true" ]; then
@@ -996,12 +1000,12 @@ if [ $SHADOW = "uninstall" ]; then
       else
          $INFOTEXT -n "Please enter which shell you want to use for remote login (rsh/ssh) or\n hit <RETURN> to use [%s] >> " $SHELL_NAME
          SHELL_NAME=`Enter $SHELL_NAME`
-         which $SHELL_NAME
+         which $SHELL_NAME >/dev/null 2>&1
          if [ "$?" = 1 ]; then
-            $INFOTEXT ">>%s<< is not a valid shell command, please use rsh or ssh!"
+            $INFOTEXT ">>%s<< is not a valid shell command, please use rsh or ssh!" $SHELL_NAME
             exit 1
          fi 
-         echo "cd $SGE_ROOT; . $SGE_ROOT/$SGE_CELL/common/settings.sh; inst_sge -usm" | $SHELL_NAME $s_host /bin/sh &   
+         echo "cd $SGE_ROOT; . $SGE_ROOT/$SGE_CELL/common/settings.sh; ./inst_sge -usm" | $SHELL_NAME $s_host /bin/sh &   
       fi     
    fi
 

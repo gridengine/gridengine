@@ -223,9 +223,9 @@ ExecuteAsAdmin()
       $*
    else
       if [ -f $SGE_UTILBIN/adminrun ]; then
-         $SGE_UTILBIN/adminrun $ADMINUSER $*
+         $SGE_UTILBIN/adminrun $ADMINUSER "$@"
       else
-         $SGE_ROOT/utilbin/$SGE_ARCH/adminrun $ADMINUSER $*
+         $SGE_ROOT/utilbin/$SGE_ARCH/adminrun $ADMINUSER "$@"
       fi
    fi
 
@@ -1443,49 +1443,31 @@ CreateSGEStartUpScripts()
    if [ $create = true ]; then
 
       if [ $hosttype = "master" ]; then
-         ExecuteAsAdmin sed -e "s%GENROOT%${SGE_ROOT_VAL}%g" \
-                            -e "s%GENCELL%${SGE_CELL_VAL}%g" \
-                            -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
-                            util/rctemplates/sgemaster_template > ${TMP_SGE_STARTUP_FILE}.0
-
-         if [ "$SGE_QMASTER_PORT" != "" ]; then
-            ExecuteAsAdmin sed -e "s/=GENSGE_QMASTER_PORT/=$SGE_QMASTER_PORT/" \
-                               ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
-         else
-            ExecuteAsAdmin sed -e "/GENSGE_QMASTER_PORT/d" \
-                               ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
-         fi
-
-         if [ "$SGE_EXECD_PORT" != "" ]; then
-            ExecuteAsAdmin sed -e "s/=GENSGE_EXECD_PORT/=$SGE_EXECD_PORT/" \
-                               ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
-         else
-            ExecuteAsAdmin sed -e "/GENSGE_EXECD_PORT/d" \
-                               ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
-         fi
+         template="util/rctemplates/sgemaster_template"
       else
-         ExecuteAsAdmin sed -e "s%GENROOT%${SGE_ROOT_VAL}%g" \
+         template="util/rctemplates/sgeexecd_template"
+      fi
+
+      ExecuteAsAdmin sed -e "s%GENROOT%${SGE_ROOT_VAL}%g" \
                             -e "s%GENCELL%${SGE_CELL_VAL}%g" \
                             -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
-                            util/rctemplates/sgeexecd_template > ${TMP_SGE_STARTUP_FILE}.0
+                            $template > ${TMP_SGE_STARTUP_FILE}.0
 
-         if [ "$SGE_QMASTER_PORT" != "" ]; then
-            ExecuteAsAdmin sed -e "s/=GENSGE_QMASTER_PORT/=$SGE_QMASTER_PORT/" \
-                               ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
-         else
-            ExecuteAsAdmin sed -e "/GENSGE_QMASTER_PORT/d" \
-                               ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
-         fi
+      if [ "$SGE_QMASTER_PORT" != "" ]; then
+         ExecuteAsAdmin sed -e "s/=GENSGE_QMASTER_PORT/=$SGE_QMASTER_PORT/" \
+                            ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
+      else
+         ExecuteAsAdmin sed -e "/GENSGE_QMASTER_PORT/d" \
+                            ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
+      fi
 
-         if [ "$SGE_EXECD_PORT" != "" ]; then
-            ExecuteAsAdmin sed -e "s/=GENSGE_EXECD_PORT/=$SGE_EXECD_PORT/" \
-                               ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
-         else
-            ExecuteAsAdmin sed -e "/GENSGE_EXECD_PORT/d" \
-                               ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
-         fi
-
-       fi
+      if [ "$SGE_EXECD_PORT" != "" ]; then
+         ExecuteAsAdmin sed -e "s/=GENSGE_EXECD_PORT/=$SGE_EXECD_PORT/" \
+                            ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
+      else
+         ExecuteAsAdmin sed -e "/GENSGE_EXECD_PORT/d" \
+                            ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
+      fi
 
       ExecuteAsAdmin $CP $TMP_SGE_STARTUP_FILE $SGE_STARTUP_FILE
       ExecuteAsAdmin $CHMOD a+x $SGE_STARTUP_FILE
@@ -1522,6 +1504,9 @@ AddSGEStartUpScript()
       S95NAME=S95sgemaster
       K03NAME=K03sgemaster
       DAEMON_NAME="qmaster/scheduler"
+   elif [ $hosttype = "shadow" ]; then
+      #Currently shadowd does not install RC script on its own
+      return
    elif [ $hosttype = "bdb" ]; then
       TMP_SGE_STARTUP_FILE=/tmp/sgebdb.$$
       STARTUP_FILE_NAME=sgebdb
@@ -2343,6 +2328,10 @@ RemoveRcScript()
    hosttype=$2
    euid=$3
    
+   if [ $euid != 0 ]; then
+      $INFOTEXT "You are not a root user. Startup scripts could not be uninstalled!"
+      return 0
+   fi
 
    $INFOTEXT "Checking for installed rc startup scripts!\n"
 
@@ -2368,11 +2357,6 @@ RemoveRcScript()
    fi
 
    SGE_STARTUP_FILE=$SGE_ROOT/$SGE_CELL/common/$STARTUP_FILE_NAME
-
-
-   if [ $euid != 0 ]; then
-      return 0
-   fi
 
    $INFOTEXT -u "\nRemoving %s startup script" $DAEMON_NAME
 
@@ -3054,7 +3038,8 @@ GetAdminUser()
    ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
    euid=`$SGE_UTILBIN/uidgid -euid`
 
-   if [ `echo "$ADMINUSER" |tr "A-Z" "a-z"` = "none" -a $euid = 0 ]; then
+   TMP_USER=`echo "$ADMINUSER" |tr "A-Z" "a-z"`
+   if [ \( -z "$TMP_USER" -o "$TMP_USER" = "none" \) -a $euid = 0 ]; then
       ADMINUSER=default
    fi
 

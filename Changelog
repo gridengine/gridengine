@@ -1,3 +1,15 @@
+LP-2008-03-04-0: Bugfix:    Uninstall does not remove the SGE_STARTUP_SCRIPT
+                 Bugfix:    qmaster crashes when SGE_ND=1, dl 2 and BDB server 
+                            spooling
+                 Bugfix:    Uninstallation of remote execd if not interactive
+                 Bugfix     Infotext spawned on remote machine with -wait or 
+                             -ask does not display the text
+                 Bugster:   6659880, 6666732, 6670352, 6669655
+                 Bugfix:    Replaced N1 with Sun in the logs
+                 Bugfix:    Improved uninstallation dialogs
+                 Bugfix:    Install - merged replacements of $* calls to $@
+                 Review:    MD
+
 MP-2008-03-04-0: Bugfix:    Fixed error introduced into build through
                             checkin of MP-2008-02-21-0
                  Review:    MD

@@ -1,3 +1,8 @@
+RD-2008-03-04-0: Enhancem:  - improved qmaster startup time
+                            - reduced mem/cpu usage for AR submission
+                            - reduced mem/cpu usage for job -w v verification
+                 Review:    AH
+
 AH-2008-02-28-0: Docs:      Added documentation for qmaster_params 
                             ENABLE_RESCHEDULE_KILL and ENABLE_RESCHEDULE_SLAVE 
                             to sge_conf(5).

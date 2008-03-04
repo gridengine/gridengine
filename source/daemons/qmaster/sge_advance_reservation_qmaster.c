@@ -76,6 +76,8 @@
 #include "sgeobj/sge_str.h"
 #include "sgeobj/sge_calendar.h"
 #include "sgeobj/sge_ulong.h"
+#include "sgeobj/sge_qref.h"
+#include "sgeobj/sge_pe.h"
 
 #include "sched/sge_resource_utilization.h"
 #include "sched/sge_select_queue.h"
@@ -95,6 +97,7 @@
 #include "evm/sge_event_master.h"
 #include "sge_reporting_qmaster.h"
 #include "sge_give_jobs.h"
+#include "sge_qinstance_qmaster.h"
 #include "mail.h"
 #include "symbols.h"
 
@@ -933,20 +936,13 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
 static bool ar_reserve_queues(lList **alpp, lListElem *ar)
 {
    lList **splitted_job_lists[SPLIT_LAST];
-   lList *waiting_due_to_pedecessor_list = NULL;   /* JB_Type */
-   lList *waiting_due_to_time_list = NULL;         /* JB_Type */
-   lList *pending_excluded_list = NULL;            /* JB_Type */
    lList *suspended_list = NULL;                   /* JB_Type */
-   lList *finished_list = NULL;                    /* JB_Type */
-   lList *pending_list = NULL;                     /* JB_Type */
-   lList *pending_excludedlist = NULL;             /* JB_Type */
    lList *running_list = NULL;                     /* JB_Type */
-   lList *error_list = NULL;                       /* JB_Type */
-   lList *hold_list = NULL;                        /* JB_Type */
-   lList *not_started_list = NULL;                 /* JB_Type */
 
    int verify_mode = lGetUlong(ar, AR_verify);
    lList *talp = NULL;
+   lList *ar_queue_request = lGetList(ar, AR_queue_list);
+   const char *ar_pe_request = lGetString(ar, AR_pe);
 
    lListElem *cqueue = NULL;
    bool ret = true;
@@ -965,10 +961,17 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
    lList *master_pe_list = lCopyList("", *object_base[SGE_TYPE_PE].list);
    lList *master_exechost_list = lCopyList("", *object_base[SGE_TYPE_EXECHOST].list);
 
-   lList *all_queue_list = NULL;
    dispatch_t result = DISPATCH_NEVER_CAT;
 
    DENTER(TOP_LAYER, "ar_reserve_queues");
+
+   if (lGetList(ar, AR_acl_list) != NULL) {
+      lSetString(dummy_job, JB_owner, "*");
+      lSetString(dummy_job, JB_group, "*");
+   } else {
+      lSetString(dummy_job, JB_owner, lGetString(ar, AR_owner));
+      lSetString(dummy_job, JB_group, lGetString(ar, AR_group));
+   }
 
    assignment_init(&a, dummy_job, NULL, false);
    a.host_list        = master_exechost_list;
@@ -987,130 +990,89 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
     * deciding about assignment. This is because assignment_release() sees 
     * queue_list only as a list pointer.
     */
-   for_each(cqueue, master_cqueue_list) {
-      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+   a.queue_list = lCreateList("", QU_Type);
 
-      qinstance_list = lCopyList(NULL, qinstance_list);
-      if (!all_queue_list) {
-         all_queue_list = qinstance_list;
-      } else {
-         lAddList(all_queue_list, &qinstance_list);
-      }   
+   for_each(cqueue, master_cqueue_list) {
+      const char *cqname = lGetString(cqueue, CQ_name);
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+      lListElem *qinstance;
+
+      if (cqueue_match_static(cqname, &a) != DISPATCH_OK) {
+         continue;
+      }
+
+      for_each(qinstance, qinstance_list) {
+         const char *cal_name;
+
+         /* skip orphaned queues */
+         if (qinstance_state_is_orphaned(qinstance)) {
+            continue;
+         }
+      
+         /* we only have to consider requested queues */
+         if (ar_queue_request != NULL) {
+            if (qref_list_cq_rejected(ar_queue_request, cqname,
+                     lGetHost(qinstance, QU_qhostname), master_hgroup_list)) {
+               continue; 
+            } 
+         }
+
+         /* we only have to consider queues containing the requested pe */
+         if (ar_pe_request != NULL) {
+            bool found = false;
+            lListElem *pe_ref;
+
+            for_each(pe_ref, lGetList(qinstance, QU_pe_list)) {
+               if (pe_name_is_matching(lGetString(pe_ref, ST_name), ar_pe_request)) {
+                  found = true;
+                  break;
+               }
+            }
+            if (!found) {
+               continue;
+            }
+
+         }
+
+         /* sort out queue that are calendar disabled in requested time frame */
+         if ((cal_name = lGetString(qinstance, QU_calendar)) != NULL) {
+            lListElem *cal_ep = calendar_list_locate(master_cal_list, cal_name); 
+
+            if (!calendar_open_in_time_frame(cal_ep, lGetUlong(ar, AR_start_time), lGetUlong(ar, AR_duration))) {
+               /* skip queue */
+               answer_list_add_sprintf(alpp, STATUS_OK, ANSWER_QUALITY_INFO, MSG_AR_QUEUEDISABLEDINTIMEFRAME,
+                                       lGetString(qinstance, QU_full_name)); 
+               continue;
+            }
+         } 
+         /* sort out queues where not all users have access */
+         if (lGetList(ar, AR_acl_list) != NULL) {
+            if (!sge_ar_have_users_access(alpp, ar, lGetString(qinstance, QU_full_name), 
+                                                lGetList(qinstance, QU_acl),
+                                                lGetList(qinstance, QU_xacl),
+                                                master_userset_list)) {
+               continue;
+            }
+         }
+
+         lAppendElem(a.queue_list, lCopyElem(qinstance));
+      }
    }
 
    /*
     * split jobs
     */
    {
-      lList *job_list_copy = lCopyList("", master_job_list);
-
+      /* initialize all job lists */
       for (i = SPLIT_FIRST; i < SPLIT_LAST; i++) {
          splitted_job_lists[i] = NULL;
       }
-
-      splitted_job_lists[SPLIT_WAITING_DUE_TO_PREDECESSOR] = &waiting_due_to_pedecessor_list;
-      splitted_job_lists[SPLIT_WAITING_DUE_TO_TIME] = &waiting_due_to_time_list;
-      splitted_job_lists[SPLIT_PENDING_EXCLUDED] = &pending_excluded_list;
       splitted_job_lists[SPLIT_SUSPENDED] = &suspended_list;
-      splitted_job_lists[SPLIT_FINISHED] = &finished_list;
-      splitted_job_lists[SPLIT_PENDING] = &pending_list;
-      splitted_job_lists[SPLIT_PENDING_EXCLUDED_INSTANCES] = &pending_excludedlist;
       splitted_job_lists[SPLIT_RUNNING] = &running_list;
-      splitted_job_lists[SPLIT_ERROR] = &error_list;
-      splitted_job_lists[SPLIT_HOLD] = &hold_list;
-      splitted_job_lists[SPLIT_NOT_STARTED] = &not_started_list;
 
-      /* TODO: splitted job lists must be freed */
-
-      split_jobs(&job_list_copy, NULL, all_queue_list, 
-                 mconf_get_max_aj_instances(), splitted_job_lists);
-
-      lFreeList(&job_list_copy);                  
-   }
-
-   /*
-    * Queue filtering
-    *
-    * TBD sort our queues where no user of AR acl have access
-    * for new we just copy the all_queue_list
-    */
-   {
-      lListElem *ep, *next_ep;
-      lCondition *where;
-      lEnumeration *what;
-      const lDescr *dp = lGetListDescr(all_queue_list);
-
-      /*
-       * sort out queues in orphaned state
-       */
-
-      what = lWhat("%T(ALL)", dp); 
-      where = lWhere("%T(!(%I m= %u))", dp, QU_state, QI_ORPHANED);
-
-      if (!what || !where) {
-         answer_list_add_sprintf(alpp, STATUS_OK, ANSWER_QUALITY_INFO, MSG_FAILEDTOBUILDWHEREANDWHAT);
-
-         /* free all job lists */
-         for (i = SPLIT_FIRST; i < SPLIT_LAST; i++) {
-            if (splitted_job_lists[i]) {
-               lFreeList(splitted_job_lists[i]);
-               splitted_job_lists[i] = NULL;
-            }
-         }
-         lFreeList(&(a.queue_list));
-         lFreeList(&all_queue_list);
-         lFreeList(&master_pe_list);
-         lFreeList(&master_exechost_list);
-         lFreeElem(&dummy_job);
-         assignment_release(&a);
-         DRETURN(false); 
-      } 
-
-      a.queue_list = lSelect("", all_queue_list, where, what);
-
-      /* sort out queue that are calendar disabled in requested time frame */
-      next_ep = lFirst(a.queue_list);
-      while ((ep = next_ep)) {
-         const char *cal_name;
-         next_ep = lNext(ep);
-         
-         if ((cal_name = lGetString(ep, QU_calendar)) != NULL) {
-            lListElem *cal_ep = calendar_list_locate(master_cal_list, cal_name); 
-
-            if (!calendar_open_in_time_frame(cal_ep, lGetUlong(ar, AR_start_time), lGetUlong(ar, AR_duration))) {
-               /* skip queue */
-               answer_list_add_sprintf(alpp, STATUS_OK, ANSWER_QUALITY_INFO, MSG_AR_QUEUEDISABLEDINTIMEFRAME,
-                                       lGetString(ep, QU_full_name)); 
-               lRemoveElem(a.queue_list, &ep);
-               continue;
-            }
-         } 
-      }
-
-      if (lGetList(ar, AR_acl_list) != NULL) {
-         /* sort out queues where not all users have access */
-         lListElem *ep, *next_ep;
-
-         next_ep = lFirst(a.queue_list);
-         while ((ep = next_ep)) {
-            next_ep = lNext(ep);
-
-            if (!sge_ar_have_users_access(alpp, ar, lGetString(ep, QU_full_name), 
-                                                lGetList(ep, QU_acl),
-                                                lGetList(ep, QU_xacl),
-                                                master_userset_list)) {
-               lRemoveElem(a.queue_list, &ep);
-            }
-         }
-         lSetString(dummy_job, JB_owner, "*");
-         lSetString(dummy_job, JB_group, "*");
-      } else {
-         lSetString(dummy_job, JB_owner, lGetString(ar, AR_owner));
-         lSetString(dummy_job, JB_group, lGetString(ar, AR_group));
-      }
-      
-      lFreeWhere(&where);
-      lFreeWhat(&what);
+      /* splitted job lists must be freed */
+      split_jobs(&master_job_list, NULL, a.queue_list, 
+                 mconf_get_max_aj_instances(), splitted_job_lists, true);
    }
 
    /*
@@ -1121,6 +1083,10 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
                               master_pe_list, a.host_list, a.queue_list, 
                               NULL, a.centry_list, a.acl_list,
                               a.hgrp_list, NULL, false);
+
+   /* free generated job lists */
+   lFreeList(splitted_job_lists[SPLIT_RUNNING]);
+   lFreeList(splitted_job_lists[SPLIT_SUSPENDED]);
 
    lSetUlong(dummy_job, JB_execution_time, lGetUlong(ar, AR_start_time));
    lSetUlong(dummy_job, JB_deadline, lGetUlong(ar, AR_end_time));
@@ -1137,7 +1103,7 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
    if (verify_mode == AR_JUST_VERIFY) {
       DPRINTF(("AR Verify Mode\n"));
       set_monitor_alpp(&talp);
-   }   
+   }
 
    if (lGetString(ar, AR_pe)) {
       lSetString(dummy_job, JB_pe, lGetString(ar, AR_pe));
@@ -1186,16 +1152,7 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
    /* stop dreaming */
    sconf_set_qs_state(QS_STATE_FULL);
 
-   /* free all job lists */
-   for (i = SPLIT_FIRST; i < SPLIT_LAST; i++) {
-      if (splitted_job_lists[i]) {
-         lFreeList(splitted_job_lists[i]);
-         splitted_job_lists[i] = NULL;
-      }
-   }
-
    lFreeList(&(a.queue_list));
-   lFreeList(&all_queue_list);
    lFreeList(&master_pe_list);
    lFreeList(&master_exechost_list);
    lFreeElem(&dummy_job);
@@ -1368,28 +1325,21 @@ ar_list_has_reservation_due_to_ckpt(lList *ar_master_list, lList **answer_list,
                                     const char *qinstance_name, lList *ckpt_string_list) 
 {
    lListElem *ar;
-   lListElem *gs;
 
    DENTER(TOP_LAYER, "ar_has_reservation_due_to_ckpt");
 
    for_each(ar, ar_master_list) {
       const char *ckpt_string = lGetString(ar, AR_checkpoint_name);
 
-      for_each(gs, lGetList(ar, AR_granted_slots)) {
-         const char *gq = lGetString(gs, JG_qname);
-
-         if (strcmp(gq, qinstance_name) == 0 && ckpt_string != NULL) {
-            lListElem *ckpt_elem = lGetElemStr(ckpt_string_list, ST_name, ckpt_string);
-
-            if (ckpt_elem == NULL) {
-               ERROR((SGE_EVENT, MSG_PARSE_MOD_REJECTED_DUE_TO_AR_SSU, ckpt_string, 
-                      SGE_ATTR_CKPT_LIST, sge_u32c(lGetUlong(ar, AR_id))));
-               answer_list_add(answer_list, SGE_EVENT, 
-                               STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-               DRETURN(true);
-            }
-         } 
-      } 
+      if (ckpt_string != NULL && lGetElemStr(lGetList(ar, AR_granted_slots), JG_qname, qinstance_name)) {
+         if (lGetElemStr(ckpt_string_list, ST_name, ckpt_string) == NULL) {
+            ERROR((SGE_EVENT, MSG_PARSE_MOD_REJECTED_DUE_TO_AR_SSU, ckpt_string, 
+                   SGE_ATTR_CKPT_LIST, sge_u32c(lGetUlong(ar, AR_id))));
+            answer_list_add(answer_list, SGE_EVENT, 
+                            STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+            DRETURN(true);
+         }
+      }
    }
    DRETURN(false);
 }
@@ -1436,28 +1386,21 @@ ar_list_has_reservation_due_to_pe(lList *ar_master_list, lList **answer_list,
                                   const char *qinstance_name, lList *pe_string_list) 
 {
    lListElem *ar;
-   lListElem *gs;
 
    DENTER(TOP_LAYER, "ar_list_has_reservation_due_to_pe");
 
    for_each(ar, ar_master_list) {
       const char *pe_string = lGetString(ar, AR_pe);
 
-      for_each(gs, lGetList(ar, AR_granted_slots)) {
-         const char *gq = lGetString(gs, JG_qname);
-
-         if (strcmp(gq, qinstance_name) == 0 && pe_string != NULL) {
-            lListElem *pe = lGetElemStr(pe_string_list, ST_name, pe_string);
-
-            if (pe == NULL) {
-               ERROR((SGE_EVENT, MSG_PARSE_MOD_REJECTED_DUE_TO_AR_SSU, pe_string, 
-                      SGE_ATTR_PE_LIST, sge_u32c(lGetUlong(ar, AR_id))));
-               answer_list_add(answer_list, SGE_EVENT, 
-                               STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-               DRETURN(true);
-            }
-         } 
-      } 
+      if (pe_string != NULL && lGetElemStr(lGetList(ar, AR_granted_slots), JG_qname, qinstance_name)) {
+         if (lGetElemStr(pe_string_list, ST_name, pe_string) == NULL) {
+            ERROR((SGE_EVENT, MSG_PARSE_MOD_REJECTED_DUE_TO_AR_SSU, pe_string, 
+                   SGE_ATTR_PE_LIST, sge_u32c(lGetUlong(ar, AR_id))));
+            answer_list_add(answer_list, SGE_EVENT, 
+                            STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+            DRETURN(true);
+         }
+      }
    }
    DRETURN(false);
 }
@@ -1586,6 +1529,12 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
                                 QU_s_vmem,
                                 QU_h_vmem,
                                 NoName };
+    static char *value = "INFINITY";
+    static int attr[] = {
+      QU_s_cpu, QU_h_cpu, QU_s_fsize, QU_h_fsize, QU_s_data,
+      QU_h_data, QU_s_stack, QU_h_stack, QU_s_core, QU_h_core,
+      QU_s_rss, QU_h_rss, QU_s_vmem, QU_h_vmem, NoName
+    };
 
    lDescr *rdp = NULL;
    lEnumeration *what; 
@@ -1600,9 +1549,12 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
    queue_list = lCreateList("", rdp);
 
    for_each(gep, gdil) {
+      int index = 0;
       u_long32 slots = lGetUlong(gep, JG_slots);
       lListElem *queue = lCreateElem(rdp);
       lList *crl = NULL;
+      lListElem *cr;
+      lListElem *new_cr;
       
       const char *queue_name = lGetString(gep, JG_qname);
       char *cqueue_name = cqueue_get_name_from_qinstance(queue_name);
@@ -1618,43 +1570,26 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
       /*
        * initialize values
        */
-      {
-         const char *value = "INFINITY";
-         
-         const int attr[] = {
-            QU_s_cpu, QU_h_cpu, QU_s_fsize, QU_h_fsize, QU_s_data,
-            QU_h_data, QU_s_stack, QU_h_stack, QU_s_core, QU_h_core,
-            QU_s_rss, QU_h_rss, QU_s_vmem, QU_h_vmem, NoName
-         };
-         int index = 0;
-
-         while (attr[index] != NoName) {
-            lSetString(queue, attr[index], value);
-            index++;
-         }
+      while (attr[index] != NoName) {
+         lSetString(queue, attr[index], value);
+         index++;
       }
 
       lSetUlong(queue, QU_job_slots, slots);
 
-      {
-         lListElem *cr;
-         lListElem *new_cr;
-         
-         for_each(cr, lGetList(ar, AR_resource_list)) {
+      for_each(cr, lGetList(ar, AR_resource_list)) {
+         if (lGetBool(cr, CE_consumable)) {
+            double newval = lGetDouble(cr, CE_doubleval) * slots;
 
-            if (lGetBool(cr, CE_consumable)) {
-               double newval = lGetDouble(cr, CE_doubleval) * slots;
+            sge_dstring_sprintf(&buffer, "%f", newval);
+            new_cr = lCopyElem(cr);
+            lSetString(new_cr, CE_stringval, sge_dstring_get_string(&buffer));
+            lSetDouble(new_cr, CE_doubleval, newval);
 
-               sge_dstring_sprintf(&buffer, "%f", newval);
-               new_cr = lCopyElem(cr);
-               lSetString(new_cr, CE_stringval, sge_dstring_get_string(&buffer));
-               lSetDouble(new_cr, CE_doubleval, newval);
-
-               if (crl == NULL) {
-                  crl = lCreateList("", CE_Type);
-               }
-               lAppendElem(crl, new_cr);
+            if (crl == NULL) {
+               crl = lCreateList("", CE_Type);
             }
+            lAppendElem(crl, new_cr);
          }
       }
 
@@ -1672,7 +1607,8 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
          lListElem *master_cqueue;
          lListElem *master_queue;
 
-         for_each(master_cqueue, master_cqueue_list) {
+         master_cqueue = lGetElemStr(master_cqueue_list, CQ_name, cqueue_name);
+         if (master_cqueue != NULL) {
             if ((master_queue = lGetSubStr(master_cqueue, QU_full_name,
                   queue_name, CQ_qinstances)) != NULL){
                if (qinstance_state_is_ambiguous(master_queue)) {
@@ -1705,7 +1641,6 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
                                 qinstance_state_as_string(QI_ERROR));
                   qinstance_set_error(queue, QI_ERROR, sge_dstring_get_string(&buffer), true);
                }
-               break;
             }
          }
       }
@@ -2221,83 +2156,87 @@ ar_list_has_reservation_due_to_qinstance_complex_attr(lList *ar_master_list,
                                                       lList *ce_master_list)
 {  
    lListElem *ar = NULL;
+   lListElem *gs;
 
    DENTER(TOP_LAYER, "ar_list_has_reservation_due_to_qinstance_complex_attr");
 
    for_each(ar, ar_master_list) {
-      lListElem *gs = NULL;
       const char *qinstance_name = lGetString(qinstance, QU_full_name);
 
-      for_each(gs, lGetList(ar, AR_granted_slots)) {
-         const char *gq = lGetString(gs, JG_qname);
+      if ((gs =lGetElemStr(lGetList(ar, AR_granted_slots), JG_qname, qinstance_name))) {
 
-         if (!strcmp(gq, qinstance_name)) {
-            lListElem *rue = NULL;
-            lListElem *request = NULL;
-            lList *rue_list = lGetList(qinstance, QU_resource_utilization);
+         lListElem *rue = NULL;
+         lListElem *request = NULL;
+         lList *rue_list;
 
-            for_each(request, lGetList(ar, AR_resource_list)) {
-               const char *ce_name = lGetString(request, CE_name);
-               lListElem *ce = lGetElemStr(ce_master_list, CE_name, ce_name);
-               bool is_consumable = (lGetBool(ce, CE_consumable) > 0) ? true : false;
-  
-               if (!is_consumable) {
-                  char text[2048];
-                  u_long32 slots = lGetUlong(gs, JG_slots);
-                  lListElem *current = lGetSubStr(qinstance, CE_name, 
-                                                  ce_name, QU_consumable_config_list);
-                  if (current != NULL) {                                  
-                     current = lCopyElem(current);
-                     lSetUlong(current, CE_relop, lGetUlong(ce, CE_relop));
-                     lSetDouble(current, CE_pj_doubleval, lGetDouble(current, CE_doubleval));
-                     lSetString(current, CE_pj_stringval, lGetString(current, CE_stringval));
+         for_each(request, lGetList(ar, AR_resource_list)) {
+            const char *ce_name = lGetString(request, CE_name);
+            lListElem *ce = lGetElemStr(ce_master_list, CE_name, ce_name);
+            bool is_consumable = (lGetBool(ce, CE_consumable) > 0) ? true : false;
 
-                     if (compare_complexes(slots, request, current, text, false, true) == 0) {
+            if (!is_consumable) {
+               char text[2048];
+               u_long32 slots = lGetUlong(gs, JG_slots);
+               lListElem *current = lGetSubStr(qinstance, CE_name, 
+                                               ce_name, QU_consumable_config_list);
+               if (current != NULL) {                                  
+                  current = lCopyElem(current);
+                  lSetUlong(current, CE_relop, lGetUlong(ce, CE_relop));
+                  lSetDouble(current, CE_pj_doubleval, lGetDouble(current, CE_doubleval));
+                  lSetString(current, CE_pj_stringval, lGetString(current, CE_stringval));
+
+                  if (compare_complexes(slots, request, current, text, false, true) == 0) {
+                     ERROR((SGE_EVENT, MSG_QUEUE_MODCMPLXDENYDUETOAR_SS, ce_name,
+                            SGE_ATTR_COMPLEX_VALUES));
+                     answer_list_add(answer_list, SGE_EVENT, 
+                                     STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                     lFreeElem(&current);
+                     DRETURN(true);
+                  }
+                  lFreeElem(&current);
+               }
+            }
+         }
+
+         /* now it gets expensive. Before we can start the check at first we have to build the
+            consumable config list. */
+         qinstance_reinit_consumable_actual_list(qinstance, answer_list);
+         rue_list = lGetList(qinstance, QU_resource_utilization);
+
+         for_each(rue, rue_list) {
+            const char *ce_name = lGetString(rue, RUE_name);
+            lListElem *ce = lGetElemStr(ce_master_list, CE_name, ce_name);
+            bool is_consumable = (lGetBool(ce, CE_consumable) > 0) ? true : false;
+
+            if (is_consumable) {
+               lListElem *rde = NULL;
+               lList * rde_list = lGetList(rue, RUE_utilized);
+               lListElem *cv = lGetSubStr(qinstance, CE_name, ce_name, QU_consumable_config_list);
+
+               if (cv == NULL) {
+                  ERROR((SGE_EVENT, MSG_QUEUE_MODNOCMPLXDENYDUETOAR_SS, 
+                         ce_name, SGE_ATTR_COMPLEX_VALUES));
+                  answer_list_add(answer_list, SGE_EVENT, 
+                                  STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                  DRETURN(true);
+               } else {
+                  double configured = lGetDouble(cv, CE_doubleval);
+
+                  for_each(rde, rde_list) {
+                     double amount = lGetDouble(rde, RDE_amount);
+
+                     if (amount > configured) {
                         ERROR((SGE_EVENT, MSG_QUEUE_MODCMPLXDENYDUETOAR_SS, ce_name,
                                SGE_ATTR_COMPLEX_VALUES));
                         answer_list_add(answer_list, SGE_EVENT, 
                                         STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-                        lFreeElem(&current);
                         DRETURN(true);
                      }
-                     lFreeElem(&current);
                   }
                }
-            }
-            for_each(rue, rue_list) {
-               const char *ce_name = lGetString(rue, RUE_name);
-               lListElem *ce = lGetElemStr(ce_master_list, CE_name, ce_name);
-               bool is_consumable = (lGetBool(ce, CE_consumable) > 0) ? true : false;
-
-               if (is_consumable) {
-                  lListElem *rde = NULL;
-                  lList * rde_list = lGetList(rue, RUE_utilized);
-                  lListElem *cv = lGetSubStr(qinstance, CE_name, ce_name, QU_consumable_config_list);
-
-                  if (cv == NULL) {
-                     ERROR((SGE_EVENT, MSG_QUEUE_MODNOCMPLXDENYDUETOAR_SS, 
-                            ce_name, SGE_ATTR_COMPLEX_VALUES));
-                     answer_list_add(answer_list, SGE_EVENT, 
-                                     STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-                     DRETURN(true);
-                  } else {
-                     for_each(rde, rde_list) {
-                        double amount = lGetDouble(rde, RDE_amount);
-                        double configured = lGetDouble(cv, CE_doubleval);
-
-                        if (amount > configured) {
-                           ERROR((SGE_EVENT, MSG_QUEUE_MODCMPLXDENYDUETOAR_SS, ce_name,
-                                  SGE_ATTR_COMPLEX_VALUES));
-                           answer_list_add(answer_list, SGE_EVENT, 
-                                           STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-                           DRETURN(true);
-                        }
-                     }
-                  }
-               } 
             } 
          } 
-      } 
+      }
    }
    DRETURN(false);
 }  
@@ -2398,9 +2337,10 @@ ar_list_has_reservation_due_to_host_complex_attr(lList *ar_master_list, lList **
                                      STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                      DRETURN(true);
                   } else {
+                     double configured = lGetDouble(cv, CE_doubleval);
+
                      for_each(rde, rde_list) {
                         double amount = lGetDouble(rde, RDE_amount);
-                        double configured = lGetDouble(cv, CE_doubleval);
 
                         if (amount > configured) {
                            ERROR((SGE_EVENT, MSG_QUEUE_MODCMPLXDENYDUETOAR_SS, 

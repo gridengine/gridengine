@@ -181,7 +181,7 @@ int scheduler(sge_evc_class_t *evc, sge_Sdescr_t *lists, lList **order) {
    splitted_job_lists[SPLIT_NOT_STARTED] = &not_started_list;
 
    split_jobs(&(lists->job_list), NULL, lists->all_queue_list, 
-              mconf_get_max_aj_instances(), splitted_job_lists);
+              mconf_get_max_aj_instances(), splitted_job_lists, false);
 
    { /* add global queue messages */
       lList *qlp;

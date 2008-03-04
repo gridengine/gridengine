@@ -2972,7 +2972,7 @@ static bool interactive_cq_rejected(const lListElem *cq)
 *  NOTES
 *     MT-NOTE: cqueue_match_static() is MT safe
 *******************************************************************************/
-static dispatch_t cqueue_match_static(const char *cqname, sge_assignment_t *a)
+dispatch_t cqueue_match_static(const char *cqname, sge_assignment_t *a)
 {
    const lList *hard_resource_list;
    const lListElem *cq;

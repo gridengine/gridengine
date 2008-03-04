@@ -88,10 +88,6 @@ qinstance_change_state_on_calender_(sge_gdi_ctx_class_t *ctx,
                                     lListElem *qi_elem, u_long32 cal_order, 
                                     lList **state_change_list, monitoring_t *monitor);
 
-static bool
-qinstance_reinit_consumable_actual_list(lListElem *this_elem,
-                                        lList **answer_list);
-
 bool
 qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                            lListElem *this_elem, lList **answer_list,
@@ -105,7 +101,8 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                            bool *is_ambiguous, 
                            bool *has_changed_conf_attr, 
                            bool *has_changed_state_attr,
-                           const bool initial_modify, 
+                           const bool initial_modify,
+                           bool *need_reinitialize,
                            monitoring_t *monitor)
 {
 #if 0 /* EB: DEBUG: enable debugging for qinstance_modify_attribute() */
@@ -154,7 +151,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                   /* check if the modification is possible or if
                    * an existing AR would be violated by the modification
                    */
-                  if (sge_ar_list_conflicts_with_calendar(answer_list, lGetString(this_elem, QU_full_name),
+                  if (!initial_modify && sge_ar_list_conflicts_with_calendar(answer_list, lGetString(this_elem, QU_full_name),
                                                       calendar, *object_type_get_master_list(SGE_TYPE_AR))) {
                      ret = false;
                      break;
@@ -315,7 +312,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                            lGetString(this_elem, QU_full_name), new_value)) {
                      ret = false;
                      break;
-                  } else if (cqueue_attibute_name == CQ_pe_list &&
+                  } else if (!initial_modify && cqueue_attibute_name == CQ_pe_list &&
                              ar_list_has_reservation_due_to_pe(
                                  *object_type_get_master_list(SGE_TYPE_AR), answer_list,
                                  lGetString(this_elem, QU_full_name), new_value)) {
@@ -380,7 +377,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                                          matching_group, is_ambiguous);
                if (old_value != new_value) {
                   DPRINTF(("reserved slots %d\n", qinstance_slots_reserved(this_elem)));
-                  if (new_value < qinstance_slots_reserved(this_elem)) {
+                  if (!initial_modify && new_value < qinstance_slots_reserved(this_elem)) {
                      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                                              MSG_QINSTANCE_SLOTSRESERVED_USS, qinstance_slots_reserved(this_elem),
                                              lGetString(this_elem, QU_qname), hostname);
@@ -393,7 +390,9 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
 #endif
                      lSetUlong(this_elem, attribute_name, new_value);
                      *has_changed_conf_attr = true;
-                     qinstance_reinit_consumable_actual_list(this_elem, answer_list);
+                     if (need_reinitialize != NULL) {
+                        *need_reinitialize = true;
+                     }
                   }
                }
             }
@@ -423,8 +422,10 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                    
                    lSetList(tmp_elem, attribute_name, new_value);
                    new_value = NULL;
-                   
-                   qinstance_reinit_consumable_actual_list(tmp_elem, answer_list);
+                  
+                   if (need_reinitialize != NULL) {
+                     *need_reinitialize = true;
+                   }
                    
                    lXchgList(tmp_elem, attribute_name, &new_value);
                    lFreeElem(&tmp_elem);
@@ -437,12 +438,11 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                       /* the following lSetList will free old_value */
                       lSetList(this_elem, attribute_name, new_value);
                       *has_changed_conf_attr = true;
-                      if (attribute_name == QU_consumable_config_list) {
-                         qinstance_reinit_consumable_actual_list(this_elem, 
-                                                                 answer_list);
+                      if (attribute_name == QU_consumable_config_list && need_reinitialize != NULL) {
+                        *need_reinitialize = true;
                       }
 
-                      if (ar_list_has_reservation_due_to_qinstance_complex_attr(*object_type_get_master_list(SGE_TYPE_AR), answer_list, 
+                      if (!initial_modify && ar_list_has_reservation_due_to_qinstance_complex_attr(*object_type_get_master_list(SGE_TYPE_AR), answer_list, 
                                                                                 this_elem, *object_type_get_master_list(SGE_TYPE_CENTRY))) {
                          ret = false;
                          break;
@@ -1179,7 +1179,7 @@ sge_qmaster_qinstance_set_initial_state(lListElem *this_elem, bool is_restart)
 *  NOTES
 *     MT-NOTE: qinstance_reinit_consumable_actual_list() is MT safe 
 *******************************************************************************/
-static bool
+bool
 qinstance_reinit_consumable_actual_list(lListElem *this_elem,
                                         lList **answer_list)
 {

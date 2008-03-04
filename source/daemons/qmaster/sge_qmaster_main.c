@@ -81,6 +81,7 @@
 #include "sge_conf.h"
 #include "sge_security.h"
 #include "sge_advance_reservation_qmaster.h"
+#include "uti/sge_time.h"
 
 #if !defined(INTERIX)
 static void init_sig_action_and_mask(void);
@@ -278,6 +279,7 @@ int main(int argc, char* argv[])
    bool do_final_spool = true;
    bool has_daemonized = false;
    sge_gdi_ctx_class_t *ctx = NULL;
+   u_long32 start_time = sge_get_gmt();
 
    DENTER_MAIN(TOP_LAYER, "qmaster");
 
@@ -372,6 +374,8 @@ int main(int argc, char* argv[])
    sge_init_ar_id();
 
    sge_setup_job_resend();
+
+   INFO((SGE_EVENT, "qmaster startup took %d seconds", sge_get_gmt() - start_time));
 
    sge_create_and_join_threads(ctx);
 

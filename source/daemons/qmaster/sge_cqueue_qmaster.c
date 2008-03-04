@@ -76,12 +76,16 @@
 #include "sge_mtutil.h"
 #include "sgeobj/sge_load.h"
 #include "sgeobj/sge_advance_reservation.h"
+#include "sgeobj/sge_centry.h"
 
 #include "sge_userprj_qmaster.h"
 #include "sge_userset_qmaster.h"
 
 #include "spool/classic/read_write_ume.h"
 #include "spool/sge_spooling.h"
+
+#include "sched/sge_resource_utilization.h"
+#include "sched//sge_serf.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -122,6 +126,7 @@ qinstance_create(sge_gdi_ctx_class_t *ctx,
 {
    dstring buffer = DSTRING_INIT;
    const char *cqueue_name = lGetString(cqueue, CQ_name);
+   lList *centry_list = *(object_type_get_master_list(SGE_TYPE_CENTRY));
    lListElem *ret = NULL;
    int index;
 
@@ -149,7 +154,6 @@ qinstance_create(sge_gdi_ctx_class_t *ctx,
       bool tmp_has_changed_state_attr = false;
       const char *matching_host_or_group = NULL;
       const char *matching_group = NULL;
-      bool initial_modify = true;
 
       qinstance_modify_attribute(ctx,
                        ret, answer_list, cqueue, 
@@ -163,12 +167,15 @@ qinstance_create(sge_gdi_ctx_class_t *ctx,
                        &tmp_is_ambiguous, 
                        &tmp_has_changed_conf_attr,
                        &tmp_has_changed_state_attr,
-                       initial_modify, monitor);
+                       true, NULL, monitor);
 
       *is_ambiguous |= tmp_is_ambiguous;
 
       index++;
    }
+
+   qinstance_set_conf_slots_used(ret);
+   qinstance_debit_consumable(ret, NULL, centry_list, 0);
 
    /*
     * Change qinstance state
@@ -395,7 +402,7 @@ cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
 bool
 cqueue_mod_qinstances(sge_gdi_ctx_class_t *ctx,
                       lListElem *cqueue, lList **answer_list,
-                      lListElem *reduced_elem, bool refresh_all_values, monitoring_t *monitor)
+                      lListElem *reduced_elem, bool refresh_all_values, bool is_startup, monitoring_t *monitor)
 {
    dstring buffer = DSTRING_INIT;
    bool ret = true;
@@ -417,6 +424,7 @@ cqueue_mod_qinstances(sge_gdi_ctx_class_t *ctx,
          bool state_changed = false;
          bool conf_changed = false;
          int index = 0;
+         bool need_reinitialize = false;
 
          /*
           * Set full name of QI if it is not set
@@ -435,6 +443,7 @@ cqueue_mod_qinstances(sge_gdi_ctx_class_t *ctx,
           * Handle each cqueue attribute as long as there was no error
           * and only if the qinstance won't be deleted afterward.
           */
+
          while (ret && !is_del &&
                 cqueue_attribute_array[index].cqueue_attr != NoName) {
             const char *matching_host_or_group = NULL;
@@ -468,7 +477,6 @@ cqueue_mod_qinstances(sge_gdi_ctx_class_t *ctx,
                bool tmp_is_ambiguous = false;
                bool tmp_has_changed_conf_attr = false;
                bool tmp_has_changed_state_attr = false;
-               bool initial_modify = false;
 
                ret &= qinstance_modify_attribute(ctx,
                           qinstance,
@@ -483,7 +491,8 @@ cqueue_mod_qinstances(sge_gdi_ctx_class_t *ctx,
                           &tmp_is_ambiguous,
                           &tmp_has_changed_conf_attr,
                           &tmp_has_changed_state_attr,
-                          initial_modify,
+                          is_startup,
+                          &need_reinitialize,
                           monitor);
 
                if (tmp_is_ambiguous) {
@@ -503,6 +512,10 @@ cqueue_mod_qinstances(sge_gdi_ctx_class_t *ctx,
             }
             
             index++;
+         }
+
+         if (need_reinitialize) {
+            qinstance_reinit_consumable_actual_list(qinstance, answer_list);
          }
 
          /*
@@ -537,7 +550,7 @@ cqueue_mod_qinstances(sge_gdi_ctx_class_t *ctx,
             qinstance_increase_qversion(qinstance);
          }
 
-         if (ret) {
+         if (ret && !is_startup) {
             lListElem *ar;
             lList *master_userset_list = *(object_type_get_master_list(SGE_TYPE_USERSET));
 
@@ -587,7 +600,7 @@ cqueue_handle_qinstances(sge_gdi_ctx_class_t *ctx,
    }
    if (ret) {
       ret = cqueue_mod_qinstances(ctx, cqueue, answer_list, reduced_elem, 
-                                   refresh_all_values, monitor);
+                                   refresh_all_values, false, monitor);
    }
    if (ret) {
       ret = cqueue_add_qinstances(ctx, cqueue, answer_list, add_hosts, monitor);

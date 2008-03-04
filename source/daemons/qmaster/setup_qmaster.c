@@ -1123,7 +1123,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
     *    - cached QI values.
     */
    for_each(tmpqep, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
-      cqueue_mod_qinstances(ctx, tmpqep, NULL, tmpqep, true, &monitor);
+      cqueue_mod_qinstances(ctx, tmpqep, NULL, tmpqep, true, true, &monitor);
    }
 
    /* rebuild signal resend events */

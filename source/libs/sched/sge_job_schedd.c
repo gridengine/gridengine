@@ -561,7 +561,7 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
 *******************************************************************************/
 void split_jobs(lList **job_list, lList **answer_list,
                 lList *queue_list, u_long32 max_aj_instances, 
-                lList **result_list[], bool is_free_job_list)
+                lList **result_list[], bool is_free_job_list, bool do_copy)
 {
 #if 0 /* EB: DEBUG: enable debug messages for split_jobs() */
 #define JOB_SPLIT_DEBUG
@@ -724,8 +724,12 @@ void split_jobs(lList **job_list, lList **answer_list,
             if (*target == NULL) {
                *target = lCreateList(NULL, lGetElemDescr(ja_task));
             }
-            lDechainElem(ja_task_list, ja_task);
-            lAppendElem(*target, ja_task);
+            if (do_copy) {
+               lAppendElem(*target, lCopyElem(ja_task));
+            } else {
+               lDechainElem(ja_task_list, ja_task);
+               lAppendElem(*target, ja_task);
+            }
          }
       }
 
@@ -774,37 +778,43 @@ void split_jobs(lList **job_list, lList **answer_list,
              (i == SPLIT_PENDING && n_h_ids != NULL ) ||
              (i == SPLIT_HOLD && (u_h_ids != NULL || o_h_ids != NULL || 
                                   s_h_ids != NULL || a_h_ids != NULL))) {
-            if (*(result_list[i]) == NULL) {
-               const lDescr *reduced_decriptor = lGetElemDescr(job);
+            if (result_list[i] != NULL) {
+               if (*(result_list[i]) == NULL) {
+                  const lDescr *reduced_decriptor = lGetElemDescr(job);
 
 #ifdef JOB_SPLIT_DEBUG               
-               DPRINTF(("Create "SFN"-list\n", get_name_of_split_value(i)));
+                  DPRINTF(("Create "SFN"-list\n", get_name_of_split_value(i)));
 #endif
-               *(result_list[i]) = lCreateList("", reduced_decriptor);
-            } 
-            if (move_job == 1) {
+                  *(result_list[i]) = lCreateList("", reduced_decriptor);
+               } 
+               if (move_job == 1) {
 #ifdef JOB_SPLIT_DEBUG
-               DPRINTF(("Reuse job element "sge_u32" for "SFN"-list\n", 
-                        lGetUlong(job, JB_job_number), 
-                        get_name_of_split_value(i)));
+                  DPRINTF(("Reuse job element "sge_u32" for "SFN"-list\n", 
+                           lGetUlong(job, JB_job_number), 
+                           get_name_of_split_value(i)));
 #endif
-               move_job = 0;
-               lDechainElem(*job_list, job);
-               target_job[i] = job;
-            } else {
+                  move_job = 0;
+                  if (do_copy) {
+                     target_job[i] = lCopyElem(job);
+                  } else {
+                     lDechainElem(*job_list, job);
+                     target_job[i] = job;
+                  }
+               } else {
 #ifdef JOB_SPLIT_DEBUG
-               DPRINTF(("Copy job element "sge_u32" for "SFN"-list\n", 
-                        lGetUlong(job, JB_job_number), 
-                        get_name_of_split_value(i)));
+                  DPRINTF(("Copy job element "sge_u32" for "SFN"-list\n", 
+                           lGetUlong(job, JB_job_number), 
+                           get_name_of_split_value(i)));
 #endif
-               target_job[i] = lCopyElem(job);
+                  target_job[i] = lCopyElem(job);
+               }
+#ifdef JOB_SPLIT_DEBUG
+               DPRINTF(("Add job element "sge_u32" into "SFN"-list\n",
+                        lGetUlong(target_job[i], JB_job_number),
+                        get_name_of_split_value(i))); 
+#endif
+               lAppendElem(*(result_list[i]), target_job[i]);
             }
-#ifdef JOB_SPLIT_DEBUG
-            DPRINTF(("Add job element "sge_u32" into "SFN"-list\n",
-                     lGetUlong(target_job[i], JB_job_number),
-                     get_name_of_split_value(i))); 
-#endif
-            lAppendElem(*(result_list[i]), target_job[i]);
          }
       }
 
@@ -816,7 +826,7 @@ void split_jobs(lList **job_list, lList **answer_list,
           (result_list[SPLIT_HOLD] == NULL && 
                    (u_h_ids != NULL || o_h_ids != NULL || 
                     s_h_ids != NULL || a_h_ids == NULL))) {
-         if (move_job == 0) {
+         if (move_job == 0 && !do_copy) {
             /* 
              * We moved 'job' into a target list therefore it is necessary 
              * to create a new job.
@@ -834,7 +844,7 @@ void split_jobs(lList **job_list, lList **answer_list,
       /* 
        * Insert array task information for not enrolled tasks
        */
-      if (result_list[target_for_ids] != NULL && target_ids != NULL) {
+      if (target_for_ids < SPLIT_LAST && result_list[target_for_ids] != NULL && target_ids != NULL) {
 #ifdef JOB_SPLIT_DEBUG
          DPRINTF(("Move not enrolled %s tasks\n",
                   get_name_of_split_value(target_for_ids)));
@@ -881,14 +891,16 @@ void split_jobs(lList **job_list, lList **answer_list,
          lXchgList(job, JB_ja_s_h_ids, &s_h_ids);
          lXchgList(job, JB_ja_a_h_ids, &a_h_ids);
       } else {
-         lFreeList(&ja_task_list);
+         if (!do_copy) {
+            lFreeList(&ja_task_list);
+         }
       }
    }
 
    /*
     * Could we dispense all jobs?
     */
-   if (is_free_job_list == true) {
+   if (!do_copy && is_free_job_list == true) {
       if (lGetNumberOfElem(*job_list) == 0) {
          lFreeList(job_list);
       }

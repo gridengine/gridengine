@@ -3008,7 +3008,7 @@ static bool access_cq_rejected(const char *user, const char *group,
 *  NOTES
 *     MT-NOTE: cqueue_match_static() is MT safe
 *******************************************************************************/
-static dispatch_t cqueue_match_static(const char *cqname, sge_assignment_t *a)
+dispatch_t cqueue_match_static(const char *cqname, sge_assignment_t *a)
 {
    const lList *hard_resource_list;
    const lListElem *cq;

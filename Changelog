@@ -1,3 +1,8 @@
+RD-2008-03-04-0: Enhancem:  - improved qmaster startup time
+                            - reduced mem/cpu usage for AR submission
+                            - reduced mem/cpu usage for job -w v verification
+                 Review:    AH
+
 AH-2008-03-04-0: Enhancem:  Consider also user_list/xuser_list in static
                             cluster queue matching
                  Review:    RD

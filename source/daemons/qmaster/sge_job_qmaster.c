@@ -3804,6 +3804,8 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger)
          int ngranted = 0;
          int try_it = 1;
          const char *ckpt_name;
+         lList *job_hard_queue_list = lGetList(jep, JB_hard_queue_list);
+         const char *pe_name = lGetString(jep, JB_pe);
          object_description *object_base = object_type_get_object_description();
 
          sge_assignment_t a = SGE_ASSIGNMENT_INIT;
@@ -3819,21 +3821,15 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger)
 
          /* parallel */
          if (try_it) {
+            u_long32 ar_id = lGetUlong(jep, JB_ar);
+            lList *ar_granted_slots = NULL;
 
-            /* 
-             * Current scheduler code expects all queue instances in a plain list. We use 
-             * a copy of all queue instances that needs to be free'd explicitely after 
-             * deciding about assignment. This is because assignment_release() sees 
-             * queue_list only as a list pointer.
-             */
-            for_each(cqueue, *object_base[SGE_TYPE_CQUEUE].list) {
-               lList *qinstance_list = lCopyList(NULL, lGetList(cqueue, CQ_qinstances));
-               if (!a.queue_list) {
-                  a.queue_list = qinstance_list;
-               }   
-               else {
-                  lAddList(a.queue_list, &qinstance_list);
-               }   
+            if (ar_id != 0) {
+               lListElem *ar = NULL; 
+               ar = ar_list_locate(*object_base[SGE_TYPE_AR].list, ar_id);
+               if (ar != NULL) {
+                  ar_granted_slots = lGetList(ar, AR_granted_slots);
+               }
             }
 
             a.host_list        = *object_base[SGE_TYPE_EXECHOST].list;
@@ -3849,6 +3845,62 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger)
             a.start            = DISPATCH_TIME_NOW;
             a.duration         = 0; /* indicator for schedule based mode */
             a.is_job_verify    = true;
+
+            /* 
+             * Current scheduler code expects all queue instances in a plain list. We use 
+             * a copy of all queue instances that needs to be free'd explicitely after 
+             * deciding about assignment. This is because assignment_release() sees 
+             * queue_list only as a list pointer.
+             */ 
+            a.queue_list = lCreateList("", QU_Type);
+
+            for_each(cqueue, *object_base[SGE_TYPE_CQUEUE].list) {
+               const char *cqname = lGetString(cqueue, CQ_name);
+               lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+               lListElem *qinstance;
+
+               if (cqueue_match_static(cqname, &a) != DISPATCH_OK) {
+                  continue;
+               }
+
+               for_each(qinstance, qinstance_list) {
+
+                  /* we only have to consider requested queues */
+                  if (job_hard_queue_list != NULL) {
+                     if (qref_list_cq_rejected(job_hard_queue_list, cqname,
+                              lGetHost(qinstance, QU_qhostname), a.hgrp_list)) {
+                        continue; 
+                     } 
+                  }
+
+                  if (ar_granted_slots != NULL) {
+                     if (lGetElemStr(ar_granted_slots, JG_qname, lGetString(qinstance, QU_full_name)) == NULL) {
+                       continue; 
+                     }
+                  }
+                  
+
+                  /* we only have to consider queues containing the requested pe */
+                  if (pe_name != NULL) {
+                     bool found = false;
+                     lListElem *pe_ref;
+
+                     for_each(pe_ref, lGetList(qinstance, QU_pe_list)) {
+                        if (pe_name_is_matching(lGetString(pe_ref, ST_name), pe_name)) {
+                           found = true;
+                           break;
+                        }
+                     }
+                     if (!found) {
+                        continue;
+                     }
+
+                  }
+
+                  lAppendElem(a.queue_list, lCopyElem(qinstance));
+               }
+            }
+
 
             /* imagine qs is empty */
             sconf_set_qs_state(QS_STATE_EMPTY);

@@ -180,7 +180,7 @@ enum {
 void 
 split_jobs(lList **job_list, lList **answer_list, lList *queue_list,
            u_long32 max_aj_instances, lList **result_lists[],
-           bool is_free_job_list); 
+           bool is_free_job_list, bool do_copy); 
 
 void 
 job_lists_split_with_reference_to_max_running(lList **job_lists[],

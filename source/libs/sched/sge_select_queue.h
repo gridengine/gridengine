@@ -184,4 +184,6 @@ ri_time_by_slots(const sge_assignment_t *a, lListElem *request, lList *load_attr
                 lListElem *queue, dstring *reason, bool allow_non_requestable, 
                 int slots, u_long32 layer, double lc_factor, u_long32 *start_time, const char *object_name); 
 
+dispatch_t cqueue_match_static(const char *cqname, sge_assignment_t *a);
+
 #endif

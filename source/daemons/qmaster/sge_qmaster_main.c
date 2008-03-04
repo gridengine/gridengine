@@ -79,6 +79,7 @@
 #include "sge_security.h"
 #include "sge_advance_reservation_qmaster.h"
 #include "qm_name.h"
+#include "uti/sge_time.h"
 
 #include "uti/sge_monitor.h"
 
@@ -294,6 +295,7 @@ int main(int argc, char* argv[])
    int file_descriptor_settings_result = 0;
    bool has_daemonized = false;
    sge_gdi_ctx_class_t *ctx = NULL;
+   u_long32 start_time = sge_get_gmt();
    monitoring_t monitor;
 
    DENTER_MAIN(TOP_LAYER, "qmaster");
@@ -428,6 +430,8 @@ int main(int argc, char* argv[])
 #ifndef NO_JNI
    sge_jvm_initialize(ctx, NULL);
 #endif
+
+   INFO((SGE_EVENT, "qmaster startup took "sge_u32" seconds", sge_get_gmt() - start_time));
 
    /*
     * Block till signal from signal thread arrives us

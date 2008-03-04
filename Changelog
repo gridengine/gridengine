@@ -1,3 +1,7 @@
+MP-2008-03-04-0: Bugfix:    Fixed error introduced into build through
+                            checkin of MP-2008-02-21-0
+                 Review:    MD
+
 AH-2008-03-03-1: Bugfix     Fix drmaa_job_ps() memory leak 
                  Issue:     2505
                  Review:    RD

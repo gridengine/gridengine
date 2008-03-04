@@ -1815,7 +1815,6 @@ u_long32 isXML
    bool jobs_exist = true;
    lListElem* mes;
    lListElem *tmpElem;
-   lListElem *job_n;
 
    DENTER(TOP_LAYER, "qstat_show_job");
 
@@ -1853,12 +1852,12 @@ u_long32 isXML
             where = lOrWhere(where, newcp);
       }   
    }
-   what = lWhat("%T(->%T%I%I%I%I%I%I%I%I%I%I%I%I%I%I%I->%T%I%I%I%I%I%I->%T%I%I%I%I->%T(%I%I%I%I%I)"
-           "%I%I%I%I->%T(%I)%I->%T(%I)%I%I%I%I%I%I%I%I%I%I%I%I%I%I%I->%T%I%I%I%I%I%I%I)",
-            JB_Type, RN_Type, JB_ja_structure, JB_job_number, JB_exec_file, JB_submission_time, JB_owner,
+   what = lWhat("%T(%I%I%I%I%I%I%I%I%I%I%I%I%I%I->%T%I%I%I%I%I%I->%T%I%I%I%I->%T(%I%I%I%I%I)"
+            "%I%I%I%I->%T(%I)%I->%T(%I)%I%I%I%I%I%I%I%I%I%I%I%I%I%I%I->%T%I%I%I%I%I%I%I)%T(%I)",
+            JB_Type, JB_job_number, JB_exec_file, JB_submission_time, JB_owner,
             JB_uid, JB_group, JB_gid, JB_account, JB_merge_stderr, JB_mail_list,
             JB_project, JB_notify, JB_job_name, JB_stdout_path_list, PN_Type,
-            JB_jobshare, JB_hard_resource_list, JB_soft_resource_list,
+  	    JB_jobshare, JB_hard_resource_list, JB_soft_resource_list,
             JB_hard_queue_list, JB_soft_queue_list, JB_shell_list, PN_Type,
             JB_env_list, JB_job_args, JB_script_file, JB_ja_tasks,
             JAT_Type, JAT_status, JAT_task_number, JAT_scaled_usage_list,
@@ -1869,41 +1868,13 @@ u_long32 isXML
             JB_mail_options, JB_stdin_path_list, JB_priority, JB_restart, JB_verify,
             JB_master_hard_queue_list, JB_script_size, JB_pe, RN_Type, JB_pe_range,
             JB_jid_request_list, JB_verify_suitable_queues, JB_soft_wallclock_gmt,
-            JB_hard_wallclock_gmt, JB_override_tickets,
-            JB_version); 
+            JB_hard_wallclock_gmt, JB_override_tickets, JB_version,
+            RN_Type, JB_ja_structure); 
    /* get job list */
    alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_GET, &jlp, where, what);
    lFreeWhere(&where);
    lFreeWhat(&what);
   
-   /* Filtering using the lWhere does not seem to filter out unwanted jobs.
-    * The following code does the filtering out of jobs that are not requested
-    * in the command line.
-   */
-   job_n = lFirst(jlp);
-   while(job_n) {  
-      bool found = false;
-      tmpElem = lNext(job_n);
-      for_each(j_elem, jid_list) {
-         const char *job_name = lGetString(j_elem, ST_name);
-         if (isdigit(job_name[0])){
-            u_long32 jid = atol(lGetString(j_elem, ST_name));
-            if(lGetUlong(job_n, JB_job_number) == jid) {
-               found = true;
-            }               
-         } else {
-            if(strcmp(lGetString(job_n, JB_job_name), job_name) == 0) {
-               found = true;
-            }
-         }
-      }
-      if (!found) {
-         lRemoveElem(jlp, &job_n);
-         found = false;
-      }
-      job_n = tmpElem;
-   }
-
    if (isXML) {
       /* filter the message list to contain only jobs that have been requested.
          First remove all enteries in the job_number_list that are not in the 

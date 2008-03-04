@@ -75,7 +75,6 @@ static void rqs_excluded_hosts(const lListElem *rule, sge_assignment_t *a);
 static void rqs_excluded_cqueues(const lListElem *rule, sge_assignment_t *a);
 
 
-
 /****** sge_resource_quota_schedd/rqs_set_dynamical_limit() ***********************
 *  NAME
 *     rqs_set_dynamical_limit() -- evaluate dynamical limit
@@ -689,7 +688,7 @@ static bool is_cqueue_expand(const lListElem *rule)
 *  NOTES
 *     MT-NOTE: rqs_exceeded_sort_out() is MT safe
 *******************************************************************************/
-bool rqs_exceeded_sort_out(sge_assignment_t *a, const lListElem *rule, const dstring *rule_name,
+static bool rqs_exceeded_sort_out(sge_assignment_t *a, const lListElem *rule, const dstring *rule_name,
    const char* queue_name, const char* host_name)
 {
    bool cq_global = is_cqueue_global(rule);
@@ -803,7 +802,7 @@ bool rqs_exceeded_sort_out(sge_assignment_t *a, const lListElem *rule, const dst
 *  NOTES
 *     MT-NOTE: rqs_exceeded_sort_out_par() is MT safe 
 *******************************************************************************/
-void rqs_exceeded_sort_out_par(sge_assignment_t *a, const lListElem *rule, const dstring *rule_name,
+static void rqs_exceeded_sort_out_par(sge_assignment_t *a, const lListElem *rule, const dstring *rule_name,
    const char* queue_name, const char* host_name)
 {
    if (rqs_exceeded_sort_out(a, rule, rule_name, queue_name, host_name)) {

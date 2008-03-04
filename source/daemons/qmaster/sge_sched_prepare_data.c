@@ -88,6 +88,8 @@ static const int cqueue_field_ids[] = {
    CQ_consumable_config_list,
    CQ_projects,
    CQ_xprojects,
+   CQ_acl,
+   CQ_xacl,
    CQ_qtype,
    CQ_pe_list,
    CQ_nsuspend,

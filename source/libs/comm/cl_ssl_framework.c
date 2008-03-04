@@ -4945,7 +4945,7 @@ int cl_com_ssl_read_GMSH(cl_com_connection_t*        connection,
 
 
 /* create service, accept new connections */
-int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection) {
+int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection, cl_bool_t only_prepare_service) {
    cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }

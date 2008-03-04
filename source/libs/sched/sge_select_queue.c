@@ -2864,7 +2864,7 @@ static bool project_cq_rejected(const char *project, const lListElem *cq)
       DRETURN(true);
    }
 
-   /* with project: rejected, if project is exluded by each "xproject" profile */
+   /* with project: rejected, if project is excluded by each "xproject" profile */
    rejected = true;
    for_each (alist, lGetList(cq, CQ_xprojects)) {
       projects = lGetList(alist, APRJLIST_value);
@@ -2930,6 +2930,61 @@ static bool interactive_cq_rejected(const lListElem *cq)
    DRETURN(rejected);
 }
 
+/****** sge_select_queue/access_cq_rejected() **********************************
+*  NAME
+*     access_cq_rejected() -- Check, if cluster queue rejects user/project 
+*
+*  SYNOPSIS
+*     static bool access_cq_rejected(const char *user, const char *group, const 
+*     lList *acl_list, const lListElem *cq) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     const char *user      - Username 
+*     const char *group     - Groupname
+*     const lList *acl_list - List of access list definitions
+*     const lListElem *cq   - Cluster queue
+*
+*  RESULT
+*     static bool - True, if rejected
+*
+*  NOTES
+*     MT-NOTE: access_cq_rejected() is MT safe 
+*******************************************************************************/
+static bool access_cq_rejected(const char *user, const char *group,  
+      const lList *acl_list, const lListElem *cq)
+{
+   const lListElem *alist;
+   bool rejected;
+
+   DENTER(TOP_LAYER, "access_cq_rejected");
+
+   /* rejected, if user/group is excluded by each "xacl" profile */
+   rejected = true;
+   for_each (alist, lGetList(cq, CQ_xacl)) {
+      if (!sge_contained_in_access_list_(user, group, lGetList(alist, AUSRLIST_value), acl_list)) {
+         rejected = false;
+         break;
+      }
+   }
+   if (rejected) {
+      DRETURN(true);
+   }
+
+   /* rejected, if user/group is not included in any "acl" profile */
+   rejected = true;
+   for_each (alist, lGetList(cq, CQ_acl)) {
+      const lList *t = lGetList(alist, AUSRLIST_value);
+      if (!t || sge_contained_in_access_list_(user, group, t, acl_list)) {
+         rejected = false;
+         break;
+      }
+   }
+
+   DRETURN(rejected);
+}
 
 /****** sge_select_queue/cqueue_match_static() *********************************
 *  NAME
@@ -3022,6 +3077,13 @@ static dispatch_t cqueue_match_static(const char *cqname, sge_assignment_t *a)
       DPRINTF(("Cluster queue \"%s\" does not work for -P %s job %d\n",
          cqname, project?project:"<no project>", (int)a->job_id));
       schedd_mes_add(a->job_id, SCHEDD_INFO_HASNOPRJ_S, "cluster queue", cqname);
+      DRETURN(DISPATCH_NEVER_CAT);
+   }
+
+   /* detect if entire cluster queue ruled out due to user_list/xuser_lists */
+   if (access_cq_rejected(a->user, a->group, a->acl_list, cq)) {
+      DPRINTF(("Job %d has no permission for cluster queue %s\n", (int)a->job_id, cqname));
+      schedd_mes_add(a->job_id, SCHEDD_INFO_HASNOPERMISSION_SS, "cluster queue", cqname);
       DRETURN(DISPATCH_NEVER_CAT);
    }
 

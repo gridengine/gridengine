@@ -46,9 +46,6 @@
 
 #include "msg_schedd.h"
 
-static int sge_contained_in_access_list_(const char *user, const char *group, 
-                                         const lList *acl, const lList *acl_list);
-
 /* - -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 
    sge_has_access - determines if a user/group has access to a queue
@@ -105,7 +102,7 @@ int sge_has_access_(const char *user, const char *group, const lList *q_acl,
 
    user, group: may be NULL
 */
-static int sge_contained_in_access_list_(const char *user, const char *group,
+int sge_contained_in_access_list_(const char *user, const char *group,
                                          const lList *acl, const lList *acl_list) 
 {
    lListElem *acl_search, *acl_found;

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/01/25 11:38:19 $     Revision: $Revision: 1.67 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/03/04 12:21:43 $     Revision: $Revision: 1.68 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/01/25 11:38:19 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/03/04 12:21:43 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -574,7 +574,15 @@ and the
 option of
 .M queue_conf 5 ).
 Parallel jobs are only rescheduled if the host on which their
-master task executes is in unknown state. Checkpointing jobs will only be
+master task executes is in unknown state. The behaviour of
+.B reschedule_unknown
+for parallel jobs and for jobs without the rerun flag be set can be
+adjusted using the \fBqmaster_params\fP settings
+.B ENABLE_RESCHEDULE_KILL
+and
+.B ENABLE_RESCHEDULE_SLAVE.
+.PP
+Checkpointing jobs will only be
 rescheduled when the
 .B when
 option of the corresponding checkpointing environment contains an
@@ -977,6 +985,24 @@ job script, pe_stop or epilog script.
 .IP "\fIDISABLE_AUTO_RESCHEDULING\fP"
 If set to "true" or "1", the \fIreschedule_unknown\fP parameter
 is not taken into account.
+.PP
+.IP "\fIENABLE_RESCHEDULE_KILL\fP"
+If set to "true" or "1", the \fIreschedule_unknown\fP parameter
+affects also jobs which have the rerun flag not activated
+(see the
+.B -r y
+option of
+.M qsub 1
+and the
+.B rerun
+option of
+.M queue_conf 5 ), 
+but they are just finished as they can't be rescheduled.
+.PP
+.IP "\fIENABLE_RESCHEDULE_SLAVE\fP"
+If set to "true" or "1" xxQS_NAMExx triggers job rescheduling also when 
+the host where the slave tasks of a parallel job executes is in unknon state, 
+if the \fIreschedule_unknown\fP parameter is activated.
 .PP
 .IP "\fIMAX_DYN_EC\fP"
 Sets the max number of dynamic event clients (as used by qsub -sync y 

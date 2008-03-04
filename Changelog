@@ -15,6 +15,8 @@ LP-2008-03-04-0: Bugfix:    Uninstallation of remote execd if not interactive
 RD-2008-03-04-0: Enhancem:  - improved qmaster startup time
                             - reduced mem/cpu usage for AR submission
                             - reduced mem/cpu usage for job -w v verification
+                 Bugster:   6653424
+                 Issue:     2483
                  Review:    AH
 
 AH-2008-03-04-0: Enhancem:  Consider also user_list/xuser_list in static

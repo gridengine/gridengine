@@ -1,3 +1,8 @@
+RD-2008-03-04-1: Bugfix:    loadsensor does not work or AIX51
+                 Issue:     2508
+                 Bugster:   6661060
+                 Review:    AH
+
 AH-2008-03-04-1: Docs:      Added documentation for qmaster_params
                             ENABLE_RESCHEDULE_KILL and ENABLE_RESCHEDULE_SLAVE
                             to sge_conf(5).

@@ -1,3 +1,10 @@
+LP-2008-03-04-0: Bugfix:    Uninstallation of remote execd if not interactive
+                 Bugfix:    Infotext spawned on remote machine with -wait or 
+                            -ask does not display the text
+                 Bugster:   6670352,6669655
+                 Bugfix:    Improved uninstallation dialogs
+                 Review:    PJ
+
 RD-2008-03-04-0: Enhancem:  - improved qmaster startup time
                             - reduced mem/cpu usage for AR submission
                             - reduced mem/cpu usage for job -w v verification

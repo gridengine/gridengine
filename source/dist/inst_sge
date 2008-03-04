@@ -769,32 +769,35 @@ if [ "$EXECD" = "uninstall" ]; then
       $INFOTEXT -log "Starting execution host uninstallation!"
    fi
 
-   WelcomeUninstall 
+   if [ "$SGE_REMOTE_FLAG" != "REMOTE_EXECD_UNINSTALL" ]; then 
+      WelcomeUninstall 
 
-   if [ "$SGE_ROOT" = "" -o "$SGE_CELL" = "" ]; then
-      $INFOTEXT -wait -auto $AUTO "Your SGE_ROOT or SGE_CELL variable is not set!\n" \
-                                  "Enter SGE_ROOT and SGE_CELL in the following\n" \
-                                  "screens!\n\nHit, <RETURN> to continue!"
-      $CLEAR
-      ProcessSGERoot
+      if [ "$SGE_ROOT" = "" -o "$SGE_CELL" = "" ]; then
+         $INFOTEXT -wait -auto $AUTO "Your SGE_ROOT or SGE_CELL variable is not set!\n" \
+                                     "Enter SGE_ROOT and SGE_CELL in the following\n" \
+                                     "screens!\n\nHit, <RETURN> to continue!"
+         $CLEAR
+         ProcessSGERoot
 
-      $INFOTEXT -n "Please enter your SGE_CELL directory or use the default [default] >> "
+         $INFOTEXT -n "Please enter your SGE_CELL directory or use the default [default] >> "
 
-      SGE_CELL=`Enter default`
-      export SGE_CELL 
+         SGE_CELL=`Enter default`
+         export SGE_CELL 
+      fi
+      . $SGE_ROOT/$SGE_CELL/common/settings.sh
+      CheckHostNameResolving uninstall
+      if [ "$?" = "1" ]; then
+         $INFOTEXT "This host is not an admin host. Uninstallation is not allowed\nfrom this host!"
+         $INFOTEXT -log "This host is not an admin host. Uninstallation is not allowed\nfrom this host!"
+         MoveLog
+         exit 1
+      fi
+   else
+      . $SGE_ROOT/$SGE_CELL/common/settings.sh
    fi
-
-   . $SGE_ROOT/$SGE_CELL/common/settings.sh
 
    SourceSmfSupport
    
-   CheckHostNameResolving uninstall
-   if [ "$?" = "1" ]; then
-      $INFOTEXT "This host is not an admin host. Uninstallation is not allowed\nfrom this host!"
-      $INFOTEXT -log "This host is not an admin host. Uninstallation is not allowed\nfrom this host!"
-      MoveLog
-      exit 1
-   fi
    FetchHostname
    SetupWinSvc uninstall
    

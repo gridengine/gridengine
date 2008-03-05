@@ -133,7 +133,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
                     lList *acl_list, lList **user_list, lList **group_list, order_t *orders,
                     double *total_running_job_tickets, int *sort_hostlist, bool is_start,
                     bool is_reserve, bool is_schedule_based, lList **load_list, lList *hgrp_list, lList *rqs_list,
-                    lList *ar_list);
+                    lList *ar_list, sched_prof_t *pi);
 
 void st_set_flag_new_global_conf(bool new_value)
 {
@@ -411,6 +411,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
    lListElem *orig_job, *cat=NULL;
    lList *none_avail_queues = NULL;
    lList *consumable_load_list = NULL;
+   sched_prof_t pi;
 
    u_long32 queue_sort_method;
    u_long32 maxujobs;
@@ -702,9 +703,13 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
     */
    {
       bool is_immediate_array_job = false;
+      bool do_prof = prof_is_active(SGE_PROF_CUSTOM4);
+
       struct timeval now, later;
       double time;
       gettimeofday(&now, NULL);
+
+      memset(&pi, 0, sizeof(sched_prof_t));
 
       while ( (orig_job = lFirst(*(splitted_job_lists[SPLIT_PENDING]))) != NULL) {
          dispatch_t result = DISPATCH_NEVER_CAT;
@@ -788,7 +793,8 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
                   &consumable_load_list,
                   lists->hgrp_list,
                   lists->rqs_list,
-                  lists->ar_list);
+                  lists->ar_list, 
+                  do_prof?&pi:NULL);
             }
             lFreeElem(&job);
          }    
@@ -946,6 +952,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
    }
 
    if (prof_is_active(SGE_PROF_CUSTOM4)) {
+      static bool first_time = true;
       prof_stop_measurement(SGE_PROF_CUSTOM4, NULL);
       PROFILING((SGE_EVENT, "PROF: job dispatching took %.3f s (%d fast, %d comp, %d pe, %d res)",
                  prof_get_measurement_wallclock(SGE_PROF_CUSTOM4, false, NULL),
@@ -953,6 +960,22 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
                  fast_soft_runs,
                  comprehensive_runs,
                  nreservation));
+
+      if (first_time) {
+         PROFILING((SGE_EVENT, "PROF: parallel matching   %12.12s %12.12s %12.12s %12.12s %12.12s %12.12s %12.12s", 
+            "global", "rqs", "cqstatic", "hstatic", 
+               "qstatic", "hdynamic", "qdyn"));
+         PROFILING((SGE_EVENT, "PROF: sequential matching %12.12s %12.12s %12.12s %12.12s %12.12s %12.12s %12.12s", 
+            "global", "rqs", "cqstatic", "hstatic", 
+               "qstatic", "hdynamic", "qdyn"));
+         first_time = false;
+      }
+      PROFILING((SGE_EVENT, "PROF: parallel matching   %12d %12d %12d %12d %12d %12d %12d",
+         pi.par_global, pi.par_rqs, pi.par_cqstat, pi.par_hstat, 
+         pi.par_qstat, pi.par_hdyn, pi.par_qdyn));
+      PROFILING((SGE_EVENT, "PROF: sequential matching %12d %12d %12d %12d %12d %12d %12d",
+         pi.seq_global, pi.seq_rqs, pi.seq_cqstat, pi.seq_hstat, 
+         pi.seq_qstat, pi.seq_hdyn, pi.seq_qdyn));
    }
 
    lFreeList(&user_list);
@@ -991,7 +1014,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
                     lList *pe_list, lList *ckpt_list, lList *centry_list, lList *host_list, lList *acl_list,
                     lList **user_list, lList **group_list, order_t *orders, double *total_running_job_tickets,
                     int *sort_hostlist, bool is_start,  bool is_reserve, bool is_schedule_based, lList **load_list, lList *hgrp_list,
-                    lList *rqs_list, lList *ar_list)
+                    lList *rqs_list, lList *ar_list, sched_prof_t *pi)
 {
    lListElem *granted_el;
    dispatch_t result = DISPATCH_NOT_AT_TIME;
@@ -1003,14 +1026,13 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
 
    assignment_init(&a, job, ja_task, true);
    a.queue_list       = *queue_list;
-
-
    a.host_list        = host_list;
    a.centry_list      = centry_list;
    a.acl_list         = acl_list;
    a.hgrp_list        = hgrp_list;
    a.rqs_list         = rqs_list;
    a.ar_list          = ar_list;
+   a.pi               = pi;
 
    /* in reservation scheduling mode a non-zero duration always must be defined */
    if ( !job_get_duration(&a.duration, job) ) {

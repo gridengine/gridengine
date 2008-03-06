@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: access_list.5,v $     Last Update: $Date: 2007/07/19 08:17:16 $     Revision: $Revision: 1.6.2.3 $
+.\" $RCSfile: access_list.5,v $     Last Update: $Date: 2008/03/06 09:37:30 $     Revision: $Revision: 1.6.2.4 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH ACCESS_LIST 5 "$Date: 2007/07/19 08:17:16 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH ACCESS_LIST 5 "$Date: 2008/03/06 09:37:30 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 access_list \- xxQS_NAMExx access list file format
@@ -80,8 +80,9 @@ The current functional share of the department.
 The entries parameter contains the comma separated list of 
 those UNIX users (see \fIuser_name\fP in
 .M sge_types 1 )
-or UNIX user groups that are assigned to the access list 
-or the department. Only symbolic names are allowed.  A group 
+or those primary UNIX groups that are assigned to the access list 
+or the department. Only a user's primary UNIX group is used; secondary groups
+are ignored. Only symbolic names are allowed.  A group 
 is differentiated from a user name by prefixing the group name with a '@' sign. 
 Pure access lists allow listing any user or group in any access list.  
 .PP

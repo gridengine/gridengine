@@ -1,3 +1,9 @@
+AH-2008-03-06-0: Bugfix:    Access_list(5) man page not precise enough 
+                            with regards secondary/primary group(s)
+                 Issue:     2475
+                 Bugster:   6671963
+                 Review:    JG
+
 AH-2008-03-05-0: Enhancem:  Merged code for scheduler matching statistics 
                             profiling from DIST6dot1AR branch.
                  Review:    AA

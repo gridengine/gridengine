@@ -1893,78 +1893,63 @@ PortCollision()
    CheckPortsCollision $service
 
    #$ECHO "collision_flag is $collision_flag \n"
+   $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
 
    case "$collision_flag" in
 
       settings_services_env)
-         $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
-         $INFOTEXT "\nThe port for %s is set by SGE settings \n\n" \
-                   "by getservbyname and by shell environment. Enter Ctl-C \n " \
+         $INFOTEXT "\nThe port for %s is set by SGE settings\n" \
+                   "as service and by shell environment. Enter Ctl-C \n " \
                    "and modify the appropriate files to use a unique port. " $service
-         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-
       ;;
 
       env_only)
-         $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
-         $INFOTEXT "\nThe port for %s  is set by the shell environment. \n\n" \
+         $INFOTEXT "\nThe port for %s  is set by the shell environment.\n" \
                    "Enter Ctl-C and modify the appropriate files \n " \
                    "if you wish to use a different port. " $service
-         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-
       ;;
+
       settings_only)
-         $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
-         $INFOTEXT "\nThe port for %s  is set by SGE settings. \n\n" \
+         $INFOTEXT "\nThe port for %s  is set by SGE settings.\n" \
                    "Enter Ctl-C and modify the appropriate files \n " \
                    "if you wish to use a different port. " $service
-         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-
       ;;
+
       services_only)
-         $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
-         $INFOTEXT "\nThe port for %s  is set by getservbyname. \n\n" \
+         $INFOTEXT "\nThe port for %s  is set as service.\n" \
                    "Enter Ctl-C and modify the appropriate files \n " \
                    "if you wish to use a different port. " $service
-         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-
       ;;
-
 
       settings_services)
-         $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
-         $INFOTEXT "\nThe port for %s is set BOTH by SGE settings \n\n" \
-                   "and by getservbyname. Enter Ctl-C \n " \
+         $INFOTEXT "\nThe port for %s is set BOTH by SGE settings\n" \
+                   "and as service. Enter Ctl-C \n " \
                    "and modify the appropriate files to use a unique port. " $service
-         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-
       ;;
 
-     services_env)
-         $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
-         $INFOTEXT "\nThe port for %s is set BOTH by getservbyname \n\n" \
+      services_env)
+         $INFOTEXT "\nThe port for %s is set BOTH as service\n" \
                    "and by the SGE settings. Enter Ctl-C \n " \
                    "and modify the appropriate files to use a unique port. " $service
-         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
 
       ;;
 
       settings_env)
-         $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
-         $INFOTEXT "\nThe port for %s is set BOTH by SGE settings \n\n" \
+         $INFOTEXT "\nThe port for %s is set BOTH by SGE settings\n" \
                    "and by the shell environment. Enter Ctl-C \n " \
                    "and modify the appropriate files to use a unique port. " $service
-         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-
       ;;
 
       *)
          $INFOTEXT -u "\nGrid Engine general settings "
          $INFOTEXT "\nThe SGE general settings are not set \n\n" 
-         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
        ;;
 
    esac
+         $INFOTEXT "\n\nTo set the ports as service, you have to configure >/etc/services< or\nthe used >nis, dns, ...< network services.\n(You will find the used resources/network services in nsswitch.conf file)"
+         $INFOTEXT "\nTo get the ports from environment or settings file, you have to set the environment\nvariable or source the settings file, if available, before starting the\ninstallation."
+         $INFOTEXT "The port settings from environment will override the ports got from services.\n"
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
    $CLEAR
 }
 

@@ -250,7 +250,7 @@ CheckHostNameResolving()
    while [ $done = false ]; do
       $CLEAR
       
-      PortCollision $SGE_QMASTER_SRV
+      PortCollision $SGE_EXECD_SRV
 
       $INFOTEXT -u "\nChecking hostname resolving"
 

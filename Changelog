@@ -1,3 +1,8 @@
+MD-2008-03-06-0: Bugfix:    Changed some script output to increase the 
+                            userbility. Text was hard to understand.
+                 Changed:   installation
+                 Review:    JG
+ 
 LP-2008-03-04-0: Bugfix:    Uninstall does not remove the SGE_STARTUP_SCRIPT
                  Bugfix:    qmaster crashes when SGE_ND=1, dl 2 and BDB server 
                             spooling

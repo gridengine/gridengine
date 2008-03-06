@@ -52,11 +52,21 @@ public interface GridCA {
      *  Create private key and certificate for a user.
      *
      *  @param username  name of the user
-     *  @param group     group of the user
+     *  @param gecos     gecos of the user
+     *  @param email     email address of the user
+     *  @deprecated the gecos field is no longer used, use @{link #createUser(String,String)} instead
+     *  @throws GridCAException if the creation of the private key or the certificate fails
+     */
+    public void createUser(String username, String gecos, String email) throws GridCAException;
+
+    /**
+     *  Create private key and certificate for a user.
+     *
+     *  @param username  name of the user
      *  @param email     email address of the user
      *  @throws GridCAException if the creation of the private key or the certificate fails
      */
-    public void createUser(String username, String group, String email) throws GridCAException;
+    public void createUser(String username, String email) throws GridCAException;
 
     /**
      *  Get the X.509 certificate of a user.

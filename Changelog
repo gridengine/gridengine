@@ -1,3 +1,9 @@
+AA-2008-03-06-0: Bugfix:    - missing setDefault* functions in ClusterQuueue(Impl)
+                            - sge_ca script corrections
+                            - jgdi crash fix due to logging
+                 Changed:   jgdi, sge_ca
+                 Review:    RH
+
 MD-2008-03-06-0: Bugfix:    o Changed some script output to increase the 
                             usability. Text was hard to understand.
                             o Some typos

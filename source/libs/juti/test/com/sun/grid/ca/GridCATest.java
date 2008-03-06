@@ -113,7 +113,7 @@ public class GridCATest extends TestCase {
             String username = "test";
             initCA();
 
-            ca.createUser(username, "test", "test@blubber");
+            ca.createUser(username, "test@blubber");
 
             X509Certificate cert = ca.getCertificate(username);
 

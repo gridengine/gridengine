@@ -255,7 +255,7 @@ public class Main {
         try {
             switch(type) {
                 case TYPE_USER:
-                    ca.createUser(userSpec[0], userSpec[1], userSpec[2]);
+                    ca.createUser(userSpec[0], userSpec[2]);
                     break;
                 case TYPE_DAEMON:
                     ca.createDaemon(userSpec[0], userSpec[1], userSpec[2]);

@@ -110,14 +110,14 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
     public JGDIJMXMBean getProxy() {
         return proxy;
     }
-    
+
     /**
      * Set up the ssl context
      * @param caTop  ca top directory if the Grid Engine CA ($SGE_ROOT/$SGE_CELL/common/sgeCA
      * @param ks     keystore of the user
      * @param pw     password for the keystore
      */
-    public static void setupSSL(File caTop, KeyStore ks, char [] pw) {
+    public static void setupSSL(File caTop, KeyStore ks, char[] pw) {
         SSLHelper.getInstanceByCaTop(caTop).setKeystore(ks, pw);
     }
 
@@ -127,10 +127,10 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
      * @param ks     keystore file of the user
      * @param pw     password for the keystore
      */
-    public static void setupSSL(File caTop, File ks, char [] pw) {
+    public static void setupSSL(File caTop, File ks, char[] pw) {
         SSLHelper.getInstanceByCaTop(caTop).setKeystore(ks, pw);
     }
-    
+
     /**
      * Reset the SSL setup.
      * 
@@ -272,8 +272,8 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
                 throw new JGDIException(ex, "jgdi mbean not active in qmaster");
             } catch (IOException ex) {
                 close();
-                Throwable realError = null; ;
-                if( (realError = findCause(ex, SSLHandshakeException.class)) != null) {
+                Throwable realError = null;
+                if ((realError = findCause(ex, SSLHandshakeException.class)) != null) {
                     throw new JGDIException(realError, "SSL error: " + realError.getLocalizedMessage());
                 } else if ((realError = findCause(ex, java.net.ConnectException.class)) != null) {
                     throw new JGDIException(realError, "Connection refused");
@@ -282,10 +282,10 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
             }
         }
     }
-    
+
     private Throwable findCause(Throwable ex, Class<? extends Exception> type) {
-        for(Throwable t = ex; t != null; t = t.getCause()) {
-            if(type.isAssignableFrom(t.getClass())) {
+        for (Throwable t = ex; t != null; t = t.getCause()) {
+            if (type.isAssignableFrom(t.getClass())) {
                 return t;
             }
         }
@@ -467,8 +467,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
             return null;
         }
     }
-    
-    
+
     /**
      * Create JMX credentials for password less authentication with a keystore
      * @param ks        the keystore

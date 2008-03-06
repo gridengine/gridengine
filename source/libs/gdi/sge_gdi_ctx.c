@@ -1265,8 +1265,8 @@ static int sge_gdi_ctx_class_is_alive(sge_gdi_ctx_class_t *thiz)
    }
 
    if (status != NULL) {
-      DEBUG((SGE_EVENT,MSG_GDI_ENDPOINT_UPTIME_UU, sge_u32c( status->runtime) , 
-             sge_u32c( status->application_status) ));
+      DEBUG((SGE_EVENT,MSG_GDI_ENDPOINT_UPTIME_UU, sge_u32c(status->runtime) , 
+             sge_u32c(status->application_status)));
       cl_com_free_sirm_message(&status);
    }
  

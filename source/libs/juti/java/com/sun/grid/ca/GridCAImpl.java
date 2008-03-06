@@ -227,7 +227,7 @@ public class GridCAImpl implements GridCA {
                 }
             }
         } finally {
-            if(setLock) {
+            if (setLock) {
                 try {
                     lock.release();
                 } catch (IOException ex) {
@@ -262,19 +262,33 @@ public class GridCAImpl implements GridCA {
      *  Create private key and certificate for a user.
      *
      *  @param username  name of the user
-     *  @param group     group of the user
+     *  @param gecos     gecos field of the user
+     *  @param email     email address of the user
+     *  @deprecated the gecos field is no longer used, use @{link #createUser(String,String)} instead
+     *  @throws GridCAException if the creation of the private key or the certificate fails
+     */
+    public void createUser(String username, String gecos, String email) throws GridCAException {
+        LOGGER.entering("GridCAImpl", "createUser");
+        createUser(username, email);
+        LOGGER.exiting("GridCAImpl", "createUser");
+    }
+    /**
+     *  Create private key and certificate for a user.
+     *
+     *  @param username  name of the user
      *  @param email     email address of the user
      *  @throws GridCAException if the creation of the private key or the certificate fails
      */
-    public void createUser(String username, String group, String email) throws GridCAException {
+    public void createUser(String username, String email) throws GridCAException {
         LOGGER.entering("GridCAImpl", "createUser");
         Expect pb = createProcess();
         pb.command().add("-user");
-        pb.command().add(username + ":" + group + ":" + email);
+        pb.command().add(username + ":" + username + ":" + email);
 
         execute(pb);
         LOGGER.exiting("GridCAImpl", "createUser");
     }
+    
     
     /**
      * Create private key and certificate for a sdm daemon.

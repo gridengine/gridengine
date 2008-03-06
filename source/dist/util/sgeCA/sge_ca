@@ -289,10 +289,11 @@ InitCA()
 RequestCert()
 {
     # create a certificate request
-    $REQ -new -keyout $outdir/$newreq -out $outdir/$newreq $DAYS
+    $REQ -new -keyout $outdir/$newkey -out $outdir/$newreq $DAYS
     RET=$?
     if [ $RET = 0 ]; then
-      $INFOTEXT "Request (and private key) is in %s" $outdir/$newreq
+      $INFOTEXT "Request is in %s" $outdir/$newreq
+      $INFOTEXT "Private key is in %s" $outdir/$newkey
     else
       PrintErrorAndExit 1 "Creating a certificate request failed"
     fi
@@ -842,9 +843,8 @@ MakeSysKeystore()
    certfile=$CATOP/certs/cert.pem
    if [ -r $certfile ]; then 
       ksoutfile=$CALOCALTOP/private/keystore
-      touch $ksoutfile
-      chown $ADMINUSER $ksoutfile
-      chmod 600 $ksoutfile
+      ExecuteAsAdmin touch $ksoutfile
+      ExecuteAsAdmin chmod 600 $ksoutfile
       MakeKeystore sge_daemon "SGEDaemon"
    fi
    if [ "$remove_kspwfile" = "true" ]; then
@@ -1449,10 +1449,13 @@ RenewCert()
       # The chown can only be done for user certificates
       # sdm_daemon certificate are owned by $ADMINUSER
       if [ $1 = "user" ]; then
-         ExecChown -R $2 $KEYDIR
-         if [ $? != 0 ]; then
-            PrintError "chown to %s failed (%s)" $2 $KEYDIR
-            return 1
+         id $2  > /dev/null 2>&1
+         if [ $? = 0 ]; then
+            ExecChown -R $2 $KEYDIR
+            if [ $? != 0 ]; then
+               PrintError "chown to %s failed (%s)" $2 $KEYDIR
+               return 1
+            fi
          fi
       fi
    fi
@@ -1763,6 +1766,7 @@ AUTO="false"
 # CommandLine Argument Parsing
 #
 WHICH="undef"
+newkey=newkey.pem
 newreq=newreq.pem
 newcert=newcert.pem
 user=""
@@ -1771,7 +1775,7 @@ indir=.
 userfile=""
 passinfile=""
 pkcs12outdir=""
-md="-md5"
+md="-md md5"
 nodes="-nodes"
 ksoutfile=""
 kspwfile=""
@@ -1983,7 +1987,7 @@ while [ $ARGC != 0 ]; do
       ARGC=`expr $ARGC - 1`
       ;;
    -sha1)
-      md="-sha1"
+      md="-md sha1"
       ;;
    -encryptkey)
       nodes=""
@@ -2090,9 +2094,9 @@ fi
 
 export ADMINUSER CATOP CALOCALTOP CAHOST
 
-REQ="$OPENSSL req $md $nodes"
+REQ="$OPENSSL req $nodes"
 
-CA="$OPENSSL ca -keyfile $CALOCALTOP/private/$CAKEY -cert $CATOP/$CACERT \
+CA="$OPENSSL ca $md -keyfile $CALOCALTOP/private/$CAKEY -cert $CATOP/$CACERT \
              -outdir $CATOP/newcerts"
 
 VERIFY="$OPENSSL verify"

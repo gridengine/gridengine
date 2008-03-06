@@ -219,6 +219,7 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeInit(JNIEnv
          **       to suppress any console log output
          */
          log_state_set_log_verbose(0);
+         sge_gdi_set_thread_local_ctx(ctx);
    
          if (ctx == NULL) {
             pthread_mutex_unlock(&sge_gdi_ctx_mutex);
@@ -265,6 +266,7 @@ error:
    
    lFreeList(&alp);
    
+   sge_gdi_set_thread_local_ctx(NULL);
    if (ret < 0) {
       if (ctx_index >= 0) {
          pthread_mutex_lock(&sge_gdi_ctx_mutex);

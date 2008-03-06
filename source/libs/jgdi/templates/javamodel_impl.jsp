@@ -646,7 +646,22 @@ public class <%=classname%> extends <%
             return getDefault<%=gsname%>();
         }
     }
-   
+<%   
+   if (mapAttr.getDefaultKey() != null) {
+%>
+    /**
+     *  Set <code><%=mapAttr.getValueName()%></code> attribute for the default
+     *  <code><%=mapAttr.getKeyName()%></code> (<%=mapAttr.getDefaultKey()%>).
+     *
+     *  @param <%=mapAttr.getValueName()%>  the <%=mapAttr.getValueName()%> attribute
+     */
+    public void setDefault<%=gsname%>(<%=valueClassName%> <%=mapAttr.getValueName()%>) {
+        put<%=gsname%>("<%=mapAttr.getDefaultKey()%>", <%=mapAttr.getValueName()%>);
+    }
+<%    
+    }
+%>
+
     /**
      *  <p>remove the attribute <%=attrName%> for a <%=mapAttr.getKeyName()%>.</p>
      *

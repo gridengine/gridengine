@@ -189,7 +189,7 @@ GetQmasterSpoolDir()
 
       if [ $euid = 0 ]; then
          if [ $ADMINUSER = default ]; then
-            $INFOTEXT "User >root< on this host must have read/write accessto the qmaster\n" \
+            $INFOTEXT "User >root< on this host must have read/write access to the qmaster\n" \
                       "spool directory.\n"
          else
             $INFOTEXT "The admin user >%s< must have read/write access\n" \
@@ -254,7 +254,7 @@ SetPermissions()
                       "verify and set the file permissions of your distribution (enter: y)\n\n" \
                       "In some cases, eg: the binaries are stored on a NTFS or on any other\n" \
                       "filesystem, which provides additional file permissions, the UNIX file\n" \
-                      "permissions can be wrong. In this case we would advise to verfiy and\n" \
+                      "permissions can be wrong. In this case we would advise to verify and\n" \
                       "to set the file permissions (enter: n) (y/n) [n] >> "
          else
             $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
@@ -609,7 +609,7 @@ SelectHostNameResolving()
    if [ $AUTO = "true" ]; then
      IGNORE_FQDN_DEFAULT=$HOSTNAME_RESOLVING
      $INFOTEXT -log "Using >%s< as IGNORE_FQDN_DEFAULT." "$IGNORE_FQDN_DEFAULT"
-     $INFOTEXT -log "If it's >true<, the domainname will be ignored."
+     $INFOTEXT -log "If it's >true<, the domain name will be ignored."
      
    else
      $CLEAR
@@ -624,10 +624,10 @@ SelectHostNameResolving()
                "Are all hosts of your cluster in a single DNS domain (y/n) [y] >> "
      if [ $? = 0 ]; then
         IGNORE_FQDN_DEFAULT=true
-        $INFOTEXT "Ignoring domainname when comparing hostnames."
+        $INFOTEXT "Ignoring domain name when comparing hostnames."
      else
         IGNORE_FQDN_DEFAULT=false
-        $INFOTEXT "The domainname is not ignored when comparing hostnames."
+        $INFOTEXT "The domain name is not ignored when comparing hostnames."
      fi
      $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
      $CLEAR
@@ -728,9 +728,9 @@ PrintBootstrap()
    $ECHO "# Version: $SGE_VERSION"
    $ECHO "#"
    if [ $ADMINUSER != default ]; then
-      $ECHO "admin_user              $ADMINUSER"
+      $ECHO "admin_user             $ADMINUSER"
    else
-      $ECHO "admin_user              none"
+      $ECHO "admin_user             none"
    fi
    $ECHO "default_domain          $CFG_DEFAULT_DOMAIN"
    $ECHO "ignore_fqdn             $IGNORE_FQDN_DEFAULT"
@@ -1138,7 +1138,7 @@ CreateSettingsFile()
 
 
 #--------------------------------------------------------------------------
-# InitCA Create CA and initialize it for deamons and users
+# InitCA Create CA and initialize it for daemons and users
 #
 InitCA()
 {
@@ -1204,10 +1204,8 @@ StartQmaster()
                 "configuration! Installation failed!"
       $INFOTEXT -log "sge_qmaster daemon didn't start. Please check your\n" \
                      "autoinstall configuration file! Installation failed!"
-      if [ $AUTO = true ]; then
-         MoveLog
-      fi
 
+      MoveLog
       exit 1
    fi
    $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
@@ -1997,7 +1995,7 @@ GetExecdPort()
        comm_port_max=65500
     fi
 
-    PortCollision $SGE_QMASTER_SRV
+    PortCollision $SGE_EXECD_SRV
 
     CheckServiceAndPorts service $SGE_EXECD_SRV
 
@@ -2040,7 +2038,7 @@ GetExecdPort()
                 "   sge_execd <port_number>/tcp\n\n" \
                 "to your services database and make sure to use an unused port number.\n"
 
-         $INFOTEXT "Make sure to use a different port number for the Executionhost\n" \
+         $INFOTEXT "Make sure to use a different port number for the Execution host\n" \
                    "as on the qmaster machine\n"
          $INFOTEXT "The qmaster port SGE_QMASTER_PORT = %s\n" $SGE_QMASTER_PORT
 
@@ -2322,79 +2320,60 @@ AddWindowsAdmin()
 #-------------------------------------------------------------------------
 # PortCollision: Is there port collison for service, SGE_QMASTER or
 #                  SGE_EXECD
-PortCollision() 
+PortCollision()
 {
-   
-   service=$1 
+
+   service=$1
    # Call CheckPortsCollision conflict and depending on $ret, print out
    # appropriate text
 
    CheckPortsCollision $service
 
    #$ECHO "collision_flag is $collision_flag \n"
+   $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
 
    case "$collision_flag" in
 
       settings_services_env)
-         $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
-         $INFOTEXT "\nThe port for %s is set by SGE settings \n\n" \
-                   "by getservbyname and by shell environment. Enter Ctl-C \n " \
+         $INFOTEXT "\nThe port for %s is set by SGE settings\n" \
+                   "as service and by shell environment. Enter Ctl-C \n " \
                    "and modify the appropriate files to use a unique port. " $service
-         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-
       ;;
 
       env_only)
-         $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
-         $INFOTEXT "\nThe port for %s  is set by the shell environment. \n\n" \
+         $INFOTEXT "\nThe port for %s  is set by the shell environment.\n" \
                    "Enter Ctl-C and modify the appropriate files \n " \
                    "if you wish to use a different port. " $service
-         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-
       ;;
+
       settings_only)
-         $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
-         $INFOTEXT "\nThe port for %s  is set by SGE settings. \n\n" \
+         $INFOTEXT "\nThe port for %s  is set by SGE settings.\n" \
                    "Enter Ctl-C and modify the appropriate files \n " \
                    "if you wish to use a different port. " $service
-         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-  
       ;;
       services_only)
-         $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
-         $INFOTEXT "\nThe port for %s  is set by getservbyname. \n\n" \
+         $INFOTEXT "\nThe port for %s  is set as service.\n" \
                    "Enter Ctl-C and modify the appropriate files \n " \
                    "if you wish to use a different port. " $service
-         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-
       ;;
-
 
       settings_services)
-         $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
-         $INFOTEXT "\nThe port for %s is set BOTH by SGE settings \n\n" \
-                   "and by getservbyname. Enter Ctl-C \n " \
+         $INFOTEXT "\nThe port for %s is set BOTH by SGE settings\n" \
+                   "and as service. Enter Ctl-C \n " \
                    "and modify the appropriate files to use a unique port. " $service
-         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-
       ;;
 
-     services_env)
-         $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
-         $INFOTEXT "\nThe port for %s is set BOTH by getservbyname \n\n" \
+      services_env)
+         $INFOTEXT "\nThe port for %s is set BOTH as service\n" \
                    "and by the SGE settings. Enter Ctl-C \n " \
                    "and modify the appropriate files to use a unique port. " $service
-         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
 
       ;;
 
       settings_env)
-         $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
-         $INFOTEXT "\nThe port for %s is set BOTH by SGE settings \n\n" \
+         $INFOTEXT "\nThe port for %s is set BOTH by SGE settings\n" \
                    "and by the shell environment. Enter Ctl-C \n " \
                    "and modify the appropriate files to use a unique port. " $service
-         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-
       ;;
 
       *)
@@ -2404,5 +2383,9 @@ PortCollision()
        ;;
 
    esac
+         $INFOTEXT "\n\nTo set the ports as service, you have to configure >/etc/services< or\nthe used >nis, dns, ...< network services.\n(You will find the used resources/network services in nsswitch.conf file)"
+         $INFOTEXT "\nTo get the ports from environment or settings file, you have to set the environment\nvariable or source the settings file, if available, before starting the\ninstallation."
+         $INFOTEXT "The port settings from environment will override the ports got from services.\n"
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
    $CLEAR
 }

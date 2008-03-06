@@ -248,9 +248,10 @@ CheckHostNameResolving()
    done=false
    . $SGE_ROOT/util/install_modules/inst_qmaster.sh
    while [ $done = false ]; do
-      PortCollision $SGE_QMASTER_SRV
-
       $CLEAR
+      
+      PortCollision $SGE_EXECD_SRV
+
       $INFOTEXT -u "\nChecking hostname resolving"
 
       errmsg=""

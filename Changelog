@@ -1,3 +1,9 @@
+MD-2008-03-06-0: Bugfix:    o Changed some script output to increase the 
+                            userbility. Text was hard to understand.
+                            o Some typos
+                 Changed:   installation
+                 Review:    JG
+
 AH-2008-03-06-0: Bugfix:    Access_list(5) man page not precise enough 
                             with regards secondary/primary group(s)
                  Issue:     2475

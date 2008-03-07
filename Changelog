@@ -6,7 +6,7 @@ AH-2008-03-06-1: Bugfix:    Access_list(5) man page not precise enough
                  Review:    JG
 
 MD-2008-03-06-0: Bugfix:    Changed some script output to increase the 
-                            userbility. Text was hard to understand.
+                            usability. Text was hard to understand.
                  Changed:   installation
                  Review:    JG
  

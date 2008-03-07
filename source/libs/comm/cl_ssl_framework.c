@@ -87,6 +87,7 @@
 #include "cl_commlib.h"
 #include "msg_commlib.h"
 #include "sge_unistd.h"
+#include "sge_os.h"
 
 #if (OPENSSL_VERSION_NUMBER < 0x0090700fL) 
 #define OPENSSL_CONST
@@ -166,6 +167,7 @@ static int                  (*cl_com_ssl_func__SSL_connect)                     
 static int                  (*cl_com_ssl_func__SSL_shutdown)                        (SSL *s);
 static int                  (*cl_com_ssl_func__SSL_clear)                           (SSL *s);
 static void                 (*cl_com_ssl_func__SSL_free)                            (SSL *ssl);
+static int                  (*cl_com_ssl_func__SSL_get_fd)                          (const SSL *ssl);
 static int                  (*cl_com_ssl_func__SSL_get_error)                       (SSL *s,int ret_code);
 static long                 (*cl_com_ssl_func__SSL_get_verify_result)               (SSL *ssl);
 static X509*                (*cl_com_ssl_func__SSL_get_peer_certificate)            (SSL *s);
@@ -926,6 +928,7 @@ static int cl_com_ssl_destroy_symbol_table(void) {
       cl_com_ssl_func__SSL_shutdown   = NULL;
       cl_com_ssl_func__SSL_clear   = NULL;
       cl_com_ssl_func__SSL_free   = NULL;
+      cl_com_ssl_func__SSL_get_fd = NULL;
       cl_com_ssl_func__SSL_get_error   = NULL;
       cl_com_ssl_func__SSL_get_verify_result   = NULL;
       cl_com_ssl_func__SSL_get_peer_certificate   = NULL;
@@ -1287,6 +1290,13 @@ static int cl_com_ssl_build_symbol_table(void) {
       cl_com_ssl_func__SSL_free = (void (*)(SSL *ssl))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__SSL_free == NULL) {
          CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
+         had_errors++;
+      }
+
+      func_name = "SSL_get_fd";
+      cl_com_ssl_func__SSL_get_fd = (int (*)(const SSL *ssl))dlsym(cl_com_ssl_crypto_handle, func_name);
+      if (cl_com_ssl_func__SSL_get_fd == NULL) {
+         CL_LOG_STR(CL_LOG_ERROR, "dlsym error: can't get function address:", func_name);
          had_errors++;
       }
 
@@ -1840,6 +1850,7 @@ static int cl_com_ssl_build_symbol_table(void) {
       cl_com_ssl_func__SSL_shutdown                        = SSL_shutdown;
       cl_com_ssl_func__SSL_clear                           = SSL_clear;
       cl_com_ssl_func__SSL_free                            = SSL_free;
+      cl_com_ssl_func__SSL_get_fd                          = SSL_get_fd;
       cl_com_ssl_func__SSL_get_error                       = SSL_get_error;
       cl_com_ssl_func__SSL_get_verify_result               = SSL_get_verify_result;
       cl_com_ssl_func__SSL_get_peer_certificate            = SSL_get_peer_certificate;
@@ -3126,6 +3137,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout) {
    }
 
    if ( connection->connection_sub_state == CL_COM_OPEN_INIT) {
+      int ret;
       int on = 1;
       char* unique_host = NULL;
       struct timeval now;
@@ -3160,7 +3172,17 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout) {
             }
             break;
          }
-      }    
+      }
+
+      ret = sge_dup_fd_above_stderr(&private->sockfd);
+      if (ret != 0) {
+         CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = ", ret);
+         shutdown(private->sockfd, 2);
+         close(private->sockfd);
+         private->sockfd = -1;
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE);
+         return CL_RETVAL_DUP_SOCKET_FD_ERROR;
+      }
 
       if (private->sockfd >= FD_SETSIZE) {
           CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");
@@ -3579,6 +3601,7 @@ static int cl_com_ssl_connection_request_handler_setup_finalize(cl_com_connectio
 #endif
 #define __CL_FUNCTION__ "cl_com_ssl_connection_request_handler_setup()"
 int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection, cl_bool_t only_prepare_service) {
+   int ret;
    int sockfd = 0;
    struct sockaddr_in serv_addr;
    cl_com_ssl_private_t* private = NULL;
@@ -3611,6 +3634,17 @@ int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection,
    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
       CL_LOG(CL_LOG_ERROR,"could not create socket");
       return CL_RETVAL_CREATE_SOCKET;
+   }
+
+   ret = sge_dup_fd_above_stderr(&sockfd);
+   if (ret != 0) {
+      CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = ", ret);
+      shutdown(sockfd, 2);
+      close(sockfd);
+      sockfd = -1;
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, 
+                              MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE);
+      return CL_RETVAL_DUP_SOCKET_FD_ERROR;
    }
 
    if (sockfd >= FD_SETSIZE) {
@@ -3720,68 +3754,79 @@ int cl_com_ssl_connection_request_handler(cl_com_connection_t* connection,cl_com
    memset((char *) &cli_addr, 0, sizeof(cli_addr));
    new_sfd = accept(server_fd, (struct sockaddr *) &cli_addr, &fromlen);
    if (new_sfd > -1) {
-       char* resolved_host_name = NULL;
-       cl_com_ssl_private_t* tmp_private = NULL;
+      char* resolved_host_name = NULL;
+      cl_com_ssl_private_t* tmp_private = NULL;
 
-       if (new_sfd >= FD_SETSIZE) {
-          CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");
-          shutdown(new_sfd, 2);
-          close(new_sfd);
-          cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE );
-          return CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT;
-       }
+      retval = sge_dup_fd_above_stderr(&new_sfd);
+      if (retval != 0) {
+         CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = ", retval);
+         shutdown(new_sfd, 2);
+         close(new_sfd);
+         new_sfd = -1;
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, 
+                                 MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE);
+         return CL_RETVAL_DUP_SOCKET_FD_ERROR;
+      }
 
-       cl_com_cached_gethostbyaddr(&(cli_addr.sin_addr), &resolved_host_name ,NULL, NULL); 
-       if (resolved_host_name != NULL) {
-          CL_LOG_STR(CL_LOG_INFO,"new connection from host", resolved_host_name  );
-       } else {
-          CL_LOG(CL_LOG_WARNING,"could not resolve incoming hostname");
-       }
+      if (new_sfd >= FD_SETSIZE) {
+         CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");
+         shutdown(new_sfd, 2);
+         close(new_sfd);
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE );
+         return CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT;
+      }
 
-       fcntl(new_sfd, F_SETFL, O_NONBLOCK);         /* HP needs O_NONBLOCK, was O_NDELAY */
-       sso = 1;
+      cl_com_cached_gethostbyaddr(&(cli_addr.sin_addr), &resolved_host_name ,NULL, NULL); 
+      if (resolved_host_name != NULL) {
+         CL_LOG_STR(CL_LOG_INFO,"new connection from host", resolved_host_name  );
+      } else {
+         CL_LOG(CL_LOG_WARNING,"could not resolve incoming hostname");
+      }
+
+      fcntl(new_sfd, F_SETFL, O_NONBLOCK);         /* HP needs O_NONBLOCK, was O_NDELAY */
+      sso = 1;
 #if defined(SOLARIS) && !defined(SOLARIS64)
-       if (setsockopt(new_sfd, IPPROTO_TCP, TCP_NODELAY, (const char *) &sso, sizeof(int)) == -1) {
-          CL_LOG(CL_LOG_ERROR,"could not set TCP_NODELAY");
-       }
+      if (setsockopt(new_sfd, IPPROTO_TCP, TCP_NODELAY, (const char *) &sso, sizeof(int)) == -1) {
+         CL_LOG(CL_LOG_ERROR,"could not set TCP_NODELAY");
+      }
 #else
-       if (setsockopt(new_sfd, IPPROTO_TCP, TCP_NODELAY, &sso, sizeof(int))== -1) { 
-          CL_LOG(CL_LOG_ERROR,"could not set TCP_NODELAY");
-       }
+      if (setsockopt(new_sfd, IPPROTO_TCP, TCP_NODELAY, &sso, sizeof(int))== -1) { 
+         CL_LOG(CL_LOG_ERROR,"could not set TCP_NODELAY");
+      }
 #endif
-       /* here we can investigate more information about the client */
-       /* ntohs(cli_addr.sin_port) ... */
+      /* here we can investigate more information about the client */
+      /* ntohs(cli_addr.sin_port) ... */
 
-       tmp_connection = NULL;
-       /* setup a ssl connection where autoclose is still undefined */
-       if ( (retval=cl_com_ssl_setup_connection(&tmp_connection, 
-                                                private->server_port,
-                                                private->connect_port,
-                                                connection->data_flow_type,
-                                                CL_CM_AC_UNDEFINED,
-                                                connection->framework_type,
-                                                connection->data_format_type,
-                                                connection->tcp_connect_mode,
-                                                private->ssl_setup)) != CL_RETVAL_OK) {
-          cl_com_ssl_close_connection(&tmp_connection); 
-          if (resolved_host_name != NULL) {
-             free(resolved_host_name);
-          }
-          shutdown(new_sfd, 2);
-          close(new_sfd);
-          return retval;
-       }
+      tmp_connection = NULL;
+      /* setup a ssl connection where autoclose is still undefined */
+      if ( (retval=cl_com_ssl_setup_connection(&tmp_connection, 
+                                               private->server_port,
+                                               private->connect_port,
+                                               connection->data_flow_type,
+                                               CL_CM_AC_UNDEFINED,
+                                               connection->framework_type,
+                                               connection->data_format_type,
+                                               connection->tcp_connect_mode,
+                                               private->ssl_setup)) != CL_RETVAL_OK) {
+         cl_com_ssl_close_connection(&tmp_connection); 
+         if (resolved_host_name != NULL) {
+            free(resolved_host_name);
+         }
+         shutdown(new_sfd, 2);
+         close(new_sfd);
+         return retval;
+      }
 
-       tmp_connection->client_host_name = resolved_host_name; /* set resolved hostname of client */
+      tmp_connection->client_host_name = resolved_host_name; /* set resolved hostname of client */
 
-       /* setup cl_com_ssl_private_t */
-       tmp_private = cl_com_ssl_get_private(tmp_connection);
-       if (tmp_private != NULL) {
-          tmp_private->sockfd = new_sfd;   /* fd from accept() call */
-          tmp_private->connect_in_port = ntohs(cli_addr.sin_port);
-       }
-       *new_connection = tmp_connection;
-       return CL_RETVAL_OK;
+      /* setup cl_com_ssl_private_t */
+      tmp_private = cl_com_ssl_get_private(tmp_connection);
+      if (tmp_private != NULL) {
+         tmp_private->sockfd = new_sfd;   /* fd from accept() call */
+         tmp_private->connect_in_port = ntohs(cli_addr.sin_port);
+      }
+      *new_connection = tmp_connection;
+      return CL_RETVAL_OK;
    }
    return CL_RETVAL_OK;
 }

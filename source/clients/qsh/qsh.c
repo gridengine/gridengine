@@ -2008,7 +2008,7 @@ int main(int argc, char **argv)
                   VERBOSE_LOG((stderr, MSG_QSH_ESTABLISHINGREMOTESESSIONTO_SS, 
                      client_name, host));
                   VERBOSE_LOG((stderr, "\n")); 
-            
+           
                   if (nostdin == 1) {
                      DPRINTF(("closing STDIN\n"));
                      close(STDIN_FILENO);

@@ -798,3 +798,47 @@ void sge_close_all_fds(fd_set *keep_open)
    DRETURN_VOID;
 }  
 
+/****** sge_os/sge_dup_fd_above_stderr() **************************************
+*  NAME
+*     sge_dup_fd_above_stderr() -- Make sure a fd is >=3
+*
+*  SYNOPSIS
+*     int sge_dup_fd_above_stderr(int *fd) 
+*
+*  FUNCTION
+*     This function checks if the given fd is <3, if yes it dups it to be >=3.
+*     The fd obtained by open(), socket(), pipe(), etc. can be <3 if stdin, 
+*     stdout and/or stderr are closed. As it is difficult for an application
+*     to determine if the first three fds are connected to the std-handles or
+*     something else and because many programmers just rely on these three fds
+*     to be connected to the std-handles, this function makes sure that it 
+*     doesn't use these three fds.
+*
+*  INPUTS
+*     int *fd - pointer to the fd which is to be checked and dupped.
+*
+*  RESULT
+*     int - 0: Ok
+*          >0: errno
+*
+*  SEE ALSO
+*******************************************************************************/
+int sge_dup_fd_above_stderr(int *fd) 
+{
+   if (fd == NULL) {
+      return EINVAL;
+   }
+   /* 
+    * make sure the provided *fd is not 0, 1 or 2  - anyone can close
+    * stdin, stdout or stderr without checking what these really are
+    */
+   if (*fd < 3) {
+      int tmp_fd;
+      if ((tmp_fd = fcntl(*fd, F_DUPFD, 3)) == -1) {
+         return errno;
+      } 
+      close(*fd);
+      *fd = tmp_fd;
+   }
+   return 0;
+}

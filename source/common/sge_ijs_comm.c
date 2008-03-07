@@ -309,15 +309,17 @@ int comm_open_connection(bool                 b_server,
       DEXIT;
       return COMM_INVALID_PARAMETER;
    }
+
    if (b_secure == true) {
 #ifdef SECURE
-      const char       *progname               = "pty";
+      const char *progname    = "pty";
       communication_framework = CL_CT_SSL;
 
       if (strcmp(component_name, "pty_shepherd") == 0) {
          /* pretend we are the execd to access it's credentials */
          progname = "execd";
       }
+
       ret = sge_ssl_setup_security_path(progname, user_name);
       if (ret != 0) {
          sge_dstring_sprintf(err_msg, cl_get_error_text(ret));

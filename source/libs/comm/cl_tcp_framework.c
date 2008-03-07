@@ -28,6 +28,8 @@
 #include "cl_connection_list.h"
 #include "cl_util.h"
 #include "msg_commlib.h"
+#include "sge_unistd.h"
+#include "sge_os.h"
 
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
@@ -249,6 +251,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout) {
    }
 
    if (connection->connection_sub_state == CL_COM_OPEN_INIT) {
+      int ret;
       int on = 1;
       char* unique_host = NULL;
       struct timeval now;
@@ -279,7 +282,18 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout) {
             }
             break;
          }
-      }    
+      }
+
+      ret = sge_dup_fd_above_stderr(&private->sockfd);
+      if (ret != 0) {
+         CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = %d", ret);
+         shutdown(private->sockfd, 2);
+         close(private->sockfd);
+         private->sockfd = -1;
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR,
+                                 MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE);
+         return CL_RETVAL_DUP_SOCKET_FD_ERROR;
+      }
 
       if (private->sockfd >= FD_SETSIZE) {
           char tmp_buffer[256];
@@ -972,6 +986,7 @@ int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection,
    struct sockaddr_in serv_addr;
    cl_com_tcp_private_t* private = NULL;
    int on = 1;
+   int ret;
 
    CL_LOG(CL_LOG_INFO,"setting up TCP request handler ...");
     
@@ -997,6 +1012,17 @@ int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection,
       return CL_RETVAL_CREATE_SOCKET;
    }
 
+   ret = sge_dup_fd_above_stderr(&sockfd);
+   if (ret != 0) {
+      CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = %d", ret);
+      shutdown(sockfd, 2);
+      close(sockfd);
+      sockfd = -1;
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, 
+                              MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE);
+      return CL_RETVAL_DUP_SOCKET_FD_ERROR;
+   }
+
    if (sockfd >= FD_SETSIZE) {
        CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");
        shutdown(sockfd, 2);
@@ -1004,7 +1030,6 @@ int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection,
        cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE );
        return CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT;
    }
-
 
    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) != 0) {
       CL_LOG(CL_LOG_ERROR,"could not set SO_REUSEADDR");
@@ -1187,66 +1212,77 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
    memset((char *) &cli_addr, 0, sizeof(cli_addr));
    new_sfd = accept(server_fd, (struct sockaddr *) &cli_addr, &fromlen);
    if (new_sfd > -1) {
-       char* resolved_host_name = NULL;
-       cl_com_tcp_private_t* tmp_private = NULL;
+      char* resolved_host_name = NULL;
+      cl_com_tcp_private_t* tmp_private = NULL;
 
-       if (new_sfd >= FD_SETSIZE) {
-          CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");
-          shutdown(new_sfd, 2);
-          close(new_sfd);
-          cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE );
-          return CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT;
-       }
+      retval = sge_dup_fd_above_stderr(&new_sfd);
+      if (retval != 0) {
+         CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = %d", retval);
+         shutdown(new_sfd, 2);
+         close(new_sfd);
+         new_sfd = -1;
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, 
+                                 MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE);
+         return CL_RETVAL_DUP_SOCKET_FD_ERROR;
+      }
 
-       cl_com_cached_gethostbyaddr(&(cli_addr.sin_addr), &resolved_host_name, NULL, NULL); 
-       if (resolved_host_name != NULL) {
-          CL_LOG_STR(CL_LOG_INFO,"new connection from host", resolved_host_name);
-       } else {
-          CL_LOG(CL_LOG_WARNING,"could not resolve incoming hostname");
-       }
+      if (new_sfd >= FD_SETSIZE) {
+         CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");
+         shutdown(new_sfd, 2);
+         close(new_sfd);
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE );
+         return CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT;
+      }
 
-       fcntl(new_sfd, F_SETFL, O_NONBLOCK);         /* HP needs O_NONBLOCK, was O_NDELAY */
-       sso = 1;
+      cl_com_cached_gethostbyaddr(&(cli_addr.sin_addr), &resolved_host_name, NULL, NULL); 
+      if (resolved_host_name != NULL) {
+         CL_LOG_STR(CL_LOG_INFO,"new connection from host", resolved_host_name);
+      } else {
+         CL_LOG(CL_LOG_WARNING,"could not resolve incoming hostname");
+      }
+
+      fcntl(new_sfd, F_SETFL, O_NONBLOCK);         /* HP needs O_NONBLOCK, was O_NDELAY */
+      sso = 1;
 #if defined(SOLARIS) && !defined(SOLARIS64)
-       if (setsockopt(new_sfd, IPPROTO_TCP, TCP_NODELAY, (const char *) &sso, sizeof(int)) == -1)
+      if (setsockopt(new_sfd, IPPROTO_TCP, TCP_NODELAY, (const char *) &sso, sizeof(int)) == -1)
 #else
-       if (setsockopt(new_sfd, IPPROTO_TCP, TCP_NODELAY, &sso, sizeof(int))== -1)
+      if (setsockopt(new_sfd, IPPROTO_TCP, TCP_NODELAY, &sso, sizeof(int))== -1)
 #endif
       {
-          CL_LOG(CL_LOG_ERROR,"could not set TCP_NODELAY");
-       }
-       /* here we can investigate more information about the client */
-       /* ntohs(cli_addr.sin_port) ... */
+         CL_LOG(CL_LOG_ERROR,"could not set TCP_NODELAY");
+      }
+      /* here we can investigate more information about the client */
+      /* ntohs(cli_addr.sin_port) ... */
 
-       tmp_connection = NULL;
-       /* setup a tcp connection where autoclose is still undefined */
-       if ( (retval=cl_com_tcp_setup_connection(&tmp_connection, 
-                                                private->server_port,
-                                                private->connect_port,
-                                                connection->data_flow_type, 
-                                                CL_CM_AC_UNDEFINED,
-                                                connection->framework_type,
-                                                connection->data_format_type,
-                                                connection->tcp_connect_mode)) != CL_RETVAL_OK) {
-          cl_com_tcp_close_connection(&tmp_connection); 
-          if (resolved_host_name != NULL) {
-             free(resolved_host_name);
-          }
-          shutdown(new_sfd, 2);
-          close(new_sfd);
-          return retval;
-       }
+      tmp_connection = NULL;
+      /* setup a tcp connection where autoclose is still undefined */
+      if ( (retval=cl_com_tcp_setup_connection(&tmp_connection, 
+                                               private->server_port,
+                                               private->connect_port,
+                                               connection->data_flow_type, 
+                                               CL_CM_AC_UNDEFINED,
+                                               connection->framework_type,
+                                               connection->data_format_type,
+                                               connection->tcp_connect_mode)) != CL_RETVAL_OK) {
+         cl_com_tcp_close_connection(&tmp_connection); 
+         if (resolved_host_name != NULL) {
+            free(resolved_host_name);
+         }
+         shutdown(new_sfd, 2);
+         close(new_sfd);
+         return retval;
+      }
 
-       tmp_connection->client_host_name = resolved_host_name; /* set resolved hostname of client */
+      tmp_connection->client_host_name = resolved_host_name; /* set resolved hostname of client */
 
-       /* setup cl_com_tcp_private_t */
-       tmp_private = cl_com_tcp_get_private(tmp_connection);
-       if (tmp_private != NULL) {
-          tmp_private->sockfd = new_sfd;   /* fd from accept() call */
-          tmp_private->connect_in_port = ntohs(cli_addr.sin_port);
-       }
+      /* setup cl_com_tcp_private_t */
+      tmp_private = cl_com_tcp_get_private(tmp_connection);
+      if (tmp_private != NULL) {
+         tmp_private->sockfd = new_sfd;   /* fd from accept() call */
+         tmp_private->connect_in_port = ntohs(cli_addr.sin_port);
+      }
 
-       *new_connection = tmp_connection;
+      *new_connection = tmp_connection;
    }
    return CL_RETVAL_OK;
 }
@@ -1675,7 +1711,13 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
          timeout.tv_sec = 0; 
          timeout.tv_usec = 100*1000;  /* wait for 1/10 second */
 #endif
-         max_fd = 0;
+         CL_LOG(CL_LOG_INFO,"no select descriptors");
+         cl_raw_list_unlock(connection_list);
+#ifdef USE_POLL
+         free(ufds);
+#endif
+         sge_sleep(timeout.tv_sec, timeout.tv_usec);
+         return CL_RETVAL_NO_SELECT_DESCRIPTORS;
       }
    }
 
@@ -1718,16 +1760,6 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
 #endif
 
    my_errno = errno;
-
-   if (max_fd == 0) {
-      /* there were no file descriptors! Return error after select timeout! */
-      /* (no descriptors part 2) */
-#ifdef USE_POLL
-      free(ufds);
-#endif
-      CL_LOG(CL_LOG_INFO,"no select descriptors");
-      return CL_RETVAL_NO_SELECT_DESCRIPTORS;
-   }
    switch(select_back) {
       case -1: {
          if (my_errno == EINTR) {

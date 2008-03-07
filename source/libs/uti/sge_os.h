@@ -83,6 +83,7 @@ int sge_contains_pid(pid_t, pid_t *, int);
 int sge_checkprog(pid_t, const char *, const char *);
 
 void sge_close_all_fds(fd_set *keep_open);
+int sge_dup_fd_above_stderr(int *fd);
  
 int sge_daemonize(fd_set *keep_open, sge_gdi_ctx_class_t *context);
  

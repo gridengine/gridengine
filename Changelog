@@ -1,3 +1,9 @@
+HP-2008-03-07-0: Bugfix:    qrsh -nostdin failed when it was started with closed stdin
+                 Changed:   commlib, qsh
+                 Bugster:   6670917
+                 Issue:     1258
+                 Review:    AA, CR
+
 AA-2008-03-06-0: Bugfix:    - missing setDefault* functions in ClusterQuueue(Impl)
                             - sge_ca script corrections
                             - jgdi crash fix due to logging

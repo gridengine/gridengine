@@ -1877,7 +1877,8 @@ sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, u_long32 thread_id,
    }
 
    /* a dynamic eh handler is created */
-   *context = sge_gdi_ctx_class_create(progid, prognames[progid], thread_id, threadnames[thread_id], user, group,
+   *context = sge_gdi_ctx_class_create(progid, prognames[progid], thread_id, 
+                                       threadnames[thread_id], user, group,
                                        sge_root, sge_cell, sge_qmaster_port, 
                                        sge_execd_port, from_services, 
                                        is_qmaster_intern_client, alpp);

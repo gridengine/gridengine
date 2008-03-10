@@ -1095,30 +1095,19 @@ cqueue_list_set_unknown_state(lList *this_list, const char *hostname,
 {
    lListElem *cqueue = NULL;
 
+   if (hostname == NULL) {
+      return;
+   }
+
    for_each(cqueue, this_list) {
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-      lListElem *qinstance = NULL;
-      lListElem *next_qinstance = NULL;
-      const void *iterator = NULL;
-
-      if (hostname != NULL) {
-         next_qinstance = lGetElemHostFirst(qinstance_list, QU_qhostname,
-                                            hostname, &iterator);
-      } else {
-         next_qinstance = lFirst(qinstance_list);
-      }
-      while ((qinstance = next_qinstance)) {
-         if (hostname != NULL) {
-            next_qinstance = lGetElemHostNext(qinstance_list, QU_qhostname,
-                                              hostname, &iterator);
-         } else {
-            next_qinstance = lNext(qinstance);
-         }
-         if (qinstance_state_is_unknown(qinstance) != is_unknown) {
-            sge_qmaster_qinstance_state_set_unknown(qinstance, is_unknown);
-            if (send_events) {
-               qinstance_add_event(qinstance, sgeE_QINSTANCE_MOD);
-            }
+      lListElem *qinstance = lGetElemHost(qinstance_list, QU_qhostname,
+                                          hostname);
+      if (qinstance != NULL &&
+          qinstance_state_is_unknown(qinstance) != is_unknown) {
+         sge_qmaster_qinstance_state_set_unknown(qinstance, is_unknown);
+         if (send_events) {
+            qinstance_add_event(qinstance, sgeE_QINSTANCE_MOD);
          }
       }
    }

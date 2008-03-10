@@ -3,11 +3,17 @@
 #include <string.h>
 #include <errno.h>
 
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/resource.h>
+
 #define __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__
 #include "cull/cull.h"
 
 #include "uti/sge_profiling.h"
 #include "uti/sge_stdio.h"
+
+#include "sgeobj/sge_jobL.h"
 
 #include "msg_common.h"
 
@@ -53,6 +59,7 @@ lNameSpace nmv[] = {
 
 int main(int argc, char *argv[])
 {
+#if 0
    const char *const filename = "test_cull_pack.txt";
    lListElem *ep, *obj, *copy;
    sge_pack_buffer pb, copy_pb;
@@ -168,6 +175,55 @@ int main(int argc, char *argv[])
 FCLOSE_ERROR:
    printf(MSG_FILE_ERRORCLOSEINGXY_SS, filename, strerror(errno));
    return EXIT_FAILURE;
+#else
+
+   #define LOOP 5000
+   lListElem *ep;
+   struct rusage before;
+   struct rusage after;
+   double time = 0;
+   int i;
+
+   sge_prof_setup();
+
+   ep = lCreateElem(JB_Type);
+
+   getrusage(RUSAGE_SELF, &before);
+   {
+      sge_pack_buffer pb;
+      init_packbuffer(&pb, 0, 0);
+      cull_pack_elem(&pb, ep);
+      for (i=0; i < LOOP; i++) {
+         sge_pack_buffer copy_pb;
+         char *buffer;
+         buffer = (char *)malloc(pb.bytes_used);
+         memcpy(buffer, pb.head_ptr, pb.bytes_used);
+         init_packbuffer_from_buffer(&copy_pb, buffer, pb.bytes_used);
+         clear_packbuffer(&copy_pb);
+      }
+      clear_packbuffer(&pb);
+   }
+   getrusage(RUSAGE_SELF, &after);
+   time = (after.ru_utime.tv_usec + after.ru_stime.tv_usec) - (before.ru_utime.tv_usec + before.ru_stime.tv_usec);
+   time = (after.ru_utime.tv_sec + after.ru_stime.tv_sec) - (before.ru_utime.tv_sec + before.ru_stime.tv_sec) + (time/1000000);
+   printf("memcpy took %.2fs\n", time);
+
+   getrusage(RUSAGE_SELF, &before);
+   for (i=0; i < LOOP; i++) {
+      sge_pack_buffer pb;
+      init_packbuffer(&pb, 0, 0);
+      cull_pack_elem(&pb, ep);
+      clear_packbuffer(&pb);
+   }
+   getrusage(RUSAGE_SELF, &after);
+   time = (after.ru_utime.tv_usec + after.ru_stime.tv_usec) - (before.ru_utime.tv_usec + before.ru_stime.tv_usec);
+   time = (after.ru_utime.tv_sec + after.ru_stime.tv_sec) - (before.ru_utime.tv_sec + before.ru_stime.tv_sec) + (time/1000000);
+   printf("pack_elem took %.2fs\n", time);
+
+   lFreeElem(&ep);
+
+   return 0;
+#endif
 }
 
 

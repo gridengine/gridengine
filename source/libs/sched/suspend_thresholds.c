@@ -211,7 +211,6 @@ select4suspension(lList *job_list, lListElem *qep, lListElem **jepp,
    }
   
    for_each (jep, job_list) {
-      lListElem *gqueue;
 
       /* job running */ 
       for_each (ja_task, lGetList(jep, JB_ja_tasks)) {
@@ -226,16 +225,10 @@ select4suspension(lList *job_list, lListElem *qep, lListElem **jepp,
          **    a job / one task of an array-job
          **    a master-task of a pe-job with sub-tasks in this queue
          ** then it is a potential candidate which we could suspend
-         */      
-         for_each (gqueue, 
-               lGetList(ja_task,JAT_granted_destin_identifier_list)) {
-            if (!strcmp(qnm, lGetString(gqueue, JG_qname))) {
-               break;
-            }
-         }
-         if (!gqueue) {
+         */
+         if (lGetSubStr(ja_task, JG_qname, qnm, JAT_granted_destin_identifier_list) == NULL) {
             continue;
-         }      
+         }
 
          /* select job that runs shortest time for suspension */
          if (!shortest || lGetUlong(shortest, JAT_start_time) < 

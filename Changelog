@@ -1,3 +1,6 @@
+RD-2008-03-10-0: Enhancem.  replaced some loops by hashed access
+                 Review:    JG
+
 HP-2008-03-07-0: Bugfix:    qrsh -nostdin failed when it was started with closed stdin
                  Changed:   commlib, qsh
                  Bugster:   6670917

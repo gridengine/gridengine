@@ -1195,6 +1195,10 @@ char *argv[]
             nodepath = sge_strtok(buf, "=");
             sharestr = sge_strtok(NULL, "");
             if (nodepath && sharestr && sscanf(sharestr, "%d", &shares) == 1) {
+               if (shares < 0) {
+                  fprintf(stderr, "%s\n", MSG_QCONF_POSITIVE_SHARE_VALUE);                  
+                  DRETURN(1);
+               }
                memset(&ancestors, 0, sizeof(ancestors));
                node = search_named_node_path(ep, nodepath, &ancestors);
                if (!node && opt==astnode_OPT) {

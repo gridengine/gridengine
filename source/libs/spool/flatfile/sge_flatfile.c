@@ -85,6 +85,7 @@
 /* uti */
 #include "uti/sge_spool.h"
 #include "uti/sge_unistd.h"
+#include "sge_all_listsL.h"
 
 const spool_flatfile_instr qconf_sub_name_value_space_sfi = 
 {
@@ -1958,6 +1959,20 @@ FF_DEBUG("detected end_token");
          spool_return_whitespace = false;
          
          if (fields[field_index].read_func == NULL) {
+                        
+            if(type == lUlongT) {            
+               char *end_ptr = NULL;
+               double dbl_value;
+               
+               dbl_value = strtod(sge_dstring_get_string(&buffer), &end_ptr);
+               if ( dbl_value < 0) {
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                       ANSWER_QUALITY_ERROR,
+                                       MSG_MUST_BE_POSITIVE_VALUE_S,
+                                       fields[field_index].name);
+                  return;
+               }
+            }
             if (object_parse_field_from_string(*object, answer_list, nm, 
                                         sge_dstring_get_string(&buffer)) == 0) {
                stop = true;

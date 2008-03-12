@@ -1,3 +1,8 @@
+RD-2008-03-12-0: Bugfix:    - removed wrong unique hash introduced with
+                              RD-2008-03-10-0
+                            - replaced loop in qstat by hashed access
+                 Review:    JG
+
 MP-2008-03-11-0: Bugfix:    Merge of MP-2007-12-05-0 from V61_BRANCH.
                  Bugster:   2150515
                  Issue:     2315

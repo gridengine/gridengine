@@ -4300,7 +4300,7 @@ parallel_tag_hosts_queues(sge_assignment_t *a, lListElem *hep, int *slots, int *
 
          /* try to foreclose the cluster queue */
          if (lGetElemStr(a->skip_cqueue_list, CTI_name, cqname)) {
-            DPRINTF(("skip cluster queue %s\n", cqname));             
+            DPRINTF(("(1) skip cluster queue %s\n", cqname));             
             continue;
          }
 
@@ -4310,6 +4310,7 @@ parallel_tag_hosts_queues(sge_assignment_t *a, lListElem *hep, int *slots, int *
                a->pi->par_cqstat++;
             if (cqueue_match_static(cqname, a) != DISPATCH_OK) {
                lAddElemStr(&(a->skip_cqueue_list), CTI_name, cqname, CTI_Type);
+               DPRINTF(("add cluster queue %s to skip list\n", cqname));             
                continue;
             }
             DPRINTF(("cqueue %s is not rejected\n", cqname));
@@ -4317,6 +4318,7 @@ parallel_tag_hosts_queues(sge_assignment_t *a, lListElem *hep, int *slots, int *
          }
 
          if (skip_queue_list && lGetElemStr(skip_queue_list, CTI_name, qname)){
+            DPRINTF(("(2) skip cluster queue %s\n", cqname));             
             continue;
          }
          

@@ -881,7 +881,7 @@ static int write_QU_consumable_config_list(const lListElem *ep, int nm,
    for_each(vep, lp) {
       const char *name = lGetString(vep, CE_name);
 
-      if (strcmp (name, "slots") != 0) {
+      if (strcmp(name, "slots") != 0) {
          const char *strval = NULL;
          
          /* we want to know if any elements from the list are available or not*/

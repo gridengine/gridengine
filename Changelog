@@ -1,3 +1,6 @@
+AH-2008-03-13-1: Bugfix:    Fix possible libdrmaa.so crash in sge_uid2user()
+                 Review:    DG
+
 JG-2008-03-13-0: Bugfix:    Fixed minor memory leaks.
                  Review:    RD
 

@@ -1,3 +1,6 @@
+JG-2008-03-06-0: CVS:       Created V61u4_TAG.
+----------------------------------------------
+
 AH-2008-03-06-1: Bugfix:    Access_list(5) man page not precise enough
                             with regards secondary/primary group(s)
                  Changed:   man page
@@ -142,8 +145,8 @@ RN-2008-02-04-0: Bugfix:    o Failed to deliver STOP signal for subordinated job
                  Bugster:   2478, 2479, 2480
                  Issue:     6623174, 6625420, 6619046
 
-OJ-2008-02-01-0: Bugfix:    use of the same pathes for input/output stream must be 
-                            dealt with
+OJ-2008-02-01-0: Bugfix:    use of the same pathes for input/output stream must
+                            be dealt with
                  Bugster:   6310194 
                  Issue:     1751
                  Review:    MP
@@ -154,10 +157,10 @@ OJ-2008-01-31-1: Bugfix:    execd installation does not test absolute path for
                  Issue:     2195
                  Review:    MD
 
-OJ-2008-01-31-0: Bugfix:    Set SGE_QMASTER_PORT in settings file if sge_qmaster is 
-                            not found in /etc/services file
+OJ-2008-01-31-0: Bugfix:    Set SGE_QMASTER_PORT in settings file if sge_qmaster
+                            is not found in /etc/services file
                  Bugster:   6589297 
-                 Issue:     N/A
+                 Issue:     2477
                  Review:    JG, MD
  
 MP-2008-01-31-0: Bugfix:    Spelling mistakes in the qmon help menus

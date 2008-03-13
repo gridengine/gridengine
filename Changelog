@@ -1,3 +1,6 @@
+JG-2008-03-13-0: Bugfix:    Fixed minor memory leaks.
+                 Review:    RD
+
 JG-2008-03-06-0: CVS:       Created V61u4_TAG.
 ----------------------------------------------
 

@@ -494,7 +494,7 @@ int japi_init(const char *contact, const char *session_key_in,
    JAPI_LOCK_SESSION();
    if (japi_session != JAPI_SESSION_INACTIVE) {
       JAPI_UNLOCK_SESSION();
-      japi_standard_error(DRMAA_ERRNO_ALREADY_ACTIVE_SESSION, diag);      
+      japi_standard_error(DRMAA_ERRNO_ALREADY_ACTIVE_SESSION, diag);
       DRETURN(DRMAA_ERRNO_ALREADY_ACTIVE_SESSION);
    }
    
@@ -543,7 +543,7 @@ int japi_init(const char *contact, const char *session_key_in,
       if (handle == NULL) {
          commlib_error = ctx->connect(ctx);
          handle = ctx->get_com_handle(ctx);
-      }   
+      }
       if (handle == NULL) {
          sge_dstring_sprintf (diag, MSG_JAPI_NO_HANDLE_S,
                               cl_get_error_text(commlib_error));
@@ -727,7 +727,7 @@ int japi_enable_job_wait(const char *username, const char *unqualified_hostname,
          sge_dstring_sprintf(diag, MSG_JAPI_EC_THREAD_NOT_STARTED_S,
                              strerror(errno));
       }
-      
+
       DRETURN(DRMAA_ERRNO_INTERNAL_ERROR);
    }
 
@@ -952,7 +952,7 @@ int japi_exit(int flag, dstring *diag)
       JAPI_UNLOCK_EC_STATE();
 
       if (my_state == JAPI_EC_UP) {
-         japi_stop_event_client (default_cell);
+         japi_stop_event_client(default_cell);
       }
 
       DPRINTF (("Waiting for event client to terminate.\n"));
@@ -1292,11 +1292,9 @@ static int japi_send_job(lListElem *sge_job_template, u_long32 *jobid, dstring *
          if ((answer_status == STATUS_NOQMASTER) ||
              (answer_status == STATUS_NOCOMMD)) {
             result = DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE;
-         }
-         else if (answer_status == STATUS_NOTOK_DOAGAIN) {
+         } else if (answer_status == STATUS_NOTOK_DOAGAIN) {
             result = DRMAA_ERRNO_TRY_LATER;
-         }
-         else {
+         } else {
             result = DRMAA_ERRNO_DENIED_BY_DRM;
          }
       }
@@ -3224,8 +3222,7 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
 *     japi_get_job_and_queues() -- get job and the queue via GDI for job status
 *
 *  SYNOPSIS
-*     static int japi_get_job_and_queues(u_long32 jobid, lList 
-*     **retrieved_cqueue_list, lList **retrieved_job_list, dstring *diag) 
+*     static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list, lList **retrieved_job_list, dstring *diag) 
 *
 *  FUNCTION
 *     We use GDI GET to get jobs status. Additionally also the queue list 
@@ -3288,7 +3285,6 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list
          JB_execution_time);
    
    if (!job_selection || !job_fields) {
-      lFreeList(&mal);
       japi_standard_error(DRMAA_ERRNO_NO_MEMORY, diag);
       DRETURN(DRMAA_ERRNO_NO_MEMORY);
    }
@@ -3958,31 +3954,31 @@ int japi_get_drm_system(dstring *drm, dstring *diag, int me)
 *     japi_subscribe_job_list() -- Do event subscription for job list
 *
 *  SYNOPSIS
-*     static void japi_subscribe_job_list(const char *japi_session_key, 
-*     sge_evc_class_t *evc) 
+*     static void japi_subscribe_job_list(const char *japi_session_key,
+*     sge_evc_class_t *evc)
 *
 *  FUNCTION
 *     Event subscription for job list can be very costly. It requires
-*     qmaster to copy the entire job list temporarily at the time when 
+*     qmaster to copy the entire job list temporarily at the time when
 *     an event is registered. For that reason subscribing the job list
 *     was factorized out, so that it can be done only when required.
-*     Subscribing the job list event is required only in cases 
+*     Subscribing the job list event is required only in cases
 *
-*     (a) when the client event client connection breaks down e.g. 
-*     due to qmaster be shut-down and restarted
+*     (a) when the client event client connection breaks down e.g.
+*         due to qmaster be shut-down and restarted
 *
-*    (b) when a JAPI session is restarted e.g when DRMAA is used
+*     (b) when a JAPI session is restarted e.g when DRMAA is used
 *
 *  INPUTS
 *     const char *japi_session_key - JAPI session key
 *     sge_evc_class_t *evc         - event client object
 *
 *  NOTES
-*     MT-NOTE: japi_subscribe_job_list() is MT safe 
+*     MT-NOTE: japi_subscribe_job_list() is MT safe
 *******************************************************************************/
 static void japi_subscribe_job_list(const char *japi_session_key, sge_evc_class_t *evc)
 {
-   const int job_nm[] = {       
+   const int job_nm[] = {
       JB_job_number,
       JB_project,
       JB_type,
@@ -3996,16 +3992,16 @@ static void japi_subscribe_job_list(const char *japi_session_key, sge_evc_class_
       JB_ja_template,
       NoName
    };
-   
+
    lCondition *where = NULL;
    lEnumeration *what = NULL;
    lListElem *where_el = NULL;
    lListElem *what_el = NULL;
 
    evc->ec_subscribe(evc, sgeE_JOB_LIST);
-   
+
    where = lWhere("%T(%I==%s)", JB_Type, JB_session, japi_session_key);
-   what = lIntVector2What(JB_Type, job_nm); 
+   what = lIntVector2What(JB_Type, job_nm);
 
    where_el = lWhereToElem(where);
    what_el = lWhatToElem(what);
@@ -4017,7 +4013,7 @@ static void japi_subscribe_job_list(const char *japi_session_key, sge_evc_class_
    if (where_el) {
       lFreeElem(&where_el);
    }
-   
+
    if (what_el) {
       lFreeElem(&what_el);
    }
@@ -4058,7 +4054,7 @@ static void *japi_implementation_thread(void *p)
                                  qmaster. */
    sge_gdi_ctx_class_t *evc_ctx = NULL;
    static sge_evc_class_t *evc = NULL;
-   
+
    DENTER(TOP_LAYER, "japi_implementation_thread");
 
    /* Check EC state before we bother starting.  This also prevents the event
@@ -4122,7 +4118,7 @@ static void *japi_implementation_thread(void *p)
    evc->ec_set_flush_delay(evc, flush_delay_rate); 
    evc->ec_set_session(evc, japi_session_key);
 
-   /* subscription of the entire job list at start-up 
+   /* subscription of the entire job list at start-up
       required only for session reconnect (DRMAA) */
    if (restarting) {
       japi_subscribe_job_list(japi_session_key, evc);
@@ -4187,7 +4183,7 @@ static void *japi_implementation_thread(void *p)
             break;
          }
          JAPI_UNLOCK_EC_STATE();
-        
+
          /* Bug Fix: Issuezilla #826
           * The first part of this bug fix is to keep the event client thread
           * from dying when the qmaster goes down.  In distinguish between
@@ -4211,7 +4207,7 @@ static void *japi_implementation_thread(void *p)
             DPRINTF ((MSG_JAPI_RECONNECTED));
             disconnected = false;
          }
-         
+
          for_each (event, event_list) {
             u_long32 type, intkey, intkey2;
             type = lGetUlong(event, ET_type);
@@ -4313,9 +4309,9 @@ static void *japi_implementation_thread(void *p)
 
                      /* remove task from not yet finished job id list */
                      object_delete_range_id(japi_job, NULL, JJ_not_yet_finished_ids, intkey2);
+
                      /* add an entry to the finished tasks */
                      DPRINTF(("adding finished task %ld for job %ld\n", intkey2, intkey));
-
                      japi_task = lAddSubUlong(japi_job, JJAT_task_id, intkey2, JJ_finished_tasks, JJAT_Type);
                      lSetUlong(japi_task, JJAT_stat, wait_status);
                      lSetString(japi_task, JJAT_failed_text, err_str);
@@ -4368,7 +4364,7 @@ static void *japi_implementation_thread(void *p)
                         DPRINTF(("adding started task %ld for job %ld\n",
                                  intkey2, intkey));
                         range_list_insert_id (&range, &alp, intkey2);
-                        range_list_sort_uniq_compress (range, &japi_ec_alp, true);
+                        range_list_sort_uniq_compress(range, &japi_ec_alp, true);
                         lXchgList(japi_job, JJ_started_task_ids, &range);
 
                         /* signal all application threads waiting for a job event */
@@ -4469,8 +4465,7 @@ static void *japi_implementation_thread(void *p)
     * JAPI_EC_FINISHING="aborted by main thread." */
    if ((japi_ec_state == JAPI_EC_UP) || (japi_ec_state == JAPI_EC_FINISHING)) {
       japi_ec_state = JAPI_EC_DOWN;
-   }
-   else {
+   } else {
       japi_ec_state = JAPI_EC_FAILED;
    }
    

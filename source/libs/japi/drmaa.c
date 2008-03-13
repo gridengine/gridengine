@@ -2845,9 +2845,9 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
       
       if (args != NULL) {
          opt_list_append_opts_from_qsub_cmdline(prog_number, &opts_job_cat, &alp,
-                                                 args, environ);
-         
-         FREE(args);
+                                                args, environ);
+         /* free the args string array */
+         sge_strafree(&args);
 
          if (answer_list_has_error(&alp)) {
             answer_list_to_dstring(alp, diag);
@@ -3097,7 +3097,7 @@ static int opt_list_append_opts_from_drmaa_attr(lList **args, const lList *attrs
       for_each(oep, olp) {
          struct saved_vars_s *context = NULL;
          const char *str = lGetString(oep, ST_name);
-        
+
          if (first_time) {
             first_time = 0;
          }
@@ -3978,7 +3978,7 @@ static char *drmaa_get_home_directory(const char* username, lList **answer_list)
       answer_list_add(answer_list, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       DRETURN(NULL);
    }
-   
+
    DRETURN(strdup(pwd->pw_dir));
 }
 

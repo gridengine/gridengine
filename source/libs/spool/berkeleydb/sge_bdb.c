@@ -906,6 +906,7 @@ spool_berkeleydb_write_object(lList **answer_list, bdb_info info,
    {
       sge_pack_buffer pb;
       int cull_ret;
+
       cull_ret = init_packbuffer(&pb, 8192, 0);
       if (cull_ret != PACK_SUCCESS) {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -948,8 +949,8 @@ spool_berkeleydb_write_object(lList **answer_list, bdb_info info,
                data_dbt.size = pb.bytes_used;
 
                DPRINTF(("storing object with key "SFQ", size = %d "
-                        "to env = %p, db = %p, txn = %p, txn_id = %d\n", 
-                        key, data_dbt.size, bdb_get_env(info), db, 
+                        "to env = %p, db = %p, txn = %p, txn_id = %d\n",
+                        key, data_dbt.size, bdb_get_env(info), db,
                         txn, (txn->id == NULL) ? 0 : txn->id(txn)));
 
                /* Store a key/data pair. */
@@ -1749,9 +1750,9 @@ spool_berkeleydb_read_object(lList **answer_list, bdb_info info,
          /* We specified DB_DBT_MALLOC - BDB will malloc memory for each
           * object found and we have to free it.
           */
-          if (data_dbt.data != NULL) {
+         if (data_dbt.data != NULL) {
             FREE(data_dbt.data);
-          }
+         }
       }
    }
 
@@ -1784,7 +1785,7 @@ spool_berkeleydb_clear_log(lList **answer_list, bdb_info info)
 
    if (ret) {
       int dbret;
-      char **list;
+      char **list = NULL;
 
       PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       dbret = env->log_archive(env, &list, DB_ARCH_ABS);

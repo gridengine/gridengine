@@ -312,7 +312,8 @@ char *sge_strtok(const char *str, const char *delimitor)
 *     size_t sge_strlcpy(char *dst, const char *src, size_t dstsize) 
 *
 *  FUNCTION
-*     ??? 
+*     copies "dstsize"-1 characters from from "src" to "dst" and terminates
+*     the src string with '\0'- Returns the size of the "src" string.
 *
 *  INPUTS
 *     char *dst       - destination
@@ -322,14 +323,8 @@ char *sge_strtok(const char *str, const char *delimitor)
 *  RESULT
 *     size_t - strlen of src, not dst !!!
 *
-*  EXAMPLE
-*     ??? 
-*
 *  NOTES
 *     MT-NOTE: sge_strlcpy() is MT safe 
-*
-*  BUGS
-*     ??? 
 *******************************************************************************/
 size_t sge_strlcpy(char *dst, const char *src, size_t dstsize) {
    size_t index = 0;
@@ -366,9 +361,9 @@ size_t sge_strlcpy(char *dst, const char *src, size_t dstsize) {
 *     If no delimitor is given isspace() is used. 
 *
 *  INPUTS
-*     const char *str                - str which should be tokenized 
-*     const char *delimitor          - delimitor string 
-*     struct saved_vars_s **context  - context
+*     const char *str               - str which should be tokenized 
+*     const char *delimitor         - delimitor string 
+*     struct saved_vars_s **context - context
 *
 *  RESULT
 *     char* - first/next token
@@ -1040,23 +1035,23 @@ char **sge_stradup(char **cpp, int n)
 *     Free list of character pointers 
 *
 *  INPUTS
-*     char **cpp - Array of string pointers 
+*     char ***cpp - Pointer to array of string pointers 
 *
 *  NOTES
 *     MT-NOTE: sge_strafree() is MT safe
 ******************************************************************************/
-void sge_strafree(char **cpp)
+void sge_strafree(char ***cpp)
 {
-   char **cpp1 = cpp;
-   if (!cpp) {
-      return;
+   if (cpp != NULL && *cpp != NULL) {
+      char **cpp1 = *cpp;
+    
+      while (*cpp1 != NULL) {
+         FREE(*cpp1);
+         (*cpp1)++;
+      }
+      FREE(*cpp);
    }
- 
-   while (*cpp1) {
-      free(*cpp1++);
-   }
-   free(cpp);
-}                          
+}
 
 /****** uti/string/sge_stramemncpy() ******************************************
 *  NAME
@@ -1174,7 +1169,7 @@ stra_from_str(const char *source_str, const char *delim)
          }
          ret[n] = NULL;
          sge_free_saved_vars(context);
-      } 
+      }
    }
    return ret;
 }

@@ -813,8 +813,8 @@ MakeUserKeystores()
       if [ -r $certfile ]; then 
          ksoutfile=$CALOCALTOP/userkeys/$user/keystore
          touch $ksoutfile
-         chown $user $ksoutfile
-         chmod 600 $ksoutfile
+         $CHOWN $user $ksoutfile
+         $CHMOD 600 $ksoutfile
          MakeKeystore user "$user"
       fi
    done   

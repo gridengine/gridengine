@@ -1049,7 +1049,7 @@ AddCommonFiles()
 }
 
 AddJMXFiles() {
-   if [ "$SGE_JMX_PORT" != "" ]; then
+   if [ "$SGE_ENABLE_JMX" = "true" ]; then
       jmx_dir=$COMMONDIR/jmx
       ExecuteAsAdmin mkdir -p $jmx_dir
       
@@ -1800,186 +1800,170 @@ SetLibJvmPath() {
 #
 GetJMXPort() {
 
-   $INFOTEXT -u "\nGrid Engine JMX MBean server"
+   if [ "$SGE_ENABLE_JMX" = "true" ]; then
 
-   jmx_port_min=1
-   jmx_port_max=65500
+      $INFOTEXT -u "\nGrid Engine JMX MBean server"
 
-   if [ $AUTO = "true" ]; then
+      jmx_port_min=1
+      jmx_port_max=65500
 
-      if [ "$SGE_ENABLE_JMX" = "false" ]; then
-            $INFOTEXT -log "\nJMX MBean server in qmaster disabled"
-      else       
-         if [ ! -f "$SGE_JVM_LIB_PATH" ]; then
-            $INFOTEXT -log "\nWarning: Cannot start jvm thread: jvm library %s not found" "$SGE_JVM_LIB_PATH"
-            MoveLog
-            exit 1
-         else   
-            $INFOTEXT -log "\nUsing jvm library >%s<" "$SGE_JVM_LIB_PATH"
-         fi
+      if [ $AUTO = "true" ]; then
 
-         if [ "$SGE_JMX_PORT" != "" ]; then
-            if [ $SGE_JMX_PORT -ge $jmx_port_min -a $SGE_JMX_PORT -le $jmx_port_max ]; then
-               $INFOTEXT -log "Using SGE_JMX_PORT >%s<." $SGE_JMX_PORT
-            else
-               $INFOTEXT -log "Your \$SGE_JMX_PORT=%s\n\n" \
-                         "has an invalid value (it must be in range %s..%s).\n\n" \
-                         "Please check your configuration file and restart\n" \
-                         "the installation or configure the service >sge_qmaster<." $SGE_JMX_PORT $jmx_port_min $jmx_port_max
+            if [ ! -f "$SGE_JVM_LIB_PATH" ]; then
+               $INFOTEXT -log "\nWarning: Cannot start jvm thread: jvm library %s not found" "$SGE_JVM_LIB_PATH"
                MoveLog
                exit 1
+            else   
+               $INFOTEXT -log "\nUsing jvm library >%s<" "$SGE_JVM_LIB_PATH"
             fi
-         fi
 
-         # if not set initialize to false
-         if [ "$SGE_JMX_SSL" = "" ]; then
-            SGE_JMX_SSL=false
-         fi
-         if [ "$SGE_JMX_SSL_CLIENT" = "" ]; then
-            SGE_JMX_SSL_CLIENT=false
-         fi
-      fi 
-
-   else
-
-      sge_jvm_lib_path=""
-      sge_jmx_port=""
-      sge_additional_jvm_args=""
-      sge_jmx_ssl=false
-      sge_jmx_ssl_client=false
-      sge_jxm_ssl_keystore=""
-      sge_jxm_ssl_keystore_pw=""
-      enable_jmx=false
-      alldone=false
-      while [ $alldone = false ]; do
-         $INFOTEXT -ask "y" "n" -def "n" -n \
-              "\nEnable the JMX MBean server in qmaster (y/n) [n] >> "
-         ret=$?
-         if [ $ret -eq 0 ]; then
-            enable_jmx=true
-         else   
-            enable_jmx=false
-         fi   
-
-         if [ "$enable_jmx" = "false" ]; then
-            $INFOTEXT "\nJMX MBean server in qmaster disabled"
-            $INFOTEXT -wait -n "Hit <RETURN> to continue >> "
-            $CLEAR
-            return
-         fi
-
-         $INFOTEXT -e "Please give some basic parameters for JMX MBean server\n" \
-         "We will ask for\n" \
-         "   - JAVA_HOME\n" \
-         "   - additional JVM arguments (optional)\n" \
-         "   - JMX MBean server port\n" \
-         "   - JMX ssl authentication\n" \
-         "   - JMX ssl client authentication\n" \
-         "   - JMX ssl server keystore path\n" \
-         "   - JMX ssl server keystore password\n"
-         
-         # set sge_jvm_lib_path
-         SetLibJvmPath
-         sge_jvm_lib_path=$jvm_lib_path
-
-         # set SGE_ADDITIONAL_JVM_ARGS
-         $INFOTEXT -n "Please enter additional JVM arguments (optional) >> "
-         INP=`Enter "$sge_additional_jvm_args"`
-         sge_additional_jvm_args="$INP"
-
-         done=false
-         while [ $done != true ]; do
-            $INFOTEXT -n "Please enter an unused port number for the JMX MBean server >> "
-            INP=`Enter $sge_jmx_port`
-            if [ "$INP" = "" ]; then
-               $INFOTEXT "\nInvalid input. Must be a number."
-               continue
+            if [ "$SGE_JMX_PORT" != "" ]; then
+               if [ $SGE_JMX_PORT -ge $jmx_port_min -a $SGE_JMX_PORT -le $jmx_port_max ]; then
+                  $INFOTEXT -log "Using SGE_JMX_PORT >%s<." $SGE_JMX_PORT
+               else
+                  $INFOTEXT -log "Your \$SGE_JMX_PORT=%s\n\n" \
+                            "has an invalid value (it must be in range %s..%s).\n\n" \
+                            "Please check your configuration file and restart\n" \
+                            "the installation or configure the service >sge_qmaster<." $SGE_JMX_PORT $jmx_port_min $jmx_port_max
+                  MoveLog
+                  exit 1
+               fi
             fi
-            chars=`echo $INP | wc -c`
-            chars=`expr $chars - 1`
-            digits=`expr $INP : "[0-9][0-9]*"`
-            if [ "$chars" != "$digits" ]; then
-               $INFOTEXT "\nInvalid input. Must be a number."
-            elif [ $INP -lt $jmx_port_min -o $INP -gt $jmx_port_max ]; then
-               $INFOTEXT "\nInvalid port number. Must be in range [%s..%s]." $jmx_port_min $jmx_port_max
-            elif [ $INP -le 1024 -a $euid != 0 ]; then
-               $INFOTEXT "\nYou are not user >root<. You need to use a port above 1024."
-            else
-               done=true
+
+            # if not set initialize to false
+            if [ "$SGE_JMX_SSL" = "" ]; then
+               SGE_JMX_SSL=false
             fi
-         done
-         sge_jmx_port=$INP
+            if [ "$SGE_JMX_SSL_CLIENT" = "" ]; then
+               SGE_JMX_SSL_CLIENT=false
+            fi
+      else
 
-         # set SGE_JMX_SSL
-         $INFOTEXT -ask "y" "n" -def "y" -n \
-            "Enable JMX SSL server authentication (y/n) [y] >> "
-         if [ $? = 0 ]; then
-            sge_jmx_ssl="true"
-         else    
-            sge_jmx_ssl="false"
-         fi   
+         # interactive setup
 
-         if [ "$sge_jmx_ssl" = true ]; then
-            # set SGE_JMX_SSL_CLIENT
-            $INFOTEXT -ask "y" "n" -def "n" -n \
-               "Enable JMX SSL client authentication (y/n) [n] >> "
+         sge_jvm_lib_path=""
+         sge_jmx_port=""
+         sge_additional_jvm_args=""
+         sge_jmx_ssl=false
+         sge_jmx_ssl_client=false
+         sge_jxm_ssl_keystore=""
+         sge_jxm_ssl_keystore_pw=""
+         alldone=false
+         while [ $alldone = false ]; do
+
+            $INFOTEXT -e "Please give some basic parameters for JMX MBean server\n" \
+            "We will ask for\n" \
+            "   - JAVA_HOME\n" \
+            "   - additional JVM arguments (optional)\n" \
+            "   - JMX MBean server port\n" \
+            "   - JMX ssl authentication\n" \
+            "   - JMX ssl client authentication\n" \
+            "   - JMX ssl server keystore path\n" \
+            "   - JMX ssl server keystore password\n"
+            
+            # set sge_jvm_lib_path
+            SetLibJvmPath
+            sge_jvm_lib_path=$jvm_lib_path
+
+            # set SGE_ADDITIONAL_JVM_ARGS
+            $INFOTEXT -n "Please enter additional JVM arguments (optional) >> "
+            INP=`Enter "$sge_additional_jvm_args"`
+            sge_additional_jvm_args="$INP"
+
+            done=false
+            while [ $done != true ]; do
+               $INFOTEXT -n "Please enter an unused port number for the JMX MBean server >> "
+               INP=`Enter $sge_jmx_port`
+               if [ "$INP" = "" ]; then
+                  $INFOTEXT "\nInvalid input. Must be a number."
+                  continue
+               fi
+               chars=`echo $INP | wc -c`
+               chars=`expr $chars - 1`
+               digits=`expr $INP : "[0-9][0-9]*"`
+               if [ "$chars" != "$digits" ]; then
+                  $INFOTEXT "\nInvalid input. Must be a number."
+               elif [ $INP -lt $jmx_port_min -o $INP -gt $jmx_port_max ]; then
+                  $INFOTEXT "\nInvalid port number. Must be in range [%s..%s]." $jmx_port_min $jmx_port_max
+               elif [ $INP -le 1024 -a $euid != 0 ]; then
+                  $INFOTEXT "\nYou are not user >root<. You need to use a port above 1024."
+               else
+                  done=true
+               fi
+            done
+            sge_jmx_port=$INP
+
+            # set SGE_JMX_SSL
+            $INFOTEXT -ask "y" "n" -def "y" -n \
+               "Enable JMX SSL server authentication (y/n) [y] >> "
             if [ $? = 0 ]; then
-               sge_jmx_ssl_client="true"
+               sge_jmx_ssl="true"
             else    
-               sge_jmx_ssl_client="false"
+               sge_jmx_ssl="false"
             fi   
 
-            # set SGE_JMX_SSL_KEYSTORE
-            if [ "$SGE_QMASTER_PORT" != "" ]; then
-               ca_port=port$SGE_QMASTER_PORT
+            if [ "$sge_jmx_ssl" = true ]; then
+               # set SGE_JMX_SSL_CLIENT
+               $INFOTEXT -ask "y" "n" -def "n" -n \
+                  "Enable JMX SSL client authentication (y/n) [n] >> "
+               if [ $? = 0 ]; then
+                  sge_jmx_ssl_client="true"
+               else    
+                  sge_jmx_ssl_client="false"
+               fi   
+
+               # set SGE_JMX_SSL_KEYSTORE
+               if [ "$SGE_QMASTER_PORT" != "" ]; then
+                  ca_port=port$SGE_QMASTER_PORT
+               else
+                  ca_port=sge_qmaster
+               fi
+               if [ "$sge_jmx_ssl_keystore" = "" ]; then 
+                  sge_jmx_ssl_keystore=/var/sgeCA/$ca_port/$SGE_CELL/private/keystore
+               fi
+               $INFOTEXT -n "Enter JMX SSL server keystore path [%s] >> " "$sge_jmx_ssl_keystore"
+               INP=`Enter "$sge_jmx_ssl_keystore"`
+               sge_jmx_ssl_keystore="$INP"
+
+               # set SGE_JMX_SSL_KEYSTORE_PW
+               $INFOTEXT -n "Enter JMX SSL server keystore pw >> "
+               INP=`Enter "$sge_jmx_ssl_keystore_pw"`
+               sge_jmx_ssl_keystore_pw="$INP"
+            fi
+
+            # show all parameters and redo if needed
+            $INFOTEXT "\nUsing the following JMX MBean server settings."
+            $INFOTEXT "   libjvm_path              >%s<" "$sge_jvm_lib_path"
+            $INFOTEXT "   Additional JVM arguments >%s<" "$sge_additional_jvm_args"
+            $INFOTEXT "   JMX port                 >%s<" "$sge_jmx_port"
+            $INFOTEXT "   JMX ssl                  >%s<" "$sge_jmx_ssl"
+            $INFOTEXT "   JMX client ssl           >%s<" "$sge_jmx_ssl_client"
+            $INFOTEXT "   JMX server keystore      >%s<" "$sge_jmx_ssl_keystore"
+            $INFOTEXT "   JMX server keystore pw   >%s<" "$sge_jmx_ssl_keystore_pw"
+            $INFOTEXT "\n"
+
+            $INFOTEXT -ask "y" "n" -def "y" -n \
+               "Do you want to use these data (y/n) [y] >> "
+            if [ $? = 0 ]; then
+               alldone=true
+               SGE_JVM_LIB_PATH=$sge_jvm_lib_path
+               SGE_ADDITIONAL_JVM_ARGS=$sge_additional_jvm_args
+               SGE_JMX_PORT=$sge_jmx_port
+               SGE_JMX_SSL=$sge_jmx_ssl
+               SGE_JMX_SSL_CLIENT=$sge_jmx_ssl_client
+               SGE_JMX_SSL_KEYSTORE=$sge_jmx_ssl_keystore
+               SGE_JMX_SSL_KEYSTORE_PW=$sge_jmx_ssl_keystore_pw
+               export SGE_JVM_LIB_PATH SGE_JMX_PORT SGE_ADDITIONAL_JVM_ARGS SGE_ENABLE_JMX SGE_JMX_SSL SGE_JMX_SSL_CLIENT SGE_JMX_SSL_KEYSTORE SGE_JMX_SSL_KEYSTORE_PW
             else
-               ca_port=sge_qmaster
+               $CLEAR
             fi
-            if [ "$sge_jmx_ssl_keystore" = "" ]; then 
-               sge_jmx_ssl_keystore=/var/sgeCA/$ca_port/$SGE_CELL/private/keystore
-            fi
-            $INFOTEXT -n "Enter JMX SSL server keystore path [%s] >> " "$sge_jmx_ssl_keystore"
-            INP=`Enter "$sge_jmx_ssl_keystore"`
-            sge_jmx_ssl_keystore="$INP"
+         done
+      fi
 
-            # set SGE_JMX_SSL_KEYSTORE_PW
-            $INFOTEXT -n "Enter JMX SSL server keystore pw >> "
-            INP=`Enter "$sge_jmx_ssl_keystore_pw"`
-            sge_jmx_ssl_keystore_pw="$INP"
-         fi
+      $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
+      $CLEAR
 
-         # show all parameters and redo if needed
-         $INFOTEXT "\nUsing the following JMX MBean server settings."
-         $INFOTEXT "   libjvm_path              >%s<" "$sge_jvm_lib_path"
-         $INFOTEXT "   Additional JVM arguments >%s<" "$sge_additional_jvm_args"
-         $INFOTEXT "   JMX port                 >%s<" "$sge_jmx_port"
-         $INFOTEXT "   JMX ssl                  >%s<" "$sge_jmx_ssl"
-         $INFOTEXT "   JMX client ssl           >%s<" "$sge_jmx_ssl_client"
-         $INFOTEXT "   JMX server keystore      >%s<" "$sge_jmx_ssl_keystore"
-         $INFOTEXT "   JMX server keystore pw   >%s<" "$sge_jmx_ssl_keystore_pw"
-         $INFOTEXT "\n"
-
-         $INFOTEXT -ask "y" "n" -def "y" -n \
-            "Do you want to use these data (y/n) [y] >> "
-         if [ $? = 0 ]; then
-            alldone=true
-            SGE_ENABLE_JMX=$enable_jmx
-            SGE_JVM_LIB_PATH=$sge_jvm_lib_path
-            SGE_ADDITIONAL_JVM_ARGS=$sge_additional_jvm_args
-            SGE_JMX_PORT=$sge_jmx_port
-            SGE_JMX_SSL=$sge_jmx_ssl
-            SGE_JMX_SSL_CLIENT=$sge_jmx_ssl_client
-            SGE_JMX_SSL_KEYSTORE=$sge_jmx_ssl_keystore
-            SGE_JMX_SSL_KEYSTORE_PW=$sge_jmx_ssl_keystore_pw
-            export SGE_JVM_LIB_PATH SGE_JMX_PORT SGE_ADDITIONAL_JVM_ARGS SGE_ENABLE_JMX SGE_JMX_SSL SGE_JMX_SSL_CLIENT SGE_JMX_SSL_KEYSTORE SGE_JMX_SSL_KEYSTORE_PW
-         else
-            $CLEAR
-         fi
-      done
    fi
-
-   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
-   $CLEAR
  
 }
 

@@ -41,7 +41,7 @@
    </target>
     
    <target name="drmaa.clean" depends="init">
-      <ant dir="classes" antfile="build.xml" target="clean"/>
+      <myant dir="classes" target="clean"/>
    </target>
 
    <target name="drmaa.javadoc" depends="init">
@@ -58,7 +58,7 @@
    </target>
     
    <target name="juti.clean" depends="init">
-      <ant dir="libs/juti" antfile="build.xml" target="clean"/>
+      <myant dir="libs/juti" target="clean"/>
    </target>
     
    <target name="juti.javadoc" depends="init">
@@ -75,7 +75,7 @@
    </target>
     
    <target name="jgdi.clean" depends="init">
-      <ant dir="libs/jgdi" antfile="build.xml" target="clean"/>
+      <myant dir="libs/jgdi" target="clean"/>
    </target>
 
    <target name="jgdi.javadoc" depends="init">

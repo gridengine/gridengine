@@ -1,3 +1,8 @@
+AA-2008-03-13-0: Bugfix:    changed installation for JMX
+                            install_qmaster -jmx instead of enable jmx dialog
+                            correction of build.xml for clean target
+                 Review:    RH
+
 RD-2008-03-12-0: Bugfix:    - removed wrong unique hash introduced with
                               RD-2008-03-10-0
                             - replaced loop in qstat by hashed access

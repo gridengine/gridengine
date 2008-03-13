@@ -458,7 +458,7 @@ ErrUsage()
    $INFOTEXT -e \
              "Usage: %s -m|-um|-x|-ux [all]|-rccreate|-sm|-usm|-s|-db|-udb|-updatedb \\\n" \
              "       -upd |-bup|-rst|-copycerts <host|hostlist>| \\\n" \
-             "       -v [-auto <filename>] | [-winupdate] [-csp] [-resport] [-oldijs] \\\n" \
+             "       -v [-auto <filename>] | [-winupdate] [-csp] [-jmx] [-resport] [-oldijs] \\\n" \
              "       [-afs] [-host <hostname>] [-rsh] [-noremote]\n" \
              "   -m         install qmaster host\n" \
              "   -um        uninstall qmaster host\n" \
@@ -484,6 +484,7 @@ ErrUsage()
              "   -winupdate update to add gui features to a existing execd installation\n" \
              "   -csp       install system with security framework protocol\n" \
              "              functionality\n" \
+             "   -jmx       install qmaster with JMX server thread enabled\n" \
              "   -oldijs    configure old interactive job support\n" \
              "   -afs       install system with AFS functionality\n" \
              "   -noremote  supress remote installation during autoinstall\n" \

@@ -1,3 +1,6 @@
+JG-2008-03-13-0: Bugfix:    Fixed minor memory leaks.
+                 Review:    RD
+
 AA-2008-03-13-0: Bugfix:    changed installation for JMX
                             install_qmaster -jmx instead of enable jmx dialog
                             correction of build.xml for clean target

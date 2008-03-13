@@ -202,6 +202,8 @@ list_objects(bdb_info info, const char *key)
          answer_list_output(&answer_list);
          ret = EXIT_FAILURE;
       }
+
+      lFreeList(&list);
    }
 
    DRETURN(ret);

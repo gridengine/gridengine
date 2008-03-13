@@ -1891,7 +1891,7 @@ spool_berkeleydb_clear_log(lList **answer_list, bdb_info info)
 
    if (ret) {
       int dbret;
-      char **list;
+      char **list = NULL;
 
       PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       dbret = env->log_archive(env, &list, DB_ARCH_ABS);

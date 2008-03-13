@@ -361,9 +361,9 @@ size_t sge_strlcpy(char *dst, const char *src, size_t dstsize) {
 *     If no delimitor is given isspace() is used. 
 *
 *  INPUTS
-*     const char *str                - str which should be tokenized 
-*     const char *delimitor          - delimitor string 
-*     struct saved_vars_s **context  - context
+*     const char *str               - str which should be tokenized 
+*     const char *delimitor         - delimitor string 
+*     struct saved_vars_s **context - context
 *
 *  RESULT
 *     char* - first/next token
@@ -1035,23 +1035,23 @@ char **sge_stradup(char **cpp, int n)
 *     Free list of character pointers 
 *
 *  INPUTS
-*     char **cpp - Array of string pointers 
+*     char ***cpp - Pointer to array of string pointers 
 *
 *  NOTES
 *     MT-NOTE: sge_strafree() is MT safe
 ******************************************************************************/
-void sge_strafree(char **cpp)
+void sge_strafree(char ***cpp)
 {
-   char **cpp1 = cpp;
-   if (!cpp) {
-      return;
+   if (cpp != NULL && *cpp != NULL) {
+      char **cpp1 = *cpp;
+    
+      while (*cpp1 != NULL) {
+         FREE(*cpp1);
+         (*cpp1)++;
+      }
+      FREE(*cpp);
    }
- 
-   while (*cpp1) {
-      free(*cpp1++);
-   }
-   free(cpp);
-}                          
+}
 
 /****** uti/string/sge_stramemncpy() ******************************************
 *  NAME

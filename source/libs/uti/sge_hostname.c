@@ -178,7 +178,6 @@ int sge_get_qmaster_port(bool *from_services) {
 
       /* set new port value */
       cached_port = int_port;
-
    }
 
    sge_mutex_unlock("get_qmaster_port_mutex", SGE_FUNC, __LINE__, &get_qmaster_port_mutex);
@@ -866,8 +865,8 @@ static void sge_host_delete(host *h)
       else
          hostlist = hostlist->next;
    }
-   sge_strafree(h->he.h_aliases);
-   sge_strafree(h->he.h_addr_list);
+   sge_strafree(&(h->he.h_aliases));
+   sge_strafree(&(h->he.h_addr_list));
    free(h);
 
    sge_host_delete(predalias);
@@ -1218,7 +1217,7 @@ void sge_hostcpy(char *dst, const char *raw)
  
       sge_strlcpy(dst, raw, CL_MAXHOSTLEN);
    }
-   
+
    return;
 }  
 

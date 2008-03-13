@@ -1,3 +1,7 @@
+RD-2008-03-13-0: Bugfix:    fixed issue with queue subordinate suspention
+                            introduced by RD-2008-03-04-0
+                 Review:    AH
+
 JG-2008-03-13-0: Bugfix:    Fixed minor memory leaks.
                  Review:    RD
 

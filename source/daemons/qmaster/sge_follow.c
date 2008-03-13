@@ -291,7 +291,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          DRETURN(-1);
       }
 
-      if (lGetString(jep, JB_pe)) {
+      if (or_pe) {
          pe = pe_list_locate(*object_base[SGE_TYPE_PE].list, or_pe);
          if (!pe) {
             ERROR((SGE_EVENT, MSG_OBJ_UNABLE2FINDPE_S, or_pe));
@@ -533,12 +533,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
 
       /* now after successfully (we hope) sent the job to execd 
          suspend all subordinated queues that need suspension */
-      {
-         lList *master_list = *object_base[SGE_TYPE_CQUEUE].list;
-         lList *gdil = lGetList(jatp, JAT_granted_destin_identifier_list);
-
-         cqueue_list_x_on_subordinate_gdil(ctx, master_list, true, gdil, monitor);
-      }
+      cqueue_list_x_on_subordinate_gdil(ctx, *object_base[SGE_TYPE_CQUEUE].list, true, gdil, monitor);
    }    
    break;
 

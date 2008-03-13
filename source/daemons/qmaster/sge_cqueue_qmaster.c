@@ -1095,19 +1095,27 @@ cqueue_list_set_unknown_state(lList *this_list, const char *hostname,
 {
    lListElem *cqueue = NULL;
 
-   if (hostname == NULL) {
-      return;
-   }
-
    for_each(cqueue, this_list) {
-      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-      lListElem *qinstance = lGetElemHost(qinstance_list, QU_qhostname,
-                                          hostname);
-      if (qinstance != NULL &&
-          qinstance_state_is_unknown(qinstance) != is_unknown) {
-         sge_qmaster_qinstance_state_set_unknown(qinstance, is_unknown);
-         if (send_events) {
-            qinstance_add_event(qinstance, sgeE_QINSTANCE_MOD);
+      if (hostname != NULL) {
+         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+         lListElem *qinstance = lGetElemHost(qinstance_list, QU_qhostname,
+                                             hostname);
+         if (qinstance != NULL &&
+             qinstance_state_is_unknown(qinstance) != is_unknown) {
+            sge_qmaster_qinstance_state_set_unknown(qinstance, is_unknown);
+            if (send_events) {
+               qinstance_add_event(qinstance, sgeE_QINSTANCE_MOD);
+            }
+         }
+      } else {
+         lListElem *qinstance = NULL;
+         for_each (qinstance, lGetList(cqueue, CQ_qinstances)) {
+            if (qinstance_state_is_unknown(qinstance) != is_unknown) {
+               sge_qmaster_qinstance_state_set_unknown(qinstance, is_unknown);
+               if (send_events) {
+                  qinstance_add_event(qinstance, sgeE_QINSTANCE_MOD);
+               }
+            }
          }
       }
    }

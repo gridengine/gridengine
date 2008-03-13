@@ -533,30 +533,32 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                   lSetList(this_elem, attribute_name, lCopyList("", new_value));
                   *has_changed_conf_attr = true;
 
-                  /*
-                   * Find list of subordinates that have to be suspended after
-                   * the modification of CQ_subordinate_list-sublist 
-                   */
-                  ret &= qinstance_find_suspended_subordinates(this_elem,
-                                                               answer_list,
-                                                               &suspended_so);
+                  if (initial_modify == false) {
+                     /*
+                      * Find list of subordinates that have to be suspended after
+                      * the modification of CQ_subordinate_list-sublist 
+                      */
+                     ret &= qinstance_find_suspended_subordinates(this_elem,
+                                                                  answer_list,
+                                                                  &suspended_so);
 
-                  /* 
-                   * Remove equal entries in both lists 
-                   */
-                  lDiffListStr(SO_name, &suspended_so, &unsuspended_so);
+                     /* 
+                      * Remove equal entries in both lists 
+                      */
+                     lDiffListStr(SO_name, &suspended_so, &unsuspended_so);
 
-                  /*
-                   * (Un)suspend subordinated queue instances
-                   */
-                  cqueue_list_x_on_subordinate_so(ctx,
-                                                  master_list, answer_list, 
-                                                  false, unsuspended_so, false,
-                                                  monitor);
-                  cqueue_list_x_on_subordinate_so(ctx,
-                                                  master_list, answer_list, 
-                                                  true, suspended_so, false,
-                                                  monitor);
+                     /*
+                      * (Un)suspend subordinated queue instances
+                      */
+                     cqueue_list_x_on_subordinate_so(ctx,
+                                                     master_list, answer_list, 
+                                                     false, unsuspended_so, false,
+                                                     monitor);
+                     cqueue_list_x_on_subordinate_so(ctx,
+                                                     master_list, answer_list, 
+                                                     true, suspended_so, false,
+                                                     monitor);
+                  }
 
                   /*
                    * Cleanup

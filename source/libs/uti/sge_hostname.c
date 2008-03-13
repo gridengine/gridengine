@@ -132,7 +132,7 @@ int sge_get_qmaster_port(void) {
    if (next_timeout > 0 ) {
       DPRINTF(("reresolve port timeout in "sge_U32CFormat"\n", sge_u32c( next_timeout - now.tv_sec)));
    }
-   if ( cached_port >= 0 && next_timeout > now.tv_sec ) {
+   if (cached_port >= 0 && next_timeout > now.tv_sec) {
       int_port = cached_port;
       DPRINTF(("returning cached port value: "sge_U32CFormat"\n", sge_u32c(int_port)));
       sge_mutex_unlock("get_qmaster_port_mutex", SGE_FUNC, __LINE__, &get_qmaster_port_mutex);
@@ -692,26 +692,26 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_
 #ifdef GETHOSTBYADDR_R7
 #define SGE_GETHOSTBYADDR_FOUND
    /* This is for Solaris */
-   DPRINTF (("Getting host by addr - Solaris\n"));
+   DPRINTF(("Getting host by addr - Solaris\n"));
    {
       char buffer[4096];
       struct hostent *help_he = NULL;
-      he = (struct hostent *)malloc (sizeof (struct hostent));
+      he = (struct hostent *)malloc(sizeof(struct hostent));
       if (he != NULL) {
          memset(he, 0, sizeof(struct hostent));
 
          /* On Solaris, this function returns the pointer to my struct on success
           * and NULL on failure. */
-         help_he = gethostbyaddr_r ((const char *)addr, 4, AF_INET, he, buffer, 4096, &l_errno);
+         help_he = gethostbyaddr_r((const char *)addr, 4, AF_INET, he, buffer, 4096, &l_errno);
       
          /* Since he contains pointers into buffer, and buffer goes away when we
           * exit this code block, we make a deep copy to return. */
          if (help_he != NULL) {
-            struct hostent *new_he = sge_copy_hostent (help_he);
-            FREE (he);
+            struct hostent *new_he = sge_copy_hostent(help_he);
+            FREE(he);
             he = new_he;
          } else {
-            FREE (he);
+            FREE(he);
             he = NULL;
          }
       }
@@ -721,7 +721,7 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_
 #ifdef GETHOSTBYADDR_R5
 #define SGE_GETHOSTBYADDR_FOUND
    /* This is for HPUX < 11 */
-   DPRINTF (("Getting host by addr - 3 arg\n"));
+   DPRINTF(("Getting host by addr - 3 arg\n"));
    
    {
       struct hostent_data he_data;
@@ -757,7 +757,7 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_
 #ifdef GETHOSTBYADDR
 #define SGE_GETHOSTBYADDR_FOUND
    /* This is for HPUX >= 11 */
-   DPRINTF (("Getting host by addr - Thread safe\n"));
+   DPRINTF(("Getting host by addr - Thread safe\n"));
    he = gethostbyaddr((const char *)addr, 4, AF_INET);
    /* The location of the error code is actually undefined.  I'm just
     * assuming that it's in h_errno since that's where it is in the unsafe
@@ -783,7 +783,7 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_
 
 #if defined(CRAY)
    he = gethostbyaddr((const char *)addr, sizeof(struct in_addr), AF_INET);
-#else   
+#else
    he = gethostbyaddr((const char *)addr, 4, AF_INET);
 #endif
 
@@ -855,8 +855,8 @@ static void sge_host_delete(host *h)
       else
          hostlist = hostlist->next;
    }
-   sge_strafree(h->he.h_aliases);
-   sge_strafree(h->he.h_addr_list);
+   sge_strafree(&(h->he.h_aliases));
+   sge_strafree(&(h->he.h_addr_list));
    free(h);
 
    sge_host_delete(predalias);
@@ -1191,7 +1191,6 @@ void sge_hostcpy(char *dst, const char *raw)
               SGE_STRCASECMP(bootstrap_get_default_domain(), "none") != 0) {
  
       /* exotic: honor FQDN but use default_domain */
- 
       if (!strchr(raw, '.')) {
          snprintf(dst, CL_MAXHOSTLEN, "%s.%s", raw, bootstrap_get_default_domain());
       } else {
@@ -1202,6 +1201,7 @@ void sge_hostcpy(char *dst, const char *raw)
  
       sge_strlcpy(dst, raw, CL_MAXHOSTLEN);
    }
+
    return;
 }  
 
@@ -1243,9 +1243,9 @@ int sge_hostcmp(const char *h1, const char*h2)
       sge_hostcpy(h1_cpy,h1);
       sge_hostcpy(h2_cpy,h2);
  
-     cmp = SGE_STRCASECMP(h1_cpy, h2_cpy);
+      cmp = SGE_STRCASECMP(h1_cpy, h2_cpy);
 
-     DPRINTF(("sge_hostcmp(%s, %s) = %d\n", h1_cpy, h2_cpy));
+      DPRINTF(("sge_hostcmp(%s, %s) = %d\n", h1_cpy, h2_cpy));
    }
  
    DEXIT;

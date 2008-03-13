@@ -1,3 +1,6 @@
+JG-2008-03-13-0: Bugfix:    Fixed minor memory leaks.
+                 Review:    RD
+
 AH-2008-03-03-2: Bugfix     Fix drmaa_job_ps() memory leak
                  Issue:     2505
                  Review:    RD

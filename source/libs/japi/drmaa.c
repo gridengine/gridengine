@@ -2719,6 +2719,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
          return DRMAA_ERRNO_DENIED_BY_DRM;
       }
    }
+   lFreeList(&alp);
 
    if ((drmaa_errno = opt_list_append_opts_from_drmaa_attr(&opts_drmaa,
                            drmaa_jt->strings, drmaa_jt->string_vectors,
@@ -2772,12 +2773,14 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
             DEXIT;
             return DRMAA_ERRNO_DENIED_BY_DRM;
          }
+         lFreeList(&alp);
       }
       /* -cwd could also theoretically appear in opts_default, but since I
        * control what goes into opts_default, I know it isn't. */
       else if ((!(opt_list_has_X(opts_native, "-cwd"))) &&
                (!(opt_list_has_X(opts_defaults, "-cwd")))){
          path = drmaa_get_home_directory(&alp);
+         lFreeList(&alp);
       }
 
       if (path != NULL) {
@@ -2876,14 +2879,15 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
          DEXIT;
          return DRMAA_ERRNO_DENIED_BY_DRM;
       }
+      lFreeList(&alp);
 
       FREE(job_cat);
       
       if (args != NULL) {
          opt_list_append_opts_from_qsub_cmdline(&opts_job_cat, &alp,
-                                                 args, environ);
-         
-         FREE(args);
+                                                args, environ);
+         /* free the args string array */
+         sge_strafree(&args);
 
          if (answer_list_has_error(&alp)) {
             answer_list_to_dstring(alp, diag);
@@ -2944,6 +2948,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
                   DEXIT;
                   return DRMAA_ERRNO_DENIED_BY_DRM;
                }
+               lFreeList(&alp);
             }
          }
       } else {
@@ -2986,6 +2991,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
       answer_list_to_dstring(alp, diag);
       lFreeElem(&jt);
       lFreeList(&opts_all);
+      lFreeList(&alp);
       DEXIT;
       return DRMAA_ERRNO_DENIED_BY_DRM;
    }

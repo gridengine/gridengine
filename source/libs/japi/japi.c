@@ -976,7 +976,7 @@ int japi_exit(int flag, dstring *diag)
       JAPI_UNLOCK_EC_STATE();
 
       if (my_state == JAPI_EC_UP) {
-         japi_stop_event_client ();
+         japi_stop_event_client();
       }
 
       DPRINTF (("Waiting for event client to terminate.\n"));
@@ -4195,6 +4195,7 @@ static void *japi_implementation_thread(void *p)
       lFreeList(&alp);
       goto SetupFailed;
    }
+
    log_state_set_log_gui(0);
 
    /* JAPI parameters passed through environment */
@@ -4573,8 +4574,7 @@ static void *japi_implementation_thread(void *p)
     * JAPI_EC_FINISHING="aborted by main thread." */
    if ((japi_ec_state == JAPI_EC_UP) || (japi_ec_state == JAPI_EC_FINISHING)) {
       japi_ec_state = JAPI_EC_DOWN;
-   }
-   else {
+   } else {
       japi_ec_state = JAPI_EC_FAILED;
    }
    

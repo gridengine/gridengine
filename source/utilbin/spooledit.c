@@ -195,6 +195,8 @@ list_objects(bdb_info info, const char *key)
          answer_list_output(&answer_list);
          ret = EXIT_FAILURE;
       }
+
+      lFreeList(&list);
    }
 
    DEXIT;
@@ -227,6 +229,7 @@ dump_object(bdb_info info, const char *key)
          ret = EXIT_FAILURE;
       } else {
          lDumpElemFp(stdout, object, 0);
+         lFreeElem(&object);
       }
    }
 

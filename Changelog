@@ -1,3 +1,6 @@
+AH-2008-03-13-0: Bugfix:    Fix possible libdrmaa.so crash in sge_uid2user()
+                 Review:    DG
+
 RD-2008-03-13-0: Bugfix:    fixed issue with queue subordinate suspention
                             introduced by RD-2008-03-04-0
                  Review:    AH

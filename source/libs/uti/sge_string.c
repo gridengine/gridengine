@@ -990,7 +990,7 @@ void sge_strafree(char ***cpp)
     
       while (*cpp1 != NULL) {
          FREE(*cpp1);
-         (*cpp1)++;
+         cpp1++;
       }
       FREE(*cpp);
    }
@@ -1112,7 +1112,7 @@ stra_from_str(const char *source_str, const char *delim)
          }
          ret[n] = NULL;
          sge_free_saved_vars(context);
-      } 
+      }
    }
    return ret;
 }

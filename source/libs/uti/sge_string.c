@@ -1047,7 +1047,7 @@ void sge_strafree(char ***cpp)
     
       while (*cpp1 != NULL) {
          FREE(*cpp1);
-         (*cpp1)++;
+         cpp1++;
       }
       FREE(*cpp);
    }

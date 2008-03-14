@@ -667,7 +667,7 @@ int sge_uid2user(uid_t uid, char *dst, size_t sz, int retries)
       buffer = sge_malloc(size);
       
       /* max retries that are made resolving user name */
-      while (getpwuid_r(uid, &pwentry, buffer, size, &pw) != 0) {
+      while (getpwuid_r(uid, &pwentry, buffer, size, &pw) != 0 || !pw) {
          if (!retries--) {
             ERROR((SGE_EVENT, MSG_SYSTEM_GETPWUIDFAILED_US, 
                   sge_u32c(uid), strerror(errno)));

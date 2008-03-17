@@ -1,3 +1,8 @@
+JG-2008-03-17-1: Cleanup:   Event delivery time for scheduler
+                            (schedule_interval) was set twice when
+                            schedd config changed.
+                 Review:    EB
+
 JG-2008-03-17-0: Bugfix:    Fixed incorrect handling of flush_submit_secs and
                             flush_finish_secs in scheduler thread.
                  Review:    EB

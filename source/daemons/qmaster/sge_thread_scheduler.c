@@ -907,7 +907,7 @@ sge_scheduler_main(void *arg)
                /* set scheduler interval / event delivery interval */
                u_long32 interval = sconf_get_schedule_interval();
                if (evc->ec_get_edtime(evc) != interval) {
-                    evc->ec_set_edtime(evc, interval);
+                  evc->ec_set_edtime(evc, interval);
                }
 
                /* set job / ja_task event flushing */

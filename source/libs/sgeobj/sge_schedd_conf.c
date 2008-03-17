@@ -2220,7 +2220,7 @@ bool sconf_is_job_category_filtering(void){
 u_long32 sconf_get_flush_submit_sec(void)
 {
    const lListElem *sc_ep = NULL;
-   u_long32 flush_sec = (u_long32)-1;
+   u_long32 flush_sec = 0;
   
    sge_mutex_lock("Sched_Conf_Lock", "", __LINE__, &pos.mutex);
       
@@ -2255,7 +2255,7 @@ u_long32 sconf_get_flush_submit_sec(void)
 u_long32 sconf_get_flush_finish_sec(void)
 {
    const lListElem *sc_ep = NULL;
-   u_long32 flush_sec = (u_long32)-1;
+   u_long32 flush_sec = 0;
   
    sge_mutex_lock("Sched_Conf_Lock", "", __LINE__, &pos.mutex);
       

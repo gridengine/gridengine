@@ -291,7 +291,6 @@ char *argv[]
        * in this case do not start a scheduling run
        */
       if (done == false) {
-
          if (check_qmaster) {
             if ((ret = sge_ck_qmaster(ctx, initial_qmaster_host)) < 0) {
                FREE(initial_qmaster_host);
@@ -309,25 +308,33 @@ char *argv[]
             }
          }
 
-         if(sge_mirror_process_events(evc) == SGE_EM_TIMEOUT) {
+         if (sge_mirror_process_events(evc) == SGE_EM_TIMEOUT) {
             check_qmaster = true;
             continue;
          }
 
-         if(evc->ec_need_new_registration(evc)) {
+         if (evc->ec_need_new_registration(evc)) {
             check_qmaster = true;
             continue;
          }
 
          /* got new config? */
          if (sconf_is_new_config()) {
+            u_long32 interval = sconf_get_schedule_interval();
+            if (evc->ec_get_edtime(evc) != interval) {
+               evc->ec_set_edtime(evc, interval);
+            }
+
             /* 
              * Update synchronous receive timeout
              * This is the timeout used for waiting for events. 
              */
             cl_com_set_synchron_receive_timeout(cl_com_get_handle(prognames[SCHEDD], 0), 
-                                                (int) (sconf_get_schedule_interval() * 2));
+                                                (int) (interval * 2));
 
+            /* set job / ja_task event flushing */
+            set_job_flushing(evc);
+            
             /* check profiling settings, if necessary, switch profiling on/off */
             if (sconf_get_profiling()) {
                prof_start(SGE_PROF_OTHER, NULL);
@@ -344,8 +351,7 @@ char *argv[]
                prof_start(SGE_PROF_CUSTOM6, NULL);
                prof_start(SGE_PROF_CUSTOM7, NULL);
                prof_start(SGE_PROF_SCHEDLIB4, NULL);
-            } 
-            else {
+            } else {
                prof_stop(SGE_PROF_OTHER, NULL);
                prof_stop(SGE_PROF_PACKING, NULL);
                prof_stop(SGE_PROF_EVENTCLIENT, NULL);
@@ -361,11 +367,11 @@ char *argv[]
                prof_stop(SGE_PROF_CUSTOM7, NULL);
                prof_stop(SGE_PROF_SCHEDLIB4, NULL);
             }
+
+            sconf_reset_new_config();
          }
    
          sched_funcs[current_scheduler].event_func(evc);
-
-         sconf_reset_new_config();
       }
       
       /* output profiling information */
@@ -670,39 +676,19 @@ int sge_before_dispatch(sge_evc_class_t *evc)
 
       if (gdi2_get_configuration(ctx, SGE_GLOBAL_NAME, &global, &local) == 0) {
          merge_configuration(NULL, progid, cell_root, global, local, NULL);
-      }   
+      }
       lFreeElem(&global);
       lFreeElem(&local);
       new_global_config = 0;
    }
    
-   if (sconf_is_new_config()) {
-      int interval = sconf_get_flush_finish_sec();
-      bool flush = (interval > 0) ? true : false;
-      interval--;
-      if (evc->ec_get_flush(evc, sgeE_JOB_DEL) != interval) {
-         evc->ec_set_flush(evc, sgeE_JOB_DEL,flush, interval);
-         evc->ec_set_flush(evc, sgeE_JOB_FINAL_USAGE,flush, interval);
-         evc->ec_set_flush(evc, sgeE_JATASK_MOD, flush, interval);
-         evc->ec_set_flush(evc, sgeE_JATASK_DEL, flush, interval);
-      }
-
-      interval= sconf_get_flush_submit_sec();
-      flush = (interval > 0) ? true : false;
-      interval--;      
-      if(evc->ec_get_flush(evc, sgeE_JOB_ADD) != interval) {
-         evc->ec_set_flush(evc, sgeE_JOB_ADD, flush, interval);
-      }
-      evc->ec_commit(evc, NULL);
-   }
-
    /*
     * job categories are reset here, we need 
     *  - an update of the rejected field for every new run
     *  - the resource request dependent urgency contribution is cached 
     *    per job category 
     */
-   sge_reset_job_category(); 
+   sge_reset_job_category();
    
    DRETURN(0);
 }

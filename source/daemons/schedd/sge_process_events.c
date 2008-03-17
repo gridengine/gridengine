@@ -813,18 +813,6 @@ sge_process_schedd_conf_event_before(sge_evc_class_t *evc, object_description *o
       lFreeElem(&old);
    }
 
-   /* check event client settings */
-   {
-      const char *time = lGetString(new, SC_schedule_interval); 
-      u_long32 schedule_interval;  
-
-      if (extended_parse_ulong_val(NULL, &schedule_interval, TYPE_TIM, time, NULL, 0, 0, true) ) {
-         if (evc->ec_get_edtime(evc) != schedule_interval) {
-           evc->ec_set_edtime(evc, schedule_interval);
-         }
-      }
-   }
-
    if (use_alg(lGetString(new, SC_algorithm))==2) {
       /* changings on event handler or schedule interval can take effect 
        * only after a new registration of schedd at qmaster 
@@ -1205,7 +1193,25 @@ sge_process_schedd_monitor_event(sge_evc_class_t *evc, object_description *objec
    schedd_set_monitor_next_run(true);
    DEXIT;
    return SGE_EMA_OK;
-}   
+}
+
+void set_job_flushing(sge_evc_class_t *evc)
+{
+   int interval;
+   bool flush;
+
+   interval= sconf_get_flush_submit_sec();
+   flush = (interval > 0) ? true : false;
+   interval--;
+   evc->ec_set_flush(evc, sgeE_JOB_ADD, flush, interval);
+
+   interval = sconf_get_flush_finish_sec();
+   flush = (interval > 0) ? true : false;
+   interval--;
+   evc->ec_set_flush(evc, sgeE_JOB_DEL, flush, interval);
+   evc->ec_set_flush(evc, sgeE_JOB_FINAL_USAGE, flush, interval);
+   evc->ec_set_flush(evc, sgeE_JATASK_DEL, flush, interval);
+}
 
 int subscribe_default_scheduler(sge_evc_class_t *evc)
 {
@@ -1250,33 +1256,8 @@ int subscribe_default_scheduler(sge_evc_class_t *evc)
                         NULL, NULL, NULL, NULL); 
 
    /* set flush parameters for job */
-   {
-      int temp = sconf_get_flush_submit_sec();
-      if (temp <= 0) {
-         evc->ec_set_flush(evc, sgeE_JOB_ADD, false, -1);        
-         /* SG: we might want to have sgeE_JOB_MOD in here to be notified, when
-         a job is removed from its hold state */
-      }   
-      else {
-         temp--;
-         evc->ec_set_flush(evc, sgeE_JOB_ADD, true, temp);        
-         /* SG: we might want to have sgeE_JOB_MOD in here to be notified, when
-         a job is removed from its hold state */
-      }   
-         
-      temp = sconf_get_flush_finish_sec();
-      if (temp <= 0){
-         evc->ec_set_flush(evc, sgeE_JOB_DEL, false, -1);
-         evc->ec_set_flush(evc, sgeE_JOB_FINAL_USAGE, false, -1);
-         evc->ec_set_flush(evc, sgeE_JATASK_DEL, false, -1);
-      }
-      else {
-         temp--;
-         evc->ec_set_flush(evc, sgeE_JOB_DEL, true, temp);
-         evc->ec_set_flush(evc, sgeE_JOB_FINAL_USAGE, true, temp);
-         evc->ec_set_flush(evc, sgeE_JATASK_DEL, true, temp);
-      }
-   }
+   set_job_flushing(evc);
+
    /* for some reason we flush sharetree changes */
    evc->ec_set_flush(evc, sgeE_NEW_SHARETREE, true, 0);
 

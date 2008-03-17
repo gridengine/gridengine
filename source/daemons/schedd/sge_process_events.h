@@ -39,6 +39,7 @@
 
 /* which data do we want to be mirrored from qmaster */
 int subscribe_default_scheduler(sge_evc_class_t *evc);
+void set_job_flushing(sge_evc_class_t *evc);
 
 /* event post processing */
 int event_handler_default_scheduler(sge_evc_class_t *evc);

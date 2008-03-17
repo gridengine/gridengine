@@ -1,3 +1,11 @@
+CR-2008-03-17-0: Bugfix:    Uninstall execd ignored because of hostname
+                            matching problem
+                 Enhancem.: Log hostname resolve changes into auto install log
+                            for (un)installing execd hosts
+                 Issue:     2516
+                 Bugster:   6676063
+                 Review:    MD
+
 LP-2008-03-17-1: Bugfix:    shadow_masters file might contain some hosts twice
                  Bugfix:    sgemaster -qmaster stop shutdowns also shadowd
                  Bugfix:    execd uninstallation should remove execd_spool_dir 

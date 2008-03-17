@@ -122,6 +122,9 @@ CERT_COPY_HOST_LIST="undef"
 SERVICE_TAGS="undef"
 SGE_ENABLE_SMF="true"
 
+#Save changed host names during resolving
+RESOLVED_CHANGED_HOSTNAMES=""
+
 BasicSettings
 SetUpInfoText
 PreInstallCheck
@@ -538,6 +541,8 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
     install_is_done="false"
     max_retries=20
     Stdout2Log
+    LogResolvedHostLists
+
     . $SGE_ROOT/$SGE_CELL/common/settings.sh
 
    if [ -f "$SGE_ROOT/$SGE_CELL/common/bootstrap" ]; then
@@ -771,6 +776,7 @@ if [ "$EXECD" = "uninstall" ]; then
    if [ "$AUTO" = "true" ]; then
       Stdout2Log
       $INFOTEXT -log "Starting execution host uninstallation!"
+      LogResolvedHostLists
    fi
 
    if [ "$SGE_REMOTE_FLAG" != "REMOTE_EXECD_UNINSTALL" ]; then 

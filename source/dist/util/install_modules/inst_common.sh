@@ -538,6 +538,101 @@ GetConfigFromFile()
       SGE_ENABLE_SMF=false
    fi
 }
+#--------------------------------------------------------------------------
+# Parameter $1: String which might be a Ip adress
+# Return: 0 if not, 1 if yes
+# echo: parsed IP address
+IsIpAddress()
+{
+   IP=$1
+   isIp=""
+   ipFound=""
+   if [ "$IP" != "" ]; then
+      # split text into 4 strings on the "." and
+      # check that the value is an integer >= 0
+      # and lower than 256
+      for nr in 1 2 3 4; do
+         value=`echo $IP | cut -d"." -f$nr`
+         isNotDigit=`echo $value | grep "[^0-9]"`
+         if [ "$isNotDigit" = "" -a "$value" != "" ]; then
+            if [ "$value" -ge 0 -a "$value" -lt 256 ]; then
+               isIp="${isIp}1"
+               if [ "$ipFound" != "" ]; then 
+                  ipFound="${ipFound}."
+               fi
+               ipFound="${ipFound}$value"
+            fi
+         fi
+      done
+   fi
+
+   # If we found 4 numbers  0 =< nr < 256
+   # between 4 points. This must be an ip address
+   if [ "$isIp" = "1111" ]; then
+      echo ${ipFound}
+      return 1
+   fi
+   echo ""
+   return 0
+}
+
+#--------------------------------------------------------------------------
+# Get IP address list of a host
+# Parameters $1 , hostname
+# return: number of found ip adresses
+# echo: list of ip addresses
+GetIpAddressOfHost()
+{
+   # call gethostbyname and remove the first column splitted on
+   # the ":". Also ignore lines which don't have a "."
+   LIST=`$SGE_UTILBIN/gethostbyname $1 | cut -d":" -f 2 | grep "\."`
+   IpList=""
+   IpCount=0
+   for line in $LIST; do
+      isIp=`IsIpAddress $line `
+      if [ $? -eq 1 ]; then
+         IpList="${IpList} $isIp"
+         IpCount=`expr $IpCount + 1`
+      fi
+   done
+
+   # Return the number of found ip adresses
+   # output the ip adress list
+   echo $IpList
+   return $IpCount
+}
+
+
+
+
+#--------------------------------------------------------------------------
+# Resolve a single host
+#
+ResolveSingleHost()
+{
+   UNRESOLVED=$1
+   RESOLVED=""
+   ResolveSingleHostResult=""
+   # It is better to resolve the host by finding out its
+   # ip address. If the host matches to exaclty one ip address
+   # we use the ip address to resolve the host local.
+   # By doing it this way we eliminate problems with long
+   # and short hostname resolving.
+   if [ "$UNRESOLVED" != "" ]; then
+      HOSTIP=`GetIpAddressOfHost $UNRESOLVED`
+      if [ $? -eq 1  ]; then
+         # We have only 1 ip address, resolve by IP
+         RESOLVED=`$SGE_UTILBIN/gethostbyaddr -name $HOSTIP`
+      else
+         # Resolve by name
+         RESOLVED=`$SGE_UTILBIN/gethostbyname -name $UNRESOLVED`
+      fi
+   fi
+
+   # Save the resolve result in RESOLVED_CHANGED_HOSTNAMES
+   AddChangedHost ${UNRESOLVED} ${RESOLVED}
+   ResolveSingleHostResult=$RESOLVED
+}
 
 #--------------------------------------------------------------------------
 # Resolves the given hostname list to the names used by SGE
@@ -545,6 +640,7 @@ GetConfigFromFile()
 ResolveHosts()
 {
    HOSTS=""
+   ResolveHostsResult=""
    if [ $# -ge 1 ]; then
       for host in $*; do
          if [ "$host" = "none" ]; then
@@ -552,14 +648,16 @@ ResolveHosts()
          else
             if [ -f $host ]; then
                for fhost in `cat $host`; do
-                  HOSTS="$HOSTS `$SGE_UTILBIN/gethostbyname -name $fhost`"
+                  ResolveSingleHost $fhost
+                  HOSTS="$HOSTS $ResolveSingleHostResult"
                done
             fi
-            HOSTS="$HOSTS `$SGE_UTILBIN/gethostbyname -name $host`" 
+            ResolveSingleHost $host
+            HOSTS="$HOSTS $ResolveSingleHostResult" 
          fi
       done
    fi
-   echo $HOSTS
+   ResolveHostsResult=$HOSTS
 }
 
 #--------------------------------------------------------------------------
@@ -571,6 +669,41 @@ CheckRSHConnection()
    $SHELL_NAME $check_host hostname
 
    return $?
+}
+
+
+#--------------------------------------------------------------------------
+# Log result of hostname resolvings into log file
+LogResolvedHostLists()
+{
+   if [ "$AUTO" = "true" ]; then
+      if [ "$RESOLVED_CHANGED_HOSTNAMES" != "" ]; then
+         $INFOTEXT -log "Local hostname resolving results:"
+      fi
+      for resolve_text in $RESOLVED_CHANGED_HOSTNAMES; do
+         unresolvedHostname=`echo $resolve_text | cut -d# -f1`
+         resolvedHostname=`echo $resolve_text | cut -d# -f2`
+         $INFOTEXT -log "   Resolved host \"$unresolvedHostname\" to \"$resolvedHostname\""
+      done
+   fi
+}
+
+#--------------------------------------------------------------------------
+# Save the result of the resolving in a global list. The resolve result
+# can later be logged by LogResolvedHostLists()
+# 
+# $1 unresolved host name
+# $2 resolved host name
+AddChangedHost()
+{
+   UNRESOLVED=$1
+   RESOLVED=$2
+   if [ "$UNRESOLVED" != "$RESOLVED" ]; then
+      if [ "$RESOLVED_CHANGED_HOSTNAMES" != "" ]; then
+         RESOLVED_CHANGED_HOSTNAMES="${RESOLVED_CHANGED_HOSTNAMES} "
+      fi 
+      RESOLVED_CHANGED_HOSTNAMES="${RESOLVED_CHANGED_HOSTNAMES}${UNRESOLVED}#${RESOLVED}"
+   fi
 }
 
 #--------------------------------------------------------------------------
@@ -646,13 +779,24 @@ CheckConfigFile()
    #do hostname resolving. fetching hostname from config file, try to resolve and
    #and recreate the hostname lists
    if [ "$DB_SPOOLING_SERVER" != "none" ]; then
-      DB_SPOOLING_SERVER=`ResolveHosts $DB_SPOOLING_SERVER`
+      ResolveHosts $DB_SPOOLING_SERVER
+      DB_SPOOLING_SERVER=$ResolveHostsResult
    fi
-   ADMIN_HOST_LIST=`ResolveHosts $ADMIN_HOST_LIST`
-   SUBMIT_HOST_LIST=`ResolveHosts $SUBMIT_HOST_LIST`
-   EXEC_HOST_LIST=`ResolveHosts $EXEC_HOST_LIST`
-   SHADOW_HOST=`ResolveHosts $SHADOW_HOST`
-   EXEC_HOST_LIST_RM=`ResolveHosts $EXEC_HOST_LIST_RM`
+
+   ResolveHosts $ADMIN_HOST_LIST
+   ADMIN_HOST_LIST=$ResolveHostsResult
+
+   ResolveHosts $SUBMIT_HOST_LIST
+   SUBMIT_HOST_LIST=$ResolveHostsResult
+
+   ResolveHosts $EXEC_HOST_LIST
+   EXEC_HOST_LIST=$ResolveHostsResult
+
+   ResolveHosts $SHADOW_HOST
+   SHADOW_HOST=$ResolveHostsResult
+
+   ResolveHosts $EXEC_HOST_LIST_RM
+   EXEC_HOST_LIST_RM=$ResolveHostsResult
 
    if [ "$QMASTER" = "install" -o "$EXECD" = "install" -o "$QMASTER" = "uninstall" -o "$EXECD" = "uninstall" ]; then
       for e in $CONFIG_ENTRIES; do

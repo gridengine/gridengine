@@ -53,6 +53,6 @@ sge_schedd_get_unhandled_request_count(sge_gdi_ctx_class_t *ctx,
                                        lList **answer_list);
 
 bool
-sge_schedd_block_until_oders_processed(sge_gdi_ctx_class_t *ctx, lList **answer_list);
+sge_schedd_block_until_orders_processed(sge_gdi_ctx_class_t *ctx, lList **answer_list);
 
 #endif

@@ -151,9 +151,26 @@ void event_update_func(u_long32 ec_id, lList **alpp, lList *event_list)
 /*  event client registration stuff          */
 /*********************************************/
 
-int subscribe_scheduler(sge_evc_class_t *evc, sge_where_what_t *where_what) {
-   int temp;
+void set_job_flushing(sge_evc_class_t *evc)
+{
+   int interval;
+   bool flush;
 
+   interval= sconf_get_flush_submit_sec();
+   flush = (interval > 0) ? true : false;
+   interval--;
+   evc->ec_set_flush(evc, sgeE_JOB_ADD, flush, interval);
+
+   interval = sconf_get_flush_finish_sec();
+   flush = (interval > 0) ? true : false;
+   interval--;
+   evc->ec_set_flush(evc, sgeE_JOB_DEL, flush, interval);
+   evc->ec_set_flush(evc, sgeE_JOB_FINAL_USAGE, flush, interval);
+   evc->ec_set_flush(evc, sgeE_JATASK_DEL, flush, interval);
+}
+
+int subscribe_scheduler(sge_evc_class_t *evc, sge_where_what_t *where_what)
+{
    DENTER(TOP_LAYER, "subscribe_scheduler");
 
    /* subscribe event types for the mirroring interface */
@@ -177,30 +194,7 @@ int subscribe_scheduler(sge_evc_class_t *evc, sge_where_what_t *where_what) {
    sge_mirror_subscribe(evc, SGE_TYPE_USER,           NULL, NULL, NULL, NULL, NULL);
    sge_mirror_subscribe(evc, SGE_TYPE_USERSET,        sge_process_userset_event_before, NULL, NULL, NULL, NULL);
 
-   /* set flush parameters for job */
-   temp = sconf_get_flush_submit_sec();
-   if (temp <= 0) {
-      evc->ec_set_flush(evc, sgeE_JOB_ADD, false, -1);
-      /* SG: we might want to have sgeE_JOB_MOD in here to be notified, when
-      a job is removed from its hold state */
-   } else {
-      temp--;
-      evc->ec_set_flush(evc, sgeE_JOB_ADD, true, temp);
-      /* SG: we might want to have sgeE_JOB_MOD in here to be notified, when
-      a job is removed from its hold state */
-   }  
-
-   temp = sconf_get_flush_finish_sec();
-   if (temp <= 0){
-      evc->ec_set_flush(evc, sgeE_JOB_DEL, false, -1);
-      evc->ec_set_flush(evc, sgeE_JOB_FINAL_USAGE, false, -1);
-      evc->ec_set_flush(evc, sgeE_JATASK_DEL, false, -1);
-   } else {
-      temp--;
-      evc->ec_set_flush(evc, sgeE_JOB_DEL, true, temp);
-      evc->ec_set_flush(evc, sgeE_JOB_FINAL_USAGE, true, temp);
-      evc->ec_set_flush(evc, sgeE_JATASK_DEL, true, temp);
-   }
+   set_job_flushing(evc);
 
    /* for some reason we flush sharetree changes */
    evc->ec_set_flush(evc, sgeE_NEW_SHARETREE, true, 0);
@@ -208,7 +202,7 @@ int subscribe_scheduler(sge_evc_class_t *evc, sge_where_what_t *where_what) {
    /* configuration changes and trigger should have immediate effevc->ect */
    evc->ec_set_flush(evc, sgeE_SCHED_CONF, true, 0);
    evc->ec_set_flush(evc, sgeE_SCHEDDMONITOR, true, 0);
-   evc->ec_set_flush(evc, sgeE_GLOBAL_CONFIG,true, 0);
+   evc->ec_set_flush(evc, sgeE_GLOBAL_CONFIG, true, 0);
 
    DRETURN(true);
 }
@@ -235,26 +229,6 @@ int sge_before_dispatch(sge_evc_class_t *evc)
       lFreeElem(&local); 
       st_set_flag_new_global_conf(false);
    }  
-      
-   if (sconf_is_new_config()) {
-      int interval = sconf_get_flush_finish_sec();
-      bool flush = (interval > 0) ? true : false;
-      interval--;
-      if (evc->ec_get_flush(evc, sgeE_JOB_DEL) != interval) {
-         evc->ec_set_flush(evc, sgeE_JOB_DEL, flush, interval);
-         evc->ec_set_flush(evc, sgeE_JOB_FINAL_USAGE, flush, interval);
-         evc->ec_set_flush(evc, sgeE_JATASK_MOD, flush, interval);
-         evc->ec_set_flush(evc, sgeE_JATASK_DEL, flush, interval);
-      }     
-         
-      interval= sconf_get_flush_submit_sec();
-      flush = (interval > 0) ? true : false;
-      interval--;
-      if(evc->ec_get_flush(evc, sgeE_JOB_ADD) != interval) {
-         evc->ec_set_flush(evc, sgeE_JOB_ADD, flush, interval);
-      }
-      evc->ec_commit(evc, NULL);
-   }
 
    /*
     * job categories are reset here, we need 

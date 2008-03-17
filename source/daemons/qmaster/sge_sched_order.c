@@ -152,15 +152,15 @@ sge_schedd_get_unhandled_request_count(sge_gdi_ctx_class_t *ctx,
 }
 
 bool
-sge_schedd_block_until_oders_processed(sge_gdi_ctx_class_t *ctx, 
-                                       lList **answer_list)
+sge_schedd_block_until_orders_processed(sge_gdi_ctx_class_t *ctx, 
+                                        lList **answer_list)
 {
    bool ret = true;
    state_gdi_multi *current_state = NULL;
    state_gdi_multi *next_state = NULL; 
    state_gdi_multi *last_but_one = NULL;
 
-   DENTER(TOP_LAYER, "sge_schedd_block_until_oders_processed");
+   DENTER(TOP_LAYER, "sge_schedd_block_until_orders_processed");
 
    /*
     * Before we wait for all order requests to be finished 

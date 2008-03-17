@@ -503,8 +503,6 @@ void *
 sge_scheduler_main(void *arg)
 {
    time_t next_prof_output = 0;
-   int stored_submit = 0; 
-   int stored_finish = 0;
    monitoring_t monitor;
    sge_gdi_ctx_class_t *ctx = NULL;
    sge_evc_class_t *evc = NULL;
@@ -646,7 +644,6 @@ sge_scheduler_main(void *arg)
          PROF_START_MEASUREMENT(SGE_PROF_CUSTOM6);
 
          /*
-          * Set state to "busy" 
           * check if we have to shutdown
           * use events to update data
           * ack all events
@@ -661,8 +658,6 @@ sge_scheduler_main(void *arg)
                              &Scheduler_Control.mutex);
             
             evc->ec_ack(evc);
-            evc->ec_set_busy(evc, 1);
-            evc->ec_commit(evc, NULL);
 
             if (event_list != NULL) {
                do_shutdown = (lGetElemUlong(event_list, ET_type, sgeE_SHUTDOWN) != NULL) ? true : false;
@@ -904,45 +899,32 @@ sge_scheduler_main(void *arg)
          }
 
          /* 
-          * need to sync with timed event thread
+          * need to sync with event master thread
           * if schedd configuration changed then settings in evm can be adjusted 
           */
          {
-            u_long32 interval = sconf_get_schedule_interval();
-            int submit_s = sconf_get_flush_submit_sec();
-            int finish_s = sconf_get_flush_finish_sec();
+            if (sconf_is_new_config()) {
+               /* set scheduler interval / event delivery interval */
+               u_long32 interval = sconf_get_schedule_interval();
+               if (evc->ec_get_edtime(evc) != interval) {
+                    evc->ec_set_edtime(evc, interval);
+               }
 
-            /* set scheduler interval / event delivery interval */
-            if (evc->ec_get_edtime(evc) != interval) {
-                 evc->ec_set_edtime(evc, interval);
-            }
+               /* set job / ja_task event flushing */
+               set_job_flushing(evc);
 
-            /* set flush submit seconds */
-            if (submit_s != stored_submit) {
-               evc->ec_set_flush(evc, sgeE_JOB_ADD, true, (submit_s - 1));
-               stored_submit = submit_s;
-            }
+               /* no need to ec_commit here - we do it when resetting the busy state */
 
-            /* set flush finish seconds */
-            if (finish_s != stored_finish) {
-               int flush_time = finish_s - 1;
-
-               evc->ec_set_flush(evc, sgeE_JOB_DEL, true, flush_time);
-               evc->ec_set_flush(evc, sgeE_JOB_FINAL_USAGE, true, flush_time);
-               evc->ec_set_flush(evc, sgeE_JATASK_DEL, true, flush_time);
-               stored_finish = finish_s;
+               /* now we handled the new schedd config - no need to do it twice */
+               sconf_reset_new_config();
             }
 
             /* 
              * block till master handled all GDI orders 
              */
             if (handled_events) {  
-               sge_schedd_block_until_oders_processed(evc->get_gdi_ctx(evc), NULL);
+               sge_schedd_block_until_orders_processed(evc->get_gdi_ctx(evc), NULL);
             }
-
-
-            /* give information to event master */
-            evc->ec_commit(evc, NULL);
          }
 
          /*
@@ -995,6 +977,7 @@ sge_scheduler_main(void *arg)
          }
       }
    }
+
    DPRINTF((SFN" terminated\n", thread_config->thread_name));
 
    /*

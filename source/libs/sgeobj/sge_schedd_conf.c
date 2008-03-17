@@ -2251,16 +2251,14 @@ bool sconf_is_job_category_filtering(void){
 u_long32 sconf_get_flush_submit_sec(void)
 {
    const lListElem *sc_ep = NULL;
-   u_long32 flush_sec = (u_long32)-1;
+   u_long32 flush_sec = 0;
   
    sge_mutex_lock("Sched_Conf_Lock", "", __LINE__, &pos.mutex);
       
-   if (pos.flush_submit_sec!= -1) {
+   if (pos.flush_submit_sec != -1) {
       sc_ep = lFirst(*(object_type_get_master_list(SGE_TYPE_SCHEDD_CONF)));
       if (sc_ep != NULL) {
          flush_sec = lGetPosUlong(sc_ep, pos.flush_submit_sec);
-      } else {
-         flush_sec = 1;
       }
    }
 
@@ -2290,7 +2288,7 @@ u_long32 sconf_get_flush_submit_sec(void)
 u_long32 sconf_get_flush_finish_sec(void)
 {
    const lListElem *sc_ep = NULL;
-   u_long32 flush_sec = (u_long32)-1;
+   u_long32 flush_sec = 0;
   
    sge_mutex_lock("Sched_Conf_Lock", "", __LINE__, &pos.mutex);
       
@@ -2298,8 +2296,6 @@ u_long32 sconf_get_flush_finish_sec(void)
       sc_ep = lFirst(*(object_type_get_master_list(SGE_TYPE_SCHEDD_CONF)));
       if (sc_ep != NULL) {
          flush_sec = lGetPosUlong(sc_ep, pos.flush_finish_sec);
-      } else {
-         flush_sec = 1;
       }
    }
 

@@ -1,3 +1,11 @@
+LP-2008-03-17-1: Bugfix:    shadow_masters file might contain some hosts twice
+                 Bugfix:    sgemaster -qmaster stop shutdowns also shadowd
+                 Bugfix:    execd uninstallation should remove execd_spool_dir 
+                            if it contains only 1 execd (local)
+                 Bugfix:    Service in maintanence is removed in SMFUnregister()
+                 Bugster:   6675592, 6673706, 6675597
+                 Review:    PJ
+
 LP-2008-03-17-0: Bugfix:    SMF services => standalone checkprog crash
                  Bugster:   6675604
                  Review:    PJ

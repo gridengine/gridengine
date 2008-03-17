@@ -110,7 +110,7 @@ SMFImportService()
       $INFOTEXT "Service descriptor %s is corrupted, exiting!" $file
       return 1
    fi
-   #Strangly svccfg import does not return non-zero exit code if there was 
+   #Strangely svccfg import does not return non-zero exit code if there was 
    #an error such as permission denied
    res=`$SVCCFG import $file 2>&1 | head -1`
    if [ -n "$res" ]; then      
@@ -250,10 +250,11 @@ SMFHaltAndDeleteService()
       return 1
    fi
 
+   #Service might be in maintanence
+   #In theory process can still be running after we remove it
    $SVCADM disable -s "$service_name"
    if [ "$?" -ne 0 ]; then
       $INFOTEXT "Could not disable the service %s!" $service_name
-      return 1
    fi
 
    $SVCCFG delete "$service_name"

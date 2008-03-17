@@ -585,7 +585,7 @@ if [ "$startup" = true ]; then
       fi
    fi
 else
-   if [ $shadow_host = true ]; then
+   if [ $shadowd = true -a $shadow_host = true ]; then
       echo "   Shutting down Grid Engine shadowd"
       DetectSMFService shadowd
       if [ -z "$SMF_FMRI" -a -n "$service"  ]; then

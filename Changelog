@@ -1,3 +1,7 @@
+LP-2008-03-17-0: Bugfix:    SMF services => standalone checkprog crash
+                 Bugster:   6675604
+                 Review:    PJ
+
 JG-2008-03-17-1: Cleanup:   Event delivery time for scheduler
                             (schedule_interval) was set twice when
                             schedd config changed.

@@ -59,6 +59,7 @@
 #define MSG_COMMAND_RUNPSCMDFAILED_S         _MESSAGE(57014, _("could not run "SFQ" to get pids of processes"))
 #define MSG_PROC_FOUNDNOPROCESS_S            _MESSAGE(57015, _("found no running processes with name "SFQ))
 #define MSG_PROC_FOUNDPIDSWITHNAME_S         _MESSAGE(57016, _("found the following pids which have process name "SFQ))
+#define MSG_COMMAND_SMF_INIT_FAILED          _MESSAGE(57019, _("failed to initialize libraries for SMF support"))
 
 
 

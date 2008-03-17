@@ -154,7 +154,15 @@ int main(int argc, char *argv[])
 			pid = getppid();
 			printf("%ld\n", (long)pid );
 			res = 0;
-		} else {		
+		} else {
+#if defined(SOLARIS)
+                        /* Init shared SMF libs if necessary */
+                        if (sge_smf_used() == 1 && sge_smf_init_libs() != 0) {
+                           fprintf(stderr, MSG_COMMAND_SMF_INIT_FAILED);
+                           fprintf(stderr, "\n");
+                           exit(1);
+                        }
+#endif
 			res = sge_checkprog(pid, process_name, PSCMD);
 	
 			if (res == 1)

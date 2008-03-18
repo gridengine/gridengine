@@ -341,10 +341,6 @@ static bool SEND_EVENTS[sgeE_EVENTSIZE];
 static subscribed_control_t Subscribed_Control;
 
 event_master_control_t Event_Master_Control = {
-   PTHREAD_MUTEX_INITIALIZER,       /* transaction_mutex */
-   NULL,                            /* transaction_requests */
-   PTHREAD_MUTEX_INITIALIZER,       /* t_add_event_mutex */
-   false,                           /* is_transaction */
    PTHREAD_MUTEX_INITIALIZER,       /* mutex */
    PTHREAD_COND_INITIALIZER,        /* cond_var */
    PTHREAD_MUTEX_INITIALIZER,       /* cond_mutex */
@@ -353,7 +349,8 @@ event_master_control_t Event_Master_Control = {
    false,                           /* is_prepare_shutdown */
    NULL,                            /* clients */
    NULL,                            /* requests */
-   PTHREAD_MUTEX_INITIALIZER        /* request_mutex */
+   PTHREAD_MUTEX_INITIALIZER,       /* request_mutex */
+   0                                /* transaction_key */
 };
 
 static void       init_send_events(void); 
@@ -381,7 +378,19 @@ static void       set_flush(void);
 
 static void blockEvents(lListElem *event_client, ev_event ev_type, bool isBlock);
 
+static void
+sge_event_master_destroy_transaction_store(void *transaction_store)
+{
+   event_master_transaction_t *t_store = (event_master_transaction_t *)transaction_store;
+   lFreeList(&(t_store->transaction_requests));
+}
 
+static void
+sge_event_master_init_transaction_store(event_master_transaction_t *t_store)
+{
+   t_store->is_transaction = false;
+   t_store->transaction_requests = lCreateListHash("Event Master Requests", EVR_Type, false);
+}
 
 /****** Eventclient/Server/sge_add_event_client() ******************************
 *  NAME
@@ -1497,7 +1506,6 @@ static bool add_list_event_for_client(u_long32 event_client_id, u_long32 timesta
    lListElem *evr = NULL;        /* event request object */
    lList *etlp = NULL;           /* event list */
    lListElem *etp = NULL;        /* event object */
-   bool is_add_direct = true;
 
    DENTER(TOP_LAYER, "add_list_event_for_client");
 
@@ -1526,26 +1534,22 @@ static bool add_list_event_for_client(u_long32 event_client_id, u_long32 timesta
    lSetString(etp, ET_strkey2, strkey2);
    lSetList(etp, ET_new_version, list);
 
-   sge_mutex_lock("event_master_t_add_event_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.t_add_event_mutex);
-   if (Event_Master_Control.is_transaction) {
-      is_add_direct = false;
-      if (Event_Master_Control.transaction_requests == NULL) {
-         Event_Master_Control.transaction_requests = lCreateListHash("Transaction Event Requests", EVR_Type, false);
+   /* 
+    * if we have a transaction open, add to the transaction 
+    * otherwise into the event master request list
+    * need a new C block, as the GET_SPECIFIC macro declares new variables
+    */
+   {
+      GET_SPECIFIC(event_master_transaction_t, t_store, sge_event_master_init_transaction_store, Event_Master_Control.transaction_key, "t_store");
+      if (t_store->is_transaction) {
+         lAppendElem(t_store->transaction_requests, evr);
+      } else {
+         sge_mutex_lock("event_master_request_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.request_mutex);
+         lAppendElem(Event_Master_Control.requests, evr);
+         sge_mutex_unlock("event_master_request_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.request_mutex);
+
+         set_flush();
       }
-
-      /* If the setspecific worked, add the event. */
-      if (Event_Master_Control.transaction_requests != NULL) {
-         lAppendElem(Event_Master_Control.transaction_requests, evr);
-      }
-   }
-   sge_mutex_unlock("event_master_t_add_event_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.t_add_event_mutex);
-
-   if (is_add_direct) {
-      sge_mutex_lock("event_master_request_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.request_mutex);
-      lAppendElem(Event_Master_Control.requests, evr);
-      sge_mutex_unlock("event_master_request_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.request_mutex);
-
-      set_flush();
    }
 
    DRETURN(true);
@@ -1843,8 +1847,9 @@ void sge_event_master_init(void)
    DENTER(TOP_LAYER, "sge_event_master_init");
 
    Event_Master_Control.clients = lCreateListHash("EV_Clients", EV_Type, true);
-
    Event_Master_Control.requests = lCreateListHash("Event Master Requests", EVR_Type, false);
+   pthread_key_create(&(Event_Master_Control.transaction_key), sge_event_master_destroy_transaction_store);
+   
    init_send_events();
 
    /* init the event subscription counter */
@@ -3034,12 +3039,12 @@ static lListElem *elem_select(subscription_t *subscription, lListElem *element,
    }
 
    /* get the filters for the sub lists */
-   if (sub_type>=0) {
+   if (sub_type >= 0) {
       sub_selection = subscription[sub_type].where;
       sub_fields = subscription[sub_type].what;
    }
 
-   if (sub_fields){ /* do we have a sub list filter, otherwise ... */
+   if (sub_fields) { /* do we have a sub list filter, otherwise ... */
       int ids_size = 0;
 
       /* allocate memory to store the sub-lists, which should be handeled special */
@@ -3270,32 +3275,27 @@ static u_long32 assign_new_dynamic_id(lList **answer_list)
 *******************************************************************************/
 bool sge_commit(void)
 {
-   bool ret = false;
+   bool ret = true;
 
    DENTER(TOP_LAYER, "sge_commit");
- 
-   sge_mutex_lock("event_master_t_add_event_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.t_add_event_mutex);
 
-   if (Event_Master_Control.is_transaction) {
-      /* we do not need to evaluate the flushing, we just trigger, when ever there is one event. */
-      Event_Master_Control.is_transaction = false;
- 
-      /* We don't have to worry about holding a lock while we work on this list
-       * because the list is thread specific. */
+   /* need a new C block, as the GET_SPECIFIC macro declares new variables */
+   {
+      GET_SPECIFIC(event_master_transaction_t, t_store, sge_event_master_init_transaction_store, Event_Master_Control.transaction_key, "t_store");
+      if (t_store->is_transaction) {
+         t_store->is_transaction = false;
 
-      if (Event_Master_Control.transaction_requests != NULL) {
-         sge_mutex_lock("event_master_request_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.request_mutex);
-         lAppendList(Event_Master_Control.requests, Event_Master_Control.transaction_requests);
-         sge_mutex_unlock("event_master_request_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.request_mutex);
+         if (lGetNumberOfElem(t_store->transaction_requests) > 0) {
+            sge_mutex_lock("event_master_request_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.request_mutex);
+            lAppendList(Event_Master_Control.requests, t_store->transaction_requests);
+            sge_mutex_unlock("event_master_request_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.request_mutex);
 
-         set_flush();
+            set_flush();
+         }
+      } else {
+         WARNING((SGE_EVENT, "attempting to commit an event master transaction, but no transaction is open"));
+         ret = false;
       }
-      ret = true;
-   }
-   sge_mutex_unlock("event_master_t_add_event_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.t_add_event_mutex);
-
-   if (ret) {
-      sge_mutex_unlock("event_master_transaction_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.transaction_mutex);
    }
  
    DRETURN(ret);
@@ -3397,11 +3397,16 @@ static void set_flush(void)
 void sge_set_commit_required(void)
 {
    DENTER(TOP_LAYER,"sge_set_commit_required");
- 
-   sge_mutex_lock("event_master_transaction_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.transaction_mutex);
-   sge_mutex_lock("event_master_t_add_event_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.t_add_event_mutex);
-   Event_Master_Control.is_transaction = true;
-   sge_mutex_unlock("event_master_t_add_event_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.t_add_event_mutex);
+
+   /* need a new C block, as the GET_SPECIFIC macro declares new variables */
+   {
+      GET_SPECIFIC(event_master_transaction_t, t_store, sge_event_master_init_transaction_store, Event_Master_Control.transaction_key, "t_store");
+      if (t_store->is_transaction) {
+         WARNING((SGE_EVENT, "attempting to open a new event master transaction, but we already have a transaction open"));
+      } else {
+         t_store->is_transaction = true;
+      }
+   }
 
    DRETURN_VOID;
 }

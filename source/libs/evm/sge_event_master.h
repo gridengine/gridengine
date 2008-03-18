@@ -49,13 +49,13 @@
  *
  ***********************************************************
  */
-typedef struct {
-   pthread_mutex_t  transaction_mutex;     /* a mutex ensuring that only one transaction is running at a time */
-   lList            *transaction_requests; /* a list storing all event add requests happening, while a transaction is open, a
-                                             transaction is not thread specific*/
-   pthread_mutex_t  t_add_event_mutex;     /* guarding the transaction_requests list and the boolean is_transaction */
-   bool             is_transaction;        /* identifies, if a transaction is open, or not */
 
+typedef struct {
+   bool     is_transaction;                /* identifies, if a transaction is open, or not */
+   lList    *transaction_requests;         /* a list storing all event add requests happening, while a transaction is open */
+} event_master_transaction_t;
+ 
+typedef struct {
    pthread_mutex_t  mutex;                 /* used for mutual exclusion. only use in public functions   */
    pthread_cond_t   cond_var;              /* used for waiting                                          */
    pthread_mutex_t  cond_mutex;            /* used for mutual exclusion. only use in internal functions */
@@ -72,6 +72,8 @@ typedef struct {
                                            /* protected by mutex                                        */
    lList*           requests;              /* event master requests (add/mod/del evc, add/ack event)    */
    pthread_mutex_t  request_mutex;         /* used to protect access to the request list                */
+
+   pthread_key_t     transaction_key;      /* key to access thread local transaction storage            */
 } event_master_control_t;
 
 extern event_master_control_t Event_Master_Control;

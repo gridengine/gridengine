@@ -1,3 +1,7 @@
+JG-2008-03-18-0: Enhancem.: Use thread local storage for transactions in
+                            event master.
+                 Review:    EB
+
 JO-2008-03-18-0: Enhancem.: changed detection message
                  Review:    LP
 

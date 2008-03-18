@@ -369,7 +369,7 @@ set SPOOLING_DEPS   = "spoolloaderlib spooldlib spoollib spoolclib spoolblib"
 # we generate a berkeley db shared lib, so we need bdb include and lib path
 set CFLAGS            = "-I$BERKELEYDB_HOME/include/${BDB_INCLUDE_SUBDIR} $CFLAGS"
 set LFLAGS            = "-L$BERKELEYDB_HOME/lib/${BDB_LIB_SUBDIR} $LFLAGS"
-set SHARED_LFLAGS    = "$SHARED_LFLAGS -L$BERKELEYDB_HOME/lib"
+set SHARED_LFLAGS    = "$SHARED_LFLAGS -L$BERKELEYDB_HOME/lib/${BDB_LIB_SUBDIR}"
 
 # JUTI Targets
 set JUTI_ALL  = juti_all
@@ -618,7 +618,6 @@ while ($#argv >= 1 && $?found)
       set SECFLAGS    = ""
       set SECLIB      = ""
       set SECLIBS     = ""
-      set SECLIBS_STATIC = ""
       set SECLIBOBJS  = ""
       set SECTARGETS  = ""
       set KLFLAGS     = ""
@@ -1002,6 +1001,9 @@ case DARWIN_PPC:
    case "8.*":
       set CFLAGS = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN8 -D$BUILDARCH -DGETHOSTBYNAME -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
       breaksw
+   case "9.*":
+      set CFLAGS = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN9 -D$BUILDARCH -DGETHOSTBYNAME -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
+      breaksw
    default:
       echo DARWIN release \"$REL\" not supported!
       exit 1
@@ -1021,13 +1023,11 @@ case DARWIN_PPC:
    else
       set libext = ".a"
    endif   
-   
-#   if ( -r "/sw/lib/libxm$libext" ) then
-#      set MOTIFHOME = /sw
-#   else
-#      set MOTIFHOME = /usr/local
-#   endif   
-   set MOTIFHOME = /Applications/Darwin/openmotif-2.2.3
+  
+   # Can be overwritten in aimk.private or aimk.site 
+   if ( ! $?MOTIFHOME ) then
+      set MOTIFHOME = /Applications/Darwin/openmotif-2.2.3
+   endif
 
    set XMTDEF   = ""
    set XMTINCD  = "$XMTINCD -I$MOTIFHOME/include"
@@ -1043,6 +1043,7 @@ case DARWIN_PPC:
    case "6.*":
    case "7.*":
    case "8.*":
+   case "9.*":
       set XLFLAGS = "$XLIBD"
       breaksw
    default:
@@ -1086,7 +1087,7 @@ case FREEBSD_*:
    set SHARED_CFLAGS = "-fPIC"
    set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared -export-dynamic"
    set AUTHLIBS = "-lcrypt -lpam"
-   
+  
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD -I/usr/X11/include"
    set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
@@ -1411,7 +1412,7 @@ case WIN32_X86:
    set JUTI_OBJ         = juti.obj
    
    set CORE_INCLUDE   = "$CORE_INCLUDE -I../libs/wingrid"
-   set WINGRIDLIB     = "-lwingrid $SECLIBS_STATIC"
+   set WINGRIDLIB     = "-lwingrid $SECLIBS"
    set WINGRIDLIB_DEP = "libwingrid.a"
 
    if ($OPTIMIZATION == 1) then
@@ -1488,6 +1489,7 @@ case NECSX4:
    set XINCD    = ""
    set XCFLAGS  = "$XMTDEF $XINCD"
    set XLFLAGS  = ""
+
    if ( $SHAREDLIBS == 1 ) then
       echo creating shared libs not yet supported on $BUILDARCH
       exit 1
@@ -2091,7 +2093,7 @@ if ( "$MAKEWINGRIDLIB" == 1 ) then
    $MAKE $MAKEOPT -f $SOURCE/libs/wingrid/Makefile "MAKE=$MAKE" "CC=$CC" \
       "COMPILE_ARCH=$COMPILE_ARCH" \
       "CFLAGS=$CFLAGS $CORE_INCLUDE" "SOURCE=$SOURCE" \
-      "KRBLIBS=$KRBLIBS" "SECLIBS_STATIC=$SECLIBS_STATIC" \
+      "KRBLIBS=$KRBLIBS" \
       "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
       "AR=$AR" "ARFLAGS=$ARFLAGS" \
       "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \

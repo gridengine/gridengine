@@ -1,3 +1,6 @@
+EB-2008-03-18-0: Enhancem.: changes for darwin-x86 (Leopard)
+                 Review:    AA
+
 CR-2008-03-17-0: Bugfix:    Uninstall execd ignored because of hostname
                             matching problem
                  Enhancem.: Log hostname resolve changes into auto install log

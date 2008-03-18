@@ -124,7 +124,12 @@ extern sge_gdi_ctx_class_t *ctx;
 *******************************************************************************/
 
 /* Defined in rshd.c */
+#ifdef DARWIN9
+#  include <crt_externs.h>
+#  define environ (*_NSGetEnviron())
+#else
 extern char **environ;
+#endif
 
 static int drmaa_is_attribute_supported(const char *name, bool vector, dstring *diag);
 static drmaa_attr_names_t *drmaa_fill_string_vector(const char *name[]);

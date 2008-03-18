@@ -62,7 +62,7 @@ SHEPHERD_OBJS = $(SHEPHERD_SRC:.c=.o) sge_ijs_comm.o sge_ijs_threads.o
 
 SHEPHERD_ADD_OBJS = $(SHEPHERD_ADD_SRC:.c=.o) 
 
-SHEPHERD_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon $(DLLIB) $(SECLIBS_STATIC)
+SHEPHERD_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon $(DLLIB) $(SECLIBS) 
 
 SHEPHERD_LIB_DEPENDS = $(GDILIB) $(SGEOBJDLIB) $(SGEOBJLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB) $(TPLIB)
 

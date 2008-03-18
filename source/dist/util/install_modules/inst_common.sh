@@ -1826,7 +1826,7 @@ SearchForExistingInstallations()
          MoveLog
          exit 1
       else
-         $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Stop the installation (YES) or remove detected cluster (NO)? (y/n) [y] >> "
+         $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nStop the installation (WARNING: selecting 'n' will remove the detected cluster) (y/n) [y] >> "
          if [ $? -eq 0 ]; then
             exit 1
          fi

@@ -1,3 +1,12 @@
+AA-2008-03-18-0: Bugfix:    - sge_ca man page
+                            - qping man page typos
+                            - qmon help file
+                            - qmon restore of settings
+                            - mk_ascman on linux option
+                 Bugster:   6618332, 6629016, 6660953, 6660954
+                 Issues:    2467, 2517, 2518, 2519
+                 Review:    EB
+
 JG-2008-03-18-0: Enhancem.: Use thread local storage for transactions in
                             event master.
                  Review:    EB

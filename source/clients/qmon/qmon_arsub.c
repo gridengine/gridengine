@@ -70,7 +70,6 @@
 #include "parse_job_cull.h"
 #include "unparse_job_cull.h"
 #include "read_defaults.h"
-#include "write_job_defaults.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_appres.h"
@@ -230,8 +229,8 @@ static void qmonARSubAskForCkpt(Widget w, XtPointer cld, XtPointer cad);
 static void qmonARSubCheckARName(Widget w, XtPointer cld, XtPointer cad);
 static void qmonARSubToggleDuration(Widget w, XtPointer cld, XtPointer cad);
 
-static Boolean qmonCullToSM(lListElem *jep, tARSMEntry *data);
-static Boolean qmonSMToCull(tARSMEntry *data, lListElem *jep, int save);
+static Boolean qmonCullToARSM(lListElem *jep, tARSMEntry *data);
+static Boolean qmonARSMToCull(tARSMEntry *data, lListElem *jep, int save);
 static void qmonFreeARSMData(tARSMEntry *data);
 static void qmonInitARSMData(tARSMEntry *data);
 static u_long32 ConvertMailOptions(int mail_options);
@@ -481,7 +480,7 @@ void qmonARSubPopup(Widget w, XtPointer cld, XtPointer cad)
    }
 
    if (ar_to_set != NULL) {
-      qmonCullToSM(ar_to_set, &ARSMData);
+      qmonCullToARSM(ar_to_set, &ARSMData);
       XmtDialogSetDialogValues(arsub_layout, &ARSMData);
    }
 
@@ -860,8 +859,8 @@ static void qmonARSubARSub(Widget w, XtPointer cld, XtPointer cad)
          goto error;
       }
 
-      if (!qmonSMToCull(&ARSMData, lFirst(lp), 0)) {
-         DPRINTF(("qmonSMToCull failure\n"));
+      if (!qmonARSMToCull(&ARSMData, lFirst(lp), 0)) {
+         DPRINTF(("qmonARSMToCull failure\n"));
          sprintf(buf, 
                  XmtLocalize(w, 
                              "AR submission failed", 
@@ -984,8 +983,8 @@ static void qmonARSubARSub(Widget w, XtPointer cld, XtPointer cad)
 
       lSetUlong(lFirst(lp), AR_id, arsub_mode_data.ar_id);
       
-      if (!qmonSMToCull(&ARSMData,lFirst(lp), 0)) {
-         DPRINTF(("qmonSMToCull failure\n"));
+      if (!qmonARSMToCull(&ARSMData,lFirst(lp), 0)) {
+         DPRINTF(("qmonARSMToCull failure\n"));
          sprintf(buf, "AR submission failed\n");
          goto error;
       }
@@ -1090,7 +1089,7 @@ tARSMEntry *data
 /*  the ar element to dialog data conversion                              */
 /*  we need a valid tARSMEntry pointer                                       */
 /*-------------------------------------------------------------------------*/
-static Boolean qmonCullToSM(
+static Boolean qmonCullToARSM(
 lListElem *jep,
 tARSMEntry *data
 ) {
@@ -1102,7 +1101,7 @@ tARSMEntry *data
    const char* username = ctx->get_username(ctx);
    const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
    
-   DENTER(GUI_LAYER, "qmonCullToSM");
+   DENTER(GUI_LAYER, "qmonCullToARSM");
 
    /*
    ** free any allocated memory
@@ -1174,7 +1173,7 @@ tARSMEntry *data
 /*-------------------------------------------------------------------------*/
 /* we need a valid ar element pointer                                     */
 /*-------------------------------------------------------------------------*/
-static Boolean qmonSMToCull(
+static Boolean qmonARSMToCull(
 tARSMEntry *data,
 lListElem *jep,
 int save 
@@ -1187,14 +1186,14 @@ int save
    const char *username = ctx->get_username(ctx);
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
    
-   DENTER(GUI_LAYER, "qmonSMToCull");
+   DENTER(GUI_LAYER, "qmonARSMToCull");
 
    if (!data->ar_name || data->ar_name[0] == '\0') {
       lSetString(jep, AR_name, NULL);
    } else {
       lSetString(jep, AR_name, data->ar_name);
    }   
-   
+
    lSetString(jep, AR_checkpoint_name, data->ckpt_obj);
 
    /* 

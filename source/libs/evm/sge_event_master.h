@@ -41,6 +41,16 @@
 #include "uti/sge_monitor.h"
 
 /*
+ * EVENT_MASTER_MIN_FREE_DESCRIPTORS
+ * Event master assumes that every event client requires one file descriptor
+ * for communication (in commlib).
+ * This define is the number of file descriptors not to be used by
+ * event master, but for use by the program containing event master
+ * (sge_qmaster).
+ */
+#define EVENT_MASTER_MIN_FREE_DESCRIPTORS 25
+
+/*
  ***** event_master_control_t definition ********************
  *
  * This struct contains all the control information needed
@@ -69,7 +79,7 @@ typedef struct {
                                            /* new event clients, when this is set to false. protected   */
                                            /* by mutex.                                                 */
    lList*           clients;               /* list of event master clients                              */
-                                           /* protected by mutex                                        */
+   lList*           client_ids;            /* range list holding free event client ids                  */
    lList*           requests;              /* event master requests (add/mod/del evc, add/ack event)    */
    pthread_mutex_t  request_mutex;         /* used to protect access to the request list                */
 

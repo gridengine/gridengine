@@ -181,17 +181,11 @@ sge_event_master_main(void *arg)
 
       thread_start_stop_profiling();
 
-      sge_mutex_lock("event_master_cond_mutex", SGE_FUNC, __LINE__, 
-                     &Event_Master_Control.cond_mutex);
-
       /*
        * did a new event arrive which has a flush time of 0 seconds?
        */
       MONITOR_IDLE_TIME(sge_event_master_wait_next(), (&monitor), mconf_get_monitor_time(), 
                         mconf_is_monitor_message());
-
-      sge_mutex_unlock("event_master_cond_mutex", SGE_FUNC, __LINE__, 
-                       &Event_Master_Control.cond_mutex);
 
       MONITOR_MESSAGES((&monitor));
       MONITOR_EDT_COUNT((&monitor));

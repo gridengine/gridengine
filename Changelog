@@ -1,3 +1,6 @@
+JG-2008-03-19-0: Enhancem.  Further event master cleanup
+                 Review:    EB
+
 CR-2008-03-19-0: Bugfix:    - added missing sgeE_EXECHOST_MOD event
                               generation for execd hosts in unknown state
                               in sge_load_value_cleanup_handler()

@@ -904,6 +904,9 @@ void sge_load_value_cleanup_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent
       cqueue_list_set_unknown_state(
             *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
             host, true, true);
+    
+      /* hedeby depends on this event */
+      sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, host, NULL, NULL, hep);
 
       /* initiate timer for this host because they turn into 'unknown' state */
       reschedule_unknown_trigger(hep); 

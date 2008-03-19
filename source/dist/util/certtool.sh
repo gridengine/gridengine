@@ -80,6 +80,8 @@ if [ ! -f "$SGE_ROOT/util/arch" ]; then
    exit 1
 fi
 
+SGE_ARCH=`$SGE_ROOT/util/arch`
+
 if [ ! -f $SGE_ROOT/util/arch_variables ]; then
    echo
    echo ERROR: Missing shell script \"$SGE_ROOT/util/arch_variables\".

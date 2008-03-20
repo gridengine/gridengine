@@ -147,7 +147,7 @@ The @fBCalendar Configuration@fR dialogue is opened by clicking on the @fBCalend
 or by selecting @fBCalendar Configuration@fR in the @fBTask@fR menu.\n\
 \n\
 @fBCalendar Objects@fR can be added, modified or removed from the Grid Engine system with the\n\
-@fBCalendar Configuration@fR dialogue. They can be attached to queues to restrict queue accessability\n\
+@fBCalendar Configuration@fR dialogue. They can be attached to queues to restrict queue accessibility\n\
 to the calendar specified times.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -449,7 +449,7 @@ Shell that shall be used to execute the job scripts. This can also be another co
 than a usual Unix shell.\n\
 Shell Start Mode defines the way how shell scripts are handled by the Shell.\n\
 Initial State defines if this queue is accessible for scheduling after startup.\n\
-Calendar contains the name of the calendar attached to this queue to manage the accessability of\n\
+Calendar contains the name of the calendar attached to this queue to manage the accessibility of\n\
 the queue based on date and time.\n\
 Notify Time is the time that passes before a KILL signal is sent after sending user defined signals.\n\
 Job's Nice is the UNIX nice value that the job is started with.\n\
@@ -545,7 +545,7 @@ To submit a job you first have to select the directive @fBPrefix@fR which is use
 @fB#$@fR if nothing is specified.\n\
 The next step is to choose a script by either entering its name with absolute path or relative to\n\
 the current working directory of qmon or by simply selecting the specific @fBJob Script@fR from\n\
-the @fBFile Selection Box@fR poped up by pressing the icon right aside the @fBJob Script@fR input field.\n\
+the @fBFile Selection Box@fR popped up by pressing the icon right aside the @fBJob Script@fR input field.\n\
 If there are any default files delivered which contain @fBGrid Engine command directives@fR or if\n\
 the job script contains any @fBGrid Engine command directives@fR, they are evaluated. The settings\n\
 that apply to the job are shown in the dialogue.\n\
@@ -555,7 +555,7 @@ the lowest priority is stored under @fB$SGE_ROOT/$SGE_CELL/common/sge_request@fR
 second level is stored under @fB$HOME/.sge_request@fR and the third level with the highest\n\
 priority of the default files is stored in the current working directory of qmon under\n\
 @fB./.sge_request@fR.\n\
-If there are any script file embeded Grid Engine commandline directives they override the settings\n\
+If there are any script file embedded Grid Engine commandline directives they override the settings\n\
 of the default files.\n\
 \n\
 After the script has been selected one can adjust the requirements of the job to be submitted.\n\
@@ -565,7 +565,7 @@ e.g. 1-10:2,20,24-27.\n\
 @fBJob Args@fR contains any arguments delivered to the job script. They are separated by\n\
 blanks as on the command line.\n\
 With the @fBPriority@fR spinbox the job gets an initial priority value. Users without manager\n\
-or operator priviledges may only lower their initial priority value.\n\
+or operator privileges may only lower their initial priority value.\n\
 The @fBStart At@fR field sets the time when the job is considered eligible for execution.\n\
 The @fBCurrent Working Directory@fR toggle button indicates whether the job is to be executed\n\
 in the current working directory (for identical directory hierarchies between the submit and\n\
@@ -614,7 +614,7 @@ true for @fBInteractive Jobs@fR.\n\
 The button list on the right is used to perform different tasks concerning of job submission.\n\
 The button labeled with @fBBatch@fR toggles between batch and interactive mode for submitting\n\
 either batch or interactive jobs.\n\
-The @fBSubmit@fR button submitts the job into the Grid Engine system.\n\
+The @fBSubmit@fR button submits the job into the Grid Engine system.\n\
 The @fBEdit@fR button is used to edit a chosen job script.\n\
 The @fBClear@fR button clears and resets all fields of the dialogue. One has to rechoose a Job Script.\n\
 The @fBReload Button@fR discards any additional manually performed changes in the dialogue and restores\n\
@@ -754,7 +754,7 @@ in the file selection box. This loads the values from the file into the matrix.\
 To save your current matrix settings to file use the @fBSave@fR button.\n\
 \n\
 After filling in the complexes they are stored permanently in the system by pressing the\n\
-@fBOk@fR button. If everything is alright the complex editor closes and the new complex\n\
+@fBOk@fR button. If everything is all right the complex editor closes and the new complex\n\
 appears in the @fBComplexes@fR list and its corresponding attributes show up in the\n\
 @fBAttributesfR section.\n\
 \n\
@@ -814,7 +814,7 @@ Here the hostname of the new execution host can be specified the @fBLoad Scaling
 The configuration helper dialogue consists of a folder with the categories @fBScaling@fR for\n\
 @fBLoad Scaling, Usage Scaling@fR (Grid Engine Enterprise Edition mode only)\n\
 settings, @fBConsumables/Fixed Attributes@fR for host based attachment of consumables and fixed attributes,\n\
-@fBUser Access@fR for host based accessability settings and in Grid Engine Enterprise Edition mode additionally @fBProject Access@fR\n\
+@fBUser Access@fR for host based accessibility settings and in Grid Engine Enterprise Edition mode additionally @fBProject Access@fR\n\
 for host based definition of project access.\n\
 The scaling can be used to weight special load or usage values for better comparability of distinct\n\
 cluster machine types. The other settings are mainly the counterpart too queue based configuration\n\
@@ -983,7 +983,7 @@ The @fBDone@fR button quits the dialogue.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Qmon*sconf_shell*xmtHelpTitle: Scheduler Configuration Help
 Qmon*sconf_shell*xmtHelp: \
-The @fBScheduler Configuration@fR dialogue permitts the setting of scheduler specific\n\
+The @fBScheduler Configuration@fR dialogue permits the setting of scheduler specific\n\
 parameters. It is subdivided in @fBGeneral Parameters and Load Adjustment@fR.\n\
 \n\
 The @fBAlgorithm@fR field allows the setting of a different scheduling algorithm.\n\
@@ -1000,7 +1000,7 @@ users to avoid that one user can allocate all the system resources uniquely. Thi
 only available in Grid Engine mode. No suspend of already existing jobs takes place to achieve an\n\
 equal share for the different users.\n\
 The @fBJob Scheduling Information@fB part allows enabling/disabling of job scheduling information\n\
-for all or part of the jobs. The inputfield serves to enter a job range as min[-max][,...] to\n\
+for all or part of the jobs. The input field serves to enter a job range as min[-max][,...] to\n\
 define for which jobs scheduling information is requested.\n\
 The @fBLoad Formula@fR is the formula of load parameters which should be used by the\n\
 @fBSort by Load@fR method.\n\
@@ -1015,7 +1015,7 @@ After having changed the scheduler configuration these changes are made permanen
 Qmon*qmon_cal*xmtHelpTitle: Calendar Configuration Help
 Qmon*qmon_cal*xmtHelp: \
 The @fBCalendar Configuration@fR dialogue allows the configuration of Grid Engine calendars.\n\
-They are used to restrict the accessability of Grid Engine queues to certain dates and times.\n\
+They are used to restrict the accessibility of Grid Engine queues to certain dates and times.\n\
 \n\
 Press @fBAdd@fR to add a new calendar. This pops up the calendar definition helper dialogue.\n\
 Here you can enter a calendar entry according to the examples given there.\n\
@@ -1161,7 +1161,7 @@ The @fBDone@fR quits the dialogue without any additional action, so be aware and
 The @fBAdd Node@fR and @fBAdd Leaf@fR buttons can be used to add new nodes to the share tree.\n\
 The @fBAdd Node@fR button adds a group node and the @fBAdd Leaf@fR button adds a leaf node.\n\
 To add a node, highlight the node under which you want to add a new node and click on the @fBAdd\n\
-Leaf@fR or @fBAdd Node@fR button. A helper dialogue will be dispayed where you can enter the node\n\
+Leaf@fR or @fBAdd Node@fR button. A helper dialogue will be displayed where you can enter the node\n\
 @fBName@fR and its @fBShares@fR. To modify the name or the number of shares of a node, highlight\n\
 the node and click on the @fBModify@fR button. The @fBCut@fR, @fBPaste@fR, and @fBCopy@fR buttons\n\
 can be used to prune and graft sections of the share tree. The @fBFind@fR buttons can be used to\n\
@@ -1174,7 +1174,7 @@ tree. The specification "/ProjectA/davidson" finds the "davidson" node which is 
 represents a descendant relationship, such that the specification "ProjectA.davidson" finds\n\
 the "davidson" node which is a descendant of a node "ProjectA". A '*' instead of a name represents\n\
 a wild-card and will match any node at the specified level. For instance, the specification\n\
-"/*/*/davidson" will find the first occurance of the "node" davidson which is three levels below\n\
+"/*/*/davidson" will find the first occurrence of the "node" davidson which is three levels below\n\
 the "Root" node. Any node names (not just users or projects) may be specified in a node\n\
 specification.\n\
 \n\
@@ -1210,7 +1210,7 @@ The @fBTwisted Red Arrow@fR links to the corresponding object configuration dial
 Qmon*oticket_layout*xmtHelpTitle: Override Policy Help
 Qmon*oticket_layout*xmtHelp: \
 The @fBOverride Policy@fR dialogue allows the Grid Engine manager to specify how shorttrem system\n\
-resources should be overriden among Grid Engine @fBUsers, Departments, Projects, Job and Jobclass@fR,\n\
+resources should be overridden among Grid Engine @fBUsers, Departments, Projects, Job and Jobclass@fR,\n\
 where Jobclass is currently identical to a Grid Engine queue.\n\
 \n\
 Selecting one of the categories listed above from the @fBoption menu@fR topleft displays all\n\

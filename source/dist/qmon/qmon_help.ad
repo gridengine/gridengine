@@ -443,7 +443,7 @@ The @fBQueue Configuration@fR subdialogue provides the means to @fBadd and modif
 It consists of two sections, the upper part shows two input fields for the @fIQueue Name@fR\n\
 and one to add a @fIhost or hostgroup name@fR to the @fIHostlist@fR. The Hostlist shows the hostgroups\n\
 or hosts that are represented by the cluster queue.\n\
-The @fBAdd@fR and @fBDelete@fR buttons let you add a new host or hostgroup entered in the inputfield next\n\
+The @fBAdd@fR and @fBDelete@fR buttons let you add a new host or hostgroup entered in the input field next\n\
 to the Hostlist or delete a host or hostgroup selected in the Hostlist.\n\
 On the right there is the @fBOk, Cancel and Help@fR button.\n\n\
 The button @fBRefresh@fR updates\n\

@@ -736,7 +736,7 @@ AA-2008-01-04-0: Enhancem.: - jgdi_event.c functions moved to sge_event_client.c
 
 JG-2008-01-03-0: Bugfix:    accounting records for parallel job tasks didn't
                             contain the task submission time.
-                 Bugster:   6469605
+                 Bugster:   6469605, 6647681
                  Issue:     1689
                  Review:    MD
 
@@ -1941,7 +1941,6 @@ MP-2007-06-20-0: Bugfix:    inst_sge -ux uninstallation of exechost tries to
                  Review:    MD
 
 JG-2007-06-20-0: Bugfix:    sgeremoterun didn't work with Grid Engine >= 6.0
-                 
                  Bugtraq:   6536039
                  Review:    MD
 

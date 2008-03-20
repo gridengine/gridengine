@@ -38,6 +38,11 @@
 #include "sig_handlers.h"
 #include "sge_prog.h"
 
+#if defined(SOLARIS)
+#   include "sge_smf.h"
+#   include "sge_string.h"
+#endif
+
 static void sge_terminate(int);
 static void sge_sigpipe_handler(int);
 static void sge_alarmclock(int dummy);
@@ -196,10 +201,20 @@ static void sge_terminate(int dummy)
 {
    /* set shut-me-down variable */
    shut_me_down = 1;
-
+   
+#if defined(SOLARIS)
+   if (sge_smf_used() == 1) {
+      /* We don't do disable on svcadm restart */
+      if (sge_strnullcmp(sge_smf_get_instance_state(), SCF_STATE_STRING_ONLINE) == 0 &&
+          sge_strnullcmp(sge_smf_get_instance_next_state(), SCF_STATE_STRING_NONE) == 0) {      
+         sge_smf_temporary_disable_instance();
+      }
+   }
+#endif   
+   
    /* inform commlib to ignore all timeouts */
    cl_com_ignore_timeouts(CL_TRUE);
-
+   
    /* This is not the best way to shut down a process. 
       TODO: remove the exit call, applications should check shut_me_down */
    if (!sge_sig_handler_in_main_loop) {

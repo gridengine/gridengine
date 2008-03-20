@@ -31,6 +31,12 @@
 /*___INFO__MARK_END__*/
 
 #if defined(SOLARIS)
+/* Redefines from libscf.h */
+#define	SCF_PG_RESTARTER		((const char *)"restarter")
+#define	SCF_PROPERTY_NEXT_STATE		((const char *)"next_state")
+#define	SCF_STATE_STRING_NONE		((const char *)"none")
+#define	SCF_STATE_STRING_ONLINE		((const char *)"online")
+
 int sge_smf_used(void);
 
 int sge_smf_init_libs(void);
@@ -38,6 +44,10 @@ int sge_smf_init_libs(void);
 int sge_smf_contract_fork(char *err_str, int err_length);
 
 void sge_smf_temporary_disable_instance(void);
+
+char *sge_smf_get_instance_state(void);
+
+char *sge_smf_get_instance_next_state(void);
 #else
 void dummy(void);
 #endif

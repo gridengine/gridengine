@@ -92,6 +92,11 @@
 #include "sge_thread_worker.h"
 #include "sge_thread_scheduler.h"
 
+#if defined(SOLARIS)
+#   include "sge_smf.h"
+#   include "sge_string.h"
+#endif
+
 void
 sge_signaler_initialize(sge_gdi_ctx_class_t *ctx)
 {
@@ -211,6 +216,15 @@ void* sge_signaler_main(void* arg)
              */
             sge_thread_notify_all_waiting();
 
+#if defined(SOLARIS)
+            if (sge_smf_used() == 1) {
+               /* We don't do disable on svcadm restart */
+               if (sge_strnullcmp(sge_smf_get_instance_state(), SCF_STATE_STRING_ONLINE) == 0 &&
+                   sge_strnullcmp(sge_smf_get_instance_next_state(), SCF_STATE_STRING_NONE) == 0) {
+                  sge_smf_temporary_disable_instance();
+               }
+            }
+#endif   
             /*
              * Now this thread can exit. The main thread does the remaining
              * shutdown activities

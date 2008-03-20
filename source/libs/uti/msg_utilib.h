@@ -256,7 +256,7 @@
 #define MSG_SMF_CONTRACT_ABANDON_FAILED_US  _MESSAGE(59149, _("can't abandon contract "sge_U32CFormat": "SFQ))
 #define MSG_SMF_LOAD_LIBSCF_FAILED_S        _MESSAGE(59150, _(SFQ" -> can't load libscf"))
 #define MSG_SMF_LOAD_LIB_FAILED             _MESSAGE(59151, _("can't load libcontract and libscf"))
-#define MSG_SMF_DISABLE_FAILED_SS           _MESSAGE(59152, _("can't temporary disable instance "SFQ" : "SFQ))
+#define MSG_SMF_DISABLE_FAILED_SSUU         _MESSAGE(59152, _("could not temporary disable instance "SFQ" : "SFQ"   [euid="sge_U32CFormat", uid="sge_U32CFormat"]"))
                                                                                                                                                  
 #endif /* __MSG_UTILIB_H */
 

@@ -377,9 +377,8 @@ int main(int argc, char **argv)
          next_prof_output = now + 60;
       }
    }   
-
-   sge_shutdown((void**)&ctx, execd_exit_state);
    sge_prof_cleanup();
+   sge_shutdown((void**)&ctx, execd_exit_state);
    DRETURN(0);
 }
 
@@ -399,7 +398,7 @@ static void execd_exit_func(void **ctx_ref, int i)
 
 #ifdef COMPILE_DC
    ptf_stop();
-#endif   
+#endif
    DEXIT;
 }
 

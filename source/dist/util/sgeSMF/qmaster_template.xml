@@ -70,13 +70,8 @@ NOTE:  This service manifest is not editable. Make customizations in a different
 
            <exec_method type='method'
                 name='stop'
-                exec='@@@SGE_ROOT@@@/util/sgeSMF/smf_stop_master.sh %f %{restarter/contract} %{restarter/state} %{restarter/next_state}'
+                exec=':kill'
                 timeout_seconds='60'>
-                <method_context>
-                   <method_environment>
-                      <envvar name='SGE_SMF_KILL_TIMEOUT' value='60'/>
-                   </method_environment>
-                </method_context>
            </exec_method>
 
            <property_group name='startd' type='framework'>

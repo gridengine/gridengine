@@ -1,3 +1,11 @@
+LP-2008-03-20-0: Bugfix:    svcadm restart does not restart qmaster/shadowd 
+                            services
+                 Bugfix:    SMF execd does not corretly shutdown on kill -15
+                 Bugfix:    SMF execd might not go to disabled state if sge 
+                            admin user does not have smf auths
+                 Bugster:   6677918, 6675579, 6675693
+                 Review:    HP, PJ
+
 HP-2008-03-20-0: Bugfix:    o Cleaned up link dependencies of static SSL libraries
                             Now static SSL libraries are only linked to binaries 
                             when it's really necessary. All other binaries 
@@ -569,6 +577,7 @@ LP-2008-01-24-0: Enhancem.: Subprocesses start in new contracts if SMF is used
                  Enhancem.: Various SMF support improvements
                  Enhancem.: Startup scripts now support -nosmf option
                  Bugfix:    load sensor might block execd port
+                 Issue:     2520
                  Bugster:   6654696
                  Review:    RD
 

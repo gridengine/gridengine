@@ -49,7 +49,7 @@ QSH_ADD_OBJS = $(QSH_ADD_SRC:.c=.o)
 
 QSH_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon $(DLLIB)
 
-QSH_LIB_DEPENDS = $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(SECLIBS) $(KRBLIBS) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB) $(TPLIB)
+QSH_LIB_DEPENDS = $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(KRBLIBS) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

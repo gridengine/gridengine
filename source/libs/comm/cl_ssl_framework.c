@@ -68,7 +68,15 @@
 #ifdef SOLARIS
 #include <link.h>
 #endif /* SOLARIS */
-
+#else /* LOAD_OPENSSL */
+/*
+ * Disable the warning "The variable ... is set but never used."
+ * We set a lot of function pointers we don't use currently, but we want
+ * to have them ready when we need them.
+ */
+#if defined (IRIX65)
+#pragma set woff 1552 
+#endif
 #endif /* LOAD_OPENSSL */
 
 #include <openssl/err.h> 
@@ -1077,7 +1085,7 @@ static int cl_com_ssl_build_symbol_table(void) {
 #endif
       
       if (cl_com_ssl_crypto_handle == NULL) {
-         CL_LOG(CL_LOG_ERROR,"can't load ssl library");
+         CL_LOG_STR(CL_LOG_ERROR, "can't load ssl library: ", dlerror());
          cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_DLOPEN_SSL_LIB_FAILED, MSG_CL_SSL_FW_OPEN_SSL_CRYPTO_FAILED);
          pthread_mutex_unlock(&cl_com_ssl_crypto_handle_mutex);
          return CL_RETVAL_SSL_DLOPEN_SSL_LIB_FAILED;
@@ -1851,9 +1859,9 @@ static int cl_com_ssl_build_symbol_table(void) {
       cl_com_ssl_func__SSL_clear                           = SSL_clear;
       cl_com_ssl_func__SSL_free                            = SSL_free;
       cl_com_ssl_func__SSL_get_fd                          = SSL_get_fd;
-      cl_com_ssl_func__SSL_get_error                       = SSL_get_error;
-      cl_com_ssl_func__SSL_get_verify_result               = SSL_get_verify_result;
-      cl_com_ssl_func__SSL_get_peer_certificate            = SSL_get_peer_certificate;
+      cl_com_ssl_func__SSL_get_error                       = (int (*)(SSL *s,int ret_code))SSL_get_error;
+      cl_com_ssl_func__SSL_get_verify_result               = (long (*)(SSL *ssl))SSL_get_verify_result;
+      cl_com_ssl_func__SSL_get_peer_certificate            = (X509* (*)(SSL *s))SSL_get_peer_certificate;
       cl_com_ssl_func__SSL_write                           = SSL_write;
       cl_com_ssl_func__SSL_read                            = SSL_read;
       cl_com_ssl_func__X509_get_subject_name               = X509_get_subject_name;
@@ -1868,7 +1876,7 @@ static int cl_com_ssl_build_symbol_table(void) {
       cl_com_ssl_func__SSL_ctrl                            = SSL_ctrl;
       cl_com_ssl_func__RAND_status                         = RAND_status;
       cl_com_ssl_func__RAND_load_file                      = RAND_load_file;
-      cl_com_ssl_func__SSL_get_cipher_list                 = SSL_get_cipher_list;
+      cl_com_ssl_func__SSL_get_cipher_list                 = (const char* (*)(SSL *ssl, int priority))SSL_get_cipher_list;
       cl_com_ssl_func__SSL_CTX_set_cipher_list             = SSL_CTX_set_cipher_list;
       cl_com_ssl_func__SSL_set_cipher_list                 = SSL_set_cipher_list;
       cl_com_ssl_func__SSL_set_quiet_shutdown              = SSL_set_quiet_shutdown;
@@ -1883,7 +1891,7 @@ static int cl_com_ssl_build_symbol_table(void) {
 
 #ifdef ENABLE_CRL
       cl_com_ssl_func__PEM_ASN1_read                       = PEM_ASN1_read;
-      cl_com_ssl_func__SSL_CTX_get_cert_store              = SSL_CTX_get_cert_store;
+      cl_com_ssl_func__SSL_CTX_get_cert_store              = (X509_STORE *(*)(SSL_CTX *ctx))SSL_CTX_get_cert_store;
       cl_com_ssl_func__X509_STORE_add_crl                  = X509_STORE_add_crl;
       cl_com_ssl_func__d2i_X509_CRL                        = d2i_X509_CRL;
       cl_com_ssl_func__X509_STORE_set_flags = X509_STORE_set_flags;
@@ -1901,13 +1909,13 @@ static int cl_com_ssl_build_symbol_table(void) {
       cl_com_ssl_func__ERR_print_errors_fp = ERR_print_errors_fp;
       cl_com_ssl_func__X509_LOOKUP_file = X509_LOOKUP_file;
       cl_com_ssl_func__X509_STORE_CTX_get_ex_data = X509_STORE_CTX_get_ex_data;
-      cl_com_ssl_func__SSL_get_SSL_CTX = SSL_get_SSL_CTX;
+      cl_com_ssl_func__SSL_get_SSL_CTX = (SSL_CTX* (*)(SSL *ssl))SSL_get_SSL_CTX;
       cl_com_ssl_func__X509_STORE_CTX_get_error_depth = X509_STORE_CTX_get_error_depth;
       cl_com_ssl_func__X509_NAME_oneline = X509_NAME_oneline;
       cl_com_ssl_func__CRYPTO_free = CRYPTO_free;
       cl_com_ssl_func__X509_verify_cert_error_string = X509_verify_cert_error_string;
       cl_com_ssl_func__SSL_get_ex_data_X509_STORE_CTX_idx = SSL_get_ex_data_X509_STORE_CTX_idx;
-      cl_com_ssl_func__SSL_CTX_get_ex_data = SSL_CTX_get_ex_data;
+      cl_com_ssl_func__SSL_CTX_get_ex_data = (void* (*)(SSL_CTX *ssl,int idx))SSL_CTX_get_ex_data;
       cl_com_ssl_func__SSL_CTX_set_ex_data = SSL_CTX_set_ex_data;
       cl_com_ssl_func__sk_num = sk_num;
       cl_com_ssl_func__sk_value = sk_value;

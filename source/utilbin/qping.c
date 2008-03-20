@@ -931,7 +931,9 @@ int main(int argc, char *argv[]) {
    cl_tcp_connect_t connect_type = CL_TCP_DEFAULT;
    cl_xml_connection_type_t connection_type = CL_CM_CT_MESSAGE;
    char* client_name  = "qping";
+#ifdef SECURE
    int   got_no_framework  = 0;
+#endif
 
    int   parameter_start   = 1;
    int   comp_id           = -1;
@@ -1185,7 +1187,9 @@ int main(int argc, char *argv[]) {
          fprintf(stderr,"please use option -ssl or -tcp to bypass bootstrap file read\n");
          exit(1);
       }
+#ifdef SECURE
       got_no_framework = 1;
+#endif
       if ( strcmp( "csp", bootstrap_get_security_mode()) == 0) {
          option_ssl = 1;
       } else {

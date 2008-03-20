@@ -163,9 +163,10 @@ pack.o:		$(CULLLIB_DIR)/pack.c
 #---------------------------------------------------------------------
 # example1
 
+EXAMPLE1_DEPS = example1.o $(CULLLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(RMONLIB) $(COMMLISTSLIB) $(LCKLIB)
 EXAMPLE1_OBJS = example1.o $(CULLLIB) $(UTILIB) $(WINGRIDLIB) $(RMONLIB) $(COMMLISTSLIB) $(LCKLIB)
 
-example1: $(EXAMPLE1_OBJS)
+example1: $(EXAMPLE1_DEPS)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o example1 $(EXAMPLE1_OBJS) $(LFLAGS) $(LIBS)
 
 example1.o: $(CULLLIB_DIR)/example1.c
@@ -174,9 +175,10 @@ example1.o: $(CULLLIB_DIR)/example1.c
 #---------------------------------------------------------------------
 # example2
 
+EXAMPLE2_DEPS = example2.o $(CULLLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(COMMLISTSLIB) $(LCKLIB)
 EXAMPLE2_OBJS = example2.o $(CULLLIB) $(WINGRIDLIB) $(UTILIB) $(RMONLIB) $(COMMLISTSLIB) $(LCKLIB)
 
-example2: $(EXAMPLE2_OBJS)
+example2: $(EXAMPLE2_DEPS)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o example2 $(EXAMPLE2_OBJS) $(LFLAGS) $(LIBS)
 
 example2.o: $(CULLLIB_DIR)/example2.c

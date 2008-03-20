@@ -111,11 +111,9 @@ QMASTER_ADD_OBJS = $(QMASTER_ADD_SRC:.c=.o)
 QMASTER_ADD_LIBS = $(SPOOLING_LIBS) -lsched $(EVMLIB) -levc $(MIRLIB) -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon $(DLLIB)
 
 QMASTER_LIB_DEPENDS = $(SCHEDLIB) $(EVMLIB) $(EVCLIB) $(MIRLIB) \
-                      $(GDILIB) $(SGEOBJLIB) \
-                      $(SPOOLING_DEPS) $(SGEOBJDLIB) \
-                      $(SECLIBS) $(KRBLIBS) \
-                      $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) \
-                      $(UTILIB) $(LCKLIB) $(RMONLIB) \
+                      $(GDILIB) $(SGEOBJLIB) $(SPOOLING_DEPS) $(SGEOBJDLIB) \
+                      $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) \
+                      $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB) \
                       $(TPLIB)
 
 QMASTER_TEST_OBJS = \

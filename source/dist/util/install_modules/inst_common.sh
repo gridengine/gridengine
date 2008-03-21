@@ -81,12 +81,20 @@ BasicSettings()
 
   unset SGE_NOMSG
 
-  if [ ! -d $SGE_BIN ]; then
-     $ECHO "Can't find binaries for architecture: $SGE_ARCH!"
-     $ECHO "Please check your binaries. Installation failed!"
-     $ECHO "Exiting installation."
-     exit 2
-  fi
+   if [ ! -d $SGE_BIN ]; then
+      case $SGE_ARCH in
+      u*)
+         $ECHO "Failed: $SGE_ARCH platform is not supported."
+         $ECHO "Exiting installation."
+         exit 2
+         ;;   
+      *)
+         $ECHO "Can't find binaries for architecture: $SGE_ARCH!"
+         $ECHO "Please check your binaries. Installation failed!"
+         $ECHO "Exiting installation."
+         exit 2
+      esac
+   fi
 
    if [ "$SGE_ARCH" != "win32-x86" ]; then
       # set spooldefaults binary path

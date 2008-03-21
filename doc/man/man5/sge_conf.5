@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/03/04 12:21:43 $     Revision: $Revision: 1.68 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/03/21 13:55:34 $     Revision: $Revision: 1.69 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/03/04 12:21:43 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/03/21 13:55:34 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -291,6 +291,18 @@ These three flags correspond to the DRMAA job template attribute 'drmaa_transfer
 .PP
 The global configuration entry for this value
 may be overwritten by the execution host local configuration.
+.PP
+Exit codes for the prolog attribute can be interpreted based on the 
+following exit values:
+.RS
+0: Success 
+.br
+99: Reschedule job 
+.br
+100: Put job in error state 
+.br
+Anything else: Put queue in error state
+.RE
 .\"
 .\"
 .SS "\fBepilog\fP"
@@ -322,6 +334,18 @@ used to constitute a command line.
 .PP
 The global configuration entry for this value
 may be overwritten by the execution host local configuration.
+.PP
+Exit codes for the epilog attribute can be interpreted based on the 
+following exit values:
+.RS
+0: Success 
+.br
+99: Reschedule job 
+.br
+100: Put job in error state 
+.br
+Anything else: Put queue in error state
+.RE
 .\"
 .\"
 .SS "\fBshell_start_mode\fP"

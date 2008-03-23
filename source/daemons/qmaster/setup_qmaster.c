@@ -1129,10 +1129,6 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
    /* rebuild signal resend events */
    rebuild_signal_events();
 
-   DPRINTF(("scheduler config -----------------------------------\n"));
-   
-   sge_read_sched_configuration(ctx, spooling_context, &answer_list);
-   answer_list_output(&answer_list);
 
    DPRINTF(("user list-----------------------------------\n"));
    spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_USER].list, SGE_TYPE_USER);
@@ -1146,6 +1142,11 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
 
    remove_invalid_job_references(job_spooling, 0, object_base);
    
+   DPRINTF(("scheduler config -----------------------------------\n"));
+   
+   sge_read_sched_configuration(ctx, spooling_context, &answer_list);
+   answer_list_output(&answer_list);
+
    DPRINTF(("share tree list-----------------------------------\n"));
    spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_SHARETREE].list, SGE_TYPE_SHARETREE);
    answer_list_output(&answer_list);

@@ -1,3 +1,7 @@
+GH-2008-03-23-0: Bugfix:    Reprioritize disappears after sge_qmaster restart
+                 Bugster:   6574269
+                 Review:    AH
+
 MP-2008-03-21-1: Bugfix:    Merge of MP-2008-02-22-0 from V61_BRANCH.
                  Bugster:   6575740
                  Issue:     2287

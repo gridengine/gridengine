@@ -2199,7 +2199,7 @@ SetScheddConfig()
       $INFOTEXT -n "3) Max\n          Immediate Scheduling, report no scheduling information,\n" \
                    "          actual load\n"
 
-      $INFOTEXT -auto $AUTO -n "Enter the number of your prefered configuration and hit <RETURN>! \n" \
+      $INFOTEXT -auto $AUTO -n "Enter the number of your preferred configuration and hit <RETURN>! \n" \
                    "Default configuration is [1] >> "
       SCHEDD=`Enter 1`
 

@@ -159,7 +159,8 @@ sge_gdi_packet_queue_wakeup_all_waiting(sge_gdi_packet_queue_class_t *packet_que
 *  SYNOPSIS
 *     void sge_gdi_packet_queue_store_notify(
 *                                   sge_gdi_packet_queue_class_t *packet_queue, 
-*                                   sge_gdi_packet_class_t *packet) 
+*                                   sge_gdi_packet_class_t *packet,
+*                                   monitoring_t *monitor) 
 *
 *  FUNCTION
 *     A call to this function will append "packet" at the end of the 
@@ -169,6 +170,7 @@ sge_gdi_packet_queue_wakeup_all_waiting(sge_gdi_packet_queue_class_t *packet_que
 *  INPUTS
 *     sge_gdi_packet_queue_class_t *packet_queue - packet queue pointer 
 *     sge_gdi_packet_class_t *packet             - handle to a new packet 
+*     monitoring_t *monitor                      - monitor object pointer
 *
 *  RESULT
 *     void - none
@@ -181,7 +183,8 @@ sge_gdi_packet_queue_wakeup_all_waiting(sge_gdi_packet_queue_class_t *packet_que
 *******************************************************************************/
 void
 sge_gdi_packet_queue_store_notify(sge_gdi_packet_queue_class_t *packet_queue,
-                                  sge_gdi_packet_class_t *packet, bool high_prio)
+                                  sge_gdi_packet_class_t *packet, bool high_prio,
+                                  monitoring_t *monitor)
 {
    cl_thread_settings_t *thread_config = NULL; 
 
@@ -212,6 +215,7 @@ sge_gdi_packet_queue_store_notify(sge_gdi_packet_queue_class_t *packet_queue,
          packet_queue->last_packet = packet;
          packet_queue->counter++;
       }
+      MONITOR_SET_QLEN(monitor, packet_queue->counter);
    }
 
    DPRINTF((SFN" added new packet (packet_queue->counter = "sge_U32CFormat")\n",
@@ -274,7 +278,8 @@ sge_gdi_packet_queue_store_notify(sge_gdi_packet_queue_class_t *packet_queue,
 *******************************************************************************/
 bool
 sge_gdi_packet_queue_wait_for_new_packet(sge_gdi_packet_queue_class_t *packet_queue,
-                                         sge_gdi_packet_class_t **packet)
+                                         sge_gdi_packet_class_t **packet,
+                                         monitoring_t *monitor)
 {
    bool ret = true;
    DENTER(TOP_LAYER, "sge_gdi_packet_queue_wait_for_new_packet");
@@ -359,6 +364,8 @@ sge_gdi_packet_queue_wait_for_new_packet(sge_gdi_packet_queue_class_t *packet_qu
                   packet_queue->counter, 
                   packet_queue->waiting));
       }
+
+      MONITOR_SET_QLEN(monitor, ((packet_queue != NULL) ?  packet_queue->counter_prio +  packet_queue->counter : 0));
 
       sge_mutex_unlock(PACKET_QUEUE_MUTEX, SGE_FUNC, __LINE__, &(packet_queue->mutex));
    }

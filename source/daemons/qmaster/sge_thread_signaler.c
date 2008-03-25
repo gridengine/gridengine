@@ -200,8 +200,7 @@ void* sge_signaler_main(void* arg)
       /*
        * Wait for signals
        */
-      MONITOR_IDLE_TIME(sigwait(&sig_set, &sig_num), (&monitor), mconf_get_monitor_time(),
-                        mconf_is_monitor_message());
+      sigwait(&sig_set, &sig_num);
 
       thread_start_stop_profiling();
 

@@ -526,7 +526,7 @@ sge_scheduler_main(void *arg)
       cl_thread_func_startup(thread_config);
 
       /* initialize monitoring */ 
-      sge_monitor_init(&monitor, thread_config->thread_name, NONE_EXT, SCT_WARNING, SCT_ERROR);
+      sge_monitor_init(&monitor, thread_config->thread_name, SCH_EXT, SCT_WARNING, SCT_ERROR);
       sge_qmaster_thread_init(&ctx, SCHEDD, SCHEDD_THREAD, true);
 
       /* register at profiling module */   
@@ -951,6 +951,8 @@ sge_scheduler_main(void *arg)
             }
 
             thread_output_profiling("scheduler thread profiling summary:\n", &next_prof_output);
+
+            sge_monitor_output(&monitor);
          } else {
             PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM6);
          }

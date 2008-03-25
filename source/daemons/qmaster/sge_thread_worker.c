@@ -234,7 +234,10 @@ sge_worker_main(void *arg)
        * thread takes care that packet producers will be terminated 
        * before all worker threads so that this won't be a problem.
        */
-      sge_gdi_packet_queue_wait_for_new_packet(&Master_Packet_Queue, &packet);
+      MONITOR_IDLE_TIME((
+      sge_gdi_packet_queue_wait_for_new_packet(&Master_Packet_Queue, &packet, &monitor)
+      ), &monitor, mconf_get_monitor_time(), mconf_is_monitor_message());
+
       if (packet != NULL) {
          sge_gdi_task_class_t *task = packet->first_task;
 #ifdef DO_LATE_LOCK
@@ -263,6 +266,9 @@ sge_worker_main(void *arg)
             MONITOR_WAIT_TIME((type = eval_message_and_block(*aMsg)), monitor); 
          }
 #else
+
+         MONITOR_MESSAGES((&monitor));
+
          if (packet->is_gdi_request == true) {
             /*
              * test if a write lock is neccessary
@@ -349,6 +355,8 @@ sge_worker_main(void *arg)
      
          thread_output_profiling("worker thread profiling summary:\n",
                                  &next_prof_output);
+
+         sge_monitor_output(&monitor);
 
       } else { 
          int execute = 0;

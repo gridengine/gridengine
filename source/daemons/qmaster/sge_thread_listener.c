@@ -179,7 +179,7 @@ sge_listener_main(void *arg)
 
    DPRINTF((SFN" started\n", thread_config->thread_name));
    cl_thread_func_startup(thread_config);
-   sge_monitor_init(&monitor, thread_config->thread_name, GDI_EXT, MT_WARNING, MT_ERROR);
+   sge_monitor_init(&monitor, thread_config->thread_name, LIS_EXT, MT_WARNING, MT_ERROR);
    sge_qmaster_thread_init(&ctx, QMASTER, LISTENER_THREAD, true);
 
    /* register at profiling module */

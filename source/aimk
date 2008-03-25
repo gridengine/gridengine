@@ -1079,7 +1079,7 @@ case FREEBSD_*:
    set SHARED_CFLAGS = "-fPIC"
    set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared -export-dynamic"
    set AUTHLIBS = "-lcrypt -lpam"
-  
+ 
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD -I/usr/X11/include"
    set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
@@ -1484,7 +1484,6 @@ case NECSX4:
    set XINCD    = ""
    set XCFLAGS  = "$XMTDEF $XINCD"
    set XLFLAGS  = ""
-
    if ( $SHAREDLIBS == 1 ) then
       echo creating shared libs not yet supported on $BUILDARCH
       exit 1

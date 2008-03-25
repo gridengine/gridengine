@@ -371,16 +371,19 @@ void sge_qmaster_process_message(sge_gdi_ctx_class_t *ctx, monitoring_t *monitor
    if (res == CL_RETVAL_OK) {
       switch (msg.tag) {
          case TAG_GDI_REQUEST: 
+            MONITOR_INC_GDI(monitor);
             do_gdi_packet(ctx, NULL, &msg, monitor);
             break;
          case TAG_ACK_REQUEST:
+            MONITOR_INC_ACK(monitor);
             do_c_ack(ctx, &msg, monitor);
             break;
          case TAG_EVENT_CLIENT_EXIT:
+            MONITOR_INC_ECE(monitor);
             do_event_client_exit(ctx, &msg, monitor);
-            MONITOR_ACK(monitor);   
             break;
          case TAG_REPORT_REQUEST: 
+            MONITOR_INC_REP(monitor);
             do_report_request(ctx, &msg, monitor);
             break;
          default: 
@@ -474,7 +477,7 @@ do_gdi_packet(sge_gdi_ctx_class_t *ctx, lList **answer_list,
        * Put the packet into the packet queue so that workers can handle it
        * and then wait until the packet is handled
        */
-      sge_gdi_packet_queue_store_notify(&Master_Packet_Queue, packet, false);
+      sge_gdi_packet_queue_store_notify(&Master_Packet_Queue, packet, false, NULL);
 
 #ifdef SEND_ANSWER_IN_LISTENER
       sge_gdi_packet_wait_till_handled(packet);
@@ -566,7 +569,7 @@ do_report_request(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t *mo
    /*
     * Put the packet into the packet queue so that workers can handle it
     */
-   sge_gdi_packet_queue_store_notify(&Master_Packet_Queue, packet, false);
+   sge_gdi_packet_queue_store_notify(&Master_Packet_Queue, packet, false, NULL);
 
    DRETURN_VOID;
 } /* do_report_request */
@@ -691,7 +694,6 @@ static void do_c_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t 
          break;
 
       case ACK_EVENT_DELIVERY:
-         MONITOR_ACK(monitor); 
          /* 
          ** TODO: in this case we should check if the event belongs to the user
          **       who send the request

@@ -398,6 +398,7 @@ int main(int argc, char **argv)
 
    DENTER_MAIN(TOP_LAYER, "qhost");
 
+   sge_sig_handler_in_main_loop = 0;
    log_state_set_log_gui(true);
    sge_setup_sig_handlers(QHOST);
 

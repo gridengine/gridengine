@@ -1406,6 +1406,7 @@ static bool reporting_flush_report_file(lList **answer_list,
 
    DENTER(TOP_LAYER, "reporting_flush_report_file");
 
+   sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
    size = sge_dstring_strlen(&(buf->buffer));
    sge_dstring_init(&error_dstring, error_buffer, sizeof(error_buffer));
 
@@ -1420,8 +1421,6 @@ static bool reporting_flush_report_file(lList **answer_list,
       if (SGE_STAT(filename, &statbuf)) {
          write_comment = true;
       }     
-
-      sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
 
       /* open file for append */
       fp = fopen(filename, "a");
@@ -1496,8 +1495,9 @@ static bool reporting_flush_report_file(lList **answer_list,
          FCLOSE(fp);
       }
 
-      sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
    }
+
+   sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
 
    DRETURN(ret);
 

@@ -231,6 +231,7 @@ char **argv
    qstat_env.longest_queue_length=30;
    qstat_env.need_queues = true;
 
+   sge_sig_handler_in_main_loop = 0;
    sge_setup_sig_handlers(QSTAT);
    log_state_set_log_gui(true);
 

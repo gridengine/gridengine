@@ -1,4 +1,4 @@
-EB-2008-03-12-0: Enhancem.: - enhanced qping -info monitoring output
+EB-2008-03-25-0: Enhancem.: - enhanced qping -info monitoring output
                  Review:    MD, review for ext_sch_output() still needs to be done
 
 GH-2008-03-23-0: Bugfix:    Reprioritize disappears after sge_qmaster restart

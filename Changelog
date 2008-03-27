@@ -1,3 +1,8 @@
+MP-2008-03-27-0: Bugfix:    qhost -xml has wrong namespace. Merged from V61 branch
+                 Bugster:   6680160
+                 Issue:     2515
+                 Review:    MD
+
 AA-2008-03-27-0: Bugfix:    - rmi codebase missing juti.jar
                             - type in management.properties.template
                  Review:    CR

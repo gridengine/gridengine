@@ -181,6 +181,7 @@ AH-2008-03-05-0: Enhancem:  Merged code for scheduler matching statistics
 
 MP-2008-03-04-0: Bugfix:    Fixed error introduced into build through
                             checkin of MP-2008-02-22-0
+                 Bugster:   6647620, 6640688
                  Review:    MD
 
 RD-2008-03-04-1: Bugfix:    loadsensor does not work or AIX51

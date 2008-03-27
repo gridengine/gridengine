@@ -178,7 +178,7 @@ com.sun.grid.jgdi.management.jmxremote.password.file=@@SGE_ROOT@@/@@SGE_CELL@@/c
 #      If the access file is empty or non-existent then no access is allowed.
 #
 
-# For a non-default password file location use the following line
+# For a non-default access file location use the following line
 # com.sun.grid.jgdi.management.jmxremote.access.file=filepath
 com.sun.grid.jgdi.management.jmxremote.access.file=@@SGE_ROOT@@/@@SGE_CELL@@/common/jmx/jmxremote.access
 

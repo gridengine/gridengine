@@ -1,3 +1,8 @@
+MP-2008-03-27-0: Bugfix:    qhost -xml has wrong namespace
+                 Bugster:   6680160
+                 Issue:     2515
+                 Review:    MD
+
 AA-2008-03-27-0: Bugfix:    merge from maintrunk AA-2008-03-18-0
                             - qmon help file
                             - qmon restore of settings

@@ -1,3 +1,10 @@
+AA-2008-03-27-0: Bugfix:    merge from maintrunk AA-2008-03-18-0
+                            - qmon help file
+                            - qmon restore of settings
+                 Bugster:   6618332, 6629016, 6660953, 6660954
+                 Issues:    2467, 2517, 2518, 2519
+                 Review:    CR
+                            
 JG-2008-03-17-0: Cleanup:   Cleanup handling of event delivery time
                             (schedule_interval) and flushing of events
                             in scheduler.

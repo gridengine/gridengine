@@ -141,6 +141,7 @@ int flags
       return answer;
    }
 
+#if 0
    /*
    ** -C
    */
@@ -149,6 +150,7 @@ int flags
       DEXIT;
       return answer;
    }
+#endif
 
    /*
    ** -e

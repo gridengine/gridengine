@@ -415,6 +415,7 @@ static void qmonSubmitChangeResourcesPixmap(void);
 static void qmonSubmitReadScript(Widget w, String file, String merges, int r_defaults);
 static void qmonSubmitSetSensitive(int mode, int submode);
 static void qmonSubmitToggleHoldNow(Widget w, XtPointer cld, XtPointer cad);
+static lList *lCopyUniqNullNone(lList *lp, int keyfield);
 /*-------------------------------------------------------------------------*/
 
 static Widget qmon_submit = 0;
@@ -1682,22 +1683,22 @@ int read_defaults
       lFreeList(&alp);
 
       if (merge_script) {
+         lList *cl2 = NULL;
          /*
          ** stage one ana half of script file parsing
          ** merge an additional script in to override settings
          */ 
-         alp = parse_script_file(prog_number, merge_script, "", &cmdline, environ, 
+         alp = parse_script_file(prog_number, merge_script, "", &cl2, environ, 
                                  FLG_HIGHER_PRIOR | FLG_USE_NO_PSEUDOS);
          qmonMessageBox(w, alp, 0);
+         lFreeList(&alp);
 
-         if (alp) {
-            lFreeList(&alp);
-            DEXIT;
-            return;
+         if (cl2 != NULL) {
+            lAddList(cmdline, &cl2);
          }
       }   
    } else {
-      alp = parse_script_file(prog_number, filename, prefix, &cmdline, environ,
+      alp = parse_script_file(prog_number, filename, (prefix[0] ? prefix : NULL), &cmdline, environ,
                               FLG_HIGHER_PRIOR | FLG_IGNORE_EMBEDED_OPTS); 
       qmonMessageBox(w, alp, 0);
       lFreeList(&alp);
@@ -1935,7 +1936,7 @@ char *prefix
    else
       data->wd_path = NULL;
 
-   data->shell_list = lCopyList("JB_shell_list", lGetList(jep, JB_shell_list));
+   data->shell_list = lCopyUniqNullNone(lGetList(jep, JB_shell_list), PN_host);
    
    data->mail_list = lCopyList("JB_mail_list", lGetList(jep, JB_mail_list));
    if (!data->mail_list) {
@@ -1960,12 +1961,9 @@ char *prefix
 
    data->mail_options = MailOptionsToDialog(lGetUlong(jep, JB_mail_options));
 
-   data->stdoutput_path_list = lCopyList("JB_stdout_path_list", 
-                                       lGetList(jep, JB_stdout_path_list));
-   data->stdinput_path_list = lCopyList("JB_stdin_path_list", 
-                                       lGetList(jep, JB_stdin_path_list));
-   data->stderror_path_list = lCopyList("JB_stderr_path_list", 
-                                       lGetList(jep, JB_stderr_path_list));
+   data->stdoutput_path_list = lCopyUniqNullNone(lGetList(jep, JB_stdout_path_list), PN_host);
+   data->stdinput_path_list = lCopyUniqNullNone(lGetList(jep, JB_stdin_path_list), PN_host);
+   data->stderror_path_list = lCopyUniqNullNone(lGetList(jep, JB_stderr_path_list), PN_host);
    data->merge_output = lGetBool(jep, JB_merge_stderr);
 /*    data->reserve = lGetBool(jep, JB_reserve); */
    data->priority = lGetUlong(jep, JB_priority) - BASE_PRIORITY;
@@ -2324,19 +2322,16 @@ int save
    lSetUlong(jep, JB_verify_suitable_queues, data->verify_mode);
 
    DPRINTF(("JB_stdout_path_list %p\n", data->stdoutput_path_list));
-   lSetList(jep, JB_stdout_path_list, lCopyList("stdout",
-                                             data->stdoutput_path_list));
+   lSetList(jep, JB_stdout_path_list, lCopyUniqNullNone(data->stdoutput_path_list, PN_host));
    
    DPRINTF(("JB_stdin_path_list %p\n", data->stdinput_path_list));
-   lSetList(jep, JB_stdin_path_list, lCopyList("stdin",
-                                             data->stdinput_path_list));
+   lSetList(jep, JB_stdin_path_list, lCopyUniqNullNone(data->stdinput_path_list, PN_host));
    
    DPRINTF(("JB_stderr_path_list %p\n", data->stderror_path_list));
-   lSetList(jep, JB_stderr_path_list, lCopyList("stderr", 
-                                             data->stderror_path_list));
+   lSetList(jep, JB_stderr_path_list, lCopyUniqNullNone(data->stderror_path_list, PN_host));
    
    DPRINTF(("JB_shell_list %p\n", data->shell_list));
-   lSetList(jep, JB_shell_list, lCopyList("shell",data->shell_list));
+   lSetList(jep, JB_shell_list, lCopyUniqNullNone(data->shell_list, PN_host));
   
    DPRINTF(("JB_env_list %p\n", data->env_list));
    { 
@@ -3337,3 +3332,38 @@ static void qmonSubmitToggleHoldNow(Widget w, XtPointer cld, XtPointer cad)
    
    DEXIT;
 }
+
+static lList *lCopyUniqNullNone(lList *lp, int keyfield)
+{
+
+   lList *cl = NULL;
+   lListElem *ep;
+   lListElem *rep;
+
+   DENTER(CULL_LAYER, "lCopyUniqNullNone");
+
+   cl = lCopyList("", lp);
+   /*
+    * sort the list first to make our algorithm work
+    */
+   lPSortList(cl, "%I+", keyfield);
+
+   /*
+    * go over all elements and remove following elements
+    */
+   ep = lFirst(cl);
+   while (ep) {
+      rep = lNext(ep);
+      while (rep &&
+             ((lGetHost(rep, keyfield) == NULL && lGetHost(ep, keyfield) == NULL) ||
+              (lGetHost(rep, keyfield) == NULL && !strcasecmp(lGetHost(ep, keyfield), "none")) ||
+              (lGetHost(ep, keyfield) == NULL && !strcasecmp(lGetHost(rep, keyfield), "none")) || 
+              (!sge_hostcmp(lGetHost(rep, keyfield), lGetHost(ep, keyfield))))) {
+         lRemoveElem(cl, &rep);
+         rep = lNext(ep);
+      }
+      ep = lNext(ep);
+   }
+
+   DRETURN(cl);
+}   

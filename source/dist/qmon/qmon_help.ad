@@ -159,7 +159,7 @@ or by selecting @fBUser Config@fR in the @fBTask@fR menu.\n\
 @fBManagers, Operators and User Access Lists@fR can be added or removed from the\n\
 Grid Engine system with the @fBUser Configuration@fR dialogue.\n\
 \n\
-There are four user categories in Grid Engine: @fBManagers, Operators, Owners, Users@fR.\n\
+There are four user categories in Grid Engine - @fBManagers, Operators, Owners, Users@fR.\n\
 \n\
 @fBManagers@fR have full capabilities to manipulate Grid Engine. By default the superuser\n\
 of the master host and any machine hosting a queue have manager privileges.\n\
@@ -197,7 +197,16 @@ The @fBProject Configuration@fR dialogue is opened by clicking on the @fBProject
 or by selecting @fBProject Configuration@fR in the @fBTask@fR menu.\n\
 \n\
 The @fBProject Configuration@fR dialogue allows the definition and manipulation of Grid Engine\n\
-projects.\n\
+projects.
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*RQS_CONFIG.xmtHelpTitle: @fBResource Quota Configuration
+Qmon*RQS_CONFIG.xmtHelp: \
+The @fBResource Quota Configuration@fR dialogue is opened by clicking on the @fBResource Quota Config Icon@fR\n\
+or by selecting @fBResource Quota Configuration@fR in the @fBTask@fR menu.\n\
+\n\
+The @fBResource Quota Configuration@fR dialogue allows the definition and manipulation of Grid Engine\n\
+resource quotas.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Qmon*TICKET_OVERVIEW.xmtHelpTitle: @fBPolicy Configuration
@@ -665,6 +674,8 @@ submit command of a foreign queuing system connected to Grid Engine through the 
 Interface@fR.\n\
 In the @fBJob Dependencies@fR field the job numbers that the current job depends on, can be\n\
 entered.\n\
+In the @fBHold Array Dependencies@fR field the job numbers that the current job depends un with array dependency,\n\
+can be entered.\n\
 The @fBDeadline@fR field allows entering the deadline when a job shall be fulfilled.\n\
 This leads to an increase of the priority of this job when it approaches its deadline.\n\
 Only @fBDeadline Users@fR can submit deadline jobs.\n\
@@ -1261,4 +1272,22 @@ To register the changes with @fBsge_qmaster@fR press @fBApply@fR. The message ar
 confirms either @fBSuccess or Failure@fR.\n\
 @fBDone@fR quits the dialogue.\n\
 The @fBTwisted Red Arrow@fR links to the corresponding object configuration dialogue.
-"
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*rqs*xmtHelpTitle: @fBResource Quota Help
+Qmon*rqs*xmtHelp: \
+The @fBResource Quota Configuration@fR dialogue allows the Grid Engine manager to specify how system\n\
+resources should be restricted by quotas. The corresponding allowed syntax is explained in sge_resource_quota(5) man page.\n\
+\n\
+In qmon the complete set of reqsource quotas is shown as for qconf -srqs and changed as for qconf -mrqs. (see qconf(1))\n\
+A template section to start with is\n\
+{\n\
+   name         template\n\
+   description  NONE\n\
+   enabled      FALSE\n\
+   limit        to slots=0\n\
+}\n\
+\n\
+To register the changes with @fBsge_qmaster@fR press @fBOk@fR.\n\
+@fBCancel@fR discards any changes and quits the dialogue.
+

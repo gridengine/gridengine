@@ -1,3 +1,7 @@
+AH-2008-03-31-0: Bugfix:    qsub(1) man page mentioned non extisting file.
+                 Issue:     2535
+                 Review:    TBD
+
 MP-2008-03-27-0: Bugfix:    qhost -xml has wrong namespace. Merged from V61 branch
                  Bugster:   6680160
                  Issue:     2515

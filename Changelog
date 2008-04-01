@@ -1,3 +1,6 @@
+AH-2008-04-01-0: Enhancem.  Added mallinfo() to qping -info output for Linux qmasters
+                 Review:    TBD
+
 RD-2008-03-13-0: Bugfix:    fixed some issues introduced with
                             RD-2008-03-10-0
                  Review:    AH

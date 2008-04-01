@@ -33,6 +33,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+#ifdef LINUX
+#include <malloc.h>
+#endif
+
 
 #include "uti/sge_monitor.h"
 
@@ -374,6 +378,22 @@ u_long32 sge_monitor_status(char **info_message, u_long32 monitor_time)
       }
       sge_dstring_append(&Info_Line, "\n");
    }
+
+#ifdef LINUX
+   {
+      struct mallinfo info;
+      info = mallinfo();
+      sge_dstring_sprintf_append(&Info_Line, MSG_UTI_MONITOR_MEMINFO_UUUUUUU,
+         info.arena,
+         info.ordblks,
+         info.hblks,
+         info.hblkhd,
+         info.uordblks,
+         info.fordblks,
+         info.keepcost);
+      sge_dstring_append(&Info_Line, "\n");
+   }
+#endif
 
    if (monitor_time != 0) { /* generates the output monitoring output data */
       int i;

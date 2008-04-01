@@ -232,6 +232,7 @@
 #define MSG_UTI_MONITOR_MEMERROREXT            _MESSAGE(59133, _("not enough memory for monitor extension"))
 #define MSG_UTI_MONITOR_TETEXT_FF              _MESSAGE(59134, _("pending: %.2f executed: %.2f/s"))
 #define MSG_UTI_MONITOR_EDTEXT_FFFFFFFF        _MESSAGE(59135, _("clients: %.2f mod: %.2f/s ack: %.2f/s blocked: %.2f busy: %.2f | events: %.2f/s added: %.2f/s skipt: %.2f/s"))
+#define MSG_UTI_MONITOR_MEMINFO_UUUUUUU        _MESSAGE(59137, _("mallinfo:                 ARENA("sge_U32CFormat")| ORDBLKS("sge_U32CFormat") | HBLKS ("sge_U32CFormat")| HBLHKD("sge_U32CFormat") | UORDBLKS("sge_U32CFormat") | FORDBLKS("sge_U32CFormat") | KEEPCOST("sge_U32CFormat")"))
 
 #define MSG_UTI_DAEMONIZE_CANT_PIPE            _MESSAGE(59140, _("can't create pipe"))
 #define MSG_UTI_DAEMONIZE_CANT_FCNTL_PIPE      _MESSAGE(59141, _("can't set daemonize pipe to not blocking mode"))

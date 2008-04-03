@@ -101,6 +101,7 @@
 
 #include "sgeobj/msg_sgeobjlib.h"
 
+static void sge_change_queue_version_exechost(sge_gdi_ctx_class_t *ctx, const char *exechost_name);
 static void master_kill_execds(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task);
 static void host_trash_nonstatic_load_values(lListElem *host);
 static void notify(sge_gdi_ctx_class_t *ctx, lListElem *lel, sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task, int kill_jobs, int force); 
@@ -132,7 +133,7 @@ host_initalitze_timer(void)
       template_host_elem = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, SGE_TEMPLATE_NAME);
       
       for_each(host, *object_base[SGE_TYPE_EXECHOST].list) {
-         if ( (host != global_host_elem ) && (host != template_host_elem ) ) {
+         if ((host != global_host_elem) && (host != template_host_elem)) {
             reschedule_add_additional_time(load_report_interval(host));
             reschedule_unknown_trigger(host);
             reschedule_add_additional_time(0);
@@ -582,7 +583,7 @@ int host_spool(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *ep, gdi_object
    const char *key;
    sge_object_type host_type = SGE_TYPE_ADMINHOST;
 
-   bool dbret;
+   int ret = 0;
    lList *answer_list = NULL;
    bool job_spooling = ctx->get_job_spooling(ctx);
 
@@ -608,18 +609,16 @@ int host_spool(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *ep, gdi_object
          break;
    }
      
-   dbret = spool_write_object(alpp, spool_get_default_context(), ep, key, host_type, job_spooling);
-   answer_list_output(&answer_list);
-
-   if (!dbret) {
+   if (!spool_write_object(alpp, spool_get_default_context(), ep, key, host_type, job_spooling)) {
       answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
                               MSG_PERSISTENCE_WRITE_FAILED_S,
                               key);
+      ret = 1;
    }
+   answer_list_output(&answer_list);
 
-   DEXIT;
-   return dbret ? 0 : 1;
+   DRETURN(ret);
 }
 
 int host_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
@@ -679,14 +678,8 @@ const char *target    /* prognames[QSTD|EXECD] */
 
    host = lGetHost(hep, EH_name);
 
-   if (target) {
-      if (cl_com_remove_known_endpoint_from_name((char*)host,(char*)target,1) == CL_RETVAL_OK) {
-         DEBUG((SGE_EVENT, "set %s/%s/%d to unheard\n", host, target, 1 ));
-      }
-   } else {
-      if (cl_com_remove_known_endpoint_from_name((char*)host,(char*)prognames[EXECD],1) == CL_RETVAL_OK) {
-         DEBUG((SGE_EVENT, "set %s/%s/%d to unheard\n", host,(char*)prognames[EXECD], 1 ));
-      }
+   if (cl_com_remove_known_endpoint_from_name((char*)host,(char*)target,1) == CL_RETVAL_OK) {
+      DEBUG((SGE_EVENT, "set %s/%s/%d to unheard\n", host, target, 1));
    }
 
    host_trash_nonstatic_load_values(hep);
@@ -725,19 +718,13 @@ void sge_update_load_values(sge_gdi_ctx_class_t *ctx, char *rhost, lList *lp)
 
    /* loop over all received load values */
    for_each(ep, lp) {
-      const char *name, *value, *host;
-      u_long32 global, is_static;
 
       /* get name, value and other info */
-      name = lGetString(ep, LR_name);
-      value = lGetString(ep, LR_value);
-      host  = lGetHost(ep, LR_host);
-      global = lGetUlong(ep, LR_global);
-      is_static = lGetUlong(ep, LR_static);
-
-      if (is_static == 1) {
-         statics_changed = true;
-      }
+      const char *name = lGetString(ep, LR_name);
+      const char *value = lGetString(ep, LR_value);
+      const char *host  = lGetHost(ep, LR_host);
+      u_long32 global = lGetUlong(ep, LR_global);
+      u_long32 is_static = lGetUlong(ep, LR_static);
 
       /* erroneous load report */
       if (!name || !value || !host) {
@@ -770,8 +757,11 @@ void sge_update_load_values(sge_gdi_ctx_class_t *ctx, char *rhost, lList *lp)
          lRemoveElem(lGetList(*hepp, EH_load_list), &lep);
       } else {
          /* replace old load value or add a new one */
-         lep = lGetSubStr(*hepp, HL_name, name, EH_load_list);  
+         if (is_static == 1) {
+            statics_changed = true;
+         }
 
+         lep = lGetSubStr(*hepp, HL_name, name, EH_load_list);  
          if (lep == NULL) {
             lep = lAddSubStr(*hepp, HL_name, name, EH_load_list, HL_Type);
             DPRINTF(("%s: adding load value: "SFQ" = "SFQ"\n", 
@@ -929,7 +919,8 @@ u_long32 load_report_interval(lListElem *hep)
    host = lGetHost(hep, EH_name);
 
    /* cache load report interval in exec host to prevent host name resolving each epoch */
-   if (mconf_is_new_config() || !lGetUlong(hep, EH_load_report_interval)) {
+   timeout = lGetUlong(hep, EH_load_report_interval);
+   if (mconf_is_new_config() || timeout == 0) {
       lListElem *conf_entry = NULL;
       
       if ((conf_entry = sge_get_configuration_entry_by_name(host, "load_report_time")) != NULL) {
@@ -944,14 +935,12 @@ u_long32 load_report_interval(lListElem *hep)
       DPRINTF(("%s: load value timeout for host %s is "sge_u32"\n", SGE_FUNC, host, timeout));
       
       lSetUlong(hep, EH_load_report_interval, timeout);
-   } else { 
-      timeout = lGetUlong(hep, EH_load_report_interval);
    }
     
    DRETURN(timeout);
 }
 
-void sge_change_queue_version_exechost(sge_gdi_ctx_class_t *ctx, const char *exechost_name) 
+static void sge_change_queue_version_exechost(sge_gdi_ctx_class_t *ctx, const char *exechost_name) 
 {
    lListElem *cqueue = NULL; 
    bool change_all = (strcasecmp(exechost_name, SGE_GLOBAL_NAME) == 0) ? true : false;
@@ -1204,7 +1193,7 @@ notify(sge_gdi_ctx_class_t *ctx, lListElem *lel, sge_gdi_packet_class_t *packet,
       }
    }
 
-   sge_mark_unheard(lel, NULL); /* for both execd */
+   sge_mark_unheard(lel, prognames[EXECD]); /* for both execd */
 
    DEXIT;
    return;

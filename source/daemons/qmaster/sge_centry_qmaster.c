@@ -526,7 +526,7 @@ sge_change_queue_version_centry(sge_gdi_ctx_class_t *ctx)
 *     MT-NOTE: centry_redebit_consumables() maybe not MT safe (the functions
 *     qinstance_debit_consumable and host_debit_consumable have no MT-NOTE).
 *
-*     This function could be highly optimized by taking into account the
+*     TODO: This function could be highly optimized by taking into account the
 *     centry list passed as parameter.
 *     This would not only increase performance by only recomputing the 
 *     debitation for only the changed centries (and spooling only the actually 

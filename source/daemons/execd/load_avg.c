@@ -275,9 +275,8 @@ execd_add_conf_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now
 static int 
 execd_add_license_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now, u_long32 *next_send) 
 {
-   const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
-
    if (*next_send == 0) {
+      const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
       lListElem *report;
 
       *next_send = now + mconf_get_load_report_time();

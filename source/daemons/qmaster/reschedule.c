@@ -168,21 +168,15 @@ void reschedule_unknown_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, moni
     * Check if host is still in unknown state
     */
    for_each(qep, master_list) {
-      lList *qinstance_list = NULL;
       lListElem *qinstance = NULL;
-      lListElem *next_qinstance = NULL;
-      const void *iterator = NULL;
 
-      qinstance_list = lGetList(qep, CQ_qinstances);
-      next_qinstance = lGetElemHostFirst(qinstance_list, QU_qhostname, 
-                                         hostname, &iterator); 
-      while ((qinstance = next_qinstance) != NULL) {
-         next_qinstance = lGetElemHostNext(qinstance_list, QU_qhostname, 
-                                           hostname, &iterator); 
+      qinstance = lGetElemHost(lGetList(qep, CQ_qinstances), QU_qhostname, 
+                                         hostname); 
+      if (qinstance != NULL) {
          if (!qinstance_state_is_unknown(qinstance)) {
            DTRACE;
            goto Error;
-         } 
+         }
       }
    }
 

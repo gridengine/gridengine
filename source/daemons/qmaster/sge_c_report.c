@@ -181,7 +181,7 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
          break;
       case NUM_REP_REPORT_CONF: 
          MONITOR_ECONF(monitor); 
-         if (hep && (sge_compare_configuration(hep, lGetList(report, REP_list)) != 0)) {
+         if (sge_compare_configuration(hep, lGetList(report, REP_list)) != 0) {
             DPRINTF(("%s: configuration on host %s is not up to date\n", SGE_FUNC, rhost));
             send_tag_new_conf = true;
          }
@@ -196,7 +196,6 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
          if (ret) {
             ERROR((SGE_EVENT, MSG_LICENCE_ERRORXUPDATINGLICENSEDATA_I, ret));
          }
-
          break;
 
       case NUM_REP_REPORT_JOB:
@@ -237,7 +236,6 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
          ERROR((SGE_EVENT, MSG_CONF_CANTNOTIFYEXECHOSTXOFNEWCONF_S, rhost));
       }
    }
-
    
    DRETURN_VOID;
 } /* sge_c_report */

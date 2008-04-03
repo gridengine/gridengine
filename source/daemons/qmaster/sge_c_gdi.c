@@ -242,8 +242,6 @@ int verify_request_version(lList **alpp, u_long32 version, char *host, char *com
 
    DENTER(TOP_LAYER, "verify_request_version");
 
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
-
    if (version == GRM_GDI_VERSION) {
       DRETURN(0);
    }
@@ -254,6 +252,8 @@ int verify_request_version(lList **alpp, u_long32 version, char *host, char *com
          break;
       }
    }
+
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    if (client_version) {
       WARNING((SGE_EVENT, MSG_GDI_WRONG_GDI_SSISS,
@@ -358,13 +358,9 @@ sge_c_gdi(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet,
 static void 
 sge_c_gdi_get(gdi_object_t *ao, sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task, monitoring_t *monitor)
 {
-   dstring ds;
-   char buffer[256];
    object_description *object_base = object_type_get_object_description();
 
    DENTER(TOP_LAYER, "sge_c_gdi_get");
-
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    /* Whatever client sent with this get request - we don't need it */
    lFreeList(&(task->data_list));
@@ -647,7 +643,7 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
                   }
                   break;
             }
-         } /* for_each request */
+         } /* while loop */
 
          if (task->target == SGE_ORDER_LIST) {
             sge_commit();
@@ -1875,7 +1871,6 @@ monitoring_t *monitor
    lListElem *new_obj = NULL,
              *old_obj;
 
-   lListElem *tmp_ep = NULL;
    dstring buffer;
    char ds_buffer[256];
 
@@ -1998,17 +1993,11 @@ monitoring_t *monitor
          *alpp = lCreateList("answer", AN_Type);
       }
    
-      /* copy every entry from tmp_alp into alpp */
-      for_each (tmp_ep, tmp_alp) {
-         lListElem* copy = NULL;
-      
-         copy = lCopyElem(tmp_ep);
-         if (copy != NULL) {
-            lAppendElem(*alpp,copy);
-         } 
-      }
+      /* copy tmp_alp to alpp */
+      lAppendList(*alpp, tmp_alp);
    }
    lFreeList(&tmp_alp);
+
    {
       lList **master_list = NULL;
 

@@ -166,12 +166,9 @@ static int sge_add_qeti_resource_container(lList **qeti_to_add, lList* rue_list,
    }
 
    /* default request */
-   for_each (actual, rue_list) {
+   actual = lGetElemStr(rue_list, RUE_name, SGE_ATTR_SLOTS);
+   if (actual != NULL) {
       name = lGetString(actual, RUE_name);
-      if (strcmp(name, SGE_ATTR_SLOTS) != 0) {
-         continue;
-      }   
-
       centry_config = lGetElemStr(centry_list, CE_name, name);
 
       if (lGetBool(centry_config, CE_consumable)==true && !is_requested(requests, name)) {
@@ -184,7 +181,7 @@ static int sge_add_qeti_resource_container(lList **qeti_to_add, lList* rue_list,
    }
 
    /* explicit requests */
-   for_each (req, requests) {
+   for_each(req, requests) {
       name = lGetString(req, CE_name);
       centry_config = lGetElemStr(centry_list, CE_name, name);
 
@@ -337,7 +334,7 @@ static void sge_qeti_init_refs(lList *cref_lp)
 
    DENTER(TOP_LAYER, "sge_qeti_init_refs");
 
-   for_each (cr_ep, cref_lp) {
+   for_each(cr_ep, cref_lp) {
       rue_ep = lGetRef(cr_ep, QETI_resource_instance);
       utilization_diagram = lGetList((lListElem *)lGetRef(cr_ep, QETI_resource_instance), RUE_utilized);
       DPRINTF(("   QETI INIT: %s %p\n", lGetString(rue_ep, RUE_name), utilization_diagram));

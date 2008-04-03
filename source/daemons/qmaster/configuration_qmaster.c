@@ -394,55 +394,43 @@ static int check_config(lList **alpp, lListElem *conf)
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DRETURN(STATUS_EEXIST);
       }
+
       if (!strcmp(name, "loglevel")) {
          u_long32 tmp_uval;
-         if (sge_parse_loglevel_val(&tmp_uval,value) != 1) {
+         if (sge_parse_loglevel_val(&tmp_uval, value) != 1) {
             ERROR((SGE_EVENT, MSG_CONF_GOTINVALIDVALUEXFORLOGLEVEL_S, value));
             answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             DRETURN(STATUS_EEXIST);
          }
-      }
-
-      if (!strcmp(name, "shell_start_mode")) {
-         if ( (strcasecmp("unix_behavior",value) != 0) && 
-              (strcasecmp("posix_compliant",value) != 0) &&
-              (strcasecmp("script_from_stdin",value) != 0) ) {
+      } else if (!strcmp(name, "shell_start_mode")) {
+         if ((strcasecmp("unix_behavior", value) != 0) && 
+             (strcasecmp("posix_compliant", value) != 0) &&
+             (strcasecmp("script_from_stdin", value) != 0) ) {
             ERROR((SGE_EVENT, MSG_CONF_GOTINVALIDVALUEXFORSHELLSTARTMODE_S, value));
             answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             DRETURN(STATUS_EEXIST);
          }
-      }
-  
-      if (!strcmp(name, "shell")) {
-         bool path_found = path_verify(name, alpp, "shell", true);
-         if ( !path_found ) {
+      } else if (!strcmp(name, "shell")) {
+         if (!path_verify(name, alpp, "shell", true)) {
             ERROR((SGE_EVENT, MSG_CONF_GOTINVALIDVALUEXFORSHELL_S, value));
             answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             DRETURN(STATUS_EEXIST);
          }
-      }
-
-
-
-      if (!strcmp(name, "load_report_time")) {
+      } else if (!strcmp(name, "load_report_time")) {
          /* do not allow infinity entry for load_report_time */
-         if (strcasecmp(value,"infinity") == 0) {
+         if (strcasecmp(value, "infinity") == 0) {
             ERROR((SGE_EVENT, MSG_CONF_INFNOTALLOWEDFORATTRXINCONFLISTOFY_SS, name, conf_name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             DRETURN(STATUS_EEXIST);
          }
-      }
-
-      if (!strcmp(name, "max_unheard")) {
+      } else if (!strcmp(name, "max_unheard")) {
          /* do not allow infinity entry */
          if (strcasecmp(value,"infinity") == 0) {
             ERROR((SGE_EVENT, MSG_CONF_INFNOTALLOWEDFORATTRXINCONFLISTOFY_SS, name, conf_name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             DRETURN(STATUS_EEXIST);
          }
-      }
-
-      if (!strcmp(name, "admin_user")) {
+      } else if (!strcmp(name, "admin_user")) {
          struct passwd pw_struct;
          char *buffer;
          int size;
@@ -456,9 +444,7 @@ static int check_config(lList **alpp, lListElem *conf)
             DRETURN(STATUS_EEXIST);
          }
          FREE(buffer);
-      }
-
-      if (!strcmp(name, "user_lists")||!strcmp(name, "xuser_lists")) {
+      } else if (!strcmp(name, "user_lists")||!strcmp(name, "xuser_lists")) {
          lList *tmp = NULL;
          int ok;
 
@@ -470,14 +456,12 @@ static int check_config(lList **alpp, lListElem *conf)
          }
 
          /* .. checking userset names */
-         ok = (userset_list_validate_acl_list(tmp, alpp)==STATUS_OK);
+         ok = (userset_list_validate_acl_list(tmp, alpp) == STATUS_OK);
          lFreeList(&tmp);
          if (!ok) {
             DRETURN(STATUS_EEXIST);
          }
-      }
-
-      if (!strcmp(name, "projects")||!strcmp(name, "xprojects")) {
+      } else if (!strcmp(name, "projects") || !strcmp(name, "xprojects")) {
          lList *tmp = NULL;
          int ok=1;
 
@@ -495,9 +479,7 @@ static int check_config(lList **alpp, lListElem *conf)
          if (!ok) {
             DRETURN(STATUS_EEXIST);
          }
-      }
-
-      if (!strcmp(name, "prolog") || !strcmp(name, "epilog")) {
+      } else if (!strcmp(name, "prolog") || !strcmp(name, "epilog")) {
          if (strcasecmp(value, "none")) {
             const char *t, *script = value;
 
@@ -519,9 +501,7 @@ static int check_config(lList **alpp, lListElem *conf)
                DRETURN(STATUS_EEXIST);
             }
          }
-      }
-
-      if (!strcmp(name, "auto_user_oticket") || !strcmp(name, "auto_user_fshare")) {
+      } else if (!strcmp(name, "auto_user_oticket") || !strcmp(name, "auto_user_fshare")) {
          u_long32 uval = 0;
          if (!extended_parse_ulong_val(NULL, &uval, TYPE_INT, value, NULL, 0, 0, true)) {
             ERROR((SGE_EVENT, MSG_CONF_FORMATERRORFORXINYCONFIG_SS, name, value ? value : "(NULL)"));
@@ -543,7 +523,7 @@ static int check_config(lList **alpp, lListElem *conf)
        * - xterm
        * - *_daemon, may also be "builtin"
        */
-      if (strcmp(name, "set_token_cmd") == 0 ||
+      else if (strcmp(name, "set_token_cmd") == 0 ||
           strcmp(name, "pag_cmd") == 0 ||
           strcmp(name, "shepherd_cmd") == 0) {
          if (strcasecmp(value, "none") != 0) {
@@ -552,15 +532,13 @@ static int check_config(lList **alpp, lListElem *conf)
                DRETURN(STATUS_EEXIST);
             }
          }
-      }
-      if (strcmp(name, "mailer") == 0 ||
+      } else if (strcmp(name, "mailer") == 0 ||
           strcmp(name, "xterm") == 0) {
          if (!path_verify(value, alpp, name, true)) {
             answer_list_log(alpp, false, false);
             DRETURN(STATUS_EEXIST);
          }
-      }
-      if (strcmp(name, "qlogin_daemon") == 0 ||
+      } else if (strcmp(name, "qlogin_daemon") == 0 ||
           strcmp(name, "rlogin_daemon") == 0 ||
           strcmp(name, "rsh_daemon") == 0) {
          if (strcasecmp(value, "builtin") != 0) {
@@ -572,7 +550,7 @@ static int check_config(lList **alpp, lListElem *conf)
       }
 
       /* load_sensor is a comma separated list of scripts */
-      if (strcmp(name, "load_sensor") == 0 && strcasecmp(value, "none") != 0) {
+      else if (strcmp(name, "load_sensor") == 0 && strcasecmp(value, "none") != 0) {
          struct saved_vars_s *context = NULL;
          const char *path = sge_strtok_r(value, ",", &context);
          do {

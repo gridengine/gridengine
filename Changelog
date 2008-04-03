@@ -1,3 +1,7 @@
+RD-2008-04-03-1: Cleanup:   added some code cleanup and smaller performance
+                            improvements
+                 Review:    JG
+
 RD-2008-04-03-0: Enhancem:  Solaris binaries are now linked by default with
                             mtmalloc
                  Review:    JG

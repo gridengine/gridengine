@@ -90,8 +90,7 @@ decay_usage( lList *usage_list,
                decay = pow(lGetPosDouble(decay_elem, UA_value_POS),
                      (double)(curr_time - usage_time_stamp) /
                      (double)sge_usage_interval);
-            }
-            else {
+            } else {
                decay = default_decay;
             }
             lSetPosDouble(usage, UA_value_POS,

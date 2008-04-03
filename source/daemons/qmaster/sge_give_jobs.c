@@ -1128,7 +1128,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
                   if (!master_host) {
                      master_host = granted_queue_JG_qhostname;
                   }
-                  if (sge_hostcmp(master_host, granted_queue_JG_qhostname )) {
+                  if (sge_hostcmp(master_host, granted_queue_JG_qhostname)) {
                      host = host_list_locate(master_exechost_list, granted_queue_JG_qhostname ); 
                      
                      add_to_reschedule_unknown_list(ctx,

@@ -80,7 +80,6 @@ bool host_list_add_missing_href(sge_gdi_ctx_class_t *context,
 void host_diff_projects(const lListElem *new, const lListElem *old, lList **new_prj, lList **old_prj);
 void host_diff_usersets(const lListElem *new, const lListElem *old, lList **new_acl, lList **old_acl);
 
-void sge_change_queue_version_exechost(sge_gdi_ctx_class_t *ctx, const char *exechost_name);
 
 void        
 host_initalitze_timer(void);

@@ -41,7 +41,6 @@ void utilization_print(const lListElem *cr, const char *object_name);
 int utilization_add(lListElem *cr, u_long32 start_time, u_long32 duration, double utilization, 
    u_long32 job_id, u_long32 ja_taskid, u_long32 level, const char *object_name, const char *type, bool for_job);
 double utilization_max(const lListElem *cr, u_long32 start_time, u_long32 duration);
-void utilization_print_all(const lList* pe_list, lList *host_list, const lList *queue_list, const lList *ar_list);
 u_long32 utilization_below(const lListElem *cr, double max_util, const char *object_name);
 
 int add_job_utilization(const sge_assignment_t *a, const char *type, bool for_job_scheduling);

@@ -872,13 +872,11 @@ bool qinstance_change_state_on_calendar_all(sge_gdi_ctx_class_t *ctx,
 
    DENTER(TOP_LAYER, "qinstance_signal_on_calendar_all");
 
-   for_each (cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE)))
-   {
+   for_each (cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
       lListElem *qinstance = NULL;
 
-      for_each(qinstance, qinstance_list)
-      {
+      for_each(qinstance, qinstance_list) {
          const char *queue_calendar = lGetString(qinstance, QU_calendar);
 
          if (queue_calendar != NULL && !strcmp(queue_calendar, cal_name)) {

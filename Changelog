@@ -1,4 +1,4 @@
-RD-2008-02-04-1: CVS:       Created V62beta_RC1_TAG
+RD-2008-04-03-2: CVS:       Created V62beta_RC1_TAG
 ---------------------------------------------------
 
 LP-2008-04-03-0: Bugfix:    Fixed deadlock in execd sig. handler with SMF

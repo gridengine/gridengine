@@ -76,6 +76,7 @@
 
 #if defined(SOLARIS)
 #   include "sge_smf.h"
+#   include "sge_string.h"
 #endif
 
 #ifndef FALSE
@@ -436,6 +437,15 @@ static void shadowd_exit_func(
 void **ctx_ref,
 int i 
 ) {
+#if defined(SOLARIS)
+   if (sge_smf_used() == 1) {
+      /* We don't do disable on svcadm restart */
+      if (sge_strnullcmp(sge_smf_get_instance_state(), SCF_STATE_STRING_ONLINE) == 0 &&
+          sge_strnullcmp(sge_smf_get_instance_next_state(), SCF_STATE_STRING_NONE) == 0) {      
+         sge_smf_temporary_disable_instance();
+      }
+   }
+#endif 
    exit(i);
 }
 

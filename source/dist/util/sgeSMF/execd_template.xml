@@ -75,11 +75,12 @@ NOTE:  This service manifest is not editable; its contents will be
                 </method_context>
            </exec_method>
 
+           <!-- TODO: Timeout 90secs now needed -->
            <exec_method
                 type='method'
                 name='stop'
                 exec=':kill'
-                timeout_seconds='60'>
+                timeout_seconds='300'>
            </exec_method>
 
            <property_group name='startd' type='framework'>

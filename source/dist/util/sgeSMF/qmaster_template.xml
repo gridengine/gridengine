@@ -71,7 +71,7 @@ NOTE:  This service manifest is not editable. Make customizations in a different
            <exec_method type='method'
                 name='stop'
                 exec=':kill'
-                timeout_seconds='60'>
+                timeout_seconds='600'>
            </exec_method>
 
            <property_group name='startd' type='framework'>

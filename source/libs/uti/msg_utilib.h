@@ -233,7 +233,7 @@
 #define MSG_UTI_MONITOR_TETEXT_FF              _MESSAGE(59134, _("pending: %.2f executed: %.2f/s"))
 #define MSG_UTI_MONITOR_EDTEXT_FFFFFFFF        _MESSAGE(59135, _("clients: %.2f mod: %.2f/s ack: %.2f/s blocked: %.2f busy: %.2f | events: %.2f/s added: %.2f/s skipt: %.2f/s"))
 #define MSG_UTI_MONITOR_LISEXT_FFFF            _MESSAGE(59136, _("in (g:%.2f a:%.2f e:%.2f r:%.2f)/s"))
-#define MSG_UTI_MONITOR_SCHEXT_UUUUUUUUUU      _MESSAGE(59137, _("MEM (arena:"sge_U32CFormat",ordblks:"sge_U32CFormat",smblks:"sge_U32CFormat",hblks:"sge_U32CFormat",hblhkd:"sge_U32CFormat",usmblks:"sge_U32CFormat",fsmblks:"sge_U32CFormat",uordblks:"sge_U32CFormat",fordblks:"sge_U32CFormat",keepcost:"sge_U32CFormat")"))
+#define MSG_UTI_MONITOR_SCHEXT_UUUUUUUUUU      _MESSAGE(59137, _("malloc:                   arena("sge_U32CFormat") |ordblks("sge_U32CFormat") | smblks("sge_U32CFormat") | hblksr("sge_U32CFormat") | hblhkd("sge_U32CFormat") usmblks("sge_U32CFormat") | fsmblks("sge_U32CFormat") | uordblks("sge_U32CFormat") | fordblks("sge_U32CFormat") | keepcost("sge_U32CFormat")"))
 
 #define MSG_UTI_DAEMONIZE_CANT_PIPE            _MESSAGE(59140, _("can't create pipe"))
 #define MSG_UTI_DAEMONIZE_CANT_FCNTL_PIPE      _MESSAGE(59141, _("can't set daemonize pipe to not blocking mode"))

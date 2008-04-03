@@ -1,3 +1,7 @@
+EB-2008-04-03-0: Bugfix:    o added allinfo to default qping -info output
+                              (did missing review for EB-2008-03-25-0)
+                 Review:    JG
+
 RD-2008-04-03-1: Cleanup:   added some code cleanup and smaller performance
                             improvements
                  Review:    JG

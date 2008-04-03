@@ -83,9 +83,18 @@ static Output_t Output[MAX_OUTPUT_LINES] = {
                                              {NULL, {0,0}, NO_WARNING, NO_ERROR, 0, NULL, PTHREAD_MUTEX_INITIALIZER},
                                            };
 
-/** a static dstring used as a temporary buffer to build the comlib info string */
-static pthread_mutex_t  Dstring_Mutex = PTHREAD_MUTEX_INITIALIZER; 
+/* global mutex used for mallinfo initialisation and also used to access the Info_Line string */
+static pthread_mutex_t global_mutex = PTHREAD_MUTEX_INITIALIZER; 
+
+/* a static dstring used as a temporary buffer to build the comlib info string */
 static dstring Info_Line= DSTRING_INIT;
+
+/* mallinfo related data */
+#if defined(LINUX) || defined(AIX43) || defined(AIX51) || defined(IRIX) || defined(SOLARIS) || defined(HP11)
+static bool mallinfo_initialized = false;
+static void *mallinfo_shlib_handle = NULL;
+static struct mallinfo (*mallinfo_func_pointer)(void) = NULL;
+#endif
 
 /***********************************************
  * static functin def. for special extensions 
@@ -150,7 +159,16 @@ void sge_monitor_free(monitoring_t *monitor)
    monitor->output = false;
    monitor->work_line = NULL;
    monitor->thread_name = NULL;
-   
+
+#if defined(LINUX) || defined(AIX43) || defined(AIX51) || defined(IRIX) || defined(SOLARIS) || defined(HP11)
+   sge_mutex_lock("sge_monitor_status", SGE_FUNC, __LINE__, &global_mutex);
+   if (mallinfo_shlib_handle != NULL) {  
+      dlclose(mallinfo_shlib_handle);
+      mallinfo_shlib_handle = NULL;
+   }
+   sge_mutex_unlock("sge_monitor_status", SGE_FUNC, __LINE__, &global_mutex);
+#endif
+ 
    DEXIT;
 }
 
@@ -183,6 +201,28 @@ sge_monitor_init(monitoring_t *monitor, const char *thread_name, extension_t ext
                  thread_warning_t warning_timeout, thread_error_t error_timeout)
 {
    DENTER(GDI_LAYER, "sge_monitor_init");
+
+   /*
+    * initialize the mallinfo function pointer if it is available
+    */
+#if defined(LINUX) || defined(AIX43) || defined(AIX51) || defined(IRIX) || defined(SOLARIS) || defined(HP11)
+   sge_mutex_lock("sge_monitor_status", SGE_FUNC, __LINE__, &global_mutex);
+   if (mallinfo_initialized == false) {
+      const char *function_name = "mallinfo";
+
+      mallinfo_initialized = true;
+#  ifdef RTLD_NODELETE
+      mallinfo_shlib_handle = dlopen(NULL, RTLD_LAZY | RTLD_NODELETE);
+#  else
+      mallinfo_shlib_handle = dlopen(NULL, RTLD_LAZY );
+#  endif /* RTLD_NODELETE */
+
+      if (mallinfo_shlib_handle != NULL) {
+         mallinfo_func_pointer = (struct mallinfo (*)(void)) dlsym(mallinfo_shlib_handle, function_name);
+      }
+   }
+   sge_mutex_unlock("sge_monitor_status", SGE_FUNC, __LINE__, &global_mutex);
+#endif
 
    monitor->thread_name = thread_name;
  
@@ -353,7 +393,7 @@ u_long32 sge_monitor_status(char **info_message, u_long32 monitor_time)
 
    sge_dstring_init(&ddate, date, sizeof(date));
    
-   sge_mutex_lock("sge_monitor_status", SGE_FUNC, __LINE__, &Dstring_Mutex);
+   sge_mutex_lock("sge_monitor_status", SGE_FUNC, __LINE__, &global_mutex);
   
    sge_dstring_clear(&Info_Line);
    
@@ -402,6 +442,26 @@ u_long32 sge_monitor_status(char **info_message, u_long32 monitor_time)
       sge_dstring_append(&Info_Line, "\n");
    }
 
+#if defined(LINUX) || defined(AIX43) || defined(AIX51) || defined(IRIX) || defined(SOLARIS) || defined(HP11)
+   if (mallinfo_func_pointer != NULL) {
+      struct mallinfo mallinfo_data = mallinfo_func_pointer();
+
+      sge_dstring_sprintf_append(&Info_Line, MSG_UTI_MONITOR_SCHEXT_UUUUUUUUUU,
+                                 mallinfo_data.arena,
+                                 mallinfo_data.ordblks,
+                                 mallinfo_data.smblks,
+                                 mallinfo_data.hblks,
+                                 mallinfo_data.hblkhd,
+                                 mallinfo_data.usmblks,
+                                 mallinfo_data.fsmblks,
+                                 mallinfo_data.uordblks,
+                                 mallinfo_data.fordblks,
+                                 mallinfo_data.keepcost);
+      sge_dstring_append(&Info_Line, "\n");
+   }
+#endif
+ 
+
    if (monitor_time != 0) { /* generates the output monitoring output data */
       int i;
       sge_dstring_append(&Info_Line, MSG_UTI_MONITOR_COLON); 
@@ -425,7 +485,7 @@ u_long32 sge_monitor_status(char **info_message, u_long32 monitor_time)
 
    *info_message = strdup(sge_dstring_get_string(&Info_Line));
   
-   sge_mutex_unlock("sge_monitor_status", SGE_FUNC, __LINE__, &Dstring_Mutex);
+   sge_mutex_unlock("sge_monitor_status", SGE_FUNC, __LINE__, &global_mutex);
    DEXIT;
    return ret;
 }
@@ -609,49 +669,7 @@ void sge_monitor_reset(monitoring_t *monitor)
 *******************************************************************************/
 static void ext_sch_output(dstring *message, void *monitoring_extension, double time)
 {
-#if defined(LINUX) || defined(AIX43) || defined(AIX51) || defined(IRIX) || defined(SOLARIS) || defined(HP11)
-   const char *function_name = "mallinfo";
-   struct mallinfo (*function_pointer)(void);
-   struct mallinfo mallinfo_data;
-   const char *error = NULL;
-   void *shlib_handle = NULL;
-
-   /* open the shared lib */
-#if defined(HP11) || defined(HP1164)
-#  ifdef RTLD_NODELETE
-   shlib_handle = dlopen(NULL, RTLD_LAZY | RTLD_NODELETE);
-#  else
-   shlib_handle = dlopen(NULL, RTLD_LAZY );
-#  endif /* RTLD_NODELETE */
-#else
-#  ifdef RTLD_NODELETE
-   shlib_handle = dlopen(NULL, RTLD_LAZY | RTLD_NODELETE);
-#  else
-   shlib_handle = dlopen(NULL, RTLD_LAZY);
-#  endif 
-#endif
-
-   function_pointer = (struct mallinfo (*)(void)) dlsym(shlib_handle, function_name);
-   error = dlerror();
-   if (error != NULL || function_pointer == NULL) {
-      sge_dstring_sprintf_append(message, "");
-   } else {
-      mallinfo_data = function_pointer();
-      sge_dstring_sprintf_append(message, MSG_UTI_MONITOR_SCHEXT_UUUUUUUUUU, 
-                                 mallinfo_data.arena,
-                                 mallinfo_data.ordblks,
-                                 mallinfo_data.smblks,
-                                 mallinfo_data.hblks,
-                                 mallinfo_data.hblkhd,
-                                 mallinfo_data.usmblks,
-                                 mallinfo_data.fsmblks,
-                                 mallinfo_data.uordblks,
-                                 mallinfo_data.fordblks,
-                                 mallinfo_data.keepcost);
-   }
-#else
    sge_dstring_sprintf_append(message, "");
-#endif
 }
 
 /****** sge_monitor/ext_gdi_output() *******************************************

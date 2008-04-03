@@ -1,3 +1,7 @@
+RD-2008-04-03-0: Enhancem:  Solaris binaries are now linked by default with
+                            mtmalloc
+                 Review:    JG
+
 AH-2008-03-31-0: Bugfix:    qsub(1) man page mentioned non extisting file.
                  Issue:     2535
                  Review:    TBD

@@ -3,67 +3,67 @@ Bugs fixed in SGE 6.1u4 since release 6.1u3
 
 Issue    Sun BugId Description
 -------- --------- ------------------------------------------------------------------------------------------
-       	6640885 	 on Windows installation fails when installing as root and SGE admin user = none 
-1689 	   6469605 	 accounting records for slave tasks of pe jobs should contain the correct task submission time 
-2136 	   6506580 	 check if config parameters qlogin_daemon and rlogin_daemon are pathes 
-2187 	   6562190 	 parallel scheduling memory leak in sge_schedd
-2195 	   6528315 	 execd installation does not test absolute path for local spool dir 
-2234 	   6549694 	 Sort on table column throws exception if explicit SORT specified in SimpleQuery Sort on table column 
-2245 	   6556389 	 Error.jsp contains unbalanced tagError.jsp contains unbalanced tag 
-2282 	   6565635 	 arco_read should be able to create synonyms instead of arco_write 
-2285 	   6566325 	 DBW should use batch inserts 
-2287 	   6575740 	 prolog an epilog descriptions should include exit codes 
-2315 	   6410844 	 It is possible to negative tickets / shares in qmon and from the command line 
-2354 	   6598005 	 ORDER BY clause ignored in Advanced Query 
-2373 	   6598176 	 Queue Consumables query incorrect in ARCo predefined queries 
-2433 	   4752829 	 CLI accepts the slot number of more than 10000000 
-2434 	   6634786 	 ARCo online help contains invalid, unclear or outdated information 
-2437 	   6259265 	 the installation of two rpc databases on the some host fails 
-2438 	   6636466 	 DBWriter should not exit if there is a database connection error 
-2439  	6638329 	 Reporting 'View' dropdown menu and 'Save Result' functionality is confusing 
-2440 	   6638354 	 DBW derived rules and reporting queries that count jobs need to be updated 
-2442  	6363756 	 incomplete error loging in case of classic spooling failures 
-2444   	6640762 	 Row Limit in Simple Query uses wrong syntax 
-2445   	6453563 	 NONE' as value is not rejected for queue_conf(5) shell and qsub(1) -S 
-2446   	6640690 	 Upgrade to 6.1u3 fails for PostgreSQL < 8.0, minor issues i dbdefinition.xml for PSQL > 8.0 
-2450   	6644709 	 dbwriter should write checkpoint to database 
-2452   	6647681 	 dbwriter deletion rules delete tasks of pe_jobs 
-2455   	6517626 	 unclear 'exit_status' description in accounting(5) about Grid Engine specific status 
-2459   	6513435 	 autoinstall configfile should be parsed and checked for valid input! 
-2460   	6640688 	 qstat -j output is broken for shell_path 
-2461  	6647620 	 the project field should be displayed in the qstat -j output 
-2463  	6646335 	 Wrong variable for calculating daily host values from hourly ones 
-2465   	6594807 	 Pending PE job qstat -j output displays addtional useless message when not running because of RQs 
-2466  	6550644 	 automatic backup is broken! 
-2467  	6629016 	 Spelling mistakes in the qmon help menus 
-2468  	6653090 	 deletion rule for PostgreSQL incorrect for deletion of sge_share_log 
-2472   	6655195 	 qquota broken if quota definition contains "hosts" or "users" scope negation 
-2475   	6671963 	 Access_list(5) man page not precise enough with regards secondary/primary group(s) 
-2476   	6657521 	 RQS debitation of running jobs is broken if enabled by -mattr 
-2477   	6589297 	 Set SGE_QMASTER_PORT in settings file if sge_qmaster is not found in /etc/services file 
-2478   	6623174 	 Failed to deliver STOP signal for subordinated jobs 
-2479  	6625420   Missing array job task usage in the accounting file 
-2480  	6619046 	 qhost/qstat can't be interrupted with ctrl-c 
-2485  	6650827 	 typographical errors in messages from install_qmaster 
-2487  	6661470 	 Sort order and row limit cannot be specified together in ARCo Simple Query builder 
-2492   	6664502 	 Qmaster segfaults with long host resource evaluation expression 
-2494   	6561179 	 Error message for unsupported platforms should be more verbose 
-2495   	6664567 	 qsub does not accept resource strings size larger than 256 
-2497   	6665417 	 Memory leak in drmaa_run_job()/drmaa_run_bulk_job() 
-2498   	6663741 	 ARCo reporting module installation script is broken on Red Hat Enterprise Linux 4 Update 4 
-2501  	6657615 	 Job predecessor list missing from qstat -j output 
-2503   	6661500 	 In SJWC on Oracle dates appear truncated to just MM/DD/YYYY 
-2514  	6659855 	 configfile check in automatic installation is to strict 
-2520  	6654696 	 load sensor might block execd port 
-2524  	6670352 	 Uninstallation of remote execd if not interactive 
-2525  	6669655 	 Infotext spawned on remote machine with -wait or -ask does not display the text 
-2526  	6659880 	 Uninstall does not remove the SGE_STARTUP_SCRIPT 
-2527  	6666732 	 qmaster crashes when SGE_ND=1, dl 2 and BDB server spooling 
-2528  	6660899 	 inst_sge -ux all -um fails 
-2531    	6595754 	 Usage string for some commands is incomplete 
-2532  	6676165 	 dbwriter installation can't finish on large amount of data 
-2539    	6574269 	 reprioritize disappears after sge_qmaster restart 
-2540    	6396036 	 qmaster failover should not change the state of any queue 
+-      	 6640885   on Windows installation fails when installing as root and SGE admin user = none 
+1689 	 6469605   accounting records for slave tasks of pe jobs should contain the correct task submission time 
+2136 	 6506580   check if config parameters qlogin_daemon and rlogin_daemon are pathes 
+2187 	 6562190   parallel scheduling memory leak in sge_schedd
+2195 	 6528315   execd installation does not test absolute path for local spool dir 
+2234 	 6549694   Sort on table column throws exception if explicit SORT specified in SimpleQuery Sort on table column 
+2245 	 6556389   Error.jsp contains unbalanced tagError.jsp contains unbalanced tag 
+2282 	 6565635   arco_read should be able to create synonyms instead of arco_write 
+2285 	 6566325   DBW should use batch inserts 
+2287 	 6575740   prolog an epilog descriptions should include exit codes 
+2315 	 6410844   It is possible to negative tickets / shares in qmon and from the command line 
+2354 	 6598005   ORDER BY clause ignored in Advanced Query 
+2373 	 6598176   Queue Consumables query incorrect in ARCo predefined queries 
+2433 	 4752829   CLI accepts the slot number of more than 10000000 
+2434 	 6634786   ARCo online help contains invalid, unclear or outdated information 
+2437 	 6259265   the installation of two rpc databases on the some host fails 
+2438 	 6636466   DBWriter should not exit if there is a database connection error 
+2439  	 6638329   Reporting 'View' dropdown menu and 'Save Result' functionality is confusing 
+2440 	 6638354   DBW derived rules and reporting queries that count jobs need to be updated 
+2442  	 6363756   incomplete error loging in case of classic spooling failures 
+2444   	 6640762   Row Limit in Simple Query uses wrong syntax 
+2445   	 6453563   NONE' as value is not rejected for queue_conf(5) shell and qsub(1) -S 
+2446   	 6640690   Upgrade to 6.1u3 fails for PostgreSQL < 8.0, minor issues i dbdefinition.xml for PSQL > 8.0 
+2450   	 6644709   dbwriter should write checkpoint to database 
+2452   	 6647681   dbwriter deletion rules delete tasks of pe_jobs 
+2455   	 6517626   unclear 'exit_status' description in accounting(5) about Grid Engine specific status 
+2459   	 6513435   autoinstall configfile should be parsed and checked for valid input! 
+2460   	 6640688   qstat -j output is broken for shell_path 
+2461  	 6647620   the project field should be displayed in the qstat -j output 
+2463  	 6646335   Wrong variable for calculating daily host values from hourly ones 
+2465   	 6594807   Pending PE job qstat -j output displays addtional useless message when not running because of RQs 
+2466  	 6550644   automatic backup is broken! 
+2467  	 6629016   Spelling mistakes in the qmon help menus 
+2468  	 6653090   deletion rule for PostgreSQL incorrect for deletion of sge_share_log 
+2472   	 6655195   qquota broken if quota definition contains "hosts" or "users" scope negation 
+2475   	 6671963   Access_list(5) man page not precise enough with regards secondary/primary group(s) 
+2476   	 6657521   RQS debitation of running jobs is broken if enabled by -mattr 
+2477   	 6589297   Set SGE_QMASTER_PORT in settings file if sge_qmaster is not found in /etc/services file 
+2478   	 6623174   Failed to deliver STOP signal for subordinated jobs 
+2479  	 6625420   Missing array job task usage in the accounting file 
+2480  	 6619046   qhost/qstat can't be interrupted with ctrl-c 
+2485  	 6650827   typographical errors in messages from install_qmaster 
+2487  	 6661470   Sort order and row limit cannot be specified together in ARCo Simple Query builder 
+2492   	 6664502   Qmaster segfaults with long host resource evaluation expression 
+2494   	 6561179   Error message for unsupported platforms should be more verbose 
+2495   	 6664567   qsub does not accept resource strings size larger than 256 
+2497   	 6665417   Memory leak in drmaa_run_job()/drmaa_run_bulk_job() 
+2498   	 6663741   ARCo reporting module installation script is broken on Red Hat Enterprise Linux 4 Update 4 
+2501  	 6657615   Job predecessor list missing from qstat -j output 
+2503   	 6661500   In SJWC on Oracle dates appear truncated to just MM/DD/YYYY 
+2514  	 6659855   configfile check in automatic installation is to strict 
+2520  	 6654696   load sensor might block execd port 
+2524  	 6670352   Uninstallation of remote execd if not interactive 
+2525  	 6669655   Infotext spawned on remote machine with -wait or -ask does not display the text 
+2526  	 6659880   Uninstall does not remove the SGE_STARTUP_SCRIPT 
+2527  	 6666732   qmaster crashes when SGE_ND=1, dl 2 and BDB server spooling 
+2528  	 6660899   inst_sge -ux all -um fails 
+2531     6595754   Usage string for some commands is incomplete 
+2532  	 6676165   dbwriter installation can't finish on large amount of data 
+2539     6574269   reprioritize disappears after sge_qmaster restart 
+2540     6396036   qmaster failover should not change the state of any queue 
 
 
 Bugs fixed in SGE 6.1u3 since release 6.1u2

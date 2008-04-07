@@ -318,7 +318,7 @@ CheckHostNameResolving()
                new_admin_host_list=""
                for h in $admin_host_list; do
                   hasdot=`echo $h|grep '\.'`
-                  if [ hasdot = "" ]; then
+                  if [ "$hasdot" = "" ]; then
                      h=$h.$default_domain 
                   fi
                   new_admin_host_list="$new_admin_host_list $h"

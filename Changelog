@@ -1,3 +1,7 @@
+JO-2008-04-07-0: Bugfix:    Intermediate acct records are not mentioned in man reporting
+                 Bugster:   6572196
+                 Review:    JG
+
 RD-2008-04-07-0: Bugfix:    fixed execd installation with default domain
                  Bugster:   6684415
                  Issue:     

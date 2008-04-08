@@ -1053,8 +1053,8 @@ CheckConfigFile()
          $INFOTEXT -e "Your >ADD_TO_RC< flag is wrong! Valid values are: 0, 1, true, false"
          is_valid="false" 
       fi
-      if [ "$SHELL_NAME" != "ssh" -a "$SHELL_NAME" != "rsh" ]; then
-           $INFOTEXT -e "Your >SHELL_NAME< entry is wrong. Allowed values are >ssh< or >rsh<"
+      if [ "$SHELL_NAME" != "ssh" -a "$SHELL_NAME" != "rsh" -a "$SHELL_NAME" != "remsh" ]; then
+           $INFOTEXT -e "Your >SHELL_NAME< entry is wrong. Allowed values are >ssh<, >rsh< or >remsh<"
            is_valid="false"
       fi
       if [ -z "$SGE_ENABLE_SMF" ]; then

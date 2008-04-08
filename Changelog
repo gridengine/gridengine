@@ -1,3 +1,7 @@
+MD-2008-04-08-0: Bugfix:   o configfile check in automatic installation is to
+                           strict (merged from: MD-2008-02-07-0 V61_BRANCH)
+                 Bugster:  6659855
+
 JO-2008-04-07-0: Bugfix:    Intermediate acct records are not mentioned in man reporting
                  Bugster:   6572196
                  Review:    JG

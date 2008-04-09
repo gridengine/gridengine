@@ -822,6 +822,7 @@ static void sge_gdi_ctx_destroy(void *theState)
    sge_free(s->username);
    sge_free(s->groupname);
    sge_free(s->component_name);
+   sge_free(s->thread_name);
    sge_free(s->component_username);
    sge_free(s->ssl_certificate);
    sge_free(s->ssl_private_key);

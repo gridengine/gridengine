@@ -1,3 +1,6 @@
+JG-2008-04-09-0: Bugfix:    Fixed non critical memory leaks.
+                 Review:    EB
+
 MD-2008-04-08-0: Bugfix:    o Configuration file check of automatic installation
                              does not recognize remsh
                  Bugster:   6673782

@@ -124,7 +124,7 @@ int sge_read_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aSpoolContext, l
       /* write a warning into messages file, if no local config exists*/
       WARNING((SGE_EVENT, MSG_CONFIG_NOLOCAL_S, qualified_hostname));
    }
-         
+
    if ((global = sge_get_configuration_for_host(SGE_GLOBAL_NAME)) == NULL) {
       ERROR((SGE_EVENT, MSG_CONFIG_NOGLOBAL));
       DRETURN(-1);
@@ -135,12 +135,12 @@ int sge_read_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aSpoolContext, l
 
    lFreeElem(&local);
    lFreeElem(&global);
-   
+
    if (0 != ret) {
       ERROR((SGE_EVENT, MSG_CONFIG_ERRORXMERGINGCONFIGURATIONY_IS, ret, qualified_hostname));
       DRETURN(-1);
    }
-   
+
    sge_show_conf();         
 
    DRETURN(0);

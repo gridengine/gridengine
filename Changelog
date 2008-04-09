@@ -1,3 +1,9 @@
+CR-2008-04-09-0: Bugfix:    commlib might crash if running out of memory
+                            (merged from maintrunk)
+                 Bugster:   6686155
+                 Issue:     2546
+                 Review:    MD
+
 RD-2008-04-09-0: Enhancem:  added hash to scheduler message list
                  Review:    JG
 

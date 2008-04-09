@@ -335,9 +335,7 @@ int cl_com_get_parameter_list_string(char** param_string) {
    }
 
    pthread_mutex_lock(&cl_com_parameter_list_mutex);
-   cl_raw_list_lock(cl_com_parameter_list);
-   retval = cl_parameter_list_get_param_string(cl_com_parameter_list, param_string, 0);
-   cl_raw_list_unlock(cl_com_parameter_list);
+   retval = cl_parameter_list_get_param_string(cl_com_parameter_list, param_string, 1);
    pthread_mutex_unlock(&cl_com_parameter_list_mutex);
    return retval;
 }
@@ -355,7 +353,6 @@ int cl_com_set_parameter_list_value(char* parameter, char* value) {
       return CL_RETVAL_PARAMS;
    }
 
-
    pthread_mutex_lock(&cl_com_parameter_list_mutex);
 
    cl_raw_list_lock(cl_com_parameter_list);
@@ -363,7 +360,9 @@ int cl_com_set_parameter_list_value(char* parameter, char* value) {
    while (elem != NULL) { 
       if (strcmp(elem->parameter,parameter) == 0 ) {
          /* found matching element */
-         free(elem->value);
+         if (elem->value != NULL) {
+            free(elem->value);
+         }
          elem->value = strdup(value);
          if (elem->value == NULL) {
             retval = CL_RETVAL_MALLOC;

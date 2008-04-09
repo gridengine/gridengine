@@ -1,3 +1,10 @@
+MD-2008-04-09-0: Bugfix:    o Configuration file check of automatic installation
+                             does not recognize remsh
+                            (merged from maintrunk: MD-2008-04-08-0)
+                 Bugster:   6673782
+                 Issue:     2549
+                 Review:    JG
+
 RD-2008-04-07-0: Bugfix:    fixed execd installation with default domain
                  Bugster:   6684415
                  Issue:     2545

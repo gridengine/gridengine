@@ -1,7 +1,8 @@
 MD-2008-04-08-0: Bugfix:    o Configuration file check of automatic installation
                              does not recognize remsh
                  Bugster:   6673782
-                 Review:    TBD
+                 Issue:     2549
+                 Review:    JG
 
 JO-2008-04-07-0: Bugfix:    Intermediate acct records are not mentioned in man reporting
                  Bugster:   6572196

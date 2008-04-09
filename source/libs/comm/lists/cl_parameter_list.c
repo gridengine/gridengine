@@ -269,14 +269,22 @@ cl_parameter_list_elem_t* cl_parameter_list_get_last_elem(cl_parameter_list_elem
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_parameter_list_get_param_string()"
-int cl_parameter_list_get_param_string(cl_raw_list_t* list_p, char** param_string, int lock_list) 
+int cl_parameter_list_get_param_string(cl_raw_list_t* list_p, char** param_string, int lock_list)
 {
    cl_parameter_list_elem_t* elem = NULL;
+   cl_parameter_list_elem_t* next_elem = NULL;
    cl_parameter_list_elem_t* first_elem = NULL;
-   cl_parameter_list_elem_t* last_elem = NULL;
    int ret_val = CL_RETVAL_OK;
-   char* ret_str = NULL;
    size_t malloc_size = 0;
+
+   if (list_p == NULL || param_string == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   if (*param_string != NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
 
    if (lock_list == 1) {   
       /* lock list */
@@ -285,63 +293,39 @@ int cl_parameter_list_get_param_string(cl_raw_list_t* list_p, char** param_strin
       }
    }
    
-   if ( list_p != NULL ) {
-      if (cl_raw_list_get_elem_count(list_p) == 0) {
-         *param_string = strdup("");
-         return ret_val;
-      } else {
-         first_elem = cl_parameter_list_get_first_elem(list_p);
-         elem = first_elem;
-         last_elem = cl_parameter_list_get_least_elem(list_p);
-      }
-   } else {
-     /*unlock parameter list*/
+   /* If we have no elems, return empty malloced string */
+   if (cl_raw_list_get_elem_count(list_p) == 0) {
+      *param_string = strdup("");
       if (lock_list == 1) {
          if ((ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
             return ret_val;
          }
       }
-      return CL_RETVAL_PARAMS;
+      if (*param_string == NULL) {
+         return CL_RETVAL_MALLOC;
+      }
+      return CL_RETVAL_OK;
    }
 
+   /* store first and last elem of list */
+   first_elem = cl_parameter_list_get_first_elem(list_p);
+
+   /* go over list and calculate string size:
+    * each parameter value pair have an "=" and a ":"
+    * the last entry has no ":" so we can simply add 2 bytes for each
+    * parameter/value string.
+    * The string termination value "0" is also recognized because
+    * the last elem has no ":"
+    */
+   elem = first_elem;
    while (elem != NULL) {
       malloc_size = malloc_size + strlen(elem->parameter) + strlen(elem->value) + 2;
       elem = cl_parameter_list_get_next_elem(elem);
    }
-   ret_str = calloc(malloc_size, sizeof(char));
 
-   if (ret_str != NULL) {
-      elem = first_elem;
-
-      while (elem != NULL) {
-         if (strcmp(elem->parameter,last_elem->parameter) == 0 && strcmp(elem->value,last_elem->value) == 0) {
-            /* found matching element */
-            /* we need no ":" at the end, because it's the last element*/
-            strncat(ret_str, elem->parameter, strlen(elem->parameter));
-            strncat(ret_str, "=", 1);
-            strncat(ret_str, elem->value, strlen(elem->value));
-         } else {
-            strncat(ret_str, elem->parameter, strlen(elem->parameter));
-            strncat(ret_str, "=", 1);
-            strncat(ret_str, elem->value, strlen(elem->value));
-            strncat(ret_str, ":", 1);
-         }
-         elem = cl_parameter_list_get_next_elem(elem);
-      }
-         *param_string = strdup(ret_str);
-         free(ret_str);
-         ret_str = NULL;
-         
-         
-         /*unlock parameter list*/
-         if (lock_list == 1) {
-            if ((ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
-               return ret_val;
-            }
-         }
-         return ret_val;
-   } else {
-      param_string = NULL;
+   /* malloc return string */
+   *param_string = calloc(malloc_size, sizeof(char));
+   if (*param_string == NULL) {
       /*unlock parameter list*/
       if (lock_list == 1) {
          if ((ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
@@ -350,4 +334,30 @@ int cl_parameter_list_get_param_string(cl_raw_list_t* list_p, char** param_strin
       }
       return CL_RETVAL_MALLOC;
    }
+
+   elem = first_elem;
+   while (elem != NULL) {
+      next_elem = cl_parameter_list_get_next_elem(elem);
+      if (next_elem == NULL) {
+         /* this is last elem! */
+         /* we need no ":" at the end, because it's the last element*/
+         strncat(*param_string, elem->parameter, strlen(elem->parameter));
+         strncat(*param_string, "=", 1);
+         strncat(*param_string, elem->value, strlen(elem->value));
+      } else {
+         strncat(*param_string, elem->parameter, strlen(elem->parameter));
+         strncat(*param_string, "=", 1);
+         strncat(*param_string, elem->value, strlen(elem->value));
+         strncat(*param_string, ":", 1);
+      }
+      elem = next_elem;
+   }
+
+   /*unlock parameter list*/
+   if (lock_list == 1) {
+      if ((ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
+         return ret_val;
+      }
+   }
+   return CL_RETVAL_OK;
 }

@@ -310,9 +310,12 @@ int cl_log_list_setup(cl_raw_list_t** list_p, const char* creator_name, int crea
 
    /* malloc creator and list data structures */
    creator_settings = (cl_thread_settings_t*)malloc(sizeof(cl_thread_settings_t));
+   if (creator_settings == NULL) {
+      return CL_RETVAL_MALLOC;
+   }
+
    ldata = (cl_log_list_data_t*) malloc(sizeof(cl_log_list_data_t));
-   if (ldata == NULL || creator_settings == NULL) {
-      free(ldata);
+   if (ldata == NULL) {
       free(creator_settings);
       return CL_RETVAL_MALLOC;
    }

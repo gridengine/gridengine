@@ -1856,20 +1856,24 @@ static int cl_com_ssl_transform_ssl_error(unsigned long ssl_error, char* buffer,
          if (counter == 2) {
             module = strdup(help);
             if (module == NULL) {
+               free(buffer_copy);
                return CL_RETVAL_MALLOC;
             }
          }
          if (counter == 4) {
             error_text = strdup(help);
             if (error_text == NULL) {
-               free(module);
-               module = NULL;
+               free(buffer_copy);
+               if (module != NULL) {
+                  free(module);
+               }
                return CL_RETVAL_MALLOC;
             }
          }
       }
    }
 
+   /* buffer copy is malloc()ed here and != NULL , free buffer_copy ...*/
    free(buffer_copy);
    buffer_copy = NULL;
 
@@ -1878,7 +1882,6 @@ static int cl_com_ssl_transform_ssl_error(unsigned long ssl_error, char* buffer,
       if (module == NULL) {
          if (error_text != NULL) {
             free(error_text);
-            error_text = NULL;
          }
          return CL_RETVAL_MALLOC;
       }
@@ -1888,7 +1891,6 @@ static int cl_com_ssl_transform_ssl_error(unsigned long ssl_error, char* buffer,
       error_text = (char*) malloc(sizeof(char)*buflen);
       if (error_text == NULL) {
          free(module);
-         module = NULL;
          return CL_RETVAL_MALLOC;
       }
       snprintf(error_text, buflen, buffer);
@@ -1927,9 +1929,10 @@ static int cl_com_ssl_transform_ssl_error(unsigned long ssl_error, char* buffer,
       }
    }
 
+   /* both variables are malloc()ed and != NULL at this point */
    free(module);
-   free(error_text);
    module = NULL;
+   free(error_text);
    error_text = NULL;
 
    if (do_ignore == CL_TRUE) {

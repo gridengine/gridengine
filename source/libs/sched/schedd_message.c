@@ -66,7 +66,6 @@ static bool mes_schedd_info = true;
  */
 static int log_schedd_info = 1;
 
-
 void schedd_mes_on(void) { mes_schedd_info = true; }
 void schedd_mes_off(void) { mes_schedd_info = false; }
 
@@ -77,7 +76,6 @@ static void schedd_mes_find_others(lList *job_list,
       lListElem *message_elem = NULL;  /* MES_Type */
       lRef category = NULL;            /* Category pointer (void*) */
       lList *jid_cat_list = NULL;      /* ULNG */
-      int create_new_jid_cat_list = 0;
       lList *message_list = lGetList(tmp_sme, SME_message_list);
 
       /*
@@ -101,21 +99,10 @@ static void schedd_mes_find_others(lList *job_list,
                                                              job_list,
                                                              ignore_category);
             category = jid_category;
-            create_new_jid_cat_list = 0;
-         }
-         else {
-            create_new_jid_cat_list = 1;
-         }
-
-         /*
-          * Replace the MES_job_number_list which containes only one jid
-          * with a list of jids (all have same category
-          */
-         if (create_new_jid_cat_list) {
+            lSetList(message_elem, MES_job_number_list, jid_cat_list);
+         } else {
             lSetList(message_elem, MES_job_number_list,
                      lCopyList("", jid_cat_list));
-         } else {
-            lSetList(message_elem, MES_job_number_list, jid_cat_list);
          }
       }
    }
@@ -144,14 +131,9 @@ static lList *schedd_mes_get_same_category_jids(lRef category,
 
    DENTER(TOP_LAYER, "schedd_mes_get_same_category_jids");
    if (job_list != NULL && category != NULL) {
-      ret = lCreateList("", ULNG_Type);
       for_each(job, job_list) {
          if (ignore_category || lGetRef(job, JB_category) == category) {
-            lListElem *new_jid_elem = NULL;
-
-            new_jid_elem = lCreateElem(ULNG_Type);
-            lSetUlong(new_jid_elem, ULNG, lGetUlong(job, JB_job_number));
-            lAppendElem(ret, new_jid_elem);
+            lAddElemUlong(&ret, ULNG, lGetUlong(job, JB_job_number), ULNG_Type);
          }
       }
    }

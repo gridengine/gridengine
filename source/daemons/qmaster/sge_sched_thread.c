@@ -915,8 +915,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
                if ((rjob = lFindFirst(*(splitted_job_lists[SPLIT_RUNNING]), where)) != NULL)
                   remove_immediate_job(*(splitted_job_lists[SPLIT_RUNNING]), rjob, orders, 1);
                lFreeWhere(&where);
-            }
-            else {
+            } else {
             /* prevent that we get the same job next time again */
                lDechainElem(*(splitted_job_lists[SPLIT_PENDING]),orig_job);
                if ((*(splitted_job_lists[SPLIT_NOT_STARTED])) == NULL) {

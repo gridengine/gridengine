@@ -375,7 +375,7 @@ int main(int argc, char* argv[])
 
    sge_setup_job_resend();
 
-   INFO((SGE_EVENT, "qmaster startup took %d seconds", sge_get_gmt() - start_time));
+   INFO((SGE_EVENT, "qmaster startup took "sge_u32" seconds", sge_get_gmt() - start_time));
 
    sge_create_and_join_threads(ctx);
 

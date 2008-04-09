@@ -123,6 +123,7 @@ int rqs_mod(sge_gdi_ctx_class_t *ctx,
 {
    const char *rqs_name = NULL; 
    bool rules_changed = false;
+   bool previous_enabled = (bool)lGetBool(new_rqs, RQS_enabled);
 
    DENTER(TOP_LAYER, "rqs_mod");
 
@@ -164,7 +165,8 @@ int rqs_mod(sge_gdi_ctx_class_t *ctx,
             new_rule = rqs_rule_locate(new_rule_list, lGetString(rule, RQR_name));
             if (new_rule != NULL) {
                /* ---- RQR_limit */
-               attr_mod_sub_list(alpp, new_rule, RQR_limit, RQRL_name, rule, sub_command, SGE_ATTR_RQSRULES, SGE_OBJ_RQS, 0);
+               attr_mod_sub_list(alpp, new_rule, RQR_limit, RQRL_name, rule,
+                                 sub_command, SGE_ATTR_RQSRULES, SGE_OBJ_RQS, 0);
             } else {
                ERROR((SGE_EVENT, MSG_RESOURCEQUOTA_NORULEDEFINED));
                answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC,
@@ -178,7 +180,7 @@ int rqs_mod(sge_gdi_ctx_class_t *ctx,
    if (!rqs_verify_attributes(new_rqs, alpp, true)) {
       goto ERROR;
    }
-   if (rules_changed && lGetBool(new_rqs, RQS_enabled) == true) {
+   if (rules_changed || (lGetBool(new_rqs, RQS_enabled) != previous_enabled)) {
       rqs_reinit_consumable_actual_list(new_rqs, alpp);
    }
   
@@ -415,6 +417,10 @@ rqs_reinit_consumable_actual_list(lListElem *rqs, lList **answer_list) {
             lXchgList(limit, RQRL_usage, &usage);
             lFreeList(&usage);
          }
+      }
+
+      if (lGetBool(rqs, RQS_enabled) == false) {
+         DRETURN(ret);
       }
 
       for_each(job, job_list) {

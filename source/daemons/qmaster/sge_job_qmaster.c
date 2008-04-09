@@ -1594,25 +1594,20 @@ static void get_rid_of_schedd_job_messages(u_long32 job_number)
       */
       next = lFirst(mes_list);
       while ((mes = next)) {
-         lListElem *job_ulng, *nxt_job_ulng;
+         lListElem *job_ulng;
          next = lNext(mes);
          
-         nxt_job_ulng = lFirst(lGetList(mes, MES_job_number_list));
-         while ((job_ulng = nxt_job_ulng)) {
-            nxt_job_ulng = lNext(nxt_job_ulng);    
-
-            if (lGetUlong(job_ulng, ULNG) == job_number) {
-               /* 
-               ** more than one job in list for this message => remove job id
-               ** else => remove whole message 
-               */
-               if (lGetNumberOfElem(lGetList(mes, MES_job_number_list)) > 1) {
-                  lRemoveElem(lGetList(mes, MES_job_number_list), &job_ulng);
-                  DPRINTF(("Removed jobid "sge_u32" from list of scheduler messages\n", job_number));
-               } else {
-                  lRemoveElem(mes_list, &mes);
-                  DPRINTF(("Removed message from list of scheduler messages "sge_u32"\n", job_number));
-               }
+         if ((job_ulng = lGetElemUlong(lGetList(mes, MES_job_number_list), ULNG, job_number)) != NULL) {
+            /* 
+            ** more than one job in list for this message => remove job id
+            ** else => remove whole message 
+            */
+            if (lGetNumberOfElem(lGetList(mes, MES_job_number_list)) > 1) {
+               lRemoveElem(lGetList(mes, MES_job_number_list), &job_ulng);
+               DPRINTF(("Removed jobid "sge_u32" from list of scheduler messages\n", job_number));
+            } else {
+               lRemoveElem(mes_list, &mes);
+               DPRINTF(("Removed message from list of scheduler messages "sge_u32"\n", job_number));
             }
          }
       }

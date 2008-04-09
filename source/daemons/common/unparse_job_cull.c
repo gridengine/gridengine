@@ -428,8 +428,7 @@ int flags
    if ((lGetUlong(job, JB_restart) == 1)) {
       ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, "-r", "y");
       lSetInt(ep_opt, SPA_argval_lIntT, 1);
-   }
-   else if ((lGetUlong(job, JB_restart) == 2)) {
+   } else if ((lGetUlong(job, JB_restart) == 2)) {
       ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, "-r", "n");
       lSetInt(ep_opt, SPA_argval_lIntT, 2);
    }

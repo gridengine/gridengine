@@ -1,3 +1,6 @@
+RD-2008-04-09-1: CVS        Created V61ARsnapshot3_6_TAG
+--------------------------------------------------------
+
 CR-2008-04-09-0: Bugfix:    commlib might crash if running out of memory
                             (merge from maintrunk)
                  Bugster:   6686155

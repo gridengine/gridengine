@@ -1,3 +1,10 @@
+AH-2008-04-10-0: Bugfix:    Set schedd_job_info to false in all scheduler profiles to 
+                            mitigate the problem of schedd_job_info causing immense 
+                            memory consumption
+                 Bugster:   6686621
+                 Issue:     2464
+                 Review:    JG
+
 CR-2008-04-09-0: Bugfix:    commlib might crash if running out of memory
                  Bugster:   6686155
                  Issue:     2546

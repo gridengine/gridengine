@@ -512,7 +512,7 @@ if [ "$startup" = true ]; then
       fi
    fi
 else
-   if [ $shadow_host = true ]; then
+   if [ $shadowd = true -a $shadow_host = true ]; then
       # Send SIGTERM to shadowd
       echo "   Shutting down Grid Engine shadowd"
       if [ -f $qmaster_spool_dir/shadowd_$UQHOST.pid ]; then

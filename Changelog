@@ -1,3 +1,9 @@
+MP-2008-04-10-0: Bugfix:    sgemaster -qmaster stop also shuts down the 
+                            shadow deamon
+                 Bugster:   6673706
+                 Issue:     2522
+                 Review:    MD
+
 CR-2008-04-09-0: Bugfix:    commlib might crash if running out of memory
                             (merged from maintrunk)
                  Bugster:   6686155

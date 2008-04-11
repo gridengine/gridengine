@@ -691,6 +691,9 @@ int cl_thread_func_testcancel(cl_thread_settings_t* thread_config) {
    int ret_val = 0;
    int execute_pop = 0;
 
+   if (thread_config == NULL) {
+      return CL_RETVAL_THREAD_CANCELSTATE_ERROR;
+   }
 
    /* pthread_cleanup_push() and pthread_cleanup_pop() must be used in the
       same { ... } context */
@@ -700,7 +703,6 @@ int cl_thread_func_testcancel(cl_thread_settings_t* thread_config) {
 #endif
 
    if (thread_config->thread_cleanup_func != NULL) {
-
       /* push user cleanup function */
       pthread_cleanup_push( (void(*)(void*)) thread_config->thread_cleanup_func, thread_config );
    
@@ -709,7 +711,7 @@ int cl_thread_func_testcancel(cl_thread_settings_t* thread_config) {
    
       ret_val = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
    
-      if ( ret_val == 0 ) {
+      if (ret_val == 0) {
          pthread_testcancel();
          ret_val = pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,NULL);
       }
@@ -721,10 +723,9 @@ int cl_thread_func_testcancel(cl_thread_settings_t* thread_config) {
    } else {
       /* push default cleanup function */
       pthread_cleanup_push( (void(*)(void*)) cl_thread_default_cleanup_function, thread_config );
-   
       ret_val = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
-   
-      if ( ret_val == 0 ) {
+  
+      if (ret_val == 0) {
          pthread_testcancel();
          ret_val = pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,NULL);
       }
@@ -733,7 +734,7 @@ int cl_thread_func_testcancel(cl_thread_settings_t* thread_config) {
    }
 
 
-   if ( ret_val != 0) {
+   if (ret_val != 0) {
       return CL_RETVAL_THREAD_CANCELSTATE_ERROR;
    }
    return CL_RETVAL_OK;

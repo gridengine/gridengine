@@ -975,7 +975,7 @@ sge_scheduler_main(void *arg)
             pthread_cleanup_pop(execute);
             pthread_cleanup_pop(execute);
             pthread_cleanup_pop(execute);
-            DPRINTF((SFN" passed cancelation point\n", thread_config->thread_name));
+            DPRINTF((SFN" passed cancelation point\n", thread_config != NULL ? thread_config->thread_name : "<null>"));
          }
       }
    }

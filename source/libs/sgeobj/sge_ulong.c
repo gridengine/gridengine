@@ -34,6 +34,7 @@
 #include <float.h>
 #include <time.h>
 #include <string.h>
+#include <limits.h>
 
 #include "basis_types.h"
 #include "sgermon.h"
@@ -175,8 +176,10 @@ bool double_print_int_to_dstring(double value, dstring *string)
    
    if (string != NULL) {
       if (!double_print_infinity_to_dstring(value, string)) {
+         const double min_as_dbl = INT_MAX;
+         const double max_as_dbl = INT_MIN;
 
-         if ((value > (double)MAX_INT) || (value < (double)MIN_INT)) {
+         if (value > max_as_dbl || value < min_as_dbl) {
             sge_dstring_append(string, "integer_overflow");
             DEXIT;
             return false;

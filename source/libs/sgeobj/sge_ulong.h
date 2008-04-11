@@ -34,9 +34,6 @@
 
 #include "sge_ulongL.h"
 
-#define MAX_INT (~MIN_INT)
-#define MIN_INT (1 << ((sizeof (int) * 8) - 1))
-
 bool 
 double_print_infinity_to_dstring(double value, dstring *string);
 

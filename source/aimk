@@ -1529,7 +1529,7 @@ case SOLARISAMD64:
    set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 1
 
-   set CFLAGS = "$CFLAGS -DSOLARIS -D$BUILDARCH -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L -DGETHOSTBYNAME_R5 -DGETHOSTBYADDR_R7 "
+   set CFLAGS = "$CFLAGS -DSOLARIS -D$BUILDARCH -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L -DGETHOSTBYNAME_R5 -DGETHOSTBYADDR_R7 -errwarn=%all" 
    set SHAREDLD = $CC
 
    if ($OPTIMIZATION == 1) then 
@@ -1546,6 +1546,17 @@ case SOLARISAMD64:
      #       set haspatch = 0
             if ( $compversion == 5.5 && $haspatch == 1 || $compversion != 5.5 ) then
                set OFLAG = "-fast -xchip=pentium -xcache=generic"
+               #
+               # Due to compiler bugs in the X86 compiler
+               #
+               #   cc: Sun C 5.5 Patch 112761-13 2005/06/14
+               #   cc: Sun C 5.8 Patch 121016-06 2007/08/01
+               #
+               # the -fast and -xchip switches make no sense. They cause SEGV when threads are
+               # shut down. Following line will overwite the switches set above. It can be removed
+               # as soon as there is a patch available for the compiler 
+               #
+               set OFLAG = "-xO3"
             else
                echo using \"-xO3\" optimization due to compiler bug
                set OFLAG = "-xO3"
@@ -1631,6 +1642,7 @@ case SOLARISAMD64:
          set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G"
       endif
       set CFLAGS = "-Xc -v $OFLAG $MEMFLAG -ftrap=division $CFLAGS $DEBUG_FLAG"
+      set CFLAGS = "-Xc -v $MEMFLAG -ftrap=division $CFLAGS $DEBUG_FLAG"
    else if ( $CC == gcc) then
       #set CFLAGS = "-Wall -Werror -Wstrict-prototypes $CFLAGS"
       set CFLAGS = "-Wall -Wstrict-prototypes $CFLAGS"

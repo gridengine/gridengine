@@ -1,3 +1,10 @@
+EB-2008-04-11-0: Bugfix:    o disabled compiler optimization for Solaris x86
+                              which causes SEGV when threads are shut down
+                            o fixed some compiler wanings
+                            o now on all Solaris hosts comipler will stop for 
+                              warnings 
+                 Review:    JG
+
 AH-2008-04-10-0: Bugfix:    Set schedd_job_info to false in all scheduler profiles to 
                             mitigate the problem of schedd_job_info causing immense 
                             memory consumption

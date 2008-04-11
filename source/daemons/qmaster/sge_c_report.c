@@ -52,6 +52,7 @@
 #include "sge_lock.h"
 #include "sge_event_master.h"
 #include "sgeobj/sge_ack.h"
+#include "sgeobj/sge_centryL.h"
 #include "reschedule.h"
 
 static int update_license_data(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList *lp_lic); 
@@ -174,8 +175,35 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
                is_pb_used = true;
                init_packbuffer(&pb, 1024, 0);
             }
-
             sge_update_load_values(ctx, rhost, lGetList(report, REP_list));
+
+            if (mconf_get_simulate_execds()) {
+               lList *master_exechost_list = *object_type_get_master_list(SGE_TYPE_EXECHOST);
+               lListElem *shep;
+               lListElem *simhostElem=NULL; 
+
+               for_each(shep, master_exechost_list) {
+                  simhostElem = lGetSubStr(shep, CE_name, "load_report_host", EH_consumable_config_list);
+                  if (simhostElem != NULL) {
+                     const char *real_host = lGetString(simhostElem, CE_stringval);
+                     if (real_host != NULL && sge_hostcmp(real_host, rhost) == 0) {
+                        const char* sim_host = lGetHost(shep, EH_name);
+                        lListElem *clp = NULL;
+
+                        DPRINTF(("Copy load values of %s to simulated host %s\n",
+                                rhost, sim_host));
+
+                        for_each(clp, lGetList(report, REP_list)) {
+                           if (strcmp(lGetHost(clp, LR_host), SGE_GLOBAL_NAME) != 0) {
+                              lSetHost(clp, LR_host, sim_host);
+                           }
+                        }
+                        sge_update_load_values(ctx, sim_host, lGetList(report,REP_list));
+                     }
+                  }
+               }
+            }
+
             pack_ack(&pb, ACK_LOAD_REPORT, this_seqno, 0, NULL);
          }
          break;

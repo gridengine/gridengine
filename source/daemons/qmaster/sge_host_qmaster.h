@@ -61,7 +61,7 @@ int sge_add_host_of_type(sge_gdi_ctx_class_t *context, const char *hostname, u_l
 void sge_gdi_kill_exechost(sge_gdi_ctx_class_t *ctx,                            
                            sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task);
 
-void sge_update_load_values(sge_gdi_ctx_class_t *context, char *rhost, lList *lp);
+void sge_update_load_values(sge_gdi_ctx_class_t *context, const char *rhost, lList *lp);
 
 void sge_load_value_cleanup_handler(sge_gdi_ctx_class_t *context, te_event_t anEvent, monitoring_t *monitor);
 

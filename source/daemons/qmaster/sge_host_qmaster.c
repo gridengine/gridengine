@@ -700,7 +700,7 @@ const char *target    /* prognames[QSTD|EXECD] */
    updates global and host specific load values
    using the load report list lp
 */
-void sge_update_load_values(sge_gdi_ctx_class_t *ctx, char *rhost, lList *lp)
+void sge_update_load_values(sge_gdi_ctx_class_t *ctx, const char *rhost, lList *lp)
 {
    u_long32 now;
    const char *report_host = NULL;

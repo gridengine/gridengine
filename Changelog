@@ -1,3 +1,8 @@
+RH-2008-04-11-0: Enhancem.: Simulated execds can now get a copy of a load report
+                            of a real execd (complex load_report_host must be defined and
+                            the simulated execd must have a complex load_report_host=<real execd>)
+                 Review:    RD
+
 EB-2008-04-11-0: Bugfix:    o disabled compiler optimization for Solaris x86
                               which causes SEGV when threads are shut down
                             o fixed some compiler wanings

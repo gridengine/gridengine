@@ -1,3 +1,6 @@
+RD-2008-04-14-0: Enhancem.: Added messages lost detection for test_virtual_gdi_client
+                 Review:    CR
+
 DG-2008-04-14-0: Cleanup:   fix of broken build:
                             -errwarn=%all switched off for special targets
                              (X11, remote)

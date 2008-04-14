@@ -46,7 +46,7 @@
 /* shutdown when test client can't connect for more than 15 min */
 #define SGE_TEST_VIRTUAL_CLIENT_SHUTDOWN_TIMEOUT 15*60
 #define DATA_SIZE 5000
-
+#define PACKAGE_COUNTER
 
 /* counters */
 static int rcv_messages = 0;
@@ -89,7 +89,9 @@ extern int main(int argc, char** argv)
   time_t last_time = 0;
   int no_output = 0;
   int reconnect = 0;
+#ifndef PACKAGE_COUNTER
   char data[DATA_SIZE] = "gdi request";
+#endif
 
   cl_xml_ack_type_t ack_type = CL_MIH_MAT_NAK;
   cl_bool_t synchron = CL_FALSE;
@@ -169,8 +171,18 @@ extern int main(int argc, char** argv)
         cl_com_endpoint_t* sender  = NULL;
         if (snd_data == NULL) {
            snd_data = malloc(DATA_SIZE);
+#ifdef PACKAGE_COUNTER
+           sprintf(snd_data, "%d\n", snd_messages);
+#else
            memcpy(snd_data, data, DATA_SIZE);
+#endif
         }
+#ifdef PACKAGE_COUNTER
+        else {
+           sprintf(snd_data, "%d\n", snd_messages);
+        }
+#endif
+
    
         gettimeofday(&now,NULL);
         if (now.tv_sec > shutdown_time ) {
@@ -188,20 +200,27 @@ extern int main(int argc, char** argv)
                                                CL_TRUE, 0,                   /* syncron, response_mid */
                                                &message, &sender);
            if (retval == CL_RETVAL_OK) {
-                 rcv_messages++;
                  gettimeofday(&now,NULL);
                  shutdown_time = now.tv_sec + SGE_TEST_VIRTUAL_CLIENT_SHUTDOWN_TIMEOUT;
 
                  snd_data = (char*)message->message;
                  message->message = NULL;
 
-                 cl_com_free_message(&message);
-                 cl_com_free_endpoint(&sender);
+#ifdef PACKAGE_COUNTER
+                 if (atoi(snd_data) != rcv_messages) {
+                    printf("!!!! %d. message was lost, got %s", rcv_messages, snd_data);
+                    do_shutdown = 1;
+                 }
+#endif
 
                  if (now.tv_sec != last_time && !no_output) {
                     printf("virtual gdi client message count[received |%d| / sent |%d|]...\n", rcv_messages, snd_messages);
                     last_time = now.tv_sec;
                  }
+                 
+                 rcv_messages++;
+                 cl_com_free_message(&message);
+                 cl_com_free_endpoint(&sender);
            } else {
               /* shutdown when virtual qmaster is not running anymore */
               if (rcv_messages > 0) {
@@ -209,8 +228,8 @@ extern int main(int argc, char** argv)
                  do_shutdown = 1;
               } else {
                 /* we are not connected, sleep one second */
+                snd_messages = 0;
                 sleep(1);
-
               }
            }
         } else {

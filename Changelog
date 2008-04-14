@@ -1,3 +1,6 @@
+RH-2008-04-14-0: Bugfix:    Avoid trashing of simulated load values in simulated_execds mode
+                 Review:    RD
+
 RD-2008-04-14-0: Enhancem.: Added messages lost detection for test_virtual_gdi_client
                  Review:    CR
 

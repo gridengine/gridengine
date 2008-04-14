@@ -48,8 +48,10 @@
 #include "sge_uidgid.h"
 #include "msg_utilib.h"
 
+#ifndef __SunOS_5_10
 /* Redefinitions from S10+ sys/types.h */
 typedef id_t    ctid_t;
+#endif
 
 /* Redefinitions from libcontract.h */
 typedef void *ct_stathdl_t;

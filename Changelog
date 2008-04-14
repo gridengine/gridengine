@@ -1,3 +1,9 @@
+DG-2008-04-14-0: Cleanup:   fix of broken build:
+                            -errwarn=%all switched off for special targets
+                             (X11, remote)
+                            sge_smf compiler warning fix due to errwarn=%all
+                 Review:    AA
+                            
 RH-2008-04-11-0: Enhancem.: Simulated execds can now get a copy of a load report
                             of a real execd (complex load_report_host must be defined and
                             the simulated execd must have a complex load_report_host=<real execd>)

@@ -52,6 +52,8 @@ set WINCFLAGS    = ""
 set WINLIBS      = ""
 set AIMK_TARGETOPT   = 0
 set NO_XDEPEND   = ""
+set ERR_WARN_NONE = ""
+set ERR_WARN_ALL = ""
 
 if ( -f dist/util/arch ) then
    set buildarch = `dist/util/arch`
@@ -1529,7 +1531,9 @@ case SOLARISAMD64:
    set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 1
 
-   set CFLAGS = "$CFLAGS -DSOLARIS -D$BUILDARCH -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L -DGETHOSTBYNAME_R5 -DGETHOSTBYADDR_R7 -errwarn=%all" 
+   set ERR_WARN_NONE = "-errwarn=%none" # is set in XCFLAGS and for R_E_M_O_T_E target to switch off -errwarn=%all
+   set ERR_WARN_ALL = "-errwarn=%all"  # is set in cc specific section below
+   set CFLAGS = "$CFLAGS -DSOLARIS -D$BUILDARCH -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L -DGETHOSTBYNAME_R5 -DGETHOSTBYADDR_R7" 
    set SHAREDLD = $CC
 
    if ($OPTIMIZATION == 1) then 
@@ -1545,7 +1549,7 @@ case SOLARISAMD64:
             set haspatch = `expr $patchcnt ">=" 1`
      #       set haspatch = 0
             if ( $compversion == 5.5 && $haspatch == 1 || $compversion != 5.5 ) then
-               set OFLAG = "-fast -xchip=pentium -xcache=generic"
+               # set OFLAG = "-fast -xchip=pentium -xcache=generic"
                #
                # Due to compiler bugs in the X86 compiler
                #
@@ -1614,6 +1618,7 @@ case SOLARISAMD64:
 
    if ( $CC == cc ) then
       set LFLAGS = "-xildoff $LFLAGS"
+      set CFLAGS = "$CFLAGS $ERR_WARN_ALL"
       set SHARED_CFLAGS = "-KPIC"
 
       if ( $BUILDARCH == SOLARIS64 ) then
@@ -1680,7 +1685,7 @@ case SOLARISAMD64:
    set XINCD    = "-I/usr/dt/include -I/usr/openwin/include $XMTINCD $XINCD"
    set XLIBD    = "-L/usr/dt/lib -L/usr/openwin/lib"
 
-   set XCFLAGS  = "-DNeedFunctionPrototypes -DNeedVarargsPrototypes $XMTDEF $XINCD"
+   set XCFLAGS  = "$ERR_WARN_NONE -DNeedFunctionPrototypes -DNeedVarargsPrototypes $XMTDEF $XINCD"
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = "-lXm -lXt -lXext -lXmu -lX11 -lw -lgen"
 
@@ -2418,7 +2423,7 @@ if ( "$REMOTE" == 1) then
    if ( $COMPILE_ARCH == "NECSX5" ) then
       set CFLAGS_REMOTE = "$CFLAGS_NOOPT"
    else
-      set CFLAGS_REMOTE = "$CFLAGS"
+      set CFLAGS_REMOTE = "$CFLAGS $ERR_WARN_NONE"
    endif
 
    cd $COMPILE_ARCH

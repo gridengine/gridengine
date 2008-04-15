@@ -687,8 +687,6 @@ sge_scheduler_main(void *arg)
             lList *master_pe_list = *object_type_get_master_list(SGE_TYPE_PE);
             lList *master_hgrp_list = *object_type_get_master_list(SGE_TYPE_HGROUP);
             lList *master_sharetree_list = *object_type_get_master_list(SGE_TYPE_SHARETREE);
-            lList *selected_dept_list = NULL;
-            lList *selected_acl_list = NULL;
 
             PROF_START_MEASUREMENT(SGE_PROF_CUSTOM7);
 
@@ -710,9 +708,9 @@ sge_scheduler_main(void *arg)
 
             memset(&copy, 0, sizeof(copy));
 
-            selected_dept_list = lSelect("", master_userset_list, 
+            copy.dept_list = lSelect("", master_userset_list, 
                                          where_what.where_dept, where_what.what_dept);
-            selected_acl_list = lSelect("", master_userset_list, 
+            copy.acl_list = lSelect("", master_userset_list, 
                                         where_what.where_acl, where_what.what_acl);
 
             DPRINTF(("RAW CQ:%d, J:%d, H:%d, C:%d, A:%d, D:%d, P:%d, CKPT:%d,"
@@ -721,8 +719,8 @@ sge_scheduler_main(void *arg)
                lGetNumberOfElem(master_job_list),
                lGetNumberOfElem(master_exechost_list),
                lGetNumberOfElem(master_centry_list),
-               lGetNumberOfElem(selected_acl_list),
-               lGetNumberOfElem(selected_dept_list),
+               lGetNumberOfElem(copy.acl_list),
+               lGetNumberOfElem(copy.dept_list),
                lGetNumberOfElem(master_project_list),
                lGetNumberOfElem(master_ckpt_list),
                lGetNumberOfElem(master_user_list),
@@ -806,17 +804,16 @@ sge_scheduler_main(void *arg)
                copy.job_list = lCopyList("", master_job_list);
             }
 
-            copy.dept_list = lCopyList("", selected_dept_list);
-            lFreeList(&selected_dept_list);
-            copy.acl_list = lCopyList("", selected_acl_list);
-            lFreeList(&selected_acl_list);
-            copy.centry_list = lCopyList("", master_centry_list);
-            copy.pe_list = lCopyList("", master_pe_list);
+            /* no need to copy these lists, they are read only used */
+            copy.centry_list = master_centry_list;
+            copy.ckpt_list = master_ckpt_list;
+            copy.hgrp_list = master_hgrp_list;
+
+            /* these lists need to be copied because they are modified during scheduling run */
             copy.share_tree = lCopyList("", master_sharetree_list);
+            copy.pe_list = lCopyList("", master_pe_list);
             copy.user_list = lCopyList("", master_user_list);
             copy.project_list = lCopyList("", master_project_list);
-            copy.ckpt_list = lCopyList("", master_ckpt_list);
-            copy.hgrp_list = lCopyList("", master_hgrp_list);
             copy.rqs_list = lCopyList("", master_rqs_list);
             copy.ar_list = lCopyList("", master_ar_list);
 
@@ -876,7 +873,7 @@ sge_scheduler_main(void *arg)
             scheduler_method(evc, &answer_list, &copy, &orders);
 
             PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
-            prof_run = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7,true, NULL);
+            prof_run = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7, true, NULL);
             PROF_START_MEASUREMENT(SGE_PROF_CUSTOM7);
 
             /* .. which gets deleted after using */
@@ -885,15 +882,12 @@ sge_scheduler_main(void *arg)
             lFreeList(&(copy.dis_queue_list));
             lFreeList(&(copy.all_queue_list));
             lFreeList(&(copy.job_list));
-            lFreeList(&(copy.centry_list));
             lFreeList(&(copy.acl_list));
             lFreeList(&(copy.dept_list));
             lFreeList(&(copy.pe_list));
             lFreeList(&(copy.share_tree));
             lFreeList(&(copy.user_list));
             lFreeList(&(copy.project_list));
-            lFreeList(&(copy.ckpt_list));
-            lFreeList(&(copy.hgrp_list));
             lFreeList(&(copy.rqs_list));
             lFreeList(&(copy.ar_list));
          }

@@ -1,3 +1,8 @@
+RD-2008-04-15-0: Enhancem:  - reduced list copy in scheduler
+                 Bugfix:    - reduced load reports are broken
+                 Bugster:   6688549
+                 Review:    CR, JG
+
 EB-2008-04-15-0: Bugfix:    o print worker queue length in message file and qping output
                             o removed second worker queue (test code for performance tests)
                               this code is not needed anymore

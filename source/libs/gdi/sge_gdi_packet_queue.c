@@ -105,11 +105,44 @@ sge_gdi_packet_queue_class_t Master_Packet_Queue = {
    NULL,
    NULL,
    0,
-   NULL,
-   NULL,
-   0,
    false
 };
+
+/****** gdi/request_internal/ge_gdi_packet_queue_get_length) *****************
+*  NAME
+*     sge_gdi_packet_queue_get_length() -- returns the current queue length 
+*
+*  SYNOPSIS
+*     u_long32 sge_gdi_packet_queue_get_length(
+*                                sge_gdi_packet_queue_class_t *packet_queue) 
+*
+*  FUNCTION
+*    Returns the queue length of "packet_queue". 
+*
+*  INPUTS
+*     sge_gdi_packet_queue_class_t *packet_queue - packet queue 
+*
+*  RESULT
+*     u_long32 - queue length 
+*
+*  NOTES
+*     MT-NOTE: ge_gdi_packet_queue_get_length() is MT safe 
+*
+*  SEE ALSO
+*     gdi/request_internal/sge_gdi_packet_queue_wait_for_new_packet()
+*     gdi/request_internal/sge_gdi_packet_queue_store_notify()
+*******************************************************************************/
+u_long32
+sge_gdi_packet_queue_get_length(sge_gdi_packet_queue_class_t *packet_queue)
+{
+   u_long32 ret = 0;
+
+   DENTER(TOP_LAYER, "sge_gdi_packet_queue_get_length");
+   sge_mutex_lock(PACKET_QUEUE_MUTEX, SGE_FUNC, __LINE__, &(packet_queue->mutex));
+   ret =  packet_queue->counter;
+   sge_mutex_unlock(PACKET_QUEUE_MUTEX, SGE_FUNC, __LINE__, &(packet_queue->mutex));
+   DRETURN(ret);
+}
 
 /****** gdi/request_internal/sge_gdi_packet_queue_wakeup_all_waiting() *********
 *  NAME
@@ -150,6 +183,7 @@ sge_gdi_packet_queue_wakeup_all_waiting(sge_gdi_packet_queue_class_t *packet_que
    pthread_cond_broadcast(&(packet_queue->cond));
 
    sge_mutex_unlock(PACKET_QUEUE_MUTEX, SGE_FUNC, __LINE__, &(packet_queue->mutex));
+   DRETURN_VOID;
 }
 
 /****** gdi/request_internal/sge_gdi_packet_queue_store_notify() **********
@@ -183,8 +217,7 @@ sge_gdi_packet_queue_wakeup_all_waiting(sge_gdi_packet_queue_class_t *packet_que
 *******************************************************************************/
 void
 sge_gdi_packet_queue_store_notify(sge_gdi_packet_queue_class_t *packet_queue,
-                                  sge_gdi_packet_class_t *packet, bool high_prio,
-                                  monitoring_t *monitor)
+                                  sge_gdi_packet_class_t *packet, monitoring_t *monitor)
 {
    cl_thread_settings_t *thread_config = NULL; 
 
@@ -198,24 +231,13 @@ sge_gdi_packet_queue_store_notify(sge_gdi_packet_queue_class_t *packet_queue,
     * Append the packet at the end of the queue
     */
    if (packet != NULL) {
-      if (high_prio) {
-         if (packet_queue->first_packet_prio == NULL) {
-            packet_queue->first_packet_prio = packet;
-         } else {
-            packet_queue->last_packet_prio->next = packet;
-         }
-         packet_queue->last_packet_prio = packet;
-         packet_queue->counter_prio++;
+      if (packet_queue->first_packet == NULL) {
+         packet_queue->first_packet = packet;
       } else {
-         if (packet_queue->first_packet == NULL) {
-            packet_queue->first_packet = packet;
-         } else {
-            packet_queue->last_packet->next = packet;
-         }
-         packet_queue->last_packet = packet;
-         packet_queue->counter++;
+         packet_queue->last_packet->next = packet;
       }
-      MONITOR_SET_QLEN(monitor, packet_queue->counter);
+      packet_queue->last_packet = packet;
+      packet_queue->counter++;
    }
 
    DPRINTF((SFN" added new packet (packet_queue->counter = "sge_U32CFormat")\n",
@@ -294,7 +316,7 @@ sge_gdi_packet_queue_wait_for_new_packet(sge_gdi_packet_queue_class_t *packet_qu
        * that someone calls sge_gdi_packet_queue_wakeup_all_waiting() or
        * sge_gdi_packet_queue_store_notify()
        */
-      if (packet_queue->first_packet == NULL && packet_queue->first_packet_prio == NULL) {
+      if (packet_queue->first_packet == NULL) {
          packet_queue->waiting++;
          DPRINTF((SFN" is waiting for packet (packet_queue->waiting = "
                   sge_U32CFormat")\n", thread_config ? thread_config->thread_name : "-NA-", 
@@ -307,34 +329,14 @@ sge_gdi_packet_queue_wait_for_new_packet(sge_gdi_packet_queue_class_t *packet_qu
             ts.tv_sec = (time_t)(current_time + WORKER_WAIT_TIME_S);
             ts.tv_nsec = WORKER_WAIT_TIME_N;;
             pthread_cond_timedwait(&(packet_queue->cond), &(packet_queue->mutex), &ts);
-         } while (packet_queue->first_packet == NULL && packet_queue->first_packet_prio == NULL && 
-                  sge_thread_has_shutdown_started() == false);
+         } while (packet_queue->first_packet == NULL && sge_thread_has_shutdown_started() == false);
          packet_queue->waiting--;
       }
 
       /* 
        * If there is a packet then dechain it an return it to the caller 
        */
-      if (packet_queue->first_packet_prio != NULL) {
-         *packet = packet_queue->first_packet_prio;
-
-         if (packet_queue->first_packet_prio == packet_queue->last_packet_prio) {
-            packet_queue->last_packet_prio = NULL;
-            packet_queue->first_packet_prio = NULL;
-         } else {
-            packet_queue->first_packet_prio = (*packet)->next;
-         }
-         (*packet)->next = NULL;
-         packet_queue->counter_prio--;
-         DPRINTF((SFN" takes packet from priority queue. ("
-                  "packet_queue->counter_prio = "sge_U32CFormat
-                  "; packet_queue->counter = "sge_U32CFormat
-                  "; packet_queue->waiting = "sge_U32CFormat")\n",
-                  thread_config ? thread_config->thread_name : "-NA-", 
-                  packet_queue->counter_prio, 
-                  packet_queue->counter, 
-                  packet_queue->waiting));
-      } else if (packet_queue->first_packet != NULL) {
+      if (packet_queue->first_packet != NULL) {
          *packet = packet_queue->first_packet;
 
          if (packet_queue->first_packet == packet_queue->last_packet) {
@@ -346,26 +348,22 @@ sge_gdi_packet_queue_wait_for_new_packet(sge_gdi_packet_queue_class_t *packet_qu
          (*packet)->next = NULL;
          packet_queue->counter--;
          DPRINTF((SFN" takes packet from priority queue. ("
-                  "packet_queue->counter_prio = "sge_U32CFormat
-                  "; packet_queue->counter = "sge_U32CFormat
+                  "packet_queue->counter = "sge_U32CFormat
                   "; packet_queue->waiting = "sge_U32CFormat")\n",
                   thread_config ? thread_config->thread_name : "-NA-", 
-                  packet_queue->counter_prio, 
                   packet_queue->counter, 
                   packet_queue->waiting));
       } else {
          *packet = NULL;
          DPRINTF((SFN" wokeup but got no packet. ("
-                  "packet_queue->counter_prio = "sge_U32CFormat
-                  "; packet_queue->counter = "sge_U32CFormat
+                  "packet_queue->counter = "sge_U32CFormat
                   "; packet_queue->waiting = "sge_U32CFormat")\n",
                   thread_config ? thread_config->thread_name : "-NA-", 
-                  packet_queue->counter_prio, 
                   packet_queue->counter, 
                   packet_queue->waiting));
       }
 
-      MONITOR_SET_QLEN(monitor, ((packet_queue != NULL) ?  packet_queue->counter_prio +  packet_queue->counter : 0));
+      MONITOR_SET_QLEN(monitor, packet_queue->counter);
 
       sge_mutex_unlock(PACKET_QUEUE_MUTEX, SGE_FUNC, __LINE__, &(packet_queue->mutex));
    }

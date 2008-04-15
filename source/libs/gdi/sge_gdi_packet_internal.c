@@ -700,7 +700,7 @@ sge_gdi_packet_execute_internal(sge_gdi_ctx_class_t* ctx, lList **answer_list,
    /* 
     * append the packet to the packet list of the worker threads
     */
-   sge_gdi_packet_queue_store_notify(&Master_Packet_Queue, packet, true, NULL);
+   sge_gdi_packet_queue_store_notify(&Master_Packet_Queue, packet, NULL);
 
    DRETURN(ret);
 }

@@ -1,3 +1,8 @@
+EB-2008-04-15-0: Bugfix:    o print worker queue length in message file and qping output
+                            o removed second worker queue (test code for performance tests)
+                              this code is not needed anymore
+                 Review:    MD 
+
 AA-2008-04-14-0: Bugfix:    min/max typo leads to wrong qstat output
                  Review:    RD
 

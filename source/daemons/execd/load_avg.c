@@ -124,7 +124,6 @@ void execd_merge_load_report(u_long32 seqno)
          const void *iterator = NULL;
          const char *hostname = lGetHost(old_lr, LR_host);
          const char *name = lGetString(old_lr, LR_name);
-         const char *value = lGetString(old_lr, LR_value);
          lListElem *lr, *lr_next;
          bool found = false;
 
@@ -137,8 +136,9 @@ void execd_merge_load_report(u_long32 seqno)
                if (lGetUlong(old_lr, LR_static) == 2) {
                   lRemoveElem(lr_list, &lr); 
                } else {
-                  lSetString(lr, LR_value, value);
+                  lSetString(lr, LR_value, lGetString(old_lr, LR_value));
                }
+               break;
             }
          }
          if (!found) {
@@ -212,10 +212,11 @@ execd_add_load_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now
                   if (!send_all && sge_strnullcmp(lGetString(ep, LR_value), value) == 0) {
                      /* value hasn't changed, remove it from list */ 
                      lRemoveElem(tmp_lr_list, &ep);
+                  } else {
+                     DPRINTF(("value %s has changed from %s to %s\n", name, value ? value:"NULL", lGetString(ep, LR_value)));
+                     /* Old value is no longer valid */
+                     lSetString(lr, LR_value, NULL);
                   }
-
-                  /* Old value is no longer valid */
-                  lSetString(lr, LR_value, NULL);
                   break;
                }
             }

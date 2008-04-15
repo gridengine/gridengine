@@ -214,7 +214,7 @@ enum {
 };
 
 LISTDEF(LR_Type)
-   SGE_STRING(LR_name, CULL_DEFAULT)
+   SGE_STRING(LR_name, CULL_HASH)
    SGE_STRING(LR_value, CULL_DEFAULT)
    SGE_ULONG(LR_global, CULL_DEFAULT)       /* ==1 global load value */
    SGE_ULONG(LR_static, CULL_DEFAULT)       /* ==1 static load value */

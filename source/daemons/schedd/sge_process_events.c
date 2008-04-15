@@ -271,14 +271,16 @@ int event_handler_default_scheduler(sge_evc_class_t *evc)
    copy.dept_list = lSelect("", master_userset_list, where_dept, what_dept);
    copy.acl_list = lSelect("", master_userset_list, where_acl, what_acl);
 
+   /* no need to copy theses list, they are read only used */
+   copy.centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
+   copy.ckpt_list = *object_type_get_master_list(SGE_TYPE_CKPT);
+   copy.hgrp_list = *object_type_get_master_list(SGE_TYPE_HGROUP);
+
    /* .. but not in all cases */
-   copy.centry_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_CENTRY));
    copy.pe_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_PE));
    copy.share_tree = lCopyList("", *object_type_get_master_list(SGE_TYPE_SHARETREE));
    copy.user_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_USER));
    copy.project_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_PROJECT));
-   copy.ckpt_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_CKPT));
-   copy.hgrp_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_HGROUP));
    copy.rqs_list = lCopyList("", master_rqs_list);
 
    /* report number of reduced and raw (in brackets) lists */
@@ -359,8 +361,6 @@ int event_handler_default_scheduler(sge_evc_class_t *evc)
    lFreeList(&(copy.dis_queue_list));
    lFreeList(&(copy.all_queue_list));
    lFreeList(&(copy.job_list));
-   lFreeList(&(copy.centry_list));
-   lFreeList(&(copy.acl_list));
 
    lFreeList(&(copy.dept_list));
 
@@ -368,8 +368,6 @@ int event_handler_default_scheduler(sge_evc_class_t *evc)
    lFreeList(&(copy.share_tree));
    lFreeList(&(copy.user_list));
    lFreeList(&(copy.project_list));
-   lFreeList(&(copy.ckpt_list));
-   lFreeList(&(copy.hgrp_list));
    lFreeList(&(copy.rqs_list));
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);

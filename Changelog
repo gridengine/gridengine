@@ -1,3 +1,8 @@
+JG-2008-04-15-0: Bugfix:    loadcheck reported "kstat finds too many cpus"
+                 Bugster:   6688666
+                 Issue:     2555
+                 Review:    RD
+
 RD-2008-04-15-0: Enhancem:  - reduced list copy in scheduler
                  Bugfix:    - reduced load reports are broken
                  Bugster:   6688549

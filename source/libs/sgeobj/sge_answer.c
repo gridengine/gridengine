@@ -875,7 +875,7 @@ bool answer_list_log(lList **answer_list, bool is_free_list) {
    bool ret = false;
    lListElem *answer;   /* AN_Type */
 
-   DENTER(ANSWER_LAYER, "answer_list_output");
+   DENTER(ANSWER_LAYER, "answer_list_log");
 
    if (answer_list != NULL && *answer_list != NULL) {
       for_each(answer, *answer_list) {

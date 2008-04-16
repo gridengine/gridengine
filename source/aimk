@@ -249,6 +249,7 @@ set SGESSH           = 0
 set OPTIMIZATION     = 1
 set GPROFFED         = 0
 set COVED            = 0
+set USE_INSURE       = 0
 set DEBUGGED         = 0
 set COMPILE_DC       = 0
 set CC               = cc
@@ -531,8 +532,7 @@ while ($#argv >= 1 && $?found)
       set KVMAN = 1
       breaksw
    case "-insure"
-      set CC         = insure
-      set CXX        = insure
+      set USE_INSURE = 1
       set INSURE_FLAG = "-Zsl"
       set LFLAGS     = "-Zsl $LFLAGS"
       set DEBUGGED   = 1
@@ -1284,13 +1284,8 @@ case LINUXSPARC64:
       set OFLAG = "-O"
    endif
 
-   if ($CC != insure) then
-      set CC  = gcc
-      set CXX = g++
-   else
-      set CFLAGS = "-Wno-error $CFLAGS"
-      set OFLAG = "-O2"
-   endif
+   set CC  = gcc
+   set CXX = g++
 
    if ($BUILDARCH == LINUXPPC) then
       set CFLAGS = "-m32 $CFLAGS"
@@ -1618,7 +1613,10 @@ case SOLARISAMD64:
 
    if ( $CC == cc ) then
       set LFLAGS = "-xildoff $LFLAGS"
-      set CFLAGS = "$CFLAGS $ERR_WARN_ALL"
+      # the ERR_WARN_ALL breaks insure instrumented builds
+      if ( $USE_INSURE == 0 ) then
+         set CFLAGS = "$CFLAGS $ERR_WARN_ALL"
+      endif
       set SHARED_CFLAGS = "-KPIC"
 
       if ( $BUILDARCH == SOLARIS64 ) then
@@ -1670,7 +1668,7 @@ case SOLARISAMD64:
       endif
    endif
 
-   set LFLAGS   = "$LFLAGS $DEBUG_FLAG -lmtmalloc"
+   set LFLAGS   = "$LFLAGS $DEBUG_FLAG"
    set LIBS     = "-lsocket -lnsl -lm -lthread"
    set LOADAVGLIBS = "-lkstat"
    set FSTYPELIBS = "-lkstat"
@@ -1900,6 +1898,12 @@ endif
 #
 set GSHARED_CFLAGS = "$SHARED_CFLAGS"
 set GSHARED_LFLAGS = "$SHARED_LFLAGS"
+
+# change CC / CXX for insure
+if ($USE_INSURE == 1) then
+   set CC  = "insure $CC"
+   set CXX = "insure $CXX"
+endif
 
 #---------------------------------------------------------------------------
 # Actual make targets begin here
@@ -2318,7 +2322,7 @@ if ( "$JAVA" > 0 ) then
       setenv AIMK_TARGET_BITS $TARGET_BITS
       setenv aimk_buildarch $buildarch
    endif
-   if ( "$INSURE_FLAG" != "" ) then
+   if ( $USE_INSURE == 1 ) then
       setenv AIMK_INSURE -insure
    else
       setenv AIMK_INSURE ""

@@ -376,75 +376,64 @@ bool get_queue_resource(lListElem *queue_elem, const lListElem *queue, const cha
    double dval=0.0;
    const char *value=NULL;
    char as_str[100];
-   int type;
-   int pos = 0;
+   int type, field;
 
-      DENTER(BASIS_LAYER, "get_queue_resource");
+   DENTER(BASIS_LAYER, "get_queue_resource");
 
-      if(!queue_elem){
-         /* error */
-         DRETURN(false);
+   if(!queue_elem){
+      /* error */
+      DRETURN(false);
+   }
+
+   if (get_rsrc(attrname, true, &field, NULL, NULL, &type)!=0) {
+      DPRINTF(("is not a system queue attribute: %s\n", attrname));
+      DRETURN(false);
+   }
+
+   /* read stuff from queue and set to new elements */
+   switch(type) {
+   case TYPE_INT:
+      dval = (double)lGetUlong(queue, field);
+      snprintf(as_str, 100, sge_u32, lGetUlong(queue, field));
+      break;
+
+   case TYPE_TIM:
+   case TYPE_MEM:
+   case TYPE_DOUBLE:
+      if ((value = lGetString(queue, field))) {
+         parse_ulong_val(&dval, NULL, type, value, NULL, 0); 
+      } 
+      break;
+
+   case TYPE_BOO:
+      dval = (double)lGetBool(queue, field);
+      snprintf(as_str, 100, "%d", (int)lGetBool(queue, field));
+      break;
+
+   case TYPE_STR: 
+   case TYPE_CSTR:
+   case TYPE_RESTR:
+      value = lGetString(queue, field);
+      break;
+   case TYPE_HOST:
+      value = lGetHost(queue, field);
+      break;
+   }
+  
+
+   if (!is_attr_prior2(queue_elem, dval, CE_doubleval, CE_dominant)){
+      lSetUlong(queue_elem,CE_dominant , DOMINANT_LAYER_QUEUE|DOMINANT_TYPE_FIXED);
+      lSetDouble(queue_elem,CE_doubleval , dval);
+
+      if(value){
+         lSetString(queue_elem, CE_stringval, value);
+      } 
+      else{
+         lSetString(queue_elem,CE_stringval , as_str);
       }
+   }
 
-      { /* test, if its a valid queue resource */
-         bool found = false;
-         for(; pos < max_queue_resources; pos++)
-            if(strcmp(attrname, queue_resource[pos].name) == 0){
-               found=true;
-               break;
-            }
-               
-         if(!found){
-            DPRINTF(("is not a system queue attribute: %s\n", attrname));
-            DRETURN(false);
-         }
-      }
-
-      /* read stuff from queue and set to new elements */
-      type = queue_resource[pos].type;
-      switch(type) {
-      case TYPE_INT:
-         dval = (double)lGetUlong(queue, queue_resource[pos].field);
-         snprintf(as_str, 100, sge_u32, lGetUlong(queue, queue_resource[pos].field));
-         break;
-
-      case TYPE_TIM:
-      case TYPE_MEM:
-      case TYPE_DOUBLE:
-         if ((value = lGetString(queue, queue_resource[pos].field))) {
-            parse_ulong_val(&dval, NULL, type, value, NULL, 0); 
-         } 
-         break;
-
-      case TYPE_BOO:
-         dval = (double)lGetBool(queue, queue_resource[pos].field);
-         snprintf(as_str, 100, "%d", (int)lGetBool(queue, queue_resource[pos].field));
-         break;
-
-      case TYPE_STR: 
-      case TYPE_CSTR:
-      case TYPE_RESTR:
-         value = lGetString(queue, queue_resource[pos].field);
-         break;
-      case TYPE_HOST:
-         value = lGetHost(queue, queue_resource[pos].field);
-         break;
-      }
-     
- 
-      if (!is_attr_prior2(queue_elem, dval, CE_doubleval, CE_dominant)){
-         lSetUlong(queue_elem,CE_dominant , DOMINANT_LAYER_QUEUE|DOMINANT_TYPE_FIXED);
-         lSetDouble(queue_elem,CE_doubleval , dval);
-
-         if(value){
-            lSetString(queue_elem, CE_stringval, value);
-         } 
-         else{
-            lSetString(queue_elem,CE_stringval , as_str);
-         }
-      }
-
-      DRETURN(true);
+   DRETURN(true);
 }
 
 
@@ -1359,9 +1348,9 @@ int main(int argc, char *argv[], char *envp[])
 *
 *  FUNCTION
 *     Do -l matching with the aim to foreclose the entire cluster queue.
-*     Only non-consumable complex_values are considered. Each cluster queue
-*     configuration profile must specify a fixed value -- otherwise we can't
-*     rule out a cluster queue.
+*     Each cluster queue configuration profile must specify a fixed value 
+*     otherwise we can't rule out a cluster queue. Both complex_values and 
+*     queue resource limits are checked.
 *
 *  INPUTS
 *     const lList* hard_resource_list - resource list -l (CE_Type)
@@ -1374,23 +1363,22 @@ int main(int argc, char *argv[], char *envp[])
 *
 *  NOTES
 *     MT-NOTE: request_cq_rejected() is MT safe
-*
-*     Builtin complex attributes such as non-consumable -l h_vmem
-*     also could be checked here.
 *******************************************************************************/
 bool request_cq_rejected(const lList* hard_resource_list, const lListElem *cq,
-      const lList *centry_list, dstring *unsatisfied)
+      const lList *centry_list, bool single_slot, dstring *unsatisfied)
 {
-   const lListElem *req, *val_ce, *ce; /* CE_Type */
+   const lListElem *req, *val_ce = NULL, *ce; /* CE_Type */
    const lListElem *alist;
    const char *name, *request, *offer;
-   u_long32 type, relop;
+   u_long32 relop;
+   int type;
    bool rejected;
    int match;
 
    DENTER(TOP_LAYER, "request_cq_rejected");
 
    for_each (req, hard_resource_list) {
+      int cqfld, valfld;
       name = lGetString(req, CE_name);
 
       if (!(ce = lGetElemStr(centry_list, CE_name, name))) {
@@ -1398,30 +1386,43 @@ bool request_cq_rejected(const lList* hard_resource_list, const lListElem *cq,
          DRETURN(true);
       }
 
-      /* on cluster queue level we don't deal with consumable attributes */
-      if (lGetBool(ce, CE_consumable))
-         continue;
-
-      type = lGetUlong(ce, CE_valtype);
-
       request = lGetString(req, CE_stringval);
       relop = lGetUlong(ce, CE_relop);
 
-      rejected = true;
-      for_each (alist, lGetList(cq, CQ_consumable_config_list)) {
-
-         val_ce = lGetSubStr(alist, CE_name, name, ACELIST_value);
-         if (!val_ce) {
-            rejected = false;
-            break;
+      if (get_rsrc(name, true, NULL, &cqfld, &valfld, &type)==0) {
+         if (cqfld == 0) {
+            continue;
          } 
+      } else {
+         type = (int)lGetUlong(ce, CE_valtype);
+         cqfld = CQ_consumable_config_list;
+         valfld = ACELIST_value;
+      }
+
+      /* use of resource_cmp() can be wrong for parallel jobs that request more than a single slot */
+      if (!single_slot && type != TYPE_STR && type != TYPE_CSTR && type != TYPE_HOST && type != TYPE_RESTR)
+         continue;
+
+      rejected = true;
+      for_each (alist, lGetList(cq, cqfld)) {
+         if (valfld == ACELIST_value) {
+            /* complex_values upper limit */ 
+            val_ce = lGetSubStr(alist, CE_name, name, valfld);
+            if (!val_ce) {
+               rejected = false;
+               break;
+            }
+            offer = lGetString(val_ce, CE_stringval);
+         } else {
+            /* queue resource upper limit */ 
+            offer = lGetString(alist, valfld);
+         }
 
          switch (type) {
          case TYPE_STR:
          case TYPE_CSTR:
          case TYPE_HOST:
          case TYPE_RESTR:
-            offer = lGetString(val_ce, CE_stringval);
             match = string_cmp(type, relop, request, offer);
             break;
 
@@ -1432,13 +1433,13 @@ bool request_cq_rejected(const lList* hard_resource_list, const lListElem *cq,
          case TYPE_DOUBLE:
             {
                double req_dl, off_dl;
-               offer = lGetString(val_ce, CE_stringval);
-               if (!parse_ulong_val(&req_dl, NULL, type, request, NULL, 0) ||
-                   !parse_ulong_val(&off_dl, NULL, type, offer, NULL, 0)) {
+               if (!parse_ulong_val(&req_dl, NULL, type, request, NULL, 0) || 
+                    !parse_ulong_val(&off_dl, NULL, type, offer, NULL, 0)) {
                   DPRINTF(("%s is not of type %s\n", request, map_type2str(type)));
                   match = 0;
-               } else
+               } else {
                   match = resource_cmp(relop, req_dl, off_dl);
+               }
             }
             break;
 
@@ -1458,6 +1459,9 @@ bool request_cq_rejected(const lList* hard_resource_list, const lListElem *cq,
          sge_dstring_sprintf(unsatisfied, SFN"="SFN, name, request);
          DRETURN(true);
       }
+
+      DPRINTF(("cluster queue \"%s\" might be suited according -l %s=%s\n",
+            lGetString(cq, CQ_name), name, request));
    }
 
    DRETURN(false);

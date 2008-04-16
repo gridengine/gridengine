@@ -1,3 +1,10 @@
+AH-2008-04-16-0: Enhancem.: Improvements with cluster queue matching
+                            * added consideration for queue resource limits
+                            * added consideration for consumables
+                            * disregard non-string resources for parallel jobs 
+                              that request more than a single slot
+                 Review:    RD
+
 JG-2008-04-15-0: Bugfix:    loadcheck reported "kstat finds too many cpus"
                  Bugster:   6688666
                  Issue:     2555

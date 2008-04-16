@@ -1257,6 +1257,8 @@ static bool ec2_set_busy_handling(sge_evc_class_t *thiz, ev_busy_handling handli
    if (sge_evc->ec == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
    } else {
+      DPRINTF(("EVC: change event client to "sge_U32CFormat"\n", (u_long32)handling));
+
       ret = (lGetUlong(sge_evc->ec, EV_busy_handling) != handling) ? true : false;
 
       if (ret) {

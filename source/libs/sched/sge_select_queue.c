@@ -3061,7 +3061,8 @@ dispatch_t cqueue_match_static(const char *cqname, sge_assignment_t *a)
    /* detect if entire cluster queue ruled out due to -l */
    if ((hard_resource_list = lGetList(a->job, JB_hard_resource_list))) {
       dstring unsatisfied = DSTRING_INIT;
-      if (request_cq_rejected(hard_resource_list, cq, a->centry_list, &unsatisfied)) {
+      if (request_cq_rejected(hard_resource_list, cq, a->centry_list, 
+                     (!a->pe_name || a->slots == 1)?true:false, &unsatisfied)) {
          DPRINTF(("Cluster Queue \"%s\" can not fulfill resource request (-l %s) that "
                "was requested by job %d\n", cqname, sge_dstring_get_string(&unsatisfied), (int)a->job_id));
          schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, sge_dstring_get_string(&unsatisfied),

@@ -816,6 +816,8 @@ sge_event_master_process_mod_event_client(lListElem *request, monitoring_t *moni
    }
    /* busy_handling changed */
    if (busy_handling != lGetUlong(event_client, EV_busy_handling)) {
+      DPRINTF(("EVM: event client %s changes to "sge_U32CFormat"\n", 
+         lGetString(event_client, EV_name), lGetUlong(event_client, EV_busy_handling)));
       lSetUlong(event_client, EV_busy_handling, busy_handling);
    }
 

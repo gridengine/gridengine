@@ -136,20 +136,25 @@ while [ $end = false ]; do
    # get memory values
    #
    if [ x$VERSION != x ]; then
-      $SVMON > /tmp/svmon.out 2>&1
+      if [ -f /tmp/svmon-$$.out ]; then
+         rm -f /tmp/svmon-$$.out
+         touch /tmp/svmon-$$.out
+      fi
+
+      $SVMON > /tmp/svmon-$$.out 2>&1
       
       if [ $VERSION = "4.3.2" ]; then
-         cat /tmp/svmon.out | tail -1 | read mem_total mem_used mem_free f4 f5 f6 f7 f8 f9 f10 swap_total swap_used
+         cat /tmp/svmon-$$.out | tail -1 | read mem_total mem_used mem_free f4 f5 f6 f7 f8 f9 f10 swap_total swap_used
       fi
 
       if [ $VERSION = "4.3.3" ]; then
-         cat /tmp/svmon.out | grep memory | read f1 mem_total mem_used mem_free f5 f6
-         cat /tmp/svmon.out | grep "pg space" | read f1 f2 swap_total swap_used
+         cat /tmp/svmon-$$.out | grep memory | read f1 mem_total mem_used mem_free f5 f6
+         cat /tmp/svmon-$$.out | grep "pg space" | read f1 f2 swap_total swap_used
       fi
 
       if [ $VERSION = "5.1.0" ]; then
-         cat /tmp/svmon.out | grep memory | read f1 mem_total mem_used mem_free f5 f6
-         cat /tmp/svmon.out | grep "pg space" | read f1 f2 swap_total swap_used
+         cat /tmp/svmon-$$.out | grep memory | read f1 mem_total mem_used mem_free f5 f6
+         cat /tmp/svmon-$$.out | grep "pg space" | read f1 f2 swap_total swap_used
       fi
  
       swap_free=`expr $swap_total - $swap_used`

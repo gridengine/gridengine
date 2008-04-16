@@ -784,9 +784,10 @@ void sge_update_load_values(sge_gdi_ctx_class_t *ctx, const char *rhost, lList *
       INFO((SGE_EVENT, MSG_CANT_ASSOCIATE_LOAD_SS, rhost, report_host));
    }
 
-   /* if non static load values arrived, this indicates that 
-   ** host is known 
-   */
+   /* 
+    * if non static load values arrived, this indicates that 
+    * host is known 
+    */
    if (added_non_static && lGetUlong(host_ep, EH_lt_heard_from) == 0) {
       const char* tmp_hostname;
 

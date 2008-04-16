@@ -1344,9 +1344,7 @@ static void
 qinstance_check_unknown_state(lListElem *this_elem, lList *master_exechost_list)
 {
    const char *hostname = NULL;
-   lList *load_list = NULL;
    lListElem *host = NULL;
-   lListElem *load = NULL;
 
    DENTER(TOP_LAYER, "qinstance_check_unknown_state");
    hostname = lGetHost(this_elem, QU_qhostname);

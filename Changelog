@@ -1,3 +1,8 @@
+EB-2008-04-16-0: Bugfix:    o loadsensor does not work on AIX
+                 Bugster:   6661060
+                 Issue:     2508
+                 Review:    RD 
+
 DG-2008-04-16-0: Cleanup:   Compiler error (indicated argument is incompatible
                             with corresponding formal parameter (NULL was
                             not casted in pointer type) while executing aimk 

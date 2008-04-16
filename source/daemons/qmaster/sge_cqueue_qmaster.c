@@ -1352,15 +1352,11 @@ qinstance_check_unknown_state(lListElem *this_elem, lList *master_exechost_list)
    hostname = lGetHost(this_elem, QU_qhostname);
    host = host_list_locate(master_exechost_list, hostname);
    if (host != NULL) {
-      load_list = lGetList(host, EH_load_list);
+      u_long32 last_heard = lGetUlong(host, EH_lt_heard_from);
 
-      for_each(load, load_list) {
-         if (!lGetBool(load, HL_static)) {
-            sge_qmaster_qinstance_state_set_unknown(this_elem, false);
-            DTRACE;
-            break;
-         }
-      } 
+      if (last_heard != 0) {
+         sge_qmaster_qinstance_state_set_unknown(this_elem, false);
+      }
    }
    DRETURN_VOID;
 }

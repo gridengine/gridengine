@@ -1,3 +1,9 @@
+DG-2008-04-16-0: Cleanup:   Compiler error (indicated argument is incompatible
+                            with corresponding formal parameter (NULL was
+                            not casted in pointer type) while executing aimk 
+                            -only-depend on baumbart (IRIX 6.5) 
+                 Review:    JG
+
 JG-2008-04-16-0: Enhancem.: Allow insure instrumentation for all platforms.
                  Review:    DG
 

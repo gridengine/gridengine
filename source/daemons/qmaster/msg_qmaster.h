@@ -213,7 +213,7 @@
 /*
 ** sge_give_jobs.c
 */
-#define MSG_COM_CANT_DELIVER_UNHEARD_SSU _MESSAGE(33137, _("got max. unheard timeout for target "SFQ" on host "SFQ", can't delivering job \""sge_U32CFormat"\""))
+#define MSG_COM_CANT_DELIVER_UNHEARD_SSU _MESSAGE(33137, _("got max. unheard timeout for target "SFQ" on host "SFQ", can't deliver job \""sge_U32CFormat"\""))
   
 #define MSG_OBJ_UNABLE2FINDCKPT_S     _MESSAGE(33138, _("can't find checkpointing object "SFQ))
 #define MSG_OBJ_UNABLE2CREATECKPT_SU  _MESSAGE(33139, _("can't create checkpointing object "SFQ" for job " sge_U32CFormat))

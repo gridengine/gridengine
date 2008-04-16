@@ -1,3 +1,6 @@
+JG-2008-04-16-0: Cleanup:   fixed typo, cleanup
+                 Review:    MD
+
 JG-2008-04-15-0: Bugfix:    loadcheck reported "kstat finds too many cpus"
                  Bugster:   6688666
                  Issue:     2555

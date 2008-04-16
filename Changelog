@@ -1,3 +1,6 @@
+JG-2008-04-16-0: Cleanup:   fixed typo, cleanup
+                 Review:    MD
+
 AH-2008-04-16-0: Enhancem.: Improvements with cluster queue matching
                             * added consideration for queue resource limits
                             * added consideration for consumables

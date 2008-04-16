@@ -6537,12 +6537,8 @@ const char *config_name
  * add_modify_config
  ** flags = 1 = add, 2 = modify, 3 = modify if exists, add if not
  *------------------------------------------------------------------------*/
-static int add_modify_config(
-sge_gdi_ctx_class_t *ctx,
-const char *cfn,
-const char *filename,
-u_long32 flags 
-) {
+static int add_modify_config(sge_gdi_ctx_class_t *ctx, const char *cfn, const char *filename, u_long32 flags)
+{
    lCondition *where = NULL;
    lEnumeration *what = NULL;
    lList *alp = NULL, *lp = NULL;
@@ -6594,21 +6590,21 @@ u_long32 flags
 
    if (filename == NULL) {
       bool failed = false;
-      
+
       /* get config or make an empty config entry if none exists */
       if (ep == NULL) {
          ep = lCreateElem(CONF_Type);
          lSetHost(ep, CONF_name, cfn);
-      }   
+      }
 
       fields = sge_build_CONF_field_list(false);
       tmpname = (char *)spool_flatfile_write_object(&alp, ep, false, fields,
                                             &qconf_sfi, SP_DEST_TMP, SP_FORM_ASCII, 
                                             tmpname, false);
-   
+
       lFreeElem(&ep);
       status = sge_edit(tmpname, uid, gid);
-      
+
       if (status != 0) {
          unlink(tmpname);
          failed = true;
@@ -6621,7 +6617,7 @@ u_long32 flags
          DRETURN(failed);
       }
       else if (status > 0) {
-         fprintf(stderr, "%s\n", MSG_ANSWER_CONFIGUNCHANGED  );
+         fprintf(stderr, "%s\n", MSG_ANSWER_CONFIGUNCHANGED);
          FREE(fields);
          DRETURN(failed);
       }
@@ -6630,7 +6626,7 @@ u_long32 flags
       ep = spool_flatfile_read_object(&alp, CONF_Type, NULL,
                                       fields, fields_out, false, &qconf_sfi,
                                       SP_FORM_ASCII, NULL, tmpname);
-      
+
       if (answer_list_output(&alp)) {
          lFreeElem(&ep);
          failed = true;
@@ -6639,7 +6635,7 @@ u_long32 flags
       if (ep != NULL) {
          missing_field = spool_get_unprocessed_field(fields, fields_out, &alp);
       }
-      
+
       FREE(fields);
 
       if (missing_field != NoName) {
@@ -6652,7 +6648,7 @@ u_long32 flags
       if (!failed && (ep == NULL)) {
          ep = lCreateElem(CONF_Type);
       }
-      
+
       if (ep != NULL) {
          lSetHost(ep, CONF_name, cfn);
       } else {
@@ -6672,7 +6668,7 @@ u_long32 flags
       ep = spool_flatfile_read_object(&alp, CONF_Type, NULL,
                                       fields, fields_out, false, &qconf_sfi,
                                       SP_FORM_ASCII, NULL, filename);
-      
+
       if (answer_list_output(&alp)) {
          lFreeElem(&ep);
       }
@@ -6682,12 +6678,12 @@ u_long32 flags
       }
 
       FREE(fields);
-      
+
       if (missing_field != NoName) {
          lFreeElem(&ep);
          answer_list_output(&alp);
       }
-            
+
       if (ep != NULL) {
          lSetHost(ep, CONF_name, cfn);
       }
@@ -6697,25 +6693,20 @@ u_long32 flags
          fprintf(stderr, "\n");
          failed = true;
          DRETURN(failed);
-      }      
+      }
    }
 
    lp = lCreateList("modified configuration", CONF_Type); 
    lAppendElem(lp, ep);
-     
+
    alp = ctx->gdi(ctx, SGE_CONFIG_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
    lFreeList(&lp);
 
    /* report results */
-   ep = lFirst(alp);                   
-        
-   answer_exit_if_not_recoverable(ep); 
-   failed = !(answer_get_status(ep) == STATUS_OK);
-         
-   fprintf(stderr, "%s\n", lGetString(ep, AN_text));
-     
+   failed = show_answer_list(alp);
+
    lFreeList(&alp);
-   
+
    DRETURN(failed);
 }
 
@@ -6740,7 +6731,7 @@ sge_gdi_ctx_class_t *ctx,
 const char *user 
 ) {
    int perm_return;
-   lList *alp = NULL; 
+   lList *alp = NULL;
 
    DENTER(TOP_LAYER, "qconf_is_manager");
 

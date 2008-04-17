@@ -57,7 +57,8 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
                        char* local_domain_name,
                        unsigned long entry_life_time,
                        unsigned long entry_update_time,
-                       unsigned long entry_reresolve_time ) {
+                       unsigned long entry_reresolve_time,
+                       cl_bool_t create_hash) {
    int ret_val = CL_RETVAL_OK;
    cl_host_list_data_t* ldata = NULL;
 
@@ -170,7 +171,9 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
    if (local_domain_name != NULL) {
       ldata->local_domain_name = strdup(local_domain_name);
       if (ldata->local_domain_name == NULL) {
-         free(ldata->host_alias_file);
+         if (ldata->host_alias_file != NULL) {
+            free(ldata->host_alias_file);
+         }
          free(ldata);
          return CL_RETVAL_MALLOC;
       }
@@ -182,16 +185,17 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
 
    ret_val = cl_raw_list_setup(list_p,list_name, 1);
    if (ret_val != CL_RETVAL_OK) {
-      free(ldata->host_alias_file);
+      if (ldata->host_alias_file != NULL) {
+         free(ldata->host_alias_file);
+      }
+      if (ldata->local_domain_name != NULL) {
+         free(ldata->local_domain_name);
+      }
       free(ldata);
       return ret_val;
    }
 
-   /* set private list data */
-   (*list_p)->list_data = ldata;
-
    switch(ldata->resolve_method) {
-
       case CL_SHORT:
          CL_LOG(CL_LOG_INFO,"using short hostname for host compare operations");
          break;
@@ -217,7 +221,27 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
    }
 
    /* create hashtable */
-   ldata->ht =  sge_htable_create(4, dup_func_string, hash_func_string, hash_compare_string);
+   if (create_hash == CL_TRUE) {
+      ldata->ht = sge_htable_create(4, dup_func_string, hash_func_string, hash_compare_string);
+      if (ldata->ht == NULL) {
+         cl_raw_list_cleanup(list_p);
+         if (ldata->host_alias_file != NULL) {
+            free(ldata->host_alias_file);
+         }
+         if (ldata->local_domain_name != NULL) {
+            free(ldata->local_domain_name);
+         }
+         free(ldata);
+         return CL_RETVAL_MALLOC;
+      }
+      CL_LOG_INT(CL_LOG_INFO,"created hash table with size =", 4);
+   } else {
+      CL_LOG(CL_LOG_INFO,"created NO hash table!");
+      ldata->ht = NULL;
+   }
+
+   /* set private list data */
+   (*list_p)->list_data = ldata;
 
    CL_LOG_INT(CL_LOG_INFO,"entry_life_time is", (int)ldata->entry_life_time);
    CL_LOG_INT(CL_LOG_INFO,"entry_update_time is", (int)ldata->entry_update_time);
@@ -230,7 +254,7 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_host_list_copy()"
-int cl_host_list_copy(cl_raw_list_t** destination, cl_raw_list_t* source) {
+int cl_host_list_copy(cl_raw_list_t** destination, cl_raw_list_t* source, cl_bool_t create_hash) {
    int ret_val = CL_RETVAL_OK;
    cl_host_list_data_t* ldata_source = NULL;
    cl_host_list_data_t* ldata_dest = NULL;
@@ -256,7 +280,8 @@ int cl_host_list_copy(cl_raw_list_t** destination, cl_raw_list_t* source) {
                                    ldata_source->local_domain_name,
                                    ldata_source->entry_life_time,
                                    ldata_source->entry_update_time,
-                                   ldata_source->entry_reresolve_time);
+                                   ldata_source->entry_reresolve_time,
+                                   create_hash);
    } else {
       CL_LOG(CL_LOG_ERROR,"not list data specified");
       ret_val = CL_RETVAL_UNKNOWN;
@@ -501,10 +526,16 @@ int cl_host_list_cleanup(cl_raw_list_t** list_p) {
    /* clean list private data */
    ldata = (*list_p)->list_data;
    if (ldata != NULL) {
-      sge_htable_destroy(ldata->ht);
+      if (ldata->ht != NULL) {
+         sge_htable_destroy(ldata->ht);
+      }
       cl_host_alias_list_cleanup(&(ldata->host_alias_list));
-      free(ldata->local_domain_name);
-      free(ldata->host_alias_file);
+      if (ldata->local_domain_name != NULL) {
+         free(ldata->local_domain_name);
+      }
+      if (ldata->host_alias_file != NULL) {
+         free(ldata->host_alias_file);
+      }
       free(ldata);
    }
    (*list_p)->list_data = NULL;
@@ -555,7 +586,9 @@ int cl_host_list_append_host(cl_raw_list_t* list_p,cl_com_host_spec_t* host, int
    /* add element to hash table */
    if (host->unresolved_name != NULL) {
       cl_host_list_data_t* ldata = list_p->list_data;
-      sge_htable_store(ldata->ht, host->unresolved_name, new_elem);
+      if (ldata->ht != NULL) {
+         sge_htable_store(ldata->ht, host->unresolved_name, new_elem);
+      }
    }
    
    /* unlock the thread list */
@@ -597,7 +630,9 @@ int cl_host_list_remove_host(cl_raw_list_t* list_p, cl_com_host_spec_t* host, in
          /* remove element from hash table */
          if (host->unresolved_name != NULL) {
             cl_host_list_data_t* ldata = list_p->list_data;
-            sge_htable_delete(ldata->ht, host->unresolved_name);
+            if (ldata->ht != NULL) {
+               sge_htable_delete(ldata->ht, host->unresolved_name);
+            }
          }
    
          cl_raw_list_remove_elem(list_p, elem->raw_elem);
@@ -620,13 +655,27 @@ int cl_host_list_remove_host(cl_raw_list_t* list_p, cl_com_host_spec_t* host, in
 #endif
 #define __CL_FUNCTION__ "cl_host_list_get_elem_host()"
 cl_host_list_elem_t* cl_host_list_get_elem_host(cl_raw_list_t* list_p, const char *unresolved_hostname) {
-   void *elem = NULL;
+   cl_host_list_elem_t *elem = NULL;
 
-   if (list_p != NULL) {
+   if (list_p != NULL && unresolved_hostname != NULL) {
       cl_host_list_data_t* ldata = list_p->list_data;
-
-      if (sge_htable_lookup(ldata->ht, unresolved_hostname, (const void **)&elem) == True) {
-         return elem;
+      if (ldata->ht != NULL) {
+         if (sge_htable_lookup(ldata->ht, unresolved_hostname, (const void **)&elem) == True) {
+            return elem;
+         }
+      } else {
+         /* Search without having hash table */
+         CL_LOG(CL_LOG_INFO,"no hash table available, searching sequential");
+         elem = cl_host_list_get_first_elem(list_p);
+         while ( elem != NULL) {
+            if (elem->host_spec != NULL && elem->host_spec->unresolved_name != NULL ) {
+               if (strcmp(elem->host_spec->unresolved_name,unresolved_hostname) == 0) {
+                  /* found matching element */
+                  return elem;
+               }
+            }
+            elem = cl_host_list_get_next_elem(elem);
+         }
       }
    }
    return NULL;

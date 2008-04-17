@@ -54,7 +54,6 @@ static int received_qping = 0;
 void sighandler_server(
 int sig 
 ) {
-/*   thread_signal_receiver = pthread_self(); */
    if (sig == SIGPIPE) {
       pipe_signal = 1;
       return;
@@ -66,6 +65,8 @@ int sig
    }
 
    /* shutdown all sockets */
+   cl_com_ignore_timeouts(CL_TRUE);
+
    do_shutdown = 1;
 }
 
@@ -169,7 +170,6 @@ extern int main(int argc, char** argv)
   cl_log_t log_level;
   cl_framework_t framework = CL_CT_TCP;
 
-  
   ssl_config.ssl_method           = CL_SSL_v23;                 /*  v23 method                                  */
   ssl_config.ssl_CA_cert_pem_file = getenv("SSL_CA_CERT_FILE"); /*  CA certificate file                         */
   ssl_config.ssl_CA_key_pem_file  = NULL;                       /*  private certificate file of CA (not used)   */

@@ -1212,9 +1212,10 @@ const char* cl_com_get_data_flow_type(cl_com_connection_t* connection) {  /* CR 
 #endif
 #define __CL_FUNCTION__ "cl_com_ignore_timeouts()"
 void cl_com_ignore_timeouts(cl_bool_t flag) {
-   if (flag == CL_TRUE) {
-      CL_LOG(CL_LOG_WARNING,"ignoring all communication timeouts");
-   }
+   /*
+    * ATTENTION: This function must be signal handler save!!! 
+    * DO NOT call functions which call lock functions !!!
+    */
    cl_ingore_timeout = flag;
 }
 
@@ -1224,6 +1225,9 @@ void cl_com_ignore_timeouts(cl_bool_t flag) {
 #endif
 #define __CL_FUNCTION__ "cl_com_get_ignore_timeouts_flag()"
 cl_bool_t cl_com_get_ignore_timeouts_flag(void) {
+    if (cl_ingore_timeout == CL_TRUE) {
+       CL_LOG(CL_LOG_WARNING,"ignoring all communication timeouts");
+    }
     return cl_ingore_timeout;
 }
 
@@ -2265,6 +2269,9 @@ int cl_com_cached_gethostbyname(char *unresolved_host, char **unique_hostname, s
          CL_LOG_STR(CL_LOG_WARNING, "host is in only resolvable host list:", unresolved_host);
 
          *unique_hostname = strdup(unresolved_host);
+         if (*unique_hostname == NULL) {
+            return CL_RETVAL_MALLOC;
+         }
 
          /* Problem: 
           *
@@ -2620,7 +2627,9 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
          /* max entry life time reached, remove entry */
          if (elem_host->unresolved_name != NULL) {
             CL_LOG_STR(CL_LOG_WARNING,"entry life timeout for elem:", elem_host->unresolved_name);
-            sge_htable_delete(ldata->ht, elem_host->unresolved_name);
+            if (ldata->ht != NULL) {
+               sge_htable_delete(ldata->ht, elem_host->unresolved_name);
+            }
          } else {
             CL_LOG(CL_LOG_WARNING,"entry life timeout for addr");
          }
@@ -2667,7 +2676,7 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
       /* we have to resolve at least one host in this list. Make a copy of this list
          and resolve it, because we don't want to lock the list when hosts are resolved */ 
       CL_LOG(CL_LOG_WARNING,"do a list copy");
-      ret_val = cl_host_list_copy(&host_list_copy, list_p);
+      ret_val = cl_host_list_copy(&host_list_copy, list_p, CL_FALSE);
       if (ret_val == CL_RETVAL_OK ) {
          cl_host_list_elem_t* act_elem = NULL;
          cl_host_list_data_t* dummy_list_data_source = NULL;
@@ -2724,7 +2733,8 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
                             dummy_list_data_source->local_domain_name,
                             dummy_list_data_source->entry_life_time,
                             dummy_list_data_source->entry_update_time,
-                            dummy_list_data_source->entry_reresolve_time);
+                            dummy_list_data_source->entry_reresolve_time,
+                            CL_FALSE);
         
          /* first remove all entries from original list */
          while((elem = cl_host_list_get_first_elem(list_p)) ) {
@@ -2732,7 +2742,9 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
             cl_raw_list_dechain_elem(list_p, elem->raw_elem);
             /* remove element from hash table */
             if (elem_host->unresolved_name != NULL) {
-               sge_htable_delete(ldata->ht, elem_host->unresolved_name);
+               if (ldata->ht != NULL) {
+                  sge_htable_delete(ldata->ht, elem_host->unresolved_name);
+               }
             }
             cl_raw_list_append_dechained_elem(dummy_list_copy, elem->raw_elem);
          }
@@ -2742,7 +2754,9 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
             elem_host = elem->host_spec;
             cl_raw_list_dechain_elem(host_list_copy, elem->raw_elem);
             if (elem_host->unresolved_name != NULL) {
-               sge_htable_store(ldata->ht, elem_host->unresolved_name, elem);
+               if (ldata->ht != NULL) {
+                  sge_htable_store(ldata->ht, elem_host->unresolved_name, elem);
+               }
             }
             cl_raw_list_append_dechained_elem(list_p, elem->raw_elem);
          } 
@@ -2795,9 +2809,9 @@ int cl_com_endpoint_list_refresh(cl_raw_list_t* list_p) {
          if (act_elem->last_used + ldata->entry_life_time < now.tv_sec ) {
             CL_LOG_STR(CL_LOG_INFO,"removing non static element (life timeout) with comp host:", act_elem->endpoint->comp_host);
             cl_raw_list_remove_elem(list_p, act_elem->raw_elem);
-            
-            sge_htable_delete(ldata->ht, act_elem->endpoint->hash_id);
-
+            if (ldata->ht != NULL) {
+               sge_htable_delete(ldata->ht, act_elem->endpoint->hash_id);
+            }
             cl_com_free_endpoint(&(act_elem->endpoint));
             free(act_elem);
             act_elem = NULL;
@@ -3402,23 +3416,43 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
    int do_read_select = 0;
    int do_write_select = 0;
    char tmp_buffer[256];
-   char* params = NULL;
-   cl_com_connection_t* connection = elem->connection;
+   cl_com_connection_t* connection = NULL;
+   cl_connection_list_data_t* ldata = NULL;
 
    unsigned long data_read = 0;
    unsigned long data_to_read;
    unsigned long data_written = 0;
-
    int connect_port = -1;
+ 
+   
 
-   if (connection == NULL ) {
+   if (elem == NULL) {
+      CL_LOG(CL_LOG_ERROR,"no connection elem");
+      return CL_RETVAL_PARAMS;
+   } else {
+      connection = elem->connection;
+   }
+   if (connection == NULL) {
       CL_LOG(CL_LOG_ERROR,"no connection");
       return CL_RETVAL_PARAMS;
    }
-
    if (connection->connection_state != CL_CONNECTING) {
-      CL_LOG(CL_LOG_ERROR,"connection statis is not connecting");
+      CL_LOG(CL_LOG_ERROR,"connection state is not connecting");
       return CL_RETVAL_ALLREADY_CONNECTED;
+   }
+   if (connection_list == NULL) {
+      CL_LOG(CL_LOG_ERROR,"no connection list");
+      return CL_RETVAL_PARAMS;
+   }
+   if (connection_list->list_data == NULL) {
+      CL_LOG(CL_LOG_ERROR,"no connection data struct");
+      return CL_RETVAL_PARAMS;
+   } else {
+      ldata = connection_list->list_data;
+   }
+   if (ldata->r_ht == NULL) {
+      CL_LOG(CL_LOG_ERROR,"no hash table availabe");
+      return CL_RETVAL_NO_FRAMEWORK_INIT;
    }
  
    switch(select_mode) {
@@ -3701,7 +3735,10 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                connection->remote->comp_id = handle->next_free_client_id;
                free(connection->remote->hash_id);
                connection->remote->hash_id = cl_create_endpoint_string(connection->remote);
-
+               if (connection->remote->hash_id == NULL) {
+                  return CL_RETVAL_MALLOC;
+               }
+               /* This is not working for disabled hash */
                while (cl_connection_list_get_elem_endpoint(connection_list, connection->remote) != NULL) {
 
                   /* break in case of to many connections */
@@ -3718,9 +3755,11 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                   connection->remote->comp_id = handle->next_free_client_id;
                   free(connection->remote->hash_id);
                   connection->remote->hash_id = cl_create_endpoint_string(connection->remote);
+                  if (connection->remote->hash_id == NULL) {
+                     return CL_RETVAL_MALLOC;
+                  }
                   counter++;
                }
-               
                CL_LOG_INT(CL_LOG_INFO,"client got auto client id:", (int)connection->remote->comp_id);
 
                /* always increment client id */
@@ -3741,8 +3780,8 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
          connection->connection_sub_state = CL_COM_READ_INIT_CRM;
       }
    
-   
       if (connection->connection_sub_state == CL_COM_READ_INIT_CRM ) {
+         char *params = NULL;
          char* connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_OK;
          const char* connection_status_text = MSG_CL_TCP_FW_CONNECTION_STATUS_TEXT_OK;
          unsigned long connect_response_message_size = 0;
@@ -3772,50 +3811,49 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                * check duplicate endpoint entries  *
                ************************************/
                /* connection list is locked by calling function , so we do not need to lock the connection list */
+               /* This is not working for disabled hash */
 
                if ((tmp_elem = cl_connection_list_get_elem_endpoint(connection_list, connection->remote)) != NULL) {
                   cl_com_connection_t* tmp_con = NULL;
-
                   tmp_con = tmp_elem->connection;
-                  if (tmp_con->connection_state != CL_CLOSING) { /* This connection will be deleted soon, ignore it */
+                  /* endpoint is not unique, check already connected endpoint */
+                  tmp_con->check_endpoint_flag = CL_TRUE;             
 
-                     /* endpoint is not unique, check already connected endpoint */
-                     tmp_con->check_endpoint_flag = CL_TRUE;             
+                  snprintf(tmp_buffer,
+                           256, 
+                           MSG_CL_TCP_FW_ENDPOINT_X_ALREADY_CONNECTED_SSU,
+                           connection->remote->comp_host,
+                           connection->remote->comp_name,
+                           sge_u32c(connection->remote->comp_id));
 
-                     snprintf(tmp_buffer,
-                              256, 
-                              MSG_CL_TCP_FW_ENDPOINT_X_ALREADY_CONNECTED_SSU,
-                              connection->remote->comp_host,
-                              connection->remote->comp_name,
-                              sge_u32c(connection->remote->comp_id));
+                  cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ENDPOINT_NOT_UNIQUE, tmp_buffer );
 
-                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ENDPOINT_NOT_UNIQUE, tmp_buffer );
+                  connection->crm_state = CL_CRM_CS_ENDPOINT_NOT_UNIQUE; /* CL_CRM_CS_DENIED; */
+                  connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_NOT_UNIQUE;
+ 
+                  /* overwrite and free last error             */
+                  if ( connection->crm_state_error != NULL) {
+                     free(connection->crm_state_error);
+                     connection->crm_state_error = NULL;     
+                  }
 
-                     connection->crm_state = CL_CRM_CS_ENDPOINT_NOT_UNIQUE; /* CL_CRM_CS_DENIED; */
-                     connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_NOT_UNIQUE;
-    
-                     /* overwrite and free last error             */
-                     if ( connection->crm_state_error != NULL) {
-                        free(connection->crm_state_error);
-                        connection->crm_state_error = NULL;     
-                     }
-
-                     connection->crm_state_error = strdup(tmp_buffer);
-                     
-                     if (connection->crm_state_error == NULL) {
-                        connection_status_text = MSG_CL_TCP_FW_CONNECTION_STATUS_TEXT_ENDPOINT_NOT_UNIQUE_ERROR;
-                     } else {
-                        connection_status_text = connection->crm_state_error;
-                     }
-                     CL_LOG(CL_LOG_ERROR, connection_status_text);
-                  } 
+                  connection->crm_state_error = strdup(tmp_buffer);
+                  
+                  if (connection->crm_state_error == NULL) {
+                     connection_status_text = MSG_CL_TCP_FW_CONNECTION_STATUS_TEXT_ENDPOINT_NOT_UNIQUE_ERROR;
+                  } else {
+                     connection_status_text = connection->crm_state_error;
+                  }
+                  CL_LOG(CL_LOG_ERROR, connection_status_text);
                } else {
                   cl_connection_list_data_t * ldata = connection_list->list_data;
                   
                   CL_LOG(CL_LOG_INFO,"new client is unique, add it to hash");
 
                   /* insert into hash */
-                  sge_htable_store(ldata->r_ht, connection->remote->hash_id, elem);
+                  if (ldata->r_ht != NULL) {
+                     sge_htable_store(ldata->r_ht, connection->remote->hash_id, elem);
+                  }
                }
             } else {
                CL_LOG(CL_LOG_WARNING,"connection list has no handler");
@@ -4031,13 +4069,13 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
 #endif
          {
             char* tmp_str = NULL;
-            cl_com_get_parameter_list_string(&tmp_str);
-    
-            if (params == NULL) {
-               cl_com_transformString2XML(tmp_str, &params);
-               free(tmp_str);
-               tmp_str = NULL;
+            int tmp_retval;
+            tmp_retval = cl_com_get_parameter_list_string(&tmp_str);
+            if (tmp_retval != CL_RETVAL_OK) {
+               return tmp_retval;
             }
+            cl_com_transformString2XML(tmp_str, &params);
+            free(tmp_str);
          }
 
          connect_response_message_size = CL_CONNECT_RESPONSE_MESSAGE_SIZE;
@@ -4057,9 +4095,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
          if (connection->data_buffer_size < (gmsh_message_size + connect_response_message_size + 1) ) {
             if (params != NULL) {
                free(params);
-               params=NULL;
             }
-
             return CL_RETVAL_STREAM_BUFFER_OVERFLOW;
          }
    
@@ -4073,10 +4109,6 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                   connection->remote->comp_name,
                   connection->remote->comp_id,
                   params ? params : "");
-         if (params != NULL) {
-            free(params);
-            params=NULL;
-         }
          connection->data_write_buffer_pos = 0;
          connection->data_write_buffer_processed = 0;
          connection->data_write_buffer_to_send = gmsh_message_size + connect_response_message_size ;
@@ -4084,6 +4116,9 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
          connection->write_buffer_timeout_time = now.tv_sec + timeout;
          connection->data_write_flag = CL_COM_DATA_READY;
          connection->connection_sub_state = CL_COM_READ_SEND_CRM;
+         if (params != NULL) {
+            free(params);
+         }
       }
    }
 

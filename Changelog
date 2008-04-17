@@ -1,3 +1,11 @@
+CR-2008-04-17-0: Cleanup:   o make use of hash table switchable for commlib lists
+                            o make cl_com_ignore_timeouts() signal handler save
+                            o cl_connection_list_destroy_connections_to_close():
+                              - fixed wrong/missing locking  
+                              - cleanup
+                            (merge from maintrunk)
+                 Review:    RD
+
 RD-2008-04-15-0: Enhancem:  - reduced list copy in scheduler
                  Bugfix:    - reduced load reports are broken
                  Bugster:   6688549

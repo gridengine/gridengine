@@ -181,7 +181,6 @@ static const mirror_description dev_mirror_base[SGE_TYPE_ALL] = {
 /*-------------------------*/
 
 typedef struct {
-   int num_events;                     /* for profiling output, number of processed events */
    bool produce_qmaster_alive_timeout; /* used to produce qmaster alive timeout when 
                                         * SGE_PRODUCE_ALIVE_TIMEOUT_ERROR environment
                                         * variable is set. */
@@ -213,8 +212,6 @@ static void mir_state_init(mir_state_t* state)
       state->mirror_base[i].callback_default = dev_mirror_base[i].callback_default;
       state->mirror_base[i].clientdata       = NULL;
    }
-
-   state->num_events = 0;
 }
 
 static void mir_state_destroy(void* state) 
@@ -226,18 +223,6 @@ static void mir_mt_init(void)
 {
    pthread_key_create(&mir_state_key, &mir_state_destroy);
 } 
-
-static int mir_get_num_events(void)
-{
-   GET_SPECIFIC(mir_state_t, mir_state, mir_state_init, mir_state_key, "mir_get_num_events");
-   return mir_state->num_events;
-}
-
-static void mir_set_num_events(int num_ev)
-{
-   GET_SPECIFIC(mir_state_t, mir_state, mir_state_init, mir_state_key, "mir_set_num_events");
-   mir_state->num_events = num_ev;
-}
 
 static bool mir_get_produce_qmaster_alive_timeout(void)
 {
@@ -1128,10 +1113,6 @@ sge_mirror_error sge_mirror_process_events(sge_evc_class_t *evc)
 
    DENTER(TOP_LAYER, "sge_mirror_process_events");
 
-   PROF_START_MEASUREMENT(SGE_PROF_MIRROR);
-
-   mir_set_num_events(0);
-
    if (evc && evc->ec_get(evc, &event_list, false)) {
       if (event_list != NULL) {
          ret = sge_mirror_process_event_list(evc, event_list);
@@ -1151,13 +1132,6 @@ sge_mirror_error sge_mirror_process_events(sge_evc_class_t *evc)
          evc->ec_mark4registration(evc);
          ret = SGE_EM_TIMEOUT;
       }
-   }
-
-   if (prof_is_active(SGE_PROF_MIRROR)) {
-      prof_stop_measurement(SGE_PROF_MIRROR, NULL);
-      PROFILING((SGE_EVENT, "PROF: sge_mirror processed %d events in %.3f s",
-                 mir_get_num_events(), prof_get_measurement_wallclock(SGE_PROF_MIRROR, 
-                 false, NULL)));
    }
 
    DEXIT;
@@ -1225,6 +1199,8 @@ sge_mirror_process_event_list(sge_evc_class_t *evc, lList *event_list)
    object_description *object_base = object_type_get_object_description();
 
    DENTER(TOP_LAYER, "sge_mirror_process_event_list");
+
+   PROF_START_MEASUREMENT(SGE_PROF_MIRROR);
 
    function_ret = SGE_EM_OK;
 
@@ -1569,8 +1545,14 @@ sge_mirror_process_event_list(sge_evc_class_t *evc, lList *event_list)
          function_ret = SGE_EM_PROCESS_ERRORS;
       }
    }
-   mir_set_num_events(num_events);
-   
+
+   if (prof_is_active(SGE_PROF_MIRROR)) {
+      prof_stop_measurement(SGE_PROF_MIRROR, NULL);
+      PROFILING((SGE_EVENT, "PROF: sge_mirror processed %d events in %.3f s",
+                 num_events, prof_get_measurement_wallclock(SGE_PROF_MIRROR, 
+                 false, NULL)));
+   }
+
    DEXIT;
    return function_ret;
 }

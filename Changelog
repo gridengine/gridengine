@@ -1,3 +1,6 @@
+JG-2008-04-17-0: Bugfix:    fixed sge_mirror profiling
+                 Review:    RD
+
 JG-2008-04-16-0: Bugfix:    qconf -mconf didn't output success message,
                             fixed typo, cleanup
                  Review:    MD

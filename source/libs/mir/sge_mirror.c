@@ -79,9 +79,6 @@
 
 #include "sge_mirror.h"
 
-/* for profiling output, number of processed events */
-int num_events = 0;
-
 /* Static functions for internal use */
 static bool produce_qmaster_alive_timeout = false; /* 
                                                     * used to produce qmaster alive timeout when 
@@ -931,10 +928,6 @@ sge_mirror_error sge_mirror_process_events(void)
 
    DENTER(TOP_LAYER, "sge_mirror_process_events");
 
-   PROF_START_MEASUREMENT(SGE_PROF_MIRROR);
-
-   num_events = 0;
-
    if(ec_get(&event_list, false)) {
       if(event_list != NULL) {
          ret = sge_mirror_process_event_list(event_list);
@@ -954,13 +947,6 @@ sge_mirror_error sge_mirror_process_events(void)
          ec_mark4registration();
          ret = SGE_EM_TIMEOUT;
       }
-   }
-
-   if (prof_is_active(SGE_PROF_MIRROR)) {
-      prof_stop_measurement(SGE_PROF_MIRROR, NULL);
-      PROFILING((SGE_EVENT, "PROF: sge_mirror processed %d events in %.3f s",
-                 num_events, prof_get_measurement_wallclock(SGE_PROF_MIRROR, 
-                 false, NULL)));
    }
 
    DEXIT;
@@ -1017,16 +1003,19 @@ static void sge_mirror_free_list(sge_object_type type)
    object_type_free_master_list(type);
 }
 
-static sge_mirror_error sge_mirror_process_event_list(lList *event_list)
+static sge_mirror_error
+sge_mirror_process_event_list(lList *event_list)
 { 
    lListElem *event;
    sge_mirror_error function_ret;
    bool no_more_events=false;
+   int num_events = 0;
 
    DENTER(TOP_LAYER, "sge_mirror_process_event_list");
 
+   PROF_START_MEASUREMENT(SGE_PROF_MIRROR);
+
    function_ret = SGE_EM_OK;
-   num_events = 0;
 
    for_each(event, event_list) {
       sge_mirror_error ret = SGE_EM_OK;
@@ -1355,6 +1344,13 @@ static sge_mirror_error sge_mirror_process_event_list(lList *event_list)
       if(ret != SGE_EM_OK) {
          function_ret = SGE_EM_PROCESS_ERRORS;
       }
+   }
+
+   if (prof_is_active(SGE_PROF_MIRROR)) {
+      prof_stop_measurement(SGE_PROF_MIRROR, NULL);
+      PROFILING((SGE_EVENT, "PROF: sge_mirror processed %d events in %.3f s",
+                 num_events, prof_get_measurement_wallclock(SGE_PROF_MIRROR, 
+                 false, NULL)));
    }
 
    DEXIT;

@@ -53,14 +53,10 @@ void sighandler_client(
 int sig 
 ) {
 /*   thread_signal_receiver = pthread_self(); */
-   if (sig == SIGPIPE) {
+   if (sig == SIGPIPE || sig == SIGHUP) {
       return;
    }
 
-   if (sig == SIGHUP) {
-      return;
-   }
-   printf("do_shutdown\n");
    /* shutdown all sockets */
    do_shutdown = 1;
    cl_com_ignore_timeouts(CL_TRUE);
@@ -75,6 +71,7 @@ int sig
 extern int main(int argc, char** argv)
 {
   struct sigaction sa;
+  static int runs = 100;
 
 
   cl_com_handle_t* handle = NULL; 
@@ -219,16 +216,21 @@ extern int main(int argc, char** argv)
   start_time =    now.tv_sec;
   appl_start_time = start_time;
   welcome_text_size = strlen(welcome_text) + 1;
+
+  if (getenv("CL_RUNS")) { 
+     runs = atoi(getenv("CL_RUNS"));
+  } else {
+     runs = -1;  /* disable runs shutdown */
+  }
   while(do_shutdown != 1) {
      unsigned long mid;
      int my_sent_error = 0;
-     static int runs = 100;
 
      CL_LOG(CL_LOG_INFO,"main loop");
-#if 0
-     runs--;
-#endif
-    if (runs<= 0) {
+     if (runs > 0) {
+        runs--;
+     }
+     if (runs == 0) {
         do_shutdown = 1;
      }
 
@@ -291,7 +293,7 @@ extern int main(int argc, char** argv)
            break;
         }
         if (retval == CL_RETVAL_OK) {
-           CL_LOG_INT(CL_LOG_WARNING,"received ack for message mid", (int)mid); 
+           CL_LOG_INT(CL_LOG_INFO,"received ack for message mid", (int)mid); 
         } else {
            cl_commlib_trigger(handle, 1);
         }
@@ -321,7 +323,7 @@ extern int main(int argc, char** argv)
         cl_commlib_trigger(handle, 1); 
 
 
-        CL_LOG_INT(CL_LOG_WARNING,"waiting for mid .... ", (int)mid); 
+        CL_LOG_INT(CL_LOG_INFO,"waiting for mid .... ", (int)mid); 
         retval = cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, mid, &message, &sender);
 
 
@@ -448,6 +450,7 @@ extern int main(int argc, char** argv)
      }
   }
   printf("do_shutdown received\n");
+  fflush(stdout);
   while (cl_commlib_shutdown_handle(handle, CL_TRUE) == CL_RETVAL_MESSAGE_IN_BUFFER) {
      printf("got message\n");
      message = NULL;

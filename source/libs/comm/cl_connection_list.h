@@ -53,14 +53,14 @@ typedef struct cl_connection_list_data_type {                      /* list speci
 
 
 /* basic functions */
-int cl_connection_list_setup(cl_raw_list_t** list_p, char* list_name, int enable_locking);   /* CR check */
+int cl_connection_list_setup(cl_raw_list_t** list_p, char* list_name, int enable_locking, cl_bool_t create_hash);
 int cl_connection_list_cleanup(cl_raw_list_t** list_p);  /* CR check */
 
 
 /* thread list functions that will lock the list */
 int cl_connection_list_append_connection(cl_raw_list_t* list_p, cl_com_connection_t* connection, int do_lock);  /* CR check */
 int cl_connection_list_remove_connection(cl_raw_list_t* list_p, cl_com_connection_t* connection, int do_lock);  /* CR check */
-int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p);  /* CR check */
+int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle);
 
 
 /* thread functions that will not lock the list */

@@ -736,7 +736,7 @@ int cl_com_setup_commlib(cl_thread_mode_t t_mode, cl_log_t debug_level, cl_log_f
    /* setup global host list */
    pthread_mutex_lock(&cl_com_host_list_mutex);
    if (cl_com_host_list == NULL) {
-      ret_val = cl_host_list_setup(&cl_com_host_list, "global_host_cache", CL_SHORT, NULL , NULL, 0 , 0, 0 );
+      ret_val = cl_host_list_setup(&cl_com_host_list, "global_host_cache", CL_SHORT, NULL , NULL, 0 , 0, 0, CL_TRUE);
       if (cl_com_host_list == NULL) {
          pthread_mutex_unlock(&cl_com_host_list_mutex);
          cl_com_cleanup_commlib();
@@ -748,7 +748,7 @@ int cl_com_setup_commlib(cl_thread_mode_t t_mode, cl_log_t debug_level, cl_log_f
    /* setup global endpoint list */
    pthread_mutex_lock(&cl_com_endpoint_list_mutex);
    if (cl_com_endpoint_list == NULL) {
-      ret_val = cl_endpoint_list_setup(&cl_com_endpoint_list, "global_endpoint_list" , 0 , 0);
+      ret_val = cl_endpoint_list_setup(&cl_com_endpoint_list, "global_endpoint_list" , 0 , 0, CL_TRUE);
       if (cl_com_endpoint_list == NULL) {
          pthread_mutex_unlock(&cl_com_endpoint_list_mutex);
          cl_com_cleanup_commlib();
@@ -1406,7 +1406,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       return NULL;
    } 
 
-   if ((return_value=cl_connection_list_setup(&(new_handle->connection_list), "connection list", 1)) != CL_RETVAL_OK) {
+   if ((return_value=cl_connection_list_setup(&(new_handle->connection_list), "connection list", 1, CL_TRUE)) != CL_RETVAL_OK) {
       int mutex_ret_val;
       cl_app_message_queue_cleanup(&(new_handle->send_message_queue));
       cl_app_message_queue_cleanup(&(new_handle->received_message_queue));
@@ -1991,7 +1991,7 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
       }
       cl_raw_list_unlock(handle->connection_list);
    
-      cl_connection_list_destroy_connections_to_close(handle->connection_list);
+      cl_connection_list_destroy_connections_to_close(handle);
       
       /* shutdown of service */
       if (handle->service_provider == CL_TRUE) {
@@ -2707,7 +2707,7 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
 
    /* remove broken connections */
    /* when threads enabled: this is done by cl_com_handle_service_thread() - OK */
-   cl_connection_list_destroy_connections_to_close(handle->connection_list);
+   cl_connection_list_destroy_connections_to_close(handle);
 
    /* calculate statistics each second */
    gettimeofday(&now,NULL);
@@ -4969,7 +4969,7 @@ int cl_commlib_search_endpoint(cl_com_handle_t* handle,
       }
    } 
 
-   retval = cl_endpoint_list_setup(endpoint_list, "matching endpoints", 0, 0); 
+   retval = cl_endpoint_list_setup(endpoint_list, "matching endpoints", 0, 0, CL_TRUE); 
    if (retval != CL_RETVAL_OK) {
       free(resolved_hostname);
       resolved_hostname = NULL;
@@ -5318,6 +5318,10 @@ int cl_commlib_check_for_ack(cl_com_handle_t* handle, char* un_resolved_hostname
    receiver.comp_id   = component_id;
    receiver.addr.s_addr = in_addr.s_addr;
    receiver.hash_id = cl_create_endpoint_string(&receiver);
+   if (receiver.hash_id == NULL) {
+      free(unique_hostname);
+      return CL_RETVAL_MALLOC;
+   }
 
    while(do_stop == 0) {
       found_message = 0;
@@ -5479,6 +5483,10 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
    receiver.comp_id   = component_id;
    receiver.addr.s_addr = in_addr.s_addr;
    receiver.hash_id = cl_create_endpoint_string(&receiver);
+   if (receiver.hash_id == NULL) {
+      free(unique_hostname);
+      return CL_RETVAL_MALLOC;
+   }
 
    /* lock handle mutex, because we don't want to allow more threads to create a new 
       connection for the same receiver endpoint */
@@ -5825,6 +5833,10 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
    receiver.comp_id   = component_id;
    receiver.addr.s_addr = in_addr.s_addr;
    receiver.hash_id = cl_create_endpoint_string(&receiver);
+   if (receiver.hash_id == NULL) {
+      free(unique_hostname);
+      return CL_RETVAL_MALLOC;
+   }
 
    /* flush send message queue */
    cl_raw_list_lock(handle->send_message_queue);
@@ -6038,6 +6050,10 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle, char* un_resolved_ho
    receiver.comp_id   = component_id;
    receiver.addr.s_addr = in_addr.s_addr;
    receiver.hash_id = cl_create_endpoint_string(&receiver);
+   if (receiver.hash_id == NULL) {
+      free(unique_hostname);
+      return CL_RETVAL_MALLOC;
+   }
 
    while(retry_send != 0) {
    
@@ -6468,6 +6484,13 @@ cl_commlib_send_message(cl_com_handle_t* handle, char *un_resolved_hostname,
       receiver.comp_id   = component_id;
       receiver.addr.s_addr = in_addr.s_addr;
       receiver.hash_id = cl_create_endpoint_string(&receiver);
+      if (receiver.hash_id == NULL) {
+         free(unique_hostname);
+         if (copy_data == CL_TRUE) {
+            free(help_data);
+         }
+         return CL_RETVAL_MALLOC;
+      }
    
       while(retry_send != 0) {
       
@@ -6647,7 +6670,10 @@ int cl_commlib_get_last_message_time(cl_com_handle_t* handle,
    receiver.comp_id   = component_id;
    receiver.addr.s_addr = in_addr.s_addr;
    receiver.hash_id = cl_create_endpoint_string(&receiver);
-
+   if (receiver.hash_id == NULL) {
+      free(unique_hostname);
+      return CL_RETVAL_MALLOC;
+   }
 
    return_value = cl_endpoint_list_get_last_touch_time(cl_com_get_endpoint_list(), &receiver, message_time);
    if (message_time) {
@@ -6875,7 +6901,7 @@ static void *cl_com_handle_read_thread(void *t_conf) {
          /* check number of connections */
          cl_commlib_check_connection_count(handle);
 
-         cl_connection_list_destroy_connections_to_close(handle->connection_list);
+         cl_connection_list_destroy_connections_to_close(handle);
 
          cl_raw_list_lock(handle->send_message_queue);
          while((mq_elem = cl_app_message_queue_get_first_elem(handle->send_message_queue)) != NULL) {

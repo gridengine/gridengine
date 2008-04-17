@@ -1,3 +1,10 @@
+CR-2008-04-17-0: Cleanup:   o make use of hash table switchable for commlib lists
+                            o make cl_com_ignore_timeouts() signal handler save
+                            o cl_connection_list_destroy_connections_to_close():
+                              - fixed wrong/missing locking  
+                              - cleanup
+                 Review:    RD
+
 JG-2008-04-17-0: Bugfix:    reactivated profiling in event_mirror
                             minor fixes and cleanup in scheduler thread mainloop
                  Review:    RD 

@@ -100,60 +100,62 @@ sge_mirror_process_event_list_(sge_evc_class_t *evc, lList *event_list);
 #pragma no_inline(sge_mirror_process_event_list,sge_mirror_process_event_list_)
 #endif
 
-static sge_mirror_error 
+static sge_mirror_error
 _sge_mirror_subscribe(sge_evc_class_t *evc,
-                      sge_object_type type, sge_mirror_callback callback_before, 
+                      sge_object_type type, sge_mirror_callback callback_before,
                       sge_mirror_callback callback_after, void *clientdata,
                       const lCondition *where, const lEnumeration *what);
 
-static sge_mirror_error 
-_sge_mirror_unsubscribe(sge_evc_class_t *evc, sge_object_type type);     
+static sge_mirror_error
+_sge_mirror_unsubscribe(sge_evc_class_t *evc, sge_object_type type);
 
-static void 
+static void
 sge_mirror_free_list(sge_object_type type);
 
-static sge_mirror_error 
-sge_mirror_process_event(sge_evc_class_t *evc, 
-                         mirror_description *mirror_base, 
-                         object_description *object_base, 
-                         sge_object_type type, 
-                         sge_event_action action, 
+static sge_mirror_error
+sge_mirror_process_event(sge_evc_class_t *evc,
+                         mirror_description *mirror_base,
+                         object_description *object_base,
+                         sge_object_type type,
+                         sge_event_action action,
                          lListElem *event);
 
 static sge_callback_result
-sge_mirror_process_shutdown(sge_evc_class_t *evc, 
-                            object_description *object_base, 
-                            sge_object_type type, 
-                            sge_event_action action, 
-                            lListElem *event, 
+sge_mirror_process_shutdown(sge_evc_class_t *evc,
+                            object_description *object_base,
+                            sge_object_type type,
+                            sge_event_action action,
+                            lListElem *event,
                             void *clientdata);
 static sge_callback_result
-sge_mirror_process_qmaster_goes_down(sge_evc_class_t *evc, 
-                                     object_description *object_base, 
-                                     sge_object_type type, 
-                                     sge_event_action action, 
-                                     lListElem *event, 
+sge_mirror_process_qmaster_goes_down(sge_evc_class_t *evc,
+                                     object_description *object_base,
+                                     sge_object_type type,
+                                     sge_event_action action,
+                                     lListElem *event,
                                      void *clientdata);
 
 static sge_callback_result
-generic_update_master_list(sge_evc_class_t *evc, 
-                           object_description *object_base, 
-                           sge_object_type type, 
-                           sge_event_action action, 
-                           lListElem *event, 
+generic_update_master_list(sge_evc_class_t *evc,
+                           object_description *object_base,
+                           sge_object_type type,
+                           sge_event_action action,
+                           lListElem *event,
                            void *clientdata);
 
 static sge_callback_result
-ar_update_master_list(sge_evc_class_t *evc, object_description *object_base, sge_object_type type, 
+ar_update_master_list(sge_evc_class_t *evc, object_description *object_base, sge_object_type type,
                        sge_event_action action, lListElem *event, void *clientdata);
 
-static 
-sge_mirror_error sge_mirror_update_master_list_ar_key(lList **list, const lDescr *list_descr, 
-                                                      int key_nm, const char *key, 
+static
+sge_mirror_error sge_mirror_update_master_list_ar_key(lList **list, const lDescr *list_descr,
+                                                      int key_nm, const char *key,
                                                       sge_event_action action, lListElem *event);
 
-/* One entry per event type, this is the basic definition. Each thread
-   will have its own table based on this one*/
+/*
+ * One entry per event type, this is the basic definition.
+ * Each thread will have its own table based on this one. 
+ */
 static const mirror_description dev_mirror_base[SGE_TYPE_ALL] = {
    /*cbb   cbd                                     cba   cd   */
    { NULL, host_update_master_list,                NULL, NULL },
@@ -197,28 +199,26 @@ static const mirror_description dev_mirror_base[SGE_TYPE_ALL] = {
 /*-------------------------*/
 
 typedef struct {
-   int num_events;                     /* for profiling output, number of processed events */
-   bool produce_qmaster_alive_timeout; /* used to produce qmaster alive timeout when 
+   bool produce_qmaster_alive_timeout; /* used to produce qmaster alive timeout when
                                         * SGE_PRODUCE_ALIVE_TIMEOUT_ERROR environment
                                         * variable is set. */
-   mirror_description mirror_base[SGE_TYPE_ALL]; /* subscription handlers */ 
+   mirror_description mirror_base[SGE_TYPE_ALL]; /* subscription handlers */
 } mir_state_t;
-
 
 static pthread_key_t   mir_state_key;
 static pthread_once_t  mir_once_control = PTHREAD_ONCE_INIT;
 
-
-static void mir_state_init(mir_state_t* state) 
+static void mir_state_init(mir_state_t* state)
 {
    int i;
-   /* if environment varialbe SGE_PRODUCE_ALIVE_TIMEOUT_ERROR
-      is defined, the mirror event client will produce qmaster
-      alive timeout errors and reconnect to qmaster */
-   if ( getenv("SGE_PRODUCE_ALIVE_TIMEOUT_ERROR") ) {
+   /*
+    * if environment varialbe SGE_PRODUCE_ALIVE_TIMEOUT_ERROR
+    * is defined, the mirror event client will produce qmaster
+    * alive timeout errors and reconnect to qmaster
+    */
+   if (getenv("SGE_PRODUCE_ALIVE_TIMEOUT_ERROR")) {
       state->produce_qmaster_alive_timeout = true;
-   }
-   else {
+   } else {
       state->produce_qmaster_alive_timeout = false;
    }
 
@@ -229,30 +229,16 @@ static void mir_state_init(mir_state_t* state)
       state->mirror_base[i].callback_default = dev_mirror_base[i].callback_default;
       state->mirror_base[i].clientdata       = NULL;
    }
-
-   state->num_events = 0;
 }
 
-static void mir_state_destroy(void* state) 
+static void mir_state_destroy(void* state)
 {
    free(state);
 }
 
-static void mir_mt_init(void) 
+static void mir_mt_init(void)
 {
    pthread_key_create(&mir_state_key, &mir_state_destroy);
-} 
-
-static int mir_get_num_events(void)
-{
-   GET_SPECIFIC(mir_state_t, mir_state, mir_state_init, mir_state_key, "mir_get_num_events");
-   return mir_state->num_events;
-}
-
-static void mir_set_num_events(int num_ev)
-{
-   GET_SPECIFIC(mir_state_t, mir_state, mir_state_init, mir_state_key, "mir_set_num_events");
-   mir_state->num_events = num_ev;
 }
 
 static bool mir_get_produce_qmaster_alive_timeout(void)
@@ -276,8 +262,8 @@ static mirror_description *mir_get_mirror_base(void)
 *     sge_mirror_initialize() -- initialize a process local event mirror interface
 *
 *  SYNOPSIS
-*     sge_mirror_error sge_mirror_initialize(ev_registration_id id, 
-*                                            const char *name) 
+*     sge_mirror_error sge_mirror_initialize(ev_registration_id id,
+*                                            const char *name)
 *
 *  FUNCTION
 *     Initializes internal data structures and registers with qmaster
@@ -307,10 +293,10 @@ static mirror_description *mir_get_mirror_base(void)
 *     Eventmirror/sge_mirror_shutdown()
 *     Eventclient/-ID-numbers
 *******************************************************************************/
-sge_mirror_error 
-sge_mirror_initialize(sge_evc_class_t *evc, ev_registration_id id, const char *name, 
+sge_mirror_error
+sge_mirror_initialize(sge_evc_class_t *evc, ev_registration_id id, const char *name,
                       bool use_global_data, event_client_update_func_t update_func,
-                      evm_mod_func_t mod_func, evm_add_func_t add_func, 
+                      evm_mod_func_t mod_func, evm_add_func_t add_func,
                       evm_remove_func_t remove_func, evm_ack_func_t ack_func)
 {
    DENTER(TOP_LAYER, "sge_mirror_initialize");
@@ -324,7 +310,7 @@ sge_mirror_initialize(sge_evc_class_t *evc, ev_registration_id id, const char *n
 
    pthread_once(&mir_once_control, mir_mt_init);
    obj_init(use_global_data);
-  
+
    /* subscribe some events with default handling */
    sge_mirror_subscribe(evc, SGE_TYPE_SHUTDOWN, NULL, NULL, NULL, NULL, NULL);
    sge_mirror_subscribe(evc, SGE_TYPE_QMASTER_GOES_DOWN, NULL, NULL, NULL, NULL, NULL);
@@ -332,8 +318,7 @@ sge_mirror_initialize(sge_evc_class_t *evc, ev_registration_id id, const char *n
    /* register with qmaster */
    evc->ec_commit(evc, NULL);
 
-   DEXIT;
-   return SGE_EM_OK;
+   DRETURN(SGE_EM_OK);
 }
 
 /****** Eventmirror/sge_mirror_shutdown() ***************************************
@@ -341,7 +326,7 @@ sge_mirror_initialize(sge_evc_class_t *evc, ev_registration_id id, const char *n
 *     sge_mirror_shutdown() -- shutdown mirroring
 *
 *  SYNOPSIS
-*     sge_mirror_error sge_mirror_shutdown(void) 
+*     sge_mirror_error sge_mirror_shutdown(void)
 *
 *  FUNCTION
 *     Shuts down the event mirroring mechanism:
@@ -363,38 +348,37 @@ sge_mirror_error sge_mirror_shutdown(sge_evc_class_t *evc)
       evc->ec_deregister(evc);
    }
 
-   DEXIT;
-   return SGE_EM_OK;
-}   
+   DRETURN(SGE_EM_OK);
+}
 
 /****** Eventmirror/sge_mirror_subscribe() **************************************
 *  NAME
 *     sge_mirror_subscribe() -- subscribe certain event types
 *
 *  SYNOPSIS
-*     sge_mirror_error sge_mirror_subscribe(sge_object_type type, 
-*                                           sge_mirror_callback callback_before, 
-*                                           sge_mirror_callback callback_after, 
-*                                           void *clientdata) 
+*     sge_mirror_error sge_mirror_subscribe(sge_object_type type,
+*                                           sge_mirror_callback callback_before,
+*                                           sge_mirror_callback callback_after,
+*                                           void *clientdata)
 *
 *  FUNCTION
 *     Subscribe a certain event type.
-*     Callback functions can be specified, that can be executed before the 
+*     Callback functions can be specified, that can be executed before the
 *     mirroring action and/or after the mirroring action.
 *
 *     The corresponding data structures are initialized,
-*     the events associated with the event type are subscribed with the 
+*     the events associated with the event type are subscribed with the
 *     event client interface.
 *
 *  INPUTS
 *     lListElem *event client              - event client to work with
 *     sge_object_type type                 - event type to subscribe or
 *                                           SGE_TYPE_ALL
-*     sge_mirror_callback callback_before - callback to be executed before 
+*     sge_mirror_callback callback_before - callback to be executed before
 *                                           mirroring
-*     sge_mirror_callback callback_after  - callback to be executed after 
+*     sge_mirror_callback callback_after  - callback to be executed after
 *                                           mirroring
-*     void *clientdata                    - clientdata to be passed to the 
+*     void *clientdata                    - clientdata to be passed to the
 *                                           callback functions
 *
 *  RESULT
@@ -406,29 +390,28 @@ sge_mirror_error sge_mirror_shutdown(sge_evc_class_t *evc)
 *     Eventclient/-Events
 *     Eventmirror/sge_mirror_unsubscribe()
 *******************************************************************************/
-sge_mirror_error sge_mirror_subscribe(sge_evc_class_t *evc, 
-                                      sge_object_type type, 
-                                      sge_mirror_callback callback_before, 
-                                      sge_mirror_callback callback_after, 
+sge_mirror_error sge_mirror_subscribe(sge_evc_class_t *evc,
+                                      sge_object_type type,
+                                      sge_mirror_callback callback_before,
+                                      sge_mirror_callback callback_after,
                                       void *clientdata,
-                                      const lCondition *where, 
+                                      const lCondition *where,
                                       const lEnumeration *what)
 {
    sge_mirror_error ret = SGE_EM_OK;
 
    DENTER(TOP_LAYER, "sge_mirror_subscribe");
 
-   if(type < 0 || type > SGE_TYPE_ALL) {
+   if (type < 0 || type > SGE_TYPE_ALL) {
       ERROR((SGE_EVENT, MSG_MIRROR_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
-      DEXIT;
-      return SGE_EM_BAD_ARG;
+      DRETURN(SGE_EM_BAD_ARG);
    }
 
-   if(type == SGE_TYPE_ALL) {
+   if (type == SGE_TYPE_ALL) {
       sge_object_type i;
 
-      for(i = SGE_TYPE_ADMINHOST; i < SGE_TYPE_ALL; i++) {
-         if((ret = _sge_mirror_subscribe(evc, i, callback_before, callback_after, clientdata, NULL, NULL)) != SGE_EM_OK) {
+      for (i = SGE_TYPE_ADMINHOST; i < SGE_TYPE_ALL; i++) {
+         if ((ret = _sge_mirror_subscribe(evc, i, callback_before, callback_after, clientdata, NULL, NULL)) != SGE_EM_OK) {
             break;
          }
       }
@@ -436,15 +419,14 @@ sge_mirror_error sge_mirror_subscribe(sge_evc_class_t *evc,
       ret = _sge_mirror_subscribe(evc, type, callback_before, callback_after, clientdata, where, what);
    }
 
-   DEXIT;
-   return ret;
-}   
-  
-static sge_mirror_error 
+   DRETURN(ret);
+}
+
+static sge_mirror_error
 _sge_mirror_subscribe(sge_evc_class_t *evc,
-                      sge_object_type type, 
-                      sge_mirror_callback callback_before, 
-                      sge_mirror_callback callback_after, 
+                      sge_object_type type,
+                      sge_mirror_callback callback_before,
+                      sge_mirror_callback callback_after,
                       void *clientdata,
                       const lCondition *where, const lEnumeration *what)
 {
@@ -452,17 +434,17 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
    lListElem *where_el = lWhereToElem(where);
 
    /* type already has been checked before */
-   switch(type) {
+   switch (type) {
       case SGE_TYPE_ADMINHOST:
          evc->ec_subscribe(evc, sgeE_ADMINHOST_LIST);
          evc->ec_subscribe(evc, sgeE_ADMINHOST_ADD);
          evc->ec_subscribe(evc, sgeE_ADMINHOST_DEL);
          evc->ec_subscribe(evc, sgeE_ADMINHOST_MOD);
-         if (what_el && where_el){
+         if (what_el && where_el) {
             evc->ec_mod_subscription_where(evc, sgeE_ADMINHOST_MOD, what_el, where_el);
             evc->ec_mod_subscription_where(evc, sgeE_ADMINHOST_DEL, what_el, where_el);
-            evc->ec_mod_subscription_where(evc, sgeE_ADMINHOST_ADD, what_el, where_el); 
-            evc->ec_mod_subscription_where(evc, sgeE_ADMINHOST_LIST, what_el, where_el); 
+            evc->ec_mod_subscription_where(evc, sgeE_ADMINHOST_ADD, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_ADMINHOST_LIST, what_el, where_el);
          }
          break;
       case SGE_TYPE_CALENDAR:
@@ -470,11 +452,11 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
          evc->ec_subscribe(evc, sgeE_CALENDAR_ADD);
          evc->ec_subscribe(evc, sgeE_CALENDAR_DEL);
          evc->ec_subscribe(evc, sgeE_CALENDAR_MOD);
-         if (what_el && where_el){
+         if (what_el && where_el) {
             evc->ec_mod_subscription_where(evc, sgeE_CALENDAR_LIST, what_el, where_el);
             evc->ec_mod_subscription_where(evc, sgeE_CALENDAR_ADD, what_el, where_el);
-            evc->ec_mod_subscription_where(evc, sgeE_CALENDAR_DEL, what_el, where_el); 
-            evc->ec_mod_subscription_where(evc, sgeE_CALENDAR_MOD, what_el, where_el); 
+            evc->ec_mod_subscription_where(evc, sgeE_CALENDAR_DEL, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_CALENDAR_MOD, what_el, where_el);
          }
          break;
       case SGE_TYPE_CKPT:
@@ -482,11 +464,11 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
          evc->ec_subscribe(evc, sgeE_CKPT_ADD);
          evc->ec_subscribe(evc, sgeE_CKPT_DEL);
          evc->ec_subscribe(evc, sgeE_CKPT_MOD);
-         if (what_el && where_el){
+         if (what_el && where_el) {
             evc->ec_mod_subscription_where(evc, sgeE_CKPT_LIST, what_el, where_el);
             evc->ec_mod_subscription_where(evc, sgeE_CKPT_ADD, what_el, where_el);
-            evc->ec_mod_subscription_where(evc, sgeE_CKPT_DEL, what_el, where_el); 
-            evc->ec_mod_subscription_where(evc, sgeE_CKPT_MOD, what_el, where_el); 
+            evc->ec_mod_subscription_where(evc, sgeE_CKPT_DEL, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_CKPT_MOD, what_el, where_el);
          }
          break;
       case SGE_TYPE_CENTRY:
@@ -494,11 +476,11 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
          evc->ec_subscribe(evc, sgeE_CENTRY_ADD);
          evc->ec_subscribe(evc, sgeE_CENTRY_DEL);
          evc->ec_subscribe(evc, sgeE_CENTRY_MOD);
-         if (what_el && where_el){
+         if (what_el && where_el) {
             evc->ec_mod_subscription_where(evc, sgeE_CENTRY_LIST, what_el, where_el);
             evc->ec_mod_subscription_where(evc, sgeE_CENTRY_ADD, what_el, where_el);
-            evc->ec_mod_subscription_where(evc, sgeE_CENTRY_DEL, what_el, where_el); 
-            evc->ec_mod_subscription_where(evc, sgeE_CENTRY_MOD, what_el, where_el); 
+            evc->ec_mod_subscription_where(evc, sgeE_CENTRY_DEL, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_CENTRY_MOD, what_el, where_el);
          }
          break;
       case SGE_TYPE_CONFIG:
@@ -506,11 +488,11 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
          evc->ec_subscribe(evc, sgeE_CONFIG_ADD);
          evc->ec_subscribe(evc, sgeE_CONFIG_DEL);
          evc->ec_subscribe(evc, sgeE_CONFIG_MOD);
-         if (what_el && where_el){
+         if (what_el && where_el) {
             evc->ec_mod_subscription_where(evc, sgeE_CONFIG_LIST, what_el, where_el);
             evc->ec_mod_subscription_where(evc, sgeE_CONFIG_ADD, what_el, where_el);
-            evc->ec_mod_subscription_where(evc, sgeE_CONFIG_DEL, what_el, where_el); 
-            evc->ec_mod_subscription_where(evc, sgeE_CONFIG_MOD, what_el, where_el); 
+            evc->ec_mod_subscription_where(evc, sgeE_CONFIG_DEL, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_CONFIG_MOD, what_el, where_el);
          }
          break;
       case SGE_TYPE_GLOBAL_CONFIG:
@@ -521,38 +503,38 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
                                           * it is sent before the CONFIG_MOD event, so
                                           * the receiver cannot even properly react to it!
                                           */
-         if (what_el && where_el){
+         if (what_el && where_el) {
             evc->ec_mod_subscription_where(evc, sgeE_GLOBAL_CONFIG, what_el, where_el);
-         }                                          
+         }
          break;
       case SGE_TYPE_EXECHOST:
          evc->ec_subscribe(evc, sgeE_EXECHOST_LIST);
          evc->ec_subscribe(evc, sgeE_EXECHOST_ADD);
          evc->ec_subscribe(evc, sgeE_EXECHOST_DEL);
          evc->ec_subscribe(evc, sgeE_EXECHOST_MOD);
-         if (what_el && where_el){
+         if (what_el && where_el) {
             evc->ec_mod_subscription_where(evc, sgeE_EXECHOST_LIST, what_el, where_el);
             evc->ec_mod_subscription_where(evc, sgeE_EXECHOST_ADD, what_el, where_el);
-            evc->ec_mod_subscription_where(evc, sgeE_EXECHOST_DEL, what_el, where_el); 
-            evc->ec_mod_subscription_where(evc, sgeE_EXECHOST_MOD, what_el, where_el); 
+            evc->ec_mod_subscription_where(evc, sgeE_EXECHOST_DEL, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_EXECHOST_MOD, what_el, where_el);
          }
          break;
       case SGE_TYPE_JATASK:
          evc->ec_subscribe(evc, sgeE_JATASK_ADD);
          evc->ec_subscribe(evc, sgeE_JATASK_DEL);
          evc->ec_subscribe(evc, sgeE_JATASK_MOD);
-         if (what_el && where_el){
+         if (what_el && where_el) {
             evc->ec_mod_subscription_where(evc, sgeE_JATASK_ADD, what_el, where_el);
-            evc->ec_mod_subscription_where(evc, sgeE_JATASK_DEL, what_el, where_el); 
-            evc->ec_mod_subscription_where(evc, sgeE_JATASK_MOD, what_el, where_el); 
+            evc->ec_mod_subscription_where(evc, sgeE_JATASK_DEL, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_JATASK_MOD, what_el, where_el);
          }
          break;
       case SGE_TYPE_PETASK:
          evc->ec_subscribe(evc, sgeE_PETASK_ADD);
          evc->ec_subscribe(evc, sgeE_PETASK_DEL);
-         if (what_el && where_el){
-            evc->ec_mod_subscription_where(evc, sgeE_PETASK_ADD, what_el, where_el); 
-            evc->ec_mod_subscription_where(evc, sgeE_PETASK_DEL, what_el, where_el); 
+         if (what_el && where_el) {
+            evc->ec_mod_subscription_where(evc, sgeE_PETASK_ADD, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_PETASK_DEL, what_el, where_el);
          }
          break;
       case SGE_TYPE_JOB:
@@ -561,11 +543,11 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
          evc->ec_subscribe(evc, sgeE_JOB_DEL);
          evc->ec_subscribe(evc, sgeE_JOB_MOD);
          evc->ec_subscribe(evc, sgeE_JOB_MOD_SCHED_PRIORITY);
-         if (what_el && where_el){
+         if (what_el && where_el) {
             evc->ec_mod_subscription_where(evc, sgeE_JOB_LIST, what_el, where_el);
             evc->ec_mod_subscription_where(evc, sgeE_JOB_ADD, what_el, where_el);
-            evc->ec_mod_subscription_where(evc, sgeE_JOB_DEL, what_el, where_el); 
-            evc->ec_mod_subscription_where(evc, sgeE_JOB_MOD, what_el, where_el); 
+            evc->ec_mod_subscription_where(evc, sgeE_JOB_DEL, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_JOB_MOD, what_el, where_el);
             evc->ec_mod_subscription_where(evc, sgeE_JOB_MOD_SCHED_PRIORITY, what_el, where_el);
          }
          /* TODO: SG: what and where for usage */
@@ -577,11 +559,11 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
          evc->ec_subscribe(evc, sgeE_JOB_SCHEDD_INFO_ADD);
          evc->ec_subscribe(evc, sgeE_JOB_SCHEDD_INFO_DEL);
          evc->ec_subscribe(evc, sgeE_JOB_SCHEDD_INFO_MOD);
-         if (what_el && where_el){
+         if (what_el && where_el) {
             evc->ec_mod_subscription_where(evc, sgeE_JOB_SCHEDD_INFO_LIST, what_el, where_el);
             evc->ec_mod_subscription_where(evc, sgeE_JOB_SCHEDD_INFO_ADD, what_el, where_el);
-            evc->ec_mod_subscription_where(evc, sgeE_JOB_SCHEDD_INFO_DEL, what_el, where_el); 
-            evc->ec_mod_subscription_where(evc, sgeE_JOB_SCHEDD_INFO_MOD, what_el, where_el); 
+            evc->ec_mod_subscription_where(evc, sgeE_JOB_SCHEDD_INFO_DEL, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_JOB_SCHEDD_INFO_MOD, what_el, where_el);
          }
          break;
       case SGE_TYPE_MANAGER:
@@ -589,11 +571,11 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
          evc->ec_subscribe(evc, sgeE_MANAGER_ADD);
          evc->ec_subscribe(evc, sgeE_MANAGER_DEL);
          evc->ec_subscribe(evc, sgeE_MANAGER_MOD);
-         if (what_el && where_el){
+         if (what_el && where_el) {
             evc->ec_mod_subscription_where(evc, sgeE_MANAGER_LIST, what_el, where_el);
             evc->ec_mod_subscription_where(evc, sgeE_MANAGER_ADD, what_el, where_el);
-            evc->ec_mod_subscription_where(evc, sgeE_MANAGER_DEL, what_el, where_el); 
-            evc->ec_mod_subscription_where(evc, sgeE_MANAGER_MOD, what_el, where_el); 
+            evc->ec_mod_subscription_where(evc, sgeE_MANAGER_DEL, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_MANAGER_MOD, what_el, where_el);
          }
          break;
       case SGE_TYPE_OPERATOR:
@@ -601,17 +583,17 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
          evc->ec_subscribe(evc, sgeE_OPERATOR_ADD);
          evc->ec_subscribe(evc, sgeE_OPERATOR_DEL);
          evc->ec_subscribe(evc, sgeE_OPERATOR_MOD);
-         if (what_el && where_el){
+         if (what_el && where_el) {
             evc->ec_mod_subscription_where(evc, sgeE_OPERATOR_LIST, what_el, where_el);
             evc->ec_mod_subscription_where(evc, sgeE_OPERATOR_ADD, what_el, where_el);
-            evc->ec_mod_subscription_where(evc, sgeE_OPERATOR_DEL, what_el, where_el); 
-            evc->ec_mod_subscription_where(evc, sgeE_OPERATOR_MOD, what_el, where_el); 
+            evc->ec_mod_subscription_where(evc, sgeE_OPERATOR_DEL, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_OPERATOR_MOD, what_el, where_el);
          }
          break;
       case SGE_TYPE_SHARETREE:
          evc->ec_subscribe(evc, sgeE_NEW_SHARETREE);
-         if (what_el && where_el){
-            evc->ec_mod_subscription_where(evc, sgeE_NEW_SHARETREE, what_el, where_el); 
+         if (what_el && where_el) {
+            evc->ec_mod_subscription_where(evc, sgeE_NEW_SHARETREE, what_el, where_el);
          }
          break;
       case SGE_TYPE_PE:
@@ -619,11 +601,11 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
          evc->ec_subscribe(evc, sgeE_PE_ADD);
          evc->ec_subscribe(evc, sgeE_PE_DEL);
          evc->ec_subscribe(evc, sgeE_PE_MOD);
-         if (what_el && where_el){
+         if (what_el && where_el) {
             evc->ec_mod_subscription_where(evc, sgeE_PE_LIST, what_el, where_el);
             evc->ec_mod_subscription_where(evc, sgeE_PE_ADD, what_el, where_el);
-            evc->ec_mod_subscription_where(evc, sgeE_PE_DEL, what_el, where_el); 
-            evc->ec_mod_subscription_where(evc, sgeE_PE_MOD, what_el, where_el); 
+            evc->ec_mod_subscription_where(evc, sgeE_PE_DEL, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_PE_MOD, what_el, where_el);
          }
          break;
       case SGE_TYPE_PROJECT:
@@ -631,11 +613,11 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
          evc->ec_subscribe(evc, sgeE_PROJECT_ADD);
          evc->ec_subscribe(evc, sgeE_PROJECT_DEL);
          evc->ec_subscribe(evc, sgeE_PROJECT_MOD);
-         if (what_el && where_el){
+         if (what_el && where_el) {
             evc->ec_mod_subscription_where(evc, sgeE_PROJECT_LIST, what_el, where_el);
             evc->ec_mod_subscription_where(evc, sgeE_PROJECT_ADD, what_el, where_el);
-            evc->ec_mod_subscription_where(evc, sgeE_PROJECT_DEL, what_el, where_el); 
-            evc->ec_mod_subscription_where(evc, sgeE_PROJECT_MOD, what_el, where_el); 
+            evc->ec_mod_subscription_where(evc, sgeE_PROJECT_DEL, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_PROJECT_MOD, what_el, where_el);
          }
          break;
       case SGE_TYPE_CQUEUE:
@@ -643,11 +625,11 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
          evc->ec_subscribe(evc, sgeE_CQUEUE_ADD);
          evc->ec_subscribe(evc, sgeE_CQUEUE_DEL);
          evc->ec_subscribe(evc, sgeE_CQUEUE_MOD);
-         if (what_el && where_el){
+         if (what_el && where_el) {
             evc->ec_mod_subscription_where(evc, sgeE_CQUEUE_LIST, what_el, where_el);
             evc->ec_mod_subscription_where(evc, sgeE_CQUEUE_ADD, what_el, where_el);
-            evc->ec_mod_subscription_where(evc, sgeE_CQUEUE_DEL, what_el, where_el); 
-            evc->ec_mod_subscription_where(evc, sgeE_CQUEUE_MOD, what_el, where_el); 
+            evc->ec_mod_subscription_where(evc, sgeE_CQUEUE_DEL, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_CQUEUE_MOD, what_el, where_el);
          }
          break;
       case SGE_TYPE_QINSTANCE:
@@ -656,36 +638,36 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
          evc->ec_subscribe(evc, sgeE_QINSTANCE_MOD);
          evc->ec_subscribe(evc, sgeE_QINSTANCE_SOS);
          evc->ec_subscribe(evc, sgeE_QINSTANCE_USOS);
-         if (what_el && where_el){
+         if (what_el && where_el) {
             evc->ec_mod_subscription_where(evc, sgeE_QINSTANCE_ADD, what_el, where_el);
-            evc->ec_mod_subscription_where(evc, sgeE_QINSTANCE_DEL, what_el, where_el); 
-            evc->ec_mod_subscription_where(evc, sgeE_QINSTANCE_MOD, what_el, where_el); 
+            evc->ec_mod_subscription_where(evc, sgeE_QINSTANCE_DEL, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_QINSTANCE_MOD, what_el, where_el);
             evc->ec_mod_subscription_where(evc, sgeE_QINSTANCE_SOS, what_el, where_el);
             evc->ec_mod_subscription_where(evc, sgeE_QINSTANCE_USOS, what_el, where_el);
          }
          break;
       case SGE_TYPE_SCHEDD_CONF:
          evc->ec_subscribe(evc, sgeE_SCHED_CONF);
-         if (what_el && where_el){
-            evc->ec_mod_subscription_where(evc, sgeE_SCHED_CONF, what_el, where_el); 
+         if (what_el && where_el) {
+            evc->ec_mod_subscription_where(evc, sgeE_SCHED_CONF, what_el, where_el);
          }
          break;
       case SGE_TYPE_SCHEDD_MONITOR:
          evc->ec_subscribe(evc, sgeE_SCHEDDMONITOR);
-         if (what_el && where_el){
-            evc->ec_mod_subscription_where(evc, sgeE_SCHEDDMONITOR, what_el, where_el); 
+         if (what_el && where_el) {
+            evc->ec_mod_subscription_where(evc, sgeE_SCHEDDMONITOR, what_el, where_el);
          }
          break;
       case SGE_TYPE_SHUTDOWN:
          evc->ec_subscribe_flush(evc, sgeE_SHUTDOWN, 0);
-         if (what_el && where_el){
-            evc->ec_mod_subscription_where(evc, sgeE_SHUTDOWN, what_el, where_el); 
+         if (what_el && where_el) {
+            evc->ec_mod_subscription_where(evc, sgeE_SHUTDOWN, what_el, where_el);
          }
          break;
       case SGE_TYPE_QMASTER_GOES_DOWN:
          evc->ec_subscribe_flush(evc, sgeE_QMASTER_GOES_DOWN, 0);
-         if (what_el && where_el){
-            evc->ec_mod_subscription_where(evc, sgeE_QMASTER_GOES_DOWN, what_el, where_el); 
+         if (what_el && where_el) {
+            evc->ec_mod_subscription_where(evc, sgeE_QMASTER_GOES_DOWN, what_el, where_el);
          }
          break;
       case SGE_TYPE_SUBMITHOST:
@@ -693,11 +675,11 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
          evc->ec_subscribe(evc, sgeE_SUBMITHOST_ADD);
          evc->ec_subscribe(evc, sgeE_SUBMITHOST_DEL);
          evc->ec_subscribe(evc, sgeE_SUBMITHOST_MOD);
-         if (what_el && where_el){
+         if (what_el && where_el) {
             evc->ec_mod_subscription_where(evc, sgeE_SUBMITHOST_LIST, what_el, where_el);
             evc->ec_mod_subscription_where(evc, sgeE_SUBMITHOST_ADD, what_el, where_el);
-            evc->ec_mod_subscription_where(evc, sgeE_SUBMITHOST_DEL, what_el, where_el); 
-            evc->ec_mod_subscription_where(evc, sgeE_SUBMITHOST_MOD, what_el, where_el); 
+            evc->ec_mod_subscription_where(evc, sgeE_SUBMITHOST_DEL, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_SUBMITHOST_MOD, what_el, where_el);
          }
          break;
       case SGE_TYPE_USER:
@@ -705,11 +687,11 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
          evc->ec_subscribe(evc, sgeE_USER_ADD);
          evc->ec_subscribe(evc, sgeE_USER_DEL);
          evc->ec_subscribe(evc, sgeE_USER_MOD);
-         if (what_el && where_el){
+         if (what_el && where_el) {
             evc->ec_mod_subscription_where(evc, sgeE_USER_LIST, what_el, where_el);
             evc->ec_mod_subscription_where(evc, sgeE_USER_ADD, what_el, where_el);
-            evc->ec_mod_subscription_where(evc, sgeE_USER_DEL, what_el, where_el); 
-            evc->ec_mod_subscription_where(evc, sgeE_USER_MOD, what_el, where_el); 
+            evc->ec_mod_subscription_where(evc, sgeE_USER_DEL, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_USER_MOD, what_el, where_el);
          }
          break;
       case SGE_TYPE_USERSET:
@@ -717,11 +699,11 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
          evc->ec_subscribe(evc, sgeE_USERSET_ADD);
          evc->ec_subscribe(evc, sgeE_USERSET_DEL);
          evc->ec_subscribe(evc, sgeE_USERSET_MOD);
-         if (what_el && where_el){
+         if (what_el && where_el) {
             evc->ec_mod_subscription_where(evc, sgeE_USERSET_LIST, what_el, where_el);
             evc->ec_mod_subscription_where(evc, sgeE_USERSET_ADD, what_el, where_el);
-            evc->ec_mod_subscription_where(evc, sgeE_USERSET_DEL, what_el, where_el); 
-            evc->ec_mod_subscription_where(evc, sgeE_USERSET_MOD, what_el, where_el); 
+            evc->ec_mod_subscription_where(evc, sgeE_USERSET_DEL, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_USERSET_MOD, what_el, where_el);
          }
          break;
       case SGE_TYPE_HGROUP:
@@ -729,11 +711,11 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
          evc->ec_subscribe(evc, sgeE_HGROUP_ADD);
          evc->ec_subscribe(evc, sgeE_HGROUP_DEL);
          evc->ec_subscribe(evc, sgeE_HGROUP_MOD);
-         if (what_el && where_el){
+         if (what_el && where_el) {
             evc->ec_mod_subscription_where(evc, sgeE_HGROUP_LIST, what_el, where_el);
             evc->ec_mod_subscription_where(evc, sgeE_HGROUP_ADD, what_el, where_el);
-            evc->ec_mod_subscription_where(evc, sgeE_HGROUP_DEL, what_el, where_el); 
-            evc->ec_mod_subscription_where(evc, sgeE_HGROUP_MOD, what_el, where_el); 
+            evc->ec_mod_subscription_where(evc, sgeE_HGROUP_DEL, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_HGROUP_MOD, what_el, where_el);
          }
          break;
       case SGE_TYPE_RQS:
@@ -741,11 +723,11 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
          evc->ec_subscribe(evc, sgeE_RQS_ADD);
          evc->ec_subscribe(evc, sgeE_RQS_DEL);
          evc->ec_subscribe(evc, sgeE_RQS_MOD);
-         if (what_el && where_el){
+         if (what_el && where_el) {
             evc->ec_mod_subscription_where(evc, sgeE_RQS_LIST, what_el, where_el);
             evc->ec_mod_subscription_where(evc, sgeE_RQS_ADD, what_el, where_el);
-            evc->ec_mod_subscription_where(evc, sgeE_RQS_DEL, what_el, where_el); 
-            evc->ec_mod_subscription_where(evc, sgeE_RQS_MOD, what_el, where_el); 
+            evc->ec_mod_subscription_where(evc, sgeE_RQS_DEL, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_RQS_MOD, what_el, where_el);
          }
          break;
 #ifndef __SGE_NO_USERMAPPING__
@@ -754,11 +736,11 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
          evc->ec_subscribe(evc, sgeE_CUSER_ADD);
          evc->ec_subscribe(evc, sgeE_CUSER_DEL);
          evc->ec_subscribe(evc, sgeE_CUSER_MOD);
-         if (what_el && where_el){
+         if (what_el && where_el) {
             evc->ec_mod_subscription_where(evc, sgeE_CUSER_LIST, what_el, where_el);
             evc->ec_mod_subscription_where(evc, sgeE_CUSER_ADD, what_el, where_el);
-            evc->ec_mod_subscription_where(evc, sgeE_CUSER_DEL, what_el, where_el); 
-            evc->ec_mod_subscription_where(evc, sgeE_CUSER_MOD, what_el, where_el); 
+            evc->ec_mod_subscription_where(evc, sgeE_CUSER_DEL, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_CUSER_MOD, what_el, where_el);
          }
          break;
 #endif
@@ -772,11 +754,11 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
          evc->ec_subscribe(evc, sgeE_AR_ADD);
          evc->ec_subscribe(evc, sgeE_AR_DEL);
          evc->ec_subscribe(evc, sgeE_AR_MOD);
-         if (what_el && where_el){
+         if (what_el && where_el) {
             evc->ec_mod_subscription_where(evc, sgeE_AR_LIST, what_el, where_el);
             evc->ec_mod_subscription_where(evc, sgeE_AR_ADD, what_el, where_el);
-            evc->ec_mod_subscription_where(evc, sgeE_AR_DEL, what_el, where_el); 
-            evc->ec_mod_subscription_where(evc, sgeE_AR_MOD, what_el, where_el); 
+            evc->ec_mod_subscription_where(evc, sgeE_AR_DEL, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_AR_MOD, what_el, where_el);
          }
          break;
       case SGE_TYPE_JOBSCRIPT:
@@ -785,10 +767,9 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
          return SGE_EM_BAD_ARG;
    }
 
-
-   {/* install callback function */
+   { /* install callback function */
       mirror_description *mirror_base = mir_get_mirror_base();
-   
+
       mirror_base[type].callback_before = callback_before;
       mirror_base[type].callback_after  = callback_after;
       mirror_base[type].clientdata      = clientdata;
@@ -798,19 +779,19 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
    lFreeElem(&what_el);
 
    return SGE_EM_OK;
-}   
+}
 
 /****** Eventmirror/sge_mirror_unsubscribe() ************************************
 *  NAME
-*     sge_mirror_unsubscribe() -- unsubscribe event types 
+*     sge_mirror_unsubscribe() -- unsubscribe event types
 *
 *  SYNOPSIS
-*     sge_mirror_error sge_mirror_unsubscribe(sge_object_type type) 
+*     sge_mirror_error sge_mirror_unsubscribe(sge_object_type type)
 *
 *  FUNCTION
 *     Unsubscribes a certain event type or all if SGE_TYPE_ALL is given as type.
-*  
-*     Unsubscribes the corresponding events in the underlying event client 
+*
+*     Unsubscribes the corresponding events in the underlying event client
 *     interface and frees data stored in the corresponding mirrored list(s).
 *  INPUTS
 *     sge_object_type type - the event type to unsubscribe or SGE_TYPE_ALL
@@ -828,41 +809,38 @@ sge_mirror_error sge_mirror_unsubscribe(sge_evc_class_t *evc, sge_object_type ty
 {
    DENTER(TOP_LAYER, "sge_mirror_unsubscribe");
 
-   if(type < 0 || type > SGE_TYPE_ALL) {
+   if (type < 0 || type > SGE_TYPE_ALL) {
       ERROR((SGE_EVENT, MSG_MIRROR_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
-      DEXIT;
-      return SGE_EM_BAD_ARG;
+      DRETURN(SGE_EM_BAD_ARG);
    }
 
-   if(type == SGE_TYPE_ALL) {
+   if (type == SGE_TYPE_ALL) {
       sge_object_type i;
-      
-      for(i = SGE_TYPE_ADMINHOST; i < SGE_TYPE_ALL; i++) {
-         if(i != SGE_TYPE_SHUTDOWN && i != SGE_TYPE_QMASTER_GOES_DOWN) {
+
+      for (i = SGE_TYPE_ADMINHOST; i < SGE_TYPE_ALL; i++) {
+         if (i != SGE_TYPE_SHUTDOWN && i != SGE_TYPE_QMASTER_GOES_DOWN) {
             _sge_mirror_unsubscribe(evc, i);
          }
       }
    } else {
       _sge_mirror_unsubscribe(evc, type);
    }
-   
-   DEXIT;
-   return SGE_EM_OK;
+
+   DRETURN(SGE_EM_OK);
 }
 
-static sge_mirror_error _sge_mirror_unsubscribe(sge_evc_class_t *evc, sge_object_type type) 
+static sge_mirror_error _sge_mirror_unsubscribe(sge_evc_class_t *evc, sge_object_type type)
 {
    mirror_description *mirror_base = mir_get_mirror_base();
-   
+ 
    DENTER(TOP_LAYER, "_sge_mirror_unsubscribe");
-   
-   /* type has been checked in calling function */
-   /* clear callback information */
+ 
+   /* type has been checked in calling function - clear callback information */
    mirror_base[type].callback_before  = NULL;
    mirror_base[type].callback_after   = NULL;
    mirror_base[type].clientdata       = NULL;
-  
-   switch(type) {
+
+   switch (type) {
       case SGE_TYPE_ADMINHOST:
          evc->ec_unsubscribe(evc, sgeE_ADMINHOST_LIST);
          evc->ec_unsubscribe(evc, sgeE_ADMINHOST_ADD);
@@ -1018,11 +996,9 @@ static sge_mirror_error _sge_mirror_unsubscribe(sge_evc_class_t *evc, sge_object
          break;
 #endif
       case SGE_TYPE_ZOMBIE:
-            DEXIT;
-            return SGE_EM_NOT_INITIALIZED;
+            DRETURN(SGE_EM_NOT_INITIALIZED);
       case SGE_TYPE_SUSER:
-            DEXIT;
-            return SGE_EM_NOT_INITIALIZED;
+            DRETURN(SGE_EM_NOT_INITIALIZED);
       case SGE_TYPE_AR:
          evc->ec_unsubscribe(evc, sgeE_AR_LIST);
          evc->ec_unsubscribe(evc, sgeE_AR_ADD);
@@ -1030,37 +1006,34 @@ static sge_mirror_error _sge_mirror_unsubscribe(sge_evc_class_t *evc, sge_object
          evc->ec_unsubscribe(evc, sgeE_AR_MOD);
          break;
       case SGE_TYPE_JOBSCRIPT:
-            DEXIT;
-            return SGE_EM_NOT_INITIALIZED;
+            DRETURN(SGE_EM_NOT_INITIALIZED);
      default:
          ERROR((SGE_EVENT, "received invalid event group %d", type));
-         DEXIT;
-         return SGE_EM_BAD_ARG;
+         DRETURN(SGE_EM_BAD_ARG);
    }
 
    /* clear data */
    sge_mirror_free_list(type);
 
-   DEXIT;
-   return SGE_EM_OK;
+   DRETURN(SGE_EM_OK);
 }
 
 /****** Eventmirror/sge_mirror_process_events() *********************************
 *  NAME
-*     sge_mirror_process_events() -- retrieve and process events 
+*     sge_mirror_process_events() -- retrieve and process events
 *
 *  SYNOPSIS
-*     sge_mirror_error sge_mirror_process_events(void) 
+*     sge_mirror_error sge_mirror_process_events(void)
 *
 *  FUNCTION
 *     Retrieves new events from qmaster.
-*     If new events have arrived from qmaster, they are processed, 
-*     that means, for each event 
+*     If new events have arrived from qmaster, they are processed,
+*     that means, for each event
 *     - if installed, a "before mirroring" callback is called
 *     - the event is mirrored into the corresponding master list
 *     - if installed, a "after mirroring" callback is called
 *
-*     If retrieving new events from qmaster fails over a time period 
+*     If retrieving new events from qmaster fails over a time period
 *     of 10 times the configured event delivery interval (see event
 *     client interface, function ec_get_edtime), a timeout warning
 *     is generated and a new registration of the event client is
@@ -1080,12 +1053,7 @@ sge_mirror_error sge_mirror_process_events(sge_evc_class_t *evc)
    sge_mirror_error ret = SGE_EM_OK;
    static int test_debug = 0;
 
-
    DENTER(TOP_LAYER, "sge_mirror_process_events");
-
-   PROF_START_MEASUREMENT(SGE_PROF_MIRROR);
-
-   mir_set_num_events(0);
 
    if (evc && evc->ec_get(evc, &event_list, false)) {
       if (event_list != NULL) {
@@ -1108,15 +1076,7 @@ sge_mirror_error sge_mirror_process_events(sge_evc_class_t *evc)
       }
    }
 
-   if (prof_is_active(SGE_PROF_MIRROR)) {
-      prof_stop_measurement(SGE_PROF_MIRROR, NULL);
-      PROFILING((SGE_EVENT, "PROF: sge_mirror processed %d events in %.3f s",
-                 mir_get_num_events(), prof_get_measurement_wallclock(SGE_PROF_MIRROR, 
-                 false, NULL)));
-   }
-
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** Eventmirror/sge_mirror_strerror() ***************************************
@@ -1140,9 +1100,9 @@ sge_mirror_error sge_mirror_process_events(sge_evc_class_t *evc)
 *  SEE ALSO
 *     Eventmirror/-Eventmirror-Typedefs
 *******************************************************************************/
-const char *sge_mirror_strerror(sge_mirror_error num) 
+const char *sge_mirror_strerror(sge_mirror_error num)
 {
-   switch(num) {
+   switch (num) {
       case SGE_EM_OK:
          return MSG_MIRROR_OK;
       case SGE_EM_NOT_INITIALIZED:
@@ -1169,9 +1129,9 @@ static void sge_mirror_free_list(sge_object_type type)
    object_type_free_master_list(type);
 }
 
-static sge_mirror_error 
+static sge_mirror_error
 sge_mirror_process_event_list_(sge_evc_class_t *evc, lList *event_list)
-{ 
+{
    lListElem *event = NULL;
    sge_mirror_error function_ret;
    bool no_more_events=false;
@@ -1180,6 +1140,8 @@ sge_mirror_process_event_list_(sge_evc_class_t *evc, lList *event_list)
    object_description *object_base = object_type_get_object_description();
 
    DENTER(TOP_LAYER, "sge_mirror_process_event_list");
+
+   PROF_START_MEASUREMENT(SGE_PROF_MIRROR);
 
    function_ret = SGE_EM_OK;
 
@@ -1190,7 +1152,7 @@ sge_mirror_process_event_list_(sge_evc_class_t *evc, lList *event_list)
       }
       num_events++;
 
-      switch(lGetUlong(event, ET_type)) {
+      switch (lGetUlong(event, ET_type)) {
          case sgeE_ADMINHOST_LIST:
             ret = sge_mirror_process_event(evc, mirror_base, object_base, SGE_TYPE_ADMINHOST, SGE_EMA_LIST, event);
             break;
@@ -1530,22 +1492,30 @@ sge_mirror_process_event_list_(sge_evc_class_t *evc, lList *event_list)
             break;
       }
 
-      /* if processing of an event failed, return an error to the caller of
+      /* 
+       * if processing of an event failed, return an error to the caller of
        * this function, but continue processing.
        */
-      if(ret != SGE_EM_OK) {
+      if (ret != SGE_EM_OK) {
          function_ret = SGE_EM_PROCESS_ERRORS;
       }
    }
-   mir_set_num_events(num_events);
-   
-   DEXIT;
-   return function_ret;
+
+   if (prof_is_active(SGE_PROF_MIRROR)) {
+      prof_stop_measurement(SGE_PROF_MIRROR, NULL);
+      PROFILING((SGE_EVENT, "PROF: sge_mirror processed %d events in %.3f s",
+                 num_events, prof_get_measurement_wallclock(SGE_PROF_MIRROR,
+                 false, NULL)));
+   }
+
+   DRETURN(function_ret);
 }
 
-/* need this wrapping as to workaround dtrace problems with 
-   pid providers when function pointers are used */
-sge_mirror_error 
+/*
+ * need this wrapping as to workaround dtrace problems with 
+ * pid providers when function pointers are used
+ */
+sge_mirror_error
 sge_mirror_process_event_list(sge_evc_class_t *evc, lList *event_list)
 {
    return sge_mirror_process_event_list_(evc, event_list);
@@ -1553,7 +1523,7 @@ sge_mirror_process_event_list(sge_evc_class_t *evc, lList *event_list)
 
 static sge_mirror_error 
 sge_mirror_process_event(sge_evc_class_t *evc, mirror_description *mirror_base, object_description *object_base,
-                        sge_object_type type, sge_event_action action, lListElem *event) 
+                        sge_object_type type, sge_event_action action, lListElem *event)
 {
    sge_callback_result ret;
    char buffer[1024];
@@ -1576,54 +1546,45 @@ sge_mirror_process_event(sge_evc_class_t *evc, mirror_description *mirror_base, 
       intkey2 = lGetUlong(event, ET_intkey2);
       strkey = lGetString(event, ET_strkey);
       strkey2 = lGetString(event, ET_strkey2);
-      DPRINTF(("\tEvent: %s intkey %d intkey2 %d strkey \"%s\" strkey2 \"%s\"\n", 
-               event_text(event, &buffer_wrapper), intkey, intkey2, 
+      DPRINTF(("\tEvent: %s intkey %d intkey2 %d strkey \"%s\" strkey2 \"%s\"\n",
+               event_text(event, &buffer_wrapper), intkey, intkey2,
                strkey?strkey:"NULL", strkey2?strkey2:"NULL"));
    }
 #endif
 
-   if(mirror_base[type].callback_before != NULL) {
+   if (mirror_base[type].callback_before != NULL) {
       ret = mirror_base[type].callback_before(evc, object_base, type, action, event, mirror_base[type].clientdata);
-      if(ret == SGE_EMA_FAILURE) {
+      if (ret == SGE_EMA_FAILURE) {
          ERROR((SGE_EVENT, MSG_MIRROR_CALLBACKFAILED_S, event_text(event, &buffer_wrapper)));
-         DEXIT;
-         return SGE_EM_CALLBACK_FAILED;
-      }
-      else if (ret == SGE_EMA_IGNORE) {
-         DEXIT;
-         return SGE_EM_OK;
+         DRETURN(SGE_EM_CALLBACK_FAILED);
+      } else if (ret == SGE_EMA_IGNORE) {
+         DRETURN(SGE_EM_OK);
       }
    }
 
-   if(mirror_base[type].callback_default != NULL) {
+   if (mirror_base[type].callback_default != NULL) {
       ret = mirror_base[type].callback_default(evc, object_base, type, action, event, NULL);
-      if(ret == SGE_EMA_FAILURE) {
-         ERROR((SGE_EVENT, MSG_MIRROR_CALLBACKFAILED_S, 
-                event_text(event, &buffer_wrapper)));
-         DEXIT;
-         return SGE_EM_CALLBACK_FAILED;
-      }
-      else if (ret == SGE_EMA_IGNORE) {
-         DEXIT;
-         return SGE_EM_OK;
-      }
-   }
-
-   if(mirror_base[type].callback_after != NULL) {
-      ret = mirror_base[type].callback_after(evc, object_base, type, action, event, mirror_base[type].clientdata);
-      if(ret == SGE_EMA_FAILURE) {
+      if (ret == SGE_EMA_FAILURE) {
          ERROR((SGE_EVENT, MSG_MIRROR_CALLBACKFAILED_S, event_text(event, &buffer_wrapper)));
-         DEXIT;
-         return SGE_EM_CALLBACK_FAILED;
+         DRETURN(SGE_EM_CALLBACK_FAILED);
+      } else if (ret == SGE_EMA_IGNORE) {
+         DRETURN(SGE_EM_OK);
       }
    }
 
-   DEXIT;
-   return SGE_EM_OK;
+   if (mirror_base[type].callback_after != NULL) {
+      ret = mirror_base[type].callback_after(evc, object_base, type, action, event, mirror_base[type].clientdata);
+      if (ret == SGE_EMA_FAILURE) {
+         ERROR((SGE_EVENT, MSG_MIRROR_CALLBACKFAILED_S, event_text(event, &buffer_wrapper)));
+         DRETURN(SGE_EM_CALLBACK_FAILED);
+      }
+   }
+
+   DRETURN(SGE_EM_OK);
 }
 
-static sge_callback_result 
-sge_mirror_process_shutdown(sge_evc_class_t *evc, object_description *object_base,sge_object_type type, 
+static sge_callback_result
+sge_mirror_process_shutdown(sge_evc_class_t *evc, object_description *object_base,sge_object_type type,
                             sge_event_action action, lListElem *event, void *clientdata)
 {
    DENTER(TOP_LAYER, "sge_mirror_process_shutdown");
@@ -1632,15 +1593,14 @@ sge_mirror_process_shutdown(sge_evc_class_t *evc, object_description *object_bas
    sge_mirror_shutdown(evc);
 
    shut_me_down = 1;
-   DEXIT;
-   return SGE_EMA_OK;
+   DRETURN(SGE_EMA_OK);
 }
 
-static sge_callback_result 
-sge_mirror_process_qmaster_goes_down(sge_evc_class_t *evc, object_description *object_base, 
-                                     sge_object_type type, 
-                                     sge_event_action action, 
-                                     lListElem *event, 
+static sge_callback_result
+sge_mirror_process_qmaster_goes_down(sge_evc_class_t *evc, object_description *object_base,
+                                     sge_object_type type,
+                                     sge_event_action action,
+                                     lListElem *event,
                                      void *clientdata)
 {
    DENTER(TOP_LAYER, "sge_mirror_process_qmaster_goes_down");
@@ -1649,12 +1609,11 @@ sge_mirror_process_qmaster_goes_down(sge_evc_class_t *evc, object_description *o
 
    evc->ec_mark4registration(evc);
 
-   DEXIT;
-   return SGE_EMA_OK;
+   DRETURN(SGE_EMA_OK);
 }
 
 static sge_callback_result
-generic_update_master_list(sge_evc_class_t *evc, object_description *object_base, sge_object_type type, 
+generic_update_master_list(sge_evc_class_t *evc, object_description *object_base, sge_object_type type,
                            sge_event_action action, lListElem *event, void *clientdata)
 {
    lList **list = NULL;
@@ -1674,7 +1633,7 @@ generic_update_master_list(sge_evc_class_t *evc, object_description *object_base
       DRETURN(SGE_EMA_FAILURE);
    }
 
-   if (!object_type_commit_master_list(type, NULL)){
+   if (!object_type_commit_master_list(type, NULL)) {
       DRETURN(SGE_EMA_FAILURE);
    }
 
@@ -1687,12 +1646,12 @@ generic_update_master_list(sge_evc_class_t *evc, object_description *object_base
 *     sge_mirror_update_master_list_str_key() -- update a master list
 *
 *  SYNOPSIS
-*     sge_mirror_error sge_mirror_update_master_list_str_key(lList **list, 
-*                                                            const lDescr *list_descr, 
-*                                                            int key_nm, 
-*                                                            const char *key, 
-*                                                            sge_event_action action, 
-*                                                            lListElem *event) 
+*     sge_mirror_error sge_mirror_update_master_list_str_key(lList **list,
+*                                                            const lDescr *list_descr,
+*                                                            int key_nm,
+*                                                            const char *key,
+*                                                            sge_event_action action,
+*                                                            lListElem *event)
 *
 *  FUNCTION
 *     Updates a certain element in a certain mirrored list.
@@ -1700,7 +1659,7 @@ generic_update_master_list(sge_evc_class_t *evc, object_description *object_base
 *
 *  INPUTS
 *     lList **list            - the master list to update
-*     lDescr *list_descr      - descriptor of the master list 
+*     lDescr *list_descr      - descriptor of the master list
 *     int key_nm              - field identifier of the key
 *     const char *key         - value of the key
 *     sge_event_action action - action to perform on list
@@ -1712,9 +1671,9 @@ generic_update_master_list(sge_evc_class_t *evc, object_description *object_base
 *  SEE ALSO
 *     Eventmirror/sge_mirror_update_master_list()
 *******************************************************************************/
-sge_mirror_error 
-sge_mirror_update_master_list_str_key(lList **list, const lDescr *list_descr, 
-                                      int key_nm, const char *key, 
+sge_mirror_error
+sge_mirror_update_master_list_str_key(lList **list, const lDescr *list_descr,
+                                      int key_nm, const char *key,
                                       sge_event_action action, lListElem *event)
 {
    lListElem *ep;
@@ -1726,7 +1685,7 @@ sge_mirror_update_master_list_str_key(lList **list, const lDescr *list_descr,
    ep = lGetElemStr(*list, key_nm, key);
 
    ret = sge_mirror_update_master_list(list, list_descr, ep, key, action, event);
-#else   
+#else
    /* TODO: is the code above correct, do we always have list != NULL ??? */
    if (list != NULL) {
       ep = lGetElemStr(*list, key_nm, key);
@@ -1734,7 +1693,7 @@ sge_mirror_update_master_list_str_key(lList **list, const lDescr *list_descr,
    } else {
       ret = SGE_EM_NOT_INITIALIZED;
    }
-#endif   
+#endif
 
    DRETURN(ret);
 }
@@ -1744,12 +1703,12 @@ sge_mirror_update_master_list_str_key(lList **list, const lDescr *list_descr,
 *     sge_mirror_update_master_list_host_key() -- update a master list
 *
 *  SYNOPSIS
-*     sge_mirror_error sge_mirror_update_master_list_host_key(lList **list, 
-*                                                            const lDescr *list_descr, 
-*                                                            int key_nm, 
-*                                                            const char *key, 
-*                                                            sge_event_action action, 
-*                                                            lListElem *event) 
+*     sge_mirror_error sge_mirror_update_master_list_host_key(lList **list,
+*                                                            const lDescr *list_descr,
+*                                                            int key_nm,
+*                                                            const char *key,
+*                                                            sge_event_action action,
+*                                                            lListElem *event)
 *
 *  FUNCTION
 *     Updates a certain element in a certain mirrored list.
@@ -1757,7 +1716,7 @@ sge_mirror_update_master_list_str_key(lList **list, const lDescr *list_descr,
 *
 *  INPUTS
 *     lList **list            - the master list to update
-*     lDescr *list_descr      - descriptor of the master list 
+*     lDescr *list_descr      - descriptor of the master list
 *     int key_nm              - field identifier of the key
 *     const char *key         - value of the key (a hostname)
 *     sge_event_action action - action to perform on list
@@ -1769,8 +1728,8 @@ sge_mirror_update_master_list_str_key(lList **list, const lDescr *list_descr,
 *  SEE ALSO
 *     Eventmirror/sge_mirror_update_master_list()
 *******************************************************************************/
-sge_mirror_error sge_mirror_update_master_list_host_key(lList **list, const lDescr *list_descr, 
-                                                        int key_nm, const char *key, 
+sge_mirror_error sge_mirror_update_master_list_host_key(lList **list, const lDescr *list_descr,
+                                                        int key_nm, const char *key,
                                                         sge_event_action action, lListElem *event)
 {
    lListElem *ep;
@@ -1789,12 +1748,12 @@ sge_mirror_error sge_mirror_update_master_list_host_key(lList **list, const lDes
 *     sge_mirror_update_master_list() -- update a master list
 *
 *  SYNOPSIS
-*     sge_mirror_error sge_mirror_update_master_list(lList **list, 
-*                                                    const lDescr *list_descr, 
-*                                                    lListElem *ep, 
-*                                                    const char *key, 
-*                                                    sge_event_action action, 
-*                                                    lListElem *event) 
+*     sge_mirror_error sge_mirror_update_master_list(lList **list,
+*                                                    const lDescr *list_descr,
+*                                                    lListElem *ep,
+*                                                    const char *key,
+*                                                    sge_event_action action,
+*                                                    lListElem *event)
 *
 *  FUNCTION
 *     Updates a given master list according to the given event information.
@@ -1819,16 +1778,16 @@ sge_mirror_error sge_mirror_update_master_list_host_key(lList **list, const lDes
 *     Eventmirror/sge_mirror_update_master_list_str_key()
 *     Eventmirror/sge_mirror_update_master_list_host_key()
 *******************************************************************************/
-sge_mirror_error 
+sge_mirror_error
 sge_mirror_update_master_list(lList **list, const lDescr *list_descr,
-                              lListElem *ep, const char *key, 
+                              lListElem *ep, const char *key,
                               sge_event_action action, lListElem *event)
 {
    lList *data_list = NULL;
 
    DENTER(TOP_LAYER, "sge_mirror_update_master_list");
 
-   switch(action) {
+   switch (action) {
       case SGE_EMA_LIST:
          /* switch to new list */
          lXchgList(event, ET_new_version, list);
@@ -1836,13 +1795,13 @@ sge_mirror_update_master_list(lList **list, const lDescr *list_descr,
 
       case SGE_EMA_ADD:
          /* check for duplicate */
-         if(ep != NULL) {
+         if (ep != NULL) {
             ERROR((SGE_EVENT, "duplicate list element "SFQ"\n", (key != NULL) ?key:"NULL"));
             DRETURN(SGE_EM_DUPLICATE_KEY);
          }
    
          /* if neccessary, create list */
-         if(*list == NULL) {
+         if (*list == NULL) {
             *list = lCreateList("", list_descr);
          }
 
@@ -1853,11 +1812,11 @@ sge_mirror_update_master_list(lList **list, const lDescr *list_descr,
 
       case SGE_EMA_DEL:
          /* check for existence */
-         if(ep == NULL) {
+         if (ep == NULL) {
             ERROR((SGE_EVENT, "element "SFQ" does not exist\n", (key != NULL) ?key:"NULL"));
             DRETURN(SGE_EM_KEY_NOT_FOUND);
          }
-         
+
          /* remove element */
          lRemoveElem(*list, &ep);
          break;
@@ -1874,8 +1833,8 @@ sge_mirror_update_master_list(lList **list, const lDescr *list_descr,
          break;
       default:
          DRETURN(SGE_EM_BAD_ARG);
-   }      
-   
+   }
+
    DRETURN(SGE_EM_OK);
 }
 
@@ -1885,9 +1844,9 @@ static sge_callback_result
 *     ar_update_master_list() -- update the master advance reservation list
 *
 *  SYNOPSIS
-*     static sge_callback_result ar_update_master_list(sge_evc_class_t *evc, 
-*     object_description *object_base, sge_object_type type, sge_event_action 
-*     action, lListElem *event, void *clientdata) 
+*     static sge_callback_result ar_update_master_list(sge_evc_class_t *evc,
+*     object_description *object_base, sge_object_type type, sge_event_action
+*     action, lListElem *event, void *clientdata)
 *
 *  FUNCTION
 *     Updates the global master list of advance reservations based on an event.
@@ -1908,7 +1867,7 @@ static sge_callback_result
 *  NOTES
 *     MT-NOTE: ar_update_master_list() is not MT safe
 *******************************************************************************/
-ar_update_master_list(sge_evc_class_t *evc, object_description *object_base, sge_object_type type, 
+ar_update_master_list(sge_evc_class_t *evc, object_description *object_base, sge_object_type type,
                         sge_event_action action, lListElem *event, void *clientdata)
 {
    lList **list = NULL;
@@ -1920,12 +1879,11 @@ ar_update_master_list(sge_evc_class_t *evc, object_description *object_base, sge
 
    list = sge_master_list(object_base, type);
    list_descr = lGetListDescr(lGetList(event, ET_new_version));
-   key_nm = object_type_get_key_nm(type); 
+   key_nm = object_type_get_key_nm(type);
 
    key = lGetString(event, ET_strkey);
 
    if (sge_mirror_update_master_list_ar_key(list, list_descr, key_nm, key, action, event) != SGE_EM_OK) {
-
       DRETURN(SGE_EMA_FAILURE);
    }
 
@@ -1938,9 +1896,9 @@ ar_update_master_list(sge_evc_class_t *evc, object_description *object_base, sge
 *                                               master list
 *
 *  SYNOPSIS
-*     static sge_mirror_error sge_mirror_update_master_list_ar_key(lList 
-*     **list, const lDescr *list_descr, int key_nm, const char *key, 
-*     sge_event_action action, lListElem *event) 
+*     static sge_mirror_error sge_mirror_update_master_list_ar_key(lList
+*     **list, const lDescr *list_descr, int key_nm, const char *key,
+*     sge_event_action action, lListElem *event)
 *
 *  FUNCTION
 *     Updates a certain element in the advance reservation mirrored list. Which
@@ -1960,8 +1918,8 @@ ar_update_master_list(sge_evc_class_t *evc, object_description *object_base, sge
 *  NOTES
 *     MT-NOTE: sge_mirror_update_master_list_ar_key() is MT safe, needs GLOBAL_LOCK 
 *******************************************************************************/
-static sge_mirror_error sge_mirror_update_master_list_ar_key(lList **list, const lDescr *list_descr, 
-                                                        int key_nm, const char *key, 
+static sge_mirror_error sge_mirror_update_master_list_ar_key(lList **list, const lDescr *list_descr,
+                                                        int key_nm, const char *key,
                                                         sge_event_action action, lListElem *event)
 {
    lListElem *ep = NULL;

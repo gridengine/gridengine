@@ -1,3 +1,7 @@
+JG-2008-04-17-0: Bugfix:    reactivated profiling in event_mirror
+                            minor fixes and cleanup in scheduler thread mainloop
+                 Review:    RD 
+
 EB-2008-04-16-0: Bugfix:    o loadsensor does not work on AIX
                  Bugster:   6661060
                  Issue:     2508

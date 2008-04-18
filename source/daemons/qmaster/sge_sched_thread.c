@@ -308,9 +308,9 @@ int scheduler_method(sge_evc_class_t *evc, lList **answer_list, scheduler_all_da
                prof_get_measurement_utime(SGE_PROF_SCHEDLIB4,false, NULL)));
    }
 
-   sge_schedd_send_orders(evc->get_gdi_ctx(evc), &orders, &(orders.configOrderList), NULL, "D: config orders");
-   sge_schedd_send_orders(evc->get_gdi_ctx(evc), &orders, &(orders.jobStartOrderList), NULL, "D: job start orders");
-   sge_schedd_send_orders(evc->get_gdi_ctx(evc), &orders, &(orders.pendingOrderList), NULL, "D: pendig ticket orders");
+   sge_schedd_send_orders(evc->get_gdi_ctx(evc), &orders, &(orders.configOrderList), answer_list, "D: config orders");
+   sge_schedd_send_orders(evc->get_gdi_ctx(evc), &orders, &(orders.jobStartOrderList), answer_list, "D: job start orders");
+   sge_schedd_send_orders(evc->get_gdi_ctx(evc), &orders, &(orders.pendingOrderList), answer_list, "D: pendig ticket orders");
 
    if (Master_Request_Queue.order_list != NULL) {
       sge_schedd_add_gdi_order_request(evc->get_gdi_ctx(evc), &orders, answer_list, &Master_Request_Queue.order_list);
@@ -850,9 +850,12 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
                   time = (time / 1000000.0) + (later.tv_sec - now.tv_sec);
 
                   if (time > 0.5) {
-                     sge_schedd_send_orders(evc->get_gdi_ctx(evc), orders, &(orders->configOrderList), NULL, "B: config orders");
-                     sge_schedd_send_orders(evc->get_gdi_ctx(evc), orders, &(orders->jobStartOrderList), NULL, "B: job start orders");
-                     sge_schedd_send_orders(evc->get_gdi_ctx(evc), orders, &(orders->pendingOrderList), NULL, "B: pendig ticket orders");
+                     lList *answer_list = NULL;
+                     sge_schedd_send_orders(evc->get_gdi_ctx(evc), orders, &(orders->configOrderList), &answer_list, "B: config orders");
+                     sge_schedd_send_orders(evc->get_gdi_ctx(evc), orders, &(orders->jobStartOrderList), &answer_list, "B: job start orders");
+                     sge_schedd_send_orders(evc->get_gdi_ctx(evc), orders, &(orders->pendingOrderList), &answer_list, "B: pendig ticket orders");
+                     answer_list_output(&answer_list);
+                     gettimeofday(&now, NULL);
                   }
                }
             }

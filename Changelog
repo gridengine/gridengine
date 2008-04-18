@@ -1,3 +1,8 @@
+RD-2008-04-18-0: Bugfix:    fixed qmaster-scheduler sync issue which led scheduler
+                            schedule a job twice
+                 Bugster:   6690182
+                 Review:    JG
+
 CR-2008-04-17-0: Cleanup:   o make use of hash table switchable for commlib lists
                             o make cl_com_ignore_timeouts() signal handler save
                             o cl_connection_list_destroy_connections_to_close():

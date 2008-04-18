@@ -865,6 +865,7 @@ sge_scheduler_main(void *arg)
             PROF_START_MEASUREMENT(SGE_PROF_CUSTOM7);
 
             scheduler_method(evc, &answer_list, &copy, &orders);
+            answer_list_output(&answer_list);
 
             PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
             prof_run = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7, true, NULL);

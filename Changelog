@@ -1,3 +1,7 @@
+DG-2008-04-18-0: Cleanup:   Path to tar file was hardcoded. Wasn't on all
+                            architectures in the same path.
+                 Review:    AH
+
 LP-2008-04-18-0: Bugfix:    inst_sge -ux fails for root user on a filesystem 
                             mapped with no-root permissions
                  Bugfix:    installation and autoinstallation does not work on 

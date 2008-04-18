@@ -52,7 +52,7 @@ SpoolingQueryChange()
 
    if [ "$BERKELEY" = "install" ]; then
       $INFOTEXT -u "\nBerkeley Database spooling parameters"
-      $INFOTEXT "\nYou are going to install a RPC Client/Server machanism!" \
+      $INFOTEXT "\nYou are going to install a RPC Client/Server mechanism!" \
                 "\nIn this case, qmaster will" \
                 "\ncontact a RPC server running on a separate server machine." \
                 "\nIf you want to use the SGE shadowd, you have to use the " \
@@ -68,6 +68,7 @@ SpoolingQueryChange()
      $INFOTEXT -u "\nBerkeley Database spooling parameters"
 
      if [ "$is_server" = "true" ]; then
+     #TODO: Does not work is_server is not set
         $INFOTEXT -n "\nPlease enter the name of your Berkeley DB Spooling Server! >> "
                SPOOLING_SERVER=`Enter $SPOOLING_SERVER`
         $INFOTEXT -n "Please enter the Database Directory now!\n"

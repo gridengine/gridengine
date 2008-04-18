@@ -42,11 +42,15 @@
 # This script requires the that $SGE_ROOT and $SGE_CELL be set
 #
 
-SED=sed
 SVCADM="/usr/sbin/svcadm"
 SVCCFG="/usr/sbin/svccfg"
 SVCS="/usr/bin/svcs"
+CAT=cat
+CHMOD=chmod
 RM=rm
+SED=sed
+TOUCH=touch
+
 SGE_SMF_SUPPORT_SOURCED=true
 
 if [ -z "$SGE_ROOT" -o -z "$SGE_CELL" ]; then
@@ -57,9 +61,9 @@ if [ -z "$SGE_ROOT" -o -z "$SGE_CELL" ]; then
    exit 2
 fi
 
-if [ -z "$ARCH" ]; then
-   ARCH=`$SGE_ROOT/util/arch`
-fi
+#Strangely ARCH is sometimes set to an invalid value. We better do it all the time
+ARCH=`$SGE_ROOT/util/arch`
+
 
 #Setup INFOTEXT
 if [ -z "$INFOTEXT" ]; then
@@ -134,7 +138,9 @@ SMFValidateContent()
 SMFReplaceXMLTemplateValues()
 {
    file="$1"
-   cat $file > $file.tmp
+   ExecuteAsAdmin $TOUCH $file.tmp
+   ExecuteAsAdmin $CHMOD 666 $file.tmp
+   $CAT $template_file > $file.tmp
    #Replace SGE_ROOT
    $SED -e "s|@@@CLUSTER_NAME@@@|$SGE_CLUSTER_NAME|g" \
         -e "s|@@@SGE_ROOT@@@|$SGE_ROOT|g" \
@@ -143,7 +149,7 @@ SMFReplaceXMLTemplateValues()
         -e "s|@@@SGE_EXECD_PORT@@@|$SGE_EXECD_PORT|g" \
         -e "s|@@@BDB_DEPENDENCY@@@|$BDB_DEPENDENCY|g" $file.tmp > $file
    #Delete tmp file
-   $RM $file.tmp
+   ExecuteAsAdmin $RM $file.tmp
 }
 
 #---------------------------------------------------------------------------
@@ -155,7 +161,14 @@ SMFReplaceXMLTemplateValues()
 #
 ServiceAlreadyExists()
 {
-   service_name="svc:/application/sge/$1:$SGE_CLUSTER_NAME"
+   case "$1" in
+      master)
+      	 service_name="svc:/application/sge/qmaster:$SGE_CLUSTER_NAME"
+	 ;;
+      *)
+         service_name="svc:/application/sge/$1:$SGE_CLUSTER_NAME"
+	 ;;
+   esac
    #Check if service exists
    $SVCS $service_name > /dev/null 2>&1
    if [ $? -ne 0 ]; then
@@ -178,16 +191,18 @@ SMFCreateAndImportService()
    fi
    template_file="$prefix/util/sgeSMF/$1_template.xml"
    suffix="${SGE_CLUSTER_NAME}"
-   service_file="$prefix/util/sgeSMF/$1_$suffix.xml"
-   if [ ! -f $template_file ]; then 
+   service_file="$SGE_ROOT/$SGE_CELL/tmp_$1_$suffix.xml"
+   if [ ! -f $template_file ]; then
       $INFOTEXT "%s is missing!" $template_file
       return 1
    fi
-   cat $template_file > $service_file
+   ExecuteAsAdmin $TOUCH $service_file
+   ExecuteAsAdmin $CHMOD 666 $service_file
+   $CAT $template_file > $service_file
    SMFReplaceXMLTemplateValues $service_file
    SMFImportService $service_file
    ret=$?
-   $RM $service_file
+   ExecuteAsAdmin $RM $service_file
    return $ret
 }
 

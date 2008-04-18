@@ -610,7 +610,7 @@ UpdateHints()
                 "If you have installed rc-files, please log in to each host and copy the new\n" \
                 "rc-startup scripts to the right location. In case of using Berkeley DB Server\n" \
                 "host, please also care about it, and don't forget to copy the rc-file, too\n" \
-                "Thank you very much for using SGE 6.1 and have fun!\n\n" 
+                "Thank you very much for using SGE 6.2 and have fun!\n\n" 
 }
 
 
@@ -627,7 +627,7 @@ WelcomeTheUserUpgrade()
              "We recommend you to make a full backup of your configuration,\n" \
              "before you start the upgrade.\n" \
              "Make sure, that your cluster is down and the new binaries are copied!\n" \
-             "After this upgrade you will get a running qmaster and schedd with\n" \
+             "After this upgrade you will get a running qmaster with\n" \
              "the configuration of your old installation. If the upgrade was\n" \
              "successfully completed your can restart your cluster\n\n"
    $INFOTEXT -wait -n "Hit <RETURN> to start upgrade >> "
@@ -683,7 +683,7 @@ UpgradeDB()
       $INFOTEXT "   ... loading object: %s\n" $cq
       ExecuteAsAdmin $SPOOLEDIT load $cq /tmp/spooledit_db_key_dump2.tmp
       if [ $? -eq 1 ]; then
-         $INFOTEXT " ... error loadping database! Exiting update!\n"
+         $INFOTEXT " ... error loading database! Exiting update!\n"
          ExecuteAsAdmin $RM /tmp/spooledit_db_key_dump.tmp
          ExecuteAsAdmin $RM /tmp/spooledit_db_key_dump2.tmp
          exit 1

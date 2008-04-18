@@ -1931,7 +1931,7 @@ ProcessSGEClusterName()
    done
       
    #Only BDB or qmaster installation can create cluster_name file
-   if [ \( "$1" = "bdb" -o "$1" = "qmaster" \) -a ! -f $SGE_ROOT/$SGE_CELL/common/cluster_name ]; then
+   if [ \( "$1" = "bdb" -o "$1" = "qmaster" -o "$UPDATE" = "true" \) -a ! -f $SGE_ROOT/$SGE_CELL/common/cluster_name ]; then
       ExecuteAsAdmin $MKDIR -p $SGE_ROOT/$SGE_CELL/common
       ExecuteAsAdmin $TOUCH $SGE_ROOT/$SGE_CELL/common/cluster_name
       ExecuteAsAdmin sh -c "$ECHO $SGE_CLUSTER_NAME > $SGE_ROOT/$SGE_CELL/common/cluster_name"
@@ -3042,6 +3042,7 @@ RemoveRcScript()
    euid=$3
    upgrade=$4
    
+   # --- from here only if root installs ---
    if [ $euid != 0 ]; then
       return 0
    fi
@@ -3052,7 +3053,6 @@ RemoveRcScript()
 
    $INFOTEXT -u "\nRemoving %s startup script" $DAEMON_NAME
 
-   # --- from here only if root installs ---
    $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
              "\nDo you want to remove the startup script \n" \
              "for %s at this machine? (y/n) [y] >> " $DAEMON_NAME

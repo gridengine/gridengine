@@ -1,3 +1,11 @@
+LP-2008-04-18-0: Bugfix:    inst_sge -ux fails for root user on a filesystem 
+                            mapped with no-root permissions
+                 Bugfix:    installation and autoinstallation does not work on 
+                            SMF supporting hosts
+                 Bugster:   6687514, 6685565
+                 Bugfix:    Fixed drmma test testGetVersion
+                 Review:    JG
+
 RD-2008-04-18-0: Bugfix:    fixed qmaster-scheduler sync issue which led scheduler
                             schedule a job twice
                  Bugster:   6690182

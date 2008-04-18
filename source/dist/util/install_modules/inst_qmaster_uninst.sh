@@ -83,13 +83,12 @@ CheckRegisteredExecd()
 
 ShutdownMaster()
 {
-   $INFOTEXT "Shutting down qmaster!"
-   $INFOTEXT -log "Shutting down qmaster!"
-
    euid=`$SGE_UTILBIN/uidgid -euid`
    GetAdminUser
    
    if [ "$SGE_ENABLE_SMF" != "true" ]; then
+      $INFOTEXT "Shutting down qmaster!"
+      $INFOTEXT -log "Shutting down qmaster!"
       spool_dir_master=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
       master_pid=`cat $spool_dir_master/qmaster.pid`
 

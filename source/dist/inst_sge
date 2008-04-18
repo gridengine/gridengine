@@ -366,20 +366,20 @@ if [ $UPDATE = "true" ]; then
    GetCell
    SetCellDependentVariables
    GetAdminUser
-
+   
    list="master bdb execd"
    for TMP_DAEMON in $list; do
       SetupRcScriptNames61 "$TMP_DAEMON"
       CheckRCfiles "61"
       if [ $? -ne 0 ] ; then
          RemoveRcScript $HOST $TMP_DAEMON $euid "61"
-      fi
+   fi
    done
 
    spooling_method=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "spooling_method" | awk '{ print $2 }'`
    QMASTER_SPOOL_DIR=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "qmaster_spool_dir" | awk '{ print $2 }'`
 
-      ExecuteAsAdmin $SPOOLDEFAULTS complexes $SGE_ROOT/util/resources/centry/display_win_gui
+   ExecuteAsAdmin $SPOOLDEFAULTS complexes $SGE_ROOT/util/resources/centry/display_win_gui
    
    if [ "$spooling_method" = "classic" ]; then  # classic spooling case
 
@@ -778,6 +778,8 @@ if [ "$EXECD" = "uninstall" ]; then
       $INFOTEXT -log "Starting execution host uninstallation!"
       LogResolvedHostLists
    fi
+   
+   GetAdminUser
 
    if [ "$SGE_REMOTE_FLAG" != "REMOTE_EXECD_UNINSTALL" ]; then 
       WelcomeUninstall 
@@ -820,7 +822,8 @@ if [ "$EXECD" = "uninstall" ]; then
 fi
 
 if [ $BERKELEY = "uninstall" ]; then
-
+   GetAdminUser
+   
    if [ "$AUTO" = "true" ]; then
       Stdout2Log
       $INFOTEXT -log "Starting berkeley rpc uninstallation!"
@@ -847,7 +850,8 @@ if [ $BERKELEY = "uninstall" ]; then
 fi
 
 if [ $QMASTER = "uninstall" ]; then
-
+   GetAdminUser
+   
    if [ "$AUTO" = "true" ]; then
       Stdout2Log
       $INFOTEXT -log "Starting qmaster uninstallation!"

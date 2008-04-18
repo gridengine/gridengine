@@ -158,7 +158,6 @@ sge_schedd_block_until_orders_processed(sge_gdi_ctx_class_t *ctx,
    bool ret = true;
    state_gdi_multi *current_state = NULL;
    state_gdi_multi *next_state = NULL; 
-   state_gdi_multi *last_but_one = NULL;
 
    DENTER(TOP_LAYER, "sge_schedd_block_until_orders_processed");
 

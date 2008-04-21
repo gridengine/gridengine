@@ -1,3 +1,6 @@
+RD-2008-04-21-1: CVS:       Created V62beta_RC2_TAG
+---------------------------------------------------
+
 HP-2008-04-21-0: Enhancem:  added -pty switch to qrsh
                  Enhancem:  several cleanups
                  Changed:   shepherd, qrsh

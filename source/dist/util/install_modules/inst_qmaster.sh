@@ -1926,9 +1926,14 @@ GetJMXPort() {
                sge_jmx_ssl_keystore="$INP"
 
                # set SGE_JMX_SSL_KEYSTORE_PW
+               STTY_ORGMODE=`stty -g`
                $INFOTEXT -n "Enter JMX SSL server keystore pw >> "
+               stty -echo
                INP=`Enter "$sge_jmx_ssl_keystore_pw"`
                sge_jmx_ssl_keystore_pw="$INP"
+               stty "$STTY_ORGMODE"
+               # echo $sge_jmx_ssl_keystore_pw
+
             fi
 
             # show all parameters and redo if needed
@@ -1939,7 +1944,8 @@ GetJMXPort() {
             $INFOTEXT "   JMX ssl                  >%s<" "$sge_jmx_ssl"
             $INFOTEXT "   JMX client ssl           >%s<" "$sge_jmx_ssl_client"
             $INFOTEXT "   JMX server keystore      >%s<" "$sge_jmx_ssl_keystore"
-            $INFOTEXT "   JMX server keystore pw   >%s<" "$sge_jmx_ssl_keystore_pw"
+            obfuscated_pw=`echo "$sge_jmx_ssl_keystore_pw" | sed 's/./*/g'`
+            $INFOTEXT "   JMX server keystore pw   >%s<" "$obfuscated_pw"
             $INFOTEXT "\n"
 
             $INFOTEXT -ask "y" "n" -def "y" -n \
@@ -1952,7 +1958,7 @@ GetJMXPort() {
                SGE_JMX_SSL=$sge_jmx_ssl
                SGE_JMX_SSL_CLIENT=$sge_jmx_ssl_client
                SGE_JMX_SSL_KEYSTORE=$sge_jmx_ssl_keystore
-               SGE_JMX_SSL_KEYSTORE_PW=$sge_jmx_ssl_keystore_pw
+               SGE_JMX_SSL_KEYSTORE_PW="$sge_jmx_ssl_keystore_pw"
                export SGE_JVM_LIB_PATH SGE_JMX_PORT SGE_ADDITIONAL_JVM_ARGS SGE_ENABLE_JMX SGE_JMX_SSL SGE_JMX_SSL_CLIENT SGE_JMX_SSL_KEYSTORE SGE_JMX_SSL_KEYSTORE_PW
             else
                $CLEAR

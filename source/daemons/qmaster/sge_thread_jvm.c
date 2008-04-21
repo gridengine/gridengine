@@ -563,7 +563,7 @@ static JNIEnv* create_vm(const char *libjvm_path, int argc, char** argv)
          ** for darwin there exists no JNI_CreateJavaVM, Why not maybe a fix in the future ???
          */
          const char* JNI_CreateJavaVM_FuncName = "JNI_CreateJavaVM_Impl";
-         const char* JNI_GetCreatedJavaVMs_FuncName = "JNI_GetCreatedJavaVMs";
+         const char* JNI_GetCreatedJavaVMs_FuncName = "JNI_GetCreatedJavaVMs_Impl";
 #else
          const char* JNI_CreateJavaVM_FuncName = "JNI_CreateJavaVM";
          const char* JNI_GetCreatedJavaVMs_FuncName = "JNI_GetCreatedJavaVMs";

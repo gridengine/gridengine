@@ -1,3 +1,9 @@
+AA-2008-04-21-0: Bugfix:    - javadoc comment fixes
+                            - darwin missing function fix
+                            - distinst OPENSSLSOVERSION fix
+                            - aimk.site lx24-ia64 java support fix
+                 Review:    CR
+
 RD-2008-04-21-0: Enhancem.: - removed SIMULATE_EXECDS param
                             - enhanced SIMULATE_JOBS
                  Review:    JG

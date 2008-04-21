@@ -1406,9 +1406,9 @@ for i in $ARCH; do
                if [ $DSTARCH = tru64 ]; then
                   libname="$lib.$shlibext"
                elif [ $DSTARCH = darwin-ppc -o $DSTARCH = darwin-x86 ];  then
-                  libname="$lib.0.9.7.$shlibext"
+                  libname="$lib.$OPENSSLSOVERSION.$shlibext"
                else
-                  libname="$lib.$shlibext.0.9.7"
+                  libname="$lib.$shlibext.$OPENSSLSOVERSION"
                fi
 
                if [ -f $OPENSSLBASE/$DSTARCH/lib/$libname ]; then

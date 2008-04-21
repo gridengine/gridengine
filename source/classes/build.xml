@@ -94,6 +94,7 @@ ___INFO__MARK_END__-->
    </target>
 
    <target name="jar.init" depends="init">
+      <mkdir dir="${classes.dir}"/>
       <fileset id="jar.classes" dir="${classes.dir}">
          <include name="org/ggf/drmaa/*.class"/>
          <include name="com/sun/grid/drmaa/*.class"/>

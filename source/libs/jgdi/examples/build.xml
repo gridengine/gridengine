@@ -44,11 +44,13 @@
       
       <macrodef name="run">
          <attribute name="classname"/>
+         <attribute name="cmdargs" default=""/>
          <sequential>
             <java classname="@{classname}" fork="true">
                <classpath refid="run.classpath"/>
                <env key="LD_LIBRARY_PATH" value="${sge.lib.path}"/>
                <arg value="bootstrap://${env.SGE_ROOT}@${env.SGE_CELL}:${env.SGE_QMASTER_PORT}"/>
+               <arg line="@{cmdargs}"/>
             </java>
          </sequential>
       </macrodef>
@@ -84,7 +86,6 @@
            description="Runs the event monitor example">
       <run classname="com.sun.grid.jgdi.examples.jmxeventmonitor.Main"/>
    </target>
-   
    
    <target name="clean">
       <delete dir="classes"/>

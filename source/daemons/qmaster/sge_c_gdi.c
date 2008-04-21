@@ -807,37 +807,12 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_re
                ERROR((SGE_EVENT, MSG_QMASTER_INVALIDJOBSUBMISSION_SSS,
                       user, request->commproc, request->host));
             } else {
-               if (mconf_get_simulate_hosts()) {
-
-                  int multi_job = 1;
-                  int i;
-                  lList *context = lGetList(ep, JB_context);
-                  if(context != NULL) {
-                     lListElem *multi = lGetElemStr(context, VA_variable, "SGE_MULTI_SUBMIT");
-                     if(multi != NULL) {
-                        multi_job = atoi(lGetString(multi, VA_value));
-                        DPRINTF(("Cloning job %d times in simulation mode\n", multi_job));
-                     }
-                  }
-                  
-                  for(i = 0; i < multi_job; i++) {
-                     lListElem *clone = lCopyElem(ep);
-                     sge_gdi_add_job(ctx,
-                                     clone, &(answer->alp), 
-                                     (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? 
-                                     &(answer->lp) : NULL, 
-                                     user, host, uid, gid, group, request, monitor);
-                        lFreeElem(&clone);
-                  }
-                  
-               } else {
-                  /* submit needs to know user and group */
-                  sge_gdi_add_job(ctx, 
-                                  ep, &(answer->alp), 
-                                  (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? 
-                                  &(answer->lp) : NULL, 
-                                  user, host, uid, gid, group, request, monitor);
-               }
+               /* submit needs to know user and group */
+               sge_gdi_add_job(ctx, 
+                               ep, &(answer->alp), 
+                               (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? 
+                               &(answer->lp) : NULL, 
+                               user, host, uid, gid, group, request, monitor);
             }
          }
       } else if (request->target == SGE_SC_LIST ) {

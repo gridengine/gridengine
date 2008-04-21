@@ -1,3 +1,9 @@
+RD-2008-04-21-0: Enhancem.: - removed SIMULATE_EXECDS param
+                            - added SIMULATE_JOBS param
+                            - enhanced commlib test binaries
+                 Review:    JG, CR
+
+
 JG-2008-04-17-0: Bugfix:    fixed sge_mirror profiling
                  Review:    RD
 

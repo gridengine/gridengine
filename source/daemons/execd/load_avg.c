@@ -632,6 +632,20 @@ void update_job_usage(const char* qualified_hostname)
 
    DENTER(TOP_LAYER, "update_job_usage");
 
+   if (mconf_get_simulate_jobs()) {
+      lListElem *jr;
+
+      for_each(jr, jr_list) {
+         add_usage(jr, USAGE_ATTR_CPU, NULL, 0.1);
+         add_usage(jr, USAGE_ATTR_MEM, NULL, 0.1);
+         add_usage(jr, USAGE_ATTR_IO, NULL, 0.0);
+         add_usage(jr, USAGE_ATTR_IOW, NULL, 0.0);
+         add_usage(jr, USAGE_ATTR_VMEM, NULL, 256);
+         add_usage(jr, USAGE_ATTR_MAXVMEM, NULL, 256);
+      }
+      DRETURN_VOID;
+   }
+
 #ifdef COMPILE_DC
    if (!mconf_get_sharetree_reserved_usage()) {
       int ptf_error;

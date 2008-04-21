@@ -402,6 +402,7 @@ int slave
          gdi_list = lGetList(jatep, JAT_granted_destin_identifier_list);
          hostname = lGetHost(lFirst(gdi_list), JG_qhostname);
          
+         if (!mconf_get_simulate_jobs()) {
          /*
           * Is another array task of the same job already here?
           * In this case it is not necessary to spool the jobscript.
@@ -427,28 +428,29 @@ int slave
          }
 
          if (!found_script) {
-            /* We are root. Make the scriptfile readable for the jobs submitter,
-               so shepherd can open (execute) it after changing to the user. */
-            fd = SGE_OPEN3(lGetString(jelem, JB_exec_file), O_CREAT | O_WRONLY, 0755);
-            if (fd < 0) {
-               sge_dstring_sprintf(&err_str, MSG_ERRORWRITINGFILE_SS, 
-                                   lGetString(jelem, JB_exec_file), 
-                                   strerror(errno));
-               goto Error;
-            }
+               /* We are root. Make the scriptfile readable for the jobs submitter,
+                  so shepherd can open (execute) it after changing to the user. */
+               fd = SGE_OPEN3(lGetString(jelem, JB_exec_file), O_CREAT | O_WRONLY, 0755);
+               if (fd < 0) {
+                  sge_dstring_sprintf(&err_str, MSG_ERRORWRITINGFILE_SS, 
+                                      lGetString(jelem, JB_exec_file), 
+                                      strerror(errno));
+                  goto Error;
+               }
 
-            if ((nwritten = sge_writenbytes(fd, lGetString(jelem, JB_script_ptr), 
-               lGetUlong(jelem, JB_script_size))) !=
-               lGetUlong(jelem, JB_script_size)) {
-               DPRINTF(("errno: %d\n", errno));
-               sge_dstring_sprintf(&err_str, MSG_EXECD_NOWRITESCRIPT_SIUS, 
-                                   lGetString(jelem, JB_exec_file), nwritten, 
-                                   sge_u32c(lGetUlong(jelem, JB_script_size)), 
-                                   strerror(errno));
+               if ((nwritten = sge_writenbytes(fd, lGetString(jelem, JB_script_ptr), 
+                  lGetUlong(jelem, JB_script_size))) !=
+                  lGetUlong(jelem, JB_script_size)) {
+                  DPRINTF(("errno: %d\n", errno));
+                  sge_dstring_sprintf(&err_str, MSG_EXECD_NOWRITESCRIPT_SIUS, 
+                                      lGetString(jelem, JB_exec_file), nwritten, 
+                                      sge_u32c(lGetUlong(jelem, JB_script_size)), 
+                                      strerror(errno));
+                  close(fd);
+                  goto Error;
+               }      
                close(fd);
-               goto Error;
-            }      
-            close(fd);
+            }
             lSetString(jelem, JB_script_ptr, NULL);
          }
       }
@@ -471,13 +473,13 @@ int slave
    kerb_job(jelem, de);
 #endif
 
-
-
-   lSetUlong(jelem, JB_script_size, 0);
-   if (job_write_spool_file(jelem, jataskid, NULL, SPOOL_WITHIN_EXECD)) {
-      /* SGE_EVENT is written by job_write_spool_file() */
-      sge_dstring_copy_string(&err_str, SGE_EVENT);
-      goto Error;
+   if (!mconf_get_simulate_jobs()) {
+      lSetUlong(jelem, JB_script_size, 0);
+      if (job_write_spool_file(jelem, jataskid, NULL, SPOOL_WITHIN_EXECD)) {
+         /* SGE_EVENT is written by job_write_spool_file() */
+         sge_dstring_copy_string(&err_str, SGE_EVENT);
+         goto Error;
+      }
    }
 
    { 
@@ -823,10 +825,12 @@ DTRACE;
 
 DTRACE;
 
-   if (job_write_spool_file(jep, jataskid, NULL, SPOOL_WITHIN_EXECD)) { 
-      sge_dstring_copy_string(&err_str, SGE_EVENT);
-      execd_job_start_failure(jep, jatep, petep, sge_dstring_get_string(&err_str), 1);
-      goto Error;
+   if (!mconf_get_simulate_jobs()) {
+      if (job_write_spool_file(jep, jataskid, NULL, SPOOL_WITHIN_EXECD)) { 
+         sge_dstring_copy_string(&err_str, SGE_EVENT);
+         execd_job_start_failure(jep, jatep, petep, sge_dstring_get_string(&err_str), 1);
+         goto Error;
+      }
    }
    
 DTRACE;   

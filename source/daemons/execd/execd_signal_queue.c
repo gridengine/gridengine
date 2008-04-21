@@ -231,10 +231,9 @@ int sge_execd_deliver_signal(u_long32 sig, lListElem *jep, lListElem *jatep) {
          sge_sig2str(sig)));
 
    /* for simulated hosts do nothing */
-   if(mconf_get_simulate_hosts() && 
-      (lGetUlong(jatep, JAT_status) & JSIMULATED)) {
+   if (mconf_get_simulate_jobs()) {
 
-      if(sig == SGE_SIGKILL) {
+      if (sig == SGE_SIGKILL) {
          lListElem *jr = NULL;
          u_long32 jobid, jataskid;
          u_long32 wallclock;
@@ -263,12 +262,12 @@ int sge_execd_deliver_signal(u_long32 sig, lListElem *jep, lListElem *jatep) {
          add_usage(jr, "exit_status", NULL, 137);
          add_usage(jr, "signal", NULL, sig);
 
-         lSetUlong(jatep, JAT_status, JEXITING | JSIMULATED);
+         lSetUlong(jatep, JAT_status, JEXITING);
 
          flush_job_report(jr);
       }
       
-      return 0;
+      DRETURN(0);
    }
 
 /*

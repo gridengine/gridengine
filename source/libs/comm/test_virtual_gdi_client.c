@@ -182,7 +182,6 @@ extern int main(int argc, char** argv)
            sprintf(snd_data, "%d\n", snd_messages);
         }
 #endif
-
    
         gettimeofday(&now,NULL);
         if (now.tv_sec > shutdown_time ) {

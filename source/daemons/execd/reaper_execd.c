@@ -925,24 +925,24 @@ lListElem *jr
       if (!pe_task_id_str) {
          if (!mconf_get_simulate_jobs()) {
             job_remove_spool_file(job_id, ja_task_id, NULL, SPOOL_WITHIN_EXECD);
-         }
 
-         if (!JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type)) &&
-             lGetString(jep, JB_exec_file)) {
-            int task_number = 0;
-            lListElem *tmp_job = NULL;
+            if (!JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type)) &&
+                lGetString(jep, JB_exec_file)) {
+               int task_number = 0;
+               lListElem *tmp_job = NULL;
 
-            /* it is possible to remove the exec_file if
-               less than one task of a job is running */
-            tmp_job = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
-            while (tmp_job != NULL && task_number <= 2) {
-               task_number++;
-               tmp_job = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
-            }
-            
-            if (task_number <= 1) {
-               DPRINTF(("unlinking script file %s\n", lGetString(jep, JB_exec_file)));
-               unlink(lGetString(jep, JB_exec_file));
+               /* it is possible to remove the exec_file if
+                  less than one task of a job is running */
+               tmp_job = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
+               while (tmp_job != NULL && task_number <= 2) {
+                  task_number++;
+                  tmp_job = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
+               }
+               
+               if (task_number <= 1) {
+                  DPRINTF(("unlinking script file %s\n", lGetString(jep, JB_exec_file)));
+                  unlink(lGetString(jep, JB_exec_file));
+               }
             }
          }
       } else {
@@ -1183,8 +1183,9 @@ int clean_up_old_jobs(int startup)
 
    DENTER(TOP_LAYER, "clean_up_old_jobs");
 
-   if (startup)
+   if (startup) {
       INFO((SGE_EVENT, MSG_SHEPHERD_CKECKINGFOROLDJOBS));
+   }
 
    /* 
       If we get an empty Master_Job_List we know that 
@@ -1203,7 +1204,9 @@ int clean_up_old_jobs(int startup)
       exited and there is no need for ps-commands.
 
    */
-   if (lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_JOB))) == 0 || !lost_children) {
+   if (mconf_get_simulate_jobs() ||
+       lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_JOB))) == 0 ||
+       !lost_children) {
       if (lost_children) {
          INFO((SGE_EVENT, MSG_SHEPHERD_NOOLDJOBSATSTARTUP));
          lost_children = 0;

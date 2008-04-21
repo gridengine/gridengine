@@ -840,7 +840,6 @@ void sge_load_value_cleanup_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent
    u_long32 now = sge_get_gmt();
    lList *master_exechost_list = *object_type_get_master_list(SGE_TYPE_EXECHOST);
    u_long32 max_unheard = mconf_get_max_unheard();
-   bool simulate_hosts = mconf_get_simulate_hosts();
    bool simulate_execds = mconf_get_simulate_execds();
 
    DENTER(TOP_LAYER, "sge_load_value_cleanup_handler");
@@ -861,17 +860,6 @@ void sge_load_value_cleanup_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent
       host = lGetHost(hep, EH_name);
 
       /* do not trash load values of simulated hosts */
-      if (simulate_hosts) {
-         const lListElem *simhost = lGetSubStr(hep, CE_name, "simhost", EH_consumable_config_list);
-         if (simhost != NULL) {
-            const char *real_host = lGetString(simhost, CE_stringval);
-            if (real_host != NULL && sge_hostcmp(real_host, host) != 0) {
-               DPRINTF(("skip trashing load values for host %s simulated by %s\n", host, real_host));
-               continue;
-            }
-         }
-      }
-
       if (simulate_execds) {
          const lListElem *load_report_host = lGetSubStr(hep, CE_name, "load_report_host", EH_consumable_config_list);
          if (load_report_host != NULL) {

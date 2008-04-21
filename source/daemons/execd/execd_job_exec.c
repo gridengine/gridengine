@@ -329,55 +329,57 @@ static int handle_job(sge_gdi_ctx_class_t *ctx, lListElem *jelem, lListElem *jat
          gdi_list = lGetList(jatep, JAT_granted_destin_identifier_list);
          hostname = lGetHost(lFirst(gdi_list), JG_qhostname);
          
-         /*
-          * Is another array task of the same job already here?
-          * In this case it is not necessary to spool the jobscript.
-          *
-          * But it is not enough, just to look for another array task. we have
-          * check wether there is another master task of the same job running
-          * on this host. This is important in case of array pe-jobs.
-          */
-         next_tmp_job = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)),
-                                           JB_job_number, job_id, &iterator);
-         while ((tmp_job = next_tmp_job) != NULL) {
-            next_tmp_job = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)),
-                                           JB_job_number, job_id, &iterator);
-           
-            ja_task_list = lGetList(tmp_job,JB_ja_tasks);
-            gdi_list = lGetList(lFirst(ja_task_list), JAT_granted_destin_identifier_list);
-            tmp_hostname = lGetHost(lFirst(gdi_list), JG_qhostname);
-           
-            if (sge_hostcmp(hostname, tmp_hostname) == 0) {
-               found_script = 1;
-               break;
-            }
-         }
-
-         if (!found_script) {
-            int fd;
-
-            /* We are root. Make the scriptfile readable for the jobs submitter,
-               so shepherd can open (execute) it after changing to the user. */
-            fd = SGE_OPEN3(lGetString(jelem, JB_exec_file), O_CREAT | O_WRONLY, 0755);
-            if (fd < 0) {
-               sge_dstring_sprintf(&err_str, MSG_ERRORWRITINGFILE_SS, 
-                                   lGetString(jelem, JB_exec_file), 
-                                   strerror(errno));
-               goto Error;
+         if (!mconf_get_simulate_jobs()) {
+            /*
+             * Is another array task of the same job already here?
+             * In this case it is not necessary to spool the jobscript.
+             *
+             * But it is not enough, just to look for another array task. we have
+             * check wether there is another master task of the same job running
+             * on this host. This is important in case of array pe-jobs.
+             */
+            next_tmp_job = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)),
+                                              JB_job_number, job_id, &iterator);
+            while ((tmp_job = next_tmp_job) != NULL) {
+               next_tmp_job = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)),
+                                              JB_job_number, job_id, &iterator);
+              
+               ja_task_list = lGetList(tmp_job,JB_ja_tasks);
+               gdi_list = lGetList(lFirst(ja_task_list), JAT_granted_destin_identifier_list);
+               tmp_hostname = lGetHost(lFirst(gdi_list), JG_qhostname);
+              
+               if (sge_hostcmp(hostname, tmp_hostname) == 0) {
+                  found_script = 1;
+                  break;
+               }
             }
 
-            if ((nwritten = sge_writenbytes(fd, lGetString(jelem, JB_script_ptr), 
-               lGetUlong(jelem, JB_script_size))) !=
-               lGetUlong(jelem, JB_script_size)) {
-               DPRINTF(("errno: %d\n", errno));
-               sge_dstring_sprintf(&err_str, MSG_EXECD_NOWRITESCRIPT_SIUS, 
-                                   lGetString(jelem, JB_exec_file), nwritten, 
-                                   sge_u32c(lGetUlong(jelem, JB_script_size)), 
-                                   strerror(errno));
+            if (!found_script) {
+               int fd;
+
+               /* We are root. Make the scriptfile readable for the jobs submitter,
+                  so shepherd can open (execute) it after changing to the user. */
+               fd = SGE_OPEN3(lGetString(jelem, JB_exec_file), O_CREAT | O_WRONLY, 0755);
+               if (fd < 0) {
+                  sge_dstring_sprintf(&err_str, MSG_ERRORWRITINGFILE_SS, 
+                                      lGetString(jelem, JB_exec_file), 
+                                      strerror(errno));
+                  goto Error;
+               }
+
+               if ((nwritten = sge_writenbytes(fd, lGetString(jelem, JB_script_ptr), 
+                  lGetUlong(jelem, JB_script_size))) !=
+                  lGetUlong(jelem, JB_script_size)) {
+                  DPRINTF(("errno: %d\n", errno));
+                  sge_dstring_sprintf(&err_str, MSG_EXECD_NOWRITESCRIPT_SIUS, 
+                                      lGetString(jelem, JB_exec_file), nwritten, 
+                                      sge_u32c(lGetUlong(jelem, JB_script_size)), 
+                                      strerror(errno));
+                  close(fd);
+                  goto Error;
+               }      
                close(fd);
-               goto Error;
-            }      
-            close(fd);
+            }
             lSetString(jelem, JB_script_ptr, NULL);
          }
       }

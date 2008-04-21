@@ -1,3 +1,7 @@
+RD-2008-04-21-0: Enhancem.: - removed SIMULATE_EXECDS param
+                            - enhanced SIMULATE_JOBS
+                 Review:    JG
+
 JG-2008-04-21-0: Bugfix:    Deleting user defined complex variables failed,
                             builtin host complex variables could be deleted.
                  Review:    MD

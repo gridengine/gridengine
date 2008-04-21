@@ -181,13 +181,10 @@ static int accounting_flush_time  = -1;
 static int sharelog_time          = 0;
 static bool log_consumables       = false;
 
-/* allow the simulation of (non existent) hosts */
-static bool simulate_hosts = false;
-
 /* generally simulate all execd's */
 static bool simulate_execds = false;
 
-/* allow the simulation of jobs (job spooling on execd side is disabled) */
+/* allow the simulation of jobs (job spooling and execution on execd side is disabled) */
 static bool simulate_jobs = false;
 
 /*
@@ -640,7 +637,6 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       spool_time = STREESPOOLTIMEDEF;
       use_qidle = false;
       disable_reschedule = false;   
-      simulate_hosts = false;
       simulate_execds = false;
       simulate_jobs = false;
       prof_listener_thrd = false;
@@ -725,9 +721,6 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
             continue;
          }
          if (parse_bool_param(s, "LOG_MONITOR_MESSAGE", &is_monitor_message)) {
-            continue;
-         }
-         if (parse_bool_param(s, "SIMULATE_HOSTS", &simulate_hosts)) {
             continue;
          }
          if (parse_bool_param(s, "SIMULATE_EXECDS", &simulate_execds)) {
@@ -1947,18 +1940,6 @@ bool mconf_get_enable_reschedule_slave(void) {
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = enable_reschedule_slave;
-   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
-   DRETURN(ret);
-}
-
-bool mconf_get_simulate_hosts(void) {
-   bool ret;
-
-   DENTER(BASIS_LAYER, "mconf_get_simulate_hosts");
-   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
-
-   ret = simulate_hosts;
-
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(ret);
 }

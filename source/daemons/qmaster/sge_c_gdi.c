@@ -524,39 +524,13 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
                ERROR((SGE_EVENT, MSG_QMASTER_INVALIDJOBSUBMISSION_SSS,
                       packet->user, packet->commproc, packet->host));
             } else {
-               if (mconf_get_simulate_hosts()) {
-
-                  int multi_job = 1;
-                  int i;
-                  lList *context = lGetList(ep, JB_context);
-                  if(context != NULL) {
-                     lListElem *multi = lGetElemStr(context, VA_variable, "SGE_MULTI_SUBMIT");
-                     if(multi != NULL) {
-                        multi_job = atoi(lGetString(multi, VA_value));
-                        DPRINTF(("Cloning job %d times in simulation mode\n", multi_job));
-                     }
-                  }
-                  
-                  for(i = 0; i < multi_job; i++) {
-                     lListElem *clone = lCopyElem(ep);
-                     sge_gdi_add_job(ctx,
-                                     clone, &(task->answer_list), 
-                                     (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? 
-                                     &(task->data_list) : NULL, 
-                                     packet->user, packet->host, packet->uid, packet->gid, packet->group, 
-                                     packet, task, monitor);
-                        lFreeElem(&clone);
-                  }
-                  
-               } else {
-                  /* submit needs to know user and group */
-                  sge_gdi_add_job(ctx, 
-                                  ep, &(task->answer_list), 
-                                  (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? 
-                                  &(task->data_list) : NULL, 
-                                  packet->user, packet->host, packet->uid, packet->gid, packet->group, 
-                                  packet, task, monitor);
-               }
+               /* submit needs to know user and group */
+               sge_gdi_add_job(ctx, 
+                               ep, &(task->answer_list), 
+                               (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? 
+                               &(task->data_list) : NULL, 
+                               packet->user, packet->host, packet->uid, packet->gid, packet->group, 
+                               packet, task, monitor);
             }
          }
       } else if (task->target == SGE_SC_LIST ) {
@@ -598,16 +572,14 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
                     case -1 :
                     case -3 :
                               /* stop the order processing */
-                              WARNING((SGE_EVENT, "Remaining %d orders unprocessed due to configuration changes.\n", 
-                                        lGetNumberOfRemainingElem(ep)));
-                              ep = lLast(task->data_list); 
+                              WARNING((SGE_EVENT, "Skipping remaining %d orders", lGetNumberOfRemainingElem(ep)));
+                              next = NULL;
                        break;
                        
                     default :  DPRINTF(("--> FAILED: unexpected state from in the order processing <--\n"));
                        break;        
                   }
                   break;
-               
                case SGE_MANAGER_LIST:
                case SGE_OPERATOR_LIST:
                   sge_add_manop(ctx, ep, &(task->answer_list), packet->user, packet->host, task->target);

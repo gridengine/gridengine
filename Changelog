@@ -1,3 +1,7 @@
+JG-2008-04-21-0: Bugfix:    Deleting user defined complex variables failed,
+                            builtin host complex variables could be deleted.
+                 Review:    MD
+
 DG-2008-04-18-0: Cleanup:   Path to tar file was hardcoded. Wasn't on all
                             architectures in the same path.
                  Review:    AH

@@ -453,18 +453,31 @@ void* commlib_to_tty(void *t_conf)
 
       thread_testcancel(t_conf);
       client_check_window_change(g_comm_handle);
-      DPRINTF(("'parsing' message\n"));
 
+      if (received_signal == SIGHUP ||
+          received_signal == SIGINT ||
+          received_signal == SIGQUIT ||
+          received_signal == SIGTERM) {
+         /* If we receive one of these signals, we must terminate */
+         do_exit = 1;
+         continue;
+      }
+
+      DPRINTF(("'parsing' message\n"));
       /*
        * 'parse' message
        * A 1 byte prefix tells us what kind of message it is.
        * See sge_ijs_comm.h for message types.
        */
       if (recv_mess.cl_message != NULL) {
+         char buf[100];
          switch (recv_mess.type) {
             case STDOUT_DATA_MSG:
+               /* copy recv_mess.data to buf to append '\0' */
+               snprintf(buf, MIN(100, recv_mess.cl_message->message_length),
+                        "%s", recv_mess.data);
                DPRINTF(("commlib_to_tty: received stdout message, writing to tty.\n"));
-               DPRINTF(("commlib_to_tty: message is: %s\n", recv_mess.data));
+               DPRINTF(("commlib_to_tty: message is: %s\n", buf));
 /* TODO: If it's not possible to write all data to the tty, retry blocking
  *       until all data was written. The commlib must block then, too.
  */
@@ -492,21 +505,18 @@ void* commlib_to_tty(void *t_conf)
                         "This was unexpected!\n"));
                break;
             case REGISTER_CTRL_MSG:
-               {
-                  char buf[100];
-                  /* control message */
-                  /* a client registered with us. With the next loop, the 
-                   * cl_commlib_trigger function will send the WINDOW_SIZE_CTRL_MSG
-                   * (and perhaps some data messages),  which is already in the 
-                   * send_messages list of the connection, to the client.
-                   */
-                  DPRINTF(("commlib_to_tty: received register message!\n"));
-                  /* Send the settings in response */
-                  sprintf(buf, "noshell = %d", g_noshell);
-                  ret = (int)comm_write_message(g_comm_handle, g_hostname, OTHERCOMPONENT, 1,
-                     (unsigned char*)buf, strlen(buf)+1, SETTINGS_CTRL_MSG, &err_msg);
-                  DPRINTF(("commlib_to_tty: sent SETTINGS_CTRL_MSG, ret = %d\n", ret));
-               }
+               /* control message */
+               /* a client registered with us. With the next loop, the 
+                * cl_commlib_trigger function will send the WINDOW_SIZE_CTRL_MSG
+                * (and perhaps some data messages),  which is already in the 
+                * send_messages list of the connection, to the client.
+                */
+               DPRINTF(("commlib_to_tty: received register message!\n"));
+               /* Send the settings in response */
+               sprintf(buf, "noshell = %d", g_noshell);
+               ret = (int)comm_write_message(g_comm_handle, g_hostname, OTHERCOMPONENT, 1,
+                  (unsigned char*)buf, strlen(buf)+1, SETTINGS_CTRL_MSG, &err_msg);
+               DPRINTF(("commlib_to_tty: sent SETTINGS_CTRL_MSG, ret = %d\n", ret));
                break;
             case UNREGISTER_CTRL_MSG:
                /* control message */
@@ -518,9 +528,15 @@ void* commlib_to_tty(void *t_conf)
                DPRINTF(("commlib_to_tty: received unregister message!\n"));
                DPRINTF(("commlib_to_tty: writing UNREGISTER_RESPONSE_CTRL_MSG\n"));
 
-               sscanf(recv_mess.data, "%d", &g_exit_status);
+               /* copy recv_mess.data to buf to append '\0' */
+               snprintf(buf, MIN(100, recv_mess.cl_message->message_length),
+                        "%s", recv_mess.data);
+               sscanf(buf, "%d", &g_exit_status);
                comm_write_message(g_comm_handle, g_hostname, OTHERCOMPONENT, 1, 
                   (unsigned char*)" ", 1, UNREGISTER_RESPONSE_CTRL_MSG, &err_msg);
+
+               DPRINTF(("commlib_to_tty: received exit_status from shepherd: %d\n", 
+                        g_exit_status));
                do_exit = 1;
                break;
          }
@@ -563,9 +579,11 @@ void* commlib_to_tty(void *t_conf)
 *  SEE ALSO
 *     do_client_loop()
 *******************************************************************************/
-int do_server_loop(int random_poll, u_long32 job_id, int nostdin, 
-                   int noshell, int *p_exit_status)
+int do_server_loop(int random_poll, u_long32 job_id, int nostdin, int noshell,
+                   int is_rsh, int is_qlogin,
+                   int *p_exit_status)
 {
+   bool              terminal_is_in_raw_mode = false;
    int               ret = 0;
    dstring           err_msg = DSTRING_INIT;
    THREAD_HANDLE     *pthread_tty_to_commlib = NULL;
@@ -583,16 +601,24 @@ int do_server_loop(int random_poll, u_long32 job_id, int nostdin,
 
    g_nostdin = nostdin;
    g_noshell = noshell;
+
    /*
-    * Set this terminal to raw mode, just output everything, 
-    * don't interpret it. Let the pty on the client side interpret
-    * the characters.
+    * qrsh without command and qlogin both have is_rsh == 0 and is_qlogin == 1
+    * qrsh with command and qsh don't need to set terminal mode.
     */
-   ret = terminal_enter_raw_mode();
-   if (ret != 0) {
-      DPRINTF(("can't set terminal to raw mode: %s (%d)\n",
-         strerror(ret), ret));
-      /* continue with terminal in un-raw mode */
+   if (is_rsh == 0 && is_qlogin == 1) {
+      /*
+       * Set this terminal to raw mode, just output everything, don't interpreti
+       * it. Let the pty on the client side interpret the characters.
+       */
+      ret = terminal_enter_raw_mode();
+      if (ret != 0) {
+         DPRINTF(("can't set terminal to raw mode: %s (%d)\n",
+            strerror(ret), ret));
+         /* continue with terminal in un-raw mode */
+      } else {
+         terminal_is_in_raw_mode = true;
+      }
    }
 
    /*
@@ -651,8 +677,12 @@ cleanup:
     * by OS on process end, but we want to be sure.
     */
    sge_dstring_free(&err_msg);
-   ret = terminal_leave_raw_mode();
-   DPRINTF(("terminal_leave_raw_mode() returned %d (%s)\n", ret, strerror(ret)));
+   if (terminal_is_in_raw_mode == true) {
+      ret = terminal_leave_raw_mode();
+      DPRINTF(("terminal_leave_raw_mode() returned %d (%s)\n", ret, strerror(ret)));
+      terminal_is_in_raw_mode = false;
+   }
+
    *p_exit_status = g_exit_status;
    DEXIT;
    return 0;

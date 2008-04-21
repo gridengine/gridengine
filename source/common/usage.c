@@ -1323,6 +1323,9 @@ void sge_usage(u_long32 prog_number, FILE *fp) {
       }
    }
 
+   if (VALID_OPT(pty_OPT, prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_pty_OPT, MSG_GDI_UTEXT_pty_OPT );
+   }
 
    fprintf(fp, "\n");
    print_marked(prog_number, fp);

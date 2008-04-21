@@ -1777,7 +1777,28 @@ DTRACE;
       /* "-inherit" - accept, but do nothing, must be handled by caller */
 
       if(!strcmp("-inherit", *sp)) {
-         ep_opt = sge_add_noarg(pcmdline, verbose_OPT, *sp, NULL);
+         ep_opt = sge_add_noarg(pcmdline, inherit_OPT, *sp, NULL);
+         sp++;
+         continue;
+      }
+/*-----------------------------------------------------------------------------*/
+      /* "-pty" - accept, but do nothing, must be handled by caller */
+
+      if(!strcmp("-pty", *sp)) {
+         /* next field is "y|n" */
+         sp++;
+         if (!*sp) {
+             answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                                     MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-pty");
+             DRETURN(answer);
+         }
+
+         DPRINTF(("\"-pty %s\"\n", *sp));
+
+         if (set_yn_option(pcmdline, pty_OPT, *(sp - 1), *sp, &answer) != STATUS_OK) {
+            DRETURN(answer);
+         }
+
          sp++;
          continue;
       }

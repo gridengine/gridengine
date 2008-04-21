@@ -39,4 +39,5 @@ int parent_loop(char *hostname, int port, int ptym,
                 struct rusage *rusage, int job_pid, dstring *err_msg);
  
 
+int get_job_status(int job_pid, int *exit_status, struct rusage *usage);
 int close_parent_loop(int exit_status);

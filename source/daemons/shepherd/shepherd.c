@@ -975,8 +975,8 @@ int ckpt_type
    int fd_pipe_err[2] = {-1, -1};
    int fd_pipe_to_child[2] = {-1, -1};
    int ret;
-   int fd_pty_master;
-   int pty = 1;
+   int fd_pty_master = -1;
+   int use_pty = 2;   /* 2 means: use default */
    dstring err_msg = DSTRING_INIT;
    bool is_interactive = false;
 
@@ -994,6 +994,21 @@ int ckpt_type
        strcasecmp(script_file, JOB_TYPE_STR_QRSH) == 0 ||
        strcasecmp(script_file, JOB_TYPE_STR_QRLOGIN) == 0) {
       is_interactive = true;
+   }
+
+   /* Try to read "pty" from config, if it is not there or set to "2", use default */
+   {
+      char *conf_val = get_conf_val("pty");
+      if (conf_val != NULL) {
+         sscanf(conf_val, "%d", &use_pty);
+      }
+      if (use_pty == 2) {  /* use default */
+         if (strcasecmp(script_file, JOB_TYPE_STR_QRSH) == 0) { 
+            use_pty = 0;
+         } else {
+            use_pty = 1;
+         }
+      }
    }
    
    /* Don't care about checkpointing for "commands other than "job" */
@@ -1047,7 +1062,7 @@ int ckpt_type
           * child gets the pty slave. The slave pty becomes stdin/stdout/stderr
           * of the child.
           */
-         if (pty == 1) {
+         if (use_pty == 1) {
             shepherd_trace("calling fork_pty()");
             pid = fork_pty(&fd_pty_master, fd_pipe_err, &err_msg);
          } else {
@@ -1179,12 +1194,13 @@ int ckpt_type
                      "port = %d, fd_pty_master = %d, "
                      "fd_pipe_in = %d, fd_pipe_out = %d, "
                      "fd_pipe_err = %d, fd_pipe_to_child = %d",
-                     hostname, port, fd_pty_master, fd_pipe_in[0], 
+                     hostname, port, fd_pty_master, fd_pipe_in[1], 
                      fd_pipe_out[0], fd_pipe_err[0], fd_pipe_to_child[0]);
 
       username = get_conf_val("job_owner");
       start_time = sge_get_gmt();
 
+      exit_status = -1;
       ret = parent_loop(hostname, port, fd_pty_master, fd_pipe_in, 
                         fd_pipe_out, fd_pipe_err, fd_pipe_to_child,
                         ckpt_pid, ckpt_type, timeout, ckpt_interval, 
@@ -1194,24 +1210,30 @@ int ckpt_type
          shepherd_error(1, "startup of qrsh job failed: "SFN"",
                         sge_dstring_get_string(&err_msg));
       }
-      sge_dstring_free(&err_msg);
+
+      /*shepherd_signal_job(-pid, SIGKILL);*/
+      sge_switch2start_user();
+      kill(-pid, SIGKILL);
+      sge_switch2admin_user();
+
+      if (exit_status == -1) {
+         exit_status = 0;
+         if (get_job_status(pid, &exit_status, &rusage) == 1) {
+            shepherd_trace("%s exited with exit status %d", 
+                           childname, WEXITSTATUS(exit_status));
+         }
+      }
+
       status = exit_status;
       ckpt_interval = 0;
-#if 0  /* TODO: This block seems to be not needed any more as the wait3()
-        *       call was moved into parent_loop()
-        */        
-      /* child exited, read usage */
-      status = wait_my_child(pid, ckpt_pid, ckpt_type,
-                             &rusage, timeout, ckpt_interval, childname);
-      shepherd_trace("wait_my_child returned:");
-      shepherd_trace("   status = %d", status);
-#endif
+
       shepherd_trace("   status = %d", status);
       shepherd_trace("   rusage.ru_stime.tv_sec  = %d", rusage.ru_stime.tv_sec);
       shepherd_trace("   rusage.ru_stime.tv_usec = %d", rusage.ru_stime.tv_usec);
       shepherd_trace("   rusage.ru_utime.tv_sec  = %d", rusage.ru_utime.tv_sec);
       shepherd_trace("   rusage.ru_utime.tv_usec = %d", rusage.ru_utime.tv_usec);
       FREE(address);
+      sge_dstring_free(&err_msg);
       /* END TODO: Move this to a function */
    }
    end_time = sge_get_gmt();

@@ -227,6 +227,7 @@ enum {
    inherit_OPT,  /* inherit option for qrsh, inherit existing job $JOB_ID */
    nostdin_OPT,  /* nostdin option for qrsh, pass as -n option to rsh */
    noshell_OPT,  /* noshell option for qrsh, pass as noshell option to qrsh_starter */
+   pty_OPT,      /* pty option for qrsh, start job in a pty */
 
    /* add/set/delete/modify sge objects */
    mattr_OPT,     /* modify a sublist of an object */

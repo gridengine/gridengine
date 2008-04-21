@@ -172,7 +172,7 @@ int comm_init_lib(dstring *err_msg)
 
    DENTER(TOP_LAYER, "comm_init_lib");
 
-   ret = cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_OFF, NULL /*my_log_list_flush_list*/);
+   ret = cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_DEBUG, my_log_list_flush_list);
    if (ret != CL_RETVAL_OK) {
       sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
       DPRINTF(("cl_com_setup_commlib() failed: %s (%d)\n",
@@ -1130,6 +1130,7 @@ int comm_recv_message(COMMUNICATION_HANDLE *handle, cl_bool_t b_synchron,
       recv_mess->cl_message = message;
       if (message != NULL) {
          if (message->message_length>0) {
+            char tmpbuf[100];
             switch (message->message[0]) {
                case STDIN_DATA_MSG:
                case STDOUT_DATA_MSG:
@@ -1142,6 +1143,10 @@ int comm_recv_message(COMMUNICATION_HANDLE *handle, cl_bool_t b_synchron,
                   /* data message */ 
                   recv_mess->type = message->message[0];
                   recv_mess->data = (char*)&(message->message[1]);
+
+                  DPRINTF(("recv_mess->type = %d\n", recv_mess->type));
+                  snprintf(tmpbuf, MIN(100, message->message_length), "%s", recv_mess->data);
+                  DPRINTF(("recv_mess->data = %s\n", tmpbuf));
                   break;
 
                case WINDOW_SIZE_CTRL_MSG:

@@ -105,7 +105,6 @@ static int                  g_raised_event        = 0;
 static struct rusage        *g_rusage             = NULL;
 static int                  *g_exit_status        = NULL;
 static int                  g_job_pid             = 0;
-static bool                 g_usage_filled_in     = false;
 
 char                        *g_hostname           = NULL;
 extern bool                 g_csp_mode;  /* defined in shepherd.c */
@@ -270,7 +269,6 @@ static void* pty_to_commlib(void *t_conf)
    int                  job_id = 0;
    int                  i;
    int                  npid;
-   struct rusage        tmp_usage;
    bool                 b_select_timeout = false;
    dstring              err_msg = DSTRING_INIT;
 
@@ -295,7 +293,7 @@ static void* pty_to_commlib(void *t_conf)
    for (i=0; i<3; i++) {
       ctrl_pid[i] = -999;
    }
-   memset(&tmp_usage, 0, sizeof(tmp_usage));
+   memset(g_rusage, 0, sizeof(*g_rusage));
 
    /* The main loop of this thread */
    while (do_exit == 0) {
@@ -306,7 +304,7 @@ static void* pty_to_commlib(void *t_conf)
 #if defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(INTERIX)
       npid = waitpid(-1, &status, WNOHANG);
 #else
-      npid = wait3(&status, WNOHANG, &tmp_usage);
+      npid = wait3(&status, WNOHANG, g_rusage);
 #endif
 #ifdef EXTENSIVE_TRACING
       shepherd_trace("pty_to_commlib: wait3() returned npid = %d, status = %d, "
@@ -400,6 +398,12 @@ static void* pty_to_commlib(void *t_conf)
       errno = 0;
       ret = select(fd_max+1, &read_fds, NULL, NULL, &timeout);
       thread_testcancel(t_conf);
+/* This is a workaround for Darwin and HP11, where thread_testcancel() doesn't work.
+ * TODO: Find the reason why it doesn't work and remove the workaround
+ */
+      if (g_raised_event > 0) {
+         do_exit = 1;
+      }
 #ifdef EXTENSIVE_TRACING
       shepherd_trace("pty_to_commlib: select() returned %d", ret);
 #endif
@@ -583,6 +587,9 @@ static void* commlib_to_pty(void *t_conf)
        * but this doesn't work on some architectures (Darwin, older Solaris).
        */
       thread_testcancel(t_conf);
+      if (g_raised_event > 0) {
+         do_exit = 1;
+      }
 
 #ifdef EXTENSIVE_TRACING
       shepherd_trace("commlib_to_pty: comm_recv_message() returned %d, err_msg: %s",
@@ -908,41 +915,11 @@ int parent_loop(char *hostname, int port, int ptym,
     *       connection should do a flush.
     *       Test it, and if it works, remove this code.
     */
+   shepherd_trace("main: flushing messages");
    if (g_comm_handle != NULL) {
       comm_flush_write_messages(g_comm_handle, err_msg);
    }
 
-   /* 
-    * Get usage of child processes, if it was not already retrieved 
-    */
-   {
-      int npid;
-      int status;
-      struct rusage tmp_usage;
-
-      memset(&tmp_usage, 0, sizeof(tmp_usage));
-
-      if (!g_usage_filled_in) {
-   #if defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(INTERIX)
-         npid = waitpid(-1, &status, 0);
-   #else
-         npid = wait3(&status, 0, &tmp_usage);
-         shepherd_trace("main: status = %d, npid = %d", status, npid);
-         if (npid == -1) {
-            shepherd_trace("main: npid == -1, errno = %d, %s", errno, strerror(errno));
-         } else {
-            shepherd_trace("main: copying tmp_usage to g_rusage");
-            memcpy(g_rusage, &tmp_usage, sizeof(tmp_usage));
-            if ((npid == g_job_pid) && ((WIFSIGNALED(status) || WIFEXITED(status)))) {
-               shepherd_trace("%s exited with exit status %d", 
-                                      childname, WEXITSTATUS(status));
-               *g_exit_status = status;
-               g_job_pid = -999;
-            }   
-         }
-   #endif
-      }
-   }
 #if 0
 {
 struct timeb ts;
@@ -955,9 +932,36 @@ shepherd_trace("+++++ timestamp: %d.%03d ++++", (int)ts.time, (int)ts.millitm);
 
    /* The communication will be freed in close_parent_loop() */
    sge_dstring_free(err_msg);
+   shepherd_trace("main: leaving main loop");
    return 0;
 }
 
+int get_job_status(int job_pid, int *exit_status, struct rusage *usage)
+{
+   int npid;
+   int status;
+   struct rusage tmp_usage;
+
+   memset(&tmp_usage, 0, sizeof(tmp_usage));
+
+#if defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(INTERIX)
+   npid = waitpid(-1, &status, 0);
+#else
+   npid = wait3(&status, 0, &tmp_usage);
+#endif
+   shepherd_trace("wait3() returned status = %d, npid = %d", status, npid);
+
+   if (npid == -1) {
+      shepherd_trace("npid == -1, errno = %d, %s", errno, strerror(errno));
+   }
+
+   if ((npid == job_pid) && ((WIFSIGNALED(status) || WIFEXITED(status)))) {
+      memcpy(usage, &tmp_usage, sizeof(tmp_usage));
+      *exit_status = status;
+      return 1;
+   }
+   return 0;
+}
 int close_parent_loop(int exit_status)
 {
    int     ret = 0;
@@ -969,9 +973,9 @@ int close_parent_loop(int exit_status)
     */
    snprintf(sz_exit_status, 20, "%d", exit_status);
    shepherd_trace("sending UNREGISTER_CTRL_MSG with exit_status = \"%s\"", 
-                          sz_exit_status);
+                  sz_exit_status);
    shepherd_trace("sending to host: %s", 
-                          g_hostname != NULL ? g_hostname : "<null>");
+                  g_hostname != NULL ? g_hostname : "<null>");
    ret = (int)comm_write_message(g_comm_handle, g_hostname,
       OTHERCOMPONENT, 1, (unsigned char*)sz_exit_status, strlen(sz_exit_status), 
       UNREGISTER_CTRL_MSG, &err_msg);

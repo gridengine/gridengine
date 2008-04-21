@@ -497,6 +497,9 @@ enum {
 *     SGE_LIST(JB_path_aliases)  
 *        Path aliases list (PA_Type).
 *
+*     SGE_ULONG(JB_pty)
+*        Interactive job should be started in a pty. 0=no, 1=yes, 2=use default.
+*
 *
 *  FUNCTION
 *     JB_Type elements make only sense in conjunction with JAT_Type
@@ -620,7 +623,8 @@ enum {
    JB_rrcontr,
    JB_dlcontr,
    JB_wtcontr,
-   JB_ar
+   JB_ar,
+   JB_pty
 };
 
 /* 
@@ -726,6 +730,7 @@ LISTDEF(JB_Type)
    SGE_DOUBLE(JB_dlcontr, CULL_DEFAULT | CULL_JGDI_RO)         
    SGE_DOUBLE(JB_wtcontr, CULL_DEFAULT | CULL_JGDI_RO)         
    SGE_ULONG(JB_ar, CULL_DEFAULT | CULL_SPOOL)     
+   SGE_ULONG(JB_pty, CULL_DEFAULT | CULL_SPOOL)     
  
    /* 
     * IF YOU ADD SOMETHING HERE THEN CHANGE ALSO THE ADOC COMMENT ABOVE 
@@ -829,6 +834,7 @@ NAMEDEF(JBN)
    NAME("JB_dlcontr")
    NAME("JB_wtcontr")
    NAME("JB_ar")
+   NAME("JB_pty")
 NAMEEND
 
 

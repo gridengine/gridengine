@@ -971,6 +971,9 @@
 #define MSG_GDI_USAGE_at_OPT                             "[-at thread_name]"
 #define MSG_GDI_UTEXT_at_OPT                             _MESSAGE(23510, _("add/start qmaster thread"))
 
+#define MSG_GDI_USAGE_pty_OPT                            "[-pty y[es]|n[o]]"
+#define MSG_GDI_UTEXT_pty_OPT                            _MESSAGE(23511, _("start job in a pty"))
+
 
 /* =================================================
  * global error messages 

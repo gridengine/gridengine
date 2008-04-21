@@ -33,8 +33,9 @@
 void set_signal_handlers(void);
 void* tty_to_commlib(void *t_conf);
 void* commlib_to_tty(void *t_conf);
-int do_server_loop(int random_poll, u_long32 job_id, int nostdin,
-                   int noshell, int *p_exit_status);
+int do_server_loop(int random_poll, u_long32 job_id, int nostdin, int noshell,
+                   int is_rsh, int is_qlogin, 
+                   int *p_exit_status);
 
 
 

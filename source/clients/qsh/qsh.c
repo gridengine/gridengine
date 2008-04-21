@@ -441,7 +441,8 @@ static char *read_from_qrsh_socket(int msgsock)
    char *c  = buffer;
   
    DENTER(TOP_LAYER, "read_from_qrsh_socket");
-  
+
+   memset(buffer, 0, 1024);
    do {
       *c = 0;
 
@@ -1317,6 +1318,7 @@ int main(int argc, char **argv)
    int existing_job = 0;
    int nostdin = 0;
    int noshell = 0;
+   int pty_option = 2;  /* 0 means "no" is specified, 1 "yes", 2 means not specified */
 
    const char *host = NULL;
    char name[MAX_JOB_NAME + 1];
@@ -1451,6 +1453,16 @@ int main(int argc, char **argv)
    while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-noshell"))) {
       lRemoveElem(opts_cmdline, &ep);
       noshell = 1;
+   }
+
+   /* parse -pty <yes|no> */
+   if (opt_list_has_X(opts_cmdline, "-pty")) {
+      pty_option = opt_list_is_X_true(opts_cmdline, "-pty");
+   }
+   lSetUlong(job, JB_pty, pty_option);
+   /* remove the pty option from commandline before proceeding */
+   while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-pty"))) {
+      lRemoveElem(opts_cmdline, &ep);
    }
 
    /*
@@ -1817,8 +1829,9 @@ int main(int argc, char **argv)
 
          DPRINTF(("starting server loop\n"));
          /* TODO: Add proper error handling and error propagation to do_server_loop() */
-         ret = do_server_loop(random_poll, job_id, nostdin, 
-                              noshell, &exit_status);
+         ret = do_server_loop(random_poll, job_id, nostdin, noshell, 
+                              is_rsh, is_qlogin,
+                              &exit_status);
          if (ret != 0) {
             return 1;
          }
@@ -1960,12 +1973,15 @@ int main(int argc, char **argv)
                      host, port, job_dir, utilbin_dir, is_rsh, is_rlogin, 
                      nostdin, noshell, sock);
 
+                  DPRINTF(("exit_status = %d\n", exit_status));
+
                   if(exit_status < 0) {
                      WARNING((SGE_EVENT, MSG_QSH_CLEANINGUPAFTERABNORMALEXITOF_S, 
                         client_name));
                      cl_com_ignore_timeouts(CL_FALSE);
                      cl_commlib_open_connection(cl_com_get_handle(progname,0),
                         (char*)mastername, (char*)prognames[QMASTER], 1);
+                     DPRINTF(("deleting job\n"));
                      delete_job(ctx, job_id, lp_jobs);
                      exit_status = EXIT_FAILURE;
                   }
@@ -2013,9 +2029,12 @@ int main(int argc, char **argv)
                      DPRINTF(("closing STDIN\n"));
                      close(STDIN_FILENO);
                   }
+
                   /* do_server_loop() loops until the client has disconnected */
-                  ret = do_server_loop(random_poll, job_id, nostdin, 
-                                       noshell, &exit_status);
+                  ret = do_server_loop(random_poll, job_id, nostdin, noshell, 
+                                       is_rsh, is_qlogin,
+                                       &exit_status);
+                  DPRINTF(("exit_status = %d\n", exit_status));
                   if (ret == COMM_RETVAL_OK) {
                      do_exit = 1;
                      continue;

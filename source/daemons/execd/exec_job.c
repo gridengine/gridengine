@@ -729,12 +729,19 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
             const char *lib_path = sge_getenv(lib_path_env);
 
             if (lib_path != NULL) {
-               var_list_set_string (&environmentList, lib_path_env, lib_path);
+               var_list_set_string(&environmentList, lib_path_env, lib_path);
             }
          }
-         
          var_list_set_sharedlib_path(&environmentList);
       }
+#if defined(HP1164)
+      const char *shlib_path = sge_getenv("SHLIB_PATH");
+
+      if (shlib_path == NULL) {
+         shlib_path = "";
+      }
+      var_list_set_string(&environmentList, "SHLIB_PATH", shlib_path);
+#endif
 
       /* set final of variables whose value shall be replaced */ 
       var_list_copy_prefix_vars(&environmentList, environmentList,
@@ -1267,6 +1274,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
    /* config for interactive jobs */
    {
       u_long32 jb_now;
+      int      pty_option;
       if(petep != NULL) {
          jb_now = JOB_TYPE_QRSH;
       } else {
@@ -1275,7 +1283,13 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
      
       if(petep != NULL) {
          fprintf(fp, "pe_task_id=%s\n", pe_task_id);
-      }   
+      }
+     
+      pty_option = (int)lGetUlong(jep, JB_pty);
+      if (pty_option < 0 || pty_option > 2) {
+         pty_option = 2;   /* 2 = use default */
+      }
+      fprintf(fp, "pty=%d\n", pty_option);
 
       if(JOB_TYPE_IS_QLOGIN(jb_now) || JOB_TYPE_IS_QRSH(jb_now) 
          || JOB_TYPE_IS_QRLOGIN(jb_now)) {

@@ -1,3 +1,8 @@
+HP-2008-04-21-0: Enhancem:  added -pty switch to qrsh
+                 Enhancem:  several cleanups
+                 Changed:   shepherd, qrsh
+                 Review:    EB
+
 AA-2008-04-21-1: Bugfix:    - suppress pw echo for JMX
                             - enable pw in JGDIShell
                  Review:    RH           

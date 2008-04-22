@@ -1610,7 +1610,7 @@ reporting_create_new_ar_record(lList **answer_list,
                               "%s\n",
                               sge_u32c(report_time), REPORTING_DELIMITER,
                               "new_ar", REPORTING_DELIMITER,
-                              sge_u32c(report_time), REPORTING_DELIMITER,
+                              sge_u32c(lGetUlong(ar, AR_submission_time)), REPORTING_DELIMITER,
                               sge_u32c(lGetUlong(ar, AR_id)), REPORTING_DELIMITER,
                               (owner != NULL) ? owner : "");
    sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
@@ -1673,6 +1673,7 @@ reporting_create_ar_attribute_record(lList **answer_list,
                               sge_U32CFormat"%c"
                               SFN"%c"
                               sge_U32CFormat"%c"   /* report_time */
+                              sge_U32CFormat"%c"   /* AR_submission_time */
                               sge_U32CFormat"%c"   /* AR_id */
                               "%s%c"               /* AR_name */
                               "%s%c"               /* AR_account */
@@ -1683,6 +1684,7 @@ reporting_create_ar_attribute_record(lList **answer_list,
                               sge_u32c(report_time), REPORTING_DELIMITER,
                               "ar_attr", REPORTING_DELIMITER,
                               sge_u32c(report_time), REPORTING_DELIMITER,
+                              sge_u32c(lGetUlong(ar, AR_submission_time)), REPORTING_DELIMITER,
                               sge_u32c(lGetUlong(ar, AR_id)), REPORTING_DELIMITER,
                               (ar_name != NULL) ? ar_name : "", REPORTING_DELIMITER,
                               (ar_account != NULL) ? ar_account : "", REPORTING_DELIMITER,
@@ -1750,6 +1752,7 @@ reporting_create_ar_log_record(lList **answer_list,
                               sge_U32CFormat"%c"
                               SFN"%c"
                               sge_U32CFormat"%c"   /* report_time */
+                              sge_U32CFormat"%c"   /* AR submission time */
                               sge_U32CFormat"%c"   /* AR_id */
                               "%s%c"               /* AR_state as string*/
                               "%s%c"               /* event as string*/
@@ -1757,6 +1760,7 @@ reporting_create_ar_log_record(lList **answer_list,
                               sge_u32c(report_time), REPORTING_DELIMITER,
                               "ar_log", REPORTING_DELIMITER,
                               sge_u32c(report_time), REPORTING_DELIMITER,
+                              sge_u32c(lGetUlong(ar, AR_submission_time)), REPORTING_DELIMITER,
                               sge_u32c(lGetUlong(ar, AR_id)), REPORTING_DELIMITER,
                               sge_dstring_get_string(&state_string), REPORTING_DELIMITER,
                               ar_get_string_from_event(event), REPORTING_DELIMITER,
@@ -1876,6 +1880,7 @@ reporting_create_ar_acct_record(lList **answer_list,
                               sge_U32CFormat"%c"
                               SFN"%c"
                               sge_U32CFormat"%c"   /* report_time */
+                              sge_U32CFormat"%c"   /* AR_submission_time */
                               sge_U32CFormat"%c"   /* AR_id */
                               "%s%c"               /* cqueue */
                               "%s%c"               /* execution hostname */
@@ -1883,6 +1888,7 @@ reporting_create_ar_acct_record(lList **answer_list,
                               sge_u32c(report_time), REPORTING_DELIMITER,
                               "ar_acct", REPORTING_DELIMITER,
                               sge_u32c(report_time), REPORTING_DELIMITER,
+                              sge_u32c(lGetUlong(ar, AR_submission_time)), REPORTING_DELIMITER,
                               sge_u32c(lGetUlong(ar, AR_id)), REPORTING_DELIMITER,
                               cqueue_name, REPORTING_DELIMITER,
                               hostname, REPORTING_DELIMITER,

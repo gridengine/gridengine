@@ -1,3 +1,9 @@
+RD-2008-04-22-0: Bugfix:    - ar_id is not contained in qstat -j output
+                            - AR submit time is missing in some reporting
+                              lines
+                 Bugster:   6691984, 6691975
+                 Review:    JO
+
 RD-2008-04-21-1: CVS:       Created V62beta_RC2_TAG
 ---------------------------------------------------
 

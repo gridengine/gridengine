@@ -1,3 +1,7 @@
+AA-2008-04-24-0: Cleanup:   - renamed java drmaa directory to libs/jdrmaa and
+                              added nbproject files
+                 Review:    DT, DG             
+
 RD-2008-04-22-0: Bugfix:    - ar_id is not contained in qstat -j output
                             - AR submit time is missing in some reporting
                               lines

@@ -34,7 +34,7 @@
 # Variable definitions for targets to build
 
 JAPILIB_DIR   = $(SDIR)/libs/japi
-CLASSES_DIR   = $(SDIR)/classes/src
+CLASSES_DIR   = $(SDIR)/libs/jdrmaa
 
 JAPILIB_10    = japi.o
 JAPILIB_OBJS  = $(JAPILIB_10)

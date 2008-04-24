@@ -144,13 +144,18 @@ public class SessionImplTest extends TestCase {
     /** Test of getVersion method, of class com.sun.grid.drmaa.SessionImpl. */
     public void testGetVersion() {
         System.out.println("testGetVersion");
-        
-        Version v = new Version(1, 0);
+
+        Version v_0_5 = new Version(0, 5); 
+        Version v_1_0 = new Version(1, 0);
         
         this.initSession();
         
         try {
-            assertEquals(v, session.getVersion());
+            // get running drmaaj-wrapper version: 0.5 or 1.0
+            Version current_version = session.getVersion();
+
+            assertTrue(current_version.equals(v_0_5) 
+                  || current_version.equals(v_1_0));  
         } finally {
             this.exitSession();
         }

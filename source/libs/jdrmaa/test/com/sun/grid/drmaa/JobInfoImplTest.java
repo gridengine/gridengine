@@ -38,8 +38,6 @@
 
 package com.sun.grid.drmaa;
 
-import java.util.HashMap;
-import java.util.Map;
 import junit.framework.*;
 import org.ggf.drmaa.*;
 

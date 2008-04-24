@@ -37,19 +37,20 @@
     
    <!-- DRMAA -->
    <target name="drmaa" depends="init">
-      <myant dir="classes"/>
+      <myant dir="libs/jdrmaa"/>
+      <!-- <myant dir="classes"/> -->
    </target>
     
    <target name="drmaa.clean" depends="init">
-      <myant dir="classes" target="clean"/>
+     <myant dir="libs/jdrmaa" target="clean"/>
    </target>
 
    <target name="drmaa.javadoc" depends="init">
-      <myant dir="classes" target="javadoc"/>
+     <myant dir="libs/jdrmaa" target="javadoc"/>
    </target>
     
    <target name="drmaa.test" depends="init">
-      <myant dir="classes" target="test"/>
+      <myant dir="libs/jdrmaa" target="test"/>
    </target>
     
    <!-- JUTI -->

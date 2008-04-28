@@ -54,7 +54,7 @@ time in case of BDB spooling.
    you must execute this command on the RPC Server host.
 
    Please verify that the command was executed correctly and the file
-   /tmp/dump.txt is now empty. 
+   /tmp/dump.out is not empty. 
 
    If the command succeeded remove the previous BDB database files by
    executing the following command as sgeadmin user:

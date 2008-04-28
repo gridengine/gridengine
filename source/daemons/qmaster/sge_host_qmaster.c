@@ -668,18 +668,15 @@ int host_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, gdi
 
 /* ------------------------------------------------------------ */
 
-void sge_mark_unheard(
-lListElem *hep,
-const char *target    /* prognames[QSTD|EXECD] */
-) {
+void sge_mark_unheard(lListElem *hep) {
    const char *host;
 
    DENTER(TOP_LAYER, "sge_mark_unheard");
 
    host = lGetHost(hep, EH_name);
 
-   if (cl_com_remove_known_endpoint_from_name((char*)host,(char*)target,1) == CL_RETVAL_OK) {
-      DEBUG((SGE_EVENT, "set %s/%s/%d to unheard\n", host, target, 1));
+   if (cl_com_remove_known_endpoint_from_name(host, prognames[EXECD], 1) == CL_RETVAL_OK) {
+      DEBUG((SGE_EVENT, "set %s/%s/%d to unheard\n", host, prognames[EXECD], 1));
    }
 
    host_trash_nonstatic_load_values(hep);
@@ -1194,7 +1191,7 @@ notify(sge_gdi_ctx_class_t *ctx, lListElem *lel, sge_gdi_packet_class_t *packet,
       }
    }
 
-   sge_mark_unheard(lel, prognames[EXECD]); /* for both execd */
+   sge_mark_unheard(lel);
 
    DEXIT;
    return;

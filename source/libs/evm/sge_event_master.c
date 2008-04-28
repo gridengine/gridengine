@@ -3244,7 +3244,7 @@ bool sge_commit(void)
          ret = false;
       }
    }
- 
+
    DRETURN(ret);
 }
 

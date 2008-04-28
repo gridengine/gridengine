@@ -94,7 +94,7 @@ int cl_com_remove_host_alias(char* alias_name);
 int cl_com_specify_ssl_configuration(cl_ssl_setup_t* new_config);
 
 int cl_com_append_known_endpoint_from_name(char* unresolved_comp_host, char* comp_name, unsigned long comp_id, int service_port, cl_xml_connection_autoclose_t autoclose, cl_bool_t is_static );
-int cl_com_remove_known_endpoint_from_name(char* unresolved_comp_host, char* comp_name, unsigned long comp_id);
+int cl_com_remove_known_endpoint_from_name(const char* unresolved_comp_host, const char* comp_name, unsigned long comp_id);
 int cl_com_get_known_endpoint_port_from_name(char* unresolved_comp_host, char* comp_name, unsigned long comp_id, int* service_port );
 int cl_com_get_known_endpoint_autoclose_mode_from_name(char* unresolved_comp_host, char* comp_name, unsigned long comp_id, cl_xml_connection_autoclose_t* auto_close_mode );
 
@@ -194,7 +194,7 @@ int cl_commlib_set_connection_param(cl_com_handle_t* handle, int parameter, int 
 int cl_commlib_get_connection_param(cl_com_handle_t* handle, int parameter, int* value);
 cl_bool_t cl_commlib_get_global_param(cl_global_settings_params_t parameter);
 int cl_commlib_set_global_param(cl_global_settings_params_t parameter, cl_bool_t value);
-int cl_commlib_get_last_message_time(cl_com_handle_t* handle, char* un_resolved_hostname, char* component_name, unsigned long component_id, unsigned long* msg_time);
+int cl_commlib_get_last_message_time(cl_com_handle_t* handle, const char* un_resolved_hostname, const char* component_name, unsigned long component_id, unsigned long* msg_time);
 
 
 /* dummy defines for old lib compatibility */

@@ -1,3 +1,9 @@
+RD-2008-04-28-0: Enhancem.  - reduced queue element send by job start
+                            - added BDB transactions for job script and job
+                 Cleanup:   - removed last occurences of QSTD
+                            - removed MAX_ORDER_LIMIT
+                 Review:    EB
+
 AA-2008-04-24-0: Cleanup:   - renamed java drmaa directory to libs/jdrmaa and
                               added nbproject files
                  Review:    DT, DG             

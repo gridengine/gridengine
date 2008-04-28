@@ -2400,7 +2400,7 @@ int cl_com_get_known_endpoint_port(cl_com_endpoint_t* endpoint, int* service_por
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_remove_known_endpoint_from_name()"
-int cl_com_remove_known_endpoint_from_name(char* unresolved_comp_host, char* comp_name, unsigned long comp_id) {
+int cl_com_remove_known_endpoint_from_name(const char* unresolved_comp_host, const char* comp_name, unsigned long comp_id) {
    int ret_val = CL_RETVAL_PARAMS;
 
    char* resolved_hostname = NULL;
@@ -6635,7 +6635,7 @@ cl_commlib_send_message(cl_com_handle_t* handle, char *un_resolved_hostname,
 #endif
 #define __CL_FUNCTION__ "cl_commlib_get_last_message_time()"
 int cl_commlib_get_last_message_time(cl_com_handle_t* handle, 
-                                    char* un_resolved_hostname, char* component_name, unsigned long component_id, 
+                                    const char* un_resolved_hostname, const char* component_name, unsigned long component_id, 
                                     unsigned long* message_time) {
 
    char* unique_hostname = NULL;
@@ -6666,7 +6666,7 @@ int cl_commlib_get_last_message_time(cl_com_handle_t* handle,
 
    /* setup endpoint */
    receiver.comp_host = unique_hostname;
-   receiver.comp_name = component_name;
+   receiver.comp_name = strdup(component_name);
    receiver.comp_id   = component_id;
    receiver.addr.s_addr = in_addr.s_addr;
    receiver.hash_id = cl_create_endpoint_string(&receiver);
@@ -6684,6 +6684,7 @@ int cl_commlib_get_last_message_time(cl_com_handle_t* handle,
 
    free(unique_hostname);
    free(receiver.hash_id);
+   free(receiver.comp_name);
 
    return return_value;
 }

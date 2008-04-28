@@ -1798,8 +1798,6 @@ const char* sge_dump_message_tag(unsigned long tag) {
          return "TAG_GET_NEW_CONF";
       case TAG_JOB_REPORT:
          return "TAG_JOB_REPORT";
-      case TAG_QSTD_QSTAT:
-         return "TAG_QSTD_QSTAT";
       case TAG_TASK_EXIT:
          return "TAG_TASK_EXIT";
       case TAG_TASK_TID:

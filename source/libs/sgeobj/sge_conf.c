@@ -162,7 +162,6 @@ static bool enable_mtrace = false;
 static long ptf_max_priority = -999;
 static long ptf_min_priority = -999;
 static int max_dynamic_event_clients = 99;
-static int max_order_limit = 99;
 static bool keep_active = false;
 static bool enable_windomacc = false;
 static bool enable_addgrp_kill = false;
@@ -648,7 +647,6 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       monitor_time = 0;
       scheduler_timeout = 0;
       max_dynamic_event_clients = 99;
-      max_order_limit = 99;
       max_job_deletion_time = 3;
       enable_reschedule_kill = false;
       enable_reschedule_slave = false;
@@ -701,10 +699,6 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
          /* EB: TODO: CLEANUP: add parse_int_param() */
          if (!strncasecmp(s, "MAX_DYN_EC", sizeof("MAX_DYN_EC")-1)) {
             max_dynamic_event_clients = atoi(&s[sizeof("MAX_DYN_EC=")-1]);
-            continue;
-         }
-         if (!strncasecmp(s, "MAX_ORDER_LIMIT", sizeof("MAX_ORDER_LIMIT")-1)) {
-            max_order_limit = atoi(&s[sizeof("MAX_ORDER_LIMIT=")-1]);
             continue;
          }
          if (parse_bool_param(s, "NO_SECURITY", &do_credentials)) {
@@ -2090,17 +2084,6 @@ void mconf_set_max_dynamic_event_clients(int value) {
    DRETURN_VOID;
 }
 
-void mconf_set_max_order_limit(int value) {
-
-   DENTER(BASIS_LAYER, "mconf_set_max_order_limit");
-   SGE_LOCK(LOCK_MASTER_CONF, LOCK_WRITE);
-
-   max_order_limit = value;
-
-   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
-   DRETURN_VOID;
-}
-
 int mconf_get_max_dynamic_event_clients(void) {
    int ret;
 
@@ -2108,18 +2091,6 @@ int mconf_get_max_dynamic_event_clients(void) {
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = max_dynamic_event_clients;
-
-   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
-   DRETURN(ret);
-}
-
-int mconf_get_max_order_limit(void) {
-   int ret;
-
-   DENTER(BASIS_LAYER, "mconf_get_max_order_limit");
-   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
-
-   ret = max_order_limit;
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(ret);

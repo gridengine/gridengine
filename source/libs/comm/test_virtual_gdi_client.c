@@ -207,7 +207,7 @@ extern int main(int argc, char** argv)
 
 #ifdef PACKAGE_COUNTER
                  if (atoi(snd_data) != rcv_messages) {
-                    printf("!!!! %d. message was lost, got %s", rcv_messages, snd_data);
+                    printf("!!!! %d. message was lost, got %s\n", rcv_messages, snd_data);
                     do_shutdown = 1;
                  }
 #endif

@@ -1134,7 +1134,7 @@ struct dispatch_entry *de
  *  NOTES
  *     MT-NOTE: tgt2cc() is not MT safe (assumptions)
  */
-void tgt2cc(lListElem *jep, const char *rhost, const char* target)
+void tgt2cc(lListElem *jep, const char *rhost)
 {
 
 #ifdef KERBEROS
@@ -1157,7 +1157,7 @@ void tgt2cc(lListElem *jep, const char *rhost, const char* target)
          }
       }
       if (rc == 0)
-         if (krb_put_tgt(rhost, target, 0, jid, tgt_creds) == 0) {
+         if (krb_put_tgt(rhost, prognames[EXECD], 0, jid, tgt_creds) == 0) {
             krb_set_tgt_id(jid);
  
             tgt_creds = NULL;
@@ -1181,12 +1181,12 @@ void tgt2cc(lListElem *jep, const char *rhost, const char* target)
  *  NOTES
  *     MT-NOTE: tgtcclr() is MT safe (assumptions)
  */
-void tgtcclr(lListElem *jep, const char *rhost, const char* target)
+void tgtcclr(lListElem *jep, const char *rhost)
 {
 #ifdef KERBEROS
 
    /* clear client TGT */
-   krb_put_tgt(rhost, target, 0, lGetUlong(jep, JB_job_number), NULL);
+   krb_put_tgt(rhost, prognames[EXECD], 0, lGetUlong(jep, JB_job_number), NULL);
    krb_set_tgt_id(0);
 
 #endif

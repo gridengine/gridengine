@@ -67,7 +67,7 @@ static void  cl_dump_connection(cl_com_connection_t* connection);
 static void cl_dump_private(cl_com_connection_t* connection);
 #endif
 
-static int cl_com_gethostbyname(char *hostname, cl_com_hostent_t **hostent, int* system_error );
+static int cl_com_gethostbyname(const char *hostname, cl_com_hostent_t **hostent, int* system_error );
 static int cl_com_gethostbyaddr(struct in_addr *addr, cl_com_hostent_t **hostent, int* system_error_retval );
 static int cl_com_dup_host(char** host_dest, const char* source, cl_host_resolve_method_t method, const char* domain);
 static cl_bool_t cl_com_default_ssl_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value);
@@ -1778,7 +1778,7 @@ int cl_com_gethostname(char **unique_hostname, struct in_addr *copy_addr, struct
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_gethostbyname()"
-static int cl_com_gethostbyname(char *hostname_unresolved, cl_com_hostent_t **hostent, int* system_error) {
+static int cl_com_gethostbyname(const char *hostname_unresolved, cl_com_hostent_t **hostent, int* system_error) {
 #if defined(CRAY)  
    struct sockaddr_in  tmp_addr;
 #else
@@ -1811,7 +1811,7 @@ static int cl_com_gethostbyname(char *hostname_unresolved, cl_com_hostent_t **ho
       CL_LOG_STR(CL_LOG_INFO,"ip address string  :", hostname_unresolved);
       CL_LOG_STR(CL_LOG_INFO,"resulting host name:", hostname);
    } else {
-      hostname = hostname_unresolved;
+      hostname = strdup(hostname_unresolved);
    }
 
    /* was there a malloc() error */
@@ -2235,7 +2235,7 @@ static cl_bool_t cl_com_is_ip_address_string(const char* resolve_hostname, struc
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_cached_gethostbyname()"
-int cl_com_cached_gethostbyname(char *unresolved_host, char **unique_hostname, struct in_addr *copy_addr, struct hostent **he_copy, int* system_error_value) {
+int cl_com_cached_gethostbyname(const char *unresolved_host, char **unique_hostname, struct in_addr *copy_addr, struct hostent **he_copy, int* system_error_value) {
    cl_host_list_elem_t*  elem = NULL;
    cl_com_host_spec_t*  elem_host = NULL;
    cl_host_list_data_t* ldata = NULL;

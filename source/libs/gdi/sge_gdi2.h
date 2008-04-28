@@ -55,7 +55,6 @@ enum {
    TAG_NEW_FEATURES,     /*12*/
    TAG_GET_NEW_CONF,
    TAG_JOB_REPORT,              /* cull based job reports */
-   TAG_QSTD_QSTAT,
    TAG_TASK_EXIT,
    TAG_TASK_TID,
    TAG_EVENT_CLIENT_EXIT,

@@ -1,3 +1,13 @@
+MD-2008-04-28-0: Bugfix:    o Set SGE_QMASTER_PORT in settings file if
+                            sge_qmaster is not found in /etc/services file
+                            (bug was not really fixed with checkin:
+                             OJ-2008-01-31-0), added a dialog and changed
+                             existing.                     
+                 Bugster:   6589297
+                 Issue:     2477
+                 Review:    HP, DG
+                 Changed:   installation
+
 RD-2008-04-28-0: Enhancem.  - reduced queue element send by job start
                             - added BDB transactions for job script and job
                  Cleanup:   - removed last occurences of QSTD

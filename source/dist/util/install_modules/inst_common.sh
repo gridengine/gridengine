@@ -994,8 +994,7 @@ CheckConfigFile()
       fi
       `IsMailAdress "$ADMIN_MAIL"`
       if [ "$?" -eq 1 -a "$ADMIN_MAIL" != "none" ]; then 
-           $INFOTEXT -e "Your >ADMIN_MAIL< entry is an invalid email adress or not >none<"
-           is_valid="false"
+           $INFOTEXT -e "Your >ADMIN_MAIL< entry seems not to be a email adress or not >none<"
       fi
 
       if [ -z "$SET_FILE_PERMS" ]; then
@@ -3560,59 +3559,11 @@ CheckServiceAndPorts()
    check_val=$2
 
    if [ "$to_check" = "service" ]; then
-      case $SGE_ARCH in
-
-       win*)
-          cat /etc/services | grep $check_val | grep "^[^#]" > /dev/null 2>&1
-          ret=$? 
-          if [ "$ret" = 1 ]; then
-             ypcat.exe services.byname | grep $check_val | grep "^[^#]" > /dev/null 2>&1
-             ret=$?
-          fi
-       ;;
-
-       lx*)
-          cat /etc/services | grep $check_val | grep "^[^#]" > /dev/null 2>&1
-          ret=$? 
-          if [ "$ret" = 1 ]; then
-             ypcat services.byname | grep $check_val | grep "^[^#]" > /dev/null 2>&1
-             ret=$?
-          fi
-       ;;
-
-       *)
-          $SGE_UTILBIN/getservbyname $check_val > /dev/null 2>&1
-          ret=$?
-       ;;
-
-      esac
+      $SGE_UTILBIN/getservbyname $check_val > /dev/null 2>&1
+      ret=$?
    elif [ "$to_check" = "port" ]; then
-      case $SGE_ARCH in
-
-       win*)
-          cat /etc/services | grep -w "$check_val/tcp" > /dev/null 2>&1
-          ret=$? 
-          if [ "$res" = 1 ]; then
-             ypcat.exe services.byname | grep -w "$check_val/tcp" > /dev/null 2>&1
-             ret=$?
-          fi
-       ;;
-
-       lx*)
-          cat /etc/services | grep -w "$check_val/tcp" > /dev/null 2>&1
-          ret=$? 
-          if [ "$res" = 1 ]; then
-             ypcat services.byname | grep -w "$check_val/tcp" > /dev/null 2>&1
-             ret=$?
-          fi
-       ;;
-
-       *)
-          $SGE_UTILBIN/getservbyname -check $check_val > /dev/null 2>&1
-          ret=$?
-       ;;
-
-      esac
+      $SGE_UTILBIN/getservbyname -check $check_val > /dev/null 2>&1
+      ret=$?
    fi
 }
 
@@ -3843,8 +3794,7 @@ CheckPortsCollision()
 {
    check_val=$1
 
-   collision_flag="empty"
-   sge_settings_flag=0
+   collision_flag="undef"
    services_flag=0
    env_flag=0
 
@@ -3852,14 +3802,6 @@ CheckPortsCollision()
 
    if [ $services_out != 0 ]; then
       services_flag=1
-   fi
-
-   if [ -f $SGE_ROOT/$SGE_CELL/common/settings.csh ]; then
-      sge_settings_flag=1
-   fi
-
-   if [ -f $SGE_ROOT/$SGE_CELL/common/settings.sh ]; then
-      sge_settings_flag=1
    fi
 
    if [ $check_val = "sge_qmaster" ]; then
@@ -3874,44 +3816,24 @@ CheckPortsCollision()
       env_flag=1
    fi
 
-   # Check which 2 or more settings are present, return appropiate $ret
 
-   if [ $sge_settings_flag = 1 -a $services_flag = 1 -a $env_flag = 0 ] ; then
-           collision_flag=settings_services
+   if [ $services_flag = 1 -a $env_flag = 0 ]; then
+           collision_flag="services_only"
            return
    fi
 
-
-   if [ $sge_settings_flag = 0 -a $services_flag = 1 -a $env_flag = 0 ] ; then
-           collision_flag=services_only
+   if [ $services_flag = 0 -a $env_flag = 1 ]; then
+           collision_flag="env_only"
            return
    fi
 
-   if [ $sge_settings_flag = 1 -a $services_flag = 0 -a $env_flag = 0 ] ; then
-           collision_flag=settings_only
+   if [ $services_flag = 1 -a $env_flag = 1 ]; then
+           collision_flag="services_env"
            return
    fi
 
-  # Now with env_flag on
-
-   if [ $sge_settings_flag = 0 -a $services_flag = 0 -a $env_flag = 1 ] ; then
-           collision_flag=env_only
+   if [ $services_flag = 0 -a $env_flag = 0 ]; then
+           collision_flag="no_ports"
            return
    fi
-
-   if [ $sge_settings_flag = 1 -a $services_flag = 1 -a $env_flag = 1 ] ; then
-           collision_flag=settings_services_env
-           return
-   fi
-
-   if [ $sge_settings_flag = 0 -a $services_flag = 1 -a $env_flag = 1 ] ; then
-           collision_flag=services_env
-           return
-   fi
-
-   if [ $sge_settings_flag = 1 -a $services_flag = 0 -a $env_flag = 1 ] ; then
-           collision_flag=settings_env
-           return
-   fi
-
 }

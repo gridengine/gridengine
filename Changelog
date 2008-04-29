@@ -1,3 +1,8 @@
+LP-2008-04-29-1: Bugfix:    sgemaster does not start/stop both qmaster, shadowd 
+                            SMF services
+                 Bugster:   6695278
+                 Review:    JG
+
 LP-2008-04-29-0: Bugfix:    Stopping qmaster may stop shadowd SMF service in 
                             some cases
                  Bugfix:    sge_smh.sh does not work as standalone script

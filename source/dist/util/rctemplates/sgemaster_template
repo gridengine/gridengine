@@ -401,7 +401,7 @@ usage()
 # MAIN Procedure
 #
 
-if [ "$#" -gt 2 -o "$1" = "-h" -o "$1" = "help" ]; then
+if [ "$#" -gt 3 -o "$1" = "-h" -o "$1" = "help" ]; then
    usage
 fi
 
@@ -459,7 +459,7 @@ if [ "$startup" = true ]; then
 
    # define variable SERVICE_TAGS
    st_enabled=`sh $SGE_ROOT/util/sgeST/sge_st "enabled"`
-   if [ "$st_enabled" = "true" ]; then
+   if [ "$st_enabled" = "true" -a "$qmaster" = "true" ]; then
       sh $SGE_ROOT/util/sgeST/sge_st "register"  
    fi
 
@@ -474,7 +474,6 @@ if [ "$startup" = true ]; then
       exit 1
    fi
 
-   #TODO improve migrate support with SMF
    if [ $qmaster = true -a $qmaster_host = false -a  \
         \( $primary_qmaster_host = true -o $migrate_qmaster = true \) ]; then
        actual_qmaster_host=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
@@ -529,17 +528,19 @@ if [ "$startup" = true ]; then
        qmaster_host=true
    fi
 
-   if [ $qmaster = true -a $qmaster_host = true ]; then
+   if [ $qmaster = true ]; then
       DetectSMFService qmaster
       #We want to use smf
       if [ -z "$SMF_FMRI" -a -n "$service"  ]; then
+         echo "   starting sge_qmaster"
          svcadm enable -st $service
-         exit $?
+      #For -migrate with SMF qmaster_host is not yet set for SMF start (2nd)
+      elif [ $qmaster_host = true -o \( -n "$SMF_FMRI" -a "$SMF_FMRI" = "$service" \) ]; then
+         echo "   starting sge_qmaster"
+         $bin_dir/sge_qmaster
+         [ $? -eq 0 -a -d /var/lock/subsys ] && touch /var/lock/subsys/sgemaster >/dev/null 2>&1
+         CheckRunningQmaster
       fi
-      echo "   starting sge_qmaster"
-      $bin_dir/sge_qmaster
-      [ $? -eq 0 -a -d /var/lock/subsys ] && touch /var/lock/subsys/sgemaster >/dev/null 2>&1
-      CheckRunningQmaster
    elif [ $qmaster = true -a $qmaster_host = false ]; then
       echo
       echo "sge_qmaster didn't start!"
@@ -557,7 +558,6 @@ if [ "$startup" = true ]; then
          pid=`cat $pidfile`
          $utilbin_dir/checkprog $pid sge_shadowd > /dev/null
          if [ "$?" = 0 ]; then
-            echo "   found running sge_shadowd - not starting"
             start_shadowd=false 
          fi
       fi
@@ -566,21 +566,21 @@ if [ "$startup" = true ]; then
          pid=`cat $UQpidfile`
          $utilbin_dir/checkprog $pid sge_shadowd > /dev/null
          if [ "$?" = 0 ]; then
-            echo "   found running sge_shadowd - not starting"
             start_shadowd=false
          fi
       fi
 
       if [ $start_shadowd = true ]; then
          DetectSMFService shadowd
+         echo "   starting sge_shadowd"
          #We want to use smf
          if [ -z "$SMF_FMRI" -a -n "$service"  ]; then
             svcadm enable -st $service
-            exit $?
-         fi
-         echo "   starting sge_shadowd"
-         $bin_dir/sge_shadowd
+         else
+            $bin_dir/sge_shadowd
+	 fi
       else
+	 echo "   found running sge_shadowd - not starting"
          exit 1
       fi
    fi
@@ -589,14 +589,14 @@ else
       echo "   Shutting down Grid Engine shadowd"
       DetectSMFService shadowd
       if [ -z "$SMF_FMRI" -a -n "$service"  ]; then
-            svcadm disable -st $service
-            exit $?
-      fi
-      # Send SIGTERM to shadowd
-      if [ -f $qmaster_spool_dir/shadowd_$UQHOST.pid ]; then
-         Shutdown sge_shadowd $qmaster_spool_dir/shadowd_$UQHOST.pid
-      elif [ -f $qmaster_spool_dir/shadowd_$HOST.pid ]; then
-         Shutdown sge_shadowd $qmaster_spool_dir/shadowd_$HOST.pid
+         svcadm disable -st $service
+      else
+         # Send SIGTERM to shadowd
+         if [ -f $qmaster_spool_dir/shadowd_$UQHOST.pid ]; then
+            Shutdown sge_shadowd $qmaster_spool_dir/shadowd_$UQHOST.pid
+         elif [ -f $qmaster_spool_dir/shadowd_$HOST.pid ]; then
+            Shutdown sge_shadowd $qmaster_spool_dir/shadowd_$HOST.pid
+         fi	
       fi
    fi
 
@@ -607,17 +607,18 @@ else
          if [ -z "$SMF_FMRI" -a -n "$service"  ]; then
             svcadm disable -st $service
             exit $?
-         fi
-         # Send SIGTERM to qmaster
-         Shutdown sge_qmaster $qmaster_spool_dir/qmaster.pid
-         ret=$?
-         if [ -f /var/lock/subsys/sgemaster ]; then
-            uid=`$utilbin_dir/uidgid -uid`
-            if [ "$uid" = "0" -a "$ret" = "0" ]; then            
-               rm -f /var/lock/subsys/sgemaster >/dev/null 2>&1
-            else
-               echo "Can't shut down qmaster!"
-               exit 1
+         else
+            # Send SIGTERM to qmaster
+            Shutdown sge_qmaster $qmaster_spool_dir/qmaster.pid
+            ret=$?
+            if [ -f /var/lock/subsys/sgemaster ]; then
+               uid=`$utilbin_dir/uidgid -uid`
+               if [ "$uid" = "0" -a "$ret" = "0" ]; then            
+                  rm -f /var/lock/subsys/sgemaster >/dev/null 2>&1
+               else
+                  echo "Can't shut down qmaster!"
+                  exit 1
+               fi
             fi
          fi
       fi

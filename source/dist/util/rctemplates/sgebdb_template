@@ -326,7 +326,7 @@ usage()
 # MAIN Procedure
 #
 
-if [ "$#" -gt 1 -o "$#" -lt 1 -o "$1" = "-h" -o "$1" = "help" ]; then
+if [ "$#" -gt 2 -o "$#" -lt 1 -o "$1" = "-h" -o "$1" = "help" ]; then
    usage
 fi
 

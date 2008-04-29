@@ -6666,7 +6666,7 @@ int cl_commlib_get_last_message_time(cl_com_handle_t* handle,
 
    /* setup endpoint */
    receiver.comp_host = unique_hostname;
-   receiver.comp_name = strdup(component_name);
+   receiver.comp_name = (char *)component_name;
    receiver.comp_id   = component_id;
    receiver.addr.s_addr = in_addr.s_addr;
    receiver.hash_id = cl_create_endpoint_string(&receiver);
@@ -6684,7 +6684,6 @@ int cl_commlib_get_last_message_time(cl_com_handle_t* handle,
 
    free(unique_hostname);
    free(receiver.hash_id);
-   free(receiver.comp_name);
 
    return return_value;
 }

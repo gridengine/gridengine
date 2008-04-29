@@ -1,3 +1,6 @@
+RD-2008-04-20-1: Bugfix:    fixed memory leak introduced by RD-2008-04-28-0
+                 Review:    JG
+
 RD-2008-04-29-0: Enhancem.: added AR_submission_time to accounting and job
                             reporting
                  Review:    JG

@@ -1811,7 +1811,7 @@ static int cl_com_gethostbyname(const char *hostname_unresolved, cl_com_hostent_
       CL_LOG_STR(CL_LOG_INFO,"ip address string  :", hostname_unresolved);
       CL_LOG_STR(CL_LOG_INFO,"resulting host name:", hostname);
    } else {
-      hostname = strdup(hostname_unresolved);
+      hostname = (char *)hostname_unresolved;
    }
 
    /* was there a malloc() error */

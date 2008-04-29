@@ -965,8 +965,6 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
    ** immediate jobs trigger scheduling immediately
    */
    if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(jep, JB_type))) {
-      sge_commit(); /* TODO RD: this toggles is_transaction back and unlocks
-                       the mutex even its was not locked by this function */
       sge_deliver_events_immediately(EV_ID_SCHEDD);
    }
 

@@ -1,8 +1,14 @@
+JG-2008-04-29-0: Bugfix:    fixed warning "attempting to commit an event master
+                            transaction, but no transaction is open"
+                            when submitting interactive jobs (-now yes)
+                 Bugster:   6690757
+                 Review:    RD
+
 AA-2008-04-29-0: Cleanup:   - JMX ssl set as default
                             - default value NONE for examples
                             - corrections in examples
                             - correction of comments in management.properties
-                 Review:    RH           
+                 Review:    RH
 
 LP-2008-04-29-1: Bugfix:    sgemaster does not start/stop both qmaster, shadowd 
                             SMF services

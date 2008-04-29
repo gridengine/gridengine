@@ -1162,7 +1162,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
                         lGetUlong(jatep, JAT_task_number),
                         RESCHEDULE_HANDLE_JR_WAIT);
 
-                     DPRINTF(("RU: sge_commit: granted_queue %s job "sge_u32"."sge_u32"\n",
+                     DPRINTF(("RU: sge_commit_job: granted_queue %s job "sge_u32"."sge_u32"\n",
                         lGetString(granted_queue, JG_qname), 
                         lGetUlong(jep, JB_job_number), 
                         lGetUlong(jatep, JAT_task_number)));

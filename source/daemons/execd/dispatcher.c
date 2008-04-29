@@ -125,6 +125,7 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx, char* err_str, void (*e
                do_kill_execd(ctx, &msg);
 #if defined(SOLARIS)
                if (sge_smf_used() == 1) {
+		  /* We must stop, we don't care about current or next planned service state */
                   sge_smf_temporary_disable_instance();
                }
 #endif   

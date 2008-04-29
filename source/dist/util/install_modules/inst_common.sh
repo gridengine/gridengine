@@ -122,6 +122,7 @@ BasicSettings()
   RM="rm -f"
   TOUCH="touch"
   MORE_CMD="more"
+  CHMOD="chmod"
 
 }
 
@@ -1711,7 +1712,7 @@ CheckIfClusterNameAlreadyExists()
    #Try if SMF service already exists
    ServiceAlreadyExists $hosttype
    if [ $? -eq 1 ]; then
-      infotext_temp_msg="Specified cluster name >\$SGE_CLUSTER_NAME=%s< is already used by your system!\nDetected SMF service application/sge/$hosttype:%s."
+      infotext_temp_msg="Specified cluster name >\$SGE_CLUSTER_NAME=%s< is already used by your system!\nDetected SMF service svc:/application/sge/$hosttype:%s."
       if [ $AUTO = true ]; then
          $INFOTEXT  -log "$infotext_temp_msg" $SGE_CLUSTER_NAME $SGE_CLUSTER_NAME
       else
@@ -1737,7 +1738,7 @@ CheckIfClusterNameAlreadyExists()
          infotext_temp_msg="Detected a presence of old SGE RC scripts for cluster >\$SGE_CLUSTER_NAME=%s< as well!\n%s\n"
          ret=3
       else
-         infotext_temp_msg="Specified cluster name >\$SGE_CLUSTER_NAME=%s< is already used by your system!\nDetected a presence of old SGE RC scripts.\n%s\n"
+         infotext_temp_msg="Specified cluster name >\$SGE_CLUSTER_NAME=%s< resulted in the following conflict!\nDetected a presence of old RC scripts.\n%s\n"
          ret=2
       fi
       if [ "$AUTO" = "true" ]; then
@@ -1933,7 +1934,8 @@ ProcessSGEClusterName()
    if [ \( "$1" = "bdb" -o "$1" = "qmaster" -o "$UPDATE" = "true" \) -a ! -f $SGE_ROOT/$SGE_CELL/common/cluster_name ]; then
       ExecuteAsAdmin $MKDIR -p $SGE_ROOT/$SGE_CELL/common
       ExecuteAsAdmin $TOUCH $SGE_ROOT/$SGE_CELL/common/cluster_name
-      ExecuteAsAdmin sh -c "$ECHO $SGE_CLUSTER_NAME > $SGE_ROOT/$SGE_CELL/common/cluster_name"
+      ExecuteAsAdmin $CHMOD 666 $SGE_ROOT/$SGE_CELL/common/cluster_name
+      $ECHO $SGE_CLUSTER_NAME > $SGE_ROOT/$SGE_CELL/common/cluster_name
       ExecuteAsAdmin $CHMOD 644 $SGE_ROOT/$SGE_CELL/common/cluster_name
    fi
 
@@ -2261,7 +2263,7 @@ InstallRcScript()
             MoveLog
          fi
          exit 1
-      fi
+		fi
       return
    fi
 

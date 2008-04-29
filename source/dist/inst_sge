@@ -232,7 +232,7 @@ while [ $ARGC != 0 ]; do
      UPDATE=true
      . ./util/install_modules/inst_qmaster.sh
      . ./util/install_modules/inst_berkeley.sh
-     . ./util/install_modules/inst_update.sh
+     #. ./util/install_modules/inst_update.sh
      #update from 6.1 or higher to 6.2
      ;;
    -winupdate)
@@ -361,83 +361,18 @@ if [ $UPDATE = "true" ]; then
 
    DATE=`date '+%Y-%m-%d_%H:%M:%S'`
    MKDIR="mkdir -p"
+   RM="rm -rf" #Overwrites BasicSettings
    WelcomeTheUserUpgrade
    ProcessSGERoot
    GetCell
    SetCellDependentVariables
    GetAdminUser
+   ProcessSGEClusterName
+   GetJMXPort
+   ServiceTagsSupport
+   AddJMXFiles
    
-   list="master bdb execd"
-   for TMP_DAEMON in $list; do
-      SetupRcScriptNames61 "$TMP_DAEMON"
-      CheckRCfiles "61"
-      if [ $? -ne 0 ] ; then
-         RemoveRcScript $HOST $TMP_DAEMON $euid "61"
-   fi
-   done
-
-   spooling_method=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "spooling_method" | awk '{ print $2 }'`
-   QMASTER_SPOOL_DIR=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "qmaster_spool_dir" | awk '{ print $2 }'`
-
-   ExecuteAsAdmin $SPOOLDEFAULTS complexes $SGE_ROOT/util/resources/centry/display_win_gui
-   
-   if [ "$spooling_method" = "classic" ]; then  # classic spooling case
-
-      ExecuteAsAdmin $MKDIR $QMASTER_SPOOL_DIR/resource_quotas
-
-      if [ `ls $QMASTER_SPOOL_DIR/jobs/ | wc -l` != 0 ]; then
-         # print Upgrade Error Message, and provide user solution to solve the problem
-         UpgradeErrorHandler $spooling_method $QMASTER_SPOOL_DIR
-         $INFOTEXT -wait -n "Hit <RETURN> to continue >>"
-      fi
-   else
-      if [ -f $SGE_ROOT/$SGE_CELL/common/bootstrap ]; then  # berkeley db spooling
-         is_rpc=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "spooling_params" | grep ":"`  
-         if [ "$is_rpc" != "" ]; then  #rpc bdb spooling
-            $INFOTEXT "This system is configured for Berkeley DB Server spooling, please make sure,\nthat the Berkeley DB RPC service is running!\n"
-            $INFOTEXT -wait -n "Please do not continue, till BDB Service is running!\nHit <RETURN> to continue >>"
-            $CLEAR 
-         fi
-      fi
-      if [ `$SGE_UTILBIN/spooledit list | grep JOB | wc -l` != 0 ]; then
-         # print Upgrade Error Message, and provide user solution to solve the problem
-         UpgradeErrorHandler $spooling_method $QMASTER_SPOOL_DIR
-         $INFOTEXT -wait -n "Hit <RETURN> to continue >>"
-      fi
-   fi
-   
-   if [ -f $SGE_ROOT/$SGE_CELL/common/sgemaster ]; then
-      ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/sgemaster $SGE_ROOT/$SGE_CELL/common/sgemaster_$DATE
-   fi
-
-   if [ -f $SGE_ROOT/$SGE_CELL/common/sgeexecd ]; then
-      ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/sgeexecd $SGE_ROOT/$SGE_CELL/common/sgeexecd_$DATE
-   fi 
-
-   if [ -f $SGE_ROOT/$SGE_CELL/common/sgebdb ]; then
-      ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/sgebdb $SGE_ROOT/$SGE_CELL/common/sgebdb_$DATE
-   fi
-
-   if [ -f $SGE_ROOT/$SGE_CELL/common/settings.sh ]; then
-      ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/settings.sh $SGE_ROOT/$SGE_CELL/common/settings.sh_$DATE
-   fi
-
-   if [ -f $SGE_ROOT/$SGE_CELL/common/settings.csh ]; then
-      ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/settings.csh $SGE_ROOT/$SGE_CELL/common/settings.csh_$DATE
-   fi
-
-   $CLEAR
-   CreateSGEStartUpScripts $euid true master
-   CreateSGEStartUpScripts $euid true execd
-   if [ -f $SGE_ROOT/$SGE_CELL/common/bootstrap ]; then
-      is_rpc=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "spooling_params" | grep ":"`  
-      if [ "$is_rpc" != "" ]; then  
-         CreateRPCServerScript
-      fi
-   fi
-   CreateSettingsFile
-   $CLEAR
-   UpdateHints
+	#TODO
 fi
 
 if [ "$BERKELEY" = "install" ]; then
@@ -947,7 +882,6 @@ if [ $SHADOW = "install" ]; then
       AddLocalConfiguration_With_Qconf
 
       $INFOTEXT "Creating shadow_masters file for host %s\n" $SHADOW_HOST
-      $INFOTEXT "Starting sge_shadowd on host %s\n" $SHADOW_HOST
       ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ALREADY_SHADOWS=`cat $SGE_ROOT/$SGE_CELL/common/shadow_masters | grep -v $SHADOW_HOST`
       ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/shadow_masters $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
@@ -969,8 +903,13 @@ if [ $SHADOW = "install" ]; then
       if [ $SHADOW_HOST = `$SGE_UTILBIN/gethostname -aname` ]; then
          . $SGE_ROOT/$SGE_CELL/common/settings.sh
          SGE_ARCH=`$SGE_ROOT/util/arch`
-         $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &
-         AddSGEStartUpScript $euid shadow 
+         AddSGEStartUpScript $euid shadow
+	 $INFOTEXT "Starting sge_shadowd on host %s\n" $SHADOW_HOST
+	 if [ "$SGE_ENABLE_SMF" = "true" ]; then
+	    $SVCADM enable -s "svc:/application/sge/shadowd:$SGE_CLUSTER_NAME"
+	 else
+	    $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &
+	 fi
       else
         for shs in `cat $SGE_ROOT/$SGE_CELL/common/shadow_masters`; do
            echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $shs /bin/sh &

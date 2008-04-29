@@ -49,6 +49,10 @@
 #include "sge_prog.h"
 #include "msg_daemons_common.h"
 
+#if defined(SOLARIS)
+#   include "sge_smf.h"
+#endif
+
 static int do_wait(pid_t);
 
 /*-----------------------------------------------------------------------
@@ -78,6 +82,10 @@ int startprog(int out, int err,
  char *str;
  dstring ds;
  char buffer[128];
+#if defined(SOLARIS)
+ int err_length = 256;
+ char err_str[err_length];
+#endif
 
  DENTER(TOP_LAYER, "startprog");
 
@@ -127,9 +135,17 @@ int startprog(int out, int err,
 
  argv[0] = prog_path;
 
- WARNING((SGE_EVENT, MSG_STARTUP_STARTINGPROGRAMMX_S, prog_path)); 
+ WARNING((SGE_EVENT, MSG_STARTUP_STARTINGPROGRAMMX_S, prog_path));
 
+#if defined(SOLARIS)
+ pid = sge_smf_contract_fork(err_str, err_length);
+ if (pid < -1 && strlen(err_str) > 0) {
+	 /* Print additional SMF related error message */
+	 ERROR((SGE_EVENT, MSG_SMF_STARTPROG_FORK_FAILED_S, err_str));
+ }
+#else
  pid = fork();
+#endif
  if (pid < 0) {
    ERROR((SGE_EVENT, MSG_PROC_CANTFORKPROCESSTOSTARTX_S, prog_path));
    DRETURN(-1);

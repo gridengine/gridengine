@@ -102,7 +102,7 @@ CUT=cut
 # if ADMINUSER = default then execute command unchanged
 STusage()
 {
-   $INFOTEXT "sge_st enable|disable|register|unregister|upgrade|check|enabled|supported|help"
+   $INFOTEXT "sge_st enable|disable|register|unregister|check|enabled|supported|help"
    $INFOTEXT " -------------------------------------------------------------------------------"
    $INFOTEXT "       enable   ... enable The Service Tags"
    $INFOTEXT "       disable  ... disable The Service Tags"
@@ -419,7 +419,7 @@ STUnregister()
 {
    product_defined_id=$1
 
-   STClient  
+   STClient
    if [ $? = 0 ]; then
       # get instance_urn
       instance_urn=`STgetInstanceUrn "$stclient" "$product_defined_id"`

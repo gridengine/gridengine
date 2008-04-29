@@ -46,10 +46,7 @@ SVCADM="/usr/sbin/svcadm"
 SVCCFG="/usr/sbin/svccfg"
 SVCS="/usr/bin/svcs"
 CAT=cat
-CHMOD=chmod
-RM=rm
 SED=sed
-TOUCH=touch
 
 SGE_SMF_SUPPORT_SOURCED=true
 
@@ -61,27 +58,37 @@ if [ -z "$SGE_ROOT" -o -z "$SGE_CELL" ]; then
    exit 2
 fi
 
-#Strangely ARCH is sometimes set to an invalid value. We better do it all the time
-ARCH=`$SGE_ROOT/util/arch`
+#Standalone setup (Warning: Overwrites inst_sge settings)
+if [ -z "$QMASTER" -a -z "$EXECD" -a -z "$SHADOW" -a -z "$BERKELEY" -a -z "$DBWRITER" ]; then
+   MKDIR=mkdir
+   TOUCH=touch
+   CHMOD=chmod
+   RM="rm -f"
+	
+   SGE_ARCH=`$SGE_ROOT/util/arch`
+   SGE_UTILBIN="$SGE_ROOT/utilbin/$SGE_ARCH"
+	
+   . $SGE_ROOT/util/install_modules/inst_common.sh
+	
+   GetAdminUser
+   #Setup INFOTEXT
+   if [ -z "$INFOTEXT" ]; then
+      INFOTEXT=$SGE_ROOT/utilbin/$SGE_ARCH/infotext
+      if [ ! -x $INFOTEXT ]; then
+         echo "Error: Can't find binary \"$INFOTEXT\""
+         echo "Please verify your setup and restart this script. Exit."
+         exit 2
+      fi
 
-
-#Setup INFOTEXT
-if [ -z "$INFOTEXT" ]; then
-   INFOTEXT=$SGE_ROOT/utilbin/$ARCH/infotext
-   if [ ! -x $INFOTEXT ]; then
-      echo "Error: Can't find binary \"$INFOTEXT\""
-      echo "Please verify your setup and restart this script. Exit."
-      exit 2
+      # Test the infotext binary
+      tmp=`$INFOTEXT test 2>&1`
+      if [ $? -ne 0 ]; then
+         echo "Error: Execution of $INFOTEXT failed: $tmp"
+         echo "Please verify your setup and restart this script. Exit."
+         exit 2
+      fi
+      SGE_INFOTEXT_MAX_COLUMN=5000; export SGE_INFOTEXT_MAX_COLUMN
    fi
-
-   # Test the infotext binary
-   tmp=`$INFOTEXT test 2>&1`
-   if [ $? -ne 0 ]; then
-      echo "Error: Execution of $INFOTEXT failed: $tmp"
-      echo "Please verify your setup and restart this script. Exit."
-      exit 2
-   fi
-   SGE_INFOTEXT_MAX_COLUMN=5000; export SGE_INFOTEXT_MAX_COLUMN
 fi
 
 #---------------------------------------------------------------------------
@@ -91,14 +98,15 @@ SMFusage()
    $INFOTEXT "Usage: sge_smf <command>"
    $INFOTEXT ""
    $INFOTEXT "Commands:"
-   $INFOTEXT "   register      [qmaster|shadowd|execd|bdb|dbwriter] SGE_CLUSTER_NAME"
+   $INFOTEXT "   register      qmaster|shadowd|execd|bdb|dbwriter [SGE_CLUSTER_NAME]"
    $INFOTEXT "                 ... register SGE as SMF service"
-   $INFOTEXT "   unregister    [qmaster|shadowd|execd|bdb|dbwriter] SGE_CLUSTER_NAME"
+   $INFOTEXT "   unregister    qmaster|shadowd|execd|bdb|dbwriter [SGE_CLUSTER_NAME]"
    $INFOTEXT "                 ... unregister SGE SMF service"
    $INFOTEXT "   supported     ... check if the SMF can be used on current host"
    $INFOTEXT "   help          ... this help"
    $INFOTEXT "\n"
    $INFOTEXT "SGE_CLUSTER_NAME ... name of this cluster (installation), used as instance name in SMF"
+   $INFOTEXT "                     CAN be omitted if defined as an environment variable"
    $INFOTEXT "                     MUST be the same as you entered during the installation"
 }
 
@@ -363,11 +371,13 @@ SMF()
             return 1
          fi
       fi
-      SGE_CLUSTER_NAME="$3"
-      if [ -z "$SGE_CLUSTER_NAME" ]; then
-         $INFOTEXT "Missing cluster name."
+      if [ -z "$SGE_CLUSTER_NAME" -a -z "$3" ]; then
+         $INFOTEXT "Missing SGE_CLUSTER_NAME argument!"
          SMFusage
          return 1
+      fi
+      if [ -n "$3" ]; then
+         SGE_CLUSTER_NAME="$3"
       fi
    fi
 

@@ -1,3 +1,9 @@
+LP-2008-04-29-0: Bugfix:    Stopping qmaster may stop shadowd SMF service in 
+                            some cases
+                 Bugfix:    sge_smh.sh does not work as standalone script
+                 Bugster:   6692677, 6692668
+                 Review:    JG
+
 MD-2008-04-28-0: Bugfix:    o Set SGE_QMASTER_PORT in settings file if
                             sge_qmaster is not found in /etc/services file
                             (bug was not really fixed with checkin:

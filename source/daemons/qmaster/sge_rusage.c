@@ -46,6 +46,7 @@
 #include "sgeobj/sge_cqueue.h"
 #include "sgeobj/sge_pe.h"
 #include "sgeobj/sge_object.h"
+#include "sgeobj/sge_advance_reservation.h"
 
 #include "sched/sge_job_schedd.h"
 
@@ -61,7 +62,7 @@
 #define ACTFILE_FPRINTF_FORMAT \
 "%s%c%s%c%s%c%s%c%s%c"sge_u32"%c%s%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c" \
 sge_u32"%c%f%c%f%c%f%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c%f%c" \
-sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c%s%c%s%c%s%c%d%c"sge_u32"%c%f%c%f%c%f%c%s%c%f%c%s%c%f%c"sge_u32"" \
+sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c%s%c%s%c%s%c%d%c"sge_u32"%c%f%c%f%c%f%c%s%c%f%c%s%c%f%c"sge_u32"%c"sge_u32"" \
 ARCH_COLUMN \
 "\n"
 
@@ -243,6 +244,8 @@ sge_write_rusage(dstring *buffer,
    u_long32 start_time      = 0;
    u_long32 end_time        = 0;
    u_long32 now             = sge_get_gmt();
+   u_long32 ar_id           = 0;
+   lListElem *ar = NULL;
    u_long32 exit_status     = 0;
    bool do_accounting_summary = false;
 
@@ -432,6 +435,12 @@ sge_write_rusage(dstring *buffer,
       start_time = usage_list_get_ulong_usage(usage_list, "start_time", 0);
       exit_status = usage_list_get_ulong_usage(usage_list, "exit_status", 0);
    }
+
+   ar_id = lGetUlong(job, JB_ar);
+   if (ar_id != 0) {
+      object_description *object_base = object_type_get_object_description();
+      ar = ar_list_locate(*object_base[SGE_TYPE_AR].list, ar_id);
+   }
    
    /*
     * Output all the usage information.
@@ -491,7 +500,8 @@ sge_write_rusage(dstring *buffer,
           none_string(pe_task_id), delimiter,
           reporting_get_double_usage_sum(usage_list, NULL, do_accounting_summary, ja_task,
                                          USAGE_ATTR_MAXVMEM, 0), delimiter, 
-          lGetUlong(job, JB_ar)
+          lGetUlong(job, JB_ar), delimiter,
+          (ar != NULL) ? lGetUlong(ar, AR_submission_time): 0
 #ifdef NEC_ACCOUNTING_ENTRIES
           , delimiter, arch_dep_usage_string
 #endif 

@@ -1,3 +1,7 @@
+RD-2008-04-29-0: Enhancem.: added AR_submission_time to accounting and job
+                            reporting
+                 Review:    JG
+
 JG-2008-04-29-0: Bugfix:    fixed warning "attempting to commit an event master
                             transaction, but no transaction is open"
                             when submitting interactive jobs (-now yes)

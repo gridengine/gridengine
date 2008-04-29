@@ -36,6 +36,9 @@ import com.sun.grid.jgdi.JGDIException;
 import com.sun.grid.jgdi.JGDIFactory;
 import com.sun.grid.jgdi.configuration.Checkpoint;
 import com.sun.grid.jgdi.configuration.ConfigurationFactory;
+import com.sun.grid.jgdi.configuration.JGDIAnswer;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Simple example which demonstrates how to add/update/delete configuration
@@ -43,50 +46,51 @@ import com.sun.grid.jgdi.configuration.ConfigurationFactory;
  *
  */
 public class ConfigExample {
-    
-    public static void main(String [] args)  {
-        
+
+    public static void main(String[] args) {
+
         try {
             String url = "bootstrap:///opt/sge@default:1026";
-            
-            if(args.length == 1) {
+
+            if (args.length == 1) {
                 url = args[0];
             }
-            
+
             JGDI jgdi = JGDIFactory.newInstance(url);
-            
+            List<JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
+
             try {
                 System.out.println("Successfully connected to " + url);
-                
+
                 // Create a new checkpoint object which intialized with default values
                 Checkpoint ckpt = ConfigurationFactory.createCheckpointWithDefaults();
                 ckpt.setName("sample");
                 ckpt.setCkptCommand("/usr/bin/ckpt");
                 ckpt.setCkptDir("/tmp");
-                
-                jgdi.addCheckpoint(ckpt);
-                try {
-                    System.out.println("Checkpoint " + ckpt.getName() + " successfully added");
-                    
-                    ckpt = jgdi.getCheckpoint("ckpt");
-                    
-                    ckpt.setRestCommand("/tmp/blubber");
-                    
-                    jgdi.updateCheckpoint(ckpt);
-                    System.out.println("Checkpoint " + ckpt.getName() + " successfully modified");
-                } finally {
-                    jgdi.deleteCheckpoint(ckpt);
-                    System.out.println("Checkpoint " + ckpt.getName() + " successfully deleted");
+
+                jgdi.addCheckpointWithAnswer(ckpt, answers);
+                for (JGDIAnswer a : answers) {
+                    System.out.println(a.getText());
                 }
-                
+                try {
+                    ckpt = jgdi.getCheckpoint(ckpt.getName());
+                    ckpt.setRestCommand("/tmp/blubber");
+                    jgdi.updateCheckpointWithAnswer(ckpt, answers);
+                    for (JGDIAnswer a : answers) {
+                        System.out.println(a.getText());
+                    }
+                } finally {
+                    jgdi.deleteCheckpointWithAnswer(ckpt.getName(), answers);
+                    for (JGDIAnswer a : answers) {
+                        System.out.println(a.getText());
+                    }
+                }
             } finally {
                 jgdi.close();
             }
-            
         } catch (JGDIException e) {
             e.printStackTrace();
         }
-        
+
     }
-    
 }

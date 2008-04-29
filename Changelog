@@ -1,3 +1,9 @@
+AA-2008-04-29-0: Cleanup:   - JMX ssl set as default
+                            - default value NONE for examples
+                            - corrections in examples
+                            - correction of comments in management.properties
+                 Review:    RH           
+
 LP-2008-04-29-1: Bugfix:    sgemaster does not start/stop both qmaster, shadowd 
                             SMF services
                  Bugster:   6695278

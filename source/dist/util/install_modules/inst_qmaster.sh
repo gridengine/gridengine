@@ -1906,11 +1906,10 @@ GetJMXPort() {
 
          sge_jvm_lib_path=""
          sge_jmx_port=""
-         sge_additional_jvm_args=""
+         sge_additional_jvm_args="-Xmx256m"
          sge_jmx_ssl=false
          sge_jmx_ssl_client=false
          sge_jxm_ssl_keystore=""
-         sge_jxm_ssl_keystore_pw=""
          alldone=false
          while [ $alldone = false ]; do
 
@@ -1929,7 +1928,7 @@ GetJMXPort() {
             sge_jvm_lib_path=$jvm_lib_path
 
             # set SGE_ADDITIONAL_JVM_ARGS
-            $INFOTEXT -n "Please enter additional JVM arguments (optional) >> "
+            $INFOTEXT -n "Please enter additional JVM arguments (optional, default is [%s]) >> " "$sge_additional_jvm_args"
             INP=`Enter "$sge_additional_jvm_args"`
             sge_additional_jvm_args="$INP"
 
@@ -1957,7 +1956,7 @@ GetJMXPort() {
             sge_jmx_port=$INP
 
             # set SGE_JMX_SSL
-            $INFOTEXT -ask "y" "n" -def "y" -n \
+            $INFOTEXT -n -ask "y" "n" -def "y" \
                "Enable JMX SSL server authentication (y/n) [y] >> "
             if [ $? = 0 ]; then
                sge_jmx_ssl="true"
@@ -1967,8 +1966,8 @@ GetJMXPort() {
 
             if [ "$sge_jmx_ssl" = true ]; then
                # set SGE_JMX_SSL_CLIENT
-               $INFOTEXT -ask "y" "n" -def "n" -n \
-                  "Enable JMX SSL client authentication (y/n) [n] >> "
+               $INFOTEXT -n -ask "y" "n" -def "y" \
+                  "Enable JMX SSL client authentication (y/n) [y] >> "
                if [ $? = 0 ]; then
                   sge_jmx_ssl_client="true"
                else    
@@ -1989,6 +1988,7 @@ GetJMXPort() {
                sge_jmx_ssl_keystore="$INP"
 
                # set SGE_JMX_SSL_KEYSTORE_PW
+               sge_jmx_ssl_keystore_pw=""
                STTY_ORGMODE=`stty -g`
                $INFOTEXT -n "Enter JMX SSL server keystore pw >> "
                stty -echo

@@ -90,11 +90,8 @@ public class EventExample {
                     jgdi.addCheckpoint(ckpt);
                     try {
                         System.out.println("Checkpoint " + ckpt.getName() + " successfully added");
-
-                        ckpt = jgdi.getCheckpoint("ckpt");
-
+                        ckpt = jgdi.getCheckpoint(ckpt.getName());
                         ckpt.setRestCommand("/tmp/blubber");
-
                         jgdi.updateCheckpoint(ckpt);
                         System.out.println("Checkpoint " + ckpt.getName() + " successfully modified");
                     } finally {

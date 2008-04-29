@@ -156,11 +156,11 @@ public class <%=classname%> extends <%
              
           } else {
        
-          if (attrValue.equalsIgnoreCase("NONE")) {
-             defaultValue = null;
-          } else {
+//          if (attrValue.equalsIgnoreCase("NONE")) {
+//             defaultValue = null;
+//          } else {
              defaultValue = jh.getInitializer(attr, attrValue);
-          }
+//          }
           
           String gsname =  Character.toUpperCase( attrName.charAt(0) ) +
                              attrName.substring(1);

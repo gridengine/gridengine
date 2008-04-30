@@ -155,8 +155,7 @@ trigger_scheduler_monitoring(sge_gdi_packet_class_t *packet, sge_gdi_task_class_
 static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, monitoring_t *monitor);
 static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, 
                                   char *commproc, int mod, lListElem *ep, 
-                                  bool is_locked, monitoring_t *monitor,
-                                  object_description *object_base);
+                                  monitoring_t *monitor, object_description *object_base);
 
 static bool
 sge_task_check_get_perm_host(sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
@@ -300,14 +299,8 @@ sge_c_gdi(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet,
    switch (task->command) {
       case SGE_GDI_GET:
          MONITOR_GDI_GET(monitor);
-#ifdef DO_LATE_LOCK
-         MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
-#endif
          sge_c_gdi_get(ao, packet, task, monitor);
          sge_gdi_packet_pack_task(packet, task, answer_list, pb);
-#ifdef DO_LATE_LOCK
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-#endif
          break;
       case SGE_GDI_ADD:
          MONITOR_GDI_ADD(monitor);
@@ -486,7 +479,7 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
    /* check permissions of host and user */
    if ((!sge_chck_mod_perm_user(&(task->answer_list), task->target, packet->user, monitor)) &&
        (!sge_chck_mod_perm_host(&(task->answer_list), task->target, packet->host, 
-                                packet->commproc, 0, NULL, false, monitor, object_base))) {
+                                packet->commproc, 0, NULL, monitor, object_base))) {
 
       if (task->target == SGE_EVENT_LIST) {
          lListElem *next;
@@ -544,12 +537,8 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
          }
       } else {
          bool is_scheduler_resync = false;
-         lList *ppList = NULL;
+         lList *tmp_list = NULL;
          lListElem *next;         
-
-#ifdef DO_LATE_LOCK
-         MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor); 
-#endif
 
          if (task->target == SGE_ORDER_LIST) {
              sge_set_commit_required(); 
@@ -611,7 +600,7 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
                                          packet->host, task->target,
 				                             monitor, is_restart);
                   } else {
-                     sge_gdi_add_mod_generic(ctx, &(task->answer_list), ep, 1, ao, packet->user, packet->host, sub_command, &ppList, monitor);
+                     sge_gdi_add_mod_generic(ctx, &(task->answer_list), ep, 1, ao, packet->user, packet->host, sub_command, &tmp_list, monitor);
                   }
                   break;
             }
@@ -623,40 +612,26 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
             answer_list_add(&(task->answer_list), "OK\n", STATUS_OK, ANSWER_QUALITY_INFO);
          }
 
-#ifdef DO_LATE_LOCK
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
-
          if (is_scheduler_resync) {
-             sge_resync_schedd(monitor); /* ask for a total update */
+            sge_resync_schedd(monitor); /* ask for a total update */
          }
 
-         /* we could do postprocessing based on ppList here */
-
          /*
-         ** ppList contains the changed AR element, set in ar_success
+         ** tmp_list contains the changed AR element, set in ar_success
          */
          if (SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_RETURN_NEW_VERSION)) {
             lFreeList(&(task->data_list));
-            task->data_list = ppList;
-            ppList = NULL;
+            task->data_list = tmp_list;
+            tmp_list = NULL;
          }
 
-         lFreeList(&ppList);
+         lFreeList(&tmp_list);
       }
    }
    
    if (ticket_orders != NULL) {
       if (mconf_get_reprioritize() == 1) {
-
-#ifdef DO_LATE_LOCK
-         MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
-#endif
          distribute_ticket_orders(ctx, ticket_orders, monitor, object_base);
-#ifdef DO_LATE_LOCK
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
-
       } else {
          /* tickets not needed at execd's if no repriorization is done */
          DPRINTF(("NO TICKET DELIVERY\n"));
@@ -682,56 +657,33 @@ sge_c_gdi_del(sge_gdi_ctx_class_t *ctx,
 
    DENTER(GDI_LAYER, "sge_c_gdi_del");
 
-   if (!task->data_list) /* delete whole list */
-   { 
-      if (sge_chck_mod_perm_user(&(task->answer_list), task->target, packet->user, monitor)) {
-         DEXIT;
-         return;
-      }
-      
-      if (sge_chck_mod_perm_host(&(task->answer_list), task->target, packet->host, 
-                                 packet->commproc, 0, NULL, false, monitor, object_base)) {
-         DEXIT;
-         return;
-      }
-      
+   if (sge_chck_mod_perm_user(&(task->answer_list), task->target, packet->user, monitor)) {
+      DRETURN_VOID;
+   }
+   
+   if (sge_chck_mod_perm_host(&(task->answer_list), task->target, packet->host, 
+                              packet->commproc, 0, NULL, monitor, object_base)) {
+      DRETURN_VOID;
+   }
+   
+   if (task->data_list == NULL) { 
+      /* delete whole list */
+
       switch (task->target)
       {
          case SGE_SHARETREE_LIST:
-#ifdef DO_LATE_LOCK
-            MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
-#endif
-            sge_del_sharetree(ctx, object_base[SGE_TYPE_SHARETREE].list, &(task->answer_list), packet->user, packet->host);
-#ifdef DO_LATE_LOCK
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
+            sge_del_sharetree(ctx, object_base[SGE_TYPE_SHARETREE].list, &(task->answer_list), 
+                              packet->user, packet->host);
             break;
-            
          default:
             SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
             answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
             break;
       }
    } else {
-
-      if (sge_chck_mod_perm_user(&(task->answer_list), task->target, packet->user, monitor)) {
-         DEXIT;
-         return;
-      }  
-
-      if (sge_chck_mod_perm_host(&(task->answer_list), task->target, packet->host, 
-                                 packet->commproc, 0, NULL, false, monitor, object_base)) {
-         DEXIT;
-         return;
-      }
-
-#ifdef DO_LATE_LOCK
-      MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
-#endif
       sge_set_commit_required();
 
       for_each (ep, task->data_list) {
-
          /* try to remove the element */
          switch (task->target)
          {
@@ -809,9 +761,6 @@ sge_c_gdi_del(sge_gdi_ctx_class_t *ctx,
       } /* for_each element */
 
       sge_commit();
-#ifdef DO_LATE_LOCK
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
    }
 
    DEXIT;
@@ -843,7 +792,7 @@ static void sge_c_gdi_copy(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
    }
 
    if (sge_chck_mod_perm_host(&(task->answer_list), task->target, packet->host, 
-                              packet->commproc, 0, NULL, false, monitor, object_base)) {
+                              packet->commproc, 0, NULL, monitor, object_base)) {
       DEXIT;
       return;
    }
@@ -960,50 +909,35 @@ static void
 sge_c_gdi_permcheck(sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task, 
                     monitoring_t *monitor)
 {
-  DENTER(GDI_LAYER, "sge_c_gdi_permcheck");
-
-#ifdef DO_LATE_LOCK
-  MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
-#endif
-  
-  switch (task->target)
-  {
-     case SGE_DUMMY_LIST:
-       sge_gdi_do_permcheck(packet, task);
-       break;
-     default:
-       WARNING((SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
-       answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR); 
-       break;
-  }
-
-#ifdef DO_LATE_LOCK
-  SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-#endif
-
-  DEXIT;
-  return;
+   DENTER(GDI_LAYER, "sge_c_gdi_permcheck");
+   switch (task->target) {
+      case SGE_DUMMY_LIST:
+         sge_gdi_do_permcheck(packet, task);
+         break;
+      default:
+         WARNING((SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+         answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR); 
+   }
+   DRETURN_VOID;
 }
 
 void sge_c_gdi_replace(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, 
                        sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
                        int sub_command, monitoring_t *monitor)
 {
-   lList *ppList = NULL;
+   lList *tmp_list = NULL;
    lListElem *ep = NULL;
    object_description *object_base = object_type_get_object_description();
 
    DENTER(GDI_LAYER, "sge_c_gdi_replace");
 
    if (sge_chck_mod_perm_user(&(task->answer_list), task->target, packet->user, monitor)) {
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
 
    if (sge_chck_mod_perm_host(&(task->answer_list), task->target, packet->host, 
-                              packet->commproc, 0, NULL, false, monitor, object_base)) {
-      DEXIT;
-      return;
+                              packet->commproc, 0, NULL, monitor, object_base)) {
+      DRETURN_VOID;
    }
 
    switch (task->target)
@@ -1011,12 +945,8 @@ void sge_c_gdi_replace(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
       case SGE_RQS_LIST:
          {
             if (rqs_replace_request_verify(&(task->answer_list), task->data_list) != true) {
-               DEXIT;
-               return;
+               DRETURN_VOID;
             }
-#ifdef DO_LATE_LOCK
-            MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
-#endif
             /* delete all currently defined rule sets */
             ep = lFirst(*object_base[SGE_TYPE_RQS].list);
             while (ep != NULL) {
@@ -1025,13 +955,9 @@ void sge_c_gdi_replace(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
             }
 
             for_each(ep, task->data_list) {
-               sge_gdi_add_mod_generic(ctx, &(task->answer_list), ep, 1, ao, packet->user, packet->host, SGE_GDI_SET_ALL, &ppList, monitor);
+               sge_gdi_add_mod_generic(ctx, &(task->answer_list), ep, 1, ao, packet->user, packet->host, SGE_GDI_SET_ALL, &tmp_list, monitor);
             }
-            lFreeList(&ppList);
-
-#ifdef DO_LATE_LOCK
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
+            lFreeList(&tmp_list);
          }
          break;
       default:      
@@ -1039,9 +965,7 @@ void sge_c_gdi_replace(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
          answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
          break;
    }
-
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /*
@@ -1060,11 +984,6 @@ sge_c_gdi_trigger(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet,
       case SGE_EXECHOST_LIST: /* kill execd */
       case SGE_MASTER_EVENT:  /* kill master */
       case SGE_SC_LIST:       /* trigger scheduler monitoring */
-
-#ifdef DO_LATE_LOCK
-            MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
-#endif
-            
             if (!host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, packet->host)) {
                ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, packet->host));
                answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
@@ -1077,31 +996,18 @@ sge_c_gdi_trigger(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet,
                sge_gdi_kill_exechost(ctx, packet, task);
             }
      
-#ifdef DO_LATE_LOCK       
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
-            
             if (SGE_SC_LIST == target) {
                trigger_scheduler_monitoring(packet, task, monitor);
-            }
-            else if (target == SGE_MASTER_EVENT) {
-               /* shutdown qmaster. Do NOT hold the global lock, while doing this !! */
+            } else if (target == SGE_MASTER_EVENT) {
                sge_gdi_kill_master(packet, task);
-
             }
          break;
 
        case SGE_CQUEUE_LIST:
        case SGE_JOB_LIST:
-#ifdef DO_LATE_LOCK
-            MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
-#endif
             sge_set_commit_required();
             sge_gdi_qmod(ctx, packet, task, monitor);
             sge_commit();
-#ifdef DO_LATE_LOCK
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
          break; 
 
        case SGE_EVENT_LIST:
@@ -1346,9 +1252,6 @@ trigger_scheduler_monitoring(sge_gdi_packet_class_t *packet, sge_gdi_task_class_
 
    DENTER(GDI_LAYER, "trigger_scheduler_monitoring");
 
-#ifdef DO_LATE_LOCK
-   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
-#endif
    if (!manop_is_manager(packet->user)) {
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
       WARNING((SGE_EVENT, MSG_COM_NOSCHEDMONPERMS));
@@ -1356,10 +1259,6 @@ trigger_scheduler_monitoring(sge_gdi_packet_class_t *packet, sge_gdi_task_class_
       DEXIT;
       return;
    }
-#ifdef DO_LATE_LOCK
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-#endif
-     
    if (!sge_add_event_for_client(EV_ID_SCHEDD, 0, sgeE_SCHEDDMONITOR, 0, 0, NULL, NULL, NULL, NULL)) {
       WARNING((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
       answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
@@ -1382,7 +1281,7 @@ void sge_c_gdi_mod(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
                    monitoring_t *monitor)
 {
    lListElem *ep;
-   lList *ppList = NULL; /* for postprocessing, after the lists of requests has been processed */
+   lList *tmp_list = NULL; 
    bool is_locked = false;
    object_description *object_base = object_type_get_object_description();
       
@@ -1395,7 +1294,7 @@ void sge_c_gdi_mod(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
 
    for_each (ep, task->data_list) {
       if (sge_chck_mod_perm_host(&(task->answer_list), task->target, packet->host, 
-                                 packet->commproc, 1, ep, is_locked, monitor, object_base)) {
+                                 packet->commproc, 1, ep, monitor, object_base)) {
          continue;
       }
 
@@ -1419,9 +1318,6 @@ void sge_c_gdi_mod(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
          sge_mod_sched_configuration(ctx, ep, &(task->answer_list), packet->user, packet->host);
       } else {
          if (!is_locked) {
-#ifdef DO_LATE_LOCK
-            MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
-#endif
             sge_set_commit_required();
             is_locked = true; 
          }
@@ -1442,7 +1338,7 @@ void sge_c_gdi_mod(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
                   answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
                   break;
                }
-               sge_gdi_add_mod_generic(ctx, &(task->answer_list), ep, 0, ao, packet->user, packet->host, sub_command, &ppList, monitor);
+               sge_gdi_add_mod_generic(ctx, &(task->answer_list), ep, 0, ao, packet->user, packet->host, sub_command, &tmp_list, monitor);
                break;
          }
       }
@@ -1450,22 +1346,19 @@ void sge_c_gdi_mod(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
 
    if (is_locked) {
       sge_commit();
-#ifdef DO_LATE_LOCK
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
    }
    
    /* postprocessing for the list of requests */
-   if (lGetNumberOfElem(ppList) != 0) {
+   if (lGetNumberOfElem(tmp_list) != 0) {
       switch (task->target) {
          case SGE_CENTRY_LIST:
             DPRINTF(("rebuilding consumable debitation\n"));
-            centry_redebit_consumables(ctx, ppList);
+            centry_redebit_consumables(ctx, tmp_list);
             break;
       }
    }
 
-   lFreeList(&ppList);
+   lFreeList(&tmp_list);
 
    DEXIT;
    return;
@@ -1503,9 +1396,6 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, mon
    case SGE_HGROUP_LIST:
    case SGE_RQS_LIST:
       /* user must be a manager */
-#ifdef DO_LATE_LOCK
-      MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
-#endif
       if (!manop_is_manager(user)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_MUSTBEMANAGER_S, user));
          answer_list_add(alpp, SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
@@ -1513,28 +1403,16 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, mon
          DEXIT;
          return 1;
       }
-#ifdef DO_LATE_LOCK
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-#endif
       break;
 
    case SGE_USERSET_LIST:
       /* user must be a operator */
-#ifdef DO_LATE_LOCK
-      MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
-#endif
       if (!manop_is_operator(user)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_MUSTBEOPERATOR_S, user));
          answer_list_add(alpp, SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
-#ifdef DO_LATE_LOCK
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-#endif
          DEXIT;
          return 1;
       }
-#ifdef DO_LATE_LOCK
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-#endif
       break;
 
    case SGE_JOB_LIST:
@@ -1562,23 +1440,11 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, mon
       /* 
          Advance reservation can be submitted by a manager or any user in the aruser access list.
       */
-#ifdef DO_LATE_LOCK
-      MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
-#endif
-
       if (!manop_is_manager(user) && !userset_is_ar_user(*userset_list_get_master_list(), user) ) {
          ERROR((SGE_EVENT, MSG_SGETEXT_MUSTBEMANAGERORUSER_SS, user, AR_USERS));
          answer_list_add(alpp, SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
-#ifdef DO_LATE_LOCK
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-#endif
          DRETURN(1);
       }
-
-#ifdef DO_LATE_LOCK
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-#endif
-
       break;
    default:
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
@@ -1595,16 +1461,9 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, mon
  */
 static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, 
                                   char *commproc, int mod, lListElem *ep, 
-                                  bool is_locked, monitoring_t *monitor,
-                                  object_description *object_base)
+                                  monitoring_t *monitor, object_description *object_base)
 {
    DENTER(TOP_LAYER, "sge_chck_mod_perm_host");
-
-#ifdef DO_LATE_LOCK
-   if (!is_locked) {
-      MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
-   }
-#endif
 
    /* check permissions of host */
    switch (target) {
@@ -1633,11 +1492,6 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
       if (!host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, host)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, host));
          answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
-#ifdef DO_LATE_LOCK
-         if (!is_locked) {
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-         }
-#endif
          DRETURN(1);
       }
       break;
@@ -1650,11 +1504,6 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
          (host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, host) && !strcmp(commproc, prognames[EXECD])))) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, host));
          answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
-#ifdef DO_LATE_LOCK
-         if (!is_locked) {
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-         }
-#endif
          DRETURN(1);
       }
       break;
@@ -1669,11 +1518,6 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
          if (!host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, host)) {
             ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, host));
             answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
-#ifdef DO_LATE_LOCK
-            if (!is_locked) {
-               SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-            }
-#endif
             DRETURN(1);
          }
          break;
@@ -1682,11 +1526,6 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
       if (!host_list_locate(*object_base[SGE_TYPE_SUBMITHOST].list, host)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITHOST_S, host));
          answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
-#ifdef DO_LATE_LOCK
-         if (!is_locked) {
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-         }
-#endif
          DRETURN(1);
       }
       break;
@@ -1700,11 +1539,6 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
         && (!host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, host))) {
         ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));
         answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
-#ifdef DO_LATE_LOCK
-        if (!is_locked) {
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-        }
-#endif
         DRETURN(1);
       }
       break;
@@ -1713,31 +1547,15 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
       if (!host_list_locate(*object_base[SGE_TYPE_SUBMITHOST].list, host)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITHOST_S, host));
          answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
-#ifdef DO_LATE_LOCK
-         if (!is_locked) {
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-         }
-#endif
          DRETURN(1);
       }
       break;
    default:
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
       answer_list_add(alpp, SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
-#ifdef DO_LATE_LOCK
-      if (!is_locked) {
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-      }
-#endif
       DRETURN(1);
    }
   
-#ifdef DO_LATE_LOCK 
-   if (!is_locked) {
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-   }
-#endif
-
    DRETURN(0);
 }
 
@@ -1833,7 +1651,7 @@ gdi_object_t *object,
 const char *ruser,
 const char *rhost,
 int sub_command,
-lList **ppList,
+lList **tmp_list,
 monitoring_t *monitor
 ) {
    int pos;
@@ -1991,7 +1809,7 @@ monitoring_t *monitor
 
    /* once we successfully added/modified the object, do final steps (on_success callback) */
    if (object->on_success) {
-      object->on_success(ctx, new_obj, old_obj, object, ppList, monitor);
+      object->on_success(ctx, new_obj, old_obj, object, tmp_list, monitor);
    }
 
    lFreeElem(&old_obj);

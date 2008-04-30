@@ -368,14 +368,9 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       lFreeList(&temp);
    }
 
-/* NEED A LOCK FROM HERE ON */
    {
       object_description *object_base = object_type_get_object_description();
 
-#ifdef DO_LATE_LOCK
-      MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
-#endif
-      
       /* get new job numbers until we find one that is not yet used */
       do {
          job_number = sge_get_job_number(ctx, monitor);
@@ -392,9 +387,6 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
 
       /* check max_jobs */
       if (job_list_register_new_job(*object_base[SGE_TYPE_JOB].list, mconf_get_max_jobs(), 0)) {/*read*/
-#ifdef DO_LATE_LOCK
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
          INFO((SGE_EVENT, MSG_JOB_ALLOWEDJOBSPERCLUSTER, sge_u32c(mconf_get_max_jobs())));
          answer_list_add(alpp, SGE_EVENT, STATUS_NOTOK_DOAGAIN, ANSWER_QUALITY_ERROR);
          DRETURN(STATUS_NOTOK_DOAGAIN);
@@ -402,9 +394,6 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
 
       if ((lGetUlong(jep, JB_verify_suitable_queues) != JUST_VERIFY)) {
          if (suser_check_new_job(jep, mconf_get_max_u_jobs()) != 0) { /*mod*/
-#ifdef DO_LATE_LOCK
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
             INFO((SGE_EVENT, MSG_JOB_ALLOWEDJOBSPERUSER_UU, sge_u32c(mconf_get_max_u_jobs()), 
                                                             sge_u32c(suser_job_count(jep))));
             answer_list_add(alpp, SGE_EVENT, STATUS_NOTOK_DOAGAIN, ANSWER_QUALITY_ERROR);
@@ -416,9 +405,6 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       xuser_lists = mconf_get_xuser_lists();
       if (!sge_has_access_(ruser, lGetString(jep, JB_group), /* read */
             user_lists, xuser_lists, *object_base[SGE_TYPE_USERSET].list)) {
-#ifdef DO_LATE_LOCK
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
          ERROR((SGE_EVENT, MSG_JOB_NOPERMS_SS, ruser, rhost));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          lFreeList(&user_lists);
@@ -439,68 +425,38 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
          if (centry_list_fill_request(lGetList(jep, JB_hard_resource_list), 
                                       alpp, master_centry_list, false, true, 
                                       false)) {
-#ifdef DO_LATE_LOCK
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
             DRETURN(STATUS_EUNKNOWN);
          }
          if (compress_ressources(alpp, lGetList(jep, JB_hard_resource_list), SGE_OBJ_JOB)) {
-#ifdef DO_LATE_LOCK
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
             DRETURN(STATUS_EUNKNOWN);
          }
          
          if (centry_list_fill_request(lGetList(jep, JB_soft_resource_list), 
                                       alpp, master_centry_list, false, true, 
                                       false)) {
-#ifdef DO_LATE_LOCK
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
             DRETURN(STATUS_EUNKNOWN);
          }
          if (compress_ressources(alpp, lGetList(jep, JB_soft_resource_list), SGE_OBJ_JOB)) {
-#ifdef DO_LATE_LOCK
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
             DRETURN(STATUS_EUNKNOWN);
          }
          if (deny_soft_consumables(alpp, lGetList(jep, JB_soft_resource_list), master_centry_list)) {
-#ifdef DO_LATE_LOCK
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
             DRETURN(STATUS_EUNKNOWN);
          }
          if (!centry_list_is_correct(lGetList(jep, JB_hard_resource_list), alpp)) {
-#ifdef DO_LATE_LOCK
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
             DRETURN(STATUS_EUNKNOWN);
          }
          if (!centry_list_is_correct(lGetList(jep, JB_soft_resource_list), alpp)) {
-#ifdef DO_LATE_LOCK
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE); 
-#endif
             DRETURN(STATUS_EUNKNOWN);
          }
       }
 
       if (!qref_list_is_valid(lGetList(jep, JB_hard_queue_list), alpp)) {
-#ifdef DO_LATE_LOCK
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
          DRETURN(STATUS_EUNKNOWN);
       }
       if (!qref_list_is_valid(lGetList(jep, JB_soft_queue_list), alpp)) {
-#ifdef DO_LATE_LOCK
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
          DRETURN(STATUS_EUNKNOWN);
       }
       if (!qref_list_is_valid(lGetList(jep, JB_master_hard_queue_list), alpp)) {
-#ifdef DO_LATE_LOCK
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
          DRETURN(STATUS_EUNKNOWN);
       }
 
@@ -514,9 +470,6 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
          const lListElem *pep;
          pep = pe_list_find_matching(*object_base[SGE_TYPE_PE].list, pe_name);
          if (!pep) {
-#ifdef DO_LATE_LOCK
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
             ERROR((SGE_EVENT, MSG_JOB_PEUNKNOWN_S, pe_name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DRETURN(STATUS_EUNKNOWN);
@@ -524,9 +477,6 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
          /* check pe_range */
          pe_range = lGetList(jep, JB_pe_range);
          if (object_verify_pe_range(alpp, pe_name, pe_range, SGE_OBJ_JOB)!=STATUS_OK) {
-#ifdef DO_LATE_LOCK
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
             DRETURN(STATUS_EUNKNOWN);
          }
 
@@ -596,9 +546,6 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
             sprintf(str, MSG_JOB_CKPTDENIED);
             break;
          }                 
-#ifdef DO_LATE_LOCK         
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
          ERROR((SGE_EVENT, "%s", str));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          DRETURN(STATUS_ESEMANTIC);
@@ -640,9 +587,6 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
          if (enforce_user && !strcasecmp(enforce_user, "auto")) {
             int status = sge_add_auto_user(ctx, ruser, alpp, monitor);
             if (status != STATUS_OK) {
-#ifdef DO_LATE_LOCK
-               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
                FREE(enforce_user);
                DRETURN(status);
             }
@@ -651,9 +595,6 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
          /* ensure user exists if enforce_user flag is set */
          if (enforce_user && !strcasecmp(enforce_user, "true") && 
                   !user_list_locate(*object_base[SGE_TYPE_USER].list, ruser)) {
-#ifdef DO_LATE_LOCK
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
             ERROR((SGE_EVENT, MSG_JOB_USRUNKNOWN_S, ruser));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             FREE(enforce_user);
@@ -676,9 +617,6 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
             lList* xprojects;
             lListElem *pep;
             if (!(pep = prj_list_locate(*object_base[SGE_TYPE_PROJECT].list , project))) {
-#ifdef DO_LATE_LOCK
-               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
                ERROR((SGE_EVENT, MSG_JOB_PRJUNKNOWN_S, project));
                answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                lFreeList(&projects);
@@ -690,9 +628,6 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
                                  lGetList(pep, PR_acl), 
                                  lGetList(pep, PR_xacl), 
                                  *object_base[SGE_TYPE_USERSET].list)) {
-#ifdef DO_LATE_LOCK
-               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
                ERROR((SGE_EVENT, MSG_SGETEXT_NO_ACCESS2PRJ4USER_SS,
                         project, ruser));
                answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -704,9 +639,6 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
             xprojects = mconf_get_xprojects();
             if ((xprojects && prj_list_locate(xprojects, project)) ||
                 (projects && !prj_list_locate(projects, project))) {
-#ifdef DO_LATE_LOCK
-               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
                ERROR((SGE_EVENT, MSG_JOB_PRJNOSUBMITPERMS_S, project));
                answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                lFreeList(&xprojects);
@@ -718,9 +650,6 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
          } else {
             char* enforce_project = mconf_get_enforce_project();
             if (lGetNumberOfElem(projects)>0) {
-#ifdef DO_LATE_LOCK
-               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
                ERROR((SGE_EVENT, MSG_JOB_PRJREQUIRED)); 
                answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                lFreeList(&projects);
@@ -729,9 +658,6 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
             }
 
             if (enforce_project && !strcasecmp(enforce_project, "true")) {
-#ifdef DO_LATE_LOCK
-               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
                ERROR((SGE_EVENT, MSG_SGETEXT_NO_PROJECT));
                answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                lFreeList(&projects);
@@ -745,9 +671,6 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
 
       /* try to dispatch a department to the job */
       if (set_department(alpp, jep, *object_base[SGE_TYPE_USERSET].list) != 1) {
-#ifdef DO_LATE_LOCK
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
          /* alpp gets filled by set_department */
          DRETURN(STATUS_EUNKNOWN);
       }
@@ -757,9 +680,6 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       */
       if (lGetUlong(jep, JB_deadline)) {
          if (!userset_is_deadline_user(*object_base[SGE_TYPE_USERSET].list, ruser)) {
-#ifdef DO_LATE_LOCK
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
             ERROR((SGE_EVENT, MSG_JOB_NODEADLINEUSER_S, ruser));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DRETURN(STATUS_EUNKNOWN);
@@ -775,17 +695,11 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
 
          ar=ar_list_locate(*object_base[SGE_TYPE_AR].list, ar_id);
          if (ar == NULL) {
-#ifdef DO_LATE_LOCK
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
             ERROR((SGE_EVENT, MSG_JOB_NOAREXISTS_U, sge_u32c(ar_id)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DRETURN(STATUS_EEXIST);
          } else if ((lGetUlong(ar, AR_state) == AR_DELETED) ||
                     (lGetUlong(ar, AR_state) == AR_EXITED)) {
-#ifdef DO_LATE_LOCK
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
             ERROR((SGE_EVENT, MSG_JOB_ARNOLONGERAVAILABE_U, sge_u32c(ar_id)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DRETURN(STATUS_EEXIST);
@@ -815,17 +729,11 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
 
             /* fit the timeframe */
             if (job_duration > (ar_end_time - ar_start_time)) {
-#ifdef DO_LATE_LOCK
-               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
                ERROR((SGE_EVENT, MSG_JOB_HRTLIMITTOOLONG_U, sge_u32c(ar_id)));
                answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                DRETURN(STATUS_DENIED);
             }
             if ((job_execution_time + job_duration) > ar_end_time) {
-#ifdef DO_LATE_LOCK
-               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
                ERROR((SGE_EVENT, MSG_JOB_HRTLIMITOVEREND_U, sge_u32c(ar_id)));
                answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                DRETURN(STATUS_DENIED);
@@ -836,11 +744,7 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       /* verify schedulability */
       {
          int ret = verify_suitable_queues(alpp, jep, NULL); 
-         if (lGetUlong(jep, JB_verify_suitable_queues)==JUST_VERIFY 
-            || ret != 0) {
-#ifdef DO_LATE_LOCK
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
+         if (lGetUlong(jep, JB_verify_suitable_queues)==JUST_VERIFY || ret != 0) {
             DRETURN(ret);
          }   
       }
@@ -850,9 +754,6 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
        * jobs with higher priority than 0 (=BASE_PRIORITY)
        */
       if (lGetUlong(jep, JB_priority) > BASE_PRIORITY && !manop_is_operator(ruser)) {
-#ifdef DO_LATE_LOCK
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
          ERROR((SGE_EVENT, MSG_JOB_NONADMINPRIO));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DRETURN(STATUS_EUNKNOWN);
@@ -860,17 +761,11 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
 
       /* checks on -hold_jid */
       if (job_verify_predecessors(jep, alpp)) {
-#ifdef DO_LATE_LOCK
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
          DRETURN(STATUS_EUNKNOWN);
       }
 
       /* checks on -hold_jid_ad */
       if (job_verify_predecessors_ad(jep, alpp)) {
-#ifdef DO_LATE_LOCK
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
          DRETURN(STATUS_EUNKNOWN);
       }
 
@@ -882,9 +777,6 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       */
       if (mconf_get_do_credentials()) {
          if (store_sec_cred(sge_root, packet, jep, mconf_get_do_authentication(), alpp) != 0) {
-#ifdef DO_LATE_LOCK
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
             DRETURN(STATUS_EUNKNOWN);
          }
       }
@@ -900,9 +792,6 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
              !JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type))) {
             if (spool_write_script(alpp, job_number, jep)==false) {
                spool_transaction(alpp, spool_get_default_context(), STC_rollback);
-#ifdef DO_LATE_LOCK
-               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
                ERROR((SGE_EVENT, MSG_JOB_NOWRITE_US, sge_u32c(job_number), strerror(errno)));
                answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
                DRETURN(STATUS_EDISK);
@@ -918,9 +807,6 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
                            job_number, 0, NULL, NULL, NULL,
                            jep, NULL, NULL, true, true)) {
          spool_transaction(alpp, spool_get_default_context(), STC_rollback);
-#ifdef DO_LATE_LOCK
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
          ERROR((SGE_EVENT, MSG_JOB_NOWRITE_U, sge_u32c(job_number)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
          if ((lGetString(jep, JB_exec_file) != NULL) && job_spooling) {
@@ -941,19 +827,12 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       
       /* add into job list */
       if (job_list_add_job(object_base[SGE_TYPE_JOB].list, "Master_Job_List", lCopyElem(jep), 0)) {
-#ifdef DO_LATE_LOCK
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
          answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
          DRETURN(STATUS_EUNKNOWN);
       }
 
       /** increase user counter */
       suser_increase_job_counter(suser_list_add(object_base[SGE_TYPE_SUSER].list, NULL, ruser));
-
-#ifdef DO_LATE_LOCK
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
    }
    /* JG: TODO: error handling: 
     * if job can't be spooled, no event is sent (in sge_event_spool)
@@ -3992,16 +3871,9 @@ int sge_gdi_copy_job(sge_gdi_ctx_class_t *ctx,
    seek_jid = lGetUlong(jep, JB_job_number);
    DPRINTF(("SEEK jobid "sge_u32" for COPY operation\n", seek_jid));
 
-#ifdef DO_LATE_LOCK
-   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
-#endif
-   
    if (!(old_jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), seek_jid))) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SU, SGE_OBJ_JOB, sge_u32c(seek_jid)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-#ifdef DO_LATE_LOCK
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-#endif
       DRETURN(STATUS_EUNKNOWN);
    } 
 
@@ -4009,16 +3881,10 @@ int sge_gdi_copy_job(sge_gdi_ctx_class_t *ctx,
    if (strcmp(ruser, lGetString(old_jep, JB_owner)) && !manop_is_manager(ruser)) {
       ERROR((SGE_EVENT, MSG_JOB_NORESUBPERMS_SSS, ruser, rhost, lGetString(old_jep, JB_owner)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-#ifdef DO_LATE_LOCK
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-#endif
       DRETURN(STATUS_EUNKNOWN);
    }
 
    new_jep = lCopyElem(old_jep);
-#ifdef DO_LATE_LOCK
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-#endif
 
    /* read script from old job and reuse it */
    if (lGetString(new_jep, JB_exec_file) && job_spooling) {

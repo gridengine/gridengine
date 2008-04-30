@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/03/21 13:55:34 $     Revision: $Revision: 1.69 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/04/30 09:11:03 $     Revision: $Revision: 1.70 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/03/21 13:55:34 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/04/30 09:11:03 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -1063,9 +1063,13 @@ output will be done within the messages file.
 Enables the profiling for qmaster signal thread.
 (e.g. PROF_SIGNAL=true)
 .PP
-.IP "\fIPROF_MESSAGE\fP"
-Enables the profiling for qmaster message thread.
-(e.g. PROF_MESSAGE=true)
+.IP "\fIPROF_WORKER\fP"
+Enables the profiling for qmaster worker threads.
+(e.g. PROF_WORKER=true)
+.PP
+.IP "\fIPROF_LISTENER\fP"
+Enables the profiling for qmaster listener threads.
+(e.g. PROF_LISTENER=true)
 .PP
 .IP "\fIPROF_DELIVER\fP"
 Enables the profiling for qmaster event deliver thread.

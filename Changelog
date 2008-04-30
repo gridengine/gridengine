@@ -1,3 +1,6 @@
+EB-2008-04-30-1: Cleanup:   Removed late lock; cleanup man pages
+                 Review:    RD
+
 RD-2008-04-30-0: Enhancem.: disabled execution of JC_FILTER code if feature
                             is disabled
                  Review:    EB

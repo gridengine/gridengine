@@ -262,7 +262,7 @@ sge_timer_terminate(void)
 
    thread = cl_thread_list_get_first_thread(Main_Control.timer_thread_pool);
    while (thread != NULL) {
-      DPRINTF((SFN" gets canceled\n", thread->thread_name));
+      DPRINTF(("getting canceled\n"));
       cl_thread_list_delete_thread(Main_Control.timer_thread_pool, thread);
 
       thread = cl_thread_list_get_first_thread(Main_Control.timer_thread_pool);
@@ -336,7 +336,7 @@ sge_timer_main(void *arg)
 
    DENTER(TOP_LAYER, "sge_timer_main");
 
-   DPRINTF((SFN" started", thread_config->thread_name));
+   DPRINTF(("started"));
    cl_thread_func_startup(thread_config);
    sge_monitor_init(&monitor, thread_config->thread_name, TET_EXT, TET_WARNING, TET_ERROR);
    sge_qmaster_thread_init(&ctx, QMASTER, TIMER_THREAD, true);
@@ -408,7 +408,7 @@ sge_timer_main(void *arg)
          cl_thread_func_testcancel(thread_config);
          pthread_cleanup_pop(execute); 
          if (sge_thread_has_shutdown_started()) {
-            DPRINTF((SFN" is waiting for termination\n", thread_config->thread_name));
+            DPRINTF(("waiting for termination\n"));
             sleep(1);
          }
       } while (sge_thread_has_shutdown_started());

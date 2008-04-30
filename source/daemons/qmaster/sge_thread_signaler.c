@@ -136,7 +136,7 @@ sge_signaler_terminate(void)
 
    thread = cl_thread_list_get_first_thread(Main_Control.signal_thread_pool);
    if (thread != NULL) {
-      DPRINTF((SFN" gets canceled\n", thread->thread_name));
+      DPRINTF(("getting canceled\n"));
       cl_thread_list_delete_thread(Main_Control.signal_thread_pool, thread);
    }
    DRETURN_VOID;
@@ -204,7 +204,7 @@ void* sge_signaler_main(void* arg)
 
       thread_start_stop_profiling();
 
-      DPRINTF(("%s: got signal %d\n", thread_config->thread_name, sig_num));
+      DPRINTF(("got signal %d\n", sig_num));
 
       switch (sig_num) {
          case SIGINT:

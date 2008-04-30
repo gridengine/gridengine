@@ -554,7 +554,7 @@ sge_scheduler_main(void *arg)
     */
    if (local_ret) {
       local_ret = sge_gdi2_evc_setup(&evc, ctx, EV_ID_SCHEDD, &alp, "scheduler");
-      DPRINTF((SFN" prepared event client/mirror mechanism\n", thread_config->thread_name));
+      DPRINTF(("prepared event client/mirror mechanism\n"));
    }
 
    /*
@@ -567,7 +567,7 @@ sge_scheduler_main(void *arg)
                             &sge_handle_event_ack);
       evc->ec_register(evc, false, NULL, &monitor);
       evc->ec_set_busy_handling(evc, EV_BUSY_UNTIL_RELEASED);
-      DPRINTF((SFN" registered at event mirror\n", thread_config->thread_name));
+      DPRINTF(("registered at event mirror\n"));
    }
 
    /*
@@ -576,7 +576,7 @@ sge_scheduler_main(void *arg)
    if (local_ret) {
       ensure_valid_what_and_where(&where_what);
       subscribe_scheduler(evc, &where_what);
-      DPRINTF((SFN" subscribed necessary data from event master\n", thread_config->thread_name));
+      DPRINTF(("subscribed necessary data from event master\n"));
    }
 
    /* 
@@ -659,7 +659,7 @@ sge_scheduler_main(void *arg)
             if (do_shutdown == false && sge_mirror_process_event_list(evc, event_list) == SGE_EM_OK) {
                handled_events = true;
             } else {
-               DPRINTF((SFN" events contain shutdown event\n", thread_config->thread_name));
+               DPRINTF(("events contain shutdown event\n"));
             }
             lFreeList(&event_list);
          }
@@ -957,11 +957,9 @@ sge_scheduler_main(void *arg)
          pthread_cleanup_pop(execute);
          pthread_cleanup_pop(execute);
          pthread_cleanup_pop(execute);
-         DPRINTF((SFN" passed cancelation point\n", thread_config != NULL ? thread_config->thread_name : "<null>"));
+         DPRINTF(("passed cancelation point\n"));
       }
    }
-
-   DPRINTF((SFN" terminated\n", thread_config->thread_name));
 
    /*
     * Don't add cleanup code here. It will never be executed. Instead register

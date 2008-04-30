@@ -59,6 +59,7 @@
 #include "msg_common.h"
 #include "msg_gdilib.h"
 
+#define CLIENT_WAIT_TIME_S 1
 
 /****** gdi/request_internal/sge_gdi_packet_create_multi_answer() ***********
 *  NAME
@@ -188,19 +189,19 @@ sge_gdi_packet_wait_till_handled(sge_gdi_packet_class_t *packet)
    DENTER(TOP_LAYER, "sge_gdi_packet_wait_till_handled");
 
    if (packet != NULL) {
-      cl_thread_settings_t *thread_config = cl_thread_get_thread_config();
-
       sge_mutex_lock(GDI_PACKET_MUTEX, SGE_FUNC, __LINE__, &(packet->mutex));
 
       while (packet->is_handled == false) {
-         DPRINTF((SFN" is waiting for packet to be handling by worker\n",
-                  thread_config ? thread_config->thread_name : "-NA-"));
-         pthread_cond_wait(&(packet->cond), &(packet->mutex));
+         struct timespec ts; 
+
+         DPRINTF(("waiting for packet to be handling by worker\n"));
+         sge_relative_timespec(CLIENT_WAIT_TIME_S, &ts);
+         pthread_cond_timedwait(&(packet->cond), &(packet->mutex), &ts);
       }
-      DPRINTF((SFN" got signal that packet is handled\n",
-               thread_config ? thread_config->thread_name : "-NA-"));
 
       sge_mutex_unlock(GDI_PACKET_MUTEX, SGE_FUNC, __LINE__, &(packet->mutex));
+
+      DPRINTF(("got signal that packet is handled\n"));
    }
 
    DRETURN_VOID;   
@@ -293,14 +294,11 @@ sge_gdi_packet_is_handled(sge_gdi_packet_class_t *packet)
 void
 sge_gdi_packet_broadcast_that_handled(sge_gdi_packet_class_t *packet)
 {
-   cl_thread_settings_t *thread_config = cl_thread_get_thread_config();
-
    DENTER(TOP_LAYER, "sge_gdi_packet_broadcast_that_handled");
 
    sge_mutex_lock(GDI_PACKET_MUTEX, SGE_FUNC, __LINE__, &(packet->mutex));
    packet->is_handled = true; 
-   DPRINTF((SFN" broadcasts that packet is handled\n",
-            thread_config ? thread_config->thread_name : "-NA-"));
+   DPRINTF(("broadcast that packet is handled\n"));
    pthread_cond_broadcast(&(packet->cond));
    sge_mutex_unlock(GDI_PACKET_MUTEX, SGE_FUNC, __LINE__, &(packet->mutex));
 

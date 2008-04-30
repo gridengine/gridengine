@@ -166,7 +166,7 @@ sge_worker_terminate(sge_gdi_ctx_class_t *ctx)
 
       thread = cl_thread_list_get_first_thread(Main_Control.worker_thread_pool);
       while (thread != NULL) {
-         DPRINTF((SFN" gets canceled\n", thread->thread_name));
+         DPRINTF(("gets canceled\n"));
          cl_thread_list_delete_thread(Main_Control.worker_thread_pool, thread);
 
          thread = cl_thread_list_get_first_thread(Main_Control.worker_thread_pool);
@@ -213,7 +213,7 @@ sge_worker_main(void *arg)
 
    DENTER(TOP_LAYER, "sge_worker_main");
 
-   DPRINTF((SFN" started", thread_config->thread_name));
+   DPRINTF(("started"));
    cl_thread_func_startup(thread_config);
    sge_monitor_init(&monitor, thread_config->thread_name, GDI_EXT, MT_WARNING, MT_ERROR);
    sge_qmaster_thread_init(&ctx, QMASTER, WORKER_THREAD, true);
@@ -224,9 +224,6 @@ sge_worker_main(void *arg)
  
    while (do_endlessly) {
       sge_gdi_packet_class_t *packet = NULL;
-#ifdef DO_LATE_LOCK
-      request_handling_t type = ATOMIC_NONE;
-#endif
 
       /*
        * Wait for packets. As long as packets are available cancelation 
@@ -240,14 +237,9 @@ sge_worker_main(void *arg)
 
       if (packet != NULL) {
          sge_gdi_task_class_t *task = packet->first_task;
-#ifdef DO_LATE_LOCK
-#else
          bool is_only_read_request = true;
-#endif
 
          thread_start_stop_profiling();
-
-         DPRINTF((SFN" waits for atomic slot\n", thread_config->thread_name));
 
 #ifdef SEND_ANSWER_IN_LISTENER
 #else
@@ -258,14 +250,6 @@ sge_worker_main(void *arg)
             init_packbuffer(&(packet->pb), 0, 0);
          }
 #endif
-
-#ifdef DO_LATE_LOCK
-         if (packet->is_gdi_request == true) {
-            MONITOR_WAIT_TIME((type = eval_gdi_and_block(task)), &monitor);
-         } else {
-            MONITOR_WAIT_TIME((type = eval_message_and_block(*aMsg)), monitor); 
-         }
-#else
 
          MONITOR_MESSAGES((&monitor));
 
@@ -295,7 +279,6 @@ sge_worker_main(void *arg)
          } else {
             MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), &monitor);
          }
-#endif
 
          if (packet->is_gdi_request == true) {
             /*
@@ -313,9 +296,6 @@ sge_worker_main(void *arg)
                          task->data_list, &monitor);
          }
 
-#ifdef DO_LATE_LOCK
-         eval_atomic_end(type);
-#else
          /*
           * do unlock
           */
@@ -324,7 +304,6 @@ sge_worker_main(void *arg)
          } else {
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE)
          }
-#endif
 
          if (packet->is_gdi_request == true) {
 #ifdef SEND_ANSWER_IN_LISTENER

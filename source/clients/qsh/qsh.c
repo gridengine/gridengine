@@ -1804,8 +1804,6 @@ int main(int argc, char **argv)
       } else { /* g_new_interactive_job_support == true */
          int     ret;
          dstring err_msg = DSTRING_INIT;
-         int     random_poll = QSH_INTERACTIVE_POLLING_MIN + 
-                               (rand() % QSH_INTERACTIVE_POLLING_MIN);
 
          /*
           * Wait for the client (=shepherd) to connect to us

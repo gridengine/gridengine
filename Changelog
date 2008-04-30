@@ -6,8 +6,8 @@ AH-2008-04-30-0: Bugfix:    - use libcore.so to fix problem with no core files
                  Issue:     2552
                  Review:    RD
 
-RD-2008-04-30-2: CVS:       Created V62beta_RC3_TAG
----------------------------------------------------
+RD-2008-04-30-2: CVS:       Created V62beta
+-------------------------------------------
 
 RD-2008-04-30-1: Cleanup:   Removed unused QU_queue_number
                  Review:    EB

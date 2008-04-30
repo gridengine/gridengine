@@ -2340,7 +2340,6 @@ static int QU_test(void)
    lSetUlong(ep, QU_pending_signal, 2);
    lSetUlong(ep, QU_pending_signal_delivery_time, 3);
    lSetUlong(ep, QU_version, 4);
-   lSetUlong(ep, QU_queue_number, 5); /* unused */
 
    printf("QU: No Args\n");   
 

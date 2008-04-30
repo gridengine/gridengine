@@ -1,3 +1,6 @@
+RD-2008-04-30-1: Cleanup:   Removed unused QU_queue_number
+                 Review:    EB
+
 EB-2008-04-30-1: Cleanup:   Removed late lock; cleanup man pages
                  Review:    RD
 

@@ -258,7 +258,7 @@ ensure_valid_what_and_where(sge_where_what_t *where_what)
 {
    lDescr *tmp_what_descr = NULL;
 
-   DENTER(TOP_LAYER, "ensure_valid_what_and_where");
+   DENTER(GDI_LAYER, "ensure_valid_what_and_where");
 
    /* prepare temp data used to create new lists with partial descriptor */
    if (where_what->what_queue2 == NULL || where_what->where_queue2 == NULL ||
@@ -412,7 +412,7 @@ sge_process_schedd_conf_event_before(sge_evc_class_t *evc, object_description *o
 {
    lListElem *new = NULL;
 
-   DENTER(TOP_LAYER, "sge_process_schedd_conf_event_before");
+   DENTER(GDI_LAYER, "sge_process_schedd_conf_event_before");
 
    DPRINTF(("callback processing schedd config event\n"));
 
@@ -469,6 +469,10 @@ sge_process_schedd_conf_event_after(sge_evc_class_t *evc, object_description *ob
                                        sge_event_action action, lListElem *event, void *clientdata){
    sconf_print_config();
 
+   if (sconf_is_job_category_filtering()) {
+     set_rebuild_categories(true);
+   }
+
    return SGE_EMA_OK;
 }
 
@@ -479,7 +483,7 @@ sge_process_project_event_before(sge_evc_class_t *evc, object_description *objec
    const lListElem *new, *old;
    const char *p;
 
-   DENTER(TOP_LAYER, "sge_process_project_event_before");
+   DENTER(GDI_LAYER, "sge_process_project_event_before");
 
    if (action != SGE_EMA_ADD &&
        action != SGE_EMA_MOD &&
@@ -523,7 +527,7 @@ sge_callback_result
 sge_process_schedd_monitor_event(sge_evc_class_t *evc, object_description *object_base, sge_object_type type,
                                  sge_event_action action, lListElem *event, void *clientdata)
 {
-   DENTER(TOP_LAYER, "sge_process_schedd_monitor_event");
+   DENTER(GDI_LAYER, "sge_process_schedd_monitor_event");
    DPRINTF(("monitoring next scheduler run\n"));
    schedd_set_monitor_next_run(true);
    DEXIT;
@@ -534,7 +538,7 @@ sge_callback_result
 sge_process_global_config_event(sge_evc_class_t *evc, object_description *object_base, sge_object_type type,
                                 sge_event_action action, lListElem *event, void *clientdata)
 {
-   DENTER(TOP_LAYER, "sge_process_global_config_event");
+   DENTER(GDI_LAYER, "sge_process_global_config_event");
    DPRINTF(("notification about new global configuration\n"));
    st_set_flag_new_global_conf(true);
    DEXIT;
@@ -604,7 +608,7 @@ sge_process_job_event_after(sge_evc_class_t *evc, object_description *object_bas
    u_long32 job_id = 0;
    lListElem *job  = NULL;
 
-   DENTER(TOP_LAYER, "sge_process_job_event_after");
+   DENTER(GDI_LAYER, "sge_process_job_event_after");
    DPRINTF(("callback processing job event after default rule\n"));
 
    if (action == SGE_EMA_ADD || action == SGE_EMA_MOD) {
@@ -714,7 +718,7 @@ sge_callback_result
 sge_process_ja_task_event_after(sge_evc_class_t *evc, object_description *object_base, sge_object_type type,
                                 sge_event_action action, lListElem *event, void *clientdata)
 {
-   DENTER(TOP_LAYER, "sge_process_ja_task_event_after");
+   DENTER(GDI_LAYER, "sge_process_ja_task_event_after");
 
    if (action == SGE_EMA_DEL) {
       lListElem *job;
@@ -731,19 +735,6 @@ sge_process_ja_task_event_after(sge_evc_class_t *evc, object_description *object
          DEXIT;
          return SGE_EMA_FAILURE;
       }
-   } else if (action == SGE_EMA_ADD || action == SGE_EMA_MOD) {
-      lListElem *job =  job_list_locate(*sge_master_list(object_base, SGE_TYPE_JOB), lGetUlong(event, ET_intkey));
-      lListElem *jatask = job_search_task(job, NULL,  lGetUlong(event, ET_intkey2));
-
-      lCondition *where = lWhere("%T(%I==%s||%I==%s||%I==%s||%I==%s)", UA_Type, UA_name, USAGE_ATTR_CPU, UA_name, USAGE_ATTR_MEM, UA_name, USAGE_ATTR_IO, UA_name, "finished_jobs");
-      lEnumeration *what = lWhat("%T(ALL)", UA_Type);
-
-      lList *job_usage_list = lSelect("", lGetList(jatask, JAT_scaled_usage_list), where, what);
-      lXchgList(jatask, JAT_scaled_usage_list, &job_usage_list);
-      lFreeList(&job_usage_list);
-
-      lFreeWhere(&where);
-      lFreeWhat(&what);
    } else {
       DPRINTF(("callback processing ja_task event after default rule\n"));
    }
@@ -776,7 +767,7 @@ sge_process_userset_event_before(sge_evc_class_t *evc, object_description *objec
    const lListElem *new, *old;
    const char *u;
 
-   DENTER(TOP_LAYER, "sge_process_userset_event_before");
+   DENTER(GDI_LAYER, "sge_process_userset_event_before");
 
    if (action != SGE_EMA_ADD &&
        action != SGE_EMA_MOD &&

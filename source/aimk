@@ -170,6 +170,7 @@ usage:
    echo "-mankv            -> generate man pages checked out with '-kv' flag"
    echo "-mo               -> generate the message catalogues (Solaris only)"
    echo "-no-core          -> don't compile the core system"
+   echo "-no-dump          -> build binaries without libcore.so (Linux only)"
    echo "-no-java          -> don't compile Java[TM] class files"
    echo "-no-jni           -> don't compile JNI library"
    echo "-no-intl          -> do not compile with internationalization library"
@@ -241,7 +242,9 @@ set MAKEFNMATCH      = 0
 set MAKEWINGRIDLIB   = 0
 set MAKEWINGRIDAPP   = 0
 set WINGRIDLIB_A     = ""
-set WINGRIDLIB_A_DEP = "" # Can't use name WINGRIDLIB_STATIC_DEP because variable is too long
+# Can't use name WINGRIDLIB_STATIC_DEP because variable is too long
+set WINGRIDLIB_A_DEP = "" 
+
 set WITH_USERMAPPING = 0 # Compile without usermapping feature
 set SGESSH           = 0
 
@@ -284,6 +287,7 @@ set FSTYPELIBS       = ""
 set TPLIB            = ""  # 3rdparty libs
 set SLIBS            = ""
 set FLAGS_OUT        = "false"
+set DUMP             = 1
 
 
 # Default settings for shared library creation
@@ -335,6 +339,8 @@ set SECFLAGS          = "-DSECURE -I$OPENSSL_HOME/include"
 set SECLIB            = ""
 set SECLIBS_STATIC    = "$OPENSSL_HOME/lib/libssl.a $OPENSSL_HOME/lib/libcrypto.a"
 set KLFLAGS           = "-L$OPENSSL_HOME/lib"
+
+set CORELIB           = ""
 
 # WIN
 set WINGRIDLIB        = ""
@@ -578,6 +584,9 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-no-core":
       set CORE = 0
+      breaksw
+   case "-no-dump":
+      set DUMP = 0
       breaksw
    case  "-no-java"
       set JAVA = 0
@@ -1344,7 +1353,21 @@ case LINUXSPARC64:
 
    set NOERR_CFLAG = "-Wno-error"
    set NOERR_PROTO = "-Wno-strict-prototypes"
-   set LIBS     = "$LIBS"
+
+   if ( $DUMP == 1 ) then
+      if ( -f $CORE_HOME/libcore.so ) then
+         set LFLAGS   = "$LFLAGS -L$CORE_HOME"
+         set CORELIB  = "-lcore"
+      else
+         echo "error: couldn't find  $CORE_HOME/libcore.so"
+         echo "error: please"
+         echo "error: (a) get you a libcore.so for $buildarch from"
+         echo "error: http://gridengine.sunsource.net/issues/show_bug.cgi?id=2552"
+         echo "error: update CORE_HOME in aimk.site or aimk.private accordingly"
+         echo "error: (b) use aimk option -no-dump to build without libcore.so "
+         exit 1
+      endif
+   endif
 
    set XMTDEF   = ""
 
@@ -2268,6 +2291,7 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
    $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" \
          "LD_WRAPPER=$LD_WRAPPER" \
          "CFLAGS=$CFLAGS $CORE_INCLUDE" \
+         "CORELIB=$CORELIB" \
          "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
          "SDIR=$SDIR" "SOURCE=$SOURCE" "COMPILE_ARCH=$COMPILE_ARCH" \
          "SECLIB=$SECLIB" \

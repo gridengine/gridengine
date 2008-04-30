@@ -1,3 +1,11 @@
+AH-2008-04-30-0: Bugfix:    - use libcore.so to fix problem with no core files 
+                              when SGE daemons crash under Linux
+                            - fixed install dialogue wording that became necessary
+                              after to AH-2008-04-10-0
+                 Bugster:   6686655
+                 Issue:     2552
+                 Review:    RD
+
 RD-2008-04-30-2: CVS:       Created V62beta_RC3_TAG
 ---------------------------------------------------
 

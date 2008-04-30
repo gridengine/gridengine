@@ -1495,6 +1495,10 @@ for i in $ARCH; do
                   ln -s $lib.$shlibext $lib.$jnilibext )
                fi
             done
+
+            if [ -f $CORE_HOME/$DSTARCH/libcore.$shlibext ]; then
+               InstallProg $CORE_HOME/$DSTARCH/libcore.$shlibext
+            fi
          fi
       fi
       cd ..

@@ -2167,7 +2167,7 @@ SetScheddConfig()
  
    while [ $done = "false" ]; do
       $INFOTEXT -u "Configurations"
-      $INFOTEXT -n "1) Normal\n          Fixed interval scheduling, report scheduling information,\n" \
+      $INFOTEXT -n "1) Normal\n          Fixed interval scheduling, report limited scheduling information,\n" \
                    "          actual + assumed load\n"
       $INFOTEXT -n "2) High\n          Fixed interval scheduling, report limited scheduling information,\n" \
                    "          actual load\n"

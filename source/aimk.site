@@ -80,6 +80,7 @@ set OPENSSL_SOVERSION = 0.9.7l
 set OPENSSL_HOME = /vol2/tools/SW/openssl-0.9.7l-origin/$buildarch
 
 
+
 # 
 # POSTGRES_HOME the directory where the include and lib directory of 
 # PostgreSQL is installed
@@ -94,6 +95,11 @@ set BERKELEYDB_HOME = /vol2/SW/db-4.4.20/$buildarch
 set BDB_INCLUDE_SUBDIR =
 set BDB_LIB_SUBDIR =
 set BDB_LIB_SUFFIX =
+
+# Directory where libcore.so's reside
+# Relevant for Linux only:
+# http://gridengine.sunsource.net/issues/show_bug.cgi?id=2552
+set CORE_HOME = /vol2/tools/SW/libcore/$buildarch
 
 # 
 # KRB_HOME the directory where the include and lib directory of kerberos is

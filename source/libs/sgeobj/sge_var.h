@@ -55,6 +55,7 @@ void var_list_copy_prefix_vars_undef(lList **varl,
 const char* var_list_get_string(lList *varl, const char *name);
 
 void var_list_set_string(lList **varl, const char *name, const char *value);
+void var_list_delete_string(lList **varl, const char *name);
 
 void var_list_set_int(lList **varl, const char *name, int value);
 

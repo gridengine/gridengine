@@ -1,4 +1,15 @@
-RD-2008-04-20-1: Bugfix:    fixed memory leak introduced by RD-2008-04-28-0
+HP-2008-04-30-1: Bugfix:    fixed several small bugs reported by insure
+                 Bugfix:    now rsh_daemon config is obeyed only for qrsh 
+                            without command, qlogin_daemon config only for 
+                            qlogin, and so on
+                 Bugfix:    partial bugfix of SHLIB_PATH problem on HP1164
+                 Bugfix:    -pty yes|no switch affects setting of terminal 
+                            mode
+                 Bugfix:    if terminal mode can't be set, now qrsh prints
+                            error and exits
+                 Review:    JG
+
+RD-2008-04-29-1: Bugfix:    fixed memory leak introduced by RD-2008-04-28-0
                  Review:    JG
 
 RD-2008-04-29-0: Enhancem.: added AR_submission_time to accounting and job

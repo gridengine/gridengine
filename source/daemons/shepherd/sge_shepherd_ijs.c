@@ -70,10 +70,10 @@
 
 #include "sge_unistd.h"
 
-#define THISCOMPONENT   "pty_shepherd"
-#define OTHERCOMPONENT  "pty_qrsh"
-
 #define RESPONSE_MSG_TIMEOUT 120
+
+#define COMM_SERVER "qrsh"
+#define COMM_CLIENT "shepherd"
 
 /* copy from shepherd.c */
 #define CKPT_REST_KERNEL 0x080     /* set for all restarted kernel ckpt jobs */
@@ -209,7 +209,7 @@ int send_buf(char *pbuf, int buf_bytes, int message_type)
    dstring err_msg = DSTRING_INIT;
 
    if (comm_write_message(g_comm_handle, g_hostname, 
-      OTHERCOMPONENT, 1, (unsigned char*)pbuf, 
+      COMM_SERVER, 1, (unsigned char*)pbuf, 
       (unsigned long)buf_bytes, message_type, &err_msg) != buf_bytes) {
       shepherd_trace("couldn't write all data: %s\n",
                      sge_dstring_get_string(&err_msg));
@@ -507,18 +507,24 @@ static void* pty_to_commlib(void *t_conf)
       }
    }
 
+#ifdef EXTENSIVE_TRACING
    shepherd_trace("pty_to_commlib: shutting down thread");
+#endif
    FREE(stdout_buf);
    FREE(stderr_buf);
    thread_func_cleanup(t_conf);
 
 /* TODO: This could cause race conditions in the main thread, replace with pthread_condition */
+#ifdef EXTENSIVE_TRACING
    shepherd_trace("pty_to_commlib: raising event for main thread");
+#endif
    g_raised_event = 2;
    thread_trigger_event(&g_thread_main);
    sge_dstring_free(&err_msg);
 
+#ifdef EXTENSIVE_TRACING
    shepherd_trace("pty_to_commlib: leaving commlib_to_pty thread");
+#endif
    return NULL;
 }
 
@@ -589,17 +595,13 @@ static void* commlib_to_pty(void *t_conf)
       thread_testcancel(t_conf);
       if (g_raised_event > 0) {
          do_exit = 1;
+         continue;
       }
 
 #ifdef EXTENSIVE_TRACING
       shepherd_trace("commlib_to_pty: comm_recv_message() returned %d, err_msg: %s",
                      ret, sge_dstring_get_string(&err_msg));
 #endif
-
-      if (g_raised_event != 0) {
-         shepherd_trace("commlib_to_pty: received event -> exiting");
-         return NULL;
-      }
 
       if (ret != COMM_RETVAL_OK) {
          /* handle error cases */
@@ -648,7 +650,8 @@ static void* commlib_to_pty(void *t_conf)
                do_exit = 1;
                break;
             case COMM_CANT_RECEIVE_MESSAGE:
-               if (check_client_alive(g_comm_handle, &err_msg) != COMM_RETVAL_OK) {
+               if (check_client_alive(g_comm_handle, 
+                                      COMM_SERVER, &err_msg) != COMM_RETVAL_OK) {
                   shepherd_trace("commlib_to_pty: not connected any more -> exiting.");
                   do_exit = 1;
                } else {
@@ -737,15 +740,21 @@ static void* commlib_to_pty(void *t_conf)
 
    sge_dstring_free(&err_msg);
 
+#ifdef EXTENSIVE_TRACING
    shepherd_trace("commlib_to_pty: leaving commlib_to_pty function\n");
+#endif
    thread_func_cleanup(t_conf);
 /* TODO: pthread_condition, see other thread*/
 
+#ifdef EXTENSIVE_TRACING
    shepherd_trace("commlib_to_pty: raising event for main thread");
+#endif
    g_raised_event = 3;
    thread_trigger_event(&g_thread_main);
 
+#ifdef EXTENSIVE_TRACING
    shepherd_trace("commlib_to_pty: leaving commlib_to_pty thread");
+#endif
    return NULL;
 }
 
@@ -800,7 +809,7 @@ int parent_loop(char *hostname, int port, int ptym,
     * Open the connection port so we can connect to our server
     */
    shepherd_trace("main: opening connection to qrsh/qlogin client");
-   ret = comm_open_connection(false, port, THISCOMPONENT, g_csp_mode, user_name,
+   ret = comm_open_connection(false, port, COMM_CLIENT, g_csp_mode, user_name,
                               &g_comm_handle, err_msg);
    if (ret != COMM_RETVAL_OK) {
       shepherd_trace("main: can't open commlib stream, err_msg = %s", 
@@ -815,7 +824,7 @@ int parent_loop(char *hostname, int port, int ptym,
     * commlib_to_pty thread.
     */
    shepherd_trace("main: sending REGISTER_CTRL_MSG");
-   ret = (int)comm_write_message(g_comm_handle, g_hostname, OTHERCOMPONENT, 1, 
+   ret = (int)comm_write_message(g_comm_handle, g_hostname, COMM_SERVER, 1, 
                       (unsigned char*)" ", 1, REGISTER_CTRL_MSG, err_msg);
    if (ret == 0) {
       /* No bytes written - error */
@@ -977,7 +986,7 @@ int close_parent_loop(int exit_status)
    shepherd_trace("sending to host: %s", 
                   g_hostname != NULL ? g_hostname : "<null>");
    ret = (int)comm_write_message(g_comm_handle, g_hostname,
-      OTHERCOMPONENT, 1, (unsigned char*)sz_exit_status, strlen(sz_exit_status), 
+      COMM_SERVER, 1, (unsigned char*)sz_exit_status, strlen(sz_exit_status), 
       UNREGISTER_CTRL_MSG, &err_msg);
 
    if (ret != strlen(sz_exit_status)) {
@@ -1022,7 +1031,7 @@ int close_parent_loop(int exit_status)
     * Do cleanup
     */
    shepherd_trace("main: cl_com_cleanup_commlib()");
-   comm_shutdown_connection(g_comm_handle, &err_msg);
+   comm_shutdown_connection(g_comm_handle, COMM_SERVER, &err_msg);
    shepherd_trace("main: comm_cleanup_lib()");
    ret = comm_cleanup_lib(&err_msg);
    if (ret != COMM_RETVAL_OK) {

@@ -103,9 +103,6 @@
 #include "sge_ijs_comm.h"
 #include "sge_ijs_threads.h"
 
-#define THISCOMPONENT  "pty_qrsh"
-#define OTHERCOMPONENT "pty_shepherd"
-
 extern COMMUNICATION_HANDLE *g_comm_handle;
 
 bool g_csp_mode = false;
@@ -1698,7 +1695,7 @@ int main(int argc, char **argv)
        * start the commlib server
        */
       DPRINTF(("starting commlib server\n"));
-      ret = comm_open_connection(true, 0, THISCOMPONENT, g_csp_mode, username,
+      ret = comm_open_connection(true, 0, COMM_SERVER, g_csp_mode, username,
                                  &g_comm_handle, &error_msg);
 
       if (ret != 0) {
@@ -1814,7 +1811,7 @@ int main(int argc, char **argv)
           * Wait for the client (=shepherd) to connect to us
           */
          DPRINTF(("waiting for connection\n"));
-         ret = comm_wait_for_connection(g_comm_handle, OTHERCOMPONENT, 
+         ret = comm_wait_for_connection(g_comm_handle, COMM_CLIENT, 
                                         QSH_SOCKET_FINAL_TIMEOUT, &host, &err_msg);
          sge_dstring_free(&err_msg);
          if (ret != COMM_RETVAL_OK) {
@@ -1829,8 +1826,8 @@ int main(int argc, char **argv)
 
          DPRINTF(("starting server loop\n"));
          /* TODO: Add proper error handling and error propagation to do_server_loop() */
-         ret = do_server_loop(random_poll, job_id, nostdin, noshell, 
-                              is_rsh, is_qlogin,
+         ret = do_server_loop(job_id, nostdin, noshell, 
+                              is_rsh, is_qlogin, pty_option,
                               &exit_status);
          if (ret != 0) {
             return 1;
@@ -1998,7 +1995,7 @@ int main(int argc, char **argv)
                 * Wait for the client to connect to us
                 */
                DPRINTF(("waiting for connection\n"));
-               ret = comm_wait_for_connection(g_comm_handle, OTHERCOMPONENT, 
+               ret = comm_wait_for_connection(g_comm_handle, COMM_CLIENT, 
                                               random_poll, &host, &err_msg);
                if (ret != COMM_RETVAL_OK) {
                   if (ret == COMM_GOT_TIMEOUT) {
@@ -2031,8 +2028,8 @@ int main(int argc, char **argv)
                   }
 
                   /* do_server_loop() loops until the client has disconnected */
-                  ret = do_server_loop(random_poll, job_id, nostdin, noshell, 
-                                       is_rsh, is_qlogin,
+                  ret = do_server_loop(job_id, nostdin, noshell, 
+                                       is_rsh, is_qlogin, pty_option,
                                        &exit_status);
                   DPRINTF(("exit_status = %d\n", exit_status));
                   if (ret == COMM_RETVAL_OK) {
@@ -2144,7 +2141,7 @@ int main(int argc, char **argv)
          dstring err_msg = DSTRING_INIT;
          int     ret;
 
-         ret = comm_shutdown_connection(g_comm_handle, &err_msg);
+         ret = comm_shutdown_connection(g_comm_handle, COMM_CLIENT, &err_msg);
          if (ret != COMM_RETVAL_OK) {
             DPRINTF(("comm_shutdown_connection() failed: %s (%d)",
                      sge_dstring_get_string(&err_msg), ret));

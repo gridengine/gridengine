@@ -30,11 +30,14 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#define COMM_SERVER "qrsh"
+#define COMM_CLIENT "shepherd"
+
 void set_signal_handlers(void);
 void* tty_to_commlib(void *t_conf);
 void* commlib_to_tty(void *t_conf);
-int do_server_loop(int random_poll, u_long32 job_id, int nostdin, int noshell,
-                   int is_rsh, int is_qlogin, 
+int do_server_loop(u_long32 job_id, int nostdin, int noshell,
+                   int is_rsh, int is_qlogin, int force_pty,
                    int *p_exit_status);
 
 

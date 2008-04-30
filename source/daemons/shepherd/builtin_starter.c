@@ -1365,6 +1365,7 @@ char *buf = NULL;
       
       pre_args_ptr[arg_id++] = strdup(sge_dstring_get_string(&arguments));
       pre_args_ptr[arg_id++] = NULL;
+      sge_dstring_free(&arguments);
       args = pre_args;
    /* No need to test for binary since this option excludes binary */
    } else if (!strcasecmp("script_from_stdin", shell_start_mode)) {

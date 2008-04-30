@@ -55,10 +55,7 @@
 #include "sge_pty.h"
 #include "sge_ijs_comm.h"
 #include "sge_ijs_threads.h"
-
-/* defines */
-#define THISCOMPONENT  "pty_qrsh"
-#define OTHERCOMPONENT "pty_shepherd"
+#include "sge_client_ijs.h"
 
 /* global variables */
 char *g_hostname  = NULL;
@@ -259,14 +256,14 @@ static void client_check_window_change(COMMUNICATION_HANDLE *handle)
 
          sprintf(buf, "WS %d %d %d %d",
                  ws.ws_row, ws.ws_col, ws.ws_xpixel, ws.ws_ypixel);
-         comm_write_message(handle, g_hostname, OTHERCOMPONENT, 1,
+         comm_write_message(handle, g_hostname, COMM_CLIENT, 1,
                             (unsigned char*)buf, strlen(buf), 
                             WINDOW_SIZE_CTRL_MSG, &err_msg);
       } else {
          DPRINTF(("client_check_windows_change: ioctl() failed! "
             "sending dummy WINDOW_SIZE_CTRL_MSG to fullfill protocol.\n"));
          sprintf(buf, "WS 60 80 480 640");
-         comm_write_message(handle, g_hostname, OTHERCOMPONENT, 1,
+         comm_write_message(handle, g_hostname, COMM_CLIENT, 1,
             (unsigned char*)buf, strlen(buf), WINDOW_SIZE_CTRL_MSG, &err_msg);
       }
    }
@@ -359,7 +356,7 @@ void* tty_to_commlib(void *t_conf)
          } else {
             DPRINTF(("tty_to_commlib: writing to commlib: %d bytes\n", nread));
             if (comm_write_message(g_comm_handle, g_hostname, 
-               OTHERCOMPONENT, 1, (unsigned char*)pbuf, 
+               COMM_CLIENT, 1, (unsigned char*)pbuf, 
                (unsigned long)nread, STDIN_DATA_MSG, &err_msg) != nread) {
                DPRINTF(("tty_to_commlib: couldn't write all data\n"));
             } else {
@@ -514,7 +511,7 @@ void* commlib_to_tty(void *t_conf)
                DPRINTF(("commlib_to_tty: received register message!\n"));
                /* Send the settings in response */
                sprintf(buf, "noshell = %d", g_noshell);
-               ret = (int)comm_write_message(g_comm_handle, g_hostname, OTHERCOMPONENT, 1,
+               ret = (int)comm_write_message(g_comm_handle, g_hostname, COMM_CLIENT, 1,
                   (unsigned char*)buf, strlen(buf)+1, SETTINGS_CTRL_MSG, &err_msg);
                DPRINTF(("commlib_to_tty: sent SETTINGS_CTRL_MSG, ret = %d\n", ret));
                break;
@@ -532,7 +529,7 @@ void* commlib_to_tty(void *t_conf)
                snprintf(buf, MIN(100, recv_mess.cl_message->message_length),
                         "%s", recv_mess.data);
                sscanf(buf, "%d", &g_exit_status);
-               comm_write_message(g_comm_handle, g_hostname, OTHERCOMPONENT, 1, 
+               comm_write_message(g_comm_handle, g_hostname, COMM_CLIENT, 1, 
                   (unsigned char*)" ", 1, UNREGISTER_RESPONSE_CTRL_MSG, &err_msg);
 
                DPRINTF(("commlib_to_tty: received exit_status from shepherd: %d\n", 
@@ -563,10 +560,12 @@ void* commlib_to_tty(void *t_conf)
 *     and to the client.
 *
 *  INPUTS
-*     int random_poll    -
-*     u_long32 job_id    -
-*     int nostdin        -
-*     int noshell        -
+*     u_long32 job_id    - SGE job id of this job
+*     int nostdin        - The "-nostdin" switch
+*     int noshell        - The "-noshell" switch
+*     int is_rsh         - Is it a qrsh with commandline?
+*     int is_qlogin      - Is it a qlogin or qrsh without commandline?
+*     int force_pty      - The user forced use of pty by the "-pty yes" switch
 *     int *p_exit_status -
 *
 *  RESULT
@@ -579,8 +578,8 @@ void* commlib_to_tty(void *t_conf)
 *  SEE ALSO
 *     do_client_loop()
 *******************************************************************************/
-int do_server_loop(int random_poll, u_long32 job_id, int nostdin, int noshell,
-                   int is_rsh, int is_qlogin,
+int do_server_loop(u_long32 job_id, int nostdin, int noshell,
+                   int is_rsh, int is_qlogin, int force_pty,
                    int *p_exit_status)
 {
    bool              terminal_is_in_raw_mode = false;
@@ -605,17 +604,18 @@ int do_server_loop(int random_poll, u_long32 job_id, int nostdin, int noshell,
    /*
     * qrsh without command and qlogin both have is_rsh == 0 and is_qlogin == 1
     * qrsh with command and qsh don't need to set terminal mode.
+    * If the user requested a pty we also have to set terminal mode.
     */
-   if (is_rsh == 0 && is_qlogin == 1) {
+   if ((force_pty == 2 && is_rsh == 0 && is_qlogin == 1) || force_pty == 1) {
       /*
        * Set this terminal to raw mode, just output everything, don't interpreti
        * it. Let the pty on the client side interpret the characters.
        */
       ret = terminal_enter_raw_mode();
       if (ret != 0) {
-         DPRINTF(("can't set terminal to raw mode: %s (%d)\n",
-            strerror(ret), ret));
-         /* continue with terminal in un-raw mode */
+         fprintf(stderr, "Can't set terminal mode. Error reason: %s (%d)\n",
+            strerror(ret), ret);
+         return 1;
       } else {
          terminal_is_in_raw_mode = true;
       }
@@ -655,13 +655,14 @@ int do_server_loop(int random_poll, u_long32 job_id, int nostdin, int noshell,
    DPRINTF(("shutting down tty_to_commlib thread\n"));
    thread_shutdown(pthread_tty_to_commlib);
 /*
- * TODO: Why doesn't this work on some hosts (e.g. oin)  
+ * TODO: Why doesn't this work on some hosts (e.g. oin)
+ *       Is it necessary at all?
 
    DPRINTF(("wait until there is no client connected any more\n"));
-   comm_wait_for_no_connection(g_comm_handle, OTHERCOMPONENT, 10, &err_msg);
+   comm_wait_for_no_connection(g_comm_handle, COMM_CLIENT, 10, &err_msg);
 */
    DPRINTF(("shut down the connection from our side\n"));
-   comm_shutdown_connection(g_comm_handle, &err_msg);
+   comm_shutdown_connection(g_comm_handle, COMM_CLIENT, &err_msg);
    /*
     * Close stdin to awake the tty_to_commlib-thread from the select() call.
     * thread_shutdown() doesn't work on all architectures.

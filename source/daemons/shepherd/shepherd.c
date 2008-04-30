@@ -665,30 +665,38 @@ int main(int argc, char **argv)
       /*
        * Check if we have to use the old or the new (builtin)
        * interactive job support.
-       * TODO: Allow different configurations for rsh, rlogin and telnet,
-       *       allow dynamic configuration for each job.
+       * TODO: allow dynamic configuration for each job?
        */
-
       config_errfunc = NULL;
-      tmp_rsh_daemon = get_conf_val("rsh_daemon");
-      if (tmp_rsh_daemon != NULL
-          && strcasecmp(tmp_rsh_daemon, "builtin") == 0) {
-         g_new_interactive_job_support = true;
-         shepherd_trace("rsh_daemon = %s", tmp_rsh_daemon);
+      script_file = get_conf_val("script_file");
+      if (script_file != NULL
+          && strcasecmp(script_file, JOB_TYPE_STR_QRSH) == 0) {
+         tmp_rsh_daemon = get_conf_val("rsh_daemon");
+         if (tmp_rsh_daemon != NULL
+             && strcasecmp(tmp_rsh_daemon, "builtin") == 0) {
+            g_new_interactive_job_support = true;
+            shepherd_trace("rsh_daemon = %s", tmp_rsh_daemon);
+         }
       }
 
-      tmp_rlogin_daemon = get_conf_val("rlogin_daemon");
-      if (tmp_rlogin_daemon != NULL
-          && strcasecmp(tmp_rlogin_daemon, "builtin") == 0) {
-         g_new_interactive_job_support = true;
-         shepherd_trace("rlogin_daemon = %s", tmp_rlogin_daemon);
+      if (script_file != NULL
+          && strcasecmp(script_file, JOB_TYPE_STR_QRLOGIN) == 0) {
+         tmp_rlogin_daemon = get_conf_val("rlogin_daemon");
+         if (tmp_rlogin_daemon != NULL
+             && strcasecmp(tmp_rlogin_daemon, "builtin") == 0) {
+            g_new_interactive_job_support = true;
+            shepherd_trace("rlogin_daemon = %s", tmp_rlogin_daemon);
+         }
       }
 
-      tmp_qlogin_daemon = get_conf_val("qlogin_daemon");
-      if (tmp_qlogin_daemon != NULL
-          && strcasecmp(tmp_qlogin_daemon, "builtin") == 0) {
-         g_new_interactive_job_support = true;
-         shepherd_trace("qlogin_daemon = %s", tmp_qlogin_daemon);
+      if (script_file != NULL
+          && strcasecmp(script_file, JOB_TYPE_STR_QLOGIN) == 0) {
+         tmp_qlogin_daemon = get_conf_val("qlogin_daemon");
+         if (tmp_qlogin_daemon != NULL
+             && strcasecmp(tmp_qlogin_daemon, "builtin") == 0) {
+            g_new_interactive_job_support = true;
+            shepherd_trace("qlogin_daemon = %s", tmp_qlogin_daemon);
+         }
       }
       config_errfunc = shepherd_error_ptr;
 

@@ -502,7 +502,8 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
       else if (failed == ESSTATE_NO_PID)
          sprintf(error, MSG_SHEPHERD_NOPIDFILE);
       else
-         sprintf(error, MSG_SHEPHERD_EXITEDWISSTATUS_I, failed);
+         sprintf(error, MSG_SHEPHERD_EXITEDWISSTATUS_IS, failed, 
+                 get_sstate_description(failed));
    }
 
    /* look for error file this overrules errors found yet */

@@ -86,7 +86,8 @@ int comm_open_connection(bool b_server, int port,
                          const char *user_name, COMMUNICATION_HANDLE **handle,
                          dstring *err_msg);
 
-int comm_shutdown_connection(COMMUNICATION_HANDLE *handle, 
+int comm_shutdown_connection(COMMUNICATION_HANDLE *handle,
+                             const char *component_name,
                              dstring *err_msg);
 
 
@@ -94,9 +95,9 @@ int comm_set_connection_param(COMMUNICATION_HANDLE* g_comm_handle, int param, in
                               dstring *err_msg);
 int comm_ignore_timeouts(bool b_ignore, dstring *err_msg);
 
-int comm_wait_for_connection(COMMUNICATION_HANDLE *handle, char *component, int wait_secs,
-                             const char **host, dstring *err_msg);
-int comm_wait_for_no_connection(COMMUNICATION_HANDLE *handle, char *component, 
+int comm_wait_for_connection(COMMUNICATION_HANDLE *handle, const char *component, 
+                             int wait_secs, const char **host, dstring *err_msg);
+int comm_wait_for_no_connection(COMMUNICATION_HANDLE *handle, const char *component, 
                                 int wait_secs, dstring *err_msg);
 int comm_get_connection_count(COMMUNICATION_HANDLE *handle, dstring *err_msg);
 
@@ -104,8 +105,8 @@ int comm_trigger(COMMUNICATION_HANDLE *handle, int synchron, dstring *err_msg);
 
 
 unsigned long comm_write_message(COMMUNICATION_HANDLE *handle,
-                  char *unresolved_hostname,
-                  char *component_name,
+                  const char *unresolved_hostname,
+                  const char *component_name,
                   unsigned long component_id,
                   unsigned char *buffer, 
                   unsigned long size, 
@@ -120,5 +121,6 @@ int comm_recv_message(COMMUNICATION_HANDLE *handle,
                  dstring *err_msg);
 
 int comm_free_message(recv_message_t *recv_mess, dstring *err_msg);
-int check_client_alive(COMMUNICATION_HANDLE *handle, dstring *err_msg);
+int check_client_alive(COMMUNICATION_HANDLE *handle, const char *component_name,
+                       dstring *err_msg);
 

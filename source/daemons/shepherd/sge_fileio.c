@@ -357,6 +357,7 @@ shepherd_read_qrsh_file(const char* pid_file_name, pid_t *qrsh_pid)
          *qrsh_pid = 0;
          ret = false;
       } 
+      FCLOSE(fp);
    } else {
       /*
        * CR 6588743 - raising a shepherd_error here would set the queue in
@@ -365,7 +366,6 @@ shepherd_read_qrsh_file(const char* pid_file_name, pid_t *qrsh_pid)
       shepherd_trace(MSG_FILE_NOOPEN_SS, pid_file_name, strerror(errno));
       ret = false;
    }
-   FCLOSE(fp);
    return ret;
 FCLOSE_ERROR:
    /*

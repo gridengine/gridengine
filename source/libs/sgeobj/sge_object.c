@@ -177,7 +177,7 @@ obj_thread_local_once_init(void);
 static void
 obj_thread_local_once_init(void) 
 {
-   pthread_key_create(&obj_state_key, &obj_state_destroy);
+   pthread_key_create(&obj_state_key, obj_state_destroy);
 }
 
 static bool 
@@ -311,7 +311,7 @@ static void obj_state_destroy(void* st)
 *     void obj_mt_init(void) 
 *
 *  FUNCTION
-*     creats teh pthread key. Needs to be called when the daemon, clients
+*     Creates the pthread key. Needs to be called when the daemon, clients
 *     starts up
 *
 *  NOTES

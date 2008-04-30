@@ -733,15 +733,12 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
             }
          }
          var_list_set_sharedlib_path(&environmentList);
-      }
 #if defined(HP1164)
-      const char *shlib_path = sge_getenv("SHLIB_PATH");
-
-      if (shlib_path == NULL) {
-         shlib_path = "";
-      }
-      var_list_set_string(&environmentList, "SHLIB_PATH", shlib_path);
+         if (mconf_get_inherit_env() != true) {
+            var_list_delete_string(&environmentList, "SHLIB_PATH");
+         }
 #endif
+      }
 
       /* set final of variables whose value shall be replaced */ 
       var_list_copy_prefix_vars(&environmentList, environmentList,

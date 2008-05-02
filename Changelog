@@ -1,3 +1,6 @@
+HP-2008-05-02-0: Bugfix:    Use of commlib debugging feature caused deadlock on lx26-amd64
+                 Changed:   common/sge_ijs_comm.c
+
 AH-2008-04-30-0: Bugfix:    - use libcore.so to fix problem with no core files 
                               when SGE daemons crash under Linux
                             - fixed install dialogue wording that became necessary

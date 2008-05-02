@@ -169,7 +169,7 @@ int comm_init_lib(dstring *err_msg)
 
    DENTER(TOP_LAYER, "comm_init_lib");
 
-   ret = cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_DEBUG, my_log_list_flush_list);
+   ret = cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_OFF, NULL /*DEBUG, my_log_list_flush_list*/);
    if (ret != CL_RETVAL_OK) {
       sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
       DPRINTF(("cl_com_setup_commlib() failed: %s (%d)\n",

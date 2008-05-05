@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_qmaster.8,v $     Last Update: $Date: 2004/08/11 13:38:23 $     Revision: $Revision: 1.11 $
+.\" $RCSfile: sge_qmaster.8,v $     Last Update: $Date: 2008/05/05 09:03:35 $     Revision: $Revision: 1.12 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_QMASTER 8 "$Date: 2004/08/11 13:38:23 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_QMASTER 8 "$Date: 2008/05/05 09:03:35 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_qmaster \- xxQS_NAMExx master control daemon
 .\"
@@ -43,11 +43,7 @@ xxqs_name_sxx_qmaster \- xxQS_NAMExx master control daemon
 .\"
 .SH DESCRIPTION
 .I xxqs_name_sxx_qmaster
-controls the overall xxQS_NAMExx behavior in a cluster. For the
-purpose of scheduling jobs
-.I xxqs_name_sxx_qmaster
-cooperates with
-.M xxqs_name_sxx_schedd 8 .
+controls the overall xxQS_NAMExx behavior in a cluster. 
 .\"
 .\"
 .SH OPTIONS
@@ -126,7 +122,6 @@ by that same user are handled correctly by the system.
 .M xxqs_name_sxx_intro 1 ,
 .M xxqs_name_sxx_conf 5 ,
 .M xxqs_name_sxx_execd 8 ,
-.M xxqs_name_sxx_schedd 8 ,
 .M xxqs_name_sxx_shadowd 8 ,
 .I xxQS_NAMExx Installation and Administration Guide
 .\"

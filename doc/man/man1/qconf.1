@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2008/01/16 16:03:10 $     Revision: $Revision: 1.31 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2008/05/05 09:03:33 $     Revision: $Revision: 1.32 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2008/01/16 16:03:10 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2008/05/05 09:03:33 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -748,7 +748,7 @@ In the form \fB\-km\fP
 .M xxqs_name_sxx_qmaster 8
 is forced to terminate in a controlled fashion. In the
 same way the \fB\-ks\fP switch causes termination of
-.M xxqs_name_sxx_schedd 8 .
+the scheduler thread.
 Shutdown of running
 .M xxqs_name_sxx_execd 8
 processes currently registered is initiated by the
@@ -778,8 +778,7 @@ The comma separated event client list specifies the event clients
 to be addressed by the \fB\-kec\fP option.
 If the keyword \fBall\fP is specified instead of an event client
 list, all running event clients except special clients like the
-.M xxqs_name_sxx_schedd 8 
-are terminated.
+scheduler thread are terminated.
 Requires root or manager privilege.
 .\"
 .IP "\fB\-mattr obj_spec attr_name val obj_instance,...\fP"
@@ -1196,9 +1195,7 @@ Shows the definition of the specified user(s) (see
 Shows the list of all currently defined users.
 .\"
 .IP "\fB\-tsm\fP	\fI<trigger scheduler monitoring>\fP"
-The xxQS_NAMExx scheduler
-.M xxqs_name_sxx_schedd 8
-is forced by this option to print 
+The xxQS_NAMExx scheduler is forced by this option to print 
 trace messages of its next scheduling run to the file
 \fI<xxqs_name_sxx_root>/<cell>/common/schedd_runlog\fP.
 The messages indicate the reasons for 
@@ -1285,7 +1282,6 @@ taking effect on next invocation of the queue (i.e., the next job).
 .M queue_conf 5 ,
 .M xxqs_name_sxx_execd 8 ,
 .M xxqs_name_sxx_qmaster 8 ,
-.M xxqs_name_sxx_schedd 8 .
 .\"
 .\"
 .SH "COPYRIGHT"

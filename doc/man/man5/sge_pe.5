@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2007/12/28 19:43:09 $     Revision: $Revision: 1.18 $
+.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2008/05/05 09:03:34 $     Revision: $Revision: 1.19 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_PE 5 "$Date: 2007/12/28 19:43:09 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_PE 5 "$Date: 2008/05/05 09:03:34 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_pe \- xxQS_NAMExx parallel environment configuration file format
@@ -187,8 +187,7 @@ can be used to constitute a command line.
 .\"
 .\"
 .SS "\fBallocation_rule\fP"
-The allocation rule is interpreted by
-.M xxqs_name_sxx_schedd 8
+The allocation rule is interpreted by the scheduler thread
 and helps the scheduler to decide how to distribute parallel
 processes among the available machines. If, for instance,
 a parallel environment is built for shared memory applications
@@ -338,7 +337,6 @@ this.
 .M qsub 1 ,
 .M access_list 5 ,
 .M xxqs_name_sxx_qmaster 8 ,
-.M xxqs_name_sxx_schedd 8 ,
 .M xxqs_name_sxx_shepherd 8 .
 .\"
 .SH "COPYRIGHT"

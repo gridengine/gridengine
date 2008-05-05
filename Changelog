@@ -1,5 +1,8 @@
-RD-2008-05-05-1: CVS:       Created V62beta
+RD-2008-05-05-2: CVS:       Created V62beta
 -------------------------------------------
+
+RD-2008-05-05-1: Cleanup:   - added missing copyright notice
+                 Review:    AA
 
 RD-2008-05-05-0: Cleanup:   - added copyright files to jar files
                             - removed Author from DRMAA JavaDoc

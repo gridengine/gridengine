@@ -74,6 +74,7 @@
 
 /* uti */
 #include "uti/sge_spool.h"
+#include "sge_all_listsL.h"
 
 static void spool_flatfile_add_line_breaks (dstring *buffer);
 
@@ -1543,6 +1544,20 @@ FF_DEBUG("detected end_token");
          spool_return_whitespace = false;
          
          if (fields[field_index].read_func == NULL) {
+            
+            if(type == lUlongT) {            
+               char *end_ptr = NULL;
+               double dbl_value;
+               
+               dbl_value = strtod(sge_dstring_get_string(&buffer), &end_ptr);
+               if ( dbl_value < 0) {
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                       ANSWER_QUALITY_ERROR,
+                                       MSG_MUST_BE_POSITIVE_VALUE_S,
+                                       fields[field_index].name);
+                  return;
+               }
+            }
             if (object_parse_field_from_string(*object, answer_list, nm, 
                                         sge_dstring_get_string(&buffer)) == 0) {
                stop = true;

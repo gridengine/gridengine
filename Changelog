@@ -1,3 +1,9 @@
+MP-2008-05-05-0: Bugfix:    It is possible to define negative ticket numbers and negative
+                            shares through qconf
+                 Bugster:   2150515
+                 Issue:     2315
+                 Review:    JG
+
 JG-2008-04-17-0: Bugfix:    fixed sge_mirror profiling
                  Review:    RD
 

@@ -38,6 +38,7 @@
 #include "rmon/sgermon.h"
 #include "sched/sge_resource_utilizationL.h"
 #include "spool/flatfile/sge_flatfile.h"
+#include "spool/flatfile/msg_spoollib_flatfile.h"
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_attr.h"
 #include "sgeobj/sge_calendar.h"
@@ -895,7 +896,20 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
          DEXIT;
          return 0;
       }
+      if (strcmp(name, "auto_user_oticket") == 0 || 
+              strcmp(name, "auto_user_fshare") == 0 ) {
+         char *end_ptr = NULL;
+         double dbl_value;
 
+         dbl_value = strtod(value, &end_ptr);
+         if ( dbl_value < 0) {
+            answer_list_add_sprintf(alp, STATUS_EUNKNOWN,
+                                 ANSWER_QUALITY_ERROR,
+                                 MSG_MUST_BE_POSITIVE_VALUE_S,
+                                 name);
+            DRETURN(0);
+         }            
+      } 
       lSetString(ep, CF_value, value);
 
       if (strtok(NULL, " \t\n")) {

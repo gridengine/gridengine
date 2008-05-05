@@ -90,6 +90,9 @@
     </target>
     
     <target name="-post-init" depends="propsinit">
+
+        <property environment="env"/>
+
         <echo>libs.junit.classpath=${libs.junit.classpath}</echo>
         <exec executable="hostname" outputproperty="hostname"/>
         <condition property="isJavaBuildHost">
@@ -100,6 +103,25 @@
         <condition property="isJavaBuildHost" >
             <contains string="${java.buildhost}" substring="${hostname}" casesensitive="false"/>
         </condition>
+
+        <!-- Copyright stuff -->
+        <property name="legal.dir" value="${env.AIMK_COPYRIGHT_DIR}"/>
+
+        <condition property="legal" value="COPYRIGHT">
+            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="sun" trim="true"/>
+        </condition>
+        <condition property="legal" value="COPYRIGHT LICENSE">
+            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="courtesy" trim="true"/>
+        </condition>
+        <condition property="legal" value="">
+           <not>
+               <or>
+                   <equals arg1="${dist.type}" arg2="courtesy" trim="true"/>
+                   <equals arg1="${dist.type}" arg2="sun" trim="true"/>
+               </or>
+           </not>
+        </condition>
+
     </target>
     
     <target name="-pre-compile" unless="isJavaBuildHost">
@@ -113,9 +135,25 @@
     </target>
     
     <target name="-post-jar">
+        <antcall target="juti.jar"/>
         <antcall target="test.jar"/>
     </target>
-    
+
+    <target name="juti.jar" depends="compile">
+        <jar file="${dist.dir}/${dist.jar}">
+            
+            <fileset dir="${build.classes.dir}">
+                <include name="**/*.class"/>
+            </fileset>
+            <fileset dir="${src.dir}">
+                <include name="**/*.properties"/>
+                <include name="jaas.config"/>
+                <include name="server.policy"/>
+            </fileset>
+            <metainf dir="${legal.dir}" includes="${legal}"/>
+        </jar>
+    </target>
+
     <target name="test.jar" depends="compile-test">
         <jar file="${dist.dir}/juti-test.jar">
             
@@ -126,6 +164,7 @@
                 <include name="**/*.properties"/>
                 <exclude name="**/*_private.properties"/>
             </fileset>
+            <metainf dir="${legal.dir}" includes="${legal}"/>
         </jar>
     </target>
     

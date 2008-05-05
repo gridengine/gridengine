@@ -2356,6 +2356,17 @@ if ( "$JAVA" > 0 ) then
    else
       setenv AIMK_DEBUG ""
    endif  
+
+   if ( "$ADD_COPYRIGHT" == 1 ) then
+      setenv AIMK_COPYRIGHT_DIR "$COPYRIGHT_DIR"
+      setenv AIMK_COPYRIGHT "courtesy"
+   else if ( "$ADD_SUN_COPYRIGHT" == 1 ) then
+      setenv AIMK_COPYRIGHT_DIR "$SUN_COPYRIGHT_DIR"
+      setenv AIMK_COPYRIGHT "sun"
+   else
+      setenv AIMK_COPYRIGHT_DIR ""
+      setenv AIMK_COPYRIGHT ""
+   endif
    ant -f build.xml $argv
    # how to propagate ant opts to first and then second build.xml
    # ant -Dsge.ant.args='-DA="a" -DB="b" -DC="c"' -f build.xml $argv

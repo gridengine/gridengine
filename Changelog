@@ -1,9 +1,13 @@
+RD-2008-05-05-1: CVS:       Created V62beta
+-------------------------------------------
+
+RD-2008-05-05-0: Cleanup:   - added copyright files to jar files
+                            - removed Author from DRMAA JavaDoc
+                 Review:    AA
+
 EB-2008-05-05-0: Doc:       removed sge_schedd man page
                             changed several man pages
                  Review:    DG
-
-RD-2008-05-02-1: CVS:       Created V62beta
--------------------------------------------
 
 RD-2008-05-02-0: Doc:       corrected copyright year and fixed references to
                             documentation

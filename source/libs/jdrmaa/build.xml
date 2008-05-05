@@ -95,6 +95,26 @@ ___INFO__MARK_END__-->
    </target>
 
    <target name="jar.init" depends="init">
+      <property environment="env"/>
+
+      <!-- Copyright stuff -->
+      <property name="legal.dir" value="${env.AIMK_COPYRIGHT_DIR}"/>
+
+      <condition property="legal" value="COPYRIGHT">
+          <equals arg1="${env.AIMK_COPYRIGHT}" arg2="sun" trim="true"/>
+      </condition>
+      <condition property="legal" value="COPYRIGHT LICENSE">
+          <equals arg1="${env.AIMK_COPYRIGHT}" arg2="courtesy" trim="true"/>
+      </condition>
+      <condition property="legal" value="">
+         <not>
+             <or>
+                 <equals arg1="${dist.type}" arg2="courtesy" trim="true"/>
+                 <equals arg1="${dist.type}" arg2="sun" trim="true"/>
+             </or>
+         </not>
+      </condition>
+
       <mkdir dir="${classes.dir}"/>
       <fileset id="jar.classes" dir="${classes.dir}">
          <include name="org/ggf/drmaa/*.class"/>
@@ -116,6 +136,7 @@ ___INFO__MARK_END__-->
       <jar compress="true" jarfile="${jar}.tmp">
          <fileset refid="jar.classes"/>
          <fileset refid="jar.meta"/>
+         <metainf dir="${legal.dir}" includes="${legal}"/>
       </jar>
       <copy file="${jar}.tmp" tofile="${jar}"/>
       <delete file="${jar}.tmp"/>
@@ -149,6 +170,7 @@ ___INFO__MARK_END__-->
          <fileset dir="${src.dir.src}">
             <include name="META-INF/services/org.ggf.drmaa.SessionFactory"/>
          </fileset>
+         <metainf dir="${legal.dir}" includes="${legal}"/>
       </jar>
    </target>
 
@@ -161,6 +183,7 @@ ___INFO__MARK_END__-->
             <include name="TestDrmaa*.class"/>
             <include name="DrmaaSuite.class"/>
          </fileset>
+         <metainf dir="${legal.dir}" includes="${legal}"/>
       </jar>
    </target>
    
@@ -180,6 +203,7 @@ ___INFO__MARK_END__-->
    <target depends="api.init, compile" name="api.build" if="isJavaBuildHost">
       <jar compress="true" jarfile="${api.jar}.tmp">
          <fileset refid="api.classes"/>
+         <metainf dir="${legal.dir}" includes="${legal}"/>
       </jar>
       <copy file="${api.jar}.tmp" tofile="${api.jar}"/>
    </target>
@@ -204,7 +228,7 @@ ___INFO__MARK_END__-->
 
    <target depends="init" description="Javadoc tool docs for DRMAA" name="javadoc">
       <mkdir dir="${javadoc.dir}"/>
-      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="public" bottom="${license_text}">
+      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="public" bottom="${license_text}" author="false">
          <fileset dir="${src.dir.src}">
             <include name="org/ggf/drmaa/*.java"/>
             <include name="com/sun/grid/drmaa/*.java"/>
@@ -217,7 +241,7 @@ ___INFO__MARK_END__-->
 
    <target depends="init" description="Javadoc tool docs for DRMAA" name="javadoc.all">
       <mkdir dir="${javadoc.dir}"/>
-      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="protected" bottom="${license_text}">
+      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="protected" bottom="${license_text}" author="false">
          <fileset dir="${src.dir.src}">
             <include name="org/ggf/drmaa/*.java"/>
             <include name="com/sun/grid/drmaa/*.java"/>

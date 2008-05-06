@@ -139,7 +139,7 @@ set TCLSH = /vol2/tools/SW/$buildarch/bin/tclsh8.3
 # Location of a copyright.h file which containes a copyright string
 # which should be included in each binary part of Grid Engine
 #
-set COPYRIGHT_DIR = /off_home/codine/copyright
+set COPYRIGHT_DIR = /off_home/codine/ge62-copyright
 
 
 #

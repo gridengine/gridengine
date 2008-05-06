@@ -113,7 +113,7 @@
         <condition property="legal" value="COPYRIGHT LICENSE">
             <equals arg1="${env.AIMK_COPYRIGHT}" arg2="courtesy" trim="true"/>
         </condition>
-        <condition property="legal" value="">
+        <condition property="legal" value="NA">
            <not>
                <or>
                    <equals arg1="${dist.type}" arg2="courtesy" trim="true"/>

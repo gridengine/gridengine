@@ -183,6 +183,28 @@
 
 
    <target name="jar.init" depends="init">
+       <property environment="env"/>
+
+       <!-- Copyright stuff -->
+       <condition property="legal.dir" value="${env.AIMK_COPYRIGHT_DIR}" else="">
+           <isset property="env.AIMK_COPYRIGHT_DIR"/>
+       </condition>
+
+       <condition property="legal" value="COPYRIGHT">
+            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="sun" trim="true"/>
+       </condition>
+       <condition property="legal" value="COPYRIGHT LICENSE">
+            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="courtesy" trim="true"/>
+       </condition>
+       <condition property="legal" value="NA">
+           <not>
+               <or>
+                   <equals arg1="${dist.type}" arg2="courtesy" trim="true"/>
+                   <equals arg1="${dist.type}" arg2="sun" trim="true"/>
+               </or>
+           </not>
+       </condition>
+   
       <fileset id="jar.classes" dir="${classes.dir}">
          <include name="**/*.class"/>
          <exclude name="com/sun/grid/jgdi/examples/**/*"/>
@@ -205,6 +227,7 @@
       <jar basedir="${classes.dir}" compress="true" jarfile="${jar}.tmp">
          <fileset refid="jar.classes"/>
          <fileset refid="jar.properties"/>
+         <metainf dir="${legal.dir}" includes="${legal}"/>
       </jar>
       <copy file="${jar}.tmp" tofile="${jar}"/>
    </target>

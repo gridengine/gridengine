@@ -1,3 +1,10 @@
+DG-2008-05-07-0: Enhancem:  Moved classes directory to libs/jdrmaa. 
+                            Created NetBeans project for jdrmaa.
+                            Adjusted build.xml files as well as aimk.  
+                            Copyright file handling didn't work in NetbeansIDE 
+                            since env.AIMK_COPYRIGHT_DIR is not set.
+                 Review:    AA
+
 CR-2008-05-07-0: Bugfix:    o merge from maintrunk: AA-2008-02-27-0
                              - default exit func
                                (commlib error: got read error (closing "xyz/qconf/2"))

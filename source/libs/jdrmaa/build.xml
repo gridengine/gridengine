@@ -34,7 +34,7 @@ ___INFO__MARK_END__-->
 
 <project basedir="." default="common_all" name="drmaa">
    <target name="init">
-      <property name="sge.srcdir" location=".."/>
+      <property name="sge.srcdir" location="../.."/>
       <property file="${sge.srcdir}/build_testsuite.properties"/>    
       <property file="${sge.srcdir}/build_private.properties"/>    
       <property file="${sge.srcdir}/build.properties"/>
@@ -46,19 +46,42 @@ ___INFO__MARK_END__-->
          </not>
       </condition>
       <condition property="isJavaBuildHost" >
-         <equals arg1="${java.buildhost}" arg2="${hostname}" trim="true"/>
+         <contains string="${java.buildhost}" substring="${hostname}" casesensitive="false"/>
       </condition>
 
-      <property location="../CLASSES" name="classes.dir"/>
-      <property location="../CLASSES/test" name="classes.dir.test"/>
+      <property location="${sge.srcdir}/CLASSES" name="classes.dir"/>
+      <property location="${sge.srcdir}/CLASSES/test" name="classes.dir.test"/>
       <property location="." name="src.dir"/>
+      <property location="${src.dir}/src" name="src.dir.src"/>
       <property location="${src.dir}/test" name="src.dir.test"/>
-      <property location="../JAVADOCS" name="javadoc.dir"/>
+      <property location="${sge.srcdir}/JAVADOCS" name="javadoc.dir"/>
       <property name="project.name" value="${ant.project.name}"/>
       <property location="${classes.dir}/${project.name}.jar" name="jar"/>
       <property location="${classes.dir}/${project.name}-test.jar" name="test.jar"/>
       <property location="${classes.dir}/${project.name}-api.jar" name="api.jar"/>
-      <property location="../scripts/removeGeneratedTags.pl" name="script"/>
+      <property location="${sge.srcdir}/scripts/removeGeneratedTags.pl" name="script"/>
+
+      <!-- Copyright stuff -->
+      <property environment="env"/>
+      <condition property="legal.dir" value="${env.AIMK_COPYRIGHT_DIR}" else="">
+          <isset property="env.AIMK_COPYRIGHT_DIR"/>
+      </condition>
+
+      <condition property="legal" value="COPYRIGHT">
+          <equals arg1="${env.AIMK_COPYRIGHT}" arg2="sun" trim="true"/>
+      </condition>
+      <condition property="legal" value="COPYRIGHT LICENSE">
+          <equals arg1="${env.AIMK_COPYRIGHT}" arg2="courtesy" trim="true"/>
+      </condition>
+      <condition property="legal" value="NA">
+          <not>
+              <or>
+                  <equals arg1="${dist.type}" arg2="courtesy" trim="true"/>
+                  <equals arg1="${dist.type}" arg2="sun" trim="true"/>
+              </or>
+          </not>
+      </condition>
+
    </target>
 
    <target depends="init" description="Compile core classes." name="compile" if="isJavaBuildHost">
@@ -68,7 +91,7 @@ ___INFO__MARK_END__-->
              destdir="${classes.dir}"
              source="1.4"
              target="1.4">
-         <src path="${src.dir}/"/>
+         <src path="${src.dir.src}"/>
          <include name="org/ggf/drmaa/*.java"/>
          <include name="com/sun/grid/drmaa/*.java"/>
          <include name="com/sun/grid/drmaa/howto/*.java"/>
@@ -94,11 +117,12 @@ ___INFO__MARK_END__-->
    </target>
 
    <target name="jar.init" depends="init">
+      <mkdir dir="${classes.dir}"/>
       <fileset id="jar.classes" dir="${classes.dir}">
          <include name="org/ggf/drmaa/*.class"/>
          <include name="com/sun/grid/drmaa/*.class"/>
       </fileset>
-      <fileset id="jar.meta" dir="${src.dir}">
+      <fileset id="jar.meta" dir="${src.dir.src}">
          <include name="META-INF/services/org.ggf.drmaa.SessionFactory"/>
       </fileset>
       <dependset>
@@ -114,6 +138,7 @@ ___INFO__MARK_END__-->
       <jar compress="true" jarfile="${jar}.tmp">
          <fileset refid="jar.classes"/>
          <fileset refid="jar.meta"/>
+         <metainf dir="${legal.dir}" includes="${legal}"/>
       </jar>
       <copy file="${jar}.tmp" tofile="${jar}"/>
       <delete file="${jar}.tmp"/>
@@ -123,9 +148,9 @@ ___INFO__MARK_END__-->
        <waitfor maxwait="${maxwait}" maxwaitunit="minute" checkevery="10" checkeveryunit="second">
             <available file="${jar}"/>
        </waitfor>
-       
+
        <available file="${jar}" property="jar.available"/>
-       
+
        <fail unless="jar.available">
           Timeout while waiting for ${jar} file build on host ${java.buildhost}
        </fail>
@@ -144,9 +169,10 @@ ___INFO__MARK_END__-->
             <include name="TestDrmaa*.class"/>
             <include name="DrmaaSuite.class"/>
          </fileset>
-         <fileset dir="${src.dir}">
+         <fileset dir="${src.dir.src}">
             <include name="META-INF/services/org.ggf.drmaa.SessionFactory"/>
          </fileset>
+         <metainf dir="${legal.dir}" includes="${legal}"/>
       </jar>
    </target>
 
@@ -159,6 +185,7 @@ ___INFO__MARK_END__-->
             <include name="TestDrmaa*.class"/>
             <include name="DrmaaSuite.class"/>
          </fileset>
+         <metainf dir="${legal.dir}" includes="${legal}"/>
       </jar>
    </target>
    
@@ -178,6 +205,7 @@ ___INFO__MARK_END__-->
    <target depends="api.init, compile" name="api.build" if="isJavaBuildHost">
       <jar compress="true" jarfile="${api.jar}.tmp">
          <fileset refid="api.classes"/>
+         <metainf dir="${legal.dir}" includes="${legal}"/>
       </jar>
       <copy file="${api.jar}.tmp" tofile="${api.jar}"/>
    </target>
@@ -202,8 +230,8 @@ ___INFO__MARK_END__-->
 
    <target depends="init" description="Javadoc tool docs for DRMAA" name="javadoc">
       <mkdir dir="${javadoc.dir}"/>
-      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="public" bottom="${license_text}">
-         <fileset dir="${src.dir}">
+      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="public" bottom="${license_text}" author="false">
+         <fileset dir="${src.dir.src}">
             <include name="org/ggf/drmaa/*.java"/>
             <include name="com/sun/grid/drmaa/*.java"/>
          </fileset>
@@ -215,8 +243,8 @@ ___INFO__MARK_END__-->
 
    <target depends="init" description="Javadoc tool docs for DRMAA" name="javadoc.all">
       <mkdir dir="${javadoc.dir}"/>
-      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="protected" bottom="${license_text}">
-         <fileset dir="${src.dir}">
+      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="protected" bottom="${license_text}" author="false">
+         <fileset dir="${src.dir.src}">
             <include name="org/ggf/drmaa/*.java"/>
             <include name="com/sun/grid/drmaa/*.java"/>
          </fileset>
@@ -252,5 +280,87 @@ ___INFO__MARK_END__-->
        <echo level="warning">         ${classes.dir}</echo>
        <echo level="warning">         I am not on the java build host (${java.buildhost}).</echo>
    </target>
+
+   <target name="arch.init" depends="init">
+        
+        <property environment="env"/>
+        
+        <echo message="env.AIMK_TARGET_BITS=${env.AIMK_TARGET_BITS}"/>
+        <echo message="env.aimk_buildarch=${env.aimk_buildarch}"/>
+
+        <condition property="sge.arch" value="${env.aimk_buildarch}">
+            <isset property="env.aimk_buildarch"/>
+        </condition>
+        <!-- else -->
+        <exec executable="${sge.srcdir}/dist/util/arch" outputproperty="sge.arch" 
+              failifexecutionfails="true"/>
+        
+        <exec executable="${sge.srcdir}/scripts/compilearch"
+              outputproperty="sge.compile.arch"
+              failifexecutionfails="true">
+            <arg line="-c ${sge.arch}"/>
+        </exec>
+        
+        <exec executable="${sge.srcdir}/scripts/compilearch"
+              outputproperty="sge.build.arch"
+              failifexecutionfails="true">
+            <arg line="-b ${sge.arch}"/>
+        </exec>
+        
+        <condition property="sge.src.arch" value="${sge.build.arch}" else="${sge.compile.arch}">
+            <equals arg1="${sge.compile.arch}" arg2=""/>
+        </condition>
+        
+        <property name="sge.src.targetbits" value="${env.AIMK_TARGET_BITS}"/>
+        
+        <echo message="sge.arch=${sge.arch}"/>
+        <echo message="sge.src.arch=${sge.src.arch}"/> 
+        <echo message="sge.src.targetbits=${sge.src.targetbits}"/>
+        
+        <condition property="aimk.targetbits" value="-64">
+            <equals arg1="${sge.src.targetbits}" arg2="TARGET_64BIT"/>
+        </condition>
+        <!-- else if -->
+        <condition property="aimk.targetbits" value="-32" else="">
+            <equals arg1="${sge.src.targetbits}" arg2="TARGET_32BIT"/>
+        </condition>
+        
+        <condition property="datamodel" value="-d64" else="">
+            <or>
+                <equals arg1="${sge.arch}" arg2="sol-sparc64"/>
+                <equals arg1="${sge.arch}" arg2="solaris64"/>
+                <equals arg1="${sge.arch}" arg2="sol-amd64"/>
+                <equals arg1="${sge.arch}" arg2="lx24-amd64"/>
+                <equals arg1="${sge.arch}" arg2="lx24-ia64"/>
+                <equals arg1="${sge.arch}" arg2="lx26-amd64"/>
+                <equals arg1="${sge.arch}" arg2="lx26-ia64"/>
+                <equals arg1="${sge.arch}" arg2="hp11-64"/>
+                <equals arg1="${sge.src.targetbits}" arg2="TARGET_64BIT"/>
+            </or>   
+        </condition>
+        
+        <fail message="Unsuported ARCH ${sge.arch}" unless="sge.src.arch"/>
+        
+        <property name="sge.lib.path" value="${sge.srcdir}/${sge.src.arch}"/>
+        <property name="sge.jvmargs"  value="-Djava.library.path=${sge.lib.path} ${datamodel}"/>
+        <echo>sge.jvmargs = ${sge.jvmargs}</echo>
+    </target>
+    
+
+   
+   <target name="run.DrmaaExample" depends="arch.init, init, jar">
+        <echo message="sge.jvmargs: ${sge.jvmargs}"/>
+        <java fork="true" classname="DrmaaExample">
+            <jvmarg line="${sge.jvmargs} -Dorg.ggf.drmaa.SessionFactory=com.sun.grid.drmaa.SessionFactoryImpl"/>
+            <env key="SGE_ROOT" value="${sge.root}"/>
+            <env key="SGE_CELL" value="${sge.cell}"/>
+            <env key="SGE_QMASTER_PORT" value="${sge.qmaster_port}"/>
+            <env key="SGE_EXECD_PORT" value="${sge.execd_port}"/>
+            <classpath>
+                <pathelement location="${classes.dir}"/>
+            </classpath>
+            <arg line="${sge.root}/examples/jobs/sleeper.sh"/>
+        </java>
+    </target>
 
 </project>

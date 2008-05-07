@@ -252,6 +252,9 @@ CheckHostNameResolving()
       
       PortCollision $SGE_EXECD_SRV
 
+      $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >>"
+      $CLEAR
+
       $INFOTEXT -u "\nChecking hostname resolving"
 
       errmsg=""
@@ -598,7 +601,7 @@ AddHostsAuto()
       done
       
       for h in $SUBMIT_HOST_LIST; do
-        if [ -f $h ]; then
+        if [ -f "$h" ]; then
            $INFOTEXT -log "Adding SUBMIT_HOSTS from file %s" $h
            for tmp in `cat $h`; do
              $INFOTEXT -log "Adding SUBMIT_HOST %s" $tmp

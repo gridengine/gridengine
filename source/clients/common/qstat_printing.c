@@ -197,7 +197,7 @@ int indent
 /*-------------------------------------------------------------------------*/
 /* print jobs per queue                                                    */
 /*-------------------------------------------------------------------------*/
-void sge_print_jobs_queue(
+int sge_print_jobs_queue(
 lListElem *qep,
 lList *job_list,
 const lList *pe_list,
@@ -233,7 +233,7 @@ lList **alpp
          ** TODO: handle shut_me_down and remove SGE_EXIT()
          */
          if (shut_me_down) {
-            SGE_EXIT(NULL, 1);
+            DRETURN(1);
          }
             
          for_each (gdilep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
@@ -370,7 +370,7 @@ lList **alpp
    }
    sge_dstring_free(&dyn_task_str);
 
-   DRETURN_VOID;
+   DRETURN(0);
 }
 
 void sge_printf_header(u_long32 full_listing, u_long32 sge_ext)

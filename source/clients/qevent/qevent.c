@@ -91,8 +91,6 @@ static void qevent_start_trigger_script(int qevent_event, const char* script_fil
 static qevent_options* qevent_get_option_struct(void);
 static void qevent_set_option_struct(qevent_options *option_struct);
 
-int main(int argc, char *argv[]);
-
 
 static void  qevent_set_option_struct(qevent_options *option_struct) {
    Global_qevent_options=option_struct;
@@ -496,8 +494,7 @@ int main(int argc, char *argv[])
    if (enabled_options.help_option) {
       qevent_show_usage();
       sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT(NULL, 0);
-      return 0;
+      SGE_EXIT((void**)&ctx, 0);
    }
 
    /* are there command line parsing errors ? */
@@ -505,7 +502,7 @@ int main(int argc, char *argv[])
       ERROR((SGE_EVENT, "%s", sge_dstring_get_string(enabled_options.error_message) ));
       qevent_show_usage();
       sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
 
@@ -517,7 +514,7 @@ int main(int argc, char *argv[])
    if (gdi_setup != AE_OK) {
       answer_list_output(&alp);
       sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
    /* TODO: how is the memory we allocate here released ???, SGE_EXIT doesn't */
    if (false == sge_gdi2_evc_setup(&evc, ctx, EV_ID_ANY, &alp)) {
@@ -533,7 +530,7 @@ int main(int argc, char *argv[])
       /* only for testsuite */
       qevent_testsuite_mode(evc);
       sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT(NULL, 0);
+      SGE_EXIT((void**)&ctx, 0);
    }
 
    /* check for subscribe option */
@@ -541,7 +538,7 @@ int main(int argc, char *argv[])
       /* only for testsuite */
       qevent_subscribe_mode(evc);
       sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT(NULL, 0);
+      SGE_EXIT((void**)&ctx, 0);
    }
 
    if (enabled_options.trigger_option_count > 0) {
@@ -614,7 +611,7 @@ int main(int argc, char *argv[])
 
       sge_dstring_free(enabled_options.error_message);
       sge_prof_cleanup();
-      SGE_EXIT(NULL, 0);
+      SGE_EXIT((void**)&ctx, 0);
       return 0;
    }
 
@@ -623,8 +620,7 @@ int main(int argc, char *argv[])
    qevent_show_usage();
    sge_dstring_free(enabled_options.error_message);
    sge_prof_cleanup();
-   SGE_EXIT(NULL, 1);
-   DEXIT;
+   SGE_EXIT((void**)&ctx, 1);
    return 1;
 }
 
@@ -700,7 +696,7 @@ static void qevent_testsuite_mode(sge_evc_class_t *evc)
 
 #endif /* QEVENT_SHOW_ALL */
    
-   while(!shut_me_down) {
+   while (!shut_me_down) {
       sge_mirror_error error = sge_mirror_process_events(evc);
       if (error == SGE_EM_TIMEOUT && !shut_me_down) {
          sleep(10);

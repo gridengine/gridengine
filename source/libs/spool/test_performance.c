@@ -242,19 +242,19 @@ int main(int argc, char *argv[])
    /* parse commandline parameters */
    if(argc != 4) {
       ERROR((SGE_EVENT, "usage: test_sge_spooling <method> <shared lib> <arguments>\n"));
-      SGE_EXIT(1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    sge_gdi_param(SET_MEWHO, QEVENT, NULL);
    if ((cl_err = sge_gdi_setup(prognames[QEVENT], NULL))) {
       ERROR((SGE_EVENT, "sge_gdi_setup failed: %s\n", cl_get_error_text(cl_err)));
-      SGE_EXIT(1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    sge_setup_sig_handlers(QEVENT);
 
    if (reresolve_me_qualified_hostname() != CL_RETVAL_OK) {
-      SGE_EXIT(1);
+      SGE_EXIT((void**)&ctx, 1);
    }   
 
 #define defstring(str) #str
@@ -263,14 +263,14 @@ int main(int argc, char *argv[])
    spooling_context = spool_create_dynamic_context(&answer_list, argv[1], argv[2], argv[3]); 
    answer_list_output(&answer_list);
    if(spooling_context == NULL) {
-      SGE_EXIT(EXIT_FAILURE);
+      SGE_EXIT((void**)&ctx, EXIT_FAILURE);
    }
 
    spool_set_default_context(spooling_context);
 
    if(!spool_startup_context(&answer_list, spooling_context, true)) {
       answer_list_output(&answer_list);
-      SGE_EXIT(EXIT_FAILURE);
+      SGE_EXIT((void**)&ctx, EXIT_FAILURE);
    }
    answer_list_output(&answer_list);
    

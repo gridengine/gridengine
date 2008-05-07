@@ -221,7 +221,10 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
       }
    }
    for_each(ep, ehl) {
-      if(report_handler == NULL ) {
+      if (shut_me_down) {
+         DRETURN(QHOST_ERROR);
+      }   
+      if (report_handler == NULL) {
          if (print_header) {
             print_header = 0;
             printf(HEAD_FORMAT,  MSG_HEADER_HOSTNAME, MSG_HEADER_ARCH, MSG_HEADER_NPROC, MSG_HEADER_LOAD,
@@ -236,7 +239,10 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
       }
       sge_print_host(ctx, ep, cl, report_handler, alpp);
       sge_print_resources(ehl, cl, resource_list, ep, show, report_handler, alpp);
-      sge_print_queues(ql, ep, jl, NULL, ehl, cl, pel, show, report_handler, alpp);
+      ret = sge_print_queues(ql, ep, jl, NULL, ehl, cl, pel, show, report_handler, alpp);
+      if (ret != QHOST_SUCCESS) {
+         break;
+      }
       if (report_handler != NULL) {
          DPRINTF(("report host_finished: %s\n", lGetHost(ep, EH_name)));
          ret = report_handler->report_host_finished(report_handler, lGetHost(ep, EH_name), alpp);
@@ -553,7 +559,7 @@ lList **alpp
                   printf("\n");
                } else {
                   ret = report_handler->report_queue_finished(report_handler, qname, alpp);
-                  if (ret != QHOST_SUCCESS ) {
+                  if (ret != QHOST_SUCCESS) {
                      DRETURN(ret);
                   }
                }
@@ -568,10 +574,12 @@ lList **alpp
                                        QSTAT_DISPLAY_FULL : 0;
                full_listing = full_listing | QSTAT_DISPLAY_ALL;
                /* TODO: sge_print_jobs_queue needs a return value */
-               sge_print_jobs_queue(qep, jl, pel, ul, ehl, cl, 1,
+               if (sge_print_jobs_queue(qep, jl, pel, ul, ehl, cl, 1,
                                     full_listing, "   ", 
                                     GROUP_NO_PETASK_GROUPS, 10,
-                                    report_handler, alpp);
+                                    report_handler, alpp) == 1) {
+                  DRETURN(QHOST_ERROR);
+               }  
             }
          }
       }

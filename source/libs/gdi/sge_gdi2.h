@@ -157,6 +157,7 @@ void gdi_rmon_print_callback_function(const char *progname,
                                       unsigned long thread_id);
 #endif
 
+void gdi2_default_exit_func(void **ref_ctx, int i); 
 
 #ifdef  __cplusplus
 }

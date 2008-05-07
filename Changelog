@@ -1,3 +1,10 @@
+AA-2008-05-07-0: Bugfix:    o merge from maintrunk: AA-2008-02-27-0
+                             - default exit func
+                               (commlib error: got read error (closing "xyz/qconf/2"))
+                 Bugster:   6695355
+                 Issue:     2568
+                 Review:    CR
+
 MD-2008-04-28-0: Bugfix:    o Set SGE_QMASTER_PORT in settings file if 
                             sge_qmaster is not found in /etc/services file
                             (bug was not really fixed with checkin:

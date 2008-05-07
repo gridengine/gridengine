@@ -240,12 +240,12 @@ int sge_qmaster_thread_init(sge_gdi_ctx_class_t **ctx_ref, bool switch_to_admin_
       char str[1024];
       if (sge_set_admin_username(admin_user, str) == -1) {
          CRITICAL((SGE_EVENT, str));
-         SGE_EXIT(NULL, 1);
+         SGE_EXIT((void**)ctx_ref, 1);
       }
 
       if (sge_switch2admin_user()) {
          CRITICAL((SGE_EVENT, MSG_ERROR_CANTSWITCHTOADMINUSER));
-         SGE_EXIT(NULL, 1);
+         SGE_EXIT((void**)ctx_ref, 1);
       }
    }
 
@@ -561,8 +561,7 @@ static void qmaster_init(sge_gdi_ctx_class_t *ctx, char **anArgv)
 
    starting_up(); /* write startup info message to message file */
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 } /* qmaster_init() */
 
 /****** qmaster/setup_qmaster/communication_setup() ****************************
@@ -789,9 +788,9 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
 
    DENTER(TOP_LAYER, "setup_qmaster");
 
-   if (first)
+   if (first) {
       first = false;
-   else {
+   } else {
       CRITICAL((SGE_EVENT, MSG_SETUP_SETUPMAYBECALLEDONLYATSTARTUP));
       DEXIT;
       return -1;
@@ -819,16 +818,14 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
 
    if (!sge_initialize_persistence(ctx, &answer_list)) {
       answer_list_output(&answer_list);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    } else {
       answer_list_output(&answer_list);
       spooling_context = spool_get_default_context();
    }
 
    if (sge_read_configuration(ctx, spooling_context, answer_list) != 0) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    
    mconf_set_new_config(true);
@@ -867,8 +864,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
    /* add qmaster host to Master_Adminhost_List as an administrativ host */
    if (!host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, qualified_hostname)) {
       if (sge_add_host_of_type(ctx, qualified_hostname, SGE_ADMINHOST_LIST, &monitor)) {
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
    }
 
@@ -881,8 +877,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
       if (!spool_write_object(&answer_list, spooling_context, ep, "root", SGE_TYPE_MANAGER, job_spooling)) {
          answer_list_output(&answer_list);
          CRITICAL((SGE_EVENT, MSG_CONFIG_CANTWRITEMANAGERLIST)); 
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
    }
    for_each(ep, *object_base[SGE_TYPE_MANAGER].list) {
@@ -1138,8 +1133,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
 
    init_categories();
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /****** setup_qmaster/remove_invalid_job_references() **************************
@@ -1262,8 +1256,7 @@ static int debit_all_jobs_from_qs()
       }
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** setup_qmaster/init_categories() ****************************************

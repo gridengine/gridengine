@@ -1,3 +1,12 @@
+CR-2008-05-07-0: Bugfix:    o merge from maintrunk: AA-2008-02-27-0
+                             - default exit func
+                               (commlib error: got read error (closing "xyz/qconf/2"))
+                            o added missing changes to qstat.c from check-in
+                              AA-2008-05-07-0
+                 Bugster:   6695355
+                 Issue:     2568
+                 Review:    AA
+
 MD-2008-05-07-0: Bugfix:    o setting of QMaster port number leads to
                             infinite loop
                  Bugster:   6696331

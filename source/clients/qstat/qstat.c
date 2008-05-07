@@ -323,7 +323,7 @@ char **argv
       lFreeList(&alp);
       lFreeList(&pcmdline);
       qstat_env_destroy(&qstat_env);
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    alp = sge_parse_qstat(&pcmdline, &qstat_env, &hostname, &jid_list, &isXML);
@@ -340,7 +340,7 @@ char **argv
       lFreeList(&ref_list);
       lFreeList(&jid_list);
       qstat_env_destroy(&qstat_env);
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    /* if -j, then only print job info and leave */
@@ -355,7 +355,7 @@ char **argv
          ret = qstat_show_job_info(ctx, isXML);
       }
       qstat_env_destroy(&qstat_env);
-      SGE_EXIT(NULL, ret);
+      SGE_EXIT((void**)&ctx, ret);
    }
 
    {
@@ -373,7 +373,7 @@ char **argv
                }
                lFreeList(&answer_list);
                qstat_env_destroy(&qstat_env);
-               SGE_EXIT(NULL, 1);
+               SGE_EXIT((void**)&ctx, 1);
                return 1;
             }
          } else {
@@ -419,11 +419,11 @@ char **argv
 
       if (ret != 0) {
          qstat_env_destroy(&qstat_env);
-         SGE_EXIT(NULL, 1);
+         SGE_EXIT((void**)&ctx, 1);
          return 1;
       }
    }
-   SGE_EXIT(NULL, 0);
+   SGE_EXIT((void**)&ctx, 0);
    return 0;
 }
 

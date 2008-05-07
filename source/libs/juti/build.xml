@@ -105,7 +105,9 @@
         </condition>
 
         <!-- Copyright stuff -->
-        <property name="legal.dir" value="${env.AIMK_COPYRIGHT_DIR}"/>
+        <condition property="legal.dir" value="${env.AIMK_COPYRIGHT_DIR}" else="">
+            <isset property="env.AIMK_COPYRIGHT_DIR"/>
+        </condition>
 
         <condition property="legal" value="COPYRIGHT">
             <equals arg1="${env.AIMK_COPYRIGHT}" arg2="sun" trim="true"/>

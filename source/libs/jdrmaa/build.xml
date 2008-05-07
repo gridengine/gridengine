@@ -38,7 +38,7 @@ ___INFO__MARK_END__-->
       <property file="${sge.srcdir}/build_testsuite.properties"/>    
       <property file="${sge.srcdir}/build_private.properties"/>    
       <property file="${sge.srcdir}/build.properties"/>
-      
+
       <exec executable="hostname" outputproperty="hostname"/>
       <condition property="isJavaBuildHost">
          <not>
@@ -60,6 +60,28 @@ ___INFO__MARK_END__-->
       <property location="${classes.dir}/${project.name}-test.jar" name="test.jar"/>
       <property location="${classes.dir}/${project.name}-api.jar" name="api.jar"/>
       <property location="${sge.srcdir}/scripts/removeGeneratedTags.pl" name="script"/>
+
+      <!-- Copyright stuff -->
+      <property environment="env"/>
+      <condition property="legal.dir" value="${env.AIMK_COPYRIGHT_DIR}" else="">
+            <isset property="env.AIMK_COPYRIGHT_DIR"/>
+      </condition>
+
+      <condition property="legal" value="COPYRIGHT">
+          <equals arg1="${env.AIMK_COPYRIGHT}" arg2="sun" trim="true"/>
+      </condition>
+      <condition property="legal" value="COPYRIGHT LICENSE">
+          <equals arg1="${env.AIMK_COPYRIGHT}" arg2="courtesy" trim="true"/>
+      </condition>
+      <condition property="legal" value="NA">
+         <not>
+             <or>
+                 <equals arg1="${dist.type}" arg2="courtesy" trim="true"/>
+                 <equals arg1="${dist.type}" arg2="sun" trim="true"/>
+             </or>
+         </not>
+      </condition>
+
    </target>
 
    <target depends="init" description="Compile core classes." name="compile" if="isJavaBuildHost">
@@ -95,26 +117,6 @@ ___INFO__MARK_END__-->
    </target>
 
    <target name="jar.init" depends="init">
-      <property environment="env"/>
-
-      <!-- Copyright stuff -->
-      <property name="legal.dir" value="${env.AIMK_COPYRIGHT_DIR}"/>
-
-      <condition property="legal" value="COPYRIGHT">
-          <equals arg1="${env.AIMK_COPYRIGHT}" arg2="sun" trim="true"/>
-      </condition>
-      <condition property="legal" value="COPYRIGHT LICENSE">
-          <equals arg1="${env.AIMK_COPYRIGHT}" arg2="courtesy" trim="true"/>
-      </condition>
-      <condition property="legal" value="NA">
-         <not>
-             <or>
-                 <equals arg1="${dist.type}" arg2="courtesy" trim="true"/>
-                 <equals arg1="${dist.type}" arg2="sun" trim="true"/>
-             </or>
-         </not>
-      </condition>
-
       <mkdir dir="${classes.dir}"/>
       <fileset id="jar.classes" dir="${classes.dir}">
          <include name="org/ggf/drmaa/*.class"/>
@@ -146,9 +148,9 @@ ___INFO__MARK_END__-->
        <waitfor maxwait="${maxwait}" maxwaitunit="minute" checkevery="10" checkeveryunit="second">
             <available file="${jar}"/>
        </waitfor>
-       
+
        <available file="${jar}" property="jar.available"/>
-       
+
        <fail unless="jar.available">
           Timeout while waiting for ${jar} file build on host ${java.buildhost}
        </fail>

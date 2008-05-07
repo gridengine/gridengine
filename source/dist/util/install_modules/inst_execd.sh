@@ -252,6 +252,9 @@ CheckHostNameResolving()
       
       PortCollision $SGE_EXECD_SRV
 
+      $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >>"
+      $CLEAR
+
       $INFOTEXT -u "\nChecking hostname resolving"
 
       errmsg=""

@@ -1,3 +1,9 @@
+MD-2008-05-07-0: Bugfix:    o setting of QMaster port number leads to
+                            infinite loop
+                 Bugster:   6696331
+                 Issue:     2569
+                 Review:    HP
+
 AA-2008-05-06-0: Bugfix:    <metainf legal=""..> adds unexpected files fix
                  Review:    DG
 

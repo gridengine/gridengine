@@ -1704,8 +1704,6 @@ EnterAndValidatePortNumber()
 
       if [ $ret = 0 ]; then
          $INFOTEXT "\nFound service with port number >%s< in >/etc/services<. Choose again." "$INP"
-      elif [ "$SGE_QMASTER_PORT" = "$INP" ]; then
-         done=false
       else
          done=true
       fi

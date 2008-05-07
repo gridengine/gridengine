@@ -1,3 +1,10 @@
+DG-2008-05-07-0: Enhancem:  Moved classes directory to libs/jdrmaa. 
+                            Created NetBeans project for jdrmaa.
+                            Adjusted build.xml files as well as aimk.  
+                            Copyright file handling didn't work in NetbeansIDE 
+                            since env.AIMK_COPYRIGHT_DIR is not set.
+                 Review:    AA
+
 MP-2008-05-05-0: Bugfix:    It is possible to define negative ticket numbers and negative
                             shares through qconf
                  Bugster:   2150515

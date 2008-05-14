@@ -1,3 +1,7 @@
+DG-2008-05-14-0: Cleanup:   aimk clean didn't clean 32 bit libraries when 
+                            called on a 64 bit Solaris machine.
+                 Review:    AA 
+
 DG-2008-05-07-0: Cleanup:   Copyright file handling didn't work in Netbeans IDE
                             since env.AIMK_COPYRIGHT_DIR is not set
                  Review:    AA

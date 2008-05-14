@@ -1,3 +1,7 @@
+DG-2008-05-14-0: Cleanup:   aimk clean didn't clean 32 bit libraries when 
+                            called on a 64 bit Solaris machine.
+                 Review:    AA
+
 MP-2008-05-14-0: Bugfix:    SGE util/arch script is broken for AIX 5.3 os
                  Bugster:   6648160
                  Issue:     2572

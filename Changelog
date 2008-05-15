@@ -1,3 +1,8 @@
+DG-2008-05-15-0: Cleanup:   Added build.properties file in order to support 
+                            build.xml file. Was missing from checkin:  
+                            DG-2008-05-07-0
+                 Review:    AA
+
 DG-2008-05-07-0: Enhancem:  Moved classes directory to libs/jdrmaa. 
                             Created NetBeans project for jdrmaa.
                             Adjusted build.xml files as well as aimk.  

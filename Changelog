@@ -1,3 +1,7 @@
+DG-2008-05-15-0: Enhancem.: HP-UX 11 64 bit machines now also compiling the 
+                            HP-UX 11 32 bit sources.                            
+                 Review:    JG
+
 DG-2008-05-14-0: Cleanup:   aimk clean didn't clean 32 bit libraries when 
                             called on a 64 bit Solaris machine.
                  Review:    AA

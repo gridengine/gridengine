@@ -54,6 +54,7 @@ set AIMK_TARGETOPT   = 0
 set NO_XDEPEND   = ""
 set ERR_WARN_NONE = ""
 set ERR_WARN_ALL = ""
+set UNMODIFIED_ARGUMENTS = ( $argv ) 
 
 if ( -f dist/util/arch ) then
    set buildarch = `dist/util/arch`
@@ -89,6 +90,7 @@ endif
 #
 set i = 1
 while ($i <= $#argv)
+   set UNMODIFIED_ARGUMENTS[$i] = "$argv[$i]"
    switch ("$argv[$i]")
    case "-32":
       set AIMK_TARGETOPT = 1
@@ -2682,5 +2684,28 @@ if ( $BUILDARCH == SOLARIS64 && $ONLY_PARAM_SPEC == 0 && "${SOLARIS_ONLY_64}" !=
       exit $status
    endif
 endif
+
+# On HP11 we are always building (and cleaning) a 32bit version
+if ( $BUILDARCH == HP1164 ) then
+   set ONLY_64_FLAG = 0
+   set arguments = "" 
+   set i = 1
+   while ($i <= $#UNMODIFIED_ARGUMENTS)
+      switch ("$UNMODIFIED_ARGUMENTS[$i]")
+         case "-only-64":
+         case "-64":
+            set ONLY_64_FLAG = 1
+            breaksw
+         default: 
+            set arguments = "$arguments $UNMODIFIED_ARGUMENTS[$i]"
+            breaksw
+      endsw
+      @ i++ 
+   end 
+   if ( "$ONLY_64_FLAG" != 1 ) then 
+      # compile the 32 bit version 
+      ./aimk -32 "$arguments"
+   endif 
+endif 
 
 exit 0

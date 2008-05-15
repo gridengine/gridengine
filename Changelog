@@ -1,3 +1,7 @@
+DG-2008-05-15-0: Enhancem.: HP-UX 11 64 bit machines now also compiling the 
+                            HP-UX 11 32 bit sources.                            
+                 Review:    JG
+
 MP-2008-05-15-0: Bugfix:    SGE util/arch script is broken for AIX 5.3 os
                  Bugster:   6648160
                  Issue:     2572

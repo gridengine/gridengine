@@ -1,3 +1,9 @@
+AH-2008-05-19-0: Bugfix:    Incorrect documentation for xprojects setting in
+                            sge_conf(5).
+                 Bugster:   6704271
+                 Issue:     2573
+                 Review:    RD
+
 DG-2008-05-15-0: Enhancem.: HP-UX 11 64 bit machines now also compiling the 
                             HP-UX 11 32 bit sources.                            
                  Review:    JG

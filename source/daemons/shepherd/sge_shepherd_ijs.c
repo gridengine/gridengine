@@ -67,7 +67,7 @@
 #include "sge_ijs_threads.h"
 #include "sge_io.h"
 #include "sge_fileio.h"
-
+#include "sge_uidgid.h"
 #include "sge_unistd.h"
 
 #define RESPONSE_MSG_TIMEOUT 120
@@ -771,6 +771,7 @@ int parent_loop(char *hostname, int port, int ptym,
    THREAD_HANDLE     *thread_pty_to_commlib = NULL;
    THREAD_HANDLE     *thread_commlib_to_pty = NULL;
    cl_raw_list_t     *cl_com_log_list = NULL;
+   int               oldeuid = SGE_SUPERUSER_UID;
 
    g_hostname            = strdup(hostname);
    g_ptym                = ptym;
@@ -824,8 +825,15 @@ int parent_loop(char *hostname, int port, int ptym,
     * commlib_to_pty thread.
     */
    shepherd_trace("main: sending REGISTER_CTRL_MSG");
+   if (getuid() == SGE_SUPERUSER_UID) {
+      oldeuid = geteuid();
+      seteuid(SGE_SUPERUSER_UID);
+   }
    ret = (int)comm_write_message(g_comm_handle, g_hostname, COMM_SERVER, 1, 
                       (unsigned char*)" ", 1, REGISTER_CTRL_MSG, err_msg);
+   if (oldeuid != SGE_SUPERUSER_UID) {
+      seteuid(oldeuid);
+   }
    if (ret == 0) {
       /* No bytes written - error */
       shepherd_trace("main: can't send REGISTER_CTRL_MSG, comm_write_message() "

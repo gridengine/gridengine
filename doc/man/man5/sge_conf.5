@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/05/19 08:32:08 $     Revision: $Revision: 1.71 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/05/19 15:55:42 $     Revision: $Revision: 1.72 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/05/19 08:32:08 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/05/19 15:55:42 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -1368,58 +1368,84 @@ overwritten by the execution host local configuration.
 .\"
 .\"
 .SS "\fBqlogin_daemon\fP"
-This parameter specifies the executable that is to be started on the
+This parameter specifies the mechanism that is to be started on the
 server side of a
 .M qlogin 1 
-request. Usually this is the absolute pathname of the system's telnet daemon. 
+request. Usually this is the builtin mechanism. It's also possible to
+configure an external executable by specifying the full qualified
+pathname, e.g. of the system's telnet daemon.
 .PP
 Changing \fBqlogin_daemon\fP will take immediate effect.
-The default value for \fBqlogin_daemon\fP is the system's default telnetd.
+The default value for \fBqlogin_daemon\fP is builtin.
 .PP
 The global configuration entry for this value
 may be overwritten by the execution host local configuration.
+.PP
+Examples for the two allowed kinds of attributes are:
+.br
+qlogin_daemon    builtin
+.br
+or
+.br
+qlogin_daemon    /usr/sbin/in.telnetd
 .\"
 .\"
 .SS "\fBqlogin_command\fP"
 This is the command to be executed on the client side of a 
 .M qlogin 1
 request.
-Usually this is the absolute pathname of the system's telnet client program. Otherwise the systems default telnet client will be used. 
-It is automatically started with the target host and port number as parameters.
+Usually this is the builtin qlogin mechanism.
+It's also possible to configure an external mechanism, usually the absolute
+pathname of the system's telnet client program. It is automatically started
+with the target host and port number as parameters.
 .PP
 Changing \fBqlogin_command\fP will take immediate effect.
-The default value for \fBqlogin_command\fP is telnet.
+The default value for \fBqlogin_command\fP is builtin.
 .PP
 The global configuration entry for this value
 may be overwritten by the execution host local configuration.
+.PP
+Examples for the two allowed kinds of attributes are:
+.br
+qlogin_command   builtin
+.br
+or
+.br
+qlogin_command   /usr/bin/telnetd
 .\"
 .\"
 .SS "\fBrlogin_daemon\fP"
-This parameter specifies the executable that is to be started on the server
+This parameter specifies the mechanism that is to be started on the server
 side of a
 .M qrsh 1
 request
 .B without
 a command argument to be executed remotely. 
-Usually this is the absolute pathname of the system's rlogin daemon. 
+Usually this is the builtin mechanism. It's also possible to
+configure an externel executable by specifying the absolute pathname,
+e.g. of the system's rlogin daemon. 
 .sp 1
 Changing
 .B rlogin_daemon
 will take immediate effect. The default for
 .B rlogin_daemon
-is the system's default rlogind.
+is builtin.
 .sp 1
 The global configuration entry for this value may be overwritten by the
 execution host local configuration.
+.PP
+The allowed values are similar to the ones of the examples of
+.B qlogin_daemon.
 .\"
 .\"
 .SS "\fBrlogin_command\fP"
-This is the command to be executed on the client side of a
+This is the mechansim to be executed on the client side of a
 .M qrsh 1
 request
 .B without
 a command argument to be executed remotely.
-If no value is given, a specialized xxQS_NAMExx component is used.
+Usually this is the builtin mechanism. If no value is given,
+a specialized xxQS_NAMExx component is used.
 The command is automatically started with the target host and port number 
 as parameters.
 The xxQS_NAMExx rlogin client has been extended
@@ -1428,40 +1454,54 @@ as \fIssh\fP, which also understand this syntax.
 .sp 1
 Changing
 .B rlogin_command
-will take immediate effect. A default value for
+will take immediate effect. The default value for
 .B rlogin_command
-is not configured.
+is builtin.
 .sp 1
 The global configuration entry for this value may be overwritten by the
 execution host local configuration.
+.PP
+In addition to the examples of 
+.B qlogin_command
+, this value is allowed:
+.br
+rsh_daemon      none
 .\"
 .\"
 .SS "\fBrsh_daemon\fP"
-This parameter specifies the executable that is to be started on the server
+This parameter specifies the mechanism that is to be started on the server
 side of a
 .M qrsh 1
 request
 .B with
 a command argument to be executed remotely.
-If no value is given, a specialized xxQS_NAMExx component is used.
+Usually this is the builtin mechanism. If no value is given,
+a specialized xxQS_NAMExx component is used.
 .sp 1
 Changing
 .B rsh_daemon
-will take immediate effect. A default value for
+will take immediate effect. The default value for
 .B rsh_daemon
-is not configured.
+is builtin.
 .sp 1
 The global configuration entry for this value may be overwritten by the
 execution host local configuration.
+.PP
+In addition to the examples of 
+.B qlogin_daemon
+, this value is allowed: 
+.br
+rsh_daemon      none
 .\"
 .\"
 .SS "\fBrsh_command\fP"
-This is the command to be executed on the client side of a
+This is the mechanism to be executed on the client side of a
 .M qrsh 1
 request
 .B with
 a command argument to be executed remotely.
-If no value is given, a specialized xxQS_NAMExx component is used. The command is
+Usually this is the builtin mechanism.  If no value is given,
+a specialized xxQS_NAMExx component is used. The command is
 automatically started with the target host and port number as parameters
 like required for
 .M telnet 1
@@ -1472,12 +1512,18 @@ and use the port number argument. You can only use clients, such as
 .sp 1
 Changing
 .B rsh_command
-will take immediate effect. A default value for
+will take immediate effect. The default value for
 .B rsh_command
-is not configured.
+is builtin.
 .sp 1
 The global configuration entry for this value may be overwritten by the
 execution host local configuration.
+.PP
+In addition to the examples of 
+.B qlogin_command
+, this value is allowed:
+.br
+rsh_command     none
 .\"
 .\"
 .SS "\fBdelegated_file_staging\fP"

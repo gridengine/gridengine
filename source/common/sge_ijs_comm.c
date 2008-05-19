@@ -291,6 +291,7 @@ int comm_open_connection(bool                 b_server,
                          dstring              *err_msg)
 {
    int              ret;
+   int              old_euid                = SGE_SUPERUSER_UID;
    int              ret_val                 = COMM_RETVAL_OK;
    int              commlib_error           = CL_RETVAL_OK;
    cl_framework_t   communication_framework = CL_CT_TCP;
@@ -316,12 +317,26 @@ int comm_open_connection(bool                 b_server,
          /* pretend we are the execd to access it's credentials */
          progname = "execd";
       }
-
+     
+      /*
+       * Got to do this with euid = root
+       */
+      if (getuid() == SGE_SUPERUSER_UID) {
+         old_euid = geteuid();
+         seteuid(SGE_SUPERUSER_UID);
+      }
       ret = sge_ssl_setup_security_path(progname, user_name);
+      /*
+       * Switch back to old euid before error handling to do tracing as
+       * the SGE admin user.
+       */
+      if (old_euid != SGE_SUPERUSER_UID) {
+         seteuid(old_euid);
+      }
+
       if (ret != 0) {
-         sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
-         DPRINTF(("sge_ssl_setup_security_path() failed: %s (%d)\n",
-                  sge_dstring_get_string(err_msg), ret));
+         DPRINTF(("sge_ssl_setup_security_path() failed!\n"));
+         sge_dstring_sprintf(err_msg, "Setting up SSL failed!");
          ret_val = COMM_CANT_SETUP_SSL; 
       }
 #else
@@ -423,7 +438,7 @@ int comm_shutdown_connection(COMMUNICATION_HANDLE *handle,
    int ret_val = COMM_RETVAL_OK;
 
    DENTER(TOP_LAYER, "comm_shutdown_connection");
-   
+
    ret = cl_commlib_close_connection(handle, g_hostname, 
                                      (char*)component_name, 1, CL_FALSE);
    if (ret != CL_RETVAL_OK) {

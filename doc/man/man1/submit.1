@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/03/31 12:06:44 $     Revision: $Revision: 1.72 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/05/19 15:55:43 $     Revision: $Revision: 1.73 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2008/03/31 12:06:44 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2008/05/19 15:55:43 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -1099,6 +1099,22 @@ please see the
 allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
+.\"
+.IP "\fB\-pty y[es]|n[o]\fP"
+Available for \fIqrsh\fP and \fIqlogin\fP only.
+.sp 1
+-pty yes enforces the job to be started in a pseudo terminal (pty). If no pty is 
+available, the job start fails.
+-pty no
+enforces the job to be started without a pty.
+By default,
+.I qrsh without a command
+and
+.I qlogin
+start the job in a pty,
+.I qrsh with a command
+starts the job without a pty.
+
 .\"
 .IP "\fB\-q wc_queue_list\fP"
 Available for \fIqsub\fP, \fIqrsh\fP, \fIqsh\fP, \fIqlogin\fP and \fIqalter\fP.

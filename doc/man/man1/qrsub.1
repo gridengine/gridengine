@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qrsub.1,v $     Last Update: $Date: 2007/09/28 10:08:39 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: qrsub.1,v $     Last Update: $Date: 2008/05/21 09:47:34 $     Revision: $Revision: 1.5 $
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
 .\"
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QRSUB 1 "$Date: 2007/09/28 10:08:39 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QRSUB 1 "$Date: 2008/05/21 09:47:34 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qrsub   \-" 1i
 Submit an Advance Reservation (AR) to xxQS_NAMExx.
@@ -79,7 +79,7 @@ itself. Already granted ARs can be shown with
 .sp 1
 Note: To make AR behavior predictable, it is necessary to have reserved
 resources available at the time of AR start. This is done by keeping jobs with
-a unlimited runtime limit separeted from ARs, and not considering resources used by
+a unlimited runtime limit separated from ARs, and not considering resources used by
 such jobs for reservation.
 .sp 1
 Note: Resource Quotas are not considered for AR queue selection and nor for

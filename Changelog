@@ -1,3 +1,8 @@
+EB-2008-05-21-0: Doc:       Changed some man pages
+                 Bugster:   6680939, 6659269, 6653487, 6660407, 6638371
+                 Issue:     2577, 2578, 2579, 2484, 2580
+                 Review:    DG
+
 HP-2008-05-19-0: Bugfix:    New interactive job support didn't work properly in secured
                             mode
                  Enhancem:  Added infos about new interactive job support to man pages

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2008/03/21 13:55:35 $     Revision: $Revision: 1.28 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2008/05/21 09:47:35 $     Revision: $Revision: 1.29 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2008/03/21 13:55:35 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2008/05/21 09:47:35 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -212,10 +212,13 @@ through
 .M xxqs_name_sxx_qmaster 8
 as a string.
 .PP
-Currently, support is only provided for SGI multiprocessor machines 
-running IRIX 6.2 and Digital UNIX multiprocessor machines. In the case of 
-Digital UNIX only one job per processor set is allowed to execute at the same 
-time, i.e.
+Currently, support is only provided for multiprocessor machines running Solaris,
+SGI multiprocessor machines running IRIX 6.2 and 
+Digital UNIX multiprocessor machines. 
+In the case of Solaris the processor set must already exist, when this processors
+parameter is configured. So the processor set has to be created manually.
+In the case of Digital UNIX only one job per processor set is allowed to 
+execute at the same time, i.e.
 .B slots
 (see above) should be set to 1 for this queue. 
 .SS "\fBqtype\fP"

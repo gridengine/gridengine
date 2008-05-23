@@ -33,7 +33,7 @@
 ###############################################################################
 # Variable definitions for targets to build
 ###############################################################################
-SGEEXPWINGRID_DIR = $(SDIR)/experimental/wingrid/qloadsensor
+SGEEXPWINGRID_DIR = $(SDIR)/utilbin/windows/qloadsensor
 
 SGEEXPWINGRID_TARGETS = qloadsensor.exe
 

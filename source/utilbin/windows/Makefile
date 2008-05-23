@@ -34,7 +34,7 @@
 # global rules: all, clean, depend, messages
 ###############################################################################
 
-experimental: qloadsensor sge_helper_service gui_test
+all: qloadsensor sge_helper_service gui_test
 
 clean: qloadsensor_clean sge_helper_service_clean gui_test_clean 
 

@@ -2088,7 +2088,7 @@ if ( "$MAKEWINGRIDAPP" == 1 ) then
       breaksw
    endsw
 
-   $MAKE -f $SOURCE/experimental/wingrid/Makefile "MAKE=$MAKE" "WINCC=$WINCC" \
+   $MAKE -f $SOURCE/utilbin/windows/Makefile "MAKE=$MAKE" "WINCC=$WINCC" \
       "WINCFLAGS=$WINCFLAGS" "WINLFLAGS=$WINLFLAGS" "SDIR=$SDIR" "RM=$RM" \
       "DEPEND=$DEPEND" "WINLIBS=$WINLIBS" $param
 

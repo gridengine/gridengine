@@ -33,7 +33,7 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-SGEHELPERSERVICE_DIR = $(SDIR)/experimental/wingrid/SGE_Helper_Service
+SGEHELPERSERVICE_DIR = $(SDIR)/utilbin/windows/SGE_Helper_Service
 
 SGEHELPERSERVICE_TARGETS = SGE_Helper_Service.exe
 

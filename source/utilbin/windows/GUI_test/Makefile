@@ -33,7 +33,7 @@
 ###############################################################################
 # Variable definitions for targets to build
 ###############################################################################
-GUITEST_DIR = $(SDIR)/experimental/wingrid/GUI_test
+GUITEST_DIR = $(SDIR)/utilbin/windows/GUI_test
 
 GUITEST_TARGETS = GUI_test.exe
 

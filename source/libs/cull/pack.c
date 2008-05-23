@@ -42,7 +42,7 @@
 
 #if defined(INTERIX)
 #include <arpa/inet.h>
-#include "misc.h"
+#include "wingrid.h"
 #endif
 
 #ifdef HPUX

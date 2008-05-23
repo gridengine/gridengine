@@ -41,7 +41,7 @@
 #include "sge_dstring.h"
 
 #if defined(INTERIX)
-#  include "../wingrid/misc.h"
+#  include "wingrid.h"
 #endif
 
 #if defined(SOLARIS) || defined(LINUX) || defined(IRIX)

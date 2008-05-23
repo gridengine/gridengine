@@ -80,7 +80,7 @@
 #endif
 
 #ifdef INTERIX
-#include "misc.h"
+#include "wingrid.h"
 #endif
 
 #define ENCODE_TO_STRING   1

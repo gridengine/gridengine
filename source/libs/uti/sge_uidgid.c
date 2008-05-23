@@ -55,7 +55,7 @@
 #include "sge_bootstrap.h"
 
 #if defined( INTERIX )
-#   include "misc.h"
+#   include "wingrid.h"
 #   include "../../../utilbin/sge_passwd.h"
 #endif
 

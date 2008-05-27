@@ -1,3 +1,9 @@
+CR-2008-05-27-0: Bugfix:    Communication library thread locking problem 
+                            results in qmaster crash
+                 Bugster:   6693998
+                 Issue:     2563
+                 Review:    JG,RD
+
 DG-2008-05-15-0: Enhancem.: HP-UX 11 64 bit machines now also compiling the 
                             HP-UX 11 32 bit sources.                            
                  Review:    JG

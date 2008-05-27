@@ -1,3 +1,10 @@
+CR-2008-05-27-0: Bugfix:    Communication library thread locking problem 
+                            results in qmaster crash
+                            (merge from V61_BRANCH)
+                 Bugster:   6693998
+                 Issue:     2563
+                 Review:    JG,RD
+
 DG-2008-05-15-0: Cleanup:   Added build.properties file in order to support 
                             build.xml file. Was missing from checkin:  
                             DG-2008-05-07-0

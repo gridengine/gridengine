@@ -210,6 +210,8 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
    cl_connection_list_elem_t* elem2 = NULL;
    cl_com_connection_t* connection = NULL;
    cl_raw_list_t *delete_connections = NULL;
+   /* used for getting connection handler in first loop */
+   cl_com_handle_t* handler = NULL;
 
    if (list_p == NULL ) {
       return CL_RETVAL_PARAMS;
@@ -380,12 +382,12 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
             }
          }
 
-         if (connection->handler != NULL) {
-            connection->handler->statistic->bytes_sent +=  connection->statistic->bytes_sent;
-            connection->handler->statistic->bytes_received +=  connection->statistic->bytes_received;
-            connection->handler->statistic->real_bytes_sent +=  connection->statistic->real_bytes_sent;
-            connection->handler->statistic->real_bytes_received +=  connection->statistic->real_bytes_received;
-         }
+         /* here we set the connection handler (needed later at cleanup of delete_connections list) */
+         handler = connection->handler;
+         handler->statistic->bytes_sent +=  connection->statistic->bytes_sent;
+         handler->statistic->bytes_received +=  connection->statistic->bytes_received;
+         handler->statistic->real_bytes_sent +=  connection->statistic->real_bytes_sent;
+         handler->statistic->real_bytes_received +=  connection->statistic->real_bytes_received;
 
          cl_raw_list_dechain_elem(list_p, elem2->raw_elem); 
          cl_raw_list_append_dechained_elem(delete_connections, elem2->raw_elem);
@@ -399,8 +401,13 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
       }
    }
 
-   if ( delete_connections != NULL ) {
-      /* remove dead connections */
+   /* ATTENTION: This code is executed without having the connection list lock !!! */
+   if (delete_connections != NULL) {
+      /*
+       * the locks have to be done in same order like done in cl_commlib_receive_message()
+       */
+      pthread_mutex_lock(handler->messages_ready_mutex);
+      cl_raw_list_lock(handler->received_message_queue);
       while ( (elem2 = cl_connection_list_get_first_elem(delete_connections))!= NULL) {
          /* found connection to close  */
          cl_com_message_t* message = NULL;
@@ -408,17 +415,14 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
    
          connection = elem2->connection;
    
+         cl_raw_list_lock(connection->received_message_list);
          while((message_list_elem = cl_message_list_get_first_elem(connection->received_message_list)) != NULL) {
             message = message_list_elem->message;
             if (message->message_state == CL_MS_READY) {
                CL_LOG(CL_LOG_ERROR,"deleting unread message for connection");
-               if (connection->handler != NULL) {
-                  /* decrease counter for ready messages */
-                  pthread_mutex_lock(connection->handler->messages_ready_mutex);
-                  connection->handler->messages_ready_for_read = connection->handler->messages_ready_for_read - 1;
-                  cl_app_message_queue_remove(connection->handler->received_message_queue, connection, 1, CL_FALSE);
-                  pthread_mutex_unlock(connection->handler->messages_ready_mutex);
-               }
+               /* decrease counter for ready messages */
+               handler->messages_ready_for_read = handler->messages_ready_for_read - 1;
+               cl_app_message_queue_remove(handler->received_message_queue, connection, 0, CL_FALSE);
             }
             if (message->message_length != 0) {
                CL_LOG_INT(CL_LOG_ERROR,"connection sub_state:",connection->connection_sub_state);
@@ -433,8 +437,9 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
             free(message_list_elem);
             cl_com_free_message(&message);
          }
-         
+         cl_raw_list_unlock(connection->received_message_list);
    
+         cl_raw_list_lock(connection->send_message_list);
          while((message_list_elem = cl_message_list_get_first_elem(connection->send_message_list)) != NULL) {
             message = message_list_elem->message;
             CL_LOG(CL_LOG_ERROR,"deleting unsend message for connection");
@@ -442,6 +447,7 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
             free(message_list_elem);
             cl_com_free_message(&message);
          }
+         cl_raw_list_unlock(connection->send_message_list);
    
          cl_raw_list_remove_elem(delete_connections, elem2->raw_elem);
          free(elem2);
@@ -452,6 +458,8 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
          }
    
       }
+      cl_raw_list_unlock(handler->received_message_queue);
+      pthread_mutex_unlock(handler->messages_ready_mutex);
       cl_connection_list_cleanup(&delete_connections);
    }
    return ret_val;

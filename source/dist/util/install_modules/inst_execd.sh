@@ -733,7 +733,7 @@ InstWinHelperSvc()
 
    loop=0
 
-   WIN_SVC="N1 Grid Engine Helper Service"
+   WIN_SVC="Sun Grid Engine Helper Service"
    WIN_DIR=`winpath2unix $SYSTEMROOT`
 
    $INFOTEXT " Testing, if a service is already installed!\n"
@@ -809,7 +809,7 @@ UnInstWinHelperSvc()
 
    loop=0
 
-   WIN_SVC="N1 Grid Engine Helper Service"
+   WIN_SVC="Sun Grid Engine Helper Service"
    WIN_DIR=`winpath2unix $SYSTEMROOT`
 
    $INFOTEXT " Testing, if service is installed!\n"

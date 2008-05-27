@@ -48,13 +48,13 @@
 // name, display name and description of the service in "Services" dialog
 // of control panel
 static const char g_szServiceName[] = "SGE_Helper_Service.exe";
-static const char g_szServiceDisplayName[] = "N1 Grid Engine Helper Service";
-static const char g_szServiceDescription[] = "Enables Sun N1 Grid Engine "
+static const char g_szServiceDisplayName[] = "Sun Grid Engine Helper Service";
+static const char g_szServiceDescription[] = "Enables Sun Grid Engine "
                                "execution host functionality to let jobs "
                                "display their GUI to the visible desktop.";
 
 // internal name of the service handler
-static const char g_szServiceHandlerName[] = "N1 Grid Engine Helper Service Handler";
+static const char g_szServiceHandlerName[] = "Sun Grid Engine Helper Service Handler";
 
 // global variables
 HANDLE          g_hWinstaACLMutex = NULL;
@@ -69,8 +69,8 @@ static SERVICE_STATUS_HANDLE g_hServiceStatus = NULL;
 static BOOL                  g_bRunning       = TRUE;
 
 // function forward declarations
-static void  WINAPI N1GridEngineHelperServiceStart(DWORD dwArgc, LPTSTR *lpszArgv);
-static DWORD WINAPI N1GridEngineHelperServiceHandlerEx(DWORD dwControl, 
+static void  WINAPI SunGridEngineHelperServiceStart(DWORD dwArgc, LPTSTR *lpszArgv);
+static DWORD WINAPI SunGridEngineHelperServiceHandlerEx(DWORD dwControl, 
                           DWORD dwEventType, LPVOID lpEventData, LPVOID lpContext);
 static void PrintHelp(const char *pszExecutableName, const char *pszServiceName);
 static void ServiceError();
@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
    int ret = 0;
 
    SERVICE_TABLE_ENTRY DispatchTable[] = {
-      {(LPSTR)g_szServiceName, N1GridEngineHelperServiceStart},
+      {(LPSTR)g_szServiceName, SunGridEngineHelperServiceStart},
       {NULL,                   NULL}};
 
    if(argc==2) {
@@ -139,13 +139,13 @@ int main(int argc, char *argv[])
 	return ret;
 }
 
-/****** N1GridEngineHelperServiceHandlerEx() **********************************
+/****** SunGridEngineHelperServiceHandlerEx() *********************************
 *  NAME
-*     N1GridEngineHelperServiceHandlerEx() -- handler for the service that is
+*     SunGridEngineHelperServiceHandlerEx() -- handler for the service that is
 *                                      invoked by the service control manager
 *
 *  SYNOPSIS
-*     DWORD WINAPI N1GridEngineHelperServiceHandlerEx(DWORD  dwControl,
+*     DWORD WINAPI SunGridEngineHelperServiceHandlerEx(DWORD  dwControl,
 *                                                     DWORD  dwEventType,
 *                                                     LPVOID lpEventData,
 *                                                     LPVOID lpContext)
@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
 *
 *  NOTES
 *******************************************************************************/
-static DWORD WINAPI N1GridEngineHelperServiceHandlerEx(DWORD  dwControl,
+static DWORD WINAPI SunGridEngineHelperServiceHandlerEx(DWORD  dwControl,
                                                        DWORD  dwEventType,
                                                        LPVOID lpEventData,
                                                        LPVOID lpContext)
@@ -232,12 +232,12 @@ static DWORD WINAPI N1GridEngineHelperServiceHandlerEx(DWORD  dwControl,
    return NO_ERROR;
 }
 
-/****** N1GridEngineHelperServiceStart() **********************************************
+/****** SunGridEngineHelperServiceStart() *********************************************
 *  NAME
-*     N1GridEngineHelperServiceStart() -- starting point of the service
+*     SunGridEngineHelperServiceStart() -- starting point of the service
 *
 *  SYNOPSIS
-*     void WINAPI N1GridEngineHelperServiceStart(DWORD dwArgc, LPTSTR *lpszArgv)
+*     void WINAPI SunGridEngineHelperServiceStart(DWORD dwArgc, LPTSTR *lpszArgv)
 *
 *  FUNCTION
 *     This is the starting point of the service that is called by the
@@ -252,7 +252,7 @@ static DWORD WINAPI N1GridEngineHelperServiceHandlerEx(DWORD  dwControl,
 *
 *  NOTES
 *******************************************************************************/
-static void WINAPI N1GridEngineHelperServiceStart(DWORD dwArgc, LPTSTR *lpszArgv)
+static void WINAPI SunGridEngineHelperServiceStart(DWORD dwArgc, LPTSTR *lpszArgv)
 {
    SERVICE_STATUS        ServiceStatus;
    DWORD                 dwStatus = 0;
@@ -273,7 +273,7 @@ static void WINAPI N1GridEngineHelperServiceStart(DWORD dwArgc, LPTSTR *lpszArgv
    ServiceStatus.dwWaitHint                = 1000;
 
    g_hServiceStatus = RegisterServiceCtrlHandlerEx(g_szServiceName, 
-                              N1GridEngineHelperServiceHandlerEx, NULL);
+                              SunGridEngineHelperServiceHandlerEx, NULL);
 
    if(g_hServiceStatus == (SERVICE_STATUS_HANDLE)0) { 
       SvcDebugOut("[%s] RegisterServiceCtrlHandler failed %d\n",  
@@ -420,7 +420,7 @@ int WriteToLogFile(const char *szMessage, ...)
 
    _vsnprintf(Buffer, 4095, szMessage, args);
 
-   fp = fopen("c:\\N1GE_helper_service.log", "a+");
+   fp = fopen("c:\\SGE_helper_service.log", "a+");
    if(fp != NULL) {
       GetLocalTime(&sysTime);
       fprintf(fp, "%02d:%02d:%02d [SGE_Helper_Service] %s\n",

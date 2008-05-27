@@ -1,3 +1,7 @@
+HP-2008-05-27-0: Enhancem:  Changed name of Windows helper service from 
+                            N1 Grid Engine Helper Service to 
+                            Sun Grid Engine Helper Service
+
 HP-2008-05-23-0: Enhancem:  Moved Windows source to gridengine repository
 
 EB-2008-05-21-0: Doc:       Changed some man pages

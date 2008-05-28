@@ -249,6 +249,9 @@ static int map_signal(int sig)
    int ret = sig;
 
    if (sig == SIGTTIN) {
+     /* SIGSTOP would also be delivered using SIGTTIN due to problems with
+      * delivering SIGWINCH to shepherd, see CR 6623174
+      */ 
       FILE *signal_file = fopen("signal", "r");
 
       if (signal_file != NULL) {
@@ -264,8 +267,6 @@ static int map_signal(int sig)
 #else
       ret = SIGKILL;
 #endif
-   } else if (sig == SIGWINCH) {
-      ret = SIGSTOP; 
    } else if (sig == SIGTSTP) {
       ret = SIGKILL;
    } else if (sig == SIGUSR1 || sig == SIGCONT) {

@@ -1,3 +1,8 @@
+EB-2008-05-28-0: Bugfix:    Merged manpage fix from maintrunc: EB-2008-05-21-0
+                 Bugster:   6653487
+                 Issue:     2579
+                 Review:    DG
+
 CR-2008-05-27-0: Bugfix:    Communication library thread locking problem 
                             results in qmaster crash
                  Bugster:   6693998

@@ -72,7 +72,7 @@
 #include "msg_execd.h"
 #include "msg_gdilib.h"
 #if defined(INTERIX)
-   #include "../../libs/wingrid/misc.h"
+   #include "../../libs/wingrid/wingrid.h"
 #endif
 
 

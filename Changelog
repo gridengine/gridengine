@@ -1,3 +1,5 @@
+HP-2008-05-28-0: Enhancem:  Moved Windows source to gridengine repository
+
 EB-2008-05-28-0: Bugfix:    Merged manpage fix from maintrunc: EB-2008-05-21-0
                  Bugster:   6653487
                  Issue:     2579

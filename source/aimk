@@ -1384,6 +1384,7 @@ case WIN32_X86:
    set WINCC = "env TMP=$WINTEMPDIR cl.exe"
    set RM = "rm -f"
    set MAKE = gmake
+   set LIBS = "$LIBS -ldl"
 
    # Default build targets for WIN32_X86 for which we have seperate make files
    set MAKEWINGRIDLIB   = 1
@@ -2035,7 +2036,7 @@ if ( "$MAKEWINGRIDAPP" == 1 ) then
       breaksw
    endsw
 
-   $MAKE -f $SOURCE/experimental/wingrid/Makefile "MAKE=$MAKE" "WINCC=$WINCC" \
+   $MAKE -f $SOURCE/utilbin/windows/Makefile "MAKE=$MAKE" "WINCC=$WINCC" \
       "WINCFLAGS=$WINCFLAGS" "WINLFLAGS=$WINLFLAGS" "SDIR=$SDIR" "RM=$RM" \
       "DEPEND=$DEPEND" "WINLIBS=$WINLIBS" $param
 

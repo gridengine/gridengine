@@ -73,7 +73,7 @@
 #endif
 
 #ifdef INTERIX
-#include "misc.h"
+#include "wingrid.h"
 #endif
 
 #define SGE_SEC_BUFSIZE 1024

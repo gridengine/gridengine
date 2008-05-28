@@ -204,8 +204,7 @@ sge_init_shared_ssl_lib(void)
         
          ret = 0;
       } else {
-         fprintf(stderr, MSG_PWD_CANT_OPEN_SSL_LIB_S, SGE_PASSWD_PROG_NAME);
-         fprintf(stderr, "\n");
+         fprintf(stderr, "%s\n", MSG_PWD_CANTOPENSSL);
          ret = 1;
       }
    } else {

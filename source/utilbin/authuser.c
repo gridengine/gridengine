@@ -678,7 +678,11 @@ static int juti_getgrouplist(const char *uname, gid_t agroup, gid_t **groups_res
    int i = 0;
    
 	setgrent();
+#if defined(INTERIX)
+   while (grp = getgrent_nomembers()) {
+#else
 	while ((grp = getgrent())) {
+#endif
       for (bail = 0, i = 0; bail == 0 && i < ngroups; i++) {
 			if (groups[i] == grp->gr_gid) {
 				bail = 1;

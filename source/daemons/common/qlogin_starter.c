@@ -60,7 +60,7 @@
 #include "msg_common.h"
 
 #if defined(INTERIX)
-#  include "misc.h"
+#  include "wingrid.h"
 #endif
 
 static char err_str[1024];

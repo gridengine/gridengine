@@ -1,3 +1,7 @@
+JO-2008-05-28-0: Bugfix:    o Added missing argument
+                            o Corrected arco_mysql.txt
+                 Review:    LP
+
 HP-2008-05-27-0: Enhancem:  Changed name of Windows helper service from 
                             N1 Grid Engine Helper Service to 
                             Sun Grid Engine Helper Service

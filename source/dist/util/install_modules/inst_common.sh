@@ -1606,7 +1606,7 @@ SetupRcScriptNames61()
 SetupRcScriptNames()
 {
    if [ "$2" = "61" ]; then
-      SetupRcScriptNames61
+      SetupRcScriptNames61 $1
       return
    fi
 

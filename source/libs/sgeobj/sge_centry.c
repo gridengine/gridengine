@@ -998,6 +998,14 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list,
       char error_msg[200];
       error_msg[0] = '\0';
 
+      /* donot allow REQUESTABLE for "tmpdir" attribute, refer CR6650497 */
+      if (!strcmp(attrname, "tmpdir") && lGetUlong(centry, CE_requestable)!= REQU_NO) {
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                    MSG_CENTRY_NOTREQUESTABLE_S, attrname);
+            ret = false;
+
+      }
+
       if (lGetBool(centry, CE_consumable)) {
    
          if (relop != CMPLXLE_OP) {

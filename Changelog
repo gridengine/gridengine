@@ -1,3 +1,8 @@
+RN-2008-05-29-3: Bugfix:    use of -l tmpdir=abc can crash schedd
+                 Bugster:   6650497
+                 Issue:     2597
+                 Review:    AH 
+
 CR-2008-05-29-0: Bugfix:    Communication library cleanup:
                             o Fixed wrong lease time information for ingoing
                               messages for qping -dump output. Lease time for

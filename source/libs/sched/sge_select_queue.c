@@ -4074,7 +4074,7 @@ parallel_host_slots(sge_assignment_t *a, int *slots, int *slots_qend, int *host_
 
       result = parallel_rc_slots_by_time(a, hard_requests, &hslots, &hslots_qend, 
             config_attr, actual_attr, load_list, false, NULL, 
-               DOMINANT_LAYER_HOST, lc_factor, HOST_TAG, false, eh_name);
+               DOMINANT_LAYER_HOST, lc_factor, HOST_TAG, false, eh_name, false);
 
       if (hslots > 0) {
          const void *iterator = NULL;
@@ -4908,7 +4908,7 @@ parallel_queue_slots(sge_assignment_t *a, lListElem *qep, int *slots, int *slots
          DPRINTF(("verifing AR queue\n"));
          result = parallel_rc_slots_by_time(a, hard_requests, &qslots, &qslots_qend, 
                ar_queue_config_attr, ar_queue_actual_attr, NULL, true, ar_queue, 
-               DOMINANT_LAYER_QUEUE, 0, QUEUE_TAG, false, lGetString(ar_queue, QU_full_name));
+               DOMINANT_LAYER_QUEUE, 0, QUEUE_TAG, false, lGetString(ar_queue, QU_full_name), false);
       } else {
          if (a->is_advance_reservation 
             || (prof_par_rqs++, result = parallel_rqs_slots_by_time(a, &lslots, &lslots_qend, 
@@ -4918,7 +4918,7 @@ parallel_queue_slots(sge_assignment_t *a, lListElem *qep, int *slots, int *slots
             prof_par_qdyn++;
             result = parallel_rc_slots_by_time(a, hard_requests, &qslots, &qslots_qend, 
                   config_attr, actual_attr, NULL, true, qep, 
-                  DOMINANT_LAYER_QUEUE, 0, QUEUE_TAG, false, lGetString(qep, QU_full_name));
+                  DOMINANT_LAYER_QUEUE, 0, QUEUE_TAG, false, lGetString(qep, QU_full_name), false);
          }
       }
 
@@ -5216,7 +5216,7 @@ parallel_global_slots(const sge_assignment_t *a, int *slots, int *slots_qend, in
 
       result = parallel_rc_slots_by_time(a, hard_request, &gslots, 
                                 &gslots_qend, config_attr, actual_attr, load_attr,  
-                                false, NULL, DOMINANT_LAYER_GLOBAL, lc_factor, GLOBAL_TAG, false, SGE_GLOBAL_NAME);
+                                false, NULL, DOMINANT_LAYER_GLOBAL, lc_factor, GLOBAL_TAG, false, SGE_GLOBAL_NAME, false);
    }
 
    *slots      = gslots;
@@ -5789,7 +5789,7 @@ dispatch_t
 parallel_rc_slots_by_time(const sge_assignment_t *a, lList *requests,  int *slots, int *slots_qend, 
                  lList *total_list, lList *rue_list, lList *load_attr, bool force_slots, 
                  lListElem *queue, u_long32 layer, double lc_factor, u_long32 tag, 
-                 bool allow_non_requestable, const char *object_name)
+                 bool allow_non_requestable, const char *object_name, bool isRQ)
 {
    dstring reason; 
    char reason_buf[1024];
@@ -5860,12 +5860,9 @@ parallel_rc_slots_by_time(const sge_assignment_t *a, lList *requests,  int *slot
                if (ri_slots_by_time(a, &avail, &avail_qend, 
                         rue_list, cep, load_attr, total_list, queue, layer, lc_factor,   
                         &reason, allow_non_requestable, false, object_name)==-1) {
-                  char buff[1024 + 1];
-                  centry_list_append_to_string(requests, buff, sizeof(buff) - 1);
-                  if (*buff && (buff[strlen(buff) - 1] == '\n')) {
-                     buff[strlen(buff) - 1] = 0;
+                  if (!isRQ) {
+                     schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, "slots=1", object_name, reason_buf);
                   }   
-                  schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, buff, object_name, reason_buf);
                   DRETURN(DISPATCH_NEVER_CAT);
                }
                max_slots      = MIN(max_slots,      avail);

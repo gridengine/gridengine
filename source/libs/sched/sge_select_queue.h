@@ -182,7 +182,7 @@ dispatch_t
 parallel_rc_slots_by_time(const sge_assignment_t *a, lList *requests, 
                  int *slots, int *slots_qend, lList *total_list, lList *rue_list, lList *load_attr, 
                  bool force_slots, lListElem *queue, u_long32 layer, double lc_factor, u_long32 tag,
-                 bool allow_non_requestable, const char *object_name);
+                 bool allow_non_requestable, const char *object_name, bool isRQ);
 
 dispatch_t
 ri_time_by_slots(const sge_assignment_t *a, lListElem *request, lList *load_attr, lList *config_attr, lList *actual_attr, 

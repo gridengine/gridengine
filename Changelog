@@ -1,3 +1,9 @@
+MP-2008--5-29-0: Bugfix:    qmaster reinstall overwriting an existing installation
+                            fails
+                 Bugster:   6673742
+                 Issue:     2594
+                 Review:    JG
+
 HP-2008-05-28-0: Enhancem:  Moved Windows source to gridengine repository
 
 EB-2008-05-28-0: Bugfix:    Merged manpage fix from maintrunc: EB-2008-05-21-0

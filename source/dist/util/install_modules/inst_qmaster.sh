@@ -64,6 +64,7 @@ GetCellRoot()
 GetCell()
 {
    is_done="false"
+   Overwrite="false"
 
    if [ $AUTO = true ]; then
     SGE_CELL=$CELL_NAME
@@ -125,6 +126,7 @@ GetCell()
                   $INFOTEXT "Deleting bootstrap file!"
                   ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL_VAL/common/bootstrap
                   is_done="true"
+                  Overwrite="true"
                else
                   $INFOTEXT "Deleting directory \"%s\" now!" $SGE_ROOT/$SGE_CELL_VAL
                   ExecuteAsAdmin rm -rf $SGE_ROOT/$SGE_CELL_VAL
@@ -1228,26 +1230,30 @@ AddHosts()
 
    fi
 
-   $INFOTEXT -u "\nCreating the default <all.q> queue and <allhosts> hostgroup"
-   echo
-   $INFOTEXT -log "Creating the default <all.q> queue and <allhosts> hostgroup"
-   TMPL=/tmp/hostqueue$$
-   TMPL2=${TMPL}.q
-   rm -f $TMPL $TMPL2
-   if [ -f $TMPL -o -f $TMPL2 ]; then
-      $INFOTEXT "\nCan't delete template files >%s< or >%s<" "$TMPL" "$TMPL2"
+   if [ "$Overwrite" = "true" ]; then
+      $INFOTEXT -u "\nSkipping creation of the default <all.q> queue and <allhosts> hostgroup"
    else
-      PrintHostGroup @allhosts > $TMPL
-      Execute $SGE_BIN/qconf -Ahgrp $TMPL
-      Execute $SGE_BIN/qconf -sq > $TMPL
-      Execute sed -e "/qname/s/template/all.q/" \
-                  -e "/hostlist/s/NONE/@allhosts/" \
-                  -e "/pe_list/s/NONE/make/" $TMPL > $TMPL2
-      Execute $SGE_BIN/qconf -Aq $TMPL2
-      rm -f $TMPL $TMPL2        
-   fi
+      $INFOTEXT -u "\nCreating the default <all.q> queue and <allhosts> hostgroup"
+      echo
+      $INFOTEXT -log "Creating the default <all.q> queue and <allhosts> hostgroup"
+      TMPL=/tmp/hostqueue$$
+      TMPL2=${TMPL}.q
+      rm -f $TMPL $TMPL2
+      if [ -f $TMPL -o -f $TMPL2 ]; then
+         $INFOTEXT "\nCan't delete template files >%s< or >%s<" "$TMPL" "$TMPL2"
+      else
+         PrintHostGroup @allhosts > $TMPL
+         Execute $SGE_BIN/qconf -Ahgrp $TMPL
+         Execute $SGE_BIN/qconf -sq > $TMPL
+         Execute sed -e "/qname/s/template/all.q/" \
+                     -e "/hostlist/s/NONE/@allhosts/" \
+                     -e "/pe_list/s/NONE/make/" $TMPL > $TMPL2
+         Execute $SGE_BIN/qconf -Aq $TMPL2
+         rm -f $TMPL $TMPL2        
+      fi
 
-   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
+      $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
+   fi
    $CLEAR
 
 }

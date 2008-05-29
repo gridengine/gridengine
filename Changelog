@@ -1,3 +1,9 @@
+RN-2008-05-29-1: Bugfix:    Incorrectly considering two host group names to be
+                            the same
+                 Bugster:   6666161
+                 Issue:     2567
+                 Review:    JG 
+
 RN-2008-05-29-0: Bugfix:    Failed to deliver STOP signal for subordinated jobs
                  Bugster:   6623174
                  Issue:     2478

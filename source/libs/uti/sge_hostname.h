@@ -91,6 +91,8 @@ int sge_hostmatch(const char *h1, const char *h2);
  
 void sge_hostcpy(char *dst, const char *raw);       
 
+bool is_hgroup_name(const char *name);
+
 /* resolver library wrappers */
 struct hostent *sge_gethostbyname_retry(const char *name);
 struct hostent *sge_gethostbyname(const char *name, int* system_error_retval);

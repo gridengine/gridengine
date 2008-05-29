@@ -153,9 +153,9 @@
                       count is reached at service component.
 
 */
-#define CL_CONNECT_MESSAGE         "<cm version=\"%s\"><df>%s</df><ct>%s</ct><rdata host=\"%s\" comp=\"%s\" id=\"%ld\"></rdata><port>%ld</port><ac>%s</ac></cm>"
-#define CL_CONNECT_MESSAGE_VERSION "0.3"
-#define CL_CONNECT_MESSAGE_SIZE   100  /* sizeof(CL_CONNECT_MESSAGE) + sizeof(CL_CONNECT_MESSAGE_VERSION) */
+#define CL_CONNECT_MESSAGE         "<cm version=\"%s\"><df>%s</df><ct>%s</ct><dst host=\"%s\" comp=\"%s\" id=\"%ld\"></dst><rdata host=\"%s\" comp=\"%s\" id=\"%ld\"></rdata><port>%ld</port><ac>%s</ac></cm>"
+#define CL_CONNECT_MESSAGE_VERSION "0.4"
+#define CL_CONNECT_MESSAGE_SIZE   100 + 33 /* sizeof(CL_CONNECT_MESSAGE) + sizeof(CL_CONNECT_MESSAGE_VERSION) */
 #define CL_CONNECT_MESSAGE_DATA_FORMAT_BIN    "bin"
 #define CL_CONNECT_MESSAGE_DATA_FORMAT_XML    "xml"
 #define CL_CONNECT_MESSAGE_DATA_FLOW_STREAM   "stream"
@@ -356,6 +356,7 @@ typedef struct cl_com_CM_type {
    cl_xml_connection_type_t       ct;
    cl_xml_connection_autoclose_t  ac;
    unsigned long                  port;  
+   cl_com_endpoint_t*             dst;   /* destination (=endpoint where clients want to connect to) */
    cl_com_endpoint_t*             rdata; /* remote */
 } cl_com_CM_t;
 

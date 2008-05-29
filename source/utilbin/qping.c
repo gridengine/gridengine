@@ -236,21 +236,29 @@ static void qping_convert_time(char* buffer, char* dest, cl_bool_t show_hour) {
    struct saved_vars_s *context = NULL;
 
    help=sge_strtok_r(buffer, ".", &context);
+   if (help == NULL) {
+      help = "-";
+   }
    help2=sge_strtok_r(NULL,".", &context);
    if (help2 == NULL) {
       help2 = "NULL";
    }
 
-   i = atoi(help);
-#ifndef HAS_LOCALTIME_R
-   tm = localtime(&i);
-#else
-   tm = (struct tm *)localtime_r(&i, &tm_buffer);
-#endif
-   if (show_hour == CL_TRUE) {
-      sprintf(dest, "%02d:%02d:%02d.%s", tm->tm_hour, tm->tm_min, tm->tm_sec, help2);
+   if (strcmp(help,"-") == 0) {
+      sprintf(dest, "N.A.");
    } else {
-      sprintf(dest, "%02d:%02d.%s", tm->tm_min, tm->tm_sec, help2);
+
+      i = atoi(help);
+#ifndef HAS_LOCALTIME_R
+      tm = localtime(&i);
+#else
+      tm = (struct tm *)localtime_r(&i, &tm_buffer);
+#endif
+      if (show_hour == CL_TRUE) {
+         sprintf(dest, "%02d:%02d:%02d.%s", tm->tm_hour, tm->tm_min, tm->tm_sec, help2);
+      } else {
+         sprintf(dest, "%02d:%02d.%s", tm->tm_min, tm->tm_sec, help2);
+      }
    }
    sge_free_saved_vars(context);
 }

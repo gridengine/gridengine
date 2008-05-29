@@ -1,3 +1,17 @@
+CR-2008-05-29-0: Bugfix:    Communication library cleanup:
+                            o Fixed wrong lease time information for ingoing
+                              messages for qping -dump output. Lease time for
+                              ingoing messages is not available because dump 
+                              message is not generated when message is polled by
+                              application.
+                            o Fixed broken qping -dump output for connect message
+                            o CM protocol message rollback:
+                              CM message now also contains message destination 
+                              endpoint name which was removed by performance
+                              changes. The information is needed in service to
+                              do hostname resolve and component id checks.
+                 Review:    AA
+
 RN-2008-05-29-2: Bugfix:    o qconf -ae|-Ae return 0 even if exechost exists already
                             o qconf -dxxxx does not set exit status on error
                             o qconf -as, -am, -ao, -Ae, -Acal, -Ackpt, -Ap when msg 

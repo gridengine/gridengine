@@ -350,8 +350,11 @@ int cl_com_free_cm_message(cl_com_CM_t** message) {   /* CR check */
    if (message == NULL || *message == NULL) {
       return CL_RETVAL_PARAMS;
    }
-   free( (*message)->version );
-   cl_com_free_endpoint( &( (*message)->rdata )  );
+   if ((*message)->version != NULL) {
+      free((*message)->version);
+   }
+   cl_com_free_endpoint(&((*message)->rdata));
+   cl_com_free_endpoint(&((*message)->dst));
 
    free(*message);
    *message = NULL;
@@ -530,6 +533,8 @@ int cl_xml_parse_CM(unsigned char* buffer, unsigned long buffer_length, cl_com_C
    unsigned long df_end = 0;
    unsigned long ct_begin = 0;
    unsigned long ct_end = 0;
+   unsigned long dst_begin = 0;
+   unsigned long dst_end = 0;
    unsigned long rdata_begin = 0;
    unsigned long rdata_end = 0;
    unsigned long port_begin = 0;
@@ -553,6 +558,7 @@ int cl_xml_parse_CM(unsigned char* buffer, unsigned long buffer_length, cl_com_C
    (*message)->ac = CL_CM_AC_UNDEFINED;
    (*message)->port = 0;
    (*message)->rdata = NULL;
+   (*message)->dst = NULL;
 
    while(buf_pointer < buffer_length) {
       switch(buffer[buf_pointer]) {
@@ -583,25 +589,25 @@ int cl_xml_parse_CM(unsigned char* buffer, unsigned long buffer_length, cl_com_C
 
                if (strncmp(charptr, "cm", 2) == 0) {
                   /* do nothing */
-               } else if (strcmp(charptr, "df") == 0) {
+               } else if (strncmp(charptr, "df", 2) == 0) {
                   if (closing_tag == CL_FALSE) {
                      df_begin = buf_pointer + 1;
                   } else {
                      df_end = buf_pointer - 4;
                   }
-               } else if (strcmp(charptr, "ct") == 0) {
+               } else if (strncmp(charptr, "ct", 2) == 0) {
                   if (closing_tag == CL_FALSE) {
                      ct_begin = buf_pointer + 1;
                   } else {
                      ct_end = buf_pointer - 4;
                   }
-               } else if (strcmp(charptr, "port") == 0) {
+               } else if (strncmp(charptr, "port", 4) == 0) {
                   if (closing_tag == CL_FALSE) {
                      port_begin = buf_pointer + 1;
                   } else {
                      port_end = buf_pointer - 6;
                   }
-               } else if (strcmp(charptr, "ac") == 0) {
+               } else if (strncmp(charptr, "ac", 2) == 0) {
                   if (closing_tag == CL_FALSE) {
                      autoclose_begin = buf_pointer + 1;
                   } else {
@@ -615,7 +621,15 @@ int cl_xml_parse_CM(unsigned char* buffer, unsigned long buffer_length, cl_com_C
                   } else {
                      rdata_end = buf_pointer - 7;
                   }
-               }
+               } else if (strncmp(charptr, "dst", 3) == 0) {
+                  if (closing_tag == CL_FALSE) {
+                     if (dst_begin == 0) {
+                        dst_begin = tag_begin;
+                     }
+                  } else {
+                     dst_end = buf_pointer - 5;
+                  }
+               } 
             }
             break;
       }
@@ -646,6 +660,9 @@ int cl_xml_parse_CM(unsigned char* buffer, unsigned long buffer_length, cl_com_C
       char *charptr = (char *)&(buffer[port_begin]);
       buffer[port_end] = '\0';
       (*message)->port = cl_util_get_ulong_value(charptr);
+   } else {
+      CL_LOG(CL_LOG_ERROR,"port information undefined");
+         return CL_RETVAL_UNKNOWN;
    }
 
    if (autoclose_begin > 0 && autoclose_end >= autoclose_begin) {
@@ -661,6 +678,13 @@ int cl_xml_parse_CM(unsigned char* buffer, unsigned long buffer_length, cl_com_C
    /* get version */
    if (version_begin > 0) {
       (*message)->version = cl_xml_parse_version((char*)&(buffer[version_begin]), buffer_length-version_begin);
+      if ((*message)->version == NULL) {
+         CL_LOG(CL_LOG_ERROR,"version information undefined");
+         return CL_RETVAL_UNKNOWN;
+      }
+   } else {
+      CL_LOG(CL_LOG_ERROR,"no version information found");
+      return CL_RETVAL_UNKNOWN;
    }
 
    if ((*message)->df == CL_CM_DF_UNDEFINED) {
@@ -682,9 +706,11 @@ int cl_xml_parse_CM(unsigned char* buffer, unsigned long buffer_length, cl_com_C
    if (rdata_begin > 0 && rdata_end >= rdata_begin) {
       (*message)->rdata = (cl_com_endpoint_t*)malloc(sizeof(cl_com_endpoint_t));
       if ((*message)->rdata == NULL) {
-         cl_com_free_cm_message(message);
          return CL_RETVAL_MALLOC;
       }
+      (*message)->rdata->comp_host = NULL;
+      (*message)->rdata->comp_name = NULL;
+      (*message)->rdata->hash_id = NULL;
       i = rdata_begin;
 
       tag_begin = 0;
@@ -706,7 +732,9 @@ int cl_xml_parse_CM(unsigned char* buffer, unsigned long buffer_length, cl_com_C
       }
       help_buf[help_buf_pointer] = '\0';
       (*message)->rdata->comp_host = strdup(help_buf);
-
+      if ((*message)->rdata->comp_host == NULL) {
+         return CL_RETVAL_MALLOC;
+      }
       tag_begin = 0;
       help_buf_pointer = 0;
       while(i<=rdata_end && help_buf_pointer < 254) {
@@ -727,7 +755,9 @@ int cl_xml_parse_CM(unsigned char* buffer, unsigned long buffer_length, cl_com_C
       }
       help_buf[help_buf_pointer] = 0;
       (*message)->rdata->comp_name = strdup(help_buf);
-
+      if ((*message)->rdata->comp_name == NULL) {
+         return CL_RETVAL_MALLOC;
+      }
       tag_begin = 0;
       help_buf_pointer = 0;
       while(i<=rdata_end && help_buf_pointer < 254) {
@@ -751,6 +781,113 @@ int cl_xml_parse_CM(unsigned char* buffer, unsigned long buffer_length, cl_com_C
       (*message)->rdata->hash_id = NULL;
    }
 
+   /* get dst data */
+   if (dst_begin > 0 && dst_end >= dst_begin) {
+      (*message)->dst = (cl_com_endpoint_t*)malloc(sizeof(cl_com_endpoint_t));
+      if ((*message)->dst == NULL) {
+         return CL_RETVAL_MALLOC;
+      }
+      (*message)->dst->comp_host = NULL;
+      (*message)->dst->comp_name = NULL;
+      (*message)->dst->hash_id = NULL;
+
+      i = dst_begin;
+
+      tag_begin = 0;
+      help_buf_pointer = 0;
+      while(i<=dst_end && help_buf_pointer < 254) {
+         if (buffer[i] == '\"') {
+            if (tag_begin == 1) {
+               i++;
+               break;             
+            }
+            tag_begin = 1;
+            i++;
+            continue;
+         }
+         if (tag_begin == 1) {
+            help_buf[help_buf_pointer++] = buffer[i];
+         }
+         i++;
+      }
+      help_buf[help_buf_pointer] = '\0';
+      (*message)->dst->comp_host = strdup(help_buf);
+      if ((*message)->dst->comp_host == NULL) {
+         return CL_RETVAL_MALLOC;
+      }
+      tag_begin = 0;
+      help_buf_pointer = 0;
+      while(i<=dst_end && help_buf_pointer < 254) {
+        
+         if (buffer[i] == '\"') {
+            if (tag_begin == 1) {
+               i++;
+               break;             
+            }
+            tag_begin = 1;
+            i++;
+            continue;
+         }
+         if (tag_begin == 1) {
+            help_buf[help_buf_pointer++] = buffer[i];
+         }
+         i++;
+      }
+      help_buf[help_buf_pointer] = 0;
+      (*message)->dst->comp_name = strdup(help_buf);
+      if ((*message)->dst->comp_name == NULL) {
+         return CL_RETVAL_MALLOC;
+      }
+      tag_begin = 0;
+      help_buf_pointer = 0;
+      while(i<=dst_end && help_buf_pointer < 254) {
+        
+         if (buffer[i] == '\"') {
+            if (tag_begin == 1) {
+               i++;
+               break;             
+            }
+            tag_begin = 1;
+            i++;
+            continue;
+         }
+         if (tag_begin == 1) {
+            help_buf[help_buf_pointer++] = buffer[i];
+         }
+         i++;
+      }
+      help_buf[help_buf_pointer] = 0;
+      (*message)->dst->comp_id = cl_util_get_ulong_value(help_buf);
+      (*message)->dst->hash_id = NULL;
+   }
+
+   /* check complete return structure of dst and rdata */
+   if ((*message)->dst == NULL) {
+      CL_LOG(CL_LOG_ERROR,"dst information not set");
+      return CL_RETVAL_UNKNOWN;
+   } else {
+      if ((*message)->dst->comp_host == NULL) {
+         CL_LOG(CL_LOG_ERROR,"dst comp host information not set");
+         return CL_RETVAL_UNKNOWN;
+      }
+      if ((*message)->dst->comp_name == NULL) {
+         CL_LOG(CL_LOG_ERROR,"dst comp name information not set");
+         return CL_RETVAL_UNKNOWN;
+      }
+   }
+   if ((*message)->rdata == NULL) {
+      CL_LOG(CL_LOG_ERROR,"rdata information not set");
+      return CL_RETVAL_UNKNOWN;
+   } else {
+      if ((*message)->rdata->comp_host == NULL) {
+         CL_LOG(CL_LOG_ERROR,"rdata comp host information not set");
+         return CL_RETVAL_UNKNOWN;
+      }
+      if ((*message)->rdata->comp_name == NULL) {
+         CL_LOG(CL_LOG_ERROR,"rdata comp name information not set");
+         return CL_RETVAL_UNKNOWN;
+      }
+   }
    return CL_RETVAL_OK;
 }
 

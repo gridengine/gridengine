@@ -1004,6 +1004,9 @@ int cl_com_specify_ssl_configuration(cl_ssl_setup_t* new_config) {
       CL_LOG(CL_LOG_INFO,"setting ssl setup configuration");
    }
    ret_val = cl_com_dup_ssl_setup(&cl_com_ssl_setup_config, new_config);
+   if (ret_val != CL_RETVAL_OK) {
+      CL_LOG_STR(CL_LOG_WARNING, "Cannot set ssl setup configuration! Reason:", cl_get_error_text(ret_val));
+   }
    pthread_mutex_unlock(&cl_com_ssl_setup_mutex);
 
    return ret_val;
@@ -3357,7 +3360,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
             case CL_MIH_DF_BIN:
                CL_LOG(CL_LOG_INFO,"received binary message");
                message->message_state = CL_MS_READY;
-               gettimeofday(&(message->message_remove_time),NULL);
+
                cl_com_add_debug_message(connection, NULL, message);
                /* we have a new message for the read queue */
                new_message_for_queue = CL_TRUE;
@@ -3365,7 +3368,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
             case CL_MIH_DF_XML:
                CL_LOG(CL_LOG_INFO,"received XML message");
                message->message_state = CL_MS_READY;
-               gettimeofday(&(message->message_remove_time),NULL);
+
                cl_com_add_debug_message(connection, NULL, message);
                /* we have a new message for the read queue */
                new_message_for_queue = CL_TRUE;

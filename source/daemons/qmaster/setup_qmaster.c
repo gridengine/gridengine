@@ -595,7 +595,7 @@ static void communication_setup(sge_gdi_ctx_class_t *ctx)
 {
    cl_com_handle_t* com_handle = NULL;
    char* qmaster_params = NULL;
-#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+#if defined(IRIX)
    struct rlimit64 qmaster_rlimits;
 #else
    struct rlimit qmaster_rlimits;
@@ -637,7 +637,7 @@ static void communication_setup(sge_gdi_ctx_class_t *ctx)
       /* 
        * re-check file descriptor limits for qmaster 
        */
-#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+#if defined(IRIX)
       getrlimit64(RLIMIT_NOFILE, &qmaster_rlimits);
 #else
       getrlimit(RLIMIT_NOFILE, &qmaster_rlimits);

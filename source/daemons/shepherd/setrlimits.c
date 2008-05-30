@@ -46,7 +46,7 @@
 
 #include <sys/resource.h>
 
-#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+#if defined(IRIX)
 #   define RLIMIT_STRUCT_TAG rlimit64
 #else
 #   define RLIMIT_STRUCT_TAG rlimit
@@ -441,6 +441,8 @@ static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp,
 #  define limit_fmt "%ld"
 #elif defined(IRIX) || defined(HPUX) || defined(DARWIN) || defined(FREEBSD) || defined(NETBSD) || defined(INTERIX)
 #  define limit_fmt "%lld"
+#elif (defined(LINUX) && defined(TARGET_32BIT))
+#  define limit_fmt "%llu"
 #elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX)
 #  define limit_fmt "%lu"
 #else
@@ -448,7 +450,7 @@ static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp,
 #endif
 
       sge_switch2start_user();
-#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+#if defined(IRIX)
       ret = setrlimit64(resource, rlp);
 #else
       ret = setrlimit(resource,rlp);
@@ -459,9 +461,8 @@ static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp,
          sprintf(trace_str, "setrlimit(%s, {"limit_fmt", "limit_fmt"}) failed: %s",
             limit_str, rlp->rlim_cur, rlp->rlim_max, strerror(errno));
             shepherd_trace(trace_str);
-      }
-      else {
-#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+      } else {
+#if defined(IRIX)
          getrlimit64(resource,&dlp);
 #else
          getrlimit(resource,&dlp);

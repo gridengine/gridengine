@@ -927,6 +927,9 @@ Cardinal size
    if (type == QmonQPE_Type) {
       *(String*)address = str;
    } else {
+      if (*(lList**)address != NULL) {
+         lFreeList((lList**)address);
+      }
       *(lList**)address = ret_list;
    }   
 }

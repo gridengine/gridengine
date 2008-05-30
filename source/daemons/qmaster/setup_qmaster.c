@@ -880,7 +880,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
       spooling_context = spool_get_default_context();
    }
 
-   if (sge_read_configuration(ctx, spooling_context, answer_list) != 0) {
+   if (sge_read_configuration(ctx, spooling_context, object_base[SGE_TYPE_CONFIG].list, answer_list) != 0) {
       DRETURN(-1);
    }
    

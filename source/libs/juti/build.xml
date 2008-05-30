@@ -136,12 +136,12 @@
         </fail>
     </target>
     
-    <target name="-post-jar">
+    <target name="-post-jar" if="isJavaBuildHost">
         <antcall target="juti.jar"/>
         <antcall target="test.jar"/>
     </target>
 
-    <target name="juti.jar" depends="compile">
+    <target name="juti.jar" depends="compile" if="isJavaBuildHost">
         <jar file="${dist.dir}/${dist.jar}">
             
             <fileset dir="${build.classes.dir}">
@@ -156,7 +156,7 @@
         </jar>
     </target>
 
-    <target name="test.jar" depends="compile-test">
+    <target name="test.jar" depends="compile-test" if="isJavaBuildHost">
         <jar file="${dist.dir}/juti-test.jar">
             
             <fileset dir="${build.test.classes.dir}">

@@ -108,6 +108,8 @@ static lList *Master_RQS_List = NULL;
 static lList *Master_AR_List = NULL;
 static lList *Master_SchedulerConfig_List = NULL;
 
+static lList *Master_Config_List = NULL;
+
 #ifndef __SGE_NO_USERMAPPING__
 static lList *Master_Cuser_List = NULL;
 #endif
@@ -119,7 +121,7 @@ static object_description object_base[SGE_TYPE_ALL] = {
    { &Master_Adminhost_List,       NULL,                   "ADMINHOST",         AH_Type,   AH_name           },
    { &Master_Calendar_List,        NULL,                   "CALENDAR",          CAL_Type,  CAL_name          },
    { &Master_Ckpt_List,            NULL,                   "CKPT",              CK_Type,   CK_name           },
-   { NULL,                         NULL,                   "CONFIG",            CONF_Type, CONF_name         },
+   { &Master_Config_List,          NULL,                   "CONFIG",            CONF_Type, CONF_name         },
    { NULL,                         NULL,                   "GLOBAL_CONFIG",     NULL,      NoName            },
    { &Master_Exechost_List,        NULL,                   "EXECHOST",          EH_Type,   EH_name           },
    { NULL,                         NULL,                   "JATASK",            JAT_Type,  JAT_task_number   },

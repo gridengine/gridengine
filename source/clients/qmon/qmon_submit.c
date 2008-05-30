@@ -150,6 +150,7 @@ typedef struct _tSMEntry {
    int      checkpoint_attr;
    int      checkpoint_interval;
    int      verify_mode;
+   int      ar_id;
 } tSMEntry;
 
    
@@ -283,6 +284,11 @@ XtResource sm_resources[] = {
       XtOffsetOf(tSMEntry, pe),
       XtRImmediate, NULL },
 
+   { "ar_id", "ar_id", XtRInt,
+      sizeof(int),
+      XtOffsetOf(tSMEntry, ar_id),
+      XtRImmediate, NULL },
+
    { "mail_options", "mail_options", XtRInt,
       sizeof(int), XtOffsetOf(tSMEntry, mail_options),
       XtRImmediate, NULL }, 
@@ -404,6 +410,7 @@ static void qmonSubmitClearCtxEnv(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitAskForPE(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitAskForCkpt(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitAskForProject(Widget w, XtPointer cld, XtPointer cad);
+static void qmonSubmitAskForAR(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitCheckJobName(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitSaveDefault(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitLoadDefault(Widget w, XtPointer cld, XtPointer cad);
@@ -457,6 +464,8 @@ static Widget submit_ctx = 0;
 static Widget submit_ctxPB = 0;
 static Widget submit_pe = 0;
 static Widget submit_pePB = 0;
+static Widget submit_ar = 0;
+static Widget submit_arPB = 0;
 static Widget submit_resources = 0;
 static Widget submit_mail = 0;
 static Widget submit_mail_user = 0;
@@ -772,6 +781,7 @@ Widget parent
                           "submit_envPB", &submit_envPB,
                           "submit_ctxPB", &submit_ctxPB,
                           "submit_pePB", &submit_pePB,
+                          "submit_arPB", &submit_arPB,
                           "submit_submit", &submit_submit,
                           "submit_done", &submit_done,
                           "submit_edit", &submit_edit,
@@ -795,6 +805,7 @@ Widget parent
                           "submit_env", &submit_env,
                           "submit_ctx", &submit_ctx,
                           "submit_pe", &submit_pe,
+                          "submit_ar", &submit_ar,
                           "submit_execution_time", &submit_execution_time,
                           "submit_exec_timePB", &submit_exec_timePB,
                           "submit_deadline_row", &submit_deadline_row,
@@ -871,6 +882,8 @@ Widget parent
                      qmonSubmitAskForCkpt, NULL);
    XtAddCallback(submit_pePB, XmNactivateCallback, 
                      qmonSubmitAskForPE, NULL);
+   XtAddCallback(submit_arPB, XmNactivateCallback, 
+                     qmonSubmitAskForAR, NULL);
    XtAddCallback(submit_output_merge, XmNvalueChangedCallback, 
                      qmonSubmitOutputMerge, NULL);
    XtAddCallback(submit_stdoutputPB, XmNactivateCallback, 
@@ -1938,6 +1951,8 @@ char *prefix
    else
       data->account_string = NULL;
 
+   data->ar_id = lGetUlong(jep, JB_ar);
+
    if ((wd_path = (StringConst)lGetString(jep, JB_cwd)))
       data->wd_path = XtNewString(wd_path);
    else
@@ -2231,6 +2246,7 @@ int save
       }
       lSetUlong(jep, JB_type, jb_now);
    }   
+   lSetUlong(jep, JB_ar, data->ar_id);
 
    if (data->cwd) {
       const char *env_value = job_get_env_string(jep, VAR_PREFIX "O_HOME");
@@ -2804,6 +2820,63 @@ static void qmonSubmitAskForPE(Widget w, XtPointer cld, XtPointer cad)
    else
       qmonMessageShow(w, True, 
             "@{Please configure a Parallel Environment first !}");
+   
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonSubmitAskForAR(Widget w, XtPointer cld, XtPointer cad)
+{
+   Boolean status = False;
+   lList *arl = NULL;
+   lListElem *cep = NULL;
+   int n, i;
+   StringConst *strs = NULL;
+   static char buf[BUFSIZ];
+   lList *alp = NULL;
+   
+   DENTER(GUI_LAYER, "qmonSubmitAskForAR");
+   
+   qmonMirrorMultiAnswer(AR_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      lFreeList(&alp);
+      DEXIT;
+      return;
+   }
+   arl = qmonMirrorList(SGE_AR_LIST);
+   n = lGetNumberOfElem(arl);
+   if (n>0) {
+      char name[BUFSIZ];
+      strs = (StringConst*)XtMalloc(sizeof(String)*n); 
+      for (cep=lFirst(arl), i=0; i<n; cep=lNext(cep), i++) {
+        snprintf(name, BUFSIZ-1, sge_u32, lGetUlong(cep, AR_id)); 
+        /*
+        ** we get only references don't free, the strings
+        */
+        strs[i] = strdup(name);
+      }
+    
+      strcpy(buf, "");
+      /* FIX_CONST_GUI */
+      status = XmtAskForItem(w, NULL, "@{Select an Advance Reservation}",
+                        "@{Available Advance Reservations}", 
+                        (String*) strs, n, False, buf, BUFSIZ, NULL); 
+      
+      if (status) {
+         XmtInputFieldSetString(submit_ar, buf);
+      }
+      /*
+      ** free referenced strings, they are strdup'ed from AR_id
+      */
+      for (i=0; i<n; i++) {
+         XtFree((char*)strs[i]);
+      }   
+      XtFree((char*)strs);
+   }
+   else
+      qmonMessageShow(w, True, 
+            "@{Please submit an Advance Reservation first !}");
    
    DEXIT;
 }

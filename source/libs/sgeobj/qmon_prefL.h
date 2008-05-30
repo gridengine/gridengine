@@ -54,7 +54,8 @@ enum {
    PREF_queue_filter_pe,
    PREF_queue_filter_user,
    PREF_queue_filter_q,
-   PREF_queue_filter_state
+   PREF_queue_filter_state,
+   PREF_ar_filter_fields
 };
 
 LISTDEF(PREF_Type)
@@ -68,6 +69,7 @@ LISTDEF(PREF_Type)
    SGE_LIST(PREF_queue_filter_user, ST_Type, CULL_DEFAULT)
    SGE_LIST(PREF_queue_filter_q, ST_Type, CULL_DEFAULT)
    SGE_STRING(PREF_queue_filter_state, CULL_DEFAULT)
+   SGE_LIST(PREF_ar_filter_fields, ST_Type, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(PREFS)
@@ -81,6 +83,7 @@ NAMEDEF(PREFS)
    NAME("PREF_queue_filter_user")
    NAME("PREF_queue_filter_q")
    NAME("PREF_queue_filter_state")
+   NAME("PREF_ar_filter_fields")
 NAMEEND
 
 /* *INDENT-ON* */

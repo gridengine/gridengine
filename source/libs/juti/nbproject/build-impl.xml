@@ -66,9 +66,10 @@ is divided into following sections:
             </or>
         </condition>
         <condition property="have.sources">
-            <or>
+            <and>
                 <available file="${src.dir}"/>
-            </or>
+                <isset property="isJavaBuildHost"/>
+            </and>
         </condition>
         <condition property="netbeans.home+have.tests">
             <and>

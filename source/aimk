@@ -1654,7 +1654,7 @@ case SOLARISAMD64:
       else if ( $BUILDARCH == SOLARISAMD64 ) then
          set CFLAGS = "-D_LARGEFILE64_SOURCE=1 $CFLAGS"
          
-         set compversion = `cc -V |& head -1 | cut -f4 -d" "`
+         set compversion = `cc -V | & head -1 | sed 's/[a-zA-Z :]*\([0-9].[0-9]*\).*$/\1/'`
          set major = `echo $compversion | cut -f1 -d"."`
          set minor = `echo $compversion | cut -f2 -d"."`
          if ($major <= 5 && $minor <= 8) then
@@ -1712,6 +1712,12 @@ case SOLARISAMD64:
    set XLIBD    = "-L/usr/dt/lib -L/usr/openwin/lib"
 
    set XCFLAGS  = "$ERR_WARN_NONE -DNeedFunctionPrototypes -DNeedVarargsPrototypes $XMTDEF $XINCD"
+
+   # workaround for opensolaris
+   if ( `uname -r` == 5.11 && ( $BUILDARCH == SOLARISAMD64 )) then
+       set XLIBD = "-L/usr/openwin/lib/64"
+   endif    
+   
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = "-lXm -lXt -lXext -lXmu -lX11 -lw -lgen"
 

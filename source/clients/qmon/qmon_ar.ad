@@ -98,8 +98,12 @@ Qmon*ar_help.activateCallback:   XmtHelpDisplayContextHelp(self);
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! ar_folder
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!Qmon*ar_main_layout*ar_folder.xmtChildren: \
+!   XmtLayout ar_pending, ar_running;
+
 Qmon*ar_main_layout*ar_folder.xmtChildren: \
-   XmtLayout ar_pending, ar_running;
+   XmtLayout ar_running;
+
 
 Qmon*ar_running.xmtChildren: \
    CE_TypeMatrix  ar_running_ars;
@@ -116,15 +120,16 @@ Qmon*ar_pending.layout: \
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! ar_running
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*ar_running.tabLabel: @{@fBRunning ARs}
+!Qmon*ar_running.tabLabel: @{@fBRunning ARs}
+Qmon*ar_running.tabLabel: @{@fBAvailable ARs}
 
 Qmon*ar_running_ars.allowColumnResize:    True
 Qmon*ar_running_ars.fill:                 False
 Qmon*ar_running_ars.reverseSelect:        True
 Qmon*ar_running_ars.fontList:             $matrix_font
-!!Qmon*ar_running_ars.fixedColumns:     4
-Qmon*ar_running_ars.columns:          4
-Qmon*ar_running_ars.columnMaxLengths: 40,20,50,50
+!!Qmon*ar_running_ars.fixedColumns:     7
+Qmon*ar_running_ars.columns:          7
+Qmon*ar_running_ars.columnMaxLengths: 40,20,50,50,50,50,50
 Qmon*ar_running_ars.rows:             20
 Qmon*ar_running_ars.visibleRows:      17
 Qmon*ar_running_ars.evenRowBackground: $matrix_even_bg
@@ -137,7 +142,7 @@ Qmon*ar_running_ars.gridType:            GRID_NONE
 Qmon*ar_running_ars.boldLabels:             True
 Qmon*ar_running_ars.buttonLabels:           True
 Qmon*ar_running_ars.columnLabelColor:       $matrix_label
-Qmon*ar_running_ars.columnLabels:           @{ARId}, @{ARName}, @{Owner}, @{State}
+Qmon*ar_running_ars.columnLabels:           @{ARId}, @{ARName}, @{Owner}, @{State}, @{StartTime}, @{EndTime}, @{Duration}
 
 Qmon*ar_running_ars*horizontalScrollBarDisplayPolicy: DISPLAY_STATIC
 
@@ -163,9 +168,9 @@ Qmon*ar_pending_ars.allowColumnResize:    True
 Qmon*ar_pending_ars.fill:                 False
 Qmon*ar_pending_ars.reverseSelect:        True
 Qmon*ar_pending_ars.fontList:             $matrix_font
-!!Qmon*ar_pending_ars.fixedColumns:       4
-Qmon*ar_pending_ars.columns:              4
-Qmon*ar_pending_ars.columnMaxLengths: 40,20,50,50
+!!Qmon*ar_pending_ars.fixedColumns:       7
+Qmon*ar_pending_ars.columns:              7
+Qmon*ar_pending_ars.columnMaxLengths: 40,20,50,50,50,50,50
 Qmon*ar_pending_ars.rows:        20
 Qmon*ar_pending_ars.visibleRows: 17
 Qmon*ar_pending_ars.evenRowBackground: $matrix_even_bg
@@ -175,7 +180,7 @@ Qmon*ar_pending_ars.oddRowBackground:  $matrix_odd_bg
 !! Qmon*ar_pending_ars.cellShadowThickness: 1
 Qmon*ar_pending_ars.gridType:      GRID_NONE
 
-Qmon*ar_pending_ars.columnLabels:           @{ARId}, @{ARName}, @{Owner}, @{State}
+Qmon*ar_pending_ars.columnLabels:           @{ARId}, @{ARName}, @{Owner}, @{State}, @{StartTime}, @{EndTime}, @{Duration}
 Qmon*ar_pending_ars.boldLabels: True
 Qmon*ar_pending_ars.buttonLabels:        True
 Qmon*ar_pending_ars.columnLabelColor:    $matrix_label

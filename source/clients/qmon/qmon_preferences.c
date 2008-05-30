@@ -231,6 +231,13 @@ int parsing_type
       return -1;
    }
 
+   /* --------- PREF_ar_filter_fields */
+   if (!set_conf_list(alpp, clpp, fields, "ar_filter_fields", ep, 
+                      PREF_ar_filter_fields, ST_Type, ST_name)) {
+      DEXIT;
+      return -1;
+   }
+   
    DEXIT;
    return 0;
 }
@@ -382,6 +389,21 @@ lListElem *ep
 
    /* --------- PREF_queue_filter_state */
    fprintf(fp, "queue_filter_state     %s\n", lGetString(ep, PREF_queue_filter_state)? lGetString(ep, PREF_queue_filter_state) : "NONE");
+
+   /* --------- PREF_ar_filter_fields */
+   fprintf(fp, "ar_filter_fields      ");
+   sep = lFirst(lGetList(ep, PREF_ar_filter_fields));
+   if (sep) {
+      do {
+         fprintf(fp, "%s", lGetString(sep, ST_name));
+         sep = lNext(sep);
+         if (sep) 
+            fprintf(fp, " ");
+      } while (sep);
+      fprintf(fp, "\n");
+   }
+   else
+      fprintf(fp, "NONE\n");
 
    if (fp != stdout) {
       FCLOSE(fp);

@@ -192,7 +192,7 @@ Qmon*arsub_layout*arsub_name.navigationType: TAB_GROUP
 Qmon*arsub_handle_hard_error.alignment:          ALIGNMENT_BEGINNING
 Qmon*arsub_handle_hard_error.labelString:        @{Handle Hard Error}
 Qmon*arsub_now.alignment:                        ALIGNMENT_BEGINNING
-Qmon*arsub_now.labelString:                      @{Start AR Immediately}
+Qmon*arsub_now.labelString:                      @{Consider only INTERACTIVE Queues}
 
 Qmon*arsub_verify.packing: PACK_TIGHT
 Qmon*arsub_verify.chooserType: ChooserOption

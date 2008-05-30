@@ -1244,7 +1244,7 @@ int main(int argc, char *argv[])
    char  domain[128] = "";
    char  username[128] = "";
    bool  do_delete = false;
-   uid_t starter_uid=-1;
+   uid_t starter_uid=(uid_t)-1;
 
    char buffer[1024];
    dstring bw;

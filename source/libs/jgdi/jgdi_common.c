@@ -3186,7 +3186,7 @@ static jgdi_result_t get_descriptor_for_property(JNIEnv *env, jobject property_d
       DRETURN(ret);
    }
    if (cull_type_name_obj == NULL) {
-      answer_list_add(alpp, "get_descriptor_for_property: cull_type_name_obj is NULL. ", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      answer_list_add(alpp, "get_descriptor_for_property: cull_type_name_obj is NULL.", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DRETURN(JGDI_ILLEGAL_STATE);
    }
    
@@ -4045,7 +4045,7 @@ void jgdi_delete(JNIEnv *env, jobject jgdi, jobject jobj, const char* classname,
       lSetUlong(iep, ID_force, force);
       what = lWhat("%T(ALL)", ID_Type);
    } else if (target_list == SGE_SHARETREE_LIST) {
-      // special handling: lp remains NULL
+      /* special handling: lp remains NULL */
    } else {
       lp = lCreateList("", descr);
       lAppendElem(lp, ep);

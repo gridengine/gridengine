@@ -1,3 +1,9 @@
+AA-2008-05-30-0: Bugfix:    - upgrade to openssl-0.9.8g
+                            - qmon AR fixes
+                            - make libjgdi.so compile on AIX and Irix
+                 Bugster:   6706406
+                 Review:    CR
+
 JG-2008-05-30-0: Bugfix:    32-bit Linux libraries are having problems with file
                             access in 64-bit NFS environments
                  Bugster:   6707055

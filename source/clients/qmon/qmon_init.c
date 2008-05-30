@@ -90,6 +90,7 @@ static String icon_names[] = {
    "mailbox_ins",
    "env",
    "penv",
+   "ar",
    "stderror",
    "stderror_ins",
    "stdoutput_ins",

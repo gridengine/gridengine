@@ -575,7 +575,7 @@ or @fBDisable/Enable@fR the queue.
 Qmon*qmon_submit.submit_layout*xmtHelpTitle: @fBSubmit Job Help
 Qmon*qmon_submit.submit_layout*xmtHelp: \
 The @fBJob Submission@fR dialogue allows to submit jobs into the Grid Engine system.\n\
-For general information on how to submit a Grid Engine job please refer to the examples given in\n\
+For general information on how to submit a Grid Engine job, please refer to the examples given in\n\
 the @fBGrid Engine User Guide@fR and the qsub(1) man page.\n\
 \n\
 To submit a job you first have to select the directive @fBPrefix@fR which is used to interpret\n\
@@ -593,10 +593,10 @@ the lowest priority is stored under @fB$Grid Engine_ROOT/$SGE_CELL/common/sge_re
 second level is stored under @fB$HOME/.sge_request@fR and the third level with the highest\n\
 priority of the default files is stored in the current working directory of qmon under\n\
 @fB./.sge_request@fR.\n\
-If there are any script file embedded Grid Engine commandline directives they override the settings\n\
+If there are any script file embedded Grid Engine command line directives, they override the settings\n\
 of the default files.\n\
 \n\
-After the script has been selected one can adjust the requirements of the job to be submitted.\n\
+After the script has been selected, one can adjust the requirements of the job to be submitted.\n\
 @fBJob Tasks@fR allows the submission of job arrays. They are specified as min[-max[:step]][,...]\n\
 e.g. 1-10:2,20,24-27.\n\
 @fBJob Name@fR contains the name of the script file and can be overwritten.\n\
@@ -604,7 +604,7 @@ e.g. 1-10:2,20,24-27.\n\
 blanks as on the command line.\n\
 With the @fBPriority@fR spinbox the job gets an initial priority value. Users without manager\n\
 or operator privileges may only lower their initial priority value.\n\
-With the @fBJob Share@fR spinbox the job's can be weighted compared to other\n\
+With the @fBJob Share@fR spinbox the job can be weighted compared to other\n\
 jobs. The job share has an influence in the Share Tree Policy and  the\n\
 Functional  Policy.\n\
 The @fBStart At@fR field sets the time when the job is considered eligible for execution.\n\
@@ -618,14 +618,14 @@ the input field or via the helper dialogue by filling in the corresponding matri
 \n\
 The @fBMerge Output@fR flag enables/disables the combination of the job's stderr into its stdout.\n\
 If @fBstdout, stderr@fR fields are empty, the output of the job is written to the\n\
-files <job_name>.o<job_id>[.<array task_id>] or <job_name>.e<job_id>[.<array task_id>] in the user's\n\
-home directory.\n\
-Where <job_name> is the name of the job entered in @fBJob Name@fR and <job_id> is the Grid Engine\n\
-job id under which the job is running. <array task_id> is the task id of the task of the job array\n\
+files <job_name>.o<job_id>[.<array_task_id>] or <job_name>.e<job_id>[.<array_task_id>] in the user's\n\
+home directory,\n\
+where <job_name> is the name of the job entered in @fBJob Name@fR and <job_id> is the Grid Engine\n\
+job id under which the job is running. <array_task_id> is the task id of the task of the job array\n\
 and is therefore only present for job arrays.\n\
 The standard output redirection can be used to write the output to another place. This is done\n\
 in the input fields @fBstdout and stderr@fR and by the corresponding helper dialogues.\n\
-If the specified path is a directory the output streams are put with the default names under\n\
+If the specified path is a directory, the output streams are put with the default names under\n\
 this directory.\n\There are also pseudo environment variables that are expanded at runtime that can\n\
 be used to build pathnames.\n\
 $HOME       home directory on execution machine\n\
@@ -1304,23 +1304,23 @@ To register the changes with @fBsge_qmaster@fR press @fBOk@fR.\n\
 Qmon*ar_main_layout*xmtHelpTitle: @fBAdvance Reservation
 Qmon*ar_main_layout*xmtHelp: \
 The @fBAdvance Reservation@fR dialogue allows the Grid Engine manager to submit and manipulate Advance Reservation objects.\n\
-See qrsub(1) and qrstat(1) man page for the commandline counterpart.\n\
+See qrsub(1) and qrstat(1) man page for the command line counterpart.\n\
 \n\
-The following operations are possible:\n\
+The following operations are possible\n\
 - open the @fBAR Submit Dialogue@fR with the @fBSubmit@fR button\n\
 - @fBDelete@fR AR objects\n\
 - adjust the display behavior of ARs with @fBCustomize@fR.\n\
 \n\
-Two list environments are displayed in a folder page.\n\
-One for the still @fBPending ARs@fR waiting to be dispatched.\n\
-One for the already @fBRunning ARs@fR showing ARs that are active.\n\
+A list of all Adance Reservations is shown.\n\
 \n\
 Without any customization the columns @fBARId, ARName, Owner@fR and\n\
 @fBState@fR are displayed. In the @fBAR Customize@fR dialogue additional information\n\
 about the AR can be selected for display.\n\
+The default sort order is by AR_id. If a different label is pressed the sorting order changes. Pressing the same label again\n\
+reverts the sort order from ascending to descending.\n\
 \n\
 For most of the tasks ARs have to be selected first. To select an AR the following\n\
-key + mouse combinations are used:\n\
+key + mouse combinations are used\n\
 @f[BI]Mouse1@fR\n\
 Begin of selection, one row is selected, already selected areas are unselected.\n\
 @f[BI]Shift + Mouse1@fR\n\
@@ -1340,7 +1340,7 @@ The @fBCustomize@fR button allows the setting of additional AR attributes to dis
 The @fBAR Customize@fR folder pops up.\n\
 The @fBSelect Fields@fR dialogue is used to display additional AR attributes.\n\
 The customization settings can be saved to $HOME/.qmon_preferences in order to keep them\n\
-across qmon sessions.\n\
+across qmon sessions by clicking the @fBSave@fR button in the @fBAR Customize@fR dialogue instead of @fBOk@fR.\n\
 \n\
 To keep the information being displayed up-to-date, qmon uses a polling scheme to retrieve\n\
 the status of the ARs from sge_qmaster.\n\
@@ -1384,6 +1384,7 @@ AR goes into error state when a reserved host goes into unknown state, a queue e
 or when a queue is disabled or suspended.\n\
 If hard error is checked, as long as the AR is in error state no jobs using the AR will be scheduled.\n\
 Otherwise the AR stays usable with the remaining resources.\n\
+The @fBConsider only INTERACTIVE Queues@fR tries to start any job on interactive queues only.\n\
 The @fBVerify Mode@fR defaults to 'Error' and can be changed to 'Just verify'.\n\
 In 'Just verify' the AR is only verified and no AR is submitted.\n\
 The @fBMail@fR section contains the events when the user is notified by electronic mail and\n\

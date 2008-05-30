@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2004/07/07 11:14:06 adoerr Exp $
+# $Id: Makefile,v 1.2 2008/05/30 10:09:18 joga Exp $
 #	Makefile.in	4.3	6/11/83
 #
 # C Shell with process control; VM/UNIX VAX Makefile
@@ -29,7 +29,7 @@ LFLAGS=$(SGE_LOPTS)
 #LFLAGS= -Zn10000		# hpux lint
 
 
-CFLAGS = $(SGE_COPTS) -g -O2 -DLINUX86 -DPROG_NAME='"qtcsh"'		# This is set by autoconf.
+CFLAGS = $(SGE_COPTS) -g -O2 -DLINUX86 -D_FILE_OFFSET_BITS=64 -DPROG_NAME='"qtcsh"'		# This is set by autoconf.
 #CFLAGS= -g			# debug
 #CFLAGS= -O			# production
 #CFLAGS= 			# Broken optimizers....

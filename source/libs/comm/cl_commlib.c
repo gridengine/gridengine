@@ -1034,7 +1034,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    char* local_hostname = NULL;
    struct in_addr local_addr;
    cl_handle_list_elem_t* elem = NULL;
-#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+#if defined(IRIX)
    struct rlimit64 application_rlimits;
 #else
    struct rlimit application_rlimits;
@@ -1219,7 +1219,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    
    new_handle->auto_close_mode = CL_CM_AC_DISABLED;
    
-#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+#if defined(IRIX)
    getrlimit64(RLIMIT_NOFILE, &application_rlimits);
 #else
    getrlimit(RLIMIT_NOFILE, &application_rlimits);

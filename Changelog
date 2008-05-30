@@ -1,3 +1,8 @@
+AH-2008-05-30-0: Bugfix:    sge_schedd can core dump when resoruce quotas are used
+                 Bugster:   6707847
+                 Issue:     2546
+                 Review:    JG
+
 RN-2008-05-29-3: Bugfix:    use of -l tmpdir=abc can crash schedd
                  Bugster:   6650497
                  Issue:     2597

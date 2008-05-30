@@ -912,9 +912,12 @@ void parallel_check_and_debit_rqs_slots(sge_assignment_t *a, const char *host, c
          lListElem *rql;
          rqs_get_rue_string(rue_name, rule, user, project, host, queue, pe);
          sge_dstring_sprintf(limit_name, "%s=%s", sge_dstring_get_string(rule_name), sge_dstring_get_string(rue_name));
-         rql = lGetElemStr(a->limit_list, RQL_name, sge_dstring_get_string(limit_name));
-         *slots = MIN(*slots, lGetInt(rql, RQL_slots));
-         *slots_qend = MIN(*slots_qend, lGetInt(rql, RQL_slots_qend));
+         if ((rql = lGetElemStr(a->limit_list, RQL_name, sge_dstring_get_string(limit_name)))) {
+            *slots = MIN(*slots, lGetInt(rql, RQL_slots));
+            *slots_qend = MIN(*slots_qend, lGetInt(rql, RQL_slots_qend));
+         } else {
+            *slots = *slots_qend = 0;
+         }
       }
 
       if (*slots == 0 && *slots_qend == 0) {

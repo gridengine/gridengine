@@ -1233,6 +1233,9 @@ case LINUXSPARC64:
    if ("$ADOC" == 1) then
       set CFLAGS = "$CFLAGS -Wno-error"
    endif
+   if ( $TARGET_BITS == TARGET_32BIT ) then
+      set CFLAGS = "$CFLAGS -D_FILE_OFFSET_BITS=64"
+   endif
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
 
    set SHAREDLD = $CC

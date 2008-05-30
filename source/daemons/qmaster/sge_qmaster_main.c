@@ -160,7 +160,7 @@ static int set_file_descriptor_limit(void) {
    int modified_hard_limit = 0;
    int return_value = 0;
 
-#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+#if defined(IRIX)
    struct rlimit64 qmaster_rlimits;
 #else
    struct rlimit qmaster_rlimits;
@@ -170,7 +170,7 @@ static int set_file_descriptor_limit(void) {
    /* 
     * check file descriptor limits for qmaster 
     */
-#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+#if defined(IRIX)
    getrlimit64(RLIMIT_NOFILE, &qmaster_rlimits);
 #else
    getrlimit(RLIMIT_NOFILE, &qmaster_rlimits);
@@ -198,14 +198,14 @@ static int set_file_descriptor_limit(void) {
    }
 
    if (modified_hard_limit == 1) {
-#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+#if defined(IRIX)
       setrlimit64(RLIMIT_NOFILE, &qmaster_rlimits);
 #else
       setrlimit(RLIMIT_NOFILE, &qmaster_rlimits);
 #endif
    }
 
-#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+#if defined(IRIX)
    getrlimit64(RLIMIT_NOFILE, &qmaster_rlimits);
 #else
    getrlimit(RLIMIT_NOFILE, &qmaster_rlimits);
@@ -220,7 +220,7 @@ static int set_file_descriptor_limit(void) {
       } else {
          qmaster_rlimits.rlim_cur = SGE_MAX_QMASTER_SOFT_FD_LIMIT;
       }
-#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+#if defined(IRIX)
       setrlimit64(RLIMIT_NOFILE, &qmaster_rlimits);
 #else
       setrlimit(RLIMIT_NOFILE, &qmaster_rlimits);
@@ -229,7 +229,7 @@ static int set_file_descriptor_limit(void) {
       /* if limits are set high enough through user we use the
          hard limit setting for the soft limit */
       qmaster_rlimits.rlim_cur = qmaster_rlimits.rlim_max;
-#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+#if defined(IRIX)
       setrlimit64(RLIMIT_NOFILE, &qmaster_rlimits);
 #else
       setrlimit(RLIMIT_NOFILE, &qmaster_rlimits);

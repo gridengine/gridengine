@@ -974,6 +974,7 @@
 #define MSG_GDI_USAGE_pty_OPT                            "[-pty y[es]|n[o]]"
 #define MSG_GDI_UTEXT_pty_OPT                            _MESSAGE(23511, _("start job in a pty"))
 
+#define MSG_GDI_UTEXT_now_qrsub_OPT_YN                   _MESSAGE(23512, _("consider only interactive queues"))
 
 /* =================================================
  * global error messages 

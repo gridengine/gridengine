@@ -1,3 +1,7 @@
+AA-2008-06-02-0: Bugfix:    - qrsub usage for -now y/n
+                 Bugster:   6707944
+                 Review:    RD
+
 CR-2008-06-02-0: Cleanup:   commlib:
                              - cl_com_cached_gethostbyaddr():
                                more error tolerant compare of reverse ip resolving

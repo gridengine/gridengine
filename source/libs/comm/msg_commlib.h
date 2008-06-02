@@ -45,7 +45,7 @@
 #define MSG_CL_TCP_FW_SETSOCKOPT_ERROR                                        _MESSAGE(85005, _("call to setsockopt() failed setting SO_REUSEADDR"))
 #define MSG_CL_TCP_FW_FCNTL_ERROR                                             _MESSAGE(85006, _("call to fcntl() failed setting O_NONBLOCK"))
 #define MSG_CL_TCP_FW_CANT_RESOLVE_HOST_S                                     _MESSAGE(85007, _("can't resolve hostname "SFQ""))
-#define MSG_CL_TCP_FW_ADDR_NAME_RESOLVE_HOST_ERROR_SSSS                       _MESSAGE(85007, _("reverse mapping of IP "SFQ" returns "SFQ" while name resolving returns "SFQ" for host "SFQ""))
+#define MSG_CL_TCP_FW_ADDR_NAME_RESOLVE_HOST_ERROR_SSSS                       _MESSAGE(85008, _("reverse mapping of IP "SFQ" returns "SFQ" while name resolving returns "SFQ" for host "SFQ""))
 #define MSG_CL_TCP_FW_CONNECT_TIMEOUT                                         _MESSAGE(85013, _("connect timeout error"))
 #define MSG_CL_TCP_FW_EMPTY_DESTINATION_HOST                                  _MESSAGE(85016, _("got empty destination host name from connected client"))
 #define MSG_CL_TCP_FW_CANT_RESOLVE_DESTINATION_HOST_S                         _MESSAGE(85018, _("can't resolve destination hostname "SFQ""))

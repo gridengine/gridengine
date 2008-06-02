@@ -457,7 +457,7 @@ CheckIfShadowMasterHost $HOST
 
 if [ "$startup" = true ]; then
 
-   # define variable SERVICE_TAGS
+   # if service tags are enabled
    st_enabled=`sh $SGE_ROOT/util/sgeST/sge_st "enabled"`
    if [ "$st_enabled" = "true" -a "$qmaster" = "true" ]; then
       sh $SGE_ROOT/util/sgeST/sge_st "register"  

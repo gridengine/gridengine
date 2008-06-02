@@ -1,3 +1,8 @@
+PJ-2008-06-02-0: Bugfix:    service tags cannot be disabled from auto-install
+                 Bugster:   6709229
+                 Issue:     2600
+                 Review:    LP 
+
 RD-2008-06-02-0: Cleanup:   minor AR related changes
                  Review:    AA 
 

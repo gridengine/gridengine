@@ -119,7 +119,7 @@ CSP_ORGA="undef"
 CSP_ORGA_UNIT="undef"
 CSP_MAIL_ADDRESS="undef"
 CERT_COPY_HOST_LIST="undef"
-SERVICE_TAGS="undef"
+SERVICE_TAGS="enable"
 SGE_ENABLE_SMF="true"
 
 #Save changed host names during resolving

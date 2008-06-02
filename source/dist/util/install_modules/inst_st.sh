@@ -44,7 +44,6 @@
 ServiceTagsSupport()
 {
    SGE_ST_CMD=util/sgeST/sge_st
-   SERVICE_TAGS="disabled"  
 
    if [ "$QMASTER" = "install" ]; then
 
@@ -56,10 +55,17 @@ ServiceTagsSupport()
                    "and allows the asset information to be monitored over a local network.\n"
 
          $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nAre you going to enable Service Tags support? (y/n) [y] >> "
+         ret=$?
+         if [ "$AUTO" != "true"]; then
+            if [ $ret = 0 ]; then
+               SERVICE_TAGS="enable"
+            else
+               SERVICE_TAGS="disable"
+            fi
+         fi
 
-         if [ $? = 0 ]; then
-            SERVICE_TAGS="enabled"
-            $SGE_ST_CMD "register" > /dev/null
+         if [ "$SERVICE_TAGS" = "enable" ]; then
+            $SGE_ST_CMD "enable" > /dev/null
          else
             $SGE_ST_CMD "disable" > /dev/null
          fi

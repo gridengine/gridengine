@@ -56,6 +56,29 @@ void usage(void)
   exit(1);
 }
 
+static int error_reported = 0;
+
+static void gethostbyaddr_communication_error(const cl_application_error_list_elem_t* commlib_error)
+{
+   if (commlib_error != NULL) {
+      switch (commlib_error->cl_err_type) {
+         case CL_LOG_ERROR: {
+            if (commlib_error->cl_info != NULL) {
+               fprintf(stderr, "%s: %s\n", cl_get_error_text(commlib_error->cl_error), commlib_error->cl_info);
+            } else {
+               fprintf(stderr, "%s\n", cl_get_error_text(commlib_error->cl_error));
+            }
+            error_reported = 1;
+            break;
+         }
+         default: {
+            break;
+         }
+      }
+   }
+}
+
+
 int main(int argc, char *argv[])
 {
   struct hostent *he = NULL;
@@ -118,6 +141,12 @@ int main(int argc, char *argv[])
   if (sge_aliasing ) {
      cl_com_set_alias_file(sge_get_alias_path());
   }
+
+  retval = cl_com_set_error_func(gethostbyaddr_communication_error);
+  if (retval != CL_RETVAL_OK) {
+     fprintf(stderr,"%s\n",cl_get_error_text(retval));
+     exit(1);
+  }
   
 
 #if defined(CRAY)
@@ -128,20 +157,25 @@ int main(int argc, char *argv[])
 
   retval = cl_com_cached_gethostbyaddr(&addr, &resolved_name, &he, &system_error);
   if (retval != CL_RETVAL_OK) {
-     char* err_text = cl_com_get_h_error_string(system_error);
-     if (err_text == NULL) {
-        err_text = strdup(strerror(system_error));
-        if (err_text == NULL) {
-           err_text = strdup("unexpected error");
-        }
-     }
-     if ( ip_string == NULL) {
-         ip_string = "NULL";
-     }
-     fprintf(stderr,"error resolving ip "SFQ": %s (%s)\n",ip_string,cl_get_error_text(retval),err_text ); 
-     free(err_text); 
-     err_text = NULL;
      cl_com_cleanup_commlib();
+     if (error_reported == 0) {
+        char* err_text = cl_com_get_h_error_string(system_error);
+
+        if (err_text == NULL) {
+           err_text = strdup(strerror(system_error));
+           if (err_text == NULL) {
+              err_text = strdup("unexpected error");
+           }
+        }
+        if ( ip_string == NULL) {
+            ip_string = "NULL";
+        }
+
+        fprintf(stderr,"error resolving ip "SFQ": %s (%s)\n",ip_string, cl_get_error_text(retval), err_text); 
+
+        free(err_text); 
+        err_text = NULL;
+     }
      exit(1);
   }
 

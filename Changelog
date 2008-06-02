@@ -1,3 +1,11 @@
+CR-2008-06-02-0: Cleanup:   commlib:
+                             - cl_com_cached_gethostbyaddr():
+                               more error tolerant compare of reverse ip resolving
+                             - report ip resolve errors to application
+                            utilbin/gethostbyaddr:
+                             - added application error callback for commlib
+                 Review:    RD
+
 AA-2008-05-30-0: Bugfix:    - upgrade to openssl-0.9.8g
                             - qmon AR fixes
                             - make libjgdi.so compile on AIX and Irix

@@ -2832,6 +2832,43 @@ int cl_com_endpoint_list_refresh(cl_raw_list_t* list_p) {
    return CL_RETVAL_OK;
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_get_ip_string()"
+static int cl_com_get_ip_string(struct in_addr *addr, char **ipstr) {
+   char tmp_buffer[256];
+   unsigned long ip,A,B,C,D;
+   /* 
+    * This function is NOT using inet_ntoa() because on some platforms this
+    * function is NOT threadsave.
+    *
+    * WARNING: Currently only used for error case. Might be not performant for general
+    * use!
+    */
+   if (addr == NULL || ipstr == NULL) { 
+      CL_LOG(CL_LOG_ERROR, "one of the parameters is NULL");
+      return CL_RETVAL_PARAMS;
+   }
+   if (*ipstr != NULL) {
+      CL_LOG(CL_LOG_ERROR, "*ipstr must be NULL");
+      return CL_RETVAL_PARAMS;
+   }
+
+   ip = (unsigned long) ntohl(addr->s_addr);
+   
+   A =  ip / (256*256*256);
+   B = (ip - (A * 256*256*256)) / (256 * 256);
+   C = (ip - (A * 256*256*256) - (B*256*256)) / 256;
+   D =  ip - (A * 256*256*256) - (B*256*256) - (C*256);
+
+   snprintf(tmp_buffer, 256, "%ld.%ld.%ld.%ld", A, B, C, D);
+   *ipstr = strdup(tmp_buffer);
+   if (*ipstr == NULL) {
+      return CL_RETVAL_MALLOC;
+   }
+   return CL_RETVAL_OK;
+}
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
@@ -2977,33 +3014,49 @@ int cl_com_cached_gethostbyaddr(struct in_addr *addr, char **unique_hostname, st
          ret_val = cl_host_alias_list_get_alias_name(ldata->host_alias_list,hostent->he->h_name , &alias_name);
          if (ret_val == CL_RETVAL_OK) {
             CL_LOG_STR(CL_LOG_INFO,"resolved addr name aliased to", alias_name);
-            if (strcasecmp(hostname, alias_name) != 0 ) {
+            if (cl_com_compare_hosts(hostname, alias_name) != CL_RETVAL_OK) {
                resolve_name_ok = 0;
             }
             free(alias_name);
             alias_name = NULL;
          } else {
-            if (strcasecmp(hostname , hostent->he->h_name) != 0 
-              && strcasecmp(hostent->he->h_name, "localhost") != 0 ) {
+            if (cl_com_compare_hosts(hostname, hostent->he->h_name) != CL_RETVAL_OK &&
+                strcasecmp(hostent->he->h_name, "localhost") != 0 ) {
                resolve_name_ok = 0;
             }
          }
 
          /* if names are not equal -> report error */ 
-         if (resolve_name_ok != 1) {     /* hostname compare OK */
+         if (resolve_name_ok != 1) {     /* hostname compare OK ? */
 
-            CL_LOG(CL_LOG_ERROR,"host resolving by address returns not the same host name as resolving by name");
+            /* create application error message */
+            char error_tmp_string[1024];
+            char* help = NULL;
+
+            cl_com_get_ip_string(addr, &help);
+            snprintf(error_tmp_string, 1024, MSG_CL_TCP_FW_ADDR_NAME_RESOLVE_HOST_ERROR_SSSS,
+                     help ? help : "(NULL)",
+                     hostent->he->h_name,
+                     hostname,
+                     hostent->he->h_name);
+
+            if (help != NULL) {
+               free(help);
+               help = NULL;
+            }
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_GETHOSTADDR_ERROR, error_tmp_string);
             hostspec->resolve_error = CL_RETVAL_GETHOSTADDR_ERROR;
+
             /* add dummy host entry */
             cl_raw_list_lock(hostlist);
-             retval = cl_host_list_append_host(hostlist, hostspec, 0);
-             if (retval != CL_RETVAL_OK) {
+            retval = cl_host_list_append_host(hostlist, hostspec, 0);
+            if (retval != CL_RETVAL_OK) {
                 cl_raw_list_unlock(hostlist);
                 cl_com_free_hostspec(&hostspec);
                 return retval;
-             }
-             cl_raw_list_unlock(hostlist);
-             return CL_RETVAL_GETHOSTADDR_ERROR;
+            }
+            cl_raw_list_unlock(hostlist);
+            return CL_RETVAL_GETHOSTADDR_ERROR;
          } 
          /* if names are equal -> perfect ! , return resolved hostname */
          *unique_hostname = hostname;

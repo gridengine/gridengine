@@ -357,7 +357,7 @@ int ar_spool(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *ep, gdi_object_t
 
    DENTER(TOP_LAYER, "ar_spool");
 
-   sge_dstring_sprintf(&buffer, sge_u32, lGetUlong(ep, AR_id));
+   sge_dstring_sprintf(&buffer, sge_U32CFormat, lGetUlong(ep, AR_id));
    dbret = spool_write_object(&answer_list, spool_get_default_context(), ep, 
                               sge_dstring_get_string(&buffer), SGE_TYPE_AR,
                               job_spooling);
@@ -414,10 +414,6 @@ int ar_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep,
 
    DENTER(TOP_LAYER, "ar_success");
 
-   ev = te_new_event((time_t)lGetUlong(ep, AR_start_time), TYPE_AR_EVENT, ONE_TIME_EVENT, lGetUlong(ep, AR_id), AR_RUNNING, NULL);
-   te_add_event(ev);
-   te_free_event(&ev);
-
    /* with old_ep it is possible to identify if it is an add or modify request */
    timestamp = sge_get_gmt();
    if (old_ep == NULL) {
@@ -447,6 +443,13 @@ int ar_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep,
                  sge_dstring_get_string(&buffer), NULL, NULL, ep);
    lListElem_clear_changed_info(ep);
    sge_dstring_free(&buffer);
+
+   /*
+   ** add the timer to trigger the state change
+    */
+   ev = te_new_event((time_t)lGetUlong(ep, AR_start_time), TYPE_AR_EVENT, ONE_TIME_EVENT, lGetUlong(ep, AR_id), AR_RUNNING, NULL);
+   te_add_event(ev);
+   te_free_event(&ev);
 
    DRETURN(0);
 }
@@ -920,7 +923,6 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
    dstring buffer = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "sge_ar_event_handler");
-
    
    /*
     To guarantee all jobs are removed from the cluster when AR end time is
@@ -966,8 +968,6 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
       sge_event_spool(ctx, NULL, 0, sgeE_AR_DEL, 
                       ar_id, 0, sge_dstring_get_string(&buffer), NULL, NULL,
                       NULL, NULL, NULL, true, true);
-
-
 
    } else {
       /* AR_RUNNING */

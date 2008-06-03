@@ -1,3 +1,9 @@
+ZG-2008-05-27-0: Bugfix:    sgeexecd startup script shouldn't suppress error
+                            messages from sge_execd binary
+                 Bugster:   6609754
+                 Issue:     2156
+                 Review:    JG
+
 JG-2008-05-30-0: Bugfix:    32-bit Linux libraries are having problems with file
                             access in 64-bit NFS environments
                  Bugster:   6707055

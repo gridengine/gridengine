@@ -280,11 +280,30 @@ UQHOST=`$utilbin_dir/gethostname -name | cut -f1 -d.`
 if [ "$startup" = true ]; then
 
    # execution daemon is started on this host!
+   if [ -z "$SGE_EXECD_PORT" ]; then
+      SGE_EXECD_PORT=`$utilbin_dir/getservbyname -number sge_execd`
+   fi
 
-      echo "   starting sge_execd"
-      $bin_dir/sge_execd
-      [ $? -eq 0 -a -d /var/lock/subsys ] && touch /var/lock/subsys/sgeexecd
-      exit 0
+   echo "   starting sge_execd"
+   exec 1>/dev/null 2>&1
+   $bin_dir/sge_execd
+   [ $? -eq 0 -a -d /var/lock/subsys ] && touch /var/lock/subsys/sgeexecd
+      
+   #Don't exit until daemon is up
+   $bin_dir/qping -info "$HOST" "$SGE_EXECD_PORT" execd 1 > /dev/null 2>&1
+   ret=$?
+   loop=0
+   while [ $ret -ne 0 -a $loop -ne 61 ]; do
+      sleep 1
+      $bin_dir/qping -info "$HOST" "$SGE_EXECD_PORT" execd 1 > /dev/null 2>&1
+      ret=$?
+      loop=`expr $loop + 1`
+   done
+   if [ $loop -eq 61 ]; then
+      echo "Execd did not start in 61 seconds!"
+      exit 1
+   fi
+   exit 0
 else
    if [ $execd = true ]; then
       # Shutdown execution daemon

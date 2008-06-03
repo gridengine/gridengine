@@ -56,7 +56,7 @@ ServiceTagsSupport()
 
          $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nAre you going to enable Service Tags support? (y/n) [y] >> "
          ret=$?
-         if [ "$AUTO" != "true"]; then
+         if [ "$AUTO" != "true" ]; then
             if [ $ret = 0 ]; then
                SERVICE_TAGS="enable"
             else

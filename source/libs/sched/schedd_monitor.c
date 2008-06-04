@@ -122,7 +122,7 @@ int schedd_log(const char *logstr)
 
       fp = fopen(schedd_log_file, "a");
       if (!fp) {
-         DPRINTF(("could not open schedd_log_file %s\n", schedd_log_file));
+         DPRINTF(("could not open schedd_log_file "SFQ"\n", schedd_log_file));
          DEXIT;
          return -1;
       }

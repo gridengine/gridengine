@@ -531,6 +531,9 @@ sge_scheduler_main(void *arg)
       set_thread_name(pthread_self(), "Scheduler Thread");
       conf_update_thread_profiling("Scheduler Thread");
       DPRINTF((SFN" started\n", thread_config->thread_name));
+
+      /* initialize schedd_runnlog logging */
+      schedd_set_schedd_log_file(ctx);
    }
 
    /* set profiling parameters */

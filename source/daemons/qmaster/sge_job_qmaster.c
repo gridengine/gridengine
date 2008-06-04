@@ -4165,7 +4165,7 @@ static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, c
    lListElem *rn;
    char *dupped_session = NULL;
    int deleted_unenrolled_tasks;
-   u_long32 task_number;
+   u_long32 task_number = 0;
    u_long32 existing_tasks;
    lList *range_list = NULL;        /* RN_Type */
    u_long32 job_number = lGetUlong(job, JB_job_number);

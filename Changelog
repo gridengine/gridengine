@@ -1,6 +1,6 @@
 EB-2008-06-04-0: Bugfix:    schedd_runlog file is not written when qconf -tsm is used
                  Review:    JG
-                 Bugster:   
+                 Bugster:   6710417
                  Issue:     2602
 
 RD-2008-06-04-0: Bugfix:    added fix for deleting jobs with no enrolled an no

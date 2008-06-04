@@ -4277,6 +4277,22 @@ static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, c
       deleted_unenrolled_tasks = 0;
       *deleted_tasks = 0;
       existing_tasks = job_get_ja_tasks(job);
+
+      if (*alltasks == 1 && existing_tasks == 0) {
+         /*
+          * This job has no pending and no running tasks.
+          */
+         lListElem *tmp_task = job_get_ja_task_template_pending(job, task_number);
+
+         sge_commit_job(ctx, job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED,
+                        COMMIT_UNENROLLED_TASK | COMMIT_NEVER_RAN, monitor);
+
+         INFO((SGE_EVENT, MSG_JOB_DELETEX_SSU, ruser, SGE_OBJ_JOB, sge_u32c(job_number)));
+         answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+         njobs++;
+         continue;
+      }
+
       for (task_number = unenrolled_start; 
            task_number <= unenrolled_end; 
            task_number += *step) {

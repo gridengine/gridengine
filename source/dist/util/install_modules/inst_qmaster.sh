@@ -332,6 +332,10 @@ SetPermissions()
    $CLEAR
 }
 
+
+#SetSpoolingOptionsBerkeleyDB()
+# $1 - new default spool_dir
+#      TODO: $1 only for local bdb spooling for now
 SetSpoolingOptionsBerkeleyDB()
 {
    SPOOLING_METHOD=berkeleydb
@@ -408,7 +412,7 @@ SetSpoolingOptionsBerkeleyDB()
 
          while [ $is_spool = "false" ] && [ $done = "false" ]; do
             $CLEAR
-            SpoolingQueryChange
+            SpoolingQueryChange "$1"
             if [ -d $SPOOLING_DIR ]; then
                $INFOTEXT -n -ask "y" "n" -def "n" -auto $AUTO "The spooling directory already exists! Do you want to delete it? [n] >> "
                ret=$?               
@@ -767,13 +771,15 @@ InitSpoolingDatabase()
 
 #-------------------------------------------------------------------------
 # AddConfiguration
-#
+# optional args for GetConfigutration
+# $1 - default CFG_EXE_SPOOL
+# $2 - default CFG_MAIL_ADDR
 AddConfiguration()
 {
    useold=false
 
    if [ $useold = false ]; then
-      GetConfiguration
+      GetConfiguration "$@"
       #TruncCreateAndMakeWriteable $COMMONDIR/configuration
       #PrintConf >> $COMMONDIR/configuration
       #SetPerm $COMMONDIR/configuration
@@ -893,7 +899,9 @@ AddLocalConfiguration()
 
 #-------------------------------------------------------------------------
 # GetConfiguration: get some parameters for global configuration
-#
+# args are optional
+# $1 - default CFG_EXE_SPOOL
+# $2 - default CFG_MAIL_ADDR
 GetConfiguration()
 {
 
@@ -927,24 +935,34 @@ GetConfiguration()
             $INFOTEXT "The pathname of the spool directory of the execution hosts. You\n" \
                       "must have the right to create this directory and to write into it.\n"
       fi
+      
+      if [ -z "$1" ]; then
+         default_value=$SGE_ROOT_VAL/$SGE_CELL_VAL/spool
+      else
+         default_value="$1"
+      fi
 
-      $INFOTEXT -n "Default: [%s] >> " $SGE_ROOT_VAL/$SGE_CELL_VAL/spool
+      $INFOTEXT -n "Default: [%s] >> " $default_value
 
-      CFG_EXE_SPOOL=`Enter $SGE_ROOT_VAL/$SGE_CELL_VAL/spool`
+      CFG_EXE_SPOOL=`Enter $default_value`
 
       $CLEAR
+      if [ -z "$2" ]; then
+         default_value=none
+      else
+         default_value="$2"
+      fi
       $INFOTEXT -u "\nGrid Engine cluster configuration (continued)"
       $INFOTEXT -n "\n<administrator_mail>\n\n" \
                    "The email address of the administrator to whom problem reports are sent.\n\n" \
                    "It's is recommended to configure this parameter. You may use >none<\n" \
                    "if you do not wish to receive administrator mail.\n\n" \
                    "Please enter an email address in the form >user@foo.com<.\n\n" \
-                   "Default: [none] >> "
+                   "Default: [%s] >> " $default_value
 
-      CFG_MAIL_ADDR=`Enter none`
+      CFG_MAIL_ADDR=`Enter $default_value`
 
       $CLEAR
-
       $INFOTEXT "\nThe following parameters for the cluster configuration were configured:\n\n" \
                 "   execd_spool_dir        %s\n" \
                 "   administrator_mail     %s\n" $CFG_EXE_SPOOL $CFG_MAIL_ADDR
@@ -966,6 +984,10 @@ GetConfiguration()
 GetGidRange()
 {
    done=false
+   if [ -z "$GID_RANGE" ]; then
+        GID_RANGE=20000-20100
+   fi
+   
    while [ $done = false ]; do
       $CLEAR
       $INFOTEXT -u "\nGrid Engine group id range"
@@ -983,7 +1005,7 @@ GetGidRange()
                 "on a single host.\n\n" \
                 "You can change at any time the group id range in your cluster configuration.\n"
 
-      $INFOTEXT -n "Please enter a range >> "
+      $INFOTEXT -n "Please enter a range [%s] >> " $GID_RANGE
 
       CFG_GID_RANGE=`Enter $GID_RANGE`
 

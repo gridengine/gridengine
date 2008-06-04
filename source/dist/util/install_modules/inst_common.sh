@@ -482,7 +482,7 @@ ErrUsage()
              "   -rst       restore configuration from backup\n" \
              "   -copycerts copy local certificates to given hosts\n" \
              "   -v         print version\n" \
-             "   -upd       upgrade cluster from 6.1 or higher to 6.2\n" \
+             "   -upd       upgrade cluster from 6.0 or higher to 6.2\n" \
              "   -rccreate  create startup scripts from templates\n" \
              "   -host      hostname for shadow master installation or uninstallation \n" \
              "              (eg. exec host)\n" \
@@ -1203,24 +1203,6 @@ WelcomeTheUser()
    $CLEAR
 }
 
-#--------------------------------------------------------------------------
-#
-WelcomeTheUserUpgrade()
-{
-   $INFOTEXT -u "\nWelcome to the Grid Engine Upgrade"
-   $INFOTEXT "\nBefore you continue with the upgrade please read these hints:\n\n" \
-             "   - Your terminal window should have a size of at least\n" \
-             "     80x24 characters\n\n" \
-             "   - The INTR character is often bound to the key Ctrl-C.\n" \
-             "     The term >Ctrl-C< is used during the upgrade if you\n" \
-             "     have the possibility to abort the upgrade\n\n" \
-             "The upgrade procedure will take approximately 1-2 minutes.\n" \
-             "After this upgrade you will get a new set of settings and\n" \
-             "rc-startup script files. The old files will be stored in:\n" \
-             "$SGE_ROOT/$SGE_CELL/common directory"
-   $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-   $CLEAR
-}
 
 #--------------------------------------------------------------------------
 #
@@ -1932,11 +1914,10 @@ ProcessSGEClusterName()
       
    #Only BDB or qmaster installation can create cluster_name file
    if [ \( "$1" = "bdb" -o "$1" = "qmaster" -o "$UPDATE" = "true" \) -a ! -f $SGE_ROOT/$SGE_CELL/common/cluster_name ]; then
-      ExecuteAsAdmin $MKDIR -p $SGE_ROOT/$SGE_CELL/common
-      ExecuteAsAdmin $TOUCH $SGE_ROOT/$SGE_CELL/common/cluster_name
-      ExecuteAsAdmin $CHMOD 666 $SGE_ROOT/$SGE_CELL/common/cluster_name
-      $ECHO $SGE_CLUSTER_NAME > $SGE_ROOT/$SGE_CELL/common/cluster_name
-      ExecuteAsAdmin $CHMOD 644 $SGE_ROOT/$SGE_CELL/common/cluster_name
+      if [ ! -d "$SGE_ROOT/$SGE_CELL/common" ]; then
+         ExecuteAsAdmin $MKDIR -p "$SGE_ROOT/$SGE_CELL/common"
+      fi
+      SafelyCreateFile $SGE_ROOT/$SGE_CELL/common/cluster_name 644 "$SGE_CLUSTER_NAME"
    fi
 
    $ECHO
@@ -1946,7 +1927,21 @@ ProcessSGEClusterName()
    $CLEAR
 }
 
-#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+# SafelyCreateFile: Creates a file as admin user (must be set)
+#  $1 - file name
+#  $2 - final file permissions
+#  $3 - file content
+#
+SafelyCreateFile()
+{
+   ExecuteAsAdmin $TOUCH $1
+   ExecuteAsAdmin $CHMOD 666 $1
+   $ECHO "$3" > $1
+   ExecuteAsAdmin $CHMOD $2 $1
+}
+
+#-------------------------------------------------------------------------------
 # CheckForSMF: Sets SGE_ENABLE_SMF to true if support SMF is desired and possible
 #              false if machine does not support it
 #
@@ -1971,7 +1966,7 @@ CheckForSMF()
       fi
    fi
 }
- 
+
 #-------------------------------------------------------------------------
 # GiveHints: give some useful hints at the end of the installation
 #
@@ -2139,27 +2134,27 @@ CreateSGEStartUpScripts()
          template="util/rctemplates/sgeexecd_template"
       fi
 
-      ExecuteAsAdmin sed -e "s%GENROOT%${SGE_ROOT_VAL}%g" \
-                            -e "s%GENCELL%${SGE_CELL_VAL}%g" \
-                            -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
-                            $template > ${TMP_SGE_STARTUP_FILE}.0
+      Execute sed -e "s%GENROOT%${SGE_ROOT_VAL}%g" \
+                  -e "s%GENCELL%${SGE_CELL_VAL}%g" \
+                  -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
+                  $template > ${TMP_SGE_STARTUP_FILE}.0
 
       if [ "$SGE_QMASTER_PORT" != "" ]; then
-         ExecuteAsAdmin sed -e "s/=GENSGE_QMASTER_PORT/=$SGE_QMASTER_PORT/" \
-                            ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
+         Execute sed -e "s/=GENSGE_QMASTER_PORT/=$SGE_QMASTER_PORT/" \
+                     ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
       else
-         ExecuteAsAdmin sed -e "/GENSGE_QMASTER_PORT/d" \
-                            ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
+         Execute sed -e "/GENSGE_QMASTER_PORT/d" \
+                     ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
       fi
 
       if [ "$SGE_EXECD_PORT" != "" ]; then
-         ExecuteAsAdmin sed -e "s/=GENSGE_EXECD_PORT/=$SGE_EXECD_PORT/" \
-                            ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
+         Execute sed -e "s/=GENSGE_EXECD_PORT/=$SGE_EXECD_PORT/" \
+                     ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
       else
-         ExecuteAsAdmin sed -e "/GENSGE_EXECD_PORT/d" \
-                            ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
+         Execute sed -e "/GENSGE_EXECD_PORT/d" \
+                     ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
       fi
-
+      Execute $CHMOD 666 $TMP_SGE_STARTUP_FILE
       ExecuteAsAdmin $CP $TMP_SGE_STARTUP_FILE $SGE_STARTUP_FILE
       ExecuteAsAdmin $CHMOD a+x $SGE_STARTUP_FILE
 

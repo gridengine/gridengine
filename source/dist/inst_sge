@@ -229,11 +229,13 @@ while [ $ARGC != 0 ]; do
      #restore a backuped database
      ;;
    -upd)
+     #update from 6.0 or higher to 6.2
      UPDATE=true
+     QMASTER="install"
      . ./util/install_modules/inst_qmaster.sh
      . ./util/install_modules/inst_berkeley.sh
-     #. ./util/install_modules/inst_update.sh
-     #update from 6.1 or higher to 6.2
+     . ./util/install_modules/inst_st.sh
+     . ./util/upgrade_modules/inst_upgrade.sh
      ;;
    -winupdate)
      #update to new Gridengine Helper Service
@@ -356,23 +358,159 @@ if [ $WIN_SVC = "uninstall" ]; then
    # don't exit but continue with uninstallation of execution daemon
 fi
 
-
-if [ $UPDATE = "true" ]; then
-
-   DATE=`date '+%Y-%m-%d_%H:%M:%S'`
-   MKDIR="mkdir -p"
-   RM="rm -rf" #Overwrites BasicSettings
-   WelcomeTheUserUpgrade
-   ProcessSGERoot
-   GetCell
-   SetCellDependentVariables
-   GetAdminUser
-   ProcessSGEClusterName
-   GetJMXPort
-   ServiceTagsSupport
-   AddJMXFiles
+#Upgrade form 6.0+ to 6.2
+if [ "$UPDATE" = true ]; then
+   AUTO=false
+   EXECD=undef
+   SHADOW=undef
+   BERKELEY=undef
+   DBWRITER=undef
    
-	#TODO
+   LicenseAgreement
+   WelcomeTheUserUpgrade
+   #Ask for backup_dir
+   GetBackupDirectory
+   #Old rc scripts must be long gone!
+   
+   #Stop if not a qmaster host
+   tmp_master=`cat "$UPGRADE_BACKUP_DIR/cell/act_qmaster" 2>/dev/null`
+   tmp_master2=`grep "^${HOST}#" "$UPGRADE_BACKUP_DIR/cell/shadow_masters" 2>/dev/null`
+   if [ "$tmp_master" != "$HOST" -a "$tmp_master2" != "$HOST" ]; then
+        $INFOTEXT "Upgrade must be started on a qmaster host!"
+        exit 1
+   fi
+
+   #Source sge_root. sge_cell, qmaster, execd port from the backup
+   . "${UPGRADE_BACKUP_DIR}/sge_root"
+   . "${UPGRADE_BACKUP_DIR}/sge_cell"
+   . "${UPGRADE_BACKUP_DIR}/ports"
+   CheckForLocalHostResolving
+   ProcessSGERoot
+   QMASTER=undef
+   GetCell
+   QMASTER=install
+   #Real upgrade from 6.0+ to 6.2 from here (has bootstrap)
+   if [ -f "$SGE_ROOT/$SGE_CELL/common/bootstrap" ]; then
+      UPGRADE_MODE="upgrade"
+   else
+      #Just copy the configuration to a new SGE_CELL
+      UPGRADE_MODE="copy"
+      #we need different ports that the backup
+      SGE_QMASTER_PORT=`expr $SGE_QMASTER_PORT + 2`
+      SGE_EXECD_PORT=`expr $SGE_EXECD_PORT + 2`      
+      GetQmasterPort
+      GetExecdPort
+   fi
+
+   SetCellDependentVariables
+   if [ "$UPGRADE_MODE" = upgrade ]; then
+      #Get backuped admin user
+      GetBackupedAdminUser
+      OLD_ADMIN_USER=$ADMIN_USER
+      GetAdminUser #Get current admin user of the cluster
+      CheckUpgradeUser #Stop if admin user mismatch (backup vs. current cluster)
+      #Detect spool dir from the backup
+      QMDIR=`BootstrapGetValue $SGE_ROOT/$SGE_CELL/common "qmaster_spool_dir"`
+   else
+      CheckWhoInstallsSGE
+      #Ask for new QMaster spool dir
+      GetQmasterSpoolDir $euid
+      SGE_CLUSTER_NAME="" #delete environment
+   fi		
+   #TODO: Check if no jobs. qmaster.pi#Need to remove cluster_name if present
+   if [ -f  "$SGE_ROOT/$SGE_CELL/common/cluster_name" ]; then
+      #Need to remove cluster_name if present
+      SGE_CLUSTER_NAME=`cat "$SGE_ROOT/$SGE_CELL/common/cluster_name" 2>/dev/null`
+      ExecuteAsAdmin rm -f "$SGE_ROOT/$SGE_CELL/common/cluster_name" 2>/dev/null
+   elif [ "$UPGRADE" = upgrade -a -f "$UPGRADE_BACKUP_DIR/cell/cluster_name" ]; then
+      SGE_CLUSTER_NAME=`cat "$UPGRADE_BACKUP_DIR/cell/cluster_name" 2>/dev/null`
+   fi
+   ProcessSGEClusterName qmaster
+   WindowsSupport
+   #UninstWinHelperPre62 #Can we always try to remove it? What about 6.1 and 6.2 on the same host?
+   #SetupWinSvc "update" #run only on all exechosts
+   SetPermissions
+   if [ "$UPGRADE_MODE" = copy ]; then
+      #SelectHostNameResolving
+      SetProductMode
+   else
+      PRODUCT_MODE=`BootstrapGetValue $SGE_ROOT/$SGE_CELL/common "security_mode"`
+      #TODO: csp and changed qmaster port needs -csp flag
+   fi
+   #Find out if jmx should be used from the backup
+   RestoreJMX "${UPGRADE_BACKUP_DIR}/cell/jmx"
+   #Load and upgrade old cell
+   RestoreCell "${UPGRADE_BACKUP_DIR}/cell"
+   GetJMXPort
+   ExecuteAsAdmin rm -rf "$QMDIR" > /dev/null 2>&1 # remove old qmaster spool dir
+   Makedir $QMDIR/job_scripts       # create a new one
+
+   if [ "$UPGRADE_MODE" = upgrade ]; then
+      SelectNewSpooling `BootstrapGetValue "${UPGRADE_BACKUP_DIR}/cell" "spooling_method"`
+   else
+      SetSpoolingOptions
+      ReplaceLineWithMatch "$SGE_ROOT/$SGE_CELL/common/bootstrap" 644 'spooling_method.*' "spooling_method         $SPOOLING_METHOD"
+      ReplaceLineWithMatch "$SGE_ROOT/$SGE_CELL/common/bootstrap" 644 'spooling_lib.*'    "spooling_lib            $SPOOLING_LIB"
+      ReplaceLineWithMatch "$SGE_ROOT/$SGE_CELL/common/bootstrap" 644 'spooling_params.*' "spooling_params         $SPOOLING_ARGS"
+   fi
+   InitSpoolingDatabase
+   ServiceTagsSupport
+   #IJS
+   SavedOrNewIJS
+   if [ "$UPGRADE_MODE" = upgrade ]; then
+      #Create a new configuration to be able to start qmaster
+      AddDummyConfiguration
+   else
+      #Create new configuration
+      loadConfig=false # we won't recover configurations from the backup
+      AddNewConfigurations
+   fi
+   AddActQmaster # Always overwrite backup settings with current host
+   AddJMXFiles
+   #Restore jobseqnum and arseqnum
+   RestoreSequenceNumberFiles $QMDIR
+   CreateSGEStartUpScripts $euid true master
+   CreateSGEStartUpScripts $euid true execd
+   CreateSettingsFile
+   InitCA
+   #New qmaster RC script/SMF
+   SetupRcScriptNames master
+   InstallRcScript
+   CopyCA execd
+   CopyCA submit
+   #TODO: Need to ensure there is no qmaster on the same port running
+   StartQmaster
+   CheckRunningDaemon sge_qmaster
+   #Load configuration, show only critical errors
+   loadArgs=""
+   if [ "$newIJS" = true ]; then
+      loadArgs="-newijs"
+   fi
+   if [ "$loadConfig" = false ]; then
+      if [ -n "$loadArgs" ]; then 
+         loadArgs="$loadArgs -noconfig"
+      else
+         loadArgs="-noconfig"
+      fi
+   fi
+   "$SGE_ROOT/util/upgrade_modules/load_cc.sh" "$UPGRADE_BACKUP_DIR" "C" $loadArgs
+   if [ "$UPGRADE" = copy ]; then
+      SafelyCreateFile "/tmp/$HOST" 666 `$SGE_BIN/qconf -sconf $HOST`
+      #For all execd create local conf based on local localconf
+      for execd_host in `$SGE_BIN/qconf -sel 2>/dev/null`; do
+         if [ "$execd_host" != "$HOST" ]; then
+            #TODO: ExecuteAsAdmin?
+            sed -e 's/"${HOST}"/"${execd_host}"/' "/tmp/$HOST" >> "/tmp/$execd_host"
+            $SGE_BIN/qconf -Aconf "/tmp/$execd_host" #2>/dev/null
+            rm -f "/tmp/$execd_host"
+         fi
+      done
+      rm -f "/tmp/$HOST"
+   fi
+   exit 0
+   #TODO: run inst_sge -finish_upgrade to 
+   # 1. install new RC /SMF scripts on all host
+   # 2. clear spool dirs
 fi
 
 if [ "$BERKELEY" = "install" ]; then
@@ -416,7 +554,7 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  WelcomeTheUser
  CheckForLocalHostResolving
  CheckWhoInstallsSGE
- ProcessSGERoot 
+ ProcessSGERoot
  GetQmasterPort
  GetExecdPort
  GetCell
@@ -454,7 +592,7 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  SetScheddConfig
  GiveHints
  CheckRunningDaemon sge_qmaster
-
+ 
  if [ $? = 0 ]; then
     $INFOTEXT "sge_qmaster successfully installed!\n"
     $INFOTEXT -log "sge_qmaster successfully installed!\n"

@@ -39,6 +39,12 @@
 
 SpoolingQueryChange()
 {
+   if [ -z "$1" ]; then
+      SPOOLING_DIR="`dirname $QMDIR`"/spooldb
+   else
+      SPOOLING_DIR="$1"
+   fi
+	
    if [ -f "$SGE_ROOT/$SGE_CELL/common/bootstrap" ]; then
       ignore_fqdn=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "ignore_fqdn" | awk '{ print $2 }'`
       default_domain=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "default_domain" | awk '{ print $2 }'`
@@ -58,17 +64,17 @@ SpoolingQueryChange()
                 "\nIf you want to use the SGE shadowd, you have to use the " \
                 "\nRPC Client/Server mechanism.\n"
                 SPOOLING_SERVER=`$SGE_UTILBIN/gethostname -aname`
-   $INFOTEXT -n "\nEnter database server name or \nhit <RETURN> to use default [%s] >> " $SPOOLING_SERVER
+      $INFOTEXT -n "\nEnter database server name or \nhit <RETURN> to use default [%s] >> " $SPOOLING_SERVER
                 SPOOLING_SERVER=`Enter $SPOOLING_SERVER`
 
-   $INFOTEXT -n "\nEnter the database directory\n" \
+      $INFOTEXT -n "\nEnter the database directory\n" \
                 "or hit <RETURN> to use default [%s] >> " "$SGE_ROOT/$SGE_CELL/$SPOOLING_DIR"
                 SPOOLING_DIR=`Enter $SGE_ROOT/$SGE_CELL/$SPOOLING_DIR`
    else
      $INFOTEXT -u "\nBerkeley Database spooling parameters"
 
      if [ "$is_server" = "true" ]; then
-     #TODO: Does not work is_server is not set
+        #TODO: Does not work is_server is not set
         $INFOTEXT -n "\nPlease enter the name of your Berkeley DB Spooling Server! >> "
                SPOOLING_SERVER=`Enter $SPOOLING_SERVER`
         $INFOTEXT -n "Please enter the Database Directory now!\n"
@@ -78,9 +84,8 @@ SpoolingQueryChange()
      else
         SPOOLING_SERVER=none
         $INFOTEXT -n "\nPlease enter the Database Directory now, even if you want to spool locally,\n" \
-                     "it is necessary to enter this Database Directory. \n\nDefault: [%s] >> " `dirname $QMDIR`"/spooldb" 
-                  SPOOLING_DIR=`dirname $QMDIR`"/spooldb" 
-                  SPOOLING_DIR=`Enter $SPOOLING_DIR`        
+                     "it is necessary to enter this Database Directory. \n\nDefault: [%s] >> " "$SPOOLING_DIR"
+        SPOOLING_DIR=`Enter "$SPOOLING_DIR"`
      fi
 
      if [ "$AUTO" = "true" ]; then

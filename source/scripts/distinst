@@ -832,6 +832,7 @@ if [ $instcommon = true ]; then
       Execute mv $DEST_SGE_ROOT/util/arch.dist $DEST_SGE_ROOT/util/arch
 
       Execute chmod 755 $DEST_SGE_ROOT/util/install_modules \
+			$DEST_SGE_ROOT/util/upgrade_modules \
                         $DEST_SGE_ROOT/util/rctemplates \
                         $DEST_SGE_ROOT/util/resources \
                         $DEST_SGE_ROOT/util/sgeCA \

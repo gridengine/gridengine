@@ -1,3 +1,10 @@
+LP-2008-06-04-0: Enhancem:  New upgrade 6.0+ to 6.2, new method introduced to 
+                            upgrade to different SGE_ROOT, SGE_CELL and tranfer
+                            old configuration to a new cluster
+                 Bugfix:    install fails creating unique cluster name
+                 Bugtraq:   6709231
+                 Review:    RD, PJ, AP
+
 EB-2008-06-04-0: Bugfix:    schedd_runlog file is not written when qconf -tsm is used
                  Review:    JG
                  Bugster:   6710417

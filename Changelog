@@ -1,3 +1,6 @@
+RD-2008-06-04-0: CVS        Created V61ARsnapshot3_7_TAG
+--------------------------------------------------------
+
 AH-2008-05-29-0: Bugfix:    - sge_schedd can core dump when resoruce quotas are used
                             - Pending PE job qstat -j output displays additional
                               useless message when not running because of RQs

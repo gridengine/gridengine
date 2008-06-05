@@ -86,7 +86,7 @@ static Output_t Output[MAX_OUTPUT_LINES] = {
 /* global mutex used for mallinfo initialisation and also used to access the Info_Line string */
 static pthread_mutex_t global_mutex = PTHREAD_MUTEX_INITIALIZER; 
 
-/* a static dstring used as a temporary buffer to build the comlib info string */
+/* a static dstring used as a temporary buffer to build the commlib info string */
 static dstring Info_Line= DSTRING_INIT;
 
 /* mallinfo related data */
@@ -394,10 +394,10 @@ u_long32 sge_monitor_status(char **info_message, u_long32 monitor_time)
    sge_dstring_init(&ddate, date, sizeof(date));
    
    sge_mutex_lock("sge_monitor_status", SGE_FUNC, __LINE__, &global_mutex);
-  
+
    sge_dstring_clear(&Info_Line);
    
-   {/* this is the qping info section, it checks wether each thread is still alive */
+   {/* this is the qping info section, it checks if each thread is still alive */
       int i;
       int error_count = 0;
       struct timeval now;

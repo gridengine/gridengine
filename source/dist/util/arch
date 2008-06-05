@@ -192,8 +192,11 @@ Linux)
    ia64)
       lxmachine=ia64
       ;;
-   ppc*)
+   ppc)
       lxmachine=ppc
+      ;;
+   ppc64)
+      lxmachine=ppc64
       ;;
    *)
       unsupported="UNSUPPORTED-"

@@ -194,6 +194,11 @@ case $buildarch in
       COMPILE_ARCH=LINUXPPC_26
       TARGET_BITS=TARGET_32BIT
       ;;
+   lx26-ppc64)
+      BUILDARCH=LINUXPPC64
+      COMPILE_ARCH=LINUXPPC64_26
+      TARGET_BITS=TARGET_64BIT
+      ;;
    lx26-ia64)               
       BUILDARCH=LINUXIA64
       COMPILE_ARCH=LINUXIA64_26

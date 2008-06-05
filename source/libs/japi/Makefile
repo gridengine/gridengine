@@ -100,7 +100,7 @@ drmaa_messages:
 ###############################################################################
 libdrmaa$(SHAREDEXT).1.0:  $(JAPILIB_10) $(JAPI_DEPEND_OBJS) $(DRMAALIB_OBJS) $(DRMAA_OBJS) $(WINGRIDLIB_DEP)
 	$(SHAREDLD) $(SHARED_LFLAGS) $(SONAME_LFLAG_DRMAA10) -o libdrmaa$(SHAREDEXT).1.0 $(DRMAALIB_10_OBJS) $(DRMAA_OBJS) $(JAPILIB_10) $(JAPI_ADD_OBJS) \
-      $(SECLIB) $(WINGRIDLIB) $(LIBS) $(DLLIB) -lc \
+      $(SECLIB) $(WINGRIDLIB) $(LIBS) $(DLLIB) \
    && ../scripts/nonreentrant.sh -a `../dist/util/arch` -w libdrmaa$(SHAREDEXT).1.0
 
 # Needed to compile howtos, examples, and unit tests

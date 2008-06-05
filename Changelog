@@ -1,3 +1,8 @@
+RD-2008-06-05-1: Bugfix:    - added support for lx26-ppc64 
+                            - imported several compiler error fixes from community
+                 Issue:     2584, 2585, 2348, 2587, 2588, 2590
+                 Review:
+
 RD-2008-06-05-0: Bugfix:    Service Tags version is incorrect
                  Bugster:   6698169
                  Review:    JG
@@ -43,7 +48,7 @@ CR-2008-06-02-0: Cleanup:   commlib:
                              - cl_com_cached_gethostbyaddr():
                                more error tolerant compare of reverse ip resolving
                              - report ip resolve errors to application
-                            utilbin/gethostbyaddr:
+                               utilbin/gethostbyaddr:
                              - added application error callback for commlib
                  Review:    RD
 

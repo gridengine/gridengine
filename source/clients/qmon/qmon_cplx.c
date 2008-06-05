@@ -58,7 +58,7 @@
 #include "sge_centry.h"
 #include "sge_centry_qconf.h"
 #include "spool/flatfile/sge_flatfile.h"
-#include "spool/flatfile//sge_flatfile_obj.h"
+#include "spool/flatfile/sge_flatfile_obj.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"

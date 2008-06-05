@@ -36,7 +36,7 @@
 ##########################################################################
 SHELL  = /bin/sh
 RM     = rm -f 
-DEPEND = $(SOURCE)/3rdparty/sge_depend/$(COMPILE_ARCH)/sge_depend -l -S -Y $(CFLAGS)
+DEPEND = $(SOURCE)/3rdparty/sge_depend/$(COMPILE_ARCH)/sge_depend -l -S -Y $(DEPEND_FLAGS)
 ##########################################################################
 
 ###############################################################################

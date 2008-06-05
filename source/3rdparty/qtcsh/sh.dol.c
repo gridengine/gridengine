@@ -35,7 +35,7 @@
  */
 #include "sh.h"
 
-RCSID("$Id: sh.dol.c,v 1.1 2001/07/18 11:06:04 root Exp $")
+RCSID("$Id: sh.dol.c,v 1.2 2008/06/05 12:32:52 roland Exp $")
 
 /*
  * C shell
@@ -1008,7 +1008,7 @@ heredoc(term)
 #ifndef O_TEMPORARY
 # define O_TEMPORARY 0
 #endif
-    if (open(tmp, O_RDWR|O_CREAT|O_TEMPORARY) < 0) {
+    if (open(tmp, O_RDWR|O_CREAT|O_TEMPORARY, 0600) < 0) {
 	int     oerrno = errno;
 
 	(void) unlink(tmp);

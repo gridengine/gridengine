@@ -229,7 +229,7 @@ static Widget project_toggle = 0;
 static Widget reporting_variables_list = 0;
 static Widget reporting_variables_chosen = 0;
 
-static tHostEntry host_data = {NULL, NULL, NULL};
+static tHostEntry host_data = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 static int add_mode = 0;
 static int dialog_mode = SGE_ADMINHOST_LIST;
 
@@ -968,16 +968,8 @@ StringConst name
       host_data.name = NULL;
    }   
       
-   /*
-   ** build the load scaling list, build a list from all
-   ** entries of the host complex filled with a scaling factor
-   ** of 1.0 and override the entries with the exechost scaling list
-   ** entries if necessary
-   */
-/*    correct_capacities(ehl, cl); */
-   for_each (ep, ehl) {
-      host_complexes2scheduler(&entries, ep, ehl, cl);   
-   }
+   /* get complex entries and filter out scalable entries */
+   entries = lCopyList("", cl);
    if (!where)
       where = lWhere("%T(%I == %u || %I == %u || %I == %u || %I == %u)", CE_Type,
                      CE_valtype, TYPE_INT, CE_valtype, TYPE_TIM, 
@@ -1328,7 +1320,7 @@ static void qmonExecHostChange(Widget w, XtPointer cld, XtPointer cad)
 
    DENTER(GUI_LAYER, "qmonExecHostChange");
 
-   qmonMirrorMultiAnswer(EXECHOST_T | USERSET_T | PROJECT_T, 
+   qmonMirrorMultiAnswer(EXECHOST_T | USERSET_T | PROJECT_T | CENTRY_T, 
                            &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);

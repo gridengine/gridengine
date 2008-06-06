@@ -43,12 +43,12 @@
 WelcomeTheUserUpgrade()
 {
    $INFOTEXT -u "\nWelcome to the Grid Engine Upgrade"
-   $INFOTEXT "\nBefore you continue with the upgrade please read these hints:\n\n" \
+   $INFOTEXT "\nBefore you continue with the upgrade, read these hints:\n\n" \
              "   - Your terminal window should have a size of at least\n" \
              "     80x24 characters\n\n" \
-             "   - The INTR character is often bound to the key Ctrl-C.\n" \
-             "     The term >Ctrl-C< is used during the upgrade if you\n" \
-             "     have the possibility to abort the upgrade\n\n" \
+             "   - At any time during the upgrade process, use your standard \n" \
+             "     interrupt key to abort the upgrade. Typically, the interrupt \n" \
+             "     key combination is Ctrl-C.\n\n" \
              "The upgrade procedure will take approximately 1-2 minutes.\n"
    $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
    $CLEAR
@@ -125,7 +125,8 @@ GetBackupDirectory()
    done=false
    while [ $done = false ]; do
       $CLEAR
-      $INFOTEXT -n "\nEnter path to a backup directory >> "
+      $INFOTEXT -u "\nType the complete path to the Grid Engine configuration backup directory."
+      $INFOTEXT -n " Backup directory  >> "
       eval UPGRADE_BACKUP_DIR=`Enter $UPGRADE_BACKUP_DIR`
       version=`cat "${UPGRADE_BACKUP_DIR}/version" 2>/dev/null`
       backup_date=`cat "${UPGRADE_BACKUP_DIR}/backup_date" 2>/dev/null`
@@ -177,9 +178,9 @@ dbwriter.conf"
    ReplaceLineWithMatch "$SGE_ROOT/$SGE_CELL/common/bootstrap" 666 'Version.*' "Version: $SGE_VERSION"
    #ADMIN_USER
    if [ $ADMINUSER != default ]; then
-      admin_user_value="admin_user             $ADMINUSER"
+      admin_user_value="admin_user              $ADMINUSER"
    else
-      admin_user_value="admin_user             none"
+      admin_user_value="admin_user              none"
    fi
    ReplaceLineWithMatch "$SGE_ROOT/$SGE_CELL/common/bootstrap" 666 'admin_user.*' "$admin_user_value"
    #TODO: default_domain, ignore_fqdn?
@@ -190,7 +191,8 @@ dbwriter.conf"
    #PRODUCT MODE
    ReplaceLineWithMatch "$SGE_ROOT/$SGE_CELL/common/bootstrap" 666 'security_mode.*' "security_mode           $PRODUCT_MODE"
    
-   #TODO: remove gdi_threads
+   #Remove gdi_threads if present
+   RemoveLineWithMatch "$SGE_ROOT/$SGE_CELL/common/bootstrap" 666 'gdi_threads.*'
    
    #Add threads info if missing
    cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "threads" >/dev/null 2>&1
@@ -201,11 +203,10 @@ dbwriter.conf"
       $ECHO "scheduler_threads       1" >> $SGE_ROOT/$SGE_CELL/common/bootstrap
    fi
    
-   cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "jvm_threads" >/dev/null 2>&1
-   if [ $? -ne 0 -a "$SGE_ENABLE_JMX" = "true" ]; then
-      $ECHO "jvm_threads             1" >> $SGE_ROOT/$SGE_CELL/common/bootstrap
+   if [ "$SGE_ENABLE_JMX" = "true" ]; then
+      ReplaceOrAddLine "$SGE_ROOT/$SGE_CELL/common/bootstrap" 666 'jvm_threads.*' "jvm_threads             1"
    else
-      $ECHO "jvm_threads             0" >> $SGE_ROOT/$SGE_CELL/common/bootstrap
+      ReplaceOrAddLine "$SGE_ROOT/$SGE_CELL/common/bootstrap" 666 'jvm_threads.*' "jvm_threads             0"
    fi
    ExecuteAsAdmin $CHMOD 644 "$SGE_ROOT/$SGE_CELL/common/bootstrap"
 }
@@ -234,8 +235,11 @@ RestoreJMX()
 SavedOrNewIJS()
 {
    $CLEAR
-   $INFOTEXT -u "Interactive Job Support (IJS) selection"
-   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nUse IJS from the backup ('y') or use new defaults ('n') (y/n) [y] >> "
+   newIJS=false
+   $INFOTEXT -u "Interactive Job Support (IJS) Selection"   
+   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nThe backup configuration includes information for running \n" \
+                                                  "interactive jobs. Do you want to use the IJS information from \n" \
+                                                  "the backup ('y') or use new default values ('n') (y/n) [y] >> "
    if [ $? -ne 0 ]; then
       $INFOTEXT -n "\nUsing new interactive job support default setting for a new installation."
       newIJS=true
@@ -247,10 +251,14 @@ SavedOrNewIJS()
 #-------------------------------------------------------------------------------
 # AskForNewSequenceNumber: Ask for the next sequence number
 #   $1 - file with the seq_number
-#   $2 - "job" | "ar"
+#   $2 - "job" | "AR"
 AskForNewSequenceNumber()
 {
    NEXT_SEQ_NUMBER=""
+   if [ ! -f "$1" ]; then #set to 0 is no file in backup and don't ask
+      NEXT_SEQ_NUMBER=0
+      return
+   fi
    NEXT_SEQ_NUMBER=`cat "${1}" 2>/dev/null`
    if [ -z "$NEXT_SEQ_NUMBER" -o "$NEXT_SEQ_NUMBER" -lt 0 ]; then
       NEXT_SEQ_NUMBER=0
@@ -264,10 +272,11 @@ AskForNewSequenceNumber()
       exit 1
    fi
    $CLEAR
-   $INFOTEXT -u "Select next %s number" "$2"
-   $INFOTEXT -n "\nBackup contains last %s number. We added 1000 and rounded it up to 1000s.\n" \
-                "Increase the number, if appropriate.\n" \
-		"Select the new next %s number [%s] >> " "$2" "$2" "$NEXT_SEQ_NUMBER"
+   $INFOTEXT -u "Provide a value to use for the next %s ID." "$2"
+   $INFOTEXT -n "\nBackup contains last %s ID. As a suggested value, we added 1000 \n" \
+                "to that number and rounded it to the nearest 1000.\n" \
+                "Increase the value, if appropriate.\n" \
+		          "Choose the new next %s ID [%s] >> " "$2" "$2" "$NEXT_SEQ_NUMBER"
    eval NEXT_SEQ_NUMBER=`Enter $NEXT_SEQ_NUMBER`
    $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
    $CLEAR
@@ -344,18 +353,20 @@ SelectNewSpooling()
              $backuped_spooling_method
    if [ $? -eq 0 ]; then
       keep=true
-      SPOOLING_METHOD=$backuped_spooling_method
-      case $SPOOLING_METHOD in 
-         classic)
-            SetSpoolingOptionsClassic
-            ;;
-         berkeleydb)
-	    #TODO: need new upgrade questions with defaults from the backup!
-	    #      inst_berkeley - SpoolingQueryChange might optionally accept sugegstion defualt value
-	    SPOOLING_DIR=`BootstrapGetValue "${UPGRADE_BACKUP_DIR}/cell" "spooling_params"`
-            SetSpoolingOptionsBerkeleyDB $SPOOLING_DIR
-            ;;
-         esac
+      SPOOLING_METHOD=`BootstrapGetValue $SGE_ROOT/$SGE_CELL/common "spooling_method"`
+      SPOOLING_LIB=`BootstrapGetValue $SGE_ROOT/$SGE_CELL/common "spooling_lib"`
+      SPOOLING_ARGS=`BootstrapGetValue $SGE_ROOT/$SGE_CELL/common "spooling_params"`
+      if [ "$SPOOLING_METHOD" = "berkeleydb" ]; then
+         ExecuteAsAdmin rm -rf "$SPOOLING_ARGS"/*
+      else #Classic
+         tmp_spool=`echo $SPOOLING_ARGS | awk -F";" '{print $1}' | awk '{print $2}'`
+         list="configuration
+local_conf
+sched_configuration"
+         for f in $list; do
+            ExecuteAsAdmin rm -rf "${tmp_spool}/${f}"
+         done
+      fi
    else
       SetSpoolingOptions
    fi
@@ -391,96 +402,95 @@ AddDummyConfiguration()
    ExecuteAsAdmin rm -f $TMPC
 }
 
-ReplaceLineWithMatch()
+#For copy upgrade type
+PrepareConfiguration()
 {
-  repFile="${1:?Need the file name to operate}"
-  filePerms="${2:?Need file final permissions}"
-  repExpr="${3:?Need an expression, where to replace}" 
-  replace="${4:?Need the replacement text}" 
-
-  #Return if no match
-  grep "${repExpr}" $repFile >/dev/null 2>&1
-
-  #We need to change the file
-  ExecuteAsAdmin touch ${repFile}.tmp
-  ExecuteAsAdmin chmod 666 ${repFile}.tmp
-  sed -e "s|${repExpr}|${replace}|g" $repFile >> ${repFile}.tmp
-  ExecuteAsAdmin mv -f ${repFile}.tmp  ${repFile}
-  ExecuteAsAdmin chmod ${filePerms} ${repFile}
+   $CLEAR
+   tmp_range=`FileGetValue "$UPGRADE_BACKUP_DIR/configurations/global" "gid_range"`
+   echo "$tmp_range" | grep -- "-" >/dev/null 2>&1
+   if [ $? -ne 0 ]; then #single value
+      GID_RANGE=`expr $tmp_range + 100`
+   else                  #range
+      tmp_start=`echo $tmp_range | awk -F"-" ' { print $1 }'`
+      tmp_end=`echo $tmp_range | awk -F"-" ' { print $2 }'`
+      tmp_range=`expr $tmp_end - $tmp_start`
+      tmp_end=`expr $tmp_end + 100`
+      GID_RANGE="${tmp_end}-`expr $tmp_end + $tmp_range`"
+   fi
+   GetConfiguration "$SGE_ROOT/$SGE_CELL/spool" `FileGetValue "$UPGRADE_BACKUP_DIR/configurations/global" "administrator_mail"`
 }
 
-AddNewConfigurations()
+ReplaceLineWithMatch()
 {
-   $CLEAR
-   $INFOTEXT -n "\nYou must provide a different value from the suggested in the next configuration screen!\n"
-   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
-   $CLEAR
-   #Need to modify the configuration form the backup in case of copy upgrade
-   if [ "$newIJS" != true -a "$UPGRADE_MODE" = copy ]; then
-      tmp_value=""
-      tmp_value=`FileGetValue "${UPGRADE_BACKUP_DIR}/configurations/global" "qlogin_daemon"`
-      if [ -n "$tmp_value" ]; then
-         QLOGIN_DAEMON=$tmp_value
-      fi
-      tmp_value=""
-      tmp_value=`FileGetValue "${UPGRADE_BACKUP_DIR}/configurations/global" "qlogin_command"`
-      if [ -n "$tmp_value" ]; then
-         QLOGIN_COMMAND=$tmp_value
-      fi
-      tmp_value=""
-      tmp_value=`FileGetValue "${UPGRADE_BACKUP_DIR}/configurations/global" "rlogin_daemon"`
-      if [ -n "$tmp_value" ]; then
-          RLOGIN_DAEMON=$tmp_value
-      fi
-      tmp_value=""
-      tmp_value=`FileGetValue "${UPGRADE_BACKUP_DIR}/configurations/global" "rlogin_command"`
-      if [ -n "$tmp_value" ]; then
-         RLOGIN_COMMAND=$tmp_value
+   repFile="${1:?Need the file name to operate}"
+   filePerms="${2:?Need file final permissions}"
+   repExpr="${3:?Need an expression, where to replace}" 
+   replace="${4:?Need the replacement text}" 
+
+   #Return if no match
+   grep "${repExpr}" $repFile >/dev/null 2>&1
+   if [ $? -ne 0 ]; then
+      return
+   fi
+   #We need to change the file
+   ExecuteAsAdmin touch ${repFile}.tmp
+   ExecuteAsAdmin chmod 666 ${repFile}.tmp
+  
+   SEP="|"
+   echo "$repExpr $replace" | grep "|" >/dev/null 2>&1
+   if [ $? -eq 0 ]; then
+      echo "$repExpr $replace" | grep "%" >/dev/null 2>&1
+      if [ $? -ne 0 ]; then
+         SEP="%"
       else
-         RLOGIN_COMMAND=undef
-      fi
-      tmp_value=""
-      tmp_value=`FileGetValue "${UPGRADE_BACKUP_DIR}/configurations/global" "rsh_daemon"`
-      if [ -n "$tmp_value" ]; then
-         RSH_DAEMON=$tmp_value
-      else
-         RSH_DAEMON=undef
-      fi
-      tmp_value=""
-      tmp_value=`FileGetValue "${UPGRADE_BACKUP_DIR}/configurations/global" "rsh_command"`
-      if [ -n "$tmp_value" ]; then
-         RSH_COMMAND=$tmp_value
-      else
-         RSH_COMMAND=undef
+         echo "$repExpr $replace" | grep "?" >/dev/null 2>&1
+         if [ $? -ne 0 ]; then
+            SEP="?"
+         else
+            $INFOTEXT "repExpr $replace contains |,% and ? characters: cannot use sed"
+            exit 1
+         fi
       fi
    fi
-   GID_RANGE=`FileGetValue "$UPGRADE_BACKUP_DIR/configurations/global" "gid_range"`
-   AddConfiguration `FileGetValue "$UPGRADE_BACKUP_DIR/configurations/global" "execd_spool_dir"` `FileGetValue "$UPGRADE_BACKUP_DIR/configurations/global" "administrator_mail"`
+   #We need to change the file
+   sed -e "s${SEP}${repExpr}${SEP}${replace}${SEP}g" "$repFile" >> "${repFile}.tmp"
+   ExecuteAsAdmin mv -f "${repFile}.tmp"  "${repFile}"
+   ExecuteAsAdmin chmod "${filePerms}" "${repFile}"
+}
+
+ReplaceOrAddLine()
+{
+   repFile="${1:?Need the file name to operate}"
+   filePerms="${2:?Need file final permissions}"
+   repExpr="${3:?Need an expression, where to replace}" 
+   replace="${4:?Need the replacement text}" 
    
-   #Create local configuration with correct IJS settings
-   if [ "$newIJS" = false -a "$UPGRADE_MODE" = copy -a -f "${UPGRADE_BACKUP_DIR}/configurations/${HOST}" ]; then
-      #Just modify IJS related values
-      tmp_value=""
-      tmp_value=`FileGetValue "${UPGRADE_BACKUP_DIR}/configurations/${HOST}" "qlogin_daemon"`
-      if [ -n "$tmp_value" ]; then
-         QLOGIN_DAEMON=$tmp_value
-      else
-         QLOGIN_DAEMON=undef
-      fi
-      tmp_value=""
-      tmp_value=`FileGetValue "${UPGRADE_BACKUP_DIR}/configurations/${HOST}" "rlogin_daemon"`
-      if [ -n "$tmp_value" ]; then
-         RLOGIN_DAEMON=$tmp_value
-      else
-         RLOGIN_DAEMON=undef
-      fi
-      tmp_value=""
-      tmp_value=`FileGetValue "${UPGRADE_BACKUP_DIR}/configurations/${HOST}" "rsh_daemon"`
-      if [ -n "$tmp_value" ]; then
-         RSH_DAEMON=$tmp_value
-      else
-         RSH_DAEMON=undef
-      fi
+   #Does the pattern exists
+   grep "${repExpr}" "${repFile}" > /dev/null 2>&1
+   if [ $? -eq 0 ]; then #match
+      ReplaceLineWithMatch "$repFile" "$filePerms" "$repExpr" "$replace"
+   else                  #line does not exist
+      echo "$replace" >> "$repFile"
    fi
-   AddLocalConfiguration
+}
+
+#Remove line with maching expression
+RemoveLineWithMatch()
+{
+   remFile="${1:?Need the file name to operate}"
+   filePerms="${2:?Need file final permissions}"
+   remExpr="${3:?Need an expression, where to remove lines}"
+   
+   #Return if no match
+   grep "${remExpr}" $remFile >/dev/null 2>&1
+   if [ $? -ne 0 ]; then
+      return
+   fi
+
+   #We need to change the file
+   ExecuteAsAdmin touch ${remFile}.tmp
+   ExecuteAsAdmin chmod 666 ${remFile}.tmp
+   sed -e "/${remExpr}/d" "$remFile" > "${remFile}.tmp"
+   ExecuteAsAdmin mv -f "${remFile}.tmp"  "${remFile}"
+   ExecuteAsAdmin chmod "${filePerms}" "${remFile}"
 }

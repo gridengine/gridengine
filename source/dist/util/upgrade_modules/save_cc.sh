@@ -50,6 +50,7 @@ ARCH=`$SGE_ROOT/util/arch`
 
 MKDIR=mkdir
 QCONF=$SGE_ROOT/bin/$ARCH/qconf
+HOST=`$SGE_ROOT/utilbin/$ARCH/gethostname -name`
 
 
 
@@ -129,9 +130,9 @@ BackupSgeCell()
    fi
 	
    #sge_root
-   cat $SGE_ROOT/$SGE_CELL/common/settings.sh | grep "SGE_ROOT" > "${DEST_DIR}/sge_root"
+   cat $SGE_ROOT/$SGE_CELL/common/settings.sh | grep "SGE_ROOT" | head -1 > "${DEST_DIR}/sge_root"
    #sge_cell
-   cat $SGE_ROOT/$SGE_CELL/common/settings.sh | grep "SGE_CELL" > "${DEST_DIR}/sge_cell"
+   cat $SGE_ROOT/$SGE_CELL/common/settings.sh | grep "SGE_CELL" | head -1 > "${DEST_DIR}/sge_cell"
    #qmaster_port, execd_port
    cat $SGE_ROOT/$SGE_CELL/common/settings.sh | grep "PORT" > "${DEST_DIR}/ports"
 	
@@ -177,6 +178,17 @@ BackupSgeCell()
 
 #Dump all curent configuration to the temp directory called ccc
 DEST_DIR="${1:?The save directory is required}"
+
+admin_hosts=`$QCONF -sh 2>/dev/null`
+if [ -z "$admin_hosts" ]; then
+   $INFOTEXT "ERROR: qconf -sh failed. Qmaster is probably not running?"
+   exit 1
+fi
+tmp_adminhost=`$QCONF -sh | grep "^${HOST}$"`
+if [ "$tmp_adminhost" != "$HOST" ]; then
+   $INFOTEXT "ERROR: Load must be started on admin host (qmaster host recommended)."
+   exit 1
+fi
 
 if [ ! -d "$DEST_DIR" ]; then
    $MKDIR -p $DEST_DIR
@@ -282,6 +294,8 @@ DumpListToLocation "$list" $DEST_DIR/resource_quotas "-srqs"
 #     -sstree                       <show share tree>
 DumpOptionToFile "-sstree" "$DEST_DIR/sharetree"
 
+#Make files readable for all
+chmod -R g+r,o+r "$DEST_DIR"/*
 
 $INFOTEXT "Configuration successfully saved to $DEST_DIR directory."
 exit 0

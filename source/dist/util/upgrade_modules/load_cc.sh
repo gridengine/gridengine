@@ -39,9 +39,6 @@
 #TODO Documentation
 #TODO Script man page
 
-#TODO Main cluster copy upgrade script with user guide
-#TODO Main Upgrade script with user guide
-
 #TODO infotext?, Need to be run as Admin user
 INFOTEXT=echo
 
@@ -56,32 +53,7 @@ CAT=cat
 MKDIR=mkdir
 LS=ls
 QCONF=$SGE_ROOT/bin/$ARCH/qconf
-
-
-#Backup file, if not already done
-BckFile()
-{
-   bckFile="${1:?Need the file name}"
-   always="${2:-0}" 
-
-   if [ ${always} = 1 -a -f ${bckFile}.sav ] ; then
-      rm ${bckFile}.sav
-      ret=$?
-      if [ $ret != 0 ]; then
-         $INFOTEXT "[CRITICAL] No permission to remove ${bckFile}.sav"
-         exit 1
-      fi
-   fi
-
-   if [ -f ${bckFile} -a ! -f ${bckFile}.sav ] ; then
-      cp $bckFile ${bckFile}.sav
-      ret=$?
-      if [ $ret != 0 ]; then
-         $INFOTEXT "[CRITICAL] No permission to copy ${bckFile} to ${bckFile}.sav"
-         exit 1
-      fi
-   fi
-}
+HOST=`$SGE_ROOT/utilbin/$ARCH/gethostname -name`
 
 
 #All logging is done by this functions
@@ -110,67 +82,106 @@ LogIt()
 #Remove line with maching expression
 RemoveLineWithMatch()
 {
-  remFile="${1:?Need the file name to operate}"
-  remExpr="${2:?Need an expression, where to remove lines}"
-  BckFile "$remFile"
+   remFile="${1:?Need the file name to operate}"
+   remExpr="${2:?Need an expression, where to remove lines}"
 
-  sed -e "/${remExpr}/d" $remFile > ${remFile}.tmp
-  mv ${remFile}.tmp  ${remFile}
+   #Return if no match
+   grep "${remExpr}" $remFile >/dev/null 2>&1
+   if [ $? -ne 0 ]; then
+      return
+   fi
+
+   sed -e "/${remExpr}/d" $remFile > ${remFile}.tmp
+   mv -f ${remFile}.tmp  ${remFile}
 }
 
 
 ReplaceLineWithMatch()
 {
-  repFile="${1:?Need the file name to operate}"
-  repExpr="${2:?Need an expression, where to replace}" 
-  replace="${3:?Need the replacement text}" 
+   repFile="${1:?Need the file name to operate}"
+   repExpr="${2:?Need an expression, where to replace}" 
+   replace="${3:?Need the replacement text}" 
 
-
-  #awk " /${repExpr}/ { print $replace ;next} {print}" $repFile > ${repFile}.tmp
-  #Return if no match
-  grep ${repExpr} $repFile 2>/dev/null 2>&1
-  if [ $? -ne 0 ]; then
-     return
-  fi
-  #We need to change the file
-  BckFile "$repFile"
-  sed -e "s/${repExpr}/${replace}/g" $repFile > ${repFile}.tmp
-  mv -f ${repFile}.tmp  ${repFile}
+   #Return if no match
+   grep ${repExpr} $repFile >/dev/null 2>&1
+   if [ $? -ne 0 ]; then
+      return
+   fi
+   SEP="|"
+   echo "$repExpr $replace" | grep "|" >/dev/null 2>&1
+   if [ $? -eq 0 ]; then
+      echo "$repExpr $replace" | grep "%" >/dev/null 2>&1
+      if [ $? -ne 0 ]; then
+         SEP="%"
+      else
+         echo "$repExpr $replace" | grep "?" >/dev/null 2>&1
+         if [ $? -ne 0 ]; then
+            SEP="?"
+         else
+            LogIt "C" "$repExpr $replace contains |,% and ? character cannot use sed"
+         fi
+      fi
+   fi
+   #We need to change the file
+   sed -e "s${SEP}${repExpr}${SEP}${replace}${SEP}g" "$repFile" > "${repFile}.tmp"
+   mv -f "${repFile}.tmp"  "${repFile}"
 }
 
-
-GetQuotedString()
+ReplaceOrAddLine()
 {
-  getFile="${1:?Need the file name to fetch the string from}"
-  sed -e "/${remExpr}/d" $remFile > ${remFile}.tmp
-  mv ${remFile}.tmp  ${remFile}
+   repFile="${1:?Need the file name to operate}"
+   repExpr="${2:?Need an expression, where to replace}" 
+   replace="${3:?Need the replacement text}" 
+   
+   #Does the pattern exists
+   grep "${repExpr}" "${repFile}" > /dev/null 2>&1
+   if [ $? -eq 0 ]; then #match
+      ReplaceLineWithMatch "$repFile" "$repExpr" "$replace"
+   else                  #line does not exist
+      echo "$replace" >> "$repFile"
+   fi
 }
 
-#Remove old IJS and add new default valuesfor the new IJS
-UpdateIJSConfiguration()
+#UpdateConfiguration - Change IJS settings and 
+#                      for copy configuration execd_spool, admin_mail, gid_range
+UpdateConfiguration()
 {
    modFile=$1
    #Add new default to the global configuration
    if [ `echo $modFile | awk -F"/" '{ print $NF }'` = "global" ]; then
       #GLOBAL
-      ReplaceLineWithMatch ${modFile} 'qlogin_command.*' "qlogin_command               builtin"
-      ReplaceLineWithMatch ${modFile} 'qlogin_daemon.*'  "qlogin_daemon                builtin"
+      if [ -n "$EXECD_SPOOL_DIR" ]; then
+         ReplaceOrAddLine ${modFile} 'execd_spool_dir.*'     "execd_spool_dir              $EXECD_SPOOL_DIR"
+      fi
+      if [ -n "$GID_RANGE" ]; then
+         ReplaceOrAddLine ${modFile} 'gid_range.*'     "gid_range              $GID_RANGE"
+      fi
+      if [ -n "$ADMIN_MAIL" ]; then
+         ReplaceOrAddLine ${modFile} 'administrator_mail.*'     "administrator_mail              $ADMIN_MAIL"
+      fi
+      
+      if [ "$newIJS" = true ]; then # new IJS settings
+         ReplaceOrAddLine ${modFile} 'qlogin_command.*' "qlogin_command               builtin"
+         ReplaceOrAddLine ${modFile} 'qlogin_daemon.*'  "qlogin_daemon                builtin"
 		
-      ReplaceLineWithMatch ${modFile} 'rlogin_command.*' "rlogin_command               builtin"
-      ReplaceLineWithMatch ${modFile} 'rlogin_daemon.*'  "rlogin_daemon                builtin"
+         ReplaceOrAddLine ${modFile} 'rlogin_command.*' "rlogin_command               builtin"
+         ReplaceOrAddLine ${modFile} 'rlogin_daemon.*'  "rlogin_daemon                builtin"
 		
-      ReplaceLineWithMatch ${modFile} 'rsh_command.*'    "rsh_command                  builtin"
-      ReplaceLineWithMatch ${modFile} 'rsh_daemon.*'     "rsh_daemon                   builtin"
+         ReplaceOrAddLine ${modFile} 'rsh_command.*'    "rsh_command                  builtin"
+         ReplaceOrAddLine ${modFile} 'rsh_daemon.*'     "rsh_daemon                   builtin"
+      fi
    else
-      #LOCAL
-      RemoveLineWithMatch ${modFile} 'qlogin_command.*'
-      RemoveLineWithMatch ${modFile} 'qlogin_daemon.*'
+      #LOCAL configurations
+      if [ "$newIJS" = true ]; then # new IJS settings
+         RemoveLineWithMatch ${modFile} 'qlogin_command.*'
+         RemoveLineWithMatch ${modFile} 'qlogin_daemon.*'
 		
-      RemoveLineWithMatch ${modFile} 'rlogin_command.*'
-      RemoveLineWithMatch ${modFile} 'rlogin_daemon.*'
+         RemoveLineWithMatch ${modFile} 'rlogin_command.*'
+         RemoveLineWithMatch ${modFile} 'rlogin_daemon.*'
 		
-      RemoveLineWithMatch ${modFile} 'rsh_command.*'
-      RemoveLineWithMatch ${modFile} 'rsh_daemon.*'
+         RemoveLineWithMatch ${modFile} 'rsh_command.*'
+         RemoveLineWithMatch ${modFile} 'rsh_daemon.*'
+      fi
    fi
 }
 
@@ -189,10 +200,7 @@ ModifyLoad()
          RemoveLineWithMatch ${modFile} 'processors.*'
       ;;
       -Aconf)
-	      if [ "$newIJS" = "true" ]; then
-	         LogIt "I" "Updating configuration $loadFile for the new IJS"
-	         UpdateIJSConfiguration $loadFile
-	      fi
+	 UpdateConfiguration $loadFile
          ;;
    esac
    
@@ -441,10 +449,8 @@ LoadConfigFile()
 
    if [ "${configLevel:=1}" -gt 20 ]; then
    	LogIt "C" "Too deep in Load Config File"
-	exit 1
+	EXIT 1
    fi
-	
-   BckFile "${loadFile}"
 
    configLevel=`expr ${configLevel} + 1`
    
@@ -483,17 +489,16 @@ LoadListFromLocation()
       for item in $list; do
          LoadConfigFile $item $qconfOpt	
       done
-   #Directory list is not empty and without .sav files	
+   #Directory list is not empty
    elif [ -d "$loadLoc" ]; then
-      llList=`ls -1 ${loadLoc} | grep -v '\.sav'`
+      llList=`ls -1 ${loadLoc}`
       if [ -z "$llList" ]; then
          return
       fi
       #we prefer full file names 
-      llList=`ls ${loadLoc}/* | grep -v '\.sav'`
+      llList=`ls ${loadLoc}/*`
 
       for item in $llList; do
-         BckFile $item
          LoadConfigFile $item $qconfOpt
       done
    else
@@ -561,9 +566,7 @@ LoadConfigurations()
    LoadListFromLocation "$dir/resource_quotas" "-Arqs"
 
    # -Aconf file_list  <add configurations>
-   if [ "$loadConfig" = true ]; then
-      LoadListFromLocation "$dir/configurations" "-Aconf"
-   fi
+   LoadListFromLocation "$dir/configurations" "-Aconf"
 
    # -Astree fname  <add share tree>
    LoadConfigFile "$dir/sharetree" "-Astree"
@@ -604,7 +607,7 @@ IterativeLoad()
       loadLevel=`expr ${loadLevel} + 1`
       if [ "${loadLevel}" -gt 10 ]; then
          LogIt "C" "Too deep in Load Level"
-         exit 1   
+         EXIT 1   
       fi 
       LogIt "W" "[REPEAT LOAD]"
       LoadOnce "$dir"
@@ -612,82 +615,115 @@ IterativeLoad()
 
    if [ -n "$errorMsg" ]; then 
       LogIt "C" "$errorMsg"
-      exit 1
+      EXIT 1
    fi
+}
+
+EXIT() {
+   if [ -n "$BCK_DIR" ]; then
+      rm -rf "$BCK_DIR" 2>/dev/null
+   fi
+   exit "$1"
 }
 
 ########
 # MAIN #
 ########
 DIR="${1:?The load directory is required}"
-LOGGER_LEVEL=${2:-'W'}
+shift
 
+LOGGER_LEVEL="W"
 newIJS=false
-loadConfig=true
+EXECD_SPOOL_DIR=""
+ADMIN_MAIL=""
+GID_RANGE=""
 
-shift
-shift
+DATE=`date '+%Y-%m-%d_%H:%M:%S'`
+BCK_DIR="/tmp/sge_backup_$DATE"
+if [ ! -d "$BCK_DIR" ]; then
+   mkdir -p $BCK_DIR
+else
+   $INFOTEXT "Creating directory $BCK_DIR failed - already exists. Try again!"
+   exit 1
+fi
+cp -fR "${DIR}"/* "$BCK_DIR"
+#Make files readable for all
+chmod -R g+r,o+r "$BCK_DIR"/*
+
+MESSAGE_FILE_NAME="/tmp/sge_backup_load_${DATE}.log"
+
 ARGC=$#
 while [ $ARGC -gt 0 ]; do
    case $1 in
-      -newijs)
-         newIJS=true
-         LogIt "I" "LOAD invoked with -newijs"
+      -log)
+         shift
+         if [ "$1" != "C" -a "$1" != "W" -a "$1" != "I" ]; then
+            LogIt "W" "LOAD invoked with invalid log level "$1" using W"
+         else
+            LOGGER_LEVEL="$1"
+         fi
          ;;
-      -noconfig)
-         LogIt "I" "LOAD invoked with -noconfig"
-         loadConfig=false
+      -newijs)
+         shift
+         if [ "$1" != "true" -a "$1" != "false" ]; then
+            LogIt "W" "LOAD invoked with invalid newijs "$1" using false"
+         else 
+            LogIt "I" "LOAD invoked with -newijs"
+            newIJS="$1"
+         fi
+         ;;
+      -execd_spool_dir)
+         shift
+         LogIt "I" "LOAD invoked with -execd_spool_dir $1"
+         EXECD_SPOOL_DIR="$1"
+         ;;
+      -admin_mail)
+         shift
+         LogIt "I" "LOAD invoked with -admin_mail $1"
+         ADMIN_MAIL="$1"
+         ;;
+      -gid_range)
+         shift
+         LogIt "I" "LOAD invoked with -gid_range $1"
+         GID_RANGE="$1"
          ;;
       *)
          echo "Invalid argument \'$1\'"
          ;;
    esac
    shift
-   ARGC=`expr $ARGC - 1`
+   ARGC=`expr $ARGC - 2`
 done
-
-#TODO: Test if supported qmaster host + admin host
-
-MESSAGE_FILE_NAME="${DIR}/load.log"
-BckFile "${MESSAGE_FILE_NAME}" "1"
-
 
 CURRENT_VERSION=`$QCONF -help | sed  -n '1,1 p'` 2>&1
 ret=$?
 if [ "$ret" != "0" ]; then
    $INFOTEXT "ERROR: qconf -help failed"
    LogIt "C" "qmaster is not installed"
-   exit 1
+   EXIT 1
 fi
-$QCONF -sq > /dev/null 2>&1
-ret=$?
-if [ "$ret" != "0" ]; then
-   $INFOTEXT "ERROR: qconf -sq failed. Qmaster is not running?"
+admin_hosts=`$QCONF -sh 2>/dev/null`
+if [ -z "$admin_hosts" ]; then
+   $INFOTEXT "ERROR: qconf -sh failed. Qmaster is probably not running?"
    LogIt "C" "qmaster is not running"
-   exit 1
+   EXIT 1
+fi
+tmp_adminhost=`$QCONF -sh | grep "^${HOST}$"`
+if [ "$tmp_adminhost" != "$HOST" ]; then
+   $INFOTEXT "ERROR: Load must be started on admin host (qmaster host recommended)."
+   LogIt "C" "Can't start load_cc.sh on $HOST: not an admin host"
+   EXIT 1
 fi
 
-LOAD_VERSION=`cat $DIR/version`
-echo "LOAD $DIR" > $MESSAGE_FILE_NAME
-echo "$CURRENT_VERSION" >> $MESSAGE_FILE_NAME
-echo "$LOAD_VERSION" >> $MESSAGE_FILE_NAME
+LOAD_VERSION=`cat ${BCK_DIR}/version`
+LogIt "I" "LOAD $DIR backup from $BCK_DIR"
+LogIt "I" "$CURRENT_VERSION"
+LogIt "I" "$LOAD_VERSION"
 
-#Clear .sav file if present
-#TODO: Remove BckFile and .sav files with /tmp/timestamp dir
-#TODO: too long error might occur?
-for f in `find $DIR -type f -name "*.sav"` ; do
-   mv $f `echo "$f" | awk '{ print substr($0,1,length($0) - 4);}'`
-   if [ $? -ne 0 ]; then
-      LogIt "C" "Found .sav file in the backup directory. Appempt to rename them to the original names failed"
-      exit 1
-   fi
-done
+$INFOTEXT "Loading saved cluster configuration from $DIR (log in $MESSAGE_FILE_NAME)..."
 
+IterativeLoad "${BCK_DIR}"
 
-echo "Loading saved cluster configuration from $DIR ..."
-
-IterativeLoad "$DIR"
-
-echo "LOADING FINISHED" >> $MESSAGE_FILE_NAME
-echo "Done"
-exit 0
+LogIt "I" "LOADING FINISHED"
+$INFOTEXT "Done"
+EXIT 0

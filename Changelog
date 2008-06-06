@@ -1,3 +1,7 @@
+RD-2008-06-06-0: Bugfix:    - installation fails with ubuntu 08.04
+                 Issue:     2604
+                 Review:    JG
+
 RD-2008-06-05-1: Bugfix:    - added support for lx26-ppc64 
                             - imported several compiler error fixes from community
                  Issue:     2584, 2585, 2348, 2587, 2588, 2590

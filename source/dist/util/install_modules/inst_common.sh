@@ -3778,7 +3778,7 @@ IsMailAdress() {
 }
 
 IsValidClusterName() {
-   res=`echo "$1" | $AWK ' \
+   res=`echo "$1" | awk ' \
       /^[A-Za-z][A-Za-z0-9_-]*$/ { print "OK" } \
    '`
    if [ "$res" = "OK" ]; then

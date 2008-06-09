@@ -1,3 +1,6 @@
+LP-2008-06-09-0: Bugfix:     Upgrade load order fixed
+                 Review:    RD
+
 AA-2008-06-06-0: Bugfix:    load scaling display not working correctly
                             sensitivity of buttons in Queue Control dialog
                  Bugster:   6711578

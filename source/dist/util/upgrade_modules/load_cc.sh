@@ -532,11 +532,11 @@ LoadConfigurations()
    # -ao user,... <add operators>
    LoadListFromLocation "$dir/operators" "-ao"
 
-   # -Ae fname    <add execution host>
-   LoadListFromLocation "$dir/execution" "-Ae"
-
    # -Mc fname <modify complex>
    LoadConfigFile "$dir/centry" "-Mc"
+   
+   # -Ae fname    <add execution host>
+   LoadListFromLocation "$dir/execution" "-Ae"
 
    # -Acal fname <add calendar>
    LoadListFromLocation "$dir/calendars" "-Acal"

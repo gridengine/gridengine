@@ -1,4 +1,7 @@
-LP-2008-06-09-0: Bugfix:     Upgrade load order fixed
+RD-2008-06-10-0: CVS:       Created V62beta2_TAG
+------------------------------------------------
+
+LP-2008-06-09-0: Bugfix:    Upgrade load order fixed
                  Review:    RD
 
 AA-2008-06-06-0: Bugfix:    load scaling display not working correctly

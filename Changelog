@@ -1,3 +1,8 @@
+MP-2008-06-10-0: Bugfix:    qstat -j does not print array task information
+                 Bugster:   6710485
+                 Issue:     2606
+                 Review:    JG
+
 AA-2008-06-06-0: Bugfix:    load scaling display not working correctly
                             sensitivity of buttons in Queue Control dialog
                  Bugster:   6711578

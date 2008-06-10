@@ -1518,6 +1518,7 @@ dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListE
    const char *project;
    const lList *hard_queue_list, *master_hard_queue_list;
    const char *qinstance_name = lGetString(queue, QU_full_name);
+   bool could_be_master = false;
 
    DENTER(TOP_LAYER, "sge_queue_match_static");
 
@@ -1583,22 +1584,6 @@ dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListE
    }
 
    /* 
-    * is queue contained in hard queue list ? 
-    */
-   if (hard_queue_list) {
-      if (qref_list_cq_rejected(hard_queue_list, lGetString(queue, QU_qname),
-                     lGetHost(queue, QU_qhostname), hgrp_list)) {
-         DPRINTF(("Queue \"%s\" is not contained in the hard "
-                  "queue list (-q) that was requested by job %d\n",
-                  qinstance_name, (int) job_id));
-         schedd_mes_add(job_id, SCHEDD_INFO_NOTINHARDQUEUELST_S,
-                        qinstance_name);
-         DRETURN(DISPATCH_NEVER_CAT);
-      } 
-   }
-
-
-   /* 
     * is this queue a candidate for being the master queue? 
     */
    if (master_hard_queue_list) {
@@ -1615,7 +1600,27 @@ dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListE
          DPRINTF(("Queue \"%s\" is not contained in the master hard "
                   "queue list (-masterq) that was requested by job %d\n",
                   qinstance_name, (int) job_id));
+      } else {
+         could_be_master = true;
       }
+   } else {
+      lSetUlong(queue, QU_tagged4schedule, 0);
+   }
+      
+
+   /* 
+    * is queue contained in hard queue list ? 
+    */
+   if (hard_queue_list) {
+      if ((could_be_master == false) && qref_list_cq_rejected(hard_queue_list, lGetString(queue, QU_qname),
+                     lGetHost(queue, QU_qhostname), hgrp_list)) {
+         DPRINTF(("Queue \"%s\" is not contained in the hard "
+                  "queue list (-q) that was requested by job %d\n",
+                  qinstance_name, (int) job_id));
+         schedd_mes_add(job_id, SCHEDD_INFO_NOTINHARDQUEUELST_S,
+                        qinstance_name);
+         DRETURN(DISPATCH_NEVER_CAT);
+      } 
    }
 
    /*
@@ -3018,7 +3023,8 @@ dispatch_t cqueue_match_static(const char *cqname, sge_assignment_t *a)
    DENTER(TOP_LAYER, "cqueue_match_static");
 
    /* detect if entire cluster queue ruled out due to -q */
-   if (qref_list_cq_rejected(lGetList(a->job, JB_hard_queue_list), cqname, NULL, NULL)) {
+   if (qref_list_cq_rejected(lGetList(a->job, JB_hard_queue_list), cqname, NULL, NULL) &&
+       (!a->pe_name || qref_list_cq_rejected(lGetList(a->job, JB_master_hard_queue_list), cqname, NULL, NULL))) {
       DPRINTF(("Cluster Queue \"%s\" is not contained in the hard queue list (-q) that "
             "was requested by job %d\n", cqname, (int)a->job_id));
       schedd_mes_add(a->job_id, SCHEDD_INFO_NOTINHARDQUEUELST_S, cqname);
@@ -3828,14 +3834,26 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                         continue;
 
                      DPRINTF(("tagged: %d maxslots: %d rqs_hslots: %d\n", (int)lGetUlong(qep, QU_tag), maxslots, rqs_hslots));
-                     DPRINTF(("SLOT HARVESTING: %s soft violations %d\n", lGetString(qep, QU_full_name), lGetUlong(qep, QU_soft_violation)));
+                     DPRINTF(("SLOT HARVESTING: %s soft violations: %d master: %d\n", 
+                           lGetString(qep, QU_full_name), (int)lGetUlong(qep, QU_soft_violation), (int)lGetUlong(qep, QU_tagged4schedule)));
 
                      /* how much is still needed */
                      slots = MIN(lGetUlong(qep, QU_tag), maxslots - rqs_hslots);
-                     if (need_master_host && !have_master_host && !got_master_queue && lGetUlong(qep, QU_tagged4schedule)==0) {
-                        if (accu_host_slots + rqs_hslots + slots == a->slots)
-                           slots--;
+
+                     if (need_master_host) {
+                        /* care for slave tasks assignments of -masterq jobs */
+                        if (!have_master_host && !got_master_queue && lGetUlong(qep, QU_tagged4schedule)==0 
+                             && accu_host_slots + rqs_hslots + slots == a->slots)
+                              slots--;
+                        /* care for master tasks assignments of -masterq jobs */
+                        if (lGetUlong(qep, QU_tagged4schedule)==1) {
+                           if (!have_master_host && !got_master_queue)
+                              slots = MIN(slots, 1);
+                           else
+                              slots = 0;
+                        }
                      }
+
                      slots_qend = 0;
                      if (lGetUlong(a->job, JB_ar)==0 && !a->is_advance_reservation) {
                         DPRINTF(("trying to debit %d slots in queue "SFQ"\n", slots, qname));
@@ -3926,9 +3944,19 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
 
                      slots = 0;
                      slots_qend = MIN(lGetUlong(qep, QU_tag_qend), maxslots - rqs_hslots);
-                     if (need_master_host && !have_master_host_qend && !got_master_queue && lGetUlong(qep, QU_tagged4schedule)==0) {
-                        if (accu_host_slots_qend + rqs_hslots + slots_qend == a->slots)
+
+                     if (need_master_host) {
+                        /* care for slave tasks assignments of -masterq jobs */
+                        if (!have_master_host_qend && !got_master_queue && lGetUlong(qep, QU_tagged4schedule)==0
+                            && accu_host_slots_qend + rqs_hslots + slots_qend == a->slots)
                            slots_qend--;
+                        /* care for master tasks assignments of -masterq jobs */
+                        if (need_master_host && lGetUlong(qep, QU_tagged4schedule)==1) {
+                           if (!have_master_host_qend && !got_master_queue)
+                              slots_qend = MIN(slots_qend, 1);
+                           else
+                              slots_qend = 0;
+                        }
                      }
 
                      if (lGetUlong(a->job, JB_ar)==0 && !a->is_advance_reservation) {
@@ -4101,8 +4129,9 @@ parallel_host_slots(sge_assignment_t *a, int *slots, int *slots_qend,
    if (a->pi)
       a->pi->par_hstat++;
 
-   if (!qref_list_eh_rejected(lGetList(a->job, JB_hard_queue_list), eh_name, a->hgrp_list) &&
-      sge_host_match_static(a->job, a->ja_task, hep, a->centry_list, a->acl_list) == DISPATCH_OK) {
+   if (!(qref_list_eh_rejected(lGetList(a->job, JB_hard_queue_list), eh_name, a->hgrp_list) && 
+        qref_list_eh_rejected(lGetList(a->job, JB_master_hard_queue_list), eh_name, a->hgrp_list)) &&
+               sge_host_match_static(a->job, a->ja_task, hep, a->centry_list, a->acl_list) == DISPATCH_OK) {
 
       /* cause load be raised artificially to reflect load correction when
          checking job requests */

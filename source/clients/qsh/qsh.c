@@ -1603,7 +1603,8 @@ int main(int argc, char **argv)
          SGE_EXIT(NULL, 1);
       }   
 
-      just_verify = (lGetUlong(job, JB_verify_suitable_queues)==JUST_VERIFY);
+      just_verify = (lGetUlong(job, JB_verify_suitable_queues)==JUST_VERIFY ||
+                      lGetUlong(job, JB_verify_suitable_queues) == PROBE_VERIFY);
    }
 
    /*

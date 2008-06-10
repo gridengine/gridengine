@@ -106,13 +106,14 @@ enum {
 };
 
 /* values for JB_verify_suitable_queues */
-#define OPTION_VERIFY_STR "nwev"
+#define OPTION_VERIFY_STR "nwevp"
 enum { 
    SKIP_VERIFY = 0,     /* -w n no expendable verifications will be done */
-   WARNING_VERIFY,     /* -w w qmaster will warn about these jobs - but submit will succeed */ 
+   WARNING_VERIFY,      /* -w w qmaster will warn about these jobs - but submit will succeed */ 
    ERROR_VERIFY,        /* -w e qmaster will make expendable verifications to reject 
                             jobs that are not schedulable (default) */ 
-   JUST_VERIFY          /* -w v just verify at qmaster but do not submit */
+   JUST_VERIFY,         /* -w v just verify at qmaster but do not submit */
+   PROBE_VERIFY         /* -w p do verification with all resource utilizations in place (probe) */
 };
 
 

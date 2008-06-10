@@ -3651,9 +3651,6 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
       schedd_mes_set_tmp_list(use_category->cache, CCT_job_messages, a->job_id);
    }
 
-   /* remove reasons from last unsuccesful iteration */ 
-   clean_monitor_alp();
-
    if (lGetUlong(a->job, JB_ar) == 0) {
       prof_par_global++;
       parallel_global_slots(a, &gslots, &gslots_qend, &global_soft_violations); 
@@ -3975,6 +3972,20 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                accu_host_slots, a->slots));
          best_result = DISPATCH_NEVER_CAT;
       }
+
+      /* could be interesting for future diagnosis that unveils what resources the job could get 
+         as of now we got only negative diagnosis information i.e. reasons why/where no resources are/available */
+#if 0
+      if (best_result != DISPATCH_OK) {
+         dstring sched_info = DSTRING_INIT;
+         for_each (gdil_ep, a->gdil) {
+            sge_dstring_sprintf(&sched_info, "   HOST: %s QUEUE: %s SLOTS %d", 
+               lGetHost(gdil_ep, JG_qhostname), lGetString(gdil_ep, JG_qname), (int)lGetUlong(gdil_ep, JG_slots));
+            schedd_log(sge_dstring_get_string(&sched_info));
+         }
+         sge_dstring_free(&sched_info);
+      }
+#endif
 
       *available_slots = accu_host_slots;
 
@@ -5797,7 +5808,6 @@ parallel_rc_slots_by_time(const sge_assignment_t *a, lList *requests,  int *slot
    int avail_qend = 0;
    int max_slots = INT_MAX, max_slots_qend = INT_MAX;
    const char *name;
-   static lListElem *implicit_slots_request = NULL;
    lListElem *tep, *cep, *actual, *req;
    dispatch_t result;
 
@@ -5807,28 +5817,33 @@ parallel_rc_slots_by_time(const sge_assignment_t *a, lList *requests,  int *slot
 
    clear_resource_tags(requests, QUEUE_TAG); 
 
-   if (!implicit_slots_request) {
-      implicit_slots_request = lCreateElem(CE_Type);
-      lSetString(implicit_slots_request, CE_name, SGE_ATTR_SLOTS);
-      lSetString(implicit_slots_request, CE_stringval, "1");
-      lSetDouble(implicit_slots_request, CE_doubleval, 1);
-   }
-
    /* --- implicit slot request */
    name = SGE_ATTR_SLOTS;
    if (!(tep = lGetElemStr(total_list, CE_name, name)) && force_slots) {
       DRETURN(DISPATCH_OK); /* ??? Is this correct? Should be DISPATCH_NEVER_CAT */
    }
+
    if (tep) {
+      static lListElem *implicit_slots_request = NULL;
+
+      if (!implicit_slots_request) {
+         implicit_slots_request = lCreateElem(CE_Type);
+         lSetString(implicit_slots_request, CE_name, SGE_ATTR_SLOTS);
+         lSetString(implicit_slots_request, CE_stringval, "1");
+         lSetDouble(implicit_slots_request, CE_doubleval, 1);
+      }
+
       if (ri_slots_by_time(a, &avail, &avail_qend, 
             rue_list, implicit_slots_request, load_attr, total_list, queue, layer, lc_factor, 
             &reason, allow_non_requestable, false, object_name)) {
-         char buff[1024 + 1];
-         centry_list_append_to_string(requests, buff, sizeof(buff) - 1);
-         if (*buff && (buff[strlen(buff) - 1] == '\n')) {
-            buff[strlen(buff) - 1] = 0;
+         if (!isRQ) {
+            char buff[1024 + 1];
+            centry_list_append_to_string(requests, buff, sizeof(buff) - 1);
+            if (*buff && (buff[strlen(buff) - 1] == '\n')) {
+               buff[strlen(buff) - 1] = 0;
+            }   
+            schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, buff, object_name, reason_buf);
          }   
-         schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, buff, object_name, reason_buf);
          DRETURN(DISPATCH_NEVER_CAT);
       }
       max_slots      = MIN(max_slots,      avail);
@@ -5882,12 +5897,14 @@ parallel_rc_slots_by_time(const sge_assignment_t *a, lList *requests,  int *slot
                &reason, allow_non_requestable, false, object_name);
 
       if (result == DISPATCH_NEVER_CAT || result == DISPATCH_NEVER_JOB) {
-         char buff[1024 + 1];
-         centry_list_append_to_string(requests, buff, sizeof(buff) - 1);
-         if (*buff && (buff[strlen(buff) - 1] == '\n')) {
-            buff[strlen(buff) - 1] = 0;
+         if (!isRQ) {
+            char buff[1024 + 1];
+            centry_list_append_to_string(requests, buff, sizeof(buff) - 1);
+            if (*buff && (buff[strlen(buff) - 1] == '\n')) {
+               buff[strlen(buff) - 1] = 0;
+            }   
+            schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, buff, object_name, reason_buf);
          }   
-         schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, buff, object_name, reason_buf);
       }
       
       switch (result) {

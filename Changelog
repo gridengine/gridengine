@@ -1,3 +1,11 @@
+AH-2008-06-10-0 Bugfix:     - qalter -w v is silent on finished jobs
+                            - qalter -w v wrongly changes job attributes
+                            - added -w p (poke) option as replacement for old 
+                              qstat -j 
+                 Bugster:   6708891,6712685,6685496
+                 Issue:     2598,2607,2548
+                 Review:    RD
+
 RD-2008-06-04-0: CVS        Created V61ARsnapshot3_7_TAG
 --------------------------------------------------------
 

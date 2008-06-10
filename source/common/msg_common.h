@@ -864,8 +864,8 @@
 #define MSG_GDI_USAGE_V_OPT                              "[-V]"
 #define MSG_GDI_UTEXT_V_OPT                              _MESSAGE(23461, _("export all environment variables"))
 
-#define MSG_GDI_USAGE_w_OPT_EWNV                         "[-w e|w|n|v]"
-#define MSG_GDI_UTEXT_w_OPT_EWNV                         _MESSAGE(23462, _("verify mode (error|warning|none|just verify) for jobs"))
+#define MSG_GDI_USAGE_w_OPT_EWNVP                        "[-w e|w|n|v|p]"
+#define MSG_GDI_UTEXT_w_OPT_EWNVP                        _MESSAGE(23462, _("verify mode (error|warning|none|just verify|probe) for jobs"))
 
 #define MSG_GDI_USAGE_AT_OPT_FILE                        "[-@ file]"
 #define MSG_GDI_UTEXT_AT_OPT_FILE                        _MESSAGE(23463, _("read commandline input from file"))

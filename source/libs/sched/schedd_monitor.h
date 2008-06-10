@@ -36,9 +36,6 @@
 
 #define SCHED_LOG_NAME "schedd_runlog"
 
-/* free answer list if anyone is registered */
-void clean_monitor_alp(void);
-
 /* registers answer list to be used */
 void set_monitor_alpp(lList **alpp);
 

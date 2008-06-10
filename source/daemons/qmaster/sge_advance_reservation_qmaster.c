@@ -992,6 +992,15 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
     */
    a.queue_list = lCreateList("", QU_Type);
 
+    /* imagine qs is empty */
+    sconf_set_qs_state(QS_STATE_EMPTY);
+
+   /* redirect scheduler monitoring into answer list */
+   if (verify_mode == AR_JUST_VERIFY) {
+      DPRINTF(("AR Verify Mode\n"));
+      set_monitor_alpp(&talp);
+   }
+
    for_each(cqueue, master_cqueue_list) {
       const char *cqname = lGetString(cqueue, CQ_name);
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
@@ -1095,15 +1104,6 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
    lSetList(dummy_job, JB_master_hard_queue_list, lCopyList("", lGetList(ar, AR_master_queue_list)));
    lSetUlong(dummy_job, JB_type, lGetUlong(ar, AR_type));
    lSetString(dummy_job, JB_checkpoint_name, lGetString(ar, AR_checkpoint_name));
-
-    /* imagine qs is empty */
-    sconf_set_qs_state(QS_STATE_EMPTY);
-
-   /* redirect scheduler monitoring into answer list */
-   if (verify_mode == AR_JUST_VERIFY) {
-      DPRINTF(("AR Verify Mode\n"));
-      set_monitor_alpp(&talp);
-   }
 
    if (lGetString(ar, AR_pe)) {
       lSetString(dummy_job, JB_pe, lGetString(ar, AR_pe));

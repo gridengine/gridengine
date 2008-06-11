@@ -1,3 +1,6 @@
+RD-2008-06-11-0: Bugfix:    mtmalloc on Solaris was wrongly disabled
+                 Review:    JG
+
 AH-2008-06-10-0: Bugfix:    qsub option -q breaks -masterq
                  Bugster:   6710983
                  Issue:     2603

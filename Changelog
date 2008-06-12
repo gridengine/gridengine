@@ -1,3 +1,9 @@
+RD-2008-06-12-0: Bugfix:    load_sensor does not work with reports for
+                            other hosts
+                 Bugster:   6713785
+                 Issue:     2611
+                 Review:    DG
+
 RD-2008-06-11-0: Bugfix:    mtmalloc on Solaris was wrongly disabled
                  Review:    JG
 
@@ -21383,3 +21389,4 @@ CR-2001-07-20-0: Testsuite:
 AH-2001-07-20-0: - increased GRM_GDI_VERSION for GE 5.3
                  - fix qmaster core dump caused by old execd's sending load 
                    reports w/o REP_seqno
+

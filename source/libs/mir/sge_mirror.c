@@ -1823,7 +1823,7 @@ sge_mirror_update_master_list(lList **list, const lDescr *list_descr,
 
       case SGE_EMA_MOD:
          /* check for existence */
-         if(ep == NULL) {
+         if (ep == NULL) {
             ERROR((SGE_EVENT, "element "SFQ" does not exist\n", (key != NULL) ?key:"NULL"));
             DRETURN(SGE_EM_KEY_NOT_FOUND);
          }

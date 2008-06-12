@@ -73,7 +73,6 @@ int main(int argc, char **argv) {
    lListElem *aep, *idep;
    lList *jlp = NULL, *alp = NULL, *pcmdline = NULL, *ref_list = NULL, *user_list=NULL;
    u_long32 force = 0;
-   int cmd;
    int wait;
    unsigned long status = 0;
    bool have_master_privileges;
@@ -127,10 +126,6 @@ int main(int argc, char **argv) {
    */
    handle=cl_com_get_handle(prognames[QDEL], 0);
    cl_com_set_synchron_receive_timeout(handle, 10*60);
-
-   /* prepare gdi request for 'all' and '-uall' parameters */
-   cmd = SGE_GDI_DEL;
-
 
    /* Are there jobs which should be deleted? */
    if (!ref_list) {
@@ -215,7 +210,7 @@ int main(int argc, char **argv) {
                   }   
                }
             }
-            alp = ctx->gdi(ctx, SGE_JOB_LIST, cmd, &part_ref_list, NULL, NULL);
+            alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_DEL, &part_ref_list, NULL, NULL);
 
             for_each(aep, alp) {
                status = lGetUlong(aep, AN_status);

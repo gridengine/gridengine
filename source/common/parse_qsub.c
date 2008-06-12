@@ -1662,7 +1662,7 @@ DTRACE;
          DPRINTF(("\"-w %s\"\n", *sp));
 
          if (!strcmp("e", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
+            ep_opt = sge_add_arg(pcmdline, w_OPT, lIntT, *(sp - 1), *sp);
             if (prog_number == QRSUB) {
                lSetInt(ep_opt, SPA_argval_lIntT, AR_ERROR_VERIFY);
             } else {
@@ -1675,12 +1675,12 @@ DTRACE;
                      MSG_PARSE_INVALIDOPTIONARGUMENTWX_S, *sp);
                DRETURN(answer);
             } else {
-               ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
+               ep_opt = sge_add_arg(pcmdline, w_OPT, lIntT, *(sp - 1), *sp);
             }
             lSetInt(ep_opt, SPA_argval_lIntT, WARNING_VERIFY);
          }
          else if (!strcmp("n", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
+            ep_opt = sge_add_arg(pcmdline, w_OPT, lIntT, *(sp - 1), *sp);
             if (prog_number == QRSUB) {
                answer_list_add_sprintf(&answer,STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
                      MSG_PARSE_INVALIDOPTIONARGUMENTWX_S, *sp);
@@ -1690,7 +1690,7 @@ DTRACE;
             }
          }
          else if (!strcmp("v", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
+            ep_opt = sge_add_arg(pcmdline, w_OPT, lIntT, *(sp - 1), *sp);
             if (prog_number == QRSUB) {
                lSetInt(ep_opt, SPA_argval_lIntT, AR_JUST_VERIFY);
             } else {

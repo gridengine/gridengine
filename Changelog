@@ -1,3 +1,9 @@
+AH-2008-06-12-0   Bugfix:    - qalter -w v is silent on finished jobs
+                             - qalter -w v wrongly changes job attributes
+                  Bugster:   6708891,6712685
+                  Issue:     2598,2607
+                  Review:    RD
+
 RD-2008-06-12-1: Bugfix:    fixed possible segfault introduced with
                             RD-2008-06-12-0
                  Review:    DG

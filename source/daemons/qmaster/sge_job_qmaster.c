@@ -167,7 +167,7 @@ static void set_context(lList *jbctx, lListElem *job);
 
 static u_long32 guess_highest_job_number(void);
 
-static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger);
+static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bool is_modify);
 
 static int job_verify_predecessors(lListElem *job, lList **alpp);
 
@@ -743,7 +743,7 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
 
       /* verify schedulability */
       {
-         int ret = verify_suitable_queues(alpp, jep, NULL); 
+         int ret = verify_suitable_queues(alpp, jep, NULL, false); 
          if (lGetUlong(jep, JB_verify_suitable_queues)==JUST_VERIFY || ret != 0) {
             DRETURN(ret);
          }   
@@ -1629,6 +1629,21 @@ int sub_command
 
       if ((job_where != NULL ) && !lCompare(jobep, job_where)) {
          continue;
+      }
+
+      /* ignore modify requests if all job tasks are already JFINISHED 
+         and no task id remains in not yet ran task id lists */
+      if (job_get_not_enrolled_ja_tasks(jobep) == 0) {
+         lListElem *ja_task;
+         bool all_finished = true;
+         for_each (ja_task, lGetList(jobep, JB_ja_tasks)) {
+            if (lGetUlong(ja_task, JAT_status) != JFINISHED) {
+               all_finished = false;
+               break;
+            }
+         }
+         if (all_finished == true)
+            continue;
       }
 
       njobs++;
@@ -3066,7 +3081,7 @@ int *trigger
       int ret;
       lSetUlong(new_job, JB_verify_suitable_queues, 
             lGetUlong(jep, JB_verify_suitable_queues));
-      ret = verify_suitable_queues(alpp, new_job, trigger); 
+      ret = verify_suitable_queues(alpp, new_job, trigger, true); 
       if (lGetUlong(new_job, JB_verify_suitable_queues)==JUST_VERIFY 
          || ret != 0) {
          DRETURN(ret);
@@ -3661,188 +3676,190 @@ static u_long32 guess_highest_job_number()
 }   
       
 /* all modifications are done now verify schedulability */
-static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger)
+static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bool is_modify)
 {
    int verify_mode = lGetUlong(jep, JB_verify_suitable_queues);
 
    DENTER(TOP_LAYER, "verify_suitable_queues");
-   
-   switch (verify_mode) {
-   case SKIP_VERIFY:   
+
+   if (verify_mode == SKIP_VERIFY) {
       DPRINTF(("skip expensive verification of schedulability\n"));
-      break;
-   case ERROR_VERIFY:
-   case WARNING_VERIFY:
-   case JUST_VERIFY:
-   default:
-      {
-         lListElem *cqueue;
-         lList *talp = NULL;
-         int ngranted = 0;
-         int try_it = 1;
-         const char *ckpt_name;
-         lList *job_hard_queue_list = lGetList(jep, JB_hard_queue_list);
-         const char *pe_name = lGetString(jep, JB_pe);
-         object_description *object_base = object_type_get_object_description();
+      DRETURN(0);
+   }     
 
-         sge_assignment_t a = SGE_ASSIGNMENT_INIT;
+   /* can happen only from qalter -w ... */
+   if (is_modify == true && job_get_not_enrolled_ja_tasks(jep) == 0) {
+      /* since we can rule out a finished jobs it can be running only */
+      sprintf(SGE_EVENT, "verification: job is already running");
+      answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+      DRETURN(0);
+   }  
+ 
+   {
+      lListElem *cqueue;
+      lList *talp = NULL;
+      int ngranted = 0;
+      int try_it = 1;
+      const char *ckpt_name;
+      lList *job_hard_queue_list = lGetList(jep, JB_hard_queue_list);
+      const char *pe_name = lGetString(jep, JB_pe);
+      object_description *object_base = object_type_get_object_description();
 
-         assignment_init(&a, jep, NULL, false);
+      sge_assignment_t a = SGE_ASSIGNMENT_INIT;
 
-         DPRINTF(("verify schedulability = %c\n", OPTION_VERIFY_STR[verify_mode]));
+      assignment_init(&a, jep, NULL, false);
 
-         /* checkpointing */
-         if ((ckpt_name=lGetString(jep, JB_checkpoint_name)))
-            if (!(a.ckpt = ckpt_list_locate(*object_base[SGE_TYPE_CKPT].list, ckpt_name)))
-               try_it = 0;
+      DPRINTF(("verify schedulability = %c\n", OPTION_VERIFY_STR[verify_mode]));
 
-         /* parallel */
-         if (try_it) {
-            u_long32 ar_id = lGetUlong(jep, JB_ar);
-            lList *ar_granted_slots = NULL;
+      /* checkpointing */
+      if ((ckpt_name=lGetString(jep, JB_checkpoint_name)))
+         if (!(a.ckpt = ckpt_list_locate(*object_base[SGE_TYPE_CKPT].list, ckpt_name)))
+            try_it = 0;
 
-            if (ar_id != 0) {
-               lListElem *ar = NULL; 
-               ar = ar_list_locate(*object_base[SGE_TYPE_AR].list, ar_id);
-               if (ar != NULL) {
-                  ar_granted_slots = lGetList(ar, AR_granted_slots);
-               }
-            }
+      /* parallel */
+      if (try_it) {
+         u_long32 ar_id = lGetUlong(jep, JB_ar);
+         lList *ar_granted_slots = NULL;
 
-            a.host_list        = *object_base[SGE_TYPE_EXECHOST].list;
-            a.centry_list      = *object_base[SGE_TYPE_CENTRY].list;
-            a.acl_list         = *object_base[SGE_TYPE_USERSET].list;
-            a.hgrp_list        = *object_base[SGE_TYPE_HGROUP].list;
-            if (lGetUlong(jep, JB_ar) == 0) {
-               a.rqs_list         = *object_base[SGE_TYPE_RQS].list;
-            } else {
-               a.ar_list         = *object_base[SGE_TYPE_AR].list;
-            }
-            a.gep              = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, SGE_GLOBAL_NAME);
-            a.start            = DISPATCH_TIME_NOW;
-            a.duration         = 0; /* indicator for schedule based mode */
-            a.is_job_verify    = true;
-
-            /* 
-             * Current scheduler code expects all queue instances in a plain list. We use 
-             * a copy of all queue instances that needs to be free'd explicitely after 
-             * deciding about assignment. This is because assignment_release() sees 
-             * queue_list only as a list pointer.
-             */ 
-            a.queue_list = lCreateList("", QU_Type);
-
-            for_each(cqueue, *object_base[SGE_TYPE_CQUEUE].list) {
-               const char *cqname = lGetString(cqueue, CQ_name);
-               lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-               lListElem *qinstance;
-
-               if (cqueue_match_static(cqname, &a) != DISPATCH_OK) {
-                  continue;
-               }
-
-               for_each(qinstance, qinstance_list) {
-
-                  /* we only have to consider requested queues */
-                  if (job_hard_queue_list != NULL) {
-                     if (qref_list_cq_rejected(job_hard_queue_list, cqname,
-                              lGetHost(qinstance, QU_qhostname), a.hgrp_list)) {
-                        continue; 
-                     } 
-                  }
-
-                  if (ar_granted_slots != NULL) {
-                     if (lGetElemStr(ar_granted_slots, JG_qname, lGetString(qinstance, QU_full_name)) == NULL) {
-                       continue; 
-                     }
-                  }
-                  
-
-                  /* we only have to consider queues containing the requested pe */
-                  if (pe_name != NULL) {
-                     bool found = false;
-                     lListElem *pe_ref;
-
-                     for_each(pe_ref, lGetList(qinstance, QU_pe_list)) {
-                        if (pe_name_is_matching(lGetString(pe_ref, ST_name), pe_name)) {
-                           found = true;
-                           break;
-                        }
-                     }
-                     if (!found) {
-                        continue;
-                     }
-
-                  }
-
-                  lAppendElem(a.queue_list, lCopyElem(qinstance));
-               }
-            }
-
-
-            /* imagine qs is empty */
-            sconf_set_qs_state(QS_STATE_EMPTY);
-
-            /* redirect scheduler monitoring into answer list */
-            if (verify_mode == JUST_VERIFY) {
-               set_monitor_alpp(&talp);
-            }   
-
-            if (lGetString(jep, JB_pe)) {
-               sge_select_parallel_environment(&a, *object_base[SGE_TYPE_PE].list);
-            } else {
-               sge_sequential_assignment(&a);
-            }
-            ngranted += nslots_granted(a.gdil, NULL);
-
-            /* stop redirection of scheduler monitoring messages */
-            if (verify_mode==JUST_VERIFY) {
-               set_monitor_alpp(NULL);
-            }
-
-            /* stop dreaming */
-            sconf_set_qs_state(QS_STATE_FULL);
-
-            lFreeList(&(a.queue_list));
-         }
-
-         assignment_release(&a);
-
-         /* consequences */
-         if (!ngranted || !try_it) {
-            /* copy error msgs from talp into alpp */
-            if (verify_mode==JUST_VERIFY) {
-               if (!*alpp)
-                  *alpp = lCreateList("answer", AN_Type);
-               lAddList(*alpp, &talp);
-            } else {
-               lFreeList(&talp);
-            }
-
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_JOB_NOSUITABLEQ_S,
-               (verify_mode==JUST_VERIFY ? MSG_JOB_VERIFYVERIFY: 
-                  (verify_mode==ERROR_VERIFY)?MSG_JOB_VERIFYERROR:MSG_JOB_VERIFYWARN)));
-            answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, (verify_mode==JUST_VERIFY ? ANSWER_QUALITY_INFO: 
-                  (verify_mode==ERROR_VERIFY)?ANSWER_QUALITY_ERROR:ANSWER_QUALITY_WARNING));
-
-            if (verify_mode != WARNING_VERIFY) {
-               DRETURN((verify_mode==JUST_VERIFY)?0:STATUS_ESEMANTIC);
+         if (ar_id != 0) {
+            lListElem *ar = NULL; 
+            ar = ar_list_locate(*object_base[SGE_TYPE_AR].list, ar_id);
+            if (ar != NULL) {
+               ar_granted_slots = lGetList(ar, AR_granted_slots);
             }
          }
 
+         a.host_list        = *object_base[SGE_TYPE_EXECHOST].list;
+         a.centry_list      = *object_base[SGE_TYPE_CENTRY].list;
+         a.acl_list         = *object_base[SGE_TYPE_USERSET].list;
+         a.hgrp_list        = *object_base[SGE_TYPE_HGROUP].list;
+         if (lGetUlong(jep, JB_ar) == 0) {
+            a.rqs_list         = *object_base[SGE_TYPE_RQS].list;
+         } else {
+            a.ar_list         = *object_base[SGE_TYPE_AR].list;
+         }
+         a.gep              = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, SGE_GLOBAL_NAME);
+         a.start            = DISPATCH_TIME_NOW;
+         a.duration         = 0; /* indicator for schedule based mode */
+         a.is_job_verify    = true;
+
+         /* 
+          * Current scheduler code expects all queue instances in a plain list. We use 
+          * a copy of all queue instances that needs to be free'd explicitely after 
+          * deciding about assignment. This is because assignment_release() sees 
+          * queue_list only as a list pointer.
+          */ 
+         a.queue_list = lCreateList("", QU_Type);
+
+         /* imagine qs is empty */
+         sconf_set_qs_state(QS_STATE_EMPTY);
+
+         /* redirect scheduler monitoring into answer list */
+         if (verify_mode == JUST_VERIFY) {
+            set_monitor_alpp(&talp);
+         }
+
+         for_each(cqueue, *object_base[SGE_TYPE_CQUEUE].list) {
+            const char *cqname = lGetString(cqueue, CQ_name);
+            lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+            lListElem *qinstance;
+
+            if (cqueue_match_static(cqname, &a) != DISPATCH_OK) {
+               continue;
+            }
+
+            for_each(qinstance, qinstance_list) {
+
+               /* we only have to consider requested queues */
+               if (job_hard_queue_list != NULL) {
+                  if (qref_list_cq_rejected(job_hard_queue_list, cqname,
+                           lGetHost(qinstance, QU_qhostname), a.hgrp_list)) {
+                     continue; 
+                  } 
+               }
+
+               if (ar_granted_slots != NULL) {
+                  if (lGetElemStr(ar_granted_slots, JG_qname, lGetString(qinstance, QU_full_name)) == NULL) {
+                    continue; 
+                  }
+               }
+               
+
+               /* we only have to consider queues containing the requested pe */
+               if (pe_name != NULL) {
+                  bool found = false;
+                  lListElem *pe_ref;
+
+                  for_each(pe_ref, lGetList(qinstance, QU_pe_list)) {
+                     if (pe_name_is_matching(lGetString(pe_ref, ST_name), pe_name)) {
+                        found = true;
+                        break;
+                     }
+                  }
+                  if (!found) {
+                     continue;
+                  }
+
+               }
+
+               lAppendElem(a.queue_list, lCopyElem(qinstance));
+            }
+         }
+
+         if (pe_name) {
+            sge_select_parallel_environment(&a, *object_base[SGE_TYPE_PE].list);
+         } else {
+            sge_sequential_assignment(&a);
+         }
+         ngranted = nslots_granted(a.gdil, NULL);
+
+         /* stop redirection of scheduler monitoring messages */
          if (verify_mode==JUST_VERIFY) {
-            if (trigger) {
-               *trigger |= VERIFY_EVENT;
-            }
-            if (!a.pe) {
-               sprintf(SGE_EVENT, MSG_JOB_VERIFYFOUNDQ); 
-            } else {
-               sprintf(SGE_EVENT, MSG_JOB_VERIFYFOUNDSLOTS_I, ngranted);
-            }
-            answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-            DRETURN(0);
+            set_monitor_alpp(NULL);
+         }
+
+         /* stop dreaming */
+         sconf_set_qs_state(QS_STATE_FULL);
+
+         lFreeList(&(a.queue_list));
+      }
+
+      assignment_release(&a);
+
+      /* consequences */
+      if (!try_it || !ngranted) {
+         /* copy error msgs from talp into alpp */
+         if (verify_mode==JUST_VERIFY) {
+            if (!*alpp)
+               *alpp = lCreateList("answer", AN_Type);
+            lAddList(*alpp, &talp);
+         } else {
+            lFreeList(&talp);
+         }
+
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_JOB_NOSUITABLEQ_S,
+            (verify_mode==JUST_VERIFY ? MSG_JOB_VERIFYVERIFY: 
+               (verify_mode==ERROR_VERIFY)?MSG_JOB_VERIFYERROR:MSG_JOB_VERIFYWARN)));
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, (verify_mode==JUST_VERIFY ? ANSWER_QUALITY_INFO: 
+               (verify_mode==ERROR_VERIFY)?ANSWER_QUALITY_ERROR:ANSWER_QUALITY_WARNING));
+
+         if (verify_mode != WARNING_VERIFY) {
+            DRETURN((verify_mode==JUST_VERIFY)?0:STATUS_ESEMANTIC);
          }
       }
-      break;
+
+      if (verify_mode==JUST_VERIFY) {
+         if (trigger) {
+            *trigger |= VERIFY_EVENT;
+         }
+         if (!a.pe) {
+            sprintf(SGE_EVENT, MSG_JOB_VERIFYFOUNDQ); 
+         } else {
+            sprintf(SGE_EVENT, MSG_JOB_VERIFYFOUNDSLOTS_I, ngranted);
+         }
+         answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+         DRETURN(STATUS_ESEMANTIC);
+      }
    }
 
    DRETURN(0);

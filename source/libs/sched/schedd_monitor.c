@@ -83,11 +83,6 @@ char* schedd_get_log_string(void)
    return log_string;
 }
 
-void clean_monitor_alp()
-{
-   lFreeList(monitor_alpp);
-}
-
 void set_monitor_alpp(lList **alpp) {
    monitor_alpp = alpp;
    monitor_next_run = (alpp!=NULL)?true:false;
@@ -103,10 +98,7 @@ int schedd_log(const char *logstr)
    }
 
    if (monitor_alpp) {
-      char logloglog[2048];
-/*       DPRINTF(("schedd_log: %s\n", logstr)); */
-      sprintf(logloglog, "%s", logstr);
-      answer_list_add(monitor_alpp, logloglog, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+      answer_list_add(monitor_alpp, logstr, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
    } 
    else {
       time_t now;

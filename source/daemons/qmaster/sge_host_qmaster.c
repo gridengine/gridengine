@@ -714,6 +714,22 @@ void sge_update_load_values(sge_gdi_ctx_class_t *ctx, const char *rhost, lList *
     */
    now = sge_get_gmt();
 
+   host_ep = host_list_locate(*object_type_get_master_list(SGE_TYPE_EXECHOST), rhost);
+   if (host_ep == NULL) {
+      /* report from unknown host arrived, ignore it */
+      DRETURN_VOID;
+   }
+
+   /* 
+    * if rhost is unknown set him to known
+    */
+   if (lGetUlong(host_ep, EH_lt_heard_from) == 0) {
+      cqueue_list_set_unknown_state(*(object_type_get_master_list(SGE_TYPE_CQUEUE)),
+                                    rhost, true, false);
+      lSetUlong(host_ep, EH_lt_heard_from, sge_get_gmt());
+   }
+
+   host_ep = NULL;
    /* loop over all received load values */
    for_each(ep, lp) {
 
@@ -785,34 +801,21 @@ void sge_update_load_values(sge_gdi_ctx_class_t *ctx, const char *rhost, lList *
    ** if static load values (eg arch) have changed
    ** then spool
    */
-   if (*hepp != NULL) {
+   if (hepp != NULL && *hepp != NULL) {
       sge_event_spool(ctx, &answer_list, 0, sgeE_EXECHOST_MOD, 
                       0, 0, lGetHost(*hepp, EH_name), NULL, NULL,
                       *hepp, NULL, NULL, true, statics_changed);
 
       reporting_create_host_record(&answer_list, *hepp, now);
-      answer_list_output(&answer_list);
-   }
-
-   /* 
-    * if rhost is unknown set him to known
-    */
-   host_ep = host_list_locate(*object_type_get_master_list(SGE_TYPE_EXECHOST), rhost);
-   if (lGetUlong(host_ep, EH_lt_heard_from) == 0) {
-      cqueue_list_set_unknown_state(*(object_type_get_master_list(SGE_TYPE_CQUEUE)),
-                                    rhost, true, false);
-      lSetUlong(host_ep, EH_lt_heard_from, sge_get_gmt());
    }
 
    if (global_ep) {
-      lList *answer_list = NULL;
       sge_event_spool(ctx, &answer_list, 0, sgeE_EXECHOST_MOD, 
                       0, 0, SGE_GLOBAL_NAME, NULL, NULL,
                       global_ep, NULL, NULL, true, false);
       reporting_create_host_record(&answer_list, global_ep, now);
-      answer_list_output(&answer_list);
    }
-
+   answer_list_output(&answer_list);
 
    DRETURN_VOID;
 }

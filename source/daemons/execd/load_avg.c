@@ -105,7 +105,9 @@ execd_add_load_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now
    const char* binary_path = ctx->get_binary_path(ctx);
 
    if (*next_send <= now) {
+      lSortOrder *order = lParseSortOrderVarArg(LR_Type, "%I+", LR_host);
       lListElem *report;
+      lList *tmp_lr_list;
 
       *next_send = now + mconf_get_load_report_time();
 
@@ -120,7 +122,10 @@ execd_add_load_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now
       lSetUlong(report, REP_version, GRM_GDI_VERSION);
       lSetUlong(report, REP_seqno, sge_execd_report_seqno);
       lSetHost(report, REP_host, qualified_hostname);
-      lSetList(report, REP_list, sge_build_load_report(qualified_hostname, binary_path));
+      tmp_lr_list = sge_build_load_report(qualified_hostname, binary_path);
+      lSortList(tmp_lr_list, order);
+      lFreeSortOrder(&order);
+      lSetList(report, REP_list, tmp_lr_list);
       lAppendElem(report_list, report);
    }
 

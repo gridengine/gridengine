@@ -3172,9 +3172,9 @@ japi_sge_state_to_drmaa_state(lListElem *job, bool is_array_task, u_long32 jobid
       *remote_ps |= DRMAA_PS_SUBSTATE_USER_SUSP;
    if (range_list_is_id_within(lGetList(job, JB_ja_s_h_ids), taskid) ||
        range_list_is_id_within(lGetList(job, JB_ja_o_h_ids), taskid) ||
-       range_list_is_id_within(lGetList(job, JB_ja_a_h_ids), taskid) /* ||
+       range_list_is_id_within(lGetList(job, JB_ja_a_h_ids), taskid)  ||
        (lGetUlong(job, JB_execution_time) > sge_get_gmt()) || 
-                    lGetList(job, JB_jid_predecessor_list) */
+                    lGetList(job, JB_jid_predecessor_list) 
        )
       *remote_ps |= DRMAA_PS_SUBSTATE_SYSTEM_SUSP;
  

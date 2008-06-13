@@ -1,3 +1,9 @@
+DG-2008-06-13-0: Bugfix:    job hold due to -hold_jid is not indicated as 
+                            STATE_SYSTEM_ON_HOLD by drmaa_job_ps(3) 
+                 Issue:     2608
+                 Bugster:   6562277
+                 Review:    AH, RD 
+
 AH-2008-06-12-0   Bugfix:    - qalter -w v is silent on finished jobs
                              - qalter -w v wrongly changes job attributes
                   Bugster:   6708891,6712685

@@ -41,8 +41,7 @@ package com.sun.grid.drmaa;
 import junit.framework.*;
 
 /**
- *
- * @author dan.templeton@sun.com
+ * 
  */
 public class DrmaaSuite extends TestCase {
     
@@ -59,6 +58,7 @@ public class DrmaaSuite extends TestCase {
         suite.addTest(com.sun.grid.drmaa.JobTemplateImplTest.suite());
         suite.addTest(com.sun.grid.drmaa.SessionImplJobTest.suite());
         suite.addTest(com.sun.grid.drmaa.Issues.suite());
+        suite.addTest(com.sun.grid.drmaa.Issue2608Test.suite());
         return suite;
     }
 }

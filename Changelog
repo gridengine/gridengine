@@ -622,7 +622,11 @@ RD-2008-03-13-0: Bugfix:    fixed issue with queue subordinate suspention
                             introduced by RD-2008-03-04-0
                  Review:    AH
 
-JG-2008-03-13-0: Bugfix:    Fixed minor memory leaks.
+JG-2008-03-13-0: Bugfix:    - fixed minor memory leaks.
+                            - specifying more than one drmaa_v_env 
+                              attribute causes spurious error msg
+                 Bugster:   6614108
+                 Issue:     2392
                  Review:    RD
 
 AA-2008-03-13-0: Bugfix:    changed installation for JMX

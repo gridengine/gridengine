@@ -1,3 +1,5 @@
+LP-2008-06-13-0: Enhancem:  Added SMF specification document
+
 DG-2008-06-13-0: Bugfix:    job hold due to -hold_jid is not indicated as 
                             STATE_SYSTEM_ON_HOLD by drmaa_job_ps(3) 
                  Issue:     2608

@@ -378,8 +378,8 @@ centry_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, gdi_o
    return 0;
 }
 
-int sge_del_centry(sge_gdi_ctx_class_t *ctx, lListElem *centry, lList **answer_list, 
-                   char *remote_user, char *remote_host) 
+int sge_del_centry(sge_gdi_ctx_class_t *ctx, lListElem *centry, lList **answer_list,
+                   char *remote_user, char *remote_host)
 {
    bool ret = true;
    object_description *object_base = object_type_get_object_description();
@@ -397,24 +397,24 @@ int sge_del_centry(sge_gdi_ctx_class_t *ctx, lListElem *centry, lList **answer_l
          /* check if its a build in value */
          {
             int i;
-            for ( i=0; i< max_queue_resources; i++){
-               if (strcmp(queue_resource[i].name, name) == 0 ){
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+            for (i = 0; i < max_queue_resources; i++) {
+               if (strcmp(queue_resource[i].name, name) == 0 ) {
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR,
                                     MSG_INVALID_CENTRY_DEL_S, name);
                   ret = false;
-                  break; 
+                  break;
                }
             }
 
             for (i = 0; i < max_host_resources; i++) {
-               if (strcmp(host_resource[i].name, name) == 0 ){
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+               if (strcmp(host_resource[i].name, name) == 0 ) {
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR,
                                           MSG_INVALID_CENTRY_DEL_S, name);
                   ret = false;
-                  break; 
+                  break;
                }
             }
-         }      
+         }
          if (ret) {
             if (tmp_centry != NULL) {
                if (!centry_is_referenced(tmp_centry, &local_answer_list, 

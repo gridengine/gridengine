@@ -1005,7 +1005,6 @@ reporting_create_host_consumable_record(lList **answer_list,
       sge_dstring_free(&consumable_dstring);
    }
 
-
    DRETURN(ret);
 }
 

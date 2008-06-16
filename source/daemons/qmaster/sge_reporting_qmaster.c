@@ -1014,7 +1014,6 @@ reporting_create_host_consumable_record(lList **answer_list,
       sge_dstring_free(&consumable_dstring);
    }
 
-
    DRETURN(ret);
 }
 
@@ -1494,7 +1493,6 @@ static bool reporting_flush_report_file(lList **answer_list,
       if (fp != NULL) {
          FCLOSE(fp);
       }
-
    }
 
    sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));

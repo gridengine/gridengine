@@ -1,3 +1,9 @@
+AA-2008-06-16-0: Bugfix:    - certtool.sh didn't overwrite key dir 
+                              for reinstall in testsuite
+                            - NullPointerException fix for sharetree
+                            - memory leak fix
+                 Review:    JG
+
 RD-2008-06-12-0: Bugfix:    load_sensor does not work with reports for
                             other hosts
                  Bugster:   6713785

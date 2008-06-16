@@ -435,6 +435,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_fillEvents
          }
       }
    }
+   lFreeList(&elist);
    
    {
       jint size = 0;
@@ -700,7 +701,7 @@ static jgdi_result_t fill_generic_event(JNIEnv *env, jobject event_obj, const ch
          jstring evt_classname_obj = NULL;
          const char* evt_classname = NULL;
          
-         ret = Object_getClass(env, obj, &evt_class, alpp);
+         ret = Object_getClass(env, event_obj, &evt_class, alpp);
          if (ret != JGDI_SUCCESS) {
             DRETURN(ret);
          }

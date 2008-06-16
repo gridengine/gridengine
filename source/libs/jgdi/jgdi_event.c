@@ -888,7 +888,7 @@ static jgdi_result_t fill_generic_event(JNIEnv *env, jobject event_obj, const ch
       }
    } else {
       jobject  obj = NULL;
-      
+
       ret = ChangedObjectEvent_setPKInfo(env, event_obj,
                                         lGetUlong(ev,ET_intkey),
                                         lGetUlong(ev,ET_intkey2),
@@ -916,7 +916,7 @@ static jgdi_result_t fill_generic_event(JNIEnv *env, jobject event_obj, const ch
          jstring evt_classname_obj = NULL;
          const char* evt_classname = NULL;
          
-         ret = Object_getClass(env, obj, &evt_class, alpp);
+         ret = Object_getClass(env, event_obj, &evt_class, alpp);
          if (ret != JGDI_SUCCESS) {
             DRETURN(ret);
          }

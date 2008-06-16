@@ -118,7 +118,8 @@ else
    if [ "$SGE_ARCH" = "win32-x86" ]; then
       WIN_HOST_NAME=`hostname | tr [a-z] [A-Z]`
       WIN_ADMINUSER="$WIN_HOST_NAME+$ADMINUSER"
-      UID=`id | cut -d"(" -f1 | cut -d"=" -f2`
+      #UID=`id | cut -d"(" -f1 | cut -d"=" -f2`
+      UID=`id -u`
       if [ $UID = "197108" -o $UID = "1049076" ]; then
          is_su="true"
          WIN_SU_NAME=`id | cut -d"(" -f2 | cut -d")" -f1 | cut -d"+" -f2`
@@ -153,14 +154,17 @@ else
          echo
 
          echo "... copy "$USERKEY_DIR/$UNIX_SU_NAME" to "$USERKEY_DIR/$WIN_HOST_NAME+$WIN_SU_NAME""
+         rm -rf "$USERKEY_DIR/$WIN_HOST_NAME+$WIN_SU_NAME"
          cp -r "$USERKEY_DIR/$UNIX_SU_NAME" "$USERKEY_DIR/$WIN_HOST_NAME+$WIN_SU_NAME"
          echo
 
          echo "... copy "$USERKEY_DIR/$UNIX_SU_NAME" to "$USERKEY_DIR/$WIN_SU_NAME""
+         rm -rf "$USERKEY_DIR/$WIN_SU_NAME"
          cp -r "$USERKEY_DIR/$UNIX_SU_NAME" "$USERKEY_DIR/$WIN_SU_NAME"
          echo
 
          echo "... copy "$USERKEY_DIR/$ADMINUSER" to "$USERKEY_DIR/$WIN_ADMINUSER""           
+         rm -rf "$USERKEY_DIR/$WIN_ADMINUSER"
          cp -r "$USERKEY_DIR/$ADMINUSER" "$USERKEY_DIR/$WIN_ADMINUSER"
          echo
 

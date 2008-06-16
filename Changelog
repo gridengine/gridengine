@@ -1,3 +1,8 @@
+AA-2008-06-16-0: Bugfix:    - certtool.sh didn't overwrite key dir 
+                              for reinstall in testsuite
+                            - NullPointerException fix for sharetree
+                 Review:    JG
+
 LP-2008-06-13-1: Bugfix:    Fixed SMF specification document
 
 LP-2008-06-13-0: Enhancem:  Added SMF specification document

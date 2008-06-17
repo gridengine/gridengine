@@ -188,9 +188,11 @@ EB-2008-05-21-0: Doc:       Changed some man pages
                  Review:    DG
 
 HP-2008-05-19-0: Bugfix:    New interactive job support didn't work properly in secured
-                            mode
+                            mode.
                  Enhancem:  Added infos about new interactive job support to man pages
                  Review:    AA
+                 Remark:    This bugfix was not sufficient, a complete bugfix
+                            will follow!
                  
 AH-2008-05-19-0: Bugfix:    Incorrect documentation for xprojects setting in
                             sge_conf(5).

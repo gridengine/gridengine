@@ -172,7 +172,8 @@ RN-2008-05-29-0: Bugfix:    Failed to deliver STOP signal for subordinated jobs
                  Issue:     2478
                  Review:    JG 
 
-JO-2008-05-28-0: Bugfix:    o Added missing argument
+JO-2008-05-28-0: Bugfix:    o Argument not passed from SetupRcScriptNames()
+                 Bugster:   6715369
                             o Corrected arco_mysql.txt
                  Review:    LP
 

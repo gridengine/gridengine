@@ -114,6 +114,8 @@ CR-2008-06-02-0: Cleanup:   commlib:
                              - report ip resolve errors to application
                                utilbin/gethostbyaddr:
                              - added application error callback for commlib
+                 Bugster:   6715366
+                 Issue:     2616
                  Review:    RD
 
 AA-2008-05-30-0: Bugfix:    - upgrade to openssl-0.9.8g
@@ -150,6 +152,8 @@ CR-2008-05-29-0: Bugfix:    Communication library cleanup:
                               endpoint name which was removed by performance
                               changes. The information is needed in service to
                               do hostname resolve and component id checks.
+                 Bugster:   6715371, 6715373
+                 Issue:     2617, 2618
                  Review:    AA
 
 RN-2008-05-29-2: Bugfix:    o qconf -ae|-Ae return 0 even if exechost exists already

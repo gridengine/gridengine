@@ -119,7 +119,7 @@ CR-2008-06-02-0: Cleanup:   commlib:
 AA-2008-05-30-0: Bugfix:    - upgrade to openssl-0.9.8g
                             - qmon AR fixes
                             - make libjgdi.so compile on AIX and Irix
-                 Bugster:   6706406
+                 Bugster:   6706406, 6715346
                  Review:    CR
 
 JG-2008-05-30-0: Bugfix:    32-bit Linux libraries are having problems with file

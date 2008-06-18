@@ -1,3 +1,9 @@
+DG-2008-06-18-0: Bugfix:    job hold due to -hold_jid is not indicated as
+                            STATE_SYSTEM_ON_HOLD by drmaa_job_ps(3)
+                 Issue:     2608
+                 Bugster:   6562277
+                 Review:    AH, RD
+
 JG-2008-06-16-0: Bugfix:    reporting file is lacking information about global
                             consumables, if log_consumables=false
                  Bugster:   6710542

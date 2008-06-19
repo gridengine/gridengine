@@ -701,13 +701,10 @@ void sge_update_load_values(sge_gdi_ctx_class_t *ctx, char *rhost, lList *lp)
    }
 
    /* 
-    * if rhost is unknown set him to known
+    * set rhost to known
     */
-   if (lGetUlong(host_ep, EH_lt_heard_from) == 0) {
-      cqueue_list_set_unknown_state(*(object_type_get_master_list(SGE_TYPE_CQUEUE)),
-                                    rhost, true, false);
-      lSetUlong(host_ep, EH_lt_heard_from, sge_get_gmt());
-   }
+   cqueue_list_set_unknown_state(*(object_type_get_master_list(SGE_TYPE_CQUEUE)),
+                                 rhost, true, false);
 
    host_ep = NULL;
    /* loop over all received load values */

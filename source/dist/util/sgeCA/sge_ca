@@ -798,6 +798,24 @@ MakeUserCerts()
 #
 MakeUserKeystores()
 {
+   for user in `ls $CALOCALTOP/userkeys`; do
+      MakeUserKeystore $user
+   done   
+}
+
+#--------------------------------------------------------------------------
+# MakeUserKeystore create keystores for existing user in 
+# $CALOCALTOP/userkeys/<user> 
+#
+# $1 <user> 
+MakeUserKeystore()
+{
+   if [ "$1" = "" ]; then
+      PrintErrorAndExit 1 "no valid user '%s'. Exit." $1
+   fi
+
+   user=$1
+
    if [ "$ksoutfile" = "" ]; then
       ksoutfile_saved=$ksoutfile
    fi
@@ -808,18 +826,17 @@ MakeUserKeystores()
       kspwfile=/tmp/tmp.$$
       remove_kspwfile=true
    fi   
-   for user in `ls $CALOCALTOP/userkeys`; do
-      certfile=$CALOCALTOP/userkeys/$user/cert.pem
-      if [ -r $certfile ]; then 
-         ksoutfile=$CALOCALTOP/userkeys/$user/keystore
-         touch $ksoutfile
-         $CHOWN $user $ksoutfile
-         $CHMOD 600 $ksoutfile
-         MakeKeystore user "$user"
-      fi
-   done   
+   certfile=$CALOCALTOP/userkeys/$user/cert.pem
+   if [ -r $certfile ]; then 
+      ksoutfile=$CALOCALTOP/userkeys/$user/keystore
+      touch $ksoutfile
+      $CHOWN $user $ksoutfile
+      $CHMOD 600 $ksoutfile
+      MakeKeystore user "$user"
+   fi
    if [ "$remove_kspwfile" = "true" ]; then
       rm $kspwfile
+      kspwfile=""
    fi
    ksoutfile=$ksoutfile_saved
 }
@@ -849,6 +866,7 @@ MakeSysKeystore()
    fi
    if [ "$remove_kspwfile" = "true" ]; then
       rm $kspwfile
+      kspwfile=""
    fi
    ksoutfile=$ksoutfile_saved
 }
@@ -2184,7 +2202,11 @@ pkcs12)
     fi
     ;;
 ks) 
-    MakeKeystore user $user
+    if [  "$ksoutfile" != "" ]; then
+       MakeKeystore user $user
+    else
+       MakeUserKeystore $user
+    fi    
     if [ $? != 0 ]; then
        exit 1
     fi

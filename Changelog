@@ -1,3 +1,8 @@
+AA-2008-06-19-0: Bugfix:    sge_ca script does not allow easy sdm_admin keystore creation
+                 Bugster:   6716648
+                 Issue:     2619
+                 Review:    RH
+
 DG-2008-06-19-0: Cleanup:   Outdated installation hint for AIX loadsensor 
                             in script comments. 
                  Review:    EB 

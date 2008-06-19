@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_ca.8,v $     Last Update: $Date: 2008/03/18 14:48:29 $     Revision: $Revision: 1.1 $
+.\" $RCSfile: sge_ca.8,v $     Last Update: $Date: 2008/06/19 12:42:43 $     Revision: $Revision: 1.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SGE_CA 8 "$Date: 2008/03/18 14:48:29 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH SGE_CA 8 "$Date: 2008/06/19 12:42:43 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 util/sgeCA/sge_ca \- xxQS_NAMExx CSP Support control command
 .\"
@@ -185,8 +185,8 @@ export certificate and key of daemon <g> g='common name' in pkcs12 format. This 
 .\"
 .br
 .br
-.IP "\fBsge_ca -ks <user> -ksout <file> [-kspwf <file>] [-cadir <dir>] [-catop <dir>] [-calocaltop <dir>] [-adminuser <admin>]\fP"
-create a keystore containing certificate and key of user <user> in JKS format where <user> is the Unix user name. This command is usually run as user root on the qmaster host. If -kspwf <file> is used the keystore and the corresponding key will be encrypted with the password in <file>. The -ksout <file> option specifies the keystore file that is created. This command is usually invoked by sge_ca -userks. A prerequisite is a valid JAVA_HOME environment variable setting. $CATOP and $CALOCALTOP maybe overruled by -cadir, -catop and -calocaltop.
+.IP "\fBsge_ca -ks <user> [-ksout <file>] [-kspwf <file>] [-cadir <dir>] [-catop <dir>] [-calocaltop <dir>] [-adminuser <admin>]\fP"
+create a keystore containing certificate and key of user <user> in JKS format where <user> is the Unix user name. This command is usually run as user root on the qmaster host. If -kspwf <file> is used the keystore and the corresponding key will be encrypted with the password in <file>. The -ksout <file> option specifies the keystore file that is created. If the -ksout <file> option is missing the default location for the keystore is $CALOCALTOP/userkeys/<user>/keystore. This command is usually invoked by sge_ca -userks. A prerequisite is a valid JAVA_HOME environment variable setting. $CATOP and $CALOCALTOP maybe overruled by -cadir, -catop and -calocaltop.
 .\"
 .IP "\fBsge_ca -userks [-kspwf <file>] [-cadir <dir>] [-catop <dir>] [-calocaltop <dir>] [-adminuser <admin>]\fP"
 generate a keystore in JKS format for all users having a key and certificate.

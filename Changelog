@@ -1,3 +1,9 @@
+DG-2008-06-19-0: Bugfix:    o loadsensor does not work on AIX 
+                            Merged from 6.2 branch: EB-2008-04-16-0
+                 Bugster:   6661060
+                 Issue:     2508
+                 Review:    EB 
+
 DG-2008-06-18-0: Bugfix:    job hold due to -hold_jid is not indicated as
                             STATE_SYSTEM_ON_HOLD by drmaa_job_ps(3)
                  Issue:     2608

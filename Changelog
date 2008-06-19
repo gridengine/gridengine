@@ -1,3 +1,7 @@
+DG-2008-06-19-0: Cleanup:   Outdated installation hint for AIX loadsensor 
+                            in script comments. 
+                 Review:    EB 
+
 JG-2008-06-16-0: Bugfix:    reporting file is lacking information about global
                             consumables, if log_consumables=false
                  Bugster:   6710542

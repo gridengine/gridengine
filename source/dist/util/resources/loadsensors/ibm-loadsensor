@@ -36,7 +36,7 @@
 #****** util/resources/ibm-loadsensor ***************************************
 #
 #  NAME
-#     ibm-loadsensor -- loadsensor for IBM aix43
+#     ibm-loadsensor -- loadsensor for IBM aix43, aix51
 #
 #  SYNOPSIS
 #     ibm-loadsensor
@@ -54,7 +54,8 @@
 #     of load information, press return; to end the script, enter quit.
 #
 #     To integrate the loadsensor into sge_execd, either copy it to
-#     $SGE_ROOT/bin/aix43/qloadsensor
+#     $SGE_ROOT/bin/aix51/qloadsensor (if you have another version to
+#     $SGE_ROOT/bin/<YOUR_AIX_VERSION>/qloadsensor) 
 #     or define it as loadsensor in the hosts cluster configuration, see
 #     man page sge_conf(5).
 #

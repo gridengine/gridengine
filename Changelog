@@ -1,3 +1,6 @@
+RH-2008-06-19-0: Bugfix:    copy paste error in jgdish xmldump fixed
+                 Review:    AA
+
 AA-2008-06-19-0: Bugfix:    sge_ca script does not allow easy sdm_admin keystore creation
                  Bugster:   6716648
                  Issue:     2619

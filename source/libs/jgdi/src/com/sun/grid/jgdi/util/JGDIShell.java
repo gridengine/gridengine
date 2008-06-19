@@ -625,7 +625,7 @@ public class JGDIShell implements Runnable, Shell {
                     System.out.flush();
                 }
             } else {
-                Method method = JGDI.class.getMethod("Unknown error" + args[0], new Class[]{String.class});
+                Method method = JGDI.class.getMethod("get" + args[0], new Class[]{String.class});
                 Object obj = method.invoke(jgdi, new Object[]{args[1]});
                 XMLUtil.write((GEObject) obj, System.out);
             }

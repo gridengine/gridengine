@@ -4,7 +4,8 @@ RD-2008-06-19-0: Bugfix:    host remained in u state after reconnect
 
 DG-2008-06-19-0: Bugfix:    AIX loadsensor script  
                             Merged from 6.2 branch: EB-2008-04-16-0
-                 Bugster:   6717172 
+                 Bugster:   6717172
+                 Issue:     2622 
                  Review:    EB 
 
 DG-2008-06-18-0: Bugfix:    job hold due to -hold_jid is not indicated as

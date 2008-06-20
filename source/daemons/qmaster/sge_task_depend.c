@@ -257,7 +257,6 @@ bool sge_task_depend_update(lListElem *jep, lList **alpp, u_long32 task_id)
       /* use the RSP functions to determine dependent predecessor task range */
       if (sge_task_depend_get_range(&dep_range, alpp, pred_jep, jep, task_id)) {
          /* since we can't calculate it, we must assume dependence */
-         DPRINTF(("could not calculate dependent iteration ranges for a job\n"));
          lFreeElem(&dep_range);
          Depend = 1;
          break;

@@ -404,7 +404,7 @@ JG-2008-04-17-0: Bugfix:    reactivated profiling in event_mirror
                  Review:    RD 
 
 EB-2008-04-16-0: Bugfix:    o loadsensor does not work on AIX
-                 Bugster:   6661060
+                 Bugster:   6661060, 6717172
                  Issue:     2508
                  Review:    RD 
 

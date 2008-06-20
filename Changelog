@@ -405,7 +405,7 @@ JG-2008-04-17-0: Bugfix:    reactivated profiling in event_mirror
 
 EB-2008-04-16-0: Bugfix:    o loadsensor does not work on AIX
                  Bugster:   6661060, 6717172
-                 Issue:     2508
+                 Issue:     2508, 2622
                  Review:    RD 
 
 DG-2008-04-16-0: Cleanup:   Compiler error (indicated argument is incompatible

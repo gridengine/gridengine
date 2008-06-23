@@ -298,6 +298,11 @@ if [ $AUTO = "false" -a $QMASTER = "undef" -a $EXECD = "install" -a $SHADOW = "i
    ErrUsage
 fi
 
+#CR 6692104: can not combine 'inst_sge -x' and 'install_execd' with -winsvc switch
+if [ $EXECD = "install" -a WIN_SVC = "install" ]; then
+   ErrUsage
+fi
+
 #checking the autoinstall configuration file at this point of installation,
 #because the commandline switches are completely parsed and we know the selected options.
 #This will influence the configfile parsing and checking mechanism.

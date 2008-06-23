@@ -1,3 +1,7 @@
+DG-2008-06-23-0: Cleanup:   Temporary load file is not deleted by script.
+                            Cleanup of check in EB-2008-04-16-0. 
+                 Review:    JG
+
 RH-2008-06-19-0: Bugfix:    copy paste error in jgdish xmldump fixed
                  Review:    AA
 

@@ -157,6 +157,9 @@ while [ $end = false ]; do
          cat /tmp/svmon-$$.out | grep memory | read f1 mem_total mem_used mem_free f5 f6
          cat /tmp/svmon-$$.out | grep "pg space" | read f1 f2 swap_total swap_used
       fi
+
+      # delete output file 
+      rm -f /tmp/svmon-$$.out
  
       swap_free=`expr $swap_total - $swap_used`
       virtual_total=`expr $mem_total + $swap_total`

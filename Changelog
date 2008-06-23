@@ -1,3 +1,7 @@
+DG-2008-06-23-0: Cleanup:   Temporary load file is not deleted by script.
+                            Cleanup of check in DG-2008-06-19-0. 
+                 Review:    JG
+
 RD-2008-06-19-0: Bugfix:    host remained in u state after reconnect
                             introduced with RD-2008-06-12-0
                  Review:    JG

@@ -1,3 +1,8 @@
+ZG-2008-06-23-0: Bugfix:    install_execd -winsvc should output wrong usage
+                 Bugster:   6692104
+                 Issue:     2624
+                 Review:    JG
+
 DG-2008-06-23-0: Cleanup:   Temporary load file is not deleted by script.
                             Cleanup of check in EB-2008-04-16-0. 
                  Review:    JG

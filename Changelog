@@ -1,3 +1,8 @@
+ZG-2008-06-25-0: Bugfix:    incorrect dependency on xinetd in init scripts fo linux
+                 Bugster:   6677192
+                 Issue:     2523
+                 Review:    JG
+
 ZG-2008-06-23-0: Bugfix:    install_execd -winsvc should output wrong usage
                  Bugster:   6692104
                  Issue:     2624

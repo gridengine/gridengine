@@ -160,9 +160,11 @@ execd_signal_queue(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buff
                      }
                      found = lGetUlong(jep, JB_job_number);
 
-                     job_write_spool_file(jep, 
-                        lGetUlong(lFirst(lGetList(jep, JB_ja_tasks)), 
-                        JAT_task_number), NULL, SPOOL_WITHIN_EXECD);
+                     if (!mconf_get_simulate_jobs()) {
+                        job_write_spool_file(jep, 
+                           lGetUlong(lFirst(lGetList(jep, JB_ja_tasks)), 
+                           JAT_task_number), NULL, SPOOL_WITHIN_EXECD);
+                     }
 
                   }
                }
@@ -237,8 +239,7 @@ lListElem *jatep
          sge_sig2str(sig)));
 
    /* for simulated hosts do nothing */
-   if(mconf_get_simulate_hosts() && 
-      (lGetUlong(jatep, JAT_status) & JSIMULATED)) {
+   if (mconf_get_simulate_jobs()) {
 
       if(sig == SGE_SIGKILL) {
          lListElem *jr = NULL;
@@ -269,12 +270,12 @@ lListElem *jatep
          add_usage(jr, "exit_status", NULL, 137);
          add_usage(jr, "signal", NULL, sig);
 
-         lSetUlong(jatep, JAT_status, JEXITING | JSIMULATED);
+         lSetUlong(jatep, JAT_status, JEXITING);
 
          flush_job_report(jr);
       }
       
-      return 0;
+      DRETURN(0);
    }
 
 /*
@@ -709,7 +710,9 @@ u_long32 signal
 
    /* now save this job/queue so we are up to date on restart */
    if (!getridofjob) {
-      job_write_spool_file(jep, jataskid, NULL, SPOOL_WITHIN_EXECD);
+      if (!mconf_get_simulate_jobs()) {
+         job_write_spool_file(jep, jataskid, NULL, SPOOL_WITHIN_EXECD);
+      }
       /* write mail */
       if (send_mail == 1) {
          sge_send_suspend_mail(SGE_SIGCONT,master_q ,jep, jatep); 

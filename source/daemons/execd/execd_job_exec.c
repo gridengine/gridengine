@@ -395,6 +395,7 @@ int slave
          gdi_list = lGetList(jatep, JAT_granted_destin_identifier_list);
          hostname = lGetHost(lFirst(gdi_list), JG_qhostname);
          
+         if (!mconf_get_simulate_jobs()) {
          /*
           * Is another array task of the same job already here?
           * In this case it is not necessary to spool the jobscript.
@@ -446,6 +447,7 @@ int slave
             close(fd);
             lSetString(jelem, JB_script_ptr, NULL);
          }
+         }
       }
    }
       
@@ -466,14 +468,14 @@ int slave
    kerb_job(jelem, de);
 #endif
 
-
-
-   lSetUlong(jelem, JB_script_size, 0);
-   if (job_write_spool_file(jelem, jataskid, NULL, SPOOL_WITHIN_EXECD)) {
-      /* SGE_EVENT is written by job_write_spool_file() */
-      sge_dstring_copy_string(&err_str, SGE_EVENT);
-      DEXIT;
-      goto Error;
+   if (!mconf_get_simulate_jobs()) {
+      lSetUlong(jelem, JB_script_size, 0);
+      if (job_write_spool_file(jelem, jataskid, NULL, SPOOL_WITHIN_EXECD)) {
+         /* SGE_EVENT is written by job_write_spool_file() */
+         sge_dstring_copy_string(&err_str, SGE_EVENT);
+         DEXIT;
+         goto Error;
+      }
    }
 
    { 
@@ -816,10 +818,12 @@ DTRACE;
 
 DTRACE;
 
-   if (job_write_spool_file(jep, jataskid, NULL, SPOOL_WITHIN_EXECD)) { 
-      sge_dstring_copy_string(&err_str, SGE_EVENT);
-      execd_job_start_failure(jep, jatep, petep, sge_dstring_get_string(&err_str), 1);
-      goto Error;
+   if (!mconf_get_simulate_jobs()) {
+      if (job_write_spool_file(jep, jataskid, NULL, SPOOL_WITHIN_EXECD)) { 
+         sge_dstring_copy_string(&err_str, SGE_EVENT);
+         execd_job_start_failure(jep, jatep, petep, sge_dstring_get_string(&err_str), 1);
+         goto Error;
+      }
    }
    
 DTRACE;   

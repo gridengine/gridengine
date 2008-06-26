@@ -193,6 +193,11 @@ int job_initialize_job(lListElem *job)
          add_job_report(job_id, ja_task_id, lGetString(pe_task, PET_id), job);
       }
 
+      if (mconf_get_simulate_jobs()) {
+         /* nothing to do for simulated jobs */
+         continue;
+      }
+
       /* does active dir exist ? */
       if (lGetUlong(ja_task, JAT_status) == JRUNNING ||
           lGetUlong(ja_task, JAT_status) == JWAITING4OSJID) {

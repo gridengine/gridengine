@@ -418,17 +418,6 @@ send_slave_jobs_wc(const char *target, lListElem *tmpjep, lListElem *jatep,
       }
       hostname = lGetHost(gdil_ep, JG_qhostname);
 
-      /* map hostname if we are simulating hosts */
-      if(mconf_get_simulate_hosts()) {
-         const lListElem *simhost = lGetSubStr(hep, CE_name, "simhost", EH_consumable_config_list);
-         if(simhost != NULL) {
-            const char *real_host = lGetString(simhost, CE_stringval);
-            if(real_host != NULL && sge_hostcmp(real_host, hostname) != 0) {
-               DPRINTF(("deliver job for simulated host %s to host %s\n", hostname, real_host));
-               hostname = real_host;
-            }   
-         }
-      }
 
       /* do ask_commproc() only if we are missing load reports */
       cl_commlib_get_last_message_time(handle, (char*)hostname, (char*)target, 1, &last_heard_from);
@@ -533,18 +522,6 @@ send_job(const char *rhost, const char *target, lListElem *jep, lListElem *jatep
    cl_com_handle_t* handle = NULL;
 
    DENTER(TOP_LAYER, "send_job");
-
-   /* map hostname if we are simulating hosts */
-   if(mconf_get_simulate_hosts()) {
-      const lListElem *simhost = lGetSubStr(hep, CE_name, "simhost", EH_consumable_config_list);
-      if(simhost != NULL) {
-         const char *real_host = lGetString(simhost, CE_stringval);
-         if(real_host != NULL && sge_hostcmp(real_host, rhost) != 0) {
-            DPRINTF(("deliver job for simulated host %s to host %s\n", rhost, real_host));
-            rhost = real_host;
-         }   
-      }
-   }
 
    /* do ask_commproc() only if we are missing load reports */
    handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);

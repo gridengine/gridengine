@@ -166,7 +166,7 @@ static void notify_ptf()
                    }
                }
             }
-            if (write_job)
+            if (write_job && !mconf_get_simulate_jobs())
                job_write_spool_file(jep, lGetUlong(jatep, JAT_task_number), 
                                     NULL, SPOOL_WITHIN_EXECD);
          }
@@ -550,10 +550,10 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
    }
 
    /* check for end of simulated jobs */
-   if(mconf_get_simulate_hosts()) {
+   if (mconf_get_simulate_jobs()) {
       for_each(jep, Master_Job_List) {
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-            if((lGetUlong(jatep, JAT_status) & JSIMULATED) && lGetUlong(jatep, JAT_end_time) <= now) {
+            if(lGetUlong(jatep, JAT_end_time) <= now) {
                lListElem *jr = NULL;
                u_long32 jobid, jataskid;
                u_long32 wallclock;
@@ -581,7 +581,7 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
                add_usage(jr, "exit_status", NULL, 0);
             
                
-               lSetUlong(jatep, JAT_status, JEXITING | JSIMULATED);
+               lSetUlong(jatep, JAT_status, JEXITING);
                flush_job_report(jr);
             }
          }
@@ -742,8 +742,10 @@ static int sge_start_jobs()
 
          /* now save this job so we are up to date on restart */
          if (state_changed) {
-            job_write_spool_file(jep, lGetUlong(jatep, JAT_task_number), 
-                                 NULL, SPOOL_WITHIN_EXECD);
+            if (!mconf_get_simulate_jobs()) {
+               job_write_spool_file(jep, lGetUlong(jatep, JAT_task_number), 
+                                    NULL, SPOOL_WITHIN_EXECD);
+            }
             jobs_started++;
          }
       }
@@ -796,38 +798,35 @@ lListElem *petep
 
    /* we might simulate another host */
    /* JG: TODO: make a function simulate_start_job_or_task() */
-   if(mconf_get_simulate_hosts()) {
-      const char *host = lGetHost(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_qhostname);
-      if(sge_hostcmp(host, uti_state_get_qualified_hostname()) != 0) {
-         lList *job_args;
-         u_long32 duration = 60;
+   if (mconf_get_simulate_jobs()) {
+      lList *job_args;
+      u_long32 duration = 60;
 
-         DPRINTF(("Simulating job "sge_u32"."sge_u32"\n", 
-                  job_id, ja_task_id));
-         lSetUlong(jatep, JAT_start_time, now);
-         lSetUlong(jatep, JAT_status, JRUNNING | JSIMULATED);
+      DPRINTF(("Simulating job "sge_u32"."sge_u32"\n", 
+               job_id, ja_task_id));
+      lSetUlong(jatep, JAT_start_time, now);
+      lSetUlong(jatep, JAT_status, JRUNNING);
 
-         /* set time when job shall be reported as finished */
-         job_args = lGetList(jep, JB_job_args);
-         if(lGetNumberOfElem(job_args) == 1) {
-            const char *arg = NULL;
-            char *endptr = NULL;
-            u_long32 duration_in;
-  
-            arg = lGetString(lFirst(job_args), ST_name);
-            if(arg != NULL) {
-               DPRINTF(("Trying to use first argument ("SFQ") as duration for simulated job\n", arg));
-               
-               duration_in = strtol(arg, &endptr, 0);
-               if(arg != endptr) {
-                  duration = duration_in;
-               }
-            }   
-         }
+      /* set time when job shall be reported as finished */
+      job_args = lGetList(jep, JB_job_args);
+      if (lGetNumberOfElem(job_args) == 1) {
+         const char *arg = NULL;
+         char *endptr = NULL;
+         u_long32 duration_in;
 
-         lSetUlong(jatep, JAT_end_time, now + duration);
-         return 1;
+         arg = lGetString(lFirst(job_args), ST_name);
+         if (arg != NULL) {
+            DPRINTF(("Trying to use first argument ("SFQ") as duration for simulated job\n", arg));
+            
+            duration_in = strtol(arg, &endptr, 0);
+            if (arg != endptr) {
+               duration = duration_in;
+            }
+         }   
       }
+
+      lSetUlong(jatep, JAT_end_time, now + duration);
+      DRETURN(1);
    }
 
    if(petep != NULL) {

@@ -1,3 +1,7 @@
+RD-2008-06-26-0: Enhancem.: - removed SIMULATE_EXECDS param
+                            - added SIMULATE_JOBS param
+                  Review:   JG
+
 JG-2008-05-30-0: Bugfix:    32-bit Linux libraries are having problems with file
                             access in 64-bit NFS environments
                  Bugster:   6707055

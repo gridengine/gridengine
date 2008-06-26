@@ -162,8 +162,8 @@ static int accounting_flush_time  = -1;
 static int sharelog_time          = 0;
 static bool log_consumables       = true;
 
-/* allow the simulation of (non existent) hosts */
-static bool simulate_hosts = false;
+/* allow the simulation of jobs (job spooling and execution on execd side is disabled) */
+static bool simulate_jobs = false;
 
 /*
  * This value overrides the default scheduler timeout (10 minutes)
@@ -660,7 +660,7 @@ int merge_configuration(lList **answer_list, lListElem *global, lListElem *local
       spool_time = STREESPOOLTIMEDEF;
       use_qidle = false;
       disable_reschedule = false;   
-      simulate_hosts = false;
+      simulate_jobs = false;
       prof_message_thrd = false;
       prof_signal_thrd = false;
       prof_deliver_thrd = false;
@@ -722,9 +722,6 @@ int merge_configuration(lList **answer_list, lListElem *global, lListElem *local
             continue;
          }
          if (parse_bool_param(s, "LOG_MONITOR_MESSAGE", &is_monitor_message)) {
-            continue;
-         }
-         if (parse_bool_param(s, "SIMULATE_HOSTS", &simulate_hosts)) {
             continue;
          }
          if (!strncasecmp(s, "SCHEDULER_TIMEOUT",
@@ -857,6 +854,9 @@ int merge_configuration(lList **answer_list, lListElem *global, lListElem *local
             continue;
          }
          if (parse_bool_param(s, "INHERIT_ENV", &inherit_env)) {
+            continue;
+         }
+         if (parse_bool_param(s, "SIMULATE_JOBS", &simulate_jobs)) {
             continue;
          }
       }
@@ -1855,13 +1855,13 @@ bool mconf_get_enable_addgrp_kill(void) {
    DRETURN(ret);
 }
 
-bool mconf_get_simulate_hosts(void) {
+bool mconf_get_simulate_jobs(void) {
    bool ret;
 
-   DENTER(TOP_LAYER, "mconf_get_simulate_hosts");
+   DENTER(TOP_LAYER, "mconf_get_simulate_jobs");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
-   ret = simulate_hosts;
+   ret = simulate_jobs;
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(ret);

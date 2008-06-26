@@ -838,18 +838,6 @@ void sge_load_value_cleanup_handler(te_event_t anEvent, monitoring_t *monitor)
 
       host = lGetHost(hep, EH_name);
 
-      /* do not trash load values of simulated hosts */
-      if(mconf_get_simulate_hosts()) {
-         const lListElem *simhost = lGetSubStr(hep, CE_name, "simhost", EH_consumable_config_list);
-         if(simhost != NULL) {
-            const char *real_host = lGetString(simhost, CE_stringval);
-            if(real_host != NULL && sge_hostcmp(real_host, host) != 0) {
-               DPRINTF(("skip trashing load values for host %s simulated by %s\n", host, real_host));
-               continue;
-            }
-         }
-      }
-
       timeout = MAX(load_report_interval(hep)*3, mconf_get_max_unheard()); 
       if ( hep != global_host_elem) {
          cl_commlib_get_last_message_time((cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0)),

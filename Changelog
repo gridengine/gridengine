@@ -1,3 +1,6 @@
+DG-2008-06-30-0: Cleanup:   Missing depend target in qmake makefile.
+                 Review:    AA
+
 ZG-2008-06-25-0: Bugfix:    incorrect dependency on xinetd in init scripts fo linux
                  Bugster:   6677192
                  Issue:     2523

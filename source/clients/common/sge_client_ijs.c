@@ -182,6 +182,8 @@ void signal_handler(int sig)
 *******************************************************************************/
 void set_signal_handlers(void)
 {
+  struct sigaction old_handler, new_handler;
+
    /* Is SIGHUP necessary? 
     * Yes: termio(7I) says:
     * "When a modem disconnect is detected, a SIGHUP signal is sent
@@ -191,20 +193,47 @@ void set_signal_handlers(void)
     *  caught, any subsequent  read  returns  with  an  end-of-file
     *  indication until the terminal is closed."
     */
-   if (signal(SIGHUP, SIG_IGN) != SIG_IGN) {
-      sigset(SIGHUP, signal_handler);
+   sigaction(SIGHUP, NULL, &old_handler);
+   if (old_handler.sa_handler != SIG_IGN) {
+      new_handler.sa_handler = signal_handler;
+      sigaddset(&new_handler.sa_mask, SIGHUP);
+      new_handler.sa_flags = SA_RESTART;
+      sigaction(SIGHUP, &new_handler, NULL);
    }
-   if (signal(SIGINT, SIG_IGN) != SIG_IGN) {
-      sigset(SIGINT, signal_handler);
+
+   sigaction(SIGINT, NULL, &old_handler);
+   if (old_handler.sa_handler != SIG_IGN) {
+      new_handler.sa_handler = signal_handler;
+      sigaddset(&new_handler.sa_mask, SIGINT);
+      new_handler.sa_flags = SA_RESTART;
+      sigaction(SIGINT, &new_handler, NULL);
    }
-   if (signal(SIGQUIT, SIG_IGN) != SIG_IGN) {
-      sigset(SIGQUIT, signal_handler);
+
+   sigaction(SIGQUIT, NULL, &old_handler);
+   if (old_handler.sa_handler != SIG_IGN) {
+      new_handler.sa_handler = signal_handler;
+      sigaddset(&new_handler.sa_mask, SIGQUIT);
+      new_handler.sa_flags = SA_RESTART;
+      sigaction(SIGQUIT, &new_handler, NULL);
    }
-   if (signal(SIGTERM, SIG_IGN) != SIG_IGN) {
-      sigset(SIGTERM, signal_handler);
+
+   sigaction(SIGTERM, NULL, &old_handler);
+   if (old_handler.sa_handler != SIG_IGN) {
+      new_handler.sa_handler = signal_handler;
+      sigaddset(&new_handler.sa_mask, SIGTERM);
+      new_handler.sa_flags = SA_RESTART;
+      sigaction(SIGTERM, &new_handler, NULL);
    }
-   sigset(SIGWINCH, window_change_handler);
-   sigset(SIGPIPE,  broken_pipe_handler);
+
+   new_handler.sa_handler = window_change_handler;
+   sigaddset(&new_handler.sa_mask, SIGWINCH);
+   new_handler.sa_flags = SA_RESTART;
+   sigaction(SIGWINCH, &new_handler, NULL);
+
+   new_handler.sa_handler = broken_pipe_handler;
+   sigaddset(&new_handler.sa_mask, SIGPIPE);
+   new_handler.sa_flags = SA_RESTART;
+   sigaction(SIGPIPE, &new_handler, NULL);
 }
 
 /****** client_check_window_change() *******************************************
@@ -428,13 +457,8 @@ void* commlib_to_tty(void *t_conf)
       recv_mess.cl_message = NULL;
       recv_mess.data = NULL;
 
-      DPRINTF(("commlib_to_tty: Waiting in comm_trigger() for data\n"));
-      ret = comm_trigger(g_comm_handle, 1, &err_msg);
-      DPRINTF(("commlib_to_tty: comm_trigger() returned %d, %s\n",
-              ret, &err_msg));
-
       DPRINTF(("commlib_to_tty: recv_message()\n"));
-      ret = comm_recv_message(g_comm_handle, CL_FALSE, &recv_mess, &err_msg);
+      ret = comm_recv_message(g_comm_handle, CL_TRUE, &recv_mess, &err_msg);
       if (ret != COMM_RETVAL_OK) {
          /* check if we are still connected to anybody. */
          /* if not - exit. */

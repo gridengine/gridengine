@@ -39,6 +39,7 @@
 #include <errno.h>
 #include "sge_arch.h"
 #include "sge_string.h"
+#include "sge_signal.h"
 
 
 #include "cl_commlib.h"
@@ -6703,6 +6704,14 @@ static void *cl_com_trigger_thread(void *t_conf) {
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
 
+   /* TODO: Create a "thread constructor" callback in the thread list,
+    *       move this call to the thread constructor.
+    */
+   /* block all signals this thread won't handle */
+   if (sge_thread_block_signals() != 0) {
+      CL_LOG(CL_LOG_ERROR, "can't block signals");
+      do_exit = 1;
+   }
 
    /* set thread config data */
    if (cl_thread_set_thread_config(thread_config) != CL_RETVAL_OK) {
@@ -6762,6 +6771,12 @@ static void *cl_com_handle_service_thread(void *t_conf) {
 
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
+
+   /* block all signals this thread won't handle */
+   if (sge_thread_block_signals() != 0) {
+      CL_LOG(CL_LOG_ERROR, "can't block signals");
+      do_exit = 1;
+   }
 
    /* set thread config data */
    if (cl_thread_set_thread_config(thread_config) != CL_RETVAL_OK) {
@@ -6861,6 +6876,11 @@ static void *cl_com_handle_read_thread(void *t_conf) {
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
 
+   /* block all signals this thread won't handle */
+   if (sge_thread_block_signals() != 0) {
+      CL_LOG(CL_LOG_ERROR, "can't block signals");
+      do_exit = 1;
+   }
 
    /* set thread config data */
    if (cl_thread_set_thread_config(thread_config) != CL_RETVAL_OK) {
@@ -7239,6 +7259,11 @@ static void *cl_com_handle_write_thread(void *t_conf) {
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
 
+   /* block all signals this thread won't handle */
+   if (sge_thread_block_signals() != 0) {
+      CL_LOG(CL_LOG_ERROR, "can't block signals");
+      do_exit = 1;
+   }
 
    /* set thread config data */
    if (cl_thread_set_thread_config(thread_config) != CL_RETVAL_OK) {

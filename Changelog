@@ -1,3 +1,13 @@
+HP-2008-07-02-0: Bugfix:    shepherd wasn't able to read user certificates
+                 Bugster:   6718433
+                 Bugfix:    insufficient handling of commlib errors
+                 Bugster:   6718447
+                 Bugfix:    incorrect accounting when terminate method is used
+                 Bugster:   6718453
+                 Bugfix:    qrsh and qlogin has very slow response to user input
+                 Bugster:   6686921
+                 Review:    JG
+
 DG-2008-06-30-0: Cleanup:   Missing depend target in qmake makefile.
                  Review:    AA
 

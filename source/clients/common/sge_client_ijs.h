@@ -30,8 +30,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#define COMM_SERVER "qrsh"
-#define COMM_CLIENT "shepherd"
+#define COMM_SERVER "qrsh_ijs"
+#define COMM_CLIENT "shepherd_ijs"
 
 void set_signal_handlers(void);
 void* tty_to_commlib(void *t_conf);

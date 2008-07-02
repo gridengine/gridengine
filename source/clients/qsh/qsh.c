@@ -1695,8 +1695,8 @@ int main(int argc, char **argv)
        * start the commlib server
        */
       DPRINTF(("starting commlib server\n"));
-      ret = comm_open_connection(true, 0, COMM_SERVER, g_csp_mode, username,
-                                 &g_comm_handle, &error_msg);
+      ret = comm_open_connection(true, g_csp_mode, COMM_SERVER, 0, COMM_CLIENT,
+                                 username, &g_comm_handle, &error_msg);
 
       if (ret != 0) {
          ERROR((SGE_EVENT, MSG_QSH_CREATINGCOMMLIBSERVER_S,

@@ -72,20 +72,13 @@ setenv TMPDIR /tmp
 # is installed
 #
 set OPENSSL_SOVERSION = 0.9.7l
-set OPENSSL_HOME = /vol2/tools/SW/openssl-0.9.7l-origin/$buildarch
-
-
-# 
-# POSTGRES_HOME the directory where the include and lib directory of 
-# PostgreSQL is installed
-#
-set POSTGRES_HOME = /vol2/tools/SW/postgresql-7.3.2/$buildarch
+set OPENSSL_HOME = /off_home/gridengine/openssl-0.9.7l-origin/$buildarch
 
 # 
 # BERKELEYDB_HOME the directory where the include and lib directory of
 # Berkeley DB is installed
 #
-set BERKELEYDB_HOME = /vol2/SW/db-4.4.20/$buildarch
+set BERKELEYDB_HOME = /off_home/gridengine/db-4.4.20/$buildarch
 set BDB_INCLUDE_SUBDIR =
 set BDB_LIB_SUBDIR =
 set BDB_LIB_SUFFIX =
@@ -96,10 +89,6 @@ set BDB_LIB_SUFFIX =
 #
 set KRB_HOME = /vol2/tools/SW/krb5/$buildarch
 
-# 
-# INSURE4_LIBDIR the directory where the insure library is installed
-#
-set INSURE4_LIBDIR = /vol2/tools/insure4/lib.alpha4
 # 
 # man2html path
 #

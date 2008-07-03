@@ -362,6 +362,12 @@ bool rqs_verify_attributes(lListElem *rqs, lList **answer_list, bool in_master)
 
             lSetString(limit, RQRL_name, lGetString(centry, CE_name));
 
+            if (strval == NULL) {
+               answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, MSG_RESOURCEQUOTA_NORULES);
+               ret = false;
+               break;
+            }
+
             if (strchr(strval, '$') != NULL) {
                if (lGetUlong(rule, RQR_level) == RQR_HOST || lGetUlong(rule, RQR_level) == RQR_QUEUEI) {
                   /* the value is a dynamical limit */

@@ -31,9 +31,9 @@
 #___INFO__MARK_END__
 
 # Base directory where the openssl binary and libraries reside
-OPENSSLBASE=/vol2/tools/SW/openssl-0.9.7l
+OPENSSLBASE=/off_home/gridengine/openssl-0.9.7l
 
 # Base directory where BDB resides
-BERKELEYDBBASE=/vol2/SW/db-4.2.52
+BERKELEYDBBASE=/off_home/gridengine/db-4.2.52
 
 TAR=gtar

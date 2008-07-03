@@ -1,3 +1,6 @@
+JG-2008-07-03-0: Enhancem.: Updated review template and help document.
+                 Review:    sge-et
+
 DG-2008-07-03-0: Cleanup:   Java DRMAA test checks only for old version
                             number. Problems with build numbers fixed.
                  Review:    RH 

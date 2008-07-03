@@ -1,3 +1,7 @@
+DG-2008-07-03-0: Cleanup:   Java DRMAA test checks only for old version
+                            number. Problems with build numbers fixed.
+                 Review:    RH 
+
 AH-2008-07-03-0: Bugfix:    Invalid qconf -mrqs crashes qmaster with segmentation fault
                  Bugster:   6722217
                  Issue:     2432

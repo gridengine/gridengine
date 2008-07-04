@@ -42,7 +42,7 @@
 #
 WelcomeTheUserUpgrade()
 {
-   $INFOTEXT -u "\nWelcome to the Grid Engine Upgrade"
+   $INFOTEXT -u "\nWelcome to the Grid Engine Upgrade Procedure"
    $INFOTEXT "\nBefore you continue with the upgrade, read these hints:\n\n" \
              "   - Your terminal window should have a size of at least\n" \
              "     80x24 characters\n\n" \
@@ -132,24 +132,25 @@ GetBackupDirectory()
       backup_date=`cat "${UPGRADE_BACKUP_DIR}/backup_date" 2>/dev/null`
       if [ -n "$version" -a -n "$backup_date" -a -d "${UPGRADE_BACKUP_DIR}/cell" ]; then
          #Ask if correct
-	 $INFOTEXT -n "\nFound backup from $version version created on $backup_date"
-	 $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nContinue with this backup directory (y/n) [y] >> "
+	      $INFOTEXT -n "\nFound backup from $version version created on $backup_date"
+	      $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nContinue with this backup directory (y/n) [y] >> "
          if [ $? -eq 0 ]; then
             done=true
 	         return 0
          fi
       else
-         $INFOTEXT -n "\n$UPGRADE_BACKUP_DIR is not a valid backup directory!"
-	 $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nEnter a new backup directory or exit ('n') (y/n) [y] >> "
-	 if [ $? -ne 0 ]; then
-	    exit 0
-	 fi
+         $INFOTEXT -n "\nInvalid backup directory \"${UPGRADE_BACKUP_DIR}\"!"
+         UPGRADE_BACKUP_DIR=""
+	      $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nEnter a new backup directory or exit ('n') (y/n) [y] >> "
+	      if [ $? -ne 0 ]; then
+	         exit 0
+	      fi
       fi
    done
 }
 
 #-------------------------------------------------------------------------------
-# RestoreCell: Restore backuped cell directory
+# RestoreCell: Restore backup cell directory
 #   $1 - BACKUPED_CELL_DIRECTORY
 RestoreCell()
 {
@@ -159,6 +160,7 @@ RestoreCell()
    fi
    
    FILE_LIST="bootstrap
+host_aliases
 qtask
 sge_aliases
 sge_request
@@ -222,9 +224,9 @@ RestoreJMX()
       $INFOTEXT -n "\nFound JMX settings in the backup"
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nUse the JMX settings from the backup ('y') or reconfigure ('n') (y/n) [y] >> "
       if [ $? -eq 0 ]; then
-	 #Use backup
-	 ExecuteAsAdmin cp -r "${old_jmx}" "$SGE_ROOT/$SGE_CELL/common"
-	 SGE_ENABLE_JMX=false
+	      #Use backup
+	      ExecuteAsAdmin cp -r "${old_jmx}" "$SGE_ROOT/$SGE_CELL/common"
+	      SGE_ENABLE_JMX=false
       fi
    fi
 }
@@ -234,8 +236,11 @@ RestoreJMX()
 #   $1 - BACKUPED_JMX_DIRECTORY
 SavedOrNewIJS()
 {
-   $CLEAR
    newIJS=false
+   if [ "$USE_OLD_IJS" = true ]; then
+      return
+   fi
+   $CLEAR
    $INFOTEXT -u "Interactive Job Support (IJS) Selection"   
    $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nThe backup configuration includes information for running \n" \
                                                   "interactive jobs. Do you want to use the IJS information from \n" \
@@ -259,26 +264,36 @@ AskForNewSequenceNumber()
       NEXT_SEQ_NUMBER=0
       return
    fi
-   NEXT_SEQ_NUMBER=`cat "${1}" 2>/dev/null`
-   if [ -z "$NEXT_SEQ_NUMBER" -o "$NEXT_SEQ_NUMBER" -lt 0 ]; then
-      NEXT_SEQ_NUMBER=0
-   else
-      #Add 1000 and round up
-      NEXT_SEQ_NUMBER=`expr $NEXT_SEQ_NUMBER / 1000 + 1`
-      NEXT_SEQ_NUMBER=`expr $NEXT_SEQ_NUMBER \* 1000`
+   DEFAULT_SEQ_NUMBER=`cat "${1}" 2>/dev/null`
+   if [ -z "$DEFAULT_SEQ_NUMBER" -o "$DEFAULT_SEQ_NUMBER" -lt 1 ]; then
+      DEFAULT_SEQ_NUMBER=1
    fi
+   #Add 1000 and round up
+   TMP_SEQ_NUMBER=`expr $DEFAULT_SEQ_NUMBER / 1000 + 2`
+   TMP_SEQ_NUMBER=`expr $TMP_SEQ_NUMBER \* 1000`
+
    if [ "$2" != "job" -a "$2" != "AR" ]; then
       $INFOTEXT "Invalid value '"$2"' provided to AskForNewSequenceNumber"
       exit 1
    fi
-   $CLEAR
-   $INFOTEXT -u "Provide a value to use for the next %s ID." "$2"
-   $INFOTEXT -n "\nBackup contains last %s ID. As a suggested value, we added 1000 \n" \
-                "to that number and rounded it to the nearest 1000.\n" \
-                "Increase the value, if appropriate.\n" \
-		          "Choose the new next %s ID [%s] >> " "$2" "$2" "$NEXT_SEQ_NUMBER"
-   eval NEXT_SEQ_NUMBER=`Enter $NEXT_SEQ_NUMBER`
-   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
+   done=false
+   while [ "$done" != true ]; do
+      $CLEAR
+      $INFOTEXT -u "Provide a value to use for the next %s ID." "$2"
+      $INFOTEXT -n "\nBackup contains last %s ID %s. As a suggested value, we added 1000 \n" \
+                   "to that number and rounded it up to the nearest 1000.\n" \
+                   "Increase the value, if appropriate.\n" \
+		             "Choose the new next %s ID [%s] >> " "$2" "$DEFAULT_SEQ_NUMBER" "$2" "$TMP_SEQ_NUMBER"
+      eval NEXT_SEQ_NUMBER=`Enter $TMP_SEQ_NUMBER`
+      if [ "$NEXT_SEQ_NUMBER" -lt 1 -o "$NEXT_SEQ_NUMBER" -gt 9999999 ]; then
+         $INFOTEXT -n "\nInvalid sequence number %s!\n" \
+                      "Number must be between 1 .. 9999999" "$NEXT_SEQ_NUMBER"
+      else
+         NEXT_SEQ_NUMBER=`expr $NEXT_SEQ_NUMBER - 1`
+         done=true
+      fi
+      $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
+   done
    $CLEAR
 }
 
@@ -340,8 +355,8 @@ UninstWinHelperPre62() {
 # $1 - backued spooling method
 SelectNewSpooling() 
 {
-   backuped_spooling_method=$1
-   if [ "$backuped_spooling_method" != "berkeleydb" -a "$backuped_spooling_method" != "classic" ]; then
+   backup_spooling_method=$1
+   if [ "$backup_spooling_method" != "berkeleydb" -a "$backup_spooling_method" != "classic" ]; then
       $INFOTEXT "Invalid arg $1 to SelectNewSpooling"
       exit 1
    fi
@@ -349,15 +364,25 @@ SelectNewSpooling()
    keep=false
 	
    $CLEAR
-   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nUse backuped %s spooling method ('y') or use new spooling configuration ('n') (y/n) [y] >> " \
-             $backuped_spooling_method
+   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nUse previous %s spooling method ('y') or use new spooling method ('n') (y/n) [y] >> " \
+             $backup_spooling_method
    if [ $? -eq 0 ]; then
       keep=true
       SPOOLING_METHOD=`BootstrapGetValue $SGE_ROOT/$SGE_CELL/common "spooling_method"`
       SPOOLING_LIB=`BootstrapGetValue $SGE_ROOT/$SGE_CELL/common "spooling_lib"`
       SPOOLING_ARGS=`BootstrapGetValue $SGE_ROOT/$SGE_CELL/common "spooling_params"`
       if [ "$SPOOLING_METHOD" = "berkeleydb" ]; then
-         ExecuteAsAdmin rm -rf "$SPOOLING_ARGS"/*
+         db_server_host=`echo "$SPOOLING_ARGS" | awk -F: '{print $1}'`
+         db_server_spool_dir=`echo "$SPOOLING_ARGS" | awk -F: '{print $2}'`
+         if [ -z "$db_server_spool_dir" ]; then #local bdb spooling
+            if [ -d "$SPOOLING_ARGS" ]; then
+               ExecuteAsAdmin rm -rf "$SPOOLING_ARGS"/*
+            else #Create spooling dir if not present
+               Makedir "$SPOOLING_ARGS"
+            fi
+         else # BDB server
+            DoRemoteAction "$db_server_host" "$ADMINUSER" "/bin/sh -c if [ -d $db_server_spool_dir ]; then rm -rf $db_server_spool_dir/*; fi"
+         fi
       else #Classic
          tmp_spool=`echo $SPOOLING_ARGS | awk -F";" '{print $1}' | awk '{print $2}'`
          list="configuration
@@ -368,7 +393,9 @@ sched_configuration"
          done
       fi
    else
-      SetSpoolingOptions
+      #Selecting new spooling method
+      suggested_spoooling_params=`BootstrapGetValue ${UPGRADE_BACKUP_DIR}/$SGE_CELL/common "spooling_params"`
+      SetSpoolingOptions "$suggested_spooling_params"
    fi
 	
    if [ "$keep" = false ]; then
@@ -393,11 +420,10 @@ AddDummyConfiguration()
    RLOGIN_DAEMON=builtin
    RSH_COMMAND=builtin
    RSH_DAEMON=builtin
-   #TODO: add timestamp
-   TMPC=/tmp/configuration
+   TMPC=/tmp/configuration_`date '+%Y-%m-%d_%H:%M:%S'`
    rm -f $TMPC
    SafelyCreateFile $TMPC 666 ""
-   PrintConf >> $TMPC 
+   PrintConf >> $TMPC
    ExecuteAsAdmin $SPOOLDEFAULTS configuration $TMPC
    ExecuteAsAdmin rm -f $TMPC
 }

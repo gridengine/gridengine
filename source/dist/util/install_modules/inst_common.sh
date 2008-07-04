@@ -465,10 +465,10 @@ ErrUsage()
 {
    myname=`basename $0`
    $INFOTEXT -e \
-             "Usage: %s -m|-um|-x|-ux [all]|-rccreate|-sm|-usm|-s|-db|-udb|-updatedb \\\n" \
-             "       -upd |-bup|-rst|-copycerts <host|hostlist>| \\\n" \
-             "       -v [-auto <filename>] | [-winupdate] [-csp] [-jmx] [-resport] [-oldijs] \\\n" \
-             "       [-afs] [-host <hostname>] [-rsh] [-noremote]\n" \
+             "Usage: %s -m|-um|-x|-ux [all]|-rccreate [all]|-rcremove [all]|-sm|-usm|-s|-db|-udb| \\\n" \
+             "       -upd|-post_upd|-bup|-rst|-copycerts <host|hostlist>| \\\n" \
+             "       -v [-auto <filename>] | [-nr] | [-winupdate] [-winsvc] [-uwinsvc] [-csp] [-jmx] \\\n" \
+             "       [-resport] [-oldijs] [-afs] [-host <hostname>] [-rsh] [-noremote] [-nosmf]\n" \
              "   -m         install qmaster host\n" \
              "   -um        uninstall qmaster host\n" \
              "   -x         install execution host\n" \
@@ -483,6 +483,8 @@ ErrUsage()
              "   -copycerts copy local certificates to given hosts\n" \
              "   -v         print version\n" \
              "   -upd       upgrade cluster from 6.0 or higher to 6.2\n" \
+             "   -post_upd  finish the upgrade procedure (cleanup old RC scritps, \n" \
+             "              execd spooling directories, etc.)\n" \
              "   -rccreate  create startup scripts from templates\n" \
              "   -host      hostname for shadow master installation or uninstallation \n" \
              "              (eg. exec host)\n" \
@@ -490,7 +492,10 @@ ErrUsage()
              "              higher than 1024\n" \
              "   -rsh       use rsh instead of ssh (default is ssh)\n" \
              "   -auto      full automatic installation (qmaster and exec hosts)\n" \
+             "   -nr        set reschedule to false\n" \
              "   -winupdate update to add gui features to a existing execd installation\n" \
+             "   -winsvc    install only windows helper service\n" \
+             "   -uwinsvc   uninstall only windows helper service\n" \
              "   -csp       install system with security framework protocol\n" \
              "              functionality\n" \
              "   -jmx       install qmaster with JMX server thread enabled\n" \
@@ -1140,10 +1145,6 @@ CheckConfigFile()
          $INFOTEXT -e "The>CSP_MAIL_ADDRESS< entry is empty!\n"
          is_valid="false"
       fi
-      if [ "$COPY_COMMAND" != "scp" -a "$COPY_COMMAND" != "rcp" ]; then
-         $INFOTEXT -e "Your >COPY_COMMAND< entry is invalid"
-         is_valid="false"
-      fi
       if [ -z "$CSP_RECREATE" ]; then
          $INFOTEXT -e "Your >CSP_RECREATE< flag is not set!"
          is_valid="false" 
@@ -1172,6 +1173,11 @@ CheckConfigFile()
       if [ "$CSP_COPY_CERTS" != "true" -a "$CSP_COPY_CERTS" != "false" ]; then
          $INFOTEXT -e "Your >CSP_COPY_CERTS< flag is wrong! Valid values are:0, 1, true, false"
          is_valid="false" 
+      fi
+      #COPY_COMMAND is checked only if CSP_COPY_CERTS=true
+      if [ "$CSP_COPY_CERTS" = true -a \( "$COPY_COMMAND" != "scp" -a "$COPY_COMMAND" != "rcp" \) ]; then
+         $INFOTEXT -e "Your >COPY_COMMAND< entry is invalid"
+         is_valid="false"
       fi
    fi
 
@@ -1769,23 +1775,6 @@ RemoveRC_SMF()
 
 
 #-------------------------------------------------------------------------
-# SourceSmfSupport: Call to ensure SMF suppport is available
-#
-SourceSmfSupport()
-{
-   if [ "$SGE_SMF_SUPPORT_SOURCED" != true ]; then
-      if [ ! -f ./util/sgeSMF/sge_smf_support.sh ]; then
-         $INFOTEXT "Missing ./util/sgeSMF/sge_smf_support.sh file!"
-         $INFOTEXT -log "Missing ./util/sgeSMF/sge_smf_support.sh file!"
-         MoveLog
-         exit 2
-      fi
-      . ./util/sgeSMF/sge_smf_support.sh
-   fi
-}
-
-
-#-------------------------------------------------------------------------
 # SearchForExistingInstallations
 # $1 .. list of components to search for
 #
@@ -1796,8 +1785,6 @@ SearchForExistingInstallations()
    if [ -z "$SGE_CLUSTER_NAME" ]; then
       return
    fi
-
-   SourceSmfSupport
     
    TMP_DAEMON_LIST=$1
    exists=0
@@ -1842,7 +1829,6 @@ SearchForExistingInstallations()
 #
 ProcessSGEClusterName()
 {
-   SourceSmfSupport
    TMP_CLUSTER_NAME=`cat $SGE_ROOT/$SGE_CELL/common/cluster_name 2>/dev/null`
    # We always use the name in cluster_name file
    if [ -n "$TMP_CLUSTER_NAME" ]; then
@@ -1936,8 +1922,10 @@ ProcessSGEClusterName()
 SafelyCreateFile()
 {
    ExecuteAsAdmin $TOUCH $1
-   ExecuteAsAdmin $CHMOD 666 $1
-   $ECHO "$3" > $1
+   if [ -n "$3" ]; then
+      ExecuteAsAdmin $CHMOD 666 $1
+      $ECHO "$3" > $1
+   fi
    ExecuteAsAdmin $CHMOD $2 $1
 }
 
@@ -1955,6 +1943,7 @@ CheckForSMF()
          SGE_ENABLE_SMF="$?"
          if [ $SGE_ENABLE_SMF -eq 0 ]; then
             SGE_ENABLE_SMF="true"
+            . ./util/sgeSMF/sge_smf_support.sh
          else
             $INFOTEXT "Disabling SMF - SVC repository not found!!!" 
             SGE_ENABLE_SMF="false"
@@ -2124,7 +2113,7 @@ CreateSGEStartUpScripts()
       Execute rm ${TMP_SGE_STARTUP_FILE}.1
    fi
 
-   SGE_STARTUP_FILE=$SGE_ROOT_VAL/$COMMONDIR/$STARTUP_FILE_NAME
+   SGE_STARTUP_FILE=$SGE_ROOT/$SGE_CELL/common/$STARTUP_FILE_NAME
 
    if [ $create = true ]; then
 
@@ -3573,7 +3562,6 @@ CopyCA()
    fi
 
    if [ "$CSP" = "false" -a \( "$WINDOWS_SUPPORT" = "false" -o "$WIN_DOMAIN_ACCESS" = "false" \) ]; then
-      $INFOTEXT "No CSP system installed!"
       return 1
    fi
    
@@ -3647,13 +3635,13 @@ CopyCaToHostType()
    fi
 
    for RHOST in $cmd; do
-         if [ "$RHOST" != "$HOST" ]; then
+      if [ "$RHOST" != "$HOST" ]; then
             CheckRSHConnection $RHOST
             if [ "$?" = 0 ]; then
-               $INFOTEXT "Copying certificates to host %s" $RHOST
-               $INFOTEXT -log "Copying certificates to host %s" $RHOST
+         $INFOTEXT "Copying certificates to host %s" $RHOST
+         $INFOTEXT -log "Copying certificates to host %s" $RHOST
                echo "mkdir /var/sgeCA > /dev/null 2>&1" | $SHELL_NAME $RHOST /bin/sh &
-               if [ "$SGE_QMASTER_PORT" = "" ]; then 
+         if [ "$SGE_QMASTER_PORT" = "" ]; then
                   $COPY_COMMAND -pr $HOST:/var/sgeCA/sge_qmaster $RHOST:/var/sgeCA
                else
                   $COPY_COMMAND -pr $HOST:/var/sgeCA/port$SGE_QMASTER_PORT $RHOST:/var/sgeCA
@@ -3662,34 +3650,34 @@ CopyCaToHostType()
                   $INFOTEXT "Setting ownership to adminuser %s" $ADMINUSER
                   $INFOTEXT -log "Setting ownership to adminuser %s" $ADMINUSER
                   if [ "$SGE_QMASTER_PORT" = "" ]; then
-                     PORT_DIR="sge_qmaster"
-                  else
-                     PORT_DIR="port$SGE_QMASTER_PORT"
-                  fi
+            PORT_DIR="sge_qmaster"
+         else
+            PORT_DIR="port$SGE_QMASTER_PORT"
+         fi
                   echo "chown $ADMINUSER /var/sgeCA/$PORT_DIR" | $SHELL_NAME $RHOST /bin/sh &
                   echo "chown -R $ADMINUSER /var/sgeCA/$PORT_DIR/$SGE_CELL" | $SHELL_NAME $RHOST /bin/sh &
-                  for dir in `ls /var/sgeCA/$PORT_DIR/$SGE_CELL/userkeys`; do
+               for dir in `ls /var/sgeCA/$PORT_DIR/$SGE_CELL/userkeys`; do
                      echo "chown -R $dir /var/sgeCA/$PORT_DIR/$SGE_CELL/userkeys/$dir" | $SHELL_NAME $RHOST /bin/sh &
-                  done
-               else
+               done               
+            else
                   $INFOTEXT "The certificate copy failed!"      
                   $INFOTEXT -log "The certificate copy failed!"      
-               fi
-            else
+	    fi
+         else
                $INFOTEXT "rsh/ssh connection to host %s is not working!" $RHOST
                $INFOTEXT "Certificates couldn't be copied!"
-               $INFOTEXT -log "rsh/ssh connection to host %s is not working!" $RHOST
-               $INFOTEXT -log "Certificates couldn't be copied!"
-               $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-            fi
-         else
+            $INFOTEXT -log "rsh/ssh connection to host %s is not working!" $RHOST
+            $INFOTEXT -log "Certificates couldn't be copied!"
+            $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+	 fi
+      else
             $INFOTEXT "rsh/ssh connection to host %s is not working!" $RHOST
             $INFOTEXT "Certificates couldn't be copied!"
             $INFOTEXT -log "rsh/ssh connection to host %s is not working!" $RHOST
             $INFOTEXT -log "Certificates couldn't be copied!"
-            $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-         fi
-      done
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+      fi
+  done
 }
 
 #-------------------------------------------------------------------------
@@ -3832,5 +3820,179 @@ CheckPortsCollision()
    if [ $services_flag = 0 -a $env_flag = 0 ]; then
            collision_flag="no_ports"
            return
+   fi
+}
+
+#DoRemoteAction -  Executes an action on a remote host
+# $1 - host
+# $2 - remote username
+# $3 - command to execute (e.g.: "$SGE_ROOT/$SGE_CELL/common/sgeexecd start")
+DoRemoteAction()
+{
+  host="${1:?Missing host argument}"
+  user="${2:?Missing user argument}"
+  cmd="${3:?Missing command argument}"
+  if [ "$host" = "$HOST" ]; then     #local host
+     /bin/sh -c "$cmd"
+  elif [ "$user" = default ]; then
+     $SHELL_NAME "$host" "/bin/sh -c $cmd"
+  else
+     $SHELL_NAME -l "$user" "$host" "/bin/sh -c $cmd"
+  fi
+}
+
+#DoRemoteAction -  Executes an action on a remote host
+# $1 - list of hosts (separated by " ")
+# $2 - remote username
+# $3 - command to execute (e.g.: "$SGE_ROOT/$SGE_CELL/common/sgeexecd start")
+DoRemoteActionForHosts()
+{
+  host_list="${1:?Missing host_list argument}"
+  user="${2:?Missing user argument}"
+  cmd="${3:?Missing command argument}"
+  tmp_list="$host_list"
+  #Check if the list has lines
+  if [ `echo "$tmp_list" | wc -l` -lt 2 ]; then
+     host_list=`echo "$tmp_list" | awk  '{ for (i = 1; i <= NF; i++) print $i }'`
+  fi
+  for host in $host_list ; do
+     if [ "$UPDATE_WIN" = true ]; then
+        user="`echo $host | tr "a-z" "A-Z"`+$user"
+     fi
+     DoRemoteAction "$host" "$user" "$cmd"
+  done
+}
+
+
+
+#ManipulateOneDaemonType -  Add/Removes RC files of one type of all hosts listed in host
+#                                             Deletes exec spool dirs
+# $1 - list of hosts
+# $2 - type (qmaster, execd, bdb)
+# $3 - version (supported "61" otherwise 62 is used)
+ManipulateOneDaemonType()
+{
+   list="$1"
+   type="$2"
+   version="$3"
+   if [ "$version" != 61 ]; then
+      version=""
+   fi
+   
+   if [ -f $SGE_ROOT/$SGE_CELL/common/bootstrap ]; then
+      GetAdminUser
+   else
+      $INFOTEXT "\nObviously there was no qmaster installation for this cell yet. The file\n\n" \
+                "   %s\n\ndoes not exist. Exit." \$SGE_ROOT/$SGE_CELL/common/bootstrap
+      exit 1
+   fi
+   
+   if [ "$euid" -ne 0 ]; then
+      $INFOTEXT -n "\nYou need to be a root to perform this action!"
+      exit 1
+   fi
+   
+   if [ -f $SGE_ROOT/$SGE_CELL/common/settings.sh ]; then
+      . $SGE_ROOT/$SGE_CELL/common/settings.sh
+   else
+      $INFOTEXT "\nThe file\n\n" \
+                "   %s\n\nwhich is required to set the environment variables does not exist. Exit." \
+                \$SGE_ROOT/$SGE_CELL/common/settings.sh
+      exit 1
+   fi
+   
+   #Construct the correct list when all  hosts required
+   if [ "$ALL_RC" = true ]; then
+      case $type in
+      qmaster)
+	 list=""
+         #Install all qmaster/shadowd hosts
+         if [ -f "$SGE_ROOT/$SGE_CELL/common/shadow_masters" ]; then
+            list=`cat "$SGE_ROOT/$SGE_CELL/common/shadow_masters"`
+         elif [ -f "$SGE_ROOT/$SGE_CELL/common/act_qmaster" ]; then
+            list=`cat "$SGE_ROOT/$SGE_CELL/common/act_qmaster"`
+         fi
+	 ;;
+      execd)
+         list=`$SGE_BIN/qconf -sel`
+	 ;;
+      bdb)
+         list=`BootstrapGetValue $SGE_ROOT/$SGE_CELL/common "spooling_params"`
+	 db_server_host=`echo "$SPOOLING_ARGS" | awk -F: '{print $1}'`
+         db_server_spool_dir=`echo "$SPOOLING_ARGS" | awk -F: '{print $2}'`
+         if [ -z "$db_server_spool_dir" ]; then #local bdb spooling
+	    $INFOTEXT "Your cluster does not use BDB server spooling!"
+	    $INFOTEXT -log "Your cluster does not use BDB server spooling!"
+	    return 1
+	 fi
+	 list="$db_server_host"
+	 ;;
+      *)
+         $INFOTEXT "Unknown type %s in ManipulateOneTypeRC" "$type"
+         exit 1
+      esac
+   fi
+   
+   if [ -z "$list" ]; then
+      $INFOTEXT "No %s hosts defined!" $type
+      $INFOTEXT -log "No %s hosts defined!" $type
+      return 0
+   fi
+   
+   #Basic sommand settings
+   rc_cmd=". $SGE_ROOT/$SGE_CELL/common/settings.sh ; \
+. $SGE_ROOT/util/install_modules/inst_common.sh ; . $SGE_ROOT/util/install_modules/inst_qmaster.sh ; \
+. $SGE_ROOT/util/install_modules/inst_berkeley.sh ; . $SGE_ROOT/util/install_modules/inst_execd.sh ; \
+. $SGE_ROOT/util/upgrade_modules/inst_upgrade.sh ; \
+AUTO=true ; export AUTO ; SGE_ENABLE_SMF=true ; export SGE_ENABLE_SMF ; euid=$euid ; \
+cd $SGE_ROOT ; BasicSettings ; SetUpInfoText ; CheckForSMF ; "
+   if [ "$SMF_FLAGS" = -nosmf ]; then
+      rc_cmd="$rc_cmd SGE_ENABLE_SMF=false ; "
+   fi
+
+   if [ "$DEL_EXECD_SPOOL" = true ]; then        #DELETE EXECD SPOOL DIRS
+      cmd=". $SGE_ROOT/$SGE_CELL/common/settings.sh ; . $SGE_ROOT/util/install_modules/inst_common.sh ; \
+cd $SGE_ROOT && RemoteExecSpoolDirDelete"
+      DoRemoteActionForHosts "$list" default "$cmd"
+   fi
+   
+   if [ "$UPDATE_WIN" = true ]; then                   #UPDATE WINDOWS HELPER SERVICE ON ALL WINDOWS EXECDs
+      cmd=". $SGE_ROOT/$SGE_CELL/common/settings.sh ; . $SGE_ROOT/util/install_modules/inst_common.sh ; \
+. $SGE_ROOT/util/install_modules/inst_execd.sh ; cd $SGE_ROOT ; BasicSettings ; SetUpInfoText ; SetupWinSvc update"
+      DoRemoteActionForHosts "$list" $ADMINUSER "$cmd"
+   fi
+   
+   if [ "$REMOVE_RC" = true ]; then                    #REMOVE OLD RCs
+      cmd="$rc_cmd RemoveRcScript $HOST $type $euid $version"
+      DoRemoteActionForHosts "$list" default "$cmd"
+   fi
+   
+   if [ "$ADD_RC" = true ]; then                              #ADD NEW RCs
+      cmd="$rc_cmd ADD_TO_RC=true; export ADD_TO_RC ; SetupRcScriptNames $type && InstallRcScript"
+      DoRemoteActionForHosts "$list" default "$cmd"
+   fi
+}
+
+RemoteExecSpoolDirDelete() 
+{
+   BasicSettings
+   SetUpInfoText
+   GetAdminUser
+   global_dir=`qconf -sconf 2>&1 | grep execd_spool_dir | awk '{ print $2}'`
+   local_dir=`qconf -sconf $HOST 2>&1 | grep execd_spool_dir | awk '{ print $2}'` 
+   if [ -z "$local_dir" ]; then 
+      local_dir=$global_dir
+   fi
+   if [ -d "$local_dir/$HOST" ]; then
+      #Try as root
+      rm -rf "$local_dir/$HOST/"* > /dev/null 2&>1
+      if [ $? -ne 0 ]; then
+         #Try as admin
+	 ExecuteAsAdmin rm -rf "$local_dir/$HOST/"*
+      fi
+   elif [ ! -d "$local_dir" ]; then
+      LOCAL_EXECD_SPOOL=$local_dir
+      . ./util/inst_execd.sh
+      MakeLocalSpoolDir
    fi
 }

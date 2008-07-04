@@ -85,28 +85,18 @@ GetCell()
       $CLEAR
       $INFOTEXT -u "\nGrid Engine cells"
       if [ "$SGE_CELL" = "" ]; then
-         $INFOTEXT -n "\nGrid Engine supports multiple cells.\n\n" \
-                      "If you are not planning to run multiple Grid Engine clusters or if you don't\n" \
-                      "know yet what is a Grid Engine cell it is safe to keep the default cell name\n\n" \
-                      "   default\n\n" \
-                      "If you want to install multiple cells you can enter a cell name now.\n\n" \
-                      "The environment variable\n\n" \
-                      "   \$SGE_CELL=<your_cell_name>\n\n" \
-                      "will be set for all further Grid Engine commands.\n\n" \
-                      "Enter cell name [default] >> "
-         INP=`Enter default`
-      else
-         $INFOTEXT -n "\nGrid Engine supports multiple cells.\n\n" \
-                      "If you are not planning to run multiple Grid Engine clusters or if you don't\n" \
-                      "know yet what is a Grid Engine cell it is safe to keep the default cell name\n\n" \
-                      "   default\n\n" \
-                      "If you want to install multiple cells you can enter a cell name now.\n\n" \
-                      "The environment variable\n\n" \
-                      "   \$SGE_CELL=<your_cell_name>\n\n" \
-                      "will be set for all further Grid Engine commands.\n\n" \
-                      "Enter cell name [%s] >> " $SGE_CELL
-         INP=`Enter $SGE_CELL`
+         SGE_CELL=default
       fi
+      $INFOTEXT -n "\nGrid Engine supports multiple cells.\n\n" \
+                   "If you are not planning to run multiple Grid Engine clusters or if you don't\n" \
+                   "know yet what is a Grid Engine cell it is safe to keep the default cell name\n\n" \
+                   "   default\n\n" \
+                   "If you want to install multiple cells you can enter a cell name now.\n\n" \
+                   "The environment variable\n\n" \
+                   "   \$SGE_CELL=<your_cell_name>\n\n" \
+                   "will be set for all further Grid Engine commands.\n\n" \
+                   "Enter cell name [%s] >> " $SGE_CELL
+      INP=`Enter $SGE_CELL`
       eval SGE_CELL=$INP
       SGE_CELL_VAL=`eval echo $SGE_CELL`
       if [ "$QMASTER" = "install" ]; then
@@ -334,8 +324,7 @@ SetPermissions()
 
 
 #SetSpoolingOptionsBerkeleyDB()
-# $1 - new default spool_dir
-#      TODO: $1 only for local bdb spooling for now
+# $1 - new default spool_dir or BDBD server
 SetSpoolingOptionsBerkeleyDB()
 {
    SPOOLING_METHOD=berkeleydb
@@ -405,14 +394,16 @@ SetSpoolingOptionsBerkeleyDB()
       fi
 
       if [ $is_server = "true" ]; then
-         SpoolingQueryChange
+         db_server_host=`echo "$1" | awk -F: '{print $1}'`
+         db_server_spool_dir=`echo "$1" | awk -F: '{print $2}'`
+         SpoolingQueryChange "$db_server_host" "$db_server_spool_dir"
       else
          done="false"
          is_spool="false"
 
          while [ $is_spool = "false" ] && [ $done = "false" ]; do
             $CLEAR
-            SpoolingQueryChange "$1"
+            SpoolingQueryChange
             if [ -d $SPOOLING_DIR ]; then
                $INFOTEXT -n -ask "y" "n" -def "n" -auto $AUTO "The spooling directory already exists! Do you want to delete it? [n] >> "
                ret=$?               
@@ -540,6 +531,7 @@ SetSpoolingOptionsClassic()
    SPOOLING_ARGS="$SGE_ROOT_VAL/$COMMONDIR;$QMDIR"
 }
 
+# $1 - suggested spooling params form the backup
 SetSpoolingOptionsDynamic()
 {
    if [ "$AUTO" = "true" ]; then
@@ -565,7 +557,7 @@ SetSpoolingOptionsDynamic()
          SetSpoolingOptionsClassic
          ;;
       berkeleydb)
-         SetSpoolingOptionsBerkeleyDB
+         SetSpoolingOptionsBerkeleyDB $1
          ;;
       *)
          $INFOTEXT "\nUnknown spooling method. Exit."
@@ -578,7 +570,7 @@ SetSpoolingOptionsDynamic()
 
 #--------------------------------------------------------------------------
 # SetSpoolingOptions sets / queries options for the spooling framework
-#
+# $1 - suggested spooling params form teh old bootstrap file
 SetSpoolingOptions()
 {
    $INFOTEXT -u "\nSetup spooling"
@@ -589,10 +581,10 @@ SetSpoolingOptions()
          SetSpoolingOptionsClassic
          ;;
       berkeleydb)
-         SetSpoolingOptionsBerkeleyDB
+         SetSpoolingOptionsBerkeleyDB $1
          ;;
       dynamic)
-         SetSpoolingOptionsDynamic
+         SetSpoolingOptionsDynamic $1
          ;;
       *)
          $INFOTEXT "\nUnknown spooling method. Exit."
@@ -783,7 +775,7 @@ AddConfiguration()
       #TruncCreateAndMakeWriteable $COMMONDIR/configuration
       #PrintConf >> $COMMONDIR/configuration
       #SetPerm $COMMONDIR/configuration
-      TMPC=/tmp/configuration
+      TMPC=/tmp/configuration_`date '+%Y-%m-%d_%H:%M:%S'`
       TOUCH=touch
       rm -f $TMPC
       ExecuteAsAdmin $TOUCH $TMPC
@@ -1809,11 +1801,7 @@ SetLibJvmPath() {
    while [ $isdone != true ]; do
       $INFOTEXT -n "Please enter JAVA_HOME or press enter [%s] >> " "$java_home"
       INP=`Enter $java_home`
-      if [ "$INP" = "" -a ! -x $INP/bin/java ]; then
-         $INFOTEXT "\nInvalid input. Must be a valid JAVA_HOME path."
-         continue
-      fi
-      if [ "$INP" = "" -o ! -x $INP/bin/java ]; then
+      if [ ! -x $INP/bin/java ]; then
          $INFOTEXT "\nInvalid input. Must be a valid JAVA_HOME path."
       else
          java_home=$INP

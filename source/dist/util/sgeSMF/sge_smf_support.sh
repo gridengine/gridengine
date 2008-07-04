@@ -50,46 +50,49 @@ SED=sed
 
 SGE_SMF_SUPPORT_SOURCED=true
 
-if [ -z "$SGE_ROOT" -o -z "$SGE_CELL" ]; then
-   if [ -z "$INFOTEXT" ]; then
-      INFOTEXT=echo
-   fi
-   $INFOTEXT "\$SGE_ROOT and \$SGE_CELL must be set!"
-   exit 2
-fi
-
-#Standalone setup (Warning: Overwrites inst_sge settings)
-if [ -z "$QMASTER" -a -z "$EXECD" -a -z "$SHADOW" -a -z "$BERKELEY" -a -z "$DBWRITER" ]; then
-   MKDIR=mkdir
-   TOUCH=touch
-   CHMOD=chmod
-   RM="rm -f"
-	
-   SGE_ARCH=`$SGE_ROOT/util/arch`
-   SGE_UTILBIN="$SGE_ROOT/utilbin/$SGE_ARCH"
-	
-   . $SGE_ROOT/util/install_modules/inst_common.sh
-	
-   GetAdminUser
-   #Setup INFOTEXT
-   if [ -z "$INFOTEXT" ]; then
-      INFOTEXT=$SGE_ROOT/utilbin/$SGE_ARCH/infotext
-      if [ ! -x $INFOTEXT ]; then
-         echo "Error: Can't find binary \"$INFOTEXT\""
-         echo "Please verify your setup and restart this script. Exit."
-         exit 2
+DoSetup()
+{
+   if [ -z "$SGE_ROOT" -o -z "$SGE_CELL" ]; then
+      if [ -z "$INFOTEXT" ]; then
+         INFOTEXT=echo
       fi
-
-      # Test the infotext binary
-      tmp=`$INFOTEXT test 2>&1`
-      if [ $? -ne 0 ]; then
-         echo "Error: Execution of $INFOTEXT failed: $tmp"
-         echo "Please verify your setup and restart this script. Exit."
-         exit 2
-      fi
-      SGE_INFOTEXT_MAX_COLUMN=5000; export SGE_INFOTEXT_MAX_COLUMN
+      $INFOTEXT "\$SGE_ROOT and \$SGE_CELL must be set!"
+      exit 2
    fi
-fi
+
+   #Standalone setup (Warning: Overwrites inst_sge settings)
+   if [ -z "$QMASTER" -a -z "$EXECD" -a -z "$SHADOW" -a -z "$BERKELEY" -a -z "$DBWRITER" ]; then
+      MKDIR=mkdir
+      TOUCH=touch
+      CHMOD=chmod
+      RM="rm -f"
+	
+      SGE_ARCH=`$SGE_ROOT/util/arch`
+      SGE_UTILBIN="$SGE_ROOT/utilbin/$SGE_ARCH"
+  	
+      . $SGE_ROOT/util/install_modules/inst_common.sh
+  	
+      GetAdminUser
+      #Setup INFOTEXT
+      if [ -z "$INFOTEXT" ]; then
+         INFOTEXT=$SGE_ROOT/utilbin/$SGE_ARCH/infotext
+         if [ ! -x $INFOTEXT ]; then
+            echo "Error: Can't find binary \"$INFOTEXT\""
+            echo "Please verify your setup and restart this script. Exit."
+            exit 2
+        fi
+
+         #Test the infotext binary
+         tmp=`$INFOTEXT test 2>&1`
+         if [ $? -ne 0 ]; then
+            echo "Error: Execution of $INFOTEXT failed: $tmp"
+            echo "Please verify your setup and restart this script. Exit."
+            exit 2
+         fi
+         SGE_INFOTEXT_MAX_COLUMN=5000; export SGE_INFOTEXT_MAX_COLUMN
+      fi
+   fi
+}
 
 #---------------------------------------------------------------------------
 # Show the usage of the standalone command
@@ -332,6 +335,8 @@ SMFUnregister()
 # return a stdout output
 SMF()
 {   
+   DoSetup
+   
    if [ -f /lib/svc/share/smf_include.sh ]; then 
       . /lib/svc/share/smf_include.sh
       smf_present

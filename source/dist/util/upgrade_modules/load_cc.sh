@@ -56,6 +56,20 @@ QCONF=$SGE_ROOT/bin/$ARCH/qconf
 HOST=`$SGE_ROOT/utilbin/$ARCH/gethostname -name`
 
 
+Usage()
+{
+   myname=`basename $0`
+   $INFOTEXT "Usage: $myname [-log I|W|C] [-newijs true|false] [-execd_spool_dir <value>] [-admin_mail <value>]\n" \
+             "      [-gid_range <integer_range_value>] [-help]\n" \
+             "\nExamples:\n" \
+             "   $myname -log C -newijs true -execd_spool_dir /sge/real_execd_spool -admin_mail root@host.com\n" \
+             "   -gid_range 23000-24000\n" \
+             "Loads the configuration, displays only critical error, enables new interactive job support,\n" \
+             "sets execd_spool_dir to the <value> for all execution daemons in the backup, sets admin_mail\n" \
+             "to <value> and sets gid_range to <integer_range_value>."
+}
+
+
 #All logging is done by this functions
 LogIt()
 {
@@ -629,6 +643,11 @@ EXIT() {
 ########
 # MAIN #
 ########
+if [ "$1" = -help -o $# -eq 0 ]; then
+   Usage
+   exit 0
+fi
+
 DIR="${1:?The load directory is required}"
 shift
 
@@ -689,6 +708,8 @@ while [ $ARGC -gt 0 ]; do
          ;;
       *)
          echo "Invalid argument \'$1\'"
+         Usage
+         exit 1
          ;;
    esac
    shift

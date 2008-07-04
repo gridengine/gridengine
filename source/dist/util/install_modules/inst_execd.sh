@@ -725,6 +725,7 @@ CheckWinAdminUser()
    fi
 }
 
+# $1 - only do reinstall with $1=update
 InstWinHelperSvc()
 {
    tmp_path=$PATH
@@ -744,14 +745,15 @@ InstWinHelperSvc()
       ret=2
       $INFOTEXT "   ... a service is already installed!"
       $INFOTEXT -log "   ... a service is already installed!"
-      $INFOTEXT "   ... stopping service!"
-      $INFOTEXT -log "   ... stopping service!"
 
       while [ "$ret" -ne 0 ]; do
          eval "net continue \"$WIN_SVC\"" > /dev/null 2>&1
          ret=$?
       done    
-      
+      #Return if not in update mode
+      if [ "$1" != update ]; then
+         return
+      fi
    fi
 
    if [ -f "$WIN_DIR"/SGE_Helper_Service.exe ]; then
@@ -883,7 +885,7 @@ SetupWinSvc()
       fi 
       InstWinHelperSvc
    elif [ "$1" = "update" ]; then #in case of an update, this tree is used
-      InstWinHelperSvc
+      InstWinHelperSvc "$1"
    else
       UnInstWinHelperSvc
    fi

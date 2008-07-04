@@ -1,3 +1,8 @@
+MP-2008-07-04-0: Bugfix:    RQS: Line wrap of host list introduces syntax error
+                 Bugster:   6647676
+                 Issue:     2449
+                 Review:    DT
+
 DG-2008-07-04-0: Bugfix:    Java DRMAA exit() method resulted in segmentation
                             fault on 64 bit platform when using 32 bit 
                             native drmaa library. 

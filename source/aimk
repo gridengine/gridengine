@@ -256,6 +256,7 @@ set INSURE_FLAG      = ""
 set NOERR_CFLAG      = ""
 set NOERR_PROTO      = ""
 set NOERR_SSH        = ""
+set ODRMAAFLAGS      = ""
 set MEMCFLAG         = ""
 set JAVA_ARCH        = ""
 set JAVA_LFLAGS      = ""
@@ -1543,14 +1544,21 @@ case SOLARISAMD64:
             set haspatch = `expr $patchcnt ">=" 1`
      #       set haspatch = 0
             if ( $compversion == 5.5 && $haspatch == 1 || $compversion != 5.5 ) then
-               set OFLAG = "-fast -xchip=pentium -xcache=generic"
+               # less aggressive compiler optimization leads to more stable code
+               set OFLAG = "-fast -xchip=pentium -xcache=generic -xregs=no%frameptr -xalias_level=any -xtarget=pentium"
             else
                echo using \"-xO3\" optimization due to compiler bug
                set OFLAG = "-xO3"
+               set ODRMAAFLAGS = "-xregs=no%frameptr -xalias_level=any"
      #          set OFLAG = "-xO3 -fns -fsimple=2 -fsingle -ftrap=%none -nofstore -xbuiltin=%all -xdepend -xlibmil"
             endif
-         else
+         else if ( $BUILDARCH ==  SOLARISAMD64 ) then 
 	         set OFLAG = "-fast -xchip=generic -xcache=generic"
+            set ODRMAAFLAGS = "-xregs=no%frameptr -xalias_level=any"
+         else 
+            # it is a sparc architecture: use other xregs
+	         set OFLAG = "-fast -xchip=generic -xcache=generic"
+            set ODRMAAFLAGS = "-xregs=no%appl -xalias_level=any"
          endif
       endif
    else
@@ -2279,6 +2287,7 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
          "JUTI_ALL=$JUTI_ALL" "JUTI_CLEAN=$JUTI_CLEAN" "JUTI_DEPEND=$JUTI_DEPEND" \
          "AUTHUSER_ALL=$AUTHUSER_ALL" "LOADCHECK_ALL=$LOADCHECK_ALL" \
          "WINCC=$WINCC" "WINCFLAGS=$WINCFLAGS" "WINLIBS=$WINLIBS" \
+         "ODRMAAFLAGS=$ODRMAAFLAGS" \
          $argv
    if ( $status != 0 ) then
       echo not done

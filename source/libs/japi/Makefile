@@ -135,22 +135,22 @@ include $(JAPILIB_DIR)/howto/Makefile
 # rules to build object codes
 ###############################################################################
 drmaa.1.0.o: $(JAPILIB_DIR)/drmaa.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/drmaa.c -o drmaa.1.0.o
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) $(ODRMAAFLAGS) -c $(JAPILIB_DIR)/drmaa.c -o drmaa.1.0.o
 
 drmaa.0.95.o: $(JAPILIB_DIR)/drmaa.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -DDRMAA_95 -c $(JAPILIB_DIR)/drmaa.c -o drmaa.0.95.o
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) $(ODRMAAFLAGS) -DDRMAA_95 -c $(JAPILIB_DIR)/drmaa.c -o drmaa.0.95.o
 
 japi.1.0.o: $(JAPILIB_DIR)/japi.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/japi.c -o japi.1.0.o
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) $(ODRMAAFLAGS) -c $(JAPILIB_DIR)/japi.c -o japi.1.0.o
 
 japi.0.95.o: $(JAPILIB_DIR)/japi.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -DDRMAA_95 -c $(JAPILIB_DIR)/japi.c -o japi.0.95.o
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) $(ODRMAAFLAGS) -DDRMAA_95 -c $(JAPILIB_DIR)/japi.c -o japi.0.95.o
 
 com_sun_grid_drmaa_SessionImpl.1.0.o: $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c -o com_sun_grid_drmaa_SessionImpl.1.0.o
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) $(ODRMAAFLAGS) -c $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c -o com_sun_grid_drmaa_SessionImpl.1.0.o
 
 com_sun_grid_drmaa_SessionImpl.0.95.o: $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -DDRMAA_95 -c $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c -o com_sun_grid_drmaa_SessionImpl.0.95.o
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) $(ODRMAAFLAGS) -DDRMAA_95 -c $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c -o com_sun_grid_drmaa_SessionImpl.0.95.o
 
 #---------------------------------------------------------------------
 

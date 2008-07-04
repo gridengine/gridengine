@@ -110,11 +110,8 @@ lListElem *job_get_ja_task_template_pending(const lListElem *job,
    template_task = lFirst(lGetList(job, JB_ja_template));
    if (!template_task) {
       ERROR((SGE_EVENT, "unable to retrieve template task\n"));
-   } 
-   if (template_task) {
+   }  else {
       lSetUlong(template_task, JAT_state, JQUEUED | JWAITING);
-   }
-   if (template_task) {
       lSetUlong(template_task, JAT_task_number, ja_task_id);  
    }
    DRETURN(template_task);
@@ -3175,9 +3172,6 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
       }
    }
 
-   /* TODO: JB_stdout_path_list */
-   /* TODO: JB_stderr_path_list */
-   /* TODO: JB_stdin_path_list */
    /* JB_merge_stderr boolean value */
    /* TODO: JB_hard_resource_list */
    /* TODO: JB_soft_resource_list */
@@ -3268,98 +3262,6 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
    if (ret) {
       ret = object_verify_double_null(job, answer_list, JB_wtcontr);
     }
-
-   DRETURN(ret);
-}
-
-/****** sge_job/job_verify_execd_job() *****************************************
-*  NAME
-*     job_verify_execd_job() -- verify a job entering execd
-*
-*  SYNOPSIS
-*     bool 
-*     job_verify_execd_job(const lListElem *job, lList **answer_list) 
-*
-*  FUNCTION
-*     Verifies a job object entering execd.
-*     Does generic tests by calling job_verify, like verifying the cull
-*     structure, and makes sure a number of job attributes are set
-*     correctly.
-*
-*  INPUTS
-*     const lListElem *job - the job to verify
-*     lList **answer_list  - answer list to pass back error messages
-*
-*  RESULT
-*     bool - true on success,
-*            false on error with error message in answer_list
-*
-*  NOTES
-*     MT-NOTE: job_verify_execd_job() is MT safe 
-*
-*  BUGS
-*     The function is far from being complete.
-*     Currently, only the CULL structure is verified, not the contents.
-*
-*  SEE ALSO
-*     sge_job/job_verify()
-*******************************************************************************/
-bool
-job_verify_execd_job(const lListElem *job, lList **answer_list)
-{
-   bool ret = true;
-
-   DENTER(TOP_LAYER, "job_verify_execd_job");
-
-   ret = job_verify(job, answer_list);
-
-   /* 
-    * A job entering execd must have some additional properties:
-    *    - correct state
-    *    - JB_job_number > 0
-    *    - JB_job_name != NULL
-    *    - JB_exec_file etc. ???
-    *    - JB_submission_time, JB_execution_time??
-    *    - JB_owner != NULL
-    *    - JB_cwd != NULL??
-    */
-
-   if (ret) {
-      ret = object_verify_ulong_not_null(job, answer_list, JB_job_number);
-   }
-
-   if (ret) {
-      ret = object_verify_string_not_null(job, answer_list, JB_job_name);
-   }
-
-   if (ret) {
-      ret = object_verify_string_not_null(job, answer_list, JB_owner);
-   }
-
-   if (ret) {
-      const lListElem *ckpt = lGetObject(job, JB_checkpoint_object);
-      if (ckpt != NULL) {
-         if (ckpt_validate(ckpt, answer_list) != STATUS_OK) {
-            ret = false;
-         }
-      }
-   }
-
-   /* for job execution, we need exactly one ja task */
-   if (ret) {
-      const lList *ja_tasks = lGetList(job, JB_ja_tasks);
-
-      if (ja_tasks == NULL || lGetNumberOfElem(ja_tasks) != 1) {
-         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
-                           MSG_INVALIDJATASK_REQUEST);
-         ret = false;
-      }
-
-      /* verify the ja task structure */
-      if (ret) {
-         ret = ja_task_verify_execd_job(lFirst(ja_tasks), answer_list);
-      }
-   }
 
    DRETURN(ret);
 }

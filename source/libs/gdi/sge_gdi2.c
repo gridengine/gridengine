@@ -1735,7 +1735,7 @@ int gdi2_send_message_pb(sge_gdi_ctx_class_t *ctx,
 
    DENTER(GDI_LAYER, "gdi2_send_message_pb");
 
-   if ( !pb ) {
+   if (pb == NULL) {
        DPRINTF(("no pointer for sge_pack_buffer\n"));
        ret = gdi2_send_message(ctx, synchron, tocomproc, toid, tohost, tag, NULL, 0, mid);
        DRETURN(ret);

@@ -556,19 +556,15 @@ send_job(sge_gdi_ctx_class_t *ctx,
    cl_commlib_get_last_message_time(handle, (char*)rhost, (char*)target, 1, &last_heard_from);
    now = sge_get_gmt();
    if (last_heard_from + sge_get_max_unheard_value() <= now) {
-
       ERROR((SGE_EVENT, MSG_COM_CANT_DELIVER_UNHEARD_SSU, target, rhost, sge_u32c(lGetUlong(jep, JB_job_number))));
       sge_mark_unheard(hep, target);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    
    if ((tmpjep = copyJob(jep, jatep)) == NULL) {
-      DEXIT;
-      return -1;
-   }
-   else {
+      DRETURN(-1);
+   } else {
       tmpjatep = lFirst(lGetList(tmpjep, JB_ja_tasks));
    }
 
@@ -579,8 +575,7 @@ send_job(sge_gdi_ctx_class_t *ctx,
    if (master && job_spooling && lGetString(tmpjep, JB_exec_file) && !JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type))) {
       if (spool_read_script(tmpjep, lGetUlong(tmpjep, JB_job_number))) {
          lFreeElem(&tmpjep);
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
    }
 
@@ -590,8 +585,7 @@ send_job(sge_gdi_ctx_class_t *ctx,
    */
    if (setCheckpointObj(tmpjep) != 0) {
       lFreeElem(&tmpjep);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    
    qlp = lCreateList("qlist", QU_Type);
@@ -667,8 +661,7 @@ send_job(sge_gdi_ctx_class_t *ctx,
    if(init_packbuffer(&pb, 0, 0) != PACK_SUCCESS) {
       lFreeElem(&tmpjep);
       lFreeList(&qlp);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    pack_job_delivery(&pb, tmpjep, qlp, pe);
@@ -679,7 +672,6 @@ send_job(sge_gdi_ctx_class_t *ctx,
    if (pe != NULL) {
       lAppendElem(master_pe_list, pe);
    }   
-
 
    /*
    ** security hook
@@ -704,8 +696,7 @@ send_job(sge_gdi_ctx_class_t *ctx,
       ERROR((SGE_EVENT, MSG_COM_SENDJOBTOHOST_US, sge_u32c(lGetUlong(jep, JB_job_number)), rhost));
       ERROR((SGE_EVENT, "commlib error: %s\n", cl_get_error_text(failed)));
       sge_mark_unheard(hep, target);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    } else {
       DPRINTF(("successfully sent %sjob "sge_u32" to host \"%s\"\n", 
                master?"":"SLAVE ", 
@@ -713,8 +704,7 @@ send_job(sge_gdi_ctx_class_t *ctx,
                rhost));
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 void sge_job_resend_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor)

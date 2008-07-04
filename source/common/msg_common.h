@@ -147,7 +147,6 @@
 #define MSG_PARSE_INVALIDPRIORITYMUSTBEINNEG1023TO1024              _MESSAGE(23109, _("ERROR! invalid priority, must be an integer from -1023 to 1024"))
 #define MSG_PARSE_INVALIDJOBSHAREMUSTBEUINT              _MESSAGE(23110, _("ERROR! invalid jobshare, must be an unsigned integer"))
 #define MSG_PARSE_INVALIDOTICKETSMUSTBEUINT              _MESSAGE(23111, _("ERROR! invalid override tickets, must be an unsigned integer"))
-#define MSG_PARSE_SAMEPATHFORINPUTANDOUTPUT_SS              _MESSAGE(231112, _("ERROR! -i argument "SFQ" cannot be the same as -o argument "SFQ))
 
 /*
 ** parse_qconf.c

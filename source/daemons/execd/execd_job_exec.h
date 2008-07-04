@@ -51,4 +51,6 @@ int execd_job_slave(sge_gdi_ctx_class_t *ctx,
                     char *err_str, 
                     int answer_error);
 
+bool job_verify_execd_job(const lListElem *job, lList **answer_list, const char *qualified_hostname);
+
 #endif /* __EXECD_JOB_EXEC_H */

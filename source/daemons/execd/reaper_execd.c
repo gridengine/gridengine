@@ -641,15 +641,14 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
                    job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring)));
          }
       }
-   }
-   else
+   } else {
       job_pid = 0;
+   }
 
    lSetUlong(jr, JR_job_pid, job_pid);
    
    /* Only used for ckpt jobs: 1 checkpointed, 2 checkpoint in the arena */
    lSetUlong(jr, JR_ckpt_arena, ckpt_arena);
-   
 
    /* Currently the shepherd doesn't create this file */
    sge_get_active_job_file_path(&fname, job_id, ja_task_id, pe_task_id, 
@@ -847,9 +846,9 @@ lListElem *jr
    /* try to find this job in our job list */ 
 
    jep = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
-   while(jep != NULL) {
+   while (jep != NULL) {
       jatep = job_search_task(jep, NULL, ja_task_id);
-      if(jatep != NULL) {
+      if (jatep != NULL) {
          break;
       }
       jep = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
@@ -860,11 +859,7 @@ lListElem *jr
    
       DPRINTF(("REMOVING WITH jep && jatep\n"));
       if (pe_task_id_str) {
-         for_each(petep, lGetList(jatep, JAT_task_list)) {
-            if (!strcmp(pe_task_id_str, lGetString(petep, PET_id))) {
-               break;  
-            }
-         }   
+         petep = lGetElemStr(lGetList(jatep, JAT_task_list), PET_id, pe_task_id_str);
 
          if (!petep) {
             ERROR((SGE_EVENT, MSG_JOB_XYHASNOTASKZ_UUS, 
@@ -874,7 +869,7 @@ lListElem *jr
             return;
          }
 
-         if (lGetUlong(jr, JR_state)!=JEXITING) {
+         if (lGetUlong(jr, JR_state) != JEXITING) {
             WARNING((SGE_EVENT, MSG_EXECD_GOTACKFORPETASKBUTISNOTINSTATEEXITING_S, pe_task_id_str));
             DEXIT;
             return;
@@ -886,8 +881,9 @@ lListElem *jr
       }   
      
       /* use mail list of job instead of tasks one */
-      if (jr && lGetUlong(jr, JR_state)!=JSLAVE)
+      if (jr && lGetUlong(jr, JR_state) != JSLAVE) {
          reaper_sendmail(ctx, jep, jr); 
+      }
 
 
       /*
@@ -938,7 +934,7 @@ lListElem *jr
                /* it is possible to remove the exec_file if
                   less than one task of a job is running */
                tmp_job = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
-               while(tmp_job != NULL) {
+               while (tmp_job != NULL) {
                   task_number++;
                   tmp_job = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
                }
@@ -1086,14 +1082,16 @@ int general,
 int failed 
 ) {
    lListElem *jr, *ep;
-   u_long32 jobid, jataskid;
+   u_long32 jobid, jataskid = 0;
    const char *petaskid = NULL;
 
    DENTER(TOP_LAYER, "execd_job_failure");
 
    jobid = lGetUlong(jep, JB_job_number);
-   jataskid = lGetUlong(jatep, JAT_task_number);
-   if(petep != NULL) {
+   if (jatep != NULL) {
+      jataskid = lGetUlong(jatep, JAT_task_number);
+   }
+   if (petep != NULL) {
       petaskid = lGetString(petep, PET_id);
    }
 
@@ -1108,7 +1106,7 @@ int failed
       jr = add_job_report(jobid, jataskid, petaskid, jep);
    }
    
-   if(petep != NULL) {
+   if (petep != NULL) {
       ep = lFirst(lGetList(petep, PET_granted_destin_identifier_list));
    } else {
       ep = lFirst(lGetList(jatep, JAT_granted_destin_identifier_list));
@@ -1127,8 +1125,7 @@ int failed
 
    job_related_adminmail(EXECD, jr, job_is_array(jep));
 
-   DEXIT;
-   return jr;
+   DRETURN(jr);
 }
 
 
@@ -1187,8 +1184,9 @@ int startup
 
    DENTER(TOP_LAYER, "clean_up_old_jobs");
 
-   if (startup)
+   if (startup) {
       INFO((SGE_EVENT, MSG_SHEPHERD_CKECKINGFOROLDJOBS));
+   }
 
    /* 
       If we get an empty Master_Job_List we know that 

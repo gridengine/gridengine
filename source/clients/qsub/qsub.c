@@ -92,8 +92,6 @@ char **argv
    lListElem *job = NULL;
    lList *alp = NULL;
    lListElem *ep;
-   lListElem *i_opt;
-   lListElem *o_opt;
    int exit_status = 0;
    int just_verify;
    int tmp_ret;
@@ -217,26 +215,12 @@ char **argv
       }
       
       lRemoveElem(opts_all, &ep);
-
    }
-      i_opt = lGetElemStr(opts_all, SPA_switch, "-i");
-      o_opt = lGetElemStr(opts_all, SPA_switch, "-o");
-
-      if (opt_list_is_X_true(opts_cmdline, "-i")) {
-         if (i_opt == o_opt) { 
-            fprintf(stderr, MSG_PARSE_SAMEPATHFORINPUTANDOUTPUT_SS, 
-             "", "");
-            fprintf(stderr, "\n");
-            DEXIT;
-            SGE_EXIT(NULL, 1);
-         }
-      }
-
 
    if (wait_for_job) {
       DPRINTF(("Wait for job end\n"));
    }
-   
+
    alp = cull_parse_job_parameter(myuid, username, cell_root, unqualified_hostname, qualified_hostname, opts_all, &job);
 
    tmp_ret = answer_list_print_err_warn(&alp, NULL, "qsub: ", MSG_WARNING);
@@ -373,17 +357,16 @@ char **argv
    if (!just_verify) {
       const char *output = sge_dstring_get_string(&diag); 
 
+      /* print the tersed output */
       if (has_terse) {
          printf("%s", jobid_string);
-      }
-      else if (output != NULL) {
+      } else if (output != NULL) {
         printf("%s", output);
       } else {
         printf(MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS, jobid_string, lGetString(job, JB_job_name));
       }
       printf("\n");
-   }   
-   else {
+   } else {
       printf(MSG_JOB_VERIFYFOUNDQ);
       printf("\n");
    }   
@@ -681,8 +664,7 @@ static int report_exit_status(int stat, const char *jobid)
 
    if (aborted) {
       printf(MSG_QSUB_JOBNEVERRAN_S, jobid);
-   }
-   else {
+   } else {
       japi_wifexited(&exited, stat, NULL);
       if (exited) {
          japi_wexitstatus(&exit_status, stat, NULL);
@@ -696,8 +678,7 @@ static int report_exit_status(int stat, const char *jobid)
             printf(MSG_QSUB_JOBRECEIVEDSIGNAL_SS, jobid,
                     sge_dstring_get_string(&termsig));
             sge_dstring_free(&termsig);
-         }
-         else {
+         } else {
             printf(MSG_QSUB_JOBFINISHUNCLEAR_S, jobid);
          }
 

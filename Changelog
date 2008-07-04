@@ -1,5 +1,11 @@
+JG-2008-07-04-0: Bugfix:    Same path for input and output/error file must be
+                            rejected.
+                 Bugster:   6310194
+                 Issue:     1751
+                 Review:    RD
+
 JG-2008-07-03-1: Enhancem.: New default location for Berkeley DB and openssl.
-                  Review:   AA
+                 Review:    AA
 
 JG-2008-07-03-0: Enhancem.: Updated review template and help document.
                  Review:    sge-et

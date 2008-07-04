@@ -847,7 +847,7 @@ lListElem *jr
    /* try to find this job in our job list */ 
 
    jep = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
-   while(jep != NULL) {
+   while (jep != NULL) {
       jatep = job_search_task(jep, NULL, ja_task_id);
       if (jatep != NULL) {
          break;
@@ -1086,14 +1086,16 @@ int general,
 int failed 
 ) {
    lListElem *jr, *ep;
-   u_long32 jobid, jataskid;
+   u_long32 jobid, jataskid = 0;
    const char *petaskid = NULL;
 
    DENTER(TOP_LAYER, "execd_job_failure");
 
    jobid = lGetUlong(jep, JB_job_number);
-   jataskid = lGetUlong(jatep, JAT_task_number);
-   if(petep != NULL) {
+   if (jatep != NULL) {
+      jataskid = lGetUlong(jatep, JAT_task_number);
+   }
+   if (petep != NULL) {
       petaskid = lGetString(petep, PET_id);
    }
 
@@ -1126,8 +1128,7 @@ int failed
 
    job_related_adminmail(EXECD, jr, job_is_array(jep), lGetString(jep, JB_owner));
 
-   DEXIT;
-   return jr;
+   DRETURN(jr);
 }
 
 

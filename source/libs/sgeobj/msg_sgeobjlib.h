@@ -259,8 +259,6 @@
 
 #define MSG_JOB_NAMETOOLONG_I _MESSAGE(64353, _("job name too long, maximum allowed length is %d characters"))
 
-#define MSG_INVALIDJATASK_REQUEST _MESSAGE(64354, _("invalid task list in job start request"))
-
 #define MSG_INVALID_GDIL _MESSAGE(64355, _("invalid granted destination identifier list"))
 
 #define MSG_INVALID_QINSTANCE_NAME_S   _MESSAGE(64356, _("invalid queue instance name "SFQ))

@@ -230,12 +230,9 @@
 #define MSG_JOB_TASKWITHOUTJOB_U      _MESSAGE(29140, _("received task belongs to job "sge_U32CFormat" but this job is not here"))
 #define MSG_JOB_TASKNOTASKINJOB_UU    _MESSAGE(29141, _("received task belongs to job "sge_U32CFormat" but this job is here but the JobArray task "sge_U32CFormat" is not here"))
 #define MSG_JOB_TASKNOSUITABLEJOB_U   _MESSAGE(29142, _("received task belongs to job "sge_U32CFormat" but this job is not suited for starting tasks"))
-/* #define MSG_JOB_TASKALREADYEXISTS_US  _message(29143, _("received task "sge_U32CFormat"/"SFN" which is already here")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_JOB_NOTASKPASSINGIF_SU    _message(29144, _(SFN" does not fulfill task passing interface for job "sge_U32CFormat)) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_JOB_NOFREEQ_USSS          _MESSAGE(29145, _("no free queue for job "sge_U32CFormat" of user "SFN"@"SFN" (localhost = "SFN")"))
-/* #define MSG_JOB_NOSUCHQ_SUSS          _message(29146, _("no such queue "SFQ" as requested by job "sge_U32CFormat" from user "SFN"@"SFN)) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_JOB_NOREQQONHOST_SSS      _message(29147, _("requested queue "SFQ" resides not at this host "SFN" but at host "SFN)) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_JOB_REQQFULL_SII          _message(29148, _("requested queue "SFQ" is already full (%d/%d)")) __TS Removed automatically from testsuite!! TS__*/
+#define MSG_JOB_INVALIDJATASK_REQUEST _MESSAGE(29146, _("invalid task list in job start request"))
+#define MSG_JOB_SAMEPATHSFORINPUTANDOUTPUT_SSS   _MESSAGE(29147, _("same paths given for stdin ("SFQ") and "SFN" ("SFQ")"))
 /*
 ** execd_kill_execd.c
 */

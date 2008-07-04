@@ -1,3 +1,8 @@
+DG-2008-07-04-0: Cleanup:   Java DRMAA Junit test: problems with build 
+                            numbers fixed. 
+                            Merged from 61_BRANCH DG-2008-07-03-0 
+                 Review:    CR 
+
 JG-2008-07-04-0: Bugfix:    Same path for input and output/error file must be
                             rejected.
                  Bugster:   6310194

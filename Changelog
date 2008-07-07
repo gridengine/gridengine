@@ -7,7 +7,7 @@ LP-2008-07-07-0: Enhancem:  Removed ST question, ST used by default
                  Bugfix:    install fails with mutually dependent subordinate 
                             queues
                  Bugster:   6716772, 6722920, 6723130
-                 Issue:     2625
+                 Issue:     2574, 2625
                  Review:    RD, ZG
 
 MP-2008-07-07-0: Bugfix:    RQS: Line wrap of host list introduces syntax error

@@ -14,7 +14,7 @@ LP-2008-07-07-0: Enhancem:  Removed ST question, ST used by default
                  Bugfix:    install fails with mutually dependent subordinate 
                             queues
                  Bugster:   6716772, 6722920, 6723130
-                 Issue:     2625
+                 Issue:     2574, 2625
                  Review:    RD, ZG
 
 2 Conforms to specification
@@ -51,7 +51,7 @@ LP-2008-07-07-0: Enhancem:  Removed ST question, ST used by default
 
 3.7 Issuezilla entry (if exists) complete and correct?
 3.7 [] yes
-3.7 [x] no - comment: Missing 2 issuezilla entries
+3.7 [x] no - comment: Missing 1 issuezilla entries
 
 
 4 Source review

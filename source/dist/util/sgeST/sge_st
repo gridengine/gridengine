@@ -364,6 +364,7 @@ STaddServiceTag()
       -p "${PRODUCT_NAME}" \
       -e "${PRODUCT_VERSION}" \
       -t "${PRODUCT_URN}" \
+      -F "${PRODUCT_PARENT_URN}" \
       -P "${PRODUCT_PARENT_NAME}" \
       -I "${product_defined_id}" \
       -m "${PRODUCT_VENDOR}" \
@@ -447,7 +448,6 @@ STServiceTag()
    SetAdminUser
    #load static data from file
    STBasicSettings
-   #redefine dynamic data for instalation
    product_defined_id=$SGE_ROOT/$SGE_CELL
 
    if [ "$command" = "enable" ]; then

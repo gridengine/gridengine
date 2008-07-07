@@ -1,3 +1,15 @@
+LP-2008-07-07-0: Enhancem:  Removed ST question, ST used by default
+                 Enhancem:  ST also register PRODUCT_PARENT_URN
+                 Bugfix:    execd install fails on OS X when qmaster boot 
+                            scripts are present
+                 Bugfix:    upgrade does not save and restore sge_qstat, 
+                            sge_ar_request,sge_qquota
+                 Bugfix:    install fails with mutually dependent subordinate 
+                            queues
+                 Bugster:   6716772, 6722920, 6723130
+                 Issue:     2625
+                 Review:    RD, ZG
+
 MP-2008-07-07-0: Bugfix:    RQS: Line wrap of host list introduces syntax error
                  Bugster:   6647676
                  Issue:     2449

@@ -214,7 +214,7 @@ ModifyLoad()
          RemoveLineWithMatch ${modFile} 'processors.*'
       ;;
       -Aconf)
-	 UpdateConfiguration $loadFile
+	      UpdateConfiguration $loadFile
          ;;
    esac
    
@@ -371,6 +371,28 @@ ResolveResult()
                ret=$?
                return $ret
             ;;
+            'Subordinated cluster queue'*)
+               obj=`echo $resMsg | awk '{print $4}' | awk -F\" '{ print $2}'`
+               LogIt "W" "Non-existing subordinated queue $obj encountered, creating dummy queue [REPEAT REQUIRED]"
+               $QCONF -sq | sed "s/^qname.*/qname                    $obj/g" > ${BCK_DIR}/queue.tmp 2>/dev/null
+               $QCONF -Aq ${BCK_DIR}/queue.tmp >/dev/null 2>&1
+               rm -f ${BCK_DIR}/queue.tmp
+               repeat=1
+               return 1
+            ;;
+         esac
+      ;;
+      -Mq)
+         case "$resMsg" in
+            'Subordinated cluster queue'*)
+               obj=`echo $resMsg | awk '{print $4}' | awk -F\" '{ print $2}'`
+               LogIt "W" "Non-existing subordinated queue $obj encountered, creating dummy queue [REPEAT REQUIRED]"
+               $QCONF -sq | sed "s/^qname.*/qname                    $obj/g" > ${BCK_DIR}/queue.tmp 2>/dev/null
+               $QCONF -Aq ${BCK_DIR}/queue.tmp >/dev/null 2>&1
+               rm -f ${BCK_DIR}/queue.tmp
+               repeat=1
+               return 1
+            ;;
          esac
       ;;
    	#If -Aconf fails we try modify
@@ -385,13 +407,13 @@ ResolveResult()
                return $ret
             ;;
             'denied: the path given for'*)
-               #FlatFile ${resFile}  
+               #FlatFile ${resFile}
                ReplaceLineWithMatch "$resFile" 'qlogin_daemon.*' 'qlogin_daemon   /usr/sbin/in.telnetd'
                ReplaceLineWithMatch "$resFile" 'rlogin_daemon.*' 'rlogin_daemon   /usr/sbin/in.rlogind'
                LogIt "I" "wrong path corrected, trying again"
                LoadConfigFile "$resFile" "$resOpt"
                ret=$?
-               return $ret               
+               return $ret
             ;;   
             *'already exists')
                LogIt "I" "$obj already exists, trying to modify -Mconf"
@@ -463,7 +485,7 @@ LoadConfigFile()
 
    if [ "${configLevel:=1}" -gt 20 ]; then
    	LogIt "C" "Too deep in Load Config File"
-	EXIT 1
+	   EXIT 1
    fi
 
    configLevel=`expr ${configLevel} + 1`

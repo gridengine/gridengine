@@ -154,22 +154,54 @@ BackupSgeCell()
    mkdir -p "$DEST_DIR/cell"
    cp $SGE_ROOT/$SGE_CELL/common/act_qmaster "${DEST_DIR}/cell"
    cp $SGE_ROOT/$SGE_CELL/common/bootstrap "${DEST_DIR}/cell"
-   cp $SGE_ROOT/$SGE_CELL/common/cluster_name "${DEST_DIR}/cell" 2>/dev/null
-
-   cp $SGE_ROOT/$SGE_CELL/common/host_aliases "${DEST_DIR}/cell" 2>/dev/null
-   cp $SGE_ROOT/$SGE_CELL/common/qtask "${DEST_DIR}/cell" 2>/dev/null
-   cp $SGE_ROOT/$SGE_CELL/common/sge_aliases "${DEST_DIR}/cell" 2>/dev/null
-   cp $SGE_ROOT/$SGE_CELL/common/sge_request "${DEST_DIR}/cell" 2>/dev/null
-   cp $SGE_ROOT/$SGE_CELL/common/shadow_masters "${DEST_DIR}/cell" 2>/dev/null
-	
+   #cluster_name
+   if [ -f $SGE_ROOT/$SGE_CELL/common/cluster_name ]; then
+      cp $SGE_ROOT/$SGE_CELL/common/cluster_name "${DEST_DIR}/cell"
+   fi
+   #host_aliases
+   if [ -f $SGE_ROOT/$SGE_CELL/common/host_aliases ]; then
+      cp $SGE_ROOT/$SGE_CELL/common/host_aliases "${DEST_DIR}/cell"
+   fi
+   #qtask
+   if [ -f $SGE_ROOT/$SGE_CELL/common/qtask ]; then
+      cp $SGE_ROOT/$SGE_CELL/common/qtask "${DEST_DIR}/cell"
+   fi
+   #sge_aliases
+   if [ -f $SGE_ROOT/$SGE_CELL/common/sge_aliases ]; then
+      cp $SGE_ROOT/$SGE_CELL/common/sge_aliases "${DEST_DIR}/cell"
+   fi
+   #sge_ar_request
+   if [ -f $SGE_ROOT/$SGE_CELL/common/sge_ar_request ]; then
+      cp $SGE_ROOT/$SGE_CELL/common/sge_ar_request "${DEST_DIR}/cell"
+   fi
+   #sge_request
+   if [ -f $SGE_ROOT/$SGE_CELL/common/sge_request ]; then
+      cp $SGE_ROOT/$SGE_CELL/common/sge_request "${DEST_DIR}/cell"
+   fi
+   #sge_qstat
+   if [ -f $SGE_ROOT/$SGE_CELL/common/sge_qstat ]; then
+      cp $SGE_ROOT/$SGE_CELL/common/sge_qstat "${DEST_DIR}/cell"
+   fi
+   #sge_qquota
+   if [ -f $SGE_ROOT/$SGE_CELL/common/sge_qquota ]; then
+      cp $SGE_ROOT/$SGE_CELL/common/sge_qquota "${DEST_DIR}/cell"
+   fi
+   #sge_qstat
+   if [ -f $SGE_ROOT/$SGE_CELL/common/sge_qstat ]; then
+      cp $SGE_ROOT/$SGE_CELL/common/sge_qstat "${DEST_DIR}/cell"
+   fi
+   
+   #shadow_masters
+   if [ -f $SGE_ROOT/$SGE_CELL/common/shadow_masters ]; then
+      cp $SGE_ROOT/$SGE_CELL/common/shadow_masters "${DEST_DIR}/cell"
+   fi	
    #Accounting file
    if [ -r "$SGE_ROOT/$SGE_CELL/common/accounting" ]; then
       cp "$SGE_ROOT/$SGE_CELL/common/accounting" "${DEST_DIR}/cell"
-   fi
-	
+   fi	
    #Save dbwriter.conf for simple dbwriter upgrade, if present
    if [ -r "$SGE_ROOT/$SGE_CELL/common/dbwriter.conf" ]; then
-      cp "$SGE_ROOT/$SGE_CELL/common/dbwriter.conf" "${DEST_DIR}/cell" 2>/dev/null
+      cp "$SGE_ROOT/$SGE_CELL/common/dbwriter.conf" "${DEST_DIR}/cell"
    fi
 	
    #Save JMX settings if present

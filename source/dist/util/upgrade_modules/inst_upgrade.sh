@@ -163,7 +163,10 @@ RestoreCell()
 host_aliases
 qtask
 sge_aliases
+sge_ar_request
 sge_request
+sge_qquota
+sge_qstat
 shadow_masters
 accounting
 dbwriter.conf"

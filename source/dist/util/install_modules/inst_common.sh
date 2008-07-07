@@ -1785,6 +1785,11 @@ SearchForExistingInstallations()
    if [ -z "$SGE_CLUSTER_NAME" ]; then
       return
    fi
+   
+   #MacOS overwrites the files (all services share single file)
+   if [ "$ARCH" = darwin ]; then
+      return
+   fi
     
    TMP_DAEMON_LIST=$1
    exists=0
@@ -3985,10 +3990,10 @@ RemoteExecSpoolDirDelete()
    fi
    if [ -d "$local_dir/$HOST" ]; then
       #Try as root
-      rm -rf "$local_dir/$HOST/"* > /dev/null 2&>1
+      rm -rf "$local_dir/$HOST" > /dev/null 2&>1
       if [ $? -ne 0 ]; then
          #Try as admin
-	 ExecuteAsAdmin rm -rf "$local_dir/$HOST/"*
+	 ExecuteAsAdmin rm -rf "$local_dir/$HOST"
       fi
    elif [ ! -d "$local_dir" ]; then
       LOCAL_EXECD_SPOOL=$local_dir

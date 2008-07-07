@@ -298,11 +298,6 @@ if [ $AUTO = "false" -a $QMASTER = "undef" -a $EXECD = "install" -a $SHADOW = "i
    ErrUsage
 fi
 
-#CR 6692104: can not combine 'inst_sge -x' and 'install_execd' with -winsvc switch
-if [ $EXECD = "install" -a WIN_SVC = "install" ]; then
-   ErrUsage
-fi
-
 #checking the autoinstall configuration file at this point of installation,
 #because the commandline switches are completely parsed and we know the selected options.
 #This will influence the configfile parsing and checking mechanism.
@@ -312,19 +307,19 @@ fi
 
 $CLEAR
 
-if [ $WIN_UPDATE = "true" ]; then
+if [ "$WIN_UPDATE" = "true" ]; then
    WelcomeTheUserWinUpdate
    SetupWinSvc update #service install due to an update -> param: update
    # don't exit but continue with installation of execution daemon
 fi
 
-if [ $WIN_SVC = "install" ]; then
+if [ "$WIN_SVC" = "install" ]; then
    WelcomeTheUserWinSvc install #install text param
    SetupWinSvc install #service install due to service install switch -> param install
    # don't exit but continue with installation of execution daemon
 fi
 
-if [ $WIN_SVC = "uninstall" ]; then
+if [ "$WIN_SVC" = "uninstall" ]; then
    WelcomeTheUserWinSvc uninstall #uninstall text param
    SetupWinSvc uninstall #service install due to service uninstall switch -> param uninstall
    # don't exit but continue with uninstallation of execution daemon

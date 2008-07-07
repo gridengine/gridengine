@@ -4,19 +4,20 @@ LP-2008-07-04-0: Enhancem:  Windows host list is now saved during the backup for
                             from the backup during the upgrade
                  Enhancem:  Added post update actions to clean execd_spool_dirs,
                             remove RC scripts, create RC scripts, update WINSVC
-                 Enhancem:  COPY_COMMAND is only checked when CSP_COPY_CERTS=true
                  Enhancem:  WINSVC install no longer reinstalls a service 
                             (winupdate should be used)
                  Cleanup:   Various upgrade/install code
-                 Bugfix:    Removed "No CSP system installed!" during qmaster 
-                            installation (without CSP)
                  Bugfix:    JMX java detection fixed
                  Bugfix:    Upgrade script failed when choosing a different 
                             port number then $SGE_QMASTER_PORT
                  Bugfix:    upgrade does not create arusers user set
                  Bugfix:    upgrade does not save host_aliases file
                  Bugfix:    upgrade does not create display_win_gui complex
-                 Bugster:   6717816, 6722652, 6722805, 6722806
+                 Bugfix:    Auto install template value checking is too strict 
+                            on COPY_COMMAND
+                 Bugfix:    qmaster installation displays "No CSP system 
+                            installed" twice when no CSP
+                 Bugster:   6717816, 6722652, 6722805, 6722806, 6717891, 6722925
                  Review:    AP
 
 DG-2008-07-04-0: Cleanup:   Java DRMAA Junit test: problems with build 

@@ -1,3 +1,8 @@
+ZG-2008-07-07-0: Bugfix:    install_execd -winsvc should output wrong usage
+                 Bugster:   6692104
+                 Issue:     2624
+                 Review:    LP
+
 RD-2006-10-19-0: CVS        Created V60u9_win_BRANCH
 ----------------------------------------------------
 

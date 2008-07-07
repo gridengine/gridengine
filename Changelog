@@ -1,3 +1,8 @@
+ZG-2008-07-07-0: Bugfix:    install_execd -winsvc should output wrong usage
+                 Bugster:   6692104
+                 Issue:     2624
+                 Review:    LP
+
 JG-2008-07-03-1: Enhancem.: New default location for Berkeley DB and openssl.
                   Review:   AA
 

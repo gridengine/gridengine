@@ -1,3 +1,7 @@
+CR-2008-07-07-0: Cleanup:   Fixed problems with java build host when compiling
+                            jgdi from testsuite
+                 Review:    AA
+
 MP-2008-07-04-0: Bugfix:    RQS: Line wrap of host list introduces syntax error
                  Bugster:   6647676
                  Issue:     2449

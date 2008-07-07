@@ -1,3 +1,6 @@
+RD-2008-07-07-0: Bugfix:    fixed broken auto installation
+                 Review:    AA
+
 DG-2008-07-07-0: Bugfix:    Java DRMAA final static variables are accessed 
                             through object references. 
                  Bugster:   6722930

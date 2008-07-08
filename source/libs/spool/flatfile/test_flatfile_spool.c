@@ -147,9 +147,9 @@ int main(int argc, char** argv)
                                SC_test,
                                QU_test,
                                HGRP_test,
-                               CONF_test,
-                               RQS_test,
+                               CONF_test,                               
                                AR_test,
+                               RQS_test,
 #ifndef __SGE_NO_USERMAPPING__
                                CU_test,
 #endif
@@ -1428,6 +1428,10 @@ static int CQ_test(void) {
    
    lAddSubHost(ep, HR_name, "Test_Name2", CQ_hostlist, HR_Type);
    lAddSubHost(ep, HR_name, "Test_Name3", CQ_hostlist, HR_Type);
+   lAddSubHost(ep, HR_name, "Test_Name4", CQ_hostlist, HR_Type);
+   lAddSubHost(ep, HR_name, "Test_Name5", CQ_hostlist, HR_Type);
+   lAddSubHost(ep, HR_name, "Test_Name6", CQ_hostlist, HR_Type);
+   lAddSubHost(ep, HR_name, "Test_Name7", CQ_hostlist, HR_Type);
 
    lp = lCreateList("Seq No. List", AULNG_Type);
    
@@ -1626,6 +1630,21 @@ static int CQ_test(void) {
    
    ep2 = lCreateElem(AULNG_Type);
    lSetHost(ep2, AULNG_href, "Test_Name45");
+   lSetUlong(ep2, AULNG_value, 16);
+   lAppendElem(lp, ep2);
+
+   ep2 = lCreateElem(AULNG_Type);
+   lSetHost(ep2, AULNG_href, "Test_Name45_1");
+   lSetUlong(ep2, AULNG_value, 16);
+   lAppendElem(lp, ep2);
+
+   ep2 = lCreateElem(AULNG_Type);
+   lSetHost(ep2, AULNG_href, "Test_Name45_2");
+   lSetUlong(ep2, AULNG_value, 16);
+   lAppendElem(lp, ep2);
+
+   ep2 = lCreateElem(AULNG_Type);
+   lSetHost(ep2, AULNG_href, "Test_Name45_3");
    lSetUlong(ep2, AULNG_value, 16);
    lAppendElem(lp, ep2);
 
@@ -2694,6 +2713,21 @@ static int RQS_test(void) {
       lAddSubStr(ep3, ST_name, "Test_User2", RQRF_xscope, ST_Type);
       lAddSubStr(ep3, ST_name, "Test_User3", RQRF_xscope, ST_Type);
       lSetObject(ep2, RQR_filter_users, ep3);
+      
+      ep3 = lCreateElem(RQRF_Type);
+      lSetBool(ep3, RQRF_expand, false);
+      lAddSubStr(ep3, ST_name, "Test_Host1", RQRF_scope, ST_Type);
+      lAddSubStr(ep3, ST_name, "Test_Host2", RQRF_xscope, ST_Type);
+      lAddSubStr(ep3, ST_name, "Test_Host3", RQRF_xscope, ST_Type);
+      lSetObject(ep2, RQR_filter_hosts, ep3);
+
+      ep3 = lCreateElem(RQRF_Type);
+      lSetBool(ep3, RQRF_expand, false);
+      lAddSubStr(ep3, ST_name, "Test_PE1", RQRF_scope, ST_Type);
+      lAddSubStr(ep3, ST_name, "Test_PE2", RQRF_xscope, ST_Type);
+      lAddSubStr(ep3, ST_name, "Test_PE3", RQRF_xscope, ST_Type);
+      lSetObject(ep2, RQR_filter_pes, ep3);
+
 
       limit_list = lCreateList("Limit_List", RQRL_Type);
       limit = lCreateElem(RQRL_Type);

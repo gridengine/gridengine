@@ -1,9 +1,14 @@
-RD-2008-08-08-1: Cleanup:   - removed references to DRMAA 0.95 from man pages
+MP-2008-07-08-0: Enhancem:  Updated the test_flatfile_spool file to take into account
+                            parsing of RQSes with a backslash followed by a line
+                            break combination
+                 Review:    RD
+
+RD-2008-07-08-1: Cleanup:   - removed references to DRMAA 0.95 from man pages
                             - deprecated obsolete parameters/switches
                             - removed redundant upgrade documents
                  Review:    AA
 
-RD-2008-08-08-0: Cleanup:   - fixed and enhanced test_performance module test
+RD-2008-07-08-0: Cleanup:   - fixed and enhanced test_performance module test
                             - some smaller code cleanups
                  Review:    AA
 

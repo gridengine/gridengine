@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: host_conf.5,v $     Last Update: $Date: 2007/07/19 09:04:32 $     Revision: $Revision: 1.14 $
+.\" $RCSfile: host_conf.5,v $     Last Update: $Date: 2008/07/08 09:10:05 $     Revision: $Revision: 1.15 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH HOST_CONF 5 "$Date: 2007/07/19 09:04:32 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH HOST_CONF 5 "$Date: 2008/07/08 09:10:05 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 host_conf \- xxQS_NAMExx execution host configuration file format
@@ -175,6 +175,9 @@ on the host. The load values are enlisted in a comma separated list. Each
 load value start with its name, followed by an equal sign and the reported
 value.
 .SS "\fBprocessors\fP"
+.B Note:
+Deprecated, may be removed in future release.
+.br
 This entry cannot be configured but is only displayed in case of a
 .M qconf 1
 \fB\-se\fP command. Its value is the number of processors which has been

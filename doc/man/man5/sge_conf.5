@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/06/04 14:04:36 $     Revision: $Revision: 1.74 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/07/08 09:10:06 $     Revision: $Revision: 1.75 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/06/04 14:04:36 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/07/08 09:10:06 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -349,6 +349,9 @@ Anything else: Put queue in error state
 .\"
 .\"
 .SS "\fBshell_start_mode\fP"
+.B Note:
+Deprecated, may be removed in future release.
+.br
 This parameter defines the mechanisms which are used to actually
 invoke the job scripts on the execution hosts. The following
 values are recognized:
@@ -863,6 +866,9 @@ overwritten by the execution host local configuration.
 .\"
 .\"
 .SS "\fBset_token_cmd\fP"
+.B Note:
+Deprecated, may be removed in future release.
+.br
 This parameter is only present if your xxQS_NAMExx system is licensed
 to support AFS.
 .PP
@@ -914,6 +920,9 @@ may be overwritten by the execution host local configuration.
 .\"
 .\"
 .SS "\fBpag_cmd\fP"
+.B Note:
+Deprecated, may be removed in future release.
+.br
 This parameter is only present if your xxQS_NAMExx system is licensed
 to support AFS.
 .PP
@@ -931,6 +940,9 @@ may be overwritten by the execution host local configuration.
 .\"
 .\"
 .SS "\fBtoken_extend_time\fP"
+.B Note:
+Deprecated, may be removed in future release.
+.br
 This parameter is only present if your xxQS_NAMExx system is licensed
 to support AFS.
 .PP
@@ -1007,6 +1019,9 @@ necessary to run the job again, by returning 100 in the prolog, pe_start,
 job script, pe_stop or epilog script.
 .PP
 .IP "\fIDISABLE_AUTO_RESCHEDULING\fP"
+.B Note:
+Deprecated, may be removed in future release.
+.br
 If set to "true" or "1", the \fIreschedule_unknown\fP parameter
 is not taken into account.
 .PP
@@ -1193,6 +1208,9 @@ instance, or another
 signal name then this signal will be sent as notification signal.
 .PP
 .IP "\fISHARETREE_RESERVED_USAGE\fP"
+.B Note:
+Deprecated, may be removed in future release.
+.br
 If this parameter is set to true, the usage of reserved resources is taken for the 
 xxQS_NAMExx share tree consumption instead of measured usage.
 .PP
@@ -1354,6 +1372,9 @@ for further information about \fBreport_variables\fB.
 .\"
 .\"
 .SS "\fBfinished_jobs\fP"
+.B Note:
+Deprecated, may be removed in future release.
+.br
 xxQS_NAMExx stores a certain number of \fIjust finished\fP jobs to provide
 post mortem status information. The \fBfinished_jobs\fP parameter defines the
 number of finished jobs stored. If this maximum number is reached, the
@@ -1541,6 +1562,9 @@ correctly. (See also FORBID_APPERROR).
 .\"
 .\"
 .SS "\fBreprioritize\fP"
+.B Note:
+Deprecated, may be removed in future release.
+.br
 This flag enables or disables the reprioritization of jobs based on their
 ticket amount. The \fBreprioritize_interval\fP in 
 .M sched_conf 5

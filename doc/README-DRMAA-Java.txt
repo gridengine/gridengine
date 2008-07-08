@@ -26,9 +26,9 @@ Content
 
    Simply put, DRMAA is an API for submitting and controling jobs.  DRMAA
    has been implemented in several lanuages and for several DRMs.  The Grid
-   Engine 6.0 release includes a C implementation, or C binding.  The Grid
-   Engine 6.0u2 release includes both a C binding and a Java[TM] language
-   binding.
+   Engine release since 6.0 includes a C implementation, or C binding.  Since Grid
+   Engine release 6.0u2 both, the C binding and the Java[TM] language binding, are
+   included.
 
    For more information about DRMAA and the various bindings that are
    available, visit the DRMAA website at:
@@ -43,8 +43,7 @@ Content
 
       http://www.gridforum.org/
 
-   The Perl language binding module for the Grid Engine 6.0 release can be
-   found at:
+   The Perl language binding module for DRMAA can be found at:
 
       http://search.cpan.org/src/THARSCH/Schedule-DRMAAc-0.81/
 
@@ -57,8 +56,7 @@ Content
 2. Getting Started
 -------------------
 
-   The Grid Engine 6.0u2 release includes a DRMAA Java language binding.  To
-   develop applications that utilize the Java language binding, you will need
+   To develop applications that utilize the Java language binding, you will need
    two files.  The first is the jar file, drmaa.jar.  This file is need for both
    compiling and running applications utilizing the Java language binding.  The
    second file is the DRMAA shared library.  This file will need to be
@@ -97,10 +95,10 @@ Content
 3. Getting Support
 ------------------
 
-   For commercial deployments N1GE6 DRMAA is recommended.
+   For commercial deployments SGE DRMAA is recommended.
 
-   If you're having trouble with the DRMAA library included with the Grid
-   Engine 6 release, please visit:
+   If you're having trouble with the DRMAA library delivered with Sun Grid
+   Engine, please visit:
 
       http://gridengine.sunsource.net/servlets/ProjectIssues
 

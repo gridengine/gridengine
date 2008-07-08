@@ -25,8 +25,8 @@ Content
       Independent Software Vendors (ISVs)."
 
    Simply put, DRMAA is an API for submitting and controling jobs.  DRMAA
-   has been implemented in several lanuages and for several DRMs.  The Grid
-   Engine 6.0 release includes a C implementation, or C binding.
+   has been implemented in several lanuages and for several DRMs.  Grid
+   Engine since release 6.0 includes a C implementation, or C binding.
 
    For more information about DRMAA and the various bindings that are
    available, visit the DRMAA website at:
@@ -41,8 +41,7 @@ Content
 
       http://www.gridforum.org/
 
-   The Perl language binding module for the Grid Engine 6.0 release can be
-   found at:
+   The Perl language binding module for DRMAA can be found at:
 
       http://search.cpan.org/src/THARSCH/Schedule-DRMAAc-0.81/
 
@@ -55,9 +54,8 @@ Content
 2. Getting Started
 -------------------
 
-   The Grid Engine 6.0 release includes a DRMAA C binding.  To develop
-   applications that utilize the C binding, you will need two files.  The
-   first is the DRMAA header file, drmaa.h.  You will find this file under
+   To develop applications that utilize the C binding, you will need two files.
+   The first is the DRMAA header file, drmaa.h.  You will find this file under
    the $SGE_ROOT/include directory in the distribution.  You will need to
    include this file from any source files that are to use the DRMAA
    library.  You will also need the DRMAA shared library.  You will find
@@ -100,24 +98,13 @@ Content
    compiler/linker that you want to link in this library, e.g. by passing
    the "-ldrmaa" option to the compiler/linker.
 
-   If you are planning to use the DRMAA 1.0 library instead of the DRMAA
-   0.95 library which is active by default, you must compile with the
-   -DDRMAA_10 flag, which tells the compiler to use the DRMAA 1.0 header
-   information.  The differences between the 1.0 and 0.95 DRMAA libraries
-   are small in theory, but can actually make a big difference in practice.
-   Because of the way the error codes changed between 0.95 and 1.0, an
-   application compiled for 0.95 will not run with the 1.0 library.  The
-   problem is easily solved, however, by recompiling with the -DDRMAA_10
-   flag.  For more information about what's new in DRMAA 1.0, see the man
-   pages for drmaa_attributes(3), drmaa_jobtemplate(3) and drmaa_submit(3).
-
 3. Getting Support
 ------------------
 
-   For commercial deployments N1GE6 DRMAA is recommended.
+   For commercial deployments SGE DRMAA is recommended.
 
-   If you're having trouble with the DRMAA library included with the Grid
-   Engine 6 release, please visit:
+   If you're having trouble with the DRMAA library delivered with Sun Grid
+   Engine, please visit:
 
       http://gridengine.sunsource.net/servlets/ProjectIssues
 

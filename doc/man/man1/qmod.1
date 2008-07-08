@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qmod.1,v $     Last Update: $Date: 2007/01/05 19:56:12 $     Revision: $Revision: 1.19 $
+.\" $RCSfile: qmod.1,v $     Last Update: $Date: 2008/07/08 09:10:03 $     Revision: $Revision: 1.20 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QMOD 1 "$Date: 2007/01/05 19:56:12 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QMOD 1 "$Date: 2008/07/08 09:10:03 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qmod \- modify a xxQS_NAMExx queue
 .\"
@@ -60,8 +60,11 @@ for any queue and job in a cluster. Find additional information concerning
 .SH OPTIONS
 .\"
 .IP "\fB\-c\fP"
+.B Note:
+Deprecated, may be removed in future release.
+Please use the \fB\-cj\fP or \fB\-cq\fP switch instead.
+.br
 Clears the error state of the specified jobs(s)/queue(s).
-Do not use this switch anymore, use -cj / -cq instead.
 .IP "\fB\-cj\fP"
 Clears the error state of the specified jobs(s).
 .IP "\fB\-cq\fP"
@@ -87,11 +90,14 @@ manager/operator privileges.
 Prints a listing of all options.
 .\"
 .IP "\fB\-r\fP"
+.B Note:
+Deprecated, may be removed in future release.
+Please use the \fB\-rj\fP or \fB\-rq\fP switch instead.
+.br
 If applied to queues,
 reschedules all jobs currently running in this queue.
 If applied to running jobs, reschedules the jobs. Requires root or 
-manager privileges. Do not use this switch anymore.  Use -rj /-rq
-instead.  In order for a job to be rescheduled, it or the queue in
+manager privileges.  In order for a job to be rescheduled, it or the queue in
 which it is executing must have the rerun flag activated.  (See -r
 option in the
 .M qsub 1
@@ -114,10 +120,13 @@ reschedules all jobs currently running in this queue.
 Requires root or manager privileges.
 .\"
 .IP "\fB\-s\fP"
+.B Note:
+Deprecated, may be removed in future release.
+Please use the \fB\-sj\fP or \fB\-sq\fP switch instead.
+.br
 If applied to queues,
 suspends the queues and any jobs which might
 be active. If applied to running jobs, suspends the jobs. 
-Use of this switch is now deprecated. -sj / -sq should be used instead.
 .\"
 .IP "\fB\-sj\fP"
 If applied to running jobs, suspends the jobs. If a job is
@@ -131,10 +140,13 @@ suspends the queues and any jobs which might
 be active. 
 .\"
 .IP "\fB\-us\fP"
+.B Note:
+Deprecated, may be removed in future release.
+Please use the \fB\-usj\fP or \fB\-usq\fP switch instead.
+.br
 If applied to queues,
 unsuspends the queues and any jobs which might
-be active. If applied to jobs, unsuspends the jobs. Do not use
-this switch anymore, use -usj / -usq instead.
+be active. If applied to jobs, unsuspends the jobs.
 .\"
 .IP "\fB\-usj\fP"
 If applied to jobs, unsuspends the jobs. If a job is

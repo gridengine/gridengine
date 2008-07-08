@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_session.3,v $     Last Update: $Date: 2006/03/01 22:05:53 $     Revision: $Revision: 1.8 $
+.\" $RCSfile: drmaa_session.3,v $     Last Update: $Date: 2008/07/08 09:10:04 $     Revision: $Revision: 1.9 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_session 3 "$Date: 2006/03/01 22:05:53 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_session 3 "$Date: 2008/07/08 09:10:04 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -79,8 +79,6 @@ previous session is that all jobs previously submitted in that session \fBthat
 are still running\fP will be available in the DRMAA session.  Note, however,
 that jobs which ended before the call to drmaa_init() may not be available or
 may have no associated exit information or resource usage data.
-.PP
-In the 0.95 implementation, setting \fIcontact\fP has no effect.
 .PP
 .\" 
 .SS "drmaa_exit()"

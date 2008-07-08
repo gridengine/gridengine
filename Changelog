@@ -1,3 +1,8 @@
+JG-2008-07-08-0: Bugfix:    qmaster runs out of memory on AIX
+                 Bugster:   6720078
+                 Issue:     2641
+                 Review:    MP
+
 MP-2008-07-08-0: Enhancem:  Updated the test_flatfile_spool file to take into account
                             parsing of RQSes with a backslash followed by a line
                             break combination

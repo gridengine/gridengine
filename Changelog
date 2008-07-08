@@ -1,3 +1,7 @@
+RD-2008-08-08-0: Cleanup:   - fixed and enhanced test_performance module test
+                            - some smaller code cleanups
+                 Review:    AA
+
 LP-2008-07-07-0: Enhancem:  Removed ST question, ST used by default
                  Enhancem:  ST also register PRODUCT_PARENT_URN
                  Bugfix:    execd install fails on OS X when qmaster boot 

@@ -1678,7 +1678,6 @@ case SOLARISAMD64:
          set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G"
       endif
       set CFLAGS = "-Xc -v $OFLAG $MEMFLAG -ftrap=division $CFLAGS $DEBUG_FLAG"
-      set CFLAGS = "-Xc -v $MEMFLAG -ftrap=division $CFLAGS $DEBUG_FLAG"
    else if ( $CC == gcc) then
       #set CFLAGS = "-Wall -Werror -Wstrict-prototypes $CFLAGS"
       set CFLAGS = "-Wall -Wstrict-prototypes $CFLAGS"

@@ -30,6 +30,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/                                   
 
+#ifndef NO_SGE_COMPILE_DEBUG
+#define NO_SGE_COMPILE_DEBUG
+#endif
+
+#define BDB_LAYER BASIS_LAYER
+
 #include <errno.h>
 #include <string.h>
 #include <time.h>
@@ -115,7 +121,7 @@ spool_berkeleydb_create_context(lList **answer_list, const char *args)
 {
    lListElem *context = NULL;
 
-   DENTER(TOP_LAYER, "spool_berkeleydb_create_context");
+   DENTER(BDB_LAYER, "spool_berkeleydb_create_context");
 
    /* check input parameter */
    if (args != NULL) {
@@ -211,7 +217,7 @@ spool_berkeleydb_default_startup_func(lList **answer_list,
    bool ret = true;
    bdb_info info;
 
-   DENTER(TOP_LAYER, "spool_berkeleydb_default_startup_func");
+   DENTER(BDB_LAYER, "spool_berkeleydb_default_startup_func");
 
    info = (bdb_info)lGetRef(rule, SPR_clientdata);
 
@@ -268,7 +274,7 @@ spool_berkeleydb_default_shutdown_func(lList **answer_list,
 
    bdb_info info;
 
-   DENTER(TOP_LAYER, "spool_berkeleydb_default_shutdown_func");
+   DENTER(BDB_LAYER, "spool_berkeleydb_default_shutdown_func");
 
    info = (bdb_info)lGetRef(rule, SPR_clientdata);
 
@@ -333,7 +339,7 @@ spool_berkeleydb_default_maintenance_func(lList **answer_list,
 
    bdb_info info;
 
-   DENTER(TOP_LAYER, "spool_berkeleydb_default_maintenance_func");
+   DENTER(BDB_LAYER, "spool_berkeleydb_default_maintenance_func");
 
    info = (bdb_info)lGetRef(rule, SPR_clientdata);
 
@@ -395,7 +401,7 @@ spool_berkeleydb_trigger_func(lList **answer_list, const lListElem *rule,
    bool ret = true;
    bdb_info info;
 
-   DENTER(TOP_LAYER, "spool_berkeleydb_trigger_func");
+   DENTER(BDB_LAYER, "spool_berkeleydb_trigger_func");
 
    info = (bdb_info)lGetRef(rule, SPR_clientdata);
    if (info == NULL) {
@@ -457,7 +463,7 @@ spool_berkeleydb_transaction_func(lList **answer_list, const lListElem *rule,
 
    bdb_info info;
 
-   DENTER(TOP_LAYER, "spool_berkeleydb_default_transaction_func");
+   DENTER(BDB_LAYER, "spool_berkeleydb_default_transaction_func");
 
    info = (bdb_info)lGetRef(rule, SPR_clientdata);
    if (info == NULL) {
@@ -549,7 +555,7 @@ spool_berkeleydb_default_list_func(lList **answer_list,
 
    bdb_info info;
 
-   DENTER(TOP_LAYER, "spool_berkeleydb_default_list_func");
+   DENTER(BDB_LAYER, "spool_berkeleydb_default_list_func");
 
    info = (bdb_info)lGetRef(rule, SPR_clientdata);
    descr = object_type_get_descr(object_type);
@@ -782,7 +788,7 @@ spool_berkeleydb_default_read_func(lList **answer_list,
 
    bdb_info info;
 
-   DENTER(TOP_LAYER, "spool_berkeleydb_default_read_func");
+   DENTER(BDB_LAYER, "spool_berkeleydb_default_read_func");
 
    info = (bdb_info)lGetRef(rule, SPR_clientdata);
 
@@ -892,7 +898,7 @@ spool_berkeleydb_default_write_func(lList **answer_list,
    bool local_transaction = false; /* did we start a transaction? */
    bdb_info info;
 
-   DENTER(TOP_LAYER, "spool_berkeleydb_default_write_func");
+   DENTER(BDB_LAYER, "spool_berkeleydb_default_write_func");
 
    DPRINTF(("spool_berkeleydb_default_write_func called for %s with key %s\n",
             object_type_get_name(object_type), key != NULL ? key : "<null>"));
@@ -1057,7 +1063,7 @@ spool_berkeleydb_default_delete_func(lList **answer_list,
    char dbkey_buffer[MAX_STRING_SIZE];
    const char *dbkey;
 
-   DENTER(TOP_LAYER, "spool_berkeleydb_default_delete_func");
+   DENTER(BDB_LAYER, "spool_berkeleydb_default_delete_func");
 
    sge_dstring_init(&dbkey_dstring, dbkey_buffer, sizeof(dbkey_buffer));
    info = (bdb_info)lGetRef(rule, SPR_clientdata);
@@ -1161,7 +1167,7 @@ spool_berkeleydb_option_func(lList **answer_list, lListElem *rule,
    const char *delimiter = ",; ";
    bdb_info info;
 
-   DENTER(TOP_LAYER, "spool_berkeleydb_option_func");
+   DENTER(BDB_LAYER, "spool_berkeleydb_option_func");
 
    info = (bdb_info)lGetRef(rule, SPR_clientdata);
 

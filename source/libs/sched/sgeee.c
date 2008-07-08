@@ -3892,8 +3892,7 @@ sge_build_sgeee_orders(scheduler_all_data_t *lists, lList *running_jobs, lList *
                   order_list = sge_create_orders(order_list, ORT_ptickets, job, task_template, NULL, false);
                }
             }  
-         }
-         else {
+         } else {
             order_list = sge_create_orders(order_list, ORT_clear_pri_info, job, NULL, NULL, false);               
          }
       }

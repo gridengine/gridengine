@@ -1310,7 +1310,7 @@ bool job_is_tight_parallel(const lListElem *job, const lList *pe_list)
 *     const lList *pe_list - PE_Type list with all existing PEs 
 *
 *  RESULT
-*     bool - treu or false
+*     bool - true or false
 *
 *  SEE ALSO
 *     sgeobj/job/job_is_array()

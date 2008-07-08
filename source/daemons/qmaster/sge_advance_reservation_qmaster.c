@@ -1167,8 +1167,7 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
       splitted_job_lists[SPLIT_RUNNING] = &running_list;
 
       /* splitted job lists must be freed */
-      split_jobs(&master_job_list, NULL, a.queue_list, 
-                 mconf_get_max_aj_instances(), splitted_job_lists, false, true);
+      split_jobs(&master_job_list, mconf_get_max_aj_instances(), splitted_job_lists, true);
    }
 
    /*

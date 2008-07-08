@@ -512,7 +512,7 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
 *
 *  SYNOPSIS
 *     void split_jobs(lList **job_list, lList **answer_list, 
-*                     lList *queue_list, u_long32 max_aj_instances, 
+*                     u_long32 max_aj_instances, 
 *                     lList **result_list[]) 
 *
 *  FUNCTION
@@ -528,18 +528,14 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
 *     Each of those lists containes jobs which have a certain state.
 *     (e.g. result_list[SPLIT_WAITING_DUE_TO_TIME] will contain
 *     all jobs which have to wait according to their start time. 
-*     'queue_list' is the whole list of configured queues.
 *     'max_aj_instances' are the maximum number of tasks of an 
 *     array job which may be instantiated at the same time.
-*     'queue_list' and 'max_aj_instances' are used for the
-*     split decitions. 
+*     'max_aj_instances' is used for the split decitions. 
 *     In case of any error the 'answer_list' will be used to report
 *     errors (It is not used in the moment)
 *
 *  INPUTS
 *     lList **job_list          - JB_Type input list 
-*     lList **answer_list       - AN_Type answer list 
-*     lList *queue_list         - QU_Type list 
 *     u_long32 max_aj_instances - max. num. of task instances 
 *     lList **result_list[]     - Array of result list (JB_Type)
 *
@@ -559,9 +555,8 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
 *     sched/sge_job_schedd/trash_splitted_jobs()
 *     sched/sge_job_schedd/job_lists_split_with_reference_to_max_running()
 *******************************************************************************/
-void split_jobs(lList **job_list, lList **answer_list,
-                lList *queue_list, u_long32 max_aj_instances, 
-                lList **result_list[], bool is_free_job_list, bool do_copy)
+void split_jobs(lList **job_list, u_long32 max_aj_instances, 
+                lList **result_list[], bool do_copy)
 {
 #if 0 /* EB: DEBUG: enable debug messages for split_jobs() */
 #define JOB_SPLIT_DEBUG
@@ -897,17 +892,7 @@ void split_jobs(lList **job_list, lList **answer_list,
       }
    }
 
-   /*
-    * Could we dispense all jobs?
-    */
-   if (!do_copy && is_free_job_list == true) {
-      if (lGetNumberOfElem(*job_list) == 0) {
-         lFreeList(job_list);
-      }
-   }
-
-   DEXIT;
-   return;
+   DRETURN_VOID;
 } 
 
 /****** sched/sge_job_schedd/trash_splitted_jobs() ****************************

@@ -71,7 +71,6 @@
 #include "spool/loader/sge_spooling_loader.h"
 #include "sge_event.h"
 
-static lList *Master_Job_List = NULL;
 
 #ifndef TEST_READ_ONLY
 static const char *random_string(int length)
@@ -93,10 +92,6 @@ static bool generate_jobs(int num)
 {
    int i;
 
-   if (Master_Job_List == NULL) {
-      Master_Job_List = lCreateList("job list", JB_Type);
-   }
-
    for (i = 0; i < num; i++) {
       lListElem *job;
 
@@ -112,7 +107,7 @@ static bool generate_jobs(int num)
       lSetString(job, JB_group, random_string(10));
       lSetString(job, JB_account, random_string(20));
       lSetString(job, JB_cwd, random_string(100));
-      lAppendElem(Master_Job_List, job);
+      lAppendElem(*object_type_get_master_list(SGE_TYPE_JOB), job);
 
       if ((i % 10) == 0) {
          lAddSubUlong(job, JAT_task_number, 1, JB_ja_tasks, JAT_Type);
@@ -130,9 +125,9 @@ static bool spool_data(void)
 
    context = spool_get_default_context();
 
-   fprintf(stdout, "spooling %d jobs\n", lGetNumberOfElem(Master_Job_List));
+   fprintf(stdout, "spooling %d jobs\n", lGetNumberOfElem(*object_type_get_master_list(SGE_TYPE_JOB)));
 
-   for_each(job, Master_Job_List) {
+   for_each(job, *object_type_get_master_list(SGE_TYPE_JOB)) {
       sprintf(key, sge_U32CFormat".0", sge_u32c(lGetUlong(job, JB_job_number)));
       spool_write_object(&answer_list, context, job, key, SGE_TYPE_JOB, true);
       answer_list_output(&answer_list);
@@ -149,9 +144,28 @@ static bool read_spooled_data(void)
    context = spool_get_default_context();
 
    /* jobs */
-   spool_read_list(&answer_list, context, &Master_Job_List, SGE_TYPE_JOB);
+   spool_read_list(&answer_list, context, object_type_get_master_list(SGE_TYPE_JOB), SGE_TYPE_JOB);
    answer_list_output(&answer_list);
-/*    DPRINTF(("read %d entries to Master_Job_List\n", lGetNumberOfElem(Master_Job_List))); */
+/*    DPRINTF(("read %d entries to Master_Job_List\n", lGetNumberOfElem(*object_type_get_master_list(SGE_TYPE_JOB)))); */
+
+   return true;
+}
+
+static bool delete_spooled_data(void)
+{  
+   lList *answer_list = NULL;
+   lListElem *job;
+   lListElem *context;
+   char key[100];
+
+   context = spool_get_default_context();
+
+   /* jobs */
+   for_each(job, *object_type_get_master_list(SGE_TYPE_JOB)) {
+      sprintf(key, sge_U32CFormat".0", sge_u32c(lGetUlong(job, JB_job_number)));
+      spool_delete_object(&answer_list, context, SGE_TYPE_JOB, key, true);
+      answer_list_output(&answer_list);
+   }
 
    return true;
 }
@@ -161,17 +175,21 @@ int main(int argc, char *argv[])
    sge_gdi_ctx_class_t *ctx = NULL;
    lListElem *spooling_context;
    lList *answer_list = NULL;
+   object_description *object_base;
 
    DENTER_MAIN(TOP_LAYER, "test_performance");
 
-   
 #define NM10 "%I%I%I%I%I%I%I%I%I%I"
 #define NM5  "%I%I%I%I%I"
 #define NM2  "%I%I"
 #define NM1  "%I"
+   prof_mt_init();
 
    prof_start(SGE_PROF_CUSTOM1, NULL);
    prof_set_level_name(SGE_PROF_CUSTOM1, "performance", NULL);
+
+   prof_start(SGE_PROF_SPOOLINGIO, NULL);
+   prof_set_level_name(SGE_PROF_SPOOLINGIO, "io", NULL);
 
    /* parse commandline parameters */
    if(argc != 4) {
@@ -179,11 +197,15 @@ int main(int argc, char *argv[])
       SGE_EXIT((void**)&ctx, 1);
    }
    
-   if (sge_gdi2_setup(&ctx, QEVENT, MAIN_THREAD, NULL) != AE_OK) {
+   if (sge_gdi2_setup(&ctx, QEVENT, MAIN_THREAD, &answer_list) != AE_OK) {
+      answer_list_output(&answer_list);
       SGE_EXIT((void**)&ctx, 1);
    }
    
    sge_setup_sig_handlers(QEVENT);
+
+   object_base = object_type_get_object_description();
+   *(object_base[SGE_TYPE_JOB].list) = lCreateList("job list", JB_Type);
 
 #define defstring(str) #str
 
@@ -228,32 +250,37 @@ int main(int argc, char *argv[])
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
    prof_output_info(SGE_PROF_CUSTOM1, true, "spool jobs:\n");
    prof_reset(SGE_PROF_CUSTOM1, NULL);
+   prof_output_info(SGE_PROF_SPOOLINGIO, true, "IO:\n");
+   prof_reset(SGE_PROF_SPOOLINGIO, NULL);
 
-   lFreeList(&Master_Job_List);
-
+   lFreeList(object_base[SGE_TYPE_JOB].list);
+   *(object_base[SGE_TYPE_JOB].list) = lCreateList("job list", JB_Type);
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
    read_spooled_data();
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
    prof_output_info(SGE_PROF_CUSTOM1, true, "read jobs (cached):\n");
    prof_reset(SGE_PROF_CUSTOM1, NULL);
+
+   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
+   delete_spooled_data();
+   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
+   prof_output_info(SGE_PROF_CUSTOM1, true, "delete jobs:\n");
+   prof_reset(SGE_PROF_CUSTOM1, NULL);
   
    spool_shutdown_context(&answer_list, spooling_context);
    spool_startup_context(&answer_list, spooling_context, true);
-  
-   lFreeList(&Master_Job_List);
 #else
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
    read_spooled_data();
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
    prof_output_info(SGE_PROF_CUSTOM1, true, "\nread jobs (uncached):\n");
    prof_reset(SGE_PROF_CUSTOM1, NULL);
-
-   lFreeList(&Master_Job_List);
 #endif
+
+   lFreeList(object_base[SGE_TYPE_JOB].list);
 
    spool_shutdown_context(&answer_list, spooling_context);
    answer_list_output(&answer_list);
 
-   DEXIT;
-   return EXIT_SUCCESS;
+   DRETURN(EXIT_SUCCESS);
 }

@@ -85,6 +85,7 @@
 /* uti */
 #include "uti/sge_spool.h"
 #include "uti/sge_unistd.h"
+#include "uti/sge_profiling.h"
 #include "sge_all_listsL.h"
 
 const spool_flatfile_instr qconf_sub_name_value_space_sfi = 
@@ -1225,6 +1226,8 @@ spool_flatfile_write_data(lList **answer_list, const void *data, int data_len,
 
    SGE_CHECK_POINTER_NULL(data, answer_list);
 
+   PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+
    /* open/get filehandle */
    fd = spool_flatfile_open_file(answer_list, destination, filepath, &result);
 #ifdef USE_FOPEN
@@ -1233,6 +1236,7 @@ spool_flatfile_write_data(lList **answer_list, const void *data, int data_len,
    if (fd == -1) {
 #endif
       /* message generated in spool_flatfile_open_file */
+      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       DRETURN(NULL);
    }
 
@@ -1249,6 +1253,7 @@ spool_flatfile_write_data(lList **answer_list, const void *data, int data_len,
       spool_flatfile_close_file(answer_list, fd, result, destination);
       unlink(filepath);
       FREE(result);
+      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       DRETURN(NULL);
    }
 
@@ -1257,8 +1262,10 @@ spool_flatfile_write_data(lList **answer_list, const void *data, int data_len,
       /* message generated in spool_flatfile_close_file */
       unlink(filepath);
       FREE(result);
+      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       DRETURN(NULL);
    }
+   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
 
    DRETURN(result);
 }

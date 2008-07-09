@@ -1698,15 +1698,17 @@ CheckIfClusterNameAlreadyExists()
    infotext_temp_msg=""
    ret=0
    #Try if SMF service already exists
-   ServiceAlreadyExists $hosttype
-   if [ $? -eq 1 ]; then
-      infotext_temp_msg="Specified cluster name >\$SGE_CLUSTER_NAME=%s< is already used by your system!\nDetected SMF service svc:/application/sge/$hosttype:%s."
-      if [ $AUTO = true ]; then
-         $INFOTEXT  -log "$infotext_temp_msg" $SGE_CLUSTER_NAME $SGE_CLUSTER_NAME
-      else
-         $INFOTEXT  "$infotext_temp_msg" $SGE_CLUSTER_NAME $SGE_CLUSTER_NAME
+   if [ "$SGE_ENABLE_SMF" = true ]; then
+      ServiceAlreadyExists $hosttype
+      if [ $? -eq 1 ]; then
+         infotext_temp_msg="Specified cluster name >\$SGE_CLUSTER_NAME=%s< is already used by your system!\nDetected SMF service svc:/application/sge/$hosttype:%s."
+         if [ $AUTO = true ]; then
+            $INFOTEXT  -log "$infotext_temp_msg" $SGE_CLUSTER_NAME $SGE_CLUSTER_NAME
+         else
+            $INFOTEXT  "$infotext_temp_msg" $SGE_CLUSTER_NAME $SGE_CLUSTER_NAME
+         fi
+         ret=1
       fi
-      ret=1
    fi
 
    # Shadowd does not have RC script
@@ -1787,7 +1789,7 @@ SearchForExistingInstallations()
    fi
    
    #MacOS overwrites the files (all services share single file)
-   if [ "$ARCH" = darwin ]; then
+   if [ "$ARCH" = darwin -o "$ARCH" = darwin-ppc -o "$ARCH" = darwin-x86 ]; then
       return
    fi
     
@@ -3058,23 +3060,25 @@ RemoveRcScript()
       fi
    fi
    
-   ServiceAlreadyExists $hosttype
    #If Solaris 10+ and SMF used and 6.1 version not specified
-   if [ $? -eq 1 -a "$SGE_ENABLE_SMF" = "true" -a -z "$upgrade" ]; then
-      if [ "$AUTO" = "true" ]; then
-         OLD_INFOTEXT=$INFOTEXT
-         INFOTEXT="$INFOTEXT -log"
-      fi
+   if [ "$SGE_ENABLE_SMF" = true ]; then
+      ServiceAlreadyExists $hosttype
+      if [ $? -eq 1 -a -z "$upgrade" ]; then
+         if [ "$AUTO" = "true" ]; then
+            OLD_INFOTEXT=$INFOTEXT
+            INFOTEXT="$INFOTEXT -log"
+         fi
 
-      SMFUnregister $hosttype
-      ret=$?
+         SMFUnregister $hosttype
+         ret=$?
 
-      if [ "$AUTO" = "true" ]; then
-         INFOTEXT=$OLD_INFOTEXT
-      fi
-      if [ $ret -ne 0 ]; then
-         MoveLog
-         exit 1
+         if [ "$AUTO" = "true" ]; then
+            INFOTEXT=$OLD_INFOTEXT
+         fi
+         if [ $ret -ne 0 ]; then
+            MoveLog
+            exit 1
+         fi
       fi
    # If system is Linux Standard Base (LSB) compliant, use the install_initd utility
    elif [ "$RC_FILE" = lsb ]; then
@@ -3840,9 +3844,9 @@ DoRemoteAction()
   if [ "$host" = "$HOST" ]; then     #local host
      /bin/sh -c "$cmd"
   elif [ "$user" = default ]; then
-     $SHELL_NAME "$host" "/bin/sh -c $cmd"
+     $SHELL_NAME "$host" "/bin/sh -c \"${cmd}\""
   else
-     $SHELL_NAME -l "$user" "$host" "/bin/sh -c $cmd"
+     $SHELL_NAME -l "$user" "$host" "/bin/sh -c \"${cmd}\""
   fi
 }
 
@@ -3922,7 +3926,7 @@ ManipulateOneDaemonType()
          list=`$SGE_BIN/qconf -sel`
 	 ;;
       bdb)
-         list=`BootstrapGetValue $SGE_ROOT/$SGE_CELL/common "spooling_params"`
+         list=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "spooling_params" | awk '{ print $2}' 2>/dev/null`
 	 db_server_host=`echo "$SPOOLING_ARGS" | awk -F: '{print $1}'`
          db_server_spool_dir=`echo "$SPOOLING_ARGS" | awk -F: '{print $2}'`
          if [ -z "$db_server_spool_dir" ]; then #local bdb spooling
@@ -3945,10 +3949,9 @@ ManipulateOneDaemonType()
    fi
    
    #Basic sommand settings
-   rc_cmd=". $SGE_ROOT/$SGE_CELL/common/settings.sh ; \
+   rc_cmd=". $SGE_ROOT/$SGE_CELL/common/settings.sh ; . $SGE_ROOT/util/arch_variables ;\
 . $SGE_ROOT/util/install_modules/inst_common.sh ; . $SGE_ROOT/util/install_modules/inst_qmaster.sh ; \
 . $SGE_ROOT/util/install_modules/inst_berkeley.sh ; . $SGE_ROOT/util/install_modules/inst_execd.sh ; \
-. $SGE_ROOT/util/upgrade_modules/inst_upgrade.sh ; \
 AUTO=true ; export AUTO ; SGE_ENABLE_SMF=true ; export SGE_ENABLE_SMF ; euid=$euid ; \
 cd $SGE_ROOT ; BasicSettings ; SetUpInfoText ; CheckForSMF ; "
    if [ "$SMF_FLAGS" = -nosmf ]; then
@@ -3997,7 +4000,7 @@ RemoteExecSpoolDirDelete()
       fi
    elif [ ! -d "$local_dir" ]; then
       LOCAL_EXECD_SPOOL=$local_dir
-      . ./util/inst_execd.sh
+      . $SGE_ROOT/util/install_modules/inst_execd.sh
       MakeLocalSpoolDir
    fi
 }

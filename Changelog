@@ -1,3 +1,11 @@
+LP-2008-07-09-0: Enhancem:  Improved upgrade mode detection
+                 Cleanup:   Renamed LP-2008-07-07 to LP-2008-07-07-0
+                 Bugfix:    ServiceAlreadyExists error on non-smf hosts
+                 Bugfix:    Fixed upgrade remote actions
+                 Bugfix:    Upgrade uses same local execd spool dir in copy mode
+                 Bugster:   6723936
+                 Review:    JO
+
 JG-2008-07-08-0: Bugfix:    qmaster runs out of memory on AIX
                  Bugster:   6720078
                  Issue:     2641

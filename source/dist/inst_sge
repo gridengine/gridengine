@@ -447,7 +447,9 @@ if [ "$UPDATE" = true ]; then
          $INFOTEXT "Upgrade must be started on a qmaster host!"
          exit 1
       fi
-      if [ ! -f "$SGE_ROOT/$SGE_CELL/common/bootstrap" ]; then
+      if [ ! -d "$SGE_ROOT/$SGE_CELL" ]; then
+         UPGRADE_MODE="copy"
+      elif [ ! -f "$SGE_ROOT/$SGE_CELL/common/bootstrap" ]; then
          $INFOTEXT -n "Cannot continue with the \"real\" upgrade. Installation corrupted.\n" \
                       "Missing bootstrapfile in %s directory!\n" \
                       "Rerun the upgrade and choose different value for <sge_root> and/or <sge_cell>.\n" "$SGE_ROOT/$SGE_CELL/common"
@@ -459,7 +461,8 @@ if [ "$UPDATE" = true ]; then
                    "%s directory \n" \
                    "and restart the upgrade.\n" "$SGE_ROOT/$SGE_CELL"
       exit 1
-   else
+   fi
+   if [ "$UPGRADE_MODE" != "upgrade" ]; then
       #Just copy the configuration to a new SGE_CELL
       UPGRADE_MODE="copy"
       #we need different ports than in the backup
@@ -565,13 +568,11 @@ if [ "$UPDATE" = true ]; then
    CopyCA submit
    CheckRunningDaemon sge_qmaster
    $INFOTEXT -u "Last step - load configuration from the backup"
-   $INFOTEXT -n "\nload command: $SGE_ROOT/util/upgrade_modules/load_cc.sh $UPGRADE_BACKUP_DIR \n" \
-             "-log C -newijs \"$newIJS\" -gid_range \"${CFG_GID_RANGE}\" -admin_mail \"${CFG_MAIL_ADDR}\" \n" \
-             "-execd_spool_dir \"${CFG_EXE_SPOOL}\" \n"   
+   $INFOTEXT -n "\nload command: $SGE_ROOT/util/upgrade_modules/load_cc.sh $UPGRADE_BACKUP_DIR -mode \"$UPGRADE_MODE\" -log C -newijs \"$newIJS\" -gid_range \"${CFG_GID_RANGE}\" -admin_mail \"${CFG_MAIL_ADDR}\" -execd_spool_dir \"${CFG_EXE_SPOOL}\" \n"   
    $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
    #Load configuration, show only critical errors
-   "$SGE_ROOT/util/upgrade_modules/load_cc.sh" "$UPGRADE_BACKUP_DIR" -log "C" -newijs "$newIJS" \
--execd_spool_dir "$CFG_EXE_SPOOL" -gid_range "$CFG_GID_RANGE" -admin_mail "$CFG_MAIL_ADDR"
+   "$SGE_ROOT/util/upgrade_modules/load_cc.sh" "$UPGRADE_BACKUP_DIR" -log "C" -mode "$UPGRADE_MODE" \
+-newijs "$newIJS" -execd_spool_dir "$CFG_EXE_SPOOL" -gid_range "$CFG_GID_RANGE" -admin_mail "$CFG_MAIL_ADDR"
    
    if [ "$POST_UPDATE" != true ]; then
       $INFOTEXT -n "\nIf loading the configuration suceeded run these additional commads:\n" \
@@ -584,7 +585,7 @@ if [ "$UPDATE" = true ]; then
           "   WARNING: If the host already runs a helper service of a different version (e.g. from 6.1 cluster)\n" \
           "                   it will be overwritten by the new version and hosts will only work in 6.2 cluster\n"
       fi
-      $INFOTEXT -n "OPTIONAL:" \
+      $INFOTEXT -n "OPTIONAL:\n" \
       "inst_sge -upd-rc\n" \
       "   This will create new RC scripts/SMF services for the new cluster (qmaster,execd,bdb)\n" \
       "   WARNING: will silently remove existing conflicting files\n" \

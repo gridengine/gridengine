@@ -196,15 +196,32 @@ UpdateConfiguration()
          RemoveLineWithMatch ${modFile} 'rsh_command.*'
          RemoveLineWithMatch ${modFile} 'rsh_daemon.*'
       fi
+      #We need to change local execd spool dirs for copy mode 
+      if [ "$mode" = copy ]; then
+         local_dir=`grep execd_spool_dir ${modFile} 2>/dev/null | awk '{print $2}'`
+         if [ -n "$local_dir" ]; then
+	    local_dir=`dirname $local_dir 2>/dev/null`
+	    if [ -n "$local_dir" ]; then
+	       if [ -n "$SGE_CLUSTER_NAME" ]; then
+	          local_dir="${local_dir}/${SGE_CLUSTER_NAME}"
+	       elif [ -n "$SGE_QMASTER_PORT" ]; then
+	          local_dir="${local_dir}/${SGE_QMASTER_PORT}"
+	       else
+	          local_dir="${local_dir}/${SGE_CELL}"
+	       fi
+	       ReplaceOrAddLine ${modFile} 'execd_spool_dir.*'  "execd_spool_dir                $local_dir"
+	    fi
+	 fi
+      fi
    fi
 }
 
 #Modify before load
-ModifyLoad()
+ModifyData()
 {
    modOpt="${1:?An option is required}"
    modFile="${2:?The file name is required}"
-   #echo "ModifyLoad opt:$modOpt file:$modFile"
+   #echo "ModifyData opt:$modOpt file:$modFile"
 
    #test only, comment in production
    case "$modOpt" in
@@ -491,7 +508,7 @@ LoadConfigFile()
    configLevel=`expr ${configLevel} + 1`
    
 
-   ModifyLoad "$loadOpt" "$loadFile" 
+   ModifyData "$loadOpt" "$loadFile" 
    loadMsg=`$QCONF $loadOpt $loadFile 2>&1`
    
    ResolveResult "$loadOpt" "$loadFile" "$loadMsg" "$ret"
@@ -674,6 +691,7 @@ DIR="${1:?The load directory is required}"
 shift
 
 LOGGER_LEVEL="W"
+mode=upgrade
 newIJS=false
 EXECD_SPOOL_DIR=""
 ADMIN_MAIL=""
@@ -704,12 +722,21 @@ while [ $ARGC -gt 0 ]; do
             LOGGER_LEVEL="$1"
          fi
          ;;
+      -mode)
+         shift
+	 if [ "$1" != "upgrade" -a "$1" != "copy" ]; then
+            LogIt "W" "LOAD invoked with invalid mode "$1" using $mode"
+         else 
+            LogIt "I" "LOAD invoked with -mode $1"
+            mode="$1"
+         fi
+	 ;;
       -newijs)
          shift
          if [ "$1" != "true" -a "$1" != "false" ]; then
-            LogIt "W" "LOAD invoked with invalid newijs "$1" using false"
+            LogIt "W" "LOAD invoked with invalid newijs "$1" using $newIJS"
          else 
-            LogIt "I" "LOAD invoked with -newijs"
+            LogIt "I" "LOAD invoked with -newijs true"
             newIJS="$1"
          fi
          ;;

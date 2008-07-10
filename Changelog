@@ -1,3 +1,13 @@
+LP-2008-07-10-0: Enhancem:  Introduced new inst_sge option -start-all to start
+                            complete cluster
+                 Enhancem:  Improved messages
+                 Cleanup:   Removed inst_update.sh
+                 Bugfix:    Fixed typos & usages
+                 Bugfix:    shadow_masters file might contain some hosts twice
+                 Bugster:   6675592
+                 Issue:     2521
+                 Review:    MD
+
 JG-2008-07-10-0: Bugfix:    Error message of qalter -q "" <job_id> suggests
                             memory corruption.
                  Bugster:   6704393

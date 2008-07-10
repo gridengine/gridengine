@@ -36,9 +36,6 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-#TODO Documentation
-#TODO Script man page
-
 INFOTEXT=echo
 
 if [ -z "$SGE_ROOT" -o -z "$SGE_CELL" ]; then
@@ -59,8 +56,8 @@ Usage()
    myname=`basename $0`
    $INFOTEXT \
              "Usage: $myname <backup_dir>|[-help]\n" \
-             "\n<backup_dir> ... directory where the backup will be stored\n" \
-             "                can't exist or must be empty"
+             "\n<backup_dir> ... Directory in which to store the backup.\n" \
+             "                The directory must either be empty or not exists at all."
 }
 
 #Dump list to dir

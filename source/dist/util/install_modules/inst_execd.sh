@@ -502,7 +502,7 @@ AddQueue()
 
 GetLocalExecdSpoolDir()
 {
-   spool_dir=`qconf -sconf | grep "execd_spool_dir" | awk '{ print $2 }'` 2>/dev/null
+   spool_dir=`qconf -sconf | grep "execd_spool_dir" | awk '{ print $2 }' 2>/dev/null`
    host_dir=`$SGE_UTILBIN/gethostname -aname | cut -d"." -f1`
    GLOBAL_EXECD_SPOOL=$spool_dir/$host_dir
 
@@ -520,7 +520,7 @@ GetLocalExecdSpoolDir()
 
    if [ "$SGE_ARCH" != "win32-x86" ]; then
       $INFOTEXT -n -auto $AUTO -ask "y" "n" -def "n" "Do you want to configure a different spool directory\n for this host (y/n) [n] >> "
-   ret=$?
+      ret=$?
    else
       ret=0 #windows need it, don't need to ask
    fi
@@ -567,7 +567,7 @@ GetLocalExecdSpoolDir()
 MakeHostSpoolDir()
 {
    MKDIR="mkdir -p"
-   spool_dir=`qconf -sconf | grep "execd_spool_dir" | awk '{ print $2 }'` 2>/dev/null
+   spool_dir=`qconf -sconf | grep "execd_spool_dir" | awk '{ print $2 }' 2>/dev/null`
    host_dir=`$SGE_UTILBIN/gethostname -aname | cut -d"." -f1`
 
    $MKDIR $spool_dir/$host_dir

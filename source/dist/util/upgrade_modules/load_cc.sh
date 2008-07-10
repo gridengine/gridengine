@@ -36,10 +36,6 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-#TODO Documentation
-#TODO Script man page
-
-#TODO infotext?, Need to be run as Admin user
 INFOTEXT=echo
 
 if [ -z "$SGE_ROOT" -o -z "$SGE_CELL" ]; then
@@ -59,14 +55,15 @@ HOST=`$SGE_ROOT/utilbin/$ARCH/gethostname -name`
 Usage()
 {
    myname=`basename $0`
-   $INFOTEXT "Usage: $myname [-log I|W|C] [-newijs true|false] [-execd_spool_dir <value>] [-admin_mail <value>]\n" \
-             "      [-gid_range <integer_range_value>] [-help]\n" \
-             "\nExamples:\n" \
-             "   $myname -log C -newijs true -execd_spool_dir /sge/real_execd_spool -admin_mail root@host.com\n" \
-             "   -gid_range 23000-24000\n" \
-             "Loads the configuration, displays only critical error, enables new interactive job support,\n" \
-             "sets execd_spool_dir to the <value> for all execution daemons in the backup, sets admin_mail\n" \
-             "to <value> and sets gid_range to <integer_range_value>."
+   $INFOTEXT "Usage: $myname [-log I|W|C] [-mode upgrade|copy] [-newijs true|false] [-execd_spool_dir <value>] [-admin_mail <value>] [-gid_range <integer_range_value>] [-help]\n" \
+             "\nExample:\n" \
+             "   $myname -log C -mode copy -newijs true -execd_spool_dir /sge/real_execd_spool -admin_mail user@host.com -gid_range 23000-24000\nLoads the configuration according to the following rules:\n" \
+             "   Shows only critical errors\n" \
+             "   Uses copy upgrade mode (local execd spool dirs will be changed)\n" \
+             "   Enables new interactive job support\n" \
+             "   Changes the global execution daemon spooling directory\n" \
+             "   Sets the address to which to send mail\n" \
+             "   Sets the group ID range"
 }
 
 

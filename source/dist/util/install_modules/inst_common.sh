@@ -465,9 +465,9 @@ ErrUsage()
 {
    myname=`basename $0`
    $INFOTEXT -e \
-             "Usage: %s -m|-um|-x|-ux [all]|-rccreate [all]|-rcremove [all]|-sm|-usm|-s|-db|-udb| \\\n" \
-             "       -upd|-post_upd|-bup|-rst|-copycerts <host|hostlist>| \\\n" \
-             "       -v [-auto <filename>] | [-nr] | [-winupdate] [-winsvc] [-uwinsvc] [-csp] [-jmx] \\\n" \
+             "Usage: %s -m|-um|-x|-ux [all]|-rccreate [all]|-rcremove [all]|-sm|-usm|-s|-db|-udb|-upd| \\\n" \
+             "       -upd-execd|-upd-win|-upd-rc|-post_upd|-bup|-rst|-copycerts <host|hostlist>| -v \\\n" \
+             "       [-auto <filename>]|[-nr]||[-start-all][-winupdate]|[-winsvc] [-uwinsvc] [-csp] [-jmx] \\\n" \
              "       [-resport] [-oldijs] [-afs] [-host <hostname>] [-rsh] [-noremote] [-nosmf]\n" \
              "   -m         install qmaster host\n" \
              "   -um        uninstall qmaster host\n" \
@@ -483,6 +483,10 @@ ErrUsage()
              "   -copycerts copy local certificates to given hosts\n" \
              "   -v         print version\n" \
              "   -upd       upgrade cluster from 6.0 or higher to 6.2\n" \
+             "   -upd-execd delete/initialize all execd spool directories\n" \
+             "   -upd-win   update/install windows helper service on all Windows hosts\n" \
+             "   -upd-rc    creates new autostart scripts for the whole cluster\n" \
+             "   -upd-win   update/install windows helper service on all Windows hosts\n" \
              "   -post_upd  finish the upgrade procedure (cleanup old RC scritps, \n" \
              "              execd spooling directories, etc.)\n" \
              "   -rccreate  create startup scripts from templates\n" \
@@ -493,9 +497,10 @@ ErrUsage()
              "   -rsh       use rsh instead of ssh (default is ssh)\n" \
              "   -auto      full automatic installation (qmaster and exec hosts)\n" \
              "   -nr        set reschedule to false\n" \
+             "   -start-all start whole cluster\n" \
              "   -winupdate update to add gui features to a existing execd installation\n" \
-             "   -winsvc    install only windows helper service\n" \
-             "   -uwinsvc   uninstall only windows helper service\n" \
+             "   -winsvc    install windows helper service\n" \
+             "   -uwinsvc   uninstall windows helper service\n" \
              "   -csp       install system with security framework protocol\n" \
              "              functionality\n" \
              "   -jmx       install qmaster with JMX server thread enabled\n" \
@@ -3865,6 +3870,7 @@ DoRemoteActionForHosts()
      host_list=`echo "$tmp_list" | awk  '{ for (i = 1; i <= NF; i++) print $i }'`
   fi
   for host in $host_list ; do
+     $INFOTEXT "\nProcessing $host ..."
      if [ "$UPDATE_WIN" = true ]; then
         user="`echo $host | tr "a-z" "A-Z"`+$user"
      fi
@@ -3896,8 +3902,8 @@ ManipulateOneDaemonType()
       exit 1
    fi
    
-   if [ "$euid" -ne 0 ]; then
-      $INFOTEXT -n "\nYou need to be a root to perform this action!"
+   if [ "$euid" -ne 0 -a "$START_CLUSTER" != true ]; then
+      $INFOTEXT -n "\nYou need to be a root to perform this action!\n"
       exit 1
    fi
    
@@ -3921,20 +3927,22 @@ ManipulateOneDaemonType()
          elif [ -f "$SGE_ROOT/$SGE_CELL/common/act_qmaster" ]; then
             list=`cat "$SGE_ROOT/$SGE_CELL/common/act_qmaster"`
          fi
+	 start_cmd="$SGE_ROOT/$SGE_CELL/common/sgemaster"
 	 ;;
       execd)
          list=`$SGE_BIN/qconf -sel`
+	 start_cmd="$SGE_ROOT/$SGE_CELL/common/sgeexecd"
 	 ;;
       bdb)
          list=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "spooling_params" | awk '{ print $2}' 2>/dev/null`
 	 db_server_host=`echo "$SPOOLING_ARGS" | awk -F: '{print $1}'`
          db_server_spool_dir=`echo "$SPOOLING_ARGS" | awk -F: '{print $2}'`
          if [ -z "$db_server_spool_dir" ]; then #local bdb spooling
-	    $INFOTEXT "Your cluster does not use BDB server spooling!"
 	    $INFOTEXT -log "Your cluster does not use BDB server spooling!"
 	    return 1
 	 fi
 	 list="$db_server_host"
+	 start_cmd="$SGE_ROOT/$SGE_CELL/common/sgebdb"
 	 ;;
       *)
          $INFOTEXT "Unknown type %s in ManipulateOneTypeRC" "$type"
@@ -3957,26 +3965,36 @@ cd $SGE_ROOT ; BasicSettings ; SetUpInfoText ; CheckForSMF ; "
    if [ "$SMF_FLAGS" = -nosmf ]; then
       rc_cmd="$rc_cmd SGE_ENABLE_SMF=false ; "
    fi
+   
+   if [ "$START_CLUSTER" = true ]; then
+      $INFOTEXT -u "Starting all $type hosts:"
+      DoRemoteActionForHosts "$list" default "$start_cmd"
+      return
+   fi
 
    if [ "$DEL_EXECD_SPOOL" = true ]; then        #DELETE EXECD SPOOL DIRS
       cmd=". $SGE_ROOT/$SGE_CELL/common/settings.sh ; . $SGE_ROOT/util/install_modules/inst_common.sh ; \
 cd $SGE_ROOT && RemoteExecSpoolDirDelete"
+      $INFOTEXT -u "Initializing all local execd spool directories:"
       DoRemoteActionForHosts "$list" default "$cmd"
    fi
    
    if [ "$UPDATE_WIN" = true ]; then                   #UPDATE WINDOWS HELPER SERVICE ON ALL WINDOWS EXECDs
       cmd=". $SGE_ROOT/$SGE_CELL/common/settings.sh ; . $SGE_ROOT/util/install_modules/inst_common.sh ; \
 . $SGE_ROOT/util/install_modules/inst_execd.sh ; cd $SGE_ROOT ; BasicSettings ; SetUpInfoText ; SetupWinSvc update"
+      $INFOTEXT -u "Updating windows helper service on all windows hosts:"
       DoRemoteActionForHosts "$list" $ADMINUSER "$cmd"
    fi
    
    if [ "$REMOVE_RC" = true ]; then                    #REMOVE OLD RCs
       cmd="$rc_cmd RemoveRcScript $HOST $type $euid $version"
+      $INFOTEXT -u "Removing all $type $version startup scripts:"
       DoRemoteActionForHosts "$list" default "$cmd"
    fi
    
    if [ "$ADD_RC" = true ]; then                              #ADD NEW RCs
       cmd="$rc_cmd ADD_TO_RC=true; export ADD_TO_RC ; SetupRcScriptNames $type && InstallRcScript"
+      $INFOTEXT -u "Creating new startup scripts for all $type hosts:"
       DoRemoteActionForHosts "$list" default "$cmd"
    fi
 }

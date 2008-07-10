@@ -128,6 +128,9 @@ static int gdi2_send_message(sge_gdi_ctx_class_t * ctx,
                              int buflen, u_long32 *mid);
 
 
+static int get_gdi_retries_value(void);
+static bool get_cl_ping_value(void);
+
 lList* sge_gdi2(sge_gdi_ctx_class_t *ctx, u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
                lEnumeration *enp) 
 {
@@ -459,6 +462,74 @@ gdi2_send_multi_sync(sge_gdi_ctx_class_t* ctx, lList **alpp, state_gdi_multi *st
    state->sequence_id = 0;
    DRETURN(true);
 }
+/****** gdi/request/get_gdi_retries_value() ***************************************
+*  NAME
+*     get_gdi_retries_value() -- get commlib parameter list value "gdi_retries"
+*
+*  SYNOPSIS
+*     static int get_gdi_retries_value(void) 
+*
+*  FUNCTION
+*     Returns the nr of retries on synchron receive retries when getting a
+*     GDI response message.
+*
+*  INPUTS
+*     void - none
+*
+*  RESULT
+*     static int - configured "gdi_retries" value (set by qmaster_params)
+*
+*  SEE ALSO
+*     gdi/request/get_cl_ping_value()
+*     gdi/request/get_gdi_retries_value()
+*******************************************************************************/
+static int get_gdi_retries_value(void) {
+   char* gdi_retries = NULL;
+   int retries = 0;
+   cl_com_get_parameter_list_value("gdi_retries", &gdi_retries);
+   if (gdi_retries != NULL) {
+      retries = atoi(gdi_retries);
+      FREE(gdi_retries);
+   }
+   return retries;
+}
+
+/****** gdi/request/get_cl_ping_value() *******************************************
+*  NAME
+*     get_cl_ping_value() -- get commlib parameter list value "cl_ping"
+*
+*  SYNOPSIS
+*     static bool get_cl_ping_value(void) 
+*
+*  FUNCTION
+*     Returns the value of the "cl_ping" commlib parameter. The value is true
+*     or false and specifies if gdi should send a SIM message to qmaster which
+*     should be used for desiction making if qmaster is still working or
+*     unreachable.
+*
+*  INPUTS
+*     void - none
+*
+*  RESULT
+*     static bool - true or false (enabled or disabled)
+*
+*  SEE ALSO
+*     gdi/request/get_cl_ping_value()
+*     gdi/request/get_gdi_retries_value()
+*******************************************************************************/
+static bool get_cl_ping_value(void) {
+   char* cl_ping = NULL;
+   bool do_ping = false;
+
+   cl_com_get_parameter_list_value("cl_ping", &cl_ping);
+   if (cl_ping != NULL) {
+      if (strcasecmp(cl_ping, "true") == 0) {
+         do_ping = true;
+      }
+      FREE(cl_ping);
+   }
+   return do_ping;
+}
 
 /****** gdi/request/sge_send_receive_gdi2_request() ****************************
 *  NAME
@@ -533,33 +604,28 @@ static int sge_send_receive_gdi2_request(sge_gdi_ctx_class_t *ctx,
 
 
    {
-      char* cl_ping = NULL;
-      char* gdi_retries = NULL;
-      int retries = 0;
-      int doit = 0;
+      int runs = 0;
+      bool do_ping = false;
+      bool do_permanent = false;
 
-      cl_com_get_parameter_list_value("cl_ping", &cl_ping);
-      cl_com_get_parameter_list_value("gdi_retries", &gdi_retries);
-      if (gdi_retries != NULL) {
-         retries = atoi(gdi_retries);
-         FREE(gdi_retries);
-         retries++;
+      do_ping = get_cl_ping_value();
+      runs = get_gdi_retries_value();
+
+      if (runs == -1) {
+/*         TODO:  reject gdi_params < -1 at modifiy time (file issue) */
+         do_permanent = true;
       }
 
-      if (retries <= 0) {
-         doit = retries - 2; 
-      } 
-
-      while (doit <= retries - 1) {
-         DPRINTF(("calling the sge_get_gdi2_request: %d times\n",retries));
-         DPRINTF(("retry: %d\n",doit));
+      do {
          ret = sge_get_gdi2_request(ctx, commlib_error, rcv_rhost, rcv_commproc, &id, in, gdi_request_mid);
          if (ret == 0) {
-
+#if 0
+         /* This code is only of interrest for development */
             DPRINTF(("in: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
                   (*in)->request_id, (*in)->sequence_id, (*in)->target, (*in)->op));
             DPRINTF(("out: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
                      out->request_id, out->sequence_id, out->target, out->op));
+#endif
 
             if (*in && ((*in)->request_id == out->request_id)) {
                break;
@@ -571,39 +637,38 @@ static int sge_send_receive_gdi2_request(sge_gdi_ctx_class_t *ctx,
             if (*commlib_error == CL_RETVAL_SYNC_RECEIVE_TIMEOUT) {
                cl_com_SIRM_t* cl_endpoint_status = NULL;
                cl_com_handle_t* handle = NULL;
-
-               DPRINTF(("failed receiving gdi response. Commlib returned: "SFQ"\n", cl_get_error_text(*commlib_error)));
+               DPRINTF(("TEST_2372_OUTPUT: CL_RETVAL_SYNC_RECEIVE_TIMEOUT: RUNS="sge_U32CFormat"\n", sge_u32c(runs)));
                handle = ctx->get_com_handle(ctx);
-
-               DPRINTF(("gdi timeout is set to: %d\n", handle->synchron_receive_timeout));
-               DPRINTF(("cl_ping: %s\n", cl_ping));
-              
-               if (strncasecmp(cl_ping, "true", sizeof("true")-1) == 0 && strlen(cl_ping) == sizeof("true")-1) {
-                  DPRINTF(("sending qping to commlib!\n"));
+               if (handle != NULL) {
+                  DPRINTF(("TEST_2372_OUTPUT: GDI_TIMEOUT="sge_U32CFormat"\n", sge_u32c(handle->synchron_receive_timeout)));
+               }
+               if (do_ping == true) {
+                  DPRINTF(("TEST_2372_OUTPUT: CL_PING=TRUE\n"));
                   cl_commlib_get_endpoint_status(handle, rcv_rhost, rcv_commproc, id, &cl_endpoint_status);
-
-                  if (cl_endpoint_status->application_status != 0) {
-                     DPRINTF(("qmaster status is not ok!\n"));
-                     DPRINTF(("some qmaster threads may have crashed or overloaded\n"));
+                  if (cl_endpoint_status != NULL) {
+                     if (cl_endpoint_status->application_status != 0) {
+                        DPRINTF(("TEST_2372_OUTPUT: QPING: error\n"));
+                     } else {
+                        DPRINTF(("TEST_2372_OUTPUT: QPING: ok\n"));
+                     }
+                     DPRINTF(("TEST_2372_OUTPUT: QPING: Application Status: %d\n", cl_endpoint_status->application_status));
+                     cl_com_free_sirm_message(&cl_endpoint_status);
                   } else {
-                     DPRINTF(("qmaster application status is ok. qmaster is working.\n"));
-                     DPRINTF(("commlib seems to be ok, but commlib returned: "SFQ"\n", cl_get_error_text(*commlib_error)));
+                     DPRINTF(("TEST_2372_OUTPUT: QPING: failed\n"));
+                     break;
                   }
-                  DPRINTF(("Message Number: %d\n", cl_endpoint_status->application_messages_brm));
-                  DPRINTF(("Application Status: %d\n", cl_endpoint_status->application_status));
-                  DPRINTF(("The qmaster seems to be overloaded!!!!!\n"));
-                  DPRINTF(("Setting a higher timeout or raise the number of retires may solve this problem\n"));
-                  cl_com_free_sirm_message(&cl_endpoint_status);
+               } else {
+                  DPRINTF(("TEST_2372_OUTPUT: CL_PING=FALSE\n"));
                }
             } else {
                break;
             }
          }
-         if (retries > 0) {
-            doit++;
-         } 
-      }
-      free(cl_ping);
+         /* 
+          * only decrement runs if do_permanent is true. do_permanent is set to true
+          * if qmaster_params value for gdi_retries is set to -1 (see man page) 
+          */
+      } while (do_permanent == true || --runs > 0); 
    }
 
    if (ret) {
@@ -1094,35 +1159,27 @@ gdi2_receive_multi_async(sge_gdi_ctx_class_t* ctx, sge_gdi_request **answer, lLi
    }
   
    {
-      char* cl_ping = NULL;
-      char* gdi_retries = NULL;
-      int retries = 0;
-      int doit = 0; 
+      int runs = 0;
+      bool do_ping = false;
+      bool do_permanent = false;
 
-      cl_com_get_parameter_list_value("cl_ping", &cl_ping);
-      cl_com_get_parameter_list_value("gdi_retries", &gdi_retries);
-      if (gdi_retries != NULL) {
-         retries = atoi(gdi_retries);
-         FREE(gdi_retries);
-         retries++;
-      }
+      do_ping = get_cl_ping_value();
+      runs = get_gdi_retries_value();
 
-      if (retries <= 0) {
-         doit = retries - 2;
+      if (runs == -1) {
+         do_permanent = true;
       }
 
       /* receive answer */
-      while (doit <= retries - 1) {
-
-         DPRINTF(("calling the sge_get_gdi2_request_async: %d times\n",retries));
-         DPRINTF(("retry: %d\n",doit));
+      do {
          ret = sge_get_gdi2_request_async(ctx, &commlib_error, rcv_rhost, rcv_commproc, &id ,answer, gdi_request_mid, is_sync);
          if (ret == 0) {
-
+/*
             DPRINTF(("in: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
                   (*answer)->request_id, (*answer)->sequence_id, (*answer)->target, (*answer)->op));
             DPRINTF(("out: request_id=%d, sequence_id=%d, target=%d, op=%d\n",
                      state->first->request_id, state->first->sequence_id, state->first->target, state->first->op));
+*/
             if (*answer && ((*answer)->request_id == state->first->request_id)) {
                break;
             } else {
@@ -1133,40 +1190,37 @@ gdi2_receive_multi_async(sge_gdi_ctx_class_t* ctx, sge_gdi_request **answer, lLi
             if (commlib_error == CL_RETVAL_SYNC_RECEIVE_TIMEOUT) {
                cl_com_SIRM_t* cl_endpoint_status = NULL;
                cl_com_handle_t* handle = NULL;
-
-               DPRINTF(("failed receiving gdi response. Commlib returned: "SFQ"\n", cl_get_error_text(commlib_error)));
+               DPRINTF(("TEST_2372_OUTPUT: CL_RETVAL_SYNC_RECEIVE_TIMEOUT: RUNS="sge_U32CFormat"\n", sge_u32c(runs)));
                handle = ctx->get_com_handle(ctx);
+               DPRINTF(("TEST_2372_OUTPUT: GDI_TIMEOUT="sge_U32CFormat"\n", sge_u32c(handle->synchron_receive_timeout)));
 
-               DPRINTF(("gdi timeout is set to: %d\n", handle->synchron_receive_timeout));
-               DPRINTF(("cl_ping: %s\n", cl_ping));
-
-               if (strncasecmp(cl_ping, "true", sizeof("true")-1) == 0 && strlen(cl_ping) == sizeof("true")-1) {
-                  DPRINTF(("sending qping to commlib!\n"));
+               if (do_ping == true) {
+                  DPRINTF(("TEST_2372_OUTPUT: CL_PING=TRUE\n"));
                   cl_commlib_get_endpoint_status(handle, rcv_rhost, rcv_commproc, id, &cl_endpoint_status);
-
-                  if (cl_endpoint_status->application_status != 0) {
-                     DPRINTF(("qmaster status is not ok!\n"));
-                     DPRINTF(("some qmaster threads may have crashed or overloaded\n"));
+                  if (cl_endpoint_status != NULL) {
+                     if (cl_endpoint_status->application_status != 0) {
+                        DPRINTF(("TEST_2372_OUTPUT: QPING: error\n"));
+                     } else {
+                        DPRINTF(("TEST_2372_OUTPUT: QPING: ok\n"));
+                     }
+                     DPRINTF(("TEST_2372_OUTPUT: QPING: Application Status: %d\n", cl_endpoint_status->application_status));
+                     cl_com_free_sirm_message(&cl_endpoint_status);
                   } else {
-                     DPRINTF(("qmaster application status is ok. qmaster is working.\n"));
-                     DPRINTF(("commlib seems to be ok, but commlib returned: "SFQ"\n", cl_get_error_text(commlib_error)));
-                     DPRINTF(("Qmaster status not ok\n"));
+                     DPRINTF(("TEST_2372_OUTPUT: QPING: failed\n"));
+                     break;
                   }
-                  DPRINTF(("Message Number: %d\n", cl_endpoint_status->application_messages_brm));
-                  DPRINTF(("Application Status: %d\n", cl_endpoint_status->application_status));
-                  DPRINTF(("The qmaster seems to be overloaded!!!!!\n"));
-                  DPRINTF(("Setting a higher timeout or raise the number of retires may solve this problem\n"));
-                  cl_com_free_sirm_message(&cl_endpoint_status);
+               } else {
+                  DPRINTF(("TEST_2372_OUTPUT: CL_PING=FALSE\n"));
                }
             } else {
                break;
             }
          }
-         if (retries > 0) {
-            doit++;
-         }
-      }
-      free(cl_ping);
+         /* 
+          * only decrement runs if do_permanent is true. do_permanent is set to true
+          * if qmaster_params value for gdi_retries is set to -1 (see man page) 
+          */
+      } while (do_permanent == true || --runs > 0);
    }
   
    /* process return code */

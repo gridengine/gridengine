@@ -82,7 +82,7 @@ int cl_parameter_list_cleanup(cl_raw_list_t** list_p)
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_parameter_list_append_parameter()"
-int cl_parameter_list_append_parameter(cl_raw_list_t* list_p, char* parameter, char* value, int lock_list) 
+int cl_parameter_list_append_parameter(cl_raw_list_t* list_p, const char* parameter, char* value, int lock_list) 
 {
 
    int ret_val;
@@ -157,7 +157,7 @@ int cl_parameter_list_append_parameter(cl_raw_list_t* list_p, char* parameter, c
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_parameter_list_remove_parameter()"
-int cl_parameter_list_remove_parameter(cl_raw_list_t* list_p, char* parameter, int lock_list) 
+int cl_parameter_list_remove_parameter(cl_raw_list_t* list_p, const char* parameter, int lock_list) 
 {
    int ret_val = CL_RETVAL_OK;
    int function_return = CL_RETVAL_UNKNOWN_PARAMETER;

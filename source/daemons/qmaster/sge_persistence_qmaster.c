@@ -224,14 +224,40 @@ sge_event_spool(sge_gdi_ctx_class_t *ctx,
    bool delete = false;
    dstring buffer = DSTRING_INIT;
    bool job_spooling = ctx->get_job_spooling(ctx);
+   static int do_sge_test_spooling_wait = -1;
 
-   if (getenv("SGE_TEST_SPOOLING_WAIT_TIME_US") != NULL) {
-      static unsigned long sleep_time = 0;
-      if (sleep_time == 0) {
-         sleep_time = atoi(getenv("SGE_TEST_SPOOLING_WAIT_TIME_US"));
+   if (do_sge_test_spooling_wait == -1) {
+      if (getenv("SGE_TEST_SPOOLING_WAIT_TIME") != NULL) {
+         do_sge_test_spooling_wait = 1;
+      } else {
+         do_sge_test_spooling_wait = 0;
       }
-      usleep(sleep_time);
-      sleep_time = sleep_time + 100000;
+   }
+   if (do_sge_test_spooling_wait == 1) {
+      unsigned long sleep_time = 0;
+      bool do_sleep = false;
+      sleep_time = atoi(getenv("SGE_TEST_SPOOLING_WAIT_TIME"));
+      do {
+
+         /* 
+          * find out if there is a qping -dump client connected to qmaster
+          */         
+         cl_com_handle_t* handle = cl_com_get_handle("qmaster",1);
+         if (handle != NULL) {
+            if (handle->debug_client_setup != NULL) {
+               if (handle->debug_client_setup->dc_mode != CL_DEBUG_CLIENT_OFF) {
+                  do_sleep = true;
+               } else {
+                  do_sleep = false;
+               }
+            }
+         }
+
+         if (do_sleep == true) {
+            usleep(1000000);
+            sleep_time--;
+         }
+      } while (sleep_time > 0 && do_sleep == true);
    }
 
    switch (event) {

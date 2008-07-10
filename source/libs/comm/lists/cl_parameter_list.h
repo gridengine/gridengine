@@ -47,8 +47,8 @@ int cl_parameter_list_setup(cl_raw_list_t** list_p, char* list_name );
 int cl_parameter_list_cleanup(cl_raw_list_t** list_p);
 
 /* thread list functions that will lock the list */
-int cl_parameter_list_append_parameter(cl_raw_list_t* list_p, char* parameter, char* value, int lock_list);
-int cl_parameter_list_remove_parameter(cl_raw_list_t* list_p, char* parameter, int lock_list);
+int cl_parameter_list_append_parameter(cl_raw_list_t* list_p, const char* parameter, char* value, int lock_list);
+int cl_parameter_list_remove_parameter(cl_raw_list_t* list_p, const char* parameter, int lock_list);
 int cl_parameter_list_get_param_string(cl_raw_list_t* list_p, char** param_string, int lock_list);
 
 /* thread functions that will not lock the list */

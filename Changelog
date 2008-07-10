@@ -1,3 +1,8 @@
+CR-2008-07-09-0: Bugfix:    Segmentation fault of sge_schedd
+                 Bugster:   6713722
+                 Issue:     2609
+                 Review:    RD, DG
+
 JG-2008-07-08-0: Bugfix:    qmaster runs out of memory on AIX
                  Bugster:   6720078
                  Issue:     2641

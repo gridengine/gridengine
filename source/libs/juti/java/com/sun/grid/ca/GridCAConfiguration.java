@@ -47,8 +47,9 @@ public class GridCAConfiguration implements Serializable {
     private File caLocalTop;
     private File configDir;
     private File tmpDir;
-    private String  adminUser;
+    private String adminUser;
     private String caHost;
+    private int daysValid = 365;
     
     /** Creates a new instance of GridCAConfiguration */
     public GridCAConfiguration() {
@@ -184,7 +185,23 @@ public class GridCAConfiguration implements Serializable {
         this.tmpDir = tmpDir;
     }
     
+    /**
+     * Get the days the certificates are valid
+     * 
+     * @return  the days of validity
+     */
+    public int getDaysValid() {
+        return daysValid;
+    }
     
+    /**
+     * Set the days the certificates are valid
+     * @param daysValid the days the certificates are valid
+     */
+    public void setDaysValid(int daysValid) {
+        this.daysValid = daysValid;
+    }
+
     /**
      * Get the admin user of the ca.
      *

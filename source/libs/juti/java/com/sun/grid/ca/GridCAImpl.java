@@ -94,6 +94,8 @@ public class GridCAImpl implements GridCA {
         ret.command().add("-adminuser");
         ret.command().add(config.getAdminUser());
         ret.command().add("-nosge");
+        ret.command().add("-days");
+        ret.command().add(Integer.toString(config.getDaysValid()));
         return ret;
     }
     

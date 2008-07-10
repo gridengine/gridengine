@@ -77,20 +77,22 @@ public class GECAKeyManager implements X509KeyManager {
     }
     
     public synchronized void setKeystore(File serverKeystore, char[] pw) throws SecurityException {
-        FileInputStream fi = null;
         try {
             log.log(Level.FINER, "loading keystore file {0}", serverKeystore);
             KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-            fi = new FileInputStream(serverKeystore);
-            ks.load(fi, pw);
-            setKeystore(ks, pw);
+            FileInputStream fi = new FileInputStream(serverKeystore);
+            try {
+                ks.load(fi, pw);
+                setKeystore(ks, pw);
+            } finally {
+                try {
+                    fi.close();
+                } catch (IOException ex) {
+                    // Ignore
+                }
+            }
         } catch (Exception ex) {
             throw new SecurityException("Cannnot create keymanager", ex);
-        } finally {
-            try {
-                fi.close();
-            } catch (IOException ex) {
-            }
         }
     }
     

@@ -1178,8 +1178,18 @@ InitCA()
          touch /tmp/pwfile.$$
          chmod 600 /tmp/pwfile.$$
          echo "$SGE_JMX_SSL_KEYSTORE_PW" > /tmp/pwfile.$$
-         $SGE_CA_CMD -sysks -kspwf /tmp/pwfile.$$
+         OUTPUT=`$SGE_CA_CMD -sysks -ksout $SGE_JMX_SSL_KEYSTORE -kspwf /tmp/pwfile.$$ 2>&1`
+         if [ $? != 0 ]; then
+            $INFOTEXT "Error: Cannot create keystore $SGE_JMX_SSL_KEYSTORE\n$OUTPUT"
+            ret=1
+         else
+            ret=0
+         fi
          rm /tmp/pwfile.$$
+         if [ $ret = 1 ]; then
+            MoveLog
+            exit 1
+         fi
       fi
       
       $INFOTEXT -auto $AUTO -wait -n "Hit <RETURN> to continue >> "

@@ -1,3 +1,12 @@
+AA-2008-07-10-0: Bugfix:    - install_qmaster -jmx fails if non default keystore path is used
+                            - jmx keystore property is wrong for non default keystore location
+                            - use LinkedHashMap to keep sort order
+                            - jgdi cleanups
+                            - GridCA -days extension
+                 Bugster:   6723932, 6724576
+                 Issue:     2647, 2646
+                 Review:    RH, CR
+
 LP-2008-07-10-0: Enhancem:  Introduced new inst_sge option -start-all to start
                             complete cluster
                  Enhancem:  Improved messages

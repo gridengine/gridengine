@@ -243,4 +243,7 @@ void sge_silent_set(int i);
 
 int sge_silent_get(void); 
 
+int sge_get_management_entry(const char *fname, int n, int nmissing, bootstrap_entry_t name[],
+                          char value[][SGE_PATH_MAX], dstring *error_dstring);
+
 #endif /* _SGE_FILE_PATH_H_ */

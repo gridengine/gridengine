@@ -202,6 +202,7 @@
  */
 #define MSG_UTI_CANNOTRESOLVEBOOTSTRAPFILE     _MESSAGE(49100, _("cannot resolve name of bootstrap file"))
 #define MSG_UTI_CANNOTLOCATEATTRIBUTE_SS       _MESSAGE(49102, _("cannot read attribute <"SFN"> from bootstrap file "SFN))
+#define MSG_UTI_CANNOTLOCATEATTRIBUTEMAN_SS    _MESSAGE(49103, _("cannot read attribute <"SFN"> from management.properties file "SFN))
 
 /* 
 ** libs/uti/setup_path.c

@@ -45,6 +45,7 @@
 #include "sge_spool.h"
 #include "sge_stdio.h" 
 #include "sge_unistd.h"
+#include "sge_string.h"
 #include "msg_utilib.h"
 
 #define MAX_JA_TASKS_PER_DIR  (4096l)
@@ -864,3 +865,106 @@ int sge_silent_get()
 {
    return silent_flag;
 } 
+
+/****** uti/spool/sge_get_management_entry() *************************************
+*  NAME
+*     sge_get_management_entry() - Read management.properties file entries
+*
+*  SYNOPSIS
+*     int sge_get_management_entry(const char *fname, int n, 
+*                               const char *name[], 
+*                               char value[][1025],
+*                               dstring *error_dstring) 
+*
+*  FUNCTION
+*     Reads in an array of configuration file entries
+*
+*  RESULT
+*     int - 0 on success
+*
+*  BUGS
+*     Function can not differ multiple similar named entries.
+*
+*  NOTES
+*     MT-NOTE: sge_get_management_entry() is MT safe
+******************************************************************************/
+int sge_get_management_entry(const char *fname, int n, int nmissing, bootstrap_entry_t name[], 
+                          char value[][SGE_PATH_MAX], dstring *error_dstring) 
+{
+   FILE *fp;
+   char buf[SGE_PATH_MAX], *cp;
+   int i;
+   bool *is_found = NULL;
+   
+   DENTER(TOP_LAYER, "sge_get_management_entry");
+
+   if (!(fp = fopen(fname, "r"))) {
+      if (error_dstring == NULL){
+         CRITICAL((SGE_EVENT, MSG_FILE_FOPENFAILED_SS, fname, strerror(errno)));
+      }
+      else {
+         sge_dstring_sprintf(error_dstring, MSG_FILE_FOPENFAILED_SS, 
+                             fname, strerror(errno));
+      }
+      DEXIT;
+      return n;
+   }
+   is_found = malloc(sizeof(bool) * n);
+   memset(is_found, false, n * sizeof(bool));
+   
+   while (fgets(buf, sizeof(buf), fp)) {
+      char *pos = NULL;
+
+      /* set chrptr to the first non blank character
+       * If line is empty continue with next line
+       */
+      if(!(cp = strtok_r(buf, " \t\n", &pos))) {
+          continue;
+      }    
+
+      /* allow commentaries */
+      if (cp[0] == '#') {
+          continue;
+      }    
+  
+      /* search for all requested configuration values */ 
+      for (i=0; i<n; i++) {
+         char *nam = strtok_r(cp, "=", &pos);
+         char *val = strtok_r(NULL, "\n", &pos);
+         if (nam != NULL && val != NULL && strcasecmp(name[i].name, nam) == 0) {
+                DPRINTF(("nam = %s\n", nam));
+                DPRINTF(("val = %s\n", val));
+                sge_strlcpy(value[i], val, SGE_PATH_MAX);
+                is_found[i] = true;
+                if (name[i].is_required) {
+                  --nmissing; 
+                }
+                break;
+         }
+      }
+   }
+   if (nmissing != 0) {
+      for (i=0; i<n; i++) {
+         if (!is_found[i] && name[i].is_required) {
+            if (error_dstring == NULL){
+               CRITICAL((SGE_EVENT, MSG_UTI_CANNOTLOCATEATTRIBUTEMAN_SS, name[i].name, fname));
+            }
+            else {
+               sge_dstring_sprintf(error_dstring, MSG_UTI_CANNOTLOCATEATTRIBUTEMAN_SS, 
+                                   name[i].name, fname);
+            }
+            
+            break;
+         }
+      }
+   }
+   
+   FREE(is_found);
+   FCLOSE(fp);
+   DEXIT;
+   return nmissing;
+FCLOSE_ERROR:
+   DEXIT;
+   return 0;
+} /* sge_get_management_entry() */
+

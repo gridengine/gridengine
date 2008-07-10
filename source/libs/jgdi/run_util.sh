@@ -125,7 +125,7 @@ setup_env() {
                   ;;
       darwin-x86) SRC_ARCH=DARWIN_X86
                   JAVA_ARCH=""
-                  DEBUGGER=dbx
+                  DEBUGGER=gdb
                   ;;
            tru64) SRC_ARCH=ALPHA5
                   JAVA_ARCH=alpha

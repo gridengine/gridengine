@@ -29,7 +29,6 @@
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/
-
 package com.sun.grid.jgdi.util.shell.editor;
 
 import com.sun.grid.jgdi.JGDIException;
@@ -87,10 +86,10 @@ import java.util.Map;
  * jgdi.updateClusterQueue(geObj);</CODE>
  */
 public class GEObjectEditor {
-    
+
     private static final int ELEMENT_NAME = 10;
     private static final int ELEMENT_VALUE = 11;
-    
+
     /**
      * Updates GEObject based on the text. Text is parsed and if correct, object is updated.
      * Creates new objects where necessary, based on values provided in text, therefore
@@ -100,7 +99,7 @@ public class GEObjectEditor {
     public static <T extends GEObject> T updateObjectWithText(T obj, String text) {
         return doUpdate(null, obj, text);
     }
-    
+
     /**
      * Updates GEObject based on the text. Text is parsed and if correct, object is updated.
      * Retrives objects from Grid Engine where necessary.
@@ -112,7 +111,7 @@ public class GEObjectEditor {
         }
         return doUpdate(jgdi, obj, text);
     }
-    
+
     private static <T extends GEObject> T doUpdate(JGDI jgdi, T obj, String text) {
         PropertyDescriptor pd;
         Object key;
@@ -129,7 +128,7 @@ public class GEObjectEditor {
                     obj = (T) EditorParser.parseShareTreeText(text);
                 } else {
                     propertyMap = EditorParser.parsePlainText(obj, text, " ");
-                    for (Iterator iter=propertyMap.keySet().iterator(); iter.hasNext();) {
+                    for (Iterator iter = propertyMap.keySet().iterator(); iter.hasNext();) {
                         key = iter.next();
                         line = (String) propertyMap.get(key);
                         updatePropertyValue(jgdi, obj, key, line);
@@ -141,17 +140,17 @@ public class GEObjectEditor {
         }
         return obj;
     }
-    
+
     private static <T extends GEObject> void updatePropertyValue(JGDI jgdi, T obj, Object key, String values) throws JGDIException {
         if (key instanceof SimplePropertyDescriptor) {
-            updateSimpleProperty(jgdi, obj, (SimplePropertyDescriptor)key, values);
+            updateSimpleProperty(jgdi, obj, (SimplePropertyDescriptor) key, values);
         } else if (key instanceof DefaultListPropertyDescriptor) {
-            updateListProperty(jgdi, obj, (DefaultListPropertyDescriptor)key, values);
+            updateListProperty(jgdi, obj, (DefaultListPropertyDescriptor) key, values);
         } else if (key instanceof DefaultMapPropertyDescriptor) {
-            updateMapProperty(jgdi, obj, (DefaultMapPropertyDescriptor)key, values);
+            updateMapProperty(jgdi, obj, (DefaultMapPropertyDescriptor) key, values);
         } else if (key instanceof DefaultMapListPropertyDescriptor) {
-            updateMapListProperty(jgdi, obj, (DefaultMapListPropertyDescriptor)key, values);
-            //For CONFIGURATION objects
+            updateMapListProperty(jgdi, obj, (DefaultMapListPropertyDescriptor) key, values);
+        //For CONFIGURATION objects
         } else if (obj instanceof Configuration && key instanceof String) {
             Configuration c = (Configuration) obj;
             ConfigurationElement ce = new ConfigurationElementImpl();
@@ -163,11 +162,11 @@ public class GEObjectEditor {
             //Also if should be reworked to return correct error code (1).
             jgdi.updateConfiguration(c);
         } else {
-            new IllegalArgumentException("Unknown descriptor type=\""+key.getClass().getName()+
-                    "\" for object type "+obj.getClass().getName());
+            new IllegalArgumentException("Unknown descriptor type=\"" + key.getClass().getName() +
+                    "\" for object type " + obj.getClass().getName());
         }
     }
-    
+
     private static void updateSimpleProperty(JGDI jgdi, GEObject obj, SimplePropertyDescriptor pd, String value) {
         String type = pd.getPropertyType().getName();
         Object val = EditorUtil.getParsedValueAsObject(jgdi, pd.getPropertyName(), type, value);
@@ -176,7 +175,7 @@ public class GEObjectEditor {
         }
         pd.setValue(obj, val);
     }
-    
+
     private static void updateListProperty(JGDI jgdi, GEObject obj, DefaultListPropertyDescriptor pd, String values) {
         String type = pd.getPropertyType().getName();
         String[] elems = values.split(" ");
@@ -189,20 +188,20 @@ public class GEObjectEditor {
             }
         }
     }
-    
+
     private static void updateMapProperty(JGDI jgdi, GEObject obj, DefaultMapPropertyDescriptor pd, String values) {
         String attr = pd.getPropertyName();
-        String key, elem=null;
+        String key, elem = null;
         Object val;
-        String[] elems = values.substring(1,values.length()-1).split("] \\[");
-        
+        String[] elems = values.substring(1, values.length() - 1).split("] \\[");
+
         pd.removeAll(obj);
-        for (int i=0; i < elems.length; i++) {
+        for (int i = 0; i < elems.length; i++) {
             elem = elems[i];
             //Get a key for the map
             int keyEndPos = elem.indexOf('=');
             key = elem.substring(0, keyEndPos);
-            elem = elem.substring(keyEndPos+1, elem.length());
+            elem = elem.substring(keyEndPos + 1, elem.length());
             //ClusterQueue - QTYPE we already have the int value as String, so we don't convert
             if (attr.equalsIgnoreCase("qtype")) {
                 pd.put(obj, key, Integer.valueOf(elem));
@@ -214,16 +213,15 @@ public class GEObjectEditor {
             //TODO LP: Since we do pd.removeAll() this works as setting null value, but some GEObjects expect to have default value set to null!
             //LP: Temp fix for some objects
             String cls = obj.getClass().getSimpleName();
-            boolean putNullValue = (
-                  //cls.equals("ExecHost") || 
-                  cls.equals("ClusterQueueImpl") //calendar NONE => needs @/=null
-                  ) ? true : false;
+            boolean putNullValue = ( //cls.equals("ExecHost") || 
+                    cls.equals("ClusterQueueImpl") //calendar NONE => needs @/=null
+                    ) ? true : false;
             if (val != null || putNullValue) {
                 pd.put(obj, key, val);
             }
         }
     }
-    
+
     private static void updateOneMapListEntry(JGDI jgdi, GEObject obj, DefaultMapListPropertyDescriptor pd, String key, String elem) {
         String type = pd.getPropertyType().getName();
         String[] elems, subElems;
@@ -233,7 +231,7 @@ public class GEObjectEditor {
         //Get elements from the line
         elems = elem.split(" ");
         //Set new value for each of them
-        for (int i=0; i < elems.length; i++) {
+        for (int i = 0; i < elems.length; i++) {
             isCurrentElemMap = EditorParser.isMap(elems[i]);
             if (isCurrentElemMap) {
                 subElems = elems[i].split("=");
@@ -247,7 +245,7 @@ public class GEObjectEditor {
                     continue;
                 }
                 if (obj instanceof TestGEObject) {
-                    val = subElems[0]+"="+strVal; //TODO LP: Check the tests
+                    val = subElems[0] + "=" + strVal; //TODO LP: Check the tests
                 }
             } else {
                 name = elems[i];
@@ -270,44 +268,43 @@ public class GEObjectEditor {
             }
         }
     }
-    
+
     private static void updateMapListProperty(JGDI jgdi, GEObject obj, DefaultMapListPropertyDescriptor pd, String values) {
-        String key, elem=null;
-        String[] elems = values.substring(1,values.length()-1).split("] \\[");
-        
+        String key, elem = null;
+        String[] elems = values.substring(1, values.length() - 1).split("] \\[");
+
         pd.removeAll(obj);
-        for (int i=0; i < elems.length; i++) {
+        for (int i = 0; i < elems.length; i++) {
             elem = elems[i];
             //Get a key for the map
             int keyEndPos = elem.indexOf('=');
             key = elem.substring(0, keyEndPos);
-            elem = elem.substring(keyEndPos+1, elem.length());
+            elem = elem.substring(keyEndPos + 1, elem.length());
             updateOneMapListEntry(jgdi, obj, pd, key, elem);
         }
     }
-    
-    
+
     /**
      * Retrives all properties known to JGDI for specified GEObject as text. Each property on one line.
      */
     public static String getAllPropertiesAsText(GEObject obj) {
         return getPropertiesAsText(obj, EditorUtil.PROPERTIES_ALL);
     }
-    
+
     /**
      * Retrives configurable properties for specified GEObject as text. Each property on one line.
      */
     public static String getConfigurablePropertiesAsText(GEObject obj) {
         return getPropertiesAsText(obj, EditorUtil.PROPERTIES_CONFIGURABLE);
     }
-    
+
     /**
      * Retrives read-only properties for specified GEObject as text. Each property on one line.
      */
     public static String getReadOnlyPropertiesAsText(GEObject obj) {
         return getPropertiesAsText(obj, EditorUtil.PROPERTIES_READ_ONLY);
     }
-    
+
     public static String getPropertiesAsText(GEObject obj, int propScope) {
         Object o;
         int maxLen = 0;
@@ -320,46 +317,52 @@ public class GEObjectEditor {
             pd = (PropertyDescriptor) iter.next();
             subNames = getStretchedElementNames(obj, pd);
             if (subNames.size() > 0) {
-                for (Iterator it = subNames.iterator(); it.hasNext(); ) {
-                    maxLen = Math.max(maxLen, ((String)it.next()).length());
+                for (Iterator it = subNames.iterator(); it.hasNext();) {
+                    maxLen = Math.max(maxLen, ((String) it.next()).length());
                 }
             } else {
                 name = EditorUtil.java2cName(obj, pd.getPropertyName());
                 maxLen = Math.max(maxLen, name.length());
             }
         }
-        
+
         for (Iterator iter = getProperties(obj, propScope).iterator(); iter.hasNext();) {
             pd = (PropertyDescriptor) iter.next();
             subNames = getStretchedElementNames(obj, pd);
             if (subNames.size() > 0) {
                 subValues = getStretchedElementValues(obj, pd);
                 if (subNames.size() != subValues.size()) {
-                    throw new IllegalArgumentException("Unknown error: Expecting name x value lists of a same size! Got sizes "+subNames.size()+" and "+subValues.size());
+                    throw new IllegalArgumentException("Unknown error: Expecting name x value lists of a same size! Got sizes " + subNames.size() + " and " + subValues.size());
                 }
-                for (int j=0; j < subNames.size(); j++ ) {
+                for (int j = 0; j < subNames.size(); j++) {
                     name = (String) subNames.get(j);
-                    value = (String)subValues.get(j);
+                    value = (String) subValues.get(j);
                     sb.append(name);
-                    for (int i=name.length(); i<maxLen; i++) {
+                    for (int i = name.length(); i < maxLen; i++) {
                         sb.append(' ');
                     }
-                    sb.append("    "+value+"\n");
+                    sb.append("    " + value + "\n");
                 }
             } else {
                 name = EditorUtil.java2cName(obj, pd.getPropertyName());
                 value = EditorUtil.translateObjectToStringValue(pd.getPropertyName(), EditorUtil.getPropertyValue(obj, pd));
-                sb.append(name);
-                for (int i=name.length(); i<maxLen; i++) {
-                    sb.append(' ');
+                if (obj instanceof Configuration && name.equals("hostname")) {
+                    sb.append("#");
+                    sb.append(value);
+                    sb.append(":\n");
+                } else {
+                    sb.append(name);
+                    for (int i = name.length(); i < maxLen; i++) {
+                        sb.append(' ');
+                    }
+                    spaces = "    ";
+                    sb.append(spaces + value + "\n");
                 }
-                spaces = "    ";
-                sb.append(spaces+value+"\n");
             }
         }
         return sb.toString();
     }
-    
+
     public static String getPropertyAsText(GEObject obj, int propScope, String propName) throws JGDIException {
         Object o;
         int maxLen = 0;
@@ -369,7 +372,7 @@ public class GEObjectEditor {
         List subNames = null, subValues = null;
         PropertyDescriptor pd = getProperty(obj, propScope, propName);
         if (pd == null) {
-            throw new JGDIException("JGDI Error: Attribute \""+propName+"\" does not exits in "+obj.getName());
+            throw new JGDIException("JGDI Error: Attribute \"" + propName + "\" does not exits in " + obj.getName());
         }
         subNames = getStretchedElementNames(obj, pd);
         if (subNames.size() > 0) {
@@ -398,21 +401,22 @@ public class GEObjectEditor {
         }
         return sb.toString();
     }
-    
+
     private static List getStretchedElementNames(GEObject obj, PropertyDescriptor pd) {
         return getStretchedElementList(obj, pd, ELEMENT_NAME);
     }
+
     private static List getStretchedElementValues(GEObject obj, PropertyDescriptor pd) {
         return getStretchedElementList(obj, pd, ELEMENT_VALUE);
     }
-    
+
     private static List getStretchedElementList(GEObject obj, PropertyDescriptor pd, int type) {
         List list = new ArrayList();
         //CONFIGURATION
         if (obj instanceof Configuration) {
             String name = EditorUtil.java2cName(obj, pd.getPropertyName());
             if (name.equals("entries")) {
-                Iterator iter = ((Configuration)obj).getEntriesList().iterator();
+                Iterator iter = ((Configuration) obj).getEntriesList().iterator();
                 ConfigurationElement elem = null;
                 while (iter.hasNext()) {
                     elem = (ConfigurationElement) iter.next();
@@ -424,24 +428,26 @@ public class GEObjectEditor {
                             list.add(elem.getValue());
                             break;
                         default:
-                            throw new IllegalArgumentException("Invalid element type: "+type+"!");
+                            throw new IllegalArgumentException("Invalid element type: " + type + "!");
                     }
                 }
             }
         }
         return list;
     }
-    
+
     static List<PropertyDescriptor> getAllProperties(GEObject obj) {
         return getProperties(obj, EditorUtil.PROPERTIES_ALL);
     }
+
     static List getConfigurableProperties(GEObject obj) {
         return getProperties(obj, EditorUtil.PROPERTIES_CONFIGURABLE);
     }
+
     static List getReadOnlyProperties(GEObject obj) {
         return getProperties(obj, EditorUtil.PROPERTIES_READ_ONLY);
     }
-    
+
     static List getProperties(GEObject obj, int propScope) {
         List<PropertyDescriptor> propList = new ArrayList<PropertyDescriptor>();
         ClassDescriptor cd = Util.getDescriptor(obj.getClass());
@@ -455,7 +461,7 @@ public class GEObjectEditor {
         }
         return propList;
     }
-    
+
     static PropertyDescriptor getProperty(GEObject obj, int propScope, String name) {
         List<PropertyDescriptor> propList = new ArrayList<PropertyDescriptor>();
         ClassDescriptor cd = Util.getDescriptor(obj.getClass());
@@ -471,7 +477,7 @@ public class GEObjectEditor {
         }
         return null;
     }
-    
+
     static boolean isValidPropertyType(PropertyDescriptor pd, int propScope) {
         switch (propScope) {
             case EditorUtil.PROPERTIES_ALL:
@@ -484,7 +490,7 @@ public class GEObjectEditor {
                 throw new IllegalArgumentException("Invalid property scope specifier!");
         }
     }
-    
+
     public static void main(String[] args) {
         ClusterQueue geObject = new ClusterQueueImpl(true);
         System.out.println(GEObjectEditor.getConfigurablePropertiesAsText(geObject));

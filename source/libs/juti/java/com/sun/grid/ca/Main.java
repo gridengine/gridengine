@@ -76,6 +76,7 @@ import javax.security.auth.callback.UnsupportedCallbackException;
  *    -tmp &lt;dir&gt;              path tmp files (default system property java.io.tmp)
  *    -config &lt;dir&gt;           path to CA configuration files (default $cadist/util/sgeCA
  *    -adminuser &lt;user&gt;       name of the admin user (default system proeprty user.name)
+ *    -days &lt;days&gt;            number of days the certificates are valid (default 365 days)
  *
  * </pre>
  *
@@ -142,6 +143,17 @@ public class Main {
                 throw new GridCAException("-cahost option requires <host>");
             }
             config.setCaHost(args[index]);
+            return ++index;
+        } else if(args[index].equals("-days")) {
+            index++;
+            if(index >= args.length) {
+                throw new GridCAException("-days option requires <days>");
+            }
+            try {
+                config.setDaysValid(Integer.parseInt(args[index]));
+            } catch (NumberFormatException ne) {
+                throw new GridCAException("argument for -days must be an integer");
+            }   
             return ++index;
         } else {
             // Unknown option

@@ -1324,7 +1324,7 @@ static jgdi_result_t set_map_list(JNIEnv *env, jclass bean_class, jobject bean, 
    } else {
       DPRINTF(("Property %s has no cull wrapper\n", property_name));
    }
-   
+
    for_each(ep, lp) {
       lList  *sub_list = lGetPosList(ep, value_field_pos);
       lListElem *sub_ep = NULL;
@@ -3969,6 +3969,8 @@ void jgdi_delete_array(JNIEnv *env, jobject jgdi, jobjectArray obj_array, const 
          goto error;
       }
 
+      sge_gdi_set_thread_local_ctx(ctx);
+
       alp = ctx->gdi(ctx, target_list, SGE_GDI_DEL, &ref_list, NULL, NULL);
       lFreeList(&ref_list);
       
@@ -3987,6 +3989,7 @@ error:
       throw_error_from_answer_list(env, ret, alp);
    }
    lFreeList(&alp);
+   sge_gdi_set_thread_local_ctx(NULL);
    rmon_set_thread_ctx(NULL);
    jgdi_destroy_rmon_ctx(&rmon_ctx);
    
@@ -4180,6 +4183,8 @@ static void jgdi_kill(JNIEnv *env, jobject jgdi, lList* lp, int kill_target, job
    /* get context */
    ret = getGDIContext(env, jgdi, &ctx, &alp);
 
+   sge_gdi_set_thread_local_ctx(ctx);
+
    if (ret == JGDI_SUCCESS) {
       default_cell = ctx->get_default_cell(ctx);
       alp = ctx->kill(ctx, lp, default_cell, 0, kill_target);
@@ -4198,6 +4203,7 @@ static void jgdi_kill(JNIEnv *env, jobject jgdi, lList* lp, int kill_target, job
    }
 
    lFreeList(&alp);
+   sge_gdi_set_thread_local_ctx(NULL);
    rmon_set_thread_ctx(NULL);
    jgdi_destroy_rmon_ctx(&rmon_ctx);
 
@@ -4230,6 +4236,7 @@ static void jgdi_clearusage(JNIEnv *env, jobject jgdi, jobject answers)
    if ((ret = getGDIContext(env, jgdi, &ctx, &alp)) != JGDI_SUCCESS) {
       goto error;
    }
+   sge_gdi_set_thread_local_ctx(ctx);
 
    what = lWhat("%T(ALL)", STN_Type);
 
@@ -4295,6 +4302,7 @@ error:
    lFreeList(&alp);
    lFreeList(&lp);
    lFreeList(&lp2);
+   sge_gdi_set_thread_local_ctx(NULL);
    rmon_set_thread_ctx(NULL);
    jgdi_destroy_rmon_ctx(&rmon_ctx);
 
@@ -4446,6 +4454,7 @@ static void jgdi_qmod(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolea
       if (ret != JGDI_SUCCESS) {
          goto error;
       }
+      sge_gdi_set_thread_local_ctx(ctx);
 
       alp = ctx->gdi(ctx, SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, &ref_list, NULL, NULL);
       lFreeList(&ref_list);
@@ -4465,6 +4474,7 @@ error:
       throw_error_from_answer_list(env, ret, alp);
    }
    lFreeList(&alp);
+   sge_gdi_set_thread_local_ctx(NULL);
    rmon_set_thread_ctx(NULL);
    jgdi_destroy_rmon_ctx(&rmon_ctx);
    
@@ -4527,6 +4537,8 @@ static void jgdi_detached_settings(JNIEnv *env, jobject jgdi, jobjectArray obj_a
       goto error;
    }
    
+   sge_gdi_set_thread_local_ctx(ctx);
+
    /* HGRP */
    hgrp_what = lWhat("%T(ALL)", HGRP_Type);
    hgrp_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_HGROUP_LIST,
@@ -4538,8 +4550,8 @@ static void jgdi_detached_settings(JNIEnv *env, jobject jgdi, jobjectArray obj_a
    cq_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_SEND, SGE_CQUEUE_LIST,
                          SGE_GDI_GET, NULL, NULL, cqueue_what,
                          &state, true);
-   lFreeWhat(&cqueue_what);
    ctx->gdi_wait(ctx, &alp, &multi_answer_list, &state);
+   lFreeWhat(&cqueue_what);
 
    /* HGRP */
    sge_gdi_extract_answer(&local_answer_list, SGE_GDI_GET,
@@ -4600,6 +4612,7 @@ error:
    
    lFreeList(&alp);
    lFreeList(&lp);
+   sge_gdi_set_thread_local_ctx(NULL);
    rmon_set_thread_ctx(NULL);
    jgdi_destroy_rmon_ctx(&rmon_ctx);
 
@@ -4730,6 +4743,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeTriggerSche
       if (answer_list_has_error(&alp)) {
          ret = JGDI_ERROR;
       }
+      sge_gdi_set_thread_local_ctx(ctx);
 
       if (answers != NULL) {
          generic_fill_list(env, answers, "com/sun/grid/jgdi/configuration/JGDIAnswer", alp, NULL);
@@ -4743,6 +4757,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeTriggerSche
 
    lFreeList(&alp);
 
+   sge_gdi_set_thread_local_ctx(NULL);
    rmon_set_thread_ctx(NULL);
    jgdi_destroy_rmon_ctx(&rmon_ctx);
 
@@ -5115,6 +5130,7 @@ JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeGetSched
    if ((ret = getGDIContext(env, jgdi, &ctx, &alp)) != JGDI_SUCCESS) {
       goto error;
    }
+   sge_gdi_set_thread_local_ctx(ctx);
 
    what = lWhat("%T(%I)", EV_Type, EV_host);
    where = lWhere("%T(%I==%u))", EV_Type, EV_id, EV_ID_SCHEDD);
@@ -5147,6 +5163,7 @@ error:
 
    lFreeList(&alp);
    lFreeList(&lp);
+   sge_gdi_set_thread_local_ctx(NULL);
 
    DRETURN(jschedd_host);
 }

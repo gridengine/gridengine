@@ -46,6 +46,8 @@ public class TestConfiguration {
     private File calocaltop;
     private File cascript;
     private String adminUser;
+    private Integer daysValid;
+    
     private Properties props = new Properties();
     
     private static TestConfiguration theInstance;
@@ -135,7 +137,18 @@ public class TestConfiguration {
         }
         return adminUser;
     }
-    
+
+    public int getDaysValid() {
+        if (daysValid == null) {
+            if ( props.getProperty("daysValid") == null) {
+               daysValid = new Integer(365);
+            } else {
+               daysValid = new Integer(props.getProperty("daysValid"));
+            }
+        }
+        return daysValid.intValue();
+    }
+
     public String getTestUser() {
         return props.getProperty("testuser");
     }

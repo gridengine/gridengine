@@ -38,27 +38,27 @@ import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
-import java.util.Date;
 import junit.framework.*;
 
 /**
  *
  */
 public class GridCATest extends TestCase {
-    
+
     private File baseDir;
     private File catop;
     private File calocaltop;
     private GridCA ca;
-    
+    private TestConfiguration testConfig;
+
     /** Creates a new instance of GridCATest */
     public GridCATest(String name) {
         super(name);
     }
-    
+
     protected void setUp() throws Exception {
         super.setUp();
-        if(!SGEUtil.isWindows()) {
+        if (!SGEUtil.isWindows()) {
             File tmpDir = new File(System.getProperty("java.io.tmpdir"));
 
             baseDir = new File(tmpDir, System.getProperty("user.name") + "_" + System.currentTimeMillis());
@@ -70,7 +70,7 @@ public class GridCATest extends TestCase {
             catop.mkdir();
             calocaltop.mkdir();
 
-            TestConfiguration testConfig = TestConfiguration.getInstance();
+            testConfig = TestConfiguration.getInstance();
 
 
             GridCAConfiguration config = new GridCAConfiguration();
@@ -80,23 +80,22 @@ public class GridCATest extends TestCase {
             config.setSgeCaScript(testConfig.getCaScript());
             config.setCaHost("localhost");
             config.setAdminUser(testConfig.getAdminUser());
+            config.setDaysValid(testConfig.getDaysValid());
             config.validate();
 
             ca = GridCAFactory.newInstance(config);
         }
     }
-    
+
     protected void tearDown() throws Exception {
-        if(!SGEUtil.isWindows()) {
+        if (!SGEUtil.isWindows()) {
             Runtime.getRuntime().exec("chmod -R u+w " + baseDir.getAbsolutePath());
             Runtime.getRuntime().exec("rm -rf " + baseDir.getAbsolutePath());
         }
     }
-    
-    
-    
+
     private void initCA() throws Exception {
-        if(!SGEUtil.isWindows()) {
+        if (!SGEUtil.isWindows()) {
             InitCAParameters params = new InitCAParameters();
             params.setCountry("de");
             params.setState("Bayern");
@@ -106,10 +105,22 @@ public class GridCATest extends TestCase {
             params.setAdminEmailAddress("admin@blubber");
             ca.init(params);
         }
-    } 
-    
+    }
+
+    public void testValid() throws Exception {
+        if (!SGEUtil.isWindows()) {
+            initCA();
+            X509Certificate cert = ca.getCertificate(testConfig.getAdminUser());
+            Calendar cal = Calendar.getInstance();
+            int days = testConfig.getDaysValid();
+            cal.add(Calendar.DAY_OF_YEAR, days + 1);
+            assertTrue(cal.getTimeInMillis() > cert.getNotAfter().getTime());
+        }
+
+    }
+
     public void testUser() throws Exception {
-        if(!SGEUtil.isWindows()) {
+        if (!SGEUtil.isWindows()) {
             String username = "test";
             initCA();
 
@@ -117,10 +128,10 @@ public class GridCATest extends TestCase {
 
             X509Certificate cert = ca.getCertificate(username);
 
-            char [] pw = "changeit".toCharArray();
+            char[] pw = "changeit".toCharArray();
             KeyStore ks = ca.createKeyStore("test", pw, pw);
 
-            Certificate [] chain =  ks.getCertificateChain(username);
+            Certificate[] chain = ks.getCertificateChain(username);
 
             assertNotNull("certificate chain for user " + username + " not found", chain);
 
@@ -128,16 +139,16 @@ public class GridCATest extends TestCase {
             int days = 10;
             ca.renewCertificate(username, days);
 
-            X509Certificate renewedCert =  ca.getCertificate(username);
+            X509Certificate renewedCert = ca.getCertificate(username);
             assertNotNull("renewed certificate chain for user " + username + " not found", renewedCert);
 
             cal.add(Calendar.DAY_OF_YEAR, days + 1);
-            assertTrue( cal.getTimeInMillis() > renewedCert.getNotAfter().getTime());
+            assertTrue(cal.getTimeInMillis() > renewedCert.getNotAfter().getTime());
         }
     }
-    
+
     public void testDaemon() throws Exception {
-        if(!SGEUtil.isWindows()) {
+        if (!SGEUtil.isWindows()) {
             String daemon = "test";
             String user = System.getProperty("user.name");
             initCA();
@@ -146,11 +157,11 @@ public class GridCATest extends TestCase {
 
             X509Certificate cert = ca.getDaemonCertificate("test");
 
-            char [] pw = "changeit".toCharArray();
+            char[] pw = "changeit".toCharArray();
             KeyStore ks = ca.createDaemonKeyStore(daemon);
 
 
-            Certificate [] chain =  ks.getCertificateChain(daemon);
+            Certificate[] chain = ks.getCertificateChain(daemon);
 
             assertNotNull("certificate chain for daemon " + daemon + " not found is keystore", chain);
 
@@ -158,13 +169,11 @@ public class GridCATest extends TestCase {
             int days = 10;
             ca.renewDaemonCertificate(daemon, days);
 
-            X509Certificate renewedCert =  ca.getDaemonCertificate(daemon);
+            X509Certificate renewedCert = ca.getDaemonCertificate(daemon);
             assertNotNull("renewed certificate chain for daemon " + daemon + " not found", renewedCert);
 
             cal.add(Calendar.DAY_OF_YEAR, days + 1);
-            assertTrue( cal.getTimeInMillis() > renewedCert.getNotAfter().getTime());
+            assertTrue(cal.getTimeInMillis() > renewedCert.getNotAfter().getTime());
         }
     }
-
-    
 }

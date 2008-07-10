@@ -847,10 +847,7 @@ MakeUserKeystore()
 #
 MakeSysKeystore()
 {
-   if [ "$ksoutfile" = "" ]; then
-      ksoutfile_saved=$ksoutfile
-   fi
-
+   ret=0
    remove_kspwfile=false
    if [ "$kspwfile" = "" ]; then
       touch /tmp/tmp.$$
@@ -859,16 +856,31 @@ MakeSysKeystore()
    fi   
    certfile=$CATOP/certs/cert.pem
    if [ -r $certfile ]; then 
-      ksoutfile=$CALOCALTOP/private/keystore
+      if [ "$ksoutfile" = "" ]; then
+         ksoutfile=$CALOCALTOP/private/keystore
+      fi   
+      ksoutdir=`dirname $ksoutfile`
+      if [ ! -d "$ksoutdir" ]; then
+         PrintError "keystore directory does not exist: $ksoutdir"
+         if [ "$remove_kspwfile" = "true" ]; then
+            rm $kspwfile
+            kspwfile=""
+         fi
+         return 1
+      fi   
       ExecuteAsAdmin touch $ksoutfile
       ExecuteAsAdmin chmod 600 $ksoutfile
       MakeKeystore sge_daemon "SGEDaemon"
+      ret=$?
+   else 
+      PrintError "no certificate file"
+      ret=1
    fi
    if [ "$remove_kspwfile" = "true" ]; then
       rm $kspwfile
       kspwfile=""
    fi
-   ksoutfile=$ksoutfile_saved
+   return $ret
 }
 
 
@@ -910,7 +922,12 @@ MakeKeystore()
    JVM_ARGS="-cp $ROOT_PATH/lib/juti.jar"
    JVM_ARGS="$JVM_ARGS -Djava.util.logging.config.file=$ROOT_PATH/util/sgeCA/logging.properties"
 
-   $JAVA $JVM_ARGS com.sun.grid.ca.Main $CA_ARGS 
+   OUTPUT=`$JAVA $JVM_ARGS com.sun.grid.ca.Main $CA_ARGS 2>&1`
+   if [ $? != 0 ]; then
+      PrintError "initks failed: $OUTPUT"
+      return 1
+   fi   
+      
 }
 
 #--------------------------------------------------------------------------
@@ -2146,6 +2163,9 @@ userks)
     ;;
 sysks) 
     MakeSysKeystore
+    if [ $? != 0 ]; then
+       exit 1
+    fi
     ;;
 oneuser)
     MakeUserCert user "$user"

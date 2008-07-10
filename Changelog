@@ -1,3 +1,9 @@
+JG-2008-07-10-0: Bugfix:    Error message of qalter -q "" <job_id> suggests
+                            memory corruption.
+                 Bugster:   6704393
+                 Issue:     2575
+                 Review:    MD
+
 ZG-2008-07-10-0: Bugfix:    Default is the local spool directory when 
                             install_execd is running on a Windows host
                  Bugfix:    Improved text at "Execd spool directory configuration"

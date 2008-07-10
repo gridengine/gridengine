@@ -1019,7 +1019,7 @@ u_long32 flags
 
          if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
             answer_list_add_sprintf(&answer, STATUS_EEXIST, ANSWER_QUALITY_WARNING,
-               MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S, *sp);
+                  MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S, *sp);
          }
 
          /* next field is name */
@@ -2346,37 +2346,33 @@ char *dest_str
 
    DENTER(TOP_LAYER, "cull_parse_destination_identifier_list");
 
-   if (!lpp) {
-      DEXIT;
-      return 1;
+   if (lpp == NULL) {
+      DRETURN(1);
    }
 
    s = sge_strdup(NULL, dest_str);
-   if (!s) {
+   if (s == NULL) {
       *lpp = NULL;
-      DEXIT;
-      return 3;
+      DRETURN(3);
    }
+
    str_str = string_list(s, ",", NULL);
-   if (!str_str || !*str_str) {
+   if (str_str == NULL || *str_str == NULL) {
       *lpp = NULL;
       FREE(s);
-      DEXIT;
-      return 2;
+      DRETURN(2);
    }
 
    i_ret = cull_parse_string_list(str_str, "destin_ident_list", QR_Type, rule, lpp);
    if (i_ret) {
       FREE(s);
       FREE(str_str);
-      DEXIT;
-      return 3;
+      DRETURN(3);
    }
 
    FREE(s);
    FREE(str_str);
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /***************************************************************************/

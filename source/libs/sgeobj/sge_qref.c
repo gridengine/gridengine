@@ -418,7 +418,7 @@ qref_list_resolve(const lList *src_qref_list, lList **answer_list,
 *  INPUTS
 *     const char *qref_pattern - a wildcard pattern as defined for -q qref_list
 *     const char *cqname       - cluster queue name
-*     const char *hostname     - exeuction hostname (may be NULL)
+*     const char *hostname     - execution hostname (may be NULL)
 *     const lList *hgroup_list - host group list
 *
 *  RESULT
@@ -794,7 +794,7 @@ qref_list_is_valid(const lList *this_list, lList **answer_list)
             lFreeList(&qref_list);
             lFreeList(&resolved_qref_list);
             if (!found_matching_qinstance) {
-               ERROR((SGE_EVENT, MSG_QREF_QUNKNOWN_S, qref_pattern));
+               ERROR((SGE_EVENT, MSG_QREF_QUNKNOWN_S, qref_pattern == NULL ? "" : qref_pattern));
                answer_list_add(answer_list, SGE_EVENT,
                                STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                ret = false;
@@ -807,8 +807,7 @@ qref_list_is_valid(const lList *this_list, lList **answer_list)
          ret = false;
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 void

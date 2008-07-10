@@ -1,3 +1,11 @@
+ZG-2008-07-10-0: Bugfix:    Default is the local spool directory when 
+                            install_execd is running on a Windows host
+                 Bugfix:    Improved text at "Execd spool directory configuration"
+                            at execd installation
+                 Bugster:   6589820
+                 Issue:     2634
+                 Review:    LP
+
 CR-2008-07-09-0: Bugfix:    Segmentation fault of sge_schedd
                  Bugster:   6713722
                  Issue:     2609

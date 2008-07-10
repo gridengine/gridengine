@@ -1,3 +1,11 @@
+ZG-2008-07-10-0: Bugfix:    Default is the local spool directory when 
+                            install_execd is running on a Windows host
+                 Bugfix:    Improved text at "Execd spool directory configuration"
+                            at execd installation
+                 Bugster:   6589820
+                 Issue:     2634
+                 Review:    LP
+
 LP-2008-07-09-0: Enhancem:  Improved upgrade mode detection
                  Cleanup:   Renamed LP-2008-07-07 to LP-2008-07-07-0
                  Bugfix:    ServiceAlreadyExists error on non-smf hosts

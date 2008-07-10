@@ -789,8 +789,7 @@ unsigned long flags
          }
          if (fp) {
             cb = fprintf(fp, "%s", pdelis[2]);
-         }
-         else {
+         } else {
             cb = strlen(pdelis[2]);
             sprintf(buff, "%s", pdelis[2]);
          }
@@ -1198,7 +1197,7 @@ int soft_field
    hard_list = lCopyList("job_hard_sublist", lGetList(job, hard_field));
    if (soft_field) {
       soft_list = lCopyList("job_soft_sublist", lGetList(job, soft_field));
-   }   
+   }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, option))) {
       lp = NULL;
@@ -1207,30 +1206,26 @@ int soft_field
          if (!soft_field || lGetInt(ep, SPA_argval_lIntT) < 2) {
             if (!hard_list) {
                hard_list = lp;
-            }   
-            else {
+            } else {
                lAddList(hard_list, &lp);
-            }   
-         }
-         else {
+            }
+         } else {
             if (!soft_list) {
-                  soft_list = lp;
-            }      
-            else {
+               soft_list = lp;
+            } else {
                lAddList(soft_list, &lp);
-            }   
+            }
          }
       }
       lRemoveElem(cmdline, &ep);
-    }
+   }
 
-    lSetList(job, hard_field, hard_list);
-    if (soft_field) {
+   lSetList(job, hard_field, hard_list);
+   if (soft_field) {
       lSetList(job, soft_field, soft_list);
-    }  
+   }
 
-    DEXIT;
-    return 0;
+   DRETURN(0);
 }
 
 int parse_list_simple(

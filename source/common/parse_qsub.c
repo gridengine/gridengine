@@ -514,7 +514,6 @@ u_long32 flags
              DRETURN(answer);
          }
 
-        
          DPRINTF(("\"-i %s\"\n", *sp));
 
          i_ret = cull_parse_path_list(&path_list, *sp);
@@ -1071,7 +1070,7 @@ DTRACE;
          DPRINTF(("\"-q %s\"\n", *sp));
          i_ret = cull_parse_destination_identifier_list(&id_list, *sp);
          if (i_ret) {
-             answer_list_add_sprintf(&answer,STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+             answer_list_add_sprintf(&answer, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
                     MSG_PARSE_WRONGDESTIDLISTFORMATXSPECTOQOPTION_S, *sp);
              DRETURN(answer);
          }
@@ -2056,7 +2055,7 @@ static int var_list_parse_from_environment(lList **lpp, char **envp)
       char *env_description;
       char *env_entry;
       lListElem *ep;
-      struct saved_vars_s *context;
+      struct saved_vars_s *context = NULL;
 
       ep = lCreateElem(VA_Type);
       lAppendElem(*lpp, ep);
@@ -2064,7 +2063,6 @@ static int var_list_parse_from_environment(lList **lpp, char **envp)
       env_entry = sge_strdup(NULL, *envp);
       SGE_ASSERT((env_entry));
 
-      context = NULL;
       env_name = sge_strtok_r(env_entry, "=", &context);
       SGE_ASSERT((env_name));
       lSetString(ep, VA_variable, env_name);
@@ -2074,7 +2072,6 @@ static int var_list_parse_from_environment(lList **lpp, char **envp)
          lSetString(ep, VA_value, env_description);
       FREE(env_entry);
       sge_free_saved_vars(context);
-
    }
 
    DEXIT;
@@ -2094,37 +2091,33 @@ char *dest_str
 
    DENTER(TOP_LAYER, "cull_parse_destination_identifier_list");
 
-   if (!lpp) {
-      DEXIT;
-      return 1;
+   if (lpp == NULL) {
+      DRETURN(1);
    }
 
    s = sge_strdup(NULL, dest_str);
-   if (!s) {
+   if (s == NULL) {
       *lpp = NULL;
-      DEXIT;
-      return 3;
+      DRETURN(3);
    }
+
    str_str = string_list(s, ",", NULL);
-   if (!str_str || !*str_str) {
+   if (str_str == NULL || *str_str == NULL) {
       *lpp = NULL;
       FREE(s);
-      DEXIT;
-      return 2;
+      DRETURN(2);
    }
 
    i_ret = cull_parse_string_list(str_str, "destin_ident_list", QR_Type, rule, lpp);
    if (i_ret) {
       FREE(s);
       FREE(str_str);
-      DEXIT;
-      return 3;
+      DRETURN(3);
    }
 
    FREE(s);
    FREE(str_str);
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /***************************************************************************/

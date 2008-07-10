@@ -152,8 +152,7 @@ qref_list_resolve_qinstance_names(const lList *cq_qref_list,
       }
       lFreeList(&qi_ref_list);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 static bool
@@ -400,8 +399,7 @@ qref_list_resolve(const lList *src_qref_list, lList **answer_list,
 
    sge_dstring_free(&host_or_hgroup);
    sge_dstring_free(&cqueue_name);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sge_qref/qref_cq_rejected() ********************************************
@@ -620,7 +618,7 @@ qref_list_host_rejected(const char *href, const char *hostname, const lList *hgr
       }
    } else { /* wc_host */
       /* use hostgroup expression */
-      if( sge_eval_expression(TYPE_HOST, href, hostname, NULL)==0) {
+      if (sge_eval_expression(TYPE_HOST, href, hostname, NULL)==0) {
             DEXIT;
             return false;
       }
@@ -769,7 +767,7 @@ qref_list_is_valid(const lList *this_list, lList **answer_list)
          /*
           * At least one qinstance has to exist for each pattern
           */
-         for_each (qref_elem, this_list) {
+         for_each(qref_elem, this_list) {
             bool found_something = false;
             bool found_matching_qinstance = false;
             const char *qref_pattern = NULL;
@@ -796,7 +794,7 @@ qref_list_is_valid(const lList *this_list, lList **answer_list)
             lFreeList(&qref_list);
             lFreeList(&resolved_qref_list);
             if (!found_matching_qinstance) {
-               ERROR((SGE_EVENT, MSG_QREF_QUNKNOWN_S, qref_pattern));
+               ERROR((SGE_EVENT, MSG_QREF_QUNKNOWN_S, qref_pattern == NULL ? "" : qref_pattern));
                answer_list_add(answer_list, SGE_EVENT,
                                STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                ret = false;
@@ -809,8 +807,7 @@ qref_list_is_valid(const lList *this_list, lList **answer_list)
          ret = false;
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 void

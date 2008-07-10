@@ -1316,13 +1316,16 @@ char **string_list(char *str, char *delis, char **pstr)
 
    DENTER(BASIS_LAYER, "string_list");
 
-   if (!str) {
+   if (str == NULL) {
       DRETURN(NULL);
    }
 
-   while (strchr(delis, str[0])) {
+   /* skip heading delimiters */
+   while (str[0] != '\0' && strchr(delis, str[0]) != NULL) {
       str++;
    }
+
+   /* at str end: str either was an empty string or only contained delimiters */
    if (str[0] == '\0') {
       DRETURN(NULL);
    }
@@ -1330,13 +1333,12 @@ char **string_list(char *str, char *delis, char **pstr)
    /*
     * not more items than length of string is possible
     */
-   if (!pstr) {
+   if (pstr == NULL) {
       head = malloc((sizeof(void *)) * (strlen(str) + 1));
-      if (!head) {
+      if (head == NULL) {
          DRETURN(NULL);
       }
-   }
-   else {
+   } else {
       head = pstr;
    }
 
@@ -1361,8 +1363,7 @@ char **string_list(char *str, char *delis, char **pstr)
       while ((str[i] != '\0') && !is_space) {
          if ((found_first_quote == 0) && (str[i] == '"')) {
             found_first_quote = 2;
-         }
-         else if ((found_first_quote == 0) && (str[i] == '\'')) {
+         } else if ((found_first_quote == 0) && (str[i] == '\'')) {
             found_first_quote = 1;
          }
 

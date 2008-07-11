@@ -1,3 +1,8 @@
+JA-2008-07-11-0: Bugfix:    Tasks held with array dependency may get deleted prematurely
+                 Bugster:   6723951
+                 Issue:     2628
+                 Review:    AH
+
 AA-2008-07-10-0: Bugfix:    - install_qmaster -jmx fails if non default keystore path is used
                             - jmx keystore property is wrong for non default keystore location
                             - use LinkedHashMap to keep sort order

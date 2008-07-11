@@ -1748,6 +1748,24 @@ int sub_command
             }
          }
 
+         if (trigger & RECHAIN_JA_AD_HOLD) {
+            lListElem *suc_jobep, *jid;
+            for_each(jid, lGetList(jobep, JB_ja_ad_predecessor_list)) {
+               u_long32 pre_ident = lGetUlong(jid, JRE_job_number);
+
+               DPRINTF((" JOB #"sge_u32": P: "sge_u32"\n", jobid, pre_ident)); 
+
+               if ((suc_jobep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), pre_ident))) {
+                  lListElem *temp_job = NULL;
+   
+                  temp_job = lGetElemUlong(lGetList(suc_jobep, JB_ja_ad_successor_list), JRE_job_number, jobid);               
+                  DPRINTF(("  JOB "sge_u32" removed from trigger "
+                     "list of job "sge_u32"\n", jobid, pre_ident));
+                  lRemoveElem(lGetList(suc_jobep, JB_ja_ad_successor_list), &temp_job);
+               } 
+            }
+         }
+
          /* write data back into job list  */
          {
             lListElem *prev = lPrev(jobep);
@@ -1759,6 +1777,8 @@ int sub_command
          /* no need to spool these mods */
          if (trigger & RECHAIN_JID_HOLD) 
             job_suc_pre(new_job);
+         if (trigger & RECHAIN_JA_AD_HOLD) 
+            job_suc_pre_ad(new_job);
 
          INFO((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSUS, ruser, 
                rhost, sge_u32c(jobid), MSG_JOB_JOB));
@@ -1835,6 +1855,7 @@ lListElem *jep
          if (lGetList(parent_jep, JB_ja_n_h_ids) != NULL ||
              lGetList(parent_jep, JB_ja_u_h_ids) != NULL ||
              lGetList(parent_jep, JB_ja_o_h_ids) != NULL ||
+             lGetList(parent_jep, JB_ja_a_h_ids) != NULL ||
              lGetList(parent_jep, JB_ja_s_h_ids) != NULL) {
             Exited = 0;
          }

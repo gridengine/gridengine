@@ -289,7 +289,7 @@ u_long32 job_get_ja_task_hold_state(const lListElem *job,
 *     has to be called to free allocated memory.
 *
 *  INPUTS
-*     const lListElem *job   - JB_Type 
+*     const lListElem *job    - JB_Type 
 *     lList *id_list[16]      - NULL initialized pointer array 
 *     u_long32 hold_state[16] - Array for hold state combinations 
 *
@@ -431,7 +431,7 @@ void job_create_hold_id_lists(const lListElem *job, lList *id_list[16],
 *
 *  SYNOPSIS
 *     void job_destroy_hold_id_lists(const lListElem *job, 
-*                                    lList *id_list[8]) 
+*                                    lList *id_list[16]) 
 *
 *  FUNCTION
 *     This function frees all memory allocated by a previous call of 
@@ -439,7 +439,7 @@ void job_create_hold_id_lists(const lListElem *job, lList *id_list[16],
 *
 *  INPUTS
 *     const lListElem *job - JB_Type 
-*     lList *id_list[8]    - array of RN_Type lists
+*     lList *id_list[16]   - array of RN_Type lists
 *
 *  SEE ALSO
 *     sgeobj/job/job_create_hold_id_lists 
@@ -599,7 +599,7 @@ u_long32 job_get_not_enrolled_ja_tasks(const lListElem *job)
                                   lGetList(job, JB_ja_a_h_ids));
 
    ret += range_list_get_number_of_ids(lGetList(job, JB_ja_n_h_ids));
-   ret += range_list_get_number_of_ids(uos_ids);
+   ret += range_list_get_number_of_ids(uosa_ids);
 
    lFreeList(&uosa_ids);
    lFreeList(&uos_ids);
@@ -1865,7 +1865,7 @@ void job_set_env_string(lListElem *job, const char* variable, const char* value)
 *  FUNCTION
 *     Test following elements of "job" whether they are correct:
 *        JB_ja_structure, JB_ja_n_h_ids, JB_ja_u_h_ids, 
-*        JB_ja_s_h_ids, JB_ja_o_h_ids, JB_ja_z_ids
+*        JB_ja_s_h_ids, JB_ja_o_h_ids, JB_ja_a_h_ids, JB_ja_z_ids
 *     The function will try to correct errors within this lists. If
 *     this is not possible an error will be returned in "answer_list".
 *      
@@ -1890,6 +1890,7 @@ void job_check_correct_id_sublists(lListElem *job, lList **answer_list)
          JB_ja_u_h_ids,
          JB_ja_s_h_ids,
          JB_ja_o_h_ids,
+         JB_ja_a_h_ids,
          JB_ja_z_ids,
          -1
       };

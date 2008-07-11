@@ -110,7 +110,7 @@
 #define MSG_GDI_UNABLE_TO_CONNECT_SUS                    _MESSAGE(43119, _("unable to contact "SFN" using port "sge_U32CFormat" on host "SFQ))
 #define MSG_GDI_GETGRGIDXFAILEDERRORX_U                  _MESSAGE(43120, _("unable to resolve group name for group ID, "sge_U32CFormat))
 #define MSG_GDI_SENDINGGDIREQUESTFAILED                  _MESSAGE(43121, _("failed sending gdi request"))
-#define MSG_GDI_RECEIVEGDIREQUESTFAILED                  _MESSAGE(43122, _("failed receiving gdi request"))
+#define MSG_GDI_RECEIVEGDIREQUESTFAILED_US               _MESSAGE(43122, _("failed receiving gdi request response for mid="sge_U32CFormat" ("SFN")."))
 #define MSG_GDI_REQUESTFORMATERROR                       _MESSAGE(43124, _("format error while packing gdi request"))
 #define MSG_GDI_UNEXPECTEDERRORWHILEPACKINGGDIREQUEST    _MESSAGE(43125, _("unexpected error while packing gdi request"))
 #define MSG_GDI_ERRORUNPACKINGGDIREQUEST_S               _MESSAGE(43126, _("error unpacking gdi request: "SFN))

@@ -61,8 +61,8 @@ sge_initialize_persistence(sge_gdi_ctx_class_t *ctx, lList **answer_list)
 
    DENTER(TOP_LAYER, "sge_initialize_persistence");
 
-   if (getenv("SGE_TEST_SPOOLING_WAIT_TIME_US") != NULL) {
-         spooling_wait_time=atoi(getenv("SGE_TEST_SPOOLING_WAIT_TIME_US"));
+   if (getenv("SGE_TEST_SPOOLING_WAIT_TIME") != NULL) {
+         spooling_wait_time=atoi(getenv("SGE_TEST_SPOOLING_WAIT_TIME"));
    }
 
    /* create spooling context */
@@ -243,12 +243,28 @@ sge_event_spool(sge_gdi_ctx_class_t *ctx,
    /*for testing a fixed gid_error, this has been introduced. We need it to slowdown*/
    /*the spooling mechanism, to simulate the situation where this error appears*/ 
    if (spooling_wait_time != 0) {
-      static unsigned long sleep_time = 0;
-      if (sleep_time == 0) {
-         sleep_time = spooling_wait_time;
-      }
-      usleep(sleep_time);
-      sleep_time = sleep_time + 100000;
+      unsigned long sleep_time = spooling_wait_time;
+      bool do_sleep = false;
+      do {
+         /* 
+          * find out if there is a qping -dump client connected to qmaster
+          */         
+         cl_com_handle_t* handle = cl_com_get_handle("qmaster",1);
+         if (handle != NULL) {
+            if (handle->debug_client_setup != NULL) {
+               if (handle->debug_client_setup->dc_mode != CL_DEBUG_CLIENT_OFF) {
+                  do_sleep = true;
+               } else {
+                  do_sleep = false;
+               }
+            }
+         }
+
+         if (do_sleep == true) {
+            usleep(1000000);
+            sleep_time--;
+         }
+      } while (sleep_time > 0 && do_sleep == true);
    }
 
    switch (event) {

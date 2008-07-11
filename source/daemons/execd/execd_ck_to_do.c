@@ -549,31 +549,14 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx)
    }
 
    /* handle shutdown */
-   switch (shut_me_down) {
-      case 1:
-         return_value = 1; /* tell dispatcher to finish server */
-         break;
-      case 0:
-         return_value = 0;
-         break;
-      default:
-         /* if shut_me_down == 2 we wait one "dispatch epoche"
-            and we hope that all the killed jobs are reaped 
-            reaped jobs will be reported to qmaster 
-            since sge_get_flush_flag() is set in this case
-         */
-         if (lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_JOB))) == 0) { /* no need to delay shutdown */
-            return_value = 1;
-         } else {
-            DPRINTF(("DELAYED SHUTDOWN\n"));
-            shut_me_down--;
-            return_value = 0;
-         }
-   }
+   return_value = shut_me_down;
+
+   /* TODO: Why not check shut_me_down in dispatcher - and remove this terminate loop from dispatcher */
 
    if (return_value == 0 && was_communication_error != CL_RETVAL_OK) {
       DPRINTF(("was_communication_error is %s\n", cl_get_error_text(was_communication_error)));
       return_value = 1;  /* leave dispatcher */
+      /* TODO: check if we really must leave dispatcher when a commlib error occurs !!!*/
    }
 
    DRETURN(return_value);

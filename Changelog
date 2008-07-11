@@ -1,3 +1,7 @@
+CR-2008-07-11-0: Bugfix:    - Merged from V61_BRANCH: CR-2008-07-09-0
+                            - Execd Cleanup  
+                 Review:    MD
+
 HP-2008-07-11-0: Bugfix:    Added workaround to set missing resource limits
                  Bugster:   6722507, 6533487
                  Issue:     2370  

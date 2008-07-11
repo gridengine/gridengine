@@ -67,12 +67,12 @@
 #   include "sge_smf.h"
 #endif
 
-int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx, char* err_str, void (*errfunc)(const char *))
+int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx)
 {
    monitoring_t monitor;
    bool terminate = false;
    bool do_reconnect = false;
-   int ret = CL_RETVAL_OK;
+   int ret = CL_RETVAL_UNKNOWN;
 
    DENTER(TOP_LAYER, "sge_execd_process_messages");
 
@@ -151,6 +151,18 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx, char* err_str, void (*e
             clear_packbuffer(&apb);
          }
       } else {
+         switch (ret) {
+            case CL_RETVAL_CONNECTION_NOT_FOUND:  /* we lost connection to qmaster */
+            case CL_RETVAL_CONNECT_ERROR:         /* or we can't connect */
+               do_reconnect = true;
+               break;
+            case CL_RETVAL_NO_MESSAGE:
+            case CL_RETVAL_SYNC_RECEIVE_TIMEOUT:
+               break;
+            default:
+               do_reconnect = true;
+               break;
+         }  
          cl_commlib_trigger(ctx->get_com_handle(ctx), 1);
       }
 
@@ -193,13 +205,9 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx, char* err_str, void (*e
 
       /* do cyclic stuff */
       if (!terminate) {
-         int check_to_do_ret = do_ck_to_do(ctx);
-
-         if (check_to_do_ret == 1) {
+         if (do_ck_to_do(ctx) == 1) {
             terminate = true;
             ret = CL_RETVAL_OK;
-         } else if (check_to_do_ret == -1) {
-            do_reconnect = true;
          }
       }
    }

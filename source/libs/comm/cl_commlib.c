@@ -302,7 +302,7 @@ int cl_com_set_status_func(cl_app_status_func_t status_func) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_get_parameter_list_value()"
-int cl_com_get_parameter_list_value(char* parameter, char** value) {
+int cl_com_get_parameter_list_value(const char* parameter, char** value) {
    cl_parameter_list_elem_t* elem = NULL;
    int retval = CL_RETVAL_UNKNOWN_PARAMETER;
 
@@ -353,7 +353,7 @@ int cl_com_get_parameter_list_string(char** param_string) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_set_parameter_list_value()"
-int cl_com_set_parameter_list_value(char* parameter, char* value) {
+int cl_com_set_parameter_list_value(const char* parameter, char* value) {
    cl_parameter_list_elem_t* elem = NULL;
    int retval = CL_RETVAL_UNKNOWN_PARAMETER;
 
@@ -393,7 +393,7 @@ int cl_com_set_parameter_list_value(char* parameter, char* value) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_remove_parameter_list_value()"
-int cl_com_remove_parameter_list_value(char* parameter) {
+int cl_com_remove_parameter_list_value(const char* parameter) {
    int retval = CL_RETVAL_OK;
    pthread_mutex_lock(&cl_com_parameter_list_mutex);
    retval = cl_parameter_list_remove_parameter(cl_com_parameter_list, parameter,1);
@@ -430,7 +430,7 @@ int cl_com_update_parameter_list(char* parameter) {
          if (sub_token2 != NULL) {    
             if (strstr(sub_token1, "gdi_timeout") || strstr(sub_token1, "gdi_retries")) {
                if (sge_str_is_number(sub_token2)) {
-                  cl_com_set_parameter_list_value(sub_token1, sub_token2);
+                  cl_com_set_parameter_list_value((const char*)sub_token1, sub_token2);
                }
             } else {
                if (strstr(sub_token1, "cl_ping")) {
@@ -438,7 +438,7 @@ int cl_com_update_parameter_list(char* parameter) {
                        strlen(sub_token2) == sizeof("true")-1) || 
                       ((strncasecmp(sub_token2, "false", sizeof("false")-1) == 0) && 
                        strlen(sub_token2) == sizeof("false")-1)){
-                     cl_com_set_parameter_list_value(sub_token1, sub_token2);
+                     cl_com_set_parameter_list_value((const char*)sub_token1, sub_token2);
                   }
                }
             }

@@ -34,6 +34,6 @@
 
 #include "gdi/sge_gdi_ctx.h"
 
-int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx, char* err_str, void (*errfunc)(const char *));
+int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx);
 
 #endif /* _DISPATCHER_H */

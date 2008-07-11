@@ -89,7 +89,6 @@ char execd_spool_dir[SGE_PATH_MAX];
 
 static void execd_exit_func(void **ctx, int i);
 static void execd_register(sge_gdi_ctx_class_t *ctx);
-static void dispatcher_errfunc(const char *err_str);
 static void parse_cmdline_execd(char **argv);
 static lList *sge_parse_cmdline_execd(char **argv, lList **ppcmdline);
 static lList *sge_parse_execd(lList **ppcmdline, lList **ppreflist, u_long32 *help);
@@ -322,7 +321,6 @@ int main(int argc, char **argv)
 
    /***** MAIN LOOP *****/
    while (shut_me_down != 1) {
-      char err_str[1024];
 
      if (thread_prof_active_by_id(pthread_self())) {
          prof_start(SGE_PROF_CUSTOM1, NULL);
@@ -336,7 +334,7 @@ int main(int argc, char **argv)
 
       PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
 
-      ret = sge_execd_process_messages(ctx, err_str, dispatcher_errfunc);
+      ret = sge_execd_process_messages(ctx);
 
       if (sge_sig_handler_sigpipe_received) {
           sge_sig_handler_sigpipe_received = 0;
@@ -354,14 +352,8 @@ int main(int argc, char **argv)
          break; /* shut down, leave while */
       }
 
-      if (ret) {
-         if (cl_is_commlib_error(ret)) {
-            if (ret != CL_RETVAL_OK) {
-               execd_register(ctx); /* reregister at qmaster */
-            }
-         } else {
-            WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, err_str));
-         }
+      if (shut_me_down != 1) {
+         execd_register(ctx); /* reregister at qmaster */
       }
    }
 
@@ -410,18 +402,6 @@ static void execd_exit_func(void **ctx_ref, int i)
       }
    }
 #endif  
-   DEXIT;
-}
-
-/*-------------------------------------------------------------
- * dispatcher_errfunc
- *
- * function called by dispatcher on non terminal errors 
- *-------------------------------------------------------------*/
-static void dispatcher_errfunc(const char *err_str)
-{
-   DENTER(TOP_LAYER, "dispatcher_errfunc");
-   ERROR((SGE_EVENT, "%s", err_str));
    DEXIT;
 }
 

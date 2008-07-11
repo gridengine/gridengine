@@ -4628,13 +4628,11 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
 
          {
             char* gdi_timeout = NULL;
-            int timeout = 0;
-            int retval = 0;
-            retval = cl_com_get_parameter_list_value("gdi_timeout", &gdi_timeout);
-            if (retval != CL_RETVAL_OK || gdi_timeout == NULL) {
-               cl_com_set_synchron_receive_timeout(connection->handler, 60);
+            cl_com_get_parameter_list_value("gdi_timeout", &gdi_timeout);
+            if (gdi_timeout == NULL) {
+               cl_com_set_synchron_receive_timeout(connection->handler, CL_DEFINE_SYNCHRON_RECEIVE_TIMEOUT);
             } else {
-               timeout = atoi(gdi_timeout);
+               int timeout = atoi(gdi_timeout);
                cl_com_set_synchron_receive_timeout(connection->handler, timeout);
                free(gdi_timeout);
             }

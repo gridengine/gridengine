@@ -1,3 +1,8 @@
+CR-2008-07-11-0: Bugfix:     Fixed wrong gdi_retries loop count
+                 Cleanup:    Execd cleanup
+                 Belongs to: CR-2008-07-09-0
+                 Review:     MD 
+
 JG-2008-07-10-0: Bugfix:    Error message of qalter -q "" <job_id> suggests
                             memory corruption.
                  Bugster:   6704393

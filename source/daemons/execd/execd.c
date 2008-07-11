@@ -369,14 +369,8 @@ char **argv
          break; /* shut down, leave while */
       }
 
-      if (i) {
-         if (cl_is_commlib_error(i)) {
-            if (i != CL_RETVAL_OK) {
-               execd_register(ctx); /* reregister at qmaster */
-            }
-         } else {
-            WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, err_str ));
-         }
+      if (shut_me_down != 1) {
+         execd_register(ctx); /* reregister at qmaster */
       }
    }
 

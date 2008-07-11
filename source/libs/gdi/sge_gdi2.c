@@ -605,14 +605,15 @@ static int sge_send_receive_gdi2_request(sge_gdi_ctx_class_t *ctx,
 
    {
       int runs = 0;
+      int runs_at_start = 0;
       bool do_ping = false;
       bool do_permanent = false;
 
       do_ping = get_cl_ping_value();
       runs = get_gdi_retries_value();
+      runs_at_start = runs;
 
       if (runs == -1) {
-/*         TODO:  reject gdi_params < -1 at modifiy time (file issue) */
          do_permanent = true;
       }
 
@@ -664,11 +665,17 @@ static int sge_send_receive_gdi2_request(sge_gdi_ctx_class_t *ctx,
                break;
             }
          }
+
+         if (get_gdi_retries_value() != runs_at_start) {
+            DPRINTF(("Value changed during request - break\n"));
+            break;
+         }
+         
          /* 
           * only decrement runs if do_permanent is true. do_permanent is set to true
           * if qmaster_params value for gdi_retries is set to -1 (see man page) 
           */
-      } while (do_permanent == true || --runs > 0); 
+      } while (do_permanent == true || runs-- > 0); 
    }
 
    if (ret) {
@@ -1160,11 +1167,13 @@ gdi2_receive_multi_async(sge_gdi_ctx_class_t* ctx, sge_gdi_request **answer, lLi
   
    {
       int runs = 0;
+      int runs_at_start = 0;
       bool do_ping = false;
       bool do_permanent = false;
 
       do_ping = get_cl_ping_value();
       runs = get_gdi_retries_value();
+      runs_at_start = runs;
 
       if (runs == -1) {
          do_permanent = true;
@@ -1216,11 +1225,17 @@ gdi2_receive_multi_async(sge_gdi_ctx_class_t* ctx, sge_gdi_request **answer, lLi
                break;
             }
          }
+
+         if (get_gdi_retries_value() != runs_at_start) {
+            DPRINTF(("Value changed during request - break\n"));
+            break;
+         }
+
          /* 
           * only decrement runs if do_permanent is true. do_permanent is set to true
           * if qmaster_params value for gdi_retries is set to -1 (see man page) 
           */
-      } while (do_permanent == true || --runs > 0);
+      } while (do_permanent == true || runs-- > 0);
    }
   
    /* process return code */

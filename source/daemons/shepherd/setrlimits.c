@@ -75,7 +75,7 @@
 #ifndef CRAY
 static void pushlimit(int, struct RLIMIT_STRUCT_TAG *, int trace_rlimit);
 
-static int get_resource_info(u_long32 resource, char **name, int *resource_type);
+static int get_resource_info(u_long32 resource, const char **name, int *resource_type);
 #endif
 
 static int rlimcmp(sge_rlim_t r1, sge_rlim_t r2);
@@ -335,45 +335,46 @@ void setrlimits(int trace_rlimit) {
 }
 
 #ifndef CRAY
-static int get_resource_info(u_long32 resource, char **name, 
+/* *INDENT-OFF* */
+/* resource           resource_name              resource_type
+                                                 NECSX 4/5
+                                                 |         OTHER ARCHS
+                                                 |         |          */
+const struct resource_table_entry resource_table[] = {
+   {RLIMIT_FSIZE,     "RLIMIT_FSIZE",            {RES_PROC, RES_PROC}},
+   {RLIMIT_DATA,      "RLIMIT_DATA",             {RES_PROC, RES_PROC}},
+   {RLIMIT_STACK,     "RLIMIT_STACK",            {RES_PROC, RES_PROC}},
+   {RLIMIT_CORE,      "RLIMIT_CORE",             {RES_PROC, RES_PROC}},
+   {RLIMIT_CPU,       "RLIMIT_CPU",              {RES_BOTH, RES_PROC}},
+#if defined(RLIMIT_RSS)
+   {RLIMIT_RSS,       "RLIMIT_RSS",              {RES_PROC, RES_PROC}},
+#endif
+#if defined(RLIMIT_VMEM)
+   {RLIMIT_VMEM,      "RLIMIT_VMEM",             {RES_PROC, RES_PROC}},
+#elif defined(RLIMIT_AS)
+   {RLIMIT_AS,        "RLIMIT_VMEM/RLIMIT_AS",   {RES_PROC, RES_PROC}},
+#endif
+#if defined(NECSX4) || defined(NECSX5)
+   {RLIMIT_TMPF,      "RLIMIT_TMPF",             {RES_JOB,  RES_PROC}},
+   {RLIMIT_MTDEV,     "RLIMIT_MTDEV",            {RES_JOB,  RES_PROC}},
+   {RLIMIT_NOFILE,    "RLIMIT_NOFILE",           {RES_BOTH, RES_PROC}},
+   {RLIMIT_PROC,      "RLIMIT_PROC",             {RES_JOB,  RES_PROC}},
+   {RLIMIT_RLG0,      "RLIMIT_RLG0",             {RES_JOB,  RES_PROC}},
+   {RLIMIT_RLG1,      "RLIMIT_RLG1",             {RES_JOB,  RES_PROC}},
+   {RLIMIT_RLG2,      "RLIMIT_RLG2",             {RES_JOB,  RES_PROC}},
+   {RLIMIT_RLG3,      "RLIMIT_RLG3",             {RES_JOB,  RES_PROC}},
+   {RLIMIT_CPURESTM,  "RLIMIT_CPURESTM",         {RES_JOB,  RES_PROC}},
+#endif
+   {0,                NULL,                      {0, 0}}
+};
+const char *unknown_string = "unknown";
+/* *INDENT-ON* */
+
+static int get_resource_info(u_long32 resource, const char **name, 
                              int *resource_type) 
 {
    int is_job_resource_column;
    int row;
-
-   /* *INDENT-OFF* */
-   /* resource           resource_name              resource_type
-                                                    NECSX 4/5
-                                                    |         OTHER ARCHS
-                                                    |         |          */
-   struct resource_table_entry resource_table[] = {
-      {RLIMIT_FSIZE,     "RLIMIT_FSIZE",            {RES_PROC, RES_PROC}},
-      {RLIMIT_DATA,      "RLIMIT_DATA",             {RES_PROC, RES_PROC}},
-      {RLIMIT_STACK,     "RLIMIT_STACK",            {RES_PROC, RES_PROC}},
-      {RLIMIT_CORE,      "RLIMIT_CORE",             {RES_PROC, RES_PROC}},
-      {RLIMIT_CPU,       "RLIMIT_CPU",              {RES_BOTH, RES_PROC}},
-#if defined(RLIMIT_RSS)
-      {RLIMIT_RSS,       "RLIMIT_RSS",              {RES_PROC, RES_PROC}},
-#endif
-#if defined(RLIMIT_VMEM)
-      {RLIMIT_VMEM,      "RLIMIT_VMEM",             {RES_PROC, RES_PROC}},
-#elif defined(RLIMIT_AS)
-      {RLIMIT_AS,        "RLIMIT_VMEM/RLIMIT_AS",   {RES_PROC, RES_PROC}},
-#endif
-#if defined(NECSX4) || defined(NECSX5)
-      {RLIMIT_TMPF,      "RLIMIT_TMPF",             {RES_JOB,  RES_PROC}},
-      {RLIMIT_MTDEV,     "RLIMIT_MTDEV",            {RES_JOB,  RES_PROC}},
-      {RLIMIT_NOFILE,    "RLIMIT_NOFILE",           {RES_BOTH, RES_PROC}},
-      {RLIMIT_PROC,      "RLIMIT_PROC",             {RES_JOB,  RES_PROC}},
-      {RLIMIT_RLG0,      "RLIMIT_RLG0",             {RES_JOB,  RES_PROC}},
-      {RLIMIT_RLG1,      "RLIMIT_RLG1",             {RES_JOB,  RES_PROC}},
-      {RLIMIT_RLG2,      "RLIMIT_RLG2",             {RES_JOB,  RES_PROC}},
-      {RLIMIT_RLG3,      "RLIMIT_RLG3",             {RES_JOB,  RES_PROC}},
-      {RLIMIT_CPURESTM,  "RLIMIT_CPURESTM",         {RES_JOB,  RES_PROC}},
-#endif
-      {0,                NULL,                      {0, 0}}
-   };
-   /* *INDENT-ON* */
 
 #if defined(NECSX4) || defined(NECSX5)
    is_job_resource_column = 0;
@@ -391,7 +392,7 @@ static int get_resource_info(u_long32 resource, char **name,
       }
       row++;
    }
-   *name = "unknown";
+   *name = unknown_string;
    return 1;       
 }
 #endif
@@ -415,7 +416,7 @@ static int get_resource_info(u_long32 resource, char **name,
 static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp, 
                       int trace_rlimit) 
 {
-   char *limit_str;
+   const char *limit_str;
    char trace_str[1024];
    struct RLIMIT_STRUCT_TAG dlp;
    int resource_type;

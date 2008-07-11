@@ -302,10 +302,10 @@ lList* sge_gdi2(sge_gdi_ctx_class_t *ctx, u_long32 target, u_long32 cmd,
    id = sge_gdi2_multi(ctx, &alp, SGE_GDI_SEND, target, cmd, lpp, 
                        cp, enp, &state, true);
    if (id != -1) {
-      local_ret = sge_gdi2_wait(ctx, &alp, &mal, &state); 
+      local_ret = sge_gdi2_wait(ctx, &alp, &mal, &state);
       if (local_ret == true) {
          sge_gdi_extract_answer(&alp, cmd, target, id, mal, lpp);
-      } 
+      }
       lFreeList(&mal);
    }
    PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
@@ -354,11 +354,15 @@ int sge_gdi2_multi(sge_gdi_ctx_class_t* ctx, lList **alpp,
             local_ret = ctx->sge_gdi_packet_execute(ctx, alpp, packet);
             if (local_ret == false) {
                /* answer has been written in ctx->sge_gdi_packet_execute() */
+               sge_gdi_packet_free(&packet);
+               state->packet = NULL;
                ret = -1;
             }
          } 
       } else {
          /* answer list has been filled by sge_gdi_packet_append_task() */
+         sge_gdi_packet_free(&packet);
+         state->packet = NULL;
          ret = -1;
       }
    } else {

@@ -6516,6 +6516,7 @@ const char *config_name
          fprintf(stderr, MSG_ANSWER_CONFIGXNOTDEFINED_S, cfn);
          fprintf(stderr, "\n");
          lFreeList(&alp);
+         lFreeList(&lp);
          DRETURN(1);
       }
       printf("#%s:\n", cfn);

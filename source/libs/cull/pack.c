@@ -174,10 +174,9 @@ init_packbuffer(sge_pack_buffer *pb, int initial_size, int just_count)
       memset(pb, 0, sizeof(sge_pack_buffer));
  
       pb->head_ptr = malloc(initial_size);
-      if (!pb->head_ptr) {
+      if (pb->head_ptr == NULL) {
          ERROR((SGE_EVENT, MSG_CULL_NOTENOUGHMEMORY_D, initial_size));
-         DEXIT;
-         return PACK_ENOMEM;
+         DRETURN(PACK_ENOMEM);
       }
       pb->cur_ptr = pb->head_ptr;
       pb->mem_size = initial_size;

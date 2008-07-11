@@ -1,3 +1,8 @@
+JG-2008-07-11-0: Bugfix:    Fixed minor memory leaks.
+                 Bugster:   6724877
+                 Issue:     2650
+                 Review:    MD
+
 JA-2008-07-11-1: Bugfix:    - improve precondition in sge_task_depend_get_range to accept
                               any valid task id
                             - remove warnings and debug messages associated with

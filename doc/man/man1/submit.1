@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/05/21 09:47:34 $     Revision: $Revision: 1.74 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/07/11 12:56:35 $     Revision: $Revision: 1.75 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2008/05/21 09:47:34 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2008/07/11 12:56:35 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -616,7 +616,7 @@ again become "essential". The \fB\-hard\fP and \fB\-soft\fP
 options in effect act as "toggles" during the scan.
 .\"
 .IP "\fB\-h | \-h {u|s|o|n|U|O|S}...\fP"
-Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP, \fIqalter\fP
+Available for \fIqsub\fP, \fIqrsh\fP (with command argument), \fIqalter\fP
 and \fIqresub\fP.
 .sp 1
 List of holds to place on a job, a task or some tasks of a job.
@@ -1384,7 +1384,7 @@ If you use the \fB\-u\fP switch it is not permitted to
 specify an additional \fIwc_job_range_list\fP.
 .\"
 .IP "\fB\-v variable[=value],...\fP"
-Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP and \fIqalter\fP.
+Available for \fIqsub\fP, \fIqrsh\fP (with command argument) and \fIqalter\fP.
 .sp 1
 Defines or redefines the environment variables to
 be exported to the execution context of the job.

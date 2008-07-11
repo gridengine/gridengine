@@ -166,6 +166,14 @@ static bool keep_active = false;
 static bool enable_windomacc = false;
 static bool enable_addgrp_kill = false;
 static u_long32 pdc_interval = 1;
+static char s_descriptors[100];
+static char h_descriptors[100];
+static char s_maxproc[100];
+static char h_maxproc[100];
+static char s_memorylocked[100];
+static char h_memorylocked[100];
+static char s_locks[100];
+static char h_locks[100];
 
 /* 
  * reporting params 
@@ -790,6 +798,14 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       sharelog_time = 0;
       log_consumables = false;
       enable_addgrp_kill = false;
+      strcpy(s_descriptors, "UNDEFINED");
+      strcpy(h_descriptors, "UNDEFINED");
+      strcpy(s_maxproc, "UNDEFINED");
+      strcpy(h_maxproc, "UNDEFINED");
+      strcpy(s_memorylocked, "UNDEFINED");
+      strcpy(h_memorylocked, "UNDEFINED");
+      strcpy(s_locks, "UNDEFINED");
+      strcpy(h_locks, "UNDEFINED");
 
       for (s=sge_strtok_r(execd_params, ",; ", &conf_context); s; s=sge_strtok_r(NULL, ",; ", &conf_context)) {
          if (parse_bool_param(s, "USE_QIDLE", &use_qidle)) {
@@ -888,6 +904,38 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
                                        1);
                pdc_interval = 1;
             }
+            continue;
+         }
+         if (!strncasecmp(s, "S_DESCRIPTORS", sizeof("S_DESCRIPTORS")-1)) {
+            sge_strlcpy(s_descriptors, s+sizeof("S_DESCRIPTORS"), 100);
+            continue;
+         }
+         if (!strncasecmp(s, "H_DESCRIPTORS", sizeof("H_DESCRIPTORS")-1)) {
+            sge_strlcpy(h_descriptors, s+sizeof("H_DESCRIPTORS"), 100);
+            continue;
+         }
+         if (!strncasecmp(s, "S_MAXPROC", sizeof("S_MAXPROC")-1)) {
+            sge_strlcpy(s_maxproc, s+sizeof("S_MAXPROC"), 100);
+            continue;
+         }
+         if (!strncasecmp(s, "H_MAXPROC", sizeof("H_MAXPROC")-1)) {
+            sge_strlcpy(h_maxproc, s+sizeof("H_MAXPROC"), 100);
+            continue;
+         }
+         if (!strncasecmp(s, "S_MEMORYLOCKED", sizeof("S_MEMORYLOCKED")-1)) {
+            sge_strlcpy(s_memorylocked, s+sizeof("S_MEMORYLOCKED"), 100);
+            continue;
+         }
+         if (!strncasecmp(s, "H_MEMORYLOCKED", sizeof("H_MEMORYLOCKED")-1)) {
+            sge_strlcpy(h_memorylocked, s+sizeof("H_MEMORYLOCKED"), 100);
+            continue;
+         }
+         if (!strncasecmp(s, "S_LOCKS", sizeof("S_LOCKS")-1)) {
+            sge_strlcpy(s_locks, s+sizeof("S_LOCKS"), 100);
+            continue;
+         }
+         if (!strncasecmp(s, "H_LOCKS", sizeof("H_LOCKS")-1)) {
+            sge_strlcpy(h_locks, s+sizeof("H_LOCKS"), 100);
             continue;
          }
       }
@@ -2265,4 +2313,84 @@ int mconf_get_max_job_deletion_time(void) {
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(deletion_time);
+}
+
+void mconf_get_h_descriptors(char **pret) {
+   DENTER(BASIS_LAYER, "mconf_get_h_descriptors");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   *pret = strdup(h_descriptors);
+   
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN_VOID;
+}
+
+void mconf_get_s_descriptors(char **pret) {
+   DENTER(BASIS_LAYER, "mconf_get_s_descriptors");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   *pret = strdup(s_descriptors);
+   
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN_VOID;
+}
+
+void mconf_get_h_maxproc(char **pret) {
+   DENTER(BASIS_LAYER, "mconf_get_h_maxproc");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   *pret = strdup(h_maxproc);
+   
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN_VOID;
+}
+
+void mconf_get_s_maxproc(char **pret) {
+   DENTER(BASIS_LAYER, "mconf_get_s_maxproc");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   *pret = strdup(s_maxproc);
+   
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN_VOID;
+}
+
+void mconf_get_h_memorylocked(char **pret) {
+   DENTER(BASIS_LAYER, "mconf_get_h_memorylocked");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   *pret = strdup(h_memorylocked);
+   
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN_VOID;
+}
+
+void mconf_get_s_memorylocked(char **pret) {
+   DENTER(BASIS_LAYER, "mconf_get_s_memorylocked");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   *pret = strdup(s_memorylocked);
+   
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN_VOID;
+}
+
+void mconf_get_h_locks(char **pret) {
+   DENTER(BASIS_LAYER, "mconf_get_h_locks");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   *pret = strdup(h_locks);
+   
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN_VOID;
+}
+
+void mconf_get_s_locks(char **pret) {
+   DENTER(BASIS_LAYER, "mconf_get_s_locks");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   *pret = strdup(s_locks);
+   
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN_VOID;
 }

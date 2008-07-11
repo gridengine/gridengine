@@ -39,6 +39,7 @@
 #define REPRIORITIZE "reprioritize"
 
 #define GID_RANGE_NOT_ALLOWED_ID 100
+#define RLIMIT_UNDEFINED -9999
 
 typedef int (*tDaemonizeFunc)(void *ctx);
 
@@ -141,5 +142,13 @@ bool mconf_get_enable_addgrp_kill(void);
 u_long32 mconf_get_pdc_interval(void);
 bool mconf_get_enable_reschedule_kill(void);
 bool mconf_get_enable_reschedule_slave(void);
+void mconf_get_h_descriptors(char **pret);
+void mconf_get_s_descriptors(char **pret);
+void mconf_get_h_maxproc(char **pret);
+void mconf_get_s_maxproc(char **pret);
+void mconf_get_h_memorylocked(char **pret);
+void mconf_get_s_memorylocked(char **pret);
+void mconf_get_h_locks(char **pret);
+void mconf_get_s_locks(char **pret);
 
 #endif /* __SGE_CONF_H */

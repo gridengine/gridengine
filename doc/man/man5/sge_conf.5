@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/07/08 09:10:06 $     Revision: $Revision: 1.75 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/07/11 12:56:36 $     Revision: $Revision: 1.76 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/07/08 09:10:06 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/07/11 12:56:36 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -1237,6 +1237,37 @@ and
 if rsh and rshd components are used which are provided with xxQS_NAMExx
 (i.e., the \fBrsh_daemon\fP and \fBrsh_command\fP parameters may
 not be changed from the default).
+.PP
+.IP "\fIS_DESCRIPTORS\fP, \fIH_DESCRIPTORS\fP, \fIS_MAXPROC\fP, \fIH_MAXPROC\fP,"
+.IP "\fIS_MEMORYLOCKED\fP, \fIH_MEMORYLOCKED\fP, \fIS_LOCKS\fP, \fIH_LOCKS\fP"
+Specifies soft and hard resource limits as implemented by the
+.M setrlimit 2
+system call. See this manual page on your system for more information. These
+parameters complete the list of limits set by the RESOURCE LIMITS parameter
+of the queue configuration as described in
+.M queue_conf 5 .
+Unlike the resource limits in the queue
+configuration, these resource limits are set for every job on this execution
+host. If a value is not specified, the resource limit is inherited from the
+execution daemon process. Because this would lead to unpredicted results,
+if only one limit of a resource is set (soft or hard), the
+corresponding other limit is set to the same value.
+.br
+\fIS_DESCRIPTORS\fP and \fIH_DESCRIPTORS\fP specify a value one greater than the maximum
+file descriptor number that can be opened by any process of a job.
+.br
+\fIS_MAXPROC\fP and \fIH_MAXPROC\fP specify the maximum number of processes that can be
+created by the job user on this execution host
+.br
+\fIS_MEMORYLOCKED\fP and \fIH_MEMORYLOCKED\fP specify the maximum number of bytes of
+virtual memory that may be locked into RAM.
+.br
+\fIS_LOCKS\fP and \fIH_LOCKS\fP specify the maximum number of file locks any process
+of a job may establish.
+.br
+All of these values can be specified using the multiplier letters k, K, m, M, g and G, see
+.M sge_types 1
+for details.
 .\"
 .\"
 .IP "\fIINHERIT_ENV\fP"

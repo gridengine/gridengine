@@ -1,3 +1,9 @@
+JA-2008-07-11-1: Bugfix:    - improve precondition in sge_task_depend_get_range to accept
+                              any valid task id
+                            - remove warnings and debug messages associated with
+                              sge_task_depend_get_range failure
+                 Review:    AH,JG
+
 JA-2008-07-11-0: Bugfix:    Tasks held with array dependency may get deleted prematurely
                  Bugster:   6723951
                  Issue:     2628

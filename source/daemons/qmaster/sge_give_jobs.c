@@ -1524,10 +1524,6 @@ static void release_successor_tasks_ad(lListElem *jep, u_long32 task_id)
 
       /* infer reverse dependencies from the completed predecessor task to this successor */
       if (sge_task_depend_get_range(&suc_range, NULL, suc_jep, jep, task_id)) {
-         /* JA: this should not really happen at all.. maybe make it a proper error? */ 
-         u_long32 job_id = lGetUlong(jep, JB_job_number);
-         DPRINTF(("unknown error computing dependants of task %lu.%lu\n", job_id, task_id));
-         WARNING((SGE_EVENT, MSG_JOB_DEPENDUPT4J_UU, sge_u32c(job_id), sge_u32c(task_id)));
          lFreeElem(&suc_range);
          continue;
       }

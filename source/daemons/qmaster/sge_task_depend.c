@@ -114,17 +114,20 @@ int sge_task_depend_get_range(lListElem **range, lList **alpp,
 
    if (range == NULL || 
          pre_jep == NULL || 
-         suc_jep == NULL ||
-         task_id == 0) {
+         suc_jep == NULL) {
       DRETURN(STATUS_EUNKNOWN);
    }
 
    job_get_submit_task_ids(pre_jep, &a0, &a1, &sa);
    job_get_submit_task_ids(suc_jep, &b0, &b1, &sb);
 
-   /* do some basic checks on the input */
-   if (!sge_task_depend_is_same_range(pre_jep, suc_jep) || 
-       ((task_id - 1) % sb) != 0) {
+   /* sanity check on task ranges */
+   if (!sge_task_depend_is_same_range(pre_jep, suc_jep)) {
+      DRETURN(STATUS_EUNKNOWN);
+   }
+
+   /* make sure task_id is the first task in a range */
+   if (task_id < b0 || ((task_id - b0) % sb) != 0) {
       DRETURN(STATUS_EUNKNOWN);
    }
 
@@ -148,7 +151,6 @@ int sge_task_depend_get_range(lListElem **range, lList **alpp,
 
    DRETURN(0);
 }
-
 
 /*****************************************************************************
  Tasks matching this profile are considered finished for dependence purposes
@@ -254,7 +256,6 @@ bool sge_task_depend_update(lListElem *jep, lList **alpp, u_long32 task_id)
       /* use the RSP functions to determine dependent predecessor task range */
       if (sge_task_depend_get_range(&dep_range, alpp, pred_jep, jep, task_id)) {
          /* since we can't calculate it, we must assume dependence */
-         DPRINTF(("could not calculate dependent iteration ranges for a job\n"));
          lFreeElem(&dep_range);
          Depend = 1;
          break;
@@ -345,7 +346,6 @@ bool sge_task_depend_init(lListElem *jep, lList **alpp)
 
    if (lGetNumberOfElem(lGetList(jep, JB_ja_ad_request_list)) > 0) {
       if (lGetNumberOfElem(lGetList(jep, JB_ja_ad_predecessor_list)) == 0) {
-         DPRINTF(("all predecessors are gone (1)!\n")); 
          /* fast case where all predecessors are "gone" */         
          if (sge_task_depend_flush(jep, alpp))
             ret = true;

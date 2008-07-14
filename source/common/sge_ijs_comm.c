@@ -637,6 +637,7 @@ int comm_shutdown_connection(COMMUNICATION_HANDLE *handle,
     * during the shutdown of the connection - just shut down.
     */
    ret = cl_com_set_error_func(NULL);
+   cl_com_ignore_timeouts(CL_TRUE);
    ret = cl_commlib_close_connection(handle, g_hostname, 
                                      (char*)component_name, 1, CL_FALSE);
    if (ret != CL_RETVAL_OK) {

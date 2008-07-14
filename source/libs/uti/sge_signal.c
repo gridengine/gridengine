@@ -424,42 +424,36 @@ void sge_unblock_all_signals(void)
    sigprocmask(SIG_SETMASK, &sigmask, NULL);
 }
 
-/****** uti/signal/sge_thread_block_signals() *********************************
+/****** uti/signal/sge_thread_block_all_signals() *****************************
 *  NAME
-*     sge_thread_block_signals()
+*     sge_thread_block_all_signals()
 *
 *  SYNOPSIS
-*     int sge_thread_block_signals(void)
+*     int sge_thread_block_all_signals(void)
 *
 *  FUNCTION
-*     Blocks all signals the shepherd maps and forwards to the job in
-*     the calling thread.
-*     Per thread blocking of signals is necessary for HP11/HP1164, where a
-*     signal gets delivered to the signal handler of the process, but
-*     awakes only the system call (e.g. select() or wait3()) of the 
-*     first thread which doesn't block this signal.
+*     Blocks all signals the OS knows for the calling thread.
+*
+*  OUTPUTS
+*    sigset_t *oldsigmask - the sigmask of this thread that was set before
+*                           this function was called.
 *
 *  RETURN VALUES
 *     int - 0 if ok,
-*           non-zero if an error occured. See pthread_sigmask(3C) for
-*           return values.
+*           errno if pthread_sigmask failed,
+*           1000 if oldsigmask == NULL.
 *
 *  NOTES
 *     MT-NOTE: sge_thread_block_signals() is MT safe
 *******************************************************************************/
-int sge_thread_block_signals(void)
+int sge_thread_block_all_signals(sigset_t *oldsigmask)
 {
-   sigset_t new_set;
+   sigset_t new_mask;
+   int      ret = 1000;
 
-   sigemptyset(&new_set);
-   sigaddset(&new_set, SIGPIPE);
-   sigaddset(&new_set, SIGTTOU);
-   sigaddset(&new_set, SIGTTIN);
-   sigaddset(&new_set, SIGUSR1);
-   sigaddset(&new_set, SIGUSR2);
-   sigaddset(&new_set, SIGCONT);
-   sigaddset(&new_set, SIGWINCH);
-   sigaddset(&new_set, SIGTSTP);
-
-   return pthread_sigmask(SIG_SETMASK, &new_set, NULL);
+   if (oldsigmask != NULL) {
+      sigfillset(&new_mask);
+      ret = pthread_sigmask(SIG_BLOCK, &new_mask, oldsigmask);
+   }
+   return ret;
 }

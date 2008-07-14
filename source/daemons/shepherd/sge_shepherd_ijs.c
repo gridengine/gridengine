@@ -313,11 +313,6 @@ static void* pty_to_commlib(void *t_conf)
    bool                 b_select_timeout = false;
    dstring              err_msg = DSTRING_INIT;
 
-   if (sge_thread_block_signals() != 0) {
-      shepherd_trace("pthread_sigmask failed: %d, %s", errno, strerror(errno));
-      do_exit = 1;
-   }
-
    /* Report to thread lib that this thread starts up now */
    thread_func_startup(t_conf);
    /* Set this thread to be cancelled (=killed) at any time. */
@@ -551,11 +546,6 @@ static void* commlib_to_pty(void *t_conf)
    int                  do_exit = 0;
    int                  fd_write = -1;
    dstring              err_msg = DSTRING_INIT;
-
-   if (sge_thread_block_signals() != 0) {
-      shepherd_trace("pthread_sigmask failed: %d, %s", errno, strerror(errno));
-      do_exit = 1;
-   }
 
    /* report to thread lib that thread starts up now */
    thread_func_startup(t_conf);
@@ -856,6 +846,12 @@ int parent_loop(char *hostname, int port, int ptym,
       shepherd_trace("main: registering main thread failed: %d", ret);
       return 1;
    }
+
+#if defined(HP11) || defined(HP1164)
+   {
+   sigset_t old_sigmask;
+   sge_thread_block_all_signals(&old_sigmask);
+#endif
    ret = create_thread(thread_lib_handle,
                        &thread_pty_to_commlib,
                        cl_com_log_list,
@@ -872,6 +868,10 @@ int parent_loop(char *hostname, int port, int ptym,
                        "commlib_to_pty thread",
                        3,
                        commlib_to_pty);
+#if defined(HP11) || defined(HP1164)
+   pthread_sigmask(SIG_SETMASK, &old_sigmask, NULL);
+   }
+#endif
    if (ret != CL_RETVAL_OK) {
       shepherd_trace("main: creating commlib_to_pty thread failed: %d", ret);
    }
@@ -1037,6 +1037,7 @@ int close_parent_loop(int exit_status)
 
    FREE(g_hostname);
    sge_dstring_free(&err_msg);
+   shepherd_trace("main: leaving closinge_parent_loop()");
    return 0;
 }
 

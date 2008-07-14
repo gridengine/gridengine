@@ -480,6 +480,8 @@ void* commlib_to_tty(void *t_conf)
           received_signal == SIGQUIT ||
           received_signal == SIGTERM) {
          /* If we receive one of these signals, we must terminate */
+         DPRINTF(("commlib_to_tty: shutting down because of signal %d\n",
+                 received_signal));
          do_exit = 1;
          continue;
       }
@@ -577,7 +579,9 @@ void* commlib_to_tty(void *t_conf)
 *     do_server_loop() -- The servers main loop
 *
 *  SYNOPSIS
-*     void* commlib_to_tty(void *t_conf)
+*     int do_server_loop(u_long32 job_id, int nostdin, int noshell,
+*                        int is_rsh, int is_qlogin, int force_pty,
+*                        int *p_exit_status)
 *
 *  FUNCTION
 *     The main loop of the commlib server, handling the data transfer from

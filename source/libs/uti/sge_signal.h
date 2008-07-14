@@ -96,7 +96,7 @@ typedef void (*err_func_t)(char *s);
 void sge_set_def_sig_mask(sigset_t*, err_func_t);
 void sge_unblock_all_signals(void);
 
-int sge_thread_block_signals(void);
+int sge_thread_block_all_signals(sigset_t *oldsigmask);
 
 #endif /* __SGE_SIGNAL_H */
 

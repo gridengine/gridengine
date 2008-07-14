@@ -1,3 +1,9 @@
+MD-2008-07-14-0: Bugfix:    /etc/services is not handled correctly during 
+                            installation
+                 Bugster:   6711517
+                 Issue:     2655
+                 Review:    JG
+
 RN-2008-07-14-0: Bugfix:    'Infinity' must be rejected when specified in 
                             'complex_values' or RQS limits for consumables
                  Bugster:   6613438

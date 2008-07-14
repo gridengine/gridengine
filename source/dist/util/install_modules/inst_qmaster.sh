@@ -1142,6 +1142,16 @@ CreateSettingsFile()
       fi
    fi
 
+   if [ "$execd_service" = "true" ]; then
+      SGE_EXECD_PORT=""
+      export SGE_EXECD_PORT
+   fi
+
+   if [ "$qmaster_service" = "true" ]; then
+      SGE_QMASTER_PORT=""
+      export SGE_QMASTER_PORT
+   fi
+
    ExecuteAsAdmin util/create_settings.sh $SGE_ROOT_VAL/$COMMONDIR
 
    SetPerm $SGE_ROOT_VAL/$COMMONDIR/settings.sh
@@ -1582,6 +1592,7 @@ GetQmasterPort()
          $INFOTEXT "\nUsing the service\n\n" \
                    "   sge_qmaster\n\n" \
                    "for communication with Grid Engine.\n"
+         qmaster_service="true"
       fi
       $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
       $CLEAR
@@ -2123,6 +2134,7 @@ GetExecdPort()
          $INFOTEXT "\nUsing the service\n\n" \
                    "   sge_execd\n\n" \
                    "for communication with Grid Engine.\n"
+         execd_service="true"
       fi
       $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
       $CLEAR

@@ -2140,7 +2140,7 @@ CreateSGEStartUpScripts()
                   -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
                   $template > ${TMP_SGE_STARTUP_FILE}.0
 
-      if [ "$SGE_QMASTER_PORT" != "" ]; then
+      if [ "$SGE_QMASTER_PORT" != "" -a "$qmaster_service" != "true" ]; then
          Execute sed -e "s/=GENSGE_QMASTER_PORT/=$SGE_QMASTER_PORT/" \
                      ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
       else
@@ -2148,7 +2148,7 @@ CreateSGEStartUpScripts()
                      ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
       fi
 
-      if [ "$SGE_EXECD_PORT" != "" ]; then
+      if [ "$SGE_EXECD_PORT" != "" -a "$execd_service" != "true" ]; then
          Execute sed -e "s/=GENSGE_EXECD_PORT/=$SGE_EXECD_PORT/" \
                      ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
       else

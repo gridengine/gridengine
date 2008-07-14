@@ -157,7 +157,7 @@ struct queue_summary_str {
    
    u_long32    used_slots;
    u_long32    resv_slots;
-   u_long32    free_slots;
+   u_long32    total_slots;
    
    const char* arch;
    const char* state;

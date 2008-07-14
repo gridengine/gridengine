@@ -1140,7 +1140,7 @@ static int jgdi_qstat_queue_summary(qstat_handler_t *handler, const char* qname,
    if (QueueInstanceSummaryImpl_setUsedSlots(env, qi_obj, summary->used_slots, alpp) != JGDI_SUCCESS) {
       DRETURN(-1);
    }
-   if (QueueInstanceSummaryImpl_setFreeSlots(env, qi_obj, summary->free_slots, alpp) != JGDI_SUCCESS) {
+   if (QueueInstanceSummaryImpl_setFreeSlots(env, qi_obj, summary->total_slots, alpp) != JGDI_SUCCESS) {
       DRETURN(-1);
    }
    if (QueueInstanceSummaryImpl_setHasLoadValue(env, qi_obj, summary->has_load_value, alpp) != JGDI_SUCCESS) {

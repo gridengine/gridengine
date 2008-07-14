@@ -1432,7 +1432,7 @@ static int handle_queue(lListElem *q, qstat_env_t *qstat_env, qstat_handler_t *h
 
    summary.resv_slots = qinstance_slots_reserved_now(q);
    summary.used_slots = qinstance_slots_used(q);
-   summary.free_slots = (int)lGetUlong(q, QU_job_slots);
+   summary.total_slots = (int)lGetUlong(q, QU_job_slots);
 
    /* arch */
    if (!sge_get_string_qattr(arch_string, sizeof(arch_string)-1, LOAD_ATTR_ARCH, 

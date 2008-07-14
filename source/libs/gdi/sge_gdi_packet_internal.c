@@ -513,6 +513,9 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
       }
    }
 
+   /* after this point we do no longer need pb - free its resources */
+   clear_packbuffer(&pb);
+
    /* 
     * wait for response from master; also here keep care that commlib
     * related error messages are hidden if master is not up and running anymore

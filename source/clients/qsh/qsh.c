@@ -2135,7 +2135,7 @@ int main(int argc, char **argv)
             DPRINTF(("polling_interval set to %d\n", polling_interval));
          }
       } /* end of while (1) polling */
-      if (g_new_interactive_job_support == true) {
+      if (g_new_interactive_job_support == true && g_comm_handle != NULL) {
          dstring err_msg = DSTRING_INIT;
          int     ret;
 
@@ -2144,6 +2144,8 @@ int main(int argc, char **argv)
             DPRINTF(("comm_shutdown_connection() failed: %s (%d)",
                      sge_dstring_get_string(&err_msg), ret));
          }
+
+         sge_dstring_free(&err_msg);
       }
 
       lFreeList(&lp_jobs);

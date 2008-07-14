@@ -497,8 +497,8 @@ void* commlib_to_tty(void *t_conf)
          switch (recv_mess.type) {
             case STDOUT_DATA_MSG:
                /* copy recv_mess.data to buf to append '\0' */
-               snprintf(buf, MIN(100, recv_mess.cl_message->message_length),
-                        "%s", recv_mess.data);
+               memcpy(buf, recv_mess.data, MIN(99, recv_mess.cl_message->message_length - 1));
+               buf[MIN(99, recv_mess.cl_message->message_length - 1)] = 0;
                DPRINTF(("commlib_to_tty: received stdout message, writing to tty.\n"));
                DPRINTF(("commlib_to_tty: message is: %s\n", buf));
 /* TODO: If it's not possible to write all data to the tty, retry blocking
@@ -552,8 +552,8 @@ void* commlib_to_tty(void *t_conf)
                DPRINTF(("commlib_to_tty: writing UNREGISTER_RESPONSE_CTRL_MSG\n"));
 
                /* copy recv_mess.data to buf to append '\0' */
-               snprintf(buf, MIN(100, recv_mess.cl_message->message_length),
-                        "%s", recv_mess.data);
+               memcpy(buf, recv_mess.data, MIN(99, recv_mess.cl_message->message_length - 1));
+               buf[MIN(99, recv_mess.cl_message->message_length - 1)] = 0;
                sscanf(buf, "%d", &g_exit_status);
                comm_write_message(g_comm_handle, g_hostname, COMM_CLIENT, 1, 
                   (unsigned char*)" ", 1, UNREGISTER_RESPONSE_CTRL_MSG, &err_msg);
@@ -691,6 +691,7 @@ int do_server_loop(u_long32 job_id, int nostdin, int noshell,
 */
    DPRINTF(("shut down the connection from our side\n"));
    comm_shutdown_connection(g_comm_handle, COMM_CLIENT, &err_msg);
+   g_comm_handle = NULL;
    /*
     * Close stdin to awake the tty_to_commlib-thread from the select() call.
     * thread_shutdown() doesn't work on all architectures.
@@ -699,7 +700,6 @@ int do_server_loop(u_long32 job_id, int nostdin, int noshell,
 
    DPRINTF(("waiting for end of tty_to_commlib thread\n"));
    thread_join(pthread_tty_to_commlib);
-   thread_cleanup_lib(&thread_lib_handle);
 cleanup:
    /*
     * Set our terminal back to 'unraw' mode. Should be done automatically
@@ -713,6 +713,8 @@ cleanup:
    }
 
    *p_exit_status = g_exit_status;
+
+   thread_cleanup_lib(&thread_lib_handle);
    DEXIT;
    return 0;
 }

@@ -269,7 +269,7 @@ extern int main(int argc, char** argv)
   printf("commlib setup ...\n");
   /* this is for compiler warning on irix65 */
 
-  switch(atoi(argv[1])) {
+  switch (atoi(argv[1])) {
      case 0:
         log_level=CL_LOG_OFF;
         break;
@@ -315,7 +315,7 @@ extern int main(int argc, char** argv)
      int max_con_test_count = 2;
      unsigned long max_connection_count;
 
-     while(do_shutdown != 1) {
+     while (do_shutdown != 1) {
         int ret_val;
 
         if (actual_issue == 1400) {
@@ -385,8 +385,9 @@ extern int main(int argc, char** argv)
      printf("\ntesting issue #1389 ...\n");
 
 
-     while(runtime < 45 && do_shutdown == 0 && main_return == 0) {
+     while (runtime < 45 && do_shutdown == 0 && main_return == 0) {
         data = malloc(data_size * sizeof(char));
+        memset(data, 0, data_size * sizeof(char));
         if (data == NULL) {
            printf("malloc() error: can't malloc(%ld)\n", data_size * sizeof(char) );
            printf("issue #1389 failed\n");
@@ -395,16 +396,16 @@ extern int main(int argc, char** argv)
         }
         printf("malloced %.2f MB\n", (double) (data_size*sizeof(char))/(1024*1024)  );
    
-        sprintf(data,"hallo du");
+        sprintf(data, "hallo du");
       
         cl_commlib_send_message(handle, com_host, "server", 1, 
                             CL_MIH_MAT_NAK, 
-                            (cl_byte_t**)&data, data_size, 
+                            (cl_byte_t**)&data, data_size * sizeof(char), 
                             NULL, 0,0, CL_FALSE, CL_FALSE);
    
         printf("starting measurement...\n");
-        gettimeofday(&start,NULL);
-        while(do_shutdown == 0 ) {
+        gettimeofday(&start, NULL);
+        while (do_shutdown == 0) {
            cl_commlib_trigger(handle, 1); 
            ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
            if (ret_val != CL_RETVAL_OK && ret_val != CL_RETVAL_NO_MESSAGE) {
@@ -415,7 +416,6 @@ extern int main(int argc, char** argv)
            }
            if (message != NULL) {
               printf("received response message from %s with size %lu\n", sender->comp_host, message->message_length);
-              message->message = NULL;
               cl_com_free_message(&message);
               cl_com_free_endpoint(&sender);
               break;
@@ -431,16 +431,14 @@ extern int main(int argc, char** argv)
         }
      }
 
-     
      printf("\ntesting issue #1400 ...\n");
      {
-
         printf("setting up server for test 1400 ...\n");
-        cl_commlib_send_message(handle, com_host, "server", 1, 
-                               CL_MIH_MAT_ACK, 
-                               &iz1400_pointer, 7, 
-                               NULL, 0,0, CL_TRUE, CL_TRUE);
-      }
+        cl_commlib_send_message(handle, com_host, "server", 1,
+                                CL_MIH_MAT_ACK,
+                                &iz1400_pointer, 7,
+                                NULL, 0,0, CL_TRUE, CL_TRUE);
+     }
 
      printf("creating new connections ...\n");
 
@@ -448,21 +446,21 @@ extern int main(int argc, char** argv)
      handle2=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, CL_FALSE, com_port, CL_TCP_DEFAULT, "client2", 0, 1, 0 );
  
      printf("sending via connection 1 ...\n");
-     cl_commlib_send_message(handle, com_host, "server", 1, 
-                            CL_MIH_MAT_ACK, 
-                            &test_pointer, 5, 
+     cl_commlib_send_message(handle, com_host, "server", 1,
+                            CL_MIH_MAT_ACK,
+                            &test_pointer, 5,
                             NULL, 0,0, CL_TRUE, CL_TRUE);
 
      printf("sending via connection 2 ...\n");
-     cl_commlib_send_message(handle1, com_host, "server", 1, 
-                            CL_MIH_MAT_ACK, 
-                            &test_pointer, 5, 
+     cl_commlib_send_message(handle1, com_host, "server", 1,
+                            CL_MIH_MAT_ACK,
+                            &test_pointer, 5,
                             NULL, 0,0, CL_TRUE, CL_TRUE);
 
      printf("sending via connection 3 ...\n");
-     ret_val = cl_commlib_send_message(handle2, com_host, "server", 1, 
-                            CL_MIH_MAT_ACK, 
-                            &test_pointer, 5, 
+     ret_val = cl_commlib_send_message(handle2, com_host, "server", 1,
+                            CL_MIH_MAT_ACK,
+                            &test_pointer, 5,
                             NULL, 0,0, CL_TRUE, CL_TRUE);
 
      if (ret_val == CL_RETVAL_OK) {
@@ -475,12 +473,10 @@ extern int main(int argc, char** argv)
      printf("resetting server ...\n");
 
      iz1400_data[5] = 'r';
-     cl_commlib_send_message(handle, com_host, "server", 1, 
-                            CL_MIH_MAT_ACK, 
-                            &iz1400_pointer, 7, 
+     cl_commlib_send_message(handle, com_host, "server", 1,
+                            CL_MIH_MAT_ACK,
+                            &iz1400_pointer, 7,
                             NULL, 0,0, CL_TRUE, CL_TRUE);
-
-
   }
 
   printf("shutting down ...\n");
@@ -488,12 +484,8 @@ extern int main(int argc, char** argv)
 
   printf("commlib cleanup ...\n");
   cl_com_cleanup_commlib();
-  
+
   printf("main done\n");
   return main_return;
 }
-
-
-
-
 

@@ -1,3 +1,8 @@
+JG-2008-07-14-0: Bugfix:    Fixed minor memory leaks.
+                 Bugster:   6724877
+                 Issue:     2650
+                 Review:    EB, HP, CR
+
 HP-2008-07-14-0: Bugfix:     Fixed wrongly set signals in commlib threads
                  Bugster:    6725446
                  Issue:      2653

@@ -1340,7 +1340,8 @@ int comm_recv_message(COMMUNICATION_HANDLE *handle, cl_bool_t b_synchron,
                   recv_mess->data = (char*)&(message->message[1]);
 
                   DPRINTF(("recv_mess->type = %d\n", recv_mess->type));
-                  snprintf(tmpbuf, MIN(100, message->message_length), "%s", recv_mess->data);
+                  memcpy(tmpbuf, recv_mess->data, MIN(99, message->message_length - 1));
+                  tmpbuf[MIN(99, message->message_length - 1)] = 0;
                   DPRINTF(("recv_mess->data = %s\n", tmpbuf));
                   break;
 

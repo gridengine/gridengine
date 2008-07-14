@@ -1,3 +1,9 @@
+RN-2008-07-14-0: Bugfix:    'Infinity' must be rejected when specified in 
+                            'complex_values' or RQS limits for consumables
+                 Bugster:   6613438
+                 Issue:     2391
+                 Review:    AH 
+
 CR-2008-07-11-0: Bugfix:    - Merged from V61_BRANCH: CR-2008-07-09-0
                             - Execd Cleanup  
                  Review:    MD

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/07/11 12:56:35 $     Revision: $Revision: 1.75 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/07/16 12:04:17 $     Revision: $Revision: 1.76 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2008/07/11 12:56:35 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2008/07/16 12:04:17 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -1457,22 +1457,12 @@ The specifiers e, w, n and v define the following validation modes:
 	for invalid requests.
 `n'	none - switches off validation; the default for
 	\fIqsub\fP and \fIqalter\fP.
-`v'	verify - does not submit the job but prints an
-	extensive validation report.
+`v'	verify - does not submit the job but prints a
+	validation report.
 .fi
 .sp 1
 Note, that the necessary checks are performance consuming and hence the 
 checking is switched off by default.
-.sp 1
-Note also, that the reasons for job requirements being invalid with respect to 
-resource availability of queues are displayed in the "\fB-w v\fP" case using 
-the format as described for the
-.M qstat 1
-\fB\-F\fP option (see description of 
-\fBFull Format\fP in section \fBOUTPUT FORMATS\fP of the
-.M qstat 1
-manual page.
-.\"
 .IP "\fB\-wd working_dir\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP and
 \fIqalter\fP only.

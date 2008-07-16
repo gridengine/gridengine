@@ -1,3 +1,8 @@
+DG-2008-07-16-0: Bugfix:    qsub -w v always returned success.
+                 Bugster:   6724949
+                 Issue:     2652
+                 Review:    JG
+
 MP-2008-07-14-0: Bugfix:    Merged from V61_BRANCH: MP-2008-7-11-0
                  Bugster:   6716082
                  Issue:     2644

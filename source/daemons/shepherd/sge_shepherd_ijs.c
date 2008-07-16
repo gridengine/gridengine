@@ -847,31 +847,30 @@ int parent_loop(char *hostname, int port, int ptym,
       return 1;
    }
 
-#if defined(HP11) || defined(HP1164)
    {
-   sigset_t old_sigmask;
-   sge_thread_block_all_signals(&old_sigmask);
-#endif
-   ret = create_thread(thread_lib_handle,
-                       &thread_pty_to_commlib,
-                       cl_com_log_list,
-                       "pty_to_commlib thread",
-                       2,
-                       pty_to_commlib);
-   if (ret != CL_RETVAL_OK) {
-      shepherd_trace("main: creating pty_to_commlib thread failed: %d", ret);
+      sigset_t old_sigmask;
+      sge_thread_block_all_signals(&old_sigmask);
+
+      ret = create_thread(thread_lib_handle,
+                          &thread_pty_to_commlib,
+                          cl_com_log_list,
+                          "pty_to_commlib thread",
+                          2,
+                          pty_to_commlib);
+      if (ret != CL_RETVAL_OK) {
+         shepherd_trace("main: creating pty_to_commlib thread failed: %d", ret);
+      }
+
+      ret = create_thread(thread_lib_handle,
+                          &thread_commlib_to_pty,
+                          cl_com_log_list,
+                          "commlib_to_pty thread",
+                          3,
+                          commlib_to_pty);
+
+      pthread_sigmask(SIG_SETMASK, &old_sigmask, NULL);
    }
 
-   ret = create_thread(thread_lib_handle,
-                       &thread_commlib_to_pty,
-                       cl_com_log_list,
-                       "commlib_to_pty thread",
-                       3,
-                       commlib_to_pty);
-#if defined(HP11) || defined(HP1164)
-   pthread_sigmask(SIG_SETMASK, &old_sigmask, NULL);
-   }
-#endif
    if (ret != CL_RETVAL_OK) {
       shepherd_trace("main: creating commlib_to_pty thread failed: %d", ret);
    }

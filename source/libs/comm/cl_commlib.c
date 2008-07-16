@@ -787,19 +787,18 @@ int cl_com_setup_commlib(cl_thread_mode_t t_mode, cl_log_t debug_level, cl_log_f
                return ret_val;
             }
             CL_LOG(CL_LOG_INFO,"starting trigger thread ...");
-#if defined(HP11) || defined(HP1164)
+
             {
             sigset_t old_sigmask;
             sge_thread_block_all_signals(&old_sigmask);
-#endif
+
             ret_val = cl_thread_list_create_thread(cl_com_thread_list,
                                                    &thread_p,
                                                    cl_com_log_list,
                                                    "trigger_thread", 1, cl_com_trigger_thread, NULL, NULL);
-#if defined(HP11) || defined(HP1164)
             pthread_sigmask(SIG_SETMASK, &old_sigmask, NULL);
             }
-#endif
+
             if (ret_val != CL_RETVAL_OK) {
                pthread_mutex_unlock(&cl_com_thread_list_mutex);
                CL_LOG(CL_LOG_ERROR,"could not start trigger_thread");
@@ -1593,19 +1592,18 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
          CL_LOG(CL_LOG_INFO,"starting handle service thread ...");
          snprintf(help_buffer,80,"%s_service",new_handle->local->comp_name);
-#if defined(HP11) || defined(HP1164)
          {
          sigset_t old_sigmask;
          sge_thread_block_all_signals(&old_sigmask);
-#endif
+
          return_value = cl_thread_list_create_thread(cl_com_thread_list,
                                                      &(new_handle->service_thread),
                                                      cl_com_log_list,
                                                      help_buffer, 2, cl_com_handle_service_thread, NULL, (void*)new_handle);
-#if defined(HP11) || defined(HP1164)
+
          pthread_sigmask(SIG_SETMASK, &old_sigmask, NULL);
          }
-#endif
+
          if (return_value != CL_RETVAL_OK) {
             CL_LOG(CL_LOG_ERROR,"could not start handle service thread");
             thread_start_error = 1;
@@ -1614,19 +1612,19 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
          CL_LOG(CL_LOG_INFO,"starting handle read thread ...");
          snprintf(help_buffer,80,"%s_read",new_handle->local->comp_name);
-#if defined(HP11) || defined(HP1164)
+
          {
          sigset_t old_sigmask;
          sge_thread_block_all_signals(&old_sigmask);
-#endif
+
          return_value = cl_thread_list_create_thread(cl_com_thread_list,
                                                      &(new_handle->read_thread),
                                                      cl_com_log_list,
                                                      help_buffer, 3, cl_com_handle_read_thread, NULL, NULL);
-#if defined(HP11) || defined(HP1164)
+
          pthread_sigmask(SIG_SETMASK, &old_sigmask, NULL);
          }
-#endif
+
          if (return_value != CL_RETVAL_OK) {
             CL_LOG(CL_LOG_ERROR,"could not start handle read thread");
             thread_start_error = 1;
@@ -1635,19 +1633,19 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
          CL_LOG(CL_LOG_INFO,"starting handle write thread ...");
          snprintf(help_buffer,80,"%s_write",new_handle->local->comp_name);
-#if defined(HP11) || defined(HP1164)
+
          {
          sigset_t old_sigmask;
          sge_thread_block_all_signals(&old_sigmask);
-#endif
+
          return_value = cl_thread_list_create_thread(cl_com_thread_list,
                                                      &(new_handle->write_thread),
                                                      cl_com_log_list,
                                                      help_buffer, 2, cl_com_handle_write_thread, NULL, NULL);
-#if defined(HP11) || defined(HP1164)
+
          pthread_sigmask(SIG_SETMASK, &old_sigmask, NULL);
          }
-#endif
+
          if (return_value != CL_RETVAL_OK) {
             CL_LOG(CL_LOG_ERROR,"could not start handle write thread");
             thread_start_error = 1;

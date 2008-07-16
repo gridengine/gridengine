@@ -1,3 +1,7 @@
+HP-2008-07-16-0: Bugfix:     Using fix HP-2008-07-14-0 for all architectures now
+                 Cleanup to: HP-2008-07-14-0
+                 Review:     CR
+
 DG-2008-07-16-0: Bugfix:    qsub -w v always returned success.
                  Bugster:   6724949
                  Issue:     2652

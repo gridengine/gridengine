@@ -1,5 +1,10 @@
-AP-2008-07-17-0: Bugfix:    Wrong option in upgrade procedure.
-                 Review:    AS
+EB-2008-07-17-0: Bugfix:     Qmaster message file contains logging about NULL ptr passed to host_list_locate()
+                 Bugster:    6726283
+                 Issue:      2658
+                 Review:     JG 
+
+AP-2008-07-17-0: Bugfix:     Wrong option in upgrade procedure.
+                 Review:     AS
 
 HP-2008-07-16-0: Bugfix:     Using fix HP-2008-07-14-0 for all architectures now
                  Cleanup to: HP-2008-07-14-0

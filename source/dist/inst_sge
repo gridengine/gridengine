@@ -593,7 +593,7 @@ if [ "$UPDATE" = true ]; then
       "inst_sge -upd-rc\n" \
       "   This will create new RC scripts/SMF services for the new cluster (qmaster,execd,bdb)\n" \
       "   WARNING: will silently remove existing conflicting files\n" \
-      "   TIP: If you don't want to enable SMF on Solaris run  inst_sge -post-upd-rc -nosmf\n" \
+      "   TIP: If you don't want to enable SMF on Solaris run  inst_sge -upd-rc -nosmf\n" \
       "\n" \
       "TIP: Use inst_sge -post-upd to do all previous actions\n"
       exit 0

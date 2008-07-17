@@ -1,3 +1,6 @@
+AP-2008-07-17-0: Bugfix:    Wrong option in upgrade procedure.
+                 Review:    AS
+
 HP-2008-07-16-0: Bugfix:     Using fix HP-2008-07-14-0 for all architectures now
                  Cleanup to: HP-2008-07-14-0
                  Review:     CR

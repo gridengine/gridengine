@@ -3550,27 +3550,32 @@ char *argv[]
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s\n", lGetString(aep, AN_text));
+            lFreeList(&alp);
+            lFreeList(&lp);
             sge_parse_return = 1;
             spp++;
             continue;
          }
+         lFreeList(&alp);
 
-         if (!lp || lGetNumberOfElem(lp) == 0) {
+         if (lp == NULL || lGetNumberOfElem(lp) == 0) {
             fprintf(stderr, MSG_USER_XISNOKNOWNUSER_S, *spp);
             fprintf(stderr, "\n");
             spp++;
+            lFreeList(&lp);
             continue;
          }
-         lFreeList(&alp);
          ep = lFirst(lp);
          
          /* edit user */
          newep = edit_user(ep, uid, gid);
 
          /* if the user name has changed, we need to print an error message */   
-         if (strcmp(lGetString(ep, UU_name), lGetString(newep, UU_name))) {
+         if (newep == NULL || strcmp(lGetString(ep, UU_name), lGetString(newep, UU_name))) {
             fprintf(stderr, MSG_QCONF_CANTCHANGEOBJECTNAME_SS, lGetString(ep, UU_name), lGetString(newep, UU_name));
             fprintf(stderr, "\n");
+            lFreeElem(&newep);
+            lFreeList(&lp);
             DRETURN(1);
          } else {
             lFreeList(&lp);
@@ -3617,13 +3622,17 @@ char *argv[]
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s\n", lGetString(aep, AN_text));
+            lFreeList(&alp);
+            lFreeList(&lp);
             spp++;
             continue;
          }
+         lFreeList(&alp);
 
          if (lp == NULL || lGetNumberOfElem(lp) == 0) {
             fprintf(stderr, MSG_PROJECT_XISNOKNWOWNPROJECT_S, *spp);
             fprintf(stderr, "\n");
+            lFreeList(&lp);
             continue;
          }
          lFreeList(&alp);

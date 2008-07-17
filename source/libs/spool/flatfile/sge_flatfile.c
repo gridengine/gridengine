@@ -1977,7 +1977,8 @@ FF_DEBUG("detected end_token");
                                        ANSWER_QUALITY_ERROR,
                                        MSG_MUST_BE_POSITIVE_VALUE_S,
                                        fields[field_index].name);
-                  return;
+                  sge_dstring_free(&buffer);
+                  DRETURN_VOID;
                }
             }
             if (object_parse_field_from_string(*object, answer_list, nm, 
@@ -2170,8 +2171,7 @@ FF_DEBUG("after parsing object");
 
    /* cleanup */
    sge_dstring_free(&buffer);
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /****** spool/flatfile/spool_flatfile_read_list() ***********************

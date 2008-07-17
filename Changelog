@@ -1,10 +1,16 @@
-EB-2008-07-17-0: Bugfix:     Qmaster message file contains logging about NULL ptr passed to host_list_locate()
-                 Bugster:    6726283
-                 Issue:      2658
-                 Review:     JG 
+JG-2008-07-14-0: Bugfix:    Fixed minor memory leaks.
+                 Bugster:   6724877
+                 Issue:     2650
+                 Review:    HP
 
-AP-2008-07-17-0: Bugfix:     Wrong option in upgrade procedure.
-                 Review:     AS
+EB-2008-07-17-0: Bugfix:    Qmaster message file contains logging about NULL
+                            ptr passed to host_list_locate()
+                 Bugster:   6726283
+                 Issue:     2658
+                 Review:    JG 
+
+AP-2008-07-17-0: Bugfix:    Wrong option in upgrade procedure.
+                 Review:    AS
 
 HP-2008-07-16-0: Bugfix:     Using fix HP-2008-07-14-0 for all architectures now
                  Cleanup to: HP-2008-07-14-0
@@ -25,10 +31,10 @@ JG-2008-07-14-0: Bugfix:    Fixed minor memory leaks.
                  Issue:     2650
                  Review:    EB, HP, CR
 
-HP-2008-07-14-0: Bugfix:     Fixed wrongly set signals in commlib threads
-                 Bugster:    6725446
-                 Issue:      2653
-                 Review:     EB, CR
+HP-2008-07-14-0: Bugfix:    Fixed wrongly set signals in commlib threads
+                 Bugster:   6725446
+                 Issue:     2653
+                 Review:    EB, CR
 
 MD-2008-07-14-0: Bugfix:    /etc/services is not handled correctly during 
                             installation

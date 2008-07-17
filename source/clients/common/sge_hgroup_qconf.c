@@ -198,9 +198,10 @@ static bool hgroup_provide_modify_context(sge_gdi_ctx_class_t *ctx, lListElem **
                                        hgroup, false) || 
                 ignore_unchanged_message) {
                lFreeElem(this_elem);
-               *this_elem = hgroup; 
+               *this_elem = hgroup;
                ret = true;
             } else {
+               lFreeElem(&hgroup);
                answer_list_add(answer_list, MSG_FILE_NOTCHANGED,
                                STATUS_ERROR1, ANSWER_QUALITY_ERROR);
             }

@@ -213,10 +213,10 @@ int main(int argc, char *argv[])
          printf("positiv filter matching failed (test %d)\n", i+1);
          pos_tests_failed++;
       }
+      lFreeElem(&rule);
       if (positiv_test[i].last == true) {
          break;
       }
-      lFreeElem(&rule);
    }
    printf("%d positiv test(s) failed\n", pos_tests_failed);
 

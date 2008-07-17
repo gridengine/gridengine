@@ -847,6 +847,7 @@ int comm_wait_for_connection(COMMUNICATION_HANDLE *handle,
       if (endpoint_list->elem_count > 0) {
          endpoint = cl_endpoint_list_get_first_elem(endpoint_list);
          g_hostname = strdup(endpoint->endpoint->comp_host);
+         FREE(*host);
          *host = g_hostname;
          DPRINTF(("A client from host %s has connected\n", g_hostname));
       }
@@ -1346,14 +1347,15 @@ int comm_recv_message(COMMUNICATION_HANDLE *handle, cl_bool_t b_synchron,
                   break;
 
                case WINDOW_SIZE_CTRL_MSG:
+                  memcpy(tmpbuf, message->message, MIN(99, message->message_length));
+                  tmpbuf[MIN(99, message->message_length)] = 0;
                   /* control message */
-                  recv_mess->type = message->message[0];
+                  recv_mess->type = tmpbuf[0];
                   /* scan subtype */
-                  sscanf((char*)&(message->message[1]),
-                     "%s", sub_type);
+                  sscanf((char*)&(tmpbuf[1]), "%s", sub_type);
                   if (strcmp(sub_type, "WS") == 0) {
                      int row, col, xpixel, ypixel;
-                     sscanf((char*)&(message->message[4]),
+                     sscanf((char*)&(tmpbuf[4]),
                         "%d%d%d%d",
                         &row, &col, &xpixel, &ypixel);
                      recv_mess->ws.ws_row    = row;

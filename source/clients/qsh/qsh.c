@@ -1809,7 +1809,7 @@ int main(int argc, char **argv)
           * Wait for the client (=shepherd) to connect to us
           */
          DPRINTF(("waiting for connection\n"));
-         ret = comm_wait_for_connection(g_comm_handle, COMM_CLIENT, 
+         ret = comm_wait_for_connection(g_comm_handle, COMM_CLIENT,
                                         QSH_SOCKET_FINAL_TIMEOUT, &host, &err_msg);
          sge_dstring_free(&err_msg);
          if (ret != COMM_RETVAL_OK) {
@@ -1995,6 +1995,8 @@ int main(int argc, char **argv)
                DPRINTF(("waiting for connection\n"));
                ret = comm_wait_for_connection(g_comm_handle, COMM_CLIENT, 
                                               random_poll, &host, &err_msg);
+               /* JG: TODO: nothing is done with err_msg?? */
+               sge_dstring_free(&err_msg);
                if (ret != COMM_RETVAL_OK) {
                   if (ret == COMM_GOT_TIMEOUT) {
                      DPRINTF(("got no connection within timeout of %d s\n", random_poll));

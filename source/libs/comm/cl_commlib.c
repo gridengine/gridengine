@@ -7619,49 +7619,51 @@ static void cl_commlib_app_message_queue_cleanup(cl_com_handle_t* handle) {
       do some connection cleanup
       - remove received messages not fetched by application
     */
-   pthread_mutex_lock(handle->messages_ready_mutex); 
-   if (handle->messages_ready_for_read != 0) {
-      cl_app_message_queue_elem_t* app_mq_elem = NULL;
-      struct timeval now;
-      long timeout_time = 0;
-      cl_com_connection_t* connection = NULL;
+   if (handle != NULL) {
+      pthread_mutex_lock(handle->messages_ready_mutex); 
+      if (handle->messages_ready_for_read != 0) {
+         cl_app_message_queue_elem_t* app_mq_elem = NULL;
+         struct timeval now;
+         long timeout_time = 0;
+         cl_com_connection_t* connection = NULL;
 
-      /* compute timeout */
-      gettimeofday(&now, NULL);
+         /* compute timeout */
+         gettimeofday(&now, NULL);
 
-      cl_raw_list_lock(handle->received_message_queue);
-      app_mq_elem = cl_app_message_queue_get_first_elem(handle->received_message_queue);
-      while(app_mq_elem) {
-         cl_message_list_elem_t* message_elem = NULL;
-         cl_message_list_elem_t* next_message_elem = NULL;
+         cl_raw_list_lock(handle->received_message_queue);
+         app_mq_elem = cl_app_message_queue_get_first_elem(handle->received_message_queue);
+         while(app_mq_elem) {
+            cl_message_list_elem_t* message_elem = NULL;
+            cl_message_list_elem_t* next_message_elem = NULL;
 
-         connection = app_mq_elem->rcv_connection;
-         app_mq_elem = cl_app_message_queue_get_next_elem(app_mq_elem);
+            connection = app_mq_elem->rcv_connection;
+            app_mq_elem = cl_app_message_queue_get_next_elem(app_mq_elem);
 
-         cl_raw_list_lock(connection->received_message_list);
-         next_message_elem = cl_message_list_get_first_elem(connection->received_message_list);
-         while(next_message_elem) {
-            cl_com_message_t* message = NULL;
-            message_elem = next_message_elem;
-            next_message_elem = cl_message_list_get_next_elem(message_elem);
-            message = message_elem->message;
-            if (message != NULL && message->message_state == CL_MS_READY) {
-               timeout_time = message->message_receive_time.tv_sec + handle->message_timeout;
-               if (timeout_time <= now.tv_sec) {
-                  CL_LOG(CL_LOG_WARNING,"removing message because of message_timeout");
+            cl_raw_list_lock(connection->received_message_list);
+            next_message_elem = cl_message_list_get_first_elem(connection->received_message_list);
+            while(next_message_elem) {
+               cl_com_message_t* message = NULL;
+               message_elem = next_message_elem;
+               next_message_elem = cl_message_list_get_next_elem(message_elem);
+               message = message_elem->message;
+               if (message != NULL && message->message_state == CL_MS_READY) {
+                  timeout_time = message->message_receive_time.tv_sec + handle->message_timeout;
+                  if (timeout_time <= now.tv_sec) {
+                     CL_LOG(CL_LOG_WARNING,"removing message because of message_timeout");
 
-                  cl_message_list_remove_receive(connection, message, 0);
-                  handle->messages_ready_for_read = handle->messages_ready_for_read - 1;
-                  cl_app_message_queue_remove(handle->received_message_queue, connection, 0, CL_FALSE);
-                  cl_com_free_message(&message);
+                     cl_message_list_remove_receive(connection, message, 0);
+                     handle->messages_ready_for_read = handle->messages_ready_for_read - 1;
+                     cl_app_message_queue_remove(handle->received_message_queue, connection, 0, CL_FALSE);
+                     cl_com_free_message(&message);
+                  }
                }
             }
+            cl_raw_list_unlock(connection->received_message_list);
          }
-         cl_raw_list_unlock(connection->received_message_list);
+         cl_raw_list_unlock(handle->received_message_queue);
       }
-      cl_raw_list_unlock(handle->received_message_queue);
+      pthread_mutex_unlock(handle->messages_ready_mutex);
    }
-   pthread_mutex_unlock(handle->messages_ready_mutex);
 }
 
 /****** cl_commlib/cl_com_messages_in_send_queue() ****************************

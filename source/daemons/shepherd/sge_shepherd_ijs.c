@@ -1006,6 +1006,7 @@ int close_parent_loop(int exit_status)
             count++;
          } else if (recv_mess.type == UNREGISTER_RESPONSE_CTRL_MSG) {
             shepherd_trace("Received UNREGISTER_RESPONSE_CTRL_MSG");
+            comm_free_message(&recv_mess, &err_msg);
             break;
          } else {
             shepherd_trace("No connection or timeout while waiting for message");

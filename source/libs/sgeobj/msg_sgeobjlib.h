@@ -338,4 +338,6 @@
 
 #define MSG_INVALID_QINSTANCE_NAME_S   _MESSAGE(64356, _("invalid queue instance name "SFQ))
 
+#define MSG_CENTRY_NOTREQUESTABLE_S              _MESSAGE(64357, _("Complex attribute "SFQ" is not requestable"))
+
 #endif /* __MSG_SGEOBJLIB_H */

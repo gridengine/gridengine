@@ -1,3 +1,10 @@
+RN-2008-07-18-0: Bugfix:    o use of -l tmpdir=abc can crash schedd
+                            o 'Infinity' must be rejected when specified in
+                            'complex_values' or RQS limits for consumables
+                 Bugster:   6650497, 6613438
+                 Issue:     2597, 2391
+                 Review:    AH
+
 JG-2008-07-08-0: Bugfix:    qmaster runs out of memory on AIX
                  Bugster:   6720078
                  Issue:     2641

@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # SGE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
-# Scriptname: load_cc.sh
+# Scriptname: load_sge_config.sh
 # Module: common functions
 #
 #___INFO__MARK_BEGIN__
@@ -778,7 +778,7 @@ fi
 tmp_adminhost=`$QCONF -sh | grep "^${HOST}$"`
 if [ "$tmp_adminhost" != "$HOST" ]; then
    $INFOTEXT "ERROR: Load must be started on admin host (qmaster host recommended)."
-   LogIt "C" "Can't start load_cc.sh on $HOST: not an admin host"
+   LogIt "C" "Can't start load_sge_config.sh on $HOST: not an admin host"
    EXIT 1
 fi
 

@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Saves cluster configuration into a directory structure.
-# Scriptname: save_cc.sh
+# Scriptname: save_sge_config.sh
 # Module: common functions
 #
 #___INFO__MARK_BEGIN__

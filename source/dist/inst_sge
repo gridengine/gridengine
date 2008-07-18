@@ -579,10 +579,10 @@ if [ "$UPDATE" = true ]; then
    CopyCA submit
    CheckRunningDaemon sge_qmaster
    $INFOTEXT -u "Last step - load configuration from the backup"
-   $INFOTEXT -n "\nload command: $SGE_ROOT/util/upgrade_modules/load_cc.sh $UPGRADE_BACKUP_DIR -mode \"$UPGRADE_MODE\" -log C -newijs \"$newIJS\" -gid_range \"${CFG_GID_RANGE}\" -admin_mail \"${CFG_MAIL_ADDR}\" -execd_spool_dir \"${CFG_EXE_SPOOL}\" \n"   
+   $INFOTEXT -n "\nload command: $SGE_ROOT/util/upgrade_modules/load_sge_config.sh $UPGRADE_BACKUP_DIR -mode \"$UPGRADE_MODE\" -log C -newijs \"$newIJS\" -gid_range \"${CFG_GID_RANGE}\" -admin_mail \"${CFG_MAIL_ADDR}\" -execd_spool_dir \"${CFG_EXE_SPOOL}\" \n"   
    $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
    #Load configuration, show only critical errors
-   "$SGE_ROOT/util/upgrade_modules/load_cc.sh" "$UPGRADE_BACKUP_DIR" -log "C" -mode "$UPGRADE_MODE" \
+   "$SGE_ROOT/util/upgrade_modules/load_sge_config.sh" "$UPGRADE_BACKUP_DIR" -log "C" -mode "$UPGRADE_MODE" \
 -newijs "$newIJS" -execd_spool_dir "$CFG_EXE_SPOOL" -gid_range "$CFG_GID_RANGE" -admin_mail "$CFG_MAIL_ADDR"
    
    if [ "$POST_UPDATE" != true ]; then

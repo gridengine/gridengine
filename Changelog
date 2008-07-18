@@ -1,3 +1,6 @@
+LP-2008-07-18-2: Cleanup:   Renamed load_cc.sh and save_cc.sh to 
+                            load_sge_config.sh and save_sge_config.sh
+
 LP-2008-07-18-1: Bugfix:    Upgrade did not update N1 windows helper service
                             (Using service name instead of display name now)
                  Bugfix:    Wrong users were connecting to windows hosts in the

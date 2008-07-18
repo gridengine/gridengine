@@ -746,43 +746,41 @@ InstWinHelperSvc()
 
    loop=0
 
-   WIN_SVC="Sun Grid Engine Helper Service"
+   WIN_SVC="SGE_Helper_Service.exe"
    WIN_DIR=`winpath2unix $SYSTEMROOT`
 
    $INFOTEXT " Testing, if a service is already installed!\n"
    $INFOTEXT -log " Testing, if a service is already installed!\n"
-   eval "net pause \"$WIN_SVC\"" > /dev/null 2>&1
-   ret=$?
-   if [ "$ret" = 0 ]; then
-      ret=2
-      $INFOTEXT "   ... a service is already installed!"
-      $INFOTEXT -log "   ... a service is already installed!"
-
-      while [ "$ret" -ne 0 ]; do
-         eval "net continue \"$WIN_SVC\"" > /dev/null 2>&1
-         ret=$?
-      done    
-      #Return if not in update mode
-      if [ "$1" != update ]; then
-         return
-      fi
-   fi
-
+   
    if [ -f "$WIN_DIR"/SGE_Helper_Service.exe ]; then
-      $INFOTEXT "   ... uninstalling old service!"
-      $INFOTEXT -log "   ... uninstalling old service!"
-      $WIN_DIR/SGE_Helper_Service.exe -uninstall
+      #Try to stop
+      eval "net stop \"$WIN_SVC\"" > /dev/null 2>&1
+      ret=$?
+      #If stop fails, try start since service might be already registered
+      if [ "$ret" -ne 0 ]; then
+         eval "net start \"$WIN_SVC\"" > /dev/null 2>&1
+	 ret=$?
+         #In any case stop the service
+         eval "net stop \"$WIN_SVC\"" > /dev/null 2>&1
+      fi
+      if [ "$ret" -eq 0 ]; then
+         $INFOTEXT "   ... a service is already installed!"
+         $INFOTEXT -log "   ... a service is already installed!"
+	 $INFOTEXT "   ... uninstalling old service!"
+         $INFOTEXT -log "   ... uninstalling old service!"
+         $WIN_DIR/SGE_Helper_Service.exe -uninstall
+      fi
       rm $WIN_DIR/SGE_Helper_Service.exe
    fi
-
+   
    ret=1
    $INFOTEXT "\n   ... moving new service binary!"
    $INFOTEXT -log "\n   ... moving new service binary!"
    cp -fR $SGE_UTILBIN/SGE_Helper_Service.exe $WIN_DIR
 
+   $INFOTEXT "   ... installing new service!"
+   $INFOTEXT -log "   ... installing new service!"
    while [ "$ret" -ne "0" -a "$loop" -lt 6 ]; do 
-      $INFOTEXT "   ... installing new service!"
-      $INFOTEXT -log "   ... installing new service!"
       $WIN_DIR/SGE_Helper_Service.exe -install
       ret=$?
       loop=`expr $loop + 1`

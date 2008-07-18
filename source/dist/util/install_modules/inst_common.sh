@@ -3855,6 +3855,22 @@ DoRemoteActionForHosts()
   fi
   for host in $host_list ; do
      $INFOTEXT "\nProcessing $host ..."
+     if [ -f "$SGE_ROOT/$SGE_CELL/win_hosts_to_update" ]; then
+        cat $SGE_ROOT/$SGE_CELL/win_hosts_to_update | grep $host > /dev/null 2>&1
+	if [ "$?" -eq 0 -a $HOST != $host ]; then
+	   #We want to connect to a windows host (but as who?)
+	   host_str="`echo $host | tr "a-z" "A-Z"`"
+	   if [ -n "$SGE_WIN_ADMIN" ]; then
+	      user="${host_str}+$SGE_WIN_ADMIN"
+	   else
+	      #We need to ask
+	      AUTO=false
+	      $INFOTEXT -n "Provide a valid windows administrator user name for host %s \n[%s] >> "  "$host" "$host_str+Administrator"
+	      eval user=`Enter "$host_str+Administrator"`
+	      AUTO=true
+	   fi
+	fi
+     fi
      DoRemoteAction "$host" "$user" "$cmd"
   done
 }
@@ -3962,7 +3978,7 @@ cd $SGE_ROOT && RemoteExecSpoolDirDelete"
    
    if [ "$UPDATE_WIN" = true ]; then                   #UPDATE WINDOWS HELPER SERVICE ON ALL WINDOWS EXECDs
       cmd=". $SGE_ROOT/$SGE_CELL/common/settings.sh ; . $SGE_ROOT/util/install_modules/inst_common.sh ; \
-. $SGE_ROOT/util/install_modules/inst_execd.sh ; cd $SGE_ROOT ; ECHO=echo ;BasicSettings ; SetUpInfoText ; SAVED_PATH=$PATH ; SetupWinSvc update"
+. $SGE_ROOT/util/install_modules/inst_execd.sh ; cd $SGE_ROOT ; AUTO=true ; ECHO=echo ;BasicSettings ; SetUpInfoText ; SAVED_PATH=$PATH ; SetupWinSvc update"
       $INFOTEXT -u "Updating windows helper service on all windows hosts:"
       DoRemoteActionForHosts "$list" $ADMINUSER "$cmd"
    fi

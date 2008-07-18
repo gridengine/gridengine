@@ -597,6 +597,11 @@ if [ "$UPDATE" = true ]; then
           "   WARNING: If a helper service from a previous release is running \n" \
           "            on this host, the new helper service overwrites it. The \n" \
           "            host will run only in a 6.2 cluster.\n"
+	  "   TIP: This action requires to enter a windows administrator user for each \n" \
+	  "        host interactively. If all your systems share the same administrator you \n" \
+	  "        can set the environment variable SGE_WIN_ADMIN to that user name. \n" \
+	  "        E.g.: (sh, bash) export SGE_WIN_ADMIN=Administrator \n" \
+	  "              (csh,tcsh) setenv SGE_WIN_ADMIN Administrator \n"
       fi
       $INFOTEXT -n "OPTIONAL:\n" \
       "inst_sge -upd-rc\n" \

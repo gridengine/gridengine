@@ -1,3 +1,10 @@
+LP-2008-07-18-1: Bugfix:    Upgrade did not update N1 windows helper service
+                            (Using service name instead of display name now)
+                 Bugfix:    Wrong users were connecting to windows hosts in the
+                            post upgrade procedures
+                 Bugfix:    Fixed broken -winsvc in certain cases
+                 Review:    AP
+
 AA-2008-07-18-0: Bugfix:     o qconf invalid values and exit code fixes
                  Bugster:    6618016, 6618012, 6617973
                  Issue:      2662
@@ -18,7 +25,8 @@ LP-2008-07-18-0: Enhancem:  Introduced new inst_sge option -start-all to start
                  Cleanup:   Removed unsed procedure UninstWinHelperPre62
                  Bugfix:    shadow_masters file might contain some hosts twice
                  Bugster:   6675592
-                 Issue:     2521 
+                 Issue:     2521
+                 Review:    JG, MD
 
 EB-2008-07-17-0: Bugfix:     Qmaster message file contains logging about NULL ptr passed to host_list_locate()
                  Bugster:    6726283

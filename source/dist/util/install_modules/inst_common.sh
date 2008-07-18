@@ -178,26 +178,10 @@ Enter()
 Makedir()
 {
    dir=$1
-   tmp_dir=$1
 
    if [ ! -d $dir ]; then
-
-      while [ ! -d $tmp_dir ]; do
-         tmp_dir2=`dirname $tmp_dir`
-         tmp_dir=$tmp_dir2
-      done
-
-       $INFOTEXT "creating directory: %s" "$dir"
-       if [ "`$SGE_UTILBIN/filestat -owner $tmp_dir`" != "$ADMINUSER" ]; then
-         Execute $MKDIR -p $dir
-         if [ "$ADMINUSER" = "default" ]; then
-            Execute $CHOWN root $dir
-         else
-            Execute $CHOWN $ADMINUSER $dir
-         fi
-       else
-         ExecuteAsAdmin $MKDIR -p $dir
-       fi
+      $INFOTEXT "creating directory: %s" "$dir"
+      ExecuteAsAdmin $MKDIR -p $dir
    fi
 
    ExecuteAsAdmin $CHMOD $DIRPERM $dir

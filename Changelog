@@ -1,3 +1,8 @@
+AA-2008-07-18-0: Bugfix:     o qconf invalid values and exit code fixes
+                 Bugster:    6618016, 6618012, 6617973
+                 Issue:      2662
+                 Review:     MD
+
 MD-2008-07-18-0: Bugfix:     o Installation of execution daemon left user unclear 
                              which port was chosen.
                              o Wrong permissions if install_qmaster creates qmaster 

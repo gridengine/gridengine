@@ -611,8 +611,8 @@ char *argv[]
 
          spp = sge_parser_get_next(spp);
          parse_name_list_to_cull("host to add", &lp, AH_Type, AH_name, *spp);
-         if (add_host_of_type(ctx, lp, SGE_ADMINHOST_LIST) != 0) {
-            sge_parse_return = 1;
+         if (!add_host_of_type(ctx, lp, SGE_ADMINHOST_LIST)) {
+            sge_parse_return |= 1;
          }
          
          lFreeList(&lp);
@@ -5182,7 +5182,9 @@ char *argv[]
             sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN);
          }
          
-         cqueue_add_from_file(ctx, &answer_list, file);
+         if (!cqueue_add_from_file(ctx, &answer_list, file)) {
+            sge_parse_return |= 1;
+         }
          sge_parse_return |= show_answer(answer_list);
          lFreeList(&answer_list);
          

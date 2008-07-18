@@ -104,4 +104,6 @@ struct hostent *sge_copy_hostent (struct hostent *orig);
 int sge_get_qmaster_port(void);
 int sge_get_execd_port(void);
 
+bool is_hgroup_name(const char *name);
+
 #endif /* __HOST_H */

@@ -1,3 +1,9 @@
+RN-2008-07-18-1: Bugfix:    Incorrectly considering two host group names to be
+                            the same 
+                 Bugster:   6666161
+                 Issue:     2567
+                 Review:    JG
+
 RN-2008-07-18-0: Bugfix:    o use of -l tmpdir=abc can crash schedd
                             o 'Infinity' must be rejected when specified in
                             'complex_values' or RQS limits for consumables

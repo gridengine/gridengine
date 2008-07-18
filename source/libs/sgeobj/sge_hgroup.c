@@ -64,34 +64,6 @@
 
 lList *Master_HGroup_List = NULL;
 
-/****** sgeobj/hgroup/is_hgroup_name() ****************************************
-*  NAME
-*     is_hgroup_name() -- Is the given name a hostgroup name 
-*
-*  SYNOPSIS
-*     bool is_hgroup_name(const char *name) 
-*
-*  FUNCTION
-*     Is the given name a hostgroup name 
-*
-*  INPUTS
-*     const char *name - hostname or hostgroup name 
-*
-*  RESULT
-*     bool - true for hostgroupnames otherwise faslse
-******************************************************************************/
-bool 
-is_hgroup_name(const char *name)
-{
-   bool ret = false;
-
-   if (name != NULL) {
-      ret = (name[0] == HOSTGROUP_INITIAL_CHAR) ? true : false;
-   }
-   return ret;
-}
-
-
 /****** sgeobj/hgroup/hgroup_check_name() *************************************
 *  NAME
 *    hgroup_check_name() -- determine if the name is a valid hgroup name

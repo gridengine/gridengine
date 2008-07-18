@@ -1163,6 +1163,7 @@ char *sge_host_get_mainname(host *h)
 *        - Domain name may be ignored
 *        - Domain name may be replaced by a 'default domain'
 *        - Hostnames may be used as they are.
+*        - straight strcpy() for hostgroup names
 *
 *  INPUTS
 *     char *dst       - possibly modified hostname
@@ -1176,9 +1177,15 @@ char *sge_host_get_mainname(host *h)
 ******************************************************************************/
 void sge_hostcpy(char *dst, const char *raw)
 {
+   const char *default_domain = NULL;
    if (dst == NULL || raw == NULL) {
       return;
    }
+   if (is_hgroup_name(raw)) {
+      /* hostgroup name: not in FQDN format, copy the entire string*/
+      sge_strlcpy(dst, raw, CL_MAXHOSTLEN);
+      return;
+   } 
    if (bootstrap_get_ignore_fqdn()) {
       char *s = NULL;
       /* standard: simply ignore FQDN */
@@ -1187,12 +1194,12 @@ void sge_hostcpy(char *dst, const char *raw)
       if ((s = strchr(dst, '.'))) {
          *s = '\0';
       }
-   } else if (bootstrap_get_default_domain() != NULL && 
-              SGE_STRCASECMP(bootstrap_get_default_domain(), "none") != 0) {
+   } else if ( (default_domain = bootstrap_get_default_domain()) != NULL && 
+              SGE_STRCASECMP(default_domain, "none") != 0) {
  
       /* exotic: honor FQDN but use default_domain */
       if (!strchr(raw, '.')) {
-         snprintf(dst, CL_MAXHOSTLEN, "%s.%s", raw, bootstrap_get_default_domain());
+         snprintf(dst, CL_MAXHOSTLEN, "%s.%s", raw, default_domain);
       } else {
          sge_strlcpy(dst, raw, CL_MAXHOSTLEN);
       }
@@ -1282,4 +1289,33 @@ bool sge_is_hgroup_ref(const char *string)
    return ret;
 }
 
+/****** uti/hostname/is_hgroup_name() ****************************************
+*  NAME
+*     is_hgroup_name() -- Is the given name a hostgroup name 
+*
+*  SYNOPSIS
+*     bool is_hgroup_name(const char *name) 
+*
+*  FUNCTION
+*     Is the given name a hostgroup name 
+*
+*  NOTE
+*     This function is also used for usergroup in resource quota sets
+*
+*  INPUTS
+*     const char *name - hostname or hostgroup name 
+*
+*  RESULT
+*     bool - true for hostgroupnames otherwise false
+******************************************************************************/
+bool 
+is_hgroup_name(const char *name)
+{
+   bool ret = false;
+
+   if (name != NULL) {
+      ret = (name[0] == HOSTGROUP_INITIAL_CHAR) ? true : false;
+   }
+   return ret;
+}
 

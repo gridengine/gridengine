@@ -3871,9 +3871,6 @@ DoRemoteActionForHosts()
   fi
   for host in $host_list ; do
      $INFOTEXT "\nProcessing $host ..."
-     if [ "$UPDATE_WIN" = true ]; then
-        user="`echo $host | tr "a-z" "A-Z"`+$user"
-     fi
      DoRemoteAction "$host" "$user" "$cmd"
   done
 }
@@ -3981,7 +3978,7 @@ cd $SGE_ROOT && RemoteExecSpoolDirDelete"
    
    if [ "$UPDATE_WIN" = true ]; then                   #UPDATE WINDOWS HELPER SERVICE ON ALL WINDOWS EXECDs
       cmd=". $SGE_ROOT/$SGE_CELL/common/settings.sh ; . $SGE_ROOT/util/install_modules/inst_common.sh ; \
-. $SGE_ROOT/util/install_modules/inst_execd.sh ; cd $SGE_ROOT ; BasicSettings ; SetUpInfoText ; SetupWinSvc update"
+. $SGE_ROOT/util/install_modules/inst_execd.sh ; cd $SGE_ROOT ; ECHO=echo ;BasicSettings ; SetUpInfoText ; SAVED_PATH=$PATH ; SetupWinSvc update"
       $INFOTEXT -u "Updating windows helper service on all windows hosts:"
       DoRemoteActionForHosts "$list" $ADMINUSER "$cmd"
    fi

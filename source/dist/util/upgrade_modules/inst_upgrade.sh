@@ -312,47 +312,6 @@ RestoreSequenceNumberFiles()
    SafelyCreateFile "$QMASTER_SPOOL_DIR/arseqnum" 644 $NEXT_SEQ_NUMBER
 }
 
-#Copy of inst_execd.sh UnInstWinHelperSvc but modified for pre62
-#TODO: needs to be done on every windows execd host
-#TODO: cleanup duplicit with UnInstWinHelper()
-UninstWinHelperPre62() {
-   tmp_path=$PATH
-   PATH=/usr/contrib/win32/bin:/common:$SAVED_PATH
-   export PATH
-	
-   WIN_SVC="N1 Grid Engine Helper Service"
-   WIN_DIR=`winpath2unix $SYSTEMROOT`
-   $INFOTEXT " Testing, if windows helper service is installed!\n"
-   eval "net pause \"$WIN_SVC\"" > /dev/null 2>&1
-   ret=$?
-   if [ "$ret" = 0 ]; then
-      ret=2
-      $INFOTEXT "   ... a service is installed!"
-      $INFOTEXT -log "   ... a service is installed!"
-      $INFOTEXT "   ... stopping service!"
-      $INFOTEXT -log "   ... stopping service!"
-
-      while [ "$ret" -ne 0 ]; do
-         eval "net continue \"$WIN_SVC\"" > /dev/null 2>&1
-         ret=$?
-      done
-   else
-      $INFOTEXT "   ... no service installed!"   
-      $INFOTEXT -log "   ... no service installed!"   
-   fi
-	
-   if [ -f "$WIN_DIR"/N1_Helper_Service.exe ]; then
-      $INFOTEXT "   ... found service binary!" 
-      $INFOTEXT -log "   ... found service binary!" 
-      $INFOTEXT "   ... uninstalling service!"
-      $INFOTEXT -log "   ... uninstalling service!"
-      $WIN_DIR/Sun_Helper_Service.exe -uninstall
-      rm $WIN_DIR/Sun_Helper_Service.exe
-   fi
-
-   PATH=$tmp_path
-   export PATH
-}
 
 #Select spooling method
 # $1 - backued spooling method

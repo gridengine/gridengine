@@ -88,6 +88,7 @@ WIN_UPDATE=false
 COPY_CA="false"
 RECREATE_SETTINGS="false"
 USE_OLD_IJS="false"
+START_CLUSTER="false"
 
 QMASTER="undef"
 EXECD="undef"
@@ -249,7 +250,7 @@ while [ $ARGC != 0 ]; do
      . ./util/install_modules/inst_common.sh
      . ./util/upgrade_modules/inst_upgrade.sh
      ;;
-   -upd-execds)
+   -upd-execd)
      ALL_RC=true
      DEL_EXECD_SPOOL=true
      . ./util/install_modules/inst_common.sh
@@ -266,6 +267,10 @@ while [ $ARGC != 0 ]; do
      RC_VERSION="61"
      REMOVE_RC=true
      ADD_RC=true
+     ;;
+   -start-all)
+     START_CLUSTER=true
+     . ./util/install_modules/inst_common.sh
      ;;
    -winupdate)
      #update to new Gridengine Helper Service
@@ -288,30 +293,6 @@ while [ $ARGC != 0 ]; do
    -rccreate)
      MAKE_RC=true
      #Generate new rc scripts from settings file
-     ;;
-   -rc-remove-execd-61)
-     HOST_TYPE=execd
-     RC_VERSION="61"
-     REMOVE_RC=true
-     if [ "$2" = "all" ]; then
-        ALL_RC="true"
-        shift
-	ARGC=`expr $ARGC - 1`
-     else
-        RC_HOST_LIST="$2"
-     fi
-     ;;
-   -rc-remove-execd)
-     HOST_TYPE=execd
-     RC_VERSION=""
-     REMOVE_RC=true
-     if [ "$2" = "all" ]; then
-        ALL_RC="true"
-        shift
-	ARGC=`expr $ARGC - 1`
-     else
-        RC_HOST_LIST="$2"
-     fi
      ;;
    -noremote)
      NOREMOTE=true
@@ -396,6 +377,18 @@ if [ $USE_OLD_IJS = "false" ]; then
    RSH_COMMAND="builtin"
 fi
 
+if [ "$START_CLUSTER" = true ]; then
+   if [ -z "$SGE_ROOT" -o -z "$SGE_CELL" ]; then
+      $INFOTEXT "\Can't start cluster: $SGE_ROOT and \$SGE_CELL must be set!"
+      exit 2
+   fi
+   ALL_RC=true
+   ManipulateOneDaemonType "" bdb ""
+   ManipulateOneDaemonType "" qmaster ""
+   ManipulateOneDaemonType "" execd ""
+   exit
+fi
+
 if [ "$WIN_UPDATE" = "true" ]; then
    WelcomeTheUserWinUpdate
    SetupWinSvc update #service install due to an update -> param: update
@@ -449,31 +442,45 @@ if [ "$UPDATE" = true ]; then
       tmp_master2=`grep "^${HOST}#" "$UPGRADE_BACKUP_DIR/cell/shadow_masters" 2>/dev/null`
       if [ "$tmp_master" != "$HOST" -a "$tmp_master2" != "$HOST" ]; then
          $INFOTEXT "Upgrade must be started on a qmaster host!"
-         exit 1
+         exit 2
       fi
       if [ ! -d "$SGE_ROOT/$SGE_CELL" ]; then
          UPGRADE_MODE="copy"
       elif [ ! -f "$SGE_ROOT/$SGE_CELL/common/bootstrap" ]; then
-         $INFOTEXT -n "Cannot continue with the \"real\" upgrade. Installation corrupted.\n" \
-                      "Missing bootstrapfile in %s directory!\n" \
-                      "Rerun the upgrade and choose different value for <sge_root> and/or <sge_cell>.\n" "$SGE_ROOT/$SGE_CELL/common"
-         exit 1
+         $INFOTEXT -n "Cannot continue with the \"real\" upgrade procedure because the \n" \
+                      "installation is corrupted. There is no bootstrap file in the \n" \
+                      "%s directory.\n" \
+                      "Restart the upgrade and choose a different <sge_root> or \n" \
+                      "<sge_cell> value.\n" "$SGE_ROOT/$SGE_CELL/common"
+         exit 2
       fi
    elif [ -f "$SGE_ROOT/$SGE_CELL/common/bootstrap" ]; then
       $INFOTEXT -n "Bootstrap file already exists in selected <sge_root>/<sge_cell>.\n" \
                    "If you want to copy the configuration to this location, delete \n" \
                    "%s directory \n" \
                    "and restart the upgrade.\n" "$SGE_ROOT/$SGE_CELL"
-      exit 1
+      exit 2
    fi
    if [ "$UPGRADE_MODE" != "upgrade" ]; then
       #Just copy the configuration to a new SGE_CELL
       UPGRADE_MODE="copy"
-      #we need different ports than in the backup
-      SGE_QMASTER_PORT=`expr $SGE_QMASTER_PORT + 2`
-      SGE_EXECD_PORT=`expr $SGE_EXECD_PORT + 2`      
+      if [ -n "$SGE_QMASTER_PORT" ]; then
+         SGE_QMASTER_PORT=`expr $SGE_QMASTER_PORT + 2`
+      fi
       GetQmasterPort
+      if [ -n "$SGE_EXECD_PORT" ]; then
+         SGE_EXECD_PORT=`expr $SGE_EXECD_PORT + 2`
+      fi
       GetExecdPort
+   else
+      #UPGRADE MODE
+      #Backup could be created with /etc/services values, (not saved) we rather ask for new value 
+      if [ -z "$SGE_QMASTER_PORT" ]; then
+         GetQmasterPort
+      fi
+      if [ -z "$SGE_EXECD_PORT" ]; then
+         GetExecdPort
+      fi
    fi
 
    SetCellDependentVariables
@@ -579,23 +586,26 @@ if [ "$UPDATE" = true ]; then
 -newijs "$newIJS" -execd_spool_dir "$CFG_EXE_SPOOL" -gid_range "$CFG_GID_RANGE" -admin_mail "$CFG_MAIL_ADDR"
    
    if [ "$POST_UPDATE" != true ]; then
-      $INFOTEXT -n "\nIf loading the configuration suceeded run these additional commads:\n" \
+      $INFOTEXT -n "\nIf loading the configuration succeeded run these additional commands:\n" \
       "REQUIRED:\n" \
-      "inst_sge -upd-execds\n" \
-      "   This will initialize all execd spool directories\n"
+      "inst_sge -upd-execd\n" \
+      "   This command initializes all execd spool directories.\n"
       if [ "$WINDOWS_SUPPORT" = true ]; then
           $INFOTEXT -n "inst_sge -upd-win\n" \
-          "   This will connect to all windows execution hosts install new windows helper service\n" \
-          "   WARNING: If the host already runs a helper service of a different version (e.g. from 6.1 cluster)\n" \
-          "                   it will be overwritten by the new version and hosts will only work in 6.2 cluster\n"
+          "   This command connects to all Windows execution hosts and installs \n" \
+          "   the new Windows helper service on each host.\n" \
+          "   WARNING: If a helper service from a previous release is running \n" \
+          "            on this host, the new helper service overwrites it. The \n" \
+          "            host will run only in a 6.2 cluster.\n"
       fi
       $INFOTEXT -n "OPTIONAL:\n" \
       "inst_sge -upd-rc\n" \
-      "   This will create new RC scripts/SMF services for the new cluster (qmaster,execd,bdb)\n" \
-      "   WARNING: will silently remove existing conflicting files\n" \
-      "   TIP: If you don't want to enable SMF on Solaris run  inst_sge -upd-rc -nosmf\n" \
+      "   This command creates new autostart scripts for the new cluster\n" \
+      "   and removes any conflicting files.\n" \
+      "   TIP: To disable SMF on Solaris systems, use the command\n" \
+      "        inst_sge -upd-rc -nosmf\n" \
       "\n" \
-      "TIP: Use inst_sge -post-upd to do all previous actions\n"
+      "TIP: Use inst_sge -post-upd to do all above actions\n"
       exit 0
    fi
 fi
@@ -642,15 +652,23 @@ fi
 
 #Remove old RC and install new
 if [ "$UPDATE_WIN" = true ]; then
+   if [ -z "$SGE_ROOT" -o -z "$SGE_CELL" ]; then
+      $INFOTEXT "\$SGE_ROOT and \$SGE_CELL must be set!"
+      exit 2
+   fi
+   
+   list=""
    if [ -f "$SGE_ROOT/$SGE_CELL/win_hosts_to_update" ]; then
-      list=`cat $UPGRADE_BACKUP_DIR/win_hosts_to_update`
-   else
-      $INFOTEXT -log "No windows hosts in the backup. Cannot upgrade windows helper service."
+      list=`cat $SGE_ROOT/$SGE_CELL/win_hosts_to_update 2>/dev/null`
+   fi
+   if [ -z "$list" ]; then
+      $INFOTEXT -log "Cannot upgrade Windows helper service because there are no Windows\n" \
+                     "hosts in the backup."
       exit 2
    fi
    ALL_RC=false
    ManipulateOneDaemonType $list execd ""
-   $INFOTEXT -log "After you verify that your windows hosts work, you may delete  %s file." "$SGE_ROOT/$SGE_CELL/win_hosts_to_update"
+   $INFOTEXT -log "After you verify that your Windows hosts work, delete \n%s file." "$SGE_ROOT/$SGE_CELL/win_hosts_to_update"
    exit
 fi
 
@@ -1163,7 +1181,7 @@ if [ $SHADOW = "install" ]; then
       ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ExecuteAsAdmin chmod a+rw $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ACT_QMASTER=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
-      if [ "$ACT_QMASTER" != "$SHADOWD_HOST" ]; then
+      if [ "$ACT_QMASTER" != "$SHADOW_HOST" ]; then
          ExecuteAsAdmin echo "$ACT_QMASTER" >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
       fi
       ExecuteAsAdmin echo $SHADOW_HOST >> $SGE_ROOT/$SGE_CELL/common/shadow_masters

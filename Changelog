@@ -1,3 +1,12 @@
+LP-2008-07-18-0: Enhancem:  Introduced new inst_sge option -start-all to start
+                            complete cluster
+                 Enhancem:  Improved upgrade messages
+                 Enhancem:  Upgrade now handles /etc/services sge ports
+                 Cleanup:   Removed unsed procedure UninstWinHelperPre62
+                 Bugfix:    shadow_masters file might contain some hosts twice
+                 Bugster:   6675592
+                 Issue:     2521
+
 JG-2008-07-14-0: Bugfix:    Fixed minor memory leaks.
                  Bugster:   6724877
                  Issue:     2650
@@ -82,14 +91,8 @@ AA-2008-07-10-0: Bugfix:    - install_qmaster -jmx fails if non default keystore
                  Issue:     2647, 2646
                  Review:    RH, CR
 
-LP-2008-07-10-0: Enhancem:  Introduced new inst_sge option -start-all to start
-                            complete cluster
-                 Enhancem:  Improved messages
-                 Cleanup:   Removed inst_update.sh
+LP-2008-07-10-0: Cleanup:   Removed inst_update.sh
                  Bugfix:    Fixed typos & usages
-                 Bugfix:    shadow_masters file might contain some hosts twice
-                 Bugster:   6675592
-                 Issue:     2521
                  Review:    MD
 
 JG-2008-07-10-0: Bugfix:    Error message of qalter -q "" <job_id> suggests

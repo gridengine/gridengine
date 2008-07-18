@@ -1,3 +1,11 @@
+MD-2008-07-18-0: Bugfix:     o Installation of execution daemon left user unclear 
+                             which port was chosen.
+                             o Wrong permissions if install_qmaster creates qmaster 
+                             spool directory
+                 Bugster:    6726344, 6726285
+                 Issue:      2661, 2660
+                 Review:     CR
+
 RN-2008-07-18-3: Enhancem.: Numbers in error mail too large
                  Bugtraq:   6367642
                  Issue:     804

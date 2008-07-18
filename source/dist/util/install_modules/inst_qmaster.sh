@@ -1905,9 +1905,11 @@ PortCollision()
          if [ "$service" = "sge_qmaster" ]; then
             $INFOTEXT "   SGE_QMASTER_PORT = %s" $SGE_QMASTER_PORT
             $INFOTEXT "   sge_qmaster service set to port %s" `$SGE_UTILBIN/getservbyname $service | cut -d" " -f2` 
+            $INFOTEXT "\n   Currently SGE_QMASTER_PORT = %s is active!" $SGE_QMASTER_PORT 
          else
             $INFOTEXT "   SGE_EXECD_PORT = %s" $SGE_EXECD_PORT
             $INFOTEXT "   sge_execd service set to port %s" `$SGE_UTILBIN/getservbyname $service | cut -d" " -f2` 
+            $INFOTEXT "\n   Currently SGE_EXECD_PORT = %s is active!" $SGE_EXECD_PORT 
          fi
          INP=1
       ;;

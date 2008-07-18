@@ -3680,9 +3680,10 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
 {
    lListElem *job = a->job;
    bool need_master_host = (lGetList(job, JB_master_hard_queue_list) != NULL) ? true : false;
+   bool have_hard_queue_request = (lGetList(job, JB_hard_queue_list) != NULL) ? true : false;
 
    int accu_host_slots, accu_host_slots_qend;
-   bool have_master_host, have_master_host_qend, suited_as_master_host, suited_as_master_host_qend = false;
+   bool have_master_host, have_master_host_qend, suited_as_master_host;
    lListElem *hep;
    dispatch_t best_result = DISPATCH_NEVER_CAT; 
    int gslots = a->slots;
@@ -3811,7 +3812,7 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                      While considering allocation_rule and master queue demand we try to get as 
                      much from each queue as needed, but not more than 'maxslots'. When we are through 
                      all queue instances and got not even 'minslots' the slots must be undebited. */
-                  bool got_master_queue = false;
+                  bool got_master_queue = have_master_host;
                   lListElem *qep;
                   int rqs_hslots = 0, maxslots, slots, slots_qend;
 
@@ -3840,14 +3841,15 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                      if (need_master_host) {
                         /* care for slave tasks assignments of -masterq jobs */
                         if (!have_master_host && !got_master_queue && lGetUlong(qep, QU_tagged4schedule)==0 
-                             && accu_host_slots + rqs_hslots + slots == a->slots)
-                              slots--;
+                             && accu_host_slots + rqs_hslots + slots == a->slots) {
+                           slots--;
+                        }
                         /* care for master tasks assignments of -masterq jobs */
                         if (lGetUlong(qep, QU_tagged4schedule)==1) {
-                           if (!have_master_host && !got_master_queue)
-                              slots = MIN(slots, 1);
-                           else
-                              slots = 0;
+                           if (!have_master_host && !got_master_queue && have_hard_queue_request) {
+                              if (have_hard_queue_request) 
+                                 slots = MIN(slots, 1);
+                           } 
                         }
                      }
 
@@ -3913,17 +3915,16 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                         }
                      }
                      hslots = 0;
-                     suited_as_master_host = false;
                   } else {
                      if (got_master_queue)
-                        suited_as_master_host = true;
+                        have_master_host = true;
                      accu_host_slots += rqs_hslots;
                   }
                }
 
                if ( hslots_qend >= minslots && a->care_reservation && !a->is_reservation) {
                   lListElem *qep;
-                  bool got_master_queue = false;
+                  bool got_master_queue_qend = have_master_host_qend;
                   int rqs_hslots = 0, maxslots, slots, slots_qend;
 
                   /* still broken for cases where round robin requires multiple rounds */
@@ -3944,15 +3945,13 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
 
                      if (need_master_host) {
                         /* care for slave tasks assignments of -masterq jobs */
-                        if (!have_master_host_qend && !got_master_queue && lGetUlong(qep, QU_tagged4schedule)==0
+                        if (!have_master_host_qend && !got_master_queue_qend && lGetUlong(qep, QU_tagged4schedule)==0
                             && accu_host_slots_qend + rqs_hslots + slots_qend == a->slots)
                            slots_qend--;
                         /* care for master tasks assignments of -masterq jobs */
                         if (need_master_host && lGetUlong(qep, QU_tagged4schedule)==1) {
-                           if (!have_master_host_qend && !got_master_queue)
-                              slots_qend = MIN(slots_qend, 1);
-                           else
-                              slots_qend = 0;
+                           if (!have_master_host_qend && !got_master_queue_qend && have_hard_queue_request) 
+                               slots_qend = MIN(slots_qend, 1);
                         }
                      }
 
@@ -3986,15 +3985,11 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                      }
                      hslots_qend = 0;
                   } else {
-                     if (got_master_queue)
-                        suited_as_master_host_qend = true;
+                     if (got_master_queue_qend) 
+                        have_master_host_qend = true;
                      accu_host_slots_qend += rqs_hslots;
                   }
                }
-
-               /* tag full amount or zero */
-               have_master_host |= suited_as_master_host;
-               have_master_host_qend |= suited_as_master_host_qend;
             }
 
             /* mark host as not suitable */

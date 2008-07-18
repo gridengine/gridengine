@@ -1,3 +1,9 @@
+AH-2008-07-18-0: Bugfix:     Fixed error that caused tight_integration_massive test to fail.
+                 Bugster:    6710983
+                 Issue:      2603
+                 Review:     CR
+                 Belongs to: AH-2008-06-10-0
+
 LP-2008-07-18-2: Cleanup:   Renamed load_cc.sh and save_cc.sh to 
                             load_sge_config.sh and save_sge_config.sh
 
@@ -13,6 +19,7 @@ AA-2008-07-18-0: Bugfix:     o qconf invalid values and exit code fixes
                  Issue:      2662
                  Review:     MD
 
+>>>>>>> 1.4402
 MD-2008-07-18-0: Bugfix:     o Installation of execution daemon left user unclear 
                              which port was chosen.
                              o Wrong permissions if install_qmaster creates qmaster 

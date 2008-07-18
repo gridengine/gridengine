@@ -1,3 +1,10 @@
+RN-2008-07-18-0: Bugfix:    o use of -l tmpdir=abc can crash schedd
+                            o 'Infinity' must be rejected when specified in
+                            'complex_values' or RQS limits for consumables
+                 Bugster:   6650497, 6613438
+                 Issue:     2597, 2391
+                 Review:    AH
+
 MP-2008-07-11-0: Bugfix:    Incorrect slots_total from qstat -f -xml output
                  Bugster:   6716082
                  Issue:     2644

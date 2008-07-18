@@ -361,6 +361,7 @@
 #define MSG_RQS_REQUEST_DUPLICATE_NAME_S         _MESSAGE(64386, _("Resource quota replacement request contains rqs name "SFQ" multiple times"))
 
 #define MSG_ATTR_INVALID_ULONGVALUE_USUU         _MESSAGE(64387, _(sge_U32CFormat" is an invalid value for the "SFQ" attribute - it must be a value between "sge_U32CFormat" and "sge_U32CFormat))
-#define MSG_CQUEUE_UNKNOWNSHELL_S  _MESSAGE(64388, _("Invalid value "SFQ" for shell "))
+#define MSG_CQUEUE_UNKNOWNSHELL_S                _MESSAGE(64388, _("Invalid value "SFQ" for shell "))
+#define MSG_CENTRY_NOTREQUESTABLE_S              _MESSAGE(64389, _("Complex attribute "SFQ" is not requestable"))
 
 #endif /* __MSG_SGEOBJLIB_H */

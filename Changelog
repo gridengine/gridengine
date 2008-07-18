@@ -1,3 +1,8 @@
+RN-2008-07-18-3: Enhancem.: Numbers in error mail too large
+                 Bugtraq:   6367642
+                 Issue:     804
+                 Review:    JG
+
 RN-2008-07-18-2: Bugfix:    o qconf -ae|-Ae return 0 even if exechost exists already
                             o qconf -dxxxx does not set exit status on error
                             o qconf -as, -am, -ao, -Ae, -Acal, -Ackpt, -Ap when msg 

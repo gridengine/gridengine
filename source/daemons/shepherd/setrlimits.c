@@ -48,9 +48,14 @@
 
 #if defined(IRIX)
 #   define RLIMIT_STRUCT_TAG rlimit64
+#   define RLIMIT_INFINITY RLIM64_INFINITY
 #else
 #   define RLIMIT_STRUCT_TAG rlimit
+#   define RLIMIT_INFINITY RLIM_INFINITY
 #endif
+
+/* Format the value, if val == INFINITY, print INFINITY for logs sake */
+#define FORMAT_LIMIT(x) (x==RLIMIT_INFINITY)?0:x, (x==RLIMIT_INFINITY)?"\bINFINITY":""
 
 #if defined(DARWIN)
 #   include <sys/time.h>
@@ -438,15 +443,15 @@ static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp,
          rlp->rlim_cur = rlp->rlim_max;
 
 #if defined(NECSX4) || defined(NECSX5) || defined(NETBSD_ALPHA) || defined(NETBSD_X86_64) || defined(NETBSD_SPARC64)
-#  define limit_fmt "%ld"
+#  define limit_fmt "%ld%s"
 #elif defined(IRIX) || defined(HPUX) || defined(DARWIN) || defined(FREEBSD) || defined(NETBSD) || defined(INTERIX)
-#  define limit_fmt "%lld"
+#  define limit_fmt "%lld%s"
 #elif (defined(LINUX) && defined(TARGET_32BIT))
-#  define limit_fmt "%llu"
+#  define limit_fmt "%llu%s"
 #elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX)
-#  define limit_fmt "%lu"
+#  define limit_fmt "%lu%s"
 #else
-#  define limit_fmt "%d"
+#  define limit_fmt "%d%s"
 #endif
 
       sge_switch2start_user();
@@ -459,7 +464,7 @@ static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp,
       if (ret) {
          /* exit or not exit ? */
          sprintf(trace_str, "setrlimit(%s, {"limit_fmt", "limit_fmt"}) failed: %s",
-            limit_str, rlp->rlim_cur, rlp->rlim_max, strerror(errno));
+            limit_str, FORMAT_LIMIT(rlp->rlim_cur), FORMAT_LIMIT(rlp->rlim_max), strerror(errno));
             shepherd_trace(trace_str);
       } else {
 #if defined(IRIX)
@@ -473,10 +478,10 @@ static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp,
          sprintf(trace_str, "%s setting: (soft "limit_fmt" hard "limit_fmt") "
             "resulting: (soft "limit_fmt" hard "limit_fmt")",
             limit_str,
-            rlp->rlim_cur,
-            rlp->rlim_max,
-            dlp.rlim_cur,
-            dlp.rlim_max);
+            FORMAT_LIMIT(rlp->rlim_cur),
+            FORMAT_LIMIT(rlp->rlim_max),
+            FORMAT_LIMIT(dlp.rlim_cur),
+            FORMAT_LIMIT(dlp.rlim_max));
          shepherd_trace(trace_str);
       }
    }
@@ -501,7 +506,7 @@ static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp,
       if (setrlimitj(get_rlimits_os_job_id(), resource, rlp)) {
          /* exit or not exit ? */
          sprintf(trace_str, "setrlimitj(%s, {"limit_fmt", "limit_fmt"}) "
-            "failed: %s", limit_str, rlp->rlim_cur, rlp->rlim_max,
+            "failed: %s", limit_str, FORMAT_LIMIT(rlp->rlim_cur), FORMAT_LIMIT(rlp->rlim_max),
             strerror(errno));
       } else {
          getrlimitj(get_rlimits_os_job_id(), resource,&dlp);
@@ -513,10 +518,10 @@ static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp,
          sprintf(trace_str, "Job %s setting: (soft "limit_fmt" hard "limit_fmt
             ") resulting: (soft "limit_fmt" hard "limit_fmt")",
             limit_str,
-            rlp->rlim_cur,
-            rlp->rlim_max,
-            dlp.rlim_cur,
-            dlp.rlim_max);
+            FORMAT_LIMIT(rlp->rlim_cur),
+            FORMAT_LIMIT(rlp->rlim_max),
+            FORMAT_LIMIT(dlp.rlim_cur),
+            FORMAT_LIMIT(dlp.rlim_max));
          shepherd_trace(trace_str);
       }
    }

@@ -1,3 +1,12 @@
+RN-2008-07-18-2: Bugfix:    o qconf -ae|-Ae return 0 even if exechost exists already
+                            o qconf -dxxxx does not set exit status on error
+                            o qconf -as, -am, -ao, -Ae, -Acal, -Ackpt, -Ap when msg 
+                             "already exist" should return not 0 exit code
+                            o qconf -acal doesn't return error code 1 when failed
+                 Bugster:   6652411,6546280,6704283,6597558
+                 Issue:     2595
+                 Review:    JG 
+
 RN-2008-07-18-1: Bugfix:    Incorrectly considering two host group names to be
                             the same 
                  Bugster:   6666161

@@ -1,3 +1,5 @@
+MP-2008-07-19-0: Bugfix:    Fixed spelling mistakes in the man pages.
+
 AH-2008-07-18-0: Bugfix:     Fixed error that caused tight_integration_massive test to fail.
                  Bugster:    6710983
                  Issue:      2603

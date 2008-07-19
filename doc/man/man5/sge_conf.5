@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/07/11 12:56:36 $     Revision: $Revision: 1.76 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/07/19 17:12:58 $     Revision: $Revision: 1.77 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/07/11 12:56:36 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/07/19 17:12:58 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -601,7 +601,7 @@ and the
 option of
 .M queue_conf 5 ).
 Parallel jobs are only rescheduled if the host on which their
-master task executes is in unknown state. The behaviour of
+master task executes is in unknown state. The behavior of
 .B reschedule_unknown
 for parallel jobs and for jobs without the rerun flag be set can be
 adjusted using the \fBqmaster_params\fP settings
@@ -1040,7 +1040,7 @@ but they are just finished as they can't be rescheduled.
 .PP
 .IP "\fIENABLE_RESCHEDULE_SLAVE\fP"
 If set to "true" or "1" xxQS_NAMExx triggers job rescheduling also when 
-the host where the slave tasks of a parallel job executes is in unknon state, 
+the host where the slave tasks of a parallel job executes is in unknown state, 
 if the \fIreschedule_unknown\fP parameter is activated.
 .PP
 .IP "\fIMAX_DYN_EC\fP"
@@ -1315,7 +1315,7 @@ to a time_specifier (see
 .br
 If this parameter is set to \fBPER_LOAD_REPORT\fP the PDC is triggered in the
 same interval as \fBload_report_time\fP (see above). If this parameter is set
-to \fBNEVER\fP the PDC run is never trigged. The default is 1 second.
+to \fBNEVER\fP the PDC run is never triggered. The default is 1 second.
 .br
 \fBNote:\fP A PDC run is quite compute extensive may degrade the
 performance of the running jobs. But if the PDC runs less often or never the
@@ -1474,7 +1474,7 @@ request
 .B without
 a command argument to be executed remotely. 
 Usually this is the builtin mechanism. It's also possible to
-configure an externel executable by specifying the absolute pathname,
+configure an external executable by specifying the absolute pathname,
 e.g. of the system's rlogin daemon. 
 .sp 1
 Changing
@@ -1491,7 +1491,7 @@ The allowed values are similar to the ones of the examples of
 .\"
 .\"
 .SS "\fBrlogin_command\fP"
-This is the mechansim to be executed on the client side of a
+This is the mechanism to be executed on the client side of a
 .M qrsh 1
 request
 .B without

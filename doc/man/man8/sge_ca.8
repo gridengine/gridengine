@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_ca.8,v $     Last Update: $Date: 2008/06/19 12:42:43 $     Revision: $Revision: 1.2 $
+.\" $RCSfile: sge_ca.8,v $     Last Update: $Date: 2008/07/19 17:12:58 $     Revision: $Revision: 1.3 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SGE_CA 8 "$Date: 2008/06/19 12:42:43 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH SGE_CA 8 "$Date: 2008/07/19 17:12:58 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 util/sgeCA/sge_ca \- xxQS_NAMExx CSP Support control command
 .\"
@@ -53,7 +53,7 @@ manipulate individual keys and certificates
 .IP "\fBsge_ca -print <cert> | -printkey <key> | -printcrl <crl>\fP"
 print out certificates, keys and certificate revocation lists in human readable form. 
 .IP "\fBsge_ca -showCaTop | -showCaLocalTop [command options]\fP"
-echo the $CATOP or $CALOCALTOP directory. This command is usually run as root on the qmaster host after a CA infrastructure has been created. If "\fB-cadir\fP" or "\fB-catop\fP" or "\fB-calocaltop\fP" are set the correspodning directories are printed.
+echo the $CATOP or $CALOCALTOP directory. This command is usually run as root on the qmaster host after a CA infrastructure has been created. If "\fB-cadir\fP" or "\fB-catop\fP" or "\fB-calocaltop\fP" are set the corresponding directories are printed.
 .IP "\fBsge_ca -usercert <user file> | -user <u:g:e> | -sdm_daemon <u:g:e> [command options]\fP" 
 are used for creation of certificates and keys for a bunch of users contained in <user file>, a single user or SDM daemon <u:g:e>. (see
 .M hedeby_introduction 1
@@ -217,7 +217,7 @@ Print a certificate revocation list where <crl> is the corresponding certificate
 .br
 .br
 .IP "\fBsge_ca -req [-cadir <dir>] [-catop <dir>] [-calocaltop <dir>] [-adminuser <admin>] [-days <days>] [-encryptkey] [-sha1] [-outdir <dir>]\fP"
-create a private key and a certificate request for the calling user. This are created as newkey.pem and newreq.pem in the currrent working directory.
+create a private key and a certificate request for the calling user. This are created as newkey.pem and newreq.pem in the current working directory.
 If the option -outdir <dir> is specified in addition the files are created in <dir>.
 .\"
 .IP "\fBsge_ca -sign [-cadir <dir>] [-catop <dir>] [-calocaltop <dir>] [-adminuser <admin>] [-days <days>] [-encryptkey] [-sha1] [-outdir <dir>\fP"

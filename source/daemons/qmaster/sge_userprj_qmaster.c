@@ -420,7 +420,7 @@ int user        /* =1 user, =0 project */
 
       /* check user list for reference */
       if ((prj = lGetElemStr(*object_base[SGE_TYPE_USER].list, UU_default_project, name))) {
-         ERROR((SGE_EVENT, MSG_USERPRJ_PRJXSTILLREFERENCEDINENTRYX_SS, name, lGetString(prj, PR_name)));
+         ERROR((SGE_EVENT, MSG_USERPRJ_PRJXSTILLREFERENCEDINENTRYX_SS, name, lGetString(prj, UU_name)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EEXIST;

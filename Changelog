@@ -1,3 +1,9 @@
+RN-2008-07-22-0: Bugfix:    qmaster crashes while project deletion (qconf -dprj)
+                            in a special case
+                 Bugster:   6728262
+                 Issue:     2672
+                 Review:    JG 
+
 MP-2008-07-19-0: Bugfix:    Fixed spelling mistakes in the man pages.
 
 AH-2008-07-18-0: Bugfix:     Fixed error that caused tight_integration_massive test to fail.

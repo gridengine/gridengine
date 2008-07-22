@@ -62,13 +62,13 @@ GetBackupedAdminUser()
    ADMIN_USER=`BootstrapGetValue "$UPGRADE_BACKUP_DIR/cell" admin_user`
    euid=`$SGE_UTILBIN/uidgid -euid`
 
-   TMP_USER=`echo "$ADMINUSER" |tr "A-Z" "a-z"`
+   TMP_USER=`echo "$ADMINUSER" |tr "[A-Z]" "[a-z]"`
    if [ \( -z "$TMP_USER" -o "$TMP_USER" = "none" \) -a $euid = 0 ]; then
       ADMINUSER=default
    fi
 
    if [ "$SGE_ARCH" = "win32-x86" ]; then
-      HOSTNAME=`hostname | tr "a-z" "A-Z"`
+      HOSTNAME=`hostname | tr "[a-z]" "[A-Z]"`
       ADMINUSER="$HOSTNAME+$ADMINUSER"
    fi
 }

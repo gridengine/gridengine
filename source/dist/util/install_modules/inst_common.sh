@@ -2115,12 +2115,15 @@ CreateSGEStartUpScripts()
 
       if [ $hosttype = "master" ]; then
          template="util/rctemplates/sgemaster_template"
+         svc_name="sgemaster.${SGE_CLUSTER_NAME}"
       else
          template="util/rctemplates/sgeexecd_template"
+         svc_name="sgeexecd.${SGE_CLUSTER_NAME}"
       fi
 
       Execute sed -e "s%GENROOT%${SGE_ROOT_VAL}%g" \
                   -e "s%GENCELL%${SGE_CELL_VAL}%g" \
+                  -e "s%GENSGESVC%${svc_name}%g" \
                   -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
                   $template > ${TMP_SGE_STARTUP_FILE}.0
 
@@ -3686,13 +3689,13 @@ GetAdminUser()
    ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
    euid=`$SGE_UTILBIN/uidgid -euid`
 
-   TMP_USER=`echo "$ADMINUSER" |tr "A-Z" "a-z"`
+   TMP_USER=`echo "$ADMINUSER" |tr "[A-Z]" "[a-z]"`
    if [ \( -z "$TMP_USER" -o "$TMP_USER" = "none" \) -a $euid = 0 ]; then
       ADMINUSER=default
    fi
 
    if [ "$SGE_ARCH" = "win32-x86" ]; then
-      HOSTNAME=`hostname | tr "a-z" "A-Z"`
+      HOSTNAME=`hostname | tr "[a-z]" "[A-Z]"`
       ADMINUSER="$HOSTNAME+$ADMINUSER"
    fi
 }
@@ -3846,7 +3849,7 @@ DoRemoteAction()
 DoRemoteActionForHosts()
 {
   host_list="${1:?Missing host_list argument}"
-  user="${2:?Missing user argument}"
+  src_user="${2:?Missing user argument}"
   cmd="${3:?Missing command argument}"
   tmp_list="$host_list"
   #Check if the list has lines
@@ -3854,12 +3857,14 @@ DoRemoteActionForHosts()
      host_list=`echo "$tmp_list" | awk  '{ for (i = 1; i <= NF; i++) print $i }'`
   fi
   for host in $host_list ; do
+     user="$src_user"
      $INFOTEXT "\nProcessing $host ..."
      if [ -f "$SGE_ROOT/$SGE_CELL/win_hosts_to_update" ]; then
+        host_uqdn=`echo $host | sed -e "s%[.].*$%%"`
         cat $SGE_ROOT/$SGE_CELL/win_hosts_to_update | grep $host > /dev/null 2>&1
 	if [ "$?" -eq 0 -a $HOST != $host ]; then
-	   #We want to connect to a windows host (but as who?)
-	   host_str="`echo $host | tr "a-z" "A-Z"`"
+	   #We want to connect to a windows host only if not already there (but as who?)
+	   host_str=`echo $host_uqdn | tr [a-z] [A-Z]`
 	   if [ -n "$SGE_WIN_ADMIN" ]; then
 	      user="${host_str}+$SGE_WIN_ADMIN"
 	   else

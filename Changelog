@@ -1,3 +1,14 @@
+LP-2008-07-22-0: Bugfix:    Fixed broken upgrade message
+                 Bugfix:    inst_sge -post-upd did not upgrade win_hosts
+                 Bugfix:    Wrong user after connectiong to a win host in the
+                            post upgrade procedure
+                 Bugfix:    tr command has wrong replace arguments in some 
+                            places
+                 Bugfix:    Installation fails when another cluster already uses
+                            RC scripts on Linux
+                 Bugster:   6728406, 6727751
+                 Review:    MD, AP
+
 RN-2008-07-22-0: Bugfix:    qmaster crashes while project deletion (qconf -dprj)
                             in a special case
                  Bugster:   6728262
@@ -27,7 +38,6 @@ AA-2008-07-18-0: Bugfix:     o qconf invalid values and exit code fixes
                  Issue:      2662
                  Review:     MD
 
->>>>>>> 1.4402
 MD-2008-07-18-0: Bugfix:     o Installation of execution daemon left user unclear 
                              which port was chosen.
                              o Wrong permissions if install_qmaster creates qmaster 

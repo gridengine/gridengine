@@ -596,7 +596,7 @@ if [ "$UPDATE" = true ]; then
           "   the new Windows helper service on each host.\n" \
           "   WARNING: If a helper service from a previous release is running \n" \
           "            on this host, the new helper service overwrites it. The \n" \
-          "            host will run only in a 6.2 cluster.\n"
+          "            host will run only in a 6.2 cluster.\n" \
 	  "   TIP: This action requires to enter a windows administrator user for each \n" \
 	  "        host interactively. If all your systems share the same administrator you \n" \
 	  "        can set the environment variable SGE_WIN_ADMIN to that user name. \n" \
@@ -616,6 +616,11 @@ if [ "$UPDATE" = true ]; then
 fi
 
 if [ "$POST_UPDATE" = true ]; then
+   if [ -z "$SGE_ROOT" -o -z "$SGE_CELL" ]; then
+      $INFOTEXT "\$SGE_ROOT and \$SGE_CELL must be set!"
+      exit 2
+   fi
+   
    ALL_RC=true     #Do all hosts
    ADD_RC=false
    REMOVE_RC=false
@@ -634,6 +639,21 @@ if [ "$POST_UPDATE" = true ]; then
    ManipulateOneDaemonType "" bdb ""
    ManipulateOneDaemonType "" qmaster ""
    ManipulateOneDaemonType "" execd ""
+   #Update win hosts if appropriate
+   list=""
+   if [ -f "$SGE_ROOT/$SGE_CELL/win_hosts_to_update" ]; then
+      list=`cat $SGE_ROOT/$SGE_CELL/win_hosts_to_update 2>/dev/null`
+   else
+      exit 0
+   fi
+   if [ -z "$list" ]; then
+      $INFOTEXT -log "Cannot upgrade Windows helper service because there are no Windows\n" \
+                     "hosts in the backup."
+      exit 2
+   fi
+   ALL_RC=false
+   ManipulateOneDaemonType $list execd ""
+   $INFOTEXT -log "After you verify that your Windows hosts work, delete \n%s file." "$SGE_ROOT/$SGE_CELL/win_hosts_to_update"
    exit
 fi
 

@@ -51,6 +51,7 @@
 #include "sgeobj/sge_pe.h"
 #include "sched/sge_resource_utilizationL.h"
 #include "sgeobj/sge_hgroup.h"
+#include "sge_hostname.h"
 #include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_hrefL.h"
 #include "sgeobj/sge_host.h"

@@ -1,3 +1,7 @@
+DG-2008-07-23-0: Cleanup:    Declaration of is_hgroup_name() not found.
+                 Belongs to: RN-2008-07-18-1
+                 Review:     AH
+
 MD-2008-07-18-0: Bugfix:     o Installation of execution daemon left user unclear 
                              which port was chosen.
                              o Wrong permissions if install_qmaster creates qmaster 

@@ -1,3 +1,6 @@
+LP-2008-07-23-0: Bugfix:    Fixed inst_sge -help output
+                 Review:    JG
+
 LP-2008-07-22-0: Bugfix:    Fixed broken upgrade message
                  Bugfix:    inst_sge -post-upd did not upgrade win_hosts
                  Bugfix:    Wrong user after connectiong to a win host in the

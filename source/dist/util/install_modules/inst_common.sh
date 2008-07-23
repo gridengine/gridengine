@@ -449,10 +449,11 @@ ErrUsage()
 {
    myname=`basename $0`
    $INFOTEXT -e \
-             "Usage: %s -m|-um|-x|-ux [all]|-rccreate [all]|-rcremove [all]|-sm|-usm|-s|-db|-udb|-upd| \\\n" \
-             "       -upd-execd|-upd-win|-upd-rc|-post_upd|-bup|-rst|-copycerts <host|hostlist>| -v \\\n" \
-             "       [-auto <filename>]|[-nr]||[-start-all][-winupdate]|[-winsvc] [-uwinsvc] [-csp] [-jmx] \\\n" \
-             "       [-resport] [-oldijs] [-afs] [-host <hostname>] [-rsh] [-noremote] [-nosmf]\n" \
+             "Usage: %s -m|-um|-x|-ux [all]|-sm|-usm|-s|-db|-udb|-bup|-rst| \n" \
+             "       -copycerts <host|hostlist>|-v|-upd|-upd-execd|-upd-rc|-upd-win| \n" \
+             "       -post_upd|-start-all|-rccreate|[-host <hostname>] [-resport] [-rsh] \n" \
+             "       [-auto <filename>] [-nr] [-winupdate] [-winsvc] [-uwinsvc] [-csp] \n" \
+             "       [-jmx] [-oldijs] [-afs] [-noremote] [-nosmf]\n" \
              "   -m         install qmaster host\n" \
              "   -um        uninstall qmaster host\n" \
              "   -x         install execution host\n" \
@@ -468,11 +469,11 @@ ErrUsage()
              "   -v         print version\n" \
              "   -upd       upgrade cluster from 6.0 or higher to 6.2\n" \
              "   -upd-execd delete/initialize all execd spool directories\n" \
+             "   -upd-rc    create new autostart scripts for the whole cluster\n" \
              "   -upd-win   update/install windows helper service on all Windows hosts\n" \
-             "   -upd-rc    creates new autostart scripts for the whole cluster\n" \
-             "   -upd-win   update/install windows helper service on all Windows hosts\n" \
-             "   -post_upd  finish the upgrade procedure (cleanup old RC scritps, \n" \
-             "              execd spooling directories, etc.)\n" \
+             "   -post_upd  finish the upgrade procedure (initialize execd spool directories,\n" \
+             "              create autostart scripts and update windows helper service)\n" \
+             "   -start-all start whole cluster\n" \
              "   -rccreate  create startup scripts from templates\n" \
              "   -host      hostname for shadow master installation or uninstallation \n" \
              "              (eg. exec host)\n" \
@@ -481,7 +482,6 @@ ErrUsage()
              "   -rsh       use rsh instead of ssh (default is ssh)\n" \
              "   -auto      full automatic installation (qmaster and exec hosts)\n" \
              "   -nr        set reschedule to false\n" \
-             "   -start-all start whole cluster\n" \
              "   -winupdate update to add gui features to a existing execd installation\n" \
              "   -winsvc    install windows helper service\n" \
              "   -uwinsvc   uninstall windows helper service\n" \
@@ -2176,7 +2176,7 @@ AddSGEStartUpScript()
    fi
    
    $CLEAR
-    
+   
    SetupRcScriptNames $hosttype   
 
    InstallRcScript 

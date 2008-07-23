@@ -1,3 +1,7 @@
+HP-2008-07-23-0: Bugfix:    On Windows/Interix, the shepherd didn't exit immediately
+                            after the qrsh job finished, it took 60 s to finish
+                 Review:    JG
+
 LP-2008-07-23-0: Bugfix:    Fixed inst_sge -help output
                  Review:    JG
 

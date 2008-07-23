@@ -1001,6 +1001,20 @@ int close_parent_loop(int exit_status)
 
       shepherd_trace("waiting for UNREGISTER_RESPONSE_CTRL_MSG");
       while (count < RESPONSE_MSG_TIMEOUT) {
+#if defined(INTERIX)
+/*
+ * TODO: comm_recv_message() should return immediatley when the server
+ *       is not running any more. On Interix, it waits until a timeout
+ *       occurs (60s), so we check if the server is running before
+ *       we wait for the message.
+ *       This has to be fixed in comm_recv_message() or the commlib.
+ */
+         if (check_client_alive(g_comm_handle, 
+                                COMM_SERVER, &err_msg) != COMM_RETVAL_OK) {
+            shepherd_trace("Server already exited");
+            break;
+         }
+#endif
          ret = comm_recv_message(g_comm_handle, CL_TRUE, &recv_mess, &err_msg);
          if (ret == COMM_GOT_TIMEOUT) {
             count++;

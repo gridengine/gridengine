@@ -265,7 +265,8 @@ static const char *drmaa_supported_vector[] = {
 *      MT-NOTE: drmaa_init() is MT safe
 *******************************************************************************/
 int drmaa_init(const char *contact, char *error_diagnosis,
-               size_t error_diag_len) {
+               size_t error_diag_len)
+{
    int ret;
    dstring diag;
    dstring *diagp = NULL;
@@ -505,11 +506,13 @@ int drmaa_delete_job_template(drmaa_job_template_t *jt, char *error_diagnosis, s
    DENTER(TOP_LAYER, "drmaa_delete_job_template");
 
    if (error_diagnosis != NULL) {
-      sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
+      sge_dstring_init(&diag, error_diagnosis, error_diag_len);
    }
 
    if (jt == NULL) {
-      japi_standard_error(DRMAA_ERRNO_INVALID_ARGUMENT, &diag);
+      if (error_diagnosis != NULL) {
+         japi_standard_error(DRMAA_ERRNO_INVALID_ARGUMENT, &diag);
+      }
       DRETURN(DRMAA_ERRNO_INVALID_ARGUMENT);
    } 
 

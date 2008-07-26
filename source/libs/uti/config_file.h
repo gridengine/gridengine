@@ -39,14 +39,14 @@ void set_error(const char *err_str);
 
 int read_config(const char *fname);
 
-char *get_conf_val(char *name);
+char *get_conf_val(const char *name);
 char *search_conf_val(const char *name);
 char *search_nonone_conf_val(const char *name);
 
 int replace_params(const char *src, char *dst, int dst_len, char **alllowed);
 void delete_config(void);
 int add_config_entry(const char *name, const char *value);
-char* set_conf_val( const char* name, const char* value );
+void set_conf_val(const char* name, const char* value);
 
 bool parse_bool_param(const char *string, const char *variable, bool *value);
 bool parse_int_param(const char *input, const char *variable, 

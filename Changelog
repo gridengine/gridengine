@@ -1,3 +1,9 @@
+JG-2008-07-26-0: Bugfix:    Memory leak in sge_execd with qsub -v SGE_* or 
+                            qsub -V.
+                 Bugster:   6729411
+                 Issue:     2672
+                 Review:    MD
+
 DG-2008-07-23-0: Cleanup:    Declaration of is_hgroup_name() not found.
                  Belongs to: RN-2008-07-18-1
                  Review:     AH

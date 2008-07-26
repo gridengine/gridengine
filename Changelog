@@ -1,3 +1,9 @@
+JG-2008-07-26-0: Bugfix:    Memory leak in sge_execd with qsub -v SGE_* or 
+                            qsub -V.
+                 Bugster:   6729411
+                 Issue:     2672
+                 Review:    MD
+
 RN-2008-07-18-1: Bugfix:    Incorrectly considering two host group names to be
                             the same 
                  Bugster:   6666161

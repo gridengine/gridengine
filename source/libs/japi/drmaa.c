@@ -502,11 +502,13 @@ int drmaa_delete_job_template(drmaa_job_template_t *jt, char *error_diagnosis, s
    dstring diag;
 
    if (error_diagnosis != NULL) {
-      sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
+      sge_dstring_init(&diag, error_diagnosis, error_diag_len);
    }
 
    if (jt == NULL) {
-      japi_standard_error(DRMAA_ERRNO_INVALID_ARGUMENT, &diag);
+      if (error_diagnosis != NULL) {
+         japi_standard_error(DRMAA_ERRNO_INVALID_ARGUMENT, &diag);
+      }
       return DRMAA_ERRNO_INVALID_ARGUMENT;
    } 
 
@@ -2669,6 +2671,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
       DEXIT;
       return DRMAA_ERRNO_DENIED_BY_DRM;
    }
+   lFreeList(&alp);
 
    /*
     * append the native spec switches to the list if they exist

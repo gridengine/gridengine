@@ -1,3 +1,6 @@
+JG-2008-07-26-1: Bugfix:    Minor memory leaks merged from maintrunk:
+                            JG-2008-07-17-0, JG-2008-07-14-0, JG-2008-07-11
+
 JG-2008-07-26-0: Bugfix:    Memory leak in sge_execd with qsub -v SGE_* or 
                             qsub -V.
                  Bugster:   6729411

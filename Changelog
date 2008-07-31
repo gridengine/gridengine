@@ -1,3 +1,6 @@
+MD-2008-07-31-0: CVS:       Created V62_TAG
+-------------------------------------------
+
 HP-2008-07-23-0: Bugfix:    On Windows/Interix, the shepherd didn't exit immediately
                             after the qrsh job finished, it took 60 s to finish
                  Review:    JG

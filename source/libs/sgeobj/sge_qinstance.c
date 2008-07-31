@@ -688,14 +688,33 @@ qinstance_list_find_matching(const lList *this_list, lList **answer_list,
    if (this_list != NULL && hostname_pattern != NULL) {
       lListElem *qinstance;
       char host[CL_MAXHOSTLEN];
+      int is_pattern = sge_is_pattern(hostname_pattern);
 
-      if ((getuniquehostname(hostname_pattern, host, 0)) == CL_RETVAL_OK) {
-         hostname_pattern = host;
+      /* 
+       * if the pattern does not contain wildcards (it is a real hostname),
+       * we resolve it.
+       */
+      if (!is_pattern) {
+         if ((getuniquehostname(hostname_pattern, host, 0)) == CL_RETVAL_OK) {
+            hostname_pattern = host;
+         }
       }
 
       for_each(qinstance, this_list) {
          const char *hostname = lGetHost(qinstance, QU_qhostname);
-         if (!fnmatch(hostname_pattern, hostname, 0)) {
+         bool matches = false;
+
+         if (is_pattern) {
+            if (!fnmatch(hostname_pattern, hostname, 0)) {
+               matches = true;
+            }
+         } else {
+            if (sge_hostcmp(hostname_pattern, hostname) == 0) {
+               matches = true;
+            }
+         }
+
+         if (matches) {
             if (qref_list != NULL) {
                dstring buffer = DSTRING_INIT;
                const char *qi_name = qinstance_get_name(qinstance, &buffer);

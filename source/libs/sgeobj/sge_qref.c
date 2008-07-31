@@ -133,8 +133,8 @@ qref_list_resolve_qinstance_names(const lList *cq_qref_list,
 {
    bool ret = true;
    const lListElem *cq_qref = NULL;
-
    DENTER(QREF_LAYER, "qref_list_resolve_qinstance_names");
+
    for_each(cq_qref, cq_qref_list) {
       const char *cqueue_name = NULL;
       const char *hostname_pattern = NULL;
@@ -149,7 +149,6 @@ qref_list_resolve_qinstance_names(const lList *cq_qref_list,
       qinstance_list = lGetList(cqueue, CQ_qinstances);
       qinstance_list_find_matching(qinstance_list, answer_list,
                                    hostname_pattern, &qi_ref_list);
-
       for_each(qi_qref, qi_ref_list) {
          const char *qi_name = lGetString(qi_qref, QR_name);
 
@@ -351,6 +350,7 @@ qref_list_resolve(const lList *src_qref_list, lList **answer_list,
                   bool resolve_cqueue, bool resolve_qdomain)
 {
    bool ret = true;
+
    DENTER(QREF_LAYER, "qref_list_resolve");
 
    if (src_qref_list != NULL) {
@@ -370,7 +370,7 @@ qref_list_resolve(const lList *src_qref_list, lList **answer_list,
          /*
           * Find all existing parts of the qref-pattern
           */ 
-         name = lGetString(qref_pattern, QR_name); 
+         name = lGetString(qref_pattern, QR_name);
          cqueue_name_split(name, &cqueue_name, &host_or_hgroup,
                            &has_hostname, &has_domain);
          cq_pattern = sge_dstring_get_string(&cqueue_name);
@@ -380,7 +380,6 @@ qref_list_resolve(const lList *src_qref_list, lList **answer_list,
           */
          cqueue_list_find_all_matching_references(cqueue_list, answer_list,
                                                   cq_pattern, &cq_ref_list);
-
          /*
           * Depending on the type of pattern -> resolve QC or QI names
           */

@@ -310,8 +310,8 @@ char **argv
    cqueue_list_set_tag(queue_list, TAG_SHOW_IT, true);
 
    /* unseclect all queues not selected by a -q (if exist) */
-   if (lGetNumberOfElem(queueref_list)>0) {
-      if ((nqueues=select_by_qref_list(queue_list, hgrp_list, queueref_list))<0) {
+   if (lGetNumberOfElem(queueref_list) > 0) {
+      if ((nqueues=select_by_qref_list(queue_list, hgrp_list, queueref_list)) < 0) {
          SGE_EXIT(1);
       }
       if (nqueues==0) {

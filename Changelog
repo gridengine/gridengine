@@ -1,3 +1,9 @@
+JG-2008-07-31-0: Bugfix:    qstat -f -q cqueue@host fails, if host is resolved
+                            differently on the client than on qmaster
+                 Bugster:   6732056
+                 Issue:     2681
+                 Review:    EB
+
 JG-2008-07-26-1: Bugfix:    Minor memory leaks merged from maintrunk:
                             JG-2008-07-17-0, JG-2008-07-14-0, JG-2008-07-11
 

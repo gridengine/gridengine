@@ -1157,8 +1157,8 @@ parallel_rqs_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, con
                      rqs_get_rue_string(&rue_string, rule, user, project, host, queue, pe);
 
                      if (rqs_set_dynamical_limit(limit, a->gep, exec_host, a->centry_list)) {
-                        int tttslots;
-                        int tttslots_qend;
+                        int tttslots = INT_MAX;
+                        int tttslots_qend = INT_MAX;
                         result = parallel_limit_slots_by_time(a, job_centry_list, &tttslots, &tttslots_qend, raw_centry, limit, &rue_string);
                         ttslots = MIN(ttslots, tttslots);
                         ttslots_qend = MIN(ttslots_qend, tttslots_qend);

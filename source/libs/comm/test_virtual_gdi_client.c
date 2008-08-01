@@ -191,7 +191,6 @@ extern int main(int argc, char** argv)
                                          NULL, 0, 0, CL_FALSE, synchron);
         if (retval == CL_RETVAL_OK) {
            snd_messages++;
-           snd_data = NULL;
            retval = cl_commlib_receive_message(handle, NULL, NULL, 0,  /* handle, comp_host, comp_name , comp_id, */
                                                CL_TRUE, 0,                   /* syncron, response_mid */
                                                &message, &sender);

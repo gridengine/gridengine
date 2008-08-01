@@ -348,26 +348,28 @@ int scheduler(sge_evc_class_t *evc, sge_Sdescr_t *lists, lList **order) {
       }
    }
 
-   if (!shut_me_down) {
-      lList *orderlist=sge_join_orders(&orders);
+   {
+      lList *orderlist = sge_join_orders(&orders);
 
       if (orderlist != NULL) {
-         /*
-          * Scheduler needs a relatively high synchronuous receive timeout as minimum. This
-          * is required for cases when orders processing takes long time due to very slow 
-          * qmaster spooling (e.g. classic over NFS).
-          *
-          * We'll reset it after sending the orders, to have a poss. lower timeout
-          * (2 * event client interval) for receiving new events.
-          */
-         cl_com_set_synchron_receive_timeout(cl_com_get_handle(prognames[SCHEDD], 0), 120);
-         sge_send_orders2master(evc, &orderlist);
-         cl_com_set_synchron_receive_timeout(cl_com_get_handle(prognames[SCHEDD], 0), 
-                                             (int) (sconf_get_schedule_interval() * 2));
+         if (!shut_me_down) {
+            /*
+             * Scheduler needs a relatively high synchronuous receive timeout as minimum. This
+             * is required for cases when orders processing takes long time due to very slow 
+             * qmaster spooling (e.g. classic over NFS).
+             *
+             * We'll reset it after sending the orders, to have a poss. lower timeout
+             * (2 * event client interval) for receiving new events.
+             */
+            cl_com_set_synchron_receive_timeout(cl_com_get_handle(prognames[SCHEDD], 0), 120);
+            sge_send_orders2master(evc, &orderlist);
+            cl_com_set_synchron_receive_timeout(cl_com_get_handle(prognames[SCHEDD], 0), 
+                                                (int) (sconf_get_schedule_interval() * 2));
+         }
+
          lFreeList(&orderlist);
       }
    }
-
 
    schedd_mes_release();
    schedd_mes_set_logging(0); 

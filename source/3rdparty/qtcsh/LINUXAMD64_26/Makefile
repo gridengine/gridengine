@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1.2.1 2007/04/24 06:22:22 joga Exp $
+# $Id: Makefile,v 1.1.2.2 2008/08/01 09:59:47 joga Exp $
 #	Makefile.in	4.3	6/11/83
 #
 # C Shell with process control; VM/UNIX VAX Makefile
@@ -225,7 +225,7 @@ LIBES= -lncurses -lcrypt 	 			 ## This is set by autoconf.
 
 
 EXTRAFLAGS =  $(AFSDEF) -I../../../libs/gdi
-EXTRALIBS =  $(AFSLIB) -L../../../LINUXAMD64_26 -R/lib/lx26-amd64 $(SGE_LIBS) 
+EXTRALIBS =  $(AFSLIB) -L../../../LINUXAMD64_26 -R/lib/lx26-amd64 $(SGE_LIBS) -lm
 
 
 # The difficult choice of a c-compiler...

@@ -172,6 +172,8 @@ int shepconf_has_notify_signal(const char *notify_name, int *signal)
       *signal = 0;
       ret = 0;
    }
+
+   sge_dstring_free(&param_name);
    return ret;
 }
 

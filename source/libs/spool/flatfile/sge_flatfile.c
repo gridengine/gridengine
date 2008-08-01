@@ -1715,8 +1715,8 @@ FF_DEBUG("read field name");
          }
    
          /* search field name in field array */
-         for(field_index = 0; fields[field_index].nm != NoName; field_index++) {
-            if(sge_strnullcmp(spool_text, fields[field_index].name) == 0) {
+         for (field_index = 0; fields[field_index].nm != NoName; field_index++) {
+            if (sge_strnullcmp(spool_text, fields[field_index].name) == 0) {
                nm = fields[field_index].nm;
                break;
             }
@@ -1726,7 +1726,7 @@ FF_DEBUG("read field name");
          if (nm == NoName) {
             field_has_name = false;
             
-            for(field_index = 0; fields[field_index].nm != NoName; field_index++) {
+            for (field_index = 0; fields[field_index].nm != NoName; field_index++) {
                if (fields[field_index].name == NULL) {
                   nm = fields[field_index].nm;
                   break;
@@ -1882,6 +1882,8 @@ FF_DEBUG("detected end_token");
                                        ANSWER_QUALITY_ERROR,
                                        MSG_MUST_BE_POSITIVE_VALUE_S,
                                        fields[field_index].name);
+                  sge_dstring_free(&buffer);
+                  DEXIT;
                   return;
                }
             }
@@ -1891,7 +1893,7 @@ FF_DEBUG("detected end_token");
                continue;
             }
          } else {
-            if (fields[field_index].read_func (*object, nm,
+            if (fields[field_index].read_func(*object, nm,
                                                sge_dstring_get_string(&buffer),
                                                answer_list) == 0) {
                stop = true;
@@ -1913,7 +1915,7 @@ FF_DEBUG("empty list");
                record_end = true;
             }
             /* check for field end - we have to skip it later */
-            else if (is_delimiter (*token) &&
+            else if (is_delimiter(*token) &&
                      (*spool_text == instr->field_delimiter)) {
                field_end = true;
             }

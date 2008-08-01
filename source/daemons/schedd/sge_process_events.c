@@ -362,6 +362,7 @@ int event_handler_default_scheduler(sge_evc_class_t *evc)
    lFreeList(&(copy.all_queue_list));
    lFreeList(&(copy.job_list));
 
+   lFreeList(&(copy.acl_list));
    lFreeList(&(copy.dept_list));
 
    lFreeList(&(copy.pe_list));

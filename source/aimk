@@ -245,6 +245,7 @@ set SGESSH           = 0
 set OPTIMIZATION     = 1
 set GPROFFED         = 0
 set COVED            = 0
+set USE_INSURE       = 0
 set DEBUGGED         = 0
 set COMPILE_DC       = 0
 set CC               = cc
@@ -530,8 +531,7 @@ while ($#argv >= 1 && $?found)
       set KVMAN = 1
       breaksw
    case "-insure"
-      set CC         = insure
-      set CXX        = insure
+      set USE_INSURE = 1
       set INSURE_FLAG = "-Zsl"
       set LFLAGS     = "-Zsl $LFLAGS"
       set DEBUGGED   = 1
@@ -1078,9 +1078,9 @@ case FREEBSD_*:
    set LIBS     = "$LIBS -lkvm"
    set SHAREDLD = $CC
    set SHARED_CFLAGS = "-fPIC"
-   set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared -export-dynamic" 
+   set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared -export-dynamic"
    set AUTHLIBS = "-lcrypt -lpam"
-   
+
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD -I/usr/X11/include"
    set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
@@ -1283,13 +1283,8 @@ case LINUXSPARC64:
       set OFLAG = "-O"
    endif
 
-   if ($CC != insure) then
-      set CC  = gcc
-      set CXX = g++
-   else
-      set CFLAGS = "-Wno-error $CFLAGS"
-      set OFLAG = "-O2"
-   endif
+   set CC  = gcc
+   set CXX = g++
 
    if ($BUILDARCH == LINUXPPC) then
       set CFLAGS = "-m32 $CFLAGS"
@@ -1351,7 +1346,6 @@ case LINUXSPARC64:
 
    set NOERR_CFLAG = "-Wno-error"
    set NOERR_PROTO = "-Wno-strict-prototypes"
-   set LIBS     = "$LIBS"
 
    set XMTDEF   = ""
 
@@ -1528,7 +1522,7 @@ case SOLARISAMD64:
    set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 1
 
-   set CFLAGS = "$CFLAGS -DSOLARIS -D$BUILDARCH -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L -DGETHOSTBYNAME_R5 -DGETHOSTBYADDR_R7 "
+   set CFLAGS = "$CFLAGS -DSOLARIS -D$BUILDARCH -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L -DGETHOSTBYNAME_R5 -DGETHOSTBYADDR_R7"
    set SHAREDLD = $CC
 
    if ($OPTIMIZATION == 1) then 
@@ -1888,6 +1882,12 @@ endif
 #
 set GSHARED_CFLAGS = "$SHARED_CFLAGS"
 set GSHARED_LFLAGS = "$SHARED_LFLAGS"
+
+# change CC / CXX for insure
+if ($USE_INSURE == 1) then
+   set CC  = "insure $CC"
+   set CXX = "insure $CXX"
+endif
 
 #---------------------------------------------------------------------------
 # Actual make targets begin here
@@ -2305,7 +2305,7 @@ if ( "$JAVA" > 0 ) then
       setenv AIMK_TARGET_BITS $TARGET_BITS
       setenv aimk_buildarch $buildarch
    endif
-   if ( "$INSURE_FLAG" != "" ) then
+   if ( $USE_INSURE == 1 ) then
       setenv AIMK_INSURE -insure
    else
       setenv AIMK_INSURE ""

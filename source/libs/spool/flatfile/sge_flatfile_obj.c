@@ -759,18 +759,18 @@ static int write_SC_queue_sort_method(const lListElem *ep, int nm,
          sge_dstring_append (buffer, "load");
          break;
    }
-   
+
    return 1;
 }
 
 static int read_CF_value(lListElem *ep, int nm, const char *buf,
                          lList **alp)
 {
-   const char *name = lGetString (ep, CF_name);
+   const char *name = lGetString(ep, CF_name);
    char *value = NULL;
-   char *buffer = strdup (buf);
+   char *buffer = strdup(buf);
 
-   DENTER (TOP_LAYER, "read_CF_value");
+   DENTER(TOP_LAYER, "read_CF_value");
    
    if (!strcmp(name, "gid_range")) {
       if ((value= strtok(buffer, " \t\n"))) {
@@ -791,7 +791,7 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
             } else {
                lListElem *rep;
 
-               for_each (rep, rlp) {
+               for_each(rep, rlp) {
                   u_long32 min;
 
                   min = lGetUlong(rep, RN_min);
@@ -821,8 +821,7 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
          FREE (buffer);
          DRETURN(0);
       }
-   } 
-   else if (!strcmp(name, "user_lists") || 
+   } else if (!strcmp(name, "user_lists") || 
       !strcmp(name, "xuser_lists") || 
       !strcmp(name, "projects") || 
       !strcmp(name, "xprojects") || 
@@ -849,7 +848,7 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
          DRETURN(0);
       }
       /* skip leading delimitors */
-      while (value[0] && isspace((int) value[0]))
+      while (value[0] && isspace((int)value[0]))
          value++;
 
       lSetString(ep, CF_value, value);
@@ -901,9 +900,9 @@ spooling_field *sge_build_CONF_field_list(bool spool_config)
                              NULL, NULL, NULL, NULL);
    }
    
-   create_spooling_field (&fields[count++], CONF_entries, 28, NULL,
+   create_spooling_field(&fields[count++], CONF_entries, 28, NULL,
                           CF_sub_fields, &qconf_sub_param_sfi, NULL, NULL);
-   create_spooling_field (&fields[count++], NoName, 28, NULL, NULL, NULL, NULL,
+   create_spooling_field(&fields[count++], NoName, 28, NULL, NULL, NULL, NULL,
                           NULL);
    
    return fields;
@@ -1026,8 +1025,7 @@ spooling_field *sge_build_QU_field_list(bool to_stdout, bool to_file)
                              NULL, NULL, NULL);
       create_spooling_field (&fields[count++], QU_h_vmem, 21, "h_vmem", NULL,
                              NULL, NULL, NULL);
-   }
-   else if (to_file) {
+   } else if (to_file) {
       /*
        * Spool only non-CQ attributes
        */
@@ -1079,19 +1077,20 @@ static int read_CQ_ulng_attr_list (lListElem *ep, int nm, const char *buffer, lL
 {
    int ret;
    lList *lp = NULL;
-   
+
    ret = ulng_attr_list_parse_from_string(&lp, alp, buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY);
    
    if (!ret) {
+      lFreeList(&lp);
       return 0;
    }
-   
+
    if (lp != NULL) {
       lSetList(ep, nm, lp);
       return 1;
    }
-   
+
    return 0;
 }
 
@@ -1103,31 +1102,32 @@ static int write_CQ_ulng_attr_list(const lListElem *ep, int nm,
    return 1;
 }
 
-static int read_CQ_celist_attr_list (lListElem *ep, int nm, const char *buffer,
+static int read_CQ_celist_attr_list(lListElem *ep, int nm, const char *buffer,
                                      lList **alp)
 {
    int ret;
    lList *lp = NULL;
-   
+
    ret = celist_attr_list_parse_from_string(&lp, alp, buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY);
    
    if (!ret) {
+      lFreeList(&lp);
       return 0;
    }
-   
+
    if (lp != NULL) {
       lSetList(ep, nm, lp);
       return 1;
    }
-   
+
    return 0;
 }
 
 static int write_CQ_celist_attr_list(const lListElem *ep, int nm,
                                    dstring *buffer, lList **alp)
 {
-   celist_attr_list_append_to_dstring(lGetList (ep, nm), buffer);
+   celist_attr_list_append_to_dstring(lGetList(ep, nm), buffer);
    
    return 1;
 }
@@ -1142,6 +1142,7 @@ static int read_CQ_inter_attr_list(lListElem *ep, int nm, const char *buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY);
    
    if (!ret) {
+      lFreeList(&lp);
       return 0;
    }
    
@@ -1185,12 +1186,12 @@ static int read_CQ_str_attr_list(lListElem *ep, int nm, const char *buffer,
 static int write_CQ_str_attr_list(const lListElem *ep, int nm,
                                    dstring *buffer, lList **alp)
 {
-   str_attr_list_append_to_dstring(lGetList (ep, nm), buffer);
+   str_attr_list_append_to_dstring(lGetList(ep, nm), buffer);
    
    return 1;
 }
 
-static int read_CQ_qtlist_attr_list (lListElem *ep, int nm, const char *buffer,
+static int read_CQ_qtlist_attr_list(lListElem *ep, int nm, const char *buffer,
                                      lList **alp)
 {
    int ret;
@@ -1200,6 +1201,7 @@ static int read_CQ_qtlist_attr_list (lListElem *ep, int nm, const char *buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY);
    
    if (!ret) {
+      lFreeList(&lp);
       return 0;
    }
    
@@ -1219,7 +1221,7 @@ static int write_CQ_qtlist_attr_list(const lListElem *ep, int nm,
    return 1;
 }
 
-static int read_CQ_strlist_attr_list (lListElem *ep, int nm, const char *buffer,
+static int read_CQ_strlist_attr_list(lListElem *ep, int nm, const char *buffer,
                                       lList **alp)
 {
    int ret;
@@ -1229,6 +1231,7 @@ static int read_CQ_strlist_attr_list (lListElem *ep, int nm, const char *buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY);
    
    if (!ret) {
+      lFreeList(&lp);
       return 0;
    }
    
@@ -1248,7 +1251,7 @@ static int write_CQ_strlist_attr_list(const lListElem *ep, int nm,
    return 1;
 }
 
-static int read_CQ_bool_attr_list (lListElem *ep, int nm, const char *buffer,
+static int read_CQ_bool_attr_list(lListElem *ep, int nm, const char *buffer,
                                    lList **alp)
 {
    int ret;
@@ -1258,6 +1261,7 @@ static int read_CQ_bool_attr_list (lListElem *ep, int nm, const char *buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY);
    
    if (!ret) {
+      lFreeList(&lp);
       return 0;
    }
    
@@ -1277,7 +1281,7 @@ static int write_CQ_bool_attr_list(const lListElem *ep, int nm,
    return 1;
 }
 
-static int read_CQ_usrlist_attr_list (lListElem *ep, int nm, const char *buffer,
+static int read_CQ_usrlist_attr_list(lListElem *ep, int nm, const char *buffer,
                                       lList **alp)
 {
    int ret;
@@ -1287,6 +1291,7 @@ static int read_CQ_usrlist_attr_list (lListElem *ep, int nm, const char *buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY);
    
    if (!ret) {
+      lFreeList(&lp);
       return 0;
    }
    
@@ -1306,7 +1311,7 @@ static int write_CQ_usrlist_attr_list(const lListElem *ep, int nm,
    return 1;
 }
 
-static int read_CQ_solist_attr_list (lListElem *ep, int nm, const char *buffer,
+static int read_CQ_solist_attr_list(lListElem *ep, int nm, const char *buffer,
                                      lList **alp)
 {
    int ret;
@@ -1316,6 +1321,7 @@ static int read_CQ_solist_attr_list (lListElem *ep, int nm, const char *buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY);
    
    if (!ret) {
+      lFreeList(&lp);
       return 0;
    }
    
@@ -1335,7 +1341,7 @@ static int write_CQ_solist_attr_list(const lListElem *ep, int nm,
    return 1;
 }
 
-static int read_CQ_prjlist_attr_list (lListElem *ep, int nm, const char *buffer,
+static int read_CQ_prjlist_attr_list(lListElem *ep, int nm, const char *buffer,
                                       lList **alp)
 {
    int ret;
@@ -1345,6 +1351,7 @@ static int read_CQ_prjlist_attr_list (lListElem *ep, int nm, const char *buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY);
    
    if (!ret) {
+      lFreeList(&lp);
       return 0;
    }
    
@@ -1359,12 +1366,12 @@ static int read_CQ_prjlist_attr_list (lListElem *ep, int nm, const char *buffer,
 static int write_CQ_prjlist_attr_list(const lListElem *ep, int nm,
                                    dstring *buffer, lList **alp)
 {
-   prjlist_attr_list_append_to_dstring(lGetList (ep, nm), buffer);
+   prjlist_attr_list_append_to_dstring(lGetList(ep, nm), buffer);
    
    return 1;
 }
 
-static int read_CQ_time_attr_list (lListElem *ep, int nm, const char *buffer,
+static int read_CQ_time_attr_list(lListElem *ep, int nm, const char *buffer,
                                    lList **alp)
 {
    int ret;
@@ -1374,6 +1381,7 @@ static int read_CQ_time_attr_list (lListElem *ep, int nm, const char *buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY);
    
    if (!ret) {
+      lFreeList(&lp);
       return 0;
    }
    
@@ -1388,12 +1396,12 @@ static int read_CQ_time_attr_list (lListElem *ep, int nm, const char *buffer,
 static int write_CQ_time_attr_list(const lListElem *ep, int nm,
                                    dstring *buffer, lList **alp)
 {
-   time_attr_list_append_to_dstring(lGetList (ep, nm), buffer);
+   time_attr_list_append_to_dstring(lGetList(ep, nm), buffer);
    
    return 1;
 }
 
-static int read_CQ_mem_attr_list (lListElem *ep, int nm, const char *buffer,
+static int read_CQ_mem_attr_list(lListElem *ep, int nm, const char *buffer,
                                   lList **alp)
 {
    int ret;
@@ -1403,6 +1411,7 @@ static int read_CQ_mem_attr_list (lListElem *ep, int nm, const char *buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY);
    
    if (!ret) {
+      lFreeList(&lp);
       return 0;
    }
    
@@ -1444,12 +1453,11 @@ static int read_CQ_hostlist(lListElem *ep, int nm, const char *buffer,
 static int write_CQ_hostlist(const lListElem *ep, int nm,
                              dstring *buffer, lList **alp)
 {
-   lList *lp = lGetList (ep, nm);
+   lList *lp = lGetList(ep, nm);
    
    if (lp != NULL) {
       href_list_append_to_dstring(lp, buffer);
-   }
-   else {
+   } else {
       sge_dstring_append(buffer, "NONE");
    }
    
@@ -1462,9 +1470,8 @@ static int write_CE_stringval(const lListElem *ep, int nm, dstring *buffer,
    const char *s;
 
    if ((s=lGetString(ep, CE_stringval)) != NULL) {
-      sge_dstring_append (buffer, s);
-   }
-   else {
+      sge_dstring_append(buffer, s);
+   } else {
       char tmp[1024];
       sprintf(tmp, "%f", lGetDouble(ep, CE_doubleval));
       sge_dstring_append (buffer, strdup (tmp));

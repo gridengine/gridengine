@@ -1,3 +1,5 @@
+MP-2008-08-05-0: Bugfix:    Fixed spelling mistakes in man pages.
+
 JG-2008-08-01-0: Bugfix:    Fixed aimk for use with insure.
                             Fixed minor memory leaks and memory access problems.
                  Review:    MD

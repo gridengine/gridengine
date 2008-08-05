@@ -1284,7 +1284,7 @@ _spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
 {
    lListElem *object = NULL;
    int *my_fields_out = NULL;
-   
+
    /* BUGFIX: Issuezilla #732
     * If we're not given a fields_out array, create one for internal use. */
    if (fields_out != NULL) {
@@ -1413,8 +1413,7 @@ FF_DEBUG("read field name");
                stop = true;
                continue;
             }
-         }
-         else {
+         } else {
             field_has_name = true;
          }
 
@@ -1544,7 +1543,6 @@ FF_DEBUG("detected end_token");
          spool_return_whitespace = false;
          
          if (fields[field_index].read_func == NULL) {
-            
             if(type == lUlongT) {            
                char *end_ptr = NULL;
                double dbl_value;
@@ -1555,6 +1553,8 @@ FF_DEBUG("detected end_token");
                                        ANSWER_QUALITY_ERROR,
                                        MSG_MUST_BE_POSITIVE_VALUE_S,
                                        fields[field_index].name);
+                  sge_dstring_free(&buffer);
+                  DEXIT;
                   return;
                }
             }
@@ -1563,17 +1563,15 @@ FF_DEBUG("detected end_token");
                stop = true;
                continue;
             }
-         }
-         else {
-            if (fields[field_index].read_func (*object, nm,
-                                               sge_dstring_get_string (&buffer),
+         } else {
+            if (fields[field_index].read_func(*object, nm,
+                                               sge_dstring_get_string(&buffer),
                                                answer_list) == 0) {
                stop = true;
                continue;
             }
          }
-      }
-      else { /* if (type == lListT) */
+      } else { /* if (type == lListT) */
          lList *list;
          const lDescr *sub_descr;
 
@@ -1588,7 +1586,7 @@ FF_DEBUG("empty list");
                record_end = true;
             }
             /* check for field end - we have to skip it later */
-            else if (is_delimiter (*token) &&
+            else if (is_delimiter(*token) &&
                      (*spool_text == instr->field_delimiter)) {
                field_end = true;
             }
@@ -1624,7 +1622,7 @@ FF_DEBUG("empty list");
             /* read sublist */
             {
                char new_end_token[MAX_STRING_SIZE];
-               
+
                get_end_token(new_end_token, MAX_STRING_SIZE, end_token,
                              instr->field_delimiter);
                /* We're passing in NULL for the fields_out parameter
@@ -2015,6 +2013,7 @@ FF_DEBUG("after parsing list");
       lFreeList(&list);
    }
 
+   DEXIT;
    return list;
 }
 
@@ -2034,9 +2033,9 @@ static lListElem *search_for_tree_node(lListElem *ep, const char *id,
    }
    
    object_append_field_to_dstring (ep, &alp, &node_id, nm2, '\0');
-   node_id_str = sge_dstring_get_string (&node_id);
+   node_id_str = sge_dstring_get_string(&node_id);
    
-   if (strcmp (id, node_id_str) == 0) {
+   if (strcmp(id, node_id_str) == 0) {
       DEXIT;
       return ep;
    }

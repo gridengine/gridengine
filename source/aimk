@@ -234,6 +234,7 @@ set WITH_USERMAPPING = 0 # Compile without usermapping feature
 set OPTIMIZATION     = 1
 set GPROFFED         = 0
 set COVED            = 0
+set USE_INSURE       = 0
 set DEBUGGED         = 0
 set COMPILE_DC       = 0
 set CC               = cc
@@ -500,8 +501,7 @@ while ($#argv >= 1 && $?found)
       set KVMAN = 1
       breaksw
    case "-insure"
-      set CC         = insure
-      set CXX        = insure
+      set USE_INSURE = 1
       set INSURE_FLAG = "-Zsl"
       set LFLAGS     = "-Zsl $LFLAGS"
       set DEBUGGED   = 1
@@ -1716,6 +1716,12 @@ endif
 #
 set GSHARED_CFLAGS = "$SHARED_CFLAGS"
 set GSHARED_LFLAGS = "$SHARED_LFLAGS"
+
+# change CC / CXX for insure
+if ($USE_INSURE == 1) then
+   set CC  = "insure $CC"
+   set CXX = "insure $CXX"
+endif
 
 #---------------------------------------------------------------------------
 # Actual make targets begin here

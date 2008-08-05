@@ -1,3 +1,8 @@
+JG-2008-08-05-0: Bugfix:    Fixed aimk for use with insure.
+                            Fixed minor memory leaks and memory access problems.
+                            Merged from maintrunk:JG-2008-08-01-0.
+                 Review:    MD
+
 JG-2008-07-31-0: Bugfix:    qstat -f -q cqueue@host fails, if host is resolved
                             differently on the client than on qmaster
                  Bugster:   6732056

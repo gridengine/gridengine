@@ -125,8 +125,10 @@
 *     Don't forget to define the 'FCLOSE_ERROR'-label
 ******************************************************************************/
 #define FCLOSE(x) \
-   if(fclose(x) != 0) { \
-      goto FCLOSE_ERROR; \
+   if (x != NULL) { \
+      if(fclose(x) != 0) { \
+         goto FCLOSE_ERROR; \
+      } \
    }
 
 

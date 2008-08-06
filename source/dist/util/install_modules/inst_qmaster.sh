@@ -1230,7 +1230,7 @@ AddHosts()
 
    fi
 
-   if [ "$Overwrite" = "true" ]; then
+   if [ "$Overwrite" = "true" -a "$SPOOLING_METHOD" = "classic" ]; then
       $INFOTEXT -u "\nSkipping creation of the default <all.q> queue and <allhosts> hostgroup"
    else
       $INFOTEXT -u "\nCreating the default <all.q> queue and <allhosts> hostgroup"

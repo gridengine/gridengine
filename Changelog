@@ -1,3 +1,7 @@
+MD-2008-08-06-0: Bugfix:    fixed SGE_CELL overwrite mode for non classic
+                            spooling method
+                 Review:    JG
+
 MP-2008-08-05-0: Bugfix:    Fixed spelling mistakes in man pages.
 
 JG-2008-08-01-0: Bugfix:    Fixed aimk for use with insure.
@@ -205,8 +209,8 @@ JG-2008-05-30-0: Bugfix:    32-bit Linux libraries are having problems with file
                  Issue:     2543
                  Review:    AH
 
-MP-2008--5-29-0: Bugfix:    qmaster reinstall overwriting an existing installation
-                            fails
+MP-2008-05-29-0: Bugfix:    qmaster reinstall overwriting an existing 
+                            installation fails
                  Bugster:   6673742
                  Issue:     2594
                  Review:    JG

@@ -433,9 +433,9 @@ public class JobTemplateImpl implements JobTemplate {
      * nativeSpecification property as well as by explict DRMAA job template
      * property settings.
      *
-     * <p>The options -help, -t, -verify, and -w w|v are ignored.  The -cwd
-     * option is ignored unless the $SGE_DRMAA_ALLOW_CWD environment variable is
-     * set.</p>
+     * <p>The options -help, -sync, -t, -verify, and -w w|v are ignored.  The 
+     * -cwd option is ignored unless the $SGE_DRMAA_ALLOW_CWD environment 
+     * variable is set.</p>
      * @param category {@inheritDoc}
      * @throws DrmaaException {@inheritDoc}
      * @see <a href="http://gridengine.sunsource.net/nonav/source/browse/~checkout~/gridengine/doc/htmlman/htmlman5/qtask.html">qtask(5)</a>
@@ -464,8 +464,8 @@ public class JobTemplateImpl implements JobTemplate {
     /**
      * Specifies native qsub options which will be interpreted as part of the
      * DRMAA job template.  All options available to the qsub command may be
-     * used in the nativeSpecification, except for -help, -t, -verify, and -w
-     * w|v.  -cwd may only be used if the $SGE_DRMAA_ALLOW_CWD enviroment
+     * used in the nativeSpecification, except for -help, -sync, -t, -verify, 
+     * and -w w|v.  -cwd may only be used if the $SGE_DRMAA_ALLOW_CWD enviroment
      * variable is set.  Options set in the nativeSpecification will be
      * overridden by the corresponding DRMAA properties.  See the qsub(1) man
      * page for more information on qsub command line options.

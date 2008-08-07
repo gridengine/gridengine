@@ -1,3 +1,7 @@
+DG-2008-08-07-0: Bugfix:    Man page qdel is misleading with the -f option.
+                 Bugster:   6702511
+                 Review:    CR
+
 MD-2008-07-31-0: CVS:       Created V62_TAG
 -------------------------------------------
 

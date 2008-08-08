@@ -1,3 +1,9 @@
+DG-2008-08-08-0: Bugfix:     Manpage sge_conf(5) was wrong about default 
+                             loglevel.
+                 Bugster:    6575737
+                 Issue:      2280
+                 Review:     JG
+
 DG-2008-08-07-1: Cleanup:    Update of documentation and comments.
                  Belongs to: DT-2007-11-21-0 
                  Bugster:    6558329

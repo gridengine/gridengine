@@ -1,3 +1,7 @@
+JG-2008-08-08-0: Bugfix:    Fixed minor memory leaks in qconf.
+                 Enhancem.: Added Makefile for qtcsh on lx26-amd64.
+                 Review:    DG
+
 JG-2008-08-05-0: Bugfix:    Fixed aimk for use with insure.
                             Fixed minor memory leaks and memory access problems.
                             Merged from maintrunk:JG-2008-08-01-0.

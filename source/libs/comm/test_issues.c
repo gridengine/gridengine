@@ -408,7 +408,6 @@ extern int main(int argc, char** argv)
            }
            if (message != NULL) {
               printf("received response message from %s with size %lu\n", sender->comp_host, message->message_length);
-              message->message = NULL;
               cl_com_free_message(&message);
               cl_com_free_endpoint(&sender);
               break;

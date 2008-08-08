@@ -224,6 +224,7 @@ bool hgroup_provide_modify_context(lListElem **this_elem, lList **answer_list,
                *this_elem = hgroup; 
                ret = true;
             } else {
+               lFreeElem(&hgroup);
                answer_list_add(answer_list, MSG_FILE_NOTCHANGED,
                                STATUS_ERROR1, ANSWER_QUALITY_ERROR);
             }

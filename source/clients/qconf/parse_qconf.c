@@ -3527,16 +3527,19 @@ char *argv[]
          if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             spp++;
-            continue;
-         }
-
-         if (!lp || lGetNumberOfElem(lp) == 0) {
-            fprintf(stderr, MSG_USER_XISNOKNOWNUSER_S, *spp);
-            fprintf(stderr, "\n");
-            spp++;
+            lFreeList(&alp);
+            lFreeList(&lp);
             continue;
          }
          lFreeList(&alp);
+
+         if (lp == NULL || lGetNumberOfElem(lp) == 0) {
+            fprintf(stderr, MSG_USER_XISNOKNOWNUSER_S, *spp);
+            fprintf(stderr, "\n");
+            lFreeList(&lp);
+            spp++;
+            continue;
+         }
          ep = lFirst(lp);
          
          /* edit user */
@@ -3547,8 +3550,7 @@ char *argv[]
             fprintf(stderr, MSG_QCONF_CANTCHANGEOBJECTNAME_SS, lGetString(ep, UP_name), lGetString(newep, UP_name));
             fprintf(stderr, "\n");
             SGE_EXIT(1);
-         }
-         else {
+         } else {
             lFreeList(&lp);
             /* send it to qmaster */
             lp = lCreateList("User list to modify", UP_Type); 

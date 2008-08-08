@@ -1,3 +1,190 @@
+Bugs fixed in SGE 6.2 since release 6.2beta2
+--------------------------------------------
+
+Issue    Sun BugId Description
+-------- --------- ------------------------------------------------------------------------------------------
+-        6181171   bad documentation on qstat -j output 
+-        6248737   dc_shell prompt is missing with qrsh 
+-        6269470   arcorun should be documented in the manuals 
+-        6279624   Incorrect documentation for latebinding parameters 
+-        6289602   Need description of modifying ARCo bahaviour after initial install 
+-        6295019   Sun N1 Grid Engine 6 Documentation: Cluster Queues vs. Queue Instances when subordinating 
+-        6298080   We need a document which describes all dbwriter parameters 
+-        6300789   /etc/init.d/sgemaster -migrate should be documented 
+-        6353033   qrsh without command does not give online resource usage 
+-        6364948   Update description of ARCo database model 
+-        6371741   Describe possible problems when jobs are pending and password is changed in Windows domain 
+-        6398703   N1GE6 Solaris packages installation instructions are incorrect 
+-        6418175   need documentation for the arco updatedb script 
+-        6462150   Administration Guide still contains reference to no longer existing 'maxgjobs' 
+-        6469744   The qrsh command caused licensing error when accessing windows execution hosts 
+-        6481737   Arco should support webconsole 3.0.x 
+-        6525497   JGDI crashes JVM when null is passed to JNI GetStringUTFChars function 
+-        6528484   qrsh does not work without NFS s-bit if binaries are kept on NFS 
+-        6541412   Feedback on 6.1 beta documentation from OS community 
+-        6559385   Calling JGDI getQueueInstanceSummary results in a memory leak 
+-        6563438   User accounts in MySQL for ARCo 
+-        6572196   Intermediate acct records are not mentioned in man reporting 
+-        6574679   Need method for fast startup of MPI jobs 
+-        6594812   Admin guide should explain 'cannot run in PE <PE_NAME> because it only offers <NUM> slots' message 
+-        6609726   Documentation mentions invalid parameter "weight_jobclass" 
+-        6618315   qmon segfaults when trying to set functional policy 
+-        6618323   qmon segfaults on trying to modify override policy 
+-        6632830   ExecuteAsAdmin shorten the long command line arguments 
+-        6640885   on Windows installation fails when installing as root and SGE admin user = none 
+-        6655813   All occurences of DRMAA 0.5 and libdrmaa.0.95 needs to be removed for 6.2 
+-        6655818   6.2 ReleaseNotes need to mention DRMAA 0.5 and libdrmaa 0.95 are removed from the distribution 
+-        6659854   wrong detection of sge_qmaster port in Qmaster installation makes installing impossible. 
+-        6661146   splash screen for qmon GE 6.2 alpha still has old information 
+-        6661510   In ARCo database installation guide users must be instructed to configure MySQL with INNODB 
+-        6670264   Validation of the Filter List in Simple Query builder fails 
+-        6684918   Problem with case sensitivity for queries in ARCo 
+-        6686921   qrsh and qlogin has very slow response to user input. 
+-        6692055   Exception when switching cluster in ARCo GUI 
+-        6693980   Simple Query builder does not repopulate dropdown menus when cluster changed 
+-        6702922   Grid Engine 6.1 Installation Guide still mentions SUNWsgee, SUNWsgeed, and Solaris 7 
+-        6708360   Grid Engine 6.1u4 documentation should state that web console 3.0.2 is supported 
+-        6717816   Upgrade script failed when choosing a different port number then $SGE_QMASTER_PORT 
+-        6717891   Auto install template value checking is too strict on COPY_COMMAND 
+-        6718433   in csp mode, shephed cannot always read user certificates for interactive job support 
+-        6718447   commlib errors of the connection between shepherd and qrsh client are not printed to stderr 
+-        6718453   terminate method for interactive jobs doesn't work properly 
+-        6722507   limits defined in /etc/security/limits.conf are not obeyed in interactive jobs 
+-        6722652   upgrade does not create arusers user set 
+-        6722805   upgrade does not save host_aliases file 
+-        6722806   upgrade does not create display_win_gui complex 
+-        6722920   upgrade does not save and restore sge_qstat, sge_ar_request,sge_qquota 
+-        6722930   Java DRMAA static constants are accessed via object references and not via class references 
+-        6723936   Upgrade uses same local execd spool dir in copy mode
+72       6726206   Adding new system produces unreadable bootstrap directory names 
+213      4658706   msg size used in tight PE integr. job start sync. protocol should be smaller 
+420      6696915   serialVersionUID of jaxb generated classes 
+458      6702281   Modify Grid Engine complex mapping command uses a defect bundle message 
+468      6707031   Confusing error message while installing managed host 
+472      6708450   Service adapter must report resource request when its needs are fulfilled 
+476      6710436   monitoring commands "-h" switch relying on RegExpHost filter do not work properly 
+477      6710442   SCP assumes that service is down too soon 
+478      6710441   SCP performs full synchronization when it is not necessary 
+479      6710595   host uninstallation bad message 
+480      6710593   host unistall fials if spool is removed 
+483      6711006   full stacktrace shown when "-p" default option is wrong 
+484      6713852   adding multiple resources for example 3000 can lead to ambigous resources 
+486      6712084   Hostname resolving problems with loopback interface 
+487      6713234   GE service stays in RELOADING state 
+488      6713797   GE adapter contains resource in UNASSIGNED state 
+489      6714497   show services command different output style 
+498      6719595   GEAdapter sends RESOURCE_ERROR event after RESOURCE_REMOVED event 
+500      6721627   RP can not handle requests with quantity 0 
+504      6722161   History shows resource for RESOURCE_REQUEST entries 
+509      6724564   Managed host installation on master host corrupts bootstrap config 
+514      6725419   SDM needs to support service tags 
+523      6727853   multiple resource operations on GE cause that operations are rejected 
+527      6730545   Invalid state transition STOPPED -> SHUTDOWN @ GE-adapter shutdown 
+533      6248721   qrsh should pass INTR only to application 
+869      6288965   accounting: low precision of ru_utime, ru_stime and cpu
+1052     6367643   Seamless Pseudo Terminal Support 
+1258     6670917   qrsh -inherit -nostdin fails when started with closed STDIN 
+1265     5097481   Admin guide: Effect of -p priority and weight_priority not described 
+1406     6287866   cannot submit to HPUX client using qrsh with no command 
+1606     6287915   qrsh -noshell executes shell resource files 
+1675     6289273   event client acknowledge and deregister request not always processed in sequence by qmaster 
+1751     6310194   use of the same pathes for input/output stream must be dealt with 
+1788     6518012   qmake runs out of secure ports 
+1832     6367649   Support array sub job dependancies/holds 
+1857     6344948   No description of RESTRING for Grid Engine complexes configuration 
+1942     6362866   qconf *stnode CLI commands not documented at all 
+2013     6403530   job exit code 100 must be described in chapter 8 of the Admins Guide 
+2084     6702768   Admin Guide: incorrectly says only QMON can be used to assign override tickets to jobs 
+2170     6511009   Advanced Query with wild card character * does not produce correct results. 
+2234     6549694   Sort on table column throws exception if explicit SORT specified in SimpleQuery Sort on table column 
+2245     6556389   Error.jsp contains unbalanced tagError.jsp contains unbalanced tag 
+2247     6556411   DBW queries "Average Job Turnaround Time", "Average Job Wait Time" might not work 
+2264     6555953   JGDI deleteJob crashes qmaster 
+2266     6563346   Wrong usage of 'day' format model in trunc(date) Oracle functions 
+2284     6565841   Oracle: rollback segments keep filling up, Postgres: delete query keeps running 
+2288     6567673   qlogin does not work on HP11 with N1GE6.0 u11 
+2309     6572801   sge_queue_values definition does not contain PRIMARY KEY 
+2317     6574565   Oralce, Postgres FOREIGN KEY fields need to be indexed 
+2339     6586817   RQS can break allocation_rule 
+2350     6595856   Galore use of drmaa_job_ps(3) can cause performance decline 
+2354     6598005   ORDER BY clause ignored in Advanced Query 
+2364     6615165   Need means to simulate large numbers of execution nodes 
+2370     6533487   Need to have file descriptors limit set for jobs 
+2378     6610855   -masterq may not break slave task preference due to soft/queue sort method 
+2391     6613438   'Infinity' must be rejected when specified in 'complex_values' or RQS limits for consumables 
+2392     6614108   Specifying more than one drmaa_v_env attribute causes spurious error msg 
+2404     6618328   qmon displays wrong string for queue filtering 
+2415     6620930   ARCO view_accounting filters out parallel job usage incorrectly 
+2422     6609633   qconf -Mconf is missing 
+2426     6627903   Need GNU-lib mtrace()/muntrace() support in qmaster for hunt on memory leaks 
+2432     6722217   Invalid qconf -mrqs crashes qmaster with segmentation fault 
+2434     6634786   ARCo online help contains invalid, unclear or outdated information 
+2439     6638329   Reporting 'View' dropdown menu and 'Save Result' functionality is confusing 
+2441     6638472   ARCo should support multi-clusters 
+2443     6655773   0.5 Java language binding and 0.95 C language binding should be dropped for 6.2 
+2444     6640762   Row Limit in Simple Query uses wrong syntax 
+2448     6643273   dbwriter should support schemas for Postgres db installation 
+2449     6647676   RQS: Line wrap of host list introduces syntax error 
+2450     6644709   dbwriter should write checkpoint to database 
+2451     6572326   need option to suppress individual accounting records in tightly integrated parallel jobs 
+2452     6647681   dbwriter deletion rules delete tasks of pe_jobs 
+2457     6649528   execd can take 100% of CPU usage 
+2469     6652219   change of a load value not propagated from exec to qmaster due to load report protocol optimization 
+2470     6649605   Advanced reservation "-he no" option is broken 
+2472     6655195   qquota broken if quota definition contains "hosts" or "users" scope negation 
+2475     6671963   Access_list(5) man page not precise enough with regards secondary/primary group(s) 
+2476     6657521   RQS debitation of running jobs is broken if enabled by -mattr 
+2483     6653424   Long qmaster startup time in large clusters with many jobs 
+2486     6661461   Row Limit in ARCo Simple Query builder cannot be empty 
+2487     6661470   Sort order and row limit cannot be specified together in ARCo Simple Query builder 
+2491     6670879   Resources get blocked when a parallel jobs host is not reachable 
+2513     6698155   Missing entry in User's Guide - failure codes 
+2521     6675592   shadow_masters file might contain some hosts twice 
+2523     6677192   incorrect depencency on xinetd in init scripts for linux 
+2529     6677885   Latebindings for Advanced Queries does not work 
+2536     6680905   Switching from Simple Query to Advanced Query removes the Latebingings 
+2555     6688666   loadcheck prints error message "kstat finds too many cpus" 
+2565     6694003   ARCo should not print exception stack trace in the console 
+2566     6684968   TABLESPACE values should be written to dbwriter.conf 
+2574     6716772   execd install fails on OS X when qmaster boot scripts are present 
+2575     6704393   error message given by qalter -q '' <jobid> suggests a memory access problem 
+2598     6708891   qalter -w v <jobid> must reject operating on already finished jobs 
+2603     6710983   qsub option -q breaks -masterq 
+2605     6711578   load scaling display not working correctly 
+2606     6710485   qstat -j does not print array task information 
+2607     6712685   qalter -w v wrongly changes job attributes 
+2608     6562277   job hold due to -hold_jid is not indicated as STATE_SYSTEM_ON_HOLD by drmaa_job_ps(3) 
+2611     6713785   A load sensor reporting values for other hosts does not work 
+2615     6710542   reporting file is lacking information about global consumables, if log_consumables=false 
+2619     6716648   sge_ca script does not allow easy sdm_admin keystore creation 
+2620     6715561   Wallclock_Time query should be more constrained 
+2624     6692104   "./install_execd -winsvc -auto /path/to/auto.conf" command causes error 
+2625     6723130   install fails with mutually dependent subordinate queues 
+2634     6589820   The default has to be local spool directory when install_execd is run for a Windows host 
+2641     6720078   qmaster runs out of memory on AIX 
+2642     6713362   dbw install parameters are not verified 
+2644     6716082   Incorrect slots_total from qstat -F -xml output 
+2646     6724576   jmx keystore property is wrong for non default keystore location 
+2647     6723932   install_qmaster -jmx fails if non default keystore path is used 
+2648     6254021   arcorun: Unexpected Error: Could not load the translet class 'GregorSamsa' 
+2649     6254027   PDF output does not span over multiple pages 
+2650     6724877   memory leaks to be fixed in 6.2 
+2652     6724949   qsub -w v does report success even when requirements are not fulfilled 
+2653     6725446   Ctrl-C in a qmaster running in debug mode does not trigger a proper shutdown 
+2655     6711517   /etc/services is not handled correctly during installation 
+2658     6726283   Qmaster message file contains logging about NULL ptr passed to host_list_locate() 
+2660     6726285   Wrong permissions if install_qmaster creates qmaster spool directory 
+2661     6726344   Installation of execution daemon left user unclear which port was chosen. 
+2662     6617973   qconf -aconf Unresolvablehost should not open the editor 
+2662     6618012   qconf -Arqs InvalidValue dumps core 
+2662     6618016   Several qconf options do not recognize invalid values and return error exit code 
+2669     6722925   qmaster installation displays "No CSP system installed" twice when no CSP 
+2672     6728262   qmaster crashes while project deletion (qconf -dprj) in a special case 
+2676     6729353   Exception occurs during the exportation of a query result to pdf 
+2677     6728406   tr command has wrong replace arguments in some places 
+2678     6727751   Installation fails when another cluster already uses RC scripts on Linux
+
+
 Bugs fixed in SGE 6.2beta2 since release 6.2beta
 ------------------------------------------------
 

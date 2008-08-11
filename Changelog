@@ -1,3 +1,8 @@
+AA-2008-08-11-0: Bugfix:     sge_ca script fails for installation as root user
+                 Bugster:    6735875
+                 Issue:      2685
+                 Review:     RH
+
 DG-2008-08-08-0: Bugfix:     Manpage sge_conf(5) was wrong about default 
                              loglevel.
                  Bugster:    6575737

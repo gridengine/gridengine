@@ -686,31 +686,37 @@ MakeRandFile()
    fi
    # $INFOTEXT "Creating RANDFILE from '%s' in '%s'" $rfile $1
 
+   if [ "$2" = "default" ]; then
+      myuser=root
+   else
+      myuser=$2
+   fi
+
    RANDFILE=/tmp/.rand.$$; export RANDFILE;
-   $V5UTILBIN/adminrun $2 dd if=$rfile of=$RANDFILE count=2048 > /dev/null 2>&1
+   $V5UTILBIN/adminrun $myuser dd if=$rfile of=$RANDFILE count=2048 > /dev/null 2>&1
    if [ $? -lt 0 ]; then
        PrintError "Could not create random number for (%s -> %s)" $rfile $RANDFILE
        return 1
    fi
-   $V5UTILBIN/adminrun $2 $OPENSSL rand -rand $RANDFILE -out $1 2048  > /dev/null 2>&1
+   $V5UTILBIN/adminrun $myuser $OPENSSL rand -rand $RANDFILE -out $1 2048  > /dev/null 2>&1
    if [ $? -ne 0 ]; then
        PrintError "bootstraping of rand command as user %s failed (%s -> %s)" $2 $RANDFILE $1
        return 1
    fi
    
-   $V5UTILBIN/adminrun $2 $OPENSSL rand -rand $rfile -out $1 2048  > /dev/null 2>&1
+   $V5UTILBIN/adminrun $myuser $OPENSSL rand -rand $rfile -out $1 2048  > /dev/null 2>&1
    if [ $? -ne 0 ]; then
        PrintError "openssl rand command as user %s failed (%s -> %s)" $2 $rfile $1
        return 1
    fi
 
-   $V5UTILBIN/adminrun $2 $RM $RANDFILE > /dev/null 2>&1
+   $V5UTILBIN/adminrun $myuser $RM $RANDFILE > /dev/null 2>&1
    if [ $? -ne 0 ]; then
        PrintError "Could not delete file %s as user %s" $RANDFILE $2
        return 1
    fi
    
-   $V5UTILBIN/adminrun $2 $CHMOD 644 $1 > /dev/null 2>&1
+   $V5UTILBIN/adminrun $myuser $CHMOD 644 $1 > /dev/null 2>&1
    if [ $? -ne 0 ]; then
        PrintError "chmod as user %s on file %s failed" $2 $1
        return 1

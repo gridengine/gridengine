@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2007/07/19 08:17:16 $     Revision: $Revision: 1.17.2.1 $
+.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2008/08/13 14:42:49 $     Revision: $Revision: 1.17.2.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_attributes 3 "$Date: 2007/07/19 08:17:16 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_attributes 3 "$Date: 2008/08/13 14:42:49 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -214,10 +214,10 @@ set to "n", the ultimate result is that the input and output files will remain
 separate.
 .PP
 For various reasons, some options are silently ignored by DRMAA.  Setting any
-of these options will have no effect.  The ignored options are: -cwd, -help, -t,
--verify, -w w, and -w v.  The -cwd option can be re-enabled by setting the
-environment variable, SGE_DRMAA_ALLOW_CWD.  However, the -cwd option is not
-thread safe and should not be used in a multi-threaded context.
+of these options will have no effect.  The ignored options are: -cwd, -help, 
+-sync, -t, -verify, -w w, and -w v.  The -cwd option can be re-enabled by 
+setting the environment variable, SGE_DRMAA_ALLOW_CWD.  However, the -cwd 
+option is not thread safe and should not be used in a multi-threaded context.
 .PP
 .\"
 .SS Attribute Correlations
@@ -428,8 +428,8 @@ as well as by explicit DRMAA job template settings.
 In order to avoid collisions with command names in the qtask files, it is
 recommended that DRMAA job category names take the form: <category_name>.cat.
 .PP
-The options -help, -t, -verify, and -w w|v are ignored.  The -cwd option is
-ignored unless the $SGE_DRMAA_ALLOW_CWD environment variable is set.
+The options -help, -sync, -t, -verify, and -w w|v are ignored.  The -cwd 
+option is ignored unless the $SGE_DRMAA_ALLOW_CWD environment variable is set.
 .PP
 .\" 
 .\" 
@@ -439,8 +439,8 @@ Specifies xxQS_NAMExx native
 options which will be interpreted as part of the DRMAA job template.  All
 options available to
 .M qsub 1 
-command may be used in the \fInative_specification\fP, except for -help, -t,
--verify, and -w w|v.  The -cwd option may only be used if the
+command may be used in the \fInative_specification\fP, except for -help, -sync,
+-t, -verify, and -w w|v.  The -cwd option may only be used if the
 SGE_DRMAA_ALLOW_CWD environment variable is set.  This is because the current
 parsing algorithm for -cwd is not thread-safe.  Options set in the \fInative
 specification\fP will be overridden by the corresponding DRMAA attributes.  See

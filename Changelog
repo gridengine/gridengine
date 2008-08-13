@@ -1,3 +1,10 @@
+DG-2008-08-13-0: Bugfix:      Man page sge_conf(5) was wrong about default 
+                              loglevel.
+                 Merged from: maintrunk: DG-2008-08-08
+                 Bugster:     6575737
+                 Issue:       2280
+                 Review:      CR 
+
 MD-2008-08-13-0: CVS:       Created V61u5_TAG.
 ----------------------------------------------
 

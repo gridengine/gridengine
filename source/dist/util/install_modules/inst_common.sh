@@ -2846,7 +2846,6 @@ CopyCA()
    fi
 
    if [ "$CSP" = "false" -a \( "$WINDOWS_SUPPORT" = "false" -o "$WIN_DOMAIN_ACCESS" = "false" \) ]; then
-      $INFOTEXT "No CSP system installed!"
       return 1
    fi
    
@@ -2973,13 +2972,13 @@ GetAdminUser()
    ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
    euid=`$SGE_UTILBIN/uidgid -euid`
 
-   TMP_USER=`echo "$ADMINUSER" |tr "A-Z" "a-z"`
+   TMP_USER=`echo "$ADMINUSER" |tr "[A-Z]" "[a-z]"`
    if [ \( -z "$TMP_USER" -o "$TMP_USER" = "none" \) -a $euid = 0 ]; then
       ADMINUSER=default
    fi
 
    if [ "$SGE_ARCH" = "win32-x86" ]; then
-      HOSTNAME=`hostname | tr "a-z" "A-Z"`
+      HOSTNAME=`hostname | tr "[a-z]" "[A-Z]"`
       ADMINUSER="$HOSTNAME+$ADMINUSER"
    fi
 }

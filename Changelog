@@ -1,3 +1,10 @@
+LP-2008-08-13-0: Bugfix:      qmaster installation displays "No CSP system installed" twice when no CSP
+                 Bugfix:      tr command has wrong replace arguments in some places
+                 Merged from: maintrunk: LP-2008-07-04-0, LP-2008-07-22-0
+                 Bugster:     6722925, 6728406
+                 Issue:       2669, 2677
+                 Review:      JO
+
 DG-2008-08-13-2: Bugfix:      Update of documentation and comments.
                  Belongs to:  DT-2007-11-21-0 
                  Merged from: maintrunk: DG-2008-08-07-1

@@ -166,7 +166,7 @@ GetAdminUser()
       user=`grep admin_user $cfgname | awk '{ print $2 }'`
    fi
 
-   if [ `echo $user|tr "A-Z" "a-z"` = "none" ]; then
+   if [ `echo $user|tr "[A-Z]" "[a-z]"` = "none" ]; then
       user=root
    fi
    echo $user

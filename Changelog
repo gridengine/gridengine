@@ -1,3 +1,9 @@
+AA-2008-08-13-0: Bugfix:      sge_ca script fails for installation as root user
+                              cleanup of SGE_EXIT and test programs
+                 Bugster:     6735875
+                 Issue:       2685
+                 Review:      MD
+
 LP-2008-08-13-0: Bugfix:      qmaster installation displays "No CSP system installed" twice when no CSP
                  Bugfix:      tr command has wrong replace arguments in some places
                  Merged from: maintrunk: LP-2008-07-04-0, LP-2008-07-22-0

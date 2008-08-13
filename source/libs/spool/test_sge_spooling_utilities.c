@@ -58,11 +58,8 @@ int main(int argc, char *argv[])
 
    lInit(nmv);
 
-   queue = queue_create_template();
-   copy  = lCreateElem(QU_Type);
-
-   descr = lGetElemDescr(queue);
-   
+   descr = QU_Type;
+   copy  = lCreateElem(descr);
 
 /*    lWriteElemTo(queue, stdout); */
 

@@ -103,7 +103,7 @@ static int sge_ck_qmaster(sge_gdi_ctx_class_t *ctx, const char *former_master_ho
 static int parse_cmdline_schedd(int argc, char **argv);
 static void usage(FILE *fp);
 static void schedd_exit_func(void **ctx_ref, int i);
-static int sge_setup_sge_schedd(sge_gdi_ctx_class_t *ctx);
+static int sge_setup_sge_schedd(sge_gdi_ctx_class_t **ctx_ref);
 int daemonize_schedd(void *ctx);
 
 
@@ -199,7 +199,7 @@ char *argv[]
 
    if ((ret = sge_occupy_first_three()) >= 0) {
       CRITICAL((SGE_EVENT, MSG_FILE_REDIRECTFILEDESCRIPTORFAILED_I , ret));
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    lInit(nmv);
@@ -209,7 +209,7 @@ char *argv[]
 
    /* setup communication (threads) and daemonize if qmaster is unreachable */
    sge_sig_handler_in_main_loop = 1;
-   check_qmaster = (sge_setup_sge_schedd(ctx) != 0) ? true : false;
+   check_qmaster = (sge_setup_sge_schedd(&ctx) != 0) ? true : false;
 
    /* prepare event client/mirror mechanism */
    /* TODO: check if this works with daemonizing */
@@ -221,7 +221,7 @@ char *argv[]
    /* TODO: why does the scheduler not work if this is done here ??? */
    if (!evc->ec_register(evc, false, &alp)) {
       answer_list_output(&alp);
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 #endif   
    sge_schedd_mirror_register(evc);
@@ -229,18 +229,18 @@ char *argv[]
    master_host = ctx->get_master(ctx, false);
    if ( (ret=cl_com_cached_gethostbyname((char*)master_host, &initial_qmaster_host, NULL,NULL,NULL)) != CL_RETVAL_OK) {
       CRITICAL((SGE_EVENT, cl_get_error_text(ret)));
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
    if ( (ret=cl_com_gethostname(&local_host, NULL,NULL,NULL)) != CL_RETVAL_OK) {
       FREE(initial_qmaster_host); 
       CRITICAL((SGE_EVENT, cl_get_error_text(ret)));
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    if (cl_com_compare_hosts((char*)master_host,local_host) != CL_RETVAL_OK) {
       CRITICAL((SGE_EVENT, MSG_SCHEDD_STARTSCHEDONMASTERHOST_S , master_host));
       FREE(initial_qmaster_host); 
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
    FREE(local_host);
 
@@ -295,7 +295,7 @@ char *argv[]
             if ((ret = sge_ck_qmaster(ctx, initial_qmaster_host)) < 0) {
                FREE(initial_qmaster_host);
                CRITICAL((SGE_EVENT, MSG_SCHEDD_CANTGOFURTHER ));
-               SGE_EXIT(NULL, 1);
+               SGE_EXIT((void**)&ctx, 1);
             } 
             
             if (ret > 0) {
@@ -579,12 +579,13 @@ const char *alg_name
  *         1     if sge_ck_qmaster() returns ==  1
  *         0     if setup was completely ok
  *-------------------------------------------------------------------*/
-static int sge_setup_sge_schedd(sge_gdi_ctx_class_t *ctx)
+static int sge_setup_sge_schedd(sge_gdi_ctx_class_t **ctx_ref)
 {
    int ret;
    u_long32 saved_logginglevel;
    char err_str[1024];
    lList *schedd_config_list = NULL;
+   sge_gdi_ctx_class_t *ctx = *ctx_ref;
    const char *admin_user = ctx->get_admin_user(ctx);
    const char *qmaster_spool_dir = ctx->get_qmaster_spool_dir(ctx);
 
@@ -597,11 +598,11 @@ static int sge_setup_sge_schedd(sge_gdi_ctx_class_t *ctx)
          break;
       case -2:
          INFO((SGE_EVENT, MSG_SCHEDD_SCHEDD_ABORT_BY_USER));
-         SGE_EXIT(NULL, 1);
+         SGE_EXIT((void**)ctx_ref, 1);
          break;
       default:
          CRITICAL((SGE_EVENT, MSG_SCHEDD_ALREADY_RUNNING));
-         SGE_EXIT(NULL, 1);
+         SGE_EXIT((void**)ctx_ref, 1);
    }
 
    sge_show_conf();
@@ -613,12 +614,12 @@ static int sge_setup_sge_schedd(sge_gdi_ctx_class_t *ctx)
    */
    if (sge_set_admin_username(admin_user, err_str)) {
       CRITICAL((SGE_EVENT, err_str));
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)ctx_ref, 1);
    }
 
    if (sge_switch2admin_user()) {
       CRITICAL((SGE_EVENT, MSG_SCHEDD_CANTSWITCHTOADMINUSER ));
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)ctx_ref, 1);
    }
 
 
@@ -638,7 +639,7 @@ static int sge_setup_sge_schedd(sge_gdi_ctx_class_t *ctx)
    log_state_set_log_level(LOG_WARNING);
    if ((ret = sge_ck_qmaster(ctx, NULL)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SCHEDD_CANTSTARTUP ));
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)ctx_ref, 1);
    }
    log_state_set_log_level(saved_logginglevel);
 

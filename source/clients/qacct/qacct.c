@@ -87,7 +87,7 @@ typedef struct {
    int slots;
 } sge_qacct_columns;
 
-static void qacct_usage(FILE *fp);
+static void qacct_usage(sge_gdi_ctx_class_t **ctx, FILE *fp);
 static void print_full(int length, const char* string);
 static void print_full_ulong(int length, u_long32 value); 
 static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data );
@@ -321,7 +321,7 @@ int main(int argc, char **argv)
       else if (!strcmp("-t", argv[ii])) {
          if (!argv[ii+1] || *(argv[ii+1])=='-') {
             fprintf(stderr, "%s\n", MSG_HISTORY_TOPTIONMASTHAVELISTOFTASKIDRANGES ); 
-            qacct_usage(stderr);
+            qacct_usage(&ctx, stderr);
             DRETURN(1);
          } else {
             lList* task_id_range_list=NULL;
@@ -334,7 +334,7 @@ int main(int argc, char **argv)
                lFreeList(&answer);
                fprintf(stderr, MSG_HISTORY_INVALIDLISTOFTASKIDRANGES_S , argv[ii]);
                fprintf(stderr, "\n");
-               qacct_usage(stderr);
+               qacct_usage(&ctx, stderr);
                DRETURN(1); 
             }
             taskstart = lGetUlong(lFirst(task_id_range_list), RN_min);
@@ -357,13 +357,13 @@ int main(int argc, char **argv)
                /*
                ** problem: insufficient error reporting
                */
-               qacct_usage(stderr);
+               qacct_usage(&ctx, stderr);
             }
             begin_time = (time_t)tmp_begin_time;
             DPRINTF(("begin is: %ld\n", begin_time));
             beginflag = 1; 
          } else {
-            qacct_usage(stderr);
+            qacct_usage(&ctx, stderr);
          }
       }
       /*
@@ -377,13 +377,13 @@ int main(int argc, char **argv)
                /*
                ** problem: insufficient error reporting
                */
-               qacct_usage(stderr);
+               qacct_usage(&ctx, stderr);
             }
             end_time = (time_t)tmp_end_time;
             DPRINTF(("end is: %ld\n", end_time));
             endflag = 1; 
          } else {
-            qacct_usage(stderr);
+            qacct_usage(&ctx, stderr);
          }
       }
       /*
@@ -396,12 +396,12 @@ int main(int argc, char **argv)
                /*
                ** problem: insufficient error reporting
                */
-               qacct_usage(stderr);
+               qacct_usage(&ctx, stderr);
             }
             DPRINTF(("days is: %d\n", days));
             daysflag = 1; 
          } else {
-            qacct_usage(stderr);
+            qacct_usage(&ctx, stderr);
          }
       }
       /*
@@ -466,7 +466,7 @@ int main(int argc, char **argv)
             strcpy(complexes, argv[++ii]);
             complexflag = 1;
          } else {
-            qacct_usage(stderr);
+            qacct_usage(&ctx, stderr);
          }
       } 
       /*
@@ -476,7 +476,7 @@ int main(int argc, char **argv)
          if (argv[ii+1]) {
             strcpy(acctfile, argv[++ii]);
          } else {
-            qacct_usage(stderr);
+            qacct_usage(&ctx, stderr);
          }
       }
       /*
@@ -487,12 +487,12 @@ int main(int argc, char **argv)
             strcpy(account, argv[++ii]);
             accountflag = 1;
          } else {
-            qacct_usage(stderr);
+            qacct_usage(&ctx, stderr);
          }
       } else if (!strcmp("-help",argv[ii])) {
-         qacct_usage(stdout);
+         qacct_usage(&ctx, stdout);
       } else {
-         qacct_usage(stderr);
+         qacct_usage(&ctx, stderr);
       }
    } /* end for */
 
@@ -515,7 +515,7 @@ int main(int argc, char **argv)
       if (SGE_STAT(acctfile,&buf)) {
          perror(acctfile); 
          printf("%s\n", MSG_HISTORY_NOJOBSRUNNINGSINCESTARTUP);
-         SGE_EXIT(NULL, 1);
+         SGE_EXIT((void**)&ctx, 1);
       }
    }
    /*
@@ -598,7 +598,7 @@ int main(int argc, char **argv)
             /*
             ** problem: still to tell some more to the user
             */
-            qacct_usage(stderr);
+            qacct_usage(&ctx, stderr);
          }
          /* lDumpList(stdout, complex_options, 0); */
          if (!is_path_setup) {
@@ -615,21 +615,21 @@ int main(int argc, char **argv)
             ret = get_qacct_lists(ctx, &alp, NULL, &queue_list, NULL, &hgrp_list);
             if (ret == false) {
                answer_list_output(&alp);
-               SGE_EXIT(NULL, 1);
+               SGE_EXIT((void**)&ctx, 1);
             }   
 
             qref_list_resolve(queueref_list, NULL, &queue_name_list, 
                            &found_something, queue_list, hgrp_list, true, true);
             if (!found_something) {
                fprintf(stderr, "%s\n", MSG_QINSTANCE_NOQUEUES);
-               SGE_EXIT(NULL, 1);
+               SGE_EXIT((void**)&ctx, 1);
             }
          }  
          if (complexflag) {
             ret = get_qacct_lists(ctx, &alp, &centry_list, &queue_list, &exechost_list, NULL);
             if (ret == false) {
                answer_list_output(&alp);
-               SGE_EXIT(NULL, 1);
+               SGE_EXIT((void**)&ctx, 1);
             }   
          }   
       } /* endif complexflag */
@@ -651,7 +651,7 @@ int main(int argc, char **argv)
    if (fp == NULL) {
       ERROR((SGE_EVENT, MSG_HISTORY_ERRORUNABLETOOPENX_S ,acctfile));
       printf("%s\n", MSG_HISTORY_NOJOBSRUNNINGSINCESTARTUP);
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    totals.ru_wallclock = 0;
@@ -667,7 +667,7 @@ int main(int argc, char **argv)
       sorted_list = lCreateList("sorted_list", QAJ_Type);
       if (!sorted_list) {
          ERROR((SGE_EVENT, MSG_HISTORY_NOTENOUGTHMEMORYTOCREATELIST ));
-         SGE_EXIT(NULL, 1);
+         SGE_EXIT((void**)&ctx, 1);
       }
    }
 
@@ -998,7 +998,7 @@ int main(int argc, char **argv)
 
    if (shut_me_down) {
       printf("%s\n", MSG_USER_ABORT);
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
    if (job_number || job_name[0]) {
       if (!jobfound) {
@@ -1017,15 +1017,15 @@ int main(int argc, char **argv)
                ERROR((SGE_EVENT, MSG_HISTORY_JOBNAMEXNOTFOUND_S  , job_name));
             }
          }
-         SGE_EXIT(NULL, 1);
+         SGE_EXIT((void**)&ctx, 1);
       } else {
-         SGE_EXIT(NULL, 0);
+         SGE_EXIT((void**)&ctx, 0);
       }
    } else {
       if (taskstart && taskend && taskstep) {
          ERROR((SGE_EVENT, MSG_HISTORY_TOPTIONREQUIRESJOPTION ));
-         qacct_usage(stderr);
-         SGE_EXIT(NULL, 0); 
+         qacct_usage(&ctx, stderr);
+         SGE_EXIT((void**)&ctx, 0); 
       }
    }
 
@@ -1222,12 +1222,12 @@ int main(int argc, char **argv)
    ** problem: other clients evaluate some status here
    */
    sge_prof_cleanup();
-   SGE_EXIT(NULL, 0);
+   SGE_EXIT((void**)&ctx, 0);
    DRETURN(0);
 
 FCLOSE_ERROR:
    ERROR((SGE_EVENT, MSG_FILE_ERRORCLOSEINGXY_SS, acct_file, strerror(errno)));
-   SGE_EXIT(NULL, 1);
+   SGE_EXIT((void**)&ctx, 1);
    DRETURN(1);
 }
 
@@ -1393,7 +1393,7 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
 **   note that the other clients use a common function
 **   for this. output was adapted to a similar look.
 */
-static void qacct_usage(FILE *fp)
+static void qacct_usage(sge_gdi_ctx_class_t **ctx, FILE *fp)
 {
    dstring ds;
    char buffer[256];
@@ -1427,9 +1427,9 @@ static void qacct_usage(FILE *fp)
    fprintf(fp, " begin_time, end_time              %s\n", MSG_HISTORY_beginend_OPT_USAGE );
    fprintf(fp, " queue                             [cluster_queue|queue_instance|queue_domain|pattern]\n");
    if (fp==stderr) {
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)ctx, 1);
    } else {
-      SGE_EXIT(NULL, 0);   
+      SGE_EXIT((void**)ctx, 0);   
    }
 
    DRETURN_VOID;

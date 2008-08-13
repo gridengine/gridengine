@@ -1,3 +1,6 @@
+CR-2008-08-13-0: Bugfix:    Fixed test binary: test_virtual_gdi_client
+                 Review:    DG
+
 DG-2008-08-13-0: Bugfix:      Man page sge_conf(5) was wrong about default 
                               loglevel.
                  Merged from: maintrunk: DG-2008-08-08

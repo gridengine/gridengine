@@ -172,7 +172,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
    u_long32 pe_slots = 0, q_slots = 0, q_version;
    lListElem *pe = NULL;
 
-   DENTER(BASIS_LAYER, "sge_follow_order");
+   DENTER(TOP_LAYER, "sge_follow_order");
 
    or_type=lGetUlong(ep, OR_type);
    or_pe=lGetString(ep, OR_pe);

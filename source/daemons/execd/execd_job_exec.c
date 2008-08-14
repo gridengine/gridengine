@@ -642,6 +642,7 @@ static int handle_task(sge_gdi_ctx_class_t *ctx, lListElem *petrep, char *commpr
    DENTER(TOP_LAYER, "handle_task");
 
    petep = lCreateElem(PET_Type);
+   lSetBool(petep, PET_do_contact, true); /* actually not used in execd */
 
 #ifdef KERBEROS
    if (krb_verify_user(de->host, de->commproc, de->id,

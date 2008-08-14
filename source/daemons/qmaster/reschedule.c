@@ -120,7 +120,7 @@ void reschedule_unknown_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, moni
    lList *master_list = *object_base[SGE_TYPE_CQUEUE].list;
    u_long32 new_timeout = 0;
    u_long32 timeout = te_get_first_numeric_key(anEvent);
-   const char* hostname = te_get_alphanumeric_key(anEvent);
+   char* hostname = te_get_alphanumeric_key(anEvent);
 
 
    DENTER(TOP_LAYER, "reschedule_unknown_event");
@@ -194,7 +194,7 @@ void reschedule_unknown_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, moni
    reschedule_jobs(ctx, hep, 0, &answer_list, monitor);
    lFreeList(&answer_list);
    
-   free((char*)hostname);
+   sge_free(hostname);
    
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
    DEXIT;

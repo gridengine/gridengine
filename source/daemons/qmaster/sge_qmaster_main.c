@@ -82,6 +82,7 @@
 #include "sge_security.h"
 #include "sge_advance_reservation_qmaster.h"
 #include "uti/sge_time.h"
+#include "sge_job_enforce_limit.h"
 
 #if !defined(INTERIX)
 static void init_sig_action_and_mask(void);
@@ -374,6 +375,7 @@ int main(int argc, char* argv[])
    sge_init_ar_id();
 
    sge_setup_job_resend();
+   sge_add_check_limit_trigger();
 
    INFO((SGE_EVENT, "qmaster startup took "sge_u32" seconds", sge_get_gmt() - start_time));
 

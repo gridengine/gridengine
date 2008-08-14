@@ -96,6 +96,7 @@
 #include "msg_common.h"
 #include "msg_qmaster.h"
 #include "sgeobj/msg_sgeobjlib.h"
+#include "sge_job_enforce_limit.h"
 
 static void master_kill_execds(sge_gdi_ctx_class_t *ctx, sge_gdi_request *request, sge_gdi_request *answer);
 static void host_trash_nonstatic_load_values(lListElem *host);
@@ -658,6 +659,9 @@ const char *target    /* prognames[QSTD|EXECD] */
 
    lSetUlong(hep, EH_lt_heard_from, 0);
 
+   /* add a trigger to enforce limits when they are exceeded */
+   sge_host_add_enforce_limit_trigger(host);
+
    DRETURN_VOID;
 }
 
@@ -764,6 +768,9 @@ void sge_update_load_values(sge_gdi_ctx_class_t *ctx, char *rhost, lList *lp)
          *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
          tmp_hostname, true, false);
       lSetUlong(host_ep, EH_lt_heard_from, sge_get_gmt());
+
+      /* remove trigger to enforce limits when they are exceeded */
+      sge_host_remove_enforce_limit_trigger(rhost);
    }
 
    if (global_ep) {
@@ -863,6 +870,9 @@ void sge_load_value_cleanup_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent
       cqueue_list_set_unknown_state(
             *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
             host, true, true);
+      
+      /* add a trigger to enforce limits when they are exceeded */
+      sge_host_add_enforce_limit_trigger(host);
 
       /* initiate timer for this host because they turn into 'unknown' state */
       reschedule_unknown_trigger(hep); 

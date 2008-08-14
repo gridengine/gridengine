@@ -307,10 +307,10 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *jep, lL
    t2 = sge_get_gmt();
    if (t2-t1 > 30) {
       WARNING((SGE_EVENT, "job delivery: preparation for job "sge_U32CFormat" took %d s", 
-      lGetUlong(jep, JB_job_number), (int)(t2-t1)));
+               sge_u32c(lGetUlong(jep, JB_job_number)), (int)(t2-t1)));
    } else {
       INFO((SGE_EVENT, "job delivery: preparation for job "sge_U32CFormat" took %d s", 
-      lGetUlong(jep, JB_job_number), (int)(t2-t1)));
+            sge_u32c(lGetUlong(jep, JB_job_number)), (int)(t2-t1)));
    }
 
    t1 = sge_get_gmt();
@@ -318,10 +318,10 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *jep, lL
    t2 = sge_get_gmt();
    if (t2-t1 > 30) {
       WARNING((SGE_EVENT, "job delivery: sending job "sge_U32CFormat" took %d s", 
-      lGetUlong(jep, JB_job_number), (int)(t2-t1)));
+               sge_u32c(lGetUlong(jep, JB_job_number)), (int)(t2-t1)));
    } else {
       INFO((SGE_EVENT, "job delivery: sending job "sge_U32CFormat" took %d s", 
-      lGetUlong(jep, JB_job_number), (int)(t2-t1)));
+            sge_u32c(lGetUlong(jep, JB_job_number)), (int)(t2-t1)));
    }
 
    lFreeElem(&tmpjep);
@@ -835,8 +835,7 @@ void sge_job_resend_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, 
 
    DEXIT;
    return;
-} /* sge_job_resend_event_handler() */
-
+} 
 
 void cancel_job_resend(u_long32 jid, u_long32 ja_task_id)
 {
@@ -873,7 +872,6 @@ void trigger_job_resend(u_long32 now, lListElem *hep, u_long32 jid, u_long32 ja_
    DEXIT;
    return;
 }
-
 
 /***********************************************************************
  sge_zombie_job_cleanup_handler

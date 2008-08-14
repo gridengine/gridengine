@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qdel.1,v $     Last Update: $Date: 2007/01/05 19:56:12 $     Revision: $Revision: 1.14 $
+.\" $RCSfile: qdel.1,v $     Last Update: $Date: 2008/08/14 12:10:04 $     Revision: $Revision: 1.14.6.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QDEL 1 "$Date: 2007/01/05 19:56:12 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QDEL 1 "$Date: 2008/08/14 12:10:04 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qdel \- delete xxQS_NAMExx jobs from queues
 .SH SYNTAX
@@ -72,7 +72,7 @@ even if the
 .M xxqs_name_sxx_execd 8
 controlling the job(s) does not respond to the delete request sent by
 .M xxqs_name_sxx_qmaster 8 .
-.PP
+.sp 1
 Users which are neither xxQS_NAMExx managers nor operators can only use the
 .B \-f
 option (for their own jobs) if the cluster configuration entry
@@ -84,6 +84,11 @@ non-administrative users differs. Jobs are deleted from the xxQS_NAMExx
 database immediately in case of administrators. Otherwise, a regular
 deletion is attempted first and a forced cancellation is only executed if
 the regular deletion was unsuccessful.
+.sp 1
+Additionally regular qdel requests can result in a forced deletetion of a 
+job if \fBENABLE_FORCED_QDEL_IF_UNKNOWN\fP is set in the \fBqmaster_params\fP 
+(see 
+.M xxqs_name_sxx_conf 5 ) 
 .\"
 .IP "\fB\-help\fP"
 Prints a listing of all options.
@@ -147,6 +152,7 @@ service "sge_qmaster" instead to define that port.
 .M xxqs_name_sxx_intro 1 ,
 .M qstat 1 ,
 .M qsub 1 ,
+.M xxqs_name_sxx_conf 1 ,
 .M xxqs_name_sxx_qmaster 8 ,
 .M xxqs_name_sxx_execd 8 .
 .\"

@@ -1,5 +1,5 @@
-#ifndef __SGE_REPORT_H
-#define __SGE_REPORT_H
+#ifndef __SGE_JOB_ENFORCE_LIMIT_H
+#define __SGE_JOB_ENFORCE_LIMIT_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,19 +32,23 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cull.h"
-#include "sge_reportL.h"
+void 
+sge_job_enforce_limit_handler(sge_gdi_ctx_class_t *ctx, te_event_t event, monitoring_t *monitor);
 
-void job_report_print_usage(const lListElem *jr, FILE *fp);
+void
+sge_add_check_limit_trigger(void);
 
-void job_report_init_from_job(lListElem *jr, const lListElem *jep, 
-                              const lListElem *jatep, const lListElem *petep);
+void 
+sge_host_add_enforce_limit_trigger(const char *hostname);
 
-void job_report_init_from_job_with_usage(lListElem *job_report,
-                                         lListElem *job,
-                                         lListElem *ja_task,
-                                         lListElem *pe_task,
-                                         u_long32 time_stamp);
+void
+sge_host_remove_enforce_limit_trigger(const char *hostname);
 
-#endif /* __SGE_REPORT_H */
+void 
+sge_job_add_enforce_limit_trigger(lListElem *jep, lListElem *jatep);
+
+void 
+sge_job_remove_enforce_limit_trigger(u_long32 jid, u_long32 ja_task_id);
+
+#endif /* __SGE_JOB_ENFORCE_LIMIT_H */
 

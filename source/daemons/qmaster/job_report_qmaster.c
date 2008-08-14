@@ -572,7 +572,8 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
                      }
                   }
 #endif
-                  if (lGetUlong(petask, PET_status)==JRUNNING) {
+                  /* don't skip the job exit if a task is running on a host in unknown state */
+                  if (lGetUlong(petask, PET_status)==JRUNNING && lGetBool(petask, PET_do_contact) == true) {
                      DPRINTF(("job exit for job "sge_u32": still waiting for task %s\n", 
                         jobid, lGetString(petask, PET_id)));
                      skip_job_exit = 1;

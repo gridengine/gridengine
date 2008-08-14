@@ -694,6 +694,7 @@
 #define MSG_LOG_WAIT4SGEDEL           _MESSAGE(33804, _("job waits for schedds deletion"))
 #define MSG_LOG_DELSGE                _MESSAGE(33805, _("job deleted by schedd"))
 #define MSG_LOG_DELIMMEDIATE          _MESSAGE(33806, _("immediate job deleted by schedd"))
+#define MSG_LOG_DELFORCED             _MESSAGE(33807, _("job deleted by forced deletion request"))
 #define MSG_QMASTER_UNEXPECTED_SIGNAL_I    _MESSAGE(33810, _("received unexpected signal %d"))
 #define MSG_JOB_DEADLINETIME               _MESSAGE(33811, _("deadline time"))
 #define MSG_COM_NOSCHEDMONPERMS   _MESSAGE(33815, _("starting scheduler monitoring requires manager privileges"))
@@ -781,8 +782,14 @@
 #define MSG_QUEUE_MODNOCMPLXDENYDUETOAR_SS          _MESSAGE(33944, _("denied: changing "SFQ" in "SFN" would break advance reservations"))
 #define MSG_JOB_ARNOLONGERAVAILABE_U                _MESSAGE(33945, _("the advance reservation "sge_U32CFormat" is no longer available"))
       
-#define MSG_GDI_KEYSTR_QUESTIONMARK    _MESSAGE(33946, _("Questionmark"))
-#define MSG_GDI_KEYSTR_COMMA           _MESSAGE(33947, _("Comma"))
-#define MSG_GDI_KEYSTR_LENGTH_U        _MESSAGE(33948, _("string is longer than "sge_U32CFormat", this is not allowed for objectnames") )
+#define MSG_GDI_KEYSTR_QUESTIONMARK   _MESSAGE(33946, _("Questionmark"))
+#define MSG_GDI_KEYSTR_COMMA          _MESSAGE(33947, _("Comma"))
+#define MSG_GDI_KEYSTR_LENGTH_U       _MESSAGE(33948, _("string is longer than "sge_U32CFormat", this is not allowed for objectnames") )
+#define MSG_JOB_TERMJOBDUETOLIMIT_UU  _MESSAGE(33954, _("terminating job "sge_U32CFormat"."sge_U32CFormat" because runtime limit is reached"))
+#define MSG_JOB_ADDJOBTRIGGER_UUUU    _MESSAGE(33955, _("added trigger to terminate job "sge_U32CFormat"."sge_U32CFormat" when runtime limit is reached ("sge_U32CFormat" + "sge_U32CFormat")"))
+#define MSG_JOB_DELJOBTRIGGER_UU      _MESSAGE(33956, _("removing trigger to terminate job "sge_U32CFormat"."sge_U32CFormat))
+#define MSG_JOB_CHGFORCED_UU          _MESSAGE(33957, _("changed non-forced request to forced request for job "sge_U32CFormat"."sge_U32CFormat" because host can't be contacted"))
+#define MSG_JOB_ADDDELLIMITTOOK_U     _MESSAGE(33958, _("adding/removing limit enforcement trigger took "sge_U32CFormat"s."))
+
 
 #endif

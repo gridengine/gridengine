@@ -88,6 +88,7 @@
 #include "uti/sge_os.h"
 #include "sge_advance_reservation_qmaster.h"
 #include "sge_string.h"
+#include "sge_job_enforce_limit.h"
 
 /*
  * This is NOT officially approved by POSIX. In fact, POSIX does not specify a
@@ -731,6 +732,8 @@ void sge_register_event_handler(void)
    te_register_event_handler(reschedule_unknown_event, TYPE_RESCHEDULE_UNKNOWN_EVENT);
 
    te_register_event_handler(sge_ar_event_handler, TYPE_AR_EVENT);
+
+   te_register_event_handler(sge_job_enforce_limit_handler, TYPE_ENFORCE_LIMIT_EVENT);
 
    DRETURN_VOID;
 }

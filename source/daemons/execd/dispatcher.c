@@ -163,8 +163,8 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx, char* err_str, void (*e
             u_long32 now = sge_get_gmt();
             static u_long32 last_qmaster_file_read = 0;
             
-            if (now - last_qmaster_file_read >= 30) {
-               /* re-read act qmaster file (max. every 30 seconds) */
+            if (now - last_qmaster_file_read >= EXECD_MAX_RECONNECT_TIMEOUT) {
+               /* re-read act qmaster file (max. every EXECD_MAX_RECONNECT_TIMEOUT seconds) */
                DPRINTF(("re-read actual qmaster file\n"));
                last_qmaster_file_read = now;
 

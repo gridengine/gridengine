@@ -37,6 +37,7 @@
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
 #include "sge_report.h"
+#include "execution_states.h"
 
 #include "msg_sgeobjlib.h"
 
@@ -141,4 +142,52 @@ void job_report_init_from_job(lListElem *job_report,
 
    DEXIT;
 }
+
+/* TODO: EB: ADOC header */
+void job_report_init_from_job_with_usage(lListElem *job_report,
+                                         lListElem *job,
+                                         lListElem *ja_task,
+                                         lListElem *pe_task,
+                                         u_long32 time_stamp)
+{
+   lListElem *ep;
+   lListElem *obj;
+   int nm;
+
+   DENTER(TOP_LAYER, "job_report_init_from_job_with_usage");
+
+   /*
+    * initialize the job jeport like any other job report...
+    */
+   job_report_init_from_job(job_report, job, ja_task, pe_task);
+
+   /*
+    * ... and now add the online usage plus some fields which are needed for the accounting
+    */
+   lSetUlong(job_report, JR_wait_status, SGE_SET_WEXITSTATUS(SGE_WEXITED_BIT, 0));
+   lSetUlong(job_report, JR_failed, SSTATE_QMASTER_ENFORCED_LIMIT);
+
+   if (pe_task == NULL) {
+      nm = JAT_scaled_usage_list;
+      obj = ja_task;
+   } else {
+      nm = PET_scaled_usage;
+      obj = pe_task;
+
+      lSetString(job_report, JR_pe_task_id_str, lGetString(pe_task, PET_id));
+   }
+
+   ep = lAddSubStr(obj, UA_name, "submission_time", nm, UA_Type);
+   lSetDouble(ep, UA_value, lGetUlong(job, JB_submission_time));
+   ep = lAddSubStr(obj, UA_name, "start_time", nm, UA_Type);
+   lSetDouble(ep, UA_value, lGetUlong(ja_task, JAT_start_time));
+   ep = lAddSubStr(obj, UA_name, "end_time", nm, UA_Type);
+   lSetDouble(ep, UA_value, time_stamp);
+   ep = lAddSubStr(obj, UA_name, "ru_wallclock", nm, UA_Type);
+   lSetDouble(ep, UA_value, 0.0);
+
+   lSetList(job_report, JR_usage, lCopyList("", lGetList(obj, nm)));
+   DEXIT;
+}
+
 

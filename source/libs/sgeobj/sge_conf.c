@@ -144,6 +144,8 @@ static bool prof_execd_thrd = false;
 static u_long32 monitor_time = 0;
 static bool enable_reschedule_kill = false;
 static bool enable_reschedule_slave = false;
+static bool enable_enforce_master_limit = false;
+static bool enable_forced_qdel_if_unknown = false;
 
 static long ptf_max_priority = -999;
 static long ptf_min_priority = -999;
@@ -624,6 +626,8 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       max_job_deletion_time = 3;
       enable_reschedule_kill = false;
       enable_reschedule_slave = false;
+      enable_enforce_master_limit = false;
+      enable_forced_qdel_if_unknown = false;
 
       for (s=sge_strtok_r(qmaster_params, ",; ", &conf_context); s; s=sge_strtok_r(NULL, ",; ", &conf_context)) {
          if (parse_bool_param(s, "FORBID_RESCHEDULE", &forbid_reschedule)) {
@@ -703,6 +707,12 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
             continue;
          }
          if (parse_bool_param(s, "ENABLE_RESCHEDULE_SLAVE", &enable_reschedule_slave)) {
+            continue;
+         }
+         if (parse_bool_param(s, "ENABLE_ENFORCE_MASTER_LIMIT", &enable_enforce_master_limit)) {
+            continue;
+         }
+         if (parse_bool_param(s, "ENABLE_FORCED_QDEL_IF_UNKNOWN", &enable_forced_qdel_if_unknown)) {
             continue;
          }
       }
@@ -1839,6 +1849,27 @@ bool mconf_get_enable_reschedule_slave(void) {
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = enable_reschedule_slave;
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+bool mconf_get_enable_enforce_master_limit(void) {
+   bool ret;
+
+   DENTER(BASIS_LAYER, "mconf_get_enable_enforce_master_limit");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+   ret = enable_enforce_master_limit;
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+
+}
+
+bool mconf_get_enable_forced_qdel_if_unknown(void) {
+   bool ret;
+
+   DENTER(BASIS_LAYER, "mconf_get_enable_forced_qdel_if_unknown");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+   ret = enable_forced_qdel_if_unknown;
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(ret);
 }

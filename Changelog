@@ -1,3 +1,26 @@
+EB_2008-08-08-08: Enhancem.: relaxed accounting
+                            - write accounting record if job is deleted with
+                              forced attribute. Online usage will be used for
+                              accounting
+                            - write job logging record if job is deleted with
+                              forced attribute
+                            - enable master side limit checking when
+                              ENABLE_ENFORCE_MASTER_LIMIT is set as
+                              qmaster_param (tightly and loose integrated PE
+                              jobs are handled correctly).
+                            - triggers are added/removed when hosts change
+                              into unknown/known state (kill, qconf -ke)
+                            - enable mapping of regular qdel to forced qdel
+                              if ENABLE_FORCED_QDEL_IF_UNKNOWN is set as
+                              qmaster_param
+                            - qmaster enforced deleted jobs (h_rt limit) will
+                              be logged in accounting file as failed with
+                              status 37 ("qmaster enforced h_rt limit")
+                           - changed some man pages
+                 Bugster:   6702908 
+                 Issue:     2551
+                 Review:    AH, JG
+
 JG-2008-08-01-0: Bugfix:    Fixed an uninitialized variable.
                             Merged from V61_BRANCH.
                  Review:    AH

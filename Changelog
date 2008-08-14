@@ -1,3 +1,6 @@
+MD-2008-08-14-0: Enhancem:  Checkein version.c and script files containing
+                            the version number
+
 JG-2008-08-08-0: Bugfix:    Fixed minor memory leaks in qconf.
                  Enhancem.: Added Makefile for qtcsh on lx26-amd64.
                  Review:    DG

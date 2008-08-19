@@ -1232,14 +1232,25 @@ AddHosts()
    if [ -f $TMPL -o -f $TMPL2 ]; then
       $INFOTEXT "\nCan't delete template files >%s< or >%s<" "$TMPL" "$TMPL2"
    else
-      PrintHostGroup @allhosts > $TMPL
-      Execute $SGE_BIN/qconf -Ahgrp $TMPL
+      $SGE_BIN/qconf -shgrp @allhosts 2>&1 > /dev/null 
+      if [ "$?" = 1 ]; then
+         PrintHostGroup @allhosts > $TMPL
+         Execute $SGE_BIN/qconf -Ahgrp $TMPL
+      fi
       Execute $SGE_BIN/qconf -sq > $TMPL
       Execute sed -e "/qname/s/template/all.q/" \
                   -e "/hostlist/s/NONE/@allhosts/" \
                   -e "/pe_list/s/NONE/make/" $TMPL > $TMPL2
-      Execute $SGE_BIN/qconf -Aq $TMPL2
-      rm -f $TMPL $TMPL2        
+      $SGE_BIN/qconf -sq all.q 2>&1 > /dev/null 
+      if [ "$?" = 1 ]; then
+         Execute $SGE_BIN/qconf -Aq $TMPL2
+      fi      
+      if [ -f $TMPL ]; then 
+         rm -f $TMPL
+      fi 
+      if [ -f $TMPL2 ]; then 
+         rm -f $TMPL2
+      fi 
    fi
 
    $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "

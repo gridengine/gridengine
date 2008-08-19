@@ -1,3 +1,8 @@
+DG-2008-08-19-0: Cleanup:   Installation checks if a allhosts hostgroup
+                            already exists before it is added. The same 
+                            is fixed for default all.q queue.
+                 Review:    MD
+
 MD-2008-08-14-0: Enhancem:  Checkein version.c and script files containing
                             the version number
 

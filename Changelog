@@ -1,3 +1,11 @@
+DG-2008-08-19-0: Bugfix:     qconf -help showed different identifier 
+                             for the same variable (obj_id_lst and 
+                             obj_id_list). obj_id_list is consistent
+                             with other identifiers.
+                 Bugster:    6622128
+                 Issue:      2693
+                 Review:     AA
+
 MP-2008-08-12-0: Bugfix:     qmaster reinstall overwriting an existing
                              installation fails
                              Merged from V61_BRANCH MP-2008-05-29-0

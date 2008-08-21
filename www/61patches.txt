@@ -1,3 +1,69 @@
+Bugs fixed in SGE 6.1u5 since release 6.1u4
+-------------------------------------------
+
+Issue    Sun BugId Description
+-------- --------- ------------------------------------------------------------------------------------------
+-        6631515   wrong documentation for upgrade 6.0u2 and higher to 6.1u2 and higher 
+-        6717172   Multiple loadsensor instances are trying to access the same temp load file on AIX51 
+-        6670264   Validation of the Filter List in Simple Query builder fails 
+245      4680766   qhost -l h=<hostname> does not work 
+804      6367642   Numbers in error mail too large 
+1751     6310194   use of the same pathes for input/output stream must be dealt with 
+2063     6431035   DRMAA Java language binding segfaults on Session.exit() with sol-x86 binaries on AMD64 
+2159     6609754   sgeexecd startup script shouldn't suppress error messages from sge_execd binary 
+2170     6511009   Advanced Query with wild card character * does not produce correct results. 
+2391     6613438   'Infinity' must be rejected when specified in 'complex_values' or RQS limits for consumables 
+2432     6722217   Invalid qconf -mrqs crashes qmaster with segmentation fault 
+2449     6647676   RQS: Line wrap of host list introduces syntax error 
+2486     6661461   Row Limit in ARCo Simple Query builder cannot be empty 
+2508     6661060   loadsensor does not work on AIX51 
+2515     6680160   qhost -xml has wrong namespace 
+2517     6660953   QMON: The help for Resource Quotas is not available 
+2519     6618332   qmon fills in fields incorrectly for restoring config for Submit Job 
+2522     6673706   sgemaster -qmaster stop shutdowns also shadowd 
+2523     6677192   incorrect depencency on xinetd in init scripts for linux 
+2529     6677885   Latebindings for Advanced Queries does not work 
+2536     6680905   Switching from Simple Query to Advanced Query removes the Latebingings 
+2543     6707055   32-bit Linux binaries are having problems with file access in 64-bit NFS environments 
+2545     6684415   using of default_domain may prohibit execd installation 
+2546     6686155   Commlib might crash if running out of memory 
+2549     6673782   Configuration file check of automatic installation does not recognize remsh 
+2555     6688666   loadcheck prints error message "kstat finds too many cpus" 
+2563     6693998   Communication library thread locking problem results in qmaster crash 
+2565     6694003   ARCo should not print exception stack trace in the console 
+2566     6684968   TABLESPACE values should be written to dbwriter.conf 
+2567     6666161   Incorrectly considering two host group names to be the same 
+2568     6695355   Clients not disconnecting correctly 
+2572     6648160   SGE util/arch script is broken for AIX 5.3 Operating System 
+2575     6704393   error message given by qalter -q '' <jobid> suggests a memory access problem 
+2579     6653487   bootstrap(5) man page sees itself als sge_conf(5) 
+2594     6673742   qmaster reinstall overwriting an existing installation fails 
+2595     6652411   qconf -ae|-Ae return 0 even if exechost exists already 
+2595     6546280   qconf -dxxxx does not set exit status on error 
+2595     6704283   qconf -as, -am, -ao, -Ae, -Acal, -Ackpt, -Ap when msg "already exist" should return not 0 exit code 
+2595     6597558   qconf -acal doesn't return error code 1 when failed 
+2596     6696331   setting of QMaster port number leads to infinite loop 
+2597     6650497   use of -l tmpdir=abc can crash schedd 
+2605     6711578   load scaling display not working correctly 
+2606     6710485   qstat -j does not print array task information 
+2608     6562277   job hold due to -hold_jid is not indicated as STATE_SYSTEM_ON_HOLD by drmaa_job_ps(3) 
+2609     6713722   Segmentation fault of sge_schedd 
+2611     6713785   A load sensor reporting values for other hosts does not work 
+2615     6710542   reporting file is lacking information about global consumables, if log_consumables=false 
+2620     6715561   Wallclock_Time query should be more constrained 
+2624     6692104   "./install_execd -winsvc -auto /path/to/auto.conf" command causes error 
+2634     6589820   The default has to be local spool directory when install_execd is run for a Windows host 
+2641     6720078   qmaster runs out of memory on AIX 
+2642     6713362   dbw install parameters are not verified 
+2644     6716082   Incorrect slots_total from qstat -F -xml output 
+2660     6726285   Wrong permissions if install_qmaster creates qmaster spool directory 
+2661     6726344   Installation of execution daemon left user unclear which port was chosen. 
+2676     6729353   Exception occurs during the exportation of a query result to pdf 
+2679     6729441   memory leak in sge_execd with qsub -v SGE_* or qsub -V 
+2683     6733626   ARCo should support SJWC 3.1 
+
+
+
 Bugs fixed in SGE 6.1u4 since release 6.1u3
 -------------------------------------------
 

@@ -178,10 +178,30 @@ Enter()
 Makedir()
 {
    dir=$1
+   tmp_dir=$1
 
    if [ ! -d $dir ]; then
-      $INFOTEXT "creating directory: %s" "$dir"
-      ExecuteAsAdmin $MKDIR -p $dir
+
+      while [ ! -d $tmp_dir ]; do
+         chown_dir=$tmp_dir
+         tmp_dir2=`dirname $tmp_dir`
+         tmp_dir=$tmp_dir2
+      done
+
+       $INFOTEXT "creating directory: %s" "$dir"
+       if [ "`$SGE_UTILBIN/filestat -owner $tmp_dir`" != "$ADMINUSER" ]; then
+         Execute $MKDIR -p $dir
+         if [ "$ADMINUSER" = "default" ]; then
+            Execute $CHOWN -R root $chown_dir
+         else
+            Execute $CHOWN -R $ADMINUSER $chown_dir
+         fi
+       else
+         ExecuteAsAdmin $MKDIR -p $dir
+       fi
+       
+       #Now set the permission recursively only during the creating
+       ExecuteAsAdmin $CHMOD -R $DIRPERM $chown_dir
    fi
 
    ExecuteAsAdmin $CHMOD $DIRPERM $dir

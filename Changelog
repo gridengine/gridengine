@@ -1,3 +1,9 @@
+LP-2008-08-21-0: Bugfix:      Cannot choose admin user when installing as root 
+                              - installation fails
+                 Bugster:     6739725
+                 Issue:       2694
+                 Review:      MD
+
 AA-2008-08-13-0: Bugfix:      sge_ca script fails for installation as root user
                               cleanup of SGE_EXIT and test programs
                  Bugster:     6735875

@@ -1,3 +1,8 @@
+AP-2008-09-03-0: Bugfix:     weight_priority is missing from sched_conf(5)
+                 Bugster:    6575735
+                 Issue:      2279
+                 Review:     DG
+
 DG-2008-08-19-0: Bugfix:     qconf -help showed different identifier 
                              for the same variable (obj_id_lst and 
                              obj_id_list). obj_id_list is consistent

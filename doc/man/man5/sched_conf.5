@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2008/07/08 09:10:05 $     Revision: $Revision: 1.35 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2008/09/03 08:36:34 $     Revision: $Revision: 1.36 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2008/07/08 09:10:05 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2008/09/03 08:36:34 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -287,6 +287,13 @@ The weight applied on jobs normalized urgency when determining priority finally 
 Determines the relative importance of urgency.
 See under 
 .M sge_priority 5 
+for an overview on job priorities.
+.\"
+.SS "\fBweight_priority\fP"
+The weight applied on jobs normalized POSIX priority when determining priority
+finally used. Determines the relative importance of POSIX priority.
+See under
+.M sge_priority 5
 for an overview on job priorities.
 .\"
 .SS "\fBweight_ticket\fP"

@@ -1,3 +1,8 @@
+AP-2008-09-03-0: Bugfix:      weight_priority is missing from sched_conf(5)
+                 Bugster:     6575735
+                 Issue:       2279
+                 Review:      DG
+
 LP-2008-08-21-0: Bugfix:      Cannot choose admin user when installing as root 
                               - installation fails
                  Bugster:     6739725

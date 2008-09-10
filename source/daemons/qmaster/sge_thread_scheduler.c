@@ -945,6 +945,9 @@ sge_scheduler_main(void *arg)
          evc->ec_set_busy(evc, 0);
          evc->ec_commit(evc, NULL);
 
+         /* stop logging into schedd_runlog (enabled via -tsm) */
+         schedd_set_monitor_next_run(false);
+
          /*
           * pthread cancelation point
           *

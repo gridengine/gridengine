@@ -1,3 +1,8 @@
+DG-2008-09-10-0: Bugfix:      Logging into schedd_runlog is never turned off.
+                 Bugster:     6744738
+                 Issue:       2717
+                 Review:      JG
+
 MP-2008-09-04-0: Bugfix:      The ibm-loadsensor script has the 5.3.0 case
                               missing in the section that computes the
                               memory load values.

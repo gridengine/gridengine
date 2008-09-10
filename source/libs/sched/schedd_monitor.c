@@ -46,8 +46,8 @@
 
 #include "msg_common.h"
 
+static bool monitor_next_run = false; 
 
-static bool monitor_next_run = false;
 static char log_string[2048 + 1] = "invalid log_string";
 static char schedd_log_file[SGE_PATH_MAX + 1] = "";
 
@@ -68,14 +68,47 @@ void schedd_set_schedd_log_file(sge_gdi_ctx_class_t *ctx)
    DEXIT;
 }
 
+/****** schedd_monitor/schedd_is_monitor_next_run() ****************************
+*  NAME
+*     schedd_is_monitor_next_run() -- ??? 
+*
+*  SYNOPSIS
+*     bool schedd_is_monitor_next_run(void) 
+*
+*  FUNCTION
+*     Returns the state of scheduling log. 
+*
+*  RESULT
+*     bool - true if logging is activated; false if logging is disabled 
+*
+*  NOTES
+*     MT-NOTE: schedd_is_monitor_next_run() is not MT safe 
+*******************************************************************************/
 bool schedd_is_monitor_next_run(void)
 {
    return monitor_next_run;
 }
 
+/****** schedd_monitor/schedd_set_monitor_next_run() ***************************
+*  NAME
+*     schedd_set_monitor_next_run() -- ??? 
+*
+*  SYNOPSIS
+*     void schedd_set_monitor_next_run(bool set) 
+*
+*  FUNCTION
+*     Activated and deactivates logging of scheduling information into 
+*     the scheduling runlog file.
+*
+*  INPUTS
+*     bool set - State of scheduling log for the next run. 
+*
+*  NOTES
+*     MT-NOTE: schedd_set_monitor_next_run() is not MT safe 
+*******************************************************************************/
 void schedd_set_monitor_next_run(bool set)
 {
-   monitor_next_run = set;
+   monitor_next_run = set; 
 }
 
 char* schedd_get_log_string(void)
@@ -85,22 +118,17 @@ char* schedd_get_log_string(void)
 
 void set_monitor_alpp(lList **alpp) {
    monitor_alpp = alpp;
-   monitor_next_run = (alpp!=NULL)?true:false;
 }
 
 int schedd_log(const char *logstr) 
 {
    DENTER(TOP_LAYER, "schedd_log");
 
-   if (!monitor_next_run) {
-      DEXIT;
-      return 0;
-   }
-
    if (monitor_alpp) {
+      /* add to answer list for verification (-w v) */
       answer_list_add(monitor_alpp, logstr, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-   } 
-   else {
+   } else if (schedd_is_monitor_next_run()){
+      /* do logging (-tsm) */
       time_t now;
       FILE *fp = NULL;
       char *time_str = NULL;
@@ -145,7 +173,7 @@ int schedd_log_list(const char *logstr, lList *lp, int nm) {
 
 #ifndef WIN32NATIVE
 
-   if (!monitor_next_run) {
+   if (!schedd_is_monitor_next_run()) {
       DEXIT;
       return 0;
    }
@@ -178,7 +206,6 @@ int schedd_log_list(const char *logstr, lList *lp, int nm) {
    DEXIT;
    return 0;
 }
-
 
 const char *job_descr(
 u_long32 jobid 

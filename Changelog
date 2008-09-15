@@ -1,6 +1,7 @@
 EB-2008-09-15-0: Bugfix:      subordinate properties lost on qmaster restart
                  Issues:      1741
                  Bugster:     6319223
+                 Review:      JG
 
 DG-2008-09-10-0: Bugfix:      Logging into schedd_runlog is never turned off.
                  Bugster:     6744738

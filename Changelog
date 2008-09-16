@@ -1,5 +1,10 @@
+DG-2008-09-16-0: Bugfix:      qresub on -b y jobs raises wrong error condition
+                 Bugster:     6727295
+                 Issue:       2726
+                 Review:      JG
+
 EB-2008-09-15-0: Bugfix:      subordinate properties lost on qmaster restart
-                 Issues:      1741
+                 Issue:       1741
                  Bugster:     6319223
                  Review:      JG
 

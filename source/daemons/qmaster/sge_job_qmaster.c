@@ -3933,14 +3933,19 @@ int sge_gdi_copy_job(sge_gdi_ctx_class_t *ctx,
    new_jep = lCopyElem(old_jep);
 
    /* read script from old job and reuse it */
-   if (lGetString(new_jep, JB_exec_file) && job_spooling) {
-      spool_read_script(alpp, seek_jid, new_jep);
+   if (lGetString(new_jep, JB_exec_file) && job_spooling 
+      && !JOB_TYPE_IS_BINARY(lGetUlong(new_jep, JB_type))) {
+      if (spool_read_script(alpp, seek_jid, new_jep) == false) {
+         lFreeElem(&new_jep);
+         DRETURN(STATUS_EUNKNOWN);
+      }  
    }
 
    job_initialize_id_lists(new_jep, NULL);
 
    /* override settings of old job with new settings of jep */
    if (mod_job_attributes(new_jep, jep, alpp, ruser, rhost, &dummy_trigger)) {
+      lFreeElem(&new_jep);
       DRETURN(STATUS_EUNKNOWN);
    }
 
@@ -3948,7 +3953,7 @@ int sge_gdi_copy_job(sge_gdi_ctx_class_t *ctx,
    ret = sge_gdi_add_job(ctx, new_jep, alpp, lpp, ruser, rhost, uid, gid, group, packet, task, monitor);
 
    lFreeElem(&new_jep);
-
+   
    DRETURN(ret);
 }
 

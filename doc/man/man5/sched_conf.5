@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2008/09/03 08:50:18 $     Revision: $Revision: 1.31.2.4 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2008/09/16 15:08:22 $     Revision: $Revision: 1.31.2.5 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2008/09/03 08:50:18 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2008/09/16 15:08:22 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -386,7 +386,7 @@ each scheduling run.
 If set equal to 1, the scheduler records information for each scheduling run allowing 
 to reproduce job resources utilization in the file \fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/schedule\fP.\"
 .\"
-.IP "\fISELECT_PE_RANGE_ALG\fP"
+.IP "\fIPE_RANGE_ALG\fP"
 This parameter sets the algorithm for the pe range computation. The default is automatic, which
 means that the scheduler will select the best one, and it should not be necessary to 
 change it to a different setting in normal operation. If a custom setting is needed, the 

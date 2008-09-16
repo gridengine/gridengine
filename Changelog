@@ -1,3 +1,9 @@
+MP-2008-09-16-0: Bugfix:      Prameter PE_RANGE_ALG is shown as SELECT_PE_RANGE_ALG 
+                              in the man page of sched_conf
+                 Bugster:     6567413
+                 Issue:       2723
+                 Review:      DG
+
 MP-2008-09-03-0: Bugfix:      The ibm-loadsensor script has the 5.3.0 case 
                               missing in the section that computes the 
                               memory load values.

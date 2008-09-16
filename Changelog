@@ -1,3 +1,9 @@
+MP-2008-09-16-0: Bugfix:      Prameter PE_RANGE_ALG is shown as SELECT_PE_RANGE_ALG
+                              in the man page of sched_conf
+                 Bugster:     6567413
+                 Issue:       2723
+                 Review:      DG
+
 DG-2008-09-16-0: Bugfix:      qresub on -b y jobs raises wrong error condition
                  Bugster:     6727295
                  Issue:       2726

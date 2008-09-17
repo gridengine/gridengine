@@ -1723,7 +1723,6 @@ int main(int argc, char **argv)
 
       lp_jobs = lCreateList("submitted jobs", JB_Type);
       lAppendElem(lp_jobs, job);
-   
       DPRINTF(("B E F O R E     S E N D I N G! ! ! ! ! ! ! ! ! ! ! ! ! !\n"));
       DPRINTF(("=====================================================\n"));
 
@@ -1747,7 +1746,7 @@ int main(int argc, char **argv)
          } else if (quality == ANSWER_QUALITY_WARNING) {
             fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          } else {
-            if (log_state_get_log_verbose()) {
+            if (log_state_get_log_verbose() || just_verify) {
                fprintf(stdout, "%s\n", lGetString(aep, AN_text));
             }
          }
@@ -1763,6 +1762,9 @@ int main(int argc, char **argv)
          if (status == STATUS_NOTOK_DOAGAIN) { 
             sge_prof_cleanup();
             SGE_EXIT((void**)&ctx, status);
+         } else if (just_verify) {
+            sge_prof_cleanup();
+            SGE_EXIT((void**)&ctx, 0);
          } else {
             sge_prof_cleanup();
             SGE_EXIT((void**)&ctx, 1);

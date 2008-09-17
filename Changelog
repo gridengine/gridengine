@@ -1,3 +1,10 @@
+MP-2008-09-17-0: Bugfix:      qrsh -w v does not give any feedback to the user after
+                              submitting the command. Also, even with no error, the
+                              return code is always 1.
+                 Bugster:     6726233
+                 Issue:       2731
+                 Review:      JG
+
 MP-2008-09-16-0: Bugfix:      Parameter PE_RANGE_ALG is shown as SELECT_PE_RANGE_ALG
                               in the man page of sched_conf
                  Bugster:     6567413

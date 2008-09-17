@@ -57,7 +57,6 @@ static char* report_types[] = {
 };
 #endif
 
-#define ALIVE_INTERVAL (3*60)
 
 extern lUlong sge_execd_report_seqno;
 
@@ -66,35 +65,21 @@ extern lUlong sge_execd_report_seqno;
 int sge_send_all_reports(sge_gdi_ctx_class_t *ctx, u_long32 now, int which,
                          report_source *report_sources)
 {
-   enum { STATE_OK, STATE_ERROR };
-
-   static int state = STATE_ERROR;
-   static u_long32 next_alive_time = 0;
-   const char *master_host = NULL;
    int ret = -1;
-   int i;
-
    DENTER(TOP_LAYER, "sge_send_all_reports");
 
-   /* in case of error state we test every load interval */
-   if (now > next_alive_time || state == STATE_ERROR) {
-      DPRINTF(("ALIVE TEST OF MASTER\n"));
-      next_alive_time = now + ALIVE_INTERVAL;
-      state = STATE_OK;
-      if (ctx->is_alive(ctx) != CL_RETVAL_OK) {
-         state = STATE_ERROR;
-         ctx->get_master(ctx, true);
-      }   
-   }
-   master_host = ctx->get_master(ctx, false);
-
-   if (state == STATE_OK) {
+   /*
+    * Send reports only if there is not a communication error.
+    * Don't reset stored communication errors. 
+    */
+   if (sge_get_com_error_flag(EXECD, SGE_COM_WAS_COMMUNICATION_ERROR, false) == false) {
+      const char *master_host = NULL;
       lList *report_list = NULL;
+      int i = 0;
 
+      master_host = ctx->get_master(ctx, false);
       DPRINTF(("SENDING LOAD AND REPORTS\n"));
-
       report_list = lCreateList("report list", REP_Type);
-
       for (i=0; report_sources[i].type; i++) {
          if (!which || which == report_sources[i].type) {
             DPRINTF(("%s\n", report_types[report_sources[i].type - 1]));
@@ -104,19 +89,16 @@ int sge_send_all_reports(sge_gdi_ctx_class_t *ctx, u_long32 now, int which,
 
       /* send load report asynchron to qmaster */
       if (lGetNumberOfElem(report_list) > 0) {
-
          /* wrap around */
          if (++sge_execd_report_seqno == 10000) {
             sge_execd_report_seqno = 0;
          }
-         ret = report_list_send(ctx, report_list, master_host, 
-                                prognames[QMASTER], 1, 0);
+         ret = report_list_send(ctx, report_list, master_host, prognames[QMASTER], 1, 0);
       } else {
          ret = CL_RETVAL_OK;
       }
       lFreeList(&report_list);
    }
-
    DRETURN(ret);
 }
 

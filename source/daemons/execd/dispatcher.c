@@ -95,8 +95,7 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx)
          sge_pack_buffer apb;
          int atag = 0;
 
-         switch (msg.tag)
-         {
+         switch (msg.tag) {
             case TAG_JOB_EXECUTION:
                if (init_packbuffer(&apb, 1024, 0) == PACK_SUCCESS) {
                   do_job_exec(ctx, &msg, &apb);
@@ -166,9 +165,11 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx)
          cl_commlib_trigger(ctx->get_com_handle(ctx), 1);
       }
 
-      if (do_reconnect || sge_get_com_error_flag(EXECD, SGE_COM_WAS_COMMUNICATION_ERROR)) {
-
+      if (sge_get_com_error_flag(EXECD, SGE_COM_WAS_COMMUNICATION_ERROR, false)) {
          do_reconnect = true;
+      }
+
+      if (do_reconnect) {
          if (cl_com_get_handle("execd", 1) == NULL) {
             terminate = true; /* if we don't have a handle, we must leave
                                * because execd_register will create a new one.
@@ -190,24 +191,32 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx)
                DPRINTF(("re-read actual qmaster file\n"));
                last_qmaster_file_read = now;
 
-               /* re-register at qmaster when connection is up again */
+               /* This code will re-read act qmaster file! */
+               ctx->get_master(ctx, true);
+
+               /* Try to re-register at qmaster */
                if (sge_execd_register_at_qmaster(ctx, true) == 0) {
-                     do_reconnect = false;
-               } 
+                  do_reconnect = false;    /* we are reconnected */
+                  sge_get_com_error_flag(EXECD, SGE_COM_WAS_COMMUNICATION_ERROR, true);
+               }
             }
          }
       }
-      if (sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED) ||
-          sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE)){
+
+      if (sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED, false)) {
          terminate = true; /* leave sge_execd_process_messages */
-         ret = CL_RETVAL_UNKNOWN;
+         ret = SGE_COM_ACCESS_DENIED;
+      } else if (sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE, false)) {
+         terminate = true; /* leave sge_execd_process_messages */
+         ret = SGE_COM_ENDPOINT_NOT_UNIQUE;
       }
+
 
       /* do cyclic stuff */
       if (!terminate) {
          if (do_ck_to_do(ctx) == 1) {
             terminate = true;
-            ret = CL_RETVAL_OK;
+            ret = 0;
          }
       }
    }

@@ -338,8 +338,7 @@ execd_get_wallclock_limit(const char *qualified_hostname, lList *gdil_list, int 
 
 
    as all dispatcher called function returns
-   -  0 on success
-   - -1 on error
+   -  0 on success (currently the only value is 0)
    -  1 if we want to quit the dispacher loop
    
  do cyclic jobs
@@ -348,15 +347,13 @@ execd_get_wallclock_limit(const char *qualified_hostname, lList *gdil_list, int 
 #define SIGNAL_RESEND_INTERVAL 1
 #define OLD_JOB_INTERVAL 60
 
-int do_ck_to_do(sge_gdi_ctx_class_t *ctx)
-{
+int do_ck_to_do(sge_gdi_ctx_class_t *ctx) {
    u_long32 now;
    static u_long next_pdc = 0;
    static u_long next_signal = 0;
    static u_long next_old_job = 0;
    static u_long next_report = 0;
    static u_long last_report_send = 0;
-   int was_communication_error = CL_RETVAL_OK;
    lListElem *jep, *jatep;
    int return_value = 0;
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
@@ -544,19 +541,13 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx)
          update_job_usage(qualified_hostname);
 
          /* send all reports */
-         was_communication_error = sge_send_all_reports(ctx, now, 0, execd_report_sources);
+         sge_send_all_reports(ctx, now, 0, execd_report_sources);
       }
    }
 
    /* handle shutdown */
-   return_value = shut_me_down;
-
-   /* TODO: Why not check shut_me_down in dispatcher - and remove this terminate loop from dispatcher */
-
-   if (return_value == 0 && was_communication_error != CL_RETVAL_OK) {
-      DPRINTF(("was_communication_error is %s\n", cl_get_error_text(was_communication_error)));
-      return_value = 1;  /* leave dispatcher */
-      /* TODO: check if we really must leave dispatcher when a commlib error occurs !!!*/
+   if (shut_me_down != 0) {
+      return_value = 1;
    }
 
    DRETURN(return_value);

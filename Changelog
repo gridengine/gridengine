@@ -1,4 +1,4 @@
-MP-2008-09-16-0: Bugfix:      Prameter PE_RANGE_ALG is shown as SELECT_PE_RANGE_ALG 
+MP-2008-09-16-0: Bugfix:      Parameter PE_RANGE_ALG is shown as SELECT_PE_RANGE_ALG
                               in the man page of sched_conf
                  Bugster:     6567413
                  Issue:       2723
@@ -68,6 +68,8 @@ MP-2008-08-05-0: Bugfix:    Fixed spelling mistakes in man pages.
 
 JG-2008-08-01-0: Bugfix:    Fixed aimk for use with insure.
                             Fixed minor memory leaks and memory access problems.
+                 Bugster:   6738127
+                 Issue:     2706
                  Review:    MD
 
 MD-2008-08-01-0: Enhancem:  checked in version.c and inst_sge set version

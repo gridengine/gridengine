@@ -1850,11 +1850,6 @@ static void qmonCQFolderChange(Widget w, XtPointer cld, XtPointer cad)
       current_matrix = qhost_settings;
       qmonCQUpdateQhostMatrix();
 
-      XtSetSensitive(cq_add, False);
-      XtSetSensitive(cq_clone, False);
-      XtSetSensitive(cq_mod, False);
-      XtSetSensitive(cq_delete, False);
-      XtSetSensitive(cq_sick, False);
       XtSetSensitive(cq_force, False);
       XtSetSensitive(cq_suspend, False);
       XtSetSensitive(cq_resume, False);

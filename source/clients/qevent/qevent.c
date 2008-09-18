@@ -689,7 +689,7 @@ static void qevent_testsuite_mode(sge_evc_class_t *evc)
    lFreeWhere(&where);
    lFreeWhat(&what);
  
-   /* we want a 5 second event delivery interval */
+   /* we want a 5 sevc->econd event delivery interval */
    evc->ec_set_edtime(evc, 5);
 
    /* and have our events flushed immediately */

@@ -55,6 +55,7 @@ enum {
    TAG_NEW_FEATURES,     /*12*/
    TAG_GET_NEW_CONF,
    TAG_JOB_REPORT,              /* cull based job reports */
+   TAG_QSTD_QSTAT,
    TAG_TASK_EXIT,
    TAG_TASK_TID,
    TAG_EVENT_CLIENT_EXIT,
@@ -142,7 +143,7 @@ typedef enum sge_gdi_stored_com_error_type {
    SGE_COM_ENDPOINT_NOT_UNIQUE,
    SGE_COM_WAS_COMMUNICATION_ERROR
 } sge_gdi_stored_com_error_t;
-bool sge_get_com_error_flag(u_long32 progid, sge_gdi_stored_com_error_t error_type, bool reset_error_flag);
+bool sge_get_com_error_flag(u_long32 progid, sge_gdi_stored_com_error_t error_type);
 
 void general_communication_error(const cl_application_error_list_elem_t* commlib_error);
 int gdi_log_flush_func(cl_raw_list_t* list_p);

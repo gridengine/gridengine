@@ -1273,12 +1273,7 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
          return retval;
       }
 
-      /*
-       * set resolved hostname of client (NULL is valid because checks are done when
-       * connection state is set to connection->connection_state = CL_CONNECTING; and
-       * new connection is added to connection list)
-       */
-      tmp_connection->client_host_name = resolved_host_name;
+      tmp_connection->client_host_name = resolved_host_name; /* set resolved hostname of client */
 
       /* setup cl_com_tcp_private_t */
       tmp_private = cl_com_tcp_get_private(tmp_connection);

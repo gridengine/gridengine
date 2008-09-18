@@ -48,6 +48,10 @@ sge_schedd_add_gdi_order_request(sge_gdi_ctx_class_t *ctx, order_t *orders, lLis
 bool
 sge_schedd_send_orders(sge_gdi_ctx_class_t *ctx, order_t *orders, lList **order_list, lList **answer_list, const char *name);
 
+int
+sge_schedd_get_unhandled_request_count(sge_gdi_ctx_class_t *ctx,
+                                       lList **answer_list);
+
 bool
 sge_schedd_block_until_orders_processed(sge_gdi_ctx_class_t *ctx, lList **answer_list);
 

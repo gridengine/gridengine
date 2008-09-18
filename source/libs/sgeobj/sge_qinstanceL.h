@@ -124,6 +124,7 @@ enum {
 
 /* EB: TODO: Add internal attributes */
 
+   QU_queue_number,
    QU_state,
    QU_tagged4schedule,
    QU_cache_version,
@@ -214,6 +215,7 @@ LISTDEF(QU_Type)
 
 /* EB:*/
 
+   SGE_ULONG(QU_queue_number, CULL_SPOOL | CULL_JGDI_RO) /* unused: please reuse me! */
    SGE_ULONG(QU_state, CULL_SPOOL | CULL_JGDI_HIDDEN)
    SGE_ULONG(QU_tagged4schedule, CULL_DEFAULT | CULL_JGDI_RO)
    SGE_ULONG(QU_cache_version, CULL_DEFAULT | CULL_JGDI_RO)
@@ -301,6 +303,7 @@ NAMEDEF(QUN)
 
 /* EB: TODO: Add internal attributes */
 
+   NAME("QU_queue_number")
    NAME("QU_state")
    NAME("QU_tagged4schedule")
    NAME("QU_cache_version")

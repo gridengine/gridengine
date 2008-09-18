@@ -832,7 +832,6 @@ if [ $instcommon = true ]; then
       Execute mv $DEST_SGE_ROOT/util/arch.dist $DEST_SGE_ROOT/util/arch
 
       Execute chmod 755 $DEST_SGE_ROOT/util/install_modules \
-			$DEST_SGE_ROOT/util/upgrade_modules \
                         $DEST_SGE_ROOT/util/rctemplates \
                         $DEST_SGE_ROOT/util/resources \
                         $DEST_SGE_ROOT/util/sgeCA \
@@ -1064,8 +1063,8 @@ if [ $instcommon = true ]; then
    if [ $insttxtdoc = true ]; then
       echo "Installing README, ... files"
       Execute cp ../doc/*.asc   $DEST_SGE_ROOT/doc
-      #Execute cp ../doc/README-Autoinstall.txt $DEST_SGE_ROOT/doc
-      #Execute cp ../doc/README-Upgrade.txt $DEST_SGE_ROOT/doc
+      Execute cp ../doc/README-Autoinstall.txt $DEST_SGE_ROOT/doc
+      Execute cp ../doc/README-Upgrade.txt $DEST_SGE_ROOT/doc
       Execute cp ../doc/README-DRMAA.txt $DEST_SGE_ROOT/doc
       Execute chmod 644 $DEST_SGE_ROOT/doc/*
       Cleanup doc      
@@ -1496,10 +1495,6 @@ for i in $ARCH; do
                   ln -s $lib.$shlibext $lib.$jnilibext )
                fi
             done
-
-            if [ -f $CORE_HOME/$DSTARCH/libcore.$shlibext ]; then
-               InstallProg $CORE_HOME/$DSTARCH/libcore.$shlibext
-            fi
          fi
       fi
       cd ..

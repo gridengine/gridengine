@@ -52,7 +52,7 @@ ARCH=UNKNOWN
 if [ -f util/arch ]; then
    ARCH=`util/arch`
 elif [ "$SGE_ROOT" != "" -a -x $SGE_ROOT/util/arch ]; then
-   ARCH=`$SGE_ROOT/util/arch`
+      ARCH=`$SGE_ROOT/util/arch`
 else
    echo "can't find script \$SGE_ROOT/util/arch"
    exit 1
@@ -470,7 +470,7 @@ Execute()
 # uses binary "adminrun" form SGE distribution
 #
 # USES: variables "$verbose"    (if set to "true" print arguments)
-#                 "$ADMINUSER"   (if set to "default" do not use "adminrun")
+#                  $ADMINUSER   (if set to "default" do not use "adminrun)
 #                 "$V5UTILBIN"  (path to the binary in utilbin)
 #
 ExecuteAsAdmin()
@@ -543,7 +543,7 @@ SetAdminUser()
       exit 1
    fi
  
-   if [ `echo "$user"| env LC_ALL=C tr "[A-Z]" "[a-z]"` = "none" ]; then
+   if [ `echo "$user"| env LC_ALL=C tr "A-Z" "a-z"` = "none" ]; then
       ADMINUSER=default
    else
       ADMINUSER=$user

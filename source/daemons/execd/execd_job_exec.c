@@ -67,13 +67,12 @@
 #include "sgeobj/sge_object.h"
 #include "sge_bootstrap.h"
 #include "sge_answer.h"
-#include "sge_ckpt.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
 #include "msg_gdilib.h"
 #if defined(INTERIX)
-   #include "wingrid.h"
+   #include "../../libs/wingrid/misc.h"
 #endif
 
 
@@ -116,14 +115,8 @@ int do_job_exec(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, sge_pack_buffer *a
          DRETURN(0);
       }
 
-      if (!job_verify_execd_job(job, &answer_list, ctx->get_qualified_hostname(ctx))) {
-         lListElem *ja_task = lFirst(lGetList(job, JB_ja_tasks));
-         const char *err_str = lGetString(lFirst(answer_list), AN_text);
-
-         /* set the job into error state */
-         execd_job_start_failure(job, ja_task, NULL, err_str, GFSTATE_JOB);
-
-         /* error output to messages file, cleanup */
+      if (!job_verify_execd_job(job, &answer_list)) {
+         lFreeElem(&job);
          answer_list_output(&answer_list);
          ERROR((SGE_EVENT, MSG_EXECD_INVALIDJOBREQUEST_SS, aMsg->snd_name, aMsg->snd_host));
          DRETURN(0);
@@ -800,142 +793,3 @@ Error:
 
    DRETURN(-1);
 }
-
-/****** execd/job/job_verify_execd_job() *****************************************
-*  NAME
-*     job_verify_execd_job() -- verify a job entering execd
-*
-*  SYNOPSIS
-*     bool 
-*     job_verify_execd_job(const lListElem *job, lList **answer_list) 
-*
-*  FUNCTION
-*     Verifies a job object entering execd.
-*     Does generic tests by calling job_verify, like verifying the cull
-*     structure, and makes sure a number of job attributes are set
-*     correctly.
-*
-*  INPUTS
-*     const lListElem *job - the job to verify
-*     lList **answer_list  - answer list to pass back error messages
-*
-*  RESULT
-*     bool - true on success,
-*            false on error with error message in answer_list
-*
-*  NOTES
-*     MT-NOTE: job_verify_execd_job() is MT safe 
-*
-*  BUGS
-*     The function is far from being complete.
-*     Currently, only the CULL structure is verified, not the contents.
-*
-*  SEE ALSO
-*     sge_job/job_verify()
-*******************************************************************************/
-bool
-job_verify_execd_job(const lListElem *job, lList **answer_list, const char *qualified_hostname)
-{
-   bool ret = true;
-
-   DENTER(TOP_LAYER, "job_verify_execd_job");
-
-   ret = job_verify(job, answer_list);
-
-   /* 
-    * A job entering execd must have some additional properties:
-    *    - correct state
-    *    - JB_job_number > 0
-    *    - JB_job_name != NULL
-    *    - JB_exec_file etc. ???
-    *    - JB_submission_time, JB_execution_time??
-    *    - JB_owner != NULL
-    *    - JB_cwd != NULL??
-    */
-
-   if (ret) {
-      ret = object_verify_ulong_not_null(job, answer_list, JB_job_number);
-   }
-
-   if (ret) {
-      ret = object_verify_string_not_null(job, answer_list, JB_job_name);
-   }
-
-   if (ret) {
-      ret = object_verify_string_not_null(job, answer_list, JB_owner);
-   }
-
-   if (ret) {
-      const lListElem *ckpt = lGetObject(job, JB_checkpoint_object);
-      if (ckpt != NULL) {
-         if (ckpt_validate(ckpt, answer_list) != STATUS_OK) {
-            ret = false;
-         }
-      }
-   }
-
-   /* for job execution, we need exactly one ja task */
-   if (ret) {
-      const lList *ja_tasks = lGetList(job, JB_ja_tasks);
-
-      if (ja_tasks == NULL || lGetNumberOfElem(ja_tasks) != 1) {
-         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
-                           MSG_JOB_INVALIDJATASK_REQUEST);
-         ret = false;
-      }
-
-      /* verify the ja task structure */
-      if (ret) {
-         ret = ja_task_verify_execd_job(lFirst(ja_tasks), answer_list);
-      }
-   }
-
-   /* 
-    * JB_stdout_path_list, JB_stderr_path_list, JB_stdin_path_list
-    * validate, stdin may not be the same as stdout or stderr
-    * except, when it is "/dev/null".
-    */
-   if (ret) {
-      char stdin_path[SGE_PATH_MAX];
-      char stdout_path[SGE_PATH_MAX];
-      char stderr_path[SGE_PATH_MAX];
-      u_long32 job_id = lGetUlong(job, JB_job_number);
-      u_long32 ja_task_id = lGetUlong(lFirst(lGetList(job, JB_ja_tasks)), JAT_task_number);
-
-      sge_get_path(qualified_hostname,
-                   lGetList(job, JB_stdin_path_list), "",
-                   lGetString(job, JB_owner), 
-                   lGetString(job, JB_job_name),
-                   job_id,
-                   job_is_array(job) ? ja_task_id : 0,
-                   SGE_STDIN, stdin_path, SGE_PATH_MAX);
-      sge_get_path(qualified_hostname,
-                   lGetList(job, JB_stdout_path_list), "", 
-                   lGetString(job, JB_owner), 
-                   lGetString(job, JB_job_name),
-                   job_id,
-                   job_is_array(job) ? ja_task_id : 0,
-                   SGE_STDOUT, stdout_path, SGE_PATH_MAX);
-      sge_get_path(qualified_hostname,
-                   lGetList(job, JB_stderr_path_list), "",
-                   lGetString(job, JB_owner), 
-                   lGetString(job, JB_job_name),
-                   job_id,
-                   job_is_array(job) ? ja_task_id : 0,
-                   SGE_STDERR, stderr_path, SGE_PATH_MAX);
-      if (strcmp(stdin_path, "/dev/null") != 0) {
-         if (strcmp(stdin_path, stdout_path) == 0) {
-            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
-                              MSG_JOB_SAMEPATHSFORINPUTANDOUTPUT_SSS, stdin_path, "stdout", stdout_path);
-            ret = false;
-         } else if (strcmp(stdin_path, stderr_path) == 0) {
-            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
-                              MSG_JOB_SAMEPATHSFORINPUTANDOUTPUT_SSS, stdin_path, "stderr", stderr_path);
-            ret = false;
-         }
-      }
-   }
-
-   DRETURN(ret);
-}
-

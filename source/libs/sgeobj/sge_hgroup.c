@@ -63,6 +63,38 @@
 
 #define HGROUP_LAYER TOP_LAYER
 
+/****** sgeobj/hgroup/is_hgroup_name() ****************************************
+*  NAME
+*     is_hgroup_name() -- Is the given name a hostgroup name 
+*
+*  SYNOPSIS
+*     bool is_hgroup_name(const char *name) 
+*
+*  FUNCTION
+*     Is the given name a hostgroup name 
+*
+*  NOTE
+*     This function is also used for usergroup in resource quota sets
+*
+*  INPUTS
+*     const char *name - hostname or hostgroup name 
+*
+*  RESULT
+*     bool - true for hostgroupnames otherwise false
+******************************************************************************/
+bool 
+is_hgroup_name(const char *name)
+{
+   bool ret = false;
+   DENTER(TOP_LAYER, "is_hgroup_name");
+
+   if (name != NULL) {
+      ret = (name[0] == HOSTGROUP_INITIAL_CHAR) ? true : false;
+   }
+   DRETURN(ret);
+}
+
+
 /****** sgeobj/hgroup/hgroup_check_name() *************************************
 *  NAME
 *    hgroup_check_name() -- determine if the name is a valid hgroup name

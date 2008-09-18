@@ -177,7 +177,7 @@ sge_listener_main(void *arg)
 
    DENTER(TOP_LAYER, "sge_listener_main");
 
-   DPRINTF(("started\n"));
+   DPRINTF((SFN" started\n", thread_config->thread_name));
    cl_thread_func_startup(thread_config);
    sge_monitor_init(&monitor, thread_config->thread_name, LIS_EXT, MT_WARNING, MT_ERROR);
    sge_qmaster_thread_init(&ctx, QMASTER, LISTENER_THREAD, true);
@@ -186,7 +186,7 @@ sge_listener_main(void *arg)
    set_thread_name(pthread_self(), "Listener Thread");
    conf_update_thread_profiling("Listener Thread");
 
-   DPRINTF(("entering main loop\n"));
+   DPRINTF((SFN" enters main loop\n", thread_config->thread_name));
    while (do_endlessly) {
       int execute = 0; 
 
@@ -208,7 +208,7 @@ sge_listener_main(void *arg)
          cl_thread_func_testcancel(thread_config);
          pthread_cleanup_pop(execute); 
          if (sge_thread_has_shutdown_started()) {
-            DPRINTF(("waiting for termination\n"));
+            DPRINTF((SFN" is waiting for termination\n", thread_config->thread_name));
             sleep(1);
          }
       } while (sge_thread_has_shutdown_started());

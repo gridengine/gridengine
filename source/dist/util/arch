@@ -87,7 +87,7 @@ AIX)
       ;;
    5)
       case $osrelease in
-      1|2|3)
+      1)
          ARCH=aix51
          ;;
       *)
@@ -192,11 +192,8 @@ Linux)
    ia64)
       lxmachine=ia64
       ;;
-   ppc)
+   ppc*)
       lxmachine=ppc
-      ;;
-   ppc64)
-      lxmachine=ppc64
       ;;
    *)
       unsupported="UNSUPPORTED-"

@@ -614,7 +614,7 @@ static void communication_setup(sge_gdi_ctx_class_t *ctx)
 {
    cl_com_handle_t* com_handle = NULL;
    char* qmaster_params = NULL;
-#if defined(IRIX)
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
    struct rlimit64 qmaster_rlimits;
 #else
    struct rlimit qmaster_rlimits;
@@ -656,7 +656,7 @@ static void communication_setup(sge_gdi_ctx_class_t *ctx)
       /* 
        * re-check file descriptor limits for qmaster 
        */
-#if defined(IRIX)
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
       getrlimit64(RLIMIT_NOFILE, &qmaster_rlimits);
 #else
       getrlimit(RLIMIT_NOFILE, &qmaster_rlimits);
@@ -880,7 +880,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
       spooling_context = spool_get_default_context();
    }
 
-   if (sge_read_configuration(ctx, spooling_context, object_base[SGE_TYPE_CONFIG].list, answer_list) != 0) {
+   if (sge_read_configuration(ctx, spooling_context, answer_list) != 0) {
       DRETURN(-1);
    }
    
@@ -1107,8 +1107,6 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
    /*
     * Initialize cached values for each qinstance:
     *    - clear suspend on subordinate flag
-    *    - update suspend on subordinate state according to running jobs
-    *    - update cached QI values.
     */
    for_each(tmpqep, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
       lList *qinstance_list = lGetList(tmpqep, CQ_qinstances);
@@ -1117,7 +1115,15 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
       for_each(qinstance, qinstance_list) {
          sge_qmaster_qinstance_state_set_susp_on_sub(qinstance, false);
       }
-      cqueue_mod_qinstances(ctx, tmpqep, NULL, tmpqep, true, false, &monitor);
+   }
+
+   /* 
+    * Initialize
+    *    - suspend on subordinate state 
+    *    - cached QI values.
+    */
+   for_each(tmpqep, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+      cqueue_mod_qinstances(ctx, tmpqep, NULL, tmpqep, true, true, &monitor);
    }
 
    /* rebuild signal resend events */

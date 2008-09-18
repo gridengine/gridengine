@@ -118,8 +118,15 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
    
    this_seqno = lGetUlong(lFirst(report_list), REP_seqno);
 
+#ifdef DO_LATE_LOCK   
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor); 
+#endif
+
    /* need exec host for all types of reports */
    if (!(hep = host_list_locate(*object_type_get_master_list(SGE_TYPE_EXECHOST), rhost))) {
+#ifdef DO_LATE_LOCK
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+#endif
       ERROR((SGE_EVENT, MSG_GOTSTATUSREPORTOFUNKNOWNEXECHOST_S, rhost));
       DRETURN_VOID;
    }
@@ -132,6 +139,9 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
    if ((this_seqno < last_seqno && (last_seqno - this_seqno) <= 9000) &&
       !(last_seqno > 9990 && this_seqno < 10)) {
       /* this must be an old report, log and then ignore it */
+#ifdef DO_LATE_LOCK
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+#endif
       INFO((SGE_EVENT, MSG_QMASTER_RECEIVED_OLD_LOAD_REPORT_UUS, 
                sge_u32c(this_seqno), sge_u32c(last_seqno), rhost));
       DRETURN_VOID;
@@ -233,6 +243,10 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
    /* RU: */
    /* delete reschedule unknown list entries we heard about */
    delete_from_reschedule_unknown_list(ctx, hep);
+  
+#ifdef DO_LATE_LOCK 
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+#endif
   
    if (is_pb_used) {
       if (pb_filled(&pb)) {

@@ -53,26 +53,22 @@
 #define COMM_CANT_CLEANUP_COMMLIB         3
 #define COMM_CANT_CREATE_HANDLE           4
 #define COMM_CANT_SHUTDOWN_HANDLE         5
-#define COMM_CANT_OPEN_CONNECTION         6 
-#define COMM_CANT_CLOSE_CONNECTION        7
-#define COMM_CANT_SETUP_SSL               8
-#define COMM_CANT_SET_CONNECTION_PARAM    9
-#define COMM_CANT_SET_IGNORE_TIMEOUTS    10
-#define COMM_GOT_TIMEOUT                 11
-#define COMM_CANT_TRIGGER                12
-#define COMM_CANT_SEARCH_ENDPOINT        13
-#define COMM_CANT_LOCK_CONNECTION_LIST   14
-#define COMM_CANT_UNLOCK_CONNECTION_LIST 15
-#define COMM_CANT_RECEIVE_MESSAGE        16
-#define COMM_CANT_FREE_MESSAGE           17
-#define COMM_CANT_GET_CLIENT_STATUS      18
-#define COMM_NO_SELECT_DESCRIPTORS       19
-#define COMM_CONNECTION_NOT_FOUND        20
-#define COMM_NO_SECURITY_COMPILED_IN     21
-#define COMM_SELECT_INTERRUPT            22
-#define COMM_ENDPOINT_NOT_UNIQUE         23
-#define COMM_ACCESS_DENIED               24
-#define COMM_SYNC_RECEIVE_TIMEOUT        25
+#define COMM_CANT_CLOSE_CONNECTION        6
+#define COMM_CANT_SETUP_SSL               7
+#define COMM_CANT_SET_CONNECTION_PARAM    8
+#define COMM_CANT_SET_IGNORE_TIMEOUTS     9
+#define COMM_GOT_TIMEOUT                 10
+#define COMM_CANT_TRIGGER                11
+#define COMM_CANT_SEARCH_ENDPOINT        12
+#define COMM_CANT_LOCK_CONNECTION_LIST   13
+#define COMM_CANT_UNLOCK_CONNECTION_LIST 14
+#define COMM_CANT_RECEIVE_MESSAGE        15
+#define COMM_CANT_FREE_MESSAGE           16
+#define COMM_CANT_GET_CLIENT_STATUS      17
+#define COMM_NO_SELECT_DESCRIPTORS       18
+#define COMM_CONNECTION_NOT_FOUND        19
+#define COMM_NO_SECURITY_COMPILED_IN     20
+#define COMM_SELECT_INTERRUPT            21
 
 typedef struct recv_message_s {
    unsigned char type;
@@ -85,18 +81,12 @@ typedef struct recv_message_s {
 int comm_init_lib(dstring *err_msg);
 int comm_cleanup_lib(dstring *err_msg);
 
-int comm_open_connection(bool                 b_server, 
-                         bool                 b_secure,
-                         const char           *this_component,
-                         int                  port, 
-                         const char           *other_component,
-                         const char           *user_name,
-                         COMMUNICATION_HANDLE **handle, 
-                         dstring              *err_msg);
+int comm_open_connection(bool b_server, int port, 
+                         const char *component_name, bool b_secure,
+                         const char *user_name, COMMUNICATION_HANDLE **handle,
+                         dstring *err_msg);
 
-int comm_get_application_error(dstring *err_msg);
-int comm_shutdown_connection(COMMUNICATION_HANDLE *handle,
-                             const char *component_name,
+int comm_shutdown_connection(COMMUNICATION_HANDLE *handle, 
                              dstring *err_msg);
 
 
@@ -104,9 +94,9 @@ int comm_set_connection_param(COMMUNICATION_HANDLE* g_comm_handle, int param, in
                               dstring *err_msg);
 int comm_ignore_timeouts(bool b_ignore, dstring *err_msg);
 
-int comm_wait_for_connection(COMMUNICATION_HANDLE *handle, const char *component, 
-                             int wait_secs, const char **host, dstring *err_msg);
-int comm_wait_for_no_connection(COMMUNICATION_HANDLE *handle, const char *component, 
+int comm_wait_for_connection(COMMUNICATION_HANDLE *handle, char *component, int wait_secs,
+                             const char **host, dstring *err_msg);
+int comm_wait_for_no_connection(COMMUNICATION_HANDLE *handle, char *component, 
                                 int wait_secs, dstring *err_msg);
 int comm_get_connection_count(COMMUNICATION_HANDLE *handle, dstring *err_msg);
 
@@ -114,8 +104,8 @@ int comm_trigger(COMMUNICATION_HANDLE *handle, int synchron, dstring *err_msg);
 
 
 unsigned long comm_write_message(COMMUNICATION_HANDLE *handle,
-                  const char *unresolved_hostname,
-                  const char *component_name,
+                  char *unresolved_hostname,
+                  char *component_name,
                   unsigned long component_id,
                   unsigned char *buffer, 
                   unsigned long size, 
@@ -130,6 +120,5 @@ int comm_recv_message(COMMUNICATION_HANDLE *handle,
                  dstring *err_msg);
 
 int comm_free_message(recv_message_t *recv_mess, dstring *err_msg);
-int check_client_alive(COMMUNICATION_HANDLE *handle, const char *component_name,
-                       dstring *err_msg);
+int check_client_alive(COMMUNICATION_HANDLE *handle, dstring *err_msg);
 

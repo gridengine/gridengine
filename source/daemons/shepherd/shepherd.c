@@ -159,7 +159,7 @@ static int start_child(char *childname, char *script_file, pid_t *pidp,
 static void forward_signal_to_job(int pid, int timeout, int *postponed_signal, 
                        int remaining_alarm, pid_t ctrl_pid[3]);
 static int check_ckpttype(void);
-int wait_my_child(int pid, int ckpt_pid, int ckpt_type, 
+static int wait_my_child(int pid, int ckpt_pid, int ckpt_type, 
                          struct rusage *rusage, int timeout, 
                          int ckpt_interval, char *childname);
 static void set_ckpt_params(int, char *, int, char *, int, char *, int, int *);
@@ -177,7 +177,7 @@ static void shepconf_deliver_signal_or_method(int sig, int pid, pid_t *ctrl_pid)
 
 /* overridable control methods */
 static void verify_method(char *method_name);
-void shepherd_signal_job(pid_t pid, int sig);
+static void shepherd_signal_job(pid_t pid, int sig);
 
 char shepherd_job_dir[2048];
 
@@ -249,9 +249,6 @@ static int map_signal(int sig)
    int ret = sig;
 
    if (sig == SIGTTIN) {
-     /* SIGSTOP would also be delivered using SIGTTIN due to problems with
-      * delivering SIGWINCH to shepherd, see CR 6623174
-      */ 
       FILE *signal_file = fopen("signal", "r");
 
       if (signal_file != NULL) {
@@ -267,6 +264,8 @@ static int map_signal(int sig)
 #else
       ret = SIGKILL;
 #endif
+   } else if (sig == SIGWINCH) {
+      ret = SIGSTOP; 
    } else if (sig == SIGTSTP) {
       ret = SIGKILL;
    } else if (sig == SIGUSR1 || sig == SIGCONT) {
@@ -666,38 +665,30 @@ int main(int argc, char **argv)
       /*
        * Check if we have to use the old or the new (builtin)
        * interactive job support.
-       * TODO: allow dynamic configuration for each job?
+       * TODO: Allow different configurations for rsh, rlogin and telnet,
+       *       allow dynamic configuration for each job.
        */
+
       config_errfunc = NULL;
-      script_file = get_conf_val("script_file");
-      if (script_file != NULL
-          && strcasecmp(script_file, JOB_TYPE_STR_QRSH) == 0) {
-         tmp_rsh_daemon = get_conf_val("rsh_daemon");
-         if (tmp_rsh_daemon != NULL
-             && strcasecmp(tmp_rsh_daemon, "builtin") == 0) {
-            g_new_interactive_job_support = true;
-            shepherd_trace("rsh_daemon = %s", tmp_rsh_daemon);
-         }
+      tmp_rsh_daemon = get_conf_val("rsh_daemon");
+      if (tmp_rsh_daemon != NULL
+          && strcasecmp(tmp_rsh_daemon, "builtin") == 0) {
+         g_new_interactive_job_support = true;
+         shepherd_trace("rsh_daemon = %s", tmp_rsh_daemon);
       }
 
-      if (script_file != NULL
-          && strcasecmp(script_file, JOB_TYPE_STR_QRLOGIN) == 0) {
-         tmp_rlogin_daemon = get_conf_val("rlogin_daemon");
-         if (tmp_rlogin_daemon != NULL
-             && strcasecmp(tmp_rlogin_daemon, "builtin") == 0) {
-            g_new_interactive_job_support = true;
-            shepherd_trace("rlogin_daemon = %s", tmp_rlogin_daemon);
-         }
+      tmp_rlogin_daemon = get_conf_val("rlogin_daemon");
+      if (tmp_rlogin_daemon != NULL
+          && strcasecmp(tmp_rlogin_daemon, "builtin") == 0) {
+         g_new_interactive_job_support = true;
+         shepherd_trace("rlogin_daemon = %s", tmp_rlogin_daemon);
       }
 
-      if (script_file != NULL
-          && strcasecmp(script_file, JOB_TYPE_STR_QLOGIN) == 0) {
-         tmp_qlogin_daemon = get_conf_val("qlogin_daemon");
-         if (tmp_qlogin_daemon != NULL
-             && strcasecmp(tmp_qlogin_daemon, "builtin") == 0) {
-            g_new_interactive_job_support = true;
-            shepherd_trace("qlogin_daemon = %s", tmp_qlogin_daemon);
-         }
+      tmp_qlogin_daemon = get_conf_val("qlogin_daemon");
+      if (tmp_qlogin_daemon != NULL
+          && strcasecmp(tmp_qlogin_daemon, "builtin") == 0) {
+         g_new_interactive_job_support = true;
+         shepherd_trace("qlogin_daemon = %s", tmp_qlogin_daemon);
       }
       config_errfunc = shepherd_error_ptr;
 
@@ -1224,6 +1215,14 @@ int ckpt_type
       sge_switch2start_user();
       kill(-pid, SIGKILL);
       sge_switch2admin_user();
+
+      if (exit_status == -1) {
+         exit_status = 0;
+         if (get_job_status(pid, &exit_status, &rusage) == 1) {
+            shepherd_trace("%s exited with exit status %d", 
+                           childname, WEXITSTATUS(exit_status));
+         }
+      }
 
       status = exit_status;
       ckpt_interval = 0;
@@ -2182,7 +2181,7 @@ void handle_signals_and_methods(
    }   
 }         
 /*------------------------------------------------------------------------*/
-int wait_my_child(
+static int wait_my_child(
 int pid,                   /* pid of job */
 int ckpt_pid,              /* pid of restarted job or same as pid */
 int ckpt_type,             /* type of checkpointing */
@@ -2565,7 +2564,7 @@ static void start_clean_command(char *cmd)
  and uses it instead of the pid. If reading or killing fails, the normal
  mechanism is used.
  ****************************************************************/
-void 
+static void 
 shepherd_signal_job(pid_t pid, int sig) {
 #if defined(IRIX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
    static int first = 1;

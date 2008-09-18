@@ -64,7 +64,6 @@ GetCellRoot()
 GetCell()
 {
    is_done="false"
-   Overwrite="false"
 
    if [ $AUTO = true ]; then
     SGE_CELL=$CELL_NAME
@@ -86,18 +85,28 @@ GetCell()
       $CLEAR
       $INFOTEXT -u "\nGrid Engine cells"
       if [ "$SGE_CELL" = "" ]; then
-         SGE_CELL=default
+         $INFOTEXT -n "\nGrid Engine supports multiple cells.\n\n" \
+                      "If you are not planning to run multiple Grid Engine clusters or if you don't\n" \
+                      "know yet what is a Grid Engine cell it is safe to keep the default cell name\n\n" \
+                      "   default\n\n" \
+                      "If you want to install multiple cells you can enter a cell name now.\n\n" \
+                      "The environment variable\n\n" \
+                      "   \$SGE_CELL=<your_cell_name>\n\n" \
+                      "will be set for all further Grid Engine commands.\n\n" \
+                      "Enter cell name [default] >> "
+         INP=`Enter default`
+      else
+         $INFOTEXT -n "\nGrid Engine supports multiple cells.\n\n" \
+                      "If you are not planning to run multiple Grid Engine clusters or if you don't\n" \
+                      "know yet what is a Grid Engine cell it is safe to keep the default cell name\n\n" \
+                      "   default\n\n" \
+                      "If you want to install multiple cells you can enter a cell name now.\n\n" \
+                      "The environment variable\n\n" \
+                      "   \$SGE_CELL=<your_cell_name>\n\n" \
+                      "will be set for all further Grid Engine commands.\n\n" \
+                      "Enter cell name [%s] >> " $SGE_CELL
+         INP=`Enter $SGE_CELL`
       fi
-      $INFOTEXT -n "\nGrid Engine supports multiple cells.\n\n" \
-                   "If you are not planning to run multiple Grid Engine clusters or if you don't\n" \
-                   "know yet what is a Grid Engine cell it is safe to keep the default cell name\n\n" \
-                   "   default\n\n" \
-                   "If you want to install multiple cells you can enter a cell name now.\n\n" \
-                   "The environment variable\n\n" \
-                   "   \$SGE_CELL=<your_cell_name>\n\n" \
-                   "will be set for all further Grid Engine commands.\n\n" \
-                   "Enter cell name [%s] >> " $SGE_CELL
-      INP=`Enter $SGE_CELL`
       eval SGE_CELL=$INP
       SGE_CELL_VAL=`eval echo $SGE_CELL`
       if [ "$QMASTER" = "install" ]; then
@@ -126,13 +135,10 @@ GetCell()
                if [ $sel_ret = 0 -a $with_bdb = 0 ]; then
                   $INFOTEXT "Deleting bootstrap and cluster_name files!"
                   ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL_VAL/common/bootstrap
-                  ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL_VAL/common/cluster_name                  
+                  ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL_VAL/common/cluster_name
                elif [ $sel_ret -ne 0 ]; then
                   $INFOTEXT "Deleting directory \"%s\" now!" $SGE_ROOT/$SGE_CELL_VAL
                   ExecuteAsAdmin rm -rf $SGE_ROOT/$SGE_CELL_VAL
-               fi
-               if [ $sel_ret = 0 ]; then
-                  Overwrite="true"
                fi
                is_done="true"
             fi
@@ -326,9 +332,6 @@ SetPermissions()
    $CLEAR
 }
 
-
-#SetSpoolingOptionsBerkeleyDB()
-# $1 - new default spool_dir or BDBD server
 SetSpoolingOptionsBerkeleyDB()
 {
    SPOOLING_METHOD=berkeleydb
@@ -398,9 +401,7 @@ SetSpoolingOptionsBerkeleyDB()
       fi
 
       if [ $is_server = "true" ]; then
-         db_server_host=`echo "$1" | awk -F: '{print $1}'`
-         db_server_spool_dir=`echo "$1" | awk -F: '{print $2}'`
-         SpoolingQueryChange "$db_server_host" "$db_server_spool_dir"
+         SpoolingQueryChange
       else
          done="false"
          is_spool="false"
@@ -535,7 +536,6 @@ SetSpoolingOptionsClassic()
    SPOOLING_ARGS="$SGE_ROOT_VAL/$COMMONDIR;$QMDIR"
 }
 
-# $1 - suggested spooling params form the backup
 SetSpoolingOptionsDynamic()
 {
    if [ "$AUTO" = "true" ]; then
@@ -561,7 +561,7 @@ SetSpoolingOptionsDynamic()
          SetSpoolingOptionsClassic
          ;;
       berkeleydb)
-         SetSpoolingOptionsBerkeleyDB $1
+         SetSpoolingOptionsBerkeleyDB
          ;;
       *)
          $INFOTEXT "\nUnknown spooling method. Exit."
@@ -574,7 +574,7 @@ SetSpoolingOptionsDynamic()
 
 #--------------------------------------------------------------------------
 # SetSpoolingOptions sets / queries options for the spooling framework
-# $1 - suggested spooling params form teh old bootstrap file
+#
 SetSpoolingOptions()
 {
    $INFOTEXT -u "\nSetup spooling"
@@ -585,10 +585,10 @@ SetSpoolingOptions()
          SetSpoolingOptionsClassic
          ;;
       berkeleydb)
-         SetSpoolingOptionsBerkeleyDB $1
+         SetSpoolingOptionsBerkeleyDB
          ;;
       dynamic)
-         SetSpoolingOptionsDynamic $1
+         SetSpoolingOptionsDynamic
          ;;
       *)
          $INFOTEXT "\nUnknown spooling method. Exit."
@@ -767,19 +767,17 @@ InitSpoolingDatabase()
 
 #-------------------------------------------------------------------------
 # AddConfiguration
-# optional args for GetConfigutration
-# $1 - default CFG_EXE_SPOOL
-# $2 - default CFG_MAIL_ADDR
+#
 AddConfiguration()
 {
    useold=false
 
    if [ $useold = false ]; then
-      GetConfiguration "$@"
+      GetConfiguration
       #TruncCreateAndMakeWriteable $COMMONDIR/configuration
       #PrintConf >> $COMMONDIR/configuration
       #SetPerm $COMMONDIR/configuration
-      TMPC=/tmp/configuration_`date '+%Y-%m-%d_%H:%M:%S'`
+      TMPC=/tmp/configuration
       TOUCH=touch
       rm -f $TMPC
       ExecuteAsAdmin $TOUCH $TMPC
@@ -895,9 +893,7 @@ AddLocalConfiguration()
 
 #-------------------------------------------------------------------------
 # GetConfiguration: get some parameters for global configuration
-# args are optional
-# $1 - default CFG_EXE_SPOOL
-# $2 - default CFG_MAIL_ADDR
+#
 GetConfiguration()
 {
 
@@ -931,34 +927,24 @@ GetConfiguration()
             $INFOTEXT "The pathname of the spool directory of the execution hosts. You\n" \
                       "must have the right to create this directory and to write into it.\n"
       fi
-      
-      if [ -z "$1" ]; then
-         default_value=$SGE_ROOT_VAL/$SGE_CELL_VAL/spool
-      else
-         default_value="$1"
-      fi
 
-      $INFOTEXT -n "Default: [%s] >> " $default_value
+      $INFOTEXT -n "Default: [%s] >> " $SGE_ROOT_VAL/$SGE_CELL_VAL/spool
 
-      CFG_EXE_SPOOL=`Enter $default_value`
+      CFG_EXE_SPOOL=`Enter $SGE_ROOT_VAL/$SGE_CELL_VAL/spool`
 
       $CLEAR
-      if [ -z "$2" ]; then
-         default_value=none
-      else
-         default_value="$2"
-      fi
       $INFOTEXT -u "\nGrid Engine cluster configuration (continued)"
       $INFOTEXT -n "\n<administrator_mail>\n\n" \
                    "The email address of the administrator to whom problem reports are sent.\n\n" \
                    "It's is recommended to configure this parameter. You may use >none<\n" \
                    "if you do not wish to receive administrator mail.\n\n" \
                    "Please enter an email address in the form >user@foo.com<.\n\n" \
-                   "Default: [%s] >> " $default_value
+                   "Default: [none] >> "
 
-      CFG_MAIL_ADDR=`Enter $default_value`
+      CFG_MAIL_ADDR=`Enter none`
 
       $CLEAR
+
       $INFOTEXT "\nThe following parameters for the cluster configuration were configured:\n\n" \
                 "   execd_spool_dir        %s\n" \
                 "   administrator_mail     %s\n" $CFG_EXE_SPOOL $CFG_MAIL_ADDR
@@ -980,10 +966,6 @@ GetConfiguration()
 GetGidRange()
 {
    done=false
-   if [ -z "$GID_RANGE" ]; then
-        GID_RANGE=20000-20100
-   fi
-   
    while [ $done = false ]; do
       $CLEAR
       $INFOTEXT -u "\nGrid Engine group id range"
@@ -1001,7 +983,7 @@ GetGidRange()
                 "on a single host.\n\n" \
                 "You can change at any time the group id range in your cluster configuration.\n"
 
-      $INFOTEXT -n "Please enter a range [%s] >> " $GID_RANGE
+      $INFOTEXT -n "Please enter a range >> "
 
       CFG_GID_RANGE=`Enter $GID_RANGE`
 
@@ -1146,16 +1128,6 @@ CreateSettingsFile()
       fi
    fi
 
-   if [ "$execd_service" = "true" ]; then
-      SGE_EXECD_PORT=""
-      export SGE_EXECD_PORT
-   fi
-
-   if [ "$qmaster_service" = "true" ]; then
-      SGE_QMASTER_PORT=""
-      export SGE_QMASTER_PORT
-   fi
-
    ExecuteAsAdmin util/create_settings.sh $SGE_ROOT_VAL/$COMMONDIR
 
    SetPerm $SGE_ROOT_VAL/$COMMONDIR/settings.sh
@@ -1192,18 +1164,8 @@ InitCA()
          touch /tmp/pwfile.$$
          chmod 600 /tmp/pwfile.$$
          echo "$SGE_JMX_SSL_KEYSTORE_PW" > /tmp/pwfile.$$
-         OUTPUT=`$SGE_CA_CMD -sysks -ksout $SGE_JMX_SSL_KEYSTORE -kspwf /tmp/pwfile.$$ 2>&1`
-         if [ $? != 0 ]; then
-            $INFOTEXT "Error: Cannot create keystore $SGE_JMX_SSL_KEYSTORE\n$OUTPUT"
-            ret=1
-         else
-            ret=0
-         fi
+         $SGE_CA_CMD -sysks -kspwf /tmp/pwfile.$$
          rm /tmp/pwfile.$$
-         if [ $ret = 1 ]; then
-            MoveLog
-            exit 1
-         fi
       fi
       
       $INFOTEXT -auto $AUTO -wait -n "Hit <RETURN> to continue >> "
@@ -1362,31 +1324,28 @@ AddHosts()
 
    fi
 
-   if [ "$Overwrite" = "true" -a "$SPOOLING_METHOD" = "classic" ]; then
-      $INFOTEXT -u "\nSkipping creation of the default <all.q> queue and <allhosts> hostgroup"
+   $INFOTEXT -u "\nCreating the default <all.q> queue and <allhosts> hostgroup"
+   echo
+   $INFOTEXT -log "Creating the default <all.q> queue and <allhosts> hostgroup"
+   TMPL=/tmp/hostqueue$$
+   TMPL2=${TMPL}.q
+   rm -f $TMPL $TMPL2
+   if [ -f $TMPL -o -f $TMPL2 ]; then
+      $INFOTEXT "\nCan't delete template files >%s< or >%s<" "$TMPL" "$TMPL2"
    else
-      $INFOTEXT -u "\nCreating the default <all.q> queue and <allhosts> hostgroup"
-      echo
-      $INFOTEXT -log "Creating the default <all.q> queue and <allhosts> hostgroup"
-      TMPL=/tmp/hostqueue$$
-      TMPL2=${TMPL}.q
-      rm -f $TMPL $TMPL2
-      if [ -f $TMPL -o -f $TMPL2 ]; then
-         $INFOTEXT "\nCan't delete template files >%s< or >%s<" "$TMPL" "$TMPL2"
-      else
-         PrintHostGroup @allhosts > $TMPL
-         Execute $SGE_BIN/qconf -Ahgrp $TMPL
-         Execute $SGE_BIN/qconf -sq > $TMPL
-         Execute sed -e "/qname/s/template/all.q/" \
-                     -e "/hostlist/s/NONE/@allhosts/" \
-                     -e "/pe_list/s/NONE/make/" $TMPL > $TMPL2
-         Execute $SGE_BIN/qconf -Aq $TMPL2
-         rm -f $TMPL $TMPL2        
-      fi
-
-      $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
-      $CLEAR
+      PrintHostGroup @allhosts > $TMPL
+      Execute $SGE_BIN/qconf -Ahgrp $TMPL
+      Execute $SGE_BIN/qconf -sq > $TMPL
+      Execute sed -e "/qname/s/template/all.q/" \
+                  -e "/hostlist/s/NONE/@allhosts/" \
+                  -e "/pe_list/s/NONE/make/" $TMPL > $TMPL2
+      Execute $SGE_BIN/qconf -Aq $TMPL2
+      rm -f $TMPL $TMPL2        
    fi
+
+   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
+   $CLEAR
+
 }
 
 
@@ -1556,10 +1515,12 @@ GetQmasterPort()
    else
       comm_port_max=65500
    fi
-    PortCollision $SGE_QMASTER_SRV
-    PortSourceSelect $SGE_QMASTER_SRV
 
-   if [ "$SGE_QMASTER_PORT" != "" -a "$port_source" != "db" ]; then
+   PortCollision $SGE_QMASTER_SRV
+
+   CheckServiceAndPorts service $SGE_QMASTER_SRV
+
+   if [ "$SGE_QMASTER_PORT" != "" ]; then
       $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
 
       if [ $SGE_QMASTER_PORT -ge 1 -a $SGE_QMASTER_PORT -le $comm_port_max ]; then
@@ -1568,13 +1529,10 @@ GetQmasterPort()
                      "as port for communication.\n\n" $SGE_QMASTER_PORT
                       export SGE_QMASTER_PORT
                       $INFOTEXT -log "Using SGE_QMASTER_PORT >%s<." $SGE_QMASTER_PORT
-         if [ "$collision_flag" = "services_only" -o "$collision_flag" = "services_env" ]; then
+         if [ $ret = 0 ]; then
             $INFOTEXT "This overrides the preset TCP/IP service >sge_qmaster<.\n"
          fi
-         $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n "Do you want to change the port number? (y/n) [n] >> "
-         if [ "$?" = 0 ]; then
-            EnterPortAndCheck $SGE_QMASTER_SRV
-         fi
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
          $CLEAR
          return
       else
@@ -1590,171 +1548,110 @@ GetQmasterPort()
       fi
    fi
    $INFOTEXT -u "\nGrid Engine TCP/IP service >sge_qmaster<"
-   if [ "$port_source" = "env" ]; then
-      EnterPortAndCheck $SGE_QMASTER_SRV
-      $CLEAR
-   else
-      EnterServiceOrPortAndCheck $SGE_QMASTER_SRV
-      if [ "$port_source" = "db" ]; then
-         $INFOTEXT "\nUsing the service\n\n" \
-                   "   sge_qmaster\n\n" \
-                   "for communication with Grid Engine.\n"
-         qmaster_service="true"
-      fi
-      $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-      $CLEAR
-   fi
-}
+   if [ $ret != 0 ]; then
+      $INFOTEXT "\nThere is no service >sge_qmaster< available in your >/etc/services< file\n" \
+                "or in your NIS/NIS+ database.\n\n" \
+                "You may add this service now to your services database or choose a port number.\n" \
+                "It is recommended to add the service now. If you are using NIS/NIS+ you should\n" \
+                "add the service at your NIS/NIS+ server and not to the local >/etc/services<\n" \
+                "file.\n\n" \
+                "Please add an entry in the form\n\n" \
+                "   sge_qmaster <port_number>/tcp\n\n" \
+                "to your services database and make sure to use an unused port number.\n"
 
-EnterServiceOrPortAndCheck()
-{
-   if [ "$1" = "sge_qmaster" ]; then
-      service_name="sge_qmaster"
-      port_var_name="SGE_QMASTER_PORT"
-   else
-      service_name="sge_execd"
-      port_var_name="SGE_EXECD_PORT"
-
-   fi
+      $INFOTEXT -wait -auto $AUTO -n "Please add the service now or press <RETURN> to go to entering a port number >> "
 
       # Check if $SGE_SERVICE service is available now
       service_available=false
       done=false
       while [ $done = false ]; do
-         CheckServiceAndPorts service $service_name
+         CheckServiceAndPorts service $SGE_QMASTER_SRV
          if [ $ret != 0 ]; then
             $CLEAR
-            $INFOTEXT -u "\nNo TCP/IP service >%s< yet" $service_name
+            $INFOTEXT -u "\nNo TCP/IP service >sge_qmaster< yet"
             $INFOTEXT -n "\nIf you have just added the service it may take a while until the service\n" \
                          "propagates in your network. If this is true we can again check for\n" \
-                         "the service >%s<. If you don't want to add this service or if\n" \
+                         "the service >sge_qmaster<. If you don't want to add this service or if\n" \
                          "you want to install Grid Engine just for testing purposes you can enter\n" \
-                         "a port number.\n" $service_name
+                         "a port number.\n"
 
               if [ $AUTO != "true" ]; then
                  $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
                       "Check again (enter [n] to specify a port number) (y/n) [y] >> "
                  ret=$?
               else
-                 $INFOTEXT -log "Setting %s" $port_var_name
+                 $INFOTEXT -log "Setting SGE_QMASTER_PORT"
                  ret=1
               fi
 
-            if [ $ret = 1 ]; then
+            if [ $ret = 0 ]; then
+               :
+            else
                if [ $AUTO = true ]; then
                   $INFOTEXT -log "Please use an unused port number!"
                   MoveLog
                   exit 1
                fi
-               $CLEAR
-               EnterAndValidatePortNumber $1
-               SelectedPortOutput $1
-               port_source="env"
+
+               $INFOTEXT -n "Please enter an unused port number >> "
+               INP=`Enter $SGE_QMASTER_PORT`
+
+               chars=`echo $INP | wc -c`
+               chars=`expr $chars - 1`
+               digits=`expr $INP : "[0-9][0-9]*"`
+               if [ "$chars" != "$digits" ]; then
+                  $INFOTEXT "\nInvalid input. Must be a number."
+               elif [ $INP -le 1 -o $INP -ge $comm_port_max ]; then
+                  $INFOTEXT "\nInvalid port number. Must be in range [1..%s]." $comm_port_max
+               elif [ $INP -le 1024 -a $euid != 0 ]; then
+                  $INFOTEXT "\nYou are not user >root<. You need to use a port above 1024."
+               else
+                  CheckServiceAndPorts port ${INP}
+
+                  if [ $ret = 0 ]; then
+                     $INFOTEXT "\nFound service with port number >%s< in >/etc/services<. Choose again." "$INP"
+                  else
+                     done=true
+                  fi
+               fi
+               if [ $done = false ]; then
+                  $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+               fi
             fi
+            export SGE_QMASTER_PORT
          else
             done=true
             service_available=true
          fi
       done
-}
 
-
-EnterPortAndCheck()
-{
-
-   if [ "$1" = "sge_qmaster" ]; then
-      service_name="sge_qmaster"
-      port_var_name="SGE_QMASTER_PORT"
-   else
-      service_name="sge_execd"
-      port_var_name="SGE_EXECD_PORT"
-
-   fi
-      # Check if $SGE_SERVICE service is available now
-      done=false
-      while [ $done = false ]; do
-            $CLEAR
-            if [ $AUTO = true ]; then
-               $INFOTEXT -log "Please use an unused port number!"
-               MoveLog
-               exit 1
-            fi
-
-            EnterAndValidatePortNumber $1
-            SelectedPortOutput $1
-      done
-   $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-}
-
-
-SelectedPortOutput()
-{
-   if [ "$1" = "sge_qmaster" ]; then
-      SGE_QMASTER_PORT=$INP
-      $INFOTEXT "\nUsing the environment variable\n\n" \
-      "   \$SGE_QMASTER_PORT=%s\n\n" \
-      "as port for communication.\n\n" $SGE_QMASTER_PORT
-      export SGE_QMASTER_PORT
-      $INFOTEXT -log "Using SGE_QMASTER_PORT >%s<." $SGE_QMASTER_PORT
-   else
-      SGE_EXECD_PORT=$INP
-      $INFOTEXT "\nUsing the environment variable\n\n" \
-      "   \$SGE_EXECD_PORT=%s\n\n" \
-      "as port for communication.\n\n" $SGE_EXECD_PORT
-      export SGE_EXECD_PORT
-      $INFOTEXT -log "Using SGE_EXECD_PORT >%s<." $SGE_EXECD_PORT
-   fi
-}
-
-
-
-EnterAndValidatePortNumber()
-{
-   $INFOTEXT -u "\nGrid Engine TCP/IP service >%s<\n" $service_name
-   $INFOTEXT -n "\n" 
-   $INFOTEXT -n "Please enter an unused port number >> "
-
-   if [ "$1" = "sge_qmaster" ]; then
-      INP=`Enter $SGE_QMASTER_PORT`
-   else
-      INP=`Enter $SGE_EXECD_PORT`
-
-      if [ "$INP" = "$SGE_QMASTER_PORT" -a $service_name = "sge_execd" ]; then
-         $INFOTEXT "Please use any other port number!!!"
-         $INFOTEXT "This %s port number is used by sge_qmaster" $SGE_QMASTER_PORT
-         if [ $AUTO = "true" ]; then
-            $INFOTEXT -log "Please use any other port number!!!"
-            $INFOTEXT -log "This %s port number is used by sge_qmaster" $SGE_QMASTER_PORT
-            $INFOTEXT -log "Installation failed!!!"
-            MoveLog
-            exit 1
-         fi
-      fi
-   fi
-
-   chars=`echo $INP | wc -c`
-   chars=`expr $chars - 1`
-   digits=`expr $INP : "[0-9][0-9]*"`
-   if [ "$chars" != "$digits" ]; then
-      $INFOTEXT "\nInvalid input. Must be a number."
-   elif [ $INP -le 1 -o $INP -ge $comm_port_max ]; then
-      $INFOTEXT "\nInvalid port number. Must be in range [1..%s]." $comm_port_max
-   elif [ $INP -le 1024 -a $euid != 0 ]; then
-      $INFOTEXT "\nYou are not user >root<. You need to use a port above 1024."
-   else
-      CheckServiceAndPorts port ${INP}
-
-      if [ $ret = 0 ]; then
-         $INFOTEXT "\nFound service with port number >%s< in >/etc/services<. Choose again." "$INP"
+      if [ $service_available = false ]; then
+         SGE_QMASTER_PORT=$INP
+         export SGE_QMASTER_PORT
+         $INFOTEXT "\nUsing port >%s< for sge_qmaster daemon.\n" $SGE_QMASTER_PORT
+         $INFOTEXT -log "Using port >%s< for sge_qmaster daemon." $SGE_QMASTER_PORT
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+         $CLEAR
       else
-         done=true
+         SGE_QMASTER_PORT=`$SGE_UTILBIN/getservbyname -number $SGE_QMASTER_SRV`
+         export SGE_QMASTER_PORT
+         port="$SGE_QMASTER_PORT/tcp"
+         $INFOTEXT "\nService >sge_qmaster %s< is now available.\n" $port
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+         $CLEAR
       fi
-   fi
-   if [ $done = false ]; then
+   else
+      SGE_QMASTER_PORT=`$SGE_UTILBIN/getservbyname -number $SGE_QMASTER_SRV`
+      export SGE_QMASTER_PORT
+      port="$SGE_QMASTER_PORT/tcp"
+      $INFOTEXT "\nUsing the service\n\n" \
+                "   sge_qmaster %s\n\n" \
+                "for communication with Grid Engine.\n" $port
       $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+      $CLEAR
    fi
-}
 
+}
 
 ########################################################
 #
@@ -1829,7 +1726,11 @@ SetLibJvmPath() {
    while [ $isdone != true ]; do
       $INFOTEXT -n "Please enter JAVA_HOME or press enter [%s] >> " "$java_home"
       INP=`Enter $java_home`
-      if [ ! -x $INP/bin/java ]; then
+      if [ "$INP" = "" -a ! -x $INP/bin/java ]; then
+         $INFOTEXT "\nInvalid input. Must be a valid JAVA_HOME path."
+         continue
+      fi
+      if [ "$INP" = "" -o ! -x $INP/bin/java ]; then
          $INFOTEXT "\nInvalid input. Must be a valid JAVA_HOME path."
       else
          java_home=$INP
@@ -1942,10 +1843,11 @@ GetJMXPort() {
 
          sge_jvm_lib_path=""
          sge_jmx_port=""
-         sge_additional_jvm_args="-Xmx256m"
+         sge_additional_jvm_args=""
          sge_jmx_ssl=false
          sge_jmx_ssl_client=false
          sge_jxm_ssl_keystore=""
+         sge_jxm_ssl_keystore_pw=""
          alldone=false
          while [ $alldone = false ]; do
 
@@ -1964,7 +1866,7 @@ GetJMXPort() {
             sge_jvm_lib_path=$jvm_lib_path
 
             # set SGE_ADDITIONAL_JVM_ARGS
-            $INFOTEXT -n "Please enter additional JVM arguments (optional, default is [%s]) >> " "$sge_additional_jvm_args"
+            $INFOTEXT -n "Please enter additional JVM arguments (optional) >> "
             INP=`Enter "$sge_additional_jvm_args"`
             sge_additional_jvm_args="$INP"
 
@@ -1992,7 +1894,7 @@ GetJMXPort() {
             sge_jmx_port=$INP
 
             # set SGE_JMX_SSL
-            $INFOTEXT -n -ask "y" "n" -def "y" \
+            $INFOTEXT -ask "y" "n" -def "y" -n \
                "Enable JMX SSL server authentication (y/n) [y] >> "
             if [ $? = 0 ]; then
                sge_jmx_ssl="true"
@@ -2002,8 +1904,8 @@ GetJMXPort() {
 
             if [ "$sge_jmx_ssl" = true ]; then
                # set SGE_JMX_SSL_CLIENT
-               $INFOTEXT -n -ask "y" "n" -def "y" \
-                  "Enable JMX SSL client authentication (y/n) [y] >> "
+               $INFOTEXT -ask "y" "n" -def "n" -n \
+                  "Enable JMX SSL client authentication (y/n) [n] >> "
                if [ $? = 0 ]; then
                   sge_jmx_ssl_client="true"
                else    
@@ -2024,7 +1926,6 @@ GetJMXPort() {
                sge_jmx_ssl_keystore="$INP"
 
                # set SGE_JMX_SSL_KEYSTORE_PW
-               sge_jmx_ssl_keystore_pw=""
                STTY_ORGMODE=`stty -g`
                $INFOTEXT -n "Enter JMX SSL server keystore pw >> "
                stty -echo
@@ -2069,9 +1970,8 @@ GetJMXPort() {
       $CLEAR
 
    fi
-
+ 
 }
-
 
 #-------------------------------------------------------------------------
 # GetExecdPort: get communication port SGE_EXECD_PORT
@@ -2086,8 +1986,10 @@ GetExecdPort()
     fi
 
     PortCollision $SGE_EXECD_SRV
-    PortSourceSelect $SGE_EXECD_SRV
-    if [ "$SGE_EXECD_PORT" != "" -a "$port_source" != "db" ]; then
+
+    CheckServiceAndPorts service $SGE_EXECD_SRV
+
+    if [ "$SGE_EXECD_PORT" != "" ]; then
       $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
 
       if [ $SGE_EXECD_PORT -ge 1 -a $SGE_EXECD_PORT -le $comm_port_max ]; then
@@ -2096,13 +1998,10 @@ GetExecdPort()
                      "as port for communication.\n\n" $SGE_EXECD_PORT
                       export SGE_EXECD_PORT
                       $INFOTEXT -log "Using SGE_EXECD_PORT >%s<." $SGE_EXECD_PORT
-         if [ "$collision_flag" = "services_only" -o "$collision_flag" = "services_env" ]; then
+         if [ $ret = 0 ]; then
             $INFOTEXT "This overrides the preset TCP/IP service >sge_execd<.\n"
          fi
-         $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n "Do you want to change the port number? (y/n) [n] >> "
-         if [ "$?" = 0 ]; then
-            EnterPortAndCheck $SGE_EXECD_SRV 
-         fi
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
          $CLEAR
          return
       else
@@ -2117,35 +2016,130 @@ GetExecdPort()
                    "the installation or configure the service >sge_execd<." $SGE_EXECD_PORT $comm_port_max
       fi
    fi         
-      $INFOTEXT -u "\nGrid Engine TCP/IP communication service "
-   if [ "$port_source" = "env" ]; then
+      $INFOTEXT -u "\nGrid Engine TCP/IP service >sge_execd<"
+   if [ $ret != 0 ]; then
+      $INFOTEXT "\nThere is no service >sge_execd< available in your >/etc/services< file\n" \
+                "or in your NIS/NIS+ database.\n\n" \
+                "You may add this service now to your services database or choose a port number.\n" \
+                "It is recommended to add the service now. If you are using NIS/NIS+ you should\n" \
+                "add the service at your NIS/NIS+ server and not to the local >/etc/services<\n" \
+                "file.\n\n" \
+                "Please add an entry in the form\n\n" \
+                "   sge_execd <port_number>/tcp\n\n" \
+                "to your services database and make sure to use an unused port number.\n"
 
-         $INFOTEXT "Make sure to use a different port number for the execution host\n" \
+         $INFOTEXT "Make sure to use a different port number for the Execution host\n" \
                    "as on the qmaster machine\n"
-         if [ `$SGE_UTILBIN/getservbyname $SGE_QMASTER_SRV 2>/dev/null | wc -w` = 0 -a "$SGE_QMASTER_PORT" != "" ]; then
-            $INFOTEXT "The qmaster port SGE_QMASTER_PORT = %s\n" $SGE_QMASTER_PORT
-         elif [ `$SGE_UTILBIN/getservbyname sge_qmaster 2>/dev/null | wc -w` != 0 -a "$SGE_QMASTER_PORT" = "" ]; then
-            $INFOTEXT "sge_qmaster service set to port %s\n" `$SGE_UTILBIN/getservbyname $SGE_QMASTER_SRV | cut -d" " -f2`
-         else 
-            $INFOTEXT "The qmaster port SGE_QMASTER_PORT = %s" $SGE_QMASTER_PORT
-            $INFOTEXT "sge_qmaster service set to port %s\n" `$SGE_UTILBIN/getservbyname $SGE_QMASTER_SRV | cut -d" " -f2`
-         fi 
-         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+         $INFOTEXT "The qmaster port SGE_QMASTER_PORT = %s\n" $SGE_QMASTER_PORT
+
+      $INFOTEXT -wait -auto $AUTO -n "Please add the service now or press <RETURN> to go to entering a port number >> "
 
       # Check if $SGE_SERVICE service is available now
-      EnterPortAndCheck $SGE_EXECD_SRV
-      $CLEAR
-   else
-      EnterServiceOrPortAndCheck $SGE_EXECD_SRV
-      if [ "$service_available" = "true" ]; then
-         $INFOTEXT "\nUsing the service\n\n" \
-                   "   sge_execd\n\n" \
-                   "for communication with Grid Engine.\n"
-         execd_service="true"
+      service_available=false
+      done=false
+      while [ $done = false ]; do
+         CheckServiceAndPorts service $SGE_EXECD_SRV
+         if [ $ret != 0 ]; then
+            $CLEAR
+            $INFOTEXT -u "\nNo TCP/IP service >sge_execd< yet"
+            $INFOTEXT -n "\nIf you have just added the service it may take a while until the service\n" \
+                         "propagates in your network. If this is true we can again check for\n" \
+                         "the service >sge_execd<. If you don't want to add this service or if\n" \
+                         "you want to install Grid Engine just for testing purposes you can enter\n" \
+                         "a port number.\n"
+
+              if [ $AUTO != "true" ]; then
+                 $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
+                      "Check again (enter [n] to specify a port number) (y/n) [y] >> "
+                 ret=$?
+              else
+                 $INFOTEXT -log "Setting SGE_EXECD_PORT"
+                 ret=1 
+              fi
+
+            if [ $ret = 0 ]; then
+               :
+            else
+               $INFOTEXT -n "Please enter an unused port number >> "
+               INP=`Enter $SGE_EXECD_PORT`
+
+               if [ $AUTO = true ]; then
+                  $INFOTEXT -log "Please use an unused port number!"
+                  MoveLog
+                  exit 1
+               fi
+
+
+               if [ "$INP" = "$SGE_QMASTER_PORT" ]; then
+                  $INFOTEXT "Please use any other port number!!!"
+                  $INFOTEXT "This %s port number is used by sge_qmaster" $SGE_QMASTER_PORT
+                  if [ $AUTO = "true" ]; then
+                     $INFOTEXT -log "Please use any other port number!!!"
+                     $INFOTEXT -log "This %s port number is used by sge_qmaster" $SGE_QMASTER_PORT
+                     $INFOTEXT -log "Installation failed!!!"
+                     MoveLog
+                     exit 1
+                  fi
+               fi
+               chars=`echo $INP | wc -c`
+               chars=`expr $chars - 1`
+               digits=`expr $INP : "[0-9][0-9]*"`
+               if [ "$chars" != "$digits" ]; then
+                  $INFOTEXT "\nInvalid input. Must be a number."
+               elif [ $INP -le 1 -o $INP -ge $comm_port_max ]; then
+                  $INFOTEXT "\nInvalid port number. Must be in range [1..%s]." $comm_port_max
+               elif [ $INP -le 1024 -a $euid != 0 ]; then
+                  $INFOTEXT "\nYou are not user >root<. You need to use a port above 1024."
+               else
+                  #ser=`awk '{ print $2 }' /etc/services | grep "^${INP}/tcp"`
+                  #cat /etc/services | grep -v "^#" | grep ${INP}
+                  CheckServiceAndPorts port ${INP}
+                  if [ $ret = 0 ]; then
+                     $INFOTEXT "\nFound service with port number >%s< in >/etc/services<. Choose again." "$INP"
+                  else
+                     done=true
+                  fi
+                  if [ $INP = $SGE_QMASTER_PORT ]; then
+                     done=false
+                  fi
+               fi
+               if [ $done = false ]; then
+                  $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+               fi
+            fi
+         else
+            done=true
+            service_available=true
+         fi
+      done
+
+      if [ $service_available = false ]; then
+         SGE_EXECD_PORT=$INP
+         export SGE_EXECD_PORT
+         $INFOTEXT "\nUsing port >%s< for sge_execd daemon.\n" $SGE_EXECD_PORT
+         $INFOTEXT -log "Using port >%s< for sge_execd daemon." $SGE_EXECD_PORT
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+         $CLEAR
+      else
+         SGE_EXECD_PORT=`$SGE_UTILBIN/getservbyname -number $SGE_EXECD_SRV`
+         export SGE_EXECD_PORT
+         port="$SGE_EXECD_PORT/tcp"
+         $INFOTEXT "\nService >sge_execd %s< is now available.\n" $port
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+         $CLEAR
       fi
+   else
+      SGE_EXECD_PORT=`$SGE_UTILBIN/getservbyname -number $SGE_EXECD_SRV`
+      export SGE_EXECD_PORT
+      port="$SGE_EXECD_PORT/tcp"
+      $INFOTEXT "\nUsing the service\n\n" \
+                "   sge_execd %s\n\n" \
+                "for communication with Grid Engine.\n" $port
       $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
       $CLEAR
    fi
+
+   export SGE_EXECD_PORT
 }
 
 
@@ -2204,7 +2198,7 @@ SetScheddConfig()
  
    while [ $done = "false" ]; do
       $INFOTEXT -u "Configurations"
-      $INFOTEXT -n "1) Normal\n          Fixed interval scheduling, report limited scheduling information,\n" \
+      $INFOTEXT -n "1) Normal\n          Fixed interval scheduling, report scheduling information,\n" \
                    "          actual + assumed load\n"
       $INFOTEXT -n "2) High\n          Fixed interval scheduling, report limited scheduling information,\n" \
                    "          actual load\n"
@@ -2330,72 +2324,58 @@ PortCollision()
 
    case "$collision_flag" in
 
-      env_only)
-         $INFOTEXT "\nThe port for %s is currently set by the shell environment.\n\n" $service
-         if [ "$service" = "sge_qmaster" ]; then
-            $INFOTEXT "   SGE_QMASTER_PORT = %s" $SGE_QMASTER_PORT
-         else
-            $INFOTEXT "   SGE_EXECD_PORT = %s" $SGE_EXECD_PORT
-         fi
-         INP=1
+      settings_services_env)
+         $INFOTEXT "\nThe port for %s is set by SGE settings\n" \
+                   "as service and by shell environment. Enter Ctl-C \n " \
+                   "and modify the appropriate files to use a unique port. " $service
       ;;
 
+      env_only)
+         $INFOTEXT "\nThe port for %s  is set by the shell environment.\n" \
+                   "Enter Ctl-C and modify the appropriate files \n " \
+                   "if you wish to use a different port. " $service
+      ;;
+
+      settings_only)
+         $INFOTEXT "\nThe port for %s  is set by SGE settings.\n" \
+                   "Enter Ctl-C and modify the appropriate files \n " \
+                   "if you wish to use a different port. " $service
+      ;;
       services_only)
-         $INFOTEXT "\nThe port for %s is currently set as service.\n" $service
-         if [ "$service" = "sge_qmaster" ]; then
-            $INFOTEXT "   sge_qmaster service set to port %s" `$SGE_UTILBIN/getservbyname $service | cut -d" " -f2` 
-         else
-            $INFOTEXT "   sge_execd service set to port %s" `$SGE_UTILBIN/getservbyname $service | cut -d" " -f2` 
-         fi
-         INP=2
+         $INFOTEXT "\nThe port for %s  is set as service.\n" \
+                   "Enter Ctl-C and modify the appropriate files \n " \
+                   "if you wish to use a different port. " $service
+      ;;
+
+      settings_services)
+         $INFOTEXT "\nThe port for %s is set BOTH by SGE settings\n" \
+                   "and as service. Enter Ctl-C \n " \
+                   "and modify the appropriate files to use a unique port. " $service
       ;;
 
       services_env)
-         $INFOTEXT "\nThe port for %s is curently set BOTH as service and by the\nshell environment\n" $service
-         if [ "$service" = "sge_qmaster" ]; then
-            $INFOTEXT "   SGE_QMASTER_PORT = %s" $SGE_QMASTER_PORT
-            $INFOTEXT "   sge_qmaster service set to port %s" `$SGE_UTILBIN/getservbyname $service | cut -d" " -f2` 
-            $INFOTEXT "\n   Currently SGE_QMASTER_PORT = %s is active!" $SGE_QMASTER_PORT 
-         else
-            $INFOTEXT "   SGE_EXECD_PORT = %s" $SGE_EXECD_PORT
-            $INFOTEXT "   sge_execd service set to port %s" `$SGE_UTILBIN/getservbyname $service | cut -d" " -f2` 
-            $INFOTEXT "\n   Currently SGE_EXECD_PORT = %s is active!" $SGE_EXECD_PORT 
-         fi
-         INP=1
+         $INFOTEXT "\nThe port for %s is set BOTH as service\n" \
+                   "and by the SGE settings. Enter Ctl-C \n " \
+                   "and modify the appropriate files to use a unique port. " $service
+
       ;;
 
-      no_ports)
-         $INFOTEXT "\nThe communication settings for %s are currently not done.\n\n" $service
-         INP=1
+      settings_env)
+         $INFOTEXT "\nThe port for %s is set BOTH by SGE settings\n" \
+                   "and by the shell environment. Enter Ctl-C \n " \
+                   "and modify the appropriate files to use a unique port. " $service
+      ;;
+
+      *)
+         $INFOTEXT -u "\nGrid Engine general settings "
+         $INFOTEXT "\nThe SGE general settings are not set \n\n" 
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
        ;;
 
    esac
-}
-
-
-PortSourceSelect()
-{
-   $INFOTEXT "\nNow you have the possibility to set/change the communication ports by using the\n>shell environment< or you may configure it via a network service, configured\nin local >/etc/service<, >NIS< or >NIS+<, adding an entry in the form\n\n"
-   $INFOTEXT "    %s <port_number>/tcp\n\n" $1
-   $INFOTEXT "to your services database and make sure to use an unused port number.\n\n"
-   $INFOTEXT -n "How do you want to configure the Grid Engine communication ports?\n\n"
-   $INFOTEXT "Using the >shell environment<:                           [1]\n"
-   $INFOTEXT -n "Using a network service like >/etc/service<, >NIS/NIS+<: [2]\n\n(default: %s) >> " $INP
-   #INP will be set in function: PortCollision, we need this as default value for auto install
-   INP=`Enter $INP`
-
-   if [ "$INP" = "1" ]; then
-      port_source="env"
-   elif [ "$INP" = "2" ]; then
-      port_source="db"
-      if [ "$1" = "sge_qmaster" ]; then
-         unset SGE_QMASTER_PORT
-         export SGE_QMASTER_PORT
-      else
-         unset SGE_EXECD_PORT
-         export SGE_EXECD_PORT
-      fi
-   fi
-   
+         $INFOTEXT "\n\nTo set the ports as service, you have to configure >/etc/services< or\nthe used >nis, dns, ...< network services.\n(You will find the used resources/network services in nsswitch.conf file)"
+         $INFOTEXT "\nTo get the ports from environment or settings file, you have to set the environment\nvariable or source the settings file, if available, before starting the\ninstallation."
+         $INFOTEXT "The port settings from environment will override the ports got from services.\n"
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
    $CLEAR
 }

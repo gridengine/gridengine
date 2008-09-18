@@ -289,7 +289,7 @@ u_long32 job_get_ja_task_hold_state(const lListElem *job,
 *     has to be called to free allocated memory.
 *
 *  INPUTS
-*     const lListElem *job    - JB_Type 
+*     const lListElem *job   - JB_Type 
 *     lList *id_list[16]      - NULL initialized pointer array 
 *     u_long32 hold_state[16] - Array for hold state combinations 
 *
@@ -431,7 +431,7 @@ void job_create_hold_id_lists(const lListElem *job, lList *id_list[16],
 *
 *  SYNOPSIS
 *     void job_destroy_hold_id_lists(const lListElem *job, 
-*                                    lList *id_list[16]) 
+*                                    lList *id_list[8]) 
 *
 *  FUNCTION
 *     This function frees all memory allocated by a previous call of 
@@ -439,7 +439,7 @@ void job_create_hold_id_lists(const lListElem *job, lList *id_list[16],
 *
 *  INPUTS
 *     const lListElem *job - JB_Type 
-*     lList *id_list[16]   - array of RN_Type lists
+*     lList *id_list[8]    - array of RN_Type lists
 *
 *  SEE ALSO
 *     sgeobj/job/job_create_hold_id_lists 
@@ -599,7 +599,7 @@ u_long32 job_get_not_enrolled_ja_tasks(const lListElem *job)
                                   lGetList(job, JB_ja_a_h_ids));
 
    ret += range_list_get_number_of_ids(lGetList(job, JB_ja_n_h_ids));
-   ret += range_list_get_number_of_ids(uosa_ids);
+   ret += range_list_get_number_of_ids(uos_ids);
 
    lFreeList(&uosa_ids);
    lFreeList(&uos_ids);
@@ -1310,7 +1310,7 @@ bool job_is_tight_parallel(const lListElem *job, const lList *pe_list)
 *     const lList *pe_list - PE_Type list with all existing PEs 
 *
 *  RESULT
-*     bool - true or false
+*     bool - treu or false
 *
 *  SEE ALSO
 *     sgeobj/job/job_is_array()
@@ -1865,7 +1865,7 @@ void job_set_env_string(lListElem *job, const char* variable, const char* value)
 *  FUNCTION
 *     Test following elements of "job" whether they are correct:
 *        JB_ja_structure, JB_ja_n_h_ids, JB_ja_u_h_ids, 
-*        JB_ja_s_h_ids, JB_ja_o_h_ids, JB_ja_a_h_ids, JB_ja_z_ids
+*        JB_ja_s_h_ids, JB_ja_o_h_ids, JB_ja_z_ids
 *     The function will try to correct errors within this lists. If
 *     this is not possible an error will be returned in "answer_list".
 *      
@@ -1890,7 +1890,6 @@ void job_check_correct_id_sublists(lListElem *job, lList **answer_list)
          JB_ja_u_h_ids,
          JB_ja_s_h_ids,
          JB_ja_o_h_ids,
-         JB_ja_a_h_ids,
          JB_ja_z_ids,
          -1
       };
@@ -3481,6 +3480,98 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
    if (ret) {
       ret = object_verify_double_null(job, answer_list, JB_wtcontr);
     }
+
+   DRETURN(ret);
+}
+
+/****** sge_job/job_verify_execd_job() *****************************************
+*  NAME
+*     job_verify_execd_job() -- verify a job entering execd
+*
+*  SYNOPSIS
+*     bool 
+*     job_verify_execd_job(const lListElem *job, lList **answer_list) 
+*
+*  FUNCTION
+*     Verifies a job object entering execd.
+*     Does generic tests by calling job_verify, like verifying the cull
+*     structure, and makes sure a number of job attributes are set
+*     correctly.
+*
+*  INPUTS
+*     const lListElem *job - the job to verify
+*     lList **answer_list  - answer list to pass back error messages
+*
+*  RESULT
+*     bool - true on success,
+*            false on error with error message in answer_list
+*
+*  NOTES
+*     MT-NOTE: job_verify_execd_job() is MT safe 
+*
+*  BUGS
+*     The function is far from being complete.
+*     Currently, only the CULL structure is verified, not the contents.
+*
+*  SEE ALSO
+*     sge_job/job_verify()
+*******************************************************************************/
+bool
+job_verify_execd_job(const lListElem *job, lList **answer_list)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "job_verify_execd_job");
+
+   ret = job_verify(job, answer_list);
+
+   /* 
+    * A job entering execd must have some additional properties:
+    *    - correct state
+    *    - JB_job_number > 0
+    *    - JB_job_name != NULL
+    *    - JB_exec_file etc. ???
+    *    - JB_submission_time, JB_execution_time??
+    *    - JB_owner != NULL
+    *    - JB_cwd != NULL??
+    */
+
+   if (ret) {
+      ret = object_verify_ulong_not_null(job, answer_list, JB_job_number);
+   }
+
+   if (ret) {
+      ret = object_verify_string_not_null(job, answer_list, JB_job_name);
+   }
+
+   if (ret) {
+      ret = object_verify_string_not_null(job, answer_list, JB_owner);
+   }
+
+   if (ret) {
+      const lListElem *ckpt = lGetObject(job, JB_checkpoint_object);
+      if (ckpt != NULL) {
+         if (ckpt_validate(ckpt, answer_list) != STATUS_OK) {
+            ret = false;
+         }
+      }
+   }
+
+   /* for job execution, we need exactly one ja task */
+   if (ret) {
+      const lList *ja_tasks = lGetList(job, JB_ja_tasks);
+
+      if (ja_tasks == NULL || lGetNumberOfElem(ja_tasks) != 1) {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                           MSG_INVALIDJATASK_REQUEST);
+         ret = false;
+      }
+
+      /* verify the ja task structure */
+      if (ret) {
+         ret = ja_task_verify_execd_job(lFirst(ja_tasks), answer_list);
+      }
+   }
 
    DRETURN(ret);
 }

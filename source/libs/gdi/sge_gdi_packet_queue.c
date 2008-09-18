@@ -55,6 +55,7 @@
 #define PACKET_QUEUE_MUTEX "packet_queue_mutex"
 
 #define WORKER_WAIT_TIME_S 1
+#define WORKER_WAIT_TIME_N 0
 
 /****** gdi/request_internal/Master_Packet_Queue **************************
 *  NAME
@@ -322,8 +323,11 @@ sge_gdi_packet_queue_wait_for_new_packet(sge_gdi_packet_queue_class_t *packet_qu
                   packet_queue->waiting));
          do {
             struct timespec ts;
+            u_long32 current_time = 0; 
 
-            sge_relative_timespec(WORKER_WAIT_TIME_S, &ts);
+            current_time = sge_get_gmt();
+            ts.tv_sec = (time_t)(current_time + WORKER_WAIT_TIME_S);
+            ts.tv_nsec = WORKER_WAIT_TIME_N;;
             pthread_cond_timedwait(&(packet_queue->cond), &(packet_queue->mutex), &ts);
          } while (packet_queue->first_packet == NULL && sge_thread_has_shutdown_started() == false);
          packet_queue->waiting--;

@@ -554,7 +554,8 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          if (job_number == 0) {
             ERROR((SGE_EVENT, MSG_JOB_NOJOBID));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DRETURN(-2);
+            DEXIT;
+            return -2;
          }
          
          task_number = lGetUlong(ep, OR_ja_task_number);
@@ -562,10 +563,11 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          DPRINTF(("ORDER : job("sge_u32")->pri/tickets reset"));
 
          jep = job_list_locate(*object_base[SGE_TYPE_JOB].list, job_number);
-         if (jep == NULL) {
+         if(jep == NULL) {
             WARNING((SGE_EVENT, MSG_JOB_UNABLE2FINDJOBORD_U, sge_u32c(job_number)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_WARNING);
-            DRETURN(0); /* it's ok - job has exited - forget about him */
+            DEXIT;
+            return 0; /* it's ok - job has exited - forget about him */
          }
        
          next_ja_task = lFirst(lGetList(jep, JB_ja_tasks));
@@ -575,7 +577,8 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          if (jatp == NULL) {
             ERROR((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU,  
                   sge_u32c(0), sge_u32c(job_number)));
-            DRETURN(-2);
+            DEXIT;
+            return -2;
          }
       
          sge_mutex_lock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);
@@ -595,7 +598,8 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
                if (task_number != 0) { /* if task_number == 0, we only change the */
                   jatp = next_ja_task; /* pending tickets, otherwise all */
                   next_ja_task = lNext(next_ja_task);
-               } else {
+               }
+               else {
                   jatp = NULL;
                }
             }
@@ -618,7 +622,8 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
                if (task_number != 0) {   /* if task_number == 0, we only change the */
                   jatp = next_ja_task;   /* pending tickets, otherwise all */
                   next_ja_task = lNext(next_ja_task);
-               } else {
+               }
+               else {
                   jatp = NULL;
                }
             }
@@ -629,6 +634,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
             lSetDouble(jep, JB_rrcontr, 0);
             lSetDouble(jep, JB_dlcontr, 0);
             lSetDouble(jep, JB_wtcontr, 0);
+            
          }
          
          sge_mutex_unlock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);         
@@ -656,47 +662,48 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          lListElem *joker;
 
          job_number=lGetUlong(ep, OR_job_number);
-         if (!job_number) {
+         if(!job_number) {
             ERROR((SGE_EVENT, MSG_JOB_NOJOBID));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DRETURN(-2);
+            DEXIT;
+            return -2;
          }
 
          DPRINTF(("ORDER : job("sge_u32")->ticket = "sge_u32"\n", 
             job_number, (u_long32)lGetDouble(ep, OR_ticket)));
 
          jep = job_list_locate(*object_base[SGE_TYPE_JOB].list, job_number);
-         if (!jep) {
+         if(!jep) {
             WARNING((SGE_EVENT, MSG_JOB_UNABLE2FINDJOBORD_U, sge_u32c(job_number)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_WARNING);
-            DRETURN(0); /* it's ok - job has exited - forget about him */
+            DEXIT;
+            return 0; /* it's ok - job has exited - forget about him */
          }
-
          task_number=lGetUlong(ep, OR_ja_task_number);
          if (!task_number) {
             ERROR((SGE_EVENT, MSG_JOB_NOORDERTASK_US, sge_u32c(job_number), "ORT_ptickets"));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DRETURN(-2);
+            DEXIT;
+            return -2;
          }
-
          jatp = job_search_task(jep, NULL, task_number);
          if (!jatp) {
             jatp = job_get_ja_task_template_pending(jep, task_number);
-
-            if (!jatp) {
-               ERROR((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU,  
-                     sge_u32c(task_number), sge_u32c(job_number)));
-               sge_add_event( 0, sgeE_JATASK_DEL, job_number, task_number, 
-                             NULL, NULL, lGetString(jep, JB_session), NULL);
-               DRETURN(-2);
-            }
+         }
+         if (!jatp) {
+            ERROR((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU,  
+                  sge_u32c(task_number), sge_u32c(job_number)));
+            sge_add_event( 0, sgeE_JATASK_DEL, job_number, task_number, 
+                          NULL, NULL, lGetString(jep, JB_session), NULL);
+            DEXIT;
+            return -2;
          }
       
          sge_mutex_lock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);
          
          if (Follow_Control.cull_order_pos == NULL) {
             lListElem *joker_task;
-
+            
             joker=lFirst(lGetList(ep, OR_joker));
             joker_task = lFirst(lGetList(joker, JB_ja_tasks));
             
@@ -715,7 +722,8 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
                      sge_u32c(lGetUlong(jatp, JAT_task_number))));
             answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
             sge_mutex_unlock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);
-            DRETURN(0);
+            DEXIT;
+            return 0;
          }
 
          /* modify jobs ticket amount */
@@ -961,7 +969,6 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
     * (former ORT_remove_interactive_job)
     * ----------------------------------------------------------------------- */
    case ORT_remove_immediate_job:
-      DPRINTF(("ORDER: ORT_remove_immediate_job or ORT_remove_job\n"));
 
       job_number=lGetUlong(ep, OR_job_number);
       if(!job_number) {
@@ -1487,13 +1494,10 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          
          if (sub_order_list != NULL) {
             lListElem *sme  = lFirst(sub_order_list);
-         
 
             if (sme != NULL) {
                lListElem *first;
                lList **master_job_schedd_info_list = object_base[SGE_TYPE_JOB_SCHEDD_INFO].list;
-
-               DPRINTF(("ORDER: got %d schedd infos\n", lGetNumberOfElem(lGetList(sme, SME_message_list))));
 
                while ((first = lFirst(*master_job_schedd_info_list))) {
                   lRemoveElem(*master_job_schedd_info_list, &first);

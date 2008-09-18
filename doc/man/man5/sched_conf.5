@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2008/09/16 17:09:03 $     Revision: $Revision: 1.37 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2007/07/19 09:04:32 $     Revision: $Revision: 1.33 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2008/09/16 17:09:03 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2007/07/19 09:04:32 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -37,7 +37,9 @@ sched_conf \- xxQS_NAMExx default scheduler configuration file
 .\"
 .SH DESCRIPTION
 .I sched_conf
-defines the configuration file format for xxQS_NAMExx's  scheduler. 
+defines the configuration file format for xxQS_NAMExx's default 
+scheduler provided by
+.M xxqs_name_sxx_schedd 8 .
 In order to modify the configuration, 
 use the graphical user's interface
 .M qmon 1
@@ -57,9 +59,6 @@ space (" ") character before any interpretation.
 The following parameters are recognized by the xxQS_NAMExx scheduler if
 present in \fIsched_conf\fP:
 .SS "\fBalgorithm\fP"
-.B Note:
-Deprecated, may be removed in future release.
-.br
 Allows for the selection of alternative scheduling algorithms.
 .PP
 Currently
@@ -121,7 +120,8 @@ The \fBjob_load_adjustments\fP are specified as a comma separated list
 of arbitrary load parameters or consumable resources and (separated by an
 equal sign) an
 associated load correction value. Whenever a job is dispatched to a
-host by the scheduler,
+host by
+.M xxqs_name_sxx_schedd 8 ,
 the load parameter and consumable value set of that host
 is increased by the values
 provided in the \fBjob_load_adjustments\fP list. These correction
@@ -161,11 +161,14 @@ The maximum number of jobs any user may have running in a xxQS_NAMExx
 cluster at the same time. If set to 0 (default) the users may run an arbitrary
 number of jobs. 
 .SS "\fBschedule_interval\fP"
-At the time the scheduler thread initially registers at the event master thread in 
-.M xxqs_name_sxx_qmaster 8 process
+At the time
+.M xxqs_name_sxx_schedd 8
+initially registers to
+.M xxqs_name_sxx_qmaster 8
 \fBschedule_interval\fP is used to set the time interval in which
-the event master thread 
-sends scheduling event updates to the scheduler thread.
+.M xxqs_name_sxx_qmaster 8
+sends scheduling event updates to
+.M xxqs_name_sxx_schedd 8 .
 A scheduling event is a status change that has occurred within
 .M xxqs_name_sxx_qmaster 8
 which may trigger or affect scheduler decisions (e.g. a job has
@@ -289,13 +292,6 @@ See under
 .M sge_priority 5 
 for an overview on job priorities.
 .\"
-.SS "\fBweight_priority\fP"
-The weight applied on jobs normalized POSIX priority when determining priority
-finally used. Determines the relative importance of POSIX priority.
-See under
-.M sge_priority 5
-for an overview on job priorities.
-.\"
 .SS "\fBweight_ticket\fP"
 The weight applied on normalized ticket amount when determining priority finally used.
 Determines the relative importance of the ticket policies. See under 
@@ -359,9 +355,6 @@ If the offset is too low, resource reservations (see \fBmax_reservation\fP)
 can be delayed repeatedly due to an overly optimistic job circulation time.
 .\"
 .IP "\fIJC_FILTER\fP"
-.B Note:
-Deprecated, may be removed in future release.
-.br
 If set to true, the scheduler limits the number of jobs it looks at during
 a scheduling run. At the beginning of the scheduling run it assigns each
 job a specific category, which is based on the job's requests, priority
@@ -386,7 +379,7 @@ each scheduling run.
 If set equal to 1, the scheduler records information for each scheduling run allowing 
 to reproduce job resources utilization in the file \fI<xxqs_name_sxx_root>/<cell>/common/schedule\fP.\"
 .\"
-.IP "\fIPE_RANGE_ALG\fP"
+.IP "\fISELECT_PE_RANGE_ALG\fP"
 This parameter sets the algorithm for the pe range computation. The default is automatic, which
 means that the scheduler will select the best one, and it should not be necessary to 
 change it to a different setting in normal operation. If a custom setting is needed, the 
@@ -524,7 +517,7 @@ time limit the default_duration is not enforced.
 .nf
 .ta \w'<xxqs_name_sxx_root>/'u
 \fI<xxqs_name_sxx_root>/<cell>/common/sched_configuration\fP
-	scheduler thread configuration
+	xxqs_name_sxx_schedd configuration
 .fi
 .\"
 .\"
@@ -538,6 +531,7 @@ time limit the default_duration is not enforced.
 .M queue_conf 5 ,
 .M xxqs_name_sxx_execd 8 ,
 .M xxqs_name_sxx_qmaster 8 ,
+.M xxqs_name_sxx_schedd 8 .
 .I xxQS_NAMExx Installation and Administration Guide
 .\"
 .SH "COPYRIGHT"

@@ -159,39 +159,6 @@ void var_list_set_string(lList **varl, const char *name, const char *value)
    DEXIT;
 }
 
-/****** sgeobj/var/var_list_delete_string() ***********************************
-*  NAME
-*     var_list_delete_string -- delete a variable
-*
-*  SYNOPSIS
-*     void var_list_delete_string(lList **varl, 
-*                                 const char *name);
-*
-*  FUNCTION
-*     Deletes the variable <name> from the list <varl> if it exists.
-*
-*  INPUTS
-*     lList **varl      - VA_Type list
-*     const char *name  - the name of the variable
-*
-*  SEE ALSO
-*     sgeobj/var/var_list_set_string() 
-******************************************************************************/
-void var_list_delete_string(lList **varl, const char *name)
-{
-   lListElem *elem;
-
-   DENTER(TOP_LAYER, "var_list_delete_string");
-   if (varl == NULL || name == NULL) {
-      DRETURN_VOID;
-   }
-   elem = lGetElemStr(*varl, VA_variable, name);
-   if (elem != NULL) {
-      lRemoveElem(*varl, &elem);
-   }
-   DEXIT;
-}
-
 /****** sgeobj/var/var_list_set_int() *****************************************
 *  NAME
 *     var_list_set_int -- add/change an variable

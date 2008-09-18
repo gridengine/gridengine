@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: reporting.5,v $     Last Update: $Date: 2008/04/22 15:49:02 $     Revision: $Revision: 1.12 $
+.\" $RCSfile: reporting.5,v $     Last Update: $Date: 2008/04/07 15:06:52 $     Revision: $Revision: 1.11 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH REPORTING 5 "$Date: 2008/04/22 15:49:02 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH REPORTING 5 "$Date: 2008/04/07 15:06:52 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 reporting \- xxQS_NAMExx reporting file format
@@ -337,8 +337,6 @@ The ar_attribute record is written whenever a new advance reservation was added 
 attribute of an existing advance reservation has changed. It has following fields.
 .IP "\fBevent_time\fP"
 The time (GMT unix time stamp) when the event was generated.
-.IP "\fBsubmission_time\fP"
-The time (GMT unix time stamp) when the advance reservation was created.
 .IP "\fBar_number\fP"
 The advance reservation number identifying the reservation.
 .IP "\fBar_name\fP"
@@ -360,8 +358,6 @@ change can be from pending to active, but can also be triggered by system events
 outage. It has following fields.
 .IP "\fBar_state_change_time\fP"
 The time (GMT unix time stamp) when the event occurred which caused a state change.
-.IP "\fBsubmission_time\fP"
-The time (GMT unix time stamp) when the advance reservation was created.
 .IP "\fBar_number\fP"
 The advance reservation number identifying the reservation.
 .IP "\fBar_state\fP"
@@ -377,8 +373,6 @@ whenever a advance reservation terminates. Advance reservation accounting record
 following fields.
 .IP "\fBar_termination_time\fP"
 The time (GMT unix time stamp) when the advance reservation terminated.
-.IP "\fBsubmission_time\fP"
-The time (GMT unix time stamp) when the advance reservation was created.
 .IP "\fBar_number\fP"
 The advance reservation number identifying the reservation.
 .IP "\fBar_qname\fP"

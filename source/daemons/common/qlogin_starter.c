@@ -60,7 +60,7 @@
 #include "msg_common.h"
 
 #if defined(INTERIX)
-#  include "wingrid.h"
+#  include "misc.h"
 #endif
 
 /****** qrsh_starter/delete_qrsh_pid_file() *****************************************

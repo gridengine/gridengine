@@ -37,7 +37,6 @@ extern "C" {
 #endif
 
 #include "cull.h"
-#include "sge_select_queue.h"
 
 #define MAXMSGLEN 256
 
@@ -55,11 +54,11 @@ void schedd_mes_release(void);
 /* Get message structure */
 lListElem *schedd_mes_obtain_package(int *global_mes_count, int *job_mes_count);
 
-void schedd_mes_add(lList **monitor_alpp, bool monitor_next_run, u_long32 job_id, u_long32 message_number, ...);
+void schedd_mes_add(u_long32 job_number, u_long32 message_number, ...);
 
 void schedd_mes_add_join(u_long32 job_number, u_long32 message_number, ...);
 
-void schedd_mes_add_global(lList **monitor_alpp, bool monitor_next_run, u_long32 message_number, ...);
+void schedd_mes_add_global(u_long32 message_number, ...);
 
 void schedd_mes_set_logging(int bval);
 

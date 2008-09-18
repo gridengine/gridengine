@@ -70,7 +70,7 @@ libspoolb.a:	$(SPOOLBLIB_OBJS)
    && ../scripts/nonreentrant.sh -a `../dist/util/arch` -w $@
 
 libspoolb$(SHAREDEXT): $(SPOOLBLIB_OBJS) $(SPOOLLIB) $(SCHEDLIB) $(SGEOBJLIB) $(ALLLISTSLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB) $(RMONLIB) $(LCKLIB) 
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libspoolb$(SHAREDEXT) $(SPOOLBLIB_OBJS) -lspool -lsched -lsgeobj -lsgeobjd -lcull -lcomm -lcommlists -luti -lrmon -llck -ldb${BDB_LIB_SUFFIX} $(LIBS) \
+	$(SHAREDLD) $(SHARED_LFLAGS) -o libspoolb$(SHAREDEXT) $(SPOOLBLIB_OBJS) -lspool -lsched -lsgeobj -lsgeobjd -lcull -lcomm -lcommlists -luti -lrmon -llck -ldb${BDB_LIB_SUFFIX} $(LIBS) -lc \
    && ../scripts/nonreentrant.sh -a `../dist/util/arch` -w $@
 
 ###############################################################################

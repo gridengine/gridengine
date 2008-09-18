@@ -92,11 +92,6 @@
 #include "sge_thread_worker.h"
 #include "sge_thread_scheduler.h"
 
-#if defined(SOLARIS)
-#   include "sge_smf.h"
-#   include "sge_string.h"
-#endif
-
 void
 sge_signaler_initialize(sge_gdi_ctx_class_t *ctx)
 {
@@ -136,7 +131,7 @@ sge_signaler_terminate(void)
 
    thread = cl_thread_list_get_first_thread(Main_Control.signal_thread_pool);
    if (thread != NULL) {
-      DPRINTF(("getting canceled\n"));
+      DPRINTF((SFN" gets canceled\n", thread->thread_name));
       cl_thread_list_delete_thread(Main_Control.signal_thread_pool, thread);
    }
    DRETURN_VOID;
@@ -200,11 +195,12 @@ void* sge_signaler_main(void* arg)
       /*
        * Wait for signals
        */
-      sigwait(&sig_set, &sig_num);
+      MONITOR_IDLE_TIME(sigwait(&sig_set, &sig_num), (&monitor), mconf_get_monitor_time(),
+                        mconf_is_monitor_message());
 
       thread_start_stop_profiling();
 
-      DPRINTF(("got signal %d\n", sig_num));
+      DPRINTF(("%s: got signal %d\n", thread_config->thread_name, sig_num));
 
       switch (sig_num) {
          case SIGINT:
@@ -215,15 +211,6 @@ void* sge_signaler_main(void* arg)
              */
             sge_thread_notify_all_waiting();
 
-#if defined(SOLARIS)
-            if (sge_smf_used() == 1) {
-               /* We don't do disable on svcadm restart */
-               if (sge_strnullcmp(sge_smf_get_instance_state(), SCF_STATE_STRING_ONLINE) == 0 &&
-                   sge_strnullcmp(sge_smf_get_instance_next_state(), SCF_STATE_STRING_NONE) == 0) {
-                  sge_smf_temporary_disable_instance();
-               }
-            }
-#endif   
             /*
              * Now this thread can exit. The main thread does the remaining
              * shutdown activities

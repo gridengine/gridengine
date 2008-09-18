@@ -76,7 +76,7 @@
 #define MSG_STATUS_ABNORMALTERMINATIONFOSHEPHERDFORJOBXYEXITSTATEFILEISEMPTY_S    _MESSAGE(29023, _("abnormal termination of shepherd for job "SFN": \"exit_status\" file is empty"))
 #define MSG_SHEPHERD_DIEDTHROUGHSIGNAL    _MESSAGE(29024, _("shepherd died through signal"))
 #define MSG_SHEPHERD_NOPIDFILE    _MESSAGE(29025, _("no \"pid\" file for shepherd"))
-#define MSG_SHEPHERD_EXITEDWISSTATUS_IS    _MESSAGE(29026, _("shepherd exited with exit status %d: %s"))
+#define MSG_SHEPHERD_EXITEDWISSTATUS_I    _MESSAGE(29026, _("shepherd exited with exit status %d"))
 #define MSG_JOB_CANTREADERRORFILEFORJOBXY_S    _MESSAGE(29027, _("can't read error file for job "SFN))
 #define MSG_JOB_CANTREADUSAGEFILEFORJOBXY_S    _MESSAGE(29028, _("can't read usage file for job "SFN))
 #define MSG_JOB_WXDIEDTHROUGHSIGNALYZ_SSI    _MESSAGE(29029, _("job "SFN" died through signal "SFN" (%d)"))
@@ -230,9 +230,12 @@
 #define MSG_JOB_TASKWITHOUTJOB_U      _MESSAGE(29140, _("received task belongs to job "sge_U32CFormat" but this job is not here"))
 #define MSG_JOB_TASKNOTASKINJOB_UU    _MESSAGE(29141, _("received task belongs to job "sge_U32CFormat" but this job is here but the JobArray task "sge_U32CFormat" is not here"))
 #define MSG_JOB_TASKNOSUITABLEJOB_U   _MESSAGE(29142, _("received task belongs to job "sge_U32CFormat" but this job is not suited for starting tasks"))
+/* #define MSG_JOB_TASKALREADYEXISTS_US  _message(29143, _("received task "sge_U32CFormat"/"SFN" which is already here")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_JOB_NOTASKPASSINGIF_SU    _message(29144, _(SFN" does not fulfill task passing interface for job "sge_U32CFormat)) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_JOB_NOFREEQ_USSS          _MESSAGE(29145, _("no free queue for job "sge_U32CFormat" of user "SFN"@"SFN" (localhost = "SFN")"))
-#define MSG_JOB_INVALIDJATASK_REQUEST _MESSAGE(29146, _("invalid task list in job start request"))
-#define MSG_JOB_SAMEPATHSFORINPUTANDOUTPUT_SSS   _MESSAGE(29147, _("same paths given for stdin ("SFQ") and "SFN" ("SFQ")"))
+/* #define MSG_JOB_NOSUCHQ_SUSS          _message(29146, _("no such queue "SFQ" as requested by job "sge_U32CFormat" from user "SFN"@"SFN)) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_JOB_NOREQQONHOST_SSS      _message(29147, _("requested queue "SFQ" resides not at this host "SFN" but at host "SFN)) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_JOB_REQQFULL_SII          _message(29148, _("requested queue "SFQ" is already full (%d/%d)")) __TS Removed automatically from testsuite!! TS__*/
 /*
 ** execd_kill_execd.c
 */

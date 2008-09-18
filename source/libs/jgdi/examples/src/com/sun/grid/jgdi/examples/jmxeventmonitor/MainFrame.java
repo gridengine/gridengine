@@ -411,7 +411,7 @@ public class MainFrame extends JFrame {
                 
                 try {
                     statusLabel.setText("Connecting to " + dlg.getHost() + ":" + dlg.getPort());
-                    controller.connect(dlg.getHost(), dlg.getPort(), new String []  { dlg.getUsername(), new String(dlg.getPassword()) }, dlg.getCaTop(), dlg.getKeystore(), dlg.getKeyStorePassword());
+                    controller.connect(dlg.getHost(), dlg.getPort(), new String []  { dlg.getUsername(), new String(dlg.getPassword()) });
                     dlg.saveInPrefs();
                     break;
                 } catch (Exception ex) {

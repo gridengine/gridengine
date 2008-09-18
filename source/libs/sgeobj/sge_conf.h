@@ -39,7 +39,6 @@
 #define REPRIORITIZE "reprioritize"
 
 #define GID_RANGE_NOT_ALLOWED_ID 100
-#define RLIMIT_UNDEFINED -9999
 
 typedef int (*tDaemonizeFunc)(void *ctx);
 
@@ -112,6 +111,7 @@ bool mconf_get_acct_reserved_usage(void);
 bool mconf_get_sharetree_reserved_usage(void);
 bool mconf_get_keep_active(void);
 bool mconf_get_enable_windomacc(void);
+bool mconf_get_simulate_hosts(void);
 bool mconf_get_simulate_execds(void);
 bool mconf_get_simulate_jobs(void);
 long mconf_get_ptf_max_priority(void);
@@ -124,7 +124,9 @@ char* mconf_get_notify_kill(void);
 bool mconf_get_disable_reschedule(void);  
 int mconf_get_scheduler_timeout(void);
 int mconf_get_max_dynamic_event_clients(void);
+int mconf_get_max_order_limit(void);
 void mconf_set_max_dynamic_event_clients(int value);
+void mconf_set_max_order_limit(int value);
 bool mconf_get_set_lib_path(void);
 bool mconf_get_inherit_env(void);
 int mconf_get_spool_time(void);
@@ -140,15 +142,5 @@ bool mconf_get_enable_forced_qdel(void);
 int mconf_get_max_job_deletion_time(void);
 bool mconf_get_enable_addgrp_kill(void);
 u_long32 mconf_get_pdc_interval(void);
-bool mconf_get_enable_reschedule_kill(void);
-bool mconf_get_enable_reschedule_slave(void);
-void mconf_get_h_descriptors(char **pret);
-void mconf_get_s_descriptors(char **pret);
-void mconf_get_h_maxproc(char **pret);
-void mconf_get_s_maxproc(char **pret);
-void mconf_get_h_memorylocked(char **pret);
-void mconf_get_s_memorylocked(char **pret);
-void mconf_get_h_locks(char **pret);
-void mconf_get_s_locks(char **pret);
 
 #endif /* __SGE_CONF_H */

@@ -101,12 +101,12 @@ typedef int (*evm_add_func_t)(
  * SEE ALSO
  *  EventMaster/sge_removce_event_client
  **/
-typedef void (*evm_remove_func_t) (
+typedef void (*evm_remove_func_t)(
    u_long32 aClientID               /* the event client id to remove */
 );
 
 /* documentation see libs/evc/sge_event_client.c */
-/* #define EV_NO_FLUSH -1 */
+/* #define EV_NO_FLUSH -1*/
 
 #define EV_NOT_SUBSCRIBED false 
 #define EV_SUBSCRIBED true
@@ -167,14 +167,14 @@ enum {
    EV_sub_array,             /* contains an array of subscribed events, only used in qmaster */      
    
    EV_state,                 /* identifies the state the event client is in. Sofar we have: connected, closing, terminated */
-   EV_update_function        /* stores an update function for process internal event clients (threads) */
+   EV_update_function        /* stores an update function for process internal event clients (threads)*/
 };
 
 LISTDEF(EV_Type)
    JGDI_ROOT_OBJ(EventClient, SGE_EVENT_LIST, GET_LIST)
 
 /*    SGE_ULONG(EV_id, CULL_DEFAULT) */
-   SGE_ULONG(EV_id, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_DEFAULT)
+   SGE_ULONG(EV_id, CULL_PRIMARY_KEY | CULL_UNIQUE | CULL_DEFAULT)
    SGE_STRING(EV_name, CULL_DEFAULT)
    
    SGE_HOST(EV_host, CULL_DEFAULT)
@@ -394,7 +394,7 @@ typedef enum {
  */
 typedef void (*evm_ack_func_t)(
    u_long32,         /* the event client id */
-   u_long32          /* the last event to ack */
+   ev_event         /* the last event to ack */
 );
 
 #define IS_TOTAL_UPDATE_EVENT(x) \

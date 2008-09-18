@@ -80,7 +80,7 @@
 #endif
 
 #ifdef INTERIX
-#include "wingrid.h"
+#include "misc.h"
 #endif
 
 #define ENCODE_TO_STRING   1
@@ -298,8 +298,6 @@ int sge_ssl_setup_security_path(const char *progname, const char *user) {
                  SGE_COMMD_SERVICE, sge_get_default_cell());
       }
       user_local_dir = userdir;
-
-      FREE(buffer);
    }
 
 
@@ -1136,7 +1134,7 @@ struct dispatch_entry *de
  *  NOTES
  *     MT-NOTE: tgt2cc() is not MT safe (assumptions)
  */
-void tgt2cc(lListElem *jep, const char *rhost)
+void tgt2cc(lListElem *jep, const char *rhost, const char* target)
 {
 
 #ifdef KERBEROS
@@ -1159,7 +1157,7 @@ void tgt2cc(lListElem *jep, const char *rhost)
          }
       }
       if (rc == 0)
-         if (krb_put_tgt(rhost, prognames[EXECD], 0, jid, tgt_creds) == 0) {
+         if (krb_put_tgt(rhost, target, 0, jid, tgt_creds) == 0) {
             krb_set_tgt_id(jid);
  
             tgt_creds = NULL;
@@ -1183,12 +1181,12 @@ void tgt2cc(lListElem *jep, const char *rhost)
  *  NOTES
  *     MT-NOTE: tgtcclr() is MT safe (assumptions)
  */
-void tgtcclr(lListElem *jep, const char *rhost)
+void tgtcclr(lListElem *jep, const char *rhost, const char* target)
 {
 #ifdef KERBEROS
 
    /* clear client TGT */
-   krb_put_tgt(rhost, prognames[EXECD], 0, lGetUlong(jep, JB_job_number), NULL);
+   krb_put_tgt(rhost, target, 0, lGetUlong(jep, JB_job_number), NULL);
    krb_set_tgt_id(0);
 
 #endif

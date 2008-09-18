@@ -1019,7 +1019,7 @@ u_long32 flags
 
          if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
             answer_list_add_sprintf(&answer, STATUS_EEXIST, ANSWER_QUALITY_WARNING,
-                  MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S, *sp);
+               MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S, *sp);
          }
 
          /* next field is name */
@@ -1109,7 +1109,6 @@ u_long32 flags
                     MSG_PARSE_WRONGSTDOUTPATHLISTFORMATXSPECTOOOPTION_S, *sp );
              DRETURN(answer);
          }
-
          ep_opt = sge_add_arg(pcmdline, o_OPT, lListT, *(sp - 1), *sp);
          lSetList(ep_opt, SPA_argval_lListT, stdout_path_list);
 
@@ -1651,7 +1650,7 @@ DTRACE;
          DPRINTF(("\"-w %s\"\n", *sp));
 
          if (!strcmp("e", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, w_OPT, lIntT, *(sp - 1), *sp);
+            ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
             if (prog_number == QRSUB) {
                lSetInt(ep_opt, SPA_argval_lIntT, AR_ERROR_VERIFY);
             } else {
@@ -1664,12 +1663,12 @@ DTRACE;
                      MSG_PARSE_INVALIDOPTIONARGUMENTWX_S, *sp);
                DRETURN(answer);
             } else {
-               ep_opt = sge_add_arg(pcmdline, w_OPT, lIntT, *(sp - 1), *sp);
+               ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
             }
             lSetInt(ep_opt, SPA_argval_lIntT, WARNING_VERIFY);
          }
          else if (!strcmp("n", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, w_OPT, lIntT, *(sp - 1), *sp);
+            ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
             if (prog_number == QRSUB) {
                answer_list_add_sprintf(&answer,STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
                      MSG_PARSE_INVALIDOPTIONARGUMENTWX_S, *sp);
@@ -1679,7 +1678,7 @@ DTRACE;
             }
          }
          else if (!strcmp("v", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, w_OPT, lIntT, *(sp - 1), *sp);
+            ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
             if (prog_number == QRSUB) {
                lSetInt(ep_opt, SPA_argval_lIntT, AR_JUST_VERIFY);
             } else {
@@ -1766,28 +1765,7 @@ DTRACE;
       /* "-inherit" - accept, but do nothing, must be handled by caller */
 
       if(!strcmp("-inherit", *sp)) {
-         ep_opt = sge_add_noarg(pcmdline, inherit_OPT, *sp, NULL);
-         sp++;
-         continue;
-      }
-/*-----------------------------------------------------------------------------*/
-      /* "-pty" - accept, but do nothing, must be handled by caller */
-
-      if(!strcmp("-pty", *sp)) {
-         /* next field is "y|n" */
-         sp++;
-         if (!*sp) {
-             answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
-                                     MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-pty");
-             DRETURN(answer);
-         }
-
-         DPRINTF(("\"-pty %s\"\n", *sp));
-
-         if (set_yn_option(pcmdline, pty_OPT, *(sp - 1), *sp, &answer) != STATUS_OK) {
-            DRETURN(answer);
-         }
-
+         ep_opt = sge_add_noarg(pcmdline, verbose_OPT, *sp, NULL);
          sp++;
          continue;
       }
@@ -2346,33 +2324,37 @@ char *dest_str
 
    DENTER(TOP_LAYER, "cull_parse_destination_identifier_list");
 
-   if (lpp == NULL) {
-      DRETURN(1);
+   if (!lpp) {
+      DEXIT;
+      return 1;
    }
 
    s = sge_strdup(NULL, dest_str);
-   if (s == NULL) {
+   if (!s) {
       *lpp = NULL;
-      DRETURN(3);
+      DEXIT;
+      return 3;
    }
-
    str_str = string_list(s, ",", NULL);
-   if (str_str == NULL || *str_str == NULL) {
+   if (!str_str || !*str_str) {
       *lpp = NULL;
       FREE(s);
-      DRETURN(2);
+      DEXIT;
+      return 2;
    }
 
    i_ret = cull_parse_string_list(str_str, "destin_ident_list", QR_Type, rule, lpp);
    if (i_ret) {
       FREE(s);
       FREE(str_str);
-      DRETURN(3);
+      DEXIT;
+      return 3;
    }
 
    FREE(s);
    FREE(str_str);
-   DRETURN(0);
+   DEXIT;
+   return 0;
 }
 
 /***************************************************************************/

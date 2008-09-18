@@ -44,7 +44,6 @@
 #include "parse.h"
 #include "sge_utility.h"
 #include "sge_hgroup.h"
-#include "sge_hostname.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"

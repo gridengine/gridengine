@@ -204,7 +204,7 @@ int do_signal_queue(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, sge_pack_buffe
  SIGUSR1           | SIGUSR1
  SIGUSR2           | SIGXCPU
  SIGCONT           | SIGCONT
- SIGWINCH          | SIGSTOP (not used anymore, use SIGTTIN to fwd SIGSTOP )
+ SIGWINCH          | SIGSTOP
  SIGTSTP           | SIGKILL
 
  SIGTTIN forces the shepherd to look into the "signal" file. This file
@@ -231,9 +231,10 @@ int sge_execd_deliver_signal(u_long32 sig, lListElem *jep, lListElem *jatep) {
          sge_sig2str(sig)));
 
    /* for simulated hosts do nothing */
-   if (mconf_get_simulate_jobs()) {
+   if(mconf_get_simulate_hosts() && 
+      (lGetUlong(jatep, JAT_status) & JSIMULATED)) {
 
-      if (sig == SGE_SIGKILL) {
+      if(sig == SGE_SIGKILL) {
          lListElem *jr = NULL;
          u_long32 jobid, jataskid;
          u_long32 wallclock;
@@ -262,12 +263,12 @@ int sge_execd_deliver_signal(u_long32 sig, lListElem *jep, lListElem *jatep) {
          add_usage(jr, "exit_status", NULL, 137);
          add_usage(jr, "signal", NULL, sig);
 
-         lSetUlong(jatep, JAT_status, JEXITING);
+         lSetUlong(jatep, JAT_status, JEXITING | JSIMULATED);
 
          flush_job_report(jr);
       }
       
-      DRETURN(0);
+      return 0;
    }
 
 /*
@@ -480,12 +481,15 @@ int sge_kill(int pid, u_long32 sge_signal, u_long32 job_id, u_long32 ja_task_id,
        SIGUSR1           | SIGUSR1
        SIGUSR2           | SIGXCPU
        SIGCONT           | SIGCONT
-       SIGWINCH          | SIGSTOP (not used anymore, use SIGTTIN to fwd SIGSTOP )
+       SIGWINCH          | SIGSTOP
        SIGTSTP           | SIGKILL
    */ 
    direct_signal = 1;
 
    switch (sig) {
+   case SIGSTOP:
+      sig = SIGWINCH;
+      break;
    case SIGKILL:
       sig = SIGTSTP;
       break;
@@ -498,7 +502,6 @@ int sge_kill(int pid, u_long32 sge_signal, u_long32 job_id, u_long32 ja_task_id,
    case SIGUSR1:
    case SIGCONT:
       break;
-   /* We now fwd SIGSTOP using file(SIGTTIN) rather than SIGWINCH, refer CR6623174 */
    default:
       direct_signal = 0;        /* communication has to be done via file */
    }

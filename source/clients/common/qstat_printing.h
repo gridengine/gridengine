@@ -77,7 +77,7 @@ void sge_printf_header(u_long32 full_listing, u_long32 sge_ext);
 */
 #include "sge_qhost.h"
 
-int 
+void 
 sge_print_jobs_queue(lListElem *qep, lList *job_list, const lList *pe_list, 
                      lList *user_list, lList *ehl, lList *cl, 
                      int print_jobs_of_queue, u_long32 full_listing, 

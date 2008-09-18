@@ -50,7 +50,7 @@ ALLDEPENDENCIES = qidl_depend \
                   sge_depend \
                   pw_depend \
                   culltrans_depend \
-                  $(KRBDEPEND)
+                  $(SECDEPEND) $(KRBDEPEND)
 
 
 CULLSRC    = ../gdilib/sge_ckptL.h \
@@ -198,7 +198,7 @@ include $(QIDLSDIR)/object.rules
 # include $(JQMONDIR)/Makefile
 
 #---------------------------------------------------------------------
-ALLLIBS     = $(SCHEDLIB) $(GDILIB) $(KRBLIBS) \
+ALLLIBS     = $(SCHEDLIB) $(GDILIB) $(SECLIBS) $(KRBLIBS) \
               $(CULLLIB) $(COMMLIB) $(PWLIB) $(UTILIB) $(RMONLIB) 
 QCMASTEROBJS= $(CORBASRC:.cpp=.o) $(QMASTERSRC:.c=.o) $(ALLLIBS)
 #---------------------------------------------------------------------

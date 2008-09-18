@@ -382,8 +382,6 @@ static void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* 
    sge_dstring_free(&tmp_buf);
    sge_dstring_free(&line);
    sge_dstring_free(&line2);
-   /* Ugly, but needed for remote invocation with -wait or -ask options */
-   fflush((options->e == 1) ? stderr : stdout); 
    DEXIT;
 }
 

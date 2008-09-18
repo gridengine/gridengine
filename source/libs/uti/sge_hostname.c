@@ -178,6 +178,7 @@ int sge_get_qmaster_port(bool *from_services) {
 
       /* set new port value */
       cached_port = int_port;
+
    }
 
    sge_mutex_unlock("get_qmaster_port_mutex", SGE_FUNC, __LINE__, &get_qmaster_port_mutex);
@@ -865,8 +866,8 @@ static void sge_host_delete(host *h)
       else
          hostlist = hostlist->next;
    }
-   sge_strafree(&(h->he.h_aliases));
-   sge_strafree(&(h->he.h_addr_list));
+   sge_strafree(h->he.h_aliases);
+   sge_strafree(h->he.h_addr_list);
    free(h);
 
    sge_host_delete(predalias);
@@ -1173,7 +1174,6 @@ char *sge_host_get_mainname(host *h)
 *        - Domain name may be ignored
 *        - Domain name may be replaced by a 'default domain'
 *        - Hostnames may be used as they are.
-*        - straight strcpy() for hostgroup names
 *
 *  INPUTS
 *     char *dst       - possibly modified hostname
@@ -1189,17 +1189,11 @@ char *sge_host_get_mainname(host *h)
 void sge_hostcpy(char *dst, const char *raw)
 {
    bool ignore_fqdn = bootstrap_get_ignore_fqdn();
-   bool is_hgrp = is_hgroup_name(raw);
    const char *default_domain;
 
    if (dst == NULL || raw == NULL) {
       return;
    }
-   if (is_hgrp) {
-      /* hostgroup name: not in FQDN format, copy the entire string*/
-      sge_strlcpy(dst, raw, CL_MAXHOSTLEN);
-      return;
-   } 
    if (ignore_fqdn) {
       char *s = NULL;
       /* standard: simply ignore FQDN */
@@ -1224,7 +1218,7 @@ void sge_hostcpy(char *dst, const char *raw)
  
       sge_strlcpy(dst, raw, CL_MAXHOSTLEN);
    }
-
+   
    return;
 }  
 
@@ -1322,35 +1316,4 @@ int sge_hostmatch(const char *h1, const char*h2)
  
    DEXIT;
    return cmp;
-}
-
-
-/****** uti/hostname/is_hgroup_name() ****************************************
-*  NAME
-*     is_hgroup_name() -- Is the given name a hostgroup name 
-*
-*  SYNOPSIS
-*     bool is_hgroup_name(const char *name) 
-*
-*  FUNCTION
-*     Is the given name a hostgroup name 
-*
-*  NOTE
-*     This function is also used for usergroup in resource quota sets
-*
-*  INPUTS
-*     const char *name - hostname or hostgroup name 
-*
-*  RESULT
-*     bool - true for hostgroupnames otherwise false
-******************************************************************************/
-bool 
-is_hgroup_name(const char *name)
-{
-   bool ret = false;
-
-   if (name != NULL) {
-      ret = (name[0] == HOSTGROUP_INITIAL_CHAR) ? true : false;
-   }
-   return ret;
 }

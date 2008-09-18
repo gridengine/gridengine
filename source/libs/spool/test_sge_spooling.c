@@ -657,7 +657,7 @@ int main(int argc, char *argv[])
    /* parse commandline parameters */
    if(argc != 4) {
       ERROR((SGE_EVENT, "usage: test_sge_spooling <method> <shared lib> <arguments>\n"));
-      SGE_EXIT((void**)&ctx, 1);
+      SGE_EXIT(NULL, 1);
    }
 
    if (sge_gdi2_setup(&ctx, QEVENT, MAIN_THREAD, &answer_list) != AE_OK) {

@@ -48,7 +48,7 @@
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_connection_list_setup()"
-int cl_connection_list_setup(cl_raw_list_t** list_p, char* list_name, int enable_locking, cl_bool_t create_hash) {
+int cl_connection_list_setup(cl_raw_list_t** list_p, char* list_name, int enable_locking) {
    cl_connection_list_data_t* ldata = NULL;
    int ret_val;
    ldata = (cl_connection_list_data_t*) malloc(sizeof(cl_connection_list_data_t));
@@ -61,22 +61,11 @@ int cl_connection_list_setup(cl_raw_list_t** list_p, char* list_name, int enable
    ret_val = cl_raw_list_setup(list_p, list_name , enable_locking); 
    if ( ret_val != CL_RETVAL_OK) {
       free(ldata);
+      ldata = NULL;
       return ret_val;
    }
-
    /* create hashtable */
-   if (create_hash == CL_TRUE) {
-      ldata->r_ht = sge_htable_create(4, dup_func_string, hash_func_string, hash_compare_string);
-      if (ldata->r_ht == NULL) {
-         cl_raw_list_cleanup(list_p);
-         free(ldata);
-         return CL_RETVAL_MALLOC;
-      }
-      CL_LOG_INT(CL_LOG_INFO,"created hash table with size =", 4);
-   } else {
-      ldata->r_ht = NULL;
-      CL_LOG(CL_LOG_INFO,"created NO hash table!");
-   }
+   ldata->r_ht =  sge_htable_create(4, dup_func_string, hash_func_string, hash_compare_string);
 
    /* set private list data */
    (*list_p)->list_data = ldata;
@@ -99,9 +88,7 @@ int cl_connection_list_cleanup(cl_raw_list_t** list_p) {
    ldata = (*list_p)->list_data;
    (*list_p)->list_data = NULL;
    if (ldata != NULL) {
-      if (ldata->r_ht != NULL) {
-         sge_htable_destroy(ldata->r_ht);
-      }
+      sge_htable_destroy(ldata->r_ht);
       free(ldata);
       ldata = NULL;
    }
@@ -109,19 +96,27 @@ int cl_connection_list_cleanup(cl_raw_list_t** list_p) {
    return cl_raw_list_cleanup(list_p);
 }
 
-
-#ifdef __CL_FUNCTION__
-#undef __CL_FUNCTION__
-#endif
-#define __CL_FUNCTION__ "cl_create_endpoint_string()"
 char *cl_create_endpoint_string(cl_com_endpoint_t *endpoint)
 {
-   char help[2048]; /* max length of endpoint name is 256 */
+   int size;
+   char *ret;
+
    if (endpoint == NULL) {
       return NULL;
    }
-   snprintf(help, 2048, "%lu%s%lu", (unsigned long)endpoint->addr.s_addr, endpoint->comp_name, endpoint->comp_id);
-   return strdup(help);
+
+   size = cl_util_get_ulong_number_length(endpoint->addr.s_addr);
+   size += strlen(endpoint->comp_name);
+   size += cl_util_get_ulong_number_length(endpoint->comp_id);
+   size++;
+
+   ret = (char*)malloc(sizeof(char*)*(size)); 
+   if (ret != NULL) {
+      snprintf(ret, size, "%lu%s%lu", (unsigned long)endpoint->addr.s_addr,
+               endpoint->comp_name, endpoint->comp_id);
+   }
+
+   return ret;
 }
 
 #ifdef __CL_FUNCTION__
@@ -168,9 +163,7 @@ int cl_connection_list_append_connection(cl_raw_list_t* list_p, cl_com_connectio
       /* only add into hash if the endpoint is already filled. For server
          connection this is not the case when the endpoint is added to the
          list. The hash will be added later when the endpoint is known */
-      if (ldata->r_ht != NULL) {
-         sge_htable_store(ldata->r_ht, connection->remote->hash_id, new_elem);
-      }
+      sge_htable_store(ldata->r_ht, connection->remote->hash_id, new_elem);
    }
 
    /* unlock the thread list */
@@ -187,7 +180,7 @@ int cl_connection_list_append_connection(cl_raw_list_t* list_p, cl_com_connectio
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_connection_list_remove_connection()"
-int cl_connection_list_remove_connection(cl_raw_list_t* list_p, cl_com_connection_t* connection, int do_lock ) {
+int cl_connection_list_remove_connection(cl_raw_list_t* list_p, cl_com_connection_t* connection, int do_lock ) {  /* CR check */
    int function_return = CL_RETVAL_CONNECTION_NOT_FOUND;
    int ret_val = CL_RETVAL_OK;
    int is_do_free = 0;
@@ -204,30 +197,15 @@ int cl_connection_list_remove_connection(cl_raw_list_t* list_p, cl_com_connectio
       }
    }
 
-   ldata = list_p->list_data;
-   if (ldata->r_ht != NULL) {
-      if (sge_htable_lookup(ldata->r_ht, connection->remote->hash_id, (const void **)&elem) == True) {
-         /* found matching element */
-         cl_raw_list_remove_elem(list_p, elem->raw_elem);
-         is_do_free = 1;
-         function_return = CL_RETVAL_OK;
-         sge_htable_delete(ldata->r_ht, connection->remote->hash_id);
-      }
-   } else {
-      /* Search without having hash table */
-      CL_LOG(CL_LOG_INFO,"no hash table available, searching sequencial");
-      elem = cl_connection_list_get_first_elem(list_p);
-      while ( elem != NULL) {
-         if (elem->connection == connection) {
-            /* found matching element */
-            cl_raw_list_remove_elem(list_p, elem->raw_elem);
-            is_do_free = 1;
-            function_return = CL_RETVAL_OK;
-            break;
-         }
-         elem = cl_connection_list_get_next_elem(elem);
-      } 
-   }
+   if (sge_htable_lookup(ldata->r_ht, connection->remote->hash_id, (const void **)&elem) == True) {
+      /* found matching element */
+      cl_raw_list_remove_elem(list_p, elem->raw_elem);
+      is_do_free = 1;
+      function_return = CL_RETVAL_OK;
+
+      ldata = list_p->list_data;
+      sge_htable_delete(ldata->r_ht, connection->remote->hash_id);
+   } 
 
    /* unlock the thread list */
    if (do_lock != 0) {
@@ -253,34 +231,38 @@ int cl_connection_list_remove_connection(cl_raw_list_t* list_p, cl_com_connectio
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_connection_list_destroy_connections_to_close()"
-int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle) {
+int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p) {
    int ret_val = CL_RETVAL_OK;
    cl_bool_t timeout_flag = cl_com_get_ignore_timeouts_flag();
    cl_connection_list_elem_t* elem = NULL;
-   cl_connection_list_elem_t* act_elem = NULL;
+   cl_connection_list_elem_t* elem2 = NULL;
    cl_com_connection_t* connection = NULL;
    cl_raw_list_t *delete_connections = NULL;
+
    struct timeval now;
 
-   if (handle == NULL ) {
-      return CL_RETVAL_PARAMS;
-   }
-
-   if (handle->connection_list == NULL) {
+   if (list_p == NULL ) {
       return CL_RETVAL_PARAMS;
    }
 
    /* lock list */
-   if ( (ret_val = cl_raw_list_lock(handle->connection_list)) != CL_RETVAL_OK) {
+   if ( (ret_val = cl_raw_list_lock(list_p)) != CL_RETVAL_OK) {
       return ret_val;
    }
 
    gettimeofday(&now,NULL);
-   elem = cl_connection_list_get_first_elem(handle->connection_list);
+   elem = cl_connection_list_get_first_elem(list_p);
    while ( elem != NULL) {
-      act_elem = elem;
+      elem2 = elem;
+      connection = elem2->connection;
       elem = cl_connection_list_get_next_elem(elem);
-      connection = act_elem->connection;
+
+#if 0
+      CL_LOG_STR(CL_LOG_ERROR,"connection host is -->",connection->local->comp_host);
+      CL_LOG_STR(CL_LOG_ERROR,"connection name is -->",connection->local->comp_name);
+      CL_LOG_INT(CL_LOG_ERROR,"connection   id is -->",connection->local->comp_id);
+#endif
+
       if (connection->data_flow_type == CL_CM_CT_MESSAGE ) {
          if (connection->connection_state == CL_CONNECTED &&
              connection->connection_sub_state == CL_COM_DONE) {
@@ -288,7 +270,11 @@ int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle) {
             if (connection->connection_close_time.tv_sec == 0) {
                /* there is no timeout set, set connection close time for this connection */
                gettimeofday(&(connection->connection_close_time),NULL);
-               connection->connection_close_time.tv_sec += handle->close_connection_timeout;
+               if (connection->handler != NULL) {
+                  connection->connection_close_time.tv_sec += connection->handler->close_connection_timeout;
+               } else {
+                  connection->connection_close_time.tv_sec += CL_DEFINE_DELETE_MESSAGES_TIMEOUT_AFTER_CCRM;
+               }
             }
 
             if( cl_raw_list_get_elem_count(connection->received_message_list) == 0 &&
@@ -310,10 +296,13 @@ int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle) {
       }
 
       /* check connection timeout time */
-      if (connection->connection_state == CL_CONNECTED || 
-          connection->connection_state == CL_OPENING   ||
-          connection->connection_state == CL_CONNECTING) {
-         if (connection->last_transfer_time.tv_sec + handle->connection_timeout <= now.tv_sec) {
+      if (connection->handler != NULL &&
+         (connection->connection_state == CL_CONNECTED || 
+          connection->connection_state == CL_OPENING ||
+          connection->connection_state == CL_CONNECTING)) {
+         int h_timeout = connection->handler->connection_timeout;
+
+         if (connection->last_transfer_time.tv_sec + h_timeout <= now.tv_sec) {
             switch (connection->data_flow_type) {
                case CL_CM_CT_MESSAGE: {
                   CL_LOG(CL_LOG_WARNING,"got connection transfer timeout ...");
@@ -368,10 +357,6 @@ int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle) {
          }
       }
 
-     /*
-      * This code will do the cleanup for connections in CL_CLOSING state. Connections are dechained 
-      * and removed after unlocking the connection list 
-      */
       if (connection->connection_state == CL_CLOSING ) {
          cl_connection_list_data_t* ldata = NULL;
          if (connection->connection_sub_state == CL_COM_DO_SHUTDOWN) {
@@ -392,75 +377,69 @@ int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle) {
             connection->connection_sub_state = CL_COM_SHUTDOWN_DONE;
          }
 
-         if (delete_connections == NULL) {
-            if (cl_connection_list_setup(&delete_connections, "delete_connections", 0, CL_FALSE) != CL_RETVAL_OK) {
-               continue;
-            }
+         if (delete_connections == NULL &&
+             cl_connection_list_setup(&delete_connections, "delete_connections", 0) != CL_RETVAL_OK) {
+            continue;
          }
 
-         handle->statistic->bytes_sent +=  connection->statistic->bytes_sent;
-         handle->statistic->bytes_received +=  connection->statistic->bytes_received;
-         handle->statistic->real_bytes_sent +=  connection->statistic->real_bytes_sent;
-         handle->statistic->real_bytes_received +=  connection->statistic->real_bytes_received;
+         if (connection->handler != NULL) {
+            connection->handler->statistic->bytes_sent +=  connection->statistic->bytes_sent;
+            connection->handler->statistic->bytes_received +=  connection->statistic->bytes_received;
+            connection->handler->statistic->real_bytes_sent +=  connection->statistic->real_bytes_sent;
+            connection->handler->statistic->real_bytes_received +=  connection->statistic->real_bytes_received;
+         }
 
-         cl_raw_list_dechain_elem(handle->connection_list, act_elem->raw_elem); 
+         cl_raw_list_dechain_elem(list_p, elem2->raw_elem); 
 
          if (connection->remote != NULL) {
-            ldata = handle->connection_list->list_data;
-            if (ldata->r_ht != NULL) {
-               sge_htable_delete(ldata->r_ht, connection->remote->hash_id);
-            }
+            ldata = list_p->list_data;
+            sge_htable_delete(ldata->r_ht, connection->remote->hash_id);
          }
 
-         cl_raw_list_append_dechained_elem(delete_connections, act_elem->raw_elem);
+         cl_raw_list_append_dechained_elem(delete_connections, elem2->raw_elem);
       }
-   }
+   } 
 
    /* unlock list */
-   if ( (ret_val = cl_raw_list_unlock(handle->connection_list)) != CL_RETVAL_OK) {
+   if ( (ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
       CL_LOG(CL_LOG_ERROR,"error unlocking list");
    }
 
-   /* ATTENTION: This code is executed without having the connection list lock !!! */
    if (delete_connections != NULL) {
-      cl_com_message_t* message = NULL;
-      cl_message_list_elem_t* message_list_elem = NULL;
-
-      pthread_mutex_lock(handle->messages_ready_mutex);
-      cl_raw_list_lock(handle->received_message_queue);
-      while ( (elem = cl_connection_list_get_first_elem(delete_connections))!= NULL) {
-         /* get connection from elem */
-         connection = elem->connection;
-
-         cl_raw_list_lock(connection->received_message_list);
+      /* remove dead connections */
+      while ( (elem2 = cl_connection_list_get_first_elem(delete_connections))!= NULL) {
+         /* found connection to close  */
+         cl_com_message_t* message = NULL;
+         cl_message_list_elem_t* message_list_elem = NULL;
+   
+         connection = elem2->connection;
+   
          while((message_list_elem = cl_message_list_get_first_elem(connection->received_message_list)) != NULL) {
             message = message_list_elem->message;
             if (message->message_state == CL_MS_READY) {
-               /* decrease counter for ready messages */
-               handle->messages_ready_for_read = handle->messages_ready_for_read - 1;
-               cl_app_message_queue_remove(handle->received_message_queue, connection, 0, CL_FALSE);
+               CL_LOG(CL_LOG_ERROR,"deleting unread message for connection");
+               if (connection->handler != NULL) {
+                  /* decrease counter for ready messages */
+                  pthread_mutex_lock(connection->handler->messages_ready_mutex);
+                  connection->handler->messages_ready_for_read = connection->handler->messages_ready_for_read - 1;
+                  cl_app_message_queue_remove(connection->handler->received_message_queue, connection, 1, CL_FALSE);
+                  pthread_mutex_unlock(connection->handler->messages_ready_mutex);
+               }
             }
-            CL_LOG(CL_LOG_ERROR,"deleting unread message for connection");
-#if 0
-            /* only debugging ... */
             if (message->message_length != 0) {
                CL_LOG_INT(CL_LOG_ERROR,"connection sub_state:",connection->connection_sub_state);
-               CL_LOG(CL_LOG_ERROR,"deleting unread message for connection");
-               CL_LOG_INT(CL_LOG_ERROR,"message state is:", (int)message->message_state);
+               CL_LOG(CL_LOG_ERROR,"deleting read message for connection");
                CL_LOG_INT(CL_LOG_ERROR,"message length:", (int)message->message_length);
+               CL_LOG_INT(CL_LOG_ERROR,"message state:", (int)message->message_state);
                CL_LOG_INT(CL_LOG_ERROR,"message df:", (int)message->message_df);
                CL_LOG_INT(CL_LOG_ERROR,"message mat:", (int)message->message_mat);
             }
-#endif
    
             cl_raw_list_remove_elem(connection->received_message_list,  message_list_elem->raw_elem);
             free(message_list_elem);
             cl_com_free_message(&message);
          }
-         cl_raw_list_unlock(connection->received_message_list);
-
-         /* remove all messages from send_message_list */
-         cl_raw_list_lock(connection->send_message_list);
+         
          while((message_list_elem = cl_message_list_get_first_elem(connection->send_message_list)) != NULL) {
             message = message_list_elem->message;
             CL_LOG(CL_LOG_ERROR,"deleting unsend message for connection");
@@ -468,20 +447,16 @@ int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle) {
             free(message_list_elem);
             cl_com_free_message(&message);
          }
-         cl_raw_list_unlock(connection->send_message_list);
    
-         /* remove elem from delete_connections list */
-         cl_raw_list_remove_elem(delete_connections, elem->raw_elem);
-         free(elem);
-         elem = NULL;
-         /* close connection and free stuff */
+         cl_raw_list_remove_elem(delete_connections, elem2->raw_elem);
+         free(elem2);
+         elem2 = NULL;
+   
          if ((ret_val=cl_com_close_connection(&connection)) != CL_RETVAL_OK) {  
             CL_LOG(CL_LOG_ERROR, "error closing connection");
          }
+   
       }
-      cl_raw_list_unlock(handle->received_message_queue);
-      pthread_mutex_unlock(handle->messages_ready_mutex);
-
       cl_connection_list_cleanup(&delete_connections);
    }
    return ret_val;
@@ -493,7 +468,7 @@ int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_connection_list_get_first_elem()"
-cl_connection_list_elem_t* cl_connection_list_get_first_elem(cl_raw_list_t* list_p) {
+cl_connection_list_elem_t* cl_connection_list_get_first_elem(cl_raw_list_t* list_p) {   /* CR check */
    cl_raw_list_elem_t* raw_elem = cl_raw_list_get_first_elem(list_p);
    if (raw_elem) {
       return (cl_connection_list_elem_t*) raw_elem->data;
@@ -505,7 +480,7 @@ cl_connection_list_elem_t* cl_connection_list_get_first_elem(cl_raw_list_t* list
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_connection_list_get_least_elem()"
-cl_connection_list_elem_t* cl_connection_list_get_least_elem(cl_raw_list_t* list_p) {
+cl_connection_list_elem_t* cl_connection_list_get_least_elem(cl_raw_list_t* list_p) {   /* CR check */
    cl_raw_list_elem_t* raw_elem = cl_raw_list_get_least_elem(list_p);
    if (raw_elem) {
       return (cl_connection_list_elem_t*) raw_elem->data;
@@ -551,33 +526,15 @@ cl_connection_list_elem_t* cl_connection_list_get_last_elem(cl_connection_list_e
    return NULL;
 }
 
-#ifdef __CL_FUNCTION__
-#undef __CL_FUNCTION__
-#endif
-#define __CL_FUNCTION__ "cl_connection_list_get_elem_endpoint()"
 cl_connection_list_elem_t* cl_connection_list_get_elem_endpoint(cl_raw_list_t* list_p, cl_com_endpoint_t *endpoint) {
-   cl_connection_list_elem_t *elem = NULL;
+   void *elem = NULL;
 
-   if (list_p != NULL && endpoint != NULL) {
+   if (list_p != NULL) {
       cl_connection_list_data_t* ldata = NULL;
       ldata = list_p->list_data;
-      if (ldata->r_ht != NULL) {
-         if (sge_htable_lookup(ldata->r_ht, endpoint->hash_id, (const void**)&elem) == True) {
-            return elem;
-         }
-      } else {
-         /* Search without having hash table */
-         CL_LOG(CL_LOG_INFO,"no hash table available, searching sequential");
-         elem = cl_connection_list_get_first_elem(list_p);
-         while ( elem != NULL) {
-            if (elem->connection != NULL) {
-               if (cl_com_compare_endpoints(elem->connection->remote, endpoint) == 1) {
-                  /* found matching element */
-                  return elem;
-               }
-            }
-            elem = cl_connection_list_get_next_elem(elem);
-         }
+
+      if (sge_htable_lookup(ldata->r_ht, endpoint->hash_id, (const void**)&elem) == True) {
+         return elem;
       }
    }
    return NULL;

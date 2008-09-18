@@ -99,19 +99,10 @@ typedef struct _tAskHoldInfo {
    Widget AskHoldTasks;
 } tAskHoldInfo;
    
-/* a boolean for the sort order */
-enum {
-  AR_sort_descending = 0,
-  AR_sort_ascending
-};
-
-
 
 static Widget qmon_ar = 0;
 static Widget ar_running_ars = 0;
-#ifdef AR_PENDING
 static Widget ar_pending_ars = 0;
-#endif
 static Widget current_matrix = 0;
 static Widget ar_customize = 0;
 static Widget ar_delete = 0;
@@ -136,11 +127,11 @@ static Pixel qmonARStateToColor(Widget w, lListElem *jep);
 static Boolean qmonDeleteARForMatrix(Widget w, Widget matrix, lList **local);
 /* static lList* qmonARBuildSelectedList(Widget matrix, lDescr *dp, int nm); */
 /* static void qmonResizeCB(Widget w, XtPointer cld, XtPointer cad); */
-static void qmonARSort(Widget w, XtPointer cld, XtPointer cad);
+/* static void qmonARSort(Widget w, XtPointer cld, XtPointer cad); */
 /*-------------------------------------------------------------------------*/
-static int field_sort_by;
-static int field_sort_direction;
-static int arnum_sort_direction;
+/* static int field_sort_by; */
+/* static int field_sort_direction; */
+/* static int arnum_sort_direction; */
 
 /*-------------------------------------------------------------------------*/
 /* P U B L I C                                                             */
@@ -202,9 +193,7 @@ Widget *pen_m
    DENTER(GUI_LAYER, "qmonARReturnMatrix");
 
    *run_m = ar_running_ars;
-#ifdef AR_PENDING   
    *pen_m = ar_pending_ars;
-#endif   
 
    DEXIT;
 }
@@ -278,9 +267,7 @@ Widget parent
 ) {
    Widget ar_submit, ar_update, ar_done,
           ar_main_link, ar_pending, ar_folder;
-#ifdef AR_PENDING          
    static Widget pw[2];
-#endif   
    static Widget rw[2];
    
    DENTER(GUI_LAYER, "qmonCreateARControl");
@@ -288,9 +275,7 @@ Widget parent
    qmon_ar = XmtBuildQueryToplevel( parent, 
                                      "qmon_ar",
                                      "ar_running_ars", &ar_running_ars,
-#ifdef AR_PENDING                                     
                                      "ar_pending_ars", &ar_pending_ars,
-#endif
                                      "ar_delete", &ar_delete,
                                      "ar_select_all", &ar_select_all,
                                      "ar_update", &ar_update,
@@ -302,11 +287,9 @@ Widget parent
                                      "ar_pending", &ar_pending,
                                      "ar_force",  &force_toggle,
                                      NULL);
-#ifdef AR_PENDING
-   pw[0] = ar_pending_ars;
+   pw[0] = ar_running_ars;
    pw[1] = NULL;
-#endif   
-   rw[0] = ar_running_ars;
+   rw[0] = ar_pending_ars;
    rw[1] = NULL;
 
 
@@ -338,36 +321,33 @@ Widget parent
 /*                      qmonResizeCB, NULL); */
    XtAddCallback(ar_running_ars, XmNenterCellCallback, 
                      qmonARNoEdit, NULL);
+   XtAddCallback(ar_pending_ars, XmNenterCellCallback, 
+                     qmonARNoEdit, NULL);
    XtAddCallback(ar_running_ars, XmNselectCellCallback, 
                      qmonMatrixSelect, (XtPointer) rw);
+   XtAddCallback(ar_pending_ars, XmNselectCellCallback, 
+                     qmonMatrixSelect, (XtPointer) pw);
+#if 0                     
+   XtAddCallback(ar_pending_ars, XmNlabelActivateCallback, 
+                     qmonARSort, NULL);
    XtAddCallback(ar_running_ars, XmNlabelActivateCallback, 
                      qmonARSort, NULL);
+#endif
    /* Event Handler to display additional ar info */
    XtAddEventHandler(ar_running_ars, PointerMotionMask, 
                      False, qmonARHandleEnterLeave,
                      NULL); 
-
-#ifdef AR_PENDING                     
-   XtAddCallback(ar_pending_ars, XmNenterCellCallback, 
-                     qmonARNoEdit, NULL);
-   XtAddCallback(ar_pending_ars, XmNselectCellCallback, 
-                     qmonMatrixSelect, (XtPointer) pw);
-   XtAddCallback(ar_pending_ars, XmNlabelActivateCallback, 
-                     qmonARSort, NULL);
-   /* Event Handler to display additional ar info */
    XtAddEventHandler(ar_pending_ars, PointerMotionMask, 
                      False, qmonARHandleEnterLeave,
                      NULL); 
 
    current_matrix = ar_pending_ars;
-#else
-   current_matrix = ar_running_ars;
-#endif
-
+#if 0   
    /* initialising sort order to decreasing priority then increasing ar number */
-   field_sort_by = AR_id;
-   field_sort_direction = AR_sort_ascending;
-   arnum_sort_direction = AR_sort_ascending; 
+   field_sort_by = SGEJ_priority;
+   field_sort_direction = SGEJ_sort_decending;
+   arnum_sort_direction = SGEJ_sort_ascending; 
+#endif   
 
    DEXIT;
 }
@@ -462,23 +442,17 @@ lListElem *ar
    color = fg;
 
 #if 0
-   if (state & AR_WAITING)
-      color = ARWaitingPixel;
-
    if (state & AR_RUNNING)
       color = ARRunningPixel;
 
-   if (state & AR_Exited)
-      color = ARExitedPixel;
+   if (state & AR_WAITING)
+      color = fg;
 
    if (state & AR_DELETED)
-      color = ARDeletedPixel;
+      color = fg;
 
    if (state & AR_ERROR)
-      color = ARErrorPixel;
-
-   if (state & AR_WARNING)
-      color = ARWarningPixel;
+      color = fg;
 #endif      
 
    DEXIT;
@@ -502,6 +476,7 @@ XtPointer cad
    DEXIT;
 }
 
+#if 0
 /*-------------------------------------------------------------------------*/
 static void qmonARSort(
 Widget w,
@@ -510,22 +485,26 @@ XtPointer cad
 ) {
    XbaeMatrixLabelActivateCallbackStruct *cbs = 
             (XbaeMatrixLabelActivateCallbackStruct *) cad;
-   int column_nm[] = {AR_id, AR_name, AR_owner, AR_state, AR_start_time, AR_end_time, AR_duration};
-   int* col_nm_addr = NULL;
-   int col_nm = -1;
-
+   /* SGEJ_state is not a typo - PrintStatus uses both JAT_status and JAT_state */
+   int column_nm[] = {SGEJ_ar_number, SGEJ_priority, SGEJ_ar_name, SGEJ_owner, SGEJ_state, SGEJ_master_queue};
+   /* 
+   ** Mapping the columns to these internal resources:
+   ** JB_ar_number    (Ulong)
+   ** JAT_prio         (Double)
+   ** JB_ar_name      (String)
+   ** JB_owner         (String)
+   ** JAT_state        (Ulong)
+   ** JAT_master_queue (String)
+   */
    DENTER(GUI_LAYER, "qmonARSort");
  
    DPRINTF(("ARSort = cbs->column = %d\n", cbs->column));
    
-#if 0   
-   /* not coping beyond 4th column */
-   if ( cbs->column > 3) {
+   /* not coping beyond 6th column */
+   if ( cbs->column > 5) {
       DEXIT;
       return;
    }
-#endif   
-
    /* 
    ** Here is what we are going to do for sorting:
    ** if the user clicks on a column, we'll sort ascending,
@@ -535,30 +514,21 @@ XtPointer cad
    ** always a secondary sort key and if it is selected
    ** the user most likely wants a toggle.
    */
-
-   col_nm_addr = XbaeMatrixGetColumnUserData(w, cbs->column);
-   if (col_nm_addr != NULL) {
-      col_nm = *col_nm_addr;
-   }    
       
-   if (col_nm == field_sort_by || column_nm[cbs->column] == field_sort_by) {
+   if (column_nm[cbs->column] == field_sort_by) {
       /* toggling sort order */
       field_sort_direction = !field_sort_direction;     
    } else {
-      if (col_nm != -1) {
-         field_sort_by = col_nm;
-      } else {
-         field_sort_by = column_nm[cbs->column];
-      }
-      field_sort_direction = AR_sort_ascending;
+      field_sort_by = column_nm[cbs->column];
+      field_sort_direction = SGEJ_sort_ascending;
       /* switching from another field to ar number also toggles */
-      if (field_sort_by == AR_id) {
+      if (field_sort_by == SGEJ_ar_number) {
          field_sort_direction = !arnum_sort_direction;
       }
    }
 
    /* recording the last chosen ar number sort direction */
-   if (field_sort_by == AR_id) {
+   if (field_sort_by == SGEJ_ar_number) {
       arnum_sort_direction = field_sort_direction;
    }
    updateARList();
@@ -566,20 +536,18 @@ XtPointer cad
    DEXIT;
 }
 
+#endif
+
 /*----------------------------------------------------------------------------*/
 void updateARList(void)
 {
+   lList *pl = NULL;
    lList *rl = NULL;
    lListElem *ar = NULL;
-   int row = 0;
-   int current_rows = 0, desired_rows = 0; /* used at the end to shrink tabs */
-   
-#ifdef AR_PENDING
-   lList *pl = NULL;
    lCondition *where_run = NULL;
    lEnumeration *what = NULL;
-   int pow = 0;
-#endif   
+   int row = 0, pow = 0;
+   int current_rows = 0, desired_rows = 0; /* used at the end to shrink tabs */
          
    DENTER(GUI_LAYER, "updateARList");
    
@@ -591,10 +559,8 @@ void updateARList(void)
       return;
    }
    
-#ifdef AR_PENDING
    what = lWhat("%T(ALL)", AR_Type);
    where_run = lWhere("%T(%I == %u)", AR_Type, AR_state, AR_RUNNING);
-#endif
  
    rl = lCopyList("rl", qmonMirrorList(SGE_AR_LIST));
 
@@ -602,10 +568,7 @@ void updateARList(void)
    ** loop over the ars and the tasks
    */
    XbaeMatrixDisableRedisplay(ar_running_ars);
-
-#ifdef AR_PENDING
    XbaeMatrixDisableRedisplay(ar_pending_ars);
-#endif
  
    /*
    ** reset matrices
@@ -613,7 +576,6 @@ void updateARList(void)
    XtVaSetValues( ar_running_ars,
                   XmNcells, NULL,
                   NULL);
-#ifdef AR_PENDING                  
    XtVaSetValues( ar_pending_ars,
                   XmNcells, NULL,
                   NULL);
@@ -621,23 +583,15 @@ void updateARList(void)
    ** update the ar entries
    */
    lSplit(&rl, &pl, "rl", where_run);
-#endif
 
+#if 0
    /*
    ** sort the ars according to start time
    */
-   if (lGetNumberOfElem(rl)>0 ) {
-      if (field_sort_direction == AR_sort_ascending && arnum_sort_direction == AR_sort_ascending) {
-         lPSortList(rl, "%I+ %I+", field_sort_by, AR_id);
-      } else if (field_sort_direction == AR_sort_ascending && arnum_sort_direction == AR_sort_descending) {
-         lPSortList(rl, "%I+ %I-", field_sort_by, AR_id);
-      } else if (field_sort_direction == AR_sort_descending && arnum_sort_direction == AR_sort_ascending) {
-         lPSortList(rl, "%I- %I+", field_sort_by, AR_id);
-      } else if (field_sort_direction == AR_sort_descending && arnum_sort_direction == AR_sort_descending) {
-         lPSortList(rl, "%I- %I-", field_sort_by, AR_id);
-      }
+   if (lGetNumberOfElem(pl)>0 ) {
+      sgeee_sort_ars_by(&arl, field_sort_by, field_sort_direction, arnum_sort_direction);
    }
-
+#endif
    /*
    ** running ars
    */
@@ -646,22 +600,14 @@ void updateARList(void)
       row++;                                                            
    }            
 
-#ifdef AR_PENDING
+#if 0
    /*
    ** sort the ars according to start time
    */
    if (lGetNumberOfElem(pl)>0 ) {
-      if (field_sort_direction == AR_sort_ascending && arnum_sort_direction == AR_sort_ascending) {
-         lPSortList(pl, "%I+ %I+", field_sort_by, AR_id);
-      } else if (field_sort_direction == AR_sort_ascending && arnum_sort_direction == AR_sort_descending) {
-         lPSortList(pl, "%I+ %I-", field_sort_by, AR_id);
-      } else if (field_sort_direction == AR_sort_descending && arnum_sort_direction == AR_sort_ascending) {
-         lPSortList(pl, "%I- %I+", field_sort_by, AR_id);
-      } else if (field_sort_direction == AR_sort_descending && arnum_sort_direction == AR_sort_descending) {
-         lPSortList(pl, "%I- %I-", field_sort_by, AR_id);
-      }
+      sgeee_sort_ars_by(&arl, field_sort_by, field_sort_direction, arnum_sort_direction);
    }
-
+#endif
    /*
    ** pending ars
    */
@@ -676,8 +622,6 @@ void updateARList(void)
    lFreeWhere(&where_run);
    lFreeWhat(&what);
    lFreeList(&pl);
-#endif
-
    lFreeList(&rl);
 
    /* shrinking excessive vertical size of tabs from previous runs of updateARList() */  
@@ -686,21 +630,15 @@ void updateARList(void)
    if (current_rows > desired_rows) {
      XbaeMatrixDeleteRows(ar_running_ars, desired_rows, current_rows - desired_rows);
    }   
-
-#ifdef AR_PENDING   
    current_rows = XbaeMatrixNumRows(ar_pending_ars);
    desired_rows = MAX(pow, 20);
    if (current_rows > desired_rows) {
      XbaeMatrixDeleteRows(ar_pending_ars, desired_rows, current_rows - desired_rows);
    }
-#endif   
 
    XbaeMatrixEnableRedisplay(ar_running_ars, True);
-
-#ifdef AR_PENDING
    XbaeMatrixEnableRedisplay(ar_pending_ars, True);
-#endif 
-
+ 
    DEXIT;
 }
 
@@ -734,15 +672,13 @@ lList **local
       /* is this row selected */ 
       if (XbaeMatrixIsRowSelected(matrix, i)) {
          str = XbaeMatrixGetCell(matrix, i, 0);
-         if (str && *str != '\0') { 
+         if ( str && *str != '\0' ) { 
             DPRINTF(("ARId to delete: %s\n", str));
-            lAddElemStr(&ardl, ID_str, str, ID_Type);
-         }
-      }
-      if (force != 0) {
-         lListElem *id;
-         for_each(id, ardl){
-            lSetUlong(id, ID_force, force);
+            if (isdigit(str[0])) {
+               lAddElemUlong(&ardl, AR_id, atoi(str), AR_Type);
+            } else {
+               lAddElemStr(&ardl, AR_name, str, AR_Type);
+            }
          }
       }
    }
@@ -834,6 +770,161 @@ XtPointer cad
    DEXIT;
 }
 
+#if 0
+/*-------------------------------------------------------------------------*/
+static void qmonARChangeState(
+Widget w,
+XtPointer cld,
+XtPointer cad 
+) {
+   lList *jl = NULL;
+   lList *rl = NULL;
+   lList *alp = NULL;
+   int force = 0;
+   int action = (int)(long)cld;
+   Widget force_toggle;
+   
+   DENTER(GUI_LAYER, "qmonARChangeState");
+
+   if (action == QI_DO_CLEARERROR) {
+      rl = qmonARBuildSelectedList(ar_running_ars, ST_Type, ST_name);
+      
+      jl = qmonARBuildSelectedList(ar_pending_ars, ST_Type, ST_name);
+
+      if (!jl && rl) {
+         jl = rl;
+      }
+      else if (rl) {
+         lAddList(jl, &rl);
+      }
+   }
+   else {
+      force_toggle = XmtNameToWidget(w, "*ar_force");
+
+      force = XmToggleButtonGetState(force_toggle);
+      /*
+      ** state changes only for running ars
+      */
+      jl = qmonARBuildSelectedList(ar_running_ars, ST_Type, ST_name);
+   }
+
+   if (jl) {
+
+      alp = qmonChangeStateList(SGE_AR_LIST, jl, force, action); 
+
+      qmonMessageBox(w, alp, 0);
+
+      updateARList();
+      XbaeMatrixDeselectAll(ar_running_ars);
+      XbaeMatrixDeselectAll(ar_pending_ars);
+
+      lFreeList(&jl);
+      lFreeList(&alp);
+   }
+   else {
+      qmonMessageShow(w, True, "@{There are no ars selected !}");
+   }
+   
+   DEXIT;
+}
+
+
+/*-------------------------------------------------------------------------*/
+/* descriptor must contain AR_id at least                                  */
+/*-------------------------------------------------------------------------*/
+static lList* qmonARBuildSelectedList(matrix, dp, nm)
+Widget matrix;
+lDescr *dp;
+int nm;
+{
+   lList *jl = NULL;
+
+#if 0
+   int i;
+   int rows;
+   lListElem *jep = NULL;
+   String str;
+
+   DENTER(GUI_LAYER, "qmonARBuildSelectedList");
+
+   if (nm != JB_ar_number && nm != ST_name) {
+      DEXIT;
+      return NULL;
+   }
+
+   rows = XbaeMatrixNumRows(matrix);
+      
+   for (i=0; i<rows; i++) {
+      /* is this row selected */ 
+      if (XbaeMatrixIsRowSelected(matrix, i)) {
+         str = XbaeMatrixGetCell(matrix, i, 0);
+         DPRINTF(("AR to alter: %s\n", str));
+         /*
+         ** list with describtion ar id's and the priority value 
+         */
+         if ( str && (*str != '\0') ) { 
+            switch (nm) { 
+               case JB_ar_number:
+                  {
+                     u_long32 start = 0, end = 0, step = 0;
+                     lListElem *idp = NULL;
+                     lList *ipp = NULL;
+                     lList *jat_list = NULL;
+                     lList *alp = NULL;
+                     /* TODO: SG: check, if this is correct */
+                     if (sge_parse_artasks(&ipp, &idp, str, &alp, false, NULL) == -1) {
+                        lFreeList(&alp);
+                        DEXIT;
+                        return NULL;
+                     }
+                     lFreeList(&alp);
+
+                     if (ipp) {
+                        for_each(idp, ipp) {
+                           lListElem *ip;
+
+                           jep = lAddElemUlong(&jl, JB_ar_number, 
+                                    atol(lGetString(idp, ID_str)), dp);
+                           lSetList(jep, JB_ja_structure, 
+                                 lCopyList("", lGetList(idp, ID_ja_structure)));
+                           ar_get_submit_task_ids(jep, &start, &end, &step); 
+                           for_each(ip, lGetList(idp, ID_ja_structure)) {
+                              start = lGetUlong(ip, RN_min);
+                              end = lGetUlong(ip, RN_max);
+                              step = lGetUlong(ip, RN_step);
+                              for (; start<=end; start+=step) {
+                                 lAddElemUlong(&jat_list, JAT_task_number, 
+                                                   start, JAT_Type);
+                              }
+                           }
+                        }
+                        if (lGetNumberOfElem(jat_list) == 0) {
+                           lAddElemUlong(&jat_list, JAT_task_number, 
+                                         1, JAT_Type);
+                        }
+                        lSetList(jep, JB_ja_tasks, jat_list);
+                        lFreeList(&ipp);
+                     }
+                  }
+                  break;
+               case ST_name:
+                  jep = lAddElemStr(&jl, ST_name, str, dp);
+                  lSetList(jep, JB_ja_tasks, NULL);
+                  break;
+            }
+         }
+      }
+   }
+   DEXIT;
+#endif   
+
+   return jl;
+}
+
+
+#endif
+
+
 /*-------------------------------------------------------------------------*/
 static void qmonARHandleEnterLeave(
 Widget w,
@@ -920,11 +1011,9 @@ static void qmonARFolderChange(Widget w, XtPointer cld, XtPointer cad)
    
    DPRINTF(("%s\n", XtName(cbs->tab_child)));
 
-#ifdef AR_PENDING
    if (!strcmp(XtName(cbs->tab_child), "ar_pending")) {
       current_matrix=ar_pending_ars;
    }
-#endif   
 
    if (!strcmp(XtName(cbs->tab_child), "ar_running")) {
       current_matrix=ar_running_ars;

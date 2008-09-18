@@ -729,15 +729,11 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
             const char *lib_path = sge_getenv(lib_path_env);
 
             if (lib_path != NULL) {
-               var_list_set_string(&environmentList, lib_path_env, lib_path);
+               var_list_set_string (&environmentList, lib_path_env, lib_path);
             }
          }
+         
          var_list_set_sharedlib_path(&environmentList);
-#if defined(HP1164)
-         if (mconf_get_inherit_env() != true) {
-            var_list_delete_string(&environmentList, "SHLIB_PATH");
-         }
-#endif
       }
 
       /* set final of variables whose value shall be replaced */ 
@@ -975,18 +971,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
    fprintf(fp, "h_fsize=%s\n", lGetString(master_q, QU_h_fsize));
    fprintf(fp, "s_vmem=%s\n", lGetString(master_q, QU_s_vmem));
    fprintf(fp, "h_vmem=%s\n", lGetString(master_q, QU_h_vmem));
-   {
-      char *s;
 
-      mconf_get_s_descriptors(&s); fprintf(fp, "s_descriptors=%s\n", s); free(s);
-      mconf_get_h_descriptors(&s); fprintf(fp, "h_descriptors=%s\n", s); free(s);
-      mconf_get_s_maxproc(&s); fprintf(fp, "s_maxproc=%s\n", s); free(s);
-      mconf_get_h_maxproc(&s); fprintf(fp, "h_maxproc=%s\n", s); free(s);
-      mconf_get_s_memorylocked(&s); fprintf(fp, "s_memorylocked=%s\n", s); free(s);
-      mconf_get_h_memorylocked(&s); fprintf(fp, "h_memorylocked=%s\n", s); free(s);
-      mconf_get_s_locks(&s); fprintf(fp, "s_locks=%s\n", s); free(s);
-      mconf_get_h_locks(&s); fprintf(fp, "h_locks=%s\n", s); free(s);
-   }
 
    fprintf(fp, "priority=%s\n", lGetString(master_q, QU_priority));
    fprintf(fp, "shell_path=%s\n", shell_path);
@@ -1282,7 +1267,6 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
    /* config for interactive jobs */
    {
       u_long32 jb_now;
-      int      pty_option;
       if(petep != NULL) {
          jb_now = JOB_TYPE_QRSH;
       } else {
@@ -1291,13 +1275,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
      
       if(petep != NULL) {
          fprintf(fp, "pe_task_id=%s\n", pe_task_id);
-      }
-     
-      pty_option = (int)lGetUlong(jep, JB_pty);
-      if (pty_option < 0 || pty_option > 2) {
-         pty_option = 2;   /* 2 = use default */
-      }
-      fprintf(fp, "pty=%d\n", pty_option);
+      }   
 
       if(JOB_TYPE_IS_QLOGIN(jb_now) || JOB_TYPE_IS_QRSH(jb_now) 
          || JOB_TYPE_IS_QRLOGIN(jb_now)) {

@@ -204,5 +204,7 @@ int main(int argc, char *argv[])
 
    sge_prof_cleanup();
 
-   DRETURN(ret);
+   SGE_EXIT(NULL, ret);
+   DEXIT;
+   return ret;
 }

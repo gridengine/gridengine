@@ -136,7 +136,7 @@ else
    echo "unset SGE_CELL"                                         >> $SP_SH
 fi
 
-echo "SGE_CLUSTER_NAME=`cat $SGE_ROOT/$SGE_CELL/common/cluster_name  2>/dev/null`; export SGE_CLUSTER_NAME" >> $SP_SH
+echo "SGE_CLUSTER_NAME=`cat $SGE_ROOT/$SGE_CELL/common/cluster_name  2>/dev/null`" >> $SP_SH
 
 if [ "$SGE_QMASTER_PORT" != "" ]; then
    echo "SGE_QMASTER_PORT=$SGE_QMASTER_PORT; export SGE_QMASTER_PORT"  >> $SP_SH

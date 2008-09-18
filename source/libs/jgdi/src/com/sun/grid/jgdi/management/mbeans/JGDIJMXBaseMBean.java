@@ -83,14 +83,14 @@ public interface JGDIJMXBaseMBean {
      *
      *  @return set of event types which are currently subscribed
      */
-    public Set<EventTypeEnum> getSubscription() throws JGDIException;
+    public Set<EventTypeEnum> getSubscription();
 
     /**
      *   Set the current event subscription.
      *
      *   @param eventTypeSet  the set of event types to subscribe
      */
-    public void setSubscription(Set<EventTypeEnum> eventTypeSet) throws JGDIException;
+    public void setSubscription(Set<EventTypeEnum> eventTypeSet);
 
     // ========= JGDIBase methods ================================
     public String getAdminUser() throws JGDIException;

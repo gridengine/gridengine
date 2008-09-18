@@ -74,7 +74,7 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
 
 int cl_com_gethostname(char **unique_hostname,struct in_addr *copy_addr,struct hostent **he_copy, int* system_error_value);
 int cl_com_host_list_refresh(cl_raw_list_t* host_list);
-int cl_com_cached_gethostbyname(const char *hostname, char **unique_hostname, struct in_addr *copy_addr,struct hostent **he_copy, int* system_error_value);
+int cl_com_cached_gethostbyname( char *hostname, char **unique_hostname, struct in_addr *copy_addr,struct hostent **he_copy, int* system_error_value);
 int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname,struct hostent **he_copy,int* system_error_val );
 char* cl_com_get_h_error_string(int h_error);
 int cl_com_compare_hosts(const char* host1, const char* host2);
@@ -180,7 +180,9 @@ int cl_com_connection_request_handler(cl_com_connection_t* connection,
 int cl_com_connection_request_handler_cleanup(cl_com_connection_t* connection);
 
 /* check open connection list for new messages */
-int cl_com_open_connection_request_handler(cl_com_handle_t* handle,
+int cl_com_open_connection_request_handler(cl_framework_t framework_type,
+                                           cl_raw_list_t* connection_list,
+                                           cl_com_connection_t* service_connection,
                                            int timeout_val_sec,
                                            int timeout_val_usec,
                                            cl_select_method_t select_mode );

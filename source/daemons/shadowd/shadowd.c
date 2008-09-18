@@ -76,7 +76,6 @@
 
 #if defined(SOLARIS)
 #   include "sge_smf.h"
-#   include "sge_string.h"
 #endif
 
 #ifndef FALSE
@@ -101,7 +100,7 @@ static int check_if_valid_shadow(char *binpath,
                                  const char *binary_path);
 static int compare_qmaster_names(const char *act_qmaster_file, const char *old_qmaster);
 static int host_in_file(const char *, const char *);
-static int parse_cmdline_shadowd(int argc, char **argv);
+static void parse_cmdline_shadowd(int argc, char **argv);
 static int shadowd_is_old_master_enrolled(int sge_test_heartbeat, int sge_qmaster_port, char *oldqmaster);
 
 static int shadowd_is_old_master_enrolled(int sge_test_heartbeat, int sge_qmaster_port, char *oldqmaster)
@@ -270,10 +269,8 @@ char qmaster_out_file[SGE_PATH_MAX];
       ctx->prepare_enroll(ctx);
    }
 
-   if (parse_cmdline_shadowd(argc, argv) == 1) {
-      SGE_EXIT((void**)&ctx, 0);
-   }
-   
+   parse_cmdline_shadowd(argc, argv);
+
    if (ctx->get_qmaster_spool_dir(ctx) == NULL) {
       CRITICAL((SGE_EVENT, MSG_SHADOWD_CANTREADQMASTERSPOOLDIRFROMX_S, ctx->get_bootstrap_file(ctx)));
       SGE_EXIT((void**)&ctx, 1);
@@ -437,15 +434,6 @@ static void shadowd_exit_func(
 void **ctx_ref,
 int i 
 ) {
-#if defined(SOLARIS)
-   if (sge_smf_used() == 1) {
-      /* We don't do disable on svcadm restart */
-      if (sge_strnullcmp(sge_smf_get_instance_state(), SCF_STATE_STRING_ONLINE) == 0 &&
-          sge_strnullcmp(sge_smf_get_instance_next_state(), SCF_STATE_STRING_NONE) == 0) {      
-         sge_smf_temporary_disable_instance();
-      }
-   }
-#endif 
    exit(i);
 }
 
@@ -580,7 +568,7 @@ FCLOSE_ERROR:
 /*---------------------------------------------------------------------
  * parse_cmdline_shadowd
  *---------------------------------------------------------------------*/
-static int parse_cmdline_shadowd(
+static void parse_cmdline_shadowd(
 int argc,
 char **argv 
 ) {
@@ -601,8 +589,8 @@ char **argv
       fprintf(stdout, "%s sge_shadowd [options]\n", MSG_GDI_USAGE_USAGESTRING);
 
       PRINTITD(MSG_GDI_USAGE_help_OPT , MSG_GDI_UTEXT_help_OPT );
-      DRETURN(1);
+      SGE_EXIT(NULL, 0);
    }
 
-   DRETURN(0);
+   DRETURN_VOID;
 }

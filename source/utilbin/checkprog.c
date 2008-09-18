@@ -35,10 +35,8 @@
 #include <string.h>
 
 #include "basis_types.h"
+#include "sge_os.h"
 #include "msg_utilbin.h"
-
-#include "uti/sge_os.h"
-#include "uti/sge_smf.h"
 
 void sge_exit_wrapper(int);
 void usage(void);
@@ -156,15 +154,7 @@ int main(int argc, char *argv[])
 			pid = getppid();
 			printf("%ld\n", (long)pid );
 			res = 0;
-		} else {
-#if defined(SOLARIS)
-                        /* Init shared SMF libs if necessary */
-                        if (sge_smf_used() == 1 && sge_smf_init_libs() != 0) {
-                           fprintf(stderr, MSG_COMMAND_SMF_INIT_FAILED);
-                           fprintf(stderr, "\n");
-                           exit(1);
-                        }
-#endif
+		} else {		
 			res = sge_checkprog(pid, process_name, PSCMD);
 	
 			if (res == 1)

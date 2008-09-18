@@ -150,7 +150,6 @@ typedef struct _tSMEntry {
    int      checkpoint_attr;
    int      checkpoint_interval;
    int      verify_mode;
-   int      ar_id;
 } tSMEntry;
 
    
@@ -284,11 +283,6 @@ XtResource sm_resources[] = {
       XtOffsetOf(tSMEntry, pe),
       XtRImmediate, NULL },
 
-   { "ar_id", "ar_id", XtRInt,
-      sizeof(int),
-      XtOffsetOf(tSMEntry, ar_id),
-      XtRImmediate, NULL },
-
    { "mail_options", "mail_options", XtRInt,
       sizeof(int), XtOffsetOf(tSMEntry, mail_options),
       XtRImmediate, NULL }, 
@@ -410,7 +404,6 @@ static void qmonSubmitClearCtxEnv(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitAskForPE(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitAskForCkpt(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitAskForProject(Widget w, XtPointer cld, XtPointer cad);
-static void qmonSubmitAskForAR(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitCheckJobName(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitSaveDefault(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitLoadDefault(Widget w, XtPointer cld, XtPointer cad);
@@ -427,7 +420,6 @@ static void qmonSubmitChangeResourcesPixmap(void);
 static void qmonSubmitReadScript(Widget w, String file, String merges, int r_defaults);
 static void qmonSubmitSetSensitive(int mode, int submode);
 static void qmonSubmitToggleHoldNow(Widget w, XtPointer cld, XtPointer cad);
-static lList *lCopyUniqNullNone(lList *lp, int keyfield);
 /*-------------------------------------------------------------------------*/
 
 static Widget qmon_submit = 0;
@@ -464,8 +456,6 @@ static Widget submit_ctx = 0;
 static Widget submit_ctxPB = 0;
 static Widget submit_pe = 0;
 static Widget submit_pePB = 0;
-static Widget submit_ar = 0;
-static Widget submit_arPB = 0;
 static Widget submit_resources = 0;
 static Widget submit_mail = 0;
 static Widget submit_mail_user = 0;
@@ -781,7 +771,6 @@ Widget parent
                           "submit_envPB", &submit_envPB,
                           "submit_ctxPB", &submit_ctxPB,
                           "submit_pePB", &submit_pePB,
-                          "submit_arPB", &submit_arPB,
                           "submit_submit", &submit_submit,
                           "submit_done", &submit_done,
                           "submit_edit", &submit_edit,
@@ -805,7 +794,6 @@ Widget parent
                           "submit_env", &submit_env,
                           "submit_ctx", &submit_ctx,
                           "submit_pe", &submit_pe,
-                          "submit_ar", &submit_ar,
                           "submit_execution_time", &submit_execution_time,
                           "submit_exec_timePB", &submit_exec_timePB,
                           "submit_deadline_row", &submit_deadline_row,
@@ -882,8 +870,6 @@ Widget parent
                      qmonSubmitAskForCkpt, NULL);
    XtAddCallback(submit_pePB, XmNactivateCallback, 
                      qmonSubmitAskForPE, NULL);
-   XtAddCallback(submit_arPB, XmNactivateCallback, 
-                     qmonSubmitAskForAR, NULL);
    XtAddCallback(submit_output_merge, XmNvalueChangedCallback, 
                      qmonSubmitOutputMerge, NULL);
    XtAddCallback(submit_stdoutputPB, XmNactivateCallback, 
@@ -1701,22 +1687,22 @@ int read_defaults
       lFreeList(&alp);
 
       if (merge_script) {
-         lList *cl2 = NULL;
          /*
          ** stage one ana half of script file parsing
          ** merge an additional script in to override settings
          */ 
-         alp = parse_script_file(prog_number, merge_script, "", &cl2, environ, 
+         alp = parse_script_file(prog_number, merge_script, "", &cmdline, environ, 
                                  FLG_HIGHER_PRIOR | FLG_USE_NO_PSEUDOS);
          qmonMessageBox(w, alp, 0);
-         lFreeList(&alp);
 
-         if (cl2 != NULL) {
-            lAddList(cmdline, &cl2);
+         if (alp) {
+            lFreeList(&alp);
+            DEXIT;
+            return;
          }
       }   
    } else {
-      alp = parse_script_file(prog_number, filename, (prefix[0] ? prefix : NULL), &cmdline, environ,
+      alp = parse_script_file(prog_number, filename, prefix, &cmdline, environ,
                               FLG_HIGHER_PRIOR | FLG_IGNORE_EMBEDED_OPTS); 
       qmonMessageBox(w, alp, 0);
       lFreeList(&alp);
@@ -1951,14 +1937,12 @@ char *prefix
    else
       data->account_string = NULL;
 
-   data->ar_id = lGetUlong(jep, JB_ar);
-
    if ((wd_path = (StringConst)lGetString(jep, JB_cwd)))
       data->wd_path = XtNewString(wd_path);
    else
       data->wd_path = NULL;
 
-   data->shell_list = lCopyUniqNullNone(lGetList(jep, JB_shell_list), PN_host);
+   data->shell_list = lCopyList("JB_shell_list", lGetList(jep, JB_shell_list));
    
    data->mail_list = lCopyList("JB_mail_list", lGetList(jep, JB_mail_list));
    if (!data->mail_list) {
@@ -1983,9 +1967,12 @@ char *prefix
 
    data->mail_options = MailOptionsToDialog(lGetUlong(jep, JB_mail_options));
 
-   data->stdoutput_path_list = lCopyUniqNullNone(lGetList(jep, JB_stdout_path_list), PN_host);
-   data->stdinput_path_list = lCopyUniqNullNone(lGetList(jep, JB_stdin_path_list), PN_host);
-   data->stderror_path_list = lCopyUniqNullNone(lGetList(jep, JB_stderr_path_list), PN_host);
+   data->stdoutput_path_list = lCopyList("JB_stdout_path_list", 
+                                       lGetList(jep, JB_stdout_path_list));
+   data->stdinput_path_list = lCopyList("JB_stdin_path_list", 
+                                       lGetList(jep, JB_stdin_path_list));
+   data->stderror_path_list = lCopyList("JB_stderr_path_list", 
+                                       lGetList(jep, JB_stderr_path_list));
    data->merge_output = lGetBool(jep, JB_merge_stderr);
 /*    data->reserve = lGetBool(jep, JB_reserve); */
    data->priority = lGetUlong(jep, JB_priority) - BASE_PRIORITY;
@@ -2246,7 +2233,6 @@ int save
       }
       lSetUlong(jep, JB_type, jb_now);
    }   
-   lSetUlong(jep, JB_ar, data->ar_id);
 
    if (data->cwd) {
       const char *env_value = job_get_env_string(jep, VAR_PREFIX "O_HOME");
@@ -2348,16 +2334,19 @@ int save
    lSetUlong(jep, JB_verify_suitable_queues, data->verify_mode);
 
    DPRINTF(("JB_stdout_path_list %p\n", data->stdoutput_path_list));
-   lSetList(jep, JB_stdout_path_list, lCopyUniqNullNone(data->stdoutput_path_list, PN_host));
+   lSetList(jep, JB_stdout_path_list, lCopyList("stdout",
+                                             data->stdoutput_path_list));
    
    DPRINTF(("JB_stdin_path_list %p\n", data->stdinput_path_list));
-   lSetList(jep, JB_stdin_path_list, lCopyUniqNullNone(data->stdinput_path_list, PN_host));
+   lSetList(jep, JB_stdin_path_list, lCopyList("stdin",
+                                             data->stdinput_path_list));
    
    DPRINTF(("JB_stderr_path_list %p\n", data->stderror_path_list));
-   lSetList(jep, JB_stderr_path_list, lCopyUniqNullNone(data->stderror_path_list, PN_host));
+   lSetList(jep, JB_stderr_path_list, lCopyList("stderr", 
+                                             data->stderror_path_list));
    
    DPRINTF(("JB_shell_list %p\n", data->shell_list));
-   lSetList(jep, JB_shell_list, lCopyUniqNullNone(data->shell_list, PN_host));
+   lSetList(jep, JB_shell_list, lCopyList("shell",data->shell_list));
   
    DPRINTF(("JB_env_list %p\n", data->env_list));
    { 
@@ -2820,63 +2809,6 @@ static void qmonSubmitAskForPE(Widget w, XtPointer cld, XtPointer cad)
    else
       qmonMessageShow(w, True, 
             "@{Please configure a Parallel Environment first !}");
-   
-   DEXIT;
-}
-
-/*-------------------------------------------------------------------------*/
-static void qmonSubmitAskForAR(Widget w, XtPointer cld, XtPointer cad)
-{
-   Boolean status = False;
-   lList *arl = NULL;
-   lListElem *cep = NULL;
-   int n, i;
-   StringConst *strs = NULL;
-   static char buf[BUFSIZ];
-   lList *alp = NULL;
-   
-   DENTER(GUI_LAYER, "qmonSubmitAskForAR");
-   
-   qmonMirrorMultiAnswer(AR_T, &alp);
-   if (alp) {
-      qmonMessageBox(w, alp, 0);
-      lFreeList(&alp);
-      DEXIT;
-      return;
-   }
-   arl = qmonMirrorList(SGE_AR_LIST);
-   n = lGetNumberOfElem(arl);
-   if (n>0) {
-      char name[BUFSIZ];
-      strs = (StringConst*)XtMalloc(sizeof(String)*n); 
-      for (cep=lFirst(arl), i=0; i<n; cep=lNext(cep), i++) {
-        snprintf(name, BUFSIZ-1, sge_u32, lGetUlong(cep, AR_id)); 
-        /*
-        ** we get only references don't free, the strings
-        */
-        strs[i] = strdup(name);
-      }
-    
-      strcpy(buf, "");
-      /* FIX_CONST_GUI */
-      status = XmtAskForItem(w, NULL, "@{Select an Advance Reservation}",
-                        "@{Available Advance Reservations}", 
-                        (String*) strs, n, False, buf, BUFSIZ, NULL); 
-      
-      if (status) {
-         XmtInputFieldSetString(submit_ar, buf);
-      }
-      /*
-      ** free referenced strings, they are strdup'ed from AR_id
-      */
-      for (i=0; i<n; i++) {
-         XtFree((char*)strs[i]);
-      }   
-      XtFree((char*)strs);
-   }
-   else
-      qmonMessageShow(w, True, 
-            "@{Please submit an Advance Reservation first !}");
    
    DEXIT;
 }
@@ -3421,38 +3353,3 @@ static void qmonSubmitToggleHoldNow(Widget w, XtPointer cld, XtPointer cad)
    
    DEXIT;
 }
-
-static lList *lCopyUniqNullNone(lList *lp, int keyfield)
-{
-
-   lList *cl = NULL;
-   lListElem *ep;
-   lListElem *rep;
-
-   DENTER(CULL_LAYER, "lCopyUniqNullNone");
-
-   cl = lCopyList("", lp);
-   /*
-    * sort the list first to make our algorithm work
-    */
-   lPSortList(cl, "%I+", keyfield);
-
-   /*
-    * go over all elements and remove following elements
-    */
-   ep = lFirst(cl);
-   while (ep) {
-      rep = lNext(ep);
-      while (rep &&
-             ((lGetHost(rep, keyfield) == NULL && lGetHost(ep, keyfield) == NULL) ||
-              (lGetHost(rep, keyfield) == NULL && !strcasecmp(lGetHost(ep, keyfield), "none")) ||
-              (lGetHost(ep, keyfield) == NULL && !strcasecmp(lGetHost(rep, keyfield), "none")) || 
-              (!sge_hostcmp(lGetHost(rep, keyfield), lGetHost(ep, keyfield))))) {
-         lRemoveElem(cl, &rep);
-         rep = lNext(ep);
-      }
-      ep = lNext(ep);
-   }
-
-   DRETURN(cl);
-}   

@@ -104,7 +104,6 @@ void sge_setup_sge_execd(sge_gdi_ctx_class_t *ctx, const char* tmp_err_file_name
          SGE_EXIT(NULL, 1);
       }
       sleep(1);
-      ctx->get_master(ctx, true);
    }
    sge_show_conf();         
 
@@ -200,11 +199,6 @@ int job_initialize_job(lListElem *job)
                                                                                       /* add also job reports for tasks */
       for_each (pe_task, lGetList(ja_task, JAT_task_list)) {
          add_job_report(job_id, ja_task_id, lGetString(pe_task, PET_id), job);
-      }
-
-      if (mconf_get_simulate_jobs()) {
-         /* nothing to do for simulated jobs */
-         continue;
       }
 
       /* does active dir exist ? */

@@ -82,6 +82,11 @@ extern "C" {
 *        internal field; used only to store number used slots
 *        this field gets not spooled, updated dynamically
 *  
+*     SGE_ULONG(PE_free_slots)
+*        internal field; number of free slots
+*        Used only by flatfile spooling as a marker.  Never actually
+*        gets set.
+*  
 *     SGE_STRING(PE_urgency_slots)
 *        Specifies what slot amount shall be used when computing jobs 
 *        static urgency in case of jobs with slot range PE requests. 
@@ -113,6 +118,7 @@ enum {
    PE_allocation_rule,    
    PE_control_slaves,    
    PE_job_is_first_task,
+   PE_free_slots,
    PE_resource_utilization,
    PE_urgency_slots,
 #ifdef SGE_PQS_API
@@ -134,6 +140,7 @@ LISTDEF(PE_Type)
    SGE_STRING_D(PE_allocation_rule, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF, "$pe_slots")
    SGE_BOOL_D(PE_control_slaves, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF, "FALSE")
    SGE_BOOL_D(PE_job_is_first_task, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF, "TRUE")
+   SGE_ULONG(PE_free_slots, CULL_DEFAULT | CULL_JGDI_HIDDEN)
    SGE_LIST(PE_resource_utilization, RUE_Type, CULL_DEFAULT | CULL_JGDI_HIDDEN)
    SGE_STRING_D(PE_urgency_slots, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF, "min")
 #ifdef SGE_PQS_API
@@ -152,6 +159,7 @@ NAMEDEF(PEN)
    NAME("PE_allocation_rule")
    NAME("PE_control_slaves")
    NAME("PE_job_is_first_task")
+   NAME("PE_free_slots")
    NAME("PE_resource_utilization")
    NAME("PE_urgency_slots")
 #ifdef SGE_PQS_API

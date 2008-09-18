@@ -143,25 +143,8 @@
    }
 
 #define DLOCKPRINTF(msg)                                                         \
-   if (rmon_condition(xaybzc, LOCK)) {                                           \
-      rmon_helper_t *helper = rmon_get_helper();                                 \
-      if (helper != NULL) {                                                      \
-         cl_thread_settings_t* ___thread_config = cl_thread_get_thread_config(); \
-         if (___thread_config != NULL) {                                         \
-            strcpy(helper->thread_name, ___thread_config->thread_name);          \
-         }                                                                       \
-      }                                                                          \
-      rmon_mprintf_lock msg ;                                                    \
-      if (helper != NULL) {                                                      \
-         helper->thread_name[0] = '\0';                                          \
-      }                                                                          \
-   }
-
-#define DLOCKPRINTF_(msg)                                                         \
-   if (rmon_condition(xaybzc, LOCK)) {                                           \
-      rmon_mprintf_lock msg ;                                                    \
-   }
-
+   if (rmon_condition(xaybzc, LOCK))                                             \
+      rmon_mprintf_lock msg
 
 #define DPRINTF(msg)                                                             \
    if (rmon_condition(xaybzc, INFOPRINT)) {                                      \

@@ -61,8 +61,6 @@
 #include "msg_qsub.h"
 #include "msg_qmaster.h"
 #include "basis_types.h"
-#include "msg_common.h"
-
 
 extern sge_gdi_ctx_class_t *ctx;
 
@@ -99,11 +97,11 @@ char **argv
    dstring session_key_out = DSTRING_INIT;
    dstring diag = DSTRING_INIT;
    dstring jobid = DSTRING_INIT;
+   bool has_terse = false;
    u_long32 start, end, step;
    u_long32 num_tasks;
    int count, stat;
    char *jobid_string = NULL;
-   bool has_terse = false;
    drmaa_attr_values_t *jobids = NULL;
 
    u_long32 prog_number = 0;
@@ -131,7 +129,7 @@ char **argv
               sge_dstring_get_string(&diag));
       fprintf(stderr, "\n");
       DEXIT;
-      SGE_EXIT((void**)&ctx, 1);
+      SGE_EXIT(NULL, 1);
    }
 
    prog_number = ctx->get_who(ctx);
@@ -150,7 +148,7 @@ char **argv
    tmp_ret = answer_list_print_err_warn(&alp, NULL, NULL, MSG_WARNING);
    if (tmp_ret > 0) {
       DEXIT;
-      SGE_EXIT((void**)&ctx, tmp_ret);
+      SGE_EXIT(NULL, tmp_ret);
    }
 
    /*
@@ -161,7 +159,7 @@ char **argv
    tmp_ret = answer_list_print_err_warn(&alp, NULL, "qsub: ", MSG_QSUB_WARNING_S);
    if (tmp_ret > 0) {
       DEXIT;
-      SGE_EXIT((void**)&ctx, tmp_ret);
+      SGE_EXIT(NULL, tmp_ret);
    }
 
    /*
@@ -170,7 +168,7 @@ char **argv
    if (opt_list_has_X(opts_cmdline, "-help")) {
       sge_usage(QSUB, stdout);
       DEXIT;
-      SGE_EXIT((void**)&ctx, 0);
+      SGE_EXIT(NULL, 0);
    }
 
    /*
@@ -196,7 +194,7 @@ char **argv
                                            MSG_WARNING);
       if (tmp_ret > 0) {
          DEXIT;
-         SGE_EXIT((void**)&ctx, tmp_ret);
+         SGE_EXIT(NULL, tmp_ret);
       }
    }
 
@@ -216,7 +214,7 @@ char **argv
       
       lRemoveElem(opts_all, &ep);
    }
-
+   
    if (wait_for_job) {
       DPRINTF(("Wait for job end\n"));
    }
@@ -226,13 +224,13 @@ char **argv
    tmp_ret = answer_list_print_err_warn(&alp, NULL, "qsub: ", MSG_WARNING);
    if (tmp_ret > 0) {
       DEXIT;
-      SGE_EXIT((void**)&ctx, tmp_ret);
+      SGE_EXIT(NULL, tmp_ret);
    }
 
    if (set_sec_cred(sge_root, mastername, job, &alp) != 0) {
       answer_list_output(&alp);
       DEXIT;
-      SGE_EXIT((void**)&ctx, 1);
+      SGE_EXIT(NULL, 1);
    }
 
    /* Check is we're just verifying the job */
@@ -248,7 +246,7 @@ char **argv
    if (lGetUlong(job, JB_verify)) {
       cull_show_job(job, 0);
       DEXIT;
-      SGE_EXIT((void**)&ctx, 0);
+      SGE_EXIT(NULL, 0);
    }
 
    if (is_immediate || wait_for_job) {
@@ -359,7 +357,7 @@ char **argv
 
       /* print the tersed output */
       if (has_terse) {
-         printf("%s", jobid_string);
+        printf("%s", jobid_string);
       } else if (output != NULL) {
         printf("%s", output);
       } else {

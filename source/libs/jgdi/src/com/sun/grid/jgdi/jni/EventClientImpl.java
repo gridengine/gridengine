@@ -68,15 +68,19 @@ import java.util.logging.Logger;
 public class EventClientImpl implements EventClient {
 
     private static final Logger log = Logger.getLogger("com.sun.grid.jgdi.event");
+    
     private static List<EventClientImpl> instances = new LinkedList<EventClientImpl>();
     private static volatile boolean shutdown = false;
+
     private Set<EventListener> eventListeners = Collections.<EventListener>emptySet();
     private final Lock listenerLock = new ReentrantLock();
+    
     private final Lock executorLock = new ReentrantLock();
     private ExecutorService executor = null;
-    private Future eventLoopFuture = null;
+    private Future  eventLoopFuture = null;
+    
     private final EventLoopAction eventLoop;
-
+    
     /**
      * Creates a new instance of EventClientImpl
      * @param url  JGDI connection url in the form
@@ -85,12 +89,12 @@ public class EventClientImpl implements EventClient {
      *               event client id dynamically)
      */
     public EventClientImpl(String url, int regId) {
-        shutdown = false;
         eventLoop = new EventLoopAction(url, regId);
-        synchronized (instances) {
+        synchronized(instances) {
             instances.add(this);
         }
     }
+
 
     /**
      * Get the id of this event client
@@ -101,12 +105,6 @@ public class EventClientImpl implements EventClient {
         int ret = eventLoop.getId();
         log.exiting(getClass().getName(), "getId", ret);
         return ret;
-    }
-
-    public static void resetShutdown() {
-        synchronized (instances) {
-            shutdown = false;
-        }
     }
 
     /**
@@ -124,31 +122,31 @@ public class EventClientImpl implements EventClient {
             try {
                 evt.close();
             } catch (Exception ex) {
-            // Ignore
+                // Ignore
             }
         }
         log.exiting(EventClientImpl.class.getName(), "closeAll");
     }
-
+    
     /**
      *  Close this event client
      */
-    public void close() {
+    public void close()  {
         log.entering(getClass().getName(), "close");
         executorLock.lock();
         try {
             // Stop the event loop execution
             if (eventLoopFuture != null) {
                 try {
-                    if (!eventLoopFuture.isCancelled()) {
+                    if(!eventLoopFuture.isCancelled()) {
                         eventLoopFuture.cancel(true);
                         eventLoop.interrupt();
                     }
-                    if (!eventLoopFuture.isDone()) {
+                    if(!eventLoopFuture.isDone()) {
                         eventLoopFuture.get();
                     }
-                } catch (Exception ex) {
-                    log.log(Level.WARNING, "Stopping of event loop failed", ex);
+                } catch(Exception ex) {
+                    log.log(Level.WARNING,"Stopping of event loop failed", ex);
                 } finally {
                     eventLoopFuture = null;
                 }
@@ -158,13 +156,13 @@ public class EventClientImpl implements EventClient {
                 try {
                     executor.awaitTermination(60, TimeUnit.SECONDS);
                 } catch (InterruptedException ex) {
-                // Ingore
-                } finally {
+                    // Ingore
+                } finally {                  
                     executor = null;
                 }
             }
-        } catch (Throwable ex) {
-            log.log(Level.WARNING, "Close of event client failed", ex);
+        } catch(Throwable ex) {
+            log.log(Level.WARNING,"Close of event client failed", ex);
         } finally {
             executorLock.unlock();
             synchronized (instances) {
@@ -173,6 +171,7 @@ public class EventClientImpl implements EventClient {
         }
         log.exiting(getClass().getName(), "close");
     }
+
 
     /**
      *  Determine if the event client has been closed
@@ -185,7 +184,7 @@ public class EventClientImpl implements EventClient {
         log.exiting(getClass().getName(), "isClosed", ret);
         return ret;
     }
-
+    
     /**
      * Determine if the event client is running
      * @return <code>true</code> if the event client is running
@@ -221,7 +220,7 @@ public class EventClientImpl implements EventClient {
      */
     public void addEventListener(EventListener lis) {
         log.entering(getClass().getName(), "addEventListener", lis);
-
+        
         listenerLock.lock();
         try {
             Set<EventListener> tmp = eventListeners;
@@ -258,8 +257,8 @@ public class EventClientImpl implements EventClient {
         boolean started = false;
         executorLock.lock();
         try {
-            if (eventLoop.getState().equals(State.STOPPED)) {
-                if (shutdown) {
+            if(eventLoop.getState().equals(State.STOPPED)) {
+                if(shutdown) {
                     throw new JGDIException("Can not start event client, shutdown is in progress");
                 }
                 // the close method is smart enough to do nothing
@@ -270,18 +269,18 @@ public class EventClientImpl implements EventClient {
                 executor = Executors.newSingleThreadExecutor();
                 eventLoopFuture = executor.submit(eventLoop);
                 started = true;
-            }
+            } 
         } finally {
             executorLock.unlock();
         }
-        if (started) {
+        if(started) {
             log.log(Level.FINE, "Waiting for worker thread startup");
             eventLoop.waitForStartup();
             log.log(Level.FINE, "worker thread started");
         }
         log.exiting(getClass().getName(), "start");
     }
-
+    
     /**
      * Commit the changed subscription
      * @throws com.sun.grid.jgdi.JGDIException
@@ -304,7 +303,7 @@ public class EventClientImpl implements EventClient {
         eventLoop.subscribe(type);
         log.exiting(getClass().getName(), "subscribe");
     }
-
+    
     /**
      * Add a set of events to the subscription
      * @param types set of event types
@@ -324,7 +323,7 @@ public class EventClientImpl implements EventClient {
         eventLoop.unsubscribe(type);
         log.exiting(getClass().getName(), "unsubscribe");
     }
-
+    
     /**
      * Remove a set of events from the subscription
      * @param types the set of events
@@ -339,7 +338,7 @@ public class EventClientImpl implements EventClient {
      *  Subscribe all events for this event client
      */
     public void subscribeAll() {
-        log.entering(getClass().getName(), "subscribeAll");
+        log.entering(getClass().getName(), "subscribeAll"); 
         eventLoop.subscribeAll();
         log.exiting(getClass().getName(), "subscribeAll");
     }
@@ -348,17 +347,17 @@ public class EventClientImpl implements EventClient {
      *  Unsubscribe all events for this event client
      */
     public void unsubscribeAll() {
-        log.entering(getClass().getName(), "unsubscribeAll");
+        log.entering(getClass().getName(), "unsubscribeAll");        
         eventLoop.unsubscribeAll();
         log.exiting(getClass().getName(), "unsubscribeAll");
     }
-
+    
     /**
      * Set the subscription of this event client
      * @param types set of event types
      */
     public void setSubscription(Set<EventTypeEnum> types) {
-        log.entering(getClass().getName(), "setSubscription", types);
+        log.entering(getClass().getName(), "setSubscription", types);        
         eventLoop.setSubscription(types);
         log.exiting(getClass().getName(), "setSubscription");
     }
@@ -373,30 +372,30 @@ public class EventClientImpl implements EventClient {
         log.exiting(getClass().getName(), "getSubscription", ret);
         return ret;
     }
-
+    
     /**
      * Set the flush time for subscribed events
      * @param map   map with event type as key and flush time as value
      */
-    public void setFlush(Map<EventTypeEnum, Integer> map) {
+    public void setFlush(Map<EventTypeEnum,Integer> map) {
         log.entering(getClass().getName(), "setFlush", map);
         eventLoop.setFlush(map);
         log.exiting(getClass().getName(), "setFlush");
     }
-
+    
     /**
      * Set the flush time for subscribed event
      * @param type the event type
      * @param time the flush time
      */
     public void setFlush(EventTypeEnum type, int time) {
-        if (log.isLoggable(Level.FINER)) {
-            log.entering(getClass().getName(), "setFlush", new Object[]{type, time});
+        if(log.isLoggable(Level.FINER)) {
+            log.entering(getClass().getName(), "setFlush", new Object [] { type, time });
         }
         eventLoop.setFlush(type, time);
         log.exiting(getClass().getName(), "setFlush");
     }
-
+    
     /**
      * Get the flush time of a event
      * @param type  the event type
@@ -410,13 +409,13 @@ public class EventClientImpl implements EventClient {
     }
 
     private native void commitNative(int evcIndex) throws JGDIException;
-
+    
     private native void setFlushNative(int evcIndex, int type, boolean flush, int time) throws JGDIException;
-
+    
     private native int getFlushNative(int evcIndex, int type) throws JGDIException;
 
     private native void interruptNative(int evcIndex) throws JGDIException;
-
+    
     private native void closeNative(int evcIndex) throws JGDIException;
 
     private native int initNative(JGDI jgdi, int regId) throws JGDIException;
@@ -424,9 +423,9 @@ public class EventClientImpl implements EventClient {
     private native int registerNative(int evcIndex) throws JGDIException;
 
     private native void fillEvents(int evcIndex, List eventList) throws JGDIException;
-
+    
     private native void subscribeNative(int evcIndex, int evenType, boolean subcribe) throws JGDIException;
-
+    
     enum State {
 
         STARTING,
@@ -435,34 +434,38 @@ public class EventClientImpl implements EventClient {
         STOPPED,
         ERROR
     }
-    private static EventTypeEnum[] ALWAYS_SUBSCRIBED = {
+    
+    private static EventTypeEnum [] ALWAYS_SUBSCRIBED = {
         EventTypeEnum.QmasterGoesDown, EventTypeEnum.Shutdown
     };
-
+    
     private class EventLoopAction implements Runnable {
-
+        
+        
         private State state = State.STOPPED;
         private final String url;
         private final int regId;
         private final Lock lock = new ReentrantLock();
-        private final Condition stateChangedCondition = lock.newCondition();
-        private final Condition commitCondition = lock.newCondition();
+        private final Condition stateChangedCondition = lock.newCondition(); 
+        
         private final Map<EventTypeEnum, Integer> subscription = new HashMap<EventTypeEnum, Integer>();
         private final Set<EventTypeEnum> nativeSubscription = new HashSet<EventTypeEnum>();
+        
         private int evcId;
         private int evcIndex;
+        
         private boolean commitFlag;
         private JGDIException error;
-
+        
         public EventLoopAction(String url, int regId) {
             this.url = url;
             this.regId = regId;
-            for (EventTypeEnum type : ALWAYS_SUBSCRIBED) {
+            for(EventTypeEnum type: ALWAYS_SUBSCRIBED) {
                 subscription.put(type, null);
                 nativeSubscription.add(type);
             }
         }
-
+        
         public int getId() {
             lock.lock();
             try {
@@ -471,27 +474,24 @@ public class EventClientImpl implements EventClient {
                 lock.unlock();
             }
         }
-
+        
         public void commit() throws JGDIException {
             lock.lock();
             try {
-                if (!state.equals(State.RUNNING)) {
+                if(!state.equals(State.RUNNING)) {
                     throw new JGDIException("Cannot commit, event client is not started");
                 }
                 commitFlag = true;
                 interruptNative(evcIndex);
-                commitCondition.await();
-            } catch (InterruptedException ex) {
-                // ignore
             } finally {
                 lock.unlock();
             }
         }
-
+        
         public void interrupt() throws JGDIException {
             lock.lock();
             try {
-                if (evcIndex >= 0) {
+                if(evcIndex >= 0) {
                     interruptNative(evcIndex);
                 }
             } finally {
@@ -502,7 +502,7 @@ public class EventClientImpl implements EventClient {
         private void setState(State state) {
             lock.lock();
             try {
-                if (!this.state.equals(state)) {
+                if(!this.state.equals(state)) {
                     this.state = state;
                     stateChangedCondition.signalAll();
                 }
@@ -510,16 +510,16 @@ public class EventClientImpl implements EventClient {
                 lock.unlock();
             }
         }
-
+        
         public State getState() {
             lock.lock();
             try {
                 return state;
-            } finally {
+            }finally {
                 lock.unlock();
             }
         }
-
+        
         private void error(JGDIException ex) {
             lock.lock();
             try {
@@ -531,13 +531,13 @@ public class EventClientImpl implements EventClient {
             }
             log.log(Level.WARNING, "error in event loop", ex);
         }
-
+        
         public void waitForStartup() throws JGDIException {
             lock.lock();
             try {
-                while (true) {
-                    switch (state) {
-                        case RUNNING:
+                while(true) {
+                    switch(state) {
+                        case RUNNING: 
                             return;
                         case ERROR:
                             throw error;
@@ -546,7 +546,7 @@ public class EventClientImpl implements EventClient {
                         default:
                             stateChangedCondition.await();
                     }
-
+                    
                 }
             } catch (InterruptedException ex) {
                 throw new JGDIException(ex, "Startup of event client has been interrupted");
@@ -556,19 +556,19 @@ public class EventClientImpl implements EventClient {
         }
 
         public boolean isAlwaysSubscribed(EventTypeEnum type) {
-            for (EventTypeEnum tmpType : ALWAYS_SUBSCRIBED) {
-                if (tmpType.equals(type)) {
+            for(EventTypeEnum tmpType: ALWAYS_SUBSCRIBED) {
+                if(tmpType.equals(type)) {
                     return true;
                 }
             }
             return false;
         }
-
+        
         private void doCommit(int evcIndex) throws JGDIException {
             log.entering(getClass().getName(), "doCommit");
-            lock.lock();
+            lock.lock(); 
             try {
-                if (commitFlag) {
+                if(commitFlag) {
                     log.log(Level.FINE, "commiting subscription");
                     commitFlag = false;
                     Set<EventTypeEnum> rmSub = new HashSet<EventTypeEnum>(nativeSubscription);
@@ -579,15 +579,15 @@ public class EventClientImpl implements EventClient {
                         }
                     }
                     for (EventTypeEnum type : rmSub) {
-                        if (!isAlwaysSubscribed(type)) {
-                            log.log(Level.FINE, "unsubscribing event {0}", type);
+                        if(!isAlwaysSubscribed(type)) {
+                            log.log(Level.FINE,"unsubscribing event {0}", type);
                             subscribeNative(evcIndex, EventTypeMapping.getNativeEventType(type), false);
                             nativeSubscription.remove(type);
                         }
                     }
                     for (EventTypeEnum type : newSub) {
-                        if (!isAlwaysSubscribed(type)) {
-                            log.log(Level.FINE, "subscribing event {0}", type);
+                        if(!isAlwaysSubscribed(type)) {
+                            log.log(Level.FINE,"subscribing event {0}", type);
                             subscribeNative(evcIndex, EventTypeMapping.getNativeEventType(type), true);
                             nativeSubscription.add(type);
                         }
@@ -595,21 +595,20 @@ public class EventClientImpl implements EventClient {
 
                     for (Map.Entry<EventTypeEnum, Integer> entry : subscription.entrySet()) {
                         if (entry.getValue() != null) {
-                            if (log.isLoggable(Level.FINE)) {
-                                log.log(Level.FINE, "setting flush for event {0} = {1}", new Object[]{entry.getKey(), entry.getValue()});
+                            if(log.isLoggable(Level.FINE)) {
+                                log.log(Level.FINE,"setting flush for event {0} = ", new Object [] { entry.getKey(), entry.getValue() });
                             }
                             setFlushNative(evcIndex, EventTypeMapping.getNativeEventType(entry.getKey()), true, entry.getValue());
                         }
                     }
                     commitNative(evcIndex);
-                    commitCondition.signalAll();
                 }
             } finally {
                 lock.unlock();
             }
             log.exiting(getClass().getName(), "doCommit", null);
         }
-
+        
         public void run() {
             log.entering(getClass().getName(), "run");
 
@@ -617,10 +616,10 @@ public class EventClientImpl implements EventClient {
             try {
                 setState(State.STARTING);
                 jgdi = JGDIFactory.newInstance(url);
-
+                
                 log.log(Level.FINER, "calling initNative({0})", regId);
                 evcIndex = initNative(jgdi, regId);
-
+                
                 log.log(Level.FINER, "calling registerNative({0})", evcIndex);
                 int id = registerNative(evcIndex);
                 log.log(Level.FINER, "event client registered (id={0})", id);
@@ -631,21 +630,21 @@ public class EventClientImpl implements EventClient {
                     lock.unlock();
                 }
                 setState(State.RUNNING);
-
+                
                 boolean gotShutdownEvent = false;
                 List<Event> eventList = new ArrayList<Event>();
 
                 while (true) {
                     if (Thread.currentThread().isInterrupted()) {
-                        log.log(Level.FINE, "event loop has been interrupted");
+                        log.log(Level.FINE,"event loop has been interrupted");
                         break;
                     }
                     if (gotShutdownEvent) {
                         break;
                     }
-
+                    
                     doCommit(evcIndex);
-
+                    
                     log.log(Level.FINER, "calling native method fillEvents for event client {0}", evcId);
                     fillEvents(evcIndex, eventList);
 
@@ -655,7 +654,7 @@ public class EventClientImpl implements EventClient {
                     }
 
                     if (Thread.currentThread().isInterrupted()) {
-                        log.log(Level.FINE, "event loop has been interrupted");
+                        log.log(Level.FINE,"event loop has been interrupted");
                         break;
                     }
                     for (Event event : eventList) {
@@ -673,26 +672,26 @@ public class EventClientImpl implements EventClient {
                     }
                     eventList.clear();
                 }
-            } catch (JGDIException ex) {
+            } catch(JGDIException ex) {
                 error(ex);
-            } catch (Throwable ex) {
+            } catch(Throwable ex) {
                 error(new JGDIException(ex, "Unknown error in event loop"));
             } finally {
                 setState(State.STOPPING);
-                if (evcIndex >= 0) {
+                if(evcIndex >= 0 ) {
                     try {
                         closeNative(evcIndex);
-                    } catch (Exception ex) {
-                    // Ignore
+                    } catch(Exception ex) {
+                        // Ignore
                     } finally {
                         evcIndex = -1;
                     }
                 }
-                if (jgdi != null) {
+                if(jgdi != null) {
                     try {
                         jgdi.close();
-                    } catch (Exception ex) {
-                    // Igore
+                    } catch(Exception ex) {
+                        // Igore
                     }
                 }
                 setState(State.STOPPED);
@@ -702,11 +701,10 @@ public class EventClientImpl implements EventClient {
                     subscription.put(type, null);
                     nativeSubscription.add(type);
                 }
-                commitCondition.signalAll();
             }
             log.exiting(getClass().getName(), "run");
         }
-
+        
         public void subscribe(EventTypeEnum type) {
             log.entering(getClass().getName(), "subscribe", type);
             lock.lock();
@@ -736,7 +734,7 @@ public class EventClientImpl implements EventClient {
 
             lock.lock();
             try {
-                if (!isAlwaysSubscribed(type)) {
+                if(!isAlwaysSubscribed(type)) {
                     subscription.remove(type);
                 }
             } finally {
@@ -751,7 +749,7 @@ public class EventClientImpl implements EventClient {
             lock.lock();
             try {
                 for (EventTypeEnum type : types) {
-                    if (!isAlwaysSubscribed(type)) {
+                    if(!isAlwaysSubscribed(type)) {
                         subscription.remove(type);
                     }
                 }
@@ -788,7 +786,7 @@ public class EventClientImpl implements EventClient {
             lock.lock();
             try {
                 subscription.clear();
-                for (EventTypeEnum type : ALWAYS_SUBSCRIBED) {
+                for(EventTypeEnum type: ALWAYS_SUBSCRIBED) {
                     subscription.put(type, null);
                 }
             } finally {
@@ -802,7 +800,7 @@ public class EventClientImpl implements EventClient {
             lock.lock();
             try {
                 subscription.clear();
-                for (EventTypeEnum type : ALWAYS_SUBSCRIBED) {
+                for(EventTypeEnum type: ALWAYS_SUBSCRIBED) {
                     subscription.put(type, null);
                 }
                 subscribe(types);
@@ -866,5 +864,6 @@ public class EventClientImpl implements EventClient {
             log.exiting(getClass().getName(), "setFlush", ret);
             return ret;
         }
+
     }
 }

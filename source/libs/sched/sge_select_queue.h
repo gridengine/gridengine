@@ -52,7 +52,7 @@ int sge_load_alarm(char *reason, lListElem *queue, lList *threshold,
 void sge_create_load_list(const lList *queue_list, const lList *host_list, 
                           const lList *centry_list, lList **load_list); 
 
-bool sge_load_list_alarm(bool monitor_next_run, lList *load_list, const lList *host_list, 
+bool sge_load_list_alarm(lList *load_list, const lList *host_list, 
                          const lList *centry_list);
 
 void sge_remove_queue_from_load_list(lList **load_list, const lList *queue_list);
@@ -63,17 +63,17 @@ char *sge_load_alarm_reason(lListElem *queue, lList *threshold, const lList *exe
                             const lList *complex_list, char  *reason, int reason_size, 
                             const char *type); 
 
-int sge_split_queue_load(bool monitor_next_run, lList **unloaded, lList **overloaded, lList *exechost_list, 
+int sge_split_queue_load(lList **unloaded, lList **overloaded, lList *exechost_list, 
                          lList *complex_list, const lList *load_adjustments, 
                          lList *granted, bool is_consumable_load_alarm, bool is_comprehensive,
                          u_long32 ttype);
 
-int sge_split_queue_slots_free(bool monitor_next_run, lList **unloaded, lList **overloaded);
+int sge_split_queue_slots_free(lList **unloaded, lList **overloaded);
 
-int sge_split_cal_disabled(bool monitor_next_run, lList **unloaded, lList **overloaded);
-int sge_split_disabled(bool monitor_next_run, lList **unloaded, lList **overloaded);
+int sge_split_cal_disabled(lList **unloaded, lList **overloaded);
+int sge_split_disabled(lList **unloaded, lList **overloaded);
 
-int sge_split_suspended(bool monitor_next_run, lList **queue_list, lList **suspended);
+int sge_split_suspended(lList **queue_list, lList **suspended);
 
 
 /* --- job assignment methods ---------------------------- */
@@ -82,24 +82,6 @@ enum {
    DISPATCH_TIME_NOW = 0, 
    DISPATCH_TIME_QUEUE_END = LONG32_MAX
 };
-
-typedef struct {
-   int par_global;
-   int par_rqs;
-   int par_cqstat;
-   int par_hstat;
-   int par_qstat;
-   int par_hdyn;
-   int par_qdyn;
-
-   int seq_global;
-   int seq_rqs;
-   int seq_cqstat;
-   int seq_hstat ;
-   int seq_qstat;
-   int seq_hdyn;
-   int seq_qdyn;
-} sched_prof_t;
 
 typedef struct {
    /* ------ this section determines the assignment ------------------------------- */
@@ -111,7 +93,7 @@ typedef struct {
    const char* user;              /* user name (JB_owner)                           */
    const char* group;             /* group name (JB_group)                          */
    const char* project;           /* project name (JB_project)                      */
-   const lListElem *ckpt;         /* the checkpoint interface (CK_Type)             */
+   lListElem  *ckpt;              /* the checkpoint interface (CK_Type)             */
    lListElem  *gep;               /* the global host (EH_Type)                      */
    u_long32   duration;           /* jobs time of the assignment                    */
    lList      *load_adjustments;  /* shall load adjustmend be considered (CE_Type)  */
@@ -123,7 +105,7 @@ typedef struct {
    lList      *rqs_list;          /* the resource quota set list (RQS_Type)         */ 
    lList      *ar_list;           /* the advance reservation list (AR_Type)         */ 
    bool       is_reservation;     /* true, if a reservation for this job should be done */
-   bool       care_reservation;   /* false, if reservation is not of interest       */
+   bool       care_reservation;   /* false, if reservation is not of interes        */
    bool       is_advance_reservation; /* true for advance reservation scheduling    */
    bool       is_job_verify;      /* true, if job verification (-w ev) (in qmaster) */
    bool       is_schedule_based;  /* true, if resource reservation is enabled       */
@@ -139,14 +121,10 @@ typedef struct {
    int        slots;              /* total number of slots                          */
    u_long32   start;              /* jobs start time                                */
    int        soft_violations;    /* number of soft request violations              */
-   lList      **monitor_alpp;     /* place scheduler diagnosis here if non-NULL     */
-   bool       monitor_next_run;   /* controls qconf -tsm scheduler diagnosis        */
-   /* ------ scheduler profiling index as picky pack data ------------------------- */
-   sched_prof_t *pi;
 } sge_assignment_t;
 
 #define SGE_ASSIGNMENT_INIT {0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, \
-   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, false, false, false, false, false, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, false, NULL}
+   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, false, false, false, false, false, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0}
 
 void assignment_init(sge_assignment_t *a, lListElem *job, lListElem *ja_task, bool is_load_adj);
 void assignment_copy(sge_assignment_t *dst, sge_assignment_t *src, bool move_gdil);
@@ -175,10 +153,14 @@ sge_select_parallel_environment(sge_assignment_t *best, lList *pe_list);
 
 bool is_requested(lList *req, const char *attr);
 
-dispatch_t sge_queue_match_static(const sge_assignment_t *a, lListElem *queue);
+dispatch_t 
+sge_queue_match_static(lListElem *queue, lListElem *job, const lListElem *pe, 
+                       const lListElem *ckpt, lList *centry_list, lList *acl_list,
+                       lList *hgrp_list, lList *ar_list);
 
 dispatch_t
-sge_host_match_static(const sge_assignment_t *a, lListElem *host);
+sge_host_match_static(lListElem *job, lListElem *ja_task, lListElem *host, lList *centry_list, 
+                      lList *acl_list);
 
 /* ------ DEBUG / output methods --------------------------------------------------- */
 
@@ -201,7 +183,5 @@ dispatch_t
 ri_time_by_slots(const sge_assignment_t *a, lListElem *request, lList *load_attr, lList *config_attr, lList *actual_attr, 
                 lListElem *queue, dstring *reason, bool allow_non_requestable, 
                 int slots, u_long32 layer, double lc_factor, u_long32 *start_time, const char *object_name); 
-
-dispatch_t cqueue_match_static(const char *cqname, sge_assignment_t *a);
 
 #endif

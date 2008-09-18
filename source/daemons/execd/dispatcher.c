@@ -67,12 +67,12 @@
 #   include "sge_smf.h"
 #endif
 
-int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx)
+int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx, char* err_str, void (*errfunc)(const char *))
 {
    monitoring_t monitor;
    bool terminate = false;
    bool do_reconnect = false;
-   int ret = CL_RETVAL_UNKNOWN;
+   int ret = CL_RETVAL_OK;
 
    DENTER(TOP_LAYER, "sge_execd_process_messages");
 
@@ -95,7 +95,8 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx)
          sge_pack_buffer apb;
          int atag = 0;
 
-         switch (msg.tag) {
+         switch (msg.tag)
+         {
             case TAG_JOB_EXECUTION:
                if (init_packbuffer(&apb, 1024, 0) == PACK_SUCCESS) {
                   do_job_exec(ctx, &msg, &apb);
@@ -124,7 +125,6 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx)
                do_kill_execd(ctx, &msg);
 #if defined(SOLARIS)
                if (sge_smf_used() == 1) {
-		  /* We must stop, we don't care about current or next planned service state */
                   sge_smf_temporary_disable_instance();
                }
 #endif   
@@ -150,26 +150,12 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx)
             clear_packbuffer(&apb);
          }
       } else {
-         switch (ret) {
-            case CL_RETVAL_CONNECTION_NOT_FOUND:  /* we lost connection to qmaster */
-            case CL_RETVAL_CONNECT_ERROR:         /* or we can't connect */
-               do_reconnect = true;
-               break;
-            case CL_RETVAL_NO_MESSAGE:
-            case CL_RETVAL_SYNC_RECEIVE_TIMEOUT:
-               break;
-            default:
-               do_reconnect = true;
-               break;
-         }  
          cl_commlib_trigger(ctx->get_com_handle(ctx), 1);
       }
 
-      if (sge_get_com_error_flag(EXECD, SGE_COM_WAS_COMMUNICATION_ERROR, false)) {
-         do_reconnect = true;
-      }
+      if (do_reconnect || sge_get_com_error_flag(EXECD, SGE_COM_WAS_COMMUNICATION_ERROR)) {
 
-      if (do_reconnect) {
+         do_reconnect = true;
          if (cl_com_get_handle("execd", 1) == NULL) {
             terminate = true; /* if we don't have a handle, we must leave
                                * because execd_register will create a new one.
@@ -191,32 +177,28 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx)
                DPRINTF(("re-read actual qmaster file\n"));
                last_qmaster_file_read = now;
 
-               /* This code will re-read act qmaster file! */
-               ctx->get_master(ctx, true);
-
-               /* Try to re-register at qmaster */
+               /* re-register at qmaster when connection is up again */
                if (sge_execd_register_at_qmaster(ctx, true) == 0) {
-                  do_reconnect = false;    /* we are reconnected */
-                  sge_get_com_error_flag(EXECD, SGE_COM_WAS_COMMUNICATION_ERROR, true);
-               }
+                     do_reconnect = false;
+               } 
             }
          }
       }
-
-      if (sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED, false)) {
+      if (sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED) ||
+          sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE)){
          terminate = true; /* leave sge_execd_process_messages */
-         ret = SGE_COM_ACCESS_DENIED;
-      } else if (sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE, false)) {
-         terminate = true; /* leave sge_execd_process_messages */
-         ret = SGE_COM_ENDPOINT_NOT_UNIQUE;
+         ret = CL_RETVAL_UNKNOWN;
       }
-
 
       /* do cyclic stuff */
       if (!terminate) {
-         if (do_ck_to_do(ctx) == 1) {
+         int check_to_do_ret = do_ck_to_do(ctx);
+
+         if (check_to_do_ret == 1) {
             terminate = true;
-            ret = 0;
+            ret = CL_RETVAL_OK;
+         } else if (check_to_do_ret == -1) {
+            do_reconnect = true;
          }
       }
    }

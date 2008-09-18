@@ -49,215 +49,29 @@
 #include "sge_utility.h"
 #include "sge_security.h"
 #include "sge_ijs_comm.h"
-#include "sge_mtutil.h"
-#include "msg_commlistslib.h"
-#include "sge_log.h"
-#include "msg_gdilib.h"
+
+#define THISCOMPONENT   "pty_shepherd"
+#define OTHERCOMPONENT  "pty_qrsh"
 
 extern char *g_hostname;
 extern sig_atomic_t received_signal;
 
-/*
- * TODO: Cleanup / Headers
- * This is just slightly modified copy of the gdi commlib error handling,
- * perhaps it's possible to do minimal changes in the original functions
- * and remove these.
- */
-static pthread_mutex_t ijs_general_communication_error_mutex = PTHREAD_MUTEX_INITIALIZER;
-/* local static struct to store communication errors. The boolean
- * values com_access_denied and com_endpoint_not_unique will never be
- * restored to false again 
- */
-typedef struct sge_gdi_com_error_type {
-   int  com_error;                        /* current commlib error */
-   bool com_was_error;                    /* set if there was an communication error (but not CL_RETVAL_ACCESS_DENIED or CL_RETVAL_ENDPOINT_NOT_UNIQUE)*/
-   int  com_last_error;                   /* last logged commlib error */
-   bool com_access_denied;                /* set when commlib reports CL_RETVAL_ACCESS_DENIED */
-   int  com_access_denied_counter;        /* counts access denied errors (TODO: workaround for BT: 6350264, IZ: 1893) */
-   unsigned long com_access_denied_time; /* timeout for counts access denied errors (TODO: workaround for BT: 6350264, IZ: 1893) */
-   bool com_endpoint_not_unique;          /* set when commlib reports CL_RETVAL_ENDPOINT_NOT_UNIQUE */
-   int  com_endpoint_not_unique_counter;  /* counts access denied errors (TODO: workaround for BT: 6350264, IZ: 1893) */
-   unsigned long com_endpoint_not_unique_time; /* timeout for counts access denied errors (TODO: workaround for BT: 6350264, IZ: 1893) */
-} sge_gdi_com_error_t;
-
-
-static sge_gdi_com_error_t ijs_communication_error = {CL_RETVAL_OK,
-                                                      false,
-                                                      CL_RETVAL_OK,
-                                                      false, 0, 0,
-                                                      false, 0, 0};
-
-static bool do_timeout_handling(unsigned long *time, int *counter)
-{
-   struct timeval  now;
-   unsigned long   time_diff = 0;
-   bool            ret = false;
-   
-   gettimeofday(&now, NULL);
-   if ((now.tv_sec - *time) > (3 * CL_DEFINE_READ_TIMEOUT)) {
-      *time = 0;
-      *counter = 0;
-   }
-
-   if (*time < now.tv_sec)  {
-      if (*time == 0) {
-         time_diff = 1;
-      } else {
-         time_diff = now.tv_sec - *time;
-      }
-      *counter += time_diff;
-      if (*counter > 2*CL_DEFINE_READ_TIMEOUT) {
-         ret = true;
-      }
-      *time = now.tv_sec;
-   }
-   return ret;
-}
-
 static void ijs_general_communication_error(
                const cl_application_error_list_elem_t *commlib_error)
 {
-   DENTER(TOP_LAYER, "ijs_general_communication_error");
-
-   if (commlib_error == NULL) {
-      DEXIT;
-      return;
-   }
-
-   sge_mutex_lock("ijs_general_communication_error_mutex",
-                  SGE_FUNC, __LINE__, &ijs_general_communication_error_mutex);  
-
-   /* save the communication error to react later */
-   ijs_communication_error.com_error = commlib_error->cl_error;
-
-   switch (commlib_error->cl_error) {
-      case CL_RETVAL_OK:
-         break;
-
-      case CL_RETVAL_ACCESS_DENIED:
-         if (ijs_communication_error.com_access_denied == false) {
-            /* counts access denied errors (TODO: workaround for BT: 6350264, IZ: 1893) */
-            /* increment counter only once per second and allow max CL_DEFINE_READ_TIMEOUT + 2 access denied */
-            ijs_communication_error.com_access_denied =
-               do_timeout_handling(&ijs_communication_error.com_access_denied_time,
-                                   &ijs_communication_error.com_access_denied_counter);
-         }
-         break;
-
-      case CL_RETVAL_ENDPOINT_NOT_UNIQUE: 
-         if (ijs_communication_error.com_endpoint_not_unique == false) {
-            /* counts endpoint not unique errors (TODO: workaround for BT: 6350264, IZ: 1893) */
-            /* increment counter only once per second and allow max CL_DEFINE_READ_TIMEOUT + 2 endpoint not unique */
-            DPRINTF(("got endpint not unique"));
-            ijs_communication_error.com_endpoint_not_unique = 
-               do_timeout_handling(&ijs_communication_error.com_endpoint_not_unique_time,
-                                   &ijs_communication_error.com_endpoint_not_unique_counter);
-         }
-         break;
-
-      default:
-         ijs_communication_error.com_was_error = true;
-         break;
-   }
-
-   /*
-    * now log the error if not already reported the 
-    * least CL_DEFINE_MESSAGE_DUP_LOG_TIMEOUT seconds
-    */
-   if (commlib_error->cl_already_logged == CL_FALSE && 
-      ijs_communication_error.com_last_error != ijs_communication_error.com_error) {
-
-      /*  never log the same messages again and again (commlib
-       *  will erase cl_already_logged flag every CL_DEFINE_MESSAGE_DUP_LOG_TIMEOUT
-       *  seconds (30 seconds), so we have to save the last one!
-       */
-      ijs_communication_error.com_last_error = ijs_communication_error.com_error;
-
-      switch (commlib_error->cl_err_type) {
-         case CL_LOG_ERROR:
-            if (commlib_error->cl_info != NULL) {
-               ERROR((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_SS,
-                      cl_get_error_text(commlib_error->cl_error),
-                      commlib_error->cl_info));
-            } else {
-               ERROR((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_S,
-                      cl_get_error_text(commlib_error->cl_error)));
-            }
-            break;
-
-         case CL_LOG_WARNING:
-            if (commlib_error->cl_info != NULL) {
-               WARNING((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_SS,
-                        cl_get_error_text(commlib_error->cl_error),
-                        commlib_error->cl_info));
-            } else {
-               WARNING((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_S,
-                        cl_get_error_text(commlib_error->cl_error)));
-            }
-            break;
-
-         case CL_LOG_INFO:
-            if (commlib_error->cl_info != NULL) {
-               INFO((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_SS,
-                     cl_get_error_text(commlib_error->cl_error),
-                     commlib_error->cl_info));
-            } else {
-               INFO((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_S,
-                     cl_get_error_text(commlib_error->cl_error)));
-            }
-            break;
-
-         case CL_LOG_DEBUG:
-            if (commlib_error->cl_info != NULL) {
-               DEBUG((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_SS,
-                      cl_get_error_text(commlib_error->cl_error),
-                      commlib_error->cl_info));
-            } else {
-               DEBUG((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_S,
-                      cl_get_error_text(commlib_error->cl_error)));
-            }
-            break;
-
-         case CL_LOG_OFF:
-            break;
-      }
-   }
-   sge_mutex_unlock("ijs_general_communication_error_mutex", 
-                    SGE_FUNC, __LINE__, &ijs_general_communication_error_mutex);  
-   DRETURN_VOID;
-}
-
-int comm_get_application_error(dstring *err_msg)
-{
-   int ret = COMM_RETVAL_OK;
-
-   DENTER(TOP_LAYER, "comm_get_application_error");
-   sge_mutex_lock("ijs_general_communication_error_mutex", 
-                    SGE_FUNC, __LINE__, &ijs_general_communication_error_mutex);  
-
-   if (ijs_communication_error.com_endpoint_not_unique == true) {
-      sge_dstring_sprintf(err_msg, "%s", MSG_CL_RETVAL_ENDPOINT_NOT_UNIQUE);
-      DPRINTF(("%s", sge_dstring_get_string(err_msg)));
-      ret = COMM_ENDPOINT_NOT_UNIQUE;
-   }
-   if (ijs_communication_error.com_access_denied == true) {
-      sge_dstring_sprintf(err_msg, "%s", MSG_CL_RETVAL_ACCESS_DENIED);
-      DPRINTF(("%s", sge_dstring_get_string(err_msg)));
-      ret = COMM_ACCESS_DENIED;
-   }
-   sge_mutex_unlock("ijs_general_communication_error_mutex", 
-                    SGE_FUNC, __LINE__, &ijs_general_communication_error_mutex);  
-   DRETURN(ret);
+   /* ignore errors */
 }
 
 /* redirects the commlib logging to a file */
 /* this is a modified copy of the cl_log_list_flush_list() */
-int my_log_list_flush_list(cl_raw_list_t* list_p) {
-   cl_log_list_elem_t *elem = NULL;
-   FILE               *fp = NULL;
-   struct timeval     now;
-   int                ret_val;
+int my_log_list_flush_list(cl_raw_list_t* list_p) {        /* CR check */
+   int ret_val;
+   cl_log_list_elem_t* elem = NULL;
+   struct timeval now;
 
+   FILE *fp = NULL;
+
+   
    if (list_p == NULL) {
       return CL_RETVAL_LOG_NO_LOGLIST;
    }
@@ -271,33 +85,57 @@ int my_log_list_flush_list(cl_raw_list_t* list_p) {
    }
 
    while ((elem = cl_log_list_get_first_elem(list_p)) != NULL) {
+      /* TODO: rework logging output (log to file? call foreign log function, got by function pointer ?) */
+
       gettimeofday(&now,NULL);
 
       fprintf(fp, "%-76s|", elem->log_module_name);
       if (elem->log_parameter == NULL) {
+#define CL_COM_PRINT_THREAD_ID 0
+
+#if CL_COM_PRINT_THREAD_ID
+         fprintf(fp, "%ld.%ld|%20s|%4d|%10s|%8s| %s\n",
+#else
          fprintf(fp, "%ld.%ld|%20s|%10s|%8s| %s\n",
-                 (long)now.tv_sec,
-                 (long)now.tv_usec,
-                 elem->log_thread_name,
-                 cl_thread_convert_state_id(elem->log_thread_state),
-                 cl_log_list_convert_type_id(elem->log_type),
-                 elem->log_message);
+#endif
+
+         (long)now.tv_sec,
+         (long)now.tv_usec,
+         elem->log_thread_name,
+#if CL_COM_PRINT_THREAD_ID
+         elem->log_thread_id, 
+#endif
+         cl_thread_convert_state_id(elem->log_thread_state),
+         cl_log_list_convert_type_id(elem->log_type),
+         elem->log_message);
       } else {
+#if CL_COM_PRINT_THREAD_ID
+         fprintf(fp, "%ld.%ld|%20s|%4d|%10s|%8s| %s %s\n",
+#else
          fprintf(fp, "%ld.%ld|%20s|%10s|%8s| %s %s\n",
-                 (long)now.tv_sec,
-                 (long)now.tv_usec,
-                 elem->log_thread_name,
-                 cl_thread_convert_state_id(elem->log_thread_state),
-                 cl_log_list_convert_type_id(elem->log_type),
-                 elem->log_message,
-                 elem->log_parameter);
+#endif
+
+         (long)now.tv_sec,
+         (long)now.tv_usec,
+         elem->log_thread_name,
+#if CL_COM_PRINT_THREAD_ID
+         elem->log_thread_id, 
+#endif
+         cl_thread_convert_state_id(elem->log_thread_state),
+         cl_log_list_convert_type_id(elem->log_type),
+         elem->log_message,
+         elem->log_parameter);
       }
       cl_log_list_del_log(list_p);
       fflush(fp);
    }
 
    fclose(fp);
-   return cl_raw_list_unlock(list_p);
+
+   if ((ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
+      return ret_val;
+   } 
+   return CL_RETVAL_OK;
 }
 
 /****** sge_ijs_comm/comm_init_lib() *******************************************
@@ -334,13 +172,7 @@ int comm_init_lib(dstring *err_msg)
 
    DENTER(TOP_LAYER, "comm_init_lib");
 
-   /*
-    * To enable commlib logging to a file (see my_log_list_flush_list()
-    * for the file path), exchange this line with the one below.
-    * Caution: On some architectures, logging causes problems! 
-    */
-   /*ret = cl_com_setup_commlib(CL_RW_THREAD, CL_LOG_DEBUG, my_log_list_flush_list);*/
-   ret = cl_com_setup_commlib(CL_RW_THREAD, CL_LOG_OFF, NULL); 
+   ret = cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_OFF, NULL /*my_log_list_flush_list*/);
    if (ret != CL_RETVAL_OK) {
       sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
       DPRINTF(("cl_com_setup_commlib() failed: %s (%d)\n",
@@ -370,7 +202,7 @@ int comm_init_lib(dstring *err_msg)
 *  RESULT
 *     int - COMM_RETVAL_OK:
 *              Communication library was successfully cleaned up.
-*
+* 
 *           COMM_CANT_CLEANUP_COMMLIB:
 *              Error cleaning up the communication library, err_msg contains
 *              the error reason.
@@ -412,24 +244,22 @@ int comm_cleanup_lib(dstring *err_msg)
 *     Either start a comm server or connect to a running comm server.
 *
 *  INPUTS
-*     bool b_server               - If true, a comm server is started, if false
-*                                   a connection to a server is established.
-*     bool b_secure               - If true: Use secured connections
-*     const char *this_component  - A unique name for this end of the connection.
-*     int port                    - In case of server: Port on which the server
-*                                   should listen. If this is 0, a free port is
-*                                   selected.
-*                                   In case of client: Port on which the server
-*                                   listens.
-*     const char *other_component - The unique name of the other end of the
-*                                   connection.
-*     const char *user_name       - For secured connections: Name of the user
-*                                   whose certificates are to be used.
-*                                   Ignored for unsecured connections.
+*     bool b_server              - If true, a comm server is started, if false
+*                                  a connection to a server is established.
+*     int port                   - In case of server: Port on which the server
+*                                  should listen. If this is 0, a free port is
+*                                  selected.
+*                                  In case of client: Port on which the server
+*                                  listens.
+*     const char *component_name - A unique name for this end of the connection.
+*     bool b_secure              - If true: Use secured connections
+*     const char *user_name      - For secured connections: Name of the user
+*                                  whose certificates are to be used.
+*                                  Ignored for unsecured connections.
 *     COMMUNICATION_HANDLE **handle - The address of a COMMUNICATION_HANDLE 
-*                                   pointer which must be initialized to NULL.
-*     dstring *err_msg            - Pointer to an empty dstring to receive
-*                                   error messages.
+*                                  pointer which must be initialized to NULL.
+*     dstring *err_msg           - Pointer to an empty dstring to receive
+*                                  error messages.
 *
 *  OUTPUT
 *    COMMUNICATION_HANDLE **handle - The COMMUNICATION_HANDLE of the connection.
@@ -456,16 +286,15 @@ int comm_cleanup_lib(dstring *err_msg)
 *     communication/comm_shutdown_connection()
 *******************************************************************************/
 int comm_open_connection(bool                 b_server, 
-                         bool                 b_secure,
-                         const char           *this_component,
                          int                  port, 
-                         const char           *other_component,
+                         const char           *component_name,
+                         bool                 b_secure,
                          const char           *user_name,
                          COMMUNICATION_HANDLE **handle, 
                          dstring              *err_msg)
 {
+   const char       *progname               = "pty";
    int              ret;
-   int              old_euid                = SGE_SUPERUSER_UID;
    int              ret_val                 = COMM_RETVAL_OK;
    int              commlib_error           = CL_RETVAL_OK;
    cl_framework_t   communication_framework = CL_CT_TCP;
@@ -481,30 +310,19 @@ int comm_open_connection(bool                 b_server,
       DEXIT;
       return COMM_INVALID_PARAMETER;
    }
-
    if (b_secure == true) {
 #ifdef SECURE
       communication_framework = CL_CT_SSL;
 
-      /*
-       * Got to do this with euid = root
-       */
-      if (getuid() == SGE_SUPERUSER_UID) {
-         old_euid = geteuid();
-         seteuid(SGE_SUPERUSER_UID);
+      if (strcmp(component_name, "pty_shepherd") == 0) {
+         /* pretend we are the execd to access it's credentials */
+         progname = "execd";
       }
-      ret = sge_ssl_setup_security_path(this_component, user_name);
-      /*
-       * Switch back to old euid before error handling to do tracing as
-       * the SGE admin user.
-       */
-      if (old_euid != SGE_SUPERUSER_UID) {
-         seteuid(old_euid);
-      }
-
+      ret = sge_ssl_setup_security_path(progname, user_name);
       if (ret != 0) {
-         DPRINTF(("sge_ssl_setup_security_path() failed!\n"));
-         sge_dstring_sprintf(err_msg, "Setting up SSL failed!");
+         sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
+         DPRINTF(("sge_ssl_setup_security_path() failed: %s (%d)\n",
+                  sge_dstring_get_string(err_msg), ret));
          ret_val = COMM_CANT_SETUP_SSL; 
       }
 #else
@@ -517,6 +335,8 @@ int comm_open_connection(bool                 b_server,
       DPRINTF(("%s\n", sge_dstring_get_string(err_msg)));
       return COMM_NO_SECURITY_COMPILED_IN;      
 #endif
+/* TODO: Got to call cl_com_create_ssl_setup()? */
+/* See libs/gdi/sge_gdi_ctx.c:1156 */
    } 
 
    if (ret_val == COMM_RETVAL_OK) {
@@ -538,13 +358,13 @@ int comm_open_connection(bool                 b_server,
             *handle = cl_com_create_handle(&commlib_error, 
                                           communication_framework, 
                                           connection_type, CL_FALSE, port, 
-                                          connect_type, (char*)this_component,
+                                          connect_type, (char*)component_name,
                                           0, 1, 0);
          } else {
             *handle = cl_com_create_handle(&commlib_error, 
                                           communication_framework, 
                                           connection_type, CL_TRUE, port, 
-                                          connect_type, (char*)this_component, 
+                                          connect_type, (char*)component_name, 
                                           1, 1, 0);
          }
 
@@ -558,34 +378,10 @@ int comm_open_connection(bool                 b_server,
             (*handle)->connection_timeout = 0x0fffffff;
             DPRINTF(("(*handle)->connect_port = %d\n", (*handle)->connect_port));
             DPRINTF(("(*handle)->service_port = %d\n", (*handle)->service_port));
-
-            /* Set synchron receive timeout */
-            cl_com_set_synchron_receive_timeout(*handle, 1);
          }
       }
    }
-
-   /*
-    * Need to do this as SUPERUSER, because in csp mode we need the permissions
-    * to load the job users keys.
-    */
-   if (b_server == false) {
-      if (getuid() == SGE_SUPERUSER_UID) {
-         old_euid = geteuid();
-         seteuid(SGE_SUPERUSER_UID);
-      }
-      ret = cl_commlib_open_connection(*handle, g_hostname, (char*)other_component, 1);
-      if (old_euid != SGE_SUPERUSER_UID) {
-         seteuid(old_euid);
-      }
-      if (ret != CL_RETVAL_OK) {
-         ret_val = COMM_CANT_OPEN_CONNECTION;
-      }
-   }
-
-   if (ret_val == COMM_RETVAL_OK) {
-      ret_val = comm_get_application_error(err_msg);
-   }
+   DPRINTF(("OTHERCOMPONENT = %s\n", OTHERCOMPONENT));
 
    DEXIT;
    return ret_val;
@@ -597,15 +393,13 @@ int comm_open_connection(bool                 b_server,
 *
 *  SYNOPSIS
 *     int comm_shutdown_connection(COMMUNICATION_HANDLE *handle,  
-*                                  const char *component_name, dstring *err_msg) 
+*                                  dstring *err_msg) 
 *
 *  FUNCTION
 *     All connections get closed and then the communication handle gets freed.
 *
 *  INPUTS
 *     COMMUNICATION_HANDLE *handle  - Handle of the connection to be shut down.
-*     const char *component_name    - Name of the remote component of the
-*                                     connection to be shut down.
 *     dstring              *err_msg - Gets the error reason in case of error.
 *
 *  RESULT
@@ -624,22 +418,15 @@ int comm_open_connection(bool                 b_server,
 *  SEE ALSO
 *     communication/comm_open_connection()
 *******************************************************************************/
-int comm_shutdown_connection(COMMUNICATION_HANDLE *handle, 
-                             const char *component_name, dstring *err_msg)
+int comm_shutdown_connection(COMMUNICATION_HANDLE *handle, dstring *err_msg)
 {
    int ret;
    int ret_val = COMM_RETVAL_OK;
 
    DENTER(TOP_LAYER, "comm_shutdown_connection");
-
-   /*
-    * From here on the user shouldn't get informed of any errors occuring
-    * during the shutdown of the connection - just shut down.
-    */
-   ret = cl_com_set_error_func(NULL);
-   cl_com_ignore_timeouts(CL_TRUE);
+   
    ret = cl_commlib_close_connection(handle, g_hostname, 
-                                     (char*)component_name, 1, CL_FALSE);
+                                     OTHERCOMPONENT, 1, CL_FALSE);
    if (ret != CL_RETVAL_OK) {
       sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
       DPRINTF(("cl_commlib_close_connection() failed: %s (%d)\n",
@@ -757,15 +544,15 @@ int comm_ignore_timeouts(bool b_ignore, dstring *err_msg)
 *     comm_wait_for_connection() -- Waits until at least one client has connected
 *
 *  SYNOPSIS
-*     int comm_wait_for_connection(COMMUNICATION_HANDLE *handle, const char 
-*         *component, int wait_secs, const char **host, dstring *err_msg) 
+*     int comm_wait_for_connection(COMMUNICATION_HANDLE *handle, char 
+*     *component, int wait_secs, const char **host, dstring *err_msg) 
 *
 *  FUNCTION
 *     On a server, waits until at least one client has connected.
 *
 *  INPUTS
 *     COMMUNICATION_HANDLE *handle    - Handle of the connection.
-*     const char           *component - Wait for a client with this component
+*     char                 *component - Wait for a client with this component
 *                                       name.
 *     int                  wait_secs  - Wait at most wait_secs seconds.
 *     const char           **host     - Name of the host from where the client
@@ -792,7 +579,7 @@ int comm_ignore_timeouts(bool b_ignore, dstring *err_msg)
 *     communication/comm_wait_for_no_connection()
 *******************************************************************************/
 int comm_wait_for_connection(COMMUNICATION_HANDLE *handle, 
-                             const char *component, 
+                             char *component, 
                              int wait_secs, 
                              const char **host, 
                              dstring *err_msg)
@@ -815,7 +602,7 @@ int comm_wait_for_connection(COMMUNICATION_HANDLE *handle,
     */
    while ((ret2=cl_commlib_trigger(handle, 0)) != 99 
           && (ret = cl_commlib_search_endpoint(handle, NULL,
-             (char*)component, 0, CL_TRUE, &endpoint_list)) == CL_RETVAL_OK
+             component, 0, CL_TRUE, &endpoint_list)) == CL_RETVAL_OK
           && endpoint_list != NULL
           && endpoint_list->elem_count == 0
           && waited_usec/1000000 < wait_secs) {
@@ -847,14 +634,10 @@ int comm_wait_for_connection(COMMUNICATION_HANDLE *handle,
       if (endpoint_list->elem_count > 0) {
          endpoint = cl_endpoint_list_get_first_elem(endpoint_list);
          g_hostname = strdup(endpoint->endpoint->comp_host);
-         FREE(*host);
          *host = g_hostname;
          DPRINTF(("A client from host %s has connected\n", g_hostname));
       }
       cl_endpoint_list_cleanup(&endpoint_list);
-   }
-   if (ret_val == COMM_RETVAL_OK) {
-      ret_val = comm_get_application_error(err_msg);
    }
    DEXIT;
    return ret_val;
@@ -866,7 +649,7 @@ int comm_wait_for_connection(COMMUNICATION_HANDLE *handle,
 *                                      more
 *
 *  SYNOPSIS
-*     int comm_wait_for_no_connection(COMMUNICATION_HANDLE *handle, const char 
+*     int comm_wait_for_no_connection(COMMUNICATION_HANDLE *handle, char 
 *     *component, int wait_secs, dstring *err_msg) 
 *
 *  FUNCTION
@@ -874,7 +657,7 @@ int comm_wait_for_connection(COMMUNICATION_HANDLE *handle,
 *
 *  INPUTS
 *     COMMUNICATION_HANDLE *handle - Handle of the connection. 
-*     const char *component        - Filter for clients with this component name
+*     char *component              - Filter for clients with this component name
 *     int wait_secs                - Wait at most wait_secs seconds.
 *     dstring *err_msg             - Gets the error reason in case of error.
 *
@@ -897,7 +680,7 @@ int comm_wait_for_connection(COMMUNICATION_HANDLE *handle,
 *  SEE ALSO
 *     communication/comm_wait_for_connection()
 *******************************************************************************/
-int comm_wait_for_no_connection(COMMUNICATION_HANDLE *handle, const char *component, 
+int comm_wait_for_no_connection(COMMUNICATION_HANDLE *handle, char *component, 
                                 int wait_secs, dstring *err_msg)
 {
    int                     waited_usec = 0;
@@ -921,7 +704,7 @@ int comm_wait_for_no_connection(COMMUNICATION_HANDLE *handle, const char *compon
       /* Let commlib update it's lists */
       ret2 = cl_commlib_trigger(handle, 0);
       /* Get list of all endpoints */
-      ret  = cl_commlib_search_endpoint(handle, NULL, (char*)component, 0, CL_TRUE, 
+      ret  = cl_commlib_search_endpoint(handle, NULL, component, 0, CL_TRUE, 
                                         &endpoint_list);
 
       if (ret == CL_RETVAL_OK
@@ -1078,9 +861,6 @@ int comm_trigger(COMMUNICATION_HANDLE *handle, int synchron, dstring *err_msg)
                sge_dstring_get_string(err_msg), ret));
       ret_val = COMM_CANT_TRIGGER;
    }
-   if (ret_val == COMM_RETVAL_OK) {
-      ret_val = comm_get_application_error(err_msg);
-   }
    DEXIT;
    return ret_val;
 }
@@ -1090,8 +870,8 @@ int comm_trigger(COMMUNICATION_HANDLE *handle, int synchron, dstring *err_msg)
 *     comm_write_message() -- Write a message to the connection
 *
 *  SYNOPSIS
-*     unsigned long comm_write_message(COMMUNICATION_HANDLE *handle, const char 
-*     *unresolved_hostname, const char *component_name, unsigned long component_id, 
+*     unsigned long comm_write_message(COMMUNICATION_HANDLE *handle, char 
+*     *unresolved_hostname, char *component_name, unsigned long component_id, 
 *     unsigned char *buffer, unsigned long size, unsigned char type, dstring 
 *     *err_msg) 
 *
@@ -1099,14 +879,14 @@ int comm_trigger(COMMUNICATION_HANDLE *handle, int synchron, dstring *err_msg)
 *     Writes a message to the connection.
 *
 *  INPUTS
-*     COMMUNICATION_HANDLE *handle    - Handle of the connection.
-*     const char *unresolved_hostname - Hostname of the destination host.
-*     const char *component_name      - Component name of the destination.
-*     unsigned long component_id      - Component ID of the destination.
-*     unsigned char *buffer           - The message data.
-*     unsigned long size              - Message data length.
-*     unsigned char type              - Message type.
-*     dstring *err_msg                - Gets the error reason in case of error.
+*     COMMUNICATION_HANDLE *handle - Handle of the connection.
+*     char *unresolved_hostname    - Hostname of the destination host.
+*     char *component_name         - Component name of the destination.
+*     unsigned long component_id   - Component ID of the destination.
+*     unsigned char *buffer        - The message data.
+*     unsigned long size           - Message data length.
+*     unsigned char type           - Message type.
+*     dstring *err_msg             - Gets the error reason in case of error.
 *
 *  RESULT
 *     unsigned long - the number of bytes written.
@@ -1119,8 +899,8 @@ int comm_trigger(COMMUNICATION_HANDLE *handle, int synchron, dstring *err_msg)
 *     communication/comm_recv_message
 *******************************************************************************/
 unsigned long comm_write_message(COMMUNICATION_HANDLE *handle,
-                            const char *unresolved_hostname,
-                            const char *component_name,
+                            char *unresolved_hostname,
+                            char *component_name,
                             unsigned long component_id,
                             unsigned char *buffer, 
                             unsigned long size,
@@ -1143,8 +923,8 @@ unsigned long comm_write_message(COMMUNICATION_HANDLE *handle,
    memcpy(&sendbuf[1], buffer, size);
 
    ret = cl_commlib_send_message(handle, 
-                           (char*)unresolved_hostname,
-                           (char*)component_name,
+                           unresolved_hostname,
+                           component_name,
                            component_id,
                            CL_MIH_MAT_NAK, 
                            &sendbuf,
@@ -1168,72 +948,6 @@ unsigned long comm_write_message(COMMUNICATION_HANDLE *handle,
    
    DEXIT;
    return nwritten;
-}
-
-/****** sge_ijs_comm/comm_flush_write_messages() ******************************
-*  NAME
-*     comm_flush_write_messages() -- Flush all messages still in the write list
-*                                    of the communication library
-*
-*  SYNOPSIS
-*     int comm_flush_write_messages(COMMUNICATION_HANDLE *handle, dstring *err_msg)
-*
-*  FUNCTION
-*     Flushes all messages still in the write list of the communication library.
-*     comm_write_message() adds a message to the write list and tries to send
-*     it immediately. This isn't always possible, so comm_flush_write_messages()
-*     makes sure all messages are really written. 
-*
-*  INPUTS
-*     COMMUNICATION_HANDLE *handle - Handle of the connection.
-*     dstring *err_msg             - Contains error message in case of error.
-*
-*  RESULT
-*     int - 0: Ok, all messages were flushed.
-*          <0: Retries needed to flush all messages * -1
-*          >0: An error occured, error number is a commlib error.
-*
-*  NOTES
-*     MT-NOTE: comm_flush_write_messages() is not MT safe 
-*
-*  SEE ALSO
-*     communication/comm_write_message
-*******************************************************************************/
-int comm_flush_write_messages(COMMUNICATION_HANDLE *handle, dstring *err_msg)
-{
-   unsigned long elems = 0;
-   int           ret = 0, retries = 0;
-
-   elems = cl_com_messages_in_send_queue(handle);
-   while (elems > 0) {
-      /*
-       * Don't set the cl_commlib_trigger()-call to be blocking and
-       * get rid of the usleep() - it's much slower!
-       * The last cl_commlib_trigger()-call will take 1 s.
-       */
-      ret = cl_commlib_trigger(handle, 0);
-      /* 
-       * Bail out if trigger fails with an error that indicates that we
-       * won't be able to send the messages in the near future.
-       */
-      if (ret != CL_RETVAL_OK && 
-          ret != CL_RETVAL_SELECT_TIMEOUT &&
-          ret != CL_RETVAL_SELECT_INTERRUPT) {
-         sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
-         retries = ret;  
-         break;   
-      }
-      elems = cl_com_messages_in_send_queue(handle);
-      /* 
-       * We just tried to send the messages and it wasn't possible to send
-       * all messages - give the network some time to recover.
-       */
-      if (elems > 0) {
-         usleep(10000);
-         retries--;
-      }
-   }
-   return retries;
 }
 
 /****** sge_ijs_comm/comm_recv_message() **************************************
@@ -1291,42 +1005,63 @@ int comm_recv_message(COMMUNICATION_HANDLE *handle, cl_bool_t b_synchron,
       return COMM_INVALID_PARAMETER;
    }
 
-   ret = cl_commlib_receive_message(handle,
-                                    g_hostname, /* unresolved_hostname, */
-                                    NULL,       /* component_name, */
-                                    0,          /* component_id, */
-                                    b_synchron,
-                                    0,
-                                    &message,
-                                    &sender);
-   if (ret != CL_RETVAL_OK) {
-      sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
-      DPRINTF(("cl_commlib_receive_message() failed: %s (%d)\n",
-               sge_dstring_get_string(err_msg), ret));
-      switch (ret) {
-         case CL_RETVAL_NO_SELECT_DESCRIPTORS:
-            ret_val = COMM_NO_SELECT_DESCRIPTORS;
-         break;
-         case CL_RETVAL_CONNECTION_NOT_FOUND:
-            ret_val = COMM_CONNECTION_NOT_FOUND;
-         break;
-         case CL_RETVAL_SYNC_RECEIVE_TIMEOUT:
-            ret_val = COMM_SYNC_RECEIVE_TIMEOUT;
-         break;
-         default:
-            ret_val = COMM_CANT_RECEIVE_MESSAGE;
+   if (b_synchron == CL_TRUE) {
+      ret = cl_commlib_trigger(handle, 1);
+      if (ret != CL_RETVAL_OK && 
+          ret != CL_RETVAL_SELECT_TIMEOUT &&
+          ret != CL_RETVAL_SELECT_INTERRUPT) {
+         sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
+         DPRINTF(("cl_commlib_trigger() failed: %s (%d)\n",
+                  sge_dstring_get_string(err_msg), ret));
+         ret_val = COMM_CANT_TRIGGER;
+      } else if (ret == CL_RETVAL_SELECT_TIMEOUT) {
+         sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
+         DPRINTF(("cl_commlib_trigger() failed: %s (%d)\n",
+                  sge_dstring_get_string(err_msg), ret));
+         ret_val = COMM_GOT_TIMEOUT;
+      } else if (ret == CL_RETVAL_SELECT_INTERRUPT) {
+         sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
+         ret_val = COMM_SELECT_INTERRUPT;
       }
    }
 
-   if(sender != NULL) {
-      cl_com_free_endpoint(&sender);
+   if (ret_val == COMM_RETVAL_OK) {
+      ret = cl_commlib_receive_message(handle,
+                                       g_hostname, /* unresolved_hostname, */
+                                       NULL, /* component_name, */
+                                       0,    /* component_id, */
+                                       b_synchron,
+                                       0,
+                                       &message,
+                                       &sender);
+      if (ret != CL_RETVAL_OK) {
+         if (ret == CL_RETVAL_NO_SELECT_DESCRIPTORS) {
+            sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
+            DPRINTF(("cl_commlib_receive_message() failed: %s (%d)\n",
+                     sge_dstring_get_string(err_msg), ret));
+            ret_val = COMM_NO_SELECT_DESCRIPTORS;
+         } else if (ret == CL_RETVAL_CONNECTION_NOT_FOUND) {
+            sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
+            DPRINTF(("cl_commlib_receive_message() failed: %s (%d)\n",
+                     sge_dstring_get_string(err_msg), ret));
+            ret_val = COMM_CONNECTION_NOT_FOUND;
+         } else {
+            sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
+            DPRINTF(("cl_commlib_receive_message() failed: %s (%d)\n",
+                     sge_dstring_get_string(err_msg), ret));
+            ret_val = COMM_CANT_RECEIVE_MESSAGE;
+         }
+      }
+
+      if(sender != NULL) {
+         cl_com_free_endpoint(&sender);
+      }
    }
    
    if (ret_val == COMM_RETVAL_OK) {
       recv_mess->cl_message = message;
       if (message != NULL) {
          if (message->message_length>0) {
-            char tmpbuf[100];
             switch (message->message[0]) {
                case STDIN_DATA_MSG:
                case STDOUT_DATA_MSG:
@@ -1339,23 +1074,17 @@ int comm_recv_message(COMMUNICATION_HANDLE *handle, cl_bool_t b_synchron,
                   /* data message */ 
                   recv_mess->type = message->message[0];
                   recv_mess->data = (char*)&(message->message[1]);
-
-                  DPRINTF(("recv_mess->type = %d\n", recv_mess->type));
-                  memcpy(tmpbuf, recv_mess->data, MIN(99, message->message_length - 1));
-                  tmpbuf[MIN(99, message->message_length - 1)] = 0;
-                  DPRINTF(("recv_mess->data = %s\n", tmpbuf));
                   break;
 
                case WINDOW_SIZE_CTRL_MSG:
-                  memcpy(tmpbuf, message->message, MIN(99, message->message_length));
-                  tmpbuf[MIN(99, message->message_length)] = 0;
                   /* control message */
-                  recv_mess->type = tmpbuf[0];
+                  recv_mess->type = message->message[0];
                   /* scan subtype */
-                  sscanf((char*)&(tmpbuf[1]), "%s", sub_type);
+                  sscanf((char*)&(message->message[1]),
+                     "%s", sub_type);
                   if (strcmp(sub_type, "WS") == 0) {
                      int row, col, xpixel, ypixel;
-                     sscanf((char*)&(tmpbuf[4]),
+                     sscanf((char*)&(message->message[4]),
                         "%d%d%d%d",
                         &row, &col, &xpixel, &ypixel);
                      recv_mess->ws.ws_row    = row;
@@ -1425,16 +1154,14 @@ int comm_free_message(recv_message_t *recv_mess, dstring *err_msg)
 *     check_client_alive() -- Checks is a know, connected client is still alive
 *
 *  SYNOPSIS
-*     int check_client_alive(COMMUNICATION_HANDLE *handle, 
-*                            const char *component_name, dstring *err_msg) 
+*     int check_client_alive(COMMUNICATION_HANDLE *handle, dstring *err_msg) 
 *
 *  FUNCTION
 *     Checks if a known, connected client is still alive.
 *
 *  INPUTS
 *     COMMUNICATION_HANDLE *handle - Handle to the connection.
-*     const char *component_name   - Name of the comonent to check.
-*     dstring *err_msg             - Gets the error reason in case of error.
+*     dstring *err_msg          - Gets the error reason in case of error.
 *
 *  RESULT
 *     int - COMM_RETVAL_OK:
@@ -1447,8 +1174,7 @@ int comm_free_message(recv_message_t *recv_mess, dstring *err_msg)
 *     MT-NOTE: check_client_alive() is not MT safe 
 *
 *******************************************************************************/
-int check_client_alive(COMMUNICATION_HANDLE *handle, const char *component_name,
-                       dstring *err_msg)
+int check_client_alive(COMMUNICATION_HANDLE *handle, dstring *err_msg)
 {
    int           ret;
    int           ret_val = COMM_RETVAL_OK;
@@ -1458,11 +1184,11 @@ int check_client_alive(COMMUNICATION_HANDLE *handle, const char *component_name,
 
    DPRINTF(("handle->connect_port = %d\n", handle->connect_port));
    DPRINTF(("handle->service_port = %d\n", handle->service_port));
-   DPRINTF(("client component name = %s\n", component_name));
+   DPRINTF(("OTHERCOMPONENT = %s\n", OTHERCOMPONENT));
    DPRINTF(("g_hostname = %s\n", g_hostname));
 
    ret = cl_commlib_get_endpoint_status(handle, g_hostname, 
-                                        (char*)component_name, 1, &status);
+            OTHERCOMPONENT, 1, &status);
    if (ret != CL_RETVAL_OK) {
       sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
       DPRINTF(("cl_commlib_get_endpoint() failed: %s (%d)\n",

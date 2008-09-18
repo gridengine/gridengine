@@ -32,9 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int sge_contained_in_access_list_(const char *user, const char *group, 
-                                         const lList *acl, const lList *acl_list);
-
 int sge_has_access(const char *user, const char *group, lListElem *q, 
                    const lList *acl_list);
 

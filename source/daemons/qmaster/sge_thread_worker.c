@@ -82,7 +82,6 @@
 #include "sge_advance_reservation_qmaster.h"
 #include "sge_sched_process_events.h"
 #include "sge_follow.h"
-#include "sge_c_report.h"
 
 #include "gdi/sge_gdi_packet.h"
 #include "gdi/sge_gdi_packet_queue.h"
@@ -166,7 +165,7 @@ sge_worker_terminate(sge_gdi_ctx_class_t *ctx)
 
       thread = cl_thread_list_get_first_thread(Main_Control.worker_thread_pool);
       while (thread != NULL) {
-         DPRINTF(("gets canceled\n"));
+         DPRINTF((SFN" gets canceled\n", thread->thread_name));
          cl_thread_list_delete_thread(Main_Control.worker_thread_pool, thread);
 
          thread = cl_thread_list_get_first_thread(Main_Control.worker_thread_pool);
@@ -213,7 +212,7 @@ sge_worker_main(void *arg)
 
    DENTER(TOP_LAYER, "sge_worker_main");
 
-   DPRINTF(("started"));
+   DPRINTF((SFN" started", thread_config->thread_name));
    cl_thread_func_startup(thread_config);
    sge_monitor_init(&monitor, thread_config->thread_name, GDI_EXT, MT_WARNING, MT_ERROR);
    sge_qmaster_thread_init(&ctx, QMASTER, WORKER_THREAD, true);
@@ -224,6 +223,9 @@ sge_worker_main(void *arg)
  
    while (do_endlessly) {
       sge_gdi_packet_class_t *packet = NULL;
+#ifdef DO_LATE_LOCK
+      request_handling_t type = ATOMIC_NONE;
+#endif
 
       /*
        * Wait for packets. As long as packets are available cancelation 
@@ -231,44 +233,33 @@ sge_worker_main(void *arg)
        * thread takes care that packet producers will be terminated 
        * before all worker threads so that this won't be a problem.
        */
-      MONITOR_IDLE_TIME((
-      sge_gdi_packet_queue_wait_for_new_packet(&Master_Packet_Queue, &packet, &monitor)
-      ), &monitor, mconf_get_monitor_time(), mconf_is_monitor_message());
-
+      sge_gdi_packet_queue_wait_for_new_packet(&Master_Packet_Queue, &packet);
       if (packet != NULL) {
          sge_gdi_task_class_t *task = packet->first_task;
+#ifdef DO_LATE_LOCK
+#else
          bool is_only_read_request = true;
+#endif
 
          thread_start_stop_profiling();
 
-#ifdef SEND_ANSWER_IN_LISTENER
+         DPRINTF((SFN" waits for atomic slot\n", thread_config->thread_name));
+
+#ifdef DO_LATE_LOCK
+         MONITOR_WAIT_TIME((type = eval_gdi_and_block(task)), &monitor);
 #else
          /*
-          * prepare buffer for sending an answer 
+          * test if a write lock is neccessary
           */
-         if (packet->is_intern_request == false && packet->is_gdi_request == true) {
-            init_packbuffer(&(packet->pb), 0, 0);
-         }
-#endif
+         task = packet->first_task;
+         while (task != NULL) {
+            u_long32 command = SGE_GDI_GET_OPERATION(task->command); 
 
-         MONITOR_MESSAGES((&monitor));
-
-         if (packet->is_gdi_request == true) {
-            /*
-             * test if a write lock is neccessary
-             */
-            task = packet->first_task;
-            while (task != NULL) {
-               u_long32 command = SGE_GDI_GET_OPERATION(task->command); 
-
-               if (command != SGE_GDI_GET) {
-                  is_only_read_request = false;
-                  break;
-               }
-               task = task->next;            
+            if (command != SGE_GDI_GET) {
+               is_only_read_request = false;
+               break;
             }
-         } else {
-            is_only_read_request = false;
+            task = task->next;            
          }
 
          /*
@@ -279,23 +270,26 @@ sge_worker_main(void *arg)
          } else {
             MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), &monitor);
          }
+#endif
 
-         if (packet->is_gdi_request == true) {
-            /*
-             * do the GDI request
-             */
-            task = packet->first_task;
-            while (task != NULL) {
-               sge_c_gdi(ctx, packet, task, &(task->answer_list), &monitor);
+         /*
+          * do the GDI request
+          */
+         task = packet->first_task;
+         while (task != NULL) {
+            sge_c_gdi(ctx, packet, task, &(task->answer_list), &monitor);
 
-               task = task->next;
-            }
-         } else {
-            task = packet->first_task;
-            sge_c_report(ctx, packet->host, packet->commproc, packet->commproc_id, 
-                         task->data_list, &monitor);
+            task = task->next;
          }
+     
+         sge_gdi_packet_broadcast_that_handled(packet);
 
+         thread_output_profiling("worker thread profiling summary:\n",
+                                 &next_prof_output);
+
+#ifdef DO_LATE_LOCK
+         eval_atomic_end(type);
+#else
          /*
           * do unlock
           */
@@ -304,39 +298,7 @@ sge_worker_main(void *arg)
          } else {
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE)
          }
-
-         if (packet->is_gdi_request == true) {
-#ifdef SEND_ANSWER_IN_LISTENER
-            sge_gdi_packet_broadcast_that_handled(packet);
-#else
-            /*
-             * Send the answer to the client
-             */
-            if (packet->is_intern_request == false) {
-               MONITOR_MESSAGES_OUT(&monitor);
-               sge_gdi2_send_any_request(ctx, 0, NULL,
-                                         packet->host, packet->commproc, packet->commproc_id, 
-                                         &(packet->pb), TAG_GDI_REQUEST, 
-                                         packet->response_id, NULL);
-               clear_packbuffer(&(packet->pb));
-#  ifdef BLOCK_LISTENER
-               sge_gdi_packet_broadcast_that_handled(packet);
-#  else
-               sge_gdi_packet_free(&packet);
-#  endif
-            } else {
-               sge_gdi_packet_broadcast_that_handled(packet);
-            }
 #endif
-         } else {
-            sge_gdi_packet_free(&packet);
-         }
-     
-         thread_output_profiling("worker thread profiling summary:\n",
-                                 &next_prof_output);
-
-         sge_monitor_output(&monitor);
-
       } else { 
          int execute = 0;
 

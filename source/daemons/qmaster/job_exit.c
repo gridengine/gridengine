@@ -331,12 +331,20 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
             found_host = true;
 
             for_each(cqueue, *object_base[SGE_TYPE_CQUEUE].list) {
+
                lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
                lListElem *qinstance = NULL;
+               lListElem *next_qinstance = NULL;
+               const void *iterator = NULL;
 
-               qinstance = lGetElemHost(qinstance_list, QU_qhostname, host);
-               if (qinstance != NULL) {
-
+               next_qinstance = lGetElemHostFirst(qinstance_list, QU_qhostname, 
+                                                  host, &iterator);
+               while((qinstance = next_qinstance) != NULL) {
+                  
+                  next_qinstance = lGetElemHostNext(qinstance_list,
+                                                    QU_qhostname,
+                                                    host, 
+                                                    &iterator);
                   sge_qmaster_qinstance_state_set_error(qinstance, true);
 
                   sge_dstring_sprintf(&error, MSG_LOG_QERRORBYJOBHOST_SUS, lGetString(qinstance, QU_qname), sge_u32c(jobid), host);

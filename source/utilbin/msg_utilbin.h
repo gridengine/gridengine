@@ -59,7 +59,6 @@
 #define MSG_COMMAND_RUNPSCMDFAILED_S         _MESSAGE(57014, _("could not run "SFQ" to get pids of processes"))
 #define MSG_PROC_FOUNDNOPROCESS_S            _MESSAGE(57015, _("found no running processes with name "SFQ))
 #define MSG_PROC_FOUNDPIDSWITHNAME_S         _MESSAGE(57016, _("found the following pids which have process name "SFQ))
-#define MSG_COMMAND_SMF_INIT_FAILED          _MESSAGE(57019, _("failed to initialize libraries for SMF support"))
 
 
 
@@ -204,7 +203,6 @@
 #define MSG_PWD_FILE_PATH_NULL_S    _MESSAGE(57330,         _(SFN": path to private key file is null"))
 #define MSG_PWD_SSL_ERR_MSG_SS      _MESSAGE(57331,         _(SFN": SSL error message: "SFN))
 #define MSG_PWD_NO_SSL_ERR          _MESSAGE(57332,         _("No SSL error."))
-#define MSG_PWD_CANTOPENSSL         _MESSAGE(57333,         _("Can't open the OpenSSL library."))
 
 
 /*

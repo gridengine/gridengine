@@ -63,7 +63,6 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                            bool *has_changed_conf_attr,
                            bool *has_changed_state_attr,
                            const bool initial_modify,
-                           bool *need_reinitialize,
                            monitoring_t *monitor);
 
 bool
@@ -108,9 +107,5 @@ sge_qmaster_qinstance_state_set_ambiguous(lListElem *this_elem, bool set_state);
 
 bool
 sge_qmaster_qinstance_set_initial_state(lListElem *this_elem, bool is_restart);
-
-bool
-qinstance_reinit_consumable_actual_list(lListElem *this_elem,
-                                        lList **answer_list);
 
 #endif /* _SGE_QINSTANCE_QMASTER_H_ */

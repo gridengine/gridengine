@@ -56,7 +56,6 @@ PARSER_END(Cull)
 SKIP :
 {
       " "
-    | "%"
     | "\t"
     | "\n"
     | "\r"

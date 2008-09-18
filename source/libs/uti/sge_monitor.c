@@ -33,11 +33,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
-#include <dlfcn.h>
-
-#if defined(LINUX) || defined(AIX43) || defined(AIX51) || defined(IRIX) || defined(SOLARIS) || defined(HP11)
-#  include <malloc.h>
-#endif
 
 #include "uti/sge_monitor.h"
 
@@ -83,28 +78,18 @@ static Output_t Output[MAX_OUTPUT_LINES] = {
                                              {NULL, {0,0}, NO_WARNING, NO_ERROR, 0, NULL, PTHREAD_MUTEX_INITIALIZER},
                                            };
 
-/* global mutex used for mallinfo initialisation and also used to access the Info_Line string */
-static pthread_mutex_t global_mutex = PTHREAD_MUTEX_INITIALIZER; 
-
-/* a static dstring used as a temporary buffer to build the commlib info string */
+/** a static dstring used as a temporary buffer to build the comlib info string */
+static pthread_mutex_t  Dstring_Mutex = PTHREAD_MUTEX_INITIALIZER; 
 static dstring Info_Line= DSTRING_INIT;
-
-/* mallinfo related data */
-#if defined(LINUX) || defined(AIX43) || defined(AIX51) || defined(IRIX) || defined(SOLARIS) || defined(HP11)
-static bool mallinfo_initialized = false;
-static void *mallinfo_shlib_handle = NULL;
-static struct mallinfo (*mallinfo_func_pointer)(void) = NULL;
-#endif
 
 /***********************************************
  * static functin def. for special extensions 
  ***********************************************/
 
 static void ext_gdi_output(dstring *message, void *monitoring_extension, double time);
-static void ext_lis_output(dstring *message, void *monitoring_extension, double time);
 static void ext_edt_output(dstring *message, void *monitoring_extension, double time);
 static void ext_tet_output(dstring *message, void *monitoring_extension, double time);
-static void ext_sch_output(dstring *message, void *monitoring_extension, double time);
+
 
 /************************************************
  * implementation
@@ -159,16 +144,7 @@ void sge_monitor_free(monitoring_t *monitor)
    monitor->output = false;
    monitor->work_line = NULL;
    monitor->thread_name = NULL;
-
-#if defined(LINUX) || defined(AIX43) || defined(AIX51) || defined(IRIX) || defined(SOLARIS) || defined(HP11)
-   sge_mutex_lock("sge_monitor_status", SGE_FUNC, __LINE__, &global_mutex);
-   if (mallinfo_shlib_handle != NULL) {  
-      dlclose(mallinfo_shlib_handle);
-      mallinfo_shlib_handle = NULL;
-   }
-   sge_mutex_unlock("sge_monitor_status", SGE_FUNC, __LINE__, &global_mutex);
-#endif
- 
+   
    DEXIT;
 }
 
@@ -202,28 +178,6 @@ sge_monitor_init(monitoring_t *monitor, const char *thread_name, extension_t ext
 {
    DENTER(GDI_LAYER, "sge_monitor_init");
 
-   /*
-    * initialize the mallinfo function pointer if it is available
-    */
-#if defined(LINUX) || defined(AIX43) || defined(AIX51) || defined(IRIX) || defined(SOLARIS) || defined(HP11)
-   sge_mutex_lock("sge_monitor_status", SGE_FUNC, __LINE__, &global_mutex);
-   if (mallinfo_initialized == false) {
-      const char *function_name = "mallinfo";
-
-      mallinfo_initialized = true;
-#  ifdef RTLD_NODELETE
-      mallinfo_shlib_handle = dlopen(NULL, RTLD_LAZY | RTLD_NODELETE);
-#  else
-      mallinfo_shlib_handle = dlopen(NULL, RTLD_LAZY );
-#  endif /* RTLD_NODELETE */
-
-      if (mallinfo_shlib_handle != NULL) {
-         mallinfo_func_pointer = (struct mallinfo (*)(void)) dlsym(mallinfo_shlib_handle, function_name);
-      }
-   }
-   sge_mutex_unlock("sge_monitor_status", SGE_FUNC, __LINE__, &global_mutex);
-#endif
-
    monitor->thread_name = thread_name;
  
    monitor->output_line1 = (dstring*) malloc(sizeof(dstring));
@@ -243,37 +197,14 @@ sge_monitor_init(monitoring_t *monitor, const char *thread_name, extension_t ext
    monitor->work_line = monitor->output_line2;
  
    switch(ext) {
-      case SCH_EXT :
-            monitor->ext_data = malloc(sizeof(m_sch_t));
-            if (monitor->ext_data != NULL) {
-               monitor->ext_type = SCH_EXT;
-               monitor->ext_data_size = sizeof(m_sch_t);
-               monitor->ext_output = &ext_sch_output;
-            } else {
-               monitor->ext_type = NONE_EXT;
-               ERROR((SGE_EVENT, MSG_UTI_MONITOR_MEMERROREXT));
-            }
-         break;
-
       case GDI_EXT :
             monitor->ext_data = malloc(sizeof(m_gdi_t));
             if (monitor->ext_data != NULL) {
                monitor->ext_type = GDI_EXT;
                monitor->ext_data_size = sizeof(m_gdi_t);
                monitor->ext_output = &ext_gdi_output;
-            } else {
-               monitor->ext_type = NONE_EXT;
-               ERROR((SGE_EVENT, MSG_UTI_MONITOR_MEMERROREXT));
             }
-         break;
-
-      case LIS_EXT :
-            monitor->ext_data = malloc(sizeof(m_lis_t));
-            if (monitor->ext_data != NULL) {
-               monitor->ext_type = LIS_EXT;
-               monitor->ext_data_size = sizeof(m_lis_t);
-               monitor->ext_output = &ext_lis_output;
-            } else {
+            else {
                monitor->ext_type = NONE_EXT;
                ERROR((SGE_EVENT, MSG_UTI_MONITOR_MEMERROREXT));
             }
@@ -285,7 +216,8 @@ sge_monitor_init(monitoring_t *monitor, const char *thread_name, extension_t ext
                monitor->ext_type = EDT_EXT;
                monitor->ext_data_size = sizeof(m_edt_t);
                monitor->ext_output = &ext_edt_output;
-            } else {
+            }
+            else {
                monitor->ext_type = NONE_EXT;
                ERROR((SGE_EVENT, MSG_UTI_MONITOR_MEMERROREXT));
             }
@@ -297,7 +229,8 @@ sge_monitor_init(monitoring_t *monitor, const char *thread_name, extension_t ext
                monitor->ext_type = TET_EXT;
                monitor->ext_data_size = sizeof(m_tet_t);
                monitor->ext_output = &ext_tet_output;
-            } else {
+            }
+            else {
                monitor->ext_type = NONE_EXT;
                ERROR((SGE_EVENT, MSG_UTI_MONITOR_MEMERROREXT));
             }
@@ -393,11 +326,11 @@ u_long32 sge_monitor_status(char **info_message, u_long32 monitor_time)
 
    sge_dstring_init(&ddate, date, sizeof(date));
    
-   sge_mutex_lock("sge_monitor_status", SGE_FUNC, __LINE__, &global_mutex);
-
+   sge_mutex_lock("sge_monitor_status", SGE_FUNC, __LINE__, &Dstring_Mutex);
+  
    sge_dstring_clear(&Info_Line);
    
-   {/* this is the qping info section, it checks if each thread is still alive */
+   {/* this is the qping info section, it checks wether each thread is still alive */
       int i;
       int error_count = 0;
       struct timeval now;
@@ -442,26 +375,6 @@ u_long32 sge_monitor_status(char **info_message, u_long32 monitor_time)
       sge_dstring_append(&Info_Line, "\n");
    }
 
-#if defined(LINUX) || defined(AIX43) || defined(AIX51) || defined(IRIX) || defined(SOLARIS) || defined(HP11)
-   if (mallinfo_func_pointer != NULL) {
-      struct mallinfo mallinfo_data = mallinfo_func_pointer();
-
-      sge_dstring_sprintf_append(&Info_Line, MSG_UTI_MONITOR_SCHEXT_UUUUUUUUUU,
-                                 mallinfo_data.arena,
-                                 mallinfo_data.ordblks,
-                                 mallinfo_data.smblks,
-                                 mallinfo_data.hblks,
-                                 mallinfo_data.hblkhd,
-                                 mallinfo_data.usmblks,
-                                 mallinfo_data.fsmblks,
-                                 mallinfo_data.uordblks,
-                                 mallinfo_data.fordblks,
-                                 mallinfo_data.keepcost);
-      sge_dstring_append(&Info_Line, "\n");
-   }
-#endif
- 
-
    if (monitor_time != 0) { /* generates the output monitoring output data */
       int i;
       sge_dstring_append(&Info_Line, MSG_UTI_MONITOR_COLON); 
@@ -485,7 +398,7 @@ u_long32 sge_monitor_status(char **info_message, u_long32 monitor_time)
 
    *info_message = strdup(sge_dstring_get_string(&Info_Line));
   
-   sge_mutex_unlock("sge_monitor_status", SGE_FUNC, __LINE__, &global_mutex);
+   sge_mutex_unlock("sge_monitor_status", SGE_FUNC, __LINE__, &Dstring_Mutex);
    DEXIT;
    return ret;
 }
@@ -646,31 +559,7 @@ void sge_monitor_reset(monitoring_t *monitor)
  * implementation section for extensions
  ****************************************/
 
-/****** sge_monitor/ext_sch_output() *******************************************
-*  NAME
-*     ext_sch_output() -- generates a string from the scheduler extension
-*
-*  SYNOPSIS
-*     static void 
-*     ext_sch_output(char *message, int size, void 
-*                    *monitoring_extension, double time) 
-*
-*  FUNCTION
-*     generates a string from the extension and returns it.
-*
-*  INPUTS
-*     char *message              - initilized string buffer
-*     int size                   - buffer size
-*     void *monitoring_extension - the extension structure
-*     double time                - length of the mesurement interval
-*
-*  NOTES
-*     MT-NOTE: ext_gdi_output() is MT safe 
-*******************************************************************************/
-static void ext_sch_output(dstring *message, void *monitoring_extension, double time)
-{
-   sge_dstring_sprintf_append(message, "");
-}
+
 
 /****** sge_monitor/ext_gdi_output() *******************************************
 *  NAME
@@ -691,12 +580,13 @@ static void ext_sch_output(dstring *message, void *monitoring_extension, double 
 *
 *  NOTES
 *     MT-NOTE: ext_gdi_output() is MT safe 
+*
 *******************************************************************************/
 static void ext_gdi_output(dstring *message, void *monitoring_extension, double time)
 {
    m_gdi_t *gdi_ext = (m_gdi_t*) monitoring_extension;
 
-   sge_dstring_sprintf_append(message, MSG_UTI_MONITOR_GDIEXT_FFFFFFFFFFFFI,
+   sge_dstring_sprintf_append(message, MSG_UTI_MONITOR_GDIEXT_FFFFFFF,
             gdi_ext->eload_count/time, gdi_ext->ejob_count/time, 
             gdi_ext->econf_count/time, gdi_ext->eproc_count/time,
             gdi_ext->eack_count/time, 
@@ -704,41 +594,8 @@ static void ext_gdi_output(dstring *message, void *monitoring_extension, double 
             gdi_ext->gdi_mod_count/time, gdi_ext->gdi_del_count/time,
             gdi_ext->gdi_cp_count/time, gdi_ext->gdi_trig_count/time, 
             gdi_ext->gdi_perm_count/time,
-            sge_u32c(gdi_ext->queue_length));
+            gdi_ext->ack_count/time); 
 }
-
-/****** sge_monitor/ext_lis_output() *******************************************
-*  NAME
-*     ext_lis_output() -- generates a string from the listener extension 
-*
-*  SYNOPSIS
-*     static void 
-*     ext_lis_output(char *message, int size, void 
-*                    *monitoring_extension, double time) 
-*
-*  FUNCTION
-*     generates a string from the extension and returns it.
-*
-*  INPUTS
-*     char *message              - initilized string buffer
-*     int size                   - buffer size
-*     void *monitoring_extension - the extension structure
-*     double time                - length of the mesurement interval
-*
-*  NOTES
-*     MT-NOTE: ext_lis_output() is MT safe 
-*******************************************************************************/
-static void ext_lis_output(dstring *message, void *monitoring_extension, double time)
-{
-   m_lis_t *gdi_ext = (m_lis_t*) monitoring_extension;
-
-   sge_dstring_sprintf_append(message, MSG_UTI_MONITOR_LISEXT_FFFF,
-            gdi_ext->inc_gdi/time,
-            gdi_ext->inc_ack/time,
-            gdi_ext->inc_ece/time,
-            gdi_ext->inc_rep/time);
-}
-
 
 /****** sge_monitor/ext_edt_output() *******************************************
 *  NAME
@@ -777,9 +634,9 @@ static void ext_edt_output(dstring *message, void *monitoring_extension, double 
             edt_ext->skip_event_count / time);
 }
 
-/****** sge_monitor/ext_tet_output() *******************************************
+/****** sge_monitor/ext_edt_output() *******************************************
 *  NAME
-*     ext_tet_output() -- generates a string from the GDI extension
+*     ext_edt_output() -- generates a string from the GDI extension
 *
 *  SYNOPSIS
 *     static void ext_edt_output(char *message, int size, void 
@@ -794,7 +651,7 @@ static void ext_edt_output(dstring *message, void *monitoring_extension, double 
 *     double time                - length of the mesurement interval
 *
 *  NOTES
-*     MT-NOTE: ext_tet_output() is MT safe 
+*     MT-NOTE: ext_edt_output() is MT safe 
 *
 *******************************************************************************/
 

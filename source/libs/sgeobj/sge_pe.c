@@ -66,7 +66,7 @@
 #include "msg_sgeobjlib.h"
 #include "msg_qmaster.h"
 
-bool pe_name_is_matching(const char *pe_name, const char *wildcard)
+static bool pe_name_is_matching(const char *pe_name, const char *wildcard)
 {
    return fnmatch(wildcard, pe_name, 0) == 0 ? true : false;
 }
@@ -202,7 +202,6 @@ bool pe_is_referenced(const lListElem *pe, lList **answer_list,
        * check cq configuration for pe references instead of qinstances
        */
       const char *pe_name = lGetString(pe, PE_name);
-
       for_each(cqueue, master_cqueue_list) {
          for_each(cpl, lGetList(cqueue, CQ_pe_list)){
             if (lGetSubStr(cpl, ST_name, pe_name, ASTRLIST_value))  {

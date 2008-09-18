@@ -88,6 +88,10 @@ qinstance_change_state_on_calender_(sge_gdi_ctx_class_t *ctx,
                                     lListElem *qi_elem, u_long32 cal_order, 
                                     lList **state_change_list, monitoring_t *monitor);
 
+static bool
+qinstance_reinit_consumable_actual_list(lListElem *this_elem,
+                                        lList **answer_list);
+
 bool
 qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                            lListElem *this_elem, lList **answer_list,
@@ -101,8 +105,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                            bool *is_ambiguous, 
                            bool *has_changed_conf_attr, 
                            bool *has_changed_state_attr,
-                           const bool initial_modify,
-                           bool *need_reinitialize,
+                           const bool initial_modify, 
                            monitoring_t *monitor)
 {
 #if 0 /* EB: DEBUG: enable debugging for qinstance_modify_attribute() */
@@ -115,6 +118,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
 #else 
    DENTER(BASIS_LAYER, "qinstance_modify_attribute");
 #endif
+
 
    if (this_elem != NULL && cqueue != NULL && 
       attribute_name != NoName && cqueue_attibute_name != NoName) {
@@ -151,7 +155,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                   /* check if the modification is possible or if
                    * an existing AR would be violated by the modification
                    */
-                  if (!initial_modify && sge_ar_list_conflicts_with_calendar(answer_list, lGetString(this_elem, QU_full_name),
+                  if (sge_ar_list_conflicts_with_calendar(answer_list, lGetString(this_elem, QU_full_name),
                                                       calendar, *object_type_get_master_list(SGE_TYPE_AR))) {
                      ret = false;
                      break;
@@ -312,7 +316,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                            lGetString(this_elem, QU_full_name), new_value)) {
                      ret = false;
                      break;
-                  } else if (!initial_modify && cqueue_attibute_name == CQ_pe_list &&
+                  } else if (cqueue_attibute_name == CQ_pe_list &&
                              ar_list_has_reservation_due_to_pe(
                                  *object_type_get_master_list(SGE_TYPE_AR), answer_list,
                                  lGetString(this_elem, QU_full_name), new_value)) {
@@ -378,7 +382,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                if (old_value != new_value) {
                   int slots_reserved = qinstance_slots_reserved(this_elem);
                   DPRINTF(("reserved slots %d\n", slots_reserved));
-                  if (!initial_modify && new_value < slots_reserved) {
+                  if (new_value < slots_reserved) {
                      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                                              MSG_QINSTANCE_SLOTSRESERVED_USS, slots_reserved,
                                              lGetString(this_elem, QU_qname), hostname);
@@ -391,9 +395,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
 #endif
                      lSetUlong(this_elem, attribute_name, new_value);
                      *has_changed_conf_attr = true;
-                     if (need_reinitialize != NULL) {
-                        *need_reinitialize = true;
-                     }
+                     qinstance_reinit_consumable_actual_list(this_elem, answer_list);
                   }
                }
             }
@@ -423,10 +425,8 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                    
                    lSetList(tmp_elem, attribute_name, new_value);
                    new_value = NULL;
-                  
-                   if (need_reinitialize != NULL) {
-                     *need_reinitialize = true;
-                   }
+                   
+                   qinstance_reinit_consumable_actual_list(tmp_elem, answer_list);
                    
                    lXchgList(tmp_elem, attribute_name, &new_value);
                    lFreeElem(&tmp_elem);
@@ -439,11 +439,12 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                       /* the following lSetList will free old_value */
                       lSetList(this_elem, attribute_name, new_value);
                       *has_changed_conf_attr = true;
-                      if (attribute_name == QU_consumable_config_list && need_reinitialize != NULL) {
-                        *need_reinitialize = true;
+                      if (attribute_name == QU_consumable_config_list) {
+                         qinstance_reinit_consumable_actual_list(this_elem, 
+                                                                 answer_list);
                       }
 
-                      if (!initial_modify && ar_list_has_reservation_due_to_qinstance_complex_attr(*object_type_get_master_list(SGE_TYPE_AR), answer_list, 
+                      if (ar_list_has_reservation_due_to_qinstance_complex_attr(*object_type_get_master_list(SGE_TYPE_AR), answer_list, 
                                                                                 this_elem, *object_type_get_master_list(SGE_TYPE_CENTRY))) {
                          ret = false;
                          break;
@@ -534,32 +535,30 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                   lSetList(this_elem, attribute_name, lCopyList("", new_value));
                   *has_changed_conf_attr = true;
 
-                  if (initial_modify == false) {
-                     /*
-                      * Find list of subordinates that have to be suspended after
-                      * the modification of CQ_subordinate_list-sublist 
-                      */
-                     ret &= qinstance_find_suspended_subordinates(this_elem,
-                                                                  answer_list,
-                                                                  &suspended_so);
+                  /*
+                   * Find list of subordinates that have to be suspended after
+                   * the modification of CQ_subordinate_list-sublist 
+                   */
+                  ret &= qinstance_find_suspended_subordinates(this_elem,
+                                                               answer_list,
+                                                               &suspended_so);
 
-                     /* 
-                      * Remove equal entries in both lists 
-                      */
-                     lDiffListStr(SO_name, &suspended_so, &unsuspended_so);
+                  /* 
+                   * Remove equal entries in both lists 
+                   */
+                  lDiffListStr(SO_name, &suspended_so, &unsuspended_so);
 
-                     /*
-                      * (Un)suspend subordinated queue instances
-                      */
-                     cqueue_list_x_on_subordinate_so(ctx,
-                                                     master_list, answer_list, 
-                                                     false, unsuspended_so, false,
-                                                     monitor);
-                     cqueue_list_x_on_subordinate_so(ctx,
-                                                     master_list, answer_list, 
-                                                     true, suspended_so, false,
-                                                     monitor);
-                  }
+                  /*
+                   * (Un)suspend subordinated queue instances
+                   */
+                  cqueue_list_x_on_subordinate_so(ctx,
+                                                  master_list, answer_list, 
+                                                  false, unsuspended_so, false,
+                                                  monitor);
+                  cqueue_list_x_on_subordinate_so(ctx,
+                                                  master_list, answer_list, 
+                                                  true, suspended_so, false,
+                                                  monitor);
 
                   /*
                    * Cleanup
@@ -872,11 +871,13 @@ bool qinstance_change_state_on_calendar_all(sge_gdi_ctx_class_t *ctx,
 
    DENTER(TOP_LAYER, "qinstance_signal_on_calendar_all");
 
-   for_each (cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+   for_each (cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE)))
+   {
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
       lListElem *qinstance = NULL;
 
-      for_each(qinstance, qinstance_list) {
+      for_each(qinstance, qinstance_list)
+      {
          const char *queue_calendar = lGetString(qinstance, QU_calendar);
 
          if (queue_calendar != NULL && !strcmp(queue_calendar, cal_name)) {
@@ -1136,7 +1137,7 @@ bool
 sge_qmaster_qinstance_set_initial_state(lListElem *this_elem, bool is_restart)
 {
    bool ret = false;
-   const char *state_string = lGetString(this_elem, QU_initial_state);
+   const char *state_string = NULL; 
 
 #ifdef QINSTANCE_MODIFY_DEBUG
    DENTER(TOP_LAYER, "sge_qmaster_qinstance_set_initial_state");
@@ -1144,6 +1145,7 @@ sge_qmaster_qinstance_set_initial_state(lListElem *this_elem, bool is_restart)
    DENTER(BASIS_LAYER, "sge_qmaster_qinstance_set_initial_state");
 #endif
 
+   state_string = lGetString(this_elem, QU_initial_state);
    if (!is_restart && state_string != NULL && strcmp(state_string, "default")) {
       bool do_disable = strcmp(state_string, "disabled") == 0 ? true : false;
       bool is_disabled = qinstance_state_is_manual_disabled(this_elem);
@@ -1180,7 +1182,7 @@ sge_qmaster_qinstance_set_initial_state(lListElem *this_elem, bool is_restart)
 *  NOTES
 *     MT-NOTE: qinstance_reinit_consumable_actual_list() is MT safe 
 *******************************************************************************/
-bool
+static bool
 qinstance_reinit_consumable_actual_list(lListElem *this_elem,
                                         lList **answer_list)
 {

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: reporting.5,v $     Last Update: $Date: 2008/04/22 15:49:02 $     Revision: $Revision: 1.12 $
+.\" $RCSfile: reporting.5,v $     Last Update: $Date: 2007/07/19 09:04:32 $     Revision: $Revision: 1.10 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH REPORTING 5 "$Date: 2008/04/22 15:49:02 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH REPORTING 5 "$Date: 2007/07/19 09:04:32 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 reporting \- xxQS_NAMExx reporting file format
@@ -119,10 +119,7 @@ The job priority (from -p submission option).
 .IP "\fBmessage\fP"
 A message describing the reported action.
 .SS acct
-Records of type acct are accounting records. Normally, they are written whenever a job, a task of an array job, 
-or the task of a parallel job terminates. However, for long running jobs an intermediate acct record is created once a 
-day after a midnight. This results in multiple accounting records for a particular job and allows for a fine-grained 
-resource usage monitoring over time. 
+Records of type acct are accounting records. They are written whenever a job, a task of an array job or the task of a parallel job terminates.
 Accounting records comprise the following fields:
 .IP "\fBqname\fP"
 Name of the cluster queue in which the job has run.
@@ -148,6 +145,8 @@ parameter in the queue configuration (see
 .M queue_conf 5 ).
 .IP "\fBsubmission_time\fP"
 Submission time (GMT unix time stamp).
+For slave tasks of tightly integrated parallel jobs, the submission_time is 
+always set to 0.
 .IP "\fBstart_time\fP"
 Start time (GMT unix time stamp).
 .IP "\fBend_time\fP"
@@ -218,10 +217,6 @@ If this identifier is set the task was part of a parallel job and was
 passed to xxQS_NAMExx via the qrsh -inherit interface.
 .IP "\fBmaxvmem\fP"
 The maximum vmem size in bytes.
-.IP "\fBarid\fP"
-Advance reservation identifier. If the job used resources of an advance
-reservation then this field contains a positive integer identifier otherwise the
-value is "\fB0\fP" .
 .SS queue
 Records of type queue contain state information for queues (queue instances).
 A queue record has the following fields:
@@ -337,8 +332,6 @@ The ar_attribute record is written whenever a new advance reservation was added 
 attribute of an existing advance reservation has changed. It has following fields.
 .IP "\fBevent_time\fP"
 The time (GMT unix time stamp) when the event was generated.
-.IP "\fBsubmission_time\fP"
-The time (GMT unix time stamp) when the advance reservation was created.
 .IP "\fBar_number\fP"
 The advance reservation number identifying the reservation.
 .IP "\fBar_name\fP"
@@ -360,8 +353,6 @@ change can be from pending to active, but can also be triggered by system events
 outage. It has following fields.
 .IP "\fBar_state_change_time\fP"
 The time (GMT unix time stamp) when the event occurred which caused a state change.
-.IP "\fBsubmission_time\fP"
-The time (GMT unix time stamp) when the advance reservation was created.
 .IP "\fBar_number\fP"
 The advance reservation number identifying the reservation.
 .IP "\fBar_state\fP"
@@ -377,8 +368,6 @@ whenever a advance reservation terminates. Advance reservation accounting record
 following fields.
 .IP "\fBar_termination_time\fP"
 The time (GMT unix time stamp) when the advance reservation terminated.
-.IP "\fBsubmission_time\fP"
-The time (GMT unix time stamp) when the advance reservation was created.
 .IP "\fBar_number\fP"
 The advance reservation number identifying the reservation.
 .IP "\fBar_qname\fP"

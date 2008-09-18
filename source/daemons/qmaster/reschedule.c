@@ -67,7 +67,6 @@
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
-#include "sge_give_jobs.h"
 
 u_long32 add_time = 0;
 
@@ -142,7 +141,6 @@ void reschedule_unknown_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, moni
       DTRACE;
       goto Error;
    }
-
    /*
     * Did someone change the timeout value?
     */
@@ -168,15 +166,21 @@ void reschedule_unknown_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, moni
     * Check if host is still in unknown state
     */
    for_each(qep, master_list) {
+      lList *qinstance_list = NULL;
       lListElem *qinstance = NULL;
+      lListElem *next_qinstance = NULL;
+      const void *iterator = NULL;
 
-      qinstance = lGetElemHost(lGetList(qep, CQ_qinstances), QU_qhostname, 
-                                         hostname); 
-      if (qinstance != NULL) {
+      qinstance_list = lGetList(qep, CQ_qinstances);
+      next_qinstance = lGetElemHostFirst(qinstance_list, QU_qhostname, 
+                                         hostname, &iterator); 
+      while ((qinstance = next_qinstance) != NULL) {
+         next_qinstance = lGetElemHostNext(qinstance_list, QU_qhostname, 
+                                           hostname, &iterator); 
          if (!qinstance_state_is_unknown(qinstance)) {
            DTRACE;
            goto Error;
-         }
+         } 
       }
    }
 
@@ -378,9 +382,9 @@ int reschedule_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, l
        * on that queue/host
        *
        * PE-Jobs will only be rescheduled when the master task
-       * is running in that queue/host or RESCHEDULE_SLAVE is set
+       * is running in that queue/host
        */
-      if (!mconf_get_enable_reschedule_slave() && first_granted_queue &&
+      if (first_granted_queue &&
           ((qep && (strcmp(lGetString(first_granted_queue, JG_qname),
               lGetString(qep, QU_full_name))))
           || ((hep && sge_hostcmp(lGetHost(first_granted_queue, JG_qhostname),
@@ -394,18 +398,10 @@ int reschedule_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, l
        * If the forced flag is set we will also reschedule this job!
        */
       if (!force && lGetUlong(jep, JB_restart) == 2) {
-         if (mconf_get_enable_reschedule_kill()) {
-            INFO((SGE_EVENT, MSG_RU_REAPING_NOT_RESTARTABLE_SS, 
-                  mail_type, mail_ids));
-            sge_commit_job(ctx, jep, this_jatep, NULL, COMMIT_ST_FINISHED_FAILED_EE,
-                           COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
-            continue;
-         } else {
-            INFO((SGE_EVENT, MSG_RU_NOT_RESTARTABLE_SS, 
-                  mail_type, mail_ids));
-            answer_list_add(answer, SGE_EVENT, 
-                            STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
-         }
+         INFO((SGE_EVENT, MSG_RU_NOT_RESTARTABLE_SS, 
+               mail_type, mail_ids));
+         answer_list_add(answer, SGE_EVENT, 
+                         STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          continue;
       }
 
@@ -484,20 +480,11 @@ int reschedule_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, l
                            lGetString(first_granted_queue, JG_qname));
          }
          if (!lGetBool(queue, QU_rerun)) {
-            if (mconf_get_enable_reschedule_kill()) {
-               INFO((SGE_EVENT, MSG_RU_REAPING_NOT_RESTARTABLE_SS, 
-                     mail_type, mail_ids));
-               sge_commit_job(ctx, jep, this_jatep, NULL, COMMIT_ST_FINISHED_FAILED_EE,
-                              COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
-               continue;
-
-            } else {
-               INFO((SGE_EVENT, MSG_RU_NORERUNQUEUE_SSS, mail_type, mail_ids, 
-                  lGetString(queue, QU_full_name)));
-               answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, 
-                  ANSWER_QUALITY_WARNING);
-               continue;
-            }
+            INFO((SGE_EVENT, MSG_RU_NORERUNQUEUE_SSS, mail_type, mail_ids, 
+               lGetString(queue, QU_full_name)));
+            answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, 
+               ANSWER_QUALITY_WARNING);
+            continue;
          }
       }
 

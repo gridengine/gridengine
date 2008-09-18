@@ -28,13 +28,7 @@
  *   All Rights Reserved.
  *
  ************************************************************************/
-/*___INFO__MARK_END__*/ 
-
-#ifndef NO_SGE_COMPILE_DEBUG
-#define NO_SGE_COMPILE_DEBUG
-#endif
-
-#define BDB_LAYER BASIS_LAYER
+/*___INFO__MARK_END__*/                                   
 
 #include <errno.h>
 #include <string.h>
@@ -116,7 +110,7 @@ spool_berkeleydb_check_version(lList **answer_list)
    const char *version;
    int major, minor;
 
-   DENTER(BDB_LAYER, "spool_berkeleydb_check_version");
+   DENTER(TOP_LAYER, "spool_berkeleydb_check_version");
    
    version = db_version(&major, &minor, NULL);
 
@@ -177,7 +171,7 @@ bool spool_berkeleydb_create_environment(lList **answer_list,
 
    DB_ENV *env = NULL;
 
-   DENTER(BDB_LAYER, "spool_berkeleydb_create_environment");
+   DENTER(TOP_LAYER, "spool_berkeleydb_create_environment");
 
    server = bdb_get_server(info);
    path   = bdb_get_path(info);
@@ -382,7 +376,7 @@ spool_berkeleydb_open_database(lList **answer_list, bdb_info info,
    bool ret = true;
    bdb_database i;
 
-   DENTER(BDB_LAYER, "spool_berkeleydb_open_database");
+   DENTER(TOP_LAYER, "spool_berkeleydb_open_database");
 
    for (i = BDB_CONFIG_DB; i < BDB_ALL_DBS && ret; i++) {
       DB_ENV *env;
@@ -502,7 +496,7 @@ spool_berkeleydb_close_database(lList **answer_list, bdb_info info)
    dstring dbname_dstring = DSTRING_INIT;
    const char *dbname;
 
-   DENTER(BDB_LAYER, "spool_berkeleydb_close_database");
+   DENTER(TOP_LAYER, "spool_berkeleydb_close_database");
 
    sge_dstring_init(&dbname_dstring, dbname_buffer, sizeof(dbname_buffer));
    dbname = bdb_get_dbname(info, &dbname_dstring);
@@ -605,7 +599,7 @@ spool_berkeleydb_start_transaction(lList **answer_list, bdb_info info)
    DB_ENV *env;
    DB_TXN *txn;
 
-   DENTER(BDB_LAYER, "spool_berkeleydb_start_transaction");
+   DENTER(TOP_LAYER, "spool_berkeleydb_start_transaction");
 
    env = bdb_get_env(info);
    txn = bdb_get_txn(info);
@@ -671,7 +665,7 @@ spool_berkeleydb_end_transaction(lList **answer_list, bdb_info info,
    DB_ENV *env;
    DB_TXN *txn;
 
-   DENTER(BDB_LAYER, "spool_berkeleydb_end_transaction");
+   DENTER(TOP_LAYER, "spool_berkeleydb_end_transaction");
 
    env = bdb_get_env(info);
    txn = bdb_get_txn(info);
@@ -733,7 +727,7 @@ spool_berkeleydb_trigger(lList **answer_list, bdb_info info,
 {
    bool ret = true;
 
-   DENTER(BDB_LAYER, "spool_berkeleydb_trigger");
+   DENTER(TOP_LAYER, "spool_berkeleydb_trigger");
 
    if (bdb_get_next_clear(info) <= trigger) {
       /* 
@@ -776,7 +770,7 @@ spool_berkeleydb_read_list(lList **answer_list, bdb_info info,
    DBT key_dbt, data_dbt;
    DBC *dbc;
 
-   DENTER(BDB_LAYER, "spool_berkeleydb_read_list");
+   DENTER(TOP_LAYER, "spool_berkeleydb_read_list");
 
    db  = bdb_get_db(info, database);
    txn = bdb_get_txn(info);
@@ -899,7 +893,7 @@ spool_berkeleydb_write_object(lList **answer_list, bdb_info info,
    bool ret = true;
    lList *tmp_list = NULL;
 
-   DENTER(BDB_LAYER, "spool_berkeleydb_write_object");
+   DENTER(TOP_LAYER, "spool_berkeleydb_write_object");
 
    /* do not spool free elems. If a free elem is passed, put a copy 
     * into a temporary list and spool this copy.
@@ -955,9 +949,9 @@ spool_berkeleydb_write_object(lList **answer_list, bdb_info info,
                data_dbt.size = pb.bytes_used;
 
                DPRINTF(("storing object with key "SFQ", size = %d "
-                        "to env = %p, db = %p, txn = %p, txn_id = %d\n",
-                        key, data_dbt.size, bdb_get_env(info), db,
-                        txn, (txn->id == NULL) ? 0 : txn->id(txn)));
+                        "to env = %p, db = %p, txn = %p, txn_id = %d\n", 
+                        key, data_dbt.size, bdb_get_env(info), db, 
+                        txn, txn->id(txn)));
 
                /* Store a key/data pair. */
                PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
@@ -997,7 +991,7 @@ bool spool_berkeleydb_write_string(lList **answer_list, bdb_info info,
 {
    bool ret = true;
 
-   DENTER(BDB_LAYER, "spool_berkeleydb_write_string");
+   DENTER(TOP_LAYER, "spool_berkeleydb_write_string");
 
    {
       int dbret;
@@ -1024,7 +1018,7 @@ bool spool_berkeleydb_write_string(lList **answer_list, bdb_info info,
          DPRINTF(("storing string with key "SFQ", size = %d "
                   "to env = %p, db = %p, txn = %p, txn_id = %d\n", 
                   key, data_dbt.size, bdb_get_env(info), db, 
-                  txn, (txn->id == NULL) ? 0 : txn->id(txn)));
+                  txn, txn->id(txn)));
 
          /* Store a key/data pair. */
          PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
@@ -1206,7 +1200,7 @@ spool_berkeleydb_delete_object(lList **answer_list, bdb_info info,
    DB *db;
    DB_TXN *txn;
 
-   DENTER(BDB_LAYER, "spool_berkeleydb_delete_object");
+   DENTER(TOP_LAYER, "spool_berkeleydb_delete_object");
 
    db = bdb_get_db(info, database);
    txn = bdb_get_txn(info);
@@ -1628,7 +1622,7 @@ spool_berkeleydb_check_reopen_database(lList **answer_list,
    bool ret = true;
    DB_ENV *env;
 
-   DENTER(BDB_LAYER, "spool_berkeleydb_check_reopen_database");
+   DENTER(TOP_LAYER, "spool_berkeleydb_check_reopen_database");
 
    env = bdb_get_env(info);
 
@@ -1664,7 +1658,7 @@ spool_berkeleydb_read_keys(lList **answer_list, bdb_info info,
    DBT key_dbt, data_dbt;
    DBC *dbc;
 
-   DENTER(BDB_LAYER, "spool_berkeleydb_read_keys");
+   DENTER(TOP_LAYER, "spool_berkeleydb_read_keys");
 
    db  = bdb_get_db(info, database);
    txn = bdb_get_txn(info);
@@ -1753,7 +1747,7 @@ spool_berkeleydb_read_object(lList **answer_list, bdb_info info,
 
    DBT key_dbt, data_dbt;
 
-   DENTER(BDB_LAYER, "spool_berkeleydb_read_object");
+   DENTER(TOP_LAYER, "spool_berkeleydb_read_object");
 
    db  = bdb_get_db(info, database);
    txn = bdb_get_txn(info);
@@ -1836,7 +1830,7 @@ spool_berkeleydb_read_string(lList **answer_list, bdb_info info,
 
    DBT key_dbt, data_dbt;
 
-   DENTER(BDB_LAYER, "spool_berkeleydb_read_string");
+   DENTER(TOP_LAYER, "spool_berkeleydb_read_string");
 
    db  = bdb_get_db(info, database);
    txn = bdb_get_txn(info);
@@ -1878,7 +1872,7 @@ spool_berkeleydb_clear_log(lList **answer_list, bdb_info info)
    bool ret = true;
    DB_ENV *env;
 
-   DENTER(BDB_LAYER, "spool_berkeleydb_clear_log");
+   DENTER(TOP_LAYER, "spool_berkeleydb_clear_log");
 
    /* check connection */
    env = bdb_get_env(info);
@@ -1897,7 +1891,7 @@ spool_berkeleydb_clear_log(lList **answer_list, bdb_info info)
 
    if (ret) {
       int dbret;
-      char **list = NULL;
+      char **list;
 
       PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       dbret = env->log_archive(env, &list, DB_ARCH_ABS);
@@ -1943,7 +1937,7 @@ spool_berkeleydb_trigger_rpc(lList **answer_list, bdb_info info)
    bool ret = true;
    DB_ENV *env;
 
-   DENTER(BDB_LAYER, "spool_berkeleydb_trigger_rpc");
+   DENTER(TOP_LAYER, "spool_berkeleydb_trigger_rpc");
 
    /* check connection */
    env = bdb_get_env(info);
@@ -1979,7 +1973,7 @@ spool_berkeleydb_checkpoint(lList **answer_list, bdb_info info)
 {
    bool ret = true;
 
-   DENTER(BDB_LAYER, "spool_berkeleydb_checkpoint");
+   DENTER(TOP_LAYER, "spool_berkeleydb_checkpoint");
 
    /* only necessary for local spooling */
    if (bdb_get_server(info) == NULL) {

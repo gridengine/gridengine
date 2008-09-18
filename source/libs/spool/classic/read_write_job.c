@@ -94,8 +94,6 @@ static lListElem *pe_task_create_from_file(u_long32 job_id,
                                            const char *pe_task_id,
                                            sge_spool_flags_t flags);
 
-static int job_remove_script_file(u_long32 job_id);
-
 /* Here we cache the path of the last task spool dir that has been created.
    In case a task spool dir is removed the cache is no longer a proof of the
    existence of the task spool dir and is reinitialized */
@@ -747,7 +745,7 @@ int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid,
    return 0;
 }
 
-static int job_remove_script_file(u_long32 job_id)
+int job_remove_script_file(u_long32 job_id)
 {
    char script_file[SGE_PATH_MAX] = "";
    int ret = 0;

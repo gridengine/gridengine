@@ -50,12 +50,14 @@
 #endif
 
 #include "sgermon.h"
-#include "sge_io.h"
 #include "sge_utility.h"
 #include "sge_pty.h"
 #include "sge_ijs_comm.h"
 #include "sge_ijs_threads.h"
-#include "sge_client_ijs.h"
+
+/* defines */
+#define THISCOMPONENT  "pty_qrsh"
+#define OTHERCOMPONENT "pty_shepherd"
 
 /* global variables */
 char *g_hostname  = NULL;
@@ -182,8 +184,6 @@ void signal_handler(int sig)
 *******************************************************************************/
 void set_signal_handlers(void)
 {
-  struct sigaction old_handler, new_handler;
-
    /* Is SIGHUP necessary? 
     * Yes: termio(7I) says:
     * "When a modem disconnect is detected, a SIGHUP signal is sent
@@ -193,47 +193,20 @@ void set_signal_handlers(void)
     *  caught, any subsequent  read  returns  with  an  end-of-file
     *  indication until the terminal is closed."
     */
-   sigaction(SIGHUP, NULL, &old_handler);
-   if (old_handler.sa_handler != SIG_IGN) {
-      new_handler.sa_handler = signal_handler;
-      sigaddset(&new_handler.sa_mask, SIGHUP);
-      new_handler.sa_flags = SA_RESTART;
-      sigaction(SIGHUP, &new_handler, NULL);
+   if (signal(SIGHUP, SIG_IGN) != SIG_IGN) {
+      sigset(SIGHUP, signal_handler);
    }
-
-   sigaction(SIGINT, NULL, &old_handler);
-   if (old_handler.sa_handler != SIG_IGN) {
-      new_handler.sa_handler = signal_handler;
-      sigaddset(&new_handler.sa_mask, SIGINT);
-      new_handler.sa_flags = SA_RESTART;
-      sigaction(SIGINT, &new_handler, NULL);
+   if (signal(SIGINT, SIG_IGN) != SIG_IGN) {
+      sigset(SIGINT, signal_handler);
    }
-
-   sigaction(SIGQUIT, NULL, &old_handler);
-   if (old_handler.sa_handler != SIG_IGN) {
-      new_handler.sa_handler = signal_handler;
-      sigaddset(&new_handler.sa_mask, SIGQUIT);
-      new_handler.sa_flags = SA_RESTART;
-      sigaction(SIGQUIT, &new_handler, NULL);
+   if (signal(SIGQUIT, SIG_IGN) != SIG_IGN) {
+      sigset(SIGQUIT, signal_handler);
    }
-
-   sigaction(SIGTERM, NULL, &old_handler);
-   if (old_handler.sa_handler != SIG_IGN) {
-      new_handler.sa_handler = signal_handler;
-      sigaddset(&new_handler.sa_mask, SIGTERM);
-      new_handler.sa_flags = SA_RESTART;
-      sigaction(SIGTERM, &new_handler, NULL);
+   if (signal(SIGTERM, SIG_IGN) != SIG_IGN) {
+      sigset(SIGTERM, signal_handler);
    }
-
-   new_handler.sa_handler = window_change_handler;
-   sigaddset(&new_handler.sa_mask, SIGWINCH);
-   new_handler.sa_flags = SA_RESTART;
-   sigaction(SIGWINCH, &new_handler, NULL);
-
-   new_handler.sa_handler = broken_pipe_handler;
-   sigaddset(&new_handler.sa_mask, SIGPIPE);
-   new_handler.sa_flags = SA_RESTART;
-   sigaction(SIGPIPE, &new_handler, NULL);
+   sigset(SIGWINCH, window_change_handler);
+   sigset(SIGPIPE,  broken_pipe_handler);
 }
 
 /****** client_check_window_change() *******************************************
@@ -285,14 +258,14 @@ static void client_check_window_change(COMMUNICATION_HANDLE *handle)
 
          sprintf(buf, "WS %d %d %d %d",
                  ws.ws_row, ws.ws_col, ws.ws_xpixel, ws.ws_ypixel);
-         comm_write_message(handle, g_hostname, COMM_CLIENT, 1,
+         comm_write_message(handle, g_hostname, OTHERCOMPONENT, 1,
                             (unsigned char*)buf, strlen(buf), 
                             WINDOW_SIZE_CTRL_MSG, &err_msg);
       } else {
          DPRINTF(("client_check_windows_change: ioctl() failed! "
             "sending dummy WINDOW_SIZE_CTRL_MSG to fullfill protocol.\n"));
          sprintf(buf, "WS 60 80 480 640");
-         comm_write_message(handle, g_hostname, COMM_CLIENT, 1,
+         comm_write_message(handle, g_hostname, OTHERCOMPONENT, 1,
             (unsigned char*)buf, strlen(buf), WINDOW_SIZE_CTRL_MSG, &err_msg);
       }
    }
@@ -345,6 +318,7 @@ void* tty_to_commlib(void *t_conf)
    }
 
    while (do_exit == 0) {
+
       FD_ZERO(&read_fds);
       if (g_nostdin == 0) {
          /* wait for input on tty */
@@ -353,10 +327,8 @@ void* tty_to_commlib(void *t_conf)
       timeout.tv_sec  = 1;
       timeout.tv_usec = 0;
 
-      DPRINTF(("tty_to_commlib: Waiting in select() for data\n"));
       ret = select(STDIN_FILENO+1, &read_fds, NULL, NULL, &timeout);
 
-      thread_testcancel(t_conf);
       client_check_window_change(g_comm_handle);
 
       if (received_signal == SIGHUP ||
@@ -385,13 +357,16 @@ void* tty_to_commlib(void *t_conf)
          } else {
             DPRINTF(("tty_to_commlib: writing to commlib: %d bytes\n", nread));
             if (comm_write_message(g_comm_handle, g_hostname, 
-               COMM_CLIENT, 1, (unsigned char*)pbuf, 
+               OTHERCOMPONENT, 1, (unsigned char*)pbuf, 
                (unsigned long)nread, STDIN_DATA_MSG, &err_msg) != nread) {
+               /*
+                * TODO: Retry blocking until all data was sent!
+                * Do this in comm_write_message()
+                */
                DPRINTF(("tty_to_commlib: couldn't write all data\n"));
             } else {
                DPRINTF(("tty_to_commlib: data successfully written\n"));
             }
-            comm_flush_write_messages(g_comm_handle, &err_msg);
          }
       } else {
          /*
@@ -448,7 +423,6 @@ void* commlib_to_tty(void *t_conf)
 
    DENTER(TOP_LAYER, "commlib_to_tty");
    thread_func_startup(t_conf);
-   thread_setcancelstate(1);
 
    while (do_exit == 0) {
       /*
@@ -457,8 +431,12 @@ void* commlib_to_tty(void *t_conf)
       recv_mess.cl_message = NULL;
       recv_mess.data = NULL;
 
+      ret = comm_trigger(g_comm_handle, 1, &err_msg);
+      DPRINTF(("commlib_to_tty: comm_trigger() returned %d, %s\n",
+              ret, &err_msg));
+
       DPRINTF(("commlib_to_tty: recv_message()\n"));
-      ret = comm_recv_message(g_comm_handle, CL_TRUE, &recv_mess, &err_msg);
+      ret = comm_recv_message(g_comm_handle, CL_FALSE, &recv_mess, &err_msg);
       if (ret != COMM_RETVAL_OK) {
          /* check if we are still connected to anybody. */
          /* if not - exit. */
@@ -472,53 +450,31 @@ void* commlib_to_tty(void *t_conf)
       }
       DPRINTF(("commlib_to_tty: received a message\n"));
 
-      thread_testcancel(t_conf);
       client_check_window_change(g_comm_handle);
-
-      if (received_signal == SIGHUP ||
-          received_signal == SIGINT ||
-          received_signal == SIGQUIT ||
-          received_signal == SIGTERM) {
-         /* If we receive one of these signals, we must terminate */
-         DPRINTF(("commlib_to_tty: shutting down because of signal %d\n",
-                 received_signal));
-         do_exit = 1;
-         continue;
-      }
-
       DPRINTF(("'parsing' message\n"));
+
       /*
        * 'parse' message
        * A 1 byte prefix tells us what kind of message it is.
        * See sge_ijs_comm.h for message types.
        */
       if (recv_mess.cl_message != NULL) {
-         char buf[100];
          switch (recv_mess.type) {
             case STDOUT_DATA_MSG:
-               /* copy recv_mess.data to buf to append '\0' */
-               memcpy(buf, recv_mess.data, MIN(99, recv_mess.cl_message->message_length - 1));
-               buf[MIN(99, recv_mess.cl_message->message_length - 1)] = 0;
                DPRINTF(("commlib_to_tty: received stdout message, writing to tty.\n"));
-               DPRINTF(("commlib_to_tty: message is: %s\n", buf));
-/* TODO: If it's not possible to write all data to the tty, retry blocking
- *       until all data was written. The commlib must block then, too.
- */
-               if (sge_writenbytes(STDOUT_FILENO, recv_mess.data,
-                          (int)(recv_mess.cl_message->message_length-1))
-                       != (int)(recv_mess.cl_message->message_length-1)) {
-                  DPRINTF(("commlib_to_tty: sge_writenbytes() error\n"));
+               DPRINTF(("commlib_to_tty: message is: %s\n", recv_mess.data));
+               if (writen(STDOUT_FILENO, recv_mess.data,
+                          recv_mess.cl_message->message_length-1)
+                       != recv_mess.cl_message->message_length-1) {
+                  DPRINTF(("commlib_to_tty: writen error\n"));
                }
                break;
             case STDERR_DATA_MSG:
                DPRINTF(("commlib_to_tty: received stderr message, writing to tty.\n"));
-/* TODO: If it's not possible to write all data to the tty, retry blocking
- *       until all data was written. The commlib must block then, too.
- */
-               if (sge_writenbytes(STDERR_FILENO, recv_mess.data,
-                          (int)(recv_mess.cl_message->message_length-1))
-                       != (int)(recv_mess.cl_message->message_length-1)) {
-                  DPRINTF(("commlib_to_tty: sge_writenbytes() error\n"));
+               if (writen(STDERR_FILENO, recv_mess.data,
+                          recv_mess.cl_message->message_length-1)
+                       != recv_mess.cl_message->message_length-1) {
+                  DPRINTF(("commlib_to_tty: writen error\n"));
                }
                break;
             case WINDOW_SIZE_CTRL_MSG:
@@ -528,18 +484,21 @@ void* commlib_to_tty(void *t_conf)
                         "This was unexpected!\n"));
                break;
             case REGISTER_CTRL_MSG:
-               /* control message */
-               /* a client registered with us. With the next loop, the 
-                * cl_commlib_trigger function will send the WINDOW_SIZE_CTRL_MSG
-                * (and perhaps some data messages),  which is already in the 
-                * send_messages list of the connection, to the client.
-                */
-               DPRINTF(("commlib_to_tty: received register message!\n"));
-               /* Send the settings in response */
-               sprintf(buf, "noshell = %d", g_noshell);
-               ret = (int)comm_write_message(g_comm_handle, g_hostname, COMM_CLIENT, 1,
-                  (unsigned char*)buf, strlen(buf)+1, SETTINGS_CTRL_MSG, &err_msg);
-               DPRINTF(("commlib_to_tty: sent SETTINGS_CTRL_MSG, ret = %d\n", ret));
+               {
+                  char buf[100];
+                  /* control message */
+                  /* a client registered with us. With the next loop, the 
+                   * cl_commlib_trigger function will send the WINDOW_SIZE_CTRL_MSG
+                   * (and perhaps some data messages),  which is already in the 
+                   * send_messages list of the connection, to the client.
+                   */
+                  DPRINTF(("commlib_to_tty: received register message!\n"));
+                  /* Send the settings in response */
+                  sprintf(buf, "noshell = %d", g_noshell);
+                  ret = (int)comm_write_message(g_comm_handle, g_hostname, OTHERCOMPONENT, 1,
+                     (unsigned char*)buf, strlen(buf)+1, SETTINGS_CTRL_MSG, &err_msg);
+                  DPRINTF(("commlib_to_tty: sent SETTINGS_CTRL_MSG, ret = %d\n", ret));
+               }
                break;
             case UNREGISTER_CTRL_MSG:
                /* control message */
@@ -551,15 +510,9 @@ void* commlib_to_tty(void *t_conf)
                DPRINTF(("commlib_to_tty: received unregister message!\n"));
                DPRINTF(("commlib_to_tty: writing UNREGISTER_RESPONSE_CTRL_MSG\n"));
 
-               /* copy recv_mess.data to buf to append '\0' */
-               memcpy(buf, recv_mess.data, MIN(99, recv_mess.cl_message->message_length - 1));
-               buf[MIN(99, recv_mess.cl_message->message_length - 1)] = 0;
-               sscanf(buf, "%d", &g_exit_status);
-               comm_write_message(g_comm_handle, g_hostname, COMM_CLIENT, 1, 
+               sscanf(recv_mess.data, "%d", &g_exit_status);
+               comm_write_message(g_comm_handle, g_hostname, OTHERCOMPONENT, 1, 
                   (unsigned char*)" ", 1, UNREGISTER_RESPONSE_CTRL_MSG, &err_msg);
-
-               DPRINTF(("commlib_to_tty: received exit_status from shepherd: %d\n", 
-                        g_exit_status));
                do_exit = 1;
                break;
          }
@@ -579,21 +532,17 @@ void* commlib_to_tty(void *t_conf)
 *     do_server_loop() -- The servers main loop
 *
 *  SYNOPSIS
-*     int do_server_loop(u_long32 job_id, int nostdin, int noshell,
-*                        int is_rsh, int is_qlogin, int force_pty,
-*                        int *p_exit_status)
+*     void* commlib_to_tty(void *t_conf)
 *
 *  FUNCTION
 *     The main loop of the commlib server, handling the data transfer from
 *     and to the client.
 *
 *  INPUTS
-*     u_long32 job_id    - SGE job id of this job
-*     int nostdin        - The "-nostdin" switch
-*     int noshell        - The "-noshell" switch
-*     int is_rsh         - Is it a qrsh with commandline?
-*     int is_qlogin      - Is it a qlogin or qrsh without commandline?
-*     int force_pty      - The user forced use of pty by the "-pty yes" switch
+*     int random_poll    -
+*     u_long32 job_id    -
+*     int nostdin        -
+*     int noshell        -
 *     int *p_exit_status -
 *
 *  RESULT
@@ -606,11 +555,9 @@ void* commlib_to_tty(void *t_conf)
 *  SEE ALSO
 *     do_client_loop()
 *******************************************************************************/
-int do_server_loop(u_long32 job_id, int nostdin, int noshell,
-                   int is_rsh, int is_qlogin, int force_pty,
-                   int *p_exit_status)
+int do_server_loop(int random_poll, u_long32 job_id, int nostdin, 
+                   int noshell, int *p_exit_status)
 {
-   bool              terminal_is_in_raw_mode = false;
    int               ret = 0;
    dstring           err_msg = DSTRING_INIT;
    THREAD_HANDLE     *pthread_tty_to_commlib = NULL;
@@ -628,25 +575,16 @@ int do_server_loop(u_long32 job_id, int nostdin, int noshell,
 
    g_nostdin = nostdin;
    g_noshell = noshell;
-
    /*
-    * qrsh without command and qlogin both have is_rsh == 0 and is_qlogin == 1
-    * qrsh with command and qsh don't need to set terminal mode.
-    * If the user requested a pty we also have to set terminal mode.
+    * Set this terminal to raw mode, just output everything, 
+    * don't interpret it. Let the pty on the client side interpret
+    * the characters.
     */
-   if ((force_pty == 2 && is_rsh == 0 && is_qlogin == 1) || force_pty == 1) {
-      /*
-       * Set this terminal to raw mode, just output everything, don't interpreti
-       * it. Let the pty on the client side interpret the characters.
-       */
-      ret = terminal_enter_raw_mode();
-      if (ret != 0) {
-         fprintf(stderr, "Can't set terminal mode. Error reason: %s (%d)\n",
-            strerror(ret), ret);
-         return 1;
-      } else {
-         terminal_is_in_raw_mode = true;
-      }
+   ret = terminal_enter_raw_mode();
+   if (ret != 0) {
+      DPRINTF(("can't set terminal to raw mode: %s (%d)\n",
+         strerror(ret), ret));
+      /* continue with terminal in un-raw mode */
    }
 
    /*
@@ -683,38 +621,25 @@ int do_server_loop(u_long32 job_id, int nostdin, int noshell,
    DPRINTF(("shutting down tty_to_commlib thread\n"));
    thread_shutdown(pthread_tty_to_commlib);
 /*
- * TODO: Why doesn't this work on some hosts (e.g. oin)
- *       Is it necessary at all?
+ * TODO: Why doesn't this work on some hosts (e.g. oin)  
 
    DPRINTF(("wait until there is no client connected any more\n"));
-   comm_wait_for_no_connection(g_comm_handle, COMM_CLIENT, 10, &err_msg);
+   comm_wait_for_no_connection(g_comm_handle, OTHERCOMPONENT, 10, &err_msg);
 */
    DPRINTF(("shut down the connection from our side\n"));
-   comm_shutdown_connection(g_comm_handle, COMM_CLIENT, &err_msg);
-   g_comm_handle = NULL;
-   /*
-    * Close stdin to awake the tty_to_commlib-thread from the select() call.
-    * thread_shutdown() doesn't work on all architectures.
-    */
-   close(STDIN_FILENO);
+   comm_shutdown_connection(g_comm_handle, &err_msg);
 
    DPRINTF(("waiting for end of tty_to_commlib thread\n"));
    thread_join(pthread_tty_to_commlib);
+   thread_cleanup_lib(&thread_lib_handle);
 cleanup:
    /*
     * Set our terminal back to 'unraw' mode. Should be done automatically
     * by OS on process end, but we want to be sure.
     */
    sge_dstring_free(&err_msg);
-   if (terminal_is_in_raw_mode == true) {
-      ret = terminal_leave_raw_mode();
-      DPRINTF(("terminal_leave_raw_mode() returned %d (%s)\n", ret, strerror(ret)));
-      terminal_is_in_raw_mode = false;
-   }
-
+   terminal_leave_raw_mode();
    *p_exit_status = g_exit_status;
-
-   thread_cleanup_lib(&thread_lib_handle);
    DEXIT;
    return 0;
 }

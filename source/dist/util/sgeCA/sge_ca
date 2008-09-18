@@ -92,8 +92,8 @@ ErrUsage()
    "   -renew <user>       extend the certificate of <user>\n" \
    "   -renew_ca           extend the CA certificate\n" \
    "   -renew_sys          extend the daemon certificate\n" \
-   "   -renew_sdm <g>      renew certificate of a SDM daemon with\n" \
-   "                       g=Common Name of the SDM daemon\n" \
+   "   -renew_grm <g>      renew certificate of a GRM daemon with\n" \
+   "                       g=Common Name of the GRM daemon\n" \
    "   -days <days>        days of validity of the certificate\n" \
    "   -sha1               use sha-1 instead of md5 as message digest\n" \
    "   -encryptkey         use des to encrypt the generated key with a passphrase\n" \
@@ -109,16 +109,13 @@ ErrUsage()
    "   -userks             generate keystore for existing users\n" \
    "   -user <u:g:e>       generate certificates and keys for <u:g:e>\n" \
    "                       with u=Unix User, g=Common Name, e=email\n" \
-   "   -sdm_daemon <u:g:e> generate certificate and key for a SDM daemon\n" \
+   "   -grm_daemon <u:g:e> generate certificate and key for a GRM daemon\n" \
    "                       with u=Unix User, g=Common Name, e=email\n" \
-   "   -sdm_pkcs12 <g>     generate pkcs12 format file for SDM daemon\n" \
-   "                       with g=Common Name of the SDM daemon\n" \
-   "   -sys_pkcs12 <g>     generate pkcs12 format file for SGE daemon\n" \
-   "                       with g=Common Name of the SGE daemon\n" \
+   "   -grm_pkcs12 <g>     generate pkcs12 format file for GRM daemon\n" \
+   "                       with g=Common Name of the GRM daemon\n" \
    "   -ks <user>          generate a keystore file for <user>\n" \
    "   -kspwf <file>       keystore pw file\n" \
    "   -ksout <file>       keystore output file\n" \
-   "   -sysks              generate keystore for SGE daemon\n" \
    "   -showCaTop          echo caTop path\n" \
    "   -showCaLocalTop     echo caLocalTop path\n" \
    $myname
@@ -289,11 +286,10 @@ InitCA()
 RequestCert()
 {
     # create a certificate request
-    $REQ -new -keyout $outdir/$newkey -out $outdir/$newreq $DAYS
+    $REQ -new -keyout $outdir/$newreq -out $outdir/$newreq $DAYS
     RET=$?
     if [ $RET = 0 ]; then
-      $INFOTEXT "Request is in %s" $outdir/$newreq
-      $INFOTEXT "Private key is in %s" $outdir/$newkey
+      $INFOTEXT "Request (and private key) is in %s" $outdir/$newreq
     else
       PrintErrorAndExit 1 "Creating a certificate request failed"
     fi
@@ -686,37 +682,31 @@ MakeRandFile()
    fi
    # $INFOTEXT "Creating RANDFILE from '%s' in '%s'" $rfile $1
 
-   if [ "$2" = "default" ]; then
-      myuser=root
-   else
-      myuser=$2
-   fi
-
    RANDFILE=/tmp/.rand.$$; export RANDFILE;
-   $V5UTILBIN/adminrun $myuser dd if=$rfile of=$RANDFILE count=2048 > /dev/null 2>&1
+   $V5UTILBIN/adminrun $2 dd if=$rfile of=$RANDFILE count=2048 > /dev/null 2>&1
    if [ $? -lt 0 ]; then
        PrintError "Could not create random number for (%s -> %s)" $rfile $RANDFILE
        return 1
    fi
-   $V5UTILBIN/adminrun $myuser $OPENSSL rand -rand $RANDFILE -out $1 2048  > /dev/null 2>&1
+   $V5UTILBIN/adminrun $2 $OPENSSL rand -rand $RANDFILE -out $1 2048  > /dev/null 2>&1
    if [ $? -ne 0 ]; then
        PrintError "bootstraping of rand command as user %s failed (%s -> %s)" $2 $RANDFILE $1
        return 1
    fi
    
-   $V5UTILBIN/adminrun $myuser $OPENSSL rand -rand $rfile -out $1 2048  > /dev/null 2>&1
+   $V5UTILBIN/adminrun $2 $OPENSSL rand -rand $rfile -out $1 2048  > /dev/null 2>&1
    if [ $? -ne 0 ]; then
        PrintError "openssl rand command as user %s failed (%s -> %s)" $2 $rfile $1
        return 1
    fi
 
-   $V5UTILBIN/adminrun $myuser $RM $RANDFILE > /dev/null 2>&1
+   $V5UTILBIN/adminrun $2 $RM $RANDFILE > /dev/null 2>&1
    if [ $? -ne 0 ]; then
        PrintError "Could not delete file %s as user %s" $RANDFILE $2
        return 1
    fi
    
-   $V5UTILBIN/adminrun $myuser $CHMOD 644 $1 > /dev/null 2>&1
+   $V5UTILBIN/adminrun $2 $CHMOD 644 $1 > /dev/null 2>&1
    if [ $? -ne 0 ]; then
        PrintError "chmod as user %s on file %s failed" $2 $1
        return 1
@@ -732,7 +722,7 @@ MakeRandFile()
 #--------------------------------------------------------------------------
 # MakeUserCert create user certificates and keys for Windows Admin user
 #
-# $1 = certificate type "user" or "sdm_daemon"
+# $1 = certificate type "user" or "grm_daemon"
 # $2 = <user:gecos:email>
 #
 MakeUserCert()
@@ -804,24 +794,6 @@ MakeUserCerts()
 #
 MakeUserKeystores()
 {
-   for user in `ls $CALOCALTOP/userkeys`; do
-      MakeUserKeystore $user
-   done   
-}
-
-#--------------------------------------------------------------------------
-# MakeUserKeystore create keystores for existing user in 
-# $CALOCALTOP/userkeys/<user> 
-#
-# $1 <user> 
-MakeUserKeystore()
-{
-   if [ "$1" = "" ]; then
-      PrintErrorAndExit 1 "no valid user '%s'. Exit." $1
-   fi
-
-   user=$1
-
    if [ "$ksoutfile" = "" ]; then
       ksoutfile_saved=$ksoutfile
    fi
@@ -832,79 +804,30 @@ MakeUserKeystore()
       kspwfile=/tmp/tmp.$$
       remove_kspwfile=true
    fi   
-   certfile=$CALOCALTOP/userkeys/$user/cert.pem
-   if [ -r $certfile ]; then 
-      ksoutfile=$CALOCALTOP/userkeys/$user/keystore
-      touch $ksoutfile
-      $CHOWN $user $ksoutfile
-      $CHMOD 600 $ksoutfile
-      MakeKeystore user "$user"
-   fi
+   for user in `ls $CALOCALTOP/userkeys`; do
+      certfile=$CALOCALTOP/userkeys/$user/cert.pem
+      if [ -r $certfile ]; then 
+         ksoutfile=$CALOCALTOP/userkeys/$user/keystore
+         touch $ksoutfile
+         chown $user $ksoutfile
+         chmod 600 $ksoutfile
+         MakeKeystore "$user"
+      fi
+   done   
    if [ "$remove_kspwfile" = "true" ]; then
       rm $kspwfile
-      kspwfile=""
    fi
    ksoutfile=$ksoutfile_saved
 }
 
 #--------------------------------------------------------------------------
-# MakeSysKeystore create keystore for SGE Daemon
-# $CALOCALTOP/private 
-#
-MakeSysKeystore()
-{
-   ret=0
-   remove_kspwfile=false
-   if [ "$kspwfile" = "" ]; then
-      touch /tmp/tmp.$$
-      kspwfile=/tmp/tmp.$$
-      remove_kspwfile=true
-   fi   
-   certfile=$CATOP/certs/cert.pem
-   if [ -r $certfile ]; then 
-      if [ "$ksoutfile" = "" ]; then
-         ksoutfile=$CALOCALTOP/private/keystore
-      fi   
-      ksoutdir=`dirname $ksoutfile`
-      if [ ! -d "$ksoutdir" ]; then
-         PrintError "keystore directory does not exist: $ksoutdir"
-         if [ "$remove_kspwfile" = "true" ]; then
-            rm $kspwfile
-            kspwfile=""
-         fi
-         return 1
-      fi   
-      ExecuteAsAdmin touch $ksoutfile
-      ExecuteAsAdmin chmod 600 $ksoutfile
-      MakeKeystore sge_daemon "SGEDaemon"
-      ret=$?
-   else 
-      PrintError "no certificate file"
-      ret=1
-   fi
-   if [ "$remove_kspwfile" = "true" ]; then
-      rm $kspwfile
-      kspwfile=""
-   fi
-   return $ret
-}
-
-
-
-#--------------------------------------------------------------------------
 # MakeKeystore create keystore file of user's certificate and key
 #
-# $1 = user or sge_daemon
-# $2 = <unix user>
+# $1 = <unix user>
 #
 MakeKeystore()
 {
-   type=$1
-   if [ "$type" != "user" -a "$type" != "sge_daemon" ]; then
-      PrintError "unknown type $type only user or sge_daemon allowed"
-      return 1
-   fi
-   myuser=$2
+   myuser=$1
    if [ "$myuser" = "" ]; then 
       PrintError "username is empty"
       return 1
@@ -913,7 +836,7 @@ MakeKeystore()
    CA_ARGS="$CA_ARGS -calocaltop $CALOCALTOP"
    CA_ARGS="$CA_ARGS -cascript $ROOT_PATH/util/sgeCA/sge_ca"
    CA_ARGS="$CA_ARGS -cahost $CAHOST -adminuser $ADMINUSER"
-   CA_ARGS="$CA_ARGS initks $type $myuser $ksoutfile"
+   CA_ARGS="$CA_ARGS initks user $myuser $ksoutfile"
    if [ "$kspwfile" != "" ]; then
       CA_ARGS="$CA_ARGS $kspwfile"
    fi
@@ -928,19 +851,14 @@ MakeKeystore()
    JVM_ARGS="-cp $ROOT_PATH/lib/juti.jar"
    JVM_ARGS="$JVM_ARGS -Djava.util.logging.config.file=$ROOT_PATH/util/sgeCA/logging.properties"
 
-   OUTPUT=`$JAVA $JVM_ARGS com.sun.grid.ca.Main $CA_ARGS 2>&1`
-   if [ $? != 0 ]; then
-      PrintError "initks failed: $OUTPUT"
-      return 1
-   fi   
-      
+   $JAVA $JVM_ARGS com.sun.grid.ca.Main $CA_ARGS 
 }
 
 #--------------------------------------------------------------------------
 # MakePKCS12 create pkcs12 file of user's certificate and key
 #
-# $1 = "user" or "sdm_daemon" or "sge_daemon"
-# $2 = <unix user> or <sdm daemon>
+# $1 = "user" or "grm_daemon"
+# $1 = <unix user> or <grm daemon>
 #
 MakePKCS12()
 {
@@ -953,20 +871,15 @@ MakePKCS12()
       unixuser=$2
       KEYFILE=$CALOCALTOP/userkeys/$keyowner/key.pem
       CERTFILE=$CALOCALTOP/userkeys/$keyowner/cert.pem
-   elif [ "$1" = "sdm_daemon" ]; then
+   elif [ "$1" = "grm_daemon" ]; then
       if [ "$2" = "" ]; then
-         PrintError "no valid sdm daemon '%s'." $1
+         PrintError "no valid grm daemon '%s'." $1
          return 1
       fi
       keyowner=$2
       unixuser=$ADMINUSER
       KEYFILE=$CALOCALTOP/daemons/$keyowner/key.pem
       CERTFILE=$CALOCALTOP/daemons/$keyowner/cert.pem
-   elif [ "$1" = "sge_daemon" ]; then
-      keyowner=$2
-      unixuser=$ADMINUSER
-      KEYFILE=$CALOCALTOP/private/key.pem
-      CERTFILE=$CATOP/certs/cert.pem
    else
       PrintError "valid argument: %s" $1
       return 1
@@ -1050,9 +963,9 @@ DumpUsers()
 #--------------------------------------------------------------------------
 # MakeCert create certificate and private key for daemon
 #
-# $1 = certificate type ("daemon" or "user"  or "sdm_daemon")
+# $1 = certificate type ("daemon" or "user"  or "grm_daemon")
 # $2 = userId   (Unix user name)
-# $3 = commonname         (e.g. passwd gecos field or name of sdm_daemon)
+# $3 = commonname         (e.g. passwd gecos field or name of grm_daemon)
 # $4 = email address
 #
 MakeCert()
@@ -1069,12 +982,12 @@ MakeCert()
    fi
 
    # 
-   #  For SDM daemon the uid is always "sdm_daemon"
-   #  the SdmCATrustManagerLoginModule needs this information
+   #  For GRM daemon the uid is always "grm_daemon"
+   #  the GrmCATrustManagerLoginModule needs this information
    #  to distingush between daemon and user certificates
    #
-   if [ $1 = sdm_daemon ]; then
-      echo userId=sdm_daemon_$2 >> $TMPFILE
+   if [ $1 = grm_daemon ]; then
+      echo userId=grm_daemon_$2 >> $TMPFILE
    else
       echo userId=$2 >> $TMPFILE
    fi
@@ -1102,7 +1015,7 @@ MakeCert()
       RSFILE=$KEYDIR/rand.seed
       ExecRm $KEYDIR
       ExecuteAsAdmin $MKDIR $KEYDIR
-   elif [ $1 = sdm_daemon ]; then
+   elif [ $1 = grm_daemon ]; then
       KEYDIR=$CALOCALTOP/daemons/$3
       KEYFILE=$KEYDIR/key.pem
       REQFILE=$KEYDIR/req.pem
@@ -1174,8 +1087,8 @@ MakeCert()
    fi
    if [ $1 = daemon ]; then
       $INFOTEXT "created and signed certificate for SGE daemons" 
-   elif [ $1 = sdm_daemon ]; then
-      $INFOTEXT "created and signed certificate for sdm_daemon '%s' in '%s'" $3 $KEYDIR
+   elif [ $1 = grm_daemon ]; then
+      $INFOTEXT "created and signed certificate for grm_daemon '%s' in '%s'" $3 $KEYDIR
    else
       # check if user exists and chown if yes
       id $2  > /dev/null 2>&1
@@ -1241,8 +1154,8 @@ RenewCA()
 #--------------------------------------------------------------------------
 # RenewCert renew a certificate
 #
-# $1 = certificate type ("daemon" or "user" or "sdm_daemon"
-# $2 = userId   (Unix user name of common name of sdm_damon)
+# $1 = certificate type ("daemon" or "user" or "grm_daemon"
+# $2 = userId   (Unix user name of common name of grm_damon)
 #
 RenewCert()
 {
@@ -1293,7 +1206,7 @@ RenewCert()
       OLDCERTFILE=$CATOP/certs/cert.pem.old
       RSFILE=$CALOCALTOP/private/rand.seed
       CRLFILE=$CATOP/ca-crl.pem
-   elif [ $1 = sdm_daemon ]; then
+   elif [ $1 = grm_daemon ]; then
       KEYDIR=$CALOCALTOP/daemons/$2
       NEWKEYBASEDIR=/tmp/sge_ca_dir_$$
       NEWKEYDIR=$NEWKEYBASEDIR/daemons/$2
@@ -1488,15 +1401,12 @@ RenewCert()
          return 1
       fi
       # The chown can only be done for user certificates
-      # sdm_daemon certificate are owned by $ADMINUSER
+      # grm_daemon certificate are owned by $ADMINUSER
       if [ $1 = "user" ]; then
-         id $2  > /dev/null 2>&1
-         if [ $? = 0 ]; then
-            ExecChown -R $2 $KEYDIR
-            if [ $? != 0 ]; then
-               PrintError "chown to %s failed (%s)" $2 $KEYDIR
-               return 1
-            fi
+         ExecChown -R $2 $KEYDIR
+         if [ $? != 0 ]; then
+            PrintError "chown to %s failed (%s)" $2 $KEYDIR
+            return 1
          fi
       fi
    fi
@@ -1807,7 +1717,6 @@ AUTO="false"
 # CommandLine Argument Parsing
 #
 WHICH="undef"
-newkey=newkey.pem
 newreq=newreq.pem
 newcert=newcert.pem
 user=""
@@ -1816,7 +1725,7 @@ indir=.
 userfile=""
 passinfile=""
 pkcs12outdir=""
-md="-md md5"
+md="-md5"
 nodes="-nodes"
 ksoutfile=""
 kspwfile=""
@@ -1961,20 +1870,10 @@ while [ $ARGC != 0 ]; do
       shift
       ARGC=`expr $ARGC - 1`
       ;;
-   -sdm_pkcs12)
-      WHICH="sdm_pkcs12"
+   -grm_pkcs12)
+      WHICH="grm_pkcs12"
       if [ $ARGC -lt 2 ]; then
-         PrintError "-sdm_pkcs12 needs argument"
-         ErrUsage
-      fi
-      user="$2"
-      shift
-      ARGC=`expr $ARGC - 1`
-      ;;
-   -sys_pkcs12)
-      WHICH="sys_pkcs12"
-      if [ $ARGC -lt 2 ]; then
-         PrintError "-sys_pkcs12 needs argument"
+         PrintError "-grm_pkcs12 needs argument"
          ErrUsage
       fi
       user="$2"
@@ -2028,7 +1927,7 @@ while [ $ARGC != 0 ]; do
       ARGC=`expr $ARGC - 1`
       ;;
    -sha1)
-      md="-md sha1"
+      md="-sha1"
       ;;
    -encryptkey)
       nodes=""
@@ -2046,9 +1945,6 @@ while [ $ARGC != 0 ]; do
    -userks)
       WHICH="userks"
       ;;
-   -sysks)
-      WHICH="sysks"
-      ;;
    -user)
       WHICH="oneuser"
       if [ $ARGC -lt 2 ]; then
@@ -2059,10 +1955,10 @@ while [ $ARGC != 0 ]; do
       shift
       ARGC=`expr $ARGC - 1`
       ;;
-   -sdm_daemon)
-      WHICH="sdm_daemon"
+   -grm_daemon)
+      WHICH="grm_daemon"
       if [ $ARGC -lt 2 ]; then
-         PrintError "-sdm_daemon needs argument"
+         PrintError "-grm_daemon needs argument"
          ErrUsage
       fi
       user=$2
@@ -2079,12 +1975,12 @@ while [ $ARGC != 0 ]; do
       shift
       ARGC=`expr $ARGC - 1`
       ;;
-   -renew_sdm)
+   -renew_grm)
       if [ $ARGC -lt 2 ]; then
-         PrintError "-renew_sdm needs argument"
+         PrintError "-renew_grm needs argument"
          ErrUsage
       fi
-      WHICH="renew_sdm"
+      WHICH="renew_grm"
       user=$2
       shift
       ARGC=`expr $ARGC - 1`
@@ -2135,9 +2031,9 @@ fi
 
 export ADMINUSER CATOP CALOCALTOP CAHOST
 
-REQ="$OPENSSL req $nodes"
+REQ="$OPENSSL req $md $nodes"
 
-CA="$OPENSSL ca $md -keyfile $CALOCALTOP/private/$CAKEY -cert $CATOP/$CACERT \
+CA="$OPENSSL ca -keyfile $CALOCALTOP/private/$CAKEY -cert $CATOP/$CACERT \
              -outdir $CATOP/newcerts"
 
 VERIFY="$OPENSSL verify"
@@ -2167,20 +2063,14 @@ usercert)
 userks) 
     MakeUserKeystores
     ;;
-sysks) 
-    MakeSysKeystore
-    if [ $? != 0 ]; then
-       exit 1
-    fi
-    ;;
 oneuser)
     MakeUserCert user "$user"
     if [ $? != 0 ]; then
        exit 1
     fi
     ;;
-sdm_daemon)
-    MakeUserCert sdm_daemon $user
+grm_daemon)
+    MakeUserCert grm_daemon $user
     if [ $? != 0 ]; then
        exit 1
     fi
@@ -2203,8 +2093,8 @@ renew)
        exit 1
     fi
     ;;
-renew_sdm) 
-    RenewCert sdm_daemon $user
+renew_grm) 
+    RenewCert grm_daemon $user
     if [ $? != 0 ]; then
        exit 1
     fi
@@ -2228,23 +2118,13 @@ pkcs12)
     fi
     ;;
 ks) 
-    if [  "$ksoutfile" != "" ]; then
-       MakeKeystore user $user
-    else
-       MakeUserKeystore $user
-    fi    
+    MakeKeystore $user
     if [ $? != 0 ]; then
        exit 1
     fi
     ;;
-sdm_pkcs12) 
-    MakePKCS12 sdm_daemon $user
-    if [ $? != 0 ]; then
-       exit 1
-    fi
-    ;;
-sys_pkcs12) 
-    MakePKCS12 sge_daemon $user
+grm_pkcs12) 
+    MakePKCS12 grm_daemon $user
     if [ $? != 0 ]; then
        exit 1
     fi

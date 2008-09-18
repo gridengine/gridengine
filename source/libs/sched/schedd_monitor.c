@@ -46,8 +46,13 @@
 
 #include "msg_common.h"
 
+
+static bool monitor_next_run = false;
 static char log_string[2048 + 1] = "invalid log_string";
 static char schedd_log_file[SGE_PATH_MAX + 1] = "";
+
+/* if set we do not log into schedd log file but we fill up this answer list */
+static lList **monitor_alpp = NULL;
 
 void schedd_set_schedd_log_file(sge_gdi_ctx_class_t *ctx)
 {
@@ -63,23 +68,47 @@ void schedd_set_schedd_log_file(sge_gdi_ctx_class_t *ctx)
    DEXIT;
 }
 
+bool schedd_is_monitor_next_run(void)
+{
+   return monitor_next_run;
+}
+
+void schedd_set_monitor_next_run(bool set)
+{
+   monitor_next_run = set;
+}
 
 char* schedd_get_log_string(void)
 {
    return log_string;
 }
 
-int schedd_log(const char *logstr, lList **monitor_alpp, bool monitor_next_run) 
+void clean_monitor_alp()
+{
+   lFreeList(monitor_alpp);
+}
+
+void set_monitor_alpp(lList **alpp) {
+   monitor_alpp = alpp;
+   monitor_next_run = (alpp!=NULL)?true:false;
+}
+
+int schedd_log(const char *logstr) 
 {
    DENTER(TOP_LAYER, "schedd_log");
 
+   if (!monitor_next_run) {
+      DEXIT;
+      return 0;
+   }
+
    if (monitor_alpp) {
-      /* add to answer list for verification (-w v) */
-      answer_list_add(monitor_alpp, logstr, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+      char logloglog[2048];
+/*       DPRINTF(("schedd_log: %s\n", logstr)); */
+      sprintf(logloglog, "%s", logstr);
+      answer_list_add(monitor_alpp, logloglog, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
    } 
-   
-   if (monitor_next_run){
-      /* do logging (-tsm) */
+   else {
       time_t now;
       FILE *fp = NULL;
       char *time_str = NULL;
@@ -93,7 +122,7 @@ int schedd_log(const char *logstr, lList **monitor_alpp, bool monitor_next_run)
 
       fp = fopen(schedd_log_file, "a");
       if (!fp) {
-         DPRINTF(("could not open schedd_log_file "SFQ"\n", schedd_log_file));
+         DPRINTF(("could not open schedd_log_file %s\n", schedd_log_file));
          DEXIT;
          return -1;
       }
@@ -114,7 +143,7 @@ FCLOSE_ERROR:
 
 #define NUM_ITEMS_ON_LINE 10
 
-int schedd_log_list(lList **monitor_alpp, bool monitor_next_run, const char *logstr, lList *lp, int nm) {
+int schedd_log_list(const char *logstr, lList *lp, int nm) {
    int fields[] = { 0, 0 };
    const char *delis[] = {NULL, " ", NULL};
    lList *lp_part = NULL;
@@ -145,7 +174,7 @@ int schedd_log_list(lList **monitor_alpp, bool monitor_next_run, const char *log
                         lp_part, 
                         fields, delis, 0);
 #endif
-         schedd_log(log_string, monitor_alpp, monitor_next_run);
+         schedd_log(log_string);
          lFreeList(&lp_part);
          lp_part = NULL;
       }
@@ -157,6 +186,7 @@ int schedd_log_list(lList **monitor_alpp, bool monitor_next_run, const char *log
    DEXIT;
    return 0;
 }
+
 
 const char *job_descr(
 u_long32 jobid 

@@ -81,8 +81,6 @@
 static void (*shared_ssl_func__X509_free)(X509 *a);
 static void (*shared_ssl_func__EVP_PKEY_free)(EVP_PKEY *pkey);
 static void (*shared_ssl_func__ERR_print_errors_fp)(FILE *fp);
-unsigned long (*shared_ssl_func__ERR_get_error)(void);
-char* (*shared_ssl_func__ERR_error_string)(unsigned long e, char *buf);
 static int (*shared_ssl_func__EVP_PKEY_size)(EVP_PKEY *pkey);
 static const EVP_CIPHER* (*shared_ssl_func__EVP_rc4)(void);
 static int (*shared_ssl_func__EVP_OpenInit)(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *type, unsigned char *ek, int ekl, unsigned char *iv, EVP_PKEY *priv);
@@ -159,8 +157,6 @@ sge_init_shared_ssl_lib(void)
             "d2i_AutoPrivateKey",
             "d2i_X509",
             "RAND_load_file",
-            "ERR_get_error",
-            "ERR_error_string",
             NULL
          };
 
@@ -187,8 +183,6 @@ sge_init_shared_ssl_lib(void)
             &shared_ssl_func__d2i_X509,
 
             &shared_ssl_func__RAND_load_file,
-            &shared_ssl_func__ERR_get_error,
-            &shared_ssl_func__ERR_error_string,
 
             NULL
          };
@@ -210,7 +204,8 @@ sge_init_shared_ssl_lib(void)
         
          ret = 0;
       } else {
-         fprintf(stderr, "%s\n", MSG_PWD_CANTOPENSSL);
+         fprintf(stderr, MSG_PWD_CANT_OPEN_SSL_LIB_S, SGE_PASSWD_PROG_NAME);
+         fprintf(stderr, "\n");
          ret = 1;
       }
    } else {
@@ -238,8 +233,6 @@ sge_init_shared_ssl_lib(void)
    shared_ssl_func__d2i_AutoPrivateKey = (EVP_PKEY* (*)(EVP_PKEY **a, unsigned char **pp, long length))d2i_AutoPrivateKey;
    shared_ssl_func__d2i_X509 = (X509* (*)(X509 **a, unsigned char **in, long len)) d2i_X509;
    shared_ssl_func__RAND_load_file = RAND_load_file;
-   shared_ssl_func__ERR_get_error = ERR_get_error;
-   shared_ssl_func__ERR_error_string = ERR_error_string;
    ret = 0;
 #endif
    DEXIT;
@@ -407,8 +400,8 @@ read_private_key(const char *keyfile, char *ssl_err, size_t buff_size)
 #endif
    FCLOSE(fp);
    if (pku.pkey == NULL) {
-      error_code = shared_ssl_func__ERR_get_error();
-      shared_ssl_func__ERR_error_string(error_code, ssl_err);
+      error_code = ERR_get_error();
+      ERR_error_string(error_code, ssl_err);
 #ifdef DEFINE_SGE_PASSWD_MAIN
       shared_ssl_func__ERR_print_errors_fp(stderr);
 #endif
@@ -588,7 +581,7 @@ buffer_encrypt(const char *buffer_in, size_t buffer_in_length,
 #endif
    if(ret == 0) {
       printf("---> EVP_SealInit\n");
-      shared_ssl_func__ERR_print_errors_fp(stdout);
+      ERR_print_errors_fp(stdout);
    }
    
    if(ekeylen == 0 || ekeylen > 10000) {
@@ -667,8 +660,8 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
    ekeylen = ntohl(ekeylen);
    if (ekeylen != shared_ssl_func__EVP_PKEY_size(privateKey)) {
       shared_ssl_func__EVP_PKEY_free(privateKey);
-      error_code = shared_ssl_func__ERR_get_error();
-      shared_ssl_func__ERR_error_string(error_code, err_msg);
+      error_code = ERR_get_error();
+      ERR_error_string(error_code, err_msg);
       snprintf(err_str, MAX_STRING_SIZE, MSG_PWD_DECR_SS, SGE_PASSWD_PROG_NAME, err_msg);
 #ifdef DEFINE_SGE_PASSWD_MAIN
       fprintf(stderr, "%s\n", err_str);
@@ -680,8 +673,8 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
    encryptKey = malloc(sizeof(char) * ekeylen);
    if (!encryptKey) {
       shared_ssl_func__EVP_PKEY_free(privateKey);
-      error_code = shared_ssl_func__ERR_get_error();
-      shared_ssl_func__ERR_error_string(error_code, err_msg);
+      error_code = ERR_get_error();
+      ERR_error_string(error_code, err_msg);
       snprintf(err_str, MAX_STRING_SIZE, MSG_PWD_MALLOC_SS, 
          SGE_PASSWD_PROG_NAME, err_msg);
 #ifdef DEFINE_SGE_PASSWD_MAIN
@@ -698,8 +691,8 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
    ret = sge_ssl_rand_load_file(rand_file, 1024);
 
    if(ret <= 0) {
-      error_code = shared_ssl_func__ERR_get_error();
-      shared_ssl_func__ERR_error_string(error_code, err_msg);
+      error_code = ERR_get_error();
+      ERR_error_string(error_code, err_msg);
       snprintf(err_str, MAX_STRING_SIZE, MSG_PWD_CANTLOADRANDFILE_SSS, 
               SGE_PASSWD_PROG_NAME, rand_file, err_msg);
 
@@ -723,7 +716,7 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
 #endif
    if(ret == 0) {
       printf("----> EVP_OpenInit\n");
-      shared_ssl_func__ERR_print_errors_fp(stdout);
+      ERR_print_errors_fp(stdout);
    }
    while (buffer_in_length > 0) {
       int readlen = 0;
@@ -743,8 +736,8 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
                (int*)&buflen, 
                (const unsigned char *)ebuf, readlen);
       if (ret == 0) {
-         error_code = shared_ssl_func__ERR_get_error();
-         shared_ssl_func__ERR_error_string(error_code, err_msg);
+         error_code = ERR_get_error();
+         ERR_error_string(error_code, err_msg);
          snprintf(err_str, MAX_STRING_SIZE, MSG_PWD_SSL_ERR_MSG_SS, SGE_PASSWD_PROG_NAME, err_msg);
 #ifdef DEFINE_SGE_PASSWD_MAIN
          fprintf(stderr, "%s\n", err_str);
@@ -759,8 +752,8 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
 
    ret = shared_ssl_func__EVP_OpenFinal(&ectx, (unsigned char *)buf, (int*)&buflen);
    if (ret == 0) {
-      error_code = shared_ssl_func__ERR_get_error();
-      shared_ssl_func__ERR_error_string(error_code, err_msg);
+      error_code = ERR_get_error();
+      ERR_error_string(error_code, err_msg);
       snprintf(err_str, MAX_STRING_SIZE, MSG_PWD_SSL_ERR_MSG_SS, SGE_PASSWD_PROG_NAME, err_msg);
 #ifdef DEFINE_SGE_PASSWD_MAIN
       fprintf(stderr, "%s\n", err_str);
@@ -773,9 +766,9 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
 
    shared_ssl_func__EVP_PKEY_free(privateKey);
    free(encryptKey);
-   error_code = shared_ssl_func__ERR_get_error();
+   error_code = ERR_get_error();
    if(error_code > 0) {
-      shared_ssl_func__ERR_error_string(error_code, err_msg);
+      ERR_error_string(error_code, err_msg);
       snprintf(err_str, MAX_STRING_SIZE, MSG_PWD_SSL_ERR_MSG_SS, SGE_PASSWD_PROG_NAME, err_msg);
 #ifdef DEFINE_SGE_PASSWD_MAIN
       fprintf(stderr, "%s\n", err_str);
@@ -1244,7 +1237,7 @@ int main(int argc, char *argv[])
    char  domain[128] = "";
    char  username[128] = "";
    bool  do_delete = false;
-   uid_t starter_uid=(uid_t)-1;
+   uid_t starter_uid=-1;
 
    char buffer[1024];
    dstring bw;

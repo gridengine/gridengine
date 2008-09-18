@@ -40,7 +40,6 @@ import com.sun.grid.jgdi.event.EventTypeEnum;
 import com.sun.grid.jgdi.event.QmasterGoesDownEvent;
 import com.sun.grid.jgdi.event.ShutdownEvent;
 import com.sun.grid.jgdi.management.JGDIProxy;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -61,11 +60,8 @@ public class ConnectionController {
     private final Set<Listener> listeners = new HashSet<Listener>();
     private final Set<EventListener> eventListeners = new HashSet<EventListener>();
     private JGDIProxy jgdiProxy;
-    private boolean useSSL = false;
-    private File caTop;
-
-    private final EventListener shutdownListener = new EventListener() {
-
+    
+    private final  EventListener shutdownListener = new EventListener() {
         public void eventOccured(Event evt) {
             if (evt instanceof QmasterGoesDownEvent || evt instanceof ConnectionClosedEvent || evt instanceof ConnectionFailedEvent) {
                 disconnect();
@@ -74,13 +70,13 @@ public class ConnectionController {
             }
         }
     };
-
+    
     public ConnectionController() {
         eventListeners.add(shutdownListener);
     }
 
-    public void connect(String host, int port, Object credentials, String caTop, String keyStore, char[] pw) {
-        executor.submit(new ConnectAction(host, port, credentials, caTop, keyStore, pw));
+    public void connect(String host, int port, Object credentials) {
+        executor.submit(new ConnectAction(host, port, credentials));
     }
 
     public void disconnect() {
@@ -90,7 +86,7 @@ public class ConnectionController {
     public void setSubscription(Set<EventTypeEnum> types) {
         executor.submit(new SetSubscriptionAction(types));
     }
-
+    
     public void subscribeAll() {
         EventTypeEnum[] values = EventTypeEnum.values();
         Set<EventTypeEnum> subs = new HashSet<EventTypeEnum>(values.length);
@@ -99,11 +95,11 @@ public class ConnectionController {
         }
         subscribe(subs);
     }
-
+    
     public void unsubscribeAll() {
         executor.submit(new UnsubscribeAllAction());
     }
-
+    
     public void subscribe(Set<EventTypeEnum> types) {
         executor.submit(new SubscribeAction(types, true));
     }
@@ -137,9 +133,8 @@ public class ConnectionController {
     public void removeEventListener(EventListener lis) {
         eventListeners.remove(lis);
     }
-
+    
     private class UnsubscribeAllAction implements Runnable {
-
         public void run() {
             try {
                 if (jgdiProxy != null) {
@@ -155,9 +150,9 @@ public class ConnectionController {
             }
         }
     }
+    
 
     private class ClearSubscriptionAction implements Runnable {
-
         public void run() {
             for (Listener lis : getListeners()) {
                 lis.clearSubscription();
@@ -166,14 +161,12 @@ public class ConnectionController {
     }
 
     private class SetSubscriptionAction implements Runnable {
-
         private final Set<EventTypeEnum> types;
 
         public SetSubscriptionAction(Set<EventTypeEnum> types) {
             this.types = types;
-
+            
         }
-
         public void run() {
             try {
                 if (jgdiProxy != null) {
@@ -189,7 +182,6 @@ public class ConnectionController {
             }
         }
     }
-
     private class SubscribeAction implements Runnable {
 
         private final Set<EventTypeEnum> types;
@@ -232,9 +224,6 @@ public class ConnectionController {
             try {
                 if (jgdiProxy != null) {
                     jgdiProxy.close();
-                    if (useSSL) {
-                        JGDIProxy.resetSSL(caTop);
-                    }
                 }
             } catch (Exception ex) {
                 log.log(Level.WARNING, "connector.close failed", ex);
@@ -252,31 +241,15 @@ public class ConnectionController {
         private final String host;
         private final int port;
         private final Object credentials;
-        private final File keyStore;
-        private final char[] pw;
 
-        public ConnectAction(String host, int port, Object credentials, String caTopPath, String keyStorePath, char[] pw) {
+        public ConnectAction(String host, int port, Object credentials) {
             this.host = host;
             this.port = port;
             this.credentials = credentials;
-            if (caTopPath != null) {
-                useSSL = true;
-                caTop = new File(caTopPath);
-                this.keyStore = new File(keyStorePath);
-                this.pw = pw;
-            } else {
-                useSSL = false;
-                caTop = null;
-                this.keyStore = null;
-                this.pw = null;
-            }
         }
 
         public void run() {
             try {
-                if (useSSL) {
-                    JGDIProxy.setupSSL(caTop, keyStore, pw);
-                }
                 jgdiProxy = JGDIFactory.newJMXInstance(host, port, credentials);
                 for (EventListener lis : eventListeners) {
                     jgdiProxy.addEventListener(lis);
@@ -285,7 +258,7 @@ public class ConnectionController {
                 for (Listener lis : getListeners()) {
                     lis.connected(host, port, subscription);
                 }
-            } catch (Throwable ex) {
+            } catch (Exception ex) {
                 for (Listener lis : getListeners()) {
                     lis.errorOccured(ex);
                 }
@@ -300,13 +273,13 @@ public class ConnectionController {
         public void disconnected();
 
         public void subscriptionSet(Set<EventTypeEnum> types);
-
+        
         public void subscribed(Set<EventTypeEnum> types);
 
         public void unsubscribed(Set<EventTypeEnum> typea);
 
         public void errorOccured(Throwable ex);
-
+        
         public void clearSubscription();
     }
 }

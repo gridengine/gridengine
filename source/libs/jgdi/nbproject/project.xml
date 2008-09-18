@@ -6,9 +6,8 @@
             <!--Do not use Project Properties customizer when editing this file manually.-->
             <name>jgdi</name>
             <properties>
-                <property name="sge.srcdir">../..</property>
-                <property-file>${sge.srcdir}/build_private.properties</property-file>
-                <property-file>${sge.srcdir}/build.properties</property-file>
+                <property-file>../../build_private.properties</property-file>
+                <property-file>../../build.properties</property-file>
             </properties>
             <folders>
                 <source-folder>

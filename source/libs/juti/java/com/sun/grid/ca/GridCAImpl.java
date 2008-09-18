@@ -94,8 +94,6 @@ public class GridCAImpl implements GridCA {
         ret.command().add("-adminuser");
         ret.command().add(config.getAdminUser());
         ret.command().add("-nosge");
-        ret.command().add("-days");
-        ret.command().add(Integer.toString(config.getDaysValid()));
         return ret;
     }
     
@@ -229,7 +227,7 @@ public class GridCAImpl implements GridCA {
                 }
             }
         } finally {
-            if (setLock) {
+            if(setLock) {
                 try {
                     lock.release();
                 } catch (IOException ex) {
@@ -264,36 +262,22 @@ public class GridCAImpl implements GridCA {
      *  Create private key and certificate for a user.
      *
      *  @param username  name of the user
-     *  @param gecos     gecos field of the user
-     *  @param email     email address of the user
-     *  @deprecated the gecos field is no longer used, use @{link #createUser(String,String)} instead
-     *  @throws GridCAException if the creation of the private key or the certificate fails
-     */
-    public void createUser(String username, String gecos, String email) throws GridCAException {
-        LOGGER.entering("GridCAImpl", "createUser");
-        createUser(username, email);
-        LOGGER.exiting("GridCAImpl", "createUser");
-    }
-    /**
-     *  Create private key and certificate for a user.
-     *
-     *  @param username  name of the user
+     *  @param group     group of the user
      *  @param email     email address of the user
      *  @throws GridCAException if the creation of the private key or the certificate fails
      */
-    public void createUser(String username, String email) throws GridCAException {
+    public void createUser(String username, String group, String email) throws GridCAException {
         LOGGER.entering("GridCAImpl", "createUser");
         Expect pb = createProcess();
         pb.command().add("-user");
-        pb.command().add(username + ":" + username + ":" + email);
+        pb.command().add(username + ":" + group + ":" + email);
 
         execute(pb);
         LOGGER.exiting("GridCAImpl", "createUser");
     }
     
-    
     /**
-     * Create private key and certificate for a sdm daemon.
+     * Create private key and certificate for a grm daemon.
      *
      * @param daemon name of the daemon
      * @param user   username of the daemon (owner of the process)
@@ -303,7 +287,7 @@ public class GridCAImpl implements GridCA {
     public void createDaemon(String daemon, String user, String email) throws GridCAException {
         LOGGER.entering("GridCAImpl", "createDaemon");
         Expect pb = createProcess();
-        pb.command().add("-sdm_daemon");
+        pb.command().add("-grm_daemon");
         pb.command().add(user + ":" + daemon + ":" + email);
 
         execute(pb);
@@ -409,7 +393,7 @@ public class GridCAImpl implements GridCA {
     public X509Certificate renewDaemonCertificate(String daemon, int days) throws GridCAException {
         LOGGER.entering("GridCAImpl", "renewDaemonCertificate");
         Expect pb = createProcess();
-        pb.command().add("-renew_sdm");
+        pb.command().add("-renew_grm");
         pb.command().add(daemon);
         pb.command().add("-days");
         pb.command().add(Integer.toString(days));
@@ -453,39 +437,25 @@ public class GridCAImpl implements GridCA {
      * @throws GridCAException if the keystore could not be created
      */
     public KeyStore createKeyStore(String username, char[] keystorePassword, char[] privateKeyPassword) throws GridCAException {
-         return createKeyStore(GridCAX500Name.TYPE_USER, username, keystorePassword, privateKeyPassword);
+         return createKeyStore(TYPE_USER, username, keystorePassword, privateKeyPassword);
     }
     
     /**
      * Get the keystore for a daemon.
      *
      * This method can be used be the installation to create keystore for
-     * the daemon of a sdm system.
+     * the daemon of a grm system.
      *
      * @param daemon name of the daemon
      * @throws com.sun.grid.ca.GridCAException 
      * @return the keystore of the daemon
      */
     public KeyStore createDaemonKeyStore(String daemon) throws GridCAException {
-         return createKeyStore(GridCAX500Name.TYPE_SDM_DAEMON, daemon, new char[0], new char[0]);
+         return createKeyStore(TYPE_GRM_DAEMON, daemon, new char[0], new char[0]);
     }
     
-    /**
-     *  Get the keystore for a SGE daemon.
-     *
-     *  This method can be used be the installation to create keystore for
-     *  the daemon of a sdm system.
-     *
-     *  @param daemon name of the daemon
-     *  @param  keystorePassword password used to encrypt the keystore
-     *  @param  privateKeyPassword password used to encrypt the key
-     *  @throws com.sun.grid.ca.GridCAException 
-     *  @return the keystore of the daemon
-     */
-    public KeyStore createSGEDaemonKeyStore(String daemon, char[] keystorePassword, char[] privateKeyPassword) throws GridCAException {
-         return createKeyStore(GridCAX500Name.TYPE_SGE_DAEMON, daemon, keystorePassword, privateKeyPassword);
-    }
-    
+    private final static String TYPE_GRM_DAEMON = "grm_daemon";
+    private final static String TYPE_USER       = "user";
     
     private KeyStore createKeyStore(String type, String entity, char[] keystorePassword, char[] privateKeyPassword) throws GridCAException {
         LOGGER.entering("GridCAImpl", "createKeyStore");
@@ -571,15 +541,13 @@ public class GridCAImpl implements GridCA {
                 GridCAX500Name name = GridCAX500Name.parse(cert.getSubjectX500Principal().getName());
 
                 
-                if(GridCAX500Name.TYPE_SDM_DAEMON.equals(type)) {
+                if(TYPE_GRM_DAEMON.equals(type)) {
                     if(!name.isDaemon()) {
                         throw RB.newGridCAException("gridCAImpl.error.notADaemonCert", 
                                                     cert.getSubjectX500Principal().getName());
                     }
                     alias = name.getDaemonName();
-                } else if(GridCAX500Name.TYPE_SGE_DAEMON.equals(type)) {
-                    alias = name.getUsername();
-                } else if (GridCAX500Name.TYPE_USER.endsWith(type)) {
+                } else if (TYPE_USER.endsWith(type)) {
                     if(name.isDaemon()) {
                         throw RB.newGridCAException("gridCAImpl.error.notAUserCert", 
                                                     cert.getSubjectX500Principal().getName());
@@ -625,10 +593,8 @@ public class GridCAImpl implements GridCA {
 
                 if(type.equals("user")) {
                     pb.command().add("-pkcs12");
-                } else if (type.equals("sdm_daemon")) {
-                    pb.command().add("-sdm_pkcs12");
-                } else if (type.equals("sge_daemon")) {
-                    pb.command().add("-sys_pkcs12");
+                } else if (type.equals("grm_daemon")) {
+                    pb.command().add("-grm_pkcs12");
                 }
                 pb.command().add(username);
                 pb.command().add("-pkcs12pwf");

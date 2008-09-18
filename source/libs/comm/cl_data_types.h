@@ -54,10 +54,6 @@ typedef enum cl_tcp_connect_def {
    CL_TCP_RESERVED_PORT          /* use reserved port security */
 } cl_tcp_connect_t;
 
-/* typedef for global boolean commlib params */
-typedef enum cl_global_settings_params_def {
-   CL_COMMLIB_DELAYED_LISTEN = 1
-} cl_global_settings_params_t;
 
 /* typedef for Connection Type (CT) */
 typedef enum cl_framework_def {
@@ -437,9 +433,8 @@ struct cl_com_connection_type {
    cl_error_func_t       error_func;   /* if not NULL this function is called on errors */
    cl_tag_name_func_t    tag_name_func; /* if not NULL this function is called for debug clients to get tag id name */
 
-   cl_com_endpoint_t*    remote;   /* dst on local host in Connect Message (CM) */
-   cl_com_endpoint_t*    local;    /* src on local host in Connect Message (CM) */
-   cl_com_endpoint_t*    client_dst; /* dst where client wants to connect to. This info is from Connect Message (CM) */
+   cl_com_endpoint_t*    remote;   /* dst on local host in CM */
+   cl_com_endpoint_t*    local;    /* src on local host in CM */
 
    unsigned long         last_send_message_id;
    unsigned long         last_received_message_id;

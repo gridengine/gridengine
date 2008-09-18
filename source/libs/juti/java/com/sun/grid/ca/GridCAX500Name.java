@@ -37,7 +37,7 @@ package com.sun.grid.ca;
  * Daemon certificates have the form
  *
  * <pre>
- *   ....,UID=sdm_daemon_&lt;username&gt;,CN=<daemon name>,...
+ *   ....,UID=grm_daemon_&lt;username&gt;,CN=<daemon name>,...
  * </pre>
  *
  * User certificates have the form
@@ -49,20 +49,16 @@ package com.sun.grid.ca;
  */
 public class GridCAX500Name {
     
-    public final static String TYPE_SGE_DAEMON = "sge_daemon";
-    public final static String TYPE_SDM_DAEMON = "sdm_daemon";
-    public final static String TYPE_USER       = "user";
-    
-    public static final String SDM_DAEMON_PREFIX = TYPE_SDM_DAEMON  + '_';
+    public static final String GRM_DAEMON_PREFIX = "grm_daemon_";
     private boolean daemon;
     private String  username;
     private String  daemonName;
     
     private GridCAX500Name(String name) throws GridCAException {
         String uid = getField(name, "UID");
-        if(uid.startsWith(SDM_DAEMON_PREFIX)) {
+        if(uid.startsWith(GRM_DAEMON_PREFIX)) {
             daemon = true;
-            username = uid.substring(SDM_DAEMON_PREFIX.length());
+            username = uid.substring(GRM_DAEMON_PREFIX.length());
             daemonName = getField(name, "CN");
         } else {
             daemon = false;

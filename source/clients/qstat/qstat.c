@@ -231,7 +231,6 @@ char **argv
    qstat_env.longest_queue_length=30;
    qstat_env.need_queues = true;
 
-   sge_sig_handler_in_main_loop = 0;
    sge_setup_sig_handlers(QSTAT);
    log_state_set_log_gui(true);
 
@@ -331,7 +330,7 @@ char **argv
       lFreeList(&alp);
       lFreeList(&pcmdline);
       qstat_env_destroy(&qstat_env);
-      SGE_EXIT((void**)&ctx, 1);
+      SGE_EXIT(NULL, 1);
    }
 
    alp = sge_parse_qstat(&pcmdline, &qstat_env, &hostname, &jid_list, &isXML);
@@ -348,7 +347,7 @@ char **argv
       lFreeList(&ref_list);
       lFreeList(&jid_list);
       qstat_env_destroy(&qstat_env);
-      SGE_EXIT((void**)&ctx, 1);
+      SGE_EXIT(NULL, 1);
    }
 
    /* if -j, then only print job info and leave */
@@ -363,7 +362,7 @@ char **argv
          ret = qstat_show_job_info(ctx, isXML);
       }
       qstat_env_destroy(&qstat_env);
-      SGE_EXIT((void**)&ctx, ret);
+      SGE_EXIT(NULL, ret);
    }
 
    {
@@ -381,7 +380,7 @@ char **argv
                }
                lFreeList(&answer_list);
                qstat_env_destroy(&qstat_env);
-               SGE_EXIT((void**)&ctx, 1);
+               SGE_EXIT(NULL, 1);
                return 1;
             }
          } else {
@@ -428,11 +427,11 @@ char **argv
 
       if (ret != 0) {
          qstat_env_destroy(&qstat_env);
-         SGE_EXIT((void**)&ctx, 1);
+         SGE_EXIT(NULL, 1);
          return 1;
       }
    }
-   SGE_EXIT((void**)&ctx, 0);
+   SGE_EXIT(NULL, 0);
    return 0;
 }
 
@@ -1291,7 +1290,7 @@ static int job_stdout_soft_requested_queues_started(job_handler_t* handler, lLis
 
    DENTER(TOP_LAYER, "job_stdout_soft_requested_queues_started");
    
-   printf(QSTAT_INDENT "Soft requested queues: ");
+   printf(QSTAT_INDENT "Hard requested queues: ");
    ctx->soft_requested_queue_count = 0;
 
    DEXIT;
@@ -1328,7 +1327,7 @@ static int job_stdout_master_hard_requested_queues_started(job_handler_t* handle
 
    DENTER(TOP_LAYER, "job_stdout_master_hard_requested_queues_started");
 
-   printf(QSTAT_INDENT "Master task hard requested queues: ");
+   printf(QSTAT_INDENT "Hard requested queues: ");
    ctx->master_hard_requested_queue_count = 0;
 
    DEXIT;
@@ -1639,8 +1638,8 @@ static int qstat_stdout_queue_summary(qstat_handler_t* handler, const char* qnam
 
    printf("%-5.5s ", summary->queue_type); 
 
-   /* number of used/total slots */
-   sprintf(to_print, "%d/%d/%d ", (int)summary->resv_slots, (int)summary->used_slots, (int)summary->total_slots); 
+   /* number of used/free slots */
+   sprintf(to_print, "%d/%d/%d ", (int)summary->resv_slots, (int)summary->used_slots, (int)summary->free_slots); 
    printf("%-14.14s ", to_print);   
 
    /* load avg */
@@ -1955,24 +1954,15 @@ u_long32 isXML
          }
       }
    }
-   what = lWhat("%T(%I%I%I%I%I%I%I%I%I%I%I%I%I%I%I->%T%I%I%I%I%I%I->%T%I%I%I%I->%T(%I%I%I%I%I)"
-            "%I%I%I%I->%T(%I)%I->%T(%I)%I%I%I%I%I%I%I%I%I%I%I%I%I%I%I->%T%I%I%I%I%I%I%I%I%I)",
-            JB_Type, JB_job_number, JB_ar, JB_exec_file, JB_submission_time, JB_owner,
+   what = lWhat("%T(%I%I%I%I%I%I%I%I%I%I%I%I%I%I->%T%I%I%I%I%I%I->%T%I%I%I%I->%T(%I%I%I%I%I)%I%I%I)",
+            JB_Type, JB_job_number, JB_exec_file, JB_submission_time, JB_owner,
             JB_uid, JB_group, JB_gid, JB_account, JB_merge_stderr, JB_mail_list,
             JB_project, JB_notify, JB_job_name, JB_stdout_path_list, PN_Type,
-  	    JB_jobshare, JB_hard_resource_list, JB_soft_resource_list,
+            JB_jobshare, JB_hard_resource_list, JB_soft_resource_list,
             JB_hard_queue_list, JB_soft_queue_list, JB_shell_list, PN_Type,
             JB_env_list, JB_job_args, JB_script_file, JB_ja_tasks,
             JAT_Type, JAT_status, JAT_task_number, JAT_scaled_usage_list,
-            JAT_task_list, JAT_message_list, JB_context, JB_cwd, JB_stderr_path_list,
-            JB_jid_predecessor_list, JRE_Type, JRE_job_number, JB_jid_successor_list,
-            JRE_Type, JRE_job_number, JB_deadline, JB_execution_time, JB_checkpoint_name,
-            JB_checkpoint_attr, JB_checkpoint_interval, JB_directive_prefix, JB_reserve,
-            JB_mail_options, JB_stdin_path_list, JB_priority, JB_restart, JB_verify,
-            JB_master_hard_queue_list, JB_script_size, JB_pe, RN_Type, JB_pe_range,
-            JB_jid_request_list, JB_verify_suitable_queues, JB_soft_wallclock_gmt,
-            JB_hard_wallclock_gmt, JB_override_tickets, JB_version,
-            JB_ja_structure, JB_type); 
+            JAT_task_list, JAT_message_list, JB_context, JB_cwd, JB_stderr_path_list);
    /* get job list */
    alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_GET, &jlp, where, what);
    lFreeWhere(&where);

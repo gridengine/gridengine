@@ -52,9 +52,6 @@ set WINCFLAGS    = ""
 set WINLIBS      = ""
 set AIMK_TARGETOPT   = 0
 set NO_XDEPEND   = ""
-set ERR_WARN_NONE = ""
-set ERR_WARN_ALL = ""
-set UNMODIFIED_ARGUMENTS = ( $argv ) 
 
 if ( -f dist/util/arch ) then
    set buildarch = `dist/util/arch`
@@ -90,7 +87,6 @@ endif
 #
 set i = 1
 while ($i <= $#argv)
-   set UNMODIFIED_ARGUMENTS[$i] = "$argv[$i]"
    switch ("$argv[$i]")
    case "-32":
       set AIMK_TARGETOPT = 1
@@ -172,7 +168,6 @@ usage:
    echo "-mankv            -> generate man pages checked out with '-kv' flag"
    echo "-mo               -> generate the message catalogues (Solaris only)"
    echo "-no-core          -> don't compile the core system"
-   echo "-no-dump          -> build binaries without libcore.so (Linux only)"
    echo "-no-java          -> don't compile Java[TM] class files"
    echo "-no-jni           -> don't compile JNI library"
    echo "-no-intl          -> do not compile with internationalization library"
@@ -243,10 +238,6 @@ set MAKESNPRINTF     = 0
 set MAKEFNMATCH      = 0
 set MAKEWINGRIDLIB   = 0
 set MAKEWINGRIDAPP   = 0
-set WINGRIDLIB_A     = ""
-# Can't use name WINGRIDLIB_STATIC_DEP because variable is too long
-set WINGRIDLIB_A_DEP = "" 
-
 set WITH_USERMAPPING = 0 # Compile without usermapping feature
 set SGESSH           = 0
 
@@ -254,7 +245,6 @@ set SGESSH           = 0
 set OPTIMIZATION     = 1
 set GPROFFED         = 0
 set COVED            = 0
-set USE_INSURE       = 0
 set DEBUGGED         = 0
 set COMPILE_DC       = 0
 set CC               = cc
@@ -289,7 +279,6 @@ set FSTYPELIBS       = ""
 set TPLIB            = ""  # 3rdparty libs
 set SLIBS            = ""
 set FLAGS_OUT        = "false"
-set DUMP             = 1
 
 
 # Default settings for shared library creation
@@ -337,12 +326,15 @@ set INTERACTTARGETS   = "qmake qtcsh"
 
 # SECURE
 set SEC               = 1
+set SECCLEAN          = ""
+set SECDEPEND         = ""
 set SECFLAGS          = "-DSECURE -I$OPENSSL_HOME/include"
 set SECLIB            = ""
+set SECLIBS           = ""
 set SECLIBS_STATIC    = "$OPENSSL_HOME/lib/libssl.a $OPENSSL_HOME/lib/libcrypto.a"
+set SECLIBOBJS        = ""
+set SECTARGETS        = ""
 set KLFLAGS           = "-L$OPENSSL_HOME/lib"
-
-set CORELIB           = ""
 
 # WIN
 set WINGRIDLIB        = ""
@@ -377,7 +369,7 @@ set SPOOLING_DEPS   = "spoolloaderlib spooldlib spoollib spoolclib spoolblib"
 # we generate a berkeley db shared lib, so we need bdb include and lib path
 set CFLAGS            = "-I$BERKELEYDB_HOME/include/${BDB_INCLUDE_SUBDIR} $CFLAGS"
 set LFLAGS            = "-L$BERKELEYDB_HOME/lib/${BDB_LIB_SUBDIR} $LFLAGS"
-set SHARED_LFLAGS    = "$SHARED_LFLAGS -L$BERKELEYDB_HOME/lib/${BDB_LIB_SUBDIR}"
+set SHARED_LFLAGS    = "$SHARED_LFLAGS -L$BERKELEYDB_HOME/lib"
 
 # JUTI Targets
 set JUTI_ALL  = juti_all
@@ -540,7 +532,8 @@ while ($#argv >= 1 && $?found)
       set KVMAN = 1
       breaksw
    case "-insure"
-      set USE_INSURE = 1
+      set CC         = insure
+      set CXX        = insure
       set INSURE_FLAG = "-Zsl"
       set LFLAGS     = "-Zsl $LFLAGS"
       set DEBUGGED   = 1
@@ -587,9 +580,6 @@ while ($#argv >= 1 && $?found)
    case "-no-core":
       set CORE = 0
       breaksw
-   case "-no-dump":
-      set DUMP = 0
-      breaksw
    case  "-no-java"
       set JAVA = 0
       breaksw
@@ -623,8 +613,14 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-no-secure":
       set SEC         = 0
+      set SECCLEAN    = ""  
+      set SECDEPEND   = ""
       set SECFLAGS    = ""
       set SECLIB      = ""
+      set SECLIBS     = ""
+      set SECLIBS_STATIC = ""
+      set SECLIBOBJS  = ""
+      set SECTARGETS  = ""
       set KLFLAGS     = ""
       breaksw
    case "-only-core":
@@ -817,11 +813,7 @@ while ($#argv >= 1 && $?found)
       continue
       breaksw
    endsw
-   if ($#argv > 1 ) then
-      set argv     = ($argv[2-])
-   else
-      set argv     = ""
-   endif
+   set argv     = ($argv[2-])
 end
 
 if ( $DEBUGGED && $USE_QMAKE ) then
@@ -892,8 +884,6 @@ case AIX51:
    set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 1
 
-   set LIBS = "$LIBS -lc"
-
    if ($BUILDARCH == "AIX43") then
      set AUTHLIBS = ""
    endif
@@ -922,7 +912,7 @@ case AIX51:
    set SHARED_LFLAGS = "$LFLAGS $KLFLAGS -brtl -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
 
    # add DEBUG_FLAGS to LFLAGS after SHARED_LFLAGS - -g isn't recognized by ld
-   set LFLAGS   = "$DEBUG_FLAG -brtl -bmaxdata:0x80000000 $LFLAGS"
+   set LFLAGS   = "$DEBUG_FLAG -brtl $LFLAGS"
    set JAVA_ARCH = "aix"
    set JAVA_LFLAGS = ""
    breaksw
@@ -1012,9 +1002,6 @@ case DARWIN_PPC:
    case "8.*":
       set CFLAGS = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN8 -D$BUILDARCH -DGETHOSTBYNAME -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
       breaksw
-   case "9.*":
-      set CFLAGS = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN9 -D$BUILDARCH -DGETHOSTBYNAME -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
-      breaksw
    default:
       echo DARWIN release \"$REL\" not supported!
       exit 1
@@ -1034,11 +1021,13 @@ case DARWIN_PPC:
    else
       set libext = ".a"
    endif   
-  
-   # Can be overwritten in aimk.private or aimk.site 
-   if ( ! $?MOTIFHOME ) then
-      set MOTIFHOME = /Applications/Darwin/openmotif-2.2.3
-   endif
+   
+#   if ( -r "/sw/lib/libxm$libext" ) then
+#      set MOTIFHOME = /sw
+#   else
+#      set MOTIFHOME = /usr/local
+#   endif   
+   set MOTIFHOME = /Applications/Darwin/openmotif-2.2.3
 
    set XMTDEF   = ""
    set XMTINCD  = "$XMTINCD -I$MOTIFHOME/include"
@@ -1054,7 +1043,6 @@ case DARWIN_PPC:
    case "6.*":
    case "7.*":
    case "8.*":
-   case "9.*":
       set XLFLAGS = "$XLIBD"
       breaksw
    default:
@@ -1098,7 +1086,7 @@ case FREEBSD_*:
    set SHARED_CFLAGS = "-fPIC"
    set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared -export-dynamic"
    set AUTHLIBS = "-lcrypt -lpam"
- 
+   
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD -I/usr/X11/include"
    set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
@@ -1280,7 +1268,6 @@ case LINUX86:
 case LINUXAMD64:
 case LINUXIA64:
 case LINUXPPC:
-case LINUXPPC64:
 case LINUXSPARC:
 case LINUXSPARC64:
    set MAKEWINGRIDLIB   = 0
@@ -1302,12 +1289,19 @@ case LINUXSPARC64:
       set OFLAG = "-O"
    endif
 
-   set CC  = gcc
-   set CXX = g++
+   if ($CC != insure) then
+      set CC  = gcc
+      set CXX = g++
+   else
+      set CFLAGS = "-Wno-error $CFLAGS"
+      set OFLAG = "-O2"
+   endif
 
    if ($BUILDARCH == LINUXPPC) then
       set CFLAGS = "-m32 $CFLAGS"
-   else if ($BUILDARCH == LINUXSPARC64 || $BUILDARCH == LINUXPPC64) then
+   endif
+
+   if ($BUILDARCH == LINUXSPARC64) then
       set CFLAGS = "-m64 $CFLAGS"
    endif
 
@@ -1345,9 +1339,6 @@ case LINUXSPARC64:
    if ("$ADOC" == 1) then
       set CFLAGS = "$CFLAGS -Wno-error"
    endif
-   if ( $TARGET_BITS == TARGET_32BIT ) then
-      set CFLAGS = "$CFLAGS -D_FILE_OFFSET_BITS=64"
-   endif
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
 
    set SHAREDLD = $CC
@@ -1363,21 +1354,7 @@ case LINUXSPARC64:
 
    set NOERR_CFLAG = "-Wno-error"
    set NOERR_PROTO = "-Wno-strict-prototypes"
-
-   if ( $DUMP == 1 ) then
-      if ( -f $CORE_HOME/libcore.so ) then
-         set LFLAGS   = "$LFLAGS -L$CORE_HOME"
-         set CORELIB  = "-lcore"
-      else
-         echo "error: couldn't find  $CORE_HOME/libcore.so"
-         echo "error: please"
-         echo "error: (a) get you a libcore.so for $buildarch from"
-         echo "error: http://gridengine.sunsource.net/issues/show_bug.cgi?id=2552"
-         echo "error: update CORE_HOME in aimk.site or aimk.private accordingly"
-         echo "error: (b) use aimk option -no-dump to build without libcore.so "
-         exit 1
-      endif
-   endif
+   set LIBS     = "$LIBS"
 
    set XMTDEF   = ""
 
@@ -1398,7 +1375,7 @@ case LINUXSPARC64:
    else
       set XINCD    = "$XMTINCD $XINCD"
       set XCFLAGS  = "-DNeedFunctionPrototypes -Wno-error $XMTDEF $XINCD"
-      set XLIBS    = "-Xlinker -Bstatic -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp -lXm"
+      set XLIBS    = "-Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
    endif
    set JAVA_ARCH = "linux"
 
@@ -1433,12 +1410,9 @@ case WIN32_X86:
    set LOADCHECK_OBJ    = loadcheck.obj
    set JUTI_OBJ         = juti.obj
    
-   set CORE_INCLUDE     = "$CORE_INCLUDE -I../libs/wingrid"
-   # libwingrid.a needs libdl for dlopen() etc.
-   set WINGRIDLIB       = "-lwingrid -ldl"
-   set WINGRIDLIB_DEP   = "libwingrid.a"
-   set WINGRIDLIB_A     = "-lwingrid_static -ldl"
-   set WINGRIDLIB_A_DEP = "libwingrid_static.a"
+   set CORE_INCLUDE   = "$CORE_INCLUDE -I../libs/wingrid"
+   set WINGRIDLIB     = "-lwingrid $SECLIBS_STATIC"
+   set WINGRIDLIB_DEP = "libwingrid.a"
 
    if ($OPTIMIZATION == 1) then
       set OFLAG = "-O3"
@@ -1559,9 +1533,7 @@ case SOLARISAMD64:
    set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 1
 
-   set ERR_WARN_NONE = "-errwarn=%none" # is set in XCFLAGS and for R_E_M_O_T_E target to switch off -errwarn=%all
-   set ERR_WARN_ALL = "-errwarn=%all"  # is set in cc specific section below
-   set CFLAGS = "$CFLAGS -DSOLARIS -D$BUILDARCH -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L -DGETHOSTBYNAME_R5 -DGETHOSTBYADDR_R7" 
+   set CFLAGS = "$CFLAGS -DSOLARIS -D$BUILDARCH -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L -DGETHOSTBYNAME_R5 -DGETHOSTBYADDR_R7 "
    set SHAREDLD = $CC
 
    if ($OPTIMIZATION == 1) then 
@@ -1577,18 +1549,7 @@ case SOLARISAMD64:
             set haspatch = `expr $patchcnt ">=" 1`
      #       set haspatch = 0
             if ( $compversion == 5.5 && $haspatch == 1 || $compversion != 5.5 ) then
-               # set OFLAG = "-fast -xchip=pentium -xcache=generic"
-               #
-               # Due to compiler bugs in the X86 compiler
-               #
-               #   cc: Sun C 5.5 Patch 112761-13 2005/06/14
-               #   cc: Sun C 5.8 Patch 121016-06 2007/08/01
-               #
-               # the -fast and -xchip switches make no sense. They cause SEGV when threads are
-               # shut down. Following line will overwite the switches set above. It can be removed
-               # as soon as there is a patch available for the compiler 
-               #
-               set OFLAG = "-xO3"
+               set OFLAG = "-fast -xchip=pentium -xcache=generic"
             else
                echo using \"-xO3\" optimization due to compiler bug
                set OFLAG = "-xO3"
@@ -1646,10 +1607,6 @@ case SOLARISAMD64:
 
    if ( $CC == cc ) then
       set LFLAGS = "-xildoff $LFLAGS"
-      # the ERR_WARN_ALL breaks insure instrumented builds
-      if ( $USE_INSURE == 0 ) then
-         set CFLAGS = "$CFLAGS $ERR_WARN_ALL"
-      endif
       set SHARED_CFLAGS = "-KPIC"
 
       if ( $BUILDARCH == SOLARIS64 ) then
@@ -1659,7 +1616,7 @@ case SOLARISAMD64:
       else if ( $BUILDARCH == SOLARISAMD64 ) then
          set CFLAGS = "-D_LARGEFILE64_SOURCE=1 $CFLAGS"
          
-         set compversion = `cc -V | & head -1 | sed 's/[a-zA-Z :]*\([0-9].[0-9]*\).*$/\1/'`
+         set compversion = `cc -V |& head -1 | cut -f4 -d" "`
          set major = `echo $compversion | cut -f1 -d"."`
          set minor = `echo $compversion | cut -f2 -d"."`
          if ($major <= 5 && $minor <= 8) then
@@ -1700,7 +1657,7 @@ case SOLARISAMD64:
       endif
    endif
 
-   set LFLAGS   = "$LFLAGS $DEBUG_FLAG -lmtmalloc"
+   set LFLAGS   = "$LFLAGS $DEBUG_FLAG"
    set LIBS     = "-lsocket -lnsl -lm -lthread"
    set LOADAVGLIBS = "-lkstat"
    set FSTYPELIBS = "-lkstat"
@@ -1715,13 +1672,7 @@ case SOLARISAMD64:
    set XINCD    = "-I/usr/dt/include -I/usr/openwin/include $XMTINCD $XINCD"
    set XLIBD    = "-L/usr/dt/lib -L/usr/openwin/lib"
 
-   set XCFLAGS  = "$ERR_WARN_NONE -DNeedFunctionPrototypes -DNeedVarargsPrototypes $XMTDEF $XINCD"
-
-   # workaround for opensolaris
-   if ( `uname -r` == 5.11 && ( $BUILDARCH == SOLARISAMD64 )) then
-       set XLIBD = "-L/usr/openwin/lib/64"
-   endif    
-   
+   set XCFLAGS  = "-DNeedFunctionPrototypes -DNeedVarargsPrototypes $XMTDEF $XINCD"
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = "-lXm -lXt -lXext -lXmu -lX11 -lw -lgen"
 
@@ -1783,8 +1734,6 @@ default:
    exit 1
 endsw
 
-set DEPEND_FLAGS = "`echo $DEPEND_FLAGS | sed -e 's/-[^DI][^ ]*//g'`"
-
 if ( $JNI == 1 ) then
    set CORE_INCLUDE = "$CORE_INCLUDE -I${JAVA_HOME}/${JAVA_INCL}"
 
@@ -1817,14 +1766,6 @@ if ( $JNI == 1 ) then
          case lx24-ia64:
          case lx26-ia64:
              set JAVA_LIB_ARCH = ia64
-             breaksw
-         case lx24-ppc:
-         case lx26-ppc:
-             set JAVA_LIB_ARCH = ppc
-             breaksw
-         case lx24-ppc64:
-         case lx26-ppc64:
-             set JAVA_LIB_ARCH = ppc64
              breaksw
          case hp11:
              set JAVA_LIB_ARCH = PA_RISC
@@ -1946,12 +1887,6 @@ endif
 #
 set GSHARED_CFLAGS = "$SHARED_CFLAGS"
 set GSHARED_LFLAGS = "$SHARED_LFLAGS"
-
-# change CC / CXX for insure
-if ($USE_INSURE == 1) then
-   set CC  = "insure $CC"
-   set CXX = "insure $CXX"
-endif
 
 #---------------------------------------------------------------------------
 # Actual make targets begin here
@@ -2111,13 +2046,13 @@ if ( "$MAKEWINGRIDAPP" == 1 ) then
       breaksw
    endsw
 
-   $MAKE -f $SOURCE/utilbin/windows/Makefile "MAKE=$MAKE" "WINCC=$WINCC" \
+   $MAKE -f $SOURCE/experimental/wingrid/Makefile "MAKE=$MAKE" "WINCC=$WINCC" \
       "WINCFLAGS=$WINCFLAGS" "WINLFLAGS=$WINLFLAGS" "SDIR=$SDIR" "RM=$RM" \
       "DEPEND=$DEPEND" "WINLIBS=$WINLIBS" $param
 
    if ( $status != 0 ) then
       echo not done
-      #exit 1
+      exit 1
    endif
 
    cd ..
@@ -2156,7 +2091,7 @@ if ( "$MAKEWINGRIDLIB" == 1 ) then
    $MAKE $MAKEOPT -f $SOURCE/libs/wingrid/Makefile "MAKE=$MAKE" "CC=$CC" \
       "COMPILE_ARCH=$COMPILE_ARCH" \
       "CFLAGS=$CFLAGS $CORE_INCLUDE" "SOURCE=$SOURCE" \
-      "KRBLIBS=$KRBLIBS" \
+      "KRBLIBS=$KRBLIBS" "SECLIBS_STATIC=$SECLIBS_STATIC" \
       "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
       "AR=$AR" "ARFLAGS=$ARFLAGS" \
       "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
@@ -2316,13 +2251,12 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
    $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" \
          "LD_WRAPPER=$LD_WRAPPER" \
          "CFLAGS=$CFLAGS $CORE_INCLUDE" \
-         "CORELIB=$CORELIB" \
          "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
          "SDIR=$SDIR" "SOURCE=$SOURCE" "COMPILE_ARCH=$COMPILE_ARCH" \
-         "SECLIB=$SECLIB" \
+         "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" "SECCLEAN=$SECCLEAN" \
+         "SECLIBOBJS=$SECLIBOBJS" "SECLIB=$SECLIB" "SECLIBS=$SECLIBS" \
          "SECLIBS_STATIC=$SECLIBS_STATIC" \
          "WINGRIDLIB=$WINGRIDLIB" "WINGRIDLIB_DEP=$WINGRIDLIB_DEP" \
-         "WINGRIDLIB_STATIC=$WINGRIDLIB_A" "WINGRIDLIB_STATIC_DEP=$WINGRIDLIB_A_DEP" \
          "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" "KRBCLEAN=$KRBCLEAN"\
          "KRBLIBS=$KRBLIBS" "AUTHLIBS=$AUTHLIBS" \
          "KRBLIB=$KRBLIB" "GSSDEPEND=$GSSDEPEND" \
@@ -2330,9 +2264,9 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
          "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" \
          "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" \
          "RANLIB=$RANLIB" "AR=$AR" "ARFLAGS=$ARFLAGS" \
-         "NOERR_PROTO=$NOERR_PROTO" "NOERR_CFLAG=$NOERR_CFLAG" \
-         "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" \
-         "FSTYPELIBS=$FSTYPELIBS" "TPLIB=$TPLIB" \
+         "NOERR_PROTO=$NOERR_PROTO" \
+         "NOERR_CFLAG=$NOERR_CFLAG" \
+         "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" "FSTYPELIBS=$FSTYPELIBS" "TPLIB=$TPLIB" \
          "XGETTEXT=$XGETTEXT" "MESSAGES=$MESSAGES" \
          "INTERACTTARGETS=$INTERACTTARGETS" \
          "LIBEXT=$LIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
@@ -2371,7 +2305,7 @@ if ( "$JAVA" > 0 ) then
       setenv AIMK_TARGET_BITS $TARGET_BITS
       setenv aimk_buildarch $buildarch
    endif
-   if ( $USE_INSURE == 1 ) then
+   if ( "$INSURE_FLAG" != "" ) then
       setenv AIMK_INSURE -insure
    else
       setenv AIMK_INSURE ""
@@ -2381,17 +2315,6 @@ if ( "$JAVA" > 0 ) then
    else
       setenv AIMK_DEBUG ""
    endif  
-
-   if ( "$ADD_COPYRIGHT" == 1 ) then
-      setenv AIMK_COPYRIGHT_DIR "$COPYRIGHT_DIR"
-      setenv AIMK_COPYRIGHT "courtesy"
-   else if ( "$ADD_SUN_COPYRIGHT" == 1 ) then
-      setenv AIMK_COPYRIGHT_DIR "$SUN_COPYRIGHT_DIR"
-      setenv AIMK_COPYRIGHT "sun"
-   else
-      setenv AIMK_COPYRIGHT_DIR ""
-      setenv AIMK_COPYRIGHT ""
-   endif
    ant -f build.xml $argv
    # how to propagate ant opts to first and then second build.xml
    # ant -Dsge.ant.args='-DA="a" -DB="b" -DC="c"' -f build.xml $argv
@@ -2447,7 +2370,8 @@ if ( "$QMON" == 1 ) then
          "CFLAGS=$CFLAGS $CORE_INCLUDE" \
          "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
          "SDIR=$SDIR" "SOURCE=$SOURCE" "COMPILE_ARCH=$COMPILE_ARCH" \
-         "SECLIB=$SECLIB"\
+         "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" "SECCLEAN=$SECCLEAN" \
+         "SECLIBOBJS=$SECLIBOBJS" "SECLIB=$SECLIB" "SECLIBS=$SECLIBS"\
          "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" "KRBCLEAN=$KRBCLEAN"\
          "KRBLIBS=$KRBLIBS" "KRBLIB=$KRBLIB" "GSSDEPEND=$GSSDEPEND" \
          "GSSCLEAN=$GSSCLEAN" "MSDIR=$MSDIR" "SLIBS=$GSSLIBS $KLIBS" "LIBS=$LIBS" \
@@ -2487,7 +2411,7 @@ if ( "$REMOTE" == 1) then
    if ( $COMPILE_ARCH == "NECSX5" ) then
       set CFLAGS_REMOTE = "$CFLAGS_NOOPT"
    else
-      set CFLAGS_REMOTE = "$CFLAGS $ERR_WARN_NONE"
+      set CFLAGS_REMOTE = "$CFLAGS"
    endif
 
    cd $COMPILE_ARCH
@@ -2692,43 +2616,16 @@ echo done.
 # On SOLARIS64, if there was no special target (i.e. $argv = "") 
 # and no "-only-*" parameter specified, the shared libraries for
 # SOLARIS are also built.
-if ( $BUILDARCH == SOLARIS64 && $ONLY_PARAM_SPEC == 0 && "${SOLARIS_ONLY_64}" != 1 ) then
-      if ( "$argv" == "" ) then 
-         echo ""
-         echo "Executing aimk again to build 32 bit shared libraries."
-         if ( "$JAVA" > 0 ) then
-            ./aimk -32 -only-core libdrmaa.so libjgdi.so libjuti.so
-         else 
-            ./aimk -32 -only-core libdrmaa.so libjuti.so
-         endif
-       else if ( "$argv" == "clean" ) then 
-            ./aimk -32 -only-core clean 
-       endif 
+if ( $BUILDARCH == SOLARIS64 && "$argv" == "" && $ONLY_PARAM_SPEC == 0 && "${SOLARIS_ONLY_64}" != 1 ) then
+      echo ""
+      echo "Executing aimk again to build 32 bit shared libraries."
+      if ( "$JAVA" > 0 ) then
+         ./aimk -32 -only-core libdrmaa.so libjgdi.so libjuti.so
+      else 
+         ./aimk -32 -only-core libdrmaa.so libjuti.so
+      endif
       exit $status
    endif
 endif
-
-# On HP11 we are always building (and cleaning) a 32bit version
-if ( $BUILDARCH == HP1164 ) then
-   set ONLY_64_FLAG = 0
-   set arguments = "" 
-   set i = 1
-   while ($i <= $#UNMODIFIED_ARGUMENTS)
-      switch ("$UNMODIFIED_ARGUMENTS[$i]")
-         case "-only-64":
-         case "-64":
-            set ONLY_64_FLAG = 1
-            breaksw
-         default: 
-            set arguments = "$arguments $UNMODIFIED_ARGUMENTS[$i]"
-            breaksw
-      endsw
-      @ i++ 
-   end 
-   if ( "$ONLY_64_FLAG" != 1 ) then 
-      # compile the 32 bit version 
-      ./aimk -32 "$arguments"
-   endif 
-endif 
 
 exit 0

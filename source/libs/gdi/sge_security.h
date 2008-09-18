@@ -57,8 +57,8 @@ int sge_ssl_setup_security_path(const char *progname, const char *username);
 int kerb_job(lListElem *jelem, struct dispatch_entry *de);
 #endif
 
-void tgt2cc(lListElem *jep, const char *rhost);
-void tgtcclr(lListElem *jep, const char *rhost);
+void tgt2cc(lListElem *jep, const char *rhost, const char* target);
+void tgtcclr(lListElem *jep, const char *rhost, const char* target);
 int set_sec_cred(const char *sge_root, const char *mastername, lListElem *job, lList **alpp);
 void delete_credentials(const char *sge_root, lListElem *jep);
 bool cache_sec_cred(const char *sge_root, lListElem *jep, const char *rhost);

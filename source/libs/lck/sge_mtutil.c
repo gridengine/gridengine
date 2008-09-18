@@ -35,15 +35,11 @@
 #include <string.h>
 #include <sys/time.h>
 
-/* do not compile in monitoring code */
-#ifndef NO_SGE_COMPILE_DEBUG
-#define NO_SGE_COMPILE_DEBUG
-#endif
-
 #include "sgermon.h"
 #include "sge_log.h"
 #include "msg_lcklib.h"
 #include "sge_time.h"
+
 
 /* enable or disable lock printing*/
 /* #define PRINT_LOCK */

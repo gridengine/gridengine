@@ -451,11 +451,6 @@ sge_gdi_ctx_class_create(int prog_number, const char *component_name,
       DRETURN(NULL);
    }
 
-   /*
-   ** set default exit func, maybe overwritten
-   */
-   ret->set_exit_func(ret, gdi2_default_exit_func);
-
    DRETURN(ret);
 }
 
@@ -803,6 +798,17 @@ sge_gdi_ctx_class_create_from_bootstrap(int prog_number, const char* component_n
                                   username, NULL, sge_root, sge_cell, sge_qmaster_p, sge_execd_p, 
                                   false, is_qmaster_internal_client, alpp);
    
+#if 1
+   /*
+   ** TODO:
+   ** jmx agent is marked as daemonized, this is checked in sge_csp_path_class_create
+   ** check via pid comparison that JGDIAgent is started as master thread 
+   */
+   if (ret && ret->is_qmaster_internal_client(ret)) {
+      ret->set_daemonized(ret, true);
+   }
+#endif
+
    DRETURN(ret); 
 }
 
@@ -810,9 +816,13 @@ sge_gdi_ctx_class_create_from_bootstrap(int prog_number, const char* component_n
 static void sge_gdi_ctx_destroy(void *theState)
 {
    sge_gdi_ctx_t *s = (sge_gdi_ctx_t *)theState;
+   cl_com_handle_t *handle = cl_com_get_handle(s->component_name, 0);
 
    DENTER(TOP_LAYER, "sge_gdi_ctx_destroy");
 
+   if (handle != NULL ) {
+      cl_commlib_shutdown_handle(handle, CL_TRUE);
+   }
    sge_env_state_class_destroy(&(s->sge_env_state_obj));
    sge_prog_state_class_destroy(&(s->sge_prog_state_obj));
    sge_path_state_class_destroy(&(s->sge_path_state_obj));
@@ -822,7 +832,6 @@ static void sge_gdi_ctx_destroy(void *theState)
    sge_free(s->username);
    sge_free(s->groupname);
    sge_free(s->component_name);
-   sge_free(s->thread_name);
    sge_free(s->component_username);
    sge_free(s->ssl_certificate);
    sge_free(s->ssl_private_key);
@@ -1091,12 +1100,6 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
                                                    CL_CM_AC_DISABLED ,
                                                    CL_TRUE);
 
-            /* do a later qmaster commlib listen before creating qmaster handle */
-            /* TODO: CL_COMMLIB_DELAYED_LISTEN is set to CL_FALSE, because
-                     enabling it might cause problems with current shadowd and
-                     startup qmaster implementation */
-            cl_commlib_set_global_param(CL_COMMLIB_DELAYED_LISTEN, CL_FALSE);
-
             handle = cl_com_create_handle(&cl_ret, 
                                           communication_framework, 
                                           CL_CM_CT_MESSAGE, /* message based tcp communication */
@@ -1266,8 +1269,8 @@ static int sge_gdi_ctx_class_is_alive(sge_gdi_ctx_class_t *thiz)
    }
 
    if (status != NULL) {
-      DEBUG((SGE_EVENT,MSG_GDI_ENDPOINT_UPTIME_UU, sge_u32c(status->runtime) , 
-             sge_u32c(status->application_status)));
+      DEBUG((SGE_EVENT,MSG_GDI_ENDPOINT_UPTIME_UU, sge_u32c( status->runtime) , 
+             sge_u32c( status->application_status) ));
       cl_com_free_sirm_message(&status);
    }
  
@@ -1561,7 +1564,7 @@ static u_long32 get_jvm_thread_count(sge_gdi_ctx_class_t *thiz) {
 static sge_exit_func_t get_exit_func(sge_gdi_ctx_class_t *thiz) {
    sge_prog_state_class_t* prog_state = thiz->get_sge_prog_state(thiz);
    sge_exit_func_t exit_func = NULL;
-   DENTER(BASIS_LAYER, "sge_gdi_ctx_class->get_exit_func");
+   DENTER(TOP_LAYER, "sge_gdi_ctx_class->get_exit_func");
    exit_func = prog_state->get_exit_func(prog_state);
    DRETURN(exit_func);
 }
@@ -1878,8 +1881,7 @@ sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, u_long32 thread_id,
    }
 
    /* a dynamic eh handler is created */
-   *context = sge_gdi_ctx_class_create(progid, prognames[progid], thread_id, 
-                                       threadnames[thread_id], user, group,
+   *context = sge_gdi_ctx_class_create(progid, prognames[progid], thread_id, threadnames[thread_id], user, group,
                                        sge_root, sge_cell, sge_qmaster_port, 
                                        sge_execd_port, from_services, 
                                        is_qmaster_intern_client, alpp);
@@ -1954,3 +1956,4 @@ static int reresolve_qualified_hostname(sge_gdi_ctx_class_t *thiz) {
 
    DRETURN(ret);
 }
+

@@ -105,7 +105,7 @@ public class <%=jh.getClassName(cullObj)%>Descriptor extends <%
       // valueAttr = <%=valueAttr.getName()%> (type = <%=valueAttr.getType()%>)
       propDescr = addMapList("<%=attrName%>", <%=valueClass%>, "<%=attr.getType()%>", <%=keyClass%>, "<%=valueAttr.getType()%>",
              CullConstants.<%=attr.getName()%>, CullConstants.<%=mapAttr.getKeyAttr().getName()%>, CullConstants.<%=mapAttr.getValueAttr().getName()%>,
-             <%=attr.getDefault() == null ? "null" : "\"" + attr.getDefault() + "\"" %>,<%=attr.isReadOnly()%>, <%=attr.isConfigurable()%>);
+             <%=attr.getDefault() == null ? "null" : "\"" + attr.getDefault() + "\"" %>,<%=attr.isReadOnly()%>, <%=attr.isConfigurable()%> );
 <%
         } else if (attr instanceof com.sun.grid.cull.CullMapAttr) {
             com.sun.grid.cull.CullMapAttr mapAttr = (com.sun.grid.cull.CullMapAttr)attr;
@@ -123,7 +123,7 @@ public class <%=jh.getClassName(cullObj)%>Descriptor extends <%
       // valueAttr = <%=valueAttr.getName()%> (type = <%=valueAttr.getType()%>)
       propDescr = addMap("<%=attrName%>", <%=valueClass%>, "<%=attr.getType()%>", <%=keyClass%>,
              CullConstants.<%=attr.getName()%>, CullConstants.<%=mapAttr.getKeyAttr().getName()%>, CullConstants.<%=mapAttr.getValueAttr().getName()%>,
-             <%=attr.getDefault() == null ? "null" : "\"" + attr.getDefault() + "\"" %>, <%=attr.isReadOnly()%>, <%=attr.isConfigurable()%>);
+             <%=attr.getDefault() == null ? "null" : "\"" + attr.getDefault() + "\"" %>, <%=attr.isReadOnly()%>, <%=attr.isConfigurable()%> );
 <%
         } else if (attr instanceof com.sun.grid.cull.CullListAttr) {
             subobj = cullDef.getCullObject(attr.getType());

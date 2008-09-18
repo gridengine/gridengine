@@ -144,6 +144,8 @@ sge_event_master_terminate(void)
    }  
    DPRINTF(("all "SFN" threads terminated\n", threadnames[DELIVERER_THREAD]));
 
+   sge_event_master_shutdown();
+
    DRETURN_VOID;
 }
 
@@ -161,9 +163,9 @@ sge_event_master_main(void *arg)
 
    DENTER(TOP_LAYER, "sge_event_master_main");
 
-   DPRINTF(("started"));
+   DPRINTF((SFN" started", thread_config->thread_name));
    cl_thread_func_startup(thread_config);
-   sge_monitor_init(&monitor, thread_config->thread_name, EDT_EXT, EMT_WARNING, EMT_ERROR);
+   sge_monitor_init(&monitor, thread_config->thread_name, TET_EXT, TET_WARNING, TET_ERROR);
    sge_qmaster_thread_init(&ctx, QMASTER, DELIVERER_THREAD, true);
 
    /* register at profiling module */
@@ -181,23 +183,69 @@ sge_event_master_main(void *arg)
 
       thread_start_stop_profiling();
 
+      sge_mutex_lock("event_master_cond_mutex", SGE_FUNC, __LINE__, 
+                     &Event_Master_Control.cond_mutex);
+
+#ifdef EVC_DEBUG
+{   
+dstring dsbuf;
+char buf[1024];
+sge_dstring_init(&dsbuf, buf, sizeof(buf));
+printf("##### before sge_event_master_wait_next() at %s\n", sge_ctime(0, &dsbuf));
+}
+#endif
       /*
        * did a new event arrive which has a flush time of 0 seconds?
        */
       MONITOR_IDLE_TIME(sge_event_master_wait_next(), (&monitor), mconf_get_monitor_time(), 
                         mconf_is_monitor_message());
 
+      sge_mutex_unlock("event_master_cond_mutex", SGE_FUNC, __LINE__, 
+                       &Event_Master_Control.cond_mutex);
+
       MONITOR_MESSAGES((&monitor));
       MONITOR_EDT_COUNT((&monitor));
+      /* If the client array has changed, rebuild the indices. */
+      MONITOR_WAIT_TIME(sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__,
+                        &Event_Master_Control.mutex), (&monitor));
+    
       MONITOR_CLIENT_COUNT((&monitor), lGetNumberOfElem(Event_Master_Control.clients));
 
-      sge_event_master_process_requests(&monitor);
+      if (Event_Master_Control.indices_dirty) {
+         lListElem *ep = NULL;
+         int count = 0;
+
+         DPRINTF(("Rebuilding indices\n"));
+
+         /* For a large number of event clients, this loop would be faster as
+          * a for loop that walks through the clients_array. */
+         for_each(ep, Event_Master_Control.clients) {
+            Event_Master_Control.clients_indices[count++] = (int)lGetUlong(ep, EV_id);
+         }
+
+         Event_Master_Control.clients_indices[count] = 0;
+         Event_Master_Control.indices_dirty = false;
+      }
+
+      sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.mutex);
+
+      sge_event_master_process_mod_event_client(&monitor);
+      sge_event_master_process_acks(&monitor);
+      sge_event_master_process_sends(&monitor);
       sge_event_master_send_events(ctx, report, report_list, &monitor);
       sge_monitor_output(&monitor);
 
       thread_output_profiling("event master thread profiling summary:\n",
                               &next_prof_output);
 
+#ifdef EVC_DEBUG
+{   
+dstring dsbuf;
+char buf[1024];
+sge_dstring_init(&dsbuf, buf, sizeof(buf));
+printf("##### after processing event_master funcs at %s\n", sge_ctime(0, &dsbuf));
+}
+#endif
       /* pthread cancelation point */
       pthread_cleanup_push((void (*)(void *))sge_event_master_cleanup_monitor,
                            (void *)&monitor);
@@ -207,7 +255,7 @@ sge_event_master_main(void *arg)
       pthread_cleanup_pop(execute); 
       pthread_cleanup_pop(execute); 
       if (sge_thread_has_shutdown_started()) {
-         DPRINTF(("waiting for termination\n"));
+         DPRINTF((SFN" is waiting for termination\n", thread_config->thread_name));
          sleep(1);
       }
    }

@@ -1,6 +1,6 @@
 /* 
  * Motif Tools Library, Version 3.1
- * $Id: Menu.c,v 1.2 2008/02/13 14:35:05 andre Exp $
+ * $Id: Menu.c,v 1.1 2001/07/18 11:06:02 root Exp $
  * 
  * Written by David Flanagan.
  * Copyright (c) 1992-2001 by David Flanagan.
@@ -9,15 +9,8 @@
  * There is no warranty for this software.  See NO_WARRANTY for details.
  *
  * $Log: Menu.c,v $
- * Revision 1.2  2008/02/13 14:35:05  andre
- * AA-2008-02-13-0: Bugfix.:   - jgdi client shall use SGE Daemon keystore for JMX ssl mode
- *                             - jmxeventmon support for SSL, eventmon script
- *                             - memory leaks qmon, cull
- *                  Changed:   jgdi, install scripts
- *                  Review:    RH
- *
- * Revision 1.1.1.1  2001/07/18 11:06:02  root
- * Initial checkin.
+ * Revision 1.1  2001/07/18 11:06:02  root
+ * Initial revision
  *
  * Revision 1.2  2001/06/12 16:25:28  andre
  * *** empty log message ***
@@ -353,7 +346,7 @@ Cardinal num_items;
     Arg args[10], submenu_args[10];
     int n, m;
     XmString accel_label = NULL;
-    char namebuf[20], submenu_buf[20];
+    char namebuf[10], submenu_buf[20];
     char *name, *submenu_name;
     int numlabel, numpush, numtoggle, numsep, numsub;
     int i;

@@ -86,7 +86,7 @@ int sge_strisint(const char *str);
 
 char **sge_stradup(char **cpp, int n);
 
-void sge_strafree(char ***cpp); 
+void sge_strafree(char **cpp); 
 
 char **sge_stramemncpy(const char *cp, char **cpp, int n);
 

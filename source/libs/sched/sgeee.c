@@ -632,13 +632,11 @@ static void recompute_prio(sge_task_ref_t *tref, lListElem *task, double nurg, d
 {
    double min_tix, max_tix, prio;
    double ntix = 0.5; 
-   double weight_ticket = 0.0; 
-   double weight_urgency = 0.0;
-   double weight_priority = 0.0;
+   double weight_ticket = sconf_get_weight_ticket();
+   double weight_urgency = sconf_get_weight_urgency();
+   double weight_priority = sconf_get_weight_priority();
 
    DENTER(TOP_LAYER, "recompute_prio");
-
-   sconf_get_weight_ticket_urgency_priority(&weight_ticket, &weight_urgency, &weight_priority);
 
    /* need to know min/max tix values to normalize new ticket value */
    tix_range_get(&min_tix, &max_tix);
@@ -1297,7 +1295,7 @@ decay_and_sum_usage( sge_ref_t *ref,
     *-------------------------------------------------------------*/
 
    if (ja_task != NULL) {
-      job_usage_list = lCopyList("", lGetList(ja_task, JAT_scaled_usage_list));
+      job_usage_list = lCopyList(NULL, lGetList(ja_task, JAT_scaled_usage_list));
 
       /* sum sub-task usage into job_usage_list */
       if (job_usage_list) {
@@ -1402,6 +1400,14 @@ decay_and_sum_usage( sge_ref_t *ref,
                    *user_long_term_usage=NULL,
                    *project_long_term_usage=NULL;
          const char *usage_name = lGetString(job_usage, UA_name);
+
+         /* only copy CPU, memory, and I/O usage */
+         /* or usage explicitly in decay list */
+         if (strcmp(usage_name, USAGE_ATTR_CPU) != 0 &&
+             strcmp(usage_name, USAGE_ATTR_MEM) != 0 &&
+             strcmp(usage_name, USAGE_ATTR_IO) != 0 &&
+             !lGetElemStr(decay_list, UA_name, usage_name))
+             continue;
 
          /*---------------------------------------------------------
           * Locate the corresponding usage element for the job
@@ -3892,7 +3898,8 @@ sge_build_sgeee_orders(scheduler_all_data_t *lists, lList *running_jobs, lList *
                   order_list = sge_create_orders(order_list, ORT_ptickets, job, task_template, NULL, false);
                }
             }  
-         } else {
+         }
+         else {
             order_list = sge_create_orders(order_list, ORT_clear_pri_info, job, NULL, NULL, false);               
          }
       }
@@ -4284,12 +4291,11 @@ static void sgeee_priority(lListElem *task, u_long32 jobid, double nsu,
 {
 
    double nta, geee_priority;
-   double weight_ticket = 0.0;
-   double weight_urgency = 0.0;
-   double weight_priority = 0.0; 
+   double weight_ticket = sconf_get_weight_ticket();
+   double weight_urgency = sconf_get_weight_urgency();
+   double weight_priority = sconf_get_weight_priority();
 
    DENTER(TOP_LAYER, "sgeee_priority");
-   sconf_get_weight_ticket_urgency_priority(&weight_ticket, &weight_urgency, &weight_priority);
 
    /* now compute normalized ticket amount (NTA) for each job/task */
    nta = sge_normalize_value(lGetDouble(task, JAT_tix), min_tix, max_tix);

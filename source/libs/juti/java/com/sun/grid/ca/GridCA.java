@@ -39,7 +39,7 @@ import java.security.cert.X509Certificate;
  * Grid Certificate Authority.
  */
 public interface GridCA {
-
+    
     /**
      *  Initialize the Grid CA
      * 
@@ -47,27 +47,18 @@ public interface GridCA {
      * @throws com.sun.grid.ca.GridCAException 
      */
     public void init(InitCAParameters params) throws GridCAException;
-
+    
     /**
      *  Create private key and certificate for a user.
      *
      *  @param username  name of the user
-     *  @param gecos     gecos of the user
-     *  @param email     email address of the user
-     *  @deprecated the gecos field is no longer used, use @{link #createUser(String,String)} instead
-     *  @throws GridCAException if the creation of the private key or the certificate fails
-     */
-    public void createUser(String username, String gecos, String email) throws GridCAException;
-
-    /**
-     *  Create private key and certificate for a user.
-     *
-     *  @param username  name of the user
+     *  @param group     group of the user
      *  @param email     email address of the user
      *  @throws GridCAException if the creation of the private key or the certificate fails
      */
-    public void createUser(String username, String email) throws GridCAException;
-
+    public void createUser(String username, String group, String email) throws GridCAException;
+    
+    
     /**
      *  Get the X.509 certificate of a user.
      *
@@ -76,7 +67,7 @@ public interface GridCA {
      *  @throws GridCAException if the certificate does not exist
      */
     public X509Certificate getCertificate(String username) throws GridCAException;
-
+    
     /**
      *  Get the X.509 certificate of a daemon.
      *
@@ -85,18 +76,18 @@ public interface GridCA {
      *  @throws GridCAException if the certificate does not exist
      */
     public X509Certificate getDaemonCertificate(String daemon) throws GridCAException;
-
+    
     /**
      *  Create a keystore which contains the private key and
      *  certificate of an user.
      *
      *  @param  username         name of the user
-     *  @param  keystorePassword password used to encrypt the keystore
-     *  @param  privateKeyPassword password used to encrypt the key
+     *  @param  keystorePassword password used for encrypt the keystore
      *  @throws GridCAException if the keystore could not be created
      */
-    public KeyStore createKeyStore(String username, char[] keystorePassword, char[] privateKeyPassword) throws GridCAException;
-
+    public KeyStore createKeyStore(String username, char [] keystorePassword, char[] privateKeyPassword) throws GridCAException;
+    
+    
     /**
      *  Renew the certificate of a user.
      *
@@ -106,7 +97,8 @@ public interface GridCA {
      *  @throws CAException if the certificate can not be renewed
      */
     public X509Certificate renewCertificate(String username, int days) throws GridCAException;
-
+    
+    
     /**
      *  Renew the certificate of a daemon.
      *
@@ -117,47 +109,36 @@ public interface GridCA {
      */
     public X509Certificate renewDaemonCertificate(String daemon, int days) throws GridCAException;
 
+    
     /**
      *  Renew the certificate of the certificate authority
      *
      *  @param days  validity of the new certificate in days
      *  @throws GridCAException if the certificate can not be renewed
      */
-    public void renewCaCertificate(int days) throws GridCAException;
-
+    public void renewCaCertificate(int days) throws GridCAException;    
+    
     /**
-     *  Create private key and certificate for a sdm daemon.
+     * Create private key and certificate for a grm daemon.
      *
-     *  @param daemon name of the daemon
-     *  @param user   username of the daemon (owner of the process)
-     *  @param email  email address of the process owner
-     *  @throws com.sun.grid.ca.GridCAException if the create of the daemon failed
+     * @param daemon name of the daemon
+     * @param user   username of the daemon (owner of the process)
+     * @param email  email address of the process owner
+     * @throws com.sun.grid.ca.GridCAException if the create of the daemon failed
      */
     public void createDaemon(String daemon, String user, String email) throws GridCAException;
-
+    
+    
     /**
-     *  Get the keystore for a daemon.
+     * Get the keystore for a daemon.
      *
-     *  This method can be used be the installation to create keystore for
-     *  the daemon of a sdm system.
+     * This method can be used be the installation to create keystore for
+     * the daemon of a grm system.
      *
-     *  @param daemon name of the daemon
-     *  @throws com.sun.grid.ca.GridCAException 
-     *  @return the keystore of the daemon
+     * @param daemon name of the daemon
+     * @throws com.sun.grid.ca.GridCAException 
+     * @return the keystore of the daemon
      */
     public KeyStore createDaemonKeyStore(String daemon) throws GridCAException;
-
-    /**
-     *  Get the keystore for an SGE daemon.
-     *
-     *  This method can be used to create a keystore for
-     *  the daemon of a SGE system.
-     *
-     *  @param daemon name of the daemon
-     *  @param  keystorePassword password used to encrypt the keystore
-     *  @param  privateKeyPassword password used to encrypt the key
-     *  @throws com.sun.grid.ca.GridCAException 
-     *  @return the keystore of the daemon
-     */
-    public KeyStore createSGEDaemonKeyStore(String daemon, char[] keystorePassword, char[] privateKeyPassword) throws GridCAException;
+    
 }

@@ -37,20 +37,19 @@
     
    <!-- DRMAA -->
    <target name="drmaa" depends="init">
-      <myant dir="libs/jdrmaa"/>
-      <!-- <myant dir="classes"/> -->
+      <myant dir="classes"/>
    </target>
     
    <target name="drmaa.clean" depends="init">
-     <myant dir="libs/jdrmaa" target="clean"/>
+      <ant dir="classes" antfile="build.xml" target="clean"/>
    </target>
 
    <target name="drmaa.javadoc" depends="init">
-     <myant dir="libs/jdrmaa" target="javadoc"/>
+      <myant dir="classes" target="javadoc"/>
    </target>
     
    <target name="drmaa.test" depends="init">
-      <myant dir="libs/jdrmaa" target="test"/>
+      <myant dir="classes" target="test"/>
    </target>
     
    <!-- JUTI -->
@@ -59,7 +58,7 @@
    </target>
     
    <target name="juti.clean" depends="init">
-      <myant dir="libs/juti" target="clean"/>
+      <ant dir="libs/juti" antfile="build.xml" target="clean"/>
    </target>
     
    <target name="juti.javadoc" depends="init">
@@ -76,7 +75,7 @@
    </target>
     
    <target name="jgdi.clean" depends="init">
-      <myant dir="libs/jgdi" target="clean"/>
+      <ant dir="libs/jgdi" antfile="build.xml" target="clean"/>
    </target>
 
    <target name="jgdi.javadoc" depends="init">

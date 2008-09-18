@@ -66,8 +66,7 @@ typedef struct cl_endpoint_list_data_type {          /* list specific data */
 int cl_endpoint_list_setup(cl_raw_list_t** list_p, 
                            char* list_name, 
                            long entry_life_time,           /* max life time of an endpoint */
-                           long refresh_interval,          /* check interval */
-                           cl_bool_t create_hash);         /* flag if hash table should be used */
+                           long refresh_interval);         /* check interval */
 
 int cl_endpoint_list_cleanup(cl_raw_list_t** list_p);
 

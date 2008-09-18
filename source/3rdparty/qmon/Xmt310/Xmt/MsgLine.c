@@ -1,6 +1,6 @@
 /* 
  * Motif Tools Library, Version 3.1
- * $Id: MsgLine.c,v 1.5 2008/02/13 14:35:05 andre Exp $
+ * $Id: MsgLine.c,v 1.4 2003/03/19 17:44:40 andre Exp $
  * 
  * Written by David Flanagan.
  * Copyright (c) 1992-2001 by David Flanagan.
@@ -9,13 +9,6 @@
  * There is no warranty for this software.  See NO_WARRANTY for details.
  *
  * $Log: MsgLine.c,v $
- * Revision 1.5  2008/02/13 14:35:05  andre
- * AA-2008-02-13-0: Bugfix.:   - jgdi client shall use SGE Daemon keystore for JMX ssl mode
- *                             - jmxeventmon support for SSL, eventmon script
- *                             - memory leaks qmon, cull
- *                  Changed:   jgdi, install scripts
- *                  Review:    RH
- *
  * Revision 1.4  2003/03/19 17:44:40  andre
  * AA-2003-03-19-0  Enhancem.: - Darwin port
  *
@@ -774,7 +767,7 @@ StringConst s;
 #endif
 {
     XmtMsgLineWidget mw = (XmtMsgLineWidget) w;
-    wchar_t wcs[8*BUFSIZ];
+    wchar_t wcs[4*BUFSIZ];
     int mblen = 0;
 
     XmtAssertWidgetClass(w, xmtMsgLineWidgetClass, "XmtMsgLineAppend");

@@ -51,6 +51,4 @@ void *scheduler_thread(void* anArg);
 
 void event_update_func(u_long32 ec_id, lList **alpp, lList *event_list);
 
-void set_job_flushing(sge_evc_class_t *evc);
-
 #endif /* __SGE_SCHED_PROCESS_EVENTS_H */

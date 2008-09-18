@@ -32,7 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "uti/sge_monitor.h"
 
 typedef struct _sge_gdi_packet_queue_class_t sge_gdi_packet_queue_class_t;
 
@@ -67,21 +66,16 @@ struct _sge_gdi_packet_queue_class_t {
 
 extern sge_gdi_packet_queue_class_t Master_Packet_Queue;
 
-u_long32
-sge_gdi_packet_queue_get_length(sge_gdi_packet_queue_class_t *packet_queue);
-
 void
 sge_gdi_packet_queue_store_notify(sge_gdi_packet_queue_class_t *packet_queue,
-                                  sge_gdi_packet_class_t *packet, 
-                                  monitoring_t *monitor);
+                                       sge_gdi_packet_class_t *packet);
 
 void
 sge_gdi_packet_queue_wakeup_all_waiting(sge_gdi_packet_queue_class_t *packet_queue);
 
 bool
 sge_gdi_packet_queue_wait_for_new_packet(sge_gdi_packet_queue_class_t *packet_queue,
-                                         sge_gdi_packet_class_t **packet,
-                                         monitoring_t *monitor);
+                                         sge_gdi_packet_class_t **packet);
 
 #endif
 

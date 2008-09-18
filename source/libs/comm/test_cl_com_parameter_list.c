@@ -46,8 +46,8 @@
 extern int main(void)
 {
   int retval;
-  const char* param2 = "param2";
-  const char* param3 = "param3";
+  char* param2 = "param2";
+  char* param3 = "param3";
   char* val2 = "val2";
   char* val3 = "val3";
   char* ret_char = NULL;

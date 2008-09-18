@@ -182,7 +182,7 @@ split_jobs(lList **job_list, u_long32 max_aj_instances,
            lList **result_lists[], bool do_copy); 
 
 void 
-job_lists_split_with_reference_to_max_running(bool monitor_next_run, lList **job_lists[],
+job_lists_split_with_reference_to_max_running(lList **job_lists[],
                                               lList **user_list,
                                               const char *user_name,
                                               int max_jobs_per_user);
@@ -192,7 +192,7 @@ job_move_first_pending_to_running(lListElem **pending_job,
                                   lList **result_lists[]);
 
 void 
-trash_splitted_jobs(bool monitor_next_run, lList **job_list[]);
+trash_splitted_jobs(lList **job_list[]);
 
 void 
 job_lists_print(lList **job_list[]);

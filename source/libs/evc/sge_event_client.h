@@ -119,9 +119,6 @@ struct sge_evc_class_str {
 
    /* dump current settings */
    void (*dprintf)(sge_evc_class_t *thiz);
-
-   /* needed for heritage from stone-age: qconf -tsm scheduler monitoring */
-   bool monitor_next_run; 
 };
 
 sge_evc_class_t *

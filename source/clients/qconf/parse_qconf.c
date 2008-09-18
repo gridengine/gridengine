@@ -460,6 +460,7 @@ char *argv[]
             /* no template name given - then use "template" as name */
             host = sge_strdup(host, SGE_TEMPLATE_NAME);
          }
+
          /* get a template host entry .. */
          where = lWhere("%T( %Ih=%s )", EH_Type, EH_name, host);
          what = lWhat("%T(ALL)", EH_Type);
@@ -491,6 +492,7 @@ char *argv[]
 
          FREE(host);
          lFreeList(&alp);
+
          
          /* edit the template */
          argep = lFirst(arglp);

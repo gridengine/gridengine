@@ -206,7 +206,7 @@ static int
 resource_cmp(u_long32 relop, double req, double src_dl); 
 
 static bool 
-job_is_forced_centry_missing(const sge_assignment_t *a, const lListElem *queue_or_host);
+job_is_forced_centry_missing(const lListElem *job, const lList *master_centry_list, const lListElem *queue_or_host);
 
 static void 
 clear_resource_tags( lList *resources, u_long32 max_tag); 
@@ -421,9 +421,7 @@ sge_select_parallel_environment(sge_assignment_t *best, lList *pe_list)
             /* determine earliest start time with that PE */
             result = parallel_reservation_max_time_slots(best, &available_slots);
             if (result != DISPATCH_OK) {
-               schedd_mes_add(best->monitor_alpp, best->monitor_next_run,
-                              best->job_id, SCHEDD_INFO_PESLOTSNOTINRANGE_SI,
-                              pe_name, available_slots); 
+               schedd_mes_add(best->job_id, SCHEDD_INFO_PESLOTSNOTINRANGE_SI, pe_name, available_slots); 
                best_result = find_best_result(best_result, result);
                continue;
             }
@@ -441,9 +439,7 @@ sge_select_parallel_environment(sge_assignment_t *best, lList *pe_list)
             result = parallel_reservation_max_time_slots(&tmp, &available_slots); 
             
             if (result != DISPATCH_OK) {
-               schedd_mes_add(best->monitor_alpp, best->monitor_next_run,
-                              best->job_id, SCHEDD_INFO_PESLOTSNOTINRANGE_SI,
-                              pe_name, available_slots); 
+               schedd_mes_add(best->job_id, SCHEDD_INFO_PESLOTSNOTINRANGE_SI, pe_name, available_slots); 
                best_result = find_best_result(best_result, result);
                assignment_release(&tmp);
                continue;
@@ -483,9 +479,7 @@ sge_select_parallel_environment(sge_assignment_t *best, lList *pe_list)
 
             best_result = parallel_maximize_slots_pe(best, &available_slots);
             if (best_result != DISPATCH_OK) {
-               schedd_mes_add(best->monitor_alpp, best->monitor_next_run,
-                              best->job_id, SCHEDD_INFO_PESLOTSNOTINRANGE_SI,
-                              best->pe_name, available_slots); 
+               schedd_mes_add(best->job_id, SCHEDD_INFO_PESLOTSNOTINRANGE_SI, best->pe_name, available_slots); 
             }
             DPRINTF(("### AR ### assignment in PE \"%s\" with %d soft violations and %d available slots\n",
                   best->pe_name, best->soft_violations, available_slots));
@@ -507,9 +501,7 @@ sge_select_parallel_environment(sge_assignment_t *best, lList *pe_list)
                result = parallel_maximize_slots_pe(best, &available_slots);
 
                if (result != DISPATCH_OK) {
-                  schedd_mes_add(best->monitor_alpp, best->monitor_next_run,
-                                 best->job_id, SCHEDD_INFO_PESLOTSNOTINRANGE_SI,
-                                 pe_name, available_slots); 
+                  schedd_mes_add(best->job_id, SCHEDD_INFO_PESLOTSNOTINRANGE_SI, pe_name, available_slots); 
                   best_result = find_best_result(best_result, result);
                   continue;
                }
@@ -527,9 +519,7 @@ sge_select_parallel_environment(sge_assignment_t *best, lList *pe_list)
                            
                if (result != DISPATCH_OK) {
                   assignment_release(&tmp);
-                  schedd_mes_add(best->monitor_alpp, best->monitor_next_run,
-                                 best->job_id, SCHEDD_INFO_PESLOTSNOTINRANGE_SI,
-                                 pe_name, available_slots); 
+                  schedd_mes_add(best->job_id, SCHEDD_INFO_PESLOTSNOTINRANGE_SI, pe_name, available_slots); 
                   best_result = find_best_result(best_result, result);
                   continue;
                }
@@ -549,8 +539,7 @@ sge_select_parallel_environment(sge_assignment_t *best, lList *pe_list)
    }
 
    if (matched_pe_count == 0) {
-      schedd_mes_add(best->monitor_alpp, best->monitor_next_run,
-                     best->job_id, SCHEDD_INFO_NOPEMATCH_ ); 
+      schedd_mes_add(best->job_id, SCHEDD_INFO_NOPEMATCH_ ); 
       best_result = DISPATCH_NEVER_CAT;
    } else if (best->is_reservation && best->gdil) {
       int available_slots = 0;
@@ -674,7 +663,8 @@ parallel_reservation_max_time_slots(sge_assignment_t *best, int *available_slots
    /* assemble job category information */
    fill_category_use_t(best, &use_category, best->pe_name);  
 
-   qeti = sge_qeti_allocate(best);
+   qeti = sge_qeti_allocate(best->job, best->pe, best->ckpt, 
+         best->host_list, best->queue_list, best->centry_list, best->acl_list, best->hgrp_list, best->ar_list); 
    if (qeti == NULL) {
       ERROR((SGE_EVENT, "could not allocate qeti object needed reservation "
             "scheduling of parallel job "sge_U32CFormat, sge_u32c(best->job_id)));
@@ -861,7 +851,7 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots)
       min_slots = first;
    }   
 
-   if (best->gdil && best->slots == max_pe_slots) { /* already found maximum */
+   if (best->gdil || best->slots == max_pe_slots) { /* already found maximum */
       DRETURN(DISPATCH_OK); 
    }
 
@@ -1517,9 +1507,11 @@ static void clear_resource_tags(lList *resources, u_long32 max_tag) {
 *
 *  NOTES
 *******************************************************************************/
-
-dispatch_t sge_queue_match_static(const sge_assignment_t *a, lListElem *queue) 
+dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListElem *pe, 
+                                  const lListElem *ckpt, lList *centry_list, lList *acl_list,
+                                  lList *hgrp_list, lList *ar_list) 
 {
+   u_long32 job_id;
    u_long32 ar_id;
    lList *projects;
    lListElem *ar_ep;
@@ -1531,67 +1523,62 @@ dispatch_t sge_queue_match_static(const sge_assignment_t *a, lListElem *queue)
    DENTER(TOP_LAYER, "sge_queue_match_static");
 
    /* check if queue was reserved for AR job */
-   ar_id = lGetUlong(a->job, JB_ar);
-   ar_ep = lGetElemUlong(a->ar_list, AR_id, ar_id);
+   ar_id = lGetUlong(job, JB_ar);
+   ar_ep = lGetElemUlong(ar_list, AR_id, ar_id);
 
    if (ar_ep != NULL) {
       DPRINTF(("searching for queue %s\n", qinstance_name));
 
       if (lGetSubStr(ar_ep, QU_full_name, qinstance_name, AR_reserved_queues) == NULL) {
-         schedd_mes_add_global(a->monitor_alpp, a->monitor_next_run,
-                               SCHEDD_INFO_QNOTARRESERVED_SI, qinstance_name, ar_id);
+         schedd_mes_add_global(SCHEDD_INFO_QNOTARRESERVED_SI, qinstance_name, ar_id);
          DRETURN(DISPATCH_NEVER_CAT);
       }
    } else {
       /* this is not advance reservation job, we have to drop queues in orphaned state */
       if (lGetUlong(queue, QU_state) == QI_ORPHANED) {
-         schedd_mes_add_global(a->monitor_alpp, a->monitor_next_run, SCHEDD_INFO_QUEUENOTAVAIL_, qinstance_name);
+         schedd_mes_add_global(SCHEDD_INFO_QUEUENOTAVAIL_, qinstance_name);
          DRETURN(DISPATCH_NEVER_CAT);
       }
    }
 
+   job_id = lGetUlong(job, JB_job_number);
    /* check if job owner has access rights to the queue */
-   if (!sge_has_access(lGetString(a->job, JB_owner), lGetString(a->job, JB_group), queue, a->acl_list)) {
-      DPRINTF(("Job %d has no permission for queue %s\n", (int)a->job_id, qinstance_name));
-      schedd_mes_add(a->monitor_alpp, a->monitor_next_run,
-                     a->job_id, SCHEDD_INFO_HASNOPERMISSION_SS,
-                     "queue", qinstance_name);
+   if (!sge_has_access(lGetString(job, JB_owner), lGetString(job, JB_group), queue, acl_list)) {
+      DPRINTF(("Job %d has no permission for queue %s\n", (int)job_id, qinstance_name));
+      schedd_mes_add(job_id, SCHEDD_INFO_HASNOPERMISSION_SS, "queue", qinstance_name);
       DRETURN(DISPATCH_NEVER_CAT);
    }
 
    /* check if job can run in queue based on project */
    if ((projects = lGetList(queue, QU_projects))) {
-      if ((!(project = lGetString(a->job, JB_project)))) {
-         schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                        SCHEDD_INFO_HASNOPRJ_S,
-                        "queue", qinstance_name);
+      if ((!(project = lGetString(job, JB_project)))) {
+         schedd_mes_add(job_id, SCHEDD_INFO_HASNOPRJ_S,
+            "queue", qinstance_name);
          DRETURN(DISPATCH_NEVER_CAT);
       }
       if ((!prj_list_locate(projects, project))) {
-         schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                        SCHEDD_INFO_HASINCORRECTPRJ_SSS,
-                        project, "queue", qinstance_name);
+         schedd_mes_add(job_id, SCHEDD_INFO_HASINCORRECTPRJ_SSS,
+            project, "queue", qinstance_name);
          DRETURN(DISPATCH_NEVER_CAT);
       }
    }
 
    /* check if job can run in queue based on excluded projects */
    if ((projects = lGetList(queue, QU_xprojects))) {
-      if (((project = lGetString(a->job, JB_project)) &&
+      if (((project = lGetString(job, JB_project)) &&
            prj_list_locate(projects, project))) {
-         schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                        SCHEDD_INFO_EXCLPRJ_SSS,
-                        project, "queue", qinstance_name);
+         schedd_mes_add(job_id, SCHEDD_INFO_EXCLPRJ_SSS,
+            project, "queue", qinstance_name);
          DRETURN(DISPATCH_NEVER_CAT);
       }
    }
 
-   hard_queue_list = lGetList(a->job, JB_hard_queue_list);
-   master_hard_queue_list = lGetList(a->job, JB_master_hard_queue_list);
+   hard_queue_list = lGetList(job, JB_hard_queue_list);
+   master_hard_queue_list = lGetList(job, JB_master_hard_queue_list);
    if (hard_queue_list || master_hard_queue_list) {
-      if (!centry_list_are_queues_requestable(a->centry_list)) {
-         schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                        SCHEDD_INFO_QUEUENOTREQUESTABLE_S, qinstance_name);
+      if (!centry_list_are_queues_requestable(centry_list)) {
+         schedd_mes_add(job_id, SCHEDD_INFO_QUEUENOTREQUESTABLE_S,
+            qinstance_name);
          DRETURN(DISPATCH_NEVER_CAT);
       }
    }
@@ -1602,7 +1589,7 @@ dispatch_t sge_queue_match_static(const sge_assignment_t *a, lListElem *queue)
    if (master_hard_queue_list) {
       bool is_in_list = true;
       if (qref_list_cq_rejected(master_hard_queue_list, lGetString(queue, QU_qname),
-                     lGetHost(queue, QU_qhostname), a->hgrp_list))
+                     lGetHost(queue, QU_qhostname), hgrp_list))
          is_in_list = false;
 
       /*
@@ -1612,7 +1599,7 @@ dispatch_t sge_queue_match_static(const sge_assignment_t *a, lListElem *queue)
       if (!is_in_list) {
          DPRINTF(("Queue \"%s\" is not contained in the master hard "
                   "queue list (-masterq) that was requested by job %d\n",
-                  qinstance_name, (int) a->job_id));
+                  qinstance_name, (int) job_id));
       } else {
          could_be_master = true;
       }
@@ -1626,12 +1613,12 @@ dispatch_t sge_queue_match_static(const sge_assignment_t *a, lListElem *queue)
     */
    if (hard_queue_list) {
       if ((could_be_master == false) && qref_list_cq_rejected(hard_queue_list, lGetString(queue, QU_qname),
-                     lGetHost(queue, QU_qhostname), a->hgrp_list)) {
+                     lGetHost(queue, QU_qhostname), hgrp_list)) {
          DPRINTF(("Queue \"%s\" is not contained in the hard "
                   "queue list (-q) that was requested by job %d\n",
-                  qinstance_name, (int) a->job_id));
-         schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                        SCHEDD_INFO_NOTINHARDQUEUELST_S, qinstance_name);
+                  qinstance_name, (int) job_id));
+         schedd_mes_add(job_id, SCHEDD_INFO_NOTINHARDQUEUELST_S,
+                        qinstance_name);
          DRETURN(DISPATCH_NEVER_CAT);
       } 
    }
@@ -1640,83 +1627,76 @@ dispatch_t sge_queue_match_static(const sge_assignment_t *a, lListElem *queue)
    ** different checks for different job types:
    */
 
-   if (a->pe) { /* parallel job */
+   if (pe) { /* parallel job */
       if (!qinstance_is_parallel_queue(queue)) {
          DPRINTF(("Queue \"%s\" is not a parallel queue as requested by " 
-                  "job %d\n", qinstance_name, (int)a->job_id));
-         schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                        SCHEDD_INFO_NOTPARALLELQUEUE_S, qinstance_name);
+                  "job %d\n", qinstance_name, (int)job_id));
+         schedd_mes_add(job_id, SCHEDD_INFO_NOTPARALLELQUEUE_S, qinstance_name);
          DRETURN(DISPATCH_NEVER_CAT);
       }
 
       /*
        * check if the requested PE is named in the PE reference list of Queue
        */
-      if (!qinstance_is_pe_referenced(queue, a->pe)) {
+      if (!qinstance_is_pe_referenced(queue, pe)) {
          DPRINTF(("Queue "SFQ" does not reference PE "SFQ"\n",
-                  qinstance_name, lGetString(a->pe, PE_name)));
-         schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                        SCHEDD_INFO_NOTINQUEUELSTOFPE_SS,
-                        qinstance_name, lGetString(a->pe, PE_name));
+                  qinstance_name, lGetString(pe, PE_name)));
+         schedd_mes_add(job_id, SCHEDD_INFO_NOTINQUEUELSTOFPE_SS,
+                        qinstance_name, lGetString(pe, PE_name));
          DRETURN(DISPATCH_NEVER_CAT);
       }
    }
 
-   if (a->ckpt) { /* ckpt job */
+   if (ckpt) { /* ckpt job */
       /* is it a ckpt queue ? */
       if (!qinstance_is_checkpointing_queue(queue)) {
          DPRINTF(("Queue \"%s\" is not a checkpointing queue as requested by "
-                  "job %d\n", qinstance_name, (int)a->job_id));
-         schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                        SCHEDD_INFO_NOTACKPTQUEUE_SS, qinstance_name);
+                  "job %d\n", qinstance_name, (int)job_id));
+         schedd_mes_add(job_id, SCHEDD_INFO_NOTACKPTQUEUE_SS, qinstance_name);
          DRETURN(DISPATCH_NEVER_CAT);
       }
 
       /*
        * check if the requested CKPT is named in the CKPT ref list of Queue
        */
-      if (!qinstance_is_ckpt_referenced(queue, a->ckpt)) {
+      if (!qinstance_is_ckpt_referenced(queue, ckpt)) {
          DPRINTF(("Queue \"%s\" does not reference checkpointing object "SFQ
-                  "\n", qinstance_name, lGetString(a->ckpt, CK_name)));
-         schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                        SCHEDD_INFO_NOTINQUEUELSTOFCKPT_SS,  
-                        qinstance_name, lGetString(a->ckpt, CK_name));
+                  "\n", qinstance_name, lGetString(ckpt, CK_name)));
+         schedd_mes_add(job_id, SCHEDD_INFO_NOTINQUEUELSTOFCKPT_SS,  
+                        qinstance_name, lGetString(ckpt, CK_name));
          DRETURN(DISPATCH_NEVER_CAT);
       }
    }   
 
    /* to be activated as soon as immediate jobs are available */
-   if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(a->job, JB_type))) { 
+   if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type))) { 
       if (!qinstance_is_interactive_queue(queue)) {
          DPRINTF(("Queue \"%s\" is not an interactive queue as requested by "
-                  "job %d\n", qinstance_name, (int)a->job_id));
-         schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                        SCHEDD_INFO_QUEUENOTINTERACTIVE_S, qinstance_name);
+                  "job %d\n", qinstance_name, (int)job_id));
+         schedd_mes_add(job_id, SCHEDD_INFO_QUEUENOTINTERACTIVE_S, qinstance_name);
          DRETURN(DISPATCH_NEVER_CAT);
       } 
    }
 
-   if (!a->pe && !a->ckpt && !JOB_TYPE_IS_IMMEDIATE(lGetUlong(a->job, JB_type))) { /* serial (batch) job */
+   if (!pe && !ckpt && !JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type))) { /* serial (batch) job */
       /* is it a batch or transfer queue */
       if (!qinstance_is_batch_queue(queue)) {
          DPRINTF(("Queue \"%s\" is not a batch queue as "
-                  "requested by job %d\n", qinstance_name, (int)a->job_id));
-         schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                        SCHEDD_INFO_NOTASERIALQUEUE_S, qinstance_name);
+                  "requested by job %d\n", qinstance_name, (int)job_id));
+         schedd_mes_add(job_id, SCHEDD_INFO_NOTASERIALQUEUE_S, qinstance_name);
          DRETURN(DISPATCH_NEVER_CAT);
       }
    }
 
-   if (a->ckpt && !a->pe && lGetString(a->job, JB_script_file) &&
+   if (ckpt && !pe && lGetString(job, JB_script_file) &&
        qinstance_is_parallel_queue(queue) && !qinstance_is_batch_queue(queue)) {
       DPRINTF(("Queue \"%s\" is not a serial queue as "
-               "requested by job %d\n", qinstance_name, (int)a->job_id));
-      schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                     SCHEDD_INFO_NOTPARALLELJOB_S, qinstance_name);
+               "requested by job %d\n", qinstance_name, (int)job_id));
+      schedd_mes_add(job_id, SCHEDD_INFO_NOTPARALLELJOB_S, qinstance_name);
       DRETURN(DISPATCH_NEVER_CAT);
    }
 
-   if (job_is_forced_centry_missing(a, queue)) {
+   if (job_is_forced_centry_missing(job, centry_list, queue)) {
       DRETURN(DISPATCH_NEVER_CAT);
    }
 
@@ -1724,16 +1704,18 @@ dispatch_t sge_queue_match_static(const sge_assignment_t *a, lListElem *queue)
 }
 
 static bool 
-job_is_forced_centry_missing(const sge_assignment_t *a, const lListElem *queue_or_host)
+job_is_forced_centry_missing(const lListElem *job, 
+                             const lList *master_centry_list, 
+                             const lListElem *queue_or_host)
 {
    bool ret = false;
    lListElem *centry;
 
    DENTER(TOP_LAYER, "job_is_forced_centry_missing");
-   if (a->job != NULL && a->centry_list != NULL && queue_or_host != NULL) {
-      lList *res_list = lGetList(a->job, JB_hard_resource_list);  
+   if (job != NULL && master_centry_list != NULL && queue_or_host != NULL) {
+      lList *res_list = lGetList(job, JB_hard_resource_list);  
 
-      for_each(centry, a->centry_list) {
+      for_each(centry, master_centry_list) {
          const char *name = lGetString(centry, CE_name);
          bool is_requ = is_requested(res_list, name);
          bool is_forced = lGetUlong(centry, CE_requestable) == REQU_FORCED ? true : false;
@@ -1755,17 +1737,15 @@ job_is_forced_centry_missing(const sge_assignment_t *a, const lListElem *queue_o
          }
 
          if (is_forced && !is_requ) {
-            u_long32 job_id = lGetUlong(a->job, JB_job_number);
+            u_long32 job_id = lGetUlong(job, JB_job_number);
 
             DPRINTF(("job "sge_u32" does not request 'forced' resource "SFQ" of "
                      SFN"\n", job_id, name, object_name));
             if (is_qinstance) {
-               schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                              SCHEDD_INFO_NOTREQFORCEDRES_SS, 
+               schedd_mes_add(job_id, SCHEDD_INFO_NOTREQFORCEDRES_SS, 
                               name, object_name);
             } else if (is_host) {
-               schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                              SCHEDD_INFO_NOFORCEDRES_SS, 
+               schedd_mes_add(job_id, SCHEDD_INFO_NOFORCEDRES_SS, 
                               name, object_name);
             }
             ret = true;
@@ -1906,9 +1886,12 @@ compute_soft_violations(const sge_assignment_t *a, lListElem *queue, int violati
 *          -2 assignment will never be possible for that particular job
 *******************************************************************************/
 dispatch_t
-sge_host_match_static(const sge_assignment_t *a, lListElem *host) 
+sge_host_match_static(lListElem *job, lListElem *ja_task, lListElem *host, 
+                      lList *centry_list, lList *acl_list) 
 {
    lList *projects;
+   const char *project;
+   u_long32 job_id;
    const char *eh_name;
 
    DENTER(TOP_LAYER, "sge_host_match_static");
@@ -1917,45 +1900,47 @@ sge_host_match_static(const sge_assignment_t *a, lListElem *host)
       DRETURN(DISPATCH_OK);
    }
 
+   job_id = lGetUlong(job, JB_job_number);
    eh_name = lGetHost(host, EH_name);
 
    /* check if job owner has access rights to the host */
-   if (!sge_has_access_(lGetString(a->job, JB_owner),
-         lGetString(a->job, JB_group), lGetList(host, EH_acl),
-         lGetList(host, EH_xacl), a->acl_list)) {
+   if (!sge_has_access_(lGetString(job, JB_owner),
+         lGetString(job, JB_group), lGetList(host, EH_acl),
+         lGetList(host, EH_xacl), acl_list)) {
       DPRINTF(("Job %d has no permission for host %s\n",
-               (int)a->job_id, eh_name));
-      schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                     SCHEDD_INFO_HASNOPERMISSION_SS, "host", eh_name);
+               (int)job_id, eh_name));
+      schedd_mes_add(job_id, SCHEDD_INFO_HASNOPERMISSION_SS,
+         "host", eh_name);
       DRETURN(DISPATCH_NEVER_CAT);
    }
 
    /* check if job can run on host based on required projects */
    if ((projects = lGetList(host, EH_prj))) {
    
-      if (!a->project) {
-         schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                        SCHEDD_INFO_HASNOPRJ_S, "host", eh_name);
+      if ((!(project = lGetString(job, JB_project)))) {
+         schedd_mes_add(job_id, SCHEDD_INFO_HASNOPRJ_S,
+            "host", eh_name);
          DRETURN(DISPATCH_NEVER_CAT);
       }
 
-      if ((!prj_list_locate(projects, a->project))) {
-         schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                        SCHEDD_INFO_HASINCORRECTPRJ_SSS, a->project, "host", eh_name);
+      if ((!prj_list_locate(projects, project))) {
+         schedd_mes_add(job_id, SCHEDD_INFO_HASINCORRECTPRJ_SSS,
+            project, "host", eh_name);
          DRETURN(DISPATCH_NEVER_CAT);
       }
    }
 
    /* check if job can run on host based on excluded projects */
    if ((projects = lGetList(host, EH_xprj))) {
-      if (a->project && prj_list_locate(projects, a->project)) {
-         schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                        SCHEDD_INFO_EXCLPRJ_SSS, a->project, "host", eh_name);
+      if (((project = lGetString(job, JB_project)) &&
+           prj_list_locate(projects, project))) {
+         schedd_mes_add(job_id, SCHEDD_INFO_EXCLPRJ_SSS,
+            project, "host", eh_name);
          DRETURN(DISPATCH_NEVER_CAT);
       }
    }
 
-   if (job_is_forced_centry_missing(a, host)) {
+   if (job_is_forced_centry_missing(job, centry_list, host)) {
       DRETURN(DISPATCH_NEVER_CAT);
    }
 
@@ -1964,21 +1949,21 @@ sge_host_match_static(const sge_assignment_t *a, lListElem *host)
    ** check if job can run on host based on the list of jids/taskids
    ** contained in the reschedule_unknown-list
    */
-   if (a->ja_task) {
+   if (ja_task) {
       lListElem *ruep;
       lList *rulp;
       u_long32 task_id;
 
-      task_id = lGetUlong(a->ja_task, JAT_task_number);
+      task_id = lGetUlong(ja_task, JAT_task_number);
       rulp = lGetList(host, EH_reschedule_unknown_list);
 
       for_each(ruep, rulp) {
-         if (lGetUlong(ruep, RU_job_number) == a->job_id 
+         if (lGetUlong(ruep, RU_job_number) == job_id 
              && lGetUlong(ruep, RU_task_number) == task_id) {
-            DPRINTF(("RU: Job "sge_u32"."sge_u32" Host "SFN"\n", a->job_id,
+            DPRINTF(("RU: Job "sge_u32"."sge_u32" Host "SFN"\n", job_id,
                task_id, eh_name));
-            schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                           SCHEDD_INFO_CLEANUPNECESSARY_S, eh_name);
+            schedd_mes_add(job_id, SCHEDD_INFO_CLEANUPNECESSARY_S,
+               eh_name);
             DRETURN(DISPATCH_NEVER_JOB);
          }
       }
@@ -2454,7 +2439,6 @@ char *sge_load_alarm_reason(lListElem *qep, lList *threshold,
 
 */
 int sge_split_queue_load(
-bool monitor_next_run,
 lList **unloaded,               /* QU_Type */
 lList **overloaded,             /* QU_Type */
 lList *exechost_list,           /* EH_Type */
@@ -2498,15 +2482,11 @@ u_long32 ttype
                if (ttype==QU_suspend_thresholds) {
                   DPRINTF(("queue %s tagged to be in suspend alarm: %s\n", 
                         lGetString(qep, QU_full_name), reason));
-                  schedd_mes_add_global(NULL, monitor_next_run,
-                                        SCHEDD_INFO_QUEUEINALARM_SS,
-                                        lGetString(qep, QU_full_name), reason);
+                  schedd_mes_add_global(SCHEDD_INFO_QUEUEINALARM_SS, lGetString(qep, QU_full_name), reason);
                } else {
                   DPRINTF(("queue %s tagged to be overloaded: %s\n", 
                         lGetString(qep, QU_full_name), reason));
-                  schedd_mes_add_global(NULL, monitor_next_run,
-                                        SCHEDD_INFO_QUEUEOVERLOADED_SS,
-                                        lGetString(qep, QU_full_name), reason);
+                  schedd_mes_add_global(SCHEDD_INFO_QUEUEOVERLOADED_SS, lGetString(qep, QU_full_name), reason);
                }
             }
          }
@@ -2560,7 +2540,7 @@ u_long32 ttype
 *     int - 0 success 
 *          -1 error
 *******************************************************************************/
-int sge_split_queue_slots_free(bool monitor_next_run, lList **free, lList **full) 
+int sge_split_queue_slots_free(lList **free, lList **full) 
 {
    lList *full_queues = NULL;
    lListElem *this = NULL;
@@ -2578,9 +2558,7 @@ int sge_split_queue_slots_free(bool monitor_next_run, lList **free, lList **full
          this = lDechainElem(*free, this);        
           
          if (!qinstance_state_is_full(this)) {
-            schedd_mes_add_global(NULL, monitor_next_run,
-                                  SCHEDD_INFO_QUEUEFULL_,
-                                  lGetString(this, QU_full_name));
+            schedd_mes_add_global(SCHEDD_INFO_QUEUEFULL_, lGetString(this, QU_full_name));
             qinstance_state_set_full(this, true);
 
             if (full_queues == NULL) { 
@@ -2602,9 +2580,7 @@ int sge_split_queue_slots_free(bool monitor_next_run, lList **free, lList **full
 
    /* dump out the -tsm log and add the new queues to the disabled queue list */
    if (full_queues) {
-      schedd_log_list(NULL, monitor_next_run,
-                      MSG_SCHEDD_LOGLIST_QUEUESFULLANDDROPPED,
-                      full_queues, QU_full_name);
+      schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESFULLANDDROPPED , full_queues, QU_full_name);
       if (full != NULL) {
          if (*full == NULL) {
             *full = full_queues;
@@ -2637,7 +2613,6 @@ int sge_split_queue_slots_free(bool monitor_next_run, lList **free, lList **full
 
 */
 int sge_split_suspended(
-bool monitor_next_run,
 lList **queue_list,        /* QU_Type */
 lList **suspended         /* QU_Type */
 ) {
@@ -2672,15 +2647,11 @@ lList **suspended         /* QU_Type */
       for_each(mes_queue, lp) {
          if (!qinstance_state_is_manual_suspended(mes_queue)) {
             qinstance_state_set_manual_suspended(mes_queue, true);
-            schedd_mes_add_global(NULL, monitor_next_run,
-                                  SCHEDD_INFO_QUEUESUSP_,
-                                  lGetString(mes_queue, QU_full_name));
+            schedd_mes_add_global(SCHEDD_INFO_QUEUESUSP_, lGetString(mes_queue, QU_full_name));
          }
       }   
  
-      schedd_log_list(NULL, monitor_next_run,
-                      MSG_SCHEDD_LOGLIST_QUEUESSUSPENDEDANDDROPPED,
-                      lp, QU_full_name);
+      schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESSUSPENDEDANDDROPPED , lp, QU_full_name);
    }
 
    if (suspended != NULL) {
@@ -2716,7 +2687,7 @@ lList **suspended         /* QU_Type */
 
 */
 int 
-sge_split_cal_disabled(bool monitor_next_run, lList **queue_list, lList **disabled) 
+sge_split_cal_disabled(lList **queue_list, lList **disabled) 
 {
    lCondition *where;
    int ret;
@@ -2744,14 +2715,10 @@ sge_split_cal_disabled(bool monitor_next_run, lList **queue_list, lList **disabl
       lListElem* mes_queue;
 
       for_each(mes_queue, *disabled) {
-         schedd_mes_add_global(NULL, monitor_next_run,
-                               SCHEDD_INFO_QUEUEDISABLED_,
-                               lGetString(mes_queue, QU_full_name));
+         schedd_mes_add_global(SCHEDD_INFO_QUEUEDISABLED_, lGetString(mes_queue, QU_full_name));
       }   
  
-      schedd_log_list(NULL, monitor_next_run,
-                      MSG_SCHEDD_LOGLIST_QUEUESDISABLEDANDDROPPED,
-                      *disabled, QU_full_name);
+      schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESDISABLEDANDDROPPED , *disabled, QU_full_name);
 
       if (do_free_list) {
          lFreeList(disabled);
@@ -2777,7 +2744,7 @@ sge_split_cal_disabled(bool monitor_next_run, lList **queue_list, lList **disabl
 
 */
 int 
-sge_split_disabled(bool monitor_next_run, lList **queue_list, lList **disabled) 
+sge_split_disabled(lList **queue_list, lList **disabled) 
 {
    lCondition *where;
    int ret;
@@ -2805,14 +2772,10 @@ sge_split_disabled(bool monitor_next_run, lList **queue_list, lList **disabled)
       lListElem* mes_queue;
 
       for_each(mes_queue, *disabled) {
-         schedd_mes_add_global(NULL, monitor_next_run,
-                               SCHEDD_INFO_QUEUEDISABLED_,
-                               lGetString(mes_queue, QU_full_name));
+         schedd_mes_add_global(SCHEDD_INFO_QUEUEDISABLED_, lGetString(mes_queue, QU_full_name));
       }   
  
-      schedd_log_list(NULL, monitor_next_run,
-                      MSG_SCHEDD_LOGLIST_QUEUESDISABLEDANDDROPPED,
-                      *disabled, QU_full_name);
+      schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESDISABLEDANDDROPPED , *disabled, QU_full_name);
 
       if (do_free_list) {
          lFreeList(disabled);
@@ -3064,8 +3027,7 @@ dispatch_t cqueue_match_static(const char *cqname, sge_assignment_t *a)
        (!a->pe_name || qref_list_cq_rejected(lGetList(a->job, JB_master_hard_queue_list), cqname, NULL, NULL))) {
       DPRINTF(("Cluster Queue \"%s\" is not contained in the hard queue list (-q) that "
             "was requested by job %d\n", cqname, (int)a->job_id));
-      schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                     SCHEDD_INFO_NOTINHARDQUEUELST_S, cqname);
+      schedd_mes_add(a->job_id, SCHEDD_INFO_NOTINHARDQUEUELST_S, cqname);
       DRETURN(DISPATCH_NEVER_CAT);
    }
    
@@ -3091,8 +3053,7 @@ dispatch_t cqueue_match_static(const char *cqname, sge_assignment_t *a)
          if (gep == NULL) {
 
             DPRINTF(("Cluster Queue \"%s\" was not reserved by advance reservation %d\n", cqname, ar_id));
-            schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                           SCHEDD_INFO_QINOTARRESERVED_SI, cqname, ar_id);
+            schedd_mes_add(a->job_id, SCHEDD_INFO_QINOTARRESERVED_SI, cqname, ar_id);
             DRETURN(DISPATCH_NEVER_CAT);
          }
       } else {
@@ -3110,10 +3071,8 @@ dispatch_t cqueue_match_static(const char *cqname, sge_assignment_t *a)
                      (!a->pe_name || a->slots == 1)?true:false, &unsatisfied)) {
          DPRINTF(("Cluster Queue \"%s\" can not fulfill resource request (-l %s) that "
                "was requested by job %d\n", cqname, sge_dstring_get_string(&unsatisfied), (int)a->job_id));
-         schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                        SCHEDD_INFO_CANNOTRUNINQUEUE_SSS,
-                        sge_dstring_get_string(&unsatisfied),
-                        cqname, "of cluster queue");
+         schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, sge_dstring_get_string(&unsatisfied),
+               cqname, "of cluster queue");
          sge_dstring_free(&unsatisfied);
          DRETURN(DISPATCH_NEVER_CAT);
       }
@@ -3124,24 +3083,21 @@ dispatch_t cqueue_match_static(const char *cqname, sge_assignment_t *a)
    if (project_cq_rejected(project, cq)) {
       DPRINTF(("Cluster queue \"%s\" does not work for -P %s job %d\n",
          cqname, project?project:"<no project>", (int)a->job_id));
-      schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                     SCHEDD_INFO_HASNOPRJ_S, "cluster queue", cqname);
+      schedd_mes_add(a->job_id, SCHEDD_INFO_HASNOPRJ_S, "cluster queue", cqname);
       DRETURN(DISPATCH_NEVER_CAT);
    }
 
    /* detect if entire cluster queue ruled out due to user_list/xuser_lists */
    if (access_cq_rejected(a->user, a->group, a->acl_list, cq)) {
       DPRINTF(("Job %d has no permission for cluster queue %s\n", (int)a->job_id, cqname));
-      schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                     SCHEDD_INFO_HASNOPERMISSION_SS, "cluster queue", cqname);
+      schedd_mes_add(a->job_id, SCHEDD_INFO_HASNOPERMISSION_SS, "cluster queue", cqname);
       DRETURN(DISPATCH_NEVER_CAT);
    }
 
    /* detect if entire cluster queue ruled out due to -pe */
    if (a->pe && (pe_name=a->pe_name) && pe_cq_rejected(pe_name, cq)) {
       DPRINTF(("Cluster queue "SFQ" does not reference PE "SFQ"\n", cqname, pe_name));
-      schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                     SCHEDD_INFO_NOTINQUEUELSTOFPE_SS, cqname, pe_name);
+      schedd_mes_add(a->job_id, SCHEDD_INFO_NOTINQUEUELSTOFPE_SS, cqname, pe_name);
       DRETURN(DISPATCH_NEVER_CAT);
    }
 
@@ -3149,8 +3105,7 @@ dispatch_t cqueue_match_static(const char *cqname, sge_assignment_t *a)
    if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(a->job, JB_type)) && interactive_cq_rejected(cq)) {
       DPRINTF(("Queue \"%s\" is not an interactive queue as requested by job %d\n",
                cqname, (int)a->job_id));
-      schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                     SCHEDD_INFO_QUEUENOTINTERACTIVE_S, cqname);
+      schedd_mes_add(a->job_id, SCHEDD_INFO_QUEUENOTINTERACTIVE_S, cqname);
       DRETURN(DISPATCH_NEVER_CAT);
    }
 
@@ -3331,8 +3286,7 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
          if (a->pi)
             a->pi->seq_hstat++;
          if (qref_list_eh_rejected(lGetList(a->job, JB_hard_queue_list), eh_name, a->hgrp_list)) {
-            schedd_mes_add(a->monitor_alpp, a->monitor_next_run,
-                           a->job_id, SCHEDD_INFO_NOTINHARDQUEUELST_S, eh_name);
+            schedd_mes_add(a->job_id, SCHEDD_INFO_NOTINHARDQUEUELST_S, eh_name);
             DPRINTF(("Host \"%s\" is not contained in the hard queue list (-q) that "
                   "was requested by job %d\n", eh_name, (int)a->job_id));
             if (skip_host_list)
@@ -3343,7 +3297,7 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
             continue;
          }
 
-         if ((result=sge_host_match_static(a, hep))) {
+         if ((result=sge_host_match_static(a->job, a->ja_task, hep, a->centry_list, a->acl_list))) {
             if (result == DISPATCH_NEVER_JOB || !skip_host_list)
                lAddElemStr(&(a->skip_host_list), CTI_name, eh_name, CTI_Type);
             else
@@ -3357,7 +3311,8 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
       /* static queue matching */
       if (a->pi)
          a->pi->seq_qstat++;
-      if (sge_queue_match_static(a, qep) != DISPATCH_OK) {
+      if (sge_queue_match_static(qep, a->job, NULL, a->ckpt, a->centry_list,
+                                 a->acl_list, a->hgrp_list, a->ar_list) != DISPATCH_OK) {
          if (skip_queue_list)
             lAddElemStr(&skip_queue_list, CTI_name, qname, CTI_Type);
          best_queue_result = find_best_result(DISPATCH_NEVER_CAT, best_queue_result);
@@ -3404,8 +3359,7 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
             if (*buff && (buff[strlen(buff) - 1] == '\n')) {
                buff[strlen(buff) - 1] = 0;
             }
-            schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                           SCHEDD_INFO_CANNOTRUNATHOST_SSS, buff,
+            schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNATHOST_SSS, buff,
                            lGetHost(hep, EH_name), sge_dstring_get_string(&reason));
          } else {
             result = sequential_queue_time(&tt_queue, a, &queue_violations, ar_queue);
@@ -4183,7 +4137,7 @@ parallel_host_slots(sge_assignment_t *a, int *slots, int *slots_qend,
 
    if (!(qref_list_eh_rejected(lGetList(a->job, JB_hard_queue_list), eh_name, a->hgrp_list) && 
         qref_list_eh_rejected(lGetList(a->job, JB_master_hard_queue_list), eh_name, a->hgrp_list)) &&
-               sge_host_match_static(a, hep) == DISPATCH_OK) {
+               sge_host_match_static(a->job, a->ja_task, hep, a->centry_list, a->acl_list) == DISPATCH_OK) {
 
       /* cause load be raised artificially to reflect load correction when
          checking job requests */
@@ -4756,7 +4710,6 @@ dispatch_t sge_sequential_assignment(sge_assignment_t *a)
 
          lFreeList(&(a->gdil));
          a->gdil = gdil;
-         a->slots = 1;
          if (a->start == DISPATCH_TIME_QUEUE_END) {
             a->start = job_start_time;
          }   
@@ -4907,13 +4860,9 @@ parallel_assignment(sge_assignment_t *a, category_use_t *use_category, int *avai
    }
    if (a->slots > pslots) {
       *available_slots = MIN(pslots, pslots_qend);
-      if (a->slots > pslots_qend) {
-         schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                        SCHEDD_INFO_PESLOTSNOTINRANGE_SI, a->pe_name, pslots_qend); 
-         DRETURN(DISPATCH_NEVER_CAT);
-      }
-      DRETURN(DISPATCH_NOT_AT_TIME);
+      DRETURN((a->slots > pslots_qend)? DISPATCH_NEVER_CAT : DISPATCH_NOT_AT_TIME);
    }
+
 
    /* depends on a correct host order */
    ret = parallel_tag_queues_suitable4job(a, use_category, available_slots);
@@ -4970,7 +4919,8 @@ parallel_queue_slots(sge_assignment_t *a, lListElem *qep, int *slots, int *slots
    if (a->pi)
       a->pi->par_qstat++;
 
-   if (sge_queue_match_static(a, qep) == DISPATCH_OK) {
+   if (sge_queue_match_static(qep, a->job, a->pe, a->ckpt, a->centry_list,
+                              a->acl_list, a->hgrp_list, a->ar_list) == DISPATCH_OK) {
       lListElem *gdil;
                                     
       u_long32 ar_id = lGetUlong(a->job, JB_ar);
@@ -5091,8 +5041,7 @@ sequential_queue_time(u_long32 *start, const sge_assignment_t *a,
       if (*buff && (buff[strlen(buff) - 1] == '\n')) {
          buff[strlen(buff) - 1] = 0;
       }   
-      schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                     SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, buff, qname, reason_buf);
+      schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, buff, qname, reason_buf);
    }
 
    if (a->is_reservation && result == DISPATCH_OK) {
@@ -5196,8 +5145,7 @@ sequential_host_time(u_long32 *start, const sge_assignment_t *a,
       centry_list_append_to_string(hard_requests, buff, sizeof(buff) - 1);
       if (*buff && (buff[strlen(buff) - 1] == '\n'))
          buff[strlen(buff) - 1] = 0;
-      schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                     SCHEDD_INFO_CANNOTRUNATHOST_SSS, buff, eh_name, reason_buf);
+      schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNATHOST_SSS, buff, eh_name, reason_buf);
    }
 
    if (a->is_reservation && (result == DISPATCH_OK || result == DISPATCH_MISSING_ATTR)) {
@@ -5241,7 +5189,8 @@ sequential_global_time(u_long32 *start, const sge_assignment_t *a, int *violatio
    clear_resource_tags(hard_request, GLOBAL_TAG);
 
    /* check if job has access to any hosts globally */
-   if ((result=sge_host_match_static(a, a->gep)) != 0) {
+   if ((result=sge_host_match_static(a->job, NULL, a->gep, a->centry_list, 
+            a->acl_list)) != 0) {
       DRETURN(result);
    }
    
@@ -5266,8 +5215,7 @@ sequential_global_time(u_long32 *start, const sge_assignment_t *a, int *violatio
       if (*buff && (buff[strlen(buff) - 1] == '\n')) {
          buff[strlen(buff) - 1] = 0;
       }   
-      schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                     SCHEDD_INFO_CANNOTRUNGLOBALLY_SS, buff, reason_buf);
+      schedd_mes_add (a->job_id, SCHEDD_INFO_CANNOTRUNGLOBALLY_SS, buff, reason_buf);
    }
 
    if (a->is_reservation && (result == DISPATCH_OK || result == DISPATCH_MISSING_ATTR)) {
@@ -5309,7 +5257,7 @@ parallel_global_slots(const sge_assignment_t *a, int *slots, int *slots_qend)
    clear_resource_tags(hard_request, GLOBAL_TAG);
 
    /* check if job has access to any hosts globally */
-   if (sge_host_match_static(a, a->gep) == DISPATCH_OK) {
+   if (sge_host_match_static(a->job, NULL, a->gep, a->centry_list, a->acl_list) == DISPATCH_OK) {
       /* cause global load be raised artificially to reflect load correction when
          checking job requests */
 
@@ -5375,7 +5323,7 @@ parallel_available_slots(const sge_assignment_t *a, int *slots, int *slots_qend)
 
    sge_dstring_init(&reason, reason_buf, sizeof(reason_buf));
    
-   if ((result=pe_match_static(a)) != DISPATCH_OK) {
+   if ((result=pe_match_static(a->job, a->pe, a->acl_list)) != DISPATCH_OK) {
       DRETURN(result);
    }
 
@@ -5550,7 +5498,7 @@ const lList *centry_list
 *     lList *load_attr          - list of load attributes or null on queue level 
 *     lList *config_attr        - list of user defined attributes (CE_Type)
 *     lList *actual_attr        - usage of user consumables (RUE_Type)
-*     lListElem *queue          - the current queue, or null on host level 
+*i    lListElem *queue          - the current queue, or null on host level 
 *     dstring *reason           - target for error message 
 *     bool allow_non_requestable - allow none requestable attributes? 
 *     int slots                 - the number of slotes the job is looking for? 
@@ -5928,9 +5876,7 @@ parallel_rc_slots_by_time(const sge_assignment_t *a, lList *requests,  int *slot
          /* If the request is made from the resource quota module, this error message
           * is not informative and should not be displayed */
          if (!isRQ) {
-            schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                           SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, "slots=1",
-                           object_name, reason_buf);
+            schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, "slots=1", object_name, reason_buf);
          }
          DRETURN(DISPATCH_NEVER_CAT);
       }
@@ -5969,9 +5915,7 @@ parallel_rc_slots_by_time(const sge_assignment_t *a, lList *requests,  int *slot
                      if (*buff && (buff[strlen(buff) - 1] == '\n')) {
                         buff[strlen(buff) - 1] = 0;
                      }   
-                     schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                                    SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, buff,
-                                    object_name, reason_buf);
+                     schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, buff, object_name, reason_buf);
                   }   
                   DRETURN(DISPATCH_NEVER_CAT);
                }
@@ -5998,9 +5942,7 @@ parallel_rc_slots_by_time(const sge_assignment_t *a, lList *requests,  int *slot
             if (*buff && (buff[strlen(buff) - 1] == '\n')) {
                buff[strlen(buff) - 1] = 0;
             }   
-            schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                           SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, buff, object_name,
-                           reason_buf);
+            schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, buff, object_name, reason_buf);
          }   
       }
       
@@ -6291,7 +6233,7 @@ static lListElem *load_locate_elem(lList *load_list, lListElem *global_consumabl
 *     sge_free_load_list
 *     
 *******************************************************************************/
-bool sge_load_list_alarm(bool monitor_next_run, lList *load_list, const lList *host_list, 
+bool sge_load_list_alarm(lList *load_list, const lList *host_list, 
                          const lList *centry_list) {   
    lListElem *load;
    lListElem *queue;
@@ -6347,7 +6289,7 @@ bool sge_load_list_alarm(bool monitor_next_run, lList *load_list, const lList *h
 
                DPRINTF(("queue %s tagged to be overloaded: %s\n", 
                                      lGetString(queue, QU_full_name), reason));
-               schedd_mes_add_global(NULL, monitor_next_run, SCHEDD_INFO_QUEUEOVERLOADED_SS, 
+               schedd_mes_add_global(SCHEDD_INFO_QUEUEOVERLOADED_SS, 
                                      lGetString(queue, QU_full_name), reason);
                lSetUlong(queue, QU_tagged4schedule, 1); 
                is_alarm = true;
@@ -6812,15 +6754,13 @@ static dispatch_t match_static_advance_reservation(const sge_assignment_t *a)
          if (!(a->is_job_verify)) {
             /* is ar in error and error handling is not soft? */
             if (lGetUlong(ar, AR_state) == AR_ERROR && lGetUlong(ar, AR_error_handling) != 0) {
-               schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                              SCHEDD_INFO_ARISINERROR_I, ar_id); 
+               schedd_mes_add(a->job_id, SCHEDD_INFO_ARISINERROR_I, ar_id); 
                DRETURN(DISPATCH_NEVER_CAT);
             }
             
             /* is ar running? */
             if (lGetUlong(ar, AR_state) != AR_RUNNING && lGetUlong(ar, AR_state) != AR_ERROR) {
-               schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                              SCHEDD_INFO_EXECTIME_); 
+               schedd_mes_add(a->job_id, SCHEDD_INFO_EXECTIME_); 
                DRETURN(DISPATCH_NEVER_CAT);
             }
          }
@@ -6848,9 +6788,7 @@ static dispatch_t match_static_advance_reservation(const sge_assignment_t *a)
             if (acl_ep != NULL){
                dstring buffer = DSTRING_INIT;
                sge_dstring_sprintf(&buffer, sge_U32CFormat, sge_u32c(ar_id));
-               schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                              SCHEDD_INFO_HASNOPERMISSION_SS, SGE_OBJ_AR,
-                              sge_dstring_get_string(&buffer)); 
+               schedd_mes_add(a->job_id, SCHEDD_INFO_HASNOPERMISSION_SS, SGE_OBJ_AR, sge_dstring_get_string(&buffer)); 
                sge_dstring_free(&buffer);
                DRETURN(DISPATCH_NEVER_CAT);
             }
@@ -6878,9 +6816,7 @@ static dispatch_t match_static_advance_reservation(const sge_assignment_t *a)
             if (acl_ep == NULL){
                dstring buffer = DSTRING_INIT;
                sge_dstring_sprintf(&buffer, sge_U32CFormat, sge_u32c(ar_id));
-               schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                              SCHEDD_INFO_HASNOPERMISSION_SS, SGE_OBJ_AR,
-                              sge_dstring_get_string(&buffer)); 
+               schedd_mes_add(a->job_id, SCHEDD_INFO_HASNOPERMISSION_SS, SGE_OBJ_AR, sge_dstring_get_string(&buffer)); 
                sge_dstring_free(&buffer);
                DRETURN(DISPATCH_NEVER_CAT);
             }

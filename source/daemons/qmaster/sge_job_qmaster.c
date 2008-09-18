@@ -101,9 +101,6 @@
 #include "sgeobj/sge_pe_taskL.h"
 #include "sgeobj/sge_pe_task.h"
 
-#include "schedd_message.h"
-#include "sge_schedd_text.h"
-
 #include "sge_persistence_qmaster.h"
 #include "sge_reporting_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -114,7 +111,6 @@
 #include "msg_common.h"
 #include "msg_qmaster.h"
 #include "msg_daemons_common.h"
-
 
 
 /****** qmaster/job/spooling ***************************************************
@@ -1666,8 +1662,19 @@ int sub_command
       new_job = lCopyElem(jobep);
 
       if (mod_job_attributes(new_job, jep, &tmp_alp, ruser, rhost, &trigger)) {
-         lAddList(*alpp, &tmp_alp);
+         /* failure: just append last elem in tmp_alp 
+            elements before may contain invalid success messages */ 
+         lListElem *failure;
+         failure = lLast(tmp_alp);
+         lDechainElem(tmp_alp, failure);
+         if (!*alpp) {
+            *alpp = lCreateList("answer", AN_Type);
+         }
+         lAppendElem(*alpp, failure);
+         lFreeList(&tmp_alp);
          lFreeElem(&new_job);
+
+         DPRINTF(("---------- removed messages\n"));
          lFreeWhere(&job_where);
          FREE(job_mod_name); 
          DRETURN(STATUS_EUNKNOWN);
@@ -3687,8 +3694,8 @@ static u_long32 guess_highest_job_number()
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
 
    DRETURN(maxid);
-}
-
+}   
+      
 /* all modifications are done now verify schedulability */
 static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bool is_modify)
 {
@@ -3699,11 +3706,7 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bo
    if (verify_mode == SKIP_VERIFY) {
       DPRINTF(("skip expensive verification of schedulability\n"));
       DRETURN(0);
-   }
-
-   if (verify_mode == JUST_VERIFY) {
-      answer_list_remove_quality(*alpp, ANSWER_QUALITY_INFO);
-   }
+   }     
 
    /* can happen only from qalter -w ... */
    if (is_modify == true && job_get_not_enrolled_ja_tasks(jep) == 0) {
@@ -3716,6 +3719,7 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bo
    {
       lListElem *cqueue;
       lList *talp = NULL;
+      int ngranted = 0;
       int try_it = 1;
       const char *ckpt_name;
       lList *job_hard_queue_list = lGetList(jep, JB_hard_queue_list);
@@ -3759,9 +3763,6 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bo
          a.start            = DISPATCH_TIME_NOW;
          a.duration         = 0; /* indicator for schedule based mode */
          a.is_job_verify    = true;
-         if (verify_mode == JUST_VERIFY) {
-            a.monitor_alpp = &talp;
-         }
 
          /* 
           * Current scheduler code expects all queue instances in a plain list. We use 
@@ -3773,6 +3774,11 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bo
 
          /* imagine qs is empty */
          sconf_set_qs_state(QS_STATE_EMPTY);
+
+         /* redirect scheduler monitoring into answer list */
+         if (verify_mode == JUST_VERIFY) {
+            set_monitor_alpp(&talp);
+         }
 
          for_each(cqueue, *object_base[SGE_TYPE_CQUEUE].list) {
             const char *cqname = lGetString(cqueue, CQ_name);
@@ -3789,7 +3795,6 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bo
                if (job_hard_queue_list != NULL) {
                   if (qref_list_cq_rejected(job_hard_queue_list, cqname,
                            lGetHost(qinstance, QU_qhostname), a.hgrp_list)) {
-                     schedd_mes_add(a.monitor_alpp, a.monitor_next_run, a.job_id, SCHEDD_INFO_NOTINHARDQUEUELST_S, lGetString(qinstance, QU_full_name));
                      continue; 
                   } 
                }
@@ -3827,6 +3832,12 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bo
          } else {
             sge_sequential_assignment(&a);
          }
+         ngranted = nslots_granted(a.gdil, NULL);
+
+         /* stop redirection of scheduler monitoring messages */
+         if (verify_mode==JUST_VERIFY) {
+            set_monitor_alpp(NULL);
+         }
 
          /* stop dreaming */
          sconf_set_qs_state(QS_STATE_FULL);
@@ -3837,7 +3848,7 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bo
       assignment_release(&a);
 
       /* consequences */
-      if (!try_it || !a.slots) {
+      if (!try_it || !ngranted) {
          /* copy error msgs from talp into alpp */
          if (verify_mode==JUST_VERIFY) {
             if (!*alpp)
@@ -3861,10 +3872,6 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bo
             answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING); 
          }
 
-         if (verify_mode == ERROR_VERIFY) {
-            answer_list_remove_quality(*alpp, ANSWER_QUALITY_INFO);
-         }
-
          if (verify_mode != WARNING_VERIFY) {
             DRETURN((verify_mode==JUST_VERIFY)?0:STATUS_ESEMANTIC);
          }
@@ -3877,7 +3884,7 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bo
          if (!a.pe) {
             sprintf(SGE_EVENT, MSG_JOB_VERIFYFOUNDQ); 
          } else {
-            sprintf(SGE_EVENT, MSG_JOB_VERIFYFOUNDSLOTS_I, a.slots);
+            sprintf(SGE_EVENT, MSG_JOB_VERIFYFOUNDSLOTS_I, ngranted);
          }
          answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
          DRETURN(STATUS_ESEMANTIC);
@@ -3926,19 +3933,14 @@ int sge_gdi_copy_job(sge_gdi_ctx_class_t *ctx,
    new_jep = lCopyElem(old_jep);
 
    /* read script from old job and reuse it */
-   if (lGetString(new_jep, JB_exec_file) && job_spooling 
-      && !JOB_TYPE_IS_BINARY(lGetUlong(new_jep, JB_type))) {
-      if (spool_read_script(alpp, seek_jid, new_jep) == false) {
-         lFreeElem(&new_jep);
-         DRETURN(STATUS_EUNKNOWN);
-      }  
+   if (lGetString(new_jep, JB_exec_file) && job_spooling) {
+      spool_read_script(alpp, seek_jid, new_jep);
    }
 
    job_initialize_id_lists(new_jep, NULL);
 
    /* override settings of old job with new settings of jep */
    if (mod_job_attributes(new_jep, jep, alpp, ruser, rhost, &dummy_trigger)) {
-      lFreeElem(&new_jep);
       DRETURN(STATUS_EUNKNOWN);
    }
 
@@ -3946,7 +3948,7 @@ int sge_gdi_copy_job(sge_gdi_ctx_class_t *ctx,
    ret = sge_gdi_add_job(ctx, new_jep, alpp, lpp, ruser, rhost, uid, gid, group, packet, task, monitor);
 
    lFreeElem(&new_jep);
-   
+
    DRETURN(ret);
 }
 

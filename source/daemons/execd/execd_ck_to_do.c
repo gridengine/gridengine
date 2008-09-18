@@ -338,7 +338,8 @@ execd_get_wallclock_limit(const char *qualified_hostname, lList *gdil_list, int 
 
 
    as all dispatcher called function returns
-   -  0 on success (currently the only value is 0)
+   -  0 on success
+   - -1 on error
    -  1 if we want to quit the dispacher loop
    
  do cyclic jobs
@@ -347,13 +348,15 @@ execd_get_wallclock_limit(const char *qualified_hostname, lList *gdil_list, int 
 #define SIGNAL_RESEND_INTERVAL 1
 #define OLD_JOB_INTERVAL 60
 
-int do_ck_to_do(sge_gdi_ctx_class_t *ctx) {
+int do_ck_to_do(sge_gdi_ctx_class_t *ctx)
+{
    u_long32 now;
    static u_long next_pdc = 0;
    static u_long next_signal = 0;
    static u_long next_old_job = 0;
    static u_long next_report = 0;
    static u_long last_report_send = 0;
+   int was_communication_error = CL_RETVAL_OK;
    lListElem *jep, *jatep;
    int return_value = 0;
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
@@ -484,10 +487,10 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx) {
    }
 
    /* check for end of simulated jobs */
-   if (mconf_get_simulate_jobs()) {
+   if (mconf_get_simulate_hosts()) {
       for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-            if(lGetUlong(jatep, JAT_end_time) <= now) {
+            if((lGetUlong(jatep, JAT_status) & JSIMULATED) && lGetUlong(jatep, JAT_end_time) <= now) {
                lListElem *jr = NULL;
                u_long32 jobid, jataskid;
                u_long32 wallclock;
@@ -515,7 +518,7 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx) {
                add_usage(jr, "exit_status", NULL, 0);
             
                
-               lSetUlong(jatep, JAT_status, JEXITING);
+               lSetUlong(jatep, JAT_status, JEXITING | JSIMULATED);
                flush_job_report(jr);
             }
          }
@@ -541,13 +544,36 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx) {
          update_job_usage(qualified_hostname);
 
          /* send all reports */
-         sge_send_all_reports(ctx, now, 0, execd_report_sources);
+         was_communication_error = sge_send_all_reports(ctx, now, 0, execd_report_sources);
       }
    }
 
    /* handle shutdown */
-   if (shut_me_down != 0) {
-      return_value = 1;
+   switch (shut_me_down) {
+      case 1:
+         return_value = 1; /* tell dispatcher to finish server */
+         break;
+      case 0:
+         return_value = 0;
+         break;
+      default:
+         /* if shut_me_down == 2 we wait one "dispatch epoche"
+            and we hope that all the killed jobs are reaped 
+            reaped jobs will be reported to qmaster 
+            since sge_get_flush_flag() is set in this case
+         */
+         if (lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_JOB))) == 0) { /* no need to delay shutdown */
+            return_value = 1;
+         } else {
+            DPRINTF(("DELAYED SHUTDOWN\n"));
+            shut_me_down--;
+            return_value = 0;
+         }
+   }
+
+   if (return_value == 0 && was_communication_error != CL_RETVAL_OK) {
+      DPRINTF(("was_communication_error is %s\n", cl_get_error_text(was_communication_error)));
+      return_value = 1;  /* leave dispatcher */
    }
 
    DRETURN(return_value);
@@ -704,36 +730,40 @@ static int exec_job_or_task(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem 
 
    now = sge_get_gmt();
 
+   /* we might simulate another host */
    /* JG: TODO: make a function simulate_start_job_or_task() */
-   if (mconf_get_simulate_jobs()) {
-      lList *job_args;
-      u_long32 duration = 60;
+   if (mconf_get_simulate_hosts()) {
+      const char *host = lGetHost(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_qhostname);
+      if (sge_hostcmp(host, qualified_hostname) != 0) {
+         lList *job_args;
+         u_long32 duration = 60;
 
-      DPRINTF(("Simulating job "sge_u32"."sge_u32"\n", 
-               job_id, ja_task_id));
-      lSetUlong(jatep, JAT_start_time, now);
-      lSetUlong(jatep, JAT_status, JRUNNING);
+         DPRINTF(("Simulating job "sge_u32"."sge_u32"\n", 
+                  job_id, ja_task_id));
+         lSetUlong(jatep, JAT_start_time, now);
+         lSetUlong(jatep, JAT_status, JRUNNING | JSIMULATED);
 
-      /* set time when job shall be reported as finished */
-      job_args = lGetList(jep, JB_job_args);
-      if (lGetNumberOfElem(job_args) == 1) {
-         const char *arg = NULL;
-         char *endptr = NULL;
-         u_long32 duration_in;
+         /* set time when job shall be reported as finished */
+         job_args = lGetList(jep, JB_job_args);
+         if (lGetNumberOfElem(job_args) == 1) {
+            const char *arg = NULL;
+            char *endptr = NULL;
+            u_long32 duration_in;
+  
+            arg = lGetString(lFirst(job_args), ST_name);
+            if (arg != NULL) {
+               DPRINTF(("Trying to use first argument ("SFQ") as duration for simulated job\n", arg));
+               
+               duration_in = strtol(arg, &endptr, 0);
+               if (arg != endptr) {
+                  duration = duration_in;
+               }
+            }   
+         }
 
-         arg = lGetString(lFirst(job_args), ST_name);
-         if (arg != NULL) {
-            DPRINTF(("Trying to use first argument ("SFQ") as duration for simulated job\n", arg));
-            
-            duration_in = strtol(arg, &endptr, 0);
-            if (arg != endptr) {
-               duration = duration_in;
-            }
-         }   
+         lSetUlong(jatep, JAT_end_time, now + duration);
+         return 1;
       }
-
-      lSetUlong(jatep, JAT_end_time, now + duration);
-      DRETURN(1);
    }
 
    if (petep != NULL) {

@@ -103,6 +103,9 @@
 #include "sge_ijs_comm.h"
 #include "sge_ijs_threads.h"
 
+#define THISCOMPONENT  "pty_qrsh"
+#define OTHERCOMPONENT "pty_shepherd"
+
 extern COMMUNICATION_HANDLE *g_comm_handle;
 
 bool g_csp_mode = false;
@@ -438,8 +441,7 @@ static char *read_from_qrsh_socket(int msgsock)
    char *c  = buffer;
   
    DENTER(TOP_LAYER, "read_from_qrsh_socket");
-
-   memset(buffer, 0, 1024);
+  
    do {
       *c = 0;
 
@@ -1315,7 +1317,6 @@ int main(int argc, char **argv)
    int existing_job = 0;
    int nostdin = 0;
    int noshell = 0;
-   int pty_option = 2;  /* 0 means "no" is specified, 1 "yes", 2 means not specified */
 
    const char *host = NULL;
    char name[MAX_JOB_NAME + 1];
@@ -1450,16 +1451,6 @@ int main(int argc, char **argv)
    while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-noshell"))) {
       lRemoveElem(opts_cmdline, &ep);
       noshell = 1;
-   }
-
-   /* parse -pty <yes|no> */
-   if (opt_list_has_X(opts_cmdline, "-pty")) {
-      pty_option = opt_list_is_X_true(opts_cmdline, "-pty");
-   }
-   lSetUlong(job, JB_pty, pty_option);
-   /* remove the pty option from commandline before proceeding */
-   while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-pty"))) {
-      lRemoveElem(opts_cmdline, &ep);
    }
 
    /*
@@ -1695,8 +1686,8 @@ int main(int argc, char **argv)
        * start the commlib server
        */
       DPRINTF(("starting commlib server\n"));
-      ret = comm_open_connection(true, g_csp_mode, COMM_SERVER, 0, COMM_CLIENT,
-                                 username, &g_comm_handle, &error_msg);
+      ret = comm_open_connection(true, 0, THISCOMPONENT, g_csp_mode, username,
+                                 &g_comm_handle, &error_msg);
 
       if (ret != 0) {
          ERROR((SGE_EVENT, MSG_QSH_CREATINGCOMMLIBSERVER_S,
@@ -1804,12 +1795,14 @@ int main(int argc, char **argv)
       } else { /* g_new_interactive_job_support == true */
          int     ret;
          dstring err_msg = DSTRING_INIT;
+         int     random_poll = QSH_INTERACTIVE_POLLING_MIN + 
+                               (rand() % QSH_INTERACTIVE_POLLING_MIN);
 
          /*
           * Wait for the client (=shepherd) to connect to us
           */
          DPRINTF(("waiting for connection\n"));
-         ret = comm_wait_for_connection(g_comm_handle, COMM_CLIENT,
+         ret = comm_wait_for_connection(g_comm_handle, OTHERCOMPONENT, 
                                         QSH_SOCKET_FINAL_TIMEOUT, &host, &err_msg);
          sge_dstring_free(&err_msg);
          if (ret != COMM_RETVAL_OK) {
@@ -1824,9 +1817,8 @@ int main(int argc, char **argv)
 
          DPRINTF(("starting server loop\n"));
          /* TODO: Add proper error handling and error propagation to do_server_loop() */
-         ret = do_server_loop(job_id, nostdin, noshell, 
-                              is_rsh, is_qlogin, pty_option,
-                              &exit_status);
+         ret = do_server_loop(random_poll, job_id, nostdin, 
+                              noshell, &exit_status);
          if (ret != 0) {
             return 1;
          }
@@ -1968,15 +1960,12 @@ int main(int argc, char **argv)
                      host, port, job_dir, utilbin_dir, is_rsh, is_rlogin, 
                      nostdin, noshell, sock);
 
-                  DPRINTF(("exit_status = %d\n", exit_status));
-
                   if(exit_status < 0) {
                      WARNING((SGE_EVENT, MSG_QSH_CLEANINGUPAFTERABNORMALEXITOF_S, 
                         client_name));
                      cl_com_ignore_timeouts(CL_FALSE);
                      cl_commlib_open_connection(cl_com_get_handle(progname,0),
                         (char*)mastername, (char*)prognames[QMASTER], 1);
-                     DPRINTF(("deleting job\n"));
                      delete_job(ctx, job_id, lp_jobs);
                      exit_status = EXIT_FAILURE;
                   }
@@ -1993,10 +1982,8 @@ int main(int argc, char **argv)
                 * Wait for the client to connect to us
                 */
                DPRINTF(("waiting for connection\n"));
-               ret = comm_wait_for_connection(g_comm_handle, COMM_CLIENT, 
+               ret = comm_wait_for_connection(g_comm_handle, OTHERCOMPONENT, 
                                               random_poll, &host, &err_msg);
-               /* JG: TODO: nothing is done with err_msg?? */
-               sge_dstring_free(&err_msg);
                if (ret != COMM_RETVAL_OK) {
                   if (ret == COMM_GOT_TIMEOUT) {
                      DPRINTF(("got no connection within timeout of %d s\n", random_poll));
@@ -2026,12 +2013,9 @@ int main(int argc, char **argv)
                      DPRINTF(("closing STDIN\n"));
                      close(STDIN_FILENO);
                   }
-
                   /* do_server_loop() loops until the client has disconnected */
-                  ret = do_server_loop(job_id, nostdin, noshell, 
-                                       is_rsh, is_qlogin, pty_option,
-                                       &exit_status);
-                  DPRINTF(("exit_status = %d\n", exit_status));
+                  ret = do_server_loop(random_poll, job_id, nostdin, 
+                                       noshell, &exit_status);
                   if (ret == COMM_RETVAL_OK) {
                      do_exit = 1;
                      continue;
@@ -2137,17 +2121,15 @@ int main(int argc, char **argv)
             DPRINTF(("polling_interval set to %d\n", polling_interval));
          }
       } /* end of while (1) polling */
-      if (g_new_interactive_job_support == true && g_comm_handle != NULL) {
+      if (g_new_interactive_job_support == true) {
          dstring err_msg = DSTRING_INIT;
          int     ret;
 
-         ret = comm_shutdown_connection(g_comm_handle, COMM_CLIENT, &err_msg);
+         ret = comm_shutdown_connection(g_comm_handle, &err_msg);
          if (ret != COMM_RETVAL_OK) {
             DPRINTF(("comm_shutdown_connection() failed: %s (%d)",
                      sge_dstring_get_string(&err_msg), ret));
          }
-
-         sge_dstring_free(&err_msg);
       }
 
       lFreeList(&lp_jobs);

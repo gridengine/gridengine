@@ -84,7 +84,6 @@
 #define MSG_PROC_CANTEXECPROCESSORPROCESSDIEDTHROUGHSIGNALX_S       _MESSAGE(27028, _("cannot exec process or process died through signal: "SFN))
 #define MSG_PROC_CANTSTARTPROCESSX_S       _MESSAGE(27029, _("couldn't start process: "SFN))
 #define MSG_PROC_WAITPIDRETURNEDUNKNOWNSTATUS       _MESSAGE(27030, _("waitpid() returned unknown status"))
-#define MSG_SMF_STARTPROG_FORK_FAILED_S    _MESSAGE(27031, _("sge_smf_contract_fork() for startprog failed: "SFQ))
 
 
 /*

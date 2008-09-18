@@ -822,7 +822,6 @@ static void sge_gdi_ctx_destroy(void *theState)
    sge_free(s->username);
    sge_free(s->groupname);
    sge_free(s->component_name);
-   sge_free(s->thread_name);
    sge_free(s->component_username);
    sge_free(s->ssl_certificate);
    sge_free(s->ssl_private_key);
@@ -1561,7 +1560,7 @@ static u_long32 get_jvm_thread_count(sge_gdi_ctx_class_t *thiz) {
 static sge_exit_func_t get_exit_func(sge_gdi_ctx_class_t *thiz) {
    sge_prog_state_class_t* prog_state = thiz->get_sge_prog_state(thiz);
    sge_exit_func_t exit_func = NULL;
-   DENTER(BASIS_LAYER, "sge_gdi_ctx_class->get_exit_func");
+   DENTER(TOP_LAYER, "sge_gdi_ctx_class->get_exit_func");
    exit_func = prog_state->get_exit_func(prog_state);
    DRETURN(exit_func);
 }

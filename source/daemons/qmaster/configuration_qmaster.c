@@ -73,6 +73,12 @@
 #include "msg_qmaster.h"
 
 
+typedef struct { 
+   lList*           list;   /* 'CONF_Type' list, holding the cluster configuration */
+} cluster_config_t;
+
+
+static cluster_config_t Cluster_Config = {NULL};
 
 /* Static configuration entries may be changed at runtime with a warning */
 static char *Static_Conf_Entries[] = { "execd_spool_dir", NULL };
@@ -94,7 +100,7 @@ static u_long32 sge_get_config_version_for_host(const char* aName);
  * This is the bootstrap function for the configuration module. It does populate
  * the list with the cluster configuration.
  */
-int sge_read_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aSpoolContext, lList **config_list, lList *anAnswer)
+int sge_read_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aSpoolContext, lList *anAnswer)
 {
    lListElem *local = NULL;
    lListElem *global = NULL;
@@ -107,7 +113,7 @@ int sge_read_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aSpoolContext, l
    
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_WRITE);
 
-   spool_read_list(&anAnswer, aSpoolContext, config_list, SGE_TYPE_CONFIG);
+   spool_read_list(&anAnswer, aSpoolContext, &Cluster_Config.list, SGE_TYPE_CONFIG);
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
  
@@ -118,7 +124,7 @@ int sge_read_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aSpoolContext, l
       /* write a warning into messages file, if no local config exists*/
       WARNING((SGE_EVENT, MSG_CONFIG_NOLOCAL_S, qualified_hostname));
    }
-
+         
    if ((global = sge_get_configuration_for_host(SGE_GLOBAL_NAME)) == NULL) {
       ERROR((SGE_EVENT, MSG_CONFIG_NOGLOBAL));
       DRETURN(-1);
@@ -129,12 +135,12 @@ int sge_read_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aSpoolContext, l
 
    lFreeElem(&local);
    lFreeElem(&global);
-
+   
    if (0 != ret) {
       ERROR((SGE_EVENT, MSG_CONFIG_ERRORXMERGINGCONFIGURATIONY_IS, ret, qualified_hostname));
       DRETURN(-1);
    }
-
+   
    sge_show_conf();         
 
    DRETURN(0);
@@ -643,17 +649,15 @@ static lListElem *get_entry_from_conf(lListElem *aConf, const char *anEntryName)
 /*
  * Return a *COPY* of the master configuration.
  */
-lList* sge_get_configuration()
+lList* sge_get_configuration(void)
 {
    lList *conf = NULL;
-   object_description *object_base = object_type_get_object_description();
-   lList *config_list = *(object_base[SGE_TYPE_CONFIG].list);
    
    DENTER(TOP_LAYER, "sge_get_configuration");
 
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
    
-   conf = lCopyListHash(lGetListName(config_list), config_list, false);
+   conf = lCopyListHash(lGetListName(Cluster_Config.list), Cluster_Config.list, false);
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    
@@ -666,15 +670,13 @@ static u_long32 sge_get_config_version_for_host(const char* aName)
    u_long32 version = 0;
    char unique_name[CL_MAXHOSTLEN];
    int ret = -1;
-   object_description *object_base = object_type_get_object_description();
-   lList *config_list = *(object_base[SGE_TYPE_CONFIG].list);
 
    DENTER(TOP_LAYER, "sge_get_configuration_for_host");
 
 
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
   
-   conf = lGetElemHost(config_list, CONF_name, aName);
+   conf = lGetElemHost(Cluster_Config.list, CONF_name, aName);
    if (conf == NULL) {
       /*
        * Due to CR 6319231 IZ 1760:
@@ -687,7 +689,7 @@ static u_long32 sge_get_config_version_for_host(const char* aName)
          DPRINTF(("%s: error %s resolving host %s\n", SGE_FUNC,
                  cl_get_error_text(ret), aName));
       }
-      conf = lGetElemHost(config_list, CONF_name, unique_name);
+      conf = lGetElemHost(Cluster_Config.list, CONF_name, unique_name);
    } 
 
    if (conf == NULL) {
@@ -711,8 +713,6 @@ lListElem* sge_get_configuration_for_host(const char* aName)
    lListElem *conf = NULL;
    char unique_name[CL_MAXHOSTLEN];
    int ret = -1;
-   object_description *object_base = object_type_get_object_description();
-   lList *config_list = *(object_base[SGE_TYPE_CONFIG].list);
 
    DENTER(TOP_LAYER, "sge_get_configuration_for_host");
 
@@ -733,7 +733,7 @@ lListElem* sge_get_configuration_for_host(const char* aName)
 
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
    
-   conf = lCopyElem(lGetElemHost(config_list, CONF_name, unique_name));
+   conf = lCopyElem(lGetElemHost(Cluster_Config.list, CONF_name, unique_name));
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
 
@@ -873,8 +873,6 @@ static int exchange_conf_by_name(sge_gdi_ctx_class_t *ctx, char *aConfName, lLis
    lListElem *elem = NULL;
    u_long32 old_version, new_version = 0;
    const char *old_conf_name = lGetHost(anOldConf, CONF_name);
-   object_description *object_base = object_type_get_object_description();
-   lList *config_list = *(object_base[SGE_TYPE_CONFIG].list);
    
    DENTER(TOP_LAYER, "remove_conf_by_name");
 
@@ -889,13 +887,13 @@ static int exchange_conf_by_name(sge_gdi_ctx_class_t *ctx, char *aConfName, lLis
 
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_WRITE);
    
-   elem = lGetElemHost(config_list, CONF_name, old_conf_name);
+   elem = lGetElemHost(Cluster_Config.list, CONF_name, old_conf_name);
 
-   lRemoveElem(config_list, &elem);
+   lRemoveElem(Cluster_Config.list, &elem);
    
    elem = lCopyElem(aNewConf);
    
-   lAppendElem(config_list, elem);
+   lAppendElem(Cluster_Config.list, elem);
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
 
@@ -936,8 +934,6 @@ static bool has_reschedule_unknown_change(lList *theOldConfEntries, lList *theNe
 static int do_add_config(sge_gdi_ctx_class_t *ctx, char *aConfName, lListElem *aConf, lList**anAnswer)
 {
    lListElem *elem = NULL;
-   object_description *object_base = object_type_get_object_description();
-   lList *config_list = *(object_base[SGE_TYPE_CONFIG].list);
 
    DENTER(TOP_LAYER, "do_add_config");
 
@@ -945,7 +941,7 @@ static int do_add_config(sge_gdi_ctx_class_t *ctx, char *aConfName, lListElem *a
 
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_WRITE);
    
-   lAppendElem(config_list, elem);
+   lAppendElem(Cluster_Config.list, elem);
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
 
@@ -957,16 +953,14 @@ static int do_add_config(sge_gdi_ctx_class_t *ctx, char *aConfName, lListElem *a
 static int remove_conf_by_name(char *aConfName)
 {
    lListElem *elem = NULL;
-   object_description *object_base = object_type_get_object_description();
-   lList *config_list = *(object_base[SGE_TYPE_CONFIG].list);
    
    DENTER(TOP_LAYER, "remove_conf_by_name");
 
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_WRITE);
 
-   elem = lGetElemHost(config_list, CONF_name, aConfName);
+   elem = lGetElemHost(Cluster_Config.list, CONF_name, aConfName);
 
-   lRemoveElem(config_list, &elem);
+   lRemoveElem(Cluster_Config.list, &elem);
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
    

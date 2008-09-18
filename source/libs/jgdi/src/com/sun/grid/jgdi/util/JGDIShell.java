@@ -99,8 +99,8 @@ public class JGDIShell implements Runnable, Shell {
     private static final ResourceBundle usageResources = ResourceBundle.getBundle("com.sun.grid.jgdi.util.shell.UsageResources");
     private final PrintWriter out;
     private final PrintWriter err;
+
     private int lastExitCode = 0;
-    private static boolean usePW = false;
     
     //TODO LP: We should consider having single PrintWriter for all commands
     public JGDIShell() {
@@ -300,7 +300,6 @@ public class JGDIShell implements Runnable, Shell {
     public static void main(String[] args) {
         String url = null;
         boolean useCsp = false;
-        
         String cmdParams = "";
 
         for (int i = 0; i < args.length; i++) {
@@ -313,8 +312,6 @@ public class JGDIShell implements Runnable, Shell {
                 url = args[i];
             } else if (args[i].equals("-csp")) {
                 useCsp = true;
-            } else if (args[i].equals("-pw")) {
-                usePW = true;
             } else {
                 cmdParams += args[i] + " ";
             }
@@ -625,7 +622,7 @@ public class JGDIShell implements Runnable, Shell {
                     System.out.flush();
                 }
             } else {
-                Method method = JGDI.class.getMethod("get" + args[0], new Class[]{String.class});
+                Method method = JGDI.class.getMethod("Unknown error" + args[0], new Class[]{String.class});
                 Object obj = method.invoke(jgdi, new Object[]{args[1]});
                 XMLUtil.write((GEObject) obj, System.out);
             }
@@ -887,16 +884,7 @@ public class JGDIShell implements Runnable, Shell {
 //                    }
                 } else if (callbacks[i] instanceof PasswordCallback) {
                     PasswordCallback cb = (PasswordCallback) callbacks[i];
-                    if (usePW) {
-                        // TODO: replace by native func to suppress password echo
-                        System.out.print(cb.getPrompt() + " ");
-                        System.out.flush();
-                        String pw = new BufferedReader(new InputStreamReader(System.in)).readLine();
-                        cb.setPassword(pw.toCharArray());
-                        pw = null;
-                    } else {
-                        cb.setPassword(new char[0]);
-                    }    
+                    cb.setPassword(new char[0]);
                 } else if (callbacks[i] instanceof ConfirmationCallback) {
                     ConfirmationCallback cb = (ConfirmationCallback) callbacks[i];
                     cb.setSelectedIndex(cb.getDefaultOption());

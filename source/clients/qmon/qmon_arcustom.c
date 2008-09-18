@@ -99,7 +99,7 @@ static String PrintQueues(lListElem *ep, int nm);
 static String PrintAcls(lListElem *ep, int nm);
 static String PrintState(lListElem *ep, int nm);
 static String PrintType(lListElem *ep, int nm);
-/* static String PrintNotImpl(lListElem *ep, int nm); */
+static String PrintNotImpl(lListElem *ep, int nm);
 static String PrintMailList(lListElem *ep, int nm);
 static String PrintMailOptions(lListElem *ep, int nm);
 static String PrintPERange(lListElem *ep, int nm);
@@ -123,24 +123,24 @@ static int is_owner_ok(lListElem *ar, lList *owner_list);
 static htable ARColumnPrintHashTable = NULL;
 static htable NameMappingHashTable = NULL;
 
-#define AR_FIRST_FIELD     7
+#define FIRST_FIELD     4
 
 static tARField ar_items[] = {
    { 1, AR_id, "@{Id}", 12, 20, PrintUlong }, 
    { 1, AR_name, "@{Name}", 10, 50, PrintString },
    { 1, AR_owner, "@{Owner}", 10, 50, PrintString },
    { 1, AR_state, "@{Status}", 7, 30, PrintState },
-   { 1, AR_start_time, "@{StartTime}", 19, 30, PrintTime },
-   { 1, AR_end_time, "@{EndTime}", 19, 30, PrintTime },
-   { 1, AR_duration, "@{Duration}", 19, 30, PrintDuration },
    { 0, AR_type, "@{Type}", 7, 30, PrintType },
    { 0, AR_submission_time, "@{SubmitTime}", 19, 30, PrintTime },
+   { 0, AR_start_time, "@{StartTime}", 19, 30, PrintTime },
+   { 0, AR_end_time, "@{EndTime}", 19, 30, PrintTime },
+   { 0, AR_duration, "@{Duration}", 19, 30, PrintDuration },
    { 0, AR_account, "@{Account}", 15, 50, PrintString },
    { 0, AR_checkpoint_name, "@{Checkpoint Name}", 11, 30, PrintString },
-/*    { 0, AR_resource_list, "@{ResourceList}", 11, 30, PrintNotImpl }, */
-/*    { 0, AR_resource_utilization, "@{ResourceUtilization}", 15, 100, PrintNotImpl }, */
+   { 0, AR_resource_list, "@{ResourceList}", 11, 30, PrintNotImpl },
+   { 0, AR_resource_utilization, "@{ResourceUtilization}", 15, 100, PrintNotImpl },
    { 0, AR_queue_list, "@{Queues}", 6, 100, PrintQueues },
-/*    { 0, AR_granted_slots, "@{GrantedSlots}", 15, 50, PrintNotImpl }, */
+   { 0, AR_granted_slots, "@{GrantedSlots}", 15, 50, PrintNotImpl },
    { 0, AR_mail_options, "@{MailOptions}", 11, 30, PrintMailOptions },
    { 0, AR_mail_list, "@{MailTo}", 15, 30, PrintMailList },
    { 0, AR_pe, "@{PE}", 10, 30, PrintString },
@@ -152,13 +152,20 @@ static tARField ar_items[] = {
 /*
 ** this list restricts the selected ars, queues displayed
 */
+static lList *arfilter_owners = NULL;
 static Widget arfield_available = 0;
 static Widget arfield_selected = 0;
 
 static Widget arcu = 0;
 static Widget arfield = 0;
 
+#if 0
+static lList *arfilter_resources = NULL;
+static Widget arfilter_ar = 0;
+static Widget arfilter_sr = 0;
 static lList *arfilter_fields = NULL;
+static Widget arfilter_owner = 0;
+#endif
 
 /*-------------------------------------------------------------------------*/
 static void ar_get_type_string(char *buf, size_t buflen, u_long32 type)
@@ -175,25 +182,22 @@ static void ar_get_state_string(char *buf, size_t buflen, u_long32 state)
 {
    switch(state) {
       case AR_WAITING:
-         snprintf(buf, buflen-1, "w");  
+         snprintf(buf, buflen-1, "AR_WAITING");  
          break;
       case AR_RUNNING:
-         snprintf(buf, buflen-1, "r");  
+         snprintf(buf, buflen-1, "AR_RUNNING");  
          break;
       case AR_EXITED:
-         snprintf(buf, buflen-1, "x");  
+         snprintf(buf, buflen-1, "AR_EXITED");  
          break;
       case AR_DELETED:
-         snprintf(buf, buflen-1, "d");  
+         snprintf(buf, buflen-1, "AR_DELETED");  
          break;
       case AR_ERROR:
-         snprintf(buf, buflen-1, "E");  
-         break;
-      case AR_WARNING:
-         snprintf(buf, buflen-1, "W");  
+         snprintf(buf, buflen-1, "AR_ERROR");  
          break;
       default:
-         snprintf(buf, buflen-1, "u");  
+         snprintf(buf, buflen-1, "unknown");  
          break;
    }
 }   
@@ -323,7 +327,6 @@ int nm
    return str;
 }
    
-#if 0   
 /*-------------------------------------------------------------------------*/
 static String PrintNotImpl(
 lListElem *ep,
@@ -338,7 +341,6 @@ int nm
    DEXIT;
    return str;
 }
-#endif
    
 /*-------------------------------------------------------------------------*/
 static String PrintString(
@@ -540,7 +542,7 @@ static void okCB(Widget w, XtPointer cld, XtPointer cad)
    /*
    ** reset show flag
    */ 
-   for (j=AR_FIRST_FIELD; j<XtNumber(ar_items); j++) {           
+   for (j=FIRST_FIELD; j<XtNumber(ar_items); j++) {           
       ar_items[j].show = 0; 
    }
 
@@ -565,9 +567,15 @@ static void okCB(Widget w, XtPointer cld, XtPointer cad)
 
    qmonARReturnMatrix(&run_m, &pen_m);
    SetARLabels(run_m);
-
-#ifdef AR_PENDING
    SetARLabels(pen_m);
+   
+#if 0   
+   /*
+   ** get the strings to do a wildmatch against
+   */
+   owner_str = XmtInputFieldGetString(arfilter_owner);
+   lFreeList(&arfilter_owners);
+   lString2List(owner_str, &arfilter_owners, ST_Type, ST_name, NULL); 
 #endif   
 
    updateARList();
@@ -591,15 +599,16 @@ static void cancelCB(Widget w, XtPointer cld, XtPointer cad)
 /*-------------------------------------------------------------------------*/
 static void saveCB(Widget w, XtPointer cld, XtPointer cad)
 {
-   int j;
-   lList *lp = NULL;
-   lList *alp = NULL;
-
    DENTER(GUI_LAYER, "saveCB");
    
    okCB(w, NULL, NULL);
 
-   for (j=AR_FIRST_FIELD; j<XtNumber(ar_items); j++) {           
+#if 0
+   lSetList(qmonGetPreferences(), PREF_ar_filter_resources, 
+                     lCopyList("", arfilter_resources));
+   lSetList(qmonGetPreferences(), PREF_ar_filter_owners, 
+                     lCopyList("", arfilter_owners));
+   for (j=FIRST_FIELD; j<XtNumber(ar_items); j++) {           
       if (ar_items[j].show)
          lAddElemStr(&lp, ST_name, ar_items[j].name, ST_Type); 
    }
@@ -610,6 +619,9 @@ static void saveCB(Widget w, XtPointer cld, XtPointer cad)
    qmonMessageBox(w, alp, 0);
 
    lFreeList(&alp);
+#else
+   printf("Not yet implemented\n");
+#endif
 
    DEXIT;
 }
@@ -671,7 +683,7 @@ Widget w
 
    DENTER(GUI_LAYER, "SetARLabels");
 
-   for (i=AR_FIRST_FIELD; i<XtNumber(ar_items); i++) {
+   for (i=FIRST_FIELD; i<XtNumber(ar_items); i++) {
       if (ar_items[i].show)
          additional++;
    }
@@ -683,14 +695,14 @@ Widget w
    /*
    ** delete the additional columns
    */
-   if (cols > AR_FIRST_FIELD)
-      XbaeMatrixDeleteColumns(w, AR_FIRST_FIELD, cols - AR_FIRST_FIELD);
+   if (cols > FIRST_FIELD)
+      XbaeMatrixDeleteColumns(w, FIRST_FIELD, cols - FIRST_FIELD);
 
    if (additional > 0) {
       labels = (String*)XtMalloc(sizeof(String)*additional);
       widths = (short*)XtMalloc(sizeof(short)*additional);
       max_lengths = (int*)XtMalloc(sizeof(int)*additional);
-      for (i=AR_FIRST_FIELD, col=0; i<XtNumber(ar_items) && col<additional; i++) {
+      for (i=FIRST_FIELD, col=0; i<XtNumber(ar_items) && col<additional; i++) {
          if (ar_items[i].show) {
             String str, s, category, tag, defaultstr, free_me = NULL;
             str = ar_items[i].name; 
@@ -739,7 +751,7 @@ Widget w
          } 
       }
       XbaeMatrixAddColumns(w,
-                           AR_FIRST_FIELD,
+                           FIRST_FIELD,
                            NULL,
                            labels,
                            widths,
@@ -748,18 +760,6 @@ Widget w
                            NULL,
                            NULL,
                            additional);
-      for (i=0, col=0; i<XtNumber(ar_items) && col<(AR_FIRST_FIELD + additional); i++) {
-         if (ar_items[i].show) {
-            XbaeMatrixSetColumnUserData(w, col, &ar_items[i].nm);
-            col++;
-         }   
-      }
-#if 0
-      for (col=0; col<XbaeMatrixNumColumns(w); col++) {
-         int* nm = (int*) XbaeMatrixGetColumnUserData(w, col);
-         printf("nm = %s\n", lNm2Str(*nm));
-      }
-#endif
       for(i=0; i<additional; i++) {
          XtFree(labels[i]);
       }   
@@ -788,15 +788,15 @@ int how
 
 #if 0
    if (how == FILL_ALL)
-      itemCount = num_ars - AR_FIRST_FIELD;
+      itemCount = num_ars - FIRST_FIELD;
    else
-      for (i=AR_FIRST_FIELD; i<num_ars; i++) {
+      for (i=FIRST_FIELD; i<num_ars; i++) {
          if (ar_items[i].show)
             itemCount++;
       } 
 
    items = (XmString*)XtMalloc(sizeof(XmString)*itemCount);
-   for (i=AR_FIRST_FIELD,j=0; i<num_ars && j<itemCount; i++) {
+   for (i=FIRST_FIELD,j=0; i<num_ars && j<itemCount; i++) {
       if (how == FILL_ALL) {
          items[j] = XmtCreateLocalizedXmString(list, ar_items[i].name); 
          j++;
@@ -821,7 +821,7 @@ int how
                   XmNitems, NULL,
                   XmNitemCount, 0,
                   NULL);
-   for (i=AR_FIRST_FIELD; i<num_ars; i++) {
+   for (i=FIRST_FIELD; i<num_ars; i++) {
       if (how == FILL_ALL) {
          DPRINTF(("XmListAddItemUniqueSorted: '%s'\n", ar_items[i].name));
          XmListAddItemUniqueSorted(list, ar_items[i].name);
@@ -881,6 +881,10 @@ XtPointer cld
                            "arcu_ok", &arcu_ok,
                            "arcu_cancel", &arcu_cancel,
                            "arcu_save", &arcu_save,
+/*                            "arfilter_ar", &arfilter_ar, */
+/*                            "arfilter_sr", &arfilter_sr, */
+/*                            "arfilter_owner", &arfilter_owner, */
+/*                            "arfilter_clear", &arfilter_clear, */
                            NULL);
    /*
    ** create ARColumnPrintHashTable
@@ -910,17 +914,41 @@ XtPointer cld
       XtFree(text);
    }
 
+#if 0
    /*
    ** reference to preferences
    */
    if (qmonGetPreferences()) {
       lListElem *field;
+      lListElem *ep;
       tARField *ar_item = NULL;
-      lList *ar_filter_field_list = lGetList(qmonGetPreferences(), PREF_ar_filter_fields);
-      
-      arfilter_fields = lCopyList("", ar_filter_field_list);
 
+      arfilter_resources = lCopyList("", lGetList(qmonGetPreferences(), 
+                                          PREF_ar_filter_resources));
+      arfilter_owners = lCopyList("", lGetList(qmonGetPreferences(), 
+                                          PREF_ar_filter_owners));
+      arfilter_fields = lCopyList("", lGetList(qmonGetPreferences(),
+                                          PREF_ar_filter_fields));
+
+/* lWriteListTo(arfilter_resources, stdout); */
+/* lWriteListTo(arfilter_owners, stdout); */
 /* lWriteListTo(arfilter_fields, stdout); */
+
+
+      /*
+      ** preset the owners
+      */
+      strcpy(buf, "");
+      for_each(ep, arfilter_owners) {
+         if (first_time) {
+            first_time = 0;
+            strcpy(buf, lGetString(ep, ST_name));
+         }
+         else
+            sprintf(buf, "%s,%s", buf, lGetString(ep, ST_name));
+      }
+      XmtInputFieldSetString(arfilter_owner, buf);
+
 
       /*
       ** set the fields which shall be shown
@@ -935,6 +963,15 @@ XtPointer cld
       }
    }
 
+#endif   
+
+
+#if 0
+   /*
+   ** preset the resources 
+   */
+   qmonARFilterSet(arcu, NULL, NULL);
+#endif   
 
    /*
    ** preset the fields
@@ -947,9 +984,7 @@ XtPointer cld
    */
    qmonARReturnMatrix(&run_m, &pen_m);
    SetARLabels(run_m);
-#ifdef AR_PENDING   
    SetARLabels(pen_m);
-#endif   
    
                            
    XtAddCallback(arcu_ok, XmNactivateCallback,
@@ -963,9 +998,197 @@ XtPointer cld
    XtAddCallback(arfield_remove, XmNactivateCallback,
                         rmFromSelected, (XtPointer) arfield);
 
+#if 0
+   /*
+   ** arfilter callbacks
+   */
+   XtAddCallback(arfilter_ar, XmNactivateCallback,
+                        qmonARFilterEditResource, (XtPointer)0);
+   XtAddCallback(arfilter_sr, XmNactivateCallback,
+                        qmonARFilterEditResource, (XtPointer)1);
+   XtAddCallback(arfilter_sr, XmNremoveCallback, 
+                     qmonARFilterRemoveResource, NULL);
+   XtAddCallback(arcu_folder, XmNvalueChangedCallback, 
+                     qmonARFilterSet, NULL);
+   XtAddCallback(arfilter_clear, XmNactivateCallback,
+                        qmonARFilterClear, NULL);
+#endif
+
    DEXIT;
 }
 
+
+#if 0
+/*-------------------------------------------------------------------------*/
+static void qmonARFilterClear(Widget w, XtPointer cld, XtPointer cad)
+{
+
+
+   DENTER(GUI_LAYER, "qmonARFilterClear");
+
+   lFreeList(&arfilter_resources);
+   qmonRequestDraw(arfilter_sr, arfilter_resources, 1);
+
+   lFreeList(&arfilter_owners);
+   XmtInputFieldSetString(arfilter_owner, "");
+   
+   DEXIT;
+
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonARFilterSet(Widget w, XtPointer cld, XtPointer cad)
+{
+   lList *arl = NULL;
+   lListElem *ep = NULL;
+   lListElem *rp = NULL;
+
+   DENTER(GUI_LAYER, "qmonARFilterSet");
+
+   arl = qmonGetResources(qmonMirrorList(SGE_CENTRY_LIST), ALL_RESOURCES);
+
+   for_each (ep, arfilter_resources) {
+      rp = lGetElemStr(arl, CE_name, lGetString(ep, CE_name));
+      if (!rp)
+         rp = lGetElemStr(arl, CE_shortcut, lGetString(ep, CE_name));
+      if (rp) {
+         lSetString(ep, CE_name, lGetString(rp, CE_name));
+         lSetUlong(ep, CE_valtype, lGetUlong(rp, CE_valtype));
+      }
+   }
+      
+   /*
+   ** do the drawing
+   */
+   qmonRequestDraw(arfilter_ar, arl, 0);
+   qmonRequestDraw(arfilter_sr, arfilter_resources, 1);
+
+   lFreeList(&arl);
+
+   DEXIT;
+}
+
+
+/*-------------------------------------------------------------------------*/
+static void qmonARFilterEditResource(Widget w, XtPointer cld, XtPointer cad)
+{
+   XmIconListCallbackStruct *cbs = (XmIconListCallbackStruct*) cad;
+   long how = (long)cld;
+   lList *arl = NULL;
+   int type;
+   char stringval[CL_MAXHOSTLEN];
+   Boolean status = False;
+   StringConst name, value, strval;
+   Boolean found = False;
+   lListElem *fill_in_request = NULL;
+   lListElem *global_fill_in_request = NULL;
+   
+
+   DENTER(GUI_LAYER, "qmonARFilterEditResource");
+
+   arl = qmonGetResources(qmonMirrorList(SGE_CENTRY_LIST), ALL_RESOURCES);
+
+
+   if (!how) {
+      global_fill_in_request = lGetElemStr(arl, CE_name, cbs->element->string[0]);
+   }
+   for_each (fill_in_request, arfilter_resources) {
+      name = lGetString(fill_in_request, CE_name);
+      value = lGetString(fill_in_request, CE_stringval);
+      if (cbs->element->string[0] && name && 
+         !strcmp(cbs->element->string[0], name)) {
+            found = True;
+            break;
+      }
+   }       
+         
+   if (!found) {
+      fill_in_request = global_fill_in_request; 
+   }
+
+   if (!fill_in_request) {
+      DEXIT;
+      return;
+   }
+
+   type = lGetUlong(fill_in_request, CE_valtype);
+   strval = lGetString(fill_in_request, CE_stringval);
+   sge_strlcpy(stringval, strval, CL_MAXHOSTLEN);
+
+   status = qmonRequestInput(w, type, cbs->element->string[0], 
+                              stringval, sizeof(stringval));
+   /* 
+   ** put the value in the CE_Type elem 
+   */
+   if (status) {
+      lListElem *ep = NULL;
+      lSetString(fill_in_request, CE_stringval, stringval);
+    
+      /* put it in the hard or soft resource list if necessary */
+      if (!arfilter_resources) {
+         arfilter_resources = lCreateList("arfilter_resources", CE_Type);
+      }
+      if (!(ep = lGetElemStr(arfilter_resources, CE_name, cbs->element->string[0]))) {
+         lAppendElem(arfilter_resources, lCopyElem(fill_in_request));
+      } else {
+         lSetString(ep, CE_stringval, stringval);
+      }   
+         
+      qmonRequestDraw(arfilter_sr, arfilter_resources, 1);
+   }
+   lFreeList(&arl);
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonARFilterRemoveResource(Widget w, XtPointer cld, XtPointer cad)
+{
+
+   XmIconListCallbackStruct *cbs = (XmIconListCallbackStruct*) cad;
+   lListElem *dep = NULL;
+   Boolean found = False;
+   StringConst name, value;
+
+   DENTER(GUI_LAYER, "qmonARFilterRemoveResource");
+
+   if (arfilter_resources) {
+      for_each (dep, arfilter_resources) {
+         name = lGetString(dep, CE_name);
+         value = lGetString(dep, CE_stringval);
+         if (cbs->element->string[0] && name && 
+            !strcmp(cbs->element->string[0], name) &&
+            cbs->element->string[2] && value &&
+            !strcmp(cbs->element->string[2], value) ) {
+               found = True;
+               break;
+         }
+      }       
+            
+      if (found) {
+         lRemoveElem(arfilter_resources, &dep);
+         if (lGetNumberOfElem(arfilter_resources) == 0)
+            lFreeList(&arfilter_resources);
+         qmonRequestDraw(arfilter_sr, arfilter_resources, 1);
+      }
+   }
+   
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+lList* qmonARFilterResources(void)
+{
+   return arfilter_resources;
+}
+
+#endif
+
+/*-------------------------------------------------------------------------*/
+lList* qmonARFilterOwners(void)
+{
+   return arfilter_owners;
+}
 
 /*-------------------------------------------------------------------------*/
 /*-------------------------------------------------------------------------*/

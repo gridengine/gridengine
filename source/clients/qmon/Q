@@ -75,7 +75,7 @@ Qmon*job_form*visibleColumns:    6
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! AR configuration settings
 !! Qmon*ar_form*columnWidths: nr of characters per column for 
-!!                                the first 7 cols
+!!                                the first 4 cols
 !! Qmon*ar_form*visibleColumns: nr of visible columns (without scrollbar)
 !!                               if the column sizes shall be bigger this can
 !!                               be lowered to show only the first n cols and
@@ -83,8 +83,8 @@ Qmon*job_form*visibleColumns:    6
 !!                               scrollbar
 !!                               
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*ar_form*columnWidths:      12,20,10,10,10,10,10
-Qmon*ar_form*visibleColumns:    7
+Qmon*ar_form*columnWidths:      12,20,10,10
+Qmon*ar_form*visibleColumns:    4
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -44,11 +44,25 @@
 ServiceTagsSupport()
 {
    SGE_ST_CMD=util/sgeST/sge_st
+   SERVICE_TAGS="disabled"  
 
    if [ "$QMASTER" = "install" ]; then
+
       st_supported=`$SGE_ST_CMD "supported"`
       if [ "$st_supported" = "true" ]; then
-         $SGE_ST_CMD "enable" > /dev/null
+         $CLEAR
+         $INFOTEXT "Service Tags are a monitoring technology by SUN Microsystems.\n" \
+                   "A Service Tag enables automatic discovery of systems, software, and services\n" \
+                   "and allows the asset information to be monitored over a local network.\n"
+
+         $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nAre you going to enable Service Tags support? (y/n) [y] >> "
+
+         if [ $? = 0 ]; then
+            SERVICE_TAGS="enabled"
+            $SGE_ST_CMD "register" > /dev/null
+         else
+            $SGE_ST_CMD "disable" > /dev/null
+         fi
       fi
    elif [ $QMASTER = "uninstall" ]; then
       $SGE_ST_CMD "unregister" > /dev/null 

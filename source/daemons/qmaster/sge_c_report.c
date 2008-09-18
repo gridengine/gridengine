@@ -52,7 +52,6 @@
 #include "sge_lock.h"
 #include "sge_event_master.h"
 #include "sgeobj/sge_ack.h"
-#include "sgeobj/sge_centryL.h"
 #include "reschedule.h"
 
 static int update_license_data(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList *lp_lic); 
@@ -118,8 +117,15 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
    
    this_seqno = lGetUlong(lFirst(report_list), REP_seqno);
 
+#ifdef DO_LATE_LOCK   
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor); 
+#endif
+
    /* need exec host for all types of reports */
    if (!(hep = host_list_locate(*object_type_get_master_list(SGE_TYPE_EXECHOST), rhost))) {
+#ifdef DO_LATE_LOCK
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+#endif
       ERROR((SGE_EVENT, MSG_GOTSTATUSREPORTOFUNKNOWNEXECHOST_S, rhost));
       DRETURN_VOID;
    }
@@ -132,6 +138,9 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
    if ((this_seqno < last_seqno && (last_seqno - this_seqno) <= 9000) &&
       !(last_seqno > 9990 && this_seqno < 10)) {
       /* this must be an old report, log and then ignore it */
+#ifdef DO_LATE_LOCK
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+#endif
       INFO((SGE_EVENT, MSG_QMASTER_RECEIVED_OLD_LOAD_REPORT_UUS, 
                sge_u32c(this_seqno), sge_u32c(last_seqno), rhost));
       DRETURN_VOID;
@@ -165,35 +174,8 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
                is_pb_used = true;
                init_packbuffer(&pb, 1024, 0);
             }
+
             sge_update_load_values(ctx, rhost, lGetList(report, REP_list));
-
-            if (mconf_get_simulate_execds()) {
-               lList *master_exechost_list = *object_type_get_master_list(SGE_TYPE_EXECHOST);
-               lListElem *shep;
-               lListElem *simhostElem=NULL; 
-
-               for_each(shep, master_exechost_list) {
-                  simhostElem = lGetSubStr(shep, CE_name, "load_report_host", EH_consumable_config_list);
-                  if (simhostElem != NULL) {
-                     const char *real_host = lGetString(simhostElem, CE_stringval);
-                     if (real_host != NULL && sge_hostcmp(real_host, rhost) == 0) {
-                        const char* sim_host = lGetHost(shep, EH_name);
-                        lListElem *clp = NULL;
-
-                        DPRINTF(("Copy load values of %s to simulated host %s\n",
-                                rhost, sim_host));
-
-                        for_each(clp, lGetList(report, REP_list)) {
-                           if (strcmp(lGetHost(clp, LR_host), SGE_GLOBAL_NAME) != 0) {
-                              lSetHost(clp, LR_host, sim_host);
-                           }
-                        }
-                        sge_update_load_values(ctx, sim_host, lGetList(report,REP_list));
-                     }
-                  }
-               }
-            }
-
             pack_ack(&pb, ACK_LOAD_REPORT, this_seqno, 0, NULL);
          }
          break;
@@ -233,6 +215,10 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
    /* RU: */
    /* delete reschedule unknown list entries we heard about */
    delete_from_reschedule_unknown_list(ctx, hep);
+  
+#ifdef DO_LATE_LOCK 
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+#endif
   
    if (is_pb_used) {
       if (pb_filled(&pb)) {

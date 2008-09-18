@@ -59,7 +59,6 @@
 #include "msg_common.h"
 #include "msg_gdilib.h"
 
-#define CLIENT_WAIT_TIME_S 1
 
 /****** gdi/request_internal/sge_gdi_packet_create_multi_answer() ***********
 *  NAME
@@ -189,19 +188,19 @@ sge_gdi_packet_wait_till_handled(sge_gdi_packet_class_t *packet)
    DENTER(TOP_LAYER, "sge_gdi_packet_wait_till_handled");
 
    if (packet != NULL) {
+      cl_thread_settings_t *thread_config = cl_thread_get_thread_config();
+
       sge_mutex_lock(GDI_PACKET_MUTEX, SGE_FUNC, __LINE__, &(packet->mutex));
 
       while (packet->is_handled == false) {
-         struct timespec ts; 
-
-         DPRINTF(("waiting for packet to be handling by worker\n"));
-         sge_relative_timespec(CLIENT_WAIT_TIME_S, &ts);
-         pthread_cond_timedwait(&(packet->cond), &(packet->mutex), &ts);
+         DPRINTF((SFN" is waiting for packet to be handling by worker\n",
+                  thread_config ? thread_config->thread_name : "-NA-"));
+         pthread_cond_wait(&(packet->cond), &(packet->mutex));
       }
+      DPRINTF((SFN" got signal that packet is handled\n",
+               thread_config ? thread_config->thread_name : "-NA-"));
 
       sge_mutex_unlock(GDI_PACKET_MUTEX, SGE_FUNC, __LINE__, &(packet->mutex));
-
-      DPRINTF(("got signal that packet is handled\n"));
    }
 
    DRETURN_VOID;   
@@ -294,88 +293,19 @@ sge_gdi_packet_is_handled(sge_gdi_packet_class_t *packet)
 void
 sge_gdi_packet_broadcast_that_handled(sge_gdi_packet_class_t *packet)
 {
+   cl_thread_settings_t *thread_config = cl_thread_get_thread_config();
+
    DENTER(TOP_LAYER, "sge_gdi_packet_broadcast_that_handled");
 
    sge_mutex_lock(GDI_PACKET_MUTEX, SGE_FUNC, __LINE__, &(packet->mutex));
    packet->is_handled = true; 
-   DPRINTF(("broadcast that packet is handled\n"));
+   DPRINTF((SFN" broadcasts that packet is handled\n",
+            thread_config ? thread_config->thread_name : "-NA-"));
    pthread_cond_broadcast(&(packet->cond));
    sge_mutex_unlock(GDI_PACKET_MUTEX, SGE_FUNC, __LINE__, &(packet->mutex));
 
    DRETURN_VOID;   
 }
-
-
-/****** gdi/request/get_gdi_retries_value() ***************************************
-*  NAME
-*     get_gdi_retries_value() -- get commlib parameter list value "gdi_retries"
-*
-*  SYNOPSIS
-*     static int get_gdi_retries_value(void) 
-*
-*  FUNCTION
-*     Returns the nr of retries on synchron receive retries when getting a
-*     GDI response message.
-*
-*  INPUTS
-*     void - none
-*
-*  RESULT
-*     static int - configured "gdi_retries" value (set by qmaster_params)
-*
-*  SEE ALSO
-*     gdi/request/get_cl_ping_value()
-*     gdi/request/get_gdi_retries_value()
-*******************************************************************************/
-static int get_gdi_retries_value(void) {
-   char* gdi_retries = NULL;
-   int retries = 0;
-   cl_com_get_parameter_list_value("gdi_retries", &gdi_retries);
-   if (gdi_retries != NULL) {
-      retries = atoi(gdi_retries);
-      FREE(gdi_retries);
-   }
-   return retries;
-}
-
-/****** gdi/request/get_cl_ping_value() *******************************************
-*  NAME
-*     get_cl_ping_value() -- get commlib parameter list value "cl_ping"
-*
-*  SYNOPSIS
-*     static bool get_cl_ping_value(void) 
-*
-*  FUNCTION
-*     Returns the value of the "cl_ping" commlib parameter. The value is true
-*     or false and specifies if gdi should send a SIM message to qmaster which
-*     should be used for desiction making if qmaster is still working or
-*     unreachable.
-*
-*  INPUTS
-*     void - none
-*
-*  RESULT
-*     static bool - true or false (enabled or disabled)
-*
-*  SEE ALSO
-*     gdi/request/get_cl_ping_value()
-*     gdi/request/get_gdi_retries_value()
-*******************************************************************************/
-static bool get_cl_ping_value(void) {
-   char* cl_ping = NULL;
-   bool do_ping = false;
-
-   cl_com_get_parameter_list_value("cl_ping", &cl_ping);
-   if (cl_ping != NULL) {
-      if (strcasecmp(cl_ping, "true") == 0) {
-         do_ping = true;
-      }
-      FREE(cl_ping);
-   }
-   return do_ping;
-}
-
-
 
 /****** gdi/request_internal/sge_gdi_packet_execute_external() ****************
 *  NAME
@@ -483,8 +413,10 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
       const char *host = ctx->get_master(ctx, false);
       int id = 1;
       int response_id = 0;
+      lList *tmp_answer_list = NULL;
+
       commlib_error = sge_gdi2_send_any_request(ctx, 0, &message_id, host, commproc, id, &pb,
-                                                TAG_GDI_REQUEST, response_id, NULL);
+                                                TAG_GDI_REQUEST, response_id, &tmp_answer_list);
       if (commlib_error != CL_RETVAL_OK) {
          ret = false;
          commlib_error = ctx->is_alive(ctx);
@@ -505,6 +437,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
                                       mastername?mastername:"<NULL>", 
                                       cl_get_error_text(commlib_error))); 
             }
+            lFreeList(&tmp_answer_list);
          } else {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_SENDINGGDIREQUESTFAILED));
          }
@@ -512,9 +445,6 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
          ret = false;
       }
    }
-
-   /* after this point we do no longer need pb - free its resources */
-   clear_packbuffer(&pb);
 
    /* 
     * wait for response from master; also here keep care that commlib
@@ -527,101 +457,111 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
       char rcv_commproc[CL_MAXHOSTLEN+1];
       int tag = TAG_GDI_REQUEST;
       u_short id = 1;
+      char* cl_ping = NULL;
+      char* gdi_retries = NULL;
+      int retries = 1;
+      bool do_cl_ping = false;
+      int doit = 0;
       int gdi_error = CL_RETVAL_OK;
-      int runs = 0;
-      int runs_at_start = 0;
-      bool do_ping = false;
-      bool do_permanent = false;
 
       strcpy(rcv_host, host);
       strcpy(rcv_commproc, commproc);
 
-      do_ping = get_cl_ping_value();
-      runs = get_gdi_retries_value();
-      runs_at_start = runs;
-
-      if (runs == -1) {
-         do_permanent = true;
+      cl_com_get_parameter_list_value("cl_ping", &cl_ping);
+      if (cl_ping != NULL) {
+         if (strcasecmp(cl_ping, "true") == 0) {
+            do_cl_ping = true;
+         }
+         FREE(cl_ping);
+      }
+      cl_com_get_parameter_list_value("gdi_retries", &gdi_retries);
+      if (gdi_retries != NULL) {
+         retries = atoi(gdi_retries);
+         FREE(gdi_retries);
+         retries++;
       }
 
+      if (retries <= 0) {
+         doit = retries - 2; 
+      }
 
       /*running this loop as long as configured in gdi_retries, doing a break after getting a gdi_request*/
-      do {
+      while (doit <= retries - 1) {
+         DPRINTF(("calling the sge_gdi2_get_any_request: %d times\n",retries));
+         DPRINTF(("retry: %d\n",doit));
+
          gdi_error = sge_gdi2_get_any_request(ctx, rcv_host, rcv_commproc, &id, &rpb, &tag, 
                                                   true, message_id, NULL);
+         if (gdi_error != CL_RETVAL_OK) {
+            ret = false;
+            commlib_error = ctx->is_alive(ctx);
+            if (commlib_error != CL_RETVAL_OK) {
+               u_long32 sge_qmaster_port = ctx->get_sge_qmaster_port(ctx);
+               const char *mastername = ctx->get_master(ctx, false);
 
-         if (gdi_error == CL_RETVAL_OK) {
+               if (commlib_error == CL_RETVAL_CONNECT_ERROR ||
+                   commlib_error == CL_RETVAL_CONNECTION_NOT_FOUND ) {
+                  /* For the default case, just print a simple message */
+                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_UNABLE_TO_CONNECT_SUS,
+                                         prognames[QMASTER], sge_u32c(sge_qmaster_port),
+                                         mastername?mastername:"<NULL>"));            
+                  answer_list_add(answer_list, SGE_EVENT, STATUS_NOQMASTER, ANSWER_QUALITY_ERROR);
+               } else { 
+                  /* For unusual errors, give more detail */
+                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CANT_SEND_MSG_TO_PORT_ON_HOST_SUSS,
+                                         prognames[QMASTER], sge_u32c(sge_qmaster_port),
+                                         mastername?mastername:"<NULL>", 
+                                         cl_get_error_text(commlib_error))); 
+                  answer_list_add(answer_list, SGE_EVENT, STATUS_NOQMASTER, ANSWER_QUALITY_ERROR);
+               }
+            } else {
+               /*this error appears, if qmaster or any qmaster thread is not responding, or overloaded*/
+               if (gdi_error == CL_RETVAL_SYNC_RECEIVE_TIMEOUT) {
+                  cl_com_SIRM_t* cl_endpoint_status = NULL;
+                  cl_com_handle_t* handle = NULL;
+
+                  DPRINTF(("failed receiving gdi response. Commlib returned: "SFQ"\n", cl_get_error_text(gdi_error)));
+                  handle = ctx->get_com_handle(ctx);
+
+                  DPRINTF(("gdi timeout is set to: %d\n", handle->synchron_receive_timeout));
+                  if (do_cl_ping) {
+                     DPRINTF(("sending qping to commlib!\n"));
+                     cl_commlib_get_endpoint_status(handle, rcv_host, rcv_commproc, id, &cl_endpoint_status);
+
+                     if (cl_endpoint_status->application_status != 0) {
+                        DPRINTF(("qmaster status is not ok!\n"));
+                        DPRINTF(("some qmaster threads may have crashed or overloaded\n"));
+                     } else {
+                        DPRINTF(("qmaster application status is ok. qmaster is working.\n"));
+                        DPRINTF(("commlib seems to be ok, but commlib returned: "SFQ"\n", cl_get_error_text(gdi_error)));
+                     }
+                     DPRINTF(("Message Number: %d\n", cl_endpoint_status->application_messages_brm));
+                     DPRINTF(("Application Status: %d\n", cl_endpoint_status->application_status));
+                     DPRINTF(("The qmaster seems to be overloaded!!!!!\n"));
+                     DPRINTF(("Setting a higher timeout or raise the number of retires may solve this problem\n"));
+                     cl_com_free_sirm_message(&cl_endpoint_status);
+                  }
+                  /*only, if the last retry is also failed, the error message will be added to the answer list*/
+                  /*else, we get this error message as often as configured in gdi_retries*/
+                  if (doit == retries - 1) {
+                     SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_SYNCRECEIVETIMEOUT));
+                     answer_list_add(answer_list, SGE_EVENT, STATUS_NOQMASTER, ANSWER_QUALITY_ERROR);
+                  }
+               } else {
+                  /*this error message will be printed, if the happened error is not a commlib or a gdi sync error*/ 
+                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_RECEIVEGDIREQUESTFAILED));
+                  answer_list_add(answer_list, SGE_EVENT, STATUS_NOQMASTER, ANSWER_QUALITY_ERROR);
+               }
+            }
+            if (retries > 0) {
+               doit++;
+            }
+            ret = false;
+         } else {
             /*no error happened, leaving while*/
             ret = true;
             break;
-         } else {
-            ret = false;
-            /*this error appears, if qmaster or any qmaster thread is not responding, or overloaded*/
-            if (gdi_error == CL_RETVAL_SYNC_RECEIVE_TIMEOUT) {
-               cl_com_SIRM_t* cl_endpoint_status = NULL;
-               cl_com_handle_t* handle = NULL;
-               DPRINTF(("TEST_2372_OUTPUT: CL_RETVAL_SYNC_RECEIVE_TIMEOUT: RUNS="sge_U32CFormat"\n", sge_u32c(runs)));
-
-               handle = ctx->get_com_handle(ctx);
-               if (handle != NULL) {
-                  DPRINTF(("TEST_2372_OUTPUT: GDI_TIMEOUT="sge_U32CFormat"\n", sge_u32c(handle->synchron_receive_timeout)));
-               }
-               if (do_ping == true) {
-                  DPRINTF(("TEST_2372_OUTPUT: CL_PING=TRUE\n"));
-                  cl_commlib_get_endpoint_status(handle, rcv_host, rcv_commproc, id, &cl_endpoint_status);
-                  if (cl_endpoint_status != NULL) {
-                     if (cl_endpoint_status->application_status != 0) {
-                        DPRINTF(("TEST_2372_OUTPUT: QPING: error\n"));
-                     } else {
-                        DPRINTF(("TEST_2372_OUTPUT: QPING: ok\n"));
-                     }
-                     cl_com_free_sirm_message(&cl_endpoint_status);
-                  } else {
-                     DPRINTF(("TEST_2372_OUTPUT: QPING: failed\n"));
-                     break;
-                  }
-               } else {
-                  DPRINTF(("TEST_2372_OUTPUT: CL_PING=FALSE\n"));
-               }
-            } else {
-               break;
-            }
          }
-         if (get_gdi_retries_value() != runs_at_start) {
-            DPRINTF(("Value changed during request - break\n"));
-            break;
-         }
-         /* 
-          * only decrement runs if do_permanent is true. do_permanent is set to true
-          * if qmaster_params value for gdi_retries is set to -1 (see man page) 
-          */
-      } while (do_permanent == true || runs-- > 0);
-
-      if (ret == false) {
-         commlib_error = ctx->is_alive(ctx);
-         if (commlib_error != CL_RETVAL_OK) {
-            u_long32 sge_qmaster_port = ctx->get_sge_qmaster_port(ctx);
-            const char *mastername = ctx->get_master(ctx, false);
-
-            if (commlib_error == CL_RETVAL_CONNECT_ERROR ||
-                commlib_error == CL_RETVAL_CONNECTION_NOT_FOUND ) {
-               /* For the default case, just print a simple message */
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_UNABLE_TO_CONNECT_SUS,
-                                      prognames[QMASTER], sge_u32c(sge_qmaster_port),
-                                      mastername?mastername:"<NULL>"));            
-            } else { 
-               /* For unusual errors, give more detail */
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CANT_SEND_MSG_TO_PORT_ON_HOST_SUSS,
-                                      prognames[QMASTER], sge_u32c(sge_qmaster_port),
-                                      mastername?mastername:"<NULL>", 
-                                      cl_get_error_text(commlib_error))); 
-            }
-         } else {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_RECEIVEGDIREQUESTFAILED_US,
-                    sge_u32c(message_id),
-                    cl_get_error_text(gdi_error)));
-         }
-         answer_list_add(answer_list, SGE_EVENT, STATUS_NOQMASTER, ANSWER_QUALITY_ERROR);
       }
    }
 
@@ -760,7 +700,7 @@ sge_gdi_packet_execute_internal(sge_gdi_ctx_class_t* ctx, lList **answer_list,
    /* 
     * append the packet to the packet list of the worker threads
     */
-   sge_gdi_packet_queue_store_notify(&Master_Packet_Queue, packet, NULL);
+   sge_gdi_packet_queue_store_notify(&Master_Packet_Queue, packet, true, NULL);
 
    DRETURN(ret);
 }

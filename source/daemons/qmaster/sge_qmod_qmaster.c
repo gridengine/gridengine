@@ -1141,6 +1141,24 @@ monitoring_t *monitor
       pnm = prognames[EXECD]; 
       hnm = lGetHost(qep, QU_qhostname);
 
+      /* map hostname if we are simulating hosts */
+      if (mconf_get_simulate_hosts()) {
+         lListElem *hep = NULL;
+         const lListElem *simhost = NULL;
+
+         hep = host_list_locate(*object_type_get_master_list(SGE_TYPE_EXECHOST), hnm);
+         if(hep != NULL) {
+            simhost = lGetSubStr(hep, CE_name, "simhost", EH_consumable_config_list);
+            if(simhost != NULL) {
+               const char *real_host = lGetString(simhost, CE_stringval);
+               if(real_host != NULL && sge_hostcmp(real_host, hnm) != 0) {
+                  DPRINTF(("deliver signal for job/queue on simulated host %s to host %s\n", hnm, real_host));
+                  hnm = real_host;
+               }   
+            }
+         }
+      }
+
       if ((i = init_packbuffer(&pb, 256, 0)) == PACK_SUCCESS) {
          /* identifier for acknowledgement */
          if (jep) {

@@ -54,14 +54,14 @@ int host_mod(sge_gdi_ctx_class_t *context,
 
 int host_success(sge_gdi_ctx_class_t *context, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor);
 
-void sge_mark_unheard(lListElem *hep);
+void sge_mark_unheard(lListElem *hep, const char *target);
 
 int sge_add_host_of_type(sge_gdi_ctx_class_t *context, const char *hostname, u_long32 target, monitoring_t *monitor);
 
 void sge_gdi_kill_exechost(sge_gdi_ctx_class_t *ctx,                            
                            sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task);
 
-void sge_update_load_values(sge_gdi_ctx_class_t *context, const char *rhost, lList *lp);
+void sge_update_load_values(sge_gdi_ctx_class_t *context, char *rhost, lList *lp);
 
 void sge_load_value_cleanup_handler(sge_gdi_ctx_class_t *context, te_event_t anEvent, monitoring_t *monitor);
 

@@ -35,10 +35,8 @@
 #include <string.h>
 
 #include "basis_types.h"
+#include "sge_os.h"
 #include "msg_utilbin.h"
-
-#include "uti/sge_os.h"
-#include "uti/sge_smf.h"
 
 void sge_exit_wrapper(int);
 void usage(void);

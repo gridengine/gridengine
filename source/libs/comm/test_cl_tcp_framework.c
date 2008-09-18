@@ -207,7 +207,6 @@ int sig
 #endif
 #define __CL_FUNCTION__ "server_cleanup_conlist()"
 void server_cleanup_conlist(cl_raw_list_t** connection_list) {
-   cl_com_handle_t handle;
    CL_LOG(CL_LOG_INFO,"start");
    if (connection_list && *connection_list) {
       cl_connection_list_elem_t* con_elem = NULL;
@@ -221,8 +220,7 @@ void server_cleanup_conlist(cl_raw_list_t** connection_list) {
          con_elem = cl_connection_list_get_next_elem(con_elem);
       }
       cl_raw_list_unlock(*connection_list);
-      handle.connection_list = *connection_list;
-      cl_connection_list_destroy_connections_to_close(&handle);
+      cl_connection_list_destroy_connections_to_close(*connection_list);
       cl_connection_list_cleanup(connection_list);
    }
 }
@@ -249,7 +247,6 @@ void server_cleanup(cl_com_connection_t** con) {
 #define __CL_FUNCTION__ "server_thread()"
 void *server_thread(void *t_conf) {
    struct timeval now; 
-   cl_com_handle_t handle;
    int ret_val, retval,do_exit = 0;
    cl_com_connection_t* con = NULL;
    cl_com_connection_t* new_con = NULL;
@@ -373,8 +370,7 @@ void *server_thread(void *t_conf) {
       }
 
       CL_LOG_INT(CL_LOG_INFO, "--> nr of connections: ", (int)cl_raw_list_get_elem_count(connection_list) );
-      handle.connection_list = connection_list;
-      cl_connection_list_destroy_connections_to_close(handle);
+      cl_connection_list_destroy_connections_to_close(connection_list);
       CL_LOG_INT(CL_LOG_INFO, "--> nr of connections: ", (int)cl_raw_list_get_elem_count(connection_list) );
 
 #if 1

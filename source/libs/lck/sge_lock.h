@@ -44,6 +44,10 @@
 #define SGE_USE_LOCK_FIFO
 #endif
 
+#if 0
+#define DO_LATE_LOCK 
+#endif
+
 #if defined(LINUX)
 #undef LOCK_READ
 #undef LOCK_WRITE

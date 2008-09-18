@@ -62,87 +62,61 @@
 
 /* EB: ADOC: add commets */
 
-const int max_host_resources=23;/* specifies the number of elements in the host_resource array */
-const struct queue2cmplx host_resource[] = {
-   {"arch",           0, 0, 0, TYPE_STR},
-   {"cpu",            0, 0, 0, TYPE_DOUBLE},
-   {"load_avg",       0, 0, 0, TYPE_DOUBLE},
-   {"load_long",      0, 0, 0, TYPE_DOUBLE},
-   {"load_medium",    0, 0, 0, TYPE_DOUBLE},
-   {"load_short",     0, 0, 0, TYPE_DOUBLE},
-   {"mem_free",       0, 0, 0, TYPE_MEM},
-   {"mem_total",      0, 0, 0, TYPE_MEM},
-   {"mem_used",       0, 0, 0, TYPE_MEM},
-   {"min_cpu_inter",  0, 0, 0, TYPE_TIM},
-   {"np_load_avg",    0, 0, 0, TYPE_DOUBLE},
-   {"np_load_long",   0, 0, 0, TYPE_DOUBLE},
-   {"np_load_medium", 0, 0, 0, TYPE_DOUBLE},
-   {"np_load_short",  0, 0, 0, TYPE_DOUBLE},
-   {"num_proc",       0, 0, 0, TYPE_INT},
-   {"swap_free",      0, 0, 0, TYPE_MEM},
-   {"swap_rate",      0, 0, 0, TYPE_MEM},
-   {"swap_rsvd",      0, 0, 0, TYPE_MEM},
-   {"swap_total",     0, 0, 0, TYPE_MEM},
-   {"swap_used",      0, 0, 0, TYPE_MEM},
-   {"virtual_free",   0, 0, 0, TYPE_MEM},
-   {"virtual_total",  0, 0, 0, TYPE_MEM},
-   {"virtual_used",   0, 0, 0, TYPE_MEM}
-};
+   const int max_host_resources=23;/* specifies the number of elements in the host_resource array */
+   const struct queue2cmplx host_resource[] = {
+      {"arch",           0, TYPE_STR},
+      {"cpu",            0, TYPE_DOUBLE},
+      {"load_avg",       0, TYPE_DOUBLE},
+      {"load_long",      0, TYPE_DOUBLE},
+      {"load_medium",    0, TYPE_DOUBLE},
+      {"load_short",     0, TYPE_DOUBLE},
+      {"mem_free",       0, TYPE_MEM},
+      {"mem_total",      0, TYPE_MEM},
+      {"mem_used",       0, TYPE_MEM},
+      {"min_cpu_inter",  0, TYPE_TIM},
+      {"np_load_avg",    0, TYPE_DOUBLE},
+      {"np_load_long",   0, TYPE_DOUBLE},
+      {"np_load_medium", 0, TYPE_DOUBLE},
+      {"np_load_short",  0, TYPE_DOUBLE},
+      {"num_proc",       0, TYPE_INT},
+      {"swap_free",      0, TYPE_MEM},
+      {"swap_rate",      0, TYPE_MEM},
+      {"swap_rsvd",      0, TYPE_MEM},
+      {"swap_total",     0, TYPE_MEM},
+      {"swap_used",      0, TYPE_MEM},
+      {"virtual_free",   0, TYPE_MEM},
+      {"virtual_total",  0, TYPE_MEM},
+      {"virtual_used",   0, TYPE_MEM}
+   };
 
-const int max_queue_resources=24; /* specifies the number of elements in the queue_resource array */
-const struct queue2cmplx queue_resource[] = {
-   {"qname",            QU_qname,            0,                   0,            TYPE_STR },
-   {"hostname",         QU_qhostname,        0,                   0,            TYPE_HOST},
-   {"slots",            QU_job_slots,        0,                   0,            TYPE_INT },
-   {"tmpdir",           QU_tmpdir,           0,                   0,            TYPE_STR }, 
-   {"seq_no",           QU_seq_no,           0,                   0,            TYPE_INT },
-   {"rerun",            QU_rerun,            0,                   0,            TYPE_BOO },
-   {"calendar",         QU_calendar,         CQ_calendar,         ASTR_value,   TYPE_STR }, /* value is SGE_STRING */
-   {"s_rt",             QU_s_rt,             CQ_s_rt,             ATIME_value,  TYPE_TIM }, /* value is SGE_STRING */
-   {"h_rt",             QU_h_rt,             CQ_h_rt,             ATIME_value,  TYPE_TIM }, /* value is SGE_STRING */
-   {"s_cpu",            QU_s_cpu,            CQ_s_cpu,            ATIME_value,  TYPE_TIM }, /* value is SGE_STRING */
-   {"h_cpu",            QU_h_cpu,            CQ_h_cpu,            ATIME_value,  TYPE_TIM }, /* value is SGE_STRING */
-   {"s_fsize",          QU_s_fsize,          CQ_s_data,           AMEM_value,   TYPE_MEM }, /* value is SGE_STRING */
-   {"h_fsize",          QU_h_fsize,          CQ_h_fsize,          AMEM_value,   TYPE_MEM }, /* value is SGE_STRING */
-   {"s_data",           QU_s_data,           CQ_s_data,           AMEM_value,   TYPE_MEM }, /* value is SGE_STRING */
-   {"h_data",           QU_h_data,           CQ_h_data,           AMEM_value,   TYPE_MEM }, /* value is SGE_STRING */
-   {"s_stack",          QU_s_stack,          CQ_s_stack,          AMEM_value,   TYPE_MEM }, /* value is SGE_STRING */
-   {"h_stack",          QU_h_stack,          CQ_h_stack,          AMEM_value,   TYPE_MEM }, /* value is SGE_STRING */
-   {"s_core",           QU_s_core,           CQ_s_core,           AMEM_value,   TYPE_MEM }, /* value is SGE_STRING */
-   {"h_core",           QU_h_core,           CQ_h_core,           AMEM_value,   TYPE_MEM }, /* value is SGE_STRING */
-   {"s_rss",            QU_s_rss,            CQ_s_rss,            AMEM_value,   TYPE_MEM }, /* value is SGE_STRING */
-   {"h_rss",            QU_h_rss,            CQ_h_rss,            AMEM_value,   TYPE_MEM }, /* value is SGE_STRING */
-   {"s_vmem",           QU_s_vmem,           CQ_s_vmem,           AMEM_value,   TYPE_MEM }, /* value is SGE_STRING */
-   {"h_vmem",           QU_h_vmem,           CQ_h_vmem,           AMEM_value,   TYPE_MEM }, /* value is SGE_STRING */
-   {"min_cpu_interval", QU_min_cpu_interval, CQ_min_cpu_interval, AINTER_value, TYPE_TIM }  /* value is SGE_STRING */
-};
+   const int max_queue_resources=24; /* specifies the number of elements in the queue_resource array */
+   const struct queue2cmplx queue_resource[] = {
+      {"qname",            QU_qname,            TYPE_STR },
+      {"hostname",         QU_qhostname,        TYPE_HOST},
+      {"slots",            QU_job_slots,        TYPE_INT },
+      {"tmpdir",           QU_tmpdir,           TYPE_STR },
+      {"seq_no",           QU_seq_no,           TYPE_INT }, 
+      {"rerun",            QU_rerun,            TYPE_BOO },
+      {"calendar",         QU_calendar,         TYPE_STR },
+      {"s_rt",             QU_s_rt,             TYPE_TIM },
+      {"h_rt",             QU_h_rt,             TYPE_TIM },
+      {"s_cpu",            QU_s_cpu,            TYPE_TIM },
+      {"h_cpu",            QU_h_cpu,            TYPE_TIM },
+      {"s_fsize",          QU_s_fsize,          TYPE_MEM },
+      {"h_fsize",          QU_h_fsize,          TYPE_MEM },
+      {"s_data",           QU_s_data,           TYPE_MEM },
+      {"h_data",           QU_h_data,           TYPE_MEM },
+      {"s_stack",          QU_s_stack,          TYPE_MEM },
+      {"h_stack",          QU_h_stack,          TYPE_MEM },
+      {"s_core",           QU_s_core,           TYPE_MEM },
+      {"h_core",           QU_h_core,           TYPE_MEM },
+      {"s_rss",            QU_s_rss,            TYPE_MEM },
+      {"h_rss",            QU_h_rss,            TYPE_MEM },
+      {"s_vmem",           QU_s_vmem,           TYPE_MEM },
+      {"h_vmem",           QU_h_vmem,           TYPE_MEM },
+      {"min_cpu_interval", QU_min_cpu_interval, TYPE_TIM }
+   };
 
-int get_rsrc(const char *name, bool queue, int *field, int *cqfld, int *valfld, int *type)
-{
-   int pos = 0;
-   const struct queue2cmplx *rlist;
-   int nitems;
-
-   if (queue) {
-      rlist = &queue_resource[0];
-      nitems = max_queue_resources;
-   } else {
-      rlist = &host_resource[0];
-      nitems = max_host_resources;
-   }
-
-   for (; pos < nitems; pos++) {
-      if (strcmp(name, rlist[pos].name) == 0) {
-         if (field) *field = rlist[pos].field;
-         if (cqfld) *cqfld = rlist[pos].cqfld;
-         if (valfld) *valfld = rlist[pos].valfld;
-         if (type) *type = rlist[pos].type;
-         return 0;
-      }
-   }
-
-   return -1;
-}
 
 /****** sgeobj/centry/centry_fill_and_check() *********************************
 *  NAME
@@ -182,14 +156,12 @@ centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empt
    const char *name, *s;
    u_long32 type;
    double dval;
-   int ret, allow_infinity;
+   int ret;
 
    DENTER(CENTRY_LAYER, "centry_fill_and_check");
 
    name = lGetString(this_elem, CE_name);
    s = lGetString(this_elem, CE_stringval);
-   /* allow infinity for non-consumables only */
-   allow_infinity = lGetBool(this_elem, CE_consumable)?0:1;
 
    if (!s) {
       if (allow_empty_boolean && lGetUlong(this_elem, CE_valtype)==TYPE_BOO) {
@@ -208,9 +180,9 @@ centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empt
       case TYPE_MEM:
       case TYPE_BOO:
       case TYPE_DOUBLE:
-         if (!extended_parse_ulong_val(&dval, NULL, type, s, tmp, sizeof(tmp)-1, allow_infinity, false)) {
+         if (!parse_ulong_val(&dval, NULL, type, s, tmp, sizeof(tmp)-1)) {
 /*             ERROR((SGE_EVENT, MSG_CPLX_WRONGTYPE_SSS, name, s, tmp)); */
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_ATTRIB_XISNOTAY_SS, name, tmp);
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_CPLX_WRONGTYPE_SSS, name, s, tmp);
             DRETURN(-1);
          }
          lSetDouble(this_elem, CE_doubleval, dval);
@@ -999,14 +971,6 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list,
       double dval;
       char error_msg[200];
       error_msg[0] = '\0';
-
-      /* donot allow REQUESTABLE for "tmpdir" attribute, refer CR6650497 */
-      if (!strcmp(attrname, "tmpdir") && lGetUlong(centry, CE_requestable)!= REQU_NO) {
-            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                                    MSG_CENTRY_NOTREQUESTABLE_S, attrname);
-            ret = false;
-
-      }
 
       if (lGetBool(centry, CE_consumable)) {
    

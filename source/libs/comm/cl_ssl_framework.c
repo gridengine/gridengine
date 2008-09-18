@@ -197,22 +197,22 @@ static const char*          (*cl_com_ssl_func__SSL_get_cipher_list)             
 static int                  (*cl_com_ssl_func__SSL_CTX_set_cipher_list)             (SSL_CTX *,const char *str);
 static int                  (*cl_com_ssl_func__SSL_set_cipher_list)                 (SSL *ssl, const char *str);
 static void                 (*cl_com_ssl_func__SSL_set_quiet_shutdown)              (SSL *ssl, int mode);
-static void *               (*cl_com_ssl_func__PEM_ASN1_read_bio)                   (void *(*d2i)(),const char *name,BIO *bp, void **x, pem_password_cb *cb, void *u);
-static X509*                (*cl_com_ssl_func__d2i_X509)                            (X509 **a, const unsigned char **pp, long length);
-static PKCS8_PRIV_KEY_INFO *(*cl_com_ssl_func__d2i_PKCS8_PRIV_KEY_INFO)             (PKCS8_PRIV_KEY_INFO **x, const unsigned char **in, long len);
-static EVP_PKEY*            (*cl_com_ssl_func__d2i_PrivateKey)                      (int type, EVP_PKEY **a, const unsigned char **pp, long length);
-static EVP_PKEY*            (*cl_com_ssl_func__d2i_AutoPrivateKey)                  (EVP_PKEY **a, const unsigned char **pp, long length);
-static EVP_PKEY*            (*cl_com_ssl_func__d2i_AutoPrivateKey)                  (EVP_PKEY **a, const unsigned char **pp, long length);
+static char *               (*cl_com_ssl_func__PEM_ASN1_read_bio)                   (char *(*d2i)(),const char *name,BIO *bp,char **x, pem_password_cb *cb, void *u);
+static X509*                (*cl_com_ssl_func__d2i_X509)                            (X509 **a, unsigned char **pp, long length);
+static PKCS8_PRIV_KEY_INFO *(*cl_com_ssl_func__d2i_PKCS8_PRIV_KEY_INFO)             (PKCS8_PRIV_KEY_INFO **x,  unsigned char **in, long len);
+static EVP_PKEY*            (*cl_com_ssl_func__d2i_PrivateKey)                      (int type, EVP_PKEY **a, unsigned char **pp, long length);
+static EVP_PKEY*            (*cl_com_ssl_func__d2i_AutoPrivateKey)                  (EVP_PKEY **a, unsigned char **pp, long length);
+static EVP_PKEY*            (*cl_com_ssl_func__d2i_AutoPrivateKey)                  (EVP_PKEY **a, unsigned char **pp, long length);
 static EVP_PKEY*            (*cl_com_ssl_func__d2i_PKCS8PrivateKey_bio)             (BIO *bp, EVP_PKEY **x, pem_password_cb *cb, void *u);
 static EVP_PKEY*            (*cl_com_ssl_func__EVP_PKCS82PKEY)                      (PKCS8_PRIV_KEY_INFO *p8);
-static ASN1_VALUE*          (*cl_com_ssl_func__ASN1_item_d2i)                       (ASN1_VALUE **pval, const unsigned char **in, long len, const ASN1_ITEM *it);
+static ASN1_VALUE*          (*cl_com_ssl_func__ASN1_item_d2i)                       (ASN1_VALUE **pval, unsigned char **in, long len, const ASN1_ITEM *it);
 
 #ifdef ENABLE_CRL
-static void *               (*cl_com_ssl_func__PEM_ASN1_read)                       (void *(*d2i)(),const char *name,FILE *fp,void **x, pem_password_cb *cb, void *u);
+static char *               (*cl_com_ssl_func__PEM_ASN1_read)                       (char *(*d2i)(),const char *name,FILE *fp,char **x, pem_password_cb *cb, void *u);
 static X509_STORE *         (*cl_com_ssl_func__SSL_CTX_get_cert_store)              (SSL_CTX *ctx);
 static int                  (*cl_com_ssl_func__X509_STORE_add_crl)                  (X509_STORE *ctx, X509_CRL *x);
-static X509_CRL*            (*cl_com_ssl_func__d2i_X509_CRL)                        (X509_CRL **a, const unsigned char **pp, long length);
-static int                  (*cl_com_ssl_func__X509_STORE_set_flags)                (X509_STORE *ctx, unsigned long flags);
+static X509_CRL*            (*cl_com_ssl_func__d2i_X509_CRL)                        (X509_CRL **a, unsigned char **pp, long length);
+static void                 (*cl_com_ssl_func__X509_STORE_set_flags)                (X509_STORE *ctx, long flags);
 static X509*                (*cl_com_ssl_func__X509_STORE_CTX_get_current_cert)     (X509_STORE_CTX *ctx);
 static X509_STORE*          (*cl_com_ssl_func__X509_STORE_new)                      (void);
 static X509_NAME*           (*cl_com_ssl_func__X509_get_subject_name)               (X509 *a);
@@ -265,14 +265,14 @@ static void                 (*cl_com_ssl_func__X509_STORE_free)                 
 #endif
 
 #define  cl_com_ssl_func__PEM_read_bio_X509(bp,x,cb,u) (X509 *)cl_com_ssl_func__PEM_ASN1_read_bio( \
-   (void *(*)())cl_com_ssl_func__d2i_X509,PEM_STRING_X509,bp,(void **)x,cb,u)
+   (char *(*)())cl_com_ssl_func__d2i_X509,PEM_STRING_X509,bp,(char **)x,cb,u)
 #define  cl_com_ssl_func__PEM_read_bio_PrivateKey(bp,x,cb,u) (EVP_PKEY *)cl_com_ssl_func__PEM_ASN1_read_bio( \
-   (void *(*)())cl_com_ssl_func__d2i_AutoPrivateKey,PEM_STRING_EVP_PKEY,bp,(void **)x,cb,u)
+   (char *(*)())cl_com_ssl_func__d2i_AutoPrivateKey,PEM_STRING_EVP_PKEY,bp,(char **)x,cb,u)
 
 static PKCS8_PRIV_KEY_INFO* cl_com_ssl_func__PEM_read_bio_PKCS8_PRIV_KEY_INFO(BIO *bp, PKCS8_PRIV_KEY_INFO **x, pem_password_cb *cb, void *u)
 { 
-   return((PKCS8_PRIV_KEY_INFO *)cl_com_ssl_func__PEM_ASN1_read_bio((void *(*)())cl_com_ssl_func__d2i_PKCS8_PRIV_KEY_INFO, PEM_STRING_PKCS8INF, 
-            bp, (void **)x,cb,u));
+   return((PKCS8_PRIV_KEY_INFO *)cl_com_ssl_func__PEM_ASN1_read_bio((char *(*)())cl_com_ssl_func__d2i_PKCS8_PRIV_KEY_INFO, PEM_STRING_PKCS8INF, 
+            bp, (char **)x,cb,u));
 }
 
 
@@ -1456,7 +1456,7 @@ static int cl_com_ssl_build_symbol_table(void) {
       }
 
       func_name = "PEM_ASN1_read_bio";
-      cl_com_ssl_func__PEM_ASN1_read_bio = (void *(*)(void *(*d2i)(),const char *name,BIO *bp,void **x, pem_password_cb *cb, void *u))dlsym(cl_com_ssl_crypto_handle, func_name);
+      cl_com_ssl_func__PEM_ASN1_read_bio = (char *(*)(char *(*d2i)(),const char *name,BIO *bp,char **x, pem_password_cb *cb, void *u))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__PEM_ASN1_read_bio == NULL) {
          CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
          had_errors++;
@@ -1464,7 +1464,7 @@ static int cl_com_ssl_build_symbol_table(void) {
 
 #ifdef ENABLE_CRL
       func_name = "PEM_ASN1_read";
-      cl_com_ssl_func__PEM_ASN1_read = (void *(*)(void *(*d2i)(),const char *name,FILE *fp,void **x, pem_password_cb *cb, void *u))dlsym(cl_com_ssl_crypto_handle, func_name);
+      cl_com_ssl_func__PEM_ASN1_read = (char *(*)(char *(*d2i)(),const char *name,FILE *fp,char **x, pem_password_cb *cb, void *u))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__PEM_ASN1_read == NULL) {
          CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
          had_errors++;
@@ -1485,35 +1485,35 @@ static int cl_com_ssl_build_symbol_table(void) {
       }
 
       func_name = "d2i_X509_CRL";
-      cl_com_ssl_func__d2i_X509_CRL = (X509_CRL* (*)(X509_CRL **a, const unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
+      cl_com_ssl_func__d2i_X509_CRL = (X509_CRL* (*)(X509_CRL **a, unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__d2i_X509_CRL == NULL) {
          CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
          had_errors++;
       }
 
       func_name = "d2i_X509";
-      cl_com_ssl_func__d2i_X509 = (X509* (*)(X509 **a, const unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
+      cl_com_ssl_func__d2i_X509 = (X509* (*)(X509 **a, unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__d2i_X509 == NULL) {
          CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
          had_errors++;
       }
 
       func_name = "d2i_PKCS8_PRIV_KEY_INFO";
-      cl_com_ssl_func__d2i_PKCS8_PRIV_KEY_INFO = (PKCS8_PRIV_KEY_INFO* (*)(PKCS8_PRIV_KEY_INFO **a, const unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
+      cl_com_ssl_func__d2i_PKCS8_PRIV_KEY_INFO = (PKCS8_PRIV_KEY_INFO* (*)(PKCS8_PRIV_KEY_INFO **a, unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__d2i_PKCS8_PRIV_KEY_INFO == NULL) {
          CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
          had_errors++;
       }
 
       func_name = "d2i_PrivateKey";
-      cl_com_ssl_func__d2i_PrivateKey = (EVP_PKEY* (*)(int type, EVP_PKEY **a, const unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
+      cl_com_ssl_func__d2i_PrivateKey = (EVP_PKEY* (*)(int type, EVP_PKEY **a, unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__d2i_PrivateKey == NULL) {
          CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
          had_errors++;
       }
 
       func_name = "d2i_AutoPrivateKey";
-      cl_com_ssl_func__d2i_AutoPrivateKey = (EVP_PKEY* (*)(EVP_PKEY **a, const unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
+      cl_com_ssl_func__d2i_AutoPrivateKey = (EVP_PKEY* (*)(EVP_PKEY **a, unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__d2i_AutoPrivateKey == NULL) {
          CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
          had_errors++;
@@ -1534,14 +1534,14 @@ static int cl_com_ssl_build_symbol_table(void) {
       }
 
       func_name = "ASN1_item_d2i";
-      cl_com_ssl_func__ASN1_item_d2i = (ASN1_VALUE* (*)(ASN1_VALUE **pval, const unsigned char **in, long len, const ASN1_ITEM *it))dlsym(cl_com_ssl_crypto_handle, func_name);
+      cl_com_ssl_func__ASN1_item_d2i = (ASN1_VALUE* (*)(ASN1_VALUE **pval, unsigned char **in, long len, const ASN1_ITEM *it))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__ASN1_item_d2i == NULL) {
          CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
          had_errors++;
       }
 
       func_name = "X509_STORE_set_flags";
-      cl_com_ssl_func__X509_STORE_set_flags = (int (*)(X509_STORE *ctx, unsigned long flags))dlsym(cl_com_ssl_crypto_handle, func_name);
+      cl_com_ssl_func__X509_STORE_set_flags = (void (*)(X509_STORE *ctx, long flags))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__X509_STORE_set_flags == NULL) {
          CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
          had_errors++;
@@ -2022,24 +2022,20 @@ static int cl_com_ssl_transform_ssl_error(unsigned long ssl_error, char* buffer,
          if (counter == 2) {
             module = strdup(help);
             if (module == NULL) {
-               free(buffer_copy);
                return CL_RETVAL_MALLOC;
             }
          }
          if (counter == 4) {
             error_text = strdup(help);
             if (error_text == NULL) {
-               free(buffer_copy);
-               if (module != NULL) {
-                  free(module);
-               }
+               free(module);
+               module = NULL;
                return CL_RETVAL_MALLOC;
             }
          }
       }
    }
 
-   /* buffer copy is malloc()ed here and != NULL , free buffer_copy ...*/
    free(buffer_copy);
    buffer_copy = NULL;
 
@@ -2048,6 +2044,7 @@ static int cl_com_ssl_transform_ssl_error(unsigned long ssl_error, char* buffer,
       if (module == NULL) {
          if (error_text != NULL) {
             free(error_text);
+            error_text = NULL;
          }
          return CL_RETVAL_MALLOC;
       }
@@ -2057,6 +2054,7 @@ static int cl_com_ssl_transform_ssl_error(unsigned long ssl_error, char* buffer,
       error_text = (char*) malloc(sizeof(char)*buflen);
       if (error_text == NULL) {
          free(module);
+         module = NULL;
          return CL_RETVAL_MALLOC;
       }
       snprintf(error_text, buflen, buffer);
@@ -2099,10 +2097,9 @@ static int cl_com_ssl_transform_ssl_error(unsigned long ssl_error, char* buffer,
       }
    }
 
-   /* both variables are malloc()ed and != NULL at this point */
    free(module);
-   module = NULL;
    free(error_text);
+   module = NULL;
    error_text = NULL;
 
    if (do_ignore == CL_TRUE) {

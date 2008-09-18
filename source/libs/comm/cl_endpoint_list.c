@@ -49,8 +49,7 @@
 int cl_endpoint_list_setup(cl_raw_list_t** list_p, 
                            char* list_name, 
                            long entry_life_time,
-                           long refresh_interval,
-                           cl_bool_t create_hash) {
+                           long refresh_interval) {
 
    int ret_val = CL_RETVAL_OK;
    struct timeval now;
@@ -58,6 +57,7 @@ int cl_endpoint_list_setup(cl_raw_list_t** list_p,
 
    ldata = (cl_endpoint_list_data_t*) malloc(sizeof(cl_endpoint_list_data_t));
    if (ldata == NULL ) {
+      free(ldata);
       return CL_RETVAL_MALLOC;
    }
 
@@ -85,22 +85,11 @@ int cl_endpoint_list_setup(cl_raw_list_t** list_p,
       return ret_val;
    }
 
-   /* create hashtable */
-   if (create_hash == CL_TRUE) {
-      ldata->ht = sge_htable_create(4, dup_func_string, hash_func_string, hash_compare_string);
-      if (ldata->ht == NULL) {
-         cl_raw_list_cleanup(list_p);
-         free(ldata);
-         return CL_RETVAL_MALLOC;
-      }
-      CL_LOG_INT(CL_LOG_INFO,"created hash table with size =", 4);
-   } else {
-      CL_LOG(CL_LOG_INFO,"created NO hash table!");
-      ldata->ht = NULL;
-   }
-
    /* set private list data */
    (*list_p)->list_data = ldata;
+
+   /* create hashtable */
+   ldata->ht =  sge_htable_create(4, dup_func_string, hash_func_string, hash_compare_string);
 
    CL_LOG_INT(CL_LOG_INFO,"entry_life_time is: ", ldata->entry_life_time);
    CL_LOG_INT(CL_LOG_INFO,"refresh_interval is:", ldata->refresh_interval);
@@ -182,9 +171,7 @@ int cl_endpoint_list_cleanup(cl_raw_list_t** list_p) {
    /* clean list private data */
    ldata = (*list_p)->list_data;
    if (ldata != NULL) {
-      if (ldata->ht != NULL) {
-         sge_htable_destroy(ldata->ht);
-      }
+      sge_htable_destroy(ldata->ht);
       free(ldata);
    }
    (*list_p)->list_data = NULL;
@@ -271,9 +258,7 @@ int cl_endpoint_list_define_endpoint(cl_raw_list_t* list_p, cl_com_endpoint_t* e
       return CL_RETVAL_MALLOC;
    } else {
       cl_endpoint_list_data_t* ldata = list_p->list_data;
-      if (ldata->ht != NULL) {
-         sge_htable_store(ldata->ht, dup_endpoint->hash_id, new_elem);
-      }
+      sge_htable_store(ldata->ht, dup_endpoint->hash_id, new_elem);
    }
 
    /* unlock the list */
@@ -427,9 +412,7 @@ int cl_endpoint_list_undefine_endpoint(cl_raw_list_t* list_p, cl_com_endpoint_t*
       elem = NULL;
 
       ldata = list_p->list_data;
-      if (ldata->ht != NULL) {
-         sge_htable_delete(ldata->ht, endpoint->hash_id);
-      }
+      sge_htable_delete(ldata->ht, endpoint->hash_id);
       back = CL_RETVAL_OK;
    }
 
@@ -500,31 +483,15 @@ cl_endpoint_list_elem_t* cl_endpoint_list_get_last_elem(cl_endpoint_list_elem_t*
    return NULL;
 }
 
-#ifdef __CL_FUNCTION__
-#undef __CL_FUNCTION__
-#endif
-#define __CL_FUNCTION__ "cl_endpoint_list_get_elem_endpoint()"
 cl_endpoint_list_elem_t* cl_endpoint_list_get_elem_endpoint(cl_raw_list_t* list_p, cl_com_endpoint_t *endpoint) {
-   cl_endpoint_list_elem_t *elem = NULL;
+   void *elem = NULL;
 
    if (endpoint != NULL && list_p != NULL) {
       cl_endpoint_list_data_t* ldata = NULL;
       ldata = list_p->list_data;
-      if (ldata->ht != NULL) {
-         if (sge_htable_lookup(ldata->ht, endpoint->hash_id, (const void**)&elem) == True) {
-            return elem;
-         }
-      } else {
-         /* Search without having hash table */
-         CL_LOG(CL_LOG_INFO,"no hash table available, searching sequential");
-         elem = cl_endpoint_list_get_first_elem(list_p);
-         while ( elem != NULL) {
-            if (cl_com_compare_endpoints(elem->endpoint, endpoint) == 1) {
-               /* found matching element */
-               return elem;
-            }
-            elem = cl_endpoint_list_get_next_elem(elem);
-         }
+
+      if (sge_htable_lookup(ldata->ht, endpoint->hash_id, (const void**)&elem) == True) {
+         return elem;
       }
    }
    return NULL;

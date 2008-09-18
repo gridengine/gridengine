@@ -48,17 +48,8 @@
 #include "sge_uidgid.h"
 #include "msg_utilib.h"
 
-#if defined(__SunOS_5_7) || defined(__SunOS_5_8) || defined(__SunOS_5_9)
-   /* Redefinitions from S10+ sys/types.h */
-   typedef id_t    ctid_t;
-   /* Missing in SunOS < 10 */
-   static int unsetenv(const char *var) {
-      /* dummy */
-      return 0;
-   }
-#else
-   #include <stdlib.h>
-#endif
+/* Redefinitions from S10+ sys/types.h */
+typedef id_t    ctid_t;
 
 /* Redefinitions from libcontract.h */
 typedef void *ct_stathdl_t;
@@ -716,7 +707,7 @@ static int contracts_pre_fork(void)
     
     fd = open64(CTFS_ROOT "/process/template", O_RDWR);
     if (fd == -1) {
-        DRETURN(-1);
+        return (-1);
     }
     /*
      * Execd doesn't do anything with the new contract.
@@ -779,14 +770,8 @@ static int contracts_post_fork(int ctfd, int pid, char *err_str, int err_length)
     }
     shared_contract_func__ct_tmpl_clear(ctfd);
     close(ctfd);
-    if (pid == 0) {
-       /* We modify the child env not to contain SMF vars (not part of the service) */
-       unsetenv("SMF_FMRI");
-       unsetenv("SMF_METHOD");
-       unsetenv("SMF_RESTARTER");
-       DRETURN(pid);
-    } else if (pid < 0) {
-       DRETURN(pid);
+    if (pid <= 0) {
+        DRETURN(pid);
     }
     /* Parent has to explicitly abandon the new contract */
     if ((cfd = open64(CTFS_ROOT "/process/latest", O_RDONLY)) == -1) {
@@ -853,7 +838,7 @@ static int contracts_post_fork(int ctfd, int pid, char *err_str, int err_length)
 *  SEE ALSO
 *     
 *******************************************************************************/
-int sge_smf_contract_fork(char *err_str, int err_length)
+int sge_smf_contract_fork(char *err_str, int err_length) 
 {
     int pid;
     int ctfd;
@@ -913,12 +898,11 @@ int sge_smf_contract_fork(char *err_str, int err_length)
 *
 *     MT-NOTES: sge_smf_temporary_disable_instance is MT-safe because it 
 *               modifies once static variables (libscfLoaded)
-*               changes user id
 *
 *  SEE ALSO
 *     execd/execd_exit_func()
 *******************************************************************************/
-void sge_smf_temporary_disable_instance(void)
+void sge_smf_temporary_disable_instance(void) 
 {
     uid_t old_euid = NULL;
     int change_user = 1;

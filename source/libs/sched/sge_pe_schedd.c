@@ -164,31 +164,37 @@ int sge_debit_job_from_pe(lListElem *pep, lListElem *jep, int slots)
 *  NOTES
 *     MT-NOTE: pe_restricted() is not MT safe 
 *******************************************************************************/
-dispatch_t pe_match_static(const sge_assignment_t *a) 
-{
+dispatch_t pe_match_static(
+lListElem *job,
+lListElem *pe,
+lList *acl_list
+) {
    int total_slots;
 
    DENTER(TOP_LAYER, "pe_match_static");
 
-   total_slots = (int)lGetUlong(a->pe, PE_slots);
+   total_slots = (int)lGetUlong(pe, PE_slots);
    if (total_slots == 0) { 
       /* because there are not enough PE slots in total */
       DPRINTF(("total slots %d of PE \"%s\" not in range of job "sge_u32"\n",
-            total_slots, a->pe_name, a->job_id));
-         schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                        SCHEDD_INFO_TOTALPESLOTSNOTINRANGE_S, a->pe_name);
+            total_slots, lGetString(pe, PE_name), lGetUlong(job, JB_job_number)));
+         schedd_mes_add((lGetUlong(job, JB_job_number)), SCHEDD_INFO_TOTALPESLOTSNOTINRANGE_S,
+            lGetString(pe, PE_name));
       DEXIT;
       return DISPATCH_NEVER_CAT;
    }
 
-   if (!sge_has_access_(a->user, a->group, lGetList(a->pe, PE_user_list), 
-            lGetList(a->pe, PE_xuser_list), a->acl_list)) {
+   if (!sge_has_access_(lGetString(job, JB_owner), lGetString(job, JB_group),
+         lGetList(pe, PE_user_list), lGetList(pe, PE_xuser_list), acl_list)) {
       DPRINTF(("job %d has no access to parallel environment \"%s\"\n",
-              (int)a->job_id, a->pe_name));
-      schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                     SCHEDD_INFO_NOACCESSTOPE_S, a->pe_name);
-      DRETURN(DISPATCH_NEVER_CAT);
+            (int)lGetUlong(job, JB_job_number), lGetString(pe, PE_name)));
+      schedd_mes_add(lGetUlong(job, JB_job_number), SCHEDD_INFO_NOACCESSTOPE_S, 
+            lGetString(pe, PE_name));
+      DEXIT;
+      return DISPATCH_NEVER_CAT;
    }
 
-   DRETURN(DISPATCH_OK);
+   DEXIT;
+   return DISPATCH_OK;
 }
+

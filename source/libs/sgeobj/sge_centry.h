@@ -38,17 +38,12 @@
 struct queue2cmplx {
    char *name;    /* name of the centry element, not the shortcut */
    int  field;    /* name of the element in the queue structure */
-   int  cqfld;    /* cluster queue field */
-   int  valfld;   /* value field in cluster queue sublist */
-   int  type;     /* type of the element in the queue strcuture */
+   int type;      /* type of the element in the queue strcuture */
 };
 extern const int max_host_resources;
 extern const struct queue2cmplx host_resource[]; 
 extern const int max_queue_resources;
 extern const struct queue2cmplx queue_resource[];
-
-int 
-get_rsrc(const char *name, bool queue, int *field, int *cqfld, int *valfld, int *type);
 
 int
 centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empty_boolean,
@@ -64,7 +59,8 @@ const char *
 map_req2str(u_long32 op);
 
 lListElem *
-centry_create(lList **answer_list, const char *name);
+centry_create(lList **answer_list, 
+              const char *name);
 
 bool
 centry_is_referenced(const lListElem *centry, lList **answer_list,

@@ -206,7 +206,7 @@
 /*
 ** sge_give_jobs.c
 */
-#define MSG_COM_CANT_DELIVER_UNHEARD_SSU _MESSAGE(33137, _("got max. unheard timeout for target "SFQ" on host "SFQ", can't deliver job \""sge_U32CFormat"\""))
+#define MSG_COM_CANT_DELIVER_UNHEARD_SSU _MESSAGE(33137, _("got max. unheard timeout for target "SFQ" on host "SFQ", can't delivering job \""sge_U32CFormat"\""))
   
 #define MSG_OBJ_UNABLE2FINDCKPT_S     _MESSAGE(33138, _("can't find checkpointing object "SFQ))
 #define MSG_OBJ_UNABLE2CREATECKPT_SU  _MESSAGE(33139, _("can't create checkpointing object "SFQ" for job " sge_U32CFormat))
@@ -223,6 +223,7 @@
 #define MSG_JOB_DELIVER2Q_UUS         _MESSAGE(33148, _("failed to deliver job "sge_U32CFormat"."sge_U32CFormat" to queue "SFQ))
 #define MSG_JOB_RESCHEDULE_UU         _MESSAGE(33159, _("rescheduling job "sge_U32CFormat"."sge_U32CFormat) ) 
 #define MSG_RU_CANCELED_S             _MESSAGE(33160, _("Due to a modification of the reschedule_unknown timeout rescheduling for host "SFN" was canceled."))
+#define MSG_JOB_DEPENDUPT4J_UU        _MESSAGE(33161, _("failed to update dependent tasks of completed job "sge_U32CFormat"."sge_U32CFormat)) 
 
 /* CR: don't localize mail subject, until we send it in Mime format!
  *  The message definition is not l10n'ed (no _() macro used)!!!     
@@ -762,6 +763,7 @@
 #define MSG_QMASTER_INVALIDJOBSUBMISSION_SSS        _MESSAGE(33920, _("invalid job object in job submission from user "SFQ", commproc "SFQ" on host "SFQ))
 #define MSG_QMASTER_INVALIDEVENTCLIENT_SSS          _MESSAGE(33921, _("invalid event client request from user "SFQ", commproc "SFQ" on host "SFQ))
 
+#define MSG_FAILEDTOBUILDWHEREANDWHAT               _MESSAGE(33922, _("error: failed to build where or what condition"))
 #define MSG_AR_QUEUEDISABLEDINTIMEFRAME             _MESSAGE(33923, _("queue "SFQ" is calendar disabled in selected time frame"))
 #define MSG_AR_QUEUEDNOPERMISSIONS                  _MESSAGE(33924, _("queue "SFQ" has no permissions for selected users"))
 

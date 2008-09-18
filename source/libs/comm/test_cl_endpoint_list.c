@@ -83,7 +83,7 @@ main(int argc, char** argv)
 
 
   printf("setup endpoint list ...\n");
-  retval = cl_endpoint_list_setup(&endpoint_list, "endpoint list", 5, 2, CL_TRUE);
+  retval = cl_endpoint_list_setup(&endpoint_list, "endpoint list", 5, 2 );
   printf("%s\n\n",cl_get_error_text(retval));
 
  

@@ -54,11 +54,19 @@ gdi_request_queue_t Master_Request_Queue = {
 bool
 sge_schedd_send_orders(sge_gdi_ctx_class_t *ctx, order_t *orders, lList **order_list, lList **answer_list, const char *name)
 {
+   static bool is_initialized = false;
+   static int max_unhandled = 0;
    bool ret = true;
 
    DENTER(TOP_LAYER, "sge_schedd_send_orders");
-
+   if (!is_initialized) {
+      max_unhandled = mconf_get_max_order_limit();
+      INFO((SGE_EVENT, "Maximum number of unhandled GDI order requests limited to %d. Change this by setting MAX_ORDER_LIMT in qmaster_params and restart qmaster!\n", max_unhandled));
+      is_initialized = true;
+   }
    if ((order_list != NULL) && (*order_list != NULL) && (lGetNumberOfElem(*order_list) != 0)) {
+      int unhandled = 0;
+
       /*
        * Add the new orders 
        */
@@ -69,7 +77,13 @@ sge_schedd_send_orders(sge_gdi_ctx_class_t *ctx, order_t *orders, lList **order_
          lAddList(Master_Request_Queue.order_list, order_list);
       }
 
-      ret = sge_schedd_add_gdi_order_request(ctx, orders, answer_list, &Master_Request_Queue.order_list);
+      /*
+       * send order list only if maximum unhandled order count is not reached
+       */
+      unhandled = sge_schedd_get_unhandled_request_count(ctx, answer_list);
+      if (unhandled < max_unhandled) {
+         sge_schedd_add_gdi_order_request(ctx, orders, answer_list, &Master_Request_Queue.order_list);
+      } 
    }
    lFreeList(order_list);
 
@@ -97,7 +111,7 @@ sge_schedd_add_gdi_order_request(sge_gdi_ctx_class_t *ctx, order_t *orders, lLis
       order_id = ctx->gdi_multi(ctx, answer_list, SGE_GDI_SEND, SGE_ORDER_LIST, SGE_GDI_ADD,
                                 order_list, NULL, NULL, state, false);
 
-      if (order_id != -1) {
+      if ((answer_list == NULL) && (order_id != -1)) {
          if (Master_Request_Queue.first == NULL) {
             state->next = NULL;
             Master_Request_Queue.first = state;
@@ -118,6 +132,25 @@ sge_schedd_add_gdi_order_request(sge_gdi_ctx_class_t *ctx, order_t *orders, lLis
    DRETURN(ret);
 }
 
+
+
+int
+sge_schedd_get_unhandled_request_count(sge_gdi_ctx_class_t *ctx,
+                                       lList **answer_list)
+{
+   int counter = 0;
+   state_gdi_multi *current_state, *next_state;
+
+   DENTER(TOP_LAYER, "sge_schedd_get_unhandled_request_count");
+   next_state = Master_Request_Queue.first;
+   while ((current_state = next_state) != NULL) {
+      next_state = current_state->next;
+
+      counter += (sge_gdi2_is_done(ctx, answer_list, current_state) ? 1 : 0);
+   }
+   DRETURN(counter);
+}
+
 bool
 sge_schedd_block_until_orders_processed(sge_gdi_ctx_class_t *ctx, 
                                         lList **answer_list)
@@ -125,9 +158,64 @@ sge_schedd_block_until_orders_processed(sge_gdi_ctx_class_t *ctx,
    bool ret = true;
    state_gdi_multi *current_state = NULL;
    state_gdi_multi *next_state = NULL; 
+   state_gdi_multi *last_but_one = NULL;
 
    DENTER(TOP_LAYER, "sge_schedd_block_until_orders_processed");
 
+   /*
+    * Before we wait for all order requests to be finished 
+    * we will wait for the last package...
+    *
+    * Reason: The GDI order packages are executed in the same sequence 
+    * they are stored in the worker queue. Therefore the last package will
+    * be executed last. When the last package is done all previous are 
+    * also done.
+    *
+    * Resulting improvement: pthread_cond_wait() (which is executed in
+    * ctx->gdi_wait()) will only be executed once.
+    */
+   next_state = Master_Request_Queue.first;
+   while ((current_state = next_state) != NULL) {
+      next_state = current_state->next;
+      if (next_state != NULL && next_state->next == NULL) {
+         last_but_one = current_state;
+         break;
+      }
+   }
+      
+   if (last_but_one != NULL) {
+      lList *request_answer_list = NULL;
+      lList *multi_answer_list = NULL;
+      int order_id;
+
+      /* 
+       * wait for answer. this call might block if the request
+       * has not been handled by any worker until now.
+       * subsequent calls to sge_gdi2_wait (== ctx->gdi_wait()) in 
+       * this function will only do a boolean compare because the 
+       * concerned requests are then already finished
+       */
+      ctx->gdi_wait(ctx, answer_list, &multi_answer_list, last_but_one->next);
+
+      /*
+       * now we have an answer. is it positive? 
+       */
+      order_id = 1;
+      sge_gdi_extract_answer(&request_answer_list, SGE_GDI_ADD, SGE_ORDER_LIST,
+                             order_id, multi_answer_list, NULL);
+      if (request_answer_list != NULL) {
+         answer_list_log(&request_answer_list, false, false);
+         ret = false;
+      }
+
+      /*
+       * memory cleanup
+       */
+      lFreeList(&request_answer_list);
+      lFreeList(&multi_answer_list);
+      last_but_one->next = (state_gdi_multi*)sge_free((char*)(last_but_one->next));
+      Master_Request_Queue.last = last_but_one;
+   }
 
    /*
     * wait till all GDI order requests are finished

@@ -603,10 +603,8 @@ int find_includes(filep, file, file_red, recursion, failOK)
          break;
       case IFDEF:
       case IFNDEF:
-         if ((type == IFDEF && 
-		isdefined(line, file_red, (struct inclist **) NULL))
-          || (type == IFNDEF && 
-		!isdefined(line, file_red, (struct inclist **) NULL))) {
+         if ((type == IFDEF && isdefined(line, file_red, NULL))
+          || (type == IFNDEF && !isdefined(line, file_red, NULL))) {
             debug(1,(type == IFNDEF ?
                 "line %d: %s !def'd in %s via %s%s\n" : "",
                 filep->f_line, line,

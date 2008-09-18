@@ -35,7 +35,7 @@
 #include "basis_types.h"
 #include "gdi/sge_gdi_ctx.h"
 
-int sge_read_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aSpoolContext, lList** config_list, lList *anAnswer);
+int sge_read_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aSpoolContext, lList *anAnswer);
 
 lList*     sge_get_configuration(void);
 lListElem* sge_get_configuration_for_host(const char* aName);

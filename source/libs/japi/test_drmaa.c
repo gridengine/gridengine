@@ -3102,7 +3102,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
 
             printf ("Filling job template\n");
             drmaa_set_attribute(jt, DRMAA_WD, "/tmp", NULL, 0);
-            drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, "tar", NULL, 0);         
+            drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, "/usr/bin/tar", NULL, 0);         
             set_path_attribute_plus_colon(jt, DRMAA_ERROR_PATH, error_path, NULL, 0);
 
             printf ("Running job\n");
@@ -3202,7 +3202,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             job_argv[3] = NULL;
             drmaa_set_vector_attribute(jt, DRMAA_V_ARGV, job_argv, NULL, 0);
             drmaa_set_attribute(jt, DRMAA_WD, "/tmp", NULL, 0);
-            drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, "tar", NULL, 0);         
+            drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, "/usr/bin/tar", NULL, 0);         
 
             printf ("Running job\n");
             while ((drmaa_errno=drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
@@ -3255,7 +3255,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             job_argv[2] = NULL;
             drmaa_set_vector_attribute(jt, DRMAA_V_ARGV, job_argv, NULL, 0);
             drmaa_set_attribute(jt, DRMAA_WD, "/tmp", NULL, 0);
-            drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, "tar", NULL, 0);         
+            drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, "/usr/bin/tar", NULL, 0);         
             drmaa_set_attribute(jt, DRMAA_JOIN_FILES, "y", NULL, 0);         
             set_path_attribute_plus_colon(jt, DRMAA_OUTPUT_PATH, output_path, NULL, 0);
 
@@ -4828,8 +4828,8 @@ static drmaa_job_template_t *create_exit_job_template(const char *exit_job, int 
 
    if (ret == DRMAA_ERRNO_SUCCESS) {   
       return jt;
-   } else {
-      drmaa_delete_job_template(jt, NULL, 0);
+   }
+   else {
       return NULL;
    }
 }
@@ -4884,8 +4884,8 @@ static drmaa_job_template_t *create_sleeper_job_template(int seconds, int as_bul
 
    if (ret == DRMAA_ERRNO_SUCCESS) {   
       return jt;
-   } else {
-      drmaa_delete_job_template(jt, NULL, 0);
+   }
+   else {
       return NULL;
    }
 }

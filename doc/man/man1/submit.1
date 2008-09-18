@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/07/16 12:04:17 $     Revision: $Revision: 1.76 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/03/31 12:06:44 $     Revision: $Revision: 1.72 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2008/07/16 12:04:17 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2008/03/31 12:06:44 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -616,7 +616,7 @@ again become "essential". The \fB\-hard\fP and \fB\-soft\fP
 options in effect act as "toggles" during the scan.
 .\"
 .IP "\fB\-h | \-h {u|s|o|n|U|O|S}...\fP"
-Available for \fIqsub\fP, \fIqrsh\fP (with command argument), \fIqalter\fP
+Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP, \fIqalter\fP
 and \fIqresub\fP.
 .sp 1
 List of holds to place on a job, a task or some tasks of a job.
@@ -873,10 +873,9 @@ serial job multiple \fB\-l\fP switches refine the definition
 for the sought queue.
 .sp 1
 .I Qalter
-allows changing the value of this option even while the job is running, but only if the 
-initial list of resources does not contain a resource that
-is marked as consumable. However the modification will only be  
-effective after a restart or migration of the job.
+allows changing this option even while the job executes. The modified
+parameter will only be in effect after a restart or migration of the job,
+however.
 .\"
 .IP "\fB\-m b|e|a|s|n,...\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
@@ -1100,22 +1099,6 @@ please see the
 allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
-.\"
-.IP "\fB\-pty y[es]|n[o]\fP"
-Available for \fIqrsh\fP and \fIqlogin\fP only.
-.sp 1
--pty yes enforces the job to be started in a pseudo terminal (pty). If no pty is 
-available, the job start fails.
--pty no
-enforces the job to be started without a pty.
-By default,
-.I qrsh without a command
-and
-.I qlogin
-start the job in a pty,
-.I qrsh with a command
-starts the job without a pty.
-
 .\"
 .IP "\fB\-q wc_queue_list\fP"
 Available for \fIqsub\fP, \fIqrsh\fP, \fIqsh\fP, \fIqlogin\fP and \fIqalter\fP.
@@ -1384,7 +1367,7 @@ If you use the \fB\-u\fP switch it is not permitted to
 specify an additional \fIwc_job_range_list\fP.
 .\"
 .IP "\fB\-v variable[=value],...\fP"
-Available for \fIqsub\fP, \fIqrsh\fP (with command argument) and \fIqalter\fP.
+Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP and \fIqalter\fP.
 .sp 1
 Defines or redefines the environment variables to
 be exported to the execution context of the job.
@@ -1457,12 +1440,22 @@ The specifiers e, w, n and v define the following validation modes:
 	for invalid requests.
 `n'	none - switches off validation; the default for
 	\fIqsub\fP and \fIqalter\fP.
-`v'	verify - does not submit the job but prints a
-	validation report.
+`v'	verify - does not submit the job but prints an
+	extensive validation report.
 .fi
 .sp 1
 Note, that the necessary checks are performance consuming and hence the 
 checking is switched off by default.
+.sp 1
+Note also, that the reasons for job requirements being invalid with respect to 
+resource availability of queues are displayed in the "\fB-w v\fP" case using 
+the format as described for the
+.M qstat 1
+\fB\-F\fP option (see description of 
+\fBFull Format\fP in section \fBOUTPUT FORMATS\fP of the
+.M qstat 1
+manual page.
+.\"
 .IP "\fB\-wd working_dir\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP and
 \fIqalter\fP only.
@@ -1628,7 +1621,7 @@ The index number of the last array job task (see \fB\-t\fP option
 above). It is possible to change the predefined value of this variable with
 \fB\-v\fP or \fB\-V\fP (see options above).
 .IP xxQS_NAME_Sxx_TASK_STEPSIZE 1.5i
-The step size of the array job specification (see \fB\-t\fP option
+The stepsize of the array job specification (see \fB\-t\fP option
 above). It is possible to change the predefined value of this variable with
 \fB\-v\fP or \fB\-V\fP (see options above).
 .IP "ENVIRONMENT" 1.5i

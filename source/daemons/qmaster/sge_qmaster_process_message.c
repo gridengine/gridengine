@@ -68,6 +68,21 @@
 #include "msg_qmaster.h"
 #include "msg_common.h"
 
+#ifdef DO_LATE_LOCK
+static message_control_t Master_Control_Master = {
+   ATOMIC_NONE,
+   0,
+   PTHREAD_COND_INITIALIZER,
+   false,
+   PTHREAD_MUTEX_INITIALIZER
+};
+
+static request_handling_t eval_message_and_block(struct_msg_t msg);
+
+static void 
+eval_atomic(request_handling_t type);
+#endif
+
 static void 
 do_gdi_packet(sge_gdi_ctx_class_t *ctx, lList **answer_list, 
               struct_msg_t *aMsg, monitoring_t *monitor);
@@ -95,6 +110,211 @@ static void sge_c_job_ack(sge_gdi_ctx_class_t *ctx,
  */
 #ifdef SOLARIS
 #pragma no_inline(do_gdi_packet, do_c_ack, do_report_request)
+#endif
+
+#ifdef DO_LATE_LOCK
+/****** sge_qmaster_process_message/eval_message_and_block() *******************
+*  NAME
+*     eval_message_and_block() -- eval a message and proceed or block
+*
+*  SYNOPSIS
+*     static request_handling_t eval_message_and_block(struct_msg_t msg) 
+*
+*  FUNCTION
+*     determines the current block type for a message and proceeds or
+*     waits for another thread to finish.
+*
+*  INPUTS
+*     struct_msg_t msg - current message
+*
+*  RESULT
+*     static request_handling_t - block type
+*
+*  NOTES
+*     MT-NOTE: eval_message_and_block() is MT safe 
+*
+*******************************************************************************/
+static request_handling_t 
+eval_message_and_block(struct_msg_t msg) 
+{
+   request_handling_t type;
+
+   DENTER(TOP_LAYER, "eval_message_and_block");
+  
+   if (msg.tag == TAG_REPORT_REQUEST) {
+      type = ATOMIC_SINGLE;
+   } else {
+      type = ATOMIC_NONE;   
+   }
+  
+   eval_atomic(type);
+   
+   DEXIT;   
+   return type;
+}
+
+/****** sge_qmaster_process_message/eval_gdi_and_block() ***********************
+*  NAME
+*     eval_gdi_and_block() -- eval gdi request and proceed or block
+*
+*  SYNOPSIS
+*     static request_handling_t eval_gdi_and_block(sge_gdi_task_class_t *task) 
+*
+*  FUNCTION
+*     determines the current block type for a gdi request and proceeds or
+*     waits for another thread to finish.
+*
+*  INPUTS
+*     sge_gdi_task_class_t *task - request task 
+*
+*  RESULT
+*     static request_handling_t - returns block type
+*
+*
+*  NOTES
+*     MT-NOTE: eval_gdi_and_block() is  MT safe 
+*
+*******************************************************************************/
+request_handling_t 
+eval_gdi_and_block(sge_gdi_task_class_t *task) 
+{
+   request_handling_t type = ATOMIC_NONE;
+
+   DENTER(TOP_LAYER, "eval_gdi_and_block");
+
+   if (task->next == NULL) {
+      type = ATOMIC_SINGLE;     
+   } else if (task->command == SGE_GDI_GET) {
+      type = ATOMIC_MULTIPLE_READ; 
+   } else {
+      type = ATOMIC_MULTIPLE_WRITE;
+   }
+   eval_atomic(type);
+
+   DRETURN(type); 
+}
+
+/****** sge_qmaster_process_message/eval_atomic() ******************************
+*  NAME
+*     eval_atomic() -- check proceed type
+*
+*  SYNOPSIS
+*     static void eval_atomic(request_handling_t type) 
+*
+*  FUNCTION
+*     checks wether the current thread can proceed or if it needs to wait
+*     till the next one is done.
+*
+*  INPUTS
+*     request_handling_t type - current block type
+*
+*  RESULT
+*     static void - 
+*
+*  NOTES
+*     MT-NOTE: eval_atomic() is MT safe 
+*
+*******************************************************************************/
+static void 
+eval_atomic(request_handling_t type) 
+{
+   bool cond = false;
+
+   DENTER(TOP_LAYER, "eval_atomic");
+   
+   if (type == ATOMIC_NONE) {
+      return;
+   }
+
+   sge_mutex_lock("message_master_mutex", SGE_FUNC, __LINE__, &Master_Control_Master.mutex);
+
+   DPRINTF(("eval before type %d, counter %d, wait %d --- ntype %d\n", 
+            Master_Control_Master.type, 
+            Master_Control_Master.counter, 
+            Master_Control_Master.signal, type));
+   
+   do {
+      if (Master_Control_Master.type == ATOMIC_NONE) {
+         Master_Control_Master.type = type;
+         Master_Control_Master.counter = 1;
+         cond = true;
+      } else if (Master_Control_Master.type == type) {
+         Master_Control_Master.counter++;
+         cond = true;
+      } else {
+         Master_Control_Master.signal = true;
+         pthread_cond_wait(&Master_Control_Master.cond_var, &Master_Control_Master.mutex);
+      }
+   } while (!cond);
+  
+   DPRINTF(("eval after type %d, counter %d, wait %d --- ntype %d\n", 
+            Master_Control_Master.type, 
+            Master_Control_Master.counter, 
+            Master_Control_Master.signal, type));
+   
+   sge_mutex_unlock("message_master_mutex", SGE_FUNC, __LINE__, &Master_Control_Master.mutex);
+   DEXIT; 
+}
+
+/****** sge_qmaster_process_message/eval_atomic_end() **************************
+*  NAME
+*     eval_atomic_end() -- free block
+*
+*  SYNOPSIS
+*     static void eval_atomic_end(request_handling_t type) 
+*
+*  FUNCTION
+*     frees a current block and triggers a possible pending thread
+*
+*  INPUTS
+*     request_handling_t type - the last processing type
+*
+*  RESULT
+*     static void - 
+*
+*  NOTES
+*     MT-NOTE: eval_atomic_end() is MT safe 
+*
+*******************************************************************************/
+void 
+eval_atomic_end(request_handling_t type) 
+{
+ 
+   DENTER(TOP_LAYER, "eval_atomic_end");
+
+   if (type == ATOMIC_NONE) {
+      DEXIT;
+      return; 
+   }
+
+   sge_mutex_lock("message_master_mutex", SGE_FUNC, __LINE__, &Master_Control_Master.mutex);
+
+   DPRINTF(("end before type %d, counter %d, wait %d --- ntype %d\n", Master_Control_Master.type, 
+            Master_Control_Master.counter, Master_Control_Master.signal, type));
+   
+   if (Master_Control_Master.type != type) {
+      ERROR((SGE_EVENT, "we have a atomic type missmatch (expected = %d, got = %d\n", Master_Control_Master.type, type));
+   }
+   
+   Master_Control_Master.counter--;
+   
+   if (Master_Control_Master.counter <= 0) {
+      Master_Control_Master.type = ATOMIC_NONE;
+   }
+   
+   if (Master_Control_Master.signal) {
+      Master_Control_Master.signal = false;
+      pthread_cond_broadcast(&Master_Control_Master.cond_var);
+   }
+   
+   DPRINTF(("end after stype %d, counter %d, wait %d --- ntype %d\n\n", Master_Control_Master.type, 
+            Master_Control_Master.counter, Master_Control_Master.signal, type));
+   
+   sge_mutex_unlock("message_master_mutex", SGE_FUNC, __LINE__, &Master_Control_Master.mutex);
+
+   DEXIT;
+}
+
 #endif
 
 /****** qmaster/sge_qmaster_process_message/sge_qmaster_process_message() ******
@@ -250,13 +470,14 @@ do_gdi_packet(sge_gdi_ctx_class_t *ctx, lList **answer_list,
        * requests would be handled by read-only threads.
        */
       init_packbuffer(&(packet->pb), 0, 0);
+#else
 #endif
 
       /*
        * Put the packet into the packet queue so that workers can handle it
        * and then wait until the packet is handled
        */
-      sge_gdi_packet_queue_store_notify(&Master_Packet_Queue, packet, NULL);
+      sge_gdi_packet_queue_store_notify(&Master_Packet_Queue, packet, false, NULL);
 
 #ifdef SEND_ANSWER_IN_LISTENER
       sge_gdi_packet_wait_till_handled(packet);
@@ -280,9 +501,7 @@ do_gdi_packet(sge_gdi_ctx_class_t *ctx, lList **answer_list,
       sge_gdi_packet_free(&packet);
 #  endif
 #endif
-   } else {
-      sge_gdi_packet_free(&packet);
-   }
+   } 
 
    DRETURN_VOID;
 }
@@ -310,6 +529,9 @@ static void
 do_report_request(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t *monitor)
 {
    lList *rep = NULL;
+#ifdef DO_LATE_LOCK
+   request_handling_t type = ATOMIC_NONE;
+#endif
    const char *admin_user = ctx->get_admin_user(ctx);
    const char *myprogname = ctx->get_progname(ctx);
    sge_gdi_packet_class_t *packet = NULL;
@@ -347,7 +569,7 @@ do_report_request(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t *mo
    /*
     * Put the packet into the packet queue so that workers can handle it
     */
-   sge_gdi_packet_queue_store_notify(&Master_Packet_Queue, packet, NULL);
+   sge_gdi_packet_queue_store_notify(&Master_Packet_Queue, packet, false, NULL);
 
    DRETURN_VOID;
 } /* do_report_request */
@@ -436,7 +658,10 @@ static void do_c_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t 
 
    DENTER(TOP_LAYER, "do_c_ack");
 
+#ifdef DO_LATE_LOCK
+#else
    MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
+#endif
 
    /* Do some validity tests */
    while (pb_unused(&(aMsg->buf)) > 0) {
@@ -458,7 +683,10 @@ static void do_c_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t 
          */
          if (false == sge_security_verify_unique_identifier(true, admin_user, myprogname, 0,
                                                   aMsg->snd_host, aMsg->snd_name, aMsg->snd_id)) {
+#ifdef DO_LATE_LOCK
+#else
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE)
+#endif
             DRETURN_VOID;
          }
          /* an execd sends a job specific acknowledge ack_ulong == jobid of received job */
@@ -480,7 +708,11 @@ static void do_c_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t 
       lFreeElem(&ack);
    }
 
+#ifdef DO_LATE_LOCK
+#else
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE)
+#endif
+  
    DRETURN_VOID;
 }
 
@@ -499,6 +731,10 @@ static void sge_c_job_ack(sge_gdi_ctx_class_t *ctx, const char *host, const char
       DRETURN_VOID;
    }
 
+#ifdef DO_LATE_LOCK
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor); 
+#endif
+
    switch (ack_tag) {
    case ACK_SIGJOB:
       {
@@ -509,11 +745,17 @@ static void sge_c_job_ack(sge_gdi_ctx_class_t *ctx, const char *host, const char
          /* ack_ulong is the jobid */
          if (!(jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), ack_ulong))) {
             ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKOWNJOB_U, sge_u32c(ack_ulong) ));
+#ifdef DO_LATE_LOCK
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+#endif
             DRETURN_VOID;
          }
          jatep = job_search_task(jep, NULL, ack_ulong2);
          if (jatep == NULL) {
             ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKNOWNTASKOFJOB_UU, sge_u32c(ack_ulong2), sge_u32c(ack_ulong)));
+#ifdef DO_LATE_LOCK
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+#endif
             DRETURN_VOID;
          }
 
@@ -559,6 +801,9 @@ static void sge_c_job_ack(sge_gdi_ctx_class_t *ctx, const char *host, const char
 
          if (qinstance == NULL) {
             ERROR((SGE_EVENT, MSG_COM_ACK_QUEUE_S, ack_str));
+#ifdef DO_LATE_LOCK
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+#endif
             DRETURN_VOID;
          }
       
@@ -575,5 +820,10 @@ static void sge_c_job_ack(sge_gdi_ctx_class_t *ctx, const char *host, const char
    default:
       ERROR((SGE_EVENT, MSG_COM_ACK_UNKNOWN));
    }
+
+#ifdef DO_LATE_LOCK
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+#endif
+   
    DRETURN_VOID;
 }

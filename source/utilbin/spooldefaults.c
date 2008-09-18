@@ -368,7 +368,6 @@ static int spool_object_list(const char *directory,
                answer_list_output(&answer_list);
                break;
             }
-            lFreeElem(&ep);
          }
       }
    }

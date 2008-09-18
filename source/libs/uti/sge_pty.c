@@ -456,6 +456,7 @@ pid_t fork_no_pty(int *fd_pipe_in, int *fd_pipe_out,
          return -1;
       }
       close(fd_pipe_err[1]); fd_pipe_err[1] = -1;
+
    } else {  /* parent */
       close(fd_pipe_in[0]);  fd_pipe_in[0]  = -1;
       close(fd_pipe_out[1]); fd_pipe_out[1] = -1;

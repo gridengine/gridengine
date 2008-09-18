@@ -1344,17 +1344,23 @@ static void
 qinstance_check_unknown_state(lListElem *this_elem, lList *master_exechost_list)
 {
    const char *hostname = NULL;
+   lList *load_list = NULL;
    lListElem *host = NULL;
+   lListElem *load = NULL;
 
    DENTER(TOP_LAYER, "qinstance_check_unknown_state");
    hostname = lGetHost(this_elem, QU_qhostname);
    host = host_list_locate(master_exechost_list, hostname);
    if (host != NULL) {
-      u_long32 last_heard = lGetUlong(host, EH_lt_heard_from);
+      load_list = lGetList(host, EH_load_list);
 
-      if (last_heard != 0) {
-         sge_qmaster_qinstance_state_set_unknown(this_elem, false);
-      }
+      for_each(load, load_list) {
+         if (!lGetBool(load, HL_static)) {
+            sge_qmaster_qinstance_state_set_unknown(this_elem, false);
+            DTRACE;
+            break;
+         }
+      } 
    }
    DRETURN_VOID;
 }

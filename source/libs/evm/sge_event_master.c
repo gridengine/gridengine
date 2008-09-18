@@ -515,17 +515,27 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    /* special event clients: we allow only one instance */
    /* if it already exists, delete the old one and register the new one */
    if (id > EV_ID_ANY && id < EV_ID_FIRST_DYNAMIC) {
+    
+#ifdef DO_LATE_LOCK 
+      MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
+#endif
       /*
       ** we allow addition of a priviledged event client
       ** for internal clients (==> update_func != NULL)
       ** and manager/operator
       */
       if (update_func == NULL && !manop_is_manager(ruser)) {
+#ifdef DO_LATE_LOCK
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
+#endif
          sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.mutex);
          ERROR((SGE_EVENT, MSG_WRONG_USER_FORFIXEDID ));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          DRETURN(STATUS_ESEMANTIC);
       }
+#ifdef DO_LATE_LOCK
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
+#endif
 
       if ((ep = get_event_client(id)) != NULL) {
          /* we already have this special client */
@@ -806,8 +816,6 @@ sge_event_master_process_mod_event_client(lListElem *request, monitoring_t *moni
    }
    /* busy_handling changed */
    if (busy_handling != lGetUlong(event_client, EV_busy_handling)) {
-      DPRINTF(("EVM: event client %s changes to "sge_U32CFormat"\n", 
-         lGetString(event_client, EV_name), lGetUlong(event_client, EV_busy_handling)));
       lSetUlong(event_client, EV_busy_handling, busy_handling);
    }
 
@@ -1125,12 +1133,21 @@ int sge_shutdown_event_client(u_long32 event_client_id, const char* anUser,
    client = get_event_client(event_client_id);
 
    if (client != NULL) {
+#ifdef DO_LATE_LOCK
+      MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
+#endif
       if (!manop_is_manager(anUser) && (anUID != lGetUlong(client, EV_uid))) {
+#ifdef DO_LATE_LOCK
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
+#endif
          sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.mutex);
          answer_list_add(alpp, MSG_COM_NOSHUTDOWNPERMS, STATUS_DENIED,
                          ANSWER_QUALITY_ERROR);
          DRETURN(EPERM);
       }
+#ifdef DO_LATE_LOCK
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
+#endif
 
       add_list_event_for_client(event_client_id, 0, sgeE_SHUTDOWN, 0, 0, NULL, NULL,
                                 NULL, NULL, true);
@@ -1194,10 +1211,21 @@ int sge_shutdown_dynamic_event_clients(const char *anUser, lList **alpp, monitor
 
    DENTER(TOP_LAYER, "sge_shutdown_dynamic_event_clients");
 
+#ifdef DO_LATE_LOCK
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
+#endif
    if (!manop_is_manager(anUser)) {
-      answer_list_add(alpp, MSG_COM_NOSHUTDOWNPERMS, STATUS_DENIED, ANSWER_QUALITY_ERROR);
+#ifdef DO_LATE_LOCK
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
+#endif
+      answer_list_add(alpp, MSG_COM_NOSHUTDOWNPERMS, STATUS_DENIED,
+                      ANSWER_QUALITY_ERROR);
+
       DRETURN(EPERM);
    }
+#ifdef DO_LATE_LOCK
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
+#endif
 
    sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.mutex);
    for_each (client, Event_Master_Control.clients) {
@@ -2219,6 +2247,10 @@ static void total_update(lListElem *event_client, monitoring_t *monitor)
 
    blockEvents(event_client, sgeE_ALL_EVENTS, true);
 
+#ifdef DO_LATE_LOCK
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
+#endif
+ 
    sge_set_commit_required();
 
    total_update_event(event_client, sgeE_ADMINHOST_LIST, master_table, false);
@@ -2247,6 +2279,10 @@ static void total_update(lListElem *event_client, monitoring_t *monitor)
 #endif
 
    sge_commit();
+
+#ifdef DO_LATE_LOCK
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
+#endif
 
    DRETURN_VOID;
 } /* total_update() */
@@ -2721,7 +2757,7 @@ static void total_update_event(lListElem *event_client, ev_event type, object_de
          case sgeE_CONFIG_LIST:
             /* sge_get_configuration() returns a copy already, we do not need to make
                one later */
-            lp = *object_base[SGE_TYPE_CONFIG].list;
+            copy_lp = sge_get_configuration();
             break;
          case sgeE_EXECHOST_LIST:
             lp = *object_base[SGE_TYPE_EXECHOST].list;
@@ -3206,7 +3242,7 @@ bool sge_commit(void)
          ret = false;
       }
    }
-
+ 
    DRETURN(ret);
 }
 

@@ -379,7 +379,7 @@ main(int argc, char *argv[])
    lList *answer_list = NULL;
    sge_gdi_ctx_class_t *ctx = NULL;
 
-   DENTER_MAIN(TOP_LAYER, "spooledit");
+   DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
 
    if (sge_setup2(&ctx, SPOOLDEFAULTS, MAIN_THREAD, &answer_list, false) != AE_OK) {
       answer_list_output(&answer_list);

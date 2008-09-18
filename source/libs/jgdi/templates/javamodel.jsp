@@ -328,6 +328,7 @@ public interface <%=classname%> extends <%
      *  Set <code><%=mapAttr.getValueName()%></code> attribute for the default
      *  <code><%=mapAttr.getKeyName()%></code> (<%=mapAttr.getDefaultKey()%>).
      *
+     *  @param index  index of the <%=mapAttr.getValueName()%> attribute
      *  @param <%=mapAttr.getValueName()%>  the <%=mapAttr.getValueName()%> attribute
      */
     public void setDefault<%=gsname%>(<%=valueClassName%> <%=mapAttr.getValueName()%>);

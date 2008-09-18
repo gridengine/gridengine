@@ -86,7 +86,7 @@ static Output_t Output[MAX_OUTPUT_LINES] = {
 /* global mutex used for mallinfo initialisation and also used to access the Info_Line string */
 static pthread_mutex_t global_mutex = PTHREAD_MUTEX_INITIALIZER; 
 
-/* a static dstring used as a temporary buffer to build the commlib info string */
+/* a static dstring used as a temporary buffer to build the comlib info string */
 static dstring Info_Line= DSTRING_INIT;
 
 /* mallinfo related data */
@@ -394,10 +394,10 @@ u_long32 sge_monitor_status(char **info_message, u_long32 monitor_time)
    sge_dstring_init(&ddate, date, sizeof(date));
    
    sge_mutex_lock("sge_monitor_status", SGE_FUNC, __LINE__, &global_mutex);
-
+  
    sge_dstring_clear(&Info_Line);
    
-   {/* this is the qping info section, it checks if each thread is still alive */
+   {/* this is the qping info section, it checks wether each thread is still alive */
       int i;
       int error_count = 0;
       struct timeval now;
@@ -696,7 +696,7 @@ static void ext_gdi_output(dstring *message, void *monitoring_extension, double 
 {
    m_gdi_t *gdi_ext = (m_gdi_t*) monitoring_extension;
 
-   sge_dstring_sprintf_append(message, MSG_UTI_MONITOR_GDIEXT_FFFFFFFFFFFFI,
+   sge_dstring_sprintf_append(message, MSG_UTI_MONITOR_GDIEXT_FFFFFFF,
             gdi_ext->eload_count/time, gdi_ext->ejob_count/time, 
             gdi_ext->econf_count/time, gdi_ext->eproc_count/time,
             gdi_ext->eack_count/time, 
@@ -704,7 +704,7 @@ static void ext_gdi_output(dstring *message, void *monitoring_extension, double 
             gdi_ext->gdi_mod_count/time, gdi_ext->gdi_del_count/time,
             gdi_ext->gdi_cp_count/time, gdi_ext->gdi_trig_count/time, 
             gdi_ext->gdi_perm_count/time,
-            sge_u32c(gdi_ext->queue_length));
+            gdi_ext->queue_length);
 }
 
 /****** sge_monitor/ext_lis_output() *******************************************

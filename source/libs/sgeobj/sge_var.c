@@ -106,9 +106,9 @@ const char *var_get_sharedlib_path_name(void)
 {
 #if defined(AIX)
    return "LIBPATH";
-#elif defined(HP11)
+#elif defined(HPUX)
    return "SHLIB_PATH";
-#elif defined(ALPHA) || defined(IRIX) || defined(LINUX) || defined(SOLARIS) || defined(DARWIN) || defined(FREEBSD) || defined(NETBSD) || defined(INTERIX) || defined(HP1164)
+#elif defined(ALPHA) || defined(IRIX) || defined(LINUX) || defined(SOLARIS) || defined(DARWIN) || defined(FREEBSD) || defined(NETBSD) || defined(INTERIX)
    return "LD_LIBRARY_PATH";
 #elif defined(DARWIN)
    return "DYLD_LIBRARY_PATH";
@@ -156,39 +156,6 @@ void var_list_set_string(lList **varl, const char *name, const char *value)
       elem = lAddElemStr(varl, VA_variable, name, VA_Type);
    }
    lSetString(elem, VA_value, value);
-   DEXIT;
-}
-
-/****** sgeobj/var/var_list_delete_string() ***********************************
-*  NAME
-*     var_list_delete_string -- delete a variable
-*
-*  SYNOPSIS
-*     void var_list_delete_string(lList **varl, 
-*                                 const char *name);
-*
-*  FUNCTION
-*     Deletes the variable <name> from the list <varl> if it exists.
-*
-*  INPUTS
-*     lList **varl      - VA_Type list
-*     const char *name  - the name of the variable
-*
-*  SEE ALSO
-*     sgeobj/var/var_list_set_string() 
-******************************************************************************/
-void var_list_delete_string(lList **varl, const char *name)
-{
-   lListElem *elem;
-
-   DENTER(TOP_LAYER, "var_list_delete_string");
-   if (varl == NULL || name == NULL) {
-      DRETURN_VOID;
-   }
-   elem = lGetElemStr(*varl, VA_variable, name);
-   if (elem != NULL) {
-      lRemoveElem(*varl, &elem);
-   }
    DEXIT;
 }
 

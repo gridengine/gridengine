@@ -66,6 +66,7 @@ static bool mes_schedd_info = true;
  */
 static int log_schedd_info = 1;
 
+
 void schedd_mes_on(void) { mes_schedd_info = true; }
 void schedd_mes_off(void) { mes_schedd_info = false; }
 
@@ -76,6 +77,7 @@ static void schedd_mes_find_others(lList *job_list,
       lListElem *message_elem = NULL;  /* MES_Type */
       lRef category = NULL;            /* Category pointer (void*) */
       lList *jid_cat_list = NULL;      /* ULNG */
+      int create_new_jid_cat_list = 0;
       lList *message_list = lGetList(tmp_sme, SME_message_list);
 
       /*
@@ -99,10 +101,21 @@ static void schedd_mes_find_others(lList *job_list,
                                                              job_list,
                                                              ignore_category);
             category = jid_category;
-            lSetList(message_elem, MES_job_number_list, jid_cat_list);
-         } else {
+            create_new_jid_cat_list = 0;
+         }
+         else {
+            create_new_jid_cat_list = 1;
+         }
+
+         /*
+          * Replace the MES_job_number_list which containes only one jid
+          * with a list of jids (all have same category
+          */
+         if (create_new_jid_cat_list) {
             lSetList(message_elem, MES_job_number_list,
                      lCopyList("", jid_cat_list));
+         } else {
+            lSetList(message_elem, MES_job_number_list, jid_cat_list);
          }
       }
    }
@@ -131,9 +144,14 @@ static lList *schedd_mes_get_same_category_jids(lRef category,
 
    DENTER(TOP_LAYER, "schedd_mes_get_same_category_jids");
    if (job_list != NULL && category != NULL) {
+      ret = lCreateList("", ULNG_Type);
       for_each(job, job_list) {
          if (ignore_category || lGetRef(job, JB_category) == category) {
-            lAddElemUlong(&ret, ULNG, lGetUlong(job, JB_job_number), ULNG_Type);
+            lListElem *new_jid_elem = NULL;
+
+            new_jid_elem = lCreateElem(ULNG_Type);
+            lSetUlong(new_jid_elem, ULNG, lGetUlong(job, JB_job_number));
+            lAppendElem(ret, new_jid_elem);
          }
       }
    }
@@ -306,13 +324,13 @@ lListElem *schedd_mes_obtain_package(int *global_mes_count, int *job_mes_count)
        * message which says that schedd_job_info is disabled. 
        */
       sconf_enable_schedd_job_info();
-      schedd_mes_add_global(NULL, false, SCHEDD_INFO_TURNEDOFF);
+      schedd_mes_add_global(SCHEDD_INFO_TURNEDOFF);
       sconf_disable_schedd_job_info();
    } else if (schedd_job_info == SCHEDD_JOB_INFO_JOB_LIST) {
-      schedd_mes_add_global(NULL, false, SCHEDD_INFO_JOBLIST);
+      schedd_mes_add_global(SCHEDD_INFO_JOBLIST);
    } else if (lGetNumberOfElem(lGetList(sme, SME_message_list))<1 &&
             lGetNumberOfElem(lGetList(sme, SME_global_message_list))<1) {
-      schedd_mes_add_global(NULL, false, SCHEDD_INFO_NOMESSAGE);
+      schedd_mes_add_global(SCHEDD_INFO_NOMESSAGE);
    }
 
    if (global_mes_count != NULL) {
@@ -386,7 +404,7 @@ int schedd_mes_get_logging(void) {
 *     schedd/schedd_mes/schedd_mes_commit()
 *     schedd/schedd_mes/schedd_mes_rollback()
 *******************************************************************************/
-void schedd_mes_add(lList **monitor_alpp, bool monitor_next_run, u_long32 job_id, u_long32 message_number, ...)
+void schedd_mes_add(u_long32 job_number, u_long32 message_number, ...)
 {
 #ifndef WIN32NATIVE
    va_list args;
@@ -404,7 +422,7 @@ void schedd_mes_add(lList **monitor_alpp, bool monitor_next_run, u_long32 job_id
    DENTER(TOP_LAYER, "schedd_mes_add");
 
    fmt = sge_schedd_text(message_number);
-   va_start(args, message_number);
+   va_start(args,message_number);
    schedd_job_info = sconf_get_schedd_job_info();
 
 #if defined(LINUX)
@@ -419,21 +437,12 @@ void schedd_mes_add(lList **monitor_alpp, bool monitor_next_run, u_long32 job_id
    vsprintf(msg, fmt, args);
 #endif
 
-   if (monitor_alpp || monitor_next_run) {
-      if (job_id) {
-         sprintf(msg_log, "Job "sge_u32" %s", job_id, msg);
-      } else {
-         sprintf(msg_log, "Your job %s", msg);
-      }    
-      schedd_log(msg_log, monitor_alpp, monitor_next_run);
-   }
-
-   if (job_id && (schedd_job_info != SCHEDD_JOB_INFO_FALSE)) {
+   if (job_number && (schedd_job_info != SCHEDD_JOB_INFO_FALSE)) {
       if (mes_schedd_info == true) {
          if (schedd_job_info == SCHEDD_JOB_INFO_JOB_LIST) {
             if (!range_list_is_id_within(sconf_get_schedd_job_info_range(),
-                                         job_id)) {
-               DPRINTF(("Job "sge_u32" not in scheddconf.schedd_job_info_list\n", job_id));
+                                         job_number)) {
+               DPRINTF(("Job "sge_u32" not in scheddconf.schedd_job_info_list\n", job_number));
                return;
             }
          }
@@ -449,8 +458,23 @@ void schedd_mes_add(lList **monitor_alpp, bool monitor_next_run, u_long32 job_id
          lAppendElem(lGetList(tmp_sme, SME_message_list), mes);
 
          jid_ulng = lCreateElem(ULNG_Type);
-         lSetUlong(jid_ulng, ULNG, job_id);
+         lSetUlong(jid_ulng, ULNG, job_number);
          lAppendElem(jobs_ulng, jid_ulng);
+      }
+
+      if (log_schedd_info) {
+         sprintf(msg_log, "Job "sge_u32" %s", job_number, msg);
+         schedd_log(msg_log);
+      }
+   } else {
+      if (log_schedd_info) {
+         if (job_number) {
+            sprintf(msg_log, "Job "sge_u32" %s", job_number, msg);
+         }   
+         else {
+             sprintf(msg_log, "Your job %s", msg);
+         }    
+         schedd_log(msg_log);
       }
    }
 
@@ -548,7 +572,7 @@ void schedd_mes_add_join(u_long32 job_number, u_long32 message_number, ...)
 
       if (log_schedd_info) {
          sprintf(msg_log, "Job "sge_u32" %s", job_number, msg);
-         schedd_log(msg_log, NULL, false);
+         schedd_log(msg_log);
       }
    } else {
       if (log_schedd_info) {
@@ -558,7 +582,7 @@ void schedd_mes_add_join(u_long32 job_number, u_long32 message_number, ...)
          else {
              sprintf(msg_log, "Your job %s", msg);
          }    
-         schedd_log(msg_log, NULL, false);
+         schedd_log(msg_log);
 
       }
    }
@@ -584,7 +608,7 @@ void schedd_mes_add_join(u_long32 job_number, u_long32 message_number, ...)
 *                               sge_schedd_text(message_number) 
 *
 *******************************************************************************/
-void schedd_mes_add_global(lList **monitor_alpp, bool monitor_next_run, u_long32 message_number, ...)
+void schedd_mes_add_global(u_long32 message_number, ...)
 {
    va_list args;
    const char *fmt;
@@ -623,7 +647,7 @@ void schedd_mes_add_global(lList **monitor_alpp, bool monitor_next_run, u_long32
       lAppendElem(lGetList(sme, SME_global_message_list), mes);
 
       /* Write entry into log file */
-      schedd_log(msg, monitor_alpp, monitor_next_run);
+      schedd_log(msg);
    }
 
    DEXIT;

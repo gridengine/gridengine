@@ -1,3 +1,10 @@
+CR-2008-09-17-0: Bugfix:      Commlib does not compare hosts with strcasecmp
+                 Issue:       2728
+                 Bugster:     6748854
+                 Enhancem.:   Added new module test for simple commlib issues:
+                                 test_commlib_issue
+                 Review:      RD
+
 CR-2008-09-16-0: Bugfix:      execd failed to reconnect to shadow master host
                  Issue:       2700
                  Bugster:     6738091

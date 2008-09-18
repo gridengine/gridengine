@@ -75,7 +75,7 @@
 #ifndef CRAY
 static void pushlimit(int, struct RLIMIT_STRUCT_TAG *, int trace_rlimit);
 
-static int get_resource_info(u_long32 resource, const char **name, int *resource_type);
+static int get_resource_info(u_long32 resource, char **name, int *resource_type);
 #endif
 
 static int rlimcmp(sge_rlim_t r1, sge_rlim_t r2);
@@ -130,9 +130,7 @@ static int sge_parse_limit(sge_rlim_t *rlvalp, char *s, char *error_str,
 
 void setrlimits(int trace_rlimit) {
    sge_rlim_t s_cpu, h_cpu, s_core, h_core, s_data, h_data, 
-      s_fsize, h_fsize, s_stack, h_stack, s_vmem, h_vmem,
-      s_descriptors, h_descriptors, s_maxproc, h_maxproc,
-      s_memorylocked, h_memorylocked, s_locks, h_locks;
+      s_fsize, h_fsize, s_stack, h_stack, s_vmem, h_vmem;
 #if defined(NECSX4) || defined(NECSX5)
    sge_rlim_t s_tmpf, h_tmpf, s_mtdev, h_mtdev, s_nofile, h_nofile,
       s_proc, h_proc, s_rlg0, h_rlg0, s_rlg1, h_rlg1, s_rlg2, h_rlg2,
@@ -155,14 +153,6 @@ void setrlimits(int trace_rlimit) {
    s = get_conf_val(attr); \
    sge_parse_limit(dstp, s, error_str, sizeof(error_str));
 
-#define PARSE_IT_UNDEF(dstp, attr) \
-   s = get_conf_val(attr); \
-   if (!strncasecmp(s, "UNDEFINED", sizeof("UNDEFINED")-1)) { \
-      *dstp = RLIMIT_UNDEFINED; \
-   } else { \
-      sge_parse_limit(dstp, s, error_str, sizeof(error_str)); \
-   }
-
    PARSE_IT(&s_cpu, "s_cpu");
    PARSE_IT(&h_cpu, "h_cpu");
    PARSE_IT(&s_core, "s_core");
@@ -177,14 +167,6 @@ void setrlimits(int trace_rlimit) {
    PARSE_IT(&h_fsize, "h_fsize");
    PARSE_IT(&s_vmem, "s_vmem");
    PARSE_IT(&h_vmem, "h_vmem");
-   PARSE_IT_UNDEF(&s_descriptors, "s_descriptors");
-   PARSE_IT_UNDEF(&h_descriptors, "h_descriptors");
-   PARSE_IT_UNDEF(&s_maxproc,     "s_maxproc");
-   PARSE_IT_UNDEF(&h_maxproc,     "h_maxproc");
-   PARSE_IT_UNDEF(&s_memorylocked, "s_memorylocked");
-   PARSE_IT_UNDEF(&h_memorylocked, "h_memorylocked");
-   PARSE_IT_UNDEF(&s_locks,        "s_locks");
-   PARSE_IT_UNDEF(&h_locks,        "h_locks");
 #if defined(NECSX4) || defined(NECSX5)
    PARSE_IT(&s_tmpf, "s_tmpf");
    PARSE_IT(&h_tmpf, "h_tmpf");
@@ -208,48 +190,22 @@ void setrlimits(int trace_rlimit) {
 
 #define RL_MAX(r1, r2) ((rlimcmp((r1), (r2))>0)?(r1):(r2))
 #define RL_MIN(r1, r2) ((rlimcmp((r1), (r2))<0)?(r1):(r2))
-   /*
-    * we have to define some minimum limits to make sure that
-    * that the shepherd can run without trouble
-    */
-   s_vmem = RL_MAX(s_vmem, LIMIT_VMEM_MIN);
-   h_vmem = RL_MAX(h_vmem, LIMIT_VMEM_MIN);
-   s_data = RL_MAX(s_data, LIMIT_VMEM_MIN);
-   h_data = RL_MAX(h_data, LIMIT_VMEM_MIN);
-   s_rss = RL_MAX(s_rss, LIMIT_VMEM_MIN);
-   h_rss = RL_MAX(h_rss, LIMIT_VMEM_MIN);
-   s_stack = RL_MAX(s_stack, LIMIT_STACK_MIN);
-   h_stack = RL_MAX(h_stack, LIMIT_STACK_MIN);
-   s_cpu = RL_MAX(s_cpu, LIMIT_CPU_MIN);
-   h_cpu = RL_MAX(h_cpu, LIMIT_CPU_MIN);
-   s_fsize = RL_MAX(s_fsize, LIMIT_FSIZE_MIN);
-   h_fsize = RL_MAX(h_fsize, LIMIT_FSIZE_MIN);
-   if (s_descriptors != RLIMIT_UNDEFINED) {
-      s_descriptors = RL_MAX(s_descriptors, LIMIT_DESCR_MIN);
-      s_descriptors = RL_MIN(s_descriptors, LIMIT_DESCR_MAX);
-   }
-   if (h_descriptors != RLIMIT_UNDEFINED) {
-      h_descriptors = RL_MAX(h_descriptors, LIMIT_DESCR_MIN);
-      s_descriptors = RL_MIN(s_descriptors, LIMIT_DESCR_MAX);
-   }
-   if (s_maxproc != RLIMIT_UNDEFINED) {
-      s_maxproc = RL_MAX(s_maxproc, LIMIT_PROC_MIN);
-   }
-   if (h_maxproc != RLIMIT_UNDEFINED) {
-      h_maxproc = RL_MAX(h_maxproc, LIMIT_PROC_MIN);
-   }
-   if (s_memorylocked != RLIMIT_UNDEFINED) {
-      s_memorylocked = RL_MAX(s_memorylocked, LIMIT_MEMLOCK_MIN);
-   }
-   if (h_memorylocked != RLIMIT_UNDEFINED) {
-      h_memorylocked = RL_MAX(h_memorylocked, LIMIT_MEMLOCK_MIN);
-   }
-   if (s_locks != RLIMIT_UNDEFINED) {
-      s_locks = RL_MAX(s_locks, LIMIT_LOCKS_MIN);
-   }
-   if (h_locks != RLIMIT_UNDEFINED) {
-      h_locks = RL_MAX(h_locks, LIMIT_LOCKS_MIN);
-   }
+    /*
+     * we have to define some minimum limits to make sure that
+     * that the shepherd can run without trouble
+     */
+    s_vmem = RL_MAX(s_vmem, LIMIT_VMEM_MIN);
+    h_vmem = RL_MAX(h_vmem, LIMIT_VMEM_MIN);
+    s_data = RL_MAX(s_data, LIMIT_VMEM_MIN);
+    h_data = RL_MAX(h_data, LIMIT_VMEM_MIN);
+    s_rss = RL_MAX(s_rss, LIMIT_VMEM_MIN);
+    h_rss = RL_MAX(h_rss, LIMIT_VMEM_MIN);
+    s_stack = RL_MAX(s_stack, LIMIT_STACK_MIN);
+    h_stack = RL_MAX(h_stack, LIMIT_STACK_MIN);
+    s_cpu = RL_MAX(s_cpu, LIMIT_CPU_MIN);
+    h_cpu = RL_MAX(h_cpu, LIMIT_CPU_MIN);
+    s_fsize = RL_MAX(s_fsize, LIMIT_FSIZE_MIN);
+    h_fsize = RL_MAX(h_fsize, LIMIT_FSIZE_MIN);   
 
    /* 
     * s_vmem > h_vmem
@@ -286,30 +242,6 @@ void setrlimits(int trace_rlimit) {
    h_data = mul_infinity(h_data, host_slots);
    s_stack = mul_infinity(s_stack, host_slots);
    h_stack = mul_infinity(h_stack, host_slots);
-   if (s_descriptors != RLIMIT_UNDEFINED) {
-      s_descriptors = mul_infinity(s_descriptors, host_slots);
-   }
-   if (h_descriptors != RLIMIT_UNDEFINED) {
-      h_descriptors = mul_infinity(h_descriptors, host_slots);
-   }
-   if (s_maxproc != RLIMIT_UNDEFINED) {
-      s_maxproc = mul_infinity(s_maxproc, host_slots);
-   }
-   if (h_maxproc != RLIMIT_UNDEFINED) {
-      h_maxproc = mul_infinity(h_maxproc, host_slots);
-   }
-   if (s_memorylocked != RLIMIT_UNDEFINED) {
-      s_memorylocked = mul_infinity(s_memorylocked, host_slots);
-   }
-   if (h_memorylocked != RLIMIT_UNDEFINED) {
-      h_memorylocked = mul_infinity(h_memorylocked, host_slots);
-   }
-   if (s_locks != RLIMIT_UNDEFINED) {
-      s_locks = mul_infinity(s_locks, host_slots);
-   }
-   if (h_locks != RLIMIT_UNDEFINED) {
-      h_locks = mul_infinity(h_locks, host_slots);
-   }
 
 #if defined(CRAY)
 
@@ -352,62 +284,6 @@ void setrlimits(int trace_rlimit) {
    rlp.rlim_cur = s_core;
    rlp.rlim_max = h_core;
    pushlimit(RLIMIT_CORE, &rlp, trace_rlimit);
-
-#  if defined(RLIMIT_NOFILE)
-   if (s_descriptors != RLIMIT_UNDEFINED && h_descriptors == RLIMIT_UNDEFINED) {
-      h_descriptors = s_descriptors;
-   }
-   if (h_descriptors != RLIMIT_UNDEFINED && s_descriptors == RLIMIT_UNDEFINED) {
-      s_descriptors = h_descriptors;
-   }
-   if (s_descriptors != RLIMIT_UNDEFINED && h_descriptors != RLIMIT_UNDEFINED) {
-      rlp.rlim_cur = s_descriptors;
-      rlp.rlim_max = h_descriptors;
-      pushlimit(RLIMIT_NOFILE, &rlp, trace_rlimit);
-   }
-#  endif
-
-#  if defined(RLIMIT_NPROC)
-   if (s_maxproc != RLIMIT_UNDEFINED && h_maxproc == RLIMIT_UNDEFINED) {
-      h_maxproc = s_maxproc;
-   }
-   if (h_maxproc != RLIMIT_UNDEFINED && s_maxproc == RLIMIT_UNDEFINED) {
-      s_maxproc = h_maxproc;
-   }
-   if (s_maxproc != RLIMIT_UNDEFINED && h_maxproc != RLIMIT_UNDEFINED) {
-      rlp.rlim_cur = s_maxproc;
-      rlp.rlim_max = h_maxproc;
-      pushlimit(RLIMIT_NPROC, &rlp, trace_rlimit);
-   }
-#  endif
-
-#  if defined(RLIMIT_MEMLOCK)
-   if (s_memorylocked != RLIMIT_UNDEFINED && h_memorylocked == RLIMIT_UNDEFINED) {
-      h_memorylocked = s_memorylocked;
-   }
-   if (h_memorylocked != RLIMIT_UNDEFINED && s_memorylocked == RLIMIT_UNDEFINED) {
-      s_memorylocked = h_memorylocked;
-   }
-   if (s_memorylocked != RLIMIT_UNDEFINED && h_memorylocked != RLIMIT_UNDEFINED) {
-      rlp.rlim_cur = s_memorylocked;
-      rlp.rlim_max = h_memorylocked;
-      pushlimit(RLIMIT_MEMLOCK, &rlp, trace_rlimit);
-   }
-# endif
-
-#  if defined(RLIMIT_LOCKS)
-   if (s_locks != RLIMIT_UNDEFINED && h_locks == RLIMIT_UNDEFINED) {
-      h_locks = s_locks;
-   }
-   if (h_locks != RLIMIT_UNDEFINED && s_locks == RLIMIT_UNDEFINED) {
-      s_locks = h_locks;
-   }
-   if (s_locks != RLIMIT_UNDEFINED && h_locks != RLIMIT_UNDEFINED) {
-      rlp.rlim_cur = s_locks;
-      rlp.rlim_max = h_locks;
-      pushlimit(RLIMIT_LOCKS, &rlp, trace_rlimit);
-   }
-#  endif
 
 #  if defined(RLIMIT_VMEM)
    rlp.rlim_cur = s_vmem;
@@ -459,57 +335,45 @@ void setrlimits(int trace_rlimit) {
 }
 
 #ifndef CRAY
-/* *INDENT-OFF* */
-/* resource           resource_name              resource_type
-                                                 NECSX 4/5
-                                                 |         OTHER ARCHS
-                                                 |         |          */
-const struct resource_table_entry resource_table[] = {
-   {RLIMIT_FSIZE,     "RLIMIT_FSIZE",            {RES_PROC, RES_PROC}},
-   {RLIMIT_DATA,      "RLIMIT_DATA",             {RES_PROC, RES_PROC}},
-   {RLIMIT_STACK,     "RLIMIT_STACK",            {RES_PROC, RES_PROC}},
-   {RLIMIT_CORE,      "RLIMIT_CORE",             {RES_PROC, RES_PROC}},
-   {RLIMIT_CPU,       "RLIMIT_CPU",              {RES_BOTH, RES_PROC}},
-#if defined(RLIMIT_NPROC)
-   {RLIMIT_NPROC,     "RLIMIT_NPROC",            {RES_PROC, RES_PROC}},
-#endif
-#if defined(RLIMIT_MEMLOCK)
-   {RLIMIT_MEMLOCK,   "RLIMIT_MEMLOCK",          {RES_PROC, RES_PROC}},
-#endif
-#if defined(RLIMIT_LOCKS)
-   {RLIMIT_LOCKS,     "RLIMIT_LOCKS",            {RES_PROC, RES_PROC}},
-#endif
-#if defined(RLIMIT_NOFILE)
-   {RLIMIT_NOFILE,    "RLIMIT_NOFILE",           {RES_BOTH, RES_PROC}},
-#endif
-#if defined(RLIMIT_RSS)
-   {RLIMIT_RSS,       "RLIMIT_RSS",              {RES_PROC, RES_PROC}},
-#endif
-#if defined(RLIMIT_VMEM)
-   {RLIMIT_VMEM,      "RLIMIT_VMEM",             {RES_PROC, RES_PROC}},
-#elif defined(RLIMIT_AS)
-   {RLIMIT_AS,        "RLIMIT_VMEM/RLIMIT_AS",   {RES_PROC, RES_PROC}},
-#endif
-#if defined(NECSX4) || defined(NECSX5)
-   {RLIMIT_TMPF,      "RLIMIT_TMPF",             {RES_JOB,  RES_PROC}},
-   {RLIMIT_MTDEV,     "RLIMIT_MTDEV",            {RES_JOB,  RES_PROC}},
-   {RLIMIT_PROC,      "RLIMIT_PROC",             {RES_JOB,  RES_PROC}},
-   {RLIMIT_RLG0,      "RLIMIT_RLG0",             {RES_JOB,  RES_PROC}},
-   {RLIMIT_RLG1,      "RLIMIT_RLG1",             {RES_JOB,  RES_PROC}},
-   {RLIMIT_RLG2,      "RLIMIT_RLG2",             {RES_JOB,  RES_PROC}},
-   {RLIMIT_RLG3,      "RLIMIT_RLG3",             {RES_JOB,  RES_PROC}},
-   {RLIMIT_CPURESTM,  "RLIMIT_CPURESTM",         {RES_JOB,  RES_PROC}},
-#endif
-   {0,                NULL,                      {0, 0}}
-};
-const char *unknown_string = "unknown";
-/* *INDENT-ON* */
-
-static int get_resource_info(u_long32 resource, const char **name, 
+static int get_resource_info(u_long32 resource, char **name, 
                              int *resource_type) 
 {
    int is_job_resource_column;
    int row;
+
+   /* *INDENT-OFF* */
+   /* resource           resource_name              resource_type
+                                                    NECSX 4/5
+                                                    |         OTHER ARCHS
+                                                    |         |          */
+   struct resource_table_entry resource_table[] = {
+      {RLIMIT_FSIZE,     "RLIMIT_FSIZE",            {RES_PROC, RES_PROC}},
+      {RLIMIT_DATA,      "RLIMIT_DATA",             {RES_PROC, RES_PROC}},
+      {RLIMIT_STACK,     "RLIMIT_STACK",            {RES_PROC, RES_PROC}},
+      {RLIMIT_CORE,      "RLIMIT_CORE",             {RES_PROC, RES_PROC}},
+      {RLIMIT_CPU,       "RLIMIT_CPU",              {RES_BOTH, RES_PROC}},
+#if defined(RLIMIT_RSS)
+      {RLIMIT_RSS,       "RLIMIT_RSS",              {RES_PROC, RES_PROC}},
+#endif
+#if defined(RLIMIT_VMEM)
+      {RLIMIT_VMEM,      "RLIMIT_VMEM",             {RES_PROC, RES_PROC}},
+#elif defined(RLIMIT_AS)
+      {RLIMIT_AS,        "RLIMIT_VMEM/RLIMIT_AS",   {RES_PROC, RES_PROC}},
+#endif
+#if defined(NECSX4) || defined(NECSX5)
+      {RLIMIT_TMPF,      "RLIMIT_TMPF",             {RES_JOB,  RES_PROC}},
+      {RLIMIT_MTDEV,     "RLIMIT_MTDEV",            {RES_JOB,  RES_PROC}},
+      {RLIMIT_NOFILE,    "RLIMIT_NOFILE",           {RES_BOTH, RES_PROC}},
+      {RLIMIT_PROC,      "RLIMIT_PROC",             {RES_JOB,  RES_PROC}},
+      {RLIMIT_RLG0,      "RLIMIT_RLG0",             {RES_JOB,  RES_PROC}},
+      {RLIMIT_RLG1,      "RLIMIT_RLG1",             {RES_JOB,  RES_PROC}},
+      {RLIMIT_RLG2,      "RLIMIT_RLG2",             {RES_JOB,  RES_PROC}},
+      {RLIMIT_RLG3,      "RLIMIT_RLG3",             {RES_JOB,  RES_PROC}},
+      {RLIMIT_CPURESTM,  "RLIMIT_CPURESTM",         {RES_JOB,  RES_PROC}},
+#endif
+      {0,                NULL,                      {0, 0}}
+   };
+   /* *INDENT-ON* */
 
 #if defined(NECSX4) || defined(NECSX5)
    is_job_resource_column = 0;
@@ -527,7 +391,7 @@ static int get_resource_info(u_long32 resource, const char **name,
       }
       row++;
    }
-   *name = unknown_string;
+   *name = "unknown";
    return 1;       
 }
 #endif
@@ -551,7 +415,7 @@ static int get_resource_info(u_long32 resource, const char **name,
 static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp, 
                       int trace_rlimit) 
 {
-   const char *limit_str;
+   char *limit_str;
    char trace_str[1024];
    struct RLIMIT_STRUCT_TAG dlp;
    int resource_type;

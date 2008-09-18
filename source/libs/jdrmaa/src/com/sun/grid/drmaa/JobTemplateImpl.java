@@ -298,9 +298,9 @@ public class JobTemplateImpl implements JobTemplate {
         String stateString = null;
         
         if (state == HOLD_STATE) {
-            stateString = HOLD_STRING;
+            stateString = this.HOLD_STRING;
         } else if (state == ACTIVE_STATE) {
-            stateString = ACTIVE_STRING;
+            stateString = this.ACTIVE_STRING;
         } else {
             throw new InvalidAttributeValueException("jobSubmissionState attribute is invalid");
         }
@@ -317,9 +317,9 @@ public class JobTemplateImpl implements JobTemplate {
     public int getJobSubmissionState() throws DrmaaException {
         String[] stateString =  this.getAttribute(JOB_SUBMISSION_STATE);
         
-        if ((stateString == null) || stateString[0].equals(ACTIVE_STRING)) {
+        if ((stateString == null) || stateString[0].equals(this.ACTIVE_STRING)) {
             return ACTIVE_STATE;
-        } else if (stateString[0].equals(HOLD_STRING)) {
+        } else if (stateString[0].equals(this.HOLD_STRING)) {
             return HOLD_STATE;
         } else {
             /* This should never happen */
@@ -433,9 +433,9 @@ public class JobTemplateImpl implements JobTemplate {
      * nativeSpecification property as well as by explict DRMAA job template
      * property settings.
      *
-     * <p>The options -help, -sync, -t, -verify, and -w w|v are ignored.  The 
-     * -cwd option is ignored unless the $SGE_DRMAA_ALLOW_CWD environment 
-     * variable is set.</p>
+     * <p>The options -help, -t, -verify, and -w w|v are ignored.  The -cwd
+     * option is ignored unless the $SGE_DRMAA_ALLOW_CWD environment variable is
+     * set.</p>
      * @param category {@inheritDoc}
      * @throws DrmaaException {@inheritDoc}
      * @see <a href="http://gridengine.sunsource.net/nonav/source/browse/~checkout~/gridengine/doc/htmlman/htmlman5/qtask.html">qtask(5)</a>
@@ -464,8 +464,8 @@ public class JobTemplateImpl implements JobTemplate {
     /**
      * Specifies native qsub options which will be interpreted as part of the
      * DRMAA job template.  All options available to the qsub command may be
-     * used in the nativeSpecification, except for -help, -sync, -t, -verify, 
-     * and -w w|v.  -cwd may only be used if the $SGE_DRMAA_ALLOW_CWD enviroment
+     * used in the nativeSpecification, except for -help, -t, -verify, and -w
+     * w|v.  -cwd may only be used if the $SGE_DRMAA_ALLOW_CWD enviroment
      * variable is set.  Options set in the nativeSpecification will be
      * overridden by the corresponding DRMAA properties.  See the qsub(1) man
      * page for more information on qsub command line options.
@@ -531,9 +531,9 @@ public class JobTemplateImpl implements JobTemplate {
      */
     public void setBlockEmail(boolean blockEmail) throws DrmaaException {
         if (blockEmail) {
-            this.setAttribute(BLOCK_EMAIL, BLOCK_EMAIL_TRUE_STRING);
+            this.setAttribute(BLOCK_EMAIL, this.BLOCK_EMAIL_TRUE_STRING);
         } else {
-            this.setAttribute(BLOCK_EMAIL, BLOCK_EMAIL_FALSE_STRING);
+            this.setAttribute(BLOCK_EMAIL, this.BLOCK_EMAIL_FALSE_STRING);
         }
     }
     
@@ -547,7 +547,7 @@ public class JobTemplateImpl implements JobTemplate {
         String[] block =  this.getAttribute(BLOCK_EMAIL);
         
         if (block != null) {
-            return block[0].equals(BLOCK_EMAIL_TRUE_STRING);
+            return block[0].equals(this.BLOCK_EMAIL_TRUE_STRING);
         } else {
             return false;
         }
@@ -815,9 +815,9 @@ public class JobTemplateImpl implements JobTemplate {
      */
     public void setJoinFiles(boolean join) throws DrmaaException {
         if (join) {
-            this.setAttribute(JOIN_FILES, JOIN_FILES_TRUE_STRING);
+            this.setAttribute(JOIN_FILES, this.JOIN_FILES_TRUE_STRING);
         } else {
-            this.setAttribute(JOIN_FILES, JOIN_FILES_FALSE_STRING);
+            this.setAttribute(JOIN_FILES, this.JOIN_FILES_FALSE_STRING);
         }
     }
     
@@ -831,7 +831,7 @@ public class JobTemplateImpl implements JobTemplate {
         String[] join =  this.getAttribute(JOIN_FILES);
         
         if (join != null) {
-            return join[0].equalsIgnoreCase(JOIN_FILES_TRUE_STRING);
+            return join[0].equalsIgnoreCase(this.JOIN_FILES_TRUE_STRING);
         } else {
             return false;
         }

@@ -502,42 +502,30 @@ AddQueue()
 
 GetLocalExecdSpoolDir()
 {
-   spool_dir=`qconf -sconf | grep "execd_spool_dir" | awk '{ print $2 }' 2>/dev/null`
-   host_dir=`$SGE_UTILBIN/gethostname -aname | cut -d"." -f1`
-   GLOBAL_EXECD_SPOOL=$spool_dir/$host_dir
 
-   $INFOTEXT -u "\nExecd spool directory configuration"
-   $INFOTEXT "\nYou defined a global spool directory when you installed the master host." \
-             "\nYou can use that directory for spooling jobs from this execution host" \
-             "\nor you can define a different spool directory for this execution host." \
-             "\n\nATTENTION: For most operating systems, the spool directory does not have to" \
-             "\nbe located on a local disk. The spool directory can be located on a " \
-             "\nnetwork-accessible drive. However, using a local spool directory provides " \
-             "\nbetter performance.\n\nFOR WINDOWS USERS: On Windows systems, the spool directory " \
-             "MUST be located\non a local disk. If you install an execution daemon on a " \
-             "Windows system\nwithout a local spool directory, the execution host is unusable." \
-             "\n\nThe spool directory is currently set to:\n<<$GLOBAL_EXECD_SPOOL>>\n"
-
-   if [ "$SGE_ARCH" != "win32-x86" ]; then
-      $INFOTEXT -n -auto $AUTO -ask "y" "n" -def "n" "Do you want to configure a different spool directory\n for this host (y/n) [n] >> "
-      ret=$?
-   else
-      ret=0 #windows need it, don't need to ask
-   fi
+   $INFOTEXT -u "\nLocal execd spool directory configuration"
+   $INFOTEXT "\nDuring the qmaster installation you've already entered " \
+             "a global\nexecd spool directory. This is used, if no local " \
+             "spool directory is configured.\n\n Now you can configure a local spool " \
+             "directory for this host.\nATTENTION: The local spool directory doesn't have " \
+             "to be located on a local\ndrive. It is specific to the <local> host and can " \
+             "be located on network drives,\ntoo. But for performance reasons, spooling to a " \
+             "local drive is recommended.\n\nFOR WINDOWS USER: On Windows systems the " \
+             "local spool directory MUST be set\nto a local harddisk directory.\nInstalling " \
+             "an execd without local spool directory makes the host unuseable.\nLocal " \
+             "spooling on local harddisk is mandatory for Windows systems.\n"
+   $INFOTEXT -n -auto $AUTO -ask "y" "n" -def "n" "Do you want to configure a local spool directory\n for this host (y/n) [n] >> "
+   ret=$?
 
    while [ $ret = 0 ]; do 
-      $INFOTEXT -n "Enter the spool directory now! >> " 
+      $INFOTEXT -n "Please enter the local spool directory now! >> " 
       LOCAL_EXECD_SPOOL=`Enter`
       if [ "$LOCAL_EXECD_SPOOL" = "" ]; then
-         if [ "$SGE_ARCH" != "win32-x86" ]; then
-            $INFOTEXT -n -auto $AUTO -ask "y" "n" -def "n" "Do you want to configure a different spool directory\n for this host (y/n) [n] >> "
+         $INFOTEXT -n -auto $AUTO -ask "y" "n" -def "n" "Do you want to configure a local spool directory\n for this host (y/n) [n] >> "
          ret=$?
-         else
-            ret=0 #windows need it, don't need to ask
-         fi
          LOCAL_EXECD_SPOOL="undef"
       else
-         $INFOTEXT "Using execd spool directory [%s]" $LOCAL_EXECD_SPOOL
+         $INFOTEXT "Using local execd spool directory [%s]" $LOCAL_EXECD_SPOOL
          $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
          MakeLocalSpoolDir
          ret=1
@@ -567,7 +555,7 @@ GetLocalExecdSpoolDir()
 MakeHostSpoolDir()
 {
    MKDIR="mkdir -p"
-   spool_dir=`qconf -sconf | grep "execd_spool_dir" | awk '{ print $2 }' 2>/dev/null`
+   spool_dir=`qconf -sconf | grep "execd_spool_dir" | awk '{ print $2 }'`
    host_dir=`$SGE_UTILBIN/gethostname -aname | cut -d"." -f1`
 
    $MKDIR $spool_dir/$host_dir
@@ -737,7 +725,6 @@ CheckWinAdminUser()
    fi
 }
 
-# $1 - only do reinstall with $1=update
 InstWinHelperSvc()
 {
    tmp_path=$PATH
@@ -746,41 +733,42 @@ InstWinHelperSvc()
 
    loop=0
 
-   WIN_SVC="SGE_Helper_Service.exe"
+   WIN_SVC="Sun Grid Engine Helper Service"
    WIN_DIR=`winpath2unix $SYSTEMROOT`
 
    $INFOTEXT " Testing, if a service is already installed!\n"
    $INFOTEXT -log " Testing, if a service is already installed!\n"
-   
+   eval "net pause \"$WIN_SVC\"" > /dev/null 2>&1
+   ret=$?
+   if [ "$ret" = 0 ]; then
+      ret=2
+      $INFOTEXT "   ... a service is already installed!"
+      $INFOTEXT -log "   ... a service is already installed!"
+      $INFOTEXT "   ... stopping service!"
+      $INFOTEXT -log "   ... stopping service!"
+
+      while [ "$ret" -ne 0 ]; do
+         eval "net continue \"$WIN_SVC\"" > /dev/null 2>&1
+         ret=$?
+      done    
+      
+   fi
+
    if [ -f "$WIN_DIR"/SGE_Helper_Service.exe ]; then
-      #Try to stop
-      eval "net stop \"$WIN_SVC\"" > /dev/null 2>&1
-      ret=$?
-      #If stop fails, try start since service might be already registered
-      if [ "$ret" -ne 0 ]; then
-         eval "net start \"$WIN_SVC\"" > /dev/null 2>&1
-	 ret=$?
-         #In any case stop the service
-         eval "net stop \"$WIN_SVC\"" > /dev/null 2>&1
-      fi
-      if [ "$ret" -eq 0 ]; then
-         $INFOTEXT "   ... a service is already installed!"
-         $INFOTEXT -log "   ... a service is already installed!"
-	 $INFOTEXT "   ... uninstalling old service!"
-         $INFOTEXT -log "   ... uninstalling old service!"
-         $WIN_DIR/SGE_Helper_Service.exe -uninstall
-      fi
+      $INFOTEXT "   ... uninstalling old service!"
+      $INFOTEXT -log "   ... uninstalling old service!"
+      $WIN_DIR/SGE_Helper_Service.exe -uninstall
       rm $WIN_DIR/SGE_Helper_Service.exe
    fi
-   
+
    ret=1
    $INFOTEXT "\n   ... moving new service binary!"
    $INFOTEXT -log "\n   ... moving new service binary!"
    cp -fR $SGE_UTILBIN/SGE_Helper_Service.exe $WIN_DIR
 
-   $INFOTEXT "   ... installing new service!"
-   $INFOTEXT -log "   ... installing new service!"
    while [ "$ret" -ne "0" -a "$loop" -lt 6 ]; do 
+      $INFOTEXT "   ... installing new service!"
+      $INFOTEXT -log "   ... installing new service!"
       $WIN_DIR/SGE_Helper_Service.exe -install
       ret=$?
       loop=`expr $loop + 1`
@@ -895,7 +883,7 @@ SetupWinSvc()
       fi 
       InstWinHelperSvc
    elif [ "$1" = "update" ]; then #in case of an update, this tree is used
-      InstWinHelperSvc "$1"
+      InstWinHelperSvc
    else
       UnInstWinHelperSvc
    fi

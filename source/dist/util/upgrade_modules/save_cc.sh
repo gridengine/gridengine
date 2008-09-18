@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Saves cluster configuration into a directory structure.
-# Scriptname: save_sge_config.sh
+# Scriptname: save_cc.sh
 # Module: common functions
 #
 #___INFO__MARK_BEGIN__
@@ -36,6 +36,9 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+#TODO Documentation
+#TODO Script man page
+
 INFOTEXT=echo
 
 if [ -z "$SGE_ROOT" -o -z "$SGE_CELL" ]; then
@@ -47,18 +50,9 @@ ARCH=`$SGE_ROOT/util/arch`
 
 MKDIR=mkdir
 QCONF=$SGE_ROOT/bin/$ARCH/qconf
-QHOST=$SGE_ROOT/bin/$ARCH/qhost
 HOST=`$SGE_ROOT/utilbin/$ARCH/gethostname -name`
 
 
-Usage()
-{
-   myname=`basename $0`
-   $INFOTEXT \
-             "Usage: $myname <backup_dir>|[-help]\n" \
-             "\n<backup_dir> ... Directory in which to store the backup.\n" \
-             "                The directory must either be empty or not exists at all."
-}
 
 #Dump list to dir
 DumpListToLocation()
@@ -151,65 +145,28 @@ BackupSgeCell()
    mkdir -p "$DEST_DIR/cell"
    cp $SGE_ROOT/$SGE_CELL/common/act_qmaster "${DEST_DIR}/cell"
    cp $SGE_ROOT/$SGE_CELL/common/bootstrap "${DEST_DIR}/cell"
-   #cluster_name
-   if [ -f $SGE_ROOT/$SGE_CELL/common/cluster_name ]; then
-      cp $SGE_ROOT/$SGE_CELL/common/cluster_name "${DEST_DIR}/cell"
-   fi
-   #host_aliases
-   if [ -f $SGE_ROOT/$SGE_CELL/common/host_aliases ]; then
-      cp $SGE_ROOT/$SGE_CELL/common/host_aliases "${DEST_DIR}/cell"
-   fi
-   #qtask
-   if [ -f $SGE_ROOT/$SGE_CELL/common/qtask ]; then
-      cp $SGE_ROOT/$SGE_CELL/common/qtask "${DEST_DIR}/cell"
-   fi
-   #sge_aliases
-   if [ -f $SGE_ROOT/$SGE_CELL/common/sge_aliases ]; then
-      cp $SGE_ROOT/$SGE_CELL/common/sge_aliases "${DEST_DIR}/cell"
-   fi
-   #sge_ar_request
-   if [ -f $SGE_ROOT/$SGE_CELL/common/sge_ar_request ]; then
-      cp $SGE_ROOT/$SGE_CELL/common/sge_ar_request "${DEST_DIR}/cell"
-   fi
-   #sge_request
-   if [ -f $SGE_ROOT/$SGE_CELL/common/sge_request ]; then
-      cp $SGE_ROOT/$SGE_CELL/common/sge_request "${DEST_DIR}/cell"
-   fi
-   #sge_qstat
-   if [ -f $SGE_ROOT/$SGE_CELL/common/sge_qstat ]; then
-      cp $SGE_ROOT/$SGE_CELL/common/sge_qstat "${DEST_DIR}/cell"
-   fi
-   #sge_qquota
-   if [ -f $SGE_ROOT/$SGE_CELL/common/sge_qquota ]; then
-      cp $SGE_ROOT/$SGE_CELL/common/sge_qquota "${DEST_DIR}/cell"
-   fi
-   #sge_qstat
-   if [ -f $SGE_ROOT/$SGE_CELL/common/sge_qstat ]; then
-      cp $SGE_ROOT/$SGE_CELL/common/sge_qstat "${DEST_DIR}/cell"
-   fi
-   
-   #shadow_masters
-   if [ -f $SGE_ROOT/$SGE_CELL/common/shadow_masters ]; then
-      cp $SGE_ROOT/$SGE_CELL/common/shadow_masters "${DEST_DIR}/cell"
-   fi	
+   cp $SGE_ROOT/$SGE_CELL/common/cluster_name "${DEST_DIR}/cell" 2>/dev/null
+	
+   cp $SGE_ROOT/$SGE_CELL/common/qtask "${DEST_DIR}/cell"
+   cp $SGE_ROOT/$SGE_CELL/common/sge_aliases "${DEST_DIR}/cell"
+   cp $SGE_ROOT/$SGE_CELL/common/sge_request "${DEST_DIR}/cell"
+   cp $SGE_ROOT/$SGE_CELL/common/shadow_masters "${DEST_DIR}/cell" 2>/dev/null
+	
    #Accounting file
    if [ -r "$SGE_ROOT/$SGE_CELL/common/accounting" ]; then
       cp "$SGE_ROOT/$SGE_CELL/common/accounting" "${DEST_DIR}/cell"
-   fi	
+   fi
+	
    #Save dbwriter.conf for simple dbwriter upgrade, if present
    if [ -r "$SGE_ROOT/$SGE_CELL/common/dbwriter.conf" ]; then
-      cp "$SGE_ROOT/$SGE_CELL/common/dbwriter.conf" "${DEST_DIR}/cell"
+      cp "$SGE_ROOT/$SGE_CELL/common/dbwriter.conf" "${DEST_DIR}/cell" 2>/dev/null
    fi
+	
+   #TODO: Document sgeCA needs to be recreated (openssl changes, etc.)
 	
    #Save JMX settings if present
    if [ -d "$SGE_ROOT/$SGE_CELL/common/jmx" ]; then
       cp -r "$SGE_ROOT/$SGE_CELL/common/jmx" "${DEST_DIR}/cell/jmx"
-   fi
-   
-   #Save cluster's windows host info
-   res=`$QHOST -l "arch=win*" 2>/dev/null`
-   if [ -n "$res" ]; then     # has windows hosts
-      echo "$res" | grep "win*" | awk '{print $1}' > "${DEST_DIR}"/win_hosts
    fi
 }
 
@@ -218,10 +175,6 @@ BackupSgeCell()
 ########
 # MAIN #
 ########
-if [ "$1" = "-help" -o $# -eq 0 ]; then
-   Usage
-   exit 0
-fi
 
 #Dump all curent configuration to the temp directory called ccc
 DEST_DIR="${1:?The save directory is required}"
@@ -240,8 +193,9 @@ fi
 if [ ! -d "$DEST_DIR" ]; then
    $MKDIR -p $DEST_DIR
 elif [ `ls -1 "$DEST_DIR" | wc -l` -gt 0 ]; then
-   echo "ERROR: The save directory $DEST_DIR must be empty"
-   exit 1
+   echo "ERROR The save directory $DEST_DIR must be empty"
+   #The testsuite will not consider it as an error, if the save is already done
+   exit 0
 fi
 
 date '+%Y-%m-%d_%H:%M:%S' > "$DEST_DIR/backup_date"
@@ -276,14 +230,6 @@ DumpOptionToFile "-so" "$DEST_DIR/operators"
 
 #     -sc                           <show complexes>
 DumpOptionToFile "-sc" "$DEST_DIR/centry"
-#add display_win_gui if missing
-cat  "$DEST_DIR/centry" | grep "^display_win_gui " > /dev/null 2>&1
-if [ $? -ne 0 ]; then
-   cp "$DEST_DIR/centry" "$DEST_DIR/centry.bak"
-   sed '3i\
-display_win_gui     dwg        BOOL        ==    YES         NO         0        0'  "$DEST_DIR/centry.bak" > "$DEST_DIR/centry" 
-   rm -f "$DEST_DIR/centry.bak"
-fi
 
 #     -sel                          <show execution hosts>
 list=`$QCONF -sel 2>/dev/null`
@@ -334,13 +280,6 @@ DumpListToLocation "$list" $DEST_DIR/pe "-sp"
 list=`$QCONF -sul 2>/dev/null`
 #     -su acl_name                  <show user ACL>
 DumpListToLocation "$list" $DEST_DIR/usersets "-su"
-if [  ! -f $DEST_DIR/usersets/arusers ]; then   #add arusers ACL for 6.2+
-   echo "name       arusers
-type       ACL
-oticket    0
-fshare     0
-entries    NONE" > $DEST_DIR/usersets/arusers
-fi
 
 #     -sql                          <show queue list>
 list=`$QCONF -sql 2>/dev/null`

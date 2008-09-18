@@ -159,7 +159,7 @@ static int start_child(char *childname, char *script_file, pid_t *pidp,
 static void forward_signal_to_job(int pid, int timeout, int *postponed_signal, 
                        int remaining_alarm, pid_t ctrl_pid[3]);
 static int check_ckpttype(void);
-int wait_my_child(int pid, int ckpt_pid, int ckpt_type, 
+static int wait_my_child(int pid, int ckpt_pid, int ckpt_type, 
                          struct rusage *rusage, int timeout, 
                          int ckpt_interval, char *childname);
 static void set_ckpt_params(int, char *, int, char *, int, char *, int, int *);
@@ -177,7 +177,7 @@ static void shepconf_deliver_signal_or_method(int sig, int pid, pid_t *ctrl_pid)
 
 /* overridable control methods */
 static void verify_method(char *method_name);
-void shepherd_signal_job(pid_t pid, int sig);
+static void shepherd_signal_job(pid_t pid, int sig);
 
 char shepherd_job_dir[2048];
 
@@ -1225,6 +1225,14 @@ int ckpt_type
       kill(-pid, SIGKILL);
       sge_switch2admin_user();
 
+      if (exit_status == -1) {
+         exit_status = 0;
+         if (get_job_status(pid, &exit_status, &rusage) == 1) {
+            shepherd_trace("%s exited with exit status %d", 
+                           childname, WEXITSTATUS(exit_status));
+         }
+      }
+
       status = exit_status;
       ckpt_interval = 0;
 
@@ -2182,7 +2190,7 @@ void handle_signals_and_methods(
    }   
 }         
 /*------------------------------------------------------------------------*/
-int wait_my_child(
+static int wait_my_child(
 int pid,                   /* pid of job */
 int ckpt_pid,              /* pid of restarted job or same as pid */
 int ckpt_type,             /* type of checkpointing */
@@ -2565,7 +2573,7 @@ static void start_clean_command(char *cmd)
  and uses it instead of the pid. If reading or killing fails, the normal
  mechanism is used.
  ****************************************************************/
-void 
+static void 
 shepherd_signal_job(pid_t pid, int sig) {
 #if defined(IRIX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
    static int first = 1;

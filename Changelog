@@ -1,451 +1,3 @@
-RD-2008-09-18-0: Bugfix:      fixed verbosity of qalter -w v
-                 Bugster:     6730487
-                 Issue:       2680
-                 Review:      CR
-
-CR-2008-09-17-0: Bugfix:      Commlib does not compare hosts with strcasecmp
-                 Issue:       2728
-                 Bugster:     6748854
-                 Enhancem.:   Added new module test for simple commlib issues:
-                                 test_commlib_issue
-                 Review:      RD
-
-CR-2008-09-16-0: Bugfix:      execd failed to reconnect to shadow master host
-                 Issue:       2700
-                 Bugster:     6738091
-                 Review:      RD
-
-MP-2008-09-16-0: Bugfix:      Prameter PE_RANGE_ALG is shown as SELECT_PE_RANGE_ALG
-                              in the man page of sched_conf
-                 Bugster:     6567413
-                 Issue:       2723
-                 Review:      DG
-
-DG-2008-09-16-0: Bugfix:      qresub on -b y jobs raises wrong error condition
-                 Bugster:     6727295
-                 Issue:       2726
-                 Review:      JG
-
-EB-2008-09-15-0: Bugfix:      subordinate properties lost on qmaster restart
-                 Issue:       1741
-                 Bugster:     6319223
-                 Review:      JG
-
-DG-2008-09-10-0: Bugfix:      Logging into schedd_runlog is never turned off.
-                 Bugster:     6744738
-                 Issue:       2717
-                 Review:      JG
-
-MP-2008-09-04-0: Bugfix:      The ibm-loadsensor script has the 5.3.0 case
-                              missing in the section that computes the
-                              memory load values.
-                              Merged from V61_BRANCH MP-2008-09-03-0
-                 Bugster:     6740546
-                 Issue:       2715
-                 Review:      AP
-
-AP-2008-09-03-0: Bugfix:     weight_priority is missing from sched_conf(5)
-                 Bugster:    6575735
-                 Issue:      2279
-                 Review:     DG
-
-DG-2008-08-19-0: Bugfix:     qconf -help showed different identifier 
-                             for the same variable (obj_id_lst and 
-                             obj_id_list). obj_id_list is consistent
-                             with other identifiers.
-                 Bugster:    6622128
-                 Issue:      2693
-                 Review:     AA
-
-MP-2008-08-12-0: Bugfix:     qmaster reinstall overwriting an existing
-                             installation fails
-                             Merged from V61_BRANCH MP-2008-05-29-0
-                 Bugster:    6673742
-                 Issue:      2594
-                 Review:     JG, MD
-
-AA-2008-08-11-0: Bugfix:     sge_ca script fails for installation as root user
-                 Bugster:    6735875
-                 Issue:      2685
-                 Review:     RH
-
-DG-2008-08-08-0: Bugfix:     Manpage sge_conf(5) was wrong about default 
-                             loglevel.
-                 Bugster:    6575737
-                 Issue:      2280
-                 Review:     JG
-
-DG-2008-08-07-1: Cleanup:    Update of documentation and comments.
-                 Belongs to: DT-2007-11-21-0 
-                 Bugster:    6558329
-                 Issue:      2253
-                 Review:     MD
-
-DG-2008-08-07-0: Bugfix:     Man page qdel is misleading with the -f option.
-                 Bugster:    6702511
-                 Review:     CR
-
-MD-2008-07-31-0: CVS:       Created V62_TAG
--------------------------------------------
-
-HP-2008-07-23-0: Bugfix:    On Windows/Interix, the shepherd didn't exit immediately
-                            after the qrsh job finished, it took 60 s to finish
-                 Review:    JG
-
-LP-2008-07-23-0: Bugfix:    Fixed inst_sge -help output
-                 Review:    JG
-
-LP-2008-07-22-0: Bugfix:    Fixed broken upgrade message
-                 Bugfix:    inst_sge -post-upd did not upgrade win_hosts
-                 Bugfix:    Wrong user after connectiong to a win host in the
-                            post upgrade procedure
-                 Bugfix:    tr command has wrong replace arguments in some 
-                            places
-                 Bugfix:    Installation fails when another cluster already uses
-                            RC scripts on Linux
-                 Bugster:   6728406, 6727751
-                 Review:    MD, AP
-
-RN-2008-07-22-0: Bugfix:    qmaster crashes while project deletion (qconf -dprj)
-                            in a special case
-                 Bugster:   6728262
-                 Issue:     2672
-                 Review:    JG 
-
-MP-2008-07-19-0: Bugfix:    Fixed spelling mistakes in the man pages.
-
-AH-2008-07-18-0: Bugfix:     Fixed error that caused tight_integration_massive test to fail.
-                 Bugster:    6710983
-                 Issue:      2603
-                 Review:     CR
-                 Belongs to: AH-2008-06-10-0
-
-LP-2008-07-18-2: Cleanup:   Renamed load_cc.sh and save_cc.sh to 
-                            load_sge_config.sh and save_sge_config.sh
-
-LP-2008-07-18-1: Bugfix:    Upgrade did not update N1 windows helper service
-                            (Using service name instead of display name now)
-                 Bugfix:    Wrong users were connecting to windows hosts in the
-                            post upgrade procedures
-                 Bugfix:    Fixed broken -winsvc in certain cases
-                 Review:    AP
-
-AA-2008-07-18-0: Bugfix:     o qconf invalid values and exit code fixes
-                 Bugster:    6618016, 6618012, 6617973
-                 Issue:      2662
-                 Review:     MD
-
-MD-2008-07-18-0: Bugfix:     o Installation of execution daemon left user unclear 
-                             which port was chosen.
-                             o Wrong permissions if install_qmaster creates qmaster 
-                             spool directory
-                 Bugster:    6726344, 6726285
-                 Issue:      2661, 2660
-                 Review:     CR
-
-LP-2008-07-18-0: Enhancem:  Introduced new inst_sge option -start-all to start
-                            complete cluster
-                 Enhancem:  Improved upgrade messages
-                 Enhancem:  Upgrade now handles /etc/services sge ports
-                 Cleanup:   Removed unsed procedure UninstWinHelperPre62
-                 Bugfix:    shadow_masters file might contain some hosts twice
-                 Bugster:   6675592
-                 Issue:     2521
-                 Review:    JG, MD
-
-EB-2008-07-17-0: Bugfix:     Qmaster message file contains logging about NULL ptr passed to host_list_locate()
-                 Bugster:    6726283
-                 Issue:      2658
-                 Review:     JG
- 
-JG-2008-07-14-0: Bugfix:    Fixed minor memory leaks.
-                 Bugster:   6724877
-                 Issue:     2650
-                 Review:    HP
-
-EB-2008-07-17-0: Bugfix:    Qmaster message file contains logging about NULL
-                            ptr passed to host_list_locate()
-                 Bugster:   6726283
-                 Issue:     2658
-                 Review:    JG 
-
-AP-2008-07-17-0: Bugfix:    Wrong option in upgrade procedure.
-                 Review:    AS
-
-HP-2008-07-16-0: Bugfix:     Using fix HP-2008-07-14-0 for all architectures now
-                 Cleanup to: HP-2008-07-14-0
-                 Review:     CR
-
-DG-2008-07-16-0: Bugfix:    qsub -w v always returned success.
-                 Bugster:   6724949
-                 Issue:     2652
-                 Review:    JG
-
-MP-2008-07-14-0: Bugfix:    Merged from V61_BRANCH: MP-2008-7-11-0
-                 Bugster:   6716082
-                 Issue:     2644
-                 Review:    JG
-
-JG-2008-07-14-0: Bugfix:    Fixed minor memory leaks.
-                 Bugster:   6724877
-                 Issue:     2650
-                 Review:    EB, HP, CR
-
-HP-2008-07-14-0: Bugfix:    Fixed wrongly set signals in commlib threads
-                 Bugster:   6725446
-                 Issue:     2653
-                 Review:    EB, CR
-
-MD-2008-07-14-0: Bugfix:    /etc/services is not handled correctly during 
-                            installation
-                 Bugster:   6711517
-                 Issue:     2655
-                 Review:    JG
-
-RN-2008-07-14-0: Bugfix:    'Infinity' must be rejected when specified in 
-                            'complex_values' or RQS limits for consumables
-                 Bugster:   6613438
-                 Issue:     2391
-                 Review:    AH 
-
-CR-2008-07-11-0: Bugfix:    - Merged from V61_BRANCH: CR-2008-07-09-0
-                            - Execd Cleanup  
-                 Review:    MD
-
-HP-2008-07-11-0: Bugfix:    Added workaround to set missing resource limits
-                 Bugster:   6722507, 6533487
-                 Issue:     2370  
-                 Review:    AS, MD
-
-JG-2008-07-11-0: Bugfix:    Fixed minor memory leaks.
-                 Bugster:   6724877
-                 Issue:     2650
-                 Review:    MD
-
-JA-2008-07-11-1: Bugfix:    - improve precondition in sge_task_depend_get_range to accept
-                              any valid task id
-                            - remove warnings and debug messages associated with
-                              sge_task_depend_get_range failure
-                 Review:    AH,JG
-
-JA-2008-07-11-0: Bugfix:    Tasks held with array dependency may get deleted prematurely
-                 Bugster:   6723951
-                 Issue:     2628
-                 Review:    AH
-
-AA-2008-07-10-0: Bugfix:    - install_qmaster -jmx fails if non default keystore path is used
-                            - jmx keystore property is wrong for non default keystore location
-                            - use LinkedHashMap to keep sort order
-                            - jgdi cleanups
-                            - GridCA -days extension
-                 Bugster:   6723932, 6724576
-                 Issue:     2647, 2646
-                 Review:    RH, CR
-
-LP-2008-07-10-0: Cleanup:   Removed inst_update.sh
-                 Bugfix:    Fixed typos & usages
-                 Review:    MD
-
-JG-2008-07-10-0: Bugfix:    Error message of qalter -q "" <job_id> suggests
-                            memory corruption.
-                 Bugster:   6704393
-                 Issue:     2575
-                 Review:    MD
-
-ZG-2008-07-10-0: Bugfix:    Default is the local spool directory when 
-                            install_execd is running on a Windows host
-                 Bugfix:    Improved text at "Execd spool directory configuration"
-                            at execd installation
-                 Bugster:   6589820
-                 Issue:     2634
-                 Review:    LP
-
-LP-2008-07-09-0: Enhancem:  Improved upgrade mode detection
-                 Cleanup:   Renamed LP-2008-07-07 to LP-2008-07-07-0
-                 Bugfix:    ServiceAlreadyExists error on non-smf hosts
-                 Bugfix:    Fixed upgrade remote actions
-                 Bugfix:    Upgrade uses same local execd spool dir in copy mode
-                 Bugster:   6723936
-                 Review:    JO
-
-JG-2008-07-08-0: Bugfix:    qmaster runs out of memory on AIX
-                 Bugster:   6720078
-                 Issue:     2641
-                 Review:    MP
-
-MP-2008-07-08-0: Enhancem:  Updated the test_flatfile_spool file to take into account
-                            parsing of RQSes with a backslash followed by a line
-                            break combination
-                 Review:    RD
-
-RD-2008-07-08-1: Cleanup:   - removed references to DRMAA 0.95 from man pages
-                            - deprecated obsolete parameters/switches
-                            - removed redundant upgrade documents
-                 Review:    AA
-
-RD-2008-07-08-0: Cleanup:   - fixed and enhanced test_performance module test
-                            - some smaller code cleanups
-                 Review:    AA
-
-LP-2008-07-07-0: Enhancem:  Removed ST question, ST used by default
-                 Enhancem:  ST also register PRODUCT_PARENT_URN
-                 Bugfix:    execd install fails on OS X when qmaster boot 
-                            scripts are present
-                 Bugfix:    upgrade does not save and restore sge_qstat, 
-                            sge_ar_request,sge_qquota
-                 Bugfix:    install fails with mutually dependent subordinate 
-                            queues
-                 Bugster:   6716772, 6722920, 6723130
-                 Issue:     2574, 2625
-                 Review:    RD, ZG
-
-MP-2008-07-07-0: Bugfix:    RQS: Line wrap of host list introduces syntax error
-                 Bugster:   6647676
-                 Issue:     2449
-                 Review:    DT
-
-RD-2008-07-07-0: Bugfix:    fixed broken auto installation
-                 Review:    AA
-
-DG-2008-07-07-0: Bugfix:    Java DRMAA final static variables are accessed 
-                            through object references. 
-                 Bugster:   6722930
-                 Review:    JG
-
-LP-2008-07-04-0: Enhancem:  Windows host list is now saved during the backup for
-                            upgrade procedure
-                 Enhancem:  SGE_CELL, SGE_CLUSTER_NAME, PRODUCT_MODE is used 
-                            from the backup during the upgrade
-                 Enhancem:  Added post update actions to clean execd_spool_dirs,
-                            remove RC scripts, create RC scripts, update WINSVC
-                 Enhancem:  WINSVC install no longer reinstalls a service 
-                            (winupdate should be used)
-                 Cleanup:   Various upgrade/install code
-                 Bugfix:    JMX java detection fixed
-                 Bugfix:    Upgrade script failed when choosing a different 
-                            port number then $SGE_QMASTER_PORT
-                 Bugfix:    upgrade does not create arusers user set
-                 Bugfix:    upgrade does not save host_aliases file
-                 Bugfix:    upgrade does not create display_win_gui complex
-                 Bugfix:    Auto install template value checking is too strict 
-                            on COPY_COMMAND
-                 Bugfix:    qmaster installation displays "No CSP system 
-                            installed" twice when no CSP
-                 Bugster:   6717816, 6722652, 6722805, 6722806, 6717891, 6722925
-                 Review:    AP
-
-DG-2008-07-04-0: Cleanup:   Java DRMAA Junit test: problems with build 
-                            numbers fixed. 
-                            Merged from 61_BRANCH DG-2008-07-03-0 
-                 Review:    CR 
-
-JG-2008-07-04-0: Bugfix:    Same path for input and output/error file must be
-                            rejected.
-                 Bugster:   6310194
-                 Issue:     1751
-                 Review:    RD
-
-JG-2008-07-03-1: Enhancem.: New default location for Berkeley DB and openssl.
-                 Review:    AA
-
-JG-2008-07-03-0: Enhancem.: Updated review template and help document.
-                 Review:    sge-et
-
-AH-2008-07-03-1: Bugfix:    Invalid qconf -mrqs crashes qmaster with
-                            segmentation fault
-                 Bugster:   6722217
-                 Issue:     2432
-                 Review:    TH,RD
-
-MP-2008-07-02-0: Bugfix:    qstat -j does not print array task information
-                 Bugster:   6710485
-                 Issue:     2606
-                 Review:    JG
-
-HP-2008-07-02-0: Bugfix:    shepherd wasn't able to read user certificates
-                 Bugster:   6718433
-                 Bugfix:    insufficient handling of commlib errors
-                 Bugster:   6718447
-                 Bugfix:    incorrect accounting when terminate method is used
-                 Bugster:   6718453
-                 Bugfix:    qrsh and qlogin has very slow response to user input
-                 Bugster:   6686921
-                 Review:    JG
-
-DG-2008-06-30-0: Cleanup:   Missing depend target in qmake makefile.
-                 Review:    AA
-
-ZG-2008-06-25-0: Bugfix:    incorrect dependency on xinetd in init scripts fo linux
-                 Bugster:   6677192
-                 Issue:     2523
-                 Review:    JG
-
-ZG-2008-06-23-0: Bugfix:    install_execd -winsvc should output wrong usage
-                 Bugster:   6692104
-                 Issue:     2624
-                 Review:    JG
-
-DG-2008-06-23-0: Cleanup:   Temporary load file is not deleted by script.
-                            Cleanup of check in EB-2008-04-16-0. 
-                 Review:    JG
-
-RH-2008-06-19-0: Bugfix:    copy paste error in jgdish xmldump fixed
-                 Review:    AA
-
-AA-2008-06-19-0: Bugfix:    sge_ca script does not allow easy sdm_admin keystore creation
-                 Bugster:   6716648
-                 Issue:     2619
-                 Review:    RH
-
-DG-2008-06-19-0: Cleanup:   Outdated installation hint for AIX loadsensor 
-                            in script comments. 
-                 Review:    EB 
-
-JG-2008-06-16-0: Bugfix:    reporting file is lacking information about global
-                            consumables, if log_consumables=false
-                 Bugster:   6710542
-                 Issue:     2615
-                 Review:    HP
-
-AA-2008-06-16-0: Bugfix:    - certtool.sh didn't overwrite key dir 
-                              for reinstall in testsuite
-                            - NullPointerException fix for sharetree
-                 Review:    JG
-
-LP-2008-06-13-1: Bugfix:    Fixed SMF specification document
-
-LP-2008-06-13-0: Enhancem:  Added SMF specification document
-
-DG-2008-06-13-0: Bugfix:    job hold due to -hold_jid is not indicated as 
-                            STATE_SYSTEM_ON_HOLD by drmaa_job_ps(3) 
-                 Issue:     2608
-                 Bugster:   6562277
-                 Review:    AH, RD 
-
-AH-2008-06-12-0   Bugfix:    - qalter -w v is silent on finished jobs
-                             - qalter -w v wrongly changes job attributes
-                  Bugster:   6708891,6712685
-                  Issue:     2598,2607
-                  Review:    RD
-
-RD-2008-06-12-1: Bugfix:    fixed possible segfault introduced with
-                            RD-2008-06-12-0
-                 Review:    DG
-
-RD-2008-06-12-0: Bugfix:    load_sensor does not work with reports for
-                            other hosts
-                 Bugster:   6713785
-                 Issue:     2611
-                 Review:    DG
-
-RD-2008-06-11-0: Bugfix:    mtmalloc on Solaris was wrongly disabled
-                 Review:    JG
-
-AH-2008-06-10-0: Bugfix:    qsub option -q breaks -masterq
-                 Bugster:   6710983
-                 Issue:     2603
-                 Review:    AA
-
 RD-2008-06-10-0: CVS:       Created V62beta2_TAG
 ------------------------------------------------
 
@@ -517,14 +69,12 @@ CR-2008-06-02-0: Cleanup:   commlib:
                              - report ip resolve errors to application
                                utilbin/gethostbyaddr:
                              - added application error callback for commlib
-                 Bugster:   6715366
-                 Issue:     2616
                  Review:    RD
 
 AA-2008-05-30-0: Bugfix:    - upgrade to openssl-0.9.8g
                             - qmon AR fixes
                             - make libjgdi.so compile on AIX and Irix
-                 Bugster:   6706406, 6715346
+                 Bugster:   6706406
                  Review:    CR
 
 JG-2008-05-30-0: Bugfix:    32-bit Linux libraries are having problems with file
@@ -555,8 +105,6 @@ CR-2008-05-29-0: Bugfix:    Communication library cleanup:
                               endpoint name which was removed by performance
                               changes. The information is needed in service to
                               do hostname resolve and component id checks.
-                 Bugster:   6715371, 6715373
-                 Issue:     2617, 2618
                  Review:    AA
 
 RN-2008-05-29-2: Bugfix:    o qconf -ae|-Ae return 0 even if exechost exists already
@@ -579,8 +127,7 @@ RN-2008-05-29-0: Bugfix:    Failed to deliver STOP signal for subordinated jobs
                  Issue:     2478
                  Review:    JG 
 
-JO-2008-05-28-0: Bugfix:    o Argument not passed from SetupRcScriptNames()
-                 Bugster:   6715369
+JO-2008-05-28-0: Bugfix:    o Added missing argument
                             o Corrected arco_mysql.txt
                  Review:    LP
 
@@ -596,11 +143,9 @@ EB-2008-05-21-0: Doc:       Changed some man pages
                  Review:    DG
 
 HP-2008-05-19-0: Bugfix:    New interactive job support didn't work properly in secured
-                            mode.
+                            mode
                  Enhancem:  Added infos about new interactive job support to man pages
                  Review:    AA
-                 Remark:    This bugfix was not sufficient, a complete bugfix
-                            will follow!
                  
 AH-2008-05-19-0: Bugfix:    Incorrect documentation for xprojects setting in
                             sge_conf(5).
@@ -795,8 +340,8 @@ JG-2008-04-17-0: Bugfix:    reactivated profiling in event_mirror
                  Review:    RD 
 
 EB-2008-04-16-0: Bugfix:    o loadsensor does not work on AIX
-                 Bugster:   6661060, 6717172
-                 Issue:     2508, 2622
+                 Bugster:   6661060
+                 Issue:     2508
                  Review:    RD 
 
 DG-2008-04-16-0: Cleanup:   Compiler error (indicated argument is incompatible
@@ -1047,11 +592,7 @@ RD-2008-03-13-0: Bugfix:    fixed issue with queue subordinate suspention
                             introduced by RD-2008-03-04-0
                  Review:    AH
 
-JG-2008-03-13-0: Bugfix:    - fixed minor memory leaks.
-                            - specifying more than one drmaa_v_env 
-                              attribute causes spurious error msg
-                 Bugster:   6614108
-                 Issue:     2392
+JG-2008-03-13-0: Bugfix:    Fixed minor memory leaks.
                  Review:    RD
 
 AA-2008-03-13-0: Bugfix:    changed installation for JMX
@@ -21834,4 +21375,3 @@ CR-2001-07-20-0: Testsuite:
 AH-2001-07-20-0: - increased GRM_GDI_VERSION for GE 5.3
                  - fix qmaster core dump caused by old execd's sending load 
                    reports w/o REP_seqno
-

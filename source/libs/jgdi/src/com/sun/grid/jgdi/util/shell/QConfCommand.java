@@ -328,7 +328,9 @@ public class QConfCommand extends QConfCommandGenerated {
         String sds;
         sds = jgdi.showDetachedSettingsAll();
         //TODO LP: Check correct behaviour, for now expect that sds!="" is an error
-        if (sds != null && sds.length() > 0) {
+        if (sds == null || sds.length() == 0) {
+            out.println();
+        } else {
             out.print(sds);
             setExitCode(1);
         }

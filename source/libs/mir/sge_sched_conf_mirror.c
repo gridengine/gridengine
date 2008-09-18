@@ -101,7 +101,7 @@ schedd_conf_update_master_list(sge_evc_class_t *evc, object_description *object_
       lAppendElem(list, ep);
    }
 
-   if (!sconf_set_config(&list, &answer_list)) {
+   if (sconf_set_config(&list, &answer_list)){
       lFreeList(&list);
       answer_list_output(&answer_list);
    }

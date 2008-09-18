@@ -460,6 +460,7 @@ char *argv[]
             /* no template name given - then use "template" as name */
             host = sge_strdup(host, SGE_TEMPLATE_NAME);
          }
+
          /* get a template host entry .. */
          where = lWhere("%T( %Ih=%s )", EH_Type, EH_name, host);
          what = lWhat("%T(ALL)", EH_Type);
@@ -491,6 +492,7 @@ char *argv[]
 
          FREE(host);
          lFreeList(&alp);
+
          
          /* edit the template */
          argep = lFirst(arglp);
@@ -609,8 +611,8 @@ char *argv[]
 
          spp = sge_parser_get_next(spp);
          parse_name_list_to_cull("host to add", &lp, AH_Type, AH_name, *spp);
-         if (!add_host_of_type(ctx, lp, SGE_ADMINHOST_LIST)) {
-            sge_parse_return |= 1;
+         if (add_host_of_type(ctx, lp, SGE_ADMINHOST_LIST) != 0) {
+            sge_parse_return = 1;
          }
          
          lFreeList(&lp);
@@ -3548,32 +3550,27 @@ char *argv[]
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s\n", lGetString(aep, AN_text));
-            lFreeList(&alp);
-            lFreeList(&lp);
             sge_parse_return = 1;
             spp++;
             continue;
          }
-         lFreeList(&alp);
 
-         if (lp == NULL || lGetNumberOfElem(lp) == 0) {
+         if (!lp || lGetNumberOfElem(lp) == 0) {
             fprintf(stderr, MSG_USER_XISNOKNOWNUSER_S, *spp);
             fprintf(stderr, "\n");
             spp++;
-            lFreeList(&lp);
             continue;
          }
+         lFreeList(&alp);
          ep = lFirst(lp);
          
          /* edit user */
          newep = edit_user(ep, uid, gid);
 
          /* if the user name has changed, we need to print an error message */   
-         if (newep == NULL || strcmp(lGetString(ep, UU_name), lGetString(newep, UU_name))) {
+         if (strcmp(lGetString(ep, UU_name), lGetString(newep, UU_name))) {
             fprintf(stderr, MSG_QCONF_CANTCHANGEOBJECTNAME_SS, lGetString(ep, UU_name), lGetString(newep, UU_name));
             fprintf(stderr, "\n");
-            lFreeElem(&newep);
-            lFreeList(&lp);
             DRETURN(1);
          } else {
             lFreeList(&lp);
@@ -3620,17 +3617,13 @@ char *argv[]
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s\n", lGetString(aep, AN_text));
-            lFreeList(&alp);
-            lFreeList(&lp);
             spp++;
             continue;
          }
-         lFreeList(&alp);
 
          if (lp == NULL || lGetNumberOfElem(lp) == 0) {
             fprintf(stderr, MSG_PROJECT_XISNOKNWOWNPROJECT_S, *spp);
             fprintf(stderr, "\n");
-            lFreeList(&lp);
             continue;
          }
          lFreeList(&alp);
@@ -5180,9 +5173,7 @@ char *argv[]
             sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN);
          }
          
-         if (!cqueue_add_from_file(ctx, &answer_list, file)) {
-            sge_parse_return |= 1;
-         }
+         cqueue_add_from_file(ctx, &answer_list, file);
          sge_parse_return |= show_answer(answer_list);
          lFreeList(&answer_list);
          
@@ -6525,7 +6516,6 @@ const char *config_name
          fprintf(stderr, MSG_ANSWER_CONFIGXNOTDEFINED_S, cfn);
          fprintf(stderr, "\n");
          lFreeList(&alp);
-         lFreeList(&lp);
          DRETURN(1);
       }
       printf("#%s:\n", cfn);

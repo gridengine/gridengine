@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # SGE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
-# Scriptname: load_sge_config.sh
+# Scriptname: load_cc.sh
 # Module: common functions
 #
 #___INFO__MARK_BEGIN__
@@ -36,6 +36,10 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+#TODO Documentation
+#TODO Script man page
+
+#TODO infotext?, Need to be run as Admin user
 INFOTEXT=echo
 
 if [ -z "$SGE_ROOT" -o -z "$SGE_CELL" ]; then
@@ -50,21 +54,6 @@ MKDIR=mkdir
 LS=ls
 QCONF=$SGE_ROOT/bin/$ARCH/qconf
 HOST=`$SGE_ROOT/utilbin/$ARCH/gethostname -name`
-
-
-Usage()
-{
-   myname=`basename $0`
-   $INFOTEXT "Usage: $myname [-log I|W|C] [-mode upgrade|copy] [-newijs true|false] [-execd_spool_dir <value>] [-admin_mail <value>] [-gid_range <integer_range_value>] [-help]\n" \
-             "\nExample:\n" \
-             "   $myname -log C -mode copy -newijs true -execd_spool_dir /sge/real_execd_spool -admin_mail user@host.com -gid_range 23000-24000\nLoads the configuration according to the following rules:\n" \
-             "   Shows only critical errors\n" \
-             "   Uses copy upgrade mode (local execd spool dirs will be changed)\n" \
-             "   Enables new interactive job support\n" \
-             "   Changes the global execution daemon spooling directory\n" \
-             "   Sets the address to which to send mail\n" \
-             "   Sets the group ID range"
-}
 
 
 #All logging is done by this functions
@@ -193,32 +182,15 @@ UpdateConfiguration()
          RemoveLineWithMatch ${modFile} 'rsh_command.*'
          RemoveLineWithMatch ${modFile} 'rsh_daemon.*'
       fi
-      #We need to change local execd spool dirs for copy mode 
-      if [ "$mode" = copy ]; then
-         local_dir=`grep execd_spool_dir ${modFile} 2>/dev/null | awk '{print $2}'`
-         if [ -n "$local_dir" ]; then
-	    local_dir=`dirname $local_dir 2>/dev/null`
-	    if [ -n "$local_dir" ]; then
-	       if [ -n "$SGE_CLUSTER_NAME" ]; then
-	          local_dir="${local_dir}/${SGE_CLUSTER_NAME}"
-	       elif [ -n "$SGE_QMASTER_PORT" ]; then
-	          local_dir="${local_dir}/${SGE_QMASTER_PORT}"
-	       else
-	          local_dir="${local_dir}/${SGE_CELL}"
-	       fi
-	       ReplaceOrAddLine ${modFile} 'execd_spool_dir.*'  "execd_spool_dir                $local_dir"
-	    fi
-	 fi
-      fi
    fi
 }
 
 #Modify before load
-ModifyData()
+ModifyLoad()
 {
    modOpt="${1:?An option is required}"
    modFile="${2:?The file name is required}"
-   #echo "ModifyData opt:$modOpt file:$modFile"
+   #echo "ModifyLoad opt:$modOpt file:$modFile"
 
    #test only, comment in production
    case "$modOpt" in
@@ -228,7 +200,7 @@ ModifyData()
          RemoveLineWithMatch ${modFile} 'processors.*'
       ;;
       -Aconf)
-	      UpdateConfiguration $loadFile
+	 UpdateConfiguration $loadFile
          ;;
    esac
    
@@ -385,28 +357,6 @@ ResolveResult()
                ret=$?
                return $ret
             ;;
-            'Subordinated cluster queue'*)
-               obj=`echo $resMsg | awk '{print $4}' | awk -F\" '{ print $2}'`
-               LogIt "W" "Non-existing subordinated queue $obj encountered, creating dummy queue [REPEAT REQUIRED]"
-               $QCONF -sq | sed "s/^qname.*/qname                    $obj/g" > ${BCK_DIR}/queue.tmp 2>/dev/null
-               $QCONF -Aq ${BCK_DIR}/queue.tmp >/dev/null 2>&1
-               rm -f ${BCK_DIR}/queue.tmp
-               repeat=1
-               return 1
-            ;;
-         esac
-      ;;
-      -Mq)
-         case "$resMsg" in
-            'Subordinated cluster queue'*)
-               obj=`echo $resMsg | awk '{print $4}' | awk -F\" '{ print $2}'`
-               LogIt "W" "Non-existing subordinated queue $obj encountered, creating dummy queue [REPEAT REQUIRED]"
-               $QCONF -sq | sed "s/^qname.*/qname                    $obj/g" > ${BCK_DIR}/queue.tmp 2>/dev/null
-               $QCONF -Aq ${BCK_DIR}/queue.tmp >/dev/null 2>&1
-               rm -f ${BCK_DIR}/queue.tmp
-               repeat=1
-               return 1
-            ;;
          esac
       ;;
    	#If -Aconf fails we try modify
@@ -421,13 +371,13 @@ ResolveResult()
                return $ret
             ;;
             'denied: the path given for'*)
-               #FlatFile ${resFile}
+               #FlatFile ${resFile}  
                ReplaceLineWithMatch "$resFile" 'qlogin_daemon.*' 'qlogin_daemon   /usr/sbin/in.telnetd'
                ReplaceLineWithMatch "$resFile" 'rlogin_daemon.*' 'rlogin_daemon   /usr/sbin/in.rlogind'
                LogIt "I" "wrong path corrected, trying again"
                LoadConfigFile "$resFile" "$resOpt"
                ret=$?
-               return $ret
+               return $ret               
             ;;   
             *'already exists')
                LogIt "I" "$obj already exists, trying to modify -Mconf"
@@ -499,13 +449,13 @@ LoadConfigFile()
 
    if [ "${configLevel:=1}" -gt 20 ]; then
    	LogIt "C" "Too deep in Load Config File"
-	   EXIT 1
+	EXIT 1
    fi
 
    configLevel=`expr ${configLevel} + 1`
    
 
-   ModifyData "$loadOpt" "$loadFile" 
+   ModifyLoad "$loadOpt" "$loadFile" 
    loadMsg=`$QCONF $loadOpt $loadFile 2>&1`
    
    ResolveResult "$loadOpt" "$loadFile" "$loadMsg" "$ret"
@@ -679,16 +629,10 @@ EXIT() {
 ########
 # MAIN #
 ########
-if [ "$1" = -help -o $# -eq 0 ]; then
-   Usage
-   exit 0
-fi
-
 DIR="${1:?The load directory is required}"
 shift
 
 LOGGER_LEVEL="W"
-mode=upgrade
 newIJS=false
 EXECD_SPOOL_DIR=""
 ADMIN_MAIL=""
@@ -719,21 +663,12 @@ while [ $ARGC -gt 0 ]; do
             LOGGER_LEVEL="$1"
          fi
          ;;
-      -mode)
-         shift
-	 if [ "$1" != "upgrade" -a "$1" != "copy" ]; then
-            LogIt "W" "LOAD invoked with invalid mode "$1" using $mode"
-         else 
-            LogIt "I" "LOAD invoked with -mode $1"
-            mode="$1"
-         fi
-	 ;;
       -newijs)
          shift
          if [ "$1" != "true" -a "$1" != "false" ]; then
-            LogIt "W" "LOAD invoked with invalid newijs "$1" using $newIJS"
+            LogIt "W" "LOAD invoked with invalid newijs "$1" using false"
          else 
-            LogIt "I" "LOAD invoked with -newijs true"
+            LogIt "I" "LOAD invoked with -newijs"
             newIJS="$1"
          fi
          ;;
@@ -754,8 +689,6 @@ while [ $ARGC -gt 0 ]; do
          ;;
       *)
          echo "Invalid argument \'$1\'"
-         Usage
-         exit 1
          ;;
    esac
    shift
@@ -778,7 +711,7 @@ fi
 tmp_adminhost=`$QCONF -sh | grep "^${HOST}$"`
 if [ "$tmp_adminhost" != "$HOST" ]; then
    $INFOTEXT "ERROR: Load must be started on admin host (qmaster host recommended)."
-   LogIt "C" "Can't start load_sge_config.sh on $HOST: not an admin host"
+   LogIt "C" "Can't start load_cc.sh on $HOST: not an admin host"
    EXIT 1
 fi
 

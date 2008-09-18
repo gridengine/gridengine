@@ -40,7 +40,7 @@
 SpoolingQueryChange()
 {
    if [ -z "$1" ]; then
-      SPOOLING_DIR=$SGE_ROOT/$SGE_CELL/spooldb
+      SPOOLING_DIR="`dirname $QMDIR`"/spooldb
    else
       SPOOLING_DIR="$1"
    fi
@@ -63,35 +63,26 @@ SpoolingQueryChange()
                 "\ncontact a RPC server running on a separate server machine." \
                 "\nIf you want to use the SGE shadowd, you have to use the " \
                 "\nRPC Client/Server mechanism.\n"
-      SPOOLING_SERVER=`$SGE_UTILBIN/gethostname -aname`
+                SPOOLING_SERVER=`$SGE_UTILBIN/gethostname -aname`
       $INFOTEXT -n "\nEnter database server name or \nhit <RETURN> to use default [%s] >> " $SPOOLING_SERVER
-      SPOOLING_SERVER=`Enter $SPOOLING_SERVER`
+                SPOOLING_SERVER=`Enter $SPOOLING_SERVER`
 
       $INFOTEXT -n "\nEnter the database directory\n" \
-                   "or hit <RETURN> to use default [%s] >> " $SPOOLING_DIR
-      SPOOLING_DIR=`Enter $SPOOLING_DIR`
+                "or hit <RETURN> to use default [%s] >> " "$SGE_ROOT/$SGE_CELL/$SPOOLING_DIR"
+                SPOOLING_DIR=`Enter $SGE_ROOT/$SGE_CELL/$SPOOLING_DIR`
    else
      $INFOTEXT -u "\nBerkeley Database spooling parameters"
 
      if [ "$is_server" = "true" ]; then
         #TODO: Does not work is_server is not set
-        if [ -n "$1" -a -n "$2" ]; then
-           default_host="$1"
-           default_spool_dir="$2"
-        else
-           default_host="$HOST"
-           default_spool_dir="$SGE_ROOT/$SGE_CELL/spooldb"
-        fi
-        
-        $INFOTEXT -n "\nEnter the name of your Berkeley DB Spooling Server [%s] >> " "$default_host"
-        SPOOLING_SERVER=`Enter $SPOOLING_SERVER`
-        $INFOTEXT -n "Enter the Database Directory [%s] >> " "$default_spool_dir"
+        $INFOTEXT -n "\nPlease enter the name of your Berkeley DB Spooling Server! >> "
+               SPOOLING_SERVER=`Enter $SPOOLING_SERVER`
+        $INFOTEXT -n "Please enter the Database Directory now!\n"
+        $INFOTEXT -n "Default: [%s] >> " "$SGE_ROOT/$SGE_CELL/spooldb"
+        SPOOLING_DIR="$SGE_ROOT/$SGE_CELL/spooldb" 
         SPOOLING_DIR=`Enter $SPOOLING_DIR`
      else
         SPOOLING_SERVER=none
-        if [ -z "$1" ]; then
-           SPOOLING_DIR="`dirname $QMDIR`/spooldb"
-        fi
         $INFOTEXT -n "\nPlease enter the Database Directory now, even if you want to spool locally,\n" \
                      "it is necessary to enter this Database Directory. \n\nDefault: [%s] >> " "$SPOOLING_DIR"
         SPOOLING_DIR=`Enter "$SPOOLING_DIR"`

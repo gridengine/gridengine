@@ -557,7 +557,7 @@ int sub_command, monitoring_t *monitor
          lList *master_userset_list = *(object_type_get_master_list(SGE_TYPE_USERSET));
 
          for_each(ar, *(object_type_get_master_list(SGE_TYPE_AR))) {
-            if (lGetElemHost(lGetList(ar, AR_granted_slots), JG_qhostname, host)) {
+            if (lGetElemStr(lGetList(ar, AR_granted_slots), JG_qhostname, host)) {
                if (!sge_ar_have_users_access(NULL, ar, host, lGetList(ep, EH_acl),
                                              lGetList(ep, EH_xacl),
                                              master_userset_list)) {
@@ -700,12 +700,11 @@ void sge_mark_unheard(lListElem *hep) {
 void sge_update_load_values(sge_gdi_ctx_class_t *ctx, const char *rhost, lList *lp)
 {
    u_long32 now;
+   const char *report_host = NULL;
    lListElem *ep, **hepp = NULL;
    lListElem *lep;
-   lListElem *global_ep = NULL;
-   lListElem *host_ep = NULL;
-   bool statics_changed = false;
-   lList *answer_list = NULL;
+   lListElem *global_ep = NULL, *host_ep = NULL;
+   bool added_non_static = false, statics_changed = false;
 
    DENTER(TOP_LAYER, "sge_update_load_values");
 
@@ -714,22 +713,6 @@ void sge_update_load_values(sge_gdi_ctx_class_t *ctx, const char *rhost, lList *
     */
    now = sge_get_gmt();
 
-   host_ep = host_list_locate(*object_type_get_master_list(SGE_TYPE_EXECHOST), rhost);
-   if (host_ep == NULL) {
-      /* report from unknown host arrived, ignore it */
-      DRETURN_VOID;
-   }
-
-   /* 
-    * if rhost is unknown set him to known
-    */
-   if (lGetUlong(host_ep, EH_lt_heard_from) == 0) {
-      cqueue_list_set_unknown_state(*(object_type_get_master_list(SGE_TYPE_CQUEUE)),
-                                    rhost, true, false);
-      lSetUlong(host_ep, EH_lt_heard_from, sge_get_gmt());
-   }
-
-   host_ep = NULL;
    /* loop over all received load values */
    for_each(ep, lp) {
 
@@ -752,22 +735,14 @@ void sge_update_load_values(sge_gdi_ctx_class_t *ctx, const char *rhost, lList *
          hepp = &host_ep;
       }
 
-      /* update load value list of reported host */
-      if (*hepp == NULL || sge_hostcmp(host, lGetHost(*hepp, EH_name)) != 0) {
-   
-         if (*hepp != NULL) {
-            /* we have a host change, send events for the previous one */
-            sge_event_spool(ctx, &answer_list, 0, sgeE_EXECHOST_MOD, 
-                            0, 0, lGetHost(*hepp, EH_name), NULL, NULL,
-                            host_ep, NULL, NULL, true, statics_changed);
-            reporting_create_host_record(&answer_list, *hepp, now);
-            statics_changed = false;
-         }
-
-         /* get the new host */
+      /* update load value list of rhost */
+      if (*hepp == NULL) {
          *hepp = host_list_locate(*object_type_get_master_list(SGE_TYPE_EXECHOST), host);
-         if (*hepp == NULL) {
-            INFO((SGE_EVENT, MSG_CANT_ASSOCIATE_LOAD_SS, rhost, host));
+         if (!*hepp) {
+            if (!global) {
+               report_host = host; /* this is our error indicator */
+            }
+            DPRINTF(("got load value for UNKNOWN host "SFQ"\n", host));
             continue;
          }
       } 
@@ -788,6 +763,10 @@ void sge_update_load_values(sge_gdi_ctx_class_t *ctx, const char *rhost, lList *
             lep = lAddSubStr(*hepp, HL_name, name, EH_load_list, HL_Type);
             DPRINTF(("%s: adding load value: "SFQ" = "SFQ"\n", 
                   host, name, value));
+
+            if (!global) {
+               added_non_static = true; /* triggers clearing of unknown state */
+            }
          } 
 
          /* copy value */
@@ -797,25 +776,48 @@ void sge_update_load_values(sge_gdi_ctx_class_t *ctx, const char *rhost, lList *
       }
    }
 
-   /*
-   ** if static load values (eg arch) have changed
-   ** then spool
-   */
-   if (hepp != NULL && *hepp != NULL) {
-      sge_event_spool(ctx, &answer_list, 0, sgeE_EXECHOST_MOD, 
-                      0, 0, lGetHost(*hepp, EH_name), NULL, NULL,
-                      *hepp, NULL, NULL, true, statics_changed);
+   /* output error from previous host, if any */
+   if (report_host) {
+      INFO((SGE_EVENT, MSG_CANT_ASSOCIATE_LOAD_SS, rhost, report_host));
+   }
 
-      reporting_create_host_record(&answer_list, *hepp, now);
+   /* 
+    * if non static load values arrived, this indicates that 
+    * host is known 
+    */
+   if (added_non_static && lGetUlong(host_ep, EH_lt_heard_from) == 0) {
+      const char* tmp_hostname;
+
+      tmp_hostname = lGetHost(host_ep, EH_name);
+      cqueue_list_set_unknown_state(
+         *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
+         tmp_hostname, true, false);
+      lSetUlong(host_ep, EH_lt_heard_from, sge_get_gmt());
    }
 
    if (global_ep) {
+      lList *answer_list = NULL;
       sge_event_spool(ctx, &answer_list, 0, sgeE_EXECHOST_MOD, 
                       0, 0, SGE_GLOBAL_NAME, NULL, NULL,
                       global_ep, NULL, NULL, true, false);
       reporting_create_host_record(&answer_list, global_ep, now);
+      answer_list_output(&answer_list);
    }
-   answer_list_output(&answer_list);
+
+   /*
+   ** if static load values (eg arch) have changed
+   ** then spool
+   */
+   if (host_ep) {
+      lList *answer_list = NULL;
+
+      sge_event_spool(ctx, &answer_list, 0, sgeE_EXECHOST_MOD, 
+                      0, 0, lGetHost(host_ep, EH_name), NULL, NULL,
+                      host_ep, NULL, NULL, true, statics_changed);
+
+      reporting_create_host_record(&answer_list, host_ep, now);
+      answer_list_output(&answer_list);
+   }
 
    DRETURN_VOID;
 }

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/07/16 12:04:17 $     Revision: $Revision: 1.76 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/05/21 09:47:34 $     Revision: $Revision: 1.74 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2008/07/16 12:04:17 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2008/05/21 09:47:34 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -616,7 +616,7 @@ again become "essential". The \fB\-hard\fP and \fB\-soft\fP
 options in effect act as "toggles" during the scan.
 .\"
 .IP "\fB\-h | \-h {u|s|o|n|U|O|S}...\fP"
-Available for \fIqsub\fP, \fIqrsh\fP (with command argument), \fIqalter\fP
+Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP, \fIqalter\fP
 and \fIqresub\fP.
 .sp 1
 List of holds to place on a job, a task or some tasks of a job.
@@ -1384,7 +1384,7 @@ If you use the \fB\-u\fP switch it is not permitted to
 specify an additional \fIwc_job_range_list\fP.
 .\"
 .IP "\fB\-v variable[=value],...\fP"
-Available for \fIqsub\fP, \fIqrsh\fP (with command argument) and \fIqalter\fP.
+Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP and \fIqalter\fP.
 .sp 1
 Defines or redefines the environment variables to
 be exported to the execution context of the job.
@@ -1457,12 +1457,22 @@ The specifiers e, w, n and v define the following validation modes:
 	for invalid requests.
 `n'	none - switches off validation; the default for
 	\fIqsub\fP and \fIqalter\fP.
-`v'	verify - does not submit the job but prints a
-	validation report.
+`v'	verify - does not submit the job but prints an
+	extensive validation report.
 .fi
 .sp 1
 Note, that the necessary checks are performance consuming and hence the 
 checking is switched off by default.
+.sp 1
+Note also, that the reasons for job requirements being invalid with respect to 
+resource availability of queues are displayed in the "\fB-w v\fP" case using 
+the format as described for the
+.M qstat 1
+\fB\-F\fP option (see description of 
+\fBFull Format\fP in section \fBOUTPUT FORMATS\fP of the
+.M qstat 1
+manual page.
+.\"
 .IP "\fB\-wd working_dir\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP and
 \fIqalter\fP only.

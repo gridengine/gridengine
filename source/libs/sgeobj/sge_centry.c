@@ -182,14 +182,12 @@ centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empt
    const char *name, *s;
    u_long32 type;
    double dval;
-   int ret, allow_infinity;
+   int ret;
 
    DENTER(CENTRY_LAYER, "centry_fill_and_check");
 
    name = lGetString(this_elem, CE_name);
    s = lGetString(this_elem, CE_stringval);
-   /* allow infinity for non-consumables only */
-   allow_infinity = lGetBool(this_elem, CE_consumable)?0:1;
 
    if (!s) {
       if (allow_empty_boolean && lGetUlong(this_elem, CE_valtype)==TYPE_BOO) {
@@ -208,9 +206,9 @@ centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empt
       case TYPE_MEM:
       case TYPE_BOO:
       case TYPE_DOUBLE:
-         if (!extended_parse_ulong_val(&dval, NULL, type, s, tmp, sizeof(tmp)-1, allow_infinity, false)) {
+         if (!parse_ulong_val(&dval, NULL, type, s, tmp, sizeof(tmp)-1)) {
 /*             ERROR((SGE_EVENT, MSG_CPLX_WRONGTYPE_SSS, name, s, tmp)); */
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_ATTRIB_XISNOTAY_SS, name, tmp);
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_CPLX_WRONGTYPE_SSS, name, s, tmp);
             DRETURN(-1);
          }
          lSetDouble(this_elem, CE_doubleval, dval);

@@ -88,6 +88,8 @@ volatile int waiting4osjid = 1;
 char execd_spool_dir[SGE_PATH_MAX];
 
 static void execd_exit_func(void **ctx, int i);
+static void execd_register(sge_gdi_ctx_class_t *ctx);
+static void dispatcher_errfunc(const char *err_str);
 static void parse_cmdline_execd(char **argv);
 static lList *sge_parse_cmdline_execd(char **argv, lList **ppcmdline);
 static lList *sge_parse_execd(lList **ppcmdline, lList **ppreflist, u_long32 *help);
@@ -283,45 +285,17 @@ int main(int argc, char **argv)
       lFreeList(&report_list);
    }
    
-   /* here we have to wait for qmaster registration */
-   while (sge_execd_register_at_qmaster(ctx, true) != 0) {
-      if (sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED, false)) {
-         execd_exit_state = SGE_COM_ACCESS_DENIED;
-         break;
-      } else if (sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE, false)) {
-         execd_exit_state = SGE_COM_ENDPOINT_NOT_UNIQUE;
-         break;
-      }
-      if (shut_me_down != 0) {
-         break;
-      }
-      sleep(30);
-   }
+   execd_register(ctx);
 
-   /* 
-    * Terminate on SIGTERM or hard communication error
-    */
-   if (execd_exit_state != 0 || shut_me_down != 0) {
-      sge_shutdown((void**)&ctx, execd_exit_state);
-      DRETURN(execd_exit_state);
-   }
-
-   /*
-    * We write pid file when we are connected to qmaster. Otherwise an old
-    * execd might overwrite our pidfile.
-    */
    sge_write_pid(EXECD_PID_FILE);
 
-   /*
-    * At this point we are sure we are the only sge_execd and we are connected
-    * to the current qmaster. First we have to report any reaped children
-    * that might exist.
-    */
+   /* at this point we are sure we are the only sge_execd */
+   /* first we have to report any reaped children that might exist */
    starting_up();
 
    /*
-    * Log a warning message if execd hasn't been started by a superuser
-    */
+   ** log a warning message if execd hasn't been started by a superuser
+   */
    if (!sge_is_start_user_superuser()) {
       WARNING((SGE_EVENT, MSG_SWITCH_USER_NOT_ROOT));
    }   
@@ -346,35 +320,55 @@ int main(int argc, char **argv)
 
    sge_sig_handler_in_main_loop = 1;
 
-   if (thread_prof_active_by_id(pthread_self())) {
-      prof_start(SGE_PROF_CUSTOM1, NULL);
-      prof_start(SGE_PROF_CUSTOM2, NULL);
-      prof_start(SGE_PROF_GDI_REQUEST, NULL);
-   } else {
-      prof_stop(SGE_PROF_CUSTOM1, NULL);
-      prof_stop(SGE_PROF_CUSTOM2, NULL);
-      prof_stop(SGE_PROF_GDI_REQUEST, NULL);
-   }
+   /***** MAIN LOOP *****/
+   while (shut_me_down != 1) {
+      char err_str[1024];
 
-   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
+     if (thread_prof_active_by_id(pthread_self())) {
+         prof_start(SGE_PROF_CUSTOM1, NULL);
+         prof_start(SGE_PROF_CUSTOM2, NULL);
+         prof_start(SGE_PROF_GDI_REQUEST, NULL);
+      } else {
+           prof_stop(SGE_PROF_CUSTOM1, NULL);
+           prof_stop(SGE_PROF_CUSTOM2, NULL);
+           prof_stop(SGE_PROF_GDI_REQUEST, NULL);
+      }
 
-   /* Start dispatching */
-   execd_exit_state = sge_execd_process_messages(ctx);
+      PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
 
+      ret = sge_execd_process_messages(ctx, err_str, dispatcher_errfunc);
 
-   /*
-    * This code is only reached when dispatcher terminates and execd goes down.
-    */
+      if (sge_sig_handler_sigpipe_received) {
+          sge_sig_handler_sigpipe_received = 0;
+          INFO((SGE_EVENT, "SIGPIPE received\n"));
+      }
 
-   /* log if we received SIGPIPE signal */
-   if (sge_sig_handler_sigpipe_received) {
-       sge_sig_handler_sigpipe_received = 0;
-       INFO((SGE_EVENT, "SIGPIPE received\n"));
+      if (sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED) == true) {
+         execd_exit_state = SGE_COM_ACCESS_DENIED;
+         break; /* shut down, leave while */
+      }
+
+      /* TODO: for execd this function always returns false */
+      if (sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE) == true) {
+         execd_exit_state = SGE_COM_ENDPOINT_NOT_UNIQUE;
+         break; /* shut down, leave while */
+      }
+
+      if (ret) {
+         if (cl_is_commlib_error(ret)) {
+            if (ret != CL_RETVAL_OK) {
+               execd_register(ctx); /* reregister at qmaster */
+            }
+         } else {
+            WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, err_str));
+         }
+      }
    }
 
    lFreeList(master_job_list);
-
+  
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
+
    if (prof_is_active(SGE_PROF_ALL)) {
      time_t now = (time_t)sge_get_gmt();
 
@@ -383,11 +377,10 @@ int main(int argc, char **argv)
          prof_reset(SGE_PROF_ALL,NULL);
          next_prof_output = now + 60;
       }
-   }
+   }   
    sge_prof_cleanup();
-
    sge_shutdown((void**)&ctx, execd_exit_state);
-   DRETURN(execd_exit_state);
+   DRETURN(0);
 }
 
 
@@ -420,6 +413,18 @@ static void execd_exit_func(void **ctx_ref, int i)
    DEXIT;
 }
 
+/*-------------------------------------------------------------
+ * dispatcher_errfunc
+ *
+ * function called by dispatcher on non terminal errors 
+ *-------------------------------------------------------------*/
+static void dispatcher_errfunc(const char *err_str)
+{
+   DENTER(TOP_LAYER, "dispatcher_errfunc");
+   ERROR((SGE_EVENT, "%s", err_str));
+   DEXIT;
+}
+
 /****** execd/sge_execd_register_at_qmaster() **********************************
 *  NAME
 *     sge_execd_register_at_qmaster() -- modify execd list at qmaster site
@@ -440,6 +445,8 @@ static void execd_exit_func(void **ctx_ref, int i)
 *  NOTES
 *     MT-NOTE: sge_execd_register_at_qmaster() is not MT safe 
 *
+*  SEE ALSO
+*     execd/execd_register()
 *******************************************************************************/
 int sge_execd_register_at_qmaster(sge_gdi_ctx_class_t *ctx, bool is_restart) {
    int return_value = 0;
@@ -486,6 +493,72 @@ int sge_execd_register_at_qmaster(sge_gdi_ctx_class_t *ctx, bool is_restart) {
    lFreeList(&alp);
    lFreeList(&hlp);
    DRETURN(return_value);
+}
+
+/****** execd/execd_register() *************************************************
+*  NAME
+*     execd_register() -- register at qmaster on startup
+*
+*  SYNOPSIS
+*     static void execd_register() 
+*
+*  FUNCTION
+*     This function will block until execd is registered at qmaster
+*
+*  NOTES
+*     MT-NOTE: execd_register() is not MT safe 
+*
+*  SEE ALSO
+*     execd/sge_execd_register_at_qmaster()
+*******************************************************************************/
+static void execd_register(sge_gdi_ctx_class_t *ctx)
+{
+   int had_problems = 0;
+
+   DENTER(TOP_LAYER, "execd_register");
+
+   while (!shut_me_down) {
+      DPRINTF(("*****Checking In With qmaster*****\n"));
+
+      if (had_problems != 0) {
+         int ret_val;
+         cl_com_handle_t* handle = NULL;
+         
+         handle = cl_com_get_handle(prognames[EXECD],1);
+         if (handle == NULL) {
+            DPRINTF(("preparing reenroll"));
+            ctx->prepare_enroll(ctx);
+            handle = cl_com_get_handle(prognames[EXECD],1);
+         }
+
+         ret_val = cl_commlib_trigger(handle, 1); /* this will block on errors for 1 second */
+         switch(ret_val) {
+            case CL_RETVAL_SELECT_TIMEOUT:
+            case CL_RETVAL_CONDITION_WAIT_TIMEOUT:
+            case CL_RETVAL_OK:
+               break;
+            default:
+               DPRINTF(("got communication problems - sleeping 30 s"));
+               sleep(30); /* For other errors */
+               break;
+         }
+         if (sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED) == true ||
+             sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE) == true) {
+            break;
+         }
+
+      }
+
+      if (sge_execd_register_at_qmaster(ctx, false) != 0) {
+         if (had_problems == 0) {
+            had_problems = 1;
+         }
+         continue;
+      }
+      break;
+   }
+   
+   DRETURN_VOID;
 }
 
 

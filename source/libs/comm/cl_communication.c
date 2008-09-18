@@ -2182,7 +2182,7 @@ int cl_com_compare_hosts(const char* host1, const char* host2) {
     CL_LOG_STR(CL_LOG_DEBUG,"compareing host 1:", hostbuf1);
     CL_LOG_STR(CL_LOG_DEBUG,"compareing host 2:", hostbuf2);
 #endif
-    if ( strcasecmp(hostbuf1,hostbuf2) == 0 ) {   /* hostname compare OK */
+    if ( strcmp(hostbuf1,hostbuf2) == 0 ) {   /* hostname compare OK */
 #if CL_DO_COMMUNICATION_DEBUG
        CL_LOG(CL_LOG_DEBUG,"hosts are equal");
 #endif
@@ -3699,7 +3699,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                                                           &tmp_addr);
 
             if (connection->crm_state == CL_CRM_CS_UNDEFINED &&
-               cl_com_compare_hosts(cm_message->rdata->comp_host , unique_host) != CL_RETVAL_OK) {
+                cl_com_compare_hosts(cm_message->rdata->comp_host , unique_host) != CL_RETVAL_OK) {
                int string_size = 1;
 
                CL_LOG(CL_LOG_ERROR,"hostname resolve error (rdata):");
@@ -4628,11 +4628,13 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
 
          {
             char* gdi_timeout = NULL;
-            cl_com_get_parameter_list_value("gdi_timeout", &gdi_timeout);
-            if (gdi_timeout == NULL) {
-               cl_com_set_synchron_receive_timeout(connection->handler, CL_DEFINE_SYNCHRON_RECEIVE_TIMEOUT);
+            int timeout = 0;
+            int retval = 0;
+            retval = cl_com_get_parameter_list_value("gdi_timeout", &gdi_timeout);
+            if (retval != CL_RETVAL_OK || gdi_timeout == NULL) {
+               cl_com_set_synchron_receive_timeout(connection->handler, 60);
             } else {
-               int timeout = atoi(gdi_timeout);
+               timeout = atoi(gdi_timeout);
                cl_com_set_synchron_receive_timeout(connection->handler, timeout);
                free(gdi_timeout);
             }

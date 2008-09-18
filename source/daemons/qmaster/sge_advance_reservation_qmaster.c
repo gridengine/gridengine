@@ -1079,15 +1079,6 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
     */
    a.queue_list = lCreateList("", QU_Type);
 
-    /* imagine qs is empty */
-    sconf_set_qs_state(QS_STATE_EMPTY);
-
-   /* redirect scheduler monitoring into answer list */
-   if (verify_mode == AR_JUST_VERIFY) {
-      DPRINTF(("AR Verify Mode\n"));
-      a.monitor_alpp = &talp;
-   }
-
    for_each(cqueue, master_cqueue_list) {
       const char *cqname = lGetString(cqueue, CQ_name);
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
@@ -1167,7 +1158,8 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
       splitted_job_lists[SPLIT_RUNNING] = &running_list;
 
       /* splitted job lists must be freed */
-      split_jobs(&master_job_list, mconf_get_max_aj_instances(), splitted_job_lists, true);
+      split_jobs(&master_job_list, NULL, a.queue_list, 
+                 mconf_get_max_aj_instances(), splitted_job_lists, false, true);
    }
 
    /*
@@ -1191,6 +1183,14 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
    lSetUlong(dummy_job, JB_type, lGetUlong(ar, AR_type));
    lSetString(dummy_job, JB_checkpoint_name, lGetString(ar, AR_checkpoint_name));
 
+    /* imagine qs is empty */
+    sconf_set_qs_state(QS_STATE_EMPTY);
+
+   /* redirect scheduler monitoring into answer list */
+   if (verify_mode == AR_JUST_VERIFY) {
+      DPRINTF(("AR Verify Mode\n"));
+      set_monitor_alpp(&talp);
+   }
 
    if (lGetString(ar, AR_pe)) {
       lSetString(dummy_job, JB_pe, lGetString(ar, AR_pe));
@@ -1208,13 +1208,15 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
    if (verify_mode == AR_JUST_VERIFY) {
       /* copy error msgs from talp into alpp */
       answer_list_append_list(alpp, &talp);
-      a.monitor_alpp = NULL;
+
+      set_monitor_alpp(NULL);
 
       if (result == DISPATCH_OK) {
          if (!a.pe) {
             answer_list_add_sprintf(alpp, STATUS_OK, ANSWER_QUALITY_INFO, MSG_JOB_VERIFYFOUNDQ); 
          } else {
-            answer_list_add_sprintf(alpp, STATUS_OK, ANSWER_QUALITY_INFO, MSG_JOB_VERIFYFOUNDSLOTS_I, a.slots);
+            int ngranted = nslots_granted(a.gdil, NULL);
+            answer_list_add_sprintf(alpp, STATUS_OK, ANSWER_QUALITY_INFO, MSG_JOB_VERIFYFOUNDSLOTS_I, ngranted);
          }
       } else {
          answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_INFO, MSG_JOB_NOSUITABLEQ_S, MSG_JOB_VERIFYVERIFY);

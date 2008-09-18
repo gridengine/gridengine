@@ -431,7 +431,7 @@ void user_list_init_jc(lList **user_list, lList **splitted_job_lists[])
 *     sched/sge_job_schedd/split_jobs()     
 *     sched/sge_job_schedd/user_list_init_jc()
 *******************************************************************************/
-void job_lists_split_with_reference_to_max_running(bool monitor_next_run, lList **job_lists[],
+void job_lists_split_with_reference_to_max_running(lList **job_lists[],
                                                    lList **user_list,
                                                    const char* user_name,
                                                    int max_jobs_per_user)
@@ -479,9 +479,10 @@ void job_lists_split_with_reference_to_max_running(bool monitor_next_run, lList 
                next_user_job = lGetElemStrNext(*(job_lists[SPLIT_PENDING]), 
                                                JB_owner, jc_user_name, 
                                                &user_iterator);
-               schedd_mes_add(NULL, monitor_next_run,
-                              lGetUlong(user_job, JB_job_number),
-                              SCHEDD_INFO_USRGRPLIMIT_);
+               if (schedd_is_monitor_next_run()) {
+                  schedd_mes_add(lGetUlong(user_job, JB_job_number),
+                                     SCHEDD_INFO_USRGRPLIMIT_);
+               }
 
                lDechainElem(*(job_lists[SPLIT_PENDING]), user_job);
                if (*(job_lists[SPLIT_PENDING_EXCLUDED]) == NULL) {
@@ -511,7 +512,7 @@ void job_lists_split_with_reference_to_max_running(bool monitor_next_run, lList 
 *
 *  SYNOPSIS
 *     void split_jobs(lList **job_list, lList **answer_list, 
-*                     u_long32 max_aj_instances, 
+*                     lList *queue_list, u_long32 max_aj_instances, 
 *                     lList **result_list[]) 
 *
 *  FUNCTION
@@ -527,14 +528,18 @@ void job_lists_split_with_reference_to_max_running(bool monitor_next_run, lList 
 *     Each of those lists containes jobs which have a certain state.
 *     (e.g. result_list[SPLIT_WAITING_DUE_TO_TIME] will contain
 *     all jobs which have to wait according to their start time. 
+*     'queue_list' is the whole list of configured queues.
 *     'max_aj_instances' are the maximum number of tasks of an 
 *     array job which may be instantiated at the same time.
-*     'max_aj_instances' is used for the split decitions. 
+*     'queue_list' and 'max_aj_instances' are used for the
+*     split decitions. 
 *     In case of any error the 'answer_list' will be used to report
 *     errors (It is not used in the moment)
 *
 *  INPUTS
 *     lList **job_list          - JB_Type input list 
+*     lList **answer_list       - AN_Type answer list 
+*     lList *queue_list         - QU_Type list 
 *     u_long32 max_aj_instances - max. num. of task instances 
 *     lList **result_list[]     - Array of result list (JB_Type)
 *
@@ -554,8 +559,9 @@ void job_lists_split_with_reference_to_max_running(bool monitor_next_run, lList 
 *     sched/sge_job_schedd/trash_splitted_jobs()
 *     sched/sge_job_schedd/job_lists_split_with_reference_to_max_running()
 *******************************************************************************/
-void split_jobs(lList **job_list, u_long32 max_aj_instances, 
-                lList **result_list[], bool do_copy)
+void split_jobs(lList **job_list, lList **answer_list,
+                lList *queue_list, u_long32 max_aj_instances, 
+                lList **result_list[], bool is_free_job_list, bool do_copy)
 {
 #if 0 /* EB: DEBUG: enable debug messages for split_jobs() */
 #define JOB_SPLIT_DEBUG
@@ -891,7 +897,17 @@ void split_jobs(lList **job_list, u_long32 max_aj_instances,
       }
    }
 
-   DRETURN_VOID;
+   /*
+    * Could we dispense all jobs?
+    */
+   if (!do_copy && is_free_job_list == true) {
+      if (lGetNumberOfElem(*job_list) == 0) {
+         lFreeList(job_list);
+      }
+   }
+
+   DEXIT;
+   return;
 } 
 
 /****** sched/sge_job_schedd/trash_splitted_jobs() ****************************
@@ -922,7 +938,7 @@ void split_jobs(lList **job_list, u_long32 max_aj_instances,
 *     sched/sge_job_schedd/split_jobs() 
 *     sched/sge_job_schedd/job_lists_split_with_reference_to_max_running()
 *******************************************************************************/
-void trash_splitted_jobs(bool monitor_next_run, lList **splitted_job_lists[]) 
+void trash_splitted_jobs(lList **splitted_job_lists[]) 
 {
    int split_id_a[] = {
       SPLIT_ERROR, 
@@ -946,52 +962,48 @@ void trash_splitted_jobs(bool monitor_next_run, lList **splitted_job_lists[])
          switch (split_id_a[i]) {
          case SPLIT_ERROR:
             if (is_first_of_category) {
-               /* for qstat -j schedd_messages */
-               schedd_mes_add(NULL, monitor_next_run, job_id,
-                              SCHEDD_INFO_JOBINERROR_);
+               schedd_mes_add(job_id, SCHEDD_INFO_JOBINERROR_);
             }
-            /* for qalter -w v and qconf -tsm */
-            schedd_log_list(NULL, monitor_next_run,
-                            MSG_LOG_JOBSDROPPEDERRORSTATEREACHED, 
-                            *job_list, JB_job_number);
+            if (schedd_is_monitor_next_run()) {
+               schedd_log_list(MSG_LOG_JOBSDROPPEDERRORSTATEREACHED, 
+                               *job_list, JB_job_number);
+            }
             break;
          case SPLIT_HOLD:
             if (is_first_of_category) {
-               schedd_mes_add(NULL, monitor_next_run, job_id,
-                              SCHEDD_INFO_JOBHOLD_);
+               schedd_mes_add(job_id, SCHEDD_INFO_JOBHOLD_);
             }
-            schedd_log_list(NULL, monitor_next_run,
-                            MSG_LOG_JOBSDROPPEDBECAUSEOFXHOLD, 
-                            *job_list, JB_job_number);
+            if (schedd_is_monitor_next_run()) {
+               schedd_log_list(MSG_LOG_JOBSDROPPEDBECAUSEOFXHOLD, 
+                               *job_list, JB_job_number);
+            }
             break;
          case SPLIT_WAITING_DUE_TO_TIME:
             if (is_first_of_category) {
-               schedd_mes_add(NULL, monitor_next_run, job_id,
-                              SCHEDD_INFO_EXECTIME_);
+               schedd_mes_add(job_id, SCHEDD_INFO_EXECTIME_);
             }
-            schedd_log_list(NULL, monitor_next_run,
-                            MSG_LOG_JOBSDROPPEDEXECUTIONTIMENOTREACHED, 
+            if (schedd_is_monitor_next_run()) {
+               schedd_log_list(MSG_LOG_JOBSDROPPEDEXECUTIONTIMENOTREACHED, 
                                *job_list, JB_job_number);
+            }
             break;
          case SPLIT_WAITING_DUE_TO_PREDECESSOR:
             if (is_first_of_category) {
-               schedd_mes_add(NULL, monitor_next_run, job_id,
-                              SCHEDD_INFO_JOBDEPEND_);
+               schedd_mes_add(job_id, SCHEDD_INFO_JOBDEPEND_);
             }
-            schedd_log_list(NULL, monitor_next_run,
-                            MSG_LOG_JOBSDROPPEDBECAUSEDEPENDENCIES, 
+            if (schedd_is_monitor_next_run()) {
+               schedd_log_list(MSG_LOG_JOBSDROPPEDBECAUSEDEPENDENCIES, 
                                *job_list, JB_job_number);
+            }
             break;
          case SPLIT_PENDING_EXCLUDED_INSTANCES:
             if (is_first_of_category) {
-               schedd_mes_add(NULL, monitor_next_run, job_id,
-                              SCHEDD_INFO_MAX_AJ_INSTANCES_);
+               schedd_mes_add(job_id, SCHEDD_INFO_MAX_AJ_INSTANCES_);
             }
             break;
          case SPLIT_PENDING_EXCLUDED:
             if (is_first_of_category) {
-               schedd_mes_add(NULL, monitor_next_run, job_id,
-                              SCHEDD_INFO_USRGRPLIMIT_);
+               schedd_mes_add(job_id, SCHEDD_INFO_USRGRPLIMIT_);
             }
             break;
          default:

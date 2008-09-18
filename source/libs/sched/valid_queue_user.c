@@ -42,7 +42,6 @@
 #include "sge_userset.h"
 #include "sgeobj/sge_advance_reservation.h"
 #include "sgeobj/sge_hgroup.h"
-#include "sge_hostname.h"
 #include "msg_qmaster.h"
 
 #include "msg_schedd.h"

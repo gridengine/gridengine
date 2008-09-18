@@ -44,7 +44,6 @@
 #include <string.h>
 #include <math.h>
 #include <ctype.h>
-#include <unistd.h>
 
 #include "spool/flatfile/sge_spooling_flatfile_scanner.h"
 #include "basis_types.h"
@@ -202,19 +201,12 @@ NL       \r?\n
 
 ^[ \t\r]*{NL}   spool_line++; break;      /* Ignore blank lines */
 
- /* Remove line breaks */
-[ \t\r]*[\\][ \t\r]*{NL}[ \t\r]* {
+ /* Ignore newlines preceeded by \ */
+[\\][ \t\r]*{NL} {
    unput(' ');
    spool_line++;
    break;
 }
-
-[,][ \t\r]*[\\][ \t\r]*{NL}[ \t\r]* {
-   unput(',');
-   spool_line++;
-   break;
-}
-
 
  /* In order to make sure that whitespace before the newline gets removed, we
   * need these two rules.  Just using unput() doesn't work because it could

@@ -875,11 +875,7 @@ void sge_usage(u_long32 prog_number, FILE *fp) {
    }
 
    if (VALID_OPT(now_OPT, prog_number)) {
-      if (prog_number == QRSUB) {
-         PRINTITD(MSG_GDI_USAGE_now_OPT_YN, MSG_GDI_UTEXT_now_qrsub_OPT_YN);
-      } else {
-         PRINTITD(MSG_GDI_USAGE_now_OPT_YN, MSG_GDI_UTEXT_now_OPT_YN);
-      }
+      PRINTITD(MSG_GDI_USAGE_now_OPT_YN, MSG_GDI_UTEXT_now_OPT_YN);
    }
    
    if (VALID_OPT(M_OPT, prog_number)) {

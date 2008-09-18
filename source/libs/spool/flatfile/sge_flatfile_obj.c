@@ -1101,18 +1101,17 @@ spooling_field *sge_build_QU_field_list(bool to_stdout, bool to_file)
 static int read_CQ_ulng_attr_list(lListElem *ep, int nm, const char *buffer, lList **alp)
 {
    lList *lp = NULL;
-
+   
    if (!ulng_attr_list_parse_from_string(&lp, alp, buffer,
-                                         HOSTATTR_ALLOW_AMBIGUITY)) {
-      lFreeList(&lp);
+                                          HOSTATTR_ALLOW_AMBIGUITY)) {
       return 0;
    }
-
+   
    if (lp != NULL) {
       lSetList(ep, nm, lp);
       return 1;
    }
-
+   
    return 0;
 }
 
@@ -1128,18 +1127,17 @@ static int read_CQ_celist_attr_list(lListElem *ep, int nm, const char *buffer,
                                      lList **alp)
 {
    lList *lp = NULL;
-
+   
    if (!celist_attr_list_parse_from_string(&lp, alp, buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY)) {
-      lFreeList(&lp);
       return 0;
    }
-
+   
    if (lp != NULL) {
       lSetList(ep, nm, lp);
       return 1;
    }
-
+   
    return 0;
 }
 
@@ -1158,7 +1156,6 @@ static int read_CQ_inter_attr_list(lListElem *ep, int nm, const char *buffer,
    
    if (!inter_attr_list_parse_from_string(&lp, alp, buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY)) {
-      lFreeList(&lp);
       return 0;
    }
    
@@ -1185,7 +1182,6 @@ static int read_CQ_str_attr_list(lListElem *ep, int nm, const char *buffer,
    
    if (!str_attr_list_parse_from_string(&lp, alp, buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY)) {
-      lFreeList(&lp);
       return 0;
    }
    
@@ -1212,7 +1208,6 @@ static int read_CQ_qtlist_attr_list(lListElem *ep, int nm, const char *buffer,
    
    if (!qtlist_attr_list_parse_from_string(&lp, alp, buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY)) {
-      lFreeList(&lp);
       return 0;
    }
    
@@ -1239,7 +1234,6 @@ static int read_CQ_strlist_attr_list(lListElem *ep, int nm, const char *buffer,
    
    if (!strlist_attr_list_parse_from_string(&lp, alp, buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY)) {
-      lFreeList(&lp);
       return 0;
    }
    
@@ -1266,7 +1260,6 @@ static int read_CQ_bool_attr_list(lListElem *ep, int nm, const char *buffer,
    
    if (!bool_attr_list_parse_from_string(&lp, alp, buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY)) {
-      lFreeList(&lp);
       return 0;
    }
    
@@ -1293,7 +1286,6 @@ static int read_CQ_usrlist_attr_list(lListElem *ep, int nm, const char *buffer,
    
    if (!usrlist_attr_list_parse_from_string(&lp, alp, buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY)) {
-      lFreeList(&lp);
       return 0;
    }
    
@@ -1320,7 +1312,6 @@ static int read_CQ_solist_attr_list(lListElem *ep, int nm, const char *buffer,
    
    if (!solist_attr_list_parse_from_string(&lp, alp, buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY)) {
-      lFreeList(&lp);
       return 0;
    }
    
@@ -1347,7 +1338,6 @@ static int read_CQ_prjlist_attr_list(lListElem *ep, int nm, const char *buffer,
    
    if (!prjlist_attr_list_parse_from_string(&lp, alp, buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY)) {
-      lFreeList(&lp);
       return 0;
    }
    
@@ -1374,7 +1364,6 @@ static int read_CQ_time_attr_list(lListElem *ep, int nm, const char *buffer,
    
    if (!time_attr_list_parse_from_string(&lp, alp, buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY)) {
-      lFreeList(&lp);
       return 0;
    }
    
@@ -1401,7 +1390,6 @@ static int read_CQ_mem_attr_list(lListElem *ep, int nm, const char *buffer,
    
    if (!mem_attr_list_parse_from_string(&lp, alp, buffer,
                                           HOSTATTR_ALLOW_AMBIGUITY)) {
-      lFreeList(&lp);
       return 0;
    }
    

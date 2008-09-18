@@ -1695,8 +1695,8 @@ int main(int argc, char **argv)
        * start the commlib server
        */
       DPRINTF(("starting commlib server\n"));
-      ret = comm_open_connection(true, g_csp_mode, COMM_SERVER, 0, COMM_CLIENT,
-                                 username, &g_comm_handle, &error_msg);
+      ret = comm_open_connection(true, 0, COMM_SERVER, g_csp_mode, username,
+                                 &g_comm_handle, &error_msg);
 
       if (ret != 0) {
          ERROR((SGE_EVENT, MSG_QSH_CREATINGCOMMLIBSERVER_S,
@@ -1809,7 +1809,7 @@ int main(int argc, char **argv)
           * Wait for the client (=shepherd) to connect to us
           */
          DPRINTF(("waiting for connection\n"));
-         ret = comm_wait_for_connection(g_comm_handle, COMM_CLIENT,
+         ret = comm_wait_for_connection(g_comm_handle, COMM_CLIENT, 
                                         QSH_SOCKET_FINAL_TIMEOUT, &host, &err_msg);
          sge_dstring_free(&err_msg);
          if (ret != COMM_RETVAL_OK) {
@@ -1995,8 +1995,6 @@ int main(int argc, char **argv)
                DPRINTF(("waiting for connection\n"));
                ret = comm_wait_for_connection(g_comm_handle, COMM_CLIENT, 
                                               random_poll, &host, &err_msg);
-               /* JG: TODO: nothing is done with err_msg?? */
-               sge_dstring_free(&err_msg);
                if (ret != COMM_RETVAL_OK) {
                   if (ret == COMM_GOT_TIMEOUT) {
                      DPRINTF(("got no connection within timeout of %d s\n", random_poll));
@@ -2137,7 +2135,7 @@ int main(int argc, char **argv)
             DPRINTF(("polling_interval set to %d\n", polling_interval));
          }
       } /* end of while (1) polling */
-      if (g_new_interactive_job_support == true && g_comm_handle != NULL) {
+      if (g_new_interactive_job_support == true) {
          dstring err_msg = DSTRING_INIT;
          int     ret;
 
@@ -2146,8 +2144,6 @@ int main(int argc, char **argv)
             DPRINTF(("comm_shutdown_connection() failed: %s (%d)",
                      sge_dstring_get_string(&err_msg), ret));
          }
-
-         sge_dstring_free(&err_msg);
       }
 
       lFreeList(&lp_jobs);

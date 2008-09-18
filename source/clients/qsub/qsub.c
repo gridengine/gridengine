@@ -92,6 +92,8 @@ char **argv
    lListElem *job = NULL;
    lList *alp = NULL;
    lListElem *ep;
+   lListElem *i_opt;
+   lListElem *o_opt;
    int exit_status = 0;
    int just_verify;
    int tmp_ret;
@@ -99,11 +101,11 @@ char **argv
    dstring session_key_out = DSTRING_INIT;
    dstring diag = DSTRING_INIT;
    dstring jobid = DSTRING_INIT;
+   bool has_terse = false;
    u_long32 start, end, step;
    u_long32 num_tasks;
    int count, stat;
    char *jobid_string = NULL;
-   bool has_terse = false;
    drmaa_attr_values_t *jobids = NULL;
 
    u_long32 prog_number = 0;
@@ -217,6 +219,20 @@ char **argv
       lRemoveElem(opts_all, &ep);
    }
 
+   i_opt = lGetElemStr(opts_all, SPA_switch, "-i");
+   o_opt = lGetElemStr(opts_all, SPA_switch, "-o");
+
+   if (opt_list_is_X_true(opts_cmdline, "-i")) {
+      if (i_opt == o_opt)  {
+         fprintf(stderr, MSG_PARSE_SAMEPATHFORINPUTANDOUTPUT_SS,
+             "", "");
+         fprintf(stderr, "\n");
+         DEXIT;
+         SGE_EXIT((void**)&ctx, 1);
+      }
+   }
+
+   
    if (wait_for_job) {
       DPRINTF(("Wait for job end\n"));
    }
@@ -359,7 +375,7 @@ char **argv
 
       /* print the tersed output */
       if (has_terse) {
-         printf("%s", jobid_string);
+        printf("%s", jobid_string);
       } else if (output != NULL) {
         printf("%s", output);
       } else {

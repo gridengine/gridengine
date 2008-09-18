@@ -182,8 +182,6 @@ void signal_handler(int sig)
 *******************************************************************************/
 void set_signal_handlers(void)
 {
-  struct sigaction old_handler, new_handler;
-
    /* Is SIGHUP necessary? 
     * Yes: termio(7I) says:
     * "When a modem disconnect is detected, a SIGHUP signal is sent
@@ -193,47 +191,20 @@ void set_signal_handlers(void)
     *  caught, any subsequent  read  returns  with  an  end-of-file
     *  indication until the terminal is closed."
     */
-   sigaction(SIGHUP, NULL, &old_handler);
-   if (old_handler.sa_handler != SIG_IGN) {
-      new_handler.sa_handler = signal_handler;
-      sigaddset(&new_handler.sa_mask, SIGHUP);
-      new_handler.sa_flags = SA_RESTART;
-      sigaction(SIGHUP, &new_handler, NULL);
+   if (signal(SIGHUP, SIG_IGN) != SIG_IGN) {
+      sigset(SIGHUP, signal_handler);
    }
-
-   sigaction(SIGINT, NULL, &old_handler);
-   if (old_handler.sa_handler != SIG_IGN) {
-      new_handler.sa_handler = signal_handler;
-      sigaddset(&new_handler.sa_mask, SIGINT);
-      new_handler.sa_flags = SA_RESTART;
-      sigaction(SIGINT, &new_handler, NULL);
+   if (signal(SIGINT, SIG_IGN) != SIG_IGN) {
+      sigset(SIGINT, signal_handler);
    }
-
-   sigaction(SIGQUIT, NULL, &old_handler);
-   if (old_handler.sa_handler != SIG_IGN) {
-      new_handler.sa_handler = signal_handler;
-      sigaddset(&new_handler.sa_mask, SIGQUIT);
-      new_handler.sa_flags = SA_RESTART;
-      sigaction(SIGQUIT, &new_handler, NULL);
+   if (signal(SIGQUIT, SIG_IGN) != SIG_IGN) {
+      sigset(SIGQUIT, signal_handler);
    }
-
-   sigaction(SIGTERM, NULL, &old_handler);
-   if (old_handler.sa_handler != SIG_IGN) {
-      new_handler.sa_handler = signal_handler;
-      sigaddset(&new_handler.sa_mask, SIGTERM);
-      new_handler.sa_flags = SA_RESTART;
-      sigaction(SIGTERM, &new_handler, NULL);
+   if (signal(SIGTERM, SIG_IGN) != SIG_IGN) {
+      sigset(SIGTERM, signal_handler);
    }
-
-   new_handler.sa_handler = window_change_handler;
-   sigaddset(&new_handler.sa_mask, SIGWINCH);
-   new_handler.sa_flags = SA_RESTART;
-   sigaction(SIGWINCH, &new_handler, NULL);
-
-   new_handler.sa_handler = broken_pipe_handler;
-   sigaddset(&new_handler.sa_mask, SIGPIPE);
-   new_handler.sa_flags = SA_RESTART;
-   sigaction(SIGPIPE, &new_handler, NULL);
+   sigset(SIGWINCH, window_change_handler);
+   sigset(SIGPIPE,  broken_pipe_handler);
 }
 
 /****** client_check_window_change() *******************************************
@@ -457,8 +428,13 @@ void* commlib_to_tty(void *t_conf)
       recv_mess.cl_message = NULL;
       recv_mess.data = NULL;
 
+      DPRINTF(("commlib_to_tty: Waiting in comm_trigger() for data\n"));
+      ret = comm_trigger(g_comm_handle, 1, &err_msg);
+      DPRINTF(("commlib_to_tty: comm_trigger() returned %d, %s\n",
+              ret, &err_msg));
+
       DPRINTF(("commlib_to_tty: recv_message()\n"));
-      ret = comm_recv_message(g_comm_handle, CL_TRUE, &recv_mess, &err_msg);
+      ret = comm_recv_message(g_comm_handle, CL_FALSE, &recv_mess, &err_msg);
       if (ret != COMM_RETVAL_OK) {
          /* check if we are still connected to anybody. */
          /* if not - exit. */
@@ -480,8 +456,6 @@ void* commlib_to_tty(void *t_conf)
           received_signal == SIGQUIT ||
           received_signal == SIGTERM) {
          /* If we receive one of these signals, we must terminate */
-         DPRINTF(("commlib_to_tty: shutting down because of signal %d\n",
-                 received_signal));
          do_exit = 1;
          continue;
       }
@@ -497,8 +471,8 @@ void* commlib_to_tty(void *t_conf)
          switch (recv_mess.type) {
             case STDOUT_DATA_MSG:
                /* copy recv_mess.data to buf to append '\0' */
-               memcpy(buf, recv_mess.data, MIN(99, recv_mess.cl_message->message_length - 1));
-               buf[MIN(99, recv_mess.cl_message->message_length - 1)] = 0;
+               snprintf(buf, MIN(100, recv_mess.cl_message->message_length),
+                        "%s", recv_mess.data);
                DPRINTF(("commlib_to_tty: received stdout message, writing to tty.\n"));
                DPRINTF(("commlib_to_tty: message is: %s\n", buf));
 /* TODO: If it's not possible to write all data to the tty, retry blocking
@@ -552,8 +526,8 @@ void* commlib_to_tty(void *t_conf)
                DPRINTF(("commlib_to_tty: writing UNREGISTER_RESPONSE_CTRL_MSG\n"));
 
                /* copy recv_mess.data to buf to append '\0' */
-               memcpy(buf, recv_mess.data, MIN(99, recv_mess.cl_message->message_length - 1));
-               buf[MIN(99, recv_mess.cl_message->message_length - 1)] = 0;
+               snprintf(buf, MIN(100, recv_mess.cl_message->message_length),
+                        "%s", recv_mess.data);
                sscanf(buf, "%d", &g_exit_status);
                comm_write_message(g_comm_handle, g_hostname, COMM_CLIENT, 1, 
                   (unsigned char*)" ", 1, UNREGISTER_RESPONSE_CTRL_MSG, &err_msg);
@@ -579,9 +553,7 @@ void* commlib_to_tty(void *t_conf)
 *     do_server_loop() -- The servers main loop
 *
 *  SYNOPSIS
-*     int do_server_loop(u_long32 job_id, int nostdin, int noshell,
-*                        int is_rsh, int is_qlogin, int force_pty,
-*                        int *p_exit_status)
+*     void* commlib_to_tty(void *t_conf)
 *
 *  FUNCTION
 *     The main loop of the commlib server, handling the data transfer from
@@ -691,7 +663,6 @@ int do_server_loop(u_long32 job_id, int nostdin, int noshell,
 */
    DPRINTF(("shut down the connection from our side\n"));
    comm_shutdown_connection(g_comm_handle, COMM_CLIENT, &err_msg);
-   g_comm_handle = NULL;
    /*
     * Close stdin to awake the tty_to_commlib-thread from the select() call.
     * thread_shutdown() doesn't work on all architectures.
@@ -700,6 +671,7 @@ int do_server_loop(u_long32 job_id, int nostdin, int noshell,
 
    DPRINTF(("waiting for end of tty_to_commlib thread\n"));
    thread_join(pthread_tty_to_commlib);
+   thread_cleanup_lib(&thread_lib_handle);
 cleanup:
    /*
     * Set our terminal back to 'unraw' mode. Should be done automatically
@@ -713,8 +685,6 @@ cleanup:
    }
 
    *p_exit_status = g_exit_status;
-
-   thread_cleanup_lib(&thread_lib_handle);
    DEXIT;
    return 0;
 }

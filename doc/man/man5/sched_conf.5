@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2008/09/16 17:09:03 $     Revision: $Revision: 1.37 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2008/05/05 09:03:34 $     Revision: $Revision: 1.34 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2008/09/16 17:09:03 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2008/05/05 09:03:34 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -57,9 +57,6 @@ space (" ") character before any interpretation.
 The following parameters are recognized by the xxQS_NAMExx scheduler if
 present in \fIsched_conf\fP:
 .SS "\fBalgorithm\fP"
-.B Note:
-Deprecated, may be removed in future release.
-.br
 Allows for the selection of alternative scheduling algorithms.
 .PP
 Currently
@@ -289,13 +286,6 @@ See under
 .M sge_priority 5 
 for an overview on job priorities.
 .\"
-.SS "\fBweight_priority\fP"
-The weight applied on jobs normalized POSIX priority when determining priority
-finally used. Determines the relative importance of POSIX priority.
-See under
-.M sge_priority 5
-for an overview on job priorities.
-.\"
 .SS "\fBweight_ticket\fP"
 The weight applied on normalized ticket amount when determining priority finally used.
 Determines the relative importance of the ticket policies. See under 
@@ -359,9 +349,6 @@ If the offset is too low, resource reservations (see \fBmax_reservation\fP)
 can be delayed repeatedly due to an overly optimistic job circulation time.
 .\"
 .IP "\fIJC_FILTER\fP"
-.B Note:
-Deprecated, may be removed in future release.
-.br
 If set to true, the scheduler limits the number of jobs it looks at during
 a scheduling run. At the beginning of the scheduling run it assigns each
 job a specific category, which is based on the job's requests, priority
@@ -386,7 +373,7 @@ each scheduling run.
 If set equal to 1, the scheduler records information for each scheduling run allowing 
 to reproduce job resources utilization in the file \fI<xxqs_name_sxx_root>/<cell>/common/schedule\fP.\"
 .\"
-.IP "\fIPE_RANGE_ALG\fP"
+.IP "\fISELECT_PE_RANGE_ALG\fP"
 This parameter sets the algorithm for the pe range computation. The default is automatic, which
 means that the scheduler will select the best one, and it should not be necessary to 
 change it to a different setting in normal operation. If a custom setting is needed, the 

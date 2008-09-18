@@ -250,6 +250,7 @@ do_gdi_packet(sge_gdi_ctx_class_t *ctx, lList **answer_list,
        * requests would be handled by read-only threads.
        */
       init_packbuffer(&(packet->pb), 0, 0);
+#else
 #endif
 
       /*
@@ -280,9 +281,7 @@ do_gdi_packet(sge_gdi_ctx_class_t *ctx, lList **answer_list,
       sge_gdi_packet_free(&packet);
 #  endif
 #endif
-   } else {
-      sge_gdi_packet_free(&packet);
-   }
+   } 
 
    DRETURN_VOID;
 }

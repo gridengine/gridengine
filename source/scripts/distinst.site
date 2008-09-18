@@ -31,11 +31,11 @@
 #___INFO__MARK_END__
 
 # Base directory where the openssl binary and libraries reside
-OPENSSLSOVERSION=0.9.8
-OPENSSLBASE=/off_home/gridengine/openssl-0.9.8h-origin
+OPENSSLSOVERSION=0.9.7
+OPENSSLBASE=/vol2/tools/SW/openssl-0.9.7l-origin
 
 # Base directory where BDB resides
-BERKELEYDBBASE=/off_home/gridengine/db-4.4.20
+BERKELEYDBBASE=/vol2/SW/db-4.4.20
 
 # Base directory where libcore.so resides
 # Relevant for Linux only:

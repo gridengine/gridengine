@@ -44,10 +44,10 @@
 
 #include "sge_answer.h"
 
-#include "spool/flatfile/sge_flatfile.h"
+#include "spool/flatfile//sge_flatfile.h"
 #include "spool/sge_spooling_utilities.h"
 #include "spool/flatfile/sge_spooling_flatfile.h"
-#include "spool/flatfile/sge_flatfile_obj.h"
+#include "spool/flatfile//sge_flatfile_obj.h"
 
 #include "sgeobj/sge_cqueue.h"
 #include "sge_mt_init.h"

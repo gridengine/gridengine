@@ -105,9 +105,7 @@
         </condition>
 
         <!-- Copyright stuff -->
-        <condition property="legal.dir" value="${env.AIMK_COPYRIGHT_DIR}" else="">
-            <isset property="env.AIMK_COPYRIGHT_DIR"/>
-        </condition>
+        <property name="legal.dir" value="${env.AIMK_COPYRIGHT_DIR}"/>
 
         <condition property="legal" value="COPYRIGHT">
             <equals arg1="${env.AIMK_COPYRIGHT}" arg2="sun" trim="true"/>
@@ -115,7 +113,7 @@
         <condition property="legal" value="COPYRIGHT LICENSE">
             <equals arg1="${env.AIMK_COPYRIGHT}" arg2="courtesy" trim="true"/>
         </condition>
-        <condition property="legal" value="NA">
+        <condition property="legal" value="">
            <not>
                <or>
                    <equals arg1="${dist.type}" arg2="courtesy" trim="true"/>
@@ -136,12 +134,12 @@
         </fail>
     </target>
     
-    <target name="-post-jar" if="isJavaBuildHost">
+    <target name="-post-jar">
         <antcall target="juti.jar"/>
         <antcall target="test.jar"/>
     </target>
 
-    <target name="juti.jar" depends="compile" if="isJavaBuildHost">
+    <target name="juti.jar" depends="compile">
         <jar file="${dist.dir}/${dist.jar}">
             
             <fileset dir="${build.classes.dir}">
@@ -156,7 +154,7 @@
         </jar>
     </target>
 
-    <target name="test.jar" depends="compile-test" if="isJavaBuildHost">
+    <target name="test.jar" depends="compile-test">
         <jar file="${dist.dir}/juti-test.jar">
             
             <fileset dir="${build.test.classes.dir}">

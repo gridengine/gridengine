@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/08/08 10:15:31 $     Revision: $Revision: 1.78 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/04/30 09:11:03 $     Revision: $Revision: 1.70 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/08/08 10:15:31 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/04/30 09:11:03 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -349,9 +349,6 @@ Anything else: Put queue in error state
 .\"
 .\"
 .SS "\fBshell_start_mode\fP"
-.B Note:
-Deprecated, may be removed in future release.
-.br
 This parameter defines the mechanisms which are used to actually
 invoke the job scripts on the execution hosts. The following
 values are recognized:
@@ -532,7 +529,7 @@ overwritten by the execution host local configuration.
 .\"
 .\"
 .SS "\fBxprojects\fP"
-The \fBxprojects\fP list contains all projects that are denied access 
+The \fBxprojects\fP list contains all projects which are granted access
 to xxQS_NAMExx. User belonging to one of these projects cannot use xxQS_NAMExx. If
 users belong to projects in the \fBprojects\fP list (see above) and the
 \fBxprojects\fP list, they also cannot use the system.
@@ -601,7 +598,7 @@ and the
 option of
 .M queue_conf 5 ).
 Parallel jobs are only rescheduled if the host on which their
-master task executes is in unknown state. The behavior of
+master task executes is in unknown state. The behaviour of
 .B reschedule_unknown
 for parallel jobs and for jobs without the rerun flag be set can be
 adjusted using the \fBqmaster_params\fP settings
@@ -674,7 +671,7 @@ messages are logged.
 .PP
 Changing \fBloglevel\fP will take immediate effect.
 .PP
-The default for \fBloglevel\fP is \fIlog_warning\fP.
+The default for \fBloglevel\fP is \fIlog_info\fP.
 .PP
 This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
@@ -743,7 +740,7 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
-.SS "\fBmax_advance_reservations\fP"
+.SS "\fBmax_jobs\fP"
 The number of active (not finished) Advance Reservations simultaneously
 allowed in xxQS_NAMExx is controlled by this parameter. A value greater
 than 0 defines the limit. The default value 0 means "unlimited". If the
@@ -866,9 +863,6 @@ overwritten by the execution host local configuration.
 .\"
 .\"
 .SS "\fBset_token_cmd\fP"
-.B Note:
-Deprecated, may be removed in future release.
-.br
 This parameter is only present if your xxQS_NAMExx system is licensed
 to support AFS.
 .PP
@@ -920,9 +914,6 @@ may be overwritten by the execution host local configuration.
 .\"
 .\"
 .SS "\fBpag_cmd\fP"
-.B Note:
-Deprecated, may be removed in future release.
-.br
 This parameter is only present if your xxQS_NAMExx system is licensed
 to support AFS.
 .PP
@@ -940,9 +931,6 @@ may be overwritten by the execution host local configuration.
 .\"
 .\"
 .SS "\fBtoken_extend_time\fP"
-.B Note:
-Deprecated, may be removed in future release.
-.br
 This parameter is only present if your xxQS_NAMExx system is licensed
 to support AFS.
 .PP
@@ -1019,9 +1007,6 @@ necessary to run the job again, by returning 100 in the prolog, pe_start,
 job script, pe_stop or epilog script.
 .PP
 .IP "\fIDISABLE_AUTO_RESCHEDULING\fP"
-.B Note:
-Deprecated, may be removed in future release.
-.br
 If set to "true" or "1", the \fIreschedule_unknown\fP parameter
 is not taken into account.
 .PP
@@ -1040,7 +1025,7 @@ but they are just finished as they can't be rescheduled.
 .PP
 .IP "\fIENABLE_RESCHEDULE_SLAVE\fP"
 If set to "true" or "1" xxQS_NAMExx triggers job rescheduling also when 
-the host where the slave tasks of a parallel job executes is in unknown state, 
+the host where the slave tasks of a parallel job executes is in unknon state, 
 if the \fIreschedule_unknown\fP parameter is activated.
 .PP
 .IP "\fIMAX_DYN_EC\fP"
@@ -1208,9 +1193,6 @@ instance, or another
 signal name then this signal will be sent as notification signal.
 .PP
 .IP "\fISHARETREE_RESERVED_USAGE\fP"
-.B Note:
-Deprecated, may be removed in future release.
-.br
 If this parameter is set to true, the usage of reserved resources is taken for the 
 xxQS_NAMExx share tree consumption instead of measured usage.
 .PP
@@ -1237,37 +1219,6 @@ and
 if rsh and rshd components are used which are provided with xxQS_NAMExx
 (i.e., the \fBrsh_daemon\fP and \fBrsh_command\fP parameters may
 not be changed from the default).
-.PP
-.IP "\fIS_DESCRIPTORS\fP, \fIH_DESCRIPTORS\fP, \fIS_MAXPROC\fP, \fIH_MAXPROC\fP,"
-.IP "\fIS_MEMORYLOCKED\fP, \fIH_MEMORYLOCKED\fP, \fIS_LOCKS\fP, \fIH_LOCKS\fP"
-Specifies soft and hard resource limits as implemented by the
-.M setrlimit 2
-system call. See this manual page on your system for more information. These
-parameters complete the list of limits set by the RESOURCE LIMITS parameter
-of the queue configuration as described in
-.M queue_conf 5 .
-Unlike the resource limits in the queue
-configuration, these resource limits are set for every job on this execution
-host. If a value is not specified, the resource limit is inherited from the
-execution daemon process. Because this would lead to unpredicted results,
-if only one limit of a resource is set (soft or hard), the
-corresponding other limit is set to the same value.
-.br
-\fIS_DESCRIPTORS\fP and \fIH_DESCRIPTORS\fP specify a value one greater than the maximum
-file descriptor number that can be opened by any process of a job.
-.br
-\fIS_MAXPROC\fP and \fIH_MAXPROC\fP specify the maximum number of processes that can be
-created by the job user on this execution host
-.br
-\fIS_MEMORYLOCKED\fP and \fIH_MEMORYLOCKED\fP specify the maximum number of bytes of
-virtual memory that may be locked into RAM.
-.br
-\fIS_LOCKS\fP and \fIH_LOCKS\fP specify the maximum number of file locks any process
-of a job may establish.
-.br
-All of these values can be specified using the multiplier letters k, K, m, M, g and G, see
-.M sge_types 1
-for details.
 .\"
 .\"
 .IP "\fIINHERIT_ENV\fP"
@@ -1314,8 +1265,8 @@ to a time_specifier (see
 , to \fBPER_LOAD_REPORT\fP or to \fBNEVER\fP.
 .br
 If this parameter is set to \fBPER_LOAD_REPORT\fP the PDC is triggered in the
-same interval as \fBload_report_time\fP (see above). If this parameter is set
-to \fBNEVER\fP the PDC run is never triggered. The default is 1 second.
+same interval as \fBload_report_time\fP (see above). If this parmeter is set
+to \fBNEVER\fP the PDC run is never trigged. The default is 1 second.
 .br
 \fBNote:\fP A PDC run is quite compute extensive may degrade the
 performance of the running jobs. But if the PDC runs less often or never the
@@ -1403,9 +1354,6 @@ for further information about \fBreport_variables\fB.
 .\"
 .\"
 .SS "\fBfinished_jobs\fP"
-.B Note:
-Deprecated, may be removed in future release.
-.br
 xxQS_NAMExx stores a certain number of \fIjust finished\fP jobs to provide
 post mortem status information. The \fBfinished_jobs\fP parameter defines the
 number of finished jobs stored. If this maximum number is reached, the
@@ -1420,84 +1368,58 @@ overwritten by the execution host local configuration.
 .\"
 .\"
 .SS "\fBqlogin_daemon\fP"
-This parameter specifies the mechanism that is to be started on the
+This parameter specifies the executable that is to be started on the
 server side of a
 .M qlogin 1 
-request. Usually this is the builtin mechanism. It's also possible to
-configure an external executable by specifying the full qualified
-pathname, e.g. of the system's telnet daemon.
+request. Usually this is the absolute pathname of the system's telnet daemon. 
 .PP
 Changing \fBqlogin_daemon\fP will take immediate effect.
-The default value for \fBqlogin_daemon\fP is builtin.
+The default value for \fBqlogin_daemon\fP is the system's default telnetd.
 .PP
 The global configuration entry for this value
 may be overwritten by the execution host local configuration.
-.PP
-Examples for the two allowed kinds of attributes are:
-.br
-qlogin_daemon    builtin
-.br
-or
-.br
-qlogin_daemon    /usr/sbin/in.telnetd
 .\"
 .\"
 .SS "\fBqlogin_command\fP"
 This is the command to be executed on the client side of a 
 .M qlogin 1
 request.
-Usually this is the builtin qlogin mechanism.
-It's also possible to configure an external mechanism, usually the absolute
-pathname of the system's telnet client program. It is automatically started
-with the target host and port number as parameters.
+Usually this is the absolute pathname of the system's telnet client program. Otherwise the systems default telnet client will be used. 
+It is automatically started with the target host and port number as parameters.
 .PP
 Changing \fBqlogin_command\fP will take immediate effect.
-The default value for \fBqlogin_command\fP is builtin.
+The default value for \fBqlogin_command\fP is telnet.
 .PP
 The global configuration entry for this value
 may be overwritten by the execution host local configuration.
-.PP
-Examples for the two allowed kinds of attributes are:
-.br
-qlogin_command   builtin
-.br
-or
-.br
-qlogin_command   /usr/bin/telnetd
 .\"
 .\"
 .SS "\fBrlogin_daemon\fP"
-This parameter specifies the mechanism that is to be started on the server
+This parameter specifies the executable that is to be started on the server
 side of a
 .M qrsh 1
 request
 .B without
 a command argument to be executed remotely. 
-Usually this is the builtin mechanism. It's also possible to
-configure an external executable by specifying the absolute pathname,
-e.g. of the system's rlogin daemon. 
+Usually this is the absolute pathname of the system's rlogin daemon. 
 .sp 1
 Changing
 .B rlogin_daemon
 will take immediate effect. The default for
 .B rlogin_daemon
-is builtin.
+is the system's default rlogind.
 .sp 1
 The global configuration entry for this value may be overwritten by the
 execution host local configuration.
-.PP
-The allowed values are similar to the ones of the examples of
-.B qlogin_daemon.
 .\"
 .\"
 .SS "\fBrlogin_command\fP"
-This is the mechanism to be executed on the client side of a
+This is the command to be executed on the client side of a
 .M qrsh 1
 request
 .B without
 a command argument to be executed remotely.
-Usually this is the builtin mechanism. If no value is given,
-a specialized xxQS_NAMExx component is used.
+If no value is given, a specialized xxQS_NAMExx component is used.
 The command is automatically started with the target host and port number 
 as parameters.
 The xxQS_NAMExx rlogin client has been extended
@@ -1506,54 +1428,40 @@ as \fIssh\fP, which also understand this syntax.
 .sp 1
 Changing
 .B rlogin_command
-will take immediate effect. The default value for
+will take immediate effect. A default value for
 .B rlogin_command
-is builtin.
+is not configured.
 .sp 1
 The global configuration entry for this value may be overwritten by the
 execution host local configuration.
-.PP
-In addition to the examples of 
-.B qlogin_command
-, this value is allowed:
-.br
-rsh_daemon      none
 .\"
 .\"
 .SS "\fBrsh_daemon\fP"
-This parameter specifies the mechanism that is to be started on the server
+This parameter specifies the executable that is to be started on the server
 side of a
 .M qrsh 1
 request
 .B with
 a command argument to be executed remotely.
-Usually this is the builtin mechanism. If no value is given,
-a specialized xxQS_NAMExx component is used.
+If no value is given, a specialized xxQS_NAMExx component is used.
 .sp 1
 Changing
 .B rsh_daemon
-will take immediate effect. The default value for
+will take immediate effect. A default value for
 .B rsh_daemon
-is builtin.
+is not configured.
 .sp 1
 The global configuration entry for this value may be overwritten by the
 execution host local configuration.
-.PP
-In addition to the examples of 
-.B qlogin_daemon
-, this value is allowed: 
-.br
-rsh_daemon      none
 .\"
 .\"
 .SS "\fBrsh_command\fP"
-This is the mechanism to be executed on the client side of a
+This is the command to be executed on the client side of a
 .M qrsh 1
 request
 .B with
 a command argument to be executed remotely.
-Usually this is the builtin mechanism.  If no value is given,
-a specialized xxQS_NAMExx component is used. The command is
+If no value is given, a specialized xxQS_NAMExx component is used. The command is
 automatically started with the target host and port number as parameters
 like required for
 .M telnet 1
@@ -1564,18 +1472,12 @@ and use the port number argument. You can only use clients, such as
 .sp 1
 Changing
 .B rsh_command
-will take immediate effect. The default value for
+will take immediate effect. A default value for
 .B rsh_command
-is builtin.
+is not configured.
 .sp 1
 The global configuration entry for this value may be overwritten by the
 execution host local configuration.
-.PP
-In addition to the examples of 
-.B qlogin_command
-, this value is allowed:
-.br
-rsh_command     none
 .\"
 .\"
 .SS "\fBdelegated_file_staging\fP"
@@ -1593,9 +1495,6 @@ correctly. (See also FORBID_APPERROR).
 .\"
 .\"
 .SS "\fBreprioritize\fP"
-.B Note:
-Deprecated, may be removed in future release.
-.br
 This flag enables or disables the reprioritization of jobs based on their
 ticket amount. The \fBreprioritize_interval\fP in 
 .M sched_conf 5

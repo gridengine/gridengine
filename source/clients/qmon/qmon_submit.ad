@@ -260,7 +260,6 @@ Qmon*submit_detail.tabLabel: @{@fBAdvanced}
 Qmon*submit_detail.xmtChildren: \
    InputField        submit_ckpt_obj = ckpt_obj, \
                      submit_pe = pe, \
-                     submit_ar = ar_id, \
                      submit_account = account_string; \
    TimeInput         submit_deadline = deadline; \
    StrListField      submit_mail_user = mail_list, \
@@ -273,7 +272,7 @@ Qmon*submit_detail.xmtChildren: \
                      submit_ctx = ctx_list; \
    XmtChooser        submit_verify = verify_mode, \
                      submit_mail = mail_options; \
-   XmPushButton      submit_mail_userPB, submit_pePB, submit_arPB, submit_envPB, \
+   XmPushButton      submit_mail_userPB, submit_pePB, submit_envPB, \
                      submit_ctxPB, submit_deadlinePB, submit_ckpt_objPB;
 
 Qmon*submit_detail.layout: \
@@ -302,11 +301,6 @@ Qmon*submit_detail.layout: \
          Row { \
             Caption tl "@{Account}" Centered 30 em submit_account \
             <> \
-         } \
-         Row { \
-            Caption tl "@{Advance Reservation}" Centered 30 em submit_ar \
-            <> \
-            Fixed Centered submit_arPB \
          } \
          <> \
       } \
@@ -473,9 +467,6 @@ Qmon*submit_ctxPB.labelPixmap:                  ctx
 
 Qmon*submit_ckpt_objPB.labelType:      PIXMAP
 Qmon*submit_ckpt_objPB.labelPixmap:    ckpt
-
-Qmon*submit_arPB.labelType:            PIXMAP
-Qmon*submit_arPB.labelPixmap:          ar
 
 Qmon*submit_help.activateCallback:   XmtHelpDisplayContextHelp(self);
 

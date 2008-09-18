@@ -115,6 +115,7 @@ u_long32 flags
    char **sp;
    lList *answer = NULL;
    char str[1024 + 1];
+   char i_opt[SGE_PATH_MAX + 1];
    lListElem *ep_opt;
    int i_ret;
    u_long32 is_qalter = flags & FLG_QALTER;
@@ -670,6 +671,9 @@ u_long32 flags
          ep_opt = sge_add_arg(pcmdline, i_OPT, lListT, *(sp - 1), *sp);
          lSetList(ep_opt, SPA_argval_lListT, path_list);
 
+	 /* Save it for later comparison */
+         strcpy(i_opt, *sp);
+
          sp++;
          continue;
       }
@@ -1019,7 +1023,7 @@ u_long32 flags
 
          if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
             answer_list_add_sprintf(&answer, STATUS_EEXIST, ANSWER_QUALITY_WARNING,
-                  MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S, *sp);
+               MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S, *sp);
          }
 
          /* next field is name */
@@ -1109,9 +1113,16 @@ u_long32 flags
                     MSG_PARSE_WRONGSTDOUTPATHLISTFORMATXSPECTOOOPTION_S, *sp );
              DRETURN(answer);
          }
-
          ep_opt = sge_add_arg(pcmdline, o_OPT, lListT, *(sp - 1), *sp);
          lSetList(ep_opt, SPA_argval_lListT, stdout_path_list);
+   
+         if (i_opt != NULL) {
+            if (strcmp(i_opt, *sp) == 0) {
+               answer_list_add_sprintf(&answer, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+               MSG_PARSE_SAMEPATHFORINPUTANDOUTPUT_SS, i_opt, *sp );
+               DRETURN(answer);
+            }
+         }
 
          sp++;
          continue;
@@ -1651,7 +1662,7 @@ DTRACE;
          DPRINTF(("\"-w %s\"\n", *sp));
 
          if (!strcmp("e", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, w_OPT, lIntT, *(sp - 1), *sp);
+            ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
             if (prog_number == QRSUB) {
                lSetInt(ep_opt, SPA_argval_lIntT, AR_ERROR_VERIFY);
             } else {
@@ -1664,12 +1675,12 @@ DTRACE;
                      MSG_PARSE_INVALIDOPTIONARGUMENTWX_S, *sp);
                DRETURN(answer);
             } else {
-               ep_opt = sge_add_arg(pcmdline, w_OPT, lIntT, *(sp - 1), *sp);
+               ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
             }
             lSetInt(ep_opt, SPA_argval_lIntT, WARNING_VERIFY);
          }
          else if (!strcmp("n", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, w_OPT, lIntT, *(sp - 1), *sp);
+            ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
             if (prog_number == QRSUB) {
                answer_list_add_sprintf(&answer,STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
                      MSG_PARSE_INVALIDOPTIONARGUMENTWX_S, *sp);
@@ -1679,7 +1690,7 @@ DTRACE;
             }
          }
          else if (!strcmp("v", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, w_OPT, lIntT, *(sp - 1), *sp);
+            ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
             if (prog_number == QRSUB) {
                lSetInt(ep_opt, SPA_argval_lIntT, AR_JUST_VERIFY);
             } else {
@@ -2346,33 +2357,37 @@ char *dest_str
 
    DENTER(TOP_LAYER, "cull_parse_destination_identifier_list");
 
-   if (lpp == NULL) {
-      DRETURN(1);
+   if (!lpp) {
+      DEXIT;
+      return 1;
    }
 
    s = sge_strdup(NULL, dest_str);
-   if (s == NULL) {
+   if (!s) {
       *lpp = NULL;
-      DRETURN(3);
+      DEXIT;
+      return 3;
    }
-
    str_str = string_list(s, ",", NULL);
-   if (str_str == NULL || *str_str == NULL) {
+   if (!str_str || !*str_str) {
       *lpp = NULL;
       FREE(s);
-      DRETURN(2);
+      DEXIT;
+      return 2;
    }
 
    i_ret = cull_parse_string_list(str_str, "destin_ident_list", QR_Type, rule, lpp);
    if (i_ret) {
       FREE(s);
       FREE(str_str);
-      DRETURN(3);
+      DEXIT;
+      return 3;
    }
 
    FREE(s);
    FREE(str_str);
-   DRETURN(0);
+   DEXIT;
+   return 0;
 }
 
 /***************************************************************************/

@@ -53,7 +53,6 @@
 #include "sge_log.h"
 #include "sge_io.h"
 #include "sge_unistd.h"
-#include "uti/sge_profiling.h"
 
 #include "msg_cull.h"
 
@@ -138,15 +137,13 @@ int lWriteElemToDisk(const lListElem *ep, const char *prefix, const char *name,
       sprintf(filename, "%s", name);
    }
 
-   PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-
    /* open file */
    if ((fd = SGE_OPEN3(filename, O_WRONLY | O_CREAT | O_TRUNC, 0666)) < 0) {
       CRITICAL((SGE_EVENT, MSG_CULL_CANTOPENXFORWRITINGOFYZ_SSS ,
                 filename, obj_name, strerror(errno)));
       clear_packbuffer(&pb);
-      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-      DRETURN(1);
+      DEXIT;
+      return 1;
    }
 
    /* write packing buffer */
@@ -155,16 +152,16 @@ int lWriteElemToDisk(const lListElem *ep, const char *prefix, const char *name,
                filename));
       clear_packbuffer(&pb);
       close(fd);
-      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-      DRETURN(1);
+      DEXIT;
+      return 1;
    }
 
    /* close file and exit */
    close(fd);
-   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
    clear_packbuffer(&pb);
 
-   DRETURN(0);
+   DEXIT;
+   return 0;
 }
 
 /****** cull/file/lReadElemFromDisk() ****************************************

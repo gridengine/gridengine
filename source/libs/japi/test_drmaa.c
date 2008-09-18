@@ -4828,8 +4828,8 @@ static drmaa_job_template_t *create_exit_job_template(const char *exit_job, int 
 
    if (ret == DRMAA_ERRNO_SUCCESS) {   
       return jt;
-   } else {
-      drmaa_delete_job_template(jt, NULL, 0);
+   }
+   else {
       return NULL;
    }
 }
@@ -4884,8 +4884,8 @@ static drmaa_job_template_t *create_sleeper_job_template(int seconds, int as_bul
 
    if (ret == DRMAA_ERRNO_SUCCESS) {   
       return jt;
-   } else {
-      drmaa_delete_job_template(jt, NULL, 0);
+   }
+   else {
       return NULL;
    }
 }

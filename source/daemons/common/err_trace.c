@@ -68,7 +68,7 @@
 #include "sge_string.h"
 
 #if defined(INTERIX)
-#  include "wingrid.h"
+#  include "misc.h"
 #endif
 
 static FILE *shepherd_error_fp=NULL;

@@ -54,7 +54,6 @@ set AIMK_TARGETOPT   = 0
 set NO_XDEPEND   = ""
 set ERR_WARN_NONE = ""
 set ERR_WARN_ALL = ""
-set UNMODIFIED_ARGUMENTS = ( $argv ) 
 
 if ( -f dist/util/arch ) then
    set buildarch = `dist/util/arch`
@@ -90,7 +89,6 @@ endif
 #
 set i = 1
 while ($i <= $#argv)
-   set UNMODIFIED_ARGUMENTS[$i] = "$argv[$i]"
    switch ("$argv[$i]")
    case "-32":
       set AIMK_TARGETOPT = 1
@@ -817,11 +815,7 @@ while ($#argv >= 1 && $?found)
       continue
       breaksw
    endsw
-   if ($#argv > 1 ) then
-      set argv     = ($argv[2-])
-   else
-      set argv     = ""
-   endif
+   set argv     = ($argv[2-])
 end
 
 if ( $DEBUGGED && $USE_QMAKE ) then
@@ -892,8 +886,6 @@ case AIX51:
    set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 1
 
-   set LIBS = "$LIBS -lc"
-
    if ($BUILDARCH == "AIX43") then
      set AUTHLIBS = ""
    endif
@@ -922,7 +914,7 @@ case AIX51:
    set SHARED_LFLAGS = "$LFLAGS $KLFLAGS -brtl -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
 
    # add DEBUG_FLAGS to LFLAGS after SHARED_LFLAGS - -g isn't recognized by ld
-   set LFLAGS   = "$DEBUG_FLAG -brtl -bmaxdata:0x80000000 $LFLAGS"
+   set LFLAGS   = "$DEBUG_FLAG -brtl $LFLAGS"
    set JAVA_ARCH = "aix"
    set JAVA_LFLAGS = ""
    breaksw
@@ -1280,7 +1272,6 @@ case LINUX86:
 case LINUXAMD64:
 case LINUXIA64:
 case LINUXPPC:
-case LINUXPPC64:
 case LINUXSPARC:
 case LINUXSPARC64:
    set MAKEWINGRIDLIB   = 0
@@ -1307,7 +1298,9 @@ case LINUXSPARC64:
 
    if ($BUILDARCH == LINUXPPC) then
       set CFLAGS = "-m32 $CFLAGS"
-   else if ($BUILDARCH == LINUXSPARC64 || $BUILDARCH == LINUXPPC64) then
+   endif
+
+   if ($BUILDARCH == LINUXSPARC64) then
       set CFLAGS = "-m64 $CFLAGS"
    endif
 
@@ -1344,9 +1337,6 @@ case LINUXSPARC64:
 
    if ("$ADOC" == 1) then
       set CFLAGS = "$CFLAGS -Wno-error"
-   endif
-   if ( $TARGET_BITS == TARGET_32BIT ) then
-      set CFLAGS = "$CFLAGS -D_FILE_OFFSET_BITS=64"
    endif
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
 
@@ -1398,7 +1388,7 @@ case LINUXSPARC64:
    else
       set XINCD    = "$XMTINCD $XINCD"
       set XCFLAGS  = "-DNeedFunctionPrototypes -Wno-error $XMTDEF $XINCD"
-      set XLIBS    = "-Xlinker -Bstatic -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp -lXm"
+      set XLIBS    = "-Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
    endif
    set JAVA_ARCH = "linux"
 
@@ -1659,7 +1649,7 @@ case SOLARISAMD64:
       else if ( $BUILDARCH == SOLARISAMD64 ) then
          set CFLAGS = "-D_LARGEFILE64_SOURCE=1 $CFLAGS"
          
-         set compversion = `cc -V | & head -1 | sed 's/[a-zA-Z :]*\([0-9].[0-9]*\).*$/\1/'`
+         set compversion = `cc -V |& head -1 | cut -f4 -d" "`
          set major = `echo $compversion | cut -f1 -d"."`
          set minor = `echo $compversion | cut -f2 -d"."`
          if ($major <= 5 && $minor <= 8) then
@@ -1678,6 +1668,7 @@ case SOLARISAMD64:
          set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G"
       endif
       set CFLAGS = "-Xc -v $OFLAG $MEMFLAG -ftrap=division $CFLAGS $DEBUG_FLAG"
+      set CFLAGS = "-Xc -v $MEMFLAG -ftrap=division $CFLAGS $DEBUG_FLAG"
    else if ( $CC == gcc) then
       #set CFLAGS = "-Wall -Werror -Wstrict-prototypes $CFLAGS"
       set CFLAGS = "-Wall -Wstrict-prototypes $CFLAGS"
@@ -1700,7 +1691,7 @@ case SOLARISAMD64:
       endif
    endif
 
-   set LFLAGS   = "$LFLAGS $DEBUG_FLAG -lmtmalloc"
+   set LFLAGS   = "$LFLAGS $DEBUG_FLAG"
    set LIBS     = "-lsocket -lnsl -lm -lthread"
    set LOADAVGLIBS = "-lkstat"
    set FSTYPELIBS = "-lkstat"
@@ -1716,12 +1707,6 @@ case SOLARISAMD64:
    set XLIBD    = "-L/usr/dt/lib -L/usr/openwin/lib"
 
    set XCFLAGS  = "$ERR_WARN_NONE -DNeedFunctionPrototypes -DNeedVarargsPrototypes $XMTDEF $XINCD"
-
-   # workaround for opensolaris
-   if ( `uname -r` == 5.11 && ( $BUILDARCH == SOLARISAMD64 )) then
-       set XLIBD = "-L/usr/openwin/lib/64"
-   endif    
-   
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = "-lXm -lXt -lXext -lXmu -lX11 -lw -lgen"
 
@@ -1783,8 +1768,6 @@ default:
    exit 1
 endsw
 
-set DEPEND_FLAGS = "`echo $DEPEND_FLAGS | sed -e 's/-[^DI][^ ]*//g'`"
-
 if ( $JNI == 1 ) then
    set CORE_INCLUDE = "$CORE_INCLUDE -I${JAVA_HOME}/${JAVA_INCL}"
 
@@ -1817,14 +1800,6 @@ if ( $JNI == 1 ) then
          case lx24-ia64:
          case lx26-ia64:
              set JAVA_LIB_ARCH = ia64
-             breaksw
-         case lx24-ppc:
-         case lx26-ppc:
-             set JAVA_LIB_ARCH = ppc
-             breaksw
-         case lx24-ppc64:
-         case lx26-ppc64:
-             set JAVA_LIB_ARCH = ppc64
              breaksw
          case hp11:
              set JAVA_LIB_ARCH = PA_RISC
@@ -2111,7 +2086,7 @@ if ( "$MAKEWINGRIDAPP" == 1 ) then
       breaksw
    endsw
 
-   $MAKE -f $SOURCE/utilbin/windows/Makefile "MAKE=$MAKE" "WINCC=$WINCC" \
+   $MAKE -f $SOURCE/experimental/wingrid/Makefile "MAKE=$MAKE" "WINCC=$WINCC" \
       "WINCFLAGS=$WINCFLAGS" "WINLFLAGS=$WINLFLAGS" "SDIR=$SDIR" "RM=$RM" \
       "DEPEND=$DEPEND" "WINLIBS=$WINLIBS" $param
 
@@ -2692,43 +2667,16 @@ echo done.
 # On SOLARIS64, if there was no special target (i.e. $argv = "") 
 # and no "-only-*" parameter specified, the shared libraries for
 # SOLARIS are also built.
-if ( $BUILDARCH == SOLARIS64 && $ONLY_PARAM_SPEC == 0 && "${SOLARIS_ONLY_64}" != 1 ) then
-      if ( "$argv" == "" ) then 
-         echo ""
-         echo "Executing aimk again to build 32 bit shared libraries."
-         if ( "$JAVA" > 0 ) then
-            ./aimk -32 -only-core libdrmaa.so libjgdi.so libjuti.so
-         else 
-            ./aimk -32 -only-core libdrmaa.so libjuti.so
-         endif
-       else if ( "$argv" == "clean" ) then 
-            ./aimk -32 -only-core clean 
-       endif 
+if ( $BUILDARCH == SOLARIS64 && "$argv" == "" && $ONLY_PARAM_SPEC == 0 && "${SOLARIS_ONLY_64}" != 1 ) then
+      echo ""
+      echo "Executing aimk again to build 32 bit shared libraries."
+      if ( "$JAVA" > 0 ) then
+         ./aimk -32 -only-core libdrmaa.so libjgdi.so libjuti.so
+      else 
+         ./aimk -32 -only-core libdrmaa.so libjuti.so
+      endif
       exit $status
    endif
 endif
-
-# On HP11 we are always building (and cleaning) a 32bit version
-if ( $BUILDARCH == HP1164 ) then
-   set ONLY_64_FLAG = 0
-   set arguments = "" 
-   set i = 1
-   while ($i <= $#UNMODIFIED_ARGUMENTS)
-      switch ("$UNMODIFIED_ARGUMENTS[$i]")
-         case "-only-64":
-         case "-64":
-            set ONLY_64_FLAG = 1
-            breaksw
-         default: 
-            set arguments = "$arguments $UNMODIFIED_ARGUMENTS[$i]"
-            breaksw
-      endsw
-      @ i++ 
-   end 
-   if ( "$ONLY_64_FLAG" != 1 ) then 
-      # compile the 32 bit version 
-      ./aimk -32 "$arguments"
-   endif 
-endif 
 
 exit 0

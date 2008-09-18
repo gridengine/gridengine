@@ -174,7 +174,7 @@
 #define MSG_SCHEDD_INFO_CANNOTRUNRQS                  _MESSAGE(47141, _("Jobs cannot run because they exceeds limit in resource quota sets")) 
 #define MSG_SCHEDD_INFO_JOBDYNAMICALLIMIT_SS          _MESSAGE(47142, _("Job dropped because of invalid dynamical limit "SFN" in rule "SFN)) 
 #define MSG_SCHEDD_INFO_JOBDYNAMICALLIMIT             _MESSAGE(47143, _("Jobs dropped because of invalid dynamical limit")) 
-#define MSG_SCHEDD_INFO_CANNOTRUNRQSGLOBAL_SS         _MESSAGE(47144, _("cannot run because it exceeds limit "SFQ" in rule "SFQ))
+#define MSG_SCHEDD_INFO_CANNOTRUNRQSGLOBAL_SS         _MESSAGE(47144, _("Job cannot run because it exceeds limit "SFQ" in rule "SFQ))
 #define MSG_SCHEDD_INFO_CANNOTRUNRQSGLOBAL            _MESSAGE(47145, _("Jobs dropped because exceeds limit in rule")) 
 #define MSG_SCHEDD_INFO_QINOTARRESERVED_SI            _MESSAGE(47146, _("cannot run in queue instance "SFQ" because it was not reserved by advance reservation "sge_U32CFormat))
 #define MSG_SCHEDD_INFO_QINOTARRESERVED               _MESSAGE(47147, _("Jobs can not run because queue instance was not reserved by advance reservation"))  

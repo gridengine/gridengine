@@ -1,3 +1,9 @@
+#!/bin/sh
+
+#
+#
+# Sun Grid Engine service tag management script
+#
 #___INFO__MARK_BEGIN__
 ##########################################################################
 #
@@ -30,42 +36,13 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-###############################################################################
-# Variable definitions for targets to build
-###############################################################################
-GUITEST_DIR = $(SDIR)/utilbin/windows/GUI_test
 
-GUITEST_TARGETS = GUI_test.exe
-
-GUITEST_SRC = GUI_test.cpp
-
-GUITEST_OBJS = $(GUITEST_SRC:.cpp=.obj)
-
-GUITEST_WINLFLAGS = /SUBSYSTEM:WINDOWS $(WINLFLAGS)
-
-###############################################################################
-# global rules: all, clean, depend, messages
-###############################################################################
-
-gui_test: $(GUITEST_TARGETS)
-
-gui_test_clean: 
-	$(RM) $(GUITEST_TARGETS) $(GUITEST_OBJS)
-	$(RM) GUI_Test.ilk GUI_Test.pdb vc70.pdb vc70.idb
-
-gui_test_depend:
-	echo "no depend for gui_test"
-	# $(DEPEND) -f$(GUITEST_DIR)/GUI_test_dependencies $(GUITEST_DIR)/*.cpp
-
-###############################################################################
-# rules to build binaries
-###############################################################################
-
-all: $(GUITEST_TARGETS) 
-
-GUI_test.exe: $(GUITEST_OBJS) 
-	$(WINCC) $(GUITEST_OBJS) /link /OUT:GUI_test.exe $(GUITEST_WINLFLAGS) $(WINLIBS)
-
-GUI_test.obj: $(GUITEST_DIR)/GUI_test.cpp
-	$(WINCC) $(WINCFLAGS) -c $(GUITEST_DIR)/GUI_test.cpp
+PRODUCT_URN="urn:uuid:b759d716-7d86-11dc-932b-080020a9ed93"
+UNREGISTER_PRODUCT_URNS="urn:uuid:ab045849-e67d-11da-b5db-080020a9ed93 urn:uuid:df0f3d64-1acf-11d8-84b4-080020a9ed93"
+PRODUCT_NAME="Sun Grid Engine 6.2"
+PRODUCT_VENDOR="Sun Microsystems"
+PRODUCT_PARENT_URN="urn:uuid:739079eb-80c5-4ab0-acf7-0e8c31251190"
+PRODUCT_PARENT_NAME="Grid Engine"
+PRODUCT_VERSION="maintrunk"
+PRODUCT_SOURCE="GE_maintrunk"
 

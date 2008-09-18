@@ -38,13 +38,14 @@
 
 package com.sun.grid.drmaa;
 
-
+import java.util.*;
 import junit.framework.*;
 import org.ggf.drmaa.*;
 import com.sun.grid.Settings;
 
 /**
- * Test class for SessionImpl class.
+ *
+ * @author dan.templeton@sun.com
  */
 public class SessionImplTest extends TestCase {
     private Session session = null;
@@ -105,65 +106,36 @@ public class SessionImplTest extends TestCase {
             this.exitSession();
         }
     }
-
+    
     /** Test of getDRMSystem method, of class com.sun.grid.drmaa.SessionImpl. */
     public void testGetDrmSystem() {
         System.out.println("testGetDrmSystem");
         
-        /* structure: "version name (builddate)" */
-        String version = getVersionWithoutBuildNumber(Settings.get(Settings.VERSION));
-        String drmVersion = getVersionWithoutBuildNumber(session.getDrmSystem());
+        String version = Settings.get(Settings.VERSION);
         
-        /**
-         * In some rare cases the version strings can differ 
-         * if some binaries are recompiled and others not.
-         */
-        assertEquals("DRM version does not match Gridengine version", 
-                version, drmVersion);
-               
+        assertEquals(version, session.getDrmSystem());
+        
         this.initSession();
         
         try {
-            drmVersion = getVersionWithoutBuildNumber(session.getDrmSystem());        
-            assertEquals("Session version does not match Gridengine version", 
-                    version, drmVersion);
+            assertEquals(version, session.getDrmSystem());
         } finally {
             this.exitSession();
         }
     }
-
-    /** Removes the appended build number if necessary */
-    private String getVersionWithoutBuildNumber(final String version) {
-        int index = version.lastIndexOf("(");
-        if (index > 0) {
-            return version.substring(0, index - 1);
-        } else {
-            return version;
-        }
-    }
     
-    /** Test of getDRMAAImplementation method, of class 
-     * com.sun.grid.drmaa.SessionImpl. */
+    /** Test of getDRMAAImplementation method, of class com.sun.grid.drmaa.SessionImpl. */
     public void testGetDrmaaImplementation() {
         System.out.println("testGetDrmaaImplementation");
-                
-        /**
-         * In some rare cases the version strings can differ 
-         * if some binaries are recompiled and others not.
-         */
-        String version = getVersionWithoutBuildNumber(
-                Settings.get(Settings.VERSION));
-
-        String drmaa_version = getVersionWithoutBuildNumber(
-                session.getDrmaaImplementation());
         
-        assertEquals(version, drmaa_version);
+        String version = Settings.get(Settings.VERSION);
+        
+        assertEquals(version, session.getDrmaaImplementation());
         
         this.initSession();
-        drmaa_version = getVersionWithoutBuildNumber(
-                session.getDrmaaImplementation());
+        
         try {
-            assertEquals(version, drmaa_version);
+            assertEquals(version, session.getDrmaaImplementation());
         } finally {
             this.exitSession();
         }
@@ -189,8 +161,7 @@ public class SessionImplTest extends TestCase {
         }
     }
     
-    /** Test of create|deleteJobTemplate method, of class 
-     * com.sun.grid.drmaa.SessionImpl. */
+    /** Test of create|deleteJobTemplate method, of class com.sun.grid.drmaa.SessionImpl. */
     public void testJobTemplate() {
         System.out.println("testJobTemplate");
         

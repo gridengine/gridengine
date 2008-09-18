@@ -1,3 +1,6 @@
+MD-2008-09-18-0: CVS        Created V60u13_TAG
+----------------------------------------------
+
 DG-2008-08-19-0: Cleanup:   Installation checks if a allhosts hostgroup
                             already exists before it is added. The same 
                             is fixed for default all.q queue.

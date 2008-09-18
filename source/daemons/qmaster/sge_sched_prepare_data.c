@@ -529,8 +529,9 @@ sge_process_schedd_monitor_event(sge_evc_class_t *evc, object_description *objec
 {
    DENTER(GDI_LAYER, "sge_process_schedd_monitor_event");
    DPRINTF(("monitoring next scheduler run\n"));
-   evc->monitor_next_run = true;
-   DRETURN(SGE_EMA_OK);
+   schedd_set_monitor_next_run(true);
+   DEXIT;
+   return SGE_EMA_OK;
 }
 
 sge_callback_result

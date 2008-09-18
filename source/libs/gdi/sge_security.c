@@ -80,7 +80,7 @@
 #endif
 
 #ifdef INTERIX
-#include "wingrid.h"
+#include "misc.h"
 #endif
 
 #define ENCODE_TO_STRING   1
@@ -298,8 +298,6 @@ int sge_ssl_setup_security_path(const char *progname, const char *user) {
                  SGE_COMMD_SERVICE, sge_get_default_cell());
       }
       user_local_dir = userdir;
-
-      FREE(buffer);
    }
 
 

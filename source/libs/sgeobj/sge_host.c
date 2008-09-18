@@ -58,32 +58,23 @@ host_list_locate(const lList *host_list, const char *hostname)
    lListElem *ret = NULL;
    
    DENTER(TOP_LAYER, "host_list_locate");
-   if (host_list != NULL) {
-      if (hostname != NULL) {
-         const lListElem *element = lFirst(host_list);
+   if (hostname != NULL && host_list != NULL) {
+      const lListElem *element = lFirst(host_list);
 
-         if (element != NULL) {
-            int nm = NoName;
+      if (element != NULL) {
+         int nm = NoName;
 
-            if (object_has_type(element, EH_Type)) {
-               nm = object_get_primary_key(EH_Type);
-            } else if (object_has_type(element, AH_Type)) {
-               nm = object_get_primary_key(AH_Type);
-            } else if (object_has_type(element, SH_Type)) {
-               nm = object_get_primary_key(SH_Type);
-            }
-            ret = lGetElemHost(host_list, nm, hostname);
+         if (object_has_type(element, EH_Type)) {
+            nm = object_get_primary_key(EH_Type);
+         } else if (object_has_type(element, AH_Type)) {
+            nm = object_get_primary_key(AH_Type);
+         } else if (object_has_type(element, SH_Type)) {
+            nm = object_get_primary_key(SH_Type);
          }
-      } else {
-         CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
+         ret = lGetElemHost(host_list, nm, hostname);
       }
    } else {
-      /*
-       * This is a normal case and no error
-       * if e.g. someone tries to find a element at qmaster startup to 
-       * check if a certain element should be added
-       */
-      ret = NULL;
+      CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
    }
    
    DRETURN(ret);
@@ -283,7 +274,8 @@ int sge_resolve_hostname(const char *hostname, char *unique, int nm)
    DENTER(TOP_LAYER, "sge_resolve_hostname");
 
    if (hostname == NULL) {
-      DRETURN(CL_RETVAL_PARAMS);
+      DEXIT;
+      return CL_RETVAL_PARAMS;
    }
 
    /* 
@@ -346,7 +338,8 @@ host_is_centry_referenced(const lListElem *this_elem, const lListElem *centry)
       }
    }
 
-   DRETURN(ret);
+   DEXIT;
+   return ret;
 }
 
 bool
@@ -356,7 +349,6 @@ host_is_centry_a_complex_value(const lListElem *this_elem,
    bool ret = false;
 
    DENTER(TOP_LAYER, "host_is_centry_a_complex_value");
-
    if (this_elem != NULL) {  
       const char *name = lGetString(centry, CE_name);
       const lList *ce_values = lGetList(this_elem, EH_consumable_config_list);
@@ -372,7 +364,8 @@ host_is_centry_a_complex_value(const lListElem *this_elem,
          ret = true;
       }  
    }
-   DRETURN(ret);
+   DEXIT;
+   return ret;
 }
 
 /****** sgeobj/host/host_list_merge() ******************************************
@@ -407,16 +400,12 @@ host_list_merge(lList *this_list)
    DENTER(TOP_LAYER, "host_list_merge");
    
    if (this_list != NULL) {
-      lListElem *global_host;
+      const lListElem *global_host;
 
       /* we merge global settings into host settings */
       global_host = lGetElemHost(this_list, EH_name, SGE_GLOBAL_NAME);
       if (global_host != NULL) {
          lListElem *host;
-
-         /* for the global host, merged_report_variables == report_variables */
-         lSetList(global_host, EH_merged_report_variables,
-                  lCopyList("", lGetList(global_host, EH_report_variables)));
 
          /* do merge for all hosts except global */
          for_each (host, this_list) {
@@ -471,7 +460,8 @@ host_merge(lListElem *host, const lListElem *global_host)
 
       /* if we have a local list: use this one */
       if (local_list != NULL && lGetNumberOfElem(local_list) != 0) {
-         lSetList(host, EH_merged_report_variables, lCopyList("", local_list));
+         lSetList(host, EH_merged_report_variables, 
+                  lCopyList("", local_list));
       } else {
          const lList *global_list;
       
@@ -489,6 +479,7 @@ host_merge(lListElem *host, const lListElem *global_host)
       }
    }
    
-   DRETURN(ret);
+   DEXIT;
+   return ret;
 }
 

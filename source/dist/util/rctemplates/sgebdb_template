@@ -59,14 +59,18 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
 #---------------------------------------------------------------------------
 # The following lines provide the necessary info for adding a startup script
-# according to the Linux Standard Base Specification (LSB) which can
+# according to the Linux Standard Base Specification (LSB) 1.0.0 which can
 # be found at:
 #
-#    http://www.linuxfoundation.org/spec/booksets/LSB-Core-generic/LSB-Core-generic/initscrcomconv.html
+#    http://www.linuxbase.org/spec/gLSB/gLSB/sysinit.html
+#
+# See also
+#
+#    http://www.suse.de/~grimmer/Package-Conventions/index.html
 #
 ### BEGIN INIT INFO
 # Provides:       sgebdb 
-# Required-Start: $network $remote_fs $portmap
+# Required-Start: $network $remote_fs xinetd
 # Required-Stop: 
 # Default-Start:  3 5
 # Default-Stop: 0 1 2 6

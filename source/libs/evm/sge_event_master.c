@@ -2721,7 +2721,7 @@ static void total_update_event(lListElem *event_client, ev_event type, object_de
          case sgeE_CONFIG_LIST:
             /* sge_get_configuration() returns a copy already, we do not need to make
                one later */
-            lp = *object_base[SGE_TYPE_CONFIG].list;
+            copy_lp = sge_get_configuration();
             break;
          case sgeE_EXECHOST_LIST:
             lp = *object_base[SGE_TYPE_EXECHOST].list;

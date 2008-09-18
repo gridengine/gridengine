@@ -67,14 +67,18 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
 #---------------------------------------------------------------------------
 # The following lines provide the necessary info for adding a startup script
-# according to the Linux Standard Base Specification (LSB) which can
+# according to the Linux Standard Base Specification (LSB) 1.0.0 which can
 # be found at:
 #
-#    http://www.linuxfoundation.org/spec/booksets/LSB-Core-generic/LSB-Core-generic/initscrcomconv.html
+#    http://www.linuxbase.org/spec/gLSB/gLSB/sysinit.html
+#
+# See also
+#
+#    http://www.suse.de/~grimmer/Package-Conventions/index.html
 #
 ### BEGIN INIT INFO
-# Provides:       GENSGESVC
-# Required-Start: $network $remote_fs
+# Provides:       sgemaster 
+# Required-Start: $network $remote_fs xinetd
 # Required-Stop:
 # Default-Start:  3 5
 # Default-Stop: 0 1 2 6
@@ -256,7 +260,7 @@ GetAdminUser()
       user=`grep admin_user $cfgname | awk '{ print $2 }'`
    fi
 
-   if [ `echo $user|tr "[A-Z]" "[a-z]"` = "none" ]; then
+   if [ `echo $user|tr "A-Z" "a-z"` = "none" ]; then
       user=root
    fi
    echo $user
@@ -453,7 +457,7 @@ CheckIfShadowMasterHost $HOST
 
 if [ "$startup" = true ]; then
 
-   # if service tags are enabled
+   # define variable SERVICE_TAGS
    st_enabled=`sh $SGE_ROOT/util/sgeST/sge_st "enabled"`
    if [ "$st_enabled" = "true" -a "$qmaster" = "true" ]; then
       sh $SGE_ROOT/util/sgeST/sge_st "register"  

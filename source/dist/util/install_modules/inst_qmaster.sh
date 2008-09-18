@@ -64,7 +64,6 @@ GetCellRoot()
 GetCell()
 {
    is_done="false"
-   Overwrite="false"
 
    if [ $AUTO = true ]; then
     SGE_CELL=$CELL_NAME
@@ -86,18 +85,28 @@ GetCell()
       $CLEAR
       $INFOTEXT -u "\nGrid Engine cells"
       if [ "$SGE_CELL" = "" ]; then
-         SGE_CELL=default
+         $INFOTEXT -n "\nGrid Engine supports multiple cells.\n\n" \
+                      "If you are not planning to run multiple Grid Engine clusters or if you don't\n" \
+                      "know yet what is a Grid Engine cell it is safe to keep the default cell name\n\n" \
+                      "   default\n\n" \
+                      "If you want to install multiple cells you can enter a cell name now.\n\n" \
+                      "The environment variable\n\n" \
+                      "   \$SGE_CELL=<your_cell_name>\n\n" \
+                      "will be set for all further Grid Engine commands.\n\n" \
+                      "Enter cell name [default] >> "
+         INP=`Enter default`
+      else
+         $INFOTEXT -n "\nGrid Engine supports multiple cells.\n\n" \
+                      "If you are not planning to run multiple Grid Engine clusters or if you don't\n" \
+                      "know yet what is a Grid Engine cell it is safe to keep the default cell name\n\n" \
+                      "   default\n\n" \
+                      "If you want to install multiple cells you can enter a cell name now.\n\n" \
+                      "The environment variable\n\n" \
+                      "   \$SGE_CELL=<your_cell_name>\n\n" \
+                      "will be set for all further Grid Engine commands.\n\n" \
+                      "Enter cell name [%s] >> " $SGE_CELL
+         INP=`Enter $SGE_CELL`
       fi
-      $INFOTEXT -n "\nGrid Engine supports multiple cells.\n\n" \
-                   "If you are not planning to run multiple Grid Engine clusters or if you don't\n" \
-                   "know yet what is a Grid Engine cell it is safe to keep the default cell name\n\n" \
-                   "   default\n\n" \
-                   "If you want to install multiple cells you can enter a cell name now.\n\n" \
-                   "The environment variable\n\n" \
-                   "   \$SGE_CELL=<your_cell_name>\n\n" \
-                   "will be set for all further Grid Engine commands.\n\n" \
-                   "Enter cell name [%s] >> " $SGE_CELL
-      INP=`Enter $SGE_CELL`
       eval SGE_CELL=$INP
       SGE_CELL_VAL=`eval echo $SGE_CELL`
       if [ "$QMASTER" = "install" ]; then
@@ -126,13 +135,10 @@ GetCell()
                if [ $sel_ret = 0 -a $with_bdb = 0 ]; then
                   $INFOTEXT "Deleting bootstrap and cluster_name files!"
                   ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL_VAL/common/bootstrap
-                  ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL_VAL/common/cluster_name                  
+                  ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL_VAL/common/cluster_name
                elif [ $sel_ret -ne 0 ]; then
                   $INFOTEXT "Deleting directory \"%s\" now!" $SGE_ROOT/$SGE_CELL_VAL
                   ExecuteAsAdmin rm -rf $SGE_ROOT/$SGE_CELL_VAL
-               fi
-               if [ $sel_ret = 0 ]; then
-                  Overwrite="true"
                fi
                is_done="true"
             fi
@@ -326,9 +332,6 @@ SetPermissions()
    $CLEAR
 }
 
-
-#SetSpoolingOptionsBerkeleyDB()
-# $1 - new default spool_dir or BDBD server
 SetSpoolingOptionsBerkeleyDB()
 {
    SPOOLING_METHOD=berkeleydb
@@ -398,9 +401,7 @@ SetSpoolingOptionsBerkeleyDB()
       fi
 
       if [ $is_server = "true" ]; then
-         db_server_host=`echo "$1" | awk -F: '{print $1}'`
-         db_server_spool_dir=`echo "$1" | awk -F: '{print $2}'`
-         SpoolingQueryChange "$db_server_host" "$db_server_spool_dir"
+         SpoolingQueryChange
       else
          done="false"
          is_spool="false"
@@ -535,7 +536,6 @@ SetSpoolingOptionsClassic()
    SPOOLING_ARGS="$SGE_ROOT_VAL/$COMMONDIR;$QMDIR"
 }
 
-# $1 - suggested spooling params form the backup
 SetSpoolingOptionsDynamic()
 {
    if [ "$AUTO" = "true" ]; then
@@ -561,7 +561,7 @@ SetSpoolingOptionsDynamic()
          SetSpoolingOptionsClassic
          ;;
       berkeleydb)
-         SetSpoolingOptionsBerkeleyDB $1
+         SetSpoolingOptionsBerkeleyDB
          ;;
       *)
          $INFOTEXT "\nUnknown spooling method. Exit."
@@ -574,7 +574,7 @@ SetSpoolingOptionsDynamic()
 
 #--------------------------------------------------------------------------
 # SetSpoolingOptions sets / queries options for the spooling framework
-# $1 - suggested spooling params form teh old bootstrap file
+#
 SetSpoolingOptions()
 {
    $INFOTEXT -u "\nSetup spooling"
@@ -585,10 +585,10 @@ SetSpoolingOptions()
          SetSpoolingOptionsClassic
          ;;
       berkeleydb)
-         SetSpoolingOptionsBerkeleyDB $1
+         SetSpoolingOptionsBerkeleyDB
          ;;
       dynamic)
-         SetSpoolingOptionsDynamic $1
+         SetSpoolingOptionsDynamic
          ;;
       *)
          $INFOTEXT "\nUnknown spooling method. Exit."
@@ -767,19 +767,17 @@ InitSpoolingDatabase()
 
 #-------------------------------------------------------------------------
 # AddConfiguration
-# optional args for GetConfigutration
-# $1 - default CFG_EXE_SPOOL
-# $2 - default CFG_MAIL_ADDR
+#
 AddConfiguration()
 {
    useold=false
 
    if [ $useold = false ]; then
-      GetConfiguration "$@"
+      GetConfiguration
       #TruncCreateAndMakeWriteable $COMMONDIR/configuration
       #PrintConf >> $COMMONDIR/configuration
       #SetPerm $COMMONDIR/configuration
-      TMPC=/tmp/configuration_`date '+%Y-%m-%d_%H:%M:%S'`
+      TMPC=/tmp/configuration
       TOUCH=touch
       rm -f $TMPC
       ExecuteAsAdmin $TOUCH $TMPC
@@ -895,9 +893,7 @@ AddLocalConfiguration()
 
 #-------------------------------------------------------------------------
 # GetConfiguration: get some parameters for global configuration
-# args are optional
-# $1 - default CFG_EXE_SPOOL
-# $2 - default CFG_MAIL_ADDR
+#
 GetConfiguration()
 {
 
@@ -931,34 +927,24 @@ GetConfiguration()
             $INFOTEXT "The pathname of the spool directory of the execution hosts. You\n" \
                       "must have the right to create this directory and to write into it.\n"
       fi
-      
-      if [ -z "$1" ]; then
-         default_value=$SGE_ROOT_VAL/$SGE_CELL_VAL/spool
-      else
-         default_value="$1"
-      fi
 
-      $INFOTEXT -n "Default: [%s] >> " $default_value
+      $INFOTEXT -n "Default: [%s] >> " $SGE_ROOT_VAL/$SGE_CELL_VAL/spool
 
-      CFG_EXE_SPOOL=`Enter $default_value`
+      CFG_EXE_SPOOL=`Enter $SGE_ROOT_VAL/$SGE_CELL_VAL/spool`
 
       $CLEAR
-      if [ -z "$2" ]; then
-         default_value=none
-      else
-         default_value="$2"
-      fi
       $INFOTEXT -u "\nGrid Engine cluster configuration (continued)"
       $INFOTEXT -n "\n<administrator_mail>\n\n" \
                    "The email address of the administrator to whom problem reports are sent.\n\n" \
                    "It's is recommended to configure this parameter. You may use >none<\n" \
                    "if you do not wish to receive administrator mail.\n\n" \
                    "Please enter an email address in the form >user@foo.com<.\n\n" \
-                   "Default: [%s] >> " $default_value
+                   "Default: [none] >> "
 
-      CFG_MAIL_ADDR=`Enter $default_value`
+      CFG_MAIL_ADDR=`Enter none`
 
       $CLEAR
+
       $INFOTEXT "\nThe following parameters for the cluster configuration were configured:\n\n" \
                 "   execd_spool_dir        %s\n" \
                 "   administrator_mail     %s\n" $CFG_EXE_SPOOL $CFG_MAIL_ADDR
@@ -980,10 +966,6 @@ GetConfiguration()
 GetGidRange()
 {
    done=false
-   if [ -z "$GID_RANGE" ]; then
-        GID_RANGE=20000-20100
-   fi
-   
    while [ $done = false ]; do
       $CLEAR
       $INFOTEXT -u "\nGrid Engine group id range"
@@ -1001,7 +983,7 @@ GetGidRange()
                 "on a single host.\n\n" \
                 "You can change at any time the group id range in your cluster configuration.\n"
 
-      $INFOTEXT -n "Please enter a range [%s] >> " $GID_RANGE
+      $INFOTEXT -n "Please enter a range >> "
 
       CFG_GID_RANGE=`Enter $GID_RANGE`
 
@@ -1146,16 +1128,6 @@ CreateSettingsFile()
       fi
    fi
 
-   if [ "$execd_service" = "true" ]; then
-      SGE_EXECD_PORT=""
-      export SGE_EXECD_PORT
-   fi
-
-   if [ "$qmaster_service" = "true" ]; then
-      SGE_QMASTER_PORT=""
-      export SGE_QMASTER_PORT
-   fi
-
    ExecuteAsAdmin util/create_settings.sh $SGE_ROOT_VAL/$COMMONDIR
 
    SetPerm $SGE_ROOT_VAL/$COMMONDIR/settings.sh
@@ -1192,18 +1164,8 @@ InitCA()
          touch /tmp/pwfile.$$
          chmod 600 /tmp/pwfile.$$
          echo "$SGE_JMX_SSL_KEYSTORE_PW" > /tmp/pwfile.$$
-         OUTPUT=`$SGE_CA_CMD -sysks -ksout $SGE_JMX_SSL_KEYSTORE -kspwf /tmp/pwfile.$$ 2>&1`
-         if [ $? != 0 ]; then
-            $INFOTEXT "Error: Cannot create keystore $SGE_JMX_SSL_KEYSTORE\n$OUTPUT"
-            ret=1
-         else
-            ret=0
-         fi
+         $SGE_CA_CMD -sysks -kspwf /tmp/pwfile.$$
          rm /tmp/pwfile.$$
-         if [ $ret = 1 ]; then
-            MoveLog
-            exit 1
-         fi
       fi
       
       $INFOTEXT -auto $AUTO -wait -n "Hit <RETURN> to continue >> "
@@ -1362,31 +1324,28 @@ AddHosts()
 
    fi
 
-   if [ "$Overwrite" = "true" -a "$SPOOLING_METHOD" = "classic" ]; then
-      $INFOTEXT -u "\nSkipping creation of the default <all.q> queue and <allhosts> hostgroup"
+   $INFOTEXT -u "\nCreating the default <all.q> queue and <allhosts> hostgroup"
+   echo
+   $INFOTEXT -log "Creating the default <all.q> queue and <allhosts> hostgroup"
+   TMPL=/tmp/hostqueue$$
+   TMPL2=${TMPL}.q
+   rm -f $TMPL $TMPL2
+   if [ -f $TMPL -o -f $TMPL2 ]; then
+      $INFOTEXT "\nCan't delete template files >%s< or >%s<" "$TMPL" "$TMPL2"
    else
-      $INFOTEXT -u "\nCreating the default <all.q> queue and <allhosts> hostgroup"
-      echo
-      $INFOTEXT -log "Creating the default <all.q> queue and <allhosts> hostgroup"
-      TMPL=/tmp/hostqueue$$
-      TMPL2=${TMPL}.q
-      rm -f $TMPL $TMPL2
-      if [ -f $TMPL -o -f $TMPL2 ]; then
-         $INFOTEXT "\nCan't delete template files >%s< or >%s<" "$TMPL" "$TMPL2"
-      else
-         PrintHostGroup @allhosts > $TMPL
-         Execute $SGE_BIN/qconf -Ahgrp $TMPL
-         Execute $SGE_BIN/qconf -sq > $TMPL
-         Execute sed -e "/qname/s/template/all.q/" \
-                     -e "/hostlist/s/NONE/@allhosts/" \
-                     -e "/pe_list/s/NONE/make/" $TMPL > $TMPL2
-         Execute $SGE_BIN/qconf -Aq $TMPL2
-         rm -f $TMPL $TMPL2        
-      fi
-
-      $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
-      $CLEAR
+      PrintHostGroup @allhosts > $TMPL
+      Execute $SGE_BIN/qconf -Ahgrp $TMPL
+      Execute $SGE_BIN/qconf -sq > $TMPL
+      Execute sed -e "/qname/s/template/all.q/" \
+                  -e "/hostlist/s/NONE/@allhosts/" \
+                  -e "/pe_list/s/NONE/make/" $TMPL > $TMPL2
+      Execute $SGE_BIN/qconf -Aq $TMPL2
+      rm -f $TMPL $TMPL2        
    fi
+
+   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
+   $CLEAR
+
 }
 
 
@@ -1599,7 +1558,6 @@ GetQmasterPort()
          $INFOTEXT "\nUsing the service\n\n" \
                    "   sge_qmaster\n\n" \
                    "for communication with Grid Engine.\n"
-         qmaster_service="true"
       fi
       $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
       $CLEAR
@@ -1746,6 +1704,8 @@ EnterAndValidatePortNumber()
 
       if [ $ret = 0 ]; then
          $INFOTEXT "\nFound service with port number >%s< in >/etc/services<. Choose again." "$INP"
+      elif [ "$SGE_QMASTER_PORT" = "$INP" ]; then
+         done=false
       else
          done=true
       fi
@@ -1829,7 +1789,11 @@ SetLibJvmPath() {
    while [ $isdone != true ]; do
       $INFOTEXT -n "Please enter JAVA_HOME or press enter [%s] >> " "$java_home"
       INP=`Enter $java_home`
-      if [ ! -x $INP/bin/java ]; then
+      if [ "$INP" = "" -a ! -x $INP/bin/java ]; then
+         $INFOTEXT "\nInvalid input. Must be a valid JAVA_HOME path."
+         continue
+      fi
+      if [ "$INP" = "" -o ! -x $INP/bin/java ]; then
          $INFOTEXT "\nInvalid input. Must be a valid JAVA_HOME path."
       else
          java_home=$INP
@@ -2141,7 +2105,6 @@ GetExecdPort()
          $INFOTEXT "\nUsing the service\n\n" \
                    "   sge_execd\n\n" \
                    "for communication with Grid Engine.\n"
-         execd_service="true"
       fi
       $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
       $CLEAR
@@ -2204,7 +2167,7 @@ SetScheddConfig()
  
    while [ $done = "false" ]; do
       $INFOTEXT -u "Configurations"
-      $INFOTEXT -n "1) Normal\n          Fixed interval scheduling, report limited scheduling information,\n" \
+      $INFOTEXT -n "1) Normal\n          Fixed interval scheduling, report scheduling information,\n" \
                    "          actual + assumed load\n"
       $INFOTEXT -n "2) High\n          Fixed interval scheduling, report limited scheduling information,\n" \
                    "          actual load\n"
@@ -2355,11 +2318,9 @@ PortCollision()
          if [ "$service" = "sge_qmaster" ]; then
             $INFOTEXT "   SGE_QMASTER_PORT = %s" $SGE_QMASTER_PORT
             $INFOTEXT "   sge_qmaster service set to port %s" `$SGE_UTILBIN/getservbyname $service | cut -d" " -f2` 
-            $INFOTEXT "\n   Currently SGE_QMASTER_PORT = %s is active!" $SGE_QMASTER_PORT 
          else
             $INFOTEXT "   SGE_EXECD_PORT = %s" $SGE_EXECD_PORT
             $INFOTEXT "   sge_execd service set to port %s" `$SGE_UTILBIN/getservbyname $service | cut -d" " -f2` 
-            $INFOTEXT "\n   Currently SGE_EXECD_PORT = %s is active!" $SGE_EXECD_PORT 
          fi
          INP=1
       ;;

@@ -127,7 +127,7 @@ makerpm=false
 target=file
 VDIR=""
 VERSION=""
-PRODUCT=ge
+PRODUCT=sge
 SELECTED_ARCHS=""
 VENDOR="unknown"
 PACKAGER="unknown"
@@ -265,6 +265,10 @@ if [ $makecommon = true ]; then
       echo executing commands from mk_dist.private.common
       . ./localext/$VDIR/mk_dist.private.common
    fi
+
+   # Remove the SGE related registration settings file
+   # Then The pubic GE settings file will be used
+   Execute rm -f $VDIR/util/sgeST/sge_st_settings.sh
 
    if [ $makerpm = true ]; then
       CreateRpm common noarch $COMMON_PACKAGE $COMMON_DOCS

@@ -76,7 +76,7 @@ struct rusage {
 #endif 
 
 #if defined(INTERIX)
-#  include "wingrid.h"
+#  include "misc.h"
 #  include "windows_gui.h"
 #endif
 

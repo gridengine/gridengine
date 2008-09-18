@@ -144,6 +144,7 @@
 #define MSG_PARSE_INVALIDPRIORITYMUSTBEINNEG1023TO1024              _MESSAGE(23109, _("ERROR! invalid priority, must be an integer from -1023 to 1024"))
 #define MSG_PARSE_INVALIDJOBSHAREMUSTBEUINT              _MESSAGE(23110, _("ERROR! invalid jobshare, must be an unsigned integer"))
 #define MSG_PARSE_INVALIDOTICKETSMUSTBEUINT              _MESSAGE(23111, _("ERROR! invalid override tickets, must be an unsigned integer"))
+#define MSG_PARSE_SAMEPATHFORINPUTANDOUTPUT_SS              _MESSAGE(231112, _("ERROR! -i argument "SFQ" cannot be the same as -o argument "SFQ))
 
 /*
 ** parse_qconf.c
@@ -879,28 +880,28 @@
 #define MSG_GDI_USAGE_noshell_OPT                        "[-noshell]"
 #define MSG_GDI_UTEXT_noshell_OPT                        _MESSAGE(23475, _("start command without wrapping <loginshell> -c"))
 
-#define MSG_GDI_USAGE_mattr_OPT                          "[-mattr obj_nm attr_nm val obj_id_list]"
+#define MSG_GDI_USAGE_mattr_OPT                          "[-mattr obj_nm attr_nm val obj_id_lst]"
 #define MSG_GDI_UTEXT_mattr_OPT                          _MESSAGE(23476, _("modify an attribute (or element in a sublist) of an object"))
 
-#define MSG_GDI_USAGE_rattr_OPT                          "[-rattr obj_nm attr_nm val obj_id_list]"
+#define MSG_GDI_USAGE_rattr_OPT                          "[-rattr obj_nm attr_nm val obj_id_lst]"
 #define MSG_GDI_UTEXT_rattr_OPT                          _MESSAGE(23477, _("replace a list attribute of an object"))
 
-#define MSG_GDI_USAGE_dattr_OPT                          "[-dattr obj_nm attr_nm val obj_id_list]"
+#define MSG_GDI_USAGE_dattr_OPT                          "[-dattr obj_nm attr_nm val obj_id_lst]"
 #define MSG_GDI_UTEXT_dattr_OPT                          _MESSAGE(23478, _("delete from a list attribute of an object"))
 
-#define MSG_GDI_USAGE_aattr_OPT                          "[-aattr obj_nm attr_nm val obj_id_list]"
+#define MSG_GDI_USAGE_aattr_OPT                          "[-aattr obj_nm attr_nm val obj_id_lst]"
 #define MSG_GDI_UTEXT_aattr_OPT                          _MESSAGE(23479, _("add to a list attribute of an object") ) 
 
-#define MSG_GDI_USAGE_Mattr_OPT                          "[-Mattr obj_nm fname obj_id_list]"
+#define MSG_GDI_USAGE_Mattr_OPT                          "[-Mattr obj_nm fname obj_id_lst]"
 #define MSG_GDI_UTEXT_Mattr_OPT                          _MESSAGE(23480, _("modify an attribute (or element in a sublist) of an object"))
 
-#define MSG_GDI_USAGE_Rattr_OPT                          "[-Rattr obj_nm fname obj_id_list]"
+#define MSG_GDI_USAGE_Rattr_OPT                          "[-Rattr obj_nm fname obj_id_lst]"
 #define MSG_GDI_UTEXT_Rattr_OPT                          _MESSAGE(23481, _("replace a list attribute of an object"))
 
-#define MSG_GDI_USAGE_Dattr_OPT                          "[-Dattr obj_nm fname obj_id_list]"
+#define MSG_GDI_USAGE_Dattr_OPT                          "[-Dattr obj_nm fname obj_id_lst]"
 #define MSG_GDI_UTEXT_Dattr_OPT                          _MESSAGE(23482, _("delete from a list attribute of an object"))
 
-#define MSG_GDI_USAGE_Aattr_OPT                          "[-Aattr obj_nm fname obj_id_list]"
+#define MSG_GDI_USAGE_Aattr_OPT                          "[-Aattr obj_nm fname obj_id_lst]"
 #define MSG_GDI_UTEXT_Aattr_OPT                          _MESSAGE(23483, _("add to a list attribute of an object") ) 
 
 #define MSG_GDI_USAGE_show_license_OPT                   "[-show-license]"
@@ -973,7 +974,6 @@
 #define MSG_GDI_USAGE_pty_OPT                            "[-pty y[es]|n[o]]"
 #define MSG_GDI_UTEXT_pty_OPT                            _MESSAGE(23511, _("start job in a pty"))
 
-#define MSG_GDI_UTEXT_now_qrsub_OPT_YN                   _MESSAGE(23512, _("consider only interactive queues"))
 
 /* =================================================
  * global error messages 

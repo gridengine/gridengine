@@ -38,7 +38,7 @@ ___INFO__MARK_END__-->
       <property file="${sge.srcdir}/build_testsuite.properties"/>    
       <property file="${sge.srcdir}/build_private.properties"/>    
       <property file="${sge.srcdir}/build.properties"/>
-
+      
       <exec executable="hostname" outputproperty="hostname"/>
       <condition property="isJavaBuildHost">
          <not>
@@ -60,28 +60,6 @@ ___INFO__MARK_END__-->
       <property location="${classes.dir}/${project.name}-test.jar" name="test.jar"/>
       <property location="${classes.dir}/${project.name}-api.jar" name="api.jar"/>
       <property location="${sge.srcdir}/scripts/removeGeneratedTags.pl" name="script"/>
-
-      <!-- Copyright stuff -->
-      <property environment="env"/>
-      <condition property="legal.dir" value="${env.AIMK_COPYRIGHT_DIR}" else="">
-            <isset property="env.AIMK_COPYRIGHT_DIR"/>
-      </condition>
-
-      <condition property="legal" value="COPYRIGHT">
-          <equals arg1="${env.AIMK_COPYRIGHT}" arg2="sun" trim="true"/>
-      </condition>
-      <condition property="legal" value="COPYRIGHT LICENSE">
-          <equals arg1="${env.AIMK_COPYRIGHT}" arg2="courtesy" trim="true"/>
-      </condition>
-      <condition property="legal" value="NA">
-         <not>
-             <or>
-                 <equals arg1="${dist.type}" arg2="courtesy" trim="true"/>
-                 <equals arg1="${dist.type}" arg2="sun" trim="true"/>
-             </or>
-         </not>
-      </condition>
-
    </target>
 
    <target depends="init" description="Compile core classes." name="compile" if="isJavaBuildHost">
@@ -138,7 +116,6 @@ ___INFO__MARK_END__-->
       <jar compress="true" jarfile="${jar}.tmp">
          <fileset refid="jar.classes"/>
          <fileset refid="jar.meta"/>
-         <metainf dir="${legal.dir}" includes="${legal}"/>
       </jar>
       <copy file="${jar}.tmp" tofile="${jar}"/>
       <delete file="${jar}.tmp"/>
@@ -148,9 +125,9 @@ ___INFO__MARK_END__-->
        <waitfor maxwait="${maxwait}" maxwaitunit="minute" checkevery="10" checkeveryunit="second">
             <available file="${jar}"/>
        </waitfor>
-
+       
        <available file="${jar}" property="jar.available"/>
-
+       
        <fail unless="jar.available">
           Timeout while waiting for ${jar} file build on host ${java.buildhost}
        </fail>
@@ -172,7 +149,6 @@ ___INFO__MARK_END__-->
          <fileset dir="${src.dir.src}">
             <include name="META-INF/services/org.ggf.drmaa.SessionFactory"/>
          </fileset>
-         <metainf dir="${legal.dir}" includes="${legal}"/>
       </jar>
    </target>
 
@@ -185,7 +161,6 @@ ___INFO__MARK_END__-->
             <include name="TestDrmaa*.class"/>
             <include name="DrmaaSuite.class"/>
          </fileset>
-         <metainf dir="${legal.dir}" includes="${legal}"/>
       </jar>
    </target>
    
@@ -205,7 +180,6 @@ ___INFO__MARK_END__-->
    <target depends="api.init, compile" name="api.build" if="isJavaBuildHost">
       <jar compress="true" jarfile="${api.jar}.tmp">
          <fileset refid="api.classes"/>
-         <metainf dir="${legal.dir}" includes="${legal}"/>
       </jar>
       <copy file="${api.jar}.tmp" tofile="${api.jar}"/>
    </target>
@@ -230,7 +204,7 @@ ___INFO__MARK_END__-->
 
    <target depends="init" description="Javadoc tool docs for DRMAA" name="javadoc">
       <mkdir dir="${javadoc.dir}"/>
-      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="public" bottom="${license_text}" author="false">
+      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="public" bottom="${license_text}">
          <fileset dir="${src.dir.src}">
             <include name="org/ggf/drmaa/*.java"/>
             <include name="com/sun/grid/drmaa/*.java"/>
@@ -243,7 +217,7 @@ ___INFO__MARK_END__-->
 
    <target depends="init" description="Javadoc tool docs for DRMAA" name="javadoc.all">
       <mkdir dir="${javadoc.dir}"/>
-      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="protected" bottom="${license_text}" author="false">
+      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="protected" bottom="${license_text}">
          <fileset dir="${src.dir.src}">
             <include name="org/ggf/drmaa/*.java"/>
             <include name="com/sun/grid/drmaa/*.java"/>

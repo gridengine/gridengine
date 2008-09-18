@@ -274,25 +274,28 @@ char *get_conf_val(const char *name)
  * Parameters:
  *   name:  Name of the config entry
  *   value: Value of the config entry
+ *
+ * Return Value:
+ *   - NULL if a new config value was created or an error occured.
+ *   - The old value of the config entry if it already existed.
  *****************************************************************************/
-void set_conf_val(const char* name, const char* value)
+char* set_conf_val(const char* name, const char* value)
 {
    config_entry* pConfigEntry;
+   char* szOldValue=NULL;
 
-   if (name == NULL || value == NULL) {
-      return;
+   if (!name || !value) {
+      return NULL;
    }
    
    pConfigEntry = find_conf_entry(name, config_list);
-   if (pConfigEntry != NULL) {
-      /* avoid overwriting by itself */
-      if (pConfigEntry->value != value) {
-         FREE(pConfigEntry->value);
-         pConfigEntry->value = strdup(value);
-      }
+   if (pConfigEntry) {
+      szOldValue = pConfigEntry->value;
+      pConfigEntry->value = strdup( value );
    } else {
       add_config_entry(name, value);
    }
+   return szOldValue;
 }
 
 /***************************************************/
@@ -300,27 +303,26 @@ char *search_conf_val(const char *name) {
    config_entry *ptr = config_list;
    
    ptr = find_conf_entry(name, config_list);
-   if (ptr != NULL) {
+   if (ptr)
       return ptr->value;
-   } else {
+   else
       return NULL;
-   }
 }
 
 /**************************************************
    return NULL if conf value does not exist or
    if "none" is it's value
 */
-char *search_nonone_conf_val(const char *name)
-{
+char *search_nonone_conf_val(
+const char *name 
+) {
    char *s;
 
    s = search_conf_val(name);
-   if (s != NULL && strcasecmp("none", s) == 0) {
+   if (s && !strcasecmp("none", s))
       return NULL;
-   } else {
+   else 
       return s;
-   }
 }
 
 /**************************************************/

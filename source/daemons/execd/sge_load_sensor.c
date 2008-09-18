@@ -49,7 +49,7 @@
 #include "sge_report.h"
 
 #ifdef INTERIX
-#  include "wingrid.h"
+#include "misc.h"
 #endif
 
 #include "msg_execd.h"

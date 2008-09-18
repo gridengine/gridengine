@@ -39,7 +39,6 @@
 #include <errno.h>
 #include "sge_arch.h"
 #include "sge_string.h"
-#include "sge_signal.h"
 
 
 #include "cl_commlib.h"
@@ -302,7 +301,7 @@ int cl_com_set_status_func(cl_app_status_func_t status_func) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_get_parameter_list_value()"
-int cl_com_get_parameter_list_value(const char* parameter, char** value) {
+int cl_com_get_parameter_list_value(char* parameter, char** value) {
    cl_parameter_list_elem_t* elem = NULL;
    int retval = CL_RETVAL_UNKNOWN_PARAMETER;
 
@@ -353,7 +352,7 @@ int cl_com_get_parameter_list_string(char** param_string) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_set_parameter_list_value()"
-int cl_com_set_parameter_list_value(const char* parameter, char* value) {
+int cl_com_set_parameter_list_value(char* parameter, char* value) {
    cl_parameter_list_elem_t* elem = NULL;
    int retval = CL_RETVAL_UNKNOWN_PARAMETER;
 
@@ -393,7 +392,7 @@ int cl_com_set_parameter_list_value(const char* parameter, char* value) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_remove_parameter_list_value()"
-int cl_com_remove_parameter_list_value(const char* parameter) {
+int cl_com_remove_parameter_list_value(char* parameter) {
    int retval = CL_RETVAL_OK;
    pthread_mutex_lock(&cl_com_parameter_list_mutex);
    retval = cl_parameter_list_remove_parameter(cl_com_parameter_list, parameter,1);
@@ -430,7 +429,7 @@ int cl_com_update_parameter_list(char* parameter) {
          if (sub_token2 != NULL) {    
             if (strstr(sub_token1, "gdi_timeout") || strstr(sub_token1, "gdi_retries")) {
                if (sge_str_is_number(sub_token2)) {
-                  cl_com_set_parameter_list_value((const char*)sub_token1, sub_token2);
+                  cl_com_set_parameter_list_value(sub_token1, sub_token2);
                }
             } else {
                if (strstr(sub_token1, "cl_ping")) {
@@ -438,7 +437,7 @@ int cl_com_update_parameter_list(char* parameter) {
                        strlen(sub_token2) == sizeof("true")-1) || 
                       ((strncasecmp(sub_token2, "false", sizeof("false")-1) == 0) && 
                        strlen(sub_token2) == sizeof("false")-1)){
-                     cl_com_set_parameter_list_value((const char*)sub_token1, sub_token2);
+                     cl_com_set_parameter_list_value(sub_token1, sub_token2);
                   }
                }
             }
@@ -787,18 +786,10 @@ int cl_com_setup_commlib(cl_thread_mode_t t_mode, cl_log_t debug_level, cl_log_f
                return ret_val;
             }
             CL_LOG(CL_LOG_INFO,"starting trigger thread ...");
-
-            {
-            sigset_t old_sigmask;
-            sge_thread_block_all_signals(&old_sigmask);
-
             ret_val = cl_thread_list_create_thread(cl_com_thread_list,
                                                    &thread_p,
                                                    cl_com_log_list,
                                                    "trigger_thread", 1, cl_com_trigger_thread, NULL, NULL);
-            pthread_sigmask(SIG_SETMASK, &old_sigmask, NULL);
-            }
-
             if (ret_val != CL_RETVAL_OK) {
                pthread_mutex_unlock(&cl_com_thread_list_mutex);
                CL_LOG(CL_LOG_ERROR,"could not start trigger_thread");
@@ -1013,9 +1004,6 @@ int cl_com_specify_ssl_configuration(cl_ssl_setup_t* new_config) {
       CL_LOG(CL_LOG_INFO,"setting ssl setup configuration");
    }
    ret_val = cl_com_dup_ssl_setup(&cl_com_ssl_setup_config, new_config);
-   if (ret_val != CL_RETVAL_OK) {
-      CL_LOG_STR(CL_LOG_WARNING, "Cannot set ssl setup configuration! Reason:", cl_get_error_text(ret_val));
-   }
    pthread_mutex_unlock(&cl_com_ssl_setup_mutex);
 
    return ret_val;
@@ -1043,7 +1031,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    char* local_hostname = NULL;
    struct in_addr local_addr;
    cl_handle_list_elem_t* elem = NULL;
-#if defined(IRIX)
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
    struct rlimit64 application_rlimits;
 #else
    struct rlimit application_rlimits;
@@ -1228,7 +1216,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    
    new_handle->auto_close_mode = CL_CM_AC_DISABLED;
    
-#if defined(IRIX)
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
    getrlimit64(RLIMIT_NOFILE, &application_rlimits);
 #else
    getrlimit(RLIMIT_NOFILE, &application_rlimits);
@@ -1592,18 +1580,10 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
          CL_LOG(CL_LOG_INFO,"starting handle service thread ...");
          snprintf(help_buffer,80,"%s_service",new_handle->local->comp_name);
-         {
-         sigset_t old_sigmask;
-         sge_thread_block_all_signals(&old_sigmask);
-
          return_value = cl_thread_list_create_thread(cl_com_thread_list,
                                                      &(new_handle->service_thread),
                                                      cl_com_log_list,
                                                      help_buffer, 2, cl_com_handle_service_thread, NULL, (void*)new_handle);
-
-         pthread_sigmask(SIG_SETMASK, &old_sigmask, NULL);
-         }
-
          if (return_value != CL_RETVAL_OK) {
             CL_LOG(CL_LOG_ERROR,"could not start handle service thread");
             thread_start_error = 1;
@@ -1612,19 +1592,10 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
          CL_LOG(CL_LOG_INFO,"starting handle read thread ...");
          snprintf(help_buffer,80,"%s_read",new_handle->local->comp_name);
-
-         {
-         sigset_t old_sigmask;
-         sge_thread_block_all_signals(&old_sigmask);
-
          return_value = cl_thread_list_create_thread(cl_com_thread_list,
                                                      &(new_handle->read_thread),
                                                      cl_com_log_list,
                                                      help_buffer, 3, cl_com_handle_read_thread, NULL, NULL);
-
-         pthread_sigmask(SIG_SETMASK, &old_sigmask, NULL);
-         }
-
          if (return_value != CL_RETVAL_OK) {
             CL_LOG(CL_LOG_ERROR,"could not start handle read thread");
             thread_start_error = 1;
@@ -1633,19 +1604,10 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
          CL_LOG(CL_LOG_INFO,"starting handle write thread ...");
          snprintf(help_buffer,80,"%s_write",new_handle->local->comp_name);
-
-         {
-         sigset_t old_sigmask;
-         sge_thread_block_all_signals(&old_sigmask);
-
          return_value = cl_thread_list_create_thread(cl_com_thread_list,
                                                      &(new_handle->write_thread),
                                                      cl_com_log_list,
                                                      help_buffer, 2, cl_com_handle_write_thread, NULL, NULL);
-
-         pthread_sigmask(SIG_SETMASK, &old_sigmask, NULL);
-         }
-
          if (return_value != CL_RETVAL_OK) {
             CL_LOG(CL_LOG_ERROR,"could not start handle write thread");
             thread_start_error = 1;
@@ -3395,7 +3357,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
             case CL_MIH_DF_BIN:
                CL_LOG(CL_LOG_INFO,"received binary message");
                message->message_state = CL_MS_READY;
-
+               gettimeofday(&(message->message_remove_time),NULL);
                cl_com_add_debug_message(connection, NULL, message);
                /* we have a new message for the read queue */
                new_message_for_queue = CL_TRUE;
@@ -3403,7 +3365,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
             case CL_MIH_DF_XML:
                CL_LOG(CL_LOG_INFO,"received XML message");
                message->message_state = CL_MS_READY;
-
+               gettimeofday(&(message->message_remove_time),NULL);
                cl_com_add_debug_message(connection, NULL, message);
                /* we have a new message for the read queue */
                new_message_for_queue = CL_TRUE;
@@ -6738,6 +6700,7 @@ static void *cl_com_trigger_thread(void *t_conf) {
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
 
+
    /* set thread config data */
    if (cl_thread_set_thread_config(thread_config) != CL_RETVAL_OK) {
       CL_LOG(CL_LOG_ERROR,"thread setup error"); 
@@ -6894,6 +6857,7 @@ static void *cl_com_handle_read_thread(void *t_conf) {
 
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
+
 
    /* set thread config data */
    if (cl_thread_set_thread_config(thread_config) != CL_RETVAL_OK) {
@@ -7272,6 +7236,7 @@ static void *cl_com_handle_write_thread(void *t_conf) {
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
 
+
    /* set thread config data */
    if (cl_thread_set_thread_config(thread_config) != CL_RETVAL_OK) {
       CL_LOG(CL_LOG_ERROR,"thread setup error"); 
@@ -7619,51 +7584,49 @@ static void cl_commlib_app_message_queue_cleanup(cl_com_handle_t* handle) {
       do some connection cleanup
       - remove received messages not fetched by application
     */
-   if (handle != NULL) {
-      pthread_mutex_lock(handle->messages_ready_mutex); 
-      if (handle->messages_ready_for_read != 0) {
-         cl_app_message_queue_elem_t* app_mq_elem = NULL;
-         struct timeval now;
-         long timeout_time = 0;
-         cl_com_connection_t* connection = NULL;
+   pthread_mutex_lock(handle->messages_ready_mutex); 
+   if (handle->messages_ready_for_read != 0) {
+      cl_app_message_queue_elem_t* app_mq_elem = NULL;
+      struct timeval now;
+      long timeout_time = 0;
+      cl_com_connection_t* connection = NULL;
 
-         /* compute timeout */
-         gettimeofday(&now, NULL);
+      /* compute timeout */
+      gettimeofday(&now, NULL);
 
-         cl_raw_list_lock(handle->received_message_queue);
-         app_mq_elem = cl_app_message_queue_get_first_elem(handle->received_message_queue);
-         while(app_mq_elem) {
-            cl_message_list_elem_t* message_elem = NULL;
-            cl_message_list_elem_t* next_message_elem = NULL;
+      cl_raw_list_lock(handle->received_message_queue);
+      app_mq_elem = cl_app_message_queue_get_first_elem(handle->received_message_queue);
+      while(app_mq_elem) {
+         cl_message_list_elem_t* message_elem = NULL;
+         cl_message_list_elem_t* next_message_elem = NULL;
 
-            connection = app_mq_elem->rcv_connection;
-            app_mq_elem = cl_app_message_queue_get_next_elem(app_mq_elem);
+         connection = app_mq_elem->rcv_connection;
+         app_mq_elem = cl_app_message_queue_get_next_elem(app_mq_elem);
 
-            cl_raw_list_lock(connection->received_message_list);
-            next_message_elem = cl_message_list_get_first_elem(connection->received_message_list);
-            while(next_message_elem) {
-               cl_com_message_t* message = NULL;
-               message_elem = next_message_elem;
-               next_message_elem = cl_message_list_get_next_elem(message_elem);
-               message = message_elem->message;
-               if (message != NULL && message->message_state == CL_MS_READY) {
-                  timeout_time = message->message_receive_time.tv_sec + handle->message_timeout;
-                  if (timeout_time <= now.tv_sec) {
-                     CL_LOG(CL_LOG_WARNING,"removing message because of message_timeout");
+         cl_raw_list_lock(connection->received_message_list);
+         next_message_elem = cl_message_list_get_first_elem(connection->received_message_list);
+         while(next_message_elem) {
+            cl_com_message_t* message = NULL;
+            message_elem = next_message_elem;
+            next_message_elem = cl_message_list_get_next_elem(message_elem);
+            message = message_elem->message;
+            if (message != NULL && message->message_state == CL_MS_READY) {
+               timeout_time = message->message_receive_time.tv_sec + handle->message_timeout;
+               if (timeout_time <= now.tv_sec) {
+                  CL_LOG(CL_LOG_WARNING,"removing message because of message_timeout");
 
-                     cl_message_list_remove_receive(connection, message, 0);
-                     handle->messages_ready_for_read = handle->messages_ready_for_read - 1;
-                     cl_app_message_queue_remove(handle->received_message_queue, connection, 0, CL_FALSE);
-                     cl_com_free_message(&message);
-                  }
+                  cl_message_list_remove_receive(connection, message, 0);
+                  handle->messages_ready_for_read = handle->messages_ready_for_read - 1;
+                  cl_app_message_queue_remove(handle->received_message_queue, connection, 0, CL_FALSE);
+                  cl_com_free_message(&message);
                }
             }
-            cl_raw_list_unlock(connection->received_message_list);
          }
-         cl_raw_list_unlock(handle->received_message_queue);
+         cl_raw_list_unlock(connection->received_message_list);
       }
-      pthread_mutex_unlock(handle->messages_ready_mutex);
+      cl_raw_list_unlock(handle->received_message_queue);
    }
+   pthread_mutex_unlock(handle->messages_ready_mutex);
 }
 
 /****** cl_commlib/cl_com_messages_in_send_queue() ****************************

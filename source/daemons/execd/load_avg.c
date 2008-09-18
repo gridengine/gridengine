@@ -165,7 +165,6 @@ execd_add_load_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now
    DENTER(TOP_LAYER, "execd_add_load_report");
 
    if (*next_send <= now || sge_get_flush_lr_flag()) {
-      lSortOrder *order = lParseSortOrderVarArg(LR_Type, "%I+", LR_host);
       lListElem *report;
       lList *tmp_lr_list;
 
@@ -193,7 +192,6 @@ execd_add_load_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now
       if (lr_list == NULL) {
          lr_list = lCopyList("", tmp_lr_list);
          lFreeElem(&last_lr);
-         lSortList(tmp_lr_list, order);
          lSetList(report, REP_list, tmp_lr_list);
       } else {
          lListElem *lr;
@@ -234,13 +232,10 @@ execd_add_load_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now
                lAppendElem(tmp_lr_list, del_report);
             }
          }
-
-         lSortList(tmp_lr_list, order);
          lSetList(report, REP_list, tmp_lr_list);
          lFreeElem(&last_lr);
          last_lr = lCopyElem(report);
       }
-      lFreeSortOrder(&order);
 
       lAppendElem(report_list, report);
       send_all = false;

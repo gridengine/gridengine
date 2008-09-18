@@ -39,11 +39,6 @@
 #define LIMIT_STACK_MIN (1l*1024l*1024l)
 #define LIMIT_CPU_MIN (2l)
 #define LIMIT_FSIZE_MIN (15l*1024l)       
-#define LIMIT_DESCR_MIN (100)
-#define LIMIT_DESCR_MAX (65535)
-#define LIMIT_PROC_MIN  (20)
-#define LIMIT_MEMLOCK_MIN (4*1024)
-#define LIMIT_LOCKS_MIN (2)
 
 struct resource_table_entry {
    int resource;

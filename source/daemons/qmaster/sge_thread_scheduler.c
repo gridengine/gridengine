@@ -531,9 +531,6 @@ sge_scheduler_main(void *arg)
       set_thread_name(pthread_self(), "Scheduler Thread");
       conf_update_thread_profiling("Scheduler Thread");
       DPRINTF((SFN" started\n", thread_config->thread_name));
-
-      /* initialize schedd_runnlog logging */
-      schedd_set_schedd_log_file(ctx);
    }
 
    /* set profiling parameters */
@@ -860,7 +857,7 @@ sge_scheduler_main(void *arg)
                   lGetNumberOfLeafs(NULL, copy.share_tree, STN_children)
                  );
             } else {
-               schedd_log("-------------START-SCHEDULER-RUN-------------", NULL, evc->monitor_next_run);
+               schedd_log("-------------START-SCHEDULER-RUN-------------");
             }
 
             PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
@@ -931,7 +928,7 @@ sge_scheduler_main(void *arg)
             if (getenv("SGE_ND") != NULL) {
                printf("--------------STOP-SCHEDULER-RUN-------------\n");
             } else {
-               schedd_log("--------------STOP-SCHEDULER-RUN-------------", NULL, evc->monitor_next_run);
+               schedd_log("--------------STOP-SCHEDULER-RUN-------------");
             }
 
             thread_output_profiling("scheduler thread profiling summary:\n", &next_prof_output);
@@ -944,9 +941,6 @@ sge_scheduler_main(void *arg)
          /* reset the busy state */
          evc->ec_set_busy(evc, 0);
          evc->ec_commit(evc, NULL);
-
-         /* stop logging into schedd_runlog (enabled via -tsm) */
-         evc->monitor_next_run = false;
 
          /*
           * pthread cancelation point

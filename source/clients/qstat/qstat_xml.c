@@ -1048,7 +1048,7 @@ static int qstat_xml_queue_summary(qstat_handler_t* handler, const char* qname, 
    /* number of used/free slots */
    xml_append_Attr_I(attribute_list, "slots_used", summary->used_slots); 
    xml_append_Attr_I(attribute_list, "slots_resv", summary->resv_slots); 
-   xml_append_Attr_I(attribute_list, "slots_total", summary->total_slots);
+   xml_append_Attr_I(attribute_list, "slots_total", summary->used_slots + summary->free_slots);
 
    /* load avg */
    if (summary->has_load_value && summary->has_load_value_from_object) {

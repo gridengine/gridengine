@@ -1185,7 +1185,6 @@ int save
    lList *alp = NULL;
    const char *username = ctx->get_username(ctx);
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
-   u_long32 ar_type = 0;
    
    DENTER(GUI_LAYER, "qmonARSMToCull");
 
@@ -1239,14 +1238,7 @@ int save
 
    lSetUlong(jep, AR_verify, data->verify_mode);
    lSetUlong(jep, AR_error_handling, data->handle_hard_error);
-
-   ar_type = lGetUlong(jep, AR_type);
-   if (data->now) {
-      JOB_TYPE_SET_IMMEDIATE(ar_type);
-   } else {
-      JOB_TYPE_CLEAR_IMMEDIATE(ar_type);
-   }
-   lSetUlong(jep, AR_type, ar_type);
+   lSetUlong(jep, AR_type, data->now);
 
    DPRINTF(("data->resource_list is %s\n", 
             data->resource_list ? "NOT NULL" : "NULL"));

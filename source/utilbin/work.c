@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
          argv++;
          if (argc==1)
             usage(1);
-         if ((in = open(argv[1], O_RDONLY, 0644))<0) {
+         if ((in = open(argv[1], O_RDONLY))<0) {
             fprintf(stderr, "cannot read from \"%s\": %s\n", 
                argv[1], strerror(errno));
          }

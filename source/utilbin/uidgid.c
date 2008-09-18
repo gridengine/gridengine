@@ -37,7 +37,7 @@
 
 #include "basis_types.h"
 #if defined(INTERIX)
-#  include "wingrid.h"
+#  include "misc.h"
 #endif
 
 /*-------------------------------------------*/

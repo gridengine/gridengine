@@ -424,36 +424,4 @@ void sge_unblock_all_signals(void)
    sigprocmask(SIG_SETMASK, &sigmask, NULL);
 }
 
-/****** uti/signal/sge_thread_block_all_signals() *****************************
-*  NAME
-*     sge_thread_block_all_signals()
-*
-*  SYNOPSIS
-*     int sge_thread_block_all_signals(void)
-*
-*  FUNCTION
-*     Blocks all signals the OS knows for the calling thread.
-*
-*  OUTPUTS
-*    sigset_t *oldsigmask - the sigmask of this thread that was set before
-*                           this function was called.
-*
-*  RETURN VALUES
-*     int - 0 if ok,
-*           errno if pthread_sigmask failed,
-*           1000 if oldsigmask == NULL.
-*
-*  NOTES
-*     MT-NOTE: sge_thread_block_signals() is MT safe
-*******************************************************************************/
-int sge_thread_block_all_signals(sigset_t *oldsigmask)
-{
-   sigset_t new_mask;
-   int      ret = 1000;
 
-   if (oldsigmask != NULL) {
-      sigfillset(&new_mask);
-      ret = pthread_sigmask(SIG_BLOCK, &new_mask, oldsigmask);
-   }
-   return ret;
-}

@@ -259,6 +259,8 @@
 
 #define MSG_JOB_NAMETOOLONG_I _MESSAGE(64353, _("job name too long, maximum allowed length is %d characters"))
 
+#define MSG_INVALIDJATASK_REQUEST _MESSAGE(64354, _("invalid task list in job start request"))
+
 #define MSG_INVALID_GDIL _MESSAGE(64355, _("invalid granted destination identifier list"))
 
 #define MSG_INVALID_QINSTANCE_NAME_S   _MESSAGE(64356, _("invalid queue instance name "SFQ))
@@ -307,6 +309,5 @@
 #define MSG_AR_EVENT_STATE_UNKNOWN               _MESSAGE(64507, _("UNKNOWN"))
 
 #define MSG_ATTR_INVALID_ULONGVALUE_USUU         _MESSAGE(64508, _(sge_U32CFormat" is an invalid value for the "SFQ" attribute - it must be a value between "sge_U32CFormat" and "sge_U32CFormat))
-#define MSG_CQUEUE_UNKNOWNSHELL_S                _MESSAGE(64509, _("Invalid value "SFQ" for shell "))
-#define MSG_CENTRY_NOTREQUESTABLE_S              _MESSAGE(64510, _("Complex attribute "SFQ" is not requestable"))
+#define MSG_CQUEUE_UNKNOWNSHELL_S  _MESSAGE(64509, _("Invalid value "SFQ" for shell "))
 #endif /* __MSG_SGEOBJLIB_H */

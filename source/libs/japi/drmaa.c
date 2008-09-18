@@ -510,13 +510,11 @@ int drmaa_delete_job_template(drmaa_job_template_t *jt, char *error_diagnosis, s
    DENTER(TOP_LAYER, "drmaa_delete_job_template");
 
    if (error_diagnosis != NULL) {
-      sge_dstring_init(&diag, error_diagnosis, error_diag_len);
+      sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
    }
 
    if (jt == NULL) {
-      if (error_diagnosis != NULL) {
-         japi_standard_error(DRMAA_ERRNO_INVALID_ARGUMENT, &diag);
-      }
+      japi_standard_error(DRMAA_ERRNO_INVALID_ARGUMENT, &diag);
       DRETURN(DRMAA_ERRNO_INVALID_ARGUMENT);
    } 
 

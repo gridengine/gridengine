@@ -975,18 +975,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
    fprintf(fp, "h_fsize=%s\n", lGetString(master_q, QU_h_fsize));
    fprintf(fp, "s_vmem=%s\n", lGetString(master_q, QU_s_vmem));
    fprintf(fp, "h_vmem=%s\n", lGetString(master_q, QU_h_vmem));
-   {
-      char *s;
 
-      mconf_get_s_descriptors(&s); fprintf(fp, "s_descriptors=%s\n", s); free(s);
-      mconf_get_h_descriptors(&s); fprintf(fp, "h_descriptors=%s\n", s); free(s);
-      mconf_get_s_maxproc(&s); fprintf(fp, "s_maxproc=%s\n", s); free(s);
-      mconf_get_h_maxproc(&s); fprintf(fp, "h_maxproc=%s\n", s); free(s);
-      mconf_get_s_memorylocked(&s); fprintf(fp, "s_memorylocked=%s\n", s); free(s);
-      mconf_get_h_memorylocked(&s); fprintf(fp, "h_memorylocked=%s\n", s); free(s);
-      mconf_get_s_locks(&s); fprintf(fp, "s_locks=%s\n", s); free(s);
-      mconf_get_h_locks(&s); fprintf(fp, "h_locks=%s\n", s); free(s);
-   }
 
    fprintf(fp, "priority=%s\n", lGetString(master_q, QU_priority));
    fprintf(fp, "shell_path=%s\n", shell_path);

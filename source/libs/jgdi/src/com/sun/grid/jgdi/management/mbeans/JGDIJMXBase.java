@@ -121,17 +121,25 @@ public class JGDIJMXBase implements java.io.Serializable, JGDIJMXBaseMBean, Noti
         log.exiting("JGDIJMXBase", "unsubscribe");
     }
     
-    public Set<EventTypeEnum> getSubscription() throws JGDIException {
+    public Set<EventTypeEnum> getSubscription() {
         log.entering("JGDIJMXBase", "getSubscription");
         Set<EventTypeEnum> ret = null;
-        ret = getNB().getSubscription();
+        try {
+            ret = getNB().getSubscription();
+        } catch (JGDIException ex) {
+            throw new IllegalStateException(ex.getLocalizedMessage(), ex);
+        }
         log.exiting("JGDIJMXBase", "getSubscription", ret);
         return ret;
     }
     
-    public void setSubscription(Set<EventTypeEnum> subscription) throws JGDIException {
+    public void setSubscription(Set<EventTypeEnum> subscription) {
         log.entering("JGDIJMXBase", "setSubscription", subscription);
-        getNB().setSubscription(subscription);
+        try {
+            getNB().setSubscription(subscription);
+        } catch (JGDIException ex) {
+            throw new IllegalStateException(ex.getLocalizedMessage(), ex);
+        }
         log.exiting("JGDIJMXBase", "setSubscription");
     }
     

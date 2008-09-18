@@ -394,13 +394,26 @@ int sge_del_centry(sge_gdi_ctx_class_t *ctx, lListElem *centry, lList **answer_l
          lListElem *tmp_centry = centry_list_locate(master_centry_list, name);
 
          /* check if its a build in value */
-         if (get_rsrc(name, true, NULL, NULL, NULL, NULL) == 0 ||
-             get_rsrc(name, false, NULL, NULL, NULL, NULL) == 0) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+         {
+            int i;
+            for ( i=0; i< max_queue_resources; i++){
+               if (strcmp(queue_resource[i].name, name) == 0 ){
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
                                     MSG_INVALID_CENTRY_DEL_S, name);
-            ret = false;
-         }
+                  ret = false;
+                  break; 
+               }
+            }
 
+            for (i = 0; i < max_host_resources; i++) {
+               if (strcmp(host_resource[i].name, name) == 0 ){
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+                                          MSG_INVALID_CENTRY_DEL_S, name);
+                  ret = false;
+                  break; 
+               }
+            }
+         }      
          if (ret) {
             if (tmp_centry != NULL) {
                if (!centry_is_referenced(tmp_centry, &local_answer_list, 
@@ -513,7 +526,7 @@ sge_change_queue_version_centry(sge_gdi_ctx_class_t *ctx)
 *     MT-NOTE: centry_redebit_consumables() maybe not MT safe (the functions
 *     qinstance_debit_consumable and host_debit_consumable have no MT-NOTE).
 *
-*     TODO: This function could be highly optimized by taking into account the
+*     This function could be highly optimized by taking into account the
 *     centry list passed as parameter.
 *     This would not only increase performance by only recomputing the 
 *     debitation for only the changed centries (and spooling only the actually 

@@ -25,7 +25,6 @@ while [ "$GENERAL_ARGS" = "true" -a $# -gt 0 ]; do
     -j) PRE_ARGS="$PRE_ARGS -j";;
     -csp) CSP=1; POST_ARGS="$POST_ARGS -csp";;
     -c) CONNECT=1;;
-    -pw) PW=1; POST_ARGS="$POST_ARGS -pw";;
 #    *)  echo "Unkonwn option $1"; exit 1;;
   esac
   shift

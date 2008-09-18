@@ -34,9 +34,6 @@
 
 #include "sge_peL.h"
 
-bool
-pe_name_is_matching(const char *pe_name, const char *wildcard);
-
 bool 
 pe_is_matching(const lListElem *pe, const char *wildcard);
 

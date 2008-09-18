@@ -515,8 +515,17 @@ qinstance_is_centry_referenced(const lListElem *this_elem,
       lList *centry_list = lGetList(this_elem, QU_consumable_config_list);
       lListElem *centry_ref = lGetElemStr(centry_list, CE_name, name);
 
-      if (centry_ref != NULL || get_rsrc(name, true, NULL, NULL, NULL, NULL)==0) {
+      if (centry_ref != NULL) {
          ret = true;
+      } else {
+         int i;
+      
+         for (i = 0; i < max_queue_resources; i++) {
+            if (strcmp(queue_resource[i].name, name) == 0) {
+               ret = true;
+               break;
+            }
+         }
       }
    }
    DRETURN(ret);

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qping.1,v $     Last Update: $Date: 2008/04/30 09:11:03 $     Revision: $Revision: 1.13 $
+.\" $RCSfile: qping.1,v $     Last Update: $Date: 2007/07/19 09:04:31 $     Revision: $Revision: 1.11 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QPING 1 "$Date: 2008/04/30 09:11:03 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QPING 1 "$Date: 2007/07/19 09:04:31 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qping \- check application status of xxQS_NAMExx daemons.
 .PP
@@ -99,59 +99,59 @@ the qping request.
 If the application does not provide any information the status is 99999.
 Here are the possible status information values for the xxQS_NAMExx daemons:
 
-.in +3
+.in+3
 qmaster:
 
-.in +3
+.in+3
 \fI0\fP
 There is no unusual timing situation.
-.in -3
+.in-3
 
-.in +3
+.in+3
 \fI1\fP
 One or more threads has reached warning timeout. This may happen when 
 at least one thread does not increment his time stamp for a not usual long
 time. A possible reason for this is a high workload for this thread.
-.in -3
+.in-3
     
-.in +3
+.in+3
 \fI2\fP
 One or more threads has reached error timeout. This may happen when 
 at least one thread has not incremented his time stamp for longer than
 10 minutes.
-.in -3
+.in-3
 
-.in +3
+.in+3
 \fI3\fP
 The time measurement is not initialized.
-.in -3
+.in-3
 
 execd:
 
-.in +3
+.in+3
 \fI0\fP
 There is no unusual timing situation.
-.in -3
+.in-3
 
-.in +3
+.in+3
 \fI1\fP
 Dispatcher has reached warning timeout. This may happen when 
 the dispatcher does not increment his time stamp for a unusual long
 time. A possible reason for this is a high workload.
-.in -3
+.in-3
     
-.in +3
+.in+3
 \fI2\fP
 Dispatcher has reached error timeout. This may happen when 
 the dispatcher has not incremented his time stamp for longer than
 10 minutes.
-.in -3
+.in-3
 
-.in +3
+.in+3
 \fI3\fP
 The time measurement is not initialized.
-.in -3
-.in -3
+.in-3
+.in-3
 
 
 \fIinfo:\fP
@@ -160,89 +160,86 @@ the qping request.
 If the application does not provide any information the info message is "not available".
 Here are the possible status information values for the xxQS_NAMExx daemons:
 
-.in +3
+.in+3
 
 qmaster:
 
-.in +3
+.in+3
 The info message contains information about the qmaster threads followed by a thread
 state and time information. Each time when one of the known threads pass through their
 main loop the time information is updated. Since the qmaster has two message threads
 every message thread updates the time. This means the timeout for the message
 thread (MT) can only occur when no message thread is active anymore:
 
-.in +3
+.in+3
 THREAD_NAME: THREAD_STATE (THREAD_TIME)
-.in -3 
+.in-3 
 
-.in +3
+.in+3
 THREAD_NAME:
-.in +3
+.in+3
 .nf
-MAIN: Main thread 
-signaler: Signal thread 
-event_master: Event master thread 
-timer: Timer thread 
-worker: Worker thread
-listener: Listener thread
-scheduler: Scheduler thread
-jvm: Java thread 
+EDT:  Event Delivery Thread
+TET:  Timed Event Thread
+MT:   Message Thread(s)
+SIGT: SIGnal Thread
 
-The thread names above will be followed by a 3 digit number.
+In addition to these thread names, the name can contain a thread number (for example:
+MT(1)), when multiple instances of this thread are running.
 .fi
-.in -3
+.in-3
 
 THREAD_STATE:
-.in +3
+.in+3
 .nf
 R: Running
 W: Warning
 E: Error
 .fi
-.in -3
+.in-3
 
 THREAD_TIME:
-.in +3
+.in+3
 .nf
 Time since last timestamp updating.
 .fi
-.in -3
-.in -3
+.in-3
+.in-3
 
 After the dispatcher information follows an additional information string which describes the
 complete application status.
-.in -3
+.in-3
 
 execd:
 
-.in +3
+.in+3
 The info message contains information for the execd job dispatcher:
-.in +3
+.in+3
 dispatcher: STATE (TIME)
-.in -3
+.in-3
 
 STATE:
-.in +3
+.in+3
 .nf
 R: Running
 W: Warning
 E: Error
 .fi
-.in -3
+.in-3
 
 TIME:
-.in +3
+.in+3
 .nf
 Time since last timestamp updating.
 .fi
-.in -3
-.in -3
+.in-3
+.in-3
 
 After the thread information follows an additional information string which describes the
 application status.
 
-.in -3
-.in -3
+.in-3
+.in-3
 \fIMonitor:\fP
 If available, displays statistics on a thread. The data for each thread is
 displayed in one line. The format of this line can be changed at any time. Only the
@@ -295,7 +292,7 @@ The output is written to stdout. The environment variable "SGE_QPING_OUTPUT_FORM
 can be set to hide columns, set a default column width or to set a hostname output
 format. The value of the environment variable can be set to any combination of
 the following specifiers separated by a space character:
-.in +3
+.in+3
 .RS
 .nf
 "h:X"   -> hide column X
@@ -307,34 +304,34 @@ the following specifiers separated by a space character:
 .RE
 
 Start qping -help to see which columns are available.
-.in -3
+.in-3
 
 
 .SS "\fB\-dump_tag tag [param]\fP"
 This option has the same the same meaning as -dump, but can provide more information by
 specifying the debug level and message types qping should print:
-.in +3
+.in+3
 -dump_tag ALL <debug level> 
-.in +3
+.in+3
 This option shows all possible debug messages (APP+MSG) for the debug levels, ERROR, WARNING,
 INFO, DEBUG and DPRINTF. The contacted service must support this kind of debugging. 
 This option is not currently implemented.
-.in -3
-.in -3    
-.in +3
+.in-3
+.in-3    
+.in+3
 -dump_tag APP <debug level> 
-.in +3
+.in+3
 This option shows only application debug messages for the debug levels, ERROR, WARNING, INFO,
 DEBUG and DPRINTF. The contacted service must support this kind of debugging.
 This option is not currently implemented.
-.in -3
-.in -3    
-.in +3
+.in-3
+.in-3    
+.in+3
 -dump_tag MSG
-.in +3
+.in+3
 This option has the same behavior as the -dump option. 
-.in -3
-.in -3    
+.in-3
+.in-3    
 
 .SS "\fBhost\fP"
 Host where daemon is running.

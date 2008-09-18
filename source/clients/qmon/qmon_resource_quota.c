@@ -165,14 +165,16 @@ static void qmonRQSSetText(Widget tw, lList *rqs_list, lList **alpp)
 
    if (rqs_list != NULL) {
       const char *filename = NULL;
+      spooling_field *fields = sge_build_RQS_field_list(false, true);
       
-      filename = spool_flatfile_write_list(alpp, rqs_list, RQS_fields,
+      filename = spool_flatfile_write_list(alpp, rqs_list, fields,
                                            &qconf_rqs_sfi, 
                                            SP_DEST_TMP, SP_FORM_ASCII,
                                            filename, false);
       text = qmonReadText(filename, alpp);
       unlink(filename);
       FREE(filename);
+      FREE(fields);
       if (text != NULL) {
          XmTextSetString(tw, text);
          XtFree(text);
@@ -190,6 +192,7 @@ static void qmonRQSGetText(Widget tw, lList *rqs_list, lList **alpp)
    char *text = NULL;
    lList *new_rqs_list = NULL;
    char filename[SGE_PATH_MAX] = "";
+   spooling_field *fields = sge_build_RQS_field_list(false, true);
    size_t len = 0;
    bool ret = false;
    bool ignore_unchanged_message = false;
@@ -211,7 +214,7 @@ static void qmonRQSGetText(Widget tw, lList *rqs_list, lList **alpp)
    ret = sge_string2file(text, len, filename);
    XtFree(text);
 
-   new_rqs_list = spool_flatfile_read_list(alpp, RQS_Type, RQS_fields,
+   new_rqs_list = spool_flatfile_read_list(alpp, RQS_Type, fields,
                                             NULL, true, 
                                             &qconf_rqs_sfi,
                                             SP_FORM_ASCII, NULL, filename);
@@ -233,6 +236,7 @@ static void qmonRQSGetText(Widget tw, lList *rqs_list, lList **alpp)
    }
 
    unlink(filename);
+   FREE(fields);
 
    if (ret) {
       ret = rqs_add_del_mod_via_gdi(ctx, new_rqs_list, alpp, SGE_GDI_REPLACE);

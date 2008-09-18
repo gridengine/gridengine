@@ -259,12 +259,12 @@ sge_qmaster_thread_init(sge_gdi_ctx_class_t **ctx_ref, u_long32 prog_id,
       char str[1024];
       if (sge_set_admin_username(admin_user, str) == -1) {
          CRITICAL((SGE_EVENT, str));
-         SGE_EXIT((void**)ctx_ref, 1);
+         SGE_EXIT(NULL, 1);
       }
 
       if (sge_switch2admin_user()) {
          CRITICAL((SGE_EVENT, MSG_ERROR_CANTSWITCHTOADMINUSER));
-         SGE_EXIT((void**)ctx_ref, 1);
+         SGE_EXIT(NULL, 1);
       }
    }
 
@@ -614,7 +614,7 @@ static void communication_setup(sge_gdi_ctx_class_t *ctx)
 {
    cl_com_handle_t* com_handle = NULL;
    char* qmaster_params = NULL;
-#if defined(IRIX)
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
    struct rlimit64 qmaster_rlimits;
 #else
    struct rlimit qmaster_rlimits;
@@ -656,7 +656,7 @@ static void communication_setup(sge_gdi_ctx_class_t *ctx)
       /* 
        * re-check file descriptor limits for qmaster 
        */
-#if defined(IRIX)
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
       getrlimit64(RLIMIT_NOFILE, &qmaster_rlimits);
 #else
       getrlimit(RLIMIT_NOFILE, &qmaster_rlimits);
@@ -694,9 +694,6 @@ static void communication_setup(sge_gdi_ctx_class_t *ctx)
    cl_com_update_parameter_list(qmaster_params);
    DPRINTF(("received qmaster_params are: %s\n", qmaster_params));
    FREE(qmaster_params);
-
-   /* now enable qmaster communication */
-   cl_commlib_set_global_param(CL_COMMLIB_DELAYED_LISTEN, CL_FALSE);
    
    DEXIT;
    return;
@@ -880,7 +877,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
       spooling_context = spool_get_default_context();
    }
 
-   if (sge_read_configuration(ctx, spooling_context, object_base[SGE_TYPE_CONFIG].list, answer_list) != 0) {
+   if (sge_read_configuration(ctx, spooling_context, answer_list) != 0) {
       DRETURN(-1);
    }
    
@@ -1107,8 +1104,6 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
    /*
     * Initialize cached values for each qinstance:
     *    - clear suspend on subordinate flag
-    *    - update suspend on subordinate state according to running jobs
-    *    - update cached QI values.
     */
    for_each(tmpqep, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
       lList *qinstance_list = lGetList(tmpqep, CQ_qinstances);
@@ -1117,12 +1112,24 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
       for_each(qinstance, qinstance_list) {
          sge_qmaster_qinstance_state_set_susp_on_sub(qinstance, false);
       }
-      cqueue_mod_qinstances(ctx, tmpqep, NULL, tmpqep, true, false, &monitor);
+   }
+
+   /* 
+    * Initialize
+    *    - suspend on subordinate state 
+    *    - cached QI values.
+    */
+   for_each(tmpqep, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+      cqueue_mod_qinstances(ctx, tmpqep, NULL, tmpqep, true, &monitor);
    }
 
    /* rebuild signal resend events */
    rebuild_signal_events();
 
+   DPRINTF(("scheduler config -----------------------------------\n"));
+   
+   sge_read_sched_configuration(ctx, spooling_context, &answer_list);
+   answer_list_output(&answer_list);
 
    DPRINTF(("user list-----------------------------------\n"));
    spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_USER].list, SGE_TYPE_USER);
@@ -1136,11 +1143,6 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
 
    remove_invalid_job_references(job_spooling, 0, object_base);
    
-   DPRINTF(("scheduler config -----------------------------------\n"));
-   
-   sge_read_sched_configuration(ctx, spooling_context, &answer_list);
-   answer_list_output(&answer_list);
-
    DPRINTF(("share tree list-----------------------------------\n"));
    spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_SHARETREE].list, SGE_TYPE_SHARETREE);
    answer_list_output(&answer_list);

@@ -625,7 +625,7 @@ int isoperator,
 int isowner,
 monitoring_t *monitor
 ) {
-   lListElem *nextjep, *jep;
+   lListElem *gdil_ep, *nextjep, *jep;
    const char *qname = NULL;
    DENTER(TOP_LAYER, "qmod_queue_clean");
 
@@ -651,9 +651,12 @@ monitoring_t *monitor
       while ((jatep=nexttep)) {
          nexttep = lNext(jatep);
 
-         if (lGetSubStr(jatep, JG_qname, qname, JAT_granted_destin_identifier_list) != NULL) {
-            /* 3: JOB_FINISH reports aborted */
-            sge_commit_job(ctx, jep, jatep, NULL, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
+         for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
+            if (!strcmp(qname, lGetString(gdil_ep, JG_qname))) {
+               /* 3: JOB_FINISH reports aborted */
+               sge_commit_job(ctx, jep, jatep, NULL, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
+               break;
+            }
          }
       }
    }
@@ -1141,6 +1144,24 @@ monitoring_t *monitor
       pnm = prognames[EXECD]; 
       hnm = lGetHost(qep, QU_qhostname);
 
+      /* map hostname if we are simulating hosts */
+      if (mconf_get_simulate_hosts()) {
+         lListElem *hep = NULL;
+         const lListElem *simhost = NULL;
+
+         hep = host_list_locate(*object_type_get_master_list(SGE_TYPE_EXECHOST), hnm);
+         if(hep != NULL) {
+            simhost = lGetSubStr(hep, CE_name, "simhost", EH_consumable_config_list);
+            if(simhost != NULL) {
+               const char *real_host = lGetString(simhost, CE_stringval);
+               if(real_host != NULL && sge_hostcmp(real_host, hnm) != 0) {
+                  DPRINTF(("deliver signal for job/queue on simulated host %s to host %s\n", hnm, real_host));
+                  hnm = real_host;
+               }   
+            }
+         }
+      }
+
       if ((i = init_packbuffer(&pb, 256, 0)) == PACK_SUCCESS) {
          /* identifier for acknowledgement */
          if (jep) {
@@ -1257,7 +1278,7 @@ lListElem *qep,
 monitoring_t *monitor
 ) {
    lList *gdil_lp;
-   lListElem *mq, *jep, *jatep;
+   lListElem *mq, *jep, *gdil_ep, *jatep;
    const char *qname, *mqname, *pe_name;
 
    DENTER(TOP_LAYER, "signal_slave_jobs_in_queue");
@@ -1281,22 +1302,24 @@ monitoring_t *monitor
              !pe_list_locate(*object_type_get_master_list(SGE_TYPE_PE), pe_name))
             continue;
 
-         if (lGetElemStr(gdil_lp, JG_qname, qname) != NULL) {
+         for (gdil_ep=lNext(lFirst(gdil_lp)); gdil_ep; gdil_ep=lNext(gdil_ep))
+            if (!strcmp(lGetString(gdil_ep, JG_qname), qname)) {
 
-            /* search master queue - needed for signalling of a job */
-            if ((mq = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), mqname = lGetString(
-                  lFirst(gdil_lp), JG_qname)))) {
-               DPRINTF(("found slave job "sge_u32" in queue %s master queue is %s\n", 
-                  lGetUlong(jep, JB_job_number), qname, mqname));
-               sge_signal_queue(ctx, how, mq, jep, jatep, monitor);
-            } else {
-               ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDMQ_SU, mqname, sge_u32c(lGetUlong(jep, JB_job_number))));
+               /* search master queue - needed for signalling of a job */
+               if ((mq = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), mqname = lGetString(
+                     lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_qname)))) {
+                  DPRINTF(("found slave job "sge_u32" in queue %s master queue is %s\n", 
+                     lGetUlong(jep, JB_job_number), qname, mqname));
+                  sge_signal_queue(ctx, how, mq, jep, jatep, monitor);
+               } else 
+                  ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDMQ_SU, mqname, sge_u32c(lGetUlong(jep, JB_job_number))));
+               break;
             }
-         }
       }
    }
 
-   DRETURN_VOID;
+   DEXIT;
+   return;
 }
 
 static void signal_slave_tasks_of_job(sge_gdi_ctx_class_t *ctx, int how, lListElem *jep, lListElem *jatep, 

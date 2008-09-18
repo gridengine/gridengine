@@ -41,7 +41,7 @@
 #include "sge_dstring.h"
 
 #if defined(INTERIX)
-#  include "../wingrid/wingrid.h"
+#  include "../wingrid/misc.h"
 #endif
 
 #if defined(SOLARIS) || defined(LINUX) || defined(IRIX)
@@ -103,7 +103,7 @@
 #  define SGE_STRUCT_DIRENT struct dirent
 #endif       
 
-#if defined(_UNICOS) || defined(SOLARIS) || defined(__hpux) || defined(LINUX) || defined(AIX) || defined(SINIX) || defined(NECSX4) || defined(NECSX5) || defined(DARWIN9)
+#if defined(_UNICOS) || defined(SOLARIS) || defined(__hpux) || defined(LINUX) || defined(AIX) || defined(SINIX) || defined(NECSX4) || defined(NECSX5)
 #   define SETPGRP setpgrp()
 #elif defined(__sgi)
 #   define SETPGRP BSDsetpgrp(getpid(),getpid())

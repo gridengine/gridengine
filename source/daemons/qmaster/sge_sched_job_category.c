@@ -129,7 +129,7 @@ void sge_print_categories(void)
          lGetUlong(cat, CT_refcount))); 
    }
 
-   DRETURN_VOID;
+   DEXIT;
 }
 /*-------------------------------------------------------------------------*/
 /*    add jobs' category to the global category list, if it doesn't        */
@@ -160,13 +160,15 @@ int sge_add_job_category(lListElem *job, lList *acl_list, const lList *prj_list,
 
    if (sge_dstring_strlen(&category_str) == 0) {
       cstr = sge_dstring_copy_string(&category_str, no_requests);
-   } else {
+   }   
+   else {
       cstr = sge_dstring_get_string(&category_str);
    }
 
    if (CATEGORY_LIST == NULL) {
       CATEGORY_LIST = lCreateList("new category list", CT_Type);
-   } else {
+   }   
+   else {
       cat = lGetElemStr(CATEGORY_LIST, CT_str, cstr);
    }
 
@@ -179,19 +181,18 @@ int sge_add_job_category(lListElem *job, lList *acl_list, const lList *prj_list,
    lSetUlong(cat, CT_refcount, ++rc);
    lSetRef(job, JB_category, cat);
 
+   /* 
+   ** free category_str
+   */
+   sge_dstring_clear(&category_str);
+
    /* Second part:
       Builds the category for the category scheduler. We need the
       resource category for it. All variables are reused.
    */
-   if (sconf_is_job_category_filtering()) {
+   {
       lListElem *job_ref = NULL; 
       lList *job_ref_list = NULL;
-
-      /* 
-      ** free category_str
-      */
-      sge_dstring_clear(&category_str);
-
       
       cstr = sge_build_job_cs_category(&category_str, job, cat, did_project);
 
@@ -222,12 +223,11 @@ int sge_add_job_category(lListElem *job, lList *acl_list, const lList *prj_list,
       lSetRef(job_ref, REF_ref, job);
       lAppendElem(job_ref_list, job_ref);
       
+      /* 
+      ** free category_str
+      */
+      sge_dstring_free(&category_str);
    }
-
-   /* 
-   ** free category_str
-   */
-   sge_dstring_free(&category_str);
 
    DRETURN(0);
 }
@@ -243,12 +243,14 @@ int sge_delete_job_category(lListElem *job)
    DENTER(TOP_LAYER, "sge_delete_job_category");
    
    /* First part */
+   
    cat = (lListElem *)lGetRef(job, JB_category);
    if (CATEGORY_LIST && cat) {
       rc = lGetUlong(cat, CT_refcount);
       if (rc > 1) {
          lSetUlong(cat, CT_refcount, --rc);
-      } else {
+      }
+      else {
          lListElem *cache = NULL;
          lList *cache_list = lGetList(cat, CT_cache);
 
@@ -267,7 +269,7 @@ int sge_delete_job_category(lListElem *job)
   
    /* Second part */
    /* Removes a job from the category scheduler categories. */
-   if (sconf_is_job_category_filtering()) {
+   {
       lListElem *ref = NULL;
       bool found = false;
       int i;
@@ -279,7 +281,8 @@ int sge_delete_job_category(lListElem *job)
          if (is_job_pending_) {
             refs[0] = lGetList(cat, SCT_job_pending_ref);
             refs[1] = lGetList(cat, SCT_job_ref);
-         } else {
+         }
+         else {
             refs[0] = lGetList(cat, SCT_job_ref);
             refs[1] = lGetList(cat, SCT_job_pending_ref);
          }
@@ -306,7 +309,6 @@ int sge_delete_job_category(lListElem *job)
          }
       }
    }
-
    DRETURN(0);
 }
 
@@ -342,7 +344,8 @@ sge_is_job_category_rejected(lListElem *job)
   
    ret = sge_is_job_category_rejected_(lGetRef(job, JB_category));  
 
-   DRETURN(ret);
+   DEXIT;
+   return ret;
 }
 
 /*-------------------------------------------------------------------------*/
@@ -430,9 +433,10 @@ int sge_reset_job_category()
    DENTER(TOP_LAYER, "sge_reset_job_category");
 
    for_each (cat, CATEGORY_LIST) {
-      lListElem *cache;
+      lListElem *cache = NULL;
+      lList *cache_list = lGetList(cat, CT_cache);
 
-      for_each(cache, lGetList(cat, CT_cache)) {
+      for_each(cache, cache_list) {
          int *range = lGetRef(cache, CCT_pe_job_slots);
          FREE(range); 
       }
@@ -443,8 +447,8 @@ int sge_reset_job_category()
       lSetBool(cat, CT_messages_added, false);
       lSetBool(cat, CT_rc_valid, false);
    }
-
-   DRETURN(0);
+   DEXIT;
+   return 0;
 }
 
 /****** sge_category/sge_category_job_copy() **********************************
@@ -495,7 +499,7 @@ lList *sge_category_job_copy(lList *queue_list, lList **orders) {
          case QI_ORPHANED :
          case QI_DISABLED :
          case QI_CAL_DISABLED:
-            continue;
+                                 continue;
          default:
             jobPerCategory+= (lGetUlong(queue, QU_job_slots) - qinstance_slots_used(queue)); 
       }
@@ -503,16 +507,19 @@ lList *sge_category_job_copy(lList *queue_list, lList **orders) {
 
    if (jobPerCategory < minJobPerCategory) {
       jobPerCategory = minJobPerCategory;
-   } else if (jobPerCategory > maxJobPerCategory) {
+   }
+   else if (jobPerCategory > maxJobPerCategory) {
       jobPerCategory = maxJobPerCategory;
    }
   
    for_each(category, CS_CATEGORY_LIST) {
+      lList *job_ref_list = NULL;
       lListElem *job_ref = NULL;
       int copy_counter = 0;
 
       /* copy running jobs and others maybe pending */   
-      for_each(job_ref, lGetList(category, SCT_job_ref)) {
+      job_ref_list = lGetList(category, SCT_job_ref);
+      for_each(job_ref, job_ref_list) {
          lListElem *job = lGetRef(job_ref, REF_ref);
          if (jobListCopy == NULL) {
             jobListCopy = lCreateListHash("copy_job_list", lGetElemDescr(job), false);
@@ -521,7 +528,8 @@ lList *sge_category_job_copy(lList *queue_list, lList **orders) {
       }
 
       /* copy pending jobs, only pending till max is reached */
-      for_each(job_ref, lGetList(category, SCT_job_pending_ref)) {
+      job_ref_list = lGetList(category, SCT_job_pending_ref);
+      for_each(job_ref, job_ref_list) {
          lListElem *job = lGetRef(job_ref, REF_ref); 
 
          /* only copy, if we have free slots left, or the jobs needs a reservation */
@@ -548,15 +556,24 @@ lList *sge_category_job_copy(lList *queue_list, lList **orders) {
              
             lAppendElem(jobListCopy, lCopyElem(job));
             copy_counter+=amount;
-         } else {
+         }
+         else {
              schedd_mes_add_join( lGetUlong(job, JB_job_number), SCHEDD_INFO_JOB_CATEGORY_FILTER_);
              *orders = sge_create_orders(*orders, ORT_clear_pri_info, job, NULL, NULL, false);
          }
       }
    }
-
    schedd_mes_commit(NULL, false, NULL); 
    cull_hash_create_hashtables(jobListCopy);
  
-   DRETURN(jobListCopy);
+   DEXIT;
+   return jobListCopy;
+}
+
+/*-------------------------------------------------------------------------*/
+/* free module internal data                                               */
+/*-------------------------------------------------------------------------*/
+void sge_free_job_category(void)
+{
+   lFreeList(&CATEGORY_LIST);
 }

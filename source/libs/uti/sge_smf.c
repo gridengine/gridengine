@@ -45,20 +45,10 @@
 #include "sge_string.h"
 #include "sge_log.h"
 #include "sgermon.h"
-#include "sge_uidgid.h"
 #include "msg_utilib.h"
 
-#if defined(__SunOS_5_7) || defined(__SunOS_5_8) || defined(__SunOS_5_9)
-   /* Redefinitions from S10+ sys/types.h */
-   typedef id_t    ctid_t;
-   /* Missing in SunOS < 10 */
-   static int unsetenv(const char *var) {
-      /* dummy */
-      return 0;
-   }
-#else
-   #include <stdlib.h>
-#endif
+/* Redefinitions from S10+ sys/types.h */
+typedef id_t    ctid_t;
 
 /* Redefinitions from libcontract.h */
 typedef void *ct_stathdl_t;
@@ -89,13 +79,9 @@ typedef void *ct_stathdl_t;
 #define CTFS_ROOT       "/system/contract"
 
 /* Redefinitions from libscf.h */
-typedef struct scf_handle scf_handle_t;
-typedef struct scf_simple_prop scf_simple_prop_t;
-
 #define SMF_IMMEDIATE                   0x1
 #define SMF_TEMPORARY                   0x2
 #define SMF_AT_NEXT_BOOT                0x4
-
 typedef enum scf_error {
         SCF_ERROR_NONE = 1000,          /* no error */
         SCF_ERROR_NOT_BOUND,            /* handle not bound */
@@ -146,11 +132,6 @@ static void* scf_lib = NULL;
 /* Used libscf function pointers */
 static scf_error_t (*shared_scf_func__scf_error)(void);
 static const char *(*shared_scf_func__scf_strerror)(scf_error_t);
-static scf_simple_prop_t *(*shared_scf_func__scf_simple_prop_get)(scf_handle_t *handle, 
-        const char *instance, const char *pgname, const char *propname);
-static char *(*shared_scf_func__scf_simple_prop_next_astring)(scf_simple_prop_t *prop);
-static void (*shared_scf_func__scf_simple_prop_free)(scf_simple_prop_t *prop);
-static char *(*shared_scf_func__smf_get_state)(const char *fmri);
 static int (*shared_scf_func__smf_disable_instance)(const char *fmri, int flag);
 
 /* LIBCONTRACT */
@@ -264,10 +245,6 @@ static void init_scf_lib(void)
     const char *func_name[] = {
         "scf_error",
         "scf_strerror",
-        "scf_simple_prop_get",
-        "scf_simple_prop_next_astring",
-        "scf_simple_prop_free",
-        "smf_get_state",
         "smf_disable_instance",
         NULL
     };
@@ -275,10 +252,6 @@ static void init_scf_lib(void)
     const void *func_ptr[] = {
         &shared_scf_func__scf_error,
         &shared_scf_func__scf_strerror,
-        &shared_scf_func__scf_simple_prop_get,
-        &shared_scf_func__scf_simple_prop_next_astring,
-        &shared_scf_func__scf_simple_prop_free,
-        &shared_scf_func__smf_get_state,
         &shared_scf_func__smf_disable_instance,
         NULL
     };
@@ -678,7 +651,7 @@ int sge_smf_used(void)
     if (pthread_once(&useSMFcontrol, init_use_smf) != 0) {
         ERROR((SGE_EVENT, MSG_SMF_PTHREAD_ONCE_FAILED_S, "sge_smf_used()"));
     }
-    DPRINTF(("sge_smf_used() -> useSMF=%d\n", useSMF));
+    DPRINTF(("sge_smf_used() -> useSMF=%d", useSMF));
     DRETURN(useSMF);
 }
 
@@ -716,7 +689,7 @@ static int contracts_pre_fork(void)
     
     fd = open64(CTFS_ROOT "/process/template", O_RDWR);
     if (fd == -1) {
-        DRETURN(-1);
+        return (-1);
     }
     /*
      * Execd doesn't do anything with the new contract.
@@ -779,14 +752,8 @@ static int contracts_post_fork(int ctfd, int pid, char *err_str, int err_length)
     }
     shared_contract_func__ct_tmpl_clear(ctfd);
     close(ctfd);
-    if (pid == 0) {
-       /* We modify the child env not to contain SMF vars (not part of the service) */
-       unsetenv("SMF_FMRI");
-       unsetenv("SMF_METHOD");
-       unsetenv("SMF_RESTARTER");
-       DRETURN(pid);
-    } else if (pid < 0) {
-       DRETURN(pid);
+    if (pid <= 0) {
+        DRETURN(pid);
     }
     /* Parent has to explicitly abandon the new contract */
     if ((cfd = open64(CTFS_ROOT "/process/latest", O_RDONLY)) == -1) {
@@ -853,7 +820,7 @@ static int contracts_post_fork(int ctfd, int pid, char *err_str, int err_length)
 *  SEE ALSO
 *     
 *******************************************************************************/
-int sge_smf_contract_fork(char *err_str, int err_length)
+int sge_smf_contract_fork(char *err_str, int err_length) 
 {
     int pid;
     int ctfd;
@@ -913,116 +880,26 @@ int sge_smf_contract_fork(char *err_str, int err_length)
 *
 *     MT-NOTES: sge_smf_temporary_disable_instance is MT-safe because it 
 *               modifies once static variables (libscfLoaded)
-*               changes user id
 *
 *  SEE ALSO
 *     execd/execd_exit_func()
 *******************************************************************************/
-void sge_smf_temporary_disable_instance(void)
+void sge_smf_temporary_disable_instance(void) 
 {
-    uid_t old_euid = NULL;
-    int change_user = 1;
     DENTER(TOP_LAYER, "sge_smf_temporary_disable_instance");
     if (once_libscf_init() != 0) {
         ERROR((SGE_EVENT, MSG_SMF_LOAD_LIBSCF_FAILED_S, "sge_smf_temporary_disable_instance()"));
         DRETURN_VOID;
     }
-    /* We need to be root */
-    if (!sge_is_start_user_superuser()) {
-       change_user = 0;
-    } else {
-       old_euid = geteuid();
-       seteuid(SGE_SUPERUSER_UID);
-    }
     int ret = shared_scf_func__smf_disable_instance(FMRI, SMF_TEMPORARY);
-    if (change_user == 1) {
-       seteuid(old_euid);
-    }
     if (ret != 0 ) {
-        ERROR((SGE_EVENT, MSG_SMF_DISABLE_FAILED_SSUU,
-               FMRI,shared_scf_func__scf_strerror(shared_scf_func__scf_error()), geteuid(), getuid()));
+        ERROR((SGE_EVENT, MSG_SMF_DISABLE_FAILED_SS, 
+               FMRI,shared_scf_func__scf_strerror(shared_scf_func__scf_error())));
         DRETURN_VOID;
     }
-    DPRINTF(("Service %s temporary disabled.\n", FMRI));
+    DPRINTF(("Service %s temporary disabled due to controlled shutdown.\n", FMRI));
     DEXIT;
 }
-
-
-/******************** sge_smf_get_instance_state() *****************************
-*  NAME
-*    sge_smf_get_instance_state() -- get instance state
-*
-*  SYNOPSIS
-*    char *sge_smf_get_instance_state(void)
-*
-*  FUNCTION
-*    Get this instance state from SMF.
-*
-*  INPUTS
-*    void
-*
-*  RESULT
-*    char * -- state
-*
-*  NOTES
-*    MT-NOTES: sge_smf_get_instance_state is MT-safe
-*
-*  SEE ALSO
-*     sge_smf_get_instance_next_state()
-*******************************************************************************/
-char *sge_smf_get_instance_state(void) {
-    return shared_scf_func__smf_get_state(FMRI);
-}
-
-
-/******************** sge_smf_get_instance_next_state() ***********************
-*  NAME
-*    sge_smf_get_instance_next_state() -- get instance state
-*
-*  SYNOPSIS
-*    char *sge_smf_get_instance_next_state(void)
-*
-*  FUNCTION
-*    Get this instance state from SMF.
-*
-*  INPUTS
-*    void
-*
-*  RESULT
-*    char * -- state
-*
-*  NOTES
-*    MT-NOTES: sge_smf_get_instance_state is MT-safe
-*
-*  SEE ALSO
-*     sge_smf_get_instance_next_state()
-*******************************************************************************/
-char *sge_smf_get_instance_next_state()
-{
-    scf_simple_prop_t *prop;
-    const char *state_str;
-    char *ret;
-
-    DENTER(TOP_LAYER, "sge_smf_get_instance_next_state");
-    
-    if ((prop = shared_scf_func__scf_simple_prop_get(NULL, FMRI, SCF_PG_RESTARTER, SCF_PROPERTY_NEXT_STATE)) == NULL) {
-       DRETURN(NULL);
-    }
-
-    if ((state_str = shared_scf_func__scf_simple_prop_next_astring(prop)) == NULL) {
-       shared_scf_func__scf_simple_prop_free(prop);
-       DRETURN(NULL);
-    }
-
-    if ((ret = strdup(state_str)) == NULL) {
-        ERROR((SGE_EVENT, "Out of memory"));
-        DRETURN(NULL);
-    }
-    
-    shared_scf_func__scf_simple_prop_free(prop);
-    DRETURN(ret);
-}
-
 #else
 void dummy(void)
 {

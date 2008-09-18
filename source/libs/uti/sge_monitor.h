@@ -138,11 +138,9 @@ typedef void (*extension_output)(
  */
 typedef enum {
    NONE_EXT = -1,
-   GDI_EXT = 0,         /* GDI = request processing thread */
-   EDT_EXT = 1,         /* EDT = event delivery thread */
-   TET_EXT = 2,         /* TET = timed event thread */
-   LIS_EXT = 3,         /* LIS = listener thread */
-   SCH_EXT = 4          /* SCH = scheduler thread */
+   GDI_EXT = 0,         /* GDI = request processing thread (qmaster) */
+   EDT_EXT = 1,         /* EDT = event delivery thread (qmaster/event master) */
+   TET_EXT = 2          /* TET = timed event thread (qmaster) */
 }extension_t;
 
 /**
@@ -189,24 +187,24 @@ void sge_monitor_reset(monitoring_t *monitor);
 #define MONITOR_IDLE_TIME(execute, monitor, output_time, is_log)    { \
                                  struct timeval before;  \
                                  gettimeofday(&before, NULL); \
-                                 sge_set_last_wait_time((monitor), before); \
+                                 sge_set_last_wait_time(monitor, before); \
                                  if (output_time > 0) { \
                                     struct timeval before;  \
                                     struct timeval after; \
                                     double time; \
                                     \
-                                    (monitor)->monitor_time = output_time; \
-                                    (monitor)->log_monitor_mes = is_log; \
+                                    monitor->monitor_time = output_time; \
+                                    monitor->log_monitor_mes = is_log; \
                                     gettimeofday(&before, NULL); \
-                                    if ((monitor)->now.tv_sec == 0) { \
-                                       (monitor)->now = before; \
+                                    if (monitor->now.tv_sec == 0) { \
+                                       monitor->now = before; \
                                     } \
                                     execute; \
                                     gettimeofday(&after, NULL);  \
-                                    (monitor)->output = ((after.tv_sec-(monitor)->now.tv_sec) >= (monitor)->monitor_time)?true:false; \
+                                    monitor->output = ((after.tv_sec-monitor->now.tv_sec) >= monitor->monitor_time)?true:false; \
                                     time = after.tv_usec - before.tv_usec; \
                                     time = after.tv_sec - before.tv_sec + (time/1000000); \
-                                    (monitor)->idle += time; \
+                                    monitor->idle += time; \
                                  } \
                                  else { \
                                     execute; \
@@ -234,9 +232,9 @@ void sge_monitor_reset(monitoring_t *monitor);
                                     execute; \
                                  } \
 
-#define MONITOR_MESSAGES(monitor) if ((monitor != NULL) && ((monitor)->monitor_time > 0)) (monitor)->message_in_count++
+#define MONITOR_MESSAGES(monitor) if ((monitor != NULL) && (monitor->monitor_time > 0)) monitor->message_in_count++
 
-#define MONITOR_MESSAGES_OUT(monitor) if (((monitor) != NULL) && ((monitor)->monitor_time > 0)) (monitor)->message_out_count++
+#define MONITOR_MESSAGES_OUT(monitor) if ((monitor != NULL) && (monitor->monitor_time > 0)) monitor->message_out_count++
 
 /*--------------------------------*/
 /*   EXTENSION SECTION            */
@@ -262,12 +260,6 @@ void sge_monitor_reset(monitoring_t *monitor);
  **/
 
 
-/* scheduler thread extensions */
-
-typedef struct {
-   u_long32    dummy;    /* unused */
-} m_sch_t;
-
 /* GDI message thread extensions */
 
 typedef struct {
@@ -286,8 +278,8 @@ typedef struct {
    u_long32    eproc_count; /* counts the execd processor reports */
    u_long32    eack_count;  /* counts the execd acks */
 
-   u_long32    queue_length;     /* worker queue length */
-} m_gdi_t;
+   u_long32    ack_count;   /* counts the event client aknowledges */
+}m_gdi_t;
 
 #define MONITOR_GDI_ADD(monitor)    if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->gdi_add_count++
 #define MONITOR_GDI_GET(monitor)    if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->gdi_get_count++
@@ -305,22 +297,6 @@ typedef struct {
 #define MONITOR_EJOB(monitor)    if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->ejob_count++
 #define MONITOR_EPROC(monitor)    if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->eproc_count++
 #define MONITOR_EACK(monitor)    if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->eack_count++
-
-#define MONITOR_SET_QLEN(monitor, qlen)    if ((monitor) != NULL && (monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->queue_length = (qlen)
-
-/* listener extension */
-typedef struct {
-   u_long32    inc_gdi; /* incoming GDI requests */
-   u_long32    inc_ack; /* ack requests */
-   u_long32    inc_ece; /* event client exits */
-   u_long32    inc_rep; /* report request */
-} m_lis_t;
-
-#define MONITOR_INC_GDI(monitor)    if ((monitor->monitor_time > 0) && (monitor->ext_type == LIS_EXT)) ((m_lis_t*)(monitor->ext_data))->inc_gdi++
-#define MONITOR_INC_ACK(monitor)    if ((monitor->monitor_time > 0) && (monitor->ext_type == LIS_EXT)) ((m_lis_t*)(monitor->ext_data))->inc_ack++
-#define MONITOR_INC_ECE(monitor)    if ((monitor->monitor_time > 0) && (monitor->ext_type == LIS_EXT)) ((m_lis_t*)(monitor->ext_data))->inc_ece++
-#define MONITOR_INC_REP(monitor)    if ((monitor->monitor_time > 0) && (monitor->ext_type == LIS_EXT)) ((m_lis_t*)(monitor->ext_data))->inc_rep++
-
 /* event master thread extension */
 
 typedef struct {

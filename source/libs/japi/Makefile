@@ -34,7 +34,7 @@
 # Variable definitions for targets to build
 
 JAPILIB_DIR   = $(SDIR)/libs/japi
-CLASSES_DIR   = $(SDIR)/libs/jdrmaa
+CLASSES_DIR   = $(SDIR)/classes/src
 
 JAPILIB_10    = japi.o
 JAPILIB_OBJS  = $(JAPILIB_10)
@@ -49,7 +49,7 @@ DRMAALIB_10_ALL = $(DRMAALIB_10_NJ) com_sun_grid_drmaa_SessionImpl.o
 DRMAALIB_10_OBJS = $(DRMAALIB_10_$(JNI_TARGET))
 DRMAALIB_OBJS    = $(DRMAALIB_10_OBJS)
 DRMAA_OBJS       = $(EVCLIB_OBJS) $(GDILIB_OBJS) \
-                   $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) \
+                   $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) $(SECLIB_OBJS) \
                    $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(COMMLIB_OBJS) \
                    $(COMMLISTSLIB_OBJS) $(UTILIB_DRMAA_OBJS) $(LCKLIB_OBJS)
 
@@ -100,7 +100,7 @@ drmaa_messages:
 ###############################################################################
 libdrmaa$(SHAREDEXT).1.0:  $(JAPILIB_10) $(JAPI_DEPEND_OBJS) $(DRMAALIB_OBJS) $(DRMAA_OBJS) $(WINGRIDLIB_DEP)
 	$(SHAREDLD) $(SHARED_LFLAGS) $(SONAME_LFLAG_DRMAA10) -o libdrmaa$(SHAREDEXT).1.0 $(DRMAALIB_10_OBJS) $(DRMAA_OBJS) $(JAPILIB_10) $(JAPI_ADD_OBJS) \
-      $(SECLIB) $(WINGRIDLIB) $(LIBS) $(DLLIB) \
+      $(SECLIB) $(WINGRIDLIB) $(LIBS) $(DLLIB) -lc \
    && ../scripts/nonreentrant.sh -a `../dist/util/arch` -w libdrmaa$(SHAREDEXT).1.0
 
 # Needed to compile howtos, examples, and unit tests

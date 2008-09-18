@@ -202,8 +202,6 @@ list_objects(bdb_info info, const char *key)
          answer_list_output(&answer_list);
          ret = EXIT_FAILURE;
       }
-
-      lFreeList(&list);
    }
 
    DRETURN(ret);
@@ -379,11 +377,11 @@ main(int argc, char *argv[])
    lList *answer_list = NULL;
    sge_gdi_ctx_class_t *ctx = NULL;
 
-   DENTER_MAIN(TOP_LAYER, "spooledit");
+   DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
 
    if (sge_setup2(&ctx, SPOOLDEFAULTS, MAIN_THREAD, &answer_list, false) != AE_OK) {
       answer_list_output(&answer_list);
-      SGE_EXIT((void**)&ctx, 1);
+      SGE_EXIT(NULL, 1);
    }
 
    if (ret == EXIT_SUCCESS) {
@@ -442,7 +440,7 @@ main(int argc, char *argv[])
 
    answer_list_output(&answer_list);
 
-   SGE_EXIT((void**)&ctx, ret);
+   SGE_EXIT(NULL, ret);
 
    DRETURN(ret);
 }

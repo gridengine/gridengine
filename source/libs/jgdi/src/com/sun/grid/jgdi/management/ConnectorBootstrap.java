@@ -65,11 +65,10 @@ import sun.management.Agent;
 import sun.management.AgentConfigurationError;
 import static sun.management.AgentConfigurationError.*;
 import sun.management.FileSystem;
-// import sun.rmi.registry.RegistryImpl;
+import sun.rmi.registry.RegistryImpl;
 
 import com.sun.jmx.remote.internal.RMIExporter;
 import com.sun.jmx.remote.security.JMXPluggableAuthenticator;
-import java.rmi.registry.LocateRegistry;
 
 /**
  * This class initializes and starts a customized RMIConnectorServer for JSR 163 
@@ -346,12 +345,13 @@ public final class ConnectorBootstrap {
             // setup SSLContext to use different TrustManager and KeyManager
             final String serverKeystore = props.getProperty(PropertyNames.SSL_SERVER_KEYSTORE);
             final String serverKeystorePassword = props.getProperty(PropertyNames.SSL_SERVER_KEYSTORE_PASSWORD);
+            final String caTopName = System.getProperty("com.sun.grid.jgdi.caTop");
+            File caTop = new File(caTopName);
             File serverKeystoreFile = new File(serverKeystore);
-            File caTop = JGDIAgent.getCaTop();
             char[]pw = (serverKeystorePassword != null) ? serverKeystorePassword.toCharArray() : "".toCharArray();
             log.log(Level.FINE, "SSLHelper.init: caTop = {0} serverKeystore = {1} serverKeystorePW = {2}",
                     new Object[]{caTop, serverKeystore, (serverKeystorePassword != null) ? serverKeystorePassword : "-empty pw-" });
-            SSLHelper.getInstanceByCaTop(caTop).setKeystore(serverKeystoreFile, pw);
+            SSLHelper.init(caTop, serverKeystoreFile, pw);
         }
 
         if (log.isLoggable(Level.FINE)) {
@@ -396,7 +396,7 @@ public final class ConnectorBootstrap {
         // This RMI server should not keep the VM alive
         Map<String, Object> env = new HashMap<String, Object>();
         env.put(RMIExporter.EXPORTER_ATTRIBUTE,
-                exporter);
+                new PermanentExporter());
 
         // The local connector server need only be available via the
         // loopback connection. 
@@ -524,8 +524,9 @@ public final class ConnectorBootstrap {
         RMIServerSocketFactory ssf = null;
 
         if (useSsl || useRegistrySsl) {
-            csf = new JGDISslRMIClientSocketFactory(JGDIAgent.getCaTop());
-            ssf = new JGDISslRMIServerSocketFactory(JGDIAgent.getCaTop(), enabledCipherSuites,
+
+            csf = new SslRMIClientSocketFactory();
+            ssf = new JGDISslRMIServerSocketFactory(enabledCipherSuites,
                     enabledProtocols, sslNeedClientAuth);
         }
 
@@ -555,11 +556,11 @@ public final class ConnectorBootstrap {
         if (useRegistrySsl) {
             if (registry == null) {
                 try {
-                    registry = LocateRegistry.createRegistry(port, csf, ssf);
+                    registry = new RegistryImpl(port, csf, ssf);
                     registry.bind("jmxrmi", exporter.firstExported);
                 } catch (RemoteException ex) {
                     Logger.getLogger(ConnectorBootstrap.class.getName()).log(Level.SEVERE, null, ex);
-              } catch (AlreadyBoundException ex) {
+                } catch (AlreadyBoundException ex) {
                     Logger.getLogger(ConnectorBootstrap.class.getName()).log(Level.SEVERE, null, ex);
                 }
             } else {
@@ -568,7 +569,7 @@ public final class ConnectorBootstrap {
         } else {
             if (registry == null) {
                 try {
-                    registry = LocateRegistry.createRegistry(port);
+                    registry = new RegistryImpl(port);
                     registry.bind("jmxrmi", exporter.firstExported);
                 } catch (RemoteException ex) {
                     Logger.getLogger(ConnectorBootstrap.class.getName()).log(Level.SEVERE, null, ex);
@@ -593,7 +594,7 @@ public final class ConnectorBootstrap {
 
     public static void resetRegistry() {
         try {
-            exporter.unexportObject(exporter.firstExported, true);
+            // exporter.unexportObject(exporter.firstExported, true);
             ConnectorBootstrap.registry.unbind("jmxrmi");
         } catch (RemoteException ex) {
             Logger.getLogger(ConnectorBootstrap.class.getName()).log(Level.SEVERE, null, ex);

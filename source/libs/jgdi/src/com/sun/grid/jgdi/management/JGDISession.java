@@ -53,14 +53,17 @@ import javax.security.auth.Subject;
  *  Session for a JMX connection to JGDI
  */
 public class JGDISession {
-
+    
     private final static Logger log = Logger.getLogger(JGDISession.class.getName());
+    
     private final static Map<Long, JGDISession> sessionMap = new HashMap<Long, JGDISession>();
     private final static ReadWriteLock sessionLock = new ReentrantReadWriteLock();
+    
     private final long id;
     private final Lock lock = new ReentrantLock();
     private final NotificationBridge notificationBridge;
     private final String url;
+    
     private JGDI jgdi;
     private boolean closed;
 
@@ -74,7 +77,7 @@ public class JGDISession {
         this.url = url;
         notificationBridge = NotificationBridgeFactory.newInstance(url);
     }
-
+    
     /**
      * Get the jgdi object of this session
      * @return the jgdi object
@@ -85,15 +88,15 @@ public class JGDISession {
         JGDI ret = null;
         lock.lock();
         try {
-            if (closed) {
+            if(closed) {
                 JGDIException ex = new JGDIException("session already closed");
                 log.throwing("JGDISession", "getJGDI", ex);
                 throw ex;
             }
             if (jgdi == null) {
                 jgdi = JGDIFactory.newInstance(url);
-                if (log.isLoggable(Level.FINE)) {
-                    log.log(Level.FINE, "jgdi object {0} for session {1} created", new Object[]{jgdi, getId()});
+                if(log.isLoggable(Level.FINE)) {
+                    log.log(Level.FINE,"jgdi object {0} for session {1} created", new Object [] { jgdi, getId() });
                 }
             }
             ret = jgdi;
@@ -121,7 +124,7 @@ public class JGDISession {
         log.entering("JGDISession", "close");
         lock.lock();
         try {
-            if (!closed) {
+            if(!closed) {
                 closed = true;
                 if (jgdi != null) {
                     try {
@@ -139,18 +142,19 @@ public class JGDISession {
                     notificationBridge.close();
                 } catch (Exception ex) {
                     LogRecord lr = new LogRecord(Level.WARNING, "Error while closing notification bridge of session {0}");
-                    lr.setParameters(new Object[]{getId()});
+                    lr.setParameters(new Object[] { getId() });
                     lr.setThrown(ex);
                     log.log(lr);
                 }
             }
-            notificationBridge.eventOccured(new ConnectionClosedEvent(System.currentTimeMillis(), -1));
+            notificationBridge.eventOccured(new ConnectionClosedEvent(System.currentTimeMillis(),-1));
         } finally {
             lock.unlock();
         }
         log.exiting("JGDISession", "close");
     }
-
+    
+    
     private static long getSessionId() throws JGDIException {
         Subject sub = Subject.getSubject(AccessController.getContext());
         if (sub != null) {
@@ -162,7 +166,7 @@ public class JGDISession {
         }
         throw new JGDIException("no active session found in subject " + sub);
     }
-
+    
     /**
      * is this session already closed
      * @return <code>true</code> if this session is already closed
@@ -179,7 +183,7 @@ public class JGDISession {
         log.entering("JGDISession", "isClosed", ret);
         return ret;
     }
-
+    
     /**
      * Get the jgdi session from the security context
      * @return the current jgdi session
@@ -233,8 +237,8 @@ public class JGDISession {
      * @return the new session or <code>null</code> if a session with this id already exists
      */
     public static JGDISession createNewSession(long sessionId, String url) {
-        if (log.isLoggable(Level.FINER)) {
-            log.entering("JGDISession", "createNewSession", new Object[]{sessionId, url});
+        if(log.isLoggable(Level.FINER)) {
+            log.entering("JGDISession", "createNewSession", new Object [] { sessionId, url });
         }
         JGDISession ret = null;
         sessionLock.writeLock().lock();
@@ -253,7 +257,7 @@ public class JGDISession {
         log.exiting("JGDISession", "createNewSession", ret);
         return ret;
     }
-
+    
     /**
      * Close all jgdi sessions
      */
@@ -261,13 +265,13 @@ public class JGDISession {
         log.entering("JGDISession", "closeAllSessions");
         sessionLock.writeLock().lock();
         try {
-            for (JGDISession session : sessionMap.values()) {
+            for(JGDISession session: sessionMap.values()) {
                 session.close();
             }
             sessionMap.clear();
         } finally {
             sessionLock.writeLock().unlock();
-        }
+        }        
         log.exiting("JGDISession", "closeAllSessions");
     }
 
@@ -278,4 +282,5 @@ public class JGDISession {
     public long getId() {
         return id;
     }
+
 }

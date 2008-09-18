@@ -91,6 +91,8 @@ static void qevent_start_trigger_script(int qevent_event, const char* script_fil
 static qevent_options* qevent_get_option_struct(void);
 static void qevent_set_option_struct(qevent_options *option_struct);
 
+int main(int argc, char *argv[]);
+
 
 static void  qevent_set_option_struct(qevent_options *option_struct) {
    Global_qevent_options=option_struct;
@@ -128,23 +130,23 @@ print_event(sge_evc_class_t *evc, object_description *object_base, sge_object_ty
    return SGE_EMA_OK;
 }
 
-#ifndef QEVENT_SHOW_ALL
 static sge_callback_result
 print_jatask_event(sge_evc_class_t *evc, object_description *object_base, sge_object_type type, 
                    sge_event_action action, lListElem *event, void *clientdata)
 {
    char buffer[1024];
+   u_long32 timestamp;
    dstring buffer_wrapper;
 
    DENTER(TOP_LAYER, "print_jatask_event");
 
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
    
+   timestamp = sge_get_gmt();
+
    DPRINTF(("%s\n", event_text(event, &buffer_wrapper)));
    if (lGetPosViaElem(event, ET_type, SGE_NO_ABORT) >= 0) {
       u_long32 type = lGetUlong(event, ET_type);
-      u_long32 timestamp = lGetUlong(event, ET_timestamp);
-      
       if (type == sgeE_JATASK_MOD) { 
          lList *jat = lGetList(event,ET_new_version);
          u_long job_id  = lGetUlong(event, ET_intkey);
@@ -200,7 +202,7 @@ print_jatask_event(sge_evc_class_t *evc, object_description *object_base, sge_ob
    DEXIT;
    return SGE_EMA_OK;
 }
-#endif
+
 
 static sge_callback_result
 analyze_jatask_event(sge_evc_class_t *evc, object_description *object_base,sge_object_type type, 
@@ -480,7 +482,7 @@ int main(int argc, char *argv[])
 
    DENTER_MAIN(TOP_LAYER, "qevent");
 
-/*    sge_mt_init(); */
+   sge_mt_init();
 
    /* dump pid to file */
    qevent_dump_pid_file();
@@ -496,7 +498,8 @@ int main(int argc, char *argv[])
    if (enabled_options.help_option) {
       qevent_show_usage();
       sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT((void**)&ctx, 0);
+      SGE_EXIT(NULL, 0);
+      return 0;
    }
 
    /* are there command line parsing errors ? */
@@ -504,7 +507,7 @@ int main(int argc, char *argv[])
       ERROR((SGE_EVENT, "%s", sge_dstring_get_string(enabled_options.error_message) ));
       qevent_show_usage();
       sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT((void**)&ctx, 1);
+      SGE_EXIT(NULL, 1);
    }
 
 
@@ -516,7 +519,7 @@ int main(int argc, char *argv[])
    if (gdi_setup != AE_OK) {
       answer_list_output(&alp);
       sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT((void**)&ctx, 1);
+      SGE_EXIT(NULL, 1);
    }
    /* TODO: how is the memory we allocate here released ???, SGE_EXIT doesn't */
    if (false == sge_gdi2_evc_setup(&evc, ctx, EV_ID_ANY, &alp, NULL)) {
@@ -532,7 +535,7 @@ int main(int argc, char *argv[])
       /* only for testsuite */
       qevent_testsuite_mode(evc);
       sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT((void**)&ctx, 0);
+      SGE_EXIT(NULL, 0);
    }
 
    /* check for subscribe option */
@@ -540,7 +543,7 @@ int main(int argc, char *argv[])
       /* only for testsuite */
       qevent_subscribe_mode(evc);
       sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT((void**)&ctx, 0);
+      SGE_EXIT(NULL, 0);
    }
 
    if (enabled_options.trigger_option_count > 0) {
@@ -614,7 +617,7 @@ int main(int argc, char *argv[])
 
       sge_dstring_free(enabled_options.error_message);
       sge_prof_cleanup();
-      SGE_EXIT((void**)&ctx, 0);
+      SGE_EXIT(NULL, 0);
       return 0;
    }
 
@@ -623,7 +626,8 @@ int main(int argc, char *argv[])
    qevent_show_usage();
    sge_dstring_free(enabled_options.error_message);
    sge_prof_cleanup();
-   SGE_EXIT((void**)&ctx, 1);
+   SGE_EXIT(NULL, 1);
+   DEXIT;
    return 1;
 }
 
@@ -689,7 +693,7 @@ static void qevent_testsuite_mode(sge_evc_class_t *evc)
    lFreeWhere(&where);
    lFreeWhat(&what);
  
-   /* we want a 5 second event delivery interval */
+   /* we want a 5 sevc->econd event delivery interval */
    evc->ec_set_edtime(evc, 5);
 
    /* and have our events flushed immediately */
@@ -700,7 +704,7 @@ static void qevent_testsuite_mode(sge_evc_class_t *evc)
 
 #endif /* QEVENT_SHOW_ALL */
    
-   while (!shut_me_down) {
+   while(!shut_me_down) {
       sge_mirror_error error = sge_mirror_process_events(evc);
       if (error == SGE_EM_TIMEOUT && !shut_me_down) {
          sleep(10);

@@ -55,7 +55,7 @@
 #include "sge_bootstrap.h"
 
 #if defined( INTERIX )
-#   include "wingrid.h"
+#   include "misc.h"
 #   include "../../../utilbin/sge_passwd.h"
 #endif
 
@@ -78,7 +78,7 @@ struct uidgid_state_t {
    char  last_groupname[SGE_MAX_USERGROUP_BUF]; 
 };
 
-static admin_user_t admin_user = {PTHREAD_MUTEX_INITIALIZER, (uid_t)-1, (gid_t)-1, false};
+static admin_user_t admin_user = {PTHREAD_MUTEX_INITIALIZER, -1, -1, false};
 
 static pthread_once_t uidgid_once = PTHREAD_ONCE_INIT;
 static pthread_key_t  uidgid_state_key;
@@ -669,7 +669,7 @@ int sge_uid2user(uid_t uid, char *dst, size_t sz, int retries)
       buffer = sge_malloc(size);
       
       /* max retries that are made resolving user name */
-      while (getpwuid_r(uid, &pwentry, buffer, size, &pw) != 0 || !pw) {
+      while (getpwuid_r(uid, &pwentry, buffer, size, &pw) != 0) {
          if (!retries--) {
             ERROR((SGE_EVENT, MSG_SYSTEM_GETPWUIDFAILED_US, 
                   sge_u32c(uid), strerror(errno)));

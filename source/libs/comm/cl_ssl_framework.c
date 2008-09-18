@@ -68,15 +68,7 @@
 #ifdef SOLARIS
 #include <link.h>
 #endif /* SOLARIS */
-#else /* LOAD_OPENSSL */
-/*
- * Disable the warning "The variable ... is set but never used."
- * We set a lot of function pointers we don't use currently, but we want
- * to have them ready when we need them.
- */
-#if defined (IRIX65)
-#pragma set woff 1552 
-#endif
+
 #endif /* LOAD_OPENSSL */
 
 #include <openssl/err.h> 
@@ -95,7 +87,6 @@
 #include "cl_commlib.h"
 #include "msg_commlib.h"
 #include "sge_unistd.h"
-#include "sge_os.h"
 
 #if (OPENSSL_VERSION_NUMBER < 0x0090700fL) 
 #define OPENSSL_CONST
@@ -175,7 +166,6 @@ static int                  (*cl_com_ssl_func__SSL_connect)                     
 static int                  (*cl_com_ssl_func__SSL_shutdown)                        (SSL *s);
 static int                  (*cl_com_ssl_func__SSL_clear)                           (SSL *s);
 static void                 (*cl_com_ssl_func__SSL_free)                            (SSL *ssl);
-static int                  (*cl_com_ssl_func__SSL_get_fd)                          (const SSL *ssl);
 static int                  (*cl_com_ssl_func__SSL_get_error)                       (SSL *s,int ret_code);
 static long                 (*cl_com_ssl_func__SSL_get_verify_result)               (SSL *ssl);
 static X509*                (*cl_com_ssl_func__SSL_get_peer_certificate)            (SSL *s);
@@ -197,22 +187,22 @@ static const char*          (*cl_com_ssl_func__SSL_get_cipher_list)             
 static int                  (*cl_com_ssl_func__SSL_CTX_set_cipher_list)             (SSL_CTX *,const char *str);
 static int                  (*cl_com_ssl_func__SSL_set_cipher_list)                 (SSL *ssl, const char *str);
 static void                 (*cl_com_ssl_func__SSL_set_quiet_shutdown)              (SSL *ssl, int mode);
-static void *               (*cl_com_ssl_func__PEM_ASN1_read_bio)                   (void *(*d2i)(),const char *name,BIO *bp, void **x, pem_password_cb *cb, void *u);
-static X509*                (*cl_com_ssl_func__d2i_X509)                            (X509 **a, const unsigned char **pp, long length);
-static PKCS8_PRIV_KEY_INFO *(*cl_com_ssl_func__d2i_PKCS8_PRIV_KEY_INFO)             (PKCS8_PRIV_KEY_INFO **x, const unsigned char **in, long len);
-static EVP_PKEY*            (*cl_com_ssl_func__d2i_PrivateKey)                      (int type, EVP_PKEY **a, const unsigned char **pp, long length);
-static EVP_PKEY*            (*cl_com_ssl_func__d2i_AutoPrivateKey)                  (EVP_PKEY **a, const unsigned char **pp, long length);
-static EVP_PKEY*            (*cl_com_ssl_func__d2i_AutoPrivateKey)                  (EVP_PKEY **a, const unsigned char **pp, long length);
+static char *               (*cl_com_ssl_func__PEM_ASN1_read_bio)                   (char *(*d2i)(),const char *name,BIO *bp,char **x, pem_password_cb *cb, void *u);
+static X509*                (*cl_com_ssl_func__d2i_X509)                            (X509 **a, unsigned char **pp, long length);
+static PKCS8_PRIV_KEY_INFO *(*cl_com_ssl_func__d2i_PKCS8_PRIV_KEY_INFO)             (PKCS8_PRIV_KEY_INFO **x,  unsigned char **in, long len);
+static EVP_PKEY*            (*cl_com_ssl_func__d2i_PrivateKey)                      (int type, EVP_PKEY **a, unsigned char **pp, long length);
+static EVP_PKEY*            (*cl_com_ssl_func__d2i_AutoPrivateKey)                  (EVP_PKEY **a, unsigned char **pp, long length);
+static EVP_PKEY*            (*cl_com_ssl_func__d2i_AutoPrivateKey)                  (EVP_PKEY **a, unsigned char **pp, long length);
 static EVP_PKEY*            (*cl_com_ssl_func__d2i_PKCS8PrivateKey_bio)             (BIO *bp, EVP_PKEY **x, pem_password_cb *cb, void *u);
 static EVP_PKEY*            (*cl_com_ssl_func__EVP_PKCS82PKEY)                      (PKCS8_PRIV_KEY_INFO *p8);
-static ASN1_VALUE*          (*cl_com_ssl_func__ASN1_item_d2i)                       (ASN1_VALUE **pval, const unsigned char **in, long len, const ASN1_ITEM *it);
+static ASN1_VALUE*          (*cl_com_ssl_func__ASN1_item_d2i)                       (ASN1_VALUE **pval, unsigned char **in, long len, const ASN1_ITEM *it);
 
 #ifdef ENABLE_CRL
-static void *               (*cl_com_ssl_func__PEM_ASN1_read)                       (void *(*d2i)(),const char *name,FILE *fp,void **x, pem_password_cb *cb, void *u);
+static char *               (*cl_com_ssl_func__PEM_ASN1_read)                       (char *(*d2i)(),const char *name,FILE *fp,char **x, pem_password_cb *cb, void *u);
 static X509_STORE *         (*cl_com_ssl_func__SSL_CTX_get_cert_store)              (SSL_CTX *ctx);
 static int                  (*cl_com_ssl_func__X509_STORE_add_crl)                  (X509_STORE *ctx, X509_CRL *x);
-static X509_CRL*            (*cl_com_ssl_func__d2i_X509_CRL)                        (X509_CRL **a, const unsigned char **pp, long length);
-static int                  (*cl_com_ssl_func__X509_STORE_set_flags)                (X509_STORE *ctx, unsigned long flags);
+static X509_CRL*            (*cl_com_ssl_func__d2i_X509_CRL)                        (X509_CRL **a, unsigned char **pp, long length);
+static void                 (*cl_com_ssl_func__X509_STORE_set_flags)                (X509_STORE *ctx, long flags);
 static X509*                (*cl_com_ssl_func__X509_STORE_CTX_get_current_cert)     (X509_STORE_CTX *ctx);
 static X509_STORE*          (*cl_com_ssl_func__X509_STORE_new)                      (void);
 static X509_NAME*           (*cl_com_ssl_func__X509_get_subject_name)               (X509 *a);
@@ -265,14 +255,14 @@ static void                 (*cl_com_ssl_func__X509_STORE_free)                 
 #endif
 
 #define  cl_com_ssl_func__PEM_read_bio_X509(bp,x,cb,u) (X509 *)cl_com_ssl_func__PEM_ASN1_read_bio( \
-   (void *(*)())cl_com_ssl_func__d2i_X509,PEM_STRING_X509,bp,(void **)x,cb,u)
+   (char *(*)())cl_com_ssl_func__d2i_X509,PEM_STRING_X509,bp,(char **)x,cb,u)
 #define  cl_com_ssl_func__PEM_read_bio_PrivateKey(bp,x,cb,u) (EVP_PKEY *)cl_com_ssl_func__PEM_ASN1_read_bio( \
-   (void *(*)())cl_com_ssl_func__d2i_AutoPrivateKey,PEM_STRING_EVP_PKEY,bp,(void **)x,cb,u)
+   (char *(*)())cl_com_ssl_func__d2i_AutoPrivateKey,PEM_STRING_EVP_PKEY,bp,(char **)x,cb,u)
 
 static PKCS8_PRIV_KEY_INFO* cl_com_ssl_func__PEM_read_bio_PKCS8_PRIV_KEY_INFO(BIO *bp, PKCS8_PRIV_KEY_INFO **x, pem_password_cb *cb, void *u)
 { 
-   return((PKCS8_PRIV_KEY_INFO *)cl_com_ssl_func__PEM_ASN1_read_bio((void *(*)())cl_com_ssl_func__d2i_PKCS8_PRIV_KEY_INFO, PEM_STRING_PKCS8INF, 
-            bp, (void **)x,cb,u));
+   return((PKCS8_PRIV_KEY_INFO *)cl_com_ssl_func__PEM_ASN1_read_bio((char *(*)())cl_com_ssl_func__d2i_PKCS8_PRIV_KEY_INFO, PEM_STRING_PKCS8INF, 
+            bp, (char **)x,cb,u));
 }
 
 
@@ -296,7 +286,6 @@ typedef struct cl_com_ssl_private_type {
    int                connect_port;        /* port to connect to */
    int                connect_in_port;     /* port from where client is connected (used for reserved port check) */
    int                sockfd;              /* socket file descriptor */
-   int                pre_sockfd;          /* socket which was prepared for later listen call (only_prepare_service == TRUE */
    struct sockaddr_in client_addr;         /* used in connect for storing client addr of connection partner */ 
 
    /* SSL specific */
@@ -362,7 +351,6 @@ static int                   cl_com_ssl_verify_callback(int preverify_ok, X509_S
 static int                   cl_com_ssl_set_default_mode(SSL_CTX *ctx, SSL *ssl);
 static void                  cl_com_ssl_log_mode_settings(long mode);
 static int                   cl_com_ssl_fill_private_from_peer_cert(cl_com_ssl_private_t *private, cl_bool_t is_server);
-static int cl_com_ssl_connection_request_handler_setup_finalize(cl_com_connection_t* connection);
 
 
 #ifdef __CL_FUNCTION__
@@ -936,7 +924,6 @@ static int cl_com_ssl_destroy_symbol_table(void) {
       cl_com_ssl_func__SSL_shutdown   = NULL;
       cl_com_ssl_func__SSL_clear   = NULL;
       cl_com_ssl_func__SSL_free   = NULL;
-      cl_com_ssl_func__SSL_get_fd = NULL;
       cl_com_ssl_func__SSL_get_error   = NULL;
       cl_com_ssl_func__SSL_get_verify_result   = NULL;
       cl_com_ssl_func__SSL_get_peer_certificate   = NULL;
@@ -1085,7 +1072,7 @@ static int cl_com_ssl_build_symbol_table(void) {
 #endif
       
       if (cl_com_ssl_crypto_handle == NULL) {
-         CL_LOG_STR(CL_LOG_ERROR, "can't load ssl library: ", dlerror());
+         CL_LOG(CL_LOG_ERROR,"can't load ssl library");
          cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_DLOPEN_SSL_LIB_FAILED, MSG_CL_SSL_FW_OPEN_SSL_CRYPTO_FAILED);
          pthread_mutex_unlock(&cl_com_ssl_crypto_handle_mutex);
          return CL_RETVAL_SSL_DLOPEN_SSL_LIB_FAILED;
@@ -1301,13 +1288,6 @@ static int cl_com_ssl_build_symbol_table(void) {
          had_errors++;
       }
 
-      func_name = "SSL_get_fd";
-      cl_com_ssl_func__SSL_get_fd = (int (*)(const SSL *ssl))dlsym(cl_com_ssl_crypto_handle, func_name);
-      if (cl_com_ssl_func__SSL_get_fd == NULL) {
-         CL_LOG_STR(CL_LOG_ERROR, "dlsym error: can't get function address:", func_name);
-         had_errors++;
-      }
-
       func_name = "SSL_get_error";
       cl_com_ssl_func__SSL_get_error = (int (*)(SSL *s,int ret_code))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__SSL_get_error == NULL) {
@@ -1456,7 +1436,7 @@ static int cl_com_ssl_build_symbol_table(void) {
       }
 
       func_name = "PEM_ASN1_read_bio";
-      cl_com_ssl_func__PEM_ASN1_read_bio = (void *(*)(void *(*d2i)(),const char *name,BIO *bp,void **x, pem_password_cb *cb, void *u))dlsym(cl_com_ssl_crypto_handle, func_name);
+      cl_com_ssl_func__PEM_ASN1_read_bio = (char *(*)(char *(*d2i)(),const char *name,BIO *bp,char **x, pem_password_cb *cb, void *u))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__PEM_ASN1_read_bio == NULL) {
          CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
          had_errors++;
@@ -1464,7 +1444,7 @@ static int cl_com_ssl_build_symbol_table(void) {
 
 #ifdef ENABLE_CRL
       func_name = "PEM_ASN1_read";
-      cl_com_ssl_func__PEM_ASN1_read = (void *(*)(void *(*d2i)(),const char *name,FILE *fp,void **x, pem_password_cb *cb, void *u))dlsym(cl_com_ssl_crypto_handle, func_name);
+      cl_com_ssl_func__PEM_ASN1_read = (char *(*)(char *(*d2i)(),const char *name,FILE *fp,char **x, pem_password_cb *cb, void *u))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__PEM_ASN1_read == NULL) {
          CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
          had_errors++;
@@ -1485,35 +1465,35 @@ static int cl_com_ssl_build_symbol_table(void) {
       }
 
       func_name = "d2i_X509_CRL";
-      cl_com_ssl_func__d2i_X509_CRL = (X509_CRL* (*)(X509_CRL **a, const unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
+      cl_com_ssl_func__d2i_X509_CRL = (X509_CRL* (*)(X509_CRL **a, unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__d2i_X509_CRL == NULL) {
          CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
          had_errors++;
       }
 
       func_name = "d2i_X509";
-      cl_com_ssl_func__d2i_X509 = (X509* (*)(X509 **a, const unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
+      cl_com_ssl_func__d2i_X509 = (X509* (*)(X509 **a, unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__d2i_X509 == NULL) {
          CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
          had_errors++;
       }
 
       func_name = "d2i_PKCS8_PRIV_KEY_INFO";
-      cl_com_ssl_func__d2i_PKCS8_PRIV_KEY_INFO = (PKCS8_PRIV_KEY_INFO* (*)(PKCS8_PRIV_KEY_INFO **a, const unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
+      cl_com_ssl_func__d2i_PKCS8_PRIV_KEY_INFO = (PKCS8_PRIV_KEY_INFO* (*)(PKCS8_PRIV_KEY_INFO **a, unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__d2i_PKCS8_PRIV_KEY_INFO == NULL) {
          CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
          had_errors++;
       }
 
       func_name = "d2i_PrivateKey";
-      cl_com_ssl_func__d2i_PrivateKey = (EVP_PKEY* (*)(int type, EVP_PKEY **a, const unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
+      cl_com_ssl_func__d2i_PrivateKey = (EVP_PKEY* (*)(int type, EVP_PKEY **a, unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__d2i_PrivateKey == NULL) {
          CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
          had_errors++;
       }
 
       func_name = "d2i_AutoPrivateKey";
-      cl_com_ssl_func__d2i_AutoPrivateKey = (EVP_PKEY* (*)(EVP_PKEY **a, const unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
+      cl_com_ssl_func__d2i_AutoPrivateKey = (EVP_PKEY* (*)(EVP_PKEY **a, unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__d2i_AutoPrivateKey == NULL) {
          CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
          had_errors++;
@@ -1534,14 +1514,14 @@ static int cl_com_ssl_build_symbol_table(void) {
       }
 
       func_name = "ASN1_item_d2i";
-      cl_com_ssl_func__ASN1_item_d2i = (ASN1_VALUE* (*)(ASN1_VALUE **pval, const unsigned char **in, long len, const ASN1_ITEM *it))dlsym(cl_com_ssl_crypto_handle, func_name);
+      cl_com_ssl_func__ASN1_item_d2i = (ASN1_VALUE* (*)(ASN1_VALUE **pval, unsigned char **in, long len, const ASN1_ITEM *it))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__ASN1_item_d2i == NULL) {
          CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
          had_errors++;
       }
 
       func_name = "X509_STORE_set_flags";
-      cl_com_ssl_func__X509_STORE_set_flags = (int (*)(X509_STORE *ctx, unsigned long flags))dlsym(cl_com_ssl_crypto_handle, func_name);
+      cl_com_ssl_func__X509_STORE_set_flags = (void (*)(X509_STORE *ctx, long flags))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__X509_STORE_set_flags == NULL) {
          CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
          had_errors++;
@@ -1858,10 +1838,9 @@ static int cl_com_ssl_build_symbol_table(void) {
       cl_com_ssl_func__SSL_shutdown                        = SSL_shutdown;
       cl_com_ssl_func__SSL_clear                           = SSL_clear;
       cl_com_ssl_func__SSL_free                            = SSL_free;
-      cl_com_ssl_func__SSL_get_fd                          = SSL_get_fd;
-      cl_com_ssl_func__SSL_get_error                       = (int (*)(SSL *s,int ret_code))SSL_get_error;
-      cl_com_ssl_func__SSL_get_verify_result               = (long (*)(SSL *ssl))SSL_get_verify_result;
-      cl_com_ssl_func__SSL_get_peer_certificate            = (X509* (*)(SSL *s))SSL_get_peer_certificate;
+      cl_com_ssl_func__SSL_get_error                       = SSL_get_error;
+      cl_com_ssl_func__SSL_get_verify_result               = SSL_get_verify_result;
+      cl_com_ssl_func__SSL_get_peer_certificate            = SSL_get_peer_certificate;
       cl_com_ssl_func__SSL_write                           = SSL_write;
       cl_com_ssl_func__SSL_read                            = SSL_read;
       cl_com_ssl_func__X509_get_subject_name               = X509_get_subject_name;
@@ -1876,7 +1855,7 @@ static int cl_com_ssl_build_symbol_table(void) {
       cl_com_ssl_func__SSL_ctrl                            = SSL_ctrl;
       cl_com_ssl_func__RAND_status                         = RAND_status;
       cl_com_ssl_func__RAND_load_file                      = RAND_load_file;
-      cl_com_ssl_func__SSL_get_cipher_list                 = (const char* (*)(SSL *ssl, int priority))SSL_get_cipher_list;
+      cl_com_ssl_func__SSL_get_cipher_list                 = SSL_get_cipher_list;
       cl_com_ssl_func__SSL_CTX_set_cipher_list             = SSL_CTX_set_cipher_list;
       cl_com_ssl_func__SSL_set_cipher_list                 = SSL_set_cipher_list;
       cl_com_ssl_func__SSL_set_quiet_shutdown              = SSL_set_quiet_shutdown;
@@ -1891,7 +1870,7 @@ static int cl_com_ssl_build_symbol_table(void) {
 
 #ifdef ENABLE_CRL
       cl_com_ssl_func__PEM_ASN1_read                       = PEM_ASN1_read;
-      cl_com_ssl_func__SSL_CTX_get_cert_store              = (X509_STORE *(*)(SSL_CTX *ctx))SSL_CTX_get_cert_store;
+      cl_com_ssl_func__SSL_CTX_get_cert_store              = SSL_CTX_get_cert_store;
       cl_com_ssl_func__X509_STORE_add_crl                  = X509_STORE_add_crl;
       cl_com_ssl_func__d2i_X509_CRL                        = d2i_X509_CRL;
       cl_com_ssl_func__X509_STORE_set_flags = X509_STORE_set_flags;
@@ -1909,13 +1888,13 @@ static int cl_com_ssl_build_symbol_table(void) {
       cl_com_ssl_func__ERR_print_errors_fp = ERR_print_errors_fp;
       cl_com_ssl_func__X509_LOOKUP_file = X509_LOOKUP_file;
       cl_com_ssl_func__X509_STORE_CTX_get_ex_data = X509_STORE_CTX_get_ex_data;
-      cl_com_ssl_func__SSL_get_SSL_CTX = (SSL_CTX* (*)(SSL *ssl))SSL_get_SSL_CTX;
+      cl_com_ssl_func__SSL_get_SSL_CTX = SSL_get_SSL_CTX;
       cl_com_ssl_func__X509_STORE_CTX_get_error_depth = X509_STORE_CTX_get_error_depth;
       cl_com_ssl_func__X509_NAME_oneline = X509_NAME_oneline;
       cl_com_ssl_func__CRYPTO_free = CRYPTO_free;
       cl_com_ssl_func__X509_verify_cert_error_string = X509_verify_cert_error_string;
       cl_com_ssl_func__SSL_get_ex_data_X509_STORE_CTX_idx = SSL_get_ex_data_X509_STORE_CTX_idx;
-      cl_com_ssl_func__SSL_CTX_get_ex_data = (void* (*)(SSL_CTX *ssl,int idx))SSL_CTX_get_ex_data;
+      cl_com_ssl_func__SSL_CTX_get_ex_data = SSL_CTX_get_ex_data;
       cl_com_ssl_func__SSL_CTX_set_ex_data = SSL_CTX_set_ex_data;
       cl_com_ssl_func__sk_num = sk_num;
       cl_com_ssl_func__sk_value = sk_value;
@@ -2022,24 +2001,20 @@ static int cl_com_ssl_transform_ssl_error(unsigned long ssl_error, char* buffer,
          if (counter == 2) {
             module = strdup(help);
             if (module == NULL) {
-               free(buffer_copy);
                return CL_RETVAL_MALLOC;
             }
          }
          if (counter == 4) {
             error_text = strdup(help);
             if (error_text == NULL) {
-               free(buffer_copy);
-               if (module != NULL) {
-                  free(module);
-               }
+               free(module);
+               module = NULL;
                return CL_RETVAL_MALLOC;
             }
          }
       }
    }
 
-   /* buffer copy is malloc()ed here and != NULL , free buffer_copy ...*/
    free(buffer_copy);
    buffer_copy = NULL;
 
@@ -2048,6 +2023,7 @@ static int cl_com_ssl_transform_ssl_error(unsigned long ssl_error, char* buffer,
       if (module == NULL) {
          if (error_text != NULL) {
             free(error_text);
+            error_text = NULL;
          }
          return CL_RETVAL_MALLOC;
       }
@@ -2057,6 +2033,7 @@ static int cl_com_ssl_transform_ssl_error(unsigned long ssl_error, char* buffer,
       error_text = (char*) malloc(sizeof(char)*buflen);
       if (error_text == NULL) {
          free(module);
+         module = NULL;
          return CL_RETVAL_MALLOC;
       }
       snprintf(error_text, buflen, buffer);
@@ -2099,10 +2076,9 @@ static int cl_com_ssl_transform_ssl_error(unsigned long ssl_error, char* buffer,
       }
    }
 
-   /* both variables are malloc()ed and != NULL at this point */
    free(module);
-   module = NULL;
    free(error_text);
+   module = NULL;
    error_text = NULL;
 
    if (do_ignore == CL_TRUE) {
@@ -2582,11 +2558,7 @@ int cl_com_ssl_get_fd(cl_com_connection_t* connection, int* fd) {
       return CL_RETVAL_PARAMS;
    }
    if ( (private=cl_com_ssl_get_private(connection)) != NULL) {
-      if (private->sockfd < 0) {
-         *fd = private->pre_sockfd;
-      } else {
-         *fd = private->sockfd;
-      }
+      *fd = private->sockfd;
       return CL_RETVAL_OK;
    }
    return CL_RETVAL_UNKNOWN;
@@ -2720,7 +2692,6 @@ int cl_com_ssl_setup_connection(cl_com_connection_t**          connection,
 
    /* setup ssl private struct */
    com_private->sockfd = -1;
-   com_private->pre_sockfd = -1;
    com_private->server_port = server_port;
    com_private->connect_port = connect_port;
 
@@ -3148,7 +3119,6 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout) {
    }
 
    if ( connection->connection_sub_state == CL_COM_OPEN_INIT) {
-      int ret;
       int on = 1;
       char* unique_host = NULL;
       struct timeval now;
@@ -3183,17 +3153,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout) {
             }
             break;
          }
-      }
-
-      ret = sge_dup_fd_above_stderr(&private->sockfd);
-      if (ret != 0) {
-         CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = ", ret);
-         shutdown(private->sockfd, 2);
-         close(private->sockfd);
-         private->sockfd = -1;
-         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE);
-         return CL_RETVAL_DUP_SOCKET_FD_ERROR;
-      }
+      }    
 
       if (private->sockfd >= FD_SETSIZE) {
           CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");
@@ -3559,60 +3519,13 @@ int cl_com_ssl_read_GMSH(cl_com_connection_t* connection, unsigned long *only_on
    return retval;
 }
 
-#ifdef __CL_FUNCTION__
-#undef __CL_FUNCTION__
-#endif
-#define __CL_FUNCTION__ "cl_com_ssl_connection_request_handler_setup_finalize()"
-static int cl_com_ssl_connection_request_handler_setup_finalize(cl_com_connection_t* connection) {
-   int sockfd = 0;
-   cl_com_ssl_private_t* private = NULL;
-
-   if (connection == NULL ) {
-      CL_LOG(CL_LOG_ERROR,"no connection");
-      return CL_RETVAL_PARAMS;
-   }
-   private = cl_com_ssl_get_private(connection);
-   if (private == NULL) {
-      CL_LOG(CL_LOG_ERROR,"framework not initalized");
-      return CL_RETVAL_PARAMS; 
-   }
- 
-   sockfd = private->pre_sockfd;
-   if (sockfd < 0) {
-      CL_LOG(CL_LOG_ERROR, "pre_sockfd not valid");
-      return CL_RETVAL_PARAMS;
-   }
-
-
-   /* make socket listening for incoming connects */
-   if (listen(sockfd, 5) != 0) {   /* TODO: set listen params */
-      shutdown(sockfd, 2);
-      close(sockfd);
-      CL_LOG(CL_LOG_ERROR,"listen error");
-      return CL_RETVAL_LISTEN_ERROR;
-   }
-   CL_LOG_INT(CL_LOG_INFO,"listening with backlog=", 5);
-
-   /* set server socked file descriptor and mark connection as service handler */
-   private->sockfd = sockfd;
-   
-
-   CL_LOG(CL_LOG_INFO,"===============================");
-   CL_LOG(CL_LOG_INFO,"SSL server setup done:");
-   CL_LOG_STR(CL_LOG_INFO,"host:     ",connection->local->comp_host);
-   CL_LOG_STR(CL_LOG_INFO,"component:",connection->local->comp_name);
-   CL_LOG_INT(CL_LOG_INFO,"id:       ",(int)connection->local->comp_id);
-   CL_LOG(CL_LOG_INFO,"===============================");
-   return CL_RETVAL_OK;
-}
 
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_ssl_connection_request_handler_setup()"
-int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection, cl_bool_t only_prepare_service) {
-   int ret;
+int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection) {
    int sockfd = 0;
    struct sockaddr_in serv_addr;
    cl_com_ssl_private_t* private = NULL;
@@ -3645,17 +3558,6 @@ int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection,
    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
       CL_LOG(CL_LOG_ERROR,"could not create socket");
       return CL_RETVAL_CREATE_SOCKET;
-   }
-
-   ret = sge_dup_fd_above_stderr(&sockfd);
-   if (ret != 0) {
-      CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = ", ret);
-      shutdown(sockfd, 2);
-      close(sockfd);
-      sockfd = -1;
-      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, 
-                              MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE);
-      return CL_RETVAL_DUP_SOCKET_FD_ERROR;
    }
 
    if (sockfd >= FD_SETSIZE) {
@@ -3708,17 +3610,26 @@ int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection,
       CL_LOG_INT(CL_LOG_INFO,"random server port is:", private->server_port);
    }
 
-   /* if only_prepare_service is enabled we don't want to set the port into
-      listen mode now, we have to do it later */
-   private->pre_sockfd = sockfd;
-   if (only_prepare_service == CL_TRUE) {
-      CL_LOG_INT(CL_LOG_INFO,"service socket prepared for listen, using sockfd=", sockfd);
-      return CL_RETVAL_OK;
+   /* make socket listening for incoming connects */
+   if (listen(sockfd, 5) != 0) {   /* TODO: set listen params */
+      shutdown(sockfd, 2);
+      close(sockfd);
+      CL_LOG(CL_LOG_ERROR,"listen error");
+      return CL_RETVAL_LISTEN_ERROR;
    }
+   CL_LOG_INT(CL_LOG_INFO,"listening with backlog=", 5);
 
-   return cl_com_ssl_connection_request_handler_setup_finalize(connection);
+   /* set server socked file descriptor and mark connection as service handler */
+   private->sockfd = sockfd;
+
+   CL_LOG(CL_LOG_INFO,"===============================");
+   CL_LOG(CL_LOG_INFO,"SSL server setup done:");
+   CL_LOG_STR(CL_LOG_INFO,"host:     ",connection->local->comp_host);
+   CL_LOG_STR(CL_LOG_INFO,"component:",connection->local->comp_name);
+   CL_LOG_INT(CL_LOG_INFO,"id:       ",(int)connection->local->comp_id);
+   CL_LOG(CL_LOG_INFO,"===============================");
+   return CL_RETVAL_OK;
 }
-
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
@@ -3765,79 +3676,68 @@ int cl_com_ssl_connection_request_handler(cl_com_connection_t* connection,cl_com
    memset((char *) &cli_addr, 0, sizeof(cli_addr));
    new_sfd = accept(server_fd, (struct sockaddr *) &cli_addr, &fromlen);
    if (new_sfd > -1) {
-      char* resolved_host_name = NULL;
-      cl_com_ssl_private_t* tmp_private = NULL;
+       char* resolved_host_name = NULL;
+       cl_com_ssl_private_t* tmp_private = NULL;
 
-      retval = sge_dup_fd_above_stderr(&new_sfd);
-      if (retval != 0) {
-         CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = ", retval);
-         shutdown(new_sfd, 2);
-         close(new_sfd);
-         new_sfd = -1;
-         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, 
-                                 MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE);
-         return CL_RETVAL_DUP_SOCKET_FD_ERROR;
-      }
+       if (new_sfd >= FD_SETSIZE) {
+          CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");
+          shutdown(new_sfd, 2);
+          close(new_sfd);
+          cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE );
+          return CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT;
+       }
 
-      if (new_sfd >= FD_SETSIZE) {
-         CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");
-         shutdown(new_sfd, 2);
-         close(new_sfd);
-         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE );
-         return CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT;
-      }
+       cl_com_cached_gethostbyaddr(&(cli_addr.sin_addr), &resolved_host_name ,NULL, NULL); 
+       if (resolved_host_name != NULL) {
+          CL_LOG_STR(CL_LOG_INFO,"new connection from host", resolved_host_name  );
+       } else {
+          CL_LOG(CL_LOG_WARNING,"could not resolve incoming hostname");
+       }
 
-      cl_com_cached_gethostbyaddr(&(cli_addr.sin_addr), &resolved_host_name ,NULL, NULL); 
-      if (resolved_host_name != NULL) {
-         CL_LOG_STR(CL_LOG_INFO,"new connection from host", resolved_host_name  );
-      } else {
-         CL_LOG(CL_LOG_WARNING,"could not resolve incoming hostname");
-      }
-
-      fcntl(new_sfd, F_SETFL, O_NONBLOCK);         /* HP needs O_NONBLOCK, was O_NDELAY */
-      sso = 1;
+       fcntl(new_sfd, F_SETFL, O_NONBLOCK);         /* HP needs O_NONBLOCK, was O_NDELAY */
+       sso = 1;
 #if defined(SOLARIS) && !defined(SOLARIS64)
-      if (setsockopt(new_sfd, IPPROTO_TCP, TCP_NODELAY, (const char *) &sso, sizeof(int)) == -1) {
-         CL_LOG(CL_LOG_ERROR,"could not set TCP_NODELAY");
-      }
+       if (setsockopt(new_sfd, IPPROTO_TCP, TCP_NODELAY, (const char *) &sso, sizeof(int)) == -1) {
+          CL_LOG(CL_LOG_ERROR,"could not set TCP_NODELAY");
+       }
 #else
-      if (setsockopt(new_sfd, IPPROTO_TCP, TCP_NODELAY, &sso, sizeof(int))== -1) { 
-         CL_LOG(CL_LOG_ERROR,"could not set TCP_NODELAY");
-      }
+       if (setsockopt(new_sfd, IPPROTO_TCP, TCP_NODELAY, &sso, sizeof(int))== -1) { 
+          CL_LOG(CL_LOG_ERROR,"could not set TCP_NODELAY");
+       }
 #endif
-      /* here we can investigate more information about the client */
-      /* ntohs(cli_addr.sin_port) ... */
+       /* here we can investigate more information about the client */
+       /* ntohs(cli_addr.sin_port) ... */
 
-      tmp_connection = NULL;
-      /* setup a ssl connection where autoclose is still undefined */
-      if ( (retval=cl_com_ssl_setup_connection(&tmp_connection, 
-                                               private->server_port,
-                                               private->connect_port,
-                                               connection->data_flow_type,
-                                               CL_CM_AC_UNDEFINED,
-                                               connection->framework_type,
-                                               connection->data_format_type,
-                                               connection->tcp_connect_mode,
-                                               private->ssl_setup)) != CL_RETVAL_OK) {
-         cl_com_ssl_close_connection(&tmp_connection); 
-         if (resolved_host_name != NULL) {
-            free(resolved_host_name);
-         }
-         shutdown(new_sfd, 2);
-         close(new_sfd);
-         return retval;
-      }
+       tmp_connection = NULL;
+       /* setup a ssl connection where autoclose is still undefined */
+       if ( (retval=cl_com_ssl_setup_connection(&tmp_connection, 
+                                                private->server_port,
+                                                private->connect_port,
+                                                connection->data_flow_type,
+                                                CL_CM_AC_UNDEFINED,
+                                                connection->framework_type,
+                                                connection->data_format_type,
+                                                connection->tcp_connect_mode,
+                                                private->ssl_setup)) != CL_RETVAL_OK) {
+          cl_com_ssl_close_connection(&tmp_connection); 
+          if (resolved_host_name != NULL) {
+             free(resolved_host_name);
+          }
+          shutdown(new_sfd, 2);
+          close(new_sfd);
+          return retval;
+       }
 
-      tmp_connection->client_host_name = resolved_host_name; /* set resolved hostname of client */
+       tmp_connection->client_host_name = resolved_host_name; /* set resolved hostname of client */
 
-      /* setup cl_com_ssl_private_t */
-      tmp_private = cl_com_ssl_get_private(tmp_connection);
-      if (tmp_private != NULL) {
-         tmp_private->sockfd = new_sfd;   /* fd from accept() call */
-         tmp_private->connect_in_port = ntohs(cli_addr.sin_port);
-      }
-      *new_connection = tmp_connection;
-      return CL_RETVAL_OK;
+       /* setup cl_com_ssl_private_t */
+       tmp_private = cl_com_ssl_get_private(tmp_connection);
+       if (tmp_private != NULL) {
+          tmp_private->sockfd = new_sfd;   /* fd from accept() call */
+          tmp_private->connect_in_port = ntohs(cli_addr.sin_port);
+       }
+       *new_connection = tmp_connection;
+       return CL_RETVAL_OK;
    }
    return CL_RETVAL_OK;
 }
@@ -3930,9 +3830,6 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
 #endif
 
    if (service_connection != NULL && do_read_select != 0) {
-      cl_com_ssl_private_t* private = NULL;
-      int tmp_retval = CL_RETVAL_OK;
-
       /* this is to come out of select when for new connections */
       if(cl_com_ssl_get_private(service_connection) == NULL ) {
          CL_LOG(CL_LOG_ERROR,"service framework is not initalized");
@@ -3942,21 +3839,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
          CL_LOG(CL_LOG_ERROR,"service connection is no service handler");
          return CL_RETVAL_NOT_SERVICE_HANDLER;
       }
-      private = cl_com_ssl_get_private(service_connection);
-      /* check if service is already in listen mode. This might happen
-         when only_prepare_service was set to true at 
-         cl_com_tcp_connection_request_handler_setup() */
-      if (private->sockfd == -1 && private->pre_sockfd != -1 ) {
-         /* finalize server socket setup */
-         tmp_retval = cl_com_ssl_connection_request_handler_setup_finalize(service_connection);
-         if (tmp_retval != CL_RETVAL_OK ) {
-            cl_raw_list_unlock(connection_list);
-            return tmp_retval;
-         } else {
-            private->pre_sockfd = -1;
-         }
-      }
-      server_fd = private->sockfd;
+      server_fd = cl_com_ssl_get_private(service_connection)->sockfd;
       max_fd = MAX(max_fd,server_fd);
 #ifndef USE_POLL
       FD_SET(server_fd,&my_read_fds); 
@@ -4952,7 +4835,8 @@ int cl_com_ssl_setup_connection(cl_com_connection_t**         connection,
 
 /* create/destroy connection functions */
 int cl_com_ssl_open_connection(cl_com_connection_t*   connection,
-                               int                    timeout) {
+                               int                    timeout,
+                               unsigned long          only_once) {
    cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }
@@ -5001,7 +4885,7 @@ int cl_com_ssl_read_GMSH(cl_com_connection_t*        connection,
 
 
 /* create service, accept new connections */
-int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection, cl_bool_t only_prepare_service) {
+int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection) {
    cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }

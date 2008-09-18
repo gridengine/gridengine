@@ -51,7 +51,7 @@
 #endif 
 
 #if defined(INTERIX)
-#  include "wingrid.h"
+#  include "misc.h"
 #endif
 
 int main(int argc, char *argv[]) {

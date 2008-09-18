@@ -832,7 +832,6 @@ if [ $instcommon = true ]; then
       Execute mv $DEST_SGE_ROOT/util/arch.dist $DEST_SGE_ROOT/util/arch
 
       Execute chmod 755 $DEST_SGE_ROOT/util/install_modules \
-			$DEST_SGE_ROOT/util/upgrade_modules \
                         $DEST_SGE_ROOT/util/rctemplates \
                         $DEST_SGE_ROOT/util/resources \
                         $DEST_SGE_ROOT/util/sgeCA \
@@ -854,6 +853,7 @@ if [ $instcommon = true ]; then
                         $DEST_SGE_ROOT/util/sgeCA/sge_ca \
                         $DEST_SGE_ROOT/util/sgeST/sge_st \
                         $DEST_SGE_ROOT/util/sgeSMF/sge_smf.sh \
+                        $DEST_SGE_ROOT/util/sgeSMF/smf_stop_master.sh \
                         $DEST_SGE_ROOT/util/resources/loadsensors/* \
                         $DEST_SGE_ROOT/util/resources/starter_methods/*
 
@@ -1064,8 +1064,8 @@ if [ $instcommon = true ]; then
    if [ $insttxtdoc = true ]; then
       echo "Installing README, ... files"
       Execute cp ../doc/*.asc   $DEST_SGE_ROOT/doc
-      #Execute cp ../doc/README-Autoinstall.txt $DEST_SGE_ROOT/doc
-      #Execute cp ../doc/README-Upgrade.txt $DEST_SGE_ROOT/doc
+      Execute cp ../doc/README-Autoinstall.txt $DEST_SGE_ROOT/doc
+      Execute cp ../doc/README-Upgrade.txt $DEST_SGE_ROOT/doc
       Execute cp ../doc/README-DRMAA.txt $DEST_SGE_ROOT/doc
       Execute chmod 644 $DEST_SGE_ROOT/doc/*
       Cleanup doc      
@@ -1407,9 +1407,9 @@ for i in $ARCH; do
                if [ $DSTARCH = tru64 ]; then
                   libname="$lib.$shlibext"
                elif [ $DSTARCH = darwin-ppc -o $DSTARCH = darwin-x86 ];  then
-                  libname="$lib.$OPENSSLSOVERSION.$shlibext"
+                  libname="$lib.0.9.7.$shlibext"
                else
-                  libname="$lib.$shlibext.$OPENSSLSOVERSION"
+                  libname="$lib.$shlibext.0.9.7"
                fi
 
                if [ -f $OPENSSLBASE/$DSTARCH/lib/$libname ]; then
@@ -1496,10 +1496,6 @@ for i in $ARCH; do
                   ln -s $lib.$shlibext $lib.$jnilibext )
                fi
             done
-
-            if [ -f $CORE_HOME/$DSTARCH/libcore.$shlibext ]; then
-               InstallProg $CORE_HOME/$DSTARCH/libcore.$shlibext
-            fi
          fi
       fi
       cd ..

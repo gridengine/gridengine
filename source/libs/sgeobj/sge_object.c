@@ -106,9 +106,6 @@ static lList *Master_Pe_List = NULL;
 static lList *Master_SUser_List = NULL;
 static lList *Master_RQS_List = NULL;
 static lList *Master_AR_List = NULL;
-static lList *Master_SchedulerConfig_List = NULL;
-
-static lList *Master_Config_List = NULL;
 
 #ifndef __SGE_NO_USERMAPPING__
 static lList *Master_Cuser_List = NULL;
@@ -121,7 +118,7 @@ static object_description object_base[SGE_TYPE_ALL] = {
    { &Master_Adminhost_List,       NULL,                   "ADMINHOST",         AH_Type,   AH_name           },
    { &Master_Calendar_List,        NULL,                   "CALENDAR",          CAL_Type,  CAL_name          },
    { &Master_Ckpt_List,            NULL,                   "CKPT",              CK_Type,   CK_name           },
-   { &Master_Config_List,          NULL,                   "CONFIG",            CONF_Type, CONF_name         },
+   { NULL,                         NULL,                   "CONFIG",            CONF_Type, CONF_name         },
    { NULL,                         NULL,                   "GLOBAL_CONFIG",     NULL,      NoName            },
    { &Master_Exechost_List,        NULL,                   "EXECHOST",          EH_Type,   EH_name           },
    { NULL,                         NULL,                   "JATASK",            JAT_Type,  JAT_task_number   },
@@ -135,7 +132,7 @@ static object_description object_base[SGE_TYPE_ALL] = {
    { &Master_Project_List,         NULL,                   "PROJECT",           PR_Type,   PR_name           },
    { &Master_CQueue_List,          NULL,                   "CQUEUE",            CQ_Type,   CQ_name           },
    { NULL,                         NULL,                   "QINSTANCE",         QU_Type,   QU_qname          },
-   { &Master_SchedulerConfig_List, sconf_validate_config_, "SCHEDD_CONF",       SC_Type,   NoName            },
+   { NULL,                         sconf_validate_config_, "SCHEDD_CONF",       SC_Type,   NoName            },
    { NULL,                         NULL,                   "SCHEDD_MONITOR",    NULL,      NoName            },
    { NULL,                         NULL,                   "SHUTDOWN",          NULL,      NoName            },
    { NULL,                         NULL,                   "QMASTER_GOES_DOWN", NULL,      NoName            },
@@ -179,7 +176,7 @@ obj_thread_local_once_init(void);
 static void
 obj_thread_local_once_init(void) 
 {
-   pthread_key_create(&obj_state_key, obj_state_destroy);
+   pthread_key_create(&obj_state_key, &obj_state_destroy);
 }
 
 static bool 
@@ -313,7 +310,7 @@ static void obj_state_destroy(void* st)
 *     void obj_mt_init(void) 
 *
 *  FUNCTION
-*     Creates the pthread key. Needs to be called when the daemon, clients
+*     creats teh pthread key. Needs to be called when the daemon, clients
 *     starts up
 *
 *  NOTES

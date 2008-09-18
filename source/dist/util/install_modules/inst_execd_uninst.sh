@@ -45,26 +45,23 @@ WelcomeUninstall()
 
    $INFOTEXT -u "Grid Engine uninstallation"
    if [ "$ALL_EXECDS" = true ]; then
-      $INFOTEXT "\nYou are going to uninstall all execution hosts!\n" \
+      $INFOTEXT "\nYour are going to uninstall all execution hosts!\n" \
                 "If you are not sure what you are doing, than please stop\n" \
                 "this procedure with <CTRL-C>!\n" 
    else
-      $INFOTEXT "\nYou are going to uninstall a execution host %s!\n" \
+      $INFOTEXT "\nYour are going to uninstall a execution host!\n" \
                 "If you are not sure what you are doing, than please stop\n" \
-                "this procedure with <CTRL-C>!\n" $HOST
+                "this procedure with <CTRL-C>!\n"
    fi
    
    $INFOTEXT -wait -n "\nHit <RETURN> to continue >> "
-   $CLEAR
 }
 
 FetchHostname()
 {
-   HOSTS=""
    euid=`$SGE_UTILBIN/uidgid -euid`
    local_host=`$SGE_UTILBIN/gethostname -aname`
-   LOCAL_UNINST="false"
-   REMOTE_UNINST_ARGS=""
+   LOCAL_UNINST="false";
 
    if [ $AUTO = "true" ]; then
       tmp_local=""
@@ -76,55 +73,28 @@ FetchHostname()
             tmp_host_list="$tmp_host_list $h"
          fi
       done
-      HOSTS="$tmp_host_list $tmp_local"
-      REMOTE_UNINST_ARGS="-auto $FILE"
-   else
-      HOSTS="$HOST"
+      HOST="$tmp_host_list $tmp_local"
    fi
 
    if [ "$ALL_EXECDS" = true ]; then
-      HOSTS=`qconf -sel`
+      HOST=`qconf -sel`
    fi
-   
-   for h in $HOSTS; do
-      if [ "$NOREMOTE" = "true" -a "$h" = "$local_host" ]; then    #only the local host (from RM list) should be uninstalled and 
-         LOCAL_UNINST="true"                                    #if actual host is equal to local host do uninstallation
-         doUninstall $h
-         break                                                  #break loop, if host found and uninstalled
-      fi
 
-      if [ "$NOREMOTE" = "false" ]; then                            #also uninstall remote hosts
-         if [ "$h" = "$local_host" ]; then                          #if actual host equals to local_host, no rsh/ssh is used for
-            LOCAL_UNINST="true"                                    #uninstallation
-            doUninstall $h
-         else
-            $INFOTEXT -n "The uninstall script has to login to the uninstalled execution host %s\n" \
-                         "Enter the shell name to be used (rsh/ssh) [%s] >>" $h $SHELL_NAME
-            SHELL_NAME=`Enter $SHELL_NAME`
-            SHELL_NAME=`echo "$SHELL_NAME" | tr [A-Z] [a-z]`
-            if [ "$SHELL_NAME" != "rsh" -a "$SHELL_NAME" != "ssh" ]; then
-               $INFOTEXT -n "Skipping uninstallation of exec host $host.\n"\
-                            "Invalid shell name %s was selected." $SHELL_NAME
-               LOCAL_UNINST="false"
-               continue
-            fi
-            which $SHELL_NAME >/dev/null 2>&1
-            if [ $? -ne 0 ]; then
-               $INFOTEXT ">>%s<< is not on your PATH!" $SHELL_NAME
-               continue
-            fi
-            #h must be admin host
-            qconf -ah $h >/dev/null 2>&1
-            $SHELL_NAME $h "/bin/sh -c \"\
-SGE_ROOT=$SGE_ROOT; export SGE_ROOT;\
-SGE_CELL=$SGE_CELL; export SGE_CELL;\
-SGE_REMOTE_FLAG=REMOTE_EXECD_UNINSTALL; export SGE_REMOTE_FLAG;\
-cd $SGE_ROOT; ./inst_sge -ux $REMOTE_UNINST_ARGS\""
-            #In case we failed we better remove admin host
-            qconf -dh $h >/dev/null 2>&1
-         fi
-         LOCAL_UNINST="false"                                   #reset LOCAL_UNINST variable for following uninstallations
+   for h in $HOST; do
+
+   if [ "$NOREMOTE" = "true" -a "$h" = "$local_host" ]; then    #only the local host (from RM list) should be uninstalled and 
+      LOCAL_UNINST="true"                                    #if actual host is equal to local host do uninstallation
+      doUninstall $h
+      break;                                                 #break loop, if host found and uninstalled
+   fi
+
+   if [ "$NOREMOTE" = "false" ]; then                            #also uninstall remote hosts
+      if [ "$h" = "$local_host" ]; then                          #if actual host equals to local_host, no rsh/ssh is used for
+         LOCAL_UNINST="true"                                    #uninstallation
       fi
+      doUninstall $h                                         
+      LOCAL_UNINST="false"                                   #reset LOCAL_UNINST variable for following uninstallations
+   fi
    done
 
 }
@@ -242,7 +212,7 @@ RemoveExecd()
    qconf -de $exechost
    sleep 1
    qconf -dh $exechost
-
+ 
 
 }
 
@@ -264,36 +234,49 @@ RemoveReferences()
 RemoveSpoolDir()
 {
    exechost=$1
-   $INFOTEXT "Checking global spooldir configuration for host \"%s\"!" $exechost
-   $INFOTEXT -log "Checking global spooldir configuration for host \"%s\"!" $exechost
+
+   $INFOTEXT "Checking global spooldir configuration!\n"
+   $INFOTEXT -log "Checking global spooldir configuration!\n"
    SPOOL_DIR=`qconf -sconf | grep execd_spool_dir | awk '{ print $2 }'`
    HOST_DIR=`echo $exechost | tr "[A-Z]" "[a-z]"`
 
-   # Check global spool dir for execd host
    if [ -d "$SPOOL_DIR/$HOST_DIR" ]; then
+
       $INFOTEXT "Removing spool directory [%s]" $SPOOL_DIR/$HOST_DIR
       $INFOTEXT -log "Removing spool directory [%s]" $SPOOL_DIR/$HOST_DIR
-      ExecuteAsAdmin rm -R $SPOOL_DIR/$HOST_DIR
+      ExecuteAsAdmin `rm -R $SPOOL_DIR/$HOST_DIR`
  
       if [ `ls -la $SPOOL_DIR | wc -l` -lt 4 ]; then
-         ExecuteAsAdmin rm -R $SPOOL_DIR
+         ExecuteAsAdmin `rm -R $SPOOL_DIR`
       fi
 
    fi
 
-   $INFOTEXT "Checking local spooldir configuration for host \"%s\"!" $exechost
-   $INFOTEXT -log "Checking local spooldir configuration for host \"%s\"!" $exechost
-   SPOOL_DIR=`qconf -sconf $exechost | grep execd_spool_dir | awk '{ print $2 }'`
+   $INFOTEXT "Checking local spooldir configuration!\n"
+   $INFOTEXT -log "Checking local spooldir configuration!\n"
 
-   $INFOTEXT "Delete configuration for host \"%s\"!" $exechost
-   $INFOTEXT -log "Delete configuration for host \"%s\"!" $exechost
+   SPOOL_DIR=`qconf -sconf $exechost | grep execd_spool_dir | awk '{ print $2 }'`
    qconf -dconf $exechost
 
-   if [ "$SPOOL_DIR" != "" ]; then
-      if [ -d "$SPOOL_DIR/$HOST_DIR" ]; then
-         $INFOTEXT "Removing local spool directory [%s]" "$SPOOL_DIR/$HOST_DIR"
-         $INFOTEXT -log "Removing local spool directory [%s]" "$SPOOL_DIR/$HOST_DIR"
-         ExecuteAsAdmin rm -R $SPOOL_DIR/$HOST_DIR
+   if [ "$SPOOL_DIR" != "" -a $LOCAL_UNINST = "false" ]; then
+
+      $INFOTEXT -n "For removing the local spool directory, the uninstall script has to\n" \
+                   "login to the uninstalled execution host. Please enter the shell name\n" \
+                   "which should be used! (rsh/ssh) >>"
+      SHELL_NAME=`Enter $SHELL_NAME`
+ 
+
+      $INFOTEXT "Removing local spool directory [%s]" "$SPOOL_DIR"
+      $INFOTEXT -log "Removing local spool directory [%s]" "$SPOOL_DIR"
+      echo "rm -R $SPOOL_DIR/$HOST_DIR" | $SHELL_NAME $exechost /bin/sh 
+      echo "rm -fR $SPOOL_DIR" | $SHELL_NAME $exechost /bin/sh 
+
+   else
+      if [ "$SPOOL_DIR" != "" ]; then
+         $INFOTEXT "Removing local spool directory [%s]" "$SPOOL_DIR"
+         $INFOTEXT -log "Removing local spool directory [%s]" "$SPOOL_DIR"
+         rm -R $SPOOL_DIR/$HOST_DIR  
+         rm -fR $SPOOL_DIR 
       fi
    fi
 }

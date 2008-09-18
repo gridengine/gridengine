@@ -447,13 +447,32 @@ static bool event_client_verify_subscription(const lListElem *event_client, lLis
    DENTER(TOP_LAYER, "event_client_verify_subscription");
 
    for_each (ep, lGetList(event_client, EV_subscribed)) {
-      u_long32 id = lGetUlong(ep, EVS_id);
-      if (id <= sgeE_ALL_EVENTS || id >= sgeE_EVENTSIZE) {
-         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
-                                 MSG_EVENT_INVALIDEVENT);
-         ret = false;
-         break;
+      if (ret) {
+         u_long32 id = lGetUlong(ep, EVS_id);
+         if (id <= sgeE_ALL_EVENTS || id >= sgeE_EVENTSIZE) {
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                    MSG_EVENT_INVALIDEVENT);
+            ret = false;
+            break;
+         }
       }
+
+#if 0
+      /* check flush interval - we get a -1 out of the ulong (!) in case
+       * flushing is disabled
+       * We can very easily run into this problem by configuring scheduler interval
+       * and flush_submit|finish_secs. Disabling the check.
+       */
+      if (ret) {
+         int interval = (int) lGetUlong(ep, EVS_interval);
+         if (interval > d_time) {
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                    MSG_EVENT_FLUSHDELAYCANNOTBEGTDTIME);
+            ret = false;
+            break;
+         }
+      }
+#endif
    }
 
    /* TODO: verify the where and what elements */

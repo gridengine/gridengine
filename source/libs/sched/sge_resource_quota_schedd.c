@@ -75,6 +75,7 @@ static void rqs_excluded_hosts(const lListElem *rule, sge_assignment_t *a);
 static void rqs_excluded_cqueues(const lListElem *rule, sge_assignment_t *a);
 
 
+
 /****** sge_resource_quota_schedd/rqs_set_dynamical_limit() ***********************
 *  NAME
 *     rqs_set_dynamical_limit() -- evaluate dynamical limit
@@ -688,7 +689,7 @@ static bool is_cqueue_expand(const lListElem *rule)
 *  NOTES
 *     MT-NOTE: rqs_exceeded_sort_out() is MT safe
 *******************************************************************************/
-static bool rqs_exceeded_sort_out(sge_assignment_t *a, const lListElem *rule, const dstring *rule_name,
+bool rqs_exceeded_sort_out(sge_assignment_t *a, const lListElem *rule, const dstring *rule_name,
    const char* queue_name, const char* host_name)
 {
    bool cq_global = is_cqueue_global(rule);
@@ -802,7 +803,7 @@ static bool rqs_exceeded_sort_out(sge_assignment_t *a, const lListElem *rule, co
 *  NOTES
 *     MT-NOTE: rqs_exceeded_sort_out_par() is MT safe 
 *******************************************************************************/
-static void rqs_exceeded_sort_out_par(sge_assignment_t *a, const lListElem *rule, const dstring *rule_name,
+void rqs_exceeded_sort_out_par(sge_assignment_t *a, const lListElem *rule, const dstring *rule_name,
    const char* queue_name, const char* host_name)
 {
    if (rqs_exceeded_sort_out(a, rule, rule_name, queue_name, host_name)) {
@@ -912,12 +913,9 @@ void parallel_check_and_debit_rqs_slots(sge_assignment_t *a, const char *host, c
          lListElem *rql;
          rqs_get_rue_string(rue_name, rule, user, project, host, queue, pe);
          sge_dstring_sprintf(limit_name, "%s=%s", sge_dstring_get_string(rule_name), sge_dstring_get_string(rue_name));
-         if ((rql = lGetElemStr(a->limit_list, RQL_name, sge_dstring_get_string(limit_name)))) {
-            *slots = MIN(*slots, lGetInt(rql, RQL_slots));
-            *slots_qend = MIN(*slots_qend, lGetInt(rql, RQL_slots_qend));
-         } else {
-            *slots = *slots_qend = 0;
-         }
+         rql = lGetElemStr(a->limit_list, RQL_name, sge_dstring_get_string(limit_name));
+         *slots = MIN(*slots, lGetInt(rql, RQL_slots));
+         *slots_qend = MIN(*slots_qend, lGetInt(rql, RQL_slots_qend));
       }
 
       if (*slots == 0 && *slots_qend == 0) {
@@ -1106,9 +1104,6 @@ parallel_rqs_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, con
       dstring rue_string = DSTRING_INIT;
       dstring limit_name = DSTRING_INIT;
 
-      if (a->pi)
-         a->pi->par_rqs++;
-
       for_each(rqs, a->rqs_list) {
          lListElem *rule = NULL;
          lListElem *exec_host = host_list_locate(a->host_list, host);
@@ -1196,8 +1191,7 @@ parallel_rqs_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, con
 
             if (result != DISPATCH_OK || (tslots == 0 && ( a->is_reservation || !a->care_reservation || tslots_qend == 0))) {
                DPRINTF(("RQS PARALLEL SORT OUT\n"));
-               schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                              SCHEDD_INFO_CANNOTRUNRQSGLOBAL_SS,
+               schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNRQSGLOBAL_SS,
                      sge_dstring_get_string(&rue_string), sge_dstring_get_string(&rule_name));
                rqs_exceeded_sort_out_par(a, rule, &rule_name, queue, host);
             }
@@ -1303,8 +1297,7 @@ static dispatch_t rqs_limitation_reached(sge_assignment_t *a, const lListElem *r
             job_centry = raw_centry; 
             DPRINTF(("using default request for %s!\n", lGetString(raw_centry, CE_name)));
          } else if (is_forced == true) {
-            schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                           SCHEDD_INFO_NOTREQFORCEDRES); 
+            schedd_mes_add(a->job_id, SCHEDD_INFO_NOTREQFORCEDRES); 
             ret = DISPATCH_NEVER_CAT;
             break;
          } else {
@@ -1411,10 +1404,6 @@ dispatch_t rqs_by_slots(sge_assignment_t *a, const char *queue, const char *host
 
    *is_global = false;
 
-   if (a->pi && lGetNumberOfElem(a->rqs_list) > 0) {
-      a->pi->seq_rqs++;
-   }
-
    for_each(rqs, a->rqs_list) {
       u_long32 tt_rqs = a->start;
       const char *user = a->user;
@@ -1450,8 +1439,7 @@ dispatch_t rqs_by_slots(sge_assignment_t *a, const char *queue, const char *host
             lSetUlong(rql, RQL_time, tt_rqs);
 
             if (result != DISPATCH_OK && result != DISPATCH_MISSING_ATTR) {
-               schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
-                              SCHEDD_INFO_CANNOTRUNRQSGLOBAL_SS, 
+               schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNRQSGLOBAL_SS, 
                      sge_dstring_get_string(rue_string), sge_dstring_get_string(rule_name));
                if (rqs_exceeded_sort_out(a, rule, rule_name, queue, host)) {
                   *is_global = true;

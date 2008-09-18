@@ -51,7 +51,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
@@ -156,11 +156,11 @@ public class <%=classname%> extends <%
              
           } else {
        
-//          if (attrValue.equalsIgnoreCase("NONE")) {
-//             defaultValue = null;
-//          } else {
+          if (attrValue.equalsIgnoreCase("NONE")) {
+             defaultValue = null;
+          } else {
              defaultValue = jh.getInitializer(attr, attrValue);
-//          }
+          }
           
           String gsname =  Character.toUpperCase( attrName.charAt(0) ) +
                              attrName.substring(1);
@@ -247,7 +247,7 @@ public class <%=classname%> extends <%
     
     private void init<%=gsname%>() {
         if (m_<%=attrName%> == null) {
-            m_<%=attrName%> = new LinkedHashMap();
+            m_<%=attrName%> = new HashMap();
         }
     }
    
@@ -564,7 +564,7 @@ public class <%=classname%> extends <%
 
     private void init<%=gsname%>() {
         if (m_<%=attrName%> == null) {
-            m_<%=attrName%> = new LinkedHashMap();
+            m_<%=attrName%> = new HashMap();
         }
     }
    
@@ -646,22 +646,7 @@ public class <%=classname%> extends <%
             return getDefault<%=gsname%>();
         }
     }
-<%   
-   if (mapAttr.getDefaultKey() != null) {
-%>
-    /**
-     *  Set <code><%=mapAttr.getValueName()%></code> attribute for the default
-     *  <code><%=mapAttr.getKeyName()%></code> (<%=mapAttr.getDefaultKey()%>).
-     *
-     *  @param <%=mapAttr.getValueName()%>  the <%=mapAttr.getValueName()%> attribute
-     */
-    public void setDefault<%=gsname%>(<%=valueClassName%> <%=mapAttr.getValueName()%>) {
-        put<%=gsname%>("<%=mapAttr.getDefaultKey()%>", <%=mapAttr.getValueName()%>);
-    }
-<%    
-    }
-%>
-
+   
     /**
      *  <p>remove the attribute <%=attrName%> for a <%=mapAttr.getKeyName()%>.</p>
      *

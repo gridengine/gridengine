@@ -54,10 +54,6 @@ static double writer_all[NUM_OF_LOCK_TYPES] = {0.0, 0.0};
 static double writer_count[NUM_OF_LOCK_TYPES] = {0.0, 0.0};
 #endif
 
-#if 0
-#define PRINT_LOCK
-#endif
-
 /****** sge_lock/Introduction ****************************************************
 *  NAME
 *     Grid Engine Locking API
@@ -168,7 +164,7 @@ void sge_lock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_
 {
    int res = -1;
 
-   DENTER(TOP_LAYER, "sge_lock");
+   DENTER(BASIS_LAYER, "sge_lock");
 
    pthread_once(&lock_once, lock_once_init);
 
@@ -315,7 +311,7 @@ void sge_lock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_
 void sge_unlock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID)
 {
    int res = -1;
-   DENTER(TOP_LAYER, "sge_unlock");
+   DENTER(BASIS_LAYER, "sge_unlock");
 
    pthread_once(&lock_once, lock_once_init);
 #ifdef SGE_USE_LOCK_FIFO

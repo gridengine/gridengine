@@ -61,7 +61,7 @@ enum {
    int get_sgemode(int addr);
    int sge_quick_count_num_args (const char* args);
    void sge_parse_args (const char* args, char** pargs);
-   char** sge_get_qtask_args(void *context, char *taskname, lList **answer_list);
+   char** sge_get_qtask_args(void *context, char *taskname, lList *alp);
 #endif
 
 #endif /* _EXEC_WRAPPER_H_ */

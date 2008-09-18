@@ -49,7 +49,7 @@
 #include "sge_report.h"
 
 #ifdef INTERIX
-#  include "wingrid.h"
+#include "misc.h"
 #endif
 
 #include "msg_execd.h"
@@ -62,8 +62,6 @@ static void sge_set_ls_fds(lListElem *this_ls, fd_set *fds);
 static lListElem *sge_ls_create_ls(const char* qualified_hostname, char *name, const char *scriptfile);
 static void sge_ls_start_ls(const char *qualified_hostname, lListElem *this_ls);
 static void sge_ls_stop_ls(lListElem *this_ls, int send_no_quit_command);
-static int sge_ls_start(const char* qualified_hostname, const char *binary_path, char *scriptfile);
-
 static int read_ls(void);
 
 /* 
@@ -676,7 +674,7 @@ void sge_ls_gnu_ls(int gnu_ls)
 *  RESULT
 *     LS_OK
 ******************************************************************************/
-static int sge_ls_start(const char *qualified_hostname, const char *binary_path, char *scriptfiles)
+int sge_ls_start(const char *qualified_hostname, const char *binary_path, char *scriptfiles)
 {
    lListElem *ls_elem = NULL;        /* LS_Type */
    lListElem *nxt_ls_elem = NULL;    /* LS_Type */
@@ -736,11 +734,6 @@ static int sge_ls_start(const char *qualified_hostname, const char *binary_path,
       ls_elem = lGetElemStr(ls_list, LS_command, scriptfiles_buffer);
       if (ls_elem == NULL) {
          ls_elem = sge_ls_create_ls(qualified_hostname, IDLE_LOADSENSOR_NAME, scriptfiles_buffer);
-
-         if (ls_list == NULL) {
-            ls_list = lCreateList("", LS_Type);
-         }
-         lAppendElem(ls_list, ls_elem);
       }
       if (ls_elem != NULL) {
          lSetUlong(ls_elem, LS_tag, 0);
@@ -761,11 +754,6 @@ static int sge_ls_start(const char *qualified_hostname, const char *binary_path,
       ls_elem = lGetElemStr(ls_list, LS_command, scriptfiles_buffer);
       if (ls_elem == NULL) {
          ls_elem = sge_ls_create_ls(qualified_hostname, GNU_LOADSENSOR_NAME, scriptfiles_buffer);
-
-         if (ls_list == NULL) {
-            ls_list = lCreateList("", LS_Type);
-         }
-         lAppendElem(ls_list, ls_elem);
       }
       if (ls_elem != NULL) {
          lSetUlong(ls_elem, LS_tag, 0);

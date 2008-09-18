@@ -54,11 +54,19 @@ gdi_request_queue_t Master_Request_Queue = {
 bool
 sge_schedd_send_orders(sge_gdi_ctx_class_t *ctx, order_t *orders, lList **order_list, lList **answer_list, const char *name)
 {
+   static bool is_initialized = false;
+   static int max_unhandled = 0;
    bool ret = true;
 
    DENTER(TOP_LAYER, "sge_schedd_send_orders");
-
+   if (!is_initialized) {
+      max_unhandled = mconf_get_max_order_limit();
+      INFO((SGE_EVENT, "Maximum number of unhandled GDI order requests limited to %d. Change this by setting MAX_ORDER_LIMT in qmaster_params and restart qmaster!\n", max_unhandled));
+      is_initialized = true;
+   }
    if ((order_list != NULL) && (*order_list != NULL) && (lGetNumberOfElem(*order_list) != 0)) {
+      int unhandled = 0;
+
       /*
        * Add the new orders 
        */
@@ -69,7 +77,18 @@ sge_schedd_send_orders(sge_gdi_ctx_class_t *ctx, order_t *orders, lList **order_
          lAddList(Master_Request_Queue.order_list, order_list);
       }
 
-      ret = sge_schedd_add_gdi_order_request(ctx, orders, answer_list, &Master_Request_Queue.order_list);
+      /*
+       * send order list only if maximum unhandled order count is not reached
+       */
+      unhandled = sge_schedd_get_unhandled_request_count(ctx, answer_list);
+      if (unhandled < max_unhandled) {
+         sge_schedd_add_gdi_order_request(ctx, orders, answer_list, &Master_Request_Queue.order_list);
+      } 
+#if 0
+      else {
+         INFO((SGE_EVENT, "### POSTPONING TO SEND ORDER BECAUSE THERE IS/ARE ALREADY %d UNHANDLED GDI ADD ORDER REQUEST(S)\n", unhandled));
+      }
+#endif
    }
    lFreeList(order_list);
 
@@ -90,14 +109,10 @@ sge_schedd_add_gdi_order_request(sge_gdi_ctx_class_t *ctx, order_t *orders, lLis
       memset(state, 0, sizeof(state_gdi_multi));
       orders->numberSendOrders += lGetNumberOfElem(*order_list);
       orders->numberSendPackages++;
-
-      /*
-       * order_list will be NULL after the call of gdi_multi. This saves a copy operation.
-       */
       order_id = ctx->gdi_multi(ctx, answer_list, SGE_GDI_SEND, SGE_ORDER_LIST, SGE_GDI_ADD,
                                 order_list, NULL, NULL, state, false);
 
-      if (order_id != -1) {
+      if ((answer_list == NULL) && (order_id != -1)) {
          if (Master_Request_Queue.first == NULL) {
             state->next = NULL;
             Master_Request_Queue.first = state;
@@ -118,16 +133,33 @@ sge_schedd_add_gdi_order_request(sge_gdi_ctx_class_t *ctx, order_t *orders, lLis
    DRETURN(ret);
 }
 
+
+
+int
+sge_schedd_get_unhandled_request_count(sge_gdi_ctx_class_t *ctx,
+                                       lList **answer_list)
+{
+   int counter = 0;
+   state_gdi_multi *current_state, *next_state;
+
+   DENTER(TOP_LAYER, "sge_schedd_get_unhandled_request_count");
+   next_state = Master_Request_Queue.first;
+   while ((current_state = next_state) != NULL) {
+      next_state = current_state->next;
+
+      counter += (sge_gdi2_is_done(ctx, answer_list, current_state) ? 1 : 0);
+   }
+   DRETURN(counter);
+}
+
 bool
-sge_schedd_block_until_orders_processed(sge_gdi_ctx_class_t *ctx, 
-                                        lList **answer_list)
+sge_schedd_block_until_oders_processed(sge_gdi_ctx_class_t *ctx, 
+                                       lList **answer_list)
 {
    bool ret = true;
-   state_gdi_multi *current_state = NULL;
-   state_gdi_multi *next_state = NULL; 
+   state_gdi_multi *current_state, *next_state;
 
-   DENTER(TOP_LAYER, "sge_schedd_block_until_orders_processed");
-
+   DENTER(TOP_LAYER, "sge_schedd_block_until_oders_processed");
 
    /*
     * wait till all GDI order requests are finished
@@ -137,6 +169,8 @@ sge_schedd_block_until_orders_processed(sge_gdi_ctx_class_t *ctx,
       lList *request_answer_list = NULL;
       lList *multi_answer_list = NULL;
       int order_id;
+
+      DTRACE;
 
       /* 
        * get next element no so that we can destray the current one later 

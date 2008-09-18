@@ -361,9 +361,9 @@ size_t sge_strlcpy(char *dst, const char *src, size_t dstsize) {
 *     If no delimitor is given isspace() is used. 
 *
 *  INPUTS
-*     const char *str               - str which should be tokenized 
-*     const char *delimitor         - delimitor string 
-*     struct saved_vars_s **context - context
+*     const char *str                - str which should be tokenized 
+*     const char *delimitor          - delimitor string 
+*     struct saved_vars_s **context  - context
 *
 *  RESULT
 *     char* - first/next token
@@ -1035,23 +1035,23 @@ char **sge_stradup(char **cpp, int n)
 *     Free list of character pointers 
 *
 *  INPUTS
-*     char ***cpp - Pointer to array of string pointers 
+*     char **cpp - Array of string pointers 
 *
 *  NOTES
 *     MT-NOTE: sge_strafree() is MT safe
 ******************************************************************************/
-void sge_strafree(char ***cpp)
+void sge_strafree(char **cpp)
 {
-   if (cpp != NULL && *cpp != NULL) {
-      char **cpp1 = *cpp;
-    
-      while (*cpp1 != NULL) {
-         FREE(*cpp1);
-         cpp1++;
-      }
-      FREE(*cpp);
+   char **cpp1 = cpp;
+   if (!cpp) {
+      return;
    }
-}
+ 
+   while (*cpp1) {
+      free(*cpp1++);
+   }
+   free(cpp);
+}                          
 
 /****** uti/string/sge_stramemncpy() ******************************************
 *  NAME
@@ -1382,16 +1382,13 @@ char **string_list(char *str, char *delis, char **pstr)
 
    DENTER(BASIS_LAYER, "string_list");
 
-   if (str == NULL) {
+   if (!str) {
       DRETURN(NULL);
    }
 
-   /* skip heading delimiters */
-   while (str[0] != '\0' && strchr(delis, str[0]) != NULL) {
+   while (strchr(delis, str[0])) {
       str++;
    }
-
-   /* at str end: str either was an empty string or only contained delimiters */
    if (str[0] == '\0') {
       DRETURN(NULL);
    }
@@ -1399,12 +1396,13 @@ char **string_list(char *str, char *delis, char **pstr)
    /*
     * not more items than length of string is possible
     */
-   if (pstr == NULL) {
+   if (!pstr) {
       head = malloc((sizeof(void *)) * (strlen(str) + 1));
-      if (head == NULL) {
+      if (!head) {
          DRETURN(NULL);
       }
-   } else {
+   }
+   else {
       head = pstr;
    }
 
@@ -1429,7 +1427,8 @@ char **string_list(char *str, char *delis, char **pstr)
       while ((str[i] != '\0') && !is_space) {
          if ((found_first_quote == 0) && (str[i] == '"')) {
             found_first_quote = 2;
-         } else if ((found_first_quote == 0) && (str[i] == '\'')) {
+         }
+         else if ((found_first_quote == 0) && (str[i] == '\'')) {
             found_first_quote = 1;
          }
 

@@ -80,8 +80,6 @@ if [ ! -f "$SGE_ROOT/util/arch" ]; then
    exit 1
 fi
 
-SGE_ARCH=`$SGE_ROOT/util/arch`
-
 if [ ! -f $SGE_ROOT/util/arch_variables ]; then
    echo
    echo ERROR: Missing shell script \"$SGE_ROOT/util/arch_variables\".
@@ -110,16 +108,15 @@ fi
 is_su="false"
 is_csp=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep security_mode | awk '{ print $2 }'`
 
-if [ "$is_csp" != "csp" -a "$SGE_ARCH" != "win32-x86" ]; then
-   echo Neither CSP mode, nor WINDOWS support is enabled, no need to copy certificates
+if [ "$is_csp" != "csp" ]; then
+   echo CSP mode is not enabled, no need to copy certificates
 else
    ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep admin_user | awk '{ print $2 }'`
 
    if [ "$SGE_ARCH" = "win32-x86" ]; then
       WIN_HOST_NAME=`hostname | tr [a-z] [A-Z]`
       WIN_ADMINUSER="$WIN_HOST_NAME+$ADMINUSER"
-      #UID=`id | cut -d"(" -f1 | cut -d"=" -f2`
-      UID=`id -u`
+      UID=`id | cut -d"(" -f1 | cut -d"=" -f2`
       if [ $UID = "197108" -o $UID = "1049076" ]; then
          is_su="true"
          WIN_SU_NAME=`id | cut -d"(" -f2 | cut -d")" -f1 | cut -d"+" -f2`
@@ -154,17 +151,14 @@ else
          echo
 
          echo "... copy "$USERKEY_DIR/$UNIX_SU_NAME" to "$USERKEY_DIR/$WIN_HOST_NAME+$WIN_SU_NAME""
-         rm -rf "$USERKEY_DIR/$WIN_HOST_NAME+$WIN_SU_NAME"
          cp -r "$USERKEY_DIR/$UNIX_SU_NAME" "$USERKEY_DIR/$WIN_HOST_NAME+$WIN_SU_NAME"
          echo
 
          echo "... copy "$USERKEY_DIR/$UNIX_SU_NAME" to "$USERKEY_DIR/$WIN_SU_NAME""
-         rm -rf "$USERKEY_DIR/$WIN_SU_NAME"
          cp -r "$USERKEY_DIR/$UNIX_SU_NAME" "$USERKEY_DIR/$WIN_SU_NAME"
          echo
 
          echo "... copy "$USERKEY_DIR/$ADMINUSER" to "$USERKEY_DIR/$WIN_ADMINUSER""           
-         rm -rf "$USERKEY_DIR/$WIN_ADMINUSER"
          cp -r "$USERKEY_DIR/$ADMINUSER" "$USERKEY_DIR/$WIN_ADMINUSER"
          echo
 

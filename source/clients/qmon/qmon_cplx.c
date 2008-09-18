@@ -58,7 +58,7 @@
 #include "sge_centry.h"
 #include "sge_centry_qconf.h"
 #include "spool/flatfile/sge_flatfile.h"
-#include "spool/flatfile/sge_flatfile_obj.h"
+#include "spool/flatfile//sge_flatfile_obj.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
@@ -541,13 +541,26 @@ static void qmonCplxDelAttr(Widget matrix)
    for (i=0; i<rows; i++) {
       if (XbaeMatrixIsRowSelected(matrix, i)) {
          /* check if its a build in value */
+         int j;
+         bool delete_it = true;
          const char *name = XbaeMatrixGetCell(matrix, i, 0);
-         if (get_rsrc(name, true, NULL, NULL, NULL, NULL)==0 || 
-             get_rsrc(name, false, NULL, NULL, NULL, NULL)==0) {
-            XbaeMatrixDeselectRow(matrix, i);
-            answer_list_add_sprintf(&alp, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
-                                    MSG_INVALID_CENTRY_DEL_S, name);
-         } else {
+         for (j=0; j < max_queue_resources; j++) {
+            if (strcmp(queue_resource[j].name, name) == 0) {
+               XbaeMatrixDeselectRow(matrix, i);
+               answer_list_add_sprintf(&alp, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+                                       MSG_INVALID_CENTRY_DEL_S, name);
+               delete_it = false;
+            }
+         }
+         for (j=0; j< max_host_resources; j++) {
+            if (strcmp(host_resource[j].name, name) == 0) {
+               XbaeMatrixDeselectRow(matrix, i);
+               answer_list_add_sprintf(&alp, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+                                       MSG_INVALID_CENTRY_DEL_S, name);
+               delete_it = false;
+            }
+         }
+         if (delete_it) {
             rows_to_delete++;
          }   
       }

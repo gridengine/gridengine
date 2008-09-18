@@ -94,7 +94,7 @@ shepherd_read_qrsh_pid_file(const char *filename, pid_t *qrsh_pid,
          add_config_entry("job_pid", buffer);
          *replace_qrsh_pid = 0;
       } else {
-         shepherd_trace("could not read qrsh_pid file");
+         shepherd_trace("could not read qrsh_pid file\n");
          ret = false;
       }
       FCLOSE(fp);
@@ -103,7 +103,7 @@ shepherd_read_qrsh_pid_file(const char *filename, pid_t *qrsh_pid,
        * CR 6588743 - raising a shepherd_error here would set the queue in
        *              error state and rerun the job
        */
-      shepherd_trace(MSG_FILE_NOOPEN_SS, filename, strerror(errno));
+      shepherd_trace_sprintf(MSG_FILE_NOOPEN_SS, filename, strerror(errno));
       ret = false;
    }
    return ret;
@@ -112,7 +112,7 @@ FCLOSE_ERROR:
     * CR 6588743 - raising a shepherd_error here would set the queue in
     *              error state and rerun the job
     */
-   shepherd_trace(MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
+   shepherd_trace_sprintf(MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
    return false;
 }
 
@@ -195,13 +195,13 @@ shepherd_write_usage_file(u_long32 wait_status, int exit_status,
       FCLOSE(fp);
 
    } else {
-      shepherd_error(1, MSG_FILE_NOOPEN_SS, filename, strerror(errno));
+      shepherd_error_sprintf(MSG_FILE_NOOPEN_SS, filename, strerror(errno));
       ret = false;
    }
    return ret;
 FPRINTF_ERROR:
 FCLOSE_ERROR:
-   shepherd_error(1, MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
+   shepherd_error_sprintf(MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
    return false;
 }
 
@@ -217,13 +217,13 @@ shepherd_write_job_pid_file(const char *job_pid)
       FPRINTF((fp, "%s\n", job_pid));
       FCLOSE(fp);
    } else {
-      shepherd_error(1, MSG_FILE_NOOPEN_SS, filename, strerror(errno));
+      shepherd_error_sprintf(MSG_FILE_NOOPEN_SS, filename, strerror(errno));
       ret = false;
    }
    return ret;
 FPRINTF_ERROR:
 FCLOSE_ERROR:
-   shepherd_error(1, MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
+   shepherd_error_sprintf(MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
    return false;
 }
 
@@ -239,13 +239,13 @@ shepherd_write_sig_info_file(const char *filename, const char *task_id,
       FPRINTF((fp, "%s "sge_u32"\n", task_id, exit_status));
       FCLOSE(fp);
    } else {
-      shepherd_error(1, MSG_FILE_NOOPEN_SS, filename, strerror(errno));
+      shepherd_error_sprintf(MSG_FILE_NOOPEN_SS, filename, strerror(errno));
       ret = false;
    }
    return ret;
 FPRINTF_ERROR:
 FCLOSE_ERROR:
-   shepherd_error(1, MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
+   shepherd_error_sprintf(MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
    return false;
 }
 
@@ -261,13 +261,13 @@ bool shepherd_write_osjobid_file(const char *osjobid)
       FPRINTF((fp, "%s\n", osjobid));
       FCLOSE(fp);
    } else {
-      shepherd_error(1, MSG_FILE_NOOPEN_SS, filename, strerror(errno));
+      shepherd_error_sprintf(MSG_FILE_NOOPEN_SS, filename, strerror(errno));
       ret = false;
    }
    return ret;
 FPRINTF_ERROR:
 FCLOSE_ERROR:
-   shepherd_error(1, MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
+   shepherd_error_sprintf(MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
    return false;
 }
 
@@ -283,13 +283,13 @@ shepherd_write_processor_set_number_file(int proc_set)
       FPRINTF((fp, "%d\n", proc_set));
       FCLOSE(fp);
    } else {
-      shepherd_error(1, MSG_FILE_NOOPEN_SS, filename, strerror(errno));
+      shepherd_error_sprintf(MSG_FILE_NOOPEN_SS, filename, strerror(errno));
       ret = false;
    }
    return ret;
 FPRINTF_ERROR:
 FCLOSE_ERROR:
-   shepherd_error(1, MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
+   shepherd_error_sprintf(MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
    return false;
 }
 
@@ -304,12 +304,12 @@ shepherd_write_shepherd_about_to_exit_file(void)
    if (fd != NULL) {
       FCLOSE(fd);
    } else {
-      shepherd_error(1, MSG_FILE_NOOPEN_SS, filename, strerror(errno));
+      shepherd_error_sprintf(MSG_FILE_NOOPEN_SS, filename, strerror(errno));
       ret = false;
    }
    return ret;
 FCLOSE_ERROR:
-   shepherd_error(1, MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
+   shepherd_error_sprintf(MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
    return false;
 }
 
@@ -326,18 +326,18 @@ shepherd_read_exit_status_file(int *return_code)
       /* retrieve first exit status from exit status file */
 
       if (arguments != 1) {
-         shepherd_trace("could not read exit_status file");
+         shepherd_trace("could not read exit_status file\n");
          *return_code = ESSTATE_NO_EXITSTATUS;
          ret = false;
       }
    } else {
-      shepherd_error(1, MSG_FILE_NOOPEN_SS, filename, strerror(errno));
+      shepherd_error_sprintf(MSG_FILE_NOOPEN_SS, filename, strerror(errno));
       ret = false;
    }
    FCLOSE(fp);
    return ret;
 FCLOSE_ERROR:
-   shepherd_error(1, MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
+   shepherd_error_sprintf(MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
    return false;
 }
 
@@ -353,26 +353,27 @@ shepherd_read_qrsh_file(const char* pid_file_name, pid_t *qrsh_pid)
 
       /* retrieve first exit status from exit status file */
       if (arguments != 1) {
-         shepherd_trace("could not read qrsh_pid_file '%s'", pid_file_name);
+         shepherd_trace_sprintf("could not read qrsh_pid_file '%s'\n",
+                                 pid_file_name);
          *qrsh_pid = 0;
          ret = false;
       } 
-      FCLOSE(fp);
    } else {
       /*
        * CR 6588743 - raising a shepherd_error here would set the queue in
        *              error state and rerun the job
        */
-      shepherd_trace(MSG_FILE_NOOPEN_SS, pid_file_name, strerror(errno));
+      shepherd_trace_sprintf(MSG_FILE_NOOPEN_SS, pid_file_name, strerror(errno));
       ret = false;
    }
+   FCLOSE(fp);
    return ret;
 FCLOSE_ERROR:
    /*
     * CR 6588743 - raising a shepherd_error here would set the queue in
     *              error state and rerun the job
     */
-   shepherd_trace(MSG_FILE_NOCLOSE_SS, pid_file_name, strerror(errno));
+   shepherd_trace_sprintf(MSG_FILE_NOCLOSE_SS, pid_file_name, strerror(errno));
    return false;
 }
 
@@ -388,18 +389,18 @@ shepherd_read_processor_set_number_file(int *proc_set)
       int arguments = fscanf(fp, "%d", proc_set);
 
       if (arguments != 1) {
-         shepherd_trace("could not read processor_set_number file");
+         shepherd_trace("could not read processor_set_number file\n");
          *proc_set = 0;
          ret = false;
       } 
    } else {
-      shepherd_error(1, MSG_FILE_NOOPEN_SS, filename, strerror(errno));
+      shepherd_error_sprintf(MSG_FILE_NOOPEN_SS, filename, strerror(errno));
       ret = false;
    }
    FCLOSE(fp);
    return ret;
 FCLOSE_ERROR:
-   shepherd_error(1, MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
+   shepherd_error_sprintf(MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
    return false;
 }
 
@@ -431,22 +432,22 @@ shepherd_read_osjobid_file(
 #endif
 
       if (arguments != 1) {
-         shepherd_trace("could not read osjobid file");
+         shepherd_trace("could not read osjobid file\n");
          *return_code = 0;
          ret = false;
       }
       FCLOSE(fp);
    } else {
       if (is_error == true) {
-         shepherd_error(1, MSG_FILE_NOOPEN_SS, filename, strerror(errno));
+         shepherd_error_sprintf(MSG_FILE_NOOPEN_SS, filename, strerror(errno));
       } else {
-         shepherd_trace(MSG_FILE_NOOPEN_SS, filename, strerror(errno));
+         shepherd_trace_sprintf(MSG_FILE_NOOPEN_SS, filename, strerror(errno));
       }
       ret = false;
    }
    return ret;
 FCLOSE_ERROR:
-   shepherd_error(1, MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
+   shepherd_error_sprintf(MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
    return false;
 }
 #endif
@@ -464,12 +465,12 @@ create_checkpointed_file(int ckpt_is_in_arena)
       }
       FCLOSE(fp);
    } else {
-      shepherd_error(1, MSG_FILE_NOOPEN_SS, filename, strerror(errno));
+      shepherd_error_sprintf(MSG_FILE_NOOPEN_SS, filename, strerror(errno));
    }
    return;
 FPRINTF_ERROR:
 FCLOSE_ERROR:
-   shepherd_error(1, MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
+   shepherd_error_sprintf(MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
    return;
 }
 

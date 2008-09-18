@@ -496,7 +496,8 @@ int kupdate(int avenrun[3])
             cpu_ks[ncpu] = ks;
             ncpu++;
             if (ncpu >= ncpus) {
-               break;
+               fprintf(stderr, "kstat finds too many cpus: should be %d\n", ncpus);
+               return -1;
             }
          }
       }

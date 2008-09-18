@@ -56,8 +56,6 @@
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
 
-#include "uti/sge_string.h"
-
 #include "sgeobj/sge_advance_reservation.h"
 #include "sgeobj/sge_qinstance.h"
 
@@ -348,7 +346,9 @@ int sge_del_pe(sge_gdi_ctx_class_t *ctx, lListElem *pep, lList **alpp, char *rus
    return STATUS_OK;
 }
 
-void debit_all_jobs_from_pes(lList *pe_list) {
+void debit_all_jobs_from_pes(
+lList *pe_list  
+) {
    const char *pe_name;
    lListElem *jep, *pep;
    int slots;
@@ -364,20 +364,20 @@ void debit_all_jobs_from_pes(lList *pe_list) {
       for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
          lListElem *jatep;
 
-         if (lGetString(jep, JB_pe) != NULL) { /* is job  parallel */
-            slots = 0;
-            for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-               if ((ISSET(lGetUlong(jatep, JAT_status), JRUNNING) ||      /* is job running  */
-                    ISSET(lGetUlong(jatep, JAT_status), JTRANSFERING)) && /* or transfering  */
-                    !sge_strnullcmp(pe_name, lGetString(jatep, JAT_granted_pe))) {/* this pe         */
-                  slots += sge_granted_slots(lGetList(jatep, JAT_granted_destin_identifier_list));
-               }  
-            }
-            pe_debit_slots(pep, slots, lGetUlong(jep, JB_job_number));
+         slots = 0;
+         for_each (jatep, lGetList(jep, JB_ja_tasks)) {
+            if ((ISSET(lGetUlong(jatep, JAT_status), JRUNNING) ||      /* is job running  */
+                   ISSET(lGetUlong(jatep, JAT_status), JTRANSFERING))     /* or transfering  */
+                && lGetString(jatep, JAT_granted_pe)                     /* is job parallel */
+                && !strcmp(pe_name, lGetString(jatep, JAT_granted_pe))) {/* this pe         */
+               slots += sge_granted_slots(lGetList(jatep, JAT_granted_destin_identifier_list));
+            }  
          }
+         pe_debit_slots(pep, slots, lGetUlong(jep, JB_job_number));
       }
    }
-   DRETURN_VOID;
+   DEXIT;
+   return;
 }
 
 /****** sge_pe_qmaster/pe_diff_usersets() **************************************

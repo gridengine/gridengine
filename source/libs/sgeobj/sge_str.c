@@ -184,7 +184,9 @@ str_list_is_valid(const lList *this_list, lList **answer_list)
       lListElem *elem;
 
       for_each(elem, this_list) {
-         if (lGetString(elem, ST_name) == NULL) {
+         const char *string = lGetString(elem, ST_name);
+
+         if (string == NULL) {
             answer_list_add(answer_list, MSG_STR_INVALIDSTR, 
                             STATUS_ENOKEY, ANSWER_QUALITY_ERROR);
             break;

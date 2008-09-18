@@ -59,15 +59,11 @@
 #endif
 #endif
 
-#if !defined(__cplusplus) 
-#  if defined(DARWIN9)
-#     include <stdbool.h>
-#  else
+#ifndef  __cplusplus
 typedef enum {
   false = 0,
   true
 } bool;
-#  endif
 #endif
 
 #define SGE_EPSILON 0.00001

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2008/05/21 09:47:35 $     Revision: $Revision: 1.29 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2007/11/29 10:24:42 $     Revision: $Revision: 1.27 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2008/05/21 09:47:35 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2007/11/29 10:24:42 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -212,13 +212,10 @@ through
 .M xxqs_name_sxx_qmaster 8
 as a string.
 .PP
-Currently, support is only provided for multiprocessor machines running Solaris,
-SGI multiprocessor machines running IRIX 6.2 and 
-Digital UNIX multiprocessor machines. 
-In the case of Solaris the processor set must already exist, when this processors
-parameter is configured. So the processor set has to be created manually.
-In the case of Digital UNIX only one job per processor set is allowed to 
-execute at the same time, i.e.
+Currently, support is only provided for SGI multiprocessor machines 
+running IRIX 6.2 and Digital UNIX multiprocessor machines. In the case of 
+Digital UNIX only one job per processor set is allowed to execute at the same 
+time, i.e.
 .B slots
 (see above) should be set to 1 for this queue. 
 .SS "\fBqtype\fP"
@@ -397,18 +394,6 @@ like in
 .B prolog
 definitions of the cluster configuration (see
 .M xxqs_name_sxx_conf 5 ).
-.PP
-Exit codes for the prolog attribute can be interpreted based on the 
-following exit values:
-.RS
-0: Success 
-.br
-99: Reschedule job 
-.br
-100: Put job in error state 
-.br
-Anything else: Put queue in error state
-.RE
 .SS "\fBepilog\fP"
 The executable path of a shell script that is started after execution
 of xxQS_NAMExx jobs with the same environment setting as that for the
@@ -433,18 +418,7 @@ like in
 .B prolog
 definitions of the cluster configuration (see
 .M xxqs_name_sxx_conf 5 ).
-.PP
-Exit codes for the epilog attribute can be interpreted based on the 
-following exit values:
-.RS
-0: Success 
-.br
-99: Reschedule job 
-.br
-100: Put job in error state 
-.br
-Anything else: Put queue in error state
-.RE
+
 .SS "\fBstarter_method\fP"
 The specified executable path will be used as a job starter
 facility responsible for starting batch jobs.

@@ -83,12 +83,6 @@ static void set_utilization(lList *uti_list, u_long32 from, u_long32 till, doubl
 
 static lListElem *newResourceElem(u_long32 time, double amount);
 
-/* define DEBUG true */
-
-#ifdef DEBUG
-static void utilization_print_all(const lList* pe_list, lList *host_list, const lList *queue_list, const lList *ar_list);
-#endif
-
 /****** sge_resource_utilization/utilization_print_to_dstring() ****************
 *  NAME
 *     utilization_print_to_dstring() -- Print resource utilization to dstring
@@ -120,8 +114,7 @@ bool utilization_print_to_dstring(const lListElem *this_elem, dstring *string)
 }
 
 
-#ifdef DEBUG
-static void utilization_print_all(const lList* pe_list, lList *host_list, const lList *queue_list, const lList *ar_list)
+void utilization_print_all(const lList* pe_list, lList *host_list, const lList *queue_list, const lList *ar_list)
 {
    lListElem *ep, *cr;
    const char *name;
@@ -192,7 +185,6 @@ static void utilization_print_all(const lList* pe_list, lList *host_list, const 
    
    DRETURN_VOID;
 }
-#endif
 
 void utilization_print(const lListElem *cr, const char *object_name) 
 { 
@@ -604,6 +596,7 @@ u_long32 utilization_below(const lListElem *cr, double max_util, const char *obj
 int add_job_utilization(const sge_assignment_t *a, const char *type, bool for_job_scheduling)
 {
    lListElem *gel, *qep, *hep; 
+   int slots = 0;
    u_long32 ar_id = lGetUlong(a->job, JB_ar);
 
    DENTER(TOP_LAYER, "add_job_utilization");
@@ -623,39 +616,66 @@ int add_job_utilization(const sge_assignment_t *a, const char *type, bool for_jo
             EH_consumable_config_list, EH_resource_utilization, SGE_GLOBAL_NAME, 
               a->start, a->duration, GLOBAL_TAG, for_job_scheduling);  
 
-      for_each(gel, a->gdil) {
-         int slots = lGetUlong(gel, JG_slots); 
-         const char *eh_name = lGetHost(gel, JG_qhostname);
-         const char *qname = lGetString(gel, JG_qname);
-         const char* pe = (a->pe)?lGetString(a->pe, PE_name):NULL;
-         const char *queue_instance = lGetString(gel, JG_qname);
-         char *queue = cqueue_get_name_from_qinstance(queue_instance);
+      /* hosts */
+      for_each(hep, a->host_list) {
+         lListElem *next_gel;
+         const void *queue_iterator = NULL;
+         const char *eh_name = lGetHost(hep, EH_name);
 
-         lListElem *rqs = NULL;
+         if (!strcmp(eh_name, SGE_GLOBAL_NAME)) 
+            continue;
 
-         /* hosts */
-         if ((hep = host_list_locate(a->host_list, eh_name)) != NULL) {
+         /* determine number of slots per host */
+         slots = 0;
+         for (next_gel = lGetElemHostFirst(a->gdil, JG_qhostname, eh_name, &queue_iterator);
+             (gel = next_gel);
+              next_gel = lGetElemHostNext(a->gdil, JG_qhostname, eh_name, &queue_iterator)) {
+            
+            slots += lGetUlong(gel, JG_slots);
+         }
+         if (slots != 0) {
             rc_add_job_utilization(a->job, a->ja_task_id, type, hep, a->centry_list, slots,
                      EH_consumable_config_list, EH_resource_utilization, eh_name, a->start, 
                      a->duration, HOST_TAG, for_job_scheduling);
          }
+      }
 
-         /* queues */
-         if ((qep = qinstance_list_locate2(a->queue_list, qname)) != NULL) {
+      /* queues */
+      for_each(gel, a->gdil) {  
+         int slots = lGetUlong(gel, JG_slots); 
+         const char *qname = lGetString(gel, JG_qname);
+         if ((qep = qinstance_list_locate2(a->queue_list, qname)) == NULL) {
             /* 
-             * The NULL case happens in case of queues that were sorted out b/c they 
+             * This happens in case of queues that were sorted out b/c they 
              * are unknown, in some suspend state or in calendar disable state. As long 
              * as we do not intend to schedule future resource utilization for those 
              * queues it's valid to simply ignore resource utilizations decided in former 
              * schedule runs: running/suspneded/migrating jobs.
              * 
              */
-            rc_add_job_utilization(a->job, a->ja_task_id, type, qep, a->centry_list, slots,
-                     QU_consumable_config_list, QU_resource_utilization, qname, a->start, 
-                     a->duration, QUEUE_TAG, for_job_scheduling);
+            continue;
          }
 
-         /* resource quotas */
+         rc_add_job_utilization(a->job, a->ja_task_id, type, qep, a->centry_list, slots,
+                  QU_consumable_config_list, QU_resource_utilization, qname, a->start, 
+                  a->duration, QUEUE_TAG, for_job_scheduling);
+      }
+
+      /* resource quotas */
+      for_each(gel, a->gdil) {
+         int slots = lGetUlong(gel, JG_slots);
+         const char* user = lGetString(a->job, JB_owner);
+         const char* group = lGetString(a->job, JB_group);
+         const char* project = lGetString(a->job, JB_project);
+         const char* pe = (a->pe)?lGetString(a->pe, PE_name):NULL;
+         const char* host = lGetHost(gel, JG_qhostname);
+         char *queue = NULL;
+         const char *queue_instance = lGetString(gel, JG_qname);
+
+         lListElem *rqs = NULL;
+
+         queue = cqueue_get_name_from_qinstance(queue_instance);
+         
          for_each(rqs, a->rqs_list) {
             lListElem *rule = NULL;
 
@@ -663,19 +683,18 @@ int add_job_utilization(const sge_assignment_t *a, const char *type, bool for_jo
                continue;
             }
 
-            rule = rqs_get_matching_rule(rqs, a->user, a->group, a->project, pe, eh_name, queue, a->acl_list,
+            rule = rqs_get_matching_rule(rqs, user, group, project, pe, host, queue, a->acl_list,
                                           a->hgrp_list, NULL);
             if (rule != NULL) {
 
-               rqs_get_rue_string(&rue_name, rule, a->user, a->project,
-                                   eh_name, queue, pe);
+               rqs_get_rue_string(&rue_name, rule, user, project,
+                                   host, queue, pe);
 
                rqs_add_job_utilization(a->job, a->ja_task_id, type, rule, rue_name,
                                         a->centry_list, slots, lGetString(rqs, RQS_name),
                                         a->start, a->duration);
             }
          }
-
          FREE(queue);
       }
 
@@ -688,11 +707,12 @@ int add_job_utilization(const sge_assignment_t *a, const char *type, bool for_jo
          const char *qname = lGetString(gel, JG_qname);
          
          if ((ar = lGetElemUlong(a->ar_list, AR_id, ar_id)) != NULL) {
-            if ((qep = lGetSubStr(ar, QU_full_name, qname, AR_reserved_queues)) != NULL) {
-               rc_add_job_utilization(a->job, a->ja_task_id, type, qep, a->centry_list, slots,
-                     QU_consumable_config_list, QU_resource_utilization, qname, a->start, 
-                     a->duration, QUEUE_TAG, for_job_scheduling);
+            if ((qep = lGetSubStr(ar, QU_full_name, qname, AR_reserved_queues)) == NULL) {
+               continue;
             }
+            rc_add_job_utilization(a->job, a->ja_task_id, type, qep, a->centry_list, slots,
+                  QU_consumable_config_list, QU_resource_utilization, qname, a->start, 
+                  a->duration, QUEUE_TAG, for_job_scheduling);
          } 
       }
    }
@@ -978,7 +998,7 @@ void prepare_resource_schedules(const lList *running_jobs, const lList *suspende
                             ar_list, for_job_scheduling);
    add_calendar_to_schedule(queue_list); 
 
-#ifdef DEBUG  /* just for information purposes... */
+#if 0 /* just for information purposes... */
    utilization_print_all(pe_list, host_list, queue_list, ar_list); 
 #endif   
 

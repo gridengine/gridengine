@@ -1,4 +1,4 @@
-#___INFO__MARK_BEGIN__
+# ___INFO__MARK_BEGIN__
 ###########################################################################
 #  The Contents of this file are made available subject to the terms of
 #  the Sun Industry Standards Source License Version 1.2
@@ -27,7 +27,7 @@
 #  All Rights Reserved.
 # 
 ###########################################################################
-#___INFO__MARK_END__
+# ___INFO__MARK_END__
 #####################################################################
 #	Default Configuration File for JGDI JMX 
 #####################################################################
@@ -152,7 +152,7 @@ com.sun.grid.jgdi.management.jmxremote.login.config=GridwareConfig
 # com.sun.grid.jgdi.management.jmxremote.password.file=filepath
 #      Specifies location for password file
 #      This is optional - default location is
-#      $SGE_ROOT/$SGE_CELL/common/jmx/jmxremote.password
+#      $JRE/lib/management/jmxremote.password
 # 
 #      If the property "com.sun.grid.jgdi.management.jmxremote.authenticate" is set to 
 #      false, then this property and the password & access files are ignored.
@@ -170,7 +170,7 @@ com.sun.grid.jgdi.management.jmxremote.password.file=@@SGE_ROOT@@/@@SGE_CELL@@/c
 # com.sun.grid.jgdi.management.jmxremote.access.file=filepath
 #      Specifies location for access  file
 #      This is optional - default location is
-#      $SGE_ROOT/$SGE_CELL/common/jmx/jmxremote.access
+#      $JRE/lib/management/jmxremote.access
 # 
 #      If the property "com.sun.management.jmxremote.authenticate" is set to 
 #      false, then this property and the password & access files are ignored.
@@ -178,7 +178,7 @@ com.sun.grid.jgdi.management.jmxremote.password.file=@@SGE_ROOT@@/@@SGE_CELL@@/c
 #      If the access file is empty or non-existent then no access is allowed.
 #
 
-# For a non-default access file location use the following line
+# For a non-default password file location use the following line
 # com.sun.grid.jgdi.management.jmxremote.access.file=filepath
 com.sun.grid.jgdi.management.jmxremote.access.file=@@SGE_ROOT@@/@@SGE_CELL@@/common/jmx/jmxremote.access
 

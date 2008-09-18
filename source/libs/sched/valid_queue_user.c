@@ -42,10 +42,12 @@
 #include "sge_userset.h"
 #include "sgeobj/sge_advance_reservation.h"
 #include "sgeobj/sge_hgroup.h"
-#include "sge_hostname.h"
 #include "msg_qmaster.h"
 
 #include "msg_schedd.h"
+
+static int sge_contained_in_access_list_(const char *user, const char *group, 
+                                         const lList *acl, const lList *acl_list);
 
 /* - -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 
@@ -103,7 +105,7 @@ int sge_has_access_(const char *user, const char *group, const lList *q_acl,
 
    user, group: may be NULL
 */
-int sge_contained_in_access_list_(const char *user, const char *group,
+static int sge_contained_in_access_list_(const char *user, const char *group,
                                          const lList *acl, const lList *acl_list) 
 {
    lListElem *acl_search, *acl_found;

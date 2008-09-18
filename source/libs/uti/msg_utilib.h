@@ -202,7 +202,6 @@
  */
 #define MSG_UTI_CANNOTRESOLVEBOOTSTRAPFILE     _MESSAGE(49100, _("cannot resolve name of bootstrap file"))
 #define MSG_UTI_CANNOTLOCATEATTRIBUTE_SS       _MESSAGE(49102, _("cannot read attribute <"SFN"> from bootstrap file "SFN))
-#define MSG_UTI_CANNOTLOCATEATTRIBUTEMAN_SS    _MESSAGE(49103, _("cannot read attribute <"SFN"> from management.properties file "SFN))
 
 /* 
 ** libs/uti/setup_path.c
@@ -219,7 +218,7 @@
 */
 #define MSG_UTI_MONITOR_DEFLINE_SF             _MESSAGE(59120, _(SFN": runs: %.2fr/s"))
 #define MSG_UTI_MONITOR_DEFLINE_FFFFF          _MESSAGE(59121, _(" out: %.2fm/s APT: %.4fs/m idle: %.2f%% wait: %.2f%% time: %.2fs"))
-#define MSG_UTI_MONITOR_GDIEXT_FFFFFFFFFFFFI   _MESSAGE(59122, _("EXECD (l:%.2f,j:%.2f,c:%.2f,p:%.2f,a:%.2f)/s GDI (a:%.2f,g:%.2f,m:%.2f,d:%.2f,c:%.2f,t:%.2f,p:%.2f)/s OTHER (ql:"sge_U32CFormat")"))
+#define MSG_UTI_MONITOR_GDIEXT_FFFFFFF         _MESSAGE(59122, _("execd (l:%.2f,j:%.2f,c:%.2f,p:%.2f,a:%.2f)/s GDI (a:%.2f,g:%.2f,m:%.2f,d:%.2f,c:%.2f,t:%.2f,p:%.2f)/s event-acks: %.2f/s"))
 #define MSG_UTI_MONITOR_DISABLED               _MESSAGE(59123, _("Monitor:                  disabled"))         
 #define MSG_UTI_MONITOR_COLON                  _MESSAGE(59124, _("Monitor:"))
 #define MSG_UTI_MONITOR_OK                     _MESSAGE(59125, _("OK"))
@@ -233,8 +232,6 @@
 #define MSG_UTI_MONITOR_MEMERROREXT            _MESSAGE(59133, _("not enough memory for monitor extension"))
 #define MSG_UTI_MONITOR_TETEXT_FF              _MESSAGE(59134, _("pending: %.2f executed: %.2f/s"))
 #define MSG_UTI_MONITOR_EDTEXT_FFFFFFFF        _MESSAGE(59135, _("clients: %.2f mod: %.2f/s ack: %.2f/s blocked: %.2f busy: %.2f | events: %.2f/s added: %.2f/s skipt: %.2f/s"))
-#define MSG_UTI_MONITOR_LISEXT_FFFF            _MESSAGE(59136, _("in (g:%.2f a:%.2f e:%.2f r:%.2f)/s"))
-#define MSG_UTI_MONITOR_SCHEXT_UUUUUUUUUU      _MESSAGE(59137, _("malloc:                   arena("sge_U32CFormat") |ordblks("sge_U32CFormat") | smblks("sge_U32CFormat") | hblksr("sge_U32CFormat") | hblhkd("sge_U32CFormat") usmblks("sge_U32CFormat") | fsmblks("sge_U32CFormat") | uordblks("sge_U32CFormat") | fordblks("sge_U32CFormat") | keepcost("sge_U32CFormat")"))
 
 #define MSG_UTI_DAEMONIZE_CANT_PIPE            _MESSAGE(59140, _("can't create pipe"))
 #define MSG_UTI_DAEMONIZE_CANT_FCNTL_PIPE      _MESSAGE(59141, _("can't set daemonize pipe to not blocking mode"))
@@ -259,7 +256,7 @@
 #define MSG_SMF_CONTRACT_ABANDON_FAILED_US  _MESSAGE(59149, _("can't abandon contract "sge_U32CFormat": "SFQ))
 #define MSG_SMF_LOAD_LIBSCF_FAILED_S        _MESSAGE(59150, _(SFQ" -> can't load libscf"))
 #define MSG_SMF_LOAD_LIB_FAILED             _MESSAGE(59151, _("can't load libcontract and libscf"))
-#define MSG_SMF_DISABLE_FAILED_SSUU         _MESSAGE(59152, _("could not temporary disable instance "SFQ" : "SFQ"   [euid="sge_U32CFormat", uid="sge_U32CFormat"]"))
+#define MSG_SMF_DISABLE_FAILED_SS           _MESSAGE(59152, _("can't temporary disable instance "SFQ" : "SFQ))
                                                                                                                                                  
 #endif /* __MSG_UTILIB_H */
 

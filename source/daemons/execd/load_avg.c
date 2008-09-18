@@ -127,6 +127,7 @@ void execd_merge_load_report(u_long32 seqno)
          const void *iterator = NULL;
          const char *hostname = lGetHost(old_lr, LR_host);
          const char *name = lGetString(old_lr, LR_name);
+         const char *value = lGetString(old_lr, LR_value);
          lListElem *lr, *lr_next;
          bool found = false;
 
@@ -139,9 +140,8 @@ void execd_merge_load_report(u_long32 seqno)
                if (lGetUlong(old_lr, LR_static) == 2) {
                   lRemoveElem(lr_list, &lr); 
                } else {
-                  lSetString(lr, LR_value, lGetString(old_lr, LR_value));
+                  lSetString(lr, LR_value, value);
                }
-               break;
             }
          }
          if (!found) {
@@ -165,7 +165,6 @@ execd_add_load_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now
    DENTER(TOP_LAYER, "execd_add_load_report");
 
    if (*next_send <= now || sge_get_flush_lr_flag()) {
-      lSortOrder *order = lParseSortOrderVarArg(LR_Type, "%I+", LR_host);
       lListElem *report;
       lList *tmp_lr_list;
 
@@ -193,7 +192,6 @@ execd_add_load_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now
       if (lr_list == NULL) {
          lr_list = lCopyList("", tmp_lr_list);
          lFreeElem(&last_lr);
-         lSortList(tmp_lr_list, order);
          lSetList(report, REP_list, tmp_lr_list);
       } else {
          lListElem *lr;
@@ -217,11 +215,10 @@ execd_add_load_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now
                   if (!send_all && sge_strnullcmp(lGetString(ep, LR_value), value) == 0) {
                      /* value hasn't changed, remove it from list */ 
                      lRemoveElem(tmp_lr_list, &ep);
-                  } else {
-                     DPRINTF(("value %s has changed from %s to %s\n", name, value ? value:"NULL", lGetString(ep, LR_value)));
-                     /* Old value is no longer valid */
-                     lSetString(lr, LR_value, NULL);
                   }
+
+                  /* Old value is no longer valid */
+                  lSetString(lr, LR_value, NULL);
                   break;
                }
             }
@@ -234,13 +231,10 @@ execd_add_load_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now
                lAppendElem(tmp_lr_list, del_report);
             }
          }
-
-         lSortList(tmp_lr_list, order);
          lSetList(report, REP_list, tmp_lr_list);
          lFreeElem(&last_lr);
          last_lr = lCopyElem(report);
       }
-      lFreeSortOrder(&order);
 
       lAppendElem(report_list, report);
       send_all = false;
@@ -281,8 +275,9 @@ execd_add_conf_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now
 static int 
 execd_add_license_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now, u_long32 *next_send) 
 {
+   const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
+
    if (*next_send == 0) {
-      const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
       lListElem *report;
 
       *next_send = now + mconf_get_load_report_time();
@@ -762,20 +757,6 @@ void update_job_usage(const char* qualified_hostname)
    lListElem *next_usage;
 
    DENTER(TOP_LAYER, "update_job_usage");
-
-   if (mconf_get_simulate_jobs()) {
-      lListElem *jr;
-
-      for_each(jr, jr_list) {
-         add_usage(jr, USAGE_ATTR_CPU, NULL, 0.1);
-         add_usage(jr, USAGE_ATTR_MEM, NULL, 0.1);
-         add_usage(jr, USAGE_ATTR_IO, NULL, 0.0);
-         add_usage(jr, USAGE_ATTR_IOW, NULL, 0.0);
-         add_usage(jr, USAGE_ATTR_VMEM, NULL, 256);
-         add_usage(jr, USAGE_ATTR_MAXVMEM, NULL, 256);
-      }
-      DRETURN_VOID;
-   }
 
 #ifdef COMPILE_DC
    if (!mconf_get_sharetree_reserved_usage()) {

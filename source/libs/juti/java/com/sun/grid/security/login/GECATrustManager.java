@@ -72,18 +72,13 @@ public class GECATrustManager implements X509TrustManager {
     /** alias for the ca certificate */
     public static final String CA_ALIAS = "ca";
     
-    private File caTop;
+    private final File caTop;
     private final Map userCertMap = new HashMap();
     private final Object syncObject = new Object();
 
     private long lastUpdate;
     private X509TrustManager trustManager;
     private X509Certificate  caCertificate;
-    
-    
-    public GECATrustManager() {
-        this(null);
-    }
     
     /**
      *  Creates a new instance of GECATrustManager.
@@ -96,34 +91,17 @@ public class GECATrustManager implements X509TrustManager {
     
     
     private X509Certificate getUserCert(String username) {
-       synchronized(syncObject) {
-           if (caTop != null) {
-               CertCacheElem elem = (CertCacheElem) userCertMap.get(username);
-               if (elem == null) {
-                   File certFile = new File(caTop, "usercerts" + File.separator + username + File.separator + "cert.pem");
-                   elem = new CertCacheElem(certFile);
-                   userCertMap.put(username, elem);
-               }
-               return elem.getCertificate();
-           } else {
-               return null;
-           }
-       }
-    }
-    
-    
-    /**
-     * set a new caTop directory
-     * @param caTop
-     */
-    public void setCaTop(File caTop) {
-        synchronized(syncObject) {
-            this.caTop = caTop;
-            userCertMap.clear();
-            trustManager = null;
+       CertCacheElem elem = null;
+        synchronized(userCertMap) {
+            elem = (CertCacheElem)userCertMap.get(username);
+            if(elem == null) {
+                File certFile = new File(caTop, "usercerts" + File.separator + username + File.separator + "cert.pem");
+                elem = new CertCacheElem(certFile);
+                userCertMap.put(username, elem);
+            }
         }
+        return elem.getCertificate();
     }
-            
     
     private class CertCacheElem {
         
@@ -190,48 +168,43 @@ public class GECATrustManager implements X509TrustManager {
      */
     public boolean isValidMessage(String username, byte [] message, byte [] signature, String algorithm) {
 
-        synchronized (syncObject) {
-            if(caTop == null ) {
-                return false;
-            }
-            if(!isTrustedSignatureAlgorithm(algorithm)) {
-                return false;
-            }
+        if(!isTrustedSignatureAlgorithm(algorithm)) {
+            return false;
+        }
+        
+        X509Certificate[] chain = new X509Certificate[2];
 
-            X509Certificate[] chain = new X509Certificate[2];
+        chain[0] = getUserCert(username);
 
-            chain[0] = getUserCert(username);
+        if (chain[0] == null) {
+            return false;
+        }
 
-            if (chain[0] == null) {
-                return false;
-            }
+        try {
+            chain[1] = getCACertificate();
+        } catch (CertificateException ex) {
+            log.log(Level.FINE, "Can not get CA certificate", ex);
+            return false;
+        }
 
-            try {
-                chain[1] = getCACertificate();
-            } catch (CertificateException ex) {
-                log.log(Level.FINE, "Can not get CA certificate", ex);
-                return false;
-            }
-
-            try {
-                checkClientTrusted(chain, "RSA");
-            } catch (CertificateException ex) {
-                log.log(Level.FINE, "user certificate is not trusted", ex);
-                return false;
-            }
-
-            try {
-                Signature s = Signature.getInstance(algorithm);
-                s.initVerify(chain[0]);
-                s.update(message);
-                return s.verify(signature);
-            } catch (Exception ex) {
-                LogRecord lr = new LogRecord(Level.WARNING, "Error while verifing message of user {0}");
-                lr.setParameters(new Object[]{username});
-                lr.setThrown(ex);
-                log.log(lr);
-                return false;
-            }
+        try {
+            checkClientTrusted(chain, "RSA");
+        } catch (CertificateException ex) {
+            log.log(Level.FINE, "user certificate is not trusted", ex);
+            return false;
+        }
+        
+        try {
+            Signature s = Signature.getInstance(algorithm);
+            s.initVerify(chain[0]);
+            s.update(message);
+            return s.verify(signature);
+        } catch (Exception ex) {
+            LogRecord lr = new LogRecord(Level.WARNING, "Error while verifing message of user {0}");
+            lr.setParameters(new Object[]{username});
+            lr.setThrown(ex);
+            log.log(lr);
+            return false;
         }
     }    
     
@@ -261,13 +234,10 @@ public class GECATrustManager implements X509TrustManager {
         
     private void reinit() throws CertificateException {
         log.entering("GECATrustManager", "reinit");
-        if(caTop == null) {
-            throw new CertificateException("caTop not set");
-        }
         File caCertFile = new File(caTop, "cacert.pem");
         File caCrlFile = new File(caTop, "ca-crl.pem");
 
-        if (trustManager == null || lastUpdate < caCertFile.lastModified() || lastUpdate < caCrlFile.lastModified()) {
+        if (lastUpdate < caCertFile.lastModified() || lastUpdate < caCrlFile.lastModified() ) {
             long alastUpdate = System.currentTimeMillis();
             init(caCertFile, caCrlFile);
             this.lastUpdate = alastUpdate;

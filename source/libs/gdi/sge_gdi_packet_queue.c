@@ -55,6 +55,7 @@
 #define PACKET_QUEUE_MUTEX "packet_queue_mutex"
 
 #define WORKER_WAIT_TIME_S 1
+#define WORKER_WAIT_TIME_N 0
 
 /****** gdi/request_internal/Master_Packet_Queue **************************
 *  NAME
@@ -107,42 +108,6 @@ sge_gdi_packet_queue_class_t Master_Packet_Queue = {
    false
 };
 
-/****** gdi/request_internal/ge_gdi_packet_queue_get_length) *****************
-*  NAME
-*     sge_gdi_packet_queue_get_length() -- returns the current queue length 
-*
-*  SYNOPSIS
-*     u_long32 sge_gdi_packet_queue_get_length(
-*                                sge_gdi_packet_queue_class_t *packet_queue) 
-*
-*  FUNCTION
-*    Returns the queue length of "packet_queue". 
-*
-*  INPUTS
-*     sge_gdi_packet_queue_class_t *packet_queue - packet queue 
-*
-*  RESULT
-*     u_long32 - queue length 
-*
-*  NOTES
-*     MT-NOTE: ge_gdi_packet_queue_get_length() is MT safe 
-*
-*  SEE ALSO
-*     gdi/request_internal/sge_gdi_packet_queue_wait_for_new_packet()
-*     gdi/request_internal/sge_gdi_packet_queue_store_notify()
-*******************************************************************************/
-u_long32
-sge_gdi_packet_queue_get_length(sge_gdi_packet_queue_class_t *packet_queue)
-{
-   u_long32 ret = 0;
-
-   DENTER(TOP_LAYER, "sge_gdi_packet_queue_get_length");
-   sge_mutex_lock(PACKET_QUEUE_MUTEX, SGE_FUNC, __LINE__, &(packet_queue->mutex));
-   ret =  packet_queue->counter;
-   sge_mutex_unlock(PACKET_QUEUE_MUTEX, SGE_FUNC, __LINE__, &(packet_queue->mutex));
-   DRETURN(ret);
-}
-
 /****** gdi/request_internal/sge_gdi_packet_queue_wakeup_all_waiting() *********
 *  NAME
 *     sge_gdi_packet_queue_wakeup_all_waiting() -- waitup all waiting 
@@ -182,7 +147,6 @@ sge_gdi_packet_queue_wakeup_all_waiting(sge_gdi_packet_queue_class_t *packet_que
    pthread_cond_broadcast(&(packet_queue->cond));
 
    sge_mutex_unlock(PACKET_QUEUE_MUTEX, SGE_FUNC, __LINE__, &(packet_queue->mutex));
-   DRETURN_VOID;
 }
 
 /****** gdi/request_internal/sge_gdi_packet_queue_store_notify() **********
@@ -192,8 +156,7 @@ sge_gdi_packet_queue_wakeup_all_waiting(sge_gdi_packet_queue_class_t *packet_que
 *  SYNOPSIS
 *     void sge_gdi_packet_queue_store_notify(
 *                                   sge_gdi_packet_queue_class_t *packet_queue, 
-*                                   sge_gdi_packet_class_t *packet,
-*                                   monitoring_t *monitor) 
+*                                   sge_gdi_packet_class_t *packet) 
 *
 *  FUNCTION
 *     A call to this function will append "packet" at the end of the 
@@ -203,7 +166,6 @@ sge_gdi_packet_queue_wakeup_all_waiting(sge_gdi_packet_queue_class_t *packet_que
 *  INPUTS
 *     sge_gdi_packet_queue_class_t *packet_queue - packet queue pointer 
 *     sge_gdi_packet_class_t *packet             - handle to a new packet 
-*     monitoring_t *monitor                      - monitor object pointer
 *
 *  RESULT
 *     void - none
@@ -216,7 +178,7 @@ sge_gdi_packet_queue_wakeup_all_waiting(sge_gdi_packet_queue_class_t *packet_que
 *******************************************************************************/
 void
 sge_gdi_packet_queue_store_notify(sge_gdi_packet_queue_class_t *packet_queue,
-                                  sge_gdi_packet_class_t *packet, monitoring_t *monitor)
+                                  sge_gdi_packet_class_t *packet)
 {
    cl_thread_settings_t *thread_config = NULL; 
 
@@ -299,8 +261,7 @@ sge_gdi_packet_queue_store_notify(sge_gdi_packet_queue_class_t *packet_queue,
 *******************************************************************************/
 bool
 sge_gdi_packet_queue_wait_for_new_packet(sge_gdi_packet_queue_class_t *packet_queue,
-                                         sge_gdi_packet_class_t **packet,
-                                         monitoring_t *monitor)
+                                         sge_gdi_packet_class_t **packet)
 {
    bool ret = true;
    DENTER(TOP_LAYER, "sge_gdi_packet_queue_wait_for_new_packet");
@@ -322,8 +283,11 @@ sge_gdi_packet_queue_wait_for_new_packet(sge_gdi_packet_queue_class_t *packet_qu
                   packet_queue->waiting));
          do {
             struct timespec ts;
+            u_long32 current_time = 0; 
 
-            sge_relative_timespec(WORKER_WAIT_TIME_S, &ts);
+            current_time = sge_get_gmt();
+            ts.tv_sec = (time_t)(current_time + WORKER_WAIT_TIME_S);
+            ts.tv_nsec = WORKER_WAIT_TIME_N;;
             pthread_cond_timedwait(&(packet_queue->cond), &(packet_queue->mutex), &ts);
          } while (packet_queue->first_packet == NULL && sge_thread_has_shutdown_started() == false);
          packet_queue->waiting--;
@@ -343,23 +307,16 @@ sge_gdi_packet_queue_wait_for_new_packet(sge_gdi_packet_queue_class_t *packet_qu
          }
          (*packet)->next = NULL;
          packet_queue->counter--;
-         DPRINTF((SFN" takes packet from priority queue. ("
-                  "packet_queue->counter = "sge_U32CFormat
-                  "; packet_queue->waiting = "sge_U32CFormat")\n",
-                  thread_config ? thread_config->thread_name : "-NA-", 
-                  packet_queue->counter, 
+         DPRINTF((SFN" takes packet from queue. (packet_queue->counter = "
+                  sge_U32CFormat"; packet_queue->waiting = "sge_U32CFormat")\n",
+                  thread_config ? thread_config->thread_name : "-NA-", packet_queue->counter, 
                   packet_queue->waiting));
       } else {
          *packet = NULL;
-         DPRINTF((SFN" wokeup but got no packet. ("
-                  "packet_queue->counter = "sge_U32CFormat
-                  "; packet_queue->waiting = "sge_U32CFormat")\n",
-                  thread_config ? thread_config->thread_name : "-NA-", 
-                  packet_queue->counter, 
+         DPRINTF((SFN" wokeup but got no packet. (packet_queue->waiting = "
+                  sge_U32CFormat")\n", thread_config ? thread_config->thread_name : "-NA-",
                   packet_queue->waiting));
       }
-
-      MONITOR_SET_QLEN(monitor, packet_queue->counter);
 
       sge_mutex_unlock(PACKET_QUEUE_MUTEX, SGE_FUNC, __LINE__, &(packet_queue->mutex));
    }

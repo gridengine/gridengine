@@ -39,7 +39,6 @@ import com.sun.grid.jgdi.event.EventListener;
 import com.sun.grid.jgdi.management.mbeans.JGDIJMXMBean;
 import com.sun.grid.jgdi.util.Base64;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -66,7 +65,6 @@ import javax.management.remote.JMXConnectionNotification;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
-import javax.net.ssl.SSLHandshakeException;
 
 /**
  *  <p>
@@ -109,35 +107,6 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
      */
     public JGDIJMXMBean getProxy() {
         return proxy;
-    }
-
-    /**
-     * Set up the ssl context
-     * @param caTop  ca top directory if the Grid Engine CA ($SGE_ROOT/$SGE_CELL/common/sgeCA
-     * @param ks     keystore of the user
-     * @param pw     password for the keystore
-     */
-    public static void setupSSL(File caTop, KeyStore ks, char[] pw) {
-        SSLHelper.getInstanceByCaTop(caTop).setKeystore(ks, pw);
-    }
-
-    /**
-     * Set up the ssl context
-     * @param caTop  ca top directory if the Grid Engine CA ($SGE_ROOT/$SGE_CELL/common/sgeCA
-     * @param ks     keystore file of the user
-     * @param pw     password for the keystore
-     */
-    public static void setupSSL(File caTop, File ks, char[] pw) {
-        SSLHelper.getInstanceByCaTop(caTop).setKeystore(ks, pw);
-    }
-
-    /**
-     * Reset the SSL setup.
-     * 
-     * @param caTop the ca top directory of the cluster
-     */
-    public static void resetSSL(File caTop) {
-        SSLHelper.getInstanceByCaTop(caTop).reset();
     }
 
     /**
@@ -266,30 +235,15 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
                 connector.addConnectionNotificationListener(this, null, connector.getConnectionId());
             } catch (NullPointerException ex) {
                 close();
-                throw new JGDIException(ex, "jgdi mbean is null");
+                throw new JGDIException(ex, "jgdi mbean null");
             } catch (InstanceNotFoundException ex) {
                 close();
                 throw new JGDIException(ex, "jgdi mbean not active in qmaster");
             } catch (IOException ex) {
                 close();
-                Throwable realError = null;
-                if ((realError = findCause(ex, SSLHandshakeException.class)) != null) {
-                    throw new JGDIException(realError, "SSL error: " + realError.getLocalizedMessage());
-                } else if ((realError = findCause(ex, java.net.ConnectException.class)) != null) {
-                    throw new JGDIException(realError, "Connection refused");
-                }
                 throw new JGDIException(ex, "connection to " + url + "failed");
             }
         }
-    }
-
-    private Throwable findCause(Throwable ex, Class<? extends Exception> type) {
-        for (Throwable t = ex; t != null; t = t.getCause()) {
-            if (type.isAssignableFrom(t.getClass())) {
-                return t;
-            }
-        }
-        return null;
     }
 
     /**
@@ -506,5 +460,12 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
         } catch (Exception ex) {
             throw new JGDIException("Can not create credentials from keystore", ex);
         }
+
+
+
+
+
+
+
     }
 }

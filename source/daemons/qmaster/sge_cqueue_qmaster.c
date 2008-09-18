@@ -121,7 +121,6 @@ qinstance_create(sge_gdi_ctx_class_t *ctx,
 {
    dstring buffer = DSTRING_INIT;
    const char *cqueue_name = lGetString(cqueue, CQ_name);
-   lList *centry_list = *(object_type_get_master_list(SGE_TYPE_CENTRY));
    lListElem *ret = NULL;
    int index;
 
@@ -149,6 +148,7 @@ qinstance_create(sge_gdi_ctx_class_t *ctx,
       bool tmp_has_changed_state_attr = false;
       const char *matching_host_or_group = NULL;
       const char *matching_group = NULL;
+      bool initial_modify = true;
 
       qinstance_modify_attribute(ctx,
                        ret, answer_list, cqueue, 
@@ -162,15 +162,12 @@ qinstance_create(sge_gdi_ctx_class_t *ctx,
                        &tmp_is_ambiguous, 
                        &tmp_has_changed_conf_attr,
                        &tmp_has_changed_state_attr,
-                       true, NULL, monitor);
+                       initial_modify, monitor);
 
       *is_ambiguous |= tmp_is_ambiguous;
 
       index++;
    }
-
-   qinstance_set_conf_slots_used(ret);
-   qinstance_debit_consumable(ret, NULL, centry_list, 0);
 
    /*
     * Change qinstance state
@@ -397,7 +394,7 @@ cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
 bool
 cqueue_mod_qinstances(sge_gdi_ctx_class_t *ctx,
                       lListElem *cqueue, lList **answer_list,
-                      lListElem *reduced_elem, bool refresh_all_values, bool is_startup, monitoring_t *monitor)
+                      lListElem *reduced_elem, bool refresh_all_values, monitoring_t *monitor)
 {
    dstring buffer = DSTRING_INIT;
    bool ret = true;
@@ -419,7 +416,6 @@ cqueue_mod_qinstances(sge_gdi_ctx_class_t *ctx,
          bool state_changed = false;
          bool conf_changed = false;
          int index = 0;
-         bool need_reinitialize = false;
 
          /*
           * Set full name of QI if it is not set
@@ -438,7 +434,6 @@ cqueue_mod_qinstances(sge_gdi_ctx_class_t *ctx,
           * Handle each cqueue attribute as long as there was no error
           * and only if the qinstance won't be deleted afterward.
           */
-
          while (ret && !is_del &&
                 cqueue_attribute_array[index].cqueue_attr != NoName) {
             const char *matching_host_or_group = NULL;
@@ -472,6 +467,7 @@ cqueue_mod_qinstances(sge_gdi_ctx_class_t *ctx,
                bool tmp_is_ambiguous = false;
                bool tmp_has_changed_conf_attr = false;
                bool tmp_has_changed_state_attr = false;
+               bool initial_modify = false;
 
                ret &= qinstance_modify_attribute(ctx,
                           qinstance,
@@ -486,8 +482,7 @@ cqueue_mod_qinstances(sge_gdi_ctx_class_t *ctx,
                           &tmp_is_ambiguous,
                           &tmp_has_changed_conf_attr,
                           &tmp_has_changed_state_attr,
-                          is_startup,
-                          &need_reinitialize,
+                          initial_modify,
                           monitor);
 
                if (tmp_is_ambiguous) {
@@ -507,10 +502,6 @@ cqueue_mod_qinstances(sge_gdi_ctx_class_t *ctx,
             }
             
             index++;
-         }
-
-         if (need_reinitialize) {
-            qinstance_reinit_consumable_actual_list(qinstance, answer_list);
          }
 
          /*
@@ -545,7 +536,7 @@ cqueue_mod_qinstances(sge_gdi_ctx_class_t *ctx,
             qinstance_increase_qversion(qinstance);
          }
 
-         if (ret && !is_startup) {
+         if (ret) {
             lListElem *ar;
             lList *master_userset_list = *(object_type_get_master_list(SGE_TYPE_USERSET));
 
@@ -595,7 +586,7 @@ cqueue_handle_qinstances(sge_gdi_ctx_class_t *ctx,
    }
    if (ret) {
       ret = cqueue_mod_qinstances(ctx, cqueue, answer_list, reduced_elem, 
-                                   refresh_all_values, false, monitor);
+                                   refresh_all_values, monitor);
    }
    if (ret) {
       ret = cqueue_add_qinstances(ctx, cqueue, answer_list, add_hosts, monitor);
@@ -614,6 +605,7 @@ int cqueue_mod(sge_gdi_ctx_class_t *ctx,
 
 
    DENTER(TOP_LAYER, "cqueue_mod");
+
 
    if (ret) {
       int pos = lGetPosViaElem(reduced_elem, CQ_name, SGE_NO_ABORT);
@@ -1123,25 +1115,28 @@ cqueue_list_set_unknown_state(lList *this_list, const char *hostname,
    lListElem *cqueue = NULL;
 
    for_each(cqueue, this_list) {
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+      lListElem *qinstance = NULL;
+      lListElem *next_qinstance = NULL;
+      const void *iterator = NULL;
+
       if (hostname != NULL) {
-         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-         lListElem *qinstance = lGetElemHost(qinstance_list, QU_qhostname,
-                                             hostname);
-         if (qinstance != NULL &&
-             qinstance_state_is_unknown(qinstance) != is_unknown) {
+         next_qinstance = lGetElemHostFirst(qinstance_list, QU_qhostname,
+                                            hostname, &iterator);
+      } else {
+         next_qinstance = lFirst(qinstance_list);
+      }
+      while ((qinstance = next_qinstance)) {
+         if (hostname != NULL) {
+            next_qinstance = lGetElemHostNext(qinstance_list, QU_qhostname,
+                                              hostname, &iterator);
+         } else {
+            next_qinstance = lNext(qinstance);
+         }
+         if (qinstance_state_is_unknown(qinstance) != is_unknown) {
             sge_qmaster_qinstance_state_set_unknown(qinstance, is_unknown);
             if (send_events) {
                qinstance_add_event(qinstance, sgeE_QINSTANCE_MOD);
-            }
-         }
-      } else {
-         lListElem *qinstance = NULL;
-         for_each (qinstance, lGetList(cqueue, CQ_qinstances)) {
-            if (qinstance_state_is_unknown(qinstance) != is_unknown) {
-               sge_qmaster_qinstance_state_set_unknown(qinstance, is_unknown);
-               if (send_events) {
-                  qinstance_add_event(qinstance, sgeE_QINSTANCE_MOD);
-               }
             }
          }
       }
@@ -1344,17 +1339,23 @@ static void
 qinstance_check_unknown_state(lListElem *this_elem, lList *master_exechost_list)
 {
    const char *hostname = NULL;
+   lList *load_list = NULL;
    lListElem *host = NULL;
+   lListElem *load = NULL;
 
    DENTER(TOP_LAYER, "qinstance_check_unknown_state");
    hostname = lGetHost(this_elem, QU_qhostname);
    host = host_list_locate(master_exechost_list, hostname);
    if (host != NULL) {
-      u_long32 last_heard = lGetUlong(host, EH_lt_heard_from);
+      load_list = lGetList(host, EH_load_list);
 
-      if (last_heard != 0) {
-         sge_qmaster_qinstance_state_set_unknown(this_elem, false);
-      }
+      for_each(load, load_list) {
+         if (!lGetBool(load, HL_static)) {
+            sge_qmaster_qinstance_state_set_unknown(this_elem, false);
+            DTRACE;
+            break;
+         }
+      } 
    }
    DRETURN_VOID;
 }

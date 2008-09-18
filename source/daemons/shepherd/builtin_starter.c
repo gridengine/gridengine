@@ -76,7 +76,7 @@ struct rusage {
 #endif 
 
 #if defined(INTERIX)
-#  include "wingrid.h"
+#  include "misc.h"
 #  include "windows_gui.h"
 #endif
 
@@ -241,7 +241,7 @@ int truncate_stderr_out
    /* From here only the son --------------------------------------*/
    if (!script_file) {
       /* output error and exit */
-      shepherd_error(1, "received NULL als script file");
+      shepherd_error("received NULL als script file");
    }   
 
    /*
@@ -302,7 +302,8 @@ int truncate_stderr_out
 #endif
    if (g_new_interactive_job_support == false || !is_qlogin_starter) {
       if ((newpgrp = setsid()) < 0) {
-         shepherd_error(1, "setsid() failed, errno=%d", errno);
+         sprintf(err_str, "setsid() failed, errno=%d", errno);
+         shepherd_error(err_str);
       }
    } else {
       /* g_newpgrp was set in pty.c, fork_pty() */
@@ -353,24 +354,28 @@ int truncate_stderr_out
    if (!geteuid()) {
       if (setlogin(target_user)) {
          sge_switch2admin_user();
-         shepherd_error(1, "setlogin(%s) failed: %s", target_user, strerror(errno));
+         sprintf(err_str, "setlogin(%s) failed: %s", target_user, strerror(errno));
+         shepherd_error(err_str);
       }
       sge_switch2admin_user();
    }
 #endif
 
-   shepherd_trace("pid="pid_t_fmt" pgrp="pid_t_fmt" sid="pid_t_fmt" old pgrp="
-                  pid_t_fmt" getlogin()=%s", pid, newpgrp, newpgrp, pgrp, 
-                  (cp = getlogin()) ? cp : "<no login set>");
+   sprintf(err_str, "pid="pid_t_fmt" pgrp="pid_t_fmt" sid="pid_t_fmt
+                    " old pgrp="pid_t_fmt" getlogin()=%s", 
+                    pid, newpgrp, newpgrp, pgrp, 
+                    (cp = getlogin()) ? cp : "<no login set>");
+   shepherd_trace(err_str);
 
-   shepherd_trace("reading passwd information for user '%s'",
-                  target_user ? target_user : "<NULL>");
+   shepherd_trace_sprintf("reading passwd information for user '%s'",
+         target_user ? target_user : "<NULL>");
 
    size = get_pw_buffer_size();
    buffer = sge_malloc(size);
    pw = sge_getpwnam_r(target_user, &pw_struct, buffer, size);
    if (!pw) {
-      shepherd_error(1, "can't get password entry for user \"%s\"", target_user);
+      sprintf(err_str, "can't get password entry for user \"%s\"", target_user);
+      shepherd_error(err_str);
    }
 
    umask(022);
@@ -430,7 +435,7 @@ int truncate_stderr_out
          } else if (res == 3) {
             shepherd_state = SSTATE_PASSWD_WRONG;
          }
-         shepherd_error(1, err_str);
+         shepherd_error(err_str);
       }
    }
 #endif
@@ -477,7 +482,8 @@ int truncate_stderr_out
 
    if (ret < 0) {
       shepherd_trace(err_str);
-      shepherd_trace("try running further with uid=%d", (int)getuid());
+      sprintf(err_str, "try running further with uid=%d", (int)getuid());
+      shepherd_trace(err_str);
    } else if (ret > 0) {
       if(ret == 2) {
          shepherd_state = SSTATE_PASSWD_FILE_ERROR;
@@ -489,7 +495,7 @@ int truncate_stderr_out
       /*
       ** violation of min_gid or min_uid
       */
-      shepherd_error(1, err_str);
+      shepherd_error(err_str);
    }
 
    shell_start_mode = get_conf_val("shell_start_mode");
@@ -552,7 +558,8 @@ int truncate_stderr_out
 
       /* take shell from passwd */
       shell_path = strdup(pw->pw_shell);
-      shepherd_trace("using \"%s\" as shell of user \"%s\"", pw->pw_shell, target_user);
+      sprintf(err_str, "using \"%s\" as shell of user \"%s\"", pw->pw_shell, target_user);
+      shepherd_trace(err_str);
       
       /* unix_behaviour */
       shell_start_mode = "unix_behaviour";
@@ -667,24 +674,40 @@ int truncate_stderr_out
   
 #if 0
    /* <DEBUGGING> */
-   shepherd_trace("## stdin_path=%s", get_conf_val("stdin_path"));
-   shepherd_trace("## stdout_path=%s", get_conf_val("stdout_path"));
-   if (!merge_stderr) {
-      shepherd_trace("## stderr_path=%s", get_conf_val("stderr_path"));
+   sprintf( err_str, "## stdin_path=%s", get_conf_val( "stdin_path" ));
+   shepherd_trace( err_str );
+   sprintf( err_str, "## stdout_path=%s", get_conf_val( "stdout_path" ));
+   shepherd_trace( err_str );
+   if( !merge_stderr ) {
+      sprintf( err_str, "## stderr_path=%s", get_conf_val( "stderr_path" ));
+      shepherd_trace( err_str );
    }      
-   shepherd_trace("## fs_stdin_path=%s", get_conf_val("fs_stdin_path"));
-   shepherd_trace("## fs_stdout_path=%s", get_conf_val("fs_stdout_path"));
-   shepherd_trace("## fs_stderr_path=%s", get_conf_val("fs_stderr_path"));
-   shepherd_trace("## fs_stdin_host=%s", get_conf_val("fs_stdin_host"));
-   shepherd_trace("## fs_stdout_host=%s", get_conf_val("fs_stdout_host"));
-   shepherd_trace("## fs_stderr_host=%s", get_conf_val("fs_stderr_host"));
-   shepherd_trace("## fs_stdin_tmp_path=%s", get_conf_val("fs_stdin_tmp_path"));
-   shepherd_trace("## fs_stdout_tmp_path=%s", get_conf_val("fs_stdout_tmp_path"));
-   shepherd_trace("## fs_stderr_tmp_path=%s", get_conf_val("fs_stderr_tmp_path"));
-   shepherd_trace("## merge_stderr=%s", get_conf_val("merge_stderr"));
-   shepherd_trace("## fs_stdin_file_staging=%s", get_conf_val("fs_stdin_file_staging"));
-   shepherd_trace("## fs_stdout_file_staging=%s", get_conf_val("fs_stdout_file_staging"));
-   shepherd_trace("## fs_stderr_file_staging=%s", get_conf_val("fs_stderr_file_staging"));
+   sprintf( err_str, "## fs_stdin_path=%s", get_conf_val( "fs_stdin_path" ));
+   shepherd_trace( err_str );
+   sprintf( err_str, "## fs_stdout_path=%s", get_conf_val( "fs_stdout_path" ));
+   shepherd_trace( err_str );
+   sprintf( err_str, "## fs_stderr_path=%s", get_conf_val( "fs_stderr_path" ));
+   shepherd_trace( err_str );
+   sprintf( err_str, "## fs_stdin_host=%s", get_conf_val( "fs_stdin_host" ));
+   shepherd_trace( err_str );
+   sprintf( err_str, "## fs_stdout_host=%s", get_conf_val( "fs_stdout_host" ));
+   shepherd_trace( err_str );
+   sprintf( err_str, "## fs_stderr_host=%s", get_conf_val( "fs_stderr_host" ));
+   shepherd_trace( err_str );
+   sprintf( err_str, "## fs_stdin_tmp_path=%s", get_conf_val( "fs_stdin_tmp_path" ));
+   shepherd_trace( err_str );
+   sprintf( err_str, "## fs_stdout_tmp_path=%s", get_conf_val( "fs_stdout_tmp_path" ));
+   shepherd_trace( err_str );
+   sprintf( err_str, "## fs_stderr_tmp_path=%s", get_conf_val( "fs_stderr_tmp_path" ));
+   shepherd_trace( err_str );
+   sprintf( err_str, "## merge_stderr=%s", get_conf_val( "merge_stderr" ));
+   shepherd_trace( err_str );
+   sprintf( err_str, "## fs_stdin_file_staging=%s", get_conf_val( "fs_stdin_file_staging" ));
+   shepherd_trace( err_str );
+   sprintf( err_str, "## fs_stdout_file_staging=%s", get_conf_val( "fs_stdout_file_staging" ));
+   shepherd_trace( err_str );
+   sprintf( err_str, "## fs_stderr_file_staging=%s", get_conf_val( "fs_stderr_file_staging" ));
+   shepherd_trace( err_str );
    /* </DEBUGGING> */
 #endif
 
@@ -726,8 +749,9 @@ int truncate_stderr_out
    if (!strcasecmp(shell_start_mode, "script_from_stdin")) {
       in = SGE_OPEN2(script_file, O_RDONLY);
       if (in == -1) {
-         shepherd_error(1, "error: can't open %s script file \"%s\": %s", 
-                        childname, script_file, strerror(errno));
+         sprintf(err_str,  "error: can't open %s script file \"%s\": %s", 
+               childname, script_file, strerror(errno));
+         shepherd_error(err_str);
       }
    } else {
       /* 
@@ -740,21 +764,22 @@ int truncate_stderr_out
 
          if (in == -1) {
             shepherd_state = SSTATE_OPEN_OUTPUT;
-            shepherd_error(1, "error: can't open %s as dummy input file", 
-                           stdin_path);
+            sprintf(err_str, "error: can't open %s as dummy input file", 
+                    stdin_path);
+            shepherd_error(err_str);
          }
       }
    }
 
-   if (in != 0) {
-      shepherd_error(1, "error: fd for in is not 0");
-   }
+   if (in != 0)
+      shepherd_error("error: fd for in is not 0");
 
    if(!is_qlogin_starter) {
       /* -cwd or from pw->pw_dir */
       if (sge_chdir(cwd)) {
          shepherd_state = SSTATE_NO_CWD;
-         shepherd_error(1, "error: can't chdir to %s: %s", cwd, strerror(errno));
+         sprintf(err_str, "error: can't chdir to %s: %s", cwd, strerror(errno));
+         shepherd_error(err_str);
       }
    }
    /* open stdout - not for interactive jobs */
@@ -766,13 +791,14 @@ int truncate_stderr_out
       }
       
       if (out==-1) {
+         sprintf(err_str, "error: can't open output file \"%s\": %s", 
+                 stdout_path, strerror(errno));
          shepherd_state = SSTATE_OPEN_OUTPUT;
-         shepherd_error(1, "error: can't open output file \"%s\": %s", 
-                        stdout_path, strerror(errno));
+         shepherd_error(err_str);
       }
       
       if (out!=1) {
-         shepherd_error(1, "error: fd out is not 1");
+         shepherd_error("error: fd out is not 1");
       }   
 
       /* open stderr */
@@ -787,15 +813,16 @@ int truncate_stderr_out
          }
 
          if (err == -1) {
+            sprintf(err_str, "error: can't open output file \"%s\": %s", 
+                    stderr_path, strerror(errno));
             shepherd_state = SSTATE_OPEN_OUTPUT;
-            shepherd_error(1, "error: can't open output file \"%s\": %s", 
-                           stderr_path, strerror(errno));
+            shepherd_error(err_str);
          }
 
 #ifndef __INSURE__
          if (err!=2) {
             shepherd_trace("unexpected fd");
-            shepherd_error(1, "error: fd err is not 2");
+            shepherd_error("error: fd err is not 2");
          }
 #endif
       }
@@ -837,8 +864,9 @@ int truncate_stderr_out
            !strcasecmp("start_as_command", shell_start_mode)) && 
            !is_interactive && !is_qlogin) { 
          if (SGE_STAT(shell_path, &sbuf)) {
+            sprintf(err_str, "unable to find shell \"%s\"", shell_path);
             shepherd_state = SSTATE_NO_SHELL;
-            shepherd_error(1, "unable to find shell \"%s\"", shell_path);
+            shepherd_error(err_str);
          }
       }
    }
@@ -885,7 +913,8 @@ int truncate_stderr_out
       }
       if (ret < 0) {
         shepherd_trace(err_str);
-        shepherd_trace("try running further with uid=%d", (int)getuid());
+        sprintf(err_str, "try running further with uid=%d", (int)getuid());
+        shepherd_trace(err_str);
       } else if (ret > 0) {
         if(ret == 2) {
           shepherd_state = SSTATE_PASSWD_FILE_ERROR;
@@ -894,11 +923,11 @@ int truncate_stderr_out
         } else if (ret == 4) {
           shepherd_state = SSTATE_PASSWD_WRONG;
         }
-        shepherd_error(1, err_str);
+        shepherd_error(err_str);
       }
    }
-   shepherd_trace("now running with uid="uid_t_fmt", euid="uid_t_fmt, 
-                  (int)getuid(), (int)geteuid());
+   shepherd_trace_sprintf("now running with uid="uid_t_fmt", euid="uid_t_fmt, 
+      (int)getuid(), (int)geteuid());
 
    /*
    ** if we dont check if the script_file exists, then in case of
@@ -922,21 +951,21 @@ int truncate_stderr_out
             ** generate a friendly error message especially for interactive jobs
             */
             if (is_interactive) {
-               shepherd_error(1, "unable to find xterm executable \"%s\" for "
-                              "interactive job", file);
+               sprintf(err_str, "unable to find xterm executable \"%s\" for interactive job", file);
             } else {
-               shepherd_error(1, "unable to find %s file \"%s\"", childname, file);
+               sprintf(err_str, "unable to find %s file \"%s\"", childname, file);
             }
+   
+            shepherd_error(err_str);
          }
 
          if (!(sbuf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))) {
-            shepherd_error(1, "%s file \"%s\" is not executable", childname, file);
+            sprintf(err_str, "%s file \"%s\" is not executable", childname, file);
+            shepherd_error(err_str);
          }
       }
    }
-   start_command(childname, shell_path, script_file, argv0, shell_start_mode, 
-                 is_interactive, is_qlogin, is_rsh, is_rlogin, str_title, 
-                 use_starter_method);
+   start_command(childname, shell_path, script_file, argv0, shell_start_mode, is_interactive, is_qlogin, is_rsh, is_rlogin, str_title, use_starter_method);
 
    FREE(buffer);
    return;
@@ -981,7 +1010,10 @@ int sge_set_environment()
    setup_environment();
    
    if (!(fp = fopen(filename, "r"))) {
-      shepherd_error(1, "can't open environment file: %s", strerror(errno));
+      sprintf(err_str, "can't open environment file: %s",
+              strerror(errno));
+      shepherd_error(err_str);
+      return 1;
    }
 
 #if defined(IRIX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
@@ -1007,10 +1039,12 @@ int sge_set_environment()
       name = strtok(buf, "=");
       if (!name) {
          FCLOSE(fp);
-         shepherd_error(1, "error reading environment file: line=%d, contents:%s",
-                        line, buf);
+         sprintf(err_str, 
+                 "error reading environment file: line=%d, contents:%s",
+                 line, buf);
+         shepherd_error(err_str);
+         return 1;
       }
-
       value = strtok(NULL, "\n");
       if (value == NULL)
          value = "";
@@ -1315,16 +1349,16 @@ char *buf = NULL;
    pre_args_ptr = &pre_args[0];
    
 #if 0
-   shepherd_trace("childname = %s", childname? childname : "NULL");
-   shepherd_trace("shell_path = %s", shell_path ? shell_path : "NULL");
-   shepherd_trace("script_file = %s", script_file ? script_file : "NULL");
-   shepherd_trace("argv0 = %s", argv0 ? argv0 : "NULL");
-   shepherd_trace("shell_start_mode = %s", shell_start_mode ? shell_start_mode : "NULL");
-   shepherd_trace("is_interactive = %d", is_interactive);
-   shepherd_trace("is_qlogin = %d", is_qlogin);
-   shepherd_trace("is_rsh = %d", is_rsh);
-   shepherd_trace("is_rlogin = %d", is_rlogin);
-   shepherd_trace("str_title = %s", str_title ? str_title : "NULL");
+   sprintf(err_str, "childname = %s", childname? childname : "NULL" );  shepherd_trace(err_str);
+   sprintf(err_str, "shell_path = %s", shell_path ? shell_path : "NULL" );  shepherd_trace(err_str);
+   sprintf(err_str, "script_file = %s", script_file ? script_file : "NULL" );  shepherd_trace(err_str);
+   sprintf(err_str, "argv0 = %s", argv0 ? argv0 : "NULL" );  shepherd_trace(err_str);
+   sprintf(err_str, "shell_start_mode = %s", shell_start_mode ? shell_start_mode : "NULL" );  shepherd_trace(err_str);
+   sprintf(err_str, "is_interactive = %d", is_interactive );  shepherd_trace(err_str);
+   sprintf(err_str, "is_qlogin = %d", is_qlogin );  shepherd_trace(err_str);
+   sprintf(err_str, "is_rsh = %d", is_rsh );  shepherd_trace(err_str);
+   sprintf(err_str, "is_rlogin = %d", is_rlogin );  shepherd_trace(err_str);
+   sprintf(err_str, "str_title = %s", str_title ? str_title : "NULL"  );  shepherd_trace(err_str);   
 #endif
 
    /*
@@ -1365,7 +1399,6 @@ char *buf = NULL;
       
       pre_args_ptr[arg_id++] = strdup(sge_dstring_get_string(&arguments));
       pre_args_ptr[arg_id++] = NULL;
-      sge_dstring_free(&arguments);
       args = pre_args;
    /* No need to test for binary since this option excludes binary */
    } else if (!strcasecmp("script_from_stdin", shell_start_mode)) {
@@ -1404,8 +1437,8 @@ char *buf = NULL;
 #endif
 
       pre_args_ptr[0] = argv0;
-      shepherd_trace("start_as_command: pre_args_ptr[0] = argv0; \"%s\""
-                     " shell_path = \"%s\"", argv0, shell_path); 
+      sprintf(err_str, "start_as_command: pre_args_ptr[0] = argv0; \"%s\" shell_path = \"%s\"", argv0, shell_path); 
+      shepherd_trace(err_str);
       pre_args_ptr[1] = "-c";
       pre_args_ptr[2] = script_file;
       pre_args_ptr[3] = NULL;
@@ -1450,7 +1483,7 @@ char *buf = NULL;
       if (check_configured_method(pre_args_ptr[1], conf_name, err_str) != 0
           && g_new_interactive_job_support == false) {
          shepherd_state = SSTATE_CHECK_DAEMON_CONFIG;
-         shepherd_error(1, err_str);
+         shepherd_error(err_str);
       }
 
       pre_args_ptr[2] = "-d"; 
@@ -1502,13 +1535,13 @@ char *buf = NULL;
          shepherd_trace("start qlogin");
          
          /* build trace string */
-         shepherd_trace("calling qlogin_starter(%s, %s);", shepherd_job_dir, args[1]);
+         sprintf(err_str, "calling qlogin_starter(%s, %s);", shepherd_job_dir, args[1]);
+         shepherd_trace(err_str);
 #if defined (SOLARIS)
          if (is_rlogin) {
             if (strstr(args[1], "sshd") != NULL) {
                /* workaround for CR 6215730 */ 
-               shepherd_trace("staring an sshd on SOLARIS, do a SETPGRP to be "
-                              "able to kill it (qdel)");
+               shepherd_trace("staring an sshd on SOLARIS, do a SETPGRP to be able to kill it (qdel)");
                SETPGRP;
             }
          }
@@ -1544,8 +1577,8 @@ char *buf = NULL;
             buffer = sge_malloc(size);
             getpwuid_r(getuid(), &pw_struct, buffer, size, &pw);
             if (!pw) {
-               shepherd_error(1, "can't get password entry for user id %d",
-                             (int)getuid());
+               sprintf(err_str, "can't get password entry for user id %d", (int)getuid());
+               shepherd_error(err_str);
             }
             i = 0;
             if (pw != NULL && pw->pw_shell != NULL) {
@@ -1569,7 +1602,11 @@ char *buf = NULL;
 #endif
             my_env[i] = NULL;
            
-            shepherd_trace("execle(%s, %s, NULL, env)", shell_path, minusname);
+            for (i=0; my_env[i] != NULL; i++) {
+               shepherd_trace_sprintf("env[%d] = \"%s\"\n", i, my_env[i]);
+            }
+            shepherd_trace_sprintf("execle(%s, %s, NULL, env)", 
+                                   shell_path, minusname);
 
             execle(shell_path, minusname, NULL, my_env);
          } else { /*if (is_qrsh) */
@@ -1594,7 +1631,7 @@ char *buf = NULL;
                getcwd(cwd, SGE_PATH_MAX);
                
                if (sge_root == NULL || arch == NULL) {
-                  shepherd_trace("reading environment SGE_ROOT and ARC failed");
+                  SHEPHERD_TRACE((err_str, "reading environment SGE_ROOT and ARC failed"));
                   return;
                }
                snprintf(buf, 2048, "%s/utilbin/%s/qrsh_starter",
@@ -1624,13 +1661,13 @@ char *buf = NULL;
          }
 
          for (i=0; args[i] != NULL; i++) {
-            shepherd_trace("args[%d] = \"%s\"\n", i, args[i]);
+            shepherd_trace_sprintf("args[%d] = \"%s\"\n", i, args[i]);
          }
 #if 0
-         shepherd_trace("execve(%s, ....);", args[0]);
+         shepherd_trace_sprintf("execve(%s, ....);", args[0]);
          execve(args[0], args, sge_get_environment());
 #else
-         shepherd_trace("execvp(%s, ...);", args[0]);
+         shepherd_trace_sprintf("execvp(%s, ...);", args[0]);
          execvp(args[0], args);
 #endif
          /* END TODO: Move this to a function */
@@ -1682,16 +1719,16 @@ char *buf = NULL;
          enum en_JobStatus job_status;
          int  failure = -1;
 
-         shepherd_trace("starting job remote: %s", filename);
+         shepherd_trace_sprintf("starting job remote: %s", filename);
 
          env = sge_get_environment();
          ret = wl_start_job_remote(filename, args, env, 
                              job_user, user_passwd, 
                              &win32_exit_status, &job_status, err_msg);
 
-         shepherd_trace("start_job_remote returned with %d, "
-                        "job_status = %d, win32_exit_status = %d",
-                        ret, job_status, win32_exit_status);
+         shepherd_trace_sprintf("start_job_remote returned with %d, "
+            "job_status = %d, win32_exit_status = %d",
+            ret, job_status, win32_exit_status);
 
          switch(ret) {
             case 0:
@@ -1720,7 +1757,7 @@ char *buf = NULL;
                      failure = SSTATE_HELPER_SERVICE_ERROR;
                      break;
                }
-               shepherd_trace("exit_status: %d", win32_exit_status);
+               shepherd_trace_sprintf("exit_status: %d", win32_exit_status);
                break;
 
             case 254:
@@ -1741,7 +1778,7 @@ char *buf = NULL;
          }
          if(failure != -1) {
             shepherd_state = failure;
-            shepherd_error(1, err_msg);
+            shepherd_error(err_msg);
          }
          exit(win32_exit_status);
       } else 
@@ -1772,7 +1809,7 @@ char *buf = NULL;
                i.e. -S /etc/passwd */
             shepherd_state = SSTATE_NO_SHELL;
             /* EXIT HERE IN CASE IF FAILURE */
-            shepherd_error(1, failed_str);
+            shepherd_error(failed_str);
          }
       }
    }
@@ -1876,7 +1913,7 @@ int type
                sprintf(err_str+strlen(err_str), uid_t_fmt" ", groups[i]);
          }
          shepherd_state = SSTATE_OPEN_OUTPUT; /* job's failure */
-         shepherd_error(1, err_str);
+         shepherd_error(err_str);
       }
       return base; /* does not exist - must be path of file to be created */
    }
@@ -1886,8 +1923,9 @@ int type
    } else {
       /* 'base' is a existing directory, but not a file! */
       if (type == SGE_STDIN) {
+         sprintf(err_str, SFQ" is a directory not a file\n", base);
          shepherd_state = SSTATE_OPEN_OUTPUT; /* job's failure */
-         shepherd_error(1, SFQ" is a directory not a file\n", base);
+         shepherd_error(err_str);
          return "/dev/null";
       } else {
          job_name = get_conf_val("job_name");
@@ -1896,7 +1934,8 @@ int type
 
          if (!(path = (char *)malloc(pathlen=(strlen(base) + strlen(job_name) 
                        + strlen(job_id) + strlen(ja_task_id) + 25)))) {
-            shepherd_error(1, "malloc(%d) failed for %s@", pathlen, name);
+            sprintf(err_str, "malloc(%d) failed for %s@", pathlen, name);
+            shepherd_error(err_str);
          }
 
          if (atoi(ja_task_id)) {

@@ -327,7 +327,12 @@ static int spool_users(int argc, char *argv[])
 
 static int spool_pes(int argc, char *argv[])
 {
-   return spool_object_list(argv[2], PE_fields, &qconf_sfi, PE_Type, SGE_TYPE_PE);
+   const spooling_field *fields = sge_build_PE_field_list(true, false);
+   int ret; 
+
+   ret = spool_object_list(argv[2], fields, &qconf_sfi, PE_Type, SGE_TYPE_PE);
+   FREE(fields);
+   return ret;
 }
 
 static int spool_usersets(int argc, char *argv[])
@@ -368,7 +373,6 @@ static int spool_object_list(const char *directory,
                answer_list_output(&answer_list);
                break;
             }
-            lFreeElem(&ep);
          }
       }
    }

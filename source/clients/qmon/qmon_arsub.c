@@ -70,6 +70,7 @@
 #include "parse_job_cull.h"
 #include "unparse_job_cull.h"
 #include "read_defaults.h"
+#include "write_job_defaults.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_appres.h"
@@ -229,8 +230,8 @@ static void qmonARSubAskForCkpt(Widget w, XtPointer cld, XtPointer cad);
 static void qmonARSubCheckARName(Widget w, XtPointer cld, XtPointer cad);
 static void qmonARSubToggleDuration(Widget w, XtPointer cld, XtPointer cad);
 
-static Boolean qmonCullToARSM(lListElem *jep, tARSMEntry *data);
-static Boolean qmonARSMToCull(tARSMEntry *data, lListElem *jep, int save);
+static Boolean qmonCullToSM(lListElem *jep, tARSMEntry *data);
+static Boolean qmonSMToCull(tARSMEntry *data, lListElem *jep, int save);
 static void qmonFreeARSMData(tARSMEntry *data);
 static void qmonInitARSMData(tARSMEntry *data);
 static u_long32 ConvertMailOptions(int mail_options);
@@ -480,7 +481,7 @@ void qmonARSubPopup(Widget w, XtPointer cld, XtPointer cad)
    }
 
    if (ar_to_set != NULL) {
-      qmonCullToARSM(ar_to_set, &ARSMData);
+      qmonCullToSM(ar_to_set, &ARSMData);
       XmtDialogSetDialogValues(arsub_layout, &ARSMData);
    }
 
@@ -859,8 +860,8 @@ static void qmonARSubARSub(Widget w, XtPointer cld, XtPointer cad)
          goto error;
       }
 
-      if (!qmonARSMToCull(&ARSMData, lFirst(lp), 0)) {
-         DPRINTF(("qmonARSMToCull failure\n"));
+      if (!qmonSMToCull(&ARSMData, lFirst(lp), 0)) {
+         DPRINTF(("qmonSMToCull failure\n"));
          sprintf(buf, 
                  XmtLocalize(w, 
                              "AR submission failed", 
@@ -983,8 +984,8 @@ static void qmonARSubARSub(Widget w, XtPointer cld, XtPointer cad)
 
       lSetUlong(lFirst(lp), AR_id, arsub_mode_data.ar_id);
       
-      if (!qmonARSMToCull(&ARSMData,lFirst(lp), 0)) {
-         DPRINTF(("qmonARSMToCull failure\n"));
+      if (!qmonSMToCull(&ARSMData,lFirst(lp), 0)) {
+         DPRINTF(("qmonSMToCull failure\n"));
          sprintf(buf, "AR submission failed\n");
          goto error;
       }
@@ -1089,7 +1090,7 @@ tARSMEntry *data
 /*  the ar element to dialog data conversion                              */
 /*  we need a valid tARSMEntry pointer                                       */
 /*-------------------------------------------------------------------------*/
-static Boolean qmonCullToARSM(
+static Boolean qmonCullToSM(
 lListElem *jep,
 tARSMEntry *data
 ) {
@@ -1101,7 +1102,7 @@ tARSMEntry *data
    const char* username = ctx->get_username(ctx);
    const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
    
-   DENTER(GUI_LAYER, "qmonCullToARSM");
+   DENTER(GUI_LAYER, "qmonCullToSM");
 
    /*
    ** free any allocated memory
@@ -1173,7 +1174,7 @@ tARSMEntry *data
 /*-------------------------------------------------------------------------*/
 /* we need a valid ar element pointer                                     */
 /*-------------------------------------------------------------------------*/
-static Boolean qmonARSMToCull(
+static Boolean qmonSMToCull(
 tARSMEntry *data,
 lListElem *jep,
 int save 
@@ -1185,16 +1186,15 @@ int save
    lList *alp = NULL;
    const char *username = ctx->get_username(ctx);
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
-   u_long32 ar_type = 0;
    
-   DENTER(GUI_LAYER, "qmonARSMToCull");
+   DENTER(GUI_LAYER, "qmonSMToCull");
 
    if (!data->ar_name || data->ar_name[0] == '\0') {
       lSetString(jep, AR_name, NULL);
    } else {
       lSetString(jep, AR_name, data->ar_name);
    }   
-
+   
    lSetString(jep, AR_checkpoint_name, data->ckpt_obj);
 
    /* 
@@ -1239,14 +1239,7 @@ int save
 
    lSetUlong(jep, AR_verify, data->verify_mode);
    lSetUlong(jep, AR_error_handling, data->handle_hard_error);
-
-   ar_type = lGetUlong(jep, AR_type);
-   if (data->now) {
-      JOB_TYPE_SET_IMMEDIATE(ar_type);
-   } else {
-      JOB_TYPE_CLEAR_IMMEDIATE(ar_type);
-   }
-   lSetUlong(jep, AR_type, ar_type);
+   lSetUlong(jep, AR_type, data->now);
 
    DPRINTF(("data->resource_list is %s\n", 
             data->resource_list ? "NOT NULL" : "NULL"));

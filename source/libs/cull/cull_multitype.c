@@ -482,24 +482,10 @@ void lWriteDescrTo(const lDescr *dp, FILE *fp)
    }
 
    for (i = 0; dp[i].mt != lEndT; i++) {
-      const char *format = "nm: %d(%-20.20s) mt: %d %c%c\n";
-      int do_hash = ' ';
-      int is_hash = ' ';
-      if (dp[i].mt & CULL_HASH) {
-         if (dp[i].mt & CULL_UNIQUE) {
-            do_hash = 'u';
-         } else {
-            do_hash = 'h';
-         }
-      }
-      if (dp[i].ht != NULL) {
-         is_hash = '+';
-      }
-
       if (!fp)
-         DPRINTF((format, dp[i].nm, lNm2Str(dp[i].nm), dp[i].mt, do_hash, is_hash));
+         DPRINTF(("nm: %d(%-20.20s) mt: %d\n", dp[i].nm, lNm2Str(dp[i].nm), dp[i].mt));
       else
-         fprintf(fp, format, dp[i].nm, lNm2Str(dp[i].nm), dp[i].mt, do_hash, is_hash);
+         fprintf(fp, "nm: "sge_U32CFormat"(%-20.20s) mt: "sge_U32CFormat"\n", sge_u32c( (dp[i].nm) ), lNm2Str(dp[i].nm), sge_u32c(dp[i].mt));
    }
 
    DEXIT;

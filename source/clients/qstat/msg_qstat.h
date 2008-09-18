@@ -60,6 +60,9 @@
 #define MSG_SCHEDD_SCHEDULINGINFO    _MESSAGE(19034, _("scheduling info"))
 /* #define MSG_QSI_NOVALIDQSIHOSTSPECIFIED    _message(19035, _("no valid QSI host specified")) __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_QSTAT_CANTREACHXCAUSEY_SS    _message(19036, _("can't reach "SFN" cause "SFN)) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_QSTAT_CANTSENDQSTATREQTOQSTD_SSSS    _message(19037, _("unable to send "SFN" request to "SFN"@"SFN": "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_QSTAT_WAINTINGFORREPLYFROMQSTD_SS    _message(19038, _("waiting for reply from "SFN"@"SFN" ")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_QSTAT_CANTGETREPLYONQSTATREQFROMQSTD_SSSS    _message(19039, _("unable to get reply on "SFN" request from "SFN"@"SFN": "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_QSTAT_FOLLOWINGDONOTEXIST _MESSAGE(19040, _("Following jobs do not exist: "))
 #define MSG_QSTAT_USAGE_DISPLAYALLPARALLELJOBTASKS    _MESSAGE(19041, _("display all parallel job tasks (do not group)"))
 #define MSG_QSTAT_USAGE_DISPLAYCQUEUESUMMARY          _MESSAGE(19043, _("display cluster queue summary"))

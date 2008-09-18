@@ -51,7 +51,6 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
-import javax.swing.JToggleButton;
 import javax.swing.SpinnerNumberModel;
 
 /**
@@ -64,12 +63,7 @@ public class ConnectDialog extends JDialog {
     private final JSpinner portSpinner = new JSpinner(portSpinnerModel);
     private final JTextField usernameTextField = new JTextField();
     private final JPasswordField passwordTextField = new JPasswordField();
-    private final JToggleButton useSSLButton = new JToggleButton(new ToggleAction());
-    private final JTextField caTopTextField = new JTextField();
-    private final JTextField keyStoreTextField = new JTextField();
-    private final JPasswordField keyStorePasswordTextField = new JPasswordField();
     private boolean canceled;
-    private boolean useSSL = false;
 
     public ConnectDialog(JFrame frame) {
         super(frame, true);
@@ -83,16 +77,6 @@ public class ConnectDialog extends JDialog {
         addLabelAndComponent(panel, 1, "Port:", portSpinner);
         addLabelAndComponent(panel, 2, "Username:", usernameTextField);
         addLabelAndComponent(panel, 3, "Password:", passwordTextField);
-
-        addLabelAndComponent(panel, 4, "", useSSLButton);
-
-        addLabelAndComponent(panel, 5, "CA Top Path:", caTopTextField);
-        addLabelAndComponent(panel, 6, "Keystore Path:", keyStoreTextField);
-        addLabelAndComponent(panel, 7, "Keystore Password:", keyStorePasswordTextField);
-
-        keyStoreTextField.setEnabled(useSSL);
-        keyStorePasswordTextField.setEnabled(useSSL);
-        caTopTextField.setEnabled(useSSL);
 
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -153,27 +137,6 @@ public class ConnectDialog extends JDialog {
         return passwordTextField.getPassword();
     }
 
-    public String getCaTop() {
-        if (!useSSL) {
-            return null;
-        }
-        return caTopTextField.getText();
-    }
-
-    public String getKeystore() {
-        if (!useSSL) {
-            return null;
-        }
-        return keyStoreTextField.getText();
-    }
-
-    public char[] getKeyStorePassword() {
-        if (!useSSL) {
-            return null;
-        }
-        return keyStorePasswordTextField.getPassword();
-    }
-
     private class OKAction extends AbstractAction {
 
         public OKAction() {
@@ -185,26 +148,6 @@ public class ConnectDialog extends JDialog {
             setVisible(false);
         }
     }
-
-    private class ToggleAction extends AbstractAction {
-
-        public ToggleAction() {
-            super("SSL is disabled");
-        }
-
-        public void actionPerformed(ActionEvent e) {
-            useSSL = !useSSL;
-            if (useSSL) {
-                useSSLButton.setText("SSL is enabled");
-            } else {
-                useSSLButton.setText("SSL is disabled");
-            }
-            keyStoreTextField.setEnabled(useSSL);
-            keyStorePasswordTextField.setEnabled(useSSL);
-            caTopTextField.setEnabled(useSSL);
-        }
-        
-     }
 
     private class CancelAction extends AbstractAction {
 
@@ -240,9 +183,6 @@ public class ConnectDialog extends JDialog {
         usernameTextField.setText(prefs.get("username", System.getProperty("user.name")));
         portSpinnerModel.setValue(prefs.getInt("port", 1025));
         hostTextField.setText(prefs.get("host", ""));
-
-        caTopTextField.setText(prefs.get("caTop", System.getProperty("com.sun.grid.jgdi.caTop")));
-        keyStoreTextField.setText(prefs.get("keyStore", System.getProperty("com.sun.grid.jgdi.keyStore")));
     }
 
     public void saveInPrefs() {
@@ -253,10 +193,7 @@ public class ConnectDialog extends JDialog {
         prefs.putInt("port", getPort());
         prefs.put("host", getHost());
 
-        if (useSSL) {
-            prefs.put("caTop", getCaTop());
-            prefs.put("keyStore", getKeystore());
-        }
+
     }
 
     @Override

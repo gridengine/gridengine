@@ -48,12 +48,10 @@ SPOOLCLIB_ADD_SRC = \
          read_write_job.c 
 
 SPOOLCLIB_TEST_PROGS_OBJ = \
-         test_sge_spooling_flatfile.o \
-         test_flatfile_spool.o \
+         test_sge_spooling_flatfile.o
 
 SPOOLCLIB_TEST_PROGS = \
-         test_sge_spooling_flatfile \
-         test_flatfile_spool
+         test_sge_spooling_flatfile
 
 SPOOLCLIB_ADD_OBJS = $(SPOOLCLIB_ADD_SRC:.c=.o)
 
@@ -122,14 +120,3 @@ test_sge_spooling_flatfile: test_sge_spooling_flatfile.o sge_mt_init.o $(SPOOLLI
 
 test_sge_spooling_flatfile.o: $(SPOOLCLIB_DIR)/test_sge_spooling_flatfile.c
 	$(CC) $(CFLAGS) -c $(SPOOLCLIB_DIR)/test_sge_spooling_flatfile.c
-
-test_flatfile_spool: test_flatfile_spool.o sig_handlers.o sge_mt_init.o $(SPOOLLIB) $(SPOOLCLIB) $(SCHEDLIB) $(SGEOBJLIB) \
-                        $(SGEOBJDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB) \
-                        $(RMONLIB) $(UTILIB) $(WINGRIDLIB_DEP)
-	$(CC) $(CFLAGS) -o test_flatfile_spool $(LFLAGS) test_flatfile_spool.o sge_mt_init.o sig_handlers.o $(SPOOLCLIB) \
-                         $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
-                         $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB) \
-                         $(UTILIB) $(RMONLIB) $(WINGRIDLIB) $(LIBS) $(SECLIB) $(SLIBS) $(DLLIB) 
-
-test_flatfile_spool.o: $(SPOOLCLIB_DIR)/test_flatfile_spool.c
-	$(CC) $(CFLAGS) -c $(SPOOLCLIB_DIR)/test_flatfile_spool.c

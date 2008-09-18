@@ -47,7 +47,7 @@ int or_sge_pe_slots_per_host(lListElem *pep, lList *hosts, lListElem *h_elem, in
 
 int sge_debit_job_from_pe(lListElem *pep, lListElem *jep, int slots);
 
-dispatch_t pe_match_static(const sge_assignment_t *a);
+dispatch_t pe_match_static(lListElem *job, lListElem *pe, lList *acl_list);
 
 #endif /* __SGE_PE_SCHEDD_H */
 

@@ -236,29 +236,21 @@ static void qping_convert_time(char* buffer, char* dest, cl_bool_t show_hour) {
    struct saved_vars_s *context = NULL;
 
    help=sge_strtok_r(buffer, ".", &context);
-   if (help == NULL) {
-      help = "-";
-   }
    help2=sge_strtok_r(NULL,".", &context);
    if (help2 == NULL) {
       help2 = "NULL";
    }
 
-   if (strcmp(help,"-") == 0) {
-      sprintf(dest, "N.A.");
-   } else {
-
-      i = atoi(help);
+   i = atoi(help);
 #ifndef HAS_LOCALTIME_R
-      tm = localtime(&i);
+   tm = localtime(&i);
 #else
-      tm = (struct tm *)localtime_r(&i, &tm_buffer);
+   tm = (struct tm *)localtime_r(&i, &tm_buffer);
 #endif
-      if (show_hour == CL_TRUE) {
-         sprintf(dest, "%02d:%02d:%02d.%s", tm->tm_hour, tm->tm_min, tm->tm_sec, help2);
-      } else {
-         sprintf(dest, "%02d:%02d.%s", tm->tm_min, tm->tm_sec, help2);
-      }
+   if (show_hour == CL_TRUE) {
+      sprintf(dest, "%02d:%02d:%02d.%s", tm->tm_hour, tm->tm_min, tm->tm_sec, help2);
+   } else {
+      sprintf(dest, "%02d:%02d.%s", tm->tm_min, tm->tm_sec, help2);
    }
    sge_free_saved_vars(context);
 }
@@ -781,7 +773,6 @@ static void qping_print_line(const char* buffer, int nonewline, int dump_tag) {
          case TAG_KILL_EXECD
          case TAG_NEW_FEATURES
          case TAG_GET_NEW_CONF
-         case TAG_FULL_LOAD_REPORT
          ...
          are missing !!!
    #endif
@@ -939,9 +930,7 @@ int main(int argc, char *argv[]) {
    cl_tcp_connect_t connect_type = CL_TCP_DEFAULT;
    cl_xml_connection_type_t connection_type = CL_CM_CT_MESSAGE;
    char* client_name  = "qping";
-#ifdef SECURE
    int   got_no_framework  = 0;
-#endif
 
    int   parameter_start   = 1;
    int   comp_id           = -1;
@@ -1195,9 +1184,7 @@ int main(int argc, char *argv[]) {
          fprintf(stderr,"please use option -ssl or -tcp to bypass bootstrap file read\n");
          exit(1);
       }
-#ifdef SECURE
       got_no_framework = 1;
-#endif
       if ( strcmp( "csp", bootstrap_get_security_mode()) == 0) {
          option_ssl = 1;
       } else {

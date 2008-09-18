@@ -40,7 +40,7 @@ bool
 cqueue_mod_qinstances(sge_gdi_ctx_class_t *ctx,
                       lListElem *cqueue, lList **answer_list,
                       lListElem *reduced_elem, bool refresh_all_values, 
-                      bool is_startup, monitoring_t *monitor);
+                      monitoring_t *monitor);
 
 bool
 cqueue_handle_qinstances(sge_gdi_ctx_class_t *ctx,

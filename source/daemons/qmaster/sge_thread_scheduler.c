@@ -208,7 +208,8 @@ static void sge_scheduler_wait_for_event(void)
           ((sge_get_gmt() - current_time) < SCHEDULER_TIMEOUT_S)){
       ts.tv_sec = (long) current_time + SCHEDULER_TIMEOUT_S;
       ts.tv_nsec = SCHEDULER_TIMEOUT_N;
-      pthread_cond_timedwait(&Scheduler_Control.cond_var, &Scheduler_Control.mutex, &ts);
+      pthread_cond_timedwait(&Scheduler_Control.cond_var,
+                             &Scheduler_Control.mutex, &ts);
    };
    DEXIT;
 }
@@ -348,7 +349,7 @@ sge_scheduler_initialize(sge_gdi_ctx_class_t *ctx, lList **answer_list)
 *     qmaster/threads/sge_scheduler_main() 
 *******************************************************************************/
 void
-sge_scheduler_cleanup_thread(void *ctx_ref)
+sge_scheduler_cleanup_thread(void)
 {
    DENTER(TOP_LAYER, "sge_scheduler_cleanup_thread");
    
@@ -382,10 +383,6 @@ sge_scheduler_cleanup_thread(void *ctx_ref)
        */
       Master_Scheduler.is_running = false;
 
-      /*
-      ** free the ctx too
-      */
-      sge_gdi_ctx_class_destroy((sge_gdi_ctx_class_t **)ctx_ref);
    }
 
    sge_mutex_unlock("master scheduler struct", SGE_FUNC, __LINE__, &(Master_Scheduler.mutex));
@@ -458,6 +455,13 @@ sge_scheduler_terminate(sge_gdi_ctx_class_t *ctx, lList **answer_list)
 
       sge_mutex_unlock("master scheduler struct", SGE_FUNC, __LINE__, &(Master_Scheduler.mutex));
 
+      /* 
+       * after releasing the lock it is safe to wait for the termination. 
+       * doing this inside the critical section (before the lock) this could 
+       * rise a deadlock situtaion this function would be called within a GDI request!
+       */
+      pthread_join(thread_id, NULL); 
+
       INFO((SGE_EVENT, MSG_THREAD_XTERMINATED_S, threadnames[SCHEDD_THREAD]));
       answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_INFO);
    } else {
@@ -502,38 +506,38 @@ void *
 sge_scheduler_main(void *arg)
 {
    time_t next_prof_output = 0;
+   int stored_submit = 0; 
+   int stored_finish = 0;
    monitoring_t monitor;
    sge_gdi_ctx_class_t *ctx = NULL;
    sge_evc_class_t *evc = NULL;
-   lList *alp = NULL;
+   lList *alp = NULL;   
    sge_where_what_t where_what;
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)arg;
    bool do_shutdown = false;
    bool do_endlessly = true;
+
    bool local_ret = true;
 
    DENTER(TOP_LAYER, "sge_scheduler_main");
 
    memset(&where_what, 0, sizeof(where_what));
-
-   /*
+      
+   /* 
     * startup
     */
    if (local_ret) {
       /* initialize commlib thread */
       cl_thread_func_startup(thread_config);
 
-      /* initialize monitoring */
-      sge_monitor_init(&monitor, thread_config->thread_name, SCH_EXT, SCT_WARNING, SCT_ERROR);
+      /* initialize monitoring */ 
+      sge_monitor_init(&monitor, thread_config->thread_name, NONE_EXT, SCT_WARNING, SCT_ERROR);
       sge_qmaster_thread_init(&ctx, SCHEDD, SCHEDD_THREAD, true);
 
-      /* register at profiling module */
+      /* register at profiling module */   
       set_thread_name(pthread_self(), "Scheduler Thread");
       conf_update_thread_profiling("Scheduler Thread");
       DPRINTF((SFN" started\n", thread_config->thread_name));
-
-      /* initialize schedd_runnlog logging */
-      schedd_set_schedd_log_file(ctx);
    }
 
    /* set profiling parameters */
@@ -552,46 +556,46 @@ sge_scheduler_main(void *arg)
    serf_init(schedd_serf_record_func, schedd_serf_newline);
    schedd_set_serf_log_file(ctx);
 
-   /*
-    * prepare event client/mirror mechanism
+   /* 
+    * prepare event client/mirror mechanism 
     */
    if (local_ret) {
       local_ret = sge_gdi2_evc_setup(&evc, ctx, EV_ID_SCHEDD, &alp, "scheduler");
-      DPRINTF(("prepared event client/mirror mechanism\n"));
+      DPRINTF((SFN" prepared event client/mirror mechanism\n", thread_config->thread_name));
    }
-
-   /*
-    * register as event mirror
+      
+   /* 
+    * register as event mirror 
     */
    if (local_ret) {
       sge_mirror_initialize(evc, EV_ID_SCHEDD, "scheduler",
-                            false, &event_update_func, &sge_mod_event_client,
+                            false, &event_update_func, &sge_mod_event_client, 
                             &sge_add_event_client, &sge_remove_event_client,
                             &sge_handle_event_ack);
       evc->ec_register(evc, false, NULL, &monitor);
       evc->ec_set_busy_handling(evc, EV_BUSY_UNTIL_RELEASED);
-      DPRINTF(("registered at event mirror\n"));
+      DPRINTF((SFN" registered at event mirror\n", thread_config->thread_name));
    }
 
    /*
-    * subscribe necessary data
+    * subscribe necessary data 
     */
    if (local_ret) {
       ensure_valid_what_and_where(&where_what);
       subscribe_scheduler(evc, &where_what);
-      DPRINTF(("subscribed necessary data from event master\n"));
+      DPRINTF((SFN" subscribed necessary data from event master\n", thread_config->thread_name));
    }
 
    /* 
-    * schedulers main loop
+    * schedulers main loop  
     */
    if (local_ret) {
       while (do_endlessly) {
          bool handled_events = false;
          lList *event_list = NULL;
          int execute = 0;
-         double prof_copy = 0.0;
-         double prof_total = 0.0;
+         double prof_copy = 0.0; 
+         double prof_total = 0.0; 
          double prof_init = 0.0;
          double prof_free = 0.0;
          double prof_run = 0.0;
@@ -629,7 +633,9 @@ sge_scheduler_main(void *arg)
             prof_stop(SGE_PROF_SCHEDLIB4, NULL);
          }
 
-         sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &Scheduler_Control.mutex);
+
+         sge_mutex_lock("scheduler_thread_cond_mutex", SGE_FUNC, __LINE__, 
+                        &Scheduler_Control.mutex);
 
          /*
           * Wait for new events
@@ -637,37 +643,60 @@ sge_scheduler_main(void *arg)
          MONITOR_IDLE_TIME(sge_scheduler_wait_for_event(), (&monitor), mconf_get_monitor_time(), 
                            mconf_is_monitor_message());
 
-         PROF_START_MEASUREMENT(SGE_PROF_CUSTOM6);
-
          /*
-          * We have left sge_scheduler_wait_for_event either as we got events,
-          * or due to timeout.
-          * If we left sge_scheduler_wait_for_event due to timeout,
-          * the event_list will be NULL.
+          * Set state to "busy" 
+          * check if we have to shutdown
+          * use events to update data
+          * ack all events
           */
-         event_list = Scheduler_Control.new_events;
-         Scheduler_Control.new_events = NULL;
-         Scheduler_Control.triggered = false;
+         {
+            PROF_START_MEASUREMENT(SGE_PROF_CUSTOM6);
+            /* taking out the new events */
+            event_list = Scheduler_Control.new_events;
+            Scheduler_Control.new_events = NULL;
+            Scheduler_Control.triggered = false;
 
-         sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Scheduler_Control.mutex);
- 
-         /* ack, even if we got no events */
-         evc->ec_ack(evc);
+            sge_mutex_unlock("scheduler_thread_cond_mutex", SGE_FUNC, __LINE__, 
+                             &Scheduler_Control.mutex);
+            
+            evc->ec_ack(evc);
+            evc->ec_set_busy(evc, 1);
+            evc->ec_commit(evc, NULL);
 
-         if (event_list != NULL) {
-            /* check for shutdown */
-            do_shutdown = (lGetElemUlong(event_list, ET_type, sgeE_SHUTDOWN) != NULL) ? true : false;
+            if (event_list != NULL) {
+               do_shutdown = (lGetElemUlong(event_list, ET_type, sgeE_SHUTDOWN) != NULL) ? true : false;
 
-            /* update mirror and free data */
-            if (do_shutdown == false && sge_mirror_process_event_list(evc, event_list) == SGE_EM_OK) {
-               handled_events = true;
-            } else {
-               DPRINTF(("events contain shutdown event\n"));
+               if (do_shutdown == false && sge_mirror_process_event_list(evc, event_list) == SGE_EM_OK) {
+                  handled_events = true;
+               } 
+               lFreeList(&event_list);
             }
-            lFreeList(&event_list);
+
+            if (do_shutdown == true) {
+               /* skip loop immediately */
+               DPRINTF((SFN" events contain shutdown event\n", thread_config->thread_name));
+            }
          }
- 
-         /* if we actually got events, start the scheduling run and further event processing */
+         
+         if (handled_events == true) {
+            PROF_START_MEASUREMENT(SGE_PROF_CUSTOM7);
+
+            if (__CONDITION(INFOPRINT)) {
+               dstring ds;
+               char buffer[128];
+
+               sge_dstring_init(&ds, buffer, sizeof(buffer));
+               DPRINTF(("================[SCHEDULING-EPOCH %s]==================\n", 
+                        sge_at_time(0, &ds)));
+               sge_dstring_free(&ds);
+            }
+         }
+
+         /* 
+          * If there were new events then
+          * copy/filter data necessary for the scheduler run
+          * and run the scheduler method 
+          */
          if (handled_events == true) {
             lList *answer_list = NULL;
             scheduler_all_data_t copy;
@@ -684,28 +713,15 @@ sge_scheduler_main(void *arg)
             lList *master_pe_list = *object_type_get_master_list(SGE_TYPE_PE);
             lList *master_hgrp_list = *object_type_get_master_list(SGE_TYPE_HGROUP);
             lList *master_sharetree_list = *object_type_get_master_list(SGE_TYPE_SHARETREE);
+            lList *selected_dept_list = NULL;
+            lList *selected_acl_list = NULL;
 
-            PROF_START_MEASUREMENT(SGE_PROF_CUSTOM7);
-
-            if (__CONDITION(INFOPRINT)) {
-               dstring ds;
-               char buffer[128];
-
-               sge_dstring_init(&ds, buffer, sizeof(buffer));
-               DPRINTF(("================[SCHEDULING-EPOCH %s]==================\n",
-                        sge_at_time(0, &ds)));
-               sge_dstring_free(&ds);
-            }
-
-            /*
-             * If there were new events then
-             * copy/filter data necessary for the scheduler run
-             * and run the scheduler method
-             */
             memset(&copy, 0, sizeof(copy));
 
-            copy.dept_list = lSelect("", master_userset_list, where_what.where_dept, where_what.what_dept);
-            copy.acl_list = lSelect("", master_userset_list, where_what.where_acl, where_what.what_acl);
+            selected_dept_list = lSelect("", master_userset_list, 
+                                         where_what.where_dept, where_what.what_dept);
+            selected_acl_list = lSelect("", master_userset_list, 
+                                        where_what.where_acl, where_what.what_acl);
 
             DPRINTF(("RAW CQ:%d, J:%d, H:%d, C:%d, A:%d, D:%d, P:%d, CKPT:%d,"
                      " US:%d, PR:%d, RQS:%d, AR:%d, S:nd:%d/lf:%d\n",
@@ -713,8 +729,8 @@ sge_scheduler_main(void *arg)
                lGetNumberOfElem(master_job_list),
                lGetNumberOfElem(master_exechost_list),
                lGetNumberOfElem(master_centry_list),
-               lGetNumberOfElem(copy.acl_list),
-               lGetNumberOfElem(copy.dept_list),
+               lGetNumberOfElem(selected_acl_list),
+               lGetNumberOfElem(selected_dept_list),
                lGetNumberOfElem(master_project_list),
                lGetNumberOfElem(master_ckpt_list),
                lGetNumberOfElem(master_user_list),
@@ -727,13 +743,11 @@ sge_scheduler_main(void *arg)
 
             if (get_rebuild_categories()) {
                DPRINTF(("### ### ### ###   REBUILDING CATEGORIES   ### ### ### ###\n"));
-               sge_rebuild_job_category(master_job_list, master_userset_list,
+               sge_rebuild_job_category(master_job_list, master_userset_list, 
                                         master_project_list, master_rqs_list);
-               /*
-                * category references are used in the access tree
-                * so rebuilding categories makes necessary to rebuild
-                * the access tree
-                */
+               /* category references are used in the access tree
+                  so rebuilding categories makes necessary to rebuild
+                  the access tree */
                set_rebuild_categories(false);
             }
 
@@ -742,24 +756,25 @@ sge_scheduler_main(void *arg)
             PROF_START_MEASUREMENT(SGE_PROF_CUSTOM7);
 
             sge_before_dispatch(evc);
-
+   
             /* prepare data the the scheduler itself */
-            copy.host_list = lSelect("", master_exechost_list, where_what.where_host, where_what.what_host);
+            copy.host_list = lSelect("", master_exechost_list, 
+                                     where_what.where_host, where_what.what_host);
 
-            /*
+            /*     
              * Within the scheduler we do only need QIs
              */
             {
                lListElem *cqueue = NULL;
+
                lEnumeration *what_queue3 = NULL;
 
                for_each(cqueue, master_cqueue_list) {
                   lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
                   lList *t;
 
-                  if (!qinstance_list) {
+                  if (!qinstance_list)
                      continue;
-                  }
 
                   /* all_queue_list contains all queue instances with state and full queue name only */
                   if (!what_queue3) {
@@ -767,34 +782,30 @@ sge_scheduler_main(void *arg)
                   }
                   t = lSelect("t", qinstance_list, NULL, what_queue3);
                   if (t) {
-                     if (copy.all_queue_list == NULL) {
+                     if (copy.all_queue_list == NULL)
                         copy.all_queue_list = lCreateList("all", lGetListDescr(t));
-                     }
                      lAppendList(copy.all_queue_list, t);
                      lFreeList (&t);
                   }
 
                   t = lSelect("t", qinstance_list, where_what.where_queue, where_what.what_queue2);
                   if (t) {
-                     if (copy.queue_list == NULL) {
+                     if (copy.queue_list == NULL)
                         copy.queue_list = lCreateList("enabled", lGetListDescr(t));
-                     }
                      lAppendList(copy.queue_list, t);
                      lFreeList (&t);
                   }
 
                   t = lSelect("t", qinstance_list, where_what.where_queue2, where_what.what_queue2);
                   if (t) {
-                     if (copy.dis_queue_list == NULL) {
+                     if (copy.dis_queue_list == NULL)
                         copy.dis_queue_list = lCreateList("disabled", lGetListDescr(t));
-                     }
                      lAppendList(copy.dis_queue_list, t);
                      lFreeList (&t);
                   }
                }
-               if (what_queue3) {
+               if (what_queue3)
                   lFreeWhat(&what_queue3);
-               }
             }
 
             if (sconf_is_job_category_filtering()) {
@@ -803,16 +814,17 @@ sge_scheduler_main(void *arg)
                copy.job_list = lCopyList("", master_job_list);
             }
 
-            /* no need to copy these lists, they are read only used */
-            copy.centry_list = master_centry_list;
-            copy.ckpt_list = master_ckpt_list;
-            copy.hgrp_list = master_hgrp_list;
-
-            /* these lists need to be copied because they are modified during scheduling run */
-            copy.share_tree = lCopyList("", master_sharetree_list);
+            copy.dept_list = lCopyList("", selected_dept_list);
+            lFreeList(&selected_dept_list);
+            copy.acl_list = lCopyList("", selected_acl_list);
+            lFreeList(&selected_acl_list);
+            copy.centry_list = lCopyList("", master_centry_list);
             copy.pe_list = lCopyList("", master_pe_list);
+            copy.share_tree = lCopyList("", master_sharetree_list);
             copy.user_list = lCopyList("", master_user_list);
             copy.project_list = lCopyList("", master_project_list);
+            copy.ckpt_list = lCopyList("", master_ckpt_list);
+            copy.hgrp_list = lCopyList("", master_hgrp_list);
             copy.rqs_list = lCopyList("", master_rqs_list);
             copy.ar_list = lCopyList("", master_ar_list);
 
@@ -825,6 +837,7 @@ sge_scheduler_main(void *arg)
                lGetNumberOfElem(master_job_list),
                lGetNumberOfElem(copy.host_list),
                lGetNumberOfElem(master_exechost_list),
+
                lGetNumberOfElem(copy.centry_list),
                lGetNumberOfElem(copy.acl_list),
                lGetNumberOfElem(copy.dept_list),
@@ -847,6 +860,7 @@ sge_scheduler_main(void *arg)
                   lGetNumberOfElem(master_job_list),
                   lGetNumberOfElem(copy.host_list),
                   lGetNumberOfElem(master_exechost_list),
+
                   lGetNumberOfElem(copy.centry_list),
                   lGetNumberOfElem(copy.acl_list),
                   lGetNumberOfElem(copy.dept_list),
@@ -860,7 +874,7 @@ sge_scheduler_main(void *arg)
                   lGetNumberOfLeafs(NULL, copy.share_tree, STN_children)
                  );
             } else {
-               schedd_log("-------------START-SCHEDULER-RUN-------------", NULL, evc->monitor_next_run);
+               schedd_log("-------------START-SCHEDULER-RUN-------------");
             }
 
             PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
@@ -868,10 +882,9 @@ sge_scheduler_main(void *arg)
             PROF_START_MEASUREMENT(SGE_PROF_CUSTOM7);
 
             scheduler_method(evc, &answer_list, &copy, &orders);
-            answer_list_output(&answer_list);
 
             PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
-            prof_run = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7, true, NULL);
+            prof_run = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7,true, NULL);
             PROF_START_MEASUREMENT(SGE_PROF_CUSTOM7);
 
             /* .. which gets deleted after using */
@@ -880,41 +893,67 @@ sge_scheduler_main(void *arg)
             lFreeList(&(copy.dis_queue_list));
             lFreeList(&(copy.all_queue_list));
             lFreeList(&(copy.job_list));
+            lFreeList(&(copy.centry_list));
             lFreeList(&(copy.acl_list));
             lFreeList(&(copy.dept_list));
             lFreeList(&(copy.pe_list));
             lFreeList(&(copy.share_tree));
             lFreeList(&(copy.user_list));
             lFreeList(&(copy.project_list));
+            lFreeList(&(copy.ckpt_list));
+            lFreeList(&(copy.hgrp_list));
             lFreeList(&(copy.rqs_list));
             lFreeList(&(copy.ar_list));
+         }
 
-            /* 
-             * need to sync with event master thread
-             * if schedd configuration changed then settings in evm can be adjusted
-             */
-            if (sconf_is_new_config()) {
-               /* set scheduler interval / event delivery interval */
-               u_long32 interval = sconf_get_schedule_interval();
-               if (evc->ec_get_edtime(evc) != interval) {
-                  evc->ec_set_edtime(evc, interval);
-               }
+         /* 
+          * need to sync with timed event thread
+          * if schedd configuration changed then settings in evm can be adjusted 
+          */
+         {
+            u_long32 interval = sconf_get_schedule_interval();
+            int submit_s = sconf_get_flush_submit_sec();
+            int finish_s = sconf_get_flush_finish_sec();
 
-               /* set job / ja_task event flushing */
-               set_job_flushing(evc);
+            /* set scheduler interval / event delivery interval */
+            if (evc->ec_get_edtime(evc) != interval) {
+                 evc->ec_set_edtime(evc, interval);
+            }
 
-               /* no need to ec_commit here - we do it when resetting the busy state */
+            /* set flush submit seconds */
+            if (submit_s != stored_submit) {
+               evc->ec_set_flush(evc, sgeE_JOB_ADD, true, (submit_s - 1));
+               stored_submit = submit_s;
+            }
 
-               /* now we handled the new schedd config - no need to do it twice */
-               sconf_reset_new_config();
+            /* set flush finish seconds */
+            if (finish_s != stored_finish) {
+               int flush_time = finish_s - 1;
+
+               evc->ec_set_flush(evc, sgeE_JOB_DEL, true, flush_time);
+               evc->ec_set_flush(evc, sgeE_JOB_FINAL_USAGE, true, flush_time);
+               evc->ec_set_flush(evc, sgeE_JATASK_DEL, true, flush_time);
+               stored_finish = finish_s;
             }
 
             /* block till master handled all GDI orders */
-            sge_schedd_block_until_orders_processed(evc->get_gdi_ctx(evc), NULL);
+            if (handled_events) {  
+               sge_schedd_block_until_oders_processed(evc->get_gdi_ctx(evc), NULL);
+            }
 
-            /*
-             * Stop profiling for "schedd run total" and the subcategories
-             */
+            /* reset the busy state */
+            if ((evc->ec_get_busy_handling(evc) == EV_BUSY_UNTIL_RELEASED)) {
+               evc->ec_set_busy(evc, 0);
+            }
+
+            /* give information to event master */
+            evc->ec_commit(evc, NULL);
+         }
+
+         /*
+          * Stop profiling for "schedd run total" and the subcategories
+          */
+         if (handled_events == true) {
             PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
             prof_free = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7, true, NULL);
 
@@ -931,45 +970,41 @@ sge_scheduler_main(void *arg)
             if (getenv("SGE_ND") != NULL) {
                printf("--------------STOP-SCHEDULER-RUN-------------\n");
             } else {
-               schedd_log("--------------STOP-SCHEDULER-RUN-------------", NULL, evc->monitor_next_run);
+               schedd_log("--------------STOP-SCHEDULER-RUN-------------");
             }
 
             thread_output_profiling("scheduler thread profiling summary:\n", &next_prof_output);
-
-            sge_monitor_output(&monitor);
          } else {
             PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM6);
          }
 
-         /* reset the busy state */
-         evc->ec_set_busy(evc, 0);
-         evc->ec_commit(evc, NULL);
 
-         /* stop logging into schedd_runlog (enabled via -tsm) */
-         evc->monitor_next_run = false;
-
-         /*
-          * pthread cancelation point
-          *
-          * sge_scheduler_cleanup_thread() is the last function which should
-          * be called so it is pushed first
+         /* 
+          * pthread cancelation point 
           */
-         pthread_cleanup_push(sge_scheduler_cleanup_thread, (void *) &ctx);
-         pthread_cleanup_push((void (*)(void *))sge_scheduler_cleanup_monitor,
-                              (void *)&monitor);
-         pthread_cleanup_push((void (*)(void *))sge_scheduler_cleanup_event_client,
-                              (void *)evc);
-         cl_thread_func_testcancel(thread_config);
-         pthread_cleanup_pop(execute);
-         pthread_cleanup_pop(execute);
-         pthread_cleanup_pop(execute);
-         DPRINTF(("passed cancelation point\n"));
+         {
+            /* 
+             * sge_scheduler_cleanup_thread() is the last function which should 
+             * be called so it is pushed first 
+             */
+            pthread_cleanup_push((void (*)(void *))sge_scheduler_cleanup_thread, NULL);
+            pthread_cleanup_push((void (*)(void *))sge_scheduler_cleanup_monitor,
+                                 (void *)&monitor);
+            pthread_cleanup_push((void (*)(void *))sge_scheduler_cleanup_event_client,
+                                 (void *)evc);
+            cl_thread_func_testcancel(thread_config);
+            pthread_cleanup_pop(execute);
+            pthread_cleanup_pop(execute);
+            pthread_cleanup_pop(execute);
+            DPRINTF((SFN" passed cancelation point\n", thread_config->thread_name));
+         }
       }
    }
+   DPRINTF((SFN" terminated\n", thread_config->thread_name));
 
    /*
     * Don't add cleanup code here. It will never be executed. Instead register
-    * a cleanup function with pthread_cleanup_push()/pthread_cleanup_pop() before
+    * a cleanup function with pthread_cleanup_push()/pthread_cleanup_pop() before 
     * the call of cl_thread_func_testcancel()
     */
 

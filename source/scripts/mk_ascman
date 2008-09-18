@@ -177,11 +177,7 @@ if ( "$MANHTML" == 1 ) then
          echo Processing $i
          set bn = `basename $i .${n}`
          # man -M$MANBUILDDIR/SEDMAN/man/ $bn | man2html -solaris > $MANBUILDDIR/HTMLMAN/htmlman${n}/${bn}.html
-         set secopt = -s
-         if ( Linux == `uname` ) then
-            set secopt = ""
-         endif   
-         man -M$MANBUILDDIR/SEDMAN/man/ $secopt $n $bn | man2html -cgiurl '../htmlman$section/$title.html' -solaris | sed '2s/BODY/BODY BGCOLOR=white/' > $MANBUILDDIR/HTMLMAN/htmlman${n}/${bn}.html
+         man -M$MANBUILDDIR/SEDMAN/man/ -s $n $bn | man2html -cgiurl '../htmlman$section/$title.html' -solaris | sed '2s/BODY/BODY BGCOLOR=white/' > $MANBUILDDIR/HTMLMAN/htmlman${n}/${bn}.html
       end
    end   
    #

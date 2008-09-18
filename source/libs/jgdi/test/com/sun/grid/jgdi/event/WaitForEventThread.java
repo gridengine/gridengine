@@ -34,78 +34,75 @@ package com.sun.grid.jgdi.event;
 import java.util.LinkedList;
 import java.util.logging.Logger;
 
+
 /**
  * Helper class for event test cases.
  *
  */
 public class WaitForEventThread extends Thread implements EventListener {
-
-    private Logger log = Logger.getLogger("com.sun.grid.jgdi.event");
+    
+    private Logger logger = Logger.getLogger("com.sun.grid.jgdi.event");
     private Object object;
     private LinkedList<Event> events = new LinkedList<Event>();
-
+    
     public WaitForEventThread(Object object) {
         this.object = object;
     }
-
+    
     /**
      *
      * @param evt the event
      */
     public void eventOccured(Event evt) {
-        log.entering(getClass().getName(), "eventOccured", evt.getClass());
-        synchronized (events) {
+        logger.fine("Got event " + evt + "(" + evt.getClass() + ")");
+        synchronized(events) {
             events.add(evt);
             events.notifyAll();
         }
-        log.exiting(getClass().getName(), "eventOccured");
     }
+    
     private Object addEventSync = new Object();
     private boolean hasAddEvent = false;
-
+    
     public boolean waitForAddEvent(long timeout) throws InterruptedException {
-        log.entering(getClass().getName(), "waitForAddEvent", timeout);
-        synchronized (addEventSync) {
+        synchronized(addEventSync) {
             if (!hasAddEvent) {
                 addEventSync.wait(timeout);
             }
         }
-        log.exiting(getClass().getName(), "waitForAddEvent", hasAddEvent);
         return hasAddEvent;
     }
+    
     private Object modEventSync = new Object();
     private boolean hasModEvent = false;
-
+    
     public boolean waitForModEvent(long timeout) throws InterruptedException {
-        log.entering(getClass().getName(), "waitForModEvent", timeout);
-        synchronized (modEventSync) {
+        synchronized(modEventSync) {
             if (!hasModEvent) {
                 modEventSync.wait(timeout);
             }
         }
-        log.exiting(getClass().getName(), "waitForModEvent", hasModEvent);
         return hasModEvent;
     }
+    
     private Object delEventSync = new Object();
     private boolean hasDelEvent = false;
-
+    
     public boolean waitForDelEvent(long timeout) throws InterruptedException {
-        log.entering(getClass().getName(), "waitForDelEvent", timeout);
-        synchronized (delEventSync) {
+        synchronized(delEventSync) {
             if (!hasDelEvent) {
                 delEventSync.wait(timeout);
             }
         }
-        log.exiting(getClass().getName(), "waitForDelEvent", hasDelEvent);
         return hasDelEvent;
     }
-
+    
     public void run() {
-        log.entering(getClass().getName(), "run");
+        
         try {
             while (true) {
                 Event evt = null;
-                synchronized (events) {
+                synchronized(events) {
                     while (evt == null) {
                         while (events.isEmpty()) {
                             events.wait();
@@ -113,31 +110,31 @@ public class WaitForEventThread extends Thread implements EventListener {
                         evt = events.removeFirst();
                     }
                 }
-
+                
                 if (evt.getType().equals(EventType.SGE_EMA_ADD)) {
-                    log.fine("got add event" + evt);
-                    AddEvent addEvt = (AddEvent) evt;
+                    
+                    AddEvent addEvt = (AddEvent)evt;
                     if (this.object.equals(addEvt.getChangedObject())) {
-                        synchronized (addEventSync) {
+                        synchronized(addEventSync) {
                             hasAddEvent = true;
                             addEventSync.notifyAll();
                         }
                     }
                 } else if (evt.getType().equals(EventType.SGE_EMA_MOD)) {
-                    log.fine("got modifiy event" + evt);
-                    ModEvent modEvt = (ModEvent) evt;
+                    
+                    ModEvent modEvt = (ModEvent)evt;
                     if (this.object.equals(modEvt.getChangedObject())) {
-                        synchronized (modEventSync) {
+                        synchronized(modEventSync) {
                             hasModEvent = true;
                             modEventSync.notifyAll();
                         }
                     }
-
+                    
                 } else if (evt.getType().equals(EventType.SGE_EMA_DEL)) {
-                    log.fine("got delete event" + evt);
-                    DelEvent delEvt = (DelEvent) evt;
+                    
+                    DelEvent delEvt = (DelEvent)evt;
                     if (delEvt.hasDeletedObject(object)) {
-                        synchronized (delEventSync) {
+                        synchronized(delEventSync) {
                             hasDelEvent = true;
                             delEventSync.notifyAll();
                         }
@@ -146,8 +143,8 @@ public class WaitForEventThread extends Thread implements EventListener {
                 evt = null;
             }
         } catch (InterruptedException ire) {
-            log.fine("wait thread has been interrupted");
+            logger.fine("wait thread has been interrupted");
         }
-        log.exiting(getClass().getName(), "run");
     }
+    
 }

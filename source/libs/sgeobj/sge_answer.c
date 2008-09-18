@@ -516,6 +516,44 @@ bool answer_list_has_quality(lList **answer_list, answer_quality_t quality)
    DRETURN(ret);
 }
 
+/****** sge_answer/answer_list_remove_quality() ********************************
+*  NAME
+*     answer_list_remove_quality() -- Remove elements from list
+*
+*  SYNOPSIS
+*     void answer_list_remove_quality(lList *alp, answer_quality_t quality) 
+*
+*  FUNCTION
+*     The function removes all answer list elements with the given quality from
+*     the list.
+*
+*  INPUTS
+*     lList *answer_list       - AN_Type list   
+*     answer_quality_t quality - quality value
+*
+*  RESULT
+*     void - 
+*
+*  NOTES
+*     MT-NOTE: answer_list_remove_quality() is MT safe 
+*******************************************************************************/
+void answer_list_remove_quality(lList *answer_list, answer_quality_t quality)
+{
+   lListElem *aep, *nxt = lFirst(answer_list);
+
+   DENTER(ANSWER_LAYER, "answer_list_remove_quality");
+
+   while ((aep=nxt)) {
+      nxt=lNext(aep);
+      if (lGetUlong(aep, AN_quality) == quality) {
+         lRemoveElem(answer_list, &aep);
+      }
+   }
+
+   DRETURN_VOID;
+}
+
+
 /****** sge_answer/answer_list_has_status() ************************************
 *  NAME
 *     answer_list_has_status() -- status contains in list

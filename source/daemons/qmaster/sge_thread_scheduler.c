@@ -860,7 +860,7 @@ sge_scheduler_main(void *arg)
                   lGetNumberOfLeafs(NULL, copy.share_tree, STN_children)
                  );
             } else {
-               schedd_log("-------------START-SCHEDULER-RUN-------------");
+               schedd_log("-------------START-SCHEDULER-RUN-------------", NULL, evc->monitor_next_run);
             }
 
             PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
@@ -931,7 +931,7 @@ sge_scheduler_main(void *arg)
             if (getenv("SGE_ND") != NULL) {
                printf("--------------STOP-SCHEDULER-RUN-------------\n");
             } else {
-               schedd_log("--------------STOP-SCHEDULER-RUN-------------");
+               schedd_log("--------------STOP-SCHEDULER-RUN-------------", NULL, evc->monitor_next_run);
             }
 
             thread_output_profiling("scheduler thread profiling summary:\n", &next_prof_output);
@@ -946,7 +946,7 @@ sge_scheduler_main(void *arg)
          evc->ec_commit(evc, NULL);
 
          /* stop logging into schedd_runlog (enabled via -tsm) */
-         schedd_set_monitor_next_run(false);
+         evc->monitor_next_run = false;
 
          /*
           * pthread cancelation point

@@ -1085,7 +1085,7 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
    /* redirect scheduler monitoring into answer list */
    if (verify_mode == AR_JUST_VERIFY) {
       DPRINTF(("AR Verify Mode\n"));
-      set_monitor_alpp(&talp);
+      a.monitor_alpp = &talp;
    }
 
    for_each(cqueue, master_cqueue_list) {
@@ -1208,15 +1208,13 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
    if (verify_mode == AR_JUST_VERIFY) {
       /* copy error msgs from talp into alpp */
       answer_list_append_list(alpp, &talp);
-
-      set_monitor_alpp(NULL);
+      a.monitor_alpp = NULL;
 
       if (result == DISPATCH_OK) {
          if (!a.pe) {
             answer_list_add_sprintf(alpp, STATUS_OK, ANSWER_QUALITY_INFO, MSG_JOB_VERIFYFOUNDQ); 
          } else {
-            int ngranted = nslots_granted(a.gdil, NULL);
-            answer_list_add_sprintf(alpp, STATUS_OK, ANSWER_QUALITY_INFO, MSG_JOB_VERIFYFOUNDSLOTS_I, ngranted);
+            answer_list_add_sprintf(alpp, STATUS_OK, ANSWER_QUALITY_INFO, MSG_JOB_VERIFYFOUNDSLOTS_I, a.slots);
          }
       } else {
          answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_INFO, MSG_JOB_NOSUITABLEQ_S, MSG_JOB_VERIFYVERIFY);

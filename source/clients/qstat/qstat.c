@@ -1291,7 +1291,7 @@ static int job_stdout_soft_requested_queues_started(job_handler_t* handler, lLis
 
    DENTER(TOP_LAYER, "job_stdout_soft_requested_queues_started");
    
-   printf(QSTAT_INDENT "Hard requested queues: ");
+   printf(QSTAT_INDENT "Soft requested queues: ");
    ctx->soft_requested_queue_count = 0;
 
    DEXIT;
@@ -1328,7 +1328,7 @@ static int job_stdout_master_hard_requested_queues_started(job_handler_t* handle
 
    DENTER(TOP_LAYER, "job_stdout_master_hard_requested_queues_started");
 
-   printf(QSTAT_INDENT "Hard requested queues: ");
+   printf(QSTAT_INDENT "Master task hard requested queues: ");
    ctx->master_hard_requested_queue_count = 0;
 
    DEXIT;

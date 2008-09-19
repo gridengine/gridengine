@@ -1,3 +1,7 @@
+RD-2008-09-19-0: Bugfix:      qalter does not print any output and has wrong exit code
+                 Belongs to:  RD-2008-09-18-0
+                 Review:      JG
+
 MP-2008-09-18-0: Bugfix:      qrsh -w v does not give any feedback to the user after
                               submitting the command. Also, even with no error, the
                               return code is always 1.

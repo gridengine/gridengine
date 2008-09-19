@@ -1666,6 +1666,9 @@ int sub_command
       new_job = lCopyElem(jobep);
 
       if (mod_job_attributes(new_job, jep, &tmp_alp, ruser, rhost, &trigger)) {
+         if (*alpp == NULL) {
+             *alpp = lCreateList("answer", AN_Type);
+         }
          lAddList(*alpp, &tmp_alp);
          lFreeElem(&new_job);
          lFreeWhere(&job_where);

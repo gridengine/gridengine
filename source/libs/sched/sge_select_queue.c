@@ -869,7 +869,7 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots)
       min_slots = first;
    }   
 
-   if (best->gdil || best->slots == max_pe_slots) { /* already found maximum */
+   if (best->gdil && best->slots == max_pe_slots) { /* already found maximum */
       DRETURN(DISPATCH_OK); 
    }
 
@@ -4665,6 +4665,7 @@ dispatch_t sge_sequential_assignment(sge_assignment_t *a)
 
          lFreeList(&(a->gdil));
          a->gdil = gdil;
+         a->slots = 1;
          if (a->start == DISPATCH_TIME_QUEUE_END) {
             a->start = job_start_time;
          }   

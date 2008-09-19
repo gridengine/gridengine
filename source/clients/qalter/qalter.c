@@ -76,11 +76,8 @@ extern char **environ;
 int main(int argc, char *argv[]);
 
 /************************************************************************/
-int main(
-int argc,
-char **argv 
-) {
-   int ret = 0;
+int main(int argc, char **argv) {
+   int ret = STATUS_OK;
    lList *alp = NULL;
    lList *request_list = NULL;
    lList *cmdline = NULL;
@@ -102,16 +99,13 @@ char **argv
    if (!strcmp(sge_basename(argv[0], '/'), "qresub")) {
       DPRINTF(("QRESUB\n"));
       me_who = QRESUB;
-   }   
-   else if (!strcmp(sge_basename(argv[0], '/'), "qhold")) {
+   } else if (!strcmp(sge_basename(argv[0], '/'), "qhold")) {
       DPRINTF(("QHOLD\n"));
       me_who = QHOLD;
-   }   
-   else if (!strcmp(sge_basename(argv[0], '/'), "qrls")) {
+   } else if (!strcmp(sge_basename(argv[0], '/'), "qrls")) {
       DPRINTF(("QRLS\n"));
       me_who = QRLS;
-   } 
-   else {
+   } else {
       DPRINTF(("QALTER\n"));
       me_who = QALTER;
    } 
@@ -185,7 +179,7 @@ char **argv
    alp = ctx->gdi(ctx, SGE_JOB_LIST, gdi_cmd, &request_list, NULL, NULL); 
    for_each (aep, alp) {
       printf("%s\n", lGetString(aep, AN_text));
-      if (ret==0) {
+      if (ret == STATUS_OK) {
          ret = lGetUlong(aep, AN_status);
       }
    }

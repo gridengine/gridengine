@@ -1,3 +1,8 @@
+RD-2008-09-19-0: Bugfix:      fixed verbosity of qalter -w v
+                 Bugster:     6730487
+                 Issue:       2680
+                 Review:      CR,JG
+
 EB_2008-08-08-08: Enhancem.: relaxed accounting
                             - write accounting record if job is deleted with
                               forced attribute. Online usage will be used for

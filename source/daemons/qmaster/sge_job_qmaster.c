@@ -1706,18 +1706,11 @@ int sub_command
 
       
       if (mod_job_attributes(new_job, jep, &tmp_alp, ruser, rhost, &trigger)) {
-         /* failure: just append last elem in tmp_alp 
-            elements before may contain invalid success messages */ 
-         lListElem *failure;
-         failure = lLast(tmp_alp);
-         lDechainElem(tmp_alp, failure);
-         if (!*alpp)
-            *alpp = lCreateList("answer", AN_Type);
-         lAppendElem(*alpp, failure);
-         lFreeList(&tmp_alp);
+         if (*alpp == NULL) {
+             *alpp = lCreateList("answer", AN_Type);
+         }
+         lAddList(*alpp, &tmp_alp);
          lFreeElem(&new_job);
-
-         DPRINTF(("---------- removed messages\n"));
          lFreeWhere(&job_where);
          FREE(job_mod_name); 
          DRETURN(STATUS_EUNKNOWN);
@@ -3401,6 +3394,10 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bo
       DRETURN(0);
    }
 
+   if (verify_only) {
+      answer_list_remove_quality(*alpp, ANSWER_QUALITY_INFO);
+   }
+
    /* can happen only from qalter -w ... */
    if (is_modify == true && job_get_not_enrolled_ja_tasks(jep) == 0) {
       /* since we can rule out a finished jobs it can be running only */
@@ -3412,7 +3409,6 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bo
    {
       lListElem *cqueue;
       lList *talp = NULL;
-      int ngranted = 0;
       int try_it = 1;
       const char *ckpt_name;
       lList *job_hard_queue_list = lGetList(jep, JB_hard_queue_list);
@@ -3526,7 +3522,6 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bo
          } else {
             sge_sequential_assignment(&a);
          }
-         ngranted = nslots_granted(a.gdil, NULL);
 
          /* stop redirection of scheduler monitoring messages */
          if (verify_only) {
@@ -3544,11 +3539,12 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bo
       assignment_release(&a);
 
       /* consequences */
-      if (!try_it || !ngranted) {
+      if (!try_it || !a.slots) {
          /* copy error msgs from talp into alpp */
          if (verify_only) {
-            if (!*alpp)
+            if (!*alpp) {
                *alpp = lCreateList("answer", AN_Type);
+            }
             lAddList(*alpp, &talp);
          } else {
             lFreeList(&talp);
@@ -3559,6 +3555,10 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bo
                (verify_mode==ERROR_VERIFY)?MSG_JOB_VERIFYERROR:MSG_JOB_VERIFYWARN)));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, verify_only? ANSWER_QUALITY_INFO: 
                (verify_mode==ERROR_VERIFY)?ANSWER_QUALITY_ERROR:ANSWER_QUALITY_WARNING);
+
+         if (verify_mode == ERROR_VERIFY) {
+            answer_list_remove_quality(*alpp, ANSWER_QUALITY_INFO);
+         }
 
          if (verify_mode != WARNING_VERIFY) {
             DRETURN(STATUS_ESEMANTIC);
@@ -3572,7 +3572,7 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bo
          if (!a.pe) {
             sprintf(SGE_EVENT, MSG_JOB_VERIFYFOUNDQ); 
          } else {
-            sprintf(SGE_EVENT, MSG_JOB_VERIFYFOUNDSLOTS_I, ngranted);
+            sprintf(SGE_EVENT, MSG_JOB_VERIFYFOUNDSLOTS_I, a.slots);
          }
          answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
          DRETURN(STATUS_ESEMANTIC);

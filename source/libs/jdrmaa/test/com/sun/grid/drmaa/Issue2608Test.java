@@ -162,6 +162,8 @@ public class Issue2608Test extends TestCase {
         
         jt.setRemoteCommand(SLEEPER);
         jt.setArgs(Collections.singletonList(Integer.toString(sleep)));
+        jt.setOutputPath(":/dev/null");
+        jt.setErrorPath(":/dev/null");
         
         return jt;
     }

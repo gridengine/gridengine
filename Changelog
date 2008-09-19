@@ -1,3 +1,7 @@
+AP-2008-09-19-0: Task:        drmaa junit test Issue2608test.java - output redirection
+                 Issue:       testsuite issue 180
+                 Review:      CR
+
 MP-2008-09-17-0: Bugfix:      qrsh -w v does not give any feedback to the user after
                               submitting the command. Also, even with no error, the
                               return code is always 1.

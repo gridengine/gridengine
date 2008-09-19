@@ -1,5 +1,9 @@
-JG-2008-09-18-0: CVS:       Created V62_BRANCH and V62_BRANCH_HEAD_TAG.
------------------------------------------------------------------------
+RD-2008-09-19-0: Bugfix:      qalter does not print any output and has wrong exit code
+                 Belongs to:  RD-2008-09-18-0
+                 Review:      JG
+
+JG-2008-09-18-0: CVS:         Created V62_BRANCH and V62_BRANCH_HEAD_TAG.
+-------------------------------------------------------------------------
 
 RD-2008-09-18-0: Bugfix:      fixed verbosity of qalter -w v
                  Bugster:     6730487

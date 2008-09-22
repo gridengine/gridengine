@@ -560,6 +560,8 @@ sge_gdi2_is_done(sge_gdi_ctx_class_t* ctx, lList **alpp, state_gdi_multi *state)
  *
  *  NOTES
  *     MT-NOTE: sge_send_gdi_request() is MT safe (assumptions)
+ *     
+ *     The function does *not* wait until the message is actually sent!
  *---------------------------------------------------------*/
 int 
 sge_gdi2_send_any_request(sge_gdi_ctx_class_t *ctx, int synchron, u_long32 *mid,

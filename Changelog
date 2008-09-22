@@ -1,3 +1,9 @@
+JG-2008-09-22-0: Bugfix:      in csp mode commlib clients do not respect commlib
+                              parameters for the first message
+                 Bugster:     6750834
+                 Issue:       2734
+                 Review:      CR
+
 AP-2008-09-19-0: Task:        drmaa junit test Issue2608test.java - output redirection
                  Issue:       testsuite issue 180
                  Review:      CR
@@ -31,7 +37,7 @@ CR-2008-09-16-0: Bugfix:      execd failed to reconnect to shadow master host
                  Bugster:     6738091
                  Review:      RD
 
-MP-2008-09-16-0: Bugfix:      Prameter PE_RANGE_ALG is shown as SELECT_PE_RANGE_ALG
+MP-2008-09-16-0: Bugfix:      Parameter PE_RANGE_ALG is shown as SELECT_PE_RANGE_ALG
                               in the man page of sched_conf
                  Bugster:     6567413
                  Issue:       2723

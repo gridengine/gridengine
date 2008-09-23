@@ -529,26 +529,21 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
       u_short id = 1;
       int gdi_error = CL_RETVAL_OK;
       int runs = 0;
-      int runs_at_start = 0;
+      int retries = 0;
       bool do_ping = false;
-      bool do_permanent = false;
 
       strcpy(rcv_host, host);
       strcpy(rcv_commproc, commproc);
 
-      do_ping = get_cl_ping_value();
-      runs = get_gdi_retries_value();
-      runs_at_start = runs;
-
-      if (runs == -1) {
-         do_permanent = true;
-      }
-
+      runs = 0;
 
       /*running this loop as long as configured in gdi_retries, doing a break after getting a gdi_request*/
       do {
          gdi_error = sge_gdi2_get_any_request(ctx, rcv_host, rcv_commproc, &id, &rpb, &tag, 
-                                                  true, message_id, NULL);
+                                              true, message_id, NULL);
+
+         do_ping = get_cl_ping_value();
+         retries = get_gdi_retries_value();
 
          if (gdi_error == CL_RETVAL_OK) {
             /*no error happened, leaving while*/
@@ -587,16 +582,9 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
                break;
             }
          }
-         if (get_gdi_retries_value() != runs_at_start) {
-            DPRINTF(("Value changed during request - break\n"));
-            break;
-         }
-         /* 
-          * only decrement runs if do_permanent is true. do_permanent is set to true
-          * if qmaster_params value for gdi_retries is set to -1 (see man page) 
-          */
-      } while (do_permanent == true || runs-- > 0);
-
+         /* only increment runs if retries != -1 (-1 means retry forever) */
+      } while (retries == -1 || runs++ < retries);
+      
       if (ret == false) {
          commlib_error = ctx->is_alive(ctx);
          if (commlib_error != CL_RETVAL_OK) {

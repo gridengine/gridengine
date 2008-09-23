@@ -1,3 +1,9 @@
+JG-2008-09-23-0: Bugfix:      in csp mode commlib clients do not respect commlib
+                              parameters for the first message
+                 Bugster:     6750834
+                 Issue:       2734
+                 Review:      CR
+
 RD-2008-09-19-0: Bugfix:      qalter does not print any output and has wrong exit code
                  Belongs to:  RD-2008-09-18-0
                  Review:      JG

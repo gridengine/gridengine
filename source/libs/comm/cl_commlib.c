@@ -415,7 +415,6 @@ int cl_com_update_parameter_list(char* parameter) {
    cl_com_set_parameter_list_value("cl_ping", "false");
 
    /*begin to parse*/
-
    param_token = sge_strtok_r(parameter, ",; ", &context);
 
    /*overriding the default values with values found in qmaster_params*/

@@ -1,3 +1,9 @@
+MP-2008-09-23-0: Bugfix:      qhost -l followed by multiple resource/value pairs only
+                              accepts the first attribute and ignores the rest.
+                 Bugster:     6734764
+                 Issue:       2684
+                 Review:      DG
+
 AP-2008-09-19-0: Task:        drmaa junit test Issue2608test.java - output redirection
                  Issue:       testsuite issue 180
                  Review:      CR

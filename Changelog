@@ -1,3 +1,11 @@
+MP-2008-09-24-0: Bugfix:      qrsh -w v does not give any feedback to the user after
+                              submitting the command. Also, even with no error, the
+                              return code is always 1.
+                              Merged from MP-2008-09-17-0 in V61_BRANCH
+                 Bugster:     6726233
+                 Issue:       2731
+                 Review:      JG
+
 JG-2008-09-23-0: Bugfix:      in csp mode commlib clients do not respect commlib
                               parameters for the first message
                  Bugster:     6750834

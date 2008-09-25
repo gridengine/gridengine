@@ -280,7 +280,6 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_HOLD_LIST_QHOLD      "hold_list               `u' `s' `o'" 
 #define MSG_GDI_ARGUMENTSYNTAX_OA_HOST_ID_LIST         "host_id_list            host[ host ...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_HOSTNAME_LIST        "hostname_list           hostname[,hostname,...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_ID               "job_id_list"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_ID_LIST          "job_id_list             job_id[,job_id,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_IDENTIFIER_LIST  "job_identifier_list     {job_id|job_name|reg_exp}[,{job_id|job_name|reg_exp},...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_QUEUE_DEST       "job_queue_list          {job|queue}[{,| }{job|queue}{,| }...]"
@@ -912,7 +911,7 @@
 
 #define MSG_GDI_USAGE_JQ_DEST_OPR                        "job_queue_list"
 #define MSG_GDI_USAGE_SRVR_NM_OPR                        "server_name"
-#define MSG_GDI_USAGE_JOB_ID_OPR                         "job_task_list"
+#define MSG_GDI_USAGE_JOB_ID_OPR                         "job_id_list"
 #define MSG_GDI_USAGE_TASK_OPR                           "job_task_list"
 #define MSG_GDI_USAGE_SCRIPT_OPR                         "[{command|-} [command_args]]"
 #define MSG_GDI_USAGE_SCRIPT_OPR_ARGS                    "[-- script_args]"

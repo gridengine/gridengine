@@ -1,3 +1,11 @@
+DG-2008-09-25-1: Bugfix:      Fixed return values of -help and "no option" 
+                              for client tools. Fix of man page regarding -V 
+                              option. Added help output to stderr when  
+                              no option is given to the clients. 
+                 Bugster:     6750325, 6749921
+                 Merged from: maintrunk (DG-2008-09-25-0)
+                 Review:      RD
+
 MP-2008-09-24-0: Bugfix:      qrsh -w v does not give any feedback to the user after
                               submitting the command. Also, even with no error, the
                               return code is always 1.

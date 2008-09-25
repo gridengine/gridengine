@@ -185,10 +185,11 @@ char *argv[]
 
    DENTER(TOP_LAYER, "sge_parse_qconf");
 
-   /* If no arguments were given, output the help message. */
+   /* If no arguments were given, output the help message on stderr. */
    if (*argv == NULL) {
-      sge_usage(QCONF, stdout);
-      DRETURN(0);
+      sge_usage(QCONF, stderr);
+      fprintf(stderr, "%s\n", MSG_PARSE_NOOPTIONARGUMENT);
+      DRETURN(1);
    }
    
    spp = argv;

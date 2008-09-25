@@ -3725,7 +3725,7 @@ static dispatch_t
 parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_category, int *available_slots) 
 {
    lListElem *job = a->job;
-   bool need_master_host = (lGetList(job, JB_master_hard_queue_list) != NULL) ? true : false;
+   bool have_masterq_request = (lGetList(job, JB_master_hard_queue_list) != NULL) ? true : false;
    bool have_hard_queue_request = (lGetList(job, JB_hard_queue_list) != NULL) ? true : false;
 
    int accu_host_slots, accu_host_slots_qend;
@@ -3871,6 +3871,10 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                      maxslots = 1;
 
                   /* debit on RQS limits */
+                  /*
+                     TODO: we could use hashed access but currently hash
+                     does not consider sorted list
+                   */
                   for_each (qep, a->queue_list) {
                      const char *qname = lGetString(qep, QU_full_name);
 
@@ -3884,17 +3888,25 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                      /* how much is still needed */
                      slots = MIN(lGetUlong(qep, QU_tag), maxslots - rqs_hslots);
 
-                     if (need_master_host) {
-                        /* care for slave tasks assignments of -masterq jobs */
-                        if (!have_master_host && !got_master_queue && lGetUlong(qep, QU_tagged4schedule)==0 
-                             && accu_host_slots + rqs_hslots + slots == a->slots) {
-                           slots--;
-                        }
-                        /* care for master tasks assignments of -masterq jobs */
-                        if (lGetUlong(qep, QU_tagged4schedule)==1) {
-                           if (!have_master_host && !got_master_queue && have_hard_queue_request) {
-                              if (have_hard_queue_request) 
+                     if (have_masterq_request && !have_master_host && !got_master_queue) {
+                        if (lGetUlong(qep, QU_tagged4schedule)==0) {
+                           /*
+                              care for slave tasks assignments of -masterq jobs
+                              we need at least one slot on the masterq, thus we reduce by one slot
+                              if we run out of slots
+                             */
+                           if (accu_host_slots + rqs_hslots + slots == a->slots) {
+                              slots--;
+                           }
+                        } else {
+                           /* care for master tasks assignments of -masterq jobs */
+                           if (have_hard_queue_request) {
+                              /* if the masterq request is not contained in the hard queue request
+                                 we need to allocate only one slot for the master task */
+                              if (qref_list_cq_rejected(lGetList(a->job, JB_hard_queue_list),
+                                  lGetString(qep, QU_qname), lGetHost(qep, QU_qhostname), a->hgrp_list)) {
                                  slots = MIN(slots, 1);
+                              }
                            } 
                         }
                      }
@@ -3917,7 +3929,7 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                            lSetUlong(gdil_ep, JG_slots, slots);
 
                            /* master queue must be at first position */
-                           if (need_master_host && !have_master_host && lGetUlong(qep, QU_tagged4schedule)==1) {
+                           if (have_masterq_request && !have_master_host && lGetUlong(qep, QU_tagged4schedule)==1) {
                               lDechainElem(a->gdil, gdil_ep);
                               lInsertElem(a->gdil, NULL, gdil_ep);
                               got_master_queue = true;
@@ -3968,7 +3980,7 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                   }
                }
 
-               if ( hslots_qend >= minslots && a->care_reservation && !a->is_reservation) {
+               if (hslots_qend >= minslots && a->care_reservation && !a->is_reservation) {
                   lListElem *qep;
                   bool got_master_queue_qend = have_master_host_qend;
                   int rqs_hslots = 0, maxslots, slots, slots_qend;
@@ -3982,6 +3994,10 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                      maxslots = 1; 
                   
                   /* debit on RQS limits */
+                  /*
+                     TODO: we could use hashed access but currently hash
+                     does not consider sorted list
+                   */
                   for_each (qep, a->queue_list) {
                      if (sge_hostcmp(eh_name, lGetHost(qep, QU_qhostname)))
                         continue;
@@ -3989,15 +4005,26 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                      slots = 0;
                      slots_qend = MIN(lGetUlong(qep, QU_tag_qend), maxslots - rqs_hslots);
 
-                     if (need_master_host) {
-                        /* care for slave tasks assignments of -masterq jobs */
-                        if (!have_master_host_qend && !got_master_queue_qend && lGetUlong(qep, QU_tagged4schedule)==0
-                            && accu_host_slots_qend + rqs_hslots + slots_qend == a->slots)
-                           slots_qend--;
-                        /* care for master tasks assignments of -masterq jobs */
-                        if (need_master_host && lGetUlong(qep, QU_tagged4schedule)==1) {
-                           if (!have_master_host_qend && !got_master_queue_qend && have_hard_queue_request) 
-                               slots_qend = MIN(slots_qend, 1);
+                     if (have_masterq_request && !have_master_host_qend && !got_master_queue_qend) {
+                        if (lGetUlong(qep, QU_tagged4schedule)==0) {
+                           /*
+                              care for slave tasks assignments of -masterq jobs
+                              we need at least one slot on the masterq, thus we reduce by one slot
+                              if we run out of slots
+                             */
+                           if (accu_host_slots_qend + rqs_hslots + slots_qend == a->slots) {
+                              slots_qend--;
+                           }
+                        } else {
+                           /* care for master tasks assignments of -masterq jobs */
+                           if (have_hard_queue_request) {
+                              /* if the masterq request is not contained in the hard queue request
+                                 we need to allocate only one slot for the master task */
+                              if (qref_list_cq_rejected(lGetList(a->job, JB_hard_queue_list),
+                                  lGetString(qep, QU_qname), lGetHost(qep, QU_qhostname), a->hgrp_list)) {
+                                 slots_qend = MIN(slots_qend, 1);
+                              }
+                           }
                         }
                      }
 
@@ -4049,16 +4076,16 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
 
             /* exit is possible when we (a) got the full slot amount or 
                (b) got full slot_qend amount and know full slot amount is not achievable anymore */
-            if ((accu_host_slots >= a->slots && (!need_master_host || have_master_host)) &&
+            if ((accu_host_slots >= a->slots && (!have_masterq_request || have_master_host)) &&
                 (!a->care_reservation || a->is_reservation || 
-                 (accu_host_slots_qend >= a->slots && (!need_master_host || have_master_host_qend)))) {
+                 (accu_host_slots_qend >= a->slots && (!have_masterq_request || have_master_host_qend)))) {
                DPRINTF(("WE ARE THROUGH!\n"));
                done = true;
                break;
             }
 
             /* no need to collect further when slots_qend are complete */
-            if (a->care_reservation && accu_host_slots_qend >= a->slots && (!need_master_host || have_master_host_qend))
+            if (a->care_reservation && accu_host_slots_qend >= a->slots && (!have_masterq_request || have_master_host_qend))
                a->care_reservation = false;
 
          } /* for each host */
@@ -4069,14 +4096,14 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
       lFreeList(&unclear_cqueue_list);
 
       if (accu_host_slots >= a->slots && 
-         (!need_master_host || have_master_host)) {
+         (!have_masterq_request || have_master_host)) {
          /* stop looking for smaller slot amounts */
          DPRINTF(("-------------->      BINGO %d slots %s at specified time <--------------\n", 
-               a->slots, need_master_host?"plus master host":""));
+               a->slots, have_masterq_request?"plus master host":""));
          best_result = DISPATCH_OK;
-      } else if (accu_host_slots_qend >= a->slots && (!need_master_host || have_master_host)) {
+      } else if (accu_host_slots_qend >= a->slots && (!have_masterq_request || have_master_host)) {
          DPRINTF(("-------------->            %d slots %s later             <--------------\n", 
-               a->slots, need_master_host?"plus master host":""));
+               a->slots, have_masterq_request?"plus master host":""));
          best_result = DISPATCH_NOT_AT_TIME;
       } else {
          DPRINTF(("-------------->   NEVER ONLY %d but %d needed              <--------------\n", 

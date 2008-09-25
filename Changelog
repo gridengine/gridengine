@@ -1,3 +1,10 @@
+DG-2008-09-25-0: Bugfix:      Fixed return values of -help and "no option" 
+                              for client tools. Fix of man page regarding -V 
+                              option. Added help output to stderr when  
+                              no option is given to the clients. 
+                 Bugster:     6750325, 6749921
+                 Review:      RD
+
 JG-2008-09-22-0: Bugfix:      in csp mode commlib clients do not respect commlib
                               parameters for the first message
                  Bugster:     6750834

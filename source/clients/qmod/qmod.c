@@ -166,7 +166,6 @@ lList **ppcmdline
 ) {
 char **sp;
 char **rp;
-stringT str;
 lList *alp = NULL;
 
    DENTER(TOP_LAYER, "sge_parse_cmdline_qmod");
@@ -174,7 +173,9 @@ lList *alp = NULL;
    rp = argv;
    
    if (*rp == NULL) {
-      sge_add_noarg(ppcmdline, 0, "-help", NULL);
+      /* no command line argument: print help on error */
+      qmod_usage(stderr, NULL);
+      answer_list_add_sprintf(&alp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR, MSG_PARSE_NOOPTIONARGUMENT);
    }
    
    while(*(sp=rp)) {
@@ -250,8 +251,7 @@ lList *alp = NULL;
          /* next field is path_name */
          sp++;
          if (*sp == NULL) {
-             sprintf(str,MSG_PARSE_TOPTIONMUSTHAVEALISTOFTASKIDRANGES);
-             answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+             answer_list_add(&alp, MSG_PARSE_TOPTIONMUSTHAVEALISTOFTASKIDRANGES, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              goto error;
          }
 
@@ -295,8 +295,7 @@ lList *alp = NULL;
 #endif
 
       /* oops */
-      sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
-      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+      answer_list_add_sprintf(&alp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR, MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
 error:
       qmod_usage(stderr, NULL);
       DEXIT;

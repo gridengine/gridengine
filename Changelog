@@ -1,3 +1,8 @@
+RD-2008-09-25-0: Bugfix:      Fixed issue with overlapping -masterq and -q request
+                 Bugster:     6730437
+                 Issue:       2736
+                 Review:      DG
+
 DG-2008-09-25-0: Bugfix:      Fixed return values of -help and "no option" 
                               for client tools. Fix of man page regarding -V 
                               option. Added help output to stderr when  

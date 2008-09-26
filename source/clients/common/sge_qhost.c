@@ -107,6 +107,10 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
    bool have_lists = true;
    int print_header = 1;
    int ret = QHOST_SUCCESS;
+   lList *tmp_rsc_list = NULL;
+   const char* rmVal = NULL;
+   lListElem *tmp_hl = NULL;
+   lListElem *rm = NULL;
 #define HEAD_FORMAT "%-23s %-13.13s%4.4s %5.5s %7.7s %7.7s %7.7s %7.7s\n"
    
    DENTER(TOP_LAYER, "do_qhost");
@@ -185,6 +189,18 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
                   }
                }
             }
+            
+            tmp_rsc_list = lGetList(ep, EH_load_list);
+            for_each(rm, resource_match_list) {
+               rmVal = lGetString(rm, CE_name);
+               tmp_hl = lGetElemStr(tmp_rsc_list, HL_name, rmVal);
+               if (tmp_hl != NULL) {
+                  if (strcmp(lGetString(tmp_hl, HL_value), lGetString(rm, CE_stringval)) ==0) {
+                     selected=1;
+                  }
+               }
+            }
+            
 
             if (selected) { 
                lSetUlong(ep, EH_tagged, 1);

@@ -640,13 +640,12 @@ static int sge_parse_qhost(lList **ppcmdline,
          }
          continue;
       }
-
-      if (parse_string(ppcmdline, "-l", alpp, &argstr)) {
+      while (parse_string(ppcmdline, "-l", alpp, &argstr)) {
          *pplres = centry_list_parse_from_string(*pplres, argstr, false);
          FREE(argstr);
          continue;
       }
-
+      
       if (parse_multi_stringlist(ppcmdline, "-u", alpp, ppuser, ST_Type, ST_name)) {
          (*show) |= QHOST_DISPLAY_JOBS;
          continue;

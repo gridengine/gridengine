@@ -1,3 +1,10 @@
+MP-2008-09-26-0: Bugfix:      qhost -l followed by multiple resource/value pairs only
+                              accepts the first attribute and ignores the rest.
+                              Merged from MP-2008-09-23-0 in V61_BRANCH
+                 Bugster:     6734764
+                 Issue:       2684
+                 Review:      DG
+
 RD-2008-09-25-0: Bugfix:      Fixed issue with overlapping -masterq and -q request
                  Bugster:     6730437
                  Issue:       2736

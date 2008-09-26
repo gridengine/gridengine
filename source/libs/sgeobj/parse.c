@@ -460,8 +460,13 @@ char **str
          *str = sge_strdup(NULL, lGetString(ep2, ST_name));
       else
          *str = NULL;   
-      lRemoveElem(*ppcmdline, &ep);
-
+      
+      if(lGetNumberOfElem(lGetList(ep, SPA_argval_lListT)) > 1) {
+         lRemoveElem(lGetList(ep, SPA_argval_lListT), &ep2);
+      } else {
+         lRemoveElem(*ppcmdline, &ep);
+      }
+      
       DEXIT;
       return true;
    } else {

@@ -103,12 +103,10 @@ int schedd_log(const char *logstr, lList **monitor_alpp, bool monitor_next_run)
       FCLOSE(fp);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 FCLOSE_ERROR:
    DPRINTF((MSG_FILE_ERRORCLOSEINGXY_SS, schedd_log_file, strerror(errno)));
-   DEXIT;
-   return -1;
+   DRETURN(-1);
 }
 
 

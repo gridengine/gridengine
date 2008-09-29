@@ -1,3 +1,9 @@
+RD-2008-09-29-0: Bugfix:      Fixed potential qmaster crash with schedd_job_info and
+                              qsub -w jobs
+                 Bugster:     6749902
+                 Issue:       2742
+                 Review:      JG
+
 RD-2008-09-25-0: Bugfix:      Fixed issue with overlapping -masterq and -q request
                  Bugster:     6730437
                  Issue:       2736

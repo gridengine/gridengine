@@ -56,6 +56,7 @@ static lRef schedd_mes_get_category(u_long32 job_id, lList *job_list);
 
 /* 
  * Message structure where job scheduling informations are stored if not disabled
+ * only used if monitor_alpp == NULL, which means run in scheduler, not qmaster
  */
 static lListElem *sme = NULL;
 static lListElem *tmp_sme = NULL;
@@ -412,8 +413,7 @@ void schedd_mes_add(lList **monitor_alpp, bool monitor_next_run, u_long32 job_id
    if (nchars == -1) {
       ERROR((SGE_EVENT, MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U,
          sge_u32c(message_number)));
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
 #else
    vsprintf(msg, fmt, args);
@@ -428,18 +428,15 @@ void schedd_mes_add(lList **monitor_alpp, bool monitor_next_run, u_long32 job_id
       schedd_log(msg_log, monitor_alpp, monitor_next_run);
    }
 
-   if (job_id && (schedd_job_info != SCHEDD_JOB_INFO_FALSE)) {
+   if (!monitor_alpp && job_id && (schedd_job_info != SCHEDD_JOB_INFO_FALSE)) {
       if (mes_schedd_info == true) {
          if (schedd_job_info == SCHEDD_JOB_INFO_JOB_LIST) {
             if (!range_list_is_id_within(sconf_get_schedd_job_info_range(),
                                          job_id)) {
                DPRINTF(("Job "sge_u32" not in scheddconf.schedd_job_info_list\n", job_id));
-               return;
+               DRETURN_VOID;
             }
          }
-         if (!tmp_sme) {
-            schedd_mes_initialize();
-         }   
 
          mes = lCreateElem(MES_Type);
          jobs_ulng = lCreateList("job ids", ULNG_Type);
@@ -454,7 +451,7 @@ void schedd_mes_add(lList **monitor_alpp, bool monitor_next_run, u_long32 job_id
       }
    }
 
-   DEXIT;
+   DRETURN_VOID;
 #endif
 }
 
@@ -523,9 +520,6 @@ void schedd_mes_add_join(u_long32 job_number, u_long32 message_number, ...)
                return;
             }
          }
-         if (!tmp_sme) {
-            schedd_mes_initialize();
-         }   
 
          mes = lGetElemUlong(lGetList(tmp_sme, SME_message_list), MES_message_number, message_number);
          if (mes == NULL) {
@@ -596,37 +590,30 @@ void schedd_mes_add_global(lList **monitor_alpp, bool monitor_next_run, u_long32
 
    DENTER(TOP_LAYER, "schedd_mes_add_global");
 
-   if (sconf_get_schedd_job_info() != SCHEDD_JOB_INFO_FALSE) {
-      /* Create error message */
-      fmt = sge_schedd_text(message_number);
-      va_start(args,message_number);
+   /* Create error message */
+   fmt = sge_schedd_text(message_number);
+   va_start(args,message_number);
 #if defined(LINUX)
-      nchars = vsnprintf(msg, MAXMSGLEN, fmt, args);
-      if (nchars == -1) {
-         ERROR((SGE_EVENT, MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U,
-            sge_u32c(message_number)));
-         DEXIT;
-         return;
-      }
+   nchars = vsnprintf(msg, MAXMSGLEN, fmt, args);
+   if (nchars == -1) {
+      ERROR((SGE_EVENT, MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U,
+         sge_u32c(message_number)));
+      DRETURN_VOID;
+   }
 #else
-      vsprintf(msg, fmt, args);
+   vsprintf(msg, fmt, args);
 #endif
-
-      /* Add scheduling info to structure */
-      if (!sme) {
-         schedd_mes_initialize();
-      }   
-
+   if (!monitor_alpp && sconf_get_schedd_job_info() != SCHEDD_JOB_INFO_FALSE) {
       mes = lCreateElem(MES_Type);
       lSetUlong(mes, MES_message_number, message_number);
       lSetString(mes, MES_message, msg);
       lAppendElem(lGetList(sme, SME_global_message_list), mes);
-
-      /* Write entry into log file */
-      schedd_log(msg, monitor_alpp, monitor_next_run);
    }
 
-   DEXIT;
+   /* Write entry into log file */
+   schedd_log(msg, monitor_alpp, monitor_next_run);
+
+   DRETURN_VOID;
 }
 
 
@@ -652,8 +639,7 @@ lList *schedd_mes_get_tmp_list(){
    if (tmp_sme) {
      ret =  lGetList(tmp_sme, SME_message_list);  
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** schedd_message/schedd_mes_set_tmp_list() *******************************

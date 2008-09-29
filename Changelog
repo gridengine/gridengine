@@ -1,3 +1,26 @@
+EB_2008-08-09-29-0: Enhancem.: relaxed accounting
+                            - write accounting record if job is deleted with
+                              forced attribute. Online usage will be used for
+                              accounting
+                            - write job logging record if job is deleted with
+                              forced attribute
+                            - enable master side limit checking when
+                              ENABLE_ENFORCE_MASTER_LIMIT is set as
+                              qmaster_param (tightly and loose integrated PE
+                              jobs are handled correctly).
+                            - triggers are added/removed when hosts change
+                              into unknown/known state (kill, qconf -ke)
+                            - enable mapping of regular qdel to forced qdel
+                              if ENABLE_FORCED_QDEL_IF_UNKNOWN is set as
+                              qmaster_param
+                            - qmaster enforced deleted jobs (h_rt limit) will
+                              be logged in accounting file as failed with 
+                              status 37 ("qmaster enforced h_rt limit")
+                            - changed some man pages
+                 Bugster:   6702908 
+                 Issue:     2551 
+                 Review:    AH (JG for corresponding changes in V61ARsnapshot3_BRANCH => EB_2008-08-08-08)
+
 RD-2008-09-29-1: Bugfix:      fixed broken build on irix
                  Review:      JG
 
@@ -72,7 +95,6 @@ DG-2008-09-16-0: Bugfix:      qresub on -b y jobs raises wrong error condition
 EB-2008-09-15-0: Bugfix:      subordinate properties lost on qmaster restart
                  Issue:       1741
                  Bugster:     6319223
-                 Review:      JG
 
 DG-2008-09-10-0: Bugfix:      Logging into schedd_runlog is never turned off.
                  Bugster:     6744738

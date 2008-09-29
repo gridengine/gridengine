@@ -96,6 +96,7 @@
 #include "sge_cqueue.h"
 #include "sge_lock.h"
 #include "sge_task_depend.h"
+#include "sge_qmaster_timed_event.h"
 
 #include "sge_persistence_qmaster.h"
 #include "sge_reporting_qmaster.h"
@@ -842,8 +843,7 @@ void sge_job_resend_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, 
 
    DEXIT;
    return;
-} /* sge_job_resend_event_handler() */
-
+} 
 
 void cancel_job_resend(u_long32 jid, u_long32 ja_task_id)
 {
@@ -880,7 +880,6 @@ void trigger_job_resend(u_long32 now, lListElem *hep, u_long32 jid, u_long32 ja_
    DEXIT;
    return;
 }
-
 
 /***********************************************************************
  sge_zombie_job_cleanup_handler

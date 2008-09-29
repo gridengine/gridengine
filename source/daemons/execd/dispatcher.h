@@ -34,6 +34,8 @@
 
 #include "gdi/sge_gdi_ctx.h"
 
+#define EXECD_MAX_RECONNECT_TIMEOUT 30
+
 int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx);
 
 #endif /* _DISPATCHER_H */

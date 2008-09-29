@@ -98,8 +98,12 @@
 #include "sge_lock.h"
 #include "sge_mtutil.h"
 #include "sge_task_depend.h"
+#include "sge_job_enforce_limit.h"
 #include "sgeobj/sge_pe_taskL.h"
 #include "sgeobj/sge_pe_task.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_qinstance_state.h"
 
 #include "schedd_message.h"
 #include "sge_schedd_text.h"
@@ -1437,6 +1441,10 @@ void get_rid_of_job_due_to_qdel(sge_gdi_ctx_class_t *ctx,
       }
    } else {
       if (force) {
+         u_long32 now = sge_get_gmt();
+         const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
+         lListElem *dummy_jr = lCreateElem(JR_Type);
+
          if (job_is_array(j)) {
             ERROR((SGE_EVENT, MSG_JOB_FORCEDDELTASK_SUU,
                    ruser, sge_u32c(job_number), sge_u32c(task_number)));
@@ -1444,9 +1452,15 @@ void get_rid_of_job_due_to_qdel(sge_gdi_ctx_class_t *ctx,
             ERROR((SGE_EVENT, MSG_JOB_FORCEDDELJOB_SU,
                    ruser, sge_u32c(job_number)));
          }
-         /* 3: JOB_FINISH reports aborted */
-         sge_commit_job(ctx, j, t, NULL, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
+
+         job_report_init_from_job_with_usage(dummy_jr, j, t, NULL, now);
+         reporting_create_acct_record(ctx, NULL, dummy_jr, j, t, false);
+         reporting_create_job_log(NULL, now, JL_DELETED, MSG_SCHEDD, 
+                                  qualified_hostname, NULL, j, t, NULL, MSG_LOG_DELFORCED);
+         sge_commit_job(ctx, j, t, NULL, COMMIT_ST_FINISHED_FAILED_EE, 
+                        COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
          cancel_job_resend(job_number, task_number);
+         lFreeElem(&dummy_jr);
          j = NULL;
       } else {
          /*
@@ -4414,6 +4428,55 @@ static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, c
                }
 
                njobs++; 
+
+               /*
+                * if ENABLE_FORCED_QDEL_IF_UNKNOWN is enabled and a user send a qdel (not forced)
+                * then we will handle it as a forced request if the job (master-task) is running
+                * on a host in unknwon state.
+                */
+               if (mconf_get_enable_forced_qdel_if_unknown()) {
+                  lList *gdil = lGetList(tmp_task, JAT_granted_destin_identifier_list);
+                  lListElem *gdil_ep = lFirst(gdil);
+
+                  if (gdil_ep != NULL) {
+                     lList *master_cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
+                     lListElem *qinstance = cqueue_list_locate_qinstance(master_cqueue_list,
+                                                                         lGetString(gdil_ep, JG_qname));
+
+                     if (qinstance != NULL) {
+                        /*
+                         * is the queue (=host) in unknwon state, then make the qdel request a forced request
+                         * otherwise check if we have a tight pe job. in that case a pe slave tasks will be tagged
+                         * where the corresponding execution node can't be contacted so that a regular
+                         * qdel will delete the job (code part of the qmaster<->execd protocol)
+                         */
+                        if (qinstance_state_is_unknown(qinstance) == true) {
+                           INFO((SGE_EVENT, MSG_JOB_CHGFORCED_UU, sge_u32c(job_number), sge_u32c(task_number)));
+                           forced = true;
+                        } else {
+                           lList *master_pe_list = *(object_type_get_master_list(SGE_TYPE_PE));
+
+                           if (job_is_tight_parallel(job, master_pe_list) == true) {
+                              lList *pe_task_list = lGetList(tmp_task, JAT_task_list);
+                              lListElem *pe_task;
+
+                              for_each (pe_task, pe_task_list) {
+                                 gdil = lGetList(pe_task, PET_granted_destin_identifier_list);
+                                 gdil_ep = lFirst(gdil);
+
+                                 if (gdil_ep != NULL) {
+                                    qinstance = cqueue_list_locate_qinstance(master_cqueue_list, lGetString(gdil_ep, JG_qname));
+
+                                    if (qinstance != NULL && qinstance_state_is_unknown(qinstance) == true) {
+                                       lSetBool(pe_task, PET_do_contact, false);
+                                    }
+                                 }
+                              }
+                           }
+                        }
+                     }
+                  }
+               }
 
                /* 
                 * if task is already in status deleted and was signaled

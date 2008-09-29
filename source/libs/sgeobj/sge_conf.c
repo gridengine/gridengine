@@ -60,6 +60,7 @@
 #include "sge_answer.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
+
 #include "lck/sge_lock.h"
 
 #include "gdi/sge_gdi.h"
@@ -139,6 +140,8 @@ static bool is_new_config = false;
 static bool forbid_reschedule = false;
 static bool forbid_apperror = false;
 static bool enable_forced_qdel = false;
+static bool enable_enforce_master_limit = false;
+static bool enable_forced_qdel_if_unknown = false;
 static bool do_credentials = true;
 static bool do_authentication = true;
 static bool is_monitor_message = true;
@@ -638,6 +641,8 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       forbid_reschedule = false;
       forbid_apperror = false;
       enable_forced_qdel = false;
+      enable_enforce_master_limit = false;
+      enable_forced_qdel_if_unknown = false;
       do_credentials = true;
       do_authentication = true;
       is_monitor_message = true;
@@ -694,6 +699,12 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
             continue;
          }   
          if (parse_bool_param(s, "ENABLE_FORCED_QDEL", &enable_forced_qdel)) {
+            continue;
+         } 
+         if (parse_bool_param(s, "ENABLE_ENFORCE_MASTER_LIMIT", &enable_enforce_master_limit)) {
+            continue;
+         } 
+         if (parse_bool_param(s, "ENABLE_FORCED_QDEL_IF_UNKNOWN", &enable_forced_qdel_if_unknown)) {
             continue;
          } 
 #ifdef LINUX
@@ -2298,6 +2309,28 @@ bool mconf_get_enable_forced_qdel(void) {
 
    ret = enable_forced_qdel;
 
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+
+}
+
+bool mconf_get_enable_enforce_master_limit(void) {
+   bool ret;
+
+   DENTER(BASIS_LAYER, "mconf_get_enable_enfoce_master_limit");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+   ret = enable_enforce_master_limit;
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+
+}
+
+bool mconf_get_enable_forced_qdel_if_unknown(void) {
+   bool ret;
+
+   DENTER(BASIS_LAYER, "mconf_get_enable_forced_qdel_if_unknown");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+   ret = enable_forced_qdel_if_unknown;
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(ret);
 

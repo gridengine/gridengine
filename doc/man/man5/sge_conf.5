@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/08/08 10:15:31 $     Revision: $Revision: 1.78 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/09/29 13:03:04 $     Revision: $Revision: 1.79 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/08/08 10:15:31 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/09/29 13:03:04 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -985,6 +985,42 @@ may be overwritten by the execution host local configuration.
 .SS "\fBqmaster_params\fP"
 A list of additional parameters can be passed to the 
 xxQS_NAMExx qmaster. The following values are recognized:
+.IP "\fIENABLE_ENFORCE_MASTER_LIMIT\fP"
+If this parameter is set then the \fBs_rt\fP, \fBh_rt\fP limit of a running job 
+are tested and executed by the 
+.M xxqs_name_sxx_qmaster 8
+when the 
+.M xxqs_name_sxx_execd 8
+where the job is in unknown state.
+.sp 1
+After \fBs_rt\fB or \fBh_rt\fP limit of a job is expired then the master daemon will 
+wait additional time defined by \fBDURATION_OFFSET\fP (see 
+.M sched_conf 5 ). 
+If the execution daemon still cannot be contacted when this 
+additional time is elapsed, then the master daemon will force 
+the deletion of the job (see \fB-f\fP of 
+.M qdel 1 ).
+.sp 1
+For jobs which will be deleted that way an accounting record will be created. 
+As usage the record will contain the last reported online usage, when the 
+execution daemon could contact qmaster. The \fBfailed\fP state in the record 
+will be set to 37 to indicate that the job was terminated by a limit enforcement 
+of master daemon.
+.sp 1
+After the restart of 
+.M xxqs_name_sxx_qmaster 8
+the limit enforcement will at first be triggered after the double of the 
+biggest \fBload_report_interval\fP interval defined in 
+.M sge_conf 5
+has been elapsed. This will give the execution daemons enough time to 
+reregister at master daemon. 
+.\"
+.IP "\fIENABLE_FORCED_QDEL_IF_UNKNOWN\fP"
+If this parameter is set then a deletion request for a job is automatically interpreted 
+as a forced deletion request (see \fB-f\fP of 
+.M qdel 1 ) 
+if the host, where the job is running is in unknown state.
+.\"
 .IP "\fIENABLE_FORCED_QDEL\fP"
 If this parameter is set, non-administrative users can force deletion of
 their own jobs via the \fI\-f\fP option of

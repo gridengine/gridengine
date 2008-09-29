@@ -58,7 +58,8 @@ typedef enum {
    TYPE_JOB_NUMBER_EVENT,/**/
    TYPE_ACCOUNTING_TRIGGER,/**/
    TYPE_AR_ID_EVENT,/**/
-   TYPE_AR_EVENT,
+   TYPE_AR_EVENT, /**/
+   TYPE_ENFORCE_LIMIT_EVENT, /**/
 
    /* EB: TODO: ST: can be removed after full scheduler is part of master process */
    TYPE_ORDER_PROCESSING_EVENT
@@ -128,6 +129,7 @@ extern te_event_t te_new_event(time_t, te_type_t, te_mode_t, u_long32, u_long32,
 extern void       te_free_event(te_event_t*);
 extern void       te_add_event(te_event_t);
 extern int        te_delete_one_time_event(te_type_t, u_long32, u_long32, const char*);     
+extern int        te_delete_all_one_time_events(te_type_t aType);
 extern void       te_shutdown(void);
 
 extern time_t      te_get_when(te_event_t);
@@ -135,7 +137,7 @@ extern te_type_t   te_get_type(te_event_t);
 extern te_mode_t   te_get_mode(te_event_t);
 extern u_long32    te_get_first_numeric_key(te_event_t);
 extern u_long32    te_get_second_numeric_key(te_event_t);
-extern const char* te_get_alphanumeric_key(te_event_t);
+extern char*       te_get_alphanumeric_key(te_event_t);
 extern u_long32    te_get_sequence_number(te_event_t);
 
 #endif /* __SGE_QMASTER_TIMED_EVENT_H__ */

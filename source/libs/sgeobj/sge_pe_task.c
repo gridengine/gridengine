@@ -207,6 +207,7 @@ pe_task_sum_past_usage_list(lList *pe_task_list, const lListElem *pe_task)
    if (container == NULL) {
       container = lCreateElem(PET_Type);
       lSetString(container, PET_id, PE_TASK_PAST_USAGE_CONTAINER);
+      lSetBool(container, PET_do_contact, true);
       lInsertElem(pe_task_list, NULL, container);
    }
 

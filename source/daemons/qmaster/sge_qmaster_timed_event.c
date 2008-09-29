@@ -72,6 +72,114 @@ handler_tbl_t Handler_Tbl = {
    NULL
 };
 
+/****** qmaster/sge_qmaster_timed_event/te_delete_all_or_one_time_event() *************
+*  NAME
+*     te_delete_all_or_one_time_event() -- Delete one time events 
+*
+*  SYNOPSIS
+*     int 
+*     te_delete_all_or_one_time_event(te_type_t aType, u_long32 aKey1, 
+*                                     u_long32 aKey2, const char* aStrKey,
+*                                     bool ignore_keys) 
+*
+*  FUNCTION
+*     Delete one or more one-time events. All one-time events which do EXACTLY
+*     match the given arguments will be deleted from the event list if 
+*     ignore_keys is false. Otherwise all one-time events of the given type
+*     will be removed.
+*
+*     If a timed event is scheduled for delivery, it will NOT be deleted,
+*     even if it does match the arguments. Such an event will be deleted after
+*     event delivery has been finished.
+*
+*  INPUTS
+*     te_type_t aType     - event type 
+*     u_long32 aKey1      - first numeric key 
+*     u_long32 aKey2      - second numeric key 
+*     const char* aStrKey - alphanumeric key 
+*     bool ignore_kezs    - boolean flag
+*
+*  RESULT
+*     int - number of events deleted
+*
+*  NOTES
+*     MT-NOTE: te_delete_all_or_one_time_event() is MT safe. 
+*     MT-NOTE:
+*     MT-NOTE: If a timed event has been deleted we need to signal the event
+*     MT-NOTE: delivery thread. This is because the event delivery thread
+*     MT-NOTE: maybe waiting until the just deleted event becomes due. Event
+*     MT-NOTE: deletion is communicated by setting 'Event_Control.delete'
+*     MT-NOTE: to 'true'.
+*******************************************************************************/
+static int 
+te_delete_all_or_one_time_event(te_type_t aType, u_long32 aKey1, u_long32 aKey2, const char* strKey, bool ignore_keys)     
+{
+   int res, n = 0;
+   lCondition *cond = NULL;
+
+   DENTER(EVENT_LAYER, "te_delete_event");
+
+
+   DPRINTF(("%s: (t:"sge_u32" u1:"sge_u32" u2:"sge_u32" s:%s)\n", SGE_FUNC, aType, aKey1, aKey2, strKey?strKey:MSG_SMALLNULL));
+
+   if (ignore_keys) {
+      cond = lWhere("%T(%I != %u || %I != %u)", TE_Type, TE_type, aType, TE_mode, ONE_TIME_EVENT);
+   } else {
+      if (strKey != NULL) {
+         cond = lWhere("%T(%I != %u || %I != %u || %I != %u || %I != %u || %I != %s)", TE_Type,
+            TE_type, aType, TE_mode, ONE_TIME_EVENT, TE_uval0, aKey1, TE_uval1, aKey2, TE_sval, strKey);
+      } else {
+         cond = lWhere("%T(%I != %u || %I != %u || %I != %u || %I != %u)", TE_Type,
+            TE_type, aType, TE_mode, ONE_TIME_EVENT, TE_uval0, aKey1, TE_uval1, aKey2);
+      
+      }
+   }
+
+   sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
+
+   n = lGetNumberOfElem(Event_Control.list);
+
+   if (0 == n)
+   {
+      DPRINTF(("%s: event list empty!\n", SGE_FUNC));
+
+      sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
+   
+      lFreeWhere(&cond);
+   
+      DEXIT;
+      return 0;  
+   }
+
+   lSplit(&Event_Control.list, NULL, NULL, cond);
+
+   if (NULL == Event_Control.list)
+   {
+      DPRINTF(("%s: event list has been freed --> recreate \n", SGE_FUNC));
+
+      Event_Control.list = lCreateList("timed event list", TE_Type);
+      res = n; /* all elements have been deleted */
+   } else {
+      res = n - lGetNumberOfElem(Event_Control.list);
+   }
+
+   if( res > 0)
+   {
+      Event_Control.delete = true;
+
+      pthread_cond_signal(&Event_Control.cond_var);
+
+      DPRINTF(("%s: did delete %d event!\n", SGE_FUNC, res));
+   }
+
+   sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
+
+   lFreeWhere(&cond);
+
+   DEXIT;
+   return res;
+} 
+
 /****** sge_qmaster_timed_event/te_wait_empty() ***********************
 *  NAME
 *     te_wait_empty() -- waits, if the event list is empty
@@ -410,71 +518,53 @@ void te_add_event(te_event_t anEvent)
 *     MT-NOTE: maybe waiting until the just deleted event becomes due. Event
 *     MT-NOTE: deletion is communicated by setting 'Event_Control.delete'
 *     MT-NOTE: to 'true'.
-*
 *******************************************************************************/
-int te_delete_one_time_event(te_type_t aType, u_long32 aKey1, u_long32 aKey2, const char* strKey)     
+int te_delete_one_time_event(te_type_t aType, u_long32 aKey1, u_long32 aKey2, const char* strKey) 
 {
-   int res, n = 0;
-   lCondition *cond = NULL;
+   int ret;
 
-   DENTER(EVENT_LAYER, "te_delete_event");
+   DENTER(EVENT_LAYER, "te_delete_one_time_event");
+   ret = te_delete_all_or_one_time_event(aType, aKey1, aKey2, strKey, false);
+   DRETURN(ret); 
+}
 
+/****** qmaster/sge_qmaster_timed_event/te_delete_all_one_time_event() *************
+*  NAME
+*     te_delete_all_one_time_event() -- Delete one time events 
+*
+*  SYNOPSIS
+*     int te_delete_all_one_time_event(te_type_t aType);
+*
+*  FUNCTION
+*     Delete all one-time events of the given type. 
+*
+*     If a timed event is scheduled for delivery, it will will NOT be deleted,
+*     even if it does match the arguments. Such an event will be deleted after
+*     event delivery has been finished.
+*
+*  INPUTS
+*     te_type_t aType     - event type 
+*
+*  RESULT
+*     int - number of events deleted
+*
+*  NOTES
+*     MT-NOTE: te_delete_all_one_time_event() is MT safe. 
+*     MT-NOTE:
+*     MT-NOTE: If a timed event has been deleted we need to signal the event
+*     MT-NOTE: delivery thread. This is because the event delivery thread
+*     MT-NOTE: maybe waiting until the just deleted event becomes due. Event
+*     MT-NOTE: deletion is communicated by setting 'Event_Control.delete'
+*     MT-NOTE: to 'true'.
+*******************************************************************************/
+int te_delete_all_one_time_events(te_type_t aType) {
+   int ret;
 
-   DPRINTF(("%s: (t:"sge_u32" u1:"sge_u32" u2:"sge_u32" s:%s)\n", SGE_FUNC, aType, aKey1, aKey2, strKey?strKey:MSG_SMALLNULL));
+   DENTER(EVENT_LAYER, "te_delete_all_one_time_events");
+   ret = te_delete_all_or_one_time_event(aType, 0, 0, NULL, true);
+   DRETURN(ret);
+}
 
-   if (strKey != NULL) {
-      cond = lWhere("%T(%I != %u || %I != %u || %I != %u || %I != %u || %I != %s)", TE_Type,
-         TE_type, aType, TE_mode, ONE_TIME_EVENT, TE_uval0, aKey1, TE_uval1, aKey2, TE_sval, strKey);
-   } else {
-      cond = lWhere("%T(%I != %u || %I != %u || %I != %u || %I != %u)", TE_Type,
-         TE_type, aType, TE_mode, ONE_TIME_EVENT, TE_uval0, aKey1, TE_uval1, aKey2);
-   
-   }
-
-   sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
-
-   n = lGetNumberOfElem(Event_Control.list);
-
-   if (0 == n)
-   {
-      DPRINTF(("%s: event list empty!\n", SGE_FUNC));
-
-      sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
-   
-      lFreeWhere(&cond);
-   
-      DEXIT;
-      return 0;  
-   }
-
-   lSplit(&Event_Control.list, NULL, NULL, cond);
-
-   if (NULL == Event_Control.list)
-   {
-      DPRINTF(("%s: event list has been freed --> recreate \n", SGE_FUNC));
-
-      Event_Control.list = lCreateList("timed event list", TE_Type);
-      res = n; /* all elements have been deleted */
-   } else {
-      res = n - lGetNumberOfElem(Event_Control.list);
-   }
-
-   if( res > 0)
-   {
-      Event_Control.delete = true;
-
-      pthread_cond_signal(&Event_Control.cond_var);
-
-      DPRINTF(("%s: did delete %d event!\n", SGE_FUNC, res));
-   }
-
-   sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
-
-   lFreeWhere(&cond);
-
-   DEXIT;
-   return res;
-} /* te_delete_one_time_event() */
 
 /****** qmaster/sge_qmaster_timed_event/te_get_when() **************************
 *  NAME
@@ -651,7 +741,7 @@ u_long32 te_get_second_numeric_key(te_event_t anEvent)
 *     te_get_alphanumeric_key() -- Return timed event alphanumeric key. 
 *
 *  SYNOPSIS
-*     const char* te_get_alphanumeric_key(te_event_t anEvent) 
+*     char* te_get_alphanumeric_key(te_event_t anEvent) 
 *
 *  FUNCTION
 *     Return timed event alphanumeric key. 
@@ -662,15 +752,15 @@ u_long32 te_get_second_numeric_key(te_event_t anEvent)
 *     te_event_t anEvent - timed event 
 *
 *  RESULT
-*     const char* - alphanumeric key or MSG_SMALLNULL if no key is set.
+*     char* - alphanumeric key or MSG_SMALLNULL if no key is set.
 *
 *  NOTES
 *     MT-NOTE: 'te_get_alphanumeric_key()' is MT safe. 
 *
 *******************************************************************************/
-const char* te_get_alphanumeric_key(te_event_t anEvent)
+char* te_get_alphanumeric_key(te_event_t anEvent)
 {
-   const char* res = NULL;
+   char* res = NULL;
 
    DENTER(EVENT_LAYER, "te_get_alphanumeric_key");
 
@@ -678,9 +768,8 @@ const char* te_get_alphanumeric_key(te_event_t anEvent)
 
    res = (anEvent->str_key != NULL) ? strdup(anEvent->str_key) : NULL;
 
-   DEXIT;
-   return res;
-} /* te_get_alphanumeric_key() */
+   DRETURN(res);
+}
 
 /****** qmaster/sge_qmaster_timed_event/te_get_sequence_number() ***************
 *  NAME

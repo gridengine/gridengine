@@ -86,6 +86,7 @@
 #include "sge_reporting_qmaster.h"
 #include "sge_advance_reservation_qmaster.h"
 #include "sge_bootstrap.h"
+#include "sge_job_enforce_limit.h"
 
 #include "sgeobj/sge_object.h"
 
@@ -686,6 +687,9 @@ void sge_mark_unheard(lListElem *hep) {
 
    lSetUlong(hep, EH_lt_heard_from, 0);
 
+   /* add a trigger to enforce limits when they are exceeded */
+   sge_host_add_enforce_limit_trigger(host);
+
    /* hedeby depends on this event */
    sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, host, NULL, NULL, hep);
 
@@ -726,6 +730,10 @@ void sge_update_load_values(sge_gdi_ctx_class_t *ctx, const char *rhost, lList *
    if (lGetUlong(host_ep, EH_lt_heard_from) == 0) {
       cqueue_list_set_unknown_state(*(object_type_get_master_list(SGE_TYPE_CQUEUE)),
                                     rhost, true, false);
+
+      /* remove a trigger to enforce limits when they are exceeded */
+      sge_host_remove_enforce_limit_trigger(rhost);
+
       lSetUlong(host_ep, EH_lt_heard_from, sge_get_gmt());
    }
 
@@ -890,7 +898,10 @@ void sge_load_value_cleanup_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent
       cqueue_list_set_unknown_state(
             *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
             host, true, true);
-    
+
+      /* add a trigger to enforce limits when they are exceeded */
+      sge_host_add_enforce_limit_trigger(host);
+
       /* hedeby depends on this event */
       sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, host, NULL, NULL, hep);
 

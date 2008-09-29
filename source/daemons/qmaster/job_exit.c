@@ -76,6 +76,8 @@
 #include "sge_qinstance_qmaster.h"
 
 #include "sge_persistence_qmaster.h"
+#include "sge_job_enforce_limit.h"
+
 #include "spool/sge_spooling.h"
 
 /************************************************************************
@@ -109,7 +111,7 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
    lList *saved_gdil;
 
    DENTER(TOP_LAYER, "sge_job_exit");
-   
+
    /* JG: TODO: we'd prefer some more precise timestamp, e.g. from jr */
    timestamp = sge_get_gmt();
                      
@@ -140,6 +142,8 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
    if (!(queueep = cqueue_list_locate_qinstance(*object_base[SGE_TYPE_CQUEUE].list, qname))) {
       ERROR((SGE_EVENT, MSG_JOB_WRITEJFINISH_S, qname));
    }
+
+   sge_job_remove_enforce_limit_trigger(jobid, jataskid);
 
    /* retrieve hostname for later use */
    if (queueep != NULL) {

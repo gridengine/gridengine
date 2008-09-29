@@ -392,7 +392,7 @@ int main(int argc, char **argv)
    lList *resource_match_list = NULL;
    lList *alp = NULL;
    qhost_report_handler_t *report_handler = NULL;
-   bool is_ok = false;
+   int is_ok = 0;
    int qhost_result = 0;
    sge_gdi_ctx_class_t *ctx = NULL;
 
@@ -411,8 +411,7 @@ int main(int argc, char **argv)
    /*
    ** stage 1 of commandline parsing
    */
-   is_ok = sge_parse_cmdline_qhost(argv, environ, &pcmdline, &alp);
-   if (!is_ok) {
+   if (!sge_parse_cmdline_qhost(argv, environ, &pcmdline, &alp)) {
       /*
       ** high level parsing error! sow answer list
       */

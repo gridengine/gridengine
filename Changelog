@@ -1,3 +1,6 @@
+RD-2008-09-29-1: Bugfix:      fixed broken build on irix
+                 Review:      JG
+
 RD-2008-09-29-0: Bugfix:      Fixed potential qmaster crash with schedd_job_info and
                               qsub -w jobs
                  Bugster:     6749902

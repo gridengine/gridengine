@@ -1,3 +1,8 @@
+EB-2008-09-30-0: Bugfix:     merged changes from MAINTRUNC which make
+                             start, end and submit time available in
+                             accounting file when qmaster enforces limits
+                  Review:    TBD 
+
 RD-2008-09-29-0: Enhancem.:  - Improved scheduler message generation
                              - Improved scheduling time by using hash
                  Bugfix      - runtime limits were delayed after execd restart 

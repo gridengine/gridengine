@@ -142,9 +142,9 @@ sge_write_rusage(dstring *buffer,
                            pe_task_id));
          return ret;
       }
-      usage_list = lGetList(pe_task, PET_usage);
+      usage_list = lGetList(pe_task, PET_scaled_usage);
    } else {
-      usage_list = lGetList(ja_task, JAT_usage_list);
+      usage_list = lGetList(ja_task, JAT_scaled_usage_list);
    }
 
    /* for intermediate usage reporting, we need a list containing the already
@@ -165,9 +165,11 @@ sge_write_rusage(dstring *buffer,
          }
       }
 
+      /* use start time from intermediate usage report */
+      start_time = usage_list_get_ulong_usage(reported_list, LAST_INTERMEDIATE, 0);
+
       /* now set actual time as time of last intermediate usage report */
-      usage_list_set_ulong_usage(reported_list, LAST_INTERMEDIATE, 
-                                 now);
+      usage_list_set_ulong_usage(reported_list, LAST_INTERMEDIATE, now);
    } else {
       reported_list = NULL;
    }
@@ -262,12 +264,12 @@ sge_write_rusage(dstring *buffer,
 
    if (intermediate) {
       if (job != NULL && pe_task == NULL) {
-         submission_time = lGetUlong(job, JB_submission_time);
+         submission_time = usage_list_get_ulong_usage(usage_list, "submission_time", lGetUlong(job, JB_submission_time));
       }
       if (ja_task != NULL) {
-         start_time = lGetUlong(ja_task, JAT_start_time);
+         start_time = usage_list_get_ulong_usage(usage_list, "start_time", lGetUlong(ja_task, JAT_start_time));
       }
-      end_time = now;
+      end_time = usage_list_get_ulong_usage(usage_list, "end_time", now);
    } else {
       submission_time = usage_list_get_ulong_usage(usage_list, "submission_time", 0);
       start_time = usage_list_get_ulong_usage(usage_list, "start_time", 0);

@@ -1,3 +1,6 @@
+JG-2008-09-30-0: Enhancem.:  Improved handling of invalid requests in sge_execd.
+                 Review:     RD
+
 CR-2008-09-30-0: Bugfix:     fixed broken build
                  Review:     RD
 

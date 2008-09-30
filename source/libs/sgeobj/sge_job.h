@@ -300,7 +300,7 @@ bool sge_unparse_queue_list_dstring(dstring *category_str, lListElem *job_elem,
 bool sge_unparse_acl_dstring(dstring *category_str, const char *owner, const char *group, 
                              const lList *acl_list, const char *option);
 
-bool job_verify(const lListElem *job, lList **answer_list);
+bool job_verify(const lListElem *job, lList **answer_list, bool do_cull_verify);
 bool job_verify_submitted_job(const lListElem *job, lList **answer_list);
 
 bool job_get_wallclock_limit(u_long32 *limit, const lListElem *jep);

@@ -1077,15 +1077,10 @@ int general
    return execd_job_failure(jep, jatep, petep, error_string, general, SSTATE_FAILURE_AFTER_JOB);
 }
 
-static lListElem *execd_job_failure(
-lListElem *jep,
-lListElem *jatep,
-lListElem *petep,
-const char *error_string,
-int general,
-int failed 
-) {
-   lListElem *jr, *ep;
+static lListElem *execd_job_failure(lListElem *jep, lListElem *jatep, lListElem *petep,
+                                    const char *error_string, int general, int failed)
+{
+   lListElem *jr, *ep = NULL;
    u_long32 jobid, jataskid = 0;
    const char *petaskid = NULL;
 
@@ -1112,7 +1107,7 @@ int failed
    
    if (petep != NULL) {
       ep = lFirst(lGetList(petep, PET_granted_destin_identifier_list));
-   } else {
+   } else if (jatep != NULL) {
       ep = lFirst(lGetList(jatep, JAT_granted_destin_identifier_list));
    }
 

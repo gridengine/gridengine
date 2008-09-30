@@ -231,6 +231,9 @@ int
 object_get_primary_key(const lDescr *descr);
 
 const char *
+object_get_name(const lDescr *descr);
+
+const char *
 object_get_name_prefix(const lDescr *descr, dstring *buffer);
 
 const char *
@@ -323,6 +326,7 @@ bool
 object_list_has_differences(const lList *this_elem, lList **answer_list,
                             const lList *old_elem, bool modify_changed_flag);
 
+bool object_unpack_elem_verify(lList **answer_list, sge_pack_buffer *pb, lListElem **epp, const lDescr *descr);
 bool object_list_verify_cull(const lList *lp, const lDescr *descr);
 bool object_verify_cull(const lListElem *ep, const lDescr *descr);
 

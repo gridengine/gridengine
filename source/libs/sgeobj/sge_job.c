@@ -3056,6 +3056,7 @@ bool sge_unparse_ulong_option_dstring(dstring *category_str, const lListElem *jo
 *  INPUTS
 *     const lListElem *job - the job object to verify
 *     lList **answer_list  - answer list to pass back error messages
+*     bool do_cull_verify  - do cull verification against the JB_Type descriptor.
 *
 *  RESULT
 *     bool - true on success,
@@ -3074,20 +3075,22 @@ bool sge_unparse_ulong_option_dstring(dstring *category_str, const lListElem *jo
 *     sge_job/job_verify_execd_job()
 *******************************************************************************/
 bool 
-job_verify(const lListElem *job, lList **answer_list)
+job_verify(const lListElem *job, lList **answer_list, bool do_cull_verify)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "job_verify");
 
    if (job == NULL) {
-      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, "NULL pointer argument");
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                              MSG_NULLELEMENTPASSEDTO_S, "job_verify");
       DRETURN(false);
    }
 
-   if (ret) {
+   if (ret && do_cull_verify) {
       if (!object_verify_cull(job, JB_Type)) {
-         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, "corrupted cull structure or reduced element");
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                 MSG_OBJECT_STRUCTURE_ERROR);
          ret = false;
       }
    }
@@ -3198,7 +3201,7 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
 
    DENTER(TOP_LAYER, "job_verify_submitted_job");
 
-   ret = job_verify(job, answer_list);
+   ret = job_verify(job, answer_list, true);
 
    /* JB_job_number must me 0 */
    if (ret) {

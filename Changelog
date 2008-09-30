@@ -4,8 +4,8 @@ RD-2008-09-30-0: Enhancem.:  - Improved scheduling time by using hash
                  Bugster:    6754094
                  Review:     CR
 
-CR-2008-09-29-0: Bugfix:      execd reconnect can take up to 90 seconds after qmaster
-                              restart
+CR-2008-09-29-0: Bugfix:      execd reconnect can take up to 90 seconds after
+                              qmaster restart
                  Cleanup:     cleanup of queue - initial_state implementation
                  Bugster:     6753642
                  Issue:       2741

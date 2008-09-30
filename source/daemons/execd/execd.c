@@ -284,7 +284,7 @@ int main(int argc, char **argv)
    }
    
    /* here we have to wait for qmaster registration */
-   while (sge_execd_register_at_qmaster(ctx, true) != 0) {
+   while (sge_execd_register_at_qmaster(ctx, false) != 0) {
       if (sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED, false)) {
          execd_exit_state = SGE_COM_ACCESS_DENIED;
          break;
@@ -444,47 +444,68 @@ static void execd_exit_func(void **ctx_ref, int i)
 int sge_execd_register_at_qmaster(sge_gdi_ctx_class_t *ctx, bool is_restart) {
    int return_value = 0;
    static int sge_last_register_error_flag = 0;
-   lList *hlp = NULL, *alp = NULL;
-   lListElem *aep = NULL;
-   lListElem *hep = NULL;
+   lList *alp = NULL;
+
+   /* 
+    * If it is a reconnect (is_restart == true) the act_qmaster file must be
+    * re-read in order to update ctx qmaster cache when master migrates. 
+    */
    const char *master_host = ctx->get_master(ctx, is_restart);
    
    DENTER(TOP_LAYER, "sge_execd_register_at_qmaster");
 
-   hlp = lCreateList("exechost starting", EH_Type);
-   hep = lCreateElem(EH_Type);
-   lSetUlong(hep, EH_featureset_id, feature_get_active_featureset_id());
-   lAppendElem(hlp, hep);
+   /* We will not try to make a gdi request when qmaster is not alive. The
+    * gdi will return with timeout after one minute. If qmaster is not alive
+    * we will not try a gdi request!
+    */
+   if (ctx->is_alive(ctx) == CL_RETVAL_OK) {
+      lList *hlp = lCreateList("exechost starting", EH_Type);
+      lListElem *hep = lCreateElem(EH_Type);
+      lSetUlong(hep, EH_featureset_id, feature_get_active_featureset_id());
+      lAppendElem(hlp, hep);
 
-   /* register at qmaster */
-   DPRINTF(("*****  Register at qmaster   *****\n"));
-   if (!is_restart) {
-      /*
-       * This is a regular startup.
-       */
-      alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_ADD, &hlp, NULL, NULL);
+      /* register at qmaster */
+      DPRINTF(("*****  Register at qmaster   *****\n"));
+      if (!is_restart) {
+         /*
+          * This is a regular startup.
+          */
+         alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_ADD, &hlp, NULL, NULL);
+      } else {
+         /*
+          * Indicate this is a restart to qmaster.
+          * This is used for the initial_state of queue_configuration implementation.
+          */
+         alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_ADD | SGE_GDI_EXECD_RESTART,
+                        &hlp, NULL, NULL);
+      }
+      lFreeList(&hlp);
    } else {
-      /*
-       * Indicate this is a restart to qmaster.
-       */
-      alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_ADD | SGE_GDI_EXECD_RESTART,
-		               &hlp, NULL, NULL);
+       DPRINTF(("*****  Register at qmaster - qmaster not alive!  *****\n"));
    }
-   aep = lFirst(alp);
-   if (!alp || (lGetUlong(aep, AN_status) != STATUS_OK)) {
+
+   if (alp == NULL) {
       if (sge_last_register_error_flag == 0) {
-         WARNING((SGE_EVENT, MSG_COM_CANTREGISTER_S, 
-                  aep?lGetString(aep, AN_text):MSG_COM_ERROR));
+         WARNING((SGE_EVENT, MSG_COM_CANTREGISTER_SS, master_host?master_host:"", MSG_COM_ERROR));
          sge_last_register_error_flag = 1;
       }
       return_value = 1;
    } else {
-      sge_last_register_error_flag = 0;
-      INFO((SGE_EVENT, MSG_EXECD_REGISTERED_AT_QMASTER_S, master_host));
+      lListElem *aep = lFirst(alp);
+      if (lGetUlong(aep, AN_status) != STATUS_OK) {
+         if (sge_last_register_error_flag == 0) {
+            WARNING((SGE_EVENT, MSG_COM_CANTREGISTER_SS, master_host?master_host:"", lGetString(aep, AN_text)));
+            sge_last_register_error_flag = 1;
+         }
+         return_value = 1;
+      }
    }
-
+ 
+   if (return_value == 0) {
+      sge_last_register_error_flag = 0;
+      INFO((SGE_EVENT, MSG_EXECD_REGISTERED_AT_QMASTER_S, master_host?master_host:""));
+   }
    lFreeList(&alp);
-   lFreeList(&hlp);
    DRETURN(return_value);
 }
 

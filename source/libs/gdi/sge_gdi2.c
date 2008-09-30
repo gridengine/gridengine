@@ -670,8 +670,13 @@ sge_gdi2_get_any_request(sge_gdi_ctx_class_t *ctx, char *rhost,
    
    handle = ctx->get_com_handle(ctx);
 
-   /* trigger communication or wait for a new message (select timeout) */
-   cl_commlib_trigger(handle, synchron); /* RD: is this trigger really necessary? */
+   /* TODO: do trigger or not? depends on syncrhron
+    * TODO: Remove synchron flag from this function, it is only used for get_event_list call in event client.
+            event client code should be re-written, not to use this synchron flag set to false
+    */
+   if (synchron == 0) {
+      cl_commlib_trigger(handle, 0);
+   }
 
    i = cl_commlib_receive_message(handle, rhost, commproc, usid, 
                                   (cl_bool_t) synchron, for_request_mid, 

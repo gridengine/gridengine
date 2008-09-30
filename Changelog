@@ -1,3 +1,10 @@
+CR-2008-09-29-0: Bugfix:      execd reconnect can take up to 90 seconds after qmaster
+                              restart
+                 Cleanup:     cleanup of queue - initial_state implementation
+                 Bugster:     6753642
+                 Issue:       2741
+                 Review:      RD
+
 EB_2008-08-09-29-0: Enhancem.: relaxed accounting
                             - write accounting record if job is deleted with
                               forced attribute. Online usage will be used for

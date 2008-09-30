@@ -1,3 +1,9 @@
+RD-2008-09-30-0: Enhancem.:  - Improved scheduling time by using hash
+                 Bugfix      - runtime limits were delayed after execd restart 
+                 Issue:      2743
+                 Bugster:    6754094
+                 Review:     CR
+
 CR-2008-09-29-0: Bugfix:      execd reconnect can take up to 90 seconds after qmaster
                               restart
                  Merged from: maintrunk: CR-2008-09-29-0

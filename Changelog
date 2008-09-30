@@ -1,4 +1,4 @@
-RD-2008-09-29-0: Enhancem.:  - Improved scheduling time by using hash
+RD-2008-09-30-0: Enhancem.:  - Improved scheduling time by using hash
                  Bugfix      - runtime limits were delayed after execd restart 
                  Issue:      2743
                  Bugster:    6754094

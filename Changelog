@@ -1,3 +1,6 @@
+CR-2008-09-30-0: Bugfix:     fixed broken build
+                 Review:     RD
+
 RD-2008-09-30-0: Enhancem.:  - Improved scheduling time by using hash
                  Bugfix      - runtime limits were delayed after execd restart 
                  Issue:      2743

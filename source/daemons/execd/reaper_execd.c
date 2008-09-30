@@ -1311,7 +1311,7 @@ int clean_up_old_jobs(sge_gdi_ctx_class_t *ctx, int startup)
 }
 
 static void 
-examine_job_task_from_file(int startup, char *dir, lListElem *jep,
+examine_job_task_from_file(sge_gdi_ctx_class_t *ctx, int startup, char *dir, lListElem *jep,
                            lListElem *jatep, lListElem *petep, pid_t *pids, 
                            int npids) 
 {

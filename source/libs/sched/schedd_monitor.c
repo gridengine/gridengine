@@ -88,19 +88,20 @@ void set_monitor_alpp(lList **alpp) {
    monitor_next_run = (alpp!=NULL)?true:false;
 }
 
+lList **get_monitor_alpp(void) {
+   return monitor_alpp;
+}
+
 int schedd_log(const char *logstr) 
 {
    DENTER(TOP_LAYER, "schedd_log");
 
-   if (!monitor_next_run) {
-      DEXIT;
-      return 0;
-   }
-
    if (monitor_alpp) {
       answer_list_add(monitor_alpp, logstr, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
    } 
-   else {
+
+   if (monitor_next_run){
+      /* do logging (-tsm) */
       time_t now;
       FILE *fp = NULL;
       char *time_str = NULL;
@@ -124,12 +125,10 @@ int schedd_log(const char *logstr)
       FCLOSE(fp);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 FCLOSE_ERROR:
    DPRINTF((MSG_FILE_ERRORCLOSEINGXY_SS, schedd_log_file, strerror(errno)));
-   DEXIT;
-   return -1;
+   DRETURN(-1);
 }
 
 

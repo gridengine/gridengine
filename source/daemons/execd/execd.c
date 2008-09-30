@@ -294,7 +294,7 @@ int main(int argc, char **argv)
                           job_initialize_job);
    
    /* clean up jobs hanging around (look in active_dir) */
-   clean_up_old_jobs(1);
+   clean_up_old_jobs(ctx, 1);
    sge_send_all_reports(ctx, 0, NUM_REP_REPORT_JOB, execd_report_sources);
 
    sge_sig_handler_in_main_loop = 1;

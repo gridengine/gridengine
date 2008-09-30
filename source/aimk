@@ -1647,7 +1647,7 @@ case SOLARISAMD64:
       endif
    endif
 
-   set LFLAGS   = "$LFLAGS $DEBUG_FLAG"
+   set LFLAGS   = "$LFLAGS $DEBUG_FLAG -lmtmalloc"
    set LIBS     = "-lsocket -lnsl $LIBS"
    set LOADAVGLIBS = "-lkstat"
    set FSTYPELIBS = "-lkstat"

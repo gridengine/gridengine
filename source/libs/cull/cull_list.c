@@ -2365,7 +2365,9 @@ int lSortList(lList *lp, const lSortOrder *sp)
 
    free(pointer);
 
-   /* JG: TODO: is sorting changing the list? */
+   /* Recreate the hash */
+   cull_hash_free_descr(lp->descr);
+   cull_hash_create_hashtables(lp);
 
    DRETURN(0);
 }

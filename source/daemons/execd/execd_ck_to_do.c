@@ -505,9 +505,13 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx)
                   lSetUlong(jep, JB_hard_wallclock_gmt, 
                             MIN(lGetUlong(jep, JB_hard_wallclock_gmt), duration_add_offset(now, task_wallclock_limit)));
                }
+               if (!mconf_get_simulate_jobs()) {
+                  job_write_spool_file(jep, lGetUlong(jatep, JAT_task_number), 
+                                       NULL, SPOOL_WITHIN_EXECD);
+               }
             }
             
-            if (now >= lGetUlong(jep, JB_hard_wallclock_gmt) ) {
+            if (now >= lGetUlong(jep, JB_hard_wallclock_gmt)) {
                if (!(lGetUlong(jatep, JAT_pending_signal_delivery_time)) ||
                    (now > lGetUlong(jatep, JAT_pending_signal_delivery_time))) {
                   WARNING((SGE_EVENT, MSG_EXECD_EXCEEDHWALLCLOCK_UU,
@@ -550,7 +554,7 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx)
 
    if (next_old_job <= now) {
       next_old_job = now + OLD_JOB_INTERVAL;
-      clean_up_old_jobs(0);
+      clean_up_old_jobs(ctx, 0);
    }
 
    /* check for end of simulated jobs */

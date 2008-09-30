@@ -3751,6 +3751,7 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
              */
 
             if (lGetElemHost(a->queue_list, QU_qhostname, eh_name)) {
+               const void *iter = NULL;
 
                parallel_tag_hosts_queues(a, hep, &hslots, &hslots_qend, global_soft_violations, 
                    &suited_as_master_host, &host_seqno, &previous_load, &previous_load_inited, use_category,
@@ -3774,11 +3775,9 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                      maxslots = 1;
 
                   /* debit on RQS limits */
-                  for_each (qep, a->queue_list) {
+                  for (qep = lGetElemHostFirst(a->queue_list, QU_qhostname, eh_name, &iter); qep;
+                       qep = lGetElemHostNext(a->queue_list, QU_qhostname, eh_name, &iter)) {
                      const char *qname = lGetString(qep, QU_full_name);
-
-                     if (sge_hostcmp(eh_name, lGetHost(qep, QU_qhostname)))
-                        continue;
 
                      DPRINTF(("tagged: %d maxslots: %d rqs_hslots: %d\n", (int)lGetUlong(qep, QU_tag), maxslots, rqs_hslots));
                      DPRINTF(("SLOT HARVESTING: %s soft violations %d\n", lGetString(qep, QU_full_name), lGetUlong(qep, QU_soft_violation)));
@@ -3827,7 +3826,6 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                   }
 
                   if (rqs_hslots < minslots) {
-                     const void *iter = NULL;
                      DPRINTF(("reverting debitation since "SFQ" gets us only %d slots while min. %d are needed\n",
                            eh_name, rqs_hslots, minslots));
                         
@@ -3873,9 +3871,8 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                      maxslots = 1; 
                   
                   /* debit on RQS limits */
-                  for_each (qep, a->queue_list) {
-                     if (sge_hostcmp(eh_name, lGetHost(qep, QU_qhostname)))
-                        continue;
+                  for (qep = lGetElemHostFirst(a->queue_list, QU_qhostname, eh_name, &iter); qep;
+                       qep = lGetElemHostNext(a->queue_list, QU_qhostname, eh_name, &iter)) {
 
                      slots = 0;
                      slots_qend = MIN(lGetUlong(qep, QU_tag_qend), maxslots - rqs_hslots);

@@ -101,7 +101,7 @@ static lListElem *execd_job_failure(lListElem *jep, lListElem *jatep, lListElem 
 static int read_dusage(lListElem *jr, const char *jobdir, u_long32 jobid, u_long32 jataskid, int failed, int usage_mul_factor);
 static void build_derived_final_usage(lListElem *jr, int usage_mul_factor);
 
-static void examine_job_task_from_file(int startup, char *dir, lListElem *jep, lListElem *jatep, lListElem *petep, pid_t *pids, int npids);
+static void examine_job_task_from_file(sge_gdi_ctx_class_t *ctx, int startup, char *dir, lListElem *jep, lListElem *jatep, lListElem *petep, pid_t *pids, int npids);
 
 
 /*****************************************************************************
@@ -957,7 +957,7 @@ lListElem *jr
          lRemoveElem(lGetList(jatep, JAT_task_list), &petep);
       } else {
          /* check if job has queue limits and decrease global flag if necessary */
-         modify_queue_limits_flag_for_job(ctx->get_unqualified_hostname(ctx), jep, false);
+         modify_queue_limits_flag_for_job(ctx->get_qualified_hostname(ctx), jep, false);
 
          lRemoveElem(*(object_type_get_master_list(SGE_TYPE_JOB)), &jep);
       }
@@ -1169,7 +1169,7 @@ char *qname
  If startup is true this is the first call of the execd. We produce more
  output for the administrator the first time.
  ************************************************************************/
-int clean_up_old_jobs(int startup)
+int clean_up_old_jobs(sge_gdi_ctx_class_t *ctx, int startup)
 {
    SGE_STRUCT_DIRENT *dent = NULL;
    DIR *cwd = NULL;
@@ -1291,11 +1291,11 @@ int clean_up_old_jobs(int startup)
       }
       if (lGetUlong(jatep, JAT_status) != JSLAVE) {
          sprintf(dir, "%s/%s", ACTIVE_DIR, jobdir);
-         examine_job_task_from_file(startup, dir, jep, jatep, NULL, pids, npids);
+         examine_job_task_from_file(ctx, startup, dir, jep, jatep, NULL, pids, npids);
       }
       for_each(petep, lGetList(jatep, JAT_task_list)) {
          sprintf(dir, "%s/%s/%s", ACTIVE_DIR, jobdir, lGetString(petep, PET_id));
-         examine_job_task_from_file(startup, dir, jep, jatep, petep, pids, npids);
+         examine_job_task_from_file(ctx, startup, dir, jep, jatep, petep, pids, npids);
       }
    }    /* while (dent=SGE_READDIR(cwd)) */
 
@@ -1306,7 +1306,7 @@ int clean_up_old_jobs(int startup)
 }
 
 static void 
-examine_job_task_from_file(int startup, char *dir, lListElem *jep,
+examine_job_task_from_file(sge_gdi_ctx_class_t *ctx, int startup, char *dir, lListElem *jep,
                            lListElem *jatep, lListElem *petep, pid_t *pids, 
                            int npids) 
 {
@@ -1402,8 +1402,8 @@ examine_job_task_from_file(int startup, char *dir, lListElem *jep,
            dir, sge_u32c(pid), (shepherd_alive ? "": MSG_NOT));
    if (startup) {
       INFO((SGE_EVENT, err_str));
-   }
-   else {
+      modify_queue_limits_flag_for_job(ctx->get_qualified_hostname(ctx), jep, true);
+   } else {
       DPRINTF((err_str));
    }
 

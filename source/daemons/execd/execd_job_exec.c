@@ -418,7 +418,7 @@ static int handle_job(sge_gdi_ctx_class_t *ctx, lListElem *jelem, lListElem *jat
    }   
 
    /* check if job has queue limits and increase global flag if necessary */
-   modify_queue_limits_flag_for_job(ctx->get_unqualified_hostname(ctx), jelem, true);
+   modify_queue_limits_flag_for_job(ctx->get_qualified_hostname(ctx), jelem, true);
 
    /* put into job list */
    lAppendElem(*(object_type_get_master_list(SGE_TYPE_JOB)), jelem);

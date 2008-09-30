@@ -38,6 +38,7 @@
 
 /* registers answer list to be used */
 void set_monitor_alpp(lList **alpp);
+lList **get_monitor_alpp(void);
 
 /* retunrs string representation of jobid */
 const char *job_descr(u_long32 jobid);

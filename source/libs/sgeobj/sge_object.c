@@ -576,6 +576,50 @@ object_get_name_prefix(const lDescr *descr, dstring *buffer)
    return NULL;
 }
 
+/****** sge_object/object_get_name() *******************************************
+*  NAME
+*     object_get_name() -- get the object name by object descriptor
+*
+*  SYNOPSIS
+*     const char *
+*     object_get_name(const lDescr *descr) 
+*
+*  FUNCTION
+*     Returns the object name for a given descriptor.
+*     If the descriptor doesn't match a descriptor in object_base,
+*     return "unknown".
+*
+*  INPUTS
+*     const lDescr *descr - descriptor.
+*
+*  RESULT
+*     const char * - the object name
+*
+*  EXAMPLE
+*     object_get_name(JOB_Type) returns "JOB"
+*
+*  NOTES
+*     MT-NOTE: object_get_name() is MT safe 
+*******************************************************************************/
+const char *
+object_get_name(const lDescr *descr)
+{
+   const char *name = "unknown";
+
+   if (descr != NULL) {
+      int i;
+
+      for (i = SGE_TYPE_ADMINHOST; i < SGE_TYPE_ALL; i++) {
+         if (object_base[i].descr == descr) {
+            name = object_base[i].type_name;
+            break;
+         }
+      }
+   }
+
+   return name;
+}
+
 /****** sgeobj/object/object_append_field_to_dstring() ************************
 *  NAME
 *     object_append_field_to_dstring() -- object field to string
@@ -1420,7 +1464,7 @@ bool object_type_free_master_list(const sge_object_type type)
           ret = true;
       }
    } else {
-         ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
+      ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
    }
 
    DRETURN(ret);
@@ -2917,3 +2961,65 @@ int compress_ressources(lList **alpp, lList *rl, const char *object_descr) {
 
    DRETURN(0);
 }
+
+/****** sge_object/object_unpack_elem_verify() *********************************
+*  NAME
+*     object_unpack_elem_verify() -- unpack and verify an object
+*
+*  SYNOPSIS
+*     bool 
+*     object_unpack_elem_verify(lList **answer_list, sge_pack_buffer *pb, 
+*                               lListElem **epp, const lDescr *descr) 
+*
+*  FUNCTION
+*     Unpacks the given packbuffer.
+*     If unpacking was successfull, verifies the object
+*     against the given descriptor.
+*
+*  INPUTS
+*     lList **answer_list - answer list to report errors
+*     sge_pack_buffer *pb - the packbuffer containing the object
+*     lListElem **epp     - element pointer to pass back the unpacked object
+*     const lDescr *descr - the expected object type
+*
+*  RESULT
+*     bool - true on success, else false
+*
+*  NOTES
+*     MT-NOTE: object_unpack_elem_verify() is MT safe 
+*
+*  SEE ALSO
+*     sge_object/object_verify_cull()
+*******************************************************************************/
+bool object_unpack_elem_verify(lList **answer_list, sge_pack_buffer *pb, lListElem **epp, const lDescr *descr)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "object_unpack_elem_verify");
+
+   if (pb == NULL || epp == NULL || descr == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                              MSG_NULLELEMENTPASSEDTO_S, "object_unpack_elem_verify");
+      ret = false;
+   }
+
+   if (ret) {
+      if (cull_unpack_elem(pb, epp, NULL) != 0) {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                 MSG_COM_UNPACKOBJ_S, object_get_name(descr));
+         ret = false;
+      }
+   }
+
+   if (ret) {
+      if (!object_verify_cull(*epp, descr)) {
+         lFreeElem(epp);
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                 MSG_OBJECT_STRUCTURE_ERROR);
+         ret = false;
+      }
+   }
+
+   DRETURN(ret);
+}
+

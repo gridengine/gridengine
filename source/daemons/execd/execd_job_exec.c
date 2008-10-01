@@ -111,14 +111,15 @@ int do_job_exec(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, sge_pack_buffer *a
          DRETURN(0);
       }
        
-      if (cull_unpack_elem(&(aMsg->buf), &job, NULL)) {
+      if (!object_unpack_elem_verify(&answer_list, &(aMsg->buf), &job, JB_Type)) {
+         answer_list_output(&answer_list);
          ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
          DRETURN(0);
       }
 
       if (!job_verify_execd_job(job, &answer_list, ctx->get_qualified_hostname(ctx))) {
-         lListElem *ja_task = lFirst(lGetList(job, JB_ja_tasks));
          const char *err_str = lGetString(lFirst(answer_list), AN_text);
+         ja_task = lFirst(lGetList(job, JB_ja_tasks));
 
          /* set the job into error state */
          execd_job_start_failure(job, ja_task, NULL, err_str, GFSTATE_JOB);
@@ -126,6 +127,7 @@ int do_job_exec(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, sge_pack_buffer *a
          /* error output to messages file, cleanup */
          answer_list_output(&answer_list);
          ERROR((SGE_EVENT, MSG_EXECD_INVALIDJOBREQUEST_SS, aMsg->snd_name, aMsg->snd_host));
+         lFreeElem(&job);
          DRETURN(0);
       }
 
@@ -153,7 +155,8 @@ int do_job_exec(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, sge_pack_buffer *a
       lListElem *petrep;
       lList *answer_list = NULL;
 
-      if (cull_unpack_elem(&(aMsg->buf), &petrep, NULL)) {
+      if (!object_unpack_elem_verify(&answer_list, &(aMsg->buf), &petrep, PETR_Type)) {
+         answer_list_output(&answer_list);
          ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
          DRETURN(0);
       }
@@ -186,6 +189,7 @@ int do_job_slave(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
    int ret = 1;
    lListElem *jelem, *ja_task;
    u_long32 feature_set;
+   lList *answer_list = NULL;
 
    DENTER(TOP_LAYER, "do_job_slave");
 
@@ -202,10 +206,12 @@ int do_job_slave(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
    */
 
    /* ------- job */
-   if (cull_unpack_elem(&(aMsg->buf), &jelem, NULL)) {
+   if (!object_unpack_elem_verify(&answer_list, &(aMsg->buf), &jelem, JB_Type)) {
+      answer_list_output(&answer_list);
       ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
       DRETURN(0);
    }
+   lFreeList(&answer_list);
 
    for_each(ja_task, lGetList(jelem, JB_ja_tasks)) {
       DPRINTF(("Job: %ld Task: %ld\n", (long) lGetUlong(jelem, JB_job_number),
@@ -840,7 +846,7 @@ job_verify_execd_job(const lListElem *job, lList **answer_list, const char *qual
 
    DENTER(TOP_LAYER, "job_verify_execd_job");
 
-   ret = job_verify(job, answer_list);
+   ret = job_verify(job, answer_list, false);
 
    /* 
     * A job entering execd must have some additional properties:

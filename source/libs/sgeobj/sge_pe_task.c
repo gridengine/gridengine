@@ -259,14 +259,6 @@ pe_task_verify_request(const lListElem *petr, lList **answer_list) {
       ret = false;
    }
 
-   if (ret) {
-      if (!object_verify_cull(petr, PETR_Type)) {
-         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
-                                 MSG_OBJECT_STRUCTURE_ERROR);
-         ret = false;
-      }
-   }
-
    /* 
     * A pe task request entering execd must have some additional properties: 
     *    - PETR_jobid > 0

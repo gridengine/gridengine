@@ -1,3 +1,8 @@
+JG-2008-10-01-0: Bugfix:     Fixed 2 minor memory leaks found when merging
+                             JG-2008-09-30-0 to V61_BRANCH.
+                             Some cleanup.
+                 Review:     RD
+
 DG-2007-10-01-0: Bugfix:     Man page issue regarding qresub and the -h n
                              parameter. 
                  Issue:      2746

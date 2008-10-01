@@ -2962,6 +2962,35 @@ int compress_ressources(lList **alpp, lList *rl, const char *object_descr) {
    DRETURN(0);
 }
 
+/****** sge_object/object_unpack_elem_verify() *********************************
+*  NAME
+*     object_unpack_elem_verify() -- unpack and verify an object
+*
+*  SYNOPSIS
+*     bool 
+*     object_unpack_elem_verify(lList **answer_list, sge_pack_buffer *pb, 
+*                               lListElem **epp, const lDescr *descr) 
+*
+*  FUNCTION
+*     Unpacks the given packbuffer.
+*     If unpacking was successfull, verifies the object
+*     against the given descriptor.
+*
+*  INPUTS
+*     lList **answer_list - answer list to report errors
+*     sge_pack_buffer *pb - the packbuffer containing the object
+*     lListElem **epp     - element pointer to pass back the unpacked object
+*     const lDescr *descr - the expected object type
+*
+*  RESULT
+*     bool - true on success, else false
+*
+*  NOTES
+*     MT-NOTE: object_unpack_elem_verify() is MT safe 
+*
+*  SEE ALSO
+*     sge_object/object_verify_cull()
+*******************************************************************************/
 bool object_unpack_elem_verify(lList **answer_list, sge_pack_buffer *pb, lListElem **epp, const lDescr *descr)
 {
    bool ret = true;
@@ -2984,6 +3013,7 @@ bool object_unpack_elem_verify(lList **answer_list, sge_pack_buffer *pb, lListEl
 
    if (ret) {
       if (!object_verify_cull(*epp, descr)) {
+         lFreeElem(epp);
          answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
                                  MSG_OBJECT_STRUCTURE_ERROR);
          ret = false;

@@ -118,8 +118,8 @@ int do_job_exec(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, sge_pack_buffer *a
       }
 
       if (!job_verify_execd_job(job, &answer_list, ctx->get_qualified_hostname(ctx))) {
-         lListElem *ja_task = lFirst(lGetList(job, JB_ja_tasks));
          const char *err_str = lGetString(lFirst(answer_list), AN_text);
+         ja_task = lFirst(lGetList(job, JB_ja_tasks));
 
          /* set the job into error state */
          execd_job_start_failure(job, ja_task, NULL, err_str, GFSTATE_JOB);
@@ -127,6 +127,7 @@ int do_job_exec(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, sge_pack_buffer *a
          /* error output to messages file, cleanup */
          answer_list_output(&answer_list);
          ERROR((SGE_EVENT, MSG_EXECD_INVALIDJOBREQUEST_SS, aMsg->snd_name, aMsg->snd_host));
+         lFreeElem(&job);
          DRETURN(0);
       }
 

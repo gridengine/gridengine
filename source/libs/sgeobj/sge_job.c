@@ -1234,7 +1234,7 @@ bool job_is_tight_parallel(const lListElem *job, const lList *pe_list)
 *     const lList *pe_list - PE_Type list with all existing PEs 
 *
 *  RESULT
-*     bool - treu or false
+*     bool - true or false
 *
 *  SEE ALSO
 *     sgeobj/job/job_is_array()
@@ -2561,7 +2561,7 @@ job_get_contribution(const lListElem *this_elem, lList **answer_list,
 
 /****** sge_job/sge_unparse_acl_dstring() **************************************
 *  NAME
-*     sge_unparse_acl_dstring() -- creates a string from teh access lists and user
+*     sge_unparse_acl_dstring() -- creates a string from the access lists and user
 *
 *  SYNOPSIS
 *     bool sge_unparse_acl_dstring(dstring *category_str, const char *owner, 
@@ -2848,6 +2848,7 @@ bool sge_unparse_string_option_dstring(dstring *category_str, const lListElem *j
 *  INPUTS
 *     const lListElem *job - the job object to verify
 *     lList **answer_list  - answer list to pass back error messages
+*     bool do_cull_verify  - do cull verification against the JB_Type descriptor.
 *
 *  RESULT
 *     bool - true on success,
@@ -2866,20 +2867,22 @@ bool sge_unparse_string_option_dstring(dstring *category_str, const lListElem *j
 *     sge_job/job_verify_execd_job()
 *******************************************************************************/
 bool 
-job_verify(const lListElem *job, lList **answer_list)
+job_verify(const lListElem *job, lList **answer_list, bool do_cull_verify)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "job_verify");
 
    if (job == NULL) {
-      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, "NULL pointer argument");
-      ret = false;
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                              MSG_NULLELEMENTPASSEDTO_S, "job_verify");
+      DRETURN(false);
    }
 
-   if (ret) {
+   if (ret && do_cull_verify) {
       if (!object_verify_cull(job, JB_Type)) {
-         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, "corrupted cull structure or reduced element");
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                 MSG_OBJECT_STRUCTURE_ERROR);
          ret = false;
       }
    }
@@ -2990,7 +2993,7 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
 
    DENTER(TOP_LAYER, "job_verify_submitted_job");
 
-   ret = job_verify(job, answer_list);
+   ret = job_verify(job, answer_list, true);
 
    /* JB_job_number must me 0 */
    if (ret) {

@@ -213,13 +213,13 @@ pe_task_sum_past_usage_list(lList *pe_task_list, const lListElem *pe_task)
    DENTER(TOP_LAYER, "pe_task_sum_past_usage_list");
 
    /* no pe task list - nothing to do */
-   if(pe_task_list == NULL) {
+   if (pe_task_list == NULL) {
       DRETURN(NULL);
    }
 
    /* get container - if it does not yet exist, create it as first element in pe task list */
    container = lGetElemStr(pe_task_list, PET_id, PE_TASK_PAST_USAGE_CONTAINER);
-   if(container == NULL) {
+   if (container == NULL) {
       container = lCreateElem(PET_Type);
       lSetString(container, PET_id, PE_TASK_PAST_USAGE_CONTAINER);
       lInsertElem(pe_task_list, NULL, container);
@@ -271,14 +271,6 @@ pe_task_verify_request(const lListElem *petr, lList **answer_list) {
       answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
                               MSG_NULLELEMENTPASSEDTO_S, SGE_FUNC);
       ret = false;
-   }
-
-   if (ret) {
-      if (!object_verify_cull(petr, PETR_Type)) {
-         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
-                                 MSG_OBJECT_STRUCTURE_ERROR);
-         ret = false;
-      }
    }
 
    /* 

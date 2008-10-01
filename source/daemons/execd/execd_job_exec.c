@@ -143,7 +143,8 @@ int execd_job_exec(sge_gdi_ctx_class_t *ctx,
          DRETURN(0);
       }
        
-      if (cull_unpack_elem(pb, &job, NULL)) {
+      if (!object_unpack_elem_verify(&answer_list, pb, &job, JB_Type)) {
+         answer_list_output(&answer_list);
          ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
          DRETURN(0);
       }
@@ -186,7 +187,8 @@ int execd_job_exec(sge_gdi_ctx_class_t *ctx,
       lListElem *petrep;
       lList *answer_list = NULL;
 
-      if (cull_unpack_elem(pb, &petrep, NULL)) {
+      if (!object_unpack_elem_verify(&answer_list, pb, &petrep, PETR_Type)) {
+         answer_list_output(&answer_list);
          ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
          DRETURN(0);
       }
@@ -225,6 +227,7 @@ int execd_job_slave(sge_gdi_ctx_class_t *ctx,
    int ret = 1;
    lListElem *jelem, *ja_task;
    u_long32 feature_set;
+   lList *answer_list = NULL;
 
    DENTER(TOP_LAYER, "execd_job_slave");
 
@@ -241,10 +244,12 @@ int execd_job_slave(sge_gdi_ctx_class_t *ctx,
    */
 
    /* ------- job */
-   if (cull_unpack_elem(pb, &jelem, NULL)) {
+   if (!object_unpack_elem_verify(&answer_list, pb, &jelem, JB_Type)) {
+      answer_list_output(&answer_list);
       ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
       DRETURN(0);
    }
+   lFreeList(&answer_list);
 
    for_each(ja_task, lGetList(jelem, JB_ja_tasks)) {
       DPRINTF(("Job: %ld Task: %ld\n", (long) lGetUlong(jelem, JB_job_number),
@@ -925,7 +930,7 @@ job_verify_execd_job(const lListElem *job, lList **answer_list, const char *qual
 
    DENTER(TOP_LAYER, "job_verify_execd_job");
 
-   ret = job_verify(job, answer_list);
+   ret = job_verify(job, answer_list, false);
 
    /* 
     * A job entering execd must have some additional properties:

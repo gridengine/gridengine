@@ -1026,6 +1026,7 @@
 #define MSG_PE_ALLOCRULE_SS           _MESSAGE(60416, _("parameter allocation_rule of pe "SFQ": "SFN))
 #define MSG_GDI_OUTOFMEMORY           _MESSAGE(60418, _("out of memory"))
 #define MSG_COM_UNPACKINT_I          _MESSAGE(60419, _("unpacking integer %d failed"))
+#define MSG_COM_UNPACKOBJ_S          _MESSAGE(60420, _("unpacking a "SFN" object failed"))
 #define MSG_SGETEXT_ADDEDTOLIST_SSSS       _MESSAGE(60500, _(""SFN"@"SFN" added "SFQ" to "SFN" list"))
 #define MSG_SGETEXT_MODIFIEDINLIST_SSSS    _MESSAGE(60501, _(""SFN"@"SFN" modified "SFQ" in "SFN" list"))
 #define MSG_SGETEXT_KILL_SSS               _MESSAGE(60502, _(""SFN"@"SFN" kills "SFN))

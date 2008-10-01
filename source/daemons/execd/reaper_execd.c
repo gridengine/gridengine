@@ -1081,7 +1081,7 @@ const char *error_string,
 int general,
 int failed 
 ) {
-   lListElem *jr, *ep;
+   lListElem *jr, *ep = NULL;
    u_long32 jobid, jataskid = 0;
    const char *petaskid = NULL;
 
@@ -1108,7 +1108,7 @@ int failed
    
    if (petep != NULL) {
       ep = lFirst(lGetList(petep, PET_granted_destin_identifier_list));
-   } else {
+   } else if (jatep != NULL) {
       ep = lFirst(lGetList(jatep, JAT_granted_destin_identifier_list));
    }
 

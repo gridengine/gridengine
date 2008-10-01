@@ -1,3 +1,9 @@
+DG-2007-10-01-0: Bugfix:     Man page issue regarding qresub and the -h n
+                             parameter. 
+                 Issue:      2746
+                 Bugster:    6752920 
+                 Review:     MP
+
 JG-2008-09-30-0: Enhancem.:  Improved handling of invalid requests in sge_execd.
                  Review:     RD
 

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/09/25 08:36:50 $     Revision: $Revision: 1.77 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/10/01 08:27:03 $     Revision: $Revision: 1.78 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2008/09/25 08:36:50 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2008/10/01 08:27:03 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -259,10 +259,11 @@ I. qalter.
 .I Qresub
 allows the user to create jobs as copies of existing pending or running
 jobs. The copied jobs will have exactly the same attributes as the ones
-from which they were copied, except with a new job ID. The only modification to
+from which they were copied, except with a new job ID and with a cleared
+hold state. The only modification to
 the copied jobs supported by
 .I qresub
-is assignment of a hold state with the
+is assignment of a new hold state with the
 \fB\-h\fP option. This option can be used to first copy a job and then change
 its attributes via \fIqalter\fP.
 .PP
@@ -616,8 +617,8 @@ again become "essential". The \fB\-hard\fP and \fB\-soft\fP
 options in effect act as "toggles" during the scan.
 .\"
 .IP "\fB\-h | \-h {u|s|o|n|U|O|S}...\fP"
-Available for \fIqsub\fP, \fIqrsh\fP (with command argument), \fIqalter\fP
-and \fIqresub\fP.
+Available for \fIqsub\fP (only \fB\-h\fP), \fIqrsh\fP, \fIqalter\fP
+and \fIqresub\f (hold state is removed when not set explicitly).
 .sp 1
 List of holds to place on a job, a task or some tasks of a job.
 .sp 1
@@ -626,7 +627,7 @@ List of holds to place on a job, a task or some tasks of a job.
 `u'	denotes a user hold.
 `s'	denotes a system hold.
 `o'	denotes a operator hold.
-`n'	denotes no hold.
+`n'	denotes no hold (requires manager privileges).
 .fi
 .sp 1
 As long as any hold other than `n' is assigned to the job

@@ -1,3 +1,9 @@
+DG-2007-10-01-1: Bugfix:     Man page issue regarding qresub and the -h n
+                             parameter. 
+                 Issue:      2746
+                 Bugster:    6752920 
+                 Review:     MP
+
 RD-2008-09-30-0: Enhancem.:  - Improved scheduling time by using hash
                  Bugfix      - runtime limits were delayed after execd restart 
                  Issue:      2743

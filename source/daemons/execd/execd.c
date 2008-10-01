@@ -84,7 +84,7 @@ volatile int waiting4osjid = 1;
 char execd_spool_dir[SGE_PATH_MAX];
 
 static void execd_exit_func(void **ctx, int i);
-static void execd_register(sge_gdi_ctx_class_t *ctx);
+static void execd_register(sge_gdi_ctx_class_t *ctx, bool is_restart);
 static void dispatcher_errfunc(const char *err_str);
 static void parse_cmdline_execd(char **argv);
 static lList *sge_parse_cmdline_execd(char **argv, lList **ppcmdline);
@@ -264,7 +264,7 @@ int main(int argc, char **argv)
       lFreeList(&report_list);
    }
 
-   execd_register(ctx);
+   execd_register(ctx, false);
 
    sge_write_pid(EXECD_PID_FILE);
 
@@ -336,7 +336,7 @@ int main(int argc, char **argv)
       if (ret) {
          if (cl_is_commlib_error(ret)) {
             if (ret != CL_RETVAL_OK) {
-               execd_register(ctx); /* reregister at qmaster */
+               execd_register(ctx, true); /* reregister at qmaster */
             }
          } else {
             WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, err_str));
@@ -482,7 +482,7 @@ int sge_execd_register_at_qmaster(sge_gdi_ctx_class_t *ctx, bool is_restart) {
 *  SEE ALSO
 *     execd/sge_execd_register_at_qmaster()
 *******************************************************************************/
-static void execd_register(sge_gdi_ctx_class_t *ctx)
+static void execd_register(sge_gdi_ctx_class_t *ctx, bool is_restart)
 {
    int had_problems = 0;
 
@@ -520,7 +520,7 @@ static void execd_register(sge_gdi_ctx_class_t *ctx)
 
       }
 
-      if (sge_execd_register_at_qmaster(ctx, false) != 0) {
+      if (sge_execd_register_at_qmaster(ctx, is_restart) != 0) {
          if (had_problems == 0) {
             had_problems = 1;
          }

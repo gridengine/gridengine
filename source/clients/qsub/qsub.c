@@ -129,7 +129,7 @@ char **argv
               sge_dstring_get_string(&diag));
       fprintf(stderr, "\n");
       DEXIT;
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    prog_number = ctx->get_who(ctx);
@@ -148,7 +148,7 @@ char **argv
    tmp_ret = answer_list_print_err_warn(&alp, NULL, NULL, MSG_WARNING);
    if (tmp_ret > 0) {
       DEXIT;
-      SGE_EXIT(NULL, tmp_ret);
+      SGE_EXIT((void**)&ctx, tmp_ret);
    }
 
    /*
@@ -159,7 +159,7 @@ char **argv
    tmp_ret = answer_list_print_err_warn(&alp, NULL, "qsub: ", MSG_QSUB_WARNING_S);
    if (tmp_ret > 0) {
       DEXIT;
-      SGE_EXIT(NULL, tmp_ret);
+      SGE_EXIT((void**)&ctx, tmp_ret);
    }
 
    /*
@@ -168,7 +168,7 @@ char **argv
    if (opt_list_has_X(opts_cmdline, "-help")) {
       sge_usage(QSUB, stdout);
       DEXIT;
-      SGE_EXIT(NULL, 0);
+      SGE_EXIT((void**)&ctx, 0);
    }
 
    /*
@@ -194,7 +194,7 @@ char **argv
                                            MSG_WARNING);
       if (tmp_ret > 0) {
          DEXIT;
-         SGE_EXIT(NULL, tmp_ret);
+         SGE_EXIT((void**)&ctx, tmp_ret);
       }
    }
 
@@ -224,13 +224,13 @@ char **argv
    tmp_ret = answer_list_print_err_warn(&alp, NULL, "qsub: ", MSG_WARNING);
    if (tmp_ret > 0) {
       DEXIT;
-      SGE_EXIT(NULL, tmp_ret);
+      SGE_EXIT((void**)&ctx, tmp_ret);
    }
 
    if (set_sec_cred(sge_root, mastername, job, &alp) != 0) {
       answer_list_output(&alp);
       DEXIT;
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    /* Check is we're just verifying the job */
@@ -247,7 +247,7 @@ char **argv
    if (lGetUlong(job, JB_verify)) {
       cull_show_job(job, 0);
       DEXIT;
-      SGE_EXIT(NULL, 0);
+      SGE_EXIT((void**)&ctx, 0);
    }
 
    if (is_immediate || wait_for_job) {

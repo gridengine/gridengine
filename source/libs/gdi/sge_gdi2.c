@@ -2059,7 +2059,7 @@ lList **conf_list
 }
 
 
-static void gdi2_default_exit_func(sge_gdi_ctx_class_t **ref_ctx, int i) 
+void gdi2_default_exit_func(void **ref_ctx, int i) 
 {
    sge_security_exit(i); 
    cl_com_cleanup_commlib();
@@ -2081,13 +2081,11 @@ static void gdi2_default_exit_func(sge_gdi_ctx_class_t **ref_ctx, int i)
 ******************************************************************************/  
 int sge_gdi2_shutdown(void **context)
 {
-   sge_gdi_ctx_class_t **ref_ctx = (sge_gdi_ctx_class_t **)context;
-
    DENTER(GDI_LAYER, "sge_gdi2_shutdown");
 
    /* initialize libraries */
 /*    pthread_once(&gdi_once_control, gdi_once_init); */
-   gdi2_default_exit_func(ref_ctx, 0);
+   gdi2_default_exit_func(context, 0);
 
    DRETURN(0);
 }

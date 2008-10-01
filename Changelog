@@ -1,7 +1,13 @@
+RD-2008-10-01-0: Bugfix:     - set default exit func for most clients
+                             - added fix for execd reconnect after qmaster
+                               migration
+                             - raised version string
+                 Review:     JG
+
 EB-2008-09-30-0: Bugfix:     merged changes from MAINTRUNC which make
                              start, end and submit time available in
                              accounting file when qmaster enforces limits
-                  Review:    TBD 
+                  Review:    RD
 
 RD-2008-09-29-0: Enhancem.:  - Improved scheduler message generation
                              - Improved scheduling time by using hash

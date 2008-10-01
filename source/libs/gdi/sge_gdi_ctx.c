@@ -635,6 +635,11 @@ sge_gdi_ctx_class_t *sge_gdi_ctx_class_create(int prog_number, const char* compo
       DRETURN(NULL);
    }
 
+   /*
+   ** set default exit func, maybe overwritten
+   */
+   ret->set_exit_func(ret, gdi2_default_exit_func);
+
    DRETURN(ret);
 }
 
@@ -976,13 +981,9 @@ sge_gdi_ctx_class_t *sge_gdi_ctx_class_create_from_bootstrap(int prog_number,
 static void sge_gdi_ctx_destroy(void *theState)
 {
    sge_gdi_ctx_t *s = (sge_gdi_ctx_t *)theState;
-   cl_com_handle_t *handle = cl_com_get_handle(s->component_name, 0);
 
    DENTER(TOP_LAYER, "sge_gdi_ctx_destroy");
 
-   if (handle != NULL ) {
-      cl_commlib_shutdown_handle(handle, CL_TRUE);
-   }
    sge_env_state_class_destroy(&(s->sge_env_state_obj));
    sge_prog_state_class_destroy(&(s->sge_prog_state_obj));
    sge_path_state_class_destroy(&(s->sge_path_state_obj));

@@ -498,8 +498,7 @@ int main(int argc, char *argv[])
    if (enabled_options.help_option) {
       qevent_show_usage();
       sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT(NULL, 0);
-      return 0;
+      SGE_EXIT((void**)&ctx, 0);
    }
 
    /* are there command line parsing errors ? */
@@ -507,7 +506,7 @@ int main(int argc, char *argv[])
       ERROR((SGE_EVENT, "%s", sge_dstring_get_string(enabled_options.error_message) ));
       qevent_show_usage();
       sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
 
@@ -519,7 +518,7 @@ int main(int argc, char *argv[])
    if (gdi_setup != AE_OK) {
       answer_list_output(&alp);
       sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
    /* TODO: how is the memory we allocate here released ???, SGE_EXIT doesn't */
    if (false == sge_gdi2_evc_setup(&evc, ctx, EV_ID_ANY, &alp)) {
@@ -535,7 +534,7 @@ int main(int argc, char *argv[])
       /* only for testsuite */
       qevent_testsuite_mode(evc);
       sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT(NULL, 0);
+      SGE_EXIT((void**)&ctx, 0);
    }
 
    /* check for subscribe option */
@@ -543,7 +542,7 @@ int main(int argc, char *argv[])
       /* only for testsuite */
       qevent_subscribe_mode(evc);
       sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT(NULL, 0);
+      SGE_EXIT((void**)&ctx, 0);
    }
 
    if (enabled_options.trigger_option_count > 0) {
@@ -616,7 +615,7 @@ int main(int argc, char *argv[])
 
       sge_dstring_free(enabled_options.error_message);
       sge_prof_cleanup();
-      SGE_EXIT(NULL, 0);
+      SGE_EXIT((void**)&ctx, 0);
       return 0;
    }
 
@@ -625,8 +624,7 @@ int main(int argc, char *argv[])
    qevent_show_usage();
    sge_dstring_free(enabled_options.error_message);
    sge_prof_cleanup();
-   SGE_EXIT(NULL, 1);
-   DEXIT;
+   SGE_EXIT((void**)&ctx, 1);
    return 1;
 }
 

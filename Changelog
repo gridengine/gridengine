@@ -1,3 +1,10 @@
+MP-2008-10-02-0: Bugfix:      Modification of submit man page to reflect the correct
+                              default behaviour of -w for qrsh, qsh and qlogin
+                              Merged from MP-2008-10-02-0 in V61_BRANCH
+                 Bugster:     6726233
+                 Issue:       2731
+                 Review:      JG
+
 JG-2008-10-01-0: Enhancem.:  Improved handling of invalid requests in sge_execd.
                  Review:     RD
 

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/10/01 08:27:03 $     Revision: $Revision: 1.78 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/10/02 14:10:26 $     Revision: $Revision: 1.79 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2008/10/01 08:27:03 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2008/10/02 14:10:26 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -1451,12 +1451,12 @@ The specifiers e, w, n and v define the following validation modes:
 .nf
 .ta \w'|b|  'u
 `e'	error - jobs with invalid requests will be
-	rejected; the default for \fIqrsh\fP, \fIqsh\fP
-	and \fIqlogin\fP.
+	rejected.
 `w'	warning - only a warning will be displayed
 	for invalid requests.
 `n'	none - switches off validation; the default for
-	\fIqsub\fP and \fIqalter\fP.
+	\fIqsub\fP, \fIqalter\fP, \fIqrsh\fP, \fIqsh\fP
+	and \fIqlogin\fP.
 `v'	verify - does not submit the job but prints a
 	validation report.
 .fi

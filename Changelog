@@ -1,3 +1,9 @@
+MP-2008-10-02-0: Bugfix:      Modification of submit man page to reflect the correct
+                              default behaviour of -w for qrsh, qsh and qlogin
+                 Bugster:     6726233
+                 Issue:       2731
+                 Review:      JG
+
 DG-2008-10-02-0: Bugfix:      -help and "no option" for some clients fixed.
                  Merged from: maintrunk: DG-2008-09-25-0 
                  Bugster:     6750325, 6749921

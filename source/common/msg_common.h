@@ -40,8 +40,6 @@
 */
 
 #define MSG_SGETEXT_SGEROOTNOTFOUND_S         _MESSAGE(23000, _("SGE_ROOT directory "SFQ" doesn't exist"))
-/* #define MSG_SGETEXT_SGEROOTNOTSET             _message(23001, _("SGE_ROOT is not set")) __TS Removed automatically from testsuite!! TS__*/
-
 #define MSG_PARSE_TOOMANYOPTIONS              _MESSAGE(23002, _("ERROR! too many options"))
 #define MSG_UNKNOWN_OBJECT                    _MESSAGE(23003, _("??? unknown object ???"))
 #define MSG_NONE                   _MESSAGE(23004, _("none"))
@@ -927,7 +925,7 @@
 
 #define MSG_GDI_USAGE_JQ_DEST_OPR                        "job_queue_list"
 #define MSG_GDI_USAGE_SRVR_NM_OPR                        "server_name"
-#define MSG_GDI_USAGE_JOB_ID_OPR                         "job_task_list"
+#define MSG_GDI_USAGE_JOB_ID_OPR                         "job_id_list"
 #define MSG_GDI_USAGE_TASK_OPR                           "job_task_list"
 #define MSG_GDI_USAGE_SCRIPT_OPR                         "[{command|-} [command_args]]"
 #define MSG_GDI_USAGE_SCRIPT_OPR_ARGS                    "[-- script_args]"

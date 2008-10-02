@@ -227,9 +227,12 @@ FILE *fp
       strcpy(namebuf, prog_name);
          
    if (VALID_OPT(JOB_ID_OPR, prog_number)) {
-      fprintf(fp, "%s %s [options] %s\n", MSG_GDI_USAGE_USAGESTRING , namebuf, MSG_GDI_ARGUMENTSYNTAX_OA_JOB_ID);
+      fprintf(fp, "%s %s [options] %s\n", MSG_GDI_USAGE_USAGESTRING ,namebuf , MSG_GDI_USAGE_JOB_ID_OPR);
    } else if (VALID_OPT(JOB_TASK_OPR, prog_number)) {
       fprintf(fp, "%s %s [options] %s\n", MSG_GDI_USAGE_USAGESTRING , namebuf, MSG_GDI_USAGE_JOB_ID_OPR);
+      MARK(OA_JOB_TASK_LIST);
+      MARK(OA_JOB_TASKS);
+      MARK(OA_TASK_ID_RANGE);
    } else {
       fprintf(fp, "%s %s [options]\n", MSG_GDI_USAGE_USAGESTRING , namebuf);
    }
@@ -365,7 +368,7 @@ FILE *fp
       MARK(OA_NODE_SHARES_LIST);
       MARK(OA_NODE_PATH);
    }
-
+   
    if (VALID_OPT(astree_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_ASTREE , MSG_GDI_UTEXT_ASTREE);
    }
@@ -595,8 +598,6 @@ FILE *fp
          PRINTITD(MSG_GDI_USAGE_h_OPT_HOLD_LIST , MSG_GDI_UTEXT_h_OPT_HOLD_LIST );
          MARK(OA_HOLD_LIST);
          MARK(OA_JOB_TASK_LIST);
-         MARK(OA_JOB_TASKS);
-         MARK(OA_TASK_ID_RANGE);
       } else { /* QSUB */
          PRINTITD(MSG_GDI_USAGE_h_OPT, MSG_GDI_UTEXT_h_OPT);
       }
@@ -1209,17 +1210,13 @@ FILE *fp
    }
 
    if (VALID_OPT(JQ_DEST_OPR, prog_number)) {
-      PRINTIT(MSG_GDI_USAGE_JQ_DEST_OPR );
+      PRINTIT(MSG_GDI_USAGE_JQ_DEST_OPR);
       MARK(OA_JOB_QUEUE_DEST);
    }
 
    if (VALID_OPT(JOB_ID_OPR, prog_number)) {
-      PRINTIT(MSG_GDI_USAGE_JOB_ID_OPR );
-      if ((prog_number != QHOLD) &&
-          (prog_number != QRESUB) &&
-          (prog_number != QRLS)) {
-         MARK(OA_JOB_ID_LIST);
-      }
+      PRINTIT(MSG_GDI_USAGE_JOB_ID_OPR);
+      MARK(OA_JOB_ID_LIST);
    }
 
    if (VALID_OPT(JOB_TASK_OPR, prog_number)) {
@@ -1234,13 +1231,7 @@ FILE *fp
    }
 
    if (VALID_OPT(SCRIPT_OPR, prog_number)) {
-      if (prog_number != QALTER) {
-         PRINTIT(MSG_GDI_USAGE_SCRIPT_OPR );
-      }
-      else {
-         PRINTITD(MSG_GDI_USAGE_JOB_ID_OPR , MSG_GDI_UTEXT_JOB_ID_OPR );
-         PRINTITD(MSG_GDI_USAGE_SCRIPT_OPR_ARGS , MSG_GDI_UTEXT_SCRIPT_OPR_ARGS );
-      }
+      PRINTIT(MSG_GDI_USAGE_SCRIPT_OPR );
    }
 
    if (VALID_OPT(verbose_OPT, prog_number)) {

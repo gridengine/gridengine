@@ -133,9 +133,21 @@ char **argv
       SGE_EXIT(NULL, tmp_ret);
    }
 
-   if ((lGetNumberOfElem(cmdline) == 0) || (opt_list_has_X(cmdline, "-help"))) {
+   /* handling the case that no command line parameter was specified */
+   if ((me_who == QHOLD || me_who == QRLS) && lGetNumberOfElem(cmdline) == 1) {
+      /* -h option is set implicitly for QHOLD and QRLS */
+      sge_usage(me_who, stderr);
+      fprintf(stderr, "%s\n", MSG_PARSE_NOOPTIONARGUMENT);
+      SGE_EXIT((void**)&ctx, 1); 
+   } else if ((me_who == QRESUB || me_who == QALTER) && lGetNumberOfElem(cmdline) == 0) {
+     /* qresub and qalter have nothing set */ 
+      sge_usage(me_who, stderr);
+      fprintf(stderr, "%s\n", MSG_PARSE_NOOPTIONARGUMENT);
+      SGE_EXIT((void**)&ctx, 1);
+   } else if (opt_list_has_X(cmdline, "-help")) {
+      /* -help was specified */
       sge_usage(me_who, stdout);
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 0);
    }
 
    alp = qalter_parse_job_parameter(me_who, cmdline, &request_list, &all_jobs, 
@@ -865,14 +877,6 @@ int *all_users
                lSetList(rep, list_nm[i], lCopyList("", lGetList(job, list_nm[i])));
 
       }
-   }
-   if (!*prequestlist) {
-      /* got no target */
-      answer_list_add(&answer, MSG_JOB_MISSINGJOBID, 
-                      STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-      lFreeElem(&job);
-      FREE(rdp);
-      DRETURN(answer);      
    }
 
    lFreeElem(&job);

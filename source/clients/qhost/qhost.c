@@ -83,7 +83,7 @@
 extern char **environ;
 
 static bool sge_parse_cmdline_qhost(char **argv, char **envp, lList **ppcmdline, lList **alpp);
-static bool sge_parse_qhost(lList **ppcmdline, lList **pplres, lList **ppFres, lList **pphost, lList **ppuser, u_long32 *show, qhost_report_handler_t **report_handler, lList **alpp);
+static int sge_parse_qhost(lList **ppcmdline, lList **pplres, lList **ppFres, lList **pphost, lList **ppuser, u_long32 *show, qhost_report_handler_t **report_handler, lList **alpp);
 static bool qhost_usage(FILE *fp);
 
 static qhost_report_handler_t* xml_report_handler_create(lList **alpp);
@@ -393,6 +393,7 @@ int main(int argc, char **argv)
    lList *alp = NULL;
    qhost_report_handler_t *report_handler = NULL;
    bool is_ok = false;
+   int parse_qhost_result = 0;
    int qhost_result = 0;
    sge_gdi_ctx_class_t *ctx = NULL;
 
@@ -425,7 +426,7 @@ int main(int argc, char **argv)
    /*
    ** stage 2 of commandline parsing 
    */
-   is_ok = sge_parse_qhost(&pcmdline, 
+   parse_qhost_result = sge_parse_qhost(&pcmdline, 
                            &resource_match_list,   /* -l resource_request           */
                            &resource_list,         /* -F qresource_request          */
                            &host_list,             /* -h host_list                  */
@@ -434,13 +435,18 @@ int main(int argc, char **argv)
                            &report_handler,
                            &alp);
    lFreeList(&pcmdline);
-   if (!is_ok) {     
+   if (parse_qhost_result == 0) {     
       /*
       ** low level parsing error! show answer list
       */
       answer_list_output(&alp);
       sge_prof_cleanup();
       SGE_EXIT(NULL, 1);
+   } else if (parse_qhost_result == 2) {
+      /* -help output generated, exit normally */ 
+      answer_list_output(&alp);
+      sge_prof_cleanup();
+      SGE_EXIT(NULL, 0);
    }
 
    qhost_result = do_qhost(ctx, host_list, ul, resource_match_list, resource_list, 
@@ -570,7 +576,7 @@ lList **alpp
  ****
  **** 'stage 2' parsing of qhost-options. Gets the options from pcmdline
  ****/
-static bool sge_parse_qhost(lList **ppcmdline,
+static int sge_parse_qhost(lList **ppcmdline,
                             lList **pplres,
                             lList **ppFres,
                             lList **pphost,
@@ -584,6 +590,7 @@ static bool sge_parse_qhost(lList **ppcmdline,
    u_long32 full = 0;
    char * argstr = NULL;
    lListElem *ep;
+   int ret = 1;
  
    DENTER(TOP_LAYER, "sge_parse_host");
  
@@ -595,7 +602,8 @@ static bool sge_parse_qhost(lList **ppcmdline,
       if (parse_flag(ppcmdline, "-help",  alpp, &helpflag)) {
          usageshowed = true;
          qhost_usage(stdout);
-         goto error;
+         ret = 2;
+         goto exit;
       }
 
       if (parse_multi_stringlist(ppcmdline, "-h", alpp, pphost, ST_Type, ST_name)) {
@@ -654,9 +662,11 @@ static bool sge_parse_qhost(lList **ppcmdline,
      goto error;
    }
 
-   DRETURN(true);
+   DRETURN(1);
 
-   error:
+   error: 
+      ret = 0;
+   exit:
       if (!usageshowed) {
          qhost_usage(stderr);
       }
@@ -668,6 +678,6 @@ static bool sge_parse_qhost(lList **ppcmdline,
       lFreeList(pphost);
       lFreeList(ppuser);
 
-      DRETURN(false);
+      DRETURN(ret);
 }
 

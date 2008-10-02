@@ -147,8 +147,8 @@ static char **sge_parser_get_next(char **arg)
 {
    DENTER(TOP_LAYER, "sge_parser_get_next");
    if (!*(arg+1)) {
-      ERROR((SGE_EVENT, MSG_PARSE_NOOPTIONARGPROVIDEDTOX_S , *arg));
       sge_usage(QCONF, stderr);
+      ERROR((SGE_EVENT, MSG_PARSE_NOOPTIONARGPROVIDEDTOX_S , *arg));
       SGE_EXIT(NULL, 1);
    }
 
@@ -185,8 +185,9 @@ char *argv[]
 
    /* If no arguments were given, output the help message. */
    if (*argv == NULL) {
-      sge_usage(QCONF, stdout);
-      DRETURN(0);
+      sge_usage(QCONF, stderr);
+      fprintf(stderr, "%s\n", MSG_PARSE_NOOPTIONARGUMENT);
+      DRETURN(1);
    }
    
    spp = argv;

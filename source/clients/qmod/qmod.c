@@ -166,7 +166,6 @@ lList **ppcmdline
 ) {
 char **sp;
 char **rp;
-stringT str;
 lList *alp = NULL;
 
    DENTER(TOP_LAYER, "sge_parse_cmdline_qmod");
@@ -174,7 +173,9 @@ lList *alp = NULL;
    rp = argv;
    
    if (*rp == NULL) {
-      sge_add_noarg(ppcmdline, 0, "-help", NULL);
+      /* no command line argument: print help on error */
+      qmod_usage(stderr, NULL);
+      answer_list_add_sprintf(&alp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR, MSG_PARSE_NOOPTIONARGUMENT);
    }
    
    while(*(sp=rp)) {
@@ -250,8 +251,7 @@ lList *alp = NULL;
          /* next field is path_name */
          sp++;
          if (*sp == NULL) {
-             sprintf(str,MSG_PARSE_TOPTIONMUSTHAVEALISTOFTASKIDRANGES);
-             answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+             answer_list_add(&alp, MSG_PARSE_TOPTIONMUSTHAVEALISTOFTASKIDRANGES, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              goto error;
          }
 
@@ -295,8 +295,7 @@ lList *alp = NULL;
 #endif
 
       /* oops */
-      sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
-      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+      answer_list_add_sprintf(&alp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR, MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
 error:
       qmod_usage(stderr, NULL);
       DEXIT;
@@ -315,7 +314,6 @@ error:
  ****/
 static lList *sge_parse_qmod(lList **ppcmdline, lList **ppreflist, u_long32 *pforce) 
 {
-stringT str;
 lList *alp = NULL;
 u_long32 helpflag;
 int usageshowed = 0;
@@ -326,7 +324,6 @@ int usageshowed = 0;
       ppcmdline list. Except f_OPT all options are exclusive.
    */
    while(lGetNumberOfElem(*ppcmdline)) {
-      lListElem *ep;
       static const char *options[] = {
          "-c",
          "-cj",
@@ -405,20 +402,17 @@ int usageshowed = 0;
       }
    
       /* we get to this point, than there are -t options without job names. We have to write an error message */
-      if ((ep = lGetElemStr(*ppcmdline, SPA_switch, "-t")) != NULL) {
-         sprintf(str, MSG_JOB_LONELY_TOPTION_S, lGetString(ep, SPA_switch_arg));
-         answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-        
+      if (lGetElemStr(*ppcmdline, SPA_switch, "-t") != NULL) {
+         answer_list_add_sprintf(&alp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR, MSG_PARSE_NOOPTIONARGUMENT);
          break;
       }
       
    }
 
    if(lGetNumberOfElem(*ppcmdline)) {
-     sprintf(str, MSG_PARSE_TOOMANYOPTIONS);
      if(!usageshowed)
         qmod_usage(stderr, NULL);
-     answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+     answer_list_add_sprintf(&alp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR, MSG_PARSE_TOOMANYOPTIONS);
      DEXIT;
      return alp;
    }
@@ -453,8 +447,8 @@ char *what
       /* display full usage */
       fprintf(fp,"%s qmod [options]\n", MSG_SRC_USAGE); 
       fprintf(fp, "   [-c job_wc_queue_list]  %s\n", MSG_QMOD_c_OPT_USAGE);
-      fprintf(fp, "   [-cj wc_queue_list]     %s\n", MSG_QMOD_c_OPT_USAGE_J);
-      fprintf(fp, "   [-cq job_list]          %s\n", MSG_QMOD_c_OPT_USAGE_Q);
+      fprintf(fp, "   [-cj job_list]     %s\n", MSG_QMOD_c_OPT_USAGE_J);
+      fprintf(fp, "   [-cq wc_queue_list]          %s\n", MSG_QMOD_c_OPT_USAGE_Q);
 
       fprintf(fp, "   [-d wc_queue_list]      %s\n", MSG_QMOD_d_OPT_USAGE);
       fprintf(fp, "   [-e wc_queue_list]      %s\n", MSG_QMOD_e_OPT_USAGE);

@@ -1,3 +1,7 @@
+RC-2008-10-05-0: Enhancem.:  - Refreshed the PPC/PPC64 port
+                             - Fixed the SGE-SSH integration link problem
+                 Review:     pending
+
 MP-2008-10-02-0: Bugfix:      Modification of submit man page to reflect the correct
                               default behaviour of -w for qrsh, qsh and qlogin
                               Merged from MP-2008-10-02-0 in V61_BRANCH

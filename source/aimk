@@ -1307,8 +1307,12 @@ case LINUXSPARC64:
 
    if ($BUILDARCH == LINUXPPC) then
       set CFLAGS = "-m32 $CFLAGS"
+      set LFLAGS = "-m32 $LFLAGS"
+      set SHARED_LFLAGS = "-m32 $SHARED_LFLAGS"
    else if ($BUILDARCH == LINUXSPARC64 || $BUILDARCH == LINUXPPC64) then
       set CFLAGS = "-m64 $CFLAGS"
+      set LFLAGS = "-m64 $LFLAGS"
+      set SHARED_LFLAGS = "-m64 $SHARED_LFLAGS"
    endif
 
    if ($DEBUGGED == 1) then
@@ -2553,7 +2557,7 @@ if ( "$SGESSH" == 1) then
       ../configure --with-grd=${COMPILE_ARCH} --srcdir=.. \
          --with-cflags="${MEMCFLAG} ${NOERR_SSH} ${NOERR_PROTO} -DSGESSH_INTEGRATION" \
          --with-ldflags="${LFLAGS}" \
-         --with-libs="-L../../../${COMPILE_ARCH} -L../../../3rdparty/remote/${COMPILE_ARCH}/ -lsgeremote -luti -llck -lrmon ${LIBS} ${SLIBS}" \
+         --with-libs="-L../../../${COMPILE_ARCH} -L../../../3rdparty/remote/${COMPILE_ARCH}/ -lsgeremote -luti -lcommlists -llck -lrmon ${LIBS} ${SLIBS}" \
          --with-ssl-dir=${OPENSSL_HOME}
    endif
 

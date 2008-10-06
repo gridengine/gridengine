@@ -3450,8 +3450,12 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bo
          }
          a.gep              = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, SGE_GLOBAL_NAME);
          a.start            = DISPATCH_TIME_NOW;
-         a.duration         = 0; /* indicator for schedule based mode */
+         /* in reservation scheduling mode a non-zero duration always must be defined */
+         job_get_duration(&a.duration, jep);
          a.is_job_verify    = true;
+
+         /* we will assume this time as start time for now assignments */
+         sconf_set_now(sge_get_gmt());
 
          /* 
           * Current scheduler code expects all queue instances in a plain list. We use 

@@ -1,3 +1,9 @@
+RD-2008-10-06-0: Bugfix:     qmaster always assumed a job duration of 0
+                             in verification mode (qalter -w)
+                 Issue:      2750
+                 Bugster:    6755684
+                 Review:     JG
+
 RD-2008-10-01-0: Bugfix:     - set default exit func for most clients
                              - added fix for execd reconnect after qmaster
                                migration

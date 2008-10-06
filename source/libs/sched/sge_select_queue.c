@@ -5663,8 +5663,7 @@ ri_time_by_slots(const sge_assignment_t *a, lListElem *rep, lList *load_attr, lL
             /* may happen only if scheduler code is run outside scheduler with 
                DISPATCH_TIME_QUEUE_END time spec */
             *start_time = now;
-         } 
-         else {
+         } else {
             *start_time = when;
          }   
          ret = DISPATCH_OK;
@@ -5680,8 +5679,7 @@ ri_time_by_slots(const sge_assignment_t *a, lListElem *rep, lList *load_attr, lL
    /* here we handle DISPATCH_TIME_NOW + any other time */
    if (*start_time == DISPATCH_TIME_NOW) {
       ready_time = now;
-   }   
-   else {
+   } else {
       ready_time = *start_time;
    }   
 

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/10/02 14:10:26 $     Revision: $Revision: 1.79 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/10/06 08:06:34 $     Revision: $Revision: 1.80 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2008/10/02 14:10:26 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2008/10/06 08:06:34 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -1457,8 +1457,11 @@ The specifiers e, w, n and v define the following validation modes:
 `n'	none - switches off validation; the default for
 	\fIqsub\fP, \fIqalter\fP, \fIqrsh\fP, \fIqsh\fP
 	and \fIqlogin\fP.
+`p'	poke - does not submit the job but prints a 
+     validation report based on a cluster as is with 
+     all resource utilizations in place.
 `v'	verify - does not submit the job but prints a
-	validation report.
+     validation report based on an empty cluster.
 .fi
 .sp 1
 Note, that the necessary checks are performance consuming and hence the 

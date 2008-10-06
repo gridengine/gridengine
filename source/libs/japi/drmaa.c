@@ -3520,7 +3520,7 @@ o   -V                                     export all environment variables
    while ((element = lGetElemStrNext(args, SPA_switch, "-w", &i))) {
       int argval = lGetInt(element, SPA_argval_lIntT);
       
-      if ((argval == JUST_VERIFY) || (argval == WARNING_VERIFY)) {      
+      if ((argval == JUST_VERIFY) || (argval == POKE_VERIFY) || (argval == WARNING_VERIFY)) {      
          lRemoveElem(args, &element);
       }
    }

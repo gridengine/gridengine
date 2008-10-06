@@ -1,3 +1,10 @@
+RD-2008-10-06-0: Bugfix:     - qmaster always assumed a job duration of 0
+                               in verification mode (qalter -w)
+                 Enhancem.:  - added -w p (poke) option as replacement for old
+                               qstat -j
+                 Issue:      2750, 2548
+                 Bugster:    6755684, 6685496
+
 JF-2008-10-06-0: Bugfix: qmod does not follow admin host rules fixed
                  Bugtraq: 6707098
                  Issue: 2582

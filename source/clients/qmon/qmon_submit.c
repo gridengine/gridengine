@@ -1416,8 +1416,8 @@ static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad)
          printf("________________________________________\n");
       }
 
-      just_verify = (lGetUlong(lFirst(lp), JB_verify_suitable_queues) ==
-                           JUST_VERIFY);
+      just_verify = (lGetUlong(lFirst(lp), JB_verify_suitable_queues) == JUST_VERIFY || 
+                      lGetUlong(lFirst(lp), JB_verify_suitable_queues) == POKE_VERIFY);
 
       what = lWhat("%T(ALL)", JB_Type);
       alp = qmonAddList(SGE_JOB_LIST, qmonMirrorListRef(SGE_JOB_LIST), 

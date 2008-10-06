@@ -236,7 +236,8 @@ char **argv
    }
 
    /* Check is we're just verifying the job */
-   just_verify = (lGetUlong(job, JB_verify_suitable_queues)==JUST_VERIFY);
+   just_verify = (lGetUlong(job, JB_verify_suitable_queues)==JUST_VERIFY || 
+                  lGetUlong(job, JB_verify_suitable_queues)==POKE_VERIFY);
    DPRINTF(("Just verifying job\n"));
 
    /* Check if job is immediate */

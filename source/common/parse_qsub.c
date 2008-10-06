@@ -1640,7 +1640,7 @@ DTRACE;
                                     *sp);
          }
 
-         /* next field is "e|w|n|v" */
+         /* next field is "e|w|n|v|p" */
          sp++;
          if (!*sp) {
              answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
@@ -1685,6 +1685,14 @@ DTRACE;
             } else {
                lSetInt(ep_opt, SPA_argval_lIntT, JUST_VERIFY);
             }
+         } else if (!strcmp("p", *sp)) {
+            if (prog_number == QRSUB) {
+               answer_list_add_sprintf(&answer,STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                     MSG_PARSE_INVALIDOPTIONARGUMENTWX_S, *sp);
+               DRETURN(answer);
+            }
+            ep_opt = sge_add_arg(pcmdline, w_OPT, lIntT, *(sp - 1), *sp);
+            lSetInt(ep_opt, SPA_argval_lIntT, POKE_VERIFY);
          } else {
              answer_list_add_sprintf(&answer,STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
                      MSG_PARSE_INVALIDOPTIONARGUMENTWX_S, *sp);

@@ -400,7 +400,8 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
          DRETURN(STATUS_NOTOK_DOAGAIN);
       }
 
-      if ((lGetUlong(jep, JB_verify_suitable_queues) != JUST_VERIFY)) {
+      if (lGetUlong(jep, JB_verify_suitable_queues) != JUST_VERIFY &&
+          lGetUlong(jep, JB_verify_suitable_queues) != POKE_VERIFY) {
          if (suser_check_new_job(jep, mconf_get_max_u_jobs()) != 0) { /*mod*/
             INFO((SGE_EVENT, MSG_JOB_ALLOWEDJOBSPERUSER_UU, sge_u32c(mconf_get_max_u_jobs()), 
                                                             sge_u32c(suser_job_count(jep))));
@@ -752,7 +753,8 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       /* verify schedulability */
       {
          int ret = verify_suitable_queues(alpp, jep, NULL, false); 
-         if (lGetUlong(jep, JB_verify_suitable_queues)==JUST_VERIFY || ret != 0) {
+         if (lGetUlong(jep, JB_verify_suitable_queues) == JUST_VERIFY  || 
+             lGetUlong(jep, JB_verify_suitable_queues) == POKE_VERIFY || ret != 0) {
             DRETURN(ret);
          }   
       }
@@ -3113,8 +3115,8 @@ int *trigger
       lSetUlong(new_job, JB_verify_suitable_queues, 
             lGetUlong(jep, JB_verify_suitable_queues));
       ret = verify_suitable_queues(alpp, new_job, trigger, true); 
-      if (lGetUlong(new_job, JB_verify_suitable_queues)==JUST_VERIFY 
-         || ret != 0) {
+      if (lGetUlong(new_job, JB_verify_suitable_queues) == JUST_VERIFY || 
+          lGetUlong(new_job, JB_verify_suitable_queues) == POKE_VERIFY || ret != 0) {
          DRETURN(ret);
       }   
    }
@@ -3710,6 +3712,7 @@ static u_long32 guess_highest_job_number()
 static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bool is_modify)
 {
    int verify_mode = lGetUlong(jep, JB_verify_suitable_queues);
+   bool verify_only = (verify_mode == JUST_VERIFY || verify_mode == POKE_VERIFY) ? true : false;
 
    DENTER(TOP_LAYER, "verify_suitable_queues");
 
@@ -3718,7 +3721,7 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bo
       DRETURN(0);
    }
 
-   if (verify_mode == JUST_VERIFY) {
+   if (verify_only) {
       answer_list_remove_quality(*alpp, ANSWER_QUALITY_INFO);
    }
 
@@ -3774,11 +3777,16 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bo
          }
          a.gep              = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, SGE_GLOBAL_NAME);
          a.start            = DISPATCH_TIME_NOW;
-         a.duration         = 0; /* indicator for schedule based mode */
+         /* in reservation scheduling mode a non-zero duration always must be defined */
+         job_get_duration(&a.duration, jep);
          a.is_job_verify    = true;
-         if (verify_mode == JUST_VERIFY) {
+
+         if (verify_only) {
             a.monitor_alpp = &talp;
          }
+
+         /* we will assume this time as start time for now assignments */
+         sconf_set_now(sge_get_gmt());
 
          /* 
           * Current scheduler code expects all queue instances in a plain list. We use 
@@ -3789,7 +3797,9 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bo
          a.queue_list = lCreateList("", QU_Type);
 
          /* imagine qs is empty */
-         sconf_set_qs_state(QS_STATE_EMPTY);
+         if (verify_mode != POKE_VERIFY) {
+            sconf_set_qs_state(QS_STATE_EMPTY);
+         }
 
          for_each(cqueue, *object_base[SGE_TYPE_CQUEUE].list) {
             const char *cqname = lGetString(cqueue, CQ_name);
@@ -3846,7 +3856,9 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bo
          }
 
          /* stop dreaming */
-         sconf_set_qs_state(QS_STATE_FULL);
+         if (verify_mode != POKE_VERIFY) {
+            sconf_set_qs_state(QS_STATE_FULL);
+         }
 
          lFreeList(&(a.queue_list));
       }
@@ -3856,15 +3868,15 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bo
       /* consequences */
       if (!try_it || !a.slots) {
          /* copy error msgs from talp into alpp */
-         if (verify_mode==JUST_VERIFY) {
-            if (!*alpp)
+         if (verify_only) {
+            if (!*alpp) {
                *alpp = lCreateList("answer", AN_Type);
+            }
             lAddList(*alpp, &talp);
          } else {
             lFreeList(&talp);
          }
-
-         if (verify_mode == JUST_VERIFY) {
+         if (verify_only) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_JOB_NOSUITABLEQ_S, MSG_JOB_VERIFYVERIFY));
          } else if (verify_mode == ERROR_VERIFY) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_JOB_NOSUITABLEQ_S, MSG_JOB_VERIFYERROR));
@@ -3872,10 +3884,10 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bo
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_JOB_NOSUITABLEQ_S, MSG_JOB_VERIFYWARN));
          }
 
-         if (verify_mode == JUST_VERIFY || verify_mode == ERROR_VERIFY) {
-            answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR); 
-         } else {
+         if (verify_mode == WARNING_VERIFY) {
             answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING); 
+         } else {
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR); 
          }
 
          if (verify_mode == ERROR_VERIFY) {
@@ -3883,11 +3895,11 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bo
          }
 
          if (verify_mode != WARNING_VERIFY) {
-            DRETURN((verify_mode==JUST_VERIFY)?0:STATUS_ESEMANTIC);
+            DRETURN(STATUS_ESEMANTIC);
          }
       }
 
-      if (verify_mode == JUST_VERIFY) {
+      if (verify_only) {
          if (trigger) {
             *trigger |= VERIFY_EVENT;
          }

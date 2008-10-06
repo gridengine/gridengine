@@ -1655,7 +1655,8 @@ int main(int argc, char **argv)
          SGE_EXIT((void**)&ctx, 1);
       }   
 
-      just_verify = (lGetUlong(job, JB_verify_suitable_queues)==JUST_VERIFY);
+      just_verify = (lGetUlong(job, JB_verify_suitable_queues)==JUST_VERIFY ||
+                      lGetUlong(job, JB_verify_suitable_queues) == POKE_VERIFY);
    }
 
    if (g_new_interactive_job_support == false) {

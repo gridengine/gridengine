@@ -1,3 +1,10 @@
+MP-2008-10-06-0: Bugfix:      qhost -l followed by multiple resource/value pairs only
+                              accepts the first attribute and ignores the rest.
+                              Merged from MP-2008-09-23-0 in V61_BRANCH
+                 Bugster:     6734764
+                 Issue:       2684
+                 Review:      DG
+
 AA-2008-10-06-0: Enhancem.:  - added missing jmx function mappings
                              - minor cleanups
                              - jgdish connectjmx enhancement and -ks switch

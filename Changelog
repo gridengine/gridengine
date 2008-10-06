@@ -1,3 +1,8 @@
+JF-2008-10-06-0: Bugfix: qmod does not follow admin host rules fixed
+                 Bugtraq: 6707098
+                 Issue: 2582
+                 Review: LP
+
 RC-2008-10-05-0: Enhancem.:  - Refreshed the PPC/PPC64 port
                              - Fixed the SGE-SSH integration link problem
                  Review:     pending

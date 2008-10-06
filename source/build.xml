@@ -38,7 +38,6 @@
    <!-- DRMAA -->
    <target name="drmaa" depends="init">
       <myant dir="libs/jdrmaa"/>
-      <!-- <myant dir="classes"/> -->
    </target>
     
    <target name="drmaa.clean" depends="init">

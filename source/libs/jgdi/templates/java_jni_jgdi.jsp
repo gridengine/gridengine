@@ -38,25 +38,23 @@
   final com.sun.grid.cull.CullDefinition cullDef = (com.sun.grid.cull.CullDefinition)params.get("cullDef");
   
   class JGDIJniGenerator extends com.sun.grid.cull.AbstractGDIGenerator {
-     
+
      private String cullname;
-     
      public JGDIJniGenerator(com.sun.grid.cull.CullObject cullObject) {
         super(cullObject.getIdlName(), jh.getClassName(cullObject), cullObject);
         this.cullname = cullObject.getName();
         addPrimaryKeys(cullObject, jh);
      }
-     
+
      public void genImport() {
         if(!(cullObject.getType() == cullObject.TYPE_PRIMITIVE ||
              cullObject.getType() == cullObject.TYPE_MAPPED)) {
 %>// for <%=name%>
-import com.sun.grid.jgdi.configuration.<%=classname%>;        
+import com.sun.grid.jgdi.configuration.<%=classname%>;
 import com.sun.grid.jgdi.configuration.<%=classname%>Impl;        
 <%        
         }
      } // end of genImport
-     
      private boolean hasFillMethod;
      private void genFillMethod() {
         if(!hasFillMethod) {
@@ -85,8 +83,8 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
         genFillMethod();
 %>
    /**
-    *   Get the <code><%=name%></code> object.
-    *   @return the <code><%=name%></code> object.
+    *   Get the <code><%=name%></code> object
+    *   @return the <code><%=name%></code> object
     *   @throws JGDIException on any error on the GDI layer
     */
    public <%=classname%> get<%=name%>() throws JGDIException {
@@ -116,10 +114,9 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
            throw new IllegalStateException("Got more than 1 static <%=name%> objects");
       }
    }
-
-<%        
+<%
      } // end of genGetMethod
-     
+
      public void genGetListMethod() {
         genFillMethod();
 %>        
@@ -166,18 +163,18 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
     *  @throws JGDIException on any error on the GDI layer
     */
    public <%=classname%> get<%=name%>(<%
-    boolean first = true; 
-    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
-       String pkName = entry.getKey();
-       String pkType = entry.getValue();
-       if (first) {
-          first = false;
-       } else {
-         %>, <%
-       }
-       %> <%=pkType%> <%=pkName%> <%
+      boolean first = true;
+      for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+         String pkName = entry.getKey();
+         String pkType = entry.getValue();
+         if (first) {
+            first = false;
+         } else {
+             %>, <%
+         }
+         %> <%=pkType%> <%=pkName%> <%
     }
-       %>) throws JGDIException {
+   %>) throws JGDIException {
     
         List< <%=classname%> > ret = new LinkedList< <%=classname%> >();
         PrimaryKeyFilter filter = new PrimaryKeyFilter("<%=cullname%>");
@@ -210,8 +207,8 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
        String pkType = entry.getValue();
 %>    *  @param <%=pkName%>   the <%=pkName%> of the <code><%=name%></code> object
 <%
-    }    
-%>   *   @param  answers the <code>answer list</code> object
+    }
+%>   *  @param  answers the <code>answer list</code> object
     *  @return the found <code><%=name%></code> object of <code>null</code>    
     *  @throws JGDIException on any error on the GDI layer
     */
@@ -248,11 +245,11 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
         }
    }
    
-<%        
-     } // end of genGetByPrimaryKeyMethod
+<%
+    } // genGetByPrimaryKeyMethod
   
-     public void genAddMethod() {
-%>        
+    public void genAddMethod() {
+%>
    /**
     *   Add a new <code><%=name%></code> object.
     *   @param  obj the new <code><%=name%></code> object
@@ -324,8 +321,9 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
     */
    public native void delete<%=name%>sWithAnswer(Object[] objs, boolean force, UserFilter userFilter, List<JGDIAnswer> answers) throws JGDIException;
    
-<%        
+<%
      } // end of genDeleteMethod
+
      public void genDeleteByPrimaryKeyMethod() {
 %>
 
@@ -341,33 +339,34 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
 %>    *   @throws JGDIException on any error on the GDI layer
     */
    public void delete<%=name%>(<%
-    boolean first = true;  
+    boolean first = true;
     for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
        String pkName = entry.getKey();
        String pkType = entry.getValue();
        if(first) {
          first = false;
        } else {
-            %> , <%           
+            %>, <%
        }
        %><%=pkType%> <%=pkName%><%
-    } // end of while  
+    }
     %>) throws JGDIException {
        <%=classname%> obj = new <%=classname%>Impl(<%
-    first = true;  
-    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
-       String pkName = entry.getKey();
-       String pkType = entry.getValue();
-       if(first) {
-         first = false;
-       } else {
+      first = true;
+      for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+         String pkName = entry.getKey();
+         String pkType = entry.getValue();
+         if (first) {
+            first = false;
+         } else {
             %> , <%           
-       }
-       %><%=pkName%><%
-    } // end of while  
+         }
+         %><%=pkName%><%
+      }
     %>);
        delete<%=name%>(obj);
     }
+
    /**
     *   Delete a <code><%=name%></code> object by its primary key
 <%

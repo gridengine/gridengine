@@ -34,6 +34,7 @@ package com.sun.grid.jgdi.event;
 import com.sun.grid.jgdi.JGDIException;
 import com.sun.grid.jgdi.JGDIFactory;
 import com.sun.grid.jgdi.EventClient;
+import com.sun.grid.jgdi.configuration.ShareTree;
 import java.text.DateFormat;
 
 /**
@@ -88,6 +89,10 @@ public class QEvent implements EventListener {
 
     public void eventOccured(Event evt) {
         System.out.println(evt);
+        if (evt instanceof ShareTreeModEvent) {
+            ShareTree st = ((ShareTreeModEvent)evt).get();
+            System.out.println(st.dump());
+        }
         System.out.flush();
     }
 }

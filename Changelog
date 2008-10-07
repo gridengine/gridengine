@@ -1,7 +1,13 @@
-JF-2008-10-06-0: Bugfix: qmod does not follow admin host rules fixed
-                 Bugtraq: 6707098
-                 Issue: 2582
-                 Review: LP
+DG-2008-10-07-0: Bugfix:      Java DRMAA final static variables are accessed 
+                              through object references.
+                 Merged from: maintrunk: DG-2008-07-07-0
+                 Bugster:     6722930
+                 Review:      AF 
+
+JF-2008-10-06-0: Bugfix:      qmod does not follow admin host rules fixed
+                 Bugtraq:     6707098
+                 Issue:       2582
+                 Review:      LP
 
 MP-2008-10-02-0: Bugfix:      Modification of submit man page to reflect the correct
                               default behaviour of -w for qrsh, qsh and qlogin

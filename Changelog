@@ -1,3 +1,10 @@
+MP-2008-10-08-0: Bugfix:      SGE_Helper_Service man page still refers to old complex 
+                              variable when submitting GUI jobs. Also there is a new
+                              environment variable that is not yet documented.
+                 Bugster:     6637152
+                 Issue:       2751
+                 Review:      JG
+
 DG-2008-10-07-0: Bugfix:      Java DRMAA final static variables are accessed 
                               through object references.
                  Merged from: maintrunk: DG-2008-07-07-0

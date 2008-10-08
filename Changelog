@@ -1,3 +1,9 @@
+JG-2008-10-08-0: Bugfix:     qalter allows a user to place a job in a project
+                             forbidden by ACLs
+                 Bugster:    6752921
+                 Issue:      2737
+                 Review:     CR
+
 MP-2008-10-06-0: Bugfix:      qhost -l followed by multiple resource/value pairs only
                               accepts the first attribute and ignores the rest.
                               Merged from MP-2008-09-23-0 in V61_BRANCH

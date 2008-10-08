@@ -1,3 +1,10 @@
+MP-2008-10-08-0: Bugfix:      SGE_Helper_Service man page still refers to old complex
+                              variable when submitting GUI jobs. Also there is a new
+                              environment variable that is not yet documented.
+                 Bugster:     6637152
+                 Issue:       2751
+                 Review:      JG
+
 JG-2008-10-08-0: Bugfix:     qalter allows a user to place a job in a project
                              forbidden by ACLs
                  Bugster:    6752921

@@ -165,6 +165,8 @@ static u_long32 guess_highest_job_number(void);
 
 static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger);
 
+static int job_verify_project(const lListElem *job, lList **alpp,
+                              const char *user, const char *group);
 static int job_verify_pe_range(lList **alpp, const char *pe_name, lList *pe_range);
 
 static int job_verify_predecessors(lListElem *job, lList **alpp);
@@ -213,7 +215,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
                     sge_gdi_request *request, monitoring_t *monitor) 
 {
    int ckpt_err;
-   const char *pe_name, *project, *ckpt_name;
+   const char *pe_name, *ckpt_name;
    u_long32 ckpt_attr, ckpt_inter;
    u_long32 job_number;
    lListElem *ckpt_ep;
@@ -249,7 +251,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    }
 
    /* check for qsh without DISPLAY set */
-   if(JOB_TYPE_IS_QSH(lGetUlong(jep, JB_type))) {
+   if (JOB_TYPE_IS_QSH(lGetUlong(jep, JB_type))) {
       int ret = job_check_qsh_display(jep, alpp, false);
       if(ret != STATUS_OK) {
          DEXIT;
@@ -280,22 +282,22 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
     */ 
    {
       int status;
-      if( (status = job_resolve_host_for_path_list(jep, alpp, JB_stdout_path_list)) != STATUS_OK){
+      if ((status = job_resolve_host_for_path_list(jep, alpp, JB_stdout_path_list)) != STATUS_OK) {
          DEXIT;
          return status;
       }
 
-      if( (status = job_resolve_host_for_path_list(jep, alpp, JB_stdin_path_list)) != STATUS_OK){
+      if ((status = job_resolve_host_for_path_list(jep, alpp, JB_stdin_path_list)) != STATUS_OK) {
          DEXIT;
          return status;
       }
 
-      if( (status = job_resolve_host_for_path_list(jep, alpp,JB_shell_list)) != STATUS_OK){
+      if ((status = job_resolve_host_for_path_list(jep, alpp,JB_shell_list)) != STATUS_OK) {
          DEXIT;
          return status;
       }
 
-      if( (status = job_resolve_host_for_path_list(jep, alpp, JB_stderr_path_list)) != STATUS_OK){
+      if ((status = job_resolve_host_for_path_list(jep, alpp, JB_stderr_path_list)) != STATUS_OK) {
          DEXIT;
          return status;
       }
@@ -652,72 +654,12 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
 
    /* project */
    {
-      lList* projects = mconf_get_projects();
-      if ((project=lGetString(jep, JB_project))) {
-         lList* xprojects;
-         lListElem *pep;
-         if (!(pep = userprj_list_locate(Master_Project_List, project))) {
-            ERROR((SGE_EVENT, MSG_JOB_PRJUNKNOWN_S, project));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-            lFreeList(&projects);
-            DEXIT;
-            return STATUS_EUNKNOWN;
-         }
-
-         /* ensure user belongs to this project */
-         if (!sge_has_access_(ruser, group, 
-               lGetList(pep, UP_acl), 
-               lGetList(pep, UP_xacl), Master_Userset_List)) {
-            ERROR((SGE_EVENT, MSG_SGETEXT_NO_ACCESS2PRJ4USER_SS,
-               project, ruser));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-            lFreeList(&projects);
-            DEXIT;
-            return STATUS_EUNKNOWN;
-         }
-
-         /* verify project can submit jobs */
-         xprojects = mconf_get_xprojects();
-         if ((xprojects &&
-              userprj_list_locate(xprojects, project)) ||
-             (projects &&
-              !userprj_list_locate(projects, project))) {
-            ERROR((SGE_EVENT, MSG_JOB_PRJNOSUBMITPERMS_S, project));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-            lFreeList(&xprojects);
-            lFreeList(&projects);
-            DEXIT;
-            return STATUS_EUNKNOWN;
-         }
-         lFreeList(&xprojects);
-
-      } else {
-         char* enforce_project = mconf_get_enforce_project();
-         if (lGetNumberOfElem(projects)>0) {
-            ERROR((SGE_EVENT, MSG_JOB_PRJREQUIRED)); 
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-            lFreeList(&projects);
-            FREE(enforce_project);
-            DEXIT;
-            return STATUS_EUNKNOWN;
-         }
-
-         if (enforce_project && !strcasecmp(enforce_project, "true")) {
-            ERROR((SGE_EVENT, MSG_SGETEXT_NO_PROJECT));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-            lFreeList(&projects);
-            FREE(enforce_project);
-            DEXIT;
-            return STATUS_EUNKNOWN;
-         }
-         FREE(enforce_project);
+      int ret = job_verify_project(jep, alpp, ruser, group);
+      if (ret != STATUS_OK) {
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+         DEXIT;
+         return ret;
       }
-      lFreeList(&projects);
    }
 
    /* try to dispatch a department to the job */
@@ -3024,36 +2966,22 @@ int *trigger
    }
 
    /* ---- JB_project */
-   if ((pos=lGetPosViaElem(jep, JB_project, SGE_NO_ABORT))>=0) {
-      const char *project;
-      char* enforce_project;
+   if ((pos=lGetPosViaElem(jep, JB_project, SGE_NO_ABORT)) >= 0) {
+      int ret;
+      const char *project = lGetString(jep, JB_project);
 
-      DPRINTF(("got new JB_project\n")); 
+      DPRINTF(("got new JB_project\n"));
 
-      enforce_project = mconf_get_enforce_project();
-      
-      project = lGetString(jep, JB_project);
-      if (project && !userprj_list_locate(Master_Project_List, project)) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_JOB_PROJECT, project));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-         FREE(enforce_project);
-         DEXIT;
-         return STATUS_EUNKNOWN;
+      ret = job_verify_project(jep, alpp, lGetString(new_job, JB_owner), lGetString(new_job, JB_group));
+      if (ret != STATUS_OK) {
+         DRETURN(ret);
       }
-      if (!project && enforce_project &&
-          !strcasecmp(enforce_project, "true")) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_NO_PROJECT));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         FREE(enforce_project);
-         DEXIT;
-         return STATUS_EUNKNOWN;
-      }
+
       lSetString(new_job, JB_project, project);
       may_not_be_running = 1;
       *trigger |= MOD_EVENT;
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_PROJECT, sge_u32c(jobid));
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-      FREE(enforce_project);
    }
 
    /* ---- JB_pe */
@@ -3163,7 +3091,7 @@ int *trigger
       int status;
       DPRINTF(("got new JB_shell_list\n")); 
       
-      if( (status = job_resolve_host_for_path_list(jep, alpp,JB_shell_list)) != STATUS_OK){
+      if ((status = job_resolve_host_for_path_list(jep, alpp,JB_shell_list)) != STATUS_OK) {
          DEXIT;
          return status;
       }
@@ -3182,9 +3110,9 @@ int *trigger
       DPRINTF(("got new JB_env_list\n")); 
       
       /* check for qsh without DISPLAY set */
-      if(JOB_TYPE_IS_QSH(lGetUlong(new_job, JB_type))) {
+      if (JOB_TYPE_IS_QSH(lGetUlong(new_job, JB_type))) {
          int ret = job_check_qsh_display(jep, alpp, false);
-         if(ret != STATUS_OK) {
+         if (ret != STATUS_OK) {
             DEXIT;
             return ret;
          }
@@ -3300,7 +3228,7 @@ static bool contains_dependency_cycles(const lListElem * new_job, u_long32 job_n
       else {
          is_cycle = contains_dependency_cycles(job_list_locate(Master_Job_List, pre_nr), job_number, alpp);
       }
-      if(is_cycle)
+      if (is_cycle)
          break;
    }
    DEXIT; 
@@ -4030,5 +3958,110 @@ int sge_gdi_copy_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser, cha
 
    DEXIT;
    return ret;
+}
+
+/****** sge_job_qmaster/job_verify_project() ***********************************
+*  NAME
+*     job_verify_project() -- verify the JB_project of a job
+*
+*  SYNOPSIS
+*     static int 
+*     job_verify_project(const lListElem *job, lList **alpp,
+*                        const char *user, const char *group) 
+*
+*  FUNCTION
+*     Does verifications on the JB_project field of a job.
+*     Is called when qmaster gets a new job (sge_gdi_add_job),
+*     or when a job is modified (sge_gdi_mod_job).
+*     Verifies the project:
+*        - global config projects/xprojects
+*        - enforce_project
+*        - exists in project list
+*
+*  INPUTS
+*     const lListElem *job - the job containing JB_project
+*     lList **alpp         - answer list to pass back error messages
+*     const char *user     - job owner / job submitter
+*     const char *group    - job owners group
+*
+*  RESULT
+*     static int - STATUS_OK on success, else STATUS_* error code
+*
+*  NOTES
+*     MT-NOTE: job_verify_project() is MT safe, if caller holds the global lock.
+*******************************************************************************/
+static int
+job_verify_project(const lListElem *job, lList **alpp,
+                   const char *user, const char *group)
+{
+   int ret = STATUS_OK;
+   const char *project = lGetString(job, JB_project);
+   lList* projects = mconf_get_projects();
+
+   DENTER(TOP_LAYER, "job_verify_project");
+
+   /* job requests a project, verify existance, access rights, ... */
+   if (project != NULL) {
+      /* make sure the requested project exists at all */
+      lListElem *pep = userprj_list_locate(Master_Project_List, project);
+      if (pep == NULL) {
+         ERROR((SGE_EVENT, MSG_JOB_PRJUNKNOWN_S, project));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         ret = STATUS_EUNKNOWN;
+      }
+
+      if (ret == STATUS_OK) {
+         /* ensure user belongs to this project */
+         if (!sge_has_access_(user, group, 
+                              lGetList(pep, UP_acl), 
+                              lGetList(pep, UP_xacl), 
+                              Master_Userset_List)) {
+            ERROR((SGE_EVENT, MSG_SGETEXT_NO_ACCESS2PRJ4USER_SS,
+                     project, user));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            ret = STATUS_EUNKNOWN;
+         }
+      }
+
+      if (ret == STATUS_OK) {
+         /* verify project can use SGE cluster according to global config projects/xprojects */
+         lList *xprojects = mconf_get_xprojects();
+
+         if ((xprojects != NULL && userprj_list_locate(xprojects, project)) ||
+             (projects != NULL && userprj_list_locate(projects, project) == NULL)) {
+            ERROR((SGE_EVENT, MSG_JOB_PRJNOSUBMITPERMS_S, project));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            ret = STATUS_EUNKNOWN;
+         }
+
+         lFreeList(&xprojects);
+      }
+   } else {
+      /* 
+       * job does not request a project - verify project enforcement
+       * 
+       * when we have a projects list in the global config,
+       * every job *must* request a project
+       */
+      if (lGetNumberOfElem(projects) > 0) {
+         ERROR((SGE_EVENT, MSG_JOB_PRJREQUIRED)); 
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         ret = STATUS_EUNKNOWN;
+      }
+
+      if (ret == STATUS_OK) {
+         char* enforce_project = mconf_get_enforce_project();
+
+         if (enforce_project != NULL && strcasecmp(enforce_project, "true") == 0) {
+            ERROR((SGE_EVENT, MSG_SGETEXT_NO_PROJECT));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            ret = STATUS_EUNKNOWN;
+         }
+         FREE(enforce_project);
+      }
+   }
+
+   lFreeList(&projects);
+   DRETURN(ret);
 }
 

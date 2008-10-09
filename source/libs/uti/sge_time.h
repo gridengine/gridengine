@@ -55,5 +55,7 @@ void append_time(time_t i, dstring *buffer);
 void sge_stopwatch_start(int);
 void sge_stopwatch_log(int, const char *);  
 
+void sge_usleep(int);  
+
 #endif /* __SGE_TIME_H */
 

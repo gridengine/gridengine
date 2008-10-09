@@ -318,8 +318,6 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    ckpt_inter = lGetUlong(jep, JB_checkpoint_interval);
    ckpt_name = lGetString(jep, JB_checkpoint_name);
 
-   lSetUlong(jep, JB_submission_time, sge_get_gmt());
-
    lSetList(jep, JB_ja_tasks, NULL);
    lSetList(jep, JB_jid_sucessor_list, NULL);
 
@@ -346,6 +344,13 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
          job_number = sge_get_job_number(monitor);
       } while (job_list_locate(Master_Job_List, job_number));
       lSetUlong(jep, JB_job_number, job_number);
+      /*
+       * We need to set submission time AFTER job ID
+       * assignment to make sure that forced separation
+       * in time is effective in case of job ID rollover.
+       */
+
+      lSetUlong(jep, JB_submission_time, sge_get_gmt());
 
       /*
       ** with interactive jobs, JB_exec_file is not set
@@ -3571,6 +3576,13 @@ static u_long32 sge_get_job_number(monitoring_t *monitor)
       DPRINTF(("highest job number MAX_SEQNUM %d exceeded, starting over with 1\n", MAX_SEQNUM));
       job_number_control.job_number = 1;
       is_store_job = true;
+      /*
+       * We need to sleep at least for one second to make sure
+       * that _this_ jobs's submission time is unique given the
+       * current time resolution of one second. This will allow
+       * scheduler proper sorting in case of job ID rollover.
+       */
+      sge_usleep(1000000);
    }
    job_nr = job_number_control.job_number;
 

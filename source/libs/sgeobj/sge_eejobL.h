@@ -96,7 +96,8 @@ enum {
    SGEJ_owner,
    SGEJ_state,
    SGEJ_master_queue,
-   SGEJ_job_reference
+   SGEJ_job_reference,
+   SGEJ_submission_time
 };
 
 /* a boolean for the sort order */
@@ -113,6 +114,7 @@ LISTDEF(SGEJ_Type)
    SGE_ULONG(SGEJ_state, CULL_DEFAULT)
    SGE_STRING(SGEJ_master_queue, CULL_DEFAULT)
    SGE_REF(SGEJ_job_reference, JRL_Type, CULL_DEFAULT)
+   SGE_ULONG(SGEJ_submission_time, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(SGEJN)
@@ -123,6 +125,7 @@ NAMEDEF(SGEJN)
    NAME("SGEJ_state")
    NAME("SGEJ_master_queue")
    NAME("SGEJ_job_reference")
+   NAME("SGEJ_submission_time")
 NAMEEND
 
 /* *INDENT-ON* */

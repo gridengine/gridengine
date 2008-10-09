@@ -1,3 +1,9 @@
+GH-2008-10-09-0: Bugfix:     scheduler failure when job-id's roll over
+                             to 1.
+                 Bugster:    6682558
+                 Issue:      2564
+                 Review:     EB
+
 JG-2008-10-08-0: Bugfix:     qalter allows a user to place a job in a project
                              forbidden by ACLs
                  Bugster:    6752921

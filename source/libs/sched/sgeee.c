@@ -523,6 +523,7 @@ void sgeee_resort_pending_jobs(lList **job_list)
 
    if (next_job) {
       u_long32 job_id = lGetUlong(next_job, JB_job_number);
+      u_long32 start_time_of_job1 = lGetUlong(next_job, JB_submission_time);
       lListElem *tmp_task = lFirst(lGetList(next_job, JB_ja_tasks));
       lListElem *jep = NULL;
       lListElem *insert_jep = NULL;
@@ -586,6 +587,7 @@ void sgeee_resort_pending_jobs(lList **job_list)
          lDechainElem(*job_list, next_job);
          prio = lGetDouble(tmp_task, JAT_prio);
          for_each(jep, *job_list) {
+            u_long32 start_time_of_job2 = lGetUlong(jep, JB_submission_time);
             u_long32 job_id2 = lGetUlong(jep, JB_job_number);
             lListElem *tmp_task2 = lFirst(lGetList(jep, JB_ja_tasks));
             double prio2;
@@ -594,7 +596,18 @@ void sgeee_resort_pending_jobs(lList **job_list)
                tmp_task2 = lFirst(lGetList(jep, JB_ja_template));
             }
             prio2 = lGetDouble(tmp_task2, JAT_prio);
-            if (prio > prio2 || (prio == prio2 && job_id < job_id2)) {
+	    /*
+	     * In case of equal priority we select the most senior job
+	     * in the system. This guy is marked either by smaller job
+	     * ID (the regular case) or earlier submission time (the
+	     * wraparound case). Note: we force a one second separation
+	     * in time for the latter case to ensure that this assumption
+	     * holds.
+	     */
+            if (prio > prio2 ||
+                  (prio == prio2 &&
+		  (start_time_of_job1 < start_time_of_job2 || /* JobID rollover */
+		  (start_time_of_job1 == start_time_of_job2 && job_id < job_id2)))) { /*Regular case */
                break;
             }
             insert_jep = jep;
@@ -1836,9 +1849,15 @@ static u_long32 build_functional_categories(sge_ref_t *job_ref, int num_jobs, lL
                      break;
                   }   
                   else if (ref->tickets == jref->tickets){
-                     if (lGetUlong(ref->job, JB_job_number) < lGetUlong(jref->job, JB_job_number))
+                     u_long32 ref_time = lGetUlong(ref->job, JB_submission_time);
+                     u_long32 jref_time = lGetUlong(jref->job, JB_submission_time);
+                     u_long32 ref_jid = lGetUlong(ref->job, JB_job_number);
+                     u_long32 jref_jid = lGetUlong(jref->job, JB_job_number);
+		     if (ref_time < jref_time ||
+                           (ref_time == jref_time && ref_jid < jref_jid)) {
                         break;
-                     else if ((lGetUlong(ref->job, JB_job_number) == lGetUlong(jref->job, JB_job_number)) 
+                     }
+                     else if ((ref_jid == jref_jid)
                            && (REF_GET_JA_TASK_NUMBER(ref) < REF_GET_JA_TASK_NUMBER(jref)))
                         break;
                   }
@@ -3098,6 +3117,7 @@ sge_calc_tickets( scheduler_all_data_t *lists,
             for(i=0; i<max; i++) {
                double ftickets, max_ftickets=-1;
                u_long32 jid, save_jid=0, save_tid=0;
+	       u_long32 submission_time = 0, save_submission_time = 0;
                lListElem *current = NULL;
                lListElem *max_current = NULL;
 
@@ -3128,13 +3148,16 @@ sge_calc_tickets( scheduler_all_data_t *lists,
 
                   /* controll, if the current job has the most tickets */
                   if(ftickets >= max_ftickets){
+                     jid = lGetUlong(jref->job, JB_job_number);
+                     submission_time = lGetUlong(jref->job, JB_submission_time);
                      if (max_current == NULL ||
-                           ftickets > max_ftickets ||
-                           (jid=lGetUlong(jref->job, JB_job_number)) < save_jid ||
-                           (jid == save_jid && 
-                           REF_GET_JA_TASK_NUMBER(jref) < save_tid)) {
+                           (ftickets > max_ftickets) ||
+			   (submission_time < save_submission_time) ||
+			   (submission_time == save_submission_time && jid < save_jid) ||
+                           (jid == save_jid && REF_GET_JA_TASK_NUMBER(jref) < save_tid)) {
                         max_ftickets = ftickets;
                         save_jid = lGetUlong(jref->job, JB_job_number);
+                        save_submission_time = lGetUlong(jref->job, JB_submission_time);
                         save_tid = REF_GET_JA_TASK_NUMBER(jref);
                         sort_list[i] = jref;
                         max_current = current;

@@ -484,3 +484,47 @@ u_long32 duration_add_offset(u_long32 duration, u_long32 offset)
 
    return duration;
 }
+/****** uti/time/seg_usleep()() ****************************************
+*  NAME
+*     sge_sleep() -- ??
+*
+*  SYNOPSIS
+*     void sge_usleep(int sleep_time)
+*
+*  FUNCTION
+*     Mimiks non-iterruptable usleep() to caller
+*
+*  INPUTS
+*     int sleep_time - Requested sleep time in microseconds
+*
+*  RESULT
+*     n/a
+*
+*  NOTES
+*     None.
+*******************************************************************************/
+void sge_usleep(int sleep_time)
+{
+   struct timeval wake_tv, sleep_tv, snooze_tv;
+   int time_to_sleep;
+
+   time_to_sleep = sleep_time;
+
+   do {
+      gettimeofday(&sleep_tv, NULL);
+      (void)usleep(time_to_sleep);
+      gettimeofday(&wake_tv, NULL);
+      if (wake_tv.tv_usec < sleep_tv.tv_usec) {
+         wake_tv.tv_sec--;
+	 wake_tv.tv_usec = wake_tv.tv_usec + 1000000;
+      }
+      snooze_tv.tv_sec = wake_tv.tv_sec - sleep_tv.tv_sec;
+      snooze_tv.tv_usec = wake_tv.tv_usec - sleep_tv.tv_usec;
+
+      time_to_sleep = time_to_sleep - (snooze_tv.tv_sec * 1000000 + snooze_tv.tv_usec);
+
+   } while (time_to_sleep > 0);
+
+   return;
+
+}

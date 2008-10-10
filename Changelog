@@ -1,3 +1,9 @@
+GH-2008-10-10-0: Bugfix:      scheduler failure when job-id's roll over
+                              to 1
+                 Bugster:     6682558
+                 Issue:       2564
+                 Review:      EB
+
 MP-2008-10-08-0: Bugfix:      SGE_Helper_Service man page still refers to old complex
                               variable when submitting GUI jobs. Also there is a new
                               environment variable that is not yet documented.

@@ -57,5 +57,7 @@ void sge_stopwatch_log(int, const char *);
 
 u_long32 duration_add_offset(u_long32 duration, u_long32 offset);
 
+void sge_usleep(int);
+
 #endif /* __SGE_TIME_H */
 

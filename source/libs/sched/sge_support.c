@@ -886,15 +886,19 @@ void sgeee_sort_jobs_by( lList **job_list , int by_SGEJ_field, int field_sort_di
       ** JAT_master_queue (String)
       */
 
-      lSetUlong(tmp_sge_job, SGEJ_job_number, lGetUlong(job, JB_job_number));
+      lSetUlong(tmp_sge_job, SGEJ_job_number,
+		lGetUlong(job, JB_job_number));
+      lSetUlong(tmp_sge_job, SGEJ_submission_time,
+		lGetUlong(job, JB_submission_time));
       if (by_SGEJ_field != SGEJ_priority) { 
          lSetString(tmp_sge_job, SGEJ_job_name, lGetString(job, JB_job_name));
          lSetString(tmp_sge_job, SGEJ_owner, lGetString(job, JB_owner));
       }
       lSetRef(tmp_sge_job, SGEJ_job_reference, job);
 #if 0
-      DPRINTF(("JOB: "sge_u32" PRIORITY: %f NAME: %s OWNER: %s QUEUE: %s STATUS: "sge_u32"\n", 
+      DPRINTF(("JOB: "sge_u32" SUBMISSION_TIME: "sge_u32" PRIORITY: %f NAME: %s OWNER: %s QUEUE: %s STATUS: "sge_u32"\n", 
          lGetUlong(tmp_sge_job, SGEJ_job_number), 
+         lGetUlong(tmp_sge_job, SGEJ_submission_time), 
          lGetDouble(tmp_sge_job, SGEJ_priority),
          lGetString(tmp_sge_job, SGEJ_job_name) ? lGetString(tmp_sge_job, SGEJ_job_name) : "",
          lGetString(tmp_sge_job, SGEJ_owner) ? lGetString(tmp_sge_job, SGEJ_owner) : "",
@@ -910,16 +914,19 @@ void sgeee_sort_jobs_by( lList **job_list , int by_SGEJ_field, int field_sort_di
     * Sort tmp list
     *-----------------------------------------------------------------*/
    if ((field_sort_direction) && (jobnum_sort_direction)) {
-      sortorder = "%I+ %I+";
+      sortorder = "%I+ %I+ %I+";
    } else if (!field_sort_direction) {
-      sortorder = "%I- %I+";
+      sortorder = "%I- %I+ %I+";
    } else if (!jobnum_sort_direction) {
-      sortorder = "%I+ %I-";
+      sortorder = "%I+ %I- %I-";
    } else {
-      sortorder = "%I- %I-";
+      sortorder = "%I- %I- %I-";
    }
 
-   lPSortList(tmp_list, sortorder, by_SGEJ_field, SGEJ_job_number);
+   lPSortList(tmp_list, sortorder,
+	      by_SGEJ_field,
+	      SGEJ_submission_time,
+	      SGEJ_job_number);
 
    /*-----------------------------------------------------------------
     * rebuild job_list according sort order

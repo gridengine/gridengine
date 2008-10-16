@@ -640,15 +640,18 @@ qinstance_list_find_matching(const lList *this_list, lList **answer_list,
 int
 qinstance_slots_used(const lListElem *this_elem) 
 {
-   int ret = 1000000;
+   int ret = 1000000; /* when slots is unknown */ 
    lListElem *slots;
 
    DENTER(QINSTANCE_LAYER, "qinstance_slots_used");
+   
    slots = lGetSubStr(this_elem, RUE_name, SGE_ATTR_SLOTS, QU_resource_utilization);
    if (slots != NULL) {
       ret = lGetDouble(slots, RUE_utilized_now);
    } else {
-      /* may never happen */
+      /* this happens on qinstance_create when a queue instance is created 
+         before others queue instances in the subordinate lists  
+         are created */
       CRITICAL((SGE_EVENT, MSG_QINSTANCE_MISSLOTS_S, 
                 lGetString(this_elem, QU_full_name)));
    }
@@ -723,7 +726,7 @@ qinstance_set_slots_used(lListElem *this_elem, int new_slots)
    if (slots != NULL) {
       lSetDouble(slots, RUE_utilized_now, new_slots);
    } else {
-      /* may never happen */
+      /* because this should never happen and an critical error */
       CRITICAL((SGE_EVENT, MSG_QINSTANCE_MISSLOTS_S, 
                 lGetString(this_elem, QU_full_name)));
    }

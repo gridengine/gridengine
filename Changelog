@@ -1,3 +1,9 @@
+DG-2008-10-16-0: Bugfix:      subordinate properties lost on qmaster restart 
+                 Bugster:     6319223
+                 Issue:       1741
+                 Belongs to:  EB-2008-09-15-0
+                 Review:      EB
+
 GH-2008-10-10-0: Bugfix:      scheduler failure when job-id's roll over
                               to 1
                  Bugster:     6682558

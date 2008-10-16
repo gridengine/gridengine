@@ -988,6 +988,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
    /*
     * Initialize cached values for each qinstance:
     *    - fullname
+    *    - suspend on subordinate 
     */
    for_each(tmpqep, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
       lList *qinstance_list = lGetList(tmpqep, CQ_qinstances);
@@ -995,9 +996,10 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
 
       for_each(qinstance, qinstance_list) {
          qinstance_set_full_name(qinstance);
+         sge_qmaster_qinstance_state_set_susp_on_sub(qinstance, false);
       }
    }
-   
+
    DPRINTF(("pe_list---------------------------------\n"));
    spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_PE].list, SGE_TYPE_PE);
    answer_list_output(&answer_list);
@@ -1106,23 +1108,15 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
 
    /*
     * Initialize cached values for each qinstance:
-    *    - clear suspend on subordinate flag
     *    - update suspend on subordinate state according to running jobs
     *    - update cached QI values.
     */
    for_each(tmpqep, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
-      lList *qinstance_list = lGetList(tmpqep, CQ_qinstances);
-      lListElem *qinstance;
-
-      for_each(qinstance, qinstance_list) {
-         sge_qmaster_qinstance_state_set_susp_on_sub(qinstance, false);
-      }
       cqueue_mod_qinstances(ctx, tmpqep, NULL, tmpqep, true, false, &monitor);
    }
 
    /* rebuild signal resend events */
    rebuild_signal_events();
-
 
    DPRINTF(("user list-----------------------------------\n"));
    spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_USER].list, SGE_TYPE_USER);

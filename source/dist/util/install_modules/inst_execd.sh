@@ -376,6 +376,7 @@ CheckHostNameResolving()
 
       loop_counter=`expr $loop_counter + 1`
       if [ $loop_counter -ge $loop_max ]; then
+         $INFOTEXT -e "$MODE failed after %s retries" $loop_max
          exit 1
       fi
    done

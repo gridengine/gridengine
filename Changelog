@@ -1,3 +1,9 @@
+MD-2008-10-16-0: Bugfix:      o spooldefaults core dumps when bootstrap file 
+                                does not exists
+                 Bugster:     6710511
+                 Issue:       2753
+                 Review:      JG
+
 GH-2008-10-10-0: Bugfix:      scheduler failure when job-id's roll over
                               to 1
                  Bugster:     6682558

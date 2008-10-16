@@ -435,6 +435,7 @@ int main(int argc, char *argv[])
    sge_prof_setup();
 
    if (sge_setup2(&ctx, SPOOLDEFAULTS, &answer_list) != AE_OK) {
+      show_answer(answer_list);
       answer_list_output(&answer_list);
       SGE_EXIT((void **)&ctx, EXIT_FAILURE);
    }

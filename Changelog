@@ -1,3 +1,9 @@
+MD-2008-10-16-0: Bugfix:      o spooldefaults core dumps when bootstrap file 
+                                does not exists
+                 Bugster:     6710511
+                 Issue:       2753
+                 Review:      JG
+
 MP-2008-10-16-0: Bugfix:      invalid exit code if host is removed from admin 
                               host list during installation
                  Bugster:     6748262

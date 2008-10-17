@@ -58,12 +58,10 @@
 #include "sge_profiling.h"
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
-#include "sge_host.h"
 
 static lList *sge_parse_cmdline_qmod(char **argv, char **envp, lList **ppcmdline);
-static lList *sge_parse_qmod(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, lList **ppreflist, u_long32 *pforce);
+static lList *sge_parse_qmod(lList **ppcmdline, lList **ppreflist, u_long32 *pforce);
 static int qmod_usage(FILE *fp, char *what);
-static int is_adminhost(sge_gdi_ctx_class_t *ctx);
 
 extern char **environ;
 
@@ -79,6 +77,7 @@ char **argv
    lList *alp = NULL, *pcmdline = NULL;
    lListElem *aep;
    sge_gdi_ctx_class_t *ctx = NULL;
+   bool answ_list_has_err = false;
    
    DENTER_MAIN(TOP_LAYER, "qmod");
 
@@ -109,7 +108,7 @@ char **argv
       SGE_EXIT((void**)&ctx, 1);
    }
 
-   alp = sge_parse_qmod(ctx, &pcmdline, &ref_list, &force);
+   alp = sge_parse_qmod(&pcmdline, &ref_list, &force);
 
    if(alp) {
       /*
@@ -135,6 +134,8 @@ char **argv
       alp = ctx->gdi(ctx, SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, &ref_list, NULL, NULL);
    }
 
+   answ_list_has_err = answer_list_has_error(&alp);
+
    /*
    ** show answer list
    */
@@ -148,7 +149,12 @@ char **argv
 
    sge_prof_cleanup();
 
-   SGE_EXIT((void**)&ctx, 0);
+   if(answ_list_has_err) {
+      SGE_EXIT((void**)&ctx, 1);
+   }
+   else {
+      SGE_EXIT((void**)&ctx, 0);
+   }
    DEXIT;
    return 0;
 }
@@ -314,7 +320,7 @@ error:
  **** ppcmdline, sets the force and action flags and puts the
  **** queue/job-names/numbers in ppreflist.
  ****/
-static lList *sge_parse_qmod(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, lList **ppreflist, u_long32 *pforce)
+static lList *sge_parse_qmod(lList **ppcmdline, lList **ppreflist, u_long32 *pforce)
 {
 stringT str;
 lList *alp = NULL;
@@ -386,8 +392,6 @@ int usageshowed = 0;
          usageshowed = qmod_usage(stdout, NULL);
          break;
       }
-
-      is_adminhost(ctx);
 
       if (parse_flag(ppcmdline, "-f", &alp, pforce)) {
          continue;      
@@ -503,70 +507,3 @@ char *what
    return 1;
 }
 
-/*
-** NAME
-**   is_adminhost
-** PARAMETER
-**   ctx - gdi
-** RETURN
-**
-** EXTERNAL
-**
-** DESCRIPTION
-**   retrieves adminhost list from qmaster and checks if the
-**   local host is contained
-*/
-static int is_adminhost(sge_gdi_ctx_class_t *ctx)
-{
-   const char *host = NULL;
-   lCondition *where = NULL;
-   lEnumeration *what = NULL;
-   lList *alp = NULL;
-   lListElem *aep = NULL;
-   lList *lp = NULL;
-   lListElem  *ep = NULL;
-
-   DENTER(TOP_LAYER, "is_adminhost");
-
-   host = ctx->get_qualified_hostname(ctx);
-
-   if (!host || !*host) {
-      DRETURN(-1);
-   }
-
-   DPRINTF(("host: '%s'\n", host));
-
-   /*
-   ** GET SGE_ADMINHOST_LIST
-   */
-   where = lWhere("%T(%Ih=%s)", AH_Type, AH_name, host);
-   what = lWhat("%T(ALL)", AH_Type);
-   alp = ctx->gdi(ctx, SGE_ADMINHOST_LIST, SGE_GDI_GET, &lp, where, what);
-   lFreeWhat(&what);
-   lFreeWhere(&where);
-
-   if (!alp) {
-      SGE_EXIT(NULL, 1);
-   }
-   if (lGetUlong(aep = lFirst(alp), AN_status) != STATUS_OK) {
-      fprintf(stderr, "%s\n", lGetString(aep, AN_text));
-      lFreeList(&alp);
-      SGE_EXIT(NULL, 1);
-   }
-   lFreeList(&alp);
-
-   ep = host_list_locate(lp, host);
-
-   if (!ep) {
-      /*
-      ** host is no adminhost
-      */
-      lFreeList(&lp);
-      fprintf(stderr, MSG_ANSWER_DENIEDHOSTXISNOADMINHOST_S, host);
-      fprintf(stderr, "\n");
-      SGE_EXIT(NULL, 1);
-   }
-
-   lFreeList(&lp);
-   DRETURN(0);
-}

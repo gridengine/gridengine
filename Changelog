@@ -1,3 +1,8 @@
+JF-2008-10-16-0: Bugfix: qmod does not follow admin host rules fixed
+                 Bugtraq: 6707098
+                 Issue: 2582
+                 Review: JG
+
 MD-2008-10-16-0: Bugfix:      o spooldefaults core dumps when bootstrap file 
                                 does not exists
                  Bugster:     6710511

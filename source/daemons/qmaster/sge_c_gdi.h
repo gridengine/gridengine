@@ -109,5 +109,9 @@ void sge_clean_lists(void);
 int verify_request_version(lList **alpp, u_long32 version, char *host, 
                            char *commproc, int id);
 
+int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
+                                  char *commproc, int mod, lListElem *ep,
+                                  monitoring_t *monitor, object_description *object_base);
+
 #endif /* __SGE_C_GDI_H */
 

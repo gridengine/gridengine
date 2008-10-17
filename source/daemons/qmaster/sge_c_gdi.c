@@ -153,9 +153,6 @@ trigger_scheduler_monitoring(sge_gdi_packet_class_t *packet, sge_gdi_task_class_
                              monitoring_t *monitor);
 
 static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, monitoring_t *monitor);
-static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, 
-                                  char *commproc, int mod, lListElem *ep, 
-                                  monitoring_t *monitor, object_description *object_base);
 
 static bool
 sge_task_check_get_perm_host(sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
@@ -1459,7 +1456,7 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, mon
 /*
  * MT-NOTE: sge_chck_mod_perm_host() is MT safe
  */
-static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, 
+int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, 
                                   char *commproc, int mod, lListElem *ep, 
                                   monitoring_t *monitor, object_description *object_base)
 {

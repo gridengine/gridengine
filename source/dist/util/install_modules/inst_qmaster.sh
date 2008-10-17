@@ -129,7 +129,7 @@ GetCell()
                   ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL_VAL/common/cluster_name                  
                elif [ $sel_ret -ne 0 ]; then
                   $INFOTEXT "Deleting directory \"%s\" now!" $SGE_ROOT/$SGE_CELL_VAL
-                  ExecuteAsAdmin rm -rf $SGE_ROOT/$SGE_CELL_VAL
+                  Removedir $SGE_ROOT/$SGE_CELL_VAL
                fi
                if [ $sel_ret = 0 ]; then
                   Overwrite="true"
@@ -328,7 +328,7 @@ SetPermissions()
 
 
 #SetSpoolingOptionsBerkeleyDB()
-# $1 - new default spool_dir or BDBD server
+# $1 - new default spool_dir or BDB server
 SetSpoolingOptionsBerkeleyDB()
 {
    SPOOLING_METHOD=berkeleydb
@@ -418,8 +418,7 @@ SetSpoolingOptionsBerkeleyDB()
                fi
  
                if [ $ret = 0 ]; then
-                     RM="rm -r"
-                     ExecuteAsAdmin $RM $SPOOLING_DIR
+                     Removedir $SPOOLING_DIR
                      if [ -d $SPOOLING_DIR ]; then
                         $INFOTEXT "You are not the owner of this directory. You can't delete it!"
                      else
@@ -464,7 +463,7 @@ SetSpoolingOptionsBerkeleyDB()
          if [ "$AUTO" = "true" ]; then
                if [ $SPOOLING_SERVER = "none" ]; then
                   $ECHO
-                  ExecuteAsAdmin $MKDIR $SPOOLING_DIR
+                  Makedir $SPOOLING_DIR
                   SPOOLING_ARGS="$SPOOLING_DIR"
                else
                   $INFOTEXT -log "We found a running berkeley db server on this host!"
@@ -521,7 +520,7 @@ SetSpoolingOptionsBerkeleyDB()
 
    if [ "$SPOOLING_SERVER" = "none" ]; then
       $ECHO
-      ExecuteAsAdmin $MKDIR $SPOOLING_DIR
+      Makedir $SPOOLING_DIR
       SPOOLING_ARGS="$SPOOLING_DIR"
    else
       SPOOLING_ARGS="$SPOOLING_SERVER:`basename $SPOOLING_DIR`"
@@ -535,9 +534,14 @@ SetSpoolingOptionsClassic()
    SPOOLING_ARGS="$SGE_ROOT_VAL/$COMMONDIR;$QMDIR"
 }
 
-# $1 - suggested spooling params form the backup
+# $1 - spooling method
+# $2 - suggested spooling params from the backup
 SetSpoolingOptionsDynamic()
 {
+   suggested_method=$1
+   if [ -z "$suggested_method" ]; then
+      suggested_method=berkeleydb
+   fi
    if [ "$AUTO" = "true" ]; then
       if [ "$SPOOLING_METHOD" != "berkeleydb" -a "$SPOOLING_METHOD" != "classic" ]; then
          SPOOLING_METHOD="berkeleydb"
@@ -549,8 +553,8 @@ SetSpoolingOptionsDynamic()
          $INFOTEXT -n "Your SGE binaries are compiled to link the spooling libraries\n" \
                       "during runtime (dynamically). So you can choose between Berkeley DB \n" \
                       "spooling and Classic spooling method."
-         $INFOTEXT -n "\nPlease choose a spooling method (berkeleydb|classic) [berkeleydb] >> "
-         SPOOLING_METHOD=`Enter berkeleydb`
+         $INFOTEXT -n "\nPlease choose a spooling method (berkeleydb|classic) [%s] >> " "$suggested_method"
+         SPOOLING_METHOD=`Enter $suggested_method`
       fi
    fi
 
@@ -561,7 +565,7 @@ SetSpoolingOptionsDynamic()
          SetSpoolingOptionsClassic
          ;;
       berkeleydb)
-         SetSpoolingOptionsBerkeleyDB $1
+         SetSpoolingOptionsBerkeleyDB $2
          ;;
       *)
          $INFOTEXT "\nUnknown spooling method. Exit."

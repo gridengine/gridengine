@@ -1,3 +1,15 @@
+LP-2008-10-17-0: Bugfix:      Cannot choose admin user when installing as root 
+                              - installation fails
+                 Bugfix:      Installation might fail if SGE_CELL directory exists
+                 Bugfix:      Service Tags support displays messages on qmaster startup
+                 Bugfix:      Upgrade in copy mode should suggest spooling method 
+		              from the backup first
+                 Bugfix:      Parallel execd autoinstallation might fail when using 
+                              only SMF
+                 Bugster:     6739725, 6742941, 6743003, 6743012, 6743001
+                 Issue:       2694, 2707, 2710, -, 2709
+                 Review:      MD
+
 JF-2008-10-16-0: Bugfix: qmod does not follow admin host rules fixed
                  Bugtraq: 6707098
                  Issue: 2582

@@ -276,7 +276,7 @@ RemoveSpoolDir()
       ExecuteAsAdmin rm -R $SPOOL_DIR/$HOST_DIR
  
       if [ `ls -la $SPOOL_DIR | wc -l` -lt 4 ]; then
-         ExecuteAsAdmin rm -R $SPOOL_DIR
+         Removedir $SPOOL_DIR
       fi
 
    fi
@@ -316,7 +316,10 @@ doUninstall() {
       RemoveSpoolDir $uhost
       RemoveReferences $uhost
       RemoveExecd $uhost
-      RemoveRcScript $uhost execd $euid
+      #Detect execd service/rc script
+      CheckIfClusterNameAlreadyExists execd
+      #And remove either or both 
+      RemoveRC_SMF execd $?      
    else
       $INFOTEXT "%s is not an execution host" $uhost
       $INFOTEXT -log "%s is not an execution host" $uhost

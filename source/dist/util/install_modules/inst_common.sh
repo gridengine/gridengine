@@ -174,24 +174,66 @@ Enter()
 
 #-------------------------------------------------------------------------
 # Makedir: make directory, chown/chgrp/chmod it. Exit if failure
-#
+# 
 Makedir()
 {
    dir=$1
+   tmp_dir=$1
 
    if [ ! -d $dir ]; then
-      $INFOTEXT "creating directory: %s" "$dir"
-      ExecuteAsAdmin $MKDIR -p $dir
+      while [ ! -d $tmp_dir ]; do
+         chown_dir=$tmp_dir
+         tmp_dir2=`dirname $tmp_dir`
+         tmp_dir=$tmp_dir2
+      done
+
+       $INFOTEXT "creating directory: %s" "$dir"
+       if [ "`$SGE_UTILBIN/filestat -owner $tmp_dir`" != "$ADMINUSER" ]; then
+          Execute $MKDIR -p $dir
+          if [ "$ADMINUSER" = "default" ]; then
+             Execute $CHOWN -R root $chown_dir
+          else
+             group=`$SGE_UTILBIN/checkuser -gid $ADMINUSER`
+             Execute $CHOWN -R $ADMINUSER:$group $chown_dir
+          fi
+	  Execute $CHMOD -R $DIRPERM $chown_dir
+       else
+          ExecuteAsAdmin $MKDIR -p $dir
+	  ExecuteAsAdmin $CHMOD -R $DIRPERM $chown_dir
+       fi
    fi
 
-   ExecuteAsAdmin $CHMOD $DIRPERM $dir
+   if [ "`$SGE_UTILBIN/filestat -owner $dir`" != "$ADMINUSER" ]; then
+      Execute $CHMOD $DIRPERM $dir
+   else
+      ExecuteAsAdmin $CHMOD $DIRPERM $dir
+   fi
 }
+
+#-------------------------------------------------------------------------
+# Removedir: remove directory, chown/chgrp/chmod it. Exit if failure
+# 
+Removedir()
+{
+   dir=$1
+   tmp_dir=`dirname $dir`
+
+   if [ -d $dir ]; then
+       #We could be more clever and even check tmp_dir permissions
+       if [ "`$SGE_UTILBIN/filestat -owner $tmp_dir`" != "$ADMINUSER" ]; then
+          Execute $RM -rf $dir
+       else
+          ExecuteAsAdmin $RM -rf $dir
+       fi
+   fi
+}
+
 
 #-------------------------------------------------------------------------
 # Execute command as user $ADMINUSER and exit if exit status != 0
 # if ADMINUSER = default then execute command unchanged
 #
-# uses binary "adminrun" form SGE distribution
+# uses binary "adminrun" from SGE distribution
 #
 # USES: variables "$verbose"    (if set to "true" print arguments)
 #                  $ADMINUSER   (if set to "default" do not use "adminrun)
@@ -1896,9 +1938,7 @@ ProcessSGEClusterName()
       
    #Only BDB or qmaster installation can create cluster_name file
    if [ \( "$1" = "bdb" -o "$1" = "qmaster" -o "$UPDATE" = "true" \) -a ! -f $SGE_ROOT/$SGE_CELL/common/cluster_name ]; then
-      if [ ! -d "$SGE_ROOT/$SGE_CELL/common" ]; then
-         ExecuteAsAdmin $MKDIR -p "$SGE_ROOT/$SGE_CELL/common"
-      fi
+      Makedir "$SGE_ROOT/$SGE_CELL/common"
       SafelyCreateFile $SGE_ROOT/$SGE_CELL/common/cluster_name 644 "$SGE_CLUSTER_NAME"
    fi
 
@@ -4012,12 +4052,7 @@ RemoteExecSpoolDirDelete()
       local_dir=$global_dir
    fi
    if [ -d "$local_dir/$HOST" ]; then
-      #Try as root
-      rm -rf "$local_dir/$HOST" > /dev/null 2&>1
-      if [ $? -ne 0 ]; then
-         #Try as admin
-	 ExecuteAsAdmin rm -rf "$local_dir/$HOST"
-      fi
+      Removedir "$local_dir/$HOST"
    elif [ ! -d "$local_dir" ]; then
       LOCAL_EXECD_SPOOL=$local_dir
       . $SGE_ROOT/util/install_modules/inst_execd.sh

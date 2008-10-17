@@ -548,7 +548,7 @@ if [ "$UPDATE" = true ]; then
    if [ "$UPGRADE_MODE" = upgrade ]; then
       SelectNewSpooling `BootstrapGetValue "${UPGRADE_BACKUP_DIR}/cell" "spooling_method"`
    else
-      SetSpoolingOptions
+      SetSpoolingOptions `BootstrapGetValue "${UPGRADE_BACKUP_DIR}/cell" "spooling_method"`
       ReplaceLineWithMatch "$SGE_ROOT/$SGE_CELL/common/bootstrap" 644 'spooling_method.*' "spooling_method         $SPOOLING_METHOD"
       ReplaceLineWithMatch "$SGE_ROOT/$SGE_CELL/common/bootstrap" 644 'spooling_lib.*'    "spooling_lib            $SPOOLING_LIB"
       ReplaceLineWithMatch "$SGE_ROOT/$SGE_CELL/common/bootstrap" 644 'spooling_params.*' "spooling_params         $SPOOLING_ARGS"

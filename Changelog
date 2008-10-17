@@ -1,16 +1,21 @@
+JF-2008-10-16-0: Bugfix: qmod does not follow admin host rules fixed
+                 Bugtraq: 6707098
+                 Issue: 2582
+                 Review: JG
+
 MP-2008-10-16-0: Bugfix:      invalid exit code if host is removed from admin
                               host list during installation
                  Bugster:     6748262
                  Issue:       2755
                  Review:      DG
 
-MD-2008-10-16-0: Bugfix:      o spooldefaults core dumps when bootstrap file 
+MD-2008-10-16-0: Bugfix:      o spooldefaults core dumps when bootstrap file
                                 does not exists
                  Bugster:     6710511
                  Issue:       2753
                  Review:      JG
 
-DG-2008-10-16-0: Bugfix:      subordinate properties lost on qmaster restart 
+DG-2008-10-16-0: Bugfix:      subordinate properties lost on qmaster restart
                  Bugster:     6319223
                  Issue:       1741
                  Belongs to:  EB-2008-09-15-0
@@ -75,13 +80,13 @@ JG-2008-10-01-0: Enhancem.:  Improved handling of invalid requests in sge_execd.
                  Review:     RD
 
 DG-2007-10-01-1: Bugfix:     Man page issue regarding qresub and the -h n
-                             parameter. 
+                             parameter.
                  Issue:      2746
-                 Bugster:    6752920 
+                 Bugster:    6752920
                  Review:     MP
 
 RD-2008-09-30-0: Enhancem.:  - Improved scheduling time by using hash
-                 Bugfix      - runtime limits were delayed after execd restart 
+                 Bugfix      - runtime limits were delayed after execd restart
                  Issue:      2743
                  Bugster:    6754094
                  Review:     CR
@@ -109,11 +114,11 @@ EB_2008-08-09-29-0: Enhancem.: relaxed accounting
                               if ENABLE_FORCED_QDEL_IF_UNKNOWN is set as
                               qmaster_param
                             - qmaster enforced deleted jobs (h_rt limit) will
-                              be logged in accounting file as failed with 
+                              be logged in accounting file as failed with
                               status 37 ("qmaster enforced h_rt limit")
                             - changed some man pages
-                 Bugster:   6702908 
-                 Issue:     2551 
+                 Bugster:   6702908
+                 Issue:     2551
                  Review:    AH (JG for corresponding changes in V61ARsnapshot3_BRANCH => EB_2008-08-08-08)
 
 RD-2008-09-29-1: Bugfix:      fixed broken build on irix
@@ -130,10 +135,10 @@ RD-2008-09-25-0: Bugfix:      Fixed issue with overlapping -masterq and -q reque
                  Issue:       2736
                  Review:      DG
 
-DG-2008-09-25-0: Bugfix:      Fixed return values of -help and "no option" 
-                              for client tools. Fix of man page regarding -V 
-                              option. Added help output to stderr when  
-                              no option is given to the clients. 
+DG-2008-09-25-0: Bugfix:      Fixed return values of -help and "no option"
+                              for client tools. Fix of man page regarding -V
+                              option. Added help output to stderr when
+                              no option is given to the clients.
                  Bugster:     6750325, 6749921
                  Review:      RD
 

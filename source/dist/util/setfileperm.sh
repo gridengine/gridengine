@@ -48,10 +48,10 @@
 
 PATH=/bin:/usr/bin:/usr/sbin
 
-FILELIST="3rd_party bin ckpt examples inst_sge install_execd install_qmaster \
+FILELIST="3rd_party bin ckpt dtrace examples inst_sge install_execd install_qmaster \
           lib mpi pvm qmon util utilbin"
 
-OPTFILES="catman doc include man"  
+OPTFILES="catman doc include man"
 
 SUIDFILES="utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot bin/*/sgepasswd utilbin/*/authuser"
 
@@ -205,7 +205,7 @@ done
 
 for f in $FILELIST $OPTFILES; do
    if [ -d $f -o -f $f ]; then
-      SetFilePerm $f 
+      SetFilePerm $f
    fi
 done
 

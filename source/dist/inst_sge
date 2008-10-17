@@ -68,6 +68,7 @@ DOWNGRADE=false
 BACKUP=false
 RESTORE=false
 AUTO=false
+AUTOGUI=false
 RESCHEDULE=true
 RESPORT=false
 CSP=false
@@ -160,6 +161,10 @@ while [ $ARGC != 0 ]; do
      #Stdout2Log
      CheckPath
      ;;
+   -autogui)
+      AUTO=true
+      AUTOGUI=true
+      ;;
    -m)
      QMASTER="install"
      . ./util/install_modules/inst_qmaster.sh
@@ -361,7 +366,7 @@ fi
 #checking the autoinstall configuration file at this point of installation,
 #because the commandline switches are completely parsed and we know the selected options.
 #This will influence the configfile parsing and checking mechanism.
-if [ $AUTO = "true" ]; then
+if [ $AUTO = "true" -a  $AUTOGUI != "true" ]; then
    GetConfigFromFile
    CheckConfigFile $FILE
 fi
@@ -548,7 +553,7 @@ if [ "$UPDATE" = true ]; then
    if [ "$UPGRADE_MODE" = upgrade ]; then
       SelectNewSpooling `BootstrapGetValue "${UPGRADE_BACKUP_DIR}/cell" "spooling_method"`
    else
-      SetSpoolingOptions
+      SetSpoolingOptions `BootstrapGetValue "${UPGRADE_BACKUP_DIR}/cell" "spooling_method"`
       ReplaceLineWithMatch "$SGE_ROOT/$SGE_CELL/common/bootstrap" 644 'spooling_method.*' "spooling_method         $SPOOLING_METHOD"
       ReplaceLineWithMatch "$SGE_ROOT/$SGE_CELL/common/bootstrap" 644 'spooling_lib.*'    "spooling_lib            $SPOOLING_LIB"
       ReplaceLineWithMatch "$SGE_ROOT/$SGE_CELL/common/bootstrap" 644 'spooling_params.*' "spooling_params         $SPOOLING_ARGS"

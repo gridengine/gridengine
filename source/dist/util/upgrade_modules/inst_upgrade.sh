@@ -156,7 +156,7 @@ RestoreCell()
 {
    old_cell=$1
    if [ ! -d  "$SGE_ROOT/$SGE_CELL/common" ]; then
-      ExecuteAsAdmin mkdir -p "$SGE_ROOT/$SGE_CELL/common"
+      Makedir "$SGE_ROOT/$SGE_CELL/common"
    fi
    
    FILE_LIST="bootstrap
@@ -355,9 +355,14 @@ sched_configuration"
          done
       fi
    else
+      if [ "$backup_spooling_method" = "classic" ]; then
+          suggested_spooling_method=berkeley
+      else
+          suggested_spooling_method=classic
+      fi
       #Selecting new spooling method
       suggested_spoooling_params=`BootstrapGetValue ${UPGRADE_BACKUP_DIR}/$SGE_CELL/common "spooling_params"`
-      SetSpoolingOptions "$suggested_spooling_params"
+      SetSpoolingOptions "$suggested_spooling_method" "$suggested_spooling_params"
    fi
 	
    if [ "$keep" = false ]; then

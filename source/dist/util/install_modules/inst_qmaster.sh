@@ -1580,24 +1580,30 @@ EnterAndValidatePortNumber()
 {
    $INFOTEXT -u "\nGrid Engine TCP/IP service >%s<\n" $service_name
    $INFOTEXT -n "\n" 
-   $INFOTEXT -n "Please enter an unused port number >> "
+
+   port_ok="false"
 
    if [ "$1" = "sge_qmaster" ]; then
+      $INFOTEXT -n "Please enter an unused port number >> "
       INP=`Enter $SGE_QMASTER_PORT`
    else
-      INP=`Enter $SGE_EXECD_PORT`
-
-      if [ "$INP" = "$SGE_QMASTER_PORT" -a $service_name = "sge_execd" ]; then
-         $INFOTEXT "Please use any other port number!!!"
-         $INFOTEXT "This %s port number is used by sge_qmaster" $SGE_QMASTER_PORT
-         if [ $AUTO = "true" ]; then
-            $INFOTEXT -log "Please use any other port number!!!"
-            $INFOTEXT -log "This %s port number is used by sge_qmaster" $SGE_QMASTER_PORT
-            $INFOTEXT -log "Installation failed!!!"
-            MoveLog
-            exit 1
+      while [ $port_ok = "false" ]; do 
+         $INFOTEXT -n "Please enter an unused port number >> "
+         INP=`Enter $SGE_EXECD_PORT`
+         port_ok="true"
+         if [ "$INP" = "$SGE_QMASTER_PORT" -a $1 = "sge_execd" ]; then
+            $INFOTEXT "\nPlease use any other port number!"
+            $INFOTEXT "Port number %s is already used by sge_qmaster\n" $SGE_QMASTER_PORT
+            port_ok="false"
+            if [ $AUTO = "true" ]; then
+               $INFOTEXT -log "Please use any other port number!"
+               $INFOTEXT -log "Port number %s is already used by sge_qmaster" $SGE_QMASTER_PORT
+               $INFOTEXT -log "Installation failed!!!"
+               MoveLog
+               exit 1
+            fi
          fi
-      fi
+      done
    fi
 
    chars=`echo $INP | wc -c`

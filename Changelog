@@ -1,3 +1,9 @@
+MD-2008-10-20-0: Bugfix:      o SGE_EXECD_PORT gets accepted even when the 
+                                same as SGE_QMASTER_PORT 
+                 Bugster:     6750688
+                 Issue:       2754
+                 Review:      HP
+
 LP-2008-10-17-0: Enhancem.:   Introduced -autogui option to inst_sge
                  Bugfix:      Cannot choose admin user when installing as root 
                               - installation fails

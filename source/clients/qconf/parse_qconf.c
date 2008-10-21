@@ -4012,7 +4012,7 @@ char *argv[]
                   sge_parse_return = 1;
                }
             } else if (action == ACTION_Aconf) {
-               if (add_modify_config(ctx, host, cp, 0) != 0) {
+               if (add_modify_config(ctx, host, cp, 1) != 0) {
                   sge_parse_return = 1;
                }
             } else if (action == ACTION_Mconf) {

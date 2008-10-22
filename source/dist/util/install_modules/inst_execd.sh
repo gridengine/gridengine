@@ -399,7 +399,12 @@ AddLocalConfiguration_With_Qconf()
    else
       $INFOTEXT -log "\nCreating local configuration for host >%s<" $HOST
       PrintLocalConf 0 > $TMPL
-      ExecuteAsAdmin $SGE_BIN/qconf -Aconf $TMPL
+      ExecuteAsAdmin $SGE_BIN/qconf -sconfl | grep $HOST
+      if [ $? -eq 0 ]; then
+         ExecuteAsAdmin $SGE_BIN/qconf -Mconf $TMPL
+      else
+         ExecuteAsAdmin $SGE_BIN/qconf -Aconf $TMPL
+      fi
       rm -rf /tmp/$$
       $INFOTEXT "Local configuration for host >%s< created." $HOST
       $INFOTEXT -log "Local configuration for host >%s< created." $HOST

@@ -1,3 +1,9 @@
+MP-2008-10-22-0: Bugfix:      qconf -Aconf modifies existing configuration
+                              Merged from MP-2008-10-21-1 in V62_BRANCH
+                 Bugster:     6709552
+                 Issue:       2752
+                 Review:      JG
+
 MD-2008-10-20-0: Bugfix:      o SGE_EXECD_PORT gets accepted even when the 
                                 same as SGE_QMASTER_PORT 
                  Bugster:     6750688

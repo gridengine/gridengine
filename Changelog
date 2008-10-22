@@ -1,3 +1,8 @@
+RD-2008-10-22-0: Bugfix:      fixed scheduler crash with non-consumable RQS
+                 Bugster:     6762505
+                 Issue:       2762
+                 Review:      AH
+
 MP-2008-10-21-1: Bugfix:      qconf -Aconf modifies existing configuration
                  Bugster:     6709552
                  Issue:       2752

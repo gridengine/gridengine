@@ -1,3 +1,8 @@
+JF-2008-10-22-0: Bugfix: qmod does not follow admin host rules fixed
+                 Bugtraq: 6707098
+                 Issue: 2582
+                 Review: JG
+
 MP-2008-10-22-1: Bugfix:      qconf -Aconf modifies existing configuration
                               Merged from MP-2008-10-21-1 in V62_BRANCH
                  Bugster:     6709552

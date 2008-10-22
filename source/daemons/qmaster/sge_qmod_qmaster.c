@@ -141,7 +141,8 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
    lList *cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
    dstring cqueue_buffer = DSTRING_INIT;
    dstring hostname_buffer = DSTRING_INIT;
-   
+   object_description *object_base = NULL;
+
    DENTER(TOP_LAYER, "sge_gdi_qmod");
 
 
@@ -151,6 +152,13 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       sge_dstring_free(&cqueue_buffer);
       sge_dstring_free(&hostname_buffer);
+      DEXIT;
+      return;
+   }
+
+   object_base = object_type_get_object_description();
+   if (sge_chck_mod_perm_host(&(answer->alp), request->target, request->host,
+                              request->commproc, 0, NULL, true, monitor, object_base)) {
       DEXIT;
       return;
    }

@@ -146,10 +146,6 @@ static void trigger_scheduler_monitoring(char*, sge_gdi_request*, sge_gdi_reques
 static int sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request, 
                                   monitoring_t *monitor, object_description *object_base);
 static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, monitoring_t *monitor);
-static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, 
-                                  char *commproc, int mod, lListElem *ep, 
-                                  bool is_locked, monitoring_t *monitor,
-                                  object_description *object_base);
 
 static int schedd_mod(sge_gdi_ctx_class_t *ctx, 
                       lList **alpp, lListElem *modp, lListElem *ep, int add, 
@@ -1750,7 +1746,7 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, mon
 /*
  * MT-NOTE: sge_chck_mod_perm_host() is MT safe
  */
-static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, 
+int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, 
                                   char *commproc, int mod, lListElem *ep, 
                                   bool is_locked, monitoring_t *monitor,
                                   object_description *object_base)

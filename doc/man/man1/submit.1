@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/10/06 08:06:34 $     Revision: $Revision: 1.80 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/10/22 17:21:42 $     Revision: $Revision: 1.81 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2008/10/06 08:06:34 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2008/10/22 17:21:42 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -1466,6 +1466,11 @@ The specifiers e, w, n and v define the following validation modes:
 .sp 1
 Note, that the necessary checks are performance consuming and hence the 
 checking is switched off by default.
+It should also be noted that load values are not taken into account with 
+the verification since they are assumed to be too volatile. To cause -w e 
+verification to be passed at submission time, it is possible to specify 
+non-volatile values (non-consumables) or maximum values (consumables) in 
+complex_values.
 .IP "\fB\-wd working_dir\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP and
 \fIqalter\fP only.

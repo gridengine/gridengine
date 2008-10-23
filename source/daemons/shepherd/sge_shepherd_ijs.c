@@ -315,8 +315,6 @@ static void* pty_to_commlib(void *t_conf)
 
    /* Report to thread lib that this thread starts up now */
    thread_func_startup(t_conf);
-   /* Set this thread to be cancelled (=killed) at any time. */
-   thread_setcancelstate(1);
 
    /* Allocate working buffers, BUFSIZE = 64k */
    stdout_buf = sge_malloc(BUFSIZE);
@@ -549,7 +547,6 @@ static void* commlib_to_pty(void *t_conf)
 
    /* report to thread lib that thread starts up now */
    thread_func_startup(t_conf);
-   thread_setcancelstate(1);
 
    if (g_ptym != -1) {
       fd_write = g_ptym;
@@ -786,8 +783,17 @@ int parent_loop(char *hostname, int port, int ptym,
    sge_dstring_sprintf(err_msg, "");
 
    ret = comm_init_lib(err_msg);
-   if (ret != 0) {
-      shepherd_trace("main: can't open communication library");
+   if (ret != COMM_RETVAL_OK) {
+      shepherd_trace("main: init comm lib failed: %d", ret);
+      return 1;
+   }
+
+   /*
+    * Setup thread list.
+    */
+   ret = thread_init_lib(&thread_lib_handle);
+   if (ret != CL_RETVAL_OK) {
+      shepherd_trace("main: init thread lib thread failed: %d", ret);
       return 1;
    }
 
@@ -795,6 +801,16 @@ int parent_loop(char *hostname, int port, int ptym,
     * Get log list of communication before a connection is opened.
     */
    cl_com_log_list = cl_com_get_log_list();
+
+   /* 
+    * Register this main thread at the thread library, so it can
+    * be triggered and create two worker threads.
+    */
+   ret = register_thread(cl_com_log_list, &g_thread_main, "main thread");
+   if (ret != CL_RETVAL_OK) {
+      shepherd_trace("main: registering main thread failed: %d", ret);
+      return 1;
+   }
 
    /*
     * Open the connection port so we can connect to our server
@@ -832,20 +848,6 @@ int parent_loop(char *hostname, int port, int ptym,
       shepherd_trace("main: Sent %d bytes to qrsh client", ret);
    }
 #endif
-   /*
-    * Setup thread list.
-    */
-   ret = thread_init_lib(&thread_lib_handle);
-
-   /* 
-    * Register this main thread at the thread library, so it can
-    * be triggered and create two worker threads.
-    */
-   ret = register_thread(thread_lib_handle, &g_thread_main, "main thread");
-   if (ret != CL_RETVAL_OK) {
-      shepherd_trace("main: registering main thread failed: %d", ret);
-      return 1;
-   }
 
    {
       sigset_t old_sigmask;
@@ -914,11 +916,21 @@ int parent_loop(char *hostname, int port, int ptym,
    shepherd_trace("main: shutting down pty_to_commlib thread");
 
    /* 
-    * It seems that tracing between thread_shutdown() and thread_join()
-    * could cause deadlocks!
+    * Shutdown the threads thread_pty_to_commlib and thread_commlib_to_pty
     */
-   ret = thread_shutdown(thread_pty_to_commlib);
-   ret = thread_shutdown(thread_commlib_to_pty);
+   cl_raw_list_lock(thread_lib_handle);
+   cl_thread_list_delete_thread_from_list(thread_lib_handle, thread_pty_to_commlib);
+   cl_thread_list_delete_thread_from_list(thread_lib_handle, thread_commlib_to_pty);
+   cl_raw_list_unlock(thread_lib_handle);
+
+   cl_thread_shutdown(thread_pty_to_commlib);
+   cl_thread_shutdown(thread_commlib_to_pty);
+
+   /*
+    * This will wake up all threads waiting for a message 
+    */
+   cl_thread_trigger_thread_condition(g_comm_handle->app_condition, 1);
+
 
    close(g_ptym);
 
@@ -930,26 +942,13 @@ int parent_loop(char *hostname, int port, int ptym,
    close(g_fd_pipe_err[1]);
 
    /*
-    * Wait until the pty_to_commlib threads have shut down
+    * Wait until threads have shut down and call cleanup functions
     */
-   thread_join(thread_pty_to_commlib);
-   shepherd_trace("main: joined pty_to_commlib thread");
+   cl_thread_join(thread_pty_to_commlib);
+   cl_thread_join(thread_commlib_to_pty);
+   cl_thread_cleanup(thread_pty_to_commlib);
+   cl_thread_cleanup(thread_commlib_to_pty);
 
-#if 0
-   /* This causes problems on some architectures - why? */
-   DPRINTF(("main: cl_thread_join(thread_commlib_to_pty)\n"));
-   thread_join(thread_commlib_to_pty);
-#endif
-   /*
-    * Wait for all messages to be sent
-    * TODO: This shouldn't be neccessary, the shutdown of the
-    *       connection should do a flush.
-    *       Test it, and if it works, remove this code.
-    */
-   shepherd_trace("main: flushing messages");
-   if (g_comm_handle != NULL) {
-      comm_flush_write_messages(g_comm_handle, err_msg);
-   }
 
 #if 0
 {
@@ -958,8 +957,10 @@ ftime(&ts);
 shepherd_trace("+++++ timestamp: %d.%03d ++++", (int)ts.time, (int)ts.millitm);
 }
 #endif
+
    /* From here on, only the main thread is running */
-   thread_cleanup_lib(&thread_lib_handle);
+   shepherd_trace("main: thread_cleanup_lib()");
+   thread_cleanup_lib(&thread_lib_handle); 
 
    /* The communication will be freed in close_parent_loop() */
    sge_dstring_free(err_msg);
@@ -1001,6 +1002,7 @@ int close_parent_loop(int exit_status)
 
       shepherd_trace("waiting for UNREGISTER_RESPONSE_CTRL_MSG");
       while (count < RESPONSE_MSG_TIMEOUT) {
+         memset(&recv_mess, 0, sizeof(recv_message_t));
 #if defined(INTERIX)
 /*
  * TODO: comm_recv_message() should return immediatley when the server
@@ -1016,14 +1018,18 @@ int close_parent_loop(int exit_status)
          }
 #endif
          ret = comm_recv_message(g_comm_handle, CL_TRUE, &recv_mess, &err_msg);
-         if (ret == COMM_GOT_TIMEOUT) {
-            count++;
-         } else if (recv_mess.type == UNREGISTER_RESPONSE_CTRL_MSG) {
+         count++;
+         if (recv_mess.type == UNREGISTER_RESPONSE_CTRL_MSG) {
             shepherd_trace("Received UNREGISTER_RESPONSE_CTRL_MSG");
             comm_free_message(&recv_mess, &err_msg);
             break;
+         } else if (ret == COMM_NO_MESSAGE_AVAILABLE) {
+            shepherd_trace("still waiting for UNREGISTER_RESPONSE_CTRL_MSG");
+         } else if (ret == COMM_CONNECTION_NOT_FOUND) {
+            shepherd_trace("client disconnected - break");
+            break;
          } else {
-            shepherd_trace("No connection or timeout while waiting for message");
+            shepherd_trace("No connection or problem while waiting for message: %d", ret);
             break;
          }
          comm_free_message(&recv_mess, &err_msg);
@@ -1041,9 +1047,6 @@ int close_parent_loop(int exit_status)
    /*
     * Do cleanup
     */
-   shepherd_trace("main: cl_com_cleanup_commlib()");
-   comm_shutdown_connection(g_comm_handle, COMM_SERVER, &err_msg);
-   shepherd_trace("main: comm_cleanup_lib()");
    ret = comm_cleanup_lib(&err_msg);
    if (ret != COMM_RETVAL_OK) {
       shepherd_trace("main: error in comm_cleanup_lib(): %d", ret);

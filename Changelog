@@ -1,3 +1,26 @@
+CR-2008-10-23-1: Bugfix:      qmaster might be unresponsive for a time because 
+                              of commlib timeout
+                 Bugster:     6754568
+                 Issue:       2747
+                 Review:      HP
+                              o added new module test binaries
+                                test_cl_issue_2747_client
+                                test_cl_issue_2747_server
+                              o enhanced commlib thread list by thread type
+                                definition
+                              o qmaster threads now use commlib log list for
+                                communication logging
+                              o cleanup of commlib internal connection state
+                                model
+                              o cleanup of commlib functions used code copies
+                              o fixed bug for removing connections from
+                                connection hash
+                              o fixed bug in ssl shutdown behaviour
+                              o fixed bug in Makefile of commlib/sheperd
+                                (missing dependency for libcomm_static.a)
+                              o Fixed possible deadlock in IJS 
+                                (repairs hanging sheduler problem of CR 6751413)
+
 CR-2008-10-23-0: CVS        Created V62u1_TAG_CR6754568
 -------------------------------------------------------
 

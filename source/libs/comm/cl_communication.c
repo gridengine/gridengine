@@ -759,10 +759,6 @@ int cl_com_create_connection(cl_com_connection_t** connection) {
    (*connection)->error_func      = NULL;
    (*connection)->tag_name_func   = NULL;
    (*connection)->com_private     = NULL;
-   (*connection)->ccm_received = 0;
-   (*connection)->ccm_sent = 0;
-   (*connection)->ccrm_received = 0;
-   (*connection)->ccrm_sent = 0;
    (*connection)->data_buffer_size  = CL_DEFINE_DATA_BUFFER_SIZE;
    (*connection)->auto_close_type = CL_CM_AC_UNDEFINED;
    (*connection)->read_buffer_timeout_time = 0;
@@ -1077,7 +1073,7 @@ const char* cl_com_get_connection_state(cl_com_connection_t* connection) {   /* 
          return "CL_CONNECTING";
       }
    }
-   CL_LOG(CL_LOG_ERROR,"undefined marked to close flag type");
+   CL_LOG(CL_LOG_ERROR, "undefined marked to close flag type");
    return "unknown";
 }
 
@@ -1140,8 +1136,6 @@ const char* cl_com_get_connection_sub_state(cl_com_connection_t* connection) {
                return "CL_COM_WAIT_FOR_CCRM";
             case CL_COM_SENDING_CCRM:
                return "CL_COM_SENDING_CCRM";
-            case CL_COM_CCRM_SENT:
-               return "CL_COM_CCRM_SENT";
             case CL_COM_DONE:
                return "CL_COM_DONE";
             default:
@@ -2815,7 +2809,7 @@ int cl_com_endpoint_list_refresh(cl_raw_list_t* list_p) {
          if (act_elem->last_used + ldata->entry_life_time < now.tv_sec ) {
             CL_LOG_STR(CL_LOG_INFO,"removing non static element (life timeout) with comp host:", act_elem->endpoint->comp_host);
             cl_raw_list_remove_elem(list_p, act_elem->raw_elem);
-            if (ldata->ht != NULL) {
+            if (ldata->ht != NULL && act_elem->endpoint != NULL && act_elem->endpoint->hash_id != NULL) {
                sge_htable_delete(ldata->ht, act_elem->endpoint->hash_id);
             }
             cl_com_free_endpoint(&(act_elem->endpoint));
@@ -3420,6 +3414,11 @@ int cl_com_open_connection_request_handler(cl_com_handle_t* handle, int timeout_
       }
    }
 
+   /* service_handler flag must be reseted in any case */
+   if (service_connection == NULL && handle->service_handler != NULL) {
+      handle->service_handler->data_read_flag = CL_COM_DATA_NOT_READY;
+   }
+
    if (timeout_val_usec >= 1000000) {
       int full_usec_seconds = 0;
 
@@ -4013,11 +4012,17 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                /* This is not working for disabled hash */
 
                if ((tmp_elem = cl_connection_list_get_elem_endpoint(connection_list, connection->remote)) != NULL) {
-                  cl_com_connection_t* tmp_con = NULL;
-                  tmp_con = tmp_elem->connection;
                   /* endpoint is not unique, check already connected endpoint */
-                  tmp_con->check_endpoint_flag = CL_TRUE;             
-
+                  cl_com_connection_t* tmp_con = tmp_elem->connection;
+                  tmp_con->check_endpoint_flag = CL_TRUE;
+                  /*
+                   * delete the hash_id of the connection, otherwise the 
+                   * current one would not have a hash key anymore
+                   */
+                  if (connection->remote != NULL && connection->remote->hash_id != NULL) {
+                     free(connection->remote->hash_id);
+                     connection->remote->hash_id = NULL;
+                  }
                   snprintf(tmp_buffer,
                            256, 
                            MSG_CL_TCP_FW_ENDPOINT_X_ALREADY_CONNECTED_SSU,
@@ -4049,8 +4054,14 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                   
                   CL_LOG(CL_LOG_INFO,"new client is unique, add it to hash");
 
-                  /* insert into hash */
-                  if (ldata->r_ht != NULL) {
+                  /*
+                   * insert into hash
+                   *
+                   * Incoming (accepted) connections are added to the hash when the 
+                   * client endpoint name is resovled. Here the client is unique and
+                   * we can create a hash key for the endpoint.
+                   */
+                  if (ldata->r_ht != NULL && connection->remote != NULL && connection->remote->hash_id != NULL) {
                      sge_htable_store(ldata->r_ht, connection->remote->hash_id, elem);
                   }
                }
@@ -4629,9 +4640,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
          {
             char* gdi_timeout = NULL;
             cl_com_get_parameter_list_value("gdi_timeout", &gdi_timeout);
-            if (gdi_timeout == NULL) {
-               cl_com_set_synchron_receive_timeout(connection->handler, CL_DEFINE_SYNCHRON_RECEIVE_TIMEOUT);
-            } else {
+            if (gdi_timeout != NULL) {
                int timeout = atoi(gdi_timeout);
                cl_com_set_synchron_receive_timeout(connection->handler, timeout);
                free(gdi_timeout);

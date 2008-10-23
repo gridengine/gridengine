@@ -110,14 +110,14 @@ int cl_com_create_ssl_setup(cl_ssl_setup_t** new_setup,
 int cl_com_dup_ssl_setup(cl_ssl_setup_t** new_setup, cl_ssl_setup_t* source);
 int cl_com_free_ssl_setup(cl_ssl_setup_t** del_setup);
 
-const char* cl_com_get_framework_type(cl_com_connection_t* connection);       /* CR check */
-const char* cl_com_get_connection_type(cl_com_connection_t* connection);      /* CR check */
-const char* cl_com_get_service_handler_flag(cl_com_connection_t* connection); /* CR check */
-const char* cl_com_get_data_write_flag(cl_com_connection_t* connection);      /* CR check */
-const char* cl_com_get_data_read_flag(cl_com_connection_t* connection);       /* CR check */
-const char* cl_com_get_connection_state(cl_com_connection_t* connection); /* CR check */
+const char* cl_com_get_framework_type(cl_com_connection_t* connection);
+const char* cl_com_get_connection_type(cl_com_connection_t* connection);
+const char* cl_com_get_service_handler_flag(cl_com_connection_t* connection);
+const char* cl_com_get_data_write_flag(cl_com_connection_t* connection);
+const char* cl_com_get_data_read_flag(cl_com_connection_t* connection);
+const char* cl_com_get_connection_state(cl_com_connection_t* connection);
 const char* cl_com_get_connection_sub_state(cl_com_connection_t* connection);
-const char* cl_com_get_data_flow_type(cl_com_connection_t* connection);       /* CR check */
+const char* cl_com_get_data_flow_type(cl_com_connection_t* connection);
 
 /* This can be called by an signal handler to trigger abort of communications */
 void cl_com_ignore_timeouts(cl_bool_t flag); 

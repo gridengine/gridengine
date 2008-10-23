@@ -4013,7 +4013,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
             case CL_CT_SSL: {
                switch (connection->connection_state) {
                   case CL_CONNECTED:
-                     if (connection->ccrm_sent == 0) {
+                     if (connection->connection_sub_state != CL_COM_DONE) {
                         if (do_read_select != 0) {
                            max_fd = MAX(max_fd,con_private->sockfd);
 #ifdef USE_POLL
@@ -4196,7 +4196,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
                   case CL_DISCONNECTED:
                      break;
                   case CL_CLOSING: {
-                     if (connection->ccrm_sent == 0 && connection->connection_sub_state != CL_COM_SHUTDOWN_DONE) {
+                     if (connection->connection_sub_state != CL_COM_SHUTDOWN_DONE) {
                         if (do_read_select != 0) {
 #ifdef USE_POLL
                            ufds[ufds_index].fd = con_private->sockfd;

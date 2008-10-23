@@ -332,7 +332,6 @@ void* tty_to_commlib(void *t_conf)
 
    DENTER(TOP_LAYER, "tty_to_commlib");
    thread_func_startup(t_conf);
-   thread_setcancelstate(1);
    
    /* 
     * allocate working buffer
@@ -448,7 +447,6 @@ void* commlib_to_tty(void *t_conf)
 
    DENTER(TOP_LAYER, "commlib_to_tty");
    thread_func_startup(t_conf);
-   thread_setcancelstate(1);
 
    while (do_exit == 0) {
       /*
@@ -689,8 +687,10 @@ int do_server_loop(u_long32 job_id, int nostdin, int noshell,
    DPRINTF(("wait until there is no client connected any more\n"));
    comm_wait_for_no_connection(g_comm_handle, COMM_CLIENT, 10, &err_msg);
 */
+   cl_com_set_error_func(NULL);
+   cl_com_ignore_timeouts(CL_TRUE);
    DPRINTF(("shut down the connection from our side\n"));
-   comm_shutdown_connection(g_comm_handle, COMM_CLIENT, &err_msg);
+   ret = cl_commlib_shutdown_handle(g_comm_handle, CL_FALSE);
    g_comm_handle = NULL;
    /*
     * Close stdin to awake the tty_to_commlib-thread from the select() call.

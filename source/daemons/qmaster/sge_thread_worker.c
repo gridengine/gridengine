@@ -126,8 +126,8 @@ sge_worker_initialize(sge_gdi_ctx_class_t *ctx)
 
       sge_dstring_sprintf(&thread_name, "%s%03d", threadnames[WORKER_THREAD], i);
       cl_thread_list_create_thread(Main_Control.worker_thread_pool, &dummy_thread_p,
-                                   NULL, sge_dstring_get_string(&thread_name), i, 
-                                   sge_worker_main, NULL, NULL);
+                                   cl_com_get_log_list(), sge_dstring_get_string(&thread_name), i, 
+                                   sge_worker_main, NULL, NULL, CL_TT_WORKER);
       sge_dstring_free(&thread_name);
    }
    DRETURN_VOID;

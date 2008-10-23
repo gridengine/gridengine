@@ -108,17 +108,17 @@ extern int main(int argc, char** argv)
 
   /* setup log thread */
   log_thread = (cl_thread_settings_t*) malloc(sizeof(cl_thread_settings_t));
-  cl_thread_setup(log_thread, log_list, "log thread", 1,my_log_thread, NULL, NULL);
+  cl_thread_setup(log_thread, log_list, "log thread", 1,my_log_thread, NULL, NULL, CL_TT_USER1);
   cl_log_list_set_log_level(log_list,CL_LOG_DEBUG );
 
   /* setup thread list */
   cl_thread_list_setup(&thread_list,"thread list");
 
   /* setup first thread */
-  cl_thread_list_create_thread(thread_list, &dummy_thread_p, log_list, "1st thread", 1, my_test_thread, NULL, NULL);
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p, log_list, "1st thread", 1, my_test_thread, NULL, NULL, CL_TT_USER1);
 
   /* setup second thread */
-  cl_thread_list_create_thread(thread_list, &dummy_thread_p, log_list, "2nd thread", 2, my_test_thread, NULL, NULL);
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p, log_list, "2nd thread", 2, my_test_thread, NULL, NULL, CL_TT_USER1);
 
   
   thread_p = cl_thread_list_get_thread_by_id(thread_list, 1);
@@ -145,7 +145,7 @@ extern int main(int argc, char** argv)
 
      sprintf(new_thread_name,"thread nr %d", count);
      CL_LOG( CL_LOG_INFO,  "adding thread ...");
-     cl_thread_list_create_thread(thread_list,&dummy_thread_p, log_list,new_thread_name, id, my_test_thread, NULL, NULL);
+     cl_thread_list_create_thread(thread_list,&dummy_thread_p, log_list,new_thread_name, id, my_test_thread, NULL, NULL, CL_TT_USER1);
      CL_LOG( CL_LOG_INFO, "adding thread done");
 
   }

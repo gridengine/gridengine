@@ -247,8 +247,8 @@ sge_timer_initialize(sge_gdi_ctx_class_t *ctx, monitoring_t *monitor)
    sge_dstring_sprintf(&thread_name, "%s%03d", threadnames[TIMER_THREAD], 0);
    cl_thread_list_setup(&(Main_Control.timer_thread_pool), "timer thread pool");
    cl_thread_list_create_thread(Main_Control.timer_thread_pool, &dummy_thread_p,
-                                NULL, sge_dstring_get_string(&thread_name), 0, 
-                                sge_timer_main, NULL, NULL);
+                                cl_com_get_log_list(), sge_dstring_get_string(&thread_name), 0, 
+                                sge_timer_main, NULL, NULL, CL_TT_TIMER);
    sge_dstring_free(&thread_name);
    DRETURN_VOID;
 }

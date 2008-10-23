@@ -876,6 +876,7 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
    */
    
    if (cl_com_setup_commlib_complete() == CL_FALSE) {
+      char* env_sge_commlib_debug = getenv("SGE_DEBUG_LEVEL");
       switch (thiz->get_who(thiz)) {
          case QMASTER:
          case QMON:
@@ -883,17 +884,33 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
          case JGDI:
          case SCHEDD:
          case EXECD:
-            INFO((SGE_EVENT,MSG_GDI_MULTI_THREADED_STARTUP));
-            cl_ret = cl_com_setup_commlib(CL_RW_THREAD, CL_LOG_OFF, sge_gdi_ctx_log_flush_func);
+            {
+               INFO((SGE_EVENT,MSG_GDI_MULTI_THREADED_STARTUP));
+               /* if SGE_DEBUG_LEVEL environment is set we use gdi log flush function */
+               /* you can set commlib debug level with env SGE_COMMLIB_DEBUG */
+               if (env_sge_commlib_debug != NULL) {
+                  cl_ret = cl_com_setup_commlib(CL_RW_THREAD, CL_LOG_OFF, sge_gdi_ctx_log_flush_func);
+               } else {
+                  /* here we use default commlib flush function */
+                  cl_ret = cl_com_setup_commlib(CL_RW_THREAD, CL_LOG_OFF, NULL);
+               }
+            }
             break;
          default:
-            INFO((SGE_EVENT,MSG_GDI_SINGLE_THREADED_STARTUP));
-            cl_ret = cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_OFF, sge_gdi_ctx_log_flush_func);
-            /*
-            ** verbose logging is switched on by default
-            */
-            log_state_set_log_verbose(1);
+            {
+               INFO((SGE_EVENT,MSG_GDI_SINGLE_THREADED_STARTUP));
+               if (env_sge_commlib_debug != NULL) {
+                  cl_ret = cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_OFF, sge_gdi_ctx_log_flush_func);
+               } else {
+                  cl_ret = cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_OFF, NULL);
+               }
+               /*
+               ** verbose logging is switched on by default
+               */
+               log_state_set_log_verbose(1);
+            }
       }
+
       if (cl_ret != CL_RETVAL_OK) {
          sge_gdi_ctx_class_error(thiz, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
                             "cl_com_setup_commlib failed: %s", cl_get_error_text(cl_ret));
@@ -1785,30 +1802,30 @@ static int sge_gdi_ctx_log_flush_func(cl_raw_list_t* list_p)
       switch(elem->log_type) {
          case CL_LOG_ERROR: 
             if (log_state_get_log_level() >= LOG_ERR) {
-               ERROR((SGE_EVENT,  "%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
+               ERROR((SGE_EVENT,  "%-15s=> %s %s (%s)", elem->log_thread_name, elem->log_message, param, elem->log_module_name));
             } else {
-               printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
+               printf("%-15s=> %s %s (%s)\n", elem->log_thread_name, elem->log_message, param, elem->log_module_name);
             }
             break;
          case CL_LOG_WARNING:
             if (log_state_get_log_level() >= LOG_WARNING) {
-               WARNING((SGE_EVENT,"%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
+               WARNING((SGE_EVENT,"%-15s=> %s %s (%s)", elem->log_thread_name, elem->log_message, param, elem->log_module_name));
             } else {
-               printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
+               printf("%-15s=> %s %s (%s)\n", elem->log_thread_name, elem->log_message, param, elem->log_module_name);
             }
             break;
          case CL_LOG_INFO:
             if (log_state_get_log_level() >= LOG_INFO) {
-               INFO((SGE_EVENT,   "%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
+               INFO((SGE_EVENT,   "%-15s=> %s %s (%s)", elem->log_thread_name, elem->log_message, param, elem->log_module_name));
             } else {
-               printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
+               printf("%-15s=> %s %s (%s)\n", elem->log_thread_name, elem->log_message, param, elem->log_module_name);
             }
             break;
          case CL_LOG_DEBUG:
             if (log_state_get_log_level() >= LOG_DEBUG) { 
-               DEBUG((SGE_EVENT,  "%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
+               DEBUG((SGE_EVENT,  "%-15s=> %s %s (%s)", elem->log_thread_name, elem->log_message, param, elem->log_module_name));
             } else {
-               printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
+               printf("%-15s=> %s %s (%s)\n", elem->log_thread_name, elem->log_message, param, elem->log_module_name);
             }
             break;
          case CL_LOG_OFF:

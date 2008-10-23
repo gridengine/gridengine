@@ -291,8 +291,8 @@ sge_scheduler_initialize(sge_gdi_ctx_class_t *ctx, lList **answer_list)
           * start the scheduler
           */
          cl_thread_list_create_thread(Main_Control.scheduler_thread_pool, &dummy_thread_p,
-                                      NULL, sge_dstring_get_string(&thread_name), 
-                                      Master_Scheduler.thread_id, sge_scheduler_main, NULL, NULL);
+                                      cl_com_get_log_list(), sge_dstring_get_string(&thread_name), 
+                                      Master_Scheduler.thread_id, sge_scheduler_main, NULL, NULL, CL_TT_SCHEDULER);
          sge_dstring_free(&thread_name);
 
          /*

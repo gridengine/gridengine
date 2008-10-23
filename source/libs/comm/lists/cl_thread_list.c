@@ -137,7 +137,8 @@ int cl_thread_list_create_thread(cl_raw_list_t* list_p,
                                  int id,
                                  void * (*start_routine)(void *),
                                  cl_thread_cleanup_func_t cleanup_func,
-                                 void* user_data) {
+                                 void* user_data,
+                                 cl_thread_type_t thread_type) {
    cl_thread_settings_t* thread_p = NULL;
    int ret_val;
 
@@ -155,7 +156,7 @@ int cl_thread_list_create_thread(cl_raw_list_t* list_p,
    *new_thread_p = thread_p;
 
    /* start the new thread */
-   if ( (ret_val = cl_thread_setup(thread_p, log_list, name, id, start_routine, cleanup_func, user_data)) != CL_RETVAL_OK) {
+   if ( (ret_val = cl_thread_setup(thread_p, log_list, name, id, start_routine, cleanup_func, user_data, thread_type)) != CL_RETVAL_OK) {
       cl_thread_shutdown(thread_p);
       cl_thread_join(thread_p);
       cl_thread_cleanup(thread_p);
@@ -340,6 +341,29 @@ int cl_thread_list_delete_thread_without_join(cl_raw_list_t* list_p, cl_thread_s
 
    return ret_val;
 }
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_thread_list_delete_thread_from_list()"
+int cl_thread_list_delete_thread_from_list(cl_raw_list_t* list_p, cl_thread_settings_t* thread) {
+   /*
+    * TODO: Cleanup this function, provide a framework for shutting down threads in a 2 step 
+    *       functionality. Sometimes a thread should only be triggered for shutdown and then
+    *       removed from the list and cleaned up.
+    * This is a workaround to be able to remove a thread from the thread list without calling
+    * cl_thread_cleanup(). The thread list MUST be locked before calling this function.
+    * Also cl_thread_cleanup() MUST be called for the thread after removing it from the list 
+    */
+
+   if (thread == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   /* remove thread from list */
+   return cl_thread_list_del_thread(list_p, thread);
+}
+
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__

@@ -91,6 +91,10 @@ extern int main(void)
   sigaction(SIGHUP, &sa, NULL);
   sigaction(SIGPIPE, &sa, NULL);
 
+  /* This module test is defect */
+  printf("This test does not work!\n");
+  exit(1);
+
   cl_com_setup_commlib(CL_RW_THREAD ,CL_LOG_WARNING, NULL);
   handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , CL_FALSE, 5000 , CL_TCP_DEFAULT,"client", 0, 1,0 );
   if (handle == NULL) {
@@ -102,14 +106,14 @@ extern int main(void)
   cl_thread_list_setup(&thread_list,"thread list");
 
   /* setup first thread */
-  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "1st thread", 1, my_multi_thread, NULL, NULL);
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "1st thread", 1, my_multi_thread, NULL, NULL, CL_TT_USER1);
 
 #if 1
   /* setup second thread */
-  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "2nd thread", 2, my_multi_thread, NULL, NULL);  
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "2nd thread", 2, my_multi_thread, NULL, NULL, CL_TT_USER1);  
 
   /* setup third thread */
-  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "3nd thread", 3, my_multi_read_thread, NULL, NULL); 
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "3nd thread", 3, my_multi_read_thread, NULL, NULL, CL_TT_USER1); 
 #endif
 
   while(do_shutdown == 0) {
@@ -129,9 +133,7 @@ extern int main(void)
      } else {
         if (message != NULL) {
            CL_LOG_STR(CL_LOG_INFO,"received message:",(char*)message->message );
-/*
            printf("received message from \"%s\": \"%s\"\n", sender->comp_host,message->message);
-*/
         }
         cl_com_free_endpoint(&sender);
         cl_com_free_message(&message);
@@ -209,20 +211,6 @@ void *my_multi_thread(void *t_conf) {
          CL_LOG_STR(CL_LOG_ERROR,"cl_commlib_send_message() returned", cl_get_error_text(ret_val));
       } 
       CL_LOG_INT(CL_LOG_INFO,"message has mid", (int)mid);
-      
-#if 0
-      CL_LOG(CL_LOG_INFO,"wait for event ...");
-      if ((ret_val = cl_thread_wait_for_event(thread_config,0,thread_config->thread_id*10000 )) != CL_RETVAL_OK) {  /* nothing to do sleep 1 sec */
-         switch(ret_val) {
-            case CL_RETVAL_CONDITION_WAIT_TIMEOUT:
-               CL_LOG(CL_LOG_INFO,"condition wait timeout");
-               break;
-            default:
-               CL_LOG_STR( CL_LOG_INFO, ">got error<: ", cl_get_error_text(ret_val));
-               do_exit = 1;
-         }
-      }
-#endif
    }
 
    CL_LOG(CL_LOG_INFO, "exiting ...");

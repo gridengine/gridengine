@@ -690,7 +690,7 @@ qinstance_change_state_on_command(lListElem *this_elem, lList**answer_list,
                         qinstance_state_as_string(transitions[i].state_mask)));
                }
                answer_list_add(answer_list, SGE_EVENT,
-                               STATUS_OK, ANSWER_QUALITY_ERROR);
+                               STATUS_OK, ANSWER_QUALITY_INFO);
             } else {
                ERROR((SGE_EVENT, MSG_QINSTANCE_STATENOTMOD_S, qinstance_name));
                answer_list_add(answer_list, SGE_EVENT,

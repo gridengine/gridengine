@@ -136,9 +136,6 @@ static void trigger_scheduler_monitoring(char*, sge_gdi_request*, sge_gdi_reques
                                          monitoring_t*); 
 
 static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, monitoring_t *monitor);
-static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, 
-                                  char *commproc, int mod, lListElem *ep, 
-                                  bool is_locked, monitoring_t *monitor);
 static int sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request, monitoring_t *monitor);
 
 
@@ -1653,7 +1650,7 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, mon
 /*
  * MT-NOTE: sge_chck_mod_perm_host() is MT safe
  */
-static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, 
+int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, 
                                   char *commproc, int mod, lListElem *ep, 
                                   bool is_locked, monitoring_t *monitor)
 {
@@ -1689,7 +1686,9 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
       if (!host_list_locate(Master_Adminhost_List, host)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, host));
          answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+         if (!is_locked) {
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+         }
          DEXIT;
          return 1;
       }
@@ -2092,4 +2091,5 @@ int sub_command, monitoring_t *monitor
    DEXIT;
    return ret;
 }
+
 

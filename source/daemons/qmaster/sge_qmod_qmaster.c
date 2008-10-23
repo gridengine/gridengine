@@ -151,6 +151,12 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer, moni
       return;
    }
 
+   if (sge_chck_mod_perm_host(&(answer->alp), request->target, request->host,
+                              request->commproc, 0, NULL, true, monitor)) {
+      DEXIT;
+      return;
+   }
+
    /*
    ** loop over the ids and change queue or job state and signal them
    ** if necessary
@@ -1280,4 +1286,5 @@ static void signal_slave_tasks_of_job(int how, lListElem *jep, lListElem *jatep,
    DEXIT;
    return;
 }
+
 

@@ -76,6 +76,7 @@ char **argv
    lList *ref_list = NULL;
    lList *alp = NULL, *pcmdline = NULL;
    lListElem *aep;
+   bool answ_list_has_err = false;
    
    DENTER_MAIN(TOP_LAYER, "qmod");
 
@@ -134,6 +135,8 @@ char **argv
       alp = sge_gdi(SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, &ref_list, NULL, NULL);
    }
 
+   answ_list_has_err = answer_list_has_error(&alp);
+
    /*
    ** show answer list
    */
@@ -147,7 +150,12 @@ char **argv
 
    sge_prof_cleanup();
 
-   SGE_EXIT(0);
+   if(answ_list_has_err) {
+      SGE_EXIT(1);
+   }
+   else {
+      SGE_EXIT(0);
+   }
    DEXIT;
    return 0;
 }
@@ -500,3 +508,4 @@ char *what
    }
    return 1;
 }
+

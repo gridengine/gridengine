@@ -1,3 +1,9 @@
+RD-2008-10-27-0: Bugfix:      fixed scheduler crash with non-consumable RQS
+                              Merged from RD-2008-10-22-0 in V62_BRANCH
+                 Bugster:     6762505
+                 Issue:       2762
+                 Review:      AH
+
 MP-2008-10-22-1: Bugfix:      qsub -w e does not acknowlegde dynamic load parameters
                               Merged from MP-2008-10-21-0 in V62_BRANCH
                  Bugster:     6554872

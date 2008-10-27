@@ -1169,7 +1169,7 @@ parallel_rqs_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, con
                         result = DISPATCH_NEVER_CAT;
                         break;
                      }
-                  } else {
+                  } else if (job_centry != NULL) {
                      char availability_text[2048];
 
                      lSetString(raw_centry, CE_stringval, lGetString(limit, RQRL_value));

@@ -1,7 +1,13 @@
-JF-2008-10-22-0: Bugfix: qmod does not follow admin host rules fixed
-                 Bugtraq: 6707098
-                 Issue: 2582
-                 Review: JG
+RD-2008-10-27-0: Bugfix:      fixed scheduler crash with non-consumable RQS
+                              Merged from RD-2008-10-22-0 in V62_BRANCH
+                 Bugster:     6762505
+                 Issue:       2762
+                 Review:      AH
+
+JF-2008-10-22-0: Bugfix:      qmod does not follow admin host rules fixed
+                 Bugtraq:     6707098
+                 Issue:       2582
+                 Review:      JG
 
 MP-2008-10-22-1: Bugfix:      qconf -Aconf modifies existing configuration
                               Merged from MP-2008-10-21-1 in V62_BRANCH

@@ -196,9 +196,6 @@ qs_state_t sconf_get_qs_state(void);
 void sconf_set_global_load_correction(bool flag);
 bool sconf_get_global_load_correction(void);
 
-void     sconf_set_now(u_long32);
-u_long32 sconf_get_now(void);
-
 bool sconf_get_host_order_changed(void);
 void sconf_set_host_order_changed(bool changed);
 

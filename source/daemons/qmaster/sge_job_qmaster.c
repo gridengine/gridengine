@@ -3736,7 +3736,7 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bo
          }
 
          /* we will assume this time as start time for now assignments */
-         sconf_set_now(sge_get_gmt());
+         a.now = sge_get_gmt();
 
          /* 
           * Current scheduler code expects all queue instances in a plain list. We use 

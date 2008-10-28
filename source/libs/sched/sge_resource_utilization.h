@@ -53,7 +53,7 @@ int rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
 void prepare_resource_schedules(const lList *running_jobs,
       const lList *suspended_jobs, lList *pe_list, lList *host_list,
       lList *queue_list, lList *rqs_list, lList *centry_list, lList *acl_list,
-      lList *hgroup_list, lList *ar_list, bool for_job_scheduling);
+      lList *hgroup_list, lList *ar_list, bool for_job_scheduling, u_long32 now);
 
 #endif /* __SGE_RESOURCE_UTILIZATION_H */
 

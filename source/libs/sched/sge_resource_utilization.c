@@ -77,7 +77,7 @@ rqs_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
                         int slots, const char *obj_name, u_long32 start_time,
                         u_long32 end_time);
 
-static void add_calendar_to_schedule(lList *queue_list);
+static void add_calendar_to_schedule(lList *queue_list, u_long32 now);
 
 static void set_utilization(lList *uti_list, u_long32 from, u_long32 till, double uti);
 
@@ -852,13 +852,12 @@ static int
 add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list, 
                          lList *host_list, lList *queue_list, lList *rqs_list,
                          lList *centry_list, lList *acl_list, lList *hgroup_list,
-                         lList *ar_list, bool for_job_scheduling)
+                         lList *ar_list, bool for_job_scheduling, u_long32 now)
 {
    lListElem *jep, *ja_task;
    lListElem *gep = host_list_locate(host_list, SGE_GLOBAL_NAME);
    const char *pe_name;
    const char *type;
-   u_long32 now = sconf_get_now();
    u_long32 interval = sconf_get_schedule_interval();
 
    DENTER(TOP_LAYER, "add_job_list_to_schedule");
@@ -960,23 +959,24 @@ add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list,
 *     lList *prepare_resource_schedules - create schedule for job or advance reservation
 *                                         scheduling
 *     bool for_job_scheduling     - prepare for job or for advance reservation
+*     u_long32 now                - now time of assignment
 *
 *  NOTES
 *     MT-NOTE: prepare_resource_schedules() is not MT safe 
 *******************************************************************************/
 void prepare_resource_schedules(const lList *running_jobs, const lList *suspended_jobs, 
    lList *pe_list, lList *host_list, lList *queue_list, lList *rqs_list, lList *centry_list,
-   lList *acl_list, lList *hgroup_list, lList *ar_list, bool for_job_scheduling)
+   lList *acl_list, lList *hgroup_list, lList *ar_list, bool for_job_scheduling, u_long32 now)
 {
    DENTER(TOP_LAYER, "prepare_resource_schedules");
 
    add_job_list_to_schedule(running_jobs, false, pe_list, host_list, queue_list,
                             rqs_list, centry_list, acl_list, hgroup_list,
-                            ar_list, for_job_scheduling);
+                            ar_list, for_job_scheduling, now);
    add_job_list_to_schedule(suspended_jobs, true, pe_list, host_list, queue_list,
                             rqs_list, centry_list, acl_list, hgroup_list,
-                            ar_list, for_job_scheduling);
-   add_calendar_to_schedule(queue_list); 
+                            ar_list, for_job_scheduling, now);
+   add_calendar_to_schedule(queue_list, now); 
 
 #ifdef DEBUG  /* just for information purposes... */
    utilization_print_all(pe_list, host_list, queue_list, ar_list); 
@@ -999,6 +999,7 @@ void prepare_resource_schedules(const lList *running_jobs, const lList *suspende
 *
 *  INPUTS
 *     lList *queue_list - all queues, which can posibly run jobs
+*     u_long32 now      - now time of assignment
 *
 *  NOTES
 *     MT-NOTE: add_calendar_to_schedule() is MT safe 
@@ -1009,7 +1010,7 @@ void prepare_resource_schedules(const lList *running_jobs, const lList *suspende
 *     scheduler/prepare_resource_schedules
 *******************************************************************************/
 static void 
-add_calendar_to_schedule(lList *queue_list) 
+add_calendar_to_schedule(lList *queue_list, u_long32 now) 
 {
    lListElem *queue;
 
@@ -1017,7 +1018,7 @@ add_calendar_to_schedule(lList *queue_list)
 
    for_each(queue, queue_list) {
       lList *queue_states = lGetList(queue, QU_state_changes);
-      u_long32 from       = sconf_get_now();
+      u_long32 from       = now;
 
       if (queue_states != NULL) {
       
@@ -1043,7 +1044,7 @@ add_calendar_to_schedule(lList *queue_list)
             u_long32 till = lGetUlong(queue_state, CQU_till);
           
             /* check for now, and set it if it is now */
-            if (is_full && (from == sconf_get_now())) {
+            if (is_full && (from == now)) {
                lSetDouble(slot_uti, RUE_utilized_now, slot_count);
             }
           

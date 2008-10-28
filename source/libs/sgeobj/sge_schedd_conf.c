@@ -133,7 +133,6 @@ static pthread_once_t sc_once = PTHREAD_ONCE_INIT;
 typedef struct {
    qs_state_t queue_state;
    bool       global_load_correction;
-   u_long32   now;
    int        schedd_job_info;
    bool       host_order_changed;
    int        last_dispatch_type;
@@ -167,7 +166,6 @@ static void sc_state_init(sc_state_t* state)
 {
    state->queue_state = QS_STATE_FULL;
    state->global_load_correction = true;
-   state->now = 0;
    state->schedd_job_info = SCHEDD_JOB_INFO_FALSE;
    state->host_order_changed = true;
    state->last_dispatch_type = 0;
@@ -3657,18 +3655,6 @@ bool sconf_get_global_load_correction(void)
 u_long32 sconf_get_default_duration(void) 
 {
    return pos.c_default_duration;
-}
-
-void sconf_set_now(u_long32 now)
-{
-   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_set_now");
-   sc_state->now = now;
-}
-
-u_long32 sconf_get_now(void)
-{
-   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_get_now");
-   return sc_state->now;
 }
 
 bool sconf_get_host_order_changed(void)

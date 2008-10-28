@@ -1070,6 +1070,7 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
    a.duration         = lGetUlong(ar, AR_duration);
    a.is_reservation   = true;
    a.is_advance_reservation = true;
+   a.now              = sge_get_gmt();
 
    /* 
     * Current scheduler code expects all queue instances in a plain list. We use 
@@ -1177,7 +1178,7 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
                               *(splitted_job_lists[SPLIT_SUSPENDED]),
                               master_pe_list, a.host_list, a.queue_list, 
                               NULL, a.centry_list, a.acl_list,
-                              a.hgrp_list, NULL, false);
+                              a.hgrp_list, NULL, false, a.now);
 
    /* free generated job lists */
    lFreeList(splitted_job_lists[SPLIT_RUNNING]);

@@ -689,7 +689,7 @@ parallel_reservation_max_time_slots(sge_assignment_t *best, int *available_slots
    if (best->start == DISPATCH_TIME_QUEUE_END) {
       first_time = sge_qeti_first(qeti);
       if (first_time == 0) { /* we need at least one reservation run */
-         first_time = sconf_get_now();
+         first_time = best->now;
       }
    } else {
       /* the first iteration will be done using best->start 
@@ -5591,7 +5591,7 @@ ri_time_by_slots(const sge_assignment_t *a, lListElem *rep, lList *load_attr, lL
    double util, total, request = 0;
    lListElem *capacitiy_el;
    bool schedule_based = (a->is_advance_reservation || a->is_schedule_based) ? true : false;
-   u_long32 now = sconf_get_now();
+   u_long32 now = a->now;
    int utilized = 0;
 
    DENTER(TOP_LAYER, "ri_time_by_slots");
@@ -5841,7 +5841,7 @@ ri_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qend,
       used = 0;
    } else if ((schedule_based || utilized != 0)) {
       if (!a->is_reservation) {
-         start = sconf_get_now();
+         start = a->now;
       }   
       used = utilization_max(uep, start, a->duration);
       DPRINTF(("\t\t%s: ri_slots_by_time: utilization_max("sge_u32", "sge_u32") returns %f\n", 

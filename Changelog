@@ -1,3 +1,8 @@
+RD-2008-10-28-0: Cleanup:     - removed now from internal sconf
+                              - replaced array by CULL List
+                              - some minor format changes
+                 Review:      JG
+
 RD-2008-10-27-0: Bugfix:      fixed scheduler crash with non-consumable RQS
                               Merged from RD-2008-10-22-0 in V62_BRANCH
                  Bugster:     6762505

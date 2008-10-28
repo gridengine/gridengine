@@ -62,6 +62,7 @@
 #include "sge_resource_utilization.h"
 #include "sge_attrL.h"
 #include "sge_cqueueL.h"
+#include "sgeobj/sge_str.h"
 
 static int resource_cmp(u_long32 relop, double req_all_slots, double src_dl);
 
@@ -69,19 +70,16 @@ static int string_cmp(u_long32 type, u_long32 relop, const char *request,
                       const char *offer);
 
 static lList *get_attribute_list_by_names(lListElem *global, lListElem *host, lListElem *queue, 
-         const lList *centry_list, const char** attrnames, int max_names);
+                                          const lList *centry_list, lList *attrnames);
 
-static void build_name_filter(const char **filter, lList *list, int t_name, int *pos);
+static void build_name_filter(lList *filter, lList *list, int t_name);
 
-static bool is_attr_prior2(lListElem *upper_el, double lower_value, int t_value, int t_dominant );
+static bool is_attr_prior2(lListElem *upper_el, double lower_value, int t_value, int t_dominant);
 
 static lList *get_attribute_list(lListElem *global, lListElem *host, lListElem *queue, const lList *centry_list);
 
 
-void monitor_dominance(
-char *str,
-u_long32 mask 
-) {
+void monitor_dominance(char *str, u_long32 mask) {
    switch (mask & DOMINANT_LAYER_MASK) {
    case DOMINANT_LAYER_GLOBAL:   
       *str++ = 'g';
@@ -589,21 +587,6 @@ static bool is_attr_prior2(lListElem *upper_el, double lower_value, int t_value,
    DRETURN(ret);
 }
 
-/* provide a list of attributes containing all global attributes */
-int global_complexes2scheduler(
-lList **new_centry_list,
-lListElem *global_host,
-lList *centry_list
-) {
-   DENTER(TOP_LAYER, "global_complexes2scheduler");
-
-   lFreeList(new_centry_list);
-   *new_centry_list = get_attribute_list(global_host, NULL, NULL, centry_list);
-
-   DRETURN(0);
-}
-
-
 /* provide a list of attributes containing all attributes for the given host */
 int host_complexes2scheduler(
 lList **new_centry_list,
@@ -631,12 +614,9 @@ lList *centry_list
  queue.
 
  **********************************************************************/
-int queue_complexes2scheduler(
-lList **new_centry_list,
-lListElem *queue,
-const lList *exechost_list,
-const lList *centry_list 
-) {
+int queue_complexes2scheduler(lList **new_centry_list, lListElem *queue, const lList *exechost_list,
+                              const lList *centry_list)
+{
    DENTER(BASIS_LAYER, "queue_complexes2scheduler");
 
    lFreeList(new_centry_list);
@@ -652,8 +632,7 @@ const lList *centry_list
 *
 *  SYNOPSIS
 *     static lList* get_attribute_list_by_names(lListElem *global, lListElem 
-*     *host, lListElem *queue, lList *centry_list, const char** attrnames, int 
-*     max_names) 
+*     *host, lListElem *queue, lList *centry_list, lList *attrnames)
 *
 *  FUNCTION
 *     Assembles a list of attributes for a given queue, host, global, which contains all 
@@ -666,8 +645,7 @@ const lList *centry_list
 *     lListElem *host        - host (or NULL, if only global resources are asked for ) 
 *     lListElem *queue       - queue (or NULL, if only global / host resources are asked for) 
 *     lList *centry_list     - the system wide attribut config list 
-*     const char** attrnames - an array of attribute names 
-*     int max_names          - nr of attribute names 
+*     lList *attrnames       - ST_Type list of attribute names 
 *
 *  RESULT
 *     static lList* - a CULL list of elements or NULL
@@ -675,13 +653,13 @@ const lList *centry_list
 *******************************************************************************/
 static lList *get_attribute_list_by_names(lListElem *global, lListElem *host, 
                                           lListElem *queue, const lList *centry_list,
-                                          const char** attrnames, int max_names){
-   lListElem *attr;
-   lList * list = NULL;
-   int i;
+                                          lList *attrnames)
+{
+   lListElem *attr, *elem;
+   lList *list = NULL;
 
-   for (i=0; i<max_names; i++){
-      attr = get_attribute_by_name(global, host, queue, attrnames[i], centry_list, DISPATCH_TIME_NOW, 0);
+   for_each(elem, attrnames) {
+      attr = get_attribute_by_name(global, host, queue, lGetString(elem, ST_name), centry_list, DISPATCH_TIME_NOW, 0);
       if (attr) {
          if (!list )
             list = lCreateList("attr", CE_Type);
@@ -717,65 +695,39 @@ static lList *get_attribute_list_by_names(lListElem *global, lListElem *host,
 *******************************************************************************/
 static lList *get_attribute_list(lListElem *global, lListElem *host, lListElem *queue, const lList *centry_list)
 {
-   int pos = 0;
-   const char **filter=NULL; 
-   lList *list=NULL;
+   lList *filter = NULL; 
+   lList *list = NULL;
 
-   int size = lGetNumberOfElem(centry_list) + max_queue_resources ; 
-   
    DENTER(BASIS_LAYER, "get_attribute_list");
    
-   if (global != NULL) {
-      size += lGetNumberOfElem(lGetList(global, EH_load_list));
-   }   
-   if (host != NULL) {
-      size +=  lGetNumberOfElem( lGetList(host, EH_load_list));
-   }   
-
-   filter = malloc(size * sizeof(char*)); 
+   filter = lCreateList("", ST_Type);
 
    if (global){
-      build_name_filter(filter, lGetList(global, EH_load_list), HL_name, &pos);
-      build_name_filter(filter, lGetList(global, EH_consumable_config_list), CE_name, &pos);
+      build_name_filter(filter, lGetList(global, EH_load_list), HL_name);
+      build_name_filter(filter, lGetList(global, EH_consumable_config_list), CE_name);
    }    
 
    if (host){
-      build_name_filter(filter, lGetList(host, EH_load_list), HL_name, &pos);
-      build_name_filter(filter, lGetList(host, EH_consumable_config_list), CE_name, &pos);
+      build_name_filter(filter, lGetList(host, EH_load_list), HL_name);
+      build_name_filter(filter, lGetList(host, EH_consumable_config_list), CE_name);
    } 
 
    if (queue){ 
-      int x=0;  
+      int x = 0;  
       for (; x < max_queue_resources; x++){
-         bool add = true; 
-         int i;
-
-         if (pos >= size){
-            ERROR((SGE_EVENT,MSG_COMPLEX_MISSING)); 
-            break;
+         if (lGetElemStr(filter, ST_name, queue_resource[x].name) == NULL) {
+            lAddElemStr(&filter, ST_name, queue_resource[x].name, ST_Type);
          }
-
-         for(i=0 ; i<pos; i++){ /* prefent adding duplicates */
-            if(strcmp(filter[i], queue_resource[x].name) == 0){
-               add = false;
-               break;
-            }
-         }
-         if(add)
-           filter[pos++] = queue_resource[x].name;
       }
-
-      build_name_filter(filter, lGetList(queue, QU_consumable_config_list), CE_name, &pos);
+      build_name_filter(filter, lGetList(queue, QU_consumable_config_list), CE_name);
    }
 
 
-   list = get_attribute_list_by_names(global, host, queue, centry_list, filter, pos);
+   list = get_attribute_list_by_names(global, host, queue, centry_list, filter);
 
-   free(filter);
-   filter = NULL;
+   lFreeList(&filter);
    
-   DRETURN(list); 
-
+   DRETURN(list);
 }
 
 /****** sge_complex_schedd/build_name_filter() *********************************
@@ -794,34 +746,25 @@ static lList *get_attribute_list(lListElem *global, lListElem *host, lListElem *
 *     const char **filter     - target for the filter strings. It has to be of sufficant size. 
 *     lList *list             - a list of complexes, from which the names are extracted 
 *     int t_name              - specifies the field which is used as a name 
-*     int *pos                - current position in which the new strings are added. After a 
-*                               run it points to the next empty spot in the array. 
 *
 *  NOTES
 *     ??? 
 *
 *******************************************************************************/
-static void build_name_filter(const char **filter, lList *list, int t_name, int *pos){
+static void build_name_filter(lList *filter, lList *list, int t_name){
    lListElem *current = NULL;
    
-   if(!list)
+   if (!list) {
       return;
+   }
 
-   for_each( current,list){
-         const char* name = lGetString(current, t_name);
-         bool add = true; 
-         int i;
+   for_each(current,list){
+      const char* name = lGetString(current, t_name);
 
-         for(i=0 ; i<(*pos); i++){
-            if(strcmp(filter[i], name) == 0){
-               add = false;
-               break;
-            }
-         }
-         
-         if(add) 
-            filter[(*pos)++] = name; 
+      if (lGetElemStr(filter, ST_name, name) == NULL) {
+         lAddElemStr(&filter, ST_name, name, ST_Type);
       }
+   }
 }
 
 /* wrapper for strcmp() of all string types */ 
@@ -898,11 +841,7 @@ const char *offer) {
    return match;
 }
 
-static int resource_cmp(
-u_long32 relop,
-double req,
-double src_dl
-) {
+static int resource_cmp(u_long32 relop, double req, double src_dl) {
    int match;
 
    DENTER(CULL_LAYER, "resource_cmp");
@@ -940,14 +879,9 @@ double src_dl
  the type is given by the first complex
  return 1 if matched anything else 0 if not
  *********************************************************************/
-int compare_complexes(
-int slots,
-lListElem *req_cplx,
-lListElem *src_cplx,
-char *availability_text,
-int is_threshold,
-int force_existence 
-) {
+int compare_complexes(int slots, lListElem *req_cplx, lListElem *src_cplx, char *availability_text,
+                      int is_threshold, int force_existence)
+{
    u_long32 type, relop, used_relop = 0;
    double req_dl, src_dl;
    int match, m1, m2;
@@ -1276,12 +1210,10 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
 
       if (!ret_el) {
          ret_el = queue_el;
-      }   
-      else if (ret_el && queue_el) {
+      } else if (ret_el && queue_el) {
          if (is_attr_prior(ret_el, queue_el)) {
             lFreeElem(&queue_el);
-         }
-         else {
+         } else {
             lFreeElem(&ret_el);
             ret_el = queue_el;
          }

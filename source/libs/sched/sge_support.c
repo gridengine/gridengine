@@ -63,11 +63,7 @@ static const long sge_usage_interval = SGE_USAGE_INTERVAL;
  * decay_usage - decay usage for the passed usage list
  *--------------------------------------------------------------------*/
 
-static void
-decay_usage( lList *usage_list,
-             const lList *decay_list,
-             u_long curr_time,
-             u_long usage_time_stamp )
+static void decay_usage(lList *usage_list, const lList *decay_list, double interval)
 {
    lListElem *usage = NULL;
 
@@ -75,27 +71,24 @@ decay_usage( lList *usage_list,
       double decay = 0;
       double default_decay = 0;
 
-      if (curr_time > usage_time_stamp) {
+      default_decay = pow(sconf_get_decay_constant(),
+                  interval /
+                  (double)sge_usage_interval);
 
-         default_decay = pow(sconf_get_decay_constant(),
-                     (double)(curr_time - usage_time_stamp) /
-                     (double)sge_usage_interval);
+      for_each(usage, usage_list) {
+         lListElem *decay_elem;
+         if (decay_list &&
+             ((decay_elem = lGetElemStr(decay_list, UA_name,
+                   lGetPosString(usage, UA_name_POS))))) {
 
-         for_each(usage, usage_list) {
-            lListElem *decay_elem;
-            if (decay_list &&
-                ((decay_elem = lGetElemStr(decay_list, UA_name,
-                      lGetPosString(usage, UA_name_POS))))) {
-
-               decay = pow(lGetPosDouble(decay_elem, UA_value_POS),
-                     (double)(curr_time - usage_time_stamp) /
-                     (double)sge_usage_interval);
-            } else {
-               decay = default_decay;
-            }
-            lSetPosDouble(usage, UA_value_POS,
-                          lGetPosDouble(usage, UA_value_POS) * decay);
+            decay = pow(lGetPosDouble(decay_elem, UA_value_POS),
+                  interval /
+                  (double)sge_usage_interval);
+         } else {
+            decay = default_decay;
          }
+         lSetPosDouble(usage, UA_value_POS,
+                       lGetPosDouble(usage, UA_value_POS) * decay);
       }
    }
    return;
@@ -131,15 +124,14 @@ decay_userprj_usage( lListElem *userprj,
 
       usage_time_stamp = lGetPosUlong(userprj, obj_usage_time_stamp_POS);
 
-      if (usage_time_stamp > 0) {
+      if (usage_time_stamp > 0 && (curr_time > usage_time_stamp)) {
          lListElem *upp;
+         double interval = curr_time - usage_time_stamp;
 
-         decay_usage(lGetPosList(userprj, obj_usage_POS), decay_list,
-                     curr_time, usage_time_stamp);
+         decay_usage(lGetPosList(userprj, obj_usage_POS), decay_list, interval);
 
          for_each(upp, lGetPosList(userprj, obj_project_POS)) {
-            decay_usage(lGetPosList(upp, UPP_usage_POS), decay_list,
-                        curr_time, usage_time_stamp);
+            decay_usage(lGetPosList(upp, UPP_usage_POS), decay_list, interval);
          }
 
       }

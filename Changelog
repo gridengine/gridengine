@@ -1,3 +1,6 @@
+MP-2008-10-28-0: Rollback of changes made from MP-2008-10-22-1. qconf -Mconf does
+                 not exist in this branch. A different solution needs to be created.
+
 RD-2008-10-27-0: Bugfix:      fixed scheduler crash with non-consumable RQS
                               Merged from RD-2008-10-22-0 in V62_BRANCH
                  Bugster:     6762505

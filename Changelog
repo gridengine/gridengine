@@ -1,3 +1,9 @@
+GH-2008-10-29-0: Bugfix:      PVM start/stop scripts should not put queue
+                              in Error state
+                 Bugster:     6727832
+                 Issue:       2714
+                 Review:      CR
+
 RD-2008-10-28-0: Cleanup:     - removed now from internal sconf
                               - replaced array by CULL List
                               - some minor format changes

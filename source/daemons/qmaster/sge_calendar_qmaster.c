@@ -270,19 +270,18 @@ void sge_calendar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, mo
 
    MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
 
-   if (!(cep = calendar_list_locate(*object_type_get_master_list(SGE_TYPE_CALENDAR), cal_name)))
-   {
-      ERROR((SGE_EVENT, MSG_EVE_TE4CAL_S, cal_name));   
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);      
+   if (!(cep = calendar_list_locate(*object_type_get_master_list(SGE_TYPE_CALENDAR), cal_name))) {
+      ERROR((SGE_EVENT, MSG_EVE_TE4CAL_S, cal_name));
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       DRETURN_VOID;
    }
-      
-   calendar_update_queue_states(ctx, cep, 0, NULL, &ppList, monitor);
-   lFreeList(&ppList);
 
-   FREE(cal_name);
+   calendar_update_queue_states(ctx, cep, 0, NULL, &ppList, monitor);
 
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+
+   lFreeList(&ppList);
+   FREE(cal_name);
 
    DRETURN_VOID;
 } /* sge_calendar_event_handler() */

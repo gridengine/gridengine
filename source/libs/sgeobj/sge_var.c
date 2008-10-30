@@ -437,7 +437,7 @@ void var_list_copy_prefix_vars(lList **varl,
    for_each(var_elem, src_varl) {
       const char *prefix_name = lGetString(var_elem, VA_variable);
 
-      if (!strncmp(prefix_name, prefix, prefix_len)) {
+      if (strncmp(prefix_name, prefix, prefix_len) == 0) {
          char name[MAX_STRING_SIZE];
          const char *name_without_prefix = &prefix_name[prefix_len];
          const char *value = lGetString(var_elem, VA_value);
@@ -449,8 +449,9 @@ void var_list_copy_prefix_vars(lList **varl,
    if (*varl == NULL) {
       *varl = lCreateList("", VA_Type);
    }
-   var_list_add_as_set (*varl, var_list2); 
-   DEXIT;
+   var_list_add_as_set(*varl, var_list2); 
+
+   DRETURN_VOID;
 }
 
 /****** sgeobj/var/var_list_copy_prefix_vars_undef() **************************
@@ -673,43 +674,40 @@ int var_list_add_as_set(lList *lp0, lList *lp1)
 
    DENTER(CULL_LAYER, "var_list_add_as_set");
 
-   if (!lp1 || !lp0) {
-      DEXIT;
-      return -1;
+   if (lp1 == NULL || lp0 == NULL) {
+      DRETURN(-1);
    }
 
    /* Check if the two lists are equal */
    dp0 = lGetListDescr(lp0);
    dp1 = lGetListDescr(lp1);
-   if (lCompListDescr(dp0, dp1)) {
-      DEXIT;
-      return -1;
+   if (lCompListDescr(dp0, dp1) != 0) {
+      DRETURN(-1);
    }
 
-   while (lp1->first) {
+   while (lp1->first != NULL) {
       /* Get the first element from the second list */
-      if (!(ep1 = lDechainElem(lp1, lp1->first))) {
-         DEXIT;
-         return -1;
+      if ((ep1 = lDechainElem(lp1, lp1->first)) == NULL) {
+         DRETURN(-1);
       }
    
       /* Get it's name, and use the name to look for a matching element in the
        * first list. */
-      name = lGetString (ep1, VA_variable);
-      ep0 = lGetElemStr (lp0, VA_variable, name);
+      name = lGetString(ep1, VA_variable);
+      ep0 = lGetElemStr(lp0, VA_variable, name);
 
       /* If there is a matching element in the first list, set it's value to the
        * value of the element from the second list. */
       if (ep0 != NULL) {
-         value = lGetString (ep1, VA_value);         
-         lSetString (ep0, VA_value, value);
+         value = lGetString(ep1, VA_value);         
+         lSetString(ep0, VA_value, value);
+         lFreeElem(&ep1);
       }
       /* If there is no matching element, add the element from the second list
        * to the first list. */
       else {
          if (lAppendElem(lp0, ep1) == -1) {
-            DEXIT;
-            return -1;
+            DRETURN(-1);
          }
       }
    }
@@ -717,8 +715,7 @@ int var_list_add_as_set(lList *lp0, lList *lp1)
    /* The second list is no longer needed. */
    lFreeList(&lp1);
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /****** sge_var/var_list_verify() **********************************************

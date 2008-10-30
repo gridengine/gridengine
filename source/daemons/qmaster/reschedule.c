@@ -187,19 +187,12 @@ void reschedule_unknown_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, moni
     */
    reschedule_jobs(ctx, hep, 0, &answer_list, monitor);
    lFreeList(&answer_list);
-   
-   free((char*)hostname);
-   
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-   DEXIT;
-   return;
 
 Error:
    free((char*)hostname);
    
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
  
 /****** qmaster/reschedule/reschedule_jobs() **********************************
@@ -522,36 +515,7 @@ int reschedule_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, l
       if (!found) {
          add_to_reschedule_unknown_list(ctx, host, job_number, task_number, 0);
          ret = 0;                
-
-#if 0
-         DPRINTF(("RU: ADDED JOB "sge_u32"."sge_u32
-            " ON HOST "SFN" TO RU_TYPE-LIST\n", job_number,
-            task_number, hostname));
-      } else {
-         DPRINTF(("RU: JOB "sge_u32"."sge_u32" ON HOST "SFN
-            " already contained in RU_TYPE-LIST\n", job_number,
-            task_number, hostname));
-#endif
       }
-
-      /*
-       * Trigger the rescheduling of this task
-       */
-      if (!found) {
-         lListElem *pseudo_jr; /* JR_Type */
-
-         lSetUlong(this_jatep, JAT_job_restarted, 1);
-
-         pseudo_jr = lCreateElem(JR_Type);
-         lSetUlong(pseudo_jr, JR_job_number, job_number);
-         lSetUlong(pseudo_jr, JR_ja_task_number, task_number);
-         lSetUlong(pseudo_jr, JR_failed, SSTATE_AGAIN);
-         lSetString(pseudo_jr, JR_err_str, (char *) MSG_RU_JR_ERRSTR);
-         lSetString(pseudo_jr, JR_queue_name,
-                    lGetString(first_granted_queue, JG_qname));
-         sge_job_exit(ctx, pseudo_jr, jep, this_jatep, monitor);
-         lFreeElem(&pseudo_jr);
-      }                         
 
       /*
        * Mails and messages
@@ -584,10 +548,29 @@ int reschedule_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, l
          answer_list_add(answer, SGE_EVENT, 
                          STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       }
+
+      /*
+       * Trigger the rescheduling of this task
+       */
+      if (!found) {
+         lListElem *pseudo_jr; /* JR_Type */
+
+         lSetUlong(this_jatep, JAT_job_restarted, 1);
+
+         pseudo_jr = lCreateElem(JR_Type);
+         lSetUlong(pseudo_jr, JR_job_number, job_number);
+         lSetUlong(pseudo_jr, JR_ja_task_number, task_number);
+         lSetUlong(pseudo_jr, JR_failed, SSTATE_AGAIN);
+         lSetString(pseudo_jr, JR_err_str, (char *) MSG_RU_JR_ERRSTR);
+         lSetString(pseudo_jr, JR_queue_name,
+                    lGetString(first_granted_queue, JG_qname));
+         sge_job_exit(ctx, pseudo_jr, jep, this_jatep, monitor);
+         lFreeElem(&pseudo_jr);
+      }                         
    }
-   DEXIT;
-   return ret;
-}   
+
+   DRETURN(ret);
+}
 
 /****** qmaster/reschedule/add_to_reschedule_unknown_list() *******************
 *  NAME

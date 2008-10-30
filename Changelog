@@ -1,3 +1,7 @@
+JG-2008-10-30-0: Bugfix:      fixed a qmaster deadlock on linux
+                              fixed minor memory leaks
+                 Review:      RD
+
 DG-2008-10-30-1: Bugfix:      When updating from 6.1u? to 6.2 with rpc BDB 
                               the upgrading script does not delete spooldb 
                               directory.

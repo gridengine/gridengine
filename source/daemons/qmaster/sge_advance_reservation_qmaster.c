@@ -890,7 +890,7 @@ static u_long32 guess_highest_ar_id(void)
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
 
    DRETURN(maxid);
-}   
+}
 
 /****** sge_advance_reservation_qmaster/sge_ar_event_handler() *****************
 *  NAME

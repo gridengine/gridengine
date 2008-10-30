@@ -715,7 +715,6 @@ cleanup:
    *p_exit_status = g_exit_status;
 
    thread_cleanup_lib(&thread_lib_handle);
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 

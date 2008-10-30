@@ -343,7 +343,7 @@ SelectNewSpooling()
                Makedir "$SPOOLING_ARGS"
             fi
          else # BDB server
-            DoRemoteAction "$db_server_host" "$ADMINUSER" "/bin/sh -c if [ -d $db_server_spool_dir ]; then rm -rf $db_server_spool_dir/*; fi"
+            DoRemoteAction "$db_server_host" "$ADMINUSER" "if [ -d $db_server_spool_dir ]; then rm -rf $db_server_spool_dir/*; fi"
          fi
       else #Classic
          tmp_spool=`echo $SPOOLING_ARGS | awk -F";" '{print $1}' | awk '{print $2}'`

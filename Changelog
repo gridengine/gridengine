@@ -1,3 +1,7 @@
+MD-2008-10-30-0: Bugfix:      creation of local config during execd install broken
+                 BelongsTo:   MP-2008-10-21-1
+                 Review:      JG
+ 
 DG-2008-10-30-0: Cleanup:     Additional JVM args for autoinstall set in 
                               install template file to the same value as in 
                               inst_qmaster.sh. 

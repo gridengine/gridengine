@@ -1,3 +1,7 @@
+MD-2008-10-30-0: Bugfix:      creation of local config during execd install broken
+                 BelongsTo:   MP-2008-10-22-1
+                 Review:      JG
+
 CR-2008-10-30-0: Bugfix:      qmaster might be unresponsive for a time because 
                               of commlib timeout
                  Merged from: V62_BRANCH (CR-2008-10-23-1)
@@ -8,7 +12,7 @@ CR-2008-10-30-0: Bugfix:      qmaster might be unresponsive for a time because
                                 test_cl_issue_2747_client
                                 test_cl_issue_2747_server
                               o enhanced commlib thread list by thread type
-                                definition
+                                
                               o qmaster threads now use commlib log list for
                                 communication logging
                               o cleanup of commlib internal connection state

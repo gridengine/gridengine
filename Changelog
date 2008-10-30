@@ -1,3 +1,8 @@
+DG-2008-10-30-0: Cleanup:     Additional JVM args for autoinstall set in 
+                              install template file to the same value as in 
+                              inst_qmaster.sh. 
+                 Review:      AA 
+
 CR-2008-10-23-1: Bugfix:      qmaster might be unresponsive for a time because 
                               of commlib timeout
                  Bugster:     6754568

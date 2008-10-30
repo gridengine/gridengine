@@ -278,8 +278,8 @@ sge_jvm_initialize(sge_gdi_ctx_class_t *ctx, lList **answer_list)
           * start the JVM thread 
           */
          cl_thread_list_create_thread(Main_Control.jvm_thread_pool, &dummy_thread_p,
-                                      NULL, sge_dstring_get_string(&thread_name),
-                                      Master_Jvm.thread_id, sge_jvm_main, NULL, NULL);
+                                      cl_com_get_log_list(), sge_dstring_get_string(&thread_name),
+                                      Master_Jvm.thread_id, sge_jvm_main, NULL, NULL, CL_TT_JVM);
          sge_dstring_free(&thread_name);
 
          /*

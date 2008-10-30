@@ -264,6 +264,7 @@ extern int main(int argc, char** argv)
 #if CL_DO_SLOW
         sleep(atoi(argv[5]));
 #endif
+        cl_commlib_trigger(handle,1);
         continue;
      }
 #endif
@@ -308,7 +309,7 @@ extern int main(int argc, char** argv)
 /*        printf("retval of cl_commlib_check_for_ack(%ld) is %s\n",mid,cl_get_error_text(retval));  */
      }
      if (retval == CL_RETVAL_CONNECTION_NOT_FOUND) {
-        
+         cl_commlib_trigger(handle, 1);
          continue; 
      }
 #endif

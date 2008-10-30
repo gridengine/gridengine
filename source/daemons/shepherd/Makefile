@@ -64,7 +64,7 @@ SHEPHERD_ADD_OBJS = $(SHEPHERD_ADD_SRC:.c=.o)
 
 SHEPHERD_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(KRBLIB) -lcull -lcomm_static -lcommlists -luti $(WINGRIDLIB_STATIC) -llck -lrmon $(DLLIB)
 
-SHEPHERD_LIB_DEPENDS = $(GDILIB) $(SGEOBJDLIB) $(SGEOBJLIB) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(LCKLIB) $(RMONLIB)
+SHEPHERD_LIB_DEPENDS = $(GDILIB) $(SGEOBJDLIB) $(SGEOBJLIB) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(COMMLIB_STATIC) $(UTILIB) $(WINGRIDLIB_DEP) $(LCKLIB) $(RMONLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

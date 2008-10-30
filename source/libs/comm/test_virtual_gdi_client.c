@@ -236,8 +236,13 @@ extern int main(int argc, char** argv)
            if (rcv_messages > 0) {
               printf("cl_commlib_send_message returned: %s\n", cl_get_error_text(retval));
               do_shutdown = 1;
+           } else {
+              if (synchron == CL_FALSE) {
+                 printf("Waiting for connection to virtual_qmaster ...\n");
+                 cl_commlib_trigger(handle, 1);
+              }
            }
-        } 
+        }
         if (reconnect == 1) {
             break;
         }

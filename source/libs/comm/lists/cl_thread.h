@@ -62,6 +62,28 @@
 /* define cleanup functio type */
 typedef void  (*cl_thread_cleanup_func_t) (cl_thread_settings_t* thread_config);
 
+typedef enum cl_thread_type_def {
+   CL_TT_UNDEFINED = 0,  /* free */
+   CL_TT_CREATOR,        /* creator thread (main()) */
+   CL_TT_COMMLIB,        /* commlib thread (do not use for threads created outside commlib) */
+   CL_TT_LISTENER,       /* qmaster */
+   CL_TT_WORKER,         /* qmaster */
+   CL_TT_DELIVERER,      /* qmaster */
+   CL_TT_JVM,            /* qmaster */
+   CL_TT_SCHEDULER,      /* qmaster */
+   CL_TT_SIGNALER,       /* qmaster */
+   CL_TT_TESTER,         /* qmaster */
+   CL_TT_TIMER,          /* qmaster */
+   CL_TT_IJS,            /* interactive job support */
+   CL_TT_IJS_REGISTER,   /* interactive job support */
+   CL_TT_USER1,          /* free */
+   CL_TT_USER2,          /* free */
+   CL_TT_USER3,          /* free */
+   CL_TT_USER4,          /* free */
+   CL_TT_USER5           /* free */
+} cl_thread_type_t;
+
+
 struct cl_thread_settings_type {
 #ifdef CL_DO_COMMLIB_DEBUG
    struct timeval           thread_last_cancel_test_time; /* time when thread did the last cl_thread_func_testcancel() call */
@@ -75,6 +97,7 @@ struct cl_thread_settings_type {
    cl_thread_condition_t*   thread_event_condition;       /* event call conditions */
    cl_thread_condition_t*   thread_startup_condition;     /* startup condition ( used by cl_thread_setup() ) */
    cl_thread_cleanup_func_t thread_cleanup_func;          /* thread cleanup function pointer */
+   cl_thread_type_t         thread_type;                  /* thread type identifier */
    void*                    thread_user_data;             /* any user data ( e.g.: a pointer to a struct ) ) */
 };
 
@@ -99,7 +122,8 @@ int cl_thread_setup(cl_thread_settings_t* thread_config,
                     int id,
                     void * (*start_routine)(void *),
                     cl_thread_cleanup_func_t cleanup_func,
-                    void* user_data ); 
+                    void* user_data,
+                    cl_thread_type_t thread_type); 
 int cl_thread_cleanup(cl_thread_settings_t* thread_config); 
 cl_thread_settings_t* cl_thread_get_thread_config(void);
 int cl_thread_set_thread_config(cl_thread_settings_t* thread_config);

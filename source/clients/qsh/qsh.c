@@ -1655,8 +1655,8 @@ int main(int argc, char **argv)
          SGE_EXIT((void**)&ctx, 1);
       }   
 
-      just_verify = (lGetUlong(job, JB_verify_suitable_queues)==JUST_VERIFY ||
-                      lGetUlong(job, JB_verify_suitable_queues) == POKE_VERIFY);
+      just_verify = (lGetUlong(job, JB_verify_suitable_queues) == JUST_VERIFY ||
+                     lGetUlong(job, JB_verify_suitable_queues) == POKE_VERIFY);
    }
 
    if (g_new_interactive_job_support == false) {
@@ -2145,12 +2145,14 @@ int main(int argc, char **argv)
          dstring err_msg = DSTRING_INIT;
          int     ret;
 
+         /* This will remove the handle (g_comm_handle) */
          ret = comm_shutdown_connection(g_comm_handle, COMM_CLIENT, &err_msg);
          if (ret != COMM_RETVAL_OK) {
             DPRINTF(("comm_shutdown_connection() failed: %s (%d)",
                      sge_dstring_get_string(&err_msg), ret));
          }
-
+         g_comm_handle = NULL;
+         
          sge_dstring_free(&err_msg);
       }
 

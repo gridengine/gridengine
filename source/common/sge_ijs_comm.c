@@ -275,7 +275,7 @@ int my_log_list_flush_list(cl_raw_list_t* list_p) {
 
       fprintf(fp, "%-76s|", elem->log_module_name);
       if (elem->log_parameter == NULL) {
-         fprintf(fp, "%ld.%ld|%20s|%10s|%8s| %s\n",
+         fprintf(fp, "%ld.%ld|%20s|%s|%s| %s\n",
                  (long)now.tv_sec,
                  (long)now.tv_usec,
                  elem->log_thread_name,
@@ -283,7 +283,7 @@ int my_log_list_flush_list(cl_raw_list_t* list_p) {
                  cl_log_list_convert_type_id(elem->log_type),
                  elem->log_message);
       } else {
-         fprintf(fp, "%ld.%ld|%20s|%10s|%8s| %s %s\n",
+         fprintf(fp, "%ld.%ld|%20s|%s|%s| %s %s\n",
                  (long)now.tv_sec,
                  (long)now.tv_usec,
                  elem->log_thread_name,
@@ -330,7 +330,7 @@ int my_log_list_flush_list(cl_raw_list_t* list_p) {
 *******************************************************************************/
 int comm_init_lib(dstring *err_msg)
 {
-   int ret, ret_val = 0;
+   int ret, ret_val = COMM_RETVAL_OK;
 
    DENTER(TOP_LAYER, "comm_init_lib");
 
@@ -383,7 +383,7 @@ int comm_init_lib(dstring *err_msg)
 *******************************************************************************/
 int comm_cleanup_lib(dstring *err_msg)
 {
-   int ret, ret_val = 0;
+   int ret, ret_val = COMM_RETVAL_OK;
 
    DENTER(TOP_LAYER, "comm_cleanup_lib");
 
@@ -637,7 +637,6 @@ int comm_shutdown_connection(COMMUNICATION_HANDLE *handle,
     * during the shutdown of the connection - just shut down.
     */
    ret = cl_com_set_error_func(NULL);
-   cl_com_ignore_timeouts(CL_TRUE);
    ret = cl_commlib_close_connection(handle, g_hostname, 
                                      (char*)component_name, 1, CL_FALSE);
    if (ret != CL_RETVAL_OK) {
@@ -645,6 +644,8 @@ int comm_shutdown_connection(COMMUNICATION_HANDLE *handle,
       DPRINTF(("cl_commlib_close_connection() failed: %s (%d)\n",
                sge_dstring_get_string(err_msg), ret));
       ret_val = COMM_CANT_CLOSE_CONNECTION;
+      cl_com_ignore_timeouts(CL_TRUE);
+      cl_commlib_shutdown_handle(handle, CL_FALSE);
    } else {
       ret = cl_commlib_shutdown_handle(handle, CL_FALSE);
       if (ret != CL_RETVAL_OK) {
@@ -1228,6 +1229,7 @@ int comm_flush_write_messages(COMMUNICATION_HANDLE *handle, dstring *err_msg)
        * We just tried to send the messages and it wasn't possible to send
        * all messages - give the network some time to recover.
        */
+      /* TODO (NEW): make this working correctly by calling check_client_alive */
       if (elems > 0) {
          usleep(10000);
          retries--;
@@ -1292,17 +1294,14 @@ int comm_recv_message(COMMUNICATION_HANDLE *handle, cl_bool_t b_synchron,
    }
 
    ret = cl_commlib_receive_message(handle,
-                                    g_hostname, /* unresolved_hostname, */
+                                    NULL,       /* unresolved_hostname, */
                                     NULL,       /* component_name, */
                                     0,          /* component_id, */
-                                    b_synchron,
+                                    CL_FALSE,
                                     0,
                                     &message,
                                     &sender);
    if (ret != CL_RETVAL_OK) {
-      sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
-      DPRINTF(("cl_commlib_receive_message() failed: %s (%d)\n",
-               sge_dstring_get_string(err_msg), ret));
       switch (ret) {
          case CL_RETVAL_NO_SELECT_DESCRIPTORS:
             ret_val = COMM_NO_SELECT_DESCRIPTORS;
@@ -1313,6 +1312,9 @@ int comm_recv_message(COMMUNICATION_HANDLE *handle, cl_bool_t b_synchron,
          case CL_RETVAL_SYNC_RECEIVE_TIMEOUT:
             ret_val = COMM_SYNC_RECEIVE_TIMEOUT;
          break;
+         case CL_RETVAL_NO_MESSAGE:
+            ret_val = COMM_NO_MESSAGE_AVAILABLE;
+         break;
          default:
             ret_val = COMM_CANT_RECEIVE_MESSAGE;
       }
@@ -1322,51 +1324,51 @@ int comm_recv_message(COMMUNICATION_HANDLE *handle, cl_bool_t b_synchron,
       cl_com_free_endpoint(&sender);
    }
    
-   if (ret_val == COMM_RETVAL_OK) {
+   if (message != NULL) {
       recv_mess->cl_message = message;
-      if (message != NULL) {
-         if (message->message_length>0) {
-            char tmpbuf[100];
-            switch (message->message[0]) {
-               case STDIN_DATA_MSG:
-               case STDOUT_DATA_MSG:
-               case STDERR_DATA_MSG:
-               case REGISTER_CTRL_MSG:
-               case UNREGISTER_CTRL_MSG:
-               case UNREGISTER_RESPONSE_CTRL_MSG:
-               case SETTINGS_CTRL_MSG:
-                  DPRINTF(("length of message: %d\n", (int)message->message_length));
-                  /* data message */ 
-                  recv_mess->type = message->message[0];
-                  recv_mess->data = (char*)&(message->message[1]);
+      if (message->message_length>0) {
+         char tmpbuf[100];
+         switch (message->message[0]) {
+            case STDIN_DATA_MSG:
+            case STDOUT_DATA_MSG:
+            case STDERR_DATA_MSG:
+            case REGISTER_CTRL_MSG:
+            case UNREGISTER_CTRL_MSG:
+            case UNREGISTER_RESPONSE_CTRL_MSG:
+            case SETTINGS_CTRL_MSG:
+               DPRINTF(("length of message: %d\n", (int)message->message_length));
+               /* data message */ 
+               recv_mess->type = message->message[0];
+               recv_mess->data = (char*)&(message->message[1]);
 
-                  DPRINTF(("recv_mess->type = %d\n", recv_mess->type));
-                  memcpy(tmpbuf, recv_mess->data, MIN(99, message->message_length - 1));
-                  tmpbuf[MIN(99, message->message_length - 1)] = 0;
-                  DPRINTF(("recv_mess->data = %s\n", tmpbuf));
-                  break;
+               DPRINTF(("recv_mess->type = %d\n", recv_mess->type));
+               memcpy(tmpbuf, recv_mess->data, MIN(99, message->message_length - 1));
+               tmpbuf[MIN(99, message->message_length - 1)] = 0;
+               DPRINTF(("recv_mess->data = %s\n", tmpbuf));
+               break;
 
-               case WINDOW_SIZE_CTRL_MSG:
-                  memcpy(tmpbuf, message->message, MIN(99, message->message_length));
-                  tmpbuf[MIN(99, message->message_length)] = 0;
-                  /* control message */
-                  recv_mess->type = tmpbuf[0];
-                  /* scan subtype */
-                  sscanf((char*)&(tmpbuf[1]), "%s", sub_type);
-                  if (strcmp(sub_type, "WS") == 0) {
-                     int row, col, xpixel, ypixel;
-                     sscanf((char*)&(tmpbuf[4]),
-                        "%d%d%d%d",
-                        &row, &col, &xpixel, &ypixel);
-                     recv_mess->ws.ws_row    = row;
-                     recv_mess->ws.ws_col    = col;
-                     recv_mess->ws.ws_xpixel = xpixel;
-                     recv_mess->ws.ws_ypixel = ypixel;
-                  }
-                  break;
-            }
+            case WINDOW_SIZE_CTRL_MSG:
+               memcpy(tmpbuf, message->message, MIN(99, message->message_length));
+               tmpbuf[MIN(99, message->message_length)] = 0;
+               /* control message */
+               recv_mess->type = tmpbuf[0];
+               /* scan subtype */
+               sscanf((char*)&(tmpbuf[1]), "%s", sub_type);
+               if (strcmp(sub_type, "WS") == 0) {
+                  int row, col, xpixel, ypixel;
+                  sscanf((char*)&(tmpbuf[4]),
+                     "%d%d%d%d",
+                     &row, &col, &xpixel, &ypixel);
+                  recv_mess->ws.ws_row    = row;
+                  recv_mess->ws.ws_col    = col;
+                  recv_mess->ws.ws_xpixel = xpixel;
+                  recv_mess->ws.ws_ypixel = ypixel;
+               }
+               break;
          }
       }
+   } else {
+      cl_commlib_trigger(handle, b_synchron);
    }
    DEXIT;
    return ret_val;

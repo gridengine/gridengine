@@ -138,69 +138,18 @@ extern int main(int argc, char** argv)
                                 &mid, message->message_id,0, 
                                 CL_FALSE, CL_FALSE);
         if (ret_val != CL_RETVAL_OK) {
-/*           printf("cl_commlib_send_message() returned: %s\n",cl_get_error_text(ret_val)); */
-           if (ret_val == CL_RETVAL_PROTOCOL_ERROR) { 
-           }
+/*
+           printf("cl_commlib_send_message() returned: %s\n",cl_get_error_text(ret_val));
+*/
         } 
         
-#if 0
-
-        for(nr=0;nr<connected_clients;nr++) {
-           if (cl_com_compare_endpoints( clients[nr], sender ) != 0 ) {
-              printf("client %s/%s/%ld already known\n", sender->comp_host, sender->comp_name, sender->comp_id);
-              is_new = 0;
-           }
-        }
-        if (is_new != 0) {
-           printf("new connection\n");
-           clients[connected_clients] = cl_com_create_endpoint(sender->comp_host, sender->comp_name, sender->comp_id); 
-           connected_clients++;
-        }
-#endif
 
 /*        printf("received message from \"%s\": size of message: %ld\n", sender->comp_host, message->message_length); */
-#if 0
-        ret_val = cl_commlib_send_message(handle, 
-                                sender->comp_host, 
-                                sender->comp_name, 
-                                sender->comp_id, CL_MIH_MAT_NAK,  
-                                message->message, 
-                                message->message_length, 
-                                &mid, message->message_id,0, 
-                                0,0);
-        if (ret_val != CL_RETVAL_OK) {
-           printf("cl_commlib_send_message() returned: %s\n",cl_get_error_text(ret_val));
-        }
-#endif
 
         cl_com_free_message(&message);
         cl_com_free_endpoint(&sender);
         message = NULL;
      } 
-#if 0
-     if ( last_time != now.tv_sec ) {
-        /* send a message to all connected clients */
-        int nr;
-        cl_com_endpoint_t* client = NULL;
-        last_time = now.tv_sec;
-        for(nr=0;nr<connected_clients;nr++) {
-           client=clients[nr];
-           printf("\nsending to %s/%s/%ld\n",client->comp_host, client->comp_name, client->comp_id);
-           ret_val = cl_commlib_send_message(handle, 
-                                client->comp_host, 
-                                client->comp_name, 
-                                client->comp_id, CL_MIH_MAT_NAK,  
-                                (cl_byte_t*)"test", 
-                                5, 
-                                &mid, 0,0, 
-                                1,0);
-           if (ret_val != CL_RETVAL_OK) {
-              printf("cl_commlib_send_message() returned: %s\n",cl_get_error_text(ret_val));
-           }
-        }
-     }
-
-#endif
   }
 
 

@@ -149,17 +149,17 @@ const char* cl_log_list_convert_type_id(cl_log_t id)  {  /* CR check */
 
    switch (id) {
       case CL_LOG_OFF:
-         return "LOG_OFF";
+         return "-";
       case CL_LOG_ERROR: 
-         return "LOG_ERROR";
+         return "E";
       case CL_LOG_WARNING:
-         return "LOG_WARNING";
+         return "W";
       case CL_LOG_INFO:
-         return "LOG_INFO";
+         return "I";
       case CL_LOG_DEBUG:
-         return "LOG_DEBUG";
+         return "D";
       default:
-         return "undefined";
+         return "?";
    }
 }
 
@@ -338,7 +338,7 @@ int cl_log_list_setup(cl_raw_list_t** list_p, const char* creator_name, int crea
 
 
    /* setup creator thread information */
-   if ( (ret_val=cl_thread_setup(creator_settings,*list_p,creator_name,creator_id , NULL, NULL, NULL)) != CL_RETVAL_OK) {
+   if ( (ret_val=cl_thread_setup(creator_settings, *list_p, creator_name, creator_id , NULL, NULL, NULL, CL_TT_CREATOR)) != CL_RETVAL_OK) {
       cl_thread_cleanup(creator_settings);
       free(creator_settings);
       free(ldata);
@@ -741,36 +741,18 @@ int cl_log_list_flush_list(cl_raw_list_t* list_p) {        /* CR check */
 
       printf("%-76s|", elem->log_module_name);
       if (elem->log_parameter == NULL) {
-#define CL_COM_PRINT_THREAD_ID 0
-
-#if CL_COM_PRINT_THREAD_ID
-         printf("%ld.%ld|%20s|%4d|%10s|%8s| %s\n",
-#else
-         printf("%ld.%ld|%20s|%10s|%8s| %s\n",
-#endif
-
+         printf("%10ld.%-6ld|%18s|%s|%s| %s\n",
          (long)now.tv_sec,
          (long)now.tv_usec,
          elem->log_thread_name,
-#if CL_COM_PRINT_THREAD_ID
-         elem->log_thread_id, 
-#endif
          cl_thread_convert_state_id(elem->log_thread_state),
          cl_log_list_convert_type_id(elem->log_type),
          elem->log_message);
       } else {
-#if CL_COM_PRINT_THREAD_ID
-         printf("%ld.%ld|%20s|%4d|%10s|%8s| %s %s\n",
-#else
-         printf("%ld.%ld|%20s|%10s|%8s| %s %s\n",
-#endif
-
+         printf("%10ld.%-6ld|%18s|%s|%s| %s %s\n",
          (long)now.tv_sec,
          (long)now.tv_usec,
          elem->log_thread_name,
-#if CL_COM_PRINT_THREAD_ID
-         elem->log_thread_id, 
-#endif
          cl_thread_convert_state_id(elem->log_thread_state),
          cl_log_list_convert_type_id(elem->log_type),
          elem->log_message,

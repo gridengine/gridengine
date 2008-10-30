@@ -52,17 +52,17 @@ int create_thread(THREAD_LIB_HANDLE *thread_lib_handle,
 {
    return cl_thread_list_create_thread(thread_lib_handle, thread, log_list, 
                                        thread_name, thread_id,
-                                       thread_func, NULL, NULL);
+                                       thread_func, NULL, NULL, CL_TT_IJS);
 }
 
-int register_thread(THREAD_LIB_HANDLE *thread_lib_handle,
+int register_thread(cl_raw_list_t     *log_list,
                     THREAD_HANDLE     *thread,
                     const char *thread_name)
 {
    int ret;
    ret = cl_thread_setup(thread,
-                         thread_lib_handle, 
-                         thread_name, 0, NULL, NULL, NULL);
+                         log_list, 
+                         thread_name, 0, NULL, NULL, NULL, CL_TT_IJS_REGISTER);
    if (ret == CL_RETVAL_OK) {
       ret = cl_thread_func_startup(thread);
    }
@@ -108,13 +108,6 @@ int thread_join(THREAD_HANDLE *thread)
    return cl_thread_join(thread);
 }
 
-
-int thread_setcancelstate(int enabled)
-{
-   int state = enabled != 0 ? PTHREAD_CANCEL_ENABLE : PTHREAD_CANCEL_DISABLE;
-   pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-   return pthread_setcancelstate(state, NULL);
-}
 
 int thread_testcancel(void *t_conf)
 {

@@ -164,7 +164,6 @@ typedef enum cl_connection_sub_state_type {
    CL_COM_SENDING_CCM,
    CL_COM_WAIT_FOR_CCRM,
    CL_COM_SENDING_CCRM,
-   CL_COM_CCRM_SENT,
    CL_COM_DONE,
 
    /* when CL_CLOSING */
@@ -449,10 +448,6 @@ struct cl_com_connection_type {
 
    cl_com_handle_t*      handler;           /* this points to the handler of the connection */
 
-   int                   ccm_received;
-   int                   ccm_sent;
-   int                   ccrm_sent;
-   int                   ccrm_received;
 
    cl_framework_t        framework_type;          /* CL_CT_TCP, ... */
    cl_tcp_connect_t      tcp_connect_mode;        /* used for reserved port socket creation for TCP connect call */ 

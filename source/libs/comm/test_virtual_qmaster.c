@@ -153,11 +153,11 @@ extern int main(int argc, char** argv)
 
   printf("create application threads ...\n");
   cl_thread_list_setup(&thread_list,"thread list");
-  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "message_thread_1", 100, my_message_thread, NULL, NULL);
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "message_thread_1", 100, my_message_thread, NULL, NULL, CL_TT_USER1);
 #if 1
-  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "message_thread_2", 101, my_message_thread, NULL, NULL);
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "message_thread_2", 101, my_message_thread, NULL, NULL, CL_TT_USER1);
 #endif
-  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "event_thread", 3, my_event_thread, NULL, NULL);
+  cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "event_thread", 3, my_event_thread, NULL, NULL, CL_TT_USER1);
 
   gettimeofday(&last,NULL);
   usec_last = (last.tv_sec * 1000000.0) + last.tv_usec;
@@ -275,18 +275,10 @@ void *my_message_thread(void *t_conf) {
                                            &message, &sender);
       if (ret_val == CL_RETVAL_OK) {
          rcv_messages++;
-#if 0
-         printf(" \"%s\" -> received message from %s/%s/%ld: \"%s\" (%ld bytes)\n", thread_config->thread_name, 
-                                                                        sender->comp_host,sender->comp_name,sender->comp_id,
-                                                                        message->message, message->message_length);
-#endif
 
          if (strcmp((char*)message->message,"event") == 0) {
+            /* This is a event client */
             int i,help;
-#if 0
-            printf(" \"%s\" -> new event client\n", thread_config->thread_name);
-#endif
-
             cl_com_free_message(&message);
             help = 0;
             for (i=0;i<MAX_EVENT_CLIENTS;i++) {
@@ -303,20 +295,6 @@ void *my_message_thread(void *t_conf) {
             } 
          } else {
             /* no event client, just return message to sender */
-#if 0
-            printf(" \"%s\" -> send gdi response to %s/%s/%ld\n", thread_config->thread_name, 
-                           sender->comp_host, sender->comp_name, sender->comp_id);
-#endif
-
-#if 0
-           /* simulate a work for the gdi thread */
-           {
-              int d;
-              for (d=0;d<18000;d++) {
-                 do_nothing();
-              }
-            }
-#endif
             ret_val = cl_commlib_send_message(handle, sender->comp_host, sender->comp_name, sender->comp_id,
                                       CL_MIH_MAT_NAK,
                                       &(message->message), message->message_length,

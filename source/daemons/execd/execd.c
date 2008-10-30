@@ -257,7 +257,7 @@ int main(int argc, char **argv)
                                                (char *)ctx->get_master(ctx, true),
                                                (char*)prognames[QMASTER], 1, &status);
       if (ret_val != CL_RETVAL_OK) {
-         ERROR((SGE_EVENT, cl_get_error_text(CL_RETVAL_CONNECT_ERROR)));
+         ERROR((SGE_EVENT, cl_get_error_text(ret_val)));
          ERROR((SGE_EVENT, MSG_CONF_NOCONFBG));
       }
       cl_com_free_sirm_message(&status);

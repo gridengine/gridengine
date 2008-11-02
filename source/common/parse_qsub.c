@@ -53,18 +53,21 @@
 #include "sge_range.h"
 #include "sge_ckpt.h"
 #include "sge_ulong.h"
-#include "sge_str.h"
-#include "sge_centry.h"
-#include "sge_job.h"
-#include "sge_var.h"
-#include "sge_answer.h"
+
+#include "uti/sge_dstring.h"
+
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_var.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_jsv.h"
 
 #include "msg_common.h"
 
 static int sge_parse_priority(lList **alpp, int *valp, char *priority_str);
 static int var_list_parse_from_environment(lList **lpp, char **envp);
 static int sge_parse_hold_list(char *hold_str, u_long32 prog_number);
-static int sge_parse_mail_options(lList **alpp, char *mail_str, u_long32 prog_number); 
 static int cull_parse_destination_identifier_list(lList **lpp, char *dest_str);
 static int sge_parse_checkpoint_interval(char *time_str); 
 static int set_yn_option (lList **opts, u_long32 opt, char *arg, char *value,
@@ -888,6 +891,55 @@ u_long32 flags
          
          ep_opt = sge_add_arg(pcmdline, js_OPT, lUlongT, *(sp - 1), *sp);
          lSetUlong(ep_opt, SPA_argval_lUlongT, jobshare);
+
+         sp++;
+         continue;
+      }
+
+/*----------------------------------------------------------------------------*/
+      /* "-jsv path_name" */
+
+      if (!strcmp("-jsv", *sp)) {
+         dstring input = DSTRING_INIT;
+         dstring type = DSTRING_INIT;
+         dstring user = DSTRING_INIT;
+         dstring path = DSTRING_INIT;
+         lList *path_list = NULL;
+         bool success;
+
+         /* next field is path_name */
+         sp++;
+         if (!*sp) {
+             answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                                     MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, "-jsv" );
+             DRETURN(answer);
+         }
+
+         DPRINTF(("\"-jsv %s\"\n", *sp));
+
+         sge_dstring_append(&input, *sp);
+         success = jsv_url_parse(&input, &answer, &type, &user, &path, true);
+         if (success) {
+            lListElem *elem = lAddElemStr(&path_list, PN_path, *sp, PN_Type);
+
+            if (elem != NULL) {
+               ep_opt = sge_add_arg(pcmdline, jsv_OPT, lListT, *(sp - 1), *sp);
+               lSetList(ep_opt, SPA_argval_lListT, path_list);
+            } else {
+               sge_dstring_free(&type);
+               sge_dstring_free(&user);
+               sge_dstring_free(&path);
+               answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                                       MSG_SGETEXT_NOMEM);
+               DRETURN(answer);
+            }
+         } else {
+            sge_dstring_free(&type);
+            sge_dstring_free(&user);
+            sge_dstring_free(&path);
+            /* answer is filled in jsv_url_parse */
+            DRETURN(answer);
+         }
 
          sp++;
          continue;
@@ -2066,42 +2118,6 @@ u_long32 prog_number
    return target;
 }
 
-/***********************************************************************/
-/* MT-NOTE: sge_parse_mail_options() is MT safe */
-static int sge_parse_mail_options(lList **alpp, char *mail_str, u_long32 prog_number) 
-{
-   int i, j;
-   int mail_opt = 0;
-
-   DENTER(TOP_LAYER, "sge_parse_mail_options");
-
-   i = strlen(mail_str);
-
-   for (j = 0; j < i; j++) {
-      if ((char) mail_str[j] == 'a') {
-         mail_opt = mail_opt | MAIL_AT_ABORT;
-      } else if ((char) mail_str[j] == 'b') {
-         mail_opt = mail_opt | MAIL_AT_BEGINNING;
-      } else if ((char) mail_str[j] == 'e') {
-         mail_opt = mail_opt | MAIL_AT_EXIT;
-      } else if ((char) mail_str[j] == 'n') {
-         mail_opt = mail_opt | NO_MAIL;
-      } else if ((char) mail_str[j] == 's') {
-         if (prog_number == QRSUB) {
-            answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
-                   MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, "-m");
-            DRETURN(0);
-         }
-         mail_opt = mail_opt | MAIL_AT_SUSPENSION;
-      } else {
-         DRETURN(0);
-      }
-   }
-
-   DRETURN(mail_opt);
-
-}
-
 /***************************************************************************/
 static int sge_parse_checkpoint_interval(
 char *time_str 
@@ -2120,7 +2136,6 @@ char *time_str
 }
 
 /***************************************************************************/
-
 
 /****** parse_qsub/cull_parse_path_list() **************************************
 *  NAME

@@ -39,7 +39,6 @@
 
 #include "uti/sge_stdio.h"
 #include "symbols.h"
-#include "sge_ja_task.h"
 #include "sge_string.h"
 #include "sge_time.h"
 #include "parse_qsubL.h"
@@ -55,18 +54,22 @@
 #include "unparse_job_cull.h"
 #include "sge_language.h"
 #include "sge_feature.h"
-#include "msg_common.h"
-#include "sge_range.h"
-#include "sge_job.h"
 #include "sge_stdlib.h"
 #include "sge_io.h"
 #include "sge_prog.h"
 #include "setup_path.h"
-#include "sge_var.h"
 #include "sge_log.h"
-#include "sge_answer.h"
-#include "sge_mailrec.h"
-#include "sge_centry.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_jsv.h"
+#include "sgeobj/sge_mailrec.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_var.h"
+
+#include "msg_common.h"
 
 #define USE_CLIENT_QSUB 1
 
@@ -291,6 +294,14 @@ lList *cull_parse_job_parameter(u_long32 uid, const char *username, const char *
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-C"))) {
       lSetString(*pjob, JB_directive_prefix, 
          lGetString(ep, SPA_argval_lStringT));
+      lRemoveElem(cmdline, &ep);
+   }
+
+   while ((ep = lGetElemStr(cmdline, SPA_switch, "-jsv"))) {
+      lList *list = lGetList(ep, SPA_argval_lListT);
+      const char *file = lGetString(lFirst(list), PN_path);
+
+      jsv_list_add("jsv_switch", JSV_CONTEXT_CLIENT, NULL, file);
       lRemoveElem(cmdline, &ep);
    }
 

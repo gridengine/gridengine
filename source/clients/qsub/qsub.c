@@ -235,6 +235,17 @@ char **argv
       SGE_EXIT((void**)&ctx, 1);
    }
 
+   /*
+    * fill in user and group
+    *
+    * following is not used for security. qmaster can not rely
+    * on that information. but it is still necessary to set the
+    * attributes in the job so that the information is available
+    * in the JSV client context
+    */
+   job_set_owner_and_group(job, ctx->get_uid(ctx), ctx->get_gid(ctx),
+                           ctx->get_username(ctx), ctx->get_groupname(ctx));
+
    /* Check is we're just verifying the job */
    just_verify = (lGetUlong(job, JB_verify_suitable_queues)==JUST_VERIFY || 
                   lGetUlong(job, JB_verify_suitable_queues)==POKE_VERIFY);

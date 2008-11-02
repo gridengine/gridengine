@@ -171,6 +171,8 @@ static char* get_argument_syntax(u_long32 prog_number, int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_EVENTCLIENT_LIST;
      case OA_HOST_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_HOST_LIST;
+     case OA_JSV_URL:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_JSV_URL;
      case OA_WC_CQUEUE:
          return MSG_GDI_ARGUMENTSYNTAX_OA_WC_CQUEUE;
      case OA_WC_HOST:
@@ -689,6 +691,11 @@ void sge_usage(u_long32 prog_number, FILE *fp) {
 
    if (VALID_OPT(js_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_js_OPT_YN , MSG_GDI_UTEXT_js_OPT_YN );
+   }
+
+   if (VALID_OPT(jsv_OPT, prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_jsv_OPT_YN , MSG_GDI_UTEXT_jsv_OPT_YN );
+      MARK(OA_JSV_URL);
    }
 
    if (VALID_OPT(ke_OPT, prog_number)) {

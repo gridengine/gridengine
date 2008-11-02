@@ -854,9 +854,9 @@ enum {
 LISTDEF(PN_Type)
    JGDI_OBJ(PathName)
    SGE_STRING(PN_path, CULL_PRIMARY_KEY | CULL_DEFAULT | CULL_SUBLIST)
-   SGE_HOST(PN_host, CULL_DEFAULT )                    /* CR - hostname change */
-   SGE_HOST(PN_file_host, CULL_DEFAULT )
-   SGE_BOOL(PN_file_staging, CULL_DEFAULT )
+   SGE_HOST(PN_host, CULL_DEFAULT)                   
+   SGE_HOST(PN_file_host, CULL_DEFAULT)
+   SGE_BOOL(PN_file_staging, CULL_DEFAULT)
 LISTEND
 
 NAMEDEF(PNN)

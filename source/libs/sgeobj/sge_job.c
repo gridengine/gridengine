@@ -63,6 +63,7 @@
 
 #include "gdi/sge_gdi.h"
 
+#include "sgeobj/sge_advance_reservation.h"
 #include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_qrefL.h"
 #include "sgeobj/sge_utility.h"
@@ -1744,7 +1745,7 @@ void job_initialize_env(lListElem *job, lList **answer_list,
       const char* env_name[] = {"HOME", "LOGNAME", "PATH", 
                                 "SHELL", "TZ", "MAIL", NULL};
 
-      while (env_name[++i] != 0) {
+      while (env_name[++i] != NULL) {
          const char *env_value = sge_getenv(env_name[i]);
 
          sge_dstring_sprintf(&buffer, "%s%s%s", VAR_PREFIX, "O_",
@@ -3298,19 +3299,9 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
 
    /* JB_uid is overwritten by qmaster */
 
-   /* JB_group must be NULL */
-   if (ret) {
-      if (lGetString(job, JB_group) != NULL) {
-         answer_list_add_sprintf(answer_list,  STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
-                             MSG_INVALIDJOB_REQUEST_S, "job group");
-         ret = false;
-      }
-   }
+   /* JB_group is overwritten by qmaster */
 
-   /* JB_gid must be 0 */
-   if (ret) {
-      ret = object_verify_ulong_null(job, answer_list, JB_gid);
-    }
+   /* JB_gid is overwritten by qmaster */
 
    /* JB_account must be a valid string */
    if (ret) {
@@ -3557,3 +3548,161 @@ bool job_get_wallclock_limit(u_long32 *limit, const lListElem *jep) {
 
    DRETURN(got_duration);
 }
+
+/****** sgeobj/job/job_is_binary() ******************************************
+*  NAME
+*     job_is_binary() -- Was "job" job submitted with -b y? 
+*
+*  SYNOPSIS
+*     bool job_is_binary(const lListElem *job) 
+*
+*  FUNCTION
+*     This function returns true if "job" is a "binary" job
+*     which was e.g. submitted with qsub -b y 
+*
+*  INPUTS
+*     const lListELem *job - JB_Type element 
+*
+*  RESULT
+*     bool - true or false
+*
+*  SEE ALSO
+*     sgeobj/job/job_is_array() 
+*     sgeobj/job/job_is_binary() 
+*     sgeobj/job/job_is_tight_parallel()
+******************************************************************************/
+bool 
+job_is_binary(const lListElem *job) {
+   return (JOB_TYPE_IS_BINARY(lGetUlong(job, JB_type)) ? true : false);
+}
+
+bool
+job_set_owner_and_group(lListElem *job, u_long32 uid, u_long32 gid,
+                        const char *user, const char *group) {
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "job_set_owner_and_group");
+   lSetString(job, JB_owner, user);
+   lSetUlong(job, JB_uid, uid);
+   lSetString(job, JB_group, group);
+   lSetUlong(job, JB_gid, gid);
+   DRETURN(ret);
+}
+
+/* The context comes as a VA_Type list with certain groups of
+** elements: A group starts with either:
+** (+, ): All following elements are appended to the job's
+**        current context values, or replaces the current value
+** (-, ): The following context values are removed from the
+**        job's current list of values
+** (=, ): The following elements replace the job's current
+**        context values.
+** Any combination of groups is possible.
+** To ensure portablity with common sge_gdi, (=, ) is the default
+** when no group tag is given at the beginning of the incoming list
+*/
+/* jbctx - VA_Type; job - JB_Type */
+void 
+set_context(lList *jbctx, lListElem *job) 
+{
+   lList* newjbctx = NULL;
+   lListElem* jbctxep;
+   lListElem* temp;
+   char   mode = '+';
+   
+   newjbctx = lGetList(job, JB_context);
+
+   /* if the incoming list is empty, then simply clear the context */
+   if (!jbctx || !lGetNumberOfElem(jbctx)) {
+      lSetList(job, JB_context, NULL);
+      newjbctx = NULL;
+   }
+   else {
+      /* if first element contains no tag => assume (=, ) */
+      switch(*lGetString(lFirst(jbctx), VA_variable)) {
+         case '+':
+         case '-':
+         case '=':
+            break;
+         default:
+            lSetList(job, JB_context, NULL);
+            newjbctx = NULL;
+            break;
+      }
+   }
+
+   for_each(jbctxep, jbctx) {
+      switch(*(lGetString(jbctxep, VA_variable))) {
+         case '+':
+            mode = '+';
+            break;
+         case '-':
+            mode = '-';
+            break;
+         case '=':
+            lSetList(job, JB_context, NULL);
+            newjbctx = NULL;
+            mode = '+';
+            break;
+         default:
+            switch(mode) {
+               case '+':
+                  if (!newjbctx)
+                     lSetList(job, JB_context, newjbctx = lCreateList("context_list", VA_Type));
+                  if ((temp = lGetElemStr(newjbctx, VA_variable, lGetString(jbctxep, VA_variable))))
+                     lSetString(temp, VA_value, lGetString(jbctxep, VA_value));
+                  else
+                     lAppendElem(newjbctx, lCopyElem(jbctxep));
+                  break;
+               case '-':
+
+                  lDelSubStr(job, VA_variable, lGetString(jbctxep, VA_variable), JB_context); 
+                  /* WARNING: newjbctx is not valid when complete list was deleted */
+                  break;
+            }
+            break;
+      }
+   }
+}
+
+bool
+job_get_ckpt_attr(int op, dstring *string)
+{
+   bool success = true;
+
+   DENTER(TOP_LAYER, "job_get_ckpt_attr");
+   if (VALID(CHECKPOINT_AT_MINIMUM_INTERVAL, op)) {
+      sge_dstring_append_char(string, CHECKPOINT_AT_MINIMUM_INTERVAL_SYM);
+   }
+   if (VALID(CHECKPOINT_AT_SHUTDOWN, op)) {
+      sge_dstring_append_char(string, CHECKPOINT_AT_SHUTDOWN_SYM);
+   }
+   if (VALID(CHECKPOINT_SUSPEND, op)) {
+      sge_dstring_append_char(string, CHECKPOINT_SUSPEND_SYM);
+   }
+   if (VALID(NO_CHECKPOINT, op)) {
+      sge_dstring_append_char(string, NO_CHECKPOINT_SYM);
+   }
+   DRETURN(success);
+}
+
+bool
+job_get_verify_attr(u_long32 op, dstring *string)
+{
+   bool success = true;
+
+   DENTER(TOP_LAYER, "job_get_verify_attr");
+   if (VALID(ERROR_VERIFY, op)) {
+      sge_dstring_append_char(string, 'e');
+   } else if (VALID(WARNING_VERIFY, op)) {
+      sge_dstring_append_char(string, 'w');
+   } else if (VALID(JUST_VERIFY, op)) {
+      sge_dstring_append_char(string, 'v');
+   } else if (VALID(POKE_VERIFY, op)) {
+      sge_dstring_append_char(string, 'p');
+   } else {
+      sge_dstring_append_char(string, 'n');
+   }
+   DRETURN(success);
+}
+

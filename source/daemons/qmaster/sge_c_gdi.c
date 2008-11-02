@@ -509,19 +509,23 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
          next = lFirst(task->data_list);
          while ((ep = next) != NULL) { /* is thread save. the global lock is used, when needed */
             next = lNext(ep);
-                                                   /* fill address infos from request into event client that must be added */
+
+            lDechainElem(task->data_list, ep);
+
+            /* fill address infos from request into event client that must be added */
             if (!job_verify_submitted_job(ep, &(task->answer_list))) {
                ERROR((SGE_EVENT, MSG_QMASTER_INVALIDJOBSUBMISSION_SSS,
                       packet->user, packet->commproc, packet->host));
             } else {
                /* submit needs to know user and group */
-               sge_gdi_add_job(ctx,
-                               ep, &(task->answer_list),
-                               (sub_command & SGE_GDI_RETURN_NEW_VERSION) ?
-                               &(task->data_list) : NULL,
-                               packet->user, packet->host, packet->uid, packet->gid, packet->group,
+               sge_gdi_add_job(ctx, 
+                               &ep, &(task->answer_list), 
+                               (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? 
+                               &(task->data_list) : NULL, 
+                               packet->user, packet->host, packet->uid, packet->gid, packet->group, 
                                packet, task, monitor);
             }
+            lInsertElem(task->data_list, NULL, ep);
          }
       } else if (task->target == SGE_SC_LIST ) {
          lListElem *next;

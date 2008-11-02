@@ -305,4 +305,20 @@ bool job_verify_submitted_job(const lListElem *job, lList **answer_list);
 
 bool job_get_wallclock_limit(u_long32 *limit, const lListElem *jep);
 
+bool
+job_is_binary(const lListElem *job);
+
+bool
+job_set_owner_and_group(lListElem *job, u_long32 uid, u_long32 gid,
+                        const char *user, const char *group);
+
+bool  
+job_get_ckpt_attr(int op, dstring *string);
+
+bool
+job_get_verify_attr(u_long32 op, dstring *string);
+
+void 
+set_context(lList *jbctx, lListElem *job);
+
 #endif /* __SGE_JOB_H */    

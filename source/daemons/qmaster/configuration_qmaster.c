@@ -62,12 +62,15 @@
 #include "sge_spool.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
-#include "sge_mtutil.h"
-
 #include "sge_persistence_qmaster.h"
-#include "spool/sge_spooling.h"
+
 #include "lck/sge_lock.h"
+#include "lck/sge_mtutil.h"
+
+#include "spool/sge_spooling.h"
+
 #include "sgeobj/sge_path_alias.h"
+#include "sgeobj/sge_jsv.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -109,6 +112,25 @@ int sge_read_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aSpoolContext, l
 
    spool_read_list(&anAnswer, aSpoolContext, config_list, SGE_TYPE_CONFIG);
 
+   /*
+    * For Urubu we won't have and update script. Therefore the master
+    * has to be able to cope with a missing "jsv_url" string. 
+    *
+    * TODO: Nethertheless we have to add the "jsv_url" to the update script
+    *       for the first release after Urubu.
+    */
+   {
+      lListElem *global = lGetElemHost(*config_list, CONF_name, "global");
+      lList *entries = lGetList(global, CONF_entries);
+      lListElem *jsv_url = lGetElemStr(entries, CF_name, "jsv_url");
+
+      if (jsv_url == NULL) {
+         jsv_url = lAddSubStr(global, CF_name, "jsv_url", CONF_entries, CF_Type);
+         if (jsv_url != NULL) { 
+            lSetString(jsv_url, CF_value, "none");
+         }
+      }
+   }
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
  
    answer_list_output(&anAnswer);
@@ -396,6 +418,25 @@ static int check_config(lList **alpp, lListElem *conf)
             answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
             DRETURN(STATUS_EEXIST);
          }
+      } else if (strcmp(name, "jsv_url") == 0) {
+         if (strcasecmp("none", value) != 0) {
+            dstring input = DSTRING_INIT;
+            dstring type = DSTRING_INIT;
+            dstring user = DSTRING_INIT;
+            dstring path = DSTRING_INIT;
+            bool lret = true;
+
+            sge_dstring_append(&input, value);
+            lret = jsv_url_parse(&input, alpp, &type, &user, &path, false); 
+            sge_dstring_free(&input);
+            sge_dstring_free(&type);
+            sge_dstring_free(&user);
+            sge_dstring_free(&path);
+            if (!lret) {
+               /* answer is written by jsv_url_parse */
+               DRETURN(STATUS_EEXIST);
+            }
+         } 
       } else if (!strcmp(name, "shell_start_mode")) {
          if ((strcasecmp("unix_behavior", value) != 0) && 
              (strcasecmp("posix_compliant", value) != 0) &&

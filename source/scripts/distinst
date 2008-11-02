@@ -47,7 +47,7 @@ DEFAULTPROG="sge_qmaster sge_execd sge_shadowd \
 
 UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog loadcheck now checkuser \
-                 adminrun qrsh_starter testsuidroot authuser \
+                 adminrun qrsh_starter testsuidroot authuser read_raw echo_raw \
                  sge_share_mon infotext spooldefaults spooledit spoolinit \
                  fstype SGE_Helper_Service.exe"
 

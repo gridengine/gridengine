@@ -102,6 +102,7 @@
 #include "sge_pty.h"
 #include "sge_ijs_comm.h"
 #include "sge_ijs_threads.h"
+#include "sge_jsv.h"
 
 extern COMMUNICATION_HANDLE *g_comm_handle;
 
@@ -1440,6 +1441,15 @@ int main(int argc, char **argv)
       SGE_EXIT((void**)&ctx, 0);
    }
 
+   /* job submission verifier */
+   while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-jsv"))) {
+      lList *list = lGetList(ep, SPA_argval_lListT);
+      const char *file = lGetString(lFirst(list), PN_path);
+
+      jsv_list_add("jsv_switch", JSV_CONTEXT_CLIENT, NULL, file);
+      lRemoveElem(opts_cmdline, &ep);
+   }
+
    /* set verbosity */
    while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-verbose"))) {
       lRemoveElem(opts_cmdline, &ep);
@@ -1860,6 +1870,17 @@ int main(int argc, char **argv)
 
       job_add_parent_id_to_context(job);
 
+      /*
+       * fill in user and group
+       *
+       * following is not used for security. qmaster can not rely
+       * on that information. but it is still necessary to set the
+       * attributes in the job so that the information is available
+       * in the JSV client context
+       */
+      job_set_owner_and_group(job, ctx->get_uid(ctx), ctx->get_gid(ctx),
+                              ctx->get_username(ctx), ctx->get_groupname(ctx));
+
       lp_jobs = lCreateList("submitted jobs", JB_Type);
       lAppendElem(lp_jobs, job);
    
@@ -1867,8 +1888,8 @@ int main(int argc, char **argv)
       DPRINTF(("=====================================================\n"));
 
       /* submit the job to the QMaster */
-      alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_ADD + SGE_GDI_RETURN_NEW_VERSION, 
-         &lp_jobs, NULL, NULL);
+      alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION, 
+                     &lp_jobs, NULL, NULL);
 
       /* reinitialize 'job' with pointer to new version from qmaster */
       job = lFirst(lp_jobs);

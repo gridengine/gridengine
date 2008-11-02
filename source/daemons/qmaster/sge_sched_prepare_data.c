@@ -607,12 +607,12 @@ sge_process_job_event_after(sge_evc_class_t *evc, object_description *object_bas
    u_long32 job_id = 0;
    lListElem *job  = NULL;
 
-   DENTER(GDI_LAYER, "sge_process_job_event_after");
+   DENTER(TOP_LAYER, "sge_process_job_event_after");
    DPRINTF(("callback processing job event after default rule\n"));
 
    if (action == SGE_EMA_ADD || action == SGE_EMA_MOD) {
       job_id = lGetUlong(event, ET_intkey);
-      job = job_list_locate(*sge_master_list(object_base, SGE_TYPE_JOB), job_id);
+      job = job_list_locate(*object_type_get_master_list(SGE_TYPE_JOB), job_id);
       if (job == NULL) {
          dstring id_dstring = DSTRING_INIT;
          ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S,

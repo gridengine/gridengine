@@ -158,10 +158,10 @@ job_update_master_list(sge_evc_class_t *evc, object_description *object_base, sg
    job_id = lGetUlong(event, ET_intkey);
    job = job_list_locate(*list, job_id);
 
-   if(action == SGE_EMA_MOD) {
+   if (action == SGE_EMA_MOD) {
       u_long32 event_type = lGetUlong(event, ET_type);
 
-      if(job == NULL) {
+      if (job == NULL) {
          ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBFORUPDATEIN_SS,
                 job_get_id_string(job_id, 0, NULL, &id_dstring), "job_update_master_list"));
          DRETURN(SGE_EMA_FAILURE);
@@ -198,13 +198,13 @@ job_update_master_list(sge_evc_class_t *evc, object_description *object_base, sg
       }
    }
 
-   if(sge_mirror_update_master_list(list, list_descr, job, job_get_id_string(job_id, 0, NULL, &id_dstring), action, event) != SGE_EM_OK) {
+   if (sge_mirror_update_master_list(list, list_descr, job, job_get_id_string(job_id, 0, NULL, &id_dstring), action, event) != SGE_EM_OK) {
       lFreeList(&ja_tasks);
       DRETURN(SGE_EMA_FAILURE);
    }
 
    /* restore ja_task list after modify event */
-   if(action == SGE_EMA_MOD && ja_tasks != NULL) {
+   if (action == SGE_EMA_MOD && ja_tasks != NULL) {
       /* we have to search the replaced job */
       job = job_list_locate(*list, job_id);
       if(job == NULL) {

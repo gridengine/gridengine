@@ -1,5 +1,3 @@
-#ifndef __SGE_MAILREC_H
-#define __SGE_MAILREC_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -25,24 +23,44 @@
  * 
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
  * 
- *   Copyright: 2001 by Sun Microsystems, Inc.
+ *   Copyright: 2008 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_mailrecL.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-int mailrec_parse(lList **lpp, const char *mail_str);
+/*
+ * Implements a binary which reads in from stdin in "raw" mode thill 
+ * the first newline character occures
+ *
+ * This command can be used as a replacement for the buildin command
+ * "read" in bourne shell. On most platforms this not able to read
+ * in raw mode therefore it does backslash escaping. 
+ *
+ * As a result "binary" data with masked newline and backslash
+ * characters can be read into a bourne shell scripts with this 
+ * command.
+ */
 
-int mailrec_unparse(lList *head, char *mail_str, unsigned int mail_str_len);
+#define BUF_SIZE 8 * 1024
 
-bool
-sge_mailopt_to_dstring(u_long32 opt, dstring *string);
+int main(int argc, char *argv[])
+{
+   char buffer[BUF_SIZE];
+   char *ret;
 
-int 
-sge_parse_mail_options(lList **alpp, char *mail_str, u_long32 prog_number);
+   ret = fgets(buffer, BUF_SIZE, stdin);
+   if (ret != NULL) {
+      size_t length = strlen(ret);
 
-#endif /* __SGE_MAILREC_H */
-
+      while (length-- > 0) {
+         fputc(*(ret++), stdout);
+      }
+   }
+   return 0;
+}

@@ -728,6 +728,40 @@ const char *sge_dstring_ulong_to_binstring(dstring *sb, u_long32 number)
    return sge_dstring_get_string(sb);
 }
 
+bool
+sge_dstring_split(dstring *string, char character, dstring *before, dstring *after)
+{
+   bool ret = true;
+
+   DENTER(DSTRING_LAYER, "sge_dstring_split");
+   if (string != NULL && before != NULL && after != NULL) {
+      const char *s = sge_dstring_get_string(string);
+      const char *end = strchr(s, character);
+
+      while (end != NULL && s != end) {
+         sge_dstring_append_char(before, *(s++));
+      }
+      if (*s == character) {
+         s++;
+      }
+      sge_dstring_append(after, s);
+   }
+   DRETURN(ret);
+}
+
+void sge_dstring_strip_white_space_at_eol(dstring *string)
+{
+   DENTER(DSTRING_LAYER, "sge_strip_white_space_at_eol");
+   if (string != NULL) {
+      char *s = (string != NULL) ? string->s : NULL;
+
+      if (s != NULL) {
+         sge_strip_white_space_at_eol(s);
+      }
+   }  
+   DRETURN_VOID;
+}      
+
 #if 0 /* EB: DEBUG: */
 int main(void)
 {

@@ -59,6 +59,7 @@ QMASTER_SRC = sge_qmaster_threads.c \
               job_exit.c \
               sge_host_qmaster.c \
               sge_job_qmaster.c \
+              sge_job_verify.c \
               sge_manop_qmaster.c \
               sge_pe_qmaster.c \
               sge_ckpt_qmaster.c \
@@ -212,6 +213,9 @@ sge_c_gdi.o:	$(QMASTER_DIR)/sge_c_gdi.c
 
 sge_job_qmaster.o:	$(QMASTER_DIR)/sge_job_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_job_qmaster.c
+
+sge_job_verify.o:	$(QMASTER_DIR)/sge_job_verify.c
+		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_job_verify.c
 
 sge_cqueue_qmaster.o:	$(QMASTER_DIR)/sge_cqueue_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_cqueue_qmaster.c

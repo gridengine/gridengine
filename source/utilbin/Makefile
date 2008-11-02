@@ -39,7 +39,7 @@ UTILBIN_TARGETS = uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog work \
                  signals loadcheck now \
                  adminrun checkuser languagetest \
-                 testsuidroot infotext spooldefaults spooledit spoolinit \
+                 testsuidroot infotext spooldefaults spooledit spoolinit read_raw echo_raw \
                  tst_pthread_signals fstype qping sgepasswd sge_share_mon $(AUTHUSER_ALL) \
                  $(LOADCHECK_ALL)
 
@@ -135,6 +135,20 @@ now:		now.o version.o
 
 now.o:		$(UTILBIN_DIR)/now.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/now.c
+
+#---------------------------------------------------------------------
+read_raw:		read_raw.o version.o
+		$(CC) $(CFLAGS) -o $@ read_raw.o version.o $(LFLAGS)
+
+read_raw.o:		$(UTILBIN_DIR)/read_raw.c
+		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/read_raw.c
+
+#---------------------------------------------------------------------
+echo_raw:		echo_raw.o version.o
+		$(CC) $(CFLAGS) -o $@ echo_raw.o version.o $(LFLAGS)
+
+echo_raw.o:		$(UTILBIN_DIR)/echo_raw.c
+		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/echo_raw.c
 
 #---------------------------------------------------------------------
 checkprog:	checkprog.o peopen_standalone.o pids_standalone.o version.o $(WINGRIDLIB_DEP) $(UTILIB) $(COMMLISTSLIB) $(LCKLIB) $(RMONLIB)

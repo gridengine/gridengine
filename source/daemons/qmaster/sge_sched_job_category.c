@@ -337,11 +337,11 @@ int
 sge_is_job_category_rejected(lListElem *job) 
 {
    int ret;
+   lListElem *cat = NULL;
 
    DENTER(TOP_LAYER, "sge_is_job_category_rejected");
-  
-   ret = sge_is_job_category_rejected_(lGetRef(job, JB_category));  
-
+   cat = lGetRef(job, JB_category); 
+   ret = sge_is_job_category_rejected_(cat);  
    DRETURN(ret);
 }
 

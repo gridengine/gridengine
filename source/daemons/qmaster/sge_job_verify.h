@@ -1,5 +1,6 @@
-#ifndef __SGE_MAILREC_H
-#define __SGE_MAILREC_H
+#ifndef __SGE_JOB_VERIFY_H
+#define __SGE_JOB_VERIFY_H
+
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -25,24 +26,17 @@
  * 
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
  * 
- *   Copyright: 2001 by Sun Microsystems, Inc.
+ *   Copyright: 2008 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_mailrecL.h"
+int
+sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp,
+                      lList **lpp, char *ruser, char *rhost, uid_t uid, gid_t gid, char *group,
+                      sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
+                      monitoring_t *monitor);
 
-int mailrec_parse(lList **lpp, const char *mail_str);
-
-int mailrec_unparse(lList *head, char *mail_str, unsigned int mail_str_len);
-
-bool
-sge_mailopt_to_dstring(u_long32 opt, dstring *string);
-
-int 
-sge_parse_mail_options(lList **alpp, char *mail_str, u_long32 prog_number);
-
-#endif /* __SGE_MAILREC_H */
-
+#endif /* __SGE_JOB_VERIFY_H */

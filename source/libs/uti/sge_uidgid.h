@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <sys/types.h> 
 #include <grp.h>
+#include <pwd.h>
 
 #include "sge_dstring.h"
 #include "sge_unistd.h"

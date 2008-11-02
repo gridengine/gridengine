@@ -870,6 +870,7 @@ PrintConf()
    $ECHO "auto_user_delete_time  86400"
    $ECHO "delegated_file_staging false"
    $ECHO "reprioritize           0"
+   $ECHO "jsv_url                none"
    if [ "$SGE_JVM_LIB_PATH" != "" ]; then
       $ECHO "libjvm_path            $SGE_JVM_LIB_PATH"
    fi

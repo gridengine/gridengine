@@ -30,17 +30,21 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include <string.h>
+#include "rmon/sgermon.h"
 
-#include "sgermon.h"
-#include "sge_string.h"
-#include "sge_stdlib.h"
-#include "sge_job.h"
-#include "sge_mailrec.h"
-#include "cull_parse_util.h"
+#include "uti/sge_bitfield.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_string.h"
+#include "uti/sge_prog.h"
 
-#include "get_path.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_mailrec.h"
+
 #include "symbols.h"
+#include "get_path.h"
+
 #include "msg_common.h"
 
 /****** sgeobj/mailrec/mailrec_parse() ****************************************
@@ -199,3 +203,65 @@ int mailrec_unparse(lList *head, char *mail_str, unsigned int mail_str_len)
    }
    return 0;
 }
+
+bool
+sge_mailopt_to_dstring(u_long32 opt, dstring *string)
+{
+   bool success = true;
+
+   DENTER(TOP_LAYER, "sge_mailopt_to_dstring");
+   if (VALID(MAIL_AT_ABORT, opt)) {
+      sge_dstring_append_char(string, 'a');
+   } 
+   if (VALID(MAIL_AT_BEGINNING, opt)) {
+      sge_dstring_append_char(string, 'b');
+   } 
+   if (VALID(MAIL_AT_EXIT, opt)) {
+      sge_dstring_append_char(string, 'e');
+   } 
+   if (VALID(NO_MAIL, opt)) {
+      sge_dstring_append_char(string, 'n');
+   } 
+   if (VALID(MAIL_AT_SUSPENSION, opt)) {
+      sge_dstring_append_char(string, 's');
+   } 
+   DRETURN(success);
+}
+
+/***********************************************************************/
+/* MT-NOTE: sge_parse_mail_options() is MT safe */
+int 
+sge_parse_mail_options(lList **alpp, char *mail_str, u_long32 prog_number)
+{
+   int i, j;
+   int mail_opt = 0;
+
+   DENTER(TOP_LAYER, "sge_parse_mail_options");
+
+   i = strlen(mail_str);
+
+   for (j = 0; j < i; j++) {
+      if ((char) mail_str[j] == 'a') {
+         mail_opt = mail_opt | MAIL_AT_ABORT;
+      } else if ((char) mail_str[j] == 'b') {
+         mail_opt = mail_opt | MAIL_AT_BEGINNING;
+      } else if ((char) mail_str[j] == 'e') {
+         mail_opt = mail_opt | MAIL_AT_EXIT;
+      } else if ((char) mail_str[j] == 'n') {
+         mail_opt = mail_opt | NO_MAIL;
+      } else if ((char) mail_str[j] == 's') {
+         if (prog_number == QRSUB) {
+            answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                   MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, "-m");
+            DRETURN(0);
+         }
+         mail_opt = mail_opt | MAIL_AT_SUSPENSION;
+      } else {
+         DRETURN(0);
+      }
+   }
+
+   DRETURN(mail_opt);
+
+}
+

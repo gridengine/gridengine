@@ -96,5 +96,9 @@ size_t sge_dstring_remaining(const dstring *string);
 
 const char *sge_dstring_ulong_to_binstring(dstring *sb, u_long32 number);
 
+bool sge_dstring_split(dstring *string, char character, dstring *before, dstring *after);
+
+void sge_dstring_strip_white_space_at_eol(dstring *string);
+
 #endif /* __SGE_STRING_APPEND_H */
 

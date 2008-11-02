@@ -761,11 +761,21 @@ void sge_close_all_fds(fd_set *keep_open)
    int maxfd;
    bool ignore = false;
 
-   DENTER(TOP_LAYER, "sge_close_all_fds");
+   /*
+    * EB: IMPORTANT: Logging in this function is not allowed
+    *
+    * Reason: This function is used in sge_peopen() between fork() and exec()
+    *         In multi threaded environments the child might run into a deadlock situation
+    *         if it tries to get a lock which was hold by one of the parent threads
+    *         before the a fork() call. 
+    *
+    *         Therefore between fork() and exec() only aync-signal-safe functions are allowed.
+    *
+    *         File based operations (like done in logging) are therefore not alled here.
+    */
 
 #ifndef WIN32NATIVE
-   maxfd = sysconf(_SC_OPEN_MAX) > FD_SETSIZE ? \
-     FD_SETSIZE : sysconf(_SC_OPEN_MAX);
+   maxfd = sysconf(_SC_OPEN_MAX) > FD_SETSIZE ? FD_SETSIZE : sysconf(_SC_OPEN_MAX);
 #else /* WIN32NATIVE */
    maxfd = FD_SETSIZE;
    /* detect maximal number of fds under NT/W2000 (env: Files)*/
@@ -781,7 +791,9 @@ void sge_close_all_fds(fd_set *keep_open)
       }
 #ifdef __INSURE__
       if (_insure_is_internal_fd(fd)) {
+#if 0 /* see comment above */
          WARNING((SGE_EVENT, "INSURE: fd %d will not be closed", fd));
+#endif
          ignore = true;
       }
 #endif
@@ -794,8 +806,6 @@ void sge_close_all_fds(fd_set *keep_open)
 #endif /* WIN32NATIVE */
       }
    }
-
-   DRETURN_VOID;
 }  
 
 /****** sge_os/sge_dup_fd_above_stderr() **************************************

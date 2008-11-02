@@ -1,3 +1,13 @@
+EB-2008-11-02-0: Enhancem.:   first checkin of JSV
+                              - functional specification
+                              - JSV script template 
+                              - prepared master for JSV execution
+                              - JSV start/stop in clients and master
+                 Review:      MD 
+                 NOTE:        development is not finished. JSV functionality does
+                              not work now. Also documentation is not finished.
+                              Final checkin will follow within the next 2 weeks.
+
 MD-2008-10-30-0: Bugfix:      creation of local config during execd install broken
                  BelongsTo:   MP-2008-10-22-1
                  Review:      JG

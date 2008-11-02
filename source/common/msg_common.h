@@ -155,6 +155,7 @@
 #define MSG_EXEC_XISNOEXECHOST_S               _MESSAGE(23116, _(SFN" is no exec host"))
 #define MSG_EXEC_ADDEDHOSTXTOEXECHOSTLIST_S    _MESSAGE(23117, _("added host "SFN" to exec host list"))
 #define MSG_ANSWER_INVALIDFORMAT               _MESSAGE(23118, _("invalid format"))
+#define MSG_PARSE_WRONGPATHJSV_S               _MESSAGE(23119, _("ERROR! Wrong path format "SFQ" specified to -jsv option"))
 #define MSG_TREE_CHANGEDSHARETREE              _MESSAGE(23121, _("changed sharetree"))
 #define MSG_TREE_NOSHARETREE                   _MESSAGE(23122, _("No sharetree"))
 #define MSG_TREE_CANTADDNODEXISNONUNIQUE_S     _MESSAGE(23123, _("Could not add node "SFN" to sharetree due to non-unique path"))
@@ -321,6 +322,7 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_ID_LIST       "obj_id_list             objectname [ objectname ...]" 
 #define MSG_GDI_ARGUMENTSYNTAX_OA_EVENTCLIENT_LIST     "evid_list               all | evid[,evid,...]" 
 #define MSG_GDI_ARGUMENTSYNTAX_OA_HOST_LIST            "host_list               all | hostname[,hostname,...]" 
+#define MSG_GDI_ARGUMENTSYNTAX_OA_JSV_URL              "jsv_url                 [script:][username@]path" 
 #define MSG_GDI_ARGUMENTSYNTAX_OA_WC_CQUEUE            "wc_cqueue               wildcard expression matching a cluster queue"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_WC_HOST              "wc_host                 wildcard expression matching a host"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_WC_HOSTGROUP         "wc_hostgroup            wildcard expression matching a hostgroup"
@@ -950,6 +952,7 @@
 
 #define MSG_GDI_USAGE_js_OPT_YN                          "[-js job_share]"
 #define MSG_GDI_UTEXT_js_OPT_YN                          _MESSAGE(23503, _("share tree or functional job share"))
+
 #define MSG_GDI_USAGE_shell_OPT_YN                       "[-shell y[es]|n[o]]"
 #define MSG_GDI_UTEXT_shell_OPT_YN                       _MESSAGE(23504, _("start command with or without wrapping <loginshell> -c"))
 
@@ -973,6 +976,10 @@
 #define MSG_GDI_UTEXT_pty_OPT                            _MESSAGE(23511, _("start job in a pty"))
 
 #define MSG_GDI_UTEXT_now_qrsub_OPT_YN                   _MESSAGE(23512, _("consider only interactive queues"))
+
+#define MSG_GDI_USAGE_jsv_OPT_YN                         "[-jsv jsv_url]"
+#define MSG_GDI_UTEXT_jsv_OPT_YN                         _MESSAGE(23513, _("job submission verification script to be used"))
+
 
 /* =================================================
  * global error messages 

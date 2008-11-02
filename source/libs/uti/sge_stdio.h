@@ -150,6 +150,10 @@ void print_option_syntax(FILE *fp, const char *option, const char *meaning);
 
 bool sge_check_stdout_stream(FILE *file, int fd);
 
+pid_t sge_peopen_threadsafe(const char *shell, int login_shell, const char *command,
+                 const char *user, char **env,  FILE **fp_in, FILE **fp_out,
+                 FILE **fp_err, bool null_stderr);
+
 #if defined(SOLARIS)
 #define SGE_DEFAULT_PATH "/usr/local/bin:/bin:/usr/bin:/usr/ucb"
 #elif defined(IRIX) 

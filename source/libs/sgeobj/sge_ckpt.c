@@ -415,9 +415,8 @@ ckpt_list_do_all_exist(const lList *ckpt_list, lList **answer_list,
 *  SEE ALSO
 *
 *****************************************************************************/   
-lListElem* sge_generic_ckpt(
-char *ckpt_name 
-) {
+lListElem* sge_generic_ckpt(char *ckpt_name) 
+{
    lListElem *ep;
 
    DENTER(TOP_LAYER, "sge_generic_ckpt");

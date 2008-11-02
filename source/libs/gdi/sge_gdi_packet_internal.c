@@ -55,6 +55,7 @@
 
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_multiL.h"
+#include "sgeobj/sge_jsv.h"
 
 #include "msg_common.h"
 #include "msg_gdilib.h"
@@ -442,11 +443,36 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
 #ifdef KERBEROS
    /* request that the Kerberos library forward the TGT */
    if (ret && packet->first_task->target == SGE_JOB_LIST && 
-       SGE_GDI_GET_OPERATION(packet->first_task->command) == SGE_GDI_ADD) {
+       SGE_GDI_GET_OPERATION(packet->first_task->command) == SGE_GDI_ADD ) {
       krb_set_client_flags(krb_get_client_flags() | KRB_FORWARD_TGT);
       krb_set_tgt_id(packet->id);
    }
 #endif
+
+    /*
+     * Now we will execute the JSV script if we got a job submission request.
+     * It is necessary to dechain the job which is verified because the
+     * job verification process might destroy the job and create a completely
+     * new one with adjusted job attributes.
+     */
+    if (ret) {
+       sge_gdi_task_class_t *task = packet->first_task;
+
+       if (task->target == SGE_JOB_LIST &&
+           ((SGE_GDI_GET_OPERATION(task->command) == SGE_GDI_ADD) ||
+           (SGE_GDI_GET_OPERATION(task->command) == SGE_GDI_COPY))) {
+          lListElem *job, *next_job;
+
+          next_job = lLast(task->data_list);
+          while(ret && ((job = next_job) != NULL)) {
+             next_job = lNext(job);
+
+             lDechainElem(task->data_list, job);
+             ret &= jsv_do_verify(ctx, JSV_CONTEXT_CLIENT, &job, answer_list, false);
+             lInsertElem(task->data_list, NULL, job);
+          }
+       }
+    }
 
    /* 
     * pack packet into packbuffer
@@ -511,10 +537,10 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
          answer_list_add(answer_list, SGE_EVENT, STATUS_NOQMASTER, ANSWER_QUALITY_ERROR);
          ret = false;
       }
-   }
 
-   /* after this point we do no longer need pb - free its resources */
-   clear_packbuffer(&pb);
+      /* after this point we do no longer need pb - free its resources */
+      clear_packbuffer(&pb);
+   }
 
    /* 
     * wait for response from master; also here keep care that commlib

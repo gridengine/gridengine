@@ -1,3 +1,9 @@
+DG-2008-11-03-0: Bugfix:      Critical errors when updating von 6.1 to 6.2 with 
+                              inst_sge -upd and inst_sge -upd-execd. 
+                 Bugster:     6766830
+                 Issue:       2771
+                 Review:      MD
+
 JG-2008-10-30-0: Bugfix:      fixed a qmaster deadlock on linux
                               fixed minor memory leaks
                  Review:      RD

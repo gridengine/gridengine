@@ -185,13 +185,13 @@ centry_mod(sge_gdi_ctx_class_t *ctx,
       pos = lGetPosViaElem(reduced_elem, CE_consumable, SGE_NO_ABORT);
 
       if (pos >= 0) {
-         bool consumable = lGetPosBool(reduced_elem, pos) ? true : false;
+         u_long32 consumable = lGetPosUlong(reduced_elem, pos);
 
          if (is_slots_attr) {
-            consumable = true;
+            consumable = CONSUMABLE_YES;
          }
-         DPRINTF(("Got CE_consumable: "sge_u32"\n", (u_long32)consumable));
-         lSetBool(centry, CE_consumable, consumable);
+         DPRINTF(("Got CE_consumable: "sge_u32"\n", consumable));
+         lSetUlong(centry, CE_consumable, consumable);
       }
    }
 
@@ -355,10 +355,9 @@ centry_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, gdi_o
        * it is a consumable and the default value has changed,
        * queue / host values for these consumables have to be rebuilt.
        */
-      bool consumable = lGetBool(ep, CE_consumable) ? true : false;
-      bool old_consumable = lGetBool(old_ep, CE_consumable) ? true : false;
-      if ((consumable && !old_consumable) ||
-          (!consumable && old_consumable)) {
+      u_long32 consumable = lGetUlong(ep, CE_consumable);
+      u_long32 old_consumable = lGetUlong(old_ep, CE_consumable);
+      if (consumable != old_consumable) {
             rebuild_consumables = true;
       } else if (consumable) {
          const char *default_request = lGetString(ep, CE_default);
@@ -535,12 +534,12 @@ void centry_redebit_consumables(sge_gdi_ctx_class_t *ctx, const lList *centries)
 
       for_each(qinstance, qinstance_list) {
          lSetList(qinstance, QU_resource_utilization, NULL);
-         qinstance_debit_consumable(qinstance, NULL, master_centry_list, 0);
+         qinstance_debit_consumable(qinstance, NULL, master_centry_list, 0, true);
       }
    }
    for_each (hep, *object_base[SGE_TYPE_EXECHOST].list) {
       lSetList(hep, EH_resource_utilization, NULL);
-      debit_host_consumable(NULL, hep, master_centry_list, 0);
+      debit_host_consumable(NULL, hep, master_centry_list, 0, true);
    }
 
    /* 
@@ -552,6 +551,7 @@ void centry_redebit_consumables(sge_gdi_ctx_class_t *ctx, const lList *centries)
       lListElem* jatep;
 
       for_each (jatep, lGetList(jep, JB_ja_tasks)) {
+         bool master_task = true;
          lListElem *gdil;
          lListElem *qep = NULL;
          int slots = 0;
@@ -561,17 +561,20 @@ void centry_redebit_consumables(sge_gdi_ctx_class_t *ctx, const lList *centries)
             if (!(qep = cqueue_list_locate_qinstance(
                                *(object_type_get_master_list(SGE_TYPE_CQUEUE)), 
                                lGetString(gdil, JG_qname)))) {
+               /* should never happen */
+               master_task = false;
                continue;
             }   
 
             qslots = lGetUlong(gdil, JG_slots);
             debit_host_consumable(jep, host_list_locate(*object_base[SGE_TYPE_EXECHOST].list,
-                                  lGetHost(qep, QU_qhostname)), master_centry_list, qslots);
-            qinstance_debit_consumable(qep, jep, master_centry_list, qslots);
+                                  lGetHost(qep, QU_qhostname)), master_centry_list, qslots, master_task);
+            qinstance_debit_consumable(qep, jep, master_centry_list, qslots, master_task);
             slots += qslots;
+            master_task = false;
          }
          debit_host_consumable(jep, host_list_locate(*object_base[SGE_TYPE_EXECHOST].list,
-                               "global"), master_centry_list, slots);
+                               "global"), master_centry_list, slots, true);
       }
    }
 

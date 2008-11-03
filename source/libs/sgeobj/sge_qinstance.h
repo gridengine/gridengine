@@ -104,7 +104,7 @@ qinstance_is_calendar_referenced(const lListElem *this_elem,
 
 int
 qinstance_debit_consumable(lListElem *this_elem, lListElem *job, 
-                           lList *centry_list, int slots);
+                           lList *centry_list, int slots, bool is_master_task);
 
 bool
 qinstance_message_add(lListElem *this_elem, u_long32 type, const char *message);
@@ -120,7 +120,7 @@ int queue_reference_list_validate(lList **alpp, lList *qr_list,
 
 int
 rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, int slots,
-                 int config_nm, int actual_nm, const char *obj_name);
+                 int config_nm, int actual_nm, const char *obj_name, bool is_master_task);
 
 lListElem *
 explicit_job_request(lListElem *jep, const char *name);

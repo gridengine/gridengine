@@ -1005,7 +1005,7 @@ lList **alpp
                double dval;
 
                name = lGetString(ce, CE_name);
-               if (!lGetBool(ce, CE_consumable) || !strcmp(name, "slots") || 
+               if (!lGetUlong(ce, CE_consumable) || !strcmp(name, "slots") || 
                    job_get_request(job, name))
                   continue;
 

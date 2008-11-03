@@ -967,7 +967,7 @@ StringConst *ce_entry
    }
    ce_entry[CE_REQUEST] = lGetUlong(ep, CE_requestable) == REQU_FORCED ? "FORCED" : 
                            (lGetUlong(ep, CE_requestable) == REQU_YES ? "YES" : "NO");
-   ce_entry[CE_CONSUMABLE] = lGetBool(ep, CE_consumable) ? "YES" : "NO";
+   ce_entry[CE_CONSUMABLE] = lGetUlong(ep, CE_consumable) ? "YES" : "NO";
    ce_entry[CE_DEFAULT] = (StringConst)lGetString(ep, CE_default);
    ce_entry[CE_URGENCY] = (StringConst)lGetString(ep, CE_urgency_weight);
       
@@ -1036,10 +1036,13 @@ String *ce_entry
 
    if (!strcasecmp(ce_entry[CE_CONSUMABLE], "y") 
             || !strcasecmp(ce_entry[CE_CONSUMABLE], "yes"))
-      lSetBool(ep, CE_consumable, true);
+      lSetUlong(ep, CE_consumable, 1);
+   else if (!strcasecmp(ce_entry[CE_CONSUMABLE], "j") 
+            || !strcasecmp(ce_entry[CE_CONSUMABLE], "job"))
+      lSetUlong(ep, CE_consumable, 2);
    else if (!strcasecmp(ce_entry[CE_CONSUMABLE], "n") 
             || !strcasecmp(ce_entry[CE_CONSUMABLE], "no"))
-      lSetBool(ep, CE_consumable, false);
+      lSetUlong(ep, CE_consumable, 0);
 
    lSetString(ep, CE_default, ce_entry[CE_DEFAULT] ? qmon_trim(ce_entry[CE_DEFAULT]): "");
    lSetString(ep, CE_urgency_weight, ce_entry[CE_URGENCY] ? qmon_trim(ce_entry[CE_URGENCY]): "");

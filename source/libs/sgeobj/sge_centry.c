@@ -189,7 +189,7 @@ centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empt
    name = lGetString(this_elem, CE_name);
    s = lGetString(this_elem, CE_stringval);
    /* allow infinity for non-consumables only */
-   allow_infinity = lGetBool(this_elem, CE_consumable)?0:1;
+   allow_infinity = (lGetUlong(this_elem, CE_consumable) != CONSUMABLE_NO)?0:1;
 
    if (!s) {
       if (allow_empty_boolean && lGetUlong(this_elem, CE_valtype)==TYPE_BOO) {
@@ -235,7 +235,7 @@ centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empt
          }
 
          /* negative values are not allowed for consumable attributes */
-         if (!allow_neg_consumable && lGetBool(this_elem, CE_consumable)
+         if (!allow_neg_consumable && (lGetUlong(this_elem, CE_consumable) != CONSUMABLE_NO)
              && lGetDouble(this_elem, CE_doubleval) < (double)0.0) {
 /*             ERROR((SGE_EVENT, MSG_CPLX_ATTRIBISNEG_S, name)); */
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_CPLX_ATTRIBISNEG_S, name);
@@ -308,6 +308,39 @@ map_req2str(u_long32 op)
    return opv[op];
 }
 
+/****** sge_centry/map_consumable2str() ****************************************
+*  NAME
+*     map_consumable2str() -- map to consumable string
+*
+*  SYNOPSIS
+*     const char * map_consumable2str(u_long32 op) 
+*
+*  FUNCTION
+*     maps int representation of CONSUMABLE to string
+*
+*  INPUTS
+*     u_long32 op - CONSUMABLE_*
+*
+*  RESULT
+*     const char * - string representation of consumable definition
+*
+*  NOTES
+*     MT-NOTE: map_consumable2str() is not safe 
+*******************************************************************************/
+const char * map_consumable2str(u_long32 op)
+{
+   static char *opv[] = {
+      "NO",       /* CONSUMABLE_NO */
+      "YES",      /* CONSUMABLE_YES */
+      "JOB",      /* CONSUMABLE_JOB */
+   };
+
+   if (op > CONSUMABLE_JOB) {
+      op = CONSUMABLE_NO;
+   }
+   return opv[op];
+}
+
 const char *
 map_type2str(u_long32 type)
 {
@@ -366,7 +399,7 @@ centry_create(lList **answer_list, const char *name)
          lSetUlong(ret, CE_valtype, TYPE_INT);
          lSetUlong(ret, CE_relop, CMPLXLE_OP);
          lSetUlong(ret, CE_requestable, REQU_NO);
-         lSetBool(ret, CE_consumable, false);
+         lSetUlong(ret, CE_consumable, CONSUMABLE_NO);
          lSetString(ret, CE_default, "1");
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EMALLOC, 
@@ -724,7 +757,7 @@ centry_list_fill_request(lList *this_list, lList **answer_list, lList *master_ce
          lSetUlong(entry, CE_valtype, lGetUlong(cep, CE_valtype));
 
          /* we also know wether it is a consumable attribute */
-         lSetBool(entry, CE_consumable, lGetBool(cep, CE_consumable));
+         lSetUlong(entry, CE_consumable, lGetUlong(cep, CE_consumable));
 
          if (centry_fill_and_check(entry, answer_list, allow_empty_boolean, allow_neg_consumable)) {
             /* no error msg here - centry_fill_and_check() makes it */
@@ -966,7 +999,7 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list,
                                                    MSG_INVALID_CENTRY_TYPE_RELOP_S, attrname);  
                            ret = false;
                        }
-                       if (lGetBool(centry, CE_consumable)) {
+                       if (lGetUlong(centry, CE_consumable)) {
                            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
                                                    MSG_INVALID_CENTRY_CONSUMABLE_TYPE_SS, attrname, 
                                                    map_type2str(type));
@@ -979,7 +1012,7 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list,
                                                    MSG_INVALID_CENTRY_TYPE_RELOP_S, attrname); 
                            ret = false;
                        } 
-                       if (lGetBool(centry, CE_consumable)) {
+                       if (lGetUlong(centry, CE_consumable)) {
                            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR,
                                                    MSG_INVALID_CENTRY_CONSUMABLE_TYPE_SS, attrname, 
                                                    map_type2str(type));
@@ -1008,7 +1041,7 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list,
 
       }
 
-      if (lGetBool(centry, CE_consumable)) {
+      if (lGetUlong(centry, CE_consumable)) {
    
          if (relop != CMPLXLE_OP) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR,

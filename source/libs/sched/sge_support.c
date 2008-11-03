@@ -814,9 +814,9 @@ search_userprj_node( lListElem *ep,      /* root of the tree */
  * sgeee_sort_jobs - sort jobs according the task-priority and job number 
  *--------------------------------------------------------------------*/
 
-void sgeee_sort_jobs( lList **job_list )              /* JB_Type */
+void sgeee_sort_jobs(lList **job_list)              /* JB_Type */
 {
-  sgeee_sort_jobs_by(job_list, SGEJ_priority, SGEJ_sort_decending , SGEJ_sort_ascending); /* decreasing priority then increasing job number */
+   sgeee_sort_jobs_by(job_list, SGEJ_priority, SGEJ_sort_decending , SGEJ_sort_ascending); /* decreasing priority then increasing job number */
 }
 
 void sgeee_sort_jobs_by( lList **job_list , int by_SGEJ_field, int field_sort_direction, int jobnum_sort_direction) /* JB_Type */
@@ -826,7 +826,7 @@ void sgeee_sort_jobs_by( lList **job_list , int by_SGEJ_field, int field_sort_di
    lList *tmp_list = NULL;    /* SGEJ_Type */
    char *sortorder = NULL;
 
-   DENTER(TOP_LAYER, "sgeee_sort_jobs");
+   DENTER(TOP_LAYER, "sgeee_sort_jobs_by");
 
    if (!job_list || !*job_list) {
       DEXIT;
@@ -886,10 +886,9 @@ void sgeee_sort_jobs_by( lList **job_list , int by_SGEJ_field, int field_sort_di
       ** JAT_master_queue (String)
       */
 
-      lSetUlong(tmp_sge_job, SGEJ_job_number,
-		lGetUlong(job, JB_job_number));
-      lSetUlong(tmp_sge_job, SGEJ_submission_time,
-		lGetUlong(job, JB_submission_time));
+      lSetUlong(tmp_sge_job, SGEJ_job_number, lGetUlong(job, JB_job_number));
+      lSetUlong(tmp_sge_job, SGEJ_submission_time, lGetUlong(job, JB_submission_time));
+
       if (by_SGEJ_field != SGEJ_priority) { 
          lSetString(tmp_sge_job, SGEJ_job_name, lGetString(job, JB_job_name));
          lSetString(tmp_sge_job, SGEJ_owner, lGetString(job, JB_owner));

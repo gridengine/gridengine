@@ -170,7 +170,7 @@ qinstance_create(sge_gdi_ctx_class_t *ctx,
    }
 
    qinstance_set_conf_slots_used(ret);
-   qinstance_debit_consumable(ret, NULL, centry_list, 0);
+   qinstance_debit_consumable(ret, NULL, centry_list, 0, true);
 
    /*
     * Change qinstance state

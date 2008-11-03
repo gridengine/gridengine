@@ -769,12 +769,12 @@ qinstance_set_slots_used(lListElem *this_elem, int new_slots)
 *******************************************************************************/
 int 
 qinstance_debit_consumable(lListElem *qep, lListElem *jep, lList *centry_list, 
-                           int slots)
+                           int slots, bool is_master_task)
 {
    return rc_debit_consumable(jep, qep, centry_list, slots,
                               QU_consumable_config_list, 
                               QU_resource_utilization,
-                              lGetString(qep, QU_qname));
+                              lGetString(qep, QU_qname), is_master_task);
 }
 
 /****** sgeobj/qinstance/qinstance_message_add() *****************************
@@ -925,7 +925,7 @@ qinstance_validate(lListElem *this_elem, lList **answer_list, lList *master_exec
    qinstance_message_trash_all_of_type_X(this_elem, ~QI_ERROR);   
 
    /* setup actual list of queue */
-   qinstance_debit_consumable(this_elem, NULL, centry_master_list, 0);
+   qinstance_debit_consumable(this_elem, NULL, centry_master_list, 0, true);
 
    /* init double values of consumable configuration */
    if (centry_list_fill_request(lGetList(this_elem, QU_consumable_config_list), 
@@ -1053,7 +1053,7 @@ qinstance_list_validate(lList *this_list, lList **answer_list, lList *master_exe
 int 
 rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, 
                     int slots, int config_nm, int actual_nm, 
-                    const char *obj_name) 
+                    const char *obj_name, bool is_master_task) 
 {
    lListElem *cr, *cr_config, *dcep;
    double dval;
@@ -1067,6 +1067,8 @@ rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list,
    }
 
    for_each (cr_config, lGetList(ep, config_nm)) {
+      int debit_slots = slots;
+      u_long32 consumable;
       name = lGetString(cr_config, CE_name);
       dval = 0;
 
@@ -1074,11 +1076,23 @@ rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list,
       if (!(dcep = centry_list_locate(centry_list, name))) {
          ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
          DRETURN(-1);
-      } 
+      }
 
-      if (!lGetBool(dcep, CE_consumable)) {
-         /* no error */
+      consumable = lGetUlong(dcep, CE_consumable);
+      if (consumable == CONSUMABLE_NO) {
+         /* no error, nothing to debit */
          continue;
+      } else if (consumable == CONSUMABLE_JOB) {
+         if (!is_master_task) {
+            /* no error, only_master_task is debited */
+            continue;
+         }
+         /* it's a job consumable, we don't multiply with slots */
+         if (slots > 0) {
+            debit_slots = 1;
+         } else if (slots < 0) {
+            debit_slots = -1;
+         }
       }
 
       /* ensure attribute is in actual list */
@@ -1093,10 +1107,10 @@ rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list,
          if (tmp_ret && dval != 0.0) {
             DPRINTF(("debiting %f of %s on %s %s for %d slots\n", dval, name,
                      (config_nm==QU_consumable_config_list)?"queue":"host",
-                     obj_name, slots));
-            lAddDouble(cr, RUE_utilized_now, slots * dval);
+                     obj_name, debit_slots));
+            lAddDouble(cr, RUE_utilized_now, debit_slots * dval);
             mods++;
-         }  
+         }
       }
    }
 

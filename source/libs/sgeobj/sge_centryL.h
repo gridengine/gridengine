@@ -67,6 +67,12 @@ enum {
    REQU_FORCED
 };
 
+enum {
+   CONSUMABLE_NO = 0,
+   CONSUMABLE_YES,
+   CONSUMABLE_JOB
+};
+
 /* bit mask for CE_dominant */
 enum {
    DOMINANT_LAYER_GLOBAL = 0x0001,
@@ -124,7 +130,7 @@ LISTDEF(CE_Type)
    SGE_STRING(CE_stringval, CULL_DEFAULT | CULL_SPOOL | CULL_SUBLIST | CULL_JGDI_CONF)     /* non overwritten value */
    SGE_DOUBLE(CE_doubleval, CULL_DEFAULT | CULL_JGDI_HIDDEN)    /* parsed CE_stringval */
    SGE_ULONG(CE_relop, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)          /* relational operator */
-   SGE_BOOL(CE_consumable, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)      /* flag consumable */
+   SGE_ULONG(CE_consumable, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)      /* flag consumable */
    SGE_STRING(CE_default, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)      /* default request for consumable */
    SGE_ULONG(CE_dominant, CULL_DEFAULT | CULL_JGDI_HIDDEN)      /* monitoring facility */
    SGE_STRING(CE_pj_stringval, CULL_DEFAULT | CULL_JGDI_HIDDEN) /* per job string value */

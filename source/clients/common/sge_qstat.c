@@ -329,13 +329,12 @@ int qstat_no_group(qstat_env_t* qstat_env, qstat_handler_t* handler, lList **alp
       DRETURN(ret);
    }
    remove_tagged_jobs(qstat_env->job_list);
-   
+ 
    /* sort pending jobs */
    if (lGetNumberOfElem(qstat_env->job_list)>0 ) {
       sgeee_sort_jobs(&(qstat_env->job_list));
    }
-   
-      
+
    /* 
     *
     * step 4: iterate over jobs that are pending;
@@ -2283,7 +2282,7 @@ static int sge_handle_job(lListElem *job, lListElem *jatep, lListElem *qep, lLis
             double dval;
 
             name = lGetString(ce, CE_name);
-            if (!lGetBool(ce, CE_consumable) || !strcmp(name, "slots") || 
+            if (!lGetUlong(ce, CE_consumable) || !strcmp(name, "slots") || 
                 job_get_request(job, name)) {
                continue;
             }

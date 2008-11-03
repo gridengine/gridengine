@@ -125,7 +125,11 @@ enum {
 /* EB: TODO: Add internal attributes */
 
    QU_state,
-   QU_tagged4schedule,
+   QU_tagged4schedule, /* used for parallel job scheduling only */
+                       /* 0 - can be used only as slave queue */
+                       /* 1 - can be used as slave queue for now assignment,
+                              however as master for reservation */
+                       /* 2 - can be used as master for now and reservation */
    QU_cache_version,
    QU_pending_signal,
    QU_pending_signal_delivery_time,

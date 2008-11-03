@@ -595,7 +595,7 @@ public class QConfCommand extends QConfCommandGenerated {
             //TODO LP: deny invalid
             ce.setRequestable(val);
 
-            ce.setConsumable(Util.isYes(singleLine.get(5)));
+            ce.setConsumable(Util.getYesNoJobAsInt(singleLine.get(5)));
 
             ce.setDefault(singleLine.get(6));
 
@@ -679,7 +679,7 @@ public class QConfCommand extends QConfCommandGenerated {
             shortcutLen = Math.max(shortcutLen, complex.getShortcut().length());
             typeLen = Math.max(typeLen, ceDummy.typeToString(complex.getValtype()).length());
             requestableLen = Math.max(requestableLen, (complex.getRequestable() == 1) ? 2 : 3); //length of YES, NO
-            consumableLen = Math.max(consumableLen, (complex.isConsumable()) ? 3 : 2); //length of YES, NO);
+            consumableLen = Math.max(consumableLen, (complex.getConsumable() != 0) ? 3 : 2); //length of YES/JOB, NO);
             defaultLen = Math.max(defaultLen, complex.getDefault().length());
             urgencyLen = Math.max(urgencyLen, complex.getUrgencyWeight().length());
         }
@@ -694,7 +694,10 @@ public class QConfCommand extends QConfCommandGenerated {
         String val;
         //And finally print the columns
         for (ComplexEntry complex : complexList) {
-            val = String.format("%-19.19s %-10.10s %-11.11s %-5.5s %-11.11s %-10.10s %-8.8s %-8s", complex.getName(), complex.getShortcut(), ceDummy.typeToString(complex.getValtype()), ceDummy.opToString(complex.getRelop()), ceDummy.reqToString(complex.getRequestable()), (complex.isConsumable()) ? "YES" : "NO", complex.getDefault(), complex.getUrgencyWeight());
+            val = String.format("%-19.19s %-10.10s %-11.11s %-5.5s %-11.11s %-10.10s %-8.8s %-8s", complex.getName(),
+                    complex.getShortcut(), ceDummy.typeToString(complex.getValtype()), ceDummy.opToString(complex.getRelop()),
+                    ceDummy.reqToString(complex.getRequestable()), Util.getYesNoJobAsString(complex.getConsumable()), complex.getDefault(),
+                    complex.getUrgencyWeight());
             sb.append(val + "\n");
         }
         sb.append("# >#< starts a comment but comments are not saved across edits --------\n");

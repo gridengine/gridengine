@@ -63,6 +63,9 @@ map_type2str(u_long32 type);
 const char *
 map_req2str(u_long32 op);
 
+const char *
+map_consumable2str(u_long32 op);
+
 lListElem *
 centry_create(lList **answer_list, const char *name);
 

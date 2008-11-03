@@ -1,3 +1,7 @@
+RD-2008-11-03-0: Enhancem.:   added per job consumable functionality to avoid
+                              slot multiplication of requests for PE jobs
+                 Review:      CR, AA (qmon)
+
 EB-2008-11-02-0: Enhancem.:   first checkin of JSV
                               - functional specification
                               - JSV script template 

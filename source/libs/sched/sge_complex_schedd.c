@@ -181,7 +181,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
       }
    }
 
-   if (cplx_el && lGetBool(cplx_el, CE_consumable)) {
+   if (cplx_el && lGetUlong(cplx_el, CE_consumable) != CONSUMABLE_NO) {
       lSetUlong(cplx_el, CE_pj_dominant, layer | DOMINANT_TYPE_CONSUMABLE);
       lSetUlong(cplx_el, CE_dominant, DOMINANT_TYPE_VALUE);
       /* treat also consumables as fixed attributes when assuming an empty queuing system */
@@ -342,8 +342,9 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
          lSetUlong(cplx_el, CE_pj_dominant, DOMINANT_TYPE_VALUE);
          created = true;
       }
-      if (!get_queue_resource(cplx_el, queue, attrname) && created)
+      if (!get_queue_resource(cplx_el, queue, attrname) && created) {
          lFreeElem(&cplx_el);
+      }
    }
    DRETURN(cplx_el);
 }

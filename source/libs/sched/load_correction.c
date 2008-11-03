@@ -208,7 +208,7 @@ correct_capacities(lList *host_list, lList *centry_list)
             lSetString(ep, HL_value, sval);
          }
 
-         if (!lGetBool(cep, CE_consumable))
+         if (lGetUlong(cep, CE_consumable) == CONSUMABLE_NO)
             continue;
          if (!(total=lGetSubStr(hep, CE_name, attr_name, EH_consumable_config_list)))
             continue;

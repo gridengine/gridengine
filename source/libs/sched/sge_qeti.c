@@ -172,7 +172,7 @@ static int sge_add_qeti_resource_container(lList **qeti_to_add, lList* rue_list,
       name = lGetString(actual, RUE_name);
       centry_config = lGetElemStr(centry_list, CE_name, name);
 
-      if (lGetBool(centry_config, CE_consumable)==true && !is_requested(requests, name)) {
+      if (lGetUlong(centry_config, CE_consumable) != CONSUMABLE_NO && !is_requested(requests, name)) {
          if (!(tep = lGetElemStr(total_list, CE_name, name)) ||
             sge_qeti_list_add(qeti_to_add, name, rue_list, lGetDouble(tep, CE_doubleval), true)) {
             DEXIT;
@@ -186,7 +186,7 @@ static int sge_add_qeti_resource_container(lList **qeti_to_add, lList* rue_list,
       name = lGetString(req, CE_name);
       centry_config = lGetElemStr(centry_list, CE_name, name);
 
-      if ((centry_config && lGetBool(centry_config, CE_consumable)==true) && 
+      if ((centry_config && lGetUlong(centry_config, CE_consumable) != CONSUMABLE_NO) && 
             (tep = lGetElemStr(total_list, CE_name, name))) {
          if (sge_qeti_list_add(qeti_to_add, name, rue_list, lGetDouble(tep, CE_doubleval), false)) {
             DEXIT;

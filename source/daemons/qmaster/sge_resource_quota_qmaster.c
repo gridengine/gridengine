@@ -430,11 +430,13 @@ rqs_reinit_consumable_actual_list(lListElem *rqs, lList **answer_list) {
          for_each(ja_task, ja_task_list) {
             lListElem *granted = NULL;
             lList *gdi_list = lGetList(ja_task, JAT_granted_destin_identifier_list);
+            bool is_master_task = true;
 
             for_each(granted, gdi_list) {
                int tmp_slot = lGetUlong(granted, JG_slots);
                rqs_debit_consumable(rqs, job, granted, lGetString(ja_task, JAT_granted_pe), master_centry_list,
-                                     master_userset_list, master_hgroup_list, tmp_slot);
+                                     master_userset_list, master_hgroup_list, tmp_slot, is_master_task);
+               is_master_task = false;
             }
          }
       }

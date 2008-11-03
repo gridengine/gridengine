@@ -1287,6 +1287,7 @@ int ar_do_reservation(lListElem *ar, bool incslots)
    lList *master_centry_list = *object_base[SGE_TYPE_CENTRY].list;
    lList *master_exechost_list = *object_base[SGE_TYPE_EXECHOST].list;
    lList *master_pe_list = *object_base[SGE_TYPE_PE].list;
+   bool is_master_task = true;
 
    DENTER(TOP_LAYER, "ar_do_reservation");
 
@@ -1302,6 +1303,8 @@ int ar_do_reservation(lListElem *ar, bool incslots)
       lListElem *queue = cqueue_list_locate_qinstance(master_cqueue_list, queue_name);
 
       if (!queue) {
+         ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDQOFJOB_S, queue_name));
+         is_master_task = false;
          continue;
       }
 
@@ -1320,7 +1323,7 @@ int ar_do_reservation(lListElem *ar, bool incslots)
                                  global_host_ep, master_centry_list, tmp_slots,
                                  EH_consumable_config_list, EH_resource_utilization,
                                  SGE_GLOBAL_NAME, start_time, duration, GLOBAL_TAG,
-                                 false) != 0) {
+                                 false, is_master_task) != 0) {
          /* this info is not spooled */
          sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, 
                        SGE_GLOBAL_NAME, NULL, NULL, global_host_ep);
@@ -1332,7 +1335,7 @@ int ar_do_reservation(lListElem *ar, bool incslots)
       if (rc_add_job_utilization(dummy_job, 0, SCHEDULING_RECORD_ENTRY_TYPE_RESERVING,
                                  host_ep, master_centry_list, tmp_slots, EH_consumable_config_list,
                                  EH_resource_utilization, queue_hostname, start_time,
-                                 duration, HOST_TAG, false) != 0) {
+                                 duration, HOST_TAG, false, is_master_task) != 0) {
          /* this info is not spooled */
          sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, 
                        queue_hostname, NULL, NULL, host_ep);
@@ -1343,11 +1346,12 @@ int ar_do_reservation(lListElem *ar, bool incslots)
       rc_add_job_utilization(dummy_job, 0, SCHEDULING_RECORD_ENTRY_TYPE_RESERVING,
                              queue, master_centry_list, tmp_slots, QU_consumable_config_list,
                              QU_resource_utilization, queue_name, start_time, duration,
-                             QUEUE_TAG, false);
+                             QUEUE_TAG, false, is_master_task);
 
       qinstance_increase_qversion(queue);
       /* this info is not spooled */
       qinstance_add_event(queue, sgeE_QINSTANCE_MOD);
+      is_master_task = false;
    }
 
    if (granted_pe != NULL) {
@@ -1589,12 +1593,14 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
    lList *master_centry_list = *object_base[SGE_TYPE_CENTRY].list;
    lList *master_cqueue_list = *object_base[SGE_TYPE_CQUEUE].list;
    dstring buffer = DSTRING_INIT;
+   bool is_master_queue = true;
 
    static int queue_field[] = { QU_qhostname,
                                 QU_qname,
                                 QU_full_name,
                                 QU_job_slots,
                                 QU_consumable_config_list,
+                                QU_tagged4schedule,
                                 QU_resource_utilization,
                                 QU_message_list,
                                 QU_state,
@@ -1649,6 +1655,7 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
       lSetString(queue, QU_full_name, queue_name);
       lSetString(queue, QU_qname, cqueue_name);
 
+      sge_dstring_clear(&buffer);
       double_print_time_to_dstring(lGetUlong(ar, AR_duration), &buffer);
       lSetString(queue, QU_h_rt, sge_dstring_get_string(&buffer));
       lSetString(queue, QU_s_rt, sge_dstring_get_string(&buffer));
@@ -1664,8 +1671,19 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
       lSetUlong(queue, QU_job_slots, slots);
 
       for_each(cr, lGetList(ar, AR_resource_list)) {
-         if (lGetBool(cr, CE_consumable)) {
-            double newval = lGetDouble(cr, CE_doubleval) * slots;
+         u_long32 consumable = lGetUlong(cr, CE_consumable);
+         if (consumable != CONSUMABLE_NO) {
+            double newval;
+           
+            if (lGetUlong(cr, CE_consumable) == CONSUMABLE_YES) {
+               newval = lGetDouble(cr, CE_doubleval) * slots;
+            } else {
+               if (!is_master_queue) {
+                  /* job consumables are only attached to the selected masterq */
+                  continue;
+               }
+               newval = lGetDouble(cr, CE_doubleval);
+            }
 
             sge_dstring_sprintf(&buffer, "%f", newval);
             new_cr = lCopyElem(cr);
@@ -1686,7 +1704,7 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
       qinstance_set_conf_slots_used(queue);
 
       /* initialize QU_resource_utilization */
-      qinstance_debit_consumable(queue, NULL, master_centry_list, 0);
+      qinstance_debit_consumable(queue, NULL, master_centry_list, 0, true);
 
       /* initialize QU_state */
       {
@@ -1732,6 +1750,7 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
       }
 
       FREE(cqueue_name);
+      is_master_queue = false;
    }
    lSetList(ar, AR_reserved_queues, queue_list);
 
@@ -2258,7 +2277,7 @@ ar_list_has_reservation_due_to_qinstance_complex_attr(lList *ar_master_list,
          for_each(request, lGetList(ar, AR_resource_list)) {
             const char *ce_name = lGetString(request, CE_name);
             lListElem *ce = lGetElemStr(ce_master_list, CE_name, ce_name);
-            bool is_consumable = (lGetBool(ce, CE_consumable) > 0) ? true : false;
+            bool is_consumable = (lGetUlong(ce, CE_consumable) > 0) ? true : false;
 
             if (!is_consumable) {
                char text[2048];
@@ -2292,7 +2311,7 @@ ar_list_has_reservation_due_to_qinstance_complex_attr(lList *ar_master_list,
          for_each(rue, rue_list) {
             const char *ce_name = lGetString(rue, RUE_name);
             lListElem *ce = lGetElemStr(ce_master_list, CE_name, ce_name);
-            bool is_consumable = (lGetBool(ce, CE_consumable) > 0) ? true : false;
+            bool is_consumable = (lGetUlong(ce, CE_consumable) > 0) ? true : false;
 
             if (is_consumable) {
                lListElem *rde = NULL;
@@ -2381,7 +2400,7 @@ ar_list_has_reservation_due_to_host_complex_attr(lList *ar_master_list, lList **
             for_each(request, lGetList(ar, AR_resource_list)) {
                const char *ce_name = lGetString(request, CE_name);
                lListElem *ce = lGetElemStr(ce_master_list, CE_name, ce_name);
-               bool is_consumable = (lGetBool(ce, CE_consumable) > 0) ? true : false;
+               bool is_consumable = (lGetUlong(ce, CE_consumable) > 0) ? true : false;
   
                if (!is_consumable) {
                   char text[2048];
@@ -2409,7 +2428,7 @@ ar_list_has_reservation_due_to_host_complex_attr(lList *ar_master_list, lList **
             for_each(rue, rue_list) {
                const char *ce_name = lGetString(rue, RUE_name);
                lListElem *ce = lGetElemStr(ce_master_list, CE_name, ce_name);
-               bool is_consumable = (lGetBool(ce, CE_consumable) > 0) ? true : false;
+               bool is_consumable = (lGetUlong(ce, CE_consumable) > 0) ? true : false;
 
                if (is_consumable) {
                   lListElem *rde = NULL;

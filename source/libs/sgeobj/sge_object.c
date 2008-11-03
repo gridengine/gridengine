@@ -697,11 +697,7 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
          ret = map_req2str(lGetUlong(object, nm));
          break;
       case CE_consumable:
-         if (lGetBool(object, nm)) {
-            ret = "YES";
-         } else {
-            ret = "NO";
-         }
+         ret = map_consumable2str(lGetUlong(object, nm));
          quote_special_case = true;
          break;
       case QU_qtype:
@@ -987,15 +983,17 @@ object_parse_field_from_string(lListElem *object, lList **answer_list,
          break;
       case CE_consumable:
          {
-            bool cond = false;
+            u_long32 cond = CONSUMABLE_NO;
             if (strcasecmp(value, "y") == 0 || strcasecmp(value, "yes") == 0) {
-               cond = true;
+               cond = CONSUMABLE_YES;
             } else if (strcasecmp(value, "n") == 0 || strcasecmp(value, "no") == 0) {
-               ;
+               cond = CONSUMABLE_NO;
+            } else if (strcasecmp(value, "j") == 0 || strcasecmp(value, "job") == 0) {
+               cond = CONSUMABLE_JOB;
             } else {
                ret = false;
             }
-            lSetBool(object, nm, cond);
+            lSetUlong(object, nm, cond);
          }
          break;
       case QU_qtype:

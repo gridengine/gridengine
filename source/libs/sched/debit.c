@@ -183,6 +183,7 @@ static int
 debit_job_from_queues(lListElem *job, lList *granted, lList *global_queue_list, 
                       lList *centry_list, order_t *orders) 
 {
+   bool master_task = true;
    int qslots, total;
    unsigned int tagged;
    const char *qname;
@@ -200,6 +201,7 @@ debit_job_from_queues(lListElem *job, lList *granted, lList *global_queue_list,
          /* find queue */
          qname = lGetString(gel, JG_qname);
          if ((qep = lGetElemStr(global_queue_list, QU_full_name, qname)) == NULL) {
+            master_task = false;
             continue;
          }
 
@@ -243,8 +245,9 @@ debit_job_from_queues(lListElem *job, lList *granted, lList *global_queue_list,
 
          DPRINTF(("REDUCING SLOTS OF QUEUE %s BY %d\n", qname, tagged));
 
-         qinstance_debit_consumable(qep, job, centry_list, tagged);
+         qinstance_debit_consumable(qep, job, centry_list, tagged, master_task);
       }
+      master_task = false;
    }
 
    sge_dstring_free(&queue_name);
@@ -267,6 +270,7 @@ int *sort_hostlist
    const char *load_formula = NULL;
    lList *job_load_adjustments = sconf_get_job_load_adjustments();
    u_long32 load_adjustment_decay_time = sconf_get_load_adjustment_decay_time();
+   bool master_task = true;
 
    double old_sort_value, new_sort_value;
 
@@ -293,8 +297,9 @@ int *sort_hostlist
          lSetUlong(hep, EH_load_correction_factor, ulc_factor);
       }   
 
-      debit_host_consumable(job, host_list_locate(host_list, "global"), centry_list, slots);
-      debit_host_consumable(job, hep, centry_list, slots);
+      debit_host_consumable(job, host_list_locate(host_list, "global"), centry_list, slots, master_task);
+      debit_host_consumable(job, hep, centry_list, slots, master_task);
+      master_task = false;
 
       /* compute new combined load for this host and put it into the host */
       old_sort_value = lGetDouble(hep, EH_sort_value); 
@@ -325,12 +330,12 @@ int *sort_hostlist
  * centry_list: CE_Type
  */
 int 
-debit_host_consumable(lListElem *jep, lListElem *hep, lList *centry_list, int slots) 
+debit_host_consumable(lListElem *jep, lListElem *hep, lList *centry_list, int slots, bool is_master_task) 
 {
    return rc_debit_consumable(jep, hep, centry_list, slots, 
                            EH_consumable_config_list, 
                            EH_resource_utilization, 
-                           lGetHost(hep, EH_name));
+                           lGetHost(hep, EH_name), is_master_task);
 }
 
 /****** sge_resource_quota_schedd/debit_job_from_rqs() **********************************
@@ -362,6 +367,7 @@ debit_job_from_rqs(lListElem *job, lList *granted, lList *rqs_list, lListElem* p
                    lList *centry_list, lList *acl_list, lList *hgrp_list) 
 {
    lListElem *gel = NULL;
+   bool master_task = true;
 
    DENTER(TOP_LAYER, "debit_job_from_rqs");
 
@@ -381,8 +387,9 @@ debit_job_from_rqs(lListElem *job, lList *granted, lList *rqs_list, lListElem* p
       }
 
       for_each (rqs, rqs_list) {
-         rqs_debit_consumable(rqs, job, gel, pe_name, centry_list, acl_list, hgrp_list, slots);
+         rqs_debit_consumable(rqs, job, gel, pe_name, centry_list, acl_list, hgrp_list, slots, master_task);
       }
+      master_task = false;
    }
 
    DRETURN(0);
@@ -391,6 +398,7 @@ debit_job_from_rqs(lListElem *job, lList *granted, lList *rqs_list, lListElem* p
 static int
 debit_job_from_ar(lListElem *job, lList *granted, lList *ar_list, lList *centry_list)
 {
+   bool master_task = true;
    lListElem *gel = NULL;
 
    DENTER(TOP_LAYER, "debit_job_from_ar");
@@ -401,20 +409,11 @@ debit_job_from_ar(lListElem *job, lList *granted, lList *ar_list, lList *centry_
       
       if ((ar = lGetElemUlong(ar_list, AR_id, lGetUlong(job, JB_ar))) != NULL) {
          lListElem *queue = lGetSubStr(ar, QU_full_name, lGetString(gel, JG_qname), AR_reserved_queues);
-         qinstance_debit_consumable(queue, job, centry_list, slots);
+         qinstance_debit_consumable(queue, job, centry_list, slots, master_task);
       }
+      master_task = false;
    }
 
    DRETURN(0);
    
 }
-
-#if 0
-int debit_ar_consumable(lListElem *jep, lListElem *ar, lList *centry_list, int slots)
-{
-   return rc_debit_consumable(jep, ar, centry_list, slots,
-                              AR_resource_list, 
-                              AR_resource_utilization,
-                              "advance_reservation");
-}
-#endif

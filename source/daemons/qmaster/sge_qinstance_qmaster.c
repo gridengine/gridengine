@@ -1196,30 +1196,42 @@ qinstance_reinit_consumable_actual_list(lListElem *this_elem,
 
       lSetList(this_elem, QU_resource_utilization, NULL);
       qinstance_set_conf_slots_used(this_elem);
-      qinstance_debit_consumable(this_elem, NULL, centry_list, 0);
+      qinstance_debit_consumable(this_elem, NULL, centry_list, 0, true);
 
       for_each(ep, job_list) {
          lList *ja_task_list = lGetList(ep, JB_ja_tasks);
          lListElem *ja_task = NULL;
-         int slots = 0;
 
          for_each(ja_task, ja_task_list) {
-            lListElem *gdil_ep = lGetSubStr(ja_task, JG_qname, name,
-                                            JAT_granted_destin_identifier_list);
+            lList *gdil = lGetList(ja_task, JAT_granted_destin_identifier_list);
+            lListElem *gdil_ep = lGetElemStr(gdil, JG_qname, name);
+
             if (gdil_ep != NULL) {
-               slots += lGetUlong(gdil_ep, JG_slots);
+               bool is_master_task = false;
+               int slots = lGetUlong(gdil_ep, JG_slots);
+
+               if (gdil_ep == lFirst(gdil)) {
+                  is_master_task = true;
+               }
+
+               if (slots > 0) {
+                  qinstance_debit_consumable(this_elem, ep, centry_list, slots, is_master_task);
+               }
             }
-         }
-         if (slots > 0) {
-            qinstance_debit_consumable(this_elem, ep, centry_list, slots);
          }
       }
       for_each(ep, ar_list) {
-         lListElem *gdil_ep = lGetSubStr(ep, JG_qname, name, AR_granted_slots);
+         lList *gdil = lGetList(ep, AR_granted_slots);
+         lListElem *gdil_ep = lGetElemStr(gdil, JG_qname, name);
 
 
          if (gdil_ep != NULL) {
+            bool is_master_task = false;
             lListElem *dummy_job = lCreateElem(JB_Type);
+
+            if (gdil_ep == lFirst(gdil)) {
+               is_master_task = true;
+            }
          
             lSetList(dummy_job, JB_hard_resource_list, lCopyList("", lGetList(ep, AR_resource_list)));
 
@@ -1227,7 +1239,7 @@ qinstance_reinit_consumable_actual_list(lListElem *this_elem,
                                    this_elem, centry_list, lGetUlong(gdil_ep, JG_slots),
                                    QU_consumable_config_list, QU_resource_utilization, name,
                                    lGetUlong(ep, AR_start_time), lGetUlong(ep, AR_duration),
-                                   QUEUE_TAG, false);
+                                   QUEUE_TAG, false, is_master_task);
             lFreeElem(&dummy_job);
          }
       }

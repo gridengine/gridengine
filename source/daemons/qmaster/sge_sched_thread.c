@@ -1140,8 +1140,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
             if (result == DISPATCH_OK) {
                result = DISPATCH_NOT_AT_TIME; /* this job got a reservation */
             }  
-         }
-         else {
+         } else {
             result = DISPATCH_NEVER_CAT;
          }  
       }
@@ -1221,7 +1220,6 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
     * REMOVE QUEUES THAT ARE NO LONGER USEFUL FOR FURTHER SCHEDULING
     *------------------------------------------------------------------*/
    if (result == DISPATCH_OK || is_computed_reservation) {
-      lListElem *queue;
       lList *disabled_queues = NULL;
       bool is_consumable_load_alarm = false;
 
@@ -1243,11 +1241,6 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
          disabled_queues = NULL;
       }
 
-
-      /* remove all taggs */
-      for_each(queue, *queue_list) {
-         lSetUlong(queue, QU_tagged4schedule, 0);
-      }
 
       is_consumable_load_alarm = sge_load_list_alarm(monitor_next_run, *load_list, host_list,
                                                      centry_list);

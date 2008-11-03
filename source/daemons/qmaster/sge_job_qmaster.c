@@ -1649,7 +1649,7 @@ static bool is_changes_consumables(lList **alpp, lList* new, lList* old)
    for_each(old_entry, old) { 
 
       /* ignore non-consumables */
-      if (!lGetBool(old_entry, CE_consumable)) {
+      if (!lGetUlong(old_entry, CE_consumable)) {
          continue;
       }   
       name = lGetString(old_entry, CE_name);
@@ -1668,7 +1668,7 @@ static bool is_changes_consumables(lList **alpp, lList* new, lList* old)
    for_each(new_entry, new) { 
 
       /* ignore non-consumables */
-      if (!lGetBool(new_entry, CE_consumable)) {
+      if (!lGetUlong(new_entry, CE_consumable)) {
          continue;
       }   
       name = lGetString(new_entry, CE_name);
@@ -1734,7 +1734,7 @@ int deny_soft_consumables(lList **alpp, lList *srl, const lList *master_centry_l
       }
 
       /* ignore non-consumables */
-      if (lGetBool(dcep, CE_consumable)) {
+      if (lGetUlong(dcep, CE_consumable)) {
          ERROR((SGE_EVENT, MSG_JOB_MOD_SOFTREQCONSUMABLE_S, name));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DRETURN(-1);

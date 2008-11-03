@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: complex.5,v $     Last Update: $Date: 2008/07/19 17:12:58 $     Revision: $Revision: 1.24 $
+.\" $RCSfile: complex.5,v $     Last Update: $Date: 2008/11/03 12:53:22 $     Revision: $Revision: 1.25 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH COMPLEX 5 "$Date: 2008/07/19 17:12:58 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH COMPLEX 5 "$Date: 2008/11/03 12:53:22 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 complex \- xxQS_NAMExx complexes configuration file format
@@ -315,11 +315,11 @@ and
 .SS "\fBconsumable\fP"
 The
 .B consumable
-parameter can be set to either 'yes' ('y' abbreviated) or 'no' 
-('n'). It can be set to 'yes' only for numeric attributes (INT, DOUBLE, MEMORY,
-TIME - see
+parameter can be set to either 'yes' ('y' abbreviated), 'no' 
+('n') or 'JOB' ('j'). It can be set to 'yes' and 'JOB' only for numeric attributes
+(INT, DOUBLE, MEMORY, TIME - see
 .B type
-above). If set to 'yes' the 
+above). If set to 'yes' or 'JOB' the 
 consumption of the corresponding resource can be managed by 
 xxQS_NAMExx internal bookkeeping. In this case xxQS_NAMExx accounts 
 for the consumption of this resource for all running jobs and ensures that jobs 
@@ -327,6 +327,12 @@ are only dispatched if the xxQS_NAMExx internal bookkeeping indicates
 enough available consumable resources. Consumables are an efficient means to 
 manage limited resources such a available memory, free space on a file 
 system, network bandwidth or floating software licenses.
+.sp 1
+A consumable defined by 'y' is a per slot consumables which means the limit is
+mulitplied by the number of slots being used by the job before being applied.
+In case of 'j' the consumable is a per job consuamble. This resource is debited
+as requested (without multiplication) from the allocated master queue. The 
+resource must not be availble for the slave task queues.
 .sp 1
 Consumables can be combined with default or user defined load parameters 
 (see

@@ -75,7 +75,7 @@ static int
 rqs_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type, 
                         lListElem *rule, dstring rue_name, lList *centry_list,
                         int slots, const char *obj_name, u_long32 start_time,
-                        u_long32 end_time);
+                        u_long32 end_time, bool is_master_task);
 
 static void add_calendar_to_schedule(lList *queue_list, u_long32 now);
 
@@ -609,6 +609,7 @@ int add_job_utilization(const sge_assignment_t *a, const char *type, bool for_jo
    DENTER(TOP_LAYER, "add_job_utilization");
 
    if (ar_id == 0) {
+      bool is_master_task = true;
       /* debit non-AR-job */
 
       dstring rue_name = DSTRING_INIT;
@@ -621,7 +622,7 @@ int add_job_utilization(const sge_assignment_t *a, const char *type, bool for_jo
       /* global */
       rc_add_job_utilization(a->job, a->ja_task_id, type, a->gep, a->centry_list, a->slots, 
             EH_consumable_config_list, EH_resource_utilization, SGE_GLOBAL_NAME, 
-              a->start, a->duration, GLOBAL_TAG, for_job_scheduling);  
+              a->start, a->duration, GLOBAL_TAG, for_job_scheduling, true);  
 
       for_each(gel, a->gdil) {
          int slots = lGetUlong(gel, JG_slots); 
@@ -637,7 +638,7 @@ int add_job_utilization(const sge_assignment_t *a, const char *type, bool for_jo
          if ((hep = host_list_locate(a->host_list, eh_name)) != NULL) {
             rc_add_job_utilization(a->job, a->ja_task_id, type, hep, a->centry_list, slots,
                      EH_consumable_config_list, EH_resource_utilization, eh_name, a->start, 
-                     a->duration, HOST_TAG, for_job_scheduling);
+                     a->duration, HOST_TAG, for_job_scheduling, is_master_task);
          }
 
          /* queues */
@@ -652,7 +653,7 @@ int add_job_utilization(const sge_assignment_t *a, const char *type, bool for_jo
              */
             rc_add_job_utilization(a->job, a->ja_task_id, type, qep, a->centry_list, slots,
                      QU_consumable_config_list, QU_resource_utilization, qname, a->start, 
-                     a->duration, QUEUE_TAG, for_job_scheduling);
+                     a->duration, QUEUE_TAG, for_job_scheduling, is_master_task);
          }
 
          /* resource quotas */
@@ -672,15 +673,17 @@ int add_job_utilization(const sge_assignment_t *a, const char *type, bool for_jo
 
                rqs_add_job_utilization(a->job, a->ja_task_id, type, rule, rue_name,
                                         a->centry_list, slots, lGetString(rqs, RQS_name),
-                                        a->start, a->duration);
+                                        a->start, a->duration, is_master_task);
             }
          }
 
          FREE(queue);
+         is_master_task = false;
       }
 
       sge_dstring_free(&rue_name);
    } else {
+      bool is_master_task = true;
       /* debit AR-job */
       for_each(gel, a->gdil) {
          lListElem *ar = NULL;
@@ -691,9 +694,10 @@ int add_job_utilization(const sge_assignment_t *a, const char *type, bool for_jo
             if ((qep = lGetSubStr(ar, QU_full_name, qname, AR_reserved_queues)) != NULL) {
                rc_add_job_utilization(a->job, a->ja_task_id, type, qep, a->centry_list, slots,
                      QU_consumable_config_list, QU_resource_utilization, qname, a->start, 
-                     a->duration, QUEUE_TAG, for_job_scheduling);
+                     a->duration, QUEUE_TAG, for_job_scheduling, is_master_task);
             }
          } 
+         is_master_task = false;
       }
    }
 
@@ -703,11 +707,9 @@ int add_job_utilization(const sge_assignment_t *a, const char *type, bool for_jo
 int rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type, 
    lListElem *ep, lList *centry_list, int slots, int config_nm, int actual_nm, 
    const char *obj_name, u_long32 start_time, u_long32 duration, u_long32 tag,
-   bool for_job_scheduling) 
+   bool for_job_scheduling, bool is_master_task) 
 {
    lListElem *cr, *cr_config, *dcep;
-   double dval;
-   const char *name;
    int mods = 0;
 
    DENTER(TOP_LAYER, "rc_add_job_utilization");
@@ -727,8 +729,10 @@ int rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
    }
 
    for_each(cr_config, lGetList(ep, config_nm)) {
-      name = lGetString(cr_config, CE_name);
-      dval = 0;
+      u_long32 consumable;
+      const char *name = lGetString(cr_config, CE_name);
+      double dval = 0.0;
+      int debit_slots = slots;
 
       /* search default request */  
       if (!(dcep = centry_list_locate(centry_list, name))) {
@@ -736,9 +740,23 @@ int rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
          DRETURN(-1);
       } 
 
-      if (!lGetBool(dcep, CE_consumable)) {
+      consumable = lGetUlong(dcep, CE_consumable);
+      if (consumable == CONSUMABLE_NO) {
          /* no error */
          continue;
+      }
+
+      if (consumable == CONSUMABLE_JOB) {
+         if (!is_master_task) {
+            /* no error, only master_task is debited */
+            continue;
+         }
+         /* it's a job consumable, we don't multiply with slots */
+         if (slots > 0) {
+            debit_slots = 1;
+         } else if (slots < 0) {
+            debit_slots = -1;
+         }
       }
 
       /* ensure attribute is in actual list */
@@ -747,16 +765,12 @@ int rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
          /* CE_double is implicitly set to zero */
       }
    
-      if (jep) {
-         bool tmp_ret = job_get_contribution(jep, NULL, name, &dval, dcep);
-
-         if (tmp_ret && dval != 0.0) {
-            /* update RUE_utilized resource diagram to reflect jobs utilization */
-            utilization_add(cr, start_time, duration, slots * dval,
-               lGetUlong(jep, JB_job_number), task_id, tag, obj_name, type, for_job_scheduling);
-            mods++;
-         }  
-      }
+      if (job_get_contribution(jep, NULL, name, &dval, dcep) && dval != 0.0) {
+         /* update RUE_utilized resource diagram to reflect jobs utilization */
+         utilization_add(cr, start_time, duration, debit_slots * dval,
+            lGetUlong(jep, JB_job_number), task_id, tag, obj_name, type, for_job_scheduling);
+         mods++;
+      }  
    }
 
    DRETURN(mods);
@@ -770,7 +784,8 @@ int rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
 *  SYNOPSIS
 *     static int rqs_add_job_utilization(lListElem *jep, u_long32 task_id, 
 *     const char *type, lListElem *rule, dstring rue_name, lList *centry_list, 
-*     int slots, const char *obj_name, u_long32 start_time, u_long32 end_time) 
+*     int slots, const char *obj_name, u_long32 start_time, u_long32 end_time,
+*     bool is_master_task) 
 *
 *  FUNCTION
 *     ??? 
@@ -786,6 +801,7 @@ int rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
 *     const char *obj_name - name of the object where to debit
 *     u_long32 start_time  - start time of utilization
 *     u_long32 end_time    - end time of utilization
+*     bool is_master_task  - is this the master task going to be debit
 *
 *  RESULT
 *     static int - amount of modified limits
@@ -800,7 +816,7 @@ int rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
 static int 
 rqs_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type, 
    lListElem *rule, dstring rue_name, lList *centry_list, int slots, const char *obj_name,
-   u_long32 start_time, u_long32 end_time)
+   u_long32 start_time, u_long32 end_time, bool is_master_task)
 {
    lList *limit_list;
    lListElem *limit;
@@ -813,10 +829,11 @@ rqs_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
       limit_list = lGetList(rule, RQR_limit);
 
       for_each(limit, limit_list) {
-         bool tmp_ret;
+         u_long32 consumable;
          lListElem *raw_centry;
          lListElem *rue_elem;
-         double dval;
+         double dval = 0.0;
+         int debit_slots = slots;
 
          centry_name = lGetString(limit, RQRL_name);
          
@@ -825,8 +842,22 @@ rqs_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
             continue;
          }
 
-         if (!lGetBool(raw_centry, CE_consumable)) {
+         consumable = lGetUlong(raw_centry, CE_consumable);
+         if (consumable == CONSUMABLE_NO) {
             continue;
+         }
+
+         if (consumable == CONSUMABLE_JOB) {
+            if (!is_master_task) {
+               /* no error, only master_task is debited */
+               continue;
+            }
+            /* it's a job consumable, we don't multiply with slots */
+            if (slots > 0) {
+               debit_slots = 1;
+            } else if (slots < 0) {
+               debit_slots = -1;
+            }
          }
 
          rue_elem = lGetSubStr(limit, RUE_name, sge_dstring_get_string(&rue_name), RQRL_usage);
@@ -835,10 +866,9 @@ rqs_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
             /* RUE_utilized_now is implicitly set to zero */
          }
 
-         tmp_ret = job_get_contribution(jep, NULL, centry_name, &dval, raw_centry);
-         if (tmp_ret && dval != 0.0) {
+         if (job_get_contribution(jep, NULL, centry_name, &dval, raw_centry) && dval != 0.0) {
             /* update RUE_utilized resource diagram to reflect jobs utilization */
-            utilization_add(rue_elem, start_time, end_time, slots * dval,
+            utilization_add(rue_elem, start_time, end_time, debit_slots * dval,
                lGetUlong(jep, JB_job_number), task_id, RQS_TAG, obj_name, type, true);
             mods++;
          }

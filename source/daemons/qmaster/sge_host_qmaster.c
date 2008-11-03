@@ -1534,26 +1534,41 @@ static int attr_mod_threshold(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem 
          lListElem *jep = NULL;
          lListElem *ar_ep = NULL;
          const char *host = lGetHost(tmp_elem, EH_name);
-         int slots;
          int global_host = !strcmp(SGE_GLOBAL_NAME, host);
          lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
 
          lSetList(tmp_elem, EH_resource_utilization, NULL);
-         debit_host_consumable(NULL, tmp_elem, master_centry_list, 0);
+         debit_host_consumable(NULL, tmp_elem, master_centry_list, 0, true);
          for_each (jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
             lListElem *jatep = NULL;
 
-            slots = 0;
             for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-               slots += nslots_granted(lGetList(jatep, JAT_granted_destin_identifier_list),
+               lList *gdil = lGetList(jatep, JAT_granted_destin_identifier_list);
+               int slots;
+               bool is_master_task = false;
+               const void *iterator = NULL;
+
+               if (global_host || (lFirst(gdil) == lGetElemHostFirst(gdil, JG_qhostname, host, &iterator))) {
+                  is_master_task = true;
+               }
+
+               slots = nslots_granted(lGetList(jatep, JAT_granted_destin_identifier_list),
                   global_host?NULL:host);
+            
+               if (slots > 0) {
+                  debit_host_consumable(jep, tmp_elem, master_centry_list, slots, is_master_task);
+               }
             }
-            if (slots)
-               debit_host_consumable(jep, tmp_elem, master_centry_list, slots);
          }
 
          for_each(ar_ep, *object_type_get_master_list(SGE_TYPE_AR)) {
-            lListElem *gdil_ep = lGetSubHost(ar_ep, JG_qhostname, host, AR_granted_slots);
+            lList *gdil = lGetList(ar_ep, AR_granted_slots);
+            lListElem *gdil_ep = lGetElemHost(gdil, JG_qhostname, host);
+            bool is_master_task = false;
+
+            if (gdil_ep == lFirst(gdil)) {
+               is_master_task = true;
+            }
 
             if (gdil_ep != NULL) {
                lListElem *dummy_job = lCreateElem(JB_Type);
@@ -1564,7 +1579,7 @@ static int attr_mod_threshold(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem 
                                       tmp_elem, master_centry_list, lGetUlong(gdil_ep, JG_slots),
                                       EH_consumable_config_list, EH_resource_utilization, host,
                                       lGetUlong(ar_ep, AR_start_time), lGetUlong(ar_ep, AR_duration),
-                                      HOST_TAG, false);
+                                      HOST_TAG, false, is_master_task);
                lFreeElem(&dummy_job);
             }
          }

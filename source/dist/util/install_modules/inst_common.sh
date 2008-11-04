@@ -866,7 +866,9 @@ CheckConfigFile()
    fi 
 
    if [ "$QMASTER" = "install" ]; then
-      if [ -d "$SGE_ROOT/$SGE_CELL" -a ! -z "$DB_SPOOLING_SERVER" -a "$DB_SPOOLING_SERVER" != "none" ]; then
+      # if we have a bdb server, the cell directory already exists - this is OK.
+      # if we have no bdb server, and the cell directory exists, stop the installation.
+      if [ -d "$SGE_ROOT/$SGE_CELL" -a \( -z "$DB_SPOOLING_SERVER" -o "$DB_SPOOLING_SERVER" = "none" \) ]; then
          $INFOTEXT -e "Your >CELL_NAME< directory %s already exist!" $SGE_ROOT/$SGE_CELL
          $INFOTEXT -e "The automatic installation stops, if the >SGE_CELL< directory already exists"
          $INFOTEXT -e "to ensure, that existing installations are not overwritten!"

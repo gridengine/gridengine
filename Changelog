@@ -30,8 +30,8 @@ DG-2008-10-30-0: Cleanup:     Additional JVM args for autoinstall set in
 
 CR-2008-10-23-1: Bugfix:      qmaster might be unresponsive for a time because 
                               of commlib timeout
-                 Bugster:     6754568
-                 Issue:       2747
+                 Bugster:     6754568, 6767234
+                 Issue:       2747, 2775
                  Review:      HP
                               o added new module test binaries
                                 test_cl_issue_2747_client

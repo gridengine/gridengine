@@ -24,8 +24,8 @@ MD-2008-10-30-0: Bugfix:      creation of local config during execd install brok
 CR-2008-10-30-0: Bugfix:      qmaster might be unresponsive for a time because 
                               of commlib timeout
                  Merged from: V62_BRANCH (CR-2008-10-23-1)
-                 Bugster:     6754568
-                 Issue:       2747
+                 Bugster:     6754568, 6767234
+                 Issue:       2747, 2775
                  Review:      HP
                               o added new module test binaries
                                 test_cl_issue_2747_client

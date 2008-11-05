@@ -1,3 +1,5 @@
+MD-2008-11-05-0: Enhancem:    checking in inst_sge and version.c  
+
 JG-2008-11-04-0: Bugfix:      auto install fails with spooling via BDB server
                  Bugster:     6767198
                  Issue:       2772

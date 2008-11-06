@@ -1069,9 +1069,9 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
             DPRINTF(("re-read actual qmaster file (prepare_enroll)\n"));
             cl_com_append_known_endpoint_from_name((char*)master, 
                                                    (char*)prognames[QMASTER],
-                                                   1 ,
+                                                   1,
                                                    sge_qmaster_port,
-                                                   CL_CM_AC_DISABLED ,
+                                                   CL_CM_AC_DISABLED,
                                                    CL_TRUE);
             handle = cl_com_create_handle(&cl_ret, 
                                           communication_framework, 
@@ -1264,6 +1264,7 @@ static int sge_gdi_ctx_class_is_alive(sge_gdi_ctx_class_t *thiz)
    const char* comp_name = prognames[QMASTER];
    const char* comp_host = thiz->get_master(thiz, false);
    int         comp_id   = 1;
+   int         comp_port = thiz->get_sge_qmaster_port(thiz);
  
    DENTER(TOP_LAYER, "sge_gdi_ctx_class_is_alive");
    
@@ -1272,6 +1273,13 @@ static int sge_gdi_ctx_class_is_alive(sge_gdi_ctx_class_t *thiz)
                 "handle not found %s:0", thiz->get_component_name(thiz));
       DRETURN(CL_RETVAL_PARAMS);
    }
+
+   /*
+    * update endpoint information of qmaster in commlib
+    * qmaster could have changed due to migration
+    */
+   cl_com_append_known_endpoint_from_name((char*)comp_host, (char*)comp_name, comp_id, 
+                                          comp_port, CL_CM_AC_DISABLED, CL_TRUE);
 
    DPRINTF(("to->comp_host, to->comp_name, to->comp_id: %s/%s/%d\n", comp_host?comp_host:"", comp_name?comp_name:"", comp_id));
    cl_ret = cl_commlib_get_endpoint_status(handle, (char*)comp_host, (char*)comp_name, comp_id, &status);

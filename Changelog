@@ -1,3 +1,8 @@
+JG-2008-11-06-0: Bugfix:      When a shadow master took over, the exec daemons
+                              do not connect to the new master.
+                              Introduced in 6.2u1 development.
+                 Review:      CR
+
 CR-2008-11-06-0: Cleanup:     Fixed compiler warnings on hp11 in 
                               cl_ssl_framework.c (cl_tcp_framework.c already
                               contains the changes).

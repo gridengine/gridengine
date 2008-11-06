@@ -1239,6 +1239,8 @@ StartQmaster()
    else
       $SGE_STARTUP_FILE -qmaster
    fi
+   # wait till qmaster.pid file is written
+   sleep 1
    CheckRunningDaemon sge_qmaster
    run=$?
    if [ $run -ne 0 ]; then

@@ -2592,7 +2592,7 @@ CheckRunningDaemon()
    case $daemon_name in
 
       sge_qmaster )
-       if [ -f $QMDIR/qmaster.pid ]; then
+       if [ -s $QMDIR/qmaster.pid ]; then
           daemon_pid=`cat $QMDIR/qmaster.pid`
           $SGE_UTILBIN/checkprog $daemon_pid $daemon_name > /dev/null
           return $?      
@@ -4061,3 +4061,25 @@ RemoteExecSpoolDirDelete()
       MakeLocalSpoolDir
    fi
 }
+
+DeleteQueueNumberAttribute()
+{
+   spooldir="$1"
+   tmpfile="/tmp/clusterqueue_delete$$"
+   ExecuteAsAdmin rm -f $tmpfile
+
+   # get all queue instance files 
+   queuesdir=`ls $spooldir/qinstances/`
+   
+   # delete the evidence of queue_number for each queue instance file
+   for dir in $queuesdir; do 
+      queueinstancelist=`ls $spooldir/qinstances/$dir` 
+      for file in $queueinstancelist; do 
+         # delete line beginning with "queue_number"
+         ExecuteAsAdmin sed "/^queue_number/d" $spooldir/qinstances/$dir/$file > $tmpfile
+         ExecuteAsAdmin mv $tmpfile $spooldir/qinstances/$dir/$file
+         ExecuteAsAdmin $CHMOD 644 $spooldir/qinstances/$dir/$file
+      done 
+   done
+}
+

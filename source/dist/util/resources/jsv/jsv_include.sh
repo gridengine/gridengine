@@ -394,8 +394,8 @@ jsv_sub_add_param()
          # to "true" 
          IFS="="
          for j in $i; do
+            IFS="$saved_ifs"
             if [ "$j" = "$sub_name" ]; then
-               IFS="$saved_ifs"
                found="true"
                if [ "$value" = "" ]; then
                   if [ "$new_param" = "" ]; then
@@ -420,7 +420,6 @@ jsv_sub_add_param()
             IFS="="
             break;
          done
-         IFS=","
          if [ "$found" = "false" ]; then
             if [ "$value" = "" ]; then
                if [ "$new_param" = "" ]; then  
@@ -436,6 +435,7 @@ jsv_sub_add_param()
                fi
             fi
          fi
+         IFS=","
       done
       IFS="$saved_ifs"
 

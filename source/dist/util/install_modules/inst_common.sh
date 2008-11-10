@@ -4066,7 +4066,7 @@ DeleteQueueNumberAttribute()
 {
    spooldir="$1"
    tmpfile="/tmp/clusterqueue_delete$$"
-   ExecuteAsAdmin rm -f $tmpfile
+   Execute rm -f $tmpfile
 
    # get all queue instance files 
    queuesdir=`ls $spooldir/qinstances/`
@@ -4077,6 +4077,7 @@ DeleteQueueNumberAttribute()
       for file in $queueinstancelist; do 
          # delete line beginning with "queue_number"
          ExecuteAsAdmin sed "/^queue_number/d" $spooldir/qinstances/$dir/$file > $tmpfile
+         Execute chown $ADMINUSER $tmpfile
          ExecuteAsAdmin mv $tmpfile $spooldir/qinstances/$dir/$file
          ExecuteAsAdmin $CHMOD 644 $spooldir/qinstances/$dir/$file
       done 

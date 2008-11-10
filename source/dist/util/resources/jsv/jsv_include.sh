@@ -255,10 +255,11 @@ jsv_sub_is_param() {
             fi
             IFS="="
          done
-         IFS=","
+	 IFS="$saved_ifs"
          if [ "$ret" = "true" ]; then
             break
          fi
+         IFS=","
       done
       IFS="$saved_ifs"
    fi
@@ -300,8 +301,7 @@ jsv_sub_del_param()
             fi
             IFS="="
          done
-         IFS=","
-
+         IFS="$saved_ifs"
          # append all entries to new_param
          # skip only the entry which should be deleted
          if [ "$found" != "true" ]; then
@@ -311,6 +311,7 @@ jsv_sub_del_param()
                new_param="${new_param},$i"
             fi
          fi
+         IFS=","
       done
       IFS="$saved_ifs"
 
@@ -357,11 +358,11 @@ jsv_sub_get_param()
             fi
             IFS="="
          done
-         IFS=","
-
+         IFS="$saved_ifs"
          if [ "$found" = "true" ]; then
             break;
          fi
+         IFS=","
       done
       IFS="$saved_ifs"
    fi
@@ -420,6 +421,7 @@ jsv_sub_add_param()
             IFS="="
             break;
          done
+         IFS="$saved_ifs"
          if [ "$found" = "false" ]; then
             if [ "$value" = "" ]; then
                if [ "$new_param" = "" ]; then  

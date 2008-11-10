@@ -352,7 +352,7 @@ SelectNewSpooling()
             $INFOTEXT -n "\t- Shutdown your BDB server (host: $db_server_host) if running (>>sgebdb stop<<).\n"
             $INFOTEXT -n "\t- Make a backup of your old spool directory (directory name: $db_server_spool_dir).\n"
             $INFOTEXT -n "\t- Delete the content, not the directory itself, of your old database spool directory (directory name: $db_server_spool_diri/*).\n"
-            $INFOTEXT -n "\t- Restart your BDB server (>>sgebdbd start<<).\n"
+            $INFOTEXT -n "\t- Restart your BDB server (>>sgebdb start<<).\n"
             $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
          fi
       else #Classic

@@ -343,7 +343,17 @@ SelectNewSpooling()
                Makedir "$SPOOLING_ARGS"
             fi
          else # BDB server
-            DoRemoteAction "$db_server_host" "$ADMINUSER" "if [ -d $db_server_spool_dir ]; then rm -rf $db_server_spool_dir/*; fi"
+            #Do the following: 
+            # - Shutdown BDB server if running
+            # - Delete database directory
+            # - Restart BDB server
+            #DoRemoteAction "$db_server_host" "$ADMINUSER" "if [ -d $db_server_spool_dir ]; then rm -rf $db_server_spool_dir/*; fi"
+            $INFOTEXT -n "Please login on your BDB server and perform the following steps:\n"
+            $INFOTEXT -n "\t- Shutdown your BDB server (host: $db_server_host) if running (>>sgebdb stop<<).\n"
+            $INFOTEXT -n "\t- Make a backup of your old spool directory (directory name: $db_server_spool_dir).\n"
+            $INFOTEXT -n "\t- Delete the content, not the directory itself, of your old database spool directory (directory name: $db_server_spool_diri/*).\n"
+            $INFOTEXT -n "\t- Restart your BDB server (>>sgebdbd start<<).\n"
+            $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
          fi
       else #Classic
          tmp_spool=`echo $SPOOLING_ARGS | awk -F";" '{print $1}' | awk '{print $2}'`

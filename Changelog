@@ -1,3 +1,9 @@
+DG-2008-11-10-0: Bugfix:      When upgrading from 6.1 to 6.2 with BDB RPC 
+                              spooling using same database directory it fails.
+                 Bugster:     6768967
+                 Issue:       2782
+                 Review:      JG
+
 DG-2008-11-06-0: Bugfix:      Fixed bugs regarding the update from 6.1 to 6.2:
                               - Updating from 6.1 to 6.2 is failing with 
                                 classic spooling when using the old spool 

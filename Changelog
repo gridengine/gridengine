@@ -1,3 +1,8 @@
+JG-2008-11-10-0: Bugfix:      fixed a qmaster deadlock on linux
+                              fixed minor memory leaks
+                 Merged from: V62_BRANCH (JG-2008-10-30-0)
+                 Review:      RD
+
 EB-2008-11-06-0: Enhancem.:   - added TCL implementation for JSV template
 										- parsing code for JSV output
                               - functionality to test parsing if JSV related

@@ -988,9 +988,7 @@ sge_c_gdi_trigger(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet,
             if (!host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, packet->host)) {
                ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, packet->host));
                answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
-               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-               DEXIT;
-               return;
+               DRETURN_VOID;
             }
 
             if (SGE_EXECHOST_LIST == target) {
@@ -1254,7 +1252,6 @@ trigger_scheduler_monitoring(sge_gdi_packet_class_t *packet, sge_gdi_task_class_
    DENTER(GDI_LAYER, "trigger_scheduler_monitoring");
 
    if (!manop_is_manager(packet->user)) {
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
       WARNING((SGE_EVENT, MSG_COM_NOSCHEDMONPERMS));
       answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_WARNING);
       DEXIT;
@@ -1400,9 +1397,7 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, mon
       if (!manop_is_manager(user)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_MUSTBEMANAGER_S, user));
          answer_list_add(alpp, SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-         DEXIT;
-         return 1;
+         DRETURN(1);
       }
       break;
 

@@ -246,12 +246,14 @@ jsv_sub_is_param() {
       for i in $list; do
          IFS="="
          for j in $i; do
+            IFS="$saved_ifs"
             if [ "$j" = "$sub_name" ]; then
                ret="true"
                break
             else
                break
             fi
+            IFS="="
          done
          IFS=","
          if [ "$ret" = "true" ]; then
@@ -289,12 +291,14 @@ jsv_sub_del_param()
          # to "true" 
          IFS="="
          for j in $i; do
+            IFS="$saved_ifs"
             if [ "$j" = "$sub_name" ]; then
                found="true"
                break
             else
                break
             fi
+            IFS="="
          done
          IFS=","
 
@@ -343,6 +347,7 @@ jsv_sub_get_param()
          # to "true" 
          IFS="="
          for j in $i; do
+            IFS="$saved_ifs"
             if [ "$found" = "true" ]; then
                echo "$j"
             else
@@ -350,6 +355,7 @@ jsv_sub_get_param()
                   found="true"
                fi
             fi
+            IFS="="
          done
          IFS=","
 
@@ -389,6 +395,7 @@ jsv_sub_add_param()
          IFS="="
          for j in $i; do
             if [ "$j" = "$sub_name" ]; then
+               IFS="$saved_ifs"
                found="true"
                if [ "$value" = "" ]; then
                   if [ "$new_param" = "" ]; then
@@ -410,6 +417,7 @@ jsv_sub_add_param()
                   new_param="${new_param},$i"
                fi
             fi
+            IFS="="
             break;
          done
          IFS=","

@@ -184,8 +184,8 @@ static bool sge_gdi_task_free(sge_gdi_task_class_t ** task);
 static bool sge_gdi_task_verify(sge_gdi_task_class_t * task,
                                 lList **answer_list);
 
-static sge_gdi_task_class_t *sge_gdi_task_create(sge_gdi_packet_class_t *
-                                                 packet, lList **answer_list,
+static sge_gdi_task_class_t *sge_gdi_task_create(sge_gdi_packet_class_t *packet, 
+                                                 lList **answer_list,
                                                  u_long32 target,
                                                  u_long32 command, lList **lp,
                                                  lList **a_list,

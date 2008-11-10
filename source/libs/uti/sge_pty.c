@@ -68,7 +68,7 @@ static struct termios prev_termios;
 static int            g_raw_mode = 0;
 int                   g_newpgrp = -1;
 
-/****** sge_pty/ptym_open() ****************************************************
+/****** uti/pty/ptym_open() ****************************************************
 *  NAME
 *     ptym_open() -- Opens a pty master device
 *
@@ -159,7 +159,7 @@ int ptym_open(char *pts_name)
 }
 #endif
 
-/****** sge_pty/ptys_open() ****************************************************
+/****** uti/pty/ptys_open() ****************************************************
 *  NAME
 *     ptys_open() -- Opens a pty slave device.
 *
@@ -239,7 +239,7 @@ int ptys_open(int fdm, char *pts_name)
 }
 #endif
 
-/****** sge_pty/fork_pty() *****************************************************
+/****** uti/pty/fork_pty() *****************************************************
 *  NAME
 *     fork_pty() -- Opens a pty, forks and redirects the std handles
 *
@@ -365,7 +365,7 @@ pid_t fork_pty(int *ptrfdm, int *fd_pipe_err, dstring *err_msg)
    }
 }
 
-/****** sge_pty/fork_no_pty() **************************************************
+/****** uti/pty/fork_no_pty() **************************************************
 *  NAME
 *     fork_no_pty() -- Opens pipes, forks and redirects the std handles
 *
@@ -465,7 +465,7 @@ pid_t fork_no_pty(int *fd_pipe_in, int *fd_pipe_out,
    return pid;
 }
 
-/****** sge_pty/terminal_enter_raw_mode() **************************************
+/****** uti/pty/terminal_enter_raw_mode() **************************************
 *  NAME
 *     terminal_enter_raw_mode() -- Sets terminal to raw mode 
 *
@@ -516,7 +516,7 @@ int terminal_enter_raw_mode(void)
    return ret;
 }
 
-/****** sge_pty/terminal_leave_raw_mode() **************************************
+/****** uti/pty/terminal_leave_raw_mode() **************************************
 *  NAME
 *     terminal_leave_raw_mode() -- restore previous terminal mode
 *

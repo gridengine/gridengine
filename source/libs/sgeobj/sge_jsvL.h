@@ -102,7 +102,10 @@ enum {
    JSV_restart,
    JSV_accept,
    JSV_done,
-   JSV_soft_shutdown
+   JSV_soft_shutdown,
+   JSV_test,
+   JSV_test_pos,
+   JSV_result
 };
 
 LISTDEF(JSV_Type)
@@ -127,6 +130,9 @@ LISTDEF(JSV_Type)
    SGE_BOOL(JSV_accept, CULL_DEFAULT) 
    SGE_BOOL(JSV_done, CULL_DEFAULT) 
    SGE_BOOL(JSV_soft_shutdown, CULL_DEFAULT) 
+   SGE_BOOL(JSV_test, CULL_DEFAULT)
+   SGE_ULONG(JSV_test_pos, CULL_DEFAULT)
+   SGE_STRING(JSV_result, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(JSVN)
@@ -151,6 +157,9 @@ NAMEDEF(JSVN)
    NAME("JSV_accept")
    NAME("JSV_done")
    NAME("JSV_soft_shutdown")
+   NAME("JSV_test")
+   NAME("JSV_test_pos")
+   NAME("JSV_result")
 NAMEEND
 
 /* *INDENT-ON* */ 

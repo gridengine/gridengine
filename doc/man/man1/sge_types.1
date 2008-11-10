@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2008/05/21 09:47:34 $     Revision: $Revision: 1.23 $
+.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2008/11/10 13:05:49 $     Revision: $Revision: 1.24 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2008/05/21 09:47:34 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2008/11/10 13:05:49 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .\"
 .SH NAME
 sge_types - xxQS_NAMExx type descriptions 
@@ -117,6 +117,30 @@ are the install time parameters default_domain and ignore_fqdn (see
 .M bootstrap 5 )
 which affect how xxQS_NAMExx deals with host names in general. 
 .fi
+.SS "\fBjsv_url\fP"
+The \fBjsv_url\fP has following format:
+.PP
+\fIjsv_url\fP := \fIjsv_client_url\fP | \fIjsv_server_url\fP
+.PP
+\fIjsv_server_url\fP := [ \fItype\fP '\fB:\fP' ] [ \fIuser\fP '\fB@\fP' ] \fIpath\fP
+.PP
+.PP
+\fIjsv_client_url\fP := [ \fItype\fP '\fB:\fP' ] \fIpath\fP
+.PP
+\fItype\fP := '\fBscript\fP'
+.PP
+In the moment only the \fItype\fP \fBscript\fP is allowed. This means
+that \fIpath\fP is either the path to a script or to a binary application
+which will be used to instanciate a JSV process. The \fItype\fP is optional till
+other \fItypes\fP are supported by xxQS_NAMExx. 
+.PP
+Specifying a \fIuser\fP is only allowed for server JSV's. Client JSV's 
+will automatically be started as submit user and server JSV's as admin 
+user if not other specified.
+.PP
+The \fIpath\fP has always to be the absolute path to a binary or application.
+.PP
+.\"
 .\"
 .SS "\fBmemory_specifier\fP"
 Memory specifiers are positive decimal, hexadecimal or octal

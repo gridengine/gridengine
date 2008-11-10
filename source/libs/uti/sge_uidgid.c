@@ -819,7 +819,7 @@ int _sge_gid2group(gid_t gid, gid_t *last_gid, char **groupnamep, int retries)
    return 0;
 } /* _sge_gid2group() */
 
-/****** sge_uidgid/get_pw_buffer_size() ****************************************
+/****** uti/uidgid/get_pw_buffer_size() ****************************************
 *  NAME
 *     get_pw_buffer_size() -- get the buffer size required for getpw*_r
 *
@@ -838,7 +838,7 @@ int _sge_gid2group(gid_t gid, gid_t *last_gid, char **groupnamep, int retries)
 *     MT-NOTE: get_pw_buffer_size() is MT safe 
 *
 *  SEE ALSO
-*     sge_uidgid/get_group_buffer_size()
+*     uti/uidgid/get_group_buffer_size()
 *******************************************************************************/
 int get_pw_buffer_size(void)
 {
@@ -857,7 +857,7 @@ int get_pw_buffer_size(void)
    return sz;
 }
 
-/****** sge_uidgid/get_group_buffer_size() ****************************************
+/****** uti/uidgid/get_group_buffer_size() ****************************************
 *  NAME
 *     get_group_buffer_size() -- get the buffer size required for getgr*_r
 *
@@ -876,7 +876,7 @@ int get_pw_buffer_size(void)
 *     MT-NOTE: get_group_buffer_size() is MT safe 
 *
 *  SEE ALSO
-*     sge_uidgid/get_pw_buffer_size()
+*     uti/uidgid/get_pw_buffer_size()
 *******************************************************************************/
 int get_group_buffer_size(void)
 {
@@ -1237,7 +1237,7 @@ int sge_add_group(gid_t add_grp_id, char *err_str)
    return 0;
 }  
 
-/****** sge_uidgid/sge_getpwnam_r() ********************************************
+/****** uti/uidgid/sge_getpwnam_r() ********************************************
 *  NAME
 *     sge_getpwnam_r() -- Return password file entry for a given user name. 
 *
@@ -1273,6 +1273,11 @@ struct passwd *sge_getpwnam_r(const char *name, struct passwd *pw,
 
    while (i-- && !res) {
       if (getpwnam_r(name, pw, buffer, bufsize, &res) != 0) {
+         FILE *f;
+
+         f = fopen("/tmp/getpwnam_r.log", "a+");
+         fprintf(f, "getpwnam_r: getpwnam_r() returned with %d and message %s\n", errno, strerror(errno));
+         fclose(f);
          res = NULL;
       }
    }
@@ -1286,7 +1291,7 @@ struct passwd *sge_getpwnam_r(const char *name, struct passwd *pw,
 } /* sge_getpwnam_r() */
 
 
-/****** sge_uidgid/sge_getgrgid_r() ********************************************
+/****** uti/uidgid/sge_getgrgid_r() ********************************************
 *  NAME
 *     sge_getgrgid_r() -- Return group informations for a given group ID.
 *
@@ -1341,7 +1346,7 @@ struct group *sge_getgrgid_r(gid_t gid, struct group *pg,
    return res;
 } /* sge_getgrgid_r() */
 
-/****** sge_uidgid/sge_is_user_superuser() *************************************
+/****** uti/uidgid/sge_is_user_superuser() *************************************
 *  NAME
 *     sge_is_user_superuser() -- check if provided user is the superuser
 *
@@ -1388,7 +1393,7 @@ bool sge_is_user_superuser(const char *name)
    return ret;
 }
 
-/****** libs/uti/uidgid_state_get_*() ************************************
+/****** uti/uidgid/uidgid_state_get_*() ************************************
 *  NAME
 *     uidgid_state_set_*() - read access to lib/uti/sge_uidgid.c global variables
 *
@@ -1420,7 +1425,7 @@ static const char *uidgid_state_get_last_groupname(void)
    return uidgid_state->last_groupname;
 }
 
-/****** libs/uti/uidgid_state_set_*() ************************************
+/****** uti/uidgid/uidgid_state_set_*() ************************************
 *  NAME
 *     uidgid_state_set_*() - write access to lib/uti/sge_uidgid.c global variables
 *

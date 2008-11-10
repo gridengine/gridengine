@@ -74,79 +74,6 @@ static pthread_mutex_t jsv_mutex = PTHREAD_MUTEX_INITIALIZER;
  */
 static lList *jsv_list = NULL;   /* JSV_Type */
 
-/* <jsi_url> := [ <type> ":" ] [ <user> "@" ] <path> */
-bool 
-jsv_url_parse(dstring *jsv_url, lList **answer_list, dstring *type, dstring *user, dstring *path, bool in_client)
-{
-   bool success = true;
-
-   DENTER(TOP_LAYER, "jsv_url_parse");
-   if (jsv_url != NULL) {
-      dstring tmp = DSTRING_INIT;
-      const char *t, *u, *p;
-
-      sge_dstring_split(jsv_url, ':', type, &tmp);
-      sge_dstring_split(&tmp, '@', user, path);
-      sge_dstring_strip_white_space_at_eol(type);
-      sge_dstring_strip_white_space_at_eol(user);
-      sge_dstring_strip_white_space_at_eol(path);
-      t = sge_dstring_get_string(type);
-      u = sge_dstring_get_string(user);
-      p = sge_dstring_get_string(path);
-
-      /*
-       * either the type is not specified (the type "script" is used)
-       * or "script" has to be specified. In future we might support "sharedlib" ...
-       */
-      if ((t == NULL) ||
-          (t != NULL && strcmp(t, "script") == 0)) {
-
-         if (in_client && u != NULL) {
-            answer_list_add_sprintf(answer_list, STATUS_EEXIST, ANSWER_QUALITY_ERROR, 
-                                    "JSV script URL does not allow user "SFQ" in clients", u);
-         } else {
-            if (p != NULL) {
-               if (sge_is_file(p) && sge_is_executable(p)) {
-                  if (u != NULL) {
-                     struct passwd *pw;
-                     struct passwd pw_struct;
-                     char *buffer;
-                     int size;
-
-                     size = get_pw_buffer_size();
-                     buffer = sge_malloc(size);
-                     pw = sge_getpwnam_r(u, &pw_struct, buffer, size);
-                     buffer = sge_free(buffer);
-                     if (pw == NULL) {
-                        answer_list_add_sprintf(answer_list, STATUS_EEXIST, ANSWER_QUALITY_ERROR,  
-                                                "User specified in JSV URL "SFQ" does not exist", u);
-                        success = false;
-                     }
-                  } else {
-                     /* we have a type and a path; user is optional */
-                     success = true;
-                  }
-               } else {
-                  answer_list_add_sprintf(answer_list, STATUS_EEXIST, ANSWER_QUALITY_ERROR,
-                                          "JSV script "SFQ" is either no file or not executable", p);
-                  success = false;
-               }
-
-            } else {
-               answer_list_add_sprintf(answer_list, STATUS_EEXIST, ANSWER_QUALITY_ERROR,
-                                       "the given JSV URL "SFQ" is invalid", sge_dstring_get_string(jsv_url));
-               success = false;
-            }
-         }
-      } else {
-         answer_list_add_sprintf(answer_list, STATUS_EEXIST, ANSWER_QUALITY_ERROR, 
-                                 "invalid type "SFQ" specified in jsv url", t);
-         success = false;
-      }
-   }
-   DRETURN(success);
-}
-
 static lListElem *
 jsv_create(const char *name, const char *context, lList **answer_list, const char *jsv_url,
            const char *type, const char *user, const char *scriptfile)
@@ -179,6 +106,7 @@ jsv_create(const char *name, const char *context, lList **answer_list, const cha
             lSetList(new_jsv, JSV_incomplete, lCreateList("", JSV_Type));
             lSetList(new_jsv, JSV_complete, lCreateList("", JSV_Type));
             lSetUlong(new_jsv, JSV_last_mod, st.st_mtime);
+            lSetBool(new_jsv, JSV_test, false);
 
             sge_mutex_lock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
 
@@ -251,7 +179,7 @@ jsv_start(lListElem *jsv, lList **answer_list) {
       FILE *fp_err = NULL;
       SGE_STRUCT_STAT st;
 
-      if (SGE_STAT(scriptfile, &st) == 0 && user != NULL) {
+      if (SGE_STAT(scriptfile, &st) == 0) {
          /* set the last modification time of the script */
          lSetUlong(jsv, JSV_last_mod, st.st_mtime);
 
@@ -350,15 +278,10 @@ jsv_send_data(lListElem *jsv, lList **answer_list, const char *buffer, size_t si
    bool ret = true;
 
    DENTER(TOP_LAYER, "jsv_send_data");
-
    if (jsv_is_send_ready(jsv, answer_list)) {
-#if 0
-      int lret = write(fileno((FILE *) lGetRef(jsv, JSV_in)), buffer, size); 
-#else
       int lret = fprintf(lGetRef(jsv, JSV_in), buffer);
-      fflush(lGetRef(jsv, JSV_in));
-#endif
 
+      fflush(lGetRef(jsv, JSV_in));
       if (lret != size) {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                                  "unable to send data to JSV script.");
@@ -369,11 +292,161 @@ jsv_send_data(lListElem *jsv, lList **answer_list, const char *buffer, size_t si
                               "not ready to send to JSV script.");
       ret = false;
    } 
-
    DRETURN(ret);
 }
 
-bool
+/****** sgeobj/jsv/jsv_url_parse() ************************************************
+*  NAME
+*     jsv_url_parse() -- parses a JSV URL 
+*
+*  SYNOPSIS
+*     bool 
+*     jsv_url_parse(dstring *jsv_url, lList **answer_list, dstring *type, 
+*                   dstring *user, dstring *path, bool in_client) 
+*
+*  FUNCTION
+*     This function parses the given 'jsv_url' and fills the dstring 'type', 
+*     'user' and 'path' with the parsed elements. If one of the elements was
+*     not specified with the JSV URL then the corresponding variable will 
+*     not be changed. 
+*
+*     A JSV URL has following format:
+*     
+*        jsi_url := client_jsv_url | server_jsv_url ;
+*        server_jsi_url := [ type ":" ] [ user "@" ] path ;
+*        client_jsi_url := [ type ":" ] path ;
+*
+*     Within client JSVs it is not allowed to specify a user. This function
+*     has to be used with value 'true' for the parameter 'in_client'. 
+*     If an error happens during parsing then this function will fill
+*     'answer_list' with a corresponding message and the function will
+*     return with value 'false' otherwiese 'true' will be returned.
+*
+*  INPUTS
+*     dstring *jsv_url    - dstring containing a JSV url 
+*     lList **answer_list - answer_list
+*     dstring *type       - "script" 
+*     dstring *user       - specified username or NULL 
+*     dstring *path       - absolute path to a script or binary 
+*     bool in_client      - true in commandline clients
+*                           false within qmaster 
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - error
+*
+*  NOTES
+*     MT-NOTE: jsv_url_parse() is MT safe 
+*******************************************************************************/
+bool jsv_url_parse(dstring *jsv_url, lList **answer_list, dstring *type, 
+                   dstring *user, dstring *path, bool in_client)
+{
+   bool success = true;
+
+   DENTER(TOP_LAYER, "jsv_url_parse");
+   if (jsv_url != NULL) {
+      dstring tmp = DSTRING_INIT;
+      const char *t, *u, *p;
+
+      /*
+       * string till the first ':' is the type. then the user name follows
+       * till the '@' character and after that we have the path name.
+       * strip also white space at the and of each token silently.
+       */ 
+      sge_dstring_split(jsv_url, ':', type, &tmp);
+      sge_dstring_split(&tmp, '@', user, path);
+      sge_dstring_strip_white_space_at_eol(type);
+      sge_dstring_strip_white_space_at_eol(user);
+      sge_dstring_strip_white_space_at_eol(path);
+      t = sge_dstring_get_string(type);
+      u = sge_dstring_get_string(user);
+      p = sge_dstring_get_string(path);
+
+      DPRINTF(("type = %s\n", t));
+      DPRINTF(("u = %s\n", u));
+      DPRINTF(("p = %s\n", p));
+
+      /*
+       * either the type is not specified (the type "script" is used)
+       * or "script" has to be specified. In future we might support 
+       * "sharedlib" or others 
+       */
+      if ((t == NULL) ||
+          (t != NULL && strcmp(t, "script") == -1)) {
+
+         if (in_client && u != NULL) {
+            answer_list_add_sprintf(answer_list, STATUS_EEXIST, ANSWER_QUALITY_ERROR, 
+                                    "JSV script URL does not allow user "SFQ" in clients", u);
+         } else {
+            if (p != NULL) {
+               if (sge_is_file(p) && sge_is_executable(p)) {
+                  if (u != NULL) {
+                     struct passwd *pw;
+                     struct passwd pw_struct;
+                     char *buffer;
+                     int size;
+
+                     size = get_pw_buffer_size();
+                     buffer = sge_malloc(size);
+                     pw = sge_getpwnam_r(u, &pw_struct, buffer, size);
+                     buffer = sge_free(buffer);
+                     if (pw == NULL) {
+                        answer_list_add_sprintf(answer_list, STATUS_EEXIST, ANSWER_QUALITY_ERROR,  
+                                                "User specified in JSV URL "SFQ" does not exist", u);
+                        success = false;
+                     }
+                  } else {
+                     /* we have only type and a path this is ok because user is optional */
+                     success = true;
+                  }
+               } else {
+                  answer_list_add_sprintf(answer_list, STATUS_EEXIST, ANSWER_QUALITY_ERROR,
+                                          "JSV script %s is either no file or not executable", p);
+                  success = false;
+               }
+            } else {
+               answer_list_add_sprintf(answer_list, STATUS_EEXIST, ANSWER_QUALITY_ERROR,
+                                       "the given JSV URL "SFQ" is invalid", 
+                                       sge_dstring_get_string(jsv_url));
+               success = false;
+            }
+         }
+      } else {
+         answer_list_add_sprintf(answer_list, STATUS_EEXIST, ANSWER_QUALITY_ERROR, 
+                                 "invalid type "SFQ" specified in jsv url", t);
+         success = false;
+      }
+   }
+   DRETURN(success);
+}
+
+/****** sgeobj/jsv/jsv_send_command() *********************************************
+*  NAME
+*     jsv_send_command() -- sends a command to a JSV script 
+*
+*  SYNOPSIS
+*     bool 
+*     jsv_send_command(lListElem *jsv, lList **answer_list, const char *message) 
+*
+*  FUNCTION
+*     Sends the 'message' to the 'jsv' script. If this fails then 
+*     'answer_list' will be filled.
+*
+*  INPUTS
+*     lListElem *jsv      - JSV element 
+*     lList **answer_list - answer list 
+*     const char *message - null terminated string 
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - failed
+*
+*  NOTES
+*     MT-NOTE: jsv_send_command() is MT safe 
+*******************************************************************************/
+bool 
 jsv_send_command(lListElem *jsv, lList **answer_list, const char *message) 
 {
    bool ret = true;
@@ -389,8 +462,47 @@ jsv_send_command(lListElem *jsv, lList **answer_list, const char *message)
    DRETURN(ret);
 }
 
-bool
-jsv_list_add(const char *name, const char *context, lList **answer_list, const char *jsv_url) 
+/****** sgeobj/jsv/jsv_list_add() *************************************************
+*  NAME
+*     jsv_list_add() -- adds a new JSV  
+*
+*  SYNOPSIS
+*     bool 
+*     jsv_list_add(const char *name, const char *context, 
+*                  lList **answer_list, const char *jsv_url) 
+*
+*  FUNCTION
+*     By calling this function a new JSV element will be registered internally.
+*     The JSV will be initialized with the values 'name", 'context', and
+*     'jsv_url'. The 'name' and 'context' will be used to identify the JSV.
+*     In command line clients the 'context' string JSV_CONTEXT_CLIENT should
+*     be passed to this function. Within qmaster the name of the thread
+*     which calls this function sould be used as 'context' string.
+*
+*     The JSV dtata structures will be initialized but the JSV is not started
+*     when this function returns. 
+*
+*     In case of any errors the 'answer_list' will be filled and the function
+*     will return with the value 'false' instead of 'true'.
+*
+*
+*  INPUTS
+*     const char *name    - JSV name (used for error messages) 
+*     const char *context - JSV context name (to identify this JSV)
+*     lList **answer_list - AN_Type answer list
+*     const char *jsv_url - JSV URL 
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - false 
+*
+*  NOTES
+*     MT-NOTE: jsv_list_add() is MT safe 
+*
+*******************************************************************************/
+bool 
+jsv_list_add(const char *name, const char *context, lList **answer_list, const char *jsv_url)
 {
    lListElem *new_jsv = NULL;
    dstring input = DSTRING_INIT;
@@ -423,7 +535,44 @@ jsv_list_add(const char *name, const char *context, lList **answer_list, const c
    DRETURN(ret);
 }
 
-bool
+/****** sgeobj/jsv/jsv_list_update() **********************************************
+*  NAME
+*     jsv_list_update() -- update configuration and state of a JSV 
+*
+*  SYNOPSIS
+*     bool 
+*     jsv_list_update(const char *name, const char *context, 
+*                     lList **answer_list, const char *jsv_url) 
+*
+*  FUNCTION
+*     A call to this function either updates the configuration and/or
+*     state of a existing JSV or it creates a new one. 'name' and
+*     'context' are used to identify if the JSV already exists. If
+*     it does not exist then it will be created. 
+*
+*     If the JSV exists then it is tested if the provided 'jsv_url'
+*     is different from the jsv_url stored in the JSV element. In
+*     that case the provided 'jsv_url' will be used as new
+*     configuration value. If the JSV process is already running
+*     then it will be stopped. The process will also be stopped
+*     if the script file which was used to create the JSV process
+*     has been changed.
+*
+*  INPUTS
+*     const char *name    - name of the JSV element 
+*     const char *context - context string which indentifies JSVs 
+*     lList **answer_list - AN_Type answer list 
+*     const char *jsv_url - JSV URL string 
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - error
+*
+*  NOTES
+*     MT-NOTE: jsv_list_update() is not MT safe 
+*******************************************************************************/
+bool 
 jsv_list_update(const char *name, const char *context,
                 lList **answer_list, const char *jsv_url) 
 {
@@ -451,8 +600,6 @@ jsv_list_update(const char *name, const char *context,
 
          sge_mutex_lock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
 
-         DTRACE;
-
          ret = true;
          jsv_next = lGetElemStrFirst(jsv_list, JSV_context, context, &iterator);
          while ((ret == true) && ((jsv = jsv_next) != NULL)) {
@@ -472,8 +619,7 @@ jsv_list_update(const char *name, const char *context,
             }
 
             /* 
-             * stop the process if the configuration changed 
-             * or if the file was modified 
+             * stop the process if the configuration changed or if the file was modified 
              */
             if (strcmp(old_jsv_url, jsv_url) != 0) {
                DTRACE;
@@ -545,8 +691,73 @@ jsv_list_update(const char *name, const char *context,
    DRETURN(ret);
 }
 
-bool
-jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job, lList **answer_list, bool hold_global_lock) 
+/****** sgeobj/jsv/jsv_do_verify() *********************************************
+*  NAME
+*     jsv_do_verify() -- verify a job using JSV's 
+*
+*  SYNOPSIS
+*     bool 
+*     jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, 
+*                   lListElem **job, lList **answer_list, bool holding_lock) 
+*
+*  FUNCTION
+*     This function verifies a job specification using one or multiple 
+*     JSVs. The 'context' string will be used to identify which JSV's
+*     should be executed. 
+*
+*     In commandline clients the string "JSV_CONTEXT_CLIENT" has to be 
+*     passed to this function. In qmaster context the name of the thread 
+*     which calls this function has to be provided.
+*
+*     If multiple JSVs should be executed then the job specification
+*     of 'job' will be passed to the first JSV. This specification might
+*     be changed during the verification process. The result will be 
+*     passed to the second JSV process which might also adjust job
+*     specification parameters. This will either continue until the
+*     last JSV returns successfully or until a JSV rejects the job.
+*
+*     'job' is input and output parameter. It might either be unchanged,
+*     partially changed or completely removed. Therfore 'job' might not be 
+*     element in a list when the function is called.
+*
+*     'holding_lock' notifies the function that the calling function
+*     is holding the global lock. In that case the global lock will be
+*     released during the verification process. After that the global
+*     lock will be aquired again.
+*
+*     This function will return 'true' if the verification process
+*     was successfull. In that case 'job' contains the job specification
+*     of the verified job with all adjustments which might have been 
+*     requested during the verification process of all JSV's.
+*
+*     If the job was rejected by one of the JSVs then the return value
+*     of this funtion will be 'false' and the answer list will eiter 
+*     contain the error reason which was provided by the rejecting JSV 
+*     script/binary or it will contain a uniform message that the
+*     job was rejected due to JSV verification. If the job is acceped
+*     or accepted with modifications the returned value will be 'true'.
+*
+*  INPUTS
+*     sge_gdi_ctx_class_t* ctx - context object 
+*     const char *context      - JSV_CONTEXT_CLIENT or thread name
+*     lListElem **job          - pointer or a job (JB_Type) 
+*     lList **answer_list      - answer_list for messages 
+*     bool holding_lock        - is the calling thread holding the
+*                                global lock 
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*                job is accepted or accepted with modifications
+*        false - error
+*                job is rejected
+*
+*  NOTES
+*     MT-NOTE: jsv_do_verify() is MT safe 
+*******************************************************************************/
+bool 
+jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job, 
+              lList **answer_list, bool holding_lock) 
 {
    bool ret = true;
    lListElem *jsv;
@@ -596,7 +807,7 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job, lL
             lSetBool(jsv, JSV_restart, false);
             lSetBool(jsv, JSV_accept, false);
             lSetBool(jsv, JSV_done, false);
-   
+  
             lSetRef(jsv, JSV_old_job, old_job);
             lSetRef(jsv, JSV_new_job, new_job);
 
@@ -604,11 +815,11 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job, lL
              * During the time the job is evaluated in JSV routines we can
              * release the global lock which was accquired outside. 
              */
-            if (!hold_global_lock) {
+            if (!holding_lock) {
                SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE)
             }
             ret &= jsv_do_communication(ctx, jsv, answer_list);
-            if (!hold_global_lock) {
+            if (!holding_lock) {
                SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE)
             }
 
@@ -644,4 +855,3 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job, lL
    }
    DRETURN(ret);
 }
-

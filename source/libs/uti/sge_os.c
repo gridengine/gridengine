@@ -74,7 +74,7 @@
 /* pipe for sge_daemonize_prepare() and sge_daemonize_finalize() */
 static int fd_pipe[2];
 
-/****** sge_os/sge_get_pids() *************************************************
+/****** uti/os/sge_get_pids() *************************************************
 *  NAME
 *     sge_get_pids() -- Return all "pids" of a running processes 
 *
@@ -159,7 +159,7 @@ int sge_get_pids(pid_t *pids, int max_pids, const char *name,
    DRETURN(num_of_pids);
 }
 
-/****** sge_os/sge_contains_pid() *********************************************
+/****** uti/os/sge_contains_pid() *********************************************
 *  NAME
 *     sge_contains_pid() -- Checks whether pid array contains pid 
 *
@@ -194,7 +194,7 @@ int sge_contains_pid(pid_t pid, pid_t *pids, int npids)
    return 0;
 }
 
-/****** sge_os/sge_checkprog() ************************************************
+/****** uti/os/sge_checkprog() ************************************************
 *  NAME
 *     sge_checkprog() -- Has "pid" of a running process the given "name" 
 *
@@ -282,7 +282,7 @@ int sge_checkprog(pid_t pid, const char *name, const char *pscommand)
    DRETURN(notfound);
 }
 
-/****** sge_os/sge_daemonize_prepare() *****************************************
+/****** uti/os/sge_daemonize_prepare() *****************************************
 *  NAME
 *     sge_daemonize_prepare() -- prepare daemonize of process
 *
@@ -318,7 +318,7 @@ int sge_checkprog(pid_t pid, const char *name, const char *pscommand)
 *     int - true on success, false on error
 *
 *  SEE ALSO
-*     sge_os/sge_daemonize_finalize()
+*     uti/os/sge_daemonize_finalize()
 *******************************************************************************/
 bool sge_daemonize_prepare(sge_gdi_ctx_class_t *ctx) {
    pid_t pid;
@@ -474,7 +474,7 @@ bool sge_daemonize_prepare(sge_gdi_ctx_class_t *ctx) {
    DRETURN(true);
 }
 
-/****** sge_os/sge_daemonize_finalize() ****************************************
+/****** uti/os/sge_daemonize_finalize() ****************************************
 *  NAME
 *     sge_daemonize_finalize() -- finalize daemonize process
 *
@@ -498,7 +498,7 @@ bool sge_daemonize_prepare(sge_gdi_ctx_class_t *ctx) {
 *     int - true on success
 *
 *  SEE ALSO
-*     sge_os/sge_daemonize_prepare()
+*     uti/os/sge_daemonize_prepare()
 *******************************************************************************/
 bool sge_daemonize_finalize(sge_gdi_ctx_class_t *ctx) 
 {
@@ -548,7 +548,7 @@ bool sge_daemonize_finalize(sge_gdi_ctx_class_t *ctx)
 
 
 
-/****** sge_os/sge_daemonize() ************************************************
+/****** uti/os/sge_daemonize() ************************************************
 *  NAME
 *     sge_daemonize() -- Daemonize the current application
 *
@@ -651,7 +651,7 @@ int sge_daemonize(fd_set *keep_open, sge_gdi_ctx_class_t *ctx)
    DRETURN(1);
 }     
 
-/****** sge_os/redirect_to_dev_null() ******************************************
+/****** uti/os/redirect_to_dev_null() ******************************************
 *  NAME
 *     redirect_to_dev_null() -- redirect a channel to /dev/null
 *
@@ -686,7 +686,7 @@ int redirect_to_dev_null(int target, int mode)
    return -1;
 }
 
-/****** sge_os/sge_occupy_first_three() ***************************************
+/****** uti/os/sge_occupy_first_three() ***************************************
 *  NAME
 *     sge_occupy_first_three() -- Open descriptor 0, 1, 2 to /dev/null
 *
@@ -709,8 +709,8 @@ int redirect_to_dev_null(int target, int mode)
 *     MT-NOTE: sge_occupy_first_three() is MT safe
 *
 *  SEE ALSO
-*     sge_os/redirect_to_dev_null()
-*     sge_os/sge_close_all_fds()
+*     uti/os/redirect_to_dev_null()
+*     uti/os/sge_close_all_fds()
 ******************************************************************************/
 int sge_occupy_first_three(void)
 {
@@ -731,7 +731,7 @@ int sge_occupy_first_three(void)
    DRETURN(ret);
 }  
 
-/****** sge_os/sge_close_all_fds() ********************************************
+/****** uti/os/sge_close_all_fds() ********************************************
 *  NAME
 *     sge_close_all_fds() -- close (all) file descriptors
 *
@@ -749,7 +749,7 @@ int sge_occupy_first_three(void)
 *     MT-NOTE: sge_close_all_fds() is MT safe
 *
 *  SEE ALSO
-*     sge_os/sge_occupy_first_three()
+*     uti/os/sge_occupy_first_three()
 ******************************************************************************/
 #ifdef __INSURE__
 extern int _insure_is_internal_fd(int);
@@ -808,7 +808,7 @@ void sge_close_all_fds(fd_set *keep_open)
    }
 }  
 
-/****** sge_os/sge_dup_fd_above_stderr() **************************************
+/****** uti/os/sge_dup_fd_above_stderr() **************************************
 *  NAME
 *     sge_dup_fd_above_stderr() -- Make sure a fd is >=3
 *

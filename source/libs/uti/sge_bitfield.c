@@ -190,7 +190,7 @@ sge_bitfield_init(bitfield *bf, unsigned int size)
    return ret;
 }
 
-/****** sge_bitfield/sge_bitfield_copy() ***************************************
+/****** uti/bitfield/sge_bitfield_copy() ***************************************
 *  NAME
 *     sge_bitfield_copy() -- copies a bitfield into another one. 
 *
@@ -239,7 +239,7 @@ sge_bitfield_copy(const bitfield *source, bitfield *target)
 }
 
 
-/****** sge_bitfield/sge_bitfield_bitwise_copy() *******************************
+/****** uti/bitfield/sge_bitfield_bitwise_copy() *******************************
 *  NAME
 *     sge_bitfield_copy() -- copies a bitfield into another one. 
 *
@@ -293,7 +293,7 @@ sge_bitfield_bitwise_copy(const bitfield *source, bitfield *target)
    return ret;
 }
 
-/****** sge_bitfield/sge_bitfield_changed() ************************************
+/****** uti/bitfield/sge_bitfield_changed() ************************************
 *  NAME
 *     sge_bitfield_changed() -- figures out if something was changed.
 *
@@ -334,7 +334,7 @@ sge_bitfield_changed(const bitfield *bf)
    return ret;
 }
 
-/****** sge_bitfield/sge_bitfield_reset() ***************************************
+/****** uti/bitfield/sge_bitfield_reset() ***************************************
 *  NAME
 *     sge_bitfield_reset() -- clears a bitfield
 *

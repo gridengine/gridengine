@@ -282,7 +282,7 @@ static pthread_mutex_t hostbyaddr_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
 
-/****** libs/uti/uti_state_get_localhost() *************************************
+/****** uti/hostname/uti_state_get_localhost() *************************************
 *  NAME
 *     uti_state_get_localhost() - read access to uti lib global variables
 *
@@ -298,7 +298,7 @@ host *uti_state_get_localhost(void)
 
 #define MAX_RESOLVER_BLOCKING 15
 
-/****** uti/host/sge_gethostbyname_retry() *************************************
+/****** uti/hostname/sge_gethostbyname_retry() *************************************
 *  NAME
 *     sge_gethostbyname_retry() -- gethostbyname() wrapper
 *
@@ -316,8 +316,6 @@ host *uti_state_get_localhost(void)
 *     cl_com_cached_gethostbyname() or cl_com_gethostname() from commlib.
 *
 *     This will return an sge aliased hostname.
-*
-*
 *
 *  NOTES
 *     MT-NOTE: see sge_gethostbyname()
@@ -830,7 +828,7 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_
 }
 
 
-/****** sge_hostname/sge_host_delete() *****************************************
+/****** uti/hostname/sge_host_delete() *****************************************
 *  NAME
 *     sge_host_delete() -- delete host in host list with all aliases 
 *
@@ -873,9 +871,7 @@ static void sge_host_delete(host *h)
    sge_host_delete(nextalias);
 }
 
-
-
-/****** sge_hostname/sge_host_search_pred_alias() ******************************
+/****** uti/hostname/sge_host_search_pred_alias() ******************************
 *  NAME
 *     sge_host_search_pred_alias() -- search host who's aliasptr points to host 
 *
@@ -909,23 +905,6 @@ static host *sge_host_search_pred_alias(host *h)
 }
 
 
-/****** sge_hostname/matches_name() ********************************************
-*  NAME
-*     matches_name() -- ??? 
-*
-*  SYNOPSIS
-*     static int matches_name(struct hostent *he, const char *name) 
-*
-*  INPUTS
-*     struct hostent *he - ???
-*     const char *name   - ??? 
-*
-*  RESULT
-*     static int - ???
-*
-*  NOTES
-*     MT-NOTE: matches_name() is MT safe
-*******************************************************************************/
 static int matches_name(struct hostent *he, const char *name)    
 {
    if (!name)
@@ -937,20 +916,6 @@ static int matches_name(struct hostent *he, const char *name)
    return 0;
 }
 
-/****** sge_hostname/matches_addr() ********************************************
-*  NAME
-*     matches_addr() -- ??? 
-*
-*  SYNOPSIS
-*     static int matches_addr(hostent *he, char *addr) 
-*
-*  INPUTS
-*     struct hostent *he - ??? 
-*     char *addr  - ??? 
-*
-*  NOTES
-*     MT-NOTE: matches_addr() is MT safe
-*******************************************************************************/
 static int matches_addr(struct hostent *he, char *addr) 
 {
    if (!addr) {

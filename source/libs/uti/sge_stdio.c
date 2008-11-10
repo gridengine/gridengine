@@ -65,20 +65,6 @@
  
 static void addenv(char *, char *);
  
-/****** sge_stdio/addenv() *****************************************************
-*  NAME
-*     addenv() -- putenv() wrapper
-*
-*  SYNOPSIS
-*     static void addenv(char *key, char *value) 
-*
-*  INPUTS
-*     char *key   - ??? 
-*     char *value - ??? 
-*
-*  NOTES
-*     MT-NOTE: addenv() is MT safe
-*******************************************************************************/
 static void addenv(char *key, char *value)
 {
    char *str;
@@ -633,51 +619,15 @@ FCLOSE_ERROR:
    return -1;
 }
 
-/****** sge_stdio/print_option_syntax() ****************************************
-*  NAME
-*     print_option_syntax() -- prints syntax of an option
-*
-*  SYNOPSIS
-*     void print_option_syntax(FILE *fp, const char *option, const char 
-*     *meaning) 
-*
-*  INPUTS
-*     FILE *fp            - ??? 
-*     const char *option  - ??? 
-*     const char *meaning - ??? 
-*
-*  NOTES
-*     MT-NOTE: print_option_syntax() is MT safe
-*******************************************************************************/
-void print_option_syntax(
-FILE *fp,
-const char *option,
-const char *meaning 
-) {
+void 
+print_option_syntax(FILE *fp, const char *option, const char *meaning) 
+{
    if (!meaning)
       fprintf(fp,"   %s\n", option);
    else
       fprintf(fp,"   %-40.40s %s\n",  option, meaning);
 }
 
-
-/****** sge_stdio/sge_check_stdout_stream() ************************************
-*  NAME
-*     sge_check_stdout_stream() -- ??? 
-*
-*  SYNOPSIS
-*     bool sge_check_stdout_stream(FILE *file, int fd) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     FILE *file - ??? 
-*     int fd     - ??? 
-*
-*  NOTES
-*     MT-NOTE: sge_check_stdout_stream() is MT safe
-*******************************************************************************/
 bool sge_check_stdout_stream(FILE *file, int fd)
 {
    if (fileno(file) != fd) {

@@ -70,9 +70,6 @@ lList *cull_parse_cmdline(u_long32 prog_number, char **arg_list, char **envp, lL
 int cull_parse_path_list(lList **lpp, char *path_str);
 int cull_parse_jid_hold_list(lList **lpp, char *str);
 
-int var_list_parse_from_string(lList **lpp, const char *variable_str,
-                               int check_environment);
-
 char *reroot_path(lListElem* pjob, const char *path, lList **alpp);
 
 #endif /* PARSE_QSUBL_H */

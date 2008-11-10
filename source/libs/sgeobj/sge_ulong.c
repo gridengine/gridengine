@@ -580,4 +580,21 @@ ulong_list_parse_from_string(lList **this_list, lList **answer_list,
    DRETURN(ret);
 }
 
+/* EB: TODO: JSV: add ADOC */
+bool
+ulong_parse_priority(lList **answer_list, int *valp, const char *priority_str) 
+{
+   bool ret = true;
+   char *s;
+
+   DENTER(TOP_LAYER, "ulong_parse_priority");
+   *valp = strtol(priority_str, &s, 10);
+   if ((char*)valp == s || *valp > 1024 || *valp < -1023) {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ULNG_INVALIDPRIO_I, (int) *valp));
+      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      ret = false;
+   }
+   DRETURN(ret);
+}
+
 

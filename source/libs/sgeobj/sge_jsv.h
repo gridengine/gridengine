@@ -32,16 +32,18 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/       
 
-#include "gdi/sge_gdi_ctx.h"
 
 #include "uti/sge_dstring.h"
+
+#include "gdi/sge_gdi_ctx.h"
 
 #include "sgeobj/sge_jsvL.h"
 
 #define JSV_CONTEXT_CLIENT "client"
 
 bool        
-jsv_url_parse(dstring *jsv_url_str, lList **answer_list, dstring *type, dstring *user, dstring *path, bool in_client);
+jsv_url_parse(dstring *jsv_url_str, lList **answer_list, dstring *type, 
+              dstring *user, dstring *path, bool in_client);
 
 bool
 jsv_list_remove(const char *name, const char *context);
@@ -50,9 +52,11 @@ bool
 jsv_send_command(lListElem *jsv, lList **answer_list, const char *message);
 
 bool
-jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job, lList **answer_list, bool hold_global_lock);
+jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job, 
+              lList **answer_list, bool hold_global_lock);
 
 bool
-jsv_list_add(const char *name, const char *context, lList **answer_list, const char *jsv_url);
+jsv_list_add(const char *name, const char *context, 
+             lList **answer_list, const char *jsv_url);
 
 #endif /* __SGE_JSV_H */    

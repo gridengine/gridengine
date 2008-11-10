@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/11/02 12:37:57 $     Revision: $Revision: 1.82 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/11/10 13:05:49 $     Revision: $Revision: 1.83 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2008/11/02 12:37:57 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2008/11/10 13:05:49 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -357,7 +357,7 @@ If this option is used with \fIqsub\fP or if a corresponding value is
 specified in \fIqmon\fP then a parameter named \fBa\fP and the value
 in the format CCYYMMDDhhmm.SS will be passed to the defined JSV instances
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-ac variable[=value],...\fP"
@@ -374,7 +374,7 @@ The outcome of the evaluation of all \fB\-ac\fP, \fB\-dc\fP, and \fB\-sc\fP
 options or corresponding values in \fIqmon\fP is passed to defined JSV 
 instances as parameter with the name \fB\aac\fP.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .SP 1
 .I QALTER
@@ -400,9 +400,9 @@ job however.
 .sp 1
 If this option or a corresponding value in \fIqmon\fP is specified then
 this value will be passed to defined JSV
-instances as parameter with the name \fB\aar\fP.
+instances as parameter with the name \fB\aar\fP. 
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-A account_string\fP"
@@ -424,7 +424,7 @@ If this option or a corresponding value in \fIqmon\fP is specified then
 this value will be passed to defined JSV
 instances as parameter with the name \fBA\fP.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-b y[es]|n[o]\fP"
@@ -454,7 +454,7 @@ The value specified with this option or the corresponding value specified in
 The name of the parameter will be \fBb\fP. The value will be \fBy\fP also
 when then long form \fByes\fP was specified during submission.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-c occasion_specifier\fP"
@@ -492,7 +492,7 @@ The <interval> will we available as parameter with the name \fBc_interval\fP,
 The character sequence specified will be available as parameter with the name
 \fBc_occasion\fP. 
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 
 .\"
 .IP "\fB\-ckpt ckpt_name\fP"
@@ -507,7 +507,7 @@ If this option or a corresponding value in \fIqmon\fP is specified then
 this value will be passed to defined JSV
 instances as parameter with the name \fBckpt\fP.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-clear\fP"
@@ -545,7 +545,7 @@ remove the path from jobs during the verification process by setting the
 value of this parameter to an empty string. As a result the resulting job
 behaves as if \fB-cwd\fP was not specified during job submission.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 
 .\"
@@ -586,7 +586,7 @@ The outcome of the evaluation of all \fB\-ac\fP, \fB\-dc\fP, and \fB\-sc\fP
 options or corresponding values in \fIqmon\fP is passed to defined JSV
 instances as parameter with the name \fB\aac\fP.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-display display_specifier\fP"
@@ -608,7 +608,7 @@ instances as parameter with the name \fBdisplay\fP. This value will also
 be available in the job environment which might optionally be passed to JSV
 scripts. The variable name will be \fBDISPLAY\fP.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-dl date_time\fP"
@@ -628,7 +628,7 @@ If this option or a corresponding value in \fIqmon\fP is specified then
 this value will be passed to defined JSV
 instances as parameter with the name \fBdl\fP. The format for the date_time value
 is CCYYMMDDhhmm.SS (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 
 .\"
@@ -691,7 +691,7 @@ If this option or a corresponding value in \fIqmon\fP is specified then
 this value will be passed to defined JSV
 instances as parameter with the name \fBe\fP.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-hard\fP"
@@ -719,7 +719,7 @@ the corresponding \fB\-q\fP and \fB\-l\fP resource requirements will be
 passed to defined JSV instances as parameter with the names \fBq_hard\fP and
 \fBl_hard\fP. Find for information in the sections describing \fB\-q\fP and \fB\-l\fP.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-h | \-h {u|s|o|n|U|O|S}...\fP"
@@ -786,7 +786,7 @@ If this option is specified with \fIqsub\fP or during the submission of a job in
 defined JSV instances indicating that the job will be in user hold afer the 
 submission finishes. 
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-help\fP"
@@ -820,7 +820,7 @@ If this option or a corresponding value in \fIqmon\fP is specified then
 this value will be passed to defined JSV
 instances as parameter with the name \fBhold_jid\fP.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-hold_jid_ad wc_job_list\fP"
@@ -855,7 +855,7 @@ If this option or a corresponding value in \fIqmon\fP is specified then
 this value will be passed to defined JSV
 instances as parameter with the name \fBhold_jid_ad\fP.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-i [[hostname]:]file,...\fP"
@@ -889,7 +889,7 @@ If this option or a corresponding value in \fIqmon\fP is specified then
 this value will be passed to defined JSV
 instances as parameter with the name \fBi\fP.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .\"
 .IP "\fB\-inherit\fP"
 Available only for \fIqrsh\fP and
@@ -941,7 +941,7 @@ embedded directive.
 .sp 1
 This parameter is not available in the JSV context.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 
 .\"
 .IP "\fB\-j y[es]|n[o]\fP"
@@ -964,7 +964,7 @@ The value specified with this option or the corresponding value specified in
 The name of the parameter will be \fBj\fP. The value will be \fBy\fP also
 when then long form \fByes\fP was specified during submission.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-js job_share\fP"
@@ -1005,7 +1005,28 @@ If this option or a corresponding value in \fIqmon\fP is specified then
 this value will be passed to defined JSV
 instances as parameter with the name \fBjs\fP.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
+.\"
+.IP "\fB\-jsv jsv_url\fP"
+Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP and \fIqlogin\fP only.
+.sp 1
+Defines a client JSV instance which will be executed to verify the
+job specification before the job is sent to qmaster. 
+.sp 1
+In contrast to other options this switch will not be overwritten 
+if it is also used in sge_request files. Instead all specified JSV
+instances will be executed to verify the job to be submitted.
+.sp 1
+The JSV instance which is directly passed with the commandline of a client
+is executed as first to verify the job specification. After that the JSV
+instance which might have been defined in various sge_request files will
+be triggered to check the job. Find more details in man page 
+.M jsv 1 
+and 
+.M sge_request 5 .
+.sp 1
+The syntax of the \fBjsv_url\fP is specified in 
+.M sge_types(1).
 .\"
 .IP "\fB\-l resource=value\fP,..."
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
@@ -1039,7 +1060,7 @@ passed to defined JSV instances as parameter with the names \fBl_hard\fP and
 then these expressions will be passed as they are. Also shortcut names
 will not be expanded.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-m b|e|a|s|n,...\fP"
@@ -1088,7 +1109,7 @@ If this option or a corresponding value in \fIqmon\fP is specified then
 this value will be passed to defined JSV
 instances as parameter with the name \fBM\fP.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-masterq wc_queue_list\fP"
@@ -1120,7 +1141,7 @@ If this option or a corresponding value in \fIqmon\fP is specified
 the this hard resource requirement will be passed to defined JSV 
 instances as parameter with the name \fBmasterq\fP. 
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-notify\fP"
@@ -1148,7 +1169,7 @@ allows changing this option even while the job executes.
 Only if this option is used the parameter named \fBnotify\fP with the value
 \fBy\fP will be passed to defined JSV instances. 
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-now y[es]|n[o]\fP"                        
@@ -1170,7 +1191,7 @@ The value specified with this option or the corresponding value specified in
 The name of the parameter will be \fBnow\fP. The value will be \fBy\fP also
 when then long form \fByes\fP was specified during submission.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-N name\fP"
@@ -1207,7 +1228,7 @@ The value specified with this option or the corresponding value specified in
 \fIqmon\fP will be passed to defined JSV instances as parameter with the name
 \fIN\fP. 
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-noshell\fP"
@@ -1266,7 +1287,7 @@ If this option or a corresponding value in \fIqmon\fP is specified then
 this value will be passed to defined JSV
 instances as parameter with the name \fBo\fP.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-ot override_tickets\fP"
@@ -1288,7 +1309,7 @@ If this option or a corresponding value in \fIqmon\fP is specified then
 this value will be passed to defined JSV
 instances as parameter with the name \fBot\fP.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-p priority\fP"
@@ -1308,7 +1329,7 @@ If this option or a corresponding value in \fIqmon\fP is specified and
 the priority is not 0 then this value will be passed to defined JSV
 instances as parameter with the name \fBp\fP.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-pe parallel_environment \fBn\fP[\fB-\fP[\fBm\fP]]|[\fB-\fP]\fBm\fP,...\fP"
@@ -1331,7 +1352,7 @@ and the values \fBpe_min\fP and \fBpe_max\fP represent the values n and m which
 have been provided with the \fB-pe\fP option. A missing specification of m
 will be expanded as value 9999999 in JSV scripts and it represents the value infinity.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-pty y[es]|n[o]\fP"
@@ -1351,7 +1372,7 @@ starts the job without a pty.
 .sp 1
 This parameter is not available in the JSV context.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .\"
 .IP "\fB\-q wc_queue_list\fP"
 Available for \fIqsub\fP, \fIqrsh\fP, \fIqsh\fP, \fIqlogin\fP and \fIqalter\fP.
@@ -1376,7 +1397,7 @@ passed to defined JSV instances as parameters with the names \fBq_hard\fP and
 then these expressions will be passed as they are. Also shortcut names
 will not be expanded.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-R y[es]|n[o]\fP"
@@ -1396,7 +1417,7 @@ The value specified with this option or the corresponding value specified in
 The name of the parameter will be \fBR\fP. The value will be \fBy\fP also
 when then long form \fByes\fP was specified during submission.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-r y[es]|n[o]\fP"
@@ -1424,7 +1445,7 @@ The value specified with this option or the corresponding value specified in
 The name of the parameter will be \fBr\fP. The value will be \fBy\fP also
 when then long form \fByes\fP was specified during submission.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-sc variable[=value],...\fP"
@@ -1448,7 +1469,7 @@ The outcome of the evaluation of all \fB\-ac\fP, \fB\-dc\fP, and \fB\-sc\fP
 options or corresponding values in \fIqmon\fP is passed to defined JSV
 instances as parameter with the name \fB\aac\fP.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-shell y[es]|n[o]\fP"
@@ -1482,7 +1503,7 @@ The value specified with this option or the corresponding value specified in
 The name of the parameter will be \fBshell\fP. The value will be \fBy\fP also
 when then long form \fByes\fP was specified during submission.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-soft\fP"
@@ -1510,7 +1531,7 @@ the corresponding \fB\-q\fP and \fB\-l\fP resource requirements will be
 passed to defined JSV instances as parameter with the names \fBq_soft\fP and
 \fBl_soft\fP. Find for information in the sections describing \fB\-q\fP and \fB\-l\fP.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-sync y[es]|n[o]\fP"
@@ -1560,7 +1581,7 @@ tasks will be canceled.
 Information that this switch was specified during submission is not
 available in the JSV context.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-S [[hostname]:]pathname,...\fP"
@@ -1592,7 +1613,7 @@ If this option or a corresponding value in \fIqmon\fP is specified then
 this value will be passed to defined JSV
 instances as parameter with the name \fBS\fP.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-t n[-m[:s]]\fP"
@@ -1659,7 +1680,7 @@ If this option or a corresponding value in \fIqmon\fP is specified then
 this value will be passed to defined JSV instances as parameters 
 with the name \fBt_min\fP, \fBt_max\fP and \fBt_step\fP
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .\" Empty .SH required below to fix man indentation bug
@@ -1678,7 +1699,7 @@ the job-id.
 Information that this switch was specified during submission is not
 available in the JSV context.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-u username,...\fP"
@@ -1711,7 +1732,7 @@ DISPLAY variable provided with \fB\-display\fP will be exported to the
 defined JSV instances only optionally when this is requested explicitly
 during the job submission verification.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-verbose\fP"
@@ -1754,7 +1775,7 @@ DISPLAY variable provided with \fB\-display\fP will be exported to the
 defined JSV instances only optionally when this is requested explicitly
 during the job submission verification.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fB\-w e\fP|\fBw\fP|\fBn\fP|\fBv\fP"
@@ -1821,7 +1842,7 @@ reads the script from standard input.
 The command will be available in defined JSV instances as parameter
 with the name \fBCMDNAME\fP
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fBcommand_args\fP"
@@ -1840,7 +1861,7 @@ as parameter with the name \fBCMDARGS\fP. Also the argument values
 can by accessed. Argument names have the format \fBCMDARG<number>\fP where
 \fB<number>\fP is a integer between 0 and \fBCMDARGS\fP - 1.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .IP "\fBxterm_args\fP"
@@ -1856,7 +1877,7 @@ Information concerning \fBxterm_args\fP will be available in JSV context as
 parameters with the name \fBCMDARGS\fP and \fBCMDARG<number>\fP. Find more 
 information above in section \fBcommand_args\fP. 
 (see \fB\-jsv\fP option below or find more information concerning JSV in
-.M jsv 5 )
+.M jsv 1 )
 .
 .\"
 .\"

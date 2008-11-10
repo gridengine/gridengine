@@ -437,7 +437,7 @@ bool sge_setup_paths(u_long32 progid, const char *sge_cell, dstring *error_dstri
    return true;
 } /* sge_setup_path() */
 
-/****** uit/path/path_once_init() *********************************************
+/****** uti/path/path_once_init() *********************************************
 *  NAME
 *     path_once_init() -- One-time SGE path state initialization.
 *

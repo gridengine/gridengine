@@ -433,7 +433,7 @@ const char* sge_dstring_sprintf_append(dstring *sb, const char *format, ...)
    if (sb != NULL) {
       if (format != NULL) {
          va_list ap;
-   
+
          va_start(ap, format);
          ret = sge_dstring_vsprintf_copy_append(sb, sge_dstring_append,
                                                 format, ap); 
@@ -691,7 +691,7 @@ void sge_dstring_init(dstring *sb, char *s, size_t size)
    }
 }
 
-/****** sge/dstring/sge_dstring_ulong_to_binstring() **************************
+/****** uti/dstring/sge_dstring_ulong_to_binstring() **************************
 *  NAME
 *     sge_dstring_ulong_to_binstring() -- convert ulong into bin-string 
 *

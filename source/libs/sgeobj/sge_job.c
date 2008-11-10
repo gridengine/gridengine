@@ -3576,6 +3576,43 @@ job_is_binary(const lListElem *job) {
    return (JOB_TYPE_IS_BINARY(lGetUlong(job, JB_type)) ? true : false);
 }
 
+/* TODO: EB: JSV: add doc */
+bool
+job_set_binary(lListElem *job, bool is_binary) {
+   bool ret = true;
+   u_long32 type = lGetUlong(job, JB_type);
+  
+   if (is_binary) { 
+      JOB_TYPE_SET_BINARY(type);
+   } else {
+      JOB_TYPE_CLEAR_BINARY(type);
+   }
+   lSetUlong(job, JB_type, type);
+   return ret;
+}
+
+/* TODO: EB: JSV: add doc */
+bool 
+job_is_no_shell(const lListElem *job) {
+   return (JOB_TYPE_IS_NO_SHELL(lGetUlong(job, JB_type)) ? true : false);
+}
+
+/* TODO: EB: JSV: add doc */
+bool
+job_set_no_shell(lListElem *job, bool is_binary) {
+   bool ret = true;
+   u_long32 type = lGetUlong(job, JB_type);
+  
+   if (is_binary) { 
+      JOB_TYPE_SET_NO_SHELL(type);
+   } else {
+      JOB_TYPE_CLEAR_NO_SHELL(type);
+   }
+   lSetUlong(job, JB_type, type);
+   return ret;
+}
+
+/* TODO: EB: JSV: add doc */
 bool
 job_set_owner_and_group(lListElem *job, u_long32 uid, u_long32 gid,
                         const char *user, const char *group) {

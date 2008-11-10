@@ -102,6 +102,9 @@
 #define JOB_TYPE_SET_BINARY(jb_now) \
    jb_now = jb_now | JOB_TYPE_BINARY
 
+#define JOB_TYPE_CLEAR_BINARY(jb_now) \
+   jb_now = jb_now & ~JOB_TYPE_BINARY
+
 #define JOB_TYPE_SET_ARRAY(jb_now) \
    jb_now = jb_now | JOB_TYPE_ARRAY
 
@@ -113,6 +116,9 @@
 
 #define JOB_TYPE_SET_NO_SHELL(jb_now) \
    jb_now =  jb_now | JOB_TYPE_NO_SHELL
+
+#define JOB_TYPE_CLEAR_NO_SHELL(jb_now) \
+   jb_now =  jb_now & ~JOB_TYPE_NO_SHELL
 
 #define JOB_TYPE_UNSET_BINARY(jb_now) \
    jb_now = jb_now & ~JOB_TYPE_BINARY
@@ -307,6 +313,15 @@ bool job_get_wallclock_limit(u_long32 *limit, const lListElem *jep);
 
 bool
 job_is_binary(const lListElem *job);
+
+bool
+job_set_binary(lListElem *job, bool is_binary);
+
+bool
+job_is_no_shell(const lListElem *job);
+
+bool
+job_set_no_shell(lListElem *job, bool is_no_shell);
 
 bool
 job_set_owner_and_group(lListElem *job, u_long32 uid, u_long32 gid,

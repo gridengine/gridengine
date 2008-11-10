@@ -84,7 +84,7 @@ const char *sge_basename(const char *name, int delim)
    if (name[0] == '\0') {
       DRETURN(NULL);
    }
-
+   
    cp = strrchr(name, delim);
    if (!cp) {
       DRETURN(name); 
@@ -99,7 +99,7 @@ const char *sge_basename(const char *name, int delim)
    }
 }
 
-/****** sge_string/sge_jobname() ***********************************************
+/****** uti/string/sge_jobname() ***********************************************
 *  NAME
 *     sge_jobname() -- get jobname of command line string 
 *
@@ -702,7 +702,7 @@ int sge_strnullcmp(const char *a, const char *b)
    return strcmp(a, b);
 }
 
-/****** sge_string/sge_patternnullcmp() ****************************************
+/****** uti/string/sge_patternnullcmp() ****************************************
 *  NAME
 *     sge_patternnullcmp() -- like fnmatch 
 *
@@ -723,7 +723,6 @@ int sge_strnullcmp(const char *a, const char *b)
 *         0 - strings are the same or both NULL 
 *        -1 - a < b or a is NULL
 *         1 - a > b or b is NULL
-*
 *
 *  NOTES
 *   MT-NOTE: fnmatch uses static variables, not MT safe
@@ -780,26 +779,26 @@ int sge_strnullcasecmp(const char *a, const char *b)
 }
 
 /****** uti/string/sge_is_pattern() *******************************************
- *  NAME
- *     sge_is_pattern() -- Test if string contains  wildcard pattern
- *
- *  SYNOPSIS
- *     int sge_is_pattern(const char *s)
- *
- *  FUNCTION
- *     Check whether string 's' contains a wildcard pattern.
- *
- *  INPUTS
- *     const char *s - string
- *
- *  RESULT
- *     int - result
- *         0 - no wildcard pattern
- *         1 - it is a wildcard pattern
- *
- *  NOTES
- *     MT-NOTE: sge_is_pattern() is MT safe
- ******************************************************************************/
+*  NAME
+*     sge_is_pattern() -- Test if string contains  wildcard pattern
+*
+*  SYNOPSIS
+*     int sge_is_pattern(const char *s)
+*
+*  FUNCTION
+*     Check whether string 's' contains a wildcard pattern.
+*
+*  INPUTS
+*     const char *s - string
+*
+*  RESULT
+*     int - result
+*         0 - no wildcard pattern
+*         1 - it is a wildcard pattern
+*
+*  NOTES
+*     MT-NOTE: sge_is_pattern() is MT safe
+******************************************************************************/
 bool sge_is_pattern(const char *s) 
 {
    char c;
@@ -816,26 +815,26 @@ bool sge_is_pattern(const char *s)
 }
 
 /****** uti/string/sge_is_expression() *******************************************
- *  NAME
- *     sge_is_expression() -- Test if string contains expressions & wildcard pattern
- *
- *  SYNOPSIS
- *     int sge_is_expression(const char *s)
- *
- *  FUNCTION
- *     Check whether string 's' contains a expressions & a wildcard pattern.
- *
- *  INPUTS
- *     const char *s - string
- *
- *  RESULT
- *     int - result
- *         0 - no wildcard pattern
- *         1 - it is a wildcard pattern
- *
- *  NOTES
- *     MT-NOTE: sge_is_expression() is MT safe
- ******************************************************************************/
+*  NAME
+*     sge_is_expression() -- Test if string contains expressions & wildcard pattern
+*
+*  SYNOPSIS
+*     int sge_is_expression(const char *s)
+*
+*  FUNCTION
+*     Check whether string 's' contains a expressions & a wildcard pattern.
+*
+*  INPUTS
+*     const char *s - string
+*
+*  RESULT
+*     int - result
+*         0 - no wildcard pattern
+*         1 - it is a wildcard pattern
+*
+*  NOTES
+*     MT-NOTE: sge_is_expression() is MT safe
+******************************************************************************/
 bool sge_is_expression(const char *s) 
 {
    char c;

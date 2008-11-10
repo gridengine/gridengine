@@ -129,7 +129,7 @@ jsv_on_verify()
          jsv_sub_del_param l_hard h_data
          do_correct="true"
          if [ "$context" = "client" ]; then
-            jsv_log_info "h_vmem as hard resource requirement has been deleted"
+            jsv_log_info "h_data as hard resource requirement has been deleted"
          fi 
       fi
    fi

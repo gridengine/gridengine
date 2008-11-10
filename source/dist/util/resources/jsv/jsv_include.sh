@@ -89,20 +89,6 @@ undef="variable_is_undefined"
 quit="false"
 saved_ifs="$IFS"
 
-jsv_init_missing_params() 
-{
-   # if -b was not specified then initialize it with default values
-   # qsub jobs are not binary jobs per default whereas
-   # qrsh jobs are binary jobs
-   if [ "${jsv_param_b:-"$undef"}" = "$undef" ]; then
-      if [ "$jsv_param_CLIENT" = "qsub" ]; then
-         jsv_param_b="n"
-      elif [ "$jsv_param_CLIENT" = "qrsh" ]; then
-         jsv_param_b="y"
-      fi
-   fi
-}
-
 jsv_clear_params()
 {
    for i in $jsv_all_params; do
@@ -162,6 +148,21 @@ jsv_show_envs()
       unset command
       unset isdef
    done
+}
+
+jsv_is_env() 
+{
+   name="jsv_env_$1"
+   command=`eval "echo \$\{$name\:\-$undef\}"`
+   isdef=`eval "echo $command"`
+   if [ "$isdef" != "$undef" ]; then
+      echo true 
+   else
+      echo false
+   fi
+   unset name
+   unset command
+   unset isdef
 }
 
 jsv_get_env() 

@@ -75,4 +75,7 @@ int var_list_add_as_set(lList *varl, lList *vars);
 
 bool var_list_verify(const lList *lp, lList **answer_list);
 
+int var_list_parse_from_string(lList **lpp, const char *variable_str,
+                               int check_environment);
+
 #endif /* __SGE_VAR_H */

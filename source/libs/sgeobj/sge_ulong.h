@@ -69,4 +69,7 @@ bool
 ulong_list_parse_from_string(lList **this_list, lList **answer_list,
                              const char *string, const char *delimitor);
 
+bool
+ulong_parse_priority(lList **alpp, int *valp, const char *priority_str);
+
 #endif /* __SGE_ULONG_H */

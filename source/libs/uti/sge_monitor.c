@@ -111,7 +111,7 @@ static void ext_sch_output(dstring *message, void *monitoring_extension, double 
  ************************************************/
 
 
-/****** sge_monitor/sge_monitor_free() *****************************************
+/****** uti/monitor/sge_monitor_free() *****************************************
 *  NAME
 *     sge_monitor_free() -- frees the monitoring data structure
 *
@@ -172,7 +172,7 @@ void sge_monitor_free(monitoring_t *monitor)
    DEXIT;
 }
 
-/****** sge_monitor/sge_monitor_init() *****************************************
+/****** uti/monitor/sge_monitor_init() *****************************************
 *  NAME
 *     sge_monitor_init() -- init the monitoring structure
 *
@@ -353,7 +353,7 @@ sge_monitor_init(monitoring_t *monitor, const char *thread_name, extension_t ext
 }
 
 
-/****** sge_monitor/sge_monitor_status() ***************************************
+/****** uti/monitor/sge_monitor_status() ***************************************
 *  NAME
 *     sge_monitor_status() -- generates the status for qping / commlib
 *
@@ -491,7 +491,7 @@ u_long32 sge_monitor_status(char **info_message, u_long32 monitor_time)
 }
 
 
-/****** sge_monitor/sge_set_last_wait_time() ***********************************
+/****** uti/monitor/sge_set_last_wait_time() ***********************************
 *  NAME
 *     sge_set_last_wait_time() -- updates the last wait time (health monitoring)
 *
@@ -525,7 +525,7 @@ void sge_set_last_wait_time(monitoring_t *monitor, struct timeval wait_time)
 }
 
 
-/****** sge_monitor/sge_monitor_output() ***************************************
+/****** uti/monitor/sge_monitor_output() ***************************************
 *  NAME
 *     sge_monitor_output() -- outputs the result into the message file
 *
@@ -604,7 +604,7 @@ void sge_monitor_output(monitoring_t *monitor)
 }
 
 
-/****** sge_monitor/sge_monitor_reset() ****************************************
+/****** uti/monitor/sge_monitor_reset() ****************************************
 *  NAME
 *     sge_monitor_reset() --  resets the monitoring data
 *
@@ -646,7 +646,7 @@ void sge_monitor_reset(monitoring_t *monitor)
  * implementation section for extensions
  ****************************************/
 
-/****** sge_monitor/ext_sch_output() *******************************************
+/****** uti/monitor/ext_sch_output() *******************************************
 *  NAME
 *     ext_sch_output() -- generates a string from the scheduler extension
 *
@@ -672,7 +672,7 @@ static void ext_sch_output(dstring *message, void *monitoring_extension, double 
    sge_dstring_sprintf_append(message, "");
 }
 
-/****** sge_monitor/ext_gdi_output() *******************************************
+/****** uti/monitor/ext_gdi_output() *******************************************
 *  NAME
 *     ext_gdi_output() -- generates a string from the GDI extension
 *
@@ -707,7 +707,7 @@ static void ext_gdi_output(dstring *message, void *monitoring_extension, double 
             sge_u32c(gdi_ext->queue_length));
 }
 
-/****** sge_monitor/ext_lis_output() *******************************************
+/****** uti/monitor/ext_lis_output() *******************************************
 *  NAME
 *     ext_lis_output() -- generates a string from the listener extension 
 *
@@ -740,7 +740,7 @@ static void ext_lis_output(dstring *message, void *monitoring_extension, double 
 }
 
 
-/****** sge_monitor/ext_edt_output() *******************************************
+/****** uti/monitor/ext_edt_output() *******************************************
 *  NAME
 *     ext_edt_output() -- generates a string from the GDI extension
 *
@@ -777,7 +777,7 @@ static void ext_edt_output(dstring *message, void *monitoring_extension, double 
             edt_ext->skip_event_count / time);
 }
 
-/****** sge_monitor/ext_tet_output() *******************************************
+/****** uti/monitor/ext_tet_output() *******************************************
 *  NAME
 *     ext_tet_output() -- generates a string from the GDI extension
 *

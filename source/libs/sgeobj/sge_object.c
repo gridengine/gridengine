@@ -2834,32 +2834,32 @@ int object_verify_name(const lListElem *object, lList **answer_list, int name,
 
 
 /****** sge_object/object_verify_pe_range() **********************************
- *  NAME
- *     object_verify_pe_range() -- Verify validness of a jobs PE range request
- *
- *  SYNOPSIS
- *     int object_verify_pe_range(lList **alpp, const char *pe_name,
- *     lList *pe_range)
- *
- *  FUNCTION
- *     Verifies a jobs PE range is valid. Currently the following is done
- *     - make PE range list normalized and ascending
- *     - ensure PE range min/max not 0
- *     - in case multiple PEs match the PE request in GEEE ensure
- *       the urgency slots setting is non-ambiguous
- *
- *  INPUTS
- *     lList **alpp        - Returns answer list with error context.
- *     const char *pe_name - PE request
- *     lList *pe_range     - PE range to be verified
- *     const char *object_descr - object description for user messages
- *
- *  RESULT
- *     static int - STATUS_OK on success
- *
- *  NOTES
- *
- *******************************************************************************/
+*  NAME
+*     object_verify_pe_range() -- Verify validness of a jobs PE range request
+*
+*  SYNOPSIS
+*     int object_verify_pe_range(lList **alpp, const char *pe_name,
+*     lList *pe_range)
+*
+*  FUNCTION
+*     Verifies a jobs PE range is valid. Currently the following is done
+*     - make PE range list normalized and ascending
+*     - ensure PE range min/max not 0
+*     - in case multiple PEs match the PE request in GEEE ensure
+*       the urgency slots setting is non-ambiguous
+*
+*  INPUTS
+*     lList **alpp        - Returns answer list with error context.
+*     const char *pe_name - PE request
+*     lList *pe_range     - PE range to be verified
+*     const char *object_descr - object description for user messages
+*
+*  RESULT
+*     static int - STATUS_OK on success
+*
+*  NOTES
+*
+*******************************************************************************/
 int object_verify_pe_range(lList **alpp, const char *pe_name, lList *pe_range,
                                   const char *object_descr)
 {
@@ -2906,28 +2906,28 @@ int object_verify_pe_range(lList **alpp, const char *pe_name, lList *pe_range,
 }
 
 /****** sge_objectcompress_ressources() **********************************
- *  NAME
- *     compress_ressources() --  remove multiple requests for one resource
- *
- *  SYNOPSIS
- *     int compress_ressources(lList **alpp, lList *rl, const char *object_descr )
- *
- *  FUNCTION
- *     remove multiple requests for one resource
- *     this can't be done fully in clients without having complex definitions
- *     -l arch=linux -l a=sun4
- *
- *  INPUTS
- *     lList **alpp        - Returns answer list with error context.
- *     lList *rl           - object description for user messages
- *     const char *object_descr - object description 
- *
- *  RESULT
- *     static int - 0 on success
- *
- *  NOTES
- *
- *******************************************************************************/
+*  NAME
+*     compress_ressources() --  remove multiple requests for one resource
+*
+*  SYNOPSIS
+*     int compress_ressources(lList **alpp, lList *rl, const char *object_descr )
+*
+*  FUNCTION
+*     remove multiple requests for one resource
+*     this can't be done fully in clients without having complex definitions
+*     -l arch=linux -l a=sun4
+*
+*  INPUTS
+*     lList **alpp        - Returns answer list with error context.
+*     lList *rl           - object description for user messages
+*     const char *object_descr - object description 
+*
+*  RESULT
+*     static int - 0 on success
+*
+*  NOTES
+*
+*******************************************************************************/
 int compress_ressources(lList **alpp, lList *rl, const char *object_descr) {
    lListElem *ep, *prev, *rm_ep;
    const char *attr_name;

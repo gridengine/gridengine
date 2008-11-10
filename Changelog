@@ -1,3 +1,13 @@
+EB-2008-11-06-0: Enhancem.:   - added TCL implementation for JSV template
+										- parsing code for JSV output
+                              - functionality to test parsing if JSV related
+										  is executed within TS
+                              - added man page jsv.1 
+										- source code documentation
+										- fixed several adoc headers which broke
+										  generation of pdf files
+                 Review:      MD
+
 JG-2008-11-06-0: Bugfix:      When a shadow master took over, the exec daemons
                               do not connect to the new master.
                               Introduced in 6.2u1 development.

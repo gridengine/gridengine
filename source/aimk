@@ -2689,6 +2689,9 @@ if ( "$ADOC" == 1) then
    echo "Creating documentation for libs: libjapi.texi"
    3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Job API Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/japi/japi.h libs/japi/japi.c -o $COMPILE_ARCH/libjapi.texi
 
+   echo "Creating documentation for libs: libuti.texi"
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Utility Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/uti/*.h libs/uti/*.c -o $COMPILE_ARCH/libuti.texi
+
    echo "Creating documentation for libs: libdrmaa.texi"
 endif
 echo done.

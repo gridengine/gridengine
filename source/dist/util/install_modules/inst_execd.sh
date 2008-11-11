@@ -553,44 +553,14 @@ MakeHostSpoolDir()
    spool_dir=`qconf -sconf | grep "execd_spool_dir" | awk '{ print $2 }' 2>/dev/null`
    host_dir=`$SGE_UTILBIN/gethostname -aname | cut -d"." -f1`
 
-   $MKDIR $spool_dir/$host_dir
-   ret=$?
-
-   if [ $ret = 0 ]; then
-      group=`$SGE_UTILBIN/checkuser -gid $ADMINUSER`
-      chown -R $ADMINUSER:$group $spool_dir/$host_dir 
-   else
-      ExecuteAsAdmin $MKDIR $spool_dir/$host_dir
-   fi
+   Makedir $spool_dir/$host_dir
 }
 
 
 
 MakeLocalSpoolDir()
 {
-   tmp_dir=$LOCAL_EXECD_SPOOL
-   end_loop=0
-
-   while [ "$end_loop" = "0" ]; do
-      base_name=`basename $tmp_dir`
-      tmp_dir=`dirname $tmp_dir`
-
-      if [ -d $tmp_dir ]; then
-         dir_exists=$tmp_dir
-         end_loop=1
-      fi 
-   done
-
-   #try as root
-   mkdir -p $LOCAL_EXECD_SPOOL
-   
-   if [ $? = 0 ]; then
-      group=`$SGE_UTILBIN/checkuser -gid $ADMINUSER`
-      chown -R $ADMINUSER:$group $dir_exists/$base_name
-   else
-      #try as adminuser
-      ExecuteAsAdmin mkdir -p $LOCAL_EXECD_SPOOL
-   fi
+   Makedir $LOCAL_EXECD_SPOOL
 }
 
 #-------------------------------------------------------------------------

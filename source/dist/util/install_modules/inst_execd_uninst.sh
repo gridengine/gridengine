@@ -276,7 +276,7 @@ RemoveSpoolDir()
       ExecuteAsAdmin rm -Rf $SPOOL_DIR/$HOST_DIR
  
       if [ `ls -la $SPOOL_DIR | wc -l` -lt 4 ]; then
-         ExecuteAsAdmin rm -Rf $SPOOL_DIR
+         Removedir $SPOOL_DIR
       fi
 
    fi

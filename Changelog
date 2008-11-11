@@ -1,3 +1,8 @@
+LP-2008-11-11-0: Enhacem.:    Merged LP-2008-10-17-0 from V62_BRANCH
+                 Bugster:     6739725
+                 Issue:       2694
+                 Review:      JO
+
 GH-2008-10-29-0: Bugfix:      PVM start/stop scripts should not put queue
                               in Error state
                  Bugster:     6727832

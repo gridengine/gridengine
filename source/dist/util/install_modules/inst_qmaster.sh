@@ -404,8 +404,7 @@ SetSpoolingOptionsBerkeleyDB()
                fi
  
                if [ $ret = 0 ]; then
-                     RM="rm -r"
-                     ExecuteAsAdmin $RM $SPOOLING_DIR
+                     Removedir $SPOOLING_DIR
                      if [ -d $SPOOLING_DIR ]; then
                         $INFOTEXT "You are not the owner of this directory. You can't delete it!"
                      else
@@ -507,7 +506,7 @@ SetSpoolingOptionsBerkeleyDB()
 
    if [ "$SPOOLING_SERVER" = "none" ]; then
       $ECHO
-      ExecuteAsAdmin $MKDIR $SPOOLING_DIR
+      Makedir $SPOOLING_DIR
       SPOOLING_ARGS="$SPOOLING_DIR"
    else
       SPOOLING_ARGS="$SPOOLING_SERVER:`basename $SPOOLING_DIR`"

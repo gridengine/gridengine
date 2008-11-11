@@ -181,7 +181,6 @@ Makedir()
    tmp_dir=$1
 
    if [ ! -d $dir ]; then
-
       while [ ! -d $tmp_dir ]; do
          chown_dir=$tmp_dir
          tmp_dir2=`dirname $tmp_dir`
@@ -194,24 +193,47 @@ Makedir()
          if [ "$ADMINUSER" = "default" ]; then
             Execute $CHOWN -R root $chown_dir
          else
-            Execute $CHOWN -R $ADMINUSER $chown_dir
+             group=`$SGE_UTILBIN/checkuser -gid $ADMINUSER`
+             Execute $CHOWN -R $ADMINUSER:$group $chown_dir
          fi
+	     Execute $CHMOD -R $DIRPERM $chown_dir
        else
          ExecuteAsAdmin $MKDIR -p $dir
+         ExecuteAsAdmin $CHMOD -R $DIRPERM $chown_dir
        fi
-       
-       #Now set the permission recursively only during the creating
-       ExecuteAsAdmin $CHMOD -R $DIRPERM $chown_dir
    fi
 
-   ExecuteAsAdmin $CHMOD $DIRPERM $dir
+   if [ "`$SGE_UTILBIN/filestat -owner $dir`" != "$ADMINUSER" ]; then
+      Execute $CHMOD $DIRPERM $dir
+   else
+      ExecuteAsAdmin $CHMOD $DIRPERM $dir
+   fi
 }
+
+#-------------------------------------------------------------------------
+# Removedir: remove directory, chown/chgrp/chmod it. Exit if failure
+#
+Removedir()
+{
+   dir=$1
+   tmp_dir=`dirname $dir`
+
+   if [ -d $dir ]; then
+       #We could be more clever and even check tmp_dir permissions
+       if [ "`$SGE_UTILBIN/filestat -owner $tmp_dir`" != "$ADMINUSER" ]; then
+          Execute $RM -rf $dir
+       else
+          ExecuteAsAdmin $RM -rf $dir
+       fi
+   fi
+}
+
 
 #-------------------------------------------------------------------------
 # Execute command as user $ADMINUSER and exit if exit status != 0
 # if ADMINUSER = default then execute command unchanged
 #
-# uses binary "adminrun" form SGE distribution
+# uses binary "adminrun" from SGE distribution
 #
 # USES: variables "$verbose"    (if set to "true" print arguments)
 #                  $ADMINUSER   (if set to "default" do not use "adminrun)

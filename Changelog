@@ -1,3 +1,7 @@
+TB-2008-11-12-0: Enhancem.:   - added Perl implementation for JSV template
+                 Bugfix:      - fix in TCL implementation for JSV template
+                 Review:      EB
+
 DG-2008-11-12-0: Bugfix:      Bugfixes regarding the upgrade procedures.
                  Merged from: V62_BRANCH (DG-2008-10-30-1)
                  Merged from: V62_BRANCH (DG-2008-11-03-0)

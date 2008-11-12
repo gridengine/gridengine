@@ -64,6 +64,7 @@ proc jsv_on_verify {} {
 
       if {$i > 0} {
          jsv_reject "Parallel job does not request a multiple of 16 slots"
+         return
       }
    }
   

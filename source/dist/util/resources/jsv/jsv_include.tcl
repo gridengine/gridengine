@@ -479,7 +479,7 @@ proc jsv_main {} {
    jsv_script_log "This file contains logging output from a GE JSV script. Lines beginning"
    jsv_script_log "with >>> contain the data which was send by a command line client or"
    jsv_script_log "sge_qmaster to the JSV script. Lines beginning with <<< contain data"
-   jsv_script_log "which is send for this JSV script to the client or sge_qmaster"
+   jsv_script_log "which is send from this JSV script to the client or sge_qmaster"
    jsv_script_log ""
 
 

@@ -2592,7 +2592,7 @@ CheckRunningDaemon()
    case $daemon_name in
 
       sge_qmaster )
-       if [ -f $QMDIR/qmaster.pid ]; then
+       if [ -s $QMDIR/qmaster.pid ]; then
           daemon_pid=`cat $QMDIR/qmaster.pid`
           $SGE_UTILBIN/checkprog $daemon_pid $daemon_name > /dev/null
           return $?      
@@ -4017,14 +4017,14 @@ cd $SGE_ROOT ; BasicSettings ; SetUpInfoText ; CheckForSMF ; "
    fi
 
    if [ "$DEL_EXECD_SPOOL" = true ]; then        #DELETE EXECD SPOOL DIRS
-      cmd=". $SGE_ROOT/$SGE_CELL/common/settings.sh ; . $SGE_ROOT/util/install_modules/inst_common.sh ; \
+      cmd=". $SGE_ROOT/$SGE_CELL/common/settings.sh ; . $SGE_ROOT/util/arch_variables ; . $SGE_ROOT/util/install_modules/inst_common.sh ; \
 cd $SGE_ROOT && RemoteExecSpoolDirDelete"
       $INFOTEXT -u "Initializing all local execd spool directories:"
       DoRemoteActionForHosts "$list" default "$cmd"
    fi
    
    if [ "$UPDATE_WIN" = true ]; then                   #UPDATE WINDOWS HELPER SERVICE ON ALL WINDOWS EXECDs
-      cmd=". $SGE_ROOT/$SGE_CELL/common/settings.sh ; . $SGE_ROOT/util/install_modules/inst_common.sh ; \
+      cmd=". $SGE_ROOT/$SGE_CELL/common/settings.sh ; . $SGE_ROOT/util/arch_variables ; . $SGE_ROOT/util/install_modules/inst_common.sh ; \
 . $SGE_ROOT/util/install_modules/inst_execd.sh ; cd $SGE_ROOT ; AUTO=true ; ECHO=echo ;BasicSettings ; SetUpInfoText ; SAVED_PATH=$PATH ; SetupWinSvc update"
       $INFOTEXT -u "Updating windows helper service on all windows hosts:"
       DoRemoteActionForHosts "$list" $ADMINUSER "$cmd"
@@ -4061,3 +4061,26 @@ RemoteExecSpoolDirDelete()
       MakeLocalSpoolDir
    fi
 }
+
+DeleteQueueNumberAttribute()
+{
+   spooldir="$1"
+   tmpfile="/tmp/clusterqueue_delete$$"
+   Execute rm -f $tmpfile
+
+   # get all queue instance files 
+   queuesdir=`ls $spooldir/qinstances/`
+   
+   # delete the evidence of queue_number for each queue instance file
+   for dir in $queuesdir; do 
+      queueinstancelist=`ls $spooldir/qinstances/$dir` 
+      for file in $queueinstancelist; do 
+         # delete line beginning with "queue_number"
+         ExecuteAsAdmin sed "/^queue_number/d" $spooldir/qinstances/$dir/$file > $tmpfile
+         Execute chown $ADMINUSER $tmpfile
+         ExecuteAsAdmin mv $tmpfile $spooldir/qinstances/$dir/$file
+         ExecuteAsAdmin $CHMOD 644 $spooldir/qinstances/$dir/$file
+      done 
+   done
+}
+

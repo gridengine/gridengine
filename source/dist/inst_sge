@@ -579,6 +579,12 @@ if [ "$UPDATE" = true ]; then
    SetupRcScriptNames master #New qmaster RC script/SMF
    InstallRcScript
    #TODO: Need to ensure there is no qmaster on the same port running
+   # When doing an update from <= 6.1 to >= 6.2 AND with classic spooling 
+   # AND we are using the same spool directory: Delete queue_number attribute 
+   # from queue_instance files 
+   if [ "$SPOOLING_METHOD" = classic -a "$UPGRADE_MODE" = upgrade ]; then 
+      DeleteQueueNumberAttribute $QMDIR  
+   fi
    StartQmaster
    CopyCA execd
    CopyCA submit

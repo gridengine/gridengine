@@ -442,6 +442,32 @@ ResolveResult()
             ;;
          esac
       ;;
+      -Mconf)
+         case "$resMsg" in
+            *'value == NULL for attribute'*)
+               unknown=`echo ${resMsg} | awk -F'"' '{ print $2 }'`
+               ReplaceLineWithMatch ${resFile} "${unknown}*" "#${unknown}"
+               LogIt "I" "$obj commented, trying to again"
+               LoadConfigFile "$resFile" "$resOpt"
+               ret=$?
+               return $ret
+            ;;
+            'denied: the path given for'*)
+               #FlatFile ${resFile}
+               ReplaceLineWithMatch "$resFile" 'qlogin_daemon.*' 'qlogin_daemon   /usr/sbin/in.telnetd'
+               ReplaceLineWithMatch "$resFile" 'rlogin_daemon.*' 'rlogin_daemon   /usr/sbin/in.rlogind'
+               LogIt "I" "wrong path corrected, trying again"
+               LoadConfigFile "$resFile" "$resOpt"
+               ret=$?
+               return $ret
+            ;;   
+            *'will not be effective before sge_execd restart'*)
+               #regular upgrade message 
+               LogIt "I" "message accepted"
+               return 0
+            ;;
+         esac
+      ;;
       -Mc)  
          case "$resMsg" in
             '')

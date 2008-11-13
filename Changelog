@@ -1,3 +1,7 @@
+CR-2008-11-13-1: Cleanup:     fixed test_virtual_gdi_client and
+                              test_virtual_qmaster module test binaries
+                              (merged from V61_BRANCH)
+
 CR-2008-11-13-0: Bugfix:      fixed test_issues module test binary
                               (merged from maintrunk)
                  Review:      AA

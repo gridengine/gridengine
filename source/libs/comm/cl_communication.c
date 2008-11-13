@@ -2325,6 +2325,10 @@ int cl_com_compare_hosts( char* host1, char* host2) {
     CL_LOG_STR(CL_LOG_DEBUG,"compareing host 1:", hostbuf1);
     CL_LOG_STR(CL_LOG_DEBUG,"compareing host 2:", hostbuf2);
 #endif
+    /*
+     * cl_com_compare_hosts() return hostnames all in upper letters.
+     * There is no need to do a strcasecmp() here!
+     */
     if ( strcmp(hostbuf1,hostbuf2) == 0 ) {   /* hostname compare OK */
 #if CL_DO_COMMUNICATION_DEBUG
        CL_LOG(CL_LOG_DEBUG,"hosts are equal");

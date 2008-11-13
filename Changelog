@@ -1,3 +1,9 @@
+CR-2008-11-13-1: Bugfix:      Merged code changes of JG-2008-11-06-0 from
+                              maintrunk into this branch. The code appends qmaster
+                              endpoint information now when is_alive function
+                              is called. This is no known issue for this branch.
+                 Review:      JG
+
 CR-2008-11-13-0: Bugfix:      fixed test_issues module test binary
                               (merged from maintrunk)
                  Review:      AA

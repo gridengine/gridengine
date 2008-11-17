@@ -46,9 +46,6 @@ jsv_url_parse(dstring *jsv_url_str, lList **answer_list, dstring *type,
               dstring *user, dstring *path, bool in_client);
 
 bool
-jsv_list_remove(const char *name, const char *context);
-
-bool
 jsv_send_command(lListElem *jsv, lList **answer_list, const char *message);
 
 bool
@@ -58,5 +55,11 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
 bool
 jsv_list_add(const char *name, const char *context, 
              lList **answer_list, const char *jsv_url);
+
+bool
+jsv_list_remove(const char *name, const char *context);
+
+bool 
+jsv_list_remove_all(void);
 
 #endif /* __SGE_JSV_H */    

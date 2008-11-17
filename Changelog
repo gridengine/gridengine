@@ -1,3 +1,13 @@
+EB-2008-11-13-0: Enhancem.:   - added JSV URL to submit dialog of qmon
+										  and to global configuration
+										- added missing parsing code
+										- fixed bug in parsing code of JSV URLs
+										- added code comments
+										- moved error/info messages to msg files
+										- fixed bug in JSV scripts
+										- disabled logging in JSV scripts
+                 Review:      MD 
+
 CR-2008-11-12-0: Bugfix:      fixed test_issues module test binary
                  Review:      AA
 

@@ -34,7 +34,7 @@
 set sge_root $env(SGE_ROOT)
 set sge_arch [exec $sge_root/util/arch]
 
-set logging_enabled "true"
+set logging_enabled "false"
 set logfile "/tmp/jsv.log"
 
 # Current state of the script
@@ -46,7 +46,7 @@ set jsv_cli_params [list a ar A b ckpt cwd C display dl e hard h hold_jid \
                          now N noshell nostdin o ot P p pe pty R r shell sync S t \
                          terse u w wd]
 
-set jsv_mod_params [list c l_hard l_soft q_hard q_soft]
+set jsv_mod_params [list ac l_hard l_soft q_hard q_soft]
 
 set jsv_add_params [list CLIENT CONTEXT VERSION JOB_ID SCRIPT SCRIPT_ARGS USER]
 
@@ -137,6 +137,38 @@ proc jsv_get_env {suffix} {
       set ret $name
    }
    return $ret
+}
+
+proc jsv_add_env {suffix value} {
+   set name "jsv_env_$suffix"
+   set exists [llength [info globals $name]]
+   set ret {}
+
+   global $name
+   set $name $value
+   jsv_send_command "ENV ADD $suffix $value"
+}
+
+proc jsv_mod_env {suffix value} {
+   set name "jsv_env_$suffix"
+   set exists [llength [info globals $name]]
+   set ret {}
+
+   global $name
+   set $name $value
+   jsv_send_command "ENV MOD $suffix $value"
+}
+
+proc jsv_del_env {suffix} {
+   set name "jsv_env_$suffix"
+   set exists [llength [info globals $name]]
+   set ret {}
+
+   if {$exists == 1} {
+      global $name
+      unset $name 
+      jsv_send_command "ENV DEL $suffix"
+   }
 }
 
 proc jsv_is_param {suffix} {
@@ -404,7 +436,9 @@ proc jsv_accept {args} {
    global state
 
    if {[string compare "verifying" $state] == 0} {
-      jsv_send_command "RESULT STATE ACCEPT $args"
+      set message [lindex $args 0]
+
+      jsv_send_command "RESULT STATE ACCEPT $message"
       set state "initialized"
    } else {
       jsv_send_command "ERROR JSV script will send RESULT command but is in state $state"
@@ -415,7 +449,9 @@ proc jsv_correct {args} {
    global state
 
    if {[string compare "verifying" $state] == 0} {
-      jsv_send_command "RESULT STATE CORRECT $args"
+      set message [lindex $args 0]
+
+      jsv_send_command "RESULT STATE CORRECT $message"
       set state "initialized"
    } else {
       jsv_send_command "ERROR JSV script will send RESULT command but is in state $state"
@@ -426,7 +462,9 @@ proc jsv_reject {args} {
    global state
 
    if {[string compare "verifying" $state] == 0} {
-      jsv_send_command "RESULT STATE REJECT $args"
+      set message [lindex $args 0]
+
+      jsv_send_command "RESULT STATE REJECT $message"
       set state "initialized"
    } else {
       jsv_send_command "ERROR JSV script will send RESULT command but is in state $state"
@@ -437,7 +475,9 @@ proc jsv_reject_wait {args} {
    global state
 
    if {[string compare "verifying" $state] == 0} {
-      jsv_send_command "RESULT STATE REJECT_WAIT $args"
+      set message [lindex $args 0]
+
+      jsv_send_command "RESULT STATE REJECT_WAIT $message"
       set state "initialized"
    } else {
       jsv_send_command "ERROR JSV script will send RESULT command but is in state $state"

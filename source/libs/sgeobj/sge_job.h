@@ -336,4 +336,7 @@ job_get_verify_attr(u_long32 op, dstring *string);
 void 
 set_context(lList *jbctx, lListElem *job);
 
+bool 
+job_parse_validation_level(int *level, const char *input, int prog_number, lList **answer_list);
+
 #endif /* __SGE_JOB_H */    

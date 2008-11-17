@@ -70,6 +70,9 @@ bool
 qref_list_host_rejected(const char *href, const char *hostname, 
                                  const lList *hgroup_list);
 
+int 
+cull_parse_destination_identifier_list(lList **lpp, const char *dest_str);
+
 #endif /* __SGE_QREF_H__ */
 
 

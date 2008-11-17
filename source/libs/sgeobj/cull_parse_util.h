@@ -77,4 +77,14 @@ int fprint_thresholds(FILE *fp, char *str, lList *thresholds, int print_slots);
 
 int fprint_resource_utilizations(FILE *fp, char *str, lList *thresholds, int print_slots); 
 
+int 
+parse_list_simpler(lList *lp, lList **destlist, char *option, lListElem *job, int field, 
+                  int nm_var, int nm_value, u_long32 flags);
+
+int cull_parse_path_list(lList **lpp, const char *path_str);
+
+int cull_parse_jid_hold_list(lList **lpp, const char *str);
+
+int sge_parse_hold_list(const char *hold_str, u_long32 prog_number);
+
 #endif /* __CULL_PARSE_UTIL_H */

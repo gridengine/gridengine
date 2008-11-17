@@ -44,6 +44,7 @@
 
 #include "gdi/sge_gdi_ctx.h"
 
+#include "sgeobj/cull_parse_util.h"
 #include "sgeobj/sge_advance_reservation.h"
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_centry.h"
@@ -57,7 +58,16 @@
 #include "sgeobj/sge_ulong.h"
 #include "sgeobj/sge_var.h"
 
-#define JSV_TIMEOUT 4 
+#include "symbols.h"
+
+#include "sgeobj/msg_sgeobjlib.h"
+#include "msg_common.h"
+
+/*
+ * defines the timeout how long a client/qmaster would wait maximally for
+ * a response from a JSV script after a command string has been send
+ */
+#define JSV_CMD_TIMEOUT (4) 
 
 typedef bool (*jsv_command_f)(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_list, 
                               dstring *c, dstring *s, dstring *a);
@@ -171,15 +181,14 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
       {
          int i = 0;
          const char *read_only_param[] = {
-            "CLIENT", "CONTEXT", "GROUP", "JOB_ID", "USER", "VERSION",
+            "CLIENT", "CONTEXT", "GROUP", "JOB_ID", "USER", "VERSION", "CMDARGS",
             NULL
          };
 
          while (read_only_param[i] != NULL) {
             if (strcmp(param, read_only_param[i]) == 0) {
                answer_list_add_sprintf(&local_answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
-                                       "JSV tries to modify %s which is a read-only parameter\n",
-                                       param);
+                                       MSG_JSV_PARSE_READ_S, param);
                ret = false;
                break;
             }
@@ -204,13 +213,11 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
                is_readonly = true;
                if (value == NULL) {
                   answer_list_add_sprintf(&local_answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
-                                          "JSV tries to delete %s which is a boolean parameter\n",
-                                          param);
+                                          MSG_JSV_PARSE_BOOL_S, param);
                   ret = false;
                } else if (strcmp(value, "y") != 0 && strcmp(value, "n") != 0) {
                   answer_list_add_sprintf(&local_answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
-                                          "JSV tries to set value of boolean parameter %s to %s\n",
-                                          param, value);
+                                          MSG_JSV_PARSE_VAL_SS, param, value);
                   ret = false;
                }
                break;
@@ -232,12 +239,133 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
                job_set_no_shell(new_job, strcmp(value, "y") == 0 ? true : false);
             } else {
                answer_list_add_sprintf(&local_answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
-                                       "boolean parameter %s is not handled by JSV in client/master\n",
-                                       param);
+                                       MSG_JSV_PARSE_VAL_SS, param);
                ret = false;
             }
          }
       }
+
+      /* 
+       * Handle string parameter 
+       *    -A -ckpt -cwd -N -pe <pe_name> -P 
+       */
+      if (ret) {
+         int i = 0;
+         const char *string_param[] = {
+            "A", "ckpt", "cwd", "N", "pe_name", "P",
+            NULL
+         };
+         const int string_attribute[] = {
+            JB_account, JB_checkpoint_name, JB_cwd, JB_job_name, JB_pe, JB_project,
+            0
+         };
+
+         while (string_param[i] != NULL) {
+            int attribute = string_attribute[i];
+
+            if (strcmp(param, string_param[i]) == 0) {
+               /* jobs without job name are rejected */
+               if (value == NULL && strcmp(param, "N") == 0) {
+                  answer_list_add_sprintf(&local_answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
+                                          MSG_JSV_PARSE_NAME_S, param);
+                  ret = false;
+               } else {
+                  lSetString(new_job, attribute, value);
+               }
+            }
+            i++;
+         }
+      }
+
+      /*
+       * Handle path list parameters
+       *    -o -i -e -S
+       */
+      if (ret) {
+         int i = 0;
+         const char *path_list_param[] = {
+            "o", "i", "e", "S",
+            NULL
+         };
+         const int path_list_attribute[] = {
+            JB_stdout_path_list, JB_stdin_path_list, JB_stderr_path_list, JB_shell_list,
+            0
+         };
+
+         while (path_list_param[i] != NULL && strcmp(path_list_param[i], param) == 0) {
+            lList *path_list = NULL;
+            int attribute = path_list_attribute[i];
+
+            if (value != NULL) {
+               int lret = cull_parse_path_list(&path_list, value);
+
+               if (lret) {
+                  answer_list_add_sprintf(&local_answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
+                                          MSG_JSV_PARSE_VAL_SS, param, value);
+                  ret = false;
+               }
+            }
+            if (ret) {
+               lSetList(new_job, attribute, path_list); 
+            }
+            i++;
+         }
+      }
+
+      /* CMDARG<id> */
+      {
+         if (ret && strncmp("CMDARG", param, 6) == 0) {
+            lList *arg_list = lGetList(new_job, JB_job_args);
+            const char *id_string = param + 6;
+            lListElem *elem;
+            u_long32 id = 0;
+            u_long32 length;
+            int i;
+
+            if (value) {
+               u_long32 to_create = 0;
+
+               length = lGetNumberOfElem(arg_list);
+               ret &= ulong_parse_from_string(&id, &local_answer_list, id_string);
+               if (ret) {
+                  to_create = (length < id + 1) ? (id + 1 - length) : 0;
+                  while (to_create-- > 0) {
+                     lAddElemStr(&arg_list, ST_name, "", ST_Type);
+                  }
+               }
+            }
+            if (ret) {
+               length = lGetNumberOfElem(arg_list);
+               elem = lFirst(arg_list);
+               for (i = 0; i <= length - 1; i++) {
+                  if (i == id) {
+                     lSetString(elem, ST_name, (value != NULL) ? value : "");
+                     break;
+                  }
+                  elem = lNext(elem);
+               }
+            }
+         }
+      }
+
+      /* -a */
+      {
+         if (ret && strcmp("a", param) == 0) {
+            u_long32 timeval = 0;
+
+            if (value != NULL) {
+               int lret = ulong_parse_date_time_from_string(&timeval, &local_answer_list, value);
+
+               if (!lret) {
+                  ret = false;
+               }
+            }
+            if (ret) {
+               lSetUlong(new_job, JB_execution_time, timeval);
+            }
+         }
+      }
+
 
       /* -ac */
       {
@@ -249,11 +377,13 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
 
                if (lret) {
                   answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                                          "invalid context list "SFQ" was passed by JSV", value);
+                                          MSG_JSV_PARSE_VAL_SS, param, value);
                   ret = false;
                }
             }
-            lSetList(new_job, JB_context, context_list);
+            if (ret) {
+               lSetList(new_job, JB_context, context_list);
+            }
          }
          if (ret && strcmp("ar", param) == 0) {
             lList *ar_id_list = NULL;
@@ -275,6 +405,116 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
          }
       }
 
+      /* -display */
+      {
+         if (ret && strcmp("display", param) == 0) {
+            lList *env_list = lGetList(new_job, JB_env_list);
+            lListElem *display = lGetElemStr(env_list, VA_variable, "DISPLAY"); 
+
+            if (value != NULL) {
+               if (display == NULL) {
+                  display = lAddSubStr(new_job, VA_variable, "DISPLAY", JB_env_list, VA_Type);
+               } 
+               lSetString(display, VA_value, value);
+            } else {
+               if (display != NULL) {
+                  lRemoveElem(env_list, &display);
+               }
+            }
+         }
+      }
+
+      /* -dl */
+      {
+         if (ret && strcmp("dl", param) == 0) {
+            u_long32 timeval = 0;
+
+            if (value != NULL) {
+               int lret = ulong_parse_date_time_from_string(&timeval, &local_answer_list, value);
+
+               if (!lret) {
+                  ret = false;
+               }
+            }
+            if (ret) {
+               lSetUlong(new_job, JB_deadline, timeval);
+            }
+         }
+      }
+
+      /* -h */
+      {
+         if (ret && strcmp("h", param) == 0) {
+            int hold_state = MINUS_H_TGT_NONE;  
+            lList *n_hold = lGetList(new_job, JB_ja_u_h_ids);
+            lList *u_hold = lGetList(new_job, JB_ja_n_h_ids);
+            lList *id_list = (n_hold != NULL) ? n_hold : u_hold;
+
+            if (value != NULL) {
+               hold_state = sge_parse_hold_list(value, QSUB);
+               if (hold_state == -1) {
+                  answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                          MSG_JSV_PARSE_VAL_SS, param, value);
+                  ret = false;
+               }
+            }
+            if (hold_state == MINUS_H_TGT_NONE) {
+               lSetList(new_job, JB_ja_n_h_ids, lCopyList("", id_list));
+               lSetList(new_job, JB_ja_u_h_ids, NULL);
+            } else {
+               lSetList(new_job, JB_ja_u_h_ids, lCopyList("", id_list));
+               lSetList(new_job, JB_ja_n_h_ids, NULL);
+            }
+         }
+      }
+
+      /* -hold_jid */
+      {
+         if (ret && strcmp("hold_jid", param) == 0) {
+            lList *hold_list = NULL;
+            lList *jref_list = NULL;
+            lListElem *jid_str;
+
+            if (value != NULL) {
+               int lret = cull_parse_jid_hold_list(&hold_list, value);
+
+               if (lret) {
+                  answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                          MSG_JSV_PARSE_VAL_SS, param, value);
+                  ret = false;
+               }
+            }
+            for_each(jid_str, hold_list) {
+               lAddElemStr(&jref_list, JRE_job_name, lGetString(jid_str, ST_name), JRE_Type);
+            }
+            lSetList(new_job, JB_jid_request_list, jref_list);
+            lFreeList(&hold_list);
+         }
+      }
+
+      /* -hold_jid_ad */
+      {
+         if (ret && strcmp("hold_jid_ad", param) == 0) {
+            lList *hold_list = NULL;
+            lList *jref_list = NULL;
+            lListElem *jid_str;
+
+            if (value != NULL) {
+               int lret = cull_parse_jid_hold_list(&hold_list, value);
+
+               if (lret) {
+                  answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                          MSG_JSV_PARSE_VAL_SS, param, value);
+                  ret = false;
+               }
+            }
+            for_each(jid_str, hold_list) {
+               lAddElemStr(&jref_list, JRE_job_name, lGetString(jid_str, ST_name), JRE_Type);
+            }
+            lFreeList(&hold_list);
+         }
+      }
+
       /* -js */
       {
          if (ret && strcmp("js", param) == 0) {
@@ -283,12 +523,142 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
             if (value != NULL) {
                if (!parse_ulong_val(NULL, &shares, TYPE_INT, value, NULL, 0)) {
                   answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                                          "invalid job share "SFQ" was passed by JSV", value);
+                                          MSG_JSV_PARSE_VAL_SS, param, value);
                   ret = false;
-              }
+               }
             }
             if (ret) {
                lSetUlong(new_job, JB_jobshare, shares);
+            }
+         }
+      }
+
+      /* -l */
+      {  
+         if (ret && strcmp("l_hard", param) == 0) {
+            lList *resource_list = NULL;
+
+            if (value != NULL) {
+               resource_list = centry_list_parse_from_string(NULL, value, false);
+               
+               if (!resource_list) {
+                  answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                          MSG_JSV_PARSE_VAL_SS, param, value);
+                  ret = false;
+               }
+            }
+            if (ret) {
+               lSetList(new_job, JB_hard_resource_list, resource_list);
+            }
+         }
+         if (ret && strcmp("l_soft", param) == 0) {
+            lList *resource_list = NULL;
+
+            if (value != NULL) {
+               resource_list = centry_list_parse_from_string(NULL, value, false);
+               
+               if (!resource_list) {
+                  answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                          MSG_JSV_PARSE_VAL_SS, param, value);
+                  ret = false;
+               }
+            }
+            if (ret) {
+               lSetList(new_job, JB_soft_resource_list, resource_list);
+            }
+         }
+      }
+
+      /* -m */
+      {
+         if (ret && strcmp("m", param) == 0) {
+            int mail_options = NO_MAIL;
+
+            if (value != NULL) {
+               mail_options = sge_parse_mail_options(&local_answer_list, value, QSUB);
+               if (!mail_options) {
+                  ret = false;
+               }
+            }
+            if (ret) {
+               if (mail_options & NO_MAIL) {
+                  lSetUlong(new_job, JB_mail_options, 0);
+               } else {
+                  lSetUlong(new_job, JB_mail_options, mail_options);
+               }
+            }
+         }
+      }
+
+      /* -masterq ; -soft -q ; -hard -q*/
+      {
+         if (ret && strcmp("masterq", param) == 0) {
+            lList *id_list = NULL;
+
+            if (value != NULL) {
+               int lret = cull_parse_destination_identifier_list(&id_list, value);
+
+               if (lret) {
+                  answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                          MSG_PARSE_WRONGDESTIDLISTFORMATXSPECTOXOPTION_SS, 
+                                          value, "-masterq");
+                  ret = false;
+               }
+            }
+            if (ret) {
+               lSetList(new_job, JB_master_hard_queue_list, id_list);
+            }
+         } else if (ret && strcmp("q_hard", param) == 0) {
+            lList *id_list = NULL;
+
+            if (value != NULL) {
+               int lret = cull_parse_destination_identifier_list(&id_list, value);
+
+               if (lret) {
+                  answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                          MSG_PARSE_WRONGDESTIDLISTFORMATXSPECTOXOPTION_SS, 
+                                          value, "-q");
+                  ret = false;
+               }
+            }
+            if (ret) {
+               lSetList(new_job, JB_hard_queue_list, id_list);
+            }
+         } else if (ret && strcmp("q_soft", param) == 0) {
+            lList *id_list = NULL;
+
+            if (value != NULL) {
+               int lret = cull_parse_destination_identifier_list(&id_list, value);
+
+               if (lret) {
+                  answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                          MSG_PARSE_WRONGDESTIDLISTFORMATXSPECTOXOPTION_SS, 
+                                          value, "-q");
+                  ret = false;
+               }
+            }
+            if (ret) {
+               lSetList(new_job, JB_soft_queue_list, id_list);
+            }
+         }
+      }
+
+      /* -M */
+      {
+         if (ret && strcmp("M", param) == 0) {
+            lList *mail_list = NULL;
+
+            if (value != NULL) {
+               int lret = mailrec_parse(&mail_list, value);
+   
+               if (lret) {
+                  answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                          MSG_JSV_PARSE_VAL_SS, param, value);
+                  ret = false;
+               }
+            }
+            if (ret) {
+               lSetList(new_job, JB_mail_list, mail_list); 
             }
          }
       }
@@ -299,7 +669,7 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
             int priority = 0;
 
             if (value != NULL) {
-               ret &= ulong_parse_priority(&local_answer_list, &priority, value);
+               ret = ulong_parse_priority(&local_answer_list, &priority, value);
             }
             if (ret) {
                lSetUlong(new_job, JB_priority, BASE_PRIORITY + priority);
@@ -325,7 +695,7 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
             if (value != NULL) {
                if (!parse_ulong_val(NULL, &min, TYPE_INT, value, NULL, 0)) {
                   answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                                          "invalid pe_min "SFQ" was passed by JSV", value);
+                                          MSG_JSV_PARSE_VAL_SS, param, value);
                   ret = false;
                }
             }
@@ -347,7 +717,7 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
             if (value != NULL) {
                if (!parse_ulong_val(NULL, &max, TYPE_INT, value, NULL, 0)) {
                   answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                                          "invalid pe_max "SFQ" was passed by JSV", value);
+                                          MSG_JSV_PARSE_VAL_SS, param, value);
                   ret = false;
                }
             }
@@ -398,7 +768,7 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
             if (value != NULL) {
                if (!parse_ulong_val(NULL, &max, TYPE_INT, value, NULL, 0)) {
                   answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                                          "invalid t_max "SFQ" was passed by JSV", value);
+                                          MSG_JSV_PARSE_VAL_SS, param, value);
                   ret = false;
                }
             }
@@ -420,7 +790,7 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
             if (value != NULL) {
                if (!parse_ulong_val(NULL, &step, TYPE_INT, value, NULL, 0)) {
                   answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                                          "invalid t_max "SFQ" was passed by JSV", value);
+                                          MSG_JSV_PARSE_VAL_SS, param, value);
                   ret = false;
                }
             }
@@ -438,12 +808,27 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
          }
       }
 
+      /* -w */
+      {
+         if (ret && strcmp("w", param) == 0) {
+            int level = 0;
+
+            if (value != NULL) {
+               ret = job_parse_validation_level(&level, value, QSUB, &local_answer_list);
+            }
+            if (ret) {
+               lSetUlong(new_job, JB_verify_suitable_queues, level);             
+            }
+         }
+
+      }
+
       /*
        * if we are in test mode the we have to check the expected result.
        * in test mode we will reject jobs if we did not get the expected
        * result otherwise
        * we will accept the job with the ret value set above including
-       * the cerated error messages.
+       * the created error messages.
        */
       if (lGetBool(jsv, JSV_test) && !skip_check) {
          const char *result_string = lGetString(jsv, JSV_result);
@@ -486,8 +871,7 @@ jsv_handle_send_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer
        * is not available in this version. Job will be rejected.
        */
       answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
-                              "got \"SEND "SFN"\" from JSV script which is an unknown command",
-                              sge_dstring_get_string(s));
+                              MSG_JSV_PARSE_OBJECT_S, sge_dstring_get_string(s));
 
       lSetBool(jsv, JSV_send_env, false);
       ret = false;
@@ -520,30 +904,32 @@ jsv_handle_result_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answ
          lSetBool(jsv, JSV_done, true);
       } else if (strcmp(state, "REJECT") == 0) {
          if (message != NULL) {
-            answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR, message);
+            answer_list_add_sprintf(answer_list, STATUS_DENIED, 
+                                    ANSWER_QUALITY_ERROR, message);
          } else {
-            answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
-                                    "job has been rejected by JSV script");
+            answer_list_add_sprintf(answer_list, STATUS_DENIED, 
+                                    ANSWER_QUALITY_ERROR, MSG_JSV_REJECTED);
          }
          lSetBool(jsv, JSV_accept, false);
          lSetBool(jsv, JSV_done, true);
       } else if (strcmp(state, "REJECT_WAIT") == 0) {
          if (message != NULL) {
-            answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR, message);
+            answer_list_add_sprintf(answer_list, STATUS_DENIED, 
+                                    ANSWER_QUALITY_ERROR, message);
          } else {
-            answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
-                                    "job has been temporarily rejected by JSV script");
+            answer_list_add_sprintf(answer_list, STATUS_DENIED, 
+                                    ANSWER_QUALITY_ERROR, MSG_JSV_TMPREJECT);
          }
          lSetBool(jsv, JSV_accept, false);
          lSetBool(jsv, JSV_done, true);
       } else {
          answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
-                                 "got unknown state from JSV script (RESULT STATE %s)", a);
+                                 MSG_JSV_STATE_S, a);
          ret = false;
       }
    } else {
       answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
-                              "got unknown result command for JSV script");
+                              MSG_JSV_COMMAND_S, sub_command);
       ret = false;
    }
    
@@ -646,7 +1032,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
 
    /* 
     * JSV SCRIPT_ARGS 
-    * TODO: EB: JSV: PARSING
     * TODO: EB: JSV: check for modifications in new_job
     */
    {
@@ -669,7 +1054,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* 
     * -a 
     * PARAM a <date_time> (optional; <date_time> := CCYYMMDDhhmm.SS)
-    * TODO: EB: JSV: PARSING
     * TODO: EB: JSV: check for modifications in new_job
     */
    {
@@ -745,7 +1129,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
 
    /* 
     * -A <account_string> (optional) 
-    * TODO: EB: JSV: PARSING
     * TODO: EB: JSV: check for modifications in new_job
     */
    {
@@ -775,7 +1158,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
     *
     * PARAM c_occasion <occasion_string> (optional; <occasion_string> := ['n']['s']['m']['x']
     * PARAM c_interval <interval> (optional; <interval> := <2_digits>:<2_digits>:<2_digits>)
-    * TODO: EB: JSV: PARSING
     * TODO: EB: JSV: check for modifications in new_job
     */
    {
@@ -799,7 +1181,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* 
     * -ckpt name
     * PARAM ckpt <name> (optional);
-    * TODO: EB: JSV: PARSING
     * TODO: EB: JSV: check for modifications in new_job
     */
    {
@@ -820,7 +1201,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
     * pass an empty path.
     *
     * PARAM cwd <working_directory> (optional)
-    * TODO: EB: JSV: PARSING
     * TODO: EB: JSV: check for modifications in new_job
     */
    {
@@ -840,7 +1220,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* 
     * -dl <date_time> 
     * optional
-    * TODO: EB: JSV: PARSING
     * TODO: EB: JSV: check for modifications in new_job
     */
    {
@@ -861,7 +1240,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
 
    /* 
     * -e <output_path>
-    * TODO: EB: JSV: PARSING
     * TODO: EB: JSV: check for modifications in new_job
     */
    {
@@ -899,7 +1277,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
     * optional
     * TODO: EB: CLEANUP: summarize with hold_jid_ad 
     * TODO: EB: JSV: check for modifications in new_job
-    * TODO: EB: JSV: PARSING
     */
    {
       lList *hold_jid_list = lGetList(old_job, JB_jid_request_list);
@@ -929,7 +1306,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* 
     * -hold_jid_ad wc_job_list 
     * optional 
-    * TODO: EB: JSV: PARSING
     * TODO: EB: JSV: check for modifications in new_job
     */
    {
@@ -967,7 +1343,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
     * where 'u' means "user hold"
     * and 'n' whould mean "no hold"
     *
-    * TODO: EB: JSV: PARSING
     * TODO: EB: JSV: check for modifications in new_job
     */
    {
@@ -982,7 +1357,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
 
    /* 
     * -i <input_path> (optional) 
-    * TODO: EB: JSV: PARSING
     * TODO: EB: JSV: check for modifications in new_job
     */
    {
@@ -1052,7 +1426,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
     *
     * TODO: EB: CLEANUP: make a function for the code blocks of -soft -l and -hard -l 
     * TODO: EB: JSV: check for modifications in new_job
-    * TODO: EB: JSV: PARSING
     */
    {
       lList *l_hard_list = lGetList(old_job, JB_hard_resource_list);
@@ -1077,7 +1450,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
 
    /* 
     * -m [b][e][a][s] or n (optional; only provided to JSV script if != 'n'
-    * TODO: EB: JSV: PARSING
     * TODO: EB: JSV: check for modifications in new_job
     */
    {
@@ -1094,7 +1466,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* 
     * -M <mail_addr>, ... 
     * optional
-    * TODO: EB: JSV: PARSING
     * TODO: EB: JSV: check for modifications in new_job
     */
    {
@@ -1117,11 +1488,9 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
       }
       jsv_send_command(jsv, answer_list, sge_dstring_get_string(&buffer));
    }
-   
 
    /* 
     * -masterq wc_queue_list (optional) 
-    * TODO: EB: JSV: PARSING
     * TODO: EB: JSV: check for modifications in new_job
     */
    {
@@ -1160,7 +1529,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* 
     * -N <job_name> 
     * optional; only abaiable if specified during job submission
-    * TODO: EB: JSV: PARSING
     * TODO: EB: JSV: check for modifications in new_job
     */
    {
@@ -1180,7 +1548,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
     * -o <output_path> (optional) 
     * TODO: EB: summarize with -S -e -i 
     * TODO: EB: JSV: check for modifications in new_job
-    * TODO: EB: JSV: PARSING
     */
    {
       lList *shell_list = lGetList(old_job, JB_stdout_path_list);
@@ -1195,8 +1562,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
             const char *hostname = lGetHost(shell, PN_host);
             const char *path = lGetString(shell, PN_path);
            
-             
-            sge_dstring_append_char(&buffer, first ? ' ' : ',');
             if (hostname != NULL) {
                sge_dstring_append(&buffer, hostname); 
                sge_dstring_append_char(&buffer, ':');
@@ -1216,7 +1581,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
 
    /* 
     * -P project_name (optional; only available if specified during submission) 
-    * TODO: EB: JSV: PARSING
     * TODO: EB: JSV: check for modifications in new_job
     */
    {
@@ -1294,7 +1658,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
     *
     * TODO: EB: CLEANUP: make a function for the code blocks of -soft -q, -hard -q and -masterq
     * TODO: EB: JSV: check for modifications in new_job
-    * TODO: EB: JSV: PARSING
     */
    {
       lList *hard_queue_list = lGetList(old_job, JB_hard_queue_list);
@@ -1389,7 +1752,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* 
     * -S shell_path_list (optional) 
     * PARAM S [hostname:]path,...
-    * TODO: EB: JSV: PARSING
     * TODO: EB: JSV: check for modifications in new_job
     */
    {
@@ -1465,7 +1827,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* 
     * -w e|w|n|v|p 
     * optional; only sent to JSV if != 'n') 
-    * TODO: EB: JSV: PARSING
     * TODO: EB: JSV: check for modifications in new_job
     */
    {
@@ -1475,22 +1836,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
          sge_dstring_clear(&buffer);
          sge_dstring_sprintf(&buffer, "%s w ", prefix);
          job_get_verify_attr(verify, &buffer);
-         jsv_send_command(jsv, answer_list, sge_dstring_get_string(&buffer));
-      }
-   }
-
-   /* 
-    * -wd working_dir 
-    * optional
-    * TODO: EB: JSV: PARSING
-    * TODO: EB: JSV: check for modifications in new_job
-    */
-   {
-      const char *cwd = lGetString(old_job, JB_cwd);
-
-      if (cwd != NULL) {
-         sge_dstring_clear(&buffer);
-         sge_dstring_sprintf(&buffer, "%s wd %s", prefix, cwd);
          jsv_send_command(jsv, answer_list, sge_dstring_get_string(&buffer));
       }
    }
@@ -1520,7 +1865,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
        * if there is a DISPLAY variable and if the client is qsh/qrsh
        * then we will send the DISPLAY value as if it originally came 
        * from -display switch.
-       * TODO: EB: JSV: PARSING
        * TODO: EB: JSV: check for modifications in new_job
        */
       display = lGetElemStr(env_list, VA_variable, "DISPLAY"); 
@@ -1580,7 +1924,7 @@ jsv_handle_log_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_
          } else if (strcmp(sub_command, "ERROR") == 0) {
             ERROR((SGE_EVENT, "%s", args));
          } else {
-            WARNING((SGE_EVENT, "received "SFQ" from JSV with invalid type "SFQ, command, sub_command));
+            WARNING((SGE_EVENT, MSG_JSV_LOG_SS, command, sub_command));
          }
       } else {
          printf("%s\n", args);
@@ -1594,12 +1938,136 @@ jsv_handle_env_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_
                        dstring *c, dstring *s, dstring *a)
 {
    bool ret = true;
+   dstring variable = DSTRING_INIT;
+   dstring value = DSTRING_INIT;
+   const char *mod;
+   const char *var;
+   const char *val;
+   bool skip_check = false;
+   bool test_mode = lGetBool(jsv, JSV_test);
+   lList *local_answer_list = NULL;
+   lListElem *new_job = lGetRef(jsv, JSV_new_job);
 
    DENTER(TOP_LAYER, "jsv_handle_env_command");
+
+   jsv_split_token(a, &variable, &value);
+   mod = sge_dstring_get_string(s);
+   var = sge_dstring_get_string(&variable);
+   val = sge_dstring_get_string(&value);
+
+   DPRINTF(("got from JSV \"%s %s %s\"", mod, var, (val != NULL) ? val : ""));
+
+   if (strcmp(var, "__JSV_TEST_RESULT") == 0) {
+      lSetBool(jsv, JSV_test, true);
+      lSetUlong(jsv, JSV_test_pos, 0);
+      lSetString(jsv, JSV_result, val);
+      test_mode = true;
+      skip_check = true;
+   }
+
+   if (skip_check != true) {
+      if (mod != NULL && var != NULL &&
+          (((strcmp(mod, "MOD") == 0 || strcmp(mod, "ADD") == 0) && val != NULL) ||
+            (strcmp(mod, "DEL") == 0 && val == NULL))) {
+         lList *env_list = lGetList(new_job, JB_env_list);
+         lListElem *env_variable = NULL;
+
+         if (var != NULL) {
+            env_variable = lGetElemStr(env_list, VA_variable, var); 
+         }
+         if (strcmp("ADD", mod) == 0 || strcmp("MOD", mod) == 0) {
+            if (env_variable == NULL) {
+               env_variable = lAddSubStr(new_job, VA_variable, var, JB_env_list, VA_Type);
+            }
+            lSetString(env_variable, VA_value, val);
+         } else if (strcmp("DEL", mod) == 0) {
+            if (env_variable != NULL) {
+               lRemoveElem(env_list, &env_variable);
+            }
+         } else {
+            answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
+                                    "\"ENV %s %s %s\" is invalid\n",
+                                    (mod != NULL) ? mod : "<null>", 
+                                    (var != NULL) ? var : "<null>", 
+                                    (val != NULL) ? val : "<null>");
+            ret = false;
+         }
+      } else {
+         answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
+                                 "\"ENV %s %s %s\" is invalid\n",
+                                 (mod != NULL) ? mod : "<null>", 
+                                 (var != NULL) ? var : "<null>", 
+                                 (val != NULL) ? val : "<null>");
+         ret = false;
+      }
+   }
+
+   /*
+    * if we are in test mode the we have to check the expected result.
+    * in test mode we will reject jobs if we did not get the expected
+    * result otherwise
+    * we will accept the job with the ret value set above including
+    * the created error messages.
+    */
+   if (lGetBool(jsv, JSV_test) && !skip_check) {
+      const char *result_string = lGetString(jsv, JSV_result);
+      u_long32 result_pos = lGetUlong(jsv, JSV_test_pos);
+
+      if (strlen(result_string) > result_pos) {
+         char result_char = result_string[result_pos];
+         bool result = (result_char == '1') ? true : false;
+
+         if (result != ret) {
+            answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
+                                    "\"ENV %s %s %s\" was unexcpectedly %s\n",
+                                    (mod != NULL) ? mod : "<null>", 
+                                    (var != NULL) ? var : "<null>", 
+                                    (val != NULL) ? val : "<null>",
+                                    ret ? "accepted" : "rejected");
+            ret = false;
+         } else {
+            ret = true;
+         }
+      }
+      lSetUlong(jsv, JSV_test_pos, lGetUlong(jsv, JSV_test_pos) + 1);
+   }
+   answer_list_append_list(answer_list, &local_answer_list);
+
+   sge_dstring_free(&variable);
+   sge_dstring_free(&value);
    DRETURN(ret);
 }
 
-bool
+/****** sgeobj/jsv/jsv_do_communication() **************************************
+*  NAME
+*     jsv_do_communication() -- Starts communicating with a JSV script 
+*
+*  SYNOPSIS
+*     bool 
+*     jsv_do_communication(sge_gdi_ctx_class_t *ctx, lListElem *jsv, 
+*                          lList **answer_list) 
+*
+*  FUNCTION
+*     Start a communication cycle to verify one job. The job to
+*     be verified has to be store in 'jsv' as attribute 'JSV_new_job'.
+*     Depending on the response of the JSV instance certain attributes
+*     in the 'jsv' will be changes (JSV_restart, JSV_soft_shutdown, 
+*     JSV_done, JSV_new_job)
+*
+*  INPUTS
+*     sge_gdi_ctx_class_t *ctx - GE context 
+*     lListElem *jsv           - JSV_Type instance
+*     lList **answer_list      - AN_Type list 
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - error
+*
+*  NOTES
+*     MT-NOTE: jsv_do_communication() is MT safe 
+*******************************************************************************/
+bool 
 jsv_do_communication(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_list)
 {
    bool ret = true;
@@ -1617,7 +2085,7 @@ jsv_do_communication(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_li
          char input[10000];
          FILE *file = lGetRef(jsv, JSV_out);
 
-         if (sge_get_gmt() - start_time > JSV_TIMEOUT) {
+         if (sge_get_gmt() - start_time > JSV_CMD_TIMEOUT) {
             answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
                                     "got no response from JSV script "SFQ, lGetString(jsv, JSV_command));
             lSetBool(jsv, JSV_restart, true);
@@ -1667,8 +2135,7 @@ jsv_do_communication(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_li
 
                if (!handled) {
                   answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
-                                          "got "SFQ" from JSV script which is an unknown command", 
-                                          c);
+                                          MSG_JSV_COMMAND_S, c);
                   lSetBool(jsv, JSV_accept, false);
                   lSetBool(jsv, JSV_done, true);
                }

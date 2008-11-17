@@ -261,6 +261,7 @@ Qmon*submit_detail.xmtChildren: \
    InputField        submit_ckpt_obj = ckpt_obj, \
                      submit_pe = pe, \
                      submit_ar = ar_id, \
+                     submit_jsv_url = jsv_url, \
                      submit_account = account_string; \
    TimeInput         submit_deadline = deadline; \
    StrListField      submit_mail_user = mail_list, \
@@ -274,7 +275,7 @@ Qmon*submit_detail.xmtChildren: \
    XmtChooser        submit_verify = verify_mode, \
                      submit_mail = mail_options; \
    XmPushButton      submit_mail_userPB, submit_pePB, submit_arPB, submit_envPB, \
-                     submit_ctxPB, submit_deadlinePB, submit_ckpt_objPB;
+                     submit_ctxPB, submit_deadlinePB, submit_ckpt_objPB, submit_jsv_urlPB;
 
 Qmon*submit_detail.layout: \
    Filled Row { \
@@ -307,6 +308,11 @@ Qmon*submit_detail.layout: \
             Caption tl "@{Advance Reservation}" Centered 30 em submit_ar \
             <> \
             Fixed Centered submit_arPB \
+         } \
+         Row { \
+            Caption tl "@{JSV URL}" Centered 30 em submit_jsv_url \
+            <> \
+            Fixed Centered submit_jsv_urlPB \
          } \
          <> \
       } \
@@ -464,6 +470,9 @@ Qmon*submit_deadlinePB.labelInsensitivePixmap:  deadline_ins
 
 Qmon*submit_pePB.labelType:                     PIXMAP
 Qmon*submit_pePB.labelPixmap:                   penv
+
+Qmon*submit_jsv_urlPB.labelType:                PIXMAP
+Qmon*submit_jsv_urlPB.labelPixmap:              script_file
 
 Qmon*submit_envPB.labelType:                    PIXMAP
 Qmon*submit_envPB.labelPixmap:                  env

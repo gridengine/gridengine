@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/11/10 13:05:49 $     Revision: $Revision: 1.83 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/11/17 10:55:37 $     Revision: $Revision: 1.84 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2008/11/10 13:05:49 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2008/11/17 10:55:37 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -539,10 +539,10 @@ however.
 .sp 1
 If this option or a corresponding value in \fIqmon\fP is specified then
 this value will be passed to defined JSV
-instances as parameter with the name \fBcwd\fP. The value of this parameters
+instances as parameter with the name \fBcwd\fP. The value of this parameter
 will be the absolute path to the current working directory. JSV scripts can
 remove the path from jobs during the verification process by setting the 
-value of this parameter to an empty string. As a result the resulting job
+value of this parameter to an empty string. As a result the job
 behaves as if \fB-cwd\fP was not specified during job submission.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
 .M jsv 1 )
@@ -1829,6 +1829,11 @@ configuration files are present (see
 allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
+The parameter value will be available in defined JSV instances as parameter
+with the name \fBcwd\fP
+(see \fB-cwd\fP switch above or find more information concerning JSV in
+.M jsv 1 )
+.
 .\"       
 .IP "\fBcommand\fP"
 Available for \fIqsub\fP and \fIqrsh\fP only.

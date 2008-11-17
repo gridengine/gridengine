@@ -62,7 +62,7 @@ sge_dstring_vsprintf_copy_append(dstring *sb,
                                  const char *format,
                                  va_list ap);
 
-static const char*
+static const char* 
 sge_dstring_vsprintf_copy_append(dstring *sb,
                                  sge_dstring_copy_append_f function,
                                  const char *format,

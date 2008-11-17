@@ -4,8 +4,8 @@ use strict;
 use warnings;
 no warnings qw/uninitialized/;
 
-BEGIN { our $sge_root = $ENV{SGE_ROOT}; }
-use lib '.';
+use Env qw(SGE_ROOT);
+use lib "$SGE_ROOT/util/resources/jsv";
 use JSV qw( :DEFAULT send_env log_info );
 
 # my $sge_root = $ENV{SGE_ROOT};

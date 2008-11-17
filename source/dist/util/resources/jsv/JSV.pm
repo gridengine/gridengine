@@ -66,8 +66,8 @@ use FindBin;
 ##########################################################################
 # global variables
 my %config = (
-   log_file        => '/tmp/jsv-tb.log',
-   logging_enabled => 1,
+   log_file        => '/tmp/jsv.log',
+   logging_enabled => 0,
    head_incoming   => '>>>',
    head_outgoing   => '<<<',
 );

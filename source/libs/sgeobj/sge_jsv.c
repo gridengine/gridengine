@@ -60,6 +60,11 @@
 #include "sgeobj/sge_jsv_script.h"
 #include "sgeobj/sge_str.h"
 
+#include "sgeobj/msg_sgeobjlib.h"
+
+/*
+ * defines the timeout between the soft shutdown signal and the kill
+ */
 #define JSV_QUIT_TIMEOUT (10)
 
 /*
@@ -74,6 +79,34 @@ static pthread_mutex_t jsv_mutex = PTHREAD_MUTEX_INITIALIZER;
  */
 static lList *jsv_list = NULL;   /* JSV_Type */
 
+/****** sgeobj/jsv/jsv_create() ***************************************************
+*  NAME
+*     jsv_create() -- creates a new JSV object and initializes its attributes 
+*
+*  SYNOPSIS
+*     static lListElem * 
+*     jsv_create(const char *name, const char *context, lList **answer_list, 
+*                const char *jsv_url, const char *type, const char *user, 
+*                const char *scriptfile) 
+*
+*  FUNCTION
+*     Returns a new JSV instance. 
+*
+*  INPUTS
+*     const char *name       - Name od the new JSV element 
+*     const char *context    - JSV_CONTEXT_CLIENT or thread name
+*     lList **answer_list    - AN_Type list 
+*     const char *jsv_url    - JSV URL 
+*     const char *type       - type part of 'jsv_url' 
+*     const char *user       - user part of 'jsv_url'
+*     const char *scriptfile - path part of 'jsv_url'
+*
+*  RESULT
+*     static lListElem * - JSV_Type element
+*
+*  NOTES
+*     MT-NOTE: jsv_create() is MT safe 
+*******************************************************************************/
 static lListElem *
 jsv_create(const char *name, const char *context, lList **answer_list, const char *jsv_url,
            const char *type, const char *user, const char *scriptfile)
@@ -117,7 +150,7 @@ jsv_create(const char *name, const char *context, lList **answer_list, const cha
                lInsertElem(jsv_list, NULL, new_jsv);
             } else {
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                                       "No memory to create JSV list");
+                                       MSG_JSV_INSTANCIATE_S, scriptfile);
             }
 
             sge_mutex_unlock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
@@ -125,11 +158,11 @@ jsv_create(const char *name, const char *context, lList **answer_list, const cha
          } else {
             lFreeElem(&new_jsv);
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                                    "stat call for JSV script "SFN" failed", scriptfile);
+                                    MSG_JSV_EXISTS_S, scriptfile);
          }
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                                    "no memory to create JSV element");
+                                 MSG_JSV_INSTANCIATE_S, scriptfile);
       } 
    }
    DRETURN(new_jsv);
@@ -195,15 +228,15 @@ jsv_start(lListElem *jsv, lList **answer_list) {
             /* we need it non blocking */
             fcntl(fileno(fp_out), F_SETFL, O_NONBLOCK);
 
-            INFO((SGE_EVENT, "JSV process has been started"));
+            INFO((SGE_EVENT, MSG_JSV_STARTED_S, scriptfile));
          } else {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                                    "Unable to start JSV script "SFQ, scriptfile);
+                                    MSG_JSV_START_S, scriptfile);
             ret = false;
          }
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                                 "Unable to find JSV script "SFQ, scriptfile);
+                                 MSG_JSV_EXISTS_S, scriptfile);
          ret = false;
       }
    }
@@ -220,6 +253,7 @@ jsv_stop(lListElem *jsv, lList **answer_list, bool try_soft_quit) {
    /* stop is only possible if it was started before */
    pid = jsv_get_pid(jsv);
    if (pid != -1) {
+      const char *scriptfile = lGetString(jsv, JSV_command);
       struct timeval t;
 
       /* 
@@ -239,7 +273,7 @@ jsv_stop(lListElem *jsv, lList **answer_list, bool try_soft_quit) {
                   lGetRef(jsv, JSV_out), lGetRef(jsv, JSV_err), 
                   (try_soft_quit ? &t : NULL));
 
-      INFO((SGE_EVENT, "JSV process has been stopped"));
+      INFO((SGE_EVENT, MSG_JSV_STOPPED_S, scriptfile));
 
       jsv_set_pid(jsv, -1);
    }   
@@ -284,12 +318,12 @@ jsv_send_data(lListElem *jsv, lList **answer_list, const char *buffer, size_t si
       fflush(lGetRef(jsv, JSV_in));
       if (lret != size) {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                                 "unable to send data to JSV script.");
+                                 MSG_JSV_SEND_S);
          ret = false;
       }
    } else {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                              "not ready to send to JSV script.");
+                              MSG_JSV_SEND_READY_S);
       ret = false;
    } 
    DRETURN(ret);
@@ -373,11 +407,11 @@ bool jsv_url_parse(dstring *jsv_url, lList **answer_list, dstring *type,
        * "sharedlib" or others 
        */
       if ((t == NULL) ||
-          (t != NULL && strcmp(t, "script") == -1)) {
+          (t != NULL && strcmp(t, "script") == 0)) {
 
          if (in_client && u != NULL) {
-            answer_list_add_sprintf(answer_list, STATUS_EEXIST, ANSWER_QUALITY_ERROR, 
-                                    "JSV script URL does not allow user "SFQ" in clients", u);
+            answer_list_add_sprintf(answer_list, STATUS_EEXIST, 
+                                    ANSWER_QUALITY_ERROR, MSG_JSV_USER_S);
          } else {
             if (p != NULL) {
                if (sge_is_file(p) && sge_is_executable(p)) {
@@ -393,7 +427,7 @@ bool jsv_url_parse(dstring *jsv_url, lList **answer_list, dstring *type,
                      buffer = sge_free(buffer);
                      if (pw == NULL) {
                         answer_list_add_sprintf(answer_list, STATUS_EEXIST, ANSWER_QUALITY_ERROR,  
-                                                "User specified in JSV URL "SFQ" does not exist", u);
+                                                 MSG_JSV_USER_EXIST_S, u);
                         success = false;
                      }
                   } else {
@@ -402,19 +436,18 @@ bool jsv_url_parse(dstring *jsv_url, lList **answer_list, dstring *type,
                   }
                } else {
                   answer_list_add_sprintf(answer_list, STATUS_EEXIST, ANSWER_QUALITY_ERROR,
-                                          "JSV script %s is either no file or not executable", p);
+                                          MSG_JSV_FILE_EXEC_S, p);
                   success = false;
                }
             } else {
                answer_list_add_sprintf(answer_list, STATUS_EEXIST, ANSWER_QUALITY_ERROR,
-                                       "the given JSV URL "SFQ" is invalid", 
-                                       sge_dstring_get_string(jsv_url));
+                                       MSG_JSV_URL_S, sge_dstring_get_string(jsv_url));
                success = false;
             }
          }
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EEXIST, ANSWER_QUALITY_ERROR, 
-                                 "invalid type "SFQ" specified in jsv url", t);
+                                 MSG_JSV_URL_TYPE_S, t);
          success = false;
       }
    }
@@ -524,7 +557,7 @@ jsv_list_add(const char *name, const char *context, lList **answer_list, const c
                         sge_dstring_get_string(&path));
    if (new_jsv == NULL) {
       ret = false;
-   } 
+   }   
 
    /* cleanup */
    sge_dstring_free(&input);
@@ -532,6 +565,93 @@ jsv_list_add(const char *name, const char *context, lList **answer_list, const c
    sge_dstring_free(&user);
    sge_dstring_free(&path);
 
+   DRETURN(ret);
+}
+
+/****** sgeobj/jsv/jsv_list_remove() *******************************************
+*  NAME
+*     jsv_list_remove() -- remove a JSV script 
+*
+*  SYNOPSIS
+*     bool jsv_list_remove(const char *name, const char *context) 
+*
+*  FUNCTION
+*     Remove all JSV scripts were 'name' and 'context' matches. 
+*
+*  INPUTS
+*     const char *name    - name of a JSV script 
+*     const char *context - JSV_CLIENT_CONTEXT or thread name 
+*
+*  RESULT
+*     bool - error status
+*        true  - success
+*        false - error
+*
+*  NOTES
+*     MT-NOTE: jsv_list_remove() is MT safe 
+*******************************************************************************/
+bool 
+jsv_list_remove(const char *name, const char *context)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "jsv_list_remove");
+   if (name != NULL && context != NULL) {
+      const void *iterator = NULL;
+      lListElem *jsv_next;
+      lListElem *jsv;
+
+      sge_mutex_lock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
+      jsv_next = lGetElemStrFirst(jsv_list, JSV_context, context, &iterator);
+      while ((jsv = jsv_next) != NULL) {
+         jsv_next = lGetElemStrNext(jsv_list, JSV_context, context, &iterator);
+
+         if ((strcmp(lGetString(jsv, JSV_name), name) == 0) &&
+             (strcmp(lGetString(jsv, JSV_context), context) == 0)) {
+            lRemoveElem(jsv_list, &jsv);
+         }
+      }
+      sge_mutex_unlock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
+   }
+   DRETURN(ret);
+}
+
+/****** sgeobj/jsv/jsv_list_remove_all() ***************************************
+*  NAME
+*     jsv_list_remove_all() -- Remove all JSV elements 
+*
+*  SYNOPSIS
+*     bool jsv_list_remove_all(void) 
+*
+*  FUNCTION
+*     Remove all JSV elements from the global 'jsv_list' 
+*
+*  INPUTS
+*     void - None 
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - failed
+*
+*  NOTES
+*     MT-NOTE: jsv_list_remove_all() is MT safe 
+*******************************************************************************/
+bool 
+jsv_list_remove_all(void)
+{
+   bool ret = true;
+   lListElem *jsv;
+   lListElem *jsv_next;
+
+   DENTER(TOP_LAYER, "jsv_list_remove_all");
+   sge_mutex_lock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
+   jsv_next = lFirst(jsv_list);
+   while ((jsv = jsv_next) != NULL) {
+      jsv_next = lNext(jsv);
+      lRemoveElem(jsv_list, &jsv);
+   }
+   sge_mutex_unlock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
    DRETURN(ret);
 }
 
@@ -630,8 +750,6 @@ jsv_list_update(const char *name, const char *context,
                 * or trigger termination of jsv process and remove the jsv cull structure
                 */
                if (strcmp(jsv_url, "none") != 0) {
-                  DTRACE;
-
                   if (not_parsed) {
                      sge_dstring_append(&input, jsv_url);
                      in_client = (strcmp(context, JSV_CONTEXT_CLIENT) == 0) ? true : false;
@@ -643,14 +761,12 @@ jsv_list_update(const char *name, const char *context,
                   lSetString(jsv, JSV_user, sge_dstring_get_string(&user));
                   lSetString(jsv, JSV_command, sge_dstring_get_string(&path));
                   lSetString(jsv, JSV_url, jsv_url);
-                  INFO((SGE_EVENT, "JSV setting changed (context = "SFQ")", context));
+                  INFO((SGE_EVENT, MSG_JSV_SETTING_S, context));
                   jsv_stop(jsv, answer_list, true);
                } else {
-                  DTRACE;
-
                   jsv_stop(jsv, answer_list, true);
                   lRemoveElem(jsv_list, &jsv);
-                  INFO((SGE_EVENT, "JSV process will be stopped. Functionality is disabled now (context = "SFQ")", context));
+                  INFO((SGE_EVENT, MSG_JSV_STOP_S, context));
                }
             } else {
                SGE_STRUCT_STAT st;
@@ -659,7 +775,7 @@ jsv_list_update(const char *name, const char *context,
    
                if (SGE_STAT(lGetString(jsv, JSV_command), &st) == 0 && 
                    lGetUlong(jsv, JSV_last_mod) != st.st_mtime) {
-                  INFO((SGE_EVENT, "Modification time of JSV script changed (context = "SFQ")", context));
+                  INFO((SGE_EVENT, MSG_JSV_TIME_S, context));
                   jsv_stop(jsv, answer_list, true);    
                }
             }
@@ -835,9 +951,9 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
                u_long32 jid = lGetUlong(new_job, JB_job_number);
 
                if (jid == 0) {
-                  INFO((SGE_EVENT, "JSV rejected job (context = "SFQ")", context));
+                  INFO((SGE_EVENT, MSG_JSV_REJECTED_S, context));
                } else {
-                  INFO((SGE_EVENT, "JSV rejected job "sge_u32" (context = "SFQ")", jid, context));
+                  INFO((SGE_EVENT, MSG_JSV_REJECTED_SU, context, jid));
                }
                ret = false;
                lFreeElem(&new_job);
@@ -845,7 +961,7 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
             if (lGetBool(jsv, JSV_restart)) {
                bool soft_shutdown = lGetBool(jsv, JSV_soft_shutdown) ? true : false;
 
-               INFO((SGE_EVENT, "JSV script restart due to protocol error (context = "SFQ")", context));
+               INFO((SGE_EVENT, MSG_JSV_RESTART_S, context));
                ret &= jsv_stop(jsv, answer_list, soft_shutdown);
             }
          }

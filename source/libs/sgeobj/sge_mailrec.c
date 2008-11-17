@@ -231,7 +231,7 @@ sge_mailopt_to_dstring(u_long32 opt, dstring *string)
 /***********************************************************************/
 /* MT-NOTE: sge_parse_mail_options() is MT safe */
 int 
-sge_parse_mail_options(lList **alpp, char *mail_str, u_long32 prog_number)
+sge_parse_mail_options(lList **alpp, const char *mail_str, u_long32 prog_number)
 {
    int i, j;
    int mail_opt = 0;

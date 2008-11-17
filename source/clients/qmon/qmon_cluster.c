@@ -125,6 +125,7 @@ typedef struct _tCClEntry {
    String rlogin_command;
    String jmx_libjvm_path;
    String jmx_additional_jvm_args;
+   String jsv_url;
    String set_token_cmd;
    String pag_cmd;
    String token_extend_time;
@@ -315,6 +316,10 @@ XtResource ccl_resources[] = {
       sizeof(String), XtOffsetOf(tCClEntry, jmx_additional_jvm_args), 
       XtRImmediate, NULL },
 
+   { "jsv_url", "jsv_url", XtRString, 
+      sizeof(String), XtOffsetOf(tCClEntry, jsv_url), 
+      XtRImmediate, NULL },
+
    { "set_token_cmd", "set_token_cmd", XtRString, 
       sizeof(String), XtOffsetOf(tCClEntry, set_token_cmd), 
       XtRImmediate, NULL },
@@ -406,6 +411,7 @@ static Widget cluster_rlogin_daemon = 0;
 static Widget cluster_rlogin_command = 0;
 static Widget cluster_jmx_libjvm_path = 0;
 static Widget cluster_jmx_additional_jvm_args = 0;
+static Widget cluster_jsv_url = 0;
 static Widget cluster_set_token_cmd = 0;
 static Widget cluster_pag_cmd = 0;
 static Widget cluster_token_extend_time = 0;
@@ -727,6 +733,7 @@ Widget parent
                            "cluster_rlogin_command", &cluster_rlogin_command,
                            "cluster_jmx_libjvm_path", &cluster_jmx_libjvm_path,
                            "cluster_jmx_additional_jvm_args", &cluster_jmx_additional_jvm_args,
+                           "cluster_jsv_url", &cluster_jsv_url,
                            "cluster_set_token_cmd", &cluster_set_token_cmd,
                            "cluster_set_token_cmd_label", &cluster_set_token_cmd_label,
                            "cluster_pag_cmd_label", &cluster_pag_cmd_label,
@@ -1375,6 +1382,19 @@ int local
          lAppendElem(lp, new);
       }
 
+      if (clen->jsv_url && clen->jsv_url[0] != '\0'
+           /* && strcmp(lGetString(ep, CF_value), clen->jsv_url)*/) {
+         ep = lGetElemStr(confl, CF_name, "jsv_url");
+         if (!ep) {
+            new = lCreateElem(CF_Type);
+            lSetString(new, CF_name, "jsv_url");
+         }
+         else
+            new = lCopyElem(ep);
+         lSetString(new, CF_value, clen->jsv_url);
+         lAppendElem(lp, new);
+      }
+
 #if 0
       if (clen->dfs == 0) {
          ep = lGetElemStr(confl, CF_name, "delegated_file_staging");
@@ -1895,6 +1915,16 @@ int local
          lDelElemStr(&confl, CF_name, "additional_jvm_args");
       }
 
+      if (clen->jsv_url && clen->jsv_url[0] != '\0') {
+         ep = lGetElemStr(confl, CF_name, "jsv_url");
+         if (!ep)
+            ep = lAddElemStr(&confl, CF_name, "jsv_url", CF_Type);
+         lSetString(ep, CF_value, clen->jsv_url);
+      }
+      else {
+         lDelElemStr(&confl, CF_name, "jsv_url");
+      }
+
 #if 0
       if (clen->starter_method && clen->starter_method[0] != '\0') {
          ep = lGetElemStr(confl, CF_name, "starter_method");
@@ -2232,6 +2262,9 @@ tCClEntry *clen
    if ((ep = lGetElemStr(confl, CF_name, "additional_jvm_args")))
       clen->jmx_additional_jvm_args = XtNewString(lGetString(ep, CF_value));
 
+   if ((ep = lGetElemStr(confl, CF_name, "jsv_url")))
+      clen->jsv_url = XtNewString(lGetString(ep, CF_value));
+
    if (feature_is_enabled(FEATURE_AFS_SECURITY)) {
       if ((ep = lGetElemStr(confl, CF_name, "set_token_cmd")))
          clen->set_token_cmd = XtNewString(lGetString(ep, CF_value));
@@ -2394,6 +2427,10 @@ tCClEntry *clen
    if (clen->jmx_additional_jvm_args) {
       XtFree((char*)clen->jmx_additional_jvm_args);
       clen->jmx_additional_jvm_args = NULL;
+   }
+   if (clen->jsv_url) {
+      XtFree((char*)clen->jsv_url);
+      clen->jsv_url = NULL;
    }
    if (clen->set_token_cmd) {
       XtFree((char*)clen->set_token_cmd);

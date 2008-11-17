@@ -66,8 +66,6 @@
 #include "msg_common.h"
 
 static int var_list_parse_from_environment(lList **lpp, char **envp);
-static int sge_parse_hold_list(char *hold_str, u_long32 prog_number);
-static int cull_parse_destination_identifier_list(lList **lpp, char *dest_str);
 static int sge_parse_checkpoint_interval(char *time_str); 
 static int set_yn_option (lList **opts, u_long32 opt, char *arg, char *value,
                           lList **alp);
@@ -1683,7 +1681,8 @@ DTRACE;
       /* "-w e|w|n|v" */
 
       if (!strcmp("-w", *sp)) {
-
+         int level;
+         int lret;
 
          if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
             answer_list_add_sprintf(&answer,STATUS_EEXIST, ANSWER_QUALITY_WARNING,
@@ -1700,54 +1699,12 @@ DTRACE;
          }
 
          DPRINTF(("\"-w %s\"\n", *sp));
-
-         if (!strcmp("e", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, w_OPT, lIntT, *(sp - 1), *sp);
-            if (prog_number == QRSUB) {
-               lSetInt(ep_opt, SPA_argval_lIntT, AR_ERROR_VERIFY);
-            } else {
-               lSetInt(ep_opt, SPA_argval_lIntT, ERROR_VERIFY);
-            }
-         }
-         else if (!strcmp("w", *sp)) {
-            if (prog_number == QRSUB) {
-               answer_list_add_sprintf(&answer,STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                     MSG_PARSE_INVALIDOPTIONARGUMENTWX_S, *sp);
-               DRETURN(answer);
-            } else {
-               ep_opt = sge_add_arg(pcmdline, w_OPT, lIntT, *(sp - 1), *sp);
-            }
-            lSetInt(ep_opt, SPA_argval_lIntT, WARNING_VERIFY);
-         }
-         else if (!strcmp("n", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, w_OPT, lIntT, *(sp - 1), *sp);
-            if (prog_number == QRSUB) {
-               answer_list_add_sprintf(&answer,STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                     MSG_PARSE_INVALIDOPTIONARGUMENTWX_S, *sp);
-               DRETURN(answer);
-            } else {
-               lSetInt(ep_opt, SPA_argval_lIntT, SKIP_VERIFY);
-            }
-         }
-         else if (!strcmp("v", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, w_OPT, lIntT, *(sp - 1), *sp);
-            if (prog_number == QRSUB) {
-               lSetInt(ep_opt, SPA_argval_lIntT, AR_JUST_VERIFY);
-            } else {
-               lSetInt(ep_opt, SPA_argval_lIntT, JUST_VERIFY);
-            }
-         } else if (!strcmp("p", *sp)) {
-            if (prog_number == QRSUB) {
-               answer_list_add_sprintf(&answer,STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                     MSG_PARSE_INVALIDOPTIONARGUMENTWX_S, *sp);
-               DRETURN(answer);
-            }
-            ep_opt = sge_add_arg(pcmdline, w_OPT, lIntT, *(sp - 1), *sp);
-            lSetInt(ep_opt, SPA_argval_lIntT, POKE_VERIFY);
+         lret = job_parse_validation_level(&level, *sp, prog_number, &answer);
+         if (!lret) {
+            DRETURN(answer);
          } else {
-             answer_list_add_sprintf(&answer,STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                     MSG_PARSE_INVALIDOPTIONARGUMENTWX_S, *sp);
-             DRETURN(answer);
+            ep_opt = sge_add_arg(pcmdline, w_OPT, lIntT, *(sp - 1), *sp);
+            lSetInt(ep_opt, SPA_argval_lIntT, level);
          }
 
          sp++;
@@ -1989,134 +1946,6 @@ DTRACE;
    return answer;
 }
 
-
-/***********************************************************************/
-/* "-h [hold_list]" */
-/* MT-NOTE: sge_parse_hold_list() is MT safe */
-static int sge_parse_hold_list(
-char *hold_str,
-u_long32 prog_number
-) {
-   int i, j;
-   int target = 0;
-   int op_code = 0;
-
-   DENTER(TOP_LAYER, "sge_parse_hold_list");
-
-   i = strlen(hold_str);
-
-   for (j = 0; j < i; j++) {
-      switch (hold_str[j]) {
-      case 'n':
-         if ((prog_number == QHOLD)  || 
-             (prog_number == QRLS) || 
-             (op_code && op_code != MINUS_H_CMD_SUB)) {
-            target = -1;
-            break;
-         }
-         op_code = MINUS_H_CMD_SUB;
-         target = MINUS_H_TGT_USER|MINUS_H_TGT_OPERATOR|MINUS_H_TGT_SYSTEM;
-         break;
-      case 's':
-         if (prog_number == QRLS) {
-            if (op_code && op_code != MINUS_H_CMD_SUB) {
-               target = -1;
-               break;
-            }
-            op_code = MINUS_H_CMD_SUB;
-            target = target|MINUS_H_TGT_SYSTEM;         
-         }
-         else {
-            if (op_code && op_code != MINUS_H_CMD_ADD) {
-               target = -1;
-               break;
-            }
-            op_code = MINUS_H_CMD_ADD;
-            target = target|MINUS_H_TGT_SYSTEM;
-         }   
-         break;
-      case 'o':
-         if (prog_number == QRLS) {
-            if (op_code && op_code != MINUS_H_CMD_SUB) {
-               target = -1;
-               break;
-            }
-            op_code = MINUS_H_CMD_SUB;
-            target = target|MINUS_H_TGT_OPERATOR;         
-         }
-         else {
-            if (op_code && op_code != MINUS_H_CMD_ADD) {
-               target = -1;
-               break;
-            }
-            op_code = MINUS_H_CMD_ADD;
-            target = target|MINUS_H_TGT_OPERATOR;
-         }
-         break;
-         
-      case 'u':
-         if (prog_number == QRLS) {
-            if (op_code && op_code != MINUS_H_CMD_SUB) {
-               target = -1;
-               break;
-            }
-            op_code = MINUS_H_CMD_SUB;
-            target = target|MINUS_H_TGT_USER;
-         }
-         else {
-            if (op_code && op_code != MINUS_H_CMD_ADD) {
-               target = -1;
-               break;
-            }
-            op_code = MINUS_H_CMD_ADD;
-            target = target|MINUS_H_TGT_USER;
-         }
-         break;
-      case 'S':
-         if ((prog_number == QHOLD)  || 
-             (prog_number == QRLS) || 
-             (op_code && op_code != MINUS_H_CMD_SUB)) {
-            target = -1;
-            break;
-         }
-         op_code = MINUS_H_CMD_SUB;
-         target = target|MINUS_H_TGT_SYSTEM;
-         break;
-      case 'U':
-         if ((prog_number == QHOLD)  || 
-             (prog_number == QRLS) || 
-             (op_code && op_code != MINUS_H_CMD_SUB)) {
-            target = -1;
-            break;
-         }
-         op_code = MINUS_H_CMD_SUB;
-         target = target|MINUS_H_TGT_USER;
-         break;
-      case 'O':
-         if ((prog_number == QHOLD)  || 
-             (prog_number == QRLS) || 
-             (op_code && op_code != MINUS_H_CMD_SUB)) {
-            target = -1;
-            break;
-         }
-         op_code = MINUS_H_CMD_SUB;
-         target = target|MINUS_H_TGT_OPERATOR;
-         break;
-      default:
-         target = -1;
-      }
-
-      if (target == -1)
-         break;
-   }
-
-   if (target != -1)
-      target |= op_code;
-
-   DEXIT;
-   return target;
-}
-
 /***************************************************************************/
 static int sge_parse_checkpoint_interval(
 char *time_str 
@@ -2135,135 +1964,6 @@ char *time_str
 }
 
 /***************************************************************************/
-
-/****** parse_qsub/cull_parse_path_list() **************************************
-*  NAME
-*     cull_parse_path_list() -- ??? 
-*
-*  SYNOPSIS
-*     int cull_parse_path_list(lList **lpp, char *path_str) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     lList **lpp    - ??? 
-*     char *path_str - ??? 
-*
-*  RESULT
-*     int - error code 
-*        0 = okay
-*        1 = error 
-*
-*  NOTES
-*     MT-NOTE: cull_parse_path_list() is MT safe
-*******************************************************************************/
-int cull_parse_path_list(
-lList **lpp,
-char *path_str 
-
-/*
-   [[host]:]path[,[[host]:]path...]
-
-   str0 - path
-   str1 - host
-   str3 - temporary
-   int  - temporary
- */
-
-) {
-   char *path = NULL;
-   char *cell = NULL;
-   char **str_str = NULL;
-   char **pstr = NULL;
-   lListElem *ep = NULL;
-   char *path_string = NULL;
-   bool ret_error = false;
-
-   DENTER(TOP_LAYER, "cull_parse_path_list");
-
-   ret_error = (lpp == NULL) ? true : false;
-/*
-   if (!lpp) {
-      DEXIT;
-      return 1;
-   }
-*/
-
-   if(!ret_error){
-      path_string = sge_strdup(NULL, path_str);
-      ret_error = (path_string == NULL) ? true : false;
-   }
-/*
-   if (!path_string) {
-      *lpp = NULL;
-      DEXIT;
-      return 2;
-   }
-*/
-   if(!ret_error){
-      str_str = string_list(path_string, ",", NULL);
-      ret_error = (str_str == NULL || *str_str == NULL) ? true : false;
-   }
-/*
-   if (!str_str || !*str_str) {
-      *lpp = NULL;
-      FREE(path_string);
-      DEXIT;
-      return 3;
-   }
-*/
-   if ( (!ret_error) && (!*lpp)) {
-      *lpp = lCreateList("path_list", PN_Type);
-      ret_error = (*lpp == NULL) ? true : false;
-/*
-      if (!*lpp) {
-         FREE(path_string);
-         FREE(str_str);
-         DEXIT;
-         return 4;
-      }
-*/
-   }
-
-   if(!ret_error){
-      for (pstr = str_str; *pstr; pstr++) {
-      /* cell given ? */
-         if (*pstr[0] == ':') {  /* :path */
-            cell = NULL;
-            path = *pstr+1;
-         } else if ((path = strstr(*pstr, ":"))){ /* host:path */
-            path[0] = '\0';
-            cell = strdup(*pstr);
-            path[0] = ':';
-            path += 1;
-         } else { /* path */
-            cell = NULL;
-            path = *pstr;
-         }
-
-         SGE_ASSERT((path));
-         ep = lCreateElem(PN_Type);
-         /* SGE_ASSERT(ep); */
-         lAppendElem(*lpp, ep);
-
-         lSetString(ep, PN_path, path);
-        if (cell) {
-            lSetHost(ep, PN_host, cell);
-            FREE(cell);
-         }
-      }
-   }
-   if(path_string)
-      FREE(path_string);
-   if(str_str)
-      FREE(str_str);
-   DEXIT;
-   if(ret_error)
-      return 1;
-   else
-      return 0;
-}
 
 /****** client/var/var_list_parse_from_environment() **************************
 *  NAME
@@ -2328,101 +2028,6 @@ static int var_list_parse_from_environment(lList **lpp, char **envp)
       sge_free_saved_vars(context);
    }
 
-   DEXIT;
-   return 0;
-}
-
-/***************************************************************************/
-/* MT-NOTE: cull_parse_destination_identifier_list() is MT safe */
-static int cull_parse_destination_identifier_list(
-lList **lpp, /* QR_Type */
-char *dest_str 
-) {
-   int rule[] = {QR_name, 0};
-   char **str_str = NULL;
-   int i_ret;
-   char *s;
-
-   DENTER(TOP_LAYER, "cull_parse_destination_identifier_list");
-
-   if (lpp == NULL) {
-      DRETURN(1);
-   }
-
-   s = sge_strdup(NULL, dest_str);
-   if (s == NULL) {
-      *lpp = NULL;
-      DRETURN(3);
-   }
-
-   str_str = string_list(s, ",", NULL);
-   if (str_str == NULL || *str_str == NULL) {
-      *lpp = NULL;
-      FREE(s);
-      DRETURN(2);
-   }
-
-   i_ret = cull_parse_string_list(str_str, "destin_ident_list", QR_Type, rule, lpp);
-   if (i_ret) {
-      FREE(s);
-      FREE(str_str);
-      DRETURN(3);
-   }
-
-   FREE(s);
-   FREE(str_str);
-   DRETURN(0);
-}
-
-/***************************************************************************/
-/*   MT-NOTE: cull_parse_jid_hold_list() is MT safe */
-int cull_parse_jid_hold_list(
-lList **lpp,
-char *str 
-
-/*   jid[,jid,...]
-
-   int0 - jid
-
- */
-
-) {
-   int rule[] = {ST_name, 0};
-   char **str_str = NULL;
-   int i_ret;
-   char *s;
-
-   DENTER(TOP_LAYER, "cull_parse_jid_hold_list");
-
-   if (!lpp) {
-      DEXIT;
-      return 1;
-   }
-
-   s = sge_strdup(NULL, str);
-   if (!s) {
-      *lpp = NULL;
-      DEXIT;
-      return 3;
-   }
-   str_str = string_list(s, ",", NULL);
-   if (!str_str || !*str_str) {
-      *lpp = NULL;
-      FREE(s);
-      DEXIT;
-      return 2;
-   }
-   i_ret = cull_parse_string_list(str_str, "jid_hold list", ST_Type, rule, lpp);
-   
-   if (i_ret) {
-      FREE(s);
-      FREE(str_str);
-      DEXIT;
-      return 3;
-   }
-
-   FREE(s);
-   FREE(str_str);
    DEXIT;
    return 0;
 }

@@ -34,22 +34,26 @@
 #include <fnmatch.h>
 
 #include "basis_types.h"
-#include "sgermon.h" 
-#include "sge_string.h"
-#include "sge_str.h"
-#include "sge_log.h"
-#include "sge_hostname.h"
 
-#include "sge_answer.h"
-#include "sge_centry.h"
-#include "sge_cqueue.h"
-#include "sge_href.h"
-#include "sge_hgroup.h"
-#include "sge_object.h"
-#include "sge_qinstance.h"
-#include "sge_qref.h"
-#include "sge_eval_expression.h"
-#include "commlib.h"
+#include "rmon/sgermon.h" 
+
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
+#include "uti/sge_hostname.h"
+
+#include "sgeobj/cull_parse_util.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_eval_expression.h"
+#include "sgeobj/sge_href.h"
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qref.h"
+#include "sgeobj/sge_str.h"
+
+#include "comm/commlib.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -863,3 +867,64 @@ qref_resolve_hostname(lListElem *this_elem)
    DEXIT;
    return;
 }
+
+/****** sge_qref/cull_parse_destination_identifier_list() **********************
+*  NAME
+*     cull_parse_destination_identifier_list() -- parse a queue reference list 
+*
+*  SYNOPSIS
+*     int 
+*     cull_parse_destination_identifier_list(lList **lpp, char *dest_str) 
+*
+*  FUNCTION
+*     Parse 'dest_str' and create a QR_type list. 
+*
+*  INPUTS
+*     lList **lpp    - QR_Type list 
+*     char *dest_str - input string 
+*
+*  RESULT
+*     int - error state
+*
+*  NOTES
+*     MT-NOTE: cull_parse_destination_identifier_list() is MT safe 
+*******************************************************************************/
+int 
+cull_parse_destination_identifier_list(lList **lpp, const char *dest_str) 
+{
+   int rule[] = {QR_name, 0};
+   char **str_str = NULL;
+   int i_ret;
+   char *s;
+
+   DENTER(TOP_LAYER, "cull_parse_destination_identifier_list");
+
+   if (lpp == NULL) {
+      DRETURN(1);
+   }
+
+   s = sge_strdup(NULL, dest_str);
+   if (s == NULL) {
+      *lpp = NULL;
+      DRETURN(3);
+   }
+
+   str_str = string_list(s, ",", NULL);
+   if (str_str == NULL || *str_str == NULL) {
+      *lpp = NULL;
+      FREE(s);
+      DRETURN(2);
+   }
+
+   i_ret = cull_parse_string_list(str_str, "destin_ident_list", QR_Type, rule, lpp);
+   if (i_ret) {
+      FREE(s);
+      FREE(str_str);
+      DRETURN(3);
+   }
+
+   FREE(s);
+   FREE(str_str);
+   DRETURN(0);
+}
+

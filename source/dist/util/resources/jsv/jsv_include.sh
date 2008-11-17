@@ -43,9 +43,8 @@
 PATH=/bin:/usr/bin
 ARCH=`$SGE_ROOT/util/arch`
 
-logging_enabled=true     # is logging enabled?
-#logfile=/tmp/jsv_$$.log  # logfile
-logfile=/tmp/jsv.log     # logfile
+logging_enabled=false    # is logging enabled?
+logfile=/tmp/jsv_$$.log  # logfile
 
 # Current state of the script
 # Might be "initialized", "started" or "verifying"
@@ -60,12 +59,12 @@ jsv_cli_params="a ar A b ckpt cwd C display dl e hard h hold_jid\
 
 # These names are the suffixes of variable names which will contain
 # the information of following submit client switches:
-#     c: summarized job context information (-sc -ac -dc)
+#     ac: summarized job context information (-sc -ac -dc)
 #     l_hard: hard resource request (-hard -l ...)
 #     l_soft: soft resource requests (-soft -l ...)
 #     q_hard: hard queue resource request (-hard -q ...)
 #     q_soft: soft queue resource request (-soft -q ...)
-jsv_mod_params="c l_hard l_soft q_hard q_soft"
+jsv_mod_params="ac l_hard l_soft q_hard q_soft"
 
 # Here are the suffixes of variable names which do not directly appear
 # as named switches in a client.

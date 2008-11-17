@@ -271,7 +271,8 @@ qinstance_increase_qversion(lListElem *this_elem)
 *  RESULT
 *     bool - true, if the user is owner, else false
 ******************************************************************************/
-bool qinstance_check_owner(const lListElem *this_elem, const char *user_name)
+bool 
+qinstance_check_owner(const lListElem *this_elem, const char *user_name)
 {
    bool ret = false;
 
@@ -658,9 +659,9 @@ qinstance_slots_used(const lListElem *this_elem)
    DRETURN(ret);
 }
 
-/****** sge_qinstance/qinstance_slots_reserved() *******************************
+/****** sgeobj/qinstance/qinstance_slots_reserved() ***************************
 *  NAME
-*     qinstance_slots_reserved() -- Returns the number of maximal reserved slots
+*     qinstance_slots_reserved() -- the number of maximal reserved slots
 *
 *  SYNOPSIS
 *     int qinstance_slots_reserved(const lListElem *this_elem) 
@@ -677,7 +678,8 @@ qinstance_slots_used(const lListElem *this_elem)
 *  NOTES
 *     MT-NOTE: qinstance_slots_reserved() is MT safe 
 *******************************************************************************/
-int qinstance_slots_reserved(const lListElem *this_elem)
+int 
+qinstance_slots_reserved(const lListElem *this_elem)
 {
    int ret = 0;
    lListElem *slots;
@@ -1342,7 +1344,8 @@ qinstance_verify_full_name(lList **answer_list, const char *full_name)
 *  NOTES
 *     MT-NOTE: qinstance_set_error() is MT safe 
 *******************************************************************************/
-void qinstance_set_error(lListElem *qinstance, u_long32 type, const char *message, bool set_error)
+void 
+qinstance_set_error(lListElem *qinstance, u_long32 type, const char *message, bool set_error)
 {
    qinstance_set_state(qinstance, set_error, type);
    if (set_error) {

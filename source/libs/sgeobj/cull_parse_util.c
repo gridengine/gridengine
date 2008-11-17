@@ -35,18 +35,19 @@
 #include <strings.h>
 #include <stdlib.h>
 
-#include "cull.h"
+#include "cull/cull.h"
 #include "cull_parse_util.h"
 #include "sgermon.h"
-#include "sge_string.h"
 #include "sge_resource_utilization.h"
-#include "parse_qsubL.h"
-#include "sge_stdio.h"
 
-#include "sge_stdio.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_string.h"
 
+#include "sgeobj/sge_job.h"
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_range.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/parse_qsubL.h"
 
 static int fprint_name_value_list(FILE *fp, char *name, lList *thresholds, int print_slots,
      int nm_name, int nm_strval, int nm_doubleval);
@@ -1250,15 +1251,10 @@ int soft_field
    DRETURN(0);
 }
 
-int parse_list_simple(
-lList *cmdline,
-char *option,
-lListElem *job,
-int field,
-int nm_var,
-int nm_value,
-u_long32 flags 
-) {
+int 
+parse_list_simple(lList *cmdline, char *option, lListElem *job, int field, 
+                  int nm_var, int nm_value, u_long32 flags) 
+{
    lList *destlist = NULL;
    lList *lp = NULL;
    lListElem *ep;
@@ -1272,37 +1268,8 @@ u_long32 flags
       lp = NULL;
       lXchgList(ep, SPA_argval_lListT, &lp);
 
-      if (flags & FLG_LIST_APPEND || flags & FLG_LIST_MERGE_DOUBLE_KEY) {
-         if (lp) {  
-            if (!destlist) {
-               destlist = lp;
-            } else {
-               lAddList(destlist, &lp);
-               /*
-               ** was freed by lAddList
-               */
-               lp = NULL;
-               
-               if (flags & FLG_LIST_MERGE_DOUBLE_KEY) {
-                  cull_compress_definition_list(destlist, nm_var, nm_value, 1);
-               }
-            }
-         }
-      } else if (flags & FLG_LIST_MERGE) {
-         if (lp != NULL) {
-            if (!destlist) {
-               destlist = lp; 
-            } else {
-               cull_merge_definition_list(&destlist, lp, nm_var, nm_value);
-               lFreeList(&lp);
-            }
-         }
-      } else {
-         if (destlist) {
-            lFreeList(&destlist);
-         }
-         destlist = lp;
-      } 
+      parse_list_simpler(lp, &destlist, option, job, field, nm_var, nm_value, flags);
+
       lRemoveElem(cmdline, &ep);
    } 
 
@@ -1310,5 +1277,330 @@ u_long32 flags
 
    DEXIT;
    return 0;
+}
+
+int 
+parse_list_simpler(lList *lp, lList **destlist, char *option, lListElem *job, int field, 
+                  int nm_var, int nm_value, u_long32 flags) 
+{
+   if (lp != NULL) {
+      if (flags & FLG_LIST_APPEND || flags & FLG_LIST_MERGE_DOUBLE_KEY) {
+         if (lp) {  
+            if (!*destlist) {
+               *destlist = lp;
+            } else {
+               lAddList(*destlist, &lp);
+               
+               if (flags & FLG_LIST_MERGE_DOUBLE_KEY) {
+                  cull_compress_definition_list(*destlist, nm_var, nm_value, 1);
+               }
+            }
+         }
+      } else if (flags & FLG_LIST_MERGE) {
+         if (lp != NULL) {
+            if (!*destlist) {
+               *destlist = lp; 
+            } else {
+               cull_merge_definition_list(destlist, lp, nm_var, nm_value);
+               lFreeList(&lp);
+            }
+         }
+      } else {
+         if (*destlist) {
+            lFreeList(destlist);
+         }
+         *destlist = lp;
+      } 
+   }
+   return 0;
+}
+
+/****** cull_parse_util/cull_parse_path_list() **************************************
+*  NAME
+*     cull_parse_path_list() -- parse a path list 
+*
+*  SYNOPSIS
+*     int cull_parse_path_list(lList **lpp, char *path_str) 
+*
+*  FUNCTION
+*     Parse a path list of the format: [[host]:]path[,[[host]:]path...]
+*
+*  INPUTS
+*     lList **lpp    - parsed list PN_Type 
+*     char *path_str - input string 
+*
+*  RESULT
+*     int - error code 
+*        0 = okay
+*        1 = error 
+*
+*  NOTES
+*     MT-NOTE: cull_parse_path_list() is MT safe
+*******************************************************************************/
+int cull_parse_path_list(lList **lpp, const char *path_str) 
+{
+   char *path = NULL;
+   char *cell = NULL;
+   char **str_str = NULL;
+   char **pstr = NULL;
+   lListElem *ep = NULL;
+   char *path_string = NULL;
+   bool ret_error = false;
+
+   DENTER(TOP_LAYER, "cull_parse_path_list");
+
+   ret_error = (lpp == NULL) ? true : false;
+
+   if(!ret_error){
+      path_string = sge_strdup(NULL, path_str);
+      ret_error = (path_string == NULL) ? true : false;
+   }
+   if(!ret_error){
+      str_str = string_list(path_string, ",", NULL);
+      ret_error = (str_str == NULL || *str_str == NULL) ? true : false;
+   }
+   if ( (!ret_error) && (!*lpp)) {
+      *lpp = lCreateList("path_list", PN_Type);
+      ret_error = (*lpp == NULL) ? true : false;
+   }
+
+   if(!ret_error){
+      for (pstr = str_str; *pstr; pstr++) {
+      /* cell given ? */
+         if (*pstr[0] == ':') {  /* :path */
+            cell = NULL;
+            path = *pstr+1;
+         } else if ((path = strstr(*pstr, ":"))){ /* host:path */
+            path[0] = '\0';
+            cell = strdup(*pstr);
+            path[0] = ':';
+            path += 1;
+         } else { /* path */
+            cell = NULL;
+            path = *pstr;
+         }
+
+         ep = lCreateElem(PN_Type);
+         lAppendElem(*lpp, ep);
+
+         lSetString(ep, PN_path, path);
+        if (cell) {
+            lSetHost(ep, PN_host, cell);
+            FREE(cell);
+         }
+      }
+   }
+   if(path_string)
+      FREE(path_string);
+   if(str_str)
+      FREE(str_str);
+   DRETURN(ret_error? 1 : 0);
+}
+
+/****** cull_parse_util/cull_parse_jid_hold_list() *****************************
+*  NAME
+*     cull_parse_jid_hold_list() -- parse a jid list 
+*
+*  SYNOPSIS
+*     int cull_parse_jid_hold_list(lList **lpp, const char *str) 
+*
+*  FUNCTION
+*     parse a jid list of the fomat jid[,jid,...]
+*
+*  INPUTS
+*     lList **lpp - ST_Type result list 
+*     const char *str   - input string to be parsed 
+*
+*  RESULT
+*     int - 
+*
+*  NOTES
+*     MT-NOTE: cull_parse_jid_hold_list() is MT safe 
+*******************************************************************************/
+int 
+cull_parse_jid_hold_list(lList **lpp, const char *str) 
+{
+   int rule[] = {ST_name, 0};
+   char **str_str = NULL;
+   int i_ret;
+   char *s;
+
+   DENTER(TOP_LAYER, "cull_parse_jid_hold_list");
+
+   if (!lpp) {
+      DEXIT;
+      return 1;
+   }
+
+   s = sge_strdup(NULL, str);
+   if (!s) {
+      *lpp = NULL;
+      DEXIT;
+      return 3;
+   }
+   str_str = string_list(s, ",", NULL);
+   if (!str_str || !*str_str) {
+      *lpp = NULL;
+      FREE(s);
+      DEXIT;
+      return 2;
+   }
+   i_ret = cull_parse_string_list(str_str, "jid_hold list", ST_Type, rule, lpp);
+   
+   if (i_ret) {
+      FREE(s);
+      FREE(str_str);
+      DEXIT;
+      return 3;
+   }
+
+   FREE(s);
+   FREE(str_str);
+   DEXIT;
+   return 0;
+}
+
+/****** cull_parse_util/sge_parse_hold_list() **********************************
+*  NAME
+*     sge_parse_hold_list() -- parse -h switch of qsub and qalter 
+*
+*  SYNOPSIS
+*     int sge_parse_hold_list(char *hold_str, u_long32 prog_number) 
+*
+*  FUNCTION
+*     Parse the hold flags of -h switches which can be used with 
+*     qaub and qalter 
+*
+*  INPUTS
+*     char *hold_str       - string tobe parsed
+*     u_long32 prog_number - program number 
+*
+*  RESULT
+*     int - hold state
+*        -1 in case of error
+*
+*  NOTES
+*     MT-NOTE: sge_parse_hold_list() is MT safe 
+*******************************************************************************/
+int 
+sge_parse_hold_list(const char *hold_str, u_long32 prog_number) {
+   int i, j;
+   int target = 0;
+   int op_code = 0;
+
+   DENTER(TOP_LAYER, "sge_parse_hold_list");
+
+   i = strlen(hold_str);
+
+   for (j = 0; j < i; j++) {
+      switch (hold_str[j]) {
+      case 'n':
+         if ((prog_number == QHOLD)  || 
+             (prog_number == QRLS) || 
+             (op_code && op_code != MINUS_H_CMD_SUB)) {
+            target = -1;
+            break;
+         }
+         op_code = MINUS_H_CMD_SUB;
+         target = MINUS_H_TGT_USER|MINUS_H_TGT_OPERATOR|MINUS_H_TGT_SYSTEM;
+         break;
+      case 's':
+         if (prog_number == QRLS) {
+            if (op_code && op_code != MINUS_H_CMD_SUB) {
+               target = -1;
+               break;
+            }
+            op_code = MINUS_H_CMD_SUB;
+            target = target|MINUS_H_TGT_SYSTEM;         
+         }
+         else {
+            if (op_code && op_code != MINUS_H_CMD_ADD) {
+               target = -1;
+               break;
+            }
+            op_code = MINUS_H_CMD_ADD;
+            target = target|MINUS_H_TGT_SYSTEM;
+         }   
+         break;
+      case 'o':
+         if (prog_number == QRLS) {
+            if (op_code && op_code != MINUS_H_CMD_SUB) {
+               target = -1;
+               break;
+            }
+            op_code = MINUS_H_CMD_SUB;
+            target = target|MINUS_H_TGT_OPERATOR;         
+         }
+         else {
+            if (op_code && op_code != MINUS_H_CMD_ADD) {
+               target = -1;
+               break;
+            }
+            op_code = MINUS_H_CMD_ADD;
+            target = target|MINUS_H_TGT_OPERATOR;
+         }
+         break;
+         
+      case 'u':
+         if (prog_number == QRLS) {
+            if (op_code && op_code != MINUS_H_CMD_SUB) {
+               target = -1;
+               break;
+            }
+            op_code = MINUS_H_CMD_SUB;
+            target = target|MINUS_H_TGT_USER;
+         }
+         else {
+            if (op_code && op_code != MINUS_H_CMD_ADD) {
+               target = -1;
+               break;
+            }
+            op_code = MINUS_H_CMD_ADD;
+            target = target|MINUS_H_TGT_USER;
+         }
+         break;
+      case 'S':
+         if ((prog_number == QHOLD)  || 
+             (prog_number == QRLS) || 
+             (op_code && op_code != MINUS_H_CMD_SUB)) {
+            target = -1;
+            break;
+         }
+         op_code = MINUS_H_CMD_SUB;
+         target = target|MINUS_H_TGT_SYSTEM;
+         break;
+      case 'U':
+         if ((prog_number == QHOLD)  || 
+             (prog_number == QRLS) || 
+             (op_code && op_code != MINUS_H_CMD_SUB)) {
+            target = -1;
+            break;
+         }
+         op_code = MINUS_H_CMD_SUB;
+         target = target|MINUS_H_TGT_USER;
+         break;
+      case 'O':
+         if ((prog_number == QHOLD)  || 
+             (prog_number == QRLS) || 
+             (op_code && op_code != MINUS_H_CMD_SUB)) {
+            target = -1;
+            break;
+         }
+         op_code = MINUS_H_CMD_SUB;
+         target = target|MINUS_H_TGT_OPERATOR;
+         break;
+      default:
+         target = -1;
+      }
+
+      if (target == -1)
+         break;
+   }
+
+   if (target != -1)
+      target |= op_code;
+
+   DEXIT;
+   return target;
 }
 

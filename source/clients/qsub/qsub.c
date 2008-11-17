@@ -221,7 +221,8 @@ char **argv
       DPRINTF(("Wait for job end\n"));
    }
 
-   alp = cull_parse_job_parameter(myuid, username, cell_root, unqualified_hostname, qualified_hostname, opts_all, &job);
+   alp = cull_parse_job_parameter(myuid, username, cell_root, unqualified_hostname, 
+                                  qualified_hostname, opts_all, &job);
 
    tmp_ret = answer_list_print_err_warn(&alp, NULL, "qsub: ", MSG_WARNING);
    if (tmp_ret > 0) {

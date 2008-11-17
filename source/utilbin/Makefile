@@ -144,8 +144,8 @@ read_raw.o:		$(UTILBIN_DIR)/read_raw.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/read_raw.c
 
 #---------------------------------------------------------------------
-echo_raw:		echo_raw.o version.o
-		$(CC) $(CFLAGS) -o $@ echo_raw.o version.o $(LFLAGS)
+echo_raw:		echo_raw.o version.o $(UTILIB) $(RMONLIB) $(COMMLISTSLIB) $(LCKLIB)
+		$(CC) $(CFLAGS) -o $@ echo_raw.o version.o $(LFLAGS) -luti -lrmon -llck $(COMMLISTSLIB) $(LIBS)
 
 echo_raw.o:		$(UTILBIN_DIR)/echo_raw.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/echo_raw.c

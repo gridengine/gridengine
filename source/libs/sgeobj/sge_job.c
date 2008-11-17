@@ -3743,3 +3743,52 @@ job_get_verify_attr(u_long32 op, dstring *string)
    DRETURN(success);
 }
 
+bool 
+job_parse_validation_level(int *level, const char *input, int prog_number, lList **answer_list) 
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "job_parse_validation_level");
+   if (strcmp("e", input) == 0) {
+      if (prog_number == QRSUB) {
+         *level = AR_ERROR_VERIFY;
+      } else {
+         *level = ERROR_VERIFY;
+      }
+   } else if (strcmp("w", input) == 0) {
+      if (prog_number == QRSUB) {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                 MSG_PARSE_INVALIDOPTIONARGUMENTWX_S, input);
+         ret = false;
+      } else {
+         *level = WARNING_VERIFY; 
+      }
+   } else if (strcmp("n", input) == 0) {
+      if (prog_number == QRSUB) {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                 MSG_PARSE_INVALIDOPTIONARGUMENTWX_S, input);
+         ret = false;
+      } else {
+         *level = SKIP_VERIFY;
+      }
+   } else if (strcmp("v", input) == 0) {
+      if (prog_number == QRSUB) {
+         *level = AR_JUST_VERIFY;
+      } else {
+         *level = JUST_VERIFY;
+      }
+   } else if (strcmp("p", input) == 0) {
+      if (prog_number == QRSUB) {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                 MSG_PARSE_INVALIDOPTIONARGUMENTWX_S, input); 
+         ret = false;
+      } else {
+         *level = POKE_VERIFY;
+      }
+   } else {
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                              MSG_PARSE_INVALIDOPTIONARGUMENTWX_S, input);
+      ret = false;
+   }
+   DRETURN(ret);
+}

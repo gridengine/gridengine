@@ -37,6 +37,8 @@
 #include <sys/types.h>
 #include <sys/time.h>
 
+#include "uti/sge_dstring.h"
+
 /*
  * Implements a binary which prints all paramaters it gets as arguments
  * without interpreting "\<character>" character sequences like \n
@@ -51,6 +53,7 @@ int main(int argc, char *argv[])
    int i = 1;
    int first = 1;
    int mode = 0;
+   dstring output_buffer = DSTRING_INIT;
    
    if (argc >= 2 && strcmp(argv[1], "-e") == 0) {
       /* skip this argument and change the mode */
@@ -89,7 +92,7 @@ int main(int argc, char *argv[])
 
          while (j <= length) {
             char first = argv[i][j++];
-            
+         
             if (first == '\\') {
                char second = argv[i][j];
                char out;
@@ -130,9 +133,9 @@ int main(int argc, char *argv[])
                      out = first;
                }
                j++;
-               fputc(out, stdout);
+               sge_dstring_append_char(&output_buffer, out);
             } else {
-               fputc(first, stdout);
+               sge_dstring_append_char(&output_buffer, first);
             } 
          }
          i++;
@@ -140,8 +143,9 @@ int main(int argc, char *argv[])
       first = 0;
    }
    if (mode == 0) {
-      fputc('\n', stdout);
+      sge_dstring_append_char(&output_buffer, '\n');
    }
+   printf("%s", sge_dstring_get_string(&output_buffer));
    return 0;   
 }
 

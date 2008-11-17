@@ -1554,7 +1554,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
 
       if (shell_list != NULL) {
          lListElem *shell;
-         bool first = true;
  
          sge_dstring_clear(&buffer);
          sge_dstring_sprintf(&buffer, "%s o", prefix);
@@ -1569,7 +1568,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
             } else {
                sge_dstring_append(&buffer, path);
             }
-            first = false;
          }
          jsv_send_command(jsv, answer_list, sge_dstring_get_string(&buffer));
       }
@@ -1944,7 +1942,6 @@ jsv_handle_env_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_
    const char *var;
    const char *val;
    bool skip_check = false;
-   bool test_mode = lGetBool(jsv, JSV_test);
    lList *local_answer_list = NULL;
    lListElem *new_job = lGetRef(jsv, JSV_new_job);
 
@@ -1961,7 +1958,6 @@ jsv_handle_env_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_
       lSetBool(jsv, JSV_test, true);
       lSetUlong(jsv, JSV_test_pos, 0);
       lSetString(jsv, JSV_result, val);
-      test_mode = true;
       skip_check = true;
    }
 

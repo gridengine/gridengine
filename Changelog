@@ -1,3 +1,5 @@
+EB-2008-11-17-1: Bugfix:      - fixed broken build on irix
+
 JG-2008-11-17-0: Bugfix:      - inst_sge -rst: can't resolve username "none"
                               - inst_sge -rst: doesn't restore resource_quotas
                                 and advance reservation with classic spooling

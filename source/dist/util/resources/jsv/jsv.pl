@@ -51,17 +51,17 @@ on_verify(sub {
       }
    }
 
-   if (exists $params{c}) {
-      if (exists $params{c}{a}) {
-         sub_add_param('c','a',$params{c}{a}+1);
+   if (exists $params{ac}) {
+      if (exists $params{ac}{a}) {
+         sub_add_param('ac','a',$params{ac}{a}+1);
       } else {
-         sub_add_param('c','a',1);
+         sub_add_param('ac','a',1);
       }
-      if (exists $params{c}{b}) {
-         sub_del_param('c','b');
+      if (exists $params{ac}{b}) {
+         sub_del_param('ac','b');
       }
-      sub_add_param('c','c');
-      sub_add_param('c','d',5);
+      sub_add_param('ac','c');
+      sub_add_param('ac','d',5);
    }
 
    if ($do_wait) {

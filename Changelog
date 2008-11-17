@@ -1,3 +1,7 @@
+TB-2008-11-17-0: Bugfix:      improved error handling in perl JSV script
+                              for list/non-list PARAMs
+                 Review:      MD
+
 EB-2008-11-13-0: Enhancem.:   - added JSV URL to submit dialog of qmon
 										  and to global configuration
 										- added missing parsing code

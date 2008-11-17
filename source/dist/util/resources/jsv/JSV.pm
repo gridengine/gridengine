@@ -161,7 +161,13 @@ sub handle_command_param {
          }
          $param{$key} = { %h };
       } else {
-         $param{$key} = $val;
+         # not list command
+         if ($val =~ /,/) {
+            # oops, but this looks like a list option (contains a comma)
+            send_error("JSV script got PARAM command for non-list option '$key' but the value '$val' looks like a list");
+         } else {
+            $param{$key} = $val;
+         }
       }
    } else {
       send_error("JSV script got PARAM command but is in state $state");

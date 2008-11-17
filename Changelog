@@ -1,3 +1,10 @@
+JG-2008-11-17-0: Bugfix:      - inst_sge -rst: can't resolve username "none"
+                              - inst_sge -rst: doesn't restore resource_quotas
+                                and advance reservation with classic spooling
+                 Bugster:     6751309, 6751310
+                 Issue:       2791, 2789
+                 Review:      MD
+
 TB-2008-11-17-0: Bugfix:      improved error handling in perl JSV script
                               for list/non-list PARAMs
                  Review:      MD

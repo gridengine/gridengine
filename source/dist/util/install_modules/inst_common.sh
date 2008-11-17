@@ -2692,7 +2692,7 @@ RestoreConfig()
    BUP_SPOOL_FILE_LIST="jobseqnum"
    BUP_CLASSIC_COMMON_FILE_LIST="configuration sched_configuration accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd shadow_masters st.enabled cluster_name"
    BUP_CLASSIC_DIR_LIST="sgeCA local_conf" 
-   BUP_CLASSIC_SPOOL_FILE_LIST="jobseqnum admin_hosts calendars centry ckpt cqueues exec_hosts hostgroups managers operators pe projects qinstances schedd submit_hosts usermapping users usersets zombies"
+   BUP_CLASSIC_SPOOL_FILE_LIST="jobseqnum admin_hosts advance_reservations calendars centry ckpt cqueues exec_hosts hostgroups managers operators pe projects qinstances resource_quotas schedd submit_hosts usermapping users usersets zombies"
 
    MKDIR="mkdir -p"
    CP="cp -f"
@@ -3510,11 +3510,14 @@ RestoreCheckBootStrapFile()
       db_home=`cat $BACKUP_DIR/bootstrap | grep "spooling_params" | awk '{ print $2 }'`
       master_spool=`cat $BACKUP_DIR/bootstrap | grep "qmaster_spool_dir" | awk '{ print $2 }'`
       ADMINUSER=`cat $BACKUP_DIR/bootstrap | grep "admin_user" | awk '{ print $2 }'`
+      if [ "$ADMINUSER" = "none" ]; then
+         ADMINUSER="default"
+      fi
 
       MASTER_PORT=`cat $BACKUP_DIR/sgemaster | grep "SGE_QMASTER_PORT=" | head -1 | awk '{ print $1 }' | cut -d"=" -f2 | cut -d";" -f1` 
 
       ACT_QMASTER=`cat $BACKUP_DIR/act_qmaster`
-      
+
       $SGE_BIN/qping -info $ACT_QMASTER $MASTER_PORT qmaster 1 > /dev/null 2>&1
       ret=$?
 

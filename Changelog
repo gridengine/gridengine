@@ -1,3 +1,9 @@
+DG-2008-11-18-1: Bugfix:      Verification of qlogin and qsh does always 
+                              return error code 0. 
+                 Bugster:     6726233
+                 Issue:       2731
+                 Review:      MP
+
 DG-2008-11-18-0: Cleanup:     Fixed broken build on irix
                  Review:      EB
 

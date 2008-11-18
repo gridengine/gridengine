@@ -1902,12 +1902,19 @@ int main(int argc, char **argv)
       }
       DPRINTF(("job id is: %ld\n", job_id));
 
+      status = 0; 
+      
       for_each(aep, alp) {
-         status = lGetUlong(aep, AN_status);
          quality = lGetUlong(aep, AN_quality);
          if (quality == ANSWER_QUALITY_ERROR) {
             fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             do_exit = 1;
+            if (lGetUlong(aep, AN_status)==STATUS_NOTOK_DOAGAIN) {
+               status = STATUS_NOTOK_DOAGAIN;
+            } else {
+               /* set return value to error when doing verification */
+               status = 1;
+            }
          } else if (quality == ANSWER_QUALITY_WARNING) {
             fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          } else {
@@ -1929,7 +1936,7 @@ int main(int argc, char **argv)
             SGE_EXIT((void **)&ctx, status);
          } else if (just_verify) {
             sge_prof_cleanup();
-            SGE_EXIT((void**)&ctx, 0);
+            SGE_EXIT((void**)&ctx, status);
          } else {
             sge_prof_cleanup();
             SGE_EXIT((void **)&ctx, 1);

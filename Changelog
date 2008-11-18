@@ -1,3 +1,10 @@
+JG-2008-11-18-0: Bugfix:      - inst_sge -rst: can't resolve username "none"
+                              - inst_sge -rst: doesn't restore resource_quotas
+                                and advance reservation with classic spooling
+                 Bugster:     6751309, 6751310
+                 Issue:       2791, 2789
+                 Review:      MD
+
 CR-2008-11-13-1: Bugfix:      Merged code changes of JG-2008-11-06-0 from
                               maintrunk into this branch. The code appends qmaster
                               endpoint information now when is_alive function

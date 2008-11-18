@@ -57,6 +57,7 @@
 #include "sge_str.h"
 #include "sge_string.h"
 #include "sge_parse_num_par.h"
+#include "sge_var.h"
 #include "qmon_quarks.h"
 #include "qmon_widgets.h"
 #include "qmon_rmon.h"

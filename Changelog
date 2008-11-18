@@ -1,4 +1,8 @@
+DG-2008-11-18-0: Cleanup:     Fixed broken build on irix
+                 Review:      EB
+
 EB-2008-11-17-1: Bugfix:      - fixed broken build on irix
+                 Review:      DG
 
 JG-2008-11-17-0: Bugfix:      - inst_sge -rst: can't resolve username "none"
                               - inst_sge -rst: doesn't restore resource_quotas

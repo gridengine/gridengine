@@ -89,7 +89,6 @@ sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp,
 {
    object_description *object_base = object_type_get_object_description();
    int ret = STATUS_OK;
-   dstring string = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "sge_job_verify_adjust");
 
@@ -260,8 +259,10 @@ sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp,
     * with interactive jobs, JB_exec_file is not set
     */      
    if (lGetString(jep, JB_script_file)) {
+      dstring string = DSTRING_INIT;
       sge_dstring_sprintf(&string, "%s/%d", EXEC_DIR, (int)lGetUlong(jep, JB_job_number));
       lSetString(jep, JB_exec_file, sge_dstring_get_string(&string));
+      sge_dstring_free(&string);
    }
 
    /* check max_jobs */

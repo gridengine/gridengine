@@ -971,6 +971,7 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
       }
 
       sge_mutex_unlock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
+      FREE(jsv_url);
    }
    DRETURN(ret);
 }

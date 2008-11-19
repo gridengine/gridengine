@@ -1,3 +1,10 @@
+DG-2008-11-19-0: Bugfix:      Verification of qlogin and qsh does always
+                              return error code 0.
+                 Merged from: maintrunk: DG-2008-11-18-1
+                 Bugster:     6726233
+                 Issue:       2731
+                 Review:      MP
+
 JG-2008-11-18-0: Bugfix:      - inst_sge -rst: can't resolve username "none"
                               - inst_sge -rst: doesn't restore resource_quotas
                                 and advance reservation with classic spooling

@@ -233,21 +233,23 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
 
    DENTER(TOP_LAYER, "sge_gdi_add_job");
 
-   /*
-    * first verify before JSV is executed
-    */
-   ret = sge_job_verify_adjust(ctx, *jep, alpp, lpp, ruser, rhost, uid, gid, group, 
-                               packet, task, monitor);
-   if (ret != STATUS_OK) {
-      DRETURN(ret);
-   }
+   if (jsv_is_enabled(tc->thread_name)) {
+      /*
+       * first verify before JSV is executed
+       */
+      ret = sge_job_verify_adjust(ctx, *jep, alpp, lpp, ruser, rhost, uid, gid, group, 
+                                  packet, task, monitor);
+      if (ret != STATUS_OK) {
+         DRETURN(ret);
+      }
 
-   /*
-    * JSV verification
-    */
-   lret = jsv_do_verify(ctx, tc->thread_name, jep, alpp, false);
-   if (!lret) {
-      DRETURN(STATUS_EUNKNOWN);
+      /*
+       * JSV verification
+       */
+      lret = jsv_do_verify(ctx, tc->thread_name, jep, alpp, false);
+      if (!lret) {
+         DRETURN(STATUS_EUNKNOWN);
+      }
    }
 
    /*

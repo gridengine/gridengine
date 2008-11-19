@@ -486,14 +486,12 @@ pid_t sge_peopen_threadsafe(const char *shell, int login_shell, const char *comm
       dup(pipefds[0][0]);
       dup(pipefds[1][1]);
 
-#if 0
       /* only switch user if it is different from current one */
-      if (pw != NULL && myuid != pw->pw_uid) {
-         if (setuid(pw->pw_uid)) {
+      if (pw != NULL && myuid != tuid) {
+         if (setuid(tuid)) {
             SGE_EXIT(NULL, 1);
          }
       }
-#endif
 
       /*
        * set the environment if we got one as argument

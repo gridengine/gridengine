@@ -213,13 +213,23 @@ jsv_start(lListElem *jsv, lList **answer_list) {
       SGE_STRUCT_STAT st;
 
       if (SGE_STAT(scriptfile, &st) == 0) {
+         bool can_switch_user = sge_has_admin_user();
+
          /* set the last modification time of the script */
          lSetUlong(jsv, JSV_last_mod, st.st_mtime);
 
-         sge_switch2start_user();
-         pid = sge_peopen_threadsafe("/bin/sh", 0, scriptfile, user, NULL,
+#if 0
+         if (can_switch_user) {
+            sge_switch2start_user();
+         }
+#endif
+         pid = sge_peopen_threadsafe("/bin/sh", 0, scriptfile, (can_switch_user ? user : NULL), NULL,
                                      &fp_in, &fp_out, &fp_err, false);
-         sge_switch2admin_user();
+#if 0
+         if (can_switch_user) {
+            sge_switch2admin_user();
+         }
+#endif
          if (pid != -1) {
             jsv_set_pid(jsv, pid);
             lSetRef(jsv, JSV_in, fp_in);
@@ -616,6 +626,42 @@ jsv_list_remove(const char *name, const char *context)
       }
       sge_mutex_unlock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
    }
+   DRETURN(ret);
+}
+
+/****** sgeobj/jsv/jsv_is_enabled() ********************************************
+*  NAME
+*     jsv_is_enabled() -- is JSV enabled in the given context 
+*
+*  SYNOPSIS
+*     bool jsv_is_enabled(void) 
+*
+*  FUNCTION
+*     Returns if there are active JSV instances which have to be triggered. 
+*     As a side effect the function updates the JSV (restart) if the
+*     configuration setting changed in master.
+*
+*  INPUTS
+*     void - NONE
+*
+*  RESULT
+*     bool - is jsv active
+*        true  - there are active JSVs
+*        false - JSV is not configured
+*
+*  NOTES
+*     MT-NOTE: jsv_is_enabled() is MT safe 
+*******************************************************************************/
+bool 
+jsv_is_enabled(const char *context) {
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "jsv_is_enabled");
+
+   jsv_list_update("jsv", context, NULL, mconf_get_jsv_url());
+   sge_mutex_lock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
+   ret = (lGetNumberOfElem(jsv_list) > 0) ? true : false;
+   sge_mutex_unlock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
    DRETURN(ret);
 }
 

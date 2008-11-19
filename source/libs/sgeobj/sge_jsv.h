@@ -62,4 +62,11 @@ jsv_list_remove(const char *name, const char *context);
 bool 
 jsv_list_remove_all(void);
 
+bool
+jsv_is_enabled(const char *context);
+
+bool
+jsv_list_update(const char *name, const char *context,
+                lList **answer_list, const char *jsv_url);
+
 #endif /* __SGE_JSV_H */    

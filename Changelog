@@ -1,3 +1,8 @@
+EB-2008-11-19-1: Bugfix:      - 2nd job verification is only done if JSV
+                                is executed when jobs are added to master
+                              - fixed bug introduced with EB-2008-11-19-0
+                 Rreview:     MD (RD)			
+
 RD-2008-11-19-0: Bugfix:      - fixed two JSV related memory leaks
                  Review:      EB
 

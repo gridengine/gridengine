@@ -1559,6 +1559,37 @@ static int  get_admin_user(uid_t* theUID, gid_t* theGID)
    return res;
 } /* get_admin_user() */
 
+/****** uti/uidgid/sge_has_admin_user() ****************************************
+*  NAME
+*     sge_has_admin_user() -- is there a admin user configured and set
+*
+*  SYNOPSIS
+*     bool sge_has_admin_user(void) 
+*
+*  FUNCTION
+*     Returns if there is a admin user setting configured and set. 
+*
+*  INPUTS
+*     void - None 
+*
+*  RESULT
+*     bool - result
+*        true  - there is a setting
+*
+*  NOTES
+*     MT-NOTE: sge_has_admin_user() is MT safe 
+*******************************************************************************/
+bool 
+sge_has_admin_user(void) {
+   bool ret = true;
+   uid_t uid;
+   gid_t gid;
+
+   DENTER(TOP_LAYER, "sge_has_admin_user");
+   ret = (get_admin_user(&uid, &gid) == ESRCH) ? false : true; 
+   DRETURN(ret);
+}
+
 /****** uti/uidgid/uidgid_once_init() ******************************************
 *  NAME
 *     uidgid_once_init() -- One-time user and group function initialization.

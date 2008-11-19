@@ -216,9 +216,10 @@ jsv_start(lListElem *jsv, lList **answer_list) {
          /* set the last modification time of the script */
          lSetUlong(jsv, JSV_last_mod, st.st_mtime);
 
+         sge_switch2start_user();
          pid = sge_peopen_threadsafe("/bin/sh", 0, scriptfile, user, NULL,
                                      &fp_in, &fp_out, &fp_err, false);
-
+         sge_switch2admin_user();
          if (pid != -1) {
             jsv_set_pid(jsv, pid);
             lSetRef(jsv, JSV_in, fp_in);
@@ -414,7 +415,7 @@ bool jsv_url_parse(dstring *jsv_url, lList **answer_list, dstring *type,
                                     ANSWER_QUALITY_ERROR, MSG_JSV_USER_S);
          } else {
             if (p != NULL) {
-               if (sge_is_file(p) && sge_is_executable(p)) {
+               if ((sge_is_file(p) && sge_is_executable(p)) || strcasecmp("none", p) == 0) {
                   if (u != NULL) {
                      struct passwd *pw;
                      struct passwd pw_struct;
@@ -512,7 +513,7 @@ jsv_send_command(lListElem *jsv, lList **answer_list, const char *message)
 *     be passed to this function. Within qmaster the name of the thread
 *     which calls this function sould be used as 'context' string.
 *
-*     The JSV dtata structures will be initialized but the JSV is not started
+*     The JSV data structures will be initialized but the JSV is not started
 *     when this function returns. 
 *
 *     In case of any errors the 'answer_list' will be filled and the function
@@ -537,33 +538,35 @@ jsv_send_command(lListElem *jsv, lList **answer_list, const char *message)
 bool 
 jsv_list_add(const char *name, const char *context, lList **answer_list, const char *jsv_url)
 {
-   lListElem *new_jsv = NULL;
-   dstring input = DSTRING_INIT;
-   dstring type = DSTRING_INIT;
-   dstring user = DSTRING_INIT;
-   dstring path = DSTRING_INIT; 
-   bool in_client = false;
    bool ret = true;
-
    DENTER(TOP_LAYER, "jsv_list_add");
 
-   sge_dstring_append(&input, jsv_url);
-   in_client = (strcmp(context, JSV_CONTEXT_CLIENT) == 0) ? true : false;
-   jsv_url_parse(&input, answer_list, &type, &user, &path, in_client);
+   if (strcasecmp("none", jsv_url) != 0) {
+      lListElem *new_jsv = NULL;
+      dstring input = DSTRING_INIT;
+      dstring type = DSTRING_INIT;
+      dstring user = DSTRING_INIT;
+      dstring path = DSTRING_INIT; 
+      bool in_client = false;
 
-   new_jsv = jsv_create(name, context, answer_list, jsv_url, 
-                        sge_dstring_get_string(&type),
-                        sge_dstring_get_string(&user),
-                        sge_dstring_get_string(&path));
-   if (new_jsv == NULL) {
-      ret = false;
-   }   
+      sge_dstring_append(&input, jsv_url);
+      in_client = (strcmp(context, JSV_CONTEXT_CLIENT) == 0) ? true : false;
+      jsv_url_parse(&input, answer_list, &type, &user, &path, in_client);
 
-   /* cleanup */
-   sge_dstring_free(&input);
-   sge_dstring_free(&type);
-   sge_dstring_free(&user);
-   sge_dstring_free(&path);
+      new_jsv = jsv_create(name, context, answer_list, jsv_url, 
+                           sge_dstring_get_string(&type),
+                           sge_dstring_get_string(&user),
+                           sge_dstring_get_string(&path));
+      if (new_jsv == NULL) {
+         ret = false;
+      }   
+
+      /* cleanup */
+      sge_dstring_free(&input);
+      sge_dstring_free(&type);
+      sge_dstring_free(&user);
+      sge_dstring_free(&path);
+   }
 
    DRETURN(ret);
 }
@@ -749,7 +752,7 @@ jsv_list_update(const char *name, const char *context,
                 * depending on that either change the jsv settings and trigger a restart
                 * or trigger termination of jsv process and remove the jsv cull structure
                 */
-               if (strcmp(jsv_url, "none") != 0) {
+               if (strcasecmp(jsv_url, "none") != 0) {
                   if (not_parsed) {
                      sge_dstring_append(&input, jsv_url);
                      in_client = (strcmp(context, JSV_CONTEXT_CLIENT) == 0) ? true : false;
@@ -800,7 +803,7 @@ jsv_list_update(const char *name, const char *context,
       /*
        * create a new JSV element if no one exists
        */
-      if (ret && !already_exists && jsv_url != NULL && strcmp(jsv_url, "none") != 0) {
+      if (ret && !already_exists && jsv_url != NULL && strcasecmp(jsv_url, "none") != 0) {
          ret = jsv_list_add(name, context, answer_list, jsv_url);
       }
    }

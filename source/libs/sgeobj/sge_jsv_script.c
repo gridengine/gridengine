@@ -67,7 +67,7 @@
  * defines the timeout how long a client/qmaster would wait maximally for
  * a response from a JSV script after a command string has been send
  */
-#define JSV_CMD_TIMEOUT (4) 
+#define JSV_CMD_TIMEOUT (10) 
 
 typedef bool (*jsv_command_f)(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_list, 
                               dstring *c, dstring *s, dstring *a);
@@ -897,12 +897,15 @@ jsv_handle_result_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answ
    message = sge_dstring_get_string(&m);
    if (sub_command != NULL && strcmp(sub_command, "STATE") == 0 && state != NULL) {
       if (strcmp(state, "ACCEPT") == 0) {
+         DPRINTF(("Job is accepted\n"));
          lSetBool(jsv, JSV_accept, true);
          lSetBool(jsv, JSV_done, true);
       } else if (strcmp(state, "CORRECT") == 0) {
+         DPRINTF(("Job is corrected\n"));
          lSetBool(jsv, JSV_accept, true);
          lSetBool(jsv, JSV_done, true);
       } else if (strcmp(state, "REJECT") == 0) {
+         DPRINTF(("Job is rejected\n"));
          if (message != NULL) {
             answer_list_add_sprintf(answer_list, STATUS_DENIED, 
                                     ANSWER_QUALITY_ERROR, message);
@@ -913,6 +916,7 @@ jsv_handle_result_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answ
          lSetBool(jsv, JSV_accept, false);
          lSetBool(jsv, JSV_done, true);
       } else if (strcmp(state, "REJECT_WAIT") == 0) {
+         DPRINTF(("Job is rejected temporarily\n"));
          if (message != NULL) {
             answer_list_add_sprintf(answer_list, STATUS_DENIED, 
                                     ANSWER_QUALITY_ERROR, message);

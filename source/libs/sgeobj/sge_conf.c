@@ -1672,6 +1672,7 @@ char* mconf_get_jsv_url(void) {
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    jsv_url = sge_strdup(jsv_url, Master_Config.jsv_url);
+   sge_strip_white_space_at_eol(jsv_url);
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(jsv_url);

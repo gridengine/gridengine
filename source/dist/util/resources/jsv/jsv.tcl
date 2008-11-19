@@ -89,23 +89,23 @@ proc jsv_on_verify {} {
       }
    } 
 
-   if {[jsv_is_param "c"] == 1} {
+   if {[jsv_is_param "ac"] == 1} {
       set context [jsv_get_param "CONTEXT"]
-      set has_c_a [jsv_sub_is_param "c" "a"]
-      set has_c_b [jsv_sub_is_param "c" "b"]
+      set has_ac_a [jsv_sub_is_param "ac" "a"]
+      set has_ac_b [jsv_sub_is_param "ac" "b"]
    
-      if {$has_c_a == 1} {
-         set c_a_value [jsv_sub_get_param "c" "a"]
+      if {$has_ac_a == 1} {
+         set ac_a_value [jsv_sub_get_param "ac" "a"]
          set new_value [expr $c_a_value + 1]
 
-         jsv_sub_add_param "c" "a" $new_value
+         jsv_sub_add_param "ac" "a" $new_value
       } else {
-         jsv_sub_add_param "c" "a" 1
+         jsv_sub_add_param "ac" "a" 1
       }
-      if {$has_c_b == 1} {
-         jsv_sub_del_param "c" "b"
+      if {$has_ac_b == 1} {
+         jsv_sub_del_param "ac" "b"
       }
-      jsv_sub_add_param "c" "c"
+      jsv_sub_add_param "ac" "c"
    }
 
    if {$do_wait == 1} {

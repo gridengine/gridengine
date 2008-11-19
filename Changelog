@@ -1,3 +1,6 @@
+EB-2008-11-19-0: Bugfix:      - fixed several minor issues concerning JSV
+					  Review:      MD
+
 DG-2008-11-18-1: Bugfix:      Verification of qlogin and qsh does always 
                               return error code 0. 
                  Bugster:     6726233

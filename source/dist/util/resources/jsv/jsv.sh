@@ -134,24 +134,24 @@ jsv_on_verify()
       fi
    fi
 
-   c=`jsv_get_param c`
-   if [ "$c" != "" ]; then
+   ac=`jsv_get_param ac`
+   if [ "$ac" != "" ]; then
       context=`jsv_get_param CONTEXT`
-      has_c_a=`jsv_sub_is_param c a`
-      has_c_b=`jsv_sub_is_param c b`
+      has_ac_a=`jsv_sub_is_param ac a`
+      has_ac_b=`jsv_sub_is_param ac b`
 
-      if [ "$has_c_a" = "true" ]; then
-         c_a_value=`jsv_sub_get_param c a`
-         new_value=`echo "$c_a_value + 1" | bc`
+      if [ "$has_ac_a" = "true" ]; then
+         ac_a_value=`jsv_sub_get_param ac a`
+         new_value=`echo "$ac_a_value + 1" | bc`
 
-         jsv_sub_add_param c a $new_value
+         jsv_sub_add_param ac a $new_value
       else
-         jsv_sub_add_param c a 1
+         jsv_sub_add_param ac a 1
       fi
-      if [ "$has_c_b" = "true" ]; then
-         jsv_sub_del_param c b 
+      if [ "$has_ac_b" = "true" ]; then
+         jsv_sub_del_param ac b 
       fi
-      jsv_sub_add_param c c
+      jsv_sub_add_param ac c
    fi
 
    if [ "$do_wait" = "true" ]; then

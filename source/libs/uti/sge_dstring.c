@@ -78,6 +78,7 @@ sge_dstring_vsprintf_copy_append(dstring *sb,
       va_copy(ap_copy, ap);
       vsnprintf_ret = vsnprintf(static_buffer, BUFSIZ, format, ap_copy);
       va_end(ap_copy);
+
       /*
        * We have to handle three cases here:
        *    1) If the function returns -1 then vsprintf does not follow 

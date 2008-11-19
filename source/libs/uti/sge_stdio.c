@@ -326,6 +326,7 @@ pid_t sge_peopen_threadsafe(const char *shell, int login_shell, const char *comm
    char arg0[256];
    struct passwd *pw = NULL;
    uid_t myuid = geteuid();
+   uid_t tuid = myuid;
    char err_str[256];
  
    DENTER(TOP_LAYER, "sge_peopen_threadsafe");
@@ -355,6 +356,10 @@ pid_t sge_peopen_threadsafe(const char *shell, int login_shell, const char *comm
       strcpy(arg0, "");
    }
    strcat(arg0, shell);
+   DPRINTF(("arg0 = %s\n", arg0));
+   DPRINTF(("arg1 = -c\n"));
+   DPRINTF(("arg2 = %s\n", command));
+
 
    /*
     * prepare the change of the user which might be done after fork()
@@ -374,18 +379,17 @@ pid_t sge_peopen_threadsafe(const char *shell, int login_shell, const char *comm
       if (buffer != NULL) {
          pw = sge_getpwnam_r(user, &pw_struct, buffer, size);
          if (pw == NULL) {
-            sprintf(err_str, MSG_SYSTEM_NOUSERFOUND_SS, user, strerror(errno));            
-            sprintf(err_str, "\n");
-            write(2, err_str, strlen(err_str));
+            ERROR((SGE_EVENT, MSG_SYSTEM_NOUSERFOUND_SS, user, strerror(errno)));
             FREE(buffer);
-            SGE_EXIT(NULL, 1);
+            return -1;
          }
       } else {
          sprintf(err_str, "no memory in sge_peopen()\n");
          write(2, err_str, strlen(err_str));
          FREE(buffer);
-         SGE_EXIT(NULL, 1);
+         return -1; 
       }
+
 
       /* 
        * only prepare change of user if target user is different from current one
@@ -408,7 +412,7 @@ pid_t sge_peopen_threadsafe(const char *shell, int login_shell, const char *comm
          if (res)
 #  endif
          {
-            sprintf(err_str, MSG_SYSTEM_INITGROUPSFORUSERFAILED_ISS , res, user, strerror(errno));
+            sprintf(err_str, MSG_SYSTEM_INITGROUPSFORUSERFAILED_ISS, res, user, strerror(errno));
             sprintf(err_str, "\n");
             write(2, err_str, strlen(err_str));
             FREE(buffer);
@@ -416,6 +420,12 @@ pid_t sge_peopen_threadsafe(const char *shell, int login_shell, const char *comm
          }
 
 #endif /* WIN32 */
+      }
+      DPRINTF(("user = %s\n", user));
+      DPRINTF(("myuid = %d\n", (int)myuid));
+      if (pw != NULL) {
+         tuid = pw->pw_uid;
+         DPRINTF(("target uid = %d\n", (int)tuid));
       }
    }
 
@@ -476,28 +486,30 @@ pid_t sge_peopen_threadsafe(const char *shell, int login_shell, const char *comm
       dup(pipefds[0][0]);
       dup(pipefds[1][1]);
 
+#if 0
       /* only switch user if it is different from current one */
       if (pw != NULL && myuid != pw->pw_uid) {
          if (setuid(pw->pw_uid)) {
             SGE_EXIT(NULL, 1);
          }
       }
+#endif
 
       /*
        * set the environment if we got one as argument
        */
       if (env != NULL) {
-         addenv("HOME", pw->pw_dir);
-         addenv("SHELL", pw->pw_shell);
-         addenv("USER", pw->pw_name);
-         addenv("LOGNAME", pw->pw_name);
+         if (pw != NULL) {
+            addenv("HOME", pw->pw_dir);
+            addenv("SHELL", pw->pw_shell);
+            addenv("USER", pw->pw_name);
+            addenv("LOGNAME", pw->pw_name);
+         }
          addenv("PATH", SGE_DEFAULT_PATH);
-
          for(; *env; env++) {
             putenv(*env);
          }
       }
-
       execlp(shell, arg0, "-c", command, NULL);
    }
  

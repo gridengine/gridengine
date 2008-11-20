@@ -1,3 +1,8 @@
+EB-2008-11-20-1: Bugfix:      - fixed problem with lost data in bourne
+                                shell JSV scripts on platforms were
+                                read_raw must be used instead of "read -r"
+                 Review:      MD
+
 JG-2008-11-20-0: Enhancem.:   Optionally use jemalloc instead of system malloc
                               on Linux.
                  Review:      RD

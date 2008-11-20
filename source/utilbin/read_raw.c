@@ -54,6 +54,8 @@ int main(int argc, char *argv[])
    char buffer[BUF_SIZE];
    char *ret;
 
+   setvbuf(stdin,NULL,_IONBF,0);
+
    ret = fgets(buffer, BUF_SIZE, stdin);
    if (ret != NULL) {
       size_t length = strlen(ret);

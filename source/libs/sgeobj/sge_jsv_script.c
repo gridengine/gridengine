@@ -2115,9 +2115,6 @@ jsv_do_communication(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_li
                jsv_split_commandline(input, &command, &sub_command, &args);
                c = sge_dstring_get_string(&command);
    
-               DPRINTF(("splitted input in "SFQ" and "SFQ"\n", sge_dstring_get_string(&command),
-                        sge_dstring_get_string(&sub_command)));
-
                while(commands[++i].command != NULL) {
                   if (strcmp(c, commands[i].command) == 0) {
                      handled = true;

@@ -408,9 +408,9 @@ bool jsv_url_parse(dstring *jsv_url, lList **answer_list, dstring *type,
       u = sge_dstring_get_string(user);
       p = sge_dstring_get_string(path);
 
-      DPRINTF(("type = %s\n", t));
-      DPRINTF(("u = %s\n", u));
-      DPRINTF(("p = %s\n", p));
+      DPRINTF(("type = %s\n", t != NULL? t : "<null>"));
+      DPRINTF(("u = %s\n", u != NULL ? u : "<null>"));
+      DPRINTF(("p = %s\n", p != NULL ? p : "<null>"));
 
       /*
        * either the type is not specified (the type "script" is used)
@@ -698,6 +698,7 @@ jsv_list_remove_all(void)
    jsv_next = lFirst(jsv_list);
    while ((jsv = jsv_next) != NULL) {
       jsv_next = lNext(jsv);
+      jsv_stop(jsv, NULL, true);
       lRemoveElem(jsv_list, &jsv);
    }
    sge_mutex_unlock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);

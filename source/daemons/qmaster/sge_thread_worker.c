@@ -90,6 +90,8 @@
 
 #include "uti/sge_thread_ctrl.h"
 
+#include "sgeobj/sge_jsv.h"
+
 #include "sge_thread_main.h"
 #include "sge_thread_worker.h"
 #include "sge_qmaster_process_message.h"
@@ -175,6 +177,9 @@ sge_worker_terminate(sge_gdi_ctx_class_t *ctx)
    }
 
    do_final_spooling = sge_qmaster_do_final_spooling();
+
+   /* shutdown and remove JSV instances */
+   jsv_list_remove_all();
 
    reporting_shutdown(ctx, NULL, do_final_spooling);
    DPRINTF(("accounting and reporting module has been shutdown\n"));

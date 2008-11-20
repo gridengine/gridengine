@@ -1,3 +1,9 @@
+EB-2008-11-20-0: Bugfix:      - trigger soft and then hard shutdown
+                                of JSVs when master is terminated
+                              - fixed core of master in combination
+                                of missing user and type on certain archs
+                 Review:      MD
+
 EB-2008-11-19-1: Bugfix:      - 2nd job verification is only done if JSV
                                 is executed when jobs are added to master
                               - fixed bug introduced with EB-2008-11-19-0

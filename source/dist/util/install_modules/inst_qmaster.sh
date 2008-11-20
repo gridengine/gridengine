@@ -747,7 +747,7 @@ PrintBootstrap()
    $ECHO "listener_threads        2"
    $ECHO "worker_threads          2"
    $ECHO "scheduler_threads       1"
-   if [ "$SGE_ENABLE_JMX" = "true" ]; then
+   if [ "$SGE_ENABLE_JMX" = "true" -a "$DISABLE_JMX_THREAD" != "true" ]; then
       $ECHO "jvm_threads             1"
    else
       $ECHO "jvm_threads             0"

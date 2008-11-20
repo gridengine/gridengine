@@ -189,7 +189,7 @@ Makedir()
 
        $INFOTEXT "creating directory: %s" "$dir"
        if [ "`$SGE_UTILBIN/filestat -owner $tmp_dir`" != "$ADMINUSER" ]; then
-          Execute $MKDIR -p $dir
+          Execute mkdir -p $dir
           if [ "$ADMINUSER" = "default" ]; then
              Execute $CHOWN -R root $chown_dir
           else
@@ -198,7 +198,7 @@ Makedir()
           fi
 	       Execute $CHMOD -R $DIRPERM $chown_dir
        else
-          ExecuteAsAdmin $MKDIR -p $dir
+          ExecuteAsAdmin mkdir -p $dir
 		    ExecuteAsAdmin $CHMOD -R $DIRPERM $chown_dir
        fi
    fi
@@ -268,7 +268,9 @@ ExecuteAsAdmin()
       $INFOTEXT -log "Probably a permission problem. Please check file access permissions."
       $INFOTEXT -log "Check read/write permission. Check if SGE daemons are running."
 
-      MoveLog
+      if [ "$insideMoveLog" != true ]; then #To prevent endless recursion when failure occures in the MoveLog due to perm problems when moving the log file   
+         MoveLog
+      fi
       if [ "$ADMINRUN_NO_EXIT" != "true" ]; then
          exit 1
       fi
@@ -495,7 +497,7 @@ ErrUsage()
              "       -copycerts <host|hostlist>|-v|-upd|-upd-execd|-upd-rc|-upd-win| \n" \
              "       -post_upd|-start-all|-rccreate|[-host <hostname>] [-resport] [-rsh] \n" \
              "       [-auto <filename>] [-nr] [-winupdate] [-winsvc] [-uwinsvc] [-csp] \n" \
-             "       [-jmx] [-oldijs] [-afs] [-noremote] [-nosmf]\n" \
+             "       [-jmx] [-no-jmx] [-oldijs] [-afs] [-noremote] [-nosmf]\n" \
              "   -m         install qmaster host\n" \
              "   -um        uninstall qmaster host\n" \
              "   -x         install execution host\n" \
@@ -529,15 +531,22 @@ ErrUsage()
              "   -uwinsvc   uninstall windows helper service\n" \
              "   -csp       install system with security framework protocol\n" \
              "              functionality\n" \
-             "   -jmx       install qmaster with JMX server thread enabled\n" \
+             "   -jmx       install qmaster with JMX server thread enabled (now implicit)\n" \
+             "   -no-jmx    install qmaster without JMX server thread\n" \
              "   -oldijs    configure old interactive job support\n" \
              "   -afs       install system with AFS functionality\n" \
              "   -noremote  supress remote installation during autoinstall\n" \
              "   -nosmf     disable SMF for Solaris 10+ machines (RC scripts are used)\n" \
              "   -help      show this help text\n\n" \
              "   Examples:\n" \
-             "   inst_sge -m -x\n" \
+             "   inst_sge -m -no-jmx -x\n" \
              "                     Installs qmaster and exechost on localhost\n" \
+             "   inst_sge -m -x\n" \
+             "                     Installs qmaster with JMX thread configured, but disabled\n" \
+             "                     and exechost on localhost\n" \
+             "   inst_sge -m -jmx -x\n" \
+             "                     Installs qmaster with JMX thread enabled\n" \
+             "                     and exechost on localhost\n" \
              "   inst_sge -m -x -auto /path/to/config-file\n" \
              "                     Installs qmaster and exechost using the given\n" \
              "                     configuration file\n" \
@@ -2219,9 +2228,9 @@ AddSGEStartUpScript()
    
    $CLEAR
    
-   SetupRcScriptNames $hosttype   
+   SetupRcScriptNames $hosttype
 
-   InstallRcScript 
+   InstallRcScript
 
    $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
    $CLEAR
@@ -2489,6 +2498,8 @@ MoveLog()
    if [ "$AUTO" = "false" ]; then
       return
    fi
+   
+   insideMoveLog=true
 
    GetAdminUser
 
@@ -2515,11 +2526,15 @@ MoveLog()
    if [ "$is_master" = "true" ]; then
       loghosttype="qmaster"
       is_master="false"
+   elif [ "$is_shadow" = "true" ]; then
+      loghosttype="shadowd"
+   elif [ "$is_bdb" = "true" ]; then
+      loghosttype="bdb"
    else
       loghosttype="execd"
    fi
 
-   if [ $EXECD = "uninstall" -o $QMASTER = "uninstall" ]; then
+   if [ $EXECD = "uninstall" -o $QMASTER = "uninstall" -o $SHADOW = "uninstall" -o $BERKELEY = "uninstall" ]; then
       installtype="uninstall"
    else
       installtype="install"
@@ -2536,6 +2551,8 @@ MoveLog()
    else
       $INFOTEXT "Can't find install log file: /tmp/%s" $LOGSNAME
    fi
+   
+   insideMoveLog=""
 }
 
 
@@ -2550,6 +2567,10 @@ if [ -f /tmp/$LOGSNAME ]; then
 else
    touch /tmp/$LOGSNAME
 fi
+
+if [ "$AUTOGUI" = true ]; then
+   $INFOTEXT "Install log can be found in: %s" /tmp/$LOGSNAME
+fi
 }
 
 
@@ -2557,9 +2578,9 @@ Stdout2Log()
 {
    if [ "$STDOUT2LOG" = "0" ]; then
       CLEAR=:
+      CreateLog
       SGE_NOMSG=1
       export SGE_NOMSG
-      CreateLog
       # make Filedescriptor(FD) 4 a copy of stdout (FD 1)
       exec 4>&1
       # open logfile for writing
@@ -3731,12 +3752,23 @@ CopyCaToHostType()
 #
 GetAdminUser()
 {
-   ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
+   if [ "$AUTOGUI" = true ]; then # We have it already
+      return
+   fi
+
+   TMP_ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
+   if [ -n "$TMP_ADMINUSER" ]; then
+      ADMIN_USER=$TMP_ADMINUSER   
+   fi
    euid=`$SGE_UTILBIN/uidgid -euid`
 
    TMP_USER=`echo "$ADMINUSER" |tr "[A-Z]" "[a-z]"`
-   if [ \( -z "$TMP_USER" -o "$TMP_USER" = "none" \) -a $euid = 0 ]; then
-      ADMINUSER=default
+   if [ \( -z "$TMP_USER" -o "$TMP_USER" = "none" \) ]; then
+      if [ $euid = 0 ]; then
+         ADMINUSER=default
+      else
+         ADMINUSER=`whoami`
+      fi
    fi
 
    if [ "$SGE_ARCH" = "win32-x86" ]; then

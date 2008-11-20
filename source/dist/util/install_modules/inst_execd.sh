@@ -554,7 +554,7 @@ GetLocalExecdSpoolDir()
    #   :
    #fi
 
-   if [ $AUTO = "true" ]; then
+   if [ $AUTO = "true" -a -n "$EXECD_SPOOL_DIR_LOCAL" ]; then
       execd_spool_dir_local_exists=`echo $EXECD_SPOOL_DIR_LOCAL |  grep "^\/"`
       if [ "$EXECD_SPOOL_DIR_LOCAL" != "" -a "$execd_spool_dir_local_exists" != "" ]; then
          LOCAL_EXECD_SPOOL=$EXECD_SPOOL_DIR_LOCAL

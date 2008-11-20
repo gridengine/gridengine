@@ -72,15 +72,13 @@ AUTOGUI=false
 RESCHEDULE=true
 RESPORT=false
 CSP=false
-SGE_ENABLE_JMX=false
+SGE_ENABLE_JMX=undef
 AFS=false
 NOREMOTE=false
 START_RPC_SERVICE=false
-ADD_TO_RC=false
 SET_FILE_PERMS=false
 MAKE_RC=false
 ADD_RC=false
-REMOVE_RC=false
 UPDATE_RC=false
 UPDATE_WIN=false
 DEL_EXECD_SPOOL=false
@@ -101,9 +99,7 @@ FILE="undef"
 HOST="undef"
 HOSTRANGE="undef"
 LOCAL_EXECD_SPOOL="undef"
-SHELL_NAME="ssh"
-COPY_COMMAND="scp"
-EXEC_HOST_LIST="undef"
+
 CONFIG_FILE="undef"
 STDOUT2LOG="0"
 PAR_EXECD_INST_COUNT="20"
@@ -112,24 +108,17 @@ WIN_SVC="undef"
 
 SGE_NOMSG="undef"
 
-WINDOWS_SUPPORT="false"
-WIN_DOMAIN_ACCESS="false"
-WIN_ADMIN_NAME="Administrator"
 
-CSP_RECREATE="false"
-CSP_COPY_CERTS="false"
-CSP_COUNTRY_CODE="undef"
-CSP_STATE="undef"
-CSP_LOCATION="undef"
-CSP_ORGA="undef"
-CSP_ORGA_UNIT="undef"
-CSP_MAIL_ADDRESS="undef"
 CERT_COPY_HOST_LIST="undef"
 SERVICE_TAGS="enable"
-SGE_ENABLE_SMF="true"
 
 #Save changed host names during resolving
 RESOLVED_CHANGED_HOSTNAMES=""
+
+#These appear in the inst_template, but don't need to be taken care of
+SGE_ENABLE_SMF="true"
+ADD_TO_RC="false"
+REMOVE_RC="false"
 
 #init global variables, need for port setting
 execd_service="false"
@@ -320,6 +309,9 @@ while [ $ARGC != 0 ]; do
    -jmx)
      SGE_ENABLE_JMX=true
      ;;
+   -no-jmx)
+     SGE_ENABLE_JMX=false
+     ;;
    -copycerts)
      if [ "$2" = "" ]; then
         ErrUsage
@@ -354,6 +346,34 @@ while [ $ARGC != 0 ]; do
    esac
    shift
    ARGC=`expr $ARGC - 1`
+done
+
+# New behaviour. If no JMX flag specified (-jmx not -no-jmx), JMX gets installed but the JMX thread is not started
+if [ "$SGE_ENABLE_JMX" = undef ]; then
+   SGE_ENABLE_JMX=true
+   DISABLE_JMX_THREAD=true
+fi
+
+#Set overlapping variables only
+if [ -z "$SHELL_NAME" ]; then
+   SHELL_NAME="ssh"
+fi
+if [ -z "$COPY_COMMAND" ]; then
+   COPY_COMMAND="scp"
+fi
+
+if [ -z "$WIN_ADMIN_NAME" ]; then
+   WIN_ADMIN_NAME="Administrator"
+fi
+for item in WINDOWS_SUPPORT WIN_DOMAIN_ACCESS CSP_RECREATE CSP_COPY_CERTS; do
+   eval $item="false"
+done
+
+if [ -z "$EXEC_HOST_LIST" ]; then
+   EXEC_HOST_LIST="undef"
+fi
+for item in CSP_COUNTRY_CODE CSP_STATE CSP_LOCATION CSP_ORGA CSP_ORGA_UNIT CSP_MAIL_ADDRESS; do
+   eval $item="undef"
 done
 
 CheckForSMF
@@ -710,6 +730,8 @@ fi
 
 if [ "$BERKELEY" = "install" ]; then
 
+   is_bdb="true"
+
    if [ "$AUTO" = "true" ]; then
       Stdout2Log
       $INFOTEXT -log "Starting Berkeley DB installation!"
@@ -733,7 +755,9 @@ if [ "$BERKELEY" = "install" ]; then
       sleep 5
    fi
 
+   MoveLog
    BERKELEY="undef"
+   is_bdb=""
 fi
 
 if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
@@ -800,6 +824,7 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
     exit 1 
  fi
 
+ is_master=""
 fi
 
 
@@ -811,7 +836,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
     Stdout2Log
     LogResolvedHostLists
 
-    . $SGE_ROOT/$SGE_CELL/common/settings.sh
+    . $SGE_ROOT/$CELL_NAME/common/settings.sh
 
    if [ -f "$SGE_ROOT/$SGE_CELL/common/bootstrap" ]; then
       ignore_fqdn=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "ignore_fqdn" | awk '{ print $2 }'`
@@ -1090,6 +1115,7 @@ if [ "$EXECD" = "uninstall" ]; then
 fi
 
 if [ $BERKELEY = "uninstall" ]; then
+   is_bdb="true"
    GetAdminUser
    
    if [ "$AUTO" = "true" ]; then
@@ -1111,12 +1137,14 @@ if [ $BERKELEY = "uninstall" ]; then
       $INFOTEXT -log "remote berkeley rpc server uninstallation on host %s" $DB_SPOOLING_SERVER
       echo "cd $SGE_ROOT && ./inst_sge -udb -auto $FILE -noremote" | $SHELL_NAME $DB_SPOOLING_SERVER /bin/sh
    fi
-
-   BERKELEY="undef"
    
+   MoveLog
+   BERKELEY="undef"
+   is_bdb=""
 fi
 
 if [ $QMASTER = "uninstall" ]; then
+   is_qmaster="true"
    GetAdminUser
    
    if [ "$AUTO" = "true" ]; then
@@ -1141,12 +1169,15 @@ if [ $QMASTER = "uninstall" ]; then
    ServiceTagsSupport
    RemoveQmaster
    MoveLog
+   is_qmaster=""
 fi
 
 
 if [ $SHADOW = "install" ]; then
 
-   if [ $AUTO = "false" ]; then
+   is_shadow="true"
+
+   if [ $AUTO = "false" ]; then   
       $INFOTEXT -u "\nShadow Master Host Setup"   
       $INFOTEXT -wait -n "\nMake sure, that the host, you wish to configure as a " \
                       "shadow host,\n has read/write permissions to the qmaster spool " \
@@ -1278,10 +1309,11 @@ if [ $SHADOW = "install" ]; then
       done
    fi
    MoveLog
+   is_shadow=""
 fi
 
 if [ $SHADOW = "uninstall" ]; then
-
+   is_shadow="true"
    GetAdminUser
 
    if [ "$HOST" = "undef" -o "$HOST" = `$SGE_UTILBIN/gethostname -aname`  ]; then
@@ -1347,7 +1379,7 @@ if [ $SHADOW = "uninstall" ]; then
          echo "cd $SGE_ROOT; . $SGE_ROOT/$SGE_CELL/common/settings.sh; ./inst_sge -usm" | $SHELL_NAME $s_host /bin/sh &   
       fi     
    fi
-
+   is_shadow=""
 fi
 
 if [ "$SUBMIT" = "install" ]; then

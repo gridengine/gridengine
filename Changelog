@@ -1,3 +1,11 @@
+LP-2008-11-20-0: Enhancem.:   JMX is installed be default, new flag -no-jmx
+                 Enhancem.:   Improvements for -autogui option
+                 Bugfix:      inst_sge -x -auto ... fails
+                 Bugfix:      inst_sge -m -jmx may never finish
+                 Bugster:     6774221, 6774228
+                 Issue:       2797, 2798
+                 Review:      MD
+
 DG-2008-11-20-0: Bugfix:      - ibm-loadsensor should be automatically copied 
                               to correct location during installation.
                               - typo

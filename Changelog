@@ -1,3 +1,7 @@
+JG-2008-11-20-0: Enhancem.:   Optionally use jemalloc instead of system malloc
+                              on Linux.
+                 Review:      RD
+
 EB-2008-11-20-0: Bugfix:      - trigger soft and then hard shutdown
                                 of JSVs when master is terminated
                               - fixed core of master in combination

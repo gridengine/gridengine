@@ -187,6 +187,7 @@ usage:
    echo "-only-core        -> build only the core system"
    echo "-only-depend      -> only compile 3rdparty/sge_depend"
    echo "-only-java        -> only compile Java[TM] class files"
+   echo "-only-jemalloc    -> build only the jemalloc library"
    echo "-only-qmake       -> build only qmake"
    echo "-only-qmon        -> build only qmon 3rdparty libs and qmon client"
    echo "-only-qtcsh       -> build only qtcsh"
@@ -206,6 +207,7 @@ usage:
    echo "-sunman           -> create man pages for Sun branded man pages (with -man[kv])"
    echo "-tight-ssh        -> compile SSH daemon with tight SGE integration"
    echo "-umap             -> compile with usermapping and hostgroup feature"
+   echo "-with-jemalloc    -> build SGE with the jemalloc library"
   exit
 }
 
@@ -238,6 +240,7 @@ set CORE             = 1
 set REMOTE           = 1
 set QMAKE            = 1
 set QTCSH            = 1
+set MAKEJEMALLOCLIB  = 0
 set MAKESTRPTIME     = 0
 set MAKESNPRINTF     = 0
 set MAKEFNMATCH      = 0
@@ -263,6 +266,7 @@ set CFLAGS           = "-DSGE_ARCH_STRING=$buildarch -D$TARGET_BITS $INP_CFLAGS"
 set CORE_INCLUDE     = "-I../common -I../libs -I../libs/uti -I../libs/juti -I../libs/gdi -I../libs/japi -I../libs/sgeobj -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/comm/lists -I../libs/sched -I../libs/evc -I../libs/evm -I../libs/mir -I../libs/lck -I../daemons/common -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
 set DEBUG_FLAG       = ""
 set INSURE_FLAG      = ""
+set JEMALLOC_CFLAGS  = ""
 set NOERR_CFLAG      = ""
 set NOERR_PROTO      = ""
 set NOERR_SSH        = ""
@@ -654,6 +658,18 @@ while ($#argv >= 1 && $?found)
       set JAVA = 2
       set ONLY_PARAM_SPEC = 1
       breaksw
+   case "-only-jemalloc":
+      set CORE   = 0
+      set JAVA   = 0
+      set QMAKE  = 0
+      set QMON   = 0
+      set QTCSH  = 0
+      set REMOTE = 0
+      set MAKEJEMALLOCLIB  = 1
+      set MAKEWINGRIDAPP = 0
+      set MAKEWINGRIDLIB = 0
+      set ONLY_PARAM_SPEC = 1
+      breaksw
    case "-only-qmake":
       set CORE   = 0
       set JAVA   = 0
@@ -812,6 +828,9 @@ while ($#argv >= 1 && $?found)
    case "-tight-ssh":
       set SGESSH = 1
       breaksw
+   case  "-with-jemalloc"
+      set MAKEJEMALLOCLIB = 1
+      breaksw
    default:
       unset found
       continue
@@ -890,6 +909,7 @@ case AIX43:
 case AIX51:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
+   set MAKEJEMALLOCLIB  = 0
    set COMPILE_DC = 1
 
    set LIBS = "$LIBS -lc"
@@ -930,6 +950,7 @@ case AIX51:
 case ALPHA5:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
+   set MAKEJEMALLOCLIB  = 0
    set COMPILE_DC = 1
    set AUTHLIBS = ""
 
@@ -976,6 +997,7 @@ case DARWIN_X86:
 case DARWIN_PPC:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
+   set MAKEJEMALLOCLIB  = 0
    set COMPILE_DC = 1
 
    if ( $OPTIMIZATION == 1 ) then
@@ -1077,6 +1099,7 @@ case DARWIN_PPC:
 case FREEBSD_*:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
+   set MAKEJEMALLOCLIB  = 0
    set COMPILE_DC = 1
    set MAKE = gmake
    if ( $OPTIMIZATION == 1 ) then
@@ -1112,6 +1135,7 @@ case FREEBSD_*:
 case NETBSD_*:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
+   set MAKEJEMALLOCLIB  = 0
    set COMPILE_DC = 1
    set MAKE = gmake
    set OFLAG = "-O"
@@ -1144,6 +1168,7 @@ case NETBSD_*:
 case IRIX65:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
+   set MAKEJEMALLOCLIB  = 0
    set AUTHLIBS = ""
    if ( $OPTIMIZATION == 1 ) then
       set OFLAG = "-O3"
@@ -1186,6 +1211,7 @@ case HP11:
 case HP1164:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
+   set MAKEJEMALLOCLIB  = 0
    set MAKE = gmake
    set DLLIB = ""
    set OFLAG = ""
@@ -1411,6 +1437,16 @@ case LINUXSPARC64:
    set LFLAGS        = "$LFLAGS $RUNPATH"
    set SHARED_LFLAGS = "$SHARED_LFLAGS $RUNPATH"
 
+   if ( $COMPILE_ARCH == "ULINUX86_24" || $COMPILE_ARCH == "ULINUXAMD64_24" ) then
+      echo "Ignore jemalloc for unsupported architectures!"
+      set MAKEJEMALLOCLIB = 0
+   endif
+
+   if ( $MAKEJEMALLOCLIB == 1 ) then
+      set JEMALLOC_CFLAGS  = "-Wno-error -DMOZ_MEMORY_LINUX"
+      set LFLAGS = "$LFLAGS -ljemalloc"
+   endif
+
    breaksw
    
 case WIN32_X86:
@@ -1422,6 +1458,7 @@ case WIN32_X86:
    # Default build targets for WIN32_X86 for which we have seperate make files
    set MAKEWINGRIDLIB   = 1
    set MAKEWINGRIDAPP   = 1
+   set MAKEJEMALLOCLIB  = 0
    set QMON             = 0
    set MAKESTRPTIME     = 0
    set MAKEFNMATCH      = 0
@@ -1501,6 +1538,7 @@ case WIN32_X86:
 case NECSX4:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
+   set MAKEJEMALLOCLIB  = 0
 #
 # we need the '-hfloat0'-flag for CFLAGS and LFLAGS because the
 # XDR-Libraray does not work properly for other floating point models
@@ -1561,6 +1599,7 @@ case SOLARIS86:
 case SOLARISAMD64:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
+   set MAKEJEMALLOCLIB  = 0
    set COMPILE_DC = 1
 
    set ERR_WARN_NONE = "-errwarn=%none" # is set in XCFLAGS and for R_E_M_O_T_E target to switch off -errwarn=%all
@@ -1704,7 +1743,6 @@ case SOLARISAMD64:
       endif
    endif
 
-   set LFLAGS   = "$LFLAGS $DEBUG_FLAG -lmtmalloc"
    set LIBS     = "-lsocket -lnsl -lm -lthread"
    set LOADAVGLIBS = "-lkstat"
    set FSTYPELIBS = "-lkstat"
@@ -1737,11 +1775,23 @@ case SOLARISAMD64:
    set LFLAGS        = "$LFLAGS $RUNPATH"
    set SHARED_LFLAGS = "$SHARED_LFLAGS $RUNPATH"
 
+#   if ( $BUILDARCH == "SOLARISAMD64" ) then
+#      set MAKEJEMALLOCLIB = 1
+#   endif
+   
+   if ( $MAKEJEMALLOCLIB == 1 ) then
+      set JEMALLOC_CFLAGS  = "-DMOZ_MEMORY_SOLARIS -xc99"
+      set LFLAGS   = "$LFLAGS $DEBUG_FLAG -ljemalloc"
+   else
+      set LFLAGS   = "$LFLAGS $DEBUG_FLAG -lmtmalloc"
+   endif
+
    breaksw
 
 case UNICOS*:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
+   set MAKEJEMALLOCLIB  = 0
    set INTERACTTARGETS = ""
    set MAKE = gmake
    set ARFLAGS = rcv
@@ -2176,6 +2226,49 @@ if ( "$MAKEWINGRIDLIB" == 1 ) then
    cd $SOURCE
 endif
 
+if ( "$MAKEJEMALLOCLIB" == 1 ) then
+   echo _________3_r_d_p_a_r_t_y__J_E_M_A_L_L_O_C_
+
+   cd $COMPILE_ARCH
+
+   switch ( "$argv" )
+      case clean:
+         set param = clean
+      breaksw
+
+      case depend:
+         set param = depend
+      breaksw
+
+      case messages:
+         set param = messages
+      breaksw
+
+      case libjemalloc.so:
+         set param = libjemalloc.so
+      breaksw
+
+      default:
+         set param = ""
+      breaksw
+   endsw
+
+   $MAKE $MAKEOPT -f $SOURCE/3rdparty/jemalloc/Makefile "MAKE=$MAKE" "CC=$CC" \
+      "COMPILE_ARCH=$COMPILE_ARCH" "JEMALLOC_CFLAGS=$JEMALLOC_CFLAGS" \
+      "CC=$CC" "CFLAGS=$CFLAGS" "SOURCE=$SOURCE" "SDIR=$SDIR" \
+      "LFLAGS=$LFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
+      "AR=$AR" "ARFLAGS=$ARFLAGS" \
+      "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
+      "DEPEND_FLAGS=$DEPEND_FLAGS" \
+      "SHAREDLD=$SHAREDLD" "SHAREDEXT=$SHAREDEXT" "LIBEXT=$LIBEXT" $param
+
+   if ( $status != 0 ) then
+      echo not done
+      exit 1
+   endif
+
+   cd $SOURCE
+endif
 if ( "$MAKESTRPTIME" == 1 ) then
    echo _________3_r_d_p_a_r_t_y__S_T_R_P_T_I_M_E_
 
@@ -2494,12 +2587,14 @@ if ( "$REMOTE" == 1) then
       set CFLAGS_REMOTE = "$CFLAGS $ERR_WARN_NONE"
    endif
 
+   set REMOTE_LFLAGS = "$LFLAGS -L$SOURCE/$COMPILE_ARCH"
+
    cd $COMPILE_ARCH
 
    $MAKE $MAKEOPT -f ../Makefile "MAKE=$MAKE" "CC=$CC" \
       "CFLAGS=$CFLAGS_REMOTE" "LIBS=$LIBS" "SOURCE=$SOURCE" \
       "KRBLIBS=$KRBLIBS" "DLLIB=$DLLIB" \
-      "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
+      "LFLAGS=$REMOTE_LFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
       "AR=$AR" "ARFLAGS=$ARFLAGS" "LIBEXT=$LIBEXT" \
       "WINGRIDLIB=$WINGRIDLIB" "WINGRIDLIB_DEP=$WINGRIDLIB_DEP" \
       "MEMCFLAG=$MEMCFLAG" "COMPILE_ARCH=$COMPILE_ARCH" $argv

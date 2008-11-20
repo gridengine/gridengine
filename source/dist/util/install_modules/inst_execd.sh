@@ -833,6 +833,17 @@ UnInstWinHelperSvc()
    export PATH
 }
 
+CopyIBMLoadSensor()
+{
+   if [ "$SGE_ARCH" != "aix43" -a "$SGE_ARCH" != "aix51" ]; then 
+      return 
+   fi
+   
+   if [ ! -f $SGE_ROOT/bin/$SGE_ARCH/qloadsensor ]; then 
+      ExecuteAsAdmin cp $SGE_ROOT/util/resources/loadsensors/ibm-loadsensor $SGE_ROOT/bin/$SGE_ARCH/qloadsensor
+      ExecuteAsAdmin chmod 755 $SGE_ROOT/bin/$SGE_ARCH/qloadsensor
+   fi 
+}
 
 SetupWinSvc()
 {

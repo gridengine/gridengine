@@ -85,15 +85,15 @@ SpoolingQueryChange()
         
         $INFOTEXT -n "\nEnter the name of your Berkeley DB Spooling Server [%s] >> " "$default_host"
         SPOOLING_SERVER=`Enter $SPOOLING_SERVER`
-        $INFOTEXT -n "Enter the Database Directory [%s] >> " "$default_spool_dir"
+        $INFOTEXT -n "Enter the database directory [%s] >> " "$default_spool_dir"
         SPOOLING_DIR=`Enter $SPOOLING_DIR`
      else
         SPOOLING_SERVER=none
         if [ -z "$1" ]; then
            SPOOLING_DIR="`dirname $QMDIR`/spooldb"
         fi
-        $INFOTEXT -n "\nPlease enter the Database Directory now, even if you want to spool locally,\n" \
-                     "it is necessary to enter this Database Directory. \n\nDefault: [%s] >> " "$SPOOLING_DIR"
+        $INFOTEXT -n "\nPlease enter the database directory now, even if you want to spool locally,\n" \
+                     "it is necessary to enter this database directory. \n\nDefault: [%s] >> " "$SPOOLING_DIR"
         SPOOLING_DIR=`Enter "$SPOOLING_DIR"`
      fi
 

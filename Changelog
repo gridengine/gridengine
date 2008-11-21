@@ -1,3 +1,10 @@
+HP-2008-11-21-0: Bugfix:      on Windows, execd installation failed when hostname
+                              command returns full qualified name
+                 Changed:     inst_execd.sh
+                 Bugster:     6774847
+                 Issue:       2806
+                 Review:      MD
+
 CR-2008-11-13-1: Cleanup:     fixed test_virtual_gdi_client and
                               test_virtual_qmaster module test binaries
                               (merged from V61_BRANCH)

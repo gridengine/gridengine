@@ -411,9 +411,7 @@ sge_mirror_error sge_mirror_subscribe(sge_evc_class_t *evc,
       sge_object_type i;
 
       for (i = SGE_TYPE_ADMINHOST; i < SGE_TYPE_ALL; i++) {
-         if ((ret = _sge_mirror_subscribe(evc, i, callback_before, callback_after, clientdata, NULL, NULL)) != SGE_EM_OK) {
-            break;
-         }
+         _sge_mirror_subscribe(evc, i, callback_before, callback_after, clientdata, NULL, NULL);
       }
    } else {
       ret = _sge_mirror_subscribe(evc, type, callback_before, callback_after, clientdata, where, what);

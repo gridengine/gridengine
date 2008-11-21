@@ -478,7 +478,7 @@ sge_change_queue_version_centry(sge_gdi_ctx_class_t *ctx)
          sge_event_spool(ctx, &answer_list, 0, sgeE_QINSTANCE_MOD, 
                          0, 0, lGetString(qinstance, QU_qname), 
                          lGetHost(qinstance, QU_qhostname), NULL,
-                         qinstance, NULL, NULL, true, true);
+                         qinstance, NULL, NULL, true, false);
       }
    }
    for_each(ep, *object_base[SGE_TYPE_EXECHOST].list) {

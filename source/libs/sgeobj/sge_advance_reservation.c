@@ -465,20 +465,11 @@ ar_state2dstring(ar_state_t state, dstring *state_as_string)
 *******************************************************************************/
 bool sge_ar_has_errors(lListElem *ar) {
    bool ret = false;
-   lListElem *qinstance;
 
    DENTER(TOP_LAYER, "sge_ar_has_errors");
 
-   for_each(qinstance, lGetList(ar, AR_reserved_queues)) {
-      if (qinstance_state_is_manual_disabled(qinstance) ||
-          qinstance_state_is_manual_suspended(qinstance) ||
-          qinstance_state_is_unknown(qinstance) ||
-          qinstance_state_is_error(qinstance) ||
-          qinstance_state_is_alarm(qinstance) ||
-          qinstance_state_is_ambiguous(qinstance)) {
-         ret = true;
-         break;
-      }
+   if (lGetUlong(ar, AR_qi_errors) != 0) {
+      ret = true;
    }
 
    DRETURN(ret);

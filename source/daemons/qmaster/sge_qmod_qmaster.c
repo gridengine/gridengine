@@ -472,12 +472,6 @@ sge_change_queue_state(sge_gdi_ctx_class_t *ctx,
          break;
    }
 
-   sge_event_spool(ctx,
-                   answer, 0, sgeE_QINSTANCE_MOD,
-                   0, 0, lGetString(qep, QU_qname),
-                   ehname, NULL,
-                   qep, NULL, NULL, true, true);
-
    switch (action) {
       case QI_DO_CLEAN:
       case QI_DO_RESCHEDULE:

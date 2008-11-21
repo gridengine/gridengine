@@ -680,18 +680,20 @@ void sge_mark_unheard(lListElem *hep) {
       DEBUG((SGE_EVENT, "set %s/%s/%d to unheard\n", host, prognames[EXECD], 1));
    }
 
-   host_trash_nonstatic_load_values(hep);
-   cqueue_list_set_unknown_state(
-         *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
-         host, true, true);
+   if (lGetUlong(hep, EH_lt_heard_from) != 0) {
+      host_trash_nonstatic_load_values(hep);
+      cqueue_list_set_unknown_state(
+            *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
+            host, true, true);
 
-   lSetUlong(hep, EH_lt_heard_from, 0);
+      lSetUlong(hep, EH_lt_heard_from, 0);
 
-   /* add a trigger to enforce limits when they are exceeded */
-   sge_host_add_enforce_limit_trigger(host);
+      /* add a trigger to enforce limits when they are exceeded */
+      sge_host_add_enforce_limit_trigger(host);
 
-   /* hedeby depends on this event */
-   sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, host, NULL, NULL, hep);
+      /* hedeby depends on this event */
+      sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, host, NULL, NULL, hep);
+   }
 
    DRETURN_VOID;
 }
@@ -1122,8 +1124,7 @@ notify(sge_gdi_ctx_class_t *ctx, lListElem *lel, sge_gdi_packet_class_t *packet,
       WARNING((SGE_EVENT, MSG_OBJ_NOEXECDONHOST_S, hostname));
       answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ESEMANTIC, 
                      ANSWER_QUALITY_WARNING);
-   }
-   if (execd_alive || force) {
+   } else {
       if (host_notify_about_kill(ctx, lel, kill_jobs)) {
          INFO((SGE_EVENT, MSG_COM_NONOTIFICATION_SSS, action_str, 
                (execd_alive ? "" : MSG_OBJ_UNKNOWN), hostname));
@@ -1253,33 +1254,29 @@ sge_execd_startedup(sge_gdi_ctx_class_t *ctx, lListElem *host, lList **alpp,
    /*
     * reinit state of all qinstances at this host according to initial_state
     */
-   for_each (cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
-      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-      lListElem *qinstance = NULL;
+   if (!is_restart) {
+      for_each (cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+         lListElem *qinstance = NULL;
 
-      qinstance = lGetElemHost(qinstance_list, QU_qhostname, rhost);
-      if (qinstance != NULL) {
-         bool state_changed = sge_qmaster_qinstance_set_initial_state(qinstance,
-			                                              is_restart);
+         qinstance = lGetElemHost(qinstance_list, QU_qhostname, rhost);
+         if (qinstance != NULL) {
+            if (sge_qmaster_qinstance_set_initial_state(qinstance)) {
+               lList *answer_list = NULL;
 
-         if (state_changed) {
-            lList *answer_list = NULL;
-
-            qinstance_increase_qversion(qinstance);
-            sge_event_spool(ctx, &answer_list, 0, sgeE_QINSTANCE_MOD, 
-                            0, 0, lGetString(qinstance, QU_qname), 
-                            rhost, NULL,
-                            qinstance, NULL, NULL, true, true);
-            answer_list_output(&answer_list); 
+               qinstance_increase_qversion(qinstance);
+               sge_event_spool(ctx, &answer_list, 0, sgeE_QINSTANCE_MOD, 
+                               0, 0, lGetString(qinstance, QU_qname), 
+                               rhost, NULL,
+                               qinstance, NULL, NULL, true, true);
+               answer_list_output(&answer_list); 
+            }
          }
       }
    }
    
    DPRINTF(("=====>STARTING_UP: %s %s on >%s< is starting up\n", 
-   feature_get_product_name(FS_SHORT_VERSION, &ds), "execd", rhost));
-
-   sge_add_event( 0, sgeE_EXECHOST_MOD, 0, 0, rhost, NULL, NULL, hep);
-   lListElem_clear_changed_info(hep);
+            feature_get_product_name(FS_SHORT_VERSION, &ds), "execd", rhost));
 
    INFO((SGE_EVENT, MSG_LOG_REGISTER_SS, "execd", rhost));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);

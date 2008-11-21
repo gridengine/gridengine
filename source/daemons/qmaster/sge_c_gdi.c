@@ -587,19 +587,14 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
                   }
 
                   if (task->target==SGE_EXECHOST_LIST && !strcmp(prognames[EXECD], packet->commproc)) {
-                     bool is_restart;
+                     bool is_restart = false;
 
-                         /*
-                                * Evaluate subcommand.
-                                */
                      if (sub_command == SGE_GDI_EXECD_RESTART) {
                         is_restart = true;
-                     } else {
-                                    is_restart = false;
-                               }
+                     }
+
                      sge_execd_startedup(ctx, ep, &(task->answer_list), packet->user,
-                                         packet->host, task->target,
-                                                             monitor, is_restart);
+                                         packet->host, task->target, monitor, is_restart);
                   } else {
                      sge_gdi_add_mod_generic(ctx, &(task->answer_list), ep, 1, ao, packet->user, packet->host, sub_command, &tmp_list, monitor);
                   }

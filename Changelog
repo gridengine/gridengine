@@ -1,3 +1,9 @@
+RD-2008-11-21-0: Enhancem.:   analyzed generated events and reduced to minimum
+                              where possible.
+                 Bugster:     6724000
+                 Issue:       2799
+                 Review:      JG
+
 LP-2008-11-20-0: Enhancem.:   JMX is installed be default, new flag -no-jmx
                  Enhancem.:   Improvements for -autogui option
                  Bugfix:      inst_sge -x -auto ... fails

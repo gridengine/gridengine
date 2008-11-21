@@ -1716,31 +1716,37 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
             if ((master_queue = lGetSubStr(master_cqueue, QU_full_name,
                   queue_name, CQ_qinstances)) != NULL){
                if (qinstance_state_is_ambiguous(master_queue)) {
+                  lAddUlong(ar, AR_qi_errors, 1);
                   sge_dstring_sprintf(&buffer, "reserved queue %s is %s", queue_name,
                                 qinstance_state_as_string(QI_AMBIGUOUS));
                   qinstance_set_error(queue, QI_AMBIGUOUS, sge_dstring_get_string(&buffer), true);
                }
                if (qinstance_state_is_alarm(master_queue)) {
+                  lAddUlong(ar, AR_qi_errors, 1);
                   sge_dstring_sprintf(&buffer, "reserved queue %s is %s", queue_name,
                                 qinstance_state_as_string(QI_ALARM));
                   qinstance_set_error(queue, QI_ALARM, sge_dstring_get_string(&buffer), true);
                }
                if (qinstance_state_is_suspend_alarm(master_queue)) {
+                  lAddUlong(ar, AR_qi_errors, 1);
                   sge_dstring_sprintf(&buffer, "reserved queue %s is %s", queue_name,
                                 qinstance_state_as_string(QI_SUSPEND_ALARM));
                   qinstance_set_error(queue, QI_SUSPEND_ALARM, sge_dstring_get_string(&buffer), true);
                }
                if (qinstance_state_is_manual_disabled(master_queue)) {
+                  lAddUlong(ar, AR_qi_errors, 1);
                   sge_dstring_sprintf(&buffer, "reserved queue %s is %s", queue_name,
                                 qinstance_state_as_string(QI_DISABLED));
                   qinstance_set_error(queue, QI_DISABLED, sge_dstring_get_string(&buffer), true);
                }
                if (qinstance_state_is_unknown(master_queue)) {
+                  lAddUlong(ar, AR_qi_errors, 1);
                   sge_dstring_sprintf(&buffer, "reserved queue %s is %s", queue_name,
                                 qinstance_state_as_string(QI_UNKNOWN));
                   qinstance_set_error(queue,QI_UNKNOWN, sge_dstring_get_string(&buffer), true);
                }
                if (qinstance_state_is_error(master_queue)) {
+                  lAddUlong(ar, AR_qi_errors, 1);
                   sge_dstring_sprintf(&buffer, "reserved queue %s is %s", queue_name,
                                 qinstance_state_as_string(QI_ERROR));
                   qinstance_set_error(queue, QI_ERROR, sge_dstring_get_string(&buffer), true);
@@ -2069,11 +2075,9 @@ void sge_ar_state_set_exited(lListElem *ar) {
 *  NOTES
 *     MT-NOTE: sge_ar_list_set_error_state() is MT safe 
 *******************************************************************************/
-void sge_ar_list_set_error_state(lList *ar_list, const char *qname, u_long32 error_type, 
-                              bool send_events, bool set_error)
+void sge_ar_list_set_error_state(lList *ar_list, const char *qname, u_long32 error_type, bool set_error)
 {
    lListElem *ar;
-   bool start_time_reached;
    dstring buffer = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "sge_ar_list_set_error_state");
@@ -2082,42 +2086,33 @@ void sge_ar_list_set_error_state(lList *ar_list, const char *qname, u_long32 err
       lListElem *qinstance;
       lList *granted_slots = lGetList(ar, AR_reserved_queues);
 
-      if (set_error) {
-         if (lGetUlong(ar, AR_state) == AR_ERROR || lGetUlong(ar, AR_state) == AR_WARNING) {
-             /* ignore, AR is already in error state */
-             continue;
-         }
-      } else {
-         if (lGetUlong(ar, AR_state) == AR_RUNNING || lGetUlong(ar, AR_state) == AR_WAITING) {
-             /* ignore, AR is already in non error state */
-             continue;
-         }
-      }
-      
-      if (lGetUlong(ar, AR_state) == AR_RUNNING || lGetUlong(ar, AR_state) == AR_ERROR) {
-         start_time_reached= true;
-      } else {
-         start_time_reached= false;
-      }
-
       if ((qinstance =lGetElemStr(granted_slots, QU_full_name, qname)) != NULL) {
-         sge_dstring_sprintf(&buffer, MSG_AR_RESERVEDQUEUEHASERROR_SS, qname,
-                             qinstance_state_as_string(error_type));
+         u_long32 old_errors = lGetUlong(ar, AR_qi_errors);
+         u_long32 new_errors;
+
+         if (set_error) {
+            new_errors = old_errors + 1;
+            sge_dstring_sprintf(&buffer, MSG_AR_RESERVEDQUEUEHASERROR_SS, qname,
+                                qinstance_state_as_string(error_type));
+         } else {
+            new_errors = old_errors - 1;
+         }
+         lSetUlong(ar, AR_qi_errors, new_errors);
+
          qinstance_set_error(qinstance, error_type, sge_dstring_get_string(&buffer), set_error);
 
          /* update states */
-         if (start_time_reached) {
-            sge_ar_state_set_running(ar);
-         } else {
-            sge_ar_state_set_waiting(ar);
-         }
-
-         if (send_events) {
-               /* this info is not spooled */
-               sge_dstring_sprintf(&buffer, sge_U32CFormat, lGetUlong(ar, AR_id));
-               sge_add_event(0, sgeE_AR_MOD, 0, 0, 
-                             sge_dstring_get_string(&buffer), NULL, NULL, ar);
-               lListElem_clear_changed_info(ar);
+         if (old_errors == 0 || new_errors == 0) {
+            if ((lGetUlong(ar, AR_state) == AR_RUNNING || lGetUlong(ar, AR_state) == AR_ERROR)) {
+               sge_ar_state_set_running(ar);
+            } else {
+               sge_ar_state_set_waiting(ar);
+            }
+            /* this info is not spooled */
+            sge_dstring_sprintf(&buffer, sge_U32CFormat, lGetUlong(ar, AR_id));
+            sge_add_event(0, sgeE_AR_MOD, 0, 0, 
+                          sge_dstring_get_string(&buffer), NULL, NULL, ar);
+            lListElem_clear_changed_info(ar);
          }
       }
    }

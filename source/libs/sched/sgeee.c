@@ -3117,7 +3117,7 @@ sge_calc_tickets( scheduler_all_data_t *lists,
             for(i=0; i<max; i++) {
                double ftickets, max_ftickets=-1;
                u_long32 jid, save_jid=0, save_tid=0;
-	       u_long32 submission_time = 0, save_submission_time = 0;
+	            u_long32 submission_time = 0, save_submission_time = 0;
                lListElem *current = NULL;
                lListElem *max_current = NULL;
 

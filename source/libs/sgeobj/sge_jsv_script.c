@@ -1887,9 +1887,32 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
          for_each(env, env_list) {
             const char *value = lGetString(env, VA_value);
             const char *name = lGetString(env, VA_variable);
+            size_t length, i;
       
             sge_dstring_clear(&buffer);
-            sge_dstring_sprintf(&buffer, "ENV ADD %s %s", name, value);
+            sge_dstring_sprintf(&buffer, "ENV ADD %s ", name);
+            length = (value != NULL) ? strlen(value) : 0;
+            for (i = 0; i < length; i++) {
+               char in[] = {  
+                  '\\', '\n', '\r', '\t', '\a', '\b', '\v', '\0'
+               };
+               char *out[] = {
+                  "\\", "\\n", "\\r", "\\t", "\\a", "\\b", "\\v", ""
+               };
+               int j = 0;
+               bool already_handled = false;
+   
+               while (in[j] != '\0') {
+                  if (in[j] == value[j]) {
+                     sge_dstring_append(&buffer, out[j]);
+                     already_handled = true;
+                  }
+                  j++;
+               }
+               if (!already_handled) {
+                  sge_dstring_append_char(&buffer, value[i]); 
+               }
+            }
             jsv_send_command(jsv, answer_list, sge_dstring_get_string(&buffer));
          }
       }

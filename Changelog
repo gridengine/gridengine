@@ -1,3 +1,10 @@
+EB-2008-11-20-0: Bugfix:      Master installation with JMX support fails on DARWIN
+					  Enhancem.:   mask special characters contained in env when
+										they are passed to JSV scripts
+					  Bugster:     6774811
+					  Issue:       2803
+					  Review:      MD, JG
+
 RD-2008-11-21-0: Enhancem.:   analyzed generated events and reduced to minimum
                               where possible.
                  Bugster:     6724000

@@ -31,19 +31,39 @@
 #___INFO__MARK_END__
 
 ###############################################################################
+# Variable definitions for targets to build
+###############################################################################
+WINDOWS_WORKER_DIR = $(SDIR)/utilbin/windows/worker
+
+WINDOWS_WORKER_TARGETS = worker.exe
+
+WINDOWS_WORKER_SRC= worker.c
+
+WINDOWS_WORKER_OBJS = $(WINDOWS_WORKER_SRC:.c=.obj)
+
+WINDOWS_WORKER_FLAGS = /SUBSYSTEM:CONSOLE $(WINLFLAGS)
+
+###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
 
-all: qloadsensor sge_helper_service gui_test worker
+worker: $(WINDOWS_WORKER_TARGETS)
 
-clean: qloadsensor_clean sge_helper_service_clean gui_test_clean worker_clean
+worker_clean:
+	$(RM) $(WINDOWS_WORKER_TARGETS) $(WINDOWS_WORKER_OBJS)
+	$(RM) worker.ilk worker.pdb vc70.pdb vc70.idb
 
-depend: qloadsensor_depend sge_helper_service_depend gui_test_depend worker_depend
+worker_depend:
+	$(DEPEND) -f$(WINDOWS_WORKER_DIR)/worker_dependencies $(WINDOWS_WORKER_DIR)/*.c
 
 ###############################################################################
-# include sub Makefiles
+# rules to build binaries
 ###############################################################################
-include $(SDIR)/utilbin/windows/qloadsensor/Makefile
-include $(SDIR)/utilbin/windows/SGE_Helper_Service/Makefile
-include $(SDIR)/utilbin/windows/GUI_test/Makefile
-include $(SDIR)/utilbin/windows/worker/Makefile
+
+all: $(WINDOWS_WORKER_TARGETS) 
+
+worker.exe: $(WINDOWS_WORKER_OBJS)
+	$(WINCC) $(WINDOWS_WORKER_OBJS) /link /OUT:worker.exe $(WINDOWS_WORKER_FLAGS) $(WINLIBS)
+
+worker.obj: $(WINDOWS_WORKER_DIR)/worker.c
+	$(WINCC) $(WINCFLAGS) -c $(WINDOWS_WORKER_DIR)/worker.c

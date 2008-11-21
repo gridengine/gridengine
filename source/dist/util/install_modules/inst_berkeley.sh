@@ -70,14 +70,14 @@ SpoolingQueryChange()
      if [ "$is_server" = "true" ]; then
         $INFOTEXT -n "\nPlease enter the name of your Berkeley DB Spooling Server! >> "
                SPOOLING_SERVER=`Enter $SPOOLING_SERVER`
-        $INFOTEXT -n "Please enter the Database Directory now!\n"
+        $INFOTEXT -n "Please enter the database directory now!\n"
         $INFOTEXT -n "Default: [%s] >> " "$SGE_ROOT/$SGE_CELL/spooldb"
         SPOOLING_DIR="$SGE_ROOT/$SGE_CELL/spooldb" 
         SPOOLING_DIR=`Enter $SPOOLING_DIR`
      else
         SPOOLING_SERVER=none
-        $INFOTEXT -n "\nPlease enter the Database Directory now, even if you want to spool locally,\n" \
-                     "it is necessary to enter this Database Directory. \n\nDefault: [%s] >> " `dirname $QMDIR`"/spooldb" 
+        $INFOTEXT -n "\nPlease enter the database directory now, even if you want to spool locally,\n" \
+                     "it is necessary to enter this database directory. \n\nDefault: [%s] >> " `dirname $QMDIR`"/spooldb" 
                   SPOOLING_DIR=`dirname $QMDIR`"/spooldb" 
                   SPOOLING_DIR=`Enter $SPOOLING_DIR`        
      fi

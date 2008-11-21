@@ -280,6 +280,8 @@ static int map_signal(int sig)
    if (sig != ret) {
       shepherd_trace("mapped signal %s to signal %s", 
                      sge_sys_sig2str(sig), sge_sys_sig2str(ret));
+   } else {
+      shepherd_trace("no need to map signal %s", sge_sys_sig2str(sig));
    }
    return ret;
 FCLOSE_ERROR:
@@ -1493,7 +1495,8 @@ static void forward_signal_to_job(int pid, int timeout,
 
    /* store signal if we got one */
    if (received_signal) {
-      shepherd_trace("forward_signal_to_job(): mapping signal %d", received_signal);
+      shepherd_trace("forward_signal_to_job(): mapping signal %d %s",
+         received_signal, sge_sys_sig2str(received_signal));
       sig = map_signal(received_signal);
 
       received_signal = 0;

@@ -45,7 +45,7 @@
 #  define setegid(egid) setresgid(-1, egid, -1)
 #endif 
 
-#if defined(INTERIX)
+#if defined(INTERIX) && !defined(INTERIX52)
 #  define seteuid(euid) setreuid(-1, euid)
 #  define setegid(egid) setregid(-1, egid)
 #  define SGE_SUPERUSER_UID wl_get_superuser_id()

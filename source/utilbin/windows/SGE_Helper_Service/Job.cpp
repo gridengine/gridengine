@@ -520,6 +520,9 @@ void C_Job::FreeAllocatedMembers()
    free(user);
    user = NULL;
 
+   if (pass != NULL) {
+      SecureZeroMemory(pass, strlen(pass));
+   }
    free(pass);
    pass = NULL;
 

@@ -1,3 +1,8 @@
+HP-2008-11-21-1: Bugfix:      fixed several minor bugs, type casts, wording,
+                              added debug output and cleaned things up
+                              that appeared while testing on Windows Vista
+                 Review:      MD
+
 HP-2008-11-21-1: Enhancem.:   added worker.exe for native Windows to utilbin for
                               testing purposes - not to distribution, yet.
                  Added:       worker.c, Makefile

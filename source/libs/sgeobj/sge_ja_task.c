@@ -210,8 +210,8 @@ bool ja_task_add_finished_pe_task(lListElem *ja_task, const char *pe_task_id)
 
    pe_task = lGetSubStr(ja_task, FPET_id, pe_task_id, JAT_finished_task_list);
    if (pe_task != NULL) {
-      DPRINTF(("already handled exit of pe task "SFQ" in ja_task "sge_U32CFormat
-               "\n", pe_task_id, lGetUlong(ja_task, JAT_task_number)));
+      INFO((SGE_EVENT, "already handled exit of pe task "SFQ" in ja_task "
+         sge_U32CFormat"\n", pe_task_id, sge_u32c(lGetUlong(ja_task, JAT_task_number))));
       DRETURN(false);
    }
 

@@ -51,7 +51,7 @@ gui_test: $(GUITEST_TARGETS)
 
 gui_test_clean: 
 	$(RM) $(GUITEST_TARGETS) $(GUITEST_OBJS)
-	$(RM) GUI_Test.ilk GUI_Test.pdb vc70.pdb vc70.idb
+	$(RM) GUI_test.ilk GUI_test.pdb vc70.pdb vc70.idb
 
 gui_test_depend:
 	echo "no depend for gui_test"

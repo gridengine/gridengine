@@ -1,3 +1,10 @@
+HP-2008-11-20-0: Bugfix:      on Windows, execd installation failed when hostname
+                              command returns full qualified name
+                 Changed:     inst_execd.sh
+                 Bugster:     6774847
+                 Issue:       2806
+                 Review:      MD
+
 EB-2008-11-20-0: Bugfix:      Master installation with JMX support fails on DARWIN
 					  Enhancem.:   mask special characters contained in env when
 										they are passed to JSV scripts

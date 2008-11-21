@@ -484,7 +484,7 @@ AddQueue()
    else
       LOADCHECK_COMMAND="$SGE_UTILBIN/loadcheck.exe"
    fi
-   slots=`$LOADCHECK_COMMAND -loadval num_proc 2>/dev/null | sed "s/num_proc *//"`
+   slots=`$LOADCHECK_COMMAND -loadval num_proc < /dev/null 2>/dev/null | sed "s/num_proc *//"`
 
    $INFOTEXT -u "\nAdding a queue for this host"
    $INFOTEXT "\nWe can now add a queue instance for this host:\n\n" \
@@ -663,15 +663,17 @@ CheckWinAdminUser()
 
    if [ "$win_admin_user" != "default" -a "$win_admin_user" != "root" -a "$win_admin_user" != "none" ]; then
       WIN_HOST_NAME=`hostname | tr [a-z] [A-Z]`
+      WIN_HOST_NAME=`echo $WIN_HOST_NAME | cut -d"." -f1`
+
       ADMINUSER=$WIN_HOST_NAME"+$win_admin_user"
 
       tmp_path=$PATH
       PATH=/usr/contrib/win32/bin:/common:$SAVED_PATH
       export PATH
-      eval net user $win_admin_user > /dev/null 2>&1
+      eval net user $win_admin_user < /dev/null > /dev/null 2>&1
       ret=$?
       if [ "$ret" = 127 ]; then
-         /usr/contrib/win32/bin/net user $win_admin_user > /dev/null 2>&1
+         /usr/contrib/win32/bin/net user $win_admin_user < /dev/null > /dev/null 2>&1
          ret=$?
          if [ "$ret" = 127 ]; then
 	         $INFOTEXT "The net binary could not be found!\nPlease, check your $PATH variable or your installation!"
@@ -688,7 +690,7 @@ CheckWinAdminUser()
             read SECRET
             stty $stty_orig
             $INFOTEXT "Creating admin user %s, now ...\n" $win_admin_user
-            eval net user $win_admin_user $SECRET /add
+            eval net user $win_admin_user $SECRET /add < /dev/null
             ret=$?
             unset SECRET
          done
@@ -730,14 +732,14 @@ InstWinHelperSvc()
    
    if [ -f "$WIN_DIR"/SGE_Helper_Service.exe ]; then
       #Try to stop
-      eval "net stop \"$WIN_SVC\"" > /dev/null 2>&1
+      eval "net stop \"$WIN_SVC\"" < /dev/null > /dev/null 2>&1
       ret=$?
       #If stop fails, try start since service might be already registered
       if [ "$ret" -ne 0 ]; then
-         eval "net start \"$WIN_SVC\"" > /dev/null 2>&1
+         eval "net start \"$WIN_SVC\"" < /dev/null > /dev/null 2>&1
 	 ret=$?
          #In any case stop the service
-         eval "net stop \"$WIN_SVC\"" > /dev/null 2>&1
+         eval "net stop \"$WIN_SVC\"" < /dev/null > /dev/null 2>&1
       fi
       if [ "$ret" -eq 0 ]; then
          $INFOTEXT "   ... a service is already installed!"
@@ -774,7 +776,7 @@ InstWinHelperSvc()
 
    $INFOTEXT "\n   ... starting new service!"
    $INFOTEXT -log "\n   ... starting new service!"
-   eval "net start \"$WIN_SVC\"" > /dev/null 2>&1
+   eval "net start \"$WIN_SVC\"" < /dev/null > /dev/null 2>&1
 
    if [ "$?" -ne 0 ]; then
       $INFOTEXT "\n ... service could not be started!"
@@ -802,7 +804,7 @@ UnInstWinHelperSvc()
 
    $INFOTEXT " Testing, if service is installed!\n"
    $INFOTEXT -log " Testing, if service is installed!\n"
-   eval "net pause \"$WIN_SVC\"" > /dev/null 2>&1
+   eval "net pause \"$WIN_SVC\"" < /dev/null > /dev/null 2>&1
    ret=$?
    if [ "$ret" = 0 ]; then
       ret=2
@@ -812,7 +814,7 @@ UnInstWinHelperSvc()
       $INFOTEXT -log "   ... stopping service!"
 
       while [ "$ret" -ne 0 ]; do
-         eval "net continue \"$WIN_SVC\"" > /dev/null 2>&1
+         eval "net continue \"$WIN_SVC\"" < /dev/null > /dev/null 2>&1
          ret=$?
       done
    else

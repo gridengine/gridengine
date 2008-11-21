@@ -652,6 +652,8 @@ CheckWinAdminUser()
 
    if [ "$win_admin_user" != "default" -a "$win_admin_user" != "root" -a "$win_admin_user" != "none" ]; then
       WIN_HOST_NAME=`hostname | tr [a-z] [A-Z]`
+      WIN_HOST_NAME=`echo $WIN_HOST_NAME | cut -d"." -f1`
+
       ADMINUSER=$WIN_HOST_NAME"+$win_admin_user"
 
       tmp_path=$PATH

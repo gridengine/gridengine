@@ -43,12 +43,12 @@
 PATH=/bin:/usr/bin
 ARCH=`$SGE_ROOT/util/arch`
 
-logging_enabled=false    # is logging enabled?
-logfile=/tmp/jsv_$$.log  # logfile
+logging_enabled="false" # is logging enabled?
+logfile="/tmp/jsv_$$.log"  # logfile
 
 # Current state of the script
 # Might be "initialized", "started" or "verifying"
-state=initialized       
+state="initialized"       
 
 # Following strings are switch names of command line clients (qsub, qrsh, ...) 
 # and these strings will also be used as variable suffixes in this script
@@ -71,8 +71,7 @@ jsv_mod_params="ac l_hard l_soft q_hard q_soft"
 #     CLIENT: submit client which was used
 #     CONTEXT: in which context is this script executed
 #     ...
-#     find a full description in man page jsv(5)
-jsv_add_params="CLIENT CONTEXT VERSION JOB_ID SCRIPT SCRIPT_ARGS USER"
+jsv_add_params="CLIENT CONTEXT GROUP VERSION JOB_ID SCRIPT CMDARGS USER"
 
 # Values specified with the list below will be available in this script 
 # as variables with the name "jsv_param_<name>". If a corresponding value
@@ -177,6 +176,35 @@ jsv_get_env()
    unset isdef
 }
 
+jsv_add_env() 
+{
+   name="jsv_env_$1"
+   eval "$name=$2"
+   jsv_send_command ENV ADD "$1" "$2"
+   unset name
+}
+
+jsv_mod_env() 
+{
+   name="jsv_env_$1"
+   eval "$name=$2"
+   jsv_send_command ENV MOD "$1" "$2"
+   unset name
+}
+
+jsv_del_env() 
+{
+   name="jsv_env_$1"
+   command=`eval "echo \$\{$name\:\-$undef\}"`
+   isdef=`eval "echo $command"`
+   if [ "$isdef" != "$undef" ]; then
+      eval "unset $name" 
+      jsv_send_command ENV DEL "$1" 
+   fi
+   unset name
+   unset command
+   unset isdef
+}
 
 jsv_is_param() 
 {
@@ -206,18 +234,12 @@ jsv_get_param()
    unset isdef
 }
 
-jsv_set_param() 
+jsv_set_param()
 {
    name="jsv_param_$1"
-   value="$2"
-   command=`eval "echo \$\{$name\:\-$undef\}"`
-   isdef=`eval "echo $command"`
-   if [ "$isdef" != "$undef" ]; then
-      eval "\${$name}\=$2" 
-   fi
+   eval "$name=$2"
+   jsv_send_command PARAM "$1" "$2"
    unset name
-   unset command
-   unset isdef
 }
 
 jsv_del_param() 
@@ -228,6 +250,7 @@ jsv_del_param()
    isdef=`eval "echo $command"`
    if [ "$isdef" != "$undef" ]; then
       eval "unset \${$name}" 
+      jsv_send_command PARAM "$1" ""
    fi
    unset name
    unset command

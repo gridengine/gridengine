@@ -1443,15 +1443,6 @@ int main(int argc, char **argv)
       SGE_EXIT((void**)&ctx, 0);
    }
 
-   /* job submission verifier */
-   while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-jsv"))) {
-      lList *list = lGetList(ep, SPA_argval_lListT);
-      const char *file = lGetString(lFirst(list), PN_path);
-
-      jsv_list_add("jsv_switch", JSV_CONTEXT_CLIENT, NULL, file);
-      lRemoveElem(opts_cmdline, &ep);
-   }
-
    /* set verbosity */
    while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-verbose"))) {
       lRemoveElem(opts_cmdline, &ep);
@@ -1626,7 +1617,6 @@ int main(int argc, char **argv)
 
    opt_list_merge_command_lines(&opts_all, &opts_defaults, &opts_scriptfile,
                                 &opts_cmdline);
-
 
    alp = cull_parse_qsh_parameter(my_who, myuid, username, cell_root, unqualified_hostname, qualified_hostname, opts_all, &job);
    do_exit = parse_result_list(alp, &alp_error);
@@ -2273,7 +2263,8 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
             strcmp(cp, "-soft") && strcmp(cp, "-M") && strcmp(cp, "-verbose") &&
             strcmp(cp, "-ac") && strcmp(cp, "-dc") && strcmp(cp, "-sc") &&
             strcmp(cp, "-S") && strcmp(cp, "-w") && strcmp(cp, "-js") && strcmp(cp, "-R") &&
-            strcmp(cp, "-o") && strcmp(cp, "-e") && strcmp(cp, "-j") && strcmp(cp, "-wd")
+            strcmp(cp, "-o") && strcmp(cp, "-e") && strcmp(cp, "-j") && strcmp(cp, "-wd") &&
+            strcmp(cp, "-jsv")
            ) {
             if (error) {
                ERROR((SGE_EVENT, MSG_ANSWER_UNKOWNOPTIONX_S, cp));

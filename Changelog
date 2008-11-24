@@ -1,3 +1,9 @@
+EB-2008-11-24-0: Bugfix:		- added missing functions to Perl jsv
+										- fixed bug in master which handled -o switch
+										- fixed qlogin, qsh, qrsh so taht JSV is
+										  executed in client environment
+					  Review:      MD
+
 HP-2008-11-21-1: Bugfix:      fixed several minor bugs, type casts, wording,
                               added debug output and cleaned things up
                               that appeared while testing on Windows Vista

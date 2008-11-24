@@ -4,7 +4,7 @@
 .\" Copyright: 2008 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: jsv.1,v $     Last Update: $Date: 2008/11/10 13:05:49 $     Revision: $Revision: 1.1 $
+.\" $RCSfile: jsv.1,v $     Last Update: $Date: 2008/11/24 09:13:03 $     Revision: $Revision: 1.2 $
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
 .\"
@@ -28,7 +28,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH JSV 1 "$Date: 2008/11/10 13:05:49 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH JSV 1 "$Date: 2008/11/24 09:13:03 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 JSV \- xxQS_NAMExx Job Submission Verifier 
@@ -260,7 +260,8 @@ a \fBsend_data_command\fP before the \fBstarted_command\fP.
 .SH PSEUDO PARAMETERS
 .IP "\fBCLIENT\fP" 
 The corresponding value for the \fBCLIENT\fP parameters is 
-either 'qsub', 'qsh', 'qrsh', or 'qlogin'
+either '\fBqmaster\fP' or the name of a submit client like '\fBqsub\fP', 
+ '\fBqsh\fP', '\fBqrsh\fP', '\fBqlogin\fP' and so on
 .\" TODO add all other clients which might be possible
 This parameter value can't be changed by JSV instances.
 It will always be sent as part of a job verification.

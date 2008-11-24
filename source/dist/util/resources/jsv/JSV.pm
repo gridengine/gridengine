@@ -42,12 +42,12 @@ require Exporter;
    get_env_hash get_param_hash
    set_param del_param sub_add_param sub_del_param 
    job_accept job_correct job_reject job_reject_wait 
+   get_env add_env mod_env del_env is_env
    main 
 );
 
 # symbols to export on request
 @EXPORT_OK = qw(
-   is_env get_env 
    is_param get_param 
    sub_is_param sub_get_param 
    show_params show_envs 
@@ -215,6 +215,26 @@ sub get_env_hash {
 
 sub is_env {
    return exists $env{$_[0]};
+}
+
+sub add_env {
+   my ($key, $val) = @_;
+   $env{$key} = $val;
+
+   send_command("ENV ADD $key $val");
+}
+
+sub mod_env {
+   my ($key, $val) = @_;
+   $env{$key} = $val;
+
+   send_command("ENV MOD $key $val");
+}
+
+sub del_param {
+   my ($key) = @_;
+   delete $env{$key};
+   send_command("ENV DEL $key");
 }
 
 sub get_env {

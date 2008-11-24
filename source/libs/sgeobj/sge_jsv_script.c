@@ -1560,7 +1560,7 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
          lListElem *shell;
  
          sge_dstring_clear(&buffer);
-         sge_dstring_sprintf(&buffer, "%s o", prefix);
+         sge_dstring_sprintf(&buffer, "%s o ", prefix);
          for_each(shell, shell_list) {
             const char *hostname = lGetHost(shell, PN_host);
             const char *path = lGetString(shell, PN_path);

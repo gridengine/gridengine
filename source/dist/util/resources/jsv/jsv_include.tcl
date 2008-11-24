@@ -134,7 +134,7 @@ proc jsv_get_env {suffix} {
 
    if {$exists == 1} {
       global $name
-      set ret $name
+      eval "set ret \$$name"
    }
    return $ret
 }

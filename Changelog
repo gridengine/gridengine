@@ -1,3 +1,10 @@
+LP-2008-11-24-0: Enhancem.:   Modifed JMX behavior -jmx and no flag are equal
+                 Enhancem.:   Improvements for -autogui option
+                 Bugfix:      inst_sge -x -auto ... fails
+                 Bugster:     6774221
+                 Issue:       2797
+                 Review:      MD
+
 RD-2008-11-24-0: Bugfix:      corrected complex man page for non-multiplied consumables
                  Review:      AH
 

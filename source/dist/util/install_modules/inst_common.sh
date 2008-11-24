@@ -541,10 +541,7 @@ ErrUsage()
              "   Examples:\n" \
              "   inst_sge -m -no-jmx -x\n" \
              "                     Installs qmaster and exechost on localhost\n" \
-             "   inst_sge -m -x\n" \
-             "                     Installs qmaster with JMX thread configured, but disabled\n" \
-             "                     and exechost on localhost\n" \
-             "   inst_sge -m -jmx -x\n" \
+             "   inst_sge -m -x   or   inst_sge -m -jmx -x\n" \
              "                     Installs qmaster with JMX thread enabled\n" \
              "                     and exechost on localhost\n" \
              "   inst_sge -m -x -auto /path/to/config-file\n" \
@@ -3752,13 +3749,11 @@ CopyCaToHostType()
 #
 GetAdminUser()
 {
-   if [ "$AUTOGUI" = true ]; then # We have it already
-      return
-   fi
-
-   TMP_ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
-   if [ -n "$TMP_ADMINUSER" ]; then
-      ADMIN_USER=$TMP_ADMINUSER   
+   if [ "$AUTOGUI" != true ]; then # We have it already
+      TMP_ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
+      if [ -n "$TMP_ADMINUSER" ]; then
+         ADMIN_USER=$TMP_ADMINUSER   
+      fi
    fi
    euid=`$SGE_UTILBIN/uidgid -euid`
 

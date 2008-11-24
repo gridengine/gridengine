@@ -351,7 +351,6 @@ done
 # New behaviour. If no JMX flag specified (-jmx not -no-jmx), JMX gets installed but the JMX thread is not started
 if [ "$SGE_ENABLE_JMX" = undef ]; then
    SGE_ENABLE_JMX=true
-   DISABLE_JMX_THREAD=true
 fi
 
 #Set overlapping variables only
@@ -1285,25 +1284,25 @@ if [ $SHADOW = "install" ]; then
       Stdout2Log
       for SHADOW in $SHADOW_HOST; do
          $INFOTEXT -log "Starting sge_shadowd on host %s" $SHADOW   
-         ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
-         ALREADY_SHADOWS=`cat $SGE_ROOT/$SGE_CELL/common/shadow_masters | grep -v "$SHADOW"`
-         ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/shadow_masters $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
-         ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
-         ExecuteAsAdmin chmod a+rw $SGE_ROOT/$SGE_CELL/common/shadow_masters
-         ExecuteAsAdmin cat $SGE_ROOT/$SGE_CELL/common/act_qmaster >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
-         ExecuteAsAdmin echo $SHADOW >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+         ExecuteAsAdmin touch $SGE_ROOT/$CELL_NAME/common/shadow_masters
+         ALREADY_SHADOWS=`cat $SGE_ROOT/$CELL_NAME/common/shadow_masters | grep -v "$SHADOW"`
+         ExecuteAsAdmin mv $SGE_ROOT/$CELL_NAME/common/shadow_masters $SGE_ROOT/$CELL_NAME/common/shadow_masters.1
+         ExecuteAsAdmin touch $SGE_ROOT/$CELL_NAME/common/shadow_masters
+         ExecuteAsAdmin chmod a+rw $SGE_ROOT/$CELL_NAME/common/shadow_masters
+         ExecuteAsAdmin cat $SGE_ROOT/$CELL_NAME/common/act_qmaster >> $SGE_ROOT/$CELL_NAME/common/shadow_masters
+         ExecuteAsAdmin echo $SHADOW >> $SGE_ROOT/$CELL_NAME/common/shadow_masters
          for s in `echo $ALREADY_SHADOWS`; do
-            ExecuteAsAdmin echo $s >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+            ExecuteAsAdmin echo $s >> $SGE_ROOT/$CELL_NAME/common/shadow_masters
          done
-         ExecuteAsAdmin chmod go-w $SGE_ROOT/$SGE_CELL/common/shadow_masters
-         ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
+         ExecuteAsAdmin chmod go-w $SGE_ROOT/$CELL_NAME/common/shadow_masters
+         ExecuteAsAdmin rm -f $SGE_ROOT/$CELL_NAME/common/shadow_masters.1
          if [ $SHADOW = `$SGE_UTILBIN/gethostname -aname` ]; then
-            . $SGE_ROOT/$SGE_CELL/common/settings.sh
+            . $SGE_ROOT/$CELL_NAME/common/settings.sh
             SGE_ARCH=`$SGE_ROOT/util/arch`
             $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &
             AddSGEStartUpScript $euid shadow
          else
-              echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $SHADOW /bin/sh &
+              echo ". $SGE_ROOT/$CELL_NAME/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $SHADOW /bin/sh &
               #TODO: install rc script
          fi
       done

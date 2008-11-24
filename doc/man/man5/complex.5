@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: complex.5,v $     Last Update: $Date: 2008/11/03 12:53:22 $     Revision: $Revision: 1.25 $
+.\" $RCSfile: complex.5,v $     Last Update: $Date: 2008/11/24 09:25:28 $     Revision: $Revision: 1.26 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH COMPLEX 5 "$Date: 2008/11/03 12:53:22 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH COMPLEX 5 "$Date: 2008/11/24 09:25:28 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 complex \- xxQS_NAMExx complexes configuration file format
@@ -332,7 +332,7 @@ A consumable defined by 'y' is a per slot consumables which means the limit is
 mulitplied by the number of slots being used by the job before being applied.
 In case of 'j' the consumable is a per job consuamble. This resource is debited
 as requested (without multiplication) from the allocated master queue. The 
-resource must not be availble for the slave task queues.
+resource needs not be available for the slave task queues.
 .sp 1
 Consumables can be combined with default or user defined load parameters 
 (see

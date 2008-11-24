@@ -1,3 +1,6 @@
+RD-2008-11-24-0: Bugfix:      corrected complex man page for non-multiplied consumables
+                 Review:      AH
+
 EB-2008-11-24-0: Bugfix:		- added missing functions to Perl jsv
 										- fixed bug in master which handled -o switch
 										- fixed qlogin, qsh, qrsh so taht JSV is

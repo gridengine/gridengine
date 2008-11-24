@@ -48,8 +48,8 @@ Functional Specification Document for Non-Multiplied Consumable Requests for Par
    YES and NO, the value JOB and HOST.
 
    In case of "JOB" the requested amount of the resource is debited as requested
-   (without multiplication) from the allocated master queue. The resource must not
-   be available for the slave task queues.
+   (without multiplication) from the allocated master queue. The resource needs not 
+   to be available for the slave task queues.
 
    Example:
       Queue setup:

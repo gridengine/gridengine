@@ -934,6 +934,7 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
 
    if (context != NULL && job != NULL) {
       const char *jsv_url = NULL;
+      bool holding_mutex = false;
 
       /*
        * Depending on the context either provide a NULL pointer to 
@@ -955,6 +956,7 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
       jsv_list_update("jsv", context, answer_list, jsv_url);
 
       sge_mutex_lock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
+      holding_mutex = true;
 
       /*
        * execute JSV scripts for this thread
@@ -978,15 +980,45 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
             lSetRef(jsv, JSV_new_job, new_job);
 
             /* 
-             * During the time the job is evaluated in JSV routines we can
-             * release the global lock which was accquired outside. 
+             * A) If we came here and if the JSV which is currenty handled is a server JSV
+             *    then the current state is this:
+             *    
+             *    - holding_lock is true because this code is then executed within the 
+             *      master as part of a GDI JOB ADD request. The lock was accquired outside
+             *    - jsv_mutex is currently hold because it was accquired above
+             *    - jsv_next will always be NULL because there is only one server JSV 
+             *      instance which has to be executed,
+             *
+             * B) If we came here and this code is executed due to a configured client JSV then
+             *
+             *    - holding_lock is false. There is no global lock in the client code.
+             *    - jsv_mutex is currently hold because it was accquired above.    
+             *    - jsv_next might be != NULL when there are other client JSVs which have
+             *      to be executed after the one which is currently handled.
+             *
+             * We can distinguish between case A and B by looking at holding_lock. In case A
+             * we can:
+             *
+             *    - release the mutex_lock immediately because we can be sure that this
+             *      loop (while loop where we are currently in) is not executed again because 
+             *      there are no other JSVs. It is also true that the JSV will not be removed by 
+             *      some other thread, because for Server JSVs, always the worker thread
+             *      which executes a JSV, is responsible to stop and remove a JSV. Only exception
+             *      is the shutdown phase were this is done during shutdown but during shutdown
+             *      phase this is only done when the worker threads have finished all requests.
+             *    - unlock the global lock. So some other thread can have it. 
+             *    - do the verify (communication with JSV instance)
+             *    - acquire the global lock again to finish the GDI JOB ADD request when
+             *      this function returns.
              */
-            if (!holding_lock) {
+            if (holding_lock) {
+               sge_mutex_unlock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
+               holding_mutex = false;
                SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE)
-            }
-            ret &= jsv_do_communication(ctx, jsv, answer_list);
-            if (!holding_lock) {
+               ret &= jsv_do_communication(ctx, jsv, answer_list);
                SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE)
+            } else {
+               ret &= jsv_do_communication(ctx, jsv, answer_list);
             }
 
             lSetRef(jsv, JSV_old_job, NULL); 
@@ -1016,8 +1048,9 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
             }
          }
       }
-
-      sge_mutex_unlock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
+      if (holding_mutex) {
+         sge_mutex_unlock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
+      }
       FREE(jsv_url);
    }
    DRETURN(ret);

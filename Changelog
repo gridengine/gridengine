@@ -1,3 +1,8 @@
+EB-2008-11-25-0: Bugfix:      - removed deadlock situation in qmaster in
+										  combination with server JSV
+							         - fixed bug in Perl JSV	
+					  Review:      RD
+
 LP-2008-11-24-0: Enhancem.:   Modifed JMX behavior -jmx and no flag are equal
                  Enhancem.:   Improvements for -autogui option
                  Bugfix:      inst_sge -x -auto ... fails

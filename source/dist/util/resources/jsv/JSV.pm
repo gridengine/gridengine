@@ -231,7 +231,7 @@ sub mod_env {
    send_command("ENV MOD $key $val");
 }
 
-sub del_param {
+sub del_env {
    my ($key) = @_;
    delete $env{$key};
    send_command("ENV DEL $key");

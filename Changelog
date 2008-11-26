@@ -1,3 +1,6 @@
+RD-2008-11-26-0: Enhancem.:   enabled jemalloc as default for linux hosts
+                 Review       JG 
+
 EB-2008-11-25-0: Bugfix:      - removed deadlock situation in qmaster in
 										  combination with server JSV
 							         - fixed bug in Perl JSV	

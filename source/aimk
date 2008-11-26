@@ -184,6 +184,7 @@ usage:
    echo "-no-remote        -> don't compile 3rdparty remote module (rsh, rshd, rlogin)"
    echo "-no-rmon          -> disable rmon debug output"
    echo "-no-secure        -> diable ssl security (enabled by default)"
+   echo "-no-jemalloc      -> diable ssl security (enabled by default on Linux hosts)"
    echo "-only-core        -> build only the core system"
    echo "-only-depend      -> only compile 3rdparty/sge_depend"
    echo "-only-java        -> only compile Java[TM] class files"
@@ -396,8 +397,10 @@ set JUTI_OBJ      =
 
 # Compile with gettext and libintl - we have platform dependent defaults
 switch ($BUILDARCH) 
-   case LINUX86:
-   case LINUXAMD64:
+   case LINUX*:
+     set MAKEJEMALLOCLIB  = 1
+     set WITH_GETTEXT = 1
+     breaksw
    case SOLARIS:
    case SOLARIS64:
    case SOLARIS86:
@@ -630,6 +633,9 @@ while ($#argv >= 1 && $?found)
       set SECFLAGS    = ""
       set SECLIB      = ""
       set KLFLAGS     = ""
+      breaksw
+   case "-no-jemalloc":
+      set MAKEJEMALLOCLIB = 0
       breaksw
    case "-only-core":
       set CORE   = 1
@@ -909,7 +915,6 @@ case AIX43:
 case AIX51:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
-   set MAKEJEMALLOCLIB  = 0
    set COMPILE_DC = 1
 
    set LIBS = "$LIBS -lc"
@@ -950,7 +955,6 @@ case AIX51:
 case ALPHA5:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
-   set MAKEJEMALLOCLIB  = 0
    set COMPILE_DC = 1
    set AUTHLIBS = ""
 
@@ -997,7 +1001,6 @@ case DARWIN_X86:
 case DARWIN_PPC:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
-   set MAKEJEMALLOCLIB  = 0
    set COMPILE_DC = 1
 
    if ( $OPTIMIZATION == 1 ) then
@@ -1099,7 +1102,6 @@ case DARWIN_PPC:
 case FREEBSD_*:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
-   set MAKEJEMALLOCLIB  = 0
    set COMPILE_DC = 1
    set MAKE = gmake
    if ( $OPTIMIZATION == 1 ) then
@@ -1135,7 +1137,6 @@ case FREEBSD_*:
 case NETBSD_*:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
-   set MAKEJEMALLOCLIB  = 0
    set COMPILE_DC = 1
    set MAKE = gmake
    set OFLAG = "-O"
@@ -1168,7 +1169,6 @@ case NETBSD_*:
 case IRIX65:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
-   set MAKEJEMALLOCLIB  = 0
    set AUTHLIBS = ""
    if ( $OPTIMIZATION == 1 ) then
       set OFLAG = "-O3"
@@ -1211,7 +1211,6 @@ case HP11:
 case HP1164:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
-   set MAKEJEMALLOCLIB  = 0
    set MAKE = gmake
    set DLLIB = ""
    set OFLAG = ""
@@ -1458,7 +1457,6 @@ case WIN32_X86:
    # Default build targets for WIN32_X86 for which we have seperate make files
    set MAKEWINGRIDLIB   = 1
    set MAKEWINGRIDAPP   = 1
-   set MAKEJEMALLOCLIB  = 0
    set QMON             = 0
    set MAKESTRPTIME     = 0
    set MAKEFNMATCH      = 0
@@ -1538,7 +1536,6 @@ case WIN32_X86:
 case NECSX4:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
-   set MAKEJEMALLOCLIB  = 0
 #
 # we need the '-hfloat0'-flag for CFLAGS and LFLAGS because the
 # XDR-Libraray does not work properly for other floating point models
@@ -1599,7 +1596,6 @@ case SOLARIS86:
 case SOLARISAMD64:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
-   set MAKEJEMALLOCLIB  = 0
    set COMPILE_DC = 1
 
    set ERR_WARN_NONE = "-errwarn=%none" # is set in XCFLAGS and for R_E_M_O_T_E target to switch off -errwarn=%all
@@ -1791,7 +1787,6 @@ case SOLARISAMD64:
 case UNICOS*:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
-   set MAKEJEMALLOCLIB  = 0
    set INTERACTTARGETS = ""
    set MAKE = gmake
    set ARFLAGS = rcv

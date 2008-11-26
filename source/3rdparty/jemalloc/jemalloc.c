@@ -180,7 +180,9 @@
 /* #define	MALLOC_DSS */
 
 #ifdef MOZ_MEMORY_LINUX
+#ifndef _GNU_SOURCE
 #define	_GNU_SOURCE /* For mremap(2). */
+#endif
 #define	issetugid() 0
 #if 0 /* Enable in order to test decommit code on Linux. */
 #  define MALLOC_DECOMMIT
@@ -1201,6 +1203,9 @@ static void	malloc_print_stats(void);
 static
 #endif
 bool		malloc_init_hard(void);
+
+void		_malloc_prefork(void);
+void		_malloc_postfork(void);
 
 /*
  * End function prototypes.
@@ -3041,11 +3046,12 @@ arena_chunk_alloc(arena_t *arena)
 #endif
 		    ), (chunk_npages -
 		    arena_chunk_header_npages));
-#endif 
+#else
 		memset(&chunk->map[arena_chunk_header_npages],
 		    (CHUNK_MAP_UNTOUCHED
 		    ), (chunk_npages -
 		    arena_chunk_header_npages));
+#endif 
 
 		/* Initialize the tree of unused extent nodes. */
 		RB_INIT(&chunk->nodes);
@@ -5500,6 +5506,11 @@ MALLOC_OUT:
 #endif
 	}
 
+#if (!defined(MOZ_MEMORY_WINDOWS) && !defined(MOZ_MEMORY_DARWIN))
+	/* Prevent potential deadlock on malloc locks after fork. */
+	pthread_atfork(_malloc_prefork, _malloc_postfork, _malloc_postfork);
+#endif
+
 	/* Set variables according to the value of opt_small_max_2pow. */
 	if (opt_small_max_2pow < opt_quantum_2pow)
 		opt_small_max_2pow = opt_quantum_2pow;
@@ -5786,7 +5797,7 @@ moz_memalign(size_t alignment, size_t size)
 void *
 memalign(size_t alignment, size_t size);
 #pragma no_inline(memalign)
-#  elif (defined(__GNU_C__)
+#  elif (defined(__GNU_C__))
 __attribute__((noinline))
 #  endif
 VISIBLE

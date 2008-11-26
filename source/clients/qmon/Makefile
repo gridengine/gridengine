@@ -161,7 +161,7 @@ ALLDEMOOBJS =  tree_demo.o $(GDILIB) $(KRBLIBS) $(CULLLIB) $(UTILIB) \
                $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(XLTREELIB) $(XMTLIB)
 
 tree_demo:  tree_demo.o $(XLTREELIB)
-	$(LD_WRAPPER) $(CC) -o $@ $(ALLDEMOOBJS) $(LFLAGS) $(LIBS) $(XLFLAGS) $(XLIBS)
+	$(LD_WRAPPER) $(CC) -o $@ $(LFLAGS) $(ALLDEMOOBJS) $(LIBS) $(XLFLAGS) $(XLIBS)
 
 tree_demo.o:  $(QMON_DIR)/tree_demo.c
 	$(CC) $(CFLAGS) $(XCFLAGS) -c $(QMON_DIR)/tree_demo.c
@@ -170,7 +170,7 @@ tree_demo.o:  $(QMON_DIR)/tree_demo.c
 # locale demo
 ############################################################################
 xmlocale:  xmlocale.o 
-	$(LD_WRAPPER) $(CC) -o $@ xmlocale.o $(LFLAGS) $(LIBS) $(XLFLAGS) $(XLIBS)
+	$(LD_WRAPPER) $(CC) -o $@ $(LFLAGS) xmlocale.o $(LIBS) $(XLFLAGS) $(XLIBS)
 
 xmlocale.o:  $(QMON_DIR)/xmlocale.c
 	$(CC) $(CFLAGS) $(XCFLAGS) -c $(QMON_DIR)/xmlocale.c

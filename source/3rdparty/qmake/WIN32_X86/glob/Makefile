@@ -91,7 +91,7 @@ LIBRARIES =  $(noinst_LIBRARIES)
 
 
 DEFS = -DHAVE_CONFIG_H -I. -I$(srcdir) -I..
-CPPFLAGS =  -D_ALL_SOURCE -I../glob
+CPPFLAGS = -D_ALL_SOURCE -I../glob
 LDFLAGS = 
 LIBS = 
 libglob_a_LIBADD = 

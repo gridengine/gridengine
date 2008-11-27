@@ -1,3 +1,7 @@
+TB-2008-11-27-0: Bugfix:      renaming of commands in JSV Perl script to
+                              match TCL names
+                 Review:      MD
+
 LP-2008-11-27-0: Enhancem.:   Gridengine GUI Installer - initial version
                  Review       ZG, JO, RD, MD
 

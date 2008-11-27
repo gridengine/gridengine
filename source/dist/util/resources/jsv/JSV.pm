@@ -38,22 +38,22 @@ require Exporter;
 
 # always export the following
 @EXPORT = qw(
-   on_start on_verify 
-   get_env_hash get_param_hash
-   set_param del_param sub_add_param sub_del_param 
-   job_accept job_correct job_reject job_reject_wait 
-   get_env add_env mod_env del_env is_env
-   main 
+   jsv_on_start jsv_on_verify 
+   jsv_get_env_hash jsv_get_param_hash
+   jsv_set_param jsv_del_param jsv_sub_add_param jsv_sub_del_param 
+   jsv_accept jsv_correct jsv_reject jsv_reject_wait 
+   jsv_get_env jsv_add_env jsv_mod_env jsv_del_env jsv_is_env
+   jsv_main 
 );
 
 # symbols to export on request
 @EXPORT_OK = qw(
-   is_param get_param 
-   sub_is_param sub_get_param 
-   show_params show_envs 
-   send_command send_error send_env 
-   script_log 
-   log_info log_warning log_error
+   jsv_is_param jsv_get_param 
+   jsv_sub_is_param jsv_sub_get_param 
+   jsv_show_params jsv_show_envs 
+   jsv_send_command jsv_send_error jsv_send_env 
+   jsv_script_log 
+   jsv_log_info jsv_log_warning jsv_log_error
 );
 
 # use JSV qw/:ALL/; # to import everything
@@ -74,7 +74,7 @@ my %config = (
 
 my %handler = (
    on_start  => sub {},
-   on_verify => sub { job_accept('Job is accepted (default handler)'); },
+   on_verify => sub { jsv_accept('Job is accepted (default handler)'); },
    ENV       => \&handle_command_env,
    PARAM     => \&handle_command_param,
    START     => \&handle_command_start,
@@ -96,7 +96,7 @@ my %env = ();
 # functions
 
 # get or set on_start handler
-sub on_start {
+sub jsv_on_start {
    if (@_) {
       $handler{on_start} = $_[0];
    } else {
@@ -105,7 +105,7 @@ sub on_start {
 }
 
 # get or set on_verify handler
-sub on_verify {
+sub jsv_on_verify {
    if (@_) {
       $handler{on_verify} = $_[0];
    } else {
@@ -116,17 +116,17 @@ sub on_verify {
 sub handle_command_start {
    if ($state eq 'initialized') {
       $handler{on_start}->();
-      send_command('STARTED');
+      jsv_send_command('STARTED');
       $state = 'started';
    } else {
-      send_error("JSV script got START command but is in state $state");
+      jsv_send_error("JSV script got START command but is in state $state");
    }
 }
 
 
 sub handle_command_show {
-   show_params();
-   show_envs();
+   jsv_show_params();
+   jsv_show_envs();
 } 
 
 sub handle_command_begin {
@@ -136,7 +136,7 @@ sub handle_command_begin {
       %env = ();
       %param = ();
    } else {
-      send_error("JSV script got BEGIN command but is in state $state");
+      jsv_send_error("JSV script got BEGIN command but is in state $state");
    }
 }
 
@@ -164,13 +164,13 @@ sub handle_command_param {
          # not list command
          if ($val =~ /,/) {
             # oops, but this looks like a list option (contains a comma)
-            send_error("JSV script got PARAM command for non-list option '$key' but the value '$val' looks like a list");
+            jsv_send_error("JSV script got PARAM command for non-list option '$key' but the value '$val' looks like a list");
          } else {
             $param{$key} = $val;
          }
       }
    } else {
-      send_error("JSV script got PARAM command but is in state $state");
+      jsv_send_error("JSV script got PARAM command but is in state $state");
    }
 }
 
@@ -185,7 +185,7 @@ sub handle_command_env {
          $env{$key} = join ' ', @val;
       }
    } else {
-      send_error("JSV script got ENV command but is in state $state");
+      jsv_send_error("JSV script got ENV command but is in state $state");
    }
 }
 
@@ -209,35 +209,35 @@ sub deep_copy {
 
 
 # returns a copy of the hash of the current environment (sent to this script)
-sub get_env_hash {
+sub jsv_get_env_hash {
    return deep_copy(\%env);
 }
 
-sub is_env {
+sub jsv_is_env {
    return exists $env{$_[0]};
 }
 
-sub add_env {
+sub jsv_add_env {
    my ($key, $val) = @_;
    $env{$key} = $val;
 
-   send_command("ENV ADD $key $val");
+   jsv_send_command("ENV ADD $key $val");
 }
 
-sub mod_env {
+sub jsv_mod_env {
    my ($key, $val) = @_;
    $env{$key} = $val;
 
-   send_command("ENV MOD $key $val");
+   jsv_send_command("ENV MOD $key $val");
 }
 
-sub del_env {
+sub jsv_del_env {
    my ($key) = @_;
    delete $env{$key};
-   send_command("ENV DEL $key");
+   jsv_send_command("ENV DEL $key");
 }
 
-sub get_env {
+sub jsv_get_env {
    my ($key) = @_;
 
    if (exists $env{$key}) {
@@ -247,15 +247,15 @@ sub get_env {
 }
 
 # returns a copy of the hash of the current parameters
-sub get_param_hash {
+sub jsv_get_param_hash {
    return deep_copy(\%param);
 }
 
-sub is_param {
+sub jsv_is_param {
    return exists $param{$_[0]};
 }
 
-sub get_param {
+sub jsv_get_param {
    my ($key) = @_;
 
    if (exists $param{$key}) {
@@ -278,21 +278,21 @@ sub stringify {
    return $val;
 }
 
-sub set_param {
+sub jsv_set_param {
    my ($key, $val) = @_;
    $param{$key} = $val;
 
    $val = stringify($val);
-   send_command("PARAM $key $val");
+   jsv_send_command("PARAM $key $val");
 }
 
-sub del_param {
+sub jsv_del_param {
    my ($key) = @_;
    delete $param{$key};
-   send_command("PARAM $key");
+   jsv_send_command("PARAM $key");
 }
 
-sub sub_is_param {
+sub jsv_sub_is_param {
    my ($key, $sub) = @_;
 
    # do not autovivify => two exists checks
@@ -305,7 +305,7 @@ sub sub_is_param {
 }
 
 # returns undef or empty list if sub-parameter does not exist.
-sub sub_get_param {
+sub jsv_sub_get_param {
    my ($key, $sub) = @_;
 
    # do not autovivify => two exists checks
@@ -318,22 +318,22 @@ sub sub_get_param {
 }
 
 
-sub sub_add_param {
+sub jsv_sub_add_param {
    my ($key, $sub, $val) = @_;
 
    my $href = $param{$key};
    $href->{$sub} = $val;
 
-   set_param($key, $href);
+   jsv_set_param($key, $href);
 }
 
-sub sub_del_param {
+sub jsv_sub_del_param {
    my ($key, $sub) = @_;
 
    my $href = $param{$key};
    delete $href->{$sub};
 
-   set_param($key, $href);
+   jsv_set_param($key, $href);
 }
 
 sub show_hash {
@@ -342,52 +342,52 @@ sub show_hash {
 
    while ( ($k,$v) = each %$href ) {
       $v = stringify($v);
-      send_command("LOG INFO got $name: $k='$v'");
+      jsv_send_command("LOG INFO got $name: $k='$v'");
    }
 }
 
-sub show_params {
+sub jsv_show_params {
    show_hash('param', \%param);
 } 
 
-sub show_envs {
+sub jsv_show_envs {
    show_hash('env', \%env);
 }
 
-sub send_command {
+sub jsv_send_command {
    print "@_\n";
-   script_log($config{head_outgoing},@_);
+   jsv_script_log($config{head_outgoing},@_);
 }
 
-sub send_error {
-   send_command('ERROR', @_);
+sub jsv_send_error {
+   jsv_send_command('ERROR', @_);
 }
 
-sub send_env {
-   send_command("SEND ENV");
+sub jsv_send_env {
+   jsv_send_command("SEND ENV");
 }
 
-sub job_accept {
+sub jsv_accept {
    job_handle('ACCEPT', @_);
 }
 
-sub job_correct {
+sub jsv_correct {
    job_handle('CORRECT', @_);
 }
-sub job_reject {
+sub jsv_reject {
    job_handle('REJECT', @_);
 }
 
-sub job_reject_wait {
+sub jsv_reject_wait {
    job_handle('REJECT_WAIT', @_);
 }
 
 sub job_handle {
    if ($state eq 'verifying') {
-      send_command("RESULT STATE @_");
+      jsv_send_command("RESULT STATE @_");
       $state = 'initialized';
    } else {
-      send_error("JSV script will send 'RESULT STATE $_[0]' command but is in state $state");
+      jsv_send_error("JSV script will send 'RESULT STATE $_[0]' command but is in state $state");
    }
 }
 
@@ -408,7 +408,7 @@ sub job_handle {
       select $old_fh;
 
       my $date_time = localtime();
-      script_log(<<"END_OF_LOG");
+      jsv_script_log(<<"END_OF_LOG");
 $myself started on $date_time
 
 This file contains logging output from a GE JSV script. Lines beginning
@@ -423,14 +423,14 @@ END_OF_LOG
       return unless $config{logging_enabled};
 
       my $date_time = localtime();
-      script_log("$myself is terminating on $date_time");
+      jsv_script_log("$myself is terminating on $date_time");
 
       # don't do any error handling, if we can't log, it's not the end of the world
       close $fh;
       undef $fh;
    }
 
-   sub script_log {
+   sub jsv_script_log {
       return unless $config{logging_enabled} && $fh;
 
       # don't do any error handling, if we can't log this is not the end of the world
@@ -438,20 +438,20 @@ END_OF_LOG
    }
 } # end of closure over $fh and $myself
 
-sub log_info {
-   send_command('LOG INFO', @_);
+sub jsv_log_info {
+   jsv_send_command('LOG INFO', @_);
 }
 
-sub log_warning {
-   send_command('LOG WARNING', @_);
+sub jsv_log_warning {
+   jsv_send_command('LOG WARNING', @_);
 }
 
-sub log_error {
-   send_command('LOG ERROR', @_);
+sub jsv_log_error {
+   jsv_send_command('LOG ERROR', @_);
 }
 
 
-sub main {
+sub jsv_main {
    script_log_open();
 
    $| = 1; # no output buffering
@@ -459,7 +459,7 @@ sub main {
    while (<>) {
       chomp;
       next if $_ eq '';
-      script_log("$config{head_incoming} $_");
+      jsv_script_log("$config{head_incoming} $_");
 
       # split on one space and do not throw any trailing fields away
       my @arg = split / /, $_, -1;
@@ -470,7 +470,7 @@ sub main {
       if (exists $handler{$cmd}) {
          $handler{$cmd}->(@arg);
       } else {
-         send_error("JSV script got unknown command '$cmd'");
+         jsv_send_error("JSV script got unknown command '$cmd'");
       }
    }
 

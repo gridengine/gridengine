@@ -4,6 +4,13 @@
 <!-- (If you delete it and reopen the project it will be recreated.) -->
 <project name="GE_Java_Utils" default="jar" basedir=".">
     <description>Builds, tests, and runs the project GE Java Utils.</description>
+    <property name="sge.srcdir" location="../.."/>
+    <property file="${sge.srcdir}/build_testsuite.properties"/>
+    <property file="${sge.srcdir}/build_private.properties"/>
+    <property file="${sge.srcdir}/build.properties"/>
+    <property name="javac.source" value="${default.sge.javac.source}"/>
+    <property name="javac.target" value="${default.sge.javac.target}"/>
+
     <import file="nbproject/build-impl.xml"/>
     <!--
 

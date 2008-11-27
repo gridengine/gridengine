@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<icons>
+    <icon res="/img/columnsSortedAsc.png" id="columns.sorted.asc"/>
+    <icon res="/img/columnsSortedDesc.png" id="columns.sorted.desc"/>
+    <icon res="/img/summary_report_16.png" id="frame.log"/>
+    <icon res="/img/generic_desktop_shortcut_icon_16.png" id="install"/>
+    <icon res="/img/save_16.png" id="save"/>
+    <icon res="/img/print_16.png" id="print"/>
+    <icon res="/img/search.png" id="search"/>
+</icons>

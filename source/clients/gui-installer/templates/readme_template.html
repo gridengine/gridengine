@@ -1,0 +1,59 @@
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=ISO646-US"/>
+        <title>Read Me</title>
+    </head>
+    <body>
+        <h3>Grid Engine configuration</h3>
+        <table border = "0">
+            <tr><td>Grid Engine root directory (<code>$SGE_ROOT</code>)</td><td>${cfg.sge.root}</td></tr>
+            <tr><td>Cell name (<code>$SGE_CELL</code>)</td><td>${cfg.cell.name}</td></tr>
+            <tr><td>Cluster name (<code>$SGE_CLUSTER_NAME</code>)</td><td>${cfg.sge.cluster.name}</td></tr>
+            <tr><td>Qmaster port (<code>$SGE_QMASTER_PORT</code>)</td><td>${cfg.sge.qmaster.port}</td></tr>
+            <tr><td>Execd port (<code>$SGE_EXECD_PORT</code>)</td><td>${cfg.sge.execd.port}</td></tr>
+            <tr><td>Group id range (<code>$SGE_GID_RANGE</code>)</td><td>${cfg.gid.range}</td></tr>
+        </table>
+        <br>
+        <table border = "1">
+            <tr><td>Qmaster host</td><td>${add.qmaster.host}</td></tr>
+            <tr><td>Execution host(s)</td><td>${cfg.exec.host.list}</td></tr>
+            <tr><td>Shadow host(s)</td><td>${cfg.shadow.host}</td></tr>
+            <tr><td>Berkeley db host</td><td>${cfg.db.spooling.server}</td></tr>
+            <tr><td>Admin host(s)</td><td>${cfg.admin.host.list}</td></tr>
+            <tr><td>Submit host(s)</td><td>${cfg.submit.host.list}</td></tr>
+        </table>
+
+
+        <h3>Using Grid Engine</h3>
+        You should now enter the command:<br>
+        <code>source ${cfg.sge.root}/${cfg.cell.name}/common/settings.csh</code><br>
+        if you are a csh/tcsh user or<br>
+        <code>. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh</code><br>
+        if you are a sh/ksh user.<br>
+        This will set or expand the following environment variables:
+        <ul>
+            <li><code>$SGE_ROOT</code>         (always necessary)</li>
+            <li><code>$SGE_CELL</code>         (if you are using a cell other than <code>default</code>)</li>
+            <li><code>$SGE_CLUSTER_NAME</code> (always necessary)</li>
+            <li><code>$SGE_QMASTER_PORT</code> (if you haven't added the service <code>sge_qmaster</code>)</li>
+            <li><code>$SGE_EXECD_PORT</code>   (if you haven't added the service <code>sge_execd</code>)</li>
+            <li><code>$PATH/$path</code>       (to find the Grid Engine binaries)</li>
+            <li><code>$MANPATH</code>          (to access the manual pages)</li>
+        </ul>
+
+        <h3>Grid Engine messages</h3>
+        Grid Engine messages can be found at:<br>
+        Startup messages can be found in SMF service log files.<br>
+        You can get the name of the log file by calling svcs -l &lg;SERVICE_NAME&gt;<br>
+        E.g.: <code>svcs -l svc:/application/sge/qmaster:p10500</code><br>
+        <br>
+        After startup the daemons log their messages in their spool directories.<br>
+        Qmaster:     <code>${cfg.qmaster.spool.dir}/messages</code><br>
+        Exec daemon: <code>&lg;execd_spool_dir&gt;/&lg;hostname&gt;/messages</code>
+
+        <h3>Grid Engine startup scripts</h3>
+        Grid Engine startup scripts can be found at:<br>
+        <code>${cfg.sge.root}/${cfg.cell.name}/common/sgemaster</code> (qmaster)<br>
+        <code>${cfg.sge.root}/${cfg.cell.name}/common/sgeexecd</code> (execd)
+    </body>
+</html>

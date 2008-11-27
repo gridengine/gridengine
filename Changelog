@@ -1,3 +1,6 @@
+LP-2008-11-27-1  Cleanup:     GUI installer, license handling
+                 Review       MF
+
 TB-2008-11-27-0: Bugfix:      renaming of commands in JSV Perl script to
                               match TCL names
                  Review:      MD

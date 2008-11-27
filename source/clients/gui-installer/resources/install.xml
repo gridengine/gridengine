@@ -111,7 +111,7 @@
     
     <panels>
         <panel classname="WelcomePanel"    id="WelcomePanel" />
-        <panel classname="LicencePanel"    id="LicencePanel" />
+        <panel classname="LicencePanel"    id="LicensePanel" />
         <panel classname="PreActionPanel"  id="PreActionPanel" />
         <panel classname="UserInputPanel"  id="ComponentPanel" />
         <panel classname="UserInputPanel"  id="MainPanel" />

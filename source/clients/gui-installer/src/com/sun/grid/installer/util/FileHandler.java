@@ -150,7 +150,7 @@ public class FileHandler {
         props = line.split(" ");
         props = cleanUpFileProps(props);
 
-        if (props.length != 4) {
+        if (props.length < 4) {
             Debug.trace("Unexpected empty output from ls -la "+filePath);
             return new String[] {"","","",""};
         }

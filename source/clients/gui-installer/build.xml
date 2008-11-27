@@ -45,7 +45,36 @@
                includes="izforge/izpack/installer/InstallerFrame.java"
                classpath="${build.classes.dir}:${javac.classpath}"
                destdir="${build.classes.dir}"/>
-    </target>    
+
+        <!-- Prepare sge.license property -->
+        <property environment="env"/>
+        <condition property="legal.dir" value="${env.AIMK_COPYRIGHT_DIR}" else="">
+            <isset property="env.AIMK_COPYRIGHT_DIR"/>
+        </condition>
+
+        <condition property="legal" value="COPYRIGHT">
+            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="sun" trim="true"/>
+        </condition>
+        <condition property="legal" value="COPYRIGHT LICENSE">
+            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="courtesy" trim="true"/>
+        </condition>
+        <property name="legal" value="NA"/>
+        
+        <condition property="sge.license" value="${legal.dir}/License/LICENSE.txt">
+            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="sun" trim="true"/>
+        </condition>
+        <condition property="sge.license" value="${legal.dir}/LICENSE">
+            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="courtesy" trim="true"/>
+        </condition>
+    </target>
+
+    <target name="prepare-license" if="sge.license">
+        <property name="final.sge.license" value="res/LicencePanel.licence" />
+        <delete file="${build.dir}/jar/${final.sge.license}"/>
+        <copy tofile="${build.dir}/jar/${final.sge.license}">
+            <fileset file="${sge.license}"/>
+        </copy>
+    </target>
 
     <target name="-post-jar" description="Build installer">
         <echo message="Build installer"/>
@@ -163,28 +192,22 @@
             </fileset>
         </jar>
 
-        <!-- Prepare the copyright -->
-        <property environment="env"/>
-        <condition property="legal.dir" value="${env.AIMK_COPYRIGHT_DIR}" else="">
-            <isset property="env.AIMK_COPYRIGHT_DIR"/>
-        </condition>
+        <jar compress="${jar.compress}" destfile="${dist.jar}" update="true" description="Add license to jar">
+            <metainf dir="${legal.dir}" includes="${legal}"/>
+        </jar>
+        <unjar src="${dist.jar}" dest="${build.dir}/jar"/>
+        <delete file="${dist.jar}"/>
+        <antcall target="prepare-license"/>
 
-        <condition property="legal" value="COPYRIGHT">
-            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="sun" trim="true"/>
-        </condition>
-        <condition property="legal" value="COPYRIGHT LICENSE">
-            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="courtesy" trim="true"/>
-        </condition>
-        <property name="legal" value="NA"/>
-
-        <!-- Add/Replace icons + update metainf with the copyright is needed + include the group-layout -->
-        <jar compress="${jar.compress}" destfile="${dist.jar}" update="true" description="Add/replace icons in the ">
+        <!-- Add/Replace icons + update metainf with the copyright is needed + correct License for License Panel + include the group-layout -->
+        <zip compress="${jar.compress}" destfile="${dist.jar}" update="false" description="Repack final jar">
+            <!-- <metainf dir="${legal.dir}" includes="${legal}"/> -->
             <fileset dir="${build.dir}">
                 <include name="img/*"/>
             </fileset>
-            <metainf dir="${legal.dir}" includes="${legal}"/>
-            <zipfileset src="${libs.swing-layout.classpath}" includes="**/*.class"/>
-        </jar>
+            <fileset dir="${build.dir}/jar"/>
+            <zipfileset src="${libs.swing-layout.classpath}" includes="**/*.class"/>            
+        </zip>
 
         <property name="dist.ready" value="true"/>     
     </target>

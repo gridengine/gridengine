@@ -1734,7 +1734,7 @@ class InstallTask extends TestableTask {
                             String.valueOf(host.isQmasterHost()), String.valueOf(host.isShadowHost()),
                             String.valueOf(host.isExecutionHost()), String.valueOf(host.isAdminHost()),
                             String.valueOf(host.isSubmitHost()), variables.getProperty(VAR_SGE_JMX), variables.getProperty("add.remove.existing.components"), ";", "rm", "-f", localScript);
-                    Debug.trace("Start installation!!!");
+                    Debug.trace("Start installation: "+cmd.getComamnds());
                     cmd.execute();
                     //Set the log content
                     int tmpExitValue = 0;
@@ -1765,13 +1765,12 @@ class InstallTask extends TestableTask {
                     exitValue = (tmpExitValue != 0 && exitValue == 0) ? tmpExitValue : exitValue;
 
                     // Try to reach the host
-                    Debug.trace("Ping host(s)");
+                    Debug.trace("Ping host(s): " + host.getHostAsString());
                     if (exitValue == 0 && host.isQmasterHost()) {
                         if (!Util.pingHost(variables.getProperty(VAR_SGE_ROOT), host, variables.getProperty(VAR_SGE_QMASTER_PORT), "qmaster", 5)) {
                             log = "The installation finished but can not reach the 'qmaster' on host '" + host.getHostAsString() + "' at port '" + variables.getProperty(VAR_SGE_QMASTER_PORT) + "'.";
                             exitValue = CommandExecutor.EXITVAL_OTHER;
                         }
-
                     }
 
                     if (exitValue == 0 && host.isExecutionHost()) {

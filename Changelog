@@ -1,3 +1,6 @@
+RD-2008-11-28-0: Bugfix:      - added SISSL header to jsv.pl
+                              - corrected typos in aimk
+
 LP-2008-11-28-0: Cleanup:     Added missing headers, support for build host
                  Review       TBD
 

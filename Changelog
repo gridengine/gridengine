@@ -1,3 +1,6 @@
+RD-2008-11-28-1: CVS:         Created V62u2alpha1_TAG
+-----------------------------------------------------
+
 CR-2008-11-28-0: Cleanup:     Commlib: Use poll() instead of select() for
                               linux and solaris architectures
                  Review:      RD

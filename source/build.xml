@@ -92,7 +92,7 @@
    <!-- GUI installer -->
    <target name="gui_inst" depends="init" description="Builds GUI Installer">
       <echo message="Building GUI installer..."/>
-      <ant antfile="build.xml" target="jar" dir="clients/gui-installer/" inheritall="false"/>
+      <ant antfile="build.xml" target="do.jar" dir="clients/gui-installer/" inheritall="false"/>
    </target>
    <target name="gui_inst.clean" depends="init">
       <ant antfile="build.xml" target="clean" dir="clients/gui-installer/" inheritall="false"/>

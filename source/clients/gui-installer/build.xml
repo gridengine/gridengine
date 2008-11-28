@@ -1,12 +1,61 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<project name="installer" default="jar" basedir="." xmlns:j2seproject3="http://www.netbeans.org/ns/j2se-project/3">
+<!--___INFO__MARK_BEGIN__
+/*************************************************************************
+ *
+ *  The Contents of this file are made available subject to the terms of
+ *  the Sun Industry Standards Source License Version 1.2
+ *
+ *  Sun Microsystems Inc., March, 2001
+ *
+ *
+ *  Sun Industry Standards Source License Version 1.2
+ *  =================================================
+ *  The contents of this file are subject to the Sun Industry Standards
+ *  Source License Version 1.2 (the "License"); You may not use this file
+ *  except in compliance with the License. You may obtain a copy of the
+ *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+ *
+ *  Software provided under this License is provided on an "AS IS" basis,
+ *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+ *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+ *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+ *  See the License for the specific provisions governing your rights and
+ *  obligations concerning the Software.
+ *
+ *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ *
+ *   Copyright: 2001 by Sun Microsystems, Inc.
+ *
+ *   All Rights Reserved.
+ *
+ ************************************************************************/
+___INFO__MARK_END__-->
+<project name="installer" default="do.jar" basedir=".">
     <description>Builds, tests, and runs the project installer.</description>
     <property name="sge.srcdir" location="../.."/>
     <property file="${sge.srcdir}/build_testsuite.properties"/>
     <property file="${sge.srcdir}/build_private.properties"/>
     <property file="${sge.srcdir}/build.properties"/>
+    <exec executable="hostname" outputproperty="hostname"/>
+    <condition property="isJavaBuildHost">
+        <not>
+            <isset property="java.buildhost"/>
+        </not>
+    </condition>
+
+    <condition property="isJavaBuildHost" >
+        <contains string="${java.buildhost}" substring="${hostname}" casesensitive="false"/>
+    </condition>
+
+    <echo>isJavaBuildHost=${isJavaBuildHost}</echo>
+    <echo>java.buildhost=${java.buildhost}</echo>
+    <echo>hostname=${hostname}</echo>
+    
     <import file="nbproject/build-impl.xml"/>
+
+    <target name="do.jar" if="isJavaBuildHost" description="Builds the final jar if build host">
+        <antcall target="jar"/>
+    </target>
 
     <target name="build.izpack" unless="izpack.isbuild" description="Builds IzPack">
            <echo message="IzPack is not yet built. Building now..."/>
@@ -74,6 +123,27 @@
         <copy tofile="${build.dir}/jar/${final.sge.license}">
             <fileset file="${sge.license}"/>
         </copy>
+        <!-- Remove SISSL licence -->
+        <exec executable="sed" output="${build.dir}/jar/res/CustomLangpack.xml_eng.new">
+            <arg value="-e"/>
+            <arg value="/___INFO__MARK_BEGIN__/,/___INFO__MARK_END__/d"/>
+            <arg value="${build.dir}/jar/res/CustomLangpack.xml_eng"/>
+        </exec>
+        <exec executable="sed" output="${build.dir}/jar/res/customicons.xml.new">
+            <arg value="-e"/>
+            <arg value="/___INFO__MARK_BEGIN__/,/___INFO__MARK_END__/d"/>
+            <arg value="${build.dir}/jar/res/customicons.xml"/>
+        </exec>
+        <exec executable="sed" output="${build.dir}/jar/res/userInputSpec.xml.new">
+            <arg value="-e"/>
+            <arg value="/___INFO__MARK_BEGIN__/,/___INFO__MARK_END__/d"/>
+            <arg value="${build.dir}/jar/res/userInputSpec.xml"/>
+        </exec>
+        <move file="${build.dir}/jar/res/CustomLangpack.xml_eng.new"  tofile="${build.dir}/jar/res/CustomLangpack.xml_eng"  overwrite="true"/>
+        <move file="${build.dir}/jar/res/customicons.xml.new"  tofile="${build.dir}/jar/res/customicons.xml" overwrite="true"/>
+        <move file="${build.dir}/jar/res/userInputSpec.xml.new"  tofile="${build.dir}/jar/res/userInputSpec.xml" overwrite="true"/>
+        <!-- TODO Add the copyright notice -->
+
     </target>
 
     <target name="-post-jar" description="Build installer">
@@ -192,14 +262,16 @@
             </fileset>
         </jar>
 
+        <!-- update metainf with the copyright is needed -->
         <jar compress="${jar.compress}" destfile="${dist.jar}" update="true" description="Add license to jar">
             <metainf dir="${legal.dir}" includes="${legal}"/>
         </jar>
+        <delete dir="${build.dir}/jar"/>
         <unjar src="${dist.jar}" dest="${build.dir}/jar"/>
         <delete file="${dist.jar}"/>
         <antcall target="prepare-license"/>
 
-        <!-- Add/Replace icons + update metainf with the copyright is needed + correct License for License Panel + include the group-layout -->
+        <!-- Add/Replace icons + include the group-layout -->
         <zip compress="${jar.compress}" destfile="${dist.jar}" update="false" description="Repack final jar">
             <!-- <metainf dir="${legal.dir}" includes="${legal}"/> -->
             <fileset dir="${build.dir}">
@@ -212,7 +284,7 @@
         <property name="dist.ready" value="true"/>     
     </target>
 
-    <target name="-post-clean">
+    <target name="-post-clean" if="isJavaBuildHost">
         <delete dir="bin"/>
         <delete file="readme.html"/>
     </target>

@@ -3430,11 +3430,11 @@ int cl_com_open_connection_request_handler(cl_com_handle_t* handle, int timeout_
    if (handle->connection_list != NULL) {
       switch(handle->framework) {
          case CL_CT_TCP: {
-            return cl_com_tcp_open_connection_request_handler(handle->connection_list, service_connection,
+            return cl_com_tcp_open_connection_request_handler(handle, handle->connection_list, service_connection,
                                                               sec_param , usec_rest, select_mode);
          }
          case CL_CT_SSL: {
-            return cl_com_ssl_open_connection_request_handler(handle->connection_list, service_connection,
+            return cl_com_ssl_open_connection_request_handler(handle, handle->connection_list, service_connection,
                                                               sec_param , usec_rest, select_mode);
          }
          case CL_CT_UNDEFINED: {

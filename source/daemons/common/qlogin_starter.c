@@ -574,6 +574,7 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
    dup2( newsfd, 2 );
    
    /* close all the rest */
+   /* TODO: Use util function sge_close_all_fds() for this */
    for (fd=3; fd<FD_SETSIZE; fd++)
       close(fd);
 

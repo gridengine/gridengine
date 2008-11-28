@@ -352,6 +352,10 @@ typedef struct cl_com_handle {
    long shutdown_timeout;                   /* used when shutting down handle */
    cl_com_connection_t* service_handler;    /* service handler of this handle */
    struct timeval start_time;
+#ifdef USE_POLL
+   struct pollfd* poll_array;
+   unsigned long poll_array_connection_size;  /* nr of malloced pollfd structs */
+#endif   
 
 } cl_com_handle_t;
 

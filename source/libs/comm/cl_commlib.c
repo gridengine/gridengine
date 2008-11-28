@@ -1238,10 +1238,12 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
    new_handle->max_open_connections = (unsigned long) application_rlimits.rlim_cur;
 
+#ifndef USE_POLL
    if (FD_SETSIZE < new_handle->max_open_connections) {
       CL_LOG(CL_LOG_ERROR,"FD_SETSIZE < file descriptor limit");
       new_handle->max_open_connections = FD_SETSIZE - 1;
    }
+#endif
 
    if ( new_handle->max_open_connections < 32 ) {
       CL_LOG_INT(CL_LOG_ERROR, "to less file descriptors:", (int)new_handle->max_open_connections );
@@ -1284,7 +1286,10 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
    gettimeofday(&(new_handle->statistic->last_update),NULL);
    gettimeofday(&(new_handle->start_time),NULL);
-
+#ifdef USE_POLL
+   new_handle->poll_array = NULL;
+   new_handle->poll_array_connection_size = 0;
+#endif
    new_handle->messages_ready_mutex = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
    if (new_handle->messages_ready_mutex == NULL) {
       cl_com_free_handle_statistic(&(new_handle->statistic));
@@ -2045,6 +2050,14 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
       cl_com_free_debug_client_setup(&(handle->debug_client_setup));
 
       cl_com_free_ssl_setup(&(handle->ssl_setup));
+      
+#ifdef USE_POLL
+      if (handle->poll_array != NULL) {
+         free(handle->poll_array);
+         handle->poll_array = NULL;
+         handle->poll_array_connection_size = 0;
+      }
+#endif
 
       free(handle);
       return CL_RETVAL_OK;
@@ -2159,11 +2172,17 @@ int cl_com_get_max_connection_close_mode(cl_com_handle_t* handle, cl_max_count_t
 #endif
 #define __CL_FUNCTION__ "cl_com_set_max_connections()"
 int cl_com_set_max_connections(cl_com_handle_t* handle, unsigned long value) {
-   if (handle == NULL || value < 1) {
+   if (handle == NULL || value < 1 || handle->connection_list == NULL) {
       return CL_RETVAL_PARAMS;
    }
 
+   if ( cl_raw_list_lock(handle->connection_list) != CL_RETVAL_OK) {
+      CL_LOG(CL_LOG_ERROR,"could not lock connection list");
+      return CL_RETVAL_LOCK_ERROR;
+   }
+   CL_LOG_INT(CL_LOG_INFO, "setting max. connection count to ", (int) value);
    handle->max_open_connections = value;
+   cl_raw_list_unlock(handle->connection_list);
    return CL_RETVAL_OK;
 }
 

@@ -122,7 +122,8 @@ int cl_com_ssl_connection_request_handler(cl_com_connection_t*   connection,
 int cl_com_ssl_connection_request_handler_cleanup(cl_com_connection_t* connection);
 
 /* select mechanism */
-int cl_com_ssl_open_connection_request_handler(cl_raw_list_t*        connection_list, 
+int cl_com_ssl_open_connection_request_handler(cl_com_handle_t*      handle,
+                                               cl_raw_list_t*        connection_list, 
                                                cl_com_connection_t*  service_connection,
                                                int                   timeout_val_sec,
                                                int                   timeout_val_usec, 

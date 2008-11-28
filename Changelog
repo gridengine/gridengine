@@ -1,3 +1,7 @@
+CR-2008-11-28-0: Cleanup:     Commlib: Use poll() instead of select() for
+                              linux and solaris architectures
+                 Review:      RD
+
 RD-2008-11-28-0: Bugfix:      - added SISSL header to jsv.pl
                               - corrected typos in aimk
 

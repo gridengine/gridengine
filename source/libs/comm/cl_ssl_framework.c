@@ -298,6 +298,9 @@ typedef struct cl_com_ssl_private_type {
    int                sockfd;              /* socket file descriptor */
    int                pre_sockfd;          /* socket which was prepared for later listen call (only_prepare_service == TRUE */
    struct sockaddr_in client_addr;         /* used in connect for storing client addr of connection partner */ 
+#ifdef USE_POLL
+   struct pollfd *pollfd;                  /* used for poll() system call */
+#endif
 
    /* SSL specific */
    int                ssl_last_error;      /* last error value from SSL_get_error() */
@@ -2723,6 +2726,10 @@ int cl_com_ssl_setup_connection(cl_com_connection_t**          connection,
    com_private->pre_sockfd = -1;
    com_private->server_port = server_port;
    com_private->connect_port = connect_port;
+#ifdef USE_POLL
+   com_private->pollfd = NULL;
+#endif
+   
 
    /* check ssl setup, setup ssl if neccessary  */
    pthread_mutex_lock(&cl_com_ssl_global_config_mutex);
@@ -3191,10 +3198,11 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout) {
          shutdown(private->sockfd, 2);
          close(private->sockfd);
          private->sockfd = -1;
-         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE);
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_CANNOT_DUP_SOCKET_FD);
          return CL_RETVAL_DUP_SOCKET_FD_ERROR;
       }
 
+#ifndef USE_POLL
       if (private->sockfd >= FD_SETSIZE) {
           CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");
           shutdown(private->sockfd, 2);
@@ -3203,6 +3211,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout) {
           cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE);
           return CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT;
       } 
+#endif
 
       /* set local address reuse socket option */
       if ( setsockopt(private->sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) != 0) {
@@ -3653,11 +3662,11 @@ int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection,
       shutdown(sockfd, 2);
       close(sockfd);
       sockfd = -1;
-      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, 
-                              MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE);
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_CANNOT_DUP_SOCKET_FD);
       return CL_RETVAL_DUP_SOCKET_FD_ERROR;
    }
 
+#ifndef USE_POLL
    if (sockfd >= FD_SETSIZE) {
        CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");
        shutdown(sockfd, 2);
@@ -3665,6 +3674,7 @@ int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection,
        cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE );
        return CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT;
    }
+#endif
    
    { 
       int on = 1;
@@ -3774,11 +3784,11 @@ int cl_com_ssl_connection_request_handler(cl_com_connection_t* connection,cl_com
          shutdown(new_sfd, 2);
          close(new_sfd);
          new_sfd = -1;
-         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, 
-                                 MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE);
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_CANNOT_DUP_SOCKET_FD);
          return CL_RETVAL_DUP_SOCKET_FD_ERROR;
       }
 
+#ifndef USE_POLL
       if (new_sfd >= FD_SETSIZE) {
          CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");
          shutdown(new_sfd, 2);
@@ -3786,6 +3796,7 @@ int cl_com_ssl_connection_request_handler(cl_com_connection_t* connection,cl_com
          cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE );
          return CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT;
       }
+#endif
 
       cl_com_cached_gethostbyaddr(&(cli_addr.sin_addr), &resolved_host_name ,NULL, NULL); 
       if (resolved_host_name != NULL) {
@@ -3870,7 +3881,7 @@ int cl_com_ssl_connection_request_handler_cleanup(cl_com_connection_t* connectio
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_ssl_open_connection_request_handler()"
-int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, cl_com_connection_t* service_connection, int timeout_val_sec, int timeout_val_usec, cl_select_method_t select_mode) {
+int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_list_t* connection_list, cl_com_connection_t* service_connection, int timeout_val_sec, int timeout_val_usec, cl_select_method_t select_mode) {
    int select_back;
    cl_connection_list_elem_t* con_elem = NULL;
    cl_com_connection_t*  connection = NULL;
@@ -3895,14 +3906,19 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
 #endif
 
 #ifdef USE_POLL
-   struct pollfd *ufds;
+   struct pollfd *ufds = NULL;
    int ufds_index = 0;
+   cl_com_ssl_private_t* server_private = NULL;
 #else
    fd_set my_read_fds;
    fd_set my_write_fds;
    struct timeval timeout;
 #endif
 
+   if (handle == NULL) {
+      CL_LOG(CL_LOG_ERROR,"handle == NULL");
+      return CL_RETVAL_PARAMS;
+   }
 
    if (connection_list == NULL ) {
       CL_LOG(CL_LOG_ERROR,"no connection list");
@@ -3960,6 +3976,10 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
       max_fd = MAX(max_fd,server_fd);
 #ifndef USE_POLL
       FD_SET(server_fd,&my_read_fds); 
+#else
+      if (service_connection != NULL) {
+         server_private = cl_com_ssl_get_private(service_connection);
+      }
 #endif
       nr_of_descriptors++;
       service_connection->data_read_flag = CL_COM_DATA_NOT_READY;
@@ -3979,16 +3999,57 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
    }
 
 #ifdef USE_POLL
-   ufds = (struct pollfd*) calloc(cl_raw_list_get_elem_count(connection_list) + 1, sizeof(struct pollfd));
-
-   if (ufds == NULL) {
-      cl_raw_list_unlock(connection_list);
-      return CL_RETVAL_MALLOC;
+   /* first check if we have a poll_array of the correct size*/
+   if (handle->poll_array_connection_size != handle->max_open_connections + 1) {
+      /* max_open_connections might have changed, free current array */
+      if (handle->poll_array != NULL) {
+         free(handle->poll_array);
+         CL_LOG(CL_LOG_WARNING, "freed poll_array");
+      }
+      handle->poll_array = NULL;
+      handle->poll_array_connection_size = 0;
    }
 
-   if (server_fd != -1)
-   {
-      ufds[ufds_index].fd = server_fd;
+   /* if there is no poll_array, malloc() one */
+   if (handle->poll_array == NULL) {
+      /* malloc first time */
+      unsigned long nr_of_malloced_connections = handle->max_open_connections + 1;
+      handle->poll_array = (struct pollfd*) malloc( nr_of_malloced_connections * sizeof(struct pollfd));
+      if (handle->poll_array == NULL) {
+         handle->poll_array_connection_size = 0;
+         cl_raw_list_unlock(connection_list);
+         return CL_RETVAL_MALLOC;
+      }
+      handle->poll_array_connection_size = nr_of_malloced_connections;
+      CL_LOG_INT(CL_LOG_WARNING, "poll_array prepared count: ", (int)handle->poll_array_connection_size);
+   }
+
+   /* check poll_array size */
+   if (handle->poll_array_connection_size < cl_raw_list_get_elem_count(connection_list) + 1) {
+      /* This should not happen, but we want to be on the save side */
+      unsigned long nr_of_malloced_connections = cl_raw_list_get_elem_count(connection_list) + 1;
+      CL_LOG(CL_LOG_WARNING, "max_open_connection count < current connection size - this must NOT happen!");
+      if (handle->poll_array != NULL) {
+         free(handle->poll_array);
+         handle->poll_array = NULL;
+      }
+      handle->poll_array = (struct pollfd*) malloc( nr_of_malloced_connections * sizeof(struct pollfd));
+      if (handle->poll_array == NULL) {
+         handle->poll_array_connection_size = 0;
+         cl_raw_list_unlock(connection_list);
+         return CL_RETVAL_MALLOC;
+      }
+      handle->poll_array_connection_size = nr_of_malloced_connections;
+   }
+   ufds = handle->poll_array;
+
+   if (server_private != NULL) {
+      server_private->pollfd = NULL;
+   }
+   if (server_fd != -1 && server_private != NULL) {
+      memset(&(ufds[ufds_index]), 0, sizeof(struct pollfd));
+      server_private->pollfd = &(ufds[ufds_index]);
+      ufds[ufds_index].fd = server_private->sockfd;
       ufds[ufds_index].events = POLLIN|POLLPRI;
       ufds_index++;
    }
@@ -4003,11 +4064,13 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
       if ( (con_private=cl_com_ssl_get_private(connection)) == NULL) {
          cl_raw_list_unlock(connection_list);
          CL_LOG(CL_LOG_ERROR,"no private data pointer");
-#ifdef USE_POLL
-         free(ufds);
-#endif
          return CL_RETVAL_NO_FRAMEWORK_INIT;
       }
+#ifdef USE_POLL      
+      con_private->pollfd = NULL;
+      memset(&(ufds[ufds_index]), 0, sizeof(struct pollfd));
+#endif
+
       if (con_private->sockfd >= 0) {
          switch(connection->framework_type) {
             case CL_CT_SSL: {
@@ -4019,6 +4082,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
 #ifdef USE_POLL
                            ufds[ufds_index].fd = con_private->sockfd;
                            ufds[ufds_index].events = POLLIN|POLLPRI;
+                           con_private->pollfd = &(ufds[ufds_index]);
 #else
                            FD_SET(con_private->sockfd,&my_read_fds);
 #endif
@@ -4032,6 +4096,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
 #ifdef USE_POLL
                               ufds[ufds_index].fd = con_private->sockfd;
                               ufds[ufds_index].events |= POLLOUT;
+                              con_private->pollfd = &(ufds[ufds_index]);
 #else
                               FD_SET(con_private->sockfd,&my_write_fds);
 #endif
@@ -4042,6 +4107,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
 #ifdef USE_POLL
                               ufds[ufds_index].fd = con_private->sockfd;
                               ufds[ufds_index].events |= POLLOUT;
+                              con_private->pollfd = &(ufds[ufds_index]);
 #else
                               FD_SET(con_private->sockfd,&my_write_fds);
 #endif
@@ -4061,6 +4127,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
 #ifdef USE_POLL
                         ufds[ufds_index].fd = con_private->sockfd;
                         ufds[ufds_index].events = POLLIN|POLLPRI;
+                        con_private->pollfd = &(ufds[ufds_index]);
 #else
                         FD_SET(con_private->sockfd,&my_read_fds);
 #endif
@@ -4074,6 +4141,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
 #ifdef USE_POLL
                            ufds[ufds_index].fd = con_private->sockfd;
                            ufds[ufds_index].events |= POLLOUT;
+                           con_private->pollfd = &(ufds[ufds_index]);
 #else
                            FD_SET(con_private->sockfd,&my_write_fds);
 #endif
@@ -4084,6 +4152,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
 #ifdef USE_POLL
                            ufds[ufds_index].fd = con_private->sockfd;
                            ufds[ufds_index].events |= POLLOUT;
+                           con_private->pollfd = &(ufds[ufds_index]);
 #else
                            FD_SET(con_private->sockfd,&my_write_fds);
 #endif
@@ -4104,6 +4173,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
 #ifdef USE_POLL
                               ufds[ufds_index].fd = con_private->sockfd;
                               ufds[ufds_index].events = POLLIN|POLLPRI;
+                              con_private->pollfd = &(ufds[ufds_index]);
                               ufds_index++;
 #else
                               FD_SET(con_private->sockfd,&my_read_fds); 
@@ -4133,6 +4203,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
 #ifdef USE_POLL
                               ufds[ufds_index].fd = con_private->sockfd;
                               ufds[ufds_index].events = POLLIN|POLLPRI;
+                              con_private->pollfd = &(ufds[ufds_index]);
 #else
                               FD_SET(con_private->sockfd,&my_read_fds);
 #endif
@@ -4144,6 +4215,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
 #ifdef USE_POLL
                               ufds[ufds_index].fd = con_private->sockfd;
                               ufds[ufds_index].events |= POLLOUT;
+                              con_private->pollfd = &(ufds[ufds_index]);
 #else
                               FD_SET(con_private->sockfd,&my_write_fds);
 #endif
@@ -4163,6 +4235,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
 #ifdef USE_POLL
                               ufds[ufds_index].fd = con_private->sockfd;
                               ufds[ufds_index].events = POLLIN|POLLPRI;
+                              con_private->pollfd = &(ufds[ufds_index]);
 #else
                               FD_SET(con_private->sockfd,&my_read_fds);
 #endif
@@ -4176,6 +4249,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
 #ifdef USE_POLL
                                  ufds[ufds_index].fd = con_private->sockfd;
                                  ufds[ufds_index].events |= POLLOUT;
+                                 con_private->pollfd = &(ufds[ufds_index]);
 #else
                                  FD_SET(con_private->sockfd,&my_write_fds);
 #endif
@@ -4201,6 +4275,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
 #ifdef USE_POLL
                            ufds[ufds_index].fd = con_private->sockfd;
                            ufds[ufds_index].events = POLLIN|POLLPRI;
+                           con_private->pollfd = &(ufds[ufds_index]);
 #else
                            FD_SET(con_private->sockfd,&my_read_fds);
 #endif
@@ -4213,7 +4288,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
 #ifdef USE_POLL
                            ufds[ufds_index].fd = con_private->sockfd;
                            ufds[ufds_index].events |= POLLOUT;
-                           
+                           con_private->pollfd = &(ufds[ufds_index]);
 #else
                            FD_SET(con_private->sockfd,&my_write_fds);
 #endif
@@ -4251,9 +4326,6 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
          /* return immediate for only write select ( only called by write thread) */
          cl_raw_list_unlock(connection_list); 
          CL_LOG(CL_LOG_INFO,"returning, because of no select descriptors (CL_W_SELECT)");
-#ifdef USE_POLL
-         free(ufds);
-#endif
          return CL_RETVAL_NO_SELECT_DESCRIPTORS;
       }
 #if 0
@@ -4283,9 +4355,6 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
          CL_LOG_INT(CL_LOG_INFO, "no usable file descriptor for select() call nr.:", ldata->select_not_called_count);
          ldata->select_not_called_count += 1;
          cl_raw_list_unlock(connection_list); 
-#ifdef USE_POLL
-         free(ufds);
-#endif
          return CL_RETVAL_NO_SELECT_DESCRIPTORS; 
       } else {
          CL_LOG(CL_LOG_WARNING, "no usable file descriptors (repeated!) - select() will be used for wait");
@@ -4315,9 +4384,6 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
          ldata->last_nr_of_descriptors = nr_of_descriptors;
          cl_raw_list_unlock(connection_list); 
          CL_LOG(CL_LOG_INFO,"last connection closed");
-#ifdef USE_POLL
-         free(ufds);
-#endif
          return CL_RETVAL_NO_SELECT_DESCRIPTORS;
       }
    }
@@ -4344,9 +4410,6 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
    if (max_fd == 0) {
       /* there were no file descriptors! Return error after select timeout! */
       /* (no descriptors part 2) */
-#ifdef USE_POLL
-         free(ufds);
-#endif
       return CL_RETVAL_NO_SELECT_DESCRIPTORS;
    }
    switch(select_back) {
@@ -4413,20 +4476,6 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
          break;
       default:
       {
-#ifdef USE_POLL
-         int *lookup_index = (int*)calloc(max_fd + 1, sizeof(int));
-         int i;
-
-         if (lookup_index == NULL) {
-           retval = CL_RETVAL_MALLOC;
-           break;
-         }
-
-         for (i=0; i < ufds_index; i++) {
-           lookup_index[ufds[i].fd] = i;
-         }
-#endif
-
          cl_raw_list_lock(connection_list); 
          /* now set the read flags for connections, where data is available */
          con_elem = cl_connection_list_get_first_elem(connection_list);
@@ -4437,7 +4486,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
             if (do_read_select != 0) {
                if (con_private->sockfd >= 0 && con_private->sockfd <= max_fd) {
 #ifdef USE_POLL
-                  if (ufds[lookup_index[con_private->sockfd]].revents & (POLLIN|POLLPRI))
+                  if (con_private->pollfd != NULL && con_private->pollfd->revents & (POLLIN|POLLPRI))
 #else
                   if (FD_ISSET(con_private->sockfd, &my_read_fds))
 #endif
@@ -4449,7 +4498,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
             if (do_write_select != 0) {
                if (con_private->sockfd >= 0 && con_private->sockfd <= max_fd) {
 #ifdef USE_POLL
-                  if (ufds[lookup_index[con_private->sockfd]].revents & POLLOUT)
+                  if (con_private->pollfd != NULL && con_private->pollfd->revents & POLLOUT)
 #else
                   if (FD_ISSET(con_private->sockfd, &my_write_fds))
 #endif
@@ -4462,12 +4511,9 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
          } /* while */
          cl_raw_list_unlock(connection_list);
 
-#ifdef USE_POLL
-         free(lookup_index);
-#endif
          if (server_fd != -1) {
 #ifdef USE_POLL
-            if (ufds[0].revents & (POLLIN|POLLPRI) )
+            if (server_private != NULL && server_private->pollfd != NULL && server_private->pollfd->revents & (POLLIN|POLLPRI) )
 #else
             if (FD_ISSET(server_fd, &my_read_fds))
 #endif
@@ -4476,15 +4522,9 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
                service_connection->data_read_flag = CL_COM_DATA_READY;
             }
          }
-#ifdef USE_POLL
-         free(ufds);
-#endif
          return CL_RETVAL_OK; /* OK - done */
       }
    }
-#ifdef USE_POLL
-   free(ufds);
-#endif
    return retval;
 }
 

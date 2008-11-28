@@ -1,4 +1,7 @@
-LP-2008-11-27-1  Cleanup:     GUI installer, license handling
+JG-2008-11-28-0: Bugfix:      Fixed memory leaks in JSV and qmaster JVM thread.
+                 Review       EB
+
+LP-2008-11-27-1: Cleanup:     GUI installer, license handling
                  Review       MF
 
 TB-2008-11-27-0: Bugfix:      renaming of commands in JSV Perl script to
@@ -529,8 +532,15 @@ DG-2008-08-07-0: Bugfix:     Man page qdel is misleading with the -f option.
 MD-2008-07-31-0: CVS:       Created V62_TAG
 -------------------------------------------
 
-HP-2008-07-23-0: Bugfix:    On Windows/Interix, the shepherd didn't exit immediately
-                            after the qrsh job finished, it took 60 s to finish
+JG-2008-07-28-0: Bugfix:    Memory leak in sge_execd with qsub -v SGE_* or 
+                            qsub -V.
+                 Bugster:   6729411
+                 Issue:     2672
+                 Review:    MD
+
+HP-2008-07-23-0: Bugfix:    On Windows/Interix, the shepherd didn't exit
+                            immediately after the qrsh job finished, 
+                            it took 60 s to finish
                  Review:    JG
 
 LP-2008-07-23-0: Bugfix:    Fixed inst_sge -help output
@@ -593,6 +603,8 @@ LP-2008-07-18-0: Enhancem:  Introduced new inst_sge option -start-all to start
                  Bugster:   6675592
                  Issue:     2521
                  Review:    JG, MD
+
+JG-2008-07-17-0: Bugfix:    Fixed minor memory leaks.
 
 EB-2008-07-17-0: Bugfix:     Qmaster message file contains logging about NULL ptr passed to host_list_locate()
                  Bugster:    6726283

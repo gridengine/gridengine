@@ -192,7 +192,7 @@ extern int main(int argc, char** argv)
         retval = cl_commlib_send_message(handle, argv[3], "virtual_master", 1,
                                          ack_type,
                                          (cl_byte_t**)(&snd_data), DATA_SIZE,
-                                         NULL, 0, 0 , CL_FALSE, synchron);
+                                         NULL, 0, 0, CL_FALSE, synchron);
         if (retval == CL_RETVAL_OK) {
            snd_messages++;
            retval = cl_commlib_receive_message(handle, NULL, NULL, 0,  /* handle, comp_host, comp_name , comp_id, */

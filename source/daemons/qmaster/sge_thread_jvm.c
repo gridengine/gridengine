@@ -744,7 +744,7 @@ sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
         DPRINTF(("additional_jvm_args: >%s<\n", additional_jvm_args));
         additional_jvm_argv = string_list(additional_jvm_args, " ", NULL);
 
-        for (i=0; additional_jvm_argv[i] != NULL; i++) {
+        for (i = 0; additional_jvm_argv[i] != NULL; i++) {
            DPRINTF(("additional jvm arg[%d]: %s\n", i, additional_jvm_argv[i]));
            additional_jvm_argc++;
         }
@@ -782,11 +782,12 @@ sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
    /*
    ** add additional_jvm_args
    */
-   for (i=0; i < additional_jvm_argc; i++) {
-      jvm_argv[fixed_jvm_argc+i] = strdup(additional_jvm_argv[i]);
+   for (i = 0; i < additional_jvm_argc; i++) {
+      jvm_argv[fixed_jvm_argc + i] = strdup(additional_jvm_argv[i]);
       additional_jvm_argv[i] = NULL;
    }
    FREE(additional_jvm_argv);
+   FREE(additional_jvm_args);
 
    /*
    ** process arguments of main method

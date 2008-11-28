@@ -655,10 +655,13 @@ jsv_list_remove(const char *name, const char *context)
 bool 
 jsv_is_enabled(const char *context) {
    bool ret = true;
+   const char *jsv_url;
 
    DENTER(TOP_LAYER, "jsv_is_enabled");
 
-   jsv_list_update("jsv", context, NULL, mconf_get_jsv_url());
+   jsv_url = mconf_get_jsv_url();
+   jsv_list_update("jsv", context, NULL, jsv_url);
+   FREE(jsv_url);
    sge_mutex_lock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
    ret = (lGetNumberOfElem(jsv_list) > 0) ? true : false;
    sge_mutex_unlock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);

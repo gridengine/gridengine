@@ -3191,10 +3191,11 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout) {
          shutdown(private->sockfd, 2);
          close(private->sockfd);
          private->sockfd = -1;
-         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE);
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_CANNOT_DUP_SOCKET_FD);
          return CL_RETVAL_DUP_SOCKET_FD_ERROR;
       }
 
+#ifndef USE_POLL
       if (private->sockfd >= FD_SETSIZE) {
           CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");
           shutdown(private->sockfd, 2);
@@ -3203,6 +3204,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout) {
           cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE);
           return CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT;
       } 
+#endif
 
       /* set local address reuse socket option */
       if ( setsockopt(private->sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) != 0) {
@@ -3653,11 +3655,11 @@ int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection,
       shutdown(sockfd, 2);
       close(sockfd);
       sockfd = -1;
-      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, 
-                              MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE);
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_CANNOT_DUP_SOCKET_FD);
       return CL_RETVAL_DUP_SOCKET_FD_ERROR;
    }
 
+#ifndef USE_POLL
    if (sockfd >= FD_SETSIZE) {
        CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");
        shutdown(sockfd, 2);
@@ -3665,6 +3667,7 @@ int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection,
        cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE );
        return CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT;
    }
+#endif
    
    { 
       int on = 1;
@@ -3774,11 +3777,11 @@ int cl_com_ssl_connection_request_handler(cl_com_connection_t* connection,cl_com
          shutdown(new_sfd, 2);
          close(new_sfd);
          new_sfd = -1;
-         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, 
-                                 MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE);
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_CANNOT_DUP_SOCKET_FD);
          return CL_RETVAL_DUP_SOCKET_FD_ERROR;
       }
 
+#ifndef USE_POLL
       if (new_sfd >= FD_SETSIZE) {
          CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");
          shutdown(new_sfd, 2);
@@ -3786,6 +3789,7 @@ int cl_com_ssl_connection_request_handler(cl_com_connection_t* connection,cl_com
          cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE );
          return CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT;
       }
+#endif
 
       cl_com_cached_gethostbyaddr(&(cli_addr.sin_addr), &resolved_host_name ,NULL, NULL); 
       if (resolved_host_name != NULL) {
@@ -3895,7 +3899,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
 #endif
 
 #ifdef USE_POLL
-   struct pollfd *ufds;
+   struct pollfd *ufds = NULL;
    int ufds_index = 0;
 #else
    fd_set my_read_fds;
@@ -4330,11 +4334,14 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
    errno = 0;
 
 #ifdef USE_POLL
+#if 0
    if (select_mode == CL_W_SELECT) {
       select_back = poll(ufds, ufds_index, 5); /* 5 ms */
    } else {
       select_back = poll(ufds, ufds_index, timeout_val_sec*1000 + timeout_val_usec/1000);
    }
+#endif
+   select_back = poll(ufds, ufds_index, timeout_val_sec*1000 + timeout_val_usec/1000);
 #else
    select_back = select(max_fd + 1, &my_read_fds, &my_write_fds, NULL, &timeout);
 #endif
@@ -4472,7 +4479,6 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
             if (FD_ISSET(server_fd, &my_read_fds))
 #endif
             {
-               CL_LOG(CL_LOG_INFO,"NEW CONNECTION");
                service_connection->data_read_flag = CL_COM_DATA_READY;
             }
          }

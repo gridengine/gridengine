@@ -1238,10 +1238,12 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
    new_handle->max_open_connections = (unsigned long) application_rlimits.rlim_cur;
 
+#ifndef USE_POLL
    if (FD_SETSIZE < new_handle->max_open_connections) {
       CL_LOG(CL_LOG_ERROR,"FD_SETSIZE < file descriptor limit");
       new_handle->max_open_connections = FD_SETSIZE - 1;
    }
+#endif
 
    if ( new_handle->max_open_connections < 32 ) {
       CL_LOG_INT(CL_LOG_ERROR, "to less file descriptors:", (int)new_handle->max_open_connections );
@@ -6722,8 +6724,6 @@ static void *cl_com_handle_read_thread(void *t_conf) {
    int wait_for_events = 1;
    cl_app_message_queue_elem_t* mq_elem = NULL;
    int mq_return_value = CL_RETVAL_OK; 
-
-
    int message_received = 0;
    int trigger_write_thread = 0;
    cl_connection_list_elem_t* elem = NULL;
@@ -6755,7 +6755,6 @@ static void *cl_com_handle_read_thread(void *t_conf) {
       wait_for_events = 1;
       trigger_write_thread = 0;
       message_received = 0;
-
 
       cl_thread_func_testcancel(thread_config);
  
@@ -7116,7 +7115,6 @@ static void *cl_com_handle_write_thread(void *t_conf) {
    /* get handle from thread_config */
    handle = (cl_com_handle_t*) thread_config->thread_user_data;
    
-
    /* thread init */
    if (cl_thread_func_startup(thread_config) != CL_RETVAL_OK) {
       CL_LOG(CL_LOG_ERROR,"thread setup error"); 

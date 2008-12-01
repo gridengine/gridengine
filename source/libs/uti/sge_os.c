@@ -764,8 +764,11 @@ void sge_close_all_fds(fd_set *keep_open)
    DENTER(TOP_LAYER, "sge_close_all_fds");
 
 #ifndef WIN32NATIVE
-   maxfd = sysconf(_SC_OPEN_MAX) > FD_SETSIZE ? \
-     FD_SETSIZE : sysconf(_SC_OPEN_MAX);
+#ifndef USE_POLL
+   maxfd = sysconf(_SC_OPEN_MAX) > FD_SETSIZE ? FD_SETSIZE : sysconf(_SC_OPEN_MAX);
+#else
+   maxfd = sysconf(_SC_OPEN_MAX);
+#endif
 #else /* WIN32NATIVE */
    maxfd = FD_SETSIZE;
    /* detect maximal number of fds under NT/W2000 (env: Files)*/

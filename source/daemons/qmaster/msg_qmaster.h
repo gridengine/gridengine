@@ -792,4 +792,6 @@
 #define MSG_JOB_DISCONTTASKTRANS_SUU  _MESSAGE(33952, _("Discontinued delete transaction of user "SFQ" in job "sge_U32CFormat" at task "sge_U32CFormat))
 #define MSG_JOB_ALREADYDELETED_U      _MESSAGE(33953, _("job "sge_U32CFormat" is already in deletion"))
 
+#define MSG_QMASTER_FD_USE_POLL_LARGER_THAN_LIMIT_U  _MESSAGE(33954, _("File descriptors are limited to "sge_U32CFormat" file descriptors on this system."))
+#define MSG_QMASTER_FD_USE_POLL_COMPILE_MESSAGE1_U   _MESSAGE(33955, _("To support more than "sge_U32CFormat" clients set a higher limit in the qmaster start script!"))
 #endif

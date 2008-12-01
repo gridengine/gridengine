@@ -1,3 +1,5 @@
+MD-2008-12-01-0: Enhancem:    check in, version.c and inst_sge
+
 CR-2008-12-01-0: Cleanup:     Commlib: Use poll() instead of select() for
                               linux architectures
                  Review:      JG

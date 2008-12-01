@@ -1273,39 +1273,36 @@ ProcessSGERoot()
       fi
       SGE_ROOT_VAL=`eval echo $SGE_ROOT`
 
-      # do not check for correct SGE_ROOT in case of -nostrict
-      if [ "$strict" = true ]; then
-         # create a file in SGE_ROOT
-         if [ "$ADMINUSER" != default ]; then
-            $SGE_UTILBIN/adminrun $ADMINUSER $TOUCH $SGE_ROOT_VAL/tst$$ 2> /dev/null > /dev/null
-         else
-            touch $SGE_ROOT_VAL/tst$$ 2> /dev/null > /dev/null
-         fi
-         ret=$?
-         # check if we have write permission
-         if [ $ret != 0 ]; then
-            $CLEAR
-            $INFOTEXT "Can't create a temporary file in the directory\n\n   %s\n\n" \
-                      "This may be a permission problem (e.g. no read/write permission\n" \
-                      "on a NFS mounted filesystem).\n" \
-                      "Please check your permissions. You may cancel the installation now\n" \
-                      "and restart it or continue and try again.\n" $SGE_ROOT_VAL
-            unset $SGE_ROOT
-            $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-            $CLEAR
-         elif [ ! -f tst$$ ]; then
-            # check if SGE_ROOT points to current directory
-            $INFOTEXT "Your \$SGE_ROOT environment variable\n\n   \$SGE_ROOT = %s\n\n" \
-                        "doesn't match the current directory.\n" $SGE_ROOT_VAL
-            ExecuteAsAdmin $RM -f $SGE_ROOT_VAL/tst$$
-            unset $SGE_ROOT
-         else
-            ExecuteAsAdmin $RM -f $SGE_ROOT_VAL/tst$$
-            done=true
-         fi
+      # Need to check for correct SGE_ROOT directory
+      # create a file in SGE_ROOT
+      if [ "$ADMINUSER" != default ]; then
+         $SGE_UTILBIN/adminrun $ADMINUSER $TOUCH $SGE_ROOT_VAL/tst$$ 2> /dev/null > /dev/null
       else
-         done=true
+         touch $SGE_ROOT_VAL/tst$$ 2> /dev/null > /dev/null
       fi
+      ret=$?
+      # check if we have write permission
+      if [ $ret != 0 ]; then
+         $CLEAR
+         $INFOTEXT "Can't create a temporary file in the directory\n\n   %s\n\n" \
+                   "This may be a permission problem (e.g. no read/write permission\n" \
+                   "on a NFS mounted filesystem).\n" \
+                   "Please check your permissions. You may cancel the installation now\n" \
+                   "and restart it or continue and try again.\n" $SGE_ROOT_VAL
+         unset $SGE_ROOT
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+         $CLEAR
+      elif [ ! -f tst$$ ]; then
+         # check if SGE_ROOT points to current directory
+         $INFOTEXT "Your \$SGE_ROOT environment variable\n\n   \$SGE_ROOT = %s\n\n" \
+                     "doesn't match the current directory.\n" $SGE_ROOT_VAL
+         ExecuteAsAdmin $RM -f $SGE_ROOT_VAL/tst$$
+         unset $SGE_ROOT
+         $INFOTEXT -wait -n "Hit <RETURN> to continue >> "
+      else
+         ExecuteAsAdmin $RM -f $SGE_ROOT_VAL/tst$$
+         done=true
+      fi      
    done
 
    CheckPath

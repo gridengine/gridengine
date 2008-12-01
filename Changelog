@@ -1,3 +1,9 @@
+MP-2008-12-01-0: Bugfix:      inadequate inst_qmaster/inst_execd diagnosis if binary 
+                              and common packages are not in $SGE_ROOT
+                 Bugster:     6617928
+                 Issue:       2807
+                 Review:      JG
+
 HP-2008-11-21-0: Bugfix:      on Windows, execd installation failed when hostname
                               command returns full qualified name
                  Changed:     inst_execd.sh

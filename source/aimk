@@ -174,6 +174,7 @@ usage:
    echo "-no-core          -> don't compile the core system"
    echo "-no-dump          -> build binaries without libcore.so (Linux only)"
    echo "-no-java          -> don't compile Java[TM] class files"
+   echo "-no-gui-inst      -> don't compile Java[TM] GUI installer"
    echo "-no-jni           -> don't compile JNI library"
    echo "-no-intl          -> do not compile with internationalization library"
    echo "-no-mk            -> only return the specific architecture string"
@@ -188,6 +189,7 @@ usage:
    echo "-only-core        -> build only the core system"
    echo "-only-depend      -> only compile 3rdparty/sge_depend"
    echo "-only-java        -> only compile Java[TM] class files"
+   echo "-only-gui-inst    -> only compile Java[TM] GUI installer"
    echo "-only-jemalloc    -> build only the jemalloc library"
    echo "-only-qmake       -> build only qmake"
    echo "-only-qmon        -> build only qmon 3rdparty libs and qmon client"
@@ -278,6 +280,7 @@ set JAVA             = 1
 set JAVA_BINDIR      = "bin"
 set JAVA_INCL        = "include"
 set JAVA_SHAREDEXT   = ""
+set JAVA_GUI_INST    = 1
 set JNI              = 1
 set JNI_TARGET       = "ALL"
 set PROTECTED        = 0
@@ -600,6 +603,9 @@ while ($#argv >= 1 && $?found)
    case  "-no-java"
       set JAVA = 0
       breaksw
+   case  "-no-gui-inst"
+      set JAVA_GUI_INST = 0
+      breaksw
    case  "-no-jni"
       set JNI = 0
       breaksw
@@ -640,6 +646,7 @@ while ($#argv >= 1 && $?found)
    case "-only-core":
       set CORE   = 1
       set JAVA   = 0
+      set JAVA_GUI_INST = 0
       set QMAKE  = 0
       set QMON   = 0
       set QTCSH  = 0
@@ -651,6 +658,7 @@ while ($#argv >= 1 && $?found)
    case "-only-depend":
       set CORE       = 0
       set JAVA       = 0
+      set JAVA_GUI_INST = 0
       set QMAKE      = 0
       set QMON       = 0
       set QTCSH      = 0
@@ -664,9 +672,14 @@ while ($#argv >= 1 && $?found)
       set JAVA = 2
       set ONLY_PARAM_SPEC = 1
       breaksw
+   case  "-only-gui-inst"
+      set JAVA_GUI_INST = 2
+      set ONLY_PARAM_SPEC = 1
+      breaksw
    case "-only-jemalloc":
       set CORE   = 0
       set JAVA   = 0
+      set JAVA_GUI_INST = 0
       set QMAKE  = 0
       set QMON   = 0
       set QTCSH  = 0
@@ -679,6 +692,7 @@ while ($#argv >= 1 && $?found)
    case "-only-qmake":
       set CORE   = 0
       set JAVA   = 0
+      set JAVA_GUI_INST = 0
       set QMAKE  = 1
       set QMON   = 0
       set QTCSH  = 0
@@ -690,6 +704,7 @@ while ($#argv >= 1 && $?found)
    case "-only-qmon":
       set CORE   = 0
       set JAVA   = 0
+      set JAVA_GUI_INST = 0
       set QMAKE  = 0
       set QMON   = 1
       set QTCSH  = 0
@@ -701,6 +716,7 @@ while ($#argv >= 1 && $?found)
    case "-only-qtcsh":
       set CORE   = 0
       set JAVA   = 0
+      set JAVA_GUI_INST = 0
       set QMAKE  = 0
       set QMON   = 0
       set QTCSH  = 1
@@ -712,6 +728,7 @@ while ($#argv >= 1 && $?found)
    case "-only-wingrid":
       set CORE   = 0
       set JAVA   = 0
+      set JAVA_GUI_INST = 0
       set QMAKE  = 0
       set QMON   = 0
       set QTCSH  = 0
@@ -723,6 +740,7 @@ while ($#argv >= 1 && $?found)
    case "-only-remote":
       set CORE   = 0
       set JAVA   = 0
+      set JAVA_GUI_INST = 0
       set QMAKE  = 0
       set QMON   = 0
       set QTCSH  = 0
@@ -2012,6 +2030,30 @@ else
    echo making in $COMPILE_DIR/ for $BUILDARCH at host `hostname`
 endif
 
+# -only-gui-inst option
+if ( "$JAVA_GUI_INST" == 2 ) then
+   echo _____Making JAVA GUI Installer_____
+
+   if ( "$ADD_COPYRIGHT" == 1 ) then
+      setenv AIMK_COPYRIGHT_DIR "$COPYRIGHT_DIR"
+      setenv AIMK_COPYRIGHT "courtesy"
+   else if ( "$ADD_SUN_COPYRIGHT" == 1 ) then
+      setenv AIMK_COPYRIGHT_DIR "$SUN_COPYRIGHT_DIR"
+      setenv AIMK_COPYRIGHT "sun"
+   else
+      setenv AIMK_COPYRIGHT_DIR ""
+      setenv AIMK_COPYRIGHT ""
+   endif
+   ant -f clients/gui-installer/build.xml $argv
+
+   if ( $status != 0 ) then
+      echo not done
+      exit 1
+   endif
+   echo done
+   exit 0
+endif
+
 if ( "$BUILDMAN" == 1 ) then
    echo _________M_A_N_P_A_G_E_S__________________
 
@@ -2483,6 +2525,10 @@ if ( "$JAVA" > 0 ) then
    else
       setenv AIMK_COPYRIGHT_DIR ""
       setenv AIMK_COPYRIGHT ""
+   endif
+   # -no-gui-inst option
+   if ( "$JAVA_GUI_INST" == 0 ) then
+      setenv BUILD_NO_GUI_INSTALLER 1
    endif
    ant -f build.xml $argv
    # how to propagate ant opts to first and then second build.xml

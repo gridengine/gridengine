@@ -70,6 +70,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.text.MessageFormat;
 
 import javax.swing.AbstractButton;
 import javax.swing.JButton;
@@ -101,7 +102,7 @@ public class HostPanel extends IzPanel implements Config {
 
     public static boolean installMode = false;
 
-    private static Properties scriptLocalizedExitMsgs = new Properties();
+    private static Properties localizedMessages = new Properties();
 
     /** Creates new HostPanel */
     public HostPanel(InstallerFrame parent, InstallData idata) {
@@ -132,8 +133,8 @@ public class HostPanel extends IzPanel implements Config {
                 String key = it.next();
                 if (key.startsWith(LANGID_PREFIX_STATE)) {
                     stateLocalizedTexts.put(key, parent.langpack.get(key));
-                } else if (key.startsWith("exit.msg.")) {
-                    scriptLocalizedExitMsgs.put(key, parent.langpack.get(key));
+                } else if (key.startsWith("msg.")) {
+                    localizedMessages.put(key, parent.langpack.get(key));
                 }
             }
         }
@@ -1229,11 +1230,24 @@ public class HostPanel extends IzPanel implements Config {
                     wait = true;
                     completed = threadPool.getCompletedTaskCount();
                 }
-                threadPool.execute(new InstallTask(tables, h, variablesCopy, scriptLocalizedExitMsgs));
+                threadPool.execute(new InstallTask(tables, h, variablesCopy, localizedMessages));
                 //In case the task is a BDB or qmaster host, we have to wait for sucessful finish!
                 while (wait) {
                     if (threadPool.getCompletedTaskCount() >= completed + 1) {
                         wait = false;
+                        //If bdb or qmaster fails it's over!
+                        if (h.getState() != Host.State.SUCCESS) {
+                            HostInstallTableModel updateModel;
+                            HostInstallTableModel installModel = (HostInstallTableModel) tables.get(0).getModel();
+                            for (Host host : installList) {
+                                updateModel = (HostInstallTableModel) tables.get(2).getModel();
+                                installModel.setHostState(host, Host.State.FAILED);
+                                installModel.setHostLog(host, MessageFormat.format(localizedMessages.getProperty("msg.previous.dependent.install.failed"), h.getComponentString()));
+                                installModel.removeHost(host);
+                                updateModel.addHost(host);
+                            }
+                            return;
+                        }
                     } else {
                         try {
                             Thread.sleep(100);
@@ -1242,27 +1256,17 @@ public class HostPanel extends IzPanel implements Config {
                         }
                     }
                 }
-                //If qmaster installation was done and failed, we need to stop
-                /*if (h.isQmasterHost()) {
-                    CommandExecutor cmd = new CommandExecutor(SGE_ROOT + "/bin/" + h.getArchitecture() + "/qconf", "-sel");
-                    Map env = cmd.getEnvironment();
-                    env.put("SGE_ROOT", SGE_ROOT);
-                    env.put("SGE_CELL", idata.getVariable(VAR_SGE_CELL_NAME));
-                    env.put("SGE_QMASTER_PORT", idata.getVariable(VAR_SGE_QMASTER_PORT));
-                    env.put("SGE_EXECD_PORT", idata.getVariable(VAR_SGE_EXECD_PORT));
-                    cmd.execute();
-                    int exitCode = cmd.getExitValue();
-                    if (exitCode != 0) {                        
-                        //TODO: Move the remaning hosts to the failed list and state the reason in LOG as qmaster installation failed
-                        Debug.error("Non-zero code from qconf -sel!");
-                        return;
-                    }
-                }*/
                 row++;
             }
         } catch(Exception e) {
             Debug.error(e);
         } finally {
+            //If we have failed hosts we go to the Failed tab
+            if (((HostInstallTableModel)tables.get(2).getModel()).getRowCount() > 0) {
+                tabbedPane.setSelectedIndex(2);
+            } else { //Go to succeeded tab
+                tabbedPane.setSelectedIndex(1);
+            }
             threadPool.shutdown();
         }
     }
@@ -1720,10 +1724,10 @@ class InstallTask extends TestableTask {
                 String localScript = "/tmp/install_component." + host.getHostAsString();
                 Debug.trace("Copy auto_conf file to '" + localScript + "'.");
                 CommandExecutor cmd = new CommandExecutor(variables.getProperty(VAR_COPY_COMMAND), autoConfFile, host.getHostname() + ":" + localScript);
-                cmd.execute();
-                //Set the log content
+                cmd.execute();                
                 exitValue = cmd.getExitValue();
                 if (exitValue == CommandExecutor.EXITVAL_OTHER) {
+                    //Set the log content
                     log = "Timeout while copying the " + localScript + " script to host " + host.getHostname() + " via " + variables.getProperty(VAR_COPY_COMMAND) + " command!\nMaybe a password is expected. Try the command in the terminal first.";
                     installModel.setHostLog(host, log);
                 } else {
@@ -1746,7 +1750,7 @@ class InstallTask extends TestableTask {
                             tmpNum = d.substring("___EXIT_CODE_".length());
                             tmpNum = tmpNum.substring(0, tmpNum.indexOf("_"));
                             tmpExitValue = Integer.valueOf(tmpNum);
-                            log += "FAILED:" + msgs.get("exit.msg." + tmpNum) + SEP;
+                            log += "FAILED:" + msgs.get("msg.exit." + tmpNum) + SEP;
                         } else {
                             log += d + SEP;
                         }
@@ -1779,7 +1783,6 @@ class InstallTask extends TestableTask {
                             exitValue = CommandExecutor.EXITVAL_OTHER;
                         }
                     }
-
                     installModel.setHostLog(host, log);
                 }
             }

@@ -89,9 +89,15 @@ public class PreActionPanel extends ActionPanel {
 
         // cfg.sge.jvm.lib.path
         String[] libPaths = idata.getVariable("SYSTEM_java_library_path").split(":");
+
+        String libjvm = "/" + System.mapLibraryName("jvm");
+        if (libjvm.endsWith(".jnilib")) {
+            libjvm = libjvm.substring(0, libjvm.lastIndexOf(".jnilib")) + ".dylib";
+        }
+
         for (int i = 0; i < libPaths.length; i++) {
-            if (new File(libPaths[i] + "/libjvm.so").exists()) {
-                idata.setVariable(VAR_JVM_LIB_PATH, libPaths[i] + "/libjvm.so");
+            if (new File(libPaths[i] + libjvm).exists()) {
+                idata.setVariable(VAR_JVM_LIB_PATH, libPaths[i] + libjvm);
                 Debug.trace("cfg.sge.jvm.lib.path='" + idata.getVariable(VAR_JVM_LIB_PATH) + "'");
                 break;
             }

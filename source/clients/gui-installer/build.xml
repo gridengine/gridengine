@@ -59,7 +59,7 @@ ___INFO__MARK_END__-->
 
     <target name="build.izpack" unless="izpack.isbuild" description="Builds IzPack">
            <echo message="IzPack is not yet built. Building now..."/>
-           <ant antfile="${izpack.home}/src/build.xml" target="all" dir="${izpack.home}" inheritall="false"/>
+           <ant antfile="${izpack.home}/src/build.xml" target="all" dir="${izpack.home}" inheritall="true"/>
     </target>
 
     <target name="-pre-compile" description="Compile IzPack if it hasn't been yet">
@@ -73,7 +73,7 @@ ___INFO__MARK_END__-->
         <condition property="izpack.complete">
             <available classpath="${javac.classpath}" classname="com.izforge.izpack.installer.IzPanel"/>
         </condition>
-        <fail unless="izpack.complete" message="You need to install IzPack 4.1.1 and set the izpack.home property in the lib/nblibraries-private.properties first!"/>
+        <fail unless="izpack.complete" message="You need to install IzPack 4.1.1 and set the izpack.home property in the gridengine/source/build_private.properties first!"/>
 
         <!-- Let's copy the stuff we need locally to our build.dir, so each user works with his own files -->
         <property name="build.panels.dir" value="bin/panels"/>
@@ -85,15 +85,15 @@ ___INFO__MARK_END__-->
         <javac srcdir="../../3rdparty/IzPack/src" 
                excludes="izforge/izpack/installer/InstallerFrame.java"
                classpath="${build.classes.dir}:${javac.classpath}"
-               destdir="${build.classes.dir}"/>
+               source="${javac.source}" target="${javac.target}" destdir="${build.classes.dir}"/>
         <javac srcdir="${src.dir}"
                includes="com/sun/grid/installer/gui/HelpFrame.java"
                classpath="${build.classes.dir}:${javac.classpath}"
-               destdir="${build.classes.dir}"/>
+               source="${javac.source}" target="${javac.target}" destdir="${build.classes.dir}"/>
         <javac srcdir="../../3rdparty/IzPack/src"
                includes="izforge/izpack/installer/InstallerFrame.java"
                classpath="${build.classes.dir}:${javac.classpath}"
-               destdir="${build.classes.dir}"/>
+               source="${javac.source}" target="${javac.target}" destdir="${build.classes.dir}"/>
 
         <!-- Prepare sge.license property -->
         <property environment="env"/>
@@ -247,7 +247,6 @@ ___INFO__MARK_END__-->
             <arg value="${build.dir}"/>
             <arg value="-o"/>
             <arg value="${dist.jar}"/>
-            <!-- <jvmarg value="-Dtools.jar=${tools.jar} -Dizpack.home=${izpack.home}"/> -->            
         </java>
 
 

@@ -412,7 +412,8 @@ public class Host implements Config {
         }
         
         // Restrict qmaster and shadow components
-        if (!(architecture.indexOf("sol-") > -1) && !(architecture.indexOf("lx2") > -1)) {
+        // TODO: if (!(architecture.indexOf("sol-") > -1) && !(architecture.indexOf("lx2") > -1)) {
+        if (architecture.startsWith("win-") == true) {
             qmasterHost = false;
             shadowHost  = false;
         }

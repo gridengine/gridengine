@@ -145,27 +145,28 @@ ___INFO__MARK_END__-->
             <validator id="cfg.sge.jmx.port.portvalidator" class="com.izforge.izpack.util.PortValidator" />
         </field>
         <field type="check" variable="cfg.sge.jmx.ssl">
-            <spec txt="SSL server" align="left" id="cfg.sge.jmx.ssl.label" true="true" false="false" />
+            <spec align="left" id="cfg.sge.jmx.ssl.label" true="true" false="false" revalidate="yes" />
         </field>
         <field type="space" />
         <field type="check" variable="cfg.sge.jmx.ssl.client">
-            <spec align="left" id="cfg.sge.jmx.ssl.client.label" true="true" false="false"  revalidate="yes" />
+            <spec align="left" id="cfg.sge.jmx.ssl.client.label" true="true" false="false"/>
+            <dependency type="enable" refid="cfg.sge.jmx.ssl" value="true" />
         </field>
         <field type="dir" align="left" variable="cfg.sge.jmx.ssl.keystore">
             <spec id="cfg.sge.jmx.ssl.keystore.label" size="35" />
-            <dependency type="enable" refid="cfg.sge.jmx.ssl.client" value="true" />
+            <dependency type="enable" refid="cfg.sge.jmx.ssl" value="true" />
         </field>
         <field type="password" align="left" variable="cfg.sge.jmx.ssl.keystore.pw">
-            <dependency type="enable" refid="cfg.sge.jmx.ssl.client" value="true"/>
+            <dependency type="enable" refid="cfg.sge.jmx.ssl" value="true"/>
             <spec>
-                <pwd id="cfg.sge.jmx.ssl.keystore.pw.1" size="15" set=""/>
-                <pwd id="cfg.sge.jmx.ssl.keystore.pw.2" size="15" set=""/>
+                <pwd id="cfg.sge.jmx.ssl.keystore.pw.1" size="15" set="changeit"/>
+                <pwd id="cfg.sge.jmx.ssl.keystore.pw.2" size="15" set="changeit"/>
             </spec>
             <validator id="cfg.sge.jmx.ssl.keystore.pw.passwordequalityvalidator" class="com.izforge.izpack.util.PasswordEqualityValidator" />
         </field>
         <field type="space" />
         <field type="file" variable="cfg.sge.jvm.lib.path">
-            <spec id="cfg.sge.jvm.lib.path.label" size="35"  fileext="libjvm.so" fileextdesc="The libjvm.so library" />
+            <spec id="cfg.sge.jvm.lib.path.label" size="35"/> <!-- TODO: Need dynamic variable to choose libjvm.so, or other based on ARCH - add fileext="libjvm.so" fileextdesc="The libjvm.so library" /> -->
             <validator id="cfg.sge.jvm.lib.path.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
             <validator id="cfg.sge.jvm.lib.path.fileexistsvalidator" class="com.sun.grid.installer.gui.FileExistsValidator">
                 <param name="file" value=""/>

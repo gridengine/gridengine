@@ -205,12 +205,13 @@ ___INFO__MARK_END__-->
     <!-- JMX Panel -->
         <!-- Labels -->
         <str id="cfg.sge.jmx.port.label" txt="JMX port" />
-        <str id="cfg.sge.jmx.ssl.client.label" txt="SSL client" />
+        <str id="cfg.sge.jmx.ssl.label" txt="Enable SSL server authentication" />
+        <str id="cfg.sge.jmx.ssl.client.label" txt="Enable SSL client authentication" />
         <str id="cfg.sge.jmx.ssl.keystore.label" txt="Path to the keystore" />
         <str id="cfg.sge.jmx.ssl.keystore.pw.1" txt="Keystore password" />
         <str id="cfg.sge.jmx.ssl.keystore.pw.2" txt="Retype password" />
         <str id="cfg.sge.jvm.lib.path.label" txt="JVM library path" />
-        <str id="cfg.sge.additional.jvm.args.label" txt="Additional JMX args" />
+        <str id="cfg.sge.additional.jvm.args.label" txt="Additional JVM args" />
         <!-- Tooltips -->
         <str id="cfg.sge.jmx.port.label.tooltip" txt="<html><b>JMX port</b><br><br>
         The port used to communicate with <code>sge_qmaster</code> via JMX protocol.<br>
@@ -228,7 +229,7 @@ ___INFO__MARK_END__-->
         <str id="cfg.sge.jmx.ssl.keystore.pw.2.tooltip" txt="<html><b>Retype password</b><br><br>
         Retype the keystore password.</html>" />
         <str id="cfg.sge.jvm.lib.path.label.tooltip" txt="JVM library path" />
-        <str id="cfg.sge.additional.jvm.args.label.tooltip" txt="Additional JMX args" />
+        <str id="cfg.sge.additional.jvm.args.label.tooltip" txt="Additional JVM arguments" />
         <!-- Validators -->
         <str id="cfg.sge.jmx.port.notemptyvalidator" txt="JMX port is mandatory!" />
         <str id="cfg.sge.jmx.port.isportvalidator" txt="JMX port is invalid!" />
@@ -294,8 +295,8 @@ ___INFO__MARK_END__-->
 
     <!-- CSP Panel -->
         <!-- Labels -->
-        <str id="cfg.csp.recreate.label" txt="Recreate certs" />
-        <str id="cfg.csp.copy.certs.label" txt="Copy certs" />
+        <str id="cfg.csp.recreate.label" txt="Recreate certificates and keys" />
+        <str id="cfg.csp.copy.certs.label" txt="Copy certificates and keys" />
         <str id="cfg.csp.country.code.label" txt="Country code" />
         <str id="cfg.csp.state.label" txt="State" />
         <str id="cfg.csp.location.label" txt="Location" />
@@ -303,8 +304,8 @@ ___INFO__MARK_END__-->
         <str id="cfg.csp.orga.unit.label" txt="Organization unit" />
         <str id="cfg.csp.mail.address.label" txt="Email address" />
         <!-- Tooltips -->
-        <str id="cfg.csp.recreate.label.tooltip" txt="Recreate certs" />
-        <str id="cfg.csp.copy.certs.label.tooltip" txt="Copy certs" />
+        <str id="cfg.csp.recreate.label.tooltip" txt="Recreate certificates and keys" />
+        <str id="cfg.csp.copy.certs.label.tooltip" txt="Copy certificates and keys" />
         <str id="cfg.csp.country.code.label.tooltip" txt="<html><b>Country code</b><br><br>
         Two-letter country code, for example, US for the United States.<br><br>
         <b>Variable: </b><code>$CSP_STATE</code></html>" />
@@ -413,7 +414,7 @@ ___INFO__MARK_END__-->
         <!-- Messages -->
         <str id="warning.qmaster.arch.unsupported.message" txt="Architecture '${param1}' is not supported for qmaster installation!"/>
         <str id="warning.bdbserver.arch.unsupported.message" txt="Architecture '${param1}' is not supported for Berkeley db server installation!"/>
-
+        <str id="msg.previous.dependent.install.failed" txt="This installation depended on {0} installation which failed. Therefore it could not be started."/>
     <!-- Result Panel -->
         <!-- Labels -->
         <str id="result.info.label" txt="Read me"/>
@@ -440,8 +441,8 @@ ___INFO__MARK_END__-->
         <str id="log.message.emptylog" txt="Empty log."/>
 
    <!-- install_component exit code mapptings -->
-        <str id="exit.msg.1"  txt="Installation failed."/>
-        <str id="exit.msg.2" txt="Installation failed with exit code 2"/>
-        <str id="exit.msg.10" txt="Detected existing component installation. Can't proceed."/>
-        <str id="exit.msg.11" txt="Uninstallation failed."/>
+        <str id="msg.exit.1"  txt="Installation failed."/>
+        <str id="msg.exit.2" txt="Installation failed with exit code 2"/>
+        <str id="msg.exit.10" txt="Detected existing component installation. Can't proceed."/>
+        <str id="msg.exit.11" txt="Uninstallation failed."/>
 </langpack>

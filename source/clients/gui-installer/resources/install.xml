@@ -189,12 +189,12 @@ ___INFO__MARK_END__-->
         <variable name="cfg.sge.cluster.name" value="p${cfg.sge.qmaster.port}"/>
         <variable name="add.sge.jmx" value="true"/>
         <variable name="cfg.sge.jmx.port" value="6446"/>
-        <variable name="cfg.sge.jmx.ssl" value="false"/>
-        <variable name="cfg.sge.jmx.ssl.client" value="false"/>
+        <variable name="cfg.sge.jmx.ssl" value="true"/>
+        <variable name="cfg.sge.jmx.ssl.client" value="true"/>
         <variable name="cfg.sge.jmx.ssl.keystore.pw" value=""/>
         <variable name="cfg.sge.jmx.ssl.keystore" value="/var/sgeCA/port${cfg.sge.qmaster.port}/${cfg.cell.name}/private/keystore"/>
         <variable name="cfg.sge.jvm.lib.path" value=""/>
-        <variable name="cfg.sge.additional.jvm.args" value=""/>
+        <variable name="cfg.sge.additional.jvm.args" value="-Xmx256m"/>
         <variable name="cfg.cell.name" value="default"/>
         <variable name="cfg.admin.user" value=""/>
         <variable name="cfg.gid.range" value="20000-20100"/>
@@ -238,7 +238,7 @@ ___INFO__MARK_END__-->
         <variable name="cfg.csp.orga" value="Organisation"/>
         <variable name="cfg.csp.orga.unit" value="Organisation_unit"/>
         <variable name="cfg.csp.mail.address" value="name@yourdomain.com"/>
-        <variable name="add.hostinput" value="[latte mocca ge][1-12]"/> <!-- [ge][1-2]-->
+        <variable name="add.hostinput" value="<Enter a hostname or IP adress here ...>"/>
    </variables>
 
    <dynamicvariables>

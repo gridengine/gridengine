@@ -4,6 +4,9 @@ CR-2008-12-01-0: Cleanup:     Commlib: Use poll() instead of select() for
                               linux architectures
                  Review:      JG
 
+CR-2008-12-01-0: CVS:         Created V62u1_BRANCH
+--------------------------------------------------
+
 MD-2008-12-01-0: CVS:         Created V62u1_TAG
 -----------------------------------------------
 

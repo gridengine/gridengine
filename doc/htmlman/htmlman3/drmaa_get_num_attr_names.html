@@ -142,9 +142,9 @@ DESCRIPTION
 
      For various reasons, some options are  silently  ignored  by
      DRMAA.   Setting  any  of these options will have no effect.
-     The ignored options are: -cwd, -help, -t, -verify, -w w, and
-     -w  v.   The  -cwd  option  can  be reenabled by setting the
-     environment  variable,  SGE_DRMAA_ALLOW_CWD.   However,  the
+     The ignored options are: -cwd, -help, -sync, -t, -verify, -w
+     w,  and  -w v.  The -cwd option can be re-enabled by setting
+     the environment variable, SGE_DRMAA_ALLOW_CWD.  However, the
      -cwd  option  is not thread safe and should not be used in a
      multi-threaded context.
 
@@ -364,16 +364,16 @@ DRMAA JOB TEMPLATE ATTRIBUTES
      files,  it is recommended that DRMAA job category names take
      the form: &lt;category_name&gt;.cat.
 
-     The options -help, -t, -verify, and -w w|v are ignored.  The
-     -cwd  option  is  ignored  unless  the  $SGE_DRMAA_ALLOW_CWD
-     environment variable is set.
+     The options -help,  -sync,  -t,  -verify,  and  -w  w|v  are
+     ignored.    The   -cwd   option   is   ignored   unless  the
+     $SGE_DRMAA_ALLOW_CWD environment variable is set.
 
   drmaa_native_specification - "&lt;native_specification&gt;"
      Specifies Grid Engine native <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> options which  will  be
      interpreted  as part of the DRMAA job template.  All options
      available  to  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>  command   may   be   used   in   the
-     <I>native</I>_<I>specification</I>,  except for -help, -t, -verify, and -w
-     w|v.   The  -cwd  option   may   only   be   used   if   the
+     <I>native</I>_<I>specification</I>,  except for -help, -sync, -t, -verify,
+     and -w w|v.  The  -cwd  option  may  only  be  used  if  the
      SGE_DRMAA_ALLOW_CWD  environment  variable  is set.  This is
      because the  current  parsing  algorithm  for  -cwd  is  not
      thread-safe.   Options  set in the <I>native</I> <I>specification</I> will

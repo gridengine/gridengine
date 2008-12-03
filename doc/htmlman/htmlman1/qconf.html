@@ -9,13 +9,13 @@ SYNTAX
      qconf options
 
 DESCRIPTION
-     <I>Qconf</I> allows the system administrator to  add,  delete,  and
+     <I>qconf</I> allows the system administrator to  add,  delete,  and
      modify  the  current  Grid  Engine  configuration, including
      queue management, host management,  complex  management  and
-     user  management.   <I>Qconf</I>  also  allows  you  to examine the
+     user  management.   <I>qconf</I>  also  allows  you  to examine the
      current queue configuration for existing queues.
 
-     <I>Qconf</I> allows the use of the backslash, '\', character at the
+     <I>qconf</I> allows the use of the backslash, '\', character at the
      end  of a line to indicate that the next line is a continua-
      tion of the current line.  When displaying settings, such as
      the  output  of  one of the -s* options, <I>qconf</I> will break up
@@ -35,7 +35,7 @@ OPTIONS
           Similar to -aattr (see below) but takes  specifications
           for  the  object  attributes  to  be enhanced from file
           named fname. As opposed to -aattr, multiple  attributes
-          can be enhanced. Their specification has to be enlisted
+          can  be  enhanced. Their specification has to be listed
           in fname following the file format of the corresponding
           object (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> for the queue, for example).
           Requires root/manager privileges.
@@ -58,9 +58,9 @@ OPTIONS
 
      -Aconf file_list              &lt;<I>add</I> <I>configurations</I>&gt;
           Add the configurations (see <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>)  specified  in
-          the  files  enlisted  in the comma separated file_list.
-          The configuration is added for the host that is identi-
-          cal to the file name.
+          the  files listed in the comma separated file_list. The
+          configuration is added for the host that  is  identical
+          to the file name.
           Requires root or manager privileges.
 
      -Ae fname                     &lt;<I>add</I> <I>execution</I> <I>host</I>&gt;
@@ -104,7 +104,7 @@ OPTIONS
           list attributes from which entries are to be deleted is
           contained in  the  file  named  fname.  As  opposed  to
           -dattr,  multiple  attributes  can  be  modified. Their
-          specification has to be enlisted in fname following the
+          specification has to be listed in fname  following  the
           file   format   of   the   corresponding   object  (see
           <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> for the queue, for example).
           Requires root/manager privileges.
@@ -114,7 +114,7 @@ OPTIONS
           Similar to -mattr (see below) but takes  specifications
           for  the  object  attributes  to  be modified from file
           named fname. As opposed to -mattr, multiple  attributes
-          can be modified. Their specification has to be enlisted
+          can  be  modified. Their specification has to be listed
           in fname following the file format of the corresponding
           object (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> for the queue, for example).
           Requires root/manager privileges.
@@ -151,7 +151,7 @@ OPTIONS
           of file must comply to the format  specified  in  <I>host-</I>
           <B><A HREF="../htmlman5/group.html">group(5)</A></B>.
 
-     -Mrqs fname [mrqs_name]       &lt;<I>modify</I> <I>RQS</I> <I>configuration</I>&gt;
+     -Mrqs fname [rqs_name]        &lt;<I>modify</I> <I>RQS</I> <I>configuration</I>&gt;
           Same as -mrqs (see below) but instead  of  invoking  an
           editor  to modify the RQS configuration, the file fname
           is considered to contain a changed  configuration.  The
@@ -205,9 +205,9 @@ OPTIONS
           list  attributes whose content is to be replace is con-
           tained in the file named fname. As opposed  to  -rattr,
           multiple  attributes  can be modified. Their specifica-
-          tion has to be enlisted in  fname  following  the  file
-          format  of  the corresponding object (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>
-          for the queue, for example).
+          tion has to be listed in fname following the file  for-
+          mat  of the corresponding object (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> for
+          the queue, for example).
           Requires root/manager privileges.
 
      -aattr obj_spec attr_name val obj_instance,...
@@ -227,13 +227,13 @@ OPTIONS
           sublist the cluster queues implicit default  configura-
           tion  value  or the queue domain configuration value or
           queue  instance   configuration   value.    The   queue
-          load_thesholds parameter is an example of a list attri-
-          bute. With the -aattr option, entries can be  added  to
-          such  lists,  while  they  can  be deleted with -dattr,
+          load_thresholds  parameter  is  an  example  of  a list
+          attribute. With the -aattr option, entries can be added
+          to  such  lists, while they can be deleted with -dattr,
           modified with -mattr, and replaced with -rattr.
           For the obj_spec <I>rqs</I> the obj_instance is a unique iden-
-          tifier  for  a specific rule. The identifier consisists
-          of a rule-set name and either the number of the rule in
+          tifier  for a specific rule. The identifier consists of
+          a rule-set name and either the number of  the  rule  in
           the list, or the name of the rule, separated by a /
           The name of the configuration attribute to be  enhanced
           is  specified  with  attr_name  followed  by  val  as a
@@ -267,7 +267,7 @@ OPTIONS
           maintained by Grid Engine and to be  usable  to  submit
           checkpointing  jobs  (see  <B><A HREF="../htmlman5/checkpoint.html">checkpoint(5)</A></B> for details on
           the format of a checkpointing environment  definition).
-          <I>Qconf</I>  retrieves  a  default  checkpointing environment
+          <I>qconf</I>  retrieves  a  default  checkpointing environment
           configuration and executes <B><A HREF="../htmlman1/vi.html">vi(1)</A></B>  (or  $EDITOR  if  the
           EDITOR  environment  variable  is  set) to allow you to
           customize the checkpointing environment  configuration.
@@ -328,7 +328,7 @@ OPTIONS
           Adds one or more <I>Resource</I> <I>Quota</I> <I>Set</I>  (RQS)  description
           under the names rqs_name to the list of RQSs maintained
           by Grid Engine (see <B><A HREF="../htmlman5/sge_resource_quota.html">sge_resource_quota(5)</A></B>  for  details
-          on  the format of a RQS definition).  <I>Qconf</I> retrieves a
+          on  the format of a RQS definition).  <I>qconf</I> retrieves a
           default RQS configuration and executes <B><A HREF="../htmlman1/vi.html">vi(1)</A></B> (or  $EDI-
           TOR if the EDITOR environment variable is set) to allow
           you to customize the RQS configuration. Upon exit  from
@@ -348,7 +348,7 @@ OPTIONS
           name  pe_name  to  the  list  of PEs maintained by Grid
           Engine and to be usable to submit  parallel  jobs  (see
           <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B>  for  details  on  the format of a PE defini-
-          tion).  <I>Qconf</I> retrieves a default PE configuration  and
+          tion).  <I>qconf</I> retrieves a default PE configuration  and
           executes  <B><A HREF="../htmlman1/vi.html">vi(1)</A></B>  (or  $EDITOR if the EDITOR environment
           variable is set) to allow you to customize the PE  con-
           figuration.  Upon  exit  from  the  editor,  the  PE is
@@ -357,7 +357,7 @@ OPTIONS
 
      -aprj                         &lt;<I>add</I> <I>new</I> <I>project</I>&gt;
           Adds a project description to the  list  of  registered
-          projects  (see <B><A HREF="../htmlman5/project.html">project(5)</A></B>).  <I>Qconf</I> retrieves a template
+          projects  (see <B><A HREF="../htmlman5/project.html">project(5)</A></B>).  <I>qconf</I> retrieves a template
           project configuration and executes <B><A HREF="../htmlman1/vi.html">vi(1)</A></B> (or $EDITOR if
           the EDITOR environment variable is set) to allow you to
           customize the new project. Upon exit from  the  editor,
@@ -365,7 +365,7 @@ OPTIONS
           Requires root or manager privileges.
 
      -aq [queue_name]              &lt;<I>add</I> <I>new</I> <I>queue</I>&gt;
-          <I>Qconf</I> retrieves the default  queue  configuration  (see
+          <I>qconf</I> retrieves the default  queue  configuration  (see
           <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>)  and  executes  <B><A HREF="../htmlman1/vi.html">vi(1)</A></B> (or $EDITOR if the
           EDITOR environment variable is set)  to  allow  you  to
           customize  the  queue configuration. Upon exit from the
@@ -795,7 +795,7 @@ OPTIONS
 
      -srqsl                        &lt;<I>show</I> <I>RQS</I>-<I>list</I>&gt;
           Show a list of all  currently  defined  <I>resource</I>  <I>quota</I>
-          <I>sets</I>s (RQSs).
+          <I>set</I>s (RQSs).
 
      -sm                           &lt;<I>show</I> <I>managers</I>&gt;
           Displays the managers list.
@@ -804,9 +804,9 @@ OPTIONS
           Displays the operator list.
 
      -sobjl obj_spec attr_name val &lt;<I>show</I> <I>object</I> <I>list</I>&gt;
-          Shows a list of all configuration objects for which val
-          matches  at least one configuration value of the attri-
-          butes whose name matches with attr_name.
+          Shows a list of all  configuration  objects  for  which
+          value  matches  at least one configuration value of the
+          attributes whose name matches attr_name.
 
           Obj_spec  can   be   "queue"   or   "queue_domain"   or
           "queue_instance"    or    "exechost".     Note:    When
@@ -817,7 +817,7 @@ OPTIONS
           instances are returned.
 
           Attr_name can be any of the configuration file keywords
-          enlisted  in <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> or <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>.  Also wild-
+          listed  in  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>  or <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>.  Also wild-
           cards can be used to match multiple attributes.
 
           Val can be an arbitrary string or  a  wildcard  expres-
@@ -886,7 +886,7 @@ OPTIONS
           The Grid Engine scheduler <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>  is  forced  by
           this  option  to  print  trace  messages  of  its  next
           scheduling        run        to        the         file
-          &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>schedd</I>_<I>runlog</I>.   The  messages
+          $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>schedd</I>_<I>runlog</I>.  The messages
           indicate the reasons for  jobs  and  queues  not  being
           selected   in  that  run.   Requires  root  or  manager
           privileges.
@@ -945,8 +945,8 @@ RESTRICTIONS
      (i.e., the next job).
 
 FILES
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                     Grid Engine master host file
+     $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>act</I>_<I>qmaster</I>
+                    Grid Engine master host file
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,    <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>,    <B><A HREF="../htmlman5/checkpoint.html">checkpoint(5)</A></B>,     <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>,

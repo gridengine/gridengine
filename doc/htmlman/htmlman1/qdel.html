@@ -10,22 +10,22 @@ SYNTAX
      wc_job_range_list ]
 
 DESCRIPTION
-     <I>Qdel</I> provides a means for a user/operator/manager to  delete
+     <I>qdel</I> provides a means for a user/operator/manager to  delete
      one or more jobs. A manager/operator can delete jobs belong-
      ing to any user, while a regular user can only delete his or
      her  own  jobs.  If a manager wants to delete another user's
      job, the manager can specify the job id. If the  manager  is
      using a job name or pattern, he or she must also specify the
      user's name via "-u wc_user_list". A "qdel wc_job_name" will
-     delete  only  the jobs of the calling user by default.  <I>Qdel</I>
+     delete  only  the jobs of the calling user by default.  <I>qdel</I>
      deletes jobs in the order in which their job identifiers are
      presented.    Find    additional    information   concerning
      <I>wc</I>_<I>user</I>_<I>list</I> and <I>wc</I>_<I>job</I>_<I>list</I> in <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
 
 OPTIONS
-     -f   Force action for running jobs. The job(s)  are  deleted
-          from the list of jobs registered at <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> even
-          if the <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> controlling  the  job(s)  does  not
+     -f   Force deletion of job(s). The job(s) are  deleted  from
+          the  list  of jobs registered at <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> even if
+          the  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  controlling  the  job(s)  does   not
           respond to the delete request sent by <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
 
      Users which are neither Grid Engine managers  nor  operators
@@ -82,8 +82,8 @@ ENVIRONMENTAL VARIABLES
                     "sge_qmaster" instead to define that port.
 
 FILES
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                     Grid Engine master host file
+     $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>act</I>_<I>qmaster</I>
+                    Grid Engine master host file
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,     <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>,     <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,

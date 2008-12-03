@@ -3,7 +3,7 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     sge_conf - Grid Engine bootstrap file
+     bootstrap - Grid Engine bootstrap file
 
 DESCRIPTION
      <I>bootstrap</I>  contains  parameters  that  are  needed  for  the
@@ -23,11 +23,11 @@ FORMAT
      have  the  corresponding  file access permissions (e.g. on a
      shared file system without global root read/write access).
 
-     Being  a  parameter  set  at  installation   time   changing
-     admin_user in a running system is not supported. Changing it
-     manually on a shut-down cluster is possible, but  if  access
-     to  the  Grid Engine spooling area is interrupted, this will
-     result in unpredictable behaviour.
+     Changing the admin_user parameter set at  installation  time
+     is  not  supported in a running system. Changing it manually
+     on a shut-down cluster is possible, but  if  access  to  the
+     Grid  Engine  spooling area is interrupted, this will result
+     in unpredictable behavior.
 
      The admin_user parameter has no default value,  but  instead
      it is defined during the master installation procedure.
@@ -42,10 +42,9 @@ FORMAT
      The  default_domain  parameter  will  have  no   effect   if
      ignore_fqdn is set to "true".
 
-     Being  a  parameter  set  at  installation   time   changing
-     default_domain  in  a  running  system is not supported. The
-     default for default_domain is "none", in which case it  will
-     not be used.
+     Changing  the default_domain parameter set  at  installation
+     time  is  not supported in a running system. The default for
+     default_domain is "none", in which case it will not be used.
 
   ignore_fqdn
      Ignore fully qualified domain name component  of  hostnames.
@@ -54,9 +53,10 @@ FORMAT
      set to either "true" or "1". Switching it on may solve prob-
      lems with load reports due to different hostname resolutions
      across the cluster.
-     Being  a  parameter  set  at  installation   time   changing
-     ignore_fqdn  in  a  running  system  is  not  supported. The
-     default for ignore_fqdn is "true".
+
+     Changing the ignore_fqdn parameter set at installation  time
+     is  not  supported  in  a  running  system.  The default for
+     ignore_fqdn is "true".
 
   spooling_method
      Defines how <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> writes its configuration and  the
@@ -71,7 +71,7 @@ FORMAT
      etc.) is not contained in spooling_lib.
 
      If spooling_method was set to  <I>berkeleydb</I>  during  installa-
-     tion,  spooling_lib  is  set  to  <I>libspoolb</I>,  if <I>classic</I> was
+     tion,  spooling_lib  is  set  to  <I>libspoolb</I>.  If <I>classic</I> was
      chosen as spooling_method, spooling_lib is set to <I>libspoolc</I>.
 
      Not all operating  systems  allow  the  dynamic  loading  of
@@ -108,7 +108,7 @@ FORMAT
      corresponding binaries are located in  subdirectories  named
      aix43, cray, lx24-x86, hp11, irix65, tru64, sol-sparc, etc.
 
-     The default location for the binary path is &lt;sge_root&gt;/bin
+     The default location for the binary path is &lt;SGE_ROOT&gt;/bin
 
   qmaster_spool_dir
      The location where the master spool directory resides.  Only
@@ -120,11 +120,11 @@ FORMAT
      and regularly clean off the log files, e.g.  via  a  <B><A HREF="../htmlman8/cron.html">cron(8)</A></B>
      job.
 
-     Being  a  parameter  set  at  installation   time   changing
-     qmaster_spool_dir in a running system is not supported.
+     Changing the qmaster_spool_dir parameter set at installation
+     time is not supported in a running system.
 
      The default location  for  the  master  spool  directory  is
-     &lt;sge_root&gt;/&lt;cell&gt;/spool/qmaster.
+     $SGE_ROOT/$SGE_CELL/spool/qmaster.
 
   product_mode
      The product mode defines the set of features  the  installed

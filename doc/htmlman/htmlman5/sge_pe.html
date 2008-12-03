@@ -20,43 +20,49 @@ DESCRIPTION
      <I>sge</I>_<I>pe</I> allows for the definition of interfaces to  arbitrary
      parallel  environments.   Once  a  parallel  environment  is
      defined or modified with the -ap or -mp options to  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>
-     the  environment  can  be  requested  for  a job via the -pe
-     switch to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> together with a request of a range for the
-     number of parallel process to be allocated by the job. Addi-
-     tional -l options may be used to specify the job requirement
-     to further detail.
+     and   linked   with  one  or  more  queues  via  <I>pe</I>_<I>list</I>  in
+     <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> the environment can be requested for a job via
+     the -pe switch to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> together with a request of a range
+     for the number of parallel process to be  allocated  by  the
+     job.  Additional  -l  options may be used to specify the job
+     requirement to further detail.
+
+     Note: Grid Engine allows backslashes (\) be used  to  escape
+     newline (\newline) characters. The backslash and the newline
+     are replaced  with  a  space  ("  ")  character  before  any
+     interpretation.
 
 FORMAT
      The format of a <I>sge</I>_<I>pe</I> file is defined as follows:
 
   pe_name
-     The name of the parallel environment.  To  be  used  in  the
-     <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -pe switch.
+     The name of the parallel environment as defined for  <I>pe</I>_<I>name</I>
+     in <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.  To be used in the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -pe switch.
 
   slots
-     The number of parallel processes being  allowed  to  run  in
-     total under the parallel environment concurrently.
+     The number of parallel processes allowed  to  run  in  total
+     under   the  parallel  environment  concurrently.   Type  is
+     number, valid values are 0 to 9999999.
 
   user_lists
      A comma separated  list  of  user  access  list  names  (see
      <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>).  Each user contained in at least one of the
-     enlisted access lists has access to  the  parallel  environ-
-     ment.  If  the  user_lists  parameter  is  set  to NONE (the
-     default) any user has access being not  explicitly  excluded
-     via the xuser_lists parameter described below.  If a user is
-     contained both in an access list enlisted in xuser_lists and
-     user_lists  the  user  is  denied  access  to  the  parallel
-     environment.
+     listed access lists has access to the parallel  environment.
+     If the user_lists parameter is set to NONE (the default) any
+     user has access not explicitly excluded via the  xuser_lists
+     parameter  described  below.  If a user is contained both in
+     an access list listed in xuser_lists and user_lists the user
+     is denied access to the parallel environment.
 
   xuser_lists
      The xuser_lists parameter contains a comma separated list of
-     so  called user access lists as described in <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>.
-     Each user contained in at least one of the  enlisted  access
-     lists  is not allowed to access the parallel environment. If
-     the xuser_lists parameter is set to NONE (the  default)  any
-     user  has  access.  If a user is contained both in an access
-     list enlisted in xuser_lists  and  user_lists  the  user  is
-     denied access to the parallel environment.
+     user access lists as described in <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>.  Each user
+     contained in at least one of the listed access lists is  not
+     allowed   to   access   the  parallel  environment.  If  the
+     xuser_lists parameter is set to NONE (the default) any  user
+     has  access.  If  a user is contained both in an access list
+     listed in xuser_lists and  user_lists  the  user  is  denied
+     access to the parallel environment.
 
   start_proc_args
      The invocation command line of a start-up procedure for  the
@@ -67,14 +73,13 @@ FORMAT
      under  which  this procedure is to be started.  The standard
      output of the start-up procedure is redirected to  the  file
      <I>REQNAME</I>.po<I>JID</I>  in the job's working directory (see <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>),
-     with <I>REQNAME</I> being the name  of  the  job  as  displayed  by
-     <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>  and  <I>JID</I>  being  the  job's identification number.
-     Likewise,  the  standard  error  output  is  redirected   to
-     <I>REQNAME</I>.pe<I>JID</I>
-     The following special variables being  expanded  at  runtime
-     can  be  used  (besides  any  other strings which have to be
-     interpreted by the start and stop procedures) to  constitute
-     a command line:
+     with <I>REQNAME</I> the name of the job as  displayed  by  <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>
+     and  <I>JID</I>  the  job's  identification  number.  Likewise, the
+     standard error output is redirected to <I>REQNAME</I>.pe<I>JID</I>
+     The following special variables expanded at runtime  can  be
+     used (besides any other strings which have to be interpreted
+     by the start and stop procedures) to  constitute  a  command
+     line:
 
      $<I>pe</I>_<I>hostfile</I>
           The pathname of a file containing a  detailed  descrip-
@@ -89,7 +94,7 @@ FORMAT
 
      $<I>host</I>
           The name of the host on which the start-up or stop pro-
-          cedures are started.
+          cedures are executed.
 
      $<I>job</I>_<I>owner</I>
           The user name of the job owner.
@@ -101,7 +106,6 @@ FORMAT
           The name of the job.
 
      $<I>pe</I>  The name of the parallel environment in use.
-
      $<I>pe</I>_<I>slots</I>
           Number of slots granted for the job.
 
@@ -109,7 +113,7 @@ FORMAT
           The processors string as contained in the queue  confi-
           guration  (see  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>) of the master queue (the
           queue in which the start-up  and  stop  procedures  are
-          started).
+          executed).
 
      $<I>queue</I>
           The cluster queue of the master queue instance.
@@ -123,10 +127,10 @@ FORMAT
      specifies  the  user  under  which  this  procedure is to be
      started.  The standard output of the stop procedure is  also
      redirected  to  the  file <I>REQNAME</I>.po<I>JID</I> in the job's working
-     directory (see <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>), with <I>REQNAME</I> being the name of  the
-     job  as  displayed by <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B> and <I>JID</I> being the job's iden-
-     tification number.  Likewise, the standard error  output  is
-     redirected to <I>REQNAME</I>.pe<I>JID</I>
+     directory (see <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>), with <I>REQNAME</I> the name of the job as
+     displayed  by  <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>  and  <I>JID</I>  the  job's identification
+     number.  Likewise, the standard error output  is  redirected
+     to <I>REQNAME</I>.pe<I>JID</I>
      The same special variables as  for  start_proc_args  can  be
      used to constitute a command line.
 
@@ -205,6 +209,7 @@ FORMAT
      to be used by Grid Engine to assess the number of slots such
      jobs might finally get.
 
+
      The assumed slot allocation has a meaning  when  determining
      the resource-request-based priority contribution for numeric
      resources as described in <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B> and  is  displayed
@@ -228,8 +233,8 @@ FORMAT
                job's PE range request is assumed.
 
 RESTRICTIONS
-     Note, that the functionality of the start-up,  shutdown  and
-     signalling procedures remains the full responsibility of the
+     Note that the functionality of the  start-up,  shutdown  and
+     signaling  procedures remains the full responsibility of the
      administrator configuring the  parallel  environment.   Grid
      Engine  will just invoke these procedures and evaluate their
      exit status. If the procedures do not  perform  their  tasks
@@ -238,18 +243,13 @@ RESTRICTIONS
      detect this.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,   <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qdel.html">qdel(1)</A></B>,    <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>,    <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,
-     <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>,        <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,        <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>,
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/sge__types.html">sge__types(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,  <B><A HREF="../htmlman1/qdel.html">qdel(1)</A></B>,  <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>,
+     <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,   <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>,   <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,  <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>,
      <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B>.
 
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
 
 
 

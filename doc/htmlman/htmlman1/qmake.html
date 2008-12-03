@@ -10,7 +10,7 @@ SYNTAX
      qmake [ options ] -- [ gmake options ]
 
 DESCRIPTION
-     <I>Qmake</I> is a parallel, distributed <B><A HREF="../htmlman1/make.html">make(1)</A></B> utility. Scheduling
+     <I>qmake</I> is a parallel, distributed <B><A HREF="../htmlman1/make.html">make(1)</A></B> utility. Scheduling
      of  the  parallel  <I>make</I>  tasks is done by Grid Engine. It is
      based on <I>gmake</I> (GNU make), version 3.78.1. Both Grid  Engine
      and  <I>gmake</I>  command  line options can be specified. They are
@@ -122,7 +122,7 @@ EXAMPLES
 
           qsub -cwd -v PATH -pe make 1-10 [further sge options] &lt;script&gt;
 
-     <I>Qmake</I> will inherit the resources granted for the job sumbit-
+     <I>qmake</I> will inherit the resources granted for the job submit-
      ted above under parallel environment "make".
 
 ENVIRONMENTAL VARIABLES
@@ -156,7 +156,7 @@ ENVIRONMENTAL VARIABLES
 KNOWN PROBLEMS
   Slow NFS server
      Very low file server performance may  lead  to  problems  on
-     depending files.
+     dependent files.
 
      Example: Host a compiles a.c to a.o, host b compiles b.c  to
      b.o,  host  c shall link program c from a.o and b.o. In case
@@ -188,14 +188,14 @@ KNOWN PROBLEMS
 
 SEE ALSO
      <B><A HREF="../htmlman1/submit.html">submit(1)</A></B> , <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B> as well as <B><A HREF="../htmlman1/make.html">make(1)</A></B> (GNU make  manpage)
-     and <I>The</I> <I>GNU</I> <I>Make</I> <I>Manual</I> in &lt;sge_root&gt;/3rd_party/qmake.
+     and <I>The</I> <I>GNU</I> <I>Make</I> <I>Manual</I> in &lt;SGE_ROOT&gt;/3rd_party/qmake.
 
 COPYRIGHT
-     <I>Qmake</I> contains portions of Gnu Make (<I>gmake</I>),  which  is  the
+     <I>qmake</I> contains portions of Gnu Make (<I>gmake</I>),  which  is  the
      copyright of the Free Software Foundation, Inc., Boston, MA,
      and is protected by the Gnu General Public License.
      See   <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>   and   the   information   provided   in
-     &lt;sge_root&gt;/3rd_party/qmake for a statement of further rights
+     &lt;SGE_ROOT&gt;/3rd_party/qmake for a statement of further rights
      and permissions.
 
 

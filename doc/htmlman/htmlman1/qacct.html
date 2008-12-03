@@ -20,10 +20,10 @@ DESCRIPTION
      categories  of hostname, queue-name, group-name, owner-name,
      job-name, job-ID and for the  queues  meeting  the  resource
      requirements  as specified with the -l switch.  Combinations
-     of  each  category  are  permitted.  Alternatively,  all  or
-     specific jobs can be listed with the -j switch.  For example
-     the search criteria could include summarizing  for  a  queue
-     and an owner, but not for two queues in the same request.
+     of category are permitted. Alternatively,  all  or  specific
+     jobs  can  be  listed  with  the -j switch.  For example the
+     search criteria could include summarizing for a queue and an
+     owner, but not for two queues in the same request.
 
 OPTIONS
      -A Account
@@ -69,7 +69,7 @@ OPTIONS
           The name, a expression for matching names, or ID of the
           job  during  execution for which accounting information
           is printed. If neither a name nor an ID  is  given  all
-          jobs are enlisted.
+          jobs are listed.
           This option changes the  output  format  of  <I>qacct</I>.  If
           activated,  CPU times are no longer accumulated but the
           "raw" accounting information is printed in a  formatted
@@ -119,7 +119,7 @@ OPTIONS
      -P [Project]
           The name of the project for which usage is  summarized.
           If  Project is not given, accounting data is listed for
-          each owning project separately.
+          each project separately.
 
      -D [Department]
           The name of the department for which usage  is  summar-
@@ -162,10 +162,10 @@ ENVIRONMENTAL VARIABLES
                     "sge_execd" instead to define that port.
 
 FILES
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>accounting</I>
-                     Grid Engine default accounting file
-     &lt;<I>xxqs</I>_<I>nam</I>_<I>sexx</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                     Grid Engine master host file
+     $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>accounting</I>
+                    Grid Engine default accounting file
+     $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>act</I>_<I>qmaster</I>
+                    Grid Engine master host file
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>, <B><A HREF="../htmlman5/accounting.html">accounting(5)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,

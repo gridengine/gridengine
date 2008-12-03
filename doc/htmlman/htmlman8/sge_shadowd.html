@@ -10,9 +10,9 @@ SYNOPSIS
 
 DESCRIPTION
      <I>sge</I>_<I>shadowd</I> is a "light weight" process which can be run  on
-     so-called  shadow  master  hosts in a Grid Engine cluster to
-     detect failure of the current  Grid  Engine  master  daemon,
-     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,  and to start-up a new <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> on the
+     shadow  master  hosts  in  a  Grid  Engine cluster to detect
+     failure  of  the  current   Grid   Engine   master   daemon,
+     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,  and to start- p a new <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> on the
      host on which the <I>sge</I>_<I>shadowd</I> runs. If multiple shadow  dae-
      mons  are  active  in  a  cluster, they run a protocol which
      ensures that only one of them will  start-up  a  new  master
@@ -20,11 +20,11 @@ DESCRIPTION
 
      The  hosts suitable for being used as  shadow  master  hosts
      must  have  shared  root  read/write access to the directory
-     &lt;sge_root&gt;/&lt;cell&gt;/common as well as  to  the  master  daemon
+     $SGE_ROOT/$SGE_CELL/common as well as to the  master  daemon
      spool            directory            (by            default
-     &lt;sge_root&gt;/&lt;cell&gt;/spool/qmaster).  The names of  the  shadow
+     $SGE_ROOT/$SGE_CELL/spool/qmaster).  The names of the shadow
      master   hosts   need   to   be   contained   in   the  file
-     &lt;sge_root&gt;/&lt;cell&gt;/common/shadow_masters.
+     $SGE_ROOT/$xQS_NAME_Sxx_CELL/common/shadow_masters.
 
 RESTRICTIONS
      <I>sge</I>_<I>shadowd</I> may only be started by root.
@@ -59,19 +59,32 @@ ENVIRONMENT VARIABLES
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
 
-     SGE_DELAY_TIME If set, overrides  the  600  seconds  default
-                    minimum    delay    before   before   a   new
-                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is started by <I>sge</I>_<I>shadowd</I> .
+     SGE_DELAY_TIME This variable controls the interval in  which
+                    <I>sge</I>_<I>shadowd</I>  pauses  if a takeover bid fails.
+                    This value is used only when there are multi-
+                    ple  <I>sge</I>_<I>shadowd</I>  instances and they are con-
+                    tending to be the master.  The default is 600
+                    seconds.
+
+     SGE_CHECK_INTERVAL
+                    This variable controls the interval in  which
+                    the <I>sge</I>_<I>shadowd</I> checks the heartbeat file (60
+                    seconds by default).
+
+     SGE_GET_ACTIVE_INTERVAL
+                    This variable controls the  interval  when  a
+                    <I>sge</I>_<I>shadowd</I>  instance tries to take over when
+                    the heartbeat file has not changed.
 
 FILES
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>
-                     Default configuration directory
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>shadow</I>_<I>masters</I>
-                     Shadow master hostname file.
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>spool</I>/<I>qmaster</I>
-                     Default master daemon spool directory
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>spool</I>/<I>qmaster</I>/<I>heartbeat</I>
-                     The heartbeat file.
+     $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>
+                    Default configuration directory
+     $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>shadow</I>_<I>masters</I>
+                    Shadow master hostname file.
+     $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>spool</I>/<I>qmaster</I>
+                    Default master daemon spool directory
+     $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>spool</I>/<I>qmaster</I>/<I>heartbeat</I>
+                    The heartbeat file.
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>, <I>Grid</I> <I>Engine</I>  <I>Ins-</I>
@@ -80,19 +93,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

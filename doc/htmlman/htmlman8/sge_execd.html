@@ -105,14 +105,19 @@ RESTRICTIONS
      user are handled correctly by the system.
 
 FILES
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>configuration</I>
-                     Grid Engine global configuration
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>local</I>_<I>conf</I>/&lt;<I>host</I>&gt;
-                     Grid Engine host specific configuration
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>spool</I>/&lt;<I>host</I>&gt;
-                     Default execution host spool directory
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                     Grid Engine master host file
+     sgepasswd  contains  a  list  of  user  names   and    their
+     corresponding encrypted Windows passwords. If available, the
+     password  file  will  be   used   by  sge_execd.  To  change
+     the  contents of this file please use the sgepasswd command.
+     It is not advised to  change that file manually.
+     $<I>xSGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>configuration</I>
+                    Grid Engine global configuration
+     $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>local</I>_<I>conf</I>/&lt;<I>host</I>&gt;
+                    Grid Engine host specific configuration
+     $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>spool</I>/&lt;<I>host</I>&gt;
+                    Default execution host spool directory
+     $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>act</I>_<I>qmaster</I>
+                    Grid Engine master host file
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>, <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
@@ -120,11 +125,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
 
 
 

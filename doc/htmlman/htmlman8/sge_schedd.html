@@ -20,9 +20,9 @@ DESCRIPTION
 
      By using the -<I>tsm</I> option of the <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> command, <I>sge</I>_<I>schedd</I>
      can be forced to print trace messages of its next scheduling
-     run to the file &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>schedd</I>_<I>runlog</I>.  The
-     messages  indicate the reasons for jobs and queues not being
-     selected in that run
+     run to  the  file  $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>schedd</I>_<I>runlog</I>.
+     The  messages  indicate  the reasons for jobs and queues not
+     being selected in that run
 
 OPTIONS
      -help
@@ -58,12 +58,12 @@ ENVIRONMENTAL VARIABLES
                     "sge_qmaster" instead to define that port.
 
 FILES
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>spool</I>/<I>qmaster</I>/<I>schedd</I>
-                     sge_schedd spool directory
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>sched</I>_<I>runlog</I>
-                     sge_schedd trace information
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>sched</I>_<I>configuration</I>
-                     sge_schedd configuration
+     $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>spool</I>/<I>qmaster</I>/<I>schedd</I>
+                    sge_schedd spool directory
+     $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>sched</I>_<I>runlog</I>
+                    sge_schedd trace information
+     $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>sched</I>_<I>configuration</I>
+                    sge_schedd configuration
      See <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B> for details on the scheduler configuration
      file.
 

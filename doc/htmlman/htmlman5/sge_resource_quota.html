@@ -12,11 +12,10 @@ DESCRIPTION
      running.   The  job  request distinction is done by a set of
      user, project, cluster queue, host and pe filter criteria.
 
-     By using the resource quota sets admistrators are allowed to
-     define  a  fine  granular resource quota configuration. This
-     helps restricting some job requests  to  a  lesser  resource
-     usage  and  granting  other  job  requests a higher resource
-     usage.
+     By using the resource quota sets administrators can define a
+     fine  granular resource quota configuration. This helps res-
+     tricting some job requests to a lesser  resource  usage  and
+     granting other job requests a higher resource usage.
 
      A list of currently configured rqs can be displayed via  the
      <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>  -srqsl  option.  The  contents  of each listed rqs
@@ -36,6 +35,11 @@ DESCRIPTION
      resource  quota  set always results in at most one effective
      resource quota rule for a specific request.
 
+     Note: Grid Engine allows backslashes (\) be used  to  escape
+     newline (\newline) characters. The backslash and the newline
+     are replaced  with  a  space  ("  ")  character  before  any
+     interpretation.
+
 FORMAT
      A resource  quota  set  definition  contains  the  following
      parameters:
@@ -49,14 +53,14 @@ FORMAT
      <I>false</I>.
 
   description
-     This description field is optional and can be set  to  arbi-
-     trary string. The default value is <I>NONE</I>.
+     This description  field  is  optional  and  can  be  set  to
+     arbitrary string. The default value is <I>NONE</I>.
 
   limit
      Every resource quota set needs at least one  resource  quota
-     rule definition started by the limit field. It's possible to
-     define more resource quota rules divided by a new  line.   A
-     resource  quota  rule  consists  of  an  optional  name, the
+     rule  definition started with the limit field. It's possible
+     to define more resource quota rules divided by a  new  line.
+     A  resource  quota  rule  consists  of an optional name, the
      filters for a specific job request and  the  resource  quota
      limit.
 
@@ -145,13 +149,14 @@ FORMAT
 
                {w1|$complex1[*w1]}[{+|-}{w2|$complex2[*w2]}[{+|-}...]]
 
-          The weighting factors (w1, ...) are  positive  integers
-          or floating point numbers in double precision. The com-
-          plex values (complex1, ...)  are specified by the  name
-          defined  as type INT or DOUBLE in the complex list (see
-          <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>).
-          Note: Dynamic limits can only configured  for  a  host-
-          specific rule.
+               The  weighting  factors  (w1,  ...)  are  positive
+               integers  or floating point numbers in double pre-
+               cision. The complex values  (complex1,  ...)   are
+               specified  by the name defined as type INT or DOU-
+               BLE in the complex list (see <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>).
+               Note: Dynamic limits can  only  configured  for  a
+               host-specific rule.
+
 
 EXAMPLES
      The following is the simplest form of a resource quota  set.
@@ -203,11 +208,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
 
 
 </PRE>

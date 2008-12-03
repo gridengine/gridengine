@@ -6,7 +6,7 @@ NAME
      reporting - Grid Engine reporting file format
 
 DESCRIPTION
-     A  Grid  Engine  system   writes   a   reporting   file   to
+     An  Grid  Engine  system  writes   a   reporting   file   to
      $SGE_ROOT/default/common/reporting.  The reporting file con-
      tains data that can be used for accounting,  monitoring  and
      analysis  purposes.  It contains information about the clus-
@@ -25,7 +25,7 @@ FORMAT
 
      The first two fields are common to all reporting records:
 
-     time Time (GMT unix timestamp) when the record was created.
+     time Time (GMT Unix timestamp) when the record was created.
 
      record type
           Type of the accounting record.  The different types  of
@@ -38,18 +38,18 @@ FORMAT
      ing fields:
 
      submission_time
-          Time (GMT unix time stamp) when the job was submitted.
+          Time (GMT Unix time stamp) when the job was submitted.
 
      job_number
           The job number.
 
      task_number
-          The array task id. Always has the value -1 for  new_job
+          The array task id. It has  the  value  -1  for  new_job
           records (as we don't have array tasks yet).
 
      pe_taskid
-          The task id of parallel tasks.  Always  has  the  value
-          "none" for new_job records.
+          The task id of parallel tasks. It has the value  "none"
+          for new_job records.
 
      job_name
           The job name (from -N submission option)
@@ -58,7 +58,7 @@ FORMAT
           The job owner.
 
      group
-          The unix group of the job owner.
+          The Unix group of the job owner.
 
      project
           The project the job is running in.
@@ -81,7 +81,7 @@ FORMAT
      following fields:
 
      event_time
-          Time (GMT unix time stamp)  when  the  event  was  gen-
+          Time (GMT Unix time stamp)  when  the  event  was  gen-
           erated.
 
      event
@@ -91,12 +91,12 @@ FORMAT
           The job number.
 
      task_number
-          The array task id. Always has the value -1 for  new_job
+          The array task id. It has  the  value  -1  for  new_job
           records (as we don't have array tasks yet).
 
      pe_taskid
-          The task id of parallel tasks.  Always  has  the  value
-          "none" for new_job records.
+          The task id of parallel tasks. It has the value  "none"
+          for new_job records.
 
      state
           The state of the job after the event was processed.
@@ -113,7 +113,7 @@ FORMAT
           Reserved field for later use.
 
      submission_time
-          Time (GMT unix time stamp) when the job was submitted.
+          Time (GMT Unix time stamp) when the job was submitted.
 
      job_name
           The job name (from -N submission option)
@@ -122,7 +122,7 @@ FORMAT
           The job owner.
 
      group
-          The unix group of the job owner.
+          The Unix group of the job owner.
 
      project
           The project the job is running in.
@@ -175,15 +175,15 @@ FORMAT
           <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>).
 
      submission_time
-          Submission time (GMT unix time stamp).  For slave tasks
+          Submission time (GMT Unix time stamp).  For slave tasks
           of    tightly    integrated    parallel    jobs,    the
-          submission_time is always set to 0.
+          submission_time is set to 0.
 
      start_time
-          Start time (GMT unix time stamp).
+          Start time (GMT Unix time stamp).
 
      end_time
-          End time (GMT unix time stamp).
+          End time (GMT Unix time stamp).
 
      failed
           Indicates the problem which  occurred  in  case  a  job
@@ -274,7 +274,7 @@ FORMAT
           The hostname of a specific queue instance.
 
      report_time
-          The time (GMT unix time stamp) when a state change  was
+          The time (GMT Unix time stamp) when a state change  was
           triggered.
 
      state
@@ -291,7 +291,7 @@ FORMAT
           The hostname of a specific queue instance.
 
      report_time
-          The time (GMT unix time stamp) when a state change  was
+          The time (GMT Unix time stamp) when a state change  was
           triggered.
 
      state
@@ -311,13 +311,13 @@ FORMAT
           The name of the host.
 
      report_time
-          The time (GMT unix time stamp) when the reported infor-
+          The time (GMT Unix time stamp) when the reported infor-
           mation was generated.
 
      state
           The new host state.   Currently,  Grid  Engine  doesn't
           track  a  host  state, the field is reserved for future
-          use. Always contains the value X.
+          use. It contains the value X.
 
      load values
           Description of load values. Information about  multiple
@@ -333,13 +333,13 @@ FORMAT
           The name of the host.
 
      report_time
-          The time (GMT unix time stamp) when the reported infor-
+          The time (GMT Unix time stamp) when the reported infor-
           mation was generated.
 
      state
           The new host state.   Currently,  Grid  Engine  doesn't
           track  a  host  state, the field is reserved for future
-          use. Always contains the value X.
+          use. It contains the value X.
 
      consumables
           Description of  consumable  values.  Information  about
@@ -347,19 +347,176 @@ FORMAT
           able       description       has       the       format
           &lt;name&gt;=&lt;actual_value&gt;=&lt;configured value&gt;.
 
+  sharelog
+     The Grid Engine qmaster can dump information about sharetree
+     configuration  and use to the reporting file.  The parameter
+     <I>sharelog</I> sets an interval  in  which  sharetree  information
+     will  be  dumped.  It is set in the format HH:MM:SS. A value
+     of 00:00:00 configures qmaster not to dump sharetree  infor-
+     mation.  Intervals of several minutes up to hours are sensi-
+     ble values for this parameter.  The record contains the fol-
+     lowing fields
+
+     current time
+          The present time
+
+     usage time
+          The  time used so far
+
+     node name
+          The node name
+
+     user name
+          The user name
+
+     project name
+          The project name
+
+     shares
+          The total shares
+
+     job count
+          The job  count
+
+     level
+          The percentage of shares used
+
+     total
+          The adjusted percentage of shares used
+
+     long target share
+          The long target percentage of resource shares used
+
+     short target share
+          The short target percentage of resource shares used
+
+     actual share
+          The actual percentage of resource shares used
+
+     usage
+          The combined shares used
+
+     cpu  The cpu used
+
+     mem  The memory used
+
+     io   The IO used
+
+     long target cpu
+          The long target cpu used
+
+     long target mem
+          The long target memory used
+
+     long target io
+          The long target IO used
+
+  new_ar
+     A new_ar record contains information about advance  reserva-
+     tion  objects.  Entries  of  this  type  will be added if an
+     advance reservation is created.  It contains  the  following
+     information:
+
+     submission_time
+          The  time  (GMT  unix  time  stamp)  when  the  advance
+          reservation was created.
+
+     ar_number
+          The advance reservation number identifying the reserva-
+          tion.
+
+     ar_owner
+          The owner of the advance reservation.
+
+  ar_attribute
+     The ar_attribute record is written whenever  a  new  advance
+     reservation  was  added  or  the  attribute  of  an existing
+     advance reservation has changed. It has following fields.
+
+     event_time
+          The time (GMT unix time stamp) when the event was  gen-
+          erated.
+
+     ar_number
+          The advance reservation number identifying the reserva-
+          tion.
+
+     ar_name
+          Name of the advance reservation.
+
+     ar_account
+          An account string which was specified during the  crea-
+          tion of the advance reservation.
+
+     ar_start_time
+          Start time.
+
+     ar_end_time
+          End time.
+
+     ar_granted_pe
+          The parallel environment  which  was  selected  for  an
+          advance reservation.
+
+     ar_granted_resources
+          The  granted  resources  which  were  selected  for  an
+          advance reservation.
+
+  ar_log
+     The ar_log record is written whenever a advance  reservation
+     is  changing  status. A status change can be from pending to
+     active, but can also be triggered by system events like host
+     outage. It has following fields.
+
+     ar_state_change_time
+          The time (GMT unix time stamp) when the event  occurred
+          which caused a state change.
+
+     ar_number
+          The advance reservation number identifying the reserva-
+          tion.
+
+     ar_state
+          The new state.
+
+     ar_event
+          An event id identifying  the  event  which  caused  the
+          state change.
+
+     ar_message
+          A message describing the event which caused  the  state
+          change.
+
+  ar_acct
+     The ar_acct records are accounting records which are written
+     for every queue instance whenever a advance reservation ter-
+     minates. Advance  reservation  accounting  records  comprise
+     following fields.
+
+     ar_termination_time
+          The time (GMT unix time stamp) when the advance  reser-
+          vation terminated.
+
+     ar_number
+          The advance reservation number identifying the reserva-
+          tion.
+
+     ar_qname
+          Cluster  queue  name  which  the  advance   reservation
+          reserved.
+
+     ar_hostname
+          The name of the execution host.
+
+     ar_slots
+          The number of slots which were reserved.
+
 SEE ALSO
      <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>.  <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>.
 
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
-
 
 
 

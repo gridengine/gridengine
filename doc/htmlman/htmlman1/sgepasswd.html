@@ -12,17 +12,18 @@ SYNTAX
      sgepasswd [ -D domain ] [ user ]
 
 DESCRIPTION
-     <I>sgepasswd</I>   modifys   the   Grid   Engine   password    file
+     <I>sgepasswd</I>   modifies   the   Grid   Engine   password   file
      <B><A HREF="../htmlman5/sgepasswd.html">sgepasswd(5)</A></B>.
 
-     This file containes a list of usernames  and  their  windows
-     password in encrypted form. <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> and <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B>
-     on hosts running Microsoft Windows as operating systems  use
-     this information to start jobs for a certain user.
+     This file contains a list of usernames and  their  Microsoft
+     Windows  password  in  encrypted  form.  <I>See</I>(sge_execd)8 and
+     <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B> on how hosts running  Microsoft  Windows  as
+     operating  systems  use this information to start jobs for a
+     certain user.
 
      Each user can use the <I>sgepasswd</I> application  to  add  a  new
-     entry  for  the  own  user  account.  It is also possible to
-     change the stored password with <I>sgepasswd</I> as far as the user
+     entry  for  their  own  user account. It is also possible to
+     change the stored password with  <I>sgepasswd</I>  since  the  user
      knows the old one.
 
      The root user additionally has the permission to change  the
@@ -33,7 +34,7 @@ DESCRIPTION
 
 OPTIONS
      -D domain
-          Per default <I>sgepasswd</I> will add/modify the current  Unix
+          By default <I>sgepasswd</I> will add/modify the  current  Unix
           username without domain specification.  This switch can
           be used to add a domain specification in front  of  the
           current user name. Consult your Microsoft Windows docu-
@@ -53,7 +54,7 @@ ENVIRONMENTAL VARIABLES
 
      SGE_KEYFILE    If set, specifies the location of the private
                     key         file.          Default         is
-                    /var/sgeCA/port${SGE_QMASTER_PORT}/private/key.pem
+                    /var/sgeCA/port$SGE_QMASTER_PORT/private/key.pem
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman5/sgepasswd.html">sgepasswd(5)</A></B>
@@ -61,8 +62,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
 
 
 

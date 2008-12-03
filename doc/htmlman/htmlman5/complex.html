@@ -16,7 +16,7 @@ DESCRIPTION
      The Grid Engine complex object defines all entries which are
      used for configuring the global, the host, and queue object.
      The system has a set  of  pre  defined  entries,  which  are
-     assigned  to a host or queue per default.  In a addition can
+     assigned  to  a host or queue by default.  In a addition can
      the user define new entries and assign them to one or multi-
      ple  objects.  Each load value has to have its corresponding
      complex entry object, which defines the type and  the  rela-
@@ -34,7 +34,7 @@ DESCRIPTION
      attributes  in  the system. Adding a new entry means to pro-
      vide: name, shortcut, type, relop, requestable,  consumable,
      default, and urgency. The fields are described below. Chang-
-     ing one is easily done by updated the field  to  change  and
+     ing one is easily done by updating the field to  change  and
      removing  an  entry by deleting its definition. An attribute
      can only be removed, when it is not referenced in a host  or
      queue  object  anymore.  Also  does the system have a set of
@@ -47,19 +47,19 @@ DESCRIPTION
      attached to the global, host, or cqueue object. The resource
      attribute exists only for the objects, it got  attached  to(
      if it is attached to the global object(qconf -me global), it
-     exits sytem wide, host object: only on that host (qconf  -me
+     exits system wide, host object: only on that host (qconf -me
      NAME): cqueue object: only on that cqueue (qconf -mq NAME).
 
      When the user attached a resource attribute  to  an  object,
      one  also  has  to assign a value to it; the resource limit.
-     Another way to get a resource attribute  value  is  done  by
-     configuring a load sensor for that attribute.
+     Another way to get a resource attribute value is  by  confi-
+     guring a load sensor for that attribute.
 
   Default queue resource attributes
      In its default form it contains a selection of parameters in
      the  queue  configuration  as defined in <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.  The
-     queue configuration parameters being requestable for  a  job
-     by the user in principal are:
+     queue configuration parameters requestable for a job by  the
+     user are:
 
           qname
           hostname
@@ -83,9 +83,9 @@ DESCRIPTION
 
   Default host resource attributes
      The standard set of host related attributes consists of  two
-     categories. he first category is built by several queue con-
-     figuration attributes which are particularly suitable to  be
-     managed on a host basis. These attributes are:
+     categories.  The  first  category  is built by several queue
+     configuration attributes which are particularly suitable  to
+     be managed on a host basis. These attributes are:
 
           slots
           s_vmem
@@ -113,7 +113,7 @@ DESCRIPTION
      The characteristics definition for the standard load  values
      is  part  of  the  default host complex, while administrator
      defined load values require extension of the  host  complex.
-     Please  refer to the file &lt;sge_root&gt;/doc/load_parameters.asc
+     Please  refer  to the file $SGE_ROOT/doc/load_parameters.asc
      for detailed information on the standard set of load values.
 
   Overriding attributes
@@ -123,7 +123,7 @@ DESCRIPTION
      and  a  load sensor. In case that the attribute is a consum-
      able, we have in addition to the resource limit and its load
      report on host level also the internal usage, which the sys-
-     tem keeps track of. The mergin is done as follows:
+     tem keeps track of. The merger is done as follows:
 
      In general an attribute can be overridden on a lower level
         - global by hosts and queues
@@ -141,10 +141,15 @@ DESCRIPTION
      value is more restrictive than the old one.
 
      In the case of a consumable on host level, which has also  a
-     load sensor, the system checks for the current usage, and if
-     the internal accounting is more restrictive  than  the  load
-     sensor  report, the internal value is kept; if the load sen-
-     sour report is more restrictive, that one is kept.
+     load sensor, the system checks for the current usage. If the
+     internal accounting is more restrictive than the load sensor
+     report,  the  internal  value  is  kept;  if the load sensor
+     report is more restrictive, that one is kept.
+
+     Note: Grid Engine allows backslashes (\) be used  to  escape
+     newline (\newline) characters. The backslash and the newline
+     are replaced  with  a  space  ("  ")  character  before  any
+     interpretation.
 
 FORMAT
      The principal format of a <I>complex</I> configuration is that of a
@@ -156,9 +161,10 @@ FORMAT
 
   name
      The name of the complex element to be used to  request  this
-     attribute  for  a job in the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -l option. An attribute
-     name may appear only once across  all  complexes,  i.e.  the
-     complex attribute definition is unique.
+     attribute  for  a  job  in  the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -l option. A complex
+     attribute name (see <I>complex</I>_<I>name</I> in <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>) may appear
+     only  once  across all complexes, i.e. the complex attribute
+     definition is unique.
 
   shortcut
      A shortcut for name which may also be used to  request  this
@@ -172,23 +178,23 @@ FORMAT
      be  treated Grid Engine internally in case of comparisons or
      in case of load scaling for the load complex entries:
 
-     <B>o</B>  With INT only raw integers are allowed.
+     <B>o</B>  With INT, only raw integers are allowed.
 
-     <B>o</B>  With DOUBLE floating point numbers  in  double  precision
+     <B>o</B>  With DOUBLE, floating point numbers in  double  precision
         (decimal and scientific notation) can be specified.
 
-     <B>o</B>  With  TIME  time  specifiers  are   allowed.   Refer   to
+     <B>o</B>  With  TIME,  time  specifiers  are  allowed.   Refer   to
         <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> for a format description.
 
-     <B>o</B>  With MEMORY memory size specifiers are allowed. Refer  to
+     <B>o</B>  With MEMORY, memory size specifiers are allowed. Refer to
         <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> for a format description.
 
-     <B>o</B>  With BOOL the strings TRUE and FALSE  are  allowed.  When
+     <B>o</B>  With BOOL, the strings TRUE and FALSE are  allowed.  When
         used in a load formula (refer to <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B> ) TRUE and
         FALSE get mapped into '1' and '0'.
 
-     <B>o</B>  With STRING all strings are allowed and is used for wild-
-        card  regular  boolean  expression  matching.  Please see
+     <B>o</B>  With STRING, all strings are  allowed  and  is  used  for
+        wildcard  regular boolean expression matching. Please see
         <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B> manpage for expression definition.
 
         Examples:
@@ -208,9 +214,7 @@ FORMAT
               results in "arch=lx22-x86" OR "arch=lx24-x86"
                  OR "arch=lx25-x86" OR "arch=lx26-x86"
          -l arch="!lx24-x86&amp;!sol-sparc"  :
-              results in NOT "arch=lx24-x86" NEITHER "arch=sol-sparc"
-         -l arch="lx24-[^x]86"  :
-              results in "arch=lx24-^86" OR "arch=lx24-x86"
+              results in NEITHER "arch=lx24-x86" NOR "arch=sol-sparc"
          -l arch="lx2[4|6]-x86"  :
               results in "arch=lx2[4" OR "arch=6"
 
@@ -241,11 +245,11 @@ FORMAT
      'f' the attribute has to be requested by  a  job  or  it  is
      rejected.
 
-     To enable resource request enforcement the existence of  the
-     resource  has  to  be defined. This can be done on a cluster
-     global, per host and per  queue  basis.  The  definition  of
-     resource  availability  is performed with the complex_values
-     entry in <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B> and <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.
+     To enable resource request enforcement the resource  has  to
+     be  defined.  This can be done on a cluster global, per host
+     and per queue basis. The definition of resource availability
+     is  performed  with the complex_values entry in <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>
+     and <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.
 
   consumable
      The consumable parameter can be set  to  either  'yes'  ('y'
@@ -267,8 +271,8 @@ FORMAT
      consumable  flag  can  be  set for load attributes. The Grid
      Engine consumable resource management takes  both  the  load
      (measuring  availability  of  the resource) and the internal
-     bookkeeping into account in this case, and makes  sure  that
-     neither of both exceeds a given limit.
+     bookkeeping  into  account,  and  makes  sure  that  neither
+     exceeds a given limit.
 
      To enable consumable resource management the  basic  availa-
      bility  of a resource has to be defined. This can be done on
@@ -304,37 +308,32 @@ FORMAT
      Meaningful only for consumable complex attributes (see  con-
      sumable  parameter  above). Grid Engine assumes the resource
      amount denoted in the default  parameter  implicitly  to  be
-     consumed  by jobs being dispatched to a host or queue manag-
-     ing the consumable attribute. Jobs explicitly requesting the
-     attribute via the -<I>l</I> option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> override this default
+     consumed  by jobs dispatched to a host or queue managing the
+     consumable attribute. Jobs explicitly requesting the  attri-
+     bute  via  the  -<I>l</I>  option  to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> override this default
      value.
 
   urgency
      The urgency value allows influencing job priorities on a per
-     resource base. The urgency value effects the addend for each
-     resource  when  determining  the  resource  request  related
+     resource  basis.  The  urgency value affects the addition of
+     each resource when determining the resource request  related
      urgency contribution. For numeric type resource requests the
-     addend is the product of the urgency value, the jobs assumed
-     slot allocation and the per slot request as specified via -<I>l</I>
-     option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>.  For string type requests  the  resources
-     urgency value is directly used as addend. Urgency values are
-     of type real. See under <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B> for an  overview  on
-     job priorities.
+     addition is the product  of  the  urgency  value,  the  jobs
+     assumed  slot  allocation and the per slot request as speci-
+     fied via -<I>l</I> option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>.  For string type requests the
+     resources  urgency  value is directly used as added. Urgency
+     values are of type real. See under  <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B>  for  an
+     overview on job priorities.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman1/uptime.html">uptime(1)</A></B>,  <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>,
-     <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>, <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>, <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>,
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman1/uptime.html">uptime(1)</A></B>,
+     <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>,  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,
+     <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>,
      <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I> <I>Administration</I> <I>Guide</I>.
 
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
 
 
 

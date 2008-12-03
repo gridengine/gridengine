@@ -14,6 +14,11 @@ DESCRIPTION
      mand. A default configuration is provided together with  the
      Grid Engine distribution package.
 
+     Note: Grid Engine allows backslashes (\) be used  to  escape
+     newline (\newline) characters. The backslash and the newline
+     are replaced  with  a  space  ("  ")  character  before  any
+     interpretation.
+
 FORMAT
      The following parameters are recognized by the  Grid  Engine
      scheduler if present in <I>sched</I>_<I>conf</I>:
@@ -28,9 +33,9 @@ FORMAT
      A simple  algebraic  expression  used  to  derive  a  single
      weighted  load value from all or part of the load parameters
      reported by <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> for each host and from all or  part
-     of  the  consumable  resources  (see <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>) being main-
-     tained for each host.  The load formula expression syntax is
-     that of a summation weighted load values, that is:
+     of  the consumable resources (see <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>) maintained for
+     each host.  The load formula expression syntax is that of  a
+     summation weighted load values, that is:
 
           {w1|load_val1[*w1]}[{+|-}{w2|load_val2[*w2]}[{+|-}...]]
 
@@ -125,8 +130,8 @@ FORMAT
      are  taken  into  account  to  product  a sorted queue list.
      Currently, two settings are valid:  seqno and load.  However
      in  both  cases, Grid Engine attempts to maximize the number
-     of soft requests (see <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -s option) being fulfilled  by
-     the queues for a particular as the primary criterion.
+     of soft requests (see <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -s option)  fulfilled  by  the
+     queues for a particular as the primary criterion.
      Then, if the queue_sort_method parameter is  set  to  seqno,
      Grid  Engine  will use the seq_no parameter as configured in
      the current queue configurations (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>) as  the
@@ -151,6 +156,7 @@ FORMAT
      value.  Valid  values are specified in hours or according to
      the time format as specified in <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.
      If the value is set to 0, the usage is not decayed.
+
 
   usage_weight_list
      Grid Engine accounts for the consumption  of  the  resources
@@ -203,8 +209,8 @@ FORMAT
 
   weight_deadline
      The weight applied on the remaining time until a jobs latest
-     start  time. Determines the relative importance of the dead-
-     line. See under  <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B>  for  an  overview  on  job
+     start  time.  Determines  the  relative  importance  of  the
+     deadline. See under <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B> for an overview  on  job
      priorities.
 
   weight_waiting_time
@@ -220,10 +226,10 @@ FORMAT
      on job priorities.
 
   weight_priority
-     The weight applied on jobs normalized POSIX priority when 
-     determining priority finally used. Determines the relative 
-     importance of POSIX priority. See under <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B> 
-     for an overview on job priorities.
+     The weight applied on jobs normalized  POSIX  priority  when
+     determining  priority  finally used. Determines the relative
+     importance of POSIX priority.  See under <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B> for
+     an overview on job priorities.
 
   weight_ticket
      The weight applied on normalized ticket amount  when  deter-
@@ -256,7 +262,6 @@ FORMAT
      It is also possible to activate  the  observation  only  for
      certain  jobs.  This will be done if the parameter is set to
      job_list followed by a comma separated list of job ids.
-
      The user can obtain the collected information with the  com-
      mand qstat -j.
 
@@ -279,12 +284,12 @@ FORMAT
           <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>   ,   start_proc_args  in  <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B>  and
           starter_method      in      <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>      (notify,
           terminate_method   or  checkpointing),  procedures  run
-          after acutal job  finish,  such  as  stop_proc_args  in
+          after actual job  finish,  such  as  stop_proc_args  in
           <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B>  or  epilog  in <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> , and the delay
           until a new schedule_interval.
           If the offset is too low,  resource  reservations  (see
           max_reservation)  can  be  delayed repeatedly due to an
-          overly optistic job circulation time.
+          overly optimistic job circulation time.
 
      <I>JC</I>_<I>FILTER</I>
           If set to true, the scheduler limits the number of jobs
@@ -316,11 +321,11 @@ FORMAT
           If set equal to 1, the  scheduler  records  information
           for  each  scheduling  run  allowing  to  reproduce job
           resources      utilization      in       the       file
-          &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>schedule</I>.
+          $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>schedule</I>.
 
-     <I>SELECT</I>_<I>PE</I>_<I>RANGE</I>_<I>ALG</I>
-          This parameter sets the  algorithm  for  the  pe  range
-          computation. The default is automatic, which means that
+     <I>PE</I>_<I>RANGE</I>_<I>ALG</I>
+          This parameter sets the algorithm for the pe range com-
+          putation.  The  default  is automatic, which means that
           the scheduler will select the best one, and  it  should
           not be necessary to change it to a different setting in
           normal operation. If a custom setting  is  needed,  the
@@ -360,9 +365,9 @@ FORMAT
      rithm to count finished jobs against a user or project for a
      configurable decayed time period. This feature is turned off
      by default, and the halftime is used instead.
-     The halflife_decay_list also allows one  to  configure  dif-
-     ferent  decay  rates for each usage type being tracked (cpu,
-     io, and mem). The list is specified in the following format:
+     The  halflife_decay_list  also  allows  one   to   configure
+     different  decay rates for each usage type tracked (cpu, io,
+     and mem). The list is specified in the following format:
 
           &lt;USAGE_TYPE&gt;=&lt;TIME&gt;[:&lt;USAGE_TYPE&gt;=&lt;TIME&gt;[:&lt;USAGE_TYPE&gt;=&lt;TIME&gt;]]
 
@@ -370,7 +375,6 @@ FORMAT
      &lt;TIME&gt; can be -1, 0 or a timespan specified in  minutes.  If
      &lt;TIME&gt;  is  -1,  only the usage of currently running jobs is
      used. 0 means that the usage is not decayed.
-
 
   policy_hierarchy
      This parameter sets up a dependency chain  of  ticket  based
@@ -444,7 +448,7 @@ FORMAT
      request reservation (-R y). If max_reservation is set to "0"
      no job reservation is done.
 
-     Note, that reservation scheduling can be performance consum-
+     Note: that reservation scheduling can be performance consum-
      ing  and  hence  reservation  scheduling  is switched off by
      default. Since reservation scheduling  performance  consump-
      tion is known to grow with the number of pending jobs use of
@@ -461,8 +465,8 @@ FORMAT
      the default_duration is not enforced.
 
 FILES
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>sched</I>_<I>configuration</I>
-                sge_schedd configuration
+     $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>sched</I>_<I>configuration</I>
+               sge_schedd configuration
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>, <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <I>com-</I>
@@ -473,6 +477,49 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

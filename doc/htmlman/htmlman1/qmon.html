@@ -10,8 +10,8 @@ SYNTAX
      qmon [options]
 
 DESCRIPTION
-     <I>Qmon</I> allows administrators and users to manipulate the  Grid
-     Engine  system  from an X-Window environment.  <I>Qmon</I> provides
+     <I>qmon</I> allows administrators and users to manipulate the  Grid
+     Engine  system  from an X-Window environment.  <I>qmon</I> provides
      various dialogues linked together  in  multiple  ways.   For
      each   task  the  user  wishes  to  accomplish  via  <I>qmon</I>  a
      corresponding dialogue is provided. There are multiple  ways
@@ -73,8 +73,9 @@ DIALOGUES
      (Qalter  button).  The shown displayed fields in the tabular
      display and the jobs displayed can be customized by pressing
      the Customize button. This customization can be saved to the
-     ~/.<I>qmon</I>_<I>preferences</I> file and is used on  following  startups
-     for the initial configuration of the Job Control dialogue.
+     ~/.<I>qmon</I>_<I>preferences</I> file  and  can  be  used  on  subsequent
+     startups  for  the  initial configuration of the Job Control
+     dialogue.
 
 
   Queue Control
@@ -105,8 +106,8 @@ DIALOGUES
      pointing, Load/Suspend Thresholds, Limits,  Complexes,  User
      Access,  Project  Access,  Subordinate Queues, Owners) which
      are selectable by the tab widget area presented in the lower
-     region of the queue configuration sub-dialogue. The adminis-
-     trator  may  select  previously  configured  settings   from
+     region   of   the   queue  configuration  sub-dialogue.  The
+     administrator may select previously configured settings from
      already  existing  queues  (Clone button). By pushing the Ok
      button, the definitions are registered with  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
      The  Queue  Control  dialogue can be customized in a similar
@@ -114,7 +115,7 @@ DIALOGUES
      are also saved in ~/.<I>qmon</I>_<I>preferences</I>.
 
   Submit
-     The Job Submission dialogue serves for submitting batch  and
+     The Job Submission dialogue is used for submitting batch and
      interactive  jobs  and  is also invoked when changing attri-
      butes  of  pending  jobs  from  the  Job  Control   dialogue
      explained above (Qalter button). To toggle between batch and
@@ -123,7 +124,7 @@ DIALOGUES
      Submission screen.
 
      The  dialogue  consists  of  a  folder  containing  two  job
-     preparation  dialogue pages.The most frequently used parame-
+     preparation dialogue pages. The most frequently used parame-
      ters in the course of a job submission are  offered  on  the
      General  page.  A  job  script  has to be defined, all other
      fields are optional. If the job demands for specification of
@@ -170,7 +171,7 @@ DIALOGUES
           Host Groups
           Execution Hosts
 
-     The host list to be manipulated is selected via clicking  at
+     The host list to be manipulated is selected via clicking  on
      one  of  the  tabs named correspondingly. The first two host
      lists only provide for adding or deleting  entries,  thereby
      allowing  administrative  or submit permission for the hosts
@@ -183,19 +184,19 @@ DIALOGUES
      and projects, xprojects) as described in  <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>.   CPU,
      memory and I/O usage reported for running jobs can be scaled
      in addition and the relative performance of a  host  can  be
-     define    with   the   Resource   Capability   Factor   (see
+     defined   with   the   Resource   Capability   Factor   (see
      <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>).
 
   Cluster Config
      This dialogue maintains the cluster global configuration  as
-     well  as  host specific derivatives (see <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>).  When
-     opened, the dialogue displays a selection list for all hosts
-     which  have a configuration assigned. The special name "glo-
-     bal" refers to the cluster global configuration. By  pushing
-     the Add/Modify button a sub-dialogue is opened, which allows
-     for modification of  the  cluster  configuration.  For  host
-     specific  configurations  the  'global' host specific confi-
-     guration fields are set insensitive  and  only  the  allowed
+     well  as  host  specific  configurations  (see <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>).
+     When opened, the dialogue displays a selection list for  all
+     hosts  which have a configuration assigned. The special name
+     "global" refers to  the  cluster  global  configuration.  By
+     pushing  the  Add/Modify  button  a  sub-dialogue is opened,
+     which allows for modification of the cluster  configuration.
+     For  host specific configurations the 'global' host specific
+     configuration fields are grayed out  and  only  the  allowed
      parameters can be manipulated.
 
   Scheduler Config
@@ -218,7 +219,7 @@ DIALOGUES
      the Add/Modify button will  open  a  calendar  configuration
      dialogue, which allows to create new calendars or which pro-
      vides the means to change the existing ones. The  Ok  button
-     registers   the   additional   or   modified  calendar  with
+     registers   the   additional   or  modified  calendars  with
      <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
 
   User Config
@@ -276,11 +277,11 @@ DIALOGUES
 
   Checkpoint Config
      Checkpointing environment interfaces can be configured  with
-     this  dialogue.  Checkpointing environments are necessary to
-     describe the attributes which  the  different  checkpointing
-     methods  and  their  derivatives on various operating system
-     platforms supported by Grid Engine have. When  the  dialogue
-     is  opened  a  list  of the already configured checkpointing
+     this  dialogue.  Checkpointing  environments  are  needed to
+     describe  the  attributes  of  the  different  checkpointing
+     methods  and  their  configurations on the various operating
+     system platforms supported by Grid Engine . When the  dialo-
+     gue is opened a list of the already configured checkpointing
      environments is displayed together with the  current  confi-
      guration  (see  <B><A HREF="../htmlman5/checkpoint.html">checkpoint(5)</A></B>) of the selected checkpointing
      environment. To add  new  checkpointing  environment  or  to
@@ -290,12 +291,12 @@ DIALOGUES
      sub-dialogue with the OK button, the new or modified  check-
      pointing environment is registered with <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
 
-  Ticket Conf
+  Ticket Config
      This dialogue offers an  overview  and  editing  screen  for
      allocating  tickets to the share-based, functional and over-
      ride scheduling policies.
 
-     The Deadline Job button opens the User  Conf  dialogue  box.
+     The Deadline Job button opens the User Config dialogue  box.
      Please  change  to  the  Userset sub-dialogue and select the
      userset named "deadlineusers".  Only users of  this  userset
      may submit deadline jobs.
@@ -316,7 +317,7 @@ DIALOGUES
      <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>, <B><A HREF="../htmlman5/project.html">project(5)</A></B>, <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> and <B><A HREF="../htmlman5/user.html">user(5)</A></B> for  a
      description of the different types of override tickets).
 
-  Project Conf
+  Project Config
      This button opens a dialog for creating projects.
      The dialogue offers a selection list for the  existing  pro-
      jects  and  displays  the  configuration  of  the  one being
@@ -326,8 +327,8 @@ DIALOGUES
      allows to create new projects or which provides the means to
      change the existing ones. Project configuration  in  essence
      means  giving  or  denying  access to a project for usersets
-     (see User Conf above as well as <B><A HREF="../htmlman5/project.html">project(5)</A></B>).  The Ok  button
-     registers   the   additional   or   modified   project  with
+     (see User Config above as well as <B><A HREF="../htmlman5/project.html">project(5)</A></B>).  The Ok  but-
+     ton  registers  the  additional  or  modified  project  with
      <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
 
   Browser
@@ -407,10 +408,10 @@ RESTRICTIONS
      the end of the window.
 
 FILES
-     &lt;<I>sge</I>_<I>root</I>&gt;/<I>qmon</I>/<I>Qmon</I>           <I>Qmon</I> sample resources file
-     /<I>usr</I>/<I>lib</I>/<I>X11</I>/<I>defaults</I>/<I>Qmon</I>     <I>Qmon</I> system resources file
-     $<I>HOME</I>/<I>Qmon</I>                     <I>Qmon</I> user resources file
-     $<I>HOME</I>/.<I>qmon</I>_<I>preferences</I>        <I>Qmon</I> job/queue customization file
+     <I>x</I>$<I>xQS</I>_<I>NAME</I>_<I>Sxx</I>_<I>ROOT</I>/<I>qmon</I>/<I>Qmon</I>  <I>qmon</I> sample resources file
+     /<I>usr</I>/<I>lib</I>/<I>X11</I>/<I>defaults</I>/<I>Qmon</I>     <I>qmon</I> system resources file
+     $<I>HOME</I>/<I>Qmon</I>                     <I>qmon</I> user resources file
+     $<I>HOME</I>/.<I>qmon</I>_<I>preferences</I>        <I>qmon</I> job/queue customization file
 
 
 SEE ALSO
@@ -420,11 +421,9 @@ SEE ALSO
 
 COPYRIGHT
      See   <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>   and   the   information   provided   in
-     &lt;sge_root&gt;/3rd_party/qmon  for a statement of further rights
+     &lt;SGE_ROOT&gt;/3rd_party/qmon  for a statement of further rights
      and permissions and for credits to be given to public domain
      and freeware widget developers.
-
-
 
 
 

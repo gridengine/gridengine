@@ -10,15 +10,15 @@ SYNTAX
      qtcsh [ tcsh options | -ABLR ]
 
 DESCRIPTION
-     <I>Qtcsh</I> is an extension to the popular <B><A HREF="../htmlman1/csh.html">csh(1)</A></B> derivative <I>tcsh</I>.
+     <I>qtcsh</I> is an extension to the popular <B><A HREF="../htmlman1/csh.html">csh(1)</A></B> derivative <I>tcsh</I>.
      It  allows the transparent remote execution commands entered
-     in <I>qtcsh</I> controlled via Grid Engine.  <I>Qtcsh</I> can be  used  as
+     in <I>qtcsh</I> controlled via Grid Engine.  <I>qtcsh</I> can be  used  as
      interactive  command interpreter as well as for the process-
      ing of <I>tcsh</I> shell scripts.
 
      When invoked, <I>qtcsh</I> identifies which commands are to be  run
      remotely  and  which  are  not.  For  this purpose the files
-     &lt;sge_root&gt;/&lt;cell&gt;/common/qtask and ~/.qtask  are  processed.
+     $SGE_ROOT/$SGE_CELL/common/qtask and ~/.qtask are processed.
      Each  line in these files defines a command that is intended
      to be run remotely (see <B><A HREF="../htmlman5/qtask.html">qtask(5)</A></B> for  a  definition  of  the
      file  format).  The .qtask file in the user's home directory
@@ -29,9 +29,9 @@ DESCRIPTION
      completely overridden in case there is an appropriate  entry
      in  the  users  <B><A HREF="../htmlman5/qtask.html">qtask(5)</A></B> file.  This is prevented in case an
      exclamation mark is prefixed to  the  command  name  in  the
-     administrators qtask file.
+     administrator's qtask file.
 
-     <I>Qtcsh</I> always attempts to start the designated tasks remotely
+     <I>qtcsh</I> always attempts to start the designated tasks remotely
      via <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>.  Exceptions are
 
      <B>o</B>  if the user enters such commands via a relative or  abso-
@@ -50,7 +50,7 @@ DESCRIPTION
         without the danger of being blocked when no  Grid  Engine
         service is available.
 
-     <I>Qtcsh</I> can  operate  in  three  different  modes  determining
+     <I>qtcsh</I> can  operate  in  three  different  modes  determining
      whether
 
      <B>o</B>  tasks are executed remotely.
@@ -64,7 +64,7 @@ DESCRIPTION
      described in section BUILT-IN COMMANDS.
 
 OPTIONS
-     The options enlisted below are special to <I>qtcsh</I>. The user is
+     The options listed below are special to <I>qtcsh</I>. The  user  is
      referred to the <B><A HREF="../htmlman1/tcsh.html">tcsh(1)</A></B> documentation for the explanation of
      further options.
 
@@ -141,22 +141,22 @@ ENVIRONMENTAL VARIABLES
 
 FILES
      ~/.<I>qtask</I>       user qtask file.
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>qtask</I>
+     $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>qtask</I>
                     cluster qtask file.
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>, <B><A HREF="../htmlman5/qtask.html">qtask(5)</A></B> as  well  as  <B><A HREF="../htmlman1/tcsh.html">tcsh(1)</A></B>  under
-     &lt;sge_root&gt;/3rd_party/qtcsh.
+     $SGE_ROOT/3rd_party/qtcsh.
 
 COPYRIGHT
-     <I>Qtcsh</I> contains portions of <I>tcsh</I> which is copyrighted by  The
+     <I>qtcsh</I> contains portions of <I>tcsh</I> which is copyrighted by  The
      Regents  of  the  University  of California.  Therefore, the
      following note  applies:   This  product  includes  software
      developed  by the University of California, Berkeley and its
      contributors.
 
      See   <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>   and   the   information   provided   in
-     &lt;sge_root&gt;/3rd_party/qtcsh for a statement of further rights
+     $SGE_ROOT/3rd_party/qtcsh  for a statement of further rights
      and permissions.
 </PRE>
 <HR>

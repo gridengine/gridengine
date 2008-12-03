@@ -11,7 +11,7 @@ SYNTAX
      nonewline] ] ] &lt;host&gt; &lt;port&gt; &lt;name&gt; &lt;id&gt;
 
 DESCRIPTION
-     <I>Qping</I> is used to validate  the  runtime  status  of  a  Grid
+     <I>qping</I> is used to validate  the  runtime  status  of  a  Grid
      Engine  service  daemon. The current Grid Engine implementa-
      tion allows one to query the SGE_QMASTER daemon and any run-
      ning  SGE_EXECD  daemon. The qping command is used to send a
@@ -73,7 +73,7 @@ OPTIONS
 
            <I>1</I> One or more threads  has  reached  warning  timeout.
            This  may  happen  when  at  least one thread does not
-           increment his time stamp for a not usual long time.  A
+           increment its time stamp for an unusually long time. A
            possible  reason  for this is a high workload for this
            thread.
 
@@ -170,7 +170,7 @@ OPTIONS
   -i interval
      Set qping interval time.
 
-     The default interval time is one second. Qping will  send  a
+     The default interval time is one second. qping will  send  a
      SIM (Status Information Message) on each interval time.
 
 
@@ -182,7 +182,7 @@ OPTIONS
 
   -noalias
      Ignore   host_aliases   file,   which    is    located    at
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>host</I>_<I>aliases</I>.   If  this  option is
+     $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>host</I>_<I>aliases</I>.   If this option is
      used it is not necessary to set any Grid Engine  environment
      variable.
 
@@ -193,7 +193,7 @@ OPTIONS
      to connect to services running SSL. If the SGE settings file
      is  not  sourced,  you  have  to  use the -noalias option to
      bypass the need for the SGE_ROOT environment variable.   The
-     following  environment  variables  are used to specifiy your
+     following  environment  variables  are  used to specify your
      certificates:
        SSL_CA_CERT_FILE - CA certificate file
        SSL_CERT_FILE    - certificates file
@@ -216,7 +216,7 @@ OPTIONS
      The qping -dump instruction must be started as root  and  on
      the same host where the observed daemon is running.
 
-     The output is written to  stdout.  The  enviroment  variable
+     The output is written to stdout.  The  environment  variable
      "SGE_QPING_OUTPUT_FORMAT"  can be set to hide columns, set a
      default column width or to set a hostname output format. The
      value of the environment variable can be set to any combina-
@@ -249,8 +249,7 @@ OPTIONS
            of  debugging.   This  option  is not currently imple-
            mented.
         -dump_tag MSG
-           This option  has  the  same  behaviour  as  the  -dump
-           option.
+           This option has the same behavior as the -dump option.
 
 
   host
@@ -260,6 +259,7 @@ OPTIONS
   port
      Port which daemon has bound (used sge_qmaster/sge_execd port
      number).
+
 
 
   name

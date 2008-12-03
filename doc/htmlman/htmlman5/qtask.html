@@ -7,40 +7,40 @@ NAME
 
 DESCRIPTION
      A <I>qtask</I> file defines which commands are  submitted  to  Grid
-     Engine  for  remote  execution  by <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B>.  The <I>qtask</I> file
-     optionally  may  contain  <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>  command-line  parameters.
-     These  parameters  are  passed  to the <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B> command being
-     used by <I>qtcsh</I> to submit the commands.
+     Engine for remote execution by <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B>.  The <I>qtask</I> file may
+     contain <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B> command-line  parameters.  These  parameters
+     are  passed  to  the <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B> command used by <I>qtcsh</I> to submit
+     the commands.
 
      A cluster global <I>qtask</I> file defining cluster  wide  defaults
      and  a  user  specific  <I>qtask</I> file eventually overriding and
      enhancing those definitions are supported. The cluster  glo-
-     bal file resides at &lt;sge_root&gt;/&lt;cell/common/qtask, while the
-     user specific file can be found at ~/.qtask. An  exclamation
-     mark preceding command definitions in the cluster global can
-     be used by the administrator to deny overriding of such com-
-     mands by users.
+     bal  file resides at $SGE_ROOT/$SGE_CELL/common/qtask, while
+     the user specific file can be found at ~/.qtask. An exclama-
+     tion  mark preceding command definitions in the cluster glo-
+     bal can be used by the administrator to deny  overriding  of
+     such commands by users.
 
 FORMAT
-     The principle format of the <I>qtask</I> file is that  of  a  tabu-
-     lated  list.  Each  line  starting with a '#' character is a
-     comment line. Each line despite comment lines defines a com-
-     mand to be started remotely.
+     The format of the <I>qtask</I> file is that of  a  tabulated  list.
+     Each  line  starting with a '#' character is a comment line.
+     Each line despite comment lines  defines  a  command  to  be
+     started remotely.
 
-     Definition starts with the  command  name  that  must  match
+     The definition starts with the command name that must  match
      exactly  the name as typed in a <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B> command-line. Path-
      names are not allowed in  <I>qtask</I>  files.  Hence  absolute  or
      relative  pathnames in <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B> command-lines always lead to
-     local execution even if the commands itself are the same  as
-     defined in the <I>qtask</I> files.
+     local execution even if the commands themselves are the same
+     as defined in the <I>qtask</I> files.
 
      The command name can be followed by an arbitrary  number  of
      <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>  option  arguments which are passed on to <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B> by
      <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B>.
 
      An exclamation mark prefixing the  command  in  the  cluster
-     global  <I>qtask</I>  file prevents overriding by the user supplied
-     <I>qtask</I> file.
+     global  <I>qtask</I>  file prevents it from being overridden by the
+     user supplied <I>qtask</I> file.
 
 EXAMPLES
      The following <I>qtask</I> file

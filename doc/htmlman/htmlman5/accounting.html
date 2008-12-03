@@ -14,8 +14,8 @@ FORMAT
      Each job is represented by a line in  the  accounting  file.
      Empty  lines  and  lines which contain one character or less
      are ignored.  Accounting record  entries  are  separated  by
-     colon  (':')  signs.  The  entries  denote in their order of
-     appearance:
+     colon  (':').  The  entries denote in their order of appear-
+     ance:
 
   qname
      Name of the cluster queue in which the job has run.
@@ -46,16 +46,16 @@ FORMAT
           <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>).
 
   submission_time
-     Submission time (GMT unix time stamp).  For slave  tasks  of
+     Submission time (GMT Unix time stamp).  For slave  tasks  of
      tightly  integrated  parallel  jobs,  the submission_time is
      always set to 0.
 
   start_time
-     Start time (GMT unix time stamp).
+     Start time (GMT Unix time stamp).
 
 
   end_time
-     End time (GMT unix time stamp).
+     End time (GMT Unix time stamp).
 
   failed
      Indicates the problem which occurred in case a job could not
@@ -67,7 +67,16 @@ FORMAT
 
   exit_status
      Exit status of the  job  script  (or  Grid  Engine  specific
-     status in case of certain error conditions).
+     status  in  case  of  certain  error  conditions).  The exit
+     status is determined by following the normal  shell  conven-
+     tions.   If the command terminates normally the value of the
+     command is its exit status.  However, in the case  that  the
+     command  exits  abnormally,  a  value  of  0200 (octal), 128
+     (decimal) is added to the value of the command  to  make  up
+     the exit status.
+
+          For example: If a job dies through signal  9  (SIGKILL)
+          then the exit status becomes 128 + 9 = 137.
 
   ru_wallclock
      Difference between end_time and start_time (see above).
@@ -96,6 +105,7 @@ FORMAT
           ru_nvcsw
           ru_nivcsw
 
+
   project
      The project which was assigned to the job.
 
@@ -104,7 +114,6 @@ FORMAT
 
   granted_pe
      The parallel environment which was selected for that job.
-
 
   slots
      The number of slots which were dispatched to the job by  the
@@ -143,15 +152,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
-
-
-
 
 
 

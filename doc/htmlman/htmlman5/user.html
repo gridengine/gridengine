@@ -26,11 +26,16 @@ DESCRIPTION
      can be created and existing can be modified via the  -auser,
      -muser and -duser options to <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>.
 
+     Note: Grid Engine allows backslashes (\) be used  to  escape
+     newline (\newline) characters. The backslash and the newline
+     are replaced  with  a  space  ("  ")  character  before  any
+     interpretation.
+
 FORMAT
      A user entry contains four parameters:
 
   name
-     The user name.
+     The user name as defined for <I>user</I>_<I>name</I> in <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
 
   oticket
      The amount of override tickets  currently  assigned  to  the
@@ -52,16 +57,11 @@ FORMAT
      <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>.  <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>.  <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>.
 
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
 
 
 

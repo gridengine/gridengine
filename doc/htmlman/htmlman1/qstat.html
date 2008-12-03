@@ -25,8 +25,8 @@ DESCRIPTION
      described  below.  A  cluster-wide  sge_qstat  file  may  be
      placed  under  $SGE_ROOT/$SGE_CELL/common/sge_qstat The user
      private  file is searched at the location  $HOME/.sge_qstat.
-     The  home  directory request file has the highest precedence
-     over the cluster global file.  Command line can be  used  to
+     The  home  directory  request file has the higher precedence
+     than the cluster global file.  Command line can be  used  to
      override the flags contained in the files.
 
 OPTIONS
@@ -128,11 +128,11 @@ OPTIONS
      -pe pe_name,...
           Displays status  information  with  respect  to  queues
           which  are  attached  to  at  least one of the parallel
-          environments enlisted in  the  comma  separated  option
-          argument.  Status  information  for  jobs  is displayed
-          either for those which execute in one of  the  selected
-          queues  or which are pending and might get scheduled to
-          those queues in principle.
+          environments listed in the comma separated option argu-
+          ment.  Status  information for jobs is displayed either
+          for those which execute in one of the  selected  queues
+          or  which  are pending and might get scheduled to those
+          queues in principle.
 
 
      -pri Displays additional information for each job related to
@@ -237,7 +237,7 @@ OUTPUT FORMATS
 
      <B>o</B>  the total number of slots.
 
-     <B>o</B>  the number of slots which is in at least in  one  of  the
+     <B>o</B>  the number of slots which is  in  at  least  one  of  the
         states  'aoACDS' and in none of the states 'cdsuE'
 
      <B>o</B>  the number of slots which are in one of these  states  or
@@ -685,12 +685,12 @@ ENVIRONMENTAL VARIABLES
                     will figure out the best length.
 
 FILES
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                     Grid Engine master host file
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>sge</I>_<I>qstat</I>
-                     cluster qstat default options
+     $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>act</I>_<I>qmaster</I>
+                    Grid Engine master host file
+     $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>sge</I>_<I>qstat</I>
+                    cluster qstat default options
      $<I>HOME</I>/.<I>sge</I>_<I>qstat</I>
-                     user qstat default options
+                    user qstat default options
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qhold.html">qhold(1)</A></B>,   <B><A HREF="../htmlman1/qhost.html">qhost(1)</A></B>,

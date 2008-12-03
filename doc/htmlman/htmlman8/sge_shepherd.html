@@ -42,12 +42,12 @@ DESCRIPTION
      <I>sge</I>_<I>shepherd</I> also places an exit status file  in  the  spool
      directory.  This  exit  status  can  be viewed with qacct -j
      JobId  (see  <B><A HREF="../htmlman1/qacct.html">qacct(1)</A></B>);  it  is  not  the  exit  status   of
-     <I>sge</I>_<I>shepherd</I>  itself  but  of one of the methods executed by
+     <I>sge</I>_<I>shepherd</I>  itself  but of one of the parameters passed to
      <I>sge</I>_<I>shepherd</I>. This exit status can  have  several  meanings,
-     depending  on  in  which  method an error occurred (if any).
-     The possible  methods  are:  prolog,  parallel  start,  job,
-     parallel  stop,  epilog, suspend, restart, terminate, clean,
-     migrate, and checkpoint.
+     depending  on in where an error occurred (if any).  The pos-
+     sible parameters are: prolog, parallel start, job,  parallel
+     stop,  epilog,  suspend, restart, terminate, clean, migrate,
+     and checkpoint.
 
      The following exit values are returned:
 
@@ -55,19 +55,19 @@ DESCRIPTION
 
      99     Job script, prolog and epilog: When <I>FORBID</I>_<I>RESCHEDULE</I>
             is  not  set  in the configuration (see <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>),
-            the job gets requeued.  Otherwise see "Other".
+            the job gets re-queued.  Otherwise see "Other".
 
      100    Job script, prolog and epilog:  When  <I>FORBID</I>_<I>APPERROR</I>
             is  not  set  in the configuration (see <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>),
-            the job gets requeued.  Otherwise see "Other".
+            the job gets re-queued.  Otherwise see "Other".
 
      Other  Job script: This  is  the  exit  status  of  the  job
             itself.  No  action  is  taken  upon this exit status
             because the meaning of this exit status is not known.
             Prolog, epilog and parallel start: The queue  is  set
-            to error state and the job is requeued.
+            to error state and the job is re-queued.
             Parallel stop: The queue is set to error  state,  but
-            the  job  is not requeued. It is assumed that the job
+            the  job is not re-queued. It is assumed that the job
             itself ran successfully and only the clean up  script
             failed.
             Suspend,  restart,  terminate,  clean,  and  migrate:
@@ -81,6 +81,11 @@ RESTRICTIONS
      <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>.
 
 FILES
+     sgepasswd  contains  a  list  of  user  names   and    their
+     corresponding encrypted Windows passwords. If available, the
+     password  file   will   be    used    by   sge_shepherd.  To
+     change  the  contents  of this file please use the sgepasswd
+     command. It is not advised to  change that file manually.
      &lt;<I>execd</I>_<I>spool</I>&gt;/<I>job</I>_<I>dir</I>/&lt;<I>job</I>_<I>id</I>&gt;     job specific directory
 
 SEE ALSO
@@ -89,11 +94,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
 
 
 

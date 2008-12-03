@@ -7,7 +7,7 @@ NAME
 
 SYNTAX
      qhost [ -F [resource_name,...]  [ -help ] [ -h host_list ] [
-     -j ] [ -l resource=val,... ] [ -u user,... ]
+     -j ] [ -l resource=val,... ] [ -u user,... ] [ -xml ].
 
 DESCRIPTION
      <I>qhost</I> shows the current status of the available Grid  Engine
@@ -47,6 +47,12 @@ OPTIONS
      -u user,...
           Display information only on those jobs and queues being
           associated with the users from the given user list.
+
+     -xml This option can be used  with  all  other  options  and
+          changes  the output to XML. The used schemas are refer-
+          enced in the XML  output.  The  output  is  printed  to
+          stdout.
+
 
 OUTPUT FORMATS
      Depending on the presence or absence of the -q or -F and  -j
@@ -100,7 +106,6 @@ OUTPUT FORMATS
      <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>) is currently exceeded. This  will  result  in
      jobs  running  in  that  queue  being successively suspended
      until no threshold is violated.
-
      The states s(uspended) and d(isabled)  can  be  assigned  to
      queues  and  released  via the <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B> command. Suspending a
      queue will cause all jobs executing  in  that  queue  to  be
@@ -216,8 +221,8 @@ ENVIRONMENTAL VARIABLES
                     "sge_qmaster" instead to define that port.
 
 FILES
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                     Grid Engine master host file
+     $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>act</I>_<I>qmaster</I>
+                    Grid Engine master host file
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>,   <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qhold.html">qhold(1)</A></B>,   <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>,
@@ -227,11 +232,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
 
 
 

@@ -464,7 +464,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
           lListElem *job, *next_job;
 
           next_job = lLast(task->data_list);
-          while(ret && ((job = next_job) != NULL)) {
+          while (ret && ((job = next_job) != NULL)) {
              next_job = lNext(job);
 
              lDechainElem(task->data_list, job);
@@ -538,9 +538,10 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
          ret = false;
       }
 
-      /* after this point we do no longer need pb - free its resources */
-      clear_packbuffer(&pb);
    }
+
+   /* after this point we do no longer need pb - free its resources */
+   clear_packbuffer(&pb);
 
    /* 
     * wait for response from master; also here keep care that commlib

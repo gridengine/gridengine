@@ -353,10 +353,8 @@ int sge_gdi2_multi(sge_gdi_ctx_class_t* ctx, lList **alpp,
              */
             local_ret = ctx->sge_gdi_packet_execute(ctx, alpp, packet);
             if (local_ret == false) {
-#if 0 /* verify with insure */
                /* answer has been written in ctx->sge_gdi_packet_execute() */
                sge_gdi_packet_free(&packet);
-#endif
                state->packet = NULL;
                ret = -1;
             }

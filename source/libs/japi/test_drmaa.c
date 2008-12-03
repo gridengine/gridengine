@@ -5524,6 +5524,7 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
                                  diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
             free_order(order);
+            drmaa_delete_job_template(jt, NULL, 0);
             return -1;
          }
          
@@ -5539,6 +5540,7 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
             fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
             free_order(order);
             free_jobids(all_jobids, njobs);
+            drmaa_delete_job_template(jt, NULL, 0);
             return -1;
          }
       

@@ -402,6 +402,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
             {
                lList *old_value = lGetList(this_elem, attribute_name);
                lList *new_value = NULL;
+               bool created_new_value = false;
                lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
 
                celist_attr_list_find_value(attr_list, answer_list,
@@ -425,33 +426,38 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                                                matching_group, is_ambiguous);
                      sge_dstring_sprintf(&buffer, sge_u32, slots_value);
 
+                     if (new_value == NULL) {
+                        created_new_value = true;
+                     }
                      slots_ce = lAddElemStr(&new_value, CE_name, "slots", CE_Type);
                      lSetDouble(slots_ce, CE_doubleval, slots_value);
                      lSetString(slots_ce, CE_stringval, sge_dstring_get_string(&buffer));
                      sge_dstring_free(&buffer);
                   }
                   
-                   if (object_list_has_differences(old_value, answer_list,
-                                                   new_value, false)) {
+                  if (object_list_has_differences(old_value, answer_list,
+                                                  new_value, false)) {
 #ifdef QINSTANCE_MODIFY_DEBUG
-                      DPRINTF(("Changed "SFQ"\n", lNm2Str(attribute_name)));
+                     DPRINTF(("Changed "SFQ"\n", lNm2Str(attribute_name)));
 #endif
-                      if (!initial_modify && ar_list_has_reservation_due_to_qinstance_complex_attr(*object_type_get_master_list(SGE_TYPE_AR), answer_list, 
+                     if (!initial_modify && ar_list_has_reservation_due_to_qinstance_complex_attr(*object_type_get_master_list(SGE_TYPE_AR), answer_list, 
                                                                                 this_elem, *object_type_get_master_list(SGE_TYPE_CENTRY))) {
-                         ret = false;
-                         break;
-                      }
+                        ret = false;
+                     } else {
+                        if (need_reinitialize != NULL) {
+                           *need_reinitialize = true;
+                        }
 
-                      if (need_reinitialize != NULL) {
-                        *need_reinitialize = true;
-                      }
-
-                      lSetList(this_elem, attribute_name, lCopyList("", new_value));
-                      *has_changed_conf_attr = true;
-                   }
-                   lRemoveElem(new_value, &slots_ce);
+                        lSetList(this_elem, attribute_name, lCopyList("", new_value));
+                        *has_changed_conf_attr = true;
+                     }
+                  }
+                  lRemoveElem(new_value, &slots_ce);
                } else {
                    ret &= false;
+               }
+               if (created_new_value) {
+                  lFreeList(&new_value);
                }
             }
             break;

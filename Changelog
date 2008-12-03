@@ -1,7 +1,11 @@
+JG-2008-12-03-0: Bugfix:      fixed memory leaks
+                 Review:      DG
+
 ZG-2008-12-03-0: Enhancem.:   improve mk_ascman script the way to generate html
                               pages which handle multiple sge versions
                  Enhancem.:   update html man pages
                  Review:      LP
+
 LP-2008-12-02-0: Enhancem.:   autoconf doesn't need JMX args for execd uninstall
                  Following changes apply to clients/gui-installer
                  Bugfix:      jvm library name now resolved correctly on MacOS
@@ -16,7 +20,7 @@ LP-2008-12-02-0: Enhancem.:   autoconf doesn't need JMX args for execd uninstall
                  Review       ZG
 
 EB-2008-11-28-0: Bugfix:      - fixed erros in jsv man page
-			     Review:      MD
+			        Review:      MD
 
 RD-2008-11-28-1: CVS:         Created V62u2alpha1_TAG
 -----------------------------------------------------

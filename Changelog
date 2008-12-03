@@ -1,3 +1,7 @@
+ZG-2008-12-03-0: Enhancem.:   improve mk_ascman script the way to generate html
+                              pages which handle multiple sge versions
+                 Enhancem.:   update html man pages
+                 Review:      LP
 MP-2008-12-01-0: Bugfix:      inadequate inst_qmaster/inst_execd diagnosis if binary 
                               and common packages are not in $SGE_ROOT
                  Bugster:     6617928

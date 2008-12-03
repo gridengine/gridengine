@@ -33,10 +33,6 @@ FORMAT
      The name of the parallel environment.  To  be  used  in  the
      <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -pe switch.
 
-  queue_list
-     A comma separated list of  queues  to  which  parallel  jobs
-     belonging to this parallel environment have access to.
-
   slots
      The number of parallel processes being  allowed  to  run  in
      total under the parallel environment concurrently.
@@ -109,14 +105,13 @@ FORMAT
           Number of slots granted for the job.
 
      $<I>processors</I>
-          The processors string as contained in the queue  confi-
-          guration  (see  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>) of the master queue (the
-          queue in which the start-up  and  stop  procedures  are
-          started).
+          The  processors  string  as  contained  in  the   queue
+          configuration  (see  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>) of the master queue
+          (the queue in which the start-up  and  stop  procedures
+          are started).
 
      $<I>queue</I>
-          The master queue, i.e. the queue in which the  start-up
-          and stop procedures are started.
+          The cluster queue of the master queue instance.
 
   stop_proc_args
      The invocation command line of a shutdown procedure for  the
@@ -202,6 +197,36 @@ FORMAT
      (and its child processes) is not part of the  parallel  pro-
      gram.
 
+
+  urgency_slots
+     For pending jobs with a slot range PE request the number  of
+     slots  is  not determined. This setting specifies the method
+     to be used by Grid Engine to assess the number of slots such
+     jobs might finally get.
+
+     The assumed slot allocation has a meaning  when  determining
+     the   resource  resquest  based  priority  contribution  for
+     numeric resoures as  described  in  <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B>  and  is
+     displayed when <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B> is run without -g t option.
+
+
+     The following methods are supported:
+
+     &lt;int&gt;:    The specified integer number is directly  used  as
+               prospective slot amount.
+
+     min:      The slot range minimum is used as prospective slot
+               amount.  If  no  lower bound is specified with the
+               range 1 is assumed.
+
+     max:      The of the slot range maximum is used as  prospec-
+               tive  slot  amount. If no upper bound is specified
+               with the range the absolute maximum  possible  due
+               to the PE's slots setting is assumed.
+
+     avg:      The average of all  numbers  occuring  within  the
+               jobs PE range request is assumed.
+
 RESTRICTIONS
      Note, that the functionality of the start-up,  shutdown  and
      signalling procedures remains the full responsibility of the
@@ -220,31 +245,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

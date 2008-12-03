@@ -21,20 +21,41 @@ SYNOPSIS
      );
 
 DESCRIPTION
-     The drmaa_init() function initializes Grid Engine DRMAA  API
-     library  for  all  threads  of the process and creates a new
-     DRMAA Session. This routine must be called once  before  any
-     other  DRMAA  call, except for <B><A HREF="../htmlman3/drmaa_version.html">drmaa_version(3)</A></B>.  <I>Contact</I> is
-     an implementation dependent string  which  may  be  used  to
+  drmaa_init()
+     The drmaa_init() function initializes the Grid Engine  DRMAA
+     API library for all threads of the process and creates a new
+     DRMAA session. This routine must be called once  before  any
+     other    DRMAA    call,    except    for   <B><A HREF="../htmlman3/drmaa_version.html">drmaa_version(3)</A></B>,
+     <B><A HREF="../htmlman3/drmaa_get_DRM_system.html">drmaa_get_DRM_system(3)</A></B>,                                 and
+     <B><A HREF="../htmlman3/drmaa_get_DRMAA_implementation.html">drmaa_get_DRMAA_implementation(3)</A></B>.   Except  for  the  above
+     listed functions, no DRMAA functions may  be  called  before
+     the  drmaa_init()  function  <I>completes</I>.   Any DRMAA function
+     which is called before the drmaa_init()  function  completes
+     will  return a DRMAA_ERRNO_NO_ACTIVE_SESSION error.  <I>Contact</I>
+     is an implementation dependent string which may be  used  to
      specify  which  Grid Engine cell to use. If <I>contact</I> is NULL,
      the default Grid Engine cell will be used.  In  the  current
      implementation setting <I>contact</I> has no effect.
 
   drmaa_exit()
-     The drmaa_exit() function called by any thread finishes  the
-     process  DRMAA  session  for all threads and is necessary to
-     perform DRMAA library internal clean up.  Running  jobs  are
-     not effected.
+     The drmaa_exit() function closes the DRMAA session  for  all
+     threads  and must be called before process termination.  The
+     drmaa_exit() function may be called only once  by  a  single
+     thread  in  the  process  and  may  only be called after the
+     drmaa_init() function has completed.   Any  DRMAA  function,
+     other   than   <B><A HREF="../htmlman3/drmaa_init.html">drmaa_init(3)</A></B>,  which  is  called  after  the
+     drmaa_exit()    function    completes    will    return    a
+     DRMAA_ERRNO_NO_ACTIVE_SESSION error.
+
+     The drmaa_exit() function does neccessary clean  up  of  the
+     DRMAA  session state, including unregistering from the <I>qmas-</I>
+     <B><A HREF="../htmlman8/ter.html">ter(8)</A></B>.  If the drmaa_exit() function  is  not  called,  the
+     qmaster  will  store  events  for the DRMAA client until the
+     connection times out, causing extra work for the qmaster and
+     comsuming system resources.
+
+     Submitted jobs are not affected by  the  drmaa_exit()  func-
+     tion.
 
 ENVIRONMENTAL VARIABLES
      SGE_ROOT       Specifies the location  of  the  Grid  Engine
@@ -59,9 +80,10 @@ ENVIRONMENTAL VARIABLES
                     level of detail in which debug information is
                     generated is defined.
 
-     COMMD_PORT     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  is  expected to listen for com-
-                    munication requests.  Most installations will
+     SGE_QMASTER_PORT
+                    If set, specifies the tcp port on  which  the
+                    sge_qmaster is expected to listen for commun-
+                    ication requests.   Most  installations  will
                     use  a  services  map entry instead to define
                     that port.
 
@@ -75,8 +97,8 @@ ERRORS
      The drmaa_init() and drmaa_exit() functions will fail if:
 
   DRMAA_ERRNO_INTERNAL_ERROR
-     Unexpected or internal DRMAA error like system call failure,
-     etc.
+     Unexpected  or  internal  DRMAA  error,  like  system   call
+     failure, etc.
 
   DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE
      Could not contact DRM system for this request.
@@ -116,27 +138,6 @@ ERRORS
 
 SEE ALSO
      <B><A HREF="../htmlman3/drmaa_submit.html">drmaa_submit(3)</A></B>.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

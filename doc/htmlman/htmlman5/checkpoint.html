@@ -28,8 +28,7 @@ DESCRIPTION
      configuration of the checkpointing  configuration  file  and
      updates  of the supported operating system versions may lead
      to frequently changing implementation details. Please  refer
-     to the file &lt;sge_root&gt;/doc/checkpointing.asc for more infor-
-     mation.
+     to the directory &lt;sge_root&gt;/ckpt for more information.
 
      Please use the -<I>ackpt</I>, -<I>dckpt</I>, -<I>mckpt</I> or -<I>sckpt</I>  options  to
      the  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>  command  to manipulate checkpointing environ-
@@ -76,10 +75,6 @@ FORMAT
           is not used (even if it  is  configured)  but  the  job
           script is invoked in case of a restart instead.
 
-  queue_list
-     A comma separated list of  queues  to  which  parallel  jobs
-     belonging to this parallel environment have access to.
-
   ckpt_command
      A command-line type command string to be  executed  by  Grid
      Engine in order to initiate a checkpoint.
@@ -103,17 +98,13 @@ FORMAT
      A file system location to which checkpoints  of  potentially
      considerable size should be stored.
 
-  queue_list
-     Contains a comma or blank  separated  list  of  queue  names
-     which   are   eligible   for  a  job  if  the  checkpointing
-     environment was specified at the submission of the job.
-
   ckpt_signal
      A Unix signal to be sent to a job by Grid Engine to initiate
      a checkpoint generation. The value for this field can either
      be a symbolic name from the list produced by the  -<I>l</I>  option
      of  the <B><A HREF="../htmlman1/kill.html">kill(1)</A></B> command or an integer number which must be a
      valid signal on the systems used for checkpointing.
+
 
   when
      The points of time when checkpoints are expected to be  gen-
@@ -157,7 +148,6 @@ RESTRICTIONS
      proper fashion, the checkpointing mechanism may behave unex-
      pectedly, Grid Engine has no means to detect this.
 
-
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/sge_ckpt.html">sge_ckpt(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>,   <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,
      <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>.
@@ -165,48 +155,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

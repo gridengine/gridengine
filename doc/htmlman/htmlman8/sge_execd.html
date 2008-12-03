@@ -6,53 +6,40 @@ NAME
      sge_execd - Grid Engine job execution agent
 
 SYNOPSIS
-     sge_execd [ -help ] [ -lj log_file ] [ -nostart-commd ]
+     sge_execd [ -help ]
 
 DESCRIPTION
      <I>sge</I>_<I>execd</I> controls the  Grid  Engine  queues  local  to  the
-     machine  <I>sge</I>_<I>execd</I>  is  running on and executes/controls the
-     jobs sent from <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> to be run on these queues.
-     Together  with  <I>sge</I>_<I>execd</I>  a  <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  is  brought   up
-     automatically on the same machine (if not already present).
+     machine  on which <I>sge</I>_<I>execd</I> is running and executes/controls
+     the jobs sent from <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> to be run on these queues.
 
 OPTIONS
   -help
-     Prints  a listing of all options.
-
-  -lj log_file
-     Enables job logging. All actions  taken  by  <I>sge</I>_<I>execd</I>  from
-     receiving  the  job until returning it to <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> are
-     logged to the log_file. This feature is also available  with
-     the <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> daemon.
-
-  -nostart-commd
-     Do not start up <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  automatically  with  <I>sge</I>_<I>execd</I>
-     and evaluate the COMMD_HOST environment variable to find the
-     corresponding <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>.
+     Prints a listing of all options.
 
 LOAD SENSORS
      If a load sensor is configured for <I>sge</I>_<I>execd</I> via either  the
      global  or the execution host specific cluster configuration
-     (see <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>) the executable path of the load sensor  is
-     invoked  by <I>sge</I>_<I>execd</I> on a regular basis and delivers one or
-     multiple load figures for the execution  host  (e.g.   users
-     currently  logged  in) or on the complete cluster (e.g. free
-     disk space on a network wide scratch file system). The  load
-     sensor  may  be  a  script or a binary executable. In either
-     case its handling of the STDIN and  STDOUT  stream  and  its
-     control flow must comply to the following rules:
+     (See <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>.), the executable path of the  load  sensor
+     is  invoked by <I>sge</I>_<I>execd</I> on a regular basis and delivers one
+     or multiple load figures for the execution host (e.g.  users
+     currently logged in) or the complete cluster (e.g. free disk
+     space on a network wide scratch file system). The load  sen-
+     sor  may  be a script or a binary executable. In either case
+     its handling of the STDIN and STDOUT streams and its control
+     flow must comply to the following rules:
 
-     The load sensor has to be written as infinite  loop  waiting
-     at  a certain point for input from STDIN. If the string quit
-     is read from STDIN, the load sensor is supposed to exit.  As
-     soon  as  an  end-of-line  is  read  from  STDIN a load data
-     retrieval cycle is supposed to start. The load  sensor  then
-     performs  whatever  operation  is  necessary  to compute the
-     desired load figures.  At the end of the cycle the load sen-
-     sor writes the result to stdout. The format is as follows:
+     The load sensor has to be written as an infinite loop  wait-
+     ing  at  a certain point for input from STDIN. If the string
+     "quit" is read from STDIN,  the  load  sensor  should  exit.
+     When an end-of-line is read from STDIN a load data retrieval
+     cycle should start. The load sensor then  performs  whatever
+     operation  is necessary to compute the desired load figures.
+     At the end of the cycle the load sensor writes the result to
+     stdout. The format is as follows:
 
      <B>o</B>  A load value report starts with a line containing nothing
-        but the word start.
+        but the word  "start".
 
      <B>o</B>  Individual load values are separated by newlines.
 
@@ -71,7 +58,7 @@ LOAD SENSORS
 
      <B>o</B>  The third part is the measured load value.
 
-     <B>o</B>  A load value report ends with a line with the word end.
+     <B>o</B>  A load value report ends with a line with the word "end".
 
 ENVIRONMENTAL VARIABLES
      SGE_ROOT       Specifies the location  of  the  Grid  Engine
@@ -95,26 +82,25 @@ ENVIRONMENTAL VARIABLES
                     level of detail in which debug information is
                     generated is defined.
 
-     COMMD_PORT     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  is  expected to listen for com-
+     SGE_QMASTER_PORT
+                    If set,  specifies  the  tcp  port  on  which
+                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
-                    use  a  services  map entry instead to define
-                    that port.
+                    use  a  services  map  entry  for the service
+                    "sge_qmaster" instead to define that port.
 
-     COMMD_HOST     If set, specifies the host on which the  par-
-                    ticular  <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  to  be  used  for Grid
-                    Engine communication of the <I>sge</I>_<I>execd</I>  client
-                    resides.   Only  evaluated  if  the -nostart-
-                    commd option was specified at  the  <I>sge</I>_<I>execd</I>
-                    command-line.   Per default the local host is
-                    used.
+     SGE_EXECD_PORT If set,  specifies  the  tcp  port  on  which
+                    <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  is  expected to listen for com-
+                    munication requests.  Most installations will
+                    use  a  services  map  entry  for the service
+                    "sge_execd" instead to define that port.
 
 RESTRICTIONS
      <I>sge</I>_<I>execd</I> usually is started from root on  each  machine  in
      the  Grid Engine pool.  If started by a normal user, a spool
      directory must be used to  which  the  user  has  read/write
      access.  In this case only jobs being submitted by that same
-     user are treated correctly by the system.
+     user are handled correctly by the system.
 
 FILES
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>configuration</I>
@@ -127,12 +113,26 @@ FILES
                      Grid Engine master host file
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,   <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>,    <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>,    <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>,
-     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>, <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
 
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

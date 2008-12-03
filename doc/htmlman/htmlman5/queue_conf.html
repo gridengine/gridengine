@@ -7,9 +7,9 @@ NAME
 
 DESCRIPTION
      <I>Queue</I>_<I>conf</I> reflects the format of the template file for  the
-     queue  configuration.   Via  the  -aq and -mq options of the
-     <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> command, you can add queues and modify  the  confi-
-     guration of any queue in the cluster.
+     cluster queue configuration.  Via the -aq and -mq options of
+     the <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> command, you can add cluster queues and  modify
+     the configuration of any queue in the cluster.
 
      The <I>queue</I>_<I>conf</I> parameters take as  values  strings,  integer
      decimal  numbers  or  boolean, time and memory specifiers as
@@ -29,17 +29,61 @@ DESCRIPTION
      tiply by 1000*1000 and M multiplies by 1024*1024. If no mul-
      tiplier is present, the value is just counted in bytes.
 
+     If more than one host  is  specified  under  'hostlist'  (by
+     means  of  a  list  of  hosts or with host groups) it can be
+     desirable to specify divergences from the setting  used  for
+     each  host.  These  divergences  can  be expressed using the
+     enhanced <I>queue</I>_<I>conf</I> specifier syntax.   This  syntax  builds
+     upon  the  regular  parameter  specifier syntax as described
+     below under 'FORMAT' separately for each  parameter  and  in
+     the paragraph above:
+
+     "["host_identifier=&lt;parameters_specifier_syntax&gt;"]"
+     [,"["host_identifier=&lt;parameters_specifier_syntax&gt;"]" ]
+
+     Even in the enhanced <I>queue</I>_<I>conf</I> specifier syntax an entry
+
+     &lt;current_attribute_syntax&gt;
+
+     without brackets denoting the default  setting  is  required
+     and  used  for  all queue instances where no divergences are
+     specified.  Tuples with a host group  host_identifier  over-
+     ride   the   default   setting.  Tuples  with  a  host  name
+     host_identifier override both the default and the host group
+     setting. Note that also with the enhanced <I>queue</I>_<I>conf</I> specif-
+     ier syntax a default setting is always needed for all confi-
+     guration attributes.
+
+     Integrity verifications will be applied  on  the  configura-
+     tion.
+
+     Configurations without default setting are rejected.   Ambi-
+     gous configurations with more than one attribute setting for
+     a particular host are rejected.   Configurations  containing
+     override  values for hosts not enlisted under 'hostname' are
+     accepted but are indicated by -sick of <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> The  cluster
+     queue  should  contain a non-ambigous specification for each
+     configuration attribute of  each  queue  instance  specified
+     under  hostname  in <I>queue</I>_<I>conf</I>. Ambigous configurations with
+     more than one attribute setting resulting  from  overlapping
+     host  groups  are  indicated  by  -explain c of <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B> and
+     cause the queue instance  with  ambigous  configurations  to
+     enter the c(onfiguration ambibous) state.
+
 FORMAT
      The following list of <I>queue</I>_<I>conf</I>  parameters  specifies  the
      <I>queue</I>_<I>conf</I> content:
 
   qname
-     The name of the queue on the  node  (type  string;  template
-     default: template).
+     The name of the cluster queue(type string; template default:
+     template).
 
-  hostname
-     The fully-qualified host name of the node (type string; tem-
-     plate default: host.dom.dom.dom).
+  hostlist
+     A list of host names (fully-qualified) and host group names.
+     Host  group  names  must begin with an "@" sign. If multiple
+     hosts are  specified  the  <I>queue</I>_<I>conf</I>  constitutes  multiple
+     queue  instances.  Each  host  may be specified only once in
+     this list. (type string; template default: NONE).
 
   seq_no
      In conjunction with the hosts load situation at a time  this
@@ -51,21 +95,21 @@ FORMAT
      Regardless  of  the  queue_sort_method   setting,   <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>
      reports  queue information in the order defined by the value
      of  the  seq_no.  Set  this  parameter  to  a  monotonically
-     increasing  sequence.  The type is number and the default is
-     0.
+     increasing sequence. (type number; template default: 0).
 
   load_thresholds
      load_thresholds is a list of load thresholds. Already if one
      of  the  thresholds  is  exceeded  no  further  jobs will be
-     scheduled to the queues on this node and <B><A HREF="../htmlman1/qmon.html">qmon(1)</A></B> will signal
-     an  overload  condition for this node. Arbitrary load values
-     being defined in the "host" and "global" complexes (see <I>com-</I>
-     <B><A HREF="../htmlman5/plex.html">plex(5)</A></B> for details) can be used.
+     scheduled to the queues and <B><A HREF="../htmlman1/qmon.html">qmon(1)</A></B> will signal an  overload
+     condition for this node. Arbitrary load values being defined
+     in the "host" and "global"  complexes  (see  <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>  for
+     details) can be used.
+
 
      The syntax is that of a comma separated list with each  list
      element  consisting  of  the  name of a load value, an equal
      sign and the threshold value being intended to  trigger  the
-     overload situation (e.g. load.avg=175,users_logged_in=5).
+     overload situation (e.g. load_avg=1.75,users_logged_in=5).
 
      Note: Load values as well as  consumable  resources  may  be
      scaled  differently  for different hosts if specified in the
@@ -108,14 +152,12 @@ FORMAT
      scheduling priority, positive values (up to +20)  correspond
      to a lower scheduling priority.
 
-     In a SGEEE system  the  value  of  priority  has  no  effect
-     because  SGEEE  adjusts  priorities dynamically to implement
-     the SGEEE entitlement policy goals. Dynamic priority adjust-
-     ment   can   be   switched  off,  however,  by  setting  the
-     execd_param NO_REPRIORITIZATION to true  in  the  global  or
-     execution    daemon   local   cluster   configuration,   see
-     <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>.  In this case, the  setting  of  priority  also
-     will haven an effect in SGEEE.
+     The value of priority has  no  effect  because  SGE  adjusts
+     priorities dynamically to implement the SGE entitlement pol-
+     icy goals. Dynamic priority adjustment can be switched  off,
+     by  setting  the reprioritize_interval to 00:00:00, which is
+     the default value. In this case,  the  setting  of  priority
+     also will haven't an effect.
 
   min_cpu_interval
      The time between two automatic checkpoints in case of  tran-
@@ -149,11 +191,31 @@ FORMAT
      slots (see above) should be set to 1 for this queue.
 
   qtype
-     The type of queue.  Currently  one  of  <I>batch</I>,  <I>interactive</I>,
-     <I>parallel</I>  or  <I>checkpointing</I>  or  any  combination in a comma
-     separated list.
+     The type of queue. Currently <I>batch</I>, <I>interactive</I> or a  combi-
+     nation in a comma separated list or <I>NONE</I>.
 
-     (type string; default: batch interactive parallel ).
+     The formerly supported types parallel and checkpointing  are
+     not  allowed anymore. A queue instance is impicitely of type
+     parallel/checkpointing if there is a parallel environment or
+     a  checkpointing interface specified for this queue instance
+     in pe_list/ckpt_list. Formerly possible settings e.g.
+
+     qtype   PARALLEL
+
+     could be transfered into
+
+     qtype   NONE
+     pe_list pe_name
+
+     (type string; default: batch interactive).
+
+  pe_list
+     The list of administartor defined parallel  environments  to
+     be associated with the queue. The default is <I>NONE</I>.
+
+  ckpt_list
+     The list of administartor defined  checkpointing  interfaces
+     to be associated with the queue. The default is <I>NONE</I>.
 
   rerun
      Defines a default behavior for jobs  which  are  aborted  by
@@ -199,6 +261,7 @@ FORMAT
 
      The  type  of  the  parameter  is  string.  The  default  is
      /bin/csh.
+
 
   shell_start_mode
      This parameter defines the  mechanisms  which  are  used  to
@@ -267,17 +330,16 @@ FORMAT
      execution of Grid Engine jobs with the same environment set-
      ting as that for the Grid Engine jobs to be  started  after-
      wards.  An  optional prefix "user@" specifies the user under
-     which this procedure is to be started.   This  procedure  is
-     intended  as  a  means  for the Grid Engine administrator to
-     automate the execution of general site specific  tasks  like
-     the  preparation of temporary file systems with the need for
-     the same context information as the job. This  queue  confi-
-     guration  entry  overwrites cluster global or execution host
-     specific prolog definitions (see <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>).
-
-     Note: prolog is executed <I>exactly</I> as the job script.   There-
-     fore,   all  implications  described  under  the  parameters
-     shell_start_mode and login_shells below apply.
+     which this procedure is to be started. The procedures  stan-
+     dard  output  and the error output stream are written to the
+     same file used also for the standard output and error output
+     of  each job.  This procedure is intended as a means for the
+     Grid Engine administrator to automate the execution of  gen-
+     eral  site  specific tasks like the preparation of temporary
+     file systems with the need for the same context  information
+     as  the job. This queue configuration entry overwrites clus-
+     ter global or execution  host  specific  prolog  definitions
+     (see <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>).
 
      The default for prolog is  the  special  value  NONE,  which
      prevents  from execution of a prologue script.  The  special
@@ -290,17 +352,16 @@ FORMAT
      execution of Grid Engine jobs with the same environment set-
      ting as that for the Grid Engine jobs  that  has  just  com-
      pleted.  An optional prefix "user@" specifies the user under
-     which this procedure is to be started.   This  procedure  is
-     intended  as  a  means  for the Grid Engine administrator to
-     automate the execution of general site specific  tasks  like
-     the  cleaning up of temporary file systems with the need for
-     the same context information as the job. This  queue  confi-
-     guration  entry  overwrites cluster global or execution host
-     specific epilog definitions (see <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>).
-
-     Note: epilog is executed <I>exactly</I> as the job script.   There-
-     fore,   all  implications  described  under  the  parameters
-     shell_start_mode and login_shells below apply.
+     which this procedure is to be started. The procedures  stan-
+     dard  output  and the error output stream are written to the
+     same file used also for the standard output and error output
+     of  each  job. This procedure is intended as a means for the
+     Grid Engine administrator to automate the execution of  gen-
+     eral  site  specific tasks like the cleaning up of temporary
+     file systems with the need for the same context  information
+     as  the job. This queue configuration entry overwrites clus-
+     ter global or execution  host  specific  epilog  definitions
+     (see <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>).
 
      The default for epilog is  the  special  value  NONE,  which
      prevents  from execution of a epilogue script.  The  special
@@ -313,10 +374,10 @@ FORMAT
      The specified executable path will be used as a job  starter
      facility  responsible  for starting batch jobs.  The execut-
      able path will be executed instead of the  configured  shell
-     to  start  the  job.  The  job  arguments  will be passed as
-     arguments to the  job  starter.  The  following  environment
-     variables  are  used  to pass information to the job starter
-     concerning the shell environment  which  was  configured  or
+     to  start the job. The job arguments will be passed as argu-
+     ments to the job starter. The  following  environment  vari-
+     ables  are  used to pass information to the job starter con-
+     cerning  the  shell  environment  which  was  configured  or
      requested to start the job.
 
 
@@ -357,7 +418,6 @@ FORMAT
      runtime and can be used (besides  any  other  strings  which
      have  to  be  interpreted by the procedures) to constitute a
      command line:
-
 
      $<I>host</I>
           The name of the host on which the procedure is started.
@@ -421,9 +481,7 @@ FORMAT
      (the  default),  any project has access that is not specifi-
      cally excluded via the xprojects parameter described  below.
      If  a  project is in both the projects and xprojects parame-
-     ters, the project is  denied  access  to  the  queue.   This
-     parameter is only available in a Grid Engine Enterprise Edi-
-     tion system.
+     ters, the project is denied access to the queue.
 
   xprojects
      The xprojects parameter contains a comma separated  list  of
@@ -432,13 +490,16 @@ FORMAT
      those   denied   access  based  on  the  projects  parameter
      described above.  If a project is in both the  projects  and
      xprojects  parameters,  the  project is denied access to the
-     queue.  This parameter is only available in  a  Grid  Engine
-     Enterprise Edition system.
+     queue.
 
   subordinate_list
-     A list of Grid Engine queues, residing on the same  host  as
-     the  configured  queue, to suspend when a specified count of
-     jobs is running in this queue.  The  list  specification  is
+     A list of Grid Engine cluster queues. Relashionship  however
+     are  in  effect only between queue instances residing at the
+     same host. If there is a queue instance (be in the  sub-  or
+     superordinated  one)  on only one particular host this rela-
+     tionship is ignored.  queue instances residing on  the  same
+     host  will  be  suspended  when a specified count of jobs is
+     running in this queue instance.  The list  specification  is
      the  same  as  that  of the load_thresholds parameter above,
      e.g. low_pri_q=5,small_q. The numbers denote the  job  slots
      of  the  queue that have to be filled to trigger the suspen-
@@ -452,32 +513,19 @@ FORMAT
      priority  over  low  priority  production  queues;  default:
      NONE).
 
-  complex_list
-     The comma separated list of administrator defined  complexes
-     (see  <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>  for  details)  to  be  associated with the
-     queue.  Only complex attributes contained  in  the  enlisted
-     complexes  and  those  from the "global", "host" and "queue"
-     complex, which are implicitly attached to each queue, can be
-     used in the complex_values list below.
-
-     The default value  for  this  parameter  is  NONE,  i.e.  no
-     administrator  defined  complexes  are  associated  with the
-     queue.
-
   complex_values
      complex_values  defines  quotas  for   resource   attributes
-     managed  via  this queue.  The allowed complex attributes to
-     appear in complex_values are defined  by  complex_list  (see
-     above).   The syntax is the same as for load_thresholds (see
-     above). The quotas are related to the  resource  consumption
-     of  all  jobs in a queue in the case of consumable resources
-     (see <B><A HREF="../htmlman5/complex.html">complex(5)</A></B> for details on consumable resources) or they
-     are  interpreted on a per queue slot (see slots above) basis
-     in the case of non-consumable resources. Consumable resource
-     attributes  are  commonly  used  to manage free memory, free
-     disk space or available  floating  software  licenses  while
-     non-consumable attributes usually define distinctive charac-
-     teristics like type of hardware installed.
+     managed  via  this  queue.  The  syntax  is  the same as for
+     load_thresholds (see above). The quotas are related  to  the
+     resource  consumption  of all jobs in a queue in the case of
+     consumable resources (see <B><A HREF="../htmlman5/complex.html">complex(5)</A></B> for details on  consum-
+     able  resources) or they are interpreted on a per queue slot
+     (see slots  above)  basis  in  the  case  of  non-consumable
+     resources.  Consumable resource attributes are commonly used
+     to manage free memory, free disk space or available floating
+     software  licenses  while  non-consumable attributes usually
+     define distinctive characteristics  like  type  of  hardware
+     installed.
 
      For consumable resource  attributes  an  available  resource
      amount  is  determined  by  subtracting the current resource
@@ -521,14 +569,13 @@ FORMAT
      parallel  task  is meant to provide the same resource attri-
      bute value.
 
-
      Note: Only numeric complex attributes can be defined as con-
      sumable  resources  and  hence  non-numeric  attributes  are
      always handled on a per queue slot basis.
 
      The default value  for  this  parameter  is  NONE,  i.e.  no
-     administrator  defined resource attribute quotas are associ-
-     ated with the queue.
+     administrator   defined   resource   attribute   quotas  are
+     associated with the queue.
 
   calendar
      specifies the calendar to be valid for this  queue  or  con-
@@ -559,24 +606,6 @@ FORMAT
      disabled  The queue is  disable  in  either  case.  This  is
                equivalent to a manual and explicit '<I>qmod</I> -<I>d</I>' com-
                mand (see <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>).
-
-  fshare
-     This parameter is only available in a Grid Engine Enterprise
-     Edition system. Grid Engine does not support this parameter.
-
-     The functional shares of the queue (i.e.  job  class).  Jobs
-     executing  in  this queue may get functional tickets derived
-     from the relative importance of the queue if the  functional
-     policy is activated.
-
-  oticket
-     This parameter is only available in a Grid Engine Enterprise
-     Edition system. Grid Engine does not support this parameter.
-
-
-     The override tickets of the queue  (i.e.  job  class).  Grid
-     Engine  Enterprise Edition distributes the configured amount
-     of override tickets among all jobs executing in this queue.
 
 RESOURCE LIMITS
      The first two resource limit parameters, s_rt and h_rt,  are
@@ -664,6 +693,31 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

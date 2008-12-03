@@ -38,16 +38,16 @@ DESCRIPTION
           DRMAA_PS_DONE                job finished normally
           DRMAA_PS_FAILED              job finished, but failed
 
-     Jobs user hold and user suspend state can be  controled  via
+     Jobs' user hold and user suspend states can be controled via
      <B><A HREF="../htmlman3/drmaa_control.html">drmaa_control(3)</A></B>.   For  affecting  system  hold  and system
      suspend states the appropriate Grid Engine  interfaces  must
      be used.
 
   drmaa_control()
      The drmaa_control() function applies control  operations  on
-     Grid  Engine  jobs. Either a Grid Engine jobid can be passed
-     to <I>jobid</I> or `DRMAA_JOB_IDS_SESSION_ALL' to refer to all jobs
-     submitted    during    the   DRMAA   session   opend   using
+     Grid  Engine  jobs.  <I>jobid</I> may contain either an Grid Engine
+     jobid or `DRMAA_JOB_IDS_SESSION_ALL' to refer  to  all  jobs
+     submitted    during   the   DRMAA   session   opened   using
      <B><A HREF="../htmlman3/drmaa_init.html">drmaa_init(3)</A></B>.  Legal values for <I>action</I> and  their  meanings
      are:
 
@@ -90,8 +90,9 @@ ENVIRONMENTAL VARIABLES
                     level of detail in which debug information is
                     generated is defined.
 
-     COMMD_PORT     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  is  expected to listen for com-
+     SGE_QMASTER_PORT
+                    If set,  specifies  the  tcp  port  on  which
+                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map entry instead to define
                     that port.
@@ -100,21 +101,21 @@ RETURN VALUES
      Upon    successful    completion,    drmaa_job_ps(),     and
      drmaa_control()  return  DRMAA_ERRNO_SUCCESS.  Other  values
      indicate an error. Up to <I>error</I>_<I>diag</I>_<I>len</I> characters of  error
-     related diagnosis information is then provided in the buffer
-     <I>error</I>_<I>diagnosis</I>.
+     related  diagnosis  information  is  then  provided  in  the
+     buffer, <I>error</I>_<I>diagnosis</I>.
 
 ERRORS
      The drmaa_job_ps(), and drmaa_control() will fail if:
 
   DRMAA_ERRNO_INTERNAL_ERROR
-     Unexpected or internal DRMAA error like system call failure,
-     etc.
+     Unexpected  or  internal  DRMAA  error,  like  system   call
+     failure, etc.
 
   DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE
      Could not contact DRM system for this request.
 
   DRMAA_ERRNO_AUTH_FAILURE
-     The specified request is not processed successfully  due  to
+     The specified request was not processed successfully due  to
      authorization failure.
 
   DRMAA_ERRNO_INVALID_ARGUMENT
@@ -127,7 +128,7 @@ ERRORS
      Failed allocating memory.
 
   DRMAA_ERRNO_INVALID_JOB
-     The job specified by the does not exist.
+     The specified job does not exist.
 
      The drmaa_control() will fail if:
 

@@ -82,37 +82,36 @@ DIALOGUES
      enables  the  user  to control the status of the Grid Engine
      queues being actually configured in the  system  and  allows
      the  administrator  to add new queues or to modify or delete
-     already existing ones. Each icon button  in  the  top  level
-     Queue  Control  dialogue window represents a configured Grid
-     Engine queue.  The icon symbols, the coloring and  the  text
-     on  the  buttons  informs about the architecture, the status
-     and some basic attributes of  the  queues.   The  top  level
-     dialogue  also  allows  for deleting those queues previously
-     selected. Queues are selected  by  clicking  with  the  left
-     mouse  button  on  the icons or into a rectangular area sur-
-     rounding the buttons.
+     already existing ones. The Queue Control  dialogue  shows  a
+     tabbed  view  of Cluster Queues or their corresponding Queue
+     Instances in a tabular way.
 
-     By pushing the Add or Modify button or using a  pop-up  menu
-     that  is  raised when clicking the right mouse button in the
-     icon window of the top level Queue Control dialogue, a  sub-
-     dialogue  for  configuring  Grid  Engine queues is opened. A
-     queue needs to be selected to use the modify operation.  The
+     By pushing the Add, Clone or Modify button,  a  sub-dialogue
+     for  configuring Grid Engine queues is opened. A queue needs
+     to be selected to use the clone and  modify  operation.  The
      configuration  sub-dialogue  allows  for  definition  of the
-     queue and host name or displays the corresponding  names  in
-     case  of  a modification. The queue configuration parameters
-     (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>) are subdivided in  different  categories
-     (General  Configuration,  Execution  Methods, Checkpointing,
-     Load/Suspend Thresholds,  Limits,  Complexes,  User  Access,
-     Project  Access  (only  for Grid Engine Enterprise Edition),
-     Subordinate Queues, Owners) which are selectable by the  tab
-     widget  area presented in the lower region of the queue con-
-     figuration  sub-dialogue.  The  administrator   may   select
-     default  values  from  already configured queues (Clone but-
-     ton).  By  pushing  the  Ok  button,  the  definitions   are
-     registered  with <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.  The Queue Control dialogue
-     can be customized in a similar way as the Job Control dialo-
-     gue.   The   settings   applied   here  are  also  saved  in
-     ~/.<I>qmon</I>_<I>preferences</I>.
+     queue and its attributes.   The  configuration  sub-dialogue
+     contains  in  the upper section the queue name and a list of
+     hosts or hostgroups for which this queue contains the confi-
+     guration.   The  lower  section  contains a list of hosts or
+     hostgroups at the left, where  the  default  attributes  are
+     shown  when  the  "@/"  entry is highlighted.  These default
+     attributes can be overruled on a hostgroup or host basis  by
+     enabling  attributes  and  changing  their values after this
+     hostgroup or host entry has been added  in  the  "Attributes
+     for Host/Hostgroup" listbox. The queue configuration parame-
+     ters  (see  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>)  are  subdivided   in   different
+     categories (General Configuration, Execution Methods, Check-
+     pointing, Load/Suspend Thresholds, Limits,  Complexes,  User
+     Access,  Project  Access,  Subordinate Queues, Owners) which
+     are selectable by the tab widget area presented in the lower
+     region of the queue configuration sub-dialogue. The adminis-
+     trator  may  select  previously  configured  settings   from
+     already  existing  queues  (Clone button). By pushing the Ok
+     button, the definitions are registered with  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
+     The  Queue  Control  dialogue can be customized in a similar
+     way as the Job Control dialogue. The settings  applied  here
+     are also saved in ~/.<I>qmon</I>_<I>preferences</I>.
 
   Submit
      The Job Submission dialogue serves for submitting batch  and
@@ -150,29 +149,25 @@ DIALOGUES
 
   Complex Config
      The Complex Config allows the administrator to add new  com-
-     plexes  or  to  modify  or  delete  existing  ones (see <I>com-</I>
-     <B><A HREF="../htmlman5/plex.html">plex(5)</A></B>).  The dialogue offers  a  selection  list  for  the
-     existing complexes and displays the configuration of the one
-     being selected. By pushing the Delete button,  the  selected
-     complex  is  deleted  from  the  configuration.  Pushing the
-     Add/Modify button will open a complex  configuration  dialo-
-     gue,  which allows to create new complexes or which provides
-     the means to change the existing ones. If a new  complex  is
-     to  be  created,  a name must be defined for it. The name of
-     the complex to be modified is displayed  in  the  same  text
-     input  filed in case of a modify operation. The complex con-
-     figuration dialogue provides a tabulated list of the complex
-     entries  and  an  input region for the declaration of new or
-     modified entries. The Add button updates the tabulated  list
-     with  the  new  or changed entry and the Ok button registers
-     the additional or modified complex with <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
+     plex  attributes  or  to modify or delete existing ones (see
+     <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>).  The complex configuration dialogue provides  a
+     tabulated list of the complex attribute entries and an input
+     region for the declaration of new or modified  entries.  The
+     Add  button updates the tabulated list with a new attribute.
+     The Modify button changes a highlighted existing entry.  The
+     Delete  button removes the highlighted attributes.  The Load
+     and Save buttons allow saving or reloading the whole  attri-
+     bute  list  to  or  from  file.  The Ok button registers the
+     additional   or    modified    complex    attributes    with
+     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
 
   Host Config
-     Three types of host lists can be  maintained  via  the  Host
-     Config dialogue:
+     Four types of host related lists can be maintained  via  the
+     Host Config dialogue:
 
           Administration Hosts
           Submit Hosts
+          Host Groups
           Execution Hosts
 
      The host list to be manipulated is selected via clicking  at
@@ -180,15 +175,16 @@ DIALOGUES
      lists only provide for adding or deleting  entries,  thereby
      allowing  administrative  or submit permission for the hosts
      on the lists, or denying  it  otherwise  respectively.   The
+     host group list allows the manipulation of host groups. Host
+     groups can reference either other host groups or hosts.  The
      execution  host list entries in addition provide the ability
      to define scaling factors for the load  sensors,  consumable
      complex  attributes  and  access attributes (access, xaccess
-     and projects, xprojects for Grid Engine  Enterprise  Edition
-     mode  only)  as  described  in <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>.  In a Grid Engine
-     Enterprise Edition system CPU, memory and I/O usage reported
-     for  running jobs can be scaled in addition and the relative
-     performance of a host can be define with the Resource  Capa-
-     bility Factor (see <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>).
+     and projects, xprojects) as described in  <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>.   CPU,
+     memory and I/O usage reported for running jobs can be scaled
+     in addition and the relative performance of a  host  can  be
+     define    with   the   Resource   Capability   Factor   (see
+     <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>).
 
   Cluster Config
      This dialogue maintains the cluster global configuration  as
@@ -233,7 +229,7 @@ DIALOGUES
           Configuration of Manager accounts.
           Configuration of Operator accounts.
           Definition of Usersets.
-          Definition of User accounts (Grid Engine Enterprise Edition mode only).
+          Definition of User accounts.
 
      Those user accounts added to the list of manager or operator
      accounts  are  given permission to act as managers or opera-
@@ -243,30 +239,24 @@ DIALOGUES
      The userset lists are used together with the user_lists  and
      xuser_lists  host,  queue, project and cluster configuration
      parameters (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>, <B><A HREF="../htmlman5/project.html">project(5)</A></B>  and  <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>)
-     to  control access of users to hosts, queues, projects (only
-     available in a Grid Engine Enterprise  Edition  system)  and
-     the  entire cluster.  A userset is just a collection of user
-     names and UNIX group names. Group names  are  identified  by
+     to  control  access  of users to hosts, queues, projects and
+     the entire cluster.  A userset is just a collection of  user
+     names  and  UNIX  group names. Group names are identified by
      prefixing them with a "@" sign. The already defined usersets
-     are displayed in a selection list. These lists can be  modi-
-     fied  and new lists can be created using the Userset defini-
+     are  displayed in a selection list. These lists can be modi-
+     fied and new lists can be created using the Userset  defini-
      tion dialogue.
 
-     In a Grid Engine Enterprise Edition system usersets  can  be
-     used  as  Access  List  (equivalent to their usage in a Grid
-     Engine system) and/or as  Department  required  for  the  so
-     called  Functional  Policy  and  Override Policy (see Ticket
-     Config below).
+     Usersets can be used as Access  List  and/or  as  Department
+     required  for  the  so called Functional Policy and Override
+     Policy (see Ticket Config below).
 
-     A Grid Engine Enterprise Edition system also requires adding
-     accounts  having access to the system as entries to the Grid
-     Engine Enterprise Edition user database (see <B><A HREF="../htmlman5/user.html">user(5)</A></B>),  This
-     can be done with the User sub-dialogue.
+     User names can be added to the system as entries to the Grid
+     Engine  user  database  (see <B><A HREF="../htmlman5/user.html">user(5)</A></B>), This can be done with
+     the User sub-dialogue.
 
      The Tickets button in the button list on the right  side  of
-     the  dialogue  opens the Ticket Config dialogue (see below).
-     This is also only available in a Grid Engine Enterprise Edi-
-     tion system.
+     the dialogue opens the Ticket Config dialogue (see below).
 
   PE Config
      Parallel environment (PE) interfaces can be configured  with
@@ -303,9 +293,7 @@ DIALOGUES
   Ticket Conf
      This dialogue offers an  overview  and  editing  screen  for
      allocating  tickets to the share-based, functional and over-
-     ride scheduling policies. It is only supported in case of  a
-     Grid  Engine  Enterprise Edition system. It is not available
-     for Grid Engine systems.
+     ride scheduling policies.
 
      The Deadline Job button opens the User  Conf  dialogue  box.
      Please  change  to  the  Userset sub-dialogue and select the
@@ -313,9 +301,10 @@ DIALOGUES
      may submit deadline jobs.
 
      The Share Tree Policy button opens the dialogue for creating
-     and  editing  the  Grid Engine Enterprise Edition share tree
-     (see <B><A HREF="../htmlman5/share_tree.html">share_tree(5)</A></B> and <B><A HREF="../htmlman5/schedd_conf.html">schedd_conf(5)</A></B> for a  description  of
-     the configuration parameters).
+     and  editing  the  Grid Engine share tree (see <B><A HREF="../htmlman5/share_tree.html">share_tree(5)</A></B>
+     and <B><A HREF="../htmlman5/schedd_conf.html">schedd_conf(5)</A></B> for a description  of  the  configuration
+     parameters).
+
      The Functional Policy button opens the dialogue for creating
      and  editing  the  allocation  of the functional shares (see
      <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>, <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>, <B><A HREF="../htmlman5/project.html">project(5)</A></B>, <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> and
@@ -328,9 +317,7 @@ DIALOGUES
      description of the different types of override tickets).
 
   Project Conf
-     This button opens a dialogue for creating  projects.  It  is
-     only  supported  in case of a Grid Engine Enterprise Edition
-     system. It is not available for Grid Engine systems.
+     This button opens a dialogue for creating projects.
      The dialogue offers a selection list for the  existing  pro-
      jects  and  displays  the  configuration  of  the  one being
      selected. By pushing the Delete button, the selected project
@@ -407,16 +394,12 @@ ENVIRONMENTAL VARIABLES
                     level of detail in which debug information is
                     generated is defined.
 
-     COMMD_PORT     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  is  expected to listen for com-
+     SGE_QMASTER_PORT
+                    If set,  specifies  the  tcp  port  on  which
+                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map entry instead to define
                     that port.
-
-     COMMD_HOST     If set, specifies the host on which the  par-
-                    ticular  <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  to  be  used  for Grid
-                    Engine  communication  of  the  <I>qmon</I>   client
-                    resides.  Per default the local host is used.
 
 RESTRICTIONS
      If the line to be entered in an  editing  window  is  longer
@@ -440,6 +423,23 @@ COPYRIGHT
      &lt;sge_root&gt;/3rd_party/qmon  for a statement of further rights
      and permissions and for credits to be given to public domain
      and freeware widget developers.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

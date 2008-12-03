@@ -6,28 +6,31 @@ NAME
      qmod - modify a Grid Engine queue
 
 SYNTAX
-     qmod [ options ] [ job/task_id_list | queue_list ]
+     qmod [ options ] [ wc_job_range_list | wc_queue_list ]
 
 DESCRIPTION
      <I>Qmod</I> enables users classified as <I>owners</I>  (see  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>
      for  details)  of  a workstation to modify the state of Grid
      Engine queues for his/her machine as well as  the  state  of
      his/her  own  jobs.   A manager/operator or root can execute
-     <I>qmod</I> for any queue and job in a cluster.
+     <I>qmod</I> for any queue and job in  a  cluster.  Find  additional
+     information  concerning  <I>wc</I>_<I>queue</I>_<I>list</I>  and  <I>wc</I>_<I>job</I>_<I>list</I>  in
+     <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
 
 OPTIONS
-     -c   Clears the error state of the specified queue(s).
+     -c   Clears   the   error    state    of    the    specified
+          jobs(s)/queue(s).   Do not use this switch anymore, use
+          -cj / -cq instead.
+
+     -cj  Clears the error state of the specified jobs(s).
+
+     -cq  Clears the error state of the specified queue(s).
 
      -d   Disables  the  queue(s),  i.e.  no  further  jobs   are
           dispatched  to  disabled queues while jobs already exe-
           cuting in these queues are allowed to finish.
 
-          (Is the successor of the CODINE version 3 -soc option.)
-
      -e   Enables the queue(s).
-
-          (Is  the  successor  of  the  CODINE  version  3  -xsoc
-          option.)
 
      -f   Force the modification action for the queue despite the
           apparent  current  state of the queue. For example if a
@@ -44,56 +47,42 @@ OPTIONS
 
      -r   If applied to queues, reschedules  all  jobs  currently
           running  in  this  queue.   If applied to running jobs,
-          reschedules the jobs.
+          reschedules  the  jobs.  Requires   root   or   manager
+          privileges.  Do not use this switch anymore, use -rj /-
+          rq instead.
+
+     -rj  If applied  to  running  jobs,  reschedules  the  jobs.
+          Requires root or manager privileges.
+
+     -rq  If applied to queues, reschedules  all  jobs  currently
+          running  in  this  queue.   Requires  root  or  manager
+          privileges.
 
      -s   If applied to queues, suspends the queues and any  jobs
           which  might  be  active.  If  applied to running jobs,
-          suspends the jobs. If a job is  both  suspended  expli-
-          citly  and  via  suspension  of  its queue, a following
-          unsuspend of the queue will not release the  suspension
-          state on the job.
+          suspends the jobs. Do not use this switch anymore,  use
+          -sj / -jq instead.
+
+     -sj  If applied to running jobs, suspends the jobs. If a job
+          is  both suspended explicitly and via suspension of its
+          queue, a following unsuspend  of  the  queue  will  not
+          release the suspension state on the job.
+
+     -sq  If applied to queues, suspends the queues and any  jobs
+          which might be active.
 
      -us  If applied to queues, unsuspends  the  queues  and  any
           jobs  which  might  be  active.  If  applied  to  jobs,
-          unsuspends the jobs. If a job is both suspended  expli-
-          citly  and  via  suspension  of  its queue, a following
-          unsuspend of the queue will not release the  suspension
-          state on the job.
+          unsuspends the jobs. Do not use  this  switch  anymore,
+          use -usj / -usq instead.
 
-     -verify
-          performs no modifications but just prints what would be
-          done if -verify was not present.
+     -usj If applied to jobs, unsuspends the jobs. If  a  job  is
+          both  suspended  explicitly  and  via suspension of its
+          queue, a following unsuspend  of  the  queue  will  not
+          release the suspension state on the job.
 
-     job/task_id_list | queue_list
-          The jobs or queues  upon  which  <I>qmod</I>  is  supposed  to
-          operate.  The  job/task_id_list  is specified by one of
-          the following forms:
-
-              <I>job</I>_<I>id</I>[.<I>task</I>_<I>range</I>][,<I>job</I>_<I>id</I>[.<I>task</I>_<I>range</I>],...]
-              <I>job</I>_<I>id</I>[.<I>task</I>_<I>range</I>][ <I>job</I>_<I>id</I>[.<I>task</I>_<I>range</I>] ...]
-
-          If present, the <I>task</I>_<I>range</I> restricts the effect of  the
-          <I>qmod</I> operation to the array job task range specified as
-          suffix to the job id (see the -t option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>  for
-          further details on array jobs).
-
-          The task range specifier has  the  form  n[-m[:s]][,n[-
-          m[:s]], ...] or n[-m[:s]][ n[-m[:s]] ...] and thus con-
-          sists of a comma  or  blank  separated  list  of  range
-          specifiers  n[-m[:s]].  The  ranges are concatenated to
-          the complete task id range. Each range may be a  single
-          number,  a simple range of the form n-m or a range with
-          a step size.
-
-          The <I>queue</I>_<I>list</I> is specified by  one  of  the  following
-          forms:
-
-              <I>queuename</I>[,<I>queuename</I> ...]
-              <I>queuename</I>[ <I>queuename</I> ...]
-
-          Alternatively a wildcard charcter "*" can be  used  for
-          specifying  queues,   e.g.  "s*" will select all queues
-          starting with "s".
+     -usq If applied to queues, unsuspends  the  queues  and  any
+          jobs which might be active.
 
 ENVIRONMENTAL VARIABLES
      SGE_ROOT       Specifies the location  of  the  Grid  Engine
@@ -106,6 +95,7 @@ ENVIRONMENTAL VARIABLES
                          The name of the cell  specified  in  the
                          environment  variable SGE_CELL, if it is
                          set.
+
                          The  name  of  the  default  cell,  i.e.
                          default.
 
@@ -116,16 +106,12 @@ ENVIRONMENTAL VARIABLES
                     level of detail in which debug information is
                     generated is defined.
 
-     COMMD_PORT     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  is  expected to listen for com-
+     SGE_QMASTER_PORT
+                    If set,  specifies  the  tcp  port  on  which
+                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
-                    use  a  services  map entry instead to define
-                    that port.
-
-     COMMD_HOST     If set, specifies the host on which the  par-
-                    ticular  <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  to  be  used  for Grid
-                    Engine  communication  of  the  <I>qmod</I>   client
-                    resides.  Per default the local host is used.
+                    use  a  services  map  entry  for the service
+                    "sge_qmaster" instead to define that port.
 
 FILES
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
@@ -133,11 +119,25 @@ FILES
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,    <B><A HREF="../htmlman1/sge_ckpt.html">sge_ckpt(1)</A></B>,    <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>,    <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,
-     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>.
+     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>, <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
 
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

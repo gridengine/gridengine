@@ -7,41 +7,34 @@ NAME
 
 DESCRIPTION
      A host group entry is used to merge host  names  to  groups.
-     Each  host  group  entry  file defines one group. A group is
-     referenced by the sign "@" as first character of  the  name.
-     At  this  point of implementation you can use host groups in
-     the <B><A HREF="../htmlman5/usermapping.html">usermapping(5)</A></B> configuration. Inside a group  definition
-     file  you  can  also  reference  to  groups. This groups are
-     called subgroups.
-
-
-     Each line in the host group entry file specifies a host name
-     or a group which belongs to this group.
-
+     Each   host   group  entry  file defines one group. Inside a
+     group definition file you  can  also  reference  to  groups.
+     These  groups are called subgroups. A subgroup is referenced
+     by the sign "@" as first character of the name.
 
      A list of currently configured host  group  entries  can  be
      displayed  via  the <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> -shgrpl option. The contents of
      each enlisted host group entry can be shown via  the  -shgrp
      switch. The output follows the <I>hostgroup</I> format description.
      New host group entries can be created and  existing  can  be
-     modified  via  the  -ahgrp,  -mhgrp  and  -dhgrp  options to
-     <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>.
+     modified  via  the -ahgrp, -mhgrp, -dhgrp and -?attr options
+     to <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>.
 
 FORMAT
-     A host group entry contains at least two parameters:
+     A host group entry contains following parameters:
 
      group_name keyword
-          The group_name keyword defines the host group name. The
-          rest  of  the  textline  after the keyword "group_name"
-          will be taken as host group name value.
+          The group_name keyword defines  the  host  group  name.
+          Host group names have to begin with a '@' character.
 
 
-     hostname
-          The name of the host which is now member of  the  group
-          specified  with  group_name.  If The first character of
-          the hostname is a "@" sign the name is used  to  refer-
-          ence a <B><A HREF="../htmlman5/hostgroup.html">hostgroup(5)</A></B> which is taken as sub group of this
-          group.
+     hostlist
+          The name of all hosts and host  groups  which  are  now
+          member  of  the group specified with group_name. If The
+          first character of the hostname is a "@" sign the  name
+          is  used  to reference a <B><A HREF="../htmlman5/hostgroup.html">hostgroup(5)</A></B> which is taken as
+          sub group of this group. Default for this parameter  is
+          NONE
 
 
 
@@ -49,25 +42,33 @@ EXAMPLE
      This is a typical host group entry:
 
 
-     group_name bigMachines
+     group_name @bigMachines
 
-     @calculate
+     hostlist @solaris64 @solaris32 fangorn balrog
 
-
-     speedhost
-
-     The entry will define a new host group  called  bigMachines.
-     In  this host group is the host speedhost and all members of
-     the host group calculate.
+     The entry will define a new host group called  @bigMachines.
+     In  this  host  group  are  the host fangorn, balrog and all
+     members of the host groups @solaris64 and @solaris32.
 
 
 
 SEE ALSO
-     <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>, <B><A HREF="../htmlman5/usermapping.html">usermapping(5)</A></B>.
+     <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>
 
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -95,24 +95,24 @@ ENVIRONMENTAL VARIABLES
                     level of detail in which debug information is
                     generated is defined.
 
-     COMMD_PORT     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  is  expected to listen for com-
+     SGE_QMASTER_PORT
+                    If set,  specifies  the  tcp  port  on  which
+                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
-                    use  a  services  map entry instead to define
-                    that port.
-
-     COMMD_HOST     If set, specifies the host on which the  par-
-                    ticular  <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  to  be  used  for Grid
-                    Engine  communication  of  the  <I>qhold</I>  client
-                    resides.  Per default the local host is used.
-
+                    use  a  services  map  entry  for the service
+                    "sge_qmaster" instead to define that port.
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>, <B><A HREF="../htmlman1/qrls.html">qrls(1)</A></B>, <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
-     sions.
+     See  <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>  for  a  full  statement  of  rights   and
+     permissions.
+
+
+
+
+
 
 
 

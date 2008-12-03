@@ -35,26 +35,6 @@ FORMAT
      individual parameters that compose the global and local con-
      figurations for a Grid Engine cluster:
 
-qmaster_spool_dir
-     The location where the master spool directory resides.  Only
-     the <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> and <B><A HREF="../htmlman8/sge_shadowd.html">sge_shadowd(8)</A></B> need to have access to
-     this directory. It needs  read/write  permission  for  root,
-     however. The master spool directory - in particular the jobs
-     directory and the message log file - may become quite  large
-     depending on the size of the cluster and the number of jobs.
-     Be sure to allocate enough disk space  and  regularly  clean
-     off the log files, e.g. via a <B><A HREF="../htmlman8/cron.html">cron(8)</A></B> job.
-
-     Being  a  parameter  set  at  installation   time   changing
-     qmaster_spool_dir in a running system is not supported.
-
-     The default location  for  the  master  spool  directory  is
-     &lt;sge_root&gt;/&lt;cell&gt;/spool/qmaster.
-
-     This value is a global configuration parameter only. It can-
-     not  be  overwritten  by the execution host local configura-
-     tion.
-
 execd_spool_dir
      The execution daemon spool directory path. Again, a feasible
      spool  directory  requires  read/write access permission for
@@ -74,30 +54,8 @@ execd_spool_dir
 
      Being a parameter set at installation time changing the glo-
      bal execd_spool_dir in a running system is not supported.
-
      The default location for the execution daemon  spool  direc-
      tory is &lt;sge_root&gt;/&lt;cell&gt;/spool.
-
-     The  global  configuration  entry  for  this  value  may  be
-     overwritten by the execution host local configuration.
-
-binary_path
-     The directory path where the Grid Engine binaries reside. It
-     is  used within Grid Engine components to locate and startup
-     other Grid Engine programs.
-
-     The path name given here is searched for binaries as well as
-     any  directory  below  with  a  directory  name equal to the
-     current   operating    system    architecture.    Therefore,
-     /usr/SGE/bin   will  work  for  all  architectures,  if  the
-     corresponding binaries are located in  subdirectories  named
-     aix43, cray, glinux, hp10, irix6, osf4, solaris, etc.
-
-     Each <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> may have its private binary path.   Chang-
-     ing   the   binary  path  will  have  immediate  effect  for
-     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>.
-
-     The default location for the binary path is &lt;sge_root&gt;/bin
 
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
@@ -147,30 +105,29 @@ load_sensor
      overwritten by the execution host local configuration.
 
      In addition to the load sensors configured via  load_sensor,
-     <B><A HREF="../htmlman8/sge_exec.html">sge_exec(8)</A></B>  searches for an executable file named <I>qloadsen-</I>
-     <I>sor</I> in the execution host's  Grid  Engine  binary  directory
-     path.   If such a file is found, it is treated like the con-
-     figurable load sensors defined in load_sensor. This facility
-     is intended for pre-installing a default load sensor.
+     <B><A HREF="../htmlman8/sge_exec.html">sge_exec(8)</A></B>   searches   for   an   executable   file  named
+     <I>qloadsensor</I> in  the  execution  host's  Grid  Engine  binary
+     directory path.  If such a file is found, it is treated like
+     the configurable load sensors defined in  load_sensor.  This
+     facility  is intended for pre-installing a default load sen-
+     sor.
 
 prolog
      The executable path of a shell script that is started before
      execution of Grid Engine jobs with the same environment set-
      ting as that for the Grid Engine jobs to be  started  after-
      wards.  An  optional prefix "user@" specifies the user under
-     which this procedure is to be started.   This  procedure  is
-     intended  as  a  means  for the Grid Engine administrator to
-     automate the execution of general site specific  tasks  like
-     the  preparation of temporary file systems with the need for
-     the same context information as the job.  Each  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>
-     may use a private prologue script. Correspondingly, the exe-
-     cution host local configurations is can  be  overwritten  by
-     the  queue configuration (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> ). Changing pro-
-     log will take immediate effect.
-
-     Note: prolog is executed <I>exactly</I> as the job script.   There-
-     fore,   all  implications  described  under  the  parameters
-     shell_start_mode and login_shells below apply.
+     which this procedure is to be started. The procedures  stan-
+     dard  output  and the error output stream are written to the
+     same file used also for the standard output and error output
+     of  each job.  This procedure is intended as a means for the
+     Grid Engine administrator to automate the execution of  gen-
+     eral  site  specific tasks like the preparation of temporary
+     file systems with the need for the same context  information
+     as  the  job.   Each <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> may use a private prologue
+     script. Correspondingly, the execution host local configura-
+     tions  is can be overwritten by the queue configuration (see
+     <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> ). Changing prolog will take immediate effect.
 
      The default for prolog is  the  special  value  NONE,  which
      prevents from execution of a prologue script.
@@ -199,8 +156,98 @@ prolog
           started).
 
      $<I>queue</I>
-          The master queue, i.e. the queue in  which  the  prolog
-          and epilog procedures are started.
+          The cluster queue name of the  master  queue  instance,
+          i.e.  the  cluster queue in which the prolog and epilog
+          procedures are started.
+
+     $<I>stdin</I>_<I>path</I>
+          The  pathname  of  the  stdin  file.  This  is   always
+          /dev/null  for prolog, pe_start, pe_stop and epilog. In
+          the job script it is the pathname of the stdin file for
+          the  job.  When delegated file staging is enabled, this
+          path is set to $fs_stdin_tmp_path. When delegated  file
+          staging  is not enabled, it is the stdin pathname given
+          via DRMAA or qsub.
+
+     $<I>stdout</I>_<I>path</I>
+
+     $<I>stderr</I>_<I>path</I>
+          The pathname of the  stdout/stderr  file.  This  always
+          points  to  the  output/error file. When delegated file
+          staging   is   enabled,   this   path   is    set    to
+          $fs_stdout_tmp_path/$fs_stderr_tmp_path. When delegated
+          file staging is not enabled, it  is  the  stdout/stderr
+          pathname given via DRMAA or qsub.
+
+     $<I>merge</I>_<I>stderr</I>
+          If merging of stderr and stdout is requested, this flag
+          is "1", otherwise it is "0".  If this flag is 1, stdout
+          and stderr are merged in one  file,  the  stdout  file.
+          Merging  of  stderr and stdout can be requested via the
+          DRMAA job template  attribute  'drmaa_join_files'  (see
+          <B><A HREF="../htmlman3/drmaa_attributes.html">drmaa_attributes(3)</A></B> ) or the qsub parameter '-j y' (see
+          <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> ).
+
+     $<I>fs</I>_<I>stdin</I>_<I>host</I>
+          When delegated file staging is requested for the  stdin
+          file, this is the name of the host where the stdin file
+          has to be copied from before the job is started.
+
+     $<I>fs</I>_<I>stdout</I>_<I>host</I>
+
+     $<I>fs</I>_<I>stderr</I>_<I>host</I>
+          When  delegated  file  staging  is  requested  for  the
+          stdout/stderr  file, this is the name of the host where
+          the stdout/stderr file has to be copied  to  after  the
+          job has run.
+
+     $<I>fs</I>_<I>stdin</I>_<I>path</I>
+          When delgated file staging is requested for  the  stdin
+          file,  this  is  the  pathname of the stdin file on the
+          host $fs_stdin_host.
+
+     $<I>fs</I>_<I>stdout</I>_<I>path</I>
+
+     $<I>fs</I>_<I>stderr</I>_<I>path</I>
+          When  delegated  file  staging  is  requested  for  the
+          stdout/stderr   file,  this  is  the  pathname  of  the
+          stdout/stderr       file       on       the        host
+          $fs_stdout_host/$fs_stderr_host.
+
+     $<I>fs</I>_<I>stdin</I>_<I>tmp</I>_<I>path</I>
+          When delegated file staging is requested for the  stdin
+          file,  this  is  the  destination pathname of the stdin
+          file on the execution host. The prolog script must copy
+          the  stdin  file  from $fs_stdin_host:$fs_stdin_path to
+          localhost:$fs_stdin_tmp_path  to  establish   delegated
+          file staging of the stdin file.
+
+     $<I>fs</I>_<I>stdout</I>_<I>tmp</I>_<I>path</I>
+
+     $<I>fs</I>_<I>stderr</I>_<I>tmp</I>_<I>path</I>
+          When  delegated  file  staging  is  requested  for  the
+          stdout/stderr  file, this is the source pathname of the
+          stdout/stderr file on the execution  host.  The  epilog
+          script    must    copy    the    stdout    file    from
+          localhost:$fs_stdout_tmp_path                        to
+          $fs_stdout_host:$fs_stdout_path  (the  stderr file from
+          localhost:$fs_stderr_tmp_path                        to
+          $fs_stderr_host:$fs_stderr_path) to establish delegated
+          file staging of the stdout/stderr file.
+
+     $<I>fs</I>_<I>stdin</I>_<I>file</I>_<I>staging</I>
+
+     $<I>fs</I>_<I>stdout</I>_<I>file</I>_<I>staging</I>
+
+     $<I>fs</I>_<I>stderr</I>_<I>file</I>_<I>staging</I>
+          When  delegated  file  staging  is  requested  for  the
+          stdin/stdout/stderr  file, the flag is set to "1", oth-
+          erwise it is set to "0" (see in  delegated_file_staging
+          how to enable delegated file staging).
+
+          These three flags correspond to the DRMAA job  template
+          attribute          'drmaa_transfer_files'          (see
+          <B><A HREF="../htmlman3/drmaa_attributes.html">drmaa_attributes(3)</A></B> ).
 
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
@@ -210,19 +257,18 @@ epilog
      execution of Grid Engine jobs with the same environment set-
      ting as that for the Grid Engine jobs  that  has  just  com-
      pleted.  An optional prefix "user@" specifies the user under
-     which this procedure is to be started.   This  procedure  is
-     intended  as  a  means  for the Grid Engine administrator to
-     automate the execution of general site specific  tasks  like
-     the  cleaning up of temporary file systems with the need for
-     the same context information as the job.  Each  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>
-     may use a private epilogue script. Correspondingly, the exe-
-     cution host local configurations is can  be  overwritten  by
-     the queue configuration (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> ).  Changing epi-
-     log will take immediate effect.
-
-     Note: epilog is executed <I>exactly</I> as the job script.   There-
-     fore,   all  implications  described  under  the  parameters
-     shell_start_mode and login_shells below apply.
+     which this procedure is to be started. The procedures  stan-
+     dard  output  and the error output stream are written to the
+     same file used also for the standard output and error output
+     of  each job.  This procedure is intended as a means for the
+     Grid Engine  administrator  to  automate  the  execution  of
+     general  site  specific  tasks  like the cleaning up of tem-
+     porary file systems with  the  need  for  the  same  context
+     information as the job.  Each <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> may use a private
+     epilogue script. Correspondingly, the execution  host  local
+     configurations is can be overwritten by the queue configura-
+     tion  (see  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>  ).   Changing  epilog  will  take
+     immediate effect.
 
      The default for epilog is  the  special  value  NONE,  which
      prevents  from  execution  of  a epilogue script.  The  same
@@ -315,8 +361,10 @@ login_shells
      started as login-shells.   Shells  in  this  list  are  only
      started  as  login  shells if the parameter shell_start_mode
      (see above) is set to <I>posix</I>_<I>compliant</I>.
+
      Changes to login_shells will  take  immediate  effect.   The
      default for login_shells is sh,csh,tcsh,ksh.
+
 
      This value is a global configuration parameter only. It can-
      not  be  overwritten  by the execution host local configura-
@@ -397,15 +445,11 @@ administrator_mail
      tion.
 
 projects
-     This parameter is only available for Grid Engine  Enterprise
-     Edition systems. It is not present in Grid Engine.
-
      The projects list contains all projects  which  are  granted
-     access  to Grid Engine Enterprise Edition. User belonging to
-     none of these projects cannot  use  Grid  Engine  Enterprise
-     Edition.  If  users  belong to projects in the projects list
-     and the xprojects list (see below), they also cannot use the
-     system.
+     access  to Grid Engine. User belonging to none of these pro-
+     jects cannot use Grid Engine. If users belong to projects in
+     the  projects  list and the xprojects list (see below), they
+     also cannot use the system.
 
      Changing projects takes immediate effect.  The  default  for
      projects is none.
@@ -415,23 +459,18 @@ projects
      tion.
 
 xprojects
-     This parameter is only available for Grid Engine  Enterprise
-     Edition systems. It is not present in Grid Engine.
-
-
      The xprojects list contains all projects which  are  granted
-     access  to Grid Engine Enterprise Edition. User belonging to
-     one of these projects cannot use Grid Engine Enterprise Edi-
-     tion.  If users belong to projects in the projects list (see
-     above) and the xprojects list, they also cannot use the sys-
-     tem.
+     access  to  Grid Engine. User belonging to one of these pro-
+     jects cannot use Grid Engine. If users belong to projects in
+     the  projects  list (see above) and the xprojects list, they
+     also cannot use the system.
 
      Changing xprojects takes immediate effect.  The default  for
      xprojects is none.
 
      This value is a global configuration parameter only. It can-
-     not  be  overwritten  by the execution host local configura-
-     tion.
+     not   be   overwritten   by   the   execution   host   local
+     configuration.
 
 load_report_time
      System load is reported periodically by the  execution  dae-
@@ -483,19 +522,6 @@ reschedule_unknown
      The global configuration entry for this value  may  be  over
      written by the execution host local configuration.
 
-stat_log_time
-     Grid Engine periodically logs a snapshot of  the  status  of
-     the queues currently configured in the cluster to disk.  The
-     time interval in seconds between  consecutive  snapshots  is
-     defined by stat_log_time.
-
-     Changing stat_log_time takes immediate effect.  The  default
-     for stat_log_time is 2 hours 30 minutes.
-
-     This value is a global configuration parameter only. It can-
-     not  be  overwritten  by the execution host local configura-
-     tion.
-
 max_unheard
      If <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> could not contact or was not contacted  by
      the  execution daemon of a host for max_unheard seconds, all
@@ -518,8 +544,8 @@ loglevel
      to produce informative, warning or error messages which  are
      logged  to  the  <I>messages</I>  files in the master and execution
      daemon  spool  directories  (see  the  description  of   the
-     qmaster_spool_dir  and the execd_spool_dir parameter above).
-     The following message levels are available:
+     execd_spool_dir parameter above). The following message lev-
+     els are available:
 
      <I>log</I>_<I>err</I>
           All error events being recognized are logged.
@@ -599,14 +625,12 @@ max_jobs
 
      Changing max_jobs will take immediate effect.
 
+
      This value is a global configuration parameter only. It can-
      not  be  overwritten  by the execution host local configura-
      tion.
 
 enforce_project
-     This parameter is only available for Grid Engine  Enterprise
-     Edition systems. It is not present in Grid Engine.
-
      If set to <I>true</I>, users are  required  to  request  a  project
      whenever  submitting a job. See the -P option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> for
      details.
@@ -619,15 +643,75 @@ enforce_project
      tion.
 
 enforce_user
-     This parameter is only available for Grid Engine  Enterprise
-     Edition systems. It is not present in Grid Engine.
+     If set to <I>true</I>, a <B><A HREF="../htmlman5/user.html">user(5)</A></B> must exist to allow for  job  sub-
+     mission. Jobs are rejected if no corresponding user exists.
 
-     If set to <I>true</I>, a Grid  Engine  Enterprise  Edition  <B><A HREF="../htmlman5/user.html">user(5)</A></B>
-     must  exists  to allow for job submission. Jobs are rejected
-     if no corresponding user exists.
+     If set to <I>auto</I>, a <B><A HREF="../htmlman5/user.html">user(5)</A></B> object  for  the  submitting  user
+     will  automatically be created during job submission, if one
+     does   not    already    exist.    The    auto_user_oticket,
+     auto_user_fshare,       auto_user_default_project,       and
+     auto_user_delete_time configuration parameters will be  used
+     as default attributes of the new <B><A HREF="../htmlman5/user.html">user(5)</A></B> object.
 
      Changing  enforce_user  will  take  immediate  effect.   The
      default for enforce_user is <I>false</I>.
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+auto_user_oticket
+     The number of override tickets to  assign  to  automatically
+     created  <B><A HREF="../htmlman5/user.html">user(5)</A></B> objects. User objects are created automati-
+     cally if the enforce_user attribute is set to <I>auto</I>.
+
+     Changing auto_user_oticket will  affect  any  newly  created
+     user  objects,  but  will not change user objects created in
+     the past.
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+auto_user_fshare
+     The number of functional shares to assign  to  automatically
+     created  <B><A HREF="../htmlman5/user.html">user(5)</A></B> objects. User objects are created automati-
+     cally if the enforce_user attribute is set to <I>auto</I>.
+
+     Changing auto_user_fshare will affect any newly created user
+     objects,  but  will  not  change user objects created in the
+     past.
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+auto_user_default_project
+     The default  project  to  assign  to  automatically  created
+     <B><A HREF="../htmlman5/user.html">user(5)</A></B>  objects.  User objects are created automatically if
+     the enforce_user attribute is set to <I>auto</I>.
+
+     Changing auto_user_default_project  will  affect  any  newly
+     created  user  objects,  but  will  not  change user objects
+     created in the past.
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+auto_user_delete_time
+     The number of seconds of inactivity  after  which  automati-
+     cally  created <B><A HREF="../htmlman5/user.html">user(5)</A></B> objects will be deleted. User objects
+     are created automatically if the enforce_user  attribute  is
+     set  to  <I>auto</I>. If the user has no active or pending jobs for
+     the specified amount of time, the object will  automatically
+     be  deleted.   A value of 0 can be used to indicate that the
+     automatically created user object is  permanent  and  should
+     not be automatically deleted.
+
+     Changing auto_user_delete_time will affect the deletion time
+     for all users with active jobs.
+
      This value is a global configuration parameter only. It can-
      not  be  overwritten  by the execution host local configura-
      tion.
@@ -679,7 +763,6 @@ pag_cmd
      <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B>  process  and the job run in a <I>pagsh</I>. Please
      ask your AFS administrator for details.
 
-
      Changing pag_cmd will take immediate  effect.   The  default
      for pag_cmd is none.
 
@@ -698,13 +781,14 @@ token_extend_time
      Changing token_extend_time will take immediate effect.   The
      default for token_extend_time is 24:0:0, i.e. 24 hours.
 
+
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
 gid_range
      The gid_range is a comma separated list of range expressions
-     of  the  form  n-m  (n  as well as m being positive non-zero
-     integer numbers), where m is an abbreviation for m-m.  These
+     of  the  form  n-m  (n  as  well  as m being integer numbers
+     greater than 99), where m is an abbreviation for m-m.  These
      numbers  are  used  in  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  to  identify processes
      belonging to the same job.
 
@@ -715,8 +799,7 @@ gid_range
 
      Changing gid_range will take immediate effect.  There is  no
      default for gid_range. The administrator will have to assign
-     a value for gid_range during  installation  of  Grid  Engine
-     Enterprise Edition.
+     a value for gid_range during installation of Grid Engine.
 
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
@@ -741,13 +824,6 @@ qmaster_params
           forced only if the normal cancellation  was  unsuccess-
           ful.
 
-          Changing qmaster_params  will  take  immediate  effect.
-          The default for qmaster_params is none.
-
-          This value is a global configuration parameter only. It
-          cannot  be overwritten by the execution host local con-
-          figuration.
-
      <I>FORBID</I>_<I>RESCHEDULE</I>
           If this parameter is set, re-queuing of jobs cannot  be
           initiated  by  the job script which is under control of
@@ -757,119 +833,36 @@ qmaster_params
           instance  if  there  are  not  enough  resources on the
           current one.
 
+
+     <I>FORBID</I>_<I>APPERROR</I>
+          If this parameter is set, the  application  cannot  set
+          itself  to  error  state.   Without this parameter jobs
+          returning the value 100 are set  to  error  state  (and
+          therefore  can  be manually rescheduled by clearing the
+          error state).  This can be used to set the job to error
+          state  when  a starting condition of the application is
+          not fulfilled before the application  itself  has  been
+          started, or when a clean up procedure (e.g. in the epi-
+          log) decides that it  is  neccessary  to  run  the  job
+          again,  by  returning  100 in the prolog, pe_start, job
+          script, pe_stop or epilog script.
+
      <I>DISABLE</I>_<I>AUTO</I>_<I>RESCHEDULING</I>
           If set to "true" or "1", the <I>reschedule</I>_<I>unknown</I> parame-
           ter is not taken into account.
 
+     <I>MAX</I>_<I>DYN</I>_<I>EC</I>
+          Sets the max number of dynamic event clients  (as  used
+          by  qsub  -sync  y and by Grid Engine DRMAA API library
+          sessions). The default is set  to  99.  The  number  of
+          dynamic event clients should not be bigger than half of
+          the number of file  descriptors  the  system  has.  The
+          number of file descriptors are shared among the connec-
+          tions to all exec hosts, all event  clients,  and  file
+          handles that the qmaster needs.
+
      Changing qmaster_params will  take  immediate  effect.   The
      default for qmaster_params is none.
-
-     This value is a global configuration parameter only. It can-
-     not  be  overwritten  by the execution host local configura-
-     tion.
-
-schedd_params
-     This is foreseen for passing additional  parameters  to  the
-     Grid  Engine  scheduler. The following values are recognized
-     currently:
-
-     <I>FLUSH</I>_<I>SUBMIT</I>_<I>SEC</I>, <I>FLUSH</I>_<I>FINISH</I>_<I>SEC</I>
-          The parameters are provided  for  tuning  the  system's
-          scheduling  behavior.   By  default, a scheduler run is
-          triggered in the scheduler interval which is defined in
-          the  scheduler  configuration  <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>, parameter
-          schedule_interval.
-          The parameters FLUSH_SUBMIT_SEC/FLUSH_FINISH_SEC define
-          the  time  gaps  between triggering a scheduler run and
-          the submitting/finishing of a job.
-          The most immediate scheduler reaction can be  activated
-          by  setting  both  values  to 0. The default scheduling
-          behavior is enforced by either removing the  parameters
-          or setting them to a value of -1.
-
-     <I>CLASSIC</I>_<I>SGEEE</I>_<I>SCHEDULING</I>
-          If set to "true" or "1", use the original SGEEE pending
-          job  scheduling  algorithm.  The original SGEEE pending
-          job scheduling algorithm  calculates  the  tickets  for
-          pending  jobs  by  dividing  up  the  tickets  in  each
-          scheduling policy among  all  the  active  and  pending
-          jobs. The pending job list is then ordered based on the
-          tickets assigned to the pending jobs. The default value
-          is  "false".  This  parameter  is only valid in a SGEEE
-          system.
-
-     <I>POLICY</I>_<I>HIERARCHY</I>
-          This parameter sets up a dependency chain of  policies.
-          Each  policy  in  the dependency chain is influenced by
-          the previous policies and influences the following pol-
-          icies.  A  typical scenario is to assign precedence for
-          the override policy over the  share-based  policy.  The
-          override  policy  determines  in such a case how share-
-          based tickets are assigned among jobs of the same  user
-          or  project.   Note that all policies contribute to the
-          ticket amount assigned to a particular  job  regardless
-          of  the  policy  hierarchy  definition. Yet the tickets
-          calculated in each of the  policies  can  be  differend
-          depending on "<I>POLICY</I>_<I>HIERARCHY</I>".
-
-          The "<I>POLICY</I>_<I>HIERARCHY</I>" parameter  can  be  a  up  to  4
-          letter  combination of the first letters of the 4 poli-
-          cies  S(hare-based),   F(unctional),   D(eadline)   and
-          O(verride).  So  a value "OFSD" means that the override
-          policy takes precedence  over  the  functional  policy,
-          which  influences  the  share-based  policy  and  which
-          finaly  preceeds  the  deadline  policy.  Less  than  4
-          letters mean that some of the policies do not influence
-          other policies and also are  not  influenced  by  other
-          policies.  So a value of "FS" means that the functional
-          policy influences the share-based policy and that there
-          is no interference with the other policies.
-
-          The special value "NONE" switches  off  policy  hierar-
-          chies.
-
-     <I>SHARE</I>_<I>OVERRIDE</I>_<I>TICKETS</I>
-          If set to "true" or "1", override tickets of any  over-
-          ride  object instance are shared equally among all jobs
-          associated with the object. If set to "false"  or  "0",
-          each  job  gets  the full value of the override tickets
-          associated  with  the  object.  The  default  value  is
-          "true". This parameter is only valid in a SGEEE system.
-
-     <I>SHARE</I>_<I>FUNCTIONAL</I>_<I>SHARES</I>
-          If set to "true" or "1", functional shares of any func-
-          tional  object  instance  are shared among all the jobs
-          associated with the object. If set to "false"  or  "0",
-          each  job associated with a functional object, gets the
-          full functional shares  of  that  object.  The  default
-          value  is  "true".  This  parameter  is only valid in a
-          SGEEE system.
-
-     <I>SHARE</I>_<I>DEADLINE</I>_<I>TICKETS</I>
-          If set to "true" or "1", the total deadline tickets are
-          shared  among  all  deadline jobs. If set to "false" or
-          "0", each deadline job will receive the total  deadline
-          tickets  once  the  job  deadline has been reached. The
-          default value is "true". This parameter is  only  valid
-          in a SGEEE system.
-
-     <I>MAX</I>_<I>FUNCTIONAL</I>_<I>JOBS</I>_<I>TO</I>_<I>SCHEDULE</I>
-          The maximum number of pending jobs to schedule  in  the
-          functional  policy.  The  default  value  is  200. This
-          parameter is only valid in a SGEEE system.
-
-     <I>MAX</I>_<I>PENDING</I>_<I>TASKS</I>_<I>PER</I>_<I>JOB</I>
-          The maximum number of subtasks per pending array job to
-          schedule.  This  parameter  exists  in  order to reduce
-          scheduling overhead. The default  value  is  50.   This
-          parameter is only valid in a SGEEE system.
-
-     <I>PROFILE</I>
-          If set, the scheduler logs profiling  information  sum-
-          marizing each scheduling run.
-
-     Changing schedd_params  will  take  immediate  effect.   The
-     default for schedd_params is none.
 
      This value is a global configuration parameter only. It can-
      not  be  overwritten  by the execution host local configura-
@@ -891,22 +884,13 @@ execd_params
           the spool directory maintained by <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B> for a
           job.
 
-     <I>NO</I>_<I>REPRIORITIZATION</I>
-          If set to "true"  or  "1",  jobs  are  not  repriorized
-          dynamically.  Without setting this attribute the prior-
-          ity parameter in <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B> has no durable effect in
-          a SGEEE system because of dynamic reprioritization per-
-          formed by the PTF module inside <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>.
-
      <I>PTF</I>_<I>MIN</I>_<I>PRIORITY</I>, <I>PTF</I>_<I>MAX</I>_<I>PRIORITY</I>
-          The parameters are only  available  in  a  Grid  Engine
-          Enterprise Edition system.
-          The maximum/minumum priority which Grid  Engine  Enter-
-          prise  Edition will assign to a job.  Typically this is
-          a negative/postive value in the range of -20  (maximum)
-          to  19  (minimum)  for  systems  which allow setting of
-          priorties with the <B><A HREF="../htmlman2/nice.html">nice(2)</A></B> system call.  Other  systems
-          may provide different ranges.
+          The maximum/minumum priority  which  Grid  Engine  will
+          assign  to a job.  Typically this is a negative/postive
+          value in the range of -20 (maximum) to 19 (minimum) for
+          systems  which  allow  setting  of  priorties  with the
+          <B><A HREF="../htmlman2/nice.html">nice(2)</A></B> system call. Other  systems  may  provide  dif-
+          ferent ranges.
           The default priority range (varies from system to  sys-
           tem)  is installed either by removing the parameters or
           by setting a value of -999.
@@ -934,37 +918,10 @@ execd_params
           another signal name then this signal will  be  sent  as
           notification signal.
 
-     <I>SET</I>_<I>SGE</I>_<I>ENV</I>, <I>SET</I>_<I>COD</I>_<I>ENV</I>, <I>SET</I>_<I>GRD</I>_<I>ENV</I>
-          In <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> you can find a list of environment variables
-          which  are  exported  into the execution environment of
-          each Grid Engine Enterprise Edition job. Some of  these
-          variables  names  begin  with the prefix "SGE_". In the
-          predecessor products of Grid Engine Enterprise  Edition
-          (Codine,  GRD) the prefixes "COD_" and "GRD_" were used
-          for those variables. This makes it necessary to  update
-          all  job scripts relying one of those environment vari-
-          ables.  The  parameters  SET_SGE_ENV,  SET_COD_ENV  and
-          SET_GRD_ENV  can be used to accomplish a smoother tran-
-          sition from Codine/GRD to Grid Engine  Enterprise  Edi-
-          tion.
-
-          Each of those parameters  makes  sure  that  a  set  of
-          environment  variables  mentioned in <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> and begin-
-          ning with the corresponding  prefix  will  be  exported
-          into the job environmnet. Every parameter can be set to
-          "true",   "1"   or   "false",   "0".    Defaults    are
-          "SET_SGE_ENV=1, SET_COD_ENV=0 and SET_GRD_ENV=0".
-
-          If all three parameters are set to "false" or "0"  jobs
-          might  fail  as  none  of the corresponding environment
-          variables would be set.  Therefore  in  this  case  the
-          environment  variables beginning with the prefix "SGE_"
-          are set.
-
      <I>SHARETREE</I>_<I>RESERVED</I>_<I>USAGE</I>
           If this parameter is set to  true,  reserved  usage  is
-          taken for the Grid Engine Enterprise Edition share tree
-          consumption instead of measured usage.
+          taken  for  the  Grid  Engine  share  tree  consumption
+          instead of measured usage.
 
      Changing  execd_params  will  take  immediate  effect.   The
      default for execd_params is none.
@@ -987,32 +944,61 @@ execd_params
           rsh_command  parameters  may  not  be  changed from the
           default).
 
-admin_user
-     Administrative user account used  by  Grid  Engine  for  all
-     internal  file  handling  (status spooling, message logging,
-     etc.). Can be used in cases where the root account does  not
-     have  the  corresponding  file access permissions (e.g. on a
-     shared file system without global root read/write access).
+reporting_params
+     Used to define the behaviour of  reporting  modules  in  the
+     Grid  Engine  qmaster. Changes to the reporting_params takes
+     immediate effect.  The following values are recognized:
 
-     Being  a  parameter  set  at  installation   time   changing
-     admin_user in a running system is not supported. Changing it
-     manually on a shut-down cluster is possible, but  if  access
-     to  the  Grid Engine spooling area is interrupted, this will
-     result in unpredictable behaviour.
+     <I>accounting</I>
+          If this parameter is set to true, the  accounting  file
+          is  written.   The  accounting  file is prerequisit for
+          using the qacct command.
 
-     The admin_user parameter has no default value,  but  instead
-     it is defined during the master installation procedure.
+     <I>reporting</I>
+          If this parameter is set to true, the reporting file is
+          written.   The reporting file contains data that can be
+          used for monitoring and analysis, like job  accounting,
+          job  log,  host  load and consumables, queue status and
+          consumables  and  sharetree  configuration  and  usage.
+          Attention:  Depending on the size and load of the clus-
+          ter, the reporting file can become  quite  large.  Only
+          activate  the reporting file if you have a process run-
+          ning that will consume the reporting file!  See <I>report-</I>
+          <B><A HREF="../htmlman5/ing.html">ing(5)</A></B>  for  further  information about format and con-
+          tents of the reporting file.
 
-     This value is a global configuration parameter only. It can-
-     not  be  overwritten  by the execution host local configura-
-     tion.
+     <I>flush</I>_<I>time</I>
+          Contents of the accounting and the reporting  file  are
+          buffered  in  the  Grid Engine qmaster and flushed in a
+          fixed interval.  This interval can be  configured  with
+          the  <I>flush</I>_<I>time</I>  parameter.   It  is  specified as time
+          value in the format HH:MM:SS.   Sensible  values  range
+          from some seconds to one minute. Setting it too low may
+          slow down qmaster, setting it too high will make  qmas-
+          ter consume high amounts of memory for buffering data.
+
+     <I>joblog</I>
+          If this parameter is set to true,  the  reporting  file
+          will  contain job logging information. See <B><A HREF="../htmlman5/reporting.html">reporting(5)</A></B>
+          for more information about job logging.
+
+     <I>sharelog</I>
+          The Grid Engine  qmaster  can  dump  information  about
+          sharetree  configuration and use to the reporting file.
+          The parameter <I>sharelog</I> sets an interval in which share-
+          tree information will be dumped.  It is set in the for-
+          mat HH:MM:SS. A value of  00:00:00  configures  qmaster
+          not to dump sharetree information. Intervals of several
+          minutes up  to  hours  are  sensible  values  for  this
+          parameter.   See  <B><A HREF="../htmlman5/reporting.html">reporting(5)</A></B>  for further information
+          about sharelog.
 
 finished_jobs
      Grid Engine stores a certain number of <I>just</I> <I>finished</I> jobs to
      provide  post  mortem  status information. The finished_jobs
      parameter defines the number of finshed jobs  being  stored.
      If  this  maximum  number is reached, the eldest finshed job
-     will be discarded for every  now  job  being  added  to  the
+     will be discarded for every  new  job  being  added  to  the
      finshed job list.
 
      Changing finished_jobs  will  take  immediate  effect.   The
@@ -1043,7 +1029,6 @@ qlogin_command
      automatically started with the target host and  port  number
      as parameters.
 
-
      Changing qlogin_command will  take  immediate  effect.   The
      default for qlogin_command is none.
 
@@ -1057,7 +1042,6 @@ rlogin_daemon
      the  fully qualified pathname of the system's rlogin daemon.
      If no value is given, a specialized Grid Engine component is
      used.
-
      Changing  rlogin_daemon  will  take  immediate  effect.  The
      default for rlogin_daemon is none.
 
@@ -1095,7 +1079,6 @@ rsh_daemon
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
-
 rsh_command
      This is the command to be executed on the client side  of  a
      <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>  request  with  a  command  argument  to be executed
@@ -1111,70 +1094,33 @@ rsh_command
 
      Changing rsh_command will take immediate effect. The default
      for rsh_command is none.
-
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
-ignore_fqdn
-     Ignore fully qualified domain name component  of  hostnames.
-     Should  be set if all hosts belonging to a Grid Engine clus-
-     ter are part of a single DNS domain. It is  switched  on  if
-     set to either "true" or "1". Switching it on may solve prob-
-     lems with load reports due to different hostname resolutions
-     across the cluster.
-
-     Being  a  parameter  set  at  installation   time   changing
-     ignore_fqdn  in  a  running  system  is  not  supported. The
-     default for ignore_fqdn is "true".
-
-     This value is a global configuration parameter only. It can-
-     not  be  overwritten  by the execution host local configura-
-     tion.
-
-default_domain
-     Only needed if your Grid Engine cluster covers hosts belong-
-     ing to more than a single DNS domain. In this case it can be
-     used if your hostname resolving yields  both  qualified  and
-     unqualified  hostnames  for  the  hosts  in  one  of the DNS
-     domains. The value of  default_domain  is  appended  to  the
-     unqualified  hostname  to define a fully qualified hostname.
-     The  default_domain  parameter  will  have  no   effect   if
-     ignore_fqdn is set to "true".
-
-     Being  a  parameter  set  at  installation   time   changing
-     default_domain  in  a  running  system is not supported. The
-     default for default_domain is "none", in which case it  will
-     not be used.
-
-     This value is a global configuration parameter only. It can-
-     not   be   overwritten   by   the   execution   host   local
-     configuration.
+delegated_file_staging
+     This flag must be set to "true" when the prolog  and  epilog
+     are  ready  for  delegated  file  staging, so that the DRMAA
+     attribute 'drmaa_transfer_files' is supported. To  establish
+     delegated  file  staging,  use  the variables beginning with
+     "$fs_..." in prolog and epilog to move the input, output and
+     error  files  from one host to the other.  When this flag is
+     set to "false", no file staging is available for  the  DRMAA
+     interface.  File  staging  is currently implemented only via
+     the DRMAA interface.  When an error occurs while moving  the
+     input, output and error files, return error code 100 so that
+     the error handling mechanism can handle the error correctly.
+     (See also FORBID_APPERROR).
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/csh.html">csh(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman1/rsh.html">rsh(1)</A></B>,  <B><A HREF="../htmlman1/sh.html">sh(1)</A></B>,
-     <B><A HREF="../htmlman3/getpwnam.html">getpwnam(3)</A></B>,   <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,  <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>,  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>,
-     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>, <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B>, <B><A HREF="../htmlman8/cron.html">cron(8)</A></B>, <I>Grid</I>  <I>Engine</I>  <I>Ins-</I>
-     <I>tallation</I> <I>and</I> <I>Administration</I> <I>Guide</I>.
+     <B><A HREF="../htmlman3/getpwnam.html">getpwnam(3)</A></B>,       <B><A HREF="../htmlman3/drmaa_attributes.html">drmaa_attributes(3)</A></B>,       <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,
+     <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>,         <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>,         <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,
+     <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B>,   <B><A HREF="../htmlman8/cron.html">cron(8)</A></B>,  <I>Grid</I>  <I>Engine</I>  <I>Installation</I>  <I>and</I>
+     <I>Administration</I> <I>Guide</I>.
 
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

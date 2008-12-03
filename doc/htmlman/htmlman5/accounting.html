@@ -18,7 +18,7 @@ FORMAT
      appearance:
 
      qname
-          Name of the queue in which the job has run.
+          Name of the cluster queue in which the job has run.
 
      hostname
           Name of the execution host.
@@ -72,7 +72,9 @@ FORMAT
 
      The remainder of the accounting entries follows the contents
      of  the  standard  UNIX  rusage  structure  as  described in
-     <B><A HREF="../htmlman2/getrusage.html">getrusage(2)</A></B>.  The following entries are provided:
+     <B><A HREF="../htmlman2/getrusage.html">getrusage(2)</A></B>.  Depending on the operating system  where  the
+     job was executed some of the fields may be 0.  The following
+     entries are provided:
 
           ru_utime
           ru_stime
@@ -93,14 +95,10 @@ FORMAT
           ru_nivcsw
 
      project
-          The project which was assigned to the job. Projects are
-          only supported in case of a Grid Engine Enterprise Edi-
-          tion system.
+          The project which was assigned to the job.
 
      department
-          The department which was assigned to the  job.  Depart-
-          ments  are  only  supported  in  case  of a Grid Engine
-          Enterprise Edition system.
+          The department which was assigned to the job.
 
      granted_pe
           The parallel environment which was  selected  for  that
@@ -127,8 +125,8 @@ FORMAT
 
      pe_taskid
           If this identifier is set the task was part of a paral-
-          lel  job  and was passed to Grid Engine Enterprise Edi-
-          tion via the qrsh -inherit interface.
+          lel  job  and  was  passed  to Grid Engine via the qrsh
+          -inherit interface.
 
      maxvmem
           The maximum vmem size in bytes.
@@ -140,6 +138,8 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
 
 
 

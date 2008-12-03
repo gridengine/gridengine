@@ -1,0 +1,169 @@
+<HTML>
+<BODY BGCOLOR=white>
+<PRE>
+<!-- Manpage converted by man2html 3.0.1 -->
+NAME
+     sge_priority - Grid Engine job priorities
+
+DESCRIPTION
+     The SGE_PRIORITY man page describes means in Grid Engine for
+     controlling job priorities.
+
+     Grid Engine provide means for controlling job  dispatch  and
+     run-time  priorities.  The  dispatch  priority  is about the
+     importance of pending jobs  compared  with  each  other  and
+     determines the order in which Grid Engine dispatches jobs to
+     queues instances. The run-time priority is about the operat-
+     ing  system  priorities  of running jobs that influences the
+     CPU allocation which the operating system assigns to jobs.
+
+  JOBS DISPATCH PRIORITY
+     A job's dispatch priority is affected by the job's <B><A HREF="../htmlman1/submit.html">submit(1)</A></B>
+     -p priority, the job's submit time and on the policy set-up.
+     The overall dispatch priority set-up specifies how  priority
+     values  ("prio")  of  jobs are dynamically computed and they
+     are derived from the ticket policy and the  urgency  policy.
+     The     <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>     parameters    weight_ticket    and
+     weight_urgency are used to control to what degree the ticket
+     policy  resp.  urgency policy shall be in effect. To facili-
+     tate  easier  control,  the  dynamically  determined  values
+     ("tckts"/"urg")    for    both   policies   are   normalized
+     ("ntckts"/"nurg") before they  are  used  to  calculate  job
+     priorities ("prio"):
+
+        prio    = nurg * weight_urgency + weight_ticket * ntckts
+        nurg    = normalized(urg)
+        ntckts  = normalized(tckts)
+
+     Normalizing maps the available urgency/ticket values into  a
+     range  between  0 and 1.  The higher a jobs dynamic priority
+     value the earlier it gets an assignment.
+
+     The urgency policy defines an urgency value  for  each  job.
+     The urgency value
+
+        urg     =  rrcontr + wtcontr + dlcontr
+
+     consists   of   the   resource   requirement    contribution
+     ("rrcontr"),  the  waiting time contribution ("wtcontr") and
+     the deadline contribution ("dlcontr").
+
+     The resource  requirement  contribution  is  adding  up  all
+     resource requirements of a job into a single numeric value.
+
+        rrcontr = Sum over all(hrr)
+
+     with an "hrr" for each hard resource request.  Depending  on
+     the  resource  type two different methods are used to deter-
+     mine the value to be used for "hrr" here. For  numeric  type
+     resource  requests  the  "hrr"  representes  how  much  of a
+     resource a job requests (on a per-slot basis and on how many
+     slots)  and  how  "important" this resource is considered in
+     comparison to other resources. This is expressed by the for-
+     mula:
+
+        hrr      = rurg * assumed_slot_allocation * request
+
+     with the resources urgency value ("rurg") as specified under
+     urgency  in  <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>,  the  job's assumed_slot_allocation
+     representing the number of slots a job supposedly  gets  and
+     the  per  slot  request  as  specified  using the -l <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>
+     option. For string type requests the formula is simply
+
+        hrr      = "rurg"
+
+     and directly assigns the resource urgency value as specified
+     under urgency in <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>.
+
+     The waiting time contribution represents a weighted  weight-
+     ing time of the jobs
+
+        wtcontr = waiting_time * waiting_weight
+
+     with the waiting time  in  seconds  and  the  waiting_weight
+     value as specified in <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>.
+
+     The deadline contribution has an increasing effect  as  jobs
+     approach  their deadline initiation time (see the -dl option
+     in  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>).   It  is  defined  as  the  quotient  of   the
+     weight_deadline  value  from <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B> and the (steadily
+     decreasing) free time in seconds until  deadline  initiation
+     time
+
+        dlcontr = wheight_deadline / free_time
+
+     or is set to 0 for non-deadline jobs.
+
+     The ticket policy unites functional, override and share tree
+     policies  in the ticket value ("tckts") being defined as the
+     sum of the specific ticket values  ("ftckt"/"otckt"/"stckt")
+     for each sub-policy
+
+         tckts = ftckt + otckt + stckt
+
+     The ticket policies provide  a  broad  range  of  means  for
+     influencing  both  job  dispatch and runtime priorities on a
+     per job, per user, per project, and  per  department  basis.
+     See  the  Grid  Engine Installation and Administration Guide
+     for details.
+
+  JOB RUN-TIME PRIORITY
+     The run-time priority can be dynamically adjusted  in  order
+     to  meet  the goals set with the ticket policy. Dynamic run-
+     time priority adjustment can be turned  off  (default)  glo-
+     bally  using  reprioritize_interval  in  <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B> If no
+     dynamic run-time priority  adjustment  is  done  at  a  host
+     level,  the  priority  specification  in <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> is in
+     effect.
+
+SEE ALSO
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>, <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>, <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>,
+     <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>  <I>Grid</I>  <I>Engine</I>  <I>Installation</I>  <I>and</I>  <I>Administration</I>
+     <I>Guide</I>
+
+COPYRIGHT
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+<HR>
+<ADDRESS>
+Man(1) output converted with
+<a href="http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a>
+</ADDRESS>
+</BODY>
+</HTML>

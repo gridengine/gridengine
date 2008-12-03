@@ -7,7 +7,7 @@ NAME
 
 SYNTAX
      qhost [ -F [resource_name,...]  [ -help ] [ -h host_list ] [
-     -j ] [ -l resource=val,... ] [ -u user,... ]
+     -j ] [ -l resource=val,... ] [ -u user,... ] [ -xml ].
 
 DESCRIPTION
      <I>qhost</I> shows the current status of the available Grid  Engine
@@ -48,6 +48,12 @@ OPTIONS
           Display information only on those jobs and queues being
           associated with the users from the given user list.
 
+     -xml This option can be used  with  all  other  options  and
+          changes  the output to XML. The used schemas are refer-
+          enced in the XML  output.  The  output  is  printed  to
+          stdout.
+
+
 OUTPUT FORMATS
      Depending on the presence or absence of the -q or -F and  -j
      option three output formats need to be differentiated.  PP
@@ -85,7 +91,7 @@ OUTPUT FORMATS
      <B>o</B>  the number of used and available job slots,
 
      <B>o</B>  the state  of  the  queue  -  one  of  u(nknown)  if  the
-        corresponding  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> cannot be contacted, a(larm),
+        corresponding  <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B>  cannot be contacted, a(larm),
         A(larm),     C(alendar      suspended),      s(uspended),
         S(ubordinate),  d(isabled), D(isabled), E(rror) or combi-
         nations thereof.
@@ -100,7 +106,6 @@ OUTPUT FORMATS
      <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>) is currently exceeded. This  will  result  in
      jobs  running  in  that  queue  being successively suspended
      until no threshold is violated.
-
      The states s(uspended) and d(isabled)  can  be  assigned  to
      queues  and  released  via the <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B> command. Suspending a
      queue will cause all jobs executing  in  that  queue  to  be
@@ -115,12 +120,12 @@ OUTPUT FORMATS
      less of the cause) all jobs  executing  in  that  queue  are
      suspended too.
 
-     If an E(rror) state is displayed for a  queue,  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>
-     on  that  host was unable to locate the <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B> exe-
-     cutable on that host in order to start a job.  Please  check
-     the  error  logfile of that <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> for leads on how to
-     resolve the problem. Please enable the queue afterwards  via
-     the -c option of the <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B> command manually.
+     If an E(rror) state is displayed for a queue, <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B> on
+     that host was unable to locate the <B><A HREF="../htmlman8/ge_shepherd.html">ge_shepherd(8)</A></B> executable
+     on that host in order to start a job. Please check the error
+     logfile  of that <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B> for leads on how to resolve the
+     problem. Please enable  the  queue  afterwards  via  the  -c
+     option of the <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B> command manually.
 
      If the -F option was used, resource availability information
      is printed following the host status line. For each resource
@@ -187,50 +192,45 @@ OUTPUT FORMATS
      <B>o</B>  the priority of the jobs.
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     GE_ROOT        Specifies the location  of  the  Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
+     GE_CELL        If set, specifies  the  default  Grid  Engine
                     cell.  To  address  a  Grid Engine cell <I>qhost</I>
                     uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable SGE_CELL, if it is
+                         environment  variable  GE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     SGE_DEBUG_LEVEL
-                    If  set,  specifies  that  debug  information
+     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
 
-     SGE_QMASTER_PORT
+     GE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>  is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
 
 FILES
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                     Grid Engine master host file
+     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
+                    Grid Engine master host file
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>,   <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qhold.html">qhold(1)</A></B>,   <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>,
-     <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>,      <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,     <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>,
-     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>, <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B>.
+     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>,   <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>,   <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qhold.html">qhold(1)</A></B>,   <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>,
+     <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>,      <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,      <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,     <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B>,
+     <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>, <B><A HREF="../htmlman8/ge_shepherd.html">ge_shepherd(8)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
      sions.
-
-
-
-
 
 
 

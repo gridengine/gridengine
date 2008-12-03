@@ -12,8 +12,8 @@ DESCRIPTION
      of the <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> command, you can  add  execution  hosts  and
      modify  the configuration of any execution host in the clus-
      ter. Default execution host entries are added  automatically
-     as  soon  as  a <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> registers to <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> for
-     the very first time from a certain host. The  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>  -sel
+     as  soon as a <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B> registers to <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B> for the
+     very first time from  a  certain  host.  The  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>  -sel
      switch can be used to display a list of execution host being
      currently configured in your Grid Engine system. Via the -se
      option  you  can print the execution host configuration of a
@@ -22,30 +22,25 @@ DESCRIPTION
      The special hostname "global" can be used to define  cluster
      global characteristics.
 
+     Note, Grid Engine allows backslashes (\) be used  to  escape
+     newline (\newline) characters. The backslash and the newline
+     are replaced  with  a  space  ("  ")  character  before  any
+     interpretation.
+
 FORMAT
      The format of a <I>host</I>_<I>conf</I> file is defined as follows:
 
   hostname
-     The name of the execution host.
+     The  execution  hosts  name  as  defined  for  <I>host</I>_<I>name</I>  in
+     <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
 
   load_scaling
      A comma separated list of scaling values to  be  applied  to
      each  or  part  of  the  load  values  being reported by the
-     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> on the host and being defined  in  the  cluster
+     <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B> on the host and being  defined  in  the  cluster
      global  "host"  complex  (see <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>).  The load scaling
      factors are intended to level hardware or  operating  system
-     specific  differences between execution hosts. If, for exam-
-     ple, the load average value (load_avg in the "host" complex;
-     see  also  <B><A HREF="../htmlman1/uptime.html">uptime(1)</A></B>)  of  a multiprocessor machine is to be
-     compared  with  a  single  processor  machine  the  load  as
-     reported  by  the  single  CPU  host needs to be weighted up
-     against  the  multiprocessor  load  (given  the   same   CPU
-     hardware)  to  be  comparable.  The load scaling factors are
-     integers being multiplied with the reported load  quantities
-     to  constitute  weighted  load  values.  Thus, following the
-     example given above, the load value of the single  processor
-     machine  needs  to be multiplied by the number of processors
-     of the single processor machine to become comparable.
+     specific differences between execution hosts.
 
      The syntax of a load factor  specification  is  as  follows:
      First  the  name of the load value (as defined in the "host"
@@ -53,8 +48,8 @@ FORMAT
      scaling  value is provided. No blanks are allowed in between
      the load_scaling value string.
 
-     The  parameter  load_scaling  is  not  meaningful  for   the
-     definition of the "global" host.
+     The parameter load_scaling is not meaningful for the defini-
+     tion of the "global" host.
 
   complex_values
      complex_values  defines  quotas  for   resource   attributes
@@ -125,15 +120,16 @@ FORMAT
   load_values
      This entry cannot be configured but  is  only  displayed  in
      case  of  a  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>  -se  command.  All  load  values  are
-     displayed as reported by the <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> on the  host.  The
+     displayed as reported by the <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B> on  the  host.  The
      load  values  are  enlisted  in a comma separated list. Each
      load value start with its name, followed by  an  equal  sign
      and the reported value.
 
   processors
+     Note: Deprecated, may be removed in future release.
      This entry cannot be configured but  is  only  displayed  in
      case  of  a <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> -se command. Its value is the number of
-     processors which has been detected by  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  on  the
+     processors which has been detected  by  <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B>  on  the
      corresponding host.
 
   usage_scaling
@@ -195,12 +191,16 @@ FORMAT
      tings from the global host.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,  <B><A HREF="../htmlman1/uptime.html">uptime(1)</A></B>,  <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>,   <I>com-</I>
-     <B><A HREF="../htmlman5/plex.html">plex(5)</A></B>, <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>, <B><A HREF="../htmlman8/sge_qmater.html">sge_qmater(8)</A></B>.
+     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>,     <B><A HREF="../htmlman1/ge_types.html">ge_types(1)</A></B>,      <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,      <B><A HREF="../htmlman1/uptime.html">uptime(1)</A></B>,
+     <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>, <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>, <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B>, <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
      sions.
+
+
+
+
 
 
 

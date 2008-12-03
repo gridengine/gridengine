@@ -3,7 +3,7 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     SGE_resource_quota - Grid Engine resource quota file format
+     GE_resource_quota - Grid Engine resource quota file format
 
 DESCRIPTION
      Resource quota sets (rqs) are a flexible way to set  a  max-
@@ -12,16 +12,20 @@ DESCRIPTION
      running.   The  job  request distinction is done by a set of
      user, project, cluster queue, host and pe filter criteria.
 
-     By using the resource quota sets admistrators are allowed to
-     define  a  fine  granular resource quota configuration. This
+     By using the resource quota sets administrators are  allowed
+     to define a fine granular resource quota configuration. This
      helps restricting some job requests  to  a  lesser  resource
      usage  and  granting  other  job  requests a higher resource
      usage.
 
+     Note: Jobs requesting an Advance Reservation  (AR)  are  not
+     honored  by  Resource  Quotas and are neither subject of the
+     resulting limit, nor are debited in the usage consumption.
+
      A list of currently configured rqs can be displayed via  the
      <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>  -srqsl  option.  The  contents  of each listed rqs
      definition can be shown via the  -srqs  switch.  The  output
-     follows  the  <I>SGE</I>_<I>resource</I>_<I>quota</I> format description. New rqs
+     follows  the  <I>GE</I>_<I>resource</I>_<I>quota</I>  format description. New rqs
      can be created and existing can be modified via  the  -arqs,
      -mrqs and -drqs options to <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>.
 
@@ -35,6 +39,11 @@ DESCRIPTION
      first rule that matches a specific request will be  used.  A
      resource  quota  set always results in at most one effective
      resource quota rule for a specific request.
+
+     Note, Grid Engine allows backslashes (\) be used  to  escape
+     newline (\newline) characters. The backslash and the newline
+     are replaced  with  a  space  ("  ")  character  before  any
+     interpretation.
 
 FORMAT
      A resource  quota  set  definition  contains  the  following
@@ -145,13 +154,13 @@ FORMAT
 
                {w1|$complex1[*w1]}[{+|-}{w2|$complex2[*w2]}[{+|-}...]]
 
-          The weighting factors (w1, ...) are  positive  integers
-          or floating point numbers in double precision. The com-
-          plex values (complex1, ...)  are specified by the  name
-          defined  as type INT or DOUBLE in the complex list (see
-          <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>).
-          Note: Dynamic limits can only configured  for  a  host-
-          specific rule.
+               The  weighting  factors  (w1,  ...)  are  positive
+               integers  or floating point numbers in double pre-
+               cision. The complex values  (complex1,  ...)   are
+               specified  by  the  name  defined  as  type INT or
+               DOUBLE in the complex list (see <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>).
+               Note: Dynamic limits can  only  configured  for  a
+               host-specific rule.
 
 EXAMPLES
      The following is the simplest form of a resource quota  set.
@@ -197,12 +206,55 @@ EXAMPLES
 
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>,  <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>,  <B><A HREF="../htmlman5/host.html">host(5)</A></B>,  <I>host-</I>
+     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>,  <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>,  <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>,  <B><A HREF="../htmlman5/host.html">host(5)</A></B>,   <I>host-</I>
      <B><A HREF="../htmlman5/group.html">group(5)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>, <B><A HREF="../htmlman1/qquota.html">qquota(1)</A></B>, <B><A HREF="../htmlman5/project.html">project(5)</A></B>.
 
+
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
      sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

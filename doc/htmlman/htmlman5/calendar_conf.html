@@ -18,13 +18,19 @@ DESCRIPTION
      <I>calendar</I>_<I>conf</I> entries can be added, modified  and  displayed
      with  the  -<I>Acal</I>,  -<I>acal</I>,  -<I>Mcal</I>,  -<I>mcal</I>,  -<I>scal</I>  and -<I>scall</I>
      options to <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> or with the calendar configuration  dia-
-     log  of the graphical user interface <B><A HREF="../htmlman1/qmon.html">qmon(1)</A></B>.  The format of
-     the calendar configuration entries is defined as follows:
+     log of the graphical user interface <B><A HREF="../htmlman1/qmon.html">qmon(1)</A></B>.
+
+     Note, Grid Engine allows backslashes (\) be used  to  escape
+     newline (\newline) characters. The backslash and the newline
+     are replaced  with  a  space  ("  ")  character  before  any
+     interpretation.
 
 FORMAT
   calendar_name
      The name of the calendar to be used  when  attaching  it  to
-     queues or when administering the calendar definition.
+     queues  or  when  administering the calendar definition. See
+     <I>calendar</I>_<I>name</I> in <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B> for a  precise  definition  of
+     valid calendar names.
 
   year
      The queue status definition on a day of the year basis. This
@@ -34,17 +40,20 @@ FORMAT
      The syntax of the year field is defined as follows:
 
      year:=
-         {year_day_range_list=daytime_range_list[=state]
-         |year_day_range_list=[daytime_range_list=]state
-        |state} ...
+         { NONE
+         | year_day_range_list=daytime_range_list[=state]
+         | year_day_range_list=[daytime_range_list=]state
+         | state}
 
      Where
 
-     <B>o</B>  at least one of  year_day_range_list,  daytime_range_list
-        and state always have to be present,
+     <B>o</B>  NONE means, no definition is made on the year basis
+
+     <B>o</B>  if a definition is made on the year basis, at  least  one
+        of   year_day_range_list,  daytime_range_list  and  state
+        always have to be present,
 
      <B>o</B>  all day long is assumed if daytime_range_list is omitted,
-
      <B>o</B>  switching the queue  to  "off"  (i.e.  disabling  it)  is
         assumed if state is omitted,
 
@@ -71,14 +80,18 @@ FORMAT
      The syntax of the week field is defined as follows:
 
      week:=
-         {week_day_range_list[=daytime_range_list][=state]
-         |[week_day_range_list=]daytime_range_list[=state]
-         |[week_day_range_list=][daytime_range_list=]state} ...
+         { NONE
+         | week_day_range_list[=daytime_range_list][=state]
+         | [week_day_range_list=]daytime_range_list[=state]
+         | [week_day_range_list=][daytime_range_list=]state} ...
 
      Where
 
-     <B>o</B>  at least one of  week_day_range_list,  daytime_range_list
-        and state always have to be present,
+     <B>o</B>  NONE means, no definition is made on the week basis
+
+     <B>o</B>  if a definition is made on the week basis, at  least  one
+        of   week_day_range_list,  daytime_range_list  and  state
+        always have to be present,
 
      <B>o</B>  every day in the week is assumed  if  week_day_range_list
         is omitted,
@@ -134,7 +147,7 @@ SEMANTICS
 
 EXAMPLES
      (The following  examples  are  contained  in  the  directory
-     $SGE_ROOT/util/resources/calendars).
+     $GE_ROOT/util/resources/calendars).
 
      <B>o</B>  Night, weekend and public holiday calendar:
 
@@ -187,16 +200,54 @@ EXAMPLES
           year           1.1.1999,6.1.1999,28.3.1999,30.3.1999-
           31.3.1999,18.5.1999-19.5.1999,3.10.1999,25.12.1999,26
           .12.1999=suspended
-          week           mon-fri=20-6=suspended sat-sun=suspend
-          ed
+          week           mon-fri=20-6=suspended sat-sun=suspended
+
+
+     <B>o</B>  Weekend calendar with suspension, ignoring  public  holi-
+        days:
+
+        Settings are only done on the week basis, no settings  on
+        the year basis (keyword "NONE").
+
+          calendar_name  weekend_s
+          year           NONE
+          week           sat-sun=suspended
 
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>, <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.
+     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>, <B><A HREF="../htmlman1/ge__types.html">ge__types(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>, <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
      sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

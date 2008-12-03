@@ -18,7 +18,7 @@ DESCRIPTION
 
      When invoked, <I>qtcsh</I> identifies which commands are to be  run
      remotely  and  which  are  not.  For  this purpose the files
-     &lt;sge_root&gt;/&lt;cell&gt;/common/qtask and ~/.qtask  are  processed.
+     &lt;ge_root&gt;/&lt;cell&gt;/common/qtask and  ~/.qtask  are  processed.
      Each  line in these files defines a command that is intended
      to be run remotely (see <B><A HREF="../htmlman5/qtask.html">qtask(5)</A></B> for  a  definition  of  the
      file  format).  The .qtask file in the user's home directory
@@ -107,30 +107,29 @@ BUILT-IN COMMANDS
           -R   execute configured commands remotely
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     GE_ROOT        Specifies the location  of  the  Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
+     GE_CELL        If set, specifies  the  default  Grid  Engine
                     cell.  To  address  a  Grid Engine cell <I>qtcsh</I>
                     uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable SGE_CELL, if it is
+                         environment  variable  GE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     SGE_DEBUG_LEVEL
-                    If  set,  specifies  that  debug  information
+     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
 
-     SGE_QMASTER_PORT
+     GE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>  is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
@@ -141,12 +140,12 @@ ENVIRONMENTAL VARIABLES
 
 FILES
      ~/.<I>qtask</I>       user qtask file.
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>qtask</I>
+     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>qtask</I>
                     cluster qtask file.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>, <B><A HREF="../htmlman5/qtask.html">qtask(5)</A></B> as  well  as  <B><A HREF="../htmlman1/tcsh.html">tcsh(1)</A></B>  under
-     &lt;sge_root&gt;/3rd_party/qtcsh.
+     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>, <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>, <B><A HREF="../htmlman5/qtask.html">qtask(5)</A></B>  as  well  as  <B><A HREF="../htmlman1/tcsh.html">tcsh(1)</A></B>  under
+     &lt;ge_root&gt;/3rd_party/qtcsh.
 
 COPYRIGHT
      <I>Qtcsh</I> contains portions of <I>tcsh</I> which is copyrighted by  The
@@ -155,9 +154,10 @@ COPYRIGHT
      developed  by the University of California, Berkeley and its
      contributors.
 
-     See   <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>   and   the   information   provided   in
-     &lt;sge_root&gt;/3rd_party/qtcsh for a statement of further rights
+     See   <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>   and   the   information   provided    in
+     &lt;ge_root&gt;/3rd_party/qtcsh  for a statement of further rights
      and permissions.
+
 </PRE>
 <HR>
 <ADDRESS>

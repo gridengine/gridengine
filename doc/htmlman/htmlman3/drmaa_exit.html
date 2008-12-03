@@ -49,8 +49,6 @@ DESCRIPTION
      may not be available or may have no associated exit informa-
      tion or resource usage data.
 
-     In the 0.95 implementation, setting <I>contact</I> has no effect.
-
   drmaa_exit()
      The drmaa_exit() function closes the DRMAA session  for  all
      threads  and must be called before process termination.  The
@@ -72,34 +70,33 @@ DESCRIPTION
      tion.
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     GE_ROOT        Specifies the location  of  the  Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
+     GE_CELL        If set, specifies  the  default  Grid  Engine
                     cell  to  be  used.  To address a Grid Engine
                     cell Grid Engine uses (in the order  of  pre-
                     cedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable SGE_CELL, if it is
+                         environment  variable  GE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     SGE_DEBUG_LEVEL
-                    If  set,  specifies  that  debug  information
+     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
 
-     SGE_QMASTER_PORT
+     GE_QMASTER_PORT
                     If set, specifies the tcp port on  which  the
-                    sge_qmaster is expected to listen for commun-
-                    ication requests.   Most  installations  will
-                    use  a  services  map entry instead to define
-                    that port.
+                    ge_qmaster is expected to listen for communi-
+                    cation requests.  Most installations will use
+                    a  services  map entry instead to define that
+                    port.
 
 RETURN VALUES
      Upon successful completion,  drmaa_init()  and  drmaa_exit()
@@ -152,6 +149,9 @@ ERRORS
 
 SEE ALSO
      <B><A HREF="../htmlman3/drmaa_submit.html">drmaa_submit(3)</A></B>.
+
+
+
 
 
 

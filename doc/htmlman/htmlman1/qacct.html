@@ -6,12 +6,12 @@ NAME
      qacct - report and account for Grid Engine usage
 
 SYNOPSIS
-     qacct [ -A Account ] [ -b BeginTime ] [ -d Days ] [ -e  End-
-     Time  ] [ -g [GroupId|GroupName] ] [ -h [HostName] ] [ -help
-     ] [ -j [wc_job] ] [ -l attr=val,... ] [ -o [Owner] ]  [  -pe
-     [PEname]  ]  [  -q [wc_queue] ] [ -slots [SlotNumber] ] [ -t
-     task_id_range_list ] [ -P [Project] ] [ -D [Department] ]  [
-     -f <I>AcctFileName</I> ]
+     qacct [ -ar [ar_id] ] [ -A Account ] [ -b BeginTime ]  [  -d
+     Days ] [ -e EndTime ] [ -g [GroupId|GroupName] ] [ -h [Host-
+     Name] ] [ -help ] [ -j [wc_job] ] [ -l attr=val,... ]  [  -o
+     [Owner] ] [ -pe [PEname] ] [ -q [wc_queue] ] [ -slots [Slot-
+     Number] ] [ -t task_id_range_list ] [ -P [Project]  ]  [  -D
+     [Department] ] [ -f <I>AcctFileName</I> ]
 
 DESCRIPTION
      The <I>qacct</I>  utility  scans  the  accounting  data  file  (see
@@ -26,6 +26,11 @@ DESCRIPTION
      and an owner, but not for two queues in the same request.
 
 OPTIONS
+     -ar [ar_id]
+          The ID of the advance reservation for  which  usage  is
+          summarized.   If ar_id is not given, accounting data is
+          listed for each advance reservation separately.
+
      -A Account
           The account for jobs to be summarized.
 
@@ -53,9 +58,9 @@ OPTIONS
 
      -g [GroupId|GroupName]
           The numeric system group id or the  group  alphanumeric
-          name   of   the  job  owners  to  be  included  in  the
-          accounting. If GroupId/GroupName is omitted, all groups
-          are accounted.
+          name  of  the job owners to be included in the account-
+          ing. If GroupId/GroupName is omitted,  all  groups  are
+          accounted.
 
      -h [HostName]
           The  case-insensitive  name  of  the  host  upon  which
@@ -127,55 +132,51 @@ OPTIONS
           listed for each owning department separately.
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     GE_ROOT        Specifies the location  of  the  Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
+     GE_CELL        If set, specifies  the  default  Grid  Engine
                     cell.  To  address  a  Grid Engine cell <I>qacct</I>
                     uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable SGE_CELL, if it is
+                         environment  variable  GE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     SGE_DEBUG_LEVEL
-                    If  set,  specifies  that  debug  information
+     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
 
-     SGE_QMASTER_PORT
+     GE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>  is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
 
-     SGE_EXECD_PORT If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  is  expected to listen for com-
-                    munication requests.  Most installations will
+     GE_EXECD_PORT  If set,  specifies  the  tcp  port  on  which
+                    <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B> is expected to listen for commun-
+                    ication requests.   Most  installations  will
                     use  a  services  map  entry  for the service
                     "sge_execd" instead to define that port.
 
 FILES
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>accounting</I>
-                     Grid Engine default accounting file
+     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>accounting</I>
+                    Grid Engine default accounting file
      &lt;<I>xxqs</I>_<I>nam</I>_<I>sexx</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                     Grid Engine master host file
+                    Grid Engine master host file
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>, <B><A HREF="../htmlman5/accounting.html">accounting(5)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,
+     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>, <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>, <B><A HREF="../htmlman5/accounting.html">accounting(5)</A></B>, <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>,
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
      sions.
-
-
-
 
 
 

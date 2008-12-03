@@ -18,8 +18,11 @@ DESCRIPTION
 
      The format of the default files is:
 
-     <B>o</B>  Each line has to contain any <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B> option as described
-        in the Grid Engine Reference Manual. More than one option
+     <B>o</B>  The default  sge_qstat  file  may  contain  an  arbitrary
+        number  of  lines.  Blank lines and lines with a '#' sign
+        at the first column are skipped.  Each  line  not  to  be
+        skipped  may  contain any <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B> option as described in
+        the Grid Engine Reference Manual. More  than  one  option
         per line is allowed.
 
 EXAMPLES
@@ -27,6 +30,7 @@ EXAMPLES
      file:
 
      =====================================================
+     # Just show me my own running and suspended jobs
      -s rs -u $user
      =====================================================
 
@@ -41,16 +45,64 @@ EXAMPLES
      qstat -s rs -u &lt;current_user&gt;
 
 FILES
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>sge</I>_<I>qstat</I> global defaults file
+     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>sge</I>_<I>qstat</I> global defaults file
      $<I>HOME</I>/.<I>sge</I>_<I>qstat</I>user private defaults file
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>,  <I>Grid</I>   <I>Engine</I>   <I>Installation</I>   <I>and</I>
-     <I>Administration</I> <I>Guide</I>
+     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>, <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>, <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I> <I>Adminis-</I>
+     <I>tration</I> <I>Guide</I>
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
-     sions.
+     See  <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>  for  a  full  statement  of   rights   and
+     permissions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

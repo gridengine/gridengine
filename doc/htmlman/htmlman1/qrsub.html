@@ -1,0 +1,272 @@
+<HTML>
+<BODY BGCOLOR=white>
+<PRE>
+<!-- Manpage converted by man2html 3.0.1 -->
+NAME
+     qrsub   - Submit an Advance Reservation (AR) to Grid Engine.
+
+SYNTAX
+     qrsub [-a date_time] [-A account_string]  [-ckpt  ckpt_name]
+     [-d   time]   [-e   date_time]   [-he  yes|no]  [-help]  [-l
+     resource_list] [-now] [-M user[@host],...] [-N ar_name]  [-w
+     e|v]   [-pe   pe_name  slot_range]  [-q  wc_queue_list]  [-u
+     wc_user_list]
+
+DESCRIPTION
+     <I>Qrsub</I> provides a means  for  operators,  managers  or  users
+     referenced  in  the  ACL  (see  <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>) "arusers" to
+     create a Advance Reservation (AR) in the Grid Engine queuing
+     system. ARs allow to reserve particular consumable resources
+     for future use. These reserved resources are only  available
+     for  jobs  requesting  the  AR and the scheduler ensures the
+     availability  of  the  resources  when  the  start  time  is
+     reached.  Job  requesting  the  AR can only use the reserved
+     consumable resources.
+
+     During AR submit time the Grid Engine queuing system selects
+     the  best suited queues for the AR request and then reserves
+     the desired amount of resources.   For  a  reservation,  all
+     queues  that  are  not  in  orphaned state are considered as
+     suited. Only if the AR request can be fulfilled, the AR will
+     be granted.
+
+     ARs will be deleted either automatically when the  end  time
+     is  reached,  or manually using <I>qrdel</I> . In both cases, first
+     all jobs requesting the AR  will  be  removed  and  then  AR
+     itself. Already granted ARs can be shown with <I>qrstat</I>(.)
+
+     Note: To make AR behavior predictable, it  is  necessary  to
+     have  reserved  resources available at the time of AR start.
+     This is done by keeping jobs with a unlimited runtime  limit
+     separated  from  ARs,  and not considering resources used by
+     such jobs for reservation.
+
+     Note: Resource Quotas are not considered for AR queue selec-
+     tion and nor for jobs requesting a AR.
+
+     When an AR was successfully added to the Grid Engine queuing
+     system  <I>qrsub</I>  returns a unique integer ID referring the the
+     newly created AR. The highest  AR  ID  is  9999999.  If  the
+     highest  ID  is  reached,  a wraparound happens and the next
+     unused ID, starting with 1, will be used.
+
+     For <I>qrsub</I>, the administrator and the user may define default
+     request  files  (analogous to Grid Engine_request for qsub),
+     which can contain any of the possible command line options.
+     A cluster wide default request file is optional.  If such  a
+     default request file is used, it must be placed under
+     $GE_ROOT/$GE_CELL/common/sge_ar_request   (global   defaults
+     file).
+     A user private default request file is optional.  If  it  is
+     used, it must be placed under
+     $HOME/.sge_ar_request (user private defaults file).
+
+OPTIONS
+     -a date_time
+          Defines the activation (start) date and time of an  AR.
+          The  option  is  not mandatory. If omitted, the current
+          date_time  is  assumed.  Either  a  duration   or   end
+          date_time  must  also  be  specified. For details about
+          date_time please see <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>
+
+     -A account_string
+          Identifies the account to which the  resource  reserva-
+          tion  of the AR should be charged. For "account_string"
+          value details  please  see  the  "name"  definition  in
+          <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.   In  the  absence of this parameter Grid
+          Engine will place the default account  string  "ge"  in
+          the accounting record of the AR.
+
+     -ckpt ckpt_name
+          Selects  the  checkpointing  environment  (see   <I>check-</I>
+          <B><A HREF="../htmlman5/point.html">point(5)</A></B>)  the  AR  jobs may request. Using this option
+          guarantees queues that only providing  this  checkpoint
+          environment will be reserved.
+
+     -d time
+          Defines the duration of the AR. The use of "-d time" is
+          optional  if  "-e date_time" is requested.  For details
+          about  "time" definition please see <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
+
+     -e date_time
+          Defines the end date and time of an AR. The use of  "-e
+          date_time"  is optional if "-d time" is requested.  For
+          details  about  "date_time"   definition   please   see
+          <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
+
+     -he y[es]|n[o]
+          Specifies the behavior when the AR goes into  an  error
+          state.  The  AR  goes  into error state when a reserved
+          host goes into unknown state, a queue error happens, or
+          when a queue is disabled or suspended.
+
+          A hard error, "-he yes", means as long as the AR is  in
+          error  state no jobs using the AR will be scheduled. If
+          soft error, "-he no", is specified the AR stays  usable
+          with the remaining resources.
+          By default soft error handling is used.
+
+     -help
+          Prints a list of all options.
+
+     -l resource=value,...
+          Creates an AR in a Grid  Engine  queue,  providing  the
+          given  resource request list.  <B><A HREF="../htmlman5/complex.html">complex(5)</A></B> describes how
+          a list of  available  resources  and  their  associated
+          valid value specifiers can be obtained.
+          There may be multiple -l switches in a single command.
+
+     -m b|e|a|n
+          Defines or redefines under which circumstances mail  is
+          to be sent to the AR owner or to the users defined with
+          the -M option described  below.  The  option  arguments
+          have the following meaning:
+
+          `b'     Mail is sent at the beginning of the AR
+          `e'     Mail is sent at the end of the AR
+          `a'     Mail is sent when the AR goes into error state
+          `n'     No mail is sent, default for <I>qrsub</I>
+
+     -M user[@host],...
+          Defines or redefines the list of  users  to  which  the
+          qmaster sends mail.
+
+     -masterq wc_queue_list
+          Only meaningful for a parallel AR request together with
+          the -pe option.
+
+          This option is used to reserve  the  proper  queues  to
+          match  this request if it would be requested by a qsub.
+          A more detailed description  of  <I>wc</I>_<I>queue</I>_<I>list</I>  can  be
+          found in <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
+
+     -now y[es]|n[o]
+          This options impacts the queues selection for  reserva-
+          tion.
+          With the "-now y" option, only queues  with  the  qtype
+          "INTERACTIVE"  assigned will be considered for reserva-
+          tion.  "-now n" is the default for <I>qrsub</I>.
+
+     -N name
+          The name of the AR. The name, if requested,  must  con-
+          form  to  "name"  as  defined in <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.  Invalid
+          names will be denied at submit time.
+
+     -w e|v
+          Specifies  the  validation  level  applied  to  the  AR
+          request.
+
+          The specifiers e and v define the following  validation
+          modes:
+          `v'  verify - does not submit the AR but prints
+               an extensive validation report
+          `e'  error - rejects request if requirements cannot
+               be fulfilled, default for <I>qrsub</I>
+
+     -pe parallel_env n[-[m]]|[-]m,...
+          Parallel programming environment (PE) to select for the
+          AR queue reservation. Please see the details of a PE in
+          <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B>.
+
+     -q wc_queue_list
+          Defines or redefines a list of  cluster  queues,  queue
+          domains or queue instances, that may be reserved by the
+          AR. Please  find  a  description  of  <I>wc</I>_<I>queue</I>_<I>list</I>  in
+          <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.  This parameter has all the properties of
+          a resource request and will be merged with requirements
+          derived from the -l option described above.
+
+     -u [username|@access_list],...
+          Defines the users allowed to submit jobs requesting the
+          AR.  The  access is specified by a comma separated list
+          containing UNIX users  or  ACLs  (see  <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>).
+          prefixing the ACL name with an '@' sign.
+          By default only the AR owner is allowed to submit  jobs
+          requesting the AR.
+
+          Note: Only queues, where all  users  specified  in  the
+          list  have  access, are considered for reservation (see
+          <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>).
+
+ENVIRONMENTAL VARIABLES
+     GE_ROOT        Specifies the location  of  the  Grid  Engine
+                    standard configuration files.
+
+     GE_CELL        If set, specifies  the  default  Grid  Engine
+                    cell.  To  address  a Grid Engine cell, <I>qsub</I>,
+                    <I>qsh</I>, <I>qlogin</I> or <I>qalter</I> use (in  the  order  of
+                    precedence):
+
+                         The name of the cell  specified  in  the
+                         environment  variable  GE_CELL, if it is
+                         set.
+
+                         The  name  of  the  default  cell,  i.e.
+                         default.
+
+     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
+                    should  be written to stderr. In addition the
+                    level of detail in which debug information is
+                    generated is defined.
+
+     GE_QMASTER_PORT
+                    If set,  specifies  the  TCP  port  on  which
+                    <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>  is expected to listen for com-
+                    munication requests.  Most installations will
+                    use  a  services  map  entry  for the service
+                    "sge_qmaster" instead of defining the port.
+
+FILES
+     $<I>GE</I>_<I>ROOT</I>/$<I>GE</I>_<I>CELL</I>/<I>common</I>/<I>sge</I>_<I>ar</I>_<I>request</I>
+                   global defaults file
+     $<I>HOME</I>/.<I>sge</I>_<I>ar</I>_<I>request</I>
+                   user private defaults file
+
+SEE ALSO
+     <B><A HREF="../htmlman1/qrdel.html">qrdel(1)</A></B>, <B><A HREF="../htmlman1/qrstat.html">qrstat(1)</A></B>, <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>,  <B><A HREF="../htmlman5/checkpoint.html">checkpoint(5)</A></B>,
+     <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>, <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>, <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B>, <B><A HREF="../htmlman5/sge_resource_quota.html">sge_resource_quota(5)</A></B>.
+
+COPYRIGHT
+     See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
+     sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+<HR>
+<ADDRESS>
+Man(1) output converted with
+<a href="http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a>
+</ADDRESS>
+</BODY>
+</HTML>

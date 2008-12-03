@@ -112,14 +112,9 @@ DESCRIPTION
   drmaa_get_next_attr_value()
      Each time drmaa_get_next_attr_value() is called  it  returns
      into <I>value</I> up to <I>value</I>_<I>len</I> bytes of the next entry stored in
-     the DRMAA values string vector, <I>values</I>.  With the DRMAA  1.0
-     library,   once   the   values   list  has  been  exhausted,
-     DRMAA_ERRNO_NO_MORE_ELEMENTS is returned.   With  the  DRMAA
-     0.95  library,  once  the  values  list  has been exhausted,
-     DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE is returned.   In  order
-     to  use the DRMAA 0.95 library, you must define the DRMAA_95
-     macro, either in your application directly or through a com-
-     piler flag, such as -DDRMAA_95.
+     the DRMAA values string vector,  <I>values</I>.   Once  the  values
+     list  has  been  exhausted,  DRMAA_ERRNO_NO_MORE_ELEMENTS is
+     returned.
 
   drmaa_get_num_attr_values()
      The drmaa_get_num_attr_values() returns into <I>size</I> the number
@@ -132,31 +127,30 @@ DESCRIPTION
      <I>values</I>.
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     GE_ROOT        Specifies the location  of  the  Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
+     GE_CELL        If set, specifies  the  default  Grid  Engine
                     cell  to  be  used.  To address a Grid Engine
                     cell Grid Engine uses (in the order  of  pre-
                     cedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable SGE_CELL, if it is
+                         environment  variable  GE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     SGE_DEBUG_LEVEL
-                    If  set,  specifies  that  debug  information
+     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
 
-     SGE_QMASTER_PORT
+     GE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>  is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map entry instead to define
                     that port.
@@ -210,12 +204,13 @@ ERRORS
   DRMAA_ERRNO_CONFLICTING_ATTRIBUTE_VALUES
      The value of this attribute is conflicting with a previously
      set attributes.
+
      The drmaa_get_attribute()  and  drmaa_get_vector_attribute()
      will fail if:
 
   DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE
-     The specified attribute is not set in  the  DRMAA  job  tem-
-     plate.
+     The  specified  attribute  is  not  set  in  the  DRMAA  job
+     template.
 
      The drmaa_get_next_attr_value() will fail if:
 
@@ -224,6 +219,11 @@ ERRORS
 
 SEE ALSO
      <B><A HREF="../htmlman3/drmaa_submit.html">drmaa_submit(3)</A></B>and <B><A HREF="../htmlman3/drmaa_attributes.html">drmaa_attributes(3)</A></B>.
+
+
+
+
+
 
 
 

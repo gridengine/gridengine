@@ -75,14 +75,9 @@ DESCRIPTION
   drmaa_get_next_attr_name()
      Each time drmaa_get_next_attr_name() is  called  it  returns
      into  the  buffer,  <I>value</I>, up to <I>value</I>_<I>len</I> bytes of the next
-     entry stored in the DRMAA names string vector, <I>values</I>.  With
-     the  DRMAA  1.0  library,  once  the  names  list  has  been
-     exhausted, DRMAA_ERRNO_NO_MORE_ELEMENTS is  returned.   With
-     the  DRMAA  0.95  library,  once  the  names  list  has been
-     exhausted, DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE is  returned.
-     In  order to use the DRMAA 0.95 library, you must define the
-     DRMAA_95 macro,  either  in  your  application  directly  or
-     through a compiler flag, such as -DDRMAA_95.
+     entry stored in the DRMAA names string vector, <I>values</I>.  Once
+     the       names      list      has      been      exhausted,
+     DRMAA_ERRNO_NO_MORE_ELEMENTS is returned.
 
   drmaa_get_num_attr_names()
      The drmaa_get_num_attr_names() returns into <I>size</I> the  number
@@ -110,8 +105,9 @@ DESCRIPTION
      jobs will be executed without  a  wrapper  shell,  and  jobs
      which are unschedulable will cause a submit error.
 
+
      The     <B><A HREF="../htmlman5/sge_request.html">sge_request(5)</A></B>     file,      found      in      the
-     $SGE_ROOT/$SGE_CELL/common directory, may contain options to
+     $GE_ROOT/$GE_CELL/common  directory,  may contain options to
      be applied to all jobs.  The .sge_request file found in  the
      user's  home  directory or the current working directory may
      also contain options to be applied  to  certain  jobs.   See
@@ -142,9 +138,9 @@ DESCRIPTION
 
      For various reasons, some options are  silently  ignored  by
      DRMAA.   Setting  any  of these options will have no effect.
-     The ignored options are: -cwd, -help, -t, -verify, -w w, and
-     -w  v.   The  -cwd  option  can  be reenabled by setting the
-     environment  variable,  SGE_DRMAA_ALLOW_CWD.   However,  the
+     The ignored options are: -cwd, -help, -sync, -t, -verify, -w
+     w,  and  -w v.  The -cwd option can be re-enabled by setting
+     the environment variable, SGE_DRMAA_ALLOW_CWD.  However, the
      -cwd  option  is not thread safe and should not be used in a
      multi-threaded context.
 
@@ -313,8 +309,8 @@ DRMAA JOB TEMPLATE ATTRIBUTES
      to  the  submit  host  if no <I>hostname</I> is specified. When the
      'drmaa_transfer_files' job template attribute  is  not  sup-
      ported or does not contain the character 'e', the error file
-     is always kept  at  the  host  where  the  job  is  executed
-     regardless of any <I>hostname</I> specified.
+     is always kept at the host where the job is executed regard-
+     less of any <I>hostname</I> specified.
 
      If the DRMAA job template will be used for of bulk job  sub-
      mission     (see     also     <B><A HREF="../htmlman3/drmaa_run_bulk_job.html">drmaa_run_bulk_job(3)</A></B>)     the
@@ -364,16 +360,16 @@ DRMAA JOB TEMPLATE ATTRIBUTES
      files,  it is recommended that DRMAA job category names take
      the form: &lt;category_name&gt;.cat.
 
-     The options -help, -t, -verify, and -w w|v are ignored.  The
-     -cwd  option  is  ignored  unless  the  $SGE_DRMAA_ALLOW_CWD
-     environment variable is set.
+     The options -help,  -sync,  -t,  -verify,  and  -w  w|v  are
+     ignored.    The   -cwd   option   is   ignored   unless  the
+     $SGE_DRMAA_ALLOW_CWD environment variable is set.
 
   drmaa_native_specification - "&lt;native_specification&gt;"
      Specifies Grid Engine native <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> options which  will  be
      interpreted  as part of the DRMAA job template.  All options
      available  to  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>  command   may   be   used   in   the
-     <I>native</I>_<I>specification</I>,  except for -help, -t, -verify, and -w
-     w|v.   The  -cwd  option   may   only   be   used   if   the
+     <I>native</I>_<I>specification</I>,  except for -help, -sync, -t, -verify,
+     and -w w|v.  The  -cwd  option  may  only  be  used  if  the
      SGE_DRMAA_ALLOW_CWD  environment  variable  is set.  This is
      because the  current  parsing  algorithm  for  -cwd  is  not
      thread-safe.   Options  set in the <I>native</I> <I>specification</I> will
@@ -441,35 +437,33 @@ ENVIRONMENTAL VARIABLES
                     algorithm for parsing the -cwd option is  not
                     thread-safe.
 
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     GE_ROOT        Specifies the location  of  the  Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
+     GE_CELL        If set, specifies  the  default  Grid  Engine
                     cell  to  be  used.  To address a Grid Engine
                     cell Grid Engine uses (in the order  of  pre-
                     cedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable SGE_CELL, if it is
+                         environment  variable  GE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     SGE_DEBUG_LEVEL
-                    If  set,  specifies  that  debug  information
+     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
 
-     SGE_QMASTER_PORT
+     GE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>  is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map entry instead to define
                     that port.
-
 
 RETURN VALUES
      Upon  successful  completion,   drmaa_get_attribute_names(),
@@ -511,6 +505,11 @@ ERRORS
 
 SEE ALSO
      <B><A HREF="../htmlman3/drmaa_jobtemplate.html">drmaa_jobtemplate(3)</A></B>and <B><A HREF="../htmlman3/drmaa_submit.html">drmaa_submit(3)</A></B>.
+
+
+
+
+
 
 
 

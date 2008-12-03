@@ -47,7 +47,7 @@ DESCRIPTION
      attached to the global, host, or cqueue object. The resource
      attribute exists only for the objects, it got  attached  to(
      if it is attached to the global object(qconf -me global), it
-     exits sytem wide, host object: only on that host (qconf  -me
+     exits system wide, host object: only on that host (qconf -me
      NAME): cqueue object: only on that cqueue (qconf -mq NAME).
 
      When the user attached a resource attribute  to  an  object,
@@ -103,17 +103,17 @@ DESCRIPTION
      with a queue on that host.
 
      The second attribute category in the standard  host  complex
-     are  the default load values Every <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> periodically
-     reports load to <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.  The  reported  load  values
-     are  either the standard Grid Engine load values such as the
-     CPU load average (see <B><A HREF="../htmlman1/uptime.html">uptime(1)</A></B>) or load values  defined  by
-     the  Grid Engine administration (see the load_sensor parame-
-     ter in the cluster configuration <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>  and  the  <I>Grid</I>
-     <I>Engine</I>  <I>Installation</I>  <I>and</I> <I>Administration</I> <I>Guide</I> for details).
-     The characteristics definition for the standard load  values
-     is  part  of  the  default host complex, while administrator
+     are  the  default load values Every <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B> periodically
+     reports load to <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>.  The reported load values are
+     either  the standard Grid Engine load values such as the CPU
+     load average (see <B><A HREF="../htmlman1/uptime.html">uptime(1)</A></B>) or load values defined  by  the
+     Grid Engine administration (see the load_sensor parameter in
+     the cluster configuration <B><A HREF="../htmlman5/ge_conf.html">ge_conf(5)</A></B>  and  the  <I>Grid</I>  <I>Engine</I>
+     <I>Installation</I>  <I>and</I>  <I>Administration</I>  <I>Guide</I>  for details).  The
+     characteristics definition for the standard load  values  is
+     part  of  the  default  host  complex,  while  administrator
      defined load values require extension of the  host  complex.
-     Please  refer to the file &lt;sge_root&gt;/doc/load_parameters.asc
+     Please  refer  to the file &lt;ge_root&gt;/doc/load_parameters.asc
      for detailed information on the standard set of load values.
 
   Overriding attributes
@@ -123,7 +123,7 @@ DESCRIPTION
      and  a  load sensor. In case that the attribute is a consum-
      able, we have in addition to the resource limit and its load
      report on host level also the internal usage, which the sys-
-     tem keeps track of. The mergin is done as follows:
+     tem keeps track of. The merge is done as follows:
 
      In general an attribute can be overridden on a lower level
         - global by hosts and queues
@@ -144,7 +144,12 @@ DESCRIPTION
      load sensor, the system checks for the current usage, and if
      the internal accounting is more restrictive  than  the  load
      sensor  report, the internal value is kept; if the load sen-
-     sour report is more restrictive, that one is kept.
+     sor report is more restrictive, that one is kept.
+
+     Note, Grid Engine allows backslashes (\) be used  to  escape
+     newline (\newline) characters. The backslash and the newline
+     are replaced  with  a  space  ("  ")  character  before  any
+     interpretation.
 
 FORMAT
      The principal format of a <I>complex</I> configuration is that of a
@@ -156,9 +161,10 @@ FORMAT
 
   name
      The name of the complex element to be used to  request  this
-     attribute  for  a job in the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -l option. An attribute
-     name may appear only once across  all  complexes,  i.e.  the
-     complex attribute definition is unique.
+     attribute  for  a  job  in  the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -l option. A complex
+     attribute name (see <I>complex</I>_<I>name</I> in <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>) may appear
+     only  once  across all complexes, i.e. the complex attribute
+     definition is unique.
 
   shortcut
      A shortcut for name which may also be used to  request  this
@@ -208,9 +214,7 @@ FORMAT
               results in "arch=lx22-x86" OR "arch=lx24-x86"
                  OR "arch=lx25-x86" OR "arch=lx26-x86"
          -l arch="!lx24-x86&amp;!sol-sparc"  :
-              results in NOT "arch=lx24-x86" NEITHER "arch=sol-sparc"
-         -l arch="lx24-[^x]86"  :
-              results in "arch=lx24-^86" OR "arch=lx24-x86"
+              results in NEITHER "arch=lx24-x86" NOR "arch=sol-sparc"
          -l arch="lx2[4|6]-x86"  :
               results in "arch=lx2[4" OR "arch=6"
 
@@ -249,26 +253,35 @@ FORMAT
 
   consumable
      The consumable parameter can be set  to  either  'yes'  ('y'
-     abbreviated)  or 'no' ('n'). It can be set to 'yes' only for
-     numeric attributes (INT, DOUBLE, MEMORY,  TIME  -  see  type
-     above). If set to 'yes' the consumption of the corresponding
-     resource can be managed by Grid Engine internal bookkeeping.
-     In  this  case  Grid  Engine accounts for the consumption of
-     this resource for all running jobs and ensures that jobs are
-     only  dispatched  if  the  Grid  Engine internal bookkeeping
-     indicates enough available consumable resources. Consumables
-     are  an  efficient  means to manage limited resources such a
-     available memory, free  space  on  a  file  system,  network
-     bandwidth or floating software licenses.
+     abbreviated),  'no'  ('n')  or 'JOB' ('j'). It can be set to
+     'yes' and 'JOB' only for numeric  attributes  (INT,  DOUBLE,
+     MEMORY, TIME - see type above). If set to 'yes' or 'JOB' the
+     consumption of the corresponding resource can be managed  by
+     Grid  Engine  internal bookkeeping. In this case Grid Engine
+     accounts for the consumption of this resource for  all  run-
+     ning  jobs  and ensures that jobs are only dispatched if the
+     Grid Engine internal bookkeeping indicates enough  available
+     consumable  resources. Consumables are an efficient means to
+     manage limited resources such a available memory, free space
+     on  a  file  system,  network bandwidth or floating software
+     licenses.
+
+     A consumable defined by 'y' is a per slot consumables  which
+     means  the  limit is mulitplied by the number of slots being
+     used by the job before being applied.  In case  of  'j'  the
+     consumable is a per job consuamble. This resource is debited
+     as requested (without  multiplication)  from  the  allocated
+     master  queue.  The  resource needs not be available for the
+     slave task queues.
 
      Consumables can be combined with  default  or  user  defined
-     load  parameters  (see  <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>  and <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>), i.e.
-     load values can be reported for consumable attributes or the
-     consumable  flag  can  be  set for load attributes. The Grid
-     Engine consumable resource management takes  both  the  load
-     (measuring  availability  of  the resource) and the internal
-     bookkeeping into account in this case, and makes  sure  that
-     neither of both exceeds a given limit.
+     load parameters (see <B><A HREF="../htmlman5/ge_conf.html">ge_conf(5)</A></B> and <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>), i.e. load
+     values can be reported for consumable attributes or the con-
+     sumable flag can be set for load attributes. The Grid Engine
+     consumable resource management takes both the load  (measur-
+     ing availability of the resource) and the internal bookkeep-
+     ing into account in this case, and makes sure  that  neither
+     of both exceeds a given limit.
 
      To enable consumable resource management the  basic  availa-
      bility  of a resource has to be defined. This can be done on
@@ -301,13 +314,13 @@ FORMAT
      ity.
 
   default
-     Meaningful only for consumable complex attributes (see  con-
-     sumable  parameter  above). Grid Engine assumes the resource
-     amount denoted in the default  parameter  implicitly  to  be
-     consumed  by jobs being dispatched to a host or queue manag-
-     ing the consumable attribute. Jobs explicitly requesting the
-     attribute via the -<I>l</I> option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> override this default
-     value.
+     Meaningful  only  for  consumable  complex  attributes  (see
+     consumable   parameter   above).  Grid  Engine  assumes  the
+     resource amount denoted in the default parameter  implicitly
+     to  be  consumed by jobs being dispatched to a host or queue
+     managing the consumable attribute. Jobs explicitly  request-
+     ing the attribute via the -<I>l</I> option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> override this
+     default value.
 
   urgency
      The urgency value allows influencing job priorities on a per
@@ -322,27 +335,13 @@ FORMAT
      job priorities.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman1/uptime.html">uptime(1)</A></B>,  <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>,
-     <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>, <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>, <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>,
+     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>,  <B><A HREF="../htmlman1/ge_types.html">ge_types(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,   <B><A HREF="../htmlman1/uptime.html">uptime(1)</A></B>,
+     <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>, <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>, <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B>, <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>
      <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I> <I>Administration</I> <I>Guide</I>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
      sions.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

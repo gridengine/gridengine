@@ -10,8 +10,8 @@ SYNTAX
      {c|d|t}[+]   ]   [   -help   ]   [  -j  [job_list]  ]  [  -l
      resource=val,... ] [ -ne ] [ -pe pe_name,... ] [ -pri ] [ -q
      wc_queue_list  ] [ -qs {a|c|d|o|s|u|A|C|D|E|S} ] [ -r ] [ -s
-     {r|p|s|z|hu|ho|hs|hj|ha|h|a}[+] ] [ -t ] [ -U user,...  ]  [
-     -u user,... ] [ -urg ] [ -xml ]
+     {r|p|s|z|hu|ho|hs|hd|hj|ha|h|a}[+] ] [ -t ] [ -U user,...  ]
+     [ -u user,... ] [ -urg ] [ -xml ]
 
 DESCRIPTION
      <I>qstat</I> shows the current status of the available Grid  Engine
@@ -23,7 +23,7 @@ DESCRIPTION
      The  administrator  and  the  user  may  define  files  (see
      <B><A HREF="../htmlman5/sge_qstat.html">sge_qstat(5)</A></B>),   which   can  contain  any  of  the  options
      described  below.  A  cluster-wide  sge_qstat  file  may  be
-     placed  under  $SGE_ROOT/$SGE_CELL/common/sge_qstat The user
+     placed  under  $GE_ROOT/$GE_CELL/common/sge_qstat  The  user
      private  file is searched at the location  $HOME/.sge_qstat.
      The  home  directory request file has the highest precedence
      over the cluster global file.  Command line can be  used  to
@@ -153,20 +153,20 @@ OPTIONS
           FORMATS sub-section Expanded Format below for  detailed
           information.
 
-     -s {p|r|s|z|hu|ho|hs|hj|ha|h|a}[+]
+     -s {p|r|s|z|hu|ho|hs|hd|hj|ha|h|a}[+]
 
           Prints only jobs in the specified state,  any  combina-
           tion  of  states is possible. -s prs corresponds to the
           regular  <I>qstat</I>  output  without  -s  at  all.  To  show
           recently  finished  jobs, use -s z.  To display jobs in
-          user/operator/system hold, use the -s hu/ho/hs  option.
-          The  -s ha option shows jobs which where submitted with
-          the <I>qsub</I> -a command. <I>qstat</I>  -s  hj  displays  all  jobs
-          which are not eligible for execution unless the job has
-          entries in the job dependency list.  <I>qstat</I> -s h  is  an
-          abbreviation  for <I>qstat</I> -s huhohshjha and <I>qstat</I> -s a is
-          an abbreviation for <I>qstat</I> -s psr (see -a and  -hold_jid
-          option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>).
+          user/operator/system/array-dependency hold, use the  -s
+          hu/ho/hs/hd  option.  The -s ha option shows jobs which
+          where submitted with the <I>qsub</I> -a command. <I>qstat</I>  -s  hj
+          displays  all jobs which are not eligible for execution
+          unless the job has entries in the job dependency  list.
+          <I>qstat</I> -s h is an abbreviation for <I>qstat</I> -s huhohshdhjha
+          and <I>qstat</I> -s a is an abbreviation for <I>qstat</I> -s psr (see
+          -a, -hold_jid and -hold_jid_ad options to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>).
 
      -t   Prints extended information about the  controlled  sub-
           tasks  of  the displayed parallel jobs. Please refer to
@@ -233,11 +233,13 @@ OUTPUT FORMATS
 
      <B>o</B>  the number of currently used slots.
 
+     <B>o</B>  the number of slots reserved in advance.
+
      <B>o</B>  the number of currently available slots.
 
      <B>o</B>  the total number of slots.
 
-     <B>o</B>  the number of slots which is in at least in  one  of  the
+     <B>o</B>  the number of slots which is  in  at  least  one  of  the
         states  'aoACDS' and in none of the states 'cdsuE'
 
      <B>o</B>  the number of slots which are in one of these  states  or
@@ -262,7 +264,6 @@ OUTPUT FORMATS
      <B>o</B>  the name of the job.
 
      <B>o</B>  the user name of the job owner.
-
      <B>o</B>  the status of the  job  -  one  of  d(eletion),  E(rror),
         h(old), r(unning), R(estarted), s(uspended), S(uspended),
         t(ransfering), T(hreshold) or w(aiting).
@@ -290,7 +291,8 @@ OUTPUT FORMATS
         to it via <B><A HREF="../htmlman1/qhold.html">qhold(1)</A></B>, <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B> or the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -h option or
         that the job is waiting for completion  of  the  jobs  to
         which  job dependencies have been assigned to the job via
-        the -hold_jid option of <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> or <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>.
+        the -hold_jid  or  -hold_jid-ad  options  of  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>  or
+        <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>.
 
         The state E(rror) appears for pending jobs that  couldn't
         be  started due to job properties. The reason for the job
@@ -314,7 +316,6 @@ OUTPUT FORMATS
      <B>o</B>  the array job task id. Will be empty for non-array  jobs.
         See  the  -t option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> and the -g above for addi-
         tional information.
-
 
      If the -t option is supplied, each status line  always  con-
      tains  parallel  job task information as if -g t were speci-
@@ -352,7 +353,7 @@ OUTPUT FORMATS
      <B>o</B>  the architecture of the queue host and
 
      <B>o</B>  the state  of  the  queue  -  one  of  u(nknown)  if  the
-        corresponding  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> cannot be contacted, a(larm),
+        corresponding  <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B>  cannot be contacted, a(larm),
         A(larm),     C(alendar      suspended),      s(uspended),
         S(ubordinate),  d(isabled), D(isabled), E(rror) or combi-
         nations thereof.
@@ -382,12 +383,12 @@ OUTPUT FORMATS
      less of the cause) all jobs  executing  in  that  queue  are
      suspended too.
 
-     If an E(rror) state is displayed for a  queue,  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>
-     on  that  host was unable to locate the <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B> exe-
-     cutable on that host in order to start a job.  Please  check
-     the  error  logfile of that <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> for leads on how to
-     resolve the problem. Please enable the queue afterwards  via
-     the -c option of the <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B> command manually.
+     If an E(rror) state is displayed for a queue, <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B> on
+     that host was unable to locate the <B><A HREF="../htmlman8/ge_shepherd.html">ge_shepherd(8)</A></B> executable
+     on that host in order to start a job. Please check the error
+     logfile  of that <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B> for leads on how to resolve the
+     problem. Please enable  the  queue  afterwards  via  the  -c
+     option of the <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B> command manually.
 
      If the c(onfiguration ambiguous) state is  displayed  for  a
      queue  instance this indicates that the configuration speci-
@@ -527,7 +528,7 @@ OUTPUT FORMATS
      the start time and that no function  is  displayed  for  the
      jobs.
 
-     In very rare cases, e.g. if <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> starts up from an
+     In very rare cases, e.g. if <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B> starts up from  an
      inconsistent state in the job or queue spool files or if the
      clean queue (-cq) option of <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> is used,  <I>qstat</I>  cannot
      assign jobs to either the running or pending jobs section of
@@ -535,8 +536,8 @@ OUTPUT FORMATS
      job has a running status but is not assigned to a queue) has
      been detected. Such jobs are printed in an <I>ERROR</I>  <I>JOBS</I>  sec-
      tion  at  the very end of the output. The ERROR JOBS section
-     should disappear upon  restart  of  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.   Please
-     contact  your Grid Engine support representative if you feel
+     should disappear upon restart of <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>.  Please con-
+     tact  your  Grid  Engine  support representative if you feel
      uncertain about the cause or effects of such jobs.
 
   Expanded Format (with -r)
@@ -647,30 +648,29 @@ OUTPUT FORMATS
      ppri The job's -p priority as specified by the user.
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     GE_ROOT        Specifies the location  of  the  Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
+     GE_CELL        If set, specifies  the  default  Grid  Engine
                     cell.  To  address  a  Grid Engine cell <I>qstat</I>
                     uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable SGE_CELL, if it is
+                         environment  variable  GE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     SGE_DEBUG_LEVEL
-                    If  set,  specifies  that  debug  information
+     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
 
-     SGE_QMASTER_PORT
+     GE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>  is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
@@ -685,21 +685,22 @@ ENVIRONMENTAL VARIABLES
                     will figure out the best length.
 
 FILES
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                     Grid Engine master host file
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>sge</I>_<I>qstat</I>
-                     cluster qstat default options
-     $<I>HOME</I>/.<I>sge</I>_<I>qstat</I>
-                     user qstat default options
+     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
+                    Grid Engine master host file
+     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>ge</I>_<I>qstat</I>
+                    cluster qstat default options
+     $<I>HOME</I>/.<I>ge</I>_<I>qstat</I>
+                    user qstat default options
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qhold.html">qhold(1)</A></B>,   <B><A HREF="../htmlman1/qhost.html">qhost(1)</A></B>,
-     <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>,      <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,      <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>,
-     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>, <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B>.
+     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>,   <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qhold.html">qhold(1)</A></B>,   <B><A HREF="../htmlman1/qhost.html">qhost(1)</A></B>,
+     <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>, <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>, <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>, <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B>, <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>,
+     <B><A HREF="../htmlman8/ge_shepherd.html">ge_shepherd(8)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
      sions.
+
 
 
 

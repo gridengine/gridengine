@@ -18,8 +18,8 @@ DESCRIPTION
 
      User level checkpointing programs are supported and a  tran-
      sparent    checkpointing    mechanism   is   provided   (see
-     <B><A HREF="../htmlman1/sge_ckpt.html">sge_ckpt(1)</A></B>).  Checkpointing jobs migrate  from  workstation
-     to  workstation without user intervention on load demand. In
+     <B><A HREF="../htmlman1/ge_ckpt.html">ge_ckpt(1)</A></B>).  Checkpointing jobs migrate from workstation to
+     workstation  without  user  intervention  on load demand. In
      addition to batch jobs, interactive jobs and  parallel  jobs
      can also be submitted to Grid Engine.
 
@@ -74,6 +74,10 @@ USER INTERFACE
           tion of the configured queues is displayed  on-line  by
           changing colors at corresponding queue icons.
 
+     <B><A HREF="../htmlman1/qquota.html">qquota(1)</A></B>
+          <I>qquota</I> provides a status listing of all currently  used
+          resource quotas (see <B><A HREF="../htmlman1/ge_resource_quota.html">ge_resource_quota(1)</A></B>.)
+
      <B><A HREF="../htmlman1/qresub.html">qresub(1)</A></B>
           <I>qresub</I> creates new jobs by copying currently running or
           pending jobs.
@@ -81,6 +85,10 @@ USER INTERFACE
      <B><A HREF="../htmlman1/qrls.html">qrls(1)</A></B>
           <I>qrls</I> releases holds from jobs  previously  assigned  to
           them e.g. via <B><A HREF="../htmlman1/qhold.html">qhold(1)</A></B> (see above).
+
+     <B><A HREF="../htmlman1/qrdel.html">qrdel(1)</A></B>
+          <I>qrdel</I> provides the means  to  cancel  advance  reserva-
+          tions.
 
      <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>
           <I>qrsh</I> can be used for various purposes such as providing
@@ -93,6 +101,14 @@ USER INTERFACE
           the  job  has finished or to allow for the Grid Engine-
           controlled remote execution of the  tasks  of  parallel
           jobs.
+
+     <B><A HREF="../htmlman1/qrstat.html">qrstat(1)</A></B>
+          <I>qrstat</I> provides a status listing of all advance  reser-
+          vations in the cluster.
+
+     <B><A HREF="../htmlman1/qrsub.html">qrsub(1)</A></B>
+          <I>qrsub</I> is the user interface for  submitting  a  advance
+          reservation to Grid Engine.
 
      <B><A HREF="../htmlman1/qselect.html">qselect(1)</A></B>
           <I>qselect</I> prints a list of queue names  corresponding  to
@@ -122,30 +138,14 @@ USER INTERFACE
           Engine.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_ckpt.html">sge_ckpt(1)</A></B>,   <B><A HREF="../htmlman1/qacct.html">qacct(1)</A></B>,   <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>,   <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qdel.html">qdel(1)</A></B>,
+     <B><A HREF="../htmlman1/ge_ckpt.html">ge_ckpt(1)</A></B>,   <B><A HREF="../htmlman1/qacct.html">qacct(1)</A></B>,   <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>,   <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,    <B><A HREF="../htmlman1/qdel.html">qdel(1)</A></B>,
      <B><A HREF="../htmlman1/qhold.html">qhold(1)</A></B>,  <B><A HREF="../htmlman1/qhost.html">qhost(1)</A></B>,  <B><A HREF="../htmlman1/qlogin.html">qlogin(1)</A></B>, <B><A HREF="../htmlman1/qmake.html">qmake(1)</A></B>, <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>, <B><A HREF="../htmlman1/qmon.html">qmon(1)</A></B>,
      <B><A HREF="../htmlman1/qresub.html">qresub(1)</A></B>, <B><A HREF="../htmlman1/qrls.html">qrls(1)</A></B>, <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>, <B><A HREF="../htmlman1/qselect.html">qselect(1)</A></B>,  <B><A HREF="../htmlman1/qsh.html">qsh(1)</A></B>,  <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>,
-     <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B>, <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I> <I>Administra-</I>
-     <I>tion</I> <I>Guide</I>, <I>Grid</I>  <I>Engine</I>  <I>Quick</I>  <I>Start</I>  <I>Guide</I>,  <I>Grid</I>  <I>Engine</I>
-     <I>User</I>'<I>s</I> <I>Guide</I>.
+     <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B>,  <I>Grid</I>  <I>Engine</I>  <I>Installation</I>  <I>Guide</I>, <I>Grid</I>
+     <I>Engine</I> <I>Administration</I> <I>Guide</I>, <I>Grid</I> <I>Engine</I> <I>User</I>'<I>s</I> <I>Guide</I>.
 
 COPYRIGHT
-     Copyright: 2004 by Sun Microsystems, Inc.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+     Copyright: 2008 by Sun Microsystems, Inc.
 
 
 

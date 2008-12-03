@@ -18,6 +18,11 @@ DESCRIPTION
      deleted,  or shown via the -astnode, -dstnode, -mstnode, and
      -sstnode options to <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>.
 
+     Note, Grid Engine allows backslashes (\) be used  to  escape
+     newline (\newline) characters. The backslash and the newline
+     are replaced  with  a  space  ("  ")  character  before  any
+     interpretation.
+
 FORMAT
      The format of a share tree file is defined as follows:
 
@@ -25,6 +30,9 @@ FORMAT
         and  the  numeric  identification  number  of  the  node.
         Further attributes of that node follow until another  id-
         keyword is encountered.
+
+     <B>o</B>  The attribute type defines, if a  sharetree  node  refer-
+        ences a user (type=0), or a project (type=1)
 
      <B>o</B>  The attribute childnodes contains a comma separated  list
         of child nodes to this node.
@@ -54,45 +62,37 @@ FORMAT
         'default'.
 
 
+EXAMPLES
+     Jobs of projects P1 and P2 get 50 shares, all other jobs get
+     10 shares.
+
+     id=0
+     name=Root
+     type=0
+     shares=1
+     childnodes=1,2,3
+     id=1
+     name=P1
+     type=1
+     shares=50
+     childnodes=NONE
+     id=2
+     name=P2
+     type=1
+     shares=50
+     childnodes=NONE
+     id=3
+     name=default
+     type=0
+     shares=10
+     childnodes=NONE
+
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>, <B><A HREF="../htmlman5/project.html">project(5)</A></B>, <B><A HREF="../htmlman5/user.html">user(5)</A></B>.
+     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>, <B><A HREF="../htmlman5/project.html">project(5)</A></B>, <B><A HREF="../htmlman5/user.html">user(5)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
      sions.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

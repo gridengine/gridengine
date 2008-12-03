@@ -3,12 +3,12 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     sge_conf - Grid Engine bootstrap file
+     bootstrap - Grid Engine bootstrap file
 
 DESCRIPTION
      <I>bootstrap</I>  contains  parameters  that  are  needed  for  the
      startup of Grid Engine components.  It is created during the
-     sge_qmaster installation.  Modifying <I>bootstrap</I> in a  running
+     ge_qmaster installation.  Modifying <I>bootstrap</I> in  a  running
      system is not supported.
 
 FORMAT
@@ -27,7 +27,7 @@ FORMAT
      admin_user in a running system is not supported. Changing it
      manually on a shut-down cluster is possible, but  if  access
      to  the  Grid Engine spooling area is interrupted, this will
-     result in unpredictable behaviour.
+     result in unpredictable behavior.
 
      The admin_user parameter has no default value,  but  instead
      it is defined during the master installation procedure.
@@ -59,14 +59,14 @@ FORMAT
      default for ignore_fqdn is "true".
 
   spooling_method
-     Defines how <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> writes its configuration and  the
+     Defines how <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B> writes its configuration  and  the
      status information of a running cluster.
 
      The available spooling methods are <I>berkeleydb</I> and <I>classic</I>.
 
   spooling_lib
      The name of a shared library containing the  spooling_method
-     to  be  loaded  at  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> initialization time.  The
+     to  be  loaded  at  <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>  initialization time.  The
      extension characterizing a shared library (.so, .sl,  .dylib
      etc.) is not contained in spooling_lib.
 
@@ -104,15 +104,15 @@ FORMAT
      The path name given here is searched for binaries as well as
      any  directory  below  with  a  directory  name equal to the
      current   operating    system    architecture.    Therefore,
-     /usr/SGE/bin   will  work  for  all  architectures,  if  the
+     /usr/GE/bin   will   work  for  all  architectures,  if  the
      corresponding binaries are located in  subdirectories  named
      aix43, cray, lx24-x86, hp11, irix65, tru64, sol-sparc, etc.
 
-     The default location for the binary path is &lt;sge_root&gt;/bin
+     The default location for the binary path is &lt;ge_root&gt;/bin
 
   qmaster_spool_dir
      The location where the master spool directory resides.  Only
-     the <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> and <B><A HREF="../htmlman8/sge_shadowd.html">sge_shadowd(8)</A></B> need to have access to
+     the  <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>  and <B><A HREF="../htmlman8/ge_shadowd.html">ge_shadowd(8)</A></B> need to have access to
      this directory. The master spool directory -  in  particular
      the  job_scripts  directory  and the messages log file - may
      become quite large depending on the size of the cluster  and
@@ -124,34 +124,34 @@ FORMAT
      qmaster_spool_dir in a running system is not supported.
 
      The default location  for  the  master  spool  directory  is
-     &lt;sge_root&gt;/&lt;cell&gt;/spool/qmaster.
+     &lt;ge_root&gt;/&lt;cell&gt;/spool/qmaster.
 
-  product_mode
-     The product mode defines the set of features  the  installed
-     cluster is using.
+  security_mode
+     The security mode defines the set of security  features  the
+     installed cluster is using.
 
-     Both the basic product modes sge (Grid Engine standard mode)
-     and  sgeee (Grid Engine Enterprise Edition) as well as addi-
-     tional features (AFS, DCE, KERBEROS, RESERVED_PORT  security
-     model, CSP security model) are specified by this parameter.
+     Possible security mode settings are  none,  afs,  dce,  ker-
+     beros,  csp.   (no  additional security, AFS, DCE, KERBEROS,
+     CSP security model).
+
+  listener_threads
+     The number of listener threads (defaults  set  by  installa-
+     tion).
+
+  worker_threads
+     The number of worker threads (defaults set by installation).
+
+  scheduler_threads
+     The number of scheduler threads (allowed: 0-1,  default  set
+     by installation: 1, off: 0).  (see <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> -kt/-at option)
+
+  jvm_threads
+     The number of jvm threads (allowed: 0-1, default set by ins-
+     tallation, off: 0).
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
      sions.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -120,29 +120,28 @@ EXAMPLES
 
      can be submitted by
 
-          qsub -cwd -v PATH -pe make 1-10 [further sge options] &lt;script&gt;
+          qsub -cwd -v PATH -pe make 1-10 [further ge options] &lt;script&gt;
 
-     <I>Qmake</I> will inherit the resources granted for the job sumbit-
+     <I>Qmake</I> will inherit the resources granted for the job submit-
      ted above under parallel environment "make".
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     GE_ROOT        Specifies the location  of  the  Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
+     GE_CELL        If set, specifies  the  default  Grid  Engine
                     cell.  To  address  a  Grid Engine cell <I>qmake</I>
                     uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable SGE_CELL, if it is
+                         environment  variable  GE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     SGE_DEBUG_LEVEL
-                    If  set,  specifies  that  debug  information
+     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
@@ -188,15 +187,16 @@ KNOWN PROBLEMS
 
 SEE ALSO
      <B><A HREF="../htmlman1/submit.html">submit(1)</A></B> , <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B> as well as <B><A HREF="../htmlman1/make.html">make(1)</A></B> (GNU make  manpage)
-     and <I>The</I> <I>GNU</I> <I>Make</I> <I>Manual</I> in &lt;sge_root&gt;/3rd_party/qmake.
+     and <I>The</I> <I>GNU</I> <I>Make</I> <I>Manual</I> in &lt;ge_root&gt;/3rd_party/qmake.
 
 COPYRIGHT
      <I>Qmake</I> contains portions of Gnu Make (<I>gmake</I>),  which  is  the
      copyright of the Free Software Foundation, Inc., Boston, MA,
      and is protected by the Gnu General Public License.
-     See   <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>   and   the   information   provided   in
-     &lt;sge_root&gt;/3rd_party/qmake for a statement of further rights
+     See   <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>   and   the   information   provided    in
+     &lt;ge_root&gt;/3rd_party/qmake  for a statement of further rights
      and permissions.
+
 
 
 

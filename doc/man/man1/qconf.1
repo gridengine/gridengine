@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2008/07/08 09:10:03 $     Revision: $Revision: 1.34 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2008/12/04 16:59:56 $     Revision: $Revision: 1.35 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2008/07/08 09:10:03 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2008/12/04 16:59:56 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -765,7 +765,10 @@ hosts to be addressed by the \fB\-ke\fP and \fB\-kej\fP
 option. If the keyword \fBall\fP is specified instead of a
 host list, all running
 .M xxqs_name_sxx_execd 8
-processes are shutdown.
+processes are shutdown. Job abortion, initiated by the \fB\-kej\fP
+option will result in \fBdr\fP state for all running jobs until  
+.M xxqs_name_sxx_execd 8 
+is running again.
 .br
 Requires root or manager privileges.
 .\"

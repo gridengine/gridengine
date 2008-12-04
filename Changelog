@@ -1,17 +1,23 @@
-RN-2008-12-03-0: Bugfix:      qmaster exits with lGetString: wrong type for field JG_qhostname (lHostT)
+MD-2008-12-04-0: Bugfix:      o qconf -kej should remove jobs and then shutdown execd
+                              o description of qsub -notify option is inadequate
+                 Bugster:     6675023, 6704958
+                 Review:      DG
+
+RN-2008-12-03-0: Bugfix:      qmaster exits with lGetString: wrong type for 
+                              field JG_qhostname (lHostT)
                  Bugster:     6776137
                  Issue:       2816
                  Review:      JG 
 
 EB-2008-12-04-0: Enhancemn.:  - additional JSV parameter in global conf which
-										  makes it possible to reject the use of certain
-										  qalter switches if server side JSV is used
-										- corresponding changes in qmon man page
-										- added missing jsv_url description to sge_conf.	
-										- fixed bug in read_raw implementation which
-										  might cause hanging client JSV scripts on some
-										  architectures.
-	              Review:      MD						  
+		        	makes it possible to reject the use of certain
+				qalter switches if server side JSV is used
+                              - corresponding changes in qmon man page
+                              - added missing jsv_url description to sge_conf.	
+                              - fixed bug in read_raw implementation which
+                                might cause hanging client JSV scripts on some
+                                architectures.
+	         Review:      MD						  
 
 JG-2008-12-03-0: Bugfix:      fixed memory leaks
                  Review:      DG

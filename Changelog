@@ -1,3 +1,11 @@
+JG-2008-12-04-0: Bugfix:      - qsub(1) explanation of -b n shall mention
+                                performance impact
+                              - load sensor information is incomplete in 
+                                sge_execd(8)
+                 Bugster:     6535332, 6575742
+                 Issue:       2208, 2291
+                 Review:      MP
+
 MD-2008-12-04-0: Bugfix:      o qconf -kej should remove jobs and then shutdown execd
                               o description of qsub -notify option is inadequate
                  Bugster:     6675023, 6704958

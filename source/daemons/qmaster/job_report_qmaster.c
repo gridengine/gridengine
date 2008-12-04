@@ -304,7 +304,7 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
                         if ((shouldbe_queue_name = lGetString(jg, JG_qname)) == NULL) {
                            shouldbe_queue_name = MSG_OBJ_UNKNOWN;
                         }
-                        if ((shouldbe_host_name = lGetString(jg, JG_qhostname)) == NULL) {
+                        if ((shouldbe_host_name = lGetHost(jg, JG_qhostname)) == NULL) {
                            shouldbe_host_name = MSG_OBJ_UNKNOWN;
                         }
                      }
@@ -641,7 +641,7 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
                      if ((shouldbe_queue_name = lGetString(jg, JG_qname)) == NULL) {
                         shouldbe_queue_name = MSG_OBJ_UNKNOWN;
                      }
-                     if ((shouldbe_host_name = lGetString(jg, JG_qhostname)) == NULL) {
+                     if ((shouldbe_host_name = lGetHost(jg, JG_qhostname)) == NULL) {
                         shouldbe_host_name = MSG_OBJ_UNKNOWN;
                      }
                   }

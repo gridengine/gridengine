@@ -1,3 +1,8 @@
+RN-2008-12-03-0: Bugfix:      qmaster exits with lGetString: wrong type for field JG_qhostname (lHostT)
+                 Bugster:     6776137
+                 Issue:       2816
+                 Review:      JG 
+
 CR-2008-12-01-0: CVS:         Created V62u1_BRANCH
 --------------------------------------------------
 

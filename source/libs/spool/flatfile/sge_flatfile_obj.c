@@ -878,6 +878,7 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
       !strcmp(name, "rlogin_command") ||
       !strcmp(name, "rsh_command") ||
       !strcmp(name, "jsv_url") ||
+      !strcmp(name, "jsv_allowed_mod") ||
       !strcmp(name, "qlogin_daemon") ||
       !strcmp(name, "rlogin_daemon") ||
       !strcmp(name, "rsh_daemon") ||

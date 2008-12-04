@@ -120,6 +120,7 @@
 #include "sgeobj/sge_usage.h"
 #include "sgeobj/sge_qinstance_state.h"
 #include "sgeobj/sge_jsv.h"
+#include "sgeobj/sge_jsv_script.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -1082,6 +1083,11 @@ int sub_command
          jid_flag, user_list_flag, ruser))) {
       DRETURN(ret);
    }    
+
+   if (jsv_is_modify_rejected(ctx, alpp, jep)) {
+      DRETURN(ret);
+   }
+
    {
       const char *job_id_str = NULL;
       char job_id[40];

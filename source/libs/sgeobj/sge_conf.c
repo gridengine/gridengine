@@ -111,7 +111,8 @@ struct confel {                       /* cluster configuration parameters */
     char        *qlogin_command;      /* eg telnet $HOST $PORT */
     char        *rsh_daemon;          /* eg /usr/sbin/in.rshd */
     char        *rsh_command;         /* eg rsh -p $PORT $HOST command */
-    char        *jsv_url;         /* jsv url */
+    char        *jsv_url;             /* jsv url */
+    char        *jsv_allowed_mod;     /* allowed modifications for end users if JSV is enabled */
     char        *rlogin_daemon;       /* eg /usr/sbin/in.rlogind */
     char        *rlogin_command;      /* eg rlogin -p $PORT $HOST */
     u_long32    reschedule_unknown;   /* timout value used for auto. resch. */ 
@@ -135,7 +136,7 @@ typedef struct confel sge_conf_type;
 static sge_conf_type Master_Config = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                                        0, 0, 0, 0, 0, NULL, NULL, NULL, 0, 0, 0, 0, NULL,
                                        NULL, 0, NULL, NULL, NULL, NULL, NULL, 0, NULL,
-                                       NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0,
+                                       NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0,
                                        0, 0, NULL, 0, NULL, NULL, NULL };
 static bool is_new_config = false;
 static bool forbid_reschedule = false;
@@ -332,6 +333,7 @@ static tConfEntry conf_entries[] = {
  { "rsh_daemon",        1, "none",              1, NULL },
  { "rsh_command",       1, "none",              1, NULL },
  { "jsv_url",           0, "none",              1, NULL },
+ { "jsv_allowed_mod",   0, "none",              1, NULL },
  { "rlogin_daemon",     1, "none",              1, NULL },
  { "rlogin_command",    1, "none",              1, NULL },
  { "reschedule_unknown",1, RESCHEDULE_UNKNOWN,  1, NULL },
@@ -518,6 +520,7 @@ lList *lpCfg
    chg_conf_val(lpCfg, "rsh_daemon", &Master_Config.rsh_daemon, NULL, 0);
    chg_conf_val(lpCfg, "rsh_command", &Master_Config.rsh_command, NULL, 0);
    chg_conf_val(lpCfg, "jsv_url", &Master_Config.jsv_url, NULL, 0);
+   chg_conf_val(lpCfg, "jsv_allowed_mod", &Master_Config.jsv_allowed_mod, NULL, 0);
    chg_conf_val(lpCfg, "rlogin_daemon", &Master_Config.rlogin_daemon, NULL, 0);
    chg_conf_val(lpCfg, "rlogin_command", &Master_Config.rlogin_command, NULL, 0);
 
@@ -1067,6 +1070,7 @@ void sge_show_conf()
    DPRINTF(("conf.rsh_daemon             >%s<\n", Master_Config.rsh_daemon?Master_Config.rsh_daemon:"none"));
    DPRINTF(("conf.rsh_command            >%s<\n", Master_Config.rsh_command?Master_Config.rsh_command:"none"));
    DPRINTF(("conf.jsv_url                >%s<\n", Master_Config.jsv_url?Master_Config.jsv_url:"none"));
+   DPRINTF(("conf.jsv_allowed_mod        >%s<\n", Master_Config.jsv_allowed_mod?Master_Config.jsv_allowed_mod:"none"));
    DPRINTF(("conf.rlogin_daemon          >%s<\n", Master_Config.rlogin_daemon?Master_Config.rlogin_daemon:"none"));
    DPRINTF(("conf.rlogin_command         >%s<\n", Master_Config.rlogin_command?Master_Config.rlogin_command:"none"));
    DPRINTF(("conf.reschedule_unknown     >%u<\n", (unsigned) Master_Config.reschedule_unknown));
@@ -1153,6 +1157,7 @@ static void clean_conf(void) {
    FREE(Master_Config.rsh_daemon);
    FREE(Master_Config.rsh_command);
    FREE(Master_Config.jsv_url);
+   FREE(Master_Config.jsv_allowed_mod);
    FREE(Master_Config.rlogin_daemon);
    FREE(Master_Config.rlogin_command);
    FREE(Master_Config.auto_user_default_project);
@@ -1676,6 +1681,20 @@ char* mconf_get_jsv_url(void) {
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(jsv_url);
+}
+
+/* returned pointer needs to be freed */
+char* mconf_get_jsv_allowed_mod(void) {
+   char* jsv_allowed_mod = NULL;
+
+   DENTER(BASIS_LAYER, "mconf_get_jsv_allowed_mod");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   jsv_allowed_mod = sge_strdup(jsv_allowed_mod, Master_Config.jsv_allowed_mod);
+   sge_strip_white_space_at_eol(jsv_allowed_mod);
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(jsv_allowed_mod);
 }
 
 /* returned pointer needs to be freed */

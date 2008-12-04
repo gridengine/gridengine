@@ -218,18 +218,8 @@ jsv_start(lListElem *jsv, lList **answer_list) {
          /* set the last modification time of the script */
          lSetUlong(jsv, JSV_last_mod, st.st_mtime);
 
-#if 0
-         if (can_switch_user) {
-            sge_switch2start_user();
-         }
-#endif
          pid = sge_peopen_threadsafe("/bin/sh", 0, scriptfile, (can_switch_user ? user : NULL), NULL,
                                      &fp_in, &fp_out, &fp_err, false);
-#if 0
-         if (can_switch_user) {
-            sge_switch2admin_user();
-         }
-#endif
          if (pid != -1) {
             jsv_set_pid(jsv, pid);
             lSetRef(jsv, JSV_in, fp_in);

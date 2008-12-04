@@ -64,5 +64,5 @@ int main(int argc, char *argv[])
          fputc(*(ret++), stdout);
       }
    }
-   return 0;
+   return feof(stdin);
 }

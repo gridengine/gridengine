@@ -117,6 +117,8 @@ struct rusage {
 #elif defined(INTERIX)
 #  include <termios.h>
 #  include <sys/ioctl.h>
+#elif defined(FREEBSD)
+#  include <termios.h>
 #else
 #  include <termio.h>
 #endif
@@ -129,6 +131,10 @@ struct rusage {
 #if defined(SOLARIS) || defined(ALPHA)
 /* ALPHA4 only has wait3() prototype if _XOPEN_SOURCE_EXTENDED is defined */
 pid_t wait3(int *, int, struct rusage *);
+#endif
+
+#if defined(FREEBSD)
+#   define sigignore(x) signal(x,SIG_IGN)
 #endif
 
 #define NO_CKPT          0x000

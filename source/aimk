@@ -1149,7 +1149,7 @@ case FREEBSD_*:
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = " -Xlinker -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
    set RM	= "rm -f"
-   set JAVA_ARCH = "freebsd"
+   set JAVA_ARCH = "linux"
    breaksw 
 
 case NETBSD_*:
@@ -1898,6 +1898,9 @@ if ( $JNI == 1 ) then
              breaksw
          case hp11-64:
              set JAVA_LIB_ARCH = PA_RISC2.0W
+             breaksw
+         case fbsd-i386:
+             set JAVA_LIB_ARCH = linux 
              breaksw
          case irix65:
              set JAVA_LIB_ARCH = "" 

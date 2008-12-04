@@ -470,6 +470,7 @@ Qmon*cluster_extra_layout.xmtChildren: \
                   cluster_jmx_libjvm_path = jmx_libjvm_path, \
                   cluster_jmx_additional_jvm_args = jmx_additional_jvm_args, \
                   cluster_jsv_url = jsv_url, \
+                  cluster_jsv_allowed_mod = jsv_allowed_mod, \
                   cluster_rsh_daemon = rsh_daemon, \
                   cluster_rsh_command = rsh_command, \
                   cluster_rlogin_daemon = rlogin_daemon, \
@@ -505,6 +506,7 @@ Qmon*cluster_extra_layout.layout: \
          Row { "@{libjvm path}" <> Fixed 50 em cluster_jmx_libjvm_path }\
          Row { "@{Additional JVM args}" <> Fixed 50 em cluster_jmx_additional_jvm_args }\
          Row { "@{JSV URL}" <> Fixed 50 em cluster_jsv_url }\
+         Row { "@{JSV allowed modification}" <> Fixed 50 em cluster_jsv_allowed_mod }\
       } \
       ## \
       Etched Through Caption tl "@{@fBInteractive Parameters}" Col { \
@@ -546,3 +548,4 @@ Qmon*cluster_extra_layout.cluster_token_extend_time.verifyCallback: TrimAndTrail
 Qmon*cluster_extra_layout.cluster_jmx_libjvm_path.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_extra_layout.cluster_jmx_additional_jvm_args.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_extra_layout.cluster_jsv_url.verifyCallback: TrimAndTrail(self);
+Qmon*cluster_extra_layout.cluster_jsv_allowed_mod.verifyCallback: TrimAndTrail(self);

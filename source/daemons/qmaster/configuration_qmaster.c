@@ -113,7 +113,7 @@ int sge_read_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aSpoolContext, l
    spool_read_list(&anAnswer, aSpoolContext, config_list, SGE_TYPE_CONFIG);
 
    /*
-    * For Urubu we won't have and update script. Therefore the master
+    * For Urubu (6.2u2) we won't have and update script. Therefore the master
     * has to be able to cope with a missing "jsv_url" string. 
     *
     * TODO: Nethertheless we have to add the "jsv_url" to the update script
@@ -128,6 +128,25 @@ int sge_read_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aSpoolContext, l
          jsv_url = lAddSubStr(global, CF_name, "jsv_url", CONF_entries, CF_Type);
          if (jsv_url != NULL) { 
             lSetString(jsv_url, CF_value, "none");
+         }
+      }
+   }
+   /*
+    * For Urubu (6.2u2) we won't have and update script. Therefore the master
+    * has to be able to cope with a missing "jsv_allowed_mod" string. 
+    *
+    * TODO: Nethertheless we have to add the "jsv_allowed_mod" to the update 
+    *       script for the first release after Urubu.
+    */
+   {
+      lListElem *global = lGetElemHost(*config_list, CONF_name, "global");
+      lList *entries = lGetList(global, CONF_entries);
+      lListElem *jsv_url = lGetElemStr(entries, CF_name, "jsv_allowed_mod");
+
+      if (jsv_url == NULL) {
+         jsv_url = lAddSubStr(global, CF_name, "jsv_allowed_mod", CONF_entries, CF_Type);
+         if (jsv_url != NULL) { 
+            lSetString(jsv_url, CF_value, "ac,h,i,e,o,j,M,N,p,w");
          }
       }
    }

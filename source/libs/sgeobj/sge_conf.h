@@ -84,6 +84,7 @@ char* mconf_get_qlogin_command(void);
 char* mconf_get_rsh_daemon(void);
 char* mconf_get_rsh_command(void);
 char* mconf_get_jsv_url(void);
+char* mconf_get_jsv_allowed_mod(void);
 char* mconf_get_rlogin_daemon(void);
 char* mconf_get_rlogin_command(void);
 u_long32 mconf_get_reschedule_unknown(void);

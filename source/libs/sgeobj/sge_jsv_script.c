@@ -2166,3 +2166,178 @@ jsv_do_communication(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_li
    return ret;
 }
 
+static char *
+jsv_cull_attr2switch_name(int cull_attr, lListElem *job) 
+{
+   char *ret = NULL;
+
+   DENTER(TOP_LAYER, "jsv_cull_attr2switch_name");
+   if (cull_attr == JB_execution_time) {
+      ret = "a";
+   } else if (cull_attr == JB_context) {
+      ret = "ac"; /* although it might also be a ds or sc request we return ac here */
+   } else if (cull_attr == JB_ar) {
+      ret = "ar";
+   } else if (cull_attr == JB_account) {
+      ret = "A";
+   } else if (cull_attr == JB_checkpoint_interval) {
+      ret = "c_interval";
+   } else if (cull_attr == JB_checkpoint_attr) {
+      ret = "c_occasion";
+   } else if (cull_attr == JB_checkpoint_name) {
+      ret = "ckpt";
+   } else if (cull_attr == JB_cwd) {
+      ret = "cwd";
+   } else if (cull_attr == JB_deadline) {
+      ret = "dl";
+   } else if (cull_attr == JB_stderr_path_list) {
+      ret = "e";
+   } else if (cull_attr == JB_jid_request_list) {
+      ret = "hold_jid";
+   } else if (cull_attr == JB_ja_ad_request_list) {
+      ret = "hold_jid_ad";
+   } else if (cull_attr == JB_ja_tasks) {
+      ret = "h";
+   } else if (cull_attr == JB_stdin_path_list) {
+      ret = "i";
+   } else if (cull_attr == JB_merge_stderr) {
+      ret = "j";
+   } else if (cull_attr == JB_jobshare) {
+      ret = "js";
+   } else if (cull_attr == JB_hard_resource_list) {
+      ret = "l_hard";
+   } else if (cull_attr == JB_soft_resource_list) {
+      ret = "l_soft";
+   } else if (cull_attr == JB_mail_options) {
+      ret = "m";
+   } else if (cull_attr == JB_master_hard_queue_list) {
+      ret = "masterq";
+   } else if (cull_attr == JB_notify) {
+      ret = "notify";
+   } else if (cull_attr == JB_mail_list) {
+      ret = "M";
+   } else if (cull_attr == JB_job_name) {
+      ret = "N";
+   } else if (cull_attr == JB_stdout_path_list) {
+      ret = "o";
+   } else if (cull_attr == JB_project) {
+      ret = "P";
+   } else if (cull_attr == JB_priority) {
+      ret = "p";
+   } else if (cull_attr == JB_pe) {
+      ret = "pe_name";
+   } else if (cull_attr == JB_pe_range) {
+      ret = "pe_range";
+   } else if (cull_attr == JB_hard_queue_list) {
+      ret = "q_hard";
+   } else if (cull_attr == JB_soft_queue_list) {
+      ret = "q_soft";
+   } else if (cull_attr == JB_reserve) {
+      ret = "R";
+   } else if (cull_attr == JB_restart) {
+      ret = "r";
+   } else if (cull_attr == JB_shell_list) {
+      ret = "S";
+   } else if (cull_attr == JB_ja_structure) {
+      ret = "t";
+   } else if (cull_attr == JB_env_list) {
+      ret = "v"; /* v will be returned even if V was specified */
+   } else if (cull_attr == JB_verify_suitable_queues) {
+      ret = "w";
+   } else if (cull_attr == JB_script_file) {
+      ret = "CMDNAME";
+   }
+   DRETURN(ret);
+}
+
+bool
+jsv_is_modify_rejected(sge_gdi_ctx_class_t *context, lList **answer_list, lListElem *job) 
+{
+   bool ret = false;
+
+   DENTER(TOP_LAYER, "jsv_is_modify_rejected");
+   if (job != NULL) {
+      const char *jsv_allowed_mod = mconf_get_jsv_allowed_mod();
+      const char *jsv_url = mconf_get_jsv_url();
+
+      if (jsv_url && strcasecmp(jsv_url, "none") != 0) {
+
+         /*
+          * Check now if there are allowed modifications.
+          */
+         if (jsv_allowed_mod && strcmp(jsv_allowed_mod, "none") != 0) {
+            const lDescr *descr = lGetElemDescr(job);
+            const lDescr *pointer = NULL;
+            lList *allowed_switches = NULL;
+            lList *got_switches = NULL;
+            lListElem *allowed = NULL;
+
+            str_list_parse_from_string(&allowed_switches, jsv_allowed_mod, ",");
+            for (pointer = descr; pointer->nm != NoName; pointer++) {
+               const char *swch = jsv_cull_attr2switch_name(pointer->nm, job);
+             
+               if (swch != NULL) {
+                  lAddElemStr(&got_switches, ST_name, swch, ST_Type);
+               }
+            }
+
+            /*
+             * Remove the allowed switches from the list of switches which were
+             * applied to the job we got.
+             */
+            for_each(allowed, allowed_switches) {
+               const char *name = lGetString(allowed, ST_name);
+               const void *iterator = NULL;
+               lListElem *got;
+               lListElem *got_next;
+
+               got_next = lGetElemStrFirst(got_switches, ST_name, name, &iterator);
+               while ((got = got_next) != NULL) {
+                  got_next = lGetElemStrNext(got_switches, ST_name, name, &iterator);
+
+                  lRemoveElem(got_switches, &got);
+               }
+            }
+
+            if (lGetNumberOfElem(got_switches) == 0) {
+               ret = false;
+            } else {
+               lListElem *not_allowed;
+               dstring switches = DSTRING_INIT;
+               bool first = true;
+
+               for_each (not_allowed, got_switches) {
+                  if (!first) {
+                     sge_dstring_append_char(&switches, ',');
+                     first = false;
+                  }
+                  sge_dstring_append(&switches, lGetString(not_allowed, ST_name));
+               }
+               ERROR((SGE_EVENT, MSG_JSV_SWITCH_S, sge_dstring_get_string(&switches)));
+               answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+               sge_dstring_free(&switches);
+               ret = true;
+            }
+
+            if (allowed_switches) {
+               lFreeList(&allowed_switches);
+            }
+            if (got_switches) {
+               lFreeList(&got_switches);
+            }
+         } else {
+            /*
+             * JSV is active but no modification allowed
+             */
+            ERROR((SGE_EVENT, MSG_JSV_ALLOWED));
+            answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            ret = true;
+         }
+      }
+      FREE(jsv_allowed_mod);
+      FREE(jsv_url);
+   }
+   DRETURN(ret);
+}
+
+

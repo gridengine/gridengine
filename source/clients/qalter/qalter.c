@@ -281,7 +281,6 @@ int *all_users
    /* initialize job field set */
    job_field[0] = NoName;
    nm_set(job_field, JB_job_number);
-   nm_set(job_field, JB_job_name);
 
    /* don't do verification of schedulability per default */
    lSetUlong(job, JB_verify_suitable_queues, SKIP_VERIFY);
@@ -508,7 +507,7 @@ int *all_users
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-N"))) {
          lSetString(job, JB_job_name, lGetString(ep, SPA_argval_lStringT));
          lRemoveElem(cmdline, &ep);
-/*         nm_set(job_field, JB_job_name); */
+         nm_set(job_field, JB_job_name); 
       }
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-notify"))) {
@@ -766,8 +765,12 @@ int *all_users
          }
       }
       if ((jobid != 0) || ((*all_jobs) == 1)){
+         const char *job_name = lGetString(job, JB_job_name);
+
          rep = lAddElemUlong(prequestlist, JB_job_number, jobid, rdp);
-         lSetString(rep, JB_job_name, lGetString(job, JB_job_name));
+         if (job_name != NULL) {
+            lSetString(rep, JB_job_name, job_name);
+         }
       }   
       else{
          char *name = NULL;

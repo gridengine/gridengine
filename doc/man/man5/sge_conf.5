@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/09/29 13:03:04 $     Revision: $Revision: 1.79 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/12/04 10:56:52 $     Revision: $Revision: 1.80 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/09/29 13:03:04 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/12/04 10:56:52 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -1643,6 +1643,38 @@ This value is a global configuration parameter only. It cannot be
 overridden by the execution host local configuration.
 .\"
 .\"
+.SS "\fBjsv_url\fP"
+This setting defines a server JSV instance which will be started and
+triggered by the
+.M sge_qmaster 8
+process. This JSV instance will be used to verify job specifications of
+jobs before they are accepted and stored in the internal master database. 
+The global configuration entry for this value cannot be overwritten by 
+execution host local configurations.
+.sp 1
+Find more details concerning JSV in 
+.M jsv 1
+and 
+.M sge_request 1 .
+.sp 1
+The syntax of the \fBjsv_url\fP is specified in 
+.M sge_types 1 .
+.\"
+.\"
+.SS "\fBjsv_allowed_mod\fP"
+If there is a server JSV script defined with \fBjsv_url\fP parameter, then
+all 
+.M qalter 1
+or
+.M qmon 1
+modification requests for jobs are rejected by qmaster. With the \fBjsv_allowed_mod\fP
+parameter an administrator has the possibility to allow a set of switches which can then
+be used with clients to modify certain job attributes. The value for this parameter has to be a
+comma separated list of JSV job parameter names as they are documented in
+.M qsub 1
+or the value \fBnone\fP to indicate that no modification should be allowed. 
+.\"
+.\"
 .SS "\fBlibjvm_path\fP"
 \fBlibjvm_path\fP is usually set during qmaster installation and points to the absolute path of libjvm.so.
 (or the corresponding library depending on your architecture - e.g. /usr/java/jre/lib/i386/server/libjvm.so) The referenced libjvm version must be at least 1.5.
@@ -1667,12 +1699,14 @@ execution host local configuration.
 .M csh 1 ,
 .M qconf 1 ,
 .M qsub 1 ,
+.M jsv 1 ,
 .M rsh 1 ,
 .M sh 1 ,
 .M getpwnam 3 ,
 .M drmaa_attributes 3 ,
 .M queue_conf 5 ,
 .M sched_conf 5 ,
+.M sge_types 1 ,
 .M xxqs_name_sxx_execd 8 ,
 .M xxqs_name_sxx_qmaster 8 ,
 .M xxqs_name_sxx_shepherd 8 ,

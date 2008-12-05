@@ -61,6 +61,10 @@ DG-2008-11-03-0: Bugfix:      Critical errors when updating von 6.1 to 6.2 with
 
 JG-2008-10-30-0: Bugfix:      fixed a qmaster deadlock on linux
                               fixed minor memory leaks
+                              fixed memory leak in sge_execd with qsub -v SGE_*
+                              or qsub -V: Merge from V61_BRANCH JG-2008-07-26-0
+                 Bugster:     6729441
+                 Issue:       2679
                  Review:      RD
 
 DG-2008-10-30-1: Bugfix:      When updating from 6.1u? to 6.2 with rpc BDB 

@@ -32,8 +32,10 @@
 package com.sun.grid.jgdi.management.mbeans;
 
 import com.sun.grid.jgdi.JGDIException;
+import com.sun.grid.jgdi.configuration.ExecHost;
 import com.sun.grid.jgdi.configuration.JGDIAnswer;
 import com.sun.grid.jgdi.event.EventTypeEnum;
+import com.sun.grid.jgdi.monitoring.ClusterQueueSummary;
 import com.sun.grid.jgdi.monitoring.ClusterQueueSummaryOptions;
 import com.sun.grid.jgdi.monitoring.QHostOptions;
 import com.sun.grid.jgdi.monitoring.QHostResult;
@@ -50,7 +52,6 @@ import java.util.Set;
 // import org.ggf.drmaa.JobInfo;
 // import org.ggf.drmaa.JobTemplate;
 // import org.ggf.drmaa.Version;
-
 /**
  * Interface JGDIJMXBaseMBean
  *
@@ -102,7 +103,11 @@ public interface JGDIJMXBaseMBean {
 
     public String getActQMaster() throws JGDIException;
 
-    public List getRealExecHostList() throws com.sun.grid.jgdi.JGDIException;
+    public int getSgeQmasterPort() throws JGDIException;
+
+    public int getSgeExecdPort() throws JGDIException;
+
+    public List<ExecHost> getRealExecHostList() throws JGDIException;
 
     // -------- Monitoring interface --------------------------------------------
     public QHostOptions newQHostOptions() throws JGDIException;
@@ -115,7 +120,7 @@ public interface JGDIJMXBaseMBean {
 
     public QHostResult execQHost(QHostOptions options) throws JGDIException;
 
-    public List getClusterQueueSummary(ClusterQueueSummaryOptions options) throws JGDIException;
+    public List<ClusterQueueSummary> getClusterQueueSummary(ClusterQueueSummaryOptions options) throws JGDIException;
 
     public QueueInstanceSummaryResult getQueueInstanceSummary(QueueInstanceSummaryOptions options) throws JGDIException;
 
@@ -123,84 +128,105 @@ public interface JGDIJMXBaseMBean {
 
     // -------- Managing interface methods --------------------------------------
     public void clearShareTreeUsage() throws JGDIException;
+
     public void clearShareTreeUsageWithAnswer(List<JGDIAnswer> answers) throws JGDIException;
 
     public void cleanQueues(String[] queues) throws JGDIException;
+
     public void cleanQueuesWithAnswer(String[] queues, List<JGDIAnswer> answers) throws JGDIException;
 
     public void killMaster() throws JGDIException;
+
     public void killMasterWithAnswer(List<JGDIAnswer> answers) throws JGDIException;
 
     public void killScheduler() throws JGDIException;
+
     public void killSchedulerWithAnswer(List<JGDIAnswer> answers) throws JGDIException;
 
     public void startScheduler() throws JGDIException;
+
     public void startSchedulerWithAnswer(List<JGDIAnswer> answers) throws JGDIException;
-    
+
     public void killExecd(String[] hosts, boolean terminateJobs) throws JGDIException;
+
     public void killExecdWithAnswer(String[] hosts, boolean terminateJobs, List<JGDIAnswer> answers) throws JGDIException;
-    
 
     public void killAllExecds(boolean terminateJobs) throws JGDIException;
+
     public void killAllExecdsWithAnswer(boolean terminateJobs, List<JGDIAnswer> answers) throws JGDIException;
 
     public void killEventClients(int[] ids) throws JGDIException;
+
     public void killEventClientsWithAnswer(int[] ids, List<JGDIAnswer> answers) throws JGDIException;
 
     public void killAllEventClients() throws JGDIException;
+
     public void killAllEventClientsWithAnswer(List<JGDIAnswer> answers) throws JGDIException;
 
     public void triggerSchedulerMonitoring() throws JGDIException;
+
     public void triggerSchedulerMonitoringWithAnswer(List<JGDIAnswer> answers) throws JGDIException;
-    
 
     public String getSchedulerHost() throws JGDIException;
-    
 
     public void enableQueues(String[] queues, boolean force) throws JGDIException;
+
     public void enableQueuesWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException;
 
     public void disableQueues(String[] queues, boolean force) throws JGDIException;
+
     public void disableQueuesWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException;
-    
+
     public void suspend(String[] queues, boolean force) throws JGDIException;
+
     public void suspendWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException;
 
     public void suspendQueues(String[] queues, boolean force) throws JGDIException;
+
     public void suspendQueuesWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException;
 
     public void suspendJobs(String[] jobs, boolean force) throws JGDIException;
+
     public void suspendJobsWithAnswer(String[] jobs, boolean force, List<JGDIAnswer> answers) throws JGDIException;
 
     public void unsuspend(String[] queues, boolean force) throws JGDIException;
+
     public void unsuspendWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException;
-    
+
     public void unsuspendQueues(String[] queues, boolean force) throws JGDIException;
+
     public void unsuspendQueuesWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException;
 
     public void unsuspendJobs(String[] jobs, boolean force) throws JGDIException;
+
     public void unsuspendJobsWithAnswer(String[] jobs, boolean force, List<JGDIAnswer> answers) throws JGDIException;
 
     public void clearQueues(String[] queues, boolean force) throws JGDIException;
+
     public void clearQueuesWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException;
 
     public void clearJobs(String[] jobs, boolean force) throws JGDIException;
+
     public void clearJobsWithAnswer(String[] jobs, boolean force, List<JGDIAnswer> answers) throws JGDIException;
 
     public void reschedule(String[] queue_or_job, boolean force) throws JGDIException;
+
     public void rescheduleWithAnswer(String[] queue_or_job, boolean force, List<JGDIAnswer> answers) throws JGDIException;
-    
+
     public void rescheduleQueues(String[] queues, boolean force) throws JGDIException;
+
     public void rescheduleQueuesWithAnswer(String[] queues, boolean force, List<JGDIAnswer> answers) throws JGDIException;
-    
+
     public void rescheduleJobs(String[] jobs, boolean force) throws JGDIException;
+
     public void rescheduleJobsWithAnswer(String[] jobs, boolean force, List<JGDIAnswer> answers) throws JGDIException;
 
     public String showDetachedSettings(String[] queues) throws JGDIException;
-    
+
     public String showDetachedSettingsAll() throws JGDIException;
-    
+
     public void deleteShareTree() throws JGDIException;
+
     public void deleteShareTreeWithAnswer(List<JGDIAnswer> answers) throws JGDIException;
 
 //     // DRMAA specific methods

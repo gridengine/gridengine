@@ -34,10 +34,12 @@ package com.sun.grid.jgdi.management.mbeans;
 import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.JGDIException;
 import com.sun.grid.jgdi.JGDIFactory;
+import com.sun.grid.jgdi.configuration.ExecHost;
 import com.sun.grid.jgdi.configuration.JGDIAnswer;
 import com.sun.grid.jgdi.event.EventTypeEnum;
 import com.sun.grid.jgdi.management.JGDISession;
 import com.sun.grid.jgdi.management.NotificationBridge;
+import com.sun.grid.jgdi.monitoring.ClusterQueueSummary;
 import com.sun.grid.jgdi.monitoring.ClusterQueueSummaryOptions;
 import com.sun.grid.jgdi.monitoring.QHostOptions;
 import com.sun.grid.jgdi.monitoring.QHostResult;
@@ -211,9 +213,23 @@ public class JGDIJMXBase implements java.io.Serializable, JGDIJMXBaseMBean, Noti
         return ret;
     }
 
-    public List getRealExecHostList() throws JGDIException {
+    public int getSgeQmasterPort() throws JGDIException {
+        log.entering("JGDIJMXBase", "getSgeQmasterPort");
+        int ret = getJGDI().getSgeQmasterPort();
+        log.exiting("JGDIJMXBase", "getSgeQmasterPort", ret);
+        return ret;
+    }
+
+    public int getSgeExecdPort() throws JGDIException {
+        log.entering("JGDIJMXBase", "getSgeExecdPort");
+        int ret = getJGDI().getSgeExecdPort();
+        log.exiting("JGDIJMXBase", "getSgeExecdPort", ret);
+        return ret;
+    }
+
+    public List<ExecHost> getRealExecHostList() throws JGDIException {
         log.entering("JGDIJMXBase", "getRealExecHostList");
-        List ret = getJGDI().getRealExecHostList();
+        List<ExecHost> ret = getJGDI().getRealExecHostList();
         log.exiting("JGDIJMXBase", "getRealExecHostList", ret);
         return ret;
     }
@@ -225,9 +241,9 @@ public class JGDIJMXBase implements java.io.Serializable, JGDIJMXBaseMBean, Noti
         return ret;
     }
 
-    public List getClusterQueueSummary(ClusterQueueSummaryOptions options) throws JGDIException {
+    public List<ClusterQueueSummary> getClusterQueueSummary(ClusterQueueSummaryOptions options) throws JGDIException {
         log.entering("JGDIJMXBase", "getClusterQueueSummary", options);
-        List ret = getJGDI().getClusterQueueSummary(options);
+        List<ClusterQueueSummary> ret = getJGDI().getClusterQueueSummary(options);
         log.exiting("JGDIJMXBase", "getClusterQueueSummary", ret);
         return ret;
     }

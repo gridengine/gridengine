@@ -373,6 +373,66 @@ JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeGetActQM
 }
 
 /*
+ * Class:    com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeGetSgeQmasterPort
+ * Signature: ()I;
+ */
+JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeGetSgeQmasterPort(JNIEnv *env, jobject jgdi) {
+
+   lList *alp = NULL;
+   jint master_port = -1;
+   sge_gdi_ctx_class_t *ctx = NULL;
+   sge_bootstrap_state_class_t *bs = NULL;
+   jgdi_result_t ret = JGDI_SUCCESS;
+
+   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDI_nativeGetSgeQmasterPort");
+   
+   if ((ret = getGDIContext(env, jgdi, &ctx, &alp)) != JGDI_SUCCESS)  {
+      throw_error_from_answer_list(env, ret, alp);
+      lFreeList(&alp);
+      DRETURN(master_port);
+   }
+   bs = ctx->get_sge_bootstrap_state(ctx);
+   if (!bs) {
+      THROW_ERROR((env, JGDI_ILLEGAL_STATE, "bootstrap state not found"));
+      DRETURN(master_port);
+   }
+
+   master_port = ctx->get_sge_qmaster_port(ctx);
+   DRETURN(master_port);
+}
+
+/*
+ * Class:    com_sun_grid_jgdi_jni_JGDIBaseImpl
+ * Method:    nativeGetSgeExecdPort
+ * Signature: ()I;
+ */
+JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeGetSgeExecdPort(JNIEnv *env, jobject jgdi) {
+
+   lList *alp = NULL;
+   jint execd_port = -1;
+   sge_gdi_ctx_class_t *ctx = NULL;
+   sge_bootstrap_state_class_t *bs = NULL;
+   jgdi_result_t ret = JGDI_SUCCESS;
+
+   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDI_nativeGetSgeExecdPort");
+   
+   if ((ret = getGDIContext(env, jgdi, &ctx, &alp)) != JGDI_SUCCESS)  {
+      throw_error_from_answer_list(env, ret, alp);
+      lFreeList(&alp);
+      DRETURN(execd_port);
+   }
+   bs = ctx->get_sge_bootstrap_state(ctx);
+   if (!bs) {
+      THROW_ERROR((env, JGDI_ILLEGAL_STATE, "bootstrap state not found"));
+      DRETURN(execd_port);
+   }
+
+   execd_port = ctx->get_sge_execd_port(ctx);
+   DRETURN(execd_port);
+}
+
+/*
  * Class:     com_sun_grid_jgdi_JGDI
  * Method:    nativeGetAdminUser
  * Signature: ()Ljava/lang/String;

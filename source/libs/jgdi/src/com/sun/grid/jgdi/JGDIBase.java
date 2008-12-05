@@ -76,7 +76,21 @@ public interface JGDIBase {
      *  @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
      */
     public String getActQMaster() throws JGDIException;
-    
+
+    /**
+     *  Get the SGE_QMASTER_PORT of the current qmaster
+     *  @return the SGE_QMASTER_PORT of the current qmaster
+     *  @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
+     */
+    public int getSgeQmasterPort() throws JGDIException;
+
+    /**
+     *  Get the SGE_EXECD_PORT of the current qmaster
+     *  @return the SGE_EXECD_PORT of the current qmaster
+     *  @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
+     */
+    public int getSgeExecdPort() throws JGDIException;
+
     /**
      *   Close the <code>JGDI</code> object. After calling this method
      *   the <code>JGDI</code> is not longer useable.

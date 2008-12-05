@@ -112,6 +112,16 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
     }
 
     /**
+     *   Get the MBeanServerConnection connection
+     *
+     *   @return the MBeanServerConnection connection
+     */
+    public MBeanServerConnection getMBeanServerConnection() {
+        return connection;
+    }
+
+    
+    /**
      * Set up the ssl context
      * @param caTop  ca top directory if the Grid Engine CA ($SGE_ROOT/$SGE_CELL/common/sgeCA
      * @param ks     keystore of the user

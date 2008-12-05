@@ -139,7 +139,8 @@ MP-2008-10-02-0: Bugfix:      Modification of submit man page to reflect the cor
 
 DG-2008-10-02-0: Bugfix:      -help and "no option" for some clients fixed.
                  Merged from: maintrunk: DG-2008-09-25-0 
-                 Bugster:     6750325, 6749921
+                 Bugster:     6750325, 6749921, 6619440
+                 Issue:       2744, 2745, 1382
                  Review:      RD
 
 JG-2008-10-01-0: Enhancem.:   Improved handling of invalid requests in sge_execd.

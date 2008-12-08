@@ -1871,7 +1871,6 @@ FF_DEBUG("detected end_token");
          spool_return_whitespace = false;
          
          if (fields[field_index].read_func == NULL) {
-                        
             if(type == lUlongT) {            
                char *end_ptr = NULL;
                double dbl_value;
@@ -2320,7 +2319,7 @@ FF_DEBUG("detected record_start");
 
       /* store object */
       if (object != NULL) {
-         lAppendElem(list, object);         
+         lAppendElem(list, object);
       } else {
          /* if no object was read due to an error, a message has been
           * created in _spool_flatfile_read_object

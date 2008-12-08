@@ -849,10 +849,11 @@ calculate_reserved_usage(const char* qualified_hostname, const lListElem *ja_tas
    } else {
       start_time = lGetUlong(pe_task, PET_start_time);
    }
-   if (start_time && start_time < now)
+   if (start_time && start_time < now) {
       wall_clock_time = now - start_time;
-   else
+   } else {
       wall_clock_time = 0;
+   }
 
    cpu_val = vmem_val = vmem = 0;
 
@@ -890,15 +891,13 @@ calculate_reserved_usage(const char* qualified_hostname, const lListElem *ja_tas
        */
       usage_mul_factor = 1;
    } else {
-      /*loose integration:
+      /* loose integration:
        * loop over granted_destin_identifier_list and sum up limits * nslots
        * of each queue.
        */
-      lListElem *master_queue = lFirst(lGetList(ja_task, 
-                                           JAT_granted_destin_identifier_list));
+      lListElem *master_queue = lFirst(lGetList(ja_task, JAT_granted_destin_identifier_list));
 
-      for_each (gdil_ep, lGetList(ja_task, 
-                                  JAT_granted_destin_identifier_list)) {
+      for_each (gdil_ep, lGetList(ja_task, JAT_granted_destin_identifier_list)) {
          nslots = lGetUlong(gdil_ep, JG_slots);
          total_slots += nslots;
 
@@ -908,11 +907,9 @@ calculate_reserved_usage(const char* qualified_hostname, const lListElem *ja_tas
          if (gdil_ep == master_queue && pe != NULL && !lGetBool(pe, PE_job_is_first_task)) {
             nslots++;
          }
-         vmem += calculate_reserved_vmem(lGetObject(gdil_ep, JG_queue), 
-                                         nslots);
+         vmem += calculate_reserved_vmem(lGetObject(gdil_ep, JG_queue), nslots);
       }
-      usage_mul_factor = execd_get_acct_multiplication_factor(pe, total_slots,
-                                                              false);
+      usage_mul_factor = execd_get_acct_multiplication_factor(pe, total_slots, false);
    }
 
    /* calc reserved vmem (in GB seconds) */

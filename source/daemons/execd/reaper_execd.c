@@ -553,8 +553,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
       int slots;
 
       slots = (s=get_conf_val("pe_slots"))?atoi(s):1;
-      usage_mul_factor = execd_get_acct_multiplication_factor(pe, slots, 
-                                                         (pe_task_id != NULL) ? true : false);
+      usage_mul_factor = execd_get_acct_multiplication_factor(pe, slots, (pe_task_id != NULL) ? true : false);
    }
 
    if (read_dusage(jr, sge_dstring_get_string(&jobdir), job_id, ja_task_id, failed, usage_mul_factor)) {
@@ -1738,8 +1737,7 @@ static void build_derived_final_usage(lListElem *jr, int usage_mul_factor)
          add_usage(jr, USAGE_ATTR_MAXVMEM, NULL, maxvmem);
    }
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /*****************************************************************/

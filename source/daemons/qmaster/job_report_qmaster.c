@@ -365,13 +365,15 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
                                queue_name, shouldbe_queue_name, 
                                shouldbe_host_name, 
                                status2str(lGetUlong(jatep, JAT_status))));
-                        }
+                     }
                   }
                }
 
-               /* once a day write an intermediate usage record to the 
+               /* 
+                * once a day write an intermediate usage record to the
                 * reporting file to have correct daily usage reporting with
-                * long running jobs */
+                * long running jobs 
+                */
                if (reporting_is_intermediate_acct_required(jep, jatep, petask)) {
                   /* write intermediate usage */
                   reporting_create_acct_record(ctx, NULL, jr, jep, jatep, true);

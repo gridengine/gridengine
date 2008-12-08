@@ -1,3 +1,11 @@
+JG-2008-12-08-0: Bugfix:      auto install fails with spooling via BDB server
+                 Bugster:     6767198
+                 Issue:       2772
+                 Bugfix:      Fixed memory leak in test_drmaa
+                              (merged from maintrunk)
+                 Cleanup:     unify code between branches, formatting, ...
+                 Review:      MD
+
 ZG-2008-12-03-0: Enhancem.:   improve mk_ascman script the way to generate html
                               pages which handle multiple sge versions
                  Enhancem.:   update html man pages

@@ -253,8 +253,7 @@ hgroup_mod(sge_gdi_ctx_class_t *ctx,
             /* Check groupname for new hostgroups */
             if (hgroup_check_name(answer_list, name)) {
                lSetHost(hgroup, HGRP_name, name); 
-            }
-            else {
+            } else {
                lListElem *aep;
                for_each(aep, *answer_list) {
                   ERROR((SGE_EVENT, lGetString(aep, AN_text)));

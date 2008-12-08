@@ -189,7 +189,7 @@ Makedir()
 
        $INFOTEXT "creating directory: %s" "$dir"
        if [ "`$SGE_UTILBIN/filestat -owner $tmp_dir`" != "$ADMINUSER" ]; then
-          Execute mkdir -p $dir
+          Execute $MKDIR -p $dir
           if [ "$ADMINUSER" = "default" ]; then
              Execute $CHOWN -R root $chown_dir
           else
@@ -198,7 +198,7 @@ Makedir()
           fi
 	       Execute $CHMOD -R $DIRPERM $chown_dir
        else
-          ExecuteAsAdmin mkdir -p $dir
+          ExecuteAsAdmin $MKDIR -p $dir
 		    ExecuteAsAdmin $CHMOD -R $DIRPERM $chown_dir
        fi
    fi
@@ -990,19 +990,19 @@ CheckConfigFile()
          $INFOTEXT -e "Your >SGE_ENABLE_JMX< flag is wrong! Valid values are:0,1,true,false,TRUE,FALSE"
          is_valid="false" 
       fi   
-      `IsNumeric "$SGE_JMX_PORT"`
-      if [ "$?" -eq 1 ]; then
-         $INFOTEXT -e "Your >SGE_JMX_PORT< entry is invalid, please enter a number between 1\n and number of execution host"
-         is_valid="false"
-      elif [ "$SGE_JMX_PORT" -le 1 -a "$SGE_JMX_PORT" -ge 65536 ]; then
-         $INFOTEXT -e "Your >SGE_JMX_PORT< entry is invalid. It must be a number between 1 and 65536!"
-         is_valid="false"
-      fi
       if [ "$SGE_ENABLE_JMX" = "true" -a \( -z "$SGE_JVM_LIB_PATH" -o  "`echo "$SGE_JVM_LIB_PATH" | cut -d"/" -f1`" = "`echo "$SGE_JVM_LIB_PATH" | cut -d"/" -f2`" \) ]; then
          $INFOTEXT -e "Your >SGE_JVM_LIB_PATH< is empty or an invalid path. It must be a full path!"
          is_valid="false"
       fi   
       if [ "$SGE_ENABLE_JMX" = "true" ]; then
+         `IsNumeric "$SGE_JMX_PORT"`
+         if [ "$?" -eq 1 ]; then
+            $INFOTEXT -e "Your >SGE_JMX_PORT< entry is invalid, please enter a number between 1\n and number of execution host"
+            is_valid="false"
+         elif [ "$SGE_JMX_PORT" -le 1 -a "$SGE_JMX_PORT" -ge 65536 ]; then
+            $INFOTEXT -e "Your >SGE_JMX_PORT< entry is invalid. It must be a number between 1 and 65536!"
+            is_valid="false"
+         fi
          if [ -z "$SGE_JMX_SSL" ]; then
             $INFOTEXT -e "Your >SGE_JMX_SSL< flag is not set!"
             is_valid="false" 

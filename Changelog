@@ -1,3 +1,13 @@
+AA-2008-12-08-0: Bugfix:      several auto installation problems with jmx mode
+                              - installation of certificates in autoinstall even if -no-jmx is set
+                              - non-root user installation fails due to wrong keystore path
+                              - installation failure in auto install mode if JAVA_HOME is not set
+                              - inst_template.conf missing additional jvm args -Xmx=256m
+                              - auto install broken if SGE_JMX_PORT not set correctly even if in -no-jmx mode
+                 Bugster:     6782086
+                 Issue:       2823
+                 Review:      EB
+
 AA-2008-12-05-0: Enhancem.:   - JGDI methods getSgeQmasterPort(), getSgeExecdPort()
                               - JGDIProxy method getMBeanServerConnection()
                  Review:      EB

@@ -1176,7 +1176,7 @@ CreateSettingsFile()
 InitCA()
 {
 
-   if [ "$CSP" = true -o \( "$WINDOWS_SUPPORT" = "true" -a "$WIN_DOMAIN_ACCESS" = "true" \) -o "$SGE_JMX_SSL" = true ]; then
+   if [ "$CSP" = true -o \( "$WINDOWS_SUPPORT" = "true" -a "$WIN_DOMAIN_ACCESS" = "true" \) -o \( "$SGE_ENABLE_JMX" = true -a "$SGE_JMX_SSL" = true \) ]; then
       # Initialize CA, make directories and get DN info
       #
       SGE_CA_CMD=util/sgeCA/sge_ca
@@ -1199,7 +1199,7 @@ InitCA()
          echo "$SGE_JMX_SSL_KEYSTORE_PW" > /tmp/pwfile.$$
          OUTPUT=`$SGE_CA_CMD -sysks -ksout $SGE_JMX_SSL_KEYSTORE -kspwf /tmp/pwfile.$$ 2>&1`
          if [ $? != 0 ]; then
-            $INFOTEXT "Error: Cannot create keystore $SGE_JMX_SSL_KEYSTORE\n$OUTPUT"
+            $INFOTEXT -log "Error: Cannot create keystore $SGE_JMX_SSL_KEYSTORE\n$OUTPUT"
             ret=1
          else
             ret=0
@@ -1895,7 +1895,7 @@ SetLibJvmPath() {
    
    if [ ! -f "$jvm_lib_path" ]; then
       jvm_lib_path=""
-      $INFOTEXT "\nWarning: Cannot start jvm thread: jvm library %s not found" "$jvm_lib_path"
+      $INFOTEXT -log "\nWarning: Cannot start jvm thread: jvm library %s not found" "$jvm_lib_path"
       return 1
    fi
    if [ "$JAVA_HOME" = "" ]; then
@@ -2029,8 +2029,15 @@ GetJMXPort() {
                else
                   ca_port=sge_qmaster
                fi
+               # must be in sync with definitions in sge_ca.cnf
+               euid=`$SGE_UTILBIN/uidgid -euid`
+               if [ $euid = 0 ]; then
+                  CALOCALTOP=/var/sgeCA/$ca_port/$SGE_CELL
+               else
+                  CALOCALTOP=/tmp/sgeCA/$ca_port/$SGE_CELL
+               fi
                if [ "$sge_jmx_ssl_keystore" = "" ]; then 
-                  sge_jmx_ssl_keystore=/var/sgeCA/$ca_port/$SGE_CELL/private/keystore
+                  sge_jmx_ssl_keystore=$CALOCALTOP/private/keystore
                fi
                $INFOTEXT -n "Enter JMX SSL server keystore path [%s] >> " "$sge_jmx_ssl_keystore"
                INP=`Enter "$sge_jmx_ssl_keystore"`

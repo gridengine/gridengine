@@ -230,9 +230,6 @@ extern int main(int argc, char** argv)
      if (runs > 0) {
         runs--;
      }
-     if (runs == 0) {
-        do_shutdown = 1;
-     }
 
      /* printf("sending to \"%s\" ...\n", argv[1]);  */
 
@@ -448,6 +445,9 @@ extern int main(int argc, char** argv)
            printf("could not enable autoclose\n");
            exit(1);
         }  
+     }
+     if (runs == 0) {
+        do_shutdown = 1;
      }
   }
   printf("do_shutdown received\n");

@@ -1,3 +1,7 @@
+CR-2008-12-08-1: Bugfix:      fixed module test binary test_cl_commlib_client
+                              (wrong shutdown if CL_RUNS was set)
+                 Review:      AA
+
 CR-2008-12-08-0: Bugfix:      Commlib: Use poll() instead of select() for
                                        linux and solaris architectures
                               Commlib: commlib logging output now also 

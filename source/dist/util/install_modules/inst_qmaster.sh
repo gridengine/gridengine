@@ -1180,8 +1180,10 @@ InitCA()
       # Initialize CA, make directories and get DN info
       #
       SGE_CA_CMD=util/sgeCA/sge_ca
+      CATOP_TMP=`grep "CATOP=" util/sgeCA/sge_ca.cnf | awk -F= '{print $2}' 2>/dev/null`
+      eval CATOP_TMP=$CATOP_TMP
       if [ "$AUTO" = "true" ]; then
-         if [ "$CSP_RECREATE" = "true" ]; then
+         if [ "$CSP_RECREATE" != "false" -o ! -f $CATOP_TMP/certs/cert.pem ]; then
             $SGE_CA_CMD -init -days 365 -auto $FILE
             #if [ -f "$CSP_USERFILE" ]; then
             #   $SGE_CA_CMD -usercert $CSP_USERFILE
@@ -1199,7 +1201,8 @@ InitCA()
          echo "$SGE_JMX_SSL_KEYSTORE_PW" > /tmp/pwfile.$$
          OUTPUT=`$SGE_CA_CMD -sysks -ksout $SGE_JMX_SSL_KEYSTORE -kspwf /tmp/pwfile.$$ 2>&1`
          if [ $? != 0 ]; then
-            $INFOTEXT -log "Error: Cannot create keystore $SGE_JMX_SSL_KEYSTORE\n$OUTPUT"
+            $INFOTEXT "Error: Cannot create keystore $SGE_JMX_SSL_KEYSTORE\n$OUTPUT"
+	        $INFOTEXT -log "Error: Cannot create keystore $SGE_JMX_SSL_KEYSTORE\n$OUTPUT"
             ret=1
          else
             ret=0

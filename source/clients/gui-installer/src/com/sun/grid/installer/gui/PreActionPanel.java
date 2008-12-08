@@ -38,6 +38,9 @@ import com.izforge.izpack.util.VariableSubstitutor;
 import com.sun.grid.installer.util.ExtendedFile;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class PreActionPanel extends ActionPanel {
 
@@ -79,7 +82,7 @@ public class PreActionPanel extends ActionPanel {
              }
         }
 
-         // add.qmaster.host
+        // add.qmaster.host
         idata.setVariable(VAR_QMASTER_HOST, Host.localHostName);
         Debug.trace("add.qmaster.host='" + idata.getVariable(VAR_QMASTER_HOST) + "'");
 
@@ -88,16 +91,20 @@ public class PreActionPanel extends ActionPanel {
         Debug.trace("cfg.db.spooling.server='" + idata.getVariable(VAR_DB_SPOOLING_SERVER) + "'");
 
         // cfg.sge.jvm.lib.path
-        String[] libPaths = idata.getVariable("SYSTEM_java_library_path").split(":");
+        List<String> libPaths = new ArrayList<String>();
+        libPaths.addAll(Arrays.asList(idata.getVariable("SYSTEM_java_library_path").split(":")));
+        libPaths.add(idata.getVariable("SYSTEM_sun_boot_library_path"));
+        //MacOS last resort
+        libPaths.add("/System/Library/Frameworks/JavaVM.framework/Libraries");
 
         String libjvm = "/" + System.mapLibraryName("jvm");
         if (libjvm.endsWith(".jnilib")) {
             libjvm = libjvm.substring(0, libjvm.lastIndexOf(".jnilib")) + ".dylib";
         }
 
-        for (int i = 0; i < libPaths.length; i++) {
-            if (new File(libPaths[i] + libjvm).exists()) {
-                idata.setVariable(VAR_JVM_LIB_PATH, libPaths[i] + libjvm);
+        for (String libPath : libPaths) {
+            if (new File(libPath + libjvm).exists()) {
+                idata.setVariable(VAR_JVM_LIB_PATH, libPath + libjvm);
                 Debug.trace("cfg.sge.jvm.lib.path='" + idata.getVariable(VAR_JVM_LIB_PATH) + "'");
                 break;
             }

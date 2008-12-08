@@ -59,7 +59,7 @@ ___INFO__MARK_END__-->
     <str id="UserInputPanel.headline.MainPanel" txt="Main configuration"/>
     <str id="UserInputPanel.headline.JMXPanel" txt="JMX configuration"/>
     <str id="UserInputPanel.headline.SpoolingPanel" txt="Spooling configuration"/>
-    <str id="UserInputPanel.headline.CSPPanel" txt="CSP configuration"/>
+    <str id="UserInputPanel.headline.CSPPanel" txt="SSL certificate configuration"/>
     <str id="HostPanel.headline" txt="Select hosts"/>
     <str id="HostPanel.installing.headline" txt="Installing"/>
     <str id="PostActionPanel.headline" txt="Check environment"/>
@@ -441,6 +441,7 @@ ___INFO__MARK_END__-->
         <str id="log.message.emptylog" txt="Empty log."/>
 
    <!-- install_component exit code mapptings -->
+        <str id="msg.exit.fail.general"  txt="Installation failed with exit code {0}"/>
         <str id="msg.exit.1"  txt="Installation failed."/>
         <str id="msg.exit.2" txt="Installation failed with exit code 2"/>
         <str id="msg.exit.10" txt="Detected existing component installation. Can't proceed."/>

@@ -152,7 +152,7 @@ while [ $ARGC != 0 ]; do
      ;;
    -autogui)
       AUTO=true
-      AUTOGUI=true
+      AUTOGUI=true; export AUTOGUI;
       ;;
    -m)
      QMASTER="install"
@@ -365,14 +365,18 @@ if [ -z "$WIN_ADMIN_NAME" ]; then
    WIN_ADMIN_NAME="Administrator"
 fi
 for item in WINDOWS_SUPPORT WIN_DOMAIN_ACCESS CSP_RECREATE CSP_COPY_CERTS; do
-   eval $item="false"
+   if [ -z "$item" ]; then
+      eval $item="false"
+   fi
 done
 
 if [ -z "$EXEC_HOST_LIST" ]; then
    EXEC_HOST_LIST="undef"
 fi
 for item in CSP_COUNTRY_CODE CSP_STATE CSP_LOCATION CSP_ORGA CSP_ORGA_UNIT CSP_MAIL_ADDRESS; do
-   eval $item="undef"
+   if [ -z "$item" ]; then
+      eval $item="undef"
+   fi
 done
 
 CheckForSMF

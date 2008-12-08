@@ -31,26 +31,26 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.installer.util;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.List;
 import java.io.File;
-import java.io.InputStreamReader;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Vector;
 
 import com.izforge.izpack.util.Debug;
+import com.sun.grid.installer.gui.Host;
+import java.io.FileReader;
+import java.io.LineNumberReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Properties;
 
 /**
  * Executes the given commands and stores their exit value and output streams.
  */
-public class CommandExecutor {
+public class CommandExecutor implements Config {
     private ProcessBuilder processBuilder = null;
-
-    private StreamHandler outputStream = null;
-    private StreamHandler ttyStream = null;
-    private StreamHandler errorStream  = null;
     
     private int exitValue = -1;
 
@@ -59,43 +59,138 @@ public class CommandExecutor {
     public static final int EXITVAL_TERMINATED  = -4;
 
     private static int WAIT_TIME     = 50;
-    private int MAX_WAIT_TIME = 8000;
+    private static int DEFAULT_MAX_WAIT_TIME = 8000;
+    private int MAX_WAIT_TIME;
+
+    private Vector<String> outVector, errVector, additionalErrors;
+
+    private File outFile, errFile;
+    private List<String> cmds = null;
 
     public CommandExecutor(String... command) {
-        processBuilder = new ProcessBuilder(command);
+        this(null, DEFAULT_MAX_WAIT_TIME, Arrays.asList(command));
     }
 
-    public CommandExecutor(int timeout, String... command) {
-        MAX_WAIT_TIME=timeout;
-        processBuilder = new ProcessBuilder(command);        
+    public CommandExecutor(Properties variables, String... command) {
+        this(variables, DEFAULT_MAX_WAIT_TIME, Arrays.asList(command));
     }
 
-    public CommandExecutor(List<String> commands) {
-        processBuilder = new ProcessBuilder(commands);
+    public CommandExecutor(Properties variables, int timeout, String... command) {
+        this(variables, timeout, Arrays.asList(command));
     }
     
-    public CommandExecutor(int timeout, List<String> commands) {
-        MAX_WAIT_TIME=timeout;
+    public CommandExecutor(Properties variables, int timeout, List<String> commands) {
+        MAX_WAIT_TIME = timeout;
+
+        Debug.trace("Initializing command: " + commands);
+
+        List<String> tmp = commands;
+        commands = new ArrayList<String>();
+        additionalErrors = new Vector<String>();
+        String singleCmd = null;
+
+        if (variables == null) {
+           //Quick commands like ls, chmod, ...
+           commands.add("sh");
+           commands.add("-c");
+           List<String> tmpList = new ArrayList<String>();
+           tmpList.addAll(tmp);
+           setupOutputFiles(tmpList); //Redirect command outputs
+           singleCmd = getSingleCommand(tmpList);
+           commands.add(singleCmd);
+           Debug.trace("New quick command: " + commands);
+        } else if (variables != null) {
+            String shellName = tmp.get(0);
+            String destHost = tmp.get(1);
+            boolean onLocalHost = destHost.equalsIgnoreCase(Host.localHostName);
+            //Skip the copy command when on a local host
+            if (isSameCommand(variables.getProperty(VAR_COPY_COMMAND), shellName)) {
+                destHost = tmp.get(tmp.size() - 1).split(":")[0];
+                if (destHost.equalsIgnoreCase(Host.localHostName)) {
+                    Debug.trace("Copying skipped: " + tmp);
+                    exitValue = 0;
+                    return;
+                }
+            //Skip ssh/rsh if on local host
+            }
+            if (onLocalHost && isSameCommand(variables.getProperty(VAR_SHELL_NAME), shellName)) {
+                commands.add("sh");
+                commands.add("-c");
+                List<String> tmpList = new ArrayList<String>();
+                for (int i = 2; i < tmp.size(); i++) {
+                    tmpList.add(tmp.get(i));
+                }
+                setupOutputFiles(tmpList); //Redirect command outputs
+                singleCmd = getSingleCommand(tmpList);
+                commands.add(singleCmd);
+                Debug.trace("New command: " + commands);
+            // Add ssh/scp options if not on local host
+            } else if (!onLocalHost && (isSameCommand(variables.getProperty(VAR_SHELL_NAME), "ssh") || isSameCommand(variables.getProperty(VAR_COPY_COMMAND), "scp"))) {
+                commands.add("sh");
+                commands.add("-c");
+                //Make a single line
+                List<String> tmpList = new ArrayList<String>();
+                for (int i = 0; i < tmp.size(); i++) {
+                    if (i == 1) {
+                        //We don't want to wait on the acception unknown RSA keys
+                        //We require a kerberos5 or public key for connecting (without password)!
+                        tmpList.add("-o StrictHostKeyChecking=yes -o PreferredAuthentications=gssapi-keyex,publickey");
+                    }
+                    tmpList.add(tmp.get(i));
+                }
+                setupOutputFiles(tmpList); //Redirect command outputs
+                singleCmd = getSingleCommand(tmpList);
+                commands.add(singleCmd);                
+                Debug.trace("New command: " + commands);
+            }
+        }                
+        //cmds = commands;
         processBuilder = new ProcessBuilder(commands);
     }
 
+    private static boolean isSameCommand(String first, String second) {
+        return first.equals(second) || first.endsWith("/"+second);
+    }
+
+    private static String getSingleCommand(List<String> cmds) {
+        return getSingleCommand(0, cmds);
+    }
+
+    private static String getSingleCommand(int startElement, List<String> cmds) {
+        String singleCmd="";
+        for (int i=startElement; i < cmds.size(); i++) {
+           singleCmd += cmds.get(i) + " ";
+        }
+        if (singleCmd.length() > 1) {
+            return singleCmd.substring(0, singleCmd.length() - 1);
+        }
+        return null;
+    }
+
+    private void setupOutputFiles(List<String> commands) {
+        try {
+            outFile = File.createTempFile("gui-cmdexec", ".out");
+            errFile = File.createTempFile("gui-cmdexec", ".err");
+            commands.add("> "+outFile.getAbsolutePath()+" 2> "+ errFile.getAbsolutePath());
+        } catch (IOException ex) {
+            additionalErrors.add(this.getClass().getName() + ".init: " + ex.getMessage());
+        }
+    }
+
+
     public void execute() {
+        //Exit if we skipped the commands (on local host)
+        if (exitValue != -1) {
+            return;
+        }
+ 
         Process process = null;
 
         try {
-           process = processBuilder.start();
+            process = processBuilder.start();
             
-
-            outputStream = new StreamHandler("out", process.getInputStream());
-            errorStream  = new StreamHandler("err",process.getErrorStream());
-            //ttyStream = new StreamHandler("tty", new FileInputStream("/dev/tty"));
-
-            outputStream.start();
-            errorStream.start();
-            //ttyStream.start();
-
             long waitTime = 0;
-            //Must wait until both threads for out/err streams finished
+            long exitWait = 0;
             while (true) {
                 try {
                     exitValue = process.exitValue();
@@ -111,16 +206,22 @@ public class CommandExecutor {
                     }
                 }
             }
-            outputStream.interrupt();
-            errorStream.interrupt();
+            Debug.trace("Waited "+exitWait+"ms");
 
             Debug.trace("Command: " + processBuilder.command().toString() + " exitValue: "+exitValue);
         } catch (IOException ex) {
             exitValue = EXITVAL_OTHER;
-            //Debug.error(ex);
+            additionalErrors.add(ex.getLocalizedMessage());
         } catch (InterruptedException ex) {
             exitValue = EXITVAL_INTERRUPTED;
-            Debug.error(ex);
+            additionalErrors.add(ex.getLocalizedMessage());
+        } finally {
+            outVector = getInput(outFile);
+            errVector = getInput(errFile);
+            errVector.addAll(additionalErrors);
+            //Delete on exit to have better debug, until we close the APP
+            outFile.deleteOnExit();
+            errFile.deleteOnExit();
         }
     }
 
@@ -128,7 +229,7 @@ public class CommandExecutor {
         processBuilder.directory(directory);
     }
 
-    public List getComamnds() {
+    public List getCommands() {
         return processBuilder.command();
     }
 
@@ -141,15 +242,11 @@ public class CommandExecutor {
     }
     
     public Vector<String> getOutput() {
-        if (outputStream != null) {
-            return outputStream.getInput();
-        } else {
-            return null;
-        }
+        return outVector;
     }
     
     public Vector<String> getError() {
-        return errorStream.getInput();
+        return  errVector;
     }
 
     /**
@@ -159,74 +256,25 @@ public class CommandExecutor {
         return exitValue;
     }
     
-    private class StreamHandler extends Thread {
-        private String name             = null;
-        private InputStream inputStream = null;
-        private Vector<String> input    = null;
-        private BufferedReader bufferedReader = null;
-
-        public StreamHandler(InputStream inputStream) {
-            this.inputStream = inputStream;
-       
-            input = new Vector<String>();
-        }
-
-        public StreamHandler(String name, InputStream inputStream) {
-            this(inputStream);
-            this.name = name;
-        }
-        
-        @Override
-        public void run() {
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-            bufferedReader = new BufferedReader(inputStreamReader);
-
+          
+    private Vector<String> getInput(File f) {
+        LineNumberReader lnr = null;
+        Vector<String> v = new Vector<String>();
+        try {
+            lnr = new LineNumberReader(new FileReader(f));
+            String line;
+            while ((line = lnr.readLine()) != null) {
+                v.add(line);
+            }
+            return v;
+        } catch (IOException ex) {
+            additionalErrors.add(ex.getLocalizedMessage());
+            return v;
+        } finally {
             try {
-                String line = null;
-                while (!bufferedReader.ready()) {
-                    if (isInterrupted()) {
-                        return;
-                    }
-                    yield();
-                }
-                while (isInterrupted() != true && (line = bufferedReader.readLine()) != null) {
-                    input.add(line);
-                    Debug.trace(name + " line:" + line);
-                }
-            /*} catch (InterruptedException ex) {
-                Debug.trace("Stream "+name+" interrupted");*/
+                lnr.close();
             } catch (IOException ex) {
-                //Debug.error(ex);
-            } finally {
-                try {
-                    if (bufferedReader != null) {
-                       bufferedReader.close();
-                    }
-                } catch (IOException ex) {
-                    //Debug.error(ex);
-                }
-            }
-        }        
-
-        public Vector<String> getInput() {
-            if (input != null) {
-                return (Vector<String>)input.clone();
-            } else {
-                return null;
             }
         }
-
-        @Override
-        public void interrupt() {
-            if (bufferedReader != null) {
-                try {
-                    bufferedReader.close();
-                } catch (IOException ex) {
-                    //Debug.trace(ex);
-                }
-            }
-            super.interrupt();
-        }
-
-    }
+    }    
 }

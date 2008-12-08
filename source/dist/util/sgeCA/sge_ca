@@ -1836,7 +1836,9 @@ while [ $ARGC != 0 ]; do
       ;;
    -auto)
       AUTO="true"
-      . $2
+      if [ "$AUTOGUI" != true ]; then
+         . $2
+      fi
       shift
       ARGC=`expr $ARGC - 1`
       ;;

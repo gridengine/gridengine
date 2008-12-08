@@ -105,6 +105,10 @@ ___INFO__MARK_END__-->
             <name>add.product.mode</name>
             <value>${add.product.mode.csp}</value>
         </condition>
+        <condition type="variable" id="cond.sge.jmx.ssl">
+            <name>cfg.sge.jmx.ssl</name>
+            <value>${cfg.sge.jmx.ssl}</value>
+        </condition>
         <condition type="variable" id="cond.true">
             <name>true</name>
             <value>true</value>
@@ -148,23 +152,23 @@ ___INFO__MARK_END__-->
         <panel classname="IntermediateActionPanel"  id="IntermediateActionPanel" />
         <panel classname="UserInputPanel"  id="JMXPanel" condition="cond.custom.install+cond.sge.jmx+cond.install.qmaster"/>
         <panel classname="UserInputPanel"  id="SpoolingPanel" condition="cond.custom.install+cond.install.qmaster|cond.install.bdb"/>
-        <panel classname="UserInputPanel"  id="CSPPanel" condition="cond.custom.install+cond.product.mode.csp"/>
+        <panel classname="UserInputPanel"  id="CSPPanel" condition="cond.product.mode.csp|cond.custom.install+cond.sge.jmx+cond.sge.jmx.ssl"/>
         <panel classname="HostPanel"       id="HostPanel" />
         <panel classname="PostActionPanel" id="PostActionPanel"/>
         <panel classname="ResultPanel"     id="ResultPanel"/>
     </panels>
 
    <variables>
-        <variable name="work.dir" value="${SYSTEM_user_dir}"/>
-        <variable name="templates.dir" value="${SYSTEM_user_dir}/util/gui-installer/templates"/>
+        <variable name="work.dir" value="${SYSTEM_user_dir}"/> <!-- TODO: Delete the work.dir -->
+        <variable name="templates.dir" value="${cfg.sge.root}/util/gui-installer/templates"/>
         <variable name="readme.temp.file" value="${templates.dir}/readme_template.html"/>
-        <variable name="readme.file" value="${work.dir}/readme.html"/>
-        <variable name="silent.install.file" value="${work.dir}/install.xml"/>
+        <variable name="readme.file" value="${cfg.sge.root}/${cfg.cell.name}/readme.html"/>
+        <variable name="silent.install.file" value="${cfg.sge.root}/${cfg.cell.name}/gui_auto_install.xml"/>
         <variable name="auto.conf.temp.file" value="${templates.dir}/gui_inst_template.conf"/>
-        <variable name="auto.conf.file" value="${work.dir}/autoinst.conf"/>
+        <variable name="auto.conf.file" value="${cfg.sge.root}/${cfg.cell.name}/autoinst.conf"/>
         <variable name="auto.install.component.temp.file" value="${templates.dir}/install_component"/>
         <variable name="auto.install.component.file" value="install_component"/>
-        <variable name="install.script.file.dir" value="${work.dir}"/>
+        <variable name="install.script.file.dir" value="${cfg.sge.root}"/>
         <variable name="install.script.file.name" value="inst_sge"/>
         
         <variable name="false" value="false"/>

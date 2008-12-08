@@ -1,3 +1,21 @@
+LP-2008-12-08-0: Bugfix:      qmaster auto installation with jmx will fail if
+                              CSP_RECREATE flag is not set
+                 Following changes apply to clients/gui-installer
+                 Cleanup:     Removed install key shortcut
+                 Bugfix:      inst_sge - fixed variable settings for -autogui
+                 Bugfix:      JVM lib still not correctly detected on MacOS
+                 Bugfix:      CSP panel showned when JMX SSL selected
+                 Bugfix:      Command executor output now reliable
+                 Bugfix:      FSType commands not executed on remote host
+                 Bugfix:      GUI installer files should be referenced against
+                              $SGE_ROOT, not the work dir.
+                 Enhancem.:   Commands executed locally if on local host
+                 Enhancem.:   COPY_COMMANDS get skipped when on local host
+                 Enhancem.:   Added ssh/scp options to supress TTY outputs
+                 Enhancem.:   All install tasks fail once it's first (bdb or
+                              qmaster) task gets terminated due to timeout
+                 Review       ZG, EB
+
 CR-2008-12-08-1: Bugfix:      fixed module test binary test_cl_commlib_client
                               (wrong shutdown if CL_RUNS was set)
                  Review:      AA

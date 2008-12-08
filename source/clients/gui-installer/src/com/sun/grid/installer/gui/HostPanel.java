@@ -182,15 +182,6 @@ public class HostPanel extends IzPanel implements Config {
                 }
             }
         });
-        //TODO: MUST be removed from final version
-        hostTF.addKeyListener(new KeyAdapter() {
-
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyChar() == '+') {
-                    installButtonActionPerformed();
-                }
-            }
-        });
 
         String[] selectionHeaders = getSelectionLabelVars();
         String[] headerToltips = new String[selectionHeaders.length];
@@ -1217,9 +1208,8 @@ public class HostPanel extends IzPanel implements Config {
 
         String SGE_ROOT = idata.getVariable(VAR_SGE_ROOT);
 
-		int row = 0;
         boolean wait = false;
-        long completed = 0;
+        long completed = 0, started = 0;
         try {
             for (Host h : installList) {
                 Properties variablesCopy = new Properties();
@@ -1231,6 +1221,7 @@ public class HostPanel extends IzPanel implements Config {
                     completed = threadPool.getCompletedTaskCount();
                 }
                 threadPool.execute(new InstallTask(tables, h, variablesCopy, localizedMessages));
+                started++;
                 //In case the task is a BDB or qmaster host, we have to wait for sucessful finish!
                 while (wait) {
                     if (threadPool.getCompletedTaskCount() >= completed + 1) {
@@ -1248,6 +1239,7 @@ public class HostPanel extends IzPanel implements Config {
                             }
                             return;
                         }
+                        completed++;
                     } else {
                         try {
                             Thread.sleep(100);
@@ -1255,12 +1247,23 @@ public class HostPanel extends IzPanel implements Config {
                             Logger.getLogger(HostPanel.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
-                }
-                row++;
+                }                
             }
         } catch(Exception e) {
             Debug.error(e);
         } finally {
+            //Wait for all pending tasks to finish
+            while (threadPool.getCompletedTaskCount() < started && !threadPool.isTerminated()) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ex) {
+                }
+            }
+            try {
+                threadPool.awaitTermination(100, TimeUnit.MILLISECONDS);
+                threadPool.purge();
+            } catch (InterruptedException ex) {
+            }
             //If we have failed hosts we go to the Failed tab
             if (((HostInstallTableModel)tables.get(2).getModel()).getRowCount() > 0) {
                 tabbedPane.setSelectedIndex(2);
@@ -1515,16 +1518,8 @@ class GetArchTask extends TestableTask {
         int exitValue = getTestExitValue();
         Vector<String> output = getTestOutput();
         if (!isIsTestMode()) {
-            CommandExecutor archCmd = null;
-
-            if (!host.getHostname().equals(Host.localHostName)) {
-                archCmd = new CommandExecutor(panel.getInstallData().getVariable(VAR_SHELL_NAME), host.getHostname(), SGE_ROOT + "/util/arch");
-            } else {
-                archCmd = new CommandExecutor(SGE_ROOT + "/util/arch");
-            }
-
+            CommandExecutor archCmd = new CommandExecutor(panel.getInstallData().getVariables(), panel.getInstallData().getVariable(VAR_SHELL_NAME), host.getHostname(), SGE_ROOT + "/util/arch");
             archCmd.execute();
-
             exitValue = archCmd.getExitValue();
             output = archCmd.getOutput();
         }
@@ -1703,12 +1698,12 @@ class InstallTask extends TestableTask {
                 Debug.trace("Generating auto_conf file: '" + autoConfFile + "'.");
                 autoConfFile = Util.fillUpTemplate(autoConfTempFile, autoConfFile, variables);
 
-                Debug.trace("Set permission on auto_conf file.");
                 //Execd must be an admin host before we start the installation
                 if (host.isExecutionHost()) {
+                    //TODO: We should execute this rather from the qmaster host
                     String sgeBin = variables.getProperty(VAR_SGE_ROOT) + "/bin/" + host.getArchitecture() + "/";
                     Debug.trace("Check whether the current host is an admin host.");
-                    CommandExecutor cmd = new CommandExecutor(sgeBin+"qconf", "-ah", host.getHostname());
+                    CommandExecutor cmd = new CommandExecutor(variables, variables.getProperty(VAR_SHELL_NAME), variables.getProperty(VAR_QMASTER_HOST), sgeBin+"qconf", "-ah", host.getHostname());
                     Map env = cmd.getEnvironment();
                     env.put("SGE_ROOT", variables.getProperty(VAR_SGE_ROOT));
                     env.put("SGE_CELL", variables.getProperty(VAR_SGE_CELL_NAME));
@@ -1721,36 +1716,44 @@ class InstallTask extends TestableTask {
             if (!isIsTestMode() && ! prereqFailed) {
                 //Need to copy the script to the final location first
                 //TODO: Do this only when not on a shared FS (file is not yet accessible)
-                String localScript = "/tmp/install_component." + host.getHostAsString();
-                Debug.trace("Copy auto_conf file to '" + localScript + "'.");
-                CommandExecutor cmd = new CommandExecutor(variables.getProperty(VAR_COPY_COMMAND), autoConfFile, host.getHostname() + ":" + localScript);
+                //String localScript = "/tmp/install_component." + host.getHostAsString();
+                //Debug.trace("Copy auto_conf file to '" + localScript + "'.");
+                Debug.trace("Copy auto_conf file to '" + host.getHostname() + ":" + autoConfFile + "'.");
+                CommandExecutor cmd = new CommandExecutor(variables, variables.getProperty(VAR_COPY_COMMAND), autoConfFile, host.getHostname() + ":" + autoConfFile);
                 cmd.execute();                
                 exitValue = cmd.getExitValue();
-                if (exitValue == CommandExecutor.EXITVAL_OTHER) {
+                if (exitValue == CommandExecutor.EXITVAL_TERMINATED) {
                     //Set the log content
-                    log = "Timeout while copying the " + localScript + " script to host " + host.getHostname() + " via " + variables.getProperty(VAR_COPY_COMMAND) + " command!\nMaybe a password is expected. Try the command in the terminal first.";
+                    log = "Timeout while copying the " + autoConfFile + " script to host " + host.getHostname() + " via " + variables.getProperty(VAR_COPY_COMMAND) + " command!\nMaybe a password is expected. Try the command in the terminal first.";
                     installModel.setHostLog(host, log);
+                    //TODO: EXITVAL_OTHER - log the error
                 } else {
-                    new CommandExecutor(variables.getProperty(VAR_SHELL_NAME),host.getHostAsString(), "chmod", "755", localScript).execute();
-                    cmd = new CommandExecutor(60000, //Set install timeout to 60secs
+                    new CommandExecutor(variables, variables.getProperty(VAR_SHELL_NAME),host.getHostAsString(), "chmod", "755", autoConfFile).execute();
+                    cmd = new CommandExecutor(variables, 60000, //Set install timeout to 60secs
                             variables.getProperty(VAR_SHELL_NAME),
-                            host.getHostAsString(), " '" + localScript + "' ", String.valueOf(host.isBdbHost()),
+                            host.getHostAsString(), autoConfFile, String.valueOf(host.isBdbHost()),
                             String.valueOf(host.isQmasterHost()), String.valueOf(host.isShadowHost()),
                             String.valueOf(host.isExecutionHost()), String.valueOf(host.isAdminHost()),
-                            String.valueOf(host.isSubmitHost()), variables.getProperty(VAR_SGE_JMX), variables.getProperty("add.remove.existing.components"), ";", "rm", "-f", localScript);
-                    Debug.trace("Start installation: "+cmd.getComamnds());
+                            String.valueOf(host.isSubmitHost()), variables.getProperty(VAR_SGE_JMX), variables.getProperty("add.remove.existing.components"));
+                            //TODO: Beta and later should delete the file as part of the command add - , ";", "rm", "-f", localScript);
+                    //Debug.trace("Start installation: "+cmd.getCommands());
                     cmd.execute();
                     //Set the log content
                     int tmpExitValue = 0;
                     String tmpNum = "";
                     String SEP = System.getProperty("line.separator");
+                    String message;
                     log += "OUTPUT:" + SEP;
                     for (String d : cmd.getOutput()) {
                         if (d.matches("___EXIT_CODE_[1-9]?[0-9]___")) {
                             tmpNum = d.substring("___EXIT_CODE_".length());
                             tmpNum = tmpNum.substring(0, tmpNum.indexOf("_"));
                             tmpExitValue = Integer.valueOf(tmpNum);
-                            log += "FAILED:" + msgs.get("msg.exit." + tmpNum) + SEP;
+                            message = (String) msgs.get("msg.exit." + tmpNum);
+                            if (message == null || message.length() == 0) {
+                                message = MessageFormat.format((String) msgs.get("msg.exit.fail.general"), tmpNum);
+                            }
+                            log += "FAILED:" + message + SEP;
                         } else {
                             log += d + SEP;
                         }
@@ -1761,24 +1764,25 @@ class InstallTask extends TestableTask {
                     }
                     exitValue = cmd.getExitValue();
                     //Cleanup if timeout or interrupt
-                    if (exitValue < -1) {
+                    //TODO: Temporary do not delete for testing
+                    /*if (exitValue < -1) {
                         cmd = new CommandExecutor("rm", "-f", localScript);
                         cmd.execute();
-                    }
+                    }*/
                     //We don't trust the exit codes (rsh does not honor them)
                     exitValue = (tmpExitValue != 0 && exitValue == 0) ? tmpExitValue : exitValue;
 
                     // Try to reach the host
                     Debug.trace("Ping host(s): " + host.getHostAsString());
                     if (exitValue == 0 && host.isQmasterHost()) {
-                        if (!Util.pingHost(variables.getProperty(VAR_SGE_ROOT), host, variables.getProperty(VAR_SGE_QMASTER_PORT), "qmaster", 5)) {
+                        if (!Util.pingHost(variables, host, "qmaster", 5)) {
                             log = "The installation finished but can not reach the 'qmaster' on host '" + host.getHostAsString() + "' at port '" + variables.getProperty(VAR_SGE_QMASTER_PORT) + "'.";
                             exitValue = CommandExecutor.EXITVAL_OTHER;
                         }
                     }
 
                     if (exitValue == 0 && host.isExecutionHost()) {
-                        if (!Util.pingHost(variables.getProperty(VAR_SGE_ROOT), host, variables.getProperty(VAR_SGE_EXECD_PORT), "execd", 5)) {
+                        if (!Util.pingHost(variables, host, "execd", 5)) {
                             log = "The installation finished but can not reach the 'execd' on host '" + host.getHostAsString() + "' at port '" + variables.getProperty(VAR_SGE_EXECD_PORT) + "'.";
                             exitValue = CommandExecutor.EXITVAL_OTHER;
                         }
@@ -1804,7 +1808,7 @@ class InstallTask extends TestableTask {
             Debug.error(e);
             state = Host.State.FAILED;
             tabPos = 2;
-        }
+            }
 
         updateModel = (HostInstallTableModel) tables.get(tabPos).getModel();
 

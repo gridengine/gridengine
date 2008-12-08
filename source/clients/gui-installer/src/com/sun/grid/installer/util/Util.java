@@ -60,7 +60,7 @@ import javax.swing.SwingUtilities;
  <hostname> ::= <name>*["."<name>]
  <name>  ::= <letter>[*[<letter-or-digit-or-hyphen>]<letter-or-digit>]
 */
-public class Util {
+public class Util implements Config{
     enum Operation {
         ADD, REMOVE, DELETE
     }
@@ -617,15 +617,20 @@ public class Util {
      * @param component The type of the component to find on the given port: "qmaster" or "execd"
      * @return True only and only if the host is reachable on the given port
      */
-    public static boolean pingHost(String sgeRoot, Host host, String port, String component, int maxTries) {
-        String qping = sgeRoot + "/bin/" + Host.localHostArch + "/qping";
-        
+    public static boolean pingHost(Properties variables, Host host, String component, int maxTries) {
+        String qping = variables.getProperty(VAR_SGE_ROOT) + "/bin/" + Host.localHostArch + "/qping";
+        String port = (component.equalsIgnoreCase("qmaster")) ? variables.getProperty(VAR_SGE_QMASTER_PORT) : (component.equalsIgnoreCase("execd")) ? variables.getProperty(VAR_SGE_EXECD_PORT) : "-1";
         try {
             CommandExecutor cmdExec = null;
             int tries = 0;
             while (tries < maxTries) {
                 // TODO does -tcp option is what we need?
                 cmdExec = new CommandExecutor(qping, "-tcp", "-info", host.getHostAsString(), port, component, "1");
+                Map env = cmdExec.getEnvironment();
+                env.put("SGE_ROOT", variables.getProperty(VAR_SGE_ROOT));
+                env.put("SGE_CELL", variables.getProperty(VAR_SGE_CELL_NAME));
+                env.put("SGE_QMASTER_PORT", variables.getProperty(VAR_SGE_QMASTER_PORT));
+                env.put("SGE_EXECD_PORT", variables.getProperty(VAR_SGE_EXECD_PORT));
                 cmdExec.execute();
 
                 if (cmdExec.getExitValue() == 0) {
@@ -653,6 +658,10 @@ public class Util {
      * @return The FS type of the given directory if the check was successful, otherwise empty string.
      */
     public static String getDirFSType(Properties variables, String dir) {
+       return getDirFSType(Host.localHostName, variables, dir);
+    }
+
+    public static String getDirFSType(String host, Properties variables, String dir) {
         VariableSubstitutor vs = new VariableSubstitutor(variables);
         CommandExecutor cmdExec = null;
         String result = "";
@@ -675,12 +684,11 @@ public class Util {
 
             // Call the 'fstype' script of the proper architecture
             String fstypeScript = "${cfg.sge.root}/utilbin/${localhost.arch}/fstype";
-            cmdExec = new CommandExecutor(vs.substituteMultiple(fstypeScript, null), dir);
+            cmdExec = new CommandExecutor(variables, variables.getProperty(VAR_SHELL_NAME), host, vs.substituteMultiple(fstypeScript, null), dir);
             cmdExec.execute();
 
             if (cmdExec.getExitValue() == 0) {
                 result = cmdExec.getOutput().firstElement().trim();
-
                 Debug.trace("FSType of '" + dir + "' is '" + result +"'.");
             }
         } catch (Exception e) {

@@ -159,8 +159,6 @@ extern int main(int argc, char** argv)
   struct sigaction sa;
   cl_ssl_setup_t ssl_config;
   static int runs = 100;
-
-
   int handle_port = 0;
   cl_com_handle_t* handle = NULL; 
   cl_com_message_t* message = NULL;
@@ -170,6 +168,7 @@ extern int main(int argc, char** argv)
   cl_log_t log_level;
   cl_framework_t framework = CL_CT_TCP;
 
+  memset(&ssl_config, 0, sizeof(ssl_config));
   ssl_config.ssl_method           = CL_SSL_v23;                 /*  v23 method                                  */
   ssl_config.ssl_CA_cert_pem_file = getenv("SSL_CA_CERT_FILE"); /*  CA certificate file                         */
   ssl_config.ssl_CA_key_pem_file  = NULL;                       /*  private certificate file of CA (not used)   */
@@ -273,7 +272,9 @@ extern int main(int argc, char** argv)
  
   cl_com_set_tag_name_func(my_application_tag_name);
 
-  cl_com_specify_ssl_configuration(&ssl_config);
+  if (framework == CL_CT_SSL) {
+     cl_com_specify_ssl_configuration(&ssl_config);
+  }
 
   handle=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, CL_TRUE, handle_port, CL_TCP_DEFAULT, "server", 1, 1, 0 );
   if (handle == NULL) {

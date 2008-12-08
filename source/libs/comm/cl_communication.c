@@ -44,6 +44,11 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
+#ifdef USE_POLL
+ #include <sys/poll.h>
+#endif
+
+
 #include "uti/sge_hostname.h"
 #include "uti/sge_string.h"
 #include "cl_commlib.h"
@@ -753,6 +758,8 @@ int cl_com_create_connection(cl_com_connection_t** connection) {
   
    /* init connection struct */
    (*connection)->check_endpoint_flag = CL_FALSE;
+   (*connection)->is_read_selected = CL_FALSE;
+   (*connection)->is_write_selected = CL_FALSE;
    (*connection)->check_endpoint_mid  = 0;
    (*connection)->crm_state       = CL_CRM_CS_UNDEFINED;
    (*connection)->crm_state_error = NULL;
@@ -3389,8 +3396,12 @@ int cl_com_connection_request_handler_cleanup(cl_com_connection_t* connection) {
 #define __CL_FUNCTION__ "cl_com_open_connection_request_handler()"
 /* WARNING connection list must be locked */
 
-
-int cl_com_open_connection_request_handler(cl_com_handle_t* handle, int timeout_val_sec, int timeout_val_usec, cl_select_method_t select_mode) {
+#ifdef USE_POLL
+int cl_com_open_connection_request_handler(cl_com_poll_t* poll_handle, cl_com_handle_t* handle, int timeout_val_sec, int timeout_val_usec, cl_select_method_t select_mode)
+#else
+int cl_com_open_connection_request_handler(cl_com_handle_t* handle, int timeout_val_sec, int timeout_val_usec, cl_select_method_t select_mode)
+#endif
+{
    cl_com_connection_t* service_connection = NULL;
    int usec_rest = timeout_val_usec;
    int sec_param = timeout_val_sec;
@@ -3430,12 +3441,22 @@ int cl_com_open_connection_request_handler(cl_com_handle_t* handle, int timeout_
    if (handle->connection_list != NULL) {
       switch(handle->framework) {
          case CL_CT_TCP: {
+#ifdef USE_POLL
+            return cl_com_tcp_open_connection_request_handler(poll_handle, handle, handle->connection_list, service_connection,
+                                                              sec_param , usec_rest, select_mode);
+#else
             return cl_com_tcp_open_connection_request_handler(handle, handle->connection_list, service_connection,
                                                               sec_param , usec_rest, select_mode);
+#endif
          }
          case CL_CT_SSL: {
+#ifdef USE_POLL
+            return cl_com_ssl_open_connection_request_handler(poll_handle, handle, handle->connection_list, service_connection,
+                                                              sec_param , usec_rest, select_mode);
+#else
             return cl_com_ssl_open_connection_request_handler(handle, handle->connection_list, service_connection,
                                                               sec_param , usec_rest, select_mode);
+#endif
          }
          case CL_CT_UNDEFINED: {
             break;
@@ -3447,6 +3468,66 @@ int cl_com_open_connection_request_handler(cl_com_handle_t* handle, int timeout_
 
    return CL_RETVAL_UNDEFINED_FRAMEWORK;
 }
+
+
+#ifdef USE_POLL
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_free_poll_array()"
+int cl_com_free_poll_array(cl_com_poll_t* poll_handle) {
+   /*
+    * This procedure releases the memory malloc()ed inside
+    * the specified cl_com_poll_t structure. 
+    */
+   if (poll_handle == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+   if (poll_handle->poll_array != NULL) {
+      free(poll_handle->poll_array);
+   }
+   if (poll_handle->poll_con != NULL) {
+      free(poll_handle->poll_con);
+   }
+   poll_handle->poll_array = NULL;
+   poll_handle->poll_con = NULL;
+   poll_handle->poll_fd_count = 0;
+   CL_LOG(CL_LOG_INFO, "Freed poll_handle");
+   return CL_RETVAL_OK;
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_malloc_poll_array()"
+int cl_com_malloc_poll_array(cl_com_poll_t* poll_handle, unsigned long nr_of_malloced_connections) {
+
+   /* 
+    * Free and re-malloc() the buffers of the specified poll_handle to the
+    * so that nr_of_malloced_connections fit into the buffers.
+    */
+   if (poll_handle == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+   cl_com_free_poll_array(poll_handle);
+
+   poll_handle->poll_array = (struct pollfd*) malloc(nr_of_malloced_connections * sizeof(struct pollfd));
+   if (poll_handle->poll_array == NULL) {
+      cl_com_free_poll_array(poll_handle);
+      return CL_RETVAL_MALLOC;
+   }
+
+   poll_handle->poll_con = (cl_com_connection_t**) malloc(nr_of_malloced_connections * sizeof(cl_com_connection_t*));
+   if (poll_handle->poll_con == NULL) {
+      cl_com_free_poll_array(poll_handle);
+      return CL_RETVAL_MALLOC;
+   }
+
+   poll_handle->poll_fd_count = nr_of_malloced_connections;
+   CL_LOG_INT(CL_LOG_INFO, "nr of file descriptors fitting into the poll_array: ", (int)poll_handle->poll_fd_count);
+   return CL_RETVAL_OK;
+}
+#endif
 
 
 

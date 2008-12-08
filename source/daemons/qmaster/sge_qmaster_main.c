@@ -407,12 +407,14 @@ int main(int argc, char* argv[])
 
    sge_setup_qmaster(ctx, argv);
 
+#ifndef USE_POLL
    if (file_descriptor_settings_result == 1) {
       WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_LARGER_THAN_LIMIT_U, sge_u32c(FD_SETSIZE)));
       WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_COMPILE_MESSAGE1_U, sge_u32c(FD_SETSIZE - 20)));
       WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_COMPILE_MESSAGE2));
       WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_COMPILE_MESSAGE3));
    }
+#endif
 
    /*
     * Setup all threads and initialize corresponding modules. 

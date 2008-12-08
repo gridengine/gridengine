@@ -1,3 +1,10 @@
+CR-2008-12-08-0: Bugfix:      Commlib: Use poll() instead of select() for
+                                       linux and solaris architectures
+                              Commlib: commlib logging output now also 
+                                       contains os thread id
+                 Belongs to:  CR-2008-11-28-0
+                 Review:      RD
+
 AA-2008-12-08-0: Bugfix:      several auto installation problems with jmx mode
                               - installation of certificates in autoinstall even if -no-jmx is set
                               - non-root user installation fails due to wrong keystore path

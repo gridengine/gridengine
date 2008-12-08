@@ -389,7 +389,7 @@ int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle) {
                } else {
                   if (ret_val == CL_RETVAL_UNCOMPLETE_READ || ret_val == CL_RETVAL_UNCOMPLETE_WRITE) {
                      CL_LOG_STR(CL_LOG_INFO, "cl_com_connection_complete_shutdown() returned:", cl_get_error_text(ret_val));
-                     continue;
+                     continue; /* skip this connection this time */
                   }
                   CL_LOG_STR(CL_LOG_ERROR, "skipping another connection shutdown, last one returned:", cl_get_error_text(ret_val));
                }
@@ -397,9 +397,20 @@ int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle) {
             connection->connection_sub_state = CL_COM_SHUTDOWN_DONE;
          }
 
+         if (connection->is_read_selected == CL_TRUE || connection->is_write_selected == CL_TRUE) {
+            /* 
+             * If a connection is in selected read/write mode we should not delete the
+             * connection since some functions have a cached connection pointer to this 
+             * connections and release the connection list lock.
+             */
+            CL_LOG(CL_LOG_INFO, "connection is selected, will not remove now!");
+            continue; /* skip this connection this time */
+         }
+
+         /* We can remove and delete this connection */
          if (delete_connections == NULL) {
             if (cl_connection_list_setup(&delete_connections, "delete_connections", 0, CL_FALSE) != CL_RETVAL_OK) {
-               continue;
+               continue; /* skip this connection this time */
             }
          }
 

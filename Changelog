@@ -1,3 +1,8 @@
+LP-2008-12-09-0: Enhancem.:   Reverted default to no-jmx (SGE 6.2 behavior)
+				 Bugfix:      gui-installer did not use csp/afs flags
+				 Cleanup:     gui-installer cleanup for no-jmx as default
+				 Review       JO
+
 LP-2008-12-08-0: Bugfix:      qmaster auto installation with jmx will fail if
                               CSP_RECREATE flag is not set
                  Following changes apply to clients/gui-installer

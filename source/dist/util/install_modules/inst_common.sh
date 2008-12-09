@@ -497,7 +497,7 @@ ErrUsage()
              "       -copycerts <host|hostlist>|-v|-upd|-upd-execd|-upd-rc|-upd-win| \n" \
              "       -post_upd|-start-all|-rccreate|[-host <hostname>] [-resport] [-rsh] \n" \
              "       [-auto <filename>] [-nr] [-winupdate] [-winsvc] [-uwinsvc] [-csp] \n" \
-             "       [-jmx] [-no-jmx] [-oldijs] [-afs] [-noremote] [-nosmf]\n" \
+             "       [-jmx] [-oldijs] [-afs] [-noremote] [-nosmf]\n" \
              "   -m         install qmaster host\n" \
              "   -um        uninstall qmaster host\n" \
              "   -x         install execution host\n" \
@@ -531,19 +531,15 @@ ErrUsage()
              "   -uwinsvc   uninstall windows helper service\n" \
              "   -csp       install system with security framework protocol\n" \
              "              functionality\n" \
-             "   -jmx       install qmaster with JMX server thread enabled (now implicit)\n" \
-             "   -no-jmx    install qmaster without JMX server thread\n" \
+             "   -jmx       install qmaster with JMX server thread enabled\n" \
              "   -oldijs    configure old interactive job support\n" \
              "   -afs       install system with AFS functionality\n" \
              "   -noremote  supress remote installation during autoinstall\n" \
              "   -nosmf     disable SMF for Solaris 10+ machines (RC scripts are used)\n" \
              "   -help      show this help text\n\n" \
              "   Examples:\n" \
-             "   inst_sge -m -no-jmx -x\n" \
+             "   inst_sge -m -x\n" \
              "                     Installs qmaster and exechost on localhost\n" \
-             "   inst_sge -m -x   or   inst_sge -m -jmx -x\n" \
-             "                     Installs qmaster with JMX thread enabled\n" \
-             "                     and exechost on localhost\n" \
              "   inst_sge -m -x -auto /path/to/config-file\n" \
              "                     Installs qmaster and exechost using the given\n" \
              "                     configuration file\n" \

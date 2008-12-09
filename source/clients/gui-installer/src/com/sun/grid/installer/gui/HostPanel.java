@@ -1734,7 +1734,7 @@ class InstallTask extends TestableTask {
                             host.getHostAsString(), autoConfFile, String.valueOf(host.isBdbHost()),
                             String.valueOf(host.isQmasterHost()), String.valueOf(host.isShadowHost()),
                             String.valueOf(host.isExecutionHost()), String.valueOf(host.isAdminHost()),
-                            String.valueOf(host.isSubmitHost()), variables.getProperty(VAR_SGE_JMX), variables.getProperty("add.remove.existing.components"));
+                            String.valueOf(host.isSubmitHost()));
                             //TODO: Beta and later should delete the file as part of the command add - , ";", "rm", "-f", localScript);
                     //Debug.trace("Start installation: "+cmd.getCommands());
                     cmd.execute();

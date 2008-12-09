@@ -72,7 +72,7 @@ AUTOGUI=false
 RESCHEDULE=true
 RESPORT=false
 CSP=false
-SGE_ENABLE_JMX=undef
+SGE_ENABLE_JMX=false
 AFS=false
 NOREMOTE=false
 START_RPC_SERVICE=false
@@ -309,9 +309,6 @@ while [ $ARGC != 0 ]; do
    -jmx)
      SGE_ENABLE_JMX=true
      ;;
-   -no-jmx)
-     SGE_ENABLE_JMX=false
-     ;;
    -copycerts)
      if [ "$2" = "" ]; then
         ErrUsage
@@ -347,11 +344,6 @@ while [ $ARGC != 0 ]; do
    shift
    ARGC=`expr $ARGC - 1`
 done
-
-# New behaviour. If no JMX flag specified (-jmx not -no-jmx), JMX gets installed but the JMX thread is not started
-if [ "$SGE_ENABLE_JMX" = undef ]; then
-   SGE_ENABLE_JMX=true
-fi
 
 #Set overlapping variables only
 if [ -z "$SHELL_NAME" ]; then

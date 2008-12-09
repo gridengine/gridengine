@@ -292,6 +292,25 @@ CSP_ORGA_UNIT="${cfg.csp.orga.unit}";export CSP_ORGA_UNIT
 # your email (mandatory for csp install)
 CSP_MAIL_ADDRESS="${cfg.csp.mail.address}";export CSP_MAIL_ADDRESS
 
+
+#Additional variables from the installer
+REMOVE_EXISTING_COMPONENT=${add.remove.existing.components}
+#QMASTER Flags
+USE_JMX=${add.sge.jmx}
+PRODUCT_MODE=${add.product.mode}                      #1 none, 2 csp, 3 afs
+QMASTER_FLAGS=""
+if [ "$USE_JMX" = true ]; then
+   QMASTER_FLAGS="$QMASTER_FLAGS -jmx"
+fi
+case "$PRODUCT_MODE" in
+   2) 
+	   QMASTER_FLAGS="$QMASTER_FLAGS -csp"
+		;;
+   3)
+	   QMASTER_FLAGS="$QMASTER_FLAGS -afs"
+		;;
+esac
+
 #Genaretes output consisting of the exit code and log file
 # $1 ... COMPONENT (bdb, qmaster, shadow,exec)
 # $2 ... output from the previosly executed install/uninstall command
@@ -332,9 +351,6 @@ IS_SHADOW=$3
 IS_EXECD=$4
 IS_ADMIN=$5
 IS_SUBMIT=$6
-#TODO what about SGE_ENABLE_JMX=false
-SGE_ENABLE_JMX=$7
-REMOVE_EXISTING_COMPONENT=$8
 
 #//TODO: Add magic exit codes (so we can perform multiple component installation at once)
 #//TODO: Check if SGE_ROOT is valid and needed files exists first!
@@ -375,12 +391,7 @@ if [ "$IS_QMASTER" = true ]; then
          GenerateResultOutput "QMASTER" "" $EXIT_PREVIOUS_COMPONENT_DETECTED
       fi
    fi
-   if [ "$SGE_ENABLE_JMX" = false ]; then
-      jmx_flag="-no-jmx"
-   else
-      jmx_flag="-jmx"
-   fi
-   RES=`${cfg.sge.root}/inst_sge -m $jmx_flag -noremote -autogui`                                                                   
+   RES=`${cfg.sge.root}/inst_sge -m $QMASTER_FLAGS -noremote -autogui`                                                                   
 	GenerateResultOutput "QMASTER" "$RES" $?
 fi
 

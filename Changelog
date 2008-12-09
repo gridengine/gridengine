@@ -1,3 +1,9 @@
+MP-2008-12-09-0: Bugfix:      max_unheard default value in sge_conf man
+                              page shows incorrect value
+                 Bugster:     6399453
+                 Issue:       2268
+                 Review:      JG
+
 RD-2008-12-09-0: CVS:         Created V62u2alpha2_TAG
 -----------------------------------------------------
 

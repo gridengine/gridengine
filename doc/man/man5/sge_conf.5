@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/12/05 13:59:02 $     Revision: $Revision: 1.81 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/12/09 17:06:08 $     Revision: $Revision: 1.82 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/12/05 13:59:02 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/12/09 17:06:08 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -642,7 +642,7 @@ reports. Thus, \fBmax_unheard\fP should by greater than the
 \fBload_report_time\fP (see above).
 .PP
 Changing \fBmax_unheard\fP takes immediate effect.
-The default for \fBmax_unheard\fP is 2 minutes 30 seconds.
+The default for \fBmax_unheard\fP is 5 minutes.
 .PP
 This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.

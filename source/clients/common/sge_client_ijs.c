@@ -45,6 +45,9 @@
 #elif defined(INTERIX)
 #  include <termios.h>
 #  include <sys/ioctl.h>
+#elif defined(FREEBSD)
+#  include <termios.h>
+#  include <sys/ioctl.h>
 #else
 #  include <termio.h>
 #endif

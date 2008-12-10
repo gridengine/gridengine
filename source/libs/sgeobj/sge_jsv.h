@@ -53,6 +53,12 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
               lList **answer_list, bool hold_global_lock);
 
 bool
+jsv_stop(lListElem *jsv, lList **answer_list, bool try_soft_quit);
+
+bool
+jsv_start(lListElem *jsv, lList **answer_list);
+
+bool
 jsv_list_add(const char *name, const char *context, 
              lList **answer_list, const char *jsv_url);
 

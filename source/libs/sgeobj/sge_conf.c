@@ -143,6 +143,7 @@ static bool forbid_reschedule = false;
 static bool forbid_apperror = false;
 static bool enable_forced_qdel = false;
 static bool enable_enforce_master_limit = false;
+static bool enable_test_sleep_after_request = false;
 static bool enable_forced_qdel_if_unknown = false;
 static bool do_credentials = true;
 static bool do_authentication = true;
@@ -648,6 +649,7 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       forbid_apperror = false;
       enable_forced_qdel = false;
       enable_enforce_master_limit = false;
+      enable_test_sleep_after_request = false;
       enable_forced_qdel_if_unknown = false;
       do_credentials = true;
       do_authentication = true;
@@ -710,6 +712,9 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
          if (parse_bool_param(s, "ENABLE_ENFORCE_MASTER_LIMIT", &enable_enforce_master_limit)) {
             continue;
          } 
+         if (parse_bool_param(s, "__TEST_SLEEP_AFTER_REQUEST", &enable_test_sleep_after_request)) {
+            continue;
+         }
          if (parse_bool_param(s, "ENABLE_FORCED_QDEL_IF_UNKNOWN", &enable_forced_qdel_if_unknown)) {
             continue;
          } 
@@ -2358,6 +2363,17 @@ bool mconf_get_enable_enforce_master_limit(void) {
    DENTER(BASIS_LAYER, "mconf_get_enable_enfoce_master_limit");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
    ret = enable_enforce_master_limit;
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+
+}
+
+bool mconf_get_enable_test_sleep_after_request(void) {
+   bool ret;
+
+   DENTER(BASIS_LAYER, "mconf_get_enable_test_sleep_after_request");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+   ret = enable_test_sleep_after_request;
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(ret);
 

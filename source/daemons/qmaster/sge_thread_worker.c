@@ -329,6 +329,20 @@ sge_worker_main(void *arg)
 #  else
                sge_gdi_packet_free(&packet);
 #  endif
+               /*
+                * Code only for TS: 
+                *
+                * Following if-block will only be executed in testsuite if the qmaster
+                * parameter __TEST_SLEEP_AFTER_REQUEST is defined. This will block the
+                * worker thread if it handled a request. Only this makes sure that
+                * other worker threads can handle incloming requests. Otherwise
+                * it might be possible that one worker threads handles all requests
+                * on fast qmaster hosts if testsuite is not fast enough to generate
+                * gdi requests.
+                */
+               if (mconf_get_enable_test_sleep_after_request() == true) {
+                  sleep(5);
+               }
             } else {
                sge_gdi_packet_broadcast_that_handled(packet);
             }
@@ -353,6 +367,7 @@ sge_worker_main(void *arg)
          cl_thread_func_testcancel(thread_config);
          pthread_cleanup_pop(execute); 
       }
+
    }
 
    /*

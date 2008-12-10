@@ -1,3 +1,24 @@
+EB-2008-12-10-0: Enhancemn.:  - Added test functionality to qmaster to slow
+                                down worker threads. Used in TS for certain
+                                tests in combination with JSV
+                 Bugfix:      - ac job parameters where exproted to JSV as
+                                environment variabes and not as parameters.
+                              - fixed bug is bourne shell JSV which made it
+                                impossible to add JSV parameters if they
+                                where not previously expored by the master. 
+                              - fixed bug which rejected first submitted job
+                                after JSV process was kill or when a protocoll
+                                error occured.
+                              - changing the checkpointing interval via
+                                JSV was not handled correctly
+                              - read write lock was hold during submission
+                                if JSV was triggered
+                              - sleep ind JSV blocked worker thread
+                                kill and restart was not handled correctly
+                              - JSV was started with wrong permission if
+                                if no user or admin user was specified as
+                                start user
+
 MP-2008-12-09-0: Bugfix:      max_unheard default value in sge_conf man
                               page shows incorrect value
                  Bugster:     6399453
@@ -84,8 +105,8 @@ RN-2008-12-03-0: Bugfix:      qmaster exits with lGetString: wrong type for
                  Review:      JG 
 
 EB-2008-12-04-0: Enhancemn.:  - additional JSV parameter in global conf which
-		        	makes it possible to reject the use of certain
-				qalter switches if server side JSV is used
+                                makes it possible to reject the use of certain
+                                qalter switches if server side JSV is used
                               - corresponding changes in qmon man page
                               - added missing jsv_url description to sge_conf.	
                               - fixed bug in read_raw implementation which

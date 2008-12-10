@@ -247,7 +247,7 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       /*
        * JSV verification
        */
-      lret = jsv_do_verify(ctx, tc->thread_name, jep, alpp, false);
+      lret = jsv_do_verify(ctx, tc->thread_name, jep, alpp, true);
       if (!lret) {
          DRETURN(STATUS_EUNKNOWN);
       }

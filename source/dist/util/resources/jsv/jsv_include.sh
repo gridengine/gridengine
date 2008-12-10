@@ -405,68 +405,68 @@ jsv_sub_add_param()
    command=`eval "echo \$\{$name\:\-$undef\}"`
    list=`eval "echo $command"`
    new_param=""
-   if [ "$list" != "$undef" ]; then
-      found="false"
+   if [ "$list" = "$undef" ]; then
+      list=""
+   fi
+   found="false"
 
-      # split token between ',' character
-      IFS=","
-      for i in $list; do
-         # split the first string before '=' character
-         # This is the variable name and if it is the
-         # one which should be deleted then set "found" 
-         # to "true" 
-         IFS="="
-         for j in $i; do
-            IFS="$saved_ifs"
-            if [ "$j" = "$sub_name" ]; then
-               found="true"
-               if [ "$value" = "" ]; then
-                  if [ "$new_param" = "" ]; then
-                     new_param="$j"
-                  else
-                     new_param="${new_param},$j"
-                  fi
+   # split token between ',' character
+   IFS=","
+   for i in $list; do
+      # split the first string before '=' character
+      # This is the variable name and if it is the
+      # one which should be deleted then set "found" 
+      # to "true" 
+      IFS="="
+      for j in $i; do
+         IFS="$saved_ifs"
+         if [ "$j" = "$sub_name" ]; then
+            found="true"
+            if [ "$value" = "" ]; then
+               if [ "$new_param" = "" ]; then
+                  new_param="$j"
                else
-                  if [ "$new_param" = "" ]; then  
-                     new_param="${j}=${value}"
-                  else
-                     new_param="${new_param},${j}=${value}"
-                  fi
+                  new_param="${new_param},$j"
                fi
             else
                if [ "$new_param" = "" ]; then  
-                  new_param="$i"
+                  new_param="${j}=${value}"
                else
-                  new_param="${new_param},$i"
+                  new_param="${new_param},${j}=${value}"
                fi
             fi
-            IFS="="
-            break;
-         done
-         IFS="$saved_ifs"
-         if [ "$found" = "false" ]; then
-            if [ "$value" = "" ]; then
-               if [ "$new_param" = "" ]; then  
-                  new_param="$sub_name"
-               else
-                  new_param="${new_param},$sub_name"
-               fi
-            else 
-               if [ "$new_param" = "" ]; then  
-                  new_param="${sub_name}=$value"
-               else
-                  new_param="${new_param},${sub_name}=$value"
-               fi
+         else
+            if [ "$new_param" = "" ]; then  
+               new_param="$i"
+            else
+               new_param="${new_param},$i"
             fi
          fi
-         IFS=","
+         IFS="="
+         break;
       done
       IFS="$saved_ifs"
-
-      # set local variable and send modification to client/master
-      eval "$name=\"\$new_param\""
-      jsv_send_command PARAM "$param_name" "$new_param"
+   done
+   if [ "$found" = "false" ]; then
+      if [ "$value" = "" ]; then
+         if [ "$new_param" = "" ]; then  
+            new_param="$sub_name"
+         else
+            new_param="${new_param},$sub_name"
+         fi
+      else 
+         if [ "$new_param" = "" ]; then  
+            new_param="${sub_name}=$value"
+         else
+            new_param="${new_param},${sub_name}=$value"
+         fi
+      fi
    fi
+   IFS="$saved_ifs"
+
+   # set local variable and send modification to client/master
+   eval "$name=\"\$new_param\""
+   jsv_send_command PARAM "$param_name" "$new_param"
    unset new_param
    unset list
    unset command

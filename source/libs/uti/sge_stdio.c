@@ -316,20 +316,25 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
    return pid;
 }
 
-pid_t sge_peopen_threadsafe(const char *shell, int login_shell, const char *command,
-                 const char *user, char **env,  FILE **fp_in, FILE **fp_out,
-                 FILE **fp_err, bool null_stderr)
+pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
+                   const char *user, char **env,  FILE **fp_in, FILE **fp_out,
+                   FILE **fp_err, bool null_stderr)
 {
    static pid_t pid;
    int pipefds[3][2];
    int i;
    char arg0[256];
    struct passwd *pw = NULL;
-   uid_t myuid = geteuid();
-   uid_t tuid = myuid;
-   char err_str[256];
+   uid_t myuid;
+   uid_t tuid;
  
-   DENTER(TOP_LAYER, "sge_peopen_threadsafe");
+   DENTER(TOP_LAYER, "sge_peopen_r");
+
+   if (sge_has_admin_user()) {
+      sge_switch2start_user();
+   }
+   myuid = geteuid();
+   tuid = myuid;
 
    /* 
     * open pipes - close on failure 
@@ -341,8 +346,10 @@ pid_t sge_peopen_threadsafe(const char *shell, int login_shell, const char *comm
             close(pipefds[i][1]);
          }
          ERROR((SGE_EVENT, MSG_SYSTEM_FAILOPENPIPES_SS, command, strerror(errno)));
-         DEXIT;
-         return -1;
+         if (sge_has_admin_user()) {
+            sge_switch2admin_user();
+         }
+         DRETURN(-1);
       }
    }
 
@@ -381,15 +388,21 @@ pid_t sge_peopen_threadsafe(const char *shell, int login_shell, const char *comm
          if (pw == NULL) {
             ERROR((SGE_EVENT, MSG_SYSTEM_NOUSERFOUND_SS, user, strerror(errno)));
             FREE(buffer);
-            return -1;
+            if (sge_has_admin_user()) {
+               sge_switch2admin_user();
+            }
+            DRETURN(-1);
          }
       } else {
-         sprintf(err_str, "no memory in sge_peopen()\n");
-         write(2, err_str, strlen(err_str));
+         ERROR((SGE_EVENT, MSG_UTI_MEMPWNAM));
          FREE(buffer);
-         return -1; 
+         if (sge_has_admin_user()) {
+            sge_switch2admin_user();
+         }
+         DRETURN(-1);
       }
 
+      DPRINTF(("Was able to resolve user\n"));
 
       /* 
        * only prepare change of user if target user is different from current one
@@ -400,10 +413,13 @@ pid_t sge_peopen_threadsafe(const char *shell, int login_shell, const char *comm
 #endif 
 
          if (myuid != SGE_SUPERUSER_UID) {
-            write(2, MSG_SYSTEM_NOROOTRIGHTSTOSWITCHUSER, sizeof(MSG_SYSTEM_NOROOTRIGHTSTOSWITCHUSER));
+            ERROR((SGE_EVENT, MSG_SYSTEM_NOROOTRIGHTSTOSWITCHUSER));
             FREE(buffer);
             SGE_EXIT(NULL, 1);
          }                             
+
+         DPRINTF(("Before initgroups\n"));
+
 #if !(defined(WIN32) || defined(INTERIX))  /* initgroups not called */
          res = initgroups(pw->pw_name, pw->pw_gid);
 #  if defined(SVR3) || defined(sun)
@@ -412,12 +428,12 @@ pid_t sge_peopen_threadsafe(const char *shell, int login_shell, const char *comm
          if (res)
 #  endif
          {
-            sprintf(err_str, MSG_SYSTEM_INITGROUPSFORUSERFAILED_ISS, res, user, strerror(errno));
-            sprintf(err_str, "\n");
-            write(2, err_str, strlen(err_str));
+            ERROR((SGE_EVENT, MSG_SYSTEM_INITGROUPSFORUSERFAILED_ISS, res, user, strerror(errno)));
             FREE(buffer);
             SGE_EXIT(NULL, 1);
          }
+
+         DPRINTF(("Initgroups was successful\n"));
 
 #endif /* WIN32 */
       }
@@ -428,6 +444,8 @@ pid_t sge_peopen_threadsafe(const char *shell, int login_shell, const char *comm
          DPRINTF(("target uid = %d\n", (int)tuid));
       }
    }
+
+   DPRINTF(("Now process will fork\n"));
 
 #if defined(SOLARIS)
    pid = sge_smf_contract_fork(err_str, 256);
@@ -486,9 +504,9 @@ pid_t sge_peopen_threadsafe(const char *shell, int login_shell, const char *comm
       dup(pipefds[0][0]);
       dup(pipefds[1][1]);
 
-      /* only switch user if it is different from current one */
-      if (pw != NULL && myuid != tuid) {
-         if (setuid(tuid)) {
+      if (pw != NULL) {
+         int lret = setuid(tuid);
+         if (lret) {
             SGE_EXIT(NULL, 1);
          }
       }
@@ -521,8 +539,10 @@ pid_t sge_peopen_threadsafe(const char *shell, int login_shell, const char *comm
           ERROR((SGE_EVENT, MSG_SMF_FORK_FAILED_SS, "sge_peopen()", err_str));
       }
 #endif
-      DEXIT;
-      return -1;
+      if (sge_has_admin_user()) {
+         sge_switch2admin_user();
+      }
+      DRETURN(-1);
    }
  
    /* close the childs ends of the pipes */
@@ -544,8 +564,10 @@ pid_t sge_peopen_threadsafe(const char *shell, int login_shell, const char *comm
       *fp_err = fdopen(pipefds[2][0], "r");
    }
 
-   DEXIT;
-   return pid;
+   if (sge_has_admin_user()) {
+      sge_switch2admin_user();
+   }
+   DRETURN(pid);
 }
  
 /****** uti/stdio/sge_peclose() ***********************************************

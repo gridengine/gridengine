@@ -405,6 +405,24 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
          }
       }
 
+      /* -c <interval> */
+      {
+         if (ret && strcmp("c_interval", param) == 0) {
+            u_long32 timeval = 0;
+
+            if (value != NULL) {
+               int lret = ulong_parse_date_time_from_string(&timeval, &local_answer_list, value);
+
+               if (!lret) {
+                  ret = false;
+               }
+            }
+            if (ret) {
+               lSetUlong(new_job, JB_checkpoint_interval, timeval);
+            }
+         }
+      }
+
       /* -display */
       {
          if (ret && strcmp("display", param) == 0) {
@@ -1095,7 +1113,7 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
             bool first = true;
 
             sge_dstring_clear(&buffer);
-            sge_dstring_sprintf(&buffer, "ENV ADD ac");
+            sge_dstring_sprintf(&buffer, "PARAM ac");
             for_each(context, context_list) {
                const char *name = lGetString(context, VA_variable);
                const char *value = lGetString(context, VA_value);
@@ -2101,20 +2119,43 @@ jsv_do_communication(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_li
    }
    if (ret) {
       u_long32 start_time = sge_get_gmt();
+      bool do_retry = true;
 
       lSetBool(jsv, JSV_done, false);
       lSetBool(jsv, JSV_soft_shutdown, true);
       while (!lGetBool(jsv, JSV_done)) {
-         char input[10000];
-         FILE *file = lGetRef(jsv, JSV_out);
-
          if (sge_get_gmt() - start_time > JSV_CMD_TIMEOUT) {
-            answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
-                                    "got no response from JSV script "SFQ, lGetString(jsv, JSV_command));
-            lSetBool(jsv, JSV_restart, true);
-            lSetBool(jsv, JSV_soft_shutdown, false);
-            lSetBool(jsv, JSV_done, true);
+            /*
+             * In case of a timeout we try it a second time. In that case we kill
+             * the old instance and start a new one before we continue
+             * with the verification. Otherwise we report an error which will
+             * automatically reject the job which should be verified.
+             */
+            if (do_retry) { 
+               lSetBool(jsv, JSV_restart, false);
+               lSetBool(jsv, JSV_accept, false);
+               lSetBool(jsv, JSV_done, false);
+               ret &= jsv_stop(jsv, answer_list, false);
+               if (ret) {
+                  ret &= jsv_start(jsv, answer_list);
+               }
+               if (ret) {
+                  ret &= jsv_send_command(jsv, answer_list, "START");
+               }
+               start_time = sge_get_gmt();
+               do_retry = false;
+            } else {
+               answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
+                                       "got no response from JSV script "SFQ, 
+                                       lGetString(jsv, JSV_command));
+               lSetBool(jsv, JSV_restart, true);
+               lSetBool(jsv, JSV_soft_shutdown, false);
+               lSetBool(jsv, JSV_done, true);
+            }
          } else {
+            char input[10000];
+            FILE *file = lGetRef(jsv, JSV_out);
+
             /* read a line from the script or wait some time before you try again */
             if (fscanf(file, "%[^\n]\n", input) == 1) {
                dstring sub_command = DSTRING_INIT;
@@ -2155,8 +2196,9 @@ jsv_do_communication(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_li
 
                if (!handled) {
                   answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
-                                          MSG_JSV_COMMAND_S, c);
+                                          MSG_JSV_JCOMMAND_S, c);
                   lSetBool(jsv, JSV_accept, false);
+                  lSetBool(jsv, JSV_restart, true);
                   lSetBool(jsv, JSV_done, true);
                }
             }

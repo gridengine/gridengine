@@ -65,7 +65,7 @@
 /*
  * defines the timeout between the soft shutdown signal and the kill
  */
-#define JSV_QUIT_TIMEOUT (10)
+#define JSV_QUIT_TIMEOUT (5)
 
 /*
  * This mutex is used to secure the jsv_list below.
@@ -194,91 +194,9 @@ jsv_set_pid(lListElem *jsv, pid_t pid)
 
 
 static bool
-jsv_is_started(lListElem *jsv) {
+jsv_is_started(lListElem *jsv) 
+{
    return (jsv_get_pid(jsv) != -1) ? true : false; 
-}
-
-static bool
-jsv_start(lListElem *jsv, lList **answer_list) {
-   bool ret = true;
-
-   DENTER(TOP_LAYER, "jsv_start");
-   if (jsv != NULL && jsv_is_started(jsv) == false) {
-      const char *scriptfile = lGetString(jsv, JSV_command);
-      const char *user = lGetString(jsv, JSV_user);
-      pid_t pid = -1;
-      FILE *fp_in = NULL;
-      FILE *fp_out = NULL;
-      FILE *fp_err = NULL;
-      SGE_STRUCT_STAT st;
-
-      if (SGE_STAT(scriptfile, &st) == 0) {
-         bool can_switch_user = sge_has_admin_user();
-
-         /* set the last modification time of the script */
-         lSetUlong(jsv, JSV_last_mod, st.st_mtime);
-
-         pid = sge_peopen_threadsafe("/bin/sh", 0, scriptfile, (can_switch_user ? user : NULL), NULL,
-                                     &fp_in, &fp_out, &fp_err, false);
-         if (pid != -1) {
-            jsv_set_pid(jsv, pid);
-            lSetRef(jsv, JSV_in, fp_in);
-            lSetRef(jsv, JSV_out, fp_out);
-            lSetRef(jsv, JSV_err, fp_err);
-
-            /* we need it non blocking */
-            fcntl(fileno(fp_out), F_SETFL, O_NONBLOCK);
-
-            INFO((SGE_EVENT, MSG_JSV_STARTED_S, scriptfile));
-         } else {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                                    MSG_JSV_START_S, scriptfile);
-            ret = false;
-         }
-      } else {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                                 MSG_JSV_EXISTS_S, scriptfile);
-         ret = false;
-      }
-   }
-   DRETURN(ret);
-}
-
-static bool
-jsv_stop(lListElem *jsv, lList **answer_list, bool try_soft_quit) {
-   bool ret = true;
-   pid_t pid = -1;
-
-   DENTER(TOP_LAYER, "jsv_stop");
-
-   /* stop is only possible if it was started before */
-   pid = jsv_get_pid(jsv);
-   if (pid != -1) {
-      const char *scriptfile = lGetString(jsv, JSV_command);
-      struct timeval t;
-
-      /* 
-       * send a quit command to stop the JSV softly.
-       * give it then JSV_QUIT_TIMEOUT seconds before
-       * the kill is triggered (sge_peclose)
-       */
-      if (try_soft_quit) {
-         jsv_send_command(jsv, answer_list, "QUIT");
-         t.tv_sec = JSV_QUIT_TIMEOUT;
-      }
-  
-      /*
-       * kill the JSV process
-       */ 
-      sge_peclose(pid, lGetRef(jsv, JSV_in), 
-                  lGetRef(jsv, JSV_out), lGetRef(jsv, JSV_err), 
-                  (try_soft_quit ? &t : NULL));
-
-      INFO((SGE_EVENT, MSG_JSV_STOPPED_S, scriptfile));
-
-      jsv_set_pid(jsv, -1);
-   }   
-   DRETURN(ret);
 }
 
 static bool
@@ -327,6 +245,149 @@ jsv_send_data(lListElem *jsv, lList **answer_list, const char *buffer, size_t si
                               MSG_JSV_SEND_READY_S);
       ret = false;
    } 
+   DRETURN(ret);
+}
+
+/****** sgeobj/jsv/jsv_start() **********************************************
+*  NAME
+*     jsv_start() -- Start a JSV isntance 
+*
+*  SYNOPSIS
+*     bool jsv_start(lListElem *jsv, lList **answer_list) 
+*
+*  FUNCTION
+*     A call to this function starts a new JSV instance if it is 
+*     currently not running. Handles to pipe ends will be stored
+*     internally so that it is possible to communicate with the
+*     process which was started by this function.
+*
+*  INPUTS
+*     lListElem *jsv      - JSV_Type data structure 
+*     lList **answer_list - AN_Type list where error messages are stored. 
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - error
+*
+*  NOTES
+*     MT-NOTE: jsv_start() is not MT safe 
+*
+*  SEE ALSO
+*     sgeobj/jsv/jsv_start 
+*******************************************************************************/
+bool 
+jsv_start(lListElem *jsv, lList **answer_list) 
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "jsv_start");
+   if (jsv != NULL && jsv_is_started(jsv) == false) {
+      const char *scriptfile = lGetString(jsv, JSV_command);
+      const char *user = lGetString(jsv, JSV_user);
+      pid_t pid = -1;
+      FILE *fp_in = NULL;
+      FILE *fp_out = NULL;
+      FILE *fp_err = NULL;
+      SGE_STRUCT_STAT st;
+
+      if (SGE_STAT(scriptfile, &st) == 0) {
+         /* set the last modification time of the script */
+         lSetUlong(jsv, JSV_last_mod, st.st_mtime);
+
+         pid = sge_peopen_r("/bin/sh", 0, scriptfile, 
+                            (user != NULL ? user : get_admin_user_name()), NULL,
+                            &fp_in, &fp_out, &fp_err, false);
+         if (pid != -1) {
+            jsv_set_pid(jsv, pid);
+            lSetRef(jsv, JSV_in, fp_in);
+            lSetRef(jsv, JSV_out, fp_out);
+            lSetRef(jsv, JSV_err, fp_err);
+
+            /* we need it non blocking */
+            fcntl(fileno(fp_out), F_SETFL, O_NONBLOCK);
+
+            INFO((SGE_EVENT, MSG_JSV_STARTED_S, scriptfile));
+         } else {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
+                                    MSG_JSV_START_S, scriptfile);
+            ret = false;
+         }
+      } else {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
+                                 MSG_JSV_EXISTS_S, scriptfile);
+         ret = false;
+      }
+   }
+   DRETURN(ret);
+}
+
+/****** sge_jsv/jsv_stop() *****************************************************
+*  NAME
+*     jsv_stop() -- Stop a JSV instance which was previously started 
+*
+*  SYNOPSIS
+*     bool jsv_stop(lListElem *jsv, lList **answer_list, bool try_soft_quit) 
+*
+*  FUNCTION
+*     Stop a running JSV instance which was previously started. If the
+*     variable 'try_soft_quit' is set to 'true' then this function tries
+*     to communicate with the process. It will then send a "QUIT" string
+*     to pipe end which is connected with the stdin of the JSV process.
+*     If the script does then not terminate within JSV_QUIT_TIMEOUT 
+*     seconds then it will be terminated hard via kill signal.
+*
+*  INPUTS
+*     lListElem *jsv      - JSV_Type element 
+*     lList **answer_list - AN_Type element 
+*     bool try_soft_quit  - "true" if the JSV should terminate itself 
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - error
+*
+*  NOTES
+*     MT-NOTE: jsv_stop() is MT safe 
+*
+*  SEE ALSO
+*     sgeobj/jsv/jsv_start() 
+*******************************************************************************/
+bool 
+jsv_stop(lListElem *jsv, lList **answer_list, bool try_soft_quit) {
+   bool ret = true;
+   pid_t pid = -1;
+
+   DENTER(TOP_LAYER, "jsv_stop");
+
+   /* stop is only possible if it was started before */
+   pid = jsv_get_pid(jsv);
+   if (pid != -1) {
+      const char *scriptfile = lGetString(jsv, JSV_command);
+      struct timeval t;
+
+      /* 
+       * send a quit command to stop the JSV softly.
+       * give it then JSV_QUIT_TIMEOUT seconds before
+       * the kill is triggered (sge_peclose)
+       */
+      if (try_soft_quit) {
+         jsv_send_command(jsv, answer_list, "QUIT");
+         t.tv_sec = JSV_QUIT_TIMEOUT;
+      } else {
+         t.tv_sec = 0;
+      }
+  
+      /*
+       * kill the JSV process
+       */ 
+      sge_peclose(pid, lGetRef(jsv, JSV_in), 
+                  lGetRef(jsv, JSV_out), lGetRef(jsv, JSV_err), &t);
+
+      INFO((SGE_EVENT, MSG_JSV_STOPPED_S, scriptfile));
+
+      jsv_set_pid(jsv, -1);
+   }   
    DRETURN(ret);
 }
 

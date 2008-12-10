@@ -65,7 +65,8 @@
 enum { SGE_MAX_USERGROUP_BUF = 255 };
 
 typedef struct {
-   pthread_mutex_t mutex;  /* TODO: use RW-lock instead */
+   pthread_mutex_t mutex;  
+   const char *user_name;
    uid_t uid;
    gid_t gid;
    bool  initialized;
@@ -78,7 +79,7 @@ struct uidgid_state_t {
    char  last_groupname[SGE_MAX_USERGROUP_BUF]; 
 };
 
-static admin_user_t admin_user = {PTHREAD_MUTEX_INITIALIZER, (uid_t)-1, (gid_t)-1, false};
+static admin_user_t admin_user = {PTHREAD_MUTEX_INITIALIZER, NULL, (uid_t)-1, (gid_t)-1, false};
 
 static pthread_once_t uidgid_once = PTHREAD_ONCE_INIT;
 static pthread_key_t  uidgid_state_key;
@@ -87,7 +88,7 @@ static void uidgid_once_init(void);
 static void uidgid_state_destroy(void* theState);
 static void uidgid_state_init(struct uidgid_state_t* theState);
 
-static void set_admin_user(uid_t, gid_t);
+static void set_admin_user(const char *user_name, uid_t, gid_t);
 static int  get_admin_user(uid_t*, gid_t*);
 
 static uid_t       uidgid_state_get_last_uid(void);
@@ -249,14 +250,15 @@ int sge_set_admin_username(const char *user, char *err_str)
  
    ret = 0;
    if (!strcasecmp(user, "none")) {
-      set_admin_user(getuid(), getgid());
+      set_admin_user("root", getuid(), getgid());
    } else {
       struct passwd pw_struct;
       int size = get_pw_buffer_size();
       char *buffer = sge_malloc(size);
+
       admin = sge_getpwnam_r(user, &pw_struct, buffer, size);
       if (admin) {
-         set_admin_user(admin->pw_uid, admin->pw_gid);
+         set_admin_user(user, admin->pw_uid, admin->pw_gid);
       } else {
          if (err_str)
             sprintf(err_str, MSG_SYSTEM_ADMINUSERNOTEXIST_S, user);
@@ -1478,7 +1480,7 @@ static void uidgid_state_set_last_groupname(const char *group)
 *     MT-NOTE: set_admin_user() is MT safe. 
 *
 *******************************************************************************/
-static void set_admin_user(uid_t theUID, gid_t theGID)
+static void set_admin_user(const char *user_name, uid_t theUID, gid_t theGID)
 {
    uid_t uid = theUID;
    gid_t gid = theGID;
@@ -1486,6 +1488,7 @@ static void set_admin_user(uid_t theUID, gid_t theGID)
    DENTER(UIDGID_LAYER, "set_admin_user");
 
    sge_mutex_lock("admin_user_mutex", SGE_FUNC, __LINE__, &admin_user.mutex);
+   admin_user.user_name = user_name;
    admin_user.uid = uid;
    admin_user.gid = gid;
    admin_user.initialized = true;
@@ -1534,7 +1537,7 @@ static void set_admin_user(uid_t theUID, gid_t theGID)
 *     MT-NOTE: get_admin_user() is MT safe.
 *
 *******************************************************************************/
-static int  get_admin_user(uid_t* theUID, gid_t* theGID)
+static int get_admin_user(uid_t* theUID, gid_t* theGID)
 {
    uid_t uid;
    gid_t gid;
@@ -1558,6 +1561,29 @@ static int  get_admin_user(uid_t* theUID, gid_t* theGID)
    DEXIT;
    return res;
 } /* get_admin_user() */
+
+/****** uti/uidgid/get_admin_user_name() ***************************************
+*  NAME
+*     get_admin_user_name() -- Returns the admin user name
+*
+*  SYNOPSIS
+*     const char* get_admin_user_name(void) 
+*
+*  FUNCTION
+*     Returns the admin user name. 
+*
+*  INPUTS
+*     void - None 
+*
+*  RESULT
+*     const char* - Admin user name
+*
+*  NOTES
+*     MT-NOTE: get_admin_user_name() is MT safe 
+*******************************************************************************/
+const char *get_admin_user_name(void) {
+   return  admin_user.user_name;
+}
 
 /****** uti/uidgid/sge_has_admin_user() ****************************************
 *  NAME

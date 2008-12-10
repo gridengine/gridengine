@@ -9,6 +9,9 @@ import com.izforge.izpack.installer.InstallerFrame;
 import com.izforge.izpack.util.Debug;
 import com.izforge.izpack.util.VariableSubstitutor;
 import com.sun.grid.installer.util.CommandExecutor;
+import com.sun.grid.installer.util.Util;
+import java.util.Enumeration;
+import java.util.Properties;
 
 public class IntermediateActionPanel extends ActionPanel {
 
@@ -25,6 +28,11 @@ public class IntermediateActionPanel extends ActionPanel {
 
 
     private void initializeVariables() {
+        boolean isQmasterInst, isShadowdInst, isExecdInst;
+        isQmasterInst = parent.getRules().isConditionTrue(COND_INSTALL_QMASTER, idata.getVariables());
+        isShadowdInst = parent.getRules().isConditionTrue(COND_INSTALL_SHADOWD, idata.getVariables());
+        isExecdInst = parent.getRules().isConditionTrue(COND_INSTALL_EXECD, idata.getVariables());
+
         VariableSubstitutor vs = new VariableSubstitutor(idata.getVariables());
         
         // Localhost arch
@@ -43,6 +51,29 @@ public class IntermediateActionPanel extends ActionPanel {
             idata.setVariable(VAR_SPOOLING_METHOD, vs.substituteMultiple(idata.getVariable(VAR_SPOOLING_METHOD_BERKELEYDBSERVER), null));
         } else {
             idata.setVariable(VAR_SPOOLING_METHOD, vs.substituteMultiple(idata.getVariable(VAR_SPOOLING_METHOD_BERKELEYDB), null));
+        }
+
+        // In case of execd and/or shadow host stabdalone installation source the settings.sh boostrap and act_qmaster files
+        if (!isQmasterInst && (isExecdInst || isShadowdInst)) {
+            try {
+                Properties settingsProps = Util.sourceSGESettings(idata.getVariable(VAR_SGE_ROOT), idata.getVariable(VAR_SGE_CELL_NAME));
+                Properties bootsrapProps = Util.sourceSGEBootstrap(idata.getVariable(VAR_SGE_ROOT), idata.getVariable(VAR_SGE_CELL_NAME));
+                String qmasterHost = Util.getQmasterHost(idata.getVariable(VAR_SGE_ROOT), idata.getVariable(VAR_SGE_CELL_NAME));
+
+                String origKey = "";
+                String newKey = "";
+                for (Enumeration<Object> enumer = settingsProps.keys(); enumer.hasMoreElements();) {
+                    origKey = (String)enumer.nextElement();
+                    newKey = CONFIG_VAR_PREFIX + "." + origKey.toLowerCase().replace('_', '.');
+
+                    idata.setVariable(newKey, settingsProps.getProperty(origKey));
+                }
+
+                idata.setVariable(VAR_QMASTER_HOST, qmasterHost);
+                idata.setVariable(VAR_ADMIN_USER, bootsrapProps.getProperty("admin_user"));
+            } catch (Exception ex) {
+                Debug.error("Can not source 'settings.sh' and/or 'bootstrap' and/or 'act_qmaster' files! " + ex);
+            }
         }
     }
 }

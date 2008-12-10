@@ -31,8 +31,11 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.installer.gui;
 
+import com.izforge.izpack.installer.GUIInstaller;
 import com.izforge.izpack.panels.ProcessingClient;
 import com.izforge.izpack.panels.Validator;
+import com.izforge.izpack.util.Debug;
+import com.izforge.izpack.util.VariableSubstitutor;
 import com.sun.grid.installer.util.FileHandler;
 import java.io.File;
 import java.util.Map;
@@ -43,35 +46,60 @@ import java.util.Map;
  */
 public class FileExistsValidator implements Validator {
     private static String PARAM_FILE = "file";
+    private static String PARAM_DIR = "dir";
+    private static String PARAM_EXISTS = "exists";
 
     public boolean validate(ProcessingClient client) {
         String file = client.getText();
+        boolean exists = true;
 
         if (file.equals("")) {
             return true;
         }
 
-        // read file paramether if it's given and append it to the entered directory
         File f = new File(file);
-        if (f.isDirectory() && client.hasParams()) {
+        
+        if (client.hasParams()) {
         	Map<String, String> params = client.getValidatorParams();
+            VariableSubstitutor vs = new VariableSubstitutor(GUIInstaller.getInstallData().getVariables());
+            String dirPrefix = "";
+            String fileSuffix = "";
+
+            if (params.containsKey(PARAM_DIR)) {
+                dirPrefix = params.get(PARAM_DIR);
+                dirPrefix = vs.substituteMultiple(dirPrefix, null);
+
+                if (!dirPrefix.endsWith(FileHandler.SEPARATOR)) {
+                    dirPrefix = dirPrefix + FileHandler.SEPARATOR;
+                }
+            }
 
         	if (params.containsKey(PARAM_FILE)) {
-        		String fileSuffix = params.get(PARAM_FILE);
+                fileSuffix = params.get(PARAM_FILE);
+                fileSuffix = vs.substituteMultiple(fileSuffix, null);
 
-                if (!file.endsWith(FileHandler.SEPARATOR) && !fileSuffix.startsWith(FileHandler.SEPARATOR)) {
-                    file += FileHandler.SEPARATOR;
-                }
-                
-                file += fileSuffix;
-
-                f = new File(file);
-                return f.exists();
-        	} else {
-                return true;
+               if (!fileSuffix.startsWith(FileHandler.SEPARATOR)) {
+                    fileSuffix = FileHandler.SEPARATOR + fileSuffix;
+               }
             }
-        } else {
+
+            if (params.containsKey(PARAM_EXISTS)) {
+                exists = Boolean.parseBoolean(params.get(PARAM_EXISTS));
+
+                Debug.trace("FileExistsValidator - exists: '" + exists + "'");
+            }
+
+            file = dirPrefix + file + fileSuffix;
+
+            Debug.trace("FileExistsValidator - validate file: '" + file + "'");
+
+            f = new File(file);
+        }
+
+        if (exists) {
             return f.exists();
+        } else {
+            return !f.exists();
         }
     }
 }

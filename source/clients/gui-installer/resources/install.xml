@@ -119,7 +119,7 @@ ___INFO__MARK_END__-->
         </condition>
         <condition type="variable" id="cond.user.root">
             <name>user.name</name>
-            <value>root</value>
+            <value>${root.user}</value>
         </condition>
         <condition type="variable" id="cond.mode.install">
             <name>mode</name>
@@ -176,6 +176,7 @@ ___INFO__MARK_END__-->
         <variable name="app-version" value="version"/>
         <variable name="mode" value="install"/>
         <variable name="user.name" value="${USER_NAME}"/>
+        <variable name="user.group" value=""/>
         <variable name="install.qmaster" value="true"/>
         <variable name="install.execd" value="true"/>
         <variable name="install.shadowd" value="true"/>
@@ -197,6 +198,7 @@ ___INFO__MARK_END__-->
         <variable name="cfg.sge.jmx.ssl.client" value="true"/>
         <variable name="cfg.sge.jmx.ssl.keystore.pw" value=""/>
         <variable name="cfg.sge.jmx.ssl.keystore" value="/var/sgeCA/port${cfg.sge.qmaster.port}/${cfg.cell.name}/private/keystore"/>
+        <variable name="add.sge.jmx.ssl.keystore.def" value="${cfg.sge.root}/${cfg.cell.name}/private/keystore"/> <!-- TODO find better default ssl keystore dir -->
         <variable name="cfg.sge.jvm.lib.path" value=""/>
         <variable name="cfg.sge.additional.jvm.args" value="-Xmx256m"/>
         <variable name="cfg.cell.name" value="default"/>

@@ -32,7 +32,6 @@
 package com.sun.grid.installer.util;
 
 import com.izforge.izpack.installer.InstallerFrame;
-import com.izforge.izpack.panels.ProcessingClient;
 import com.izforge.izpack.util.Debug;
 import com.izforge.izpack.util.VariableSubstitutor;
 import com.sun.grid.installer.gui.*;
@@ -46,13 +45,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Scanner;
-import java.util.Vector;
 import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
 
@@ -667,21 +666,11 @@ public class Util implements Config{
         String result = "";
 
         dir = vs.substituteMultiple(dir, null);
-        
-        File file = new File(dir);
 
-        boolean created = false;
+        ExtendedFile file = new ExtendedFile(dir).getFirstExistingParent();
+        Debug.trace("First existing parent of '" + dir + "' is '" + file.getAbsolutePath() +"'.");
+
         try {
-            // Creat the directory if does not exist
-            if (!file.exists()) {
-                cmdExec = new CommandExecutor("mkdir", "-p", dir);
-                cmdExec.execute();
-
-                if (cmdExec.getExitValue() == 0) {
-                    created = true;
-                }
-            }
-
             // Call the 'fstype' script of the proper architecture
             String fstypeScript = "${cfg.sge.root}/utilbin/${localhost.arch}/fstype";
             cmdExec = new CommandExecutor(variables, variables.getProperty(VAR_SHELL_NAME), host, vs.substituteMultiple(fstypeScript, null), dir);
@@ -693,17 +682,110 @@ public class Util implements Config{
             }
         } catch (Exception e) {
             Debug.error(e);
-        } finally {
-            // Delete the directory if was created only for the check
-            if (created) {
-                try {
-                    file.delete();
-                } catch (Exception e) {
-                    Debug.error(e);
-                }
-            }
         }
 
         return result;
-    }        
+    }
+
+    /**
+     * Returns the group id of the user.
+     * @param user The user name
+     * @return The group id of the user if the process was successful, otherwise empty string.
+     */
+    public static String getUserGroup(String user) {
+        String group = "";
+        ExtendedFile tmpFile = null;
+
+        try {
+            tmpFile = new ExtendedFile(File.createTempFile("grouptest", null).getAbsolutePath());
+
+            group = tmpFile.getGroup();
+        } catch (IOException ex) {
+            Debug.error("Can not creat file into default temporary directory! " + ex);
+        } finally {
+            if (tmpFile != null & tmpFile.exists()) {
+                tmpFile.delete();
+            }
+        }
+
+        Debug.trace("Group of user '" + user + "' is '" + group + "'.");
+
+        return group;
+    }
+
+    /**
+     * Sources the sge <SGE_ROOT>/<CELL_NAME>/common/settings.sh file.
+     * @param sgeRoot The SGE_ROOT directory
+     * @param cellName The CELL_NAME value
+     * @return List of key values pairs sourced from the file.
+     * 
+     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
+     */
+    public static Properties sourceSGESettings(String sgeRoot, String cellName) throws FileNotFoundException, IOException {
+        Properties settings = new Properties();
+        String settingsshFile = sgeRoot + "/" + cellName + "/common/settings.sh";
+        ArrayList<String> settingsshLines = FileHandler.readFileContent(settingsshFile, false);
+
+        for (String line : settingsshLines) {
+            // Process lines like 'SGE_CELL=default; export SGE_CELL'
+            if (line.startsWith("SGE_")) {
+                String[] keyValuePair = line.split(";")[0].split("=");
+                settings.setProperty(keyValuePair[0].trim(), keyValuePair[1].trim());
+            }
+        }
+
+        Debug.trace("Sourced settings from '" + settingsshFile + "' are " + settings + ".");
+
+        return settings;
+    }
+
+    /**
+     * Sources the sge <SGE_ROOT>/<CELL_NAME>/common/sboostrap file.
+     * @param sgeRoot The SGE_ROOT directory
+     * @param cellName The CELL_NAME value
+     * @return List of key values pairs sourced from the file.
+     *
+     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
+     */
+    public static Properties sourceSGEBootstrap(String sgeRoot, String cellName) throws FileNotFoundException, IOException {
+        Properties settings = new Properties();
+        String boostrapFile = sgeRoot + "/" + cellName + "/common/bootstrap";
+        ArrayList<String> bootstrapLines = FileHandler.readFileContent(boostrapFile, false);
+        
+        for (String line : bootstrapLines) {
+            // Process lines like 'spooling_method         berkeleydb'
+            if (!line.startsWith("#")) {
+                int spaceIndex = line.indexOf(' ');
+                settings.setProperty(line.substring(0, spaceIndex).trim(), line.substring(spaceIndex).trim());
+            }
+        }
+
+        Debug.trace("Sourced settings from '" + boostrapFile + "' are " + settings + ".");
+
+        return settings;
+    }
+
+    /**
+     * Sources the <SGE_ROOT>/<CELL_NAME>/common/act_qmaster file and return with the name of qmaster host.
+     * @param sgeRoot The SGE_ROOT directory.
+     * @param cellName The CELL_NAME value
+     * @return The name of the qmaster host.
+     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
+     */
+    public static String getQmasterHost(String sgeRoot, String cellName) throws FileNotFoundException, IOException {
+        String qmasterHost = "";
+        String actQmasterFile = sgeRoot + "/" + cellName + "/common/act_qmaster";
+        ArrayList<String> settingsshLines = FileHandler.readFileContent(actQmasterFile, false);
+
+        if (settingsshLines.size() > 0) {
+            qmasterHost = settingsshLines.get(0).trim();
+        }
+
+        Debug.trace("Found qmaster host name in '" + actQmasterFile + "' is '" + qmasterHost + "'.");
+
+        return qmasterHost;
+    }
 }

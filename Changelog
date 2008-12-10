@@ -1,3 +1,24 @@
+ZG-2008-12-10-0: Bugfix:      admin user field should show up only at qmaster installation
+                 Bugfix:      qmaster host field should show up only at qmaster installation
+                 Bugfix:      cell name (directory) should be validated regarding to sge_root.
+                 Bugfix:      qmaster and execd port fields should show up only at qmaster installation
+                 Bugfix:      range validator for qmaster and execd port values
+                 Bugfix:      shell and copy fields should show up at qmaster or execd installation
+                 Bugfix:      add.to.rc field should be invisible in case of non-root installation
+                 Bugfix:      permission validator for jmx keystore directory
+                 Bugfix:      permission validator for qmaster and execd spool directories
+                 Bugfix:      validate country code filed
+                 Bugfix:      check permissions on jmx keystore dir in case of express installation
+                 Bugfix:      fix 'file' field orientation on UserInputPanel
+                 Bugfix:      check checkbox and radiobutton dependencies on UserInputPanel
+                 Enhancem.:   permission validator
+                 Enhancem.:   method to source settings.sh in Util
+                 Enhancem.:   method to source act_qmaster in Util
+                 Enhancem.:   method to get user's group in Util
+                 Enhancem.:   add capeabality for ExtendedFile to check user permissions
+                 Enhancem.:   source settings.sh in case of express and execd or shadow host installation
+                 Enhancem.:   add validator capability to 'file'field on UserInputPanel
+                 Review:      LP
 EB-2008-12-10-0: Enhancemn.:  - Added test functionality to qmaster to slow
                                 down worker threads. Used in TS for certain
                                 tests in combination with JSV

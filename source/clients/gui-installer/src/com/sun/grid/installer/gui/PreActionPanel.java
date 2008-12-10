@@ -36,6 +36,7 @@ import com.izforge.izpack.installer.InstallerFrame;
 import com.izforge.izpack.util.Debug;
 import com.izforge.izpack.util.VariableSubstitutor;
 import com.sun.grid.installer.util.ExtendedFile;
+import com.sun.grid.installer.util.Util;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -81,6 +82,11 @@ public class PreActionPanel extends ActionPanel {
                  parent.exit();
              }
         }
+
+        // set user group
+        String group = Util.getUserGroup(idata.getVariable(VAR_USER_NAME));
+        idata.setVariable(VAR_USER_GROUP, group);
+        Debug.trace("Group of executing user '" + idata.getVariable(VAR_USER_NAME) + "' is '" + group + "'.");
 
         // add.qmaster.host
         idata.setVariable(VAR_QMASTER_HOST, Host.localHostName);

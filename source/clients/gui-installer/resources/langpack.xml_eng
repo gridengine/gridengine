@@ -190,11 +190,13 @@ ___INFO__MARK_END__-->
         <str id="cfg.sge.root.notemptyvalidator" txt="Grid Engine root directory is mandatory!" />
         <str id="cfg.sge.root.fileexistsvalidator" txt="Invalid Grid Engine root directory!" />
         <str id="cfg.cell.name.notemptyvalidator" txt="Cell name is mandatory!" />
+        <str id="cfg.cell.name.exists.fileexistsvalidator" txt="Cell name already exists!" />
+        <str id="cfg.cell.name.notexists.fileexistsvalidator" txt="Cell name does not exist!" />
         <str id="cfg.sge.qmaster.port.notemptyvalidator" txt="Qmaster port is mandatory!" />
-        <str id="cfg.sge.qmaster.port.isportvalidator" txt="Qmaster port is invalid!" />
+        <str id="cfg.sge.qmaster.port.rangevalidator" txt="Qmaster port is invalid!" />
         <str id="cfg.sge.qmaster.port.portvalidator" txt="Qmaster port is in use!" />
         <str id="cfg.sge.execd.port.notemptyvalidator" txt="Execd port is mandatory!" />
-        <str id="cfg.sge.execd.port.isportvalidator" txt="Execd port is invalid!" />
+        <str id="cfg.sge.execd.port.rangevalidator" txt="Execd port is invalid!" />
         <str id="cfg.sge.cluster.name.regularexpressionvalidator" txt="Cluster name is not valid!" />
         <str id="cfg.gid.range.notemptyvalidator" txt="Group id range is mandatory!" />
         <str id="cfg.gid.range.rangevalidator" txt="Invalid  group id range!" />
@@ -235,6 +237,8 @@ ___INFO__MARK_END__-->
         <str id="cfg.sge.jmx.port.isportvalidator" txt="JMX port is invalid!" />
         <str id="cfg.sge.jmx.port.portvalidator" txt="JMX port is in use!" />
         <str id="cfg.sge.jmx.port.rangevalidator" txt="JMX port has invalid range! Valid range: 1-65500" />
+        <str id="cfg.sge.jmx.ssl.keystore.notemptyvalidator" txt="Keystore path is mandatory!" />
+        <str id="cfg.sge.jmx.ssl.keystore.permissionvalidator" txt="No write permission on the keystore directory!" />
         <str id="cfg.sge.jmx.ssl.keystore.pw.passwordequalityvalidator" txt="The passwords must match." />
         <str id="cfg.sge.jvm.lib.path.notemptyvalidator" txt="JVM library path is mandatory!" />
         <str id="cfg.sge.jvm.lib.path.fileexistsvalidator" txt="JVM library does not exist!" />
@@ -287,10 +291,13 @@ ___INFO__MARK_END__-->
         <b>Variable: </b><code>$DB_SPOOLING_DIR</code></html>" />
         <!-- Validators -->
         <str id="cfg.qmaster.spool.dir.notemptyvalidator" txt="Qmaster spool directory is mandatory!" />
+        <str id="cfg.qmaster.spool.dir.permissionvalidator" txt="No write permission on the qmaster spool directory!" />
         <str id="cfg.execd.spool.dir.notemptyvalidator" txt="Global execd spool directory is mandatory!" />
+        <str id="cfg.execd.spool.dir.permissionvalidator" txt="No write permission on the execd spool directory!" />
         <str id="cfg.db.spooling.server.notemptyvalidator" txt="Berkeley db spooling server is mandatory!" />
         <str id="cfg.db.spooling.dir.notemptyvalidator" txt="Spooling db directory is mandatory!" />
         <str id="add.db.spooling.dir.bdb.filesystemtypevalidator" txt="NFS type spooling directory is not supported!" />
+        <str id="cfg.db.spooling.dir.permissionvalidator" txt="No write permission on the spooling directory!" />
         <str id="add.db.spooling.dir.bdbserver.filesystemtypevalidator" txt="Not NFS4 type spooling directory!" />
 
     <!-- CSP Panel -->
@@ -324,6 +331,7 @@ ___INFO__MARK_END__-->
         <b>Variable: </b><code>$CSP_MAIL_ADDRESS</code></html>" />
         <!-- Validators -->
         <str id="cfg.csp.country.code.notemptyvalidator" txt="Country code is mandatory!" />
+        <str id="cfg.csp.country.code.regularexpressionvalidator" txt="Country code has to be 2 characters long!" />
         <str id="cfg.csp.state.notemptyvalidator" txt="State is mandatory!" />
         <str id="cfg.csp.location.notemptyvalidator" txt="Location is mandatory!" />
         <str id="cfg.csp.orga.notemptyvalidator" txt="Organization is mandatory!" />

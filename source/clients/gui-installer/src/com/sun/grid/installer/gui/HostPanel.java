@@ -33,11 +33,11 @@ package com.sun.grid.installer.gui;
 import com.izforge.izpack.installer.InstallData;
 import com.izforge.izpack.installer.InstallerFrame;
 import com.izforge.izpack.installer.IzPanel;
-import com.izforge.izpack.panels.ProcessingClient;
 import com.izforge.izpack.util.Debug;
 import com.izforge.izpack.util.VariableSubstitutor;
 import com.sun.grid.installer.util.CommandExecutor;
 import com.sun.grid.installer.util.Config;
+import com.sun.grid.installer.util.ExtendedFile;
 import com.sun.grid.installer.util.Util;
 import java.awt.Color;
 import java.awt.Font;
@@ -45,8 +45,6 @@ import java.awt.FontMetrics;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -598,18 +596,34 @@ public class HostPanel extends IzPanel implements Config {
             }
         }
 
-        // Check spooling dir at express mode
-        if (isExpressInst && !isBdbInst && !idata.getVariable(VAR_DB_SPOOLING_DIR_BDB).equals(VAR_DB_SPOOLING_DIR_BDB_DEF)) {
-            String fstype = Util.getDirFSType(idata.getVariables(), idata.getVariable(VAR_DB_SPOOLING_DIR_BDB));
-
-            if (fstype.equals("nfs")) {
-                idata.setVariable(VAR_DB_SPOOLING_DIR_BDB, idata.getVariable(VAR_DB_SPOOLING_DIR_BDB_DEF));
+        /**
+         * Check directories in express mode
+         */
+        if (isExpressInst) {
+            // JMX keystore path (do it only one time) in case of JMX and JMX SSL enabled
+            if (parent.getRules().isConditionTrue(COND_JMX, idata.getVariables()) &&
+                    parent.getRules().isConditionTrue(COND_JMX_SSL, idata.getVariables()) &&
+                    !idata.getVariable(VAR_JMX_SSL_KEYSTORE).equals(idata.getVariable(VAR_JMX_SSL_KEYSTORE_DEF))) {
+                ExtendedFile ef = new ExtendedFile(idata.getVariable(VAR_JMX_SSL_KEYSTORE)).getFirstExistingParent();
+                
+                if (!ef.hasWritePermission(idata.getVariable(VAR_USER_NAME), idata.getVariable(VAR_USER_GROUP))) {
+                    idata.setVariable(VAR_JMX_SSL_KEYSTORE, idata.getVariable(VAR_JMX_SSL_KEYSTORE_DEF));
+                }
             }
 
-            Debug.trace("add.db.spooling.dir.bdb='" + idata.getVariable(VAR_DB_SPOOLING_DIR_BDB) + "'");
-        }
+            // Spooling dir
+            if (!isBdbInst && !idata.getVariable(VAR_DB_SPOOLING_DIR_BDB).equals(VAR_DB_SPOOLING_DIR_BDB_DEF)) {
+                String fstype = Util.getDirFSType(idata.getVariables(), idata.getVariable(VAR_DB_SPOOLING_DIR_BDB));
 
-        // Check spooling dir at express mode and shadowd
+                if (fstype.equals("nfs")) {
+                    idata.setVariable(VAR_DB_SPOOLING_DIR_BDB, idata.getVariable(VAR_DB_SPOOLING_DIR_BDB_DEF));
+                }
+
+                Debug.trace("add.db.spooling.dir.bdb='" + idata.getVariable(VAR_DB_SPOOLING_DIR_BDB) + "'");
+            }
+
+            // Check spooling dir at express mode and shadowd
+        }
     }
 
     @Override

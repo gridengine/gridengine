@@ -152,7 +152,7 @@ public class FileHandler {
 
         if (props.length < 4) {
             Debug.trace("Unexpected empty output from ls -la "+filePath);
-            return new String[] {"","","",""};
+            return null;
         }
 
         return props;

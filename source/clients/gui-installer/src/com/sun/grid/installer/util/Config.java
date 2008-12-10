@@ -71,6 +71,7 @@ public interface Config {
     public static final String VAR_README_FILE  = "readme.file";
     public static final String VAR_PROGRESS_TYPE = "mode";
     public static final String VAR_USER_NAME = "user.name";
+    public static final String VAR_USER_GROUP = "user.group";
     public static final String VAR_ROOT_USER = "root.user";
     public static final String VAR_RESULT_INFO = "result.info";
     public static final String VAR_LOCALHOST_ARCH = "localhost.arch";
@@ -83,6 +84,8 @@ public interface Config {
     public static final String VAR_DB_SPOOLING_DIR_BDB = "add.db.spooling.dir.bdb";
     public static final String VAR_DB_SPOOLING_DIR_BDBSERVER = "add.db.spooling.dir.bdbserver";
     public static final String VAR_DB_SPOOLING_DIR_BDB_DEF = "add.db.spooling.dir.bdb.def";
+    public static final String VAR_JMX_SSL_KEYSTORE = "cfg.sge.jmx.ssl.keystore";
+    public static final String VAR_JMX_SSL_KEYSTORE_DEF = "add.sge.jmx.ssl.keystore.def";
     
     public static final String PARAMETER_1 = "param1";
     public static final String PARAMETER_2 = "param2";
@@ -95,6 +98,8 @@ public interface Config {
     public static final String COND_SPOOLING_CLASSIC = "cond.spooling.classic";
     public static final String COND_SPOOLING_BDB = "cond.spooling.bdb";
     public static final String COND_SPOOLING_BDBSERVER = "cond.spooling.bdbserver";
+    public static final String COND_JMX = "cond.sge.jmx";
+    public static final String COND_JMX_SSL = "cond.sge.jmx.ssl";
     
     public static final String LANGID_HELP_ERROR_PAGE = "installer.help.errorpage";
     public static final String LANGID_HELP_EMPTY_PAGE = "installer.help.emptypage";

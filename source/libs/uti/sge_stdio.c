@@ -324,6 +324,9 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
    int pipefds[3][2];
    int i;
    char arg0[256];
+#if defined(SOLARIS)
+   char err_str[256];
+#endif
    struct passwd *pw = NULL;
    uid_t myuid;
    uid_t tuid;

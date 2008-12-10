@@ -980,6 +980,8 @@
 #define MSG_GDI_USAGE_jsv_OPT_YN                         "[-jsv jsv_url]"
 #define MSG_GDI_UTEXT_jsv_OPT_YN                         _MESSAGE(23513, _("job submission verification script to be used"))
 
+#define MSG_GDI_USAGE_sst_OPT                         "[-sst]"
+#define MSG_GDI_UTEXT_sst_OPT                         _MESSAGE(23514, _("show a formated sharetree"))
 
 /* =================================================
  * global error messages 

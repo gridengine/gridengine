@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2008/12/04 16:59:56 $     Revision: $Revision: 1.35 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2008/12/10 15:05:27 $     Revision: $Revision: 1.36 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2008/12/04 16:59:56 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2008/12/10 15:05:27 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -1176,6 +1176,10 @@ specifying the location of a node in the share tree.
 .\"
 .IP "\fB\-sstree\fP	\fI<show share tree>\fP"
 Shows the definition of the share tree (see
+.M share_tree 5 ).
+.\"
+.IP "\fB\-sst\fP	\fI<show formated share tree>\fP"
+Shows the definition of the share tree in a tree view (see
 .M share_tree 5 ).
 .\"
 .IP "\fB\-sss\fP	\fI<show scheduler status>\fP"

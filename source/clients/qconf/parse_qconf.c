@@ -4545,7 +4545,8 @@ char *argv[]
       }
 
 /*----------------------------------------------------------------------------*/
-      /* "-bonsai" */
+      /* "-bonsai" This is the undocumented switch of showing the share tree
+         we keep this switch  for compatibility reasons */
 
       if (strcmp("-bonsai", *spp) == 0) {
          /* get the sharetree .. */
@@ -4565,6 +4566,39 @@ char *argv[]
          ep = lFirst(lp);
 
          show_sharetree(ep, NULL);
+
+         lFreeList(&lp);
+         spp++;
+         continue;
+      }
+
+/*----------------------------------------------------------------------------*/
+      /* "-sst" This is the documented switch of showing the share tree */
+
+      if (strcmp("-sst", *spp) == 0) {
+         /* get the sharetree .. */
+         what = lWhat("%T(ALL)", STN_Type);
+         alp = ctx->gdi(ctx, SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
+         lFreeWhat(&what);
+
+         aep = lFirst(alp);
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) != STATUS_OK) {
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
+            spp++;
+            continue;
+         }
+         lFreeList(&alp);
+ 
+         ep = lFirst(lp);
+
+         if (!ep) {
+            fprintf(stderr, "%s\n", MSG_TREE_NOSHARETREE);
+            spp++;
+            continue;
+         } else {
+          show_sharetree(ep, NULL);
+         }
 
          lFreeList(&lp);
          spp++;

@@ -1,3 +1,10 @@
+RD-2008-12-11-0: Bugfix:      - platform was not correctly regonized on Vista
+                              - corrected CSP directory name handling
+                              - added check for execed_spool_dir name at installation
+                 Bugster:     6783373, 6783850, 6783835
+                 Issue:       2824, 2825, 2826
+                 Review:      CR
+
 JG-2008-12-11-0: Bugfix:      tightly integrated jobs: replaced client cache by
                               environment variable SGE_RSH_COMMAND set by execd
                  Bugster:     6695481

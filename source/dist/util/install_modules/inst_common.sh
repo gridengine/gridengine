@@ -188,7 +188,7 @@ Makedir()
       done
 
        $INFOTEXT "creating directory: %s" "$dir"
-       if [ "`$SGE_UTILBIN/filestat -owner $tmp_dir`" != "$ADMINUSER" ]; then
+       if [ "`$SGE_UTILBIN/filestat -owner $tmp_dir 2> /dev/null`" != "$ADMINUSER" ]; then
           Execute $MKDIR -p $dir
           if [ "$ADMINUSER" = "default" ]; then
              Execute $CHOWN -R root $chown_dir

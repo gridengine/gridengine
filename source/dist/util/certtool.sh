@@ -116,7 +116,7 @@ else
    ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep admin_user | awk '{ print $2 }'`
 
    if [ "$SGE_ARCH" = "win32-x86" ]; then
-      WIN_HOST_NAME=`hostname | tr [a-z] [A-Z]`
+      WIN_HOST_NAME=`id | cut -d"(" -f2 | cut -d")" -f1 | cut -d"+" -f1`
       WIN_ADMINUSER="$WIN_HOST_NAME+$ADMINUSER"
       #UID=`id | cut -d"(" -f1 | cut -d"=" -f2`
       UID=`id -u`
@@ -182,10 +182,6 @@ else
 
          echo "... set owner of "$USERKEY_DIR/$WIN_ADMINUSER" to "$WIN_ADMINUSER""
          chown -R "$WIN_ADMINUSER" "$USERKEY_DIR/$WIN_ADMINUSER"
-         echo
-
-         echo "... remove old "$USERKEY_DIR/$UNIX_SU_NAME" certificates"
-         rm  -fR "$USERKEY_DIR/$UNIX_SU_NAME"
          echo
 
          echo "WINDOWS certificates are copied and permissions are set!"

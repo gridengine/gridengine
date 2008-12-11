@@ -542,10 +542,15 @@ GetLocalExecdSpoolDir()
          fi
          LOCAL_EXECD_SPOOL="undef"
       else
-         $INFOTEXT "Using execd spool directory [%s]" $LOCAL_EXECD_SPOOL
-         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-         MakeLocalSpoolDir
-         ret=1
+         if [ "`echo $LOCAL_EXECD_SPOOL | tr -d \[:graph:\]`" != "" ]; then
+            $INFOTEXT "execd spool directory [%s] is not a valid name, please try again!" $LOCAL_EXECD_SPOOL
+            $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+         else
+            $INFOTEXT "Using execd spool directory [%s]" $LOCAL_EXECD_SPOOL
+            $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+            MakeLocalSpoolDir
+            ret=1
+         fi
       fi
    done
 

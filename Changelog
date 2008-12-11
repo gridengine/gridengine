@@ -1,3 +1,22 @@
+LP-2008-12-11-0: Bugfix:      ADMIN_USER not used in auto install mode
+                 Bugfix:      When all.q or allhosts already exists qmaster
+                              installation fails
+                 Bugfix:      ShutdownQmaster - can't use SMF when not root
+                 Bugfix:      Removed No CSP System installed message in auto
+                              installation
+                 Bugfix:      Fixed gui-installer, test, javadoc, clean targets
+                 Bugfix:      gui-installer - remove existing qmaster does not
+                              uninstall execds first and fails
+                 Bugfix:      gui-installer - final readme page not generated
+                 Bugfix:      gui-installer - SHELL_NAME rsh does not work
+                 Bugfix:      gui-installer - Using /tmp as temp dir on all ARCH
+                 Bugfix:      gui-installer - fstype checks non-existing dir
+                 Bugfix:      gui-installer - Should first install BDB, qmaster,
+                              and only then the rest
+                 Bugfix:      gui-installer - Standalone bdb installation calls
+                              qconf and fails bacause of that
+                 Review       ZG, AA
+
 CR-2008-12-11-1: Bugfix:      - fixed possible core dump for qsub -jsv in
                                 sge_gdi_packet_execute_external() when job
                                 verify fails

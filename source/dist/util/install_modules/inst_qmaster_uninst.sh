@@ -86,7 +86,8 @@ ShutdownMaster()
    euid=`$SGE_UTILBIN/uidgid -euid`
    GetAdminUser
    
-   if [ "$SGE_ENABLE_SMF" != "true" ]; then
+	#When non-root, can't manage SMF
+   if [ "$euid" != 0 -o "$SGE_ENABLE_SMF" != "true" ]; then
       $INFOTEXT "Shutting down qmaster!"
       $INFOTEXT -log "Shutting down qmaster!"
       spool_dir_master=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`

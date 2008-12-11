@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.installer.gui;
 
+import com.izforge.izpack.util.Debug;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -166,6 +167,7 @@ public class HostList extends ArrayBlockingQueue<Host> {
 
     @Override
     public boolean add(Host o) {
+        //Debug.trace("adding - "+o.toString());
         if (o == null) {
             throw new NullPointerException();
         }
@@ -206,10 +208,12 @@ public class HostList extends ArrayBlockingQueue<Host> {
             return false;
         } finally {
             lock.unlock();
+            //printList();
         }
     }
 
     public boolean remove(Host o) {
+        //Debug.trace("remove - "+o.toString());
         if (o == null) {
             throw new NullPointerException();
         }
@@ -247,11 +251,13 @@ public class HostList extends ArrayBlockingQueue<Host> {
             return false;
         } finally {
             lock.unlock();
+            //printList();
         }
     }
 
 
     public boolean addUnchecked(Host o) {
+        //Debug.trace("addingUn - "+o.toString());
         if (o == null) {
             throw new NullPointerException();
         }
@@ -261,10 +267,12 @@ public class HostList extends ArrayBlockingQueue<Host> {
             return super.add(o);
         } finally {
             lock.unlock();
+            //printList();
         }
     }
 
     public boolean removeUnchecked(Host o) {
+        //Debug.trace("removeUn - "+o.toString());
         if (o == null) {
             throw new NullPointerException();
         }
@@ -282,12 +290,13 @@ public class HostList extends ArrayBlockingQueue<Host> {
             return false;
         } finally {
             lock.unlock();
+            //printList();
         }
     }
 
     public void printList() {
         for (Host h : this) {
-            System.out.println(h.getHostname() + " IP: " + h.getIp() + " State:" + h.getState());
+            System.out.println(h.getHostname() + " IP: " + h.getIp() + " State:" + h.getState() + " Components: "+h.getComponentString());
         }
     }
 }

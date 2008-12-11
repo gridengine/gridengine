@@ -52,11 +52,13 @@ import java.util.Properties;
 public class CommandExecutor implements Config {
     private ProcessBuilder processBuilder = null;
     
-    private int exitValue = -1;
-
+    private int exitValue                       = -1;
     public static final int EXITVAL_OTHER       = -2;
     public static final int EXITVAL_INTERRUPTED = -3;
     public static final int EXITVAL_TERMINATED  = -4;
+
+    private static final String SHELL           = "sh";
+    private static final String SHELL_ARG       = "-c";
 
     private static int WAIT_TIME     = 50;
     private static int DEFAULT_MAX_WAIT_TIME = 8000;
@@ -82,40 +84,42 @@ public class CommandExecutor implements Config {
     public CommandExecutor(Properties variables, int timeout, List<String> commands) {
         MAX_WAIT_TIME = timeout;
 
-        Debug.trace("Initializing command: " + commands);
+        Debug.trace("Initializing command: " + getSingleCommand(commands));
 
         List<String> tmp = commands;
         commands = new ArrayList<String>();
         additionalErrors = new Vector<String>();
         String singleCmd = null;
 
+        String shellName = tmp.get(0);
+
         if (variables == null) {
            //Quick commands like ls, chmod, ...
-           commands.add("sh");
-           commands.add("-c");
+           commands.add(SHELL);
+           commands.add(SHELL_ARG);
+           //singleCmd = "'" + getSingleCommand(tmp) + "' ";
            List<String> tmpList = new ArrayList<String>();
            tmpList.addAll(tmp);
            setupOutputFiles(tmpList); //Redirect command outputs
            singleCmd = getSingleCommand(tmpList);
            commands.add(singleCmd);
-           Debug.trace("New quick command: " + commands);
+           Debug.trace("New quick command: " + getSingleCommand(commands));
         } else if (variables != null) {
-            String shellName = tmp.get(0);
             String destHost = tmp.get(1);
             boolean onLocalHost = destHost.equalsIgnoreCase(Host.localHostName);
             //Skip the copy command when on a local host
             if (isSameCommand(variables.getProperty(VAR_COPY_COMMAND), shellName)) {
                 destHost = tmp.get(tmp.size() - 1).split(":")[0];
                 if (destHost.equalsIgnoreCase(Host.localHostName)) {
-                    Debug.trace("Copying skipped: " + tmp);
+                    Debug.trace("Copying skipped: " + getSingleCommand(tmp));
                     exitValue = 0;
                     return;
                 }
             //Skip ssh/rsh if on local host
             }
             if (onLocalHost && isSameCommand(variables.getProperty(VAR_SHELL_NAME), shellName)) {
-                commands.add("sh");
-                commands.add("-c");
+                commands.add(SHELL);
+                commands.add(SHELL_ARG);
                 List<String> tmpList = new ArrayList<String>();
                 for (int i = 2; i < tmp.size(); i++) {
                     tmpList.add(tmp.get(i));
@@ -123,28 +127,30 @@ public class CommandExecutor implements Config {
                 setupOutputFiles(tmpList); //Redirect command outputs
                 singleCmd = getSingleCommand(tmpList);
                 commands.add(singleCmd);
-                Debug.trace("New command: " + commands);
+                Debug.trace("New command: " + getSingleCommand(commands));
             // Add ssh/scp options if not on local host
-            } else if (!onLocalHost && (isSameCommand(variables.getProperty(VAR_SHELL_NAME), "ssh") || isSameCommand(variables.getProperty(VAR_COPY_COMMAND), "scp"))) {
-                commands.add("sh");
-                commands.add("-c");
+            } else {
+                commands.add(SHELL);
+                commands.add(SHELL_ARG);
                 //Make a single line
                 List<String> tmpList = new ArrayList<String>();
                 for (int i = 0; i < tmp.size(); i++) {
-                    if (i == 1) {
-                        //We don't want to wait on the acception unknown RSA keys
-                        //We require a kerberos5 or public key for connecting (without password)!
-                        tmpList.add("-o StrictHostKeyChecking=yes -o PreferredAuthentications=gssapi-keyex,publickey");
+                    if (i == 1) {                  
+                        //If ssh or scp
+                        if (isSameCommand(shellName, "ssh") || isSameCommand(shellName, "scp")) {
+                            //We don't want to wait on the acception unknown RSA keys
+                            //We require a kerberos5 or public key for connecting (without password)!
+                            tmpList.add("-o StrictHostKeyChecking=yes -o PreferredAuthentications=gssapi-keyex,publickey");
+                        }
                     }
                     tmpList.add(tmp.get(i));
                 }
                 setupOutputFiles(tmpList); //Redirect command outputs
                 singleCmd = getSingleCommand(tmpList);
                 commands.add(singleCmd);                
-                Debug.trace("New command: " + commands);
+                Debug.trace("New command: " + getSingleCommand(commands));
             }
-        }                
-        //cmds = commands;
+        }
         processBuilder = new ProcessBuilder(commands);
     }
 
@@ -169,8 +175,8 @@ public class CommandExecutor implements Config {
 
     private void setupOutputFiles(List<String> commands) {
         try {
-            outFile = File.createTempFile("gui-cmdexec", ".out");
-            errFile = File.createTempFile("gui-cmdexec", ".err");
+            outFile = File.createTempFile("gui-cmdexec", ".out", new File("/tmp"));
+            errFile = File.createTempFile("gui-cmdexec", ".err", new File("/tmp"));
             commands.add("> "+outFile.getAbsolutePath()+" 2> "+ errFile.getAbsolutePath());
         } catch (IOException ex) {
             additionalErrors.add(this.getClass().getName() + ".init: " + ex.getMessage());
@@ -190,7 +196,6 @@ public class CommandExecutor implements Config {
             process = processBuilder.start();
             
             long waitTime = 0;
-            long exitWait = 0;
             while (true) {
                 try {
                     exitValue = process.exitValue();
@@ -199,16 +204,14 @@ public class CommandExecutor implements Config {
                     Thread.sleep(WAIT_TIME);
                     waitTime += WAIT_TIME;
                     if (waitTime > MAX_WAIT_TIME) {
-                        Debug.error("Terminate command: '" + processBuilder.command() + "'!");
+                        Debug.error("Terminated ("+waitTime/1000.0+" sec): '" + processBuilder.command() + "'!");
                         process.destroy();
                         exitValue = EXITVAL_TERMINATED;
                         break;
                     }
                 }
             }
-            Debug.trace("Waited "+exitWait+"ms");
-
-            Debug.trace("Command: " + processBuilder.command().toString() + " exitValue: "+exitValue);
+            Debug.trace("Command: " + getSingleCommand(processBuilder.command()) + " exitValue: "+exitValue);
         } catch (IOException ex) {
             exitValue = EXITVAL_OTHER;
             additionalErrors.add(ex.getLocalizedMessage());

@@ -832,11 +832,12 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
     LogResolvedHostLists
 
     . $SGE_ROOT/$CELL_NAME/common/settings.sh
+    GetAdminUser
 
-   if [ -f "$SGE_ROOT/$SGE_CELL/common/bootstrap" ]; then
+    if [ -f "$SGE_ROOT/$SGE_CELL/common/bootstrap" ]; then
       ignore_fqdn=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "ignore_fqdn" | awk '{ print $2 }'`
       default_domain=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "default_domain" | awk '{ print $2 }'`
-   fi
+    fi
 
     EXEC_HOSTS_TO_INSTALL=$EXEC_HOST_LIST
     EXEC_HOSTS_TO_INSTALL_TMP=$EXEC_HOSTS_TO_INSTALL
@@ -998,6 +999,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       CheckCellDirectory
       . $SGE_ROOT/$SGE_CELL/common/settings.sh
       SearchForExistingInstallations "execd"
+      GetAdminUser
       CheckWinAdminUser
       CheckCSP
       CheckHostNameResolving install
@@ -1068,7 +1070,7 @@ if [ "$EXECD" = "uninstall" ]; then
       $INFOTEXT -log "Starting execution host uninstallation!"
       LogResolvedHostLists
    fi
-   
+
    GetAdminUser
 
    if [ "$SGE_REMOTE_FLAG" != "REMOTE_EXECD_UNINSTALL" ]; then 
@@ -1276,6 +1278,7 @@ if [ $SHADOW = "install" ]; then
 
       $INFOTEXT "Shadowhost installation completed!"
    else
+      GetAdminUser
       euid=`$SGE_UTILBIN/uidgid -euid`
       Stdout2Log
       for SHADOW in $SHADOW_HOST; do

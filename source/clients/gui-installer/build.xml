@@ -112,6 +112,9 @@ ___INFO__MARK_END__-->
         <condition property="sge.license" value="${legal.dir}/License/LICENSE.txt">
             <equals arg1="${env.AIMK_COPYRIGHT}" arg2="sun" trim="true"/>
         </condition>
+        <condition property="sun.copyright" value="true">
+            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="sun" trim="true"/>
+        </condition>
         <condition property="sge.license" value="${legal.dir}/LICENSE">
             <equals arg1="${env.AIMK_COPYRIGHT}" arg2="courtesy" trim="true"/>
         </condition>
@@ -122,28 +125,23 @@ ___INFO__MARK_END__-->
         <delete file="${build.dir}/jar/${final.sge.license}"/>
         <copy tofile="${build.dir}/jar/${final.sge.license}">
             <fileset file="${sge.license}"/>
-        </copy>
-        <!-- Remove SISSL licence -->
-        <exec executable="sed" output="${build.dir}/jar/res/CustomLangpack.xml_eng.new">
-            <arg value="-e"/>
-            <arg value="/___INFO__MARK_BEGIN__/,/___INFO__MARK_END__/d"/>
+        </copy>        
+    </target>
+
+    <target depends="prepare-license" name="prepare-legal" if="sun.copyright">
+        <!-- Replace SISSL licence with Sun license -->
+        <exec executable="sh">
+            <arg value="${build.dir}/../nbproject/replace_license.sh"/>
             <arg value="${build.dir}/jar/res/CustomLangpack.xml_eng"/>
         </exec>
-        <exec executable="sed" output="${build.dir}/jar/res/customicons.xml.new">
-            <arg value="-e"/>
-            <arg value="/___INFO__MARK_BEGIN__/,/___INFO__MARK_END__/d"/>
+        <exec executable="sh">
+            <arg value="${build.dir}/../nbproject/replace_license.sh"/>
             <arg value="${build.dir}/jar/res/customicons.xml"/>
         </exec>
-        <exec executable="sed" output="${build.dir}/jar/res/userInputSpec.xml.new">
-            <arg value="-e"/>
-            <arg value="/___INFO__MARK_BEGIN__/,/___INFO__MARK_END__/d"/>
+        <exec executable="sh">
+            <arg value="${build.dir}/../nbproject/replace_license.sh"/>
             <arg value="${build.dir}/jar/res/userInputSpec.xml"/>
         </exec>
-        <move file="${build.dir}/jar/res/CustomLangpack.xml_eng.new"  tofile="${build.dir}/jar/res/CustomLangpack.xml_eng"  overwrite="true"/>
-        <move file="${build.dir}/jar/res/customicons.xml.new"  tofile="${build.dir}/jar/res/customicons.xml" overwrite="true"/>
-        <move file="${build.dir}/jar/res/userInputSpec.xml.new"  tofile="${build.dir}/jar/res/userInputSpec.xml" overwrite="true"/>
-        <!-- TODO Add the copyright notice -->
-
     </target>
 
     <target name="-post-jar" description="Build installer">
@@ -268,7 +266,7 @@ ___INFO__MARK_END__-->
         <delete dir="${build.dir}/jar"/>
         <unjar src="${dist.jar}" dest="${build.dir}/jar"/>
         <delete file="${dist.jar}"/>
-        <antcall target="prepare-license"/>
+        <antcall target="prepare-legal"/>
 
         <!-- Add/Replace icons + include the group-layout -->
         <zip compress="${jar.compress}" destfile="${dist.jar}" update="false" description="Repack final jar">
@@ -283,9 +281,24 @@ ___INFO__MARK_END__-->
         <property name="dist.ready" value="true"/>     
     </target>
 
-    <target name="-post-clean" if="isJavaBuildHost">
+    <target name="javadoc" if="isJavaBuildHost">
+        <antcall target="-javadoc-build"/>
+        <antcall target="-javadoc-browse"/>
+    </target>
+
+    <target name="test" if="isJavaBuildHost">
+        <antcall target="compile-test"/>
+        <antcall target="-pre-test-run"/>
+        <antcall target="-do-test-run"/>
+        <antcall target="test-report"/>
+        <antcall target="-post-test-run"/>
+        <antcall target="-test-browse"/>
+    </target>
+
+    <target name="clean" if="isJavaBuildHost">
+        <delete dir="${build.dir}"/>
+        <delete dir="${dist.dir}"/>
         <delete dir="bin"/>
-        <delete file="readme.html"/>
     </target>
 
     <!--  

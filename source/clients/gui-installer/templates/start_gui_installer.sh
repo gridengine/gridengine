@@ -31,6 +31,10 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+if [ "$1" = "debug" -o "$1" = "-debug" ]; then
+   FLAG="-DSTACKTRACE=true"
+fi
+
 #Detect JAVA
 if [ -n "$JAVA_HOME" -a -f "$JAVA_HOME"/bin/java ]; then
    JAVA_BIN="$JAVA_HOME"/bin/java
@@ -43,4 +47,4 @@ if [ ! -f "$JAVA_BIN" ]; then
    exit 1
 fi
 
-$JAVA_BIN -Dswing.boldMetal=false -jar ./util/gui-installer/installer.jar
+$JAVA_BIN $FLAG -Dswing.boldMetal=false -jar ./util/gui-installer/installer.jar

@@ -1050,6 +1050,8 @@ public class HostPanel extends IzPanel implements Config {
     }
 
     private void installButtonActionPerformed() {
+        Debug.trace("INSTALL");
+        //lists.get(1).printList();
         //set install mode
         installMode = true;
 
@@ -1112,11 +1114,25 @@ public class HostPanel extends IzPanel implements Config {
                 h = tmpList.get(i);
                 if (h.isBdbHost()) {
                     o = new Host(h);
+                    boolean hasMore = false;
                     //Clear selection
-                    o.setQmasterHost(false);
-                    o.setExecutionHost(false);
-                    o.setShadowHost(false);
-                    installList.add(o);
+                    if (o.isQmasterHost()) {
+                       o.setQmasterHost(false);
+                       hasMore = true;
+                    }
+                    if (o.isExecutionHost()) {
+                       o.setExecutionHost(false);
+                       hasMore = true;
+                    }
+                    if (o.isShadowHost()) {
+                       o.setShadowHost(false);
+                       hasMore = true;
+                    }
+                    installList.addUnchecked(new Host(o));
+                    if (hasMore) {
+                       o.setAdminHost(false);
+                       o.setSubmitHost(false);
+                    }
                     tmpList.remove(o);
                     break;
                 }
@@ -1128,18 +1144,34 @@ public class HostPanel extends IzPanel implements Config {
                 h = tmpList.get(i);
                 if (h.isQmasterHost()) {
                     o = new Host(h);
+                    boolean hasMore = false;
                     //Clear selection
-                    o.setBdbHost(false);
-                    o.setExecutionHost(false);
-                    o.setShadowHost(false);
-                    installList.add(o);
+                    if (o.isBdbHost()) {
+                       o.setBdbHost(false);
+                       hasMore = true;
+                    }
+                    if (o.isExecutionHost()) {
+                       o.setExecutionHost(false);
+                       hasMore = true;
+                    }
+                    if (o.isShadowHost()) {
+                       o.setShadowHost(false);
+                       hasMore = true;
+                    }
+                    installList.addUnchecked(new Host(o));
+                    if (hasMore) {
+                       o.setAdminHost(false);
+                       o.setSubmitHost(false);
+                    }
                     tmpList.remove(o);
                     break;
                 }
             }
         }
         //Copy the rest
-        installList.addAll(tmpList);
+        for (Host host : tmpList) {
+            installList.addUnchecked(new Host(host));
+        }
 
         //installList.appendHostList(validList, isBdbInst, isQmasterInst, isShadowdInst, isExecdInst);
 
@@ -1705,40 +1737,28 @@ class InstallTask extends TestableTask {
                 String autoConfTempFile = vs.substituteMultiple(variables.getProperty(VAR_AUTO_INSTALL_COMPONENT_TEMP_FILE), null);
                 autoConfFile = vs.substituteMultiple(variables.getProperty(VAR_AUTO_INSTALL_COMPONENT_FILE), null);
 
-                //TODO: Need just one per host! Not a good place to call
-                autoConfFile += "." + host.getHostAsString();
+                //Appended CELL_NAME prevents a race in case of parallel multiple cell installations
+                autoConfFile = "/tmp/" + autoConfFile + "." + host.getHostAsString() + "." + variables.getProperty(VAR_SGE_CELL_NAME);
                 Debug.trace("Generating auto_conf file: '" + autoConfFile + "'.");
                 autoConfFile = Util.fillUpTemplate(autoConfTempFile, autoConfFile, variables);
-
-                //Execd must be an admin host before we start the installation
-                if (host.isExecutionHost()) {
-                    //TODO: We should execute this rather from the qmaster host
-                    String sgeBin = variables.getProperty(VAR_SGE_ROOT) + "/bin/" + host.getArchitecture() + "/";
-                    Debug.trace("Check whether the current host is an admin host.");
-                    CommandExecutor cmd = new CommandExecutor(variables, variables.getProperty(VAR_SHELL_NAME), variables.getProperty(VAR_QMASTER_HOST), sgeBin+"qconf", "-ah", host.getHostname());
-                    Map env = cmd.getEnvironment();
-                    env.put("SGE_ROOT", variables.getProperty(VAR_SGE_ROOT));
-                    env.put("SGE_CELL", variables.getProperty(VAR_SGE_CELL_NAME));
-                    env.put("SGE_QMASTER_PORT", variables.getProperty(VAR_SGE_QMASTER_PORT));
-                    env.put("SGE_EXECD_PORT", variables.getProperty(VAR_SGE_EXECD_PORT));
-                    cmd.execute();
-                }
+                new File(autoConfFile).deleteOnExit();
             }
             
             if (!isIsTestMode() && ! prereqFailed) {
                 //Need to copy the script to the final location first
                 //TODO: Do this only when not on a shared FS (file is not yet accessible)
-                //String localScript = "/tmp/install_component." + host.getHostAsString();
-                //Debug.trace("Copy auto_conf file to '" + localScript + "'.");
                 Debug.trace("Copy auto_conf file to '" + host.getHostname() + ":" + autoConfFile + "'.");
-                CommandExecutor cmd = new CommandExecutor(variables, variables.getProperty(VAR_COPY_COMMAND), autoConfFile, host.getHostname() + ":" + autoConfFile);
-                cmd.execute();                
+                CommandExecutor cmd = new CommandExecutor(variables, variables.getProperty(VAR_COPY_COMMAND), autoConfFile, host.getHostname() + ":" + autoConfFile, " && if [ ! -s "+autoConfFile+" ]; then echo 'File "+autoConfFile+" is empty.'; exit 1; fi");
+                cmd.execute();
                 exitValue = cmd.getExitValue();
                 if (exitValue == CommandExecutor.EXITVAL_TERMINATED) {
                     //Set the log content
                     log = "Timeout while copying the " + autoConfFile + " script to host " + host.getHostname() + " via " + variables.getProperty(VAR_COPY_COMMAND) + " command!\nMaybe a password is expected. Try the command in the terminal first.";
                     installModel.setHostLog(host, log);
-                    //TODO: EXITVAL_OTHER - log the error
+                } else if (exitValue != 0) {
+                    //TODO: output + error
+                    log = "Error when copying the file.";
+                    installModel.setHostLog(host, log);
                 } else {
                     new CommandExecutor(variables, variables.getProperty(VAR_SHELL_NAME),host.getHostAsString(), "chmod", "755", autoConfFile).execute();
                     cmd = new CommandExecutor(variables, 60000, //Set install timeout to 60secs

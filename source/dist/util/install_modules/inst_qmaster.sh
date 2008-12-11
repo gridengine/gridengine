@@ -1384,13 +1384,25 @@ AddHosts()
       if [ -f $TMPL -o -f $TMPL2 ]; then
          $INFOTEXT "\nCan't delete template files >%s< or >%s<" "$TMPL" "$TMPL2"
       else
-         PrintHostGroup @allhosts > $TMPL
-         Execute $SGE_BIN/qconf -Ahgrp $TMPL
-         Execute $SGE_BIN/qconf -sq > $TMPL
-         Execute sed -e "/qname/s/template/all.q/" \
-                     -e "/hostlist/s/NONE/@allhosts/" \
-                     -e "/pe_list/s/NONE/make/" $TMPL > $TMPL2
-         Execute $SGE_BIN/qconf -Aq $TMPL2
+		   #Issue if old qmaster is running, new installation succeeds, but in fact the old qmaster is still running!
+		   #Reinstall can cause, that these already exist. So we skip them if they already exist.
+		   if [ x`$SGE_BIN/qconf -shgrpl 2>/dev/null | grep '^@allhosts$'` = x ]; then
+            PrintHostGroup @allhosts > $TMPL
+            Execute $SGE_BIN/qconf -Ahgrp $TMPL
+			else
+			   $INFOTEXT "Skipping creation of <allhosts> hostgroup as it already exists"
+				$INFOTEXT -log "Skipping creation of <allhosts> hostgroup as it already exists"
+			fi
+			if [ x`$SGE_BIN/qconf -sql 2>/dev/null | grep '^all.q$'` = x ]; then
+            Execute $SGE_BIN/qconf -sq > $TMPL
+            Execute sed -e "/qname/s/template/all.q/" \
+                        -e "/hostlist/s/NONE/@allhosts/" \
+                        -e "/pe_list/s/NONE/make/" $TMPL > $TMPL2
+            Execute $SGE_BIN/qconf -Aq $TMPL2
+			else
+			   $INFOTEXT "Skipping creation of <all.q> queue as it already exists"
+				$INFOTEXT -log "Skipping creation of <all.q> queue  as it already exists"
+			fi
          rm -f $TMPL $TMPL2        
       fi
 

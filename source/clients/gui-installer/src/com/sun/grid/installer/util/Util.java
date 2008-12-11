@@ -550,7 +550,7 @@ public class Util implements Config{
     	BufferedWriter bufferedWriter     = null;
         VariableSubstitutor vs = new VariableSubstitutor(variables);
 
-        File f = File.createTempFile(resultFilePath, null);
+        File f = new File(resultFilePath);
     	
     	try {
     		bufferedReader = new BufferedReader(new FileReader(templateFilePath));

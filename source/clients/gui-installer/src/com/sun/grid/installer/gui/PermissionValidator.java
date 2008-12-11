@@ -68,7 +68,7 @@ public class PermissionValidator  implements Validator {
             } else if (actions[i].equals("execute") && !extendedFile.hasExecutePermission(userName, groupId)) {
                 return false;
             } else {
-                Debug.error("PermissionValidator - 'actions[i]' unknown action type! Should be: 'read' 'write' or 'execute'");
+                Debug.error("PermissionValidator - 'actions[i]="+actions[i]+"' unknown action type! Should be: 'read' 'write' or 'execute'");
             }
         }
 

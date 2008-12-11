@@ -3616,11 +3616,6 @@ CheckServiceAndPorts()
 
 CopyCA()
 {
-   if [ "$AUTO" = "true" -a "$CSP_COPY_CERTS" = "false" ]; then
-      $INFOTEXT -log "No CSP system installed!"
-      return 1
-   fi
-
    if [ "$CSP" = "false" -a \( "$WINDOWS_SUPPORT" = "false" -o "$WIN_DOMAIN_ACCESS" = "false" \) ]; then
       return 1
    fi
@@ -3745,16 +3740,24 @@ CopyCaToHostType()
 #
 GetAdminUser()
 {
-   if [ "$AUTOGUI" != true ]; then # We have it already
-      TMP_ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
-      if [ -n "$TMP_ADMINUSER" ]; then
-         ADMIN_USER=$TMP_ADMINUSER   
-      fi
+   if [ "$AUTO" = true ]; then
+	   #For auto we use template, since SGE_CELL might not yet exist
+	   TMP_CELL=$CELL_NAME
+   else
+	   TMP_CELL=$SGE_CELL
+   fi
+   #Try to get admin user from a bootstrap file
+   TMP_ADMINUSER=`cat $SGE_ROOT/$TMP_CELL/common/bootstrap 2>/dev/null | grep "admin_user" | awk '{ print $2 }'`
+   if [ -n "$TMP_ADMINUSER" ]; then
+      ADMINUSER=$TMP_ADMINUSER
+   elif [ "$AUTO" = true -o "$AUTOGUI" = true ]; then
+	   #For auto installations, if no bootstrap file use the value from the template
+	   ADMINUSER=$ADMIN_USER
    fi
    euid=`$SGE_UTILBIN/uidgid -euid`
 
    TMP_USER=`echo "$ADMINUSER" |tr "[A-Z]" "[a-z]"`
-   if [ \( -z "$TMP_USER" -o "$TMP_USER" = "none" \) ]; then
+   if [  -z "$TMP_USER" -o "$TMP_USER" = "none" ]; then
       if [ $euid = 0 ]; then
          ADMINUSER=default
       else

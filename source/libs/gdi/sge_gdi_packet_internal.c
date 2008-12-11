@@ -430,6 +430,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
 {
    bool ret = true;
    sge_pack_buffer pb;
+   bool pb_initialized = false;
    sge_pack_buffer rpb;
    sge_gdi_packet_class_t *ret_packet = NULL;
    int commlib_error;
@@ -493,6 +494,8 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
          if (pack_ret != PACK_SUCCESS) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, "unable to prepare packbuffer for sending request"));
             ret = false;
+         } else {
+            pb_initialized = true;
          }
       }
    }
@@ -541,7 +544,9 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
    }
 
    /* after this point we do no longer need pb - free its resources */
-   clear_packbuffer(&pb);
+   if (pb_initialized == true) {
+      clear_packbuffer(&pb);
+   }
 
    /* 
     * wait for response from master; also here keep care that commlib

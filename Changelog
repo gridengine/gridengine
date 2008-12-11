@@ -1,3 +1,7 @@
+CR-2008-12-11-1: Bugfix:      - fixed possible core dump in
+                                sge_gdi_packet_execute_external()
+                 Review:      RD
+
 RD-2008-12-11-0: Bugfix:      - platform was not correctly regonized on Vista
                               - corrected CSP directory name handling
                               - added check for execed_spool_dir name at installation

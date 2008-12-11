@@ -22,7 +22,7 @@ ZG-2008-12-11-0: Bugfix:      new label for Berkeley db server text field
 CR-2008-12-11-0: Cleanup:     final cleanup of poll() enhancements
                                  o added additional error handling if a poll()
                                    error POLLHUP, POLLERR or POLLNVAL
-                                 o disalbed error return when read() returns
+                                 o re-worked error return when read() returns
                                    zero data length which might be possible
                                    when using poll()
                                  o reset is_xxxx_selected flags in connection

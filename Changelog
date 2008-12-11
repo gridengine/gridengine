@@ -1,3 +1,9 @@
+JG-2008-12-11-0: Bugfix:      tightly integrated jobs: replaced client cache by
+                              environment variable SGE_RSH_COMMAND set by execd
+                 Bugster:     6695481
+                 Issue:       2393
+                 Review:      RD
+
 JG-2008-12-08-0: Bugfix:      auto install fails with spooling via BDB server
                  Bugster:     6767198
                  Issue:       2772

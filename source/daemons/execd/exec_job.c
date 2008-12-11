@@ -707,10 +707,29 @@ int err_length) {
       /* forward name of pe to job */
       if (lGetString(jatep, JAT_granted_pe) != NULL) {
          char buffer[SGE_PATH_MAX];
+         const lListElem *pe;
+
          var_list_set_string(&environmentList, "PE", lGetString(jatep, JAT_granted_pe));
          sprintf(buffer, "%s/%s/%s", execd_spool_dir, active_dir_buffer, PE_HOSTFILE);
          var_list_set_string(&environmentList, "PE_HOSTFILE", buffer);
-      }   
+
+         /* for tightly integrated jobs, also set the rsh_command SGE_RSH_COMMAND */
+         pe = lGetObject(jatep, JAT_pe_object);
+         if (pe != NULL && lGetBool(pe, PE_control_slaves) == true) {
+            const char *rsh_command = mconf_get_rsh_command();
+            if (rsh_command != NULL && sge_strnullcasecmp(rsh_command, "none") != 0) {
+               var_list_set_string(&environmentList, "SGE_RSH_COMMAND", rsh_command);
+            } else {
+               char default_buffer[SGE_PATH_MAX];
+               dstring default_dstring;
+
+               sge_dstring_init(&default_dstring, default_buffer, SGE_PATH_MAX);
+               sge_dstring_sprintf(&default_dstring, "%s/utilbin/%s/rsh", sge_root, arch);
+               var_list_set_string(&environmentList, "SGE_RSH_COMMAND", sge_dstring_get_string(&default_dstring));
+            }
+            FREE(rsh_command);
+         }
+      }
 
       /* forward name of ckpt env to job */
       if ((ep = lGetObject(jep, JB_checkpoint_object))) {
@@ -754,7 +773,7 @@ int err_length) {
             const char *lib_path = sge_getenv(lib_path_env);
 
             if (lib_path != NULL) {
-               var_list_set_string (&environmentList, lib_path_env, lib_path);
+               var_list_set_string(&environmentList, lib_path_env, lib_path);
             }
          }
          
@@ -1588,7 +1607,7 @@ int err_length) {
    if (i != 0) { /* parent or -1 */
       sigprocmask(SIG_SETMASK, &sigset_oset, NULL);
 
-      if(petep == NULL) {
+      if (petep == NULL) {
          /* nothing to be done for petasks: We do not signal single petasks, but always the whole jatask */
          lSetUlong(jep, JB_hard_wallclock_gmt, 0); /* in case we are restarting! */
          lSetUlong(jatep, JAT_pending_signal, 0);

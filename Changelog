@@ -1,3 +1,9 @@
+JG-2008-12-11-0: Bugfix:      tightly integrated jobs: replaced client cache by
+                              environment variable SGE_RSH_COMMAND set by execd
+                 Bugster:     6695481
+                 Issue:       2393
+                 Review:      RD
+
 ZG-2008-12-11-0: Bugfix:      new label for Berkeley db server text field
                  Bugfix:      hide the 'Remove existing component' checkbox and feature
                  Bugfix:      missing execd spool dir value at qmaster host

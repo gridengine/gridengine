@@ -669,6 +669,7 @@ public class Util implements Config{
 
         ExtendedFile file = new ExtendedFile(dir).getFirstExistingParent();
         Debug.trace("First existing parent of '" + dir + "' is '" + file.getAbsolutePath() +"'.");
+        dir = file.getAbsolutePath();
 
         try {
             // Call the 'fstype' script of the proper architecture

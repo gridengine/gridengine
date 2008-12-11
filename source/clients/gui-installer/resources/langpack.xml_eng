@@ -251,7 +251,7 @@ ___INFO__MARK_END__-->
         <str id="cfg.spooling.method.classic.label" txt="Classic" />
         <str id="cfg.spooling.method.bdb.label" txt="Berkeley db" />
         <str id="cfg.spooling.method.bdbserver.label" txt="Berkeley db spooling server" />
-        <str id="cfg.db.spooling.server.label" txt="Host" />
+        <str id="cfg.db.spooling.server.label" txt="Berkeley db host" />
         <str id="cfg.db.spooling.dir.label" txt="Db directory" />
         <!-- Tooltips -->
         <str id="cfg.qmaster.spool.dir.label.tooltip" txt="<html><b>Qmaster spool directory</b><br><br>

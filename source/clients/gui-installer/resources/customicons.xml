@@ -38,4 +38,5 @@ ___INFO__MARK_END__-->
     <icon res="/img/save_16.png" id="save"/>
     <icon res="/img/print_16.png" id="print"/>
     <icon res="/img/search.png" id="search"/>
+    <icon res="/img/error_small_16.png" id="error.small"/>
 </icons>

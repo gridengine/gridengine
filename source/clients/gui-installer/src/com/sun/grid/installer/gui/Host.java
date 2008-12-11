@@ -143,11 +143,7 @@ public class Host implements Config {
         this.submitHost = isSubmitHost;
         this.shadowHost = isShadowHost;
         this.executionHost = isExecutionHost;
-        if (isExecutionHost) {
-            this.spoolDir = execdSpoolDir;
-        } else {
-            this.spoolDir = "";
-        }
+        this.spoolDir = execdSpoolDir;
         this.state = state;
 
         checkArchDependencies();

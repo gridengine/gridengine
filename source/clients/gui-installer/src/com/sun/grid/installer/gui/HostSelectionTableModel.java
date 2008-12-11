@@ -86,7 +86,7 @@ public class HostSelectionTableModel extends SortedTableModel {
             case 3: return h.isQmasterHost();
             case 4: return h.isShadowHost();
             case 5: return h.isExecutionHost();
-            case 6: return h.getSpoolDir();
+            case 6: return h.getSpoolDir(); // TODO improve to show the spool dir only if the host is execution host
             case 7: return h.isAdminHost();
             case 8: return h.isSubmitHost();
             case 9: return h.isBdbHost();

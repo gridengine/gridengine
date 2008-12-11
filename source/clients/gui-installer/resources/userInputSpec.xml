@@ -52,7 +52,7 @@ ___INFO__MARK_END__-->
             </spec>
         </field>
         <field type="space" conditionid="cond.mode.install"/>
-        <field type="check" variable="add.remove.existing.components" ident="true">
+        <field type="check" variable="add.remove.existing.components" ident="true" conditionid="cond.false">
             <spec align="left" id="add.remove.existing.components.label" true="true" false="false" />
         </field>
     </panel>

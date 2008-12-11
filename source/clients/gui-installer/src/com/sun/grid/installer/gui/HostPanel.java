@@ -42,9 +42,12 @@ import com.sun.grid.installer.util.Util;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -148,18 +151,6 @@ public class HostPanel extends IzPanel implements Config {
         cancelB.setVisible(false);
         statusBar.setVisible(false);
 
-
-        //TODO: Error message must also disappear on key typed, but not on the validation hit
-		/*hostTF.addKeyListener(new KeyAdapter() {
-        @Override
-        public void keyTyped(KeyEvent e) {
-        super.keyTyped(e);
-        if (errorMessageVisible) {
-        statusBar.setVisible(false);
-        }
-        }
-        });*/
-
         hostTF.addMouseListener(new MouseAdapter() {
 
             @Override
@@ -170,15 +161,17 @@ public class HostPanel extends IzPanel implements Config {
                 }
             }
         });
-        hostTF.addFocusListener(new FocusAdapter() {
-
+        
+        hostTF.addKeyListener(new KeyAdapter() {
             @Override
-            public void focusGained(FocusEvent e) {
-                super.focusGained(e);
-                if (errorMessageVisible) {
+            public void keyTyped(KeyEvent e) {
+                if (e.getKeyChar() == '\n') {
+                    buttonActionPerformed(new ActionEvent(e.getSource(), e.getKeyCode(), e.paramString()));
+                } else if (errorMessageVisible) {
                     statusBar.setVisible(false);
                 }
             }
+
         });
 
         String[] selectionHeaders = getSelectionLabelVars();
@@ -421,7 +414,7 @@ public class HostPanel extends IzPanel implements Config {
         componentSelectionPanel.setLayout(componentSelectionPanelLayout);
         componentSelectionPanelLayout.setHorizontalGroup(
             componentSelectionPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 612, Short.MAX_VALUE)
+            .add(0, 666, Short.MAX_VALUE)
             .add(componentSelectionPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                 .add(componentSelectionPanelLayout.createSequentialGroup()
                     .addContainerGap()
@@ -436,7 +429,7 @@ public class HostPanel extends IzPanel implements Config {
                     .add(adminCB)
                     .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                     .add(submitCB)
-                    .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addContainerGap(62, Short.MAX_VALUE)))
         );
         componentSelectionPanelLayout.setVerticalGroup(
             componentSelectionPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -454,7 +447,8 @@ public class HostPanel extends IzPanel implements Config {
                     .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
         );
 
-        statusBar.setIcon(parent.icons.getImageIcon("installer.error"));
+        statusBar.setForeground(new java.awt.Color(255, 0, 0));
+        statusBar.setIcon(parent.icons.getImageIcon("error.small"));
 
         cancelB.setText(getLabel("button.cancel.label"));
         cancelB.setToolTipText(getTooltip("button.cancel.label.tooltip"));
@@ -472,10 +466,10 @@ public class HostPanel extends IzPanel implements Config {
                 .addContainerGap()
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(layout.createSequentialGroup()
-                        .add(tabbedPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1216, Short.MAX_VALUE)
+                        .add(tabbedPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1300, Short.MAX_VALUE)
                         .addContainerGap())
                     .add(layout.createSequentialGroup()
-                        .add(progressBar, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1100, Short.MAX_VALUE)
+                        .add(progressBar, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1184, Short.MAX_VALUE)
                         .add(9, 9, 9)
                         .add(cancelB)
                         .addContainerGap())
@@ -485,19 +479,18 @@ public class HostPanel extends IzPanel implements Config {
                             .add(fileRB))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(fileB)
                             .add(layout.createSequentialGroup()
-                                .add(fileB)
-                                .add(79, 79, 79)
-                                .add(statusBar, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 451, Short.MAX_VALUE)
-                                .add(100, 100, 100))
-                            .add(layout.createSequentialGroup()
-                                .add(hostTF, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 731, Short.MAX_VALUE)
+                                .add(hostTF, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 815, Short.MAX_VALUE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)))
                         .add(addB)
                         .add(284, 284, 284))
                     .add(layout.createSequentialGroup()
                         .add(componentSelectionPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap(616, Short.MAX_VALUE))))
+                        .addContainerGap(646, Short.MAX_VALUE))
+                    .add(layout.createSequentialGroup()
+                        .add(statusBar, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 413, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap())))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -507,17 +500,15 @@ public class HostPanel extends IzPanel implements Config {
                     .add(addB)
                     .add(hostTF, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                        .add(fileRB)
-                        .add(fileB))
-                    .add(layout.createSequentialGroup()
-                        .add(6, 6, 6)
-                        .add(statusBar, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 23, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(fileRB)
+                    .add(fileB))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(statusBar, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 23, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(componentSelectionPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 34, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(tabbedPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 356, Short.MAX_VALUE)
+                .add(tabbedPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 330, Short.MAX_VALUE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(cancelB, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -540,6 +531,8 @@ public class HostPanel extends IzPanel implements Config {
         setupComponentSelectionPanel();
         setColumnsWidth();
 
+        VariableSubstitutor vs = null;
+
         // Initialize the table(s) with the qmaster and the Berkeley DB host if it's necessary
         if (true) {
             try {
@@ -553,7 +546,7 @@ public class HostPanel extends IzPanel implements Config {
                 String message = "";
                 if (isQmasterInst && !isQmasterExist) {
                     host.add(idata.getVariable(VAR_QMASTER_HOST));
-                    resolveHosts(Host.Type.HOSTNAME, idata.getVariable(VAR_QMASTER_HOST), host, true, false, false, false, true, true, idata.getVariable(VAR_QMASTER_SPOOL_DIR));
+                    resolveHosts(Host.Type.HOSTNAME, idata.getVariable(VAR_QMASTER_HOST), host, true, false, false, false, true, true, idata.getVariable(VAR_EXECD_SPOOL_DIR));
 
                     if (HostSelectionTableModel.getQmasterHost() == null) {
                         try {
@@ -562,7 +555,7 @@ public class HostPanel extends IzPanel implements Config {
                             prop.setProperty(PARAMETER_1, arch);
                         }
                         
-                        VariableSubstitutor vs = new VariableSubstitutor(prop);
+                        vs = new VariableSubstitutor(prop);
                         message = vs.substituteMultiple(parent.langpack.getString("warning.qmaster.arch.unsupported.message"), null);
                         emitWarning(parent.langpack.getString("installer.warning"), message);
                     }
@@ -571,7 +564,7 @@ public class HostPanel extends IzPanel implements Config {
 
                 if (isBdbInst && !isBdbExist) {
                     host.add(idata.getVariable(VAR_DB_SPOOLING_SERVER));
-                    resolveHosts(Host.Type.HOSTNAME, idata.getVariable(VAR_DB_SPOOLING_SERVER), host, false, true, false, false, false, false, idata.getVariable(VAR_QMASTER_SPOOL_DIR));
+                    resolveHosts(Host.Type.HOSTNAME, idata.getVariable(VAR_DB_SPOOLING_SERVER), host, false, true, false, false, false, false, idata.getVariable(VAR_EXECD_SPOOL_DIR));
 
                     if (HostSelectionTableModel.getBdbHost() == null) {
                         try {
@@ -580,7 +573,7 @@ public class HostPanel extends IzPanel implements Config {
                             prop.setProperty(PARAMETER_1, arch);
                         }
 
-                        VariableSubstitutor vs = new VariableSubstitutor(prop);
+                        vs = new VariableSubstitutor(prop);
                         message = vs.substituteMultiple(parent.langpack.getString("warning.bdbserver.arch.unsupported.message"), null);
                         emitWarning(parent.langpack.getString("installer.warning"), message);
                     }
@@ -595,6 +588,8 @@ public class HostPanel extends IzPanel implements Config {
                 parent.unlockPrevButton();
             }
         }
+
+        vs = new VariableSubstitutor(idata.getVariables());
 
         /**
          * Check directories in express mode
@@ -621,9 +616,10 @@ public class HostPanel extends IzPanel implements Config {
 
                 Debug.trace("add.db.spooling.dir.bdb='" + idata.getVariable(VAR_DB_SPOOLING_DIR_BDB) + "'");
             }
-
-            // Check spooling dir at express mode and shadowd
         }
+
+        // In some cases the execd spool dir does not get substituted
+        idata.setVariable(VAR_EXECD_SPOOL_DIR, vs.substituteMultiple(idata.getVariable(VAR_EXECD_SPOOL_DIR), null));
     }
 
     @Override
@@ -996,7 +992,7 @@ public class HostPanel extends IzPanel implements Config {
         } else {
             spoolingDir = idata.getVariable(VAR_DB_SPOOLING_DIR_BDBSERVER);
         }
-        idata.setVariable(VAR_DB_SPOOLING_DIR, spoolingDir);
+        idata.setVariable(VAR_DB_SPOOLING_DIR, vs.substituteMultiple(spoolingDir, null));
 
         // cfg.spooling.method.berkeleydbserver
         variable = idata.getVariable(VAR_SPOOLING_METHOD_BERKELEYDBSERVER);
@@ -1014,7 +1010,9 @@ public class HostPanel extends IzPanel implements Config {
         idata.setVariable(VAR_DB_SPOOLING_SERVER, "none");
 
         // add.qmaster.host
-        idata.setVariable(VAR_QMASTER_HOST, "none");
+        if (isQmasterInst) {
+            idata.setVariable(VAR_QMASTER_HOST, "none");
+        }
 
         String tmpDomainName = "";
         boolean isVarWinSuppSet = false;

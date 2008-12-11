@@ -1,3 +1,18 @@
+ZG-2008-12-11-0: Bugfix:      new label for Berkeley db server text field
+                 Bugfix:      hide the 'Remove existing component' checkbox and feature
+                 Bugfix:      missing execd spool dir value at qmaster host
+                              added by default to host selection table
+                 Bugfix:      correcion of error label behaviour on HostPanel
+                 Bugfix:      in some cases the execd spool directory value
+                              does not gets substituted
+                 Bugfix:      qmaster has value 'none' in case of standalone
+                              execd/shadowd installation
+                 Bugfix:      get the FS type of the existing parent
+                 Enhancem.:   custom icon and red text color for the error label
+                              on HostPanel
+                 Enhancem.:   host resolving by pressing 'Enter' button
+                 Review:      LP
+
 CR-2008-12-11-0: Cleanup:     final cleanup of poll() enhancements
                                  o added additional error handling if a poll()
                                    error POLLHUP, POLLERR or POLLNVAL

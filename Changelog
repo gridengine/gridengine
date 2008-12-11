@@ -1,3 +1,6 @@
+RD-2008-12-11-1: CVS:         Created V62u2alpha3_TAG
+-----------------------------------------------------
+
 LP-2008-12-11-0: Bugfix:      ADMIN_USER not used in auto install mode
                  Bugfix:      When all.q or allhosts already exists qmaster
                               installation fails

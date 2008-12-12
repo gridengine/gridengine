@@ -1,3 +1,6 @@
+RD-2008-12-12-1: CVS:         Created V62u2beta_TAG
+---------------------------------------------------
+
 ZG-2008-12-12-0: Bugfix:      turn off bold fonts in case of Metal look-and-feel
                  Bugfix:      hide error label on host selection panel when input type gets modified
                  Bugfix:      show execd spool dir in host selection table only if the host signed as execd host

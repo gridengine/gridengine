@@ -163,14 +163,15 @@ void del_job_report(lListElem *jr)
 
 void cleanup_job_report(u_long32 jobid, u_long32 jataskid)
 {
-   lListElem *jr;
+   lListElem *jr, *jr_next;
    const void *iterator = NULL;
 
    DENTER(TOP_LAYER, "cleanup_job_report");
 
    /* get rid of job reports for all slave tasks */
-   jr = lGetElemUlongFirst(jr_list, JR_job_number, jobid, &iterator);
-   while (jr != NULL) {
+   jr_next = lGetElemUlongFirst(jr_list, JR_job_number, jobid, &iterator);
+   while ((jr = jr_next)) {
+      jr_next = lGetElemUlongNext(jr_list, JR_job_number, jobid, &iterator);
       if (lGetUlong(jr, JR_ja_task_number) == jataskid) {
          const char *s = lGetString(jr, JR_pe_task_id_str);
 
@@ -178,7 +179,6 @@ void cleanup_job_report(u_long32 jobid, u_long32 jataskid)
             jobid, jataskid, s?s:"master"));
          lRemoveElem(jr_list, &jr);
       }
-      jr = lGetElemUlongNext(jr_list, JR_job_number, jobid, &iterator);
    }
 
    DRETURN_VOID;

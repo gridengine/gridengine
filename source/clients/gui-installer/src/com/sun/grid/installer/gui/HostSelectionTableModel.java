@@ -86,7 +86,13 @@ public class HostSelectionTableModel extends SortedTableModel {
             case 3: return h.isQmasterHost();
             case 4: return h.isShadowHost();
             case 5: return h.isExecutionHost();
-            case 6: return h.getSpoolDir(); // TODO improve to show the spool dir only if the host is execution host
+            case 6: { // Show only if it is an ececution host
+                if (h.isExecutionHost()) {
+                    return h.getSpoolDir();
+                } else {
+                    return "";
+                }
+            }
             case 7: return h.isAdminHost();
             case 8: return h.isSubmitHost();
             case 9: return h.isBdbHost();
@@ -144,7 +150,12 @@ public class HostSelectionTableModel extends SortedTableModel {
             default: throw new IndexOutOfBoundsException("Invalid index rowIndex="+row+" columnIndex="+col);
         }
 
-        fireTableCellUpdated(row, col);        
+        fireTableCellUpdated(row, col);
+
+        // Update execd spool dir column too regarding to execd component selection
+        if (col == 5) {
+            fireTableCellUpdated(row, 6);
+        }
     }
 
     @Override
@@ -228,11 +239,11 @@ public class HostSelectionTableModel extends SortedTableModel {
             return;
         }
 
-        if (h.isQmasterHost()) {
+        if (h.equals(qmasterHost)) {
             qmasterHost = null;
         }
 
-        if (h.isBdbHost()) {
+        if (h.equals(bdbHost)) {
             bdbHost = null;
         }
 

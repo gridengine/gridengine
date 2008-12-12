@@ -152,7 +152,6 @@ public class HostPanel extends IzPanel implements Config {
         statusBar.setVisible(false);
 
         hostTF.addMouseListener(new MouseAdapter() {
-
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
@@ -172,6 +171,24 @@ public class HostPanel extends IzPanel implements Config {
                 }
             }
 
+        });
+
+        hostRB.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (!hostRB.isSelected() && errorMessageVisible) {
+                    statusBar.setVisible(false);
+                }
+            }
+        });
+
+        fileRB.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (!fileRB.isSelected() && errorMessageVisible) {
+                    statusBar.setVisible(false);
+                }
+            }
         });
 
         String[] selectionHeaders = getSelectionLabelVars();
@@ -531,7 +548,10 @@ public class HostPanel extends IzPanel implements Config {
         setupComponentSelectionPanel();
         setColumnsWidth();
 
-        VariableSubstitutor vs = null;
+        VariableSubstitutor vs = new VariableSubstitutor(idata.getVariables());;
+
+        // In some cases the execd spool dir does not get substituted
+        idata.setVariable(VAR_EXECD_SPOOL_DIR, vs.substituteMultiple(idata.getVariable(VAR_EXECD_SPOOL_DIR), null));
 
         // Initialize the table(s) with the qmaster and the Berkeley DB host if it's necessary
         if (true) {
@@ -585,11 +605,10 @@ public class HostPanel extends IzPanel implements Config {
             } catch (Exception e) {
                 Debug.error(e);
             } finally {
+                vs = null;
                 parent.unlockPrevButton();
             }
         }
-
-        vs = new VariableSubstitutor(idata.getVariables());
 
         /**
          * Check directories in express mode
@@ -617,9 +636,6 @@ public class HostPanel extends IzPanel implements Config {
                 Debug.trace("add.db.spooling.dir.bdb='" + idata.getVariable(VAR_DB_SPOOLING_DIR_BDB) + "'");
             }
         }
-
-        // In some cases the execd spool dir does not get substituted
-        idata.setVariable(VAR_EXECD_SPOOL_DIR, vs.substituteMultiple(idata.getVariable(VAR_EXECD_SPOOL_DIR), null));
     }
 
     @Override

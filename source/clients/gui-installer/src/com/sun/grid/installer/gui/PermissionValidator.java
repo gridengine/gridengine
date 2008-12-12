@@ -61,14 +61,20 @@ public class PermissionValidator  implements Validator {
         for (int i = 0; i < actions.length; i++) {
             actions[i] = actions[i].trim().toLowerCase();
             
-            if (actions[i].equals("read") && !extendedFile.hasReadPermission(userName, groupId)) {
-                return false;
-            } else if (actions[i].equals("write") && !extendedFile.hasWritePermission(userName, groupId)) {
-                return false;
-            } else if (actions[i].equals("execute") && !extendedFile.hasExecutePermission(userName, groupId)) {
-                return false;
+            if (actions[i].equals("read")) {
+                if (!extendedFile.hasReadPermission(userName, groupId)) {
+                    return false;
+                }
+            } else if (actions[i].equals("write")) {
+                if (!extendedFile.hasWritePermission(userName, groupId)) {
+                    return false;
+                }
+            } else if (actions[i].equals("execute")) {
+                if (!extendedFile.hasExecutePermission(userName, groupId)) {
+                    return false;
+                }
             } else {
-                Debug.error("PermissionValidator - 'actions[i]="+actions[i]+"' unknown action type! Should be: 'read' 'write' or 'execute'");
+                Debug.error("PermissionValidator - The is '"+actions[i]+"' unknown action type! Should be: 'read' 'write' or 'execute'");
             }
         }
 

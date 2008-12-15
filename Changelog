@@ -1,3 +1,10 @@
+JF-2008-12-15-0: Enhancem.:   Improvement of existing man pages
+                 Bugster:     6518002
+                 Issue:       0
+                 Bugster:     6784558
+                 Issue:       0
+                 Review:      MP
+
 LP-2008-12-15-1: Cleanup:     Removed debug output from the install_component
 
 LP-2008-12-15-0: Several gui-installer bugfixes

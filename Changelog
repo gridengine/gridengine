@@ -1,3 +1,5 @@
+LP-2008-12-15-1: Cleanup:     Removed debug output from the install_component
+
 LP-2008-12-15-0: Several gui-installer bugfixes
                  Bugfix:      Standalone execd installation does not work if not
                               started from qmaster host

@@ -448,7 +448,6 @@ if [ "$IS_EXECD" = true ]; then
          GenerateResultOutput "EXECD" "" $EXIT_PREVIOUS_COMPONENT_DETECTED
       fi
    fi
-set -vx
    QMASTER_HOST=`cat $SGE_ROOT/$CELL_NAME/common/act_qmaster 2>/dev/null`
    is_admin=`$SHELL_NAME $QMASTER_HOST "sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -sh 2>/dev/null | grep ${cfg.exec.host.list}'"`
    if [ -z "$is_admin" ]; then

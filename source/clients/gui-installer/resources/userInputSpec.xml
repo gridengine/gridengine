@@ -73,7 +73,7 @@ ___INFO__MARK_END__-->
                 <param name="file" value="/util/arch"/>
             </validator>
         </field>
-        <!-- BDB only installation must not check for anything -->
+        <!-- Cell name for qmaster installation -->
         <field type="text" variable="cfg.cell.name" conditionid="cond.install.qmaster">
             <spec id="cfg.cell.name.label" size="35" set="${cfg.cell.name}" />
             <validator id="cfg.cell.name.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
@@ -83,7 +83,8 @@ ___INFO__MARK_END__-->
                 <param name="exists" value="false"/>
             </validator>
         </field>
-        <field type="text" variable="cfg.cell.name" conditionid="!cond.install.qmaster">
+        <!-- Cell name for standalone execd/shadow/bdb installation -->
+        <field type="text" variable="cfg.cell.name" conditionid="!(cond.install.qmaster)+(cond.install.execd|cond.install.shadowd)">
             <spec id="cfg.cell.name.label" size="35" set="${cfg.cell.name}" />
             <validator id="cfg.cell.name.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
             <validator id="cfg.cell.name.notexists.fileexistsvalidator" class="com.sun.grid.installer.gui.FileExistsValidator">
@@ -91,6 +92,11 @@ ___INFO__MARK_END__-->
                 <param name="file" value="/common/bootstrap"/>
                 <param name="exists" value="true"/>
             </validator>
+        </field>
+        <!-- Cell name for standalone bdb installation -->
+        <field type="text" variable="cfg.cell.name" conditionid="!(cond.install.qmaster|cond.install.execd|cond.install.shadowd)">
+            <spec id="cfg.cell.name.label" size="35" set="${cfg.cell.name}" />
+            <validator id="cfg.cell.name.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
         </field>
         <field type="text" variable="cfg.sge.cluster.name" conditionid="cond.install.qmaster+cond.custom.install">
             <spec id="cfg.sge.cluster.name.label" size="35" />
@@ -146,6 +152,9 @@ ___INFO__MARK_END__-->
         </field>
         <field type="check" variable="add.sge.jmx" conditionid="cond.install.qmaster+cond.custom.install">
             <spec align="left" id="add.sge.jmx.label" true="true" false="false" />
+        </field>
+        <field type="check" variable="cfg.hostname.resolving" conditionid="cond.install.qmaster+cond.custom.install">
+            <spec align="left" id="cfg.hostname.resolving.label" true="true" false="false" />
         </field>
         <field type="space" />
         <field type="staticText" align="left" id="product.mode.statictext" conditionid="cond.install.qmaster+cond.custom.install" />

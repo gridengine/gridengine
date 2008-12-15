@@ -1044,14 +1044,14 @@ public class HostPanel extends IzPanel implements Config {
             }
 
             // cfg.hostname.resolving
-            if (!isVarHostResSet) {
-                if (!tmpDomainName.equals("") && !tmpDomainName.equals(Util.getDomainName(h.getHostname()))) {
-                    idata.setVariable(VAR_HOSTNAME_RESOLVING, "false");
-                    isVarHostResSet = true;
-                }
-                
-                tmpDomainName = Util.getDomainName(h.getHostname());
-            }
+//            if (!isVarHostResSet) {
+//                if (!tmpDomainName.equals("") && !tmpDomainName.equals(Util.getDomainName(h.getHostname()))) {
+//                    idata.setVariable(VAR_HOSTNAME_RESOLVING, "false");
+//                    isVarHostResSet = true;
+//                }
+//
+//                tmpDomainName = Util.getDomainName(h.getHostname());
+//            }
 
             // cfg.db.spooling.server
             if (h.isBdbHost()) {

@@ -67,7 +67,7 @@ public class Util implements Config{
     public enum SgeComponents { bdb, qmaster, shadowd, execd}
 
     final public static int RESOLVE_THREAD_POOL_SIZE = 8;
-    final public static int INSTALL_THREAD_POOL_SIZE = 2;
+    final public static int INSTALL_THREAD_POOL_SIZE = 8;
 
     // Currently we accept pattern in list of hosts in a file
     public static List<String> parseFileList(File f) throws FileNotFoundException {

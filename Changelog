@@ -1,3 +1,11 @@
+ZG-2208-12-15-0: Enhancem.:   Increase the number if concurrent install threads to 8
+                 Bugfix:      Wrong permission checking
+                 Bugfix:      Let the user set the HOSTNAME_RESOLVING value
+                 Bugfix:      In case of standalone BDB server installation don't
+                              check the directory of the cell
+                 Enhancem.:   Related to prev. bugfix; Improve rule engine to handle brackets.
+                 Review:      LP
+
 JF-2008-12-15-0: Enhancem.:   Improvement of existing man pages
                  Bugster:     6518002
                  Issue:       0

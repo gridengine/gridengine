@@ -130,6 +130,7 @@ ___INFO__MARK_END__-->
         <str id="cfg.copy.command.label" txt="Copy command" />
         <str id="cfg.add.to.rc.label" txt="Automatically start service(s) at machine boot" />
         <str id="add.sge.jmx.label" txt="Use JMX" />
+        <str id="cfg.hostname.resolving.label" txt="Ignore domain names" />
         <str id="product.mode.statictext" txt="Product mode" />
         <str id="add.product.mode.none.label" txt="None" />
         <str id="add.product.mode.csp.label" txt="CSP" />
@@ -176,6 +177,9 @@ ___INFO__MARK_END__-->
         <str id="add.sge.jmx.label.tooltip" txt="<html><b>Use JMX</b><br><br>
         The JMX agent functionality enables access to a subset of <code>sge_qmaster</code> functionality<br>
         via the JMX protocol.</html>" />
+        <str id="cfg.hostname.resolving.label" txt="<html><b>Ignore domain names</b><br><br>
+        Disable it if you plan to have hosts in the cluster from different domains.<br><br>
+        <b>Variable: </b><code>$HOSTNAME_RESOLVING</code></html>" />
         <str id="add.product.mode.none.label.tooltip" txt="None" />
         <str id="add.product.mode.csp.label.tooltip" txt="CSP" />
         <str id="add.product.mode.afs.label.tooltip" txt="AFS" />

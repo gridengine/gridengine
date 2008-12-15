@@ -117,6 +117,14 @@ ___INFO__MARK_END__-->
             <name>false</name>
             <value>true</value>
         </condition>
+        <condition type="variable" id="T">
+            <name>true</name>
+            <value>true</value>
+        </condition>
+        <condition type="variable" id="F">
+            <name>false</name>
+            <value>true</value>
+        </condition>
         <condition type="variable" id="cond.user.root">
             <name>user.name</name>
             <value>${root.user}</value>

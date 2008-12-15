@@ -23,7 +23,6 @@ public class PermissionValidator  implements Validator {
 
     public boolean validate(ProcessingClient client) {
         String file = client.getText();
-        String userName = GUIInstaller.getInstallData().getVariables().getProperty("USER_NAME");
         String[] actions = null;
 
         if (file.equals("")) {
@@ -31,6 +30,9 @@ public class PermissionValidator  implements Validator {
         }
 
         VariableSubstitutor vs = new VariableSubstitutor(GUIInstaller.getInstallData().getVariables());
+        String userName  = vs.substituteMultiple(GUIInstaller.getInstallData().getVariables().getProperty("user.name"), null);
+        String rootUser  = vs.substituteMultiple(GUIInstaller.getInstallData().getVariables().getProperty("root.user"), null);
+        String adminUser = vs.substituteMultiple(GUIInstaller.getInstallData().getVariables().getProperty("cfg.admin.user"), null);
 
 
         if (client.hasParams()) {
@@ -54,24 +56,26 @@ public class PermissionValidator  implements Validator {
 
         String groupId = Util.getUserGroup(userName);
 
+        String adminUserGroupId = Util.getUserGroup(adminUser);
+
         if (actions == null || actions.length == 0) {
             actions = new String[]{"read", "write", "execute"};
         }
 
         for (int i = 0; i < actions.length; i++) {
             actions[i] = actions[i].trim().toLowerCase();
-            
+
             if (actions[i].equals("read")) {
                 if (!extendedFile.hasReadPermission(userName, groupId)) {
-                    return false;
+                    return userName.equals(rootUser) && extendedFile.hasReadPermission(adminUser, adminUserGroupId);
                 }
             } else if (actions[i].equals("write")) {
                 if (!extendedFile.hasWritePermission(userName, groupId)) {
-                    return false;
+                    return userName.equals(rootUser) && extendedFile.hasReadPermission(adminUser, adminUserGroupId);
                 }
             } else if (actions[i].equals("execute")) {
                 if (!extendedFile.hasExecutePermission(userName, groupId)) {
-                    return false;
+                    return userName.equals(rootUser) && extendedFile.hasReadPermission(adminUser, adminUserGroupId);
                 }
             } else {
                 Debug.error("PermissionValidator - The is '"+actions[i]+"' unknown action type! Should be: 'read' 'write' or 'execute'");

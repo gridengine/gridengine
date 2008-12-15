@@ -1,3 +1,7 @@
+LP-2008-12-15-3: Bugfix:      gui-installer - permission validator fixed
+                 Bugfix:      gui-installer - fixed ignore domains field
+                 Review:      ZG
+
 LP-2008-12-15-2: Bugfix:      gui-installer - Missing content in html help pages
                  Review:      ZG
 

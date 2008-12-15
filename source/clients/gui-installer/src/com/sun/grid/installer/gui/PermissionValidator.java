@@ -34,6 +34,7 @@ public class PermissionValidator  implements Validator {
         String rootUser  = vs.substituteMultiple(GUIInstaller.getInstallData().getVariables().getProperty("root.user"), null);
         String adminUser = vs.substituteMultiple(GUIInstaller.getInstallData().getVariables().getProperty("cfg.admin.user"), null);
 
+Debug.trace("user="+userName+" root="+rootUser+" admin="+adminUser);
 
         if (client.hasParams()) {
                 Map<String, String> params = client.getValidatorParams();
@@ -71,11 +72,11 @@ public class PermissionValidator  implements Validator {
                 }
             } else if (actions[i].equals("write")) {
                 if (!extendedFile.hasWritePermission(userName, groupId)) {
-                    return userName.equals(rootUser) && extendedFile.hasReadPermission(adminUser, adminUserGroupId);
+                    return userName.equals(rootUser) && extendedFile.hasWritePermission(adminUser, adminUserGroupId);
                 }
             } else if (actions[i].equals("execute")) {
                 if (!extendedFile.hasExecutePermission(userName, groupId)) {
-                    return userName.equals(rootUser) && extendedFile.hasReadPermission(adminUser, adminUserGroupId);
+                    return userName.equals(rootUser) && extendedFile.hasExecutePermission(adminUser, adminUserGroupId);
                 }
             } else {
                 Debug.error("PermissionValidator - The is '"+actions[i]+"' unknown action type! Should be: 'read' 'write' or 'execute'");

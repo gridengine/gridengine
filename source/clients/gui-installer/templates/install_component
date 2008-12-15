@@ -353,10 +353,6 @@ IS_EXECD=$4
 IS_ADMIN=$5
 IS_SUBMIT=$6
 
-ARCH=`${cfg.sge.root}/util/arch`
-QCONF="${cfg.sge.root}/bin/$ARCH/qconf"
-UTILBIN="${cfg.sge.root}/utilbin/$ARCH/"
-LOCAL_HOST=`$UTILBIN/gethostname -name`
 
 #//TODO: Add magic exit codes (so we can perform multiple component installation at once)
 #//TODO: Check if SGE_ROOT is valid and needed files exists first!
@@ -452,32 +448,33 @@ if [ "$IS_EXECD" = true ]; then
          GenerateResultOutput "EXECD" "" $EXIT_PREVIOUS_COMPONENT_DETECTED
       fi
    fi
+set -vx
    QMASTER_HOST=`cat $SGE_ROOT/$CELL_NAME/common/act_qmaster 2>/dev/null`
-   is_admin=`$QCONF -sh 2>/dev/null | grep $LOCAL_HOST`
+   is_admin=`$SHELL_NAME $QMASTER_HOST "sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -sh 2>/dev/null | grep ${cfg.exec.host.list}'"`
    if [ -z "$is_admin" ]; then
-      #TODO: Does not work!
-      $SHELL_NAME $QMASTER_HOST 'SGE_ROOT=${cfg.sge.root} ; export SGE_ROOT ; SGE_CELL=${cfg.cell.name} ; export SGE_CELL ; SGE_QMASTER_PORT=${cfg.sge.qmaster.port} ; export SGE_QMASTER_PORT ; $QCONF -ah $LOCAL_HOST' >/dev/null 2>&1
+      $SHELL_NAME $QMASTER_HOST "sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -ah ${cfg.exec.host.list}'" >/dev/null 2>&1
    fi
    RES=`${cfg.sge.root}/inst_sge -x -noremote -autogui`
    if [ -z "$is_admin" ]; then
-      $QCONF -dh $LOCAL_HOST >/dev/null 2>&1
+      $SHELL_NAME $QMASTER_HOST "sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -dh ${cfg.exec.host.list}'" >/dev/null 2>&1
    fi
    GenerateResultOutput "EXECD" "$RES" $?
 fi
 
 SGE_CELL=${cfg.cell.name}
 if [ "$IS_ADMIN" = true ]; then
-   $QCONF -ah $LOCAL_HOST
+   $SHELL_NAME $QMASTER_HOST "sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -ah ${cfg.exec.host.list}'" >/dev/null 2>&1
 else
-   #Installation might need to add admin host before the install starts
-   $QCONF -dh $LOCAL_HOST
+   $SHELL_NAME $QMASTER_HOST "sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -dh ${cfg.exec.host.list}'" >/dev/null 2>&1
 fi
 
 if [ "$IS_SUBMIT" = true ]; then
-   $QCONF -as $LOCAL_HOST
+   $SHELL_NAME $QMASTER_HOST "sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -as ${cfg.exec.host.list}'" >/dev/null 2>&1
 else
-   $QCONF -ds $LOCAL_HOST
+   $SHELL_NAME $QMASTER_HOST "sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -ds ${cfg.exec.host.list}'" >/dev/null 2>&1
 fi
+
+#TODO: Could verify that ADMIN/SUBMIT was really performed by calling qconf -ss/-sh
 
 if [ -z "$EXIT_CODE" ]; then
    exit 0

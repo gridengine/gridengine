@@ -56,10 +56,9 @@ import java.awt.print.PrinterJob;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import javax.print.PrintService;
-import javax.print.PrintServiceLookup;
 import javax.swing.*;
 
 public class ResultPanel extends IzPanel implements Printable, Config {
@@ -79,12 +78,6 @@ public class ResultPanel extends IzPanel implements Printable, Config {
 	 */
 	public ResultPanel(InstallerFrame parent, InstallData idata) {
 		super(parent, idata, new IzPanelLayout());
-
-		VariableSubstitutor vs = new VariableSubstitutor(idata.getVariables());
-		
-		readmeTemplatePath = vs.substituteMultiple(idata.getVariable(VAR_README_TEMP_FILE), null);
-		readmePath = vs.substituteMultiple(idata.getVariable(VAR_README_FILE), null);
-        readmePath = insertTimeStampToFileName(readmePath);
 
 		// The info label.
 		add(LabelFactory.create(parent.langpack.getString("result.info.label"),
@@ -153,6 +146,18 @@ public class ResultPanel extends IzPanel implements Printable, Config {
 	 */
 	private void loadResult() {
 		try {
+            VariableSubstitutor vs = new VariableSubstitutor(idata.getVariables());
+            readmeTemplatePath = vs.substituteMultiple(idata.getVariable(VAR_README_TEMP_FILE), null);
+		    readmePath = vs.substituteMultiple(idata.getVariable(VAR_README_FILE), null);
+            readmePath = insertTimeStampToFileName(readmePath);
+            //TODO: Detect whole cluster settings
+            // Features - bootstrap (CSP, AFS, JMX)
+            // spooling - bootstrap (BDB server, bdb, classic)
+            // qmaster - act_qmaster
+            // shadowds - shadow_masters
+            // execd - qconf -sel
+            // submit hosts - qconf -ss
+            // admin hosts - qconf -sh
 			Util.fillUpTemplate(readmeTemplatePath, readmePath, idata.getVariables());
 			editorPane.setPage("file://" + readmePath);
 		} catch (Exception e) {
@@ -204,20 +209,20 @@ public class ResultPanel extends IzPanel implements Printable, Config {
     }
 
     private String insertTimeStampToFileName(String fileName) {
-        String[] splittedFileName = fileName.split(".");
+        String newName = "";
+        String[] splittedFileName = fileName.split("\\.");
 
         for (int i = 0; i < splittedFileName.length; i++) {
-            fileName += splittedFileName[i];
-
             if (i == splittedFileName.length - 1) {
-                fileName += generateTimeStamp();
+                newName += "_" + generateTimeStamp() + ".";
             }
+            newName += splittedFileName[i];
         }
-
-        return fileName;
+        
+        return newName;
     }
 
     private String generateTimeStamp() {
-        return new Date().toString();
+        return new SimpleDateFormat("yyyy.MM.dd_HH:mm:ss_z").format(new Date());
     }
 }

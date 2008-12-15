@@ -1068,6 +1068,48 @@ public class HostPanel extends IzPanel implements Config {
     private void installButtonActionPerformed() {
         Debug.trace("INSTALL");
         //lists.get(1).printList();
+
+        //Remove invalid components
+        Host o;
+
+        validList = lists.get(1);          //sort the current valid list
+        HostList tmpList = new HostList(); //in a copy of the hostlist
+        for (Host h : validList) {
+            o = new Host(h);
+            //Remove invalid components. They can't be installed!
+            if (o.isShadowHost() && !isShadowdInst) {
+                o.setShadowHost(false);
+            }
+            if (o.isExecutionHost() && !isExecdInst) {
+                o.setExecutionHost(false);
+            }
+            if (o.isQmasterHost() && !isQmasterInst) {
+               o.setQmasterHost(false);
+            }
+            if (o.isBdbHost() && !isBdbInst) {
+                o.setBdbHost(false);
+            }
+            //Set new state
+            o.setState(Host.State.READY_TO_INSTALL);
+            if (o.getComponentString().length() > 0) {
+               tmpList.add(o);
+            }
+        }
+        //And Check we have a components to install
+        boolean haveComponents = false;
+        for (Host h : tmpList) {
+            if (h.getComponentString().length() > 0) {
+                haveComponents = true;
+                break;
+            }
+        }
+        if (haveComponents == false) {
+            String message = new VariableSubstitutor(idata.getVariables()).substituteMultiple(parent.langpack.getString("warning.no.components.to.install.message"), null);
+            emitWarning(parent.langpack.getString("installer.warning"), message);
+            //We don't proceed with the installation
+            return;
+        }
+
         //set install mode
         installMode = true;
 
@@ -1099,29 +1141,6 @@ public class HostPanel extends IzPanel implements Config {
         //installList = new InstallHostList();
         final HostList installList = new HostList();
 
-        Host o;
-
-        validList = lists.get(1);          //sort the current valid list
-        HostList tmpList = new HostList(); //in a copy of the hostlist
-        for (Host h : validList) {
-            o = new Host(h);
-            //Remove invalid components. They can't be installed!
-            if (o.isShadowHost() && !isShadowdInst) {
-                o.setShadowHost(false);
-            }
-            if (o.isExecutionHost() && !isExecdInst) {
-                o.setExecutionHost(false);
-            }
-            if (o.isQmasterHost() && !isQmasterInst) {
-               o.setQmasterHost(false);
-            }
-            if (o.isBdbHost() && !isBdbInst) {
-                o.setBdbHost(false);
-            }
-            //Set new state
-            o.setState(Host.State.READY_TO_INSTALL);
-            tmpList.add(o);
-        }
         //Sort the hosts so that BDB is first and qmaster second
         //Find bdb and put it to the beggining
         Host h;
@@ -1453,9 +1472,10 @@ public class HostPanel extends IzPanel implements Config {
         if (parent == null) {
             return;
         }
-        if (b) {
+        JButton nextButton = parent.getNextButton();
+        if (b && !nextButton.isEnabled()) {
             parent.unlockNextButton();
-        } else {
+        } else if (!b && nextButton.isEnabled()) {
             parent.lockNextButton();
         }
     }
@@ -1621,7 +1641,6 @@ class UpdateInstallProgressTimerTask extends TimerTask {
     private String[] TABS;
     private Timer timer;
     private String prefix;
-    private boolean buttonDone;
 
     public UpdateInstallProgressTimerTask(final HostPanel panel, ThreadPoolExecutor tpe, Timer timer, final String colName, final String[] TABS, final String prefix) {
         super();
@@ -1641,7 +1660,6 @@ class UpdateInstallProgressTimerTask extends TimerTask {
         //mainBar.setString(prefix + " " + cur + " / " + max);
         mainBar.setStringPainted(true);
         mainBar.setVisible(true);
-        buttonDone = false;
         cancelButton = panel.getCancelButton();
         cancelButton.setVisible(true);
     }
@@ -1696,13 +1714,11 @@ class UpdateInstallProgressTimerTask extends TimerTask {
             mainBar.setVisible(false);
             cancelButton.setVisible(false);
 
-            if (panel.getHostListAt(1).size() > 0 && !buttonDone) {
+            if (panel.getHostListAt(1).size() > 0) {
                 panel.enableInstallButton(true);
                 if (HostPanel.installMode) {
                     panel.triggerInstallButton(false);
                 }
-
-                buttonDone = true;
             }
 
             // Jump to the Done tab if it's not empty. Otherwise jump to Failed tab.
@@ -1821,7 +1837,7 @@ class InstallTask extends TestableTask {
                     exitValue = (tmpExitValue != 0 && exitValue == 0) ? tmpExitValue : exitValue;
 
                     // Try to reach the host
-                    Debug.trace("Ping host(s): " + host.getHostAsString());
+                    /*Debug.trace("Ping host(s): " + host.getHostAsString());
                     if (exitValue == 0 && host.isQmasterHost()) {
                         if (!Util.pingHost(variables, host, "qmaster", 5)) {
                             log = "The installation finished but can not reach the 'qmaster' on host '" + host.getHostAsString() + "' at port '" + variables.getProperty(VAR_SGE_QMASTER_PORT) + "'.";
@@ -1834,7 +1850,7 @@ class InstallTask extends TestableTask {
                             log = "The installation finished but can not reach the 'execd' on host '" + host.getHostAsString() + "' at port '" + variables.getProperty(VAR_SGE_EXECD_PORT) + "'.";
                             exitValue = CommandExecutor.EXITVAL_OTHER;
                         }
-                    }
+                    }*/
                     installModel.setHostLog(host, log);
                 }
             }

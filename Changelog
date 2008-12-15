@@ -1,3 +1,18 @@
+LP-2008-12-15-0: Several gui-installer bugfixes
+                 Bugfix:      Standalone execd installation does not work if not
+                              started from qmaster host
+                 Bugfix:      Remove hosts does not remove host resolved hosts
+                 Bugfix:      Local commands should be executed locally (without
+                              a remote shell)
+                 Bugfix:      Install button may remain disabled when all
+                              hosts are removed
+                 Bugfix:      It's possible to start installation when no
+                              component are selected
+                 Bugfix:      Readme generated without a timestamp
+                 Bugfix:      Readme generated only for a default cell
+                 Enhacem.:    Shadow daemons not installed by default
+                 Review:      ZG
+
 RD-2008-12-12-1: CVS:         Created V62u2beta_TAG
 ---------------------------------------------------
 

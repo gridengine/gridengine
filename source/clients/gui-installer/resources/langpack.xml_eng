@@ -66,7 +66,7 @@ ___INFO__MARK_END__-->
     <str id="ResultPanel.headline" txt="Installation finished"/>
 
     <!--General texts-->
-    <str id="WelcomePanel.welcome" txt="<html>Welcome to the <b>${APP_NAME} ${APP_VER}</b> Installation Wizard.<br> This program will install the <b>${APP_NAME} ${APP_VER}</b> on your computer(s).  </html>" />
+    <str id="WelcomePanel.welcome" txt="<html>Welcome to the <b>${APP_NAME} ${APP_VER}</b> installation wizard.<br> This program will install the <b>${APP_NAME} ${APP_VER}</b> on your computer(s).  </html>" />
     
     <str id="state.new_unknown_host" txt="New unknown host"/>
     <str id="state.unknown_host" txt="Unknown host"/>
@@ -422,6 +422,7 @@ ___INFO__MARK_END__-->
         <!-- Messages -->
         <str id="warning.qmaster.arch.unsupported.message" txt="Architecture '${param1}' is not supported for qmaster installation!"/>
         <str id="warning.bdbserver.arch.unsupported.message" txt="Architecture '${param1}' is not supported for Berkeley db server installation!"/>
+        <str id="warning.no.components.to.install.message" txt="Cannot start installation. No componets are selected!"/>
         <str id="msg.previous.dependent.install.failed" txt="This installation depended on {0} installation which failed. Therefore it could not be started."/>
     <!-- Result Panel -->
         <!-- Labels -->

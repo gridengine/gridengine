@@ -32,7 +32,7 @@
 #___INFO__MARK_END__
 
 if [ "$1" = "debug" -o "$1" = "-debug" ]; then
-   FLAG="-DSTACKTRACE=true"
+   FLAGS="-DSTACKTRACE=true"
 fi
 
 #Detect JAVA
@@ -47,4 +47,9 @@ if [ ! -f "$JAVA_BIN" ]; then
    exit 1
 fi
 
-$JAVA_BIN $FLAG -Dswing.boldMetal=false -jar ./util/gui-installer/installer.jar
+#Try to detect platform
+#if [ x`./util/arch | grep 64` != x ]; then
+#   FLAGS="-d64 $FLAGS"
+#fi
+
+$JAVA_BIN $FLAGS -Dswing.boldMetal=false -jar ./util/gui-installer/installer.jar

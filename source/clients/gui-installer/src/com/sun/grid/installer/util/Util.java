@@ -172,7 +172,7 @@ public class Util implements Config{
             }
         }
         endL = System.currentTimeMillis();
-        System.out.println("Generating "+hostList.size()+" took "+ (endL-start)+"ms ("+(endL-start)*100/hostList.size()+" per 100 items)");
+        Debug.trace("Generating "+hostList.size()+" took "+ (endL-start)+"ms ("+(endL-start)*100/hostList.size()+" per 100 items)");
         return hostList.size() != 0 ? hostList : null;
     }
     

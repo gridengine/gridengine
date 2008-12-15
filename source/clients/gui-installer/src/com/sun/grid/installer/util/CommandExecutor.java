@@ -110,6 +110,10 @@ public class CommandExecutor implements Config {
             //Skip the copy command when on a local host
             if (isSameCommand(variables.getProperty(VAR_COPY_COMMAND), shellName)) {
                 destHost = tmp.get(tmp.size() - 1).split(":")[0];
+                //Some commands have attachaed additional check command via && if ....
+                if (destHost.startsWith(" && ")) {
+                    destHost = tmp.get(tmp.size() - 2).split(":")[0];
+                }
                 if (destHost.equalsIgnoreCase(Host.localHostName)) {
                     Debug.trace("Copying skipped: " + getSingleCommand(tmp));
                     exitValue = 0;

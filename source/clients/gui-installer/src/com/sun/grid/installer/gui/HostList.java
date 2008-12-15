@@ -296,7 +296,7 @@ public class HostList extends ArrayBlockingQueue<Host> {
 
     public void printList() {
         for (Host h : this) {
-            System.out.println(h.getHostname() + " IP: " + h.getIp() + " State:" + h.getState() + " Components: "+h.getComponentString());
+            Debug.trace(h.getHostname() + " IP: " + h.getIp() + " State:" + h.getState() + " Components: "+h.getComponentString());
         }
     }
 }

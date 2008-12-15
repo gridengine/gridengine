@@ -75,12 +75,12 @@ ___INFO__MARK_END__-->
         <h3>Grid Engine messages</h3>
         Grid Engine messages can be found at:<br>
         Startup messages can be found in SMF service log files.<br>
-        You can get the name of the log file by calling svcs -l &lg;SERVICE_NAME&gt;<br>
+        You can get the name of the log file by calling svcs -l &lt;SERVICE_NAME&gt;<br>
         E.g.: <code>svcs -l svc:/application/sge/qmaster:p10500</code><br>
         <br>
         After startup the daemons log their messages in their spool directories.<br>
         Qmaster:     <code>${cfg.qmaster.spool.dir}/messages</code><br>
-        Exec daemon: <code>&lg;execd_spool_dir&gt;/&lg;hostname&gt;/messages</code>
+        Exec daemon: <code>&lt;execd_spool_dir&gt;/&lt;hostname&gt;/messages</code>
 
         <h3>Grid Engine startup scripts</h3>
         Grid Engine startup scripts can be found at:<br>

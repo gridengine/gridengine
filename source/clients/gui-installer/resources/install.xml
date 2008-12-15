@@ -179,7 +179,7 @@ ___INFO__MARK_END__-->
         <variable name="user.group" value=""/>
         <variable name="install.qmaster" value="true"/>
         <variable name="install.execd" value="true"/>
-        <variable name="install.shadowd" value="true"/>
+        <variable name="install.shadowd" value="false"/>
         <variable name="install.bdb" value="false"/>
         <variable name="install.mode.express" value="1"/>
         <variable name="install.mode.custom" value="2"/>

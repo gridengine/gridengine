@@ -73,6 +73,7 @@ ___INFO__MARK_END__-->
                 <param name="file" value="/util/arch"/>
             </validator>
         </field>
+        <!-- BDB only installation must not check for anything -->
         <field type="text" variable="cfg.cell.name" conditionid="cond.install.qmaster">
             <spec id="cfg.cell.name.label" size="35" set="${cfg.cell.name}" />
             <validator id="cfg.cell.name.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
@@ -87,6 +88,7 @@ ___INFO__MARK_END__-->
             <validator id="cfg.cell.name.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
             <validator id="cfg.cell.name.notexists.fileexistsvalidator" class="com.sun.grid.installer.gui.FileExistsValidator">
                 <param name="dir" value="${cfg.sge.root}"/>
+                <param name="file" value="/common/bootstrap"/>
                 <param name="exists" value="true"/>
             </validator>
         </field>

@@ -235,7 +235,7 @@ public class HostSelectionTableModel extends SortedTableModel {
             return;
         }
         
-        if (!hostList.remove(h)) {
+        if (!hostList.removeUnchecked(h)) {
             return;
         }
 

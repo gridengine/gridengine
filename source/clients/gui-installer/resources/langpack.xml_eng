@@ -177,7 +177,7 @@ ___INFO__MARK_END__-->
         <str id="add.sge.jmx.label.tooltip" txt="<html><b>Use JMX</b><br><br>
         The JMX agent functionality enables access to a subset of <code>sge_qmaster</code> functionality<br>
         via the JMX protocol.</html>" />
-        <str id="cfg.hostname.resolving.label" txt="<html><b>Ignore domain names</b><br><br>
+        <str id="cfg.hostname.resolving.label.tooltip" txt="<html><b>Ignore domain names</b><br><br>
         Disable it if you plan to have hosts in the cluster from different domains.<br><br>
         <b>Variable: </b><code>$HOSTNAME_RESOLVING</code></html>" />
         <str id="add.product.mode.none.label.tooltip" txt="None" />

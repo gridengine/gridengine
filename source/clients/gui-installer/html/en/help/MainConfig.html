@@ -31,11 +31,65 @@
 ___INFO__MARK_END__-->
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
-  <head>
-    <title></title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  </head>
-  <body>
-    <h1>Main configuration</h1>
-  </body>
-</html>
+<BODY LANG="en-US" DIR="LTR">
+<H1>Main configuration</H1>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in">Admin user - SGE processes will
+	under this user name and certain directories will be onwed by this
+	user as well 
+	</P>
+	<LI><P STYLE="margin-bottom: 0in">Qmaster host - host that will run
+	qmaster daemon (main component), can be changed later in the host
+	selection 
+	</P>
+	<LI><P STYLE="margin-bottom: 0in">Grid Engine root directory - the
+	directory where you unpacked the SGE tar.gz archive or installed a
+	package (e.g.: rpm, pkg), must not contain an automounter prefix 
+	</P>
+	<LI><P STYLE="margin-bottom: 0in">Cell name - name of this Grid
+	Engine cell, a value that identifies an instance of a Grid Engine
+	when several instances run simultaneously 
+	</P>
+	<LI><P STYLE="margin-bottom: 0in">Cluster name - name of this Grid
+	Engine instance used by SMF on Solaris machines and also by
+	Accounting and Reporting console, in express installation mode it's
+	hidden and has a value p6444, there are follwoing naming
+	restrictions on this field: The cluster name must start with a
+	letter ([A-Za-z]), followed by letters, digits ([0-9]), dashes (&quot;-&quot;)
+	or underscores (&quot;_&quot;). 
+	</P>
+	<LI><P STYLE="margin-bottom: 0in">Qmaster port - a port that will be
+	used be the qmaster daemon 
+	</P>
+	<LI><P STYLE="margin-bottom: 0in">Execd port - a port that will be
+	used be the execution daemon 
+	</P>
+	<LI><P STYLE="margin-bottom: 0in">Group id range - range of
+	additional group ids, the group ids in this range must not be used
+	anywhere else, the size of the range determines how many cuncurrent
+	jobs can run in the Grid Engine, choose a safe large value 
+	</P>
+	<LI><P STYLE="margin-bottom: 0in">Shell name - remote shell to be
+	used when connection to remove hosts, must have ssh/rsh syntax,
+	expected values <TT>ssh</TT> or <TT>rsh</TT> 
+	</P>
+	<LI><P STYLE="margin-bottom: 0in">Copy command - remote copy command
+	to be used when copying files to remove hosts, must have scp/rcp
+	syntax, expected values <TT>scp</TT> or <TT>rcp</TT> 
+	</P>
+	<LI><P>Administrator email - email of Grid Engine administrator 
+	</P>
+</UL>
+<UL>
+	<LI><P>Use JMX - this checkbox triggers installation of JVM thread
+	in qmaster, currently only needed when you plan to install SDM 
+	</P>
+</UL>
+<UL>
+	<LI><P>Product mode - additional product modes <TT>csp</TT> or <TT>afs</TT>
+	can be selected here</P>
+</UL>
+<P><BR><BR>
+</P>
+</BODY>
+</HTML>

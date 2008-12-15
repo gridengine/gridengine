@@ -1,3 +1,6 @@
+LP-2008-12-15-2: Bugfix:      gui-installer - Missing content in html help pages
+                 Review:      ZG
+
 ZG-2208-12-15-0: Enhancem.:   Increase the number if concurrent install threads to 8
                  Bugfix:      Wrong permission checking
                  Bugfix:      Let the user set the HOSTNAME_RESOLVING value

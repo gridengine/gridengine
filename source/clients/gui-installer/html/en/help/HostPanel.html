@@ -31,11 +31,117 @@
 ___INFO__MARK_END__-->
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
-  <head>
-    <title></title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  </head>
-  <body>
-    <h1>Select Hosts</h1>
-  </body>
-</html>
+<BODY LANG="en-US" DIR="LTR">
+<H1>Select Hosts</H1>
+<P>This screen is where you select what hosts and what components you
+want to install. You may use component selection checkbox (not
+display in express mode) to perform more customized host
+selection.<BR>By default the qmaster host is added (based on <TT>Qmaster
+host</TT> value from the main configuration screen).</P>
+<P>We can choose hosts in two ways:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in">by a hostname or host name pattern
+		</P>
+	<LI><P STYLE="margin-bottom: 0in">by an IP address or IP address
+	pattern 
+	</P>
+</UL>
+<DL>
+	<DD>
+	<TABLE CELLPADDING=2 CELLSPACING=2>
+		<COL WIDTH=24>
+		<COL WIDTH=0>
+		<TR>
+			<TD>
+				<P><B>Note</B></P>
+				<P>The patterns do not support regular expression! Supported are
+				lists and numeric ranges.<BR>See examples below.</P>
+			</TD>
+		</TR>
+	</TABLE>
+</DL>
+<P>Examples:</P>
+<TABLE CELLPADDING=2 CELLSPACING=2 BORDER="1">
+	<TR>
+		<TH>
+			<P>Description</P>
+		</TH>
+		<TH>
+			<P>Input</P>
+		</TH>
+		<TH>
+			<P>Resolved as</P>
+		</TH>
+	</TR>
+	<TR>
+		<TD>
+			<P>Hostname</P>
+		</TD>
+		<TD>
+			<P><TT>grid00</TT></P>
+		</TD>
+		<TD>
+			<P><TT>grid00</TT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD>
+			<P>IP address</P>
+		</TD>
+		<TD>
+			<P><TT>192.168.0.1</TT></P>
+		</TD>
+		<TD>
+			<P><TT>192.168.0.1</TT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD>
+			<P>List of hosts</P>
+		</TD>
+		<TD>
+			<P><TT>grid00 grid01 grid05</TT></P>
+		</TD>
+		<TD>
+			<P><TT>grid00 grid01 grid05</TT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD>
+			<P>List of IP addresses</P>
+		</TD>
+		<TD>
+			<P><TT>192.168.0.1 192.168.0.2 192.168.0.5</TT></P>
+		</TD>
+		<TD>
+			<P><TT>192.168.0.1 192.168.0.2 192.168.0.5</TT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD>
+			<P>Host ranges</P>
+		</TD>
+		<TD>
+			<P><TT>grid[00-10]</TT></P>
+		</TD>
+		<TD>
+			<P><TT>grid00, grid01, ..., grid10</TT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD>
+			<P>Range of IP addresses</P>
+		</TD>
+		<TD>
+			<P><TT>192.168-169.0.50-60</TT></P>
+		</TD>
+		<TD>
+			<P><TT>192.168.0.50 ... 192.168.0.60, 192.169.0.50 ...
+			192.169.0.60</TT></P>
+		</TD>
+	</TR>
+</TABLE>
+<P><BR><BR>
+</P>
+</BODY>
+</HTML>

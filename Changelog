@@ -1,3 +1,9 @@
+ZG-2008-12-17-0: Bugfix:      mk_ascman: does not generate the '?pathrev=<BRANCH>'
+                              string to the end of the links inside man pages
+                 Revert:      mk_ascman: don't show the sge versions on the left
+                              side frame at the top
+                 Review:      LP
+
 JG-2008-12-11-0: Bugfix:      tightly integrated jobs: replaced client cache by
                               environment variable SGE_RSH_COMMAND set by execd
                  Bugster:     6695481

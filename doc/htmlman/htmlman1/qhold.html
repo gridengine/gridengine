@@ -16,7 +16,7 @@ DESCRIPTION
      for execution.  As long as any type of hold is assigned to a
      job, the job is not eligible for scheduling.
 
-     Holds can be removed with the <B><A HREF="../htmlman1/qrls.html">qrls(1)</A></B> or the <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>  com-
+     Holds can be removed with the <B><A HREF="../htmlman1/qrls.html?pathrev=V62_BRANCH">qrls(1)</A></B> or the <B><A HREF="../htmlman1/qalter.html?pathrev=V62_BRANCH">qalter(1)</A></B>  com-
      mand.
 
      There are three different types of holds:
@@ -35,8 +35,8 @@ DESCRIPTION
      If no hold type is specified with the -h option (see  below)
      the user hold is assumed by default.
 
-     An alternate way to assign holds to jobs is the  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>  or
-     the <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B> command (see the -<I>h</I> option).
+     An alternate way to assign holds to jobs is the  <B><A HREF="../htmlman1/qsub.html?pathrev=V62_BRANCH">qsub(1)</A></B>  or
+     the <B><A HREF="../htmlman1/qalter.html?pathrev=V62_BRANCH">qalter(1)</A></B> command (see the -<I>h</I> option).
 
 OPTIONS
      -h {u|o|s},...
@@ -62,7 +62,7 @@ OPTIONS
 
           If present, the <I>task</I>_<I>range</I> restricts the effect of  the
           <I>qhold</I>  operation  to the array job task range specified
-          as suffix to the job id (see the -t option  to  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>
+          as suffix to the job id (see the -t option  to  <B><A HREF="../htmlman1/qsub.html?pathrev=V62_BRANCH">qsub(1)</A></B>
           for further details on array jobs).
 
           The task range specifier has the  form  n[-m[:s]].  The
@@ -74,91 +74,39 @@ OPTIONS
           the current user.
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     GE_ROOT        Specifies the location  of  the  Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
+     GE_CELL        If set, specifies  the  default  Grid  Engine
                     cell.  To  address  a  Grid Engine cell <I>qhold</I>
                     uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable SGE_CELL, if it is
+                         environment  variable  GE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     SGE_DEBUG_LEVEL
-                    If  set,  specifies  that  debug  information
+     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
 
-     SGE_QMASTER_PORT
+     GE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B>  is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>, <B><A HREF="../htmlman1/qrls.html">qrls(1)</A></B>, <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>.
+     <B><A HREF="../htmlman1/ge_intro.html?pathrev=V62_BRANCH">ge_intro(1)</A></B>, <B><A HREF="../htmlman1/qalter.html?pathrev=V62_BRANCH">qalter(1)</A></B>, <B><A HREF="../htmlman1/qrls.html?pathrev=V62_BRANCH">qrls(1)</A></B>, <B><A HREF="../htmlman1/qsub.html?pathrev=V62_BRANCH">qsub(1)</A></B>.
 
 COPYRIGHT
-     See  <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>  for  a  full  statement  of  rights   and
-     permissions.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+     See <B><A HREF="../htmlman1/ge_intro.html?pathrev=V62_BRANCH">ge_intro(1)</A></B> for a full statement of rights  and  permis-
+     sions.
 </PRE>
 <HR>
 <ADDRESS>

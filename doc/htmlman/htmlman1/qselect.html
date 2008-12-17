@@ -16,7 +16,7 @@ DESCRIPTION
      described below. The output of <I>qselect</I> can be fed into other
      Grid  Engine commands to apply actions on the selected queue
      sets. For  example  together  with  the  -<I>mqattr</I>  option  to
-     <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,  <I>qselect</I> can be used to modify queue attributes on
+     <B><A HREF="../htmlman1/qconf.html?pathrev=V62_BRANCH">qconf(1)</A></B>,  <I>qselect</I> can be used to modify queue attributes on
      a set of queues.
 
 OPTIONS
@@ -44,7 +44,7 @@ OPTIONS
           only meaningful in  conjunction  with  another  <I>qselect</I>
           option  to  extract a subset of queue names from a list
           given by -q.  Description of <I>wc</I>_<I>queue</I> can be  found  in
-          <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
+          <B><A HREF="../htmlman1/sge_types.html?pathrev=V62_BRANCH">sge_types(1)</A></B>.
 
      -qs {a|c|d|o|s|u|A|C|D|E|S}
           This option allows to filter  for  queue  instances  in
@@ -68,50 +68,51 @@ EXAMPLES
      the output to those queues with access  permission  for  the
      users  <I>andreas</I>  and  <I>shannon</I>.  The third command changes the
      queue attribute <I>h</I>_<I>vmem</I> to 1 Gigabyte on queues  residing  on
-     Linux  machines (see the <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> manual page for details on
-     the -<I>mattr</I> option  and  the  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>  manual  page  on
+     Linux  machines (see the <B><A HREF="../htmlman1/qconf.html?pathrev=V62_BRANCH">qconf(1)</A></B> manual page for details on
+     the -<I>mattr</I> option  and  the  <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62_BRANCH">queue_conf(5)</A></B>  manual  page  on
      details of queue configuration entries).
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     GE_ROOT        Specifies the location  of  the  Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
+     GE_CELL        If set, specifies  the  default  Grid  Engine
                     cell.  To  address a Grid Engine cell <I>qselect</I>
                     uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable SGE_CELL, if it is
+                         environment  variable  GE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     SGE_DEBUG_LEVEL
-                    If  set,  specifies  that  debug  information
+     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
 
-     SGE_QMASTER_PORT
+     GE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B>  is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
 
 FILES
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                     Grid Engine master host file
-
+     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
+                    Grid Engine master host file
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>, <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>, <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>, <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,
+     <B><A HREF="../htmlman1/ge_intro.html?pathrev=V62_BRANCH">ge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html?pathrev=V62_BRANCH">qconf(1)</A></B>, <B><A HREF="../htmlman1/qmod.html?pathrev=V62_BRANCH">qmod(1)</A></B>, <B><A HREF="../htmlman1/qstat.html?pathrev=V62_BRANCH">qstat(1)</A></B>, <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62_BRANCH">queue_conf(5)</A></B>,
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/ge_intro.html?pathrev=V62_BRANCH">ge_intro(1)</A></B> for a full statement of rights  and  permis-
      sions.
+
+
+
 
 
 

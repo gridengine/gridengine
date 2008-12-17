@@ -12,17 +12,23 @@ DESCRIPTION
      then inherited by the jobs executing under that project.
 
      A list of currently configured projects can be displayed via
-     the  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>  -sprjl  option. The contents of each enlisted
+     the  <B><A HREF="../htmlman1/qconf.html?pathrev=V62_BRANCH">qconf(1)</A></B>  -sprjl  option. The contents of each enlisted
      project definition can be shown via the  -sprj  switch.  The
      output  follows the <I>project</I> format description. New projects
      can be created and existing can be modified via  the  -aprj,
-     -mprj and -dprj options to <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>.
+     -mprj and -dprj options to <B><A HREF="../htmlman1/qconf.html?pathrev=V62_BRANCH">qconf(1)</A></B>.
+
+     Note, Grid Engine allows backslashes (\) be used  to  escape
+     newline (\newline) characters. The backslash and the newline
+     are replaced  with  a  space  ("  ")  character  before  any
+     interpretation.
 
 FORMAT
      A project definition contains the following parameters:
 
   name
-     The project name.
+     The  project   name   as   defined   for   <I>project</I>_<I>name</I>   in
+     <B><A HREF="../htmlman1/sge_types.html?pathrev=V62_BRANCH">sge_types(1)</A></B>.
 
   oticket
      The amount of override tickets  currently  assigned  to  the
@@ -32,27 +38,21 @@ FORMAT
      The current functional share of the project.
 
   acl
-     A list of user access  lists  (ACLs  -  see  <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>)
+     A list of user access  lists  (ACLs  -  see  <B><A HREF="../htmlman5/access_list.html?pathrev=V62_BRANCH">access_list(5)</A></B>)
      referring to those users being allowed to submit jobs to the
      project.
 
   xacl
-     A list of user access  lists  (ACLs  -  see  <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>)
+     A list of user access  lists  (ACLs  -  see  <B><A HREF="../htmlman5/access_list.html?pathrev=V62_BRANCH">access_list(5)</A></B>)
      referring to those users being not allowed to submit jobs to
      the project.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>, <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>.
+     <B><A HREF="../htmlman1/ge_intro.html?pathrev=V62_BRANCH">ge_intro(1)</A></B>, <B><A HREF="../htmlman1/ge_types.html?pathrev=V62_BRANCH">ge_types(1)</A></B>, <B><A HREF="../htmlman1/qconf.html?pathrev=V62_BRANCH">qconf(1)</A></B>, <B><A HREF="../htmlman5/access_list.html?pathrev=V62_BRANCH">access_list(5)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/ge_intro.html?pathrev=V62_BRANCH">ge_intro(1)</A></B> for a full statement of rights  and  permis-
      sions.
-
-
-
-
-
-
 
 </PRE>
 <HR>

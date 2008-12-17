@@ -13,28 +13,35 @@ DESCRIPTION
      by the sign "@" as first character of the name.
 
      A list of currently configured host  group  entries  can  be
-     displayed  via  the <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> -shgrpl option. The contents of
+     displayed  via  the <B><A HREF="../htmlman1/qconf.html?pathrev=V62_BRANCH">qconf(1)</A></B> -shgrpl option. The contents of
      each enlisted host group entry can be shown via  the  -shgrp
      switch. The output follows the <I>hostgroup</I> format description.
      New host group entries can be created and  existing  can  be
      modified  via  the -ahgrp, -mhgrp, -dhgrp and -?attr options
-     to <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>.
+     to <B><A HREF="../htmlman1/qconf.html?pathrev=V62_BRANCH">qconf(1)</A></B>.
+
+     Note, Grid Engine allows backslashes (\) be used  to  escape
+     newline (\newline) characters. The backslash and the newline
+     are replaced  with  a  space  ("  ")  character  before  any
+     interpretation.
 
 FORMAT
      A host group entry contains following parameters:
 
-  group_name keyword
-     The group_name keyword defines the  host  group  name.  Host
-     group names have to begin with a '@' character.
-
+  group_name
+     The group_name defines the host group name. Host group names
+     have  to  begin  with  an  '@'  character  as  explained for
+     <I>hostgroup</I>_<I>name</I> in <B><A HREF="../htmlman5/sge_types.html?pathrev=V62_BRANCH">sge_types(5)</A></B>.
 
   hostlist
-     The name of all hosts and host groups which are  now  member
-     of the group specified with group_name. If The first charac-
-     ter of the hostname is a "@" sign the name is used to refer-
-     ence  a  <B><A HREF="../htmlman5/hostgroup.html">hostgroup(5)</A></B>  which  is  taken as sub group of this
-     group. Default for this parameter is NONE
+     The name of all hosts and host groups  (see  <I>host</I>_<I>identifier</I>
+     in  <B><A HREF="../htmlman1/sge_types.html?pathrev=V62_BRANCH">sge_types(1)</A></B>)  which  are  member  of the group. As list
+     separators white-spaces are supported  only.  Default  value
+     for this parameter is NONE.
 
+     Note, if the first character of the  <I>host</I>_<I>identifier</I>  is  an
+     "@"  sign the name is used to reference a <B><A HREF="../htmlman5/hostgroup.html?pathrev=V62_BRANCH">hostgroup(5)</A></B> which
+     is taken as sub group of this group.
 
 
 EXAMPLE
@@ -52,18 +59,11 @@ EXAMPLE
 
 
 SEE ALSO
-     <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>
+     <B><A HREF="../htmlman1/ge__types.html?pathrev=V62_BRANCH">ge__types(1)</A></B>, <B><A HREF="../htmlman1/qconf.html?pathrev=V62_BRANCH">qconf(1)</A></B>
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/ge_intro.html?pathrev=V62_BRANCH">ge_intro(1)</A></B> for a full statement of rights  and  permis-
      sions.
-
-
-
-
-
-
-
 
 
 

@@ -11,39 +11,138 @@ DESCRIPTION
      attributes  are  types.  The  syntax  for  these  types   is
      explained in this page.
 
-TYPES
-     The syntax of Grid Engine types in alphabetic order:
+OBJECT TYPES
+     These types are used for defining Grid Engine configuration:
+
+  calendar_name
+     A calendar name is  the  name  of  a  Grid  Engine  calendar
+     described in <B><A HREF="../htmlman5/calendar_conf.html?pathrev=V62_BRANCH">calendar_conf(5)</A></B>.
+
+     <I>calendar</I>_<I>name</I> := <I>object</I>_<I>name</I>
+
+  ckpt_name
+     A "ckpt_name" is the name of  a  Grid  Engine  checkpointing
+     interface described in <B><A HREF="../htmlman5/checkpoint.html?pathrev=V62_BRANCH">checkpoint(5)</A></B>.
+
+     <I>ckpt</I>_<I>name</I> := <I>object</I>_<I>name</I>
+
+  complex_name
+     A complex name is the name of a Grid Engine resource  attri-
+     bute described in <B><A HREF="../htmlman5/complex.html?pathrev=V62_BRANCH">complex(5)</A></B>.
+
+     <I>complex</I>_<I>name</I> := <I>object</I>_<I>name</I>
+
+  host_identifier
+     A host identifier can be either a host name or a host  group
+     name.
+
+     <I>host</I>_<I>identifier</I> := <I>host</I>_<I>name</I> | <I>hostgroup</I>_<I>name</I>
+
+  hostgroup_name
+     A host group name is the name of a Grid  Engine  host  group
+     described  in <B><A HREF="../htmlman5/hostgroup.html?pathrev=V62_BRANCH">hostgroup(5)</A></B>.  Note, to allow host group names
+     easily be differed from host names a "@" prefix is used.
+
+     <I>hostgroup</I>_<I>name</I> := @<I>object</I>_<I>name</I>
+
+  host_name
+     A host name is the official name of a host node. Host  names
+     with a domain specification such as "gridmaster.sun.com" are
+     called fully-qualified host names, whereas host  names  like
+     "gridmaster"  are  called  short host names. Note, there are
+     the install time parameters default_domain  and  ignore_fqdn
+     (see  <B><A HREF="../htmlman5/bootstrap.html?pathrev=V62_BRANCH">bootstrap(5)</A></B>)  which affect how Grid Engine deals with
+     host names in general.
+
+  memory_specifier
+     Memory specifiers are positive decimal, hexadecimal or octal
+     integer  constants  which  may  be  followed by a multiplier
+     letter. Valid multiplier letters are k, K, m, M,  g  and  G,
+     where  k  means  multiply  the  value by 1000, K multiply by
+     1024, m multiply by 1000*1000, M multiply  by  1024*1024,  g
+     multiply by 1000*1000*1000 and G multiply by 1024*1024*1024.
+     If no multiplier is present, the value is  just  counted  in
+     bytes.
+
+  pe_name
+     A "pe_name" is the name of a Grid Engine  parallel  environ-
+     ment described in <B><A HREF="../htmlman5/sge_pe.html?pathrev=V62_BRANCH">sge_pe(5)</A></B>.
+
+     <I>pe</I>_<I>name</I> := <I>object</I>_<I>name</I>
+
+  project_name
+     A project  name  is  the  name  of  a  Grid  Engine  project
+     described in <B><A HREF="../htmlman5/project.html?pathrev=V62_BRANCH">project(5)</A></B>.
+
+     <I>project</I>_<I>name</I> := <I>object</I>_<I>name</I>
+
+  queue_name
+     A queue name is the name of a Grid Engine queue described in
+     <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62_BRANCH">queue_conf(5)</A></B>.
+
+     <I>queue</I>_<I>name</I>  := <I>object</I>_<I>name</I>
+
+  time_specifier
+     A time specifier either consists of a positive decimal, hex-
+     adecimal  or octal integer constant, in which case the value
+     is interpreted to be in seconds, or is built  by  3  decimal
+     integer  numbers  separated  by  colon signs where the first
+     number counts the hours, the  second  the  minutes  and  the
+     third  the seconds. If a number would be zero it can be left
+     out but the separating colon must remain (e.g. 1:0:1 =  1::1
+     means 1 hours and 1 second).
+
+  user_name
+     A user name can be the name of a <B><A HREF="../htmlman1/login.html?pathrev=V62_BRANCH">login(1)</A></B>  user  or  of  the
+     Grid Engine user object described in <B><A HREF="../htmlman5/user.html?pathrev=V62_BRANCH">user(5)</A></B>.
+
+     <I>user</I>_<I>name</I> := <I>object</I>_<I>name</I>
+
+  userset_name
+     A user set name is the name of an Grid Engine access list or
+     department described in <B><A HREF="../htmlman5/access_list.html?pathrev=V62_BRANCH">access_list(5)</A></B>.
+
+     <I>userset</I>_<I>name</I> := <I>object</I>_<I>name</I>
+
+  object_name
+     An object name is a sequence  of  up  to  512  ASCII  string
+     characters except "\n", "\t", "\r", " ", "/", ":", "'", "\",
+     "[", "]", "{", "}", "|", "(", ")", "@", "%", ","  or  the  "
+     character itself.
+
+MATCHING TYPES
+     These types are used for matching Grid Engine configuration:
 
   expression
-     The wildcard expression is a regular boolean expression that
-     consists  of  a couple of <I>pattern</I>'s joined by boolean opera-
-     tors and priority brackets. When ever  expression  are  used
-     the following definition applies:
+     A wildcard expression is a regular boolean  expression  that
+     consists  of  one  or more <I>pattern</I>s joined by boolean opera-
+     tors. When a wildcard  expression  is  used,  the  following
+     definition applies:
 
-     expression= ["!"] ["("] valExp [")"] [ AND_OR expression  ]*
-     valExp  = pattern | expression AND_OR  = "&amp;" | "|"
+     expression= ["!"] ["("] valExp [")"] [ AND_OR expression ]*
+     valExp  = pattern | expression
+     AND_OR  = "&amp;" | "|"
 
      where:
 
-     "!"     not operator negate the following pattern or expresion
-     "&amp;"     and operator logically and with the following expression
-     "|"     or operator logically or with the following expression
-     "("     open bracket begin the priority evaluated expression. The close bracket is required
-     ")"     close bracket ends the priority evaluated expression.
-     "pattern"see the <I>pattern</I> definition
+     "!"       not operator -- negate the following pattern or expression
+     "&amp;"       and operator -- logically and with the following expression
+     "|"       or operator -- logically or with the following expression
+     "("       open bracket -- begin an inner expression.
+     ")"       close bracket -- end an inner expression.
+     "pattern" see the <I>pattern</I> definition that's follow
 
-     The wildcard expresion itself should  be  put  into  '"'  to
-     ensure, that the clients get the expression.
+     The expression itself should be put inside quotes  ('"')  to
+     ensure that clients receive the complete expression.
 
      e.g.
-          "!(lx*|sol*)&amp;*64*"not begin with lx or sol, but contain
-          64 "(rh_3*|suse_[89]*)&amp;!rh_3.1"attribute rh_3*, suse_8*
-          or suse_9*, but do not on a rh_3.1
-
+          "(lx*|sol*)&amp;*64*" any string beginning with either "lx" or
+                            "sol" and containing "64"
+          "rh_3*&amp;!rh_3.1"   any string beginning with "rh_3", except
+                            "rh_3.1"
 
   pattern
-     When  ever  patterns  are  used  the  following   definition
-     applies:
+     When patterns are used the following definitions apply:
 
      "*"     matches any character and any number of characters
              (between 0 and inv).
@@ -54,15 +153,13 @@ TYPES
              characters for one character at a specific position.
              Character ranges may be specified using the a-z notation.
              The caret symbol (^) is not interpreted as a logical
-             not; it is intrepreted literally.
+             not; it is interpreted literally.
 
      For more details please see
-     <B><A HREF="../htmlman5/fnmatch.html">fnmatch(5)</A></B>
+     <B><A HREF="../htmlman5/fnmatch.html?pathrev=V62_BRANCH">fnmatch(5)</A></B>
 
-
-     The pattern itself should be put into '"'  to  ensure,  that
-     the clients get the pattern. The or '|' operator is not sup-
-     ported.
+     The pattern itself should be  put  inside  quotes  ('"')  to
+     ensure that clients receive the complete pattern.
 
   range
      The task range specifier has the form
@@ -74,6 +171,20 @@ TYPES
      the complete task id range.  Each  range  may  be  a  single
      number,  a  simple  range  of the form n-m or a range with a
      step size.
+
+  wc_ar
+     The wildcard advance reservation  (AR)  specification  is  a
+     placeholder for AR ids, AR names including AR name patterns.
+     An AR id always references one AR, while the name  and  pat-
+     tern might reference multiple ARs.
+
+     wc_ar := ar_id | ar_name | pattern
+
+  wc_ar_list
+     The wildcard advance  reservation  (AR)  list  specification
+     allows to reference multiple ARs with one command.
+
+     wc_ar_list := wc_ar [ , wc_ar , ...]
 
   wc_host
      A  wildcard  host  specification  (<I>wc</I>_<I>host</I>)  is  a  wildcard
@@ -93,7 +204,7 @@ TYPES
      ('@').
 
      More information concerning hostgroups can be found in <I>host-</I>
-     <B><A HREF="../htmlman5/group.html">group(5)</A></B>
+     <B><A HREF="../htmlman5/group.html?pathrev=V62_BRANCH">group(5)</A></B>
 
      e.g.
           @*           all hostgroups in the cluster
@@ -101,15 +212,15 @@ TYPES
 
   wc_job
      The wildcard job specification is a placeholder for job ids,
-     job  names  include job name pattern. A job id always refer-
-     ences one job, while the names and pattern  might  reference
-     multiple jobs.
+     job  names  including  job  name  patterns.  A job id always
+     references one job, while the name and pattern might  refer-
+     ence multiple jobs.
 
      wc_job := job-id | job-name | pattern
 
   wc_job_range
      The wildcard job range  specification  allows  to  reference
-     specific  array  tasks  for  one or multipe jobs. The job is
+     specific  array  tasks  for one or multiple jobs. The job is
      referenced via wc_job and in addition gets a range specifier
      for the array tasks.
 
@@ -129,7 +240,7 @@ TYPES
 
      If present, the <I>task</I>_<I>range</I> restricts the effect of the  <I>qmod</I>
      operation to the array job task range specified as suffix to
-     the job id (see the -t option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> for further details
+     the job id (see the -t option to <B><A HREF="../htmlman1/qsub.html?pathrev=V62_BRANCH">qsub(1)</A></B> for further details
      on array jobs).
 
   wc_qdomain
@@ -159,6 +270,7 @@ TYPES
      or more cluster queues used in  the  cluster.   That  string
      never contains an at-character ('@'), even if the expression
      begins with a wildcard character.
+
      e.g.
           *            all cluster queues
           a*           all cluster queues beginning with an 'a'
@@ -173,7 +285,7 @@ TYPES
      wildcard expression hostname (<I>wc</I>_<I>host</I>).
 
      <I>wc</I>_<I>qinstance</I> expressions are used  to  address  a  group  of
-     queue instances whose underlying hostname matches the given
+     queue  instances whose underlying hostname matches the given
      expression.  Please note that the first character of <I>wc</I>_<I>host</I>
      does never match the at-character '@'.
 
@@ -200,6 +312,7 @@ TYPES
                            "big_" ,but does not end with "1"
           *@fangorn        all qinstances residing on host
                            fangorn
+
 
   wc_queue_list
      <I>wc</I>_<I>queue</I>_<I>list</I> := <I>wc</I>_<I>queue</I> ["," <I>wc</I>_<I>queue</I> "," ...]
@@ -232,32 +345,74 @@ TYPES
 
      wc_pe_name := pe_name | pattern
 
+  parallel_env n[-[m]]|[-]m,...
+     Parallel programming environment (PE) to select for  an  AR.
+     The range descriptor behind the PE name specifies the number
+     of parallel processes to be run. Grid Engine  will  allocate
+     the  appropriate resources as available. The <B><A HREF="../htmlman5/ge_pe.html?pathrev=V62_BRANCH">ge_pe(5)</A></B> manual
+     page contains information about the definition  of  PEs  and
+     about how to obtain a list of currently valid PEs.
+
+     You can specify a PE name which uses the wildcard character,
+     "*".   Thus  the  request  "pvm*"  will  match  any parallel
+     environment with a name starting with the string  "pvm".  In
+     the case of multiple parallel environments whose names match
+     the name string, the  parallel  environment  with  the  most
+     available slots is chosen.
+
+     The range specification is a list of  range  expressions  of
+     the  form  "n-m",  where  n  and  m  are  positive, non-zero
+     integers.  The form "n" is equivalent to  "n-n".   The  form
+     "-m" is equivalent to "1-m".  The form "n-" is equivalent to
+     "n-infinity".  The range specification is processed as  fol-
+     lows:  The  largest  number  of  queues requested is checked
+     first. If enough queues meeting the specified attribute list
+     are  available,  all  are reserved. If not, the next smaller
+     number of queues is checked, and so forth.
+
+  date_time
+     The date_time value must conform to  [[CC]]YY]MMDDhhmm[.SS],
+     where:
+
+     e.g.
+          CC           denotes the century in 2 digits.
+          YY           denotes the year in 2 digits.
+          MM           denotes the month in 2 digits.
+          DD           denotes the day in 2 digits.
+          hh           denotes the hour in 2 digits.
+          mm           denotes the minute in 2 digits.
+          ss           denotes the seconds in 2 digits (default 00).
+
+  time
+     The time value must conform to hh:mm:ss, or seconds where:
+
+     e.g.
+          hh denotes the hour in 2 digits.
+          mm denotes the minute in 2 digits.
+          ss denotes the seconds in 2 digits (default 00).
+          seconds  is a number of seconds (is used for duration values)
+
+          If any of the optional date  fields  are  omitted,  the
+          corresponding  value of the current date is assumed. If
+          CC is not specified, a YY of &lt; 70 means 20YY.
+          Use of this option may cause unexpected results if  the
+          clocks  of the hosts in the Grid Engine pool are out of
+          sync. Also, the proper behavior  of  this  option  very
+          much  depends on the correct setting of the appropriate
+          timezone, e.g. in  the  TZ  environment  variable  (see
+          <B><A HREF="../htmlman1/date.html?pathrev=V62_BRANCH">date(1)</A></B>  for  details),  when  the  Grid Engine daemons
+          <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B> and <B><A HREF="../htmlman8/ge_execd.html?pathrev=V62_BRANCH">ge_execd(8)</A></B> are invoked.
+
+  name
+     The name may be any arbitrary alphanumeric ASCII string, but
+     may  not contain  "\n", "\t", "\r", "/", ":", "@", "\", "*",
+     or "?".
+
 SEE ALSO
-     <B><A HREF="../htmlman1/qacct.html">qacct(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>, <B><A HREF="../htmlman1/qquota.html">qquota(1)</A></B>
+     <B><A HREF="../htmlman1/qacct.html?pathrev=V62_BRANCH">qacct(1)</A></B>, <B><A HREF="../htmlman1/qconf.html?pathrev=V62_BRANCH">qconf(1)</A></B>, <B><A HREF="../htmlman1/qquota.html?pathrev=V62_BRANCH">qquota(1)</A></B>, <B><A HREF="../htmlman1/qsub.html?pathrev=V62_BRANCH">qsub(1)</A></B>, <B><A HREF="../htmlman1/qrsub.html?pathrev=V62_BRANCH">qrsub(1)</A></B>
 
 COPYRIGHT
      Copyright: 2004-2007 by Sun Microsystems, Inc.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

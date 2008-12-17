@@ -1,0 +1,116 @@
+<HTML>
+<BODY BGCOLOR=white>
+<PRE>
+<!-- Manpage converted by man2html 3.0.1 -->
+NAME
+     qrdel - delete Grid Engine Advance Reservations (AR)
+
+SYNTAX
+     qrdel [-f] [-help [-u wc_user_list] wc_ar_list
+
+DESCRIPTION
+     <I>Qrdel</I> provides a means for a user/operator/manager to delete
+     one  or  more  Advance Reservations (AR). A manager/operator
+     can delete ARs belonging to any user, while a  regular  user
+     can  only  delete his or her own ARs.  If a manager wants to
+     delete another user's AR, the manager can specify the AR id.
+     By  default,  "qrdel  wc_ar_name"  will  delete only the ARs
+     belonging to that user. A manager is able to delete  another
+     user's  AR  via  "-u  wc_user_list". Jobs referring to an AR
+     tagged for deletion will also be removed. Only if  all  jobs
+     referring to an AR are removed from the Grid Engine database
+     will the AR also be removed.
+
+     <I>Qrdel</I> deletes ARs in the order in which the  AR  identifiers
+     are   presented.   Find  additional  information  concerning
+     <I>wc</I>_<I>user</I>_<I>list</I> and <I>wc</I>_<I>ar</I>_<I>list</I> in <B><A HREF="../htmlman1/sge_types.html?pathrev=V62_BRANCH">sge_types(1)</A></B>.
+
+OPTIONS
+     -f   Force action for AR. The AR and the jobs using  the  AR
+          are deleted from the Grid Engine queuing system even if
+          the  <B><A HREF="../htmlman8/ge_execd.html?pathrev=V62_BRANCH">ge_execd(8)</A></B>  controlling  the  AR  jobs  does  not
+          respond   to   the   delete   request   sent   by   the
+          <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B>.
+          Users which have neither Grid Engine manager nor opera-
+          tor  status  can  only  use the -f option for their own
+          ARs.
+
+     -help
+          Prints a list of all options.
+
+     -u wc_user_list
+          Deletes only those ARs which were  submitted  by  users
+          specified  in  the list of usernames.  For managers, it
+          is possible to use qrdel -u "*" to delete all  ARs  for
+          all  users.  If a manager wants to delete a specific AR
+          for a user, he has to specify the user and the  AR  id.
+          If  no  AR is specified, all ARs belonging to that user
+          are deleted.
+
+     wc_ar_list
+          A list of AR id's that should be deleted
+
+ENVIRONMENTAL VARIABLES
+     GE_ROOT        Specifies the location  of  the  Grid  Engine
+                    standard configuration files.
+
+     GE_CELL        If set, specifies  the  default  Grid  Engine
+                    cell.  To  address  a  Grid Engine cell <I>qrdel</I>
+                    uses (in the order of precedence):
+
+                         The name of the cell  specified  in  the
+                         environment  variable  GE_CELL, if it is
+                         set.
+
+                         The  name  of  the  default  cell,  i.e.
+                         default.
+
+
+     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
+                    should  be written to stderr. In addition the
+                    level of detail in which debug information is
+                    generated is defined.
+
+     GE_QMASTER_PORT
+                    If set, specifies the tcp port on  which  the
+                    <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B>  is expected to listen for com-
+                    munication requests.  Most installations will
+                    use  a  service  map  entry  for  the service
+                    "sge_qmaster" instead of defining the port.
+
+FILES
+     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
+                    Grid Engine master host file
+
+SEE ALSO
+     <B><A HREF="../htmlman1/ge_intro.html?pathrev=V62_BRANCH">ge_intro(1)</A></B>, <B><A HREF="../htmlman1/qrstat.html?pathrev=V62_BRANCH">qrstat(1)</A></B>,  <B><A HREF="../htmlman1/qrsub.html?pathrev=V62_BRANCH">qrsub(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html?pathrev=V62_BRANCH">qsub(1)</A></B>,  <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B>,
+     <B><A HREF="../htmlman8/ge_execd.html?pathrev=V62_BRANCH">ge_execd(8)</A></B>.
+
+COPYRIGHT
+     See <B><A HREF="../htmlman1/ge_intro.html?pathrev=V62_BRANCH">ge_intro(1)</A></B> for a full statement of rights  and  permis-
+     sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+<HR>
+<ADDRESS>
+Man(1) output converted with
+<a href="http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a>
+</ADDRESS>
+</BODY>
+</HTML>

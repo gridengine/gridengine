@@ -39,7 +39,7 @@ DESCRIPTION
           DRMAA_PS_FAILED              job finished, but failed
 
      Jobs' user hold and user suspend states  can  be  controlled
-     via  <B><A HREF="../htmlman3/drmaa_control.html">drmaa_control(3)</A></B>.  For affecting system hold and system
+     via  <B><A HREF="../htmlman3/drmaa_control.html?pathrev=V62_BRANCH">drmaa_control(3)</A></B>.  For affecting system hold and system
      suspend states the appropriate Grid Engine  interfaces  must
      be used.
 
@@ -48,7 +48,7 @@ DESCRIPTION
      Grid  Engine  jobs.  <I>jobid</I> may contain either an Grid Engine
      jobid or `DRMAA_JOB_IDS_SESSION_ALL' to refer  to  all  jobs
      submitted    during   the   DRMAA   session   opened   using
-     <B><A HREF="../htmlman3/drmaa_init.html">drmaa_init(3)</A></B>.  Legal values for <I>action</I> and  their  meanings
+     <B><A HREF="../htmlman3/drmaa_init.html?pathrev=V62_BRANCH">drmaa_init(3)</A></B>.  Legal values for <I>action</I> and  their  meanings
      are:
 
           DRMAA_CONTROL_SUSPEND        suspend the job
@@ -59,40 +59,39 @@ DESCRIPTION
 
      The DRMAA suspend/resume operations are  equivalent  to  the
      use  of  `-s  &lt;jobid&gt;'  and  `-us &lt;jobid&gt;' options with Grid
-     Engine  <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>.   The  DRMAA  hold/release  operations  are
-     equivalent  to  the use of Grid Engine <B><A HREF="../htmlman1/qhold.html">qhold(1)</A></B> and <B><A HREF="../htmlman1/qrls.html">qrls(1)</A></B>.
+     Engine  <B><A HREF="../htmlman1/qmod.html?pathrev=V62_BRANCH">qmod(1)</A></B>.   The  DRMAA  hold/release  operations  are
+     equivalent  to  the use of Grid Engine <B><A HREF="../htmlman1/qhold.html?pathrev=V62_BRANCH">qhold(1)</A></B> and <B><A HREF="../htmlman1/qrls.html?pathrev=V62_BRANCH">qrls(1)</A></B>.
      The DRMAA terminate operation is equivalent to  the  use  of
-     Grid Engine <B><A HREF="../htmlman1/qdel.html">qdel(1)</A></B>.  Only user hold and user suspend can be
-     controlled via <B><A HREF="../htmlman3/drmaa_control.html">drmaa_control(3)</A></B>.  For affecting system  hold
+     Grid Engine <B><A HREF="../htmlman1/qdel.html?pathrev=V62_BRANCH">qdel(1)</A></B>.  Only user hold and user suspend can be
+     controlled via <B><A HREF="../htmlman3/drmaa_control.html?pathrev=V62_BRANCH">drmaa_control(3)</A></B>.  For affecting system  hold
      and system suspend states the appropriate Grid Engine inter-
      faces must be used.
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     GE_ROOT        Specifies the location  of  the  Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
+     GE_CELL        If set, specifies  the  default  Grid  Engine
                     cell  to  be  used.  To address a Grid Engine
                     cell Grid Engine uses (in the order  of  pre-
                     cedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable SGE_CELL, if it is
+                         environment  variable  GE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     SGE_DEBUG_LEVEL
-                    If  set,  specifies  that  debug  information
+     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
 
-     SGE_QMASTER_PORT
+     GE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B>  is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map entry instead to define
                     that port.
@@ -146,7 +145,7 @@ ERRORS
      The job is not in a hold state.
 
 SEE ALSO
-     <B><A HREF="../htmlman3/drmaa_submit.html">drmaa_submit(3)</A></B>and <B><A HREF="../htmlman3/drmaa_wait.html">drmaa_wait(3)</A></B>.
+     <B><A HREF="../htmlman3/drmaa_submit.html?pathrev=V62_BRANCH">drmaa_submit(3)</A></B>and <B><A HREF="../htmlman3/drmaa_wait.html?pathrev=V62_BRANCH">drmaa_wait(3)</A></B>.
 
 
 

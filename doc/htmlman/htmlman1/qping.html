@@ -13,8 +13,8 @@ SYNTAX
 DESCRIPTION
      <I>Qping</I> is used to validate  the  runtime  status  of  a  Grid
      Engine  service  daemon. The current Grid Engine implementa-
-     tion allows one to query the SGE_QMASTER daemon and any run-
-     ning  SGE_EXECD  daemon. The qping command is used to send a
+     tion allows one to query the GE_QMASTER daemon and any  run-
+     ning  GE_EXECD  daemon.  The qping command is used to send a
      SIM (Status Information Message) to the destination  daemon.
      The communication layer of the specified daemon will respond
      with a SIRM (Status Information Response Message) which con-
@@ -120,13 +120,16 @@ OPTIONS
               THREAD_NAME: THREAD_STATE (THREAD_TIME)
 
               THREAD_NAME:
-                 EDT:  Event Delivery Thread
-                 TET:  Timed Event Thread
-                 MT:   Message Thread(s)
-                 SIGT: SIGnal Thread
+                 MAIN: Main thread
+                 signaler: Signal thread
+                 event_master: Event master thread
+                 timer: Timer thread
+                 worker: Worker thread
+                 listener: Listener thread
+                 scheduler: Scheduler thread
+                 jvm: Java thread
 
-                 In addition to these thread names, the name can contain a thread number (for example:
-                 <B><A HREF="../htmlman1/MT.html">MT(1)</A></B>), when multiple instances of this thread are running.
+                 The thread names above will be followed by a 3 digit number.
 
               THREAD_STATE:
                  R: Running
@@ -154,8 +157,9 @@ OPTIONS
            TIME:
               Time since last timestamp updating.
 
-        After the thread information follows an additional infor-
-        mation string which describes the application status.
+        After  the  thread  information  follows  an   additional
+        information   string   which  describes  the  application
+        status.
 
   <I>Monitor</I>:  If available, displays statistics on  a  thread.  The
   data  for  each  thread is displayed in one line. The format of
@@ -182,7 +186,7 @@ OPTIONS
 
   -noalias
      Ignore   host_aliases   file,   which    is    located    at
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>host</I>_<I>aliases</I>.   If  this  option is
+     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>host</I>_<I>aliases</I>.   If  this  option  is
      used it is not necessary to set any Grid Engine  environment
      variable.
 
@@ -193,7 +197,7 @@ OPTIONS
      to connect to services running SSL. If the SGE settings file
      is  not  sourced,  you  have  to  use the -noalias option to
      bypass the need for the SGE_ROOT environment variable.   The
-     following  environment  variables  are used to specifiy your
+     following  environment  variables  are  used to specify your
      certificates:
        SSL_CA_CERT_FILE - CA certificate file
        SSL_CERT_FILE    - certificates file
@@ -210,13 +214,14 @@ OPTIONS
      Dump output will not have a linebreak within a  message  and
      binary messages are not unpacked.
 
+
   -dump
      This option allows an administrator to observe the  communi-
      cation  protocol  data flow of a Grid Engine service daemon.
      The qping -dump instruction must be started as root  and  on
      the same host where the observed daemon is running.
 
-     The output is written to  stdout.  The  enviroment  variable
+     The output is written to stdout.  The  environment  variable
      "SGE_QPING_OUTPUT_FORMAT"  can be set to hide columns, set a
      default column width or to set a hostname output format. The
      value of the environment variable can be set to any combina-
@@ -249,16 +254,16 @@ OPTIONS
            of  debugging.   This  option  is not currently imple-
            mented.
         -dump_tag MSG
-           This option  has  the  same  behaviour  as  the  -dump
-           option.
+           This option has the same behavior as the -dump option.
 
 
   host
      Host where daemon is running.
 
 
+
   port
-     Port which daemon has bound (used sge_qmaster/sge_execd port
+     Port which daemon has bound (used  ge_qmaster/ge_execd  port
      number).
 
 
@@ -306,23 +311,18 @@ EXAMPLES
 
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     GE_ROOT        Specifies the location  of  the  Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
+     GE_CELL        If set, specifies  the  default  Grid  Engine
                     cell.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,       <B><A HREF="../htmlman5/SGE_H_ALIASES.html">SGE_H_ALIASES(5)</A></B>,        <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,
-     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>.
+     <B><A HREF="../htmlman1/ge_intro.html?pathrev=V62_BRANCH">ge_intro(1)</A></B>, <B><A HREF="../htmlman5/GE_H_ALIASES.html?pathrev=V62_BRANCH">GE_H_ALIASES(5)</A></B>, <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B>, <B><A HREF="../htmlman8/ge_execd.html?pathrev=V62_BRANCH">ge_execd(8)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/ge_intro.html?pathrev=V62_BRANCH">ge_intro(1)</A></B> for a full statement of rights  and  permis-
      sions.
-
-
-
-
 
 
 

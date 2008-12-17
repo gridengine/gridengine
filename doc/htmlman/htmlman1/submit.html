@@ -285,6 +285,21 @@ OPTIONS
           (see  -jsv  option  below or find more information con-
           cerning JSV in <B><A HREF="../htmlman1/jsv.html">jsv(1)</A></B>)
 
+          Please note that submission of command as script (-b n)
+          can  have  a significant performance impact, especially
+          for short running jobs and  big  job  scripts.   Script
+          submission  adds  a number of operations to the submis-
+          sion process:  The job script needs to be
+          - parsed at client side (for special comments)
+          - transferred from submit client to qmaster
+          - spooled in qmaster
+          - transferred to execd at job execution
+          - spooled in execd
+          - removed from spooling both in execd and qmaster once the job is done
+          If job scripts are available on  the  execution  nodes,
+          e.g.  via  NFS,  binary  submission  can  be the better
+          choice.
+
      -c occasion_specifier
           Available for <I>qsub</I> and <I>qalter</I> only.
 
@@ -627,6 +642,7 @@ OPTIONS
           pleted.  If any array task of the referenced jobs exits
           with exit code 100, the dependent tasks of the  submit-
           ted job will remain ineligible for execution.
+
           With the help of job names or regular pattern  one  can
           specify  a  job  dependency on multiple jobs satisfying
           the regular pattern or on all jobs with  the  requested
@@ -887,6 +903,7 @@ OPTIONS
           Available for <I>qsub</I>, <I>qrsh</I>, <I>qsh</I>, <I>qlogin</I> and <I>qalter</I>.  Only
           meaningful  for  parallel  jobs, i.e. together with the
           -pe option.
+
           Defines or redefines a list of  cluster  queues,  queue
           domains and queue instances which may be used to become
           the so called <I>master</I> <I>queue</I> of this parallel job. A more
@@ -919,9 +936,12 @@ OPTIONS
           nals themselves. If a SIGSTOP is pending, the job  will
           receive  a  SIGUSR1 several seconds before the SIGSTOP.
           If a SIGKILL is pending, the job will receive a SIGUSR2
-          several seconds before the SIGKILL.  The amount of time
-          delay is controlled by the  notify  parameter  in  each
-          queue configuration (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>).
+          several  seconds  before the SIGKILL.  This option pro-
+          vides the running job, before receiving the SIGSTOP  or
+          SIGKILL,  a configured time interval to do e.g. cleanup
+          operations. The amount of time delay is  controlled  by
+          the  notify  parameter in each queue configuration (see
+          <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>).
 
           Note that the Linux operating system "misused" the user
           signals  SIGUSR1 and SIGUSR2 in some early Posix thread
@@ -972,7 +992,6 @@ OPTIONS
           tory pathname has been removed from the script-name. If
           the  script  is  read from standard input, the job name
           defaults to STDIN.
-
           In the case of <I>qsh</I> or <I>qlogin</I>  with  the  -N  option  is
           absent, the string `INTERACT' is assigned to the job.
 
@@ -1025,7 +1044,6 @@ OPTIONS
 
      -o [[hostname]:]path,...
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
-
           The path used for the standard  output  stream  of  the
           job.  The path is handled as described in the -e option
           for the standard error stream.
@@ -1303,10 +1321,10 @@ OPTIONS
           <I>qsub</I>  is  interrupted, e.g. with CTRL-C, before the job
           completes, all of the job's tasks will be canceled.
 
-          Information  that  this  switch  was  specified  during
-          submission  is  not available in the JSV context.  (see
-          -jsv option below or find more  information  concerning
-          JSV in <B><A HREF="../htmlman1/jsv.html">jsv(1)</A></B>)
+          Information that this switch was specified during  sub-
+          mission is not available in the JSV context.  (see -jsv
+          option below or find more information concerning JSV in
+          <B><A HREF="../htmlman1/jsv.html">jsv(1)</A></B>)
 
      -S [[hostname]:]pathname,...
           Available for <I>qsub</I>, <I>qsh</I> and <I>qalter</I>.
@@ -1494,7 +1512,6 @@ OPTIONS
           requests exceeding the configured maximal thresholds or
           requesting unavailable resource attributes are possible
           causes for jobs to fail this validation.
-
           The specifiers e, w, n and v define the following vali-
           dation modes:
 
@@ -1511,12 +1528,12 @@ OPTIONS
           `v'  verify - does not submit the job but prints a
                validation report based on an empty cluster.
 
-          Note,  that  the  necessary  checks   are   performance
-          consuming  and  hence  the  checking is switched off by
-          default.  It should also be noted that load values  are
-          not taken into account with the verification since they
-          are assumed to be too volatile. To cause -w e verifica-
-          tion to be passed at submission time, it is possible to
+          Note, that the necessary checks are performance consum-
+          ing  and hence the checking is switched off by default.
+          It should also be noted that load values are not  taken
+          into  account  with  the  verification  since  they are
+          assumed to be too volatile. To cause -w e  verification
+          to  be  passed  at  submission  time, it is possible to
           specify non-volatile values (non-consumables)  or  max-
           imum values (consumables) in complex_values.
 
@@ -1773,6 +1790,7 @@ ENVIRONMENTAL VARIABLES
                     job is running.
 
      REQUEST        Available for batch jobs only.
+
                     The request name of a job as  specified  with
                     the  -N  switch  (see  above) or taken as the
                     name of the job script file.
@@ -1911,23 +1929,6 @@ COPYRIGHT
      See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> as  well  as  the  information  provided  in
      &lt;ge_root&gt;/3rd_party/qrsh  and &lt;ge_root&gt;/3rd_party/qlogin for
      a statement of further rights and permissions.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 </PRE>

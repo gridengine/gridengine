@@ -7,7 +7,7 @@ NAME
 
 SYNTAX
      qdel  [  -f  ]  [  -help   ]   [   -u   wc_user_list   ]   [
-     wc_job_range_list ]
+     wc_job_range_list ] [ -t task_id_range ]
 
 DESCRIPTION
      <I>Qdel</I> provides a means for a user/operator/manager to  delete
@@ -46,6 +46,14 @@ OPTIONS
 
      -help
           Prints a listing of all options.
+
+     -t   Deletes specified tasks of array job.  It  means  tasks
+          created  by qsub -t command. For example after creating
+          array    job    by    command    "qsub     -t     1-100
+          $SGE_ROOT/examples/sleeper.sh" it is possible to delete
+          tasks 5-10 from job array by command  "qdel  job_id  -t
+          5-10".   All  other tasks (1-4 and 11-100) will be exe-
+          cuted.
 
      -u wc_user_list
           Deletes only those jobs which were submitted  by  users
@@ -96,14 +104,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
      sions.
-
-
-
-
-
-
-
-
 
 
 

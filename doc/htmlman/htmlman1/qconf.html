@@ -545,7 +545,9 @@ OPTIONS
           the execution hosts to be addressed by the -ke and -kej
           option. If the keyword all is specified  instead  of  a
           host  list, all running <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B> processes are shut-
-          down.
+          down. Job abortion, initiated by the -kej  option  will
+          result   in   dr  state  for  all  running  jobs  until
+          <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B> is running again.
           Requires root or manager privileges.
 
      -kt thread_name   &lt;<I>terminate</I> <I>master</I> <I>thread</I>&gt;"
@@ -728,8 +730,8 @@ OPTIONS
      -rattr obj_spec attr_name val obj_instance,...
                                  &lt;<I>replace</I> <I>object</I> <I>attributes</I>&gt;
           Allows replacing a single configuration list  attribute
-          in  multiple  instances of an object with a single com-
-          mand. Find more  information  concerning  obj_spec  and
+          in  multiple  instances  of  an  object  with  a single
+          command. Find more information concerning obj_spec  and
           obj_instance in the description of -aattr .
           Requires root or manager privilege.
 
@@ -885,6 +887,10 @@ OPTIONS
           Shows  the  definition   of   the   share   tree   (see
           <B><A HREF="../htmlman5/share_tree.html">share_tree(5)</A></B>).
 
+     -sst                          &lt;<I>show</I> <I>formated</I> <I>share</I> <I>tree</I>&gt;
+          Shows the definition of the share tree in a  tree  view
+          (see <B><A HREF="../htmlman5/share_tree.html">share_tree(5)</A></B>).
+
      -sss                          &lt;<I>show</I> <I>scheduler</I> <I>status</I>&gt;
           Currently displays the host on which  the  Grid  Engine
           scheduler is active or an error message if no scheduler
@@ -933,7 +939,6 @@ ENVIRONMENTAL VARIABLES
                          The  name  of  the  default  cell,  i.e.
                          default.
 
-
      GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
@@ -941,10 +946,10 @@ ENVIRONMENTAL VARIABLES
 
      GE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>   is  expected  to  listen  for
-                    communication requests.   Most  installations
-                    will  use  a  services  map  entry instead to
-                    define that port.
+                    <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>  is expected to listen for com-
+                    munication requests.  Most installations will
+                    use  a  services  map entry instead to define
+                    that port.
 
      GE_EXECD_PORT  If set,  specifies  the  tcp  port  on  which
                     <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B> is expected to listen for commun-
@@ -975,14 +980,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
      sions.
-
-
-
-
-
-
-
-
 
 
 

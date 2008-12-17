@@ -562,7 +562,7 @@ FORMAT
      load_report_time (see above).
 
      Changing max_unheard takes immediate  effect.   The  default
-     for max_unheard is 2 minutes 30 seconds.
+     for max_unheard is 5 minutes.
 
      This value is a global configuration parameter only. It can-
      not  be  overwritten  by the execution host local configura-
@@ -700,7 +700,7 @@ FORMAT
      as default attributes of the new <B><A HREF="../htmlman5/user.html">user(5)</A></B> object.
 
      Changing  enforce_user  will  take  immediate  effect.   The
-     default for enforce_user is <I>false</I>.
+     default for enforce_user is <I>auto</I>.
 
      This value is a global configuration parameter only. It can-
      not  be  overwritten  by the execution host local configura-
@@ -1058,6 +1058,13 @@ FORMAT
           may show you some useful messages. The default value is
           false (off) (e.g cl_ping=false)
 
+     <I>SCHEDULER</I>_<I>TIMEOUT</I>
+          Setting this parameter allows the scheduler  GDI  event
+          acknowledge  timeout  to  be  manually  configured to a
+          specific value. Currently the default value is  set  to
+          10 minutes. The <I>SCHEDULER</I>_<I>TIMEOUT</I> value is specified in
+          seconds.
+
      Changing qmaster_params will take immediate  effect,  except
      gdi_timeout,  gdi_retries,  cl_ping,  these will take effect
      only for new connections.  The default for qmaster_params is
@@ -1245,7 +1252,6 @@ FORMAT
      pagated to the execution daemons. The propagation is done in
      one load report interval.  The default for  execd_params  is
      none.
-
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
@@ -1253,6 +1259,7 @@ FORMAT
      Used to define the behavior of reporting modules in the Grid
      Engine   qmaster.  Changes  to  the  reporting_params  takes
      immediate effect.  The following values are recognized:
+
      <I>accounting</I>
           If this parameter is set to true, the  accounting  file
           is  written.   The  accounting file is prerequisite for
@@ -1349,13 +1356,11 @@ FORMAT
      the builtin mechanism. It's also possible  to  configure  an
      external  executable  by specifying the full qualified path-
      name, e.g. of the system's telnet daemon.
-
      Changing qlogin_daemon  will  take  immediate  effect.   The
      default value for qlogin_daemon is builtin.
 
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
-
 
      Examples for the two allowed kinds of attributes are:
      qlogin_daemon    builtin
@@ -1454,6 +1459,7 @@ FORMAT
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
+
      In addition to the examples of qlogin_command ,  this  value
      is allowed:
      rsh_command     none
@@ -1484,6 +1490,31 @@ FORMAT
      This value is a global configuration parameter only. It can-
      not be overridden by the execution host local configuration.
 
+  jsv_url
+     This setting defines a server JSV  instance  which  will  be
+     started  and  triggered  by the <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> process. This
+     JSV instance will be used to verify  job  specifications  of
+     jobs  before  they  are  accepted and stored in the internal
+     master database. The global  configuration  entry  for  this
+     value  cannot  be overwritten by execution host local confi-
+     gurations.
+
+     Find   more   details   concerning   JSV   in   <B><A HREF="../htmlman1/jsv.html">jsv(1)</A></B>   and
+     <B><A HREF="../htmlman1/sge_request.html">sge_request(1)</A></B>.
+
+     The syntax of the jsv_url is specified in <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
+
+  jsv_allowed_mod
+     If there is a server JSV script defined with jsv_url parame-
+     ter, then all <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B> or <B><A HREF="../htmlman1/qmon.html">qmon(1)</A></B> modification requests for
+     jobs are  rejected  by  qmaster.  With  the  jsv_allowed_mod
+     parameter  an  administrator  has the possibility to allow a
+     set of switches which can  then  be  used  with  clients  to
+     modify  certain job attributes. The value for this parameter
+     has to be a comma separated list of JSV job parameter  names
+     as they are documented in <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> or the value none to indi-
+     cate that no modification should be allowed.
+
   libjvm_path
      libjvm_path is usually set during qmaster  installation  and
      points   to   the  absolute  path  of  libjvm.so.   (or  the
@@ -1509,48 +1540,15 @@ FORMAT
      overwritten by the execution host local configuration.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>,  <B><A HREF="../htmlman1/csh.html">csh(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman1/rsh.html">rsh(1)</A></B>,   <B><A HREF="../htmlman1/sh.html">sh(1)</A></B>,
-     <B><A HREF="../htmlman3/getpwnam.html">getpwnam(3)</A></B>,       <B><A HREF="../htmlman3/drmaa_attributes.html">drmaa_attributes(3)</A></B>,       <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,
-     <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>, <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B>,  <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>,  <B><A HREF="../htmlman8/ge_shepherd.html">ge_shepherd(8)</A></B>,
-     <B><A HREF="../htmlman8/cron.html">cron(8)</A></B>, <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I> <I>Administration</I> <I>Guide</I>.
+     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>,  <B><A HREF="../htmlman1/csh.html">csh(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman1/jsv.html">jsv(1)</A></B>,  <B><A HREF="../htmlman1/rsh.html">rsh(1)</A></B>,
+     <B><A HREF="../htmlman1/sh.html">sh(1)</A></B>,   <B><A HREF="../htmlman3/getpwnam.html">getpwnam(3)</A></B>,   <B><A HREF="../htmlman3/drmaa_attributes.html">drmaa_attributes(3)</A></B>,  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,
+     <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>,  <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>,  <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B>,   <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>,
+     <B><A HREF="../htmlman8/ge_shepherd.html">ge_shepherd(8)</A></B>,   <B><A HREF="../htmlman8/cron.html">cron(8)</A></B>,   <I>Grid</I>  <I>Engine</I>  <I>Installation</I>  <I>and</I>
+     <I>Administration</I> <I>Guide</I>.
 
 COPYRIGHT
      See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
      sions.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

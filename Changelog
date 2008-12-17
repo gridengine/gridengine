@@ -1,3 +1,9 @@
+MP-2008-12-17-0: Bugfix:      submit(1) man page defines support for the -display
+                              option only for qsh, however qrsh also supports this
+                 Bugster:     6785777
+                 Issue:       2841
+                 Review:      AP
+
 ZG-2008-12-17-1: Update:      update html man pages
 
 ZG-2008-12-17-0: Bugfix:      mk_ascman: does not generate the '?pathrev=<BRANCH>'

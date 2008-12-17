@@ -7,21 +7,21 @@ NAME
 
 DESCRIPTION
      <I>sge</I>_<I>conf</I> defines the global and local Grid Engine configura-
-     tions  and  can  be  shown/modified  by  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>  using the
+     tions  and  can  be  shown/modified  by  <B><A HREF="../htmlman1/qconf.html?pathrev=V61_BRANCH">qconf(1)</A></B>  using the
      -sconf/-mconf options. Only root or the cluster  administra-
      tor may modify <I>sge</I>_<I>conf</I>.
 
-     At its initial start-up, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> checks to see  if  a
+     At its initial start-up, <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B> checks to see  if  a
      valid Grid Engine configuration is available at a well known
      location in the Grid Engine  internal  directory  hierarchy.
      If so, it loads that configuration information and proceeds.
-     If not, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> writes a generic  configuration  con-
+     If not, <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B> writes a generic  configuration  con-
      taining  default  values  to  that  same location.  The Grid
-     Engine execution daemons <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> upon start-up retrieve
-     their configuration from <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
+     Engine execution daemons <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B> upon start-up retrieve
+     their configuration from <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B>.
 
-     The  actual  configuration  for  both   <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>   and
-     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  is  a  superposition of a <I>global</I> configuration
+     The  actual  configuration  for  both   <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B>   and
+     <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B>  is  a  superposition of a <I>global</I> configuration
      and a <I>local</I> configuration pertinent for the host on which  a
      master  or  execution daemon resides.  If a local configura-
      tion is available, its entries overwrite  the  corresponding
@@ -45,7 +45,7 @@ FORMAT
      spool  directory  requires  read/write access permission for
      root. The entry in the global configuration for this parame-
      ter  can  be  overwritten by execution host local configura-
-     tions, i.e. each  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  may  have  a  private  spool
+     tions, i.e. each  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B>  may  have  a  private  spool
      directory  with  a different path, in which case it needs to
      provide read/write permission for the root  account  of  the
      corresponding execution host only.
@@ -79,7 +79,7 @@ FORMAT
 
           mailer -s &lt;subject-of-mail-message&gt; &lt;recipient&gt;
 
-     Each <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> may use a  private  mail  agent.  Changing
+     Each <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B> may use a  private  mail  agent.  Changing
      mailer will take immediate effect.
 
      The default for mailer depends on the  operating  system  of
@@ -91,9 +91,9 @@ FORMAT
 
   xterm
      xterm is the absolute pathname to the X Window System termi-
-     nal emulator, <B><A HREF="../htmlman1/xterm.html">xterm(1)</A></B>.
+     nal emulator, <B><A HREF="../htmlman1/xterm.html?pathrev=V61_BRANCH">xterm(1)</A></B>.
 
-     Each <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> may use a  private  mail  agent.  Changing
+     Each <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B> may use a  private  mail  agent.  Changing
      xterm will take immediate effect.
 
      The default for xterm is /usr/bin/X11/xterm.
@@ -103,10 +103,10 @@ FORMAT
 
   load_sensor
      A comma separated list of executable shell script  paths  or
-     programs  to  be  started  by <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> and to be used in
+     programs  to  be  started  by <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B> and to be used in
      order to retrieve site configurable load  information  (e.g.
      free space on a certain disk partition).
-     Each <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> may use a set of private load_sensor  pro-
+     Each <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B> may use a set of private load_sensor  pro-
      grams  or  scripts.  Changing  load_sensor  will take effect
      after two load report intervals  (see  load_report_time).  A
      load  sensor  will  be  restarted  automatically if the file
@@ -116,7 +116,7 @@ FORMAT
      overwritten by the execution host local configuration.
 
      In addition to the load sensors configured via  load_sensor,
-     <B><A HREF="../htmlman8/sge_exec.html">sge_exec(8)</A></B>  searches for an executable file named <I>qloadsen-</I>
+     <B><A HREF="../htmlman8/sge_exec.html?pathrev=V61_BRANCH">sge_exec(8)</A></B>  searches for an executable file named <I>qloadsen-</I>
      <I>sor</I> in the execution host's  Grid  Engine  binary  directory
      path.   If such a file is found, it is treated like the con-
      figurable load sensors defined in load_sensor. This facility
@@ -134,10 +134,10 @@ FORMAT
      Grid Engine administrator to automate the execution of  gen-
      eral  site  specific tasks like the preparation of temporary
      file systems with the need for the same context  information
-     as  the  job.   Each  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  may use a private prolog
+     as  the  job.   Each  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B>  may use a private prolog
      script. Correspondingly, the execution host local configura-
      tions  is can be overwritten by the queue configuration (see
-     <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> ). Changing prolog will take immediate effect.
+     <B><A HREF="../htmlman5/queue_conf.html?pathrev=V61_BRANCH">queue_conf(5)</A></B> ). Changing prolog will take immediate effect.
 
      The default for prolog is  the  special  value  NONE,  which
      prevents from execution of a prolog script.
@@ -161,7 +161,7 @@ FORMAT
 
      $<I>processors</I>
           The processors string as contained in the queue  confi-
-          guration  (see  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>) of the master queue (the
+          guration  (see  <B><A HREF="../htmlman5/queue_conf.html?pathrev=V61_BRANCH">queue_conf(5)</A></B>) of the master queue (the
           queue in which the prolog  and  epilog  procedures  are
           started).
 
@@ -195,8 +195,8 @@ FORMAT
           and stderr are merged in one  file,  the  stdout  file.
           Merging  of  stderr and stdout can be requested via the
           DRMAA job template  attribute  'drmaa_join_files'  (see
-          <B><A HREF="../htmlman3/drmaa_attributes.html">drmaa_attributes(3)</A></B> ) or the qsub parameter '-j y' (see
-          <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> ).
+          <B><A HREF="../htmlman3/drmaa_attributes.html?pathrev=V61_BRANCH">drmaa_attributes(3)</A></B> ) or the qsub parameter '-j y' (see
+          <B><A HREF="../htmlman1/qsub.html?pathrev=V61_BRANCH">qsub(1)</A></B> ).
 
      $<I>fs</I>_<I>stdin</I>_<I>host</I>
           When delegated file staging is requested for the  stdin
@@ -257,7 +257,7 @@ FORMAT
 
           These three flags correspond to the DRMAA job  template
           attribute          'drmaa_transfer_files'          (see
-          <B><A HREF="../htmlman3/drmaa_attributes.html">drmaa_attributes(3)</A></B> ).
+          <B><A HREF="../htmlman3/drmaa_attributes.html?pathrev=V61_BRANCH">drmaa_attributes(3)</A></B> ).
 
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
@@ -282,10 +282,10 @@ FORMAT
      Grid Engine administrator to automate the execution of  gen-
      eral  site  specific tasks like the cleaning up of temporary
      file systems with the need for the same context  information
-     as  the  job.   Each  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  may use a private epilog
+     as  the  job.   Each  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B>  may use a private epilog
      script. Correspondingly, the execution host local configura-
      tions  is can be overwritten by the queue configuration (see
-     <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>  ).   Changing  epilog  will  take   immediate
+     <B><A HREF="../htmlman5/queue_conf.html?pathrev=V61_BRANCH">queue_conf(5)</A></B>  ).   Changing  epilog  will  take   immediate
      effect.
 
      The default for epilog is  the  special  value  NONE,  which
@@ -326,14 +326,14 @@ FORMAT
           use user specified or configured default command inter-
           preters  instead.  Thus,  if shell_start_mode is set to
           <I>posix</I>_<I>compliant</I> Grid Engine will either use the command
-          interpreter  indicated  by the -S option of the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>
+          interpreter  indicated  by the -S option of the <B><A HREF="../htmlman1/qsub.html?pathrev=V61_BRANCH">qsub(1)</A></B>
           command or the shell parameter of the queue to be  used
-          (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> for details).
+          (see <B><A HREF="../htmlman5/queue_conf.html?pathrev=V61_BRANCH">queue_conf(5)</A></B> for details).
 
      <I>script</I>_<I>from</I>_<I>stdin</I>
           Setting  the  shell_start_mode  parameter   either   to
           <I>posix</I>_<I>compliant</I>  or  <I>unix</I>_<I>behavior</I>  requires you to set
-          the umask in use for <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> such that every  user
+          the umask in use for <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B> such that every  user
           has  read  access  to  the active_jobs directory in the
           spool directory of the corresponding execution  daemon.
           In  case you have prolog and epilog scripts configured,
@@ -343,16 +343,16 @@ FORMAT
           want to set shell_start_mode to <I>script</I>_<I>from</I>_<I>stdin</I>. This
           will force Grid Engine to open the job script  as  well
           as the epilog and prolog scripts for reading into STDIN
-          as root (if <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> was started  as  root)  before
+          as root (if <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B> was started  as  root)  before
           changing  to  the job owner's user account.  The script
           is then fed into the STDIN stream of the command inter-
-          preter  indicated  by the -S option of the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> com-
+          preter  indicated  by the -S option of the <B><A HREF="../htmlman1/qsub.html?pathrev=V61_BRANCH">qsub(1)</A></B> com-
           mand or the shell parameter of the  queue  to  be  used
-          (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> for details).
+          (see <B><A HREF="../htmlman5/queue_conf.html?pathrev=V61_BRANCH">queue_conf(5)</A></B> for details).
           Thus setting shell_start_mode to <I>script</I>_<I>from</I>_<I>stdin</I> also
           implies  <I>posix</I>_<I>compliant</I>  behavior. Note, however, that
           feeding scripts into the  STDIN  stream  of  a  command
-          interpreter  may  cause trouble if commands like <B><A HREF="../htmlman1/rsh.html">rsh(1)</A></B>
+          interpreter  may  cause trouble if commands like <B><A HREF="../htmlman1/rsh.html?pathrev=V61_BRANCH">rsh(1)</A></B>
           are invoked inside a job script as  they  also  process
           the  STDIN  stream  of  the  command interpreter. These
           problems can usually be  resolved  by  redirecting  the
@@ -372,8 +372,8 @@ FORMAT
      tion.
 
   login_shells
-     UNIX command interpreters like the Bourne-Shell (see  <B><A HREF="../htmlman1/sh.html">sh(1)</A></B>)
-     or  the  C-Shell  (see <B><A HREF="../htmlman1/csh.html">csh(1)</A></B>) can be used by Grid Engine to
+     UNIX command interpreters like the Bourne-Shell (see  <B><A HREF="../htmlman1/sh.html?pathrev=V61_BRANCH">sh(1)</A></B>)
+     or  the  C-Shell  (see <B><A HREF="../htmlman1/csh.html?pathrev=V61_BRANCH">csh(1)</A></B>) can be used by Grid Engine to
      start job scripts. The command interpreters  can  either  be
      started  as  login-shells  (i.e. all system and user default
      resource files like .login or .profile will be executed when
@@ -381,7 +381,7 @@ FORMAT
      the job will be set up as if the user has just logged in) or
      just   for  command  execution  (i.e.  only  shell  specific
      resource files like .cshrc will be executed  and  a  minimal
-     default environment is set up by Grid Engine - see <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>).
+     default environment is set up by Grid Engine - see <B><A HREF="../htmlman1/qsub.html?pathrev=V61_BRANCH">qsub(1)</A></B>).
      The parameter login_shells contains a comma  separated  list
      of  the  executable  names of the command interpreters to be
      started as login-shells.   Shells  in  this  list  are  only
@@ -397,7 +397,7 @@ FORMAT
 
   min_uid
      min_uid places a lower bound on user IDs that  may  use  the
-     cluster. Users whose user ID (as returned by <B><A HREF="../htmlman3/getpwnam.html">getpwnam(3)</A></B>) is
+     cluster. Users whose user ID (as returned by <B><A HREF="../htmlman3/getpwnam.html?pathrev=V61_BRANCH">getpwnam(3)</A></B>) is
      less than min_uid will not be allowed to  run  jobs  on  the
      cluster.
 
@@ -411,7 +411,7 @@ FORMAT
   min_gid
      This parameter sets the lower bound on group  IDs  that  may
      use  the cluster.  Users whose default group ID (as returned
-     by <B><A HREF="../htmlman3/getpwnam.html">getpwnam(3)</A></B>) is less than min_gid will not be allowed  to
+     by <B><A HREF="../htmlman3/getpwnam.html?pathrev=V61_BRANCH">getpwnam(3)</A></B>) is less than min_gid will not be allowed  to
      run jobs on the cluster.
 
      Changes to min_gid will take immediate effect.  The  default
@@ -423,7 +423,7 @@ FORMAT
 
   user_lists
      The user_lists parameter contains a comma separated list  of
-     user access lists as described in <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>.  Each user
+     user access lists as described in <B><A HREF="../htmlman5/access_list.html?pathrev=V61_BRANCH">access_list(5)</A></B>.  Each user
      contained in at least one of the enlisted access  lists  has
      access to the cluster. If the user_lists parameter is set to
      NONE (the  default)  any  user  has  access  not  explicitly
@@ -440,7 +440,7 @@ FORMAT
 
   xuser_lists
      The xuser_lists parameter contains a comma separated list of
-     user access lists as described in <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>.  Each user
+     user access lists as described in <B><A HREF="../htmlman5/access_list.html?pathrev=V61_BRANCH">access_list(5)</A></B>.  Each user
      contained in at least one of the enlisted  access  lists  is
      denied  access  to the cluster. If the xuser_lists parameter
      is set to NONE (the default) any user has access.  If a user
@@ -500,14 +500,14 @@ FORMAT
 
   load_report_time
      System load is reported periodically by the  execution  dae-
-     mons  to  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.   The  parameter  load_report_time
+     mons  to  <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B>.   The  parameter  load_report_time
      defines the time interval between load reports.
 
-     Each <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> may use  a  different  load  report  time.
+     Each <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B> may use  a  different  load  report  time.
      Changing load_report_time will take immediate effect.
 
      Note: Be careful when modifying load_report_time.  Reporting
-     load too frequently might block <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> especially if
+     load too frequently might block <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B> especially if
      the number of execution hosts is large. Moreover, since  the
      system load typically increases and decreases smoothly, fre-
      quent load reports hardly offer any benefit.
@@ -520,10 +520,10 @@ FORMAT
   reschedule_unknown
      Determines whether  jobs  on  hosts  in  unknown  state  are
      rescheduled   and  thus  sent  to  other  hosts.  Hosts  are
-     registered as unknown if <B><A HREF="../htmlman8/sge_master.html">sge_master(8)</A></B> cannot establish con-
-     tact  to the <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> on those hosts (see max_unheard ).
+     registered as unknown if <B><A HREF="../htmlman8/sge_master.html?pathrev=V61_BRANCH">sge_master(8)</A></B> cannot establish con-
+     tact  to the <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B> on those hosts (see max_unheard ).
      Likely reasons are a breakdown of the host or a breakdown of
-     the network connection in between, but also <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> may
+     the network connection in between, but also <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B> may
      not be executing on such hosts.
 
      In any case, Grid Engine can reschedule jobs running on such
@@ -534,14 +534,14 @@ FORMAT
      will not be rescheduled from this host.
 
      Rescheduling is only initiated for jobs which have activated
-     the rerun flag (see the -r y option of <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> and the rerun
-     option  of   <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>).    Parallel   jobs   are   only
+     the rerun flag (see the -r y option of <B><A HREF="../htmlman1/qsub.html?pathrev=V61_BRANCH">qsub(1)</A></B> and the rerun
+     option  of   <B><A HREF="../htmlman5/queue_conf.html?pathrev=V61_BRANCH">queue_conf(5)</A></B>).    Parallel   jobs   are   only
      rescheduled  if the host on which their master task executes
      is  in  unknown  state.  Checkpointing  jobs  will  only  be
      rescheduled when the when option of the corresponding check-
      pointing environment  contains  an  appropriate  flag.  (see
-     <B><A HREF="../htmlman5/checkpoint.html">checkpoint(5)</A></B>).   Interactive  jobs  (see  <B><A HREF="../htmlman1/qsh.html">qsh(1)</A></B>,  <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>,
-     <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B>) are not rescheduled.
+     <B><A HREF="../htmlman5/checkpoint.html?pathrev=V61_BRANCH">checkpoint(5)</A></B>).   Interactive  jobs  (see  <B><A HREF="../htmlman1/qsh.html?pathrev=V61_BRANCH">qsh(1)</A></B>,  <B><A HREF="../htmlman1/qrsh.html?pathrev=V61_BRANCH">qrsh(1)</A></B>,
+     <B><A HREF="../htmlman1/qtcsh.html?pathrev=V61_BRANCH">qtcsh(1)</A></B>) are not rescheduled.
 
      The default for reschedule_unknown is 00:00:00
 
@@ -549,10 +549,10 @@ FORMAT
      written by the execution host local configuration.
 
   max_unheard
-     If <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> could not contact or was not contacted  by
+     If <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B> could not contact or was not contacted  by
      the  execution daemon of a host for max_unheard seconds, all
      queues residing on that particular host are  set  to  status
-     unknown.   <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,  at least, should be contacted by
+     unknown.   <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B>,  at least, should be contacted by
      the execution daemons in order  to  get  the  load  reports.
      Thus,    max_unheard    should    by    greater   than   the
      load_report_time (see above).
@@ -566,7 +566,7 @@ FORMAT
 
   loglevel
      This parameter specifies  the  level  of  detail  that  Grid
-     Engine components such as <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> or <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> use
+     Engine components such as <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B> or <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B> use
      to produce informative, warning or error messages which  are
      logged  to  the  <I>messages</I>  files in the master and execution
      daemon  spool  directories  (see  the  description  of   the
@@ -615,7 +615,7 @@ FORMAT
 
   max_aj_tasks
      This parameter defines the maximum number of array job tasks
-     within  an  array job.  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> will reject all array
+     within  an  array job.  <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B> will reject all array
      job submissions which request more than  max_aj_tasks  array
      job  tasks.  The  default  for  this parameter is 75000. The
      value 0 will deactivate this limit.
@@ -657,7 +657,7 @@ FORMAT
 
   enforce_project
      If set to <I>true</I>, users are  required  to  request  a  project
-     whenever  submitting a job. See the -P option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> for
+     whenever  submitting a job. See the -P option to <B><A HREF="../htmlman1/qsub.html?pathrev=V61_BRANCH">qsub(1)</A></B> for
      details.
 
      Changing enforce_project will take  immediate  effect.   The
@@ -668,15 +668,15 @@ FORMAT
      tion.
 
   enforce_user
-     If set to <I>true</I>, a <B><A HREF="../htmlman5/user.html">user(5)</A></B> must exist to allow for  job  sub-
+     If set to <I>true</I>, a <B><A HREF="../htmlman5/user.html?pathrev=V61_BRANCH">user(5)</A></B> must exist to allow for  job  sub-
      mission. Jobs are rejected if no corresponding user exists.
 
-     If set to <I>auto</I>, a <B><A HREF="../htmlman5/user.html">user(5)</A></B> object  for  the  submitting  user
+     If set to <I>auto</I>, a <B><A HREF="../htmlman5/user.html?pathrev=V61_BRANCH">user(5)</A></B> object  for  the  submitting  user
      will  automatically be created during job submission, if one
      does   not    already    exist.    The    auto_user_oticket,
      auto_user_fshare,       auto_user_default_project,       and
      auto_user_delete_time configuration parameters will be  used
-     as default attributes of the new <B><A HREF="../htmlman5/user.html">user(5)</A></B> object.
+     as default attributes of the new <B><A HREF="../htmlman5/user.html?pathrev=V61_BRANCH">user(5)</A></B> object.
 
      Changing  enforce_user  will  take  immediate  effect.   The
      default for enforce_user is <I>false</I>.
@@ -686,7 +686,7 @@ FORMAT
 
   auto_user_oticket
      The number of override tickets to  assign  to  automatically
-     created  <B><A HREF="../htmlman5/user.html">user(5)</A></B> objects. User objects are created automati-
+     created  <B><A HREF="../htmlman5/user.html?pathrev=V61_BRANCH">user(5)</A></B> objects. User objects are created automati-
      cally if the enforce_user attribute is set to <I>auto</I>.
 
      Changing auto_user_oticket will  affect  any  newly  created
@@ -699,7 +699,7 @@ FORMAT
 
   auto_user_fshare
      The number of functional shares to assign  to  automatically
-     created  <B><A HREF="../htmlman5/user.html">user(5)</A></B> objects. User objects are created automati-
+     created  <B><A HREF="../htmlman5/user.html?pathrev=V61_BRANCH">user(5)</A></B> objects. User objects are created automati-
      cally if the enforce_user attribute is set to <I>auto</I>.
 
      Changing auto_user_fshare will affect any newly created user
@@ -712,7 +712,7 @@ FORMAT
 
   auto_user_default_project
      The default  project  to  assign  to  automatically  created
-     <B><A HREF="../htmlman5/user.html">user(5)</A></B>  objects.  User objects are created automatically if
+     <B><A HREF="../htmlman5/user.html?pathrev=V61_BRANCH">user(5)</A></B>  objects.  User objects are created automatically if
      the enforce_user attribute is set to <I>auto</I>.
 
      Changing auto_user_default_project  will  affect  any  newly
@@ -725,7 +725,7 @@ FORMAT
 
   auto_user_delete_time
      The number of seconds of inactivity  after  which  automati-
-     cally  created <B><A HREF="../htmlman5/user.html">user(5)</A></B> objects will be deleted. User objects
+     cally  created <B><A HREF="../htmlman5/user.html?pathrev=V61_BRANCH">user(5)</A></B> objects will be deleted. User objects
      are created automatically if the enforce_user  attribute  is
      set  to  <I>auto</I>. If the user has no active or pending jobs for
      the specified amount of time, the object will  automatically
@@ -783,7 +783,7 @@ FORMAT
      licensed to support AFS.
 
      The path to your <I>pagsh</I> is specified via this parameter.  The
-     <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B>  process  and the job run in a <I>pagsh</I>. Please
+     <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V61_BRANCH">sge_shepherd(8)</A></B>  process  and the job run in a <I>pagsh</I>. Please
      ask your AFS administrator for details.
 
      Changing pag_cmd will take immediate  effect.   The  default
@@ -812,13 +812,13 @@ FORMAT
      The gid_range is a comma separated list of range expressions
      of  the form n-m (n as well as m are integer numbers greater
      than 99), where m is an abbreviation for m-m. These  numbers
-     are  used in <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> to identify processes belonging to
+     are  used in <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B> to identify processes belonging to
      the same job.
 
-     Each <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> may use a separate set up  group  ids  for
+     Each <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B> may use a separate set up  group  ids  for
      this  purpose.   All number in the group id range have to be
      unused supplementary group ids  on  the  system,  where  the
-     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> is started.
+     <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B> is started.
 
      Changing gid_range will take immediate effect.  There is  no
      default for gid_range. The administrator will have to assign
@@ -834,7 +834,7 @@ FORMAT
      <I>ENABLE</I>_<I>FORCED</I>_<I>QDEL</I>
           If this parameter is set, non-administrative users  can
           force  deletion  of their own jobs via the -<I>f</I> option of
-          <B><A HREF="../htmlman1/qdel.html">qdel(1)</A></B>.  Without this parameter,  forced  deletion  of
+          <B><A HREF="../htmlman1/qdel.html?pathrev=V61_BRANCH">qdel(1)</A></B>.  Without this parameter,  forced  deletion  of
           jobs  is  only  allowed  by  the Grid Engine manager or
           operator.
 
@@ -843,7 +843,7 @@ FORMAT
           tors or not. In case of administrative users, the  jobs
           are  removed  from the internal database of Grid Engine
           immediately. For regular users,  the  equivalent  of  a
-          normal  <B><A HREF="../htmlman1/qdel.html">qdel(1)</A></B>  is  executed  first,  and  deletion is
+          normal  <B><A HREF="../htmlman1/qdel.html?pathrev=V61_BRANCH">qdel(1)</A></B>  is  executed  first,  and  deletion is
           forced only if the normal cancellation  was  unsuccess-
           ful.
 
@@ -899,7 +899,7 @@ FORMAT
      <I>LOG</I>_<I>MONITOR</I>_<I>MESSAGE</I>
           Monitoring information  is  logged  into  the  messages
           files  by default. This information can be accessed via
-          by <B><A HREF="../htmlman1/qping.html">qping(1)</A></B>.  If monitoring is always enabled, the mes-
+          by <B><A HREF="../htmlman1/qping.html?pathrev=V61_BRANCH">qping(1)</A></B>.  If monitoring is always enabled, the mes-
           sages  files  can become quite large.  This switch dis-
           ables logging into the messages files, making <I>qping</I>  -<I>f</I>
           the only source of monitoring data.
@@ -1002,15 +1002,15 @@ FORMAT
      <I>ENABLE</I>_<I>WINDOMACC</I>
           If this  parameter  is  set  to  true,  Windows  Domain
           accounts  (WinDomAcc)  are used on Windows hosts. These
-          accounts require the  use  of  <B><A HREF="../htmlman1/sgepasswd.html">sgepasswd(1)</A></B>  (see  also
-          <B><A HREF="../htmlman5/sgepasswd.html">sgepasswd(5)</A></B>).  If this parameter is set to false or is
+          accounts require the  use  of  <B><A HREF="../htmlman1/sgepasswd.html?pathrev=V61_BRANCH">sgepasswd(1)</A></B>  (see  also
+          <B><A HREF="../htmlman5/sgepasswd.html?pathrev=V61_BRANCH">sgepasswd(5)</A></B>).  If this parameter is set to false or is
           not set, local Windows  accounts  are  used.   On  non-
           Windows hosts, this parameter is ignored.
 
      <I>KEEP</I>_<I>ACTIVE</I>
           This value should only be set for  debugging  purposes.
           If  set  to  true, the execution daemon will not remove
-          the spool directory maintained by <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B> for a
+          the spool directory maintained by <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V61_BRANCH">sge_shepherd(8)</A></B> for a
           job.
 
      <I>PTF</I>_<I>MIN</I>_<I>PRIORITY</I>, <I>PTF</I>_<I>MAX</I>_<I>PRIORITY</I>
@@ -1018,7 +1018,7 @@ FORMAT
           assign to a job.  Typically this is a negative/positive
           value in the range of -20 (maximum) to 19 (minimum) for
           systems  which  allow  setting  of  priorities with the
-          <B><A HREF="../htmlman2/nice.html">nice(2)</A></B> system call. Other  systems  may  provide  dif-
+          <B><A HREF="../htmlman2/nice.html?pathrev=V61_BRANCH">nice(2)</A></B> system call. Other  systems  may  provide  dif-
           ferent ranges.
           The default priority range (varies from system to  sys-
           tem)  is installed either by removing the parameters or
@@ -1034,8 +1034,8 @@ FORMAT
      <I>NOTIFY</I>_<I>KILL</I>
           The parameter allows you  to  change  the  notification
           signal  for  the  signal SIGKILL (see -<I>notify</I> option of
-          <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>).  The parameter either  accepts  signal  names
-          (use  the  -<I>l</I>  option  of <B><A HREF="../htmlman1/kill.html">kill(1)</A></B>) or the special value
+          <B><A HREF="../htmlman1/qsub.html?pathrev=V61_BRANCH">qsub(1)</A></B>).  The parameter either  accepts  signal  names
+          (use  the  -<I>l</I>  option  of <B><A HREF="../htmlman1/kill.html?pathrev=V61_BRANCH">kill(1)</A></B>) or the special value
           <I>none</I>. If set to <I>none</I>, no notification  signal  will  be
           sent.  If  it  is set to <I>TERM</I>, for instance, or another
           signal name then this signal will be sent as  notifica-
@@ -1044,8 +1044,8 @@ FORMAT
      <I>NOTIFY</I>_<I>SUSP</I>
           With this parameter it is possible to modify the notif-
           ication  signal  for  the  signal  SIGSTOP (see -<I>notify</I>
-          parameter of <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>).  The  parameter  either  accepts
-          signal names (use the -<I>l</I> option of <B><A HREF="../htmlman1/kill.html">kill(1)</A></B>) or the spe-
+          parameter of <B><A HREF="../htmlman1/qsub.html?pathrev=V61_BRANCH">qsub(1)</A></B>).  The  parameter  either  accepts
+          signal names (use the -<I>l</I> option of <B><A HREF="../htmlman1/kill.html?pathrev=V61_BRANCH">kill(1)</A></B>) or the spe-
           cial value <I>none</I>. If set to <I>none</I>, no notification signal
           will  be  sent.  If it is set to <I>TSTP</I>, for instance, or
           another signal name then this signal will  be  sent  as
@@ -1067,11 +1067,11 @@ FORMAT
           active  when  a job was submitted will be set to become
           the primary group id for job execution. If the  parame-
           ter is not set, the primary group id as defined for the
-          job owner in the execution host <B><A HREF="../htmlman5/passwd.html">passwd(5)</A></B> file is used.
+          job owner in the execution host <B><A HREF="../htmlman5/passwd.html?pathrev=V61_BRANCH">passwd(5)</A></B> file is used.
           The feature is only available for  jobs  submitted  via
-          <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>, <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>, <B><A HREF="../htmlman1/qmake.html">qmake(1)</A></B> and <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B>.  Also, it only
-          works for <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B> jobs (and thus also for <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B>  and
-          <B><A HREF="../htmlman1/qmake.html">qmake(1)</A></B>) if rsh and rshd components are used which are
+          <B><A HREF="../htmlman1/qsub.html?pathrev=V61_BRANCH">qsub(1)</A></B>, <B><A HREF="../htmlman1/qrsh.html?pathrev=V61_BRANCH">qrsh(1)</A></B>, <B><A HREF="../htmlman1/qmake.html?pathrev=V61_BRANCH">qmake(1)</A></B> and <B><A HREF="../htmlman1/qtcsh.html?pathrev=V61_BRANCH">qtcsh(1)</A></B>.  Also, it only
+          works for <B><A HREF="../htmlman1/qrsh.html?pathrev=V61_BRANCH">qrsh(1)</A></B> jobs (and thus also for <B><A HREF="../htmlman1/qtcsh.html?pathrev=V61_BRANCH">qtcsh(1)</A></B>  and
+          <B><A HREF="../htmlman1/qmake.html?pathrev=V61_BRANCH">qmake(1)</A></B>) if rsh and rshd components are used which are
           provided with Grid Engine  (i.e.,  the  rsh_daemon  and
           rsh_command  parameters  may  not  be  changed from the
           default).
@@ -1114,7 +1114,7 @@ FORMAT
           If this parameter is set then Grid Engine uses the sup-
           plementary  group  ids  (see <I>gid</I>_<I>range</I>) to identify all
           processes which are to be  terminated  when  a  job  is
-          deleted,  or  when  <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B> cleans up after job
+          deleted,  or  when  <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V61_BRANCH">sge_shepherd(8)</A></B> cleans up after job
           termination.
 
   reporting_params
@@ -1137,7 +1137,7 @@ FORMAT
           ter, the reporting file can become  quite  large.  Only
           activate  the reporting file if you have a process run-
           ning that will consume the reporting file!  See <I>report-</I>
-          <B><A HREF="../htmlman5/ing.html">ing(5)</A></B>  for  further  information about format and con-
+          <B><A HREF="../htmlman5/ing.html?pathrev=V61_BRANCH">ing(5)</A></B>  for  further  information about format and con-
           tents of the reporting file.
 
      <I>flush</I>_<I>time</I>
@@ -1168,7 +1168,7 @@ FORMAT
 
      <I>joblog</I>
           If this parameter is set to true,  the  reporting  file
-          will  contain job logging information. See <B><A HREF="../htmlman5/reporting.html">reporting(5)</A></B>
+          will  contain job logging information. See <B><A HREF="../htmlman5/reporting.html?pathrev=V61_BRANCH">reporting(5)</A></B>
           for more information about job logging.
 
      <I>sharelog</I>
@@ -1179,7 +1179,7 @@ FORMAT
           mat HH:MM:SS. A value of  00:00:00  configures  qmaster
           not to dump sharetree information. Intervals of several
           minutes up to hours are sensible values for this param-
-          eter.   See  <B><A HREF="../htmlman5/reporting.html">reporting(5)</A></B> for further information about
+          eter.   See  <B><A HREF="../htmlman5/reporting.html?pathrev=V61_BRANCH">reporting(5)</A></B> for further information about
           sharelog.
 
      <I>log</I>_<I>consumables</I>
@@ -1193,7 +1193,7 @@ FORMAT
           set  to  false, only those variables will be written to
           the  reporting  file,  that  are  configured   in   the
           report_variables  in  the  exec host configuration, see
-          <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>    for    further    information     about
+          <B><A HREF="../htmlman5/host_conf.html?pathrev=V61_BRANCH">host_conf(5)</A></B>    for    further    information     about
           report_variables.
 
   finished_jobs
@@ -1213,7 +1213,7 @@ FORMAT
 
   qlogin_daemon
      This parameter  specifies  the  executable  that  is  to  be
-     started  on  the server side of a <B><A HREF="../htmlman1/qlogin.html">qlogin(1)</A></B> request. Usually
+     started  on  the server side of a <B><A HREF="../htmlman1/qlogin.html?pathrev=V61_BRANCH">qlogin(1)</A></B> request. Usually
      this is the absolute pathname of the system's telnet daemon.
 
      Changing qlogin_daemon  will  take  immediate  effect.   The
@@ -1225,7 +1225,7 @@ FORMAT
 
   qlogin_command
      This is the command to be executed on the client side  of  a
-     <B><A HREF="../htmlman1/qlogin.html">qlogin(1)</A></B> request.  Usually this is the absolute pathname of
+     <B><A HREF="../htmlman1/qlogin.html?pathrev=V61_BRANCH">qlogin(1)</A></B> request.  Usually this is the absolute pathname of
      the system's telnet client program.  Otherwise  the  systems
      default  telnet  client  will  be  used. It is automatically
      started with the target host and port number as parameters.
@@ -1238,7 +1238,7 @@ FORMAT
 
   rlogin_daemon
      This parameter  specifies  the  executable  that  is  to  be
-     started  on  the  server side of a <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B> request without a
+     started  on  the  server side of a <B><A HREF="../htmlman1/qrsh.html?pathrev=V61_BRANCH">qrsh(1)</A></B> request without a
      command argument to be executed remotely.  Usually  this  is
      the absolute pathname of the system's rlogin daemon.
 
@@ -1250,7 +1250,7 @@ FORMAT
 
   rlogin_command
      This is the command to be executed on the client side  of  a
-     <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>  request  without  a command argument to be executed
+     <B><A HREF="../htmlman1/qrsh.html?pathrev=V61_BRANCH">qrsh(1)</A></B>  request  without  a command argument to be executed
      remotely.  If no value is given, a specialized  Grid  Engine
      component  is  used.   The  command is automatically started
      with the target host and port  number  as  parameters.   The
@@ -1266,7 +1266,7 @@ FORMAT
 
   rsh_daemon
      This parameter  specifies  the  executable  that  is  to  be
-     started  on the server side of a <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B> request with a com-
+     started  on the server side of a <B><A HREF="../htmlman1/qrsh.html?pathrev=V61_BRANCH">qrsh(1)</A></B> request with a com-
      mand argument to be  executed  remotely.   If  no  value  is
      given, a specialized Grid Engine component is used.
 
@@ -1278,11 +1278,11 @@ FORMAT
 
   rsh_command
      This is the command to be executed on the client side  of  a
-     <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>  request  with  a  command  argument  to be executed
+     <B><A HREF="../htmlman1/qrsh.html?pathrev=V61_BRANCH">qrsh(1)</A></B>  request  with  a  command  argument  to be executed
      remotely.  If no value is given, a specialized  Grid  Engine
      component is used. The command is automatically started with
      the target host and port number as parameters like  required
-     for <B><A HREF="../htmlman1/telnet.html">telnet(1)</A></B> plus the command with its arguments to be exe-
+     for <B><A HREF="../htmlman1/telnet.html?pathrev=V61_BRANCH">telnet(1)</A></B> plus the command with its arguments to be exe-
      cuted remotely. The Grid Engine rsh client has been extended
      to accept and use the port number argument. You can only use
      clients, such as <I>ssh</I>, which also understand this syntax.
@@ -1310,7 +1310,7 @@ FORMAT
   reprioritize
      This flag enables or disables the reprioritization  of  jobs
      based  on  their ticket amount. The reprioritize_interval in
-     <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B> takes effect only if reprioritize  is  set  to
+     <B><A HREF="../htmlman5/sched_conf.html?pathrev=V61_BRANCH">sched_conf(5)</A></B> takes effect only if reprioritize  is  set  to
      true.  To  turn  off  job reprioritization, the reprioritize
      flag must be set to false and the reprioritize_interval to 0
      which is the default.
@@ -1319,14 +1319,14 @@ FORMAT
      not be overridden by the execution host local configuration.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/csh.html">csh(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman1/rsh.html">rsh(1)</A></B>,  <B><A HREF="../htmlman1/sh.html">sh(1)</A></B>,
-     <B><A HREF="../htmlman3/getpwnam.html">getpwnam(3)</A></B>,       <B><A HREF="../htmlman3/drmaa_attributes.html">drmaa_attributes(3)</A></B>,       <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,
-     <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>,         <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>,         <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,
-     <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B>,   <B><A HREF="../htmlman8/cron.html">cron(8)</A></B>,  <I>Grid</I>  <I>Engine</I>  <I>Installation</I>  <I>and</I>
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V61_BRANCH">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/csh.html?pathrev=V61_BRANCH">csh(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html?pathrev=V61_BRANCH">qconf(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html?pathrev=V61_BRANCH">qsub(1)</A></B>,  <B><A HREF="../htmlman1/rsh.html?pathrev=V61_BRANCH">rsh(1)</A></B>,  <B><A HREF="../htmlman1/sh.html?pathrev=V61_BRANCH">sh(1)</A></B>,
+     <B><A HREF="../htmlman3/getpwnam.html?pathrev=V61_BRANCH">getpwnam(3)</A></B>,       <B><A HREF="../htmlman3/drmaa_attributes.html?pathrev=V61_BRANCH">drmaa_attributes(3)</A></B>,       <B><A HREF="../htmlman5/queue_conf.html?pathrev=V61_BRANCH">queue_conf(5)</A></B>,
+     <B><A HREF="../htmlman5/sched_conf.html?pathrev=V61_BRANCH">sched_conf(5)</A></B>,         <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B>,         <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B>,
+     <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V61_BRANCH">sge_shepherd(8)</A></B>,   <B><A HREF="../htmlman8/cron.html?pathrev=V61_BRANCH">cron(8)</A></B>,  <I>Grid</I>  <I>Engine</I>  <I>Installation</I>  <I>and</I>
      <I>Administration</I> <I>Guide</I>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V61_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
 
 

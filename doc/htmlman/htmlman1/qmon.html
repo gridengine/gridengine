@@ -40,7 +40,7 @@ DESCRIPTION
 
 OPTIONS
      The supported options are the standard X Toolkit options  as
-     described  in  <B><A HREF="../htmlman1/X.html">X(1)</A></B>  section Options. Furthermore, <I>qmon</I> sup-
+     described  in  <B><A HREF="../htmlman1/X.html?pathrev=V60_BRANCH">X(1)</A></B>  section Options. Furthermore, <I>qmon</I> sup-
      ports:
 
      -cmap
@@ -100,7 +100,7 @@ DIALOGUES
      enabling  attributes  and  changing  their values after this
      hostgroup or host entry has been added  in  the  "Attributes
      for Host/Hostgroup" listbox. The queue configuration parame-
-     ters  (see  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>)  are  subdivided   in   different
+     ters  (see  <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60_BRANCH">queue_conf(5)</A></B>)  are  subdivided   in   different
      categories (General Configuration, Execution Methods, Check-
      pointing, Load/Suspend Thresholds, Limits,  Complexes,  User
      Access,  Project  Access,  Subordinate Queues, Owners) which
@@ -108,7 +108,7 @@ DIALOGUES
      region of the queue configuration sub-dialogue. The adminis-
      trator  may  select  previously  configured  settings   from
      already  existing  queues  (Clone button). By pushing the Ok
-     button, the definitions are registered with  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
+     button, the definitions are registered with  <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60_BRANCH">sge_qmaster(8)</A></B>.
      The  Queue  Control  dialogue can be customized in a similar
      way as the Job Control dialogue. The settings  applied  here
      are also saved in ~/.<I>qmon</I>_<I>preferences</I>.
@@ -137,7 +137,7 @@ DIALOGUES
      definition of the quantities in which this resources are  to
      be  provided.  The  Available  Resources  are constituted by
      those complex attributes  being  declared  <I>requestable</I>  (see
-     <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>  for  details). Resource requirements can be made
+     <B><A HREF="../htmlman5/complex.html?pathrev=V60_BRANCH">complex(5)</A></B>  for  details). Resource requirements can be made
      Hard, i.e. they must be met before a job can be started in a
      queue,  or  Soft,  i.e.  they are granted on an as available
      basis.
@@ -150,7 +150,7 @@ DIALOGUES
   Complex Config
      The Complex Config allows the administrator to add new  com-
      plex  attributes  or  to modify or delete existing ones (see
-     <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>).  The complex configuration dialogue provides  a
+     <B><A HREF="../htmlman5/complex.html?pathrev=V60_BRANCH">complex(5)</A></B>).  The complex configuration dialogue provides  a
      tabulated list of the complex attribute entries and an input
      region for the declaration of new or modified  entries.  The
      Add  button updates the tabulated list with a new attribute.
@@ -159,7 +159,7 @@ DIALOGUES
      and Save buttons allow saving or reloading the whole  attri-
      bute  list  to  or  from  file.  The Ok button registers the
      additional   or    modified    complex    attributes    with
-     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
+     <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60_BRANCH">sge_qmaster(8)</A></B>.
 
   Host Config
      Four types of host related lists can be maintained  via  the
@@ -180,15 +180,15 @@ DIALOGUES
      execution  host list entries in addition provide the ability
      to define scaling factors for the load  sensors,  consumable
      complex  attributes  and  access attributes (access, xaccess
-     and projects, xprojects) as described in  <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>.   CPU,
+     and projects, xprojects) as described in  <B><A HREF="../htmlman5/complex.html?pathrev=V60_BRANCH">complex(5)</A></B>.   CPU,
      memory and I/O usage reported for running jobs can be scaled
      in addition and the relative performance of a  host  can  be
      define    with   the   Resource   Capability   Factor   (see
-     <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>).
+     <B><A HREF="../htmlman5/host_conf.html?pathrev=V60_BRANCH">host_conf(5)</A></B>).
 
   Cluster Config
      This dialogue maintains the cluster global configuration  as
-     well  as  host specific derivatives (see <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>).  When
+     well  as  host specific derivatives (see <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60_BRANCH">sge_conf(5)</A></B>).  When
      opened, the dialogue displays a selection list for all hosts
      which  have a configuration assigned. The special name "glo-
      bal" refers to the cluster global configuration. By  pushing
@@ -201,17 +201,17 @@ DIALOGUES
   Scheduler Config
      The Scheduler Configuration dialogue provides the  means  to
      change  the  behavior  of  the  Grid Engine scheduler daemon
-     <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>.  The dialogue contains a  representation  for
+     <B><A HREF="../htmlman8/sge_schedd.html?pathrev=V60_BRANCH">sge_schedd(8)</A></B>.  The dialogue contains a  representation  for
      all  scheduler  configuration  parameters  as  described  in
-     <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>.  It is subdivided in the two sections General
+     <B><A HREF="../htmlman5/sched_conf.html?pathrev=V60_BRANCH">sched_conf(5)</A></B>.  It is subdivided in the two sections General
      Parameters  and  Load  Adjustments which can be selected via
      the corresponding tabs.  The Ok button registers any changes
-     with <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
+     with <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60_BRANCH">sge_qmaster(8)</A></B>.
 
   Calendar Config
      The Calendar Config allows  the  administrator  to  add  new
      calendars   or  to  modify  or  delete  existing  ones  (see
-     <B><A HREF="../htmlman5/calendar_conf.html">calendar_conf(5)</A></B>).  The dialogue offers a selection list for
+     <B><A HREF="../htmlman5/calendar_conf.html?pathrev=V60_BRANCH">calendar_conf(5)</A></B>).  The dialogue offers a selection list for
      the existing calendars and displays the configuration of the
      one being  selected.  By  pushing  the  Delete  button,  the
      selected calendar is deleted from the configuration. Pushing
@@ -219,7 +219,7 @@ DIALOGUES
      dialogue, which allows to create new calendars or which pro-
      vides the means to change the existing ones. The  Ok  button
      registers   the   additional   or   modified  calendar  with
-     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
+     <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60_BRANCH">sge_qmaster(8)</A></B>.
 
   User Config
      User permissions are controlled via the User  Config  dialo-
@@ -238,7 +238,7 @@ DIALOGUES
 
      The userset lists are used together with the user_lists  and
      xuser_lists  host,  queue, project and cluster configuration
-     parameters (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>, <B><A HREF="../htmlman5/project.html">project(5)</A></B>  and  <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>)
+     parameters (see <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60_BRANCH">queue_conf(5)</A></B>, <B><A HREF="../htmlman5/project.html?pathrev=V60_BRANCH">project(5)</A></B>  and  <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60_BRANCH">sge_conf(5)</A></B>)
      to  control  access  of users to hosts, queues, projects and
      the entire cluster.  A userset is just a collection of  user
      names  and  UNIX  group names. Group names are identified by
@@ -252,7 +252,7 @@ DIALOGUES
      Policy (see Ticket Config below).
 
      User names can be added to the system as entries to the Grid
-     Engine  user  database  (see <B><A HREF="../htmlman5/user.html">user(5)</A></B>), This can be done with
+     Engine  user  database  (see <B><A HREF="../htmlman5/user.html?pathrev=V60_BRANCH">user(5)</A></B>), This can be done with
      the User sub-dialogue.
 
      The Tickets button in the button list on the right  side  of
@@ -266,13 +266,13 @@ DIALOGUES
      memory parallel systems are to be instantiated and to impose
      access  restrictions  onto  the  PEs.  When  the dialogue is
      opened a list of the already  configured  PEs  is  displayed
-     together  with  the current configuration (see <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B>) of
+     together  with  the current configuration (see <B><A HREF="../htmlman5/sge_pe.html?pathrev=V60_BRANCH">sge_pe(5)</A></B>) of
      the selected PE interface.  To add new PE interfaces  or  to
      modify  existing  ones, an Add and a Modify button is avail-
      able which opens a PE interface configuration  sub-dialogue.
      After  applying  the  changes and quitting this sub-dialogue
      with the OK button, the new  or  modified  PE  interface  is
-     registered with <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
+     registered with <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60_BRANCH">sge_qmaster(8)</A></B>.
 
   Checkpoint Config
      Checkpointing environment interfaces can be configured  with
@@ -282,13 +282,13 @@ DIALOGUES
      platforms supported by Grid Engine have. When  the  dialogue
      is  opened  a  list  of the already configured checkpointing
      environments is displayed together with the  current  confi-
-     guration  (see  <B><A HREF="../htmlman5/checkpoint.html">checkpoint(5)</A></B>) of the selected checkpointing
+     guration  (see  <B><A HREF="../htmlman5/checkpoint.html?pathrev=V60_BRANCH">checkpoint(5)</A></B>) of the selected checkpointing
      environment. To add  new  checkpointing  environment  or  to
      modify  existing  ones, an Add and a Modify button is avail-
      able which opens a checkpointing  environment  configuration
      sub-dialogue.  After  applying the changes and quitting this
      sub-dialogue with the OK button, the new or modified  check-
-     pointing environment is registered with <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
+     pointing environment is registered with <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60_BRANCH">sge_qmaster(8)</A></B>.
 
   Ticket Conf
      This dialogue offers an  overview  and  editing  screen  for
@@ -301,19 +301,19 @@ DIALOGUES
      may submit deadline jobs.
 
      The Share Tree Policy button opens the dialogue for creating
-     and  editing  the  Grid Engine share tree (see <B><A HREF="../htmlman5/share_tree.html">share_tree(5)</A></B>
-     and <B><A HREF="../htmlman5/schedd_conf.html">schedd_conf(5)</A></B> for a description  of  the  configuration
+     and  editing  the  Grid Engine share tree (see <B><A HREF="../htmlman5/share_tree.html?pathrev=V60_BRANCH">share_tree(5)</A></B>
+     and <B><A HREF="../htmlman5/schedd_conf.html?pathrev=V60_BRANCH">schedd_conf(5)</A></B> for a description  of  the  configuration
      parameters).
 
      The Functional Policy button opens the dialogue for creating
      and  editing  the  allocation  of the functional shares (see
-     <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>, <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>, <B><A HREF="../htmlman5/project.html">project(5)</A></B>, <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> and
-     <B><A HREF="../htmlman5/user.html">user(5)</A></B>  for  a  description of the different types of func-
+     <B><A HREF="../htmlman5/sched_conf.html?pathrev=V60_BRANCH">sched_conf(5)</A></B>, <B><A HREF="../htmlman5/access_list.html?pathrev=V60_BRANCH">access_list(5)</A></B>, <B><A HREF="../htmlman5/project.html?pathrev=V60_BRANCH">project(5)</A></B>, <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60_BRANCH">queue_conf(5)</A></B> and
+     <B><A HREF="../htmlman5/user.html?pathrev=V60_BRANCH">user(5)</A></B>  for  a  description of the different types of func-
      tional shares and the configurable weighting parameters).
 
      The Override Policy button opens the dialogue  for  creating
      and   editing   the  allocation  of  override  tickets  (see
-     <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>, <B><A HREF="../htmlman5/project.html">project(5)</A></B>, <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> and <B><A HREF="../htmlman5/user.html">user(5)</A></B> for  a
+     <B><A HREF="../htmlman5/access_list.html?pathrev=V60_BRANCH">access_list(5)</A></B>, <B><A HREF="../htmlman5/project.html?pathrev=V60_BRANCH">project(5)</A></B>, <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60_BRANCH">queue_conf(5)</A></B> and <B><A HREF="../htmlman5/user.html?pathrev=V60_BRANCH">user(5)</A></B> for  a
      description of the different types of override tickets).
 
   Project Conf
@@ -326,9 +326,9 @@ DIALOGUES
      allows to create new projects or which provides the means to
      change the existing ones. Project configuration  in  essence
      means  giving  or  denying  access to a project for usersets
-     (see User Conf above as well as <B><A HREF="../htmlman5/project.html">project(5)</A></B>).  The Ok  button
+     (see User Conf above as well as <B><A HREF="../htmlman5/project.html?pathrev=V60_BRANCH">project(5)</A></B>).  The Ok  button
      registers   the   additional   or   modified   project  with
-     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
+     <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60_BRANCH">sge_qmaster(8)</A></B>.
 
   Browser
      The Object Browser dialogue's purpose is manifold: First  of
@@ -396,7 +396,7 @@ ENVIRONMENTAL VARIABLES
 
      SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60_BRANCH">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map entry instead to define
                     that port.
@@ -414,12 +414,12 @@ FILES
 
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,   <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>,   <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>,    <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B>,
-     <B><A HREF="../htmlman5/calendar_conf.html">calendar_conf(5)</A></B>,   <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>,  <B><A HREF="../htmlman5/project.html">project(5)</A></B>,  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,
-     <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>, <B><A HREF="../htmlman5/user.html">user(5)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60_BRANCH">sge_intro(1)</A></B>,   <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60_BRANCH">sge_conf(5)</A></B>,   <B><A HREF="../htmlman5/access_list.html?pathrev=V60_BRANCH">access_list(5)</A></B>,    <B><A HREF="../htmlman5/sge_pe.html?pathrev=V60_BRANCH">sge_pe(5)</A></B>,
+     <B><A HREF="../htmlman5/calendar_conf.html?pathrev=V60_BRANCH">calendar_conf(5)</A></B>,   <B><A HREF="../htmlman5/complex.html?pathrev=V60_BRANCH">complex(5)</A></B>,  <B><A HREF="../htmlman5/project.html?pathrev=V60_BRANCH">project(5)</A></B>,  <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60_BRANCH">queue_conf(5)</A></B>,
+     <B><A HREF="../htmlman5/sched_conf.html?pathrev=V60_BRANCH">sched_conf(5)</A></B>, <B><A HREF="../htmlman5/user.html?pathrev=V60_BRANCH">user(5)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60_BRANCH">sge_qmaster(8)</A></B>.
 
 COPYRIGHT
-     See   <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>   and   the   information   provided   in
+     See   <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60_BRANCH">sge_intro(1)</A></B>   and   the   information   provided   in
      &lt;sge_root&gt;/3rd_party/qmon  for a statement of further rights
      and permissions and for credits to be given to public domain
      and freeware widget developers.

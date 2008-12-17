@@ -16,7 +16,7 @@ SYNOPSIS
 
 DESCRIPTION
      The <I>qacct</I>  utility  scans  the  accounting  data  file  (see
-     <B><A HREF="../htmlman5/accounting.html">accounting(5)</A></B>)  and  produces  a  summary of information for
+     <B><A HREF="../htmlman5/accounting.html?pathrev=V60_BRANCH">accounting(5)</A></B>)  and  produces  a  summary of information for
      wall-clock  time,  cpu-time,  and  system   time   for   the
      categories  of hostname, queue-name, group-name, owner-name,
      job-name, job-ID and for the  queues  meeting  the  resource
@@ -74,14 +74,14 @@ OPTIONS
           This option changes the  output  format  of  <I>qacct</I>.  If
           activated,  CPU times are no longer accumulated but the
           "raw" accounting information is printed in a  formatted
-          form  instead.  See <B><A HREF="../htmlman5/accounting.html">accounting(5)</A></B> for an explanation of
+          form  instead.  See <B><A HREF="../htmlman5/accounting.html?pathrev=V60_BRANCH">accounting(5)</A></B> for an explanation of
           the displayed information.
 
      -l attr=val,...
           A resource requirement specification which must be  met
           by  the  queues  in which the jobs being accounted were
           executing. The resource request is very similar to  the
-          one described in <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>.
+          one described in <B><A HREF="../htmlman1/qsub.html?pathrev=V60_BRANCH">qsub(1)</A></B>.
 
      -o [Owner]
           The name of the owner of the jobs for which  accounting
@@ -113,7 +113,7 @@ OPTIONS
           The -t switch specifies the array job task  range,  for
           which  accounting information should be printed. Syntax
           and semantics of task_id_range_list  are  identical  to
-          that  one  described  under  the  -t option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>.
+          that  one  described  under  the  -t option to <B><A HREF="../htmlman1/qsub.html?pathrev=V60_BRANCH">qsub(1)</A></B>.
           Please see there also for further information on  array
           jobs.
 
@@ -151,13 +151,13 @@ ENVIRONMENTAL VARIABLES
 
      SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60_BRANCH">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
 
      SGE_EXECD_PORT If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>   is   expected  to  listen  for
+                    <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60_BRANCH">sge_execd(8)</A></B>   is   expected  to  listen  for
                     communication requests.   Most  installations
                     will use a services map entry for the service
                     "sge_execd" instead to define that port.
@@ -169,10 +169,10 @@ FILES
                      Grid Engine master host file
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>, <B><A HREF="../htmlman5/accounting.html">accounting(5)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60_BRANCH">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qsub.html?pathrev=V60_BRANCH">qsub(1)</A></B>, <B><A HREF="../htmlman5/accounting.html?pathrev=V60_BRANCH">accounting(5)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60_BRANCH">sge_qmaster(8)</A></B>,
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
 
 

@@ -18,12 +18,12 @@ DESCRIPTION
      CPU allocation which the operating system assigns to jobs.
 
   JOBS DISPATCH PRIORITY
-     A job's dispatch priority is affected by the job's <B><A HREF="../htmlman1/submit.html">submit(1)</A></B>
+     A job's dispatch priority is affected by the job's <B><A HREF="../htmlman1/submit.html?pathrev=V60_BRANCH">submit(1)</A></B>
      -p priority, the job's submit time and on the policy set-up.
      The overall dispatch priority set-up specifies how  priority
      values  ("prio")  of  jobs are dynamically computed and they
      are derived from the ticket policy and the  urgency  policy.
-     The     <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>     parameters    weight_ticket    and
+     The     <B><A HREF="../htmlman5/sched_conf.html?pathrev=V60_BRANCH">sched_conf(5)</A></B>     parameters    weight_ticket    and
      weight_urgency are used to control to what degree the ticket
      policy  resp.  urgency policy shall be in effect. To facili-
      tate  easier  control,  the  dynamically  determined  values
@@ -65,15 +65,15 @@ DESCRIPTION
         hrr      = rurg * assumed_slot_allocation * request
 
      with the resources urgency value ("rurg") as specified under
-     urgency  in  <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>,  the  job's assumed_slot_allocation
+     urgency  in  <B><A HREF="../htmlman5/complex.html?pathrev=V60_BRANCH">complex(5)</A></B>,  the  job's assumed_slot_allocation
      representing the number of slots a job supposedly  gets  and
-     the  per  slot  request  as  specified  using the -l <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>
+     the  per  slot  request  as  specified  using the -l <B><A HREF="../htmlman1/qsub.html?pathrev=V60_BRANCH">qsub(1)</A></B>
      option. For string type requests the formula is simply
 
         hrr      = "rurg"
 
      and directly assigns the resource urgency value as specified
-     under urgency in <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>.
+     under urgency in <B><A HREF="../htmlman5/complex.html?pathrev=V60_BRANCH">complex(5)</A></B>.
 
      The waiting time contribution represents a weighted  weight-
      ing time of the jobs
@@ -81,12 +81,12 @@ DESCRIPTION
         wtcontr = waiting_time * waiting_weight
 
      with the waiting time  in  seconds  and  the  waiting_weight
-     value as specified in <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>.
+     value as specified in <B><A HREF="../htmlman5/sched_conf.html?pathrev=V60_BRANCH">sched_conf(5)</A></B>.
 
      The deadline contribution has an increasing effect  as  jobs
      approach  their deadline initiation time (see the -dl option
-     in  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>).   It  is  defined  as  the  quotient  of   the
-     weight_deadline  value  from <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B> and the (steadily
+     in  <B><A HREF="../htmlman1/qsub.html?pathrev=V60_BRANCH">qsub(1)</A></B>).   It  is  defined  as  the  quotient  of   the
+     weight_deadline  value  from <B><A HREF="../htmlman5/sched_conf.html?pathrev=V60_BRANCH">sched_conf(5)</A></B> and the (steadily
      decreasing) free time in seconds until  deadline  initiation
      time
 
@@ -111,18 +111,18 @@ DESCRIPTION
      The run-time priority can be dynamically adjusted  in  order
      to  meet  the goals set with the ticket policy. Dynamic run-
      time priority adjustment can be turned  off  (default)  glo-
-     bally  using  reprioritize_interval  in  <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B> If no
+     bally  using  reprioritize_interval  in  <B><A HREF="../htmlman5/sched_conf.html?pathrev=V60_BRANCH">sched_conf(5)</A></B> If no
      dynamic run-time priority  adjustment  is  done  at  a  host
-     level,  the  priority  specification  in <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> is in
+     level,  the  priority  specification  in <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60_BRANCH">queue_conf(5)</A></B> is in
      effect.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>, <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>, <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>,
-     <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>  <I>Grid</I>  <I>Engine</I>  <I>Installation</I>  <I>and</I>  <I>Administration</I>
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60_BRANCH">sge_intro(1)</A></B>, <B><A HREF="../htmlman5/complex.html?pathrev=V60_BRANCH">complex(5)</A></B>, <B><A HREF="../htmlman1/qstat.html?pathrev=V60_BRANCH">qstat(1)</A></B>, <B><A HREF="../htmlman1/qsub.html?pathrev=V60_BRANCH">qsub(1)</A></B>,  <B><A HREF="../htmlman5/sched_conf.html?pathrev=V60_BRANCH">sched_conf(5)</A></B>,
+     <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60_BRANCH">sge_conf(5)</A></B>  <I>Grid</I>  <I>Engine</I>  <I>Installation</I>  <I>and</I>  <I>Administration</I>
      <I>Guide</I>
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
 
 

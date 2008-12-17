@@ -12,18 +12,18 @@ DESCRIPTION
      <I>sge</I>_<I>shepherd</I> provides the parent process functionality for a
      single  Grid Engine job.  The parent functionality is neces-
      sary on UNIX systems to retrieve resource usage  information
-     (see  <B><A HREF="../htmlman2/getrusage.html">getrusage(2)</A></B>)  after  a job has finished. In addition,
+     (see  <B><A HREF="../htmlman2/getrusage.html?pathrev=V60_BRANCH">getrusage(2)</A></B>)  after  a job has finished. In addition,
      the <I>sge</I>_<I>shepherd</I> forwards signals to the job,  such  as  the
      signals  for  suspension, enabling, termination and the Grid
-     Engine checkpointing signal (see <B><A HREF="../htmlman1/sge_ckpt.html">sge_ckpt(1)</A></B> for details).
+     Engine checkpointing signal (see <B><A HREF="../htmlman1/sge_ckpt.html?pathrev=V60_BRANCH">sge_ckpt(1)</A></B> for details).
 
      The <I>sge</I>_<I>shepherd</I> receives information about the  job  to  be
-     started  from the <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>.  During the execution of the
+     started  from the <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60_BRANCH">sge_execd(8)</A></B>.  During the execution of the
      job it actually starts up to 5 child processes. First a pro-
      log  script  is run if this feature is enabled by the prolog
-     parameter in the cluster configuration.  (See  <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>.)
+     parameter in the cluster configuration.  (See  <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60_BRANCH">sge_conf(5)</A></B>.)
      Next a parallel environment startup proceedure is run if the
-     job is a parallel job. (See <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B> for more information.)
+     job is a parallel job. (See <B><A HREF="../htmlman5/sge_pe.html?pathrev=V60_BRANCH">sge_pe(5)</A></B> for more information.)
      After  that,  the  job itself is run, followed by a parallel
      environment  shutdown  procedure  for  parallel  jobs,   and
      finally  an epilog script if requested by the epilog parame-
@@ -36,12 +36,12 @@ DESCRIPTION
      After the job has finished and the  epilog  script  is  pro-
      cessed,  <I>sge</I>_<I>shepherd</I>  retrieves  resource  usage statistics
      about the job, places them in a job specific subdirectory of
-     the  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  spool  directory  for  reporting  through
-     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> and finishes.
+     the  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60_BRANCH">sge_execd(8)</A></B>  spool  directory  for  reporting  through
+     <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60_BRANCH">sge_execd(8)</A></B> and finishes.
 
      <I>sge</I>_<I>shepherd</I> also places an exit status file  in  the  spool
      directory.  This  exit  status  can  be viewed with qacct -j
-     JobId  (see  <B><A HREF="../htmlman1/qacct.html">qacct(1)</A></B>);  it  is  not  the  exit  status   of
+     JobId  (see  <B><A HREF="../htmlman1/qacct.html?pathrev=V60_BRANCH">qacct(1)</A></B>);  it  is  not  the  exit  status   of
      <I>sge</I>_<I>shepherd</I>  itself  but  of one of the methods executed by
      <I>sge</I>_<I>shepherd</I>. This exit status can  have  several  meanings,
      depending on in which method an error occured (if any).  The
@@ -54,11 +54,11 @@ DESCRIPTION
      0      All methods: Operation was executed successfully.
 
      99     Job script, prolog and epilog: When <I>FORBID</I>_<I>RESCHEDULE</I>
-            is  not  set  in the configuration (see <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>),
+            is  not  set  in the configuration (see <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60_BRANCH">sge_conf(5)</A></B>),
             the job gets requeued.  Otherwise see "Other".
 
      100    Job script, prolog and epilog:  When  <I>FORBID</I>_<I>APPERROR</I>
-            is  not  set  in the configuration (see <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>),
+            is  not  set  in the configuration (see <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60_BRANCH">sge_conf(5)</A></B>),
             the job gets requeued.  Otherwise see "Other".
 
      Other  Job script: This  is  the  exit  status  of  the  job
@@ -78,16 +78,16 @@ DESCRIPTION
 
 RESTRICTIONS
      <I>sge</I>_<I>shepherd</I> should not be invoked  manually,  but  only  by
-     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>.
+     <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60_BRANCH">sge_execd(8)</A></B>.
 
 FILES
      &lt;<I>execd</I>_<I>spool</I>&gt;/<I>job</I>_<I>dir</I>/&lt;<I>job</I>_<I>id</I>&gt;     job specific directory
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>, <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60_BRANCH">sge_intro(1)</A></B>, <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60_BRANCH">sge_conf(5)</A></B>, <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60_BRANCH">sge_execd(8)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
 
 

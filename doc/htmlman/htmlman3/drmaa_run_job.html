@@ -45,17 +45,17 @@ DESCRIPTION
 
   drmaa_run_bulk_jobs()
      The drmaa_run_bulk_jobs() submits a Grid  Engine  array  job
-     very  much  as if the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> option `-t <I>start</I>-<I>end</I>:<I>incr</I>' had
+     very  much  as if the <B><A HREF="../htmlman1/qsub.html?pathrev=V60_BRANCH">qsub(1)</A></B> option `-t <I>start</I>-<I>end</I>:<I>incr</I>' had
      been used along with the addirional  attributes  defined  in
      the  DRMAA job template, <I>jt</I>.  The same constraints regarding
      value ranges are also in effect for  the  parameters  <I>start</I>,
-     <I>end</I>,  and  <I>incr</I> as for <B><A HREF="../htmlman5/qsub.html">qsub(5)</A></B> -t. On success a DRMAA job id
+     <I>end</I>,  and  <I>incr</I> as for <B><A HREF="../htmlman5/qsub.html?pathrev=V60_BRANCH">qsub(5)</A></B> -t. On success a DRMAA job id
      string vector containing job identifiers for each array  job
      task is returned into <I>jobids</I>. The job identifiers in the job
      id    string    vector    can     be     extracted     using
-     <B><A HREF="../htmlman3/drmaa_get_next_job_id.html">drmaa_get_next_job_id(3)</A></B>.   The  caller  is  responsible for
+     <B><A HREF="../htmlman3/drmaa_get_next_job_id.html?pathrev=V60_BRANCH">drmaa_get_next_job_id(3)</A></B>.   The  caller  is  responsible for
      releasing the job id  string  vector  returned  into  <I>jobids</I>
-     using <B><A HREF="../htmlman3/drmaa_release_job_ids.html">drmaa_release_job_ids(3)</A></B>.
+     using <B><A HREF="../htmlman3/drmaa_release_job_ids.html?pathrev=V60_BRANCH">drmaa_release_job_ids(3)</A></B>.
 
   drmaa_get_next_job_id()
      Each time drmaa_get_next_job_id() is called it returns  into
@@ -93,7 +93,7 @@ ENVIRONMENTAL VARIABLES
 
      SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60_BRANCH">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map entry instead to define
                     that port.
@@ -147,7 +147,7 @@ ERRORS
      When there are no more entries in the vector.
 
 SEE ALSO
-     <B><A HREF="../htmlman3/drmaa_attributes.html">drmaa_attributes(3)</A></B>, <B><A HREF="../htmlman3/drmaa_jobtemplate.html">drmaa_jobtemplate(3)</A></B>.
+     <B><A HREF="../htmlman3/drmaa_attributes.html?pathrev=V60_BRANCH">drmaa_attributes(3)</A></B>, <B><A HREF="../htmlman3/drmaa_jobtemplate.html?pathrev=V60_BRANCH">drmaa_jobtemplate(3)</A></B>.
 
 
 

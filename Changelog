@@ -1,7 +1,14 @@
+ZG-2008-12-17-0: Bugfix:      mk_ascman: does not generate the '?pathrev=<BRANCH>'
+                              string to the end of the links inside man pages
+                 Revert:      mk_ascman: don't show the sge versions on the left
+                              side frame at the top
+                 Review:      LP
+
 ZG-2008-12-03-0: Enhancem.:   improve mk_ascman script the way to generate html
                               pages which handle multiple sge versions
                  Enhancem.:   update html man pages
                  Review:      LP
+
 RH-2004-08-16-0: Bugfix:     Typos in qconf(1) and qhost(1) fixed
                  Changed:    qconf(1) and qhost(1)
 

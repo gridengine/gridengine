@@ -308,6 +308,24 @@ extern int main(int argc, char** argv)
   while(do_shutdown != 1) {
      int ret_val;
 
+     if (getenv("CL_FORK_SLEEP_CHILD")) {
+        int sleep_child = atoi(getenv("CL_FORK_SLEEP_CHILD"));
+        int sleep_parent = 0;
+        if (getenv("CL_FORK_SLEEP_PARENT")) {
+           sleep_parent = atoi(getenv("CL_FORK_SLEEP_PARENT"));
+        }
+        if (fork() == 0) {
+           printf("fork() - child - sleep %d ...\n", sleep_child);
+           sleep(sleep_child);
+           printf("fork() - child - sleep %d done\n", sleep_child);
+           exit(0);
+        } else {
+           printf("fork() - parent - sleep %d ...\n", sleep_parent);
+           sleep(sleep_parent);
+           printf("fork() - parent - sleep %d done\n", sleep_parent);
+        }
+     } 
+
      CL_LOG(CL_LOG_INFO,"main()");
      cl_commlib_trigger(handle, 1); 
 

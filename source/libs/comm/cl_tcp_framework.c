@@ -1808,6 +1808,9 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 
       switch(select_back) {
          case -1: {
+            /*
+             * poll() and select() set errno to EINTR if interrupted
+             */
             if (my_errno == EINTR) {
                CL_LOG(CL_LOG_WARNING,"select interrupted (errno=EINTR)");
                retval = CL_RETVAL_SELECT_INTERRUPT;
@@ -1817,9 +1820,18 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
             CL_LOG_STR(CL_LOG_ERROR,"select error", strerror(my_errno));
             retval = CL_RETVAL_SELECT_ERROR;
             
-            /* check socket errors for EBADF  */
-            if (my_errno == EBADF) {
-               CL_LOG(CL_LOG_WARNING, "errno=EBADF, checking file descriptors");
+            /*
+             * 1) select() set errno to EBADF for not valid file descriptors
+             * 2) poll() and select() set errno to EINVAL for file descriptors that are
+             *    > OPEN_MAX or FD_SETSIZE
+             * => In both cases we check the filedescriptors with get_sock_opt()
+             */
+            if (my_errno == EBADF || my_errno == EINVAL) {
+               if (my_errno == EBADF) {
+                  CL_LOG(CL_LOG_WARNING, "errno=EBADF, checking file descriptors");
+               } else {
+                  CL_LOG(CL_LOG_WARNING, "errno=EINVAL, checking file descriptors");
+               }
                /* now check all file descriptors and close those which errors */
                cl_raw_list_lock(connection_list); 
                con_elem = cl_connection_list_get_first_elem(connection_list);
@@ -1835,7 +1847,7 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
                   if (socket_error != 0 || get_sock_opt_error != 0) {
                      connection->connection_state = CL_CLOSING;
                      connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
-                     CL_LOG_STR(CL_LOG_ERROR, "select error:", strerror(socket_error));
+                     CL_LOG_STR(CL_LOG_ERROR, "select() or poll() - socket error is: ", strerror(socket_error));
                      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SELECT_ERROR, strerror(socket_error));
 
                      if (connection->remote            != NULL && 
@@ -1855,14 +1867,7 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
                cl_raw_list_unlock(connection_list);
                break;
             }
-
-            CL_LOG_INT(CL_LOG_WARNING, "errno =", (int) my_errno);
-            if (my_errno == EINVAL) {
-               CL_LOG(CL_LOG_WARNING,"errno=EINVAL");
-            }
-            if (my_errno == ENOMEM) {
-               CL_LOG(CL_LOG_WARNING,"errno=ENOMEM");
-            }
+            CL_LOG_INT(CL_LOG_WARNING, "unexpected errno value: ", (int) my_errno);
             break;
          }
          case 0:
@@ -1895,8 +1900,16 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
                   }
 
                   /* Do we have poll errors ? */
-                  if (ufds[fd_index].revents & (POLLERR|POLLHUP|POLLNVAL)) {
-                     CL_LOG(CL_LOG_WARNING, "poll() returned POLLERR, POLHUP or POLLNVAL for a connection, checking socket ...");
+                  if ((ufds[fd_index].revents & (POLLERR|POLLHUP|POLLNVAL)) && connection != service_connection) {
+                     if (ufds[fd_index].revents & POLLNVAL) {
+                         CL_LOG_INT(CL_LOG_WARNING, "poll() revents POLLNVAL is set - checking file descriptor: ", (int)ufds[fd_index].fd);
+                     }
+                     if (ufds[fd_index].revents & POLLERR) {
+                         CL_LOG_INT(CL_LOG_WARNING, "poll() revents POLLERR is set - checking file descriptor: ", (int)ufds[fd_index].fd);
+                     }
+                     if (ufds[fd_index].revents & POLLHUP) {
+                         CL_LOG_INT(CL_LOG_WARNING, "poll() revents POLLHUP is set - checking file descriptor: ", (int)ufds[fd_index].fd);
+                     }
                      /* check the connection */
                      con_private = cl_com_tcp_get_private(connection);
                      socket_error = 0;
@@ -1908,7 +1921,7 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
                      if (socket_error != 0 || get_sock_opt_error != 0) {
                         connection->connection_state = CL_CLOSING;
                         connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
-                        CL_LOG_STR(CL_LOG_ERROR, "socket error:", strerror(socket_error));
+                        CL_LOG_STR(CL_LOG_ERROR, "socket error: ", strerror(socket_error));
                         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SELECT_ERROR, strerror(socket_error));
                         if (connection->remote            != NULL && 
                             connection->remote->comp_host != NULL &&

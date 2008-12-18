@@ -1,3 +1,11 @@
+CR-2008-12-18-0: Bugfix:      o execd job start might produce communication
+                                errors because of not posix compliant fork()
+                                system call
+                 Cleanup:     o poll()/select() error handling  
+                 Bugster:     6786152
+                 Issue:       2837 
+                 Review:      RD
+
 ZG-2008-12-18-0: Enhancem.:   new intermediate page for manual version selection
 
 MP-2008-12-17-0: Bugfix:      submit(1) man page defines support for the -display

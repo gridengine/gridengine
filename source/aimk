@@ -1689,6 +1689,7 @@ case SOLARISAMD64:
 #      set CFLAGS = "-DFD_SETSIZE=8192 $CFLAGS"
 #   endif
 
+   # INFO: rel is also used later ...
    set rel = `uname -r | cut -f 2 -d .`
    if ( $rel > 6 ) then
       set CFLAGS = "-DHAS_SOCKLEN_T $CFLAGS"
@@ -1757,7 +1758,22 @@ case SOLARISAMD64:
       endif
    endif
 
-   set LIBS     = "-lsocket -lnsl -lm -lthread"
+   # This is workaround for not POSIX fork() behaviour of -lthread
+   # library. The man page of fork() tells following:
+   # ...
+   # Note that if a program is  linked  with  both  libraries
+   # (-lthread  and  -lpthread),  the POSIX semantic of fork() pre-
+   # vails.
+   # 
+   # TODO: use -lpthread only when jmx thread supports it!
+   #       
+   if ( $rel < 10 ) then
+      # Solaris version < 10 needs -lpthread
+      set LIBS     = "-lsocket -lnsl -lm -lpthread -lthread"
+   else
+      # Solaris versions >= 10 have posix fork()
+      set LIBS     = "-lsocket -lnsl -lm -lthread"
+   endif
    set LOADAVGLIBS = "-lkstat"
    set FSTYPELIBS = "-lkstat"
 

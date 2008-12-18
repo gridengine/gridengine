@@ -1,3 +1,10 @@
+JF-2008-12-18-0: Enhancem.:   Improvement of existing man pages
+                 Bugster:     6609691
+                 Issue:       0
+                 Bugster:     6575730
+                 Issue:       0
+                 Review:      MP
+
 RD-2008-12-18-0: Bugfix:      - improved reprioritize data structures
                                 reprioritize code is no longer executed if
                                 feature is disabled

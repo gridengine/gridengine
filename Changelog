@@ -1,3 +1,5 @@
+ZG-2008-12-18-0: Enhancem.:   new intermediate page for manual version selection
+
 MP-2008-12-17-0: Bugfix:      submit(1) man page defines support for the -display
                               option only for qsh, however qrsh also supports this
                  Bugster:     6785777

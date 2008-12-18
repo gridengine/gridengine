@@ -1,3 +1,75 @@
+Bugs fixed in SGE 6.2u1 since release 6.2
+-----------------------------------------
+
+Issue    Sun BugId Description
+-------- --------- ------------------------------------------------------------------------------------------
+-        6702511   qdel man page: The wording for the -f option is misleading 
+-        6682558   wrong scheduling decision when job-id's roll over to 1 
+-        6776011   Missing files in SGE62u1 patch 
+-        6760646   Execd uninstallation does not remove the SMF service
+551      6734244   MaxPendingJobsSLO is not working 
+555      6735232   MaxPendingJobsSLO can produce a swinging system 
+585      6765524   GEAdapter with static resources ends up in ERROR state 
+586      6765535   GEAdapter resets accidentally the static flag of resources 
+1741     6319223   subordinate properties lost on qmaster restart 
+2240     6554872   qsub -w e does not acknowlegde dynamic load parameters 
+2253     6558329   DRMAA does not remove -sync option 
+2279     6575735   weight_priority is missing from sched_conf(5) 
+2280     6575737   loglevel default is wrong in sge_conf(5) 
+2453     6647720   database version upgrade needs to be enhanced 
+2594     6673742   qmaster reinstall overwriting an existing installation fails 
+2626     6717825   All foreign and primary keys in dbdefinition.xml should be defined as bigint 
+2663     6727809   interactive jobs to a Windows host take up to 1 minute to end 
+2679     6729441   memory leak in sge_execd with qsub -v SGE_* or qsub -V 
+2680     6730487   qalter -w v <jobid> is not verbose 
+2683     6733626   ARCo should support SJWC 3.1 
+2684     6734764   qhost -l h=<hostname> does not work in combination with any other resource request 
+2685     6735875   sge_ca script fails for installation as root user 
+2690     6734854   installation script for reporting "assumes" correct permission settings for installation files 
+2693     6622128   usage output cleanup for client commands 
+2694     6739725   Cannot choose admin user when installing as root - installation fails 
+2696     6740388   reporting installation fails with SJWC 3.0.x if $JAVA_HOME is not set to java version at least 1.5 
+2697     6740404   dbwriter installation doesn't exit when an SQL error happens during database install/upgrade 
+2698     6740420   Upgrading dbwriter from 6.1u4, 6.1u5 to 6.2 fails on MySQL 
+2700     6738091   execd fails to reconnect to shadow master host 
+2707     6742941   Installation might fail if SGE_CELL directory exists 
+2708     6742976   parameters are not replaced during database connection test 
+2709     6743001   Parallel execd autoinstallation might fail when using only SMF 
+2710     6743003   Service Tags support displays messages on qmaster startup/shutdown 
+2712     6743431   dbwriter installation fails if admin_user in bootstrap file is 'none' 
+2716     6744757   interactive jobs (qlogin, qrsh without command) don't set the TZ environment variable correctly 
+2717     6744738   once scheduler monitoring has been enabled, it remains on permanently 
+2722     6745913   dbwriter keeps crashing due to inability to close the open cursors. 
+2723     6567413   Parameter PE_RANGE_ALG is shown as SELECT_PE_RANGE_ALG in the man page of sched_conf 
+2726     6727295   qresub on -b y jobs raises wrong error condition 
+2728     6748854   Commlib does not compare hosts with strcasecmp 
+2731     6726233   qrsh -w v does not work 
+2734     6750834   in csp mode commlib clients do not respect commlib parameters for the first message 
+2736     6730437   overlap in -masterq and -hard -q causes problems with some allocation rules 
+2737     6752921   qalter allows a user to place a job in a project forbidden by ACLs 
+2741     6753642   Execd reconnect can take up to 90 seconds after qmaster restart 
+2742     6749902   sge_qmaster might crash when schedd_job_info is turned on and qsub / qalter -w is used 
+2743     6754094   h_rt limit enforcement gets delayed in case of execd restart 
+2744     6750325   qresub/qalter/qhold/qrls/qrsub/qconf/qping -help should return exit code 0 (instead of 1) 
+2745     6749921   man page indicates that qresub has the option -V and help output is confusing 
+2746     6752920   qalter -h n requires manager privileges/ qresub deletes the hold state while copying a job 
+2747     6754568   qmaster might be unresponsive for a time because of commlib timeout 
+2751     6637152   change SGE_Helper_Service.exe(8) man page 
+2752     6709552   qconf -Aconf modifies existing configuration 
+2753     6710511   spooldefaults dumps core when bootstrap file does not exists 
+2754     6750688   SGE_EXECD_PORT gets accepted even when the same as SGE_QMASTER_PORT 
+2755     6748262   invalid exit code if host is removed from admin host list during installation 
+2762     6762505   RQS with non-consumable complex crashes scheduler 
+2771     6766830   Critical errors when updating von 6.1 to 6.2 with inst_sge -upd and inst_sge -upd-execd 
+2772     6767198   auto install fails with spooling via BDB server 
+2773     6765660   When updating from 6.1u? to 6.2 with rpc BDB the upgrading script does not delete spooldb directory 
+2775     6767234   shutdown problems of shepherd daemons with new interactive job support 
+2778     6767792   inst_sge -upd prints help output of checkprog binary when PID text file is empty 
+2779     6767855   Updating from 6.1 to 6.2 is failing with classic spooling when using the old spool directory 
+2782     6768967   when upgrading from 6.1 to 6.2 with BDB RPC spooling using same database directory it fails 
+2784     6743012   Upgrade in copy mode should suggest spooling method from the backup first
+
+
 Bugs fixed in SGE 6.2 since release 6.2beta2
 --------------------------------------------
 

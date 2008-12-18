@@ -9,11 +9,11 @@ NAME
 DESCRIPTION
      <I>Host</I>_<I>conf</I> reflects the format of the template file  for  the
      execution  host  configuration.  Via the -ae and -me options
-     of the <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> command, you can  add  execution  hosts  and
+     of the <B><A HREF="../htmlman1/qconf.html?pathrev=V60s2_BRANCH">qconf(1)</A></B> command, you can  add  execution  hosts  and
      modify  the configuration of any execution host in the clus-
      ter. Default execution host entries are added  automatically
-     as  soon  as  a <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> registers to <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> for
-     the very first time from a certain host. The  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>  -sel
+     as  soon  as  a <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B> registers to <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B> for
+     the very first time from a certain host. The  <B><A HREF="../htmlman1/qconf.html?pathrev=V60s2_BRANCH">qconf(1)</A></B>  -sel
      switch can be used to display a list of execution host being
      currently configured in your Grid Engine system. Via the -se
      option  you  can print the execution host configuration of a
@@ -31,12 +31,12 @@ FORMAT
      load_scaling
           A comma separated list of scaling values to be  applied
           to  each  or  part of the load values being reported by
-          the <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> on the host and being defined  in  the
-          cluster  global  "host"  complex (see <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>).  The
+          the <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B> on the host and being defined  in  the
+          cluster  global  "host"  complex (see <B><A HREF="../htmlman5/complex.html?pathrev=V60s2_BRANCH">complex(5)</A></B>).  The
           load scaling factors are intended to level hardware  or
           operating system specific differences between execution
           hosts.  If,  for  example,  the  load   average   value
-          (load_avg in the "host" complex; see also <B><A HREF="../htmlman1/uptime.html">uptime(1)</A></B>) of
+          (load_avg in the "host" complex; see also <B><A HREF="../htmlman1/uptime.html?pathrev=V60s2_BRANCH">uptime(1)</A></B>) of
           a multiprocessor machine is to be compared with a  sin-
           gle  processor machine the load as reported by the sin-
           gle CPU host needs to be weighted up against  the  mul-
@@ -62,12 +62,12 @@ FORMAT
           managed  via  this host. Each complex attribute is fol-
           lowed by an "=" sign and the value  specification  com-
           pliant  with  the  complex  attribute  type  (see  <I>com-</I>
-          <B><A HREF="../htmlman5/plex.html">plex(5)</A></B>).  Quota specifications are separated  by  com-
+          <B><A HREF="../htmlman5/plex.html?pathrev=V60s2_BRANCH">plex(5)</A></B>).  Quota specifications are separated  by  com-
           mas.
 
           The quotas are related to the resource  consumption  of
           all  jobs on a host in the case of consumable resources
-          (see <B><A HREF="../htmlman5/complex.html">complex(5)</A></B> for details on consumable resources) or
+          (see <B><A HREF="../htmlman5/complex.html?pathrev=V60s2_BRANCH">complex(5)</A></B> for details on consumable resources) or
           they  are  interpreted  on  a per job slot basis in the
           case of non-consumable resources.  Consumable  resource
           attributes  are  commonly  used  to manage free memory,
@@ -91,8 +91,8 @@ FORMAT
           Note: Load values replacing  the  quota  specifications
           may  have  become more stringent because they have been
           scaled (see load_scaling above)  and/or  load  adjusted
-          (see <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>).  The -<I>F</I> option of <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B> and the
-          load  display  in  the  <B><A HREF="../htmlman1/qmon.html">qmon(1)</A></B>  queue  control  dialog
+          (see <B><A HREF="../htmlman5/sched_conf.html?pathrev=V60s2_BRANCH">sched_conf(5)</A></B>).  The -<I>F</I> option of <B><A HREF="../htmlman1/qstat.html?pathrev=V60s2_BRANCH">qstat(1)</A></B> and the
+          load  display  in  the  <B><A HREF="../htmlman1/qmon.html?pathrev=V60s2_BRANCH">qmon(1)</A></B>  queue  control  dialog
           (activated  by  clicking  on  a  queue  icon  while the
           "Shift" key is pressed) provide detailed information on
           the  actual availability of consumable resources and on
@@ -102,17 +102,17 @@ FORMAT
           (used  for the availability calculation) as well as the
           resource requests of the jobs waiting to be  dispatched
           either  may be derived from explicit user requests dur-
-          ing job submission (see the -<I>l</I> option  to  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>)  or
+          ing job submission (see the -<I>l</I> option  to  <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B>)  or
           from  a  "default" value configured for an attribute by
-          the administrator (see <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>).  The -<I>r</I>  option  to
-          <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>  can be used for retrieving full detail on the
+          the administrator (see <B><A HREF="../htmlman5/complex.html?pathrev=V60s2_BRANCH">complex(5)</A></B>).  The -<I>r</I>  option  to
+          <B><A HREF="../htmlman1/qstat.html?pathrev=V60s2_BRANCH">qstat(1)</A></B>  can be used for retrieving full detail on the
           actual resource requests of all jobs in the system.
 
           For non-consumable resources Grid  Engine  simply  com-
           pares the job's attribute requests with the correspond-
           ing specification in complex_values taking the relation
           operator  of  the  complex  attribute  definition  into
-          account (see <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>).  If the result  of  the  com-
+          account (see <B><A HREF="../htmlman5/complex.html?pathrev=V60s2_BRANCH">complex(5)</A></B>).  If the result  of  the  com-
           parison  is  "true",  the  host is suitable for the job
           with respect to the particular attribute. For  parallel
           jobs each job slot to be occupied by a parallel task is
@@ -128,17 +128,17 @@ FORMAT
 
      load_values
           This entry cannot be configured but is  only  displayed
-          in  case of a <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> -se command. All load values are
-          displayed as reported by the <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> on the  host.
+          in  case of a <B><A HREF="../htmlman1/qconf.html?pathrev=V60s2_BRANCH">qconf(1)</A></B> -se command. All load values are
+          displayed as reported by the <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B> on the  host.
           The load values are enlisted in a comma separated list.
           Each load value start with its  name,  followed  by  an
           equal sign and the reported value.
 
      processors
           This entry cannot be configured but is  only  displayed
-          in  case  of  a  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> -se command. Its value is the
+          in  case  of  a  <B><A HREF="../htmlman1/qconf.html?pathrev=V60s2_BRANCH">qconf(1)</A></B> -se command. Its value is the
           number  of  processors  which  has  been  detected   by
-          <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> on the corresponding host.
+          <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B> on the corresponding host.
 
      usage_scaling
           The format is equivalent to load_scaling  (see  above),
@@ -151,7 +151,7 @@ FORMAT
      user_lists
           The user_lists parameter  contains  a  comma  separated
           list  of  so  called  user access lists as described in
-          <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>.  Each user contained in at least one of
+          <B><A HREF="../htmlman5/access_list.html?pathrev=V60s2_BRANCH">access_list(5)</A></B>.  Each user contained in at least one of
           the  enlisted  access  lists has access to the host. If
           the user_lists parameter is set to NONE  (the  default)
           any  user  has access being not explicitly excluded via
@@ -163,7 +163,7 @@ FORMAT
      xuser_lists
           The xuser_lists parameter contains  a  comma  separated
           list  of  so  called  user access lists as described in
-          <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>.  Each user contained in at least one of
+          <B><A HREF="../htmlman5/access_list.html?pathrev=V60s2_BRANCH">access_list(5)</A></B>.  Each user contained in at least one of
           the  enlisted access lists is not allowed to access the
           host. If the xuser_lists parameter is set to NONE  (the
           default)  any  user has access.  If a user is contained
@@ -197,15 +197,15 @@ FORMAT
           arrives from an execution host.
 
           Default settings can be done in the global  host.  Host
-          specific  settings  for report_variables will overwrite
+          specific  settings  for  report_variables will override
           settings from the global host.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,  <B><A HREF="../htmlman1/uptime.html">uptime(1)</A></B>,  <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>,   <I>com-</I>
-     <B><A HREF="../htmlman5/plex.html">plex(5)</A></B>, <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>, <B><A HREF="../htmlman8/sge_qmater.html">sge_qmater(8)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html?pathrev=V60s2_BRANCH">qconf(1)</A></B>,  <B><A HREF="../htmlman1/uptime.html?pathrev=V60s2_BRANCH">uptime(1)</A></B>,  <B><A HREF="../htmlman5/access_list.html?pathrev=V60s2_BRANCH">access_list(5)</A></B>,   <I>com-</I>
+     <B><A HREF="../htmlman5/plex.html?pathrev=V60s2_BRANCH">plex(5)</A></B>, <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B>, <B><A HREF="../htmlman8/sge_qmater.html?pathrev=V60s2_BRANCH">sge_qmater(8)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
 
 

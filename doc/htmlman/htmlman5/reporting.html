@@ -19,9 +19,9 @@ DESCRIPTION
 
 FORMAT
      The reporting file is an ASCII file.  Each line contains one
-     record,  the fields of a record are separated by a delimiter
-     (:).  The reporting file contains records of different type.
-     Each record type has a specific record structure.
+     record, and the fields of a record are separated by a delim-
+     iter (:).  The reporting file contains records of  different
+     type. Each record type has a specific record structure.
 
      The first two fields are common to all reporting records:
 
@@ -32,13 +32,13 @@ FORMAT
           records  and  their structure are described in the fol-
           lowing text.
 
-new_job
+  new_job
      The new_job record is written whenever a new job enters  the
      system (usually by a submitting command). It has the follow-
      ing fields:
 
      submission_time
-          Time when the job was submitted.
+          Time (GMT unix time stamp) when the job was submitted.
 
      job_number
           The job number.
@@ -73,7 +73,7 @@ new_job
      priority
           The job priority (from -p submission option).
 
-job_log
+  job_log
      The job_log record is written whenever a job, an array  task
      or a pe tasks is changing status. A status change can be the
      transition from pending to running, but can  also  be  trig-
@@ -113,7 +113,7 @@ job_log
           Reserved field for later use.
 
      submission_time
-          Time when the job was submitted.
+          Time (GMT unix time stamp) when the job was submitted.
 
      job_name
           The job name (from -N submission option)
@@ -140,7 +140,7 @@ job_log
      message
           A message describing the reported action.
 
-acct
+  acct
      Records of type acct are accounting records. They are  writ-
      ten  whenever a job, a task of an array job or the task of a
      parallel job terminates.  Accounting  records  comprise  the
@@ -166,22 +166,24 @@ acct
           Job identifier - job number.
 
      account
-          An account  string  as  specified  by  the  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>  or
-          <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B> -A option.
+          An account  string  as  specified  by  the  <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B>  or
+          <B><A HREF="../htmlman1/qalter.html?pathrev=V60s2_BRANCH">qalter(1)</A></B> -A option.
 
      priority
           Priority value assigned to the job corresponding to the
           priority  parameter  in  the  queue  configuration (see
-          <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>).
+          <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B>).
 
      submission_time
-          Submission time in seconds (since epoch format).
+          Submission time (GMT unix time stamp).  For slave tasks
+          of    tightly    integrated    parallel    jobs,    the
+          submission_time is always set to 0.
 
      start_time
-          Start time in seconds (since epoch format).
+          Start time (GMT unix time stamp).
 
      end_time
-          End time in seconds (since epoch format).
+          End time (GMT unix time stamp).
 
      failed
           Indicates the problem which  occurred  in  case  a  job
@@ -201,7 +203,7 @@ acct
 
      The remainder of the accounting entries follows the contents
      of  the  standard  UNIX  rusage  structure  as  described in
-     <B><A HREF="../htmlman2/getrusage.html">getrusage(2)</A></B>.  Depending on the operating system  where  the
+     <B><A HREF="../htmlman2/getrusage.html?pathrev=V60s2_BRANCH">getrusage(2)</A></B>.  Depending on the operating system  where  the
      job was executed some of the fields may be 0.  The following
      entries are provided:
 
@@ -260,9 +262,11 @@ acct
      maxvmem
           The maximum vmem size in bytes.
 
-queue
+
+  queue
      Records of type queue contain state information  for  queues
      (queue instances).  A queue record has the following fields:
+
      qname
           The cluster queue name.
 
@@ -270,13 +274,13 @@ queue
           The hostname of a specific queue instance.
 
      report_time
-          The time (GMT unix timestamp) when a state  change  was
+          The time (GMT unix time stamp) when a state change  was
           triggered.
 
      state
           The new queue state.
 
-queue_consumable
+  queue_consumable
      A queue_consumable record contains information  about  queue
      consumable values in addition to queue state information:
 
@@ -287,7 +291,7 @@ queue_consumable
           The hostname of a specific queue instance.
 
      report_time
-          The time (GMT unix timestamp) when a state  change  was
+          The time (GMT unix time stamp) when a state change  was
           triggered.
 
      state
@@ -299,7 +303,7 @@ queue_consumable
           able       description       has       the       format
           &lt;name&gt;=&lt;actual_value&gt;=&lt;configured value&gt;.
 
-host
+  host
      A host record contains information about hosts and host load
      values.  It contains the following information:
 
@@ -307,7 +311,7 @@ host
           The name of the host.
 
      report_time
-          The time (GMT unix timestamp) when the reported  infor-
+          The time (GMT unix time stamp) when the reported infor-
           mation was generated.
 
      state
@@ -320,7 +324,7 @@ host
           load  values  is  separated  by  space.   A  load value
           description has the format &lt;name&gt;=&lt;actual_value&gt;.
 
-host_consumable
+  host_consumable
      A host_consumable record contains  information  about  hosts
      and  host  consumables.  Host consumables can for example be
      licenses.  It contains the following information:
@@ -329,7 +333,7 @@ host_consumable
           The name of the host.
 
      report_time
-          The time (GMT unix timestamp) when the reported  infor-
+          The time (GMT unix time stamp) when the reported infor-
           mation was generated.
 
      state
@@ -343,28 +347,76 @@ host_consumable
           able       description       has       the       format
           &lt;name&gt;=&lt;actual_value&gt;=&lt;configured value&gt;.
 
+  sharelog
+     The Grid Engine qmaster can dump information about sharetree
+     configuration  and use to the reporting file.  The parameter
+     <I>sharelog</I> sets an interval  in  which  sharetree  information
+     will  be  dumped.  It is set in the format HH:MM:SS. A value
+     of 00:00:00 configures qmaster not to dump sharetree  infor-
+     mation.  Intervals of several minutes up to hours are sensi-
+     ble values for this parameter.  The record contains the fol-
+     lowing fields
+
+     current time
+          The present time
+
+     usage time
+          The  time used so far
+
+     node name
+          The node name
+
+     user name
+          The user name
+
+     project name
+          The project name
+
+     shares
+          The total shares
+
+     job count
+          The job  count
+
+     level
+          The percentage of shares used
+
+     total
+          The adjusted percentage of shares used
+
+     long target share
+          The long target percentage of resource shares used
+
+     short target share
+          The short target percentage of resource shares used
+
+     actual share
+          The actual percentage of resource shares used
+
+     usage
+          The combined shares used
+
+     cpu  The cpu used
+
+     mem  The memory used
+
+     io   The IO used
+
+     long target cpu
+          The long target cpu used
+
+     long target mem
+          The long target memory used
+
+     long target io
+          The long target IO used
+
 SEE ALSO
-     <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>.  <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>.
+     <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60s2_BRANCH">sge_conf(5)</A></B>.  <B><A HREF="../htmlman5/host_conf.html?pathrev=V60s2_BRANCH">host_conf(5)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 </PRE>

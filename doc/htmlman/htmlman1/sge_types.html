@@ -7,7 +7,7 @@ NAME
 
 DESCRIPTION
      The Grid Engine user interface consists of several  programs
-     and  files.  Some  command  line  switches  and several file
+     and  files.  Some  command-line  switches  and  several file
      attributes  are  types.  The  syntax  for  these  types   is
      explained in this page.
 
@@ -45,8 +45,8 @@ TYPES
      A  wildcard  host  specification  (<I>wc</I>_<I>host</I>)  is  a  wildcard
      expression  which  might match one or more hosts used in the
      cluster.  The first character of that  string  never  begins
-     with  an at-character '@' even if the expression begins with
-     a wildcard character.
+     with  an  at-character  ('@'), even if the expression begins
+     with a wildcard character.
 
      e.g.
           *            all hosts
@@ -56,10 +56,10 @@ TYPES
      A  wildcard  hostgroup  specification  (<I>wc</I>_<I>hostgroup</I>)  is  a
      wildcard  expression  which  might  match  one or more host-
      groups.  The first character of that string is always a  at-
-     character '@'.
+     character ('@').
 
      More information concerning hostgroups can be found in <I>host-</I>
-     <B><A HREF="../htmlman5/group.html">group(5)</A></B>
+     <B><A HREF="../htmlman5/group.html?pathrev=V60s2_BRANCH">group(5)</A></B>
 
      e.g.
           @*           all hostgroups in the cluster
@@ -95,7 +95,7 @@ TYPES
 
      If present, the <I>task</I>_<I>range</I> restricts the effect of the  <I>qmod</I>
      operation to the array job task range specified as suffix to
-     the job id (see the -t option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> for further details
+     the job id (see the -t option to <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B> for further details
      on array jobs).
 
   wc_qdomain
@@ -121,8 +121,8 @@ TYPES
      A wildcard cluster  queue  specification  (<I>wc</I>_<I>cqueue</I>)  is  a
      wildcard  expression  which  might match one or more cluster
      queues used in the cluster.  That string never  contains  an
-     at-character  '@' even if the expression begins with a wild-
-     card character.
+     at-character  ('@'),  even  if  the expression begins with a
+     wildcard character.
 
      e.g.
           *            all cluster queues
@@ -182,7 +182,7 @@ TYPES
      wc_user_list := wc_user [ , wc_user , ...]
 
 SEE ALSO
-     <B><A HREF="../htmlman1/qacct.html">qacct(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>
+     <B><A HREF="../htmlman1/qacct.html?pathrev=V60s2_BRANCH">qacct(1)</A></B>, <B><A HREF="../htmlman1/qconf.html?pathrev=V60s2_BRANCH">qconf(1)</A></B>
 
 COPYRIGHT
      Copyright: 2004 by Sun Microsystems, Inc.

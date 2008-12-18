@@ -1,3 +1,5 @@
+ZG-2008-12-18-1: Update:      update html man pages
+
 ZG-2008-12-18-0: Enhacem.:    mk_askman: generate the branch name into the links
                  Bugfix:      mk_ascman: does not generate the '?pathrev=<BRANCH>'
                               string to the end of the links inside man pages

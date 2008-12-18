@@ -8,9 +8,9 @@ NAME
 
 DESCRIPTION
      <I>sched</I>_<I>conf</I> defines the configuration file  format  for  Grid
-     Engine's  default  scheduler  provided by <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>.  In
+     Engine's  default  scheduler  provided by <B><A HREF="../htmlman8/sge_schedd.html?pathrev=V60s2_BRANCH">sge_schedd(8)</A></B>.  In
      order to modify the configuration, use the graphical  user's
-     interface <B><A HREF="../htmlman1/qmon.html">qmon(1)</A></B> or the -<I>msconf</I> option of the <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> com-
+     interface <B><A HREF="../htmlman1/qmon.html?pathrev=V60s2_BRANCH">qmon(1)</A></B> or the -<I>msconf</I> option of the <B><A HREF="../htmlman1/qconf.html?pathrev=V60s2_BRANCH">qconf(1)</A></B> com-
      mand. A default configuration is provided together with  the
      Grid Engine distribution package.
 
@@ -27,8 +27,8 @@ FORMAT
   load_formula
      A simple  algebraic  expression  used  to  derive  a  single
      weighted  load value from all or part of the load parameters
-     reported by <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> for each host and from all or  part
-     of  the  consumable  resources  (see <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>) being main-
+     reported by <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B> for each host and from all or  part
+     of  the  consumable  resources  (see <B><A HREF="../htmlman5/complex.html?pathrev=V60s2_BRANCH">complex(5)</A></B>) being main-
      tained for each host.  The load formula expression syntax is
      that of a summation weighted load values, that is:
 
@@ -37,10 +37,10 @@ FORMAT
      Note, no blanks are allowed in the load formula.
      The load values and consumable  resources  (load_val1,  ...)
      are  specified  by the name defined in the complex (see <I>com-</I>
-     <B><A HREF="../htmlman5/plex.html">plex(5)</A></B>).
+     <B><A HREF="../htmlman5/plex.html?pathrev=V60s2_BRANCH">plex(5)</A></B>).
      Note: Administrator defined load values (see the load_sensor
-     parameter   in   <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>  for  details)  and  consumable
-     resources available for all hosts (see  <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>)  may  be
+     parameter   in   <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60s2_BRANCH">sge_conf(5)</A></B>  for  details)  and  consumable
+     resources available for all hosts (see  <B><A HREF="../htmlman5/complex.html?pathrev=V60s2_BRANCH">complex(5)</A></B>)  may  be
      used as well as Grid Engine default load parameters.
      The weighting factors (w1, ...) are positive integers. After
      the  expression  is  evaluated for each host the results are
@@ -67,7 +67,7 @@ FORMAT
      list  of  arbitrary  load parameters or consumable resources
      and (separated by an equal sign) an associated load  correc-
      tion  value.  Whenever  a  job  is  dispatched  to a host by
-     <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>, the load parameter and consumable  value  set
+     <B><A HREF="../htmlman8/sge_schedd.html?pathrev=V60s2_BRANCH">sge_schedd(8)</A></B>, the load parameter and consumable  value  set
      of  that  host  is  increased  by the values provided in the
      job_load_adjustments  list.  These  correction  values   are
      decayed      linearly      over     time     until     after
@@ -79,13 +79,13 @@ FORMAT
      the  combined  and  weighted  load  of  the  hosts  with the
      load_formula (see above) and to compare the load and consum-
      able  values against the load threshold lists defined in the
-     queue   configurations   (see   <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>).    If   your
-     load_formula simply consists of the default CPU load average
-     parameter <I>np</I>_<I>load</I>_<I>avg</I> and if  your  jobs  are  very  compute
-     intensive,  you  might  want to set the job_load_adjustments
+     queue   configurations   (see   <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B>).    If    the
+     load_formula consists simply of the default CPU load average
+     parameter <I>np</I>_<I>load</I>_<I>avg</I>, and if  the  jobs  are  very  compute
+     intensive,  one  might  want to set the job_load_adjustments
      list to <I>np</I>_<I>load</I>_<I>avg</I>=<I>1</I>.<I>00</I>, which means  that  every  new  job
-     dispatched  to  a  host will require 100 % CPU time and thus
-     the machine's load is instantly raised by 1.00.
+     dispatched  to  a host will require 100 % CPU time, and thus
+     the machine's load is instantly increased by 1.00.
 
   load_adjustment_decay_time
      The load  corrections  in  the  "job_load_adjustments"  list
@@ -107,17 +107,17 @@ FORMAT
      the users may run an arbitrary number of jobs.
 
   schedule_interval
-     At   the   time   <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>   initially   registers   to
-     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>  schedule_interval  is  used  to set the time
-     interval in  which  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>  sends  scheduling  event
-     updates  to  <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>.   A scheduling event is a status
-     change that has occurred  within  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>  which  may
+     At   the   time   <B><A HREF="../htmlman8/sge_schedd.html?pathrev=V60s2_BRANCH">sge_schedd(8)</A></B>   initially   registers   to
+     <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B>  schedule_interval  is  used  to set the time
+     interval in  which  <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B>  sends  scheduling  event
+     updates  to  <B><A HREF="../htmlman8/sge_schedd.html?pathrev=V60s2_BRANCH">sge_schedd(8)</A></B>.   A scheduling event is a status
+     change that has occurred  within  <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B>  which  may
      trigger  or  affect scheduler decisions (e.g. a job has fin-
      ished and thus the allocated resources are available again).
      In the Grid  Engine  default  scheduler  the  arrival  of  a
      scheduling  event  report  triggers  a  scheduler  run.  The
      scheduler waits for event reports otherwise.
-     Schedule_interval is a time value (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>  for  a
+     Schedule_interval is a time value (see <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B>  for  a
      definition of the syntax of time values).
 
   queue_sort_method
@@ -125,11 +125,11 @@ FORMAT
      are  taken  into  account  to  product  a sorted queue list.
      Currently, two settings are valid:  seqno and load.  However
      in  both  cases, Grid Engine attempts to maximize the number
-     of soft requests (see <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -s option) being fulfilled  by
+     of soft requests (see <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B> -s option) being fulfilled  by
      the queues for a particular as the primary criterion.
      Then, if the queue_sort_method parameter is  set  to  seqno,
      Grid  Engine  will use the seq_no parameter as configured in
-     the current queue configurations (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>) as  the
+     the current queue configurations (see <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B>) as  the
      next criterion to sort the queue list. The load_formula (see
      above) has only a meaning if two queues have equal  sequence
      numbers.   If  queue_sort_method  is  set  to  load the load
@@ -148,8 +148,8 @@ FORMAT
      for achieving the share entitlements as defined by the share
      tree.  The halftime defines the time interval in which accu-
      mulated usage will have been decayed to  half  its  original
-     value.  Valid values are specified of type time as specified
-     in <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.
+     value.  Valid  values are specified in hours or according to
+     the time format as specified in <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B>.
 
   usage_weight_list
      Grid Engine accounts for the consumption  of  the  resources
@@ -191,37 +191,37 @@ FORMAT
   weight_tickets_functional
      The maximum number of functional tickets available for  dis-
      tribution by Grid Engine. Determines the relative importance
-     of the functional policy. See under <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B>  for  an
+     of the functional policy. See under <B><A HREF="../htmlman5/sge_priority.html?pathrev=V60s2_BRANCH">sge_priority(5)</A></B>  for  an
      overview on job priorities.
 
   weight_tickets_share
      The maximum number of share based tickets available for dis-
      tribution by Grid Engine. Determines the relative importance
-     of the share tree policy. See under <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B>  for  an
+     of the share tree policy. See under <B><A HREF="../htmlman5/sge_priority.html?pathrev=V60s2_BRANCH">sge_priority(5)</A></B>  for  an
      overview on job priorities.
 
   weight_deadline
      The weight applied on the remaining time until a jobs latest
      start  time. Determines the relative importance of the dead-
-     line. See under  <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B>  for  an  overview  on  job
+     line. See under  <B><A HREF="../htmlman5/sge_priority.html?pathrev=V60s2_BRANCH">sge_priority(5)</A></B>  for  an  overview  on  job
      priorities.
 
   weight_waiting_time
      The weight applied on the jobs waiting  time  since  submis-
      sion.  Determines  the  relative  importance  of the waiting
-     time.  See under <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B>  for  an  overview  on  job
+     time.  See under <B><A HREF="../htmlman5/sge_priority.html?pathrev=V60s2_BRANCH">sge_priority(5)</A></B>  for  an  overview  on  job
      priorities.
 
   weight_urgency
      The weight applied on jobs normalized urgency when determin-
      ing  priority  finally used.  Determines the relative impor-
-     tance of urgency.  See under <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B> for an overview
+     tance of urgency.  See under <B><A HREF="../htmlman5/sge_priority.html?pathrev=V60s2_BRANCH">sge_priority(5)</A></B> for an overview
      on job priorities.
 
   weight_ticket
      The weight applied on normalized ticket amount  when  deter-
      mining  priority  finally  used.   Determines  the  relative
-     importance of the ticket policies. See under <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B>
+     importance of the ticket policies. See under <B><A HREF="../htmlman5/sge_priority.html?pathrev=V60s2_BRANCH">sge_priority(5)</A></B>
      for an overview on job priorities.
 
   flush_finish_sec
@@ -257,14 +257,36 @@ FORMAT
      This is foreseen for passing additional  parameters  to  the
      Grid Engine scheduler. The following values are recognized:
 
+     <I>DURATION</I>_<I>OFFSET</I>
+          If set, overrides the  default  of  value  60  seconds.
+          This  parameter  is  used  by the Grid Engine scheduler
+          when planning resource utilization as the delta between
+          net  job runtimes and total time until resources become
+          available again. Net job runtime as specified  with  -l
+          h_rt=...   or  -l  s_rt=...  or default_duration always
+          differs from total job runtime due to delays before and
+          after  actual  job  start  and finish. Among the delays
+          before job start  is  the  time  until  the  end  of  a
+          schedule_interval,  the  time it takes to deliver a job
+          to <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B> and the  delays  caused  by  prolog  in
+          <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B>   ,   start_proc_args  in  <B><A HREF="../htmlman5/sge_pe.html?pathrev=V60s2_BRANCH">sge_pe(5)</A></B>  and
+          starter_method      in      <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B>      (notify,
+          terminate_method   or  checkpointing),  procedures  run
+          after acutal job  finish,  such  as  stop_proc_args  in
+          <B><A HREF="../htmlman5/sge_pe.html?pathrev=V60s2_BRANCH">sge_pe(5)</A></B>  or  epilog  in <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B> , and the delay
+          until a new schedule_interval.
+          If the offset is too low,  resource  reservations  (see
+          max_reservation)  can  be  delayed repeatedly due to an
+          overly optistic job circulation time.
+
      <I>JC</I>_<I>FILTER</I>
           If set to true, the scheduler limits the number of jobs
           it  looks  at during a scheduling run. At the beginning
           of the scheduling run it assigns each  job  a  specific
-          category,   which  is  based  on  the  job's  requests,
-          priority settings, and the job  owner.  All  scheduling
-          policies will assign the same importance to each job in
-          one category. Therefore the number of jobs per category
+          category,  which is based on the job's requests, prior-
+          ity settings, and the job owner. All  scheduling  poli-
+          cies will assign the same importance to each job in one
+          category. Therefore the number  of  jobs  per  category
           have  a  FIFO order and can be limited to the number of
           free slots in the system.
 
@@ -289,10 +311,25 @@ FORMAT
           resources      utilization      in       the       file
           &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>schedule</I>.
 
+     <I>SELECT</I>_<I>PE</I>_<I>RANGE</I>_<I>ALG</I>
+          This parameter sets the algorithm for the pe range com-
+          putation.  The  default  is automatic, which means that
+          the scheduler will select the best one, and  it  should
+          not be necessary to change it to a different setting in
+          normal operation. If a custom setting  is  needed,  the
+          following values are available:
+          auto       : the scheduler selects the best algorithm
+          least      : starts  the  resource  matching  with  the
+          lowest slot amount first
+          bin        : starts the resource matching in the middle
+          of the pe slot range
+          highest    : starts  the  resource  matching  with  the
+          highest slot amount first
+
      Changing params will take immediate effect.  The default for
      params is none.
 
-  reprioritize_interval"
+  reprioritize_interval
      Interval (HH:MM:SS) to reprioritize jobs on the  exec  hosts
      based  on the current ticket amount for the running jobs. If
      the interval is set  to  00:00:00  the  reprioritization  is
@@ -314,13 +351,18 @@ FORMAT
      the pending job ticket calculation to account for jobs which
      have just ended. This allows the user the pending jobs algo-
      rithm to count finished jobs against a user or project for a
-     configurable  decayed  time  period.  The default is set so,
-     that finished jobs are not considered. It is  also  used  to
-     determine  if  the  job  usage has been added to the user or
-     project usage_list.
-     The halflife_decay_list also allows to  configure  different
-     decay  rates for each usage type being tracked (cpu, io, and
-     mem).
+     configurable decayed time period. This feature is turned off
+     by default, and the halftime is used instead.
+     The halflife_decay_list also allows one  to  configure  dif-
+     ferent  decay  rates for each usage type being tracked (cpu,
+     io, and mem). The list is specified in the following format:
+
+          &lt;USAGE_TYPE&gt;=&lt;TIME&gt;[:&lt;USAGE_TYPE&gt;=&lt;TIME&gt;[:&lt;USAGE_TYPE&gt;=&lt;TIME&gt;]]
+
+     &lt;Usage_TYPE&gt; can be one of the following: cpu, io, or mem.
+     &lt;TIME&gt; can be -1, 0 or a timespan specified in  minutes.  If
+     &lt;TIME&gt;  is  -1,  only the usage of currently running jobs is
+     used. 0 means that the usage is not decayed.
 
   policy_hierarchy
      This parameter sets up a dependency chain  of  ticket  based
@@ -365,7 +407,6 @@ FORMAT
      ated  with  a  functional  object,  gets the full functional
      shares of that object. The default value is "true".
 
-
   max_functional_jobs_to_schedule
      The maximum number of pending jobs to schedule in the  func-
      tional policy. The default value is 200.
@@ -382,11 +423,11 @@ FORMAT
      scheduled   instead.  A  reservation  can  cover  consumable
      resources with the global host, any execution host  and  any
      queue.  For  parallel  jobs  reservations  are done also for
-     slots resource as specified in <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B>.   As  job  runtime
+     slots resource as specified in <B><A HREF="../htmlman5/sge_pe.html?pathrev=V60s2_BRANCH">sge_pe(5)</A></B>.   As  job  runtime
      the  maximum  of  the  time specified with -l h_rt=... or -l
      s_rt=... is assumed. For jobs that have neither of them  the
      default_duration  is  assumed.  Reservations prevent jobs of
-     lower priority as specified in <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B> from  utiliz-
+     lower priority as specified in <B><A HREF="../htmlman5/sge_priority.html?pathrev=V60s2_BRANCH">sge_priority(5)</A></B> from  utiliz-
      ing the reserved resource quota during the while of reserva-
      tion. Jobs of lower priority are allowed  to  utilize  those
      reserved  resources  only  if  their  prospective job end is
@@ -406,7 +447,7 @@ FORMAT
 
   default_duration
      When job  reservation  is  enabled  through  max_reservation
-     <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>  parameter  the default duration is assumed as
+     <B><A HREF="../htmlman5/sched_conf.html?pathrev=V60s2_BRANCH">sched_conf(5)</A></B>  parameter  the default duration is assumed as
      runtime for jobs  that  have  neither  -l  h_rt=...  nor  -l
      s_rt=...  specified.  In  contrast to a h_rt/s_rt time limit
      the default_duration is not enforced.
@@ -416,55 +457,14 @@ FILES
                 sge_schedd configuration
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>, <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <I>com-</I>
-     <B><A HREF="../htmlman5/plex.html">plex(5)</A></B>,    <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,   <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>,   <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,
-     <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>.  <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I>  <I>Administration</I>
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qalter.html?pathrev=V60s2_BRANCH">qalter(1)</A></B>, <B><A HREF="../htmlman1/qconf.html?pathrev=V60s2_BRANCH">qconf(1)</A></B>, <B><A HREF="../htmlman1/qstat.html?pathrev=V60s2_BRANCH">qstat(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B>,  <I>com-</I>
+     <B><A HREF="../htmlman5/plex.html?pathrev=V60s2_BRANCH">plex(5)</A></B>,    <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B>,   <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B>,   <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B>,
+     <B><A HREF="../htmlman8/sge_schedd.html?pathrev=V60s2_BRANCH">sge_schedd(8)</A></B>.  <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I>  <I>Administration</I>
      <I>Guide</I>
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

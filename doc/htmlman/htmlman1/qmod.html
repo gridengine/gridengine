@@ -9,13 +9,13 @@ SYNTAX
      qmod [ options ] [ wc_job_range_list | wc_queue_list ]
 
 DESCRIPTION
-     <I>Qmod</I> enables users classified as <I>owners</I>  (see  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>
+     <I>Qmod</I> enables users classified as <I>owners</I>  (see  <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B>
      for  details)  of  a workstation to modify the state of Grid
      Engine queues for his/her machine as well as  the  state  of
      his/her  own  jobs.   A manager/operator or root can execute
      <I>qmod</I> for any queue and job in  a  cluster.  Find  additional
      information  concerning  <I>wc</I>_<I>queue</I>_<I>list</I>  and  <I>wc</I>_<I>job</I>_<I>list</I>  in
-     <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
+     <B><A HREF="../htmlman1/sge_types.html?pathrev=V60s2_BRANCH">sge_types(1)</A></B>.
 
 OPTIONS
      -c   Clears   the   error    state    of    the    specified
@@ -38,7 +38,7 @@ OPTIONS
           seems to be continuing the manager/operator can force a
           suspend operation which will  send  a  SIGSTOP  to  the
           jobs.  In any case, the queue or job status will be set
-          even if the <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  controlling  the  queues/jobs
+          even if the <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B>  controlling  the  queues/jobs
           cannot    be    reached.    Requires   manager/operator
           privileges.
 
@@ -48,8 +48,15 @@ OPTIONS
      -r   If applied to queues, reschedules  all  jobs  currently
           running  in  this  queue.   If applied to running jobs,
           reschedules  the  jobs.  Requires   root   or   manager
-          privileges.  Do not use this switch anymore, use -rj /-
-          rq instead.
+          privileges.  Do  not  use this switch anymore.  Use -rj
+          /-rq instead.  In order for a job to be rescheduled, it
+          or  the  queue  in  which it is executing must have the
+          rerun flag activated.  (See -r option  in  the  <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B>
+          man  page and the <I>rerun</I> option in the <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B> man
+          page for more  information.)   Additional  restrictions
+          apply  for  parallel  and checkpointing jobs.  (See the
+          <I>reschedule</I>_<I>unknown</I> description in the  <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60s2_BRANCH">sge_conf(5)</A></B>  man
+          page for details).
 
      -rj  If applied  to  running  jobs,  reschedules  the  jobs.
           Requires root or manager privileges.
@@ -60,8 +67,8 @@ OPTIONS
 
      -s   If applied to queues, suspends the queues and any  jobs
           which  might  be  active.  If  applied to running jobs,
-          suspends the jobs. Do not use this switch anymore,  use
-          -sj / -sq instead.
+          suspends the jobs. Use of this  switch  is  now  depre-
+          cated. -sj / -sq should be used instead.
 
      -sj  If applied to running jobs, suspends the jobs. If a job
           is  both suspended explicitly and via suspension of its
@@ -99,7 +106,6 @@ ENVIRONMENTAL VARIABLES
                          The  name  of  the  default  cell,  i.e.
                          default.
 
-
      SGE_DEBUG_LEVEL
                     If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
@@ -108,7 +114,7 @@ ENVIRONMENTAL VARIABLES
 
      SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
@@ -118,18 +124,12 @@ FILES
                      Grid Engine master host file
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,    <B><A HREF="../htmlman1/sge_ckpt.html">sge_ckpt(1)</A></B>,    <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>,    <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,
-     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>, <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B>,    <B><A HREF="../htmlman1/sge_ckpt.html?pathrev=V60s2_BRANCH">sge_ckpt(1)</A></B>,    <B><A HREF="../htmlman1/qstat.html?pathrev=V60s2_BRANCH">qstat(1)</A></B>,    <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B>,
+     <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B>, <B><A HREF="../htmlman1/sge_types.html?pathrev=V60s2_BRANCH">sge_types(1)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
 
 
 

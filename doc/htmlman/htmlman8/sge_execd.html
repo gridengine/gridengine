@@ -11,7 +11,7 @@ SYNOPSIS
 DESCRIPTION
      <I>sge</I>_<I>execd</I> controls the  Grid  Engine  queues  local  to  the
      machine  on which <I>sge</I>_<I>execd</I> is running and executes/controls
-     the jobs sent from <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> to be run on these queues.
+     the jobs sent from <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B> to be run on these queues.
 
 OPTIONS
   -help
@@ -19,27 +19,28 @@ OPTIONS
 
 LOAD SENSORS
      If a load sensor is configured for <I>sge</I>_<I>execd</I> via either  the
-     global  or the execution host specific cluster configuration
-     (See <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>.), the executable path of the  load  sensor
-     is  invoked by <I>sge</I>_<I>execd</I> on a regular basis and delivers one
-     or multiple load figures for the execution host (e.g.  users
-     currently logged in) or the complete cluster (e.g. free disk
-     space on a network wide scratch file system). The load  sen-
-     sor  may  be a script or a binary executable. In either case
-     its handling of the STDIN and STDOUT streams and its control
-     flow must comply to the following rules:
+     global  host  configuration  or  the execution-host-specific
+     cluster configuration  (See  <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60s2_BRANCH">sge_conf(5)</A></B>.),  the  executable
+     path of the load sensor is invoked by <I>sge</I>_<I>execd</I> on a regular
+     basis and delivers one or multiple load figures for the exe-
+     cution  host  (e.g.   users currently logged in) or the com-
+     plete cluster (e.g.  free  disk  space  on  a  network  wide
+     scratch  file  system). The load sensor may be a script or a
+     binary executable. In either case its handling of the  STDIN
+     and  STDOUT  streams and its control flow must comply to the
+     following rules:
 
-     The load sensor has to be written as an infinite loop  wait-
-     ing  at  a certain point for input from STDIN. If the string
+     The load sensor must be written as an infinite loop  waiting
+     at  a  certain  point  for  input  from STDIN. If the string
      "quit" is read from STDIN,  the  load  sensor  should  exit.
-     When an end-of-line is read from STDIN a load data retrieval
-     cycle should start. The load sensor then  performs  whatever
-     operation  is necessary to compute the desired load figures.
-     At the end of the cycle the load sensor writes the result to
-     stdout. The format is as follows:
+     When  an  end-of-line  is  read  from  STDIN,  a  load  data
+     retrieval cycle should start. The load sensor then  performs
+     whatever  operation is necessary to compute the desired load
+     figures.  At the end of the cycle the load sensor writes the
+     result to stdout. The format is as follows:
 
-     <B>o</B>  A load value report starts with a line containing nothing
-        but the word  "start".
+     <B>o</B>  A load value report starts with a  line  containing  only
+        the word  "start".
 
      <B>o</B>  Individual load values are separated by newlines.
 
@@ -52,13 +53,14 @@ LOAD SENSORS
 
      <B>o</B>  The second part is the symbolic name of the load value as
         defined  in  the  host  or  global complex list (see <I>com-</I>
-        <B><A HREF="../htmlman5/plex.html">plex(5)</A></B> for details). If a load  value  is  reported  for
+        <B><A HREF="../htmlman5/plex.html?pathrev=V60s2_BRANCH">plex(5)</A></B> for details). If a load  value  is  reported  for
         which no entry in the host or global complex list exists,
         the reported load value is not used.
 
      <B>o</B>  The third part is the measured load value.
 
-     <B>o</B>  A load value report ends with a line with the word "end".
+     <B>o</B>  A load value report ends with a line with only  the  word
+        "end".
 
 ENVIRONMENTAL VARIABLES
      SGE_ROOT       Specifies the location  of  the  Grid  Engine
@@ -84,13 +86,13 @@ ENVIRONMENTAL VARIABLES
 
      SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
 
      SGE_EXECD_PORT If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  is  expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B>  is  expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_execd" instead to define that port.
@@ -103,6 +105,11 @@ RESTRICTIONS
      user are handled correctly by the system.
 
 FILES
+     sgepasswd  contains  a  list  of  user  names   and    their
+     corresponding encrypted Windows passwords. If available, the
+     password  file  will  be   used   by  sge_execd.  To  change
+     the  contents of this file please use the sgepasswd command.
+     It is not advised to  change that file manually.
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>configuration</I>
                      Grid Engine global configuration
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>local</I>_<I>conf</I>/&lt;<I>host</I>&gt;
@@ -113,18 +120,11 @@ FILES
                      Grid Engine master host file
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>, <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B>, <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60s2_BRANCH">sge_conf(5)</A></B>, <B><A HREF="../htmlman5/complex.html?pathrev=V60s2_BRANCH">complex(5)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
-
 
 
 

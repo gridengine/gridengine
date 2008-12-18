@@ -680,7 +680,6 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
       DPRINTF(("sorting hosts by load\n"));
       sort_host_list(lists->host_list, lists->centry_list);
 
-
       break;
    }
 

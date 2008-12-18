@@ -1729,45 +1729,35 @@ job_is_forced_centry_missing(const sge_assignment_t *a, const lListElem *queue_o
    DENTER(TOP_LAYER, "job_is_forced_centry_missing");
    if (a->job != NULL && a->centry_list != NULL && queue_or_host != NULL) {
       lList *res_list = lGetList(a->job, JB_hard_resource_list);  
+      bool is_qinstance = object_has_type(queue_or_host, QU_Type);
 
       for_each(centry, a->centry_list) {
          const char *name = lGetString(centry, CE_name);
-         bool is_requ = is_requested(res_list, name);
          bool is_forced = lGetUlong(centry, CE_requestable) == REQU_FORCED ? true : false;
-         const char *object_name = NULL;
-         bool is_qinstance = object_has_type(queue_or_host, QU_Type);
-         bool is_host = object_has_type(queue_or_host, EH_Type);
 
-         if (is_forced) {
-            if (is_qinstance) {
-               is_forced = qinstance_is_centry_a_complex_value(queue_or_host, centry);
-               object_name = lGetString(queue_or_host, QU_full_name);
-            } else if (is_host) {
-               is_forced = host_is_centry_a_complex_value(queue_or_host, centry);
-               object_name = lGetHost(queue_or_host, EH_name);
-            } else {
-               DTRACE;
-               is_forced = false;
-            }
+         if (is_requested(res_list, name) || !is_forced) {
+            /* if requested or not forced we are always fine */
+            continue;
          }
 
-         if (is_forced && !is_requ) {
-            u_long32 job_id = lGetUlong(a->job, JB_job_number);
-
-            DPRINTF(("job "sge_u32" does not request 'forced' resource "SFQ" of "
-                     SFN"\n", job_id, name, object_name));
-            if (is_qinstance) {
+         if (is_qinstance) {
+            if (qinstance_is_centry_a_complex_value(queue_or_host, centry)) {
                schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
                               SCHEDD_INFO_NOTREQFORCEDRES_SS, 
-                              name, object_name);
-            } else if (is_host) {
+                              name, lGetString(queue_or_host, QU_full_name));
+               ret = true;
+               break;
+            }
+         } else {
+            if (host_is_centry_a_complex_value(queue_or_host, centry)) {
                schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
                               SCHEDD_INFO_NOFORCEDRES_SS, 
-                              name, object_name);
+                              name, lGetHost(queue_or_host, EH_name));
+               ret = true;
+               break;
+
             }
-            ret = true;
-            break;
-         }
+         } 
       }
    }
    DRETURN(ret);
@@ -2166,7 +2156,6 @@ static int load_np_value_adjustment(const char* name, lListElem *hep, double *lo
  
    int nproc = 1;
    if (!strncmp(name, "np_", 3)) {
-      int nproc = 1;
       lListElem *ep_nproc;
 
       if ((ep_nproc = lGetSubStr(hep, HL_name, LOAD_ATTR_NUM_PROC, EH_load_list))) {
@@ -2179,9 +2168,8 @@ static int load_np_value_adjustment(const char* name, lListElem *hep, double *lo
             }
          }
       }
-   } 
-   else {
-      nproc = 0;          
+   } else {
+      nproc = 0;
    }
   
    return nproc;
@@ -2441,8 +2429,6 @@ char *sge_load_alarm_reason(lListElem *qep, lList *threshold,
    the execution host list (3rd arg) and with respect to the definitions
    in the complex list (4th arg).
 
-   temporarily sets QU_tagged4schedule but sets it to 0 on exit.
-
    returns:
       0 successful
      -1 errors in functions called by sge_split_queue_load
@@ -2462,9 +2448,7 @@ bool is_comprehensive,          /* do the load evaluation comprehensive (include
 u_long32 ttype
 ) {
    lList *thresholds;
-   lCondition *where;
-   lListElem *qep;
-   int ret, load_alarm, nverified = 0;
+   int nverified = 0;
    char reason[2048];
 
    DENTER(TOP_LAYER, "sge_split_queue_load");
@@ -2475,21 +2459,27 @@ u_long32 ttype
       DRETURN(0);
    }
 
-   if (!(granted && !load_adjustments)) { 
+   if (!granted || load_adjustments) { 
+      lListElem *qep, *next_qep;
 
-   /* tag those queues being overloaded */
-      for_each(qep, *unloaded) {
-         thresholds = lGetList(qep, ttype);
-         load_alarm = 0;
+      next_qep = lFirst(*unloaded);
+      while ((qep = next_qep)) {
+         bool remove_queue = false;
+         next_qep = lNext(qep);
 
-         /* do not verify load alarm anew if a job has been dispatched recently
+         /* do not verify load alarm if a job has been dispatched recently
             but not to the host where this queue resides */
-         if (!granted || (granted && (sconf_get_global_load_correction() ||
+         if (lGetUlong(qep, QU_tagged4schedule) == 1) {
+            /* this queue is already tagged for removing */
+            remove_queue = true;
+            lSetUlong(qep, QU_tagged4schedule, 0);
+         } else if (!granted || (granted && (sconf_get_global_load_correction() ||
                               lGetElemHost(granted, JG_qhostname, lGetHost(qep, QU_qhostname))))) {
+            thresholds = lGetList(qep, ttype);
             nverified++;
 
             if (sge_load_alarm(reason, qep, thresholds, exechost_list, centry_list, load_adjustments, is_comprehensive) != 0) {
-               load_alarm = 1;
+               remove_queue = true;
                if (ttype==QU_suspend_thresholds) {
                   DPRINTF(("queue %s tagged to be in suspend alarm: %s\n", 
                         lGetString(qep, QU_full_name), reason));
@@ -2505,29 +2495,21 @@ u_long32 ttype
                }
             }
          }
-         if (load_alarm) {
-            lSetUlong(qep, QU_tagged4schedule, load_alarm);
-         }   
+         if (remove_queue) {
+            if (overloaded != NULL) {
+               lDechainElem(*unloaded, qep);
+               if (*overloaded == NULL) {
+                  *overloaded = lCreateListHash("", lGetListDescr(*unloaded), false);
+               }
+               lAppendElem(*overloaded, qep);
+            } else {
+               lRemoveElem(*unloaded, &qep);
+            }
+         }
       }
    }
-
+  
    DPRINTF(("verified threshold of %d queues\n", nverified));
-
-   /* split queues in unloaded and overloaded lists */
-   where = lWhere("%T(%I == %u)", lGetListDescr(*unloaded), QU_tagged4schedule, 0);
-   ret = lSplit(unloaded, overloaded, "overloaded queues", where);
-   lFreeWhere(&where);
-
-   if (overloaded) {
-      for_each(qep, *overloaded) { /* make sure QU_tagged4schedule is 0 on exit */
-         lSetUlong(qep, QU_tagged4schedule, 0);
-      }
-   }
-
-   if (ret) {
-      DRETURN(-1);
-   }
-
    DRETURN(0);
 }
 
@@ -2547,9 +2529,6 @@ u_long32 ttype
 *  INPUTS
 *     lList **free - Input queue instance list and return free slots.
 *     lList **full - If non-NULL the full queue instances get returned here.
-*
-*
-*  TODO: take a look into list hashing, not needed for temp list
 *
 *  RESULT
 *     int - 0 success 
@@ -2582,14 +2561,12 @@ int sge_split_queue_slots_free(bool monitor_next_run, lList **free, lList **full
                full_queues = lCreateListHash("full one", lGetListDescr(*free), false);
             }
             lAppendElem(full_queues, this);             
-         }   
-         else if (full != NULL) {
+         } else if (full != NULL) {
             if (*full == NULL) {
                *full = lCreateList("full one", lGetListDescr(*free));
             }   
             lAppendElem(*full, this);
-         } 
-         else {
+         } else {
             lFreeElem(&this);
          }   
       }
@@ -2603,14 +2580,10 @@ int sge_split_queue_slots_free(bool monitor_next_run, lList **free, lList **full
       if (full != NULL) {
          if (*full == NULL) {
             *full = full_queues;
-            full_queues = NULL;
-         }
-         else {
+         } else {
             lAddList(*full, &full_queues);
-            full_queues = NULL;
          }
-      }
-      else {
+      } else {
          lFreeList(&full_queues);
       }
    }
@@ -2646,10 +2619,6 @@ lList **suspended         /* QU_Type */
       DRETURN(-1);
    }
 
-   if (!suspended) {
-       suspended = &lp;
-   }
-
    /* split queues */
    where = lWhere("%T(!(%I m= %u) && !(%I m= %u) && !(%I m= %u) && !(%I m= %u))", 
       lGetListDescr(*queue_list), 
@@ -2676,20 +2645,12 @@ lList **suspended         /* QU_Type */
       schedd_log_list(NULL, monitor_next_run,
                       MSG_SCHEDD_LOGLIST_QUEUESSUSPENDEDANDDROPPED,
                       lp, QU_full_name);
-   }
 
-   if (suspended != NULL) {
       if (*suspended == NULL) {
          *suspended = lp;
-         lp = NULL;
-      }
-      else {
+      } else {
          lAddList(*suspended, &lp);
-         lp = NULL;
       }
-   }
-   else {
-      lFreeList(suspended);
    }
       
    DRETURN(ret);
@@ -2716,29 +2677,23 @@ sge_split_cal_disabled(bool monitor_next_run, lList **queue_list, lList **disabl
    lCondition *where;
    int ret;
    lList *lp = NULL;
-   bool do_free_list = false;
 
-   DENTER(TOP_LAYER, "sge_split_disabled");
+   DENTER(TOP_LAYER, "sge_split_cal_disabled");
 
    if (!queue_list) {
       DRETURN(-1);
    }
 
-   if (disabled == NULL) {
-       disabled = &lp;
-       do_free_list = true;
-   }
-
    /* split queues */
    where = lWhere("%T(!(%I m= %u))", lGetListDescr(*queue_list), 
                   QU_state, QI_CAL_DISABLED);
-   ret = lSplit(queue_list, disabled, "full queues", where);
+   ret = lSplit(queue_list, &lp, "full queues", where);
    lFreeWhere(&where);
 
-   if (*disabled != NULL) {
+   if (lp != NULL) {
       lListElem* mes_queue;
 
-      for_each(mes_queue, *disabled) {
+      for_each(mes_queue, lp) {
          schedd_mes_add_global(NULL, monitor_next_run,
                                SCHEDD_INFO_QUEUEDISABLED_,
                                lGetString(mes_queue, QU_full_name));
@@ -2746,10 +2701,12 @@ sge_split_cal_disabled(bool monitor_next_run, lList **queue_list, lList **disabl
  
       schedd_log_list(NULL, monitor_next_run,
                       MSG_SCHEDD_LOGLIST_QUEUESDISABLEDANDDROPPED,
-                      *disabled, QU_full_name);
+                      lp, QU_full_name);
 
-      if (do_free_list) {
-         lFreeList(disabled);
+      if (*disabled == NULL) {
+         *disabled = lp;
+      } else {
+         lAddList(*disabled, &lp);
       }
    }
    
@@ -2777,7 +2734,6 @@ sge_split_disabled(bool monitor_next_run, lList **queue_list, lList **disabled)
    lCondition *where;
    int ret;
    lList *lp = NULL;
-   bool do_free_list = false;
 
    DENTER(TOP_LAYER, "sge_split_disabled");
 
@@ -2785,21 +2741,16 @@ sge_split_disabled(bool monitor_next_run, lList **queue_list, lList **disabled)
       DRETURN(-1);
    }
 
-   if (disabled == NULL) {
-       disabled = &lp;
-       do_free_list = true;
-   }
-
    /* split queues */
    where = lWhere("%T(!(%I m= %u) && !(%I m= %u))", lGetListDescr(*queue_list), 
                   QU_state, QI_DISABLED, QU_state, QI_CAL_DISABLED);
-   ret = lSplit(queue_list, disabled, "full queues", where);
+   ret = lSplit(queue_list, &lp, "full queues", where);
    lFreeWhere(&where);
 
-   if (*disabled != NULL) {
+   if (lp != NULL) {
       lListElem* mes_queue;
 
-      for_each(mes_queue, *disabled) {
+      for_each(mes_queue, lp) {
          schedd_mes_add_global(NULL, monitor_next_run,
                                SCHEDD_INFO_QUEUEDISABLED_,
                                lGetString(mes_queue, QU_full_name));
@@ -2807,10 +2758,12 @@ sge_split_disabled(bool monitor_next_run, lList **queue_list, lList **disabled)
  
       schedd_log_list(NULL, monitor_next_run,
                       MSG_SCHEDD_LOGLIST_QUEUESDISABLEDANDDROPPED,
-                      *disabled, QU_full_name);
+                      lp, QU_full_name);
 
-      if (do_free_list) {
-         lFreeList(disabled);
+      if (*disabled == NULL) {
+         *disabled = lp;
+      } else {
+         lAddList(*disabled, &lp);
       }
    }
    
@@ -5400,8 +5353,6 @@ parallel_available_slots(const sge_assignment_t *a, int *slots, int *slots_qend)
    char reason_buf[1024];
    dispatch_t result;
    int total = lGetUlong(a->pe, PE_slots);
-   int pslots=0; 
-   int pslots_qend=0;
    static lListElem *implicit_slots_request = NULL;
    static lList *implicit_total_list = NULL;
    lListElem *tep = NULL;
@@ -5438,22 +5389,14 @@ parallel_available_slots(const sge_assignment_t *a, int *slots, int *slots_qend)
    sge_dstring_sprintf(&slots_as_str, "%d", total);
    lSetString(tep, CE_stringval, strbuf);
 
-   if (ri_slots_by_time(a, &pslots, &pslots_qend, 
+   if (ri_slots_by_time(a, slots, slots_qend, 
          lGetList(a->pe, PE_resource_utilization), implicit_slots_request, 
          NULL, implicit_total_list, NULL, 0, 0, &reason, true, true, a->pe_name)) {
       DRETURN(DISPATCH_NEVER_CAT);
    }
 
-   if (slots) {
-      *slots = pslots;
-   }
-
-   if (slots_qend) {
-      *slots_qend = pslots_qend;
-   }   
-
    DPRINTF(("\tparallel_available_slots(%s) returns %d/%d\n", a->pe_name,
-         pslots, pslots_qend));
+         *slots, *slots_qend));
 
    DRETURN(DISPATCH_OK);
 }
@@ -5538,7 +5481,7 @@ const lList *centry_list
    lListElem *ep;
    lListElem *global = NULL;
    lListElem *host = NULL;
-   int ret = 0;
+   int ret = -1;
 
    DENTER(TOP_LAYER, "sge_get_string_qattr");
 
@@ -5551,13 +5494,10 @@ const lList *centry_list
    if (ep && dst)
       sge_strlcpy(dst, lGetString(ep, CE_stringval), dst_len);
 
-   if(ep){
+   if (ep){
       lFreeElem(&ep);
       ret = 0;
    }
-   else
-      ret = -1;
-   /* ... and then free */
 
    DRETURN(ret); 
 }
@@ -6409,8 +6349,7 @@ bool sge_load_list_alarm(bool monitor_next_run, lList *load_list, const lList *h
             queue = lGetRef(queue_ref, QRL_queue);
             if (is_category_alarm) {
                lSetUlong(queue, QU_tagged4schedule, 1); 
-            }
-            else if (sge_load_alarm(reason, queue, lGetList(queue, QU_load_thresholds), host_list, 
+            } else if (sge_load_alarm(reason, queue, lGetList(queue, QU_load_thresholds), host_list, 
                                centry_list, NULL, true)) {
 
                DPRINTF(("queue %s tagged to be overloaded: %s\n", 

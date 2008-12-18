@@ -105,7 +105,8 @@ int sort_host_list(lList *hl, lList *centry_list)
    for_each (hlp, hl) {
       if (hlp != global && hlp != template) { /* don't treat global or template */
          /* build complexes for that host */
-         lSetDouble(hlp, EH_sort_value, load = scaled_mixed_load(load_formula, global, hlp, centry_list));
+         load = scaled_mixed_load(load_formula, global, hlp, centry_list);
+         lSetDouble(hlp, EH_sort_value, load);
          DPRINTF(("%s: %f\n", lGetHost(hlp, EH_name), load));
       }
    }

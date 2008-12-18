@@ -1,3 +1,11 @@
+RD-2008-12-18-0: Bugfix:      - improved reprioritize data structures
+                                reprioritize code is no longer executed if
+                                feature is disabled
+                 Cleanup      - several code improvements
+                 Bugster:     6786957
+                 Issue:       2843
+                 Review:      CR
+
 CR-2008-12-18-0: Bugfix:      o execd job start might produce communication
                                 errors because of not posix compliant fork()
                                 system call

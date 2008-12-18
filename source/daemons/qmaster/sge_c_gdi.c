@@ -462,6 +462,7 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
 {
    lListElem *ep;
    lList *ticket_orders = NULL;
+   bool reprioritize_tickets = (mconf_get_reprioritize() == 1) ? true: false;
    object_description *object_base = object_type_get_object_description();
 
    DENTER(TOP_LAYER, "sge_c_gdi_add");
@@ -554,7 +555,7 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
 
                case SGE_ORDER_LIST:
                  switch (sge_follow_order(ctx, ep, &(task->answer_list), packet->user, packet->host,
-                                          &ticket_orders, monitor, object_base)) {
+                                          reprioritize_tickets? &ticket_orders : NULL, monitor, object_base)) {
                     case STATUS_OK :
                     case  0 : /* everything went fine */
                        break;
@@ -625,15 +626,13 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
       }
    }
 
-   if (ticket_orders != NULL) {
-      if (mconf_get_reprioritize() == 1) {
-         distribute_ticket_orders(ctx, ticket_orders, monitor, object_base);
-      } else {
-         /* tickets not needed at execd's if no repriorization is done */
-         DPRINTF(("NO TICKET DELIVERY\n"));
-      }
-
+   if (reprioritize_tickets && ticket_orders != NULL) {
+      distribute_ticket_orders(ctx, ticket_orders, monitor, object_base);
       lFreeList(&ticket_orders);
+      DPRINTF(("DISTRIBUTED NEW PRIORITIZE TICKETS\n"));
+   } else {
+      /* tickets not needed at execd's if no repriorization is done */
+      DPRINTF(("NO TICKET DELIVERY\n"));
    }
 
    DRETURN_VOID;

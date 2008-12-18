@@ -473,16 +473,18 @@ send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, lListElem *jep,
       ** security hook
       */
       tgt2cc(jep, hostname);
-      if (simulate_execd) {
-         failed = CL_RETVAL_OK;
-      } else {
+      {
          u_long32 dummymid = 0;
          sge_pack_buffer send_pb;
 
          init_packbuffer(&send_pb, 0, 0);
 
          pack_job_delivery(&send_pb, jep);
-         failed = gdi2_send_message_pb(ctx, 0, prognames[EXECD], 1, hostname, TAG_SLAVE_ALLOW, &send_pb, &dummymid);
+         if (!simulate_execd) {
+            failed = gdi2_send_message_pb(ctx, 0, prognames[EXECD], 1, hostname, TAG_SLAVE_ALLOW, &send_pb, &dummymid);
+         } else {
+            failed = CL_RETVAL_OK;
+         }
          clear_packbuffer(&send_pb);
       }
       MONITOR_MESSAGES_OUT(monitor);
@@ -1139,7 +1141,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
          hosts where a part of that job ran */
       {
          lListElem *granted_queue;
-         const char *master_host = NULL;
+         bool is_master = true;
          lListElem *pe;
          const char *pe_name;      
 
@@ -1148,16 +1150,8 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
             pe = pe_list_locate(*object_base[SGE_TYPE_PE].list, pe_name);
             if (pe && lGetBool(pe, PE_control_slaves)) { 
                for_each(granted_queue, lGetList(jatep, JAT_granted_destin_identifier_list)) { 
-                  lListElem *host;
-                  const char *granted_queue_JG_qhostname;
-
-                  granted_queue_JG_qhostname = lGetHost(granted_queue, JG_qhostname);
-
-                  if (!master_host) {
-                     master_host = granted_queue_JG_qhostname;
-                  }
-                  if (sge_hostcmp(master_host, granted_queue_JG_qhostname)) {
-                     host = host_list_locate(master_exechost_list, granted_queue_JG_qhostname ); 
+                  if (!is_master) {
+                     lListElem *host = host_list_locate(master_exechost_list, lGetHost(granted_queue, JG_qhostname)); 
                      
                      add_to_reschedule_unknown_list(ctx,
                         host, 
@@ -1170,6 +1164,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
                         lGetUlong(jep, JB_job_number), 
                         lGetUlong(jatep, JAT_task_number)));
                   }
+                  is_master = false;
                }
             }
          } else {

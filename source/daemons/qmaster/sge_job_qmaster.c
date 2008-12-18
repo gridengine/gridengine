@@ -263,26 +263,22 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
    }
 
    /* write script to file */
-   {
-      bool job_spooling = ctx->get_job_spooling(ctx);
-
-      spool_transaction(alpp, spool_get_default_context(), STC_begin);
-      if (job_spooling)  {
-         if (lGetString(*jep, JB_script_file) &&
-             !JOB_TYPE_IS_BINARY(lGetUlong(*jep, JB_type))) {
-            if (spool_write_script(alpp, lGetUlong(*jep, JB_job_number), *jep)==false) {
-               spool_transaction(alpp, spool_get_default_context(), STC_rollback);
-               ERROR((SGE_EVENT, MSG_JOB_NOWRITE_US, sge_u32c(lGetUlong(*jep, JB_job_number)),
-                      strerror(errno)));
-               answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-               DRETURN(STATUS_EDISK);
-            }
+   spool_transaction(alpp, spool_get_default_context(), STC_begin);
+   if (job_spooling)  {
+      if (lGetString(*jep, JB_script_file) &&
+          !JOB_TYPE_IS_BINARY(lGetUlong(*jep, JB_type))) {
+         if (spool_write_script(alpp, lGetUlong(*jep, JB_job_number), *jep)==false) {
+            spool_transaction(alpp, spool_get_default_context(), STC_rollback);
+            ERROR((SGE_EVENT, MSG_JOB_NOWRITE_US, sge_u32c(lGetUlong(*jep, JB_job_number)),
+                   strerror(errno)));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
+            DRETURN(STATUS_EDISK);
          }
-
-         /* clean file out of memory */
-         lSetString(*jep, JB_script_ptr, NULL);
-         lSetUlong(*jep, JB_script_size, 0);
       }
+
+      /* clean file out of memory */
+      lSetString(*jep, JB_script_ptr, NULL);
+      lSetUlong(*jep, JB_script_size, 0);
    }
 
    if (!sge_event_spool(ctx, alpp, 0, sgeE_JOB_ADD, 
@@ -3769,26 +3765,21 @@ static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, c
 
          is_defined = job_is_ja_task_defined(job, task_number); 
 
-         if (is_defined) {
-            int is_enrolled;
- 
-            is_enrolled = job_is_enrolled(job, task_number);
-            if (!is_enrolled) {
-               lListElem *tmp_task = job_get_ja_task_template_pending(job, task_number);
+         if (is_defined && !job_is_enrolled(job, task_number)) {
+            lListElem *tmp_task = job_get_ja_task_template_pending(job, task_number);
 
-               (*deleted_tasks)++;
+            (*deleted_tasks)++;
 
-               reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, 
-                                        ruser, rhost, NULL, job, tmp_task, 
-                                        NULL, MSG_LOG_DELETED);
-               sge_commit_job(ctx, job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED,
-                              COMMIT_NO_SPOOLING | COMMIT_UNENROLLED_TASK | COMMIT_NEVER_RAN, monitor);
-               deleted_unenrolled_tasks = 1;
-               showmessage = 1;
-               if (!*alltasks && showmessage) {
-                  range_list_insert_id(&range_list, NULL, task_number);
-               }         
-            }
+            reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, 
+                                     ruser, rhost, NULL, job, tmp_task, 
+                                     NULL, MSG_LOG_DELETED);
+            sge_commit_job(ctx, job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED,
+                           COMMIT_NO_SPOOLING | COMMIT_UNENROLLED_TASK | COMMIT_NEVER_RAN, monitor);
+            deleted_unenrolled_tasks = 1;
+            showmessage = 1;
+            if (!*alltasks && showmessage) {
+               range_list_insert_id(&range_list, NULL, task_number);
+            }         
          }
       }
       

@@ -479,50 +479,6 @@ qinstance_is_a_ckpt_referenced(const lListElem *this_elem)
    DRETURN(ret);
 } 
 
-/****** sgeobj/qinstance/qinstance_is_centry_referenced() *********************
-*  NAME
-*     qinstance_is_centry_referenced() -- Is the given CENTRY object referenced 
-*
-*  SYNOPSIS
-*     bool 
-*     qinstance_is_centry_referenced(const lListElem *this_elem, 
-*                                    const lListElem *centry) 
-*
-*  FUNCTION
-*     Is the given CENTRY object ("centry") referenced by the qinstance
-*     "this_elem". 
-*
-*  INPUTS
-*     const lListElem *this_elem - QU_Type element 
-*     const lListElem *centry    - CE_Type element
-*
-*  RESULT
-*     bool - test result
-*        true  - is referenced
-*        fasle - is not referenced
-*
-*  NOTES
-*     MT-NOTE: qinstance_is_centry_referenced() is MT safe 
-*******************************************************************************/
-bool
-qinstance_is_centry_referenced(const lListElem *this_elem, 
-                               const lListElem *centry)
-{
-   bool ret = false;
-
-   DENTER(TOP_LAYER, "qinstance_is_centry_referenced");
-   if (this_elem != NULL) {
-      const char *name = lGetString(centry, CE_name);
-      lList *centry_list = lGetList(this_elem, QU_consumable_config_list);
-      lListElem *centry_ref = lGetElemStr(centry_list, CE_name, name);
-
-      if (centry_ref != NULL || get_rsrc(name, true, NULL, NULL, NULL, NULL)==0) {
-         ret = true;
-      }
-   }
-   DRETURN(ret);
-}
-
 /****** sgeobj/qinstance/qinstance_is_centry_a_complex_value() ****************
 *  NAME
 *     qinstance_is_centry_a_complex_value() -- Is it a complex_value 
@@ -553,7 +509,15 @@ qinstance_is_centry_a_complex_value(const lListElem *this_elem,
    bool ret = false;
 
    DENTER(TOP_LAYER, "qinstance_is_centry_a_complex_value");
-   ret = qinstance_is_centry_referenced(this_elem, centry);
+   if (this_elem != NULL) {
+      const char *name = lGetString(centry, CE_name);
+      lList *centry_list = lGetList(this_elem, QU_consumable_config_list);
+      lListElem *centry_ref = lGetElemStr(centry_list, CE_name, name);
+
+      if (centry_ref != NULL || get_rsrc(name, true, NULL, NULL, NULL, NULL)==0) {
+         ret = true;
+      }
+   }
    DRETURN(ret);
 }
 
@@ -1119,7 +1083,6 @@ rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list,
    DRETURN(mods);
 }
 
-/* slots2config_list(lListElem *qep) */
 void 
 qinstance_set_conf_slots_used(lListElem *this_elem)
 {

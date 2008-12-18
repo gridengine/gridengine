@@ -144,10 +144,27 @@ NAMEDEF(OQN)
    NAME("OQ_fticket")
    NAME("OQ_sticket")
 NAMEEND
+#define OQS sizeof(OQN)/sizeof(char*)
+
+/* internal list for reprioritze tickets to distribute */
+enum {
+   RTIC_host = RTIC_LOWERBOUND,
+   RTIC_tickets
+};
+
+LISTDEF(RTIC_Type)
+   SGE_HOST(RTIC_host, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE)
+   SGE_LIST(RTIC_tickets, OR_Type, CULL_DEFAULT)
+LISTEND
+
+NAMEDEF(RTICN)
+   NAME("RTIC_host")
+   NAME("RTIC_tickets")
+NAMEEND
+#define RTICS sizeof(RTICN)/sizeof(char*)
+
 
 /* *INDENT-ON* */ 
-
-#define OQS sizeof(OQN)/sizeof(char*)
 #ifdef  __cplusplus
 }
 #endif

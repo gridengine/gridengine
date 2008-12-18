@@ -79,10 +79,6 @@ bool
 qinstance_is_a_ckpt_referenced(const lListElem *this_elem);
 
 bool
-qinstance_is_centry_referenced(const lListElem *this_elem, 
-                               const lListElem *centry);
-
-bool
 qinstance_is_centry_a_complex_value(const lListElem *this_elem,
                                     const lListElem *name);
 

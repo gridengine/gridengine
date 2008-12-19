@@ -310,19 +310,31 @@ extern int main(int argc, char** argv)
 
      if (getenv("CL_FORK_SLEEP_CHILD")) {
         int sleep_child = atoi(getenv("CL_FORK_SLEEP_CHILD"));
-        int sleep_parent = 0;
+        int sleep_parent = 1;
+        pid_t child_pid = 0;
         if (getenv("CL_FORK_SLEEP_PARENT")) {
            sleep_parent = atoi(getenv("CL_FORK_SLEEP_PARENT"));
         }
-        if (fork() == 0) {
-           printf("fork() - child - sleep %d ...\n", sleep_child);
+        if ((child_pid = fork()) == 0) {
+           printf("fork() - child - mypid=(%d)!\n", (int) getpid());
+           printf("fork() - child - sleep %d ...\n", (int) sleep_child);
+           fflush(stdout);
            sleep(sleep_child);
-           printf("fork() - child - sleep %d done\n", sleep_child);
+           printf("fork() - child - sleep %d done\n", (int) sleep_child);
+           fflush(stdout);
            exit(0);
         } else {
-           printf("fork() - parent - sleep %d ...\n", sleep_parent);
+           printf("fork() - parent - mypid=(%d)!\n", (int) getpid());
+           printf("fork() - parent - childpid=(%d)!\n", (int) child_pid);
+           printf("fork() - parent - sleep %d ...\n", (int) sleep_parent);
+           fflush(stdout);
            sleep(sleep_parent);
-           printf("fork() - parent - sleep %d done\n", sleep_parent);
+           printf("fork() - parent - sleep %d done\n", (int) sleep_parent);
+           printf("fork() - parent - killing child pid %d ...\n", (int) child_pid);
+           fflush(stdout);
+           kill(child_pid, SIGKILL);
+           printf("fork() - parent - killing child pid %d done\n", (int) child_pid);
+           fflush(stdout);
         }
      } 
 

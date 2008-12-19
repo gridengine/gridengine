@@ -1,3 +1,10 @@
+CR-2008-12-19-0: Bugfix:      o fixed test_cl_commlib module test binary
+                                which might left deadlocked processes if
+                                used with CL_FORK_SLEEP_CHILD environment
+                                variable.
+                 Belongs to:  CR-2008-12-18-0
+                 Review:      RD
+
 JF-2008-12-18-0: Enhancem.:   Improvement of existing man pages
                  Bugster:     6609691
                  Issue:       0

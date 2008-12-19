@@ -1,3 +1,9 @@
+RD-2008-12-19-0: Bugfix:      TMPDIR of a tight integration job is sometimes not
+                              deleted
+                 Issue:       2846 
+                 Bugster:     6787485
+                 Review:      CR
+                  
 CR-2008-12-19-0: Bugfix:      o fixed test_cl_commlib module test binary
                                 which might left deadlocked processes if
                                 used with CL_FORK_SLEEP_CHILD environment

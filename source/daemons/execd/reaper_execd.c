@@ -827,7 +827,6 @@ lListElem *jr
    dstring err_str;
    SGE_STRUCT_STAT statbuf;
    lListElem *jep, *petep = NULL, *jatep = NULL;
-   lListElem *master_q;
    const char *pe_task_id_str; 
    const void *iterator;
    const char *sge_root = ctx->get_sge_root(ctx);
@@ -856,6 +855,7 @@ lListElem *jr
    }
 
    if (jep && jatep) {
+      lListElem *master_q;
       int used_slots;
    
       DPRINTF(("REMOVING WITH jep && jatep\n"));
@@ -917,6 +917,7 @@ lListElem *jr
          we have to remove queues tmpdir for this job */
       used_slots = qinstance_slots_used(master_q) - 1;
       qinstance_set_slots_used(master_q, used_slots);
+      DPRINTF(("%s: used slots decreased from %d to %d\n", lGetString(master_q, QU_full_name), used_slots+1, used_slots));
       if (!used_slots) {
          sge_remove_tmpdir(lGetString(master_q, QU_tmpdir), 
             lGetString(jep, JB_owner), lGetUlong(jep, JB_job_number), 
@@ -959,8 +960,11 @@ lListElem *jr
       } else {
          /* check if job has queue limits and decrease global flag if necessary */
          modify_queue_limits_flag_for_job(ctx->get_qualified_hostname(ctx), jep, false);
-
-         lRemoveElem(*(object_type_get_master_list(SGE_TYPE_JOB)), &jep);
+         
+         if (used_slots == 0) {
+            /* remove the jep element only if all slave tasks are gone, we need to job object to remove the tmpdir */
+            lRemoveElem(*(object_type_get_master_list(SGE_TYPE_JOB)), &jep);
+         }
       }
       del_job_report(jr);   
 

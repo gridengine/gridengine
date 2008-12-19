@@ -287,7 +287,7 @@ int do_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
          case ACK_JOB_EXIT:
 /*
 **          This is the answer of qmaster if we report a job as exiting
-**          - job gets removed from job  report list and from job list
+**          - job gets removed from job report list and from job list
 **          - job gets cleaned from file system                       
 **          - retry is triggered by next job report sent to qmaster 
 **            containing this job as "exiting"                  

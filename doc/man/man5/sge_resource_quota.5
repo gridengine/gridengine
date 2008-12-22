@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_resource_quota.5,v $     Last Update: $Date: 2007/06/20 07:28:54 $     Revision: $Revision: 1.7 $
+.\" $RCSfile: sge_resource_quota.5,v $     Last Update: $Date: 2008/12/22 11:13:35 $     Revision: $Revision: 1.8 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_RESOURCE_QUOTA 5 "$Date: 2007/06/20 07:28:54 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_RESOURCE_QUOTA 5 "$Date: 2008/12/22 11:13:35 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxQS_NAME_Sxx_resource_quota \- xxQS_NAMExx resource quota file format
@@ -165,6 +165,10 @@ are specified by the name defined as type INT or DOUBLE in the complex list
 .B Note:
 Dynamic limits can only configured for a host-specific rule.
 .RE
+.PP
+Please note that resource quotas are not enforced as job resource limits.
+Limiting for example h_vmem in a resource quota set does not result in a
+memory limit being set for job execution.
 .\"
 .\"
 .SH EXAMPLES

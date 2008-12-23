@@ -1,3 +1,9 @@
+JG-2008-12-23-0: Bugfix:      the man page accounting(5) is missing info about
+                              2 new fields introduced in 6.2
+                 Issue:       2853
+                 Bugster:     6778386
+                 Review:      AP
+
 JG-2008-12-22-0: Bugfix:      sge_resource_quota(5) should warn that resource
                               quotas are not enforced as job resource limits
                  Issue:       2793

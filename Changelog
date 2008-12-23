@@ -1,3 +1,12 @@
+AP-2008-12-23-0: Bugfix:      o shepherd_cmd is missing from sge_conf(5) man page
+                              o man qsub has wrong formatting in -C section
+                              o qconf -Msconf filename at wrong position in man page
+                              o man qconf should mention sge_resource_quota(5)
+                                in "SEE_ALSO"
+                 Bugster:     6575743, 6769528, 6788577, 6788579
+                 Issue:       2318, 2770, 2215, 2389
+                 Review:      JG
+
 JG-2008-12-23-0: Bugfix:      the man page accounting(5) is missing info about
                               2 new fields introduced in 6.2
                  Issue:       2853

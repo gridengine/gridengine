@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/12/17 18:17:54 $     Revision: $Revision: 1.87 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/12/23 16:56:45 $     Revision: $Revision: 1.88 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2008/12/17 18:17:54 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2008/12/23 16:56:45 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -565,7 +565,7 @@ behaves as if \fB-cwd\fP was not specified during job submission.
 
 .\"
 .IP "\fB\-C prefix_string\fP"
-Available for \fIqsub\fP and qrsh with script submission (-b n).
+Available for \fIqsub\fP and \fIqrsh\fP with script submission (\fB-b n\fP).
 .sp 1
 .I Prefix_string
 defines the prefix that declares a directive in the

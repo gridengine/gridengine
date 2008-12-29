@@ -1,3 +1,10 @@
+JG-2008-12-29-0: Bugfix:      sge_pe man page should document that
+                              job_is_first_task is evaluated if wallclock
+                              accounting is configured
+                 Issue:       2853
+                 Bugster:     6741415
+                 Review:      DG
+
 AP-2008-12-23-0: Bugfix:      o shepherd_cmd is missing from sge_conf(5) man page
                               o man qsub has wrong formatting in -C section
                               o qconf -Msconf filename at wrong position in man page

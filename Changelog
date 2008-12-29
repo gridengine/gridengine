@@ -9252,7 +9252,7 @@ MD-2005-04-19-0: Enhancm.:  - Windows enhancement
                             - autoinstall readme
                  Review:    RD
 
-RD-2005-04-19:1: Bugfix:    qconf -purge segfault on tru64
+RD-2005-04-19-1: Bugfix:    qconf -purge segfault on tru64
                  Bugtraq:   6252522
                  Issue:     1548
                  Review:    AH

@@ -4,7 +4,7 @@
 .\" Copyright: 2008 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: jsv.1,v $     Last Update: $Date: 2008/12/01 11:05:27 $     Revision: $Revision: 1.3 $
+.\" $RCSfile: jsv.1,v $     Last Update: $Date: 2008/12/30 17:33:27 $     Revision: $Revision: 1.4 $
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
 .\"
@@ -28,7 +28,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH JSV 1 "$Date: 2008/12/01 11:05:27 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH JSV 1 "$Date: 2008/12/30 17:33:27 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 JSV \- xxQS_NAMExx Job Submission Verifier 
@@ -148,7 +148,7 @@ JSV instances modify the set of environment variables by sending back
 \fBenv_commands\fP and by using the \fBmodifiers\fP \fBADD\fP, \fBMOD\fP
 and \fBDEL\fP.
 .\"
-.IP "\fBparam_command\fP := '\fBSTART\fP' ' ' \fBparam_parameter\fP ' ' \fBvalue\fP ;"
+.IP "\fBparam_command\fP := '\fBPARAM\fP' ' ' \fBparam_parameter\fP ' ' \fBvalue\fP ;"
 .IP "\fBparam_parameter\fP := \fBsubmit_parameter\fP | \fBpseudo_parameter\fP ;"
 The \fBparam_command\fP has two additional arguments which are separated
 by space characters. The first argument is either a \fBsubmit_parameter\fP
@@ -190,7 +190,7 @@ is sent to a JSV instance then it should terminate itself immediately.
 .\"
 .SH PROTOCOL (client/qmaster side)
 A JSV script or binary can send a set of commands to a client/qmaster process
-to indicate its state in the communication process to change the job
+to indicate its state in the communication process, to change the job
 specification of a job which should be verified and to report messages or
 errors. Below you can find the commands which are understood by the
 client/qmaster which will implement version 1.0 of the communication
@@ -248,7 +248,7 @@ the job is accepted and started later on.
 .sp 1
 The job environment is not passed to JSV instances as default because
 the job environment of the end user might contain data which
-might be interpreded wrong in the JSV context and might therefore
+might be interpreted wrong in the JSV context and might therefore
 cause errors or security issues.
 .\"
 .IP "\fBstarted_command\fP := '\fBSTARTED\fP' ;"
@@ -323,7 +323,7 @@ Here is an example for the communication of a client with a JSV instance
 when following job is submitted:
 .PP
 .nf
-> qsub -pe p 3 -hard -l a=1,b=5 -soft -l q=all.q job.sh
+> qsub -pe p 3 -hard -l a=1,b=5 -soft -l q=all.q $SGE_ROOT/examples/jobs/sleeper.sh
 .fi
 .PP
 Data in the first column is sent from the client/qmaster to the

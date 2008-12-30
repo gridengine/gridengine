@@ -1,3 +1,8 @@
+DG-2008-12-30-0: Bugfix:      JSV(1) man page issues
+                 Issue:       2863
+                 Bugster:     6789620 
+                 Review:      JG
+
 JG-2008-12-29-0: Bugfix:      sge_pe man page should document that
                               job_is_first_task is evaluated if wallclock
                               accounting is configured

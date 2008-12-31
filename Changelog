@@ -1,3 +1,13 @@
+JG-2008-12-31-0: Bugfix:      incomplete accounting for the last short tasks of
+                              tightly integrated parallel job
+                 Bugster:     6728379
+                 Issue:       2815
+                 Bugfix:      aborted slave task on tight integration job
+                              generates error log in execd
+                 Bugster:     5082660 
+                 Issue:       1197
+                 Review:      DG
+
 ZG-2008-12-17-1: Update:      update html man pages
 
 ZG-2008-12-17-0: Bugfix:      mk_ascman: does not generate the '?pathrev=<BRANCH>'

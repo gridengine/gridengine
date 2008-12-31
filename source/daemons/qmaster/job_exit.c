@@ -112,11 +112,14 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
    timestamp = sge_get_gmt();
                      
    qname = lGetString(jr, JR_queue_name);
-   if (!qname)
+   if (qname == NULL) {
       qname = (char *)MSG_OBJ_UNKNOWNQ;
+   }
+
    err_str = lGetString(jr, JR_err_str);
-   if (!err_str)
+   if (err_str == NULL) {
       err_str = MSG_UNKNOWNREASON;
+   }
 
    jobid = lGetUlong(jr, JR_job_number);
    jataskid = lGetUlong(jr, JR_ja_task_number);
@@ -126,19 +129,18 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
    cancel_job_resend(jobid, jataskid);
 
    /* This only has a meaning for Hibernator jobs. The job pid must
-    * be saved accross restarts, since jobs get there old pid
+    * be saved accross restarts, since jobs get their old pid
     */
    lSetUlong(jatep, JAT_pvm_ckpt_pid, lGetUlong(jr, JR_job_pid));
 
    DPRINTF(("reaping job "sge_u32"."sge_u32" in queue >%s< job_pid %d\n", 
       jobid, jataskid, qname, (int) lGetUlong(jatep, JAT_pvm_ckpt_pid)));
 
-   if (!(queueep = cqueue_list_locate_qinstance(*object_base[SGE_TYPE_CQUEUE].list, qname))) {
+   queueep = cqueue_list_locate_qinstance(*object_base[SGE_TYPE_CQUEUE].list, qname);
+   if (queueep == NULL) {
       ERROR((SGE_EVENT, MSG_JOB_WRITEJFINISH_S, qname));
-   }
-
-   /* retrieve hostname for later use */
-   if (queueep != NULL) {
+   } else {
+      /* retrieve hostname for later use */
       hostname = lGetHost(queueep, QU_qhostname);
    }
 
@@ -148,11 +150,9 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
                hostname,
                general_failure ? MSG_GENERAL : "",
                get_sstate_description(failed), err_str));
+   } else {
+      INFO((SGE_EVENT, MSG_JOB_JFINISH_UUS,  sge_u32c(jobid), sge_u32c(jataskid), hostname));
    }
-   else
-      INFO((SGE_EVENT, MSG_JOB_JFINISH_UUS,  sge_u32c(jobid), sge_u32c(jataskid), 
-            hostname));
-
 
    /*-------------------------------------------------*/
 
@@ -160,7 +160,7 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
    if (lGetUlong(jatep, JAT_status) != JRUNNING && 
        lGetUlong(jatep, JAT_status) != JTRANSFERING) {
       ERROR((SGE_EVENT, MSG_JOB_JEXITNOTRUN_UU, sge_u32c(lGetUlong(jep, JB_job_number)), sge_u32c(jataskid)));
-      return;
+      DRETURN_VOID;
    }
 
    /*
@@ -295,8 +295,7 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
 
                next_qinstance = lGetElemHostFirst(qinstance_list, QU_qhostname, 
                                                   host, &iterator);
-               while((qinstance = next_qinstance) != NULL) {
-                  
+               while ((qinstance = next_qinstance) != NULL) {
                   next_qinstance = lGetElemHostNext(qinstance_list,
                                                     QU_qhostname,
                                                     host, 
@@ -346,7 +345,6 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
       answer_list_output(&answer_list);
    }
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 

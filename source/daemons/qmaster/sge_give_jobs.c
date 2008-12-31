@@ -285,7 +285,7 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *jep, lL
 
 
    /* do we have pe slave tasks* */
-   for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) { 
+   for_each(gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) { 
       if (lGetUlong(gdil_ep, JG_tag_slave_job)) {
          lSetUlong(jatep, JAT_next_pe_task_id, 1);   
          is_pe_jobs = true;
@@ -297,14 +297,13 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *jep, lL
       return 1;
    }
 
-/* prepare the data to be send.... */
+   /* prepare the data to be send.... */
 
    /* create a copy of the job */
    if ((tmpjep = copyJob(jep, jatep)) == NULL) {
       DEXIT;
       return -1;
-   }
-   else {
+   } else {
       tmpjatep = lFirst(lGetList(tmpjep, JB_ja_tasks));
    }
 
@@ -725,8 +724,7 @@ void sge_job_resend_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, 
    jatep = job_search_task(jep, NULL, jataskid);
    now = (time_t)sge_get_gmt();
 
-   if(!jep || !jatep)
-   {
+   if (jep == NULL || jatep == NULL) {
       WARNING((SGE_EVENT, MSG_COM_RESENDUNKNOWNJOB_UU, sge_u32c(jobid), sge_u32c(jataskid)));
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);     
       DEXIT;
@@ -736,8 +734,7 @@ void sge_job_resend_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, 
    jatasks = lGetList(jep, JB_ja_tasks);
 
    /* check whether a slave execd allowance has to be retransmitted */
-   if (lGetUlong(jatep, JAT_status) == JTRANSFERING)
-   {
+   if (lGetUlong(jatep, JAT_status) == JTRANSFERING) {
       ep = lFirst(lGetList(jatep, JAT_granted_destin_identifier_list));
 
       if (!ep || !(qnm=lGetString(ep, JG_qname)) || !(hnm=lGetHost(ep, JG_qhostname)))
@@ -819,8 +816,7 @@ void cancel_job_resend(u_long32 jid, u_long32 ja_task_id)
    DPRINTF(("CANCEL JOB RESEND "sge_u32"/"sge_u32"\n", jid, ja_task_id)); 
    te_delete_one_time_event(TYPE_JOB_RESEND_EVENT, jid, ja_task_id, "job-resend_event");
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /* 
@@ -845,7 +841,6 @@ void trigger_job_resend(u_long32 now, lListElem *hep, u_long32 jid, u_long32 ja_
    DEXIT;
    return;
 }
-
 
 /***********************************************************************
  sge_zombie_job_cleanup_handler
@@ -1199,9 +1194,9 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       sge_clear_granted_resources(ctx, jep, jatep, 1, monitor);
       job_enroll(jep, NULL, jataskid);
       for_each(petask, lGetList(jatep, JAT_task_list)) {
-         sge_add_list_event( now, sgeE_JOB_FINAL_USAGE, jobid,
+         sge_add_list_event(now, sgeE_JOB_FINAL_USAGE, jobid,
                             lGetUlong(jatep, JAT_task_number),
-                            lGetString(petask, PET_id), 
+                            lGetString(petask, PET_id),
                             NULL, lGetString(jep, JB_session),
                             lGetList(petask, PET_scaled_usage));
       }
@@ -1286,8 +1281,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       break;
    }
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
    /* 
@@ -1335,12 +1329,10 @@ static void sge_job_finish_event(lListElem *jep, lListElem *jatep, lListElem *jr
 
    if (diagnosis != NULL) {
       lSetString(jr, JR_err_str, diagnosis);
-   }   
-   else if (!lGetString(jr, JR_err_str)) {
+   } else if (!lGetString(jr, JR_err_str)) {
       if (SGE_GET_NEVERRAN(lGetUlong(jr, JR_wait_status))) {
          lSetString(jr, JR_err_str, "Job never ran");
-      }   
-      else {
+      } else {
          lSetString(jr, JR_err_str, "Unknown job finish condition");
       }   
    }
@@ -1351,18 +1343,15 @@ static void sge_job_finish_event(lListElem *jep, lListElem *jatep, lListElem *jr
 
    if (release_jr) {
       lFreeElem(&jr);
-   }   
-   else {
+   } else {
       lXchgList(jr, JR_usage, lGetListRef(jatep, JAT_usage_list));
    }
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
-static void release_successor_jobs(
-lListElem *jep 
-) {
+static void release_successor_jobs(lListElem *jep)
+{
    lListElem *jid, *suc_jep;
    u_long32 job_ident;
 
@@ -1526,8 +1515,7 @@ static void sge_clear_granted_resources(sge_gdi_ctx_class_t *ctx,
    lSetList(ja_task, JAT_granted_destin_identifier_list, NULL);
    lSetString(ja_task, JAT_master_queue, NULL);
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /* what we do is:
@@ -1564,8 +1552,7 @@ static void reduce_queue_limit(const lList* master_centry_list, lListElem *qep,
             lSetString(qep, nm, lGetString(dcep, CE_default));
    }
    
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 
@@ -1785,8 +1772,7 @@ copyJob(lListElem *job, lListElem *ja_task)
       }
    }
 
-   DEXIT;
-   return job_copy;
+   DRETURN(job_copy);
 }
 
 
@@ -1916,3 +1902,4 @@ static int spool_delete_script(lListElem *jep, u_long32 jobid)
    PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
    return ret;
 }
+

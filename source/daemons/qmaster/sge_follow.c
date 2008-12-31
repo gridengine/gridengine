@@ -466,7 +466,6 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
           *  and gets untagged when ack has arrived 
           */
          if (pe && lGetBool(pe, PE_control_slaves)) {
-      
             lSetDouble(gdil_ep, JG_ticket, lGetDouble(oep, OQ_ticket));
             lSetDouble(gdil_ep, JG_oticket, lGetDouble(oep, OQ_oticket));
             lSetDouble(gdil_ep, JG_fticket, lGetDouble(oep, OQ_fticket));

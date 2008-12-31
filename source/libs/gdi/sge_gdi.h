@@ -189,7 +189,8 @@ enum {
    ACK_JOB_EXIT,         /* sent back by qmaster, when execd sends a job_exit */
    ACK_SIGNAL_JOB,       /* sent back by qmaster, when execd reports a job as */
                          /* running - that was not supposed to be there       */
-   ACK_EVENT_DELIVERY    /* sent back by schedd, when master sends events     */
+   ACK_EVENT_DELIVERY,   /* sent back by schedd, when master sends events     */
+   ACK_SIGNAL_SLAVE      /* sent to slave execds when master task finished    */
 };
 
 

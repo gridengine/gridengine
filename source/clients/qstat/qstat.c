@@ -97,11 +97,8 @@
 #define FORMAT_I_2 "%I %I "
 #define FORMAT_I_1 "%I "
 
-static lList *sge_parse_qstat(lList **ppcmdline, 
-                              qstat_env_t *qstat_env,  
-                              char **hostname, 
-                              lList **ppljid, 
-                              u_long32 *isXML);
+static lList *sge_parse_qstat(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, qstat_env_t *qstat_env,  
+                              char **hostname, lList **ppljid, u_long32 *isXML);
 static int qstat_show_job(sge_gdi_ctx_class_t *ctx, lList *jid, u_long32 isXML);
 static int qstat_show_job_info(sge_gdi_ctx_class_t *ctx, u_long32 isXML);
 
@@ -326,7 +323,7 @@ char **argv
       SGE_EXIT((void**)&ctx, 1);
    }
 
-   alp = sge_parse_qstat(&pcmdline, &qstat_env, &hostname, &jid_list, &isXML);
+   alp = sge_parse_qstat(ctx, &pcmdline, &qstat_env, &hostname, &jid_list, &isXML);
 
    if (alp) {
       /*
@@ -435,13 +432,10 @@ char **argv
  **** ppcmdline, sets the full and empry_qs flags and puts the
  **** queue/res/user-arguments into the lists.
  ****/
-static lList *sge_parse_qstat(
-lList **ppcmdline,
-qstat_env_t *qstat_env,
-char **hostname,
-lList **ppljid, 
-u_long32 *isXML
-) {
+static lList *
+sge_parse_qstat(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, qstat_env_t *qstat_env,
+                char **hostname, lList **ppljid, u_long32 *isXML)
+{
    stringT str;
    lList *alp = NULL;
    u_long32 helpflag;
@@ -458,12 +452,11 @@ u_long32 *isXML
    /* Loop over all options. Only valid options can be in the
       ppcmdline list. 
    */
-   while(lGetNumberOfElem(*ppcmdline))
-   {
-      if(parse_flag(ppcmdline, "-help",  &alp, &helpflag)) {
+   while (lGetNumberOfElem(*ppcmdline)) {
+      if (parse_flag(ppcmdline, "-help",  &alp, &helpflag)) {
          usageshowed = qstat_usage(qstat_env->qselect_mode, stdout, NULL);
          DEXIT;
-         SGE_EXIT(NULL, 0);
+         SGE_EXIT((void**)&ctx, 1);
          break;
       }
 
@@ -1956,7 +1949,7 @@ u_long32 isXML
       }
       fprintf(stderr, "\n");
       DEXIT;
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    /* print scheduler job information and global scheduler info */

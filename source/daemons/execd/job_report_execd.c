@@ -52,7 +52,7 @@ lList *jr_list = NULL;
 static bool flush_jr = false;
 
 void sge_set_flush_jr_flag(bool value) {
-   flush_jr =value;
+   flush_jr = value;
 }
 
 bool sge_get_flush_jr_flag(void) {
@@ -88,12 +88,8 @@ void trace_jr()
    DEXIT;
 }
 
-lListElem *add_job_report(
-u_long32 jobid,
-u_long32 jataskid,
-const char *petaskid,
-lListElem *jep 
-) {  
+lListElem *add_job_report(u_long32 jobid, u_long32 jataskid, const char *petaskid, lListElem *jep)
+{  
    lListElem *jr, *jatep = NULL;
  
    DENTER(TOP_LAYER, "add_job_report");
@@ -307,8 +303,9 @@ execd_c_ack(sge_gdi_ctx_class_t *ctx,
                DPRINTF(("acknowledged job "sge_u32"."sge_u32" not found\n", jobid, jataskid));
             }
 
-            if (pe_task_id_str)
-               free(pe_task_id_str);
+            if (pe_task_id_str != NULL) {
+               FREE(pe_task_id_str);
+            }
             break;
  
          case ACK_SIGNAL_JOB:
@@ -339,7 +336,23 @@ execd_c_ack(sge_gdi_ctx_class_t *ctx,
                }
             }
             break;
- 
+
+/*
+ * This is the answer of qmaster
+ * when we report a slave job,
+ * and the master task of this slave job has finished.
+ * qmaster expects us to send a final slave report
+ * (having JR_usage with at least a pseudo exit_status)
+ * once all pe_tasks have finished.
+ * Fix for CR 6579326 to be done: kill still running pe_tasks.
+ */
+         case ACK_SIGNAL_SLAVE:
+            unpackint(pb, &jobid);
+            unpackint(pb, &jataskid);
+
+            execd_slave_job_exit(jobid, jataskid);
+            break;
+
          default:
             ERROR((SGE_EVENT, MSG_COM_ACK_UNKNOWN));
             break;

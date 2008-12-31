@@ -427,7 +427,7 @@ int slave
           */
          next_tmp_job = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)),
                                            JB_job_number, job_id, &iterator);
-         while((tmp_job = next_tmp_job) != NULL) {
+         while ((tmp_job = next_tmp_job) != NULL) {
             next_tmp_job = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)),
                                            JB_job_number, job_id, &iterator);
            
@@ -701,7 +701,7 @@ job_get_queue_for_task(lListElem *jatep, lListElem *petep,
          DTRACE;
 
          /* Queue must have free slots */
-         if(qinstance_slots_used(this_q) < lGetUlong(this_q, QU_job_slots)) {
+         if (qinstance_slots_used(this_q) < lGetUlong(this_q, QU_job_slots)) {
             lList *jat_gdil = job_set_queue_info_in_task(qualified_hostname, lGetString(gdil_ep, JG_qname),
                                                           petep);
             DRETURN(jat_gdil); 
@@ -786,9 +786,9 @@ int *synchron
       goto Error;
    }
 
-   /* do not accept the task if job is in deletion */
-   if ((lGetUlong(jatep, JAT_state) & JDELETED)) {
-      DPRINTF(("received task exec request while job is in deletion\n"));
+   /* do not accept the task if job is in deletion or exiting */
+   if ((lGetUlong(jatep, JAT_state) & JDELETED) || lGetUlong(jatep, JAT_status) & JEXITING) {
+      DPRINTF(("received task exec request while job is in deletion or exiting\n"));
       goto Error;
    }
 
@@ -820,12 +820,12 @@ int *synchron
          
    if (gdil == NULL) { /* ran through list without finding matching queue */ 
       gdil = job_get_queue_with_task_about_to_exit(jep, jatep, petep, qualified_hostname, requested_queue);
-   }
          
-   if (gdil == NULL) {  /* also no already exited task found -> no way to start new task */
-      ERROR((SGE_EVENT, MSG_JOB_NOFREEQ_USSS, sge_u32c(jobid), 
-             lGetString(petrep, PETR_owner), de->host, qualified_hostname));
-      goto Error;
+      if (gdil == NULL) {  /* also no already exited task found -> no way to start new task */
+         ERROR((SGE_EVENT, MSG_JOB_NOFREEQ_USSS, sge_u32c(jobid), 
+                lGetString(petrep, PETR_owner), de->host, qualified_hostname));
+         goto Error;
+      }
    }
 
    /* put task into task_list of slave/master job */ 

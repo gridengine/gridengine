@@ -63,6 +63,7 @@
 #include "sge_job_qmaster.h"
 #include "execution_states.h"
 #include "sge_load_sensor.h"
+#include "execd.h"
 #include "reaper_execd.h"
 #include "job_report_execd.h"
 #include "sge_prog.h"
@@ -255,7 +256,7 @@ int sge_reap_children_execd(int max_count)
 
          /* when restarting execd it happens that cleanup_old_jobs()
             has already cleaned up this job */
-         if (lGetUlong(jr, JR_state)==JEXITING) {
+         if (lGetUlong(jr, JR_state) == JEXITING) {
             DPRINTF(("State of job "sge_u32" already changed to JEXITING\n", jobid));
             continue;
          }
@@ -826,7 +827,7 @@ lListElem *jr
    char err_str_buffer[1024];
    dstring err_str;
    SGE_STRUCT_STAT statbuf;
-   lListElem *jep, *petep = NULL, *jatep = NULL;
+   lListElem *jep = NULL, *petep = NULL, *jatep = NULL;
    const char *pe_task_id_str; 
    const void *iterator;
    const char *sge_root = ctx->get_sge_root(ctx);
@@ -844,17 +845,7 @@ lListElem *jr
    pe_task_id_str = jr?lGetString(jr, JR_pe_task_id_str):NULL;
 
    /* try to find this job in our job list */ 
-
-   jep = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
-   while (jep != NULL) {
-      jatep = job_search_task(jep, NULL, ja_task_id);
-      if (jatep != NULL) {
-         break;
-      }
-      jep = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
-   }
-
-   if (jep && jatep) {
+   if (execd_get_job_ja_task(job_id, ja_task_id, &jep, &jatep)) {
       lListElem *master_q;
       int used_slots;
    
@@ -862,7 +853,7 @@ lListElem *jr
       if (pe_task_id_str) {
          petep = lGetElemStr(lGetList(jatep, JAT_task_list), PET_id, pe_task_id_str);
 
-         if (!petep) {
+         if (petep == NULL) {
             ERROR((SGE_EVENT, MSG_JOB_XYHASNOTASKZ_UUS, 
                    sge_u32c(job_id), sge_u32c(ja_task_id), pe_task_id_str));
             del_job_report(jr);
@@ -954,9 +945,21 @@ lListElem *jr
 
 
 
-      if (pe_task_id_str) {
+      if (pe_task_id_str != NULL) {
          /* unchain pe task element from task list */
          lRemoveElem(lGetList(jatep, JAT_task_list), &petep);
+
+         /*
+          * if this was the last pe_task of an exiting slave job
+          * send the slave job final report
+          */
+         if (lGetNumberOfElem(lGetList(jatep, JAT_task_list)) == 0) {
+            lListElem *jr = get_job_report(job_id, ja_task_id, NULL);
+            if (jr != NULL && lGetUlong(jr, JR_state) == JSLAVE && lGetUlong(jatep, JAT_status) & JEXITING) {
+               add_usage(jr, "exit_status", NULL, 0);
+               flush_job_report(jr);
+            }
+         }
       } else {
          /* check if job has queue limits and decrease global flag if necessary */
          modify_queue_limits_flag_for_job(ctx->get_qualified_hostname(ctx), jep, false);
@@ -1783,8 +1786,9 @@ lListElem *jr
    mail_options = lGetUlong(jep, JB_mail_options); 
    pe_task_id_str = lGetString(jr, JR_pe_task_id_str);
 
-   if (!(q=lGetString(jr, JR_queue_name)))
+   if (!(q=lGetString(jr, JR_queue_name))) {
       q = MSG_MAIL_UNKNOWN_NAME;
+   }
 
    h = qualified_hostname;
 
@@ -1962,4 +1966,47 @@ lListElem *jr
    sge_dstring_free(&maxvmem_string);
    DEXIT;
    return ;
+}
+
+/****** reaper_execd/execd_slave_job_exit() ************************************
+*  NAME
+*     execd_slave_job_exit() -- make pe slave job report exit
+*
+*  SYNOPSIS
+*     void execd_slave_job_exit(u_long32 job_id, u_long32 ja_task_id) 
+*
+*  FUNCTION
+*     When the master task of a tightly integrated pe job exited,
+*     qmaster sends a request to all slave execds to report 
+*     the exit of the slave job container once all pe tasks
+*     have finished.
+*     This function sets the slave job to status JEXITING,
+*     if all pe tasks already exited, it triggers sending
+*     of the final slave job report.
+*
+*  INPUTS
+*     u_long32 job_id     - job id of the slave job
+*     u_long32 ja_task_id - ja_task id of the slave job
+*
+*  NOTES
+*     MT-NOTE: execd_slave_job_exit() is MT safe 
+*******************************************************************************/
+void execd_slave_job_exit(u_long32 job_id, u_long32 ja_task_id)
+{
+   lListElem *job = NULL;
+   lListElem *ja_task = NULL;
+
+   if (execd_get_job_ja_task(job_id, ja_task_id, &job, &ja_task)) {
+      /* mark the job as exiting */
+      lSetUlong(ja_task, JAT_status, JEXITING);
+
+      /* if there are no pe_tasks running
+       * we can finish the slave job right away
+       */
+      if (lGetNumberOfElem(lGetList(ja_task, JAT_task_list)) == 0) {
+         lListElem *jr = get_job_report(job_id, ja_task_id, NULL);
+         add_usage(jr, "exit_status", NULL, 0);
+         flush_job_report(jr);
+      }
+   }
 }

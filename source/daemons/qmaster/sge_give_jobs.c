@@ -557,8 +557,7 @@ send_job(sge_gdi_ctx_class_t *ctx,
    if (master && job_spooling && lGetString(tmpjep, JB_exec_file) && !JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type))) {
       if (spool_read_script(NULL, lGetUlong(tmpjep, JB_job_number), tmpjep) == false) {
          lFreeElem(&tmpjep);
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
    }
 
@@ -568,8 +567,7 @@ send_job(sge_gdi_ctx_class_t *ctx,
    */
    if (setCheckpointObj(tmpjep) != 0) {
       lFreeElem(&tmpjep);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    
    /* add all queues referenced in gdil to qlp 
@@ -687,8 +685,7 @@ send_job(sge_gdi_ctx_class_t *ctx,
       ERROR((SGE_EVENT, MSG_COM_SENDJOBTOHOST_US, sge_u32c(lGetUlong(jep, JB_job_number)), rhost));
       ERROR((SGE_EVENT, "commlib error: %s\n", cl_get_error_text(failed)));
       sge_mark_unheard(hep);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    } else {
       DPRINTF(("successfully sent %sjob "sge_u32" to host \"%s\"\n", 
                master?"":"SLAVE ", 
@@ -717,7 +714,7 @@ void sge_job_resend_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, 
    jatep = job_search_task(jep, NULL, jataskid);
    now = (time_t)sge_get_gmt();
 
-   if (!jep || !jatep) {
+   if (jep == NULL || jatep == NULL) {
       WARNING((SGE_EVENT, MSG_COM_RESENDUNKNOWNJOB_UU, sge_u32c(jobid), sge_u32c(jataskid)));
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);     
       DEXIT;
@@ -868,10 +865,11 @@ void trigger_job_resend(u_long32 now, lListElem *hep, u_long32 jid, u_long32 ja_
 
    DENTER(TOP_LAYER, "trigger_job_resend");
 
-   if (mconf_get_simulate_execds())
+   if (mconf_get_simulate_execds()) {
       seconds = delta;
-   else
+   } else {
       seconds = hep ? MAX(load_report_interval(hep), MAX_JOB_DELIVER_TIME) : 0;
+   }
    DPRINTF(("TRIGGER JOB RESEND "sge_u32"/"sge_u32" in %d seconds\n", jid, ja_task_id, seconds)); 
 
    when = (time_t)(now + seconds);
@@ -1401,12 +1399,10 @@ static void sge_job_finish_event(lListElem *jep, lListElem *jatep, lListElem *jr
 
    if (diagnosis != NULL) {
       lSetString(jr, JR_err_str, diagnosis);
-   }   
-   else if (!lGetString(jr, JR_err_str)) {
+   } else if (!lGetString(jr, JR_err_str)) {
       if (SGE_GET_NEVERRAN(lGetUlong(jr, JR_wait_status))) {
          lSetString(jr, JR_err_str, "Job never ran");
-      }   
-      else {
+      } else {
          lSetString(jr, JR_err_str, "Unknown job finish condition");
       }   
    }
@@ -1417,13 +1413,11 @@ static void sge_job_finish_event(lListElem *jep, lListElem *jatep, lListElem *jr
 
    if (release_jr) {
       lFreeElem(&jr);
-   }   
-   else {
+   } else {
       lXchgList(jr, JR_usage, lGetListRef(jatep, JAT_usage_list));
    }
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 static void release_successor_jobs(lListElem *jep)

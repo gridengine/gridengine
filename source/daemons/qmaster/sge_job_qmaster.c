@@ -127,7 +127,6 @@
 #include "msg_daemons_common.h"
 
 
-
 /****** qmaster/job/spooling ***************************************************
 *
 *  NAME
@@ -522,21 +521,21 @@ int sge_gdi_del_job(sge_gdi_ctx_class_t *ctx, lListElem *idep, lList **alpp, cha
 
 /****** sge_job_qmaster/is_pe_master_task_send() *******************************
 *  NAME
-*     is_pe_master_task_send() -- figures out, if all salves are send
+*     is_pe_master_task_send() -- figures out, if all slaves have been notified
 *
 *  SYNOPSIS
 *     bool is_pe_master_task_send(lListElem *jatep) 
 *
 *  FUNCTION
-*     In case of tightly integrated pe jobs are the salves send first. Once
-*     all execds acknowledged the slaves, the master can be send. This function
-*     figures out, if all slaves are acknowledged.
+*     In case of tightly integrated pe jobs the slave execds have to be notified first.
+*     Once all execds acknowledged the slave notification, the master can be sent.
+*     This function figures out, if all slaves have acknowledged notification.
 *
 *  INPUTS
 *     lListElem *jatep - ja task in question
 *
 *  RESULT
-*     bool - true, if all slaves are acknowledged
+*     bool - true, if all slaves have acknowledged slave notification
 *
 *  NOTES
 *     MT-NOTE: is_pe_master_task_send() is MT safe 
@@ -545,17 +544,102 @@ int sge_gdi_del_job(sge_gdi_ctx_class_t *ctx, lListElem *idep, lList **alpp, cha
 bool
 is_pe_master_task_send(lListElem *jatep) 
 {
-   bool is_all_slaves_arrived = true;
+   bool all_slaves_arrived = true;
    lListElem *gdil_ep = NULL;
    
    for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
       if (lGetUlong(gdil_ep, JG_tag_slave_job) != 0) {
-         is_all_slaves_arrived= false;
+         all_slaves_arrived = false;
          break;
       }
    }
    
-   return is_all_slaves_arrived;
+   return all_slaves_arrived;
+}
+
+/****** sge_job_qmaster/all_slave_jobs_finished() ******************************
+*  NAME
+*     all_slave_jobs_finished() -- have all slave jobs finished?
+*
+*  SYNOPSIS
+*     bool all_slave_jobs_finished(lListElem *jatep)
+*
+*  FUNCTION
+*     Figures out if all slave jobs of a tightly integrated parallel
+*     job have finished.
+*     The first gdil element of a host is tagged as long as the execd
+*     on this host didn't report the slave job finish.
+*
+*  INPUTS
+*     lListElem *jatep - the ja task of the running pe job
+*
+*  RESULT
+*     bool - true if all slave jobs finished, else false
+*
+*  NOTES
+*     MT-NOTE: all_slave_jobs_finished() is MT safe
+*     TODO: can be merged with is_pe_master_task_send
+*
+*  SEE ALSO
+*     sge_job_qmaster/is_pe_master_task_send()
+*******************************************************************************/
+bool all_slave_jobs_finished(lListElem *jatep)
+{
+   bool all_slaves_finished = true;
+   lList *gdil = NULL;
+   lListElem *gdil_ep = NULL;
+
+   /* Search gdil for tagged entries.
+    * Tagged means, the slave execd did not yet report job finish.
+    * The first entry of gdil is the master task - ignore it.
+    * Only the first gdil_ep of a host is tagged.
+    */
+   gdil = lGetList(jatep, JAT_granted_destin_identifier_list);
+   for_each (gdil_ep, gdil) {
+      const char *host = lGetHost(gdil_ep, JG_qhostname);
+      const lListElem *first_at_host = lGetElemHost(gdil, JG_qhostname, host);
+      if (gdil_ep == first_at_host && gdil_ep != lFirst(gdil)) {
+         if (lGetUlong(gdil_ep, JG_tag_slave_job) == 1) {
+            all_slaves_finished = false;
+            break;
+         }
+      }
+   }
+
+   return all_slaves_finished;
+}
+
+/****** sge_job_qmaster/tag_all_host_gdil() ************************************
+*  NAME
+*     tag_all_host_gdil() -- tag all hosts of a parallel job
+*
+*  SYNOPSIS
+*     void tag_all_host_gdil(lListElem *jatep)
+*
+*  FUNCTION
+*     Sets a tag for all hosts of a tightly integrated parallel job.
+*
+*  INPUTS
+*     lListElem *jatep - the ja task of the parallel job
+*
+*  NOTES
+*     MT-NOTE: tag_all_host_gdil() is MT safe 
+*******************************************************************************/
+void tag_all_host_gdil(lListElem *jatep)
+{
+   lList *gdil = lGetList(jatep, JAT_granted_destin_identifier_list);
+   lListElem *gdil_ep;
+
+   for_each (gdil_ep, gdil) {
+      const char *host = lGetHost(gdil_ep, JG_qhostname);
+      /* only the first gdil_ep for a host is tagged
+       * if the pe job spawns multiple queues there might be multiple entries per host
+       */
+      const lListElem *first_at_host = lGetElemHost(gdil, JG_qhostname, host);
+      if (gdil_ep == first_at_host) {
+         lSetUlong(gdil_ep, JG_tag_slave_job, 1);
+      }
+   }
 }
 
 static void empty_job_list_filter(

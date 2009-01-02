@@ -703,9 +703,9 @@ static int handle_task(sge_gdi_ctx_class_t *ctx, lListElem *petrep, char *commpr
       goto Error;
    }
 
-   /* do not accept the task if job is in deletion */
-   if ((lGetUlong(jatep, JAT_state) & JDELETED)) {
-      DPRINTF(("received task exec request while job is in deletion\n"));
+   /* do not accept the task if job is in deletion or exiting */
+   if ((lGetUlong(jatep, JAT_state) & JDELETED) || lGetUlong(jatep, JAT_status) & JEXITING) {
+      DPRINTF(("received task exec request while job is in deletion or exiting\n"));
       goto Error;
    }
 

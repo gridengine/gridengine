@@ -59,6 +59,7 @@
 #include "sge_answer.h"
 #include "execd.h"
 #include "sgeobj/sge_object.h"
+#include "sgeobj/sge_job.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -640,3 +641,62 @@ static lList *sge_parse_execd(lList **ppcmdline, lList **ppreflist,
    return alp;
 }
 
+/* JG: TODO: we have this searching code in many places!! */
+/****** execd/execd_get_job_ja_task() ******************************************
+*  NAME
+*     execd_get_job_ja_task() -- search job and ja_task by id
+*
+*  SYNOPSIS
+*     bool
+*     execd_get_job_ja_task(u_long32 job_id, u_long32 ja_task_id,
+*                           lListElem **job, lListElem **ja_task) 
+*
+*  FUNCTION
+*     Searches the execd master lists for job and ja_task
+*     defined by job_id and ja_task_id.
+*
+*  INPUTS
+*     u_long32 job_id     - job id
+*     u_long32 ja_task_id - ja_task id
+*     lListElem **job     - returns job or NULL if not found
+*     lListElem **ja_task - returns ja_task or NULL if not found
+*
+*  RESULT
+*     bool - true if both job and ja_task are found, else false
+*
+*  NOTES
+*     MT-NOTE: execd_get_job_ja_task() is MT safe 
+*******************************************************************************/
+bool execd_get_job_ja_task(u_long32 job_id, u_long32 ja_task_id, lListElem **job, lListElem **ja_task)
+{
+   const void *iterator = NULL;
+
+   DENTER(TOP_LAYER, "execd_get_job_ja_task");
+
+   *job = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)),
+                            JB_job_number, job_id, &iterator);
+   while (*job != NULL) {
+      *ja_task = job_search_task(*job, NULL, ja_task_id);
+      if (*ja_task != NULL) {
+         DRETURN(true);
+      }
+
+      /* in execd, we have exactly one ja_task per job,
+       * therefore we can have multiple jobs with the same job_id
+       */
+      *job = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)),
+                               JB_job_number, job_id, &iterator);
+   }
+   
+   if (*job == NULL) {
+      ERROR((SGE_EVENT, MSG_JOB_TASKWITHOUTJOB_U, sge_u32c(job_id))); 
+   }
+
+   if (*ja_task == NULL) { 
+      ERROR((SGE_EVENT, MSG_JOB_TASKNOTASKINJOB_UU, sge_u32c(job_id), sge_u32c(ja_task_id)));
+   }
+
+   *job = NULL;
+   *ja_task = NULL;
+   DRETURN(false);
+}

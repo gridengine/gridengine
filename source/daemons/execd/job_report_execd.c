@@ -58,7 +58,7 @@ static bool flush_jr = false;
 static int check_queue_limits = 0;
 
 void sge_set_flush_jr_flag(bool value) {
-   flush_jr =value;
+   flush_jr = value;
 }
 
 bool sge_get_flush_jr_flag(void) {
@@ -334,10 +334,27 @@ int do_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
                }
             }
             break;
+
          case ACK_LOAD_REPORT:
             execd_merge_load_report(lGetUlong(ack, ACK_id));
             break;
  
+/*
+ * This is the answer of qmaster
+ * when we report a slave job,
+ * and the master task of this slave job has finished.
+ * qmaster expects us to send a final slave report
+ * (having JR_usage with at least a pseudo exit_status)
+ * once all pe_tasks have finished.
+ * Fix for CR 6579326 to be done: kill still running pe_tasks.
+ */
+         case ACK_SIGNAL_SLAVE:
+            jobid = lGetUlong(ack, ACK_id);
+            jataskid = lGetUlong(ack, ACK_id2);
+
+            execd_slave_job_exit(jobid, jataskid);
+            break;
+
          default:
             ERROR((SGE_EVENT, MSG_COM_ACK_UNKNOWN1));
             break;

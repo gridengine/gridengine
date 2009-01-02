@@ -1,3 +1,13 @@
+JG-2009-01-02-0: Bugfix:      incomplete accounting for the last short tasks of
+                              tightly integrated parallel job
+                 Bugster:     6728379
+                 Issue:       2815
+                 Bugfix:      aborted slave task on tight integration job
+                              generates error log in execd
+                 Bugster:     5082660 
+                 Issue:       1197
+                 Review:      DG
+
 DG-2008-12-30-0: Bugfix:      JSV(1) man page issues
                  Issue:       2863
                  Bugster:     6789620 
@@ -6,7 +16,7 @@ DG-2008-12-30-0: Bugfix:      JSV(1) man page issues
 JG-2008-12-29-0: Bugfix:      sge_pe man page should document that
                               job_is_first_task is evaluated if wallclock
                               accounting is configured
-                 Issue:       2853
+                 Issue:       2862
                  Bugster:     6741415
                  Review:      DG
 

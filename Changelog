@@ -6,6 +6,10 @@ JG-2008-12-31-0: Bugfix:      incomplete accounting for the last short tasks of
                               generates error log in execd
                  Bugster:     5082660 
                  Issue:       1197
+                 Bugfix:      qmaster reports commlib read error in message
+                              file when qstat -j is executed
+                 Bugster:     6786406
+                 Issue:       2840
                  Review:      DG
 
 ZG-2008-12-17-1: Update:      update html man pages

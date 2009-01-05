@@ -1,3 +1,8 @@
+MP-2009-01-05-0: Bugfix:      qstat -j XXX -xml schema not well documented.
+                 Bugster:     6320659
+                 Issue:       1776
+                 Review:      JG
+
 JG-2009-01-02-0: Bugfix:      incomplete accounting for the last short tasks of
                               tightly integrated parallel job
                  Bugster:     6728379

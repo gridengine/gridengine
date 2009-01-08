@@ -3,8 +3,8 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     sgepasswd - Modify the Grid Engine  password  file  of  Grid
-     Engine
+     sgepasswd - Modify the Sun Grid Engine password file of  Sun
+     Grid Engine
 
 SYNTAX
      sgepasswd [[ -D domain ] -d user ]
@@ -12,7 +12,7 @@ SYNTAX
      sgepasswd [ -D domain ] [ user ]
 
 DESCRIPTION
-     <I>sgepasswd</I>   modifies   the   Grid   Engine   password   file
+     <I>sgepasswd</I>  modifies  the  Sun  Grid  Engine  password   file
      <B><A HREF="../htmlman5/sgepasswd.html">sgepasswd(5)</A></B>.
 
      This file contains a list of  usernames  and  their  windows
@@ -53,19 +53,19 @@ ENVIRONMENTAL VARIABLES
 
      SGE_KEYFILE    If set, specifies the location of the private
                     key         file.          Default         is
-                    /var/sgeCA/port${SGE_QMASTER_PORT}/private/key.pem
+                    /var/sgeCA/port${SGE_QMASTER_PORT}/${SGE_CELL}/private/key.pem
+
+     SGE_RANDFILE   If set, specifies the location  of  the  seed
+                    used  to  create  encrypted  versions of user
+                    passwords.             Default             is
+                    /var/sgeCA/port${SGE_QMASTER_PORT}/${SGE_CELL}/private/rand.seed
 
 SEE ALSO
-     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>, <B><A HREF="../htmlman5/sgepasswd.html">sgepasswd(5)</A></B>
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman5/sgepasswd.html">sgepasswd(5)</A></B>
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
 
 
 

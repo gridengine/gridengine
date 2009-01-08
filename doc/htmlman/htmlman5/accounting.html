@@ -3,12 +3,13 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     accounting - Grid Engine accounting file format
+     accounting - Sun Grid Engine accounting file format
 
 DESCRIPTION
-     An accounting record is written to the Grid Engine  account-
-     ing  file  for each job having finished. The accounting file
-     is processed by <B><A HREF="../htmlman1/qacct.html">qacct(1)</A></B> to derive accounting statistics.
+     An accounting record is  written  to  the  Sun  Grid  Engine
+     accounting file for each job having finished. The accounting
+     file is processed by <B><A HREF="../htmlman1/qacct.html">qacct(1)</A></B> to derive  accounting  statis-
+     tics.
 
 FORMAT
      Each job is represented by a line in  the  accounting  file.
@@ -28,7 +29,7 @@ FORMAT
      job.
 
   owner
-     Owner of the Grid Engine job.
+     Owner of the Sun Grid Engine job.
 
   job_name
      Job name.
@@ -58,12 +59,12 @@ FORMAT
      Indicates the problem which occurred in case a job could not
      be  started on the execution host (e.g. because the owner of
      the job did not have a valid account on  that  machine).  If
-     Grid  Engine  tries  to start a job multiple times, this may
-     lead to multiple entries in the accounting file  correspond-
-     ing to the same job ID.
+     Sun  Grid  Engine  tries to start a job multiple times, this
+     may  lead  to  multiple  entries  in  the  accounting   file
+     corresponding to the same job ID.
 
   exit_status
-     Exit status of the  job  script  (or  Grid  Engine  specific
+     Exit status of the job script (or Sun Grid  Engine  specific
      status  in  case  of  certain  error  conditions).  The exit
      status is determined by following the normal  shell  conven-
      tions.   If the command terminates normally the value of the
@@ -136,7 +137,7 @@ FORMAT
 
   pe_taskid
      If this identifier is set the task was part  of  a  parallel
-     job  and  was  passed  to  Grid Engine via the qrsh -inherit
+     job  and was passed to Sun Grid Engine via the qrsh -inherit
      interface.
 
   maxvmem
@@ -147,13 +148,65 @@ FORMAT
      an  advance  reservation then this field contains a positive
      integer identifier otherwise the value is "0" .
 
+  ar_submission_time
+     If the job used resources of  an  advance  reservation  then
+     this  field  contains  the  submission  time  (GMT unix time
+     stamp) of the advance reservation, otherwise  the  value  is
+     "0" .
+
 SEE ALSO
-     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qacct.html">qacct(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman2/getrusage.html">getrusage(2)</A></B>,
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qacct.html">qacct(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman2/getrusage.html">getrusage(2)</A></B>,
      <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.
 
+
 COPYRIGHT
-     See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

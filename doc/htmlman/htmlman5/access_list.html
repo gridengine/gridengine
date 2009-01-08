@@ -3,25 +3,25 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     access_list - Grid Engine access list file format
+     access_list - Sun Grid Engine access list file format
 
 DESCRIPTION
-     Access lists are used in Grid Engine to define  access  per-
-     missions  of users to queues (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>) or parallel
-     environments (see <B><A HREF="../htmlman5/ge_pe.html">ge_pe(5)</A></B>).  A list of currently configured
-     access  lists can be displayed via the <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> -sul option.
-     The contents of each enlisted access list can shown via  the
-     -su  switch.  The  output  follows  the  <I>access</I>_<I>list</I>  format
-     description. New access lists can be  created  and  existing
-     can be modified via the -au and -du options to <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>.
+     Access lists are used in Sun Grid Engine  to  define  access
+     permissions of users to queues (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>) or paral-
+     lel environments (see <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B>).  A list of currently  con-
+     figured  access lists can be displayed via the <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> -sul
+     option. The contents of each enlisted access list can  shown
+     via  the -su switch. The output follows the <I>access</I>_<I>list</I> for-
+     mat description. New access lists can be created and  exist-
+     ing can be modified via the -au and -du options to <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>.
 
      Departments are a special form of access list that addition-
      ally  allow  assignment  of  functional  shares and override
      tickets.
 
-     Note, Grid Engine allows backslashes (\) be used  to  escape
-     newline (\newline) characters. The backslash and the newline
-     are replaced  with  a  space  ("  ")  character  before  any
+     Note, Sun Grid Engine allows  backslashes  (\)  be  used  to
+     escape  newline (\newline) characters. The backslash and the
+     newline are replaced with a space (" ") character before any
      interpretation.
 
 FORMAT
@@ -61,11 +61,11 @@ FORMAT
      entries the <I>defaultdepartment</I> is assigned, if existing.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>,     <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>,      <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,      <B><A HREF="../htmlman5/ge_pe.html">ge_pe(5)</A></B>,
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,     <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>,     <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,     <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B>,
      <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
 
 

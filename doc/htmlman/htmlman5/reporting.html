@@ -3,10 +3,10 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     reporting - Grid Engine reporting file format
+     reporting - Sun Grid Engine reporting file format
 
 DESCRIPTION
-     A  Grid  Engine  system   writes   a   reporting   file   to
+     A  Sun  Grid  Engine  system  writes  a  reporting  file  to
      $SGE_ROOT/default/common/reporting.  The reporting file con-
      tains data that can be used for accounting,  monitoring  and
      analysis  purposes.  It contains information about the clus-
@@ -161,7 +161,7 @@ FORMAT
           the job.
 
      owner
-          Owner of the Grid Engine job.
+          Owner of the Sun Grid Engine job.
 
      job_name
           Job name.
@@ -191,14 +191,14 @@ FORMAT
           Indicates the problem which  occurred  in  case  a  job
           could  not  be  started  on  the  execution  host (e.g.
           because the owner of the  job  did  not  have  a  valid
-          account on that machine). If Grid Engine tries to start
-          a job multiple times, this may lead to multiple entries
-          in  the  accounting  file corresponding to the same job
-          ID.
+          account  on  that machine). If Sun Grid Engine tries to
+          start a job multiple times, this may lead  to  multiple
+          entries  in  the  accounting  file corresponding to the
+          same job ID.
 
      exit_status
-          Exit status of the job script (or Grid Engine  specific
-          status in case of certain error conditions).
+          Exit status of the  job  script  (or  Sun  Grid  Engine
+          specific status in case of certain error conditions).
 
      ru_wallclock
           Difference between end_time and start_time (see above).
@@ -259,7 +259,7 @@ FORMAT
 
      pe_taskid
           If this identifier is set the task was part of a paral-
-          lel  job  and  was  passed  to Grid Engine via the qrsh
+          lel  job and was passed to Sun Grid Engine via the qrsh
           -inherit interface.
 
      maxvmem
@@ -322,7 +322,7 @@ FORMAT
           mation was generated.
 
      state
-          The new host state.   Currently,  Grid  Engine  doesn't
+          The new host state.  Currently, Sun Grid Engine doesn't
           track  a  host  state, the field is reserved for future
           use. Always contains the value X.
 
@@ -344,7 +344,7 @@ FORMAT
           mation was generated.
 
      state
-          The new host state.   Currently,  Grid  Engine  doesn't
+          The new host state.  Currently, Sun Grid Engine doesn't
           track  a  host  state, the field is reserved for future
           use. Always contains the value X.
 
@@ -355,14 +355,14 @@ FORMAT
           &lt;name&gt;=&lt;actual_value&gt;=&lt;configured value&gt;.
 
   sharelog
-     The Grid Engine qmaster can dump information about sharetree
-     configuration  and use to the reporting file.  The parameter
-     <I>sharelog</I> sets an interval  in  which  sharetree  information
-     will  be  dumped.  It is set in the format HH:MM:SS. A value
-     of 00:00:00 configures qmaster not to dump sharetree  infor-
-     mation.  Intervals of several minutes up to hours are sensi-
-     ble values for this parameter.  The record contains the fol-
-     lowing fields
+     The Sun Grid  Engine  qmaster  can  dump  information  about
+     sharetree  configuration and use to the reporting file.  The
+     parameter <I>sharelog</I>  sets  an  interval  in  which  sharetree
+     information  will  be  dumped.   It  is  set  in  the format
+     HH:MM:SS. A value of 00:00:00 configures qmaster not to dump
+     sharetree  information.  Intervals  of several minutes up to
+     hours are sensible values for this  parameter.   The  record
+     contains the following fields
 
      current time
           The present time
@@ -535,7 +535,7 @@ SEE ALSO
      <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>.  <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
 
 

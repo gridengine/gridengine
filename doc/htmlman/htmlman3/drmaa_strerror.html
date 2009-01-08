@@ -66,8 +66,8 @@ DESCRIPTION
 
   drmaa_get_DRM_system()
      The drmaa_get_DRM_system() function returns into  <I>drm</I>_<I>system</I>
-     up  to <I>drm</I>_<I>system</I>_<I>len</I> characters of a string containing Grid
-     Engine product and version information.
+     up  to  <I>drm</I>_<I>system</I>_<I>len</I> characters of a string containing Sun
+     Grid Engine product and version information.
 
      The drmaa_get_DRM_system() function returns the  same  value
      before and after <B><A HREF="../htmlman3/drmaa_init.html">drmaa_init(3)</A></B> is called.
@@ -75,8 +75,8 @@ DESCRIPTION
   drmaa_get_DRMAA_implementation()
      The drmaa_get_DRMAA_implementation() function  returns  into
      <I>drm</I>_<I>system</I>  up to <I>drm</I>_<I>system</I>_<I>len</I> characters of a string con-
-     taining the Grid Engine DRMAA implementation version  infor-
-     mation.      In     the    current    implementation,    the
+     taining the Sun Grid  Engine  DRMAA  implementation  version
+     information.     In    the   current   implementation,   the
      drmaa_get_DRMAA_implementation() function returns  the  same
      result as the drmaa_get_DRM_system() function.
 
@@ -84,30 +84,31 @@ DESCRIPTION
      same value before and after <B><A HREF="../htmlman3/drmaa_init.html">drmaa_init(3)</A></B> is called.
 
 ENVIRONMENTAL VARIABLES
-     GE_ROOT        Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the Sun Grid Engine
                     standard configuration files.
 
-     GE_CELL        If set, specifies  the  default  Grid  Engine
-                    cell  to  be  used.  To address a Grid Engine
-                    cell Grid Engine uses (in the order  of  pre-
-                    cedence):
+     SGE_CELL       If set, specifies the default Sun Grid Engine
+                    cell to be used. To address a Sun Grid Engine
+                    cell Sun Grid Engine uses (in  the  order  of
+                    precedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable  GE_CELL, if it is
+                         environment  variable SGE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
+     SGE_DEBUG_LEVEL
+                    If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
 
-     GE_QMASTER_PORT
+     SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>  is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map entry instead to define
                     that port.
@@ -149,7 +150,6 @@ ERRORS
 
 SEE ALSO
      <B><A HREF="../htmlman3/drmaa_session.html">drmaa_session(3)</A></B>.
-
 
 
 

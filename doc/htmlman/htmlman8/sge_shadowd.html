@@ -3,96 +3,96 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     ge_shadowd - Grid Engine shadow master daemon
+     sge_shadowd - Sun Grid Engine shadow master daemon
 
 SYNOPSIS
-     ge_shadowd
+     sge_shadowd
 
 DESCRIPTION
-     <I>ge</I>_<I>shadowd</I> is a "light weight" process which can be  run  on
-     so-called  shadow  master  hosts in a Grid Engine cluster to
-     detect failure of the current  Grid  Engine  master  daemon,
-     <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>,  and  to  start-up a new <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B> on the
-     host on which the <I>ge</I>_<I>shadowd</I> runs. If multiple  shadow  dae-
-     mons  are  active  in  a  cluster, they run a protocol which
+     <I>sge</I>_<I>shadowd</I> is a "light weight" process which can be run  on
+     so-called  shadow  master hosts in a Sun Grid Engine cluster
+     to detect failure of the current Sun Grid Engine master dae-
+     mon, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>, and to start-up a new <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> on
+     the host on which the <I>sge</I>_<I>shadowd</I> runs. If  multiple  shadow
+     daemons  are  active in a cluster, they run a protocol which
      ensures that only one of them will  start-up  a  new  master
      daemon.
 
      The  hosts suitable for being used as  shadow  master  hosts
      must  have  shared  root  read/write access to the directory
-     $GE_ROOT/$GE_CELL/common as well as  to  the  master  daemon
+     $SGE_ROOT/$SGE_CELL/common as well as to the  master  daemon
      spool            directory            (by            default
-     $GE_ROOT/$GE_CELL/spool/qmaster).  The names of  the  shadow
+     $SGE_ROOT/$SGE_CELL/spool/qmaster).  The names of the shadow
      master   hosts   need   to   be   contained   in   the  file
-     $GE_ROOT/$xQS_NAME_Sxx_CELL/common/shadow_masters.
+     $SGE_ROOT/$xQS_NAME_Sxx_CELL/common/shadow_masters.
 
 RESTRICTIONS
-     <I>ge</I>_<I>shadowd</I> may only be started by root.
+     <I>sge</I>_<I>shadowd</I> may only be started by root.
 
 ENVIRONMENT VARIABLES
-     GE_ROOT        Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the Sun Grid Engine
                     standard configuration files.
 
-     GE_CELL        If set, specifies  the  default  Grid  Engine
-                    cell.   To   address   a   Grid  Engine  cell
-                    <I>ge</I>_<I>shadowd</I> uses (in the order of precedence):
+     SGE_CELL       If set, specifies the default Sun Grid Engine
+                    cell.  To  address  a  Sun  Grid  Engine cell
+                    <I>sge</I>_<I>shadowd</I>  uses  (in  the  order  of   pre-
+                    cedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable  GE_CELL, if it is
+                         environment  variable SGE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
+     SGE_DEBUG_LEVEL
+                    If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
 
-     GE_QMASTER_PORT
+     SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>  is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
 
-     GE_DELAY_TIME  This variable controls the interval in  which
-                    <I>ge</I>_<I>shadowd</I>  pauses  if  a takeover bid fails.
+     SGE_DELAY_TIME This variable controls the interval in  which
+                    <I>sge</I>_<I>shadowd</I>  pauses  if a takeover bid fails.
                     This value is used only when there are multi-
-                    ple  <I>ge</I>_<I>shadowd</I>  instances  and they are con-
+                    ple  <I>sge</I>_<I>shadowd</I>  instances and they are con-
                     tending to be the master.  The default is 600
                     seconds.
 
-     GE_CHECK_INTERVAL
+     SGE_CHECK_INTERVAL
                     This variable controls the interval in  which
-                    the  <I>ge</I>_<I>shadowd</I> checks the heartbeat file (60
+                    the <I>sge</I>_<I>shadowd</I> checks the heartbeat file (60
                     seconds by default).
 
-     GE_GET_ACTIVE_INTERVAL
+     SGE_GET_ACTIVE_INTERVAL
                     This variable controls the  interval  when  a
-                    <I>ge</I>_<I>shadowd</I>  instance  tries to take over when
+                    <I>sge</I>_<I>shadowd</I>  instance tries to take over when
                     the heartbeat file has not changed.
 
 FILES
-     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>
-                    Default configuration directory
-     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>shadow</I>_<I>masters</I>
-                    Shadow master hostname file.
-     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>spool</I>/<I>qmaster</I>
-                    Default master daemon spool directory
-     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>spool</I>/<I>qmaster</I>/<I>heartbeat</I>
-                    The heartbeat file.
+     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>
+                     Default configuration directory
+     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>shadow</I>_<I>masters</I>
+                     Shadow master hostname file.
+     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>spool</I>/<I>qmaster</I>
+                     Default master daemon spool directory
+     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>spool</I>/<I>qmaster</I>/<I>heartbeat</I>
+                     The heartbeat file.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>, <B><A HREF="../htmlman5/ge_conf.html">ge_conf(5)</A></B>, <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>, <I>Grid</I> <I>Engine</I>  <I>Instal-</I>
-     <I>lation</I> <I>and</I> <I>Administration</I> <I>Guide</I>.
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>, <I>Sun</I>  <I>Grid</I>  <I>Engine</I>
+     <I>Installation</I> <I>and</I> <I>Administration</I>
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
 
 
 

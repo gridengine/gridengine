@@ -6,16 +6,16 @@ NAME
      qtask - file format of the qtask file.
 
 DESCRIPTION
-     A <I>qtask</I> file defines which commands are  submitted  to  Grid
-     Engine  for  remote  execution  by <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B>.  The <I>qtask</I> file
-     optionally  may  contain  <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>  command-line  parameters.
+     A <I>qtask</I> file defines which commands  are  submitted  to  Sun
+     Grid  Engine  for  remote  execution by <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B>.  The <I>qtask</I>
+     file optionally may contain <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B> command-line parameters.
      These  parameters  are  passed  to the <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B> command being
      used by <I>qtcsh</I> to submit the commands.
 
      A cluster global <I>qtask</I> file defining cluster  wide  defaults
      and  a  user  specific  <I>qtask</I> file eventually overriding and
      enhancing those definitions are supported. The cluster  glo-
-     bal  file resides at &lt;ge_root&gt;/&lt;cell/common/qtask, while the
+     bal file resides at &lt;sge_root&gt;/&lt;cell/common/qtask, while the
      user specific file can be found at ~/.qtask. An  exclamation
      mark preceding command definitions in the cluster global can
      be used by the administrator to deny overriding of such com-
@@ -50,18 +50,18 @@ EXAMPLES
           verilog -l veri_lic=1
 
      designates the applications netscape, grep and  verilog  for
-     interactive  remote  execution through Grid Engine. Netscape
-     is requested to run only on Solaris64 architectures with the
-     DISPLAY  environment  variable  set to 'myhost:0', grep only
-     runs on the host named  'filesurfer'  and  verilog  requests
-     availability  of  a verilog license in order to get executed
-     remotely.
+     interactive   remote  execution  through  Sun  Grid  Engine.
+     Netscape is requested to run only on Solaris64 architectures
+     with  the  DISPLAY  environment  variable set to 'myhost:0',
+     grep only runs on the host named  'filesurfer'  and  verilog
+     requests  availability  of a verilog license in order to get
+     executed remotely.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>, <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B>, <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B>, <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
 
 

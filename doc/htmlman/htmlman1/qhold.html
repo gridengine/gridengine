@@ -3,7 +3,7 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     qhold - hold back Grid Engine jobs from execution
+     qhold - hold back Sun Grid Engine jobs from execution
 
 SYNTAX
      qhold [ -h {u|o|s},...  ] [ -help ] [ job/task_id_list ]
@@ -74,39 +74,91 @@ OPTIONS
           the current user.
 
 ENVIRONMENTAL VARIABLES
-     GE_ROOT        Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the Sun Grid Engine
                     standard configuration files.
 
-     GE_CELL        If set, specifies  the  default  Grid  Engine
-                    cell.  To  address  a  Grid Engine cell <I>qhold</I>
+     SGE_CELL       If set, specifies the default Sun Grid Engine
+                    cell. To address a Sun Grid Engine cell <I>qhold</I>
                     uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable  GE_CELL, if it is
+                         environment  variable SGE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
+     SGE_DEBUG_LEVEL
+                    If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
 
-     GE_QMASTER_PORT
+     SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>  is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>, <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>, <B><A HREF="../htmlman1/qrls.html">qrls(1)</A></B>, <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>, <B><A HREF="../htmlman1/qrls.html">qrls(1)</A></B>, <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
-     sions.
+     See  <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>  for  a  full  statement  of  rights   and
+     permissions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </PRE>
 <HR>
 <ADDRESS>

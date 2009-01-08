@@ -3,7 +3,8 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     qquota - shows current usage of Grid Engine resource quotas
+     qquota - shows current usage of  Sun  Grid  Engine  resource
+     quotas
 
 SYNTAX
      qquota [ -h  wc_host|wc_hostgroup,...  ]  [  -help  ]  [  -l
@@ -11,9 +12,9 @@ SYNTAX
      [ -pe wc_pe_name,... ] [ -q wc_cqueue,... ] [ -xml ]
 
 DESCRIPTION
-     <I>qquota</I> shows the current Grid Engine  resource  quota  sets.
-     Only  resource  quota  sets with a positive usage count or a
-     static limit are printed.
+     <I>qquota</I> shows the current  Sun  Grid  Engine  resource  quota
+     sets.  Only  resource quota sets with a positive usage count
+     or a static limit are printed.
 
      Selection options allow you to filter  for  specific  hosts,
      cluster   queues,   projects,  parallel  environments  (pe),
@@ -73,53 +74,50 @@ OUTPUT FORMATS
      <B>o</B>  the effective resource quota set filter
 
 ENVIRONMENTAL VARIABLES
-     GE_ROOT        Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the Sun Grid Engine
                     standard configuration files.
 
-     GE_CELL        If set, specifies  the  default  Grid  Engine
-                    cell.  To  address  a Grid Engine cell <I>qquota</I>
-                    uses (in the order of precedence):
+     SGE_CELL       If set, specifies the default Sun Grid Engine
+                    cell.  To  address  a  Sun  Grid  Engine cell
+                    <I>qquota</I> uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable  GE_CELL, if it is
+                         environment  variable SGE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
+     SGE_DEBUG_LEVEL
+                    If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
 
-     GE_QMASTER_PORT
+     SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>  is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
 
 FILES
-     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                    Grid Engine master host file
-     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>ge</I>_<I>qquota</I>
-                    cluster qquota default options
-     $<I>HOME</I>/.<I>ge</I>_<I>qquota</I>
-                    user qquota default options
+     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
+                     Sun Grid Engine master host file
+     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>sge</I>_<I>qquota</I>
+                     cluster qquota default options
+     $<I>HOME</I>/.<I>sge</I>_<I>qquota</I>
+                     user qquota default options
 
 SEE ALSO
-     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>,   <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>,   <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qhold.html">qhold(1)</A></B>,   <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>,
-     <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>,      <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,      <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,     <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B>,
-     <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>, <B><A HREF="../htmlman8/ge_shepherd.html">ge_shepherd(8)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>,   <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qhold.html">qhold(1)</A></B>,   <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>,
+     <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>,      <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,     <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>,
+     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>, <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
 
 
 

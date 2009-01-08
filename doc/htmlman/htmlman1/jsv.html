@@ -3,7 +3,7 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     JSV - Grid Engine Job Submission Verifier
+     JSV - Sun Grid Engine Job Submission Verifier
 
 DESCRIPTION
      JSV is an abbreviation for Job Submission Verifier. A JSV is
@@ -19,8 +19,8 @@ CONFIGURATION
      jsv_url  can be provided with the -jsv submit parameter dur-
      ing job submission, a corresponding switch can be  added  to
      one  of the sge_request files or a jsv_url can be configured
-     in the global cluster configuration of the Grid Engine  ins-
-     tallation.
+     in the global cluster configuration of the Sun  Grid  Engine
+     installation.
 
      All defined JSV instances  will  be  executed  in  following
      order:
@@ -31,16 +31,16 @@ CONFIGURATION
         4) $SGE_ROOT/$SGE_CELL/common/sge_request
         5) Global configuration
 
-     The Client JSVs (1-3) can be  defined  by  Grid  Engine  end
+     The Client JSVs (1-3) can be defined by Sun Grid Engine  end
      users   whereas   the  client  JSV  defined  in  the  global
      sge_request file (4) and the server  JSV  (5)  can  only  be
-     defined by the Grid Engine administrators.
+     defined by the Sun Grid Engine administrators.
 
      Due to the fact that (4) and (5) are defined and  configured
-     by  Grid Engine administrators and because they are executed
-     as last JSV instances in the sequence  of  JSV  scripts,  an
-     administrator  has an additional way to define certain poli-
-     cies for a cluster.
+     by  Sun Grid Engine administrators and because they are exe-
+     cuted as last JSV instances in the sequence of JSV  scripts,
+     an  administrator  has  an  additional way to define certain
+     policies for a cluster.
 
      As soon as one JSV instance rejects a job the whole  process
      of  verification  is  stopped  and  the  end user will get a
@@ -59,9 +59,9 @@ CONFIGURATION
 
 LIFETIME
      A Client or Server JSV is started as own UNIX process.  This
-     process  communicates  either with a Grid Engine client pro-
-     cess or the master daemon by exchanging commands, job param-
-     eters and other data via stdin/stdout channels.
+     process  communicates  either  with a Sun Grid Engine client
+     process or the master daemon  by  exchanging  commands,  job
+     parameters and other data via stdin/stdout channels.
 
      Client JSV instances  are  started  by  client  applications
      before  a job is sent to qmaster. This instance does the job
@@ -69,8 +69,8 @@ LIFETIME
      cation the JSV process is stopped.
 
      Server JSV instances are started for each worker thread part
-     of  the qmaster process (for version 6.2 of Grid Engine this
-     means  that  two  processes  are  started).  Each  of  those
+     of  the  qmaster process (for version 6.2 of Sun Grid Engine
+     this means that two processes are started).  Each  of  those
      processes have to verify job parameters for multiple jobs as
      long as the master is running, the  underlaying  JSV  confi-
      guration is not changed and no error occurs.
@@ -96,7 +96,7 @@ PROTOCOL
 PROTOCOL (JSV side)
      Following commands have to be implemented by an  JSV  script
      so that it conforms to version 1.0 of the JSV protocol which
-     was first implemented in Grid Engine 6.2u2:
+     was first implemented in Sun Grid Engine 6.2u2:
 
      begin_command := 'BEGIN' ;
           After a JSV instance has received all env_commands  and
@@ -126,7 +126,7 @@ PROTOCOL (JSV side)
           by sending back env_commands and by using the modifiers
           ADD, MOD and DEL.
 
-     param_command := 'START' ' ' param_parameter ' ' value ;
+     param_command := 'PARAM' ' ' param_parameter ' ' value ;
 
      param_parameter := submit_parameter | pseudo_parameter ;
           The param_command has two  additional  arguments  which
@@ -173,11 +173,11 @@ PROTOCOL (JSV side)
 PROTOCOL (client/qmaster side)
      A JSV script or binary can send  a  set  of  commands  to  a
      client/qmaster process to indicate its state in the communi-
-     cation process to change the  job  specification  of  a  job
+     cation process, to change the job  specification  of  a  job
      which  should  be verified and to report messages or errors.
      Below you can find the commands which are understood by  the
      client/qmaster  which will implement version 1.0 of the com-
-     munication protocol which  was  first  implemented  in  Grid
+     munication protocol which was first implemented in Sun  Grid
      Engine 6.2u2:
 
      error_command := 'ERROR' message ;
@@ -209,7 +209,7 @@ PROTOCOL (client/qmaster side)
           indicates  that  a JSV instance should be accepted with
           correction  then  the  values   provided   with   these
           param_commands will be used to modify the job before it
-          is accepted by the Grid Engine system.
+          is accepted by the Sun Grid Engine system.
 
      result_command := 'RESULT' result_type [ message ] ;
 
@@ -240,7 +240,7 @@ PROTOCOL (client/qmaster side)
 
           The job environment is not passed to JSV  instances  as
           default  because  the  job  environment of the end user
-          might contain data which might be interpreded wrong  in
+          might contain data which might be interpreted wrong  in
           the  JSV  context  and  might therefore cause errors or
           security issues.
 
@@ -315,7 +315,7 @@ EXAMPLE
      JSV instance when following job is submitted:
 
 
-     &gt; qsub -pe p 3 -hard -l a=1,b=5 -soft -l q=all.q job.sh
+     &gt; qsub -pe p 3 -hard -l a=1,b=5 -soft -l q=all.q $SGE_ROOT/examples/jobs/sleeper.sh
 
      Data in the first column is sent from the client/qmaster  to
      the  JSV  instance. That data contained in the second column
@@ -348,11 +348,11 @@ EXAMPLE
 
 
 SEE ALSO
-     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>,   <B><A HREF="../htmlman1/qlogin.html">qlogin(1)</A></B>,   <B><A HREF="../htmlman1/qmake.html">qmake(1)</A></B>,   <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>,
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>,  <B><A HREF="../htmlman1/qlogin.html">qlogin(1)</A></B>,   <B><A HREF="../htmlman1/qmake.html">qmake(1)</A></B>,   <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>,
      <B><A HREF="../htmlman1/qsh.html">qsh(1)</A></B>, <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>, <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B>,
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
 
 

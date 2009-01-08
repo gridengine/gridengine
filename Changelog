@@ -1,3 +1,6 @@
+ZG-2009-01-08-0: Update:      update html man pages
+                 Review:      LP
+
 MP-2009-01-05-0: Bugfix:      qstat -j XXX -xml schema not well documented.
                  Bugster:     6320659
                  Issue:       1776

@@ -3,8 +3,8 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     host_conf - Grid Engine execution  host  configuration  file
-     format
+     host_conf - Sun Grid  Engine  execution  host  configuration
+     file format
 
 DESCRIPTION
      <I>Host</I>_<I>conf</I> reflects the format of the template file  for  the
@@ -12,19 +12,19 @@ DESCRIPTION
      of the <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> command, you can  add  execution  hosts  and
      modify  the configuration of any execution host in the clus-
      ter. Default execution host entries are added  automatically
-     as  soon as a <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B> registers to <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B> for the
-     very first time from  a  certain  host.  The  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>  -sel
+     as  soon  as  a <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> registers to <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> for
+     the very first time from a certain host. The  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>  -sel
      switch can be used to display a list of execution host being
-     currently configured in your Grid Engine system. Via the -se
-     option  you  can print the execution host configuration of a
-     specified host.
+     currently configured in your Sun Grid Engine system. Via the
+     -se option you can print the execution host configuration of
+     a specified host.
 
      The special hostname "global" can be used to define  cluster
      global characteristics.
 
-     Note, Grid Engine allows backslashes (\) be used  to  escape
-     newline (\newline) characters. The backslash and the newline
-     are replaced  with  a  space  ("  ")  character  before  any
+     Note, Sun Grid Engine allows  backslashes  (\)  be  used  to
+     escape  newline (\newline) characters. The backslash and the
+     newline are replaced with a space (" ") character before any
      interpretation.
 
 FORMAT
@@ -37,7 +37,7 @@ FORMAT
   load_scaling
      A comma separated list of scaling values to  be  applied  to
      each  or  part  of  the  load  values  being reported by the
-     <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B> on the host and being  defined  in  the  cluster
+     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> on the host and being defined  in  the  cluster
      global  "host"  complex  (see <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>).  The load scaling
      factors are intended to level hardware or  operating  system
      specific differences between execution hosts.
@@ -100,9 +100,9 @@ FORMAT
      retrieving  full  detail  on the actual resource requests of
      all jobs in the system.
 
-     For non-consumable resources Grid Engine simply compares the
-     job's  attribute  requests with the corresponding specifica-
-     tion in complex_values taking the relation operator  of  the
+     For non-consumable resources Sun Grid Engine simply compares
+     the job's attribute requests with the corresponding specifi-
+     cation in complex_values taking the relation operator of the
      complex  attribute definition into account (see <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>).
      If the result of the comparison is "true", the host is suit-
      able  for  the job with respect to the particular attribute.
@@ -120,7 +120,7 @@ FORMAT
   load_values
      This entry cannot be configured but  is  only  displayed  in
      case  of  a  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>  -se  command.  All  load  values  are
-     displayed as reported by the <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B> on  the  host.  The
+     displayed as reported by the <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> on the  host.  The
      load  values  are  enlisted  in a comma separated list. Each
      load value start with its name, followed by  an  equal  sign
      and the reported value.
@@ -129,7 +129,7 @@ FORMAT
      Note: Deprecated, may be removed in future release.
      This entry cannot be configured but  is  only  displayed  in
      case  of  a <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> -se command. Its value is the number of
-     processors which has been detected  by  <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B>  on  the
+     processors which has been detected by  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  on  the
      corresponding host.
 
   usage_scaling
@@ -191,11 +191,11 @@ FORMAT
      tings from the global host.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>,     <B><A HREF="../htmlman1/ge_types.html">ge_types(1)</A></B>,      <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,      <B><A HREF="../htmlman1/uptime.html">uptime(1)</A></B>,
-     <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>, <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>, <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B>, <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,     <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>,     <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,     <B><A HREF="../htmlman1/uptime.html">uptime(1)</A></B>,
+     <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>, <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>, <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
 
 

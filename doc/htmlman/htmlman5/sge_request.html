@@ -3,11 +3,11 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     ge_request - Grid Engine  default  request  definition  file
-     format
+     sge_request - Sun Grid  Engine  default  request  definition
+     file format
 
 DESCRIPTION
-     <I>ge</I>_<I>request</I> reflects  the  format  of  the  files  to  define
+     <I>sge</I>_<I>request</I> reflects the  format  of  the  files  to  define
      default  request  profiles.  If  available,  default request
      files are read and processed during  job  submission  before
      any submit options embedded in the job script and before any
@@ -34,11 +34,11 @@ DESCRIPTION
         first column are skipped.
 
      <B>o</B>  Each line not to  be  skipped  may  contain  any  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>
-        option  as described in the Grid Engine Reference Manual.
-        More than one option  per  line  is  allowed.  The  batch
-        script  file and argument options to the batch script are
-        not considered  as  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>  options  and  thus  are  not
-        allowed in a default request file.
+        option  as  described  in  the  Sun Grid Engine Reference
+        Manual. More than one option per  line  is  allowed.  The
+        batch  script  file  and  argument  options  to the batch
+        script are not considered as <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> options and thus are
+        not allowed in a default request file.
 
 EXAMPLES
      The following is a  simple  example  of  a  default  request
@@ -65,17 +65,17 @@ EXAMPLES
      qsub -l arch=sun4,s_cpu=5:0:0 -r n test.sh
 
 FILES
-     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>ge</I>_<I>request</I>
-                  global defaults file
-     $<I>HOME</I>/.<I>ge</I>_<I>request</I>   user private defaults file
-     $<I>cwd</I>/.<I>ge</I>_<I>request</I>    cwd directory defaults file
+     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>sge</I>_<I>request</I>
+                   global defaults file
+     $<I>HOME</I>/.<I>sge</I>_<I>request</I>   user private defaults file
+     $<I>cwd</I>/.<I>sge</I>_<I>request</I>    cwd directory defaults file
 
 SEE ALSO
-     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>, <B><A HREF="../htmlman1/qsh.html">qsh(1)</A></B>, <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>, <I>Grid</I> <I>Engine</I>  <I>Installation</I>  <I>and</I>
-     <I>Administration</I> <I>Guide</I>
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qsh.html">qsh(1)</A></B>, <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>, <I>Sun</I> <I>Grid</I> <I>Engine</I>  <I>Installation</I>
+     <I>and</I> <I>Administration</I>
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
 
 

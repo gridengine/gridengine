@@ -3,7 +3,8 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     GE_resource_quota - Grid Engine resource quota file format
+     SGE_resource_quota - Sun Grid  Engine  resource  quota  file
+     format
 
 DESCRIPTION
      Resource quota sets (rqs) are a flexible way to set  a  max-
@@ -25,7 +26,7 @@ DESCRIPTION
      A list of currently configured rqs can be displayed via  the
      <B><A HREF="../htmlman1/qconf.html?pathrev=V62_BRANCH">qconf(1)</A></B>  -srqsl  option.  The  contents  of each listed rqs
      definition can be shown via the  -srqs  switch.  The  output
-     follows  the  <I>GE</I>_<I>resource</I>_<I>quota</I>  format description. New rqs
+     follows  the  <I>SGE</I>_<I>resource</I>_<I>quota</I> format description. New rqs
      can be created and existing can be modified via  the  -arqs,
      -mrqs and -drqs options to <B><A HREF="../htmlman1/qconf.html?pathrev=V62_BRANCH">qconf(1)</A></B>.
 
@@ -40,9 +41,9 @@ DESCRIPTION
      resource  quota  set always results in at most one effective
      resource quota rule for a specific request.
 
-     Note, Grid Engine allows backslashes (\) be used  to  escape
-     newline (\newline) characters. The backslash and the newline
-     are replaced  with  a  space  ("  ")  character  before  any
+     Note, Sun Grid Engine allows  backslashes  (\)  be  used  to
+     escape  newline (\newline) characters. The backslash and the
+     newline are replaced with a space (" ") character before any
      interpretation.
 
 FORMAT
@@ -51,6 +52,7 @@ FORMAT
 
   name
      The resource quota set name.
+
 
   enabled
      If set to <I>true</I> the resource quota set is active and will  be
@@ -89,8 +91,8 @@ FORMAT
           user name by prefixing the ACL name with an  '@'  sign.
           To exclude a user or ACL from the rule, the name can be
           prefixed with the '!' sign. Defined UNIX  user  or  ACL
-          names  need  not be known in the Grid Engine configura-
-          tion.
+          names  need  not be known in the Sun Grid Engine confi-
+          guration.
 
      projects
           Contains a comma separated list of projects  (see  <I>pro-</I>
@@ -155,10 +157,10 @@ FORMAT
                {w1|$complex1[*w1]}[{+|-}{w2|$complex2[*w2]}[{+|-}...]]
 
                The  weighting  factors  (w1,  ...)  are  positive
-               integers  or floating point numbers in double pre-
-               cision. The complex values  (complex1,  ...)   are
-               specified  by  the  name  defined  as  type INT or
-               DOUBLE in the complex list (see <B><A HREF="../htmlman5/complex.html?pathrev=V62_BRANCH">complex(5)</A></B>).
+               integers  or  floating  point  numbers  in  double
+               precision. The complex values (complex1, ...)  are
+               specified  by the name defined as type INT or DOU-
+               BLE in the complex list (see <B><A HREF="../htmlman5/complex.html?pathrev=V62_BRANCH">complex(5)</A></B>).
                Note: Dynamic limits can  only  configured  for  a
                host-specific rule.
 
@@ -206,12 +208,11 @@ EXAMPLES
 
 
 SEE ALSO
-     <B><A HREF="../htmlman1/ge_intro.html?pathrev=V62_BRANCH">ge_intro(1)</A></B>,  <B><A HREF="../htmlman5/access_list.html?pathrev=V62_BRANCH">access_list(5)</A></B>,  <B><A HREF="../htmlman5/complex.html?pathrev=V62_BRANCH">complex(5)</A></B>,  <B><A HREF="../htmlman5/host.html?pathrev=V62_BRANCH">host(5)</A></B>,   <I>host-</I>
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62_BRANCH">sge_intro(1)</A></B>,  <B><A HREF="../htmlman5/access_list.html?pathrev=V62_BRANCH">access_list(5)</A></B>,  <B><A HREF="../htmlman5/complex.html?pathrev=V62_BRANCH">complex(5)</A></B>,  <B><A HREF="../htmlman5/host.html?pathrev=V62_BRANCH">host(5)</A></B>,  <I>host-</I>
      <B><A HREF="../htmlman5/group.html?pathrev=V62_BRANCH">group(5)</A></B>, <B><A HREF="../htmlman1/qconf.html?pathrev=V62_BRANCH">qconf(1)</A></B>, <B><A HREF="../htmlman1/qquota.html?pathrev=V62_BRANCH">qquota(1)</A></B>, <B><A HREF="../htmlman5/project.html?pathrev=V62_BRANCH">project(5)</A></B>.
 
-
 COPYRIGHT
-     See <B><A HREF="../htmlman1/ge_intro.html?pathrev=V62_BRANCH">ge_intro(1)</A></B> for a full statement of rights  and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
 
 

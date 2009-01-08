@@ -4,16 +4,16 @@
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
      qmon - X-Windows OSF/Motif graphical  user's  interface  for
-     Grid Engine
+     Sun Grid Engine
 
 SYNTAX
      qmon [options]
 
 DESCRIPTION
-     <I>Qmon</I> allows administrators and users to manipulate the  Grid
-     Engine  system  from an X-Window environment.  <I>Qmon</I> provides
-     various dialogues linked together  in  multiple  ways.   For
-     each   task  the  user  wishes  to  accomplish  via  <I>qmon</I>  a
+     <I>Qmon</I> allows administrators and users to manipulate  the  Sun
+     Grid  Engine system from an X-Window environment.  <I>Qmon</I> pro-
+     vides various dialogues linked together  in  multiple  ways.
+     For  each  task  the  user  wishes  to accomplish via <I>qmon</I> a
      corresponding dialogue is provided. There are multiple  ways
      to address the proper dialogue for a certain task:
 
@@ -79,17 +79,17 @@ DIALOGUES
 
   Queue Control
      The Queue Control dialogue with its  sub-dialogue  hierarchy
-     enables  the  user  to control the status of the Grid Engine
-     queues being actually configured in the  system  and  allows
-     the  administrator  to add new queues or to modify or delete
-     already existing ones. The Queue Control  dialogue  shows  a
-     tabbed  view  of Cluster Queues or their corresponding Queue
-     Instances in a tabular way.
+     enables  the  user  to  control  the  status of the Sun Grid
+     Engine queues being actually configured in  the  system  and
+     allows  the  administrator to add new queues or to modify or
+     delete already existing ones.  The  Queue  Control  dialogue
+     shows a tabbed view of Cluster Queues or their corresponding
+     Queue Instances in a tabular way.
 
      By pushing the Add, Clone or Modify button,  a  sub-dialogue
-     for  configuring Grid Engine queues is opened. A queue needs
-     to be selected to use the clone and  modify  operation.  The
-     configuration  sub-dialogue  allows  for  definition  of the
+     for  configuring  Sun  Grid Engine queues is opened. A queue
+     needs to be selected to use the clone and modify  operation.
+     The  configuration sub-dialogue allows for definition of the
      queue and its attributes.   The  configuration  sub-dialogue
      contains  in  the upper section the queue name and a list of
      hosts or hostgroups for which this queue contains the confi-
@@ -108,7 +108,7 @@ DIALOGUES
      region of the queue configuration sub-dialogue. The adminis-
      trator  may  select  previously  configured  settings   from
      already  existing  queues  (Clone button). By pushing the Ok
-     button, the definitions are registered  with  <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B>.
+     button, the definitions are registered with  <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62_BRANCH">sge_qmaster(8)</A></B>.
      The  Queue  Control  dialogue can be customized in a similar
      way as the Job Control dialogue. The settings  applied  here
      are also saved in ~/.<I>qmon</I>_<I>preferences</I>.
@@ -159,7 +159,7 @@ DIALOGUES
      and Save buttons allow saving or reloading the whole  attri-
      bute  list  to  or  from  file.  The Ok button registers the
      additional   or    modified    complex    attributes    with
-     <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B>.
+     <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62_BRANCH">sge_qmaster(8)</A></B>.
 
   Host Config
      Four types of host related lists can be maintained  via  the
@@ -188,7 +188,7 @@ DIALOGUES
 
   Cluster Config
      This dialogue maintains the cluster global configuration  as
-     well  as  host  specific derivatives (see <B><A HREF="../htmlman5/ge_conf.html?pathrev=V62_BRANCH">ge_conf(5)</A></B>).  When
+     well  as  host specific derivatives (see <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62_BRANCH">sge_conf(5)</A></B>).  When
      opened, the dialogue displays a selection list for all hosts
      which  have a configuration assigned. The special name "glo-
      bal" refers to the cluster global configuration. By  pushing
@@ -200,13 +200,13 @@ DIALOGUES
 
   Scheduler Config
      The Scheduler Configuration dialogue provides the  means  to
-     change the behavior of the Grid Engine scheduler thread part
-     of <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B> process.  The dialogue contains a represen-
-     tation   for   all  scheduler  configuration  parameters  as
+     change  the behavior of the Sun Grid Engine scheduler thread
+     part of <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62_BRANCH">sge_qmaster(8)</A></B> process.   The  dialogue  contains  a
+     representation for all scheduler configuration parameters as
      described in <B><A HREF="../htmlman5/sched_conf.html?pathrev=V62_BRANCH">sched_conf(5)</A></B>.  It is  subdivided  in  the  two
      sections  General  Parameters and Load Adjustments which can
      be selected via  the  corresponding  tabs.   The  Ok  button
-     registers any changes with <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B>.
+     registers any changes with <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62_BRANCH">sge_qmaster(8)</A></B>.
 
   Calendar Config
      The Calendar Config allows  the  administrator  to  add  new
@@ -219,7 +219,7 @@ DIALOGUES
      dialogue, which allows to create new calendars or which pro-
      vides the means to change the existing ones. The  Ok  button
      registers   the   additional   or   modified  calendar  with
-     <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B>.
+     <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62_BRANCH">sge_qmaster(8)</A></B>.
 
   User Config
      User permissions are controlled via the User  Config  dialo-
@@ -233,14 +233,14 @@ DIALOGUES
 
      Those user accounts added to the list of manager or operator
      accounts  are  given permission to act as managers or opera-
-     tors respectively when accessing Grid Engine under their own
-     account.
+     tors respectively when accessing Sun Grid Engine under their
+     own account.
 
      The userset lists are used together with the user_lists  and
      xuser_lists  host,  queue, project and cluster configuration
-     parameters (see <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62_BRANCH">queue_conf(5)</A></B>, <B><A HREF="../htmlman5/project.html?pathrev=V62_BRANCH">project(5)</A></B> and <B><A HREF="../htmlman5/ge_conf.html?pathrev=V62_BRANCH">ge_conf(5)</A></B>) to
-     control  access  of users to hosts, queues, projects and the
-     entire cluster.  A userset is  just  a  collection  of  user
+     parameters (see <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62_BRANCH">queue_conf(5)</A></B>, <B><A HREF="../htmlman5/project.html?pathrev=V62_BRANCH">project(5)</A></B>  and  <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62_BRANCH">sge_conf(5)</A></B>)
+     to  control  access  of users to hosts, queues, projects and
+     the entire cluster.  A userset is just a collection of  user
      names  and  UNIX  group names. Group names are identified by
      prefixing them with a "@" sign. The already defined usersets
      are  displayed in a selection list. These lists can be modi-
@@ -251,9 +251,9 @@ DIALOGUES
      required  for  the  so called Functional Policy and Override
      Policy (see Ticket Config below).
 
-     User names can be added to the system as entries to the Grid
-     Engine  user  database  (see <B><A HREF="../htmlman5/user.html?pathrev=V62_BRANCH">user(5)</A></B>), This can be done with
-     the User sub-dialogue.
+     User names can be added to the system as entries to the  Sun
+     Grid  Engine  user  database (see <B><A HREF="../htmlman5/user.html?pathrev=V62_BRANCH">user(5)</A></B>), This can be done
+     with the User sub-dialogue.
 
      The Tickets button in the button list on the right  side  of
      the dialogue opens the Ticket Config dialogue (see below).
@@ -266,21 +266,21 @@ DIALOGUES
      memory parallel systems are to be instantiated and to impose
      access  restrictions  onto  the  PEs.  When  the dialogue is
      opened a list of the already  configured  PEs  is  displayed
-     together  with  the  current configuration (see <B><A HREF="../htmlman5/ge_pe.html?pathrev=V62_BRANCH">ge_pe(5)</A></B>) of
+     together  with  the current configuration (see <B><A HREF="../htmlman5/sge_pe.html?pathrev=V62_BRANCH">sge_pe(5)</A></B>) of
      the selected PE interface.  To add new PE interfaces  or  to
      modify  existing  ones, an Add and a Modify button is avail-
      able which opens a PE interface configuration  sub-dialogue.
      After  applying  the  changes and quitting this sub-dialogue
      with the OK button, the new  or  modified  PE  interface  is
-     registered with <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B>.
+     registered with <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62_BRANCH">sge_qmaster(8)</A></B>.
 
   Checkpoint Config
      Checkpointing environment interfaces can be configured  with
      this  dialogue.  Checkpointing environments are necessary to
      describe the attributes which  the  different  checkpointing
      methods  and  their  derivatives on various operating system
-     platforms supported by Grid Engine have. When  the  dialogue
-     is  opened  a  list  of the already configured checkpointing
+     platforms supported by Sun Grid Engine have. When the dialo-
+     gue is opened a list of the already configured checkpointing
      environments is displayed together with the  current  confi-
      guration  (see  <B><A HREF="../htmlman5/checkpoint.html?pathrev=V62_BRANCH">checkpoint(5)</A></B>) of the selected checkpointing
      environment. To add  new  checkpointing  environment  or  to
@@ -288,7 +288,7 @@ DIALOGUES
      able which opens a checkpointing  environment  configuration
      sub-dialogue.  After  applying the changes and quitting this
      sub-dialogue with the OK button, the new or modified  check-
-     pointing environment is registered with <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B>.
+     pointing environment is registered with <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62_BRANCH">sge_qmaster(8)</A></B>.
 
   Ticket Conf
      This dialogue offers an  overview  and  editing  screen  for
@@ -301,9 +301,9 @@ DIALOGUES
      may submit deadline jobs.
 
      The Share Tree Policy button opens the dialogue for creating
-     and  editing  the  Grid Engine share tree (see <B><A HREF="../htmlman5/share_tree.html?pathrev=V62_BRANCH">share_tree(5)</A></B>
-     and <B><A HREF="../htmlman5/schedd_conf.html?pathrev=V62_BRANCH">schedd_conf(5)</A></B> for a description  of  the  configuration
-     parameters).
+     and   editing   the   Sun   Grid   Engine  share  tree  (see
+     <B><A HREF="../htmlman5/share_tree.html?pathrev=V62_BRANCH">share_tree(5)</A></B> and <B><A HREF="../htmlman5/schedd_conf.html?pathrev=V62_BRANCH">schedd_conf(5)</A></B> for a  description  of  the
+     configuration parameters).
 
      The Functional Policy button opens the dialogue for creating
      and  editing  the  allocation  of the functional shares (see
@@ -328,22 +328,22 @@ DIALOGUES
      means  giving  or  denying  access to a project for usersets
      (see User Conf above as well as <B><A HREF="../htmlman5/project.html?pathrev=V62_BRANCH">project(5)</A></B>).  The Ok  button
      registers   the   additional   or   modified   project  with
-     <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B>.
+     <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62_BRANCH">sge_qmaster(8)</A></B>.
 
   Browser
      The Object Browser dialogue's purpose is manifold: First  of
-     all,  Grid  Engine and <I>qmon</I> messages such as notification of
-     error or success concerning a previously taken action can be
-     displayed  in  the dialogue's output window.  Also the stan-
-     dard output and the standard error output  of  <I>qmon</I>  can  be
+     all,  Sun Grid Engine and <I>qmon</I> messages such as notification
+     of error or success concerning a previously taken action can
+     be  displayed  in  the  dialogue's  output window.  Also the
+     standard output and the standard error output of <I>qmon</I> can be
      diverted to the Object Browser output window.
 
      Additionally the Object Browser can be used to display  con-
-     tinuous  information  about Grid Engine objects as the mouse
-     pointer moves over their representation as  icons  or  table
-     entries in other <I>qmon</I> dialogues. Currently, only the display
-     of the configuration of  two  Grid  Engine  objects  in  two
-     separate dialogues is supported:
+     tinuous  information  about  Sun  Grid Engine objects as the
+     mouse pointer moves over their representation  as  icons  or
+     table  entries  in other <I>qmon</I> dialogues. Currently, only the
+     display of the configuration of two Sun Grid Engine  objects
+     in two separate dialogues is supported:
 
      <B>o</B>  Queue configurations are displayed as soon as  the  mouse
         pointer  enters  a queue icon in the top level Queue Con-
@@ -373,29 +373,30 @@ RESOURCES
      the location of the resource file).
 
 ENVIRONMENTAL VARIABLES
-     GE_ROOT        Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the Sun Grid Engine
                     standard configuration files.
 
-     GE_CELL        If set, specifies  the  default  Grid  Engine
-                    cell. To address a Grid Engine cell <I>qmon</I> uses
-                    (in the order of precedence):
+     SGE_CELL       If set, specifies the default Sun Grid Engine
+                    cell.  To address a Sun Grid Engine cell <I>qmon</I>
+                    uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable  GE_CELL, if it is
+                         environment  variable SGE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
+     SGE_DEBUG_LEVEL
+                    If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
 
-     GE_QMASTER_PORT
+     SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B>  is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62_BRANCH">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map entry instead to define
                     that port.
@@ -406,23 +407,22 @@ RESTRICTIONS
      the end of the window.
 
 FILES
-     &lt;<I>ge</I>_<I>root</I>&gt;/<I>qmon</I>/<I>Qmon</I>            <I>Qmon</I> sample resources file
+     &lt;<I>sge</I>_<I>root</I>&gt;/<I>qmon</I>/<I>Qmon</I>           <I>Qmon</I> sample resources file
      /<I>usr</I>/<I>lib</I>/<I>X11</I>/<I>defaults</I>/<I>Qmon</I>     <I>Qmon</I> system resources file
      $<I>HOME</I>/<I>Qmon</I>                     <I>Qmon</I> user resources file
      $<I>HOME</I>/.<I>qmon</I>_<I>preferences</I>        <I>Qmon</I> job/queue customization file
 
 
 SEE ALSO
-     <B><A HREF="../htmlman1/ge_intro.html?pathrev=V62_BRANCH">ge_intro(1)</A></B>,    <B><A HREF="../htmlman5/ge_conf.html?pathrev=V62_BRANCH">ge_conf(5)</A></B>,    <B><A HREF="../htmlman5/access_list.html?pathrev=V62_BRANCH">access_list(5)</A></B>,     <B><A HREF="../htmlman5/ge_pe.html?pathrev=V62_BRANCH">ge_pe(5)</A></B>,
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62_BRANCH">sge_intro(1)</A></B>,   <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62_BRANCH">sge_conf(5)</A></B>,   <B><A HREF="../htmlman5/access_list.html?pathrev=V62_BRANCH">access_list(5)</A></B>,    <B><A HREF="../htmlman5/sge_pe.html?pathrev=V62_BRANCH">sge_pe(5)</A></B>,
      <B><A HREF="../htmlman5/calendar_conf.html?pathrev=V62_BRANCH">calendar_conf(5)</A></B>,   <B><A HREF="../htmlman5/complex.html?pathrev=V62_BRANCH">complex(5)</A></B>,  <B><A HREF="../htmlman5/project.html?pathrev=V62_BRANCH">project(5)</A></B>,  <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62_BRANCH">queue_conf(5)</A></B>,
-     <B><A HREF="../htmlman5/sched_conf.html?pathrev=V62_BRANCH">sched_conf(5)</A></B>, <B><A HREF="../htmlman5/user.html?pathrev=V62_BRANCH">user(5)</A></B>, <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B>.
+     <B><A HREF="../htmlman5/sched_conf.html?pathrev=V62_BRANCH">sched_conf(5)</A></B>, <B><A HREF="../htmlman5/user.html?pathrev=V62_BRANCH">user(5)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62_BRANCH">sge_qmaster(8)</A></B>.
 
 COPYRIGHT
-     See   <B><A HREF="../htmlman1/ge_intro.html?pathrev=V62_BRANCH">ge_intro(1)</A></B>   and   the   information   provided    in
-     &lt;ge_root&gt;/3rd_party/qmon  for  a statement of further rights
+     See   <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62_BRANCH">sge_intro(1)</A></B>   and   the   information   provided   in
+     &lt;sge_root&gt;/3rd_party/qmon  for a statement of further rights
      and permissions and for credits to be given to public domain
      and freeware widget developers.
-
 
 
 

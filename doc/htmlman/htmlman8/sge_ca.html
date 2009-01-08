@@ -3,30 +3,32 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     util/sgeCA/sge_ca - Grid Engine CSP Support control command
+     util/sgeCA/sge_ca - Sun Grid Engine CSP Support control com-
+     mand
 
 SYNTAX
      sge_ca command [command options]
 
 DESCRIPTION
-     sge_ca controls a simple Grid Engine  Certificate  Authority
-     that  is  used for the special Certificate Security Protocol
-     (CSP) mode.  CSP mode improves the security behavior of Grid
-     Engine  by  enabling  OpenSSL secured communication channels
-     and X509v3 certificates for authentication. In  addition  it
-     is possible to export the key material or to create JKS key-
-     stores for the JMX connector.  It follows a list of possible
-     commands and command options to give an overview which func-
-     tionality is available. For further details about every com-
-     mand refer to the COMMAND DETAILS section.
+     sge_ca controls a simple Sun Grid Engine Certificate Author-
+     ity that is used for the special Certificate Security Proto-
+     col (CSP) mode.  CSP mode improves the security behavior  of
+     Sun  Grid  Engine  by enabling OpenSSL secured communication
+     channels and  X509v3  certificates  for  authentication.  In
+     addition  it  is  possible  to export the key material or to
+     create JKS keystores for the JMX connector.   It  follows  a
+     list  of  possible  commands  and command options to give an
+     overview  which  functionality  is  available.  For  further
+     details  about  every  command  refer to the COMMAND DETAILS
+     section.
 
 COMMAND OVERVIEW
      sge_ca [-help]
           show usage
 
      sge_ca -init [command options]
-          create the infrastructure for a new Grid Engine  Certi-
-          ficate  Authority  with  its  corresponding  files  and
+          create the infrastructure for a  new  Sun  Grid  Engine
+          Certificate  Authority with its corresponding files and
           directories and a set of keys and certificates for  SGE
           Daemon, root and admin user.
 
@@ -103,9 +105,9 @@ options]
           define $CATOP setting
 
      -kspwf &lt;file&gt;
-          define a keystore password file that contains  a  pass-
-          word  that is used to encrypt the keystore and the keys
-          contained therein
+          define  a  keystore  password  file  that  contains   a
+          password  that  is used to encrypt the keystore and the
+          keys contained therein
 
      -ksout &lt;file&gt;
           define output file to write the keystore to
@@ -124,21 +126,21 @@ COMMAND DETAILS
 [-adminuser &lt;admin&gt;] [-days &lt;num days&gt;]
      sge_ca -init [-cadir &lt;dir&gt;] [-catop  &lt;dir&gt;]  [-
           calocaltop  &lt;dir&gt;]
-          The -init command creates a new Grid Engine certificate
-          authority  and its corresponding files. Usually "sge_ca
-          -init" is run by user root on the master host.  If  the
-          options -adminuser, -cadir, -calocaltop, -catop and the
-          Grid Engine environment  variables  SGE_ROOT,  SGE_CELL
-          and  SGE_QMASTER_PORT  are  set  the CA directories are
-          created in the following locations:
+          The -init command creates a new Sun Grid Engine  certi-
+          ficate  authority  and its corresponding files. Usually
+          "sge_ca -init" is run by user root on the master  host.
+          If  the options -adminuser, -cadir, -calocaltop, -catop
+          and the Sun Grid Engine environment variables SGE_ROOT,
+          SGE_CELL  and  SGE_QMASTER_PORT  are  set the CA direc-
+          tories are created in the following locations:
           two letter country code, state, location, e.g  city  or
           your  buildingcode,  organization  (e.g.  your  company
           name), organizational unit, e.g. your department, email
           address of the CA administrator (you!)
 
           Certificates and keys are generated for the CA  itself,
-          for  SGE Daemon, for GE install user (usually root) and
-          finally for the GE admin user.
+          for SGE Daemon, for SGE install user (usually root) and
+          finally for the SGE admin user.
 
           How and where the certificates and keys are created can
           be influenced additionally by:
@@ -152,10 +154,10 @@ COMMAND DETAILS
           -cahost &lt;host&gt; use &lt;host&gt; as the CA master host
           [-cadir &lt;dir&gt;] [-catop &lt;dir&gt;  [-calocaltop  &lt;dir&gt;]  set
           $CATOP  and  $CALOCALTOP to &lt;dir&gt; to use something dif-
-          ferent than the Grid Engine default directories. Either
-          -cadir  &lt;dir&gt; has to be specified to replace $CATOP and
-          $CALOCALTOP by the same directory or -catop  &lt;dir&gt;  for
-          $CATOP and -calocaltop &lt;dir&gt; for $CALOCALTOP.
+          ferent than the Sun Grid  Engine  default  directories.
+          Either  -cadir  &lt;dir&gt;  has  to  be specified to replace
+          $CATOP and $CALOCALTOP by the same directory or  -catop
+          &lt;dir&gt; for $CATOP and -calocaltop &lt;dir&gt; for $CALOCALTOP.
 
 <dir&gt;] [-adminuser &lt;admin&gt;] [-days &lt;days&gt;]
      sge_ca -user &lt;u:g:e&gt; [-cadir &lt;dir&gt;] [-catop  &lt;dir&gt;]  [-
@@ -405,17 +407,17 @@ EXAMPLES
           renew the CA certificate for 365 days
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the Sun Grid Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
+     SGE_CELL       If set, specifies the default Sun Grid Engine
                     cell.
 
 RESTRICTIONS
-     <I>sge</I>_<I>ca</I> The command must be usually called with  Grid  Engine
-     root  permissions  on  the master host.  For more details on
-     the permission requirements consult the detailed description
-     for the different commands above.
+     <I>sge</I>_<I>ca</I> The command must be  usually  called  with  Sun  Grid
+     Engine  root  permissions  on  the  master  host.   For more
+     details on the permission requirements consult the  detailed
+     description for the different commands above.
 
 FILES
      sge_ca creates a file tree starting in $CATOP and  $CALOCAL-
@@ -433,14 +435,11 @@ FILES
      TOP. (see sge_ca -copy above)
 
 SEE ALSO
-     <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B>.
+     <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62_BRANCH">sge_qmaster(8)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/ge_intro.html?pathrev=V62_BRANCH">ge_intro(1)</A></B> for a full statement of rights  and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
 
 
 

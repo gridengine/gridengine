@@ -3,16 +3,16 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     Grid Engine Checkpointing - the  Grid  Engine  checkpointing
-     mechanism and checkpointing support
+     Sun Grid Engine Checkpointing - the Sun Grid  Engine  check-
+     pointing mechanism and checkpointing support
 
 DESCRIPTION
-     Grid Engine supports two levels of checkpointing:  the  user
-     level  and  a  operating  system provided transparent level.
-     User level checkpointing refers to  applications,  which  do
-     their  own checkpointing by writing restart files at certain
-     times or algorithmic steps and by properly processing  these
-     restart files when restarted.
+     Sun Grid Engine supports two levels  of  checkpointing:  the
+     user  level  and  a  operating  system  provided transparent
+     level. User  level  checkpointing  refers  to  applications,
+     which do their own checkpointing by writing restart files at
+     certain times or algorithmic steps and by properly  process-
+     ing these restart files when restarted.
 
      Transparent checkpointing has to be provided by the  operat-
      ing system and is usually integrated in the operating system
@@ -20,15 +20,15 @@ DESCRIPTION
      facility is the Hibernator package from Softway for SGI IRIX
      platforms.
 
-     Checkpointing jobs need to be identified to the Grid  Engine
-     system by using the -<I>ckpt</I> option of the <I>qsub1</I>() command. The
-     argument to this flag refers to a  so  called  checkpointing
-     environment, which defines the attributes of the checkpoint-
-     ing method to  be  used  (see  <I>checkpoint5</I>()  for  details).
-     Checkpointing environments are setup by the <I>qconf1</I>() options
-     -<I>ackpt</I>, -<I>dckpt</I>, -<I>mckpt</I> and -<I>sckpt</I>. The <I>qsub1</I>() option -<I>c</I> can
-     be  used  to overwrite the <I>when</I> attribute for the referenced
-     checkpointing environment.
+     Checkpointing jobs need to be identified  to  the  Sun  Grid
+     Engine  system by using the -<I>ckpt</I> option of the <I>qsub1</I>() com-
+     mand. The argument to this flag refers to a so called check-
+     pointing  environment,  which  defines the attributes of the
+     checkpointing method  to  be  used  (see  <I>checkpoint5</I>()  for
+     details).   Checkpointing  environments  are  setup  by  the
+     <I>qconf1</I>() options -<I>ackpt</I>,  -<I>dckpt</I>,  -<I>mckpt</I>  and  -<I>sckpt</I>.  The
+     <I>qsub1</I>()  option  -<I>c</I> can be used to overwrite the <I>when</I> attri-
+     bute for the referenced checkpointing environment.
 
      If a queue is of the type CHECKPOINTING, jobs need  to  have
      the checkpointing attribute flagged (see the -ckpt option to
@@ -47,8 +47,8 @@ DESCRIPTION
         configured    for    the    corresponding   queues   (see
         <I>queue</I>_<I>conf5</I>().)
 
-     <B>o</B>  Shutdown of the Grid Engine execution daemon  <I>ge</I>_<I>execd8</I>()
-        being responsible for the checkpointing job.
+     <B>o</B>  Shutdown  of  the  Sun  Grid  Engine   execution   daemon
+        <I>sge</I>_<I>execd8</I>() being responsible for the checkpointing job.
 
      After abortion, the jobs will migrate to other queues unless
      they  were  submitted  to  one specific queue by an explicit
@@ -83,12 +83,12 @@ RESTRICTIONS
      jobs may suffer long turnaround times.
 
 SEE ALSO
-     <I>ge</I>_<I>intro1</I>(,) <I>qconf1</I>(,) <I>qmod1</I>(,) <I>qsub1</I>(,) <I>checkpoint5</I>(,) <I>Grid</I>
-     <I>Engine</I>  <I>Installation</I>  <I>and</I>  <I>Administration</I> <I>Guide</I>, <I>Grid</I> <I>Engine</I>
+     <I>sge</I>_<I>intro1</I>(,) <I>qconf1</I>(,) <I>qmod1</I>(,) <I>qsub1</I>(,) <I>checkpoint5</I>(,) <I>Sun</I>
+     <I>Grid</I>  <I>Engine</I> <I>Installation</I> <I>and</I> <I>Administration</I> <I>Sun</I> <I>Grid</I> <I>Engine</I>
      <I>User</I>'<I>s</I> <I>Guide</I>
 
 COPYRIGHT
-     See <I>ge</I>_<I>intro1</I>() for a full statement of rights  and  permis-
+     See <I>sge</I>_<I>intro1</I>() for a full statement of rights and  permis-
      sions.
 
 

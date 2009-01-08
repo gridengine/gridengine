@@ -3,7 +3,8 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     qrsub   - Submit an Advance Reservation (AR) to Grid Engine.
+     qrsub   - Submit an Advance Reservation  (AR)  to  Sun  Grid
+               Engine.
 
 SYNTAX
      qrsub [-a date_time] [-A account_string]  [-ckpt  ckpt_name]
@@ -15,20 +16,20 @@ SYNTAX
 DESCRIPTION
      <I>Qrsub</I> provides a means  for  operators,  managers  or  users
      referenced  in  the  ACL  (see  <B><A HREF="../htmlman5/access_list.html?pathrev=V62_BRANCH">access_list(5)</A></B>) "arusers" to
-     create a Advance Reservation (AR) in the Grid Engine queuing
-     system. ARs allow to reserve particular consumable resources
-     for future use. These reserved resources are only  available
-     for  jobs  requesting  the  AR and the scheduler ensures the
-     availability  of  the  resources  when  the  start  time  is
-     reached.  Job  requesting  the  AR can only use the reserved
-     consumable resources.
+     create a Advance Reservation (AR) in  the  Sun  Grid  Engine
+     queuing  system.  ARs allow to reserve particular consumable
+     resources for future use. These reserved resources are  only
+     available  for  jobs  requesting  the  AR  and the scheduler
+     ensures the availability of the  resources  when  the  start
+     time  is  reached.  Job  requesting  the AR can only use the
+     reserved consumable resources.
 
-     During AR submit time the Grid Engine queuing system selects
-     the  best suited queues for the AR request and then reserves
-     the desired amount of resources.   For  a  reservation,  all
-     queues  that  are  not  in  orphaned state are considered as
-     suited. Only if the AR request can be fulfilled, the AR will
-     be granted.
+     During AR submit time the Sun  Grid  Engine  queuing  system
+     selects  the  best suited queues for the AR request and then
+     reserves the desired amount of resources.   For  a  reserva-
+     tion,  all  queues  that  are not in orphaned state are con-
+     sidered as suited. Only if the AR request can be  fulfilled,
+     the AR will be granted.
 
      ARs will be deleted either automatically when the  end  time
      is  reached,  or manually using <I>qrdel</I> . In both cases, first
@@ -44,18 +45,19 @@ DESCRIPTION
      Note: Resource Quotas are not considered for AR queue selec-
      tion and nor for jobs requesting a AR.
 
-     When an AR was successfully added to the Grid Engine queuing
-     system  <I>qrsub</I>  returns a unique integer ID referring the the
-     newly created AR. The highest  AR  ID  is  9999999.  If  the
-     highest  ID  is  reached,  a wraparound happens and the next
+     When an AR was successfully added to  the  Sun  Grid  Engine
+     queuing  system  <I>qrsub</I> returns a unique integer ID referring
+     the the newly created AR. The highest AR ID is  9999999.  If
+     the highest ID is reached, a wraparound happens and the next
      unused ID, starting with 1, will be used.
 
      For <I>qrsub</I>, the administrator and the user may define default
-     request  files  (analogous to Grid Engine_request for qsub),
-     which can contain any of the possible command line options.
+     request  files  (analogous  to  Sun  Grid Engine_request for
+     qsub), which can contain any of the  possible  command  line
+     options.
      A cluster wide default request file is optional.  If such  a
      default request file is used, it must be placed under
-     $GE_ROOT/$GE_CELL/common/sge_ar_request   (global   defaults
+     $SGE_ROOT/$SGE_CELL/common/sge_ar_request  (global  defaults
      file).
      A user private default request file is optional.  If  it  is
      used, it must be placed under
@@ -73,9 +75,9 @@ OPTIONS
           Identifies the account to which the  resource  reserva-
           tion  of the AR should be charged. For "account_string"
           value details  please  see  the  "name"  definition  in
-          <B><A HREF="../htmlman1/sge_types.html?pathrev=V62_BRANCH">sge_types(1)</A></B>.   In  the  absence of this parameter Grid
-          Engine will place the default account  string  "ge"  in
-          the accounting record of the AR.
+          <B><A HREF="../htmlman1/sge_types.html?pathrev=V62_BRANCH">sge_types(1)</A></B>.   In  the  absence  of this parameter Sun
+          Grid Engine will place the default account string "sge"
+          in the accounting record of the AR.
 
      -ckpt ckpt_name
           Selects  the  checkpointing  environment  (see   <I>check-</I>
@@ -106,11 +108,12 @@ OPTIONS
           with the remaining resources.
           By default soft error handling is used.
 
+
      -help
           Prints a list of all options.
 
      -l resource=value,...
-          Creates an AR in a Grid  Engine  queue,  providing  the
+          Creates an AR in a Sun Grid Engine queue, providing the
           given  resource request list.  <B><A HREF="../htmlman5/complex.html?pathrev=V62_BRANCH">complex(5)</A></B> describes how
           a list of  available  resources  and  their  associated
           valid value specifiers can be obtained.
@@ -155,9 +158,9 @@ OPTIONS
      -w e|v
           Specifies  the  validation  level  applied  to  the  AR
           request.
-
           The specifiers e and v define the following  validation
           modes:
+
           `v'  verify - does not submit the AR but prints
                an extensive validation report
           `e'  error - rejects request if requirements cannot
@@ -189,50 +192,47 @@ OPTIONS
           <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62_BRANCH">queue_conf(5)</A></B>).
 
 ENVIRONMENTAL VARIABLES
-     GE_ROOT        Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the Sun Grid Engine
                     standard configuration files.
 
-     GE_CELL        If set, specifies  the  default  Grid  Engine
-                    cell.  To  address  a Grid Engine cell, <I>qsub</I>,
-                    <I>qsh</I>, <I>qlogin</I> or <I>qalter</I> use (in  the  order  of
-                    precedence):
+     SGE_CELL       If set, specifies the default Sun Grid Engine
+                    cell.  To  address  a  Sun  Grid Engine cell,
+                    <I>qsub</I>, <I>qsh</I>, <I>qlogin</I> or <I>qalter</I> use (in the order
+                    of precedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable  GE_CELL, if it is
+                         environment  variable SGE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
-     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
+     SGE_DEBUG_LEVEL
+                    If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
 
-     GE_QMASTER_PORT
+     SGE_QMASTER_PORT
                     If set,  specifies  the  TCP  port  on  which
-                    <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B>  is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62_BRANCH">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead of defining the port.
 
 FILES
-     $<I>GE</I>_<I>ROOT</I>/$<I>GE</I>_<I>CELL</I>/<I>common</I>/<I>sge</I>_<I>ar</I>_<I>request</I>
-                   global defaults file
+     $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>sge</I>_<I>ar</I>_<I>request</I>
+                    global defaults file
      $<I>HOME</I>/.<I>sge</I>_<I>ar</I>_<I>request</I>
-                   user private defaults file
+                    user private defaults file
 
 SEE ALSO
      <B><A HREF="../htmlman1/qrdel.html?pathrev=V62_BRANCH">qrdel(1)</A></B>, <B><A HREF="../htmlman1/qrstat.html?pathrev=V62_BRANCH">qrstat(1)</A></B>, <B><A HREF="../htmlman1/qsub.html?pathrev=V62_BRANCH">qsub(1)</A></B>,  <B><A HREF="../htmlman1/sge_types.html?pathrev=V62_BRANCH">sge_types(1)</A></B>,  <B><A HREF="../htmlman5/checkpoint.html?pathrev=V62_BRANCH">checkpoint(5)</A></B>,
      <B><A HREF="../htmlman5/complex.html?pathrev=V62_BRANCH">complex(5)</A></B>, <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62_BRANCH">queue_conf(5)</A></B>, <B><A HREF="../htmlman5/sge_pe.html?pathrev=V62_BRANCH">sge_pe(5)</A></B>, <B><A HREF="../htmlman5/sge_resource_quota.html?pathrev=V62_BRANCH">sge_resource_quota(5)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/ge_intro.html?pathrev=V62_BRANCH">ge_intro(1)</A></B> for a full statement of rights  and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
 
 
 

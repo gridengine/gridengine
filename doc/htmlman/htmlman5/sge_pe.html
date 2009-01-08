@@ -3,8 +3,8 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     ge_pe - Grid Engine parallel environment configuration  file
-     format
+     sge_pe - Sun Grid Engine parallel environment  configuration
+     file format
 
 DESCRIPTION
      Parallel environments are parallel programming  and  runtime
@@ -17,7 +17,7 @@ DESCRIPTION
      Parallel  Virtual Machine (PVM) or Message Passing Interface
      (MPI).
 
-     <I>ge</I>_<I>pe</I> allows for the definition of interfaces  to  arbitrary
+     <I>sge</I>_<I>pe</I> allows for the definition of interfaces to  arbitrary
      parallel  environments.   Once  a  parallel  environment  is
      defined or modified with the -ap or -mp options to  <B><A HREF="../htmlman1/qconf.html?pathrev=V62_BRANCH">qconf(1)</A></B>
      and   linked   with  one  or  more  queues  via  <I>pe</I>_<I>list</I>  in
@@ -27,13 +27,13 @@ DESCRIPTION
      job.  Additional  -l  options may be used to specify the job
      requirement to further detail.
 
-     Note, Grid Engine allows backslashes (\) be used  to  escape
-     newline (\newline) characters. The backslash and the newline
-     are replaced  with  a  space  ("  ")  character  before  any
+     Note, Sun Grid Engine allows  backslashes  (\)  be  used  to
+     escape  newline (\newline) characters. The backslash and the
+     newline are replaced with a space (" ") character before any
      interpretation.
 
 FORMAT
-     The format of a <I>ge</I>_<I>pe</I> file is defined as follows:
+     The format of a <I>sge</I>_<I>pe</I> file is defined as follows:
 
   pe_name
      The name of the parallel environment as defined for  <I>pe</I>_<I>name</I>
@@ -68,7 +68,7 @@ FORMAT
   start_proc_args
      The invocation command line of a start-up procedure for  the
      parallel  environment.  The start-up procedure is invoked by
-     <B><A HREF="../htmlman8/ge_shepherd.html?pathrev=V62_BRANCH">ge_shepherd(8)</A></B> prior to executing the job script.  Its  pur-
+     <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V62_BRANCH">sge_shepherd(8)</A></B> prior to executing the job script. Its  pur-
      pose is to setup the parallel environment correspondingly to
      its needs.  An optional prefix "user@"  specifies  the  user
      under  which  this procedure is to be started.  The standard
@@ -102,7 +102,7 @@ FORMAT
           The user name of the job owner.
 
      $<I>job</I>_<I>id</I>
-          Grid Engine's unique job identification number.
+          Sun Grid Engine's unique job identification number.
 
      $<I>job</I>_<I>name</I>
           The name of the job.
@@ -124,7 +124,7 @@ FORMAT
   stop_proc_args
      The invocation command line of a shutdown procedure for  the
      parallel  environment.  The shutdown procedure is invoked by
-     <B><A HREF="../htmlman8/ge_shepherd.html?pathrev=V62_BRANCH">ge_shepherd(8)</A></B> after the job script has finished.  Its  pur-
+     <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V62_BRANCH">sge_shepherd(8)</A></B> after the job script has finished. Its  pur-
      pose  is  to  stop the parallel environment and to remove it
      from all participating systems.  An optional prefix  "user@"
      specifies  the  user  under  which  this  procedure is to be
@@ -175,42 +175,44 @@ FORMAT
 
   control_slaves
      This parameter can be set to TRUE or FALSE (the default). It
-     indicates  whether  Grid  Engine is the creator of the slave
-     tasks  of  a  parallel  application  via   <B><A HREF="../htmlman8/ge_execd.html?pathrev=V62_BRANCH">ge_execd(8)</A></B>   and
-     <B><A HREF="../htmlman8/ge_shepherd.html?pathrev=V62_BRANCH">ge_shepherd(8)</A></B>  and thus has full control over all processes
+     indicates  whether  Sun  Grid  Engine  is the creator of the
+     slave tasks of a parallel application via  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62_BRANCH">sge_execd(8)</A></B>  and
+     <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V62_BRANCH">sge_shepherd(8)</A></B> and thus has full control over all processes
      in a parallel application, which enables  capabilities  such
      as  resource  limitation and correct accounting. However, to
      gain control over the slave tasks of a parallel application,
      a  sophisticated  PE  interface  is  required,  which  works
-     closely together with Grid Engine facilities. Such PE inter-
-     faces  are  available through your local Grid Engine support
-     office.
+     closely together with Sun Grid Engine  facilities.  Such  PE
+     interfaces  are available through your local Sun Grid Engine
+     support office.
 
      Please set the control_slaves parameter  to  false  for  all
      other PE interfaces.
 
   job_is_first_task
      This parameter is only checked if control_slaves (see above)
-     is  set  to  TRUE and thus Grid Engine is the creator of the
-     slave tasks of a parallel application  via  <B><A HREF="../htmlman8/ge_execd.html?pathrev=V62_BRANCH">ge_execd(8)</A></B>  and
-     <B><A HREF="../htmlman8/ge_shepherd.html?pathrev=V62_BRANCH">ge_shepherd(8)</A></B>.   In this case, a sophisticated PE interface
-     is required closely coupling the  parallel  environment  and
-     Grid  Engine.  The documentation accompanying such PE inter-
-     faces will recommend the setting for job_is_first_task.
+     is  set  to  TRUE and thus Sun Grid Engine is the creator of
+     the slave tasks of a parallel application  via  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62_BRANCH">sge_execd(8)</A></B>
+     and  <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V62_BRANCH">sge_shepherd(8)</A></B>.   In  this  case,  a  sophisticated PE
+     interface is required closely coupling the parallel environ-
+     ment  and  Sun  Grid  Engine. The documentation accompanying
+     such  PE  interfaces  will   recommend   the   setting   for
+     job_is_first_task.
 
      The job_is_first_task parameter can be set to TRUE or FALSE.
-     A  value  of  TRUE indicates that the Grid Engine job script
-     already contains one of the tasks of the  parallel  applica-
-     tion,  while  a value of FALSE indicates that the job script
-     (and its child processes) is not part of the  parallel  pro-
-     gram.
+     A  value  of  TRUE  indicates  that  the Sun Grid Engine job
+     script already contains one of the  tasks  of  the  parallel
+     application,  while  a value of FALSE indicates that the job
+     script (and its child processes) is not part of the parallel
+     program.
 
 
   urgency_slots
      For pending jobs with a slot range PE request the number  of
      slots  is  not determined. This setting specifies the method
-     to be used by Grid Engine to assess the number of slots such
-     jobs might finally get.
+     to be used by Sun Grid Engine to assess the number of  slots
+     such jobs might finally get.
+
      The assumed slot allocation has a meaning  when  determining
      the resource-request-based priority contribution for numeric
      resources as described in <B><A HREF="../htmlman5/sge_priority.html?pathrev=V62_BRANCH">sge_priority(5)</A></B> and  is  displayed
@@ -235,10 +237,10 @@ FORMAT
 
   accounting_summary
      This parameter is only checked if control_slaves (see above)
-     is  set  to  TRUE and thus Grid Engine is the creator of the
-     slave tasks of a parallel application  via  <B><A HREF="../htmlman8/ge_execd.html?pathrev=V62_BRANCH">ge_execd(8)</A></B>  and
-     <B><A HREF="../htmlman8/ge_shepherd.html?pathrev=V62_BRANCH">ge_shepherd(8)</A></B>.   In  this  case,  accounting information is
-     available for  every  single  slave  task  started  by  Grid
+     is  set  to  TRUE and thus Sun Grid Engine is the creator of
+     the slave tasks of a parallel application  via  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62_BRANCH">sge_execd(8)</A></B>
+     and  <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V62_BRANCH">sge_shepherd(8)</A></B>.   In this case, accounting information
+     is available for every single slave task started by Sun Grid
      Engine.
 
      The accounting_summary parameter  can  be  set  to  TRUE  or
@@ -252,22 +254,20 @@ FORMAT
 RESTRICTIONS
      Note, that the functionality of the start-up,  shutdown  and
      signaling  procedures remains the full responsibility of the
-     administrator configuring the  parallel  environment.   Grid
-     Engine  will just invoke these procedures and evaluate their
-     exit status. If the procedures do not  perform  their  tasks
-     properly  or  if  the  parallel  environment or the parallel
-     application behave unexpectedly, Grid Engine has no means to
-     detect this.
+     administrator configuring  the  parallel  environment.   Sun
+     Grid  Engine  will just invoke these procedures and evaluate
+     their exit status. If the procedures do  not  perform  their
+     tasks  properly or if the parallel environment or the paral-
+     lel application behave unexpectedly, Sun Grid Engine has  no
+     means to detect this.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/ge_intro.html?pathrev=V62_BRANCH">ge_intro(1)</A></B>,  <B><A HREF="../htmlman1/ge__types.html?pathrev=V62_BRANCH">ge__types(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html?pathrev=V62_BRANCH">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qdel.html?pathrev=V62_BRANCH">qdel(1)</A></B>,   <B><A HREF="../htmlman1/qmod.html?pathrev=V62_BRANCH">qmod(1)</A></B>,
-     <B><A HREF="../htmlman1/qsub.html?pathrev=V62_BRANCH">qsub(1)</A></B>, <B><A HREF="../htmlman5/access_list.html?pathrev=V62_BRANCH">access_list(5)</A></B>, <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B>, <B><A HREF="../htmlman8/ge_shepherd.html?pathrev=V62_BRANCH">ge_shepherd(8)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62_BRANCH">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/sge__types.html?pathrev=V62_BRANCH">sge__types(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html?pathrev=V62_BRANCH">qconf(1)</A></B>,  <B><A HREF="../htmlman1/qdel.html?pathrev=V62_BRANCH">qdel(1)</A></B>,  <B><A HREF="../htmlman1/qmod.html?pathrev=V62_BRANCH">qmod(1)</A></B>,
+     <B><A HREF="../htmlman1/qsub.html?pathrev=V62_BRANCH">qsub(1)</A></B>, <B><A HREF="../htmlman5/access_list.html?pathrev=V62_BRANCH">access_list(5)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62_BRANCH">sge_qmaster(8)</A></B>, <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V62_BRANCH">sge_shepherd(8)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/ge_intro.html?pathrev=V62_BRANCH">ge_intro(1)</A></B> for a full statement of rights  and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
 
 
 

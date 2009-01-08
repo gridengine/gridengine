@@ -3,8 +3,8 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     drmaa_init, drmaa_exit - Start/finish Grid Engine DRMAA ses-
-     sion
+     drmaa_init, drmaa_exit - Start/finish Sun Grid Engine  DRMAA
+     session
 
 SYNOPSIS
      #include "drmaa.h"
@@ -22,10 +22,10 @@ SYNOPSIS
 
 DESCRIPTION
   drmaa_init()
-     The drmaa_init() function initializes the Grid Engine  DRMAA
-     API library for all threads of the process and creates a new
-     DRMAA session. This routine must be called once  before  any
-     other    DRMAA    call,    except    for   <B><A HREF="../htmlman3/drmaa_version.html?pathrev=V62_BRANCH">drmaa_version(3)</A></B>,
+     The drmaa_init() function initializes the  Sun  Grid  Engine
+     DRMAA API library for all threads of the process and creates
+     a new DRMAA session. This routine must be called once before
+     any   other   DRMAA   call,   except  for  <B><A HREF="../htmlman3/drmaa_version.html?pathrev=V62_BRANCH">drmaa_version(3)</A></B>,
      <B><A HREF="../htmlman3/drmaa_get_DRM_system.html?pathrev=V62_BRANCH">drmaa_get_DRM_system(3)</A></B>,                                 and
      <B><A HREF="../htmlman3/drmaa_get_DRMAA_implementation.html?pathrev=V62_BRANCH">drmaa_get_DRMAA_implementation(3)</A></B>.   Except  for  the  above
      listed functions, no DRMAA functions may  be  called  before
@@ -33,9 +33,9 @@ DESCRIPTION
      which is called before the drmaa_init()  function  completes
      will  return a DRMAA_ERRNO_NO_ACTIVE_SESSION error.  <I>Contact</I>
      is an implementation dependent string which may be  used  to
-     specify  which  Grid Engine cell to use. If <I>contact</I> is NULL,
-     the default Grid Engine cell will be used. In the 1.0 imple-
-     mentation    <I>contact</I>   may   have   the   following   value:
+     specify  which  Sun  Grid  Engine cell to use. If <I>contact</I> is
+     NULL, the default Sun Grid Engine cell will be used. In  the
+     1.0  implementation  <I>contact</I>  may  have the following value:
      <I>session</I>=&lt;<I>session</I>_<I>id</I>&gt;.   To  determine  the  session_id,  the
      <B><A HREF="../htmlman3/drmaa_get_contact.html?pathrev=V62_BRANCH">drmaa_get_contact(3)</A></B>  function  should  be  called after the
      session  has  already  been  initialized.   By  passing  the
@@ -70,39 +70,41 @@ DESCRIPTION
      tion.
 
 ENVIRONMENTAL VARIABLES
-     GE_ROOT        Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the Sun Grid Engine
                     standard configuration files.
 
-     GE_CELL        If set, specifies  the  default  Grid  Engine
-                    cell  to  be  used.  To address a Grid Engine
-                    cell Grid Engine uses (in the order  of  pre-
-                    cedence):
+     SGE_CELL       If set, specifies the default Sun Grid Engine
+                    cell to be used. To address a Sun Grid Engine
+                    cell Sun Grid Engine uses (in  the  order  of
+                    precedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable  GE_CELL, if it is
+                         environment  variable SGE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
+     SGE_DEBUG_LEVEL
+                    If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
 
-     GE_QMASTER_PORT
+     SGE_QMASTER_PORT
                     If set, specifies the tcp port on  which  the
-                    ge_qmaster is expected to listen for communi-
-                    cation requests.  Most installations will use
-                    a  services  map entry instead to define that
-                    port.
+                    sge_qmaster is expected to listen for commun-
+                    ication requests.   Most  installations  will
+                    use  a  services  map entry instead to define
+                    that port.
 
 RETURN VALUES
      Upon successful completion,  drmaa_init()  and  drmaa_exit()
      return DRMAA_ERRNO_SUCCESS.  Other values indicate an error.
      Up to <I>error</I>_<I>diag</I>_<I>len</I> characters of error  related  diagnosis
      information is then provided in the buffer <I>error</I>_<I>diagnosis</I>.
+
 
 ERRORS
      The drmaa_init() and drmaa_exit() functions will fail if:
@@ -149,9 +151,6 @@ ERRORS
 
 SEE ALSO
      <B><A HREF="../htmlman3/drmaa_submit.html?pathrev=V62_BRANCH">drmaa_submit(3)</A></B>.
-
-
-
 
 
 

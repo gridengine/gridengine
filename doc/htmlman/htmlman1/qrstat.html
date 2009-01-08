@@ -3,21 +3,21 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     qrstat - show the status of Grid Engine Advance Reservations
-     (AR)
+     qrstat - show the status of Sun Grid Engine Advance Reserva-
+     tions (AR)
 
 SYNTAX
      qrstat [-ar ar_id,...] [-help] [-u user,...] [-explain]
 
 DESCRIPTION
-     <I>qrstat</I> shows the current status of the available Grid Engine
-     ARs.  The selection option -ar allows you to get information
-     about specific AR.
+     <I>qrstat</I> shows the current status of the  available  Sun  Grid
+     Engine  ARs.   The  selection  option  -ar allows you to get
+     information about specific AR.
 
      The administrator and the user may define  files  which  can
      contain  any  of the options described below. A cluster-wide
      sge_qrstat      file      may      be      placed      under
-     $GE_ROOT/$GE_CELL/common/sge_qrstat  The  user private  file
+     $SGE_ROOT/$SGE_CELL/common/sge_qrstat The user private  file
      is searched at the  location  $HOME/.sge_qrstat.   The  home
      directory  request  file has the highest precedence over the
      cluster global file.  Command line can be used  to  override
@@ -86,46 +86,47 @@ OUTPUT FORMATS
      AR attributes.  The second one the corresponding value.
 
 ENVIRONMENTAL VARIABLES
-     GE_ROOT        Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the Sun Grid Engine
                     standard configuration files.
 
-     GE_CELL        If set, specifies  the  default  Grid  Engine
-                    cell.  To  address  a Grid Engine cell <I>qrstat</I>
-                    uses (in the order of precedence):
+     SGE_CELL       If set, specifies the default Sun Grid Engine
+                    cell.  To  address  a  Sun  Grid  Engine cell
+                    <I>qrstat</I> uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable  GE_CELL, if it is
+                         environment  variable SGE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
+     SGE_DEBUG_LEVEL
+                    If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
 
-     GE_QMASTER_PORT
+     SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B>  is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62_BRANCH">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
 
 FILES
-     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                    Grid Engine master host file
-     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>ge</I>_<I>qrstat</I>
-                    cluster qrstat default options
-     $<I>HOME</I>/.<I>ge</I>_<I>qrstat</I>
-                    user qrstat default options
+     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
+                     Sun Grid Engine master host file
+     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>sge</I>_<I>qrstat</I>
+                     cluster qrstat default options
+     $<I>HOME</I>/.<I>sge</I>_<I>qrstat</I>
+                     user qrstat default options
 
 SEE ALSO
-     <B><A HREF="../htmlman1/ge_intro.html?pathrev=V62_BRANCH">ge_intro(1)</A></B>, <B><A HREF="../htmlman1/qrsub.html?pathrev=V62_BRANCH">qrsub(1)</A></B>, <B><A HREF="../htmlman1/qrdel.html?pathrev=V62_BRANCH">qrdel(1)</A></B>, <B><A HREF="../htmlman1/qsub.html?pathrev=V62_BRANCH">qsub(1)</A></B>,
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62_BRANCH">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qrsub.html?pathrev=V62_BRANCH">qrsub(1)</A></B>, <B><A HREF="../htmlman1/qrdel.html?pathrev=V62_BRANCH">qrdel(1)</A></B>, <B><A HREF="../htmlman1/qsub.html?pathrev=V62_BRANCH">qsub(1)</A></B>,
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/ge_intro.html?pathrev=V62_BRANCH">ge_intro(1)</A></B> for a full statement of rights  and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
 
 

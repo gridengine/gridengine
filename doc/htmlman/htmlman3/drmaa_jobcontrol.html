@@ -23,9 +23,9 @@ SYNOPSIS
      );
 
 DESCRIPTION
-     The drmaa_job_ps() function returns the status of  the  Grid
-     Engine  job <I>job</I>_<I>id</I> into the integer pointed to by <I>remote</I>_<I>ps</I>.
-     Possible return values are
+     The drmaa_job_ps() function returns the status  of  the  Sun
+     Grid  Engine  job  <I>job</I>_<I>id</I>  into  the  integer  pointed to by
+     <I>remote</I>_<I>ps</I>. Possible return values are
 
           DRMAA_PS_UNDETERMINED        job status cannot be determined
           DRMAA_PS_QUEUED_ACTIVE       job is queued and active
@@ -40,14 +40,14 @@ DESCRIPTION
 
      Jobs' user hold and user suspend states  can  be  controlled
      via  <B><A HREF="../htmlman3/drmaa_control.html?pathrev=V62_BRANCH">drmaa_control(3)</A></B>.  For affecting system hold and system
-     suspend states the appropriate Grid Engine  interfaces  must
-     be used.
+     suspend states the appropriate Sun  Grid  Engine  interfaces
+     must be used.
 
   drmaa_control()
      The drmaa_control() function applies control  operations  on
-     Grid  Engine  jobs.  <I>jobid</I> may contain either an Grid Engine
-     jobid or `DRMAA_JOB_IDS_SESSION_ALL' to refer  to  all  jobs
-     submitted    during   the   DRMAA   session   opened   using
+     Sun  Grid Engine jobs.  <I>jobid</I> may contain either an Sun Grid
+     Engine jobid or `DRMAA_JOB_IDS_SESSION_ALL' to refer to  all
+     jobs   submitted  during  the  DRMAA  session  opened  using
      <B><A HREF="../htmlman3/drmaa_init.html?pathrev=V62_BRANCH">drmaa_init(3)</A></B>.  Legal values for <I>action</I> and  their  meanings
      are:
 
@@ -58,40 +58,41 @@ DESCRIPTION
           DRMAA_CONTROL_TERMINATE      kill the job
 
      The DRMAA suspend/resume operations are  equivalent  to  the
-     use  of  `-s  &lt;jobid&gt;'  and  `-us &lt;jobid&gt;' options with Grid
+     use  of `-s &lt;jobid&gt;' and `-us &lt;jobid&gt;' options with Sun Grid
      Engine  <B><A HREF="../htmlman1/qmod.html?pathrev=V62_BRANCH">qmod(1)</A></B>.   The  DRMAA  hold/release  operations  are
-     equivalent  to  the use of Grid Engine <B><A HREF="../htmlman1/qhold.html?pathrev=V62_BRANCH">qhold(1)</A></B> and <B><A HREF="../htmlman1/qrls.html?pathrev=V62_BRANCH">qrls(1)</A></B>.
-     The DRMAA terminate operation is equivalent to  the  use  of
-     Grid Engine <B><A HREF="../htmlman1/qdel.html?pathrev=V62_BRANCH">qdel(1)</A></B>.  Only user hold and user suspend can be
-     controlled via <B><A HREF="../htmlman3/drmaa_control.html?pathrev=V62_BRANCH">drmaa_control(3)</A></B>.  For affecting system  hold
-     and system suspend states the appropriate Grid Engine inter-
-     faces must be used.
+     equivalent  to  the  use  of  Sun  Grid  Engine <B><A HREF="../htmlman1/qhold.html?pathrev=V62_BRANCH">qhold(1)</A></B> and
+     <B><A HREF="../htmlman1/qrls.html?pathrev=V62_BRANCH">qrls(1)</A></B>.  The DRMAA terminate operation is equivalent to the
+     use  of  Sun  Grid  Engine <B><A HREF="../htmlman1/qdel.html?pathrev=V62_BRANCH">qdel(1)</A></B>.  Only user hold and user
+     suspend can be controlled via <B><A HREF="../htmlman3/drmaa_control.html?pathrev=V62_BRANCH">drmaa_control(3)</A></B>.  For affect-
+     ing  system  hold  and system suspend states the appropriate
+     Sun Grid Engine interfaces must be used.
 
 ENVIRONMENTAL VARIABLES
-     GE_ROOT        Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the Sun Grid Engine
                     standard configuration files.
 
-     GE_CELL        If set, specifies  the  default  Grid  Engine
-                    cell  to  be  used.  To address a Grid Engine
-                    cell Grid Engine uses (in the order  of  pre-
-                    cedence):
+     SGE_CELL       If set, specifies the default Sun Grid Engine
+                    cell to be used. To address a Sun Grid Engine
+                    cell Sun Grid Engine uses (in  the  order  of
+                    precedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable  GE_CELL, if it is
+                         environment  variable SGE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
+     SGE_DEBUG_LEVEL
+                    If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
 
-     GE_QMASTER_PORT
+     SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B>  is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62_BRANCH">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map entry instead to define
                     that port.

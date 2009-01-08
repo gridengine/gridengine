@@ -3,7 +3,7 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     qstat - show the status of Grid Engine jobs and queues
+     qstat - show the status of Sun Grid Engine jobs and queues
 
 SYNTAX
      qstat [ -ext ] [ -f ]  [  -F  [resource_name,...]   ]  [  -g
@@ -14,16 +14,17 @@ SYNTAX
      [ -u user,... ] [ -urg ] [ -xml ]
 
 DESCRIPTION
-     <I>qstat</I> shows the current status of the available Grid  Engine
-     queues  and  the  jobs associated with the queues. Selection
-     options allow you to get information  about  specific  jobs,
-     queues or users.  Without any option <I>qstat</I> will display only
-     a list of jobs with no queue status information.
+     <I>qstat</I> shows the current status of  the  available  Sun  Grid
+     Engine  queues  and  the  jobs  associated  with the queues.
+     Selection  options  allow  you  to  get  information   about
+     specific  jobs,  queues  or users.  Without any option <I>qstat</I>
+     will display only a list of jobs with no queue status infor-
+     mation.
 
      The  administrator  and  the  user  may  define  files  (see
      <B><A HREF="../htmlman5/sge_qstat.html?pathrev=V62_BRANCH">sge_qstat(5)</A></B>),   which   can  contain  any  of  the  options
      described  below.  A  cluster-wide  sge_qstat  file  may  be
-     placed  under  $GE_ROOT/$GE_CELL/common/sge_qstat  The  user
+     placed  under  $SGE_ROOT/$SGE_CELL/common/sge_qstat The user
      private  file is searched at the location  $HOME/.sge_qstat.
      The  home  directory request file has the highest precedence
      over the cluster global file.  Command line can be  used  to
@@ -264,6 +265,7 @@ OUTPUT FORMATS
      <B>o</B>  the name of the job.
 
      <B>o</B>  the user name of the job owner.
+
      <B>o</B>  the status of the  job  -  one  of  d(eletion),  E(rror),
         h(old), r(unning), R(estarted), s(uspended), S(uspended),
         t(ransfering), T(hreshold) or w(aiting).
@@ -353,7 +355,7 @@ OUTPUT FORMATS
      <B>o</B>  the architecture of the queue host and
 
      <B>o</B>  the state  of  the  queue  -  one  of  u(nknown)  if  the
-        corresponding  <B><A HREF="../htmlman8/ge_execd.html?pathrev=V62_BRANCH">ge_execd(8)</A></B>  cannot be contacted, a(larm),
+        corresponding  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62_BRANCH">sge_execd(8)</A></B> cannot be contacted, a(larm),
         A(larm),     C(alendar      suspended),      s(uspended),
         S(ubordinate),  d(isabled), D(isabled), E(rror) or combi-
         nations thereof.
@@ -376,19 +378,19 @@ OUTPUT FORMATS
 
      The states D(isabled) and C(alendar suspended) indicate that
      the  queue  has been disabled or suspended automatically via
-     the calendar facility of Grid Engine (see <B><A HREF="../htmlman5/calendar_conf.html?pathrev=V62_BRANCH">calendar_conf(5)</A></B>),
-     while  the S(ubordinate) state indicates, that the queue has
-     been  suspend  via  subordination  to  another  queue   (see
-     <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62_BRANCH">queue_conf(5)</A></B> for details). When suspending a queue (regard-
-     less of the cause) all jobs  executing  in  that  queue  are
-     suspended too.
+     the   calendar   facility   of   Sun   Grid   Engine    (see
+     <B><A HREF="../htmlman5/calendar_conf.html?pathrev=V62_BRANCH">calendar_conf(5)</A></B>),  while the S(ubordinate) state indicates,
+     that the queue has been suspend via subordination to another
+     queue  (see  <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62_BRANCH">queue_conf(5)</A></B>  for  details). When suspending a
+     queue (regardless of the cause) all jobs executing  in  that
+     queue are suspended too.
 
-     If an E(rror) state is displayed for a queue, <B><A HREF="../htmlman8/ge_execd.html?pathrev=V62_BRANCH">ge_execd(8)</A></B> on
-     that host was unable to locate the <B><A HREF="../htmlman8/ge_shepherd.html?pathrev=V62_BRANCH">ge_shepherd(8)</A></B> executable
-     on that host in order to start a job. Please check the error
-     logfile  of that <B><A HREF="../htmlman8/ge_execd.html?pathrev=V62_BRANCH">ge_execd(8)</A></B> for leads on how to resolve the
-     problem. Please enable  the  queue  afterwards  via  the  -c
-     option of the <B><A HREF="../htmlman1/qmod.html?pathrev=V62_BRANCH">qmod(1)</A></B> command manually.
+     If an E(rror) state is displayed for a  queue,  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62_BRANCH">sge_execd(8)</A></B>
+     on  that  host was unable to locate the <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V62_BRANCH">sge_shepherd(8)</A></B> exe-
+     cutable on that host in order to start a job.  Please  check
+     the  error  logfile of that <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62_BRANCH">sge_execd(8)</A></B> for leads on how to
+     resolve the problem. Please enable the queue afterwards  via
+     the -c option of the <B><A HREF="../htmlman1/qmod.html?pathrev=V62_BRANCH">qmod(1)</A></B> command manually.
 
      If the c(onfiguration ambiguous) state is  displayed  for  a
      queue  instance this indicates that the configuration speci-
@@ -528,7 +530,7 @@ OUTPUT FORMATS
      the start time and that no function  is  displayed  for  the
      jobs.
 
-     In very rare cases, e.g. if <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B> starts up from  an
+     In very rare cases, e.g. if <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62_BRANCH">sge_qmaster(8)</A></B> starts up from an
      inconsistent state in the job or queue spool files or if the
      clean queue (-cq) option of <B><A HREF="../htmlman1/qconf.html?pathrev=V62_BRANCH">qconf(1)</A></B> is used,  <I>qstat</I>  cannot
      assign jobs to either the running or pending jobs section of
@@ -536,9 +538,9 @@ OUTPUT FORMATS
      job has a running status but is not assigned to a queue) has
      been detected. Such jobs are printed in an <I>ERROR</I>  <I>JOBS</I>  sec-
      tion  at  the very end of the output. The ERROR JOBS section
-     should disappear upon restart of <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B>.  Please con-
-     tact  your  Grid  Engine  support representative if you feel
-     uncertain about the cause or effects of such jobs.
+     should disappear upon  restart  of  <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62_BRANCH">sge_qmaster(8)</A></B>.   Please
+     contact  your  Sun Grid Engine support representative if you
+     feel uncertain about the cause or effects of such jobs.
 
   Expanded Format (with -r)
      If the -r option was specified together with <I>qstat</I>, the fol-
@@ -648,29 +650,30 @@ OUTPUT FORMATS
      ppri The job's -p priority as specified by the user.
 
 ENVIRONMENTAL VARIABLES
-     GE_ROOT        Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the Sun Grid Engine
                     standard configuration files.
 
-     GE_CELL        If set, specifies  the  default  Grid  Engine
-                    cell.  To  address  a  Grid Engine cell <I>qstat</I>
+     SGE_CELL       If set, specifies the default Sun Grid Engine
+                    cell. To address a Sun Grid Engine cell <I>qstat</I>
                     uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable  GE_CELL, if it is
+                         environment  variable SGE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
+     SGE_DEBUG_LEVEL
+                    If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
 
-     GE_QMASTER_PORT
+     SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B>  is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62_BRANCH">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
@@ -685,26 +688,21 @@ ENVIRONMENTAL VARIABLES
                     will figure out the best length.
 
 FILES
-     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                    Grid Engine master host file
-     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>ge</I>_<I>qstat</I>
-                    cluster qstat default options
-     $<I>HOME</I>/.<I>ge</I>_<I>qstat</I>
-                    user qstat default options
+     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
+                     Sun Grid Engine master host file
+     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>sge</I>_<I>qstat</I>
+                     cluster qstat default options
+     $<I>HOME</I>/.<I>sge</I>_<I>qstat</I>
+                     user qstat default options
 
 SEE ALSO
-     <B><A HREF="../htmlman1/ge_intro.html?pathrev=V62_BRANCH">ge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html?pathrev=V62_BRANCH">qalter(1)</A></B>,   <B><A HREF="../htmlman1/qconf.html?pathrev=V62_BRANCH">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qhold.html?pathrev=V62_BRANCH">qhold(1)</A></B>,   <B><A HREF="../htmlman1/qhost.html?pathrev=V62_BRANCH">qhost(1)</A></B>,
-     <B><A HREF="../htmlman1/qmod.html?pathrev=V62_BRANCH">qmod(1)</A></B>, <B><A HREF="../htmlman1/qsub.html?pathrev=V62_BRANCH">qsub(1)</A></B>, <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62_BRANCH">queue_conf(5)</A></B>, <B><A HREF="../htmlman8/ge_execd.html?pathrev=V62_BRANCH">ge_execd(8)</A></B>, <B><A HREF="../htmlman8/ge_qmaster.html?pathrev=V62_BRANCH">ge_qmaster(8)</A></B>,
-     <B><A HREF="../htmlman8/ge_shepherd.html?pathrev=V62_BRANCH">ge_shepherd(8)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62_BRANCH">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html?pathrev=V62_BRANCH">qalter(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html?pathrev=V62_BRANCH">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qhold.html?pathrev=V62_BRANCH">qhold(1)</A></B>,   <B><A HREF="../htmlman1/qhost.html?pathrev=V62_BRANCH">qhost(1)</A></B>,
+     <B><A HREF="../htmlman1/qmod.html?pathrev=V62_BRANCH">qmod(1)</A></B>,      <B><A HREF="../htmlman1/qsub.html?pathrev=V62_BRANCH">qsub(1)</A></B>,      <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62_BRANCH">queue_conf(5)</A></B>,     <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62_BRANCH">sge_execd(8)</A></B>,
+     <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62_BRANCH">sge_qmaster(8)</A></B>, <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V62_BRANCH">sge_shepherd(8)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/ge_intro.html?pathrev=V62_BRANCH">ge_intro(1)</A></B> for a full statement of rights  and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
 
 
 

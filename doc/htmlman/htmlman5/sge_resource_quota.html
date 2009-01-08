@@ -3,7 +3,8 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     SGE_resource_quota - Grid Engine resource quota file format
+     SGE_resource_quota - Sun Grid  Engine  resource  quota  file
+     format
 
 DESCRIPTION
      Resource quota sets (rqs) are a flexible way to set  a  max-
@@ -35,9 +36,9 @@ DESCRIPTION
      resource  quota  set always results in at most one effective
      resource quota rule for a specific request.
 
-     Note: Grid Engine allows backslashes (\) be used  to  escape
-     newline (\newline) characters. The backslash and the newline
-     are replaced  with  a  space  ("  ")  character  before  any
+     Note: Sun Grid Engine allows  backslashes  (\)  be  used  to
+     escape  newline (\newline) characters. The backslash and the
+     newline are replaced with a space (" ") character before any
      interpretation.
 
 FORMAT
@@ -52,9 +53,10 @@ FORMAT
      considered  for  scheduling  decisions. The default value is
      <I>false</I>.
 
+
   description
-     This description  field  is  optional  and  can  be  set  to
-     arbitrary string. The default value is <I>NONE</I>.
+     This description field is optional and can be set  to  arbi-
+     trary string. The default value is <I>NONE</I>.
 
   limit
      Every resource quota set needs at least one  resource  quota
@@ -84,8 +86,8 @@ FORMAT
           user name by prefixing the ACL name with an  '@'  sign.
           To exclude a user or ACL from the rule, the name can be
           prefixed with the '!' sign. Defined UNIX  user  or  ACL
-          names  need  not be known in the Grid Engine configura-
-          tion.
+          names  need  not be known in the Sun Grid Engine confi-
+          guration.
 
      projects
           Contains a comma separated list of projects  (see  <I>pro-</I>
@@ -156,7 +158,6 @@ FORMAT
                BLE in the complex list (see <B><A HREF="../htmlman5/complex.html?pathrev=V61_BRANCH">complex(5)</A></B>).
                Note: Dynamic limits can  only  configured  for  a
                host-specific rule.
-
 
 EXAMPLES
      The following is the simplest form of a resource quota  set.

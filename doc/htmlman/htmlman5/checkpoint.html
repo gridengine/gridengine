@@ -3,8 +3,8 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     checkpoint - Grid Engine  checkpointing  environment  confi-
-     guration file format
+     checkpoint - Sun Grid Engine checkpointing environment  con-
+     figuration file format
 
 DESCRIPTION
      Checkpointing is a facility to save the complete  status  of
@@ -12,31 +12,31 @@ DESCRIPTION
      this checkpoint at a later point of  time  if  the  original
      program or job was halted, e.g.  through a system crash.
 
-     Grid Engine provides various levels of checkpointing support
-     (see  <B><A HREF="../htmlman1/sge_ckpt.html?pathrev=V61_BRANCH">sge_ckpt(1)</A></B>).  The checkpointing environment described
-     here is a means to configure the different types  of  check-
-     pointing  in  use  for  your  Grid  Engine  cluster or parts
-     thereof. For that purpose you  can  define:  the  operations
-     which have to be executed in initiating a checkpoint genera-
-     tion in migration a checkpoint to another host  or  in  res-
-     tarting a checkpointed application; the list of queues which
-     are eligible for a checkpointing method.
+     Sun Grid Engine provides  various  levels  of  checkpointing
+     support  (see  <B><A HREF="../htmlman1/sge_ckpt.html?pathrev=V61_BRANCH">sge_ckpt(1)</A></B>).   The checkpointing environment
+     described here is a means to configure the  different  types
+     of  checkpointing in use for your Sun Grid Engine cluster or
+     parts thereof. For that purpose you can define:  the  opera-
+     tions  which  have to be executed in initiating a checkpoint
+     generation in migration a checkpoint to another host  or  in
+     restarting  a  checkpointed  application; the list of queues
+     which are eligible for a checkpointing method.
 
-     Supporting different operating systems may easily force Grid
-     Engine  to  introduce  operating system dependencies for the
-     configuration of the checkpointing  configuration  file  and
-     updates  of the supported operating system versions may lead
-     to frequently changing implementation details. Please  refer
-     to the $SGE_ROOT/ckpt directory for more information.
+     Supporting different operating systems may easily force  Sun
+     Grid  Engine  to introduce operating system dependencies for
+     the configuration of the  checkpointing  configuration  file
+     and  updates  of the supported operating system versions may
+     lead to frequently changing implementation  details.  Please
+     refer to the $SGE_ROOT/ckpt directory for more information.
 
      Please use the -<I>ackpt</I>, -<I>dckpt</I>, -<I>mckpt</I> or -<I>sckpt</I>  options  to
      the  <B><A HREF="../htmlman1/qconf.html?pathrev=V61_BRANCH">qconf(1)</A></B>  command  to manipulate checkpointing environ-
      ments from the command-line or use the corresponding <B><A HREF="../htmlman1/qmon.html?pathrev=V61_BRANCH">qmon(1)</A></B>
      dialogue for X-Windows based interactive configuration.
 
-     Note: Grid Engine allows backslashes (\) be used  to  escape
-     newline (\newline) characters. The backslash and the newline
-     are replaced  with  a  space  ("  ")  character  before  any
+     Note: Sun Grid Engine allows  backslashes  (\)  be  used  to
+     escape  newline (\newline) characters. The backslash and the
+     newline are replaced with a space (" ") character before any
      interpretation.
 
 FORMAT
@@ -61,14 +61,14 @@ FORMAT
           The Cray kernel level checkpointing is assumed.
 
      <I>transparent</I>
-          Grid Engine assumes that the jobs submitted with refer-
-          ence  to this checkpointing interface use a checkpoint-
-          ing library such as provided by the public domain pack-
-          age <I>Condor</I>.
+          Sun Grid Engine assumes that the  jobs  submitted  with
+          reference  to this checkpointing interface use a check-
+          pointing library such as provided by the public  domain
+          package <I>Condor</I>.
 
      <I>userdefined</I>
-          Grid Engine assumes that the jobs submitted with refer-
-          ence  to  this  checkpointing  interface  perform their
+          Sun Grid Engine assumes that the  jobs  submitted  with
+          reference to this checkpointing interface perform their
           private checkpointing method.
 
      <I>application</I>-<I>level</I>
@@ -80,34 +80,35 @@ FORMAT
           script is invoked in case of a restart instead.
 
   ckpt_command
-     A command-line type command string to be  executed  by  Grid
-     Engine in order to initiate a checkpoint.
+     A command-line type command string to  be  executed  by  Sun
+     Grid Engine in order to initiate a checkpoint.
 
   migr_command
-     A command-line type command string to be  executed  by  Grid
-     Engine  during  a  migration of a checkpointing job from one
-     host to another.
+     A command-line type command string to  be  executed  by  Sun
+     Grid  Engine  during a migration of a checkpointing job from
+     one host to another.
 
   restart_command
-     A command-line type command string to be  executed  by  Grid
-     Engine  when  restarting  a previously checkpointed applica-
-     tion.
+     A command-line type command string to  be  executed  by  Sun
+     Grid Engine when restarting a previously checkpointed appli-
+     cation.
 
   clean_command
-     A command-line type command string to be  executed  by  Grid
-     Engine  in order to cleanup after a checkpointed application
-     has finished.
+     A command-line type command string to  be  executed  by  Sun
+     Grid  Engine in order to cleanup after a checkpointed appli-
+     cation has finished.
 
   ckpt_dir
      A file system location to which checkpoints  of  potentially
      considerable size should be stored.
 
   ckpt_signal
-     A Unix signal to be sent to a job by Grid Engine to initiate
-     a checkpoint generation. The value for this field can either
-     be a symbolic name from the list produced by the  -<I>l</I>  option
-     of  the <B><A HREF="../htmlman1/kill.html?pathrev=V61_BRANCH">kill(1)</A></B> command or an integer number which must be a
-     valid signal on the systems used for checkpointing.
+     A Unix signal to be sent to a job by Sun Grid Engine to ini-
+     tiate  a checkpoint generation. The value for this field can
+     either be a symbolic name from the list produced by  the  -<I>l</I>
+     option  of  the  <B><A HREF="../htmlman1/kill.html?pathrev=V61_BRANCH">kill(1)</A></B>  command or an integer number which
+     must be a valid signal on the systems used  for  checkpoint-
+     ing.
 
   when
      The points of time when checkpoints are expected to be  gen-
@@ -139,25 +140,76 @@ FORMAT
 
 RESTRICTIONS
      Note, that the functionality of any checkpointing, migration
-     or  restart  procedures  provided  by  default with the Grid
+     or  restart procedures provided by default with the Sun Grid
      Engine distribution as well as the way how they are  invoked
      in the <I>ckpt</I>_<I>command</I>, <I>migr</I>_<I>command</I> or <I>restart</I>_<I>command</I> parame-
      ters of any default checkpointing environments should not be
      changed  or  otherwise  the  functionality  remains the full
      responsibility of the administrator configuring  the  check-
-     pointing  environment.   Grid  Engine will just invoke these
-     procedures and evaluate their exit status. If the procedures
-     do  not perform their tasks properly or are not invoked in a
-     proper fashion, the checkpointing mechanism may behave unex-
-     pectedly, Grid Engine has no means to detect this.
+     pointing  environment.   Sun  Grid  Engine  will just invoke
+     these procedures and evaluate their exit status. If the pro-
+     cedures  do  not  perform  their  tasks  properly or are not
+     invoked in a proper fashion, the checkpointing mechanism may
+     behave  unexpectedly, Sun Grid Engine has no means to detect
+     this.
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html?pathrev=V61_BRANCH">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/sge_ckpt.html?pathrev=V61_BRANCH">sge_ckpt(1)</A></B>, <B><A HREF="../htmlman1/sge__types.html?pathrev=V61_BRANCH">sge__types(1)</A></B>, <B><A HREF="../htmlman1/qconf.html?pathrev=V61_BRANCH">qconf(1)</A></B>, <B><A HREF="../htmlman1/qmod.html?pathrev=V61_BRANCH">qmod(1)</A></B>,
      <B><A HREF="../htmlman1/qsub.html?pathrev=V61_BRANCH">qsub(1)</A></B>, <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V61_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-
-     sions.
+     See  <B><A HREF="../htmlman1/sge_intro.html?pathrev=V61_BRANCH">sge_intro(1)</A></B>  for  a  full  statement  of  rights   and
+     permissions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 </PRE>
 <HR>

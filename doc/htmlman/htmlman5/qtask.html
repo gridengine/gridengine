@@ -6,11 +6,11 @@ NAME
      qtask - file format of the qtask file.
 
 DESCRIPTION
-     A <I>qtask</I> file defines which commands are  submitted  to  Grid
-     Engine for remote execution by <B><A HREF="../htmlman1/qtcsh.html?pathrev=V61_BRANCH">qtcsh(1)</A></B>.  The <I>qtask</I> file may
-     contain <B><A HREF="../htmlman1/qrsh.html?pathrev=V61_BRANCH">qrsh(1)</A></B> command-line  parameters.  These  parameters
-     are  passed  to  the <B><A HREF="../htmlman1/qrsh.html?pathrev=V61_BRANCH">qrsh(1)</A></B> command used by <I>qtcsh</I> to submit
-     the commands.
+     A <I>qtask</I> file defines which commands  are  submitted  to  Sun
+     Grid  Engine  for  remote  execution by <B><A HREF="../htmlman1/qtcsh.html?pathrev=V61_BRANCH">qtcsh(1)</A></B>.  The <I>qtask</I>
+     file may  contain  <B><A HREF="../htmlman1/qrsh.html?pathrev=V61_BRANCH">qrsh(1)</A></B>  command-line  parameters.  These
+     parameters  are  passed to the <B><A HREF="../htmlman1/qrsh.html?pathrev=V61_BRANCH">qrsh(1)</A></B> command used by <I>qtcsh</I>
+     to submit the commands.
 
      A cluster global <I>qtask</I> file defining cluster  wide  defaults
      and  a  user  specific  <I>qtask</I> file eventually overriding and
@@ -50,12 +50,12 @@ EXAMPLES
           verilog -l veri_lic=1
 
      designates the applications netscape, grep and  verilog  for
-     interactive  remote  execution through Grid Engine. Netscape
-     is requested to run only on Solaris64 architectures with the
-     DISPLAY  environment  variable  set to 'myhost:0', grep only
-     runs on the host named  'filesurfer'  and  verilog  requests
-     availability  of  a verilog license in order to get executed
-     remotely.
+     interactive   remote  execution  through  Sun  Grid  Engine.
+     Netscape is requested to run only on Solaris64 architectures
+     with  the  DISPLAY  environment  variable set to 'myhost:0',
+     grep only runs on the host named  'filesurfer'  and  verilog
+     requests  availability  of a verilog license in order to get
+     executed remotely.
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html?pathrev=V61_BRANCH">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qtcsh.html?pathrev=V61_BRANCH">qtcsh(1)</A></B>, <B><A HREF="../htmlman1/qrsh.html?pathrev=V61_BRANCH">qrsh(1)</A></B>.

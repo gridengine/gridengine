@@ -3,8 +3,8 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     host_conf - Grid Engine execution  host  configuration  file
-     format
+     host_conf - Sun Grid  Engine  execution  host  configuration
+     file format
 
 DESCRIPTION
      <I>Host</I>_<I>conf</I> reflects the format of the template file  for  the
@@ -15,16 +15,16 @@ DESCRIPTION
      as  soon  as  a <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B> registers to <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B> for
      the very first time from a certain host. The  <B><A HREF="../htmlman1/qconf.html?pathrev=V61_BRANCH">qconf(1)</A></B>  -sel
      switch  can  be  used  to  display  a list of execution host
-     currently configured in your Grid Engine system. Via the -se
-     option  you  can print the execution host configuration of a
-     specified host.
+     currently configured in your Sun Grid Engine system. Via the
+     -se option you can print the execution host configuration of
+     a specified host.
 
      The special hostname "global" can be used to define  cluster
      global characteristics.
 
-     Note: Grid Engine allows backslashes (\) be used  to  escape
-     newline (\newline) characters. The backslash and the newline
-     are replaced  with  a  space  ("  ")  character  before  any
+     Note: Sun Grid Engine allows  backslashes  (\)  be  used  to
+     escape  newline (\newline) characters. The backslash and the
+     newline are replaced with a space (" ") character before any
      interpretation.
 
 FORMAT
@@ -100,9 +100,9 @@ FORMAT
      retrieving  full  detail  on the actual resource requests of
      all jobs in the system.
 
-     For non-consumable resources Grid Engine simply compares the
-     job's  attribute  requests with the corresponding specifica-
-     tion in complex_values taking the relation operator  of  the
+     For non-consumable resources Sun Grid Engine simply compares
+     the job's attribute requests with the corresponding specifi-
+     cation in complex_values taking the relation operator of the
      complex  attribute definition into account (see <B><A HREF="../htmlman5/complex.html?pathrev=V61_BRANCH">complex(5)</A></B>).
      If the result of the comparison is "true", the host is suit-
      able  for  the job with respect to the particular attribute.

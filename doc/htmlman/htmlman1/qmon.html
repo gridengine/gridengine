@@ -4,16 +4,16 @@
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
      qmon - X-Windows OSF/Motif graphical  user's  interface  for
-     Grid Engine
+     Sun Grid Engine
 
 SYNTAX
      qmon [options]
 
 DESCRIPTION
-     <I>qmon</I> allows administrators and users to manipulate the  Grid
-     Engine  system  from an X-Window environment.  <I>qmon</I> provides
-     various dialogues linked together  in  multiple  ways.   For
-     each   task  the  user  wishes  to  accomplish  via  <I>qmon</I>  a
+     <I>qmon</I> allows administrators and users to manipulate  the  Sun
+     Grid  Engine system from an X-Window environment.  <I>qmon</I> pro-
+     vides various dialogues linked together  in  multiple  ways.
+     For  each  task  the  user  wishes  to accomplish via <I>qmon</I> a
      corresponding dialogue is provided. There are multiple  ways
      to address the proper dialogue for a certain task:
 
@@ -80,17 +80,17 @@ DIALOGUES
 
   Queue Control
      The Queue Control dialogue with its  sub-dialogue  hierarchy
-     enables  the  user  to control the status of the Grid Engine
-     queues being actually configured in the  system  and  allows
-     the  administrator  to add new queues or to modify or delete
-     already existing ones. The Queue Control  dialogue  shows  a
-     tabbed  view  of Cluster Queues or their corresponding Queue
-     Instances in a tabular way.
+     enables  the  user  to  control  the  status of the Sun Grid
+     Engine queues being actually configured in  the  system  and
+     allows  the  administrator to add new queues or to modify or
+     delete already existing ones.  The  Queue  Control  dialogue
+     shows a tabbed view of Cluster Queues or their corresponding
+     Queue Instances in a tabular way.
 
      By pushing the Add, Clone or Modify button,  a  sub-dialogue
-     for  configuring Grid Engine queues is opened. A queue needs
-     to be selected to use the clone and  modify  operation.  The
-     configuration  sub-dialogue  allows  for  definition  of the
+     for  configuring  Sun  Grid Engine queues is opened. A queue
+     needs to be selected to use the clone and modify  operation.
+     The  configuration sub-dialogue allows for definition of the
      queue and its attributes.   The  configuration  sub-dialogue
      contains  in  the upper section the queue name and a list of
      hosts or hostgroups for which this queue contains the confi-
@@ -201,7 +201,7 @@ DIALOGUES
 
   Scheduler Config
      The Scheduler Configuration dialogue provides the  means  to
-     change  the  behavior  of  the  Grid Engine scheduler daemon
+     change  the behavior of the Sun Grid Engine scheduler daemon
      <B><A HREF="../htmlman8/sge_schedd.html?pathrev=V61_BRANCH">sge_schedd(8)</A></B>.  The dialogue contains a  representation  for
      all  scheduler  configuration  parameters  as  described  in
      <B><A HREF="../htmlman5/sched_conf.html?pathrev=V61_BRANCH">sched_conf(5)</A></B>.  It is subdivided in the two sections General
@@ -234,8 +234,8 @@ DIALOGUES
 
      Those user accounts added to the list of manager or operator
      accounts  are  given permission to act as managers or opera-
-     tors respectively when accessing Grid Engine under their own
-     account.
+     tors respectively when accessing Sun Grid Engine under their
+     own account.
 
      The userset lists are used together with the user_lists  and
      xuser_lists  host,  queue, project and cluster configuration
@@ -252,9 +252,9 @@ DIALOGUES
      required  for  the  so called Functional Policy and Override
      Policy (see Ticket Config below).
 
-     User names can be added to the system as entries to the Grid
-     Engine  user  database  (see <B><A HREF="../htmlman5/user.html?pathrev=V61_BRANCH">user(5)</A></B>), This can be done with
-     the User sub-dialogue.
+     User names can be added to the system as entries to the  Sun
+     Grid  Engine  user  database (see <B><A HREF="../htmlman5/user.html?pathrev=V61_BRANCH">user(5)</A></B>), This can be done
+     with the User sub-dialogue.
 
      The Tickets button in the button list on the right  side  of
      the dialogue opens the Ticket Config dialogue (see below).
@@ -280,16 +280,16 @@ DIALOGUES
      this  dialogue.  Checkpointing  environments  are  needed to
      describe  the  attributes  of  the  different  checkpointing
      methods  and  their  configurations on the various operating
-     system platforms supported by Grid Engine . When the  dialo-
-     gue is opened a list of the already configured checkpointing
-     environments is displayed together with the  current  confi-
-     guration  (see  <B><A HREF="../htmlman5/checkpoint.html?pathrev=V61_BRANCH">checkpoint(5)</A></B>) of the selected checkpointing
-     environment. To add  new  checkpointing  environment  or  to
-     modify  existing  ones, an Add and a Modify button is avail-
-     able which opens a checkpointing  environment  configuration
-     sub-dialogue.  After  applying the changes and quitting this
-     sub-dialogue with the OK button, the new or modified  check-
-     pointing environment is registered with <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B>.
+     system platforms supported by Sun Grid  Engine  .  When  the
+     dialogue  is  opened a list of the already configured check-
+     pointing environments is displayed together with the current
+     configuration  (see  <B><A HREF="../htmlman5/checkpoint.html?pathrev=V61_BRANCH">checkpoint(5)</A></B>)  of  the selected check-
+     pointing environment. To add new  checkpointing  environment
+     or  to  modify  existing ones, an Add and a Modify button is
+     available which opens a checkpointing environment configura-
+     tion  sub-dialogue.  After applying the changes and quitting
+     this sub-dialogue with the OK button, the  new  or  modified
+     checkpointing environment is registered with <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B>.
 
   Ticket Config
      This dialogue offers an  overview  and  editing  screen  for
@@ -302,9 +302,9 @@ DIALOGUES
      may submit deadline jobs.
 
      The Share Tree Policy button opens the dialogue for creating
-     and  editing  the  Grid Engine share tree (see <B><A HREF="../htmlman5/share_tree.html?pathrev=V61_BRANCH">share_tree(5)</A></B>
-     and <B><A HREF="../htmlman5/schedd_conf.html?pathrev=V61_BRANCH">schedd_conf(5)</A></B> for a description  of  the  configuration
-     parameters).
+     and   editing   the   Sun   Grid   Engine  share  tree  (see
+     <B><A HREF="../htmlman5/share_tree.html?pathrev=V61_BRANCH">share_tree(5)</A></B> and <B><A HREF="../htmlman5/schedd_conf.html?pathrev=V61_BRANCH">schedd_conf(5)</A></B> for a  description  of  the
+     configuration parameters).
 
      The Functional Policy button opens the dialogue for creating
      and  editing  the  allocation  of the functional shares (see
@@ -333,18 +333,18 @@ DIALOGUES
 
   Browser
      The Object Browser dialogue's purpose is manifold: First  of
-     all,  Grid  Engine and <I>qmon</I> messages such as notification of
-     error or success concerning a previously taken action can be
-     displayed  in  the dialogue's output window.  Also the stan-
-     dard output and the standard error output  of  <I>qmon</I>  can  be
+     all,  Sun Grid Engine and <I>qmon</I> messages such as notification
+     of error or success concerning a previously taken action can
+     be  displayed  in  the  dialogue's  output window.  Also the
+     standard output and the standard error output of <I>qmon</I> can be
      diverted to the Object Browser output window.
 
      Additionally the Object Browser can be used to display  con-
-     tinuous  information  about Grid Engine objects as the mouse
-     pointer moves over their representation as  icons  or  table
-     entries in other <I>qmon</I> dialogues. Currently, only the display
-     of the configuration of  two  Grid  Engine  objects  in  two
-     separate dialogues is supported:
+     tinuous  information  about  Sun  Grid Engine objects as the
+     mouse pointer moves over their representation  as  icons  or
+     table  entries  in other <I>qmon</I> dialogues. Currently, only the
+     display of the configuration of two Sun Grid Engine  objects
+     in two separate dialogues is supported:
 
      <B>o</B>  Queue configurations are displayed as soon as  the  mouse
         pointer  enters  a queue icon in the top level Queue Con-
@@ -374,12 +374,12 @@ RESOURCES
      the location of the resource file).
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the Sun Grid Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
-                    cell. To address a Grid Engine cell <I>qmon</I> uses
-                    (in the order of precedence):
+     SGE_CELL       If set, specifies the default Sun Grid Engine
+                    cell.  To address a Sun Grid Engine cell <I>qmon</I>
+                    uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
                          environment  variable SGE_CELL, if it is

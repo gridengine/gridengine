@@ -3,32 +3,33 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     sge_types - Grid Engine type descriptions
+     sge_types - Sun Grid Engine type descriptions
 
 DESCRIPTION
-     The Grid Engine user interface consists of several  programs
-     and  files.  Some  command-line  switches  and  several file
+     The Sun Grid Engine user interface consists of several  pro-
+     grams and files. Some command-line switches and several file
      attributes  are  types.  The  syntax  for  these  types   is
      explained in this page.
 
 OBJECT TYPES
-     These types are used for defining Grid Engine configuration:
+     These types are used for defining Sun Grid Engine configura-
+     tion:
 
   calendar_name
-     A calendar name is  the  name  of  a  Grid  Engine  calendar
+     A calendar name is the name of a Sun  Grid  Engine  calendar
      described in <B><A HREF="../htmlman5/calendar_conf.html?pathrev=V61_BRANCH">calendar_conf(5)</A></B>.
 
      <I>calendar</I>_<I>name</I> := <I>object</I>_<I>name</I>
 
   ckpt_name
-     A "ckpt_name" is the name of  a  Grid  Engine  checkpointing
+     A "ckpt_name" is the name of a Sun Grid Engine checkpointing
      interface described in <B><A HREF="../htmlman5/checkpoint.html?pathrev=V61_BRANCH">checkpoint(5)</A></B>.
 
      <I>ckpt</I>_<I>name</I> := <I>object</I>_<I>name</I>
 
   complex_name
-     A complex name is the name of a Grid Engine resource  attri-
-     bute described in <B><A HREF="../htmlman5/complex.html?pathrev=V61_BRANCH">complex(5)</A></B>.
+     A complex name is the name of a  Sun  Grid  Engine  resource
+     attribute described in <B><A HREF="../htmlman5/complex.html?pathrev=V61_BRANCH">complex(5)</A></B>.
 
      <I>complex</I>_<I>name</I> := <I>object</I>_<I>name</I>
 
@@ -39,9 +40,10 @@ OBJECT TYPES
      <I>host</I>_<I>identifier</I> := <I>host</I>_<I>name</I> | <I>hostgroup</I>_<I>name</I>
 
   hostgroup_name
-     A host group name is the name of a Grid  Engine  host  group
-     described  in <B><A HREF="../htmlman5/hostgroup.html?pathrev=V61_BRANCH">hostgroup(5)</A></B>.  Note, to allow host group names
-     easily be differed from host names a "@" prefix is used.
+     A host group name is the name of  a  Sun  Grid  Engine  host
+     group  described in <B><A HREF="../htmlman5/hostgroup.html?pathrev=V61_BRANCH">hostgroup(5)</A></B>.  Note, to allow host group
+     names easily be differed from host names  a  "@"  prefix  is
+     used.
 
      <I>hostgroup</I>_<I>name</I> := @<I>object</I>_<I>name</I>
 
@@ -51,8 +53,8 @@ OBJECT TYPES
      called fully-qualified host names, whereas host  names  like
      "gridmaster"  are  called  short host names. Note, there are
      the install time parameters default_domain  and  ignore_fqdn
-     (see  <B><A HREF="../htmlman5/bootstrap.html?pathrev=V61_BRANCH">bootstrap(5)</A></B>)  which affect how Grid Engine deals with
-     host names in general.
+     (see  <B><A HREF="../htmlman5/bootstrap.html?pathrev=V61_BRANCH">bootstrap(5)</A></B>)  which  affect how Sun Grid Engine deals
+     with host names in general.
 
   memory_specifier
      Memory specifiers are positive decimal, hexadecimal or octal
@@ -65,20 +67,20 @@ OBJECT TYPES
      bytes.
 
   pe_name
-     A "pe_name" is the name of a Grid Engine  parallel  environ-
-     ment described in <B><A HREF="../htmlman5/sge_pe.html?pathrev=V61_BRANCH">sge_pe(5)</A></B>.
+     A "pe_name" is the  name  of  a  Sun  Grid  Engine  parallel
+     environment described in <B><A HREF="../htmlman5/sge_pe.html?pathrev=V61_BRANCH">sge_pe(5)</A></B>.
 
      <I>pe</I>_<I>name</I> := <I>object</I>_<I>name</I>
 
   project_name
-     A project  name  is  the  name  of  a  Grid  Engine  project
+     A project name is the name of  a  Sun  Grid  Engine  project
      described in <B><A HREF="../htmlman5/project.html?pathrev=V61_BRANCH">project(5)</A></B>.
 
      <I>project</I>_<I>name</I> := <I>object</I>_<I>name</I>
 
   queue_name
-     A queue name is the name of a Grid Engine queue described in
-     <B><A HREF="../htmlman5/queue_conf.html?pathrev=V61_BRANCH">queue_conf(5)</A></B>.
+     A queue name  is  the  name  of  a  Sun  Grid  Engine  queue
+     described in <B><A HREF="../htmlman5/queue_conf.html?pathrev=V61_BRANCH">queue_conf(5)</A></B>.
 
      <I>queue</I>_<I>name</I>  := <I>object</I>_<I>name</I>
 
@@ -93,25 +95,26 @@ OBJECT TYPES
      means 1 hours and 1 second).
 
   user_name
-     A user name can be the name of a <B><A HREF="../htmlman1/login.html?pathrev=V61_BRANCH">login(1)</A></B>  user  or  of  the
+     A user name can be the name of a <B><A HREF="../htmlman1/login.html?pathrev=V61_BRANCH">login(1)</A></B> user or of the Sun
      Grid Engine user object described in <B><A HREF="../htmlman5/user.html?pathrev=V61_BRANCH">user(5)</A></B>.
 
      <I>user</I>_<I>name</I> := <I>object</I>_<I>name</I>
 
   userset_name
-     A user set name is the name of an Grid Engine access list or
-     department described in <B><A HREF="../htmlman5/access_list.html?pathrev=V61_BRANCH">access_list(5)</A></B>.
+     A user set name is the name of an  Sun  Grid  Engine  access
+     list or department described in <B><A HREF="../htmlman5/access_list.html?pathrev=V61_BRANCH">access_list(5)</A></B>.
 
      <I>userset</I>_<I>name</I> := <I>object</I>_<I>name</I>
 
   object_name
-     An object name is a sequence  of  up  to  512  ASCII  string
-     characters except "\n", "\t", "\r", " ", "/", ":", "'", "\",
+     An object name is a sequence of up to 512 ASCII string char-
+     acters  except  "\n",  "\t",  "\r", " ", "/", ":", "'", "\",
      "[", "]", "{", "}", "|", "(", ")", "@", "%", ","  or  the  "
      character itself.
 
 MATCHING TYPES
-     These types are used for matching Grid Engine configuration:
+     These types are used for matching Sun Grid Engine configura-
+     tion:
 
   expression
      A wildcard expression is a regular boolean  expression  that
@@ -158,6 +161,8 @@ MATCHING TYPES
 
      For more details please see
      <B><A HREF="../htmlman5/fnmatch.html?pathrev=V61_BRANCH">fnmatch(5)</A></B>
+
+
      The pattern itself should be  put  inside  quotes  ('"')  to
      ensure that clients receive the complete pattern.
 
@@ -257,6 +262,7 @@ MATCHING TYPES
      never contains an at-character ('@'), even if the expression
      begins with a wildcard character.
 
+
      e.g.
           *            all cluster queues
           a*           all cluster queues beginning with an 'a'
@@ -313,7 +319,6 @@ MATCHING TYPES
 
      wc_user := user_name | pattern
 
-
   wc_user_list
      A list of user names.
 
@@ -336,10 +341,6 @@ SEE ALSO
 
 COPYRIGHT
      Copyright: 2004-2007 by Sun Microsystems, Inc.
-
-
-
-
 
 
 

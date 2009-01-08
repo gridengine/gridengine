@@ -3,21 +3,21 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     bootstrap - Grid Engine bootstrap file
+     bootstrap - Sun Grid Engine bootstrap file
 
 DESCRIPTION
      <I>bootstrap</I>  contains  parameters  that  are  needed  for  the
-     startup of Grid Engine components.  It is created during the
-     sge_qmaster installation.  Modifying <I>bootstrap</I> in a  running
-     system is not supported.
+     startup of Sun Grid Engine components.  It is created during
+     the sge_qmaster installation.  Modifying <I>bootstrap</I> in a run-
+     ning system is not supported.
 
 FORMAT
      The paragraphs that follow provide brief descriptions of the
      individual  parameters that compose the bootstrap configura-
-     tion for a Grid Engine cluster:
+     tion for a Sun Grid Engine cluster:
 
   admin_user
-     Administrative user account used  by  Grid  Engine  for  all
+     Administrative user account used by Sun Grid Engine for  all
      internal  file  handling  (status spooling, message logging,
      etc.). Can be used in cases where the root account does  not
      have  the  corresponding  file access permissions (e.g. on a
@@ -25,7 +25,7 @@ FORMAT
 
      Changing the admin_user parameter set at  installation  time
      is  not  supported in a running system. Changing it manually
-     on a shut-down cluster is possible, but  if  access  to  the
+     on a shut-down cluster is possible, but if access to the Sun
      Grid  Engine  spooling area is interrupted, this will result
      in unpredictable behavior.
 
@@ -33,10 +33,10 @@ FORMAT
      it is defined during the master installation procedure.
 
   default_domain
-     Only needed if your Grid Engine cluster covers hosts belong-
-     ing to more than a single DNS domain. In this case it can be
-     used if your hostname resolving yields  both  qualified  and
-     unqualified  hostnames  for  the  hosts  in  one  of the DNS
+     Only needed if your Sun Grid  Engine  cluster  covers  hosts
+     belonging  to more than a single DNS domain. In this case it
+     can be used if your hostname resolving yields both qualified
+     and  unqualified  hostnames  for the hosts in one of the DNS
      domains. The value of  default_domain  is  appended  to  the
      unqualified  hostname  to define a fully qualified hostname.
      The  default_domain  parameter  will  have  no   effect   if
@@ -48,11 +48,11 @@ FORMAT
 
   ignore_fqdn
      Ignore fully qualified domain name component  of  hostnames.
-     Should  be set if all hosts belonging to a Grid Engine clus-
-     ter are part of a single DNS domain. It is  switched  on  if
-     set to either "true" or "1". Switching it on may solve prob-
-     lems with load reports due to different hostname resolutions
-     across the cluster.
+     Should  be  set  if all hosts belonging to a Sun Grid Engine
+     cluster are part of a single DNS domain. It is  switched  on
+     if  set  to  either "true" or "1". Switching it on may solve
+     problems with load reports due to different hostname resolu-
+     tions across the cluster.
 
      Changing the ignore_fqdn parameter set at installation  time
      is  not  supported  in  a  running  system.  The default for
@@ -97,9 +97,9 @@ FORMAT
      /sge/default/common;/sge/default/spool/qmaster
 
   binary_path
-     The directory path where the Grid Engine binaries reside. It
-     is  used within Grid Engine components to locate and startup
-     other Grid Engine programs.
+     The directory  path  where  the  Sun  Grid  Engine  binaries
+     reside.  It  is  used  within  Sun Grid Engine components to
+     locate and startup other Sun Grid Engine programs.
 
      The path name given here is searched for binaries as well as
      any  directory  below  with  a  directory  name equal to the
@@ -130,15 +130,15 @@ FORMAT
      The product mode defines the set of features  the  installed
      cluster is using.
 
-     Both the basic product modes sge (Grid Engine standard mode)
-     and  sgeee (Grid Engine Enterprise Edition) as well as addi-
-     tional features (AFS, DCE, KERBEROS, RESERVED_PORT  security
-     model, CSP security model) are specified by this parameter.
+     Both the basic product modes sge (Sun Grid  Engine  standard
+     mode) and sgeee (Sun Grid Engine Enterprise Edition) as well
+     as additional features (AFS,  DCE,  KERBEROS,  RESERVED_PORT
+     security  model,  CSP  security model) are specified by this
+     parameter.
 
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V61_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
 
 
 

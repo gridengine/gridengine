@@ -3,7 +3,8 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     qquota - shows current usage of Grid Engine resource quotas
+     qquota - shows current usage of  Sun  Grid  Engine  resource
+     quotas
 
 SYNTAX
      qquota [ -h  wc_host|wc_hostgroup,...  ]  [  -help  ]  [  -l
@@ -11,9 +12,9 @@ SYNTAX
      [ -pe wc_pe_name,... ] [ -q wc_cqueue,... ] [ -xml ]
 
 DESCRIPTION
-     <I>qquota</I> shows the current Grid Engine  resource  quota  sets.
-     Only  resource  quota  sets with a positive usage count or a
-     static limit are printed.
+     <I>qquota</I> shows the current  Sun  Grid  Engine  resource  quota
+     sets.  Only  resource quota sets with a positive usage count
+     or a static limit are printed.
 
      Selection options allow you to filter  for  specific  hosts,
      cluster   queues,   projects,  parallel  environments  (pe),
@@ -73,12 +74,12 @@ OUTPUT FORMATS
      <B>o</B>  the effective resource quota set filter
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the Sun Grid Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
-                    cell.  To  address  a Grid Engine cell <I>qquota</I>
-                    uses (in the order of precedence):
+     SGE_CELL       If set, specifies the default Sun Grid Engine
+                    cell.  To  address  a  Sun  Grid  Engine cell
+                    <I>qquota</I> uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
                          environment  variable SGE_CELL, if it is
@@ -103,7 +104,7 @@ ENVIRONMENTAL VARIABLES
 
 FILES
      $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                    Grid Engine master host file
+                    Sun Grid Engine master host file
      $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>sge</I>_<I>qquota</I>
                     cluster qquota default options
      $<I>HOME</I>/.<I>sge</I>_<I>qquota</I>
@@ -117,8 +118,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V61_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
 
 
 

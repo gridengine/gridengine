@@ -3,16 +3,17 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     qhost - show the status of Grid Engine hosts, queues, jobs
+     qhost - show the status of Sun Grid  Engine  hosts,  queues,
+     jobs
 
 SYNTAX
      qhost [ -F [resource_name,...]  [ -help ] [ -h host_list ] [
      -j ] [ -l resource=val,... ] [ -u user,... ] [ -xml ].
 
 DESCRIPTION
-     <I>qhost</I> shows the current status of the available Grid  Engine
-     hosts,  queues  and  the  jobs  associated  with the queues.
-     Selection  options  allow  you  to  get  information   about
+     <I>qhost</I> shows the current status of  the  available  Sun  Grid
+     Engine  hosts,  queues  and  the  jobs  associated  with the
+     queues. Selection options allow you to get information about
      specific  hosts,  queues, jobs or users.  Without any option
      <I>qhost</I> will display a list of all hosts without queue or  job
      information.
@@ -52,7 +53,6 @@ OPTIONS
           changes  the output to XML. The used schemas are refer-
           enced in the XML  output.  The  output  is  printed  to
           stdout.
-
 
 OUTPUT FORMATS
      Depending on the presence or absence of the -q or -F and  -j
@@ -113,12 +113,12 @@ OUTPUT FORMATS
 
      The states D(isabled) and C(alendar suspended) indicate that
      the  queue  has been disabled or suspended automatically via
-     the calendar facility of Grid Engine (see <B><A HREF="../htmlman5/calendar_conf.html?pathrev=V61_BRANCH">calendar_conf(5)</A></B>),
-     while  the S(ubordinate) state indicates, that the queue has
-     been  suspend  via  subordination  to  another  queue   (see
-     <B><A HREF="../htmlman5/queue_conf.html?pathrev=V61_BRANCH">queue_conf(5)</A></B> for details). When suspending a queue (regard-
-     less of the cause) all jobs  executing  in  that  queue  are
-     suspended too.
+     the   calendar   facility   of   Sun   Grid   Engine    (see
+     <B><A HREF="../htmlman5/calendar_conf.html?pathrev=V61_BRANCH">calendar_conf(5)</A></B>),  while the S(ubordinate) state indicates,
+     that the queue has been suspend via subordination to another
+     queue  (see  <B><A HREF="../htmlman5/queue_conf.html?pathrev=V61_BRANCH">queue_conf(5)</A></B>  for  details). When suspending a
+     queue (regardless of the cause) all jobs executing  in  that
+     queue are suspended too.
 
      If an E(rror) state is displayed for a  queue,  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B>
      on  that  host was unable to locate the <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V61_BRANCH">sge_shepherd(8)</A></B> exe-
@@ -192,11 +192,11 @@ OUTPUT FORMATS
      <B>o</B>  the priority of the jobs.
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the Sun Grid Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
-                    cell.  To  address  a  Grid Engine cell <I>qhost</I>
+     SGE_CELL       If set, specifies the default Sun Grid Engine
+                    cell. To address a Sun Grid Engine cell <I>qhost</I>
                     uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
@@ -222,7 +222,7 @@ ENVIRONMENTAL VARIABLES
 
 FILES
      $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                    Grid Engine master host file
+                    Sun Grid Engine master host file
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html?pathrev=V61_BRANCH">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html?pathrev=V61_BRANCH">qalter(1)</A></B>,   <B><A HREF="../htmlman1/qconf.html?pathrev=V61_BRANCH">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qhold.html?pathrev=V61_BRANCH">qhold(1)</A></B>,   <B><A HREF="../htmlman1/qmod.html?pathrev=V61_BRANCH">qmod(1)</A></B>,

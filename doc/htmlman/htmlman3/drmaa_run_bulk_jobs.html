@@ -44,21 +44,21 @@ SYNOPSIS
      );
 
 DESCRIPTION
-     drmaa_run_job() submits an Grid Engine job  with  attributes
-     defined  in  the  DRMAA  job  template, <I>jt</I>. On success up to
-     <I>job</I>_<I>id</I>_<I>len</I> bytes of the job identifier are returned into the
-     buffer, <I>job</I>_<I>id</I>.
+     drmaa_run_job() submits an Sun Grid Engine job  with  attri-
+     butes  defined  in the DRMAA job template, <I>jt</I>. On success up
+     to <I>job</I>_<I>id</I>_<I>len</I> bytes of the job identifier are returned  into
+     the buffer, <I>job</I>_<I>id</I>.
 
   drmaa_run_bulk_jobs()
-     The drmaa_run_bulk_jobs() submits a Grid  Engine  array  job
-     very  much  as if the <B><A HREF="../htmlman1/qsub.html?pathrev=V61_BRANCH">qsub(1)</A></B> option `-t <I>start</I>-<I>end</I>:<I>incr</I>' had
-     been used along with the additional  attributes  defined  in
-     the  DRMAA job template, <I>jt</I>.  The same constraints regarding
-     value ranges are also in effect for  the  parameters  <I>start</I>,
-     <I>end</I>,  and  <I>incr</I> as for <B><A HREF="../htmlman5/qsub.html?pathrev=V61_BRANCH">qsub(5)</A></B> -t. On success a DRMAA job id
-     string vector containing job identifiers for each array  job
-     task is returned into <I>jobids</I>. The job identifiers in the job
-     id    string    vector    can     be     extracted     using
+     The drmaa_run_bulk_jobs() submits a Sun  Grid  Engine  array
+     job  very  much as if the <B><A HREF="../htmlman1/qsub.html?pathrev=V61_BRANCH">qsub(1)</A></B> option `-t <I>start</I>-<I>end</I>:<I>incr</I>'
+     had been used along with the additional  attributes  defined
+     in  the  DRMAA  job  template,  <I>jt</I>.   The  same  constraints
+     regarding value ranges are also in effect for the parameters
+     <I>start</I>,  <I>end</I>,  and <I>incr</I> as for <B><A HREF="../htmlman5/qsub.html?pathrev=V61_BRANCH">qsub(5)</A></B> -t. On success a DRMAA
+     job id string vector containing  job  identifiers  for  each
+     array  job task is returned into <I>jobids</I>. The job identifiers
+     in  the  job  id  string  vector  can  be  extracted   using
      <B><A HREF="../htmlman3/drmaa_get_next_job_id.html?pathrev=V61_BRANCH">drmaa_get_next_job_id(3)</A></B>.   The number of identifiers in the
      job   id   string   vector   can   be    determined    using
      <B><A HREF="../htmlman3/drmaa_get_num_job_ids.html?pathrev=V61_BRANCH">drmaa_get_num_job_ids(3)</A></B>.   Note  that this function is only
@@ -86,17 +86,17 @@ DESCRIPTION
   drmaa_release_job_ids()
      The  drmaa_release_attr_job_id()   function   releases   all
      resources  associated  with  the DRMAA job id string vector,
-     <I>values</I>. This operation has no  effect  on  the  actual  Grid
+     <I>values</I>. This operation has no effect on the actual Sun  Grid
      Engine array job tasks.
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the Sun Grid Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
-                    cell  to  be  used.  To address a Grid Engine
-                    cell Grid Engine uses (in the order  of  pre-
-                    cedence):
+     SGE_CELL       If set, specifies the default Sun Grid Engine
+                    cell to be used. To address a Sun Grid Engine
+                    cell Sun Grid Engine uses (in  the  order  of
+                    precedence):
 
                          The name of the cell  specified  in  the
                          environment  variable SGE_CELL, if it is

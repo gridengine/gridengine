@@ -3,13 +3,13 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     sge_execd - Grid Engine job execution agent
+     sge_execd - Sun Grid Engine job execution agent
 
 SYNOPSIS
      sge_execd [ -help ]
 
 DESCRIPTION
-     <I>sge</I>_<I>execd</I> controls the  Grid  Engine  queues  local  to  the
+     <I>sge</I>_<I>execd</I> controls the Sun Grid Engine queues local  to  the
      machine  on which <I>sge</I>_<I>execd</I> is running and executes/controls
      the jobs sent from <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B> to be run on these queues.
 
@@ -63,12 +63,12 @@ LOAD SENSORS
         "end".
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the Sun Grid Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
-                    cell. To address a Grid Engine cell <I>sge</I>_<I>execd</I>
-                    uses (in the order of precedence):
+     SGE_CELL       If set, specifies the default Sun Grid Engine
+                    cell.  To  address  a  Sun  Grid  Engine cell
+                    <I>sge</I>_<I>execd</I> uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
                          environment  variable SGE_CELL, if it is
@@ -99,10 +99,10 @@ ENVIRONMENTAL VARIABLES
 
 RESTRICTIONS
      <I>sge</I>_<I>execd</I> usually is started from root on  each  machine  in
-     the  Grid Engine pool.  If started by a normal user, a spool
-     directory must be used to  which  the  user  has  read/write
-     access.  In this case only jobs being submitted by that same
-     user are handled correctly by the system.
+     the  Sun  Grid  Engine pool.  If started by a normal user, a
+     spool  directory  must  be  used  to  which  the  user   has
+     read/write access. In this case only jobs being submitted by
+     that same user are handled correctly by the system.
 
 FILES
      sgepasswd  contains  a  list  of  user  names   and    their
@@ -111,13 +111,13 @@ FILES
      the  contents of this file please use the sgepasswd command.
      It is not advised to  change that file manually.
      $<I>xSGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>configuration</I>
-                    Grid Engine global configuration
+                    Sun Grid Engine global configuration
      $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>local</I>_<I>conf</I>/&lt;<I>host</I>&gt;
-                    Grid Engine host specific configuration
+                    Sun Grid Engine host specific configuration
      $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>spool</I>/&lt;<I>host</I>&gt;
                     Default execution host spool directory
      $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                    Grid Engine master host file
+                    Sun Grid Engine master host file
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html?pathrev=V61_BRANCH">sge_intro(1)</A></B>, <B><A HREF="../htmlman5/sge_conf.html?pathrev=V61_BRANCH">sge_conf(5)</A></B>, <B><A HREF="../htmlman5/complex.html?pathrev=V61_BRANCH">complex(5)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B>.

@@ -3,19 +3,20 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     qsub   -  submit a batch job to Grid Engine.
+     qsub   -  submit a batch job to Sun Grid Engine.
 
-     qsh    -  submit an interactive X-windows  session  to  Grid
+     qsh    -  submit an interactive  X-windows  session  to  Sun
+               Grid Engine.
+
+     qlogin -  submit an interactive login session  to  Sun  Grid
                Engine.
 
-     qlogin -  submit  an  interactive  login  session  to   Grid
+     qrsh   -  submit an interactive  rsh  session  to  Sun  Grid
                Engine.
 
-     qrsh   -  submit an interactive rsh session to Grid Engine.
+     qalter -  modify a pending batch job of Sun Grid Engine.
 
-     qalter -  modify a pending batch job of Grid Engine.
-
-     qresub -  submit a copy of an existing Grid Engine job.
+     qresub -  submit a copy of an existing Sun Grid Engine job.
 
 SYNTAX
      qsub [ options ] [ command | -- [ command_args ]]
@@ -34,22 +35,22 @@ SYNTAX
      qresub [ options ] job_id_list
 
 DESCRIPTION
-     <I>qsub</I> submits batch jobs to the Grid Engine  queuing  system.
-     Grid Engine supports single- and multiple-node jobs. Command
-     can be a path to a binary or a script (see -b  below)  which
-     contains  the  commands  to  be run by the job using a shell
-     (for example, <B><A HREF="../htmlman1/sh.html?pathrev=V61_BRANCH">sh(1)</A></B> or <B><A HREF="../htmlman1/csh.html?pathrev=V61_BRANCH">csh(1)</A></B>).  Arguments  to  the  command
-     are given as command_args to <I>qsub</I> . If command is handled as
-     a script then it is possible to embed flags in  the  script.
-     If  the  first  two characters of a script line either match
-     '#$' or are equal to the prefix string defined with  the  -C
-     option described below, the line is parsed for embedded com-
-     mand flags.
+     <I>qsub</I> submits batch jobs to the Sun Grid Engine queuing  sys-
+     tem.  Sun  Grid  Engine  supports  single- and multiple-node
+     jobs. Command can be a path to a binary or a script (see  -b
+     below)  which  contains  the  commands  to be run by the job
+     using a shell (for example, <B><A HREF="../htmlman1/sh.html?pathrev=V61_BRANCH">sh(1)</A></B> or <B><A HREF="../htmlman1/csh.html?pathrev=V61_BRANCH">csh(1)</A></B>).  Arguments  to
+     the  command  are given as command_args to <I>qsub</I> . If command
+     is handled as a script then it is possible to embed flags in
+     the  script.   If  the first two characters of a script line
+     either match '#$' or are equal to the prefix string  defined
+     with  the  -C option described below, the line is parsed for
+     embedded command flags.
 
-     <I>qsh</I> submits an interactive X-windows session to Grid Engine.
-     An  <B><A HREF="../htmlman1/xterm.html?pathrev=V61_BRANCH">xterm(1)</A></B>  is  brought up from the executing machine with
-     the display directed either to the X-server indicated by the
-     DISPLAY  environment  variable  or  as  specified  with  the
+     <I>qsh</I> submits an interactive X-windows  session  to  Sun  Grid
+     Engine. An <B><A HREF="../htmlman1/xterm.html?pathrev=V61_BRANCH">xterm(1)</A></B> is brought up from the executing machine
+     with the display directed either to the  X-server  indicated
+     by the DISPLAY environment variable or as specified with the
      -<I>display</I> <I>qsh</I> option. Interactive jobs are not spooled if  no
      resource  is  available  to  execute  them.  They are either
      dispatched to a suitable machine for  execution  immediately
@@ -68,11 +69,12 @@ DESCRIPTION
      qlogin_daemon  and qlogin_command in the  global  and  local
      configuration settings of <B><A HREF="../htmlman5/sge_conf.html?pathrev=V61_BRANCH">sge_conf(5)</A></B>.
 
-     On the server-side, an Grid Engine <I>telnetd</I> is  used  if  the
-     parameter  is  not set. Otherwise, it should be set to some-
-     thing like /usr/sbin/in.telnetd. On the client side, an Grid
-     Engine  <I>telnet</I>  is  used it the parameter is not set. Other-
-     wise, it should be set to something like /usr/bin/telnet.
+     On the server-side, an Sun Grid Engine <I>telnetd</I>  is  used  if
+     the  parameter  is  not  set. Otherwise, it should be set to
+     something like /usr/sbin/in.telnetd. On the client side,  an
+     Sun  Grid Engine <I>telnet</I> is used it the parameter is not set.
+     Otherwise,   it   should   be   set   to   something    like
+     /usr/bin/telnet.
 
      The client side command is automatically parameterized  with
      the  remote  host  name and port number to which to connect,
@@ -92,17 +94,17 @@ DESCRIPTION
      <B><A HREF="../htmlman1/gin.html?pathrev=V61_BRANCH">gin(1)</A></B> session is  established.   The  server-side  commands
      used can be configured with the rsh_daemon and rlogin_daemon
      parameters in the global and local configuration settings of
-     <B><A HREF="../htmlman5/sge_conf.html?pathrev=V61_BRANCH">sge_conf(5)</A></B>.   An Grid Engine <I>rshd</I> or <I>rlogind</I> is used if the
-     parameters are not set. If  the  parameters  are  set,  they
+     <B><A HREF="../htmlman5/sge_conf.html?pathrev=V61_BRANCH">sge_conf(5)</A></B>.   An Sun Grid Engine <I>rshd</I> or <I>rlogind</I> is used if
+     the parameters are not set. If the parameters are set,  they
      should   be  set  to  something  like  /usr/sbin/in.rshd  or
      /usr/sbin/in.rlogind.  On the client-side,  the  rsh_command
      and  rlogin_command  parameters can be set in the global and
      local configuration settings of <B><A HREF="../htmlman5/sge_conf.html?pathrev=V61_BRANCH">sge_conf(5)</A></B>.   If  they  are
-     not  set,  special Grid Engine <B><A HREF="../htmlman1/rsh.html?pathrev=V61_BRANCH">rsh(1)</A></B> and <B><A HREF="../htmlman1/rlogin.html?pathrev=V61_BRANCH">rlogin(1)</A></B> binaries
-     delivered with Grid Engine are used.  Use the cluster confi-
-     guration  parameters to integrate mechanisms like <I>ssh</I> or the
-     <B><A HREF="../htmlman1/rsh.html?pathrev=V61_BRANCH">rsh(1)</A></B> and <B><A HREF="../htmlman1/rlogin.html?pathrev=V61_BRANCH">rlogin(1)</A></B> facilities supplied with the  operating
-     system.
+     not  set,  special  Sun  Grid  Engine  <B><A HREF="../htmlman1/rsh.html?pathrev=V61_BRANCH">rsh(1)</A></B>  and <B><A HREF="../htmlman1/rlogin.html?pathrev=V61_BRANCH">rlogin(1)</A></B>
+     binaries delivered with Sun Grid Engine are used.   Use  the
+     cluster  configuration  parameters  to  integrate mechanisms
+     like <I>ssh</I> or the <B><A HREF="../htmlman1/rsh.html?pathrev=V61_BRANCH">rsh(1)</A></B>  and  <B><A HREF="../htmlman1/rlogin.html?pathrev=V61_BRANCH">rlogin(1)</A></B>  facilities  supplied
+     with the operating system.
 
      <I>qrsh</I> jobs can only run  in  INTERACTIVE  queues  unless  the
      option  -now  no is used (see below).  They can also only be
@@ -156,8 +158,6 @@ DESCRIPTION
      global file.  The  option  arguments,  the  embedded  script
      flags  and the options in the default request files are pro-
      cessed in the following order:
-
-
           left to right in the script line,
           left to right in the default request files,
           from top to bottom of the script file (<I>qsub</I> only),
@@ -207,12 +207,13 @@ OPTIONS
           corresponding  value of the current date is assumed. If
           CC is not specified, a YY of &lt; 70 means 20YY.
           Usage of this option may cause  unexpected  results  if
-          the clocks of the hosts in the Grid Engine pool are out
-          of sync. Also, the proper behavior of this option  very
-          much  depends on the correct setting of the appropriate
-          timezone, e.g. in  the  TZ  environment  variable  (see
-          <B><A HREF="../htmlman1/date.html?pathrev=V61_BRANCH">date(1)</A></B>  for  details),  when  the  Grid Engine daemons
-          <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B> and <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B> are invoked.
+          the clocks of the hosts in the Sun Grid Engine pool are
+          out of sync. Also, the proper behavior of  this  option
+          very  much  depends  on  the  correct  setting  of  the
+          appropriate timezone, e.g. in the TZ environment  vari-
+          able  (see  <B><A HREF="../htmlman1/date.html?pathrev=V61_BRANCH">date(1)</A></B>  for  details),  when  the Sun Grid
+          Engine  daemons  <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B>  and  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B>  are
+          invoked.
 
           <I>qalter</I> allows changing this option even while  the  job
           executes. The modified parameter will only be in effect
@@ -222,7 +223,7 @@ OPTIONS
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
 
           Adds the given name/value pair(s) to the job's context.
-          Value  may  be  omitted.  Grid Engine appends the given
+          Value may be omitted. Sun Grid Engine appends the given
           argument to the list of context variables for the  job.
           Multiple  -ac,  -dc, and -sc options may be given.  The
           order is important here.
@@ -237,9 +238,9 @@ OPTIONS
           tion  of  the job should be charged. The account_string
           may be any arbitrary ASCII alphanumeric string but  may
           not contain  "\n", "\t", "\r", "/", ":", "@", "\", "*",
-          or "?".  In the absence of this parameter  Grid  Engine
-          will  place  the  default  account  string "sge" in the
-          accounting record of the job.
+          or "?".  In the absence  of  this  parameter  Sun  Grid
+          Engine  will  place the default account string "sge" in
+          the accounting record of the job.
 
           <I>qalter</I> allows changing this option even while  the  job
           executes.
@@ -310,10 +311,9 @@ OPTIONS
      -cwd Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I> and <I>qalter</I> only.
 
           Execute the job from  the  current  working  directory.
-          This  switch  will activate Grid Engine's path aliasing
-          facility, if the corresponding configuration files  are
-          present (see <B><A HREF="../htmlman5/sge_aliases.html?pathrev=V61_BRANCH">sge_aliases(5)</A></B>).
-
+          This switch will activate Sun Grid Engine's path alias-
+          ing facility, if the corresponding configuration  files
+          are present (see <B><A HREF="../htmlman5/sge_aliases.html?pathrev=V61_BRANCH">sge_aliases(5)</A></B>).
           In the case of <I>qalter</I>, the previous definition  of  the
           current working directory will be overwritten if <I>qalter</I>
           is executed from a different directory than the preced-
@@ -334,7 +334,7 @@ OPTIONS
           scanned for embedded directives.
           The directive prefix consists of two  ASCII  characters
           which,  when  appearing  in  the  first  two bytes of a
-          script line, indicate that  what  follows  is  an  Grid
+          script line, indicate that what follows is an Sun  Grid
           Engine command.  The default is "#$".
           The user should be aware that changing the first delim-
           iting character can produce unforeseen side effects. If
@@ -376,7 +376,7 @@ OPTIONS
           plete within a given deadline. Before the deadline ini-
           tiation  time  the  priority  of a deadline job will be
           raised steadily until it reaches the maximum as config-
-          ured by the Grid Engine administrator.
+          ured by the Sun Grid Engine administrator.
           This option is applicable only  for  users  allowed  to
           submit deadline jobs.
 
@@ -389,13 +389,14 @@ OPTIONS
           redirected.   If  the path constitutes an absolute path
           name, the error-path attribute of the  job  is  set  to
           path, including the hostname. If the path name is rela-
-          tive, Grid Engine expands path either with the  current
-          working  directory path (if the -cwd switch (see above)
-          is also specified) or with the home directory path.  If
-          hostname  is present, the standard error stream will be
-          placed in the corresponding location only  if  the  job
-          runs  on the specified host. If the path contains a ":"
-          without a hostname, a leading ":" has to be specified.
+          tive, Sun Grid Engine  expands  path  either  with  the
+          current working directory path (if the -cwd switch (see
+          above) is also specified) or with  the  home  directory
+          path. If hostname is present, the standard error stream
+          will be placed in the corresponding  location  only  if
+          the  job  runs  on the specified host. If the path con-
+          tains a ":" without a hostname, a leading ":" has to be
+          specified.
 
           By default  the  file  name  for  interactive  jobs  is
           /<I>dev</I>/<I>null</I>. For batch jobs the default file name has the
@@ -434,13 +435,13 @@ OPTIONS
           Signifies that all resource requirements  following  in
           the  command line will be hard requirements and must be
           satisfied in full before a job can be scheduled.
-          As Grid Engine scans the command line and  script  file
-          for Grid Engine options and parameters it builds a list
-          of resources required  by  a  job.  All  such  resource
-          requests are considered as absolutely essential for the
-          job to commence. If the -soft  option  (see  below)  is
-          encountered   during   the   scan  then  all  following
-          resources are designated  as  "soft  requirements"  for
+          As Sun Grid Engine scans the command  line  and  script
+          file  for  Sun  Grid  Engine  options and parameters it
+          builds a list of resources required by a job. All  such
+          resource  requests  are considered as absolutely essen-
+          tial for the job to commence. If the -soft option  (see
+          below)  is encountered during the scan then all follow-
+          ing resources are designated as "soft requirements" for
           execution, or "nice-to-have, but not essential". If the
           -hard flag is encountered at a later stage of the scan,
           all  resource  requests  following it once again become
@@ -469,10 +470,10 @@ OPTIONS
           `S'  removes a system hold.
           `O'  removes a operator hold.
 
-          Grid Engine managers can assign  and  remove  all  hold
-          types, Grid Engine operators can assign and remove user
-          and operator holds, and users can only assign or remove
-          user holds.
+          Sun Grid Engine managers can assign and remove all hold
+          types,  Sun Grid Engine operators can assign and remove
+          user and operator holds, and users can only  assign  or
+          remove user holds.
 
           In the case of <I>qsub</I> only user holds can be placed on  a
           job and thus only the first form of the option with the
@@ -524,14 +525,14 @@ OPTIONS
           input  stream  of  the  job. If the <I>file</I> constitutes an
           absolute filename, the input-path attribute of the  job
           is  set  to  path,  including the hostname. If the path
-          name is relative, Grid Engine expands path either  with
-          the  current working directory path (if the -cwd switch
-          (see above) is also specified) or with the home  direc-
-          tory  path.  If hostname is present, the standard input
-          stream will be placed  in  the  corresponding  location
-          only if the job runs on the specified host. If the path
-          contains a ":" without a hostname, a leading ":" has to
-          be specified.
+          name is relative, Sun Grid Engine expands  path  either
+          with  the  current  working directory path (if the -cwd
+          switch (see above) is also specified) or with the  home
+          directory  path.  If  hostname is present, the standard
+          input stream will be placed in the corresponding  loca-
+          tion only if the job runs on the specified host. If the
+          path contains a ":" without a hostname, a  leading  ":"
+          has to be specified.
 
           By default /dev/null is the input stream for the job.
 
@@ -584,8 +585,8 @@ OPTIONS
 
           Specifies whether or not the standard error  stream  of
           the job is merged into the standard output stream.
-          If both the -j y and the -e options are  present,  Grid
-          Engine sets but ignores the error-path attribute.
+          If both the -j y and the -e options  are  present,  Sun
+          Grid Engine sets but ignores the error-path attribute.
 
           <I>qalter</I> allows changing this option even while  the  job
           executes. The modified parameter will only be in effect
@@ -601,9 +602,9 @@ OPTIONS
           The job share influences the Share Tree Policy and  the
           Functional  Policy. It has no effect on the Urgency and
           Override Policies (see <B><A HREF="../htmlman5/share_tree.html?pathrev=V61_BRANCH">share_tree(5)</A></B>, <B><A HREF="../htmlman5/sched_conf.html?pathrev=V61_BRANCH">sched_conf(5)</A></B> and
-          the  <I>Grid</I>  <I>Engine</I> <I>Installation</I> <I>and</I> <I>Administration</I> <I>Guide</I>
-          for further information on the resource management pol-
-          icies supported by Grid Engine).
+          the  <I>Sun</I>  <I>Grid</I>  <I>Engine</I>  <I>Installation</I> <I>and</I> <I>Administration</I>
+          <I>Guide</I> for further information on the  resource  manage-
+          ment policies supported by Sun Grid Engine).
 
           In case of the Share Tree Policy, users can  distribute
           the  tickets to which they are currently entitled among
@@ -630,9 +631,9 @@ OPTIONS
      -l resource=value,...
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
 
-          Launch the job in a Grid Engine queue meeting the given
-          resource  request list.  In case of <I>qalter</I> the previous
-          definition is replaced by the specified one.
+          Launch the job in a Sun Grid Engine queue  meeting  the
+          given  resource  request  list.   In case of <I>qalter</I> the
+          previous definition is replaced by the specified one.
           <B><A HREF="../htmlman5/complex.html?pathrev=V61_BRANCH">complex(5)</A></B> describes how a list of available  resources
           and  their  associated  valid  value  specifiers can be
           obtained.
@@ -704,14 +705,14 @@ OPTIONS
           Available for <I>qsub</I>,  <I>qrsh</I>  (with  command)  and  <I>qalter</I>
           only.
 
-          This flag, when set causes Grid Engine to  send  "warn-
-          ing" signals to a running job prior to sending the sig-
-          nals themselves. If a SIGSTOP is pending, the job  will
-          receive  a  SIGUSR1 several seconds before the SIGSTOP.
-          If a SIGKILL is pending, the job will receive a SIGUSR2
-          several seconds before the SIGKILL.  The amount of time
-          delay is controlled by the  notify  parameter  in  each
-          queue configuration (see <B><A HREF="../htmlman5/queue_conf.html?pathrev=V61_BRANCH">queue_conf(5)</A></B>).
+          This flag, when set causes  Sun  Grid  Engine  to  send
+          "warning" signals to a running job prior to sending the
+          signals themselves. If a SIGSTOP is  pending,  the  job
+          will  receive a SIGUSR1 several seconds before the SIG-
+          STOP. If a SIGKILL is pending, the job will  receive  a
+          SIGUSR2 several seconds before the SIGKILL.  The amount
+          of time delay is controlled by the notify parameter  in
+          each queue configuration (see <B><A HREF="../htmlman5/queue_conf.html?pathrev=V61_BRANCH">queue_conf(5)</A></B>).
 
           Note that the Linux operating system "misused" the user
           signals  SIGUSR1 and SIGUSR2 in some early Posix thread
@@ -744,11 +745,11 @@ OPTIONS
           "\", "*", and "?", and it has to start with  an  alpha-
           betic  character.  Invalid  job names will be denied at
           submit time.
-          If the -N option is not present,  Grid  Engine  assigns
-          the  name of the job script to the job after any direc-
-          tory pathname has been removed from the script-name. If
-          the  script  is  read from standard input, the job name
-          defaults to STDIN.
+          If the -N  option  is  not  present,  Sun  Grid  Engine
+          assigns the name of the job script to the job after any
+          directory pathname has been removed  from  the  script-
+          name.  If  the  script is read from standard input, the
+          job name defaults to STDIN.
           If <I>qsh</I> or <I>qlogin</I> is run without   the  -N  option,  the
           string `INTERACT' is assigned to the job.
           If <I>qrsh</I> is run without the -N option, the resulting job
@@ -830,21 +831,21 @@ OPTIONS
           0.
 
           Users may only decrease the  priority  of  their  jobs.
-          Grid   Engine  managers  and  administrators  may  also
+          Sun  Grid  Engine  managers and administrators may also
           increase the priority associated with jobs. If a  pend-
           ing job has higher priority, it is earlier eligible for
-          being dispatched by the Grid Engine scheduler.
+          being dispatched by the Sun Grid Engine scheduler.
 
      -pe parallel_environment n[-[m]]|[-]m,...
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
 
           Start parallel programming environment (PE). The  range
           descriptor  behind  the PE name specifies the number of
-          parallel processes to be run. Grid Engine will allocate
-          the  appropriate  resources as available. The <B><A HREF="../htmlman5/sge_pe.html?pathrev=V61_BRANCH">sge_pe(5)</A></B>
-          manual page contains information about  the  definition
-          of  PEs  and  about  how  to obtain a list of currently
-          valid PEs.
+          parallel processes to be  run.  Sun  Grid  Engine  will
+          allocate  the  appropriate  resources as available. The
+          <B><A HREF="../htmlman5/sge_pe.html?pathrev=V61_BRANCH">sge_pe(5)</A></B> manual page contains  information  about  the
+          definition  of  PEs  and  about how to obtain a list of
+          currently valid PEs.
           You can specify a PE name which uses the wildcard char-
           acter,  "*".   Thus  the  request "pvm*" will match any
           parallel environment with  a  name  starting  with  the
@@ -916,10 +917,10 @@ OPTIONS
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
 
           Sets the given name/value pairs as the  job's  context.
-          Value  may  be  omitted. Grid Engine replaces the job's
-          previously defined context with the one  given  as  the
-          argument.   Multiple  -ac,  -dc, and -sc options may be
-          given.  The order is important.
+          Value  may  be  omitted.  Sun  Grid Engine replaces the
+          job's previously defined context with the one given  as
+          the  argument.   Multiple -ac, -dc, and -sc options may
+          be given.  The order is important.
           Contexts provide a way to dynamically attach and remove
           meta-information  to  and from a job. The context vari-
           ables are not passed to the job's execution context  in
@@ -962,12 +963,12 @@ OPTIONS
           Signifies that all resource requirements  following  in
           the  command  line will be soft requirements and are to
           be filled on an "as available" basis.
-          As Grid Engine scans the command line and  script  file
-          for  Grid  Engine  options  and parameters, it builds a
-          list  of  resources  required  by  the  job.  All  such
-          resource  requests  are considered as absolutely essen-
-          tial for the job to commence. If the  -soft  option  is
-          encountered   during   the   scan  then  all  following
+          As Sun Grid Engine scans the command  line  and  script
+          file  for  Sun  Grid  Engine options and parameters, it
+          builds a list of resources required  by  the  job.  All
+          such  resource  requests  are  considered as absolutely
+          essential for the job to commence. If the -soft  option
+          is  encountered  during  the  scan  then  all following
           resources are designated  as  "soft  requirements"  for
           execution, or "nice-to-have, but not essential". If the
           -hard flag (see above) is encountered at a later  stage
@@ -1035,13 +1036,13 @@ OPTIONS
 
           Submits a so called <I>Array</I> <I>Job</I>, i.e. an array of identi-
           cal  tasks being differentiated only by an index number
-          and being treated by Grid Engine almost like  a  series
-          of jobs. The option argument to -t specifies the number
-          of array job tasks and the index number which  will  be
-          associated  with  the  tasks. The index numbers will be
-          exported to the job tasks via the environment  variable
-          SGE_TASK_ID.  The  option  arguments n, m and s will be
-          available    through    the    environment    variables
+          and being treated by Sun  Grid  Engine  almost  like  a
+          series of jobs. The option argument to -t specifies the
+          number of array job tasks and the  index  number  which
+          will  be  associated  with the tasks. The index numbers
+          will be exported to the job tasks via  the  environment
+          variable  SGE_TASK_ID.  The option arguments n, m and s
+          will be available  through  the  environment  variables
           SGE_TASK_FIRST, SGE_TASK_LAST and  SGE_TASK_STEPSIZE.
           The following restrictions apply to the values n and m:
 
@@ -1115,10 +1116,10 @@ OPTIONS
 
           Defines or redefines the environment  variables  to  be
           exported  to  the execution context of the job.  If the
-          -v option is present Grid Engine will add the  environ-
-          ment  variables defined as arguments to the switch and,
-          optionally, values of specified variables, to the  exe-
-          cution context of the job.
+          -v option is present  Sun  Grid  Engine  will  add  the
+          environment  variables  defined  as  arguments  to  the
+          switch and, optionally, values of specified  variables,
+          to the execution context of the job.
 
           <I>qalter</I> allows changing this option even while  the  job
           executes. The modified parameter will only be in effect
@@ -1193,9 +1194,9 @@ OPTIONS
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I> and <I>qalter</I> only.
 
           Execute  the  job  from  the  directory  specified   in
-          working_dir.   This  switch will activate Grid Engine's
-          path aliasing facility, if the corresponding configura-
-          tion files are present (see <B><A HREF="../htmlman5/sge_aliases.html?pathrev=V61_BRANCH">sge_aliases(5)</A></B>).
+          working_dir.    This  switch  will  activate  Sun  Grid
+          Engine's path aliasing facility, if  the  corresponding
+          configuration files are present (see <B><A HREF="../htmlman5/sge_aliases.html?pathrev=V61_BRANCH">sge_aliases(5)</A></B>).
 
           <I>qalter</I> allows changing this option even while  the  job
           executes. The modified parameter will only be in effect
@@ -1225,11 +1226,11 @@ OPTIONS
           configuration.  For details, refer to <B><A HREF="../htmlman5/sge_conf.html?pathrev=V61_BRANCH">sge_conf(5)</A></B>).
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the Sun Grid Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
-                    cell.  To  address  a  Grid Engine cell <I>qsub</I>,
+     SGE_CELL       If set, specifies the default Sun Grid Engine
+                    cell. To address a Sun Grid Engine cell <I>qsub</I>,
                     <I>qsh</I>, <I>qlogin</I> or <I>qalter</I> use (in  the  order  of
                     precedence):
 
@@ -1286,12 +1287,12 @@ ENVIRONMENTAL VARIABLES
      SGE_O_WORKDIR  the absolute  path  of  the  current  working
                     directory of the submitting client.
 
-     Furthermore, Grid Engine sets additional variables into  the
-     job's environment, as listed below.
+     Furthermore, Sun Grid Engine sets additional variables  into
+     the job's environment, as listed below.
 
-     SGE_ARCH       The Grid Engine architecture name of the node
-                    on which the job is running. The name is com-
-                    piled into the <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B> binary.
+     SGE_ARCH       The Sun Grid Engine architecture name of  the
+                    node on which the job is running. The name is
+                    compiled into the <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B> binary.
 
      SGE_CKPT_ENV   Specifies the checkpointing  environment  (as
                     selected with the -ckpt option) under which a
@@ -1328,10 +1329,10 @@ ENVIRONMENTAL VARIABLES
      SGE_JOB_SPOOL_DIR
                     The  directory  used  by  <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V61_BRANCH">sge_shepherd(8)</A></B>  to
                     store  job related data during job execution.
-                    This directory is owned by root or by a  Grid
-                    Engine administrative account and commonly is
-                    not open for read or write access to  regular
-                    users.
+                    This directory is owned by root or by  a  Sun
+                    Grid  Engine  administrative account and com-
+                    monly is not open for read or write access to
+                    regular users.
 
      SGE_TASK_ID    The index number of  the  current  array  job
                     task (see -t option above). This is an unique
@@ -1360,7 +1361,7 @@ ENVIRONMENTAL VARIABLES
 
      ENVIRONMENT    The ENVIRONMENT variable is set to  BATCH  to
                     identify that the job is being executed under
-                    Grid Engine control.
+                    Sun Grid Engine control.
 
      HOME           The  user's  home  directory  path  from  the
                     <B><A HREF="../htmlman5/passwd.html?pathrev=V61_BRANCH">passwd(5)</A></B> file.
@@ -1399,19 +1400,19 @@ ENVIRONMENTAL VARIABLES
                     /usr/local/bin:/usr/ucb:/bin:/usr/bin
 
      SGE_BINARY_PATH
-                    The path where the Grid Engine  binaries  are
-                    installed.  The value is the concatenation of
-                    the cluster configuration  value  binary_path
-                    and  the architecture name $SGE_ARCH environ-
-                    ment variable.
+                    The path where the Sun Grid  Engine  binaries
+                    are installed. The value is the concatenation
+                    of   the    cluster    configuration    value
+                    binary_path   and   the   architecture   name
+                    $SGE_ARCH environment variable.
 
      PE             The parallel environment under which the  job
                     executes (for parallel jobs only).
 
      PE_HOSTFILE    The path of a file containing the  definition
                     of the virtual parallel machine assigned to a
-                    parallel job by Grid Engine. See the descrip-
-                    tion   of   the   $pe_hostfile  parameter  in
+                    parallel job by  Sun  Grid  Engine.  See  the
+                    description  of the $pe_hostfile parameter in
                     <B><A HREF="../htmlman5/sge_pe.html?pathrev=V61_BRANCH">sge_pe(5)</A></B> for details on the format  of  this
                     file. The environment variable is only avail-
                     able for parallel jobs.
@@ -1447,16 +1448,16 @@ ENVIRONMENTAL VARIABLES
                     file.
 
 RESTRICTIONS
-     There is no controlling terminal for batch jobs  under  Grid
-     Engine,  and  any tests or actions on a controlling terminal
-     will fail. If these operations are in your .login or  .cshrc
-     file, they may cause your job to abort.
+     There is no controlling terminal for batch  jobs  under  Sun
+     Grid  Engine, and any tests or actions on a controlling ter-
+     minal will fail. If these operations are in your  .login  or
+     .cshrc file, they may cause your job to abort.
 
      Insert the following test before any commands that  are  not
      pertinent to batch jobs in your .login:
 
           if ( $?JOB_NAME) then
-               echo "Grid Engine spooled job"
+               echo "Sun Grid Engine spooled job"
                exit 0
           endif
 
@@ -1475,8 +1476,8 @@ EXIT STATUS
      &gt;0   Error occurred.
 
 EXAMPLES
-     The following is the simplest form of a Grid  Engine  script
-     file.
+     The following is the simplest form  of  a  Sun  Grid  Engine
+     script file.
 
      =====================================================
 
@@ -1487,7 +1488,7 @@ EXAMPLES
 
      =====================================================
 
-     The next example is a more complex Grid Engine script.
+     The next example is a more complex Sun Grid Engine script.
 
      =====================================================
 
@@ -1542,7 +1543,7 @@ FILES
      $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>sge</I>_<I>request</I>
                               cluster default request
      $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                              Grid Engine master host file
+                              Sun Grid Engine master host file
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html?pathrev=V61_BRANCH">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html?pathrev=V61_BRANCH">qconf(1)</A></B>, <B><A HREF="../htmlman1/qdel.html?pathrev=V61_BRANCH">qdel(1)</A></B>, <B><A HREF="../htmlman1/qhold.html?pathrev=V61_BRANCH">qhold(1)</A></B>, <B><A HREF="../htmlman1/qmod.html?pathrev=V61_BRANCH">qmod(1)</A></B>, <B><A HREF="../htmlman1/qrls.html?pathrev=V61_BRANCH">qrls(1)</A></B>,

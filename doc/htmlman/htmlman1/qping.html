@@ -3,7 +3,7 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     qping - check application status of Grid Engine daemons.
+     qping - check application status of Sun Grid Engine daemons.
 
 SYNTAX
      qping [-help] [-noalias] [-ssl|-tcp] [ [ [-i &lt;interval&gt;]  [-
@@ -11,20 +11,21 @@ SYNTAX
      nonewline] ] ] &lt;host&gt; &lt;port&gt; &lt;name&gt; &lt;id&gt;
 
 DESCRIPTION
-     <I>qping</I> is used to validate  the  runtime  status  of  a  Grid
-     Engine  service  daemon. The current Grid Engine implementa-
-     tion allows one to query the SGE_QMASTER daemon and any run-
-     ning  SGE_EXECD  daemon. The qping command is used to send a
-     SIM (Status Information Message) to the destination  daemon.
-     The communication layer of the specified daemon will respond
-     with a SIRM (Status Information Response Message) which con-
-     tains status information about the consulted daemon.
+     <I>qping</I> is used to validate the runtime status of a  Sun  Grid
+     Engine service daemon. The current Sun Grid Engine implemen-
+     tation allows one to query the SGE_QMASTER  daemon  and  any
+     running  SGE_EXECD daemon. The qping command is used to send
+     a SIM (Status Information Message) to the  destination  dae-
+     mon.  The  communication  layer of the specified daemon will
+     respond with a SIRM (Status  Information  Response  Message)
+     which  contains  status information about the consulted dae-
+     mon.
 
      The qping -dump and -dump_tag options allowing  an  adminis-
      trator  to observe the communication protocol data flow of a
-     Grid Engine service daemon. The qping -dump instruction must
-     be  started with root account and on the same host where the
-     observed daemon is running.
+     Sun Grid Engine service daemon. The qping -dump  instruction
+     must be started with root account and on the same host where
+     the observed daemon is running.
 
 OPTIONS
   -f
@@ -65,7 +66,7 @@ OPTIONS
      on the application which reply to the qping request.  If the
      application does not provide any information the  status  is
      99999.   Here are the possible status information values for
-     the Grid Engine daemons:
+     the Sun Grid Engine daemons:
 
         qmaster:
 
@@ -103,8 +104,7 @@ OPTIONS
      the  application  which  reply to the qping request.  If the
      application does not provide any information the  info  mes-
      sage  is  "not  available".   Here  are  the possible status
-     information values for the Grid Engine daemons:
-
+     information values for the Sun Grid Engine daemons:
 
         qmaster:
 
@@ -183,8 +183,8 @@ OPTIONS
   -noalias
      Ignore   host_aliases   file,   which    is    located    at
      $<I>SGE</I>_<I>ROOT</I>/$<I>SGE</I>_<I>CELL</I>/<I>common</I>/<I>host</I>_<I>aliases</I>.   If this option is
-     used it is not necessary to set any Grid Engine  environment
-     variable.
+     used it is not necessary to set any Sun Grid Engine environ-
+     ment variable.
 
 
   -ssl
@@ -212,9 +212,9 @@ OPTIONS
 
   -dump
      This option allows an administrator to observe the  communi-
-     cation  protocol  data flow of a Grid Engine service daemon.
-     The qping -dump instruction must be started as root  and  on
-     the same host where the observed daemon is running.
+     cation  protocol data flow of a Sun Grid Engine service dae-
+     mon. The qping -dump instruction must be started as root and
+     on the same host where the observed daemon is running.
 
      The output is written to stdout.  The  environment  variable
      "SGE_QPING_OUTPUT_FORMAT"  can be set to hide columns, set a
@@ -306,10 +306,10 @@ EXAMPLES
 
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the Sun Grid Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
+     SGE_CELL       If set, specifies the default Sun Grid Engine
                     cell.
 
 SEE ALSO

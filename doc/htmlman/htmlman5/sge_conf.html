@@ -3,22 +3,22 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     sge_conf - Grid Engine configuration files
+     sge_conf - Sun Grid Engine configuration files
 
 DESCRIPTION
-     <I>sge</I>_<I>conf</I> defines the global and local Grid Engine configura-
-     tions  and  can  be  shown/modified  by  <B><A HREF="../htmlman1/qconf.html?pathrev=V61_BRANCH">qconf(1)</A></B>  using the
+     <I>sge</I>_<I>conf</I> defines the global and local Sun Grid Engine confi-
+     gurations  and  can  be shown/modified by <B><A HREF="../htmlman1/qconf.html?pathrev=V61_BRANCH">qconf(1)</A></B> using the
      -sconf/-mconf options. Only root or the cluster  administra-
      tor may modify <I>sge</I>_<I>conf</I>.
 
      At its initial start-up, <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B> checks to see  if  a
-     valid Grid Engine configuration is available at a well known
-     location in the Grid Engine  internal  directory  hierarchy.
-     If so, it loads that configuration information and proceeds.
-     If not, <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B> writes a generic  configuration  con-
-     taining  default  values  to  that  same location.  The Grid
-     Engine execution daemons <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B> upon start-up retrieve
-     their configuration from <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B>.
+     valid  Sun  Grid Engine configuration is available at a well
+     known location in the Sun  Grid  Engine  internal  directory
+     hierarchy.   If  so, it loads that configuration information
+     and proceeds.  If not, <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B> writes a generic  con-
+     figuration  containing default values to that same location.
+     The Sun Grid  Engine  execution  daemons  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B>  upon
+     start-up retrieve their configuration from <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B>.
 
      The  actual  configuration  for  both   <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B>   and
      <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B>  is  a  superposition of a <I>global</I> configuration
@@ -30,15 +30,15 @@ DESCRIPTION
      entries,  but  only  those which need to be modified against
      the global entries.
 
-     Note: Grid Engine allows backslashes (\) be used  to  escape
-     newline (\newline) characters. The backslash and the newline
-     are replaced  with  a  space  ("  ")  character  before  any
+     Note: Sun Grid Engine allows  backslashes  (\)  be  used  to
+     escape  newline (\newline) characters. The backslash and the
+     newline are replaced with a space (" ") character before any
      interpretation.
 
 FORMAT
      The paragraphs that follow provide brief descriptions of the
      individual parameters that compose the global and local con-
-     figurations for a Grid Engine cluster:
+     figurations for a Sun Grid Engine cluster:
 
   execd_spool_dir
      The execution daemon spool directory path. Again, a feasible
@@ -83,8 +83,8 @@ FORMAT
      mailer will take immediate effect.
 
      The default for mailer depends on the  operating  system  of
-     the  host  on  which the Grid Engine master installation was
-     run. Common values are /bin/mail or /usr/bin/Mail.
+     the  host  on  which the Sun Grid Engine master installation
+     was run. Common values are /bin/mail or /usr/bin/Mail.
 
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
@@ -117,27 +117,28 @@ FORMAT
 
      In addition to the load sensors configured via  load_sensor,
      <B><A HREF="../htmlman8/sge_exec.html?pathrev=V61_BRANCH">sge_exec(8)</A></B>  searches for an executable file named <I>qloadsen-</I>
-     <I>sor</I> in the execution host's  Grid  Engine  binary  directory
+     <I>sor</I> in the execution host's Sun Grid Engine binary directory
      path.   If such a file is found, it is treated like the con-
      figurable load sensors defined in load_sensor. This facility
      is intended for pre-installing a default load sensor.
 
   prolog
      The executable path of a shell script that is started before
-     execution of Grid Engine jobs with the same environment set-
-     ting as that for the Grid Engine jobs to be  started  after-
-     wards.  An  optional prefix "user@" specifies the user under
-     which this procedure is to be started. The procedures  stan-
-     dard  output  and the error output stream are written to the
-     same file used also for the standard output and error output
-     of  each job.  This procedure is intended as a means for the
-     Grid Engine administrator to automate the execution of  gen-
-     eral  site  specific tasks like the preparation of temporary
-     file systems with the need for the same context  information
-     as  the  job.   Each  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B>  may use a private prolog
-     script. Correspondingly, the execution host local configura-
-     tions  is can be overwritten by the queue configuration (see
-     <B><A HREF="../htmlman5/queue_conf.html?pathrev=V61_BRANCH">queue_conf(5)</A></B> ). Changing prolog will take immediate effect.
+     execution  of Sun Grid Engine jobs with the same environment
+     setting as that for the Sun Grid Engine jobs to  be  started
+     afterwards.  An  optional  prefix "user@" specifies the user
+     under which this procedure is to be started. The  procedures
+     standard  output  and the error output stream are written to
+     the same file used also for the standard  output  and  error
+     output  of  each job.  This procedure is intended as a means
+     for the Sun Grid Engine administrator to automate the execu-
+     tion  of general site specific tasks like the preparation of
+     temporary file systems with the need for  the  same  context
+     information as the job.  Each <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B> may use a private
+     prolog script. Correspondingly,  the  execution  host  local
+     configurations is can be overwritten by the queue configura-
+     tion (see <B><A HREF="../htmlman5/queue_conf.html?pathrev=V61_BRANCH">queue_conf(5)</A></B> ). Changing prolog will take immedi-
+     ate effect.
 
      The default for prolog is  the  special  value  NONE,  which
      prevents from execution of a prolog script.
@@ -154,7 +155,7 @@ FORMAT
           The user name of the job owner.
 
      $<I>job</I>_<I>id</I>
-          Grid Engine's unique job identification number.
+          Sun Grid Engine's unique job identification number.
 
      $<I>job</I>_<I>name</I>
           The name of the job.
@@ -261,8 +262,6 @@ FORMAT
 
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
-
-
      Exit codes for the prolog attribute can be interpreted based
      on the following exit values:
           0: Success
@@ -272,21 +271,21 @@ FORMAT
 
   epilog
      The executable path of a shell script that is started  after
-     execution of Grid Engine jobs with the same environment set-
-     ting as that for the Grid Engine jobs  that  has  just  com-
-     pleted.  An optional prefix "user@" specifies the user under
-     which this procedure is to be started. The procedures  stan-
-     dard  output  and the error output stream are written to the
-     same file used also for the standard output and error output
-     of  each job.  This procedure is intended as a means for the
-     Grid Engine administrator to automate the execution of  gen-
-     eral  site  specific tasks like the cleaning up of temporary
-     file systems with the need for the same context  information
-     as  the  job.   Each  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B>  may use a private epilog
-     script. Correspondingly, the execution host local configura-
-     tions  is can be overwritten by the queue configuration (see
-     <B><A HREF="../htmlman5/queue_conf.html?pathrev=V61_BRANCH">queue_conf(5)</A></B>  ).   Changing  epilog  will  take   immediate
-     effect.
+     execution  of Sun Grid Engine jobs with the same environment
+     setting as that for the Sun Grid Engine jobs that  has  just
+     completed.  An  optional  prefix  "user@" specifies the user
+     under which this procedure is to be started. The  procedures
+     standard  output  and the error output stream are written to
+     the same file used also for the standard  output  and  error
+     output  of  each job.  This procedure is intended as a means
+     for the Sun Grid Engine administrator to automate the execu-
+     tion  of general site specific tasks like the cleaning up of
+     temporary file systems with the need for  the  same  context
+     information as the job.  Each <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B> may use a private
+     epilog script. Correspondingly,  the  execution  host  local
+     configurations is can be overwritten by the queue configura-
+     tion  (see  <B><A HREF="../htmlman5/queue_conf.html?pathrev=V61_BRANCH">queue_conf(5)</A></B>  ).   Changing  epilog  will  take
+     immediate effect.
 
      The default for epilog is  the  special  value  NONE,  which
      prevents from execution of a epilog script.  The  same  spe-
@@ -315,7 +314,7 @@ FORMAT
           tion  provided in a comment such as `#!/bin/csh' in the
           first line of the script to detect which command inter-
           preter to start to interpret the script. This mechanism
-          is  used  by  Grid  Engine  when   starting   jobs   if
+          is used by  Sun  Grid  Engine  when  starting  jobs  if
           <I>unix</I>_<I>behavior</I> is defined as shell_start_mode.
 
      <I>posix</I>_<I>compliant</I>
@@ -325,10 +324,10 @@ FORMAT
           compliant  queuing  system  to ignore such lines but to
           use user specified or configured default command inter-
           preters  instead.  Thus,  if shell_start_mode is set to
-          <I>posix</I>_<I>compliant</I> Grid Engine will either use the command
-          interpreter  indicated  by the -S option of the <B><A HREF="../htmlman1/qsub.html?pathrev=V61_BRANCH">qsub(1)</A></B>
-          command or the shell parameter of the queue to be  used
-          (see <B><A HREF="../htmlman5/queue_conf.html?pathrev=V61_BRANCH">queue_conf(5)</A></B> for details).
+          <I>posix</I>_<I>compliant</I> Sun Grid Engine  will  either  use  the
+          command  interpreter  indicated by the -S option of the
+          <B><A HREF="../htmlman1/qsub.html?pathrev=V61_BRANCH">qsub(1)</A></B> command or the shell parameter of the queue  to
+          be used (see <B><A HREF="../htmlman5/queue_conf.html?pathrev=V61_BRANCH">queue_conf(5)</A></B> for details).
 
      <I>script</I>_<I>from</I>_<I>stdin</I>
           Setting  the  shell_start_mode  parameter   either   to
@@ -341,13 +340,13 @@ FORMAT
           cute jobs.
           If this violates your site's security policies you  may
           want to set shell_start_mode to <I>script</I>_<I>from</I>_<I>stdin</I>. This
-          will force Grid Engine to open the job script  as  well
-          as the epilog and prolog scripts for reading into STDIN
-          as root (if <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B> was started  as  root)  before
-          changing  to  the job owner's user account.  The script
-          is then fed into the STDIN stream of the command inter-
-          preter  indicated  by the -S option of the <B><A HREF="../htmlman1/qsub.html?pathrev=V61_BRANCH">qsub(1)</A></B> com-
-          mand or the shell parameter of the  queue  to  be  used
+          will force Sun Grid Engine to open the  job  script  as
+          well  as the epilog and prolog scripts for reading into
+          STDIN as root (if <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B>  was  started  as  root)
+          before  changing  to the job owner's user account.  The
+          script is then fed into the STDIN stream of the command
+          interpreter  indicated  by the -S option of the <B><A HREF="../htmlman1/qsub.html?pathrev=V61_BRANCH">qsub(1)</A></B>
+          command or the shell parameter of the queue to be  used
           (see <B><A HREF="../htmlman5/queue_conf.html?pathrev=V61_BRANCH">queue_conf(5)</A></B> for details).
           Thus setting shell_start_mode to <I>script</I>_<I>from</I>_<I>stdin</I> also
           implies  <I>posix</I>_<I>compliant</I>  behavior. Note, however, that
@@ -373,20 +372,20 @@ FORMAT
 
   login_shells
      UNIX command interpreters like the Bourne-Shell (see  <B><A HREF="../htmlman1/sh.html?pathrev=V61_BRANCH">sh(1)</A></B>)
-     or  the  C-Shell  (see <B><A HREF="../htmlman1/csh.html?pathrev=V61_BRANCH">csh(1)</A></B>) can be used by Grid Engine to
-     start job scripts. The command interpreters  can  either  be
+     or  the  C-Shell (see <B><A HREF="../htmlman1/csh.html?pathrev=V61_BRANCH">csh(1)</A></B>) can be used by Sun Grid Engine
+     to start job scripts. The command interpreters can either be
      started  as  login-shells  (i.e. all system and user default
      resource files like .login or .profile will be executed when
      the  command  interpreter is started and the environment for
      the job will be set up as if the user has just logged in) or
      just   for  command  execution  (i.e.  only  shell  specific
      resource files like .cshrc will be executed  and  a  minimal
-     default environment is set up by Grid Engine - see <B><A HREF="../htmlman1/qsub.html?pathrev=V61_BRANCH">qsub(1)</A></B>).
-     The parameter login_shells contains a comma  separated  list
-     of  the  executable  names of the command interpreters to be
-     started as login-shells.   Shells  in  this  list  are  only
-     started  as  login  shells if the parameter shell_start_mode
-     (see above) is set to <I>posix</I>_<I>compliant</I>.
+     default  environment  is  set  up  by  Sun Grid Engine - see
+     <B><A HREF="../htmlman1/qsub.html?pathrev=V61_BRANCH">qsub(1)</A></B>).   The  parameter  login_shells  contains  a  comma
+     separated list of the executable names of the command inter-
+     preters to be started as login-shells.  Shells in this  list
+     are   only   started   as  login  shells  if  the  parameter
+     shell_start_mode (see above) is set to <I>posix</I>_<I>compliant</I>.
 
      Changes to login_shells will  take  immediate  effect.   The
      default for login_shells is sh,csh,tcsh,ksh.
@@ -472,10 +471,10 @@ FORMAT
   projects
 
      The projects list contains all projects  which  are  granted
-     access  to Grid Engine. User belonging to none of these pro-
-     jects cannot use Grid Engine. If users belong to projects in
-     the  projects  list and the xprojects list (see below), they
-     also cannot use the system.
+     access  to  Sun Grid Engine. User belonging to none of these
+     projects cannot use Sun Grid Engine. If users belong to pro-
+     jects  in  the  projects  list  and  the xprojects list (see
+     below), they also cannot use the system.
 
      Changing projects takes immediate effect.  The  default  for
      projects is none.
@@ -486,10 +485,10 @@ FORMAT
 
   xprojects
      The xprojects list contains all projects which  are  granted
-     access  to  Grid Engine. User belonging to one of these pro-
-     jects cannot use Grid Engine. If users belong to projects in
-     the  projects  list (see above) and the xprojects list, they
-     also cannot use the system.
+     access  to  Sun  Grid Engine. User belonging to one of these
+     projects cannot use Sun Grid Engine. If users belong to pro-
+     jects  in  the  projects  list (see above) and the xprojects
+     list, they also cannot use the system.
 
      Changing xprojects takes immediate effect.  The default  for
      xprojects is none.
@@ -526,12 +525,12 @@ FORMAT
      the network connection in between, but also <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B> may
      not be executing on such hosts.
 
-     In any case, Grid Engine can reschedule jobs running on such
-     hosts  to  another  system.  reschedule_unknown controls the
-     time which Grid Engine will wait before jobs are rescheduled
-     after  a  host became unknown. The time format specification
-     is hh:mm:ss. If the special value 00:00:00 is set, then jobs
-     will not be rescheduled from this host.
+     In any case, Sun Grid Engine can reschedule jobs running  on
+     such  hosts  to another system.  reschedule_unknown controls
+     the time which Sun Grid Engine will  wait  before  jobs  are
+     rescheduled  after  a  host  became unknown. The time format
+     specification is hh:mm:ss. If the special value 00:00:00  is
+     set, then jobs will not be rescheduled from this host.
 
      Rescheduling is only initiated for jobs which have activated
      the rerun flag (see the -r y option of <B><A HREF="../htmlman1/qsub.html?pathrev=V61_BRANCH">qsub(1)</A></B> and the rerun
@@ -565,7 +564,7 @@ FORMAT
      tion.
 
   loglevel
-     This parameter specifies  the  level  of  detail  that  Grid
+     This parameter specifies the level of detail that  Sun  Grid
      Engine components such as <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B> or <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B> use
      to produce informative, warning or error messages which  are
      logged  to  the  <I>messages</I>  files in the master and execution
@@ -627,7 +626,7 @@ FORMAT
      tion.
 
   max_u_jobs
-     The number of active (not finished)  jobs  which  each  Grid
+     The number of active (not finished) jobs which each Sun Grid
      Engine  user  can  have in the system simultaneously is con-
      trolled by this parameter. A value greater  than  0  defines
      the  limit.  The  default  value 0 means "unlimited". If the
@@ -643,9 +642,9 @@ FORMAT
 
   max_jobs
      The number of  active  (not  finished)  jobs  simultaneously
-     allowed  in  Grid  Engine is controlled by this parameter. A
-     value greater than 0 defines the limit. The default value  0
-     means  "unlimited".  If  the max_jobs limit is exceeded by a
+     allowed  in Sun Grid Engine is controlled by this parameter.
+     A value greater than 0 defines the limit. The default  value
+     0  means "unlimited". If the max_jobs limit is exceeded by a
      job submission then the submission command exits  with  exit
      status 25 and an appropriate error message.
 
@@ -740,14 +739,15 @@ FORMAT
      tion.
 
   set_token_cmd
-     This parameter is only present if your Grid Engine system is
-     licensed to support AFS.
+     This parameter is only present if your Sun Grid Engine  sys-
+     tem is licensed to support AFS.
 
      Set_token_cmd points to a command which sets and extends AFS
-     tokens for Grid Engine jobs. In the standard Grid Engine AFS
-     distribution, it is supplied as a script which  expects  two
-     command  line  parameters.  It  reads  the token from STDIN,
-     extends the token's expiration time and sets the token:
+     tokens  for  Sun  Grid Engine jobs. In the standard Sun Grid
+     Engine AFS distribution, it is supplied as  a  script  which
+     expects two command line parameters. It reads the token from
+     STDIN, extends the token's  expiration  time  and  sets  the
+     token:
 
           &lt;set_token_cmd&gt; &lt;user&gt; &lt;token_extend_after_seconds&gt;
 
@@ -779,8 +779,9 @@ FORMAT
      overwritten by the execution host local configuration.
 
   pag_cmd
-     This parameter is only present if your Grid Engine system is
-     licensed to support AFS.
+     This parameter is only present if your Sun Grid Engine  sys-
+     tem is licensed to support AFS.
+
 
      The path to your <I>pagsh</I> is specified via this parameter.  The
      <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V61_BRANCH">sge_shepherd(8)</A></B>  process  and the job run in a <I>pagsh</I>. Please
@@ -793,13 +794,13 @@ FORMAT
      overwritten by the execution host local configuration.
 
   token_extend_time
-     This parameter is only present if your Grid Engine system is
-     licensed to support AFS.
+     This parameter is only present if your Sun Grid Engine  sys-
+     tem is licensed to support AFS.
 
      The token_extend_time is  the  time  period  for  which  AFS
-     tokens  are periodically extended. Grid Engine will call the
-     token extension 30 minutes before the  tokens  expire  until
-     jobs  have  finished  and  the  corresponding  tokens are no
+     tokens  are periodically extended. Sun Grid Engine will call
+     the token extension 30  minutes  before  the  tokens  expire
+     until jobs have finished and the corresponding tokens are no
      longer required.
 
      Changing token_extend_time will take immediate effect.   The
@@ -822,28 +823,29 @@ FORMAT
 
      Changing gid_range will take immediate effect.  There is  no
      default for gid_range. The administrator will have to assign
-     a value for gid_range during installation of Grid Engine.
+     a value  for  gid_range  during  installation  of  Sun  Grid
+     Engine.
 
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
   qmaster_params
-     A list of additional parameters can be passed  to  the  Grid
-     Engine qmaster. The following values are recognized:
+     A list of additional parameters can be  passed  to  the  Sun
+     Grid Engine qmaster. The following values are recognized:
 
      <I>ENABLE</I>_<I>FORCED</I>_<I>QDEL</I>
           If this parameter is set, non-administrative users  can
           force  deletion  of their own jobs via the -<I>f</I> option of
           <B><A HREF="../htmlman1/qdel.html?pathrev=V61_BRANCH">qdel(1)</A></B>.  Without this parameter,  forced  deletion  of
-          jobs  is  only  allowed  by  the Grid Engine manager or
+          jobs  is only allowed by the Sun Grid Engine manager or
           operator.
 
           Note: Forced deletion for jobs is executed  differently
-          depending  on whether users are Grid Engine administra-
-          tors or not. In case of administrative users, the  jobs
-          are  removed  from the internal database of Grid Engine
-          immediately. For regular users,  the  equivalent  of  a
-          normal  <B><A HREF="../htmlman1/qdel.html?pathrev=V61_BRANCH">qdel(1)</A></B>  is  executed  first,  and  deletion is
+          depending on whether users are Sun Grid Engine adminis-
+          trators or not. In case of  administrative  users,  the
+          jobs are removed from the internal database of Sun Grid
+          Engine immediately. For regular users,  the  equivalent
+          of  a normal <B><A HREF="../htmlman1/qdel.html?pathrev=V61_BRANCH">qdel(1)</A></B> is executed first, and deletion is
           forced only if the normal cancellation  was  unsuccess-
           ful.
 
@@ -875,26 +877,27 @@ FORMAT
 
      <I>MAX</I>_<I>DYN</I>_<I>EC</I>
           Sets the max number of dynamic event clients  (as  used
-          by  qsub  -sync  y and by Grid Engine DRMAA API library
-          sessions). The default is set  to  99.  The  number  of
-          dynamic event clients should not be bigger than half of
-          the number of file  descriptors  the  system  has.  The
+          by  qsub  -sync  y  and  by  Sun  Grid Engine DRMAA API
+          library sessions). The default is set to 99. The number
+          of dynamic event clients should not be bigger than half
+          of the number of file descriptors the system  has.  The
           number of file descriptors are shared among the connec-
           tions to all exec hosts, all event  clients,  and  file
           handles that the qmaster needs.
 
      <I>MONITOR</I>_<I>TIME</I>
-          Specifies the time interval when the monitoring  infor-
-          mation should be printed. The monitoring is disabled by
-          default and can be enabled by specifying  an  interval.
-          The  monitoring  is  per  thread  and is written to the
-          messages file or displayed by the  "qping  -f"  command
-          line  tool.  Example: MONITOR_TIME=0:0:10 generates and
-          prints the monitoring information  approximately  every
-          10  seconds. The specified time is a guideline only and
-          not a fixed interval. The  interval  that  is  actually
-          used  is  printed.  In this example, the interval could
-          be anything between 9 seconds and 20 seconds.
+          Specifies  the  time  interval  when   the   monitoring
+          information  should  be printed. The monitoring is dis-
+          abled by default and can be enabled  by  specifying  an
+          interval.   The monitoring is per thread and is written
+          to the messages file or displayed  by  the  "qping  -f"
+          command  line  tool.  Example: MONITOR_TIME=0:0:10 gen-
+          erates and prints the monitoring  information  approxi-
+          mately every 10 seconds. The specified time is a guide-
+          line only and not a fixed interval. The  interval  that
+          is  actually  used  is  printed.   In this example, the
+          interval could be anything between  9  seconds  and  20
+          seconds.
 
      <I>LOG</I>_<I>MONITOR</I>_<I>MESSAGE</I>
           Monitoring information  is  logged  into  the  messages
@@ -938,7 +941,6 @@ FORMAT
           accepts colon-separated string or seconds. There is  no
           setting  to  turn  the  sharetree  spooling  off. (e.g.
           STREE_SPOOL_INTERVAL=00:02:00)
-
 
      <I>MAX</I>_<I>JOB</I>_<I>DELETION</I>_<I>TIME</I>
           Sets the value of  how  long  the  qmaster  will  spend
@@ -990,8 +992,8 @@ FORMAT
      tion.
 
   execd_params
-     This is used for passing additional parameters to  the  Grid
-     Engine   execution   daemon.   The   following   values  are
+     This is used for passing additional parameters  to  the  Sun
+     Grid  Engine  execution  daemon.  The  following  values are
      recognized:
 
      <I>ACCT</I>_<I>RESERVED</I>_<I>USAGE</I>
@@ -1014,7 +1016,7 @@ FORMAT
           job.
 
      <I>PTF</I>_<I>MIN</I>_<I>PRIORITY</I>, <I>PTF</I>_<I>MAX</I>_<I>PRIORITY</I>
-          The maximum/minimum priority  which  Grid  Engine  will
+          The maximum/minimum priority which Sun Grid Engine will
           assign to a job.  Typically this is a negative/positive
           value in the range of -20 (maximum) to 19 (minimum) for
           systems  which  allow  setting  of  priorities with the
@@ -1053,8 +1055,8 @@ FORMAT
 
      <I>SHARETREE</I>_<I>RESERVED</I>_<I>USAGE</I>
           If this parameter is set to true, the usage of reserved
-          resources  is taken for the Grid Engine share tree con-
-          sumption instead of measured usage.
+          resources  is  taken for the Sun Grid Engine share tree
+          consumption instead of measured usage.
 
      Changing  execd_params  will  take  immediate  effect.   The
      default for execd_params is none.
@@ -1072,7 +1074,7 @@ FORMAT
           <B><A HREF="../htmlman1/qsub.html?pathrev=V61_BRANCH">qsub(1)</A></B>, <B><A HREF="../htmlman1/qrsh.html?pathrev=V61_BRANCH">qrsh(1)</A></B>, <B><A HREF="../htmlman1/qmake.html?pathrev=V61_BRANCH">qmake(1)</A></B> and <B><A HREF="../htmlman1/qtcsh.html?pathrev=V61_BRANCH">qtcsh(1)</A></B>.  Also, it only
           works for <B><A HREF="../htmlman1/qrsh.html?pathrev=V61_BRANCH">qrsh(1)</A></B> jobs (and thus also for <B><A HREF="../htmlman1/qtcsh.html?pathrev=V61_BRANCH">qtcsh(1)</A></B>  and
           <B><A HREF="../htmlman1/qmake.html?pathrev=V61_BRANCH">qmake(1)</A></B>) if rsh and rshd components are used which are
-          provided with Grid Engine  (i.e.,  the  rsh_daemon  and
+          provided with Sun Grid Engine (i.e., the rsh_daemon and
           rsh_command  parameters  may  not  be  changed from the
           default).
 
@@ -1093,33 +1095,33 @@ FORMAT
 
      <I>SET</I>_<I>LIB</I>_<I>PATH</I>
           This parameter tells the execution  daemon  whether  to
-          add  the  Grid  Engine  shared library directory to the
+          add the Sun Grid Engine shared library directory to the
           library path of executed jobs.  If  set  to  true,  and
-          INHERIT_ENV is also set to true, the Grid Engine shared
-          library directory will be prepended to the library path
-          which  is  inherited  from  the shell which started the
-          execution daemon.  If INHERIT_ENV is set to false,  the
-          library  path  will contain only the Grid Engine shared
-          library directory.  If set to false, and INHERIT_ENV is
-          set  to true, the library path exported to the job will
-          be the one inherited from the shell which  started  the
-          execution daemon.  If INHERIT_ENV is also set to false,
-          the library path will be empty.   After  the  execution
-          daemon  has  set  the  library  path, it may be further
-          altered by the shell in which the job is  executed,  or
-          by  the  job  script  itself.   The  default  value for
-          SET_LIB_PATH is false.
+          INHERIT_ENV  is  also  set to true, the Sun Grid Engine
+          shared library  directory  will  be  prepended  to  the
+          library  path  which  is inherited from the shell which
+          started the execution daemon.  If INHERIT_ENV is set to
+          false,  the library path will contain only the Sun Grid
+          Engine shared library directory.  If set to false,  and
+          INHERIT_ENV  is  set to true, the library path exported
+          to the job will be the one  inherited  from  the  shell
+          which  started the execution daemon.  If INHERIT_ENV is
+          also set to false, the  library  path  will  be  empty.
+          After the execution daemon has set the library path, it
+          may be further altered by the shell in which the job is
+          executed,  or  by  the  job script itself.  The default
+          value for SET_LIB_PATH is false.
 
      <I>ENABLE</I>_<I>ADDGRP</I>_<I>KILL</I>
-          If this parameter is set then Grid Engine uses the sup-
-          plementary  group  ids  (see <I>gid</I>_<I>range</I>) to identify all
+          If this parameter is set then Sun Grid Engine uses  the
+          supplementary group ids (see <I>gid</I>_<I>range</I>) to identify all
           processes which are to be  terminated  when  a  job  is
           deleted,  or  when  <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V61_BRANCH">sge_shepherd(8)</A></B> cleans up after job
           termination.
 
   reporting_params
-     Used to define the behavior of reporting modules in the Grid
-     Engine   qmaster.  Changes  to  the  reporting_params  takes
+     Used to define the behavior of reporting modules in the  Sun
+     Grid  Engine  qmaster. Changes to the reporting_params takes
      immediate effect.  The following values are recognized:
 
      <I>accounting</I>
@@ -1141,17 +1143,17 @@ FORMAT
           tents of the reporting file.
 
      <I>flush</I>_<I>time</I>
-          Contents of the reporting file are buffered in the Grid
-          Engine  qmaster  and flushed at a fixed interval.  This
-          interval can be configured with the <I>flush</I>_<I>time</I>  parame-
-          ter.   It  is  specified  as a time value in the format
-          HH:MM:SS.  Sensible values range from a few seconds  to
-          one  minute. Setting it too low may slow down the qmas-
-          ter. Setting it too high will make the qmaster  consume
-          large amounts of memory for buffering data.
+          Contents of the reporting file are buffered in the  Sun
+          Grid  Engine  qmaster  and flushed at a fixed interval.
+          This interval can be  configured  with  the  <I>flush</I>_<I>time</I>
+          parameter.   It  is  specified  as  a time value in the
+          format HH:MM:SS.  Sensible  values  range  from  a  few
+          seconds to one minute. Setting it too low may slow down
+          the qmaster. Setting it too high will make the  qmaster
+          consume large amounts of memory for buffering data.
 
      <I>accounting</I>_<I>flush</I>_<I>time</I>
-          Contents of the accounting file  are  buffered  in  the
+          Contents of the accounting file are buffered in the Sun
           Grid  Engine  qmaster  and flushed at a fixed interval.
           This   interval   can   be    configured    with    the
           <I>accounting</I>_<I>flush</I>_<I>time</I>  parameter.  It is specified as a
@@ -1172,7 +1174,7 @@ FORMAT
           for more information about job logging.
 
      <I>sharelog</I>
-          The Grid Engine  qmaster  can  dump  information  about
+          The Sun Grid Engine qmaster can dump information  about
           sharetree  configuration and use to the reporting file.
           The parameter <I>sharelog</I> sets an interval in which share-
           tree information will be dumped.  It is set in the for-
@@ -1196,13 +1198,14 @@ FORMAT
           <B><A HREF="../htmlman5/host_conf.html?pathrev=V61_BRANCH">host_conf(5)</A></B>    for    further    information     about
           report_variables.
 
+
   finished_jobs
-     Grid Engine stores a certain number of <I>just</I> <I>finished</I> jobs to
-     provide  post  mortem  status information. The finished_jobs
-     parameter defines the number of  finished  jobs  stored.  If
-     this maximum number is reached, the eldest finished job will
-     be discarded for every new job added  to  the  finished  job
-     list.
+     Sun Grid Engine stores a certain  number  of  <I>just</I>  <I>finished</I>
+     jobs   to   provide  post  mortem  status  information.  The
+     finished_jobs parameter defines the number of finished  jobs
+     stored.  If  this maximum number is reached, the eldest fin-
+     ished job will be discarded for every new job added  to  the
+     finished job list.
 
      Changing finished_jobs  will  take  immediate  effect.   The
      default for finished_jobs is 0.
@@ -1251,12 +1254,12 @@ FORMAT
   rlogin_command
      This is the command to be executed on the client side  of  a
      <B><A HREF="../htmlman1/qrsh.html?pathrev=V61_BRANCH">qrsh(1)</A></B>  request  without  a command argument to be executed
-     remotely.  If no value is given, a specialized  Grid  Engine
-     component  is  used.   The  command is automatically started
-     with the target host and port  number  as  parameters.   The
-     Grid  Engine  rlogin  client has been extended to accept and
-     use the port number argument. You can only use clients, such
-     as <I>ssh</I>, which also understand this syntax.
+     remotely.  If no value is  given,  a  specialized  Sun  Grid
+     Engine  component  is  used.   The  command is automatically
+     started with the target host and port number as  parameters.
+     The  Sun  Grid  Engine  rlogin  client  has been extended to
+     accept and use the port number argument. You  can  only  use
+     clients, such as <I>ssh</I>, which also understand this syntax.
 
      Changing  rlogin_command  will  take  immediate  effect.   A
      default value for rlogin_command is not configured.
@@ -1268,7 +1271,7 @@ FORMAT
      This parameter  specifies  the  executable  that  is  to  be
      started  on the server side of a <B><A HREF="../htmlman1/qrsh.html?pathrev=V61_BRANCH">qrsh(1)</A></B> request with a com-
      mand argument to be  executed  remotely.   If  no  value  is
-     given, a specialized Grid Engine component is used.
+     given, a specialized Sun Grid Engine component is used.
 
      Changing rsh_daemon will take immediate  effect.  A  default
      value for rsh_daemon is not configured.
@@ -1279,13 +1282,14 @@ FORMAT
   rsh_command
      This is the command to be executed on the client side  of  a
      <B><A HREF="../htmlman1/qrsh.html?pathrev=V61_BRANCH">qrsh(1)</A></B>  request  with  a  command  argument  to be executed
-     remotely.  If no value is given, a specialized  Grid  Engine
-     component is used. The command is automatically started with
-     the target host and port number as parameters like  required
-     for <B><A HREF="../htmlman1/telnet.html?pathrev=V61_BRANCH">telnet(1)</A></B> plus the command with its arguments to be exe-
-     cuted remotely. The Grid Engine rsh client has been extended
-     to accept and use the port number argument. You can only use
-     clients, such as <I>ssh</I>, which also understand this syntax.
+     remotely.  If no value is  given,  a  specialized  Sun  Grid
+     Engine  component  is  used.  The  command  is automatically
+     started with the target host and port number  as  parameters
+     like  required for <B><A HREF="../htmlman1/telnet.html?pathrev=V61_BRANCH">telnet(1)</A></B> plus the command with its argu-
+     ments to be executed  remotely.  The  Sun  Grid  Engine  rsh
+     client  has  been extended to accept and use the port number
+     argument. You can only use clients, such as <I>ssh</I>, which  also
+     understand this syntax.
 
      Changing rsh_command will take immediate effect.  A  default
      value for rsh_command is not configured.
@@ -1322,17 +1326,12 @@ SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html?pathrev=V61_BRANCH">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/csh.html?pathrev=V61_BRANCH">csh(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html?pathrev=V61_BRANCH">qconf(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html?pathrev=V61_BRANCH">qsub(1)</A></B>,  <B><A HREF="../htmlman1/rsh.html?pathrev=V61_BRANCH">rsh(1)</A></B>,  <B><A HREF="../htmlman1/sh.html?pathrev=V61_BRANCH">sh(1)</A></B>,
      <B><A HREF="../htmlman3/getpwnam.html?pathrev=V61_BRANCH">getpwnam(3)</A></B>,       <B><A HREF="../htmlman3/drmaa_attributes.html?pathrev=V61_BRANCH">drmaa_attributes(3)</A></B>,       <B><A HREF="../htmlman5/queue_conf.html?pathrev=V61_BRANCH">queue_conf(5)</A></B>,
      <B><A HREF="../htmlman5/sched_conf.html?pathrev=V61_BRANCH">sched_conf(5)</A></B>,         <B><A HREF="../htmlman8/sge_execd.html?pathrev=V61_BRANCH">sge_execd(8)</A></B>,         <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V61_BRANCH">sge_qmaster(8)</A></B>,
-     <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V61_BRANCH">sge_shepherd(8)</A></B>,   <B><A HREF="../htmlman8/cron.html?pathrev=V61_BRANCH">cron(8)</A></B>,  <I>Grid</I>  <I>Engine</I>  <I>Installation</I>  <I>and</I>
-     <I>Administration</I> <I>Guide</I>.
+     <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V61_BRANCH">sge_shepherd(8)</A></B>,  <B><A HREF="../htmlman8/cron.html?pathrev=V61_BRANCH">cron(8)</A></B>,  <I>Sun</I> <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I>
+     <I>Administration</I>
 
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V61_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
 
 
 

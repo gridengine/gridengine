@@ -12,9 +12,9 @@ SYNTAX
 DESCRIPTION
      <I>qtcsh</I> is an extension to the popular <B><A HREF="../htmlman1/csh.html?pathrev=V61_BRANCH">csh(1)</A></B> derivative <I>tcsh</I>.
      It  allows the transparent remote execution commands entered
-     in <I>qtcsh</I> controlled via Grid Engine.  <I>qtcsh</I> can be  used  as
-     interactive  command interpreter as well as for the process-
-     ing of <I>tcsh</I> shell scripts.
+     in <I>qtcsh</I> controlled via Sun Grid Engine.  <I>qtcsh</I> can be  used
+     as  interactive  command interpreter as well as for the pro-
+     cessing of <I>tcsh</I> shell scripts.
 
      When invoked, <I>qtcsh</I> identifies which commands are to be  run
      remotely  and  which  are  not.  For  this purpose the files
@@ -40,15 +40,15 @@ DESCRIPTION
 
      <B>o</B>  if the environment variable JOB_ID is set and thus  <I>qtcsh</I>
         assumes  that execution already happens remotely within a
-        Grid Engine job and thus  executes  tasks  locally.  This
+        Sun Grid Engine job and thus executes tasks locally. This
         avoids  unwanted  recursions but can be overridden by the
         command-line option -R and the built-in command  <I>qrshmode</I>
         -<I>R</I> (see corresponding descriptions below).
 
-     <B>o</B>  if <I>qtcsh</I> cannot establish a  connection  of  Grid  Engine
+     <B>o</B>  if <I>qtcsh</I> cannot establish a connection of Sun Grid Engine
         during  start-up. This allows to use <I>qtcsh</I> as login shell
-        without the danger of being blocked when no  Grid  Engine
-        service is available.
+        without the danger of being  blocked  when  no  Sun  Grid
+        Engine service is available.
 
      <I>qtcsh</I> can  operate  in  three  different  modes  determining
      whether
@@ -73,14 +73,14 @@ OPTIONS
           put in case of remote execution.
 
      -B   Switches remote task execution  to  batch  mode.  Tasks
-          submitted  to Grid Engine will be queued if they cannot
-          start immediately.  As a consequence, <I>qtcsh</I>  may  block
-          until  the  queued  task can be started by Grid Engine.
-          While this behavior probably is undesirable  during  an
-          interactive  session,  it may be very useful for execu-
-          tion of  shell  scripts  through  <I>qtcsh</I>  as  it  avoids
-          failure  of  the scripts due to temporarily unavailable
-          resources for particular tasks.
+          submitted  to  Sun  Grid  Engine will be queued if they
+          cannot start immediately.  As a consequence, <I>qtcsh</I>  may
+          block  until the queued task can be started by Sun Grid
+          Engine. While this  behavior  probably  is  undesirable
+          during  an  interactive  session, it may be very useful
+          for execution of shell  scripts  through  <I>qtcsh</I>  as  it
+          avoids  failure  of the scripts due to temporarily una-
+          vailable resources for particular tasks.
 
      -L   Switches off default behavior of  remote  execution  of
           commands.  Causes  all  commands to be executed locally
@@ -107,11 +107,11 @@ BUILT-IN COMMANDS
           -R   execute configured commands remotely
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the Sun Grid Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
-                    cell.  To  address  a  Grid Engine cell <I>qtcsh</I>
+     SGE_CELL       If set, specifies the default Sun Grid Engine
+                    cell. To address a Sun Grid Engine cell <I>qtcsh</I>
                     uses (in the order of precedence):
 
                          The name of the cell  specified  in  the

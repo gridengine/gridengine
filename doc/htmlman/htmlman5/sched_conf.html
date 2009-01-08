@@ -3,20 +3,20 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     sched_conf - Grid  Engine  default  scheduler  configuration
+     sched_conf - N1 Grid Engine default scheduler  configuration
      file
 
 DESCRIPTION
-     <I>sched</I>_<I>conf</I> defines the configuration file  format  for  Grid
+     <I>sched</I>_<I>conf</I> defines the configuration file format for N1 Grid
      Engine's  default  scheduler  provided by <B><A HREF="../htmlman8/sge_schedd.html?pathrev=V60s2_BRANCH">sge_schedd(8)</A></B>.  In
      order to modify the configuration, use the graphical  user's
      interface <B><A HREF="../htmlman1/qmon.html?pathrev=V60s2_BRANCH">qmon(1)</A></B> or the -<I>msconf</I> option of the <B><A HREF="../htmlman1/qconf.html?pathrev=V60s2_BRANCH">qconf(1)</A></B> com-
      mand. A default configuration is provided together with  the
-     Grid Engine distribution package.
+     N1 Grid Engine distribution package.
 
 FORMAT
-     The following parameters are recognized by the  Grid  Engine
-     scheduler if present in <I>sched</I>_<I>conf</I>:
+     The following parameters  are  recognized  by  the  N1  Grid
+     Engine scheduler if present in <I>sched</I>_<I>conf</I>:
 
   algorithm
      Allows for the selection  of  alternative  scheduling  algo-
@@ -41,7 +41,7 @@ FORMAT
      Note: Administrator defined load values (see the load_sensor
      parameter   in   <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60s2_BRANCH">sge_conf(5)</A></B>  for  details)  and  consumable
      resources available for all hosts (see  <B><A HREF="../htmlman5/complex.html?pathrev=V60s2_BRANCH">complex(5)</A></B>)  may  be
-     used as well as Grid Engine default load parameters.
+     used as well as N1 Grid Engine default load parameters.
      The weighting factors (w1, ...) are positive integers. After
      the  expression  is  evaluated for each host the results are
      assigned to the  hosts  and  are  used  to  sort  the  hosts
@@ -50,8 +50,8 @@ FORMAT
      The default load formula is "np_load_avg".
 
   job_load_adjustments
-     The load, which is imposed by the Grid Engine  jobs  running
-     on  a  system  varies  in  time, and often, e.g. for the CPU
+     The load, which is imposed by the N1 Grid Engine  jobs  run-
+     ning on a system varies in time, and often, e.g. for the CPU
      load, requires some amount of time to  be  reported  in  the
      appropriate  quantity by the operating system. Consequently,
      if a job was started very recently, the  reported  load  may
@@ -59,10 +59,10 @@ FORMAT
      already imposed on that host by the job. The  reported  load
      will  adapt  to  the  real load over time, but the period of
      time, in which the reported load is  too  low,  may  already
-     lead to an oversubscription of that host. Grid Engine allows
-     the administrator to specify job_load_adjustments which  are
-     used  in  the  Grid  Engine scheduler to compensate for this
-     problem.
+     lead  to  an  oversubscription  of that host. N1 Grid Engine
+     allows the  administrator  to  specify  job_load_adjustments
+     which are used in the N1 Grid Engine scheduler to compensate
+     for this problem.
      The job_load_adjustments are specified as a comma  separated
      list  of  arbitrary  load parameters or consumable resources
      and (separated by an equal sign) an associated load  correc-
@@ -102,7 +102,7 @@ FORMAT
      to yield reasonable results.
 
   maxujobs
-     The maximum number of jobs any user may have  running  in  a
+     The maximum number of jobs any user may have running in a N1
      Grid  Engine cluster at the same time. If set to 0 (default)
      the users may run an arbitrary number of jobs.
 
@@ -114,7 +114,7 @@ FORMAT
      change that has occurred  within  <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B>  which  may
      trigger  or  affect scheduler decisions (e.g. a job has fin-
      ished and thus the allocated resources are available again).
-     In the Grid  Engine  default  scheduler  the  arrival  of  a
+     In the N1 Grid Engine default scheduler  the  arrival  of  a
      scheduling  event  report  triggers  a  scheduler  run.  The
      scheduler waits for event reports otherwise.
      Schedule_interval is a time value (see <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B>  for  a
@@ -124,10 +124,11 @@ FORMAT
      This parameter determines in which  order  several  criteria
      are  taken  into  account  to  product  a sorted queue list.
      Currently, two settings are valid:  seqno and load.  However
-     in  both  cases, Grid Engine attempts to maximize the number
-     of soft requests (see <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B> -s option) being fulfilled  by
-     the queues for a particular as the primary criterion.
-     Then, if the queue_sort_method parameter is  set  to  seqno,
+     in  both  cases,  N1  Grid  Engine  attempts to maximize the
+     number of soft requests (see <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B> -s option)  being  ful-
+     filled  by  the  queues for a particular as the primary cri-
+     terion.
+     Then, if the queue_sort_method parameter is set to seqno, N1
      Grid  Engine  will use the seq_no parameter as configured in
      the current queue configurations (see <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B>) as  the
      next criterion to sort the queue list. The load_formula (see
@@ -152,7 +153,7 @@ FORMAT
      the time format as specified in <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B>.
 
   usage_weight_list
-     Grid Engine accounts for the consumption  of  the  resources
+     N1 Grid Engine accounts for the consumption of the resources
      CPU-time,  memory  and  IO  to  determine the usage which is
      imposed on a system by a job. A single usage value  is  com-
      puted  from  these three input parameters by multiplying the
@@ -167,10 +168,10 @@ FORMAT
      be 1.
 
   compensation_factor
-     Determines how fast Grid Engine should compensate  for  past
-     usage  below  of  above the share entitlement defined in the
-     share tree. Recommended values are between 2 and  10,  where
-     10 means faster compensation.
+     Determines how fast N1 Grid  Engine  should  compensate  for
+     past  usage  below of above the share entitlement defined in
+     the share tree. Recommended values are  between  2  and  10,
+     where 10 means faster compensation.
 
   weight_user
      The relative importance of the user shares in the functional
@@ -190,15 +191,15 @@ FORMAT
 
   weight_tickets_functional
      The maximum number of functional tickets available for  dis-
-     tribution by Grid Engine. Determines the relative importance
-     of the functional policy. See under <B><A HREF="../htmlman5/sge_priority.html?pathrev=V60s2_BRANCH">sge_priority(5)</A></B>  for  an
-     overview on job priorities.
+     tribution  by N1 Grid Engine. Determines the relative impor-
+     tance of the functional policy.  See  under  <B><A HREF="../htmlman5/sge_priority.html?pathrev=V60s2_BRANCH">sge_priority(5)</A></B>
+     for an overview on job priorities.
 
   weight_tickets_share
      The maximum number of share based tickets available for dis-
-     tribution by Grid Engine. Determines the relative importance
-     of the share tree policy. See under <B><A HREF="../htmlman5/sge_priority.html?pathrev=V60s2_BRANCH">sge_priority(5)</A></B>  for  an
-     overview on job priorities.
+     tribution  by N1 Grid Engine. Determines the relative impor-
+     tance of the share tree policy.  See  under  <B><A HREF="../htmlman5/sge_priority.html?pathrev=V60s2_BRANCH">sge_priority(5)</A></B>
+     for an overview on job priorities.
 
   weight_deadline
      The weight applied on the remaining time until a jobs latest
@@ -254,12 +255,12 @@ FORMAT
      mand qstat -j.
 
   params
-     This is foreseen for passing additional  parameters  to  the
+     This is foreseen for passing additional parameters to the N1
      Grid Engine scheduler. The following values are recognized:
 
      <I>DURATION</I>_<I>OFFSET</I>
           If set, overrides the  default  of  value  60  seconds.
-          This  parameter  is  used  by the Grid Engine scheduler
+          This  parameter is used by the N1 Grid Engine scheduler
           when planning resource utilization as the delta between
           net  job runtimes and total time until resources become
           available again. Net job runtime as specified  with  -l
@@ -312,8 +313,8 @@ FORMAT
           &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>schedule</I>.
 
      <I>SELECT</I>_<I>PE</I>_<I>RANGE</I>_<I>ALG</I>
-          This parameter sets the algorithm for the pe range com-
-          putation.  The  default  is automatic, which means that
+          This parameter sets the  algorithm  for  the  pe  range
+          computation. The default is automatic, which means that
           the scheduler will select the best one, and  it  should
           not be necessary to change it to a different setting in
           normal operation. If a custom setting  is  needed,  the
@@ -363,6 +364,7 @@ FORMAT
      &lt;TIME&gt; can be -1, 0 or a timespan specified in  minutes.  If
      &lt;TIME&gt;  is  -1,  only the usage of currently running jobs is
      used. 0 means that the usage is not decayed.
+
 
   policy_hierarchy
      This parameter sets up a dependency chain  of  ticket  based
@@ -459,14 +461,12 @@ FILES
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qalter.html?pathrev=V60s2_BRANCH">qalter(1)</A></B>, <B><A HREF="../htmlman1/qconf.html?pathrev=V60s2_BRANCH">qconf(1)</A></B>, <B><A HREF="../htmlman1/qstat.html?pathrev=V60s2_BRANCH">qstat(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B>,  <I>com-</I>
      <B><A HREF="../htmlman5/plex.html?pathrev=V60s2_BRANCH">plex(5)</A></B>,    <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B>,   <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B>,   <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B>,
-     <B><A HREF="../htmlman8/sge_schedd.html?pathrev=V60s2_BRANCH">sge_schedd(8)</A></B>.  <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I>  <I>Administration</I>
-     <I>Guide</I>
+     <B><A HREF="../htmlman8/sge_schedd.html?pathrev=V60s2_BRANCH">sge_schedd(8)</A></B>.  <I>N1</I> <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I>  <I>Administra-</I>
+     <I>tion</I>
 
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
 
 
 

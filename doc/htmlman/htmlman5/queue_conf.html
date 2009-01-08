@@ -3,7 +3,7 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     queue_conf - Grid Engine queue configuration file format
+     queue_conf - N1 Grid Engine queue configuration file format
 
 DESCRIPTION
      <I>Queue</I>_<I>conf</I> reflects the format of the template file for  the
@@ -152,7 +152,7 @@ FORMAT
      scheduling priority, positive values (up to +20)  correspond
      to a lower scheduling priority.
 
-     Note, the value of priority has no effect,  if  Grid  Engine
+     Note, the value of priority has no effect, if N1 Grid Engine
      adjusts  priorities  dynamically  to  implement ticket-based
      entitlement policy goals.  Dynamic  priority  adjustment  is
      switched   off  by  default  due to <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60s2_BRANCH">sge_conf(5)</A></B> reprioritize
@@ -219,7 +219,7 @@ FORMAT
   rerun
      Defines a default behavior for jobs  which  are  aborted  by
      system crashes or manual "violent" (via <B><A HREF="../htmlman1/kill.html?pathrev=V60s2_BRANCH">kill(1)</A></B>) shutdown of
-     the   complete   Grid   Engine   system    (including    the
+     the  complete  N1  Grid   Engine   system   (including   the
      <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V60s2_BRANCH">sge_shepherd(8)</A></B>  of the jobs and their process hierarchy) on
      the queue host. As soon as  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B>  is  restarted  and
      detects  that a job has been aborted for such reasons it can
@@ -274,7 +274,7 @@ FORMAT
           tion  provided in a comment such as `#!/bin/csh' in the
           first line of the script to detect which command inter-
           preter to start to interpret the script. This mechanism
-          is  used  by  Grid  Engine  when   starting   jobs   if
+          is used  by  N1  Grid  Engine  when  starting  jobs  if
           <I>unix</I>_<I>behavior</I> is defined as shell_start_mode.
 
      <I>posix</I>_<I>compliant</I>
@@ -284,10 +284,10 @@ FORMAT
           a  compliant queuing system to ignore such lines but to
           use user specified or configured default command inter-
           preters  instead.  Thus,  if shell_start_mode is set to
-          <I>posix</I>_<I>compliant</I> Grid Engine will either use the command
-          interpreter  indicated  by the -S option of the <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B>
-          command or the shell parameter of the queue to be  used
-          (see above).
+          <I>posix</I>_<I>compliant</I> N1 Grid Engine will either use the com-
+          mand  interpreter  indicated  by  the  -S option of the
+          <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B> command or the shell parameter of the queue  to
+          be used (see above).
 
      <I>script</I>_<I>from</I>_<I>stdin</I>
           Setting  the  shell_start_mode  parameter   either   to
@@ -300,14 +300,14 @@ FORMAT
           cute jobs.
           If this violates your site's security policies you  may
           want to set shell_start_mode to <I>script</I>_<I>from</I>_<I>stdin</I>. This
-          will force Grid Engine to open the job script  as  well
-          as  the  epilogue and prologue scripts for reading into
-          STDIN as root (if <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B>  was  started  as  root)
-          before  changing  to the job owner's user account.  The
-          script is then fed into the STDIN stream of the command
-          interpreter  indicated  by the -S option of the <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B>
-          command or the shell parameter of the queue to be  used
-          (see above).
+          will force N1 Grid Engine to open  the  job  script  as
+          well  as  the epilogue and prologue scripts for reading
+          into STDIN as root  (if  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B>  was  started  as
+          root)  before changing to the job owner's user account.
+          The script is then fed into the  STDIN  stream  of  the
+          command  interpreter  indicated by the -S option of the
+          <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B> command or the shell parameter of the queue  to
+          be used (see above).
           Thus setting shell_start_mode to <I>script</I>_<I>from</I>_<I>stdin</I> also
           implies  <I>posix</I>_<I>compliant</I>  behavior. Note, however, that
           feeding scripts into the  STDIN  stream  of  a  command
@@ -329,19 +329,19 @@ FORMAT
 
   prolog
      The executable path of a shell script that is started before
-     execution of Grid Engine jobs with the same environment set-
-     ting as that for the Grid Engine jobs to be  started  after-
-     wards.  An  optional prefix "user@" specifies the user under
-     which this procedure is to be started. The procedures  stan-
-     dard  output  and the error output stream are written to the
-     same file used also for the standard output and error output
-     of  each job.  This procedure is intended as a means for the
-     Grid Engine administrator to automate the execution of  gen-
-     eral  site  specific tasks like the preparation of temporary
-     file systems with the need for the same context  information
-     as  the job. This queue configuration entry overwrites clus-
-     ter global or execution  host  specific  prolog  definitions
-     (see <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60s2_BRANCH">sge_conf(5)</A></B>).
+     execution  of  N1 Grid Engine jobs with the same environment
+     setting as that for the N1 Grid Engine jobs  to  be  started
+     afterwards.  An  optional  prefix "user@" specifies the user
+     under which this procedure is to be started. The  procedures
+     standard  output  and the error output stream are written to
+     the same file used also for the standard  output  and  error
+     output  of  each job.  This procedure is intended as a means
+     for the N1 Grid Engine administrator to automate the  execu-
+     tion  of general site specific tasks like the preparation of
+     temporary file systems with the need for  the  same  context
+     information  as  the  job.  This  queue  configuration entry
+     overwrites cluster global or execution host specific  prolog
+     definitions (see <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60s2_BRANCH">sge_conf(5)</A></B>).
 
      The default for prolog is  the  special  value  NONE,  which
      prevents  from execution of a prologue script.  The  special
@@ -351,19 +351,19 @@ FORMAT
 
   epilog
      The executable path of a shell script that is started  after
-     execution of Grid Engine jobs with the same environment set-
-     ting as that for the Grid Engine jobs  that  has  just  com-
-     pleted.  An optional prefix "user@" specifies the user under
-     which this procedure is to be started. The procedures  stan-
-     dard  output  and the error output stream are written to the
-     same file used also for the standard output and error output
-     of  each  job. This procedure is intended as a means for the
-     Grid Engine administrator to automate the execution of  gen-
-     eral  site  specific tasks like the cleaning up of temporary
-     file systems with the need for the same context  information
-     as  the job. This queue configuration entry overwrites clus-
-     ter global or execution  host  specific  epilog  definitions
-     (see <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60s2_BRANCH">sge_conf(5)</A></B>).
+     execution  of  N1 Grid Engine jobs with the same environment
+     setting as that for the N1 Grid Engine jobs  that  has  just
+     completed.  An  optional  prefix  "user@" specifies the user
+     under which this procedure is to be started. The  procedures
+     standard  output  and the error output stream are written to
+     the same file used also for the standard  output  and  error
+     output  of  each  job. This procedure is intended as a means
+     for the N1 Grid Engine administrator to automate the  execu-
+     tion  of general site specific tasks like the cleaning up of
+     temporary file systems with the need for  the  same  context
+     information  as  the  job.  This  queue  configuration entry
+     overwrites cluster global or execution host specific  epilog
+     definitions (see <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60s2_BRANCH">sge_conf(5)</A></B>).
 
 
      The default for epilog is  the  special  value  NONE,  which
@@ -402,25 +402,25 @@ FORMAT
   resume_method
   terminate_method
      These parameters can be used  for  overwriting  the  default
-     method  used  by  Grid  Engine  for suspension, release of a
+     method  used  by N1 Grid Engine for suspension, release of a
      suspension and for termination of a job.  Per  default,  the
      signals  SIGSTOP,  SIGCONT  and SIGKILL are delivered to the
      job to perform these actions. However, for some applications
      this is not appropriate.
 
-     If no executable path is given, Grid Engine takes the speci-
-     fied parameter entries as the signal to be delivered instead
-     of the default signal. A signal must be  either  a  positive
-     number  or a signal name with "SIG" as prefix and the signal
-     name as printed by <I>kill</I> -<I>l</I> (e.g.  SIGTERM).
+     If no executable path is given, N1  Grid  Engine  takes  the
+     specified  parameter  entries  as the signal to be delivered
+     instead of the default signal. A signal  must  be  either  a
+     positive  number  or  a signal name with "SIG" as prefix and
+     the signal name as printed by <I>kill</I> -<I>l</I> (e.g.  SIGTERM).
 
      If an executable path is given (it must be an <I>absolute</I>  <I>path</I>
      starting  with  a  "/")  then this command together with its
-     arguments is started by Grid Engine to perform the appropri-
-     ate  action. The following special variables are expanded at
-     runtime and can be used (besides  any  other  strings  which
-     have  to  be  interpreted by the procedures) to constitute a
-     command line:
+     arguments is started  by  N1  Grid  Engine  to  perform  the
+     appropriate  action.  The  following  special  variables are
+     expanded at runtime and  can  be  used  (besides  any  other
+     strings  which  have to be interpreted by the procedures) to
+     constitute a command line:
 
 
      $<I>host</I>
@@ -430,7 +430,7 @@ FORMAT
           The user name of the job owner.
 
      $<I>job</I>_<I>id</I>
-          Grid Engine's unique job identification number.
+          N1 Grid Engine's unique job identification number.
 
      $<I>job</I>_<I>name</I>
           The name of the job.
@@ -450,12 +450,12 @@ FORMAT
   owner_list
      The owner_list names the login names (in a  comma  separated
      list)  of  those  users  who  are  authorized to disable and
-     suspend this queue through <B><A HREF="../htmlman1/qmod.html?pathrev=V60s2_BRANCH">qmod(1)</A></B>  (Grid  Engine  operators
+     suspend this queue through <B><A HREF="../htmlman1/qmod.html?pathrev=V60s2_BRANCH">qmod(1)</A></B> (N1 Grid Engine operators
      and managers can do this by default). It is customary to set
      this field for queues on interactive workstations where  the
      computing  resources are shared between interactive sessions
-     and Grid Engine jobs, allowing the workstation owner to have
-     priority access (type string; default: NONE).
+     and N1 Grid Engine jobs, allowing the workstation  owner  to
+     have priority access (type string; default: NONE).
 
   user_lists
      The user_lists parameter contains a comma separated list  of
@@ -497,19 +497,19 @@ FORMAT
      queue.
 
   subordinate_list
-     A list of Grid Engine cluster queues. Subordinate  relation-
-     ships are in effect only between queue instances residing at
-     the same host. If there is a queue instance (be in the  sub-
-     or  superordinated  one)  on  only  one particular host this
-     relationship is ignored.  queue instances  residing  on  the
-     same  host  will be suspended when a specified count of jobs
-     is running in this queue instance.  The  list  specification
-     is  the same as that of the load_thresholds parameter above,
-     e.g. low_pri_q=5,small_q. The numbers denote the  job  slots
-     of  the  queue that have to be filled to trigger the suspen-
-     sion of the subordinated queue. If no value  is  assigned  a
-     suspension  is  triggered  if  all  slots  of  the queue are
-     filled.
+     A list of N1 Grid Engine cluster queues.  Subordinate  rela-
+     tionships  are in effect only between queue instances resid-
+     ing at the same host. If there is a queue  instance  (be  in
+     the  sub- or superordinated one) on only one particular host
+     this relationship is ignored.  queue instances  residing  on
+     the  same  host  will be suspended when a specified count of
+     jobs is running in this queue instance.  The list specifica-
+     tion  is  the  same as that of the load_thresholds parameter
+     above, e.g. low_pri_q=5,small_q. The numbers denote the  job
+     slots  of  the  queue  that have to be filled to trigger the
+     suspension  of  the  subordinated  queue.  If  no  value  is
+     assigned a suspension is triggered if all slots of the queue
+     are filled.
 
      On nodes which host more than one queue, you might  wish  to
      accord  better  service  to  certain  classes of jobs (e.g.,
@@ -563,9 +563,9 @@ FORMAT
      retrieving  full  detail  on the actual resource requests of
      all jobs in the system.
 
-     For non-consumable resources Grid Engine simply compares the
-     job's  attribute  requests with the corresponding specifica-
-     tion in complex_values taking the relation operator  of  the
+     For non-consumable resources N1 Grid Engine simply  compares
+     the job's attribute requests with the corresponding specifi-
+     cation in complex_values taking the relation operator of the
      complex  attribute definition into account (see <B><A HREF="../htmlman5/complex.html?pathrev=V60s2_BRANCH">complex(5)</A></B>).
      If the result of the comparison  is  "true",  the  queue  is
      suitable  for  the job with respect to the particular attri-
@@ -586,7 +586,7 @@ FORMAT
      specifies the calendar to be valid for this  queue  or  con-
      tains  NONE (the default). A calendar defines the availabil-
      ity of a queue depending on time  of  day,  week  and  year.
-     Please  refer  to  <B><A HREF="../htmlman5/calendar_conf.html?pathrev=V60s2_BRANCH">calendar_conf(5)</A></B>  for details on the Grid
+     Please  refer to <B><A HREF="../htmlman5/calendar_conf.html?pathrev=V60s2_BRANCH">calendar_conf(5)</A></B> for details on the N1 Grid
      Engine calendar facility.
 
      Note: Jobs can request queues with a certain calendar  model
@@ -601,7 +601,7 @@ FORMAT
      default   The queue is enabled when adding the queue  or  is
                reset  to  the  previous  status when <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B>
                comes up (this corresponds to the behavior in ear-
-               lier   Grid   Engine   releases   not   supporting
+               lier   N1  Grid  Engine  releases  not  supporting
                initial_state).
 
      enabled   The queue is  enabled  in  either  case.  This  is
@@ -614,8 +614,8 @@ FORMAT
 
 RESOURCE LIMITS
      The first two resource limit parameters, s_rt and h_rt,  are
-     implemented  by  Grid Engine. They define the "real time" or
-     also called "elapsed" or "wall  clock"  time  having  passed
+     implemented  by  N1 Grid Engine. They define the "real time"
+     or also called "elapsed" or "wall clock" time having  passed
      since  the  start  of  the job. If h_rt is exceeded by a job
      running in the queue, it is aborted via the  SIGKILL  signal
      (see  <B><A HREF="../htmlman1/kill.html?pathrev=V60s2_BRANCH">kill(1)</A></B>).   If  s_rt  is  exceeded,  the  job is first
@@ -625,8 +625,8 @@ RESOURCE LIMITS
      passed.
 
      The resource limit parameters s_cpu  and  h_cpu  are  imple-
-     mented by Grid Engine as a job limit. They impose a limit on
-     the  amount  of  combined  CPU  time  consumed  by  all  the
+     mented by N1 Grid Engine as a job limit. They impose a limit
+     on the amount of combined  CPU  time  consumed  by  all  the
      processes  in the job. If h_cpu is exceeded by a job running
      in the queue, it  is  aborted  via  a  SIGKILL  signal  (see
      <B><A HREF="../htmlman1/kill.html?pathrev=V60s2_BRANCH">kill(1)</A></B>).   If  s_cpu is exceeded, the job is sent a SIGXCPU
@@ -638,8 +638,8 @@ RESOURCE LIMITS
      number of slots being used by the job before being applied.
 
      The resource limit parameters s_vmem and h_vmem  are  imple-
-     mented by Grid Engine as a job limit. They impose a limit on
-     the amount of combined virtual memory consumed  by  all  the
+     mented by N1 Grid Engine as a job limit. They impose a limit
+     on the amount of combined virtual memory consumed by all the
      processes in the job. If h_vmem is exceeded by a job running
      in the queue, it  is  aborted  via  a  SIGKILL  signal  (see
      <B><A HREF="../htmlman1/kill.html?pathrev=V60s2_BRANCH">kill(1)</A></B>).   If s_vmem is exceeded, the job is sent a SIGXCPU

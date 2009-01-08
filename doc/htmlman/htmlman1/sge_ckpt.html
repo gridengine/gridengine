@@ -3,16 +3,16 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     Grid Engine Checkpointing - the  Grid  Engine  checkpointing
-     mechanism and checkpointing support
+     N1 Grid Engine Checkpointing - the  N1  Grid  Engine  check-
+     pointing mechanism and checkpointing support
 
 DESCRIPTION
-     Grid Engine supports two levels of checkpointing:  the  user
-     level  and  a  operating  system provided transparent level.
-     User level checkpointing refers to  applications,  which  do
-     their  own checkpointing by writing restart files at certain
-     times or algorithmic steps and by properly processing  these
-     restart files when restarted.
+     N1 Grid Engine supports two  levels  of  checkpointing:  the
+     user  level  and  a  operating  system  provided transparent
+     level. User  level  checkpointing  refers  to  applications,
+     which do their own checkpointing by writing restart files at
+     certain times or algorithmic steps and by properly  process-
+     ing these restart files when restarted.
 
      Transparent checkpointing has to be provided by the  operat-
      ing system and is usually integrated in the operating system
@@ -20,15 +20,15 @@ DESCRIPTION
      facility is the Hibernator package from Softway for SGI IRIX
      platforms.
 
-     Checkpointing jobs need to be identified to the Grid  Engine
-     system by using the -<I>ckpt</I> option of the <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B> command. The
-     argument to this flag refers to a  so  called  checkpointing
-     environment, which defines the attributes of the checkpoint-
-     ing method to  be  used  (see  <B><A HREF="../htmlman5/checkpoint.html?pathrev=V60s2_BRANCH">checkpoint(5)</A></B>  for  details).
-     Checkpointing environments are setup by the <B><A HREF="../htmlman1/qconf.html?pathrev=V60s2_BRANCH">qconf(1)</A></B> options
-     -<I>ackpt</I>, -<I>dckpt</I>, -<I>mckpt</I> and -<I>sckpt</I>. The <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B> option -<I>c</I> can
-     be  used  to overwrite the <I>when</I> attribute for the referenced
-     checkpointing environment.
+     Checkpointing jobs need to be  identified  to  the  N1  Grid
+     Engine  system by using the -<I>ckpt</I> option of the <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B> com-
+     mand. The argument to this flag refers to a so called check-
+     pointing  environment,  which  defines the attributes of the
+     checkpointing method  to  be  used  (see  <B><A HREF="../htmlman5/checkpoint.html?pathrev=V60s2_BRANCH">checkpoint(5)</A></B>  for
+     details).   Checkpointing  environments  are  setup  by  the
+     <B><A HREF="../htmlman1/qconf.html?pathrev=V60s2_BRANCH">qconf(1)</A></B> options -<I>ackpt</I>,  -<I>dckpt</I>,  -<I>mckpt</I>  and  -<I>sckpt</I>.  The
+     <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B>  option  -<I>c</I> can be used to overwrite the <I>when</I> attri-
+     bute for the referenced checkpointing environment.
 
      If a queue is of the type CHECKPOINTING, jobs need  to  have
      the checkpointing attribute flagged (see the -ckpt option to
@@ -47,8 +47,8 @@ DESCRIPTION
         configured    for    the    corresponding   queues   (see
         <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B>).
 
-     <B>o</B>  Shutdown of the Grid Engine execution daemon <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B>
-        being responsible for the checkpointing job.
+     <B>o</B>  Shutdown  of  the  N1  Grid   Engine   execution   daemon
+        <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B> being responsible for the checkpointing job.
 
      After abortion, the jobs will migrate to other queues unless
      they  were  submitted  to  one specific queue by an explicit
@@ -83,9 +83,9 @@ RESTRICTIONS
      jobs may suffer long turnaround times.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html?pathrev=V60s2_BRANCH">qconf(1)</A></B>,  <B><A HREF="../htmlman1/qmod.html?pathrev=V60s2_BRANCH">qmod(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B>,  <B><A HREF="../htmlman5/checkpoint.html?pathrev=V60s2_BRANCH">checkpoint(5)</A></B>,
-     <I>Grid</I>  <I>Engine</I>  <I>Installation</I>  <I>and</I>  <I>Administration</I>  <I>Guide</I>, <I>Grid</I>
-     <I>Engine</I> <I>User</I>'<I>s</I> <I>Guide</I>
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html?pathrev=V60s2_BRANCH">qconf(1)</A></B>, <B><A HREF="../htmlman1/qmod.html?pathrev=V60s2_BRANCH">qmod(1)</A></B>, <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B>, <B><A HREF="../htmlman5/checkpoint.html?pathrev=V60s2_BRANCH">checkpoint(5)</A></B>,  <I>N1</I>
+     <I>Grid</I>  <I>Engine</I>  <I>Installation</I> <I>and</I> <I>Administration</I> <I>N1</I> <I>Grid</I> <I>Engine</I>
+     <I>User</I>'<I>s</I> <I>Guide</I>
 
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-

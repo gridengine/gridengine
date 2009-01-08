@@ -3,19 +3,20 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     qsub   -  submit a batch job to Grid Engine.
+     qsub   -  submit a batch job to N1 Grid Engine.
 
-     qsh    -  submit an interactive X-windows  session  to  Grid
+     qsh    -  submit an interactive X-windows session to N1 Grid
                Engine.
 
-     qlogin -  submit  an  interactive  login  session  to   Grid
+     qlogin -  submit an interactive login  session  to  N1  Grid
                Engine.
 
-     qrsh   -  submit an interactive rsh session to Grid Engine.
+     qrsh   -  submit an  interactive  rsh  session  to  N1  Grid
+               Engine.
 
-     qalter -  modify a pending batch job of Grid Engine.
+     qalter -  modify a pending batch job of N1 Grid Engine.
 
-     qresub -  submit a copy of an existing Grid Engine job.
+     qresub -  submit a copy of an existing N1 Grid Engine job.
 
 SYNTAX
      qsub [ options ] [ command | -- [ command_args ]]
@@ -34,22 +35,22 @@ SYNTAX
      qresub [ options ] job_id_list
 
 DESCRIPTION
-     <I>Qsub</I> submits batch jobs to the Grid Engine  queuing  system.
-     Grid Engine supports single- and multiple-node jobs. Command
-     can be a path to a binary or a script (see -b  below)  which
-     contains  the  commands  to  be run by the job using a shell
-     (for example, <B><A HREF="../htmlman1/sh.html?pathrev=V60s2_BRANCH">sh(1)</A></B> or <B><A HREF="../htmlman1/csh.html?pathrev=V60s2_BRANCH">csh(1)</A></B>).  Arguments  to  the  command
-     are given as command_args to <I>qsub</I> . If command is handled as
-     a script then it is possible to embed flags in  the  script.
-     If  the  first  two characters of a script line either match
-     '#$' or are equal to the prefix string defined with  the  -C
-     option described below, the line is parsed for embedded com-
-     mand flags.
+     <I>Qsub</I> submits batch jobs to the N1 Grid Engine  queuing  sys-
+     tem. N1 Grid Engine supports single- and multiple-node jobs.
+     Command can be a path to a binary or a script (see -b below)
+     which  contains  the  commands  to be run by the job using a
+     shell (for example, <B><A HREF="../htmlman1/sh.html?pathrev=V60s2_BRANCH">sh(1)</A></B> or <B><A HREF="../htmlman1/csh.html?pathrev=V60s2_BRANCH">csh(1)</A></B>).  Arguments to the com-
+     mand  are given as command_args to <I>qsub</I> . If command is han-
+     dled as a script then it is possible to embed flags  in  the
+     script.  If the first two characters of a script line either
+     match '#$' or are equal to the prefix  string  defined  with
+     the -C option described below, the line is parsed for embed-
+     ded command flags.
 
-     <I>Qsh</I> submits an interactive X-windows session to Grid Engine.
-     An  <B><A HREF="../htmlman1/xterm.html?pathrev=V60s2_BRANCH">xterm(1)</A></B>  is  brought up from the executing machine with
-     the display directed either to the X-server indicated by the
-     DISPLAY  environment  variable  or  as  specified  with  the
+     <I>Qsh</I> submits an interactive  X-windows  session  to  N1  Grid
+     Engine. An <B><A HREF="../htmlman1/xterm.html?pathrev=V60s2_BRANCH">xterm(1)</A></B> is brought up from the executing machine
+     with the display directed either to the  X-server  indicated
+     by the DISPLAY environment variable or as specified with the
      -<I>display</I> <I>qsh</I> option. Interactive jobs are not spooled if  no
      resource  is  available  to  execute  them.  They are either
      dispatched to a suitable machine for  execution  immediately
@@ -65,13 +66,13 @@ DESCRIPTION
      user I/O. Usually, <I>qlogin</I> establishes a <B><A HREF="../htmlman1/telnet.html?pathrev=V60s2_BRANCH">telnet(1)</A></B> connection
      with the remote host, using standard client- and server-side
      commands.   These   commands  can  be  configured  with  the
-     qlogin_daemon (server-side, Grid Engine <I>telnetd</I> if not  set,
-     otherwise    something    like   /usr/sbin/in.telnetd)   and
-     qlogin_command (client-side, Grid Engine <I>telnet</I> if not  set,
-     otherwise  something like /usr/bin/telnet) parameters in the
-     global and local configuration settings of <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60s2_BRANCH">sge_conf(5)</A></B>.  The
-     client  side command is automatically parameterized with the
-     remote host name  and  port  number  to  which  to  connect,
+     qlogin_daemon (server-side, N1 Grid Engine  <I>telnetd</I>  if  not
+     set,  otherwise  something  like  /usr/sbin/in.telnetd)  and
+     qlogin_command (client-side, N1 Grid Engine  <I>telnet</I>  if  not
+     set, otherwise something like /usr/bin/telnet) parameters in
+     the global and local configuration settings of  <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60s2_BRANCH">sge_conf(5)</A></B>.
+     The  client side command is automatically parameterized with
+     the remote host name and port number to  which  to  connect,
      resulting in an invocation like
 
           /usr/bin/telnet my_exec_host 2442
@@ -88,21 +89,22 @@ DESCRIPTION
      <B><A HREF="../htmlman1/gin.html?pathrev=V60s2_BRANCH">gin(1)</A></B> session is  established.   The  server-side  commands
      used can be configured with the rsh_daemon and rlogin_daemon
      parameters in the global and local configuration settings of
-     <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60s2_BRANCH">sge_conf(5)</A></B>.   An Grid Engine <I>rshd</I> or <I>rlogind</I> is used if the
-     parameters are not set. If  the  parameters  are  set,  they
+     <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60s2_BRANCH">sge_conf(5)</A></B>.   An  N1 Grid Engine <I>rshd</I> or <I>rlogind</I> is used if
+     the parameters are not set. If the parameters are set,  they
      should   be  set  to  something  like  /usr/sbin/in.rshd  or
      /usr/sbin/in.rlogind.  On the client-side,  the  rsh_command
      and  rlogin_command  parameters can be set in the global and
      local configuration settings of <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60s2_BRANCH">sge_conf(5)</A></B>.   If  they  are
-     not  set,  special Grid Engine <B><A HREF="../htmlman1/rsh.html?pathrev=V60s2_BRANCH">rsh(1)</A></B> and <B><A HREF="../htmlman1/rlogin.html?pathrev=V60s2_BRANCH">rlogin(1)</A></B> binaries
-     delivered with Grid Engine are used.  Use the cluster confi-
-     guration  parameters to integrate mechanisms like <I>ssh</I> or the
-     <B><A HREF="../htmlman1/rsh.html?pathrev=V60s2_BRANCH">rsh(1)</A></B> and <B><A HREF="../htmlman1/rlogin.html?pathrev=V60s2_BRANCH">rlogin(1)</A></B> facilities supplied with the  operating
-     system.
+     not  set,  special  N1  Grid  Engine  <B><A HREF="../htmlman1/rsh.html?pathrev=V60s2_BRANCH">rsh(1)</A></B>  and  <B><A HREF="../htmlman1/rlogin.html?pathrev=V60s2_BRANCH">rlogin(1)</A></B>
+     binaries delivered with N1 Grid Engine are  used.   Use  the
+     cluster  configuration  parameters  to  integrate mechanisms
+     like <I>ssh</I> or the <B><A HREF="../htmlman1/rsh.html?pathrev=V60s2_BRANCH">rsh(1)</A></B>  and  <B><A HREF="../htmlman1/rlogin.html?pathrev=V60s2_BRANCH">rlogin(1)</A></B>  facilities  supplied
+     with the operating system.
 
      <I>Qrsh</I> jobs can only run  in  INTERACTIVE  queues  unless  the
      option  -now  no is used (see below).  They can also only be
      run, if the <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B> is running under the root account.
+
 
      <I>Qrsh</I> provides an additional useful feature  for  integrating
      with  interactive  tools providing a specific command shell.
@@ -201,12 +203,12 @@ OPTIONS
           corresponding  value of the current date is assumed. If
           CC is not specified, a YY of &lt; 70 means 20YY.
           Usage of this option may cause  unexpected  results  if
-          the clocks of the hosts in the Grid Engine pool are out
-          of sync. Also, the proper behavior of this option  very
-          much  depends on the correct setting of the appropriate
-          timezone, e.g. in  the  TZ  environment  variable  (see
-          <B><A HREF="../htmlman1/date.html?pathrev=V60s2_BRANCH">date(1)</A></B>  for  details),  when  the  Grid Engine daemons
-          <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B> and <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B> are invoked.
+          the  clocks of the hosts in the N1 Grid Engine pool are
+          out of sync. Also, the proper behavior of  this  option
+          very  much  depends  on  the  correct  setting  of  the
+          appropriate timezone, e.g. in the TZ environment  vari-
+          able (see <B><A HREF="../htmlman1/date.html?pathrev=V60s2_BRANCH">date(1)</A></B> for details), when the N1 Grid Engine
+          daemons <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B> and <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B> are invoked.
 
           <I>Qalter</I> allows changing this option even while  the  job
           executes. The modified parameter will only be in effect
@@ -216,7 +218,7 @@ OPTIONS
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
 
           Adds the given name/value pair(s) to the job's context.
-          Value  may  be  omitted.  Grid Engine appends the given
+          Value  may be omitted. N1 Grid Engine appends the given
           argument to the list of context variables for the  job.
           Multiple  -ac,  -dc, and -sc options may be given.  The
           order is important here.
@@ -231,9 +233,9 @@ OPTIONS
           tion  of  the job should be charged. The account_string
           may be any arbitrary ASCII alphanumeric string but  may
           not contain  "\n", "\t", "\r", "/", ":", "@", "\", "*",
-          or "?".  In the absence of this parameter  Grid  Engine
-          will  place  the  default  account  string "sge" in the
-          accounting record of the job.
+          or "?".  In the  absence  of  this  parameter  N1  Grid
+          Engine  will  place the default account string "sge" in
+          the accounting record of the job.
 
           <I>Qalter</I> allows changing this option even while  the  job
           executes.
@@ -304,15 +306,14 @@ OPTIONS
      -cwd Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I> and <I>qalter</I> only.
 
           Execute the job from  the  current  working  directory.
-          This  switch  will activate Grid Engine's path aliasing
-          facility, if the corresponding configuration files  are
-          present (see <B><A HREF="../htmlman5/sge_aliases.html?pathrev=V60s2_BRANCH">sge_aliases(5)</A></B>).
+          This  switch will activate N1 Grid Engine's path alias-
+          ing facility, if the corresponding configuration  files
+          are present (see <B><A HREF="../htmlman5/sge_aliases.html?pathrev=V60s2_BRANCH">sge_aliases(5)</A></B>).
 
           In the case of <I>qalter</I>, the previous definition  of  the
           current working directory will be overwritten if <I>qalter</I>
           is executed from a different directory than the preced-
           ing <I>qsub</I> or <I>qalter</I>.
-
           <I>Qalter</I> allows changing this option even while  the  job
           executes. The modified parameter will only be in effect
           after a restart or migration of the job, however.
@@ -328,7 +329,7 @@ OPTIONS
           scanned for embedded directives.
           The directive prefix consists of two  ASCII  characters
           which,  when  appearing  in  the  first  two bytes of a
-          script line, indicate that  what  follows  is  an  Grid
+          script line, indicate that what follows is an  N1  Grid
           Engine command.  The default is "#$".
           The user should be aware that changing the first delim-
           iting character can produce unforeseen side effects. If
@@ -365,12 +366,12 @@ OPTIONS
 
           Specifies   the    deadline    initiation    time    in
           [[CC]YY]MMDDhhmm[.SS] format (see -a option above). The
-          deadline  initiation  time  is  the  time  at  which  a
-          deadline  job  has  to reach top priority to be able to
-          complete within a given deadline. Before  the  deadline
-          initiation  time the priority of a deadline job will be
+          deadline initiation time is the time at which  a  dead-
+          line  job  has to reach top priority to be able to com-
+          plete within a given deadline. Before the deadline ini-
+          tiation  time  the  priority  of a deadline job will be
           raised steadily until it reaches the maximum as config-
-          ured by the Grid Engine administrator.
+          ured by the N1 Grid Engine administrator.
           This option is applicable only  for  users  allowed  to
           submit deadline jobs.
 
@@ -383,13 +384,14 @@ OPTIONS
           redirected.   If  the path constitutes an absolute path
           name, the error-path attribute of the  job  is  set  to
           path, including the hostname. If the path name is rela-
-          tive, Grid Engine expands path either with the  current
-          working  directory path (if the -cwd switch (see above)
-          is also specified) or with the home directory path.  If
-          hostname  is present, the standard error stream will be
-          placed in the corresponding location only  if  the  job
-          runs  on the specified host. If the path contains a ":"
-          without a hostname, a leading ":" has to be specified.
+          tive, N1 Grid  Engine  expands  path  either  with  the
+          current working directory path (if the -cwd switch (see
+          above) is also specified) or with  the  home  directory
+          path. If hostname is present, the standard error stream
+          will be placed in the corresponding  location  only  if
+          the  job  runs  on the specified host. If the path con-
+          tains a ":" without a hostname, a leading ":" has to be
+          specified.
 
           By default  the  file  name  for  interactive  jobs  is
           /<I>dev</I>/<I>null</I>. For batch jobs the default file name has the
@@ -428,13 +430,13 @@ OPTIONS
           Signifies that all resource requirements  following  in
           the  command line will be hard requirements and must be
           satisfied in full before a job can be scheduled.
-          As Grid Engine scans the command line and  script  file
-          for Grid Engine options and parameters it builds a list
-          of resources required  by  a  job.  All  such  resource
-          requests are considered as absolutely essential for the
-          job to commence. If the -soft  option  (see  below)  is
-          encountered   during   the   scan  then  all  following
-          resources are designated  as  "soft  requirements"  for
+          As N1 Grid Engine scans the  command  line  and  script
+          file  for  N1  Grid  Engine  options  and parameters it
+          builds a list of resources required by a job. All  such
+          resource  requests  are considered as absolutely essen-
+          tial for the job to commence. If the -soft option  (see
+          below)  is encountered during the scan then all follow-
+          ing resources are designated as "soft requirements" for
           execution, or "nice-to-have, but not essential". If the
           -hard flag is encountered at a later stage of the scan,
           all  resource  requests  following it once again become
@@ -463,10 +465,10 @@ OPTIONS
           `S'  removes a system hold.
           `O'  removes a operator hold.
 
-          Grid Engine managers can assign  and  remove  all  hold
-          types, Grid Engine operators can assign and remove user
-          and operator holds, and users can only assign or remove
-          user holds.
+          N1 Grid Engine managers can assign and remove all  hold
+          types,  N1  Grid Engine operators can assign and remove
+          user and operator holds, and users can only  assign  or
+          remove user holds.
 
           In the case of <I>qsub</I> only user holds can be placed on  a
           job and thus only the first form of the option with the
@@ -517,14 +519,14 @@ OPTIONS
           input  stream  of  the  job. If the <I>file</I> constitutes an
           absolute filename, the input-path attribute of the  job
           is  set  to  path,  including the hostname. If the path
-          name is relative, Grid Engine expands path either  with
-          the  current working directory path (if the -cwd switch
-          (see above) is also specified) or with the home  direc-
-          tory  path.  If hostname is present, the standard input
-          stream will be placed  in  the  corresponding  location
-          only if the job runs on the specified host. If the path
-          contains a ":" without a hostname, a leading ":" has to
-          be specified.
+          name is relative, N1 Grid Engine  expands  path  either
+          with  the  current  working directory path (if the -cwd
+          switch (see above) is also specified) or with the  home
+          directory  path.  If  hostname is present, the standard
+          input stream will be placed in the corresponding  loca-
+          tion only if the job runs on the specified host. If the
+          path contains a ":" without a hostname, a  leading  ":"
+          has to be specified.
 
           By default /dev/null is the input stream for the job.
 
@@ -574,10 +576,11 @@ OPTIONS
 
      -j y[es]|n[o]
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
+
           Specifies whether or not the standard error  stream  of
           the job is merged into the standard output stream.
-          If both the -j y and the -e options are  present,  Grid
-          Engine sets but ignores the error-path attribute.
+          If both the -j y and the -e  options  are  present,  N1
+          Grid Engine sets but ignores the error-path attribute.
 
           <I>Qalter</I> allows changing this option even while  the  job
           executes. The modified parameter will only be in effect
@@ -593,9 +596,9 @@ OPTIONS
           The job share influences the Share Tree Policy and  the
           Functional  Policy. It has no effect on the Urgency and
           Override Policies (see <B><A HREF="../htmlman5/share_tree.html?pathrev=V60s2_BRANCH">share_tree(5)</A></B>, <B><A HREF="../htmlman5/sched_conf.html?pathrev=V60s2_BRANCH">sched_conf(5)</A></B> and
-          the  <I>Grid</I>  <I>Engine</I> <I>Installation</I> <I>and</I> <I>Administration</I> <I>Guide</I>
-          for further information on the resource management pol-
-          icies supported by Grid Engine).
+          the  <I>N1</I>  <I>Grid</I>  <I>Engine</I>  <I>Installation</I>  <I>and</I> <I>Administration</I>
+          <I>Guide</I> for further information on the  resource  manage-
+          ment policies supported by N1 Grid Engine).
 
           In case of the Share Tree Policy, users can  distribute
           the  tickets to which they are currently entitled among
@@ -622,9 +625,9 @@ OPTIONS
      -l resource=value,...
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
 
-          Launch the job in a Grid Engine queue meeting the given
-          resource  request list.  In case of <I>qalter</I> the previous
-          definition is replaced by the specified one.
+          Launch the job in a N1 Grid Engine  queue  meeting  the
+          given  resource  request  list.   In case of <I>qalter</I> the
+          previous definition is replaced by the specified one.
           <B><A HREF="../htmlman5/complex.html?pathrev=V60s2_BRANCH">complex(5)</A></B> describes how a list of available  resources
           and  their  associated  valid  value  specifiers can be
           obtained.
@@ -675,7 +678,6 @@ OPTIONS
           Available for <I>qsub</I>, <I>qrsh</I>, <I>qsh</I>, <I>qlogin</I> and <I>qalter</I>.  Only
           meaningful  for  parallel  jobs, i.e. together with the
           -pe option.
-
           Defines or redefines a list of  cluster  queues,  queue
           domains and queue instances which may be used to become
           the so called <I>master</I> <I>queue</I> of this parallel job. A more
@@ -697,14 +699,14 @@ OPTIONS
           Available for <I>qsub</I>,  <I>qrsh</I>  (with  command)  and  <I>qalter</I>
           only.
 
-          This flag, when set causes Grid Engine to  send  "warn-
-          ing" signals to a running job prior to sending the sig-
-          nals themselves. If a SIGSTOP is pending, the job  will
-          receive  a  SIGUSR1 several seconds before the SIGSTOP.
-          If a SIGKILL is pending, the job will receive a SIGUSR2
-          several seconds before the SIGKILL.  The amount of time
-          delay is controlled by the  notify  parameter  in  each
-          queue configuration (see <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B>).
+          This flag, when set  causes  N1  Grid  Engine  to  send
+          "warning" signals to a running job prior to sending the
+          signals themselves. If a SIGSTOP is  pending,  the  job
+          will  receive a SIGUSR1 several seconds before the SIG-
+          STOP. If a SIGKILL is pending, the job will  receive  a
+          SIGUSR2 several seconds before the SIGKILL.  The amount
+          of time delay is controlled by the notify parameter  in
+          each queue configuration (see <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B>).
 
           Note that the Linux operating system "misused" the user
           signals  SIGUSR1 and SIGUSR2 in some early Posix thread
@@ -737,7 +739,7 @@ OPTIONS
           "\", "*", and "?", and it has to start with  an  alpha-
           betic  character.  Invalid  job names will be denied at
           submit time.
-          If the -N option is not present,  Grid  Engine  assigns
+          If the -N option is not present, N1 Grid Engine assigns
           the  name of the job script to the job after any direc-
           tory pathname has been removed from the script-name. If
           the  script  is  read from standard input, the job name
@@ -822,11 +824,11 @@ OPTIONS
           -1023 to 1024.  The default priority value for jobs  is
           0.
 
-          Users may only decrease the  priority  of  their  jobs.
+          Users may only decrease the priority of their jobs.  N1
           Grid   Engine  managers  and  administrators  may  also
           increase the priority associated with jobs. If a  pend-
           ing job has higher priority, it is earlier eligible for
-          being dispatched by the Grid Engine scheduler.
+          being dispatched by the N1 Grid Engine scheduler.
 
 
      -pe parallel_environment n[-[m]]|[-]m,...
@@ -834,7 +836,7 @@ OPTIONS
 
           Parallel programming environment (PE)  to  instantiate.
           The  range  descriptor behind the PE name specifies the
-          number of parallel processes to  be  run.  Grid  Engine
+          number of parallel processes to be run. N1 Grid  Engine
           will  allocate  the appropriate resources as available.
           The <B><A HREF="../htmlman5/sge_pe.html?pathrev=V60s2_BRANCH">sge_pe(5)</A></B> manual page  contains  information  about
           the definition of PEs and about how to obtain a list of
@@ -886,6 +888,7 @@ OPTIONS
           reservation might be disabled using max_reservation  in
           <B><A HREF="../htmlman5/sched_conf.html?pathrev=V60s2_BRANCH">sched_conf(5)</A></B>  and  might  be limited only to a certain
           number of high priority jobs.
+
           By default jobs are submitted with the -R n option.
 
      -r y[es]|n[o]
@@ -909,7 +912,7 @@ OPTIONS
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
 
           Sets the given name/value pairs as the  job's  context.
-          Value  may  be  omitted. Grid Engine replaces the job's
+          Value may be omitted. N1 Grid Engine replaces the job's
           previously defined context with the one  given  as  the
           argument.   Multiple  -ac,  -dc, and -sc options may be
           given.  The order is important.
@@ -935,11 +938,11 @@ OPTIONS
 
           This option can only be used if no shell-specific  com-
           mand line parsing is required. If the command line con-
-          tains shell syntax, like environment variable substitu-
-          tion  or  (back)  quoting, a shell must be started.  In
-          this case either do not use  the  -shell  n  option  or
-          execute the shell as the command line and pass the path
-          to the executable as a parameter.
+          tains   shell   syntax,   like   environment   variable
+          substitution   or  (back)  quoting,  a  shell  must  be
+          started.  In this case either do not use the  -shell  n
+          option  or  execute  the  shell as the command line and
+          pass the path to the executable as a parameter.
 
           If a job executed with the -shell n option fails due to
           a  user  error,  such as an invalid path to the execut-
@@ -956,12 +959,12 @@ OPTIONS
           Signifies that all resource requirements  following  in
           the  command  line will be soft requirements and are to
           be filled on an "as available" basis.
-          As Grid Engine scans the command line and  script  file
-          for  Grid  Engine  options  and parameters, it builds a
-          list  of  resources  required  by  the  job.  All  such
-          resource  requests  are considered as absolutely essen-
-          tial for the job to commence. If the  -soft  option  is
-          encountered   during   the   scan  then  all  following
+          As N1 Grid Engine scans the  command  line  and  script
+          file  for  N1  Grid  Engine  options and parameters, it
+          builds a list of resources required  by  the  job.  All
+          such  resource  requests  are  considered as absolutely
+          essential for the job to commence. If the -soft  option
+          is  encountered  during  the  scan  then  all following
           resources are designated  as  "soft  requirements"  for
           execution, or "nice-to-have, but not essential". If the
           -hard flag (see above) is encountered at a later  stage
@@ -989,13 +992,13 @@ OPTIONS
           <I>qsub</I> will behave as though only -sync y were given.
           If -sync y is used in conjunction  with  -t  n[-m[:i]],
           <I>qsub</I>  will  wait  for  all  the job's tasks to complete
-          before  exiting.   If  all  the  job's  tasks  complete
-          successfully,  <I>qsub</I>'<I>s</I>  exit  code  will  be that of the
-          first completed job tasks with a non-zero exit code, or
-          0  if  all job tasks exited with an exit code of 0.  If
-          any of the job's tasks fail to  complete  successfully,
-          <I>qsub</I> will print out an error message indicating why the
-          job task(s) failed and will have an exit code of 1.  If
+          before exiting.  If all the job's tasks  complete  suc-
+          cessfully,  <I>qsub</I>'<I>s</I>  exit code will be that of the first
+          completed job tasks with a non-zero exit code, or 0  if
+          all job tasks exited with an exit code of 0.  If any of
+          the job's tasks fail  to  complete  successfully,  <I>qsub</I>
+          will  print out an error message indicating why the job
+          task(s) failed and will have an exit  code  of  1.   If
           <I>qsub</I>  is  interrupted, e.g. with CTRL-C, before the job
           completes, all of the job's tasks will be canceled.
 
@@ -1029,13 +1032,13 @@ OPTIONS
 
           Submits a so called <I>Array</I> <I>Job</I>, i.e. an array of identi-
           cal  tasks being differentiated only by an index number
-          and being treated by Grid Engine almost like  a  series
-          of jobs. The option argument to -t specifies the number
-          of array job tasks and the index number which  will  be
-          associated  with  the  tasks. The index numbers will be
-          exported to the job tasks via the environment  variable
-          SGE_TASK_ID.  The  option  arguments n, m and s will be
-          available    through    the    environment    variables
+          and being treated by  N1  Grid  Engine  almost  like  a
+          series of jobs. The option argument to -t specifies the
+          number of array job tasks and the  index  number  which
+          will  be  associated  with the tasks. The index numbers
+          will be exported to the job tasks via  the  environment
+          variable  SGE_TASK_ID.  The option arguments n, m and s
+          will be available  through  the  environment  variables
           SGE_TASK_FIRST, SGE_TASK_LAST and  SGE_TASK_STEPSIZE.
 
           Following restrictions apply to the values n and m:
@@ -1100,10 +1103,10 @@ OPTIONS
 
           Defines or redefines the environment  variables  to  be
           exported  to  the execution context of the job.  If the
-          -v option is present Grid Engine will add the  environ-
-          ment  variables defined as arguments to the switch and,
-          optionally, values of specified variables, to the  exe-
-          cution context of the job.
+          -v option is  present  N1  Grid  Engine  will  add  the
+          environment  variables  defined  as  arguments  to  the
+          switch and, optionally, values of specified  variables,
+          to the execution context of the job.
 
           <I>Qalter</I> allows changing this option even while  the  job
           executes. The modified parameter will only be in effect
@@ -1146,8 +1149,8 @@ OPTIONS
           requesting unavailable resource attributes are possible
           causes for jobs to fail this validation.
 
-          The specifiers e, w,  n  and  v  define  the  following
-          validation modes:
+          The specifiers e, w, n and v define the following vali-
+          dation modes:
 
           `e'  error - jobs with invalid requests will be
                rejected; the default for <I>qrsh</I>, <I>qsh</I>
@@ -1173,9 +1176,9 @@ OPTIONS
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I> and <I>qalter</I> only.
 
           Execute  the  job  from  the  directory  specified   in
-          working_dir.   This  switch will activate Grid Engine's
-          path aliasing facility, if the corresponding configura-
-          tion files are present (see <B><A HREF="../htmlman5/sge_aliases.html?pathrev=V60s2_BRANCH">sge_aliases(5)</A></B>).
+          working_dir.    This   switch  will  activate  N1  Grid
+          Engine's path aliasing facility, if  the  corresponding
+          configuration files are present (see <B><A HREF="../htmlman5/sge_aliases.html?pathrev=V60s2_BRANCH">sge_aliases(5)</A></B>).
 
           <I>Qalter</I> allows changing this option even while  the  job
           executes. The modified parameter will only be in effect
@@ -1205,11 +1208,11 @@ OPTIONS
           configuration.  For details, refer to <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60s2_BRANCH">sge_conf(5)</A></B>).
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the N1 Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
-                    cell.  To  address  a  Grid Engine cell <I>qsub</I>,
+     SGE_CELL       If set, specifies the default N1 Grid  Engine
+                    cell.  To address a N1 Grid Engine cell <I>qsub</I>,
                     <I>qsh</I>, <I>qlogin</I> or <I>qalter</I> use (in  the  order  of
                     precedence):
 
@@ -1266,13 +1269,13 @@ ENVIRONMENTAL VARIABLES
      SGE_O_WORKDIR  the absolute  path  of  the  current  working
                     directory of the submitting client.
 
-     Furthermore, Grid Engine sets additional variables into  the
-     job's environment, as listed below.
+     Furthermore, N1 Grid Engine sets additional  variables  into
+     the job's environment, as listed below.
 
      ARC
 
-     SGE_ARCH       The Grid Engine architecture name of the node
-                    on  which  the  job  is  running. The name is
+     SGE_ARCH       The N1 Grid Engine architecture name  of  the
+                    node on which the job is running. The name is
                     compiled-in into the <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B> binary.
 
      SGE_CKPT_ENV   Specifies the checkpointing  environment  (as
@@ -1310,10 +1313,10 @@ ENVIRONMENTAL VARIABLES
      SGE_JOB_SPOOL_DIR
                     The  directory  used  by  <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V60s2_BRANCH">sge_shepherd(8)</A></B>  to
                     store  job related data during job execution.
-                    This directory is owned by root or by a  Grid
-                    Engine administrative account and commonly is
-                    not open for read or write access to  regular
-                    users.
+                    This directory is owned by root or  by  a  N1
+                    Grid  Engine  administrative account and com-
+                    monly is not open for read or write access to
+                    regular users.
 
      SGE_TASK_ID    The index number of  the  current  array  job
                     task (see -t option above). This is an unique
@@ -1342,7 +1345,7 @@ ENVIRONMENTAL VARIABLES
 
      ENVIRONMENT    The ENVIRONMENT variable is set to  BATCH  to
                     identify that the job is being executed under
-                    Grid Engine control.
+                    N1 Grid Engine control.
 
      HOME           The  user's  home  directory  path  from  the
                     <B><A HREF="../htmlman5/passwd.html?pathrev=V60s2_BRANCH">passwd(5)</A></B> file.
@@ -1381,19 +1384,19 @@ ENVIRONMENTAL VARIABLES
                     /usr/local/bin:/usr/ucb:/bin:/usr/bin
 
      SGE_BINARY_PATH
-                    The path where the Grid Engine  binaries  are
-                    installed.  The value is the concatenation of
-                    the cluster configuration  value  binary_path
-                    and  the architecture name $SGE_ARCH environ-
-                    ment variable.
+                    The path where the N1  Grid  Engine  binaries
+                    are installed. The value is the concatenation
+                    of   the    cluster    configuration    value
+                    binary_path   and   the   architecture   name
+                    $SGE_ARCH environment variable.
 
      PE             The parallel environment under which the  job
                     executes (for parallel jobs only).
 
      PE_HOSTFILE    The path of a file containing the  definition
                     of the virtual parallel machine assigned to a
-                    parallel job by Grid Engine. See the descrip-
-                    tion   of   the   $pe_hostfile  parameter  in
+                    parallel job  by  N1  Grid  Engine.  See  the
+                    description  of the $pe_hostfile parameter in
                     <B><A HREF="../htmlman5/sge_pe.html?pathrev=V60s2_BRANCH">sge_pe(5)</A></B> for details on the format  of  this
                     file. The environment variable is only avail-
                     able for parallel jobs.
@@ -1429,16 +1432,16 @@ ENVIRONMENTAL VARIABLES
                     file.
 
 RESTRICTIONS
-     There is no controlling terminal for batch jobs  under  Grid
-     Engine,  and  any tests or actions on a controlling terminal
-     will fail. If these operations are in your .login or  .cshrc
-     file, they may cause your job to abort.
+     There is no controlling terminal for  batch  jobs  under  N1
+     Grid  Engine, and any tests or actions on a controlling ter-
+     minal will fail. If these operations are in your  .login  or
+     .cshrc file, they may cause your job to abort.
 
      Insert the following test before any commands that  are  not
      pertinent to batch jobs in your .login:
 
           if ( $?JOB_NAME) then
-               echo "Grid Engine spooled job"
+               echo "N1 Grid Engine spooled job"
                exit 0
           endif
 
@@ -1457,8 +1460,9 @@ EXIT STATUS
      &gt;0   Error occurred.
 
 EXAMPLES
-     The following is the simplest form of a Grid  Engine  script
-     file.
+     The following is the simplest  form  of  a  N1  Grid  Engine
+     script file.
+
      =====================================================
 
 
@@ -1468,7 +1472,7 @@ EXAMPLES
 
      =====================================================
 
-     The next example is a more complex Grid Engine script.
+     The next example is a more complex N1 Grid Engine script.
 
      =====================================================
 
@@ -1523,7 +1527,7 @@ FILES
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>sge</I>_<I>request</I>
                                cluster default request
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                               Grid Engine master host file
+                               N1 Grid Engine master host file
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html?pathrev=V60s2_BRANCH">qconf(1)</A></B>, <B><A HREF="../htmlman1/qdel.html?pathrev=V60s2_BRANCH">qdel(1)</A></B>, <B><A HREF="../htmlman1/qhold.html?pathrev=V60s2_BRANCH">qhold(1)</A></B>, <B><A HREF="../htmlman1/qmod.html?pathrev=V60s2_BRANCH">qmod(1)</A></B>, <B><A HREF="../htmlman1/qrls.html?pathrev=V60s2_BRANCH">qrls(1)</A></B>,
@@ -1541,10 +1545,6 @@ COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B> as well  as  the  information  provided  in
      &lt;sge_root&gt;/3rd_party/qrsh   and  &lt;sge_root&gt;/3rd_party/qlogin
      for a statement of further rights and permissions.
-
-
-
-
 
 
 

@@ -11,13 +11,13 @@ SYNTAX
      -U user,... ]
 
 DESCRIPTION
-     <I>qselect</I> prints a list of Grid Engine queue names correspond-
-     ing to selection criteria specified in the <I>qselect</I> arguments
-     described below. The output of <I>qselect</I> can be fed into other
-     Grid  Engine commands to apply actions on the selected queue
-     sets. For  example  together  with  the  -<I>mqattr</I>  option  to
-     <B><A HREF="../htmlman1/qconf.html?pathrev=V60s2_BRANCH">qconf(1)</A></B>,  <I>qselect</I> can be used to modify queue attributes on
-     a set of queues.
+     <I>qselect</I>  prints  a  list  of  N1  Grid  Engine  queue  names
+     corresponding to selection criteria specified in the <I>qselect</I>
+     arguments described below. The output of <I>qselect</I> can be  fed
+     into  other  N1 Grid Engine commands to apply actions on the
+     selected queue sets. For example together with  the  -<I>mqattr</I>
+     option  to  <B><A HREF="../htmlman1/qconf.html?pathrev=V60s2_BRANCH">qconf(1)</A></B>,  <I>qselect</I>  can  be used to modify queue
+     attributes on a set of queues.
 
 OPTIONS
      -help
@@ -73,12 +73,12 @@ EXAMPLES
      details of queue configuration entries).
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the N1 Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
-                    cell.  To  address a Grid Engine cell <I>qselect</I>
-                    uses (in the order of precedence):
+     SGE_CELL       If set, specifies the default N1 Grid  Engine
+                    cell.  To  address  a  N1  Grid  Engine  cell
+                    <I>qselect</I> uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
                          environment  variable SGE_CELL, if it is
@@ -103,7 +103,7 @@ ENVIRONMENTAL VARIABLES
 
 FILES
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                     Grid Engine master host file
+                     N1 Grid Engine master host file
 
 
 SEE ALSO

@@ -3,17 +3,17 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     qmon - X-Windows OSF/Motif graphical  user's  interface  for
+     qmon - X-Windows OSF/Motif graphical user's interface for N1
      Grid Engine
 
 SYNTAX
      qmon [options]
 
 DESCRIPTION
-     <I>Qmon</I> allows administrators and users to manipulate the  Grid
-     Engine  system  from an X-Window environment.  <I>Qmon</I> provides
-     various dialogues linked together  in  multiple  ways.   For
-     each   task  the  user  wishes  to  accomplish  via  <I>qmon</I>  a
+     <I>Qmon</I> allows administrators and users to  manipulate  the  N1
+     Grid  Engine system from an X-Window environment.  <I>Qmon</I> pro-
+     vides various dialogues linked together  in  multiple  ways.
+     For  each  task  the  user  wishes  to accomplish via <I>qmon</I> a
      corresponding dialogue is provided. There are multiple  ways
      to address the proper dialogue for a certain task:
 
@@ -79,7 +79,7 @@ DIALOGUES
 
   Queue Control
      The Queue Control dialogue with its  sub-dialogue  hierarchy
-     enables  the  user  to control the status of the Grid Engine
+     enables the user to control the status of the N1 Grid Engine
      queues being actually configured in the  system  and  allows
      the  administrator  to add new queues or to modify or delete
      already existing ones. The Queue Control  dialogue  shows  a
@@ -87,9 +87,9 @@ DIALOGUES
      Instances in a tabular way.
 
      By pushing the Add, Clone or Modify button,  a  sub-dialogue
-     for  configuring Grid Engine queues is opened. A queue needs
-     to be selected to use the clone and  modify  operation.  The
-     configuration  sub-dialogue  allows  for  definition  of the
+     for  configuring  N1  Grid  Engine queues is opened. A queue
+     needs to be selected to use the clone and modify  operation.
+     The  configuration sub-dialogue allows for definition of the
      queue and its attributes.   The  configuration  sub-dialogue
      contains  in  the upper section the queue name and a list of
      hosts or hostgroups for which this queue contains the confi-
@@ -200,7 +200,7 @@ DIALOGUES
 
   Scheduler Config
      The Scheduler Configuration dialogue provides the  means  to
-     change  the  behavior  of  the  Grid Engine scheduler daemon
+     change  the  behavior of the N1 Grid Engine scheduler daemon
      <B><A HREF="../htmlman8/sge_schedd.html?pathrev=V60s2_BRANCH">sge_schedd(8)</A></B>.  The dialogue contains a  representation  for
      all  scheduler  configuration  parameters  as  described  in
      <B><A HREF="../htmlman5/sched_conf.html?pathrev=V60s2_BRANCH">sched_conf(5)</A></B>.  It is subdivided in the two sections General
@@ -233,8 +233,8 @@ DIALOGUES
 
      Those user accounts added to the list of manager or operator
      accounts  are  given permission to act as managers or opera-
-     tors respectively when accessing Grid Engine under their own
-     account.
+     tors respectively when accessing N1 Grid Engine under  their
+     own account.
 
      The userset lists are used together with the user_lists  and
      xuser_lists  host,  queue, project and cluster configuration
@@ -251,9 +251,9 @@ DIALOGUES
      required  for  the  so called Functional Policy and Override
      Policy (see Ticket Config below).
 
-     User names can be added to the system as entries to the Grid
-     Engine  user  database  (see <B><A HREF="../htmlman5/user.html?pathrev=V60s2_BRANCH">user(5)</A></B>), This can be done with
-     the User sub-dialogue.
+     User names can be added to the system as entries to  the  N1
+     Grid  Engine  user  database (see <B><A HREF="../htmlman5/user.html?pathrev=V60s2_BRANCH">user(5)</A></B>), This can be done
+     with the User sub-dialogue.
 
      The Tickets button in the button list on the right  side  of
      the dialogue opens the Ticket Config dialogue (see below).
@@ -279,8 +279,8 @@ DIALOGUES
      this  dialogue.  Checkpointing environments are necessary to
      describe the attributes which  the  different  checkpointing
      methods  and  their  derivatives on various operating system
-     platforms supported by Grid Engine have. When  the  dialogue
-     is  opened  a  list  of the already configured checkpointing
+     platforms supported by N1 Grid Engine have. When the  dialo-
+     gue is opened a list of the already configured checkpointing
      environments is displayed together with the  current  confi-
      guration  (see  <B><A HREF="../htmlman5/checkpoint.html?pathrev=V60s2_BRANCH">checkpoint(5)</A></B>) of the selected checkpointing
      environment. To add  new  checkpointing  environment  or  to
@@ -301,7 +301,7 @@ DIALOGUES
      may submit deadline jobs.
 
      The Share Tree Policy button opens the dialogue for creating
-     and  editing  the  Grid Engine share tree (see <B><A HREF="../htmlman5/share_tree.html?pathrev=V60s2_BRANCH">share_tree(5)</A></B>
+     and editing the N1 Grid Engine share tree (see <B><A HREF="../htmlman5/share_tree.html?pathrev=V60s2_BRANCH">share_tree(5)</A></B>
      and <B><A HREF="../htmlman5/schedd_conf.html?pathrev=V60s2_BRANCH">schedd_conf(5)</A></B> for a description  of  the  configuration
      parameters).
 
@@ -332,18 +332,18 @@ DIALOGUES
 
   Browser
      The Object Browser dialogue's purpose is manifold: First  of
-     all,  Grid  Engine and <I>qmon</I> messages such as notification of
-     error or success concerning a previously taken action can be
-     displayed  in  the dialogue's output window.  Also the stan-
-     dard output and the standard error output  of  <I>qmon</I>  can  be
+     all,  N1  Grid Engine and <I>qmon</I> messages such as notification
+     of error or success concerning a previously taken action can
+     be  displayed  in  the  dialogue's  output window.  Also the
+     standard output and the standard error output of <I>qmon</I> can be
      diverted to the Object Browser output window.
 
      Additionally the Object Browser can be used to display  con-
-     tinuous  information  about Grid Engine objects as the mouse
-     pointer moves over their representation as  icons  or  table
-     entries in other <I>qmon</I> dialogues. Currently, only the display
-     of the configuration of  two  Grid  Engine  objects  in  two
-     separate dialogues is supported:
+     tinuous  information  about  N1  Grid  Engine objects as the
+     mouse pointer moves over their representation  as  icons  or
+     table  entries  in other <I>qmon</I> dialogues. Currently, only the
+     display of the configuration of two N1 Grid  Engine  objects
+     in two separate dialogues is supported:
 
      <B>o</B>  Queue configurations are displayed as soon as  the  mouse
         pointer  enters  a queue icon in the top level Queue Con-
@@ -373,12 +373,12 @@ RESOURCES
      the location of the resource file).
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the N1 Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
-                    cell. To address a Grid Engine cell <I>qmon</I> uses
-                    (in the order of precedence):
+     SGE_CELL       If set, specifies the default N1 Grid  Engine
+                    cell.  To  address a N1 Grid Engine cell <I>qmon</I>
+                    uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
                          environment  variable SGE_CELL, if it is

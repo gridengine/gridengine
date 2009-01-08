@@ -3,7 +3,7 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     checkpoint - Grid Engine  checkpointing  environment  confi-
+     checkpoint - N1 Grid Engine checkpointing environment confi-
      guration file format
 
 DESCRIPTION
@@ -13,22 +13,22 @@ DESCRIPTION
      original  program  or job was halted, e.g.  through a system
      crash.
 
-     Grid Engine provides various levels of checkpointing support
-     (see  <B><A HREF="../htmlman1/sge_ckpt.html?pathrev=V60s2_BRANCH">sge_ckpt(1)</A></B>).  The checkpointing environment described
-     here is a means to configure the different types  of  check-
-     pointing  in  use  for  your  Grid  Engine  cluster or parts
-     thereof. For that purpose  you  can  define  the  operations
-     which have to be executed in initiating a checkpoint genera-
-     tion, a migration of a checkpoint to another host or a  res-
-     tart  of  a  checkpointed application as well as the list of
+     N1 Grid Engine provides various levels of checkpointing sup-
+     port   (see  <B><A HREF="../htmlman1/sge_ckpt.html?pathrev=V60s2_BRANCH">sge_ckpt(1)</A></B>).   The  checkpointing  environment
+     described here is a means to configure the  different  types
+     of  checkpointing  in use for your N1 Grid Engine cluster or
+     parts thereof. For that purpose you can  define  the  opera-
+     tions  which  have to be executed in initiating a checkpoint
+     generation, a migration of a checkpoint to another host or a
+     restart of a checkpointed application as well as the list of
      queues which are eligible for a checkpointing method.
 
-     Supporting different operating systems may easily force Grid
-     Engine  to  introduce  operating system dependencies for the
-     configuration of the checkpointing  configuration  file  and
-     updates  of the supported operating system versions may lead
-     to frequently changing implementation details. Please  refer
-     to the &lt;sge_root&gt;/ckpt directory for more information.
+     Supporting different operating systems may easily  force  N1
+     Grid  Engine  to introduce operating system dependencies for
+     the configuration of the  checkpointing  configuration  file
+     and  updates  of the supported operating system versions may
+     lead to frequently changing implementation  details.  Please
+     refer to the &lt;sge_root&gt;/ckpt directory for more information.
 
      Please use the -<I>ackpt</I>, -<I>dckpt</I>, -<I>mckpt</I> or -<I>sckpt</I>  options  to
      the  <B><A HREF="../htmlman1/qconf.html?pathrev=V60s2_BRANCH">qconf(1)</A></B>  command  to manipulate checkpointing environ-
@@ -57,14 +57,14 @@ FORMAT
           The Cray kernel level checkpointing is assumed.
 
      <I>transparent</I>
-          Grid Engine assumes that the jobs submitted with refer-
-          ence  to this checkpointing interface use a checkpoint-
-          ing library such as provided by the public domain pack-
-          age <I>Condor</I>.
+          N1 Grid Engine assumes that  the  jobs  submitted  with
+          reference  to this checkpointing interface use a check-
+          pointing library such as provided by the public  domain
+          package <I>Condor</I>.
 
      <I>userdefined</I>
-          Grid Engine assumes that the jobs submitted with refer-
-          ence  to  this  checkpointing  interface  perform their
+          N1 Grid Engine assumes that  the  jobs  submitted  with
+          reference to this checkpointing interface perform their
           private checkpointing method.
 
      <I>application</I>-<I>level</I>
@@ -76,21 +76,21 @@ FORMAT
           script is invoked in case of a restart instead.
 
   ckpt_command
-     A command-line type command string to be  executed  by  Grid
+     A command-line type command string to be executed by N1 Grid
      Engine in order to initiate a checkpoint.
 
   migr_command
-     A command-line type command string to be  executed  by  Grid
+     A command-line type command string to be executed by N1 Grid
      Engine  during  a  migration of a checkpointing job from one
      host to another.
 
   restart_command
-     A command-line type command string to be  executed  by  Grid
+     A command-line type command string to be executed by N1 Grid
      Engine  when  restarting  a previously checkpointed applica-
      tion.
 
   clean_command
-     A command-line type command string to be  executed  by  Grid
+     A command-line type command string to be executed by N1 Grid
      Engine  in order to cleanup after a checkpointed application
      has finished.
 
@@ -99,12 +99,12 @@ FORMAT
      considerable size should be stored.
 
   ckpt_signal
-     A Unix signal to be sent to a job by Grid Engine to initiate
-     a checkpoint generation. The value for this field can either
-     be a symbolic name from the list produced by the  -<I>l</I>  option
-     of  the <B><A HREF="../htmlman1/kill.html?pathrev=V60s2_BRANCH">kill(1)</A></B> command or an integer number which must be a
-     valid signal on the systems used for checkpointing.
-
+     A Unix signal to be sent to a job by N1 Grid Engine to  ini-
+     tiate  a checkpoint generation. The value for this field can
+     either be a symbolic name from the list produced by  the  -<I>l</I>
+     option  of  the  <B><A HREF="../htmlman1/kill.html?pathrev=V60s2_BRANCH">kill(1)</A></B>  command or an integer number which
+     must be a valid signal on the systems used  for  checkpoint-
+     ing.
 
   when
      The points of time when checkpoints are expected to be  gen-
@@ -136,17 +136,17 @@ FORMAT
 
 RESTRICTIONS
      Note, that the functionality of any checkpointing, migration
-     or  restart  procedures  provided  by  default with the Grid
+     or  restart  procedures provided by default with the N1 Grid
      Engine distribution as well as the way how they are  invoked
      in the <I>ckpt</I>_<I>command</I>, <I>migr</I>_<I>command</I> or <I>restart</I>_<I>command</I> parame-
      ters of any default checkpointing environments should not be
      changed  or  otherwise  the  functionality  remains the full
      responsibility of the administrator configuring  the  check-
-     pointing  environment.   Grid  Engine will just invoke these
+     pointing environment.  N1 Grid Engine will just invoke these
      procedures and evaluate their exit status. If the procedures
      do  not perform their tasks properly or are not invoked in a
      proper fashion, the checkpointing mechanism may behave unex-
-     pectedly, Grid Engine has no means to detect this.
+     pectedly, N1 Grid Engine has no means to detect this.
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/sge_ckpt.html?pathrev=V60s2_BRANCH">sge_ckpt(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html?pathrev=V60s2_BRANCH">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qmod.html?pathrev=V60s2_BRANCH">qmod(1)</A></B>,   <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B>,

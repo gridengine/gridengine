@@ -3,14 +3,14 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     qconf - Grid Engine Queue Configuration
+     qconf - N1 Grid Engine Queue Configuration
 
 SYNTAX
      qconf options
 
 DESCRIPTION
      <I>Qconf</I> allows the system administrator to  add,  delete,  and
-     modify  the  current  Grid  Engine  configuration, including
+     modify  the  current N1 Grid Engine configuration, including
      queue management, host management,  complex  management  and
      user  management.   <I>Qconf</I>  also  allows  you  to examine the
      current queue configuration for existing queues.
@@ -41,8 +41,8 @@ OPTIONS
           Requires root/manager privileges.
 
      -Acal fname                   &lt;<I>add</I> <I>calendar</I>&gt;
-          Adds a new  calendar  definition  to  the  Grid  Engine
-          environment.  Calendars  are  used  in  Grid Engine for
+          Adds a new calendar definition to the  N1  Grid  Engine
+          environment.  Calendars  are used in N1 Grid Engine for
           defining availability and unavailability  schedules  of
           queues.   The   format  of  a  calendar  definition  is
           described in <B><A HREF="../htmlman5/calendar_conf.html?pathrev=V60s2_BRANCH">calendar_conf(5)</A></B>.
@@ -64,7 +64,7 @@ OPTIONS
           Requires root or manager privileges.
 
      -Ae fname                     &lt;<I>add</I> <I>execution</I> <I>host</I>&gt;
-          Add the execution host defined in  fname  to  the  Grid
+          Add the execution host defined in fname to the N1  Grid
           Engine  cluster.  The  format  of  the  execution  host
           specification is described in  <B><A HREF="../htmlman5/host_conf.html?pathrev=V60s2_BRANCH">host_conf(5)</A></B>.   Requires
           root or manager privileges.
@@ -76,7 +76,7 @@ OPTIONS
 
      -Ap fname                     &lt;<I>add</I> <I>PE</I> <I>configuration</I>&gt;
           Add the parallel environment (PE) defined in  fname  to
-          the  Grid  Engine  cluster.  Requires  root  or manager
+          the  N1  Grid  Engine cluster. Requires root or manager
           privileges.
 
      -Aprj fname                   &lt;<I>add</I> <I>new</I> <I>project</I>&gt;
@@ -85,13 +85,14 @@ OPTIONS
           root or manager privileges.
 
      -Aq fname                     &lt;<I>add</I> <I>new</I> <I>queue</I>&gt;
-          Add the queue defined in fname to the Grid Engine clus-
-          ter. Requires root or manager privileges.
+          Add the queue defined in fname to the  N1  Grid  Engine
+          cluster. Requires root or manager privileges.
 
      -Au fname                     &lt;<I>add</I> <I>an</I> <I>ACL</I>&gt;
-          Add the user access list (ACL) defined in fname to Grid
-          Engine. User lists are used for queue usage authentica-
-          tion. Requires root/manager/operator privileges.
+          Add the user access list (ACL) defined in fname  to  N1
+          Grid  Engine.  User  lists  are  used  for  queue usage
+          authentication.     Requires      root/manager/operator
+          privileges.
 
      -Dattr obj_spec fname obj_instance,...
                                  &lt;<I>del</I>. <I>from</I> <I>object</I> <I>attribs</I>&gt;
@@ -106,7 +107,6 @@ OPTIONS
 
      -Mattr obj_spec fname obj_instance,...
                                  &lt;<I>mod</I>. <I>object</I> <I>attributes</I>&gt;
-
           Similar to -mattr (see below) but takes  specifications
           for  the  object  attributes  to  be modified from file
           named fname. As opposed to -mattr, multiple  attributes
@@ -158,9 +158,8 @@ OPTIONS
           Same as -mprj (see below) but instead  of  invoking  an
           editor  to  modify  the  project configuration the file
           fname is considered to contain a changed configuration.
-          Refer   to   <B><A HREF="../htmlman5/project.html?pathrev=V60s2_BRANCH">project(5)</A></B>  for  details  on  the  project
-          configuration  format.   Requires   root   or   manager
-          privilege.
+          Refer  to  <B><A HREF="../htmlman5/project.html?pathrev=V60s2_BRANCH">project(5)</A></B> for details on the project confi-
+          guration format.  Requires root or manager privilege.
 
      -Mq fname                     &lt;<I>modify</I> <I>queue</I> <I>configuration</I>&gt;
           Same as -mq (see below) but instead of invoking an edi-
@@ -181,7 +180,7 @@ OPTIONS
           format. Requires root or manager privilege.
 
      -Muser fname                  &lt;<I>modify</I> <I>user</I>&gt;
-          Modify the user defined in fname  in  the  Grid  Engine
+          Modify the user defined in fname in the N1 Grid  Engine
           cluster.  The  format  of  the  user  specification  is
           described  in  <B><A HREF="../htmlman5/user.html?pathrev=V60s2_BRANCH">user(5)</A></B>.   Requires  root   or   manager
           privileges.
@@ -230,8 +229,8 @@ OPTIONS
           Requires root or manager privileges.
 
      -acal calendar_name           &lt;<I>add</I> <I>calendar</I>&gt;
-          Adds a new  calendar  definition  to  the  Grid  Engine
-          environment.  Calendars  are  used  in  Grid Engine for
+          Adds a new calendar definition to the  N1  Grid  Engine
+          environment.  Calendars  are used in N1 Grid Engine for
           defining availability and unavailability  schedules  of
           queues.   The   format  of  a  calendar  definition  is
           described in <B><A HREF="../htmlman5/calendar_conf.html?pathrev=V60s2_BRANCH">calendar_conf(5)</A></B>.
@@ -247,7 +246,7 @@ OPTIONS
      -ackpt ckpt_name              &lt;<I>add</I> <I>ckpt</I>. <I>environment</I>&gt;
           Adds  a  checkpointing  environment  under   the   name
           ckpt_name  to  the  list  of checkpointing environments
-          maintained by Grid Engine and to be  usable  to  submit
+          maintained by N1 Grid Engine and to be usable to submit
           checkpointing  jobs  (see  <B><A HREF="../htmlman5/checkpoint.html?pathrev=V60s2_BRANCH">checkpoint(5)</A></B> for details on
           the format of a checkpointing environment  definition).
           <I>Qconf</I>  retrieves  a  default  checkpointing environment
@@ -268,15 +267,15 @@ OPTIONS
           Requires root or manager privileges.
 
      -ae [host_template]           &lt;<I>add</I> <I>execution</I> <I>host</I>&gt;
-          Adds a host to the list of Grid Engine execution hosts.
-          If  a  queue  is  configured  on  a  host  this host is
-          automatically added to the Grid Engine  execution  host
-          list.   Adding  execution  hosts  explicitly offers the
-          advantage to be able to specify  parameters  like  load
-          scale  values  with  the  registration of the execution
-          host. However, these parameters can be  modified  (from
-          their  defaults)  at  any later time via the -me option
-          described below.
+          Adds a host to the list of  N1  Grid  Engine  execution
+          hosts.  If a queue is configured on a host this host is
+          automatically added to the  N1  Grid  Engine  execution
+          host  list.   Adding  execution hosts explicitly offers
+          the advantage to be able  to  specify  parameters  like
+          load  scale  values with the registration of the execu-
+          tion host. However, these parameters  can  be  modified
+          (from  their  defaults)  at  any later time via the -me
+          option described below.
           If  the  host_template  argument  is   present,   <I>qconf</I>
           retrieves  the configuration of the specified execution
           host from <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B> or a generic  template  other-
@@ -290,14 +289,15 @@ OPTIONS
           <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B>.  Requires root/manager privileges.
 
      -ah hostname,...              &lt;<I>add</I> <I>administrative</I> <I>host</I>&gt;
-          Adds hosts hostname to the  Grid  Engine  trusted  host
+          Adds hosts hostname to the N1 Grid Engine trusted  host
           list  (a  host must be in this list to execute adminis-
-          trative Grid Engine commands,  the  sole  exception  to
+          trative N1 Grid Engine commands, the sole exception  to
           this being the execution of <I>qconf</I> on the <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B>
-          node). The default Grid Engine installation  procedures
-          usually add all designated execution hosts (see the -ae
-          option above) to the  Grid  Engine  trusted  host  list
-          automatically.  Requires root or manager privileges.
+          node). The default N1  Grid  Engine  installation  pro-
+          cedures usually add all designated execution hosts (see
+          the -ae option above) to the  N1  Grid  Engine  trusted
+          host  list  automatically.   Requires  root  or manager
+          privileges.
 
      -ahgrp group                  &lt;<I>add</I> <I>host</I> <I>group</I> <I>config</I>.&gt;
           Adds a new host group with the name specified in group.
@@ -308,16 +308,16 @@ OPTIONS
           manager privileges.
 
      -am user,...                  &lt;<I>add</I> <I>managers</I>&gt;
-          Adds the indicated users to  the  Grid  Engine  manager
+          Adds the indicated users to the N1 Grid Engine  manager
           list. Requires root or manager privileges.
 
      -ao user,...                  &lt;<I>add</I> <I>operators</I>&gt;
-          Adds the indicated users to the  Grid  Engine  operator
+          Adds the indicated users to the N1 Grid Engine operator
           list.  Requires root/manager privileges.
 
      -ap pe_name                   &lt;<I>add</I> <I>new</I> <I>PE</I>&gt;
           Adds a <I>Parallel</I> <I>Environment</I> (PE) description under  the
-          name  pe_name  to  the  list  of PEs maintained by Grid
+          name  pe_name  to the list of PEs maintained by N1 Grid
           Engine and to be usable to submit  parallel  jobs  (see
           <B><A HREF="../htmlman5/sge_pe.html?pathrev=V60s2_BRANCH">sge_pe(5)</A></B>  for  details  on  the format of a PE defini-
           tion).  <I>Qconf</I> retrieves a default PE configuration  and
@@ -348,8 +348,8 @@ OPTIONS
 
      -as hostname,...              &lt;<I>add</I> <I>submit</I> <I>hosts</I>&gt;
           Add hosts hostname to the list of hosts allowed to sub-
-          mit  Grid  Engine jobs and control their behavior only.
-          Requires root or manager privileges.
+          mit  N1  Grid  Engine  jobs  and control their behavior
+          only.  Requires root or manager privileges.
 
      -astnode node_path=shares,... &lt;<I>add</I> <I>share</I> <I>tree</I> <I>node</I>&gt;
           Adds the specified share tree node(s) to the share tree
@@ -375,14 +375,15 @@ OPTIONS
           manager privileges.
 
      -au user,... acl_name,...     &lt;<I>add</I> <I>users</I> <I>to</I> <I>ACLs</I>&gt;
-          Adds users to Grid Engine  user  access  lists  (ACLs).
+          Adds users to N1 Grid Engine user access lists  (ACLs).
           User  lists  are  used  for queue usage authentication.
           Requires root/manager/operator privileges.
 
      -Auser fname                  &lt;<I>add</I> <I>user</I>&gt;
-          Add the user defined in fname to the Grid Engine  clus-
-          ter.  The format of the user specification is described
-          in <B><A HREF="../htmlman5/user.html?pathrev=V60s2_BRANCH">user(5)</A></B>.  Requires root or manager privileges.
+          Add the user defined in fname to  the  N1  Grid  Engine
+          cluster.  The  format  of  the  user  specification  is
+          described  in  <B><A HREF="../htmlman5/user.html?pathrev=V60s2_BRANCH">user(5)</A></B>.   Requires  root   or   manager
+          privileges.
 
      -auser                        &lt;<I>add</I> <I>user</I>&gt;
           Adds a user  to  the  list  of  registered  users  (see
@@ -410,7 +411,7 @@ OPTIONS
           obj_spec and obj_instance in the description of -aattr
 
      -dcal calendar_name,...       &lt;<I>delete</I> <I>calendar</I>&gt;
-          Deletes the specified  calendar  definition  from  Grid
+          Deletes the specified calendar definition from N1  Grid
           Engine. Requires root/manager privileges.
 
      -dckpt ckpt_name              &lt;<I>delete</I> <I>ckpt</I>. <I>environment</I>&gt;
@@ -423,14 +424,14 @@ OPTIONS
           or manager privilege.
 
      -de host_name,...             &lt;<I>delete</I> <I>execution</I> <I>host</I>&gt;
-          Deletes hosts from the Grid Engine execution host list.
-          Requires root/manager privileges.
+          Deletes hosts from the N1 Grid  Engine  execution  host
+          list.  Requires root/manager privileges.
 
      -dh host_name,...             &lt;<I>delete</I> <I>administrative</I> <I>host</I>&gt;
-          Deletes hosts from the Grid Engine trusted  host  list.
-          The  host  on which <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B> is currently running
-          cannot be  removed  from  the  list  of  administrative
-          hosts.  Requires root/manager privileges.
+          Deletes hosts from the  N1  Grid  Engine  trusted  host
+          list.   The  host  on which <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B> is currently
+          running cannot be removed from the list of  administra-
+          tive hosts.  Requires root/manager privileges.
 
      -dm user[,user,...]           &lt;<I>delete</I> <I>managers</I>&gt;
           Deletes  managers  from  the  manager  list.   Requires
@@ -454,7 +455,7 @@ OPTIONS
           privileges.
 
      -ds host_name,...             &lt;<I>delete</I> <I>submit</I> <I>host</I>&gt;
-          Deletes hosts from the Grid Engine  submit  host  list.
+          Deletes hosts from the N1 Grid Engine submit host list.
           Requires root/manager privileges.
 
      -dstnode node_path,...        &lt;<I>delete</I> <I>share</I> <I>tree</I> <I>node</I>&gt;
@@ -469,8 +470,8 @@ OPTIONS
           manager privileges.
 
      -du user,... acl_name,...     &lt;<I>delete</I> <I>users</I> <I>from</I> <I>ACL</I>&gt;
-          Deletes one or more users from one or more Grid  Engine
-          user       access      lists      (ACLs).      Requires
+          Deletes one or more users from  one  or  more  N1  Grid
+          Engine    user    access    lists    (ACLs).   Requires
           root/manager/operator privileges.
 
      -dul acl_name,...             &lt;<I>delete</I> <I>user</I> <I>lists</I>&gt;
@@ -484,10 +485,10 @@ OPTIONS
      -help
           Prints a listing of all options.
 
-     -k{m|s|e[j] {host,...|all}}   &lt;<I>shutdown</I> <I>Grid</I> <I>Engine</I>&gt;
-          Used to shutdown Grid Engine components (daemons).   In
-          the form -km <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B> is forced to terminate in a
-          controlled fashion. In the  same  way  the  -ks  switch
+     -k{m|s|e[j] {host,...|all}}   &lt;<I>shutdown</I> <I>N1</I> <I>Grid</I> <I>Engine</I>&gt;
+          Used to shutdown N1 Grid Engine  components  (daemons).
+          In  the  form -km <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B> is forced to terminate
+          in a controlled fashion. In the same way the -ks switch
           causes  termination of <B><A HREF="../htmlman8/sge_schedd.html?pathrev=V60s2_BRANCH">sge_schedd(8)</A></B>.  Shutdown of run-
           ning <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B>  processes  currently  registered  is
           initiated  by  the  -ke  option.  If  -kej is specified
@@ -720,17 +721,17 @@ OPTIONS
           host.
 
      -sel                          &lt;<I>show</I> <I>execution</I> <I>hosts</I>&gt;
-          Displays the Grid Engine execution host list.
+          Displays the N1 Grid Engine execution host list.
 
      -secl                         &lt;<I>show</I> <I>event</I> <I>clients</I>&gt;
-          Displays the Grid Engine event client list.
+          Displays the N1 Grid Engine event client list.
 
      -sep                          &lt;<I>show</I> <I>licensed</I> <I>processors</I>&gt;
           Displays a list  of  number  of  processors  which  are
           licensed per execution host and in total.
 
      -sh                           &lt;<I>show</I> <I>administrative</I> <I>hosts</I>&gt;
-          Displays the Grid Engine administrative host list.
+          Displays the N1 Grid Engine administrative host list.
 
      -shgrp group                  &lt;<I>show</I> <I>host</I> <I>group</I> <I>config</I>.&gt;
           Displays the host group entries for the group specified
@@ -799,7 +800,7 @@ OPTIONS
           Show a list of all currently defined cluster queues.
 
      -ss                           &lt;<I>show</I> <I>submit</I> <I>hosts</I>&gt;
-          Displays the Grid Engine submit host list.
+          Displays the N1 Grid Engine submit host list.
 
      -ssconf                       &lt;<I>show</I> <I>scheduler</I> <I>configuration</I>&gt;
           Displays the current  scheduler  configuration  in  the
@@ -816,16 +817,16 @@ OPTIONS
           <B><A HREF="../htmlman5/share_tree.html?pathrev=V60s2_BRANCH">share_tree(5)</A></B>).
 
      -sss                          &lt;<I>show</I> <I>scheduler</I> <I>status</I>&gt;
-          Currently displays the host on which  the  Grid  Engine
+          Currently displays the host on which the N1 Grid Engine
           scheduler is active or an error message if no scheduler
           is running.
 
      -su acl_name                  &lt;<I>show</I> <I>user</I> <I>ACL</I>&gt;
-          Displays a Grid Engine user access list (ACL).
+          Displays a N1 Grid Engine user access list (ACL).
 
      -sul                          &lt;<I>show</I> <I>user</I> <I>lists</I>&gt;
-          Displays a list of names of all currently defined  Grid
-          Engine user access lists (ACLs).
+          Displays a list of names of all  currently  defined  N1
+          Grid Engine user access lists (ACLs).
 
      -suser user,...               &lt;<I>show</I> <I>user</I>&gt;
           Shows the definition  of  the  specified  user(s)  (see
@@ -835,7 +836,7 @@ OPTIONS
           Shows the list of all currently defined users.
 
      -tsm                          &lt;<I>trigger</I> <I>scheduler</I> <I>monitoring</I>&gt;
-          The Grid Engine scheduler <B><A HREF="../htmlman8/sge_schedd.html?pathrev=V60s2_BRANCH">sge_schedd(8)</A></B>  is  forced  by
+          The N1 Grid Engine scheduler <B><A HREF="../htmlman8/sge_schedd.html?pathrev=V60s2_BRANCH">sge_schedd(8)</A></B> is forced by
           this  option  to  print  trace  messages  of  its  next
           scheduling        run        to        the         file
           &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>schedd</I>_<I>runlog</I>.   The  messages
@@ -850,11 +851,11 @@ OPTIONS
           section OUTPUT FORMATS of the <B><A HREF="../htmlman1/qstat.html?pathrev=V60s2_BRANCH">qstat(1)</A></B> manual page.
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the N1 Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
-                    cell.  To  address  a  Grid Engine cell <I>qconf</I>
+     SGE_CELL       If set, specifies the default N1 Grid  Engine
+                    cell.  To address a N1 Grid Engine cell <I>qconf</I>
                     uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
@@ -897,7 +898,7 @@ RESTRICTIONS
 
 FILES
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                     Grid Engine master host file
+                     N1 Grid Engine master host file
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B>,    <B><A HREF="../htmlman1/qstat.html?pathrev=V60s2_BRANCH">qstat(1)</A></B>,    <B><A HREF="../htmlman5/checkpoint.html?pathrev=V60s2_BRANCH">checkpoint(5)</A></B>,     <B><A HREF="../htmlman5/complex.html?pathrev=V60s2_BRANCH">complex(5)</A></B>,

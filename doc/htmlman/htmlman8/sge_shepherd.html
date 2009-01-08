@@ -3,19 +3,20 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     sge_shepherd - Grid Engine single job controlling agent
+     sge_shepherd - N1 Grid Engine single job controlling agent
 
 SYNOPSIS
      sge_shepherd
 
 DESCRIPTION
      <I>sge</I>_<I>shepherd</I> provides the parent process functionality for a
-     single  Grid Engine job.  The parent functionality is neces-
-     sary on UNIX systems to retrieve resource usage  information
-     (see  <B><A HREF="../htmlman2/getrusage.html?pathrev=V60s2_BRANCH">getrusage(2)</A></B>)  after  a job has finished. In addition,
-     the <I>sge</I>_<I>shepherd</I> forwards signals to the job,  such  as  the
-     signals  for  suspension, enabling, termination and the Grid
-     Engine checkpointing signal (see <B><A HREF="../htmlman1/sge_ckpt.html?pathrev=V60s2_BRANCH">sge_ckpt(1)</A></B> for details).
+     single  N1  Grid  Engine  job.   The parent functionality is
+     necessary on UNIX systems to retrieve resource usage  infor-
+     mation (see <B><A HREF="../htmlman2/getrusage.html?pathrev=V60s2_BRANCH">getrusage(2)</A></B>) after a job has finished. In addi-
+     tion, the <I>sge</I>_<I>shepherd</I> forwards signals to the job, such  as
+     the signals for suspension, enabling, termination and the N1
+     Grid  Engine  checkpointing  signal  (see  <B><A HREF="../htmlman1/sge_ckpt.html?pathrev=V60s2_BRANCH">sge_ckpt(1)</A></B>   for
+     details).
 
      The <I>sge</I>_<I>shepherd</I> receives information about the  job  to  be
      started  from the <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B>.  During the execution of the
@@ -29,7 +30,7 @@ DESCRIPTION
      finally  an epilog script if requested by the epilog parame-
      ter in the cluster  configuration.  The  prolog  and  epilog
      scripts  as  well  as  the  parallel environment startup and
-     shutdown procedures are to be provided by  the  Grid  Engine
+     shutdown procedures are to be provided by the N1 Grid Engine
      administrator  and are intended for site-specific actions to
      be taken before and after execution of the actual user job.
 
@@ -74,7 +75,7 @@ DESCRIPTION
             Always successful.
             Checkpoint: Success, except for kernel checkpointing:
             checkpoint  was  not  successful, did not happen (but
-            migration will happen by Grid Engine).
+            migration will happen by N1 Grid Engine).
 
 RESTRICTIONS
      <I>sge</I>_<I>shepherd</I> should not be invoked  manually,  but  only  by
@@ -94,7 +95,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
 
 
 

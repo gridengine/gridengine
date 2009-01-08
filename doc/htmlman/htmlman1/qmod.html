@@ -3,14 +3,14 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     qmod - modify a Grid Engine queue
+     qmod - modify a N1 Grid Engine queue
 
 SYNTAX
      qmod [ options ] [ wc_job_range_list | wc_queue_list ]
 
 DESCRIPTION
      <I>Qmod</I> enables users classified as <I>owners</I>  (see  <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B>
-     for  details)  of  a workstation to modify the state of Grid
+     for details) of a workstation to modify the state of N1 Grid
      Engine queues for his/her machine as well as  the  state  of
      his/her  own  jobs.   A manager/operator or root can execute
      <I>qmod</I> for any queue and job in  a  cluster.  Find  additional
@@ -92,12 +92,12 @@ OPTIONS
           jobs which might be active.
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the N1 Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
-                    cell. To address a Grid Engine cell <I>qmod</I> uses
-                    (in the order of precedence):
+     SGE_CELL       If set, specifies the default N1 Grid  Engine
+                    cell.  To  address a N1 Grid Engine cell <I>qmod</I>
+                    uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
                          environment  variable SGE_CELL, if it is
@@ -121,7 +121,7 @@ ENVIRONMENTAL VARIABLES
 
 FILES
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                     Grid Engine master host file
+                     N1 Grid Engine master host file
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B>,    <B><A HREF="../htmlman1/sge_ckpt.html?pathrev=V60s2_BRANCH">sge_ckpt(1)</A></B>,    <B><A HREF="../htmlman1/qstat.html?pathrev=V60s2_BRANCH">qstat(1)</A></B>,    <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B>,

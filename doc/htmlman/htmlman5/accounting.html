@@ -3,12 +3,13 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     accounting - Grid Engine accounting file format
+     accounting - N1 Grid Engine accounting file format
 
 DESCRIPTION
-     An accounting record is written to the Grid Engine  account-
-     ing  file  for each job having finished. The accounting file
-     is processed by <B><A HREF="../htmlman1/qacct.html?pathrev=V60s2_BRANCH">qacct(1)</A></B> to derive accounting statistics.
+     An accounting record  is  written  to  the  N1  Grid  Engine
+     accounting file for each job having finished. The accounting
+     file is processed by <B><A HREF="../htmlman1/qacct.html?pathrev=V60s2_BRANCH">qacct(1)</A></B> to derive  accounting  statis-
+     tics.
 
 FORMAT
      Each job is represented by a line in  the  accounting  file.
@@ -28,7 +29,7 @@ FORMAT
           the job.
 
      owner
-          Owner of the Grid Engine job.
+          Owner of the N1 Grid Engine job.
 
      job_name
           Job name.
@@ -60,14 +61,14 @@ FORMAT
           Indicates the problem which  occurred  in  case  a  job
           could  not  be  started  on  the  execution  host (e.g.
           because the owner of the  job  did  not  have  a  valid
-          account on that machine). If Grid Engine tries to start
-          a job multiple times, this may lead to multiple entries
-          in  the  accounting  file corresponding to the same job
-          ID.
+          account  on  that  machine). If N1 Grid Engine tries to
+          start a job multiple times, this may lead  to  multiple
+          entries  in  the  accounting  file corresponding to the
+          same job ID.
 
      exit_status
-          Exit status of the job script (or Grid Engine  specific
-          status in case of certain error conditions).
+          Exit status of  the  job  script  (or  N1  Grid  Engine
+          specific status in case of certain error conditions).
 
      ru_wallclock
           Difference between end_time and start_time (see above).
@@ -127,7 +128,7 @@ FORMAT
 
      pe_taskid
           If this identifier is set the task was part of a paral-
-          lel  job  and  was  passed  to Grid Engine via the qrsh
+          lel  job  and was passed to N1 Grid Engine via the qrsh
           -inherit interface.
 
      maxvmem

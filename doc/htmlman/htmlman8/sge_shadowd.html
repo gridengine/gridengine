@@ -3,15 +3,15 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     sge_shadowd - Grid Engine shadow master daemon
+     sge_shadowd - N1 Grid Engine shadow master daemon
 
 SYNOPSIS
      sge_shadowd
 
 DESCRIPTION
      <I>sge</I>_<I>shadowd</I> is a "light weight" process which can be run  on
-     so-called  shadow  master  hosts in a Grid Engine cluster to
-     detect failure of the current  Grid  Engine  master  daemon,
+     so-called shadow master hosts in a N1 Grid Engine cluster to
+     detect failure of the current N1 Grid Engine master  daemon,
      <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B>,  and to start-up a new <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B> on the
      host on which the <I>sge</I>_<I>shadowd</I> runs. If multiple shadow  dae-
      mons  are  active  in  a  cluster, they run a protocol which
@@ -30,11 +30,11 @@ RESTRICTIONS
      <I>sge</I>_<I>shadowd</I> may only be started by root.
 
 ENVIRONMENT VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the N1 Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
-                    cell.   To   address   a   Grid  Engine  cell
+     SGE_CELL       If set, specifies the default N1 Grid  Engine
+                    cell.  To  address  a  N1  Grid  Engine  cell
                     <I>sge</I>_<I>shadowd</I>  uses  (in  the  order  of   pre-
                     cedence):
 
@@ -85,8 +85,8 @@ FILES
                      The heartbeat file.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B>, <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60s2_BRANCH">sge_conf(5)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B>, <I>Grid</I> <I>Engine</I>  <I>Ins-</I>
-     <I>tallation</I> <I>and</I> <I>Administration</I> <I>Guide</I>.
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B>, <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60s2_BRANCH">sge_conf(5)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B>,  <I>N1</I>  <I>Grid</I>  <I>Engine</I>
+     <I>Installation</I> <I>and</I> <I>Administration</I>
 
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-

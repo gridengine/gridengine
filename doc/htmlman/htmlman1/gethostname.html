@@ -31,7 +31,7 @@ DESCRIPTION
      <I>getservbyname</I>  can be used to get the configured port number
      of a service (e.g. from /etc/services).
 
-     The hostname utils are primarily used  by  the  Grid  Engine
+     The hostname utils are primarily used by the N1 Grid  Engine
      installation   scripts.   <I>gethostname</I>  ,  <I>gethostbyname</I>  and
      <I>gethostbyaddr</I> called without any option will print  out  the
      hostname,  all  specified aliases, and the IP address of the
@@ -46,17 +46,17 @@ OPTIONS
      This option only reports the primary name of the host.
 
   -aname
-     If this option is set, the Grid Engine host  alias  file  is
+     If this option is set, the N1 Grid Engine host alias file is
      used  for  host  name  resolving. It is necessary to set the
      environment variable SGE_ROOT and, if more than one cell  is
      defined, also SGE_CELL.
 
-     This option will print out the Grid Engine host name.
+     This option will print out the N1 Grid Engine host name.
 
 
   -all
      By using the -all option all available host information will
-     be  printed.   This  information includes the host name, the
+     be printed.  This information includes the host name, the N1
      Grid Engine host name, all host aliases, and the IP  address
      of the host.
 
@@ -88,7 +88,7 @@ EXAMPLES
      gridmaster extern_name extern_name.mydomain
 
      The local host resolving must also provide  the  alias  name
-     "gridmaster".  Each  Grid  Engine host that wants to use the
+     "gridmaster". Each N1 Grid Engine host that wants to use the
      cluster must be able to resolve the host name "gridmaster".
 
      To setup an alias name, edit your /etc/hosts file or  modify
@@ -104,10 +104,10 @@ EXAMPLES
           Host Address(es): 192.168.143.99
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the N1 Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
+     SGE_CELL       If set, specifies the default N1 Grid  Engine
                     cell.
 
 SEE ALSO

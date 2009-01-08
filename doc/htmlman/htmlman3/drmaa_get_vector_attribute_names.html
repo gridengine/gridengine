@@ -47,29 +47,30 @@ DESCRIPTION
      The drmaa_get_attribute_names() function returns into <I>values</I>
      a  DRMAA names string vector containing the set of supported
      non-vector DRMAA  job  template  attribute  names.  The  set
-     includes  supported  DRMAA reserved attribute names and Grid
-     Engine native attribute names. The names in the names string
-     vector  can  be extracted using <B><A HREF="../htmlman3/drmaa_get_next_attr_name.html?pathrev=V60s2_BRANCH">drmaa_get_next_attr_name(3)</A></B>.
-     The number of names in the names string vector can be deter-
-     mined  using  <B><A HREF="../htmlman3/drmaa_get_num_attr_names.html?pathrev=V60s2_BRANCH">drmaa_get_num_attr_names(3)</A></B>.   Note  that this
-     function is only available in the  1.0  implementation.   In
-     order  to  use  the  DRMAA  1.0 library, you must define the
-     DRMAA_10 macro,  either  in  your  application  directly  or
-     through  a compiler flag, such as -DDRMAA_10.  The caller is
-     responsible for releasing the names string  vector  returned
-     into    <I>values</I>   using   <B><A HREF="../htmlman3/drmaa_release_attr_names.html?pathrev=V60s2_BRANCH">drmaa_release_attr_names(3)</A></B>.    Use
-     <B><A HREF="../htmlman3/drmaa_set_attribute.html?pathrev=V60s2_BRANCH">drmaa_set_attribute(3)</A></B> and <B><A HREF="../htmlman3/drmaa_get_attribute.html?pathrev=V60s2_BRANCH">drmaa_get_attribute(3)</A></B>  for  set-
-     ting and inspecting non-vector attributes.
+     includes  supported  DRMAA  reserved  attribute names and N1
+     Grid Engine native attribute names. The names in  the  names
+     string      vector      can      be      extracted     using
+     <B><A HREF="../htmlman3/drmaa_get_next_attr_name.html?pathrev=V60s2_BRANCH">drmaa_get_next_attr_name(3)</A></B>.  The number  of  names  in  the
+     names    string    vector    can    be    determined   using
+     <B><A HREF="../htmlman3/drmaa_get_num_attr_names.html?pathrev=V60s2_BRANCH">drmaa_get_num_attr_names(3)</A></B>.  Note  that  this  function  is
+     only  available  in the 1.0 implementation.  In order to use
+     the DRMAA 1.0 library, you must define the  DRMAA_10  macro,
+     either  in  your  application directly or through a compiler
+     flag, such as -DDRMAA_10.  The  caller  is  responsible  for
+     releasing the names string vector returned into <I>values</I> using
+     <B><A HREF="../htmlman3/drmaa_release_attr_names.html?pathrev=V60s2_BRANCH">drmaa_release_attr_names(3)</A></B>.  Use <B><A HREF="../htmlman3/drmaa_set_attribute.html?pathrev=V60s2_BRANCH">drmaa_set_attribute(3)</A></B> and
+     <B><A HREF="../htmlman3/drmaa_get_attribute.html?pathrev=V60s2_BRANCH">drmaa_get_attribute(3)</A></B> for setting and inspecting non-vector
+     attributes.
 
   drmaa_get_vector_attribute_names()
      The drmaa_get_vector_attribute_names() function returns into
      <I>values</I>  a  DRMAA  names  string vector containing the set of
      supported vector DRMAA job template attribute names. The set
-     includes  supported  DRMAA reserved attribute names and Grid
-     Engine native attribute names. The names in the names string
-     vector  can  be extracted using <B><A HREF="../htmlman3/drmaa_get_next_attr_name.html?pathrev=V60s2_BRANCH">drmaa_get_next_attr_name(3)</A></B>.
-     The caller is responsible for  releasing  the  names  string
-     vector        returned        into        <I>values</I>       using
+     includes  supported  DRMAA  reserved  attribute names and N1
+     Grid Engine native attribute names. The names in  the  names
+     string      vector      can      be      extracted     using
+     <B><A HREF="../htmlman3/drmaa_get_next_attr_name.html?pathrev=V60s2_BRANCH">drmaa_get_next_attr_name(3)</A></B>.  The caller is responsible  for
+     releasing the names string vector returned into <I>values</I> using
      <B><A HREF="../htmlman3/drmaa_release_attr_names.html?pathrev=V60s2_BRANCH">drmaa_release_attr_names(3)</A></B>.                             Use
      <B><A HREF="../htmlman3/drmaa_set_vector_attribute.html?pathrev=V60s2_BRANCH">drmaa_set_vector_attribute(3)</A></B>                            and
      <B><A HREF="../htmlman3/drmaa_get_vector_attribute.html?pathrev=V60s2_BRANCH">drmaa_get_vector_attribute(3)</A></B>  for  setting  and  inspecting
@@ -157,7 +158,6 @@ DESCRIPTION
   Attribute Correlations
      The following DRMAA attributes correspond to  the  following
      <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B> options:
-
           DRMAA Attribute                  qsub Option
           -------------------------------------------------------
           drmaa_remote_command             script file
@@ -252,7 +252,7 @@ DRMAA JOB TEMPLATE ATTRIBUTES
 
      When the 'drmaa_transfer_files' job  template  attribute  is
      supported  and  contains  the  character 'i', the input file
-     will be fetched by Grid Engine from the  specified  host  or
+     will be fetched by N1 Grid Engine from the specified host or
      from  the  submit host if no <I>hostname</I> is specified. When the
      'drmaa_transfer_files' job template attribute  is  not  sup-
      ported or does not contain the character 'i', the input file
@@ -283,8 +283,8 @@ DRMAA JOB TEMPLATE ATTRIBUTES
 
      When the 'drmaa_transfer_files' job  template  attribute  is
      supported  and  contains  the character 'o', the output file
-     will be transferred by Grid Engine to the specified host  or
-     to  the  submit  host  if no <I>hostname</I> is specified. When the
+     will be transferred by N1 Grid Engine to the specified  host
+     or  to the submit host if no <I>hostname</I> is specified. When the
      'drmaa_transfer_files' job template attribute  is  not  sup-
      ported  or  does  not  contain the character 'o', the output
      file is always kept at the host where the  job  is  executed
@@ -316,8 +316,8 @@ DRMAA JOB TEMPLATE ATTRIBUTES
 
      When the 'drmaa_transfer_files' job  template  attribute  is
      supported  and  contains  the character 'e', the output file
-     will be transferred by Grid Engine to the specified host  or
-     to  the  submit  host  if no <I>hostname</I> is specified. When the
+     will be transferred by N1 Grid Engine to the specified  host
+     or  to the submit host if no <I>hostname</I> is specified. When the
      'drmaa_transfer_files' job template attribute  is  not  sup-
      ported or does not contain the character 'e', the error file
      is always kept at the host where the job is executed regard-
@@ -346,7 +346,7 @@ DRMAA JOB TEMPLATE ATTRIBUTES
      Specifies if the job's error  stream  should  be  intermixed
      with  the  output  stream.  If not explicitly set in the job
      template the attribute defaults to 'n'. Either  'y'  or  'n'
-     can  be  specified.  If  'y'  is  specified Grid Engine will
+     can  be  specified.  If 'y' is specified N1 Grid Engine will
      ignore the value  of  the  'drmaa_error_path'  job  template
      attribute  and  intermix  the standard error stream with the
      standard     output     stream     as     specified     with
@@ -357,15 +357,15 @@ DRMAA JOB TEMPLATE ATTRIBUTES
 
   drmaa_job_category - "&lt;category&gt;"
      Specifies the DRMAA job category.  The  <I>category</I>  string  is
-     used  by  Grid Engine as a reference into the <B><A HREF="../htmlman5/qtask.html?pathrev=V60s2_BRANCH">qtask(5)</A></B> file.
-     Certain <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B> options used in the  referenced  qtask  file
-     line  are  applied  to the job template before submission to
-     allow site-specific resolving of resources and/or  policies.
-     The  cluster  qtask file, the local qtask file, and the user
-     qtask file are searched. Job  settings  resulting  from  job
-     template  category are overridden by settings resulting from
-     the job  template  drmaa_native_specification  attribute  as
-     well as by explicit DRMAA job template settings.
+     used  by  N1  Grid  Engine  as a reference into the <B><A HREF="../htmlman5/qtask.html?pathrev=V60s2_BRANCH">qtask(5)</A></B>
+     file. Certain <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B> options used in the  referenced  qtask
+     file  line are applied to the job template before submission
+     to allow site-specific resolving of resources  and/or  poli-
+     cies.  The cluster qtask file, the local qtask file, and the
+     user qtask file are searched. Job  settings  resulting  from
+     job  template  category are overridden by settings resulting
+     from the job template  drmaa_native_specification  attribute
+     as well as by explicit DRMAA job template settings.
      In order to avoid collisions with command names in the qtask
      files,  it is recommended that DRMAA job category names take
      the form: &lt;category_name&gt;.cat.
@@ -375,9 +375,9 @@ DRMAA JOB TEMPLATE ATTRIBUTES
      environment variable is set.
 
   drmaa_native_specification - "&lt;native_specification&gt;"
-     Specifies Grid Engine native <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B> options which  will  be
-     interpreted  as part of the DRMAA job template.  All options
-     available  to  <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B>  command   may   be   used   in   the
+     Specifies N1 Grid Engine native <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B> options  which  will
+     be  interpreted  as  part  of  the  DRMAA job template.  All
+     options available to <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B> command  may  be  used  in  the
      <I>native</I>_<I>specification</I>,  except for -help, -t, -verify, and -w
      w|v.   The  -cwd  option   may   only   be   used   if   the
      SGE_DRMAA_ALLOW_CWD  environment  variable  is set.  This is
@@ -447,13 +447,13 @@ ENVIRONMENTAL VARIABLES
                     algorithm for parsing the -cwd option is  not
                     thread-safe.
 
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the N1 Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
-                    cell  to  be  used.  To address a Grid Engine
-                    cell Grid Engine uses (in the order  of  pre-
-                    cedence):
+     SGE_CELL       If set, specifies the default N1 Grid  Engine
+                    cell  to be used. To address a N1 Grid Engine
+                    cell N1 Grid Engine uses  (in  the  order  of
+                    precedence):
 
                          The name of the cell  specified  in  the
                          environment  variable SGE_CELL, if it is

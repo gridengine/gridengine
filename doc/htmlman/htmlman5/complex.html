@@ -3,24 +3,24 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     complex - Grid Engine complexes configuration file format
+     complex - N1 Grid Engine complexes configuration file format
 
 DESCRIPTION
-     <I>Complex</I> reflects the format of the Grid Engine complex  con-
-     figuration.   The  definition of complex attributes provides
-     all pertinent information concerning the resource attributes
-     a  user may request for a Grid Engine job via the <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B> -l
-     option and for the interpretation of these parameters within
-     the Grid Engine system.
+     <I>Complex</I> reflects the format of the N1  Grid  Engine  complex
+     configuration.   The  definition  of complex attributes pro-
+     vides all  pertinent  information  concerning  the  resource
+     attributes  a  user may request for a N1 Grid Engine job via
+     the <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B> -l option and for the  interpretation  of  these
+     parameters within the N1 Grid Engine system.
 
-     The Grid Engine complex object defines all entries which are
-     used for configuring the global, the host, and queue object.
-     The system has a set  of  pre  defined  entries,  which  are
-     assigned  to a host or queue per default.  In a addition can
-     the user define new entries and assign them to one or multi-
-     ple  objects.  Each load value has to have its corresponding
-     complex entry object, which defines the type and  the  rela-
-     tional operator for it.
+     The N1 Grid Engine complex object defines all entries  which
+     are  used  for  configuring  the global, the host, and queue
+     object. The system has a set of pre defined  entries,  which
+     are  assigned to a host or queue per default.  In a addition
+     can the user define new entries and assign them  to  one  or
+     multiple   objects.   Each   load  value  has  to  have  its
+     corresponding complex entry object, which defines  the  type
+     and the relational operator for it.
 
   defining resource attributes
      The complex configuration should not be  accessed  directly.
@@ -105,11 +105,11 @@ DESCRIPTION
      The second attribute category in the standard  host  complex
      are  the default load values Every <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B> periodically
      reports load to <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B>.  The  reported  load  values
-     are  either the standard Grid Engine load values such as the
-     CPU load average (see <B><A HREF="../htmlman1/uptime.html?pathrev=V60s2_BRANCH">uptime(1)</A></B>) or load values  defined  by
-     the  Grid Engine administration (see the load_sensor parame-
-     ter in the cluster configuration <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60s2_BRANCH">sge_conf(5)</A></B>  and  the  <I>Grid</I>
-     <I>Engine</I>  <I>Installation</I>  <I>and</I> <I>Administration</I> <I>Guide</I> for details).
+     are  either  the standard N1 Grid Engine load values such as
+     the CPU load average (see <B><A HREF="../htmlman1/uptime.html?pathrev=V60s2_BRANCH">uptime(1)</A></B>) or load values  defined
+     by  the  N1  Grid Engine administration (see the load_sensor
+     parameter in the cluster configuration <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60s2_BRANCH">sge_conf(5)</A></B>  and  the
+     <I>N1</I> <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I> <I>Administration</I> for details).
      The characteristics definition for the standard load  values
      is  part  of  the  default host complex, while administrator
      defined load values require extension of the  host  complex.
@@ -169,8 +169,8 @@ FORMAT
 
   type
      This setting determines how the corresponding values are  to
-     be  treated Grid Engine internally in case of comparisons or
-     in case of load scaling for the load complex entries:
+     be  treated N1 Grid Engine internally in case of comparisons
+     or in case of load scaling for the load complex entries:
 
      <B>o</B>  With INT only raw integers are allowed.
 
@@ -265,19 +265,19 @@ FORMAT
      abbreviated)  or 'no' ('n'). It can be set to 'yes' only for
      numeric attributes (INT, DOUBLE, MEMORY,  TIME  -  see  type
      above). If set to 'yes' the consumption of the corresponding
-     resource can be managed by Grid Engine internal bookkeeping.
-     In  this  case  Grid  Engine accounts for the consumption of
-     this resource for all running jobs and ensures that jobs are
-     only  dispatched  if  the  Grid  Engine internal bookkeeping
-     indicates enough available consumable resources. Consumables
-     are  an  efficient  means to manage limited resources such a
-     available memory, free  space  on  a  file  system,  network
-     bandwidth or floating software licenses.
+     resource can be managed by N1 Grid Engine internal bookkeep-
+     ing.  In  this case N1 Grid Engine accounts for the consump-
+     tion of this resource for all running jobs and ensures  that
+     jobs  are  only  dispatched  if  the N1 Grid Engine internal
+     bookkeeping indicates enough available consumable resources.
+     Consumables   are  an  efficient  means  to  manage  limited
+     resources such a available memory, free space on a file sys-
+     tem, network bandwidth or floating software licenses.
 
      Consumables can be combined with  default  or  user  defined
      load  parameters  (see  <B><A HREF="../htmlman5/sge_conf.html?pathrev=V60s2_BRANCH">sge_conf(5)</A></B>  and <B><A HREF="../htmlman5/host_conf.html?pathrev=V60s2_BRANCH">host_conf(5)</A></B>), i.e.
      load values can be reported for consumable attributes or the
-     consumable  flag  can  be  set for load attributes. The Grid
+     consumable  flag can be set for load attributes. The N1 Grid
      Engine consumable resource management takes  both  the  load
      (measuring  availability  of  the resource) and the internal
      bookkeeping into account in this case, and makes  sure  that
@@ -309,18 +309,17 @@ FORMAT
      below).  This is meaningful only if requesting the attribute
      is not enforced as explained above.
 
-     See the <I>Grid</I> <I>Engine</I> <I>Installation</I>  <I>and</I>  <I>Administration</I>  <I>Guide</I>
-     for examples on the usage of the consumable resources facil-
-     ity.
+     See the <I>N1</I> <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I>  <I>Administration</I>  for
+     examples on the usage of the consumable resources facility.
 
   default
      Meaningful only for consumable complex attributes (see  con-
-     sumable  parameter  above). Grid Engine assumes the resource
-     amount denoted in the default  parameter  implicitly  to  be
-     consumed  by jobs being dispatched to a host or queue manag-
-     ing the consumable attribute. Jobs explicitly requesting the
-     attribute via the -<I>l</I> option to <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B> override this default
-     value.
+     sumable   parameter  above).  N1  Grid  Engine  assumes  the
+     resource amount denoted in the default parameter  implicitly
+     to  be  consumed by jobs being dispatched to a host or queue
+     managing the consumable attribute. Jobs explicitly  request-
+     ing the attribute via the -<I>l</I> option to <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B> override this
+     default value.
 
   urgency
      The urgency value allows influencing job priorities on a per
@@ -337,11 +336,12 @@ FORMAT
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html?pathrev=V60s2_BRANCH">qconf(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B>,  <B><A HREF="../htmlman1/uptime.html?pathrev=V60s2_BRANCH">uptime(1)</A></B>,  <B><A HREF="../htmlman5/host_conf.html?pathrev=V60s2_BRANCH">host_conf(5)</A></B>,
      <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B>, <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B>, <B><A HREF="../htmlman8/sge_schedd.html?pathrev=V60s2_BRANCH">sge_schedd(8)</A></B>,
-     <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I> <I>Administration</I> <I>Guide</I>.
+     <I>N1</I> <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I> <I>Administration</I>
 
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
 
 
 

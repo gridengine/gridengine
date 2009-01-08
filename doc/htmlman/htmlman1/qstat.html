@@ -3,7 +3,7 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     qstat - show the status of Grid Engine jobs and queues
+     qstat - show the status of N1 Grid Engine jobs and queues
 
 SYNTAX
      qstat [ -ext ] [ -f ]  [  -F  [resource_name,...]   ]  [  -g
@@ -14,11 +14,12 @@ SYNTAX
      -u user,... ] [ -urg ] [ -xml ]
 
 DESCRIPTION
-     <I>qstat</I> shows the current status of the available Grid  Engine
-     queues  and  the  jobs associated with the queues. Selection
-     options allow you to get information  about  specific  jobs,
-     queues or users.  Without any option <I>qstat</I> will display only
-     a list of jobs with no queue status information.
+     <I>qstat</I> shows the current status  of  the  available  N1  Grid
+     Engine  queues  and  the  jobs  associated  with the queues.
+     Selection  options  allow  you  to  get  information   about
+     specific  jobs,  queues  or users.  Without any option <I>qstat</I>
+     will display only a list of jobs with no queue status infor-
+     mation.
 
      The  administrator  and  the  user  may  define  files  (see
      <B><A HREF="../htmlman5/sge_qstat.html?pathrev=V60s2_BRANCH">sge_qstat(5)</A></B>),   which   can  contain  any  of  the  options
@@ -374,12 +375,12 @@ OUTPUT FORMATS
 
      The states D(isabled) and C(alendar suspended) indicate that
      the  queue  has been disabled or suspended automatically via
-     the calendar facility of Grid Engine (see <B><A HREF="../htmlman5/calendar_conf.html?pathrev=V60s2_BRANCH">calendar_conf(5)</A></B>),
-     while  the S(ubordinate) state indicates, that the queue has
-     been  suspend  via  subordination  to  another  queue   (see
-     <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B> for details). When suspending a queue (regard-
-     less of the cause) all jobs  executing  in  that  queue  are
-     suspended too.
+     the   calendar   facility   of   N1   Grid    Engine    (see
+     <B><A HREF="../htmlman5/calendar_conf.html?pathrev=V60s2_BRANCH">calendar_conf(5)</A></B>),  while the S(ubordinate) state indicates,
+     that the queue has been suspend via subordination to another
+     queue  (see  <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B>  for  details). When suspending a
+     queue (regardless of the cause) all jobs executing  in  that
+     queue are suspended too.
 
      If an E(rror) state is displayed for a  queue,  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B>
      on  that  host was unable to locate the <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V60s2_BRANCH">sge_shepherd(8)</A></B> exe-
@@ -535,8 +536,8 @@ OUTPUT FORMATS
      been detected. Such jobs are printed in an <I>ERROR</I>  <I>JOBS</I>  sec-
      tion  at  the very end of the output. The ERROR JOBS section
      should disappear upon  restart  of  <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V60s2_BRANCH">sge_qmaster(8)</A></B>.   Please
-     contact  your Grid Engine support representative if you feel
-     uncertain about the cause or effects of such jobs.
+     contact  your  N1  Grid Engine support representative if you
+     feel uncertain about the cause or effects of such jobs.
 
   Expanded Format (with -r)
      If the -r option was specified together with <I>qstat</I>, the fol-
@@ -646,11 +647,11 @@ OUTPUT FORMATS
      ppri The job's -p priority as specified by the user.
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the N1 Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
-                    cell.  To  address  a  Grid Engine cell <I>qstat</I>
+     SGE_CELL       If set, specifies the default N1 Grid  Engine
+                    cell.  To address a N1 Grid Engine cell <I>qstat</I>
                     uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
@@ -685,7 +686,7 @@ ENVIRONMENTAL VARIABLES
 
 FILES
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                     Grid Engine master host file
+                     N1 Grid Engine master host file
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>sge</I>_<I>qstat</I>
                      cluster qstat default options
      $<I>HOME</I>/.<I>sge</I>_<I>qstat</I>

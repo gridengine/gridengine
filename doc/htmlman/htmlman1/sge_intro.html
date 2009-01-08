@@ -3,11 +3,11 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     Grid Engine - a facility for executing UNIX jobs  on  remote
-     machines
+     N1 Grid Engine - a  facility  for  executing  UNIX  jobs  on
+     remote machines
 
 DESCRIPTION
-     Grid Engine is a facility  for  executing  UNIX  batch  jobs
+     N1 Grid Engine is a facility for executing UNIX  batch  jobs
      (shell  scripts) on a pool of cooperating workstations. Jobs
      are queued and executed remotely on  workstations  at  times
      when  those  workstations  would  otherwise  be idle or only
@@ -21,11 +21,11 @@ DESCRIPTION
      <B><A HREF="../htmlman1/sge_ckpt.html?pathrev=V60s2_BRANCH">sge_ckpt(1)</A></B>).  Checkpointing jobs migrate  from  workstation
      to  workstation without user intervention on load demand. In
      addition to batch jobs, interactive jobs and  parallel  jobs
-     can also be submitted to Grid Engine.
+     can also be submitted to N1 Grid Engine.
 
 USER INTERFACE
-     The Grid Engine user interface consists of several  programs
-     which are described separately.
+     The N1 Grid Engine user interface consists of  several  pro-
+     grams which are described separately.
 
      <B><A HREF="../htmlman1/qacct.html?pathrev=V60s2_BRANCH">qacct(1)</A></B>
           <I>qacct</I> extracts arbitrary  accounting  information  from
@@ -48,7 +48,7 @@ USER INTERFACE
           <I>qhold</I> holds back submitted jobs from execution.
 
      <B><A HREF="../htmlman1/qhost.html?pathrev=V60s2_BRANCH">qhost(1)</A></B>
-          <I>qhost</I> displays status  information  about  Grid  Engine
+          <I>qhost</I> displays status information about N1 Grid  Engine
           execution hosts.
 
      <B><A HREF="../htmlman1/qlogin.html?pathrev=V60s2_BRANCH">qlogin(1)</A></B>
@@ -69,7 +69,7 @@ USER INTERFACE
           owned queues.
 
      <B><A HREF="../htmlman1/qmon.html?pathrev=V60s2_BRANCH">qmon(1)</A></B>
-          <I>qmon</I> provides a Motif command  interface  to  all  Grid
+          <I>qmon</I> provides a Motif command interface to all N1  Grid
           Engine functions. The status of all or a private selec-
           tion of the configured queues is displayed  on-line  by
           changing colors at corresponding queue icons.
@@ -84,20 +84,20 @@ USER INTERFACE
 
      <B><A HREF="../htmlman1/qrsh.html?pathrev=V60s2_BRANCH">qrsh(1)</A></B>
           <I>qrsh</I> can be used for various purposes such as providing
-          remote  execution  of interactive applications via Grid
-          Engine comparable to the standard Unix facility rsh, to
-          allow for the submission of batch jobs which, upon exe-
-          cution, support terminal I/O (standard/error output and
-          standard  input)  and  terminal  control,  to provide a
-          batch job submission client which remains active  until
-          the  job  has finished or to allow for the Grid Engine-
-          controlled remote execution of the  tasks  of  parallel
-          jobs.
+          remote  execution  of  interactive  applications via N1
+          Grid Engine comparable to the  standard  Unix  facility
+          rsh,  to  allow for the submission of batch jobs which,
+          upon execution, support  terminal  I/O  (standard/error
+          output  and  standard  input)  and terminal control, to
+          provide a batch job  submission  client  which  remains
+          active  until  the job has finished or to allow for the
+          N1 Grid Engine-controlled remote execution of the tasks
+          of parallel jobs.
 
      <B><A HREF="../htmlman1/qselect.html?pathrev=V60s2_BRANCH">qselect(1)</A></B>
           <I>qselect</I> prints a list of queue names  corresponding  to
           specified  selection criteria. The output of <I>qselect</I> is
-          usually fed into other Grid Engine  commands  to  apply
+          usually fed into other N1 Grid Engine commands to apply
           actions on a selected set of queues.
 
      <B><A HREF="../htmlman1/qsh.html?pathrev=V60s2_BRANCH">qsh(1)</A></B>
@@ -114,19 +114,19 @@ USER INTERFACE
           known  and  used Unix C-Shell (<I>csh</I>) derivative <I>tcsh</I>. It
           provides a command-shell with the  extension  of  tran-
           sparently distributing execution of designated applica-
-          tions to suitable and lightly  loaded  hosts  via  Grid
+          tions to suitable and lightly loaded hosts via N1  Grid
           Engine.
 
      <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B>
-          <I>qsub</I> is the user interface for submitting a job to Grid
-          Engine.
+          <I>qsub</I> is the user interface for submitting a job  to  N1
+          Grid Engine.
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_ckpt.html?pathrev=V60s2_BRANCH">sge_ckpt(1)</A></B>,   <B><A HREF="../htmlman1/qacct.html?pathrev=V60s2_BRANCH">qacct(1)</A></B>,   <B><A HREF="../htmlman1/qalter.html?pathrev=V60s2_BRANCH">qalter(1)</A></B>,   <B><A HREF="../htmlman1/qconf.html?pathrev=V60s2_BRANCH">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qdel.html?pathrev=V60s2_BRANCH">qdel(1)</A></B>,
      <B><A HREF="../htmlman1/qhold.html?pathrev=V60s2_BRANCH">qhold(1)</A></B>,  <B><A HREF="../htmlman1/qhost.html?pathrev=V60s2_BRANCH">qhost(1)</A></B>,  <B><A HREF="../htmlman1/qlogin.html?pathrev=V60s2_BRANCH">qlogin(1)</A></B>, <B><A HREF="../htmlman1/qmake.html?pathrev=V60s2_BRANCH">qmake(1)</A></B>, <B><A HREF="../htmlman1/qmod.html?pathrev=V60s2_BRANCH">qmod(1)</A></B>, <B><A HREF="../htmlman1/qmon.html?pathrev=V60s2_BRANCH">qmon(1)</A></B>,
      <B><A HREF="../htmlman1/qresub.html?pathrev=V60s2_BRANCH">qresub(1)</A></B>, <B><A HREF="../htmlman1/qrls.html?pathrev=V60s2_BRANCH">qrls(1)</A></B>, <B><A HREF="../htmlman1/qrsh.html?pathrev=V60s2_BRANCH">qrsh(1)</A></B>, <B><A HREF="../htmlman1/qselect.html?pathrev=V60s2_BRANCH">qselect(1)</A></B>,  <B><A HREF="../htmlman1/qsh.html?pathrev=V60s2_BRANCH">qsh(1)</A></B>,  <B><A HREF="../htmlman1/qstat.html?pathrev=V60s2_BRANCH">qstat(1)</A></B>,
-     <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B>,  <B><A HREF="../htmlman1/qtcsh.html?pathrev=V60s2_BRANCH">qtcsh(1)</A></B>, <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I> <I>Administra-</I>
-     <I>tion</I> <I>Guide</I>, <I>Grid</I>  <I>Engine</I>  <I>Quick</I>  <I>Start</I>  <I>Guide</I>,  <I>Grid</I>  <I>Engine</I>
+     <B><A HREF="../htmlman1/qsub.html?pathrev=V60s2_BRANCH">qsub(1)</A></B>,  <B><A HREF="../htmlman1/qtcsh.html?pathrev=V60s2_BRANCH">qtcsh(1)</A></B>, <I>N1</I> <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I> <I>Adminis-</I>
+     <I>tration</I> <I>N1</I> <I>Grid</I> <I>Engine</I> <I>Quick</I> <I>Start</I>  <I>Guide</I>,  <I>N1</I>  <I>Grid</I>  <I>Engine</I>
      <I>User</I>'<I>s</I> <I>Guide</I>.
 
 COPYRIGHT

@@ -3,16 +3,17 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     qhost - show the status of Grid Engine hosts, queues, jobs
+     qhost - show the status of N1  Grid  Engine  hosts,  queues,
+     jobs
 
 SYNTAX
      qhost [ -F [resource_name,...]  [ -help ] [ -h host_list ] [
      -j ] [ -l resource=val,... ] [ -u user,... ]
 
 DESCRIPTION
-     <I>qhost</I> shows the current status of the available Grid  Engine
-     hosts,  queues  and  the  jobs  associated  with the queues.
-     Selection  options  allow  you  to  get  information   about
+     <I>qhost</I> shows the current status  of  the  available  N1  Grid
+     Engine  hosts,  queues  and  the  jobs  associated  with the
+     queues. Selection options allow you to get information about
      specific  hosts,  queues, jobs or users.  Without any option
      <I>qhost</I> will display a list of all hosts without queue or  job
      information.
@@ -51,6 +52,7 @@ OPTIONS
 OUTPUT FORMATS
      Depending on the presence or absence of the -q or -F and  -j
      option three output formats need to be differentiated.  PP
+
 
   Default Format (without -q, -F and -j)
      Following the header line a line is printed  for  each  host
@@ -108,12 +110,12 @@ OUTPUT FORMATS
 
      The states D(isabled) and C(alendar suspended) indicate that
      the  queue  has been disabled or suspended automatically via
-     the calendar facility of Grid Engine (see <B><A HREF="../htmlman5/calendar_conf.html?pathrev=V60s2_BRANCH">calendar_conf(5)</A></B>),
-     while  the S(ubordinate) state indicates, that the queue has
-     been  suspend  via  subordination  to  another  queue   (see
-     <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B> for details). When suspending a queue (regard-
-     less of the cause) all jobs  executing  in  that  queue  are
-     suspended too.
+     the   calendar   facility   of   N1   Grid    Engine    (see
+     <B><A HREF="../htmlman5/calendar_conf.html?pathrev=V60s2_BRANCH">calendar_conf(5)</A></B>),  while the S(ubordinate) state indicates,
+     that the queue has been suspend via subordination to another
+     queue  (see  <B><A HREF="../htmlman5/queue_conf.html?pathrev=V60s2_BRANCH">queue_conf(5)</A></B>  for  details). When suspending a
+     queue (regardless of the cause) all jobs executing  in  that
+     queue are suspended too.
 
      If an E(rror) state is displayed for a  queue,  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V60s2_BRANCH">sge_execd(8)</A></B>
      on  that  host was unable to locate the <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V60s2_BRANCH">sge_shepherd(8)</A></B> exe-
@@ -187,11 +189,11 @@ OUTPUT FORMATS
      <B>o</B>  the priority of the jobs.
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the N1 Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
-                    cell.  To  address  a  Grid Engine cell <I>qstat</I>
+     SGE_CELL       If set, specifies the default N1 Grid  Engine
+                    cell.  To address a N1 Grid Engine cell <I>qstat</I>
                     uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
@@ -217,7 +219,7 @@ ENVIRONMENTAL VARIABLES
 
 FILES
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                     Grid Engine master host file
+                     N1 Grid Engine master host file
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html?pathrev=V60s2_BRANCH">qalter(1)</A></B>,   <B><A HREF="../htmlman1/qconf.html?pathrev=V60s2_BRANCH">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qhold.html?pathrev=V60s2_BRANCH">qhold(1)</A></B>,   <B><A HREF="../htmlman1/qmod.html?pathrev=V60s2_BRANCH">qmod(1)</A></B>,
@@ -227,8 +229,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V60s2_BRANCH">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
 
 
 

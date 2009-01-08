@@ -33,56 +33,117 @@
 #___INFO__MARK_END__
 
 ########################################################################### 
-#
 # example for a job verification script 
 #
 # Be careful:  Job verification scripts are started with sgeadmin 
-#              permissions if they are executed within the master process
+#              permissions if they are executed within the master 
+#              process (server JSV) otherwise they will be started
+#              as user which submitted the job.
 #
 
 PATH=/bin:/usr/bin
 
+####### JSV/jsv_on_start() ###################################################
+#  NAME
+#     jsv_on_start() -- initiates a job verification for one job
+#
+#  SYNOPSIS
+#     jsv_on_start()
+#
+#  FUNCTION
+#     This callback function is triggered when a new job should be verified
+#     by this script. Here it is possible to request additional information
+#     which will then be available during the job verification process
+#     itself. (see jsv_send_env)
+#
+#  INPUTS
+#     None
+#
+#  RESULT
+#     None 
+#
+#  NOTES
+#     By using jsv_send_env call the JSV scripts requests the 
+#     job environment for a job. The data contained in this
+#     environment is not verified by Grid Engine and might 
+#     therefore contain data which could cause issues in JSV 
+#     scrips. Be carefull when you interprete or otherwise use 
+#     that information.
+# 
+#     In general it is recommendet NOT to request the job
+#     environment in server JSVs due to performance reason. 
+#
+#  SEE ALSO
+#     JSV/jsv_send_env
+#     JSV/jsv_on_verify
+##############################################################################
 jsv_on_start()
 {
-   # trigger client/master to send also the job environment
-   # 
-
-   # EB: TODO: add security note
-   jsv_send_env
+#   jsv_send_env
    return
 }
 
+####### JSV/jsv_on_verify() ##################################################
+#  NAME
+#     jsv_on_verify() -- initiates a job verification for one job
+#
+#  SYNOPSIS
+#     jsv_on_verify()
+#
+#  FUNCTION
+#     Callback function which is triggered when a job should be verified.
+#     Job specifiaction and optionally job environment are available by
+#     calling special functions:
+#
+#        jsv_is_param
+#        jsv_get_param
+#        jsv_set_param
+#        jsv_del_param
+#
+#        jsv_sub_is_param
+#        jsv_sub_add_param
+#        jsv_sub_del_param
+#        jsv_sub_get_param
+#
+#        jsv_is_env
+#        jsv_add_env
+#        jsv_del_env
+#        jsv_get_env
+#        jsv_mod_env
+#
+#     The evaluaton process has to be terminated by a call of one of these
+#     functions which will then either accept, correct or reject a job:
+#
+#        jsv_correct <Message> 
+#        jsv_accept <Message>
+#        jsv_reject_wait <Message>
+#        jsv_reject <Message>
+#
+#     During the verification process following functions can be used to
+#     add logging output to the master message file or stdout of a submit
+#     client:
+#
+#        jsv_log_info <Message> 
+#        jsv_log_warning <Message>
+#        jsv_log_error <Message> 
+#        jsv_show_params
+#        jsv_show_envs
+#
+#  INPUTS
+#     None
+#
+#  RESULT
+#     None 
+#
+#  NOTES
+#
+#  SEE ALSO
+#     JSV/jsv_send_env
+#     JSV/jsv_on_start
+##############################################################################
 jsv_on_verify()
 {
-   # Logging into the logfile of this script can be done with:
-   #
-   #     jsv_script_log "script logging"
-
-   # log all received parameters and environment variables into the the master
-   # message file or print them to stdout of the client with:
-   #
-   #     jsv_show_params
-   #     jsv_show_envs
-
-   # logging into the master message file or into stdout of the submit client:
-   #
-   #     jsv_log_info "This is a JSV info message"
-   #     jsv_log_warning "This is a JSV warning message"
-   #     jsv_log_error " This is a JSV error message"
-
-   # Any time a job can be accepted, rejected with one of these commands
-   #
-   #     jsv_accept
-   #     jsv_correct
-   #     jsv_reject
-   #     jsv_reject_wait
-
-
    # EXAMPLE:
-   #
-   # Following section demonstrates how to access job paramaters, how
-   # it is possible to modify job parameters and environment variables.
-   # 
    #     - all binary jobs will be rejected
    #     - pe jobs should use a multiple of 16 slots otherwise they 
    #       are rejected
@@ -108,6 +169,7 @@ jsv_on_verify()
 
       if [ $i -gt 0 ]; then
          jsv_reject "Parallel job does not request a multiple of 16 slots"
+         return
       fi
    fi
 
@@ -161,9 +223,11 @@ jsv_on_verify()
    else
       jsv_accept "Job is accepted"
    fi
+   return
 }
 
 . ${SGE_ROOT}/util/resources/jsv/jsv_include.sh
 
+# main routine handling the protocoll between client/master and JSV script
 jsv_main
 

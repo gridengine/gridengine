@@ -54,6 +54,7 @@ int main(int argc, char *argv[])
    int first = 1;
    int mode = 0;
    dstring output_buffer = DSTRING_INIT;
+   const char *output = NULL;
    
    if (argc >= 2 && strcmp(argv[1], "-e") == 0) {
       /* skip this argument and change the mode */
@@ -87,65 +88,70 @@ int main(int argc, char *argv[])
       if (mode == 0) { 
          fprintf(stdout, "%s", argv[i++]);
       } else {
-         size_t length = strlen(argv[i]);
-         size_t j = 0;
+         if (argv[i] != NULL) {
+            size_t length = strlen(argv[i]);
+            size_t j = 0;
 
-         while (j <= length) {
-            char first = argv[i][j++];
-         
-            if (first == '\\') {
-               char second = argv[i][j];
-               char out;
+            while (j <= length) {
+               char first = argv[i][j++];
+            
+               if (first == '\\') {
+                  char second = argv[i][j];
+                  char out;
 
-               switch (second) {
-                  case '\\':
-                     out = '\\';
-                     break;
-                  case 'a':
-                     out = '\a';
-                     break;
-                  case 'b':
-                     out = '\b';
-                     break;
-                  case 'n':
-                     out = '\n';
-                     break;
-                  case 'f':
-                     out = '\f';
-                     break;
-                  case 'r':
-                     out = '\r';
-                     break;
-                  case 't':
-                     out = '\t';
-                     break;
-                  case 'v':
-                     out = '\v';
-                     break;
-                  default:
-                     /*
-                      * should not happen. we got an unknown escape sequence.
-                      * we do the same bourne shell does: 
-                      * print both characters - backlash now and the following
-                      * character in the next loop.
-                      */
-                     j--;
-                     out = first;
-               }
-               j++;
-               sge_dstring_append_char(&output_buffer, out);
-            } else {
-               sge_dstring_append_char(&output_buffer, first);
-            } 
+                  switch (second) {
+                     case '\\':
+                        out = '\\';
+                        break;
+                     case 'a':
+                        out = '\a';
+                        break;
+                     case 'b':
+                        out = '\b';
+                        break;
+                     case 'n':
+                        out = '\n';
+                        break;
+                     case 'f':
+                        out = '\f';
+                        break;
+                     case 'r':
+                        out = '\r';
+                        break;
+                     case 't':
+                        out = '\t';
+                        break;
+                     case 'v':
+                        out = '\v';
+                        break;
+                     default:
+                        /*
+                         * should not happen. we got an unknown escape sequence.
+                         * we do the same bourne shell does: 
+                         * print both characters - backlash now and the following
+                         * character in the next loop.
+                         */
+                        j--;
+                        out = first;
+                  }
+                  j++;
+                  sge_dstring_append_char(&output_buffer, out);
+               } else {
+                  sge_dstring_append_char(&output_buffer, first);
+               } 
+            }
+            i++;
          }
-         i++;
       }
       first = 0;
    }
    if (mode == 0) {
       sge_dstring_append_char(&output_buffer, '\n');
    }
-   printf("%s", sge_dstring_get_string(&output_buffer));
+   output = sge_dstring_get_string(&output_buffer);
+   if (output != NULL) {
+      printf("%s", output);
+   }
    return 0;   
 }
 

@@ -264,14 +264,25 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
             int attribute = string_attribute[i];
 
             if (strcmp(param, string_param[i]) == 0) {
-               /* jobs without job name are rejected */
-               if (value == NULL && strcmp(param, "N") == 0) {
-                  answer_list_add_sprintf(&local_answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
-                                          MSG_JSV_PARSE_NAME_S, param);
-                  ret = false;
-               } else {
+               if (value == NULL) {
+                  /* 
+                   * - jobs without job name are rejected 
+                   * - resetting ckpt name also resets ckpt attribute
+                   */
+                  if (strcmp(param, "N") == 0) {
+                     answer_list_add_sprintf(&local_answer_list, STATUS_DENIED, 
+                                             ANSWER_QUALITY_ERROR, MSG_JSV_PARSE_NAME_S, param);
+                     ret = false;
+                  } else if (strcmp(param, "ckpt") == 0) {
+                     lSetUlong(new_job, JB_checkpoint_attr, NO_CHECKPOINT);
+                     lSetString(new_job, attribute, NULL); 
+                  } else {
+                     lSetString(new_job, attribute, NULL); 
+                  }
+               } else { 
                   lSetString(new_job, attribute, value);
                }
+               break;
             }
             i++;
          }
@@ -292,21 +303,25 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
             0
          };
 
-         while (path_list_param[i] != NULL && strcmp(path_list_param[i], param) == 0) {
-            lList *path_list = NULL;
-            int attribute = path_list_attribute[i];
+         while (path_list_param[i] != NULL) {
+            if (strcmp(path_list_param[i], param) == 0) {
+               lList *path_list = NULL;
+               int attribute = path_list_attribute[i];
 
-            if (value != NULL) {
-               int lret = cull_parse_path_list(&path_list, value);
+               if (value != NULL) {
+                  int lret = cull_parse_path_list(&path_list, value);
 
-               if (lret) {
-                  answer_list_add_sprintf(&local_answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
-                                          MSG_JSV_PARSE_VAL_SS, param, value);
-                  ret = false;
+                  if (lret) {
+                     answer_list_add_sprintf(&local_answer_list, STATUS_DENIED, 
+                                             ANSWER_QUALITY_ERROR, MSG_JSV_PARSE_VAL_SS, 
+                                             param, value);
+                     ret = false;
+                  }
                }
-            }
-            if (ret) {
-               lSetList(new_job, attribute, path_list); 
+               if (ret) {
+                  lSetList(new_job, attribute, path_list); 
+               }
+               break;
             }
             i++;
          }
@@ -2203,6 +2218,11 @@ jsv_do_communication(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_li
                }
             }
          }
+   
+         /*
+          * set start time for ne iteration
+          */
+         start_time = sge_get_gmt();
       }
    }
    return ret;
@@ -2269,7 +2289,7 @@ jsv_cull_attr2switch_name(int cull_attr, lListElem *job)
    } else if (cull_attr == JB_pe) {
       ret = "pe_name";
    } else if (cull_attr == JB_pe_range) {
-      ret = "pe_range";
+      ret = "pe_min";
    } else if (cull_attr == JB_hard_queue_list) {
       ret = "q_hard";
    } else if (cull_attr == JB_soft_queue_list) {
@@ -2314,12 +2334,40 @@ jsv_is_modify_rejected(sge_gdi_ctx_class_t *context, lList **answer_list, lListE
             lList *got_switches = NULL;
             lListElem *allowed = NULL;
 
+            /*
+             * Transform the cull fields into a list of corresponding 
+             * qalter switch names.
+             */
             str_list_parse_from_string(&allowed_switches, jsv_allowed_mod, ",");
             for (pointer = descr; pointer->nm != NoName; pointer++) {
                const char *swch = jsv_cull_attr2switch_name(pointer->nm, job);
              
                if (swch != NULL) {
                   lAddElemStr(&got_switches, ST_name, swch, ST_Type);
+               }
+            }
+
+            /*
+             * Even if not specified on commandline. The information of the
+             * -w switch is always passed to qalter. We must allow it even if it
+             * was not specified.
+             */
+            allowed = lGetElemStr(allowed_switches, ST_name, "w");
+            if (allowed == NULL) {
+               lAddElemStr(&allowed_switches, ST_name, "w", ST_Type);
+            }
+
+            /*
+             * Allow -t switch automatically if -h is used. The corresponding
+             * information of -t in the CULL data structure is used to
+             * send the information of -h.
+             */
+            allowed = lGetElemStr(allowed_switches, ST_name, "h");
+            if (allowed != NULL) {
+               allowed = lGetElemStr(allowed_switches, ST_name, "t");
+
+               if (allowed == NULL) {
+                  lAddElemStr(&allowed_switches, ST_name, "t", ST_Type);
                }
             }
 
@@ -2341,6 +2389,9 @@ jsv_is_modify_rejected(sge_gdi_ctx_class_t *context, lList **answer_list, lListE
                }
             }
 
+            /*
+             * If there are no remaining switches then the request will not be rejected.
+             */
             if (lGetNumberOfElem(got_switches) == 0) {
                ret = false;
             } else {

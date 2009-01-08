@@ -1964,7 +1964,10 @@ SafelyCreateFile()
    ExecuteAsAdmin $TOUCH $1
    if [ -n "$3" ]; then
       ExecuteAsAdmin $CHMOD 666 $1
-      $ECHO "$3" > $1
+      tmp_file="/tmp/tmp_safe_create_file_$$"
+      $ECHO "$3" > $tmp_file
+      ExecuteAsAdmin cp $tmp_file $1
+      Execute rm -f $tmp_file
    fi
    ExecuteAsAdmin $CHMOD $2 $1
 }

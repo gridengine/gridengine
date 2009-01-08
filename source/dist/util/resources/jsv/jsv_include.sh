@@ -522,8 +522,6 @@ jsv_handle_env_command()
       data="$3"
       if [ "$action" = "ADD" ]; then
          jsv_all_envs="$jsv_all_envs $name"
-# TODO: EB: escape characeters are not handled correctly at least for linux amd64
-#         eval "jsv_env_${name}=\"\`$SGE_ROOT/utilbin/$ARCH/echo_raw -e \${data}\`\""
          eval "jsv_env_${name}=\"\${data}\""
       fi
       unset action

@@ -3447,6 +3447,9 @@ int sge_gdi_copy_job(sge_gdi_ctx_class_t *ctx,
       DRETURN(STATUS_EUNKNOWN);
    }
 
+   /* reset the job number. we will get a new one when we add the job */
+   lSetUlong(new_jep, JB_job_number, 0);
+
    /* call add() method */
    ret = sge_gdi_add_job(ctx, &new_jep, alpp, lpp, ruser, rhost, uid, gid, group, packet, task, monitor);
 

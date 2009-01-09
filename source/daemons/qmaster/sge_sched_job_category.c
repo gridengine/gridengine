@@ -471,7 +471,7 @@ int sge_reset_job_category()
 *     MT-NOTE: sge_reset_job_category() is not MT safe 
 *
 *******************************************************************************/
-lList *sge_category_job_copy(lList *queue_list, lList **orders) {
+lList *sge_category_job_copy(lList *queue_list, lList **orders, bool monitor_next_run) {
    const int minJobPerCategory = 5;
    const int maxJobPerCategory = 300;
    
@@ -549,7 +549,7 @@ lList *sge_category_job_copy(lList *queue_list, lList **orders) {
             lAppendElem(jobListCopy, lCopyElem(job));
             copy_counter+=amount;
          } else {
-             schedd_mes_add_join( lGetUlong(job, JB_job_number), SCHEDD_INFO_JOB_CATEGORY_FILTER_);
+             schedd_mes_add_join(monitor_next_run, lGetUlong(job, JB_job_number), SCHEDD_INFO_JOB_CATEGORY_FILTER_);
              *orders = sge_create_orders(*orders, ORT_clear_pri_info, job, NULL, NULL, false);
          }
       }

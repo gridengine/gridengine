@@ -826,7 +826,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
                return 0;
             }
          } else {
-            bool destribute_tickets = false;
+            bool distribute_tickets = false;
             /* modify jobs ticket amount and spool job */
             lSetDouble(jatp, JAT_tix, lGetDouble(ep, OR_ticket));
             DPRINTF(("TICKETS: "sge_u32"."sge_u32" "sge_u32" tickets\n",
@@ -843,7 +843,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
                job_pos_t   *order_job_pos;
          
                joker_task = lFirst(lGetList(joker, JB_ja_tasks));
-               destribute_tickets = (lGetPosViaElem(joker_task, JAT_granted_destin_identifier_list, SGE_NO_ABORT) > -1)? true : false;
+               distribute_tickets = (lGetPosViaElem(joker_task, JAT_granted_destin_identifier_list, SGE_NO_ABORT) > -1)? true : false;
 
                sge_mutex_lock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);
          
@@ -877,10 +877,10 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
                sge_mutex_unlock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex); 
             }
 
-            /* tickets should only be further destributed in the scheduler reprioritize_interval. Only in
+            /* tickets should only be further distributed in the scheduler reprioritize_interval. Only in
                those intervales does the ticket order structure contain a JAT_granted_destin_identifier_list.
                We use that as an identifier to go on, or not. */
-            if (destribute_tickets) {
+            if (distribute_tickets && topp != NULL) {
                /* add a copy of this order to the ticket orders list */
                if (!*topp) 
                   *topp = lCreateList("ticket orders", OR_Type);

@@ -401,7 +401,7 @@ sge_select_parallel_environment(sge_assignment_t *best, lList *pe_list)
       if (!best->is_advance_reservation) {
          old_logging = schedd_mes_get_logging();
          schedd_mes_set_logging(0);
-         schedd_mes_off();
+         sconf_set_mes_schedd_info(false);
       }
 
       for_each(pe, pe_list) {
@@ -589,7 +589,7 @@ sge_select_parallel_environment(sge_assignment_t *best, lList *pe_list)
    }
 
    if (best->is_reservation && !best->is_advance_reservation) {
-      schedd_mes_on();
+      sconf_set_mes_schedd_info(true);
       schedd_mes_set_logging(old_logging);
    }   
 
@@ -712,7 +712,7 @@ parallel_reservation_max_time_slots(sge_assignment_t *best, int *available_slots
       } else {
          use_category.mod_category = false;
          schedd_mes_set_logging(0);
-         schedd_mes_off();
+         sconf_set_mes_schedd_info(false);
       }
       
       result = parallel_assignment(&tmp_assignment, &use_category, available_slots);
@@ -730,7 +730,7 @@ parallel_reservation_max_time_slots(sge_assignment_t *best, int *available_slots
       }
    }
    schedd_mes_set_logging(old_logging); /* restore logging mode */
-   schedd_mes_on();
+   sconf_set_mes_schedd_info(true);
 
    sge_qeti_release(&qeti);
    assignment_release(&tmp_assignment);
@@ -908,7 +908,7 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots)
          } else { /* this is an additional run, we have already at least one posible match */
             use_category.mod_category = false;
             schedd_mes_set_logging(0);
-            schedd_mes_off();
+            sconf_set_mes_schedd_info(false);
          }
 
          /* we try that slot amount */
@@ -945,7 +945,7 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots)
             } else {  /* this is an additional run, we have already at least one posible match */
                use_category.mod_category = false;
                schedd_mes_set_logging(0);
-               schedd_mes_off();
+               sconf_set_mes_schedd_info(false);
             }
 
             /* we try that slot amount */ 
@@ -969,7 +969,7 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots)
             } else { /* this is an additional run, we have already at least one posible match */
                use_category.mod_category = false;
                schedd_mes_set_logging(0);
-               schedd_mes_off();
+               sconf_set_mes_schedd_info(false);
             }
 
             /* we try that slot amount */ 
@@ -999,7 +999,7 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots)
    assignment_release(&tmp);   
 
    schedd_mes_set_logging(old_logging); /* restore logging mode */
-   schedd_mes_on();
+   sconf_set_mes_schedd_info(true);
 
    if (best->gdil) {
       result = DISPATCH_OK;
@@ -4658,7 +4658,7 @@ dispatch_t sge_sequential_assignment(sge_assignment_t *a)
       /* turn off messages for reservation scheduling */
       old_logging = schedd_mes_get_logging();
       schedd_mes_set_logging(0);
-      schedd_mes_off();
+      sconf_set_mes_schedd_info(false);
    } 
 
    /* untag all queues */
@@ -4806,7 +4806,7 @@ dispatch_t sge_sequential_assignment(sge_assignment_t *a)
 
    if (a->is_reservation && !a->is_advance_reservation) {
       schedd_mes_set_logging(old_logging);
-      schedd_mes_on();
+      sconf_set_mes_schedd_info(true);
    }   
 
    DRETURN(result);

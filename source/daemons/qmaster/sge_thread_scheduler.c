@@ -798,7 +798,7 @@ sge_scheduler_main(void *arg)
             }
 
             if (sconf_is_job_category_filtering()) {
-               copy.job_list = sge_category_job_copy(copy.queue_list, &orders);
+               copy.job_list = sge_category_job_copy(copy.queue_list, &orders, evc->monitor_next_run);
             } else {
                copy.job_list = lCopyList("", master_job_list);
             }

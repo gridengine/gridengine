@@ -1,3 +1,7 @@
+RD-2009-09-01-0: Bugfix:      Fixed qmaster crash during scheduler message
+                              generation
+                 Review:      CR
+
 MD-2008-12-01-0: Enhancem:    check in, version.c and inst_sge
 
 CR-2008-12-01-0: Cleanup:     Commlib: Use poll() instead of select() for

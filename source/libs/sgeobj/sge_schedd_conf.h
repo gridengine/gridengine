@@ -222,6 +222,18 @@ int sconf_get_comprehensive_jobs(void);
 void sconf_set_decay_constant(double decay);
 double sconf_get_decay_constant(void);
 
+void sconf_set_mes_schedd_info(bool newval);
+bool sconf_get_mes_schedd_info(void);
+
+void schedd_mes_set_logging(int bval);
+int schedd_mes_get_logging(void);
+
+lListElem *sconf_get_sme(void);
+void sconf_set_sme(lListElem *sme);
+
+lListElem *sconf_get_tmp_sme(void);
+void sconf_set_tmp_sme(lListElem *sme);
+
 void sconf_reset_jobs(void);
 
 void sconf_get_weight_ticket_urgency_priority(double *ticket, double *urgency, double *priority);

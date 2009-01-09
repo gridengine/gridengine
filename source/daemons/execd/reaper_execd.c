@@ -65,6 +65,7 @@
 #include "sge_load_sensor.h"
 #include "execd.h"
 #include "reaper_execd.h"
+#include "execd_signal_queue.h"
 #include "job_report_execd.h"
 #include "sge_prog.h"
 #include "sge_qexec.h"
@@ -698,25 +699,9 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
          lListElem *job = NULL; 
          lListElem *ja_task = NULL;
          lListElem *master_queue = NULL;
-         const void *iterator = NULL;
 
-         /* Bugfix: Issuezilla 1031/1034
-          * The problem in 1031 is that each task got added as its own job
-          * structure, but the reaper was only looking at the first job
-          * structure in the list.  Instead, we have to iterate through the
-          * list by hand to make sure we find every instance. */
-
-         job = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
-         while(job != NULL) {
-            ja_task = job_search_task(job, NULL, ja_task_id);
-            if(ja_task != NULL) {
-               break;
-            }
-            job = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, 
-                                    &iterator);
-         }
-
-         if ((job != NULL) && (ja_task != NULL)) {
+         /* search job and ja_task */
+         if (execd_get_job_ja_task(job_id, ja_task_id, &job, &ja_task)) {
             master_queue = responsible_queue(job, ja_task, NULL);
          }
 
@@ -812,13 +797,8 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
 }
 
 /* ------------------------- */
-void remove_acked_job_exit(
-sge_gdi_ctx_class_t *ctx,
-u_long32 job_id,
-u_long32 ja_task_id,
-const char *pe_task_id,
-lListElem *jr 
-) {
+void remove_acked_job_exit(sge_gdi_ctx_class_t *ctx, u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id, lListElem *jr)
+{
    char *exec_file, *script_file, *tmpdir, *job_owner, *qname; 
    dstring jobdir = DSTRING_INIT;
    char fname[SGE_PATH_MAX];
@@ -952,7 +932,7 @@ lListElem *jr
           */
          if (lGetNumberOfElem(lGetList(jatep, JAT_task_list)) == 0) {
             lListElem *jr = get_job_report(job_id, ja_task_id, NULL);
-            if (jr != NULL && lGetUlong(jr, JR_state) == JSLAVE && lGetUlong(jatep, JAT_status) & JEXITING) {
+            if (jr != NULL && lGetUlong(jr, JR_state) == JSLAVE && ISSET(lGetUlong(jatep, JAT_state), JDELETED)) {
                add_usage(jr, "exit_status", NULL, 0);
                flush_job_report(jr);
             }
@@ -1133,11 +1113,8 @@ static lListElem *execd_job_failure(lListElem *jep, lListElem *jatep, lListElem 
  This is done very like the normal job finish and runs into the same
  functions in the qmaster.
  **************************************************************************/
-void job_unknown(
-u_long32 jobid,
-u_long32 jataskid,
-char *qname 
-) {
+void job_unknown(u_long32 jobid, u_long32 jataskid, char *qname)
+{
    lListElem *jr;
 
    DENTER(TOP_LAYER, "job_unknown");
@@ -1239,7 +1216,6 @@ int startup
    while ((dent=SGE_READDIR(cwd))) {
       char string[256], *token, *endp;
       u_long32 tmp_id;
-      const void *iterator;
 
       jobdir = dent->d_name;    /* jobdir is the jobid.jataskid converted to string */
       strcpy(string, jobdir);
@@ -1268,16 +1244,7 @@ int startup
       }
 
       /* seek job to this jobdir */
-      jep = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, jobid, &iterator);
-      while(jep != NULL) {
-         jatep = job_search_task(jep, NULL, jataskid);
-         if(jatep != NULL) {
-            break;
-         }
-         jep = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, jobid, &iterator);
-      }
- 
-      if (!jep || !jatep) {
+      if (!execd_get_job_ja_task(jobid, jataskid, &jep, &jatep)) {
          /* missing job in job dir but not in active job dir */
          if (startup) {
             ERROR((SGE_EVENT, MSG_SHEPHERD_FOUNDACTIVEJOBDIRXWHILEMISSINGJOBDIRREMOVING_S, jobdir)); 
@@ -2014,9 +1981,9 @@ void execd_slave_job_exit(u_long32 job_id, u_long32 ja_task_id)
    lListElem *ja_task = NULL;
 
    if (execd_get_job_ja_task(job_id, ja_task_id, &job, &ja_task)) {
-      /* mark the job as exiting */
-      lSetUlong(ja_task, JAT_status, JEXITING);
-
+      /* kill possibly still running tasks */
+      signal_job(job_id, ja_task_id, SGE_SIGKILL);
+   
       /* if there are no pe_tasks running
        * we can finish the slave job right away
        */

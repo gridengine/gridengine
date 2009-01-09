@@ -45,6 +45,7 @@
 #include "dispatcher.h"
 #include "sge_string.h"
 #include "sge_parse_num_par.h"
+#include "execd.h"
 #include "reaper_execd.h"
 #include "job_report_execd.h"
 #include "execd_job_exec.h"
@@ -431,7 +432,7 @@ int slave
             next_tmp_job = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)),
                                            JB_job_number, job_id, &iterator);
            
-            ja_task_list = lGetList(tmp_job,JB_ja_tasks);
+            ja_task_list = lGetList(tmp_job, JB_ja_tasks);
             gdi_list = lGetList(lFirst(ja_task_list), JAT_granted_destin_identifier_list);
             tmp_hostname = lGetHost(lFirst(gdi_list), JG_qhostname);
            
@@ -711,14 +712,9 @@ job_get_queue_for_task(lListElem *jatep, lListElem *petep,
    DRETURN(NULL);
 }
 
-static int handle_task(
-sge_gdi_ctx_class_t *ctx,
-lListElem *petrep,
-struct dispatch_entry *de,
-sge_pack_buffer *pb, 
-sge_pack_buffer *apb, 
-int *synchron
-) {
+static int handle_task(sge_gdi_ctx_class_t *ctx, lListElem *petrep, struct dispatch_entry *de,
+                       sge_pack_buffer *pb, sge_pack_buffer *apb, int *synchron)
+{
    u_long32 jobid, jataskid;
    lListElem *jep   = NULL;
    lListElem *pe    = NULL;
@@ -728,7 +724,6 @@ int *synchron
    char source[1024], new_task_id[1024];
    lList *gdil = NULL;
    int tid = 0;
-   const void *iterator;
    dstring err_str = DSTRING_INIT;
    const char *progname = ctx->get_progname(ctx);
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
@@ -753,25 +748,7 @@ int *synchron
    jobid    = lGetUlong(petrep, PETR_jobid);
    jataskid = lGetUlong(petrep, PETR_jataskid);
 
-   jep = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)),
-                            JB_job_number, jobid, &iterator);
-   while (jep != NULL) {
-      jatep = job_search_task(jep, NULL, jataskid);
-      if (jatep != NULL) {
-         break;
-      }
-
-      jep = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)),
-                              JB_job_number, jobid, &iterator);
-   }
-   
-   if (jep == NULL) {
-      ERROR((SGE_EVENT, MSG_JOB_TASKWITHOUTJOB_U, sge_u32c(jobid))); 
-      goto Error;
-   }
-
-   if (jatep == NULL) { 
-      ERROR((SGE_EVENT, MSG_JOB_TASKNOTASKINJOB_UU, sge_u32c(jobid), sge_u32c(jataskid)));
+   if (!execd_get_job_ja_task(jobid, jataskid, &jep, &jatep)) {
       goto Error;
    }
 
@@ -786,8 +763,8 @@ int *synchron
       goto Error;
    }
 
-   /* do not accept the task if job is in deletion or exiting */
-   if ((lGetUlong(jatep, JAT_state) & JDELETED) || lGetUlong(jatep, JAT_status) & JEXITING) {
+   /* do not accept the task if job is in deletion */
+   if (lGetUlong(jatep, JAT_state) & JDELETED) {
       DPRINTF(("received task exec request while job is in deletion or exiting\n"));
       goto Error;
    }

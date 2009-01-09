@@ -1,3 +1,9 @@
+JG-2008-01-09-0: Bugfix:      end of parallel job doesn't kill subsequently
+                              added, longer running tasks
+                 Bugster:     6579326
+                 Issue:       2329
+                 Review:      RD
+
 ZG-2009-01-08-0: Update:      update html man pages
                  Review:      LP
 

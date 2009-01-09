@@ -478,7 +478,7 @@ send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpj
 
          if ((old_mapped_user != NULL) && (strcmp(old_mapped_user, mapped_user) != 0)) {
             is_init_pb = true;
-         }   
+         }
          old_mapped_user = mapped_user;
       }
 #endif

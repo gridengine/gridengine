@@ -66,9 +66,13 @@
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
 
-static void pack_job_exit(sge_pack_buffer *pb, u_long32 jobid, u_long32 jataskid, const char *task_str);
-static void pack_job_kill(sge_pack_buffer *pb, u_long32 jobid, u_long32 jataskid);
-static char *status2str(u_long32 status);
+/*
+ * When the master task of a tightly integrated job exits
+ * we wait for the slave execds to report job finish.
+ * Do not wait forever, but only n report intervals.
+ * Could be made configurable in qmaster_params.
+ */
+#define MAX_MASTER_TASK_FINISH_BEFORE_EXIT 5
 
 #define is_running(state) (state==JWRITTEN || state==JRUNNING|| state==JWAITING4OSJID)
 
@@ -150,6 +154,7 @@ u_long32 status
 
    return s;
 }
+
 /* ----------------------------------------
 
 NAME 
@@ -179,7 +184,13 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
    const char *s;
    object_description *object_base = object_type_get_object_description();
 
+   char job_id_buffer[MAX_STRING_SIZE];
+   dstring job_id_dstring;
+   const char *job_id_string;
+
    DENTER(TOP_LAYER, "process_job_report");
+
+   sge_dstring_init(&job_id_dstring, job_id_buffer, MAX_STRING_SIZE);
 
    lXchgList(report, REP_list, &jrl);
 
@@ -217,7 +228,11 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
 
       jobid = lGetUlong(jr, JR_job_number);
       jataskid = lGetUlong(jr, JR_ja_task_number);
+      pe_task_id_str = lGetString(jr, JR_pe_task_id_str);
       rstate = lGetUlong(jr, JR_state);
+
+      /* build a job_id_string once - we need it in many places */
+      job_id_string = job_get_id_string(jobid, jataskid, pe_task_id_str, &job_id_dstring);
 
       /* handle protocol to execd for all jobs which are
          already finished and maybe rescheduled */
@@ -227,9 +242,7 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
          if (fret == 2) {
             pack_job_kill(pb, jobid, jataskid);
          } else if (fret == 3) {
-            pack_job_exit(pb, jobid, jataskid, 
-               lGetString(jr, JR_pe_task_id_str)?
-               lGetString(jr, JR_pe_task_id_str):"");
+            pack_job_exit(pb, jobid, jataskid, pe_task_id_str != NULL ? pe_task_id_str : "");
          }
          continue;
       }
@@ -237,17 +250,18 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
       jep = job_list_locate(*object_base[SGE_TYPE_JOB].list, jobid);
       if (jep != NULL) {
          jatep = lGetElemUlong(lGetList(jep, JB_ja_tasks), JAT_task_number, jataskid);
+
+         if (jatep != NULL) {
+            status = lGetUlong(jatep, JAT_status);
+
+            if (pe_task_id_str != NULL) {
+               petask = lGetSubStr(jatep, PET_id, pe_task_id_str, JAT_task_list); 
+            }
+         }
       }
 
-      if (jep != NULL && jatep != NULL) {
-         status = lGetUlong(jatep, JAT_status);
-      }
       queue_name = (s=lGetString(jr, JR_queue_name))?s:(char*)MSG_OBJ_UNKNOWNQ;
-      
-      if ((pe_task_id_str = lGetString(jr, JR_pe_task_id_str)) && jep && jatep) {
-         petask = lGetSubStr(jatep, PET_id, pe_task_id_str, JAT_task_list); 
-      }
-      
+
       switch (rstate) {
       case JWRITTEN:
       case JRUNNING:   
@@ -270,9 +284,8 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
                      u_long32 state = lGetUlong(jatep, JAT_state);
 
                      if (ISSET(state, JDELETED)) {
-                        DPRINTF(("Received report from "sge_u32"."sge_u32
-                                 " which is already in \"deleted\" state. "
-                                 "==> send kill signal\n", jobid, jataskid));
+                        DPRINTF(("Received report from "SFN" which is already in \"deleted\" state. "
+                                 "==> send kill signal\n", job_id_string));
 
                         pack_job_kill(pb, jobid, jataskid);
                      }
@@ -289,7 +302,7 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
                               lGetList(jatep, JAT_scaled_usage_list));
                  
                   if (status == JTRANSFERING) { /* got async ack for this job */
-                     DPRINTF(("--- transfering job "sge_u32" is running\n", jobid));
+                     DPRINTF(("--- transfering job "SFN" is running\n", job_id_string));
                      sge_commit_job(ctx, jep, jatep, jr, COMMIT_ST_ARRIVED, COMMIT_DEFAULT, monitor); /* implicitly sending usage to schedd */
                      cancel_job_resend(jobid, jataskid);
                   } else {
@@ -321,9 +334,9 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
                         u_long32 state = lGetUlong(jatep, JAT_state);
 
                         if (ISSET(state, JDELETED)) {
-                           DPRINTF(("Received report from "sge_u32"."sge_u32
+                           DPRINTF(("Received report from "SFN
                                     " which is already in \"deleted\" state. "
-                                    "==> send kill signal\n", jobid, jataskid));
+                                    "==> send kill signal\n", job_id_string));
 
                            pack_job_kill(pb, jobid, jataskid);
                         }
@@ -334,8 +347,8 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
                         /* here qmaster hears the first time about this task
                            and thus adds it to the task list of the appropriate job */
                         new_task = true;
-                        DPRINTF(("--- task (#%d) "sge_u32"/%s -> running\n", 
-                           lGetNumberOfElem(lGetList(jatep, JAT_task_list)), jobid, pe_task_id_str));
+                        DPRINTF(("--- task (#%d) "SFN" -> running\n", 
+                           lGetNumberOfElem(lGetList(jatep, JAT_task_list)), job_id_string));
                         petask = lAddSubStr(jatep, PET_id, pe_task_id_str, JAT_task_list, PET_Type);
                         lSetUlong(petask, PET_status, JRUNNING);
                         /* JG: TODO: this should be delivered from execd! */
@@ -462,8 +475,7 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
           *   exit of the job
           */
          if (jep == NULL || jatep == NULL) {
-            DPRINTF(("send cleanup request for slave job "sge_u32"."sge_u32"\n", 
-               jobid, jataskid));
+            DPRINTF(("send cleanup request for slave job "SFN"\n", job_id_string));
             pack_job_exit(pb, jobid, jataskid, pe_task_id_str);
          } else {
             /* must be ack (or later slave job report) for slave job */
@@ -482,7 +494,7 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
                if (lGetUlong(jatep, JAT_status) == JTRANSFERING) {
                   /* if tag is still 1, this is the ACK for slave notification */
                   if (lGetUlong(first_at_host, JG_tag_slave_job) != 0) {
-                     DPRINTF(("slave job "sge_u32" arrived at %s\n", jobid, rhost));
+                     DPRINTF(("slave job "SFN" arrived on host %s\n", job_id_string, rhost));
                      lSetUlong(first_at_host, JG_tag_slave_job, 0);
 
                      /* should trigger a fast delivery of the job to master execd 
@@ -506,8 +518,10 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
                      if (lGetElemStr(lGetList(jr, JR_usage), UA_name, "exit_status") != NULL) {
                         /* the job is done in this slave exec host */
                         lSetUlong(first_at_host, JG_tag_slave_job, 0);
+                        DPRINTF(("slave job "SFN" exited on host %s\n", job_id_string, rhost));
                         pack_job_exit(pb, jobid, jataskid, pe_task_id_str);
                      } else {
+                        DPRINTF(("trigger exit of slave job "SFN" on host %s\n", job_id_string, rhost));
                         pack_job_slave_signal(pb, jobid, jataskid);
                      }
                   }
@@ -522,8 +536,7 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
                host = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, rhost);
                update_reschedule_unknown_list_for_job(host, jobid, jataskid);
 
-               DPRINTF(("RU: CLEANUP FOR SLAVE JOB "sge_u32"."sge_u32" on host "SFN"\n", 
-                  jobid, jataskid, rhost));
+               DPRINTF(("RU: CLEANUP FOR SLAVE JOB "SFN" on host "SFN"\n", job_id_string, rhost));
 
                /* clean up */
                pack_job_exit(pb, jobid, jataskid, pe_task_id_str);
@@ -539,11 +552,7 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
              * or job was deleted using "qdel -f"
              * while execd was down or ...
              */
-            if (jatep == NULL) {
-               DPRINTF(("exiting job "sge_u32" does not exist\n", jobid));
-            } else {
-               DPRINTF(("exiting job "sge_u32"."sge_u32" does not exist\n", jobid, jataskid));
-            }
+            DPRINTF(("exiting job "SFN" does not exist\n", job_id_string));
          } else {
             /* job exited */
             if (pe_task_id_str == NULL) {
@@ -564,16 +573,23 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
                    * we tag all gdil entries (including the master gdil_ep)
                    * first report is when the master task gdil_ep is not yet tagged!
                    */
-                  if (lGetUlong(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_tag_slave_job) == 0) {
+                  u_long32 master_tag = lGetUlong(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_tag_slave_job);
+                  if (master_tag == 0) {
                      tag_all_host_gdil(jatep);
-                  }
-
-                  /* 
-                   * skip sge_job_exit() and pack_job_exit() in case there
-                   * are still running tasks, since execd resends job exit
-                   */
-                  if (!all_slave_jobs_finished(jatep)) {
                      skip_job_exit = 1;
+                  } else {
+                     /* 
+                      * skip sge_job_exit() and pack_job_exit() in case there
+                      * are still running tasks, since execd resends job exit
+                      * we do not wait forever - skip waiting after n master task finish reports
+                      */
+                     if (master_tag < MAX_MASTER_TASK_FINISH_BEFORE_EXIT) {
+                        if (!all_slave_jobs_finished(jatep)) {
+                           skip_job_exit = 1;
+                           master_tag++;
+                           lSetUlong(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_tag_slave_job, master_tag);
+                        }
+                     }
                   }
                }
 
@@ -581,8 +597,8 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
                case JRUNNING:
                case JTRANSFERING:
                   if (!skip_job_exit) {
-                     DPRINTF(("--- running job "sge_u32"."sge_u32" is exiting\n", 
-                        jobid, jataskid, (status==JTRANSFERING)?"transfering":"running"));
+                     DPRINTF(("--- running job "SFN" is exiting, previous status: "SFN"\n", 
+                        job_id_string, (status==JTRANSFERING)?"transfering":"running"));
 
                      sge_job_exit(ctx, jr, jep, jatep, monitor);
                   } else {
@@ -592,11 +608,8 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
                            !lGetString(jep, JB_checkpoint_name)) {
                         u_long32 state  = lGetUlong(jatep, JAT_state);
                         if (!(state & JDELETED)) {
-                           dstring id_dstring = DSTRING_INIT;
                            job_mark_job_as_deleted(ctx, jep, jatep);
-                           ERROR((SGE_EVENT, MSG_JOB_MASTERTASKFAILED_S, 
-                                  job_get_id_string(jobid, jataskid, NULL, &id_dstring)));
-                           sge_dstring_free(&id_dstring);
+                           ERROR((SGE_EVENT, MSG_JOB_MASTERTASKFAILED_S, job_id_string));
                         }
                      }
                   }
@@ -648,8 +661,7 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
                          lGetUlong(petask, PET_status)==JTRANSFERING) {
                         u_long32 failed = lGetUlong(jr, JR_failed);
 
-                        DPRINTF(("--- petask "sge_u32"."sge_u32"/%s -> final usage\n", 
-                           jobid, jataskid, pe_task_id_str));
+                        DPRINTF(("--- petask "SFN" -> final usage\n", job_id_string));
                         lSetUlong(petask, PET_status, JFINISHED);
 
                         reporting_create_acct_record(ctx, NULL, jr, jep, jatep, false);
@@ -734,11 +746,8 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
                               !lGetString(jep, JB_checkpoint_name)) {
                            u_long32 state  = lGetUlong(jatep, JAT_state);
                            if (!(state & JDELETED)) {
-                              dstring id_dstring = DSTRING_INIT;
                               job_mark_job_as_deleted(ctx, jep, jatep);
-                              ERROR((SGE_EVENT, MSG_JOB_JOBTASKFAILED_S, 
-                                     job_get_id_string(jobid, jataskid, pe_task_id_str, &id_dstring)));
-                              sge_dstring_free(&id_dstring);
+                              ERROR((SGE_EVENT, MSG_JOB_JOBTASKFAILED_S, job_id_string));
                            }
                         }
                      }

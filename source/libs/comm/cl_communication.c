@@ -114,10 +114,10 @@ int cl_com_compare_endpoints(cl_com_endpoint_t* endpoint1, cl_com_endpoint_t* en
        if (endpoint1->comp_id == endpoint2->comp_id ) {
           if (endpoint1->comp_host && endpoint1->comp_name && 
               endpoint2->comp_host && endpoint2->comp_name) {
-             if (cl_com_compare_hosts(endpoint1->comp_host,endpoint2->comp_host) == CL_RETVAL_OK) {
-                if (strcmp(endpoint1->comp_name,endpoint2->comp_name ) == 0) {
+             if (strcmp(endpoint1->comp_name,endpoint2->comp_name) == 0) {
+               if (cl_com_compare_hosts(endpoint1->comp_host, endpoint2->comp_host) == CL_RETVAL_OK) {
                    return 1;
-                }
+               }
              }
           }
        }
@@ -1222,6 +1222,10 @@ const char* cl_com_get_data_flow_type(cl_com_connection_t* connection) {  /* CR 
 #endif
 #define __CL_FUNCTION__ "cl_com_ignore_timeouts()"
 void cl_com_ignore_timeouts(cl_bool_t flag) {
+    /*
+    * ATTENTION: This function must be signal handler save!!! 
+    * DO NOT call functions which call lock functions !!!
+    */
    cl_ingore_timeout = flag;
 }
 
@@ -1231,7 +1235,7 @@ void cl_com_ignore_timeouts(cl_bool_t flag) {
 #endif
 #define __CL_FUNCTION__ "cl_com_get_ignore_timeouts_flag()"
 cl_bool_t cl_com_get_ignore_timeouts_flag(void) {
-    if ( cl_ingore_timeout == CL_TRUE ) {
+    if (cl_ingore_timeout == CL_TRUE) {
        CL_LOG(CL_LOG_WARNING,"ignoring all communication timeouts");
     }
     return cl_ingore_timeout;

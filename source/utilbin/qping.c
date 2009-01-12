@@ -293,7 +293,7 @@ static void qping_printf_fill_up(FILE* fd, char* name, int length, char c, int b
 
 }
 
-static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
+static void qping_print_line(char* buffer, int nonewline, int dump_tag, const char *sender_comp_name) {
    int i=0;
    int max_name_length = 0;
    int full_width = 0;
@@ -624,15 +624,15 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
                }
             }
    
-            if ( strstr( cl_values[6] , "TAG_ACK_REQUEST") != NULL ) {
+            if (strstr(cl_values[6] , "TAG_ACK_REQUEST") != NULL) {
                unsigned long buffer_length = 0;
-               if (  cl_util_get_binary_buffer(message_debug_data, &binary_buffer , &buffer_length) == CL_RETVAL_OK) {
+               if (cl_util_get_binary_buffer(message_debug_data, &binary_buffer, &buffer_length) == CL_RETVAL_OK) {
                   sge_pack_buffer buf;
    
                   if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
                      u_long32 ack_tag, ack_ulong, ack_ulong2;
    
-                     while(unpackint(&buf,  &ack_tag ) == PACK_SUCCESS) {
+                     while (unpackint(&buf, &ack_tag) == PACK_SUCCESS) {
                         printf("      unpacked tag ack request (binary buffer length %lu):\n", buffer_length );
                         printf("ack_tag : "sge_U32CFormat" => ", sge_u32c(ack_tag));
    
@@ -742,26 +742,77 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
                   sge_pack_buffer buf;
    
                   if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
+                     if (strcmp(sender_comp_name, "qmaster") == 0) {
+                        u_long32 feature_set;
+                        lListElem *job = NULL, *pe = NULL;
+                        lList *qlist = NULL;
+                        if (unpackint(&buf, &feature_set) == PACK_SUCCESS) {
+                           printf("      unpacked tag job execution (binary buffer length %lu):\n", buffer_length);
+                           printf("feature_set: "sge_U32CFormat"\n", sge_u32c(feature_set));
+                        }
+                        if (cull_unpack_elem(&buf, &job, NULL) == PACK_SUCCESS) {
+                           lWriteElemTo(job, stdout); /* job */
+                        } else {
+                           printf("could not unpack job\n");
+                        }
+                        if (cull_unpack_list(&buf, &qlist) == PACK_SUCCESS) {
+                           lWriteListTo(qlist, stdout); /* jobs master queue */
+                        } else {
+                           printf("could not unpack queue list\n");
+                        }
+                        if (job && lGetString(lFirst(lGetList(job, JB_ja_tasks)), JAT_granted_pe)) {
+                           if (cull_unpack_elem(&buf, &pe, NULL) == PACK_SUCCESS) {
+                              lWriteElemTo(pe, stdout); /* pe elem */
+                           } else {
+                              printf("could not unpack PE elem\n");
+                           }
+                        }
+                        lFreeList(&qlist);
+                        lFreeElem(&job);
+                        lFreeElem(&pe);
+                     } else {
+                        u_long32 feature_set;
+                        lListElem *petr = NULL;
+                        if (unpackint(&buf, &feature_set) == PACK_SUCCESS) {
+                           printf("      unpacked tag job execution (binary buffer length %lu):\n", buffer_length);
+                           printf("feature_set: "sge_U32CFormat"\n", sge_u32c(feature_set));
+                        }
+                        if (cull_unpack_elem(&buf, &petr, NULL) == PACK_SUCCESS) {
+                           lWriteElemTo(petr, stdout);
+                           lFreeElem(&petr);
+                        }
+                     }
+                     clear_packbuffer(&buf);
+                  }
+               }
+            }
+
+            if (strstr(cl_values[6], "TAG_SLAVE_ALLOW") != NULL) {
+               unsigned long buffer_length = 0;
+               if (cl_util_get_binary_buffer(message_debug_data, &binary_buffer, &buffer_length) == CL_RETVAL_OK) {
+                  sge_pack_buffer buf;
+   
+                  if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
                      u_long32 feature_set;
                      lListElem *job = NULL, *pe = NULL;
                      lList *qlist = NULL;
                      if (unpackint(&buf, &feature_set) == PACK_SUCCESS) {
-                        printf("      unpacked tag job execution (binary buffer length %lu):\n", buffer_length );
+                        printf("      unpacked tag slave allow (binary buffer length %lu):\n", buffer_length );
                         printf("feature_set: "sge_U32CFormat"\n", sge_u32c(feature_set));
                      }
                      if (cull_unpack_elem(&buf, &job, NULL) == PACK_SUCCESS) {
-                        lWriteElemTo(job,stdout); /* job */
+                        lWriteElemTo(job, stdout); /* job */
                      } else {
                         printf("could not unpack job\n");
                      }
                      if (cull_unpack_list(&buf, &qlist) == PACK_SUCCESS) {
-                        lWriteListTo(qlist,stdout); /* jobs master queue */
+                        lWriteListTo(qlist, stdout); /* jobs master queue */
                      } else {
                         printf("could not unpack queue list\n");
                      }
                      if (job && lGetString(lFirst(lGetList(job, JB_ja_tasks)), JAT_granted_pe)) {
                         if (cull_unpack_elem(&buf, &pe, NULL) == PACK_SUCCESS) {
-                           lWriteElemTo(pe,stdout); /* pe elem */
+                           lWriteElemTo(pe, stdout); /* pe elem */
                         } else {
                            printf("could not unpack PE elem\n");
                         }
@@ -1542,7 +1593,7 @@ int main(int argc, char *argv[]) {
             for (i=0; i < message->message_length; i++) {
                sge_dstring_append_char(&line_buffer, message->message[i]);
                if (message->message[i] == '\n') {
-                  qping_print_line((char*)sge_dstring_get_string(&line_buffer), option_nonewline, dump_tag );
+                  qping_print_line((char*)sge_dstring_get_string(&line_buffer), option_nonewline, dump_tag, sender->comp_name);
                   sge_dstring_free(&line_buffer);
                }
             }

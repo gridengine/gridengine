@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2008/02/22 10:45:35 $     Revision: $Revision: 1.24.2.6 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2009/01/12 09:10:29 $     Revision: $Revision: 1.24.2.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2008/02/22 10:45:35 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2009/01/12 09:10:29 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -549,9 +549,9 @@ projects are denied access other than those denied access based on the
 access to the queue.
 .SS "\fBsubordinate_list\fP"
 A list of xxQS_NAMExx cluster queues. Subordinate relationships are in effect
-only between queue instances residing at the same host. If there is a 
-queue instance (be in the sub- or superordinated one) on only one
-particular host this relationship is ignored.
+only between queue instances residing at the same host. 
+The relationship does not apply and is ignored when jobs are 
+running in queue instances on other hosts. 
 Queue instances residing on the same host will be suspended when a specified 
 count of jobs is running in this queue instance.
 The list specification is the same as that of the \fBload_thresholds\fP

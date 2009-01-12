@@ -1,3 +1,8 @@
+RD-2009-01-12-0: Bugfix:      qsub -w e crashes qmaster if schedd_job_info is enabled
+                 Bugster:     6749902
+                 Issue:       2742
+                 Review:      CR
+
 AP-2009-01-12-0: Bugfix:      broken output with qstat -r when a job requests more
                               than a single queue using -q wc_queue_list
                  Bugster:     6732134

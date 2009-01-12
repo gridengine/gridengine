@@ -140,6 +140,11 @@ typedef struct {
    int        scheduled_comprehensive_jobs;        /* counts the dispatched pe jobs */
    int        scheduled_fast_jobs;           /* counts the dispatched sequential jobs */
    double     decay_constant;            /* used in the share tree */
+   /* temporary data used for scheduling messages */
+   lListElem *sme; /* Job scheduling informations store if not disabled */
+   lListElem *tmp_sme; /* Job scheduling informations store if not disabled */
+   bool mes_schedd_info; /* write scheduling information into logfile */
+   int log_schedd_info; /* write scheduling information into logfile */
 }  sc_state_t; 
 
 /****** sge_schedd_conf/sc_state_init() ****************************************
@@ -175,6 +180,11 @@ static void sc_state_init(sc_state_t* state)
    state->scheduled_fast_jobs = 0;
    state->scheduled_comprehensive_jobs = 0;
    state->decay_constant = 0.0;
+   /* temp data for scheduler messages */
+   state->sme = NULL;
+   state->tmp_sme = NULL;
+   state->mes_schedd_info = false;
+   state->log_schedd_info = 0;
 }
 
 static void sc_state_destroy(void* state) 
@@ -3690,6 +3700,55 @@ double sconf_get_decay_constant(void)
 {
    GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_get_decay_constant");
    return sc_state->decay_constant;
+}
+
+void sconf_set_mes_schedd_info(bool newval)
+{
+   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_set_mes_schedd_info");
+   if (newval == true) {
+      if (sc_state->sme == NULL || sc_state->tmp_sme == NULL) {
+         /* if one of the values is NULL the messaging framework is initialized
+            in this case just ignore the activate request */
+         return;
+      }
+   }
+   sc_state->mes_schedd_info = newval;
+}
+
+bool sconf_get_mes_schedd_info()
+{
+   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_get_mes_schedd_info");
+   return sc_state->mes_schedd_info;
+}
+
+void schedd_mes_set_logging(int bval) {
+   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "schedd_mes_set_logging");
+   sc_state->log_schedd_info = bval;
+}
+
+int schedd_mes_get_logging(void) {
+   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "schedd_mes_get_logging");
+   return sc_state->log_schedd_info;
+}
+
+lListElem *sconf_get_sme(void) {
+   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_get_sme");
+   return sc_state->sme;
+}
+
+void sconf_set_sme(lListElem *sme) {
+   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_get_sme");
+   sc_state->sme = sme;
+}
+
+lListElem *sconf_get_tmp_sme(void) {
+   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_get_tmp_sme");
+   return sc_state->tmp_sme;
+}
+
+void sconf_set_tmp_sme(lListElem *sme) {
+   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_get_tmp_sme");
+   sc_state->tmp_sme = sme;
 }
 
 u_long32 sconf_get_duration_offset(void)

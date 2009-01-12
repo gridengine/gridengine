@@ -1239,6 +1239,8 @@ static int job_stdout_hard_requested_queue(job_handler_t* handler, const char* q
    } else {
       printf("%s", qname);
    }
+   ctx->hard_requested_queue_count++;
+
    DEXIT;
    return 0;
 }
@@ -1275,6 +1277,7 @@ static int job_stdout_soft_requested_queue(job_handler_t* handler, const char* q
    } else {
       printf("%s", qname);
    }
+   ctx->soft_requested_queue_count++;
 
    DEXIT;
    return 0;
@@ -1312,6 +1315,7 @@ static int job_stdout_master_hard_request_queue(job_handler_t* handler, const ch
    } else {
       printf("%s", qname);
    }
+   ctx->master_hard_requested_queue_count++;
 
    DEXIT;
    return 0;

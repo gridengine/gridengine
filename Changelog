@@ -1,3 +1,14 @@
+AP-2009-01-12-0: Bugfix:      broken output with qstat -r when a job requests more
+                              than a single queue using -q wc_queue_list
+                 Bugster:     6732134
+                 Issue:       2682
+                 Review:      JG
+                 Bugfix:      shell_start_mode should be documentated to be only
+                              used for batch jobs
+                 Bugster:     6792604
+                 Issue:       2058
+                 Review:      DG
+
 JG-2009-01-12-0: Bugfix:      qing aborts when connected to an execd running
                               a tightly integrated parallel job
                  Bugster:     6791931

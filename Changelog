@@ -1,3 +1,10 @@
+CR-2009-01-13-0: Bugfix:      qmaster might be unresponsive for a time because 
+                              of commlib timeout
+                 Merged from: V61_BRANCH: CR-2009-01-12-0
+                 Bugster:     6754568
+                 Issue:       2747
+                 Review:      RD
+
 ZG-2009-01-08-0: Update:      update html man pages
                  Review:      LP
 

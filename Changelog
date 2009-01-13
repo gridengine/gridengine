@@ -1,3 +1,9 @@
+ZG-2009-01-13-0: Enhancem.:   Execute directory permission checkings on remote host
+                 Enhancem.:   Switch-on logging by default
+                 Bugfix:      Disable "Browse" button in case the qmaster is not on localhost
+                 Bugfix:      New port validator for JMX port value
+                 Review:      LP
+
 AP-2009-01-13-0: Bugfix:      project(5) man page should say that "acl" set to
                               "NONE" means "all users"
                  Bugster:     6784461

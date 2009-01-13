@@ -45,6 +45,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -698,6 +700,7 @@ public class Util implements Config{
         ExtendedFile tmpFile = null;
 
         try {
+            // TODO check the give user's group not the executing user's group
             tmpFile = new ExtendedFile(File.createTempFile("grouptest", null).getAbsolutePath());
 
             group = tmpFile.getGroup();
@@ -788,5 +791,42 @@ public class Util implements Config{
         Debug.trace("Found qmaster host name in '" + actQmasterFile + "' is '" + qmasterHost + "'.");
 
         return qmasterHost;
+    }
+
+    /**
+     * Checks whether the given port is free on the specified host
+     *
+     * NOTE: works properly only on local host
+     *
+     * @param hostName The host where the port should be checked
+     * @param port The port to be checked
+     * @return True only if the host is reachable and the port is free to bind.
+     */
+    public static boolean isPortFree(String hostName, String port) {
+        try {
+            return isPortFree(hostName, Integer.parseInt(port));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Checks whether the given port is free on the specified host
+     *
+     * NOTE: works properly only on local host
+     *
+     * @param hostName The host where the port should be checked
+     * @param port The port to be checked
+     * @return True only if the host is reachable and the port is free to bind.
+     */
+    public static boolean isPortFree(String hostName, int port) {
+        try {
+            ServerSocket serverSocket = new ServerSocket(port, 0 , InetAddress.getByName(hostName));
+            serverSocket.close();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

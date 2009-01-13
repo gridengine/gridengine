@@ -46,6 +46,10 @@ public class IntermediateActionPanel extends ActionPanel {
             }
         }
 
+        // Set value for 'cond.qmaster.on.localhost' condition
+        Host.IS_QMASTER_ON_LOCALHOST = Host.localHostName.equalsIgnoreCase(idata.getVariable(VAR_QMASTER_HOST)) ||
+                Host.localHostIP.equalsIgnoreCase(idata.getVariable(VAR_QMASTER_HOST));
+
         // cfg.spooling.method
         if (parent.getRules().isConditionTrue(COND_INSTALL_BDB, idata.getVariables())) {
             idata.setVariable(VAR_SPOOLING_METHOD, vs.substituteMultiple(idata.getVariable(VAR_SPOOLING_METHOD_BERKELEYDBSERVER), null));

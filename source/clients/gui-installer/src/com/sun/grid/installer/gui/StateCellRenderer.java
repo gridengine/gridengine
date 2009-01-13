@@ -37,6 +37,7 @@ import java.awt.Component;
 import java.util.Hashtable;
 import javax.swing.JLabel;
 import javax.swing.JTable;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.TableCellRenderer;
 
 /**
@@ -50,6 +51,7 @@ public class StateCellRenderer implements TableCellRenderer {
 
     private static final Color COLOR_GOOD = Color.GREEN;
     private static final Color COLOR_BAD  = Color.RED;
+    private static final Color COLOR_WARNING  = new Color(255, 225, 0); // Yellow
 
     /**
      * Constructor
@@ -61,6 +63,7 @@ public class StateCellRenderer implements TableCellRenderer {
 
         label = new JLabel();
         label.setOpaque(true);
+        label.setBorder(new EmptyBorder(0, 1, 0, 1));
     }
 
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -71,6 +74,7 @@ public class StateCellRenderer implements TableCellRenderer {
 
             Color backColor = table.getBackground();
             label.setText(state.toString());
+            label.setToolTipText(state.getTooltip());
 
             // differenciate between states
             switch (state) {
@@ -95,12 +99,27 @@ public class StateCellRenderer implements TableCellRenderer {
                     backColor = COLOR_GOOD;
                     break;
                 }
+                case PERM_QMASTER_SPOOL_DIR:
+                case PERM_EXECD_SPOOL_DIR:
+                case PERM_BDB_SPOOL_DIR:
+                case PERM_JMX_KEYSTORE:
+                case BDB_SPOOL_DIR_EXISTS:
+                case USED_QMASTER_PORT:
+                case USED_EXECD_PORT:
+                case USED_JMX_PORT: { // warning states
+                    if (progressBars.containsKey(Integer.valueOf(row))) {
+                        progressBars.remove(Integer.valueOf(row));
+                    }
+                    comp = label;
+                    backColor = COLOR_WARNING;
+                    break;
+                }
                 default: { // bad states
                     if (progressBars.containsKey(Integer.valueOf(row))) {
                         progressBars.remove(Integer.valueOf(row));
                     }
                     comp = label;
-                    backColor = COLOR_BAD; // REACHABLE, NEW_UNKNOWN_HOST, UNKNOWN_HOST, FAILED
+                    backColor = COLOR_BAD; // RESOLVABLE, NEW_UNKNOWN_HOST, UNKNOWN_HOST, FAILED
                 }
             }
 

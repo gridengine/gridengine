@@ -42,6 +42,9 @@ public class Host implements Config {
     public static String localHostName;
     public static String localHostIP;
     public static String localHostArch;
+
+    // Value for 'cond.qmaster.on.localhost' condition depends on the value of 'add.qmaster.host'
+    public static boolean IS_QMASTER_ON_LOCALHOST = true;
     
     public static final String HOST_TYPE_QMASTER = "qmaster";
     public static final String HOST_TYPE_EXECD   = "execd";
@@ -73,7 +76,15 @@ public class Host implements Config {
         INSTALLING,
         SUCCESS,
         CANCELED,
-        FAILED;
+        FAILED,
+        PERM_QMASTER_SPOOL_DIR,
+        PERM_EXECD_SPOOL_DIR,
+        PERM_BDB_SPOOL_DIR,
+        BDB_SPOOL_DIR_EXISTS,
+        PERM_JMX_KEYSTORE,
+        USED_QMASTER_PORT,
+        USED_EXECD_PORT,
+        USED_JMX_PORT;
         
         public static Properties localizedTexts;
 
@@ -85,6 +96,18 @@ public class Host implements Config {
                 text = localizedTexts.getProperty(text);
             } else {
                 text = name();
+            }
+
+            return text;
+        }
+        
+        public String getTooltip() {
+            String text = (LANGID_PREFIX_STATE + "." + name() + ".tooltip").toLowerCase();
+
+            if (localizedTexts.containsKey(text)) {
+                text = localizedTexts.getProperty(text);
+            } else {
+                text = toString();
             }
 
             return text;
@@ -413,5 +436,13 @@ public class Host implements Config {
             qmasterHost = false;
             shadowHost  = false;
         }
+    }
+
+    /**
+     * Returns true if the host is the local host
+     * @return true if the host's IP equals the localhost's IP, false otherwise.
+     */
+    public boolean isLocalhost() {
+        return getIp().equals(localHostIP);
     }
 }

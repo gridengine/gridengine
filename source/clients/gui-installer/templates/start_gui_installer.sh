@@ -30,9 +30,10 @@
 #
 ##########################################################################
 #___INFO__MARK_END__
+FLAGS="-DLOG=true"
 
 if [ "$1" = "debug" -o "$1" = "-debug" ]; then
-   FLAGS="-DSTACKTRACE=true"
+   FLAGS=$FLAGS" -DSTACKTRACE=true"
 fi
 
 #Detect JAVA
@@ -52,4 +53,4 @@ fi
 #   FLAGS="-d64 $FLAGS"
 #fi
 
-$JAVA_BIN $FLAGS -Dswing.boldMetal=false -jar ./util/gui-installer/installer.jar
+$JAVA_BIN $FLAGS -jar ./util/gui-installer/installer.jar

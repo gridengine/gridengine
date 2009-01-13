@@ -50,6 +50,7 @@ public interface Config {
     public static final String VAR_SHADOW_HOST_LIST = "cfg.shadow.host";
     public static final String VAR_QMASTER_SPOOL_DIR = "cfg.qmaster.spool.dir";
     public static final String VAR_EXECD_SPOOL_DIR = "cfg.execd.spool.dir";
+    public static final String VAR_EXECD_SPOOL_DIR_LOCAL = "cfg.exec.spool.dir.local";
     public static final String VAR_SHELL_NAME = "cfg.shell.name";
     public static final String VAR_COPY_COMMAND = "cfg.copy.command";
     public static final String VAR_DB_SPOOLING_SERVER = "cfg.db.spooling.server";
@@ -58,6 +59,7 @@ public interface Config {
     public static final String VAR_HOSTNAME_RESOLVING = "cfg.hostname.resolving";
     public static final String VAR_JVM_LIB_PATH = "cfg.sge.jvm.lib.path";
     public static final String VAR_DB_SPOOLING_DIR= "cfg.db.spooling.dir";
+    public static final String VAR_SGE_JMX_PORT= "cfg.sge.jmx.port";
 
     public static final String VAR_AUTO_CONF_TEMP_FILE = "auto.conf.temp.file";
     public static final String VAR_AUTO_CONF_FILE = "auto.conf.file";
@@ -65,6 +67,8 @@ public interface Config {
     public static final String VAR_INSTALL_SCRIPT_FILE_DIR  = "install.script.file.dir";
     public static final String VAR_AUTO_INSTALL_COMPONENT_TEMP_FILE = "auto.install.component.temp.file";
     public static final String VAR_AUTO_INSTALL_COMPONENT_FILE  = "auto.install.component.file";
+    public static final String VAR_CHECK_HOST_TEMP_FILE  = "check.host.temp.file";
+    public static final String VAR_CHECK_HOST_FILE  = "check.host.file";
     public static final String VAR_WORK_DIR  = "work.dir";
     public static final String VAR_TEMPLATES_DIR  = "templates.dir";
     public static final String VAR_README_TEMP_FILE  = "readme.temp.file";
@@ -112,4 +116,12 @@ public interface Config {
 
     public static final String WARNING_USER_NOT_ROOT = "warning.user.not.root.message";
     public static final String ERROR_USER_INVALID = "error.user.invalid.message";
+
+    public static final int EXIT_VAL_BDB_SERVER_SPOOL_DIR_PERM_DENIED = 10;
+    public static final int EXIT_VAL_QMASTER_SPOOL_DIR_PERM_DENIED = 20;
+    public static final int EXIT_VAL_EXECD_SPOOL_DIR_PERM_DENIED = 21;
+    public static final int EXIT_VAL_JMX_KEYSTORE_PERM_DENIED = 22;
+    public static final int EXIT_VAL_BDB_SPOOL_DIR_PERM_DENIED = 23;
+    public static final int EXIT_VAL_BDB_SPOOL_DIR_EXISTS = 24;
+    public static final int EXIT_VAL_EXECD_SPOOL_DIR_LOCAL_PERM_DENIED = 40;
 }

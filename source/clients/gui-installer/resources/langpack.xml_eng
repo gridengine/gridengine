@@ -80,11 +80,41 @@ ___INFO__MARK_END__-->
     <str id="state.ready_to_install" txt="Ready to install"/>
     <str id="state.installing" txt="Installing"/>
     <str id="state.canceled" txt="Canceled"/>
+    <str id="state.perm_qmaster_spool_dir" txt="Permission denied"/>
+    <str id="state.perm_execd_spool_dir" txt="Permission denied"/>
+    <str id="state.perm_bdb_spool_dir" txt="Permission denied"/>
+    <str id="state.bdb_spool_dir_exists" txt="Directory exists"/>
+    <str id="state.perm_jmx_keystore" txt="Permission denied"/>
+    <str id="state.used_qmaster_port" txt="Used port"/>
+    <str id="state.used_execd_port" txt="Used port"/>
+    <str id="state.used_jmx_port" txt="Used port"/>
+
+    <str id="state.new_unknown_host.tooltip" txt="New unknown host"/>
+    <str id="state.unknown_host.tooltip" txt="Unknown host"/>
+    <str id="state.ok.tooltip" txt="Ok"/>
+    <str id="state.failed.tooltip" txt="Failed"/>
+    <str id="state.success.tooltip" txt="Success"/>
+    <str id="state.reachable.tooltip" txt="Reachable"/>
+    <str id="state.resolvable.tooltip" txt="Resolvable"/>
+    <str id="state.resolving.tooltip" txt="Resolving"/>
+    <str id="state.contacting.tooltip" txt="Contacting"/>
+    <str id="state.ready_to_install.tooltip" txt="Ready to install"/>
+    <str id="state.installing.tooltip" txt="Installing"/>
+    <str id="state.canceled.tooltip" txt="Canceled"/>
+    <str id="state.perm_qmaster_spool_dir.tooltip" txt="No permission to create qmaster spool directory"/>
+    <str id="state.perm_execd_spool_dir.tooltip" txt="No permission to create execd spool directory"/>
+    <str id="state.perm_bdb_spool_dir.tooltip" txt="No permission to create Berkeley db spool directory"/>
+    <str id="state.perm_jmx_keystore.tooltip" txt="No permission to create JMX keystore directory"/>
+    <str id="state.bdb_spool_dir_exists.tooltip" txt="Berkeley db spool directory exists"/>
+    <str id="state.used_qmaster_port.tooltip" txt="Used qmaster port"/>
+    <str id="state.used_execd_port.tooltip" txt="Used execd port"/>
+    <str id="state.used_jmx_port.tooltip" txt="Used jmx port"/>
 
     <!-- Labels, tooltips, messages -->
     <!-- PreAction Panel -->
         <!-- Messages -->
         <str id="warning.user.not.root.message"  txt="<html>You are not installing as user '${root.user}'!<br>This will allow you to run Grid Engine only under your user id for testing<br>a limited functionality of Grid Engine!</html>" />
+        <str id="warning.invalid.hosts.message"  txt="<html>Some of the reachable hosts are invalid. Those may fail during the installation.<br>Check host and their states for error messages in tooltips.<br><br>Do you want to continue the installation?</html>" />
         <str id="error.user.invalid.message"  txt="<html>You are not installing as user '${root.user}' or as the owner of the Grid Engine root directory.<br>You don't have enough permission to install ${APP_NAME}.<br><br>The installation terminates!</html>" />
 
     <!-- Component Panel -->
@@ -132,9 +162,10 @@ ___INFO__MARK_END__-->
         <str id="add.sge.jmx.label" txt="Use JMX" />
         <str id="cfg.hostname.resolving.label" txt="Ignore domain names" />
         <str id="product.mode.statictext" txt="Product mode" />
-        <str id="add.product.mode.none.label" txt="None" />
+        <!--<str id="add.product.mode.none.label" txt="None" />
         <str id="add.product.mode.csp.label" txt="CSP" />
-        <str id="add.product.mode.afs.label" txt="AFS" />
+        <str id="add.product.mode.afs.label" txt="AFS" />-->
+        <str id="add.product.mode.label" txt="Use CSP product mode" />
         <str id="cfg.admin.mail.label" txt="Administrator mail" />
         <!-- Tooltips -->
         <str id="cfg.admin.user.label.tooltip" txt="<html><b>Admin user</b><br><br></html>" />
@@ -180,27 +211,29 @@ ___INFO__MARK_END__-->
         <str id="cfg.hostname.resolving.label.tooltip" txt="<html><b>Ignore domain names</b><br><br>
         Disable it if you plan to have hosts in the cluster from different domains.<br><br>
         <b>Variable: </b><code>$HOSTNAME_RESOLVING</code></html>" />
-        <str id="add.product.mode.none.label.tooltip" txt="None" />
+        <!--<str id="add.product.mode.none.label.tooltip" txt="None" />
         <str id="add.product.mode.csp.label.tooltip" txt="CSP" />
-        <str id="add.product.mode.afs.label.tooltip" txt="AFS" />
+        <str id="add.product.mode.afs.label.tooltip" txt="AFS" />-->
+        <str id="add.product.mode.label.tooltip" txt="<html><b>Use CSP product mode</b><br><br>
+        Use CSP product mode.<br><br></html>" />
         <str id="cfg.admin.mail.label.tooltip" txt="<html><b>Administrator mail</b><br><br>
         The email address of the administrator to whom problem reports are sent.<br>
         You may use <code>none</code><br>if you do not wish to receive administrator mail.<br>
         The email address has the following form: <code>user@foo.com</code><br><br>
         <b>Variable: </b><code>$ADMIN_MAIL</code></html>" />
-         <!-- Validators -->
+        <!-- Validators -->
         <str id="cfg.admin.user.notemptyvalidator" txt="Admin user is mandatory!" />
         <str id="add.qmaster.host.notemptyvalidator" txt="Qmaster host is mandatory!" />
         <str id="cfg.sge.root.notemptyvalidator" txt="Grid Engine root directory is mandatory!" />
         <str id="cfg.sge.root.fileexistsvalidator" txt="Invalid Grid Engine root directory!" />
+        <str id="cfg.sge.root.fileexistsvalidator.2" txt="Invalid Sun Grid Engine version! Make sure you use Sun Grid Engine version 6.2 Update 2 or later." />
         <str id="cfg.cell.name.notemptyvalidator" txt="Cell name is mandatory!" />
         <str id="cfg.cell.name.exists.fileexistsvalidator" txt="Cell name already exists!" />
         <str id="cfg.cell.name.notexists.fileexistsvalidator" txt="Cell name does not exist!" />
         <str id="cfg.sge.qmaster.port.notemptyvalidator" txt="Qmaster port is mandatory!" />
-        <str id="cfg.sge.qmaster.port.rangevalidator" txt="Qmaster port is invalid!" />
-        <str id="cfg.sge.qmaster.port.portvalidator" txt="Qmaster port is in use!" />
+        <str id="cfg.sge.qmaster.port.rangevalidator" txt="Qmaster port is invalid! Valid range is 1-65535." />
         <str id="cfg.sge.execd.port.notemptyvalidator" txt="Execd port is mandatory!" />
-        <str id="cfg.sge.execd.port.rangevalidator" txt="Execd port is invalid!" />
+        <str id="cfg.sge.execd.port.rangevalidator" txt="Execd port is invalid! Valid range is 1-65535." />
         <str id="cfg.sge.cluster.name.regularexpressionvalidator" txt="Cluster name is not valid!" />
         <str id="cfg.gid.range.notemptyvalidator" txt="Group id range is mandatory!" />
         <str id="cfg.gid.range.rangevalidator" txt="Invalid  group id range!" />
@@ -238,9 +271,7 @@ ___INFO__MARK_END__-->
         <str id="cfg.sge.additional.jvm.args.label.tooltip" txt="Additional JVM arguments" />
         <!-- Validators -->
         <str id="cfg.sge.jmx.port.notemptyvalidator" txt="JMX port is mandatory!" />
-        <str id="cfg.sge.jmx.port.isportvalidator" txt="JMX port is invalid!" />
-        <str id="cfg.sge.jmx.port.portvalidator" txt="JMX port is in use!" />
-        <str id="cfg.sge.jmx.port.rangevalidator" txt="JMX port has invalid range! Valid range: 1-65500" />
+        <str id="cfg.sge.jmx.port.rangevalidator" txt="JMX port has invalid range! Valid range is 1-65535." />
         <str id="cfg.sge.jmx.ssl.keystore.notemptyvalidator" txt="Keystore path is mandatory!" />
         <str id="cfg.sge.jmx.ssl.keystore.permissionvalidator" txt="No write permission on the keystore directory!" />
         <str id="cfg.sge.jmx.ssl.keystore.pw.passwordequalityvalidator" txt="The passwords must match." />
@@ -383,6 +414,7 @@ ___INFO__MARK_END__-->
         <str id="menu.save.all" txt="Save all as..."/>
         <str id="progressbar.resolving.label" txt="Resolving"/>
         <str id="progressbar.installing.label" txt="Installing"/>
+        <str id="progressbar.checking.label" txt="Validating"/>
         <!-- Tooltips -->
         <str id="hostinput.label.tooltip" txt="<html><b>Hostname</b><br><br>
         The host name(s) to be added to the table. The field accepts pattern.<br><br>

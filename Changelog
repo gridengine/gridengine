@@ -35,6 +35,49 @@ DG-2009-01-12-0: Bugfix:      man queue_conf section on subordinate list is a
                  Issue:       2732
                  Review:      JG
 
+EB-2009-01-09-0: Bugfix:      qalter rejects other modification if -w is 
+                              not explicitly allowed in jsv_allowed_mod 
+                              when JSV is used
+                 Issue:	      2854
+                 Bugster:     6788644
+                 Bugfix:      qalter rejects modification of hold state 
+                              if -t is not also allowed in jsv_allowed_mod 
+                              when JSV is used
+                 Issue:       2855
+                 Bugster:     6788646
+                 Bugfix:      qresub does not set a new job id for the 
+                              new job.
+                 Issue:       2839
+                 Bugster:     6786343
+                 Bugfix:      Tight pe job might stuck in system although 
+                              enforce_limit parameter is set.
+                 Issue:	      2856
+                 Bugster:     6788647
+                 Bugfix:      echo_raw -r without additional arguments
+                              produces core dump
+                 Issue:       2848
+                 Bugster:     6788512   
+                 Bugfix:      Impossible to change -i -e and -S via JSV
+                 Issue:       2857
+                 Bugster:     6788649
+                 Bugfix:      Impossible to delete -ckpt via JSV if -c was
+                              still set
+                 Issue:       2858
+                 Bugster:     6788665
+                 Bugfix:      Pe range (pe_min, pe_max) can't be modified 
+                              even if it is specified in jsv_allowed_mod 
+                              list when JSV is used
+                 Issue:       2859
+                 Bugster:     6788651
+                 Bugfix:      Master rejects job if JSV verification process 
+                              takes longer than 10 seconds.
+                 Issues:      2860
+                 Bugster:     6788652
+                 Bugfix:      Documentation of JSV scripts is missing.
+                 Issue:       2861
+                 Bugster:     6788654
+                 Review:      MD
+
 ZG-2009-01-08-0: Update:      update html man pages
                  Review:      LP
 

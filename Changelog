@@ -1,3 +1,12 @@
+AP-2009-01-13-0: Bugfix:      project(5) man page should say that "acl" set to
+                              "NONE" means "all users"
+                 Bugster:     6784461
+                 Issue:       2827
+                 Bugfix:      man sched_conf minor corrections
+                 Bugster:     6784258
+                 Issue:       2873
+                 Review:      MP
+
 RD-2009-01-12-0: Bugfix:      qsub -w e crashes qmaster if schedd_job_info is enabled
                  Bugster:     6749902
                  Issue:       2742

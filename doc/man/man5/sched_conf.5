@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2008/09/16 17:09:03 $     Revision: $Revision: 1.37 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2009/01/13 10:15:29 $     Revision: $Revision: 1.38 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2008/09/16 17:09:03 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2009/01/13 10:15:29 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -415,8 +415,8 @@ to enable / disable the reporting of pending job tickets to the qmaster.
 It does not influence the tickets calculation. The sort order of jobs in qstat
 and qmon is only based on the submit time, when the reporting is turned off.
 .br
-The reporting should be turned of in a system with very large amount of jobs by
-setting this param to "false".
+The reporting should be turned off in a system with a very large amount of jobs
+by setting this parameter to "false".
 .\"
 .SS "\fBhalflife_decay_list\fP"
 The halflife_decay_list allows to configure different decay rates for the 
@@ -499,7 +499,7 @@ As job runtime the maximum of the time specified with -l h_rt=... or
 is assumed.
 Reservations prevent jobs of lower priority as specified in 
 .M sge_priority 5
-from utilizing the reserved resource quota during the while of reservation. 
+from utilizing the reserved resource quota during the time of reservation.
 Jobs of lower priority are allowed to utilize those reserved resources only 
 if their prospective job end is before the start of the reservation (backfilling).
 Reservation is done only for non-immediate jobs (-now no) that request reservation 
@@ -507,7 +507,7 @@ Reservation is done only for non-immediate jobs (-now no) that request reservati
 .sp 1
 Note, that reservation scheduling can be performance consuming and hence reservation 
 scheduling is switched off by default. Since reservation scheduling performance 
-consumption is known to grow with the number of pending jobs use of -R y option 
+consumption is known to grow with the number of pending jobs, the use of -R y option
 is recommended only for those jobs actually queuing for bottleneck resources. 
 Together with the max_reservation parameter this technique can be used to narrow 
 down performance impacts.

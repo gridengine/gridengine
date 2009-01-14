@@ -738,6 +738,7 @@ sge_gdi_ctx_class_create_from_bootstrap(int prog_number, const char* component_n
    int sge_qmaster_p = 0;
    int sge_execd_p = 0;
    bool is_qmaster_internal_client = false;
+   bool from_services = false;
 
    sge_gdi_ctx_class_t * ret = NULL;
    
@@ -787,21 +788,28 @@ sge_gdi_ctx_class_create_from_bootstrap(int prog_number, const char* component_n
    }
    strcpy(sge_qmaster_port, token);
    
-   sge_qmaster_p = atoi(sge_qmaster_port);
-   
+   if (is_qmaster_internal_client) {
+      sge_qmaster_p = sge_get_qmaster_port(&from_services);
+      sge_execd_p = sge_get_execd_port();
+      DPRINTF(("**** from_services %s ****\n", from_services ? "true" : "false"));
+   } else {
+      sge_qmaster_p = atoi(sge_qmaster_port);
+   } 
    if (sge_qmaster_p <= 0 ) {
       answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, "invalid url, invalid sge_qmaster_port port %s", sge_qmaster_port);
       sge_free_saved_vars(url_ctx);
       DRETURN(NULL);
    }
-
    sge_free_saved_vars(url_ctx);
    
-   /* TODO we need a way to define the execd port, from_services is always false (certs from keystore) */
-   
+   /* 
+    * TODO we need a way to define the execd port, from_services is always false (certs from keystore) for bootstrap:* mode 
+    *      for internal:* mode the master port and the execd port can be fetched from env as for other master threads here also the
+    *      from_services flag can be set
+    */
    ret = sge_gdi_ctx_class_create(prog_number, component_name, thread_number, thread_name,
                                   username, NULL, sge_root, sge_cell, sge_qmaster_p, sge_execd_p, 
-                                  false, is_qmaster_internal_client, alpp);
+                                  from_services, is_qmaster_internal_client, alpp);
    
    DRETURN(ret); 
 }

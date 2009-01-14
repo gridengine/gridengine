@@ -612,18 +612,20 @@ int maxlen
       case TYPE_HOST:
          status = XmtAskForString(w, NULL, "@{Enter a valid hostname}", stringval, maxlen, NULL);
          if (status && stringval[0] != '\0') {
-            /* try to resolve hostname */
-            ret=sge_resolve_hostname(stringval, unique, EH_name);
-            switch ( ret ) {
-               case CL_RETVAL_GETHOSTNAME_ERROR:
-                  qmonMessageShow(w, True, "Can't resolve host '%s'", stringval);
-                  status = False;
-                  break;
-               case CL_RETVAL_OK:
-                  strcpy(stringval, unique);
-                  break; 
-               default:
-                  DPRINTF(("sge_resolve_hostname() failed resolving: %s\n", cl_get_error_text(ret)));
+            if (!sge_is_pattern(stringval)) {
+               /* try to resolve hostname */
+               ret=sge_resolve_hostname(stringval, unique, EH_name);
+               switch ( ret ) {
+                  case CL_RETVAL_GETHOSTNAME_ERROR:
+                     qmonMessageShow(w, True, "Can't resolve host '%s'", stringval);
+                     status = False;
+                     break;
+                  case CL_RETVAL_OK:
+                     strcpy(stringval, unique);
+                     break; 
+                  default:
+                     DPRINTF(("sge_resolve_hostname() failed resolving: %s\n", cl_get_error_text(ret)));
+               }
             }
          }
          else

@@ -396,7 +396,8 @@ Qmon*submit_verify.strings: \
    "@{Skip}", \
    "@{Warning}", \
    "@{Error}", \
-   "@{Just verify}"
+   "@{Just verify}", \
+   "@{Poke}"
 
 Qmon*submit_mail*marginHeight: 1
 Qmon*submit_mail.packing: PACK_TIGHT

@@ -894,10 +894,14 @@ int sge_get_management_entry(const char *fname, int n, int nmissing, bootstrap_e
       for (i=0; i<n; i++) {
          char *nam = strtok_r(cp, "=", &pos);
          char *val = strtok_r(NULL, "\n", &pos);
-         if (nam != NULL && val != NULL && strcasecmp(name[i].name, nam) == 0) {
+         if (nam != NULL && strcasecmp(name[i].name, nam) == 0) {
                 DPRINTF(("nam = %s\n", nam));
-                DPRINTF(("val = %s\n", val));
-                sge_strlcpy(value[i], val, SGE_PATH_MAX);
+                if (val != NULL) {
+                   DPRINTF(("val = %s\n", val));
+                   sge_strlcpy(value[i], val, SGE_PATH_MAX);
+                } else {
+                   sge_strlcpy(value[i], "", SGE_PATH_MAX);
+                }
                 is_found[i] = true;
                 if (name[i].is_required) {
                   --nmissing; 

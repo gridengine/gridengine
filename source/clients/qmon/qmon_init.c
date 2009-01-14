@@ -511,11 +511,13 @@ DTRACE;
    XmtRegisterLayoutParser();
    XmtRegisterLayoutCreateMethod();
 
+#if 0
    /*
    ** register xmt improved icons
    */
    XmtRegisterImprovedIcons(top, NULL);
-   
+#endif
+
    /*
     * Register adapted Qmon Widgets 
     */

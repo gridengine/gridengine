@@ -1,3 +1,11 @@
+AA-2009-01-14-0: Bugfix:      - qmon misses Poke (-w p) in "Verify Mode"
+                              - adding hostname="u*" results in error: can't resolve host u*. Works on command line
+                              - max_advance_reservations is missing
+                              - wrong certificate path for jmx with /etc/services
+                 Issue:       2874,2875
+                 Bugfix:      6793547,6793554
+                 Review:      RD
+
 ZG-2009-01-13-0: Enhancem.:   Execute directory permission checkings on remote host
                  Enhancem.:   Switch-on logging by default
                  Bugfix:      Disable "Browse" button in case the qmaster is not on localhost

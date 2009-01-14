@@ -2039,7 +2039,7 @@ GetJMXPort() {
                fi   
 
                # set SGE_JMX_SSL_KEYSTORE
-               if [ "$SGE_QMASTER_PORT" != "" ]; then
+               if [ "$SGE_QMASTER_PORT" != "" -a "$qmaster_service" = false ]; then
                   ca_port=port$SGE_QMASTER_PORT
                else
                   ca_port=sge_qmaster

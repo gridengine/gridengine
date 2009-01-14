@@ -123,6 +123,8 @@ int sge_get_qmaster_port(bool *from_services) {
    struct timeval now;
    static long next_timeout = 0;
    static int cached_port = -1;
+   static bool cached_from_services = false;
+
    DENTER(GDI_LAYER, "sge_get_qmaster_port");
 
    sge_mutex_lock("get_qmaster_port_mutex", SGE_FUNC, __LINE__, &get_qmaster_port_mutex);
@@ -135,6 +137,7 @@ int sge_get_qmaster_port(bool *from_services) {
    }
    if (cached_port >= 0 && next_timeout > now.tv_sec) {
       int_port = cached_port;
+      *from_services = cached_from_services;
       DPRINTF(("returning cached port value: "sge_U32CFormat"\n", sge_u32c(int_port)));
       sge_mutex_unlock("get_qmaster_port_mutex", SGE_FUNC, __LINE__, &get_qmaster_port_mutex);
       DEXIT;
@@ -156,7 +159,8 @@ int sge_get_qmaster_port(bool *from_services) {
       if (se_help != NULL) {
          int_port = ntohs(se_help->s_port);
          if (int_port > 0 && from_services) {
-            *from_services = true;
+            cached_from_services = true;
+            *from_services = cached_from_services;
          }
       }
    }

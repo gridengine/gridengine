@@ -129,7 +129,7 @@ GetCell()
                   Overwrite="true"
                else
                   $INFOTEXT "Deleting directory \"%s\" now!" $SGE_ROOT/$SGE_CELL_VAL
-                  ExecuteAsAdmin rm -rf $SGE_ROOT/$SGE_CELL_VAL
+                  Removedir $SGE_ROOT/$SGE_CELL_VAL
                   is_done="true"
                fi
             fi

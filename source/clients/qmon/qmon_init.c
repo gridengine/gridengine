@@ -511,7 +511,7 @@ DTRACE;
    XmtRegisterLayoutParser();
    XmtRegisterLayoutCreateMethod();
 
-#if 0
+#if 1
    /*
    ** register xmt improved icons
    */

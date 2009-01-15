@@ -84,6 +84,7 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 #include "msg_evmlib.h"
+#include "msg_qmaster.h"
  
 #include "sge_event_master.h"
 
@@ -2006,13 +2007,15 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
    int ret;
    int commid; 
    int deliver_interval;
-   time_t now = time(NULL);
+   u_long32 now;
    u_long32 ec_id = 0;
    event_client_update_func_t update_func = NULL;
 
    DENTER(TOP_LAYER, "sge_event_master_send_events");
 
    sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.mutex);
+
+   now = sge_get_gmt();
    event_client = lFirst(Event_Master_Control.clients);
    while (event_client != NULL) {
       const char *host = NULL;
@@ -2042,8 +2045,9 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
       deliver_interval = lGetUlong(event_client, EV_d_time);
       busy_handling = lGetUlong(event_client, EV_busy_handling);
 
-      /* somone turned the clock back */
+      /* someone turned the clock back */
       if (lGetUlong(event_client, EV_last_heard_from) > now) {
+         WARNING((SGE_EVENT, MSG_SYSTEM_SYSTEMHASBEENMODIFIEDXSECONDS_I, (int)(now - lGetUlong(event_client, EV_last_heard_from))));
          lSetUlong(event_client, EV_last_heard_from, now);
          lSetUlong(event_client, EV_next_send_time, now + deliver_interval);
       } else if (lGetUlong(event_client, EV_last_send_time)  > now) {

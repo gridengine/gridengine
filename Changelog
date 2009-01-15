@@ -1,4 +1,10 @@
-RD-2009-09-01-0: Bugfix:      Fixed qmaster crash during scheduler message
+JG-2009-01-15-0: Bugfix:      no scheduler activity to schedule pending jobs
+                              when the qmaster installed on RHEL4
+                 Bugster:     6792704
+                 Issue:       2877
+                 Review:      CR
+
+RD-2009-01-09-0: Bugfix:      Fixed qmaster crash during scheduler message
                               generation
                  Review:      CR
 

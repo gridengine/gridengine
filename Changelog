@@ -2,6 +2,9 @@ JG-2009-01-15-0: Bugfix:      no scheduler activity to schedule pending jobs
                               when the qmaster installed on RHEL4
                  Bugster:     6792704
                  Issue:       2877
+                 Bugfix:      qmaster param SCHEDULER_TIMEOUT is used for all event clients
+                 Bugster:     6794303
+                 Issue:       2878
                  Review:      CR
 
 AA-2009-01-14-0: Bugfix:      - qmon misses Poke (-w p) in "Verify Mode"

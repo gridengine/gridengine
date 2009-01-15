@@ -1,3 +1,9 @@
+JG-2009-01-15-0: Bugfix:      no scheduler activity to schedule pending jobs
+                              when the qmaster installed on RHEL4
+                 Bugster:     6792704
+                 Issue:       2877
+                 Review:      CR
+
 ZG-2009-01-08-0: Update:      update html man pages
                  Review:      LP
 

@@ -1,3 +1,9 @@
+DG-2009-01-15-0: Bugfix:      execd: "ptf complains: Job does not exist" 
+                              message in log file
+                 Bugster:     6326191
+                 Issue:       1806
+                 Review:      JG
+
 MD-2009-01-14-0: Bugfix:      Merged CR6742941 from checkin LP-2008-10-17-0
                  Bugster:     6742941
                  Issue:       2707

@@ -197,20 +197,47 @@ sge_scheduler_cleanup_event_client(sge_evc_class_t *evc)
    DRETURN_VOID;
 }
 
-static void sge_scheduler_wait_for_event(void)
+static void sge_scheduler_wait_for_event(sge_evc_class_t *evc, lList **event_list)
 {
-   u_long32 current_time = 0; 
-   struct timespec ts;
+   int wait_ret;
+   bool do_ack = false;
+
    DENTER(TOP_LAYER, "sge_scheduler_wait_for_event");
 
-   current_time = sge_get_gmt();
-   while (!Scheduler_Control.triggered && !Scheduler_Control.exit &&
-          ((sge_get_gmt() - current_time) < SCHEDULER_TIMEOUT_S)){
+
+   sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &Scheduler_Control.mutex);
+
+   if (!Scheduler_Control.triggered) {
+      struct timespec ts;
+      u_long32 current_time = sge_get_gmt();
       ts.tv_sec = (long) current_time + SCHEDULER_TIMEOUT_S;
       ts.tv_nsec = SCHEDULER_TIMEOUT_N;
-      pthread_cond_timedwait(&Scheduler_Control.cond_var, &Scheduler_Control.mutex, &ts);
-   };
-   DEXIT;
+
+      wait_ret = pthread_cond_timedwait(&Scheduler_Control.cond_var, &Scheduler_Control.mutex, &ts);
+
+      /*
+       * if pthread_cond_timedwait returns 0, we were triggered by event master
+       * otherwise we ran into a timeout or an error
+       */
+      if (wait_ret != 0) {
+         DPRINTF(("pthread_cond_timedwait for events failed %d\n", wait_ret));
+      }
+   }
+
+   if (Scheduler_Control.triggered) {
+      *event_list = Scheduler_Control.new_events;
+      Scheduler_Control.new_events = NULL;
+      Scheduler_Control.triggered = false;
+      do_ack = true;
+   }
+
+   sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Scheduler_Control.mutex);
+
+   if (do_ack) {
+      evc->ec_ack(evc);
+   }
+
+   DRETURN_VOID;
 }
 
 /****** qmaster/threads/sge_scheduler_initialize() ***************************
@@ -629,30 +656,11 @@ sge_scheduler_main(void *arg)
             prof_stop(SGE_PROF_SCHEDLIB4, NULL);
          }
 
-         sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &Scheduler_Control.mutex);
-
          /*
           * Wait for new events
           */
-         MONITOR_IDLE_TIME(sge_scheduler_wait_for_event(), (&monitor), mconf_get_monitor_time(), 
+         MONITOR_IDLE_TIME(sge_scheduler_wait_for_event(evc, &event_list), (&monitor), mconf_get_monitor_time(), 
                            mconf_is_monitor_message());
-
-         PROF_START_MEASUREMENT(SGE_PROF_CUSTOM6);
-
-         /*
-          * We have left sge_scheduler_wait_for_event either as we got events,
-          * or due to timeout.
-          * If we left sge_scheduler_wait_for_event due to timeout,
-          * the event_list will be NULL.
-          */
-         event_list = Scheduler_Control.new_events;
-         Scheduler_Control.new_events = NULL;
-         Scheduler_Control.triggered = false;
-
-         sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Scheduler_Control.mutex);
- 
-         /* ack, even if we got no events */
-         evc->ec_ack(evc);
 
          if (event_list != NULL) {
             /* check for shutdown */
@@ -685,6 +693,7 @@ sge_scheduler_main(void *arg)
             lList *master_hgrp_list = *object_type_get_master_list(SGE_TYPE_HGROUP);
             lList *master_sharetree_list = *object_type_get_master_list(SGE_TYPE_SHARETREE);
 
+            PROF_START_MEASUREMENT(SGE_PROF_CUSTOM6);
             PROF_START_MEASUREMENT(SGE_PROF_CUSTOM7);
 
             if (__CONDITION(INFOPRINT)) {
@@ -889,6 +898,9 @@ sge_scheduler_main(void *arg)
             lFreeList(&(copy.rqs_list));
             lFreeList(&(copy.ar_list));
 
+            PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
+            prof_free = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7, true, NULL);
+
             /* 
              * need to sync with event master thread
              * if schedd configuration changed then settings in evm can be adjusted
@@ -915,9 +927,6 @@ sge_scheduler_main(void *arg)
             /*
              * Stop profiling for "schedd run total" and the subcategories
              */
-            PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
-            prof_free = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7, true, NULL);
-
             PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM6);
             prof_total = prof_get_measurement_wallclock(SGE_PROF_CUSTOM6, true, NULL);
 
@@ -937,8 +946,6 @@ sge_scheduler_main(void *arg)
             thread_output_profiling("scheduler thread profiling summary:\n", &next_prof_output);
 
             sge_monitor_output(&monitor);
-         } else {
-            PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM6);
          }
 
          /* reset the busy state */

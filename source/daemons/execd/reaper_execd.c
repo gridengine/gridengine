@@ -65,6 +65,7 @@
 #include "sge_load_sensor.h"
 #include "execd.h"
 #include "reaper_execd.h"
+#include "execd_signal_queue.h"
 #include "job_report_execd.h"
 #include "sge_prog.h"
 #include "sge_qexec.h"
@@ -629,7 +630,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
          FCLOSE_IGNORE_ERROR(fp);
       }   
 
-   sge_get_active_job_file_path(&fname, job_id, ja_task_id, pe_task_id, 
+      sge_get_active_job_file_path(&fname, job_id, ja_task_id, pe_task_id, 
                                 "job_pid");
       if (!SGE_STAT(sge_dstring_get_string(&fname), &statbuf)) {
          if ((fp = fopen(sge_dstring_get_string(&fname), "r"))) {
@@ -700,25 +701,9 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
          lListElem *job = NULL; 
          lListElem *ja_task = NULL;
          lListElem *master_queue = NULL;
-         const void *iterator = NULL;
 
-         /* Bugfix: Issuezilla 1031/1034
-          * The problem in 1031 is that each task got added as its own job
-          * structure, but the reaper was only looking at the first job
-          * structure in the list.  Instead, we have to iterate through the
-          * list by hand to make sure we find every instance. */
-
-         job = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
-         while(job != NULL) {
-            ja_task = job_search_task(job, NULL, ja_task_id);
-            if(ja_task != NULL) {
-               break;
-            }
-            job = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, 
-                                    &iterator);
-         }
-
-         if ((job != NULL) && (ja_task != NULL)) {
+         /* search job and ja_task */
+         if (execd_get_job_ja_task(job_id, ja_task_id, &job, &ja_task)) {
             master_queue = responsible_queue(job, ja_task, NULL);
          }
 
@@ -814,13 +799,8 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
 }
 
 /* ------------------------- */
-void remove_acked_job_exit(
-sge_gdi_ctx_class_t *ctx,
-u_long32 job_id,
-u_long32 ja_task_id,
-const char *pe_task_id,
-lListElem *jr 
-) {
+void remove_acked_job_exit(sge_gdi_ctx_class_t *ctx, u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id, lListElem *jr)
+{
    char *exec_file, *script_file, *tmpdir, *job_owner, *qname; 
    dstring jobdir = DSTRING_INIT;
    char fname[SGE_PATH_MAX];
@@ -838,8 +818,7 @@ lListElem *jr
 
    if (ja_task_id == 0) {
       ERROR((SGE_EVENT, MSG_SHEPHERD_REMOVEACKEDJOBEXITCALLEDWITHX_U, sge_u32c(job_id)));
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
 
    pe_task_id_str = jr?lGetString(jr, JR_pe_task_id_str):NULL;
@@ -857,14 +836,12 @@ lListElem *jr
             ERROR((SGE_EVENT, MSG_JOB_XYHASNOTASKZ_UUS, 
                    sge_u32c(job_id), sge_u32c(ja_task_id), pe_task_id_str));
             del_job_report(jr);
-            DEXIT;
-            return;
+            DRETURN_VOID;
          }
 
          if (lGetUlong(jr, JR_state) != JEXITING) {
             WARNING((SGE_EVENT, MSG_EXECD_GOTACKFORPETASKBUTISNOTINSTATEEXITING_S, pe_task_id_str));
-            DEXIT;
-            return;
+            DRETURN_VOID;
          }
 
          master_q = responsible_queue(jep, jatep, petep);
@@ -906,16 +883,33 @@ lListElem *jr
 
       /* increment # of free slots. In case no slot is used any longer 
          we have to remove queues tmpdir for this job */
-      used_slots = qinstance_slots_used(master_q) - 1;
-      qinstance_set_slots_used(master_q, used_slots);
-      DPRINTF(("%s: used slots decreased from %d to %d\n", lGetString(master_q, QU_full_name), used_slots+1, used_slots));
-      if (!used_slots) {
-         sge_remove_tmpdir(lGetString(master_q, QU_tmpdir), 
-            lGetString(jep, JB_owner), lGetUlong(jep, JB_job_number), 
-            ja_task_id, lGetString(master_q, QU_qname));
+      /* decrement the number of used slots.
+       * not done for the slave container of tightly integrated parallel jobs
+       */
+      used_slots = qinstance_slots_used(master_q);
+      if (lGetUlong(jatep, JAT_status) == JSLAVE && pe_task_id_str == NULL) {
+         DPRINTF(("remove_acked_job_exit for slave container - not decreasing used slots"));
+      } else {
+         used_slots--;
+         qinstance_set_slots_used(master_q, used_slots);
+         DPRINTF(("%s: used slots decreased to %d\n", lGetString(master_q, QU_full_name), used_slots));
       }
 
-      if (!pe_task_id_str) {
+      /* 
+       * when the job finished / the last task of a pe job finished
+       * delete the tmpdir for this job
+       * the slave container of a tightly integrated parallel job 
+       * does not have a tmpdir
+       */
+      if (used_slots == 0) {
+         if (lGetUlong(jatep, JAT_status) != JSLAVE || pe_task_id_str != NULL) {
+         sge_remove_tmpdir(lGetString(master_q, QU_tmpdir), 
+                           lGetString(jep, JB_owner), lGetUlong(jep, JB_job_number), 
+                           ja_task_id, lGetString(master_q, QU_qname));
+         }
+      }
+
+      if (pe_task_id_str == NULL) {
          if (!mconf_get_simulate_jobs()) {
             job_remove_spool_file(job_id, ja_task_id, NULL, SPOOL_WITHIN_EXECD);
 
@@ -939,11 +933,8 @@ lListElem *jr
             }
          }
       } else {
-         DPRINTF(("not removing job file: pe_task_id_str = %s\n", 
-            pe_task_id_str));
+         DPRINTF(("not removing job file: pe_task_id_str = %s\n", pe_task_id_str));
       }
-
-
 
       if (pe_task_id_str != NULL) {
          /* unchain pe task element from task list */
@@ -955,7 +946,7 @@ lListElem *jr
           */
          if (lGetNumberOfElem(lGetList(jatep, JAT_task_list)) == 0) {
             lListElem *jr = get_job_report(job_id, ja_task_id, NULL);
-            if (jr != NULL && lGetUlong(jr, JR_state) == JSLAVE && lGetUlong(jatep, JAT_status) & JEXITING) {
+            if (jr != NULL && lGetUlong(jr, JR_state) == JSLAVE && ISSET(lGetUlong(jatep, JAT_state), JDELETED)) {
                add_usage(jr, "exit_status", NULL, 0);
                flush_job_report(jr);
             }
@@ -963,19 +954,18 @@ lListElem *jr
       } else {
          /* check if job has queue limits and decrease global flag if necessary */
          modify_queue_limits_flag_for_job(ctx->get_qualified_hostname(ctx), jep, false);
-         
-         if (used_slots == 0) {
+
+         if (used_slots == 0 || mconf_get_simulate_jobs()) {
             /* remove the jep element only if all slave tasks are gone, we need to job object to remove the tmpdir */
             lRemoveElem(*(object_type_get_master_list(SGE_TYPE_JOB)), &jep);
          }
       }
-      del_job_report(jr);   
+      del_job_report(jr);
 
    } else { /* must be an ack of an ask job request from qmaster */
-
       DPRINTF(("REMOVING WITHOUT jep && jatep\n"));
       /* clean up active jobs entry */
-      if (!pe_task_id_str) {
+      if (pe_task_id_str == NULL) {
          ERROR((SGE_EVENT, MSG_SHEPHERD_ACKNOWLEDGEFORUNKNOWNJOBXYZ_UUS, 
                 sge_u32c(job_id),  sge_u32c(ja_task_id), 
                 (pe_task_id_str ? pe_task_id_str : MSG_MASTER)));
@@ -1050,8 +1040,7 @@ lListElem *jr
 
    sge_dstring_free(&jobdir);
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /**************************************************************************
@@ -1141,11 +1130,8 @@ static lListElem *execd_job_failure(lListElem *jep, lListElem *jatep, lListElem 
  This is done very like the normal job finish and runs into the same
  functions in the qmaster.
  **************************************************************************/
-void job_unknown(
-u_long32 jobid,
-u_long32 jataskid,
-char *qname 
-) {
+void job_unknown(u_long32 jobid, u_long32 jataskid, char *qname)
+{
    lListElem *jr;
 
    DENTER(TOP_LAYER, "job_unknown");
@@ -1244,7 +1230,6 @@ int clean_up_old_jobs(sge_gdi_ctx_class_t *ctx, int startup)
    while ((dent=SGE_READDIR(cwd))) {
       char string[256], *token, *endp;
       u_long32 tmp_id;
-      const void *iterator;
 
       jobdir = dent->d_name;    /* jobdir is the jobid.jataskid converted to string */
       strcpy(string, jobdir);
@@ -1273,16 +1258,7 @@ int clean_up_old_jobs(sge_gdi_ctx_class_t *ctx, int startup)
       }
 
       /* seek job to this jobdir */
-      jep = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, jobid, &iterator);
-      while(jep != NULL) {
-         jatep = job_search_task(jep, NULL, jataskid);
-         if(jatep != NULL) {
-            break;
-         }
-         jep = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, jobid, &iterator);
-      }
- 
-      if (!jep || !jatep) {
+      if (!execd_get_job_ja_task(jobid, jataskid, &jep, &jatep)) {
          /* missing job in job dir but not in active job dir */
          if (startup) {
             ERROR((SGE_EVENT, MSG_SHEPHERD_FOUNDACTIVEJOBDIRXWHILEMISSINGJOBDIRREMOVING_S, jobdir)); 
@@ -1717,8 +1693,7 @@ static void build_derived_final_usage(lListElem *jr, int usage_mul_factor)
          add_usage(jr, USAGE_ATTR_MAXVMEM, NULL, maxvmem);
    }
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /*****************************************************************/
@@ -1997,8 +1972,8 @@ void execd_slave_job_exit(u_long32 job_id, u_long32 ja_task_id)
    lListElem *ja_task = NULL;
 
    if (execd_get_job_ja_task(job_id, ja_task_id, &job, &ja_task)) {
-      /* mark the job as exiting */
-      lSetUlong(ja_task, JAT_status, JEXITING);
+      /* kill possibly still running tasks */
+      signal_job(job_id, ja_task_id, SGE_SIGKILL);
 
       /* if there are no pe_tasks running
        * we can finish the slave job right away

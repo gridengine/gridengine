@@ -690,9 +690,7 @@ bool execd_get_job_ja_task(u_long32 job_id, u_long32 ja_task_id, lListElem **job
    
    if (*job == NULL) {
       ERROR((SGE_EVENT, MSG_JOB_TASKWITHOUTJOB_U, sge_u32c(job_id))); 
-   }
-
-   if (*ja_task == NULL) { 
+   } else if (*ja_task == NULL) { 
       ERROR((SGE_EVENT, MSG_JOB_TASKNOTASKINJOB_UU, sge_u32c(job_id), sge_u32c(ja_task_id)));
    }
 

@@ -446,12 +446,13 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       {
          lListElem *user_path;
          dstring buffer = DSTRING_INIT;
-         if ((user_path=lGetElemStr(environmentList, VA_variable, "PATH")))
+         if ((user_path=lGetElemStr(environmentList, VA_variable, "PATH"))) {
             sge_dstring_sprintf(&buffer, "%s:%s", tmpdir, lGetString(user_path, VA_value));
-         else
+         } else {
             sge_dstring_sprintf(&buffer, "%s:%s", tmpdir, SGE_DEFAULT_PATH);
-            var_list_set_string(&environmentList, "PATH", sge_dstring_get_string(&buffer));
-            sge_dstring_free(&buffer);
+         }
+         var_list_set_string(&environmentList, "PATH", sge_dstring_get_string(&buffer));
+         sge_dstring_free(&buffer);
       }
 
       /* 1.) try to read cwd from pe task */

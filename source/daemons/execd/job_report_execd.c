@@ -346,7 +346,6 @@ int do_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
  * qmaster expects us to send a final slave report
  * (having JR_usage with at least a pseudo exit_status)
  * once all pe_tasks have finished.
- * Fix for CR 6579326 to be done: kill still running pe_tasks.
  */
          case ACK_SIGNAL_SLAVE:
             jobid = lGetUlong(ack, ACK_id);
@@ -369,15 +368,14 @@ int do_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
        * NOT synchron which means that the commlib will return
        * when there is nothing to do
        */
-      cl_commlib_trigger(cl_com_get_handle("execd",1) ,0);
+      cl_commlib_trigger(cl_com_get_handle("execd", 1) ,0);
    }
 
    DRETURN(0);
 }
 
 int
-execd_get_acct_multiplication_factor(const lListElem *pe, 
-                                     int slots, bool task)
+execd_get_acct_multiplication_factor(const lListElem *pe, int slots, bool task)
 {
    int factor = 1;
 

@@ -696,6 +696,7 @@ qinstance_set_slots_used(lListElem *this_elem, int new_slots)
       CRITICAL((SGE_EVENT, MSG_QINSTANCE_MISSLOTS_S, 
                 lGetString(this_elem, QU_full_name)));
    }
+
    DRETURN_VOID;
 }
 

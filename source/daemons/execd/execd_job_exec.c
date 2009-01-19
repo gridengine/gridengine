@@ -45,6 +45,7 @@
 #include "dispatcher.h"
 #include "sge_string.h"
 #include "sge_parse_num_par.h"
+#include "execd.h"
 #include "reaper_execd.h"
 #include "job_report_execd.h"
 #include "execd_job_exec.h"
@@ -649,7 +650,6 @@ static int handle_task(sge_gdi_ctx_class_t *ctx, lListElem *petrep, char *commpr
    char new_task_id[1024];
    lList *gdil = NULL;
    int tid = 0;
-   const void *iterator;
    const char *progname = ctx->get_progname(ctx);
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
    const char *unqualified_hostname = ctx->get_unqualified_hostname(ctx);
@@ -669,25 +669,7 @@ static int handle_task(sge_gdi_ctx_class_t *ctx, lListElem *petrep, char *commpr
    jobid    = lGetUlong(petrep, PETR_jobid);
    jataskid = lGetUlong(petrep, PETR_jataskid);
 
-   jep = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)),
-                            JB_job_number, jobid, &iterator);
-   while (jep != NULL) {
-      jatep = job_search_task(jep, NULL, jataskid);
-      if (jatep != NULL) {
-         break;
-      }
-
-      jep = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)),
-                              JB_job_number, jobid, &iterator);
-   }
-   
-   if (jep == NULL) {
-      ERROR((SGE_EVENT, MSG_JOB_TASKWITHOUTJOB_U, sge_u32c(jobid))); 
-      goto Error;
-   }
-
-   if (jatep == NULL) { 
-      ERROR((SGE_EVENT, MSG_JOB_TASKNOTASKINJOB_UU, sge_u32c(jobid), sge_u32c(jataskid)));
+   if (!execd_get_job_ja_task(jobid, jataskid, &jep, &jatep)) {
       goto Error;
    }
 
@@ -703,8 +685,8 @@ static int handle_task(sge_gdi_ctx_class_t *ctx, lListElem *petrep, char *commpr
       goto Error;
    }
 
-   /* do not accept the task if job is in deletion or exiting */
-   if ((lGetUlong(jatep, JAT_state) & JDELETED) || lGetUlong(jatep, JAT_status) & JEXITING) {
+   /* do not accept the task if job is in deletion */
+   if (lGetUlong(jatep, JAT_state) & JDELETED) {
       DPRINTF(("received task exec request while job is in deletion or exiting\n"));
       goto Error;
    }

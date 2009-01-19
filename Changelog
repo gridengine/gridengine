@@ -1,3 +1,6 @@
+CR-2009-01-19-0: Bugfix:      added missing test module binary source
+                 Belongs to:  CR-2009-01-13-0
+
 CR-2009-01-13-0: Bugfix:      qmaster might be unresponsive for a time because 
                               of commlib timeout
                  Merged from: V61_BRANCH: CR-2009-01-12-0

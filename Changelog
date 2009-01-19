@@ -1,3 +1,8 @@
+MP-2009-01-19-0: Bugfix:      fixed bug introduced through MP-2008-12-01-0.
+                              write permission in sge_root directory is only
+                              checked during qmaster install
+                 Review:      MD
+
 DG-2009-01-15-0: Bugfix:      execd: "ptf complains: Job does not exist" 
                               message in log file
                  Bugster:     6326191

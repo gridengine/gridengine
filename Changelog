@@ -1,3 +1,10 @@
+DG-2009-01-19-0: Bugfix:      execd: "ptf complains: Job does not exist" 
+                              message in log file
+                 Merged from: V61_BRANCH (DG-2009-01-15-0) 
+                 Bugster:     6326191
+                 Issue:       1806
+                 Review:      JG
+
 JG-2009-01-15-0: Bugfix:      no scheduler activity to schedule pending jobs
                               when the qmaster installed on RHEL4
                  Bugster:     6792704

@@ -308,18 +308,10 @@ DESC
    unregisters job from ptf and fills usage values
    into appropriate job report element
 
-RETURNS
-
-   0 everyting worked fine
-   1 got only zero usage from ptf
-
 */
-static void unregister_from_ptf(
-u_long32 job_id,
-u_long32 ja_task_id,
-const char *pe_task_id,
-lListElem *jr 
-) {
+static void unregister_from_ptf(u_long32 job_id, u_long32 ja_task_id,
+                               const char *pe_task_id, lListElem *jr) 
+{
    lList* usage = NULL;
    int ptf_error;
 
@@ -327,6 +319,20 @@ lListElem *jr
 
    ptf_error = ptf_job_complete(job_id, ja_task_id, pe_task_id, &usage);
    if (ptf_error) {
+      lListElem *ja_task = NULL;
+      lListElem *job = NULL; 
+
+      /* if the job was a 'short-runner' omit the warning */
+      if (execd_get_job_ja_task(job_id, ja_task_id, &job, &ja_task)) {
+         /* check if the job was a short-runner */  
+         u_long32 time_since_started = sge_get_gmt() - lGetUlong(ja_task, JAT_start_time);
+         if (time_since_started <= 2) {
+            /* the job was started <= 2 seconds before and ended already 
+               hence no warning has to be printed because of bug CR 6326191 */ 
+            DRETURN_VOID;
+         }
+      }
+
       WARNING((SGE_EVENT, MSG_JOB_REAPINGJOBXPTFCOMPLAINSY_US,
                sge_u32c(job_id), ptf_errstr(ptf_error)));
    } else {
@@ -336,8 +342,7 @@ lListElem *jr
       }
    }
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 #endif
 

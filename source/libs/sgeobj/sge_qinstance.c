@@ -78,7 +78,7 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
-#define QINSTANCE_LAYER TOP_LAYER
+#define QINSTANCE_LAYER BASIS_LAYER
 
 /****** sgeobj/qinstance/qinstance_list_locate() ******************************
 *  NAME

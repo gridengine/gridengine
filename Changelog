@@ -1,3 +1,10 @@
+RD-2009-01-21-0: Bugfix:      - subordinate list generated a critical message entry
+                              - subordination was broken when setup was done in wrong
+                                order
+                 Bugster:     6795248, 6796068
+                 Issue:       2883, 2884
+                 Review:      CR
+
 DG-2009-01-21-0: Cleanup:     aimk -only-depend does not work on linux
                  Review:      AA 
 

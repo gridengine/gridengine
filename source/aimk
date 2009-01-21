@@ -666,6 +666,7 @@ while ($#argv >= 1 && $?found)
       set SGE_DEPEND = 1
       set MAKEWINGRIDAPP = 0
       set MAKEWINGRIDLIB = 0
+      set MAKEJEMALLOCLIB  = 0
       set ONLY_PARAM_SPEC = 1
       breaksw
    case  "-only-java"
@@ -1808,7 +1809,7 @@ case SOLARISAMD64:
 #   if ( $BUILDARCH == "SOLARISAMD64" ) then
 #      set MAKEJEMALLOCLIB = 1
 #   endif
-   
+
    if ( $MAKEJEMALLOCLIB == 1 ) then
       set JEMALLOC_CFLAGS  = "-DMOZ_MEMORY_SOLARIS -xc99"
       set LFLAGS   = "$LFLAGS $DEBUG_FLAG -ljemalloc"

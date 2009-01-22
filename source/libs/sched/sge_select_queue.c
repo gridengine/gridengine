@@ -3000,16 +3000,18 @@ static bool access_cq_rejected(const char *user, const char *group,
 *******************************************************************************/
 dispatch_t cqueue_match_static(const char *cqname, sge_assignment_t *a)
 {
-   const lList *hard_resource_list;
+   const lList *hard_resource_list, *master_hard_queue_list;
    const lListElem *cq;
    const char *project, *pe_name;
    u_long32 ar_id;
 
    DENTER(TOP_LAYER, "cqueue_match_static");
 
+   
    /* detect if entire cluster queue ruled out due to -q */
-   if (qref_list_cq_rejected(lGetList(a->job, JB_hard_queue_list), cqname, NULL, NULL) &&
-       (!a->pe_name || qref_list_cq_rejected(lGetList(a->job, JB_master_hard_queue_list), cqname, NULL, NULL))) {
+   if (qref_list_cq_rejected(lGetList(a->job, JB_hard_queue_list), cqname, NULL, NULL) && 
+         (!a->pe_name || !(master_hard_queue_list = lGetList(a->job, JB_master_hard_queue_list)) 
+         || qref_list_cq_rejected(master_hard_queue_list, cqname, NULL, NULL))) {
       DPRINTF(("Cluster Queue \"%s\" is not contained in the hard queue list (-q) that "
             "was requested by job %d\n", cqname, (int)a->job_id));
       schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
@@ -3739,26 +3741,54 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
          const char *eh_name;
          lListElem *qep;
 
+         /* non-eligable queues may have no impact on host preference */
+         for_each (qep, a->queue_list) {
+            const char *cqname = lGetString(qep, QU_qname);
+
+            /* try to foreclose the cluster queue */
+            if (lGetElemStr(a->skip_cqueue_list, CTI_name, cqname)) {
+               lSetUlong(qep, QU_tag, 0);
+               DPRINTF(("(1) skip cluster queue %s\n", cqname));             
+               continue;
+            }
+
+            if (!lGetElemStr(unclear_cqueue_list, CTI_name, cqname)) {
+
+               if (a->pi)
+                  a->pi->par_cqstat++;
+               if (cqueue_match_static(cqname, a) != DISPATCH_OK) {
+                  lAddElemStr(&(a->skip_cqueue_list), CTI_name, cqname, CTI_Type);
+                  /* tag QI as unsuited */
+                  lSetUlong(qep, QU_tag, 0);
+                  DPRINTF(("add cluster queue %s to skip list\n", cqname));             
+                  continue;
+               }
+               DPRINTF(("cqueue %s is not rejected\n", cqname));
+               lAddElemStr(&unclear_cqueue_list, CTI_name, cqname, CTI_Type);
+            }
+            lSetUlong(qep, QU_tag, 1);
+         }
+
          if (a->is_soft) {
             a->soft_violations = 0;
             for_each (qep, a->queue_list) {
                lSetUlong(qep, QU_soft_violation, 0);
-               if (!(hep = host_list_locate(a->host_list, lGetHost(qep, QU_qhostname)))) {
+               if (lGetUlong(qep, QU_tag) == 0 || !(hep = host_list_locate(a->host_list, lGetHost(qep, QU_qhostname)))) {
                   continue;
                }
                get_soft_violations(a, hep, qep);
                DPRINTF(("EVALUATE: %s soft violations %d\n", lGetString(qep, QU_full_name), lGetUlong(qep, QU_soft_violation)));
             }
             if (sconf_get_queue_sort_method() == QSM_LOAD) {
-               lPSortList(a->queue_list, "%I+ %I+ %I+", QU_soft_violation, QU_host_seq_no, QU_seq_no);
+               lPSortList(a->queue_list, "%I- %I+ %I+ %I+", QU_tag, QU_soft_violation, QU_host_seq_no, QU_seq_no);
             } else {
-               lPSortList(a->queue_list, "%I+ %I+ %I+", QU_soft_violation, QU_seq_no, QU_host_seq_no);
+               lPSortList(a->queue_list, "%I- %I+ %I+ %I+", QU_tag, QU_soft_violation, QU_seq_no, QU_host_seq_no);
             } 
          } else {
             if (sconf_get_queue_sort_method() == QSM_LOAD) {
-               lPSortList(a->queue_list, "%I+ %I+", QU_host_seq_no, QU_seq_no);
+               lPSortList(a->queue_list, "%I- %I+ %I+", QU_tag, QU_host_seq_no, QU_seq_no);
             } else {
-               lPSortList(a->queue_list, "%I+ %I+", QU_seq_no, QU_host_seq_no);
+               lPSortList(a->queue_list, "%I- %I+ %I+", QU_tag, QU_seq_no, QU_host_seq_no);
             } 
          }
 
@@ -3833,6 +3863,9 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                   for (qep = lGetElemHostFirst(a->queue_list, QU_qhostname, eh_name, &iter); qep;
                        qep = lGetElemHostNext(a->queue_list, QU_qhostname, eh_name, &iter)) {
                      const char *qname = lGetString(qep, QU_full_name);
+
+                     if (lGetUlong(qep, QU_tag) == 0)
+                        continue;
 
                      DPRINTF(("tagged: %d maxslots: %d rqs_hslots: %d\n", (int)lGetUlong(qep, QU_tag), maxslots, rqs_hslots));
                      DPRINTF(("SLOT HARVESTING: %s soft violations: %d master: %d\n", 
@@ -3949,6 +3982,9 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                   /* debit on RQS limits */
                   for (qep = lGetElemHostFirst(a->queue_list, QU_qhostname, eh_name, &iter); qep;
                        qep = lGetElemHostNext(a->queue_list, QU_qhostname, eh_name, &iter)) {
+
+                     if (lGetUlong(qep, QU_tag_qend) == 0)
+                        continue;
 
                      slots = 0;
                      slots_qend = MIN(lGetUlong(qep, QU_tag_qend), maxslots - rqs_hslots);
@@ -4372,27 +4408,15 @@ parallel_tag_hosts_queues(sge_assignment_t *a, lListElem *hep, int *slots, int *
          qname = lGetString(qep, QU_full_name);
          cqname = lGetString(qep, QU_qname);
 
-         /* try to foreclose the cluster queue */
          if (lGetElemStr(a->skip_cqueue_list, CTI_name, cqname)) {
-            DPRINTF(("(1) skip cluster queue %s\n", cqname));             
+            /* QU_tag is already 0 */
+            lSetUlong(qep, QU_tag_qend, 0);
+            DPRINTF(("skipped due to cluster queue %s\n", cqname));             
             continue;
          }
 
-         if (!lGetElemStr(*unclear_cqueue_list, CTI_name, cqname)) {
-
-            if (a->pi)
-               a->pi->par_cqstat++;
-            if (cqueue_match_static(cqname, a) != DISPATCH_OK) {
-               lAddElemStr(&(a->skip_cqueue_list), CTI_name, cqname, CTI_Type);
-               DPRINTF(("add cluster queue %s to skip list\n", cqname));             
-               continue;
-            }
-            DPRINTF(("cqueue %s is not rejected\n", cqname));
-            lAddElemStr(unclear_cqueue_list, CTI_name, cqname, CTI_Type);
-         }
-
          if (skip_queue_list && lGetElemStr(skip_queue_list, CTI_name, qname)){
-            DPRINTF(("(2) skip cluster queue %s\n", cqname));             
+            DPRINTF(("skipped due to queue instance %s\n", qname));             
             continue;
          }
          
@@ -4417,6 +4441,7 @@ parallel_tag_hosts_queues(sge_assignment_t *a, lListElem *hep, int *slots, int *
             lSetUlong(qep, QU_tag, qslots);
             lSetUlong(qep, QU_tag_qend, qslots_qend);
          } else {
+            lSetUlong(qep, QU_tag, 0);
             if (skip_queue_list) {
                lAddElemStr(&skip_queue_list, CTI_name, qname, CTI_Type);
             }         

@@ -1,3 +1,8 @@
+GH-2009-01-22-0: Bugfix:      bad logging if "act_qmaster" file does not exist
+                 Bugster:     6288964
+                 Issue:       2881
+                 Review:      CR
+ 
 DG-2009-01-22-0: Bugfix:      Calling drmaa_exit before any calls to drmaa_init
                               results in segfault
                  Issue:       2882

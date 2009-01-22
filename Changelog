@@ -1,3 +1,9 @@
+DG-2009-01-22-0: Bugfix:      Calling drmaa_exit before any calls to drmaa_init
+                              results in segfault
+                 Issue:       2882
+                 Bugster:     6796175
+                 Review:      AA
+ 
 RD-2009-01-21-0: Bugfix:      - subordinate list generated a critical message entry
                               - subordination was broken when setup was done in wrong
                                 order

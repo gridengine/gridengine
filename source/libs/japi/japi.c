@@ -882,7 +882,7 @@ int japi_exit(int flag, dstring *diag)
    int *value;
    int cl_errno;
    cl_com_handle_t* handle = NULL;
-   const char *default_cell = ctx->get_default_cell(ctx);
+   const char *default_cell = NULL; 
 
    DENTER(TOP_LAYER, "japi_exit");
 
@@ -896,6 +896,9 @@ int japi_exit(int flag, dstring *diag)
    
    japi_session = JAPI_SESSION_SHUTTING_DOWN;
    JAPI_UNLOCK_SESSION();
+
+   /* be sure that the context exists, therefore after test for active session */
+   default_cell = ctx->get_default_cell(ctx);
 
    /* do not destroy session state until last japi call 
       depending on it is finished */

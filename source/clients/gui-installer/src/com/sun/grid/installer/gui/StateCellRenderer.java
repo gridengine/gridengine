@@ -106,7 +106,8 @@ public class StateCellRenderer implements TableCellRenderer {
                 case BDB_SPOOL_DIR_EXISTS:
                 case USED_QMASTER_PORT:
                 case USED_EXECD_PORT:
-                case USED_JMX_PORT: { // warning states
+                case USED_JMX_PORT:
+                case UNKNOWN_ERROR: { // warning states
                     if (progressBars.containsKey(Integer.valueOf(row))) {
                         progressBars.remove(Integer.valueOf(row));
                     }
@@ -119,7 +120,7 @@ public class StateCellRenderer implements TableCellRenderer {
                         progressBars.remove(Integer.valueOf(row));
                     }
                     comp = label;
-                    backColor = COLOR_BAD; // RESOLVABLE, NEW_UNKNOWN_HOST, UNKNOWN_HOST, FAILED
+                    backColor = COLOR_BAD; // RESOLVABLE, UNREACHABLE, NEW_UNKNOWN_HOST, UNKNOWN_HOST, FAILED, COPY_TIMEOUT, COPY_FAILED, ADMIN_USER_MISSING
                 }
             }
 

@@ -1173,7 +1173,7 @@ public class HostPanel extends IzPanel implements Config {
                 }
             }
 
-            boolean found = false;
+            long invalid=0;
             for (Host h : hosts) {
                 switch (h.getState()) {
                     case USED_QMASTER_PORT:
@@ -1183,15 +1183,16 @@ public class HostPanel extends IzPanel implements Config {
                     case PERM_QMASTER_SPOOL_DIR:
                     case PERM_EXECD_SPOOL_DIR:
                     case PERM_BDB_SPOOL_DIR:
-                    case PERM_JMX_KEYSTORE: {
-                         found = true;
+                    case PERM_JMX_KEYSTORE:
+                    case ADMIN_USER_NOT_KNOWN:
+                    case UNKNOWN_ERROR: {
+                         invalid++;
                     }
                 }
-
-                if (found) break;
             }
-            
-            if (found && JOptionPane.NO_OPTION == JOptionPane.showConfirmDialog(this, getLabel("warning.invalid.hosts.message"),
+
+            String msg = MessageFormat.format(getLabel("warning.invalid.hosts.message"), invalid, hosts.size());
+            if (invalid > 0 && JOptionPane.NO_OPTION == JOptionPane.showConfirmDialog(this, msg,
                     getLabel("installer.warning"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE)) {
 
                 disableControls(false);
@@ -1281,8 +1282,9 @@ public class HostPanel extends IzPanel implements Config {
                 }
             }
         }
+        //TODO: Need tmpList?
         if (isQmasterInst) {
-            //Find qmaster and put it to the beginning
+            //Find qmaster and put it as next
             for (int i = 0; i < hosts.size(); i++) {
                 h = hosts.get(i);
                 if (h.isQmasterHost()) {
@@ -1308,6 +1310,36 @@ public class HostPanel extends IzPanel implements Config {
                     }
                     hosts.remove(o);
                     break;
+                }
+            }
+        }
+        //We cannot install shadowds in parallel!
+        if (isShadowdInst) {
+            //Find shadowd and put it as next
+            for (int i = 0; i < hosts.size(); i++) {
+                h = hosts.get(i);
+                if (h.isShadowHost()) {
+                    o = new Host(h);
+                    boolean hasMore = false;
+                    //Clear selection
+                    if (o.isBdbHost()) {
+                       o.setBdbHost(false);
+                       hasMore = true;
+                    }
+                    if (o.isExecutionHost()) {
+                       o.setExecutionHost(false);
+                       hasMore = true;
+                    }
+                    if (o.isQmasterHost()) {
+                       o.setQmasterHost(false);
+                       hasMore = true;
+                    }
+                    installList.addUnchecked(new Host(o));
+                    if (hasMore) {
+                       o.setAdminHost(false);
+                       o.setSubmitHost(false);
+                    }
+                    hosts.remove(o);
                 }
             }
         }
@@ -1391,9 +1423,12 @@ public class HostPanel extends IzPanel implements Config {
         progressTimer = new Timer("InstallTimer");
         progressTimer.schedule(new UpdateInstallProgressTimerTask(this, threadPool, progressTimer, getLabel("column.progress.label"), INSTALL_TABS, getLabel("progressbar.installing.label")), 0, 200);
 
-        //Initialize new threadPool for the installation
-        threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(Util.INSTALL_THREAD_POOL_SIZE);
-        threadPool.setThreadFactory(new InstallerThreadFactory());
+		//Initialize new threadPool for the installation
+		threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(Util.INSTALL_THREAD_POOL_SIZE);
+		threadPool.setThreadFactory(new InstallerThreadFactory());
+        //We need a new executor for shadowdTasks (only 1 task at single moment)
+        ThreadPoolExecutor singleThreadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+        singleThreadPool.setThreadFactory(new InstallerThreadFactory());
 
         String SGE_ROOT = idata.getVariable(VAR_SGE_ROOT);
 
@@ -1407,13 +1442,41 @@ public class HostPanel extends IzPanel implements Config {
                 h.setComponentVariables(variablesCopy);
                 if (h.isBdbHost() || h.isQmasterHost()) {
                     wait = true;
-                    completed = threadPool.getCompletedTaskCount();
+                    completed = singleThreadPool.getCompletedTaskCount();
                 }
-                threadPool.execute(new InstallTask(tables, h, variablesCopy, localizedMessages));
+                //TODO: Need to do the first task when no qmaster/execd
+
+                //BDB, Qmaster, Shadowd instlalation go to special singlethreadPool
+                if (h.isBdbHost() || h.isQmasterHost() || h.isShadowHost()) {
+                    singleThreadPool.execute(new InstallTask(tables, h, variablesCopy, localizedMessages));
+                } else if (started == 0) {
+                    //This is a first execd/shadowd task and there were no other BDB or qmaster components
+                    //Need to create a first task that will add all hosts as admin hosts
+                    Properties vars = new Properties();
+                    Host localhost = new Host(Host.Type.HOSTNAME, Host.localHostName, false, false, false, false, "");
+                    vars.putAll(idata.getVariables());
+                    List<String> allHosts = Util.getAllHosts((HostInstallTableModel) tables.get(0).getModel(), Host.localHostName);
+                    vars.put(VAR_ALL_HOSTS, Util.listToString(allHosts));
+                    vars.put(VAR_FIRST_TASK, "true");
+                    //And execute the first task in the singleThreadPool
+                    singleThreadPool.execute(new InstallTask(tables, localhost, vars, localizedMessages));
+                    started++;
+                    //Wait until it's finished
+                    while (singleThreadPool.getCompletedTaskCount() < started && !singleThreadPool.isTerminated()) {
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException ex) {
+                        }
+                    }
+                    threadPool.execute(new InstallTask(tables, h, variablesCopy, localizedMessages));
+                } else {
+                    //Only execd get installed in parallel
+                    threadPool.execute(new InstallTask(tables, h, variablesCopy, localizedMessages));
+                }
                 started++;
                 //In case the task is a BDB or qmaster host, we have to wait for sucessful finish!
                 while (wait) {
-                    if (threadPool.getCompletedTaskCount() >= completed + 1) {
+                    if (singleThreadPool.getCompletedTaskCount() >= completed + 1) {
                         wait = false;
                         //If bdb or qmaster fails it's over!
                         if (h.getState() != Host.State.SUCCESS) {
@@ -1441,16 +1504,52 @@ public class HostPanel extends IzPanel implements Config {
         } catch (Exception e) {
             Debug.error(e);
         } finally {
-            //Wait for all pending tasks to finish
-            while (threadPool.getCompletedTaskCount() < started && !threadPool.isTerminated()) {
+            //Wait until all tasks have finished
+            while (threadPool.getCompletedTaskCount() + singleThreadPool.getCompletedTaskCount() < started && !(threadPool.isTerminated() && singleThreadPool.isTerminated())) {
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException ex) {
                 }
             }
+            //Execute final task to setup correct submit and remove invalid admin hosts silently on local host
+            Properties vars = new Properties();
+            Host localhost = new Host(Host.Type.HOSTNAME, Host.localHostName, false, false, false, false, "");
+            vars.putAll(idata.getVariables());
+            List<String> removeAdminHosts = Util.getAllHosts((HostInstallTableModel) tables.get(0).getModel(), Host.localHostName);
+            List<String> submitHosts = new ArrayList<String>();
+            for (Host h: installList) {
+                if (!h.isAdminHost() && !removeAdminHosts.contains(h.getHostAsString())) {
+                    removeAdminHosts.add(h.getHostAsString());
+                }
+                if (h.isSubmitHost() && !submitHosts.contains(h.getHostAsString())) {
+                    submitHosts.add(h.getHostAsString());
+                }
+            }
+            //Remove localhost and put as last host
+            if (removeAdminHosts.contains(Host.localHostName)) {
+                removeAdminHosts.remove(Host.localHostName);
+            }
+            removeAdminHosts.add(Host.localHostName);
+            vars.put(VAR_REMOVE_ADMINHOSTS, Util.listToString(removeAdminHosts));
+            vars.put(VAR_SUBMIT_HOST_LIST, Util.listToString(submitHosts));
+            vars.put(VAR_LAST_TASK, "true");
+            //localhost.setComponentVariables(vars);
+            //And execute the last task in the singleThreadPool
+            singleThreadPool.execute(new InstallTask(tables, localhost, vars, localizedMessages));
+            started++;
+            //Wait until it's finished
+            while (threadPool.getCompletedTaskCount() + singleThreadPool.getCompletedTaskCount() < started && !singleThreadPool.isTerminated()) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ex) {
+                }
+            }
+            //Wait for all pending tasks to finish in all threadPools
             try {
                 threadPool.awaitTermination(100, TimeUnit.MILLISECONDS);
+                singleThreadPool.awaitTermination(100, TimeUnit.MILLISECONDS);
                 threadPool.purge();
+                singleThreadPool.purge();
             } catch (InterruptedException ex) {
             }
             //If we have failed hosts we go to the Failed tab
@@ -1460,6 +1559,7 @@ public class HostPanel extends IzPanel implements Config {
                 tabbedPane.setSelectedIndex(1);
             }
             threadPool.shutdown();
+            singleThreadPool.shutdown();
         }
     }
 
@@ -1708,7 +1808,8 @@ class GetArchTask extends TestableTask {
         int exitValue = getTestExitValue();
         Vector<String> output = getTestOutput();
         if (!isIsTestMode()) {
-            CommandExecutor archCmd = new CommandExecutor(panel.getInstallData().getVariables(), panel.getInstallData().getVariable(VAR_SHELL_NAME), host.getHostname(), SGE_ROOT + "/util/arch");
+            CommandExecutor archCmd = new CommandExecutor(panel.getInstallData().getVariables(), panel.getInstallData().getVariable(VAR_SHELL_NAME), host.getHostname(), 
+            "'if [ ! -s " + SGE_ROOT + "/util/arch ]; then echo \"File " + SGE_ROOT + "/util/arch does not exist or empty.\"; exit "+ CommandExecutor.EXITVAL_MISSING_FILE  +"; else "+ SGE_ROOT + "/util/arch ; fi'");
             archCmd.execute();
             exitValue = archCmd.getExitValue();
             output = archCmd.getOutput();
@@ -1721,11 +1822,14 @@ class GetArchTask extends TestableTask {
             host.setArchitecture(output.get(0));
             state = Host.State.REACHABLE;
             tabPos = 1;
+        } else if (exitValue == CommandExecutor.EXITVAL_MISSING_FILE) {
+            state = Host.State.MISSING_FILE;
+            tabPos = 2;
         } else if (exitValue == CommandExecutor.EXITVAL_INTERRUPTED) {
             state = Host.State.CANCELED;
             tabPos = 2;
         } else {
-            state = Host.State.RESOLVABLE;
+            state = Host.State.UNREACHABLE;
             tabPos = 2;
         }
         model.setHostState(host, state);
@@ -1819,13 +1923,16 @@ class CheckHostTask extends TestableTask {
             checkHostFile = Util.fillUpTemplate(checkHostTempFile, checkHostFile, panel.getInstallData().getVariables());
 
             Debug.trace("Copy auto_conf file to '" + host.getHostname() + ":" + checkHostFile + "'.");
-            CommandExecutor cmd = new CommandExecutor(variables, variables.getProperty(VAR_COPY_COMMAND), checkHostFile, host.getHostname() + ":" + checkHostFile, " && if [ ! -s " + checkHostFile + " ]; then echo 'File " + checkHostFile + " is empty.'; exit 1; fi");
+            CommandExecutor cmd = new CommandExecutor(variables, variables.getProperty(VAR_COPY_COMMAND), checkHostFile, 
+                                                      host.getHostname() + ":" + checkHostFile + " && if [ ! -s " + checkHostFile + " ]; then echo 'File " + checkHostFile + " does not exist or empty.'; exit 1; fi");
             cmd.execute();
             exitValue = cmd.getExitValue();
             if (exitValue == CommandExecutor.EXITVAL_TERMINATED) {
                 //Set the log content
+                newState = Host.State.COPY_TIMEOUT_CHECK_HOST;
                 Debug.error("Timeout while copying the " + checkHostFile + " script to host " + host.getHostname() + " via " + variables.getProperty(VAR_COPY_COMMAND) + " command!\nMaybe a password is expected. Try the command in the terminal first.");
             } else if (exitValue != 0) {
+                newState = Host.State.COPY_FAILED_CHECK_HOST;
                 Debug.error("Error when copying the file.");
             } else {
                 new CommandExecutor(variables, variables.getProperty(VAR_SHELL_NAME), host.getHostAsString(), "chmod", "755", checkHostFile).execute();
@@ -1843,6 +1950,7 @@ class CheckHostTask extends TestableTask {
 
                 // Set the new state of the host depending on the return value of the script
                 switch (exitValue) {
+                    case EXIT_VAL_SUCCESS: newState = prevState; break;
                     case EXIT_VAL_BDB_SERVER_SPOOL_DIR_PERM_DENIED: newState = Host.State.PERM_BDB_SPOOL_DIR; break;
                     case EXIT_VAL_QMASTER_SPOOL_DIR_PERM_DENIED: newState = Host.State.PERM_QMASTER_SPOOL_DIR; break;
                     case EXIT_VAL_EXECD_SPOOL_DIR_PERM_DENIED: newState = Host.State.PERM_EXECD_SPOOL_DIR; break;
@@ -1850,7 +1958,8 @@ class CheckHostTask extends TestableTask {
                     case EXIT_VAL_BDB_SPOOL_DIR_PERM_DENIED: newState = Host.State.PERM_BDB_SPOOL_DIR; break;
                     case EXIT_VAL_EXECD_SPOOL_DIR_LOCAL_PERM_DENIED: newState = Host.State.PERM_EXECD_SPOOL_DIR; break;
                     case EXIT_VAL_BDB_SPOOL_DIR_EXISTS: newState = Host.State.BDB_SPOOL_DIR_EXISTS; break;
-                    default: newState = prevState; break;
+                    case EXIT_VAL_ADMIN_USER_NOT_KNOWN: newState = Host.State.ADMIN_USER_NOT_KNOWN; break;
+                    default: newState = Host.State.UNKNOWN_ERROR; break;
                 }
             }
         } catch (InterruptedException e) {
@@ -2004,19 +2113,27 @@ class InstallTask extends TestableTask {
 
         String log = "";
         boolean prereqFailed = false;
+        boolean isSpecialTask = Boolean.valueOf(variables.getProperty(VAR_FIRST_TASK, "false")) || Boolean.valueOf(variables.getProperty(VAR_LAST_TASK, "false"));
 
         try {
             String autoConfFile = null;
             int exitValue = getTestExitValue();
-            Vector<String> output = getTestOutput();
+            Vector<String> output = getTestOutput();            
 
-            if (host.isBdbHost() || host.isQmasterHost() || host.isShadowHost() || host.isExecutionHost()) {
-                
-                // Fill up cfg.exec.spool.dir.local
-                if (host.isExecutionHost() && !host.getSpoolDir().equals(variables.getProperty(VAR_EXECD_SPOOL_DIR))) {
-                    variables.setProperty(VAR_EXECD_SPOOL_DIR_LOCAL, host.getSpoolDir());
-                } else {
-                    variables.setProperty(VAR_EXECD_SPOOL_DIR_LOCAL, "");
+            if (host.isBdbHost() || host.isQmasterHost() || host.isShadowHost() || host.isExecutionHost() || isSpecialTask) {
+                if (!isSpecialTask) {
+                    // Fill up cfg.exec.spool.dir.local
+                    if (host.isExecutionHost() && !host.getSpoolDir().equals(variables.getProperty(VAR_EXECD_SPOOL_DIR))) {
+                        variables.setProperty(VAR_EXECD_SPOOL_DIR_LOCAL, host.getSpoolDir());
+                    } else {
+                        variables.setProperty(VAR_EXECD_SPOOL_DIR_LOCAL, "");
+                    }
+                    //Fill up manually the cfg.allhosts in qmaster installation
+                    String val = "";
+                    if (host.isQmasterHost()) {
+                        val = Util.listToString(Util.getAllHosts((HostInstallTableModel) tables.get(0).getModel(), Host.localHostName));
+                        variables.setProperty(VAR_ALL_HOSTS, val);
+                    }
                 }
                 
                 String autoConfTempFile = vs.substituteMultiple(variables.getProperty(VAR_AUTO_INSTALL_COMPONENT_TEMP_FILE), null);
@@ -2033,16 +2150,20 @@ class InstallTask extends TestableTask {
                 //Need to copy the script to the final location first
                 //TODO: Do this only when not on a shared FS (file is not yet accessible)
                 Debug.trace("Copy auto_conf file to '" + host.getHostname() + ":" + autoConfFile + "'.");
-                CommandExecutor cmd = new CommandExecutor(variables, variables.getProperty(VAR_COPY_COMMAND), autoConfFile, host.getHostname() + ":" + autoConfFile, " && if [ ! -s " + autoConfFile + " ]; then echo 'File " + autoConfFile + " is empty.'; exit 1; fi");
+                CommandExecutor cmd = new CommandExecutor(variables, variables.getProperty(VAR_COPY_COMMAND), autoConfFile, host.getHostname() + ":" + autoConfFile, " && if [ ! -s " + autoConfFile + " ]; then echo 'File " + autoConfFile + " does not exist or empty.'; exit 1; fi");
                 cmd.execute();
                 exitValue = cmd.getExitValue();
                 if (exitValue == CommandExecutor.EXITVAL_TERMINATED) {
                     //Set the log content
+                    setHostState(Host.State.COPY_TIMEOUT_INSTALL_COMPONENT);
                     log = "Timeout while copying the " + autoConfFile + " script to host " + host.getHostname() + " via " + variables.getProperty(VAR_COPY_COMMAND) + " command!\nMaybe a password is expected. Try the command in the terminal first.";
                     installModel.setHostLog(host, log);
                 } else if (exitValue != 0) {
-                    //TODO: output + error
-                    log = "Error when copying the file.";
+                    //TODO: polish output + error
+                    setHostState(Host.State.COPY_TIMEOUT_INSTALL_COMPONENT);
+                    log = "Error when copying the file " + autoConfFile + "to host " + host.getHostname() + " via " + variables.getProperty(VAR_COPY_COMMAND) + " command!\n";
+                    log += "OUTPUT:\n" + cmd.getOutput();
+                    log += "ERROR:\n" + cmd.getError();
                     installModel.setHostLog(host, log);
                 } else {
                     new CommandExecutor(variables, variables.getProperty(VAR_SHELL_NAME), host.getHostAsString(), "chmod", "755", autoConfFile).execute();
@@ -2080,12 +2201,6 @@ class InstallTask extends TestableTask {
                         log += d + SEP;
                     }
                     exitValue = cmd.getExitValue();
-                    //Cleanup if timeout or interrupt
-                    //TODO: Temporary do not delete for testing
-                    /*if (exitValue < -1) {
-                    cmd = new CommandExecutor("rm", "-f", localScript);
-                    cmd.execute();
-                    }*/
                     //We don't trust the exit codes (rsh does not honor them)
                     exitValue = (tmpExitValue != 0 && exitValue == 0) ? tmpExitValue : exitValue;
 
@@ -2125,16 +2240,33 @@ class InstallTask extends TestableTask {
             Debug.error(e);
             state = Host.State.FAILED;
             tabPos = 2;
+        } finally {
+            //Unset the special variables
+            variables.remove(VAR_FIRST_TASK);
+            variables.remove(VAR_LAST_TASK);
+            variables.remove(VAR_ALL_HOSTS);
+            variables.remove(VAR_ALL_SUBMIT_HOSTS);
+            variables.remove(VAR_REMOVE_ADMINHOSTS);
         }
 
-        updateModel = (HostInstallTableModel) tables.get(tabPos).getModel();
-
-        installModel.setHostState(host, state);
-        installModel.removeHost(host);
-        updateModel.addHost(host);
+        if (!isSpecialTask) {
+            updateModel = (HostInstallTableModel) tables.get(tabPos).getModel();
+            installModel.setHostState(host, state);
+            installModel.removeHost(host);
+            updateModel.addHost(host);
+        }
 
         //panel.getTabbedPane().setTitleAt(tabPos, HostPanel.INSTALL_TABS[tabPos] + " (" + updateModel.getRowCount() + ")");
         Debug.trace("[" + System.currentTimeMillis() + "] " + host.getHostAsString() + " Finished installtask " + host.getComponentString());
+    }
+
+    /**
+     * Sets the state of the host in the "To Be Installed" and in the "Ok or Failed" tables
+     * @param state The new state of the host
+     */
+    private void setHostState(Host.State state) {
+        ((HostInstallTableModel)tables.get(0).getModel()).setHostState(host, state);
+        ((HostInstallTableModel)tables.get((state == Host.State.SUCCESS) ? 2 : 1).getModel()).setHostState(host, state);
     }
 }
 

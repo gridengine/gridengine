@@ -46,7 +46,7 @@ ___INFO__MARK_END__-->
             <!--<param name="class" value="com.sun.java.swing.plaf.gtk.GTKLookAndFeel"/>-->
             <param name="class" value="javax.swing.plaf.metal.MetalLookAndFeel"/>
         </laf>
-        
+
         <modifier key="useHelpButton" value="yes"/>
         <modifier key="useButtonIcons" value="yes"/>
         <modifier key="useLabelIcons" value="yes"/>
@@ -70,8 +70,8 @@ ___INFO__MARK_END__-->
         <res id="Heading.image" src="logo.png"/>
         <res id="Welcome.image" src="sun_logo.gif"/>
         <res id="customicons.xml" src="customicons.xml"/>
-    </resources>    
-    
+    </resources>
+
     <conditions>
         <condition type="variable" id="cond.install.qmaster">
             <name>install.qmaster</name>
@@ -157,7 +157,7 @@ ___INFO__MARK_END__-->
             <returnvalue type="boolean">true</returnvalue>
         </condition>
     </conditions>
-    
+
     <panels>
         <panel classname="WelcomePanel"    id="WelcomePanel" />
         <panel classname="LicencePanel"    id="LicensePanel" />
@@ -187,7 +187,7 @@ ___INFO__MARK_END__-->
         <variable name="install.script.file.name" value="inst_sge"/>
         <variable name="check.host.temp.file" value="${templates.dir}/check_host"/>
         <variable name="check.host.file" value="check_host"/>
-        
+
         <variable name="false" value="false"/>
         <variable name="true" value="true"/>
         <variable name="app-version" value="version"/>
@@ -235,7 +235,7 @@ ___INFO__MARK_END__-->
         <variable name="cfg.submit.host.list" value=""/>
         <variable name="cfg.exec.host.list" value=""/>
         <variable name="cfg.exec.spool.dir.local" value=""/>
-        <variable name="cfg.hostname.resolving" value="true"/> 
+        <variable name="cfg.hostname.resolving" value="true"/>
         <variable name="cfg.shell.name" value="ssh"/>
         <variable name="cfg.copy.command" value="scp"/>
         <variable name="cfg.default.domain" value="none"/>

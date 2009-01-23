@@ -43,7 +43,12 @@ EXIT_CODE=0
 # run the command as admin user
 RunAsAdmin()
 {
-   ${cfg.sge.root}/utilbin/${host.arch}/adminrun ${cfg.admin.user} "$@"
+   #Check the admin user exists on this machine
+   ${cfg.sge.root}/utilbin/${host.arch}/adminrun ${cfg.admin.user} echo
+   if [ $? -ne 0 ]; then
+      exit 41  # admin user not known on this host
+   fi
+   ${cfg.sge.root}/utilbin/${host.arch}/adminrun ${cfg.admin.user} $@
 }
 
 # run the command as executor then if it fails as admin user
@@ -53,7 +58,7 @@ RunAsBoth()
    $ALL
    EXIT_CODE=$?
    if [ $EXIT_CODE -ne 0 -a "${user.name}" != "${cfg.admin.user}" ]; then
-      RunAsAdmin "$ALL"
+      RunAsAdmin $ALL
       EXIT_CODE=$?
    fi
 }
@@ -69,18 +74,39 @@ if [ "$IS_BDB" = true ]; then
    fi
 fi
 
+GetFirstExistingDir()
+{
+  dir=$1
+  tmp_dir=$1
+
+  if [ ! -d $dir ]; then
+     while [ ! -d $tmp_dir ]; do
+        chown_dir=$tmp_dir
+        tmp_dir2=`dirname $tmp_dir`
+        tmp_dir=$tmp_dir2
+     done
+  fi
+  echo $tmp_dir
+}
+
+IsDirWritable()
+{
+   dir=`GetFirstExistingDir $1`
+   RunAsBoth test -w $dir
+}
+
 # if qmaster host
 if [ "$IS_QMASTER" = true ]; then
    # TODO check qmaster port usage
 
    # check write permission on qmaster spool dir
-   RunAsBoth test -w ${cfg.qmaster.spool.dir}
+   IsDirWritable ${cfg.qmaster.spool.dir}
    if [ $EXIT_CODE -ne 0 ]; then
       exit 20;
    fi
 
    # check write permission on global execd spool dir
-   RunAsBoth test -w ${cfg.execd.spool.dir}
+   IsDirWritable ${cfg.execd.spool.dir}
    if [ $EXIT_CODE -ne 0 ]; then
       exit 21;
    fi
@@ -89,8 +115,7 @@ if [ "$IS_QMASTER" = true ]; then
    USE_JMX=${add.sge.jmx}
    if [ "$USE_JMX" = true ]; then
       # TODO check JMX port usage
-
-      RunAsBoth test -w ${cfg.sge.jmx.ssl.keystore}
+      IsDirWritable ${cfg.sge.jmx.ssl.keystore}
       if [ $EXIT_CODE -ne 0 ]; then
          exit 22;
       fi
@@ -103,7 +128,7 @@ if [ "$IS_QMASTER" = true ]; then
          exit 24;
       fi
 
-      RunAsBoth test -w ${cfg.db.spooling.dir}
+      IsDirWritable ${cfg.db.spooling.dir}
       if [ $EXIT_CODE -ne 0 ]; then
          exit 23;
       fi
@@ -119,7 +144,7 @@ if [ "$IS_EXECD" = true ]; then
    # TODO check execd port usage
 
    # check write permission on local execd spool dir
-   RunAsBoth test -w ${cfg.exec.spool.dir.local}
+   IsDirWritable ${cfg.exec.spool.dir.local}
    if [ $EXIT_CODE -ne 0 ]; then
       exit 40;
    fi

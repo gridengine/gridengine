@@ -1,3 +1,15 @@
+LP-2009-01-22-0: Bugfix:      gui-installer: Parallel shadowd installation might
+                              fail
+                 Bugfix:      gui-installer: Detecting missing arch script and
+                              timeout during host resolution
+                 Bugfix:      gui-installer: Requires passwordless connections
+                              from each execd to the qmaster host
+                 Bugfix:      gui-installer: check_host script not copied to the
+                              distribution
+                 Enhacem.:    Improved confusing error message about cell_name
+                 Bugster:     6786392
+                 Review:      ZG
+
 GH-2009-01-22-0: Bugfix:      bad logging if "act_qmaster" file does not exist
                  Bugster:     6288964
                  Issue:       2881

@@ -208,7 +208,7 @@ public class HostList extends ArrayBlockingQueue<Host> {
             return false;
         } finally {
             lock.unlock();
-            //printList();
+            //printList("add");
         }
     }
 
@@ -251,7 +251,7 @@ public class HostList extends ArrayBlockingQueue<Host> {
             return false;
         } finally {
             lock.unlock();
-            //printList();
+            //printList("remove");
         }
     }
 
@@ -267,7 +267,7 @@ public class HostList extends ArrayBlockingQueue<Host> {
             return super.add(o);
         } finally {
             lock.unlock();
-            //printList();
+            //printList("addUnchecked");
         }
     }
 
@@ -290,13 +290,13 @@ public class HostList extends ArrayBlockingQueue<Host> {
             return false;
         } finally {
             lock.unlock();
-            //printList();
+            //printList("removeUnchecked");
         }
     }
 
-    public void printList() {
+    public void printList(String origin) {
         for (Host h : this) {
-            Debug.trace(h.getHostname() + " IP: " + h.getIp() + " State:" + h.getState() + " Components: "+h.getComponentString());
+            Debug.trace(origin + " - " + h.getHostname() + " IP: " + h.getIp() + " State:" + h.getState() + " Components: "+h.getComponentString());
         }
     }
 }

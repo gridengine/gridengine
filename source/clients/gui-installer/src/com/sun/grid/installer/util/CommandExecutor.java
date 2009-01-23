@@ -52,10 +52,11 @@ import java.util.Properties;
 public class CommandExecutor implements Config {
     private ProcessBuilder processBuilder = null;
     
-    private int exitValue                       = -1;
-    public static final int EXITVAL_OTHER       = -2;
-    public static final int EXITVAL_INTERRUPTED = -3;
-    public static final int EXITVAL_TERMINATED  = -4;
+    private int exitValue                         = -1;
+    public static final int EXITVAL_OTHER         = -2;
+    public static final int EXITVAL_INTERRUPTED   = -3;
+    public static final int EXITVAL_TERMINATED    = -4;
+    public static final int EXITVAL_MISSING_FILE  = 15;
 
     private static final String SHELL           = "sh";
     private static final String SHELL_ARG       = "-c";
@@ -126,7 +127,13 @@ public class CommandExecutor implements Config {
                 commands.add(SHELL_ARG);
                 List<String> tmpList = new ArrayList<String>();
                 for (int i = 2; i < tmp.size(); i++) {
-                    tmpList.add(tmp.get(i));
+                    //Single if statement cannot be in single quotes!
+                    //sh -c 'if [ bla bla ]; ....' would fail
+                    if (tmp.size() == 3 && tmp.get(i).startsWith("'if") && tmp.get(i).endsWith("'")) {
+                        tmpList.add(tmp.get(i).substring(1, tmp.get(i).length() - 1));
+                    } else {
+                        tmpList.add(tmp.get(i));
+                    }
                 }
                 setupOutputFiles(tmpList); //Redirect command outputs
                 singleCmd = getSingleCommand(tmpList);
@@ -195,6 +202,7 @@ public class CommandExecutor implements Config {
         }
  
         Process process = null;
+        long cmdId = 0;
 
         try {
             process = processBuilder.start();
@@ -215,7 +223,8 @@ public class CommandExecutor implements Config {
                     }
                 }
             }
-            Debug.trace("Command: " + getSingleCommand(processBuilder.command()) + " exitValue: "+exitValue);
+            cmdId = (long)(Math.random()*1000000);
+            Debug.trace(cmdId + " Command: " + getSingleCommand(processBuilder.command()) + " exitValue: "+exitValue);
         } catch (IOException ex) {
             exitValue = EXITVAL_OTHER;
             additionalErrors.add(ex.getLocalizedMessage());
@@ -226,6 +235,8 @@ public class CommandExecutor implements Config {
             outVector = getInput(outFile);
             errVector = getInput(errFile);
             errVector.addAll(additionalErrors);
+            Debug.trace(cmdId + " output: "+ outVector);
+            Debug.trace(cmdId + " error: "+ errVector);
             //Delete on exit to have better debug, until we close the APP
             outFile.deleteOnExit();
             errFile.deleteOnExit();

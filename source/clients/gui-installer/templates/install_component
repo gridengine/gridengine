@@ -292,6 +292,8 @@ CSP_ORGA_UNIT="${cfg.csp.orga.unit}";export CSP_ORGA_UNIT
 # your email (mandatory for csp install)
 CSP_MAIL_ADDRESS="${cfg.csp.mail.address}";export CSP_MAIL_ADDRESS
 
+# enforced hostname in case of other than primary network interface was selected
+ENFORCED_HOSTNAME="${add.qmaster.host}";export ENFORCED_HOSTNAME;
 
 #Additional variables from the installer
 #REMOVE_EXISTING_COMPONENT=${add.remove.existing.components}
@@ -330,9 +332,9 @@ GenerateResultOutput()
    fi
 	
    if [ ! -f "$LOG_FILE" ]; then
-	   echo "Log file $LOG_FILE does not exit!"
+	  echo "Log file $LOG_FILE does not exit!"
    else
-		echo "___LOG_START_${COMPONENT}___"
+      echo "___LOG_START_${COMPONENT}___"
       cat "$LOG_FILE"
       echo "___LOG_END_${COMPONENT}___"
 		if [ "$EXIT_CODE" -ne 0 ]; then
@@ -354,10 +356,10 @@ IS_ADMIN=$5
 IS_SUBMIT=$6
 
 
-#//TODO: Add magic exit codes (so we can perform multiple component installation at once)
-#//TODO: Check if SGE_ROOT is valid and needed files exists first!
+#//TODO: Check if SGE_ROOT is valid and needed files exist first!
 cd ${cfg.sge.root}
 if [ "$IS_BDB" = true ]; then
+   ENFORCED_HOSTNAME=""
    #BDB is considered installed if the SPOOL_DIR_EXISTS
    if [ -d "$DB_SPOOLING_DIR" ]; then
       #Uninstall existing installation if chosen
@@ -399,19 +401,45 @@ if [ "$IS_QMASTER" = true ]; then
       fi
    fi
    RES=`${cfg.sge.root}/inst_sge -m $QMASTER_FLAGS -noremote -autogui`
-   GenerateResultOutput "QMASTER" "$RES" $?
+   ret=$?
+   #Generate a result based
+   GenerateResultOutput "QMASTER" "$RES" $ret
+   qmaster_first_task=true
+fi
+
+if [ -n "${first_install_task}" -o "$qmaster_first_task" = true ]; then
+   #Add all hosts as admin hosts on qmaster host only if this is a first task or right after the installation
+   #Only first installation tasks have $cfg.allhosts set (no action otherwise)
+   ARCH=`sh -c ${cfg.sge.root}/util/arch 2>/dev/null`
+   QMASTER_HOST=`cat $SGE_ROOT/$CELL_NAME/common/act_qmaster 2>/dev/null`
+   CURRENT_HOST=`sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ;  ${cfg.sge.root}/utilbin/$ARCH/gethostname -aname' 2>/dev/null`
+   #if [ "$HOSTNAME_RESOLVING" = true ]; then
+      QMASTER_HOST=`echo $QMASTER_HOST | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
+      CURRENT_HOST=`echo $CURRENT_HOST | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
+   #fi
+   if [ -n "${gui_allhosts}" ]; then
+      list="${gui_allhosts}"
+      for host in $list ; do
+         if [ "$QMASTER_HOST" != "$CURRENT_HOST" ]; then
+            $SHELL_NAME $QMASTER_HOST "sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -ah $host'" >/dev/null 2>&1
+         else
+            sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -ah $host' >/dev/null 2>&1
+         fi
+      done
+   fi
 fi
 
 if [ "$IS_SHADOW" = true ]; then
+   ENFORCED_HOSTNAME="$EXEC_HOST_LIST"
    #Shadowd is considered installed if it's listed in the shadow_masters file
    SM_FILE="${cfg.sge.root}/$CELL_NAME/common/shadow_masters"   
    if [ -f "$SM_FILE" ]; then
-      RES=`cat $SM_FILE | grep $EXECD_HOST_LIST 2>/dev/null`
+      RES=`cat $SM_FILE | grep $EXEC_HOST_LIST 2>/dev/null`
       #Uninstall existing installation if chosen      
       if [ "$REMOVE_EXISTING_COMPONENT" = true -a -n "$RES" ]; then
          RES=`${cfg.sge.root}/inst_sge -usm -noremote -autogui`
          ret=$?			
-         RES2=`cat $SM_FILE | grep $EXECD_HOST_LIST 2>/dev/null`
+         RES2=`cat $SM_FILE | grep $EXEC_HOST_LIST 2>/dev/null`
          #Uninstallation failed if non-zero or shadow_masters still references it
          if [ $ret -ne 0 -o -n "$RES2" ]; then            
             #Uninstallation failed
@@ -427,6 +455,7 @@ if [ "$IS_SHADOW" = true ]; then
 fi
 
 if [ "$IS_EXECD" = true ]; then
+   ENFORCED_HOSTNAME="$EXEC_HOST_LIST"
    host="$EXEC_HOST_LIST"
    if [ -n "$EXECD_SPOOL_DIR_LOCAL" -a -f "$EXECD_SPOOL_DIR_LOCAL" ]; then
       local_exists=true
@@ -448,32 +477,24 @@ if [ "$IS_EXECD" = true ]; then
          GenerateResultOutput "EXECD" "" $EXIT_PREVIOUS_COMPONENT_DETECTED
       fi
    fi
-   QMASTER_HOST=`cat $SGE_ROOT/$CELL_NAME/common/act_qmaster 2>/dev/null`
-   is_admin=`$SHELL_NAME $QMASTER_HOST "sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -sh 2>/dev/null | grep ${cfg.exec.host.list}'"`
-   if [ -z "$is_admin" ]; then
-      $SHELL_NAME $QMASTER_HOST "sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -ah ${cfg.exec.host.list}'" >/dev/null 2>&1
-   fi
    RES=`${cfg.sge.root}/inst_sge -x -noremote -autogui`
-   if [ -z "$is_admin" ]; then
-      $SHELL_NAME $QMASTER_HOST "sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -dh ${cfg.exec.host.list}'" >/dev/null 2>&1
-   fi
    GenerateResultOutput "EXECD" "$RES" $?
 fi
 
-SGE_CELL=${cfg.cell.name}
-if [ "$IS_ADMIN" = true ]; then
-   $SHELL_NAME $QMASTER_HOST "sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -ah ${cfg.exec.host.list}'" >/dev/null 2>&1
-else
-   $SHELL_NAME $QMASTER_HOST "sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -dh ${cfg.exec.host.list}'" >/dev/null 2>&1
+#To setup the final submit/admin hosts settings as specifed
+#Extra last tasks runs only this part of the script (otherwise ${cfg.allhosts.current.last} is not set)
+if [ -n "${last_install_task}" ]; then
+   #Add all submit hosts
+   list=${gui_allsubmithosts}
+   for host in $list; do
+      sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -as '$host >/dev/null 2>&1
+   done
+   #Remove hosts that are not supposed to be admin host now
+   list="${gui_remove_adminhosts}"
+   for host in $list ; do
+      sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -dh '$host >/dev/null 2>&1
+   done
 fi
-
-if [ "$IS_SUBMIT" = true ]; then
-   $SHELL_NAME $QMASTER_HOST "sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -as ${cfg.exec.host.list}'" >/dev/null 2>&1
-else
-   $SHELL_NAME $QMASTER_HOST "sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -ds ${cfg.exec.host.list}'" >/dev/null 2>&1
-fi
-
-#TODO: Could verify that ADMIN/SUBMIT was really performed by calling qconf -ss/-sh
 
 if [ -z "$EXIT_CODE" ]; then
    exit 0

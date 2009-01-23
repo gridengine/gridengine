@@ -68,11 +68,17 @@ public class Host implements Config {
         NEW_UNKNOWN_HOST,
         RESOLVING,
         RESOLVABLE,
+        MISSING_FILE,
         UNKNOWN_HOST,
         CONTACTING,
         REACHABLE,
+        UNREACHABLE,
         OK,
+        COPY_TIMEOUT_CHECK_HOST,
+        COPY_FAILED_CHECK_HOST,
         READY_TO_INSTALL,
+        COPY_TIMEOUT_INSTALL_COMPONENT,
+        COPY_FAILED_INSTALL_COMPONENT,
         INSTALLING,
         SUCCESS,
         CANCELED,
@@ -81,10 +87,12 @@ public class Host implements Config {
         PERM_EXECD_SPOOL_DIR,
         PERM_BDB_SPOOL_DIR,
         BDB_SPOOL_DIR_EXISTS,
+        ADMIN_USER_NOT_KNOWN,
         PERM_JMX_KEYSTORE,
         USED_QMASTER_PORT,
         USED_EXECD_PORT,
-        USED_JMX_PORT;
+        USED_JMX_PORT,
+        UNKNOWN_ERROR;
         
         public static Properties localizedTexts;
 

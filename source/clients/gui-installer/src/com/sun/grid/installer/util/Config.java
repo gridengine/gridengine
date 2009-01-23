@@ -60,6 +60,11 @@ public interface Config {
     public static final String VAR_JVM_LIB_PATH = "cfg.sge.jvm.lib.path";
     public static final String VAR_DB_SPOOLING_DIR= "cfg.db.spooling.dir";
     public static final String VAR_SGE_JMX_PORT= "cfg.sge.jmx.port";
+    public static final String VAR_ALL_HOSTS= "gui_allhosts";
+    public static final String VAR_ALL_SUBMIT_HOSTS= "gui_allsubmithosts";
+    public static final String VAR_REMOVE_ADMINHOSTS= "gui_remove_adminhosts";
+    public static final String VAR_FIRST_TASK= "first_install_task";
+    public static final String VAR_LAST_TASK= "last_install_task";
 
     public static final String VAR_AUTO_CONF_TEMP_FILE = "auto.conf.temp.file";
     public static final String VAR_AUTO_CONF_FILE = "auto.conf.file";
@@ -117,6 +122,7 @@ public interface Config {
     public static final String WARNING_USER_NOT_ROOT = "warning.user.not.root.message";
     public static final String ERROR_USER_INVALID = "error.user.invalid.message";
 
+    public static final int EXIT_VAL_SUCCESS = 0;
     public static final int EXIT_VAL_BDB_SERVER_SPOOL_DIR_PERM_DENIED = 10;
     public static final int EXIT_VAL_QMASTER_SPOOL_DIR_PERM_DENIED = 20;
     public static final int EXIT_VAL_EXECD_SPOOL_DIR_PERM_DENIED = 21;
@@ -124,4 +130,5 @@ public interface Config {
     public static final int EXIT_VAL_BDB_SPOOL_DIR_PERM_DENIED = 23;
     public static final int EXIT_VAL_BDB_SPOOL_DIR_EXISTS = 24;
     public static final int EXIT_VAL_EXECD_SPOOL_DIR_LOCAL_PERM_DENIED = 40;
+    public static final int EXIT_VAL_ADMIN_USER_NOT_KNOWN = 41;
 }

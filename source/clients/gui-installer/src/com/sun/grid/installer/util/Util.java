@@ -829,4 +829,25 @@ public class Util implements Config{
             return false;
         }
     }
+
+    public static List<String> getAllHosts(HostInstallTableModel model, String local) {
+        String item ="";
+        List<String> tmp = new ArrayList<String>();
+        for (int i = 0; i< model.getRowCount(); i++) {
+            item = (String) model.getValueAt(i, 0);
+            if (!tmp.contains(item) && !item.equals(local)) {
+                tmp.add(item);
+            }
+        }
+        tmp.add(local);
+        return tmp;
+    }
+
+    public static String listToString(List<String> list) {
+        String val = "";
+        for (String s: list) {
+            val+= s + " ";
+        }
+        return val.trim();
+    }
 }

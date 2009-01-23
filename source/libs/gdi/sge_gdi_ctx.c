@@ -1620,6 +1620,7 @@ static const char* get_master(sge_gdi_ctx_class_t *thiz, bool reread) {
    sge_gdi_ctx_t *es = (sge_gdi_ctx_t *) thiz->sge_gdi_ctx_handle;
    sge_path_state_class_t* path_state = thiz->get_sge_path_state(thiz);
    sge_error_class_t *eh = es ? es->eh : NULL;
+   static bool error_already_logged = false;
    
    DENTER(BASIS_LAYER, "sge_gdi_ctx_class->get_master");
    
@@ -1628,11 +1629,13 @@ static const char* get_master(sge_gdi_ctx_class_t *thiz, bool reread) {
       char master_name[CL_MAXHOSTLEN];
 
       if (get_qm_name(master_name, path_state->get_act_qmaster_file(path_state), err_str) == -1) {         
-         if (eh != NULL) {
+         if (eh != NULL && !error_already_logged) {
             eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_GDI_READMASTERNAMEFAILED_S, err_str);
+            error_already_logged = true;
          }
          DRETURN(NULL);
       } 
+      error_already_logged = false;
       DPRINTF(("(re-)reading act_qmaster file. Got master host \"%s\"\n", master_name));
       /*
       ** TODO: thread locking needed here ?

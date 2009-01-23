@@ -1276,7 +1276,7 @@ ProcessSGERoot()
       SGE_ROOT_VAL=`eval echo $SGE_ROOT`
 
       # Need to check for correct SGE_ROOT directory in case of qmaster install
-      if [ $QMASTER = "install" ]; then
+      if [ "$QMASTER" = "install" ]; then
          # create a file in SGE_ROOT
          if [ "$ADMINUSER" != default ]; then
             $SGE_UTILBIN/adminrun $ADMINUSER $TOUCH $SGE_ROOT_VAL/tst$$ 2> /dev/null > /dev/null
@@ -1377,7 +1377,7 @@ GiveHints()
       fi
    done
 
-   if [ $QMASTER = install ]; then
+   if [ "$QMASTER" = "install" ]; then
       $CLEAR
       $INFOTEXT -u "\nYour Grid Engine qmaster installation is now completed"
       $INFOTEXT   "\nPlease now login to all hosts where you want to run an execution daemon\n" \

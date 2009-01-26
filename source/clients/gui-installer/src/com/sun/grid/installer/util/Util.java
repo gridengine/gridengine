@@ -47,8 +47,10 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -682,6 +684,8 @@ public class Util implements Config{
             if (cmdExec.getExitValue() == 0) {
                 result = cmdExec.getOutput().firstElement().trim();
                 Debug.trace("FSType of '" + dir + "' is '" + result +"'.");
+            } else {
+                Debug.error("Failed to get the FSType of the directory '" + dir + "'! Error: " + cmdExec.getError());
             }
         } catch (Exception e) {
             Debug.error(e);
@@ -695,26 +699,27 @@ public class Util implements Config{
      * @param user The user name
      * @return The group id of the user if the process was successful, otherwise empty string.
      */
-    public static String getUserGroup(String user) {
-        String group = "";
+    public static String[] getUserGroups(String host, Properties variables, String user) {
+        String[] groups = null;
         ExtendedFile tmpFile = null;
+        CommandExecutor cmdExec = null;
 
         try {
-            // TODO check the give user's group not the executing user's group
-            tmpFile = new ExtendedFile(File.createTempFile("grouptest", null).getAbsolutePath());
+            String command = "groups";
+            cmdExec = new CommandExecutor(variables, variables.getProperty(VAR_SHELL_NAME), host, command, user);
 
-            group = tmpFile.getGroup();
-        } catch (IOException ex) {
-            Debug.error("Can not creat file into default temporary directory! " + ex);
-        } finally {
-            if (tmpFile != null & tmpFile.exists()) {
-                tmpFile.delete();
+            if (cmdExec.getExitValue() == 0) {
+                groups = cmdExec.getOutput().firstElement().trim().split(" ");
+
+                Debug.trace("Group of user '" + user + "' are '" + Arrays.toString(groups) + "'.");
+            } else {
+                Debug.error("Failed to get the group id's of user '" + user + "'! Error: " + cmdExec.getError());
             }
-        }
+        } catch (Exception ex) {
+            Debug.error("Failed to get the group id's of user '" + user + "'! " + ex);
+        } 
 
-        Debug.trace("Group of user '" + user + "' is '" + group + "'.");
-
-        return group;
+        return groups;
     }
 
     /**
@@ -849,5 +854,9 @@ public class Util implements Config{
             val+= s + " ";
         }
         return val.trim();
+    }
+
+    public static String generateTimeStamp() {
+        return new SimpleDateFormat("yyyy.MM.dd_HH:mm:ss").format(new Date());
     }
 }

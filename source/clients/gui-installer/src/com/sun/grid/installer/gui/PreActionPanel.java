@@ -36,12 +36,12 @@ import com.izforge.izpack.installer.InstallerFrame;
 import com.izforge.izpack.util.Debug;
 import com.izforge.izpack.util.VariableSubstitutor;
 import com.sun.grid.installer.util.ExtendedFile;
-import com.sun.grid.installer.util.Util;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import javax.swing.JOptionPane;
 
 public class PreActionPanel extends ActionPanel {
 
@@ -73,20 +73,24 @@ public class PreActionPanel extends ActionPanel {
         // Check user
         if (!userName.equals(rootUser)) {
              if (userName.equals(sgeRootDir.getOwner())) {
-                 if (!emitWarning(idata.langpack.getString("installer.warning"), vs.substituteMultiple(idata.langpack.getString(WARNING_USER_NOT_ROOT), null))) {
-                     parent.exit();
+                 if (JOptionPane.NO_OPTION == JOptionPane.showConfirmDialog(this, vs.substituteMultiple(idata.langpack.getString(WARNING_USER_NOT_ROOT), null),
+                         idata.langpack.getString("installer.warning"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE)) {
+                     parent.exit(true);
                  }
              } else {
                  emitError(idata.langpack.getString("installer.error"), vs.substituteMultiple(idata.langpack.getString(ERROR_USER_INVALID), null));
 
-                 parent.exit();
+                 parent.exit(true);
              }
         }
 
+        // set cfg.add.to.rc
+        idata.setVariable(VAR_ADD_TO_RC, parent.getRules().isConditionTrue(COND_USER_ROOT) ? "true" : "false");
+
         // set user group
-        String group = Util.getUserGroup(idata.getVariable(VAR_USER_NAME));
-        idata.setVariable(VAR_USER_GROUP, group);
-        Debug.trace("Group of executing user '" + idata.getVariable(VAR_USER_NAME) + "' is '" + group + "'.");
+//        String[] groups = Util.getUserGroups(Host.localHostName, idata.getVariables(), idata.getVariable(VAR_USER_NAME));
+//        idata.setVariable(VAR_USER_GROUP, group);
+//        Debug.trace("Group of executing user '" + idata.getVariable(VAR_USER_NAME) + "' is '" + group + "'.");
 
         // add.qmaster.host
         idata.setVariable(VAR_QMASTER_HOST, Host.localHostName);

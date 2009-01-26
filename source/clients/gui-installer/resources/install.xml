@@ -180,7 +180,7 @@ ___INFO__MARK_END__-->
         <variable name="readme.file" value="${cfg.sge.root}/${cfg.cell.name}/readme.html"/>
         <variable name="silent.install.file" value="${cfg.sge.root}/${cfg.cell.name}/gui_auto_install.xml"/>
         <variable name="auto.conf.temp.file" value="${templates.dir}/gui_inst_template.conf"/>
-        <variable name="auto.conf.file" value="${cfg.sge.root}/${cfg.cell.name}/autoinst.conf"/>
+        <variable name="auto.conf.file" value="${cfg.sge.root}/${cfg.cell.name}/gui_autoinst"/> <!-- gets the '.conf' extension later -->
         <variable name="auto.install.component.temp.file" value="${templates.dir}/install_component"/>
         <variable name="auto.install.component.file" value="install_component"/>
         <variable name="install.script.file.dir" value="${cfg.sge.root}"/>
@@ -193,7 +193,7 @@ ___INFO__MARK_END__-->
         <variable name="app-version" value="version"/>
         <variable name="mode" value="install"/>
         <variable name="user.name" value="${USER_NAME}"/>
-        <variable name="user.group" value=""/>
+        <!--<variable name="user.group" value=""/>--> <!-- not used -->
         <variable name="install.qmaster" value="true"/>
         <variable name="install.execd" value="true"/>
         <variable name="install.shadowd" value="false"/>
@@ -215,7 +215,6 @@ ___INFO__MARK_END__-->
         <variable name="cfg.sge.jmx.ssl.client" value="true"/>
         <variable name="cfg.sge.jmx.ssl.keystore.pw" value=""/>
         <variable name="cfg.sge.jmx.ssl.keystore" value="/var/sgeCA/port${cfg.sge.qmaster.port}/${cfg.cell.name}/private/keystore"/>
-        <variable name="add.sge.jmx.ssl.keystore.def" value="${cfg.sge.root}/${cfg.cell.name}/private/keystore"/> <!-- TODO find better default ssl keystore dir -->
         <variable name="cfg.sge.jvm.lib.path" value=""/>
         <variable name="cfg.sge.additional.jvm.args" value="-Xmx256m"/>
         <variable name="cfg.cell.name" value="default"/>
@@ -227,7 +226,6 @@ ___INFO__MARK_END__-->
         <variable name="add.spooling.method.berkeleydbserver" value="none"/>
         <variable name="cfg.db.spooling.server" value="none"/>
         <variable name="cfg.db.spooling.dir" value=""/> <!-- init in HostPanel -->
-        <variable name="add.db.spooling.dir.bdb.def" value="/var/spool/bdb"/>
         <variable name="add.db.spooling.dir.bdb" value="${cfg.sge.root}/${cfg.cell.name}/spool/spooldb"/>
         <variable name="add.db.spooling.dir.bdbserver" value="/var/spool/bdb"/>
         <variable name="cfg.par.execd.inst.count" value="20"/> <!-- not used -->
@@ -265,8 +263,6 @@ ___INFO__MARK_END__-->
    </variables>
 
    <dynamicvariables>
-       <variable name="cfg.add.to.rc" value="true" condition="cond.user.root"/>
-       <variable name="cfg.add.to.rc" value="false" condition="!cond.user.root"/>
        <variable name="root.user" value="Administrator" condition="izpack.windowsinstall"/>
        <variable name="root.user" value="root" condition="!izpack.windowsinstall"/>
    </dynamicvariables>

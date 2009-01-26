@@ -214,15 +214,11 @@ public class ResultPanel extends IzPanel implements Printable, Config {
 
         for (int i = 0; i < splittedFileName.length; i++) {
             if (i == splittedFileName.length - 1) {
-                newName += "_" + generateTimeStamp() + ".";
+                newName += "_" + Util.generateTimeStamp() + ".";
             }
             newName += splittedFileName[i];
         }
         
         return newName;
-    }
-
-    private String generateTimeStamp() {
-        return new SimpleDateFormat("yyyy.MM.dd_HH:mm:ss_z").format(new Date());
     }
 }

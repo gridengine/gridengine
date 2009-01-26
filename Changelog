@@ -1,3 +1,22 @@
+ZG-2009-01-26-0: Bugfix:      gui-installer: Should warn a user that some of  the
+                              selected components were not really selected
+                 Bugster:     6786371
+                 Bugfix:      gui-installer: it's not possible to switch-off
+                              'service automatic startup' feature
+                 Bugster:     6793169
+                 Bugfix:      gui-installer: should check bdb server spool dir
+                              permissions on the remote host
+                 Bugster:     6786338
+                 Bugfix:      gui-installer: qmaster spool dir permission check
+                              done locally
+                 Bugster:     6786355
+                 Bugfix:      gui-installer: GUI installer should generete
+                              auto_inst file before starting with the installation
+                 Bugster:     6786384
+                 Enhacem.:    Improve debugging capabilities
+                 Enhacem.:    Check the FS type of BDB spool directory remotely
+                 Review:      LP
+
 GH-2009-01-26-0: Bugfix:      Subordinate suspension state can not be changed
                  Bugster:     6793687
                  Issue:       2886

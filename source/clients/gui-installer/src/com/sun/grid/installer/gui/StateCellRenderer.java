@@ -104,6 +104,7 @@ public class StateCellRenderer implements TableCellRenderer {
                 case PERM_BDB_SPOOL_DIR:
                 case PERM_JMX_KEYSTORE:
                 case BDB_SPOOL_DIR_EXISTS:
+                case BDB_SPOOL_DIR_WRONG_FSTYPE:
                 case USED_QMASTER_PORT:
                 case USED_EXECD_PORT:
                 case USED_JMX_PORT:

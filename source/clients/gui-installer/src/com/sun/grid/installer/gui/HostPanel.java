@@ -38,7 +38,6 @@ import com.izforge.izpack.util.Debug;
 import com.izforge.izpack.util.VariableSubstitutor;
 import com.sun.grid.installer.util.CommandExecutor;
 import com.sun.grid.installer.util.Config;
-import com.sun.grid.installer.util.ExtendedFile;
 import com.sun.grid.installer.util.Util;
 import java.awt.Color;
 import java.awt.Font;
@@ -71,10 +70,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.text.MessageFormat;
 
+import java.util.Enumeration;
+import java.util.Hashtable;
 import javax.swing.AbstractButton;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
@@ -566,7 +566,7 @@ public class HostPanel extends IzPanel implements Config {
                 String message = "";
                 if (isQmasterInst && !isQmasterExist) {
                     host.add(idata.getVariable(VAR_QMASTER_HOST));
-                    resolveHosts(Host.Type.HOSTNAME, idata.getVariable(VAR_QMASTER_HOST), host, true, false, false, false, true, true, idata.getVariable(VAR_EXECD_SPOOL_DIR));
+                    resolveHosts(Host.Type.HOSTNAME, host, true, false, false, false, true, true, idata.getVariable(VAR_EXECD_SPOOL_DIR));
 
                     if (HostSelectionTableModel.getQmasterHost() == null) {
                         try {
@@ -584,7 +584,7 @@ public class HostPanel extends IzPanel implements Config {
 
                 if (isBdbInst && !isBdbExist) {
                     host.add(idata.getVariable(VAR_DB_SPOOLING_SERVER));
-                    resolveHosts(Host.Type.HOSTNAME, idata.getVariable(VAR_DB_SPOOLING_SERVER), host, false, true, false, false, false, false, idata.getVariable(VAR_EXECD_SPOOL_DIR));
+                    resolveHosts(Host.Type.HOSTNAME, host, false, true, false, false, false, false, idata.getVariable(VAR_EXECD_SPOOL_DIR));
 
                     if (HostSelectionTableModel.getBdbHost() == null) {
                         try {
@@ -607,33 +607,6 @@ public class HostPanel extends IzPanel implements Config {
             } finally {
                 vs = null;
                 parent.unlockPrevButton();
-            }
-        }
-
-        /**
-         * Check directories in express mode
-         */
-        if (isExpressInst) {
-            // JMX keystore path (do it only one time) in case of JMX and JMX SSL enabled
-            if (parent.getRules().isConditionTrue(COND_JMX, idata.getVariables()) &&
-                    parent.getRules().isConditionTrue(COND_JMX_SSL, idata.getVariables()) &&
-                    !idata.getVariable(VAR_JMX_SSL_KEYSTORE).equals(idata.getVariable(VAR_JMX_SSL_KEYSTORE_DEF))) {
-                ExtendedFile ef = new ExtendedFile(idata.getVariable(VAR_JMX_SSL_KEYSTORE)).getFirstExistingParent();
-
-                if (!ef.hasWritePermission(idata.getVariable(VAR_USER_NAME), idata.getVariable(VAR_USER_GROUP))) {
-                    idata.setVariable(VAR_JMX_SSL_KEYSTORE, idata.getVariable(VAR_JMX_SSL_KEYSTORE_DEF));
-                }
-            }
-
-            // Spooling dir
-            if (!isBdbInst && !idata.getVariable(VAR_DB_SPOOLING_DIR_BDB).equals(VAR_DB_SPOOLING_DIR_BDB_DEF)) {
-                String fstype = Util.getDirFSType(idata.getVariables(), idata.getVariable(VAR_DB_SPOOLING_DIR_BDB));
-
-                if (fstype.equals("nfs")) {
-                    idata.setVariable(VAR_DB_SPOOLING_DIR_BDB, idata.getVariable(VAR_DB_SPOOLING_DIR_BDB_DEF));
-                }
-
-                Debug.trace("add.db.spooling.dir.bdb='" + idata.getVariable(VAR_DB_SPOOLING_DIR_BDB) + "'");
             }
         }
     }
@@ -847,7 +820,7 @@ public class HostPanel extends IzPanel implements Config {
             try {
                 final String pattern = hostTF.getText().trim();
                 List<String> list = Util.parseHostPattern(pattern);
-                resolveHosts(Host.Type.HOSTNAME, pattern, list, qmasterCB.isSelected(), bdbCB.isSelected(), shadowCB.isSelected(), execCB.isSelected(), adminCB.isSelected(), submitCB.isSelected(), idata.getVariable(VAR_EXECD_SPOOL_DIR));
+                resolveHosts(Host.Type.HOSTNAME, list, qmasterCB.isSelected(), bdbCB.isSelected(), shadowCB.isSelected(), execCB.isSelected(), adminCB.isSelected(), submitCB.isSelected(), idata.getVariable(VAR_EXECD_SPOOL_DIR));
             } catch (IllegalArgumentException ex) {
                 statusBar.setVisible(true);
                 statusBar.setText("Error: " + ex.getMessage());
@@ -876,7 +849,7 @@ public class HostPanel extends IzPanel implements Config {
                 File f = fc.getSelectedFile();
                 try {
                     List<String> list = Util.parseFileList(f);
-                    resolveHosts(Host.Type.HOSTNAME, "/" + f.getAbsolutePath(), list, qmasterCB.isSelected(), bdbCB.isSelected(), shadowCB.isSelected(), execCB.isSelected(), adminCB.isSelected(), submitCB.isSelected(), idata.getVariable(VAR_EXECD_SPOOL_DIR));
+                    resolveHosts(Host.Type.HOSTNAME, list, qmasterCB.isSelected(), bdbCB.isSelected(), shadowCB.isSelected(), execCB.isSelected(), adminCB.isSelected(), submitCB.isSelected(), idata.getVariable(VAR_EXECD_SPOOL_DIR));
                 } catch (IllegalArgumentException ex) {
                     statusBar.setVisible(true);
                     statusBar.setText("Error: " + ex.getMessage());
@@ -937,20 +910,22 @@ public class HostPanel extends IzPanel implements Config {
         }
 
         try {
-            ThreadPoolExecutor tmp = (ThreadPoolExecutor) Executors.newFixedThreadPool(waitingTasks.size() * 2);
-            tmp.setThreadFactory(new InstallerThreadFactory());
+            if (waitingTasks.size() > 0) {
+                ThreadPoolExecutor tmp = (ThreadPoolExecutor) Executors.newFixedThreadPool(waitingTasks.size() * 2);
+                tmp.setThreadFactory(new InstallerThreadFactory());
 
-            for (Iterator<Runnable> it = waitingTasks.iterator(); it.hasNext();) {
-                TestableTask runnable = (TestableTask) it.next();
-                runnable.setTestMode(true);
-                runnable.setTestExitValue(CommandExecutor.EXITVAL_INTERRUPTED);
-                runnable.setTestOutput(new Vector<String>());
-                try {
-                    Debug.trace("Cancel task: " + runnable.getTaskName());
-                    tmp.execute(runnable);
-                    tmp.remove(runnable);
-                } catch (Exception e) {
-                    Debug.error("Failed to cancel task: " + runnable.getTaskName());
+                for (Iterator<Runnable> it = waitingTasks.iterator(); it.hasNext();) {
+                    TestableTask runnable = (TestableTask) it.next();
+                    runnable.setTestMode(true);
+                    runnable.setTestExitValue(CommandExecutor.EXITVAL_INTERRUPTED);
+                    runnable.setTestOutput(new Vector<String>());
+                    try {
+                        Debug.trace("Cancel task: " + runnable.getTaskName());
+                        tmp.execute(runnable);
+                        tmp.remove(runnable);
+                    } catch (Exception e) {
+                        Debug.error("Failed to cancel task: " + runnable.getTaskName());
+                    }
                 }
             }
         } catch (Exception e) {
@@ -974,38 +949,41 @@ public class HostPanel extends IzPanel implements Config {
         }
     }
 
-    private void resolveHosts(Host.Type type, String pattern, List<String> list, boolean isQmasterHost, boolean isBDBHost, boolean isShadowHost, boolean isExecutionHost, boolean isAdminHost, boolean isSubmitHost, String execdSpoolDir) {
+    public void resolveHosts(Host.Type type, List<String> list, boolean isQmasterHost, boolean isBDBHost, boolean isShadowHost, boolean isExecutionHost, boolean isAdminHost, boolean isSubmitHost, String execdSpoolDir) {
+        //TODO: Add caching based on pattern as key (skip re-resolving of the same pattern)
+        Host h;
+        List<Host> hosts = new ArrayList<Host>(list.size());
+        for (String hostname : list) {
+            h = new Host(type, hostname, isQmasterHost, isBDBHost, isShadowHost, isExecutionHost, isAdminHost, isSubmitHost, execdSpoolDir, Host.State.NEW_UNKNOWN_HOST);
+            hosts.add(h);
+        }
+
+        resolveHosts(hosts);
+    }
+
+    public void resolveHosts(List<Host> hosts) {
         HostTable table = tables.get(0);
         HostSelectionTableModel model = (HostSelectionTableModel) table.getModel();
 
-        //Periodically update the tabs and progressbars, while resolving
-        if (progressTimer == null) {
-            progressTimer = new Timer("ResolveTimer");
-            progressTimer.schedule(new UpdateInstallProgressTimerTask(this, threadPool, progressTimer, getLabel("column.state.label"), SELECTION_TABS, getLabel("progressbar.resolving.label")), 0, 200);
+        if (threadPool.isShutdown()) {
+            threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(Util.RESOLVE_THREAD_POOL_SIZE);
+            threadPool.setThreadFactory(new InstallerThreadFactory());
         }
 
-        //Display progressBar if hidden
-        if (!progressBar.isVisible()) {
-            progressBar.setVisible(true);
-            cancelB.setVisible(true);
-        }
-
-        //TODO: Add caching based on pattern as key (skip re-resolving of the same pattern)
-        Host h;
-        for (String hostname : list) {
-            h = new Host(type, hostname, isQmasterHost, isBDBHost, isShadowHost, isExecutionHost, isAdminHost, isSubmitHost, execdSpoolDir, Host.State.NEW_UNKNOWN_HOST);
-            model.addHost(h);
+        progressTimer = new Timer("ResolveTimer");
+        progressTimer.schedule(new UpdateInstallProgressTimerTask(this, threadPool, getLabel("column.state.label"), getLabel("progressbar.resolving.label")), 10);
+        
+        for (Host host : hosts) {
+            model.addHost(host);
 
             try {
-                threadPool.execute(new ResolveHostTask(threadPool, progressTimer, h, this));
+                threadPool.execute(new ResolveHostTask(threadPool, host, this));
             } catch (RejectedExecutionException e) {
                 Debug.error(e);
-                model.setHostState(h, Host.State.CANCELED);
-                ((HostSelectionTableModel) tables.get(2).getModel()).addHost(h);
+                model.setHostState(host, Host.State.CANCELED);
+                ((HostSelectionTableModel) tables.get(2).getModel()).addHost(host);
             }
         }
-        //Update table
-        //model.fireTableChanged(new TableModelEvent(model));
     }
 
     private void fixVariables() {
@@ -1041,9 +1019,7 @@ public class HostPanel extends IzPanel implements Config {
             idata.setVariable(VAR_QMASTER_HOST, "none");
         }
 
-        String tmpDomainName = "";
         boolean isVarWinSuppSet = false;
-        boolean isVarHostResSet = false;
         HostList list = lists.get(1);
         Host h = null;
         for (int i = 0; i < list.size(); i++) {
@@ -1082,7 +1058,7 @@ public class HostPanel extends IzPanel implements Config {
 
         //Installation must be started in a new Thread
         new Thread() {
-
+            @Override
             public void run() {
                 checkHostsAndInstall(lists.get(1));
             }
@@ -1125,19 +1101,63 @@ public class HostPanel extends IzPanel implements Config {
             }
         }
         //And Check we have a components to install
-        boolean haveComponents = false;
+        int numOfQmasterHost = 0;
+        int numOfExecdHost = 0;
+        int numOfShadowHost = 0;
+        int numOfBdbHost = 0;
         for (Host h : tmpList) {
-            if (h.getComponentString().length() > 0) {
-                haveComponents = true;
-                break;
+            if (h.isQmasterHost()) {
+                numOfQmasterHost++;
+            }
+            if (h.isExecutionHost()) {
+                numOfExecdHost++;
+            }
+            if (h.isShadowHost()) {
+                numOfShadowHost++;
+            }
+            if (h.isBdbHost()) {
+                numOfBdbHost++;
             }
         }
-        if (haveComponents == false) {
+        if (numOfQmasterHost == 0 && numOfExecdHost == 0 && numOfShadowHost == 0 && numOfBdbHost == 0) {
             String message = new VariableSubstitutor(idata.getVariables()).substituteMultiple(idata.langpack.getString("warning.no.components.to.install.message"), null);
             emitWarning(idata.langpack.getString("installer.warning"), message);
             //We don't proceed with the installation
             checkMode = false;
             return;
+        }
+
+        // Compare host selection with the component selection if does not match warn user
+        String componentString = "";
+        String hostTypeString = "";
+
+        if (isQmasterInst && numOfQmasterHost == 0) {
+            componentString = getLabel("install.qmaster.label");
+            hostTypeString = getLabel("column.qmaster.label");
+        } else if (isExecdInst && numOfExecdHost == 0) {
+            componentString = getLabel("install.execd.label");
+            hostTypeString = getLabel("column.execd.label");
+        } else if (isShadowdInst && numOfShadowHost == 0) {
+            componentString = getLabel("install.shadowd.label");
+            hostTypeString = getLabel("column.shadowd.label");
+        } else if (isBdbInst && numOfBdbHost == 0) {
+            componentString = getLabel("install.bdb.label");
+            hostTypeString = getLabel("column.bdb.label");
+        }
+
+        if (!componentString.equals("")) {
+            Properties props = new Properties();
+            props.put("component", componentString);
+            props.put("host.type", hostTypeString);
+
+            VariableSubstitutor vs = new VariableSubstitutor(props);
+
+            if (JOptionPane.NO_OPTION == JOptionPane.showConfirmDialog(this, vs.substituteMultiple(getLabel("warning.comp.selected.but.no.host"), null),
+                    getLabel("installer.warning"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE)) {
+                checkMode = false;
+                return;
+            }
+            vs = null; // Don't use it any more
         }
 
         //Stop updateTab thread
@@ -1154,19 +1174,19 @@ public class HostPanel extends IzPanel implements Config {
             Debug.error(e);
         }
 
-        progressTimer = new Timer("CheckHostsTimer");
-        progressTimer.schedule(new UpdateInstallProgressTimerTask(this, threadPool, progressTimer, getLabel("column.state.label"), INSTALL_TABS, getLabel("progressbar.checking.label")), 0, 200);
-
         //Initialize new threadPool for the installation
         threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(Util.INSTALL_THREAD_POOL_SIZE);
         threadPool.setThreadFactory(new InstallerThreadFactory());
+
+        progressTimer = new Timer("CheckHostsTimer");
+        progressTimer.schedule(new UpdateInstallProgressTimerTask(this, threadPool, getLabel("column.state.label"), getLabel("progressbar.checking.label")), 10);
 
         try {
             for (Host h : hosts) {
                 threadPool.execute(new CheckHostTask(h, this));
             }
 
-            while(threadPool.getCompletedTaskCount() < tmpList.size()  && !threadPool.isTerminated()) {
+            while (threadPool.getCompletedTaskCount() < tmpList.size() && !threadPool.isTerminated()) {
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException ex) {
@@ -1185,6 +1205,7 @@ public class HostPanel extends IzPanel implements Config {
                     case PERM_BDB_SPOOL_DIR:
                     case PERM_JMX_KEYSTORE:
                     case ADMIN_USER_NOT_KNOWN:
+                    case BDB_SPOOL_DIR_WRONG_FSTYPE:
                     case UNKNOWN_ERROR: {
                          invalid++;
                     }
@@ -1203,7 +1224,7 @@ public class HostPanel extends IzPanel implements Config {
 
                 return;
             }
-            
+
         } catch (Exception e) {
             Debug.error(e);
         } finally {
@@ -1348,13 +1369,76 @@ public class HostPanel extends IzPanel implements Config {
             installList.addUnchecked(new Host(host));
         }
 
-        //installList.appendHostList(validList, isBdbInst, isQmasterInst, isShadowdInst, isExecdInst);
+        /**
+         * Generate global auto_conf files depending on the different local execd spool dirs
+         */
+        // Seperate execution hosts depending on their execd spool dir
+        Hashtable<String, ArrayList<Host>> hostSelection = new Hashtable<String, ArrayList<Host>>();
+        String localExecdSpoolDir = "";
+        for (Host host: installList) {
+            if (host.isExecutionHost()) {
+                localExecdSpoolDir = host.getSpoolDir();
 
-        // Save host list
-        idata.setVariable(VAR_EXEC_HOST_LIST, HostList.getHostNames(installList.getHosts(Host.HOST_TYPE_EXECD), " "));
-        idata.setVariable(VAR_SHADOW_HOST_LIST, HostList.getHostNames(installList.getHosts(Host.HOST_TYPE_SHADOWD), " "));
-        idata.setVariable(VAR_ADMIN_HOST_LIST, HostList.getHostNames(installList.getHosts(Host.HOST_TYPE_ADMIN), " "));
-        idata.setVariable(VAR_SUBMIT_HOST_LIST, HostList.getHostNames(installList.getHosts(Host.HOST_TYPE_SUBMIT), " "));
+                if (!hostSelection.containsKey(localExecdSpoolDir)) {
+                    ArrayList<Host> hostList = new ArrayList<Host>();
+                    hostList.add(host);
+                    hostSelection.put(localExecdSpoolDir, hostList);
+                } else {
+                    hostSelection.get(localExecdSpoolDir).add(host);
+                }
+            }
+        }
+
+        // Construct the file names
+        VariableSubstitutor vs = new VariableSubstitutor(idata.getVariables());
+
+        String autoConfTempFile = vs.substituteMultiple(idata.getVariable(VAR_AUTO_CONF_TEMP_FILE), null);
+        String autoConfFile = vs.substituteMultiple(idata.getVariable(VAR_AUTO_CONF_FILE), null);
+
+        autoConfFile = autoConfFile + "_" + Util.generateTimeStamp();
+
+        // Generate the auto_conf file for every different local execd spool dirs
+        int index = 0;
+        String outputFilePostfix = "";
+        for (Enumeration<String> enumer = hostSelection.keys(); enumer.hasMoreElements();) {
+            localExecdSpoolDir = enumer.nextElement();
+
+            // put the 
+            if (!enumer.hasMoreElements()) {
+                idata.setVariable(VAR_SHADOW_HOST_LIST, HostList.getHostNames(installList.getHosts(Host.HOST_TYPE_SHADOWD), " "));
+                idata.setVariable(VAR_ADMIN_HOST_LIST, HostList.getHostNames(installList.getHosts(Host.HOST_TYPE_ADMIN), " "));
+                idata.setVariable(VAR_SUBMIT_HOST_LIST, HostList.getHostNames(installList.getHosts(Host.HOST_TYPE_SUBMIT), " "));
+
+                outputFilePostfix = "";
+            } else {
+                idata.setVariable(VAR_SHADOW_HOST_LIST, "");
+                idata.setVariable(VAR_ADMIN_HOST_LIST, "");
+                idata.setVariable(VAR_SUBMIT_HOST_LIST, "");
+
+                outputFilePostfix = "_" + String.valueOf(index);
+                index++;
+            }
+            
+            if (localExecdSpoolDir.equals(idata.getVariable(VAR_EXECD_SPOOL_DIR))) {
+                idata.setVariable(VAR_EXECD_SPOOL_DIR_LOCAL, "");
+            } else {
+                idata.setVariable(VAR_EXECD_SPOOL_DIR_LOCAL, localExecdSpoolDir);
+            }
+
+            idata.setVariable(VAR_EXEC_HOST_LIST, HostList.getHostNames(hostSelection.get(localExecdSpoolDir), " "));
+
+            outputFilePostfix = autoConfFile + outputFilePostfix + ".conf";
+            try {
+                Util.fillUpTemplate(autoConfTempFile, outputFilePostfix, idata.getVariables());
+                Debug.trace("Generating auto_conf file: '" + outputFilePostfix + "'.");
+            } catch (Exception ex) {
+                Debug.error("Failed to generate auto_conf file: '" + outputFilePostfix + "'." + ex);
+            }   
+        }
+
+        /**
+         * Build install table
+         */
 
         // Initialize column tooltips
         String[] installHeaders = getInstallLabelVars();
@@ -1412,7 +1496,7 @@ public class HostPanel extends IzPanel implements Config {
 
         //Installation must be started in a new Thread
         new Thread() {
-
+            @Override
             public void run() {
                 startInstallation(installList);
             }
@@ -1420,17 +1504,15 @@ public class HostPanel extends IzPanel implements Config {
     }
 
     private void startInstallation(HostList installList) {
-        progressTimer = new Timer("InstallTimer");
-        progressTimer.schedule(new UpdateInstallProgressTimerTask(this, threadPool, progressTimer, getLabel("column.progress.label"), INSTALL_TABS, getLabel("progressbar.installing.label")), 0, 200);
-
-		//Initialize new threadPool for the installation
-		threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(Util.INSTALL_THREAD_POOL_SIZE);
-		threadPool.setThreadFactory(new InstallerThreadFactory());
+	//Initialize new threadPool for the installation
+	threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(Util.INSTALL_THREAD_POOL_SIZE);
+	threadPool.setThreadFactory(new InstallerThreadFactory());
         //We need a new executor for shadowdTasks (only 1 task at single moment)
         ThreadPoolExecutor singleThreadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
         singleThreadPool.setThreadFactory(new InstallerThreadFactory());
 
-        String SGE_ROOT = idata.getVariable(VAR_SGE_ROOT);
+        progressTimer = new Timer("InstallTimer");
+        progressTimer.schedule(new UpdateInstallProgressTimerTask(this, threadPool, getLabel("column.progress.label"), getLabel("progressbar.installing.label")), 10);
 
         boolean wait = false;
         long completed = 0, started = 0;
@@ -1496,7 +1578,6 @@ public class HostPanel extends IzPanel implements Config {
                         try {
                             Thread.sleep(100);
                         } catch (InterruptedException ex) {
-                            
                         }
                     }
                 }
@@ -1687,22 +1768,6 @@ public class HostPanel extends IzPanel implements Config {
         }
     }
 
-    public static void main(String[] args) {
-        JFrame selectFrame = new JFrame("Select Hosts Panel");
-        InstallData data = new InstallData() {
-        };
-        data.setVariable("cfg.sge.root", "<PATH_TO_SGE_ROOT>");
-        data.setVariable("cond.install.shadowd", "false");
-        data.setVariable("cond.install.execd", "false");
-        data.setVariable("cond.install.qmaster", "true");
-        data.setVariable("cond.install.express.mode", "true");
-        final HostPanel hostPanel = new HostPanel(null, data);
-        selectFrame.add(hostPanel);
-        selectFrame.pack();
-        selectFrame.setVisible(true);
-        selectFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    }
-
     public void runTest() {
     }
 
@@ -1723,13 +1788,11 @@ class ResolveHostTask extends TestableTask {
     private HostPanel panel;
     private Host host;
     private ThreadPoolExecutor tpe;
-    private Timer timer;
     private HostSelectionTableModel model;
 
-    public ResolveHostTask(ThreadPoolExecutor tpe, Timer timer, Host h, HostPanel panel) {
+    public ResolveHostTask(ThreadPoolExecutor tpe, Host h, HostPanel panel) {
 
         this.tpe = tpe;
-        this.timer = timer;
         host = h;
         this.panel = panel;
         model = (HostSelectionTableModel) panel.getHostTableAt(0).getModel();
@@ -1761,7 +1824,7 @@ class ResolveHostTask extends TestableTask {
 
             tpe.execute(getArchTask);
         } catch (UnknownHostException e) {
-            Debug.error(e);
+            Debug.error("Unknown host: " + host);
             end = System.currentTimeMillis();
             host.setState(Host.State.UNKNOWN_HOST);
             //Add host to unreachable hosts tab
@@ -1849,6 +1912,7 @@ class GetArchTask extends TestableTask {
  * Thread to check settings remotely on the specified host.
  */
 class CheckHostTask extends TestableTask {
+
     private Host host = null;
     private HostPanel panel = null;
     private Properties variables = null;
@@ -1856,7 +1920,7 @@ class CheckHostTask extends TestableTask {
 
     public CheckHostTask(Host host, HostPanel panel) {
         setTaskName("CheckHostTask - " + host);
-        
+
         this.host = host;
         this.prevState = host.getState();
         this.panel = panel;
@@ -1867,7 +1931,7 @@ class CheckHostTask extends TestableTask {
         int exitValue = getTestExitValue();
         long start = System.currentTimeMillis(), end;
         Host.State newState = prevState;
-        
+
         setHostState(Host.State.CONTACTING);
 
         if (isIsTestMode()) {
@@ -1944,9 +2008,9 @@ class CheckHostTask extends TestableTask {
                 //TODO: Beta and later should delete the file as part of the command add - , ";", "rm", "-f", localScript);
                 //Debug.trace("Start installation: "+cmd.getCommands());
                 cmd.execute();
-                
+
                 exitValue = cmd.getExitValue();
-                
+
 
                 // Set the new state of the host depending on the return value of the script
                 switch (exitValue) {
@@ -1959,6 +2023,7 @@ class CheckHostTask extends TestableTask {
                     case EXIT_VAL_EXECD_SPOOL_DIR_LOCAL_PERM_DENIED: newState = Host.State.PERM_EXECD_SPOOL_DIR; break;
                     case EXIT_VAL_BDB_SPOOL_DIR_EXISTS: newState = Host.State.BDB_SPOOL_DIR_EXISTS; break;
                     case EXIT_VAL_ADMIN_USER_NOT_KNOWN: newState = Host.State.ADMIN_USER_NOT_KNOWN; break;
+                    case EXIT_VAL_BDB_SPOOL_WRONG_FSTYPE: newState = Host.State.BDB_SPOOL_DIR_WRONG_FSTYPE; break;
                     default: newState = Host.State.UNKNOWN_ERROR; break;
                 }
             }
@@ -1979,8 +2044,8 @@ class CheckHostTask extends TestableTask {
      * @param state The new state of the host
      */
     private void setHostState(Host.State state) {
-        ((HostSelectionTableModel)panel.getHostTableAt(0).getModel()).setHostState(host, state);
-        ((HostSelectionTableModel)panel.getHostTableAt(1).getModel()).setHostState(host, state);
+        ((HostSelectionTableModel) panel.getHostTableAt(0).getModel()).setHostState(host, state);
+        ((HostSelectionTableModel) panel.getHostTableAt(1).getModel()).setHostState(host, state);
     }
 }
 
@@ -1991,28 +2056,23 @@ class UpdateInstallProgressTimerTask extends TimerTask {
     private JProgressBar mainBar;
     private JButton cancelButton;
     private String colName;
-    private String[] TABS;
-    private Timer timer;
-    private String prefix;
 
-    public UpdateInstallProgressTimerTask(final HostPanel panel, ThreadPoolExecutor tpe, Timer timer, final String colName, final String[] TABS, final String prefix) {
+    public UpdateInstallProgressTimerTask(final HostPanel panel, ThreadPoolExecutor tpe, final String colName, final String prefix) {
         super();
+        
         this.panel = panel;
         this.tpe = tpe;
-        this.timer = timer;
         this.colName = colName;
-        this.TABS = TABS;
-        this.prefix = prefix;
+
         mainBar = panel.getProgressBar();
         mainBar.setMinimum(0);
-        int cur = (int) tpe.getCompletedTaskCount();
-        int max = (int) tpe.getTaskCount();
-        mainBar.setValue(cur);
-        mainBar.setMaximum(max);
+        mainBar.setValue((int) tpe.getCompletedTaskCount());
+        mainBar.setMaximum((int) tpe.getTaskCount());
         mainBar.setString(prefix);
         //mainBar.setString(prefix + " " + cur + " / " + max);
         mainBar.setStringPainted(true);
         mainBar.setVisible(true);
+
         cancelButton = panel.getCancelButton();
         cancelButton.setVisible(true);
     }
@@ -2022,66 +2082,60 @@ class UpdateInstallProgressTimerTask extends TimerTask {
         HostTable table;
         HostList list;
         DefaultTableModel model;
-        //Update individual install progress bars
-//        JTabbedPane tab = panel.getTabbedPane();
-        Host.State tmpState;
+        Host.State state;
         Object obj;
-        int i = 0;
+        int i = 0, col = 0;
+        boolean hasRunning = true;
 
-        for (Iterator<HostTable> iter = panel.getHostTableIterator(); iter.hasNext();) {
-            table = iter.next();
-            list = panel.getHostListAt(i);
-            int col = table.getColumn(colName).getModelIndex();
-            model = (DefaultTableModel) table.getModel();
-            //Update tabs
-            //tab.setTitleAt(i, TABS[i] + " (" + list.size() + ")");
-            for (int row = 0; row < list.size(); row++) {
-                // if a host gets deleted during the progress: IndexOutOfBoundsException
-                try {
-                    obj = model.getValueAt(row, col);
+        while (hasRunning) {
+            hasRunning = false;
+            i = 0;
 
-                    if (obj instanceof Host.State) {
-                        tmpState = (Host.State) obj;
+            for (Iterator<HostTable> iter = panel.getHostTableIterator(); iter.hasNext();) {
+                table = iter.next();
+                list = panel.getHostListAt(i);
+                col = table.getColumn(colName).getModelIndex();
+                model = (DefaultTableModel) table.getModel();
 
-                        switch (tmpState) {
-                            case RESOLVING:
-                            case INSTALLING:
-                            case CONTACTING:
-                                model.fireTableCellUpdated(row, col);
-                                break;
+                for (int row = 0; row < list.size(); row++) {
+                    try {
+                        obj = model.getValueAt(row, col);
+
+                        if (obj instanceof Host.State) {
+                            state = (Host.State) obj;
+
+                            switch (state) {
+                                case RESOLVING:
+                                case INSTALLING:
+                                case CONTACTING:
+                                    hasRunning = true;
+                            }
                         }
+
+                        // if the state turns from RESOLVING/INSTALLING/CONTACTING to a final state
+                        // the cell does not get updated and the progress bar remains shown
+                        model.fireTableCellUpdated(row, col);
+                    } catch (IndexOutOfBoundsException e) {
+                        // if a host gets deleted during the progress: IndexOutOfBoundsException
                     }
-                } catch (IndexOutOfBoundsException e) {
                 }
+                i++;
             }
-            i++;
+
+            //Update the main ProgressBar
+            mainBar.setValue((int) tpe.getCompletedTaskCount());
+            mainBar.setMaximum((int) tpe.getTaskCount());
         }
-        //Update the main ProgressBar
-        int cur = (int) tpe.getCompletedTaskCount();
-        int max = (int) tpe.getTaskCount();
-        mainBar.setValue(cur);
-        mainBar.setMaximum(max);
 
         //Last task should cancel the Timer and hide the progressBar
-        if (cur == max && cur > 0) {
-            mainBar.setVisible(false);
-            cancelButton.setVisible(false);
+        mainBar.setVisible(false);
+        cancelButton.setVisible(false);
 
-            if (!HostPanel.checkMode && panel.getHostListAt(1).size() > 0) {
-                panel.enableInstallButton(true);
-                if (HostPanel.installMode) {
-                    panel.triggerInstallButton(false);
-                }
+        if (!HostPanel.checkMode && panel.getHostListAt(1).size() > 0) {
+            panel.enableInstallButton(true);
+            if (HostPanel.installMode) {
+                panel.triggerInstallButton(false);
             }
-
-            // Jump to the Done tab if it's not empty. Otherwise jump to Failed tab.
-//            if (panel.getHostListAt(1).size() > 1) {
-//                tab.setSelectedIndex(1);
-//            } else {
-//                tab.setSelectedIndex(2);
-//            }
-
-            //timer.cancel();
         }
     }
 }
@@ -2135,7 +2189,7 @@ class InstallTask extends TestableTask {
                         variables.setProperty(VAR_ALL_HOSTS, val);
                     }
                 }
-                
+
                 String autoConfTempFile = vs.substituteMultiple(variables.getProperty(VAR_AUTO_INSTALL_COMPONENT_TEMP_FILE), null);
                 autoConfFile = vs.substituteMultiple(variables.getProperty(VAR_AUTO_INSTALL_COMPONENT_FILE), null);
 

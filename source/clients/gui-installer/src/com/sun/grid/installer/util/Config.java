@@ -60,6 +60,7 @@ public interface Config {
     public static final String VAR_JVM_LIB_PATH = "cfg.sge.jvm.lib.path";
     public static final String VAR_DB_SPOOLING_DIR= "cfg.db.spooling.dir";
     public static final String VAR_SGE_JMX_PORT= "cfg.sge.jmx.port";
+    public static final String VAR_ADD_TO_RC= "cfg.add.to.rc";
     public static final String VAR_ALL_HOSTS= "gui_allhosts";
     public static final String VAR_ALL_SUBMIT_HOSTS= "gui_allsubmithosts";
     public static final String VAR_REMOVE_ADMINHOSTS= "gui_remove_adminhosts";
@@ -80,7 +81,7 @@ public interface Config {
     public static final String VAR_README_FILE  = "readme.file";
     public static final String VAR_PROGRESS_TYPE = "mode";
     public static final String VAR_USER_NAME = "user.name";
-    public static final String VAR_USER_GROUP = "user.group";
+    //public static final String VAR_USER_GROUP = "user.group";
     public static final String VAR_ROOT_USER = "root.user";
     public static final String VAR_RESULT_INFO = "result.info";
     public static final String VAR_LOCALHOST_ARCH = "localhost.arch";
@@ -109,6 +110,7 @@ public interface Config {
     public static final String COND_SPOOLING_BDBSERVER = "cond.spooling.bdbserver";
     public static final String COND_JMX = "cond.sge.jmx";
     public static final String COND_JMX_SSL = "cond.sge.jmx.ssl";
+    public static final String COND_USER_ROOT = "cond.user.root";
     
     public static final String LANGID_HELP_ERROR_PAGE = "installer.help.errorpage";
     public static final String LANGID_HELP_EMPTY_PAGE = "installer.help.emptypage";
@@ -129,6 +131,7 @@ public interface Config {
     public static final int EXIT_VAL_JMX_KEYSTORE_PERM_DENIED = 22;
     public static final int EXIT_VAL_BDB_SPOOL_DIR_PERM_DENIED = 23;
     public static final int EXIT_VAL_BDB_SPOOL_DIR_EXISTS = 24;
+    public static final int EXIT_VAL_BDB_SPOOL_WRONG_FSTYPE = 25;
     public static final int EXIT_VAL_EXECD_SPOOL_DIR_LOCAL_PERM_DENIED = 40;
-    public static final int EXIT_VAL_ADMIN_USER_NOT_KNOWN = 41;
+    public static final int EXIT_VAL_ADMIN_USER_NOT_KNOWN = 50;
 }

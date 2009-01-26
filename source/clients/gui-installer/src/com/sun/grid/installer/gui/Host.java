@@ -87,6 +87,7 @@ public class Host implements Config {
         PERM_EXECD_SPOOL_DIR,
         PERM_BDB_SPOOL_DIR,
         BDB_SPOOL_DIR_EXISTS,
+        BDB_SPOOL_DIR_WRONG_FSTYPE,
         ADMIN_USER_NOT_KNOWN,
         PERM_JMX_KEYSTORE,
         USED_QMASTER_PORT,
@@ -412,22 +413,6 @@ public class Host implements Config {
         variables.put(VAR_SHADOW_HOST_LIST, getHostAsString());
         variables.put(VAR_ADMIN_HOST_LIST, getHostAsString());
         variables.put(VAR_SUBMIT_HOST_LIST, getHostAsString());
-//    	if (isQmasterHost()) {
-//    	}
-//    	if (isExecutionHost()) {
-//    		variables.put(VAR_EXEC_HOST_LIST, getHostAsString());
-//    	}
-//    	if (isShadowHost()) {
-//    		variables.put(VAR_SHADOW_HOST_LIST, getHostAsString());
-//    	}
-//    	if (isAdminHost()) {
-//    		variables.put(VAR_ADMIN_HOST_LIST, getHostAsString());
-//    	}
-//    	if (isSubmitHost()) {
-//    		variables.put(VAR_SUBMIT_HOST_LIST, getHostAsString());
-//    	}
-//    	if (isBdbHost()) {
-//    	}
     }
 
     /**

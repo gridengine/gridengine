@@ -201,11 +201,10 @@ public class HostList extends ArrayBlockingQueue<Host> {
                 }
                 return true;
             //TODO: Should be added only if we are actually installing that type
-            } else if (o.isQmasterHost() || o.isAdminHost() || o.isExecutionHost() || o.isShadowHost() || o.isSubmitHost() || o.isBdbHost()) {
-                super.add(o);
-                return true;
+            } else { //if (o.isQmasterHost() || o.isAdminHost() || o.isExecutionHost() || o.isShadowHost() || o.isSubmitHost() || o.isBdbHost()) {
+                return super.add(o);
             }
-            return false;
+            //return false;
         } finally {
             lock.unlock();
             //printList("add");
@@ -244,8 +243,7 @@ public class HostList extends ArrayBlockingQueue<Host> {
                     h.setBdbHost(false);
                 }
                 if (!h.isQmasterHost() && !h.isAdminHost() && !h.isExecutionHost() && !h.isShadowHost() && !h.isSubmitHost() && !h.isBdbHost()) {
-                    super.remove(h);
-                    return true;
+                    return super.remove(h);
                 }
             }
             return false;
@@ -283,8 +281,8 @@ public class HostList extends ArrayBlockingQueue<Host> {
             int index = indexOf(o);
             if (index >= 0) {
                 h = get(index);
-                super.remove(h);
-                return true;
+                return super.remove(h);
+                //return true;
 
             }
             return false;

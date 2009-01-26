@@ -1,3 +1,14 @@
+RD-2009-01-26-0: Bugfix:      fixed huge qmaster memory usage after hostgroup
+                              modification
+                 Bugster:     6797579
+                 Issue:       2887
+                              load_sge_config.sh does not work huge amount of
+                              configuration objects
+                 Bugster:     6797581
+                 Issue:       2888
+                              introduced scheduling performance regression with
+                 Belongs to:  RD-2008-11-03-0
+
 ZG-2009-01-26-0: Bugfix:      gui-installer: Should warn a user that some of  the
                               selected components were not really selected
                  Bugster:     6786371

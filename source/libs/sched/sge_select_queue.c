@@ -165,7 +165,7 @@ static dispatch_t
 sequential_tag_queues_suitable4job(sge_assignment_t *a);
 
 static dispatch_t
-sequential_queue_time( u_long32 *start, const sge_assignment_t *a, int *violations, lListElem *qep); 
+sequential_queue_time(u_long32 *start, const sge_assignment_t *a, int *violations, lListElem *qep); 
 
 static dispatch_t
 sequential_host_time(u_long32 *start, const sge_assignment_t *a, int *violations, lListElem *hep); 
@@ -209,7 +209,7 @@ static bool
 job_is_forced_centry_missing(const sge_assignment_t *a, const lListElem *queue_or_host);
 
 static void 
-clear_resource_tags( lList *resources, u_long32 max_tag); 
+clear_resource_tags(lList *resources, u_long32 max_tag); 
 
 static dispatch_t 
 find_best_result(dispatch_t r1, dispatch_t r2);
@@ -5053,7 +5053,7 @@ parallel_queue_slots(sge_assignment_t *a, lListElem *qep, int *slots, int *slots
    *slots = MIN(qslots, lslots);
    *slots_qend = MIN(qslots_qend, lslots_qend);
 
-   if (result == DISPATCH_OK || DISPATCH_NOT_AT_TIME) {
+   if (result == DISPATCH_OK || result == DISPATCH_NOT_AT_TIME) {
       DPRINTF(("\tparallel_queue_slots(%s) returns %d/%d\n", qname, qslots, qslots_qend));
       result = DISPATCH_OK;
    } else {

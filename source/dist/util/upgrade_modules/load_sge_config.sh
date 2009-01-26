@@ -51,6 +51,7 @@ LS=ls
 QCONF=$SGE_ROOT/bin/$ARCH/qconf
 HOST=`$SGE_ROOT/utilbin/$ARCH/gethostname -name`
 
+SUCCEEDED_LOADLOC=""
 
 Usage()
 {
@@ -553,6 +554,15 @@ LoadListFromLocation()
    loadLoc="${1:?Need the location}"
    qconfOpt="${2:?Need an option}"
 
+   failed=0
+
+   case $SUCCEEDED_LOADLOC in
+   *$loadLoc*)
+      LogIt "I" "qconf $qconfOpt $loadLoc skipped because succeeded already in previous run"
+      return 0
+      ;;
+   esac
+
    LogIt "I" "qconf $qconfOpt $loadLoc"
    
    #File list
@@ -564,6 +574,9 @@ LoadListFromLocation()
 
       for item in $list; do
          LoadConfigFile $item $qconfOpt	
+         if [ $? -ne 0 ]; then
+            failed=1
+         fi
       done
    #Directory list is not empty
    elif [ -d "$loadLoc" ]; then
@@ -571,16 +584,23 @@ LoadListFromLocation()
       if [ -z "$llList" ]; then
          return
       fi
-      #we prefer full file names 
-      llList=`ls ${loadLoc}/*`
 
-      for item in $llList; do
-         LoadConfigFile $item $qconfOpt
+      for item in ${loadLoc}/*; do
+         #we prefer full file names 
+         full=`ls $item` 
+         LoadConfigFile $full $qconfOpt
+         if [ $? -ne 0 ]; then
+            failed=1
+         fi
       done
    else
       #Not a file or directory (skip)
       errorMsg = "wrong directory or file: $loadLoc"
       LogIt "W" "$errorMsg"
+   fi
+   
+   if [ $failed -eq  0 ]; then
+      SUCCEEDED_LOADLOC="$SUCCEEDED_LOADLOC $loadLoc" 
    fi
 
    return $ret

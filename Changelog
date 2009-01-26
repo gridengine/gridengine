@@ -1,3 +1,8 @@
+GH-2009-01-26-0: Bugfix:      Subordinate suspension state can not be changed
+                 Bugster:     6793687
+                 Issue:       2886
+                 Review:      DG
+ 
 LP-2009-01-22-0: Bugfix:      gui-installer: Parallel shadowd installation might
                               fail
                  Bugfix:      gui-installer: Detecting missing arch script and

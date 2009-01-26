@@ -646,10 +646,18 @@ cl_bool_t cl_com_setup_commlib_complete(void) {
  * because the memory is malloced in cl_com_setup_commlib()
  * and freed in cl_com_cleanup_commlib()
  */
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_get_resolvable_hosts()"
 char* cl_com_get_resolvable_hosts(void) {
    return cl_commlib_debug_resolvable_hosts;
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_get_unresolvable_hosts()"
 char* cl_com_get_unresolvable_hosts(void) {
    return cl_commlib_debug_unresolvable_hosts;
 }
@@ -3505,10 +3513,14 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                   cl_com_handle_t* handle = connection->handler;
                   char* application_info = "not available";
                  
-                  /* we force an statistic update */
-                  cl_commlib_calculate_statistic(handle,CL_TRUE,0);
-                  if ( handle->statistic->application_info != NULL ) {
-                     application_info = handle->statistic->application_info;
+                  /* we force an statistic update for qping client */
+                  if (connection->remote != NULL && connection->remote->comp_name != NULL) {
+                     if (strcmp(connection->remote->comp_name, "qping") == 0) {
+                        cl_commlib_calculate_statistic(handle, CL_TRUE, 0);
+                        if ( handle->statistic->application_info != NULL ) {
+                           application_info = handle->statistic->application_info;
+                        }
+                     }
                   }
 
                   gettimeofday(&now,NULL);
@@ -6043,11 +6055,13 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle, char* un_resolved_ho
    }
 
    return_value = cl_commlib_append_message_to_connection(handle, &receiver, CL_MIH_MAT_UNDEFINED, NULL, 0, 0, 0, &my_mid);
+   /* we return as fast as possible with error */
    if (return_value != CL_RETVAL_OK) {
       free(unique_hostname);
       free(receiver.hash_id);
       return return_value;
    }
+
    switch(cl_com_create_threads) {
       case CL_NO_THREAD:
          CL_LOG(CL_LOG_INFO,"no threads enabled");
@@ -6541,6 +6555,7 @@ int cl_commlib_send_message(cl_com_handle_t*  handle,
       }
    
       return_value = cl_commlib_append_message_to_connection(handle, &receiver, ack_type, help_data, size, response_mid, tag, &my_mid);
+      /* We return as fast as possible */
       if (return_value != CL_RETVAL_OK) {
          free(unique_hostname);
          free(receiver.hash_id);
@@ -6549,6 +6564,7 @@ int cl_commlib_send_message(cl_com_handle_t*  handle,
          }
          return return_value;
       }
+
       switch(cl_com_create_threads) {
          case CL_NO_THREAD:
             CL_LOG(CL_LOG_INFO,"no threads enabled");
@@ -6560,7 +6576,7 @@ int cl_commlib_send_message(cl_com_handle_t*  handle,
             cl_thread_trigger_event(handle->write_thread);
             break;
       }
-      
+
       if (mid != NULL) {
          *mid = my_mid;
       }  

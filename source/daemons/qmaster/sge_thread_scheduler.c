@@ -234,6 +234,9 @@ static void sge_scheduler_wait_for_event(sge_evc_class_t *evc, lList **event_lis
    sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Scheduler_Control.mutex);
 
    if (do_ack) {
+      if (lGetElemUlong(*event_list, ET_type, sgeE_ACK_TIMEOUT) != NULL) {
+         evc->ec_mark4registration(evc);
+      }
       evc->ec_ack(evc);
    }
 
@@ -662,6 +665,14 @@ sge_scheduler_main(void *arg)
          MONITOR_IDLE_TIME(sge_scheduler_wait_for_event(evc, &event_list), (&monitor), mconf_get_monitor_time(), 
                            mconf_is_monitor_message());
 
+         /* If we lost connection we have to register again */
+         if (evc->ec_need_new_registration(evc)) {
+            lFreeList(&event_list);
+            if (evc->ec_register(evc, false, NULL, &monitor) == true) {
+               DPRINTF(("re-registered at event master!\n"));
+            }
+         }
+
          if (event_list != NULL) {
             /* check for shutdown */
             do_shutdown = (lGetElemUlong(event_list, ET_type, sgeE_SHUTDOWN) != NULL) ? true : false;
@@ -669,8 +680,9 @@ sge_scheduler_main(void *arg)
             /* update mirror and free data */
             if (do_shutdown == false && sge_mirror_process_event_list(evc, event_list) == SGE_EM_OK) {
                handled_events = true;
+               DPRINTF(("events handled\n"));
             } else {
-               DPRINTF(("events contain shutdown event\n"));
+               DPRINTF(("events contain shutdown event - ignoring events\n"));
             }
             lFreeList(&event_list);
          }

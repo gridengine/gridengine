@@ -125,7 +125,7 @@ int cl_com_compare_endpoints(cl_com_endpoint_t* endpoint1, cl_com_endpoint_t* en
           if (endpoint1->comp_host && endpoint1->comp_name && 
               endpoint2->comp_host && endpoint2->comp_name) {
              if (strcmp(endpoint1->comp_name,endpoint2->comp_name) == 0) {
-               if (cl_com_compare_hosts(endpoint1->comp_host, endpoint2->comp_host) == CL_RETVAL_OK) {
+                if (cl_com_compare_hosts(endpoint1->comp_host, endpoint2->comp_host) == CL_RETVAL_OK) {
                    return 1;
                 }
              }
@@ -1614,21 +1614,28 @@ int cl_com_connection_get_client_socket_in_port(cl_com_connection_t* connection,
 #endif
 #define __CL_FUNCTION__ "cl_com_connection_get_fd()"
 int cl_com_connection_get_fd(cl_com_connection_t* connection, int* fd) {
-   if (connection == NULL) {
-      return CL_RETVAL_PARAMS;
+   int ret_val = CL_RETVAL_PARAMS;
+   if (fd == NULL || connection == NULL) {
+      return ret_val;
    }
    switch(connection->framework_type) {
       case CL_CT_TCP: {
-         return cl_com_tcp_get_fd(connection,fd);
+         ret_val = cl_com_tcp_get_fd(connection,fd);
       }
       case CL_CT_SSL: {
-         return cl_com_ssl_get_fd(connection,fd);
+         ret_val = cl_com_ssl_get_fd(connection,fd);
       }
       case CL_CT_UNDEFINED: {
+         ret_val = CL_RETVAL_NO_FRAMEWORK_INIT;
          break;
       }
    }
-   return CL_RETVAL_NO_FRAMEWORK_INIT;
+
+   if (ret_val == CL_RETVAL_OK && (*fd < 0)) {
+      ret_val = CL_RETVAL_NO_PORT_ERROR;
+   }
+
+   return ret_val;
 }
 
 #ifdef __CL_FUNCTION__

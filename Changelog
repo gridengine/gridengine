@@ -1,3 +1,12 @@
+CR-2009-01-26-0: Bugfix:      Internal event clients, like the scheduler,
+                              do not reconnect after timing out
+                 Bugster:     6793076
+                 Issue:       2890 
+                 Cleanup:     o smaller commlib cleanups
+                 Enhancem.:   o disabled call of application info callback
+                                function when SIM clients name is not "qping"
+                 Review:      RD
+
 RD-2009-01-26-0: Bugfix:      fixed huge qmaster memory usage after hostgroup
                               modification
                  Bugster:     6797579

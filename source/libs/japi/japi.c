@@ -4343,18 +4343,28 @@ static void *japi_implementation_thread(void *p)
                DPRINTF (("Received shutdown message\n"));
                stop_ec = true;
                qmaster_bound = false;
-            } /* else if type == sgeE_SHUTDOWN */
-            else if (type == sgeE_QMASTER_GOES_DOWN) {
+            } else if (type == sgeE_ACK_TIMEOUT) {
+               /*
+                * Print a message that we are timed out at qmaster
+                * and we have to reconnect.
+                */
+               DPRINTF(("got sgeE_ACK_TIMEOUT event\n"));
+
+               disconnected = true;
+
+               if (error_handler != NULL) {
+                  error_handler(MSG_JAPI_QMASTER_TIMEDOUT);
+               }
+            } else if (type == sgeE_QMASTER_GOES_DOWN) {
                /* Print a message that qmaster is down and note that we are
                 * disconnected. */
                if (error_handler != NULL) {
-                  error_handler (MSG_JAPI_QMASTER_DOWN);
+                  error_handler(MSG_JAPI_QMASTER_DOWN);
                }
 
-               DPRINTF ((MSG_JAPI_QMASTER_DOWN));
+               DPRINTF((MSG_JAPI_QMASTER_DOWN));
                disconnected = true;
-               
-            } /* else if type == sgeE_QMASTER_GOES_DOWN */
+            }
          } /* for_each */
          lFreeList(&event_list);
 

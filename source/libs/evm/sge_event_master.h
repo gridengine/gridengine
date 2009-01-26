@@ -135,7 +135,7 @@ bool sge_add_list_event(u_long32 timestamp,
                         const char *session,
                         lList *list);
 
-void sge_handle_event_ack(u_long32 event_client_id, u_long32 event_number);
+bool sge_handle_event_ack(u_long32 event_client_id, u_long32 event_number);
 void sge_deliver_events_immediately(u_long32 aClientID);
 
 int sge_resync_schedd(monitoring_t *monitor);

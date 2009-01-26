@@ -3184,15 +3184,19 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout) {
             break;
          }
       }
-
-      ret = sge_dup_fd_above_stderr(&private->sockfd);
-      if (ret != 0) {
-         CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = ", ret);
-         shutdown(private->sockfd, 2);
-         close(private->sockfd);
-         private->sockfd = -1;
-         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_CANNOT_DUP_SOCKET_FD);
-         return CL_RETVAL_DUP_SOCKET_FD_ERROR;
+      
+      if (private->sockfd < 3) {
+         CL_LOG_INT(CL_LOG_WARNING, "The file descriptor is < 3. Will dup fd to be >= 3! fd value: ", private->sockfd);
+         ret = sge_dup_fd_above_stderr(&private->sockfd);
+         if (ret != 0) {
+            CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = ", ret);
+            shutdown(private->sockfd, 2);
+            close(private->sockfd);
+            private->sockfd = -1;
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_CANNOT_DUP_SOCKET_FD);
+            return CL_RETVAL_DUP_SOCKET_FD_ERROR;
+         }
+         CL_LOG_INT(CL_LOG_INFO, "fd value after dup: ", private->sockfd);
       }
 
 #ifndef USE_POLL
@@ -3649,14 +3653,18 @@ int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection,
       return CL_RETVAL_CREATE_SOCKET;
    }
 
-   ret = sge_dup_fd_above_stderr(&sockfd);
-   if (ret != 0) {
-      CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = ", ret);
-      shutdown(sockfd, 2);
-      close(sockfd);
-      sockfd = -1;
-      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_CANNOT_DUP_SOCKET_FD);
-      return CL_RETVAL_DUP_SOCKET_FD_ERROR;
+   if (sockfd < 3) {
+      CL_LOG_INT(CL_LOG_WARNING, "The file descriptor is < 3. Will dup fd to be >= 3! fd value: ", sockfd);
+      ret = sge_dup_fd_above_stderr(&sockfd);
+      if (ret != 0) {
+         CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = ", ret);
+         shutdown(sockfd, 2);
+         close(sockfd);
+         sockfd = -1;
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_CANNOT_DUP_SOCKET_FD);
+         return CL_RETVAL_DUP_SOCKET_FD_ERROR;
+      }
+      CL_LOG_INT(CL_LOG_INFO, "fd value after dup: ", sockfd);
    }
 
 #ifndef USE_POLL
@@ -3771,14 +3779,18 @@ int cl_com_ssl_connection_request_handler(cl_com_connection_t* connection,cl_com
       char* resolved_host_name = NULL;
       cl_com_ssl_private_t* tmp_private = NULL;
 
-      retval = sge_dup_fd_above_stderr(&new_sfd);
-      if (retval != 0) {
-         CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = ", retval);
-         shutdown(new_sfd, 2);
-         close(new_sfd);
-         new_sfd = -1;
-         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_CANNOT_DUP_SOCKET_FD);
-         return CL_RETVAL_DUP_SOCKET_FD_ERROR;
+      if (new_sfd < 3) {
+         CL_LOG_INT(CL_LOG_WARNING, "The file descriptor is < 3. Will dup fd to be >= 3! fd value: ", new_sfd);
+         retval = sge_dup_fd_above_stderr(&new_sfd);
+         if (retval != 0) {
+            CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = ", retval);
+            shutdown(new_sfd, 2);
+            close(new_sfd);
+            new_sfd = -1;
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_CANNOT_DUP_SOCKET_FD);
+            return CL_RETVAL_DUP_SOCKET_FD_ERROR;
+         }
+         CL_LOG_INT(CL_LOG_INFO, "fd value after dup: ", new_sfd);
       }
 
 #ifndef USE_POLL

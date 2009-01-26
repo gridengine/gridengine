@@ -1,3 +1,6 @@
+RD-2008-01-26-1: CVS:         Created V62u2beta2_TAG
+----------------------------------------------------
+
 CR-2009-01-26-0: Bugfix:      Internal event clients, like the scheduler,
                               do not reconnect after timing out
                  Bugster:     6793076

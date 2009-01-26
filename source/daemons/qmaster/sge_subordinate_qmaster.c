@@ -251,13 +251,12 @@ qinstance_find_suspended_subordinates(const lListElem *this_elem,
       /* Temporary storage for subordinates */
       lList *so_list = lGetList(this_elem, QU_subordinate_list);
       lListElem *so = NULL;
+      lListElem *next_so = NULL;
       const char *qinstance_name = lGetString(this_elem, QU_qname);
       const char *hostname = lGetHost(this_elem, QU_qhostname);
       /* Slots calculations */
       u_long32 slots = lGetUlong(this_elem, QU_job_slots);
       u_long32 slots_used = qinstance_slots_used(this_elem);
-      bool all_full = (slots_used == slots) ? true : false;
-
       /*
        * Resolve cluster queue names into qinstance names
        */
@@ -266,29 +265,21 @@ qinstance_find_suspended_subordinates(const lListElem *this_elem,
 
       /* 
        * If the number of used slots on this qinstance is greater than a
-       * subordinate's threshold (if it has one), or if this qinstance has all
-       * of it's slots full, this subordinate should be suspended.  Otherwise,
-       * remove it from the list. 
+       * subordinate's threshold (if it has one), this subordinate should
+       * be suspended.
+       *
+       * Remove all subordinated queues from "resolved_so_list" which
+       * are not actually suspended by "this_elem".
        */
-      if (!all_full) {
-         lListElem *next_so = NULL;
-
-         /*
-          * Remove all subordinated queues from "resolved_so_list" which
-          * are not actually suspended by "this_elem" 
-          */
-         DTRACE;
-         next_so = lFirst(*resolved_so_list);
-         while ((so = next_so) != NULL) {
-            next_so = lNext(so);
-            if (!tst_sos(slots_used, slots, so)) {
-               DPRINTF (("Removing %s because it's not suspended\n",
-                         lGetString (so, SO_name)));
-               lRemoveElem(*resolved_so_list, &so);
-            }
+      DTRACE;
+      next_so = lFirst(*resolved_so_list);
+      while ((so = next_so) != NULL) {
+         next_so = lNext(so);
+         if (!tst_sos(slots_used, slots, so)) {
+            DPRINTF (("Removing %s because it's not suspended\n",
+                      lGetString (so, SO_name)));
+            lRemoveElem(*resolved_so_list, &so);
          }
-      } else {
-         DTRACE;
       }
    }
 

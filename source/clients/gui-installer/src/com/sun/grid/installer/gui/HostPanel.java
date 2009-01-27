@@ -162,9 +162,7 @@ public class HostPanel extends IzPanel implements Config {
 
             @Override
             public void keyTyped(KeyEvent e) {
-                if (e.getKeyChar() == '\n') {
-                    buttonActionPerformed(new ActionEvent(e.getSource(), e.getKeyCode(), e.paramString()));
-                } else if (errorMessageVisible) {
+                if (e.getKeyChar() != '\n' && errorMessageVisible) {
                     statusBar.setVisible(false);
                 }
             }
@@ -810,24 +808,24 @@ public class HostPanel extends IzPanel implements Config {
     @Override
     public void makeXMLData(XMLElement arg0) {
     }
-
-    private void addHostFocusGained() {
-        hostTF.setSelectionEnd(0);
-        hostTF.setSelectionColor(defaultSelectionColor);
+    
+    private void addHostsFromTF() {
+        try {
+            final String pattern = hostTF.getText().trim();
+            List<String> list = Util.parseHostPattern(pattern);
+            resolveHosts(Host.Type.HOSTNAME, list, qmasterCB.isSelected(), bdbCB.isSelected(), shadowCB.isSelected(), execCB.isSelected(), adminCB.isSelected(), submitCB.isSelected(), idata.getVariable(VAR_EXECD_SPOOL_DIR));
+        } catch (IllegalArgumentException ex) {
+            statusBar.setVisible(true);
+            statusBar.setText("Error: " + ex.getMessage());
+            hostTF.setSelectionStart(0);
+            hostTF.setSelectionEnd(hostTF.getText().length());
+            errorMessageVisible = true;
+        }
     }
 
 	private void hostTFActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_hostTFActionPerformed
-            try {
-                final String pattern = hostTF.getText().trim();
-                List<String> list = Util.parseHostPattern(pattern);
-                resolveHosts(Host.Type.HOSTNAME, list, qmasterCB.isSelected(), bdbCB.isSelected(), shadowCB.isSelected(), execCB.isSelected(), adminCB.isSelected(), submitCB.isSelected(), idata.getVariable(VAR_EXECD_SPOOL_DIR));
-            } catch (IllegalArgumentException ex) {
-                statusBar.setVisible(true);
-                statusBar.setText("Error: " + ex.getMessage());
-                hostTF.setSelectionStart(0);
-                hostTF.setSelectionEnd(hostTF.getText().length());
-                errorMessageVisible = true;
-            }
+
+            addHostsFromTF();
 	}//GEN-LAST:event_hostTFActionPerformed
 
 	private void hostTFFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_hostTFFocusGained
@@ -881,7 +879,7 @@ public class HostPanel extends IzPanel implements Config {
 
     private void buttonActionPerformed(java.awt.event.ActionEvent evt) {
         if (hostRB.isSelected()) {
-            hostTFActionPerformed(evt);
+            addHostsFromTF();
             hostRB.requestFocus();
         }
     }

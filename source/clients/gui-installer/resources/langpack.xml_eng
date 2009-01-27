@@ -446,38 +446,38 @@ ___INFO__MARK_END__-->
         Example:<br>
         [foo bar] means add hosts 'foo' 'bar'<br>
         </html>" />
-        <str id="fromfile.label.tooltip" txt="From file" />
+        <str id="fromfile.label.tooltip" txt="Read and resolve host(s) from file" />
         <str id="component.qmaster.host.label.tooltip" txt="Master host" />
         <str id="component.execd.host.label.tooltip" txt="Execution host" />
         <str id="component.shadow.host.label.tooltip" txt="Shadow host" />
         <str id="component.admin.host.label.tooltip" txt="Admin host" />
         <str id="component.submit.host.label.tooltip" txt="Submit host" />
         <str id="component.bdb.host.label.tooltip" txt="Berkeley db host" />
-        <str id="button.add.label.tooltip" txt="Resolve" />
-        <str id="button.cancel.label.tooltip" txt="Cancel" />
-        <str id="column.hostname.label.tooltip" txt="Hostname" />
-        <str id="column.ip.address.label.tooltip" txt="IP address" />
-        <str id="column.arch.label.tooltip" txt="Architecture" />
-        <str id="column.qmaster.label.tooltip" txt="Qmaster" />
-        <str id="column.shadowd.label.tooltip" txt="Shadow" />
-        <str id="column.execd.label.tooltip" txt="Exec" />
+        <str id="button.add.label.tooltip" txt="Resolve the specified host(s) and add to the table" />
+        <str id="button.cancel.label.tooltip" txt="Cancel running action(s)" />
+        <str id="column.hostname.label.tooltip" txt="Name of the remote host" />
+        <str id="column.ip.address.label.tooltip" txt="IP address of the remote host" />
+        <str id="column.arch.label.tooltip" txt="Architecture of the remote host" />
+        <str id="column.qmaster.label.tooltip" txt="Qmaster host" />
+        <str id="column.shadowd.label.tooltip" txt="Shadow host" />
+        <str id="column.execd.label.tooltip" txt="Execution host" />
         <str id="column.exec.spool.dir.label.tooltip" txt="Execution spool directory" />
-        <str id="column.admin.label.tooltip" txt="Admin" />
-        <str id="column.submit.label.tooltip" txt="Submit" />
-        <str id="column.bdb.label.tooltip" txt="Berkeley db" />
-        <str id="column.state.label.tooltip" txt="State" />
-        <str id="column.component.label.tooltip" txt="Component" />
-        <str id="column.progress.label.tooltip" txt="Progress" />
-        <str id="column.log.label.tooltip" txt="Log" />
+        <str id="column.admin.label.tooltip" txt="Admin host" />
+        <str id="column.submit.label.tooltip" txt="Submit host" />
+        <str id="column.bdb.label.tooltip" txt="Berkeley db host" />
+        <str id="column.state.label.tooltip" txt="State of the remote host" />
+        <str id="column.component.label.tooltip" txt="Component to be installed" />
+        <str id="column.progress.label.tooltip" txt="Installation progress " />
+        <str id="column.log.label.tooltip" txt="Install log" />
         <str id="tab.all.label.tooltip" txt="All hosts" />
         <str id="tab.reachable.label.tooltip" txt="Reachable hosts" />
         <str id="tab.unreachable.label.tooltip" txt="Unreachable hosts" />
-        <str id="tab.installing.label.tooltip" txt="Components To Be Installed" />
-        <str id="tab.done.label.tooltip" txt="Done" />
-        <str id="tab.failed.label.tooltip" txt="Failed" />
+        <str id="tab.installing.label.tooltip" txt="Component(s) to be installed" />
+        <str id="tab.done.label.tooltip" txt="Successfully installed component(s)" />
+        <str id="tab.failed.label.tooltip" txt="Failed installation(s)" />
         <str id="menu.title.tooltip" txt="Edit actions"/>
         <str id="menu.resolve.selected.tooltip" txt="Resolve selected host(s)"/>
-        <str id="menu.resolve.all.tooltip" txt="Resolve all  host."/>
+        <str id="menu.resolve.all.tooltip" txt="Resolve all hosts"/>
         <str id="menu.remove.selected.tooltip" txt="Remove selected host(s)"/>
         <str id="menu.remove.all.tooltip" txt="Remove all hosts"/>
         <str id="menu.save.selection.tooltip" txt="Save selected host(s) into file"/>

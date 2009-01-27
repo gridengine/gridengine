@@ -1,7 +1,13 @@
-RD-2008-01-26-2: Bugfix:      fixed minor memory leak in cull error handling
+ZG-2009-01-27-0: Bugfix:      in case a host is added by pressing 'Enter' host
+                              lists lose their consistency
+                 Enhancem.:   expand the size of the window to 940x720
+                 Enhancem.:   improve tooltips
+                 Review:      LP
+
+RD-2009-01-26-2: Bugfix:      fixed minor memory leak in cull error handling
                  Review:      JG
 
-RD-2008-01-26-1: CVS:         Created V62u2beta2_TAG
+RD-2009-01-26-1: CVS:         Created V62u2beta2_TAG
 ----------------------------------------------------
 
 CR-2009-01-26-0: Bugfix:      Internal event clients, like the scheduler,

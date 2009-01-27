@@ -40,7 +40,7 @@ ___INFO__MARK_END__-->
         <url>http://gridengine.sunsource.net/</url>
         <uninstaller write="no" />
     </info>
-    <guiprefs width="880" height="700" resizable="yes">
+    <guiprefs width="940" height="720" resizable="yes">
         <laf name="custom">
             <os family="unix"/>
             <!--<param name="class" value="com.sun.java.swing.plaf.gtk.GTKLookAndFeel"/>-->

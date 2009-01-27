@@ -1,3 +1,9 @@
+DG-2009-01-27-0: Cleanup:     Java DRMAA 0.5 JUnit tests are failing with an 
+                              underlying Java DRMAA 0.5 lib and C DRMAA 1.0 
+                              library because of a not catched exception 
+                              (new in Java DRMAA 1.0). 
+                 Review:      SH
+
 GH-2009-01-26-0: Bugfix:      Subordinate suspension state can not be changed
                  Bugster:     6793687
                  Issue:       2886

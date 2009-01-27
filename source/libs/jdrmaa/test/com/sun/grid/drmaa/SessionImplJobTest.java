@@ -168,7 +168,12 @@ public class SessionImplJobTest extends TestCase {
             fail ("Allowed invalid start id");
          }
          catch (InvalidArgumentException e) {
-            /* Don't care */
+            /* Don't care - this is the original exception
+               for the underlying 0.95 C DRMAA lib */
+         } 
+         catch (IllegalArgumentException e) {
+             /* This is the exception thrown with an underlying
+                1.0 DRMAA lib */
          }
 
          try {
@@ -178,6 +183,10 @@ public class SessionImplJobTest extends TestCase {
          catch (InvalidArgumentException e) {
             /* Don't care */
          }
+         catch (IllegalArgumentException e) {
+             /* This is the exception thrown with an underlying
+                1.0 DRMAA lib */
+         }
 
          try {
             session.runBulkJobs (jt, 1, 2, -1);
@@ -186,6 +195,10 @@ public class SessionImplJobTest extends TestCase {
          catch (InvalidArgumentException e) {
             /* Don't care */
          }
+         catch (IllegalArgumentException e) {
+             /* This is the exception thrown with an underlying
+                1.0 DRMAA lib */
+         }
 
          try {
             session.runBulkJobs (jt, 3, 2, 1);
@@ -193,6 +206,10 @@ public class SessionImplJobTest extends TestCase {
          }
          catch (InvalidArgumentException e) {
             /* Don't care */
+         }
+         catch (IllegalArgumentException e) {
+             /* This is the exception thrown with an underlying
+                1.0 DRMAA lib */
          }
          
          session.deleteJobTemplate (jt);
@@ -281,6 +298,10 @@ public class SessionImplJobTest extends TestCase {
          catch (InvalidArgumentException e) {
             /* Don't care */
          }
+         catch (IllegalArgumentException e) {
+             /* This is the exception thrown with an underlying
+                1.0 DRMAA lib */
+         }
 
          try {
             session.wait (jobId, -3L);
@@ -288,6 +309,10 @@ public class SessionImplJobTest extends TestCase {
          }
          catch (InvalidArgumentException e) {
             /* Don't care */
+         }
+         catch (IllegalArgumentException e) {
+             /* This is the exception thrown with an underlying
+                1.0 DRMAA lib */
          }
          
          session.deleteJobTemplate (jt);
@@ -674,6 +699,10 @@ public class SessionImplJobTest extends TestCase {
          catch (InvalidArgumentException e) {
             /* Don't care */
          }
+         catch (IllegalArgumentException e) {
+             /* This is the exception thrown with an underlying
+                1.0 DRMAA lib */
+         }
          
          try {
             session.synchronize (jobIds, -3, true);
@@ -682,7 +711,11 @@ public class SessionImplJobTest extends TestCase {
          catch (InvalidArgumentException e) {
             /* Don't care */
          }
-         
+         catch (IllegalArgumentException e) {
+             /* This is the exception thrown with an underlying
+                1.0 DRMAA lib */
+         }
+
          session.deleteJobTemplate (jt);
       }
       catch (DrmaaException e) {
@@ -1471,6 +1504,11 @@ public class SessionImplJobTest extends TestCase {
          catch (InvalidArgumentException e) {
             /* Don't care */
          }
+         catch (IllegalArgumentException e) {
+             /* This is the exception thrown with an underlying
+                1.0 DRMAA lib */
+         }
+
       }
       catch (DrmaaException e) {
          fail ("Exception while trying to get job status: " + e.getMessage ());
@@ -1528,6 +1566,10 @@ public class SessionImplJobTest extends TestCase {
          catch (InvalidArgumentException e) {
             /* Don't care */
          }
+         catch (IllegalArgumentException e) {
+             /* This is the exception thrown with an underlying
+                1.0 DRMAA lib */
+         }
 
          try {
             session.control (jobId, -10);
@@ -1535,6 +1577,10 @@ public class SessionImplJobTest extends TestCase {
          }
          catch (InvalidArgumentException e) {
             /* Don't care */
+         }
+         catch (IllegalArgumentException e) {
+             /* This is the exception thrown with an underlying
+                1.0 DRMAA lib */
          }
          
          session.deleteJobTemplate (jt);

@@ -9,11 +9,6 @@ CR-2009-01-23-0: Bugfix:      fixed arco install problem
                  Belongs to:  MP-2009-01-19-0
                  Review:      MD
 
-GH-2009-01-23-0: Bugfix:      bad logging if "act_qmaster" file does not exist 
-                 Bugster:     6288964
-                 Issue:       2881
-                 Review:      CR
-
 MP-2009-01-19-0: Bugfix:      fixed bug introduced through MP-2008-12-01-0.
                               write permission in sge_root directory is only
                               checked during qmaster install

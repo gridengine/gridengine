@@ -1,3 +1,6 @@
+CR-2009-01-28-0: Bugfix:      fixed broken build
+                 Review:      MD
+
 GH-2009-01-23-0: Bugfix:      bad logging if "act_qmaster" file does not exist 
                               (moved V61u6_TAG for this check in)
                  Bugster:     6288964

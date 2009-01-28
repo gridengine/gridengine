@@ -210,8 +210,8 @@ int dispatch( sge_gdi_ctx_class_t *ctx,
          
          if ( now - last_qmaster_file_read >= 30 ) {
             /* re-read act qmaster file (max. every 30 seconds) */
-            DPRINTF(("re-read actual qmaster file\n"));
             const char *hostname = ctx->get_master(ctx, true);
+            DPRINTF(("re-read actual qmaster file\n"));
             last_qmaster_file_read = now;
             if (i != CL_RETVAL_CONNECTION_NOT_FOUND &&
                 i != CL_RETVAL_CONNECT_ERROR &&

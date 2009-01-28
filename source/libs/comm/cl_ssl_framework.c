@@ -5161,11 +5161,23 @@ int cl_com_ssl_connection_request_handler_cleanup(cl_com_connection_t* connectio
 }
 
 /* select mechanism */
-int cl_com_ssl_open_connection_request_handler(cl_raw_list_t*        connection_list, 
+#ifdef USE_POLL
+int cl_com_ssl_open_connection_request_handler(cl_com_poll_t*        poll_handle,
+                                               cl_com_handle_t*      handle, 
+                                               cl_raw_list_t*        connection_list, 
                                                cl_com_connection_t*  service_connection,
                                                int                   timeout_val_sec,
                                                int                   timeout_val_usec, 
-                                               cl_select_method_t    select_mode) {
+                                               cl_select_method_t    select_mode)
+#else
+int cl_com_ssl_open_connection_request_handler(cl_com_handle_t*      handle,
+                                               cl_raw_list_t*        connection_list,
+                                               cl_com_connection_t*  service_connection,
+                                               int                   timeout_val_sec,
+                                               int                   timeout_val_usec,
+                                               cl_select_method_t    select_mode)
+#endif
+{
    cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }

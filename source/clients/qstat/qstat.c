@@ -1613,8 +1613,8 @@ u_long32 isXML
             schedd_info = false;
          }
       }
-      lFreeList(&alp);
    }
+      lFreeList(&alp);
 
    /* build 'where' for all jobs */
    where = NULL;
@@ -1624,8 +1624,7 @@ u_long32 isXML
       if (isdigit(job_name[0])){
          u_long32 jid = atol(lGetString(j_elem, ST_name));
          newcp = lWhere("%T(%I==%u)", JB_Type, JB_job_number, jid);
-      }
-      else {
+      } else {
          newcp = lWhere("%T(%I p= %s)", JB_Type, JB_job_name, job_name);
       }
       if (newcp){ 

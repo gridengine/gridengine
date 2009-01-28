@@ -1,3 +1,10 @@
+JG-2009-01-28-0: Bugfix:      drmaa: quotes in native specification can result
+                              in memory corruption
+                 Bugster:     6317028
+                 Issue:       1768
+                 Bugfix:      Some minor memory leaks and cleanup.
+                 Review:      DG
+
 DG-2009-01-27-0: Cleanup:     Java DRMAA 0.5 JUnit tests are failing with an 
                               underlying Java DRMAA 0.5 lib and C DRMAA 1.0 
                               library because of a not catched exception 

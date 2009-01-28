@@ -1,3 +1,10 @@
+JG-2009-01-28-0: Bugfix:      drmaa: quotes in native specification can result
+                              in memory corruption
+                 Bugster:     6317028
+                 Issue:       1768
+                 Bugfix:      Some minor memory leaks and cleanup.
+                 Review:      DG
+
 RD-2009-01-28-0: Bugfix:      fixed commlib write thread timeout
                  Related To:  CR-2008-12-08-0
                  Review:      CR
@@ -89,7 +96,13 @@ RD-2009-01-21-0: Bugfix:      - subordinate list generated a critical message en
                  Review:      CR
 
 DG-2009-01-21-0: Cleanup:     aimk -only-depend does not work on linux
-                 Review:      AA 
+                 Review:      AA
+
+JG-2009-01-19-0: Bugfix:      end of parallel job doesn't kill subsequently
+                              added, longer running tasks
+                 Bugster:     6579326
+                 Issue:       2329
+                 Review:      RD
 
 DG-2009-01-19-0: Bugfix:      execd: "ptf complains: Job does not exist" 
                               message in log file

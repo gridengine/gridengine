@@ -1226,7 +1226,8 @@ case HP1164:
    else
       #set LFLAGS   = "$DEBUG_FLAG $LFLAGS +DD64 -Wl,+s"
       set ORIGINORIGIN = '$$ORIGIN'
-      set LFLAGS   = "$DEBUG_FLAG $LFLAGS +DD64 -Wl,+s -Wl,+b,'$ORIGINORIGIN'/../../lib/$buildarch"
+      set LFLAGS   = "$DEBUG_FLAG $LFLAGS +DD64 -Wl,+s"
+      set SHARED_LFLAGS = "$SHARED_LFLAGS -L '$ORIGINORIGIN'/../../lib/$buildarch"
    endif
 
    set XMTDEF   = "-DNO_EDITRES"

@@ -1827,27 +1827,27 @@ u_long32 isXML
             schedd_info = false;
          }
       }
-      lFreeList(&alp);
    }
+   lFreeList(&alp);
 
    /* build 'where' for all jobs */
    where = NULL;
    for_each(j_elem, jid_list) {
       const char *job_name = lGetString(j_elem, ST_name);
 
-      if (isdigit(job_name[0])){
+      if (isdigit(job_name[0])) {
          u_long32 jid = atol(lGetString(j_elem, ST_name));
          newcp = lWhere("%T(%I==%u)", JB_Type, JB_job_number, jid);
-      }
-      else {
+      } else {
          newcp = lWhere("%T(%I p= %s)", JB_Type, JB_job_name, job_name);
       }
-      if (newcp){ 
-         if (!where)
+      if (newcp) { 
+         if (!where) {
             where = newcp;
-         else
+         } else {
             where = lOrWhere(where, newcp);
-      }   
+         }
+      }
    }
    what = lWhat("%T(%I%I%I%I%I%I%I%I%I%I%I%I%I%I->%T%I%I%I%I%I%I->%T%I%I%I%I->%T(%I%I%I%I%I)"
             "%I%I%I%I->%T(%I)%I->%T(%I)%I%I%I%I%I%I%I%I%I%I%I%I%I%I%I->%T%I%I%I%I%I%I%I%I%I)",
@@ -1892,6 +1892,7 @@ u_long32 isXML
             tmp_msgElem = lNext(msgElem);
             jbList = lGetList(msgElem, MES_job_number_list);
             jbElem = lFirst(jbList);
+            
             while (jbElem) {
                tmp_jbElem = lNext(jbElem);
                if (lGetElemUlong(jlp, JB_job_number, lGetUlong(jbElem, ULNG)) == NULL) {
@@ -1911,8 +1912,7 @@ u_long32 isXML
       lFreeList(&jlp);
       lFreeList(&alp);
       lFreeList(&jid_list);
-      DEXIT;
-      return 0;
+      DRETURN(0);
    }
 
    for_each(aep, alp) {
@@ -1923,8 +1923,7 @@ u_long32 isXML
    }
    lFreeList(&alp);
    if (!jobs_exist) {
-      DEXIT;
-      return 1;
+      DRETURN(1);
    }
 
    /* does jlp contain all information we requested? */
@@ -1975,9 +1974,9 @@ u_long32 isXML
                if (first_run) {
                   printf("%s:            ",MSG_SCHEDD_SCHEDULINGINFO);
                   first_run = 0;
-               }
-               else
+               } else {
                   printf("%s", "                            ");
+               }
                printf("%s\n", lGetString(mes, MES_message));
             }
 
@@ -1990,8 +1989,9 @@ u_long32 isXML
                      if (first_run) {
                         printf("%s:            ",MSG_SCHEDD_SCHEDULINGINFO);
                         first_run = 0;
-                     } else
+                     } else {
                         printf("%s", "                            ");
+                     }
                      printf("%s\n", lGetString(mes, MES_message));
                   }
                }
@@ -2002,8 +2002,7 @@ u_long32 isXML
 
    lFreeList(&ilp);
    lFreeList(&jlp);
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int qstat_show_job_info(sge_gdi_ctx_class_t *ctx, u_long32 isXML)
